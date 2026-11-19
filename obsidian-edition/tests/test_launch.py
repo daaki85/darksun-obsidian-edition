@@ -112,6 +112,29 @@ class LaunchTests(unittest.TestCase):
             self.assertFalse(launch.is_game_dir(d))
             self.assertEqual(launch.find_game_dir(game), game)
 
+    def test_names_hand_edited_keys(self):
+        """A hand-edited portrait key that is a digit to str.isdigit but no number to int ("²") is
+        passed over, not a ValueError that broke every name look-up."""
+        self.assertEqual(launch._names({"k": {"5": "Tarkon", "\u00b2": "x", "a": "y", "7": ""}}, "k"), {5: "Tarkon"})
+
+    def dsun_only(self) -> str:
+        """A folder with an empty DSUN.EXE alone (gamepatch.write_patched mocked: no more needed)."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))
+        open(os.path.join(d, "DSUN.EXE"), "w").close()
+        return d
+
+    def test_dsun_exe_gone(self):
+        """DSUN.EXE gone from the folder since it was picked: a clear refusal in DOSBox's way and
+        the recompiled program's, and prepare_patched_game says why (it gave a TypeError)."""
+        with tempfile.TemporaryDirectory() as d:
+            game = make_game(d, cloud_saves=False)
+            os.remove(launch._find_file(game, "DSUN.EXE"))
+            with self.assertRaises(launch.LaunchError) as raised:
+                launch._launch(game, {"recompiled": False})
+            self.assertIn("has no DSUN.EXE", str(raised.exception))
+            self.assertIn("has no DSUN.EXE", launch.prepare_patched_game(game, {}))
+
     def test_settings_not_the_loaders_kept_aside(self):
         """A settings.json that is JSON but not an object (a list, a number) is read as none and
         kept aside as settings.json.bad, as an unreadable one is, so the next save loses nothing."""
@@ -162,7 +185,7 @@ class LaunchTests(unittest.TestCase):
         self.assertIn(r'mount C "..\cloud_saves" -t overlay', lines)
         self.assertIn(f'mount d "{launch.DOS_DIR}"', lines)
         self.assertLess(lines.index(r"lh d:\dsclog.exe"), lines.index(r"d:\dsunlog.exe"))
-        # upper memory moved down to C900h just before the helper loads into it
+        # upper memory moved down to CA00h just before DSCLOG loads into it
         self.assertEqual(lines.index(r"d:\umbplus.com"), lines.index(r"lh d:\dsclog.exe") - 1)
         self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.UMB_PLUS_COM)))
         self.assertLess(lines.index("c:"), lines.index(r"d:\dsunlog.exe"))  # run from the game folder
@@ -170,7 +193,7 @@ class LaunchTests(unittest.TestCase):
         # a game stopping with an error leaves its message up, saved for the crash report
         self.assertEqual(lines.index(r"d:\gameend.com"), lines.index(r"d:\dsunlog.exe") + 1)
         self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.GAME_END_COM)))
-        # EMS off, so the helper has the upper memory block EMS's page frame would take
+        # EMS off, so DSCLOG has the upper memory block EMS's page frame would take
         self.assertLess(lines.index("ems=false"), lines.index("[autoexec]"))
         self.assertEqual(lines[lines.index("ems=false") - 1], "[dos]")
 
@@ -191,14 +214,20 @@ class LaunchTests(unittest.TestCase):
         gamepatch.write_patched = write_patched
         try:
             def skip(settings):
-                self.assertEqual(launch.prepare_patched_game("nowhere", settings), "not in a test")
+                self.assertEqual(launch.prepare_patched_game(self.dsun_only(), settings), "not in a test")
                 return skips[-1]
             self.assertEqual(skip({}), frozenset())
             off = {key: skip({key: False}) for key in launch.CONTENT}
         finally:
             gamepatch.write_patched = saved
+        # (the switches gone from the tab, game.ALWAYS_ON: their patches always in, whatever is saved)
+        always = {"EFFECTS_KEPT", "ROLL_STORE", "CAMERA", "SCENE_POINTER", "MOUSE_START", "PARTY_SPREAD",
+                  "SPELLS_MANUAL", "SPELL_TO_HIT"}
         for name, patches in switches.items():
             keys = [key for key, skipped in off.items() if set(patches) <= skipped]
+            if name in always:
+                self.assertEqual(keys, [], f"gamepatch.{name}: always on now")
+                continue
             self.assertTrue(keys, f"gamepatch.{name}: no Options key leaves it out")
         for key, skipped in off.items():  # (nothing else left out: only whole switches)
             self.assertTrue(all(set(patches) <= skipped or not set(patches) & skipped
@@ -260,20 +289,20 @@ class LaunchTests(unittest.TestCase):
         self.assertTrue(items["vulture"])
         self.assertTrue(all(launch.content({"world_magic": False, "pens_gear": False})[k] for k in launch.ITEM_PARTS))
 
-    def test_combat_log_on_unless_switched_off(self):
-        """The combat log in the game is on by default, in the switches and in the dice log."""
-        self.assertIs(launch.SWITCH_DEFAULTS["combat_log"], True)
-        self.assertTrue(launch.effective_switches({})["combat_log"])
-        self.assertFalse(launch.effective_switches({"combat_log": False})["combat_log"])
+    def test_combat_log_always_on(self):
+        """The combat log in the game has no switch now (game.ALWAYS_ON): an older settings file's
+        False is dropped as it is read, and the dice log has it on whatever the settings say."""
+        self.assertNotIn("combat_log", launch.SWITCH_DEFAULTS)
+        self.assertNotIn("combat_log", launch.effective_switches({"combat_log": False}))
+        self.assertIn("combat_log_level", launch.SWITCH_DEFAULTS)  # (its level kept)
 
-    def test_older_settings_get_the_combat_log_once(self):
-        """Settings saved before version 2 have the combat log turned on, once; then it is the player's."""
-        old = {"combat_log": False, "dust": False}
+    def test_older_settings_upgraded_once(self):
+        """Settings saved before version 2 are brought up to it once (the combat log then turned on:
+        it has no switch now, and the key is dropped as the file is read)."""
+        old = {"combat_log": False, "steady_pace": False}
         self.assertTrue(launch.upgrade_settings(old))
-        self.assertEqual(old, {"combat_log": True, "dust": False, "settings_version": launch.SETTINGS_VERSION})
-        old["combat_log"] = False  # (switched off again, and saved as version 2)
+        self.assertEqual(old["settings_version"], launch.SETTINGS_VERSION)
         self.assertFalse(launch.upgrade_settings(old))
-        self.assertFalse(old["combat_log"])
         self.assertFalse(launch.upgrade_settings({}))  # (no settings yet: the defaults)
         import json
         with tempfile.TemporaryDirectory() as d:
@@ -281,12 +310,73 @@ class LaunchTests(unittest.TestCase):
             launch.SETTINGS = os.path.join(d, "settings.json")
             try:
                 with open(launch.SETTINGS, "w") as f:
-                    json.dump({"combat_log": False}, f)
-                self.assertTrue(launch.load_settings()["combat_log"])
-                launch.save_settings(dict(launch.load_settings(), combat_log=False))
-                self.assertFalse(launch.load_settings()["combat_log"])
+                    json.dump({"combat_log": False, "steady_pace": False}, f)
+                self.assertEqual(launch.load_settings()["steady_pace"], False)
+                self.assertNotIn("combat_log", launch.load_settings())
             finally:
                 launch.SETTINGS = saved_path
+
+    def test_old_false_for_an_always_on_switch_is_passed_over(self):
+        """A settings.json from before the switches went, with some of them unticked (shadows, dust,
+        weapon specialization, thieves as in AD&D, spells rolling to hit, the merged-away halves),
+        still has every rule on: the keys are dropped as it is read, the dice log's switches are on,
+        the patched game leaves nothing of theirs out, and DSCLOG's rule bits (RULES, RULES_HI) all
+        set; a switch the tab keeps is still the player's."""
+        import json
+        from dsloader import dicelog, game, gamepatch
+        old = {key: False for key in game.ALWAYS_ON | frozenset(game.ALWAYS_ON_OLD_NAMES)}
+        old.update({"helm_ac": False, "steady_pace": False})
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                with open(launch.SETTINGS, "w") as f:
+                    json.dump(old, f)
+                settings = launch.load_settings(strict=True)
+                launch.save_settings(settings)
+                with open(launch.SETTINGS) as f:
+                    written = json.load(f)
+            finally:
+                launch.SETTINGS = saved_path
+        for key in game.ALWAYS_ON:
+            self.assertNotIn(key, settings, key)
+            self.assertNotIn(key, written, key)
+            self.assertTrue(game.setting_on(old, key), key)  # (even unread: the raw file's False)
+        self.assertIs(settings["helm_ac"], False)
+        rules = game.rules_from_settings(old)
+        for key, bit in game.RULE_SETTINGS_GONE:
+            self.assertTrue(rules & bit, key)
+        self.assertTrue(rules & game.RULE_TWO_WEAPONS)
+        self.assertFalse(rules & game.RULE_HELMS)  # (its switch kept, unticked)
+        self.assertEqual(rules, game.rules_from_settings(settings))
+        self.assertEqual(game.rules_from_settings(old) | game.RULE_HELMS,
+                         game.rules_from_settings({}))
+        on = launch.content(old)
+        self.assertFalse(set(launch.CONTENT) & game.ALWAYS_ON)  # (no always-on key read)
+        self.assertFalse(on["steady_pace"])
+        log = dicelog.DiceLog(None)
+        log.use_settings(old)
+        for name in ("pickpockets", "show_gear", "show_shadows", "combat_log", "scroll_map", "show_dust",
+                     "see_through", "elf_looks", "cilla_elf", "stealth_gear", "use_targeting"):
+            self.assertFalse(hasattr(log, name), name)  # (no switch of the dice log's left for them)
+        self.assertEqual(log.rules, rules)
+        # (DSCLOG's two words, as set_rules writes them: every gone switch's bit in one or the other)
+        low, high = rules & 0xFFFF, rules >> 16 & 0xFFFF
+        self.assertEqual(low | high << 16, rules)
+        self.assertEqual(game.RULES_ALWAYS & ~(low | high << 16), 0)
+        skips = []
+        saved = gamepatch.write_patched
+
+        def write_patched(source, target, skip=frozenset()):
+            skips.append(frozenset(skip))
+            raise gamepatch.PatchError("not in a test")
+        gamepatch.write_patched = write_patched
+        try:
+            self.assertEqual(launch.prepare_patched_game(self.dsun_only(), old), "not in a test")
+        finally:
+            gamepatch.write_patched = saved
+        self.assertEqual(skips[-1], frozenset(gamepatch.STEADY_PACE))  # (only the kept switch's)
+        self.assertIn("sensitivity=33", launch.display_lines(old))  # (the pointer's speed: mouse_start)
 
     def test_settings_saved_whole_and_never_over_an_unreadable_file(self):
         """A save goes through settings.json.tmp, so no half-written file is left; an unreadable
@@ -297,7 +387,7 @@ class LaunchTests(unittest.TestCase):
             saved_path = launch.SETTINGS
             launch.SETTINGS = os.path.join(d, "settings.json")
             try:
-                launch.save_settings({"game_dir": "C:\\GOG", "dust": False})
+                launch.save_settings({"game_dir": "C:\\GOG", "steady_pace": False})
                 self.assertFalse(os.path.exists(launch.SETTINGS + ".tmp"))
                 launch.update_settings({"combat_log_level": "short"})
                 self.assertEqual(launch.load_settings()["game_dir"], "C:\\GOG")
@@ -307,9 +397,46 @@ class LaunchTests(unittest.TestCase):
                 self.assertEqual(launch.load_settings(), {})
                 with open(launch.SETTINGS + ".bad") as f:
                     self.assertIn("game_dir", f.read())
-                launch.update_settings({"dust": True})
+                launch.update_settings({"steady_pace": True})
                 with open(launch.SETTINGS) as f:
-                    self.assertEqual(json.load(f)["dust"], True)
+                    self.assertEqual(json.load(f)["steady_pace"], True)
+            finally:
+                launch.SETTINGS = saved_path
+
+    @unittest.skipIf(os.name == "nt", "the other process's lock taken with fcntl")
+    def test_settings_changed_by_another_process_kept(self):
+        """Another process (the window, `play`) changing settings.json under its lock as this one
+        updates it: this one waits for the lock, so both changes are kept (each read and wrote the
+        whole file: the later one's lost the other's)."""
+        import json
+        import subprocess
+        import sys
+        import time as _time
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                launch.save_settings({"game_dir": "C:\\GOG"})
+                lock, ready = os.path.join(d, "settings.lock"), os.path.join(d, "ready")
+                other = subprocess.Popen([sys.executable, "-c", (
+                    "import fcntl, json, os, sys, time\n"
+                    "fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT)\n"
+                    "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+                    "s = json.load(open(sys.argv[2]))\n"
+                    "open(sys.argv[3], 'w').close()\n"
+                    "time.sleep(0.4)\n"
+                    "s['pickpocketed'] = ['x@1']\n"
+                    "json.dump(s, open(sys.argv[2], 'w'))\n"), lock, launch.SETTINGS, ready])
+                try:
+                    end = _time.monotonic() + 10
+                    while not os.path.exists(ready) and _time.monotonic() < end:
+                        _time.sleep(0.01)
+                    launch.update_settings({"combat_log_level": "short"})
+                finally:
+                    other.wait(10)
+                with open(launch.SETTINGS) as f:
+                    got = json.load(f)
+                self.assertEqual((got.get("pickpocketed"), got.get("combat_log_level")), (["x@1"], "short"))
             finally:
                 launch.SETTINGS = saved_path
 
@@ -400,8 +527,9 @@ class LaunchTests(unittest.TestCase):
                       "Null pointer assignment", text)
         self.assertIn("  vulture: False", text)
         self.assertIn("  cycles: 20000", text)
-        self.assertIn("  shadows: True", text)  # (not in the settings: its default)
-        self.assertIn("  stealth: True", text)
+        self.assertIn("  monster_info: True", text)  # (not in the settings: its default)
+        self.assertIn("  helm_ac: True", text)
+        self.assertNotIn("  shadows:", text)  # (always on now: no switch to report)
         self.assertNotIn("Games", text)  # (where the game is installed is left out)
         self.assertNotIn("Xan", text)  # (and the lists kept for the game, not switches)
         self.assertIn("2 bytes at 0x10 (low memory)", text)
@@ -483,7 +611,7 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("sensitivity=50", launch.display_lines({"window_scale": 2}))
         self.assertIn("sensitivity=25", four)
         self.assertIn("sensitivity=100", launch.display_lines({"window_scale": 1}))
-        self.assertNotIn("sensitivity=33", launch.display_lines({"mouse_start": False}))
+        self.assertIn("sensitivity=33", launch.display_lines({"mouse_start": False}))  # (always on now)
         saved = launch.load_settings
         launch.load_settings = lambda: {}
         try:
@@ -494,6 +622,89 @@ class LaunchTests(unittest.TestCase):
         finally:
             launch.load_settings = saved
         self.assertLess(lines.index("fullscreen=false"), lines.index("[autoexec]"))
+
+    def test_the_picture(self):
+        """Scanlines and TV are DOSBox 0.74's scan and tv scalers in the plain one's place (2x, 3x;
+        2x in the four-times window, 3x in full screen); Sharp its unfiltered OpenGL output with
+        the window's size given. The window's size and the mouse's sensitivity are the plain
+        picture's at every size; the single-size window (the playtest kit's) is always plain, and
+        so is a picture the Loader doesn't know."""
+        def lines(scale, picture, **more):
+            return launch.display_lines({"window_scale": scale, "picture": picture, **more})
+        plain = {scale: lines(scale, "plain") for scale in launch.WINDOW_SCALES}
+        for scale in launch.WINDOW_SCALES:  # (no picture named: the plain one, as before there was a choice)
+            self.assertEqual(launch.display_lines({"window_scale": scale}), plain[scale])
+        self.assertEqual(plain[1], ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=100",
+                                    "[render]", "aspect=true", "scaler=none", ""])
+        self.assertEqual(plain[4], ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=25", "output=opengl",
+                                    "windowresolution=1280x960", "[render]", "aspect=true", "scaler=normal2x", ""])
+        for picture in launch.PICTURES + ("crt", "", None, 3, ["tv"]):
+            self.assertEqual(lines(1, picture), plain[1], picture)
+        for picture in ("crt", "", None, 3, ["tv"], "SCANLINES"):
+            for scale in (2, 3, 4):
+                self.assertEqual(lines(scale, picture), plain[scale], picture)
+            self.assertEqual(lines(3, picture, fullscreen=True), [], picture)
+        # scanlines and tv: the scaler alone changes
+        for picture, scaler in (("scanlines", "scan"), ("tv", "tv")):
+            for scale, by in ((2, 2), (3, 3), (4, 2)):
+                self.assertEqual(lines(scale, picture),
+                                 [f"scaler={scaler}{by}x" if line.startswith("scaler=") else line
+                                  for line in plain[scale]], (picture, scale))
+            self.assertEqual(lines(3, picture, fullscreen=True), ["[render]", f"scaler={scaler}3x", ""])
+        # sharp: openglnb, the window's size given, the plain scaler kept
+        self.assertEqual(lines(2, "sharp"), ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=50",
+                                             "output=openglnb", "windowresolution=640x480",
+                                             "[render]", "aspect=true", "scaler=normal2x", ""])
+        self.assertEqual(lines(3, "sharp"), ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=33",
+                                             "output=openglnb", "windowresolution=960x720",
+                                             "[render]", "aspect=true", "scaler=normal3x", ""])
+        self.assertEqual(lines(4, "sharp"), [line.replace("output=opengl", "output=openglnb") for line in plain[4]])
+        self.assertEqual(lines(3, "sharp", fullscreen=True), ["[sdl]", "output=openglnb", ""])
+        self.assertEqual(lines(3, "sharp", mouse_start=False), lines(3, "sharp"))  # (the mouse: always on now)
+        # every scaler and output named is one DOSBox 0.74 has (render.cpp, sdlmain.cpp)
+        for scale in launch.WINDOW_SCALES:
+            for picture in launch.PICTURES:
+                for full in (False, True):
+                    for line in lines(scale, picture, fullscreen=full):
+                        if line.startswith("scaler="):
+                            self.assertIn(line[7:], ("none", "normal2x", "normal3x", "scan2x", "scan3x", "tv2x", "tv3x"))
+                        if line.startswith("output="):
+                            self.assertIn(line[7:], ("opengl", "openglnb"))
+        # which pictures a window has, and the one used
+        self.assertEqual(launch.pictures({"window_scale": 1}), ("plain",))
+        self.assertEqual(launch.pictures({"window_scale": 1, "fullscreen": True}), launch.PICTURES)
+        self.assertEqual(launch.pictures({}), launch.PICTURES)
+        self.assertEqual(launch.picture({"picture": "tv"}), "tv")
+        self.assertEqual(launch.picture({"picture": "tv", "window_scale": 1}), "plain")
+        self.assertEqual(launch.picture({}), "plain")
+        self.assertEqual(launch.effective_switches({"picture": "tv", "window_scale": 1})["picture"], "plain")
+        self.assertEqual(launch.effective_switches({"picture": "sharp"})["picture"], "sharp")
+
+    def test_the_configuration_written_for_the_picture_and_the_music_device(self):
+        """write_conf: the picture's lines and the music device's `[midi]` section ahead of the
+        autoexec; neither for the defaults."""
+        def conf(settings):
+            with tempfile.TemporaryDirectory() as d:
+                game = make_game(d, cloud_saves=False)
+                with open(launch.write_conf(game, os.path.join(d, "test.conf"), settings=settings), newline="") as f:
+                    return f.read().split("\r\n")
+        usual = conf({})
+        self.assertNotIn("[midi]", usual)
+        self.assertEqual(conf({"picture": "plain", "midi_device": "default"}), usual)
+        self.assertEqual(conf({"picture": "holo", "midi_device": "the loud one"}), usual)
+        lines = conf({"picture": "scanlines", "midi_device": 2})
+        self.assertIn("scaler=scan3x", lines)
+        at = lines.index("[midi]")
+        self.assertEqual(lines[at:at + 3], ["[midi]", "midiconfig=2", ""])
+        self.assertLess(at, lines.index("[autoexec]"))
+        self.assertLess(lines.index("[cpu]"), at)
+        self.assertEqual([line for line in lines if line not in usual],
+                         ["scaler=scan3x", "[midi]", "midiconfig=2"])
+        lines = conf({"fullscreen": True, "picture": "sharp", "midi_device": "128:0"})
+        self.assertEqual(lines[:3], ["[sdl]", "output=openglnb", ""])
+        self.assertIn("midiconfig=128:0", lines)
+        self.assertEqual(launch.effective_switches({"midi_device": 3})["midi_device"], 3)
+        self.assertEqual(launch.effective_switches({"midi_device": -1})["midi_device"], "default")
 
     def test_without_the_dice_log_it_runs_the_game_as_usual(self):
         with tempfile.TemporaryDirectory() as d:

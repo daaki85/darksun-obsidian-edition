@@ -1,5 +1,5 @@
 # ghostturn.py: in a fight, GHOST_UNION's whole view on a GHOST_TAB change (GH_CHANGED) in the
-# enemies' turns: at the start of one enemy turn Cermak (thing 2) is marked see-through without the
+# enemies' turns. At the start of one enemy turn Cermak (thing 2) is marked see-through without the
 # changed byte (the control), at the next one with it; window grabs every 0.1 s through each enemy
 # turn ($WORK/ctrl_N.png, with_N.png); the party's turns passed through the END menu. The table is put
 # back clear (with the byte) at the end. Memory only.
@@ -8,7 +8,7 @@ exec(open(os.path.join(HERE, 'live.py')).read())
 from dsloader import game
 WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGva')
+hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGve')
 seg = struct.unpack('<H', g.read(hdr + 1826, 2))[0]
 TAB = seg * 16 + 8192 + 256
 def mark(thing, changed):

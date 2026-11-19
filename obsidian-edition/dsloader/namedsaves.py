@@ -2,7 +2,8 @@
 
 The game keeps its saves as SAVE01.SAV to SAVE10.SAV, and with the Loader's four pages
 (savepages.py) SAVB, SAVC and SAVD01.SAV to 10.SAV too, in its folder or, with GOG's, in
-cloud_saves. Only the game's own list says which is which: the name typed for each is inside
+cloud_saves (the fifth page, QUICK, SAVQ: quicksave.py's quick saves and autosaves, is left out:
+its slots are written over in turn, so their copies would only come and go). Only the game's own list says which is which: the name typed for each is inside
 the file (its STXT chunk). The Loader copies each into its own folder NAMED, as "Page 2 slot 05 -
 Before Scar's battle.SAV", whenever the game writes one, one copy for each slot: a slot saved over
 has its copy replaced. A copy can be put back in a slot (to be loaded from the game's list) with
@@ -14,11 +15,11 @@ import re
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-from .gff import GffError, read_gff
+from .gff import GffError, read_gff, replace_retried
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
-PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4
+PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4 (not the QUICK page, SAVQ)
 SLOTS = 10
 NAME_CHUNK = ("STXT", 1)
 UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')  # (not in a Windows file name)
@@ -133,18 +134,20 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
                 except OSError:
                     pass
                 continue
+            tmp = os.path.join(folder, target + ".tmp")
             try:
                 os.makedirs(folder, exist_ok=True)
-                tmp = os.path.join(folder, target + ".tmp")
                 with open(tmp, "wb") as f:
                     f.write(data)
                 os.utime(tmp, (stamp, stamp))
-                os.replace(tmp, os.path.join(folder, target))
+                replace_retried(tmp, os.path.join(folder, target))
                 for old in existing:
                     if os.path.normcase(old) != os.path.normcase(target):
                         os.remove(os.path.join(folder, old))
             except OSError:
                 continue
+            finally:
+                _drop(tmp)
             made.append(target)
     return made
 
@@ -169,8 +172,8 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
     """A named copy (or any save file) put in the game's PAGE and SLOT, to be loaded from its list.
     The slot's save, if any, is kept first in FOLDER (replaced_name; "(2)" and on if that is taken):
     the slot's own named copy is replaced at the next sync, as for any slot saved over. Written
-    through a temporary file, so a failure leaves the slot as it was. Its name in the game.
-    ValueError if it isn't a save."""
+    through a temporary file, so a failure leaves the slot as it was and no temporary file. Its
+    name in the game. ValueError if it isn't a save."""
     with open(copy, "rb") as f:
         data = f.read()
     name = save_name(data)
@@ -191,7 +194,19 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
             shutil.copy2(old, os.path.join(folder, kept))
     path = os.path.join(saves_dir(game_dir), slot_file(page, slot))
     tmp = path + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(data)
-    os.replace(tmp, path)
+    try:
+        with open(tmp, "wb") as f:
+            f.write(data)
+        replace_retried(tmp, path)
+    finally:
+        _drop(tmp)
     return name
+
+
+def _drop(tmp: str) -> None:
+    """A temporary file not put in place removed, so a failed replace leaves none behind."""
+    if os.path.exists(tmp):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass

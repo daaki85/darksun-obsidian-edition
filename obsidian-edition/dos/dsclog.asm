@@ -188,7 +188,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGva'          ; +0
+sig      db 'DSCLOGve'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -464,6 +464,26 @@ loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass
                                 ;      test of the Loader there (STATS aren't kept on the creation screen)
 gear_who   db 0xFF              ; +1867 the sheet index of the character DONE just made (with GEAR_DUE):
                                 ;      the game keeps it Okay, not New, till after the roster's write
+sold_items times 4 dw 0xFFFF     ; +1868 SOLD_Q's items: each entry's, the first of its thing's list as it
+                                ;      was kept (SELL_KEEP), 0FFFFh once the Loader has seen to it
+                                ;      (buyback.py: the item moved only if still that thing's first)
+a20_lost   dw 0                 ; +1876 times A20_CHECK found A20 off, the far block (in the HMA) out of
+                                ;      reach, and turned it on again; 8000h added if it wouldn't come
+                                ;      on (the far block's segments then the ROM's: the dice log's
+                                ;      a20_line says so once)
+qs_keys    dw 0xFFFF, 0xFFFF    ; +1878 the Loader's: the quick save key and the quick load key, as
+                                ;      INT 16h gives them (FFFFh: none), taken on the map (QS_KEY) ...
+qs_seq     dw 0, 0              ; +1882 ... and counted, each in its word: the Loader acts
+save_req   dw 0                 ; +1886 the Loader sets 1 to have the game saved from the map's main
+                                ;      loop (SAVE_TICK: the file and the name in SAVE_TEXT), 2 to
+                                ;      have the game's LOAD window opened; 0 while DSCLOG is at it,
+                                ;      then 3 done, 4 the game's save failed, 5 not in a fight
+save_off   dw save_text         ; +1888 offset of SAVE_TEXT in the tail: the Loader's: the save's
+                                ;      file (SAVE_FILE bytes with its NUL), then its name
+squares_on dw 0                 ; +1890 the Loader sets 1 to have the squares SQ_MAP marks drawn on
+                                ;      the floor (SQUARES; squares.py: where the party member
+                                ;      whose turn it is in a fight can still walk). SQ_MAP is in
+                                ;      DSCLOG's PSP (the 100h bytes before this header), at SQ_MAP
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -503,6 +523,7 @@ int_rand:
         add sp, 4
         popf
 stub:
+        cld                     ; (RECORD's copies go up, whatever the caller left)
         push eax                ; rand() leaves the upper half of EAX alone; so do we
         push si
         mov si, sp              ; SS:SI+6 = return IP, SS:SI+8 = return CS
@@ -592,8 +613,9 @@ stub:
 ;   SS:SI+6 = the return address of the call being logged (IP, then CS)
 ;   BP      = the frame of the code that made that call
 ;   AX      = the value to store at +6;  [kind] = the entry kind
-; Keeps every register except the flags.
+; Keeps every register except the flags (the direction flag cleared: its copies go up).
 record:
+        cld
         push bx
         push cx
         push di
@@ -705,13 +727,32 @@ record:
         pop bx
         ret
 
+; IF_FRAME: interrupts on if the INT's caller had them on, off if it had them off (the caller's
+; flags in the INT's frame, at SP + 4 where it is called: first thing in a handler, or with the
+; frame back on top), the other flags kept. The INT turned them off; a handler that ends with
+; RETF 2 (its flags the caller's results) would leave them so, and one that runs the game's code
+; would run it with them off (the game's 120 Hz clock losing its ticks; a routine of the game's that
+; waits for the timer waiting for good), and a plain STI would turn them on where DSCLOG had them
+; off (its drawing: DRAW_MASKED).
+if_frame:
+        pushf
+        push bp
+        mov bp, sp              ; [BP+2] the flags now, +4 the way back, +6 the INT's IP, +8 CS, +10 flags
+        and byte [bp + 3], ~2
+        test byte [bp + 11], 2
+        jz .off
+        or byte [bp + 3], 2
+.off:   pop bp
+        popf
+        ret
+
 ; PROBE_SAVE: INT VEC_SAVE replaces "mov al,[bp-2] / cmp al,[bp-1]" (6 bytes:
 ; INT + 4 NOPs) at the end of the saving-throw function, where [bp-2] is the
 ; final total (d20 + modifiers) and [bp-1] the save value it must reach.
 ; Records both, then does the replaced instructions; RETF 2 keeps their flags. (Spook's save is
 ; worse for its caster's levels first: SPOOK_SAVE.)
 probe_save:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         call spook_save
         push si
         mov si, sp
@@ -737,7 +778,7 @@ probe_save:
 ; NOPs) at the end of the AC function. Does the replaced instructions and
 ; records the result: the AC the game uses for this attack.
 probe_ac:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push si                 ; the game's SI is part of the AC
         mov ax, [bp-6]
         add ax, si
@@ -1532,6 +1573,42 @@ sheet_classes:
         and eax, 0x00FFFFFF
         ret
 
+; SAVE_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), what the Loader asked for in
+; SAVE_REQ (quicksave.py), once: 1 the game saved by its own routine (the one its SAVE window
+; calls: an overlay's entry, save(far file, far name); it shows nothing), from the file and the name
+; the Loader wrote in SAVE_TEXT, but not in a fight (where the game refuses a save); 2 the game's
+; LOAD window opened (the Loader has made its page the quick saves'). SAVE_REQ is 0 while the
+; routine runs (a pass of this loop inside it asks nothing again), then what came of it. AX, BX,
+; CX, DX, ES changed. The work is SAVE_FAR's, in the tail (TAIL_CALL).
+SAVE_SEG2  equ 0x4242           ; (DSUN.EXE segments, less the load segment) an overlay's entry:
+SAVE_ENTRY equ 0x0089           ;   save(far file, far name), 0 if it failed
+LOADW_SEG  equ 0x428A           ; the save window's overlay's entry that opens it to load a game
+LOADW_ENTRY equ 0x0020
+SAVE_FILE  equ 64               ; (SAVE_TEXT: the file's bytes, then the name's, SAVE_NAME)
+SAVE_NAME  equ 48               ; (the game writes 45 bytes of it)
+save_tick:
+        cmp word [cs:save_req], 0
+        je .ret
+        mov ax, save_far
+        call tail_call
+.ret:   ret
+
+; TAIL_CALL: the tail's routine at AX run: code kept in the tail (after its tables: SAVE_FAR,
+; TINT_FAR), out of this segment's 64 KB. The routine runs with CS the tail's and GS this segment
+; (this segment's variables are "gs:" there, the tail's own tables "cs:"), and ends with RETF. GS
+; kept; the rest as the routine leaves it.
+tail_call:
+        push gs
+        push cs
+        pop gs
+        push cs
+        push word .back
+        push word [cs:tail_seg]
+        push ax
+        retf
+.back:  pop gs
+        ret
+
 ; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
 ; for (SOUND_REQ), once. All registers kept.
 sound_tick:
@@ -1879,13 +1956,13 @@ probe_save_page:
 
 ; PROBE_SAVE_CLICK: INT VEC_SAVE_CLICK replaces "jmp <the end>" (3 bytes: INT + NOP; DSUN.EXE
 ; 74B9Fh), where the window's event routine leaves a click on a button it doesn't know: PAGE 1 to
-; PAGE 4 (savepages.py) show that page (then the routine's end returns 0, as for the game's own
+; PAGE 4 and QUICK (savepages.py) show that page (then the routine's end returns 0, as for the game's own
 ; buttons).
 SC_DONE    equ 0x74A21 - 0x74BA1 ; (DSUN.EXE, from the way back) the screen updated, then the end
 SC_IGNORE  equ 0x74DE5 - 0x74BA1 ; the end for the game's buttons
 SC_ID      equ 8                ; the button, at the routine's BP+8
-PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4: 815h to 818h)
-PAGES      equ 4
+PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4 and QUICK: 815h to 819h)
+PAGES      equ 5
 probe_save_click:
         push bp
         mov bp, sp
@@ -2032,7 +2109,8 @@ sp_button_id:                   ; (AX the button)
 sp_btn  dw BTN_OFF, 0           ; the game's routine for a button's state
 sp_call dd 0
 sp_was  db 0
-sp_letters db 'EBCD'            ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD)
+sp_letters db 'EBCDQ'           ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD; SAVQ: the quick
+                                ;   saves and autosaves, quicksave.py)
 sp_target db 0
 sp_step   db 0
 sp_done   dw 0                  ; where the event routine goes on: after the page changes,
@@ -2040,7 +2118,7 @@ sp_ignore dw 0                  ;   or not (from the way back)
 sp_zero   db 0                  ; 1: a click (the routine to return 0)
 
 ; SAVE_LABEL: (PROBE_WIN; EAX the window drawn, DS the game's) on the save/load window, the
-; button of the page shown (PAGE 1 to PAGE 4, savepages.py) out of use: so it shows which; and in
+; button of the page shown (PAGE 1 to PAGE 4 and QUICK, savepages.py) out of use: so it shows which; and in
 ; the load window, LOAD out of use while the row chosen has no save (an empty page's).
 save_label:
         pushad
@@ -2271,11 +2349,19 @@ probe_look:
 ; 3925Ch), the first instruction of the game's timer handler (IRQ 0, the timer its own: the
 ; game's timers run from it). Does that, and every TICK_EVERY strikes notes where the game was
 ; (what the timer interrupted) in TICKS, for the Loader's freeze report: its CS:IP, flags, SS,
-; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off.
+; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off. The
+; direction flag cleared first (the game's handler clears it only after this; the IRET puts the
+; interrupted code's back): what runs from here (BOX_NUDGE, CP_FOLLOW, LABEL_STAMP) copies with
+; string instructions. BOX_NUDGE stays here, though it calls the game's mouse handler: the
+; inventory screen, where it is needed, runs none of DSCLOG's other code while it waits (the main
+; loop's PROBE_SCROLL doesn't run there, and the game reads INT 16h only from its own keyboard
+; interrupt), and the call is as the mouse driver's own: interrupts off, on the interrupted stack.
 TICK_EVERY equ 32
 TICK_SLOTS equ 16
 TICK_SIZE  equ 16
+        times -(TICK_SIZE != 16) db 0   ; (a negative count: the "shl bx,4" below takes a slot as 16 bytes)
 probe_tick:
+        cld
         push bp
         mov bp, sp              ; BP+2 this interrupt's frame (in the handler), BP+8 the timer's
         push ds
@@ -2340,6 +2426,7 @@ PZ_TO_END     equ 0x7A7C5 - 0x7A6DF   ; (from the INT's way back)
 PZ_TO_QUEUE   equ 0x790D2 - 0x7A6DF
 PZ_TO_LEVEL   equ 0x7A7AD - 0x7A6DF   ; (the far call's address)
 probe_poison:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; BP+2 the INT's way back, [BP] the routine's BP
         pushad
@@ -2388,9 +2475,10 @@ probe_poison:
         iret
 pz_far  dd 0
 
-; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the Spellarcher whose turn
-; it is (WHOSE_TURN's combatant): the better of it (at least 0) and +1 from its SPELL_ARROW_PLUS1st
-; preserver level, +2 from its SPELL_ARROW_PLUS2th. DS the game's; others kept.
+; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the archer whose turn it
+; is (WHOSE_TURN's combatant, a Spellarcher or anyone not in the party): the better of it (at least
+; 0) and +1 from its SPELL_ARROW_PLUS1st level (ARCHER_LEVEL's), +2 from its SPELL_ARROW_PLUS2th.
+; DS the game's; others kept.
 arrow_plus_now:
         push bx
         push cx
@@ -2402,18 +2490,7 @@ arrow_plus_now:
         call es_things
         imul bx, [WHOSE_TURN], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
-        call creature_sheet     ; (ES:BX its sheet)
-        xor ax, ax
-        cmp byte [es:bx + 0x21], PRESERVER_CLASS
-        jne .c2
-        mov al, [es:bx + 0x24]
-.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
-        jne .c3
-        mov al, [es:bx + 0x25]
-.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
-        jne .level
-        mov al, [es:bx + 0x26]
-.level: xor ah, ah
+        call archer_level
         cmp al, SPELL_ARROW_PLUS2
         jae .two
         cmp al, SPELL_ARROW_PLUS1
@@ -2431,14 +2508,44 @@ arrow_plus_now:
         pop bx
         ret
 
+; ARCHER_LEVEL: AX the level a spell arrow's archer, creature AX, shoots it at (its plus, its
+; spell's caster level): a party member's (a Spellarcher's) preserver level (class PRESERVER_CLASS
+; among its sheet's +21h-23h, its level from +24h-26h; 0 without), anyone else's highest level, of
+; whatever class (spellarrows.archer_level). ES:BX its sheet; DS the game's; others kept.
+archer_level:
+        push cx
+        push si
+        mov cx, ax
+        call creature_sheet
+        xor ax, ax
+        xor si, si
+.cls:   mov ah, [es:bx + si + 0x24]
+        cmp cx, 3
+        ja .any                 ; (not a party member: its highest level)
+        cmp byte [es:bx + si + 0x21], PRESERVER_CLASS
+        je .take
+        jmp short .next
+.any:   cmp ah, al
+        jbe .next
+.take:  mov al, ah
+.next:  inc si
+        cmp si, 3
+        jb .cls
+        xor ah, ah
+        pop si
+        pop cx
+        ret
+
 ; PROBE_ARROW: INT VEC_ARROW replaces "mov es:[0006h],al" (4 bytes: INT + 2 NOPs; DSUN.EXE 58D27h)
 ; in the routine that finds a missile weapon's ammunition (58C8Fh; [BP+0Ch] the weapon's item
 ; type), where it keeps the ammunition's plus (AL) for the shot's damage and magic (the game takes
 ; the better of the weapon's and the ammunition's plus for the hit's +1/+2/+3 damage kinds). For a
-; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), its spell arrows (named
-; ARROW_NAME to +3) shot from a bow are +1 from its 5th preserver level and +2 from its 9th (a
-; cursed one's minus counted as none), so they hurt what only magic weapons hurt; other arrows as
-; they are.
+; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), or anyone not in the
+; party (the arena's elf champion), its spell arrows (named ARROW_NAME to +3) shot from a bow are +1
+; from its 5th level and +2 from its 9th (ARCHER_LEVEL: a Spellarcher's preserver level, anyone
+; else's highest; a cursed one's minus counted as none), so they hurt what only magic weapons hurt,
+; and cast their spell on a hit (AMMO_ARCHER); other arrows as they are. A party member who isn't a
+; Spellarcher shoots them as plain arrows (none should have them: ARROWS_FORBID, return_strays).
 SPELL_ARROW_PLUS1 equ 5         ; (the preserver levels: kits.SPELL_ARROW_LEVELS)
 SPELL_ARROW_PLUS2 equ 9
 probe_arrow:
@@ -2466,8 +2573,10 @@ probe_arrow:
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
         cmp ax, 3
-        ja .not                 ; (not a party member)
-        call cr_is
+        jbe .party
+        cmp ax, ax              ; (not a party member: its spell arrows cast, ZF set)
+        jmp short .not
+.party: call cr_is
         db KIT_SPELLARCHER
 .not:   pop ax
         jne .store
@@ -2485,15 +2594,16 @@ probe_arrow:
         iret
 
 ammo_name dw 0                  ; (PROBE_ARROW: the name of the ammunition last found)
-ammo_archer db 0                ; (and 1 if a Spellarcher shot it: only theirs cast their spell)
+ammo_archer db 0                ; (and 1 if a Spellarcher or anyone not in the party shot it: theirs cast)
 
 ; ARROW_HIT: "cmp byte es:[bx+0Fh],0" (58B63h; 5 bytes: the INT, the site's number and 2 NOPs)
 ; where the weapon attack routine (5883Ah) asks whether the weapon that hit (item SI, ES:BX) casts
 ; a spell (its +0Fh, the spell + 1), and ARROW_SPELL: "mov cl,es:[bx+0Fh]" (58B78h; 4 bytes) where
-; it takes it. For a shot from a bow ([BP+16h] above 1, [BP+14h] a bow's type) with a Spellarcher's
-; spell arrows (PROBE_ARROW's AMMO_NAME, ARROW_NAME on: dsloader/spellarrows.py), the arrows' spell
-; (ARROW_SPELLS) in place of the bow's. The game casts it on the target hit (598:89h) as its own
-; caster: at that caster's level for the spell (a Spellarcher's preserver level).
+; it takes it. For a shot from a bow ([BP+16h] above 1, [BP+14h] a bow's type) with spell arrows
+; (PROBE_ARROW's AMMO_NAME, ARROW_NAME on: dsloader/spellarrows.py) shot by a Spellarcher or by
+; anyone not in the party (AMMO_ARCHER), the arrows' spell (ARROW_SPELLS) in place of the bow's. The
+; game casts it on the target hit (598:89h) as its own caster: at ARCHER_LEVEL (a Spellarcher's
+; preserver level, anyone else's highest).
 ARROW_NAME  equ NAMES_OWN + 42
 arrow_hit:
         push ax
@@ -2512,7 +2622,7 @@ arrow_hit:
         cmp si, 4
         jae .set
         cmp byte [cs:ammo_archer], 0
-        je .set                 ; (not shot by a Spellarcher: no spell)
+        je .set                 ; (a party member's not a Spellarcher: no spell)
         mov al, [cs:si + arrow_spells]
         inc al
         mov byte [cs:arrow_cast], 1
@@ -2538,7 +2648,8 @@ arrow_cast   db 0               ; (1 when the hit's spell is a spell arrow's: AR
 ; ARROW_LEVEL: "push 6 / mov al,cl / mov ah,0 / push ax" (58BE6h; 7 bytes: the INT, the site's
 ; number and 4 NOPs), the level and the spell (CL) pushed for the cast of a weapon's spell on the
 ; target hit (598:89h): the game casts every weapon's spell at level 6. A spell arrow's (ARROW_HIT's
-; ARROW_CAST) at the archer's preserver level instead (the attacker's, combatant DI; at least 1).
+; ARROW_CAST) at the archer's level instead (ARCHER_LEVEL: the attacker's, combatant DI, a
+; Spellarcher's preserver level or a non-party archer's highest; at least 1).
 ; Both words go under the INT's frame, as the pushes would have left them; AX the spell, as
 ; theirs did.
 arrow_level:
@@ -2554,18 +2665,8 @@ arrow_level:
         call es_things
         imul bx, di, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
-        call creature_sheet
-        xor ax, ax
-        cmp byte [es:bx + 0x21], PRESERVER_CLASS
-        jne .c2
-        mov al, [es:bx + 0x24]
-.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
-        jne .c3
-        mov al, [es:bx + 0x25]
-.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
-        jne .least
-        mov al, [es:bx + 0x26]
-.least: cmp ax, 1
+        call archer_level
+        cmp ax, 1
         jge .put
         mov ax, 1
 .put:   mov [cs:arrow_lvl], ax
@@ -2892,7 +2993,7 @@ WS_MELEE   equ 0xFFFE           ; WS_TYPE: any melee weapon
 ; PROBE_RING_AC: INT VEC_RING_AC replaces "mov al,es:[bx+0Fh] / cbw" (5 bytes: INT + 3 NOPs)
 ; in the AC function, where ES:BX is a worn item's type, CX its number, DX the item and DI the
 ; creature's thing; bit 80h of AX says the type counts for AC (the plus less the type's AC).
-; Does that, counting rings too. With RULE_PROTECTION, AD&D's: a ring of protection betters
+; Does that, counting rings too, as AD&D has it (RULE_PROTECTION, always on): a ring of protection betters
 ; AC only without magical armour, and of two rings only the better (the left hand's if they're
 ; equal); a cloak of protection (the second of TYPES) counts only without magical or metal
 ; armour and without a shield (PROT_SCAN).
@@ -2902,8 +3003,6 @@ probe_ring_ac:
         cmp cx, RING_TYPE
         jne .cloak
         or al, 0x80
-        test word [cs:rules], RULE_PROTECTION
-        jz .done
         call prot_here
         jc .done
         test byte [cs:p_flags], P_MAGIC_ARMOUR
@@ -2950,8 +3049,6 @@ probe_ring_ac:
         cmp cx, ax
         jne .other
         pop ax
-        test word [cs:rules], RULE_PROTECTION
-        jz .done
         call prot_here
         jc .done
         test byte [cs:p_flags], P_MAGIC_ARMOUR | P_METAL_ARMOUR | P_SHIELD
@@ -3053,35 +3150,8 @@ probe_ring_save:
 
 ring_plus:                      ; DS = the game's, AX = the things table's segment, DI = a
         mov [cs:r_things], ax   ; creature's thing: SI += the pluses of the rings it wears
-        test word [cs:rules], RULE_PROTECTION
-        jnz .rules
-        mov es, ax
-        mov bx, di
-        imul bx, bx, 3
-        cmp byte [es:bx+THINGS], 2
-        jne .done               ; not a creature
-        mov ax, [es:bx+THINGS+1]
-        mov [cs:r_who], ax
-        mov word [cs:ws_slot], FINGER
-        mov word [cs:ws_type], RING_TYPE
-        call worn_scan
-        add si, [cs:ws_plus]
-        mov ax, [cs:r_who]
-        mov word [cs:ws_slot], FINGER2
-        call worn_scan
-        add si, [cs:ws_plus]
-.cloak: mov ax, [cs:types_first]  ; and a cloak of protection's (the second of TYPES), worn
-        or ax, ax
-        jz .done
-        inc ax
-        mov [cs:ws_type], ax
-        mov word [cs:ws_slot], CLOAK
-        mov ax, [cs:r_who]
-        call worn_scan
-        add si, [cs:ws_plus]
-.done:  ret
-.rules: call prot_scan          ; RULE_PROTECTION: the better ring only, whatever the armour;
-        jc .done                ; the cloak only without magical or metal armour or a shield
+        call prot_scan          ; (AD&D's: the better ring only, whatever the armour;
+        jc .done                ; the cloak only without magical or metal armour or a shield)
         mov al, [cs:p_ring]
         cmp al, [cs:p_ring2]
         jge .ring
@@ -3095,7 +3165,16 @@ ring_plus:                      ; DS = the game's, AX = the things table's segme
         imul bx, bx, 3
         mov ax, [es:bx+THINGS+1]
         mov [cs:r_who], ax
-        jmp .cloak
+        mov ax, [cs:types_first]  ; and a cloak of protection's (the second of TYPES), worn
+        or ax, ax
+        jz .done
+        inc ax
+        mov [cs:ws_type], ax
+        mov word [cs:ws_slot], CLOAK
+        mov ax, [cs:r_who]
+        call worn_scan
+        add si, [cs:ws_plus]
+.done:  ret
 
 ; PROT_HERE: (called from PROBE_RING_AC, its INT's return address at SP+2) PROT_SCAN for the
 ; AC routine's creature DI, the things table's segment being in its "mov ax,<segment>" A8h
@@ -3226,8 +3305,9 @@ prot_scan:
 ; 58892h), the attacks a round stored. The game gives every fighter, gladiator and ranger AD&D's
 ; specialist's rate (3/2, then 2 from 7th level, 5/2 from 13th); in melee a warrior (more than 2
 ; halves) with a weapon of a kind not chosen has AD&D's plain rate, half an attack less, and a
-; grand master one more. A Crusader or Mind Warrior has a warrior's extra attacks in melee
-; (WAR_KIT_OF) without RULE_SPECIALIZE (with it, its chosen weapon spec's expertise alone). Specialization +1 to hit, mastery +3 (the THAC0 less).
+; grand master one more. A Crusader or Mind Warrior has its chosen weapon spec's expertise (the
+; warrior's extra attacks of the game's way without weapon specialization gone with its switch).
+; Specialization +1 to hit, mastery +3 (the THAC0 less).
 ; PROBE_SPEC_DAMAGE: INT VEC_SPEC_DAMAGE replaces "add [bp-12h],ax" (3 bytes: INT + NOP; 588F2h),
 ; the strength bonus added to the damage bonus: specialization +2, mastery +3, and grand mastery
 ; the damage dice the next greater die size (NEXT_DIE: d8 to d10, 2d4 to 2d6, d12 to d20), against
@@ -3411,8 +3491,6 @@ probe_attacks:
         call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
         sub [bp + 0x0A], ax
         pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .store
         push dx
         call spec_of
         cmp word [bp + 0x16], 1
@@ -3436,7 +3514,6 @@ probe_attacks:
         jmp .done
 .three: sub word [bp + 0x0A], 3
 .done:  pop dx
-.store: call war_kit_of        ; (a Crusader's or Mind Warrior's extra attacks, in melee)
         cmp word [bp + 0x16], 1
         jle .melee_kit
         call own_throws         ; (a thri-kreen's chatkcha: one more a round)
@@ -3447,7 +3524,7 @@ probe_attacks:
         add ax, WILD_HALVES
 .tame:  push bx
         mov bx, [bp + 0x12]     ; (the weapon's item)
-        call off_hand_halves    ; (RULE_TWO_WEAPONS: the off hand's one a round)
+        call off_hand_halves    ; (AD&D's two weapons, always on: the off hand's one a round)
         pop bx
 .kept:  mov [bp - 8], ax
         iret
@@ -3634,14 +3711,12 @@ expert_halves:
         inc ax
 .ret:   ret
 
-; OFF_HAND_HALVES: AX the attacks a round (halves) with item BX, a melee weapon: with RULE_TWO_WEAPONS
-; (AD&D's two weapons), no more than one a round (2 halves) in the off hand (its slot OFF_HAND_SLOT),
+; OFF_HAND_HALVES: AX the attacks a round (halves) with item BX, a melee weapon: AD&D's two
+; weapons (always on), no more than one a round (2 halves) in the off hand (its slot OFF_HAND_SLOT),
 ; whoever wields it; the extra attacks are the main hand's. DS the game's; others kept.
 OFF_HAND_SLOT equ 10
 off_hand_halves:
         call cah_more           ; (the cahulaks: the off head's one more a round)
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jz .ret
         cmp ax, 2
         jbe .ret
         cmp bx, 0x270F
@@ -3660,22 +3735,6 @@ off_hand_halves:
         mov ax, 2
 .ret:   ret
 
-; WAR_KIT_OF: AX the attacks a round (halves) of PROBE_ATTACKS's attacker ([BP+10h]) made a
-; Crusader's or Mind Warrior's (WAR_KIT_HALVES) for a melee attack ([BP+16h] 1 or less). Others kept.
-war_kit_of:
-        cmp word [bp + 0x16], 1
-        jg .ret
-        push bx
-        push es
-        push ax
-        mov ax, [bp + 0x10]
-        call sheet_of_ax
-        pop ax
-        call war_kit_halves
-        pop es
-        pop bx
-.ret:   ret
-
 ; WAR_KIT_IS: ZF set if the character whose sheet is at ES:BX is a Crusader or a Mind Warrior (kit
 ; awake, KIT_WHERE that kit's for KIT_LEVEL), which has expertise in its one chosen weapon spec.
 ; All registers kept.
@@ -3686,44 +3745,6 @@ war_kit_is:
         call kit_is_b
         db KIT_MIND_WARRIOR
 .ret:   ret
-
-; WAR_KIT_HALVES: AX the melee attacks a round (halves) of a character who isn't a warrior (2 or
-; fewer), ES:BX its sheet: a Crusader's or Mind Warrior's (kit awake) the warrior's extra attacks,
-; 3/2 a round from 7th level of the kit's class, 2 from 13th, the better of the two kits' for a
-; human with both (kits.warrior_attacks); with RULE_SPECIALIZE none (its chosen weapon spec has
-; expertise's, EXPERT_HALVES: the extra attacks with that weapon alone). Others kept.
-war_kit_halves:
-        cmp ax, 2
-        ja .ret
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .ret
-        push dx
-        mov dx, ax
-        call kit_is_b
-        db KIT_CRUSADER
-        jne .mind
-        call .by_level
-.mind:  call kit_is_b
-        db KIT_MIND_WARRIOR
-        jne .back
-        call .by_level
-.back:  mov ax, dx
-        pop dx
-.ret:   ret
-.by_level:                      ; (DL the more of itself and the level's, KIT_WHERE's level)
-        push ax
-        call kit_level
-        mov ah, 3
-        cmp al, 13
-        jb .early
-        inc ah
-.early: cmp al, 7
-        jb .no
-        cmp dl, ah
-        jae .no
-        mov dl, ah
-.no:    pop ax
-        ret
 
 ; NOTE_SHOT: KIT_SHOT's bit for the attacker ([BP+0Eh]), a party member: set for a missile ([BP+16h]
 ; above 1: a shot or a throw), else clear; and KIT_OFF's: set for a melee attack with the weapon in
@@ -3771,8 +3792,6 @@ probe_spec_damage:
         jnc .wild
         add word [bp - 0x12], WILD_DAMAGE
 .wild:  pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         push dx
         call spec_of
         cmp dl, SPEC_SPECIAL
@@ -3789,14 +3808,13 @@ probe_spec_damage:
         mov [bp - 0x10], ax
         pop ax
 .out:   pop dx
-.done:  iret
+        iret
 
 ; PROBE_DAM_LINE: INT VEC_DAM_LINE replaces "mov al,es:[bx+2Ah]" (4 bytes: INT + 2 NOPs; DSUN.EXE
 ; 72A77h) in the routine that writes a melee weapon's "DAM: 1.5x1D8+4" (View Character, the
 ; inventory screen), ES:BX the sheet, SI the weapon's item type, the damage bonus, the dice's sides
-; and their count pushed (under the INT's return, in that order up). With RULE_SPECIALIZE, the
-; attacks as PROBE_ATTACKS gives them, and the bonus and sides as PROBE_SPEC_DAMAGE does; a
-; Crusader's or Mind Warrior's extra attacks (WAR_KIT_HALVES) either way.
+; and their count pushed (under the INT's return, in that order up): the attacks as PROBE_ATTACKS
+; gives them, and the bonus and sides as PROBE_SPEC_DAMAGE does.
 probe_dam_line:
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
@@ -3806,8 +3824,6 @@ probe_dam_line:
         pop ax
         pop bp
         mov al, [es:bx + 0x2a]
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         push bp
         mov bp, sp
         push dx
@@ -3844,10 +3860,9 @@ probe_dam_line:
         pop ax
 .out:   pop dx
         pop bp
-.done:  push cx                 ; (a Crusader's or Mind Warrior's extra attacks; the off hand's
+        push cx                 ; (a Crusader's or Mind Warrior's extra attacks; the off hand's
         mov ch, ah              ;  one a round, the item DI; AH kept)
         xor ah, ah
-        call war_kit_halves
         push bx
         mov bx, di
         call off_hand_halves
@@ -3861,7 +3876,7 @@ probe_dam_line:
 ; DSUN.EXE 729FFh) in the same routine's branch for a missile weapon (the inventory screen's
 ; "1D4"), ES:BX its item type's record, SI the type, the routine's [BP-6] the creature (0 for
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
-; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
+; weapon's attacks a round (halves): the rate of fire as PROBE_ATTACKS gives
 ; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; any thri-kreen's chatkcha
 ; one more a round, as OWN_THROWS (whatever the rules). With no
 ; creature (an item box: this branch for a melee weapon too), at least one a round.
@@ -3885,8 +3900,6 @@ probe_missile_line:
         mov ax, [es:bx + 4]
         call sheet_of_ax
         pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .own
         push ax
         call spec_of_sheet
         pop ax
@@ -3921,15 +3934,12 @@ probe_missile_line:
 ; PROBE_VIEW_DAM: INT VEC_VIEW_DAM replaces "mov [bp-0Eh],dx" (3 bytes: INT + NOP; DSUN.EXE 64EB6h)
 ; in View Character's routine for its "DAM: 1.5x1D8+4": DX the damage bonus it stores, its [BP-6]
 ; the attacks a round (halves), [BP-2] the dice's count, [BP-4] their sides, [BP-0Ah] the weapon's
-; item. A Crusader's or Mind Warrior's extra attacks (WAR_KIT_HALVES, not with a missile weapon).
-; With RULE_SPECIALIZE, the attacks (not a missile weapon's), the bonus and the sides as the
+; item. The attacks (not a missile weapon's), the bonus and the sides as the
 ; attack has them (PROBE_ATTACKS, PROBE_SPEC_DAMAGE), for the character on show: its number in
 ; the segment the routine's "mov ax,seg" at 64E33h holds, +25Bh (as PROBE_VIEW's CH_WHO).
 VIEW_DAM_WHO equ 0x84           ; that operand, back from the INT's return
 probe_view_dam:
         mov [bp - 0x0E], dx
-        call wp_rules
-        jz .done
         push ax
         push bx
         push dx
@@ -3951,9 +3961,6 @@ probe_view_dam:
         call kit_melee          ; (a Ravager's, a Brute's: the rule for kits being on)
         add [bp - 0x0E], ax
         pop ax
-        mov dl, SPEC_NONE
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .bonus
         call spec_of_sheet
         mov ax, si              ; a missile weapon (the type's +0, 2) keeps its rate
         imul ax, ax, 0x14
@@ -3994,8 +4001,8 @@ probe_view_dam:
         call next_die
         mov [bp - 4], ax
         pop ax
-.out:   mov ax, si              ; (a Crusader's or Mind Warrior's extra attacks, not a missile
-        imul ax, ax, 0x14       ; weapon's)
+.out:   mov ax, si              ; (not a missile weapon's)
+        imul ax, ax, 0x14
         push es
         push bx
         les bx, [0x1669]
@@ -4005,7 +4012,6 @@ probe_view_dam:
         pop es
         jnz .gone
         mov ax, [bp - 6]
-        call war_kit_halves
         mov bx, [bp - 0x0A]             ; (the item: the off hand's one a round)
         call off_hand_halves
         mov [bp - 6], ax
@@ -4015,7 +4021,7 @@ probe_view_dam:
         pop dx
         pop bx
         pop ax
-.done:  call view_material       ; (a weak material's damage, as the game's attack has it)
+        call view_material       ; (a weak material's damage, as the game's attack has it)
         push ax                 ; (Hasted twice, Slowed half, as the game's attack: whatever the
         push bx                 ;   rules, a missile weapon too)
         push dx
@@ -4213,7 +4219,7 @@ frame_speed:
 ; 6EF34h) in the routine that says whether a character may equip an item (its "Cannot use this
 ; item" when not; its only caller, the equip routine): AX the item type's mask of the classes that
 ; may use it, ES:BX the character's sheet, its +12h a bit for each of its classes, DX the item
-; type. With RULE_RESTRICT, an item the game allows that the character's classes keep it from
+; type. An item the game allows that the character's classes keep it from
 ; (CLASS_FORBIDS) is not allowed either. The kit's own (KIT_ALLOWS) are allowed whatever the
 ; game's lists and the restrictions; the kit's limits (KIT_FORBIDS) hold over everything.
 probe_can_use:
@@ -4233,8 +4239,6 @@ probe_can_use:
         call kit_forbids
         mov byte [cs:kf_off_hand], 0
         jc .no
-        test word [cs:rules], RULE_RESTRICT
-        jz .done
         call kit_allows         ; (the kit's own: whatever the classes' restrictions)
         jc .done
         call class_forbids
@@ -4589,7 +4593,7 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         ret
 ; KIT_ALLOWS: carry set if the kit of the character whose sheet is at ES:BX lets it use item type
 ; DX whatever its classes' lists and restrictions (kits.allows): a Battle Mage the weapons of its
-; chosen weapon spec (SPEC_SLOTS' first, with RULE_SPECIALIZE) and light armour (leather, or of no
+; chosen weapon spec (SPEC_SLOTS' first) and light armour (leather, or of no
 ; material; not a shield); a Battle Dancer long swords and bows (kit_dancer), whatever its cleric's
 ; sphere. DS the game's; all registers kept.
 kit_allows:
@@ -4635,8 +4639,6 @@ kit_allows:
         je .yes
         jmp .no
 .weapon:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .no
         cmp dx, KIND_TYPES
         jae .no
         mov si, dx
@@ -5154,7 +5156,7 @@ cu_others  dw 0
 ; psionic power), and so does a spell queued in a fight: the character the test's first argument
 ; (the "push dx" before its call, under the interrupt frame: DX itself is the test's to change,
 ; and was, so the check once looked at someone else), AX not 0 if it can't (its "No spell use"
-; effect). With RULE_RESTRICT, a multiclass preserver can't either while it wears armour, a helm
+; effect). A multiclass preserver can't either while it wears armour, a helm
 ; too (ARMOUR_WORN; a shield doesn't count); nor can a human who has been a preserver and a
 ; fighter, gladiator or ranger, in either order (CLASS_AND_WARRIOR).
 PRESERVER_CLASS equ 11
@@ -5178,8 +5180,6 @@ probe_no_cast:
         pop bp
         or ax, ax
         jnz .done
-        test word [cs:rules], RULE_RESTRICT
-        jz .done
         push bx
         push cx
         push dx
@@ -5246,7 +5246,7 @@ KO_RET      equ 0x194D                  ; (the death test's)
 KO_UNMADE   equ 10000                   ; (the damage routine's Disintegrate: status 8)
 FIRST_PACK  equ 14                      ; the first backpack slot
 probe_worn:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push bp
         mov bp, sp
         cmp word [bp+2], WORN_AC_RET
@@ -5517,7 +5517,6 @@ WP_CALL_PRINT  equ 0x6416F
 WP_CALL_COLOUR equ 0x6417D
 WP_CALL_HELP   equ 0x641AF
 WP_CALL_BUTTON equ 0x6422F
-WP_CALL_REDRAW equ 0x642E2
 WP_CALL_MARK   equ 0x63FC4          ; (the row's mark: A0:3180h, as 63FEEh draws it)
 WP_CALL_BACKDROP equ 0x639E9        ; (a number's backdrop put back: A0:30C3h, as 639D5h shows the PSP)
 WP_STAT_SEG    equ 0x639D5          ; ("mov ax,340h": the backdrops' words' segment)
@@ -5730,15 +5729,6 @@ km_rows     db 4                ; (KIT_MARKS: the page's rows)
 km_class    db 0                ; (KIT_MARKS: its class, KIT_CLASS's)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
-; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
-; line's and the Effects screen's own lines wanted).
-; All registers kept.
-wp_rules:
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .ret
-        test word [cs:rules_hi], RULE_HI_KITS
-.ret:   ret
-
 ; KINDS_ALLOWED: AX the kinds (bit 0 the long sword) the character whose sheet is at ES:BX can
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
@@ -5895,8 +5885,6 @@ probe_lv_pick:
 
 ; Character SI (DS the game's) asked for weapon kinds while it has fewer than it is due
 lv_check:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
         cmp si, LV_PARTY
         jae .ret
         cmp byte [cs:showing], 0
@@ -6209,6 +6197,7 @@ probe_pk_title:
         iret
 
 probe_pk_fill:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         xor di, di
         mov si, di
         cmp byte [cs:lv_mode], 0
@@ -6353,8 +6342,6 @@ probe_ef_rows:
         sti
         pushad
         push es
-        call wp_rules
-        jz .pops
         cmp word [bp - 4], EF_CELLS
         jg .pops
         mov bx, sp
@@ -6470,8 +6457,6 @@ ef_lines_of:
         jne .own_skip
         jmp .own
 .spec_rule:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
         xor di, di
 .slot:  cmp di, SPEC_COUNT
         jb .chosen
@@ -6905,7 +6890,9 @@ kit_ac:
         call kit_level
         movzx ax, al
         dec ax
-        cmp ax, RAVAGER_LEVELS - 1
+        jns .some               ; (level 0 as 1, as kits.ac: the table's first, not its last)
+        xor ax, ax
+.some:  cmp ax, RAVAGER_LEVELS - 1
         jbe .level
         mov ax, RAVAGER_LEVELS - 1
 .level: push si
@@ -7007,9 +6994,7 @@ kit_melee:
 ; WAR_HIT: AX what a Swashbuckler's, Crusader's, Battle Mage's or Mind Warrior's warrior THAC0 adds
 ; to hit in the weapon attack routine (the attacker its [BP+0Eh], the sheet its [BP+10h], the item
 ; type [BP+14h]; kits.war_to_hit): with a weapon of the kit's chosen weapon spec (one of its
-; SPEC_SLOTS, with RULE_SPECIALIZE; without it, of the kit's kinds: a Swashbuckler's long sword,
-; dagger or short sword, SWASH_KINDS; a Battle Mage's KIT_BM_KINDS; a Crusader's or Mind Warrior's
-; melee ones), its creature's THAC0 (+1Fh, its classes') less a warrior's (21 less the kit's class
+; SPEC_SLOTS), its creature's THAC0 (+1Fh, its classes') less a warrior's (21 less the kit's class
 ; level, 1 at best) where that is better, else 0. The Complete Thief's Handbook's Swashbuckler has
 ; a fighter's THAC0 with its weapon of choice only. DS the game's; others kept.
 SWASH_KINDS equ 0x000D          ; (long sword, dagger, short sword)
@@ -7027,30 +7012,23 @@ war_hit:
         jz .out
         mov ax, [bp + 0x10]
         call sheet_of_ax
-        mov ax, SWASH_KINDS
         call kit_is_b
         db KIT_SWASHBUCKLER
         je .kit
-        mov ax, KIT_BM_KINDS
         call kit_is_b
         db KIT_BATTLE_MAGE
         je .kit
-        mov ax, KIT_MELEE_KINDS
         call kit_is_b
         db KIT_CRUSADER
         je .kit
         call kit_is_b
         db KIT_MIND_WARRIOR
         jne .out
-.kit:   test word [cs:rules], RULE_SPECIALIZE
-        jz .mask
-        mov cx, si              ; (CL the kind + 1, as the slots keep it)
+.kit:   mov cx, si              ; (CL the kind + 1, as the slots keep it)
         push si
         xor si, si
-.slot:  push ax
-        call spec_get
+.slot:  call spec_get
         cmp al, cl
-        pop ax
         je .chosen
         inc si
         cmp si, SPEC_COUNT
@@ -7060,12 +7038,7 @@ war_hit:
         jmp .out
 .chosen:
         pop si
-        jmp .level
-.mask:  lea cx, [si - 1]
-        bt ax, cx
-        mov cx, 0
-        jnc .out
-.level: call kit_level
+        call kit_level
         movzx cx, al
         neg cx
         add cx, 21
@@ -7395,11 +7368,7 @@ probe_slots:
         jne .tables
         or cx, cx
         jnz .tables
-        cmp byte [bp + 0x0A], 6         ; (a 6th-level slot only with AD&D's tables: the game's
-        jb .level                       ;   own give a cleric none)
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .tables
-.level: call kit_level
+        call kit_level                  ; (a 6th-level slot too: AD&D's tables, always on)
         movzx ax, al
         push bx
         movzx bx, byte [bp + 0x0A]
@@ -7717,9 +7686,9 @@ probe_cure:
         cmp ax, HEAL_SPELL      ; Heal (NEW SPELLS: Cure Critical Wounds' handler): every wound
         jne .cures              ;   (the routine that heals stops at the most)
         mov word [bp + 0x0C], 0x7FFF
-        call manual_on          ; ... and, with the spells as the manual has them, Feeblemind (19,
-        jnz .out                ;   no timer: until removed) taken off, the abilities worked out
-        mov dx, [bp + 0x0A]     ;   again after the handler (its flags' 1, 79896h): INT and WIS back
+        mov dx, [bp + 0x0A]     ; ... and (the spells as the manual has them) Feeblemind (19, no
+                                ;   timer: until removed) taken off, the abilities worked out again
+                                ;   after the handler (its flags' 1, 79896h): INT and WIS back
         mov al, FEEBLE_EFFECT
         call drop_effect
         or ah, ah
@@ -7974,9 +7943,6 @@ probe_ranger_level:
         db KIT_JUSTIFIER
         je .take
         mov cl, 7
-        test word [cs:rules_hi], RULE_HI_RANGER
-        jnz .take
-        xor cl, cl
 .take:  pop bx
         pop ax
         sub al, cl
@@ -8364,15 +8330,11 @@ DK_PSI     equ 0x57                     ; (in PICK_STUB's: the psionicists' pop-
 DK_X       equ 0x5C
 DK_Y       equ 0x47
 probe_dual_kit:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        test word [cs:rules_hi], RULE_HI_KITS
-        jnz .ask
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
-.ask:   push word [ss:bx + 36]
+        push word [ss:bx + 36]
         push word [ss:bx + 34]
         push bp
         mov bp, sp
@@ -8385,7 +8347,7 @@ probe_dual_kit:
         mov bx, sp
         mov [ss:bx + 34], ax
         mov [ss:bx + 36], dx
-.done:  pop es
+        pop es
         popad
         cmp word [bp + 8], 0x0C
         retf 2
@@ -8711,7 +8673,7 @@ RL_ROW_Y equ 6 * 7 - 2          ; the line under CHR: 7 apart, from 2 above the 
 ; RG_TWO: "test word es:[bx+12h],200h" (5961Fh; 6 bytes: the site's number and 3 NOPs after the
 ; INT), where the routine giving an attack's to-hit adjustment for two weapons ready (595ECh)
 ; asks whether the attacker (sheet ES:BX, creature [BP-2]) is a ranger, who has none: its "jnz"
-; after it kept. With RULE_TWO_WEAPONS a ranger (its kits too, but a Justifier) has none only in
+; after it kept. With AD&D's two weapons (always on) a ranger (its kits too, but a Justifier) has none only in
 ; light armour (HEAVY_WORN): in other armour ZF is set, as for anyone else, and PROBE_TWO gives
 ; AD&D's. A Justifier has none in any armour.
 rg_two:
@@ -8721,8 +8683,6 @@ rg_two:
         and word [ss:di + 38], ~0x40
         test word [es:bx + 0x12], 0x200
         jz .plain
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jz .out
         call kit_is_b           ; (a Justifier: none in any armour; kits.py)
         db KIT_JUSTIFIER
         je .out
@@ -8923,8 +8883,6 @@ rl_score:
         push word [RL_HP_MAX]   ; (the most hit points before the click, for RL_CON)
         pop word [cs:rl_old_max]
         mov al, [bp - 2]
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .out
         cmp al, [es:bx + 0x22]
         jbe .out                ; lowered: always
         push cx
@@ -8944,12 +8902,10 @@ rl_score:
         pop cx
 .out:   iret
 
-; RL_HP replaces "add ax,[bp-2]" (63A49h), where a click adds 1 or -1 (BP-2) to the hit points.
+; RL_HP replaces "add ax,[bp-2]" (63A49h), where a click adds 1 or -1 (BP-2) to the hit points:
+; it adds nothing (the hit points as rolled).
 rl_hp:
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jnz .out
-        add ax, [bp - 2]
-.out:   iret
+        iret
 
 ; RL_CON replaces "les bx,[119Ch]" (+ NOP; 63946h) after a click on CON has had the game work out
 ; the hit points' least and most again (655D6h, not rolling): the sheet's hit points (+8) move as
@@ -8957,14 +8913,12 @@ rl_hp:
 ; lowered takes it off; the game then keeps them between the least and most, as before.
 rl_con:
         les bx, [0x119C]
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .out
         push ax
         mov ax, [RL_HP_MAX]
         sub ax, [cs:rl_old_max]
         add [es:bx + 8], ax
         pop ax
-.out:   iret
+        iret
 
 ; RL_TRY replaces "add ax,[499Ah]" (+ NOP; 6498Bh), where an ability's roll (6490Dh, the ability at
 ; [BP+8], DI the try, 0-3) adds the race's adjustment + 4 to a 4d4 (AX): the 4d4 kept in RL_TRIES,
@@ -9027,8 +8981,6 @@ rl_sum:
         call cr_thac0_draw
 .no_hp: pop es
         popad
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .back
         cmp word [cs:rl_pool], 0
         je .back
         sti
@@ -9226,10 +9178,8 @@ cr_ages:
 .drawn: sti
         pushad
         push es
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .thac0
         call cr_age_draw
-.thac0: call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
+        call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
         pop es
         popad
         push word [cs:cr_fl]
@@ -9263,8 +9213,6 @@ cr_names:
         pop word [cs:cr_cs]
         pop word [cs:cr_fl]
         add sp, 0x0E            ; the replaced instruction
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .back
         sti
         pushad
         push es
@@ -9280,7 +9228,7 @@ cr_names:
         call cr_age_draw
 .none:  pop es
         popad
-.back:  push word [cs:cr_fl]
+        push word [cs:cr_fl]
         push word [cs:cr_cs]
         push word [cs:cr_ip]
         iret
@@ -9637,9 +9585,7 @@ probe_pick_list:
         jb .spell
         shr di, 1
         jmp .out
-.int:   test word [cs:rules_hi], RULE_HI_INT    ; (a preserver: the list without the spells of a
-        jz .out                                 ; level it knows its INT's most of)
-        call is_preserver
+.int:   call is_preserver   ; (a preserver: the list without the spells of a level it knows its INT's most of)
         jnc .out
         mov bp, sp
         les si, [ss:bp + 14]
@@ -9677,12 +9623,10 @@ probe_pick_list:
         iret
 
 ; PICK_INT_ANY: (PROBE_PICK_ANY, not a Shinobi: SI the character, ES:BX its sheet, AX its
-; preserver level) with RULE_HI_INT, AX 0 (CHOOSE A SPELL not opened) when no wizard spell it
+; preserver level) AX 0 (CHOOSE A SPELL not opened) when no wizard spell it
 ; doesn't know is left at a spell level on offer (up to (AX + 1) / 2, no more than PICK_CAP's) that
 ; isn't full (LEVEL_FULL). DS the game's; others kept.
 pick_int_any:
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .ret
         cmp ax, 0
         jle .ret
         call is_preserver
@@ -9771,7 +9715,7 @@ pick_int_any:
 ; game's "jz", to "YOU ALREADY KNOW THIS SPELL") after the game's check whether the character on
 ; show (the segment of "mov ax,348h" before, its 25Bh) may learn a scroll's spell ([BP-3] of the
 ; game's frame; the game's only check is that it doesn't know it yet): a Shinobi's as SHINOBI_READ
-; has it; with RULE_HI_INT, a preserver's try at a wizard spell as INT_LEARN has it. ZF as "or
+; has it; a preserver's try at a wizard spell as INT_LEARN has it (always on). ZF as "or
 ; ax,ax" leaves it.
 SCROLL_WHO_SEG equ 0x8B6C2 - 0x8B6D5
 probe_scroll_learn:
@@ -9836,11 +9780,10 @@ LEARN_UNREAD equ 3                      ; (a Shinobi: the scroll not read, SHINO
 LEARN_NOT_ITS equ 4                     ; (a Shinobi: not one of its spells)
 SPELL_LEVELS_SEG equ 0x3FB9 - 0x4356    ; the spells' table (7 bytes a spell): its segment less DS's ...
 SPELL_LEVELS equ 0x19C                  ; ... and each spell's level there
+SPELL_ROWS_ROOM equ (0x4010 - 0x3FB9) * 16 + 0x357 ; (the rows' room in it: the game's data at 4010h:357h)
 learn_msg    db 0                       ; (LEARN_FAILED or LEARN_FULL: the game's message to change)
 int_learn:
         or ax, ax
-        jz .ret
-        test word [cs:rules_hi], RULE_HI_INT
         jz .ret
         cmp dl, WIZARD_LAST
         jbe .wizard
@@ -9894,8 +9837,8 @@ int_learn:
 ; RULE_NEW_SPELLS is on): another it can't (AX 0, PROBE_LEARN_REFUSED's LEARN_NOT_ITS_TEXT, the
 ; scroll kept). First a d100 against its chance to read languages (READ_LANG, the Loader's): above
 ; it, the scroll isn't read (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID
-; takes the spell back and says LEARN_UNREAD_TEXT). Read, with RULE_HI_INT a d100 against INT's
-; chance (INT_CHANCE; no most a level: its spells are few) as INT_LEARN's; without it, learnt. The
+; takes the spell back and says LEARN_UNREAD_TEXT). Read, a d100 against INT's chance
+; (INT_CHANCE; no most a level: its spells are few) as INT_LEARN's (always on). The
 ; try is told to the Loader (LEARN_SEQ..., LEARN_READ). DS the game's; others kept.
 shinobi_read:
         or ax, ax
@@ -9913,10 +9856,7 @@ shinobi_read:
         call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]
-        test word [cs:rules_hi], RULE_HI_INT
-        jnz .rate
-        xor al, al                      ; (no INT roll)
-.rate:  mov [cs:learn_chance], al
+        mov [cs:learn_chance], al
         mov si, SHINOBI_SPELLS          ; one of its spells?
 .its:   cmp [cs:si], dl
         je .new
@@ -10531,8 +10471,6 @@ wp_classes:
         jnz .class
         or al, al               ; (a Battle Mage, Crusader or Mind Warrior, with weapon specialization: a warrior here)
         jnz .out
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .out
         push ax
         call kit_made
         cmp al, KIT_BATTLE_MAGE
@@ -10549,11 +10487,9 @@ wp_classes:
         ret
 
 probe_wp_shown:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp ax, 8
         je .ret
-        call wp_rules
-        jz .ret
         push bp
         mov bp, sp
         push bx
@@ -10592,8 +10528,6 @@ probe_wp_shown:
 ; kits, goes back to the disciplines.
 probe_wp_class:
         mov cx, 1
-        call wp_rules
-        jz .ret
         push eax                ; (the classes changed: no kit; the routine runs after every click
         push es                 ;   on the screen)
         push bx
@@ -10678,7 +10612,7 @@ probe_wp_class:
 .out:   pop es
         pop bx
         pop ax
-.ret:   iret
+        iret
 
 ; PROBE_RACE_PANEL: INT VEC_RACE_PANEL replaces "add sp,6" (3 bytes: INT; DSUN.EXE 63403h) in the
 ; creation screen's routine for a new race or sex, after its call (63C95h) that gives the
@@ -10694,8 +10628,6 @@ probe_race_panel:
         push word [cs:rp_fl]
         push word [cs:rp_cs]
         push word [cs:rp_ip]
-        call wp_rules
-        jz .ret
         sti
         pushad
         push es
@@ -10720,7 +10652,7 @@ probe_race_panel:
         call far [cs:wp_far]
 .done:  pop es
         popad
-.ret:   iret
+        iret
 
 rp_ip   dw 0
 rp_cs   dw 0
@@ -10752,8 +10684,6 @@ wp_click:
         jne .which
         mov byte [cs:kit_keep], 1
 .which: pop bx
-        call wp_rules
-        jz .game
         call wp_harvest
         mov ax, [cs:wp_button]
         cmp ax, KIT_VIEW
@@ -11269,8 +11199,6 @@ kit_redraw:
         cmp byte [cs:kit_reroll_due], 0
         je .hp
         call kit_reroll
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .thac0
         call cr_age_draw
         jmp .thac0
 .hp:    mov si, 0x3F0
@@ -11467,7 +11395,7 @@ probe_el_level:
 ; (as kits.spell_spheres). The flags of the test go back to the JZ after (RETF 2: the interrupt's own
 ; dropped), interrupts on again.
 probe_el_know:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push eax
         push ecx
         push bx
@@ -11595,7 +11523,7 @@ av_heal:
 ; the DUAL window (866C7h, for member [BP+6]) greys those it can't: AX 0 for a class one of its
 ; kits bars (KIT_AT, asleep too; KIT_BANS, kits.DUAL_BANS). The test's flags back to the JZ (RETF 2).
 probe_dual_ban:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         call dual_spheres
         or ax, ax
         jz .out
@@ -11685,7 +11613,7 @@ SPH_WATER_ROW equ 3
 SPH_ABORT equ 0x86BC5 - 0x86B68         ; (the return, less the window's close after a change)
 SPH_WHO   equ 0x86BDC - 0x86BC5         ; ("mov ax,0348h" operand, past the return)
 probe_sphere:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp byte [cs:sph_healer], 0
         je .ban
         mov ax, SPH_WATER_ROW
@@ -11885,8 +11813,6 @@ wp_colour  dd 0
 wp_help    dd 0
            dw WP_CALL_BUTTON & 0xFFFF
 wp_button_fn dd 0
-           dw WP_CALL_REDRAW & 0xFFFF
-wp_redraw  dd 0
            dw WP_CALL_MARK & 0xFFFF
 wp_mark_fn dd 0
            dw WP_CALL_BACKDROP & 0xFFFF
@@ -12113,10 +12039,9 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
 ; XP_NEED: EAX the XP class row SI (1-8: cleric, druid, fighter, gladiator, preserver,
 ; psionicist, ranger, thief, as the game's XP table and View Character's copy number them) needs
 ; at level index CX (the entry the game reads: the level the character has), EAX coming in as the
-; game's table word: the game's x100, or with RULE_HI_TABLES AD&D's (levels 0-13). Others kept.
+; game's table word: AD&D's (levels 0-13; RULE_HI_TABLES, always on), past them the game's x100.
+; Others kept.
 xp_need:
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .game
         cmp si, 8
         ja .game
         or si, si
@@ -12172,11 +12097,9 @@ probe_xp:
 ; PROBE_PRIEST_THAC0: INT VEC_PRIEST_THAC0 replaces "mov [bp-2],ax" (3 bytes: INT + NOP; DSUN.EXE
 ; 876ABh) in the game's THAC0 routine, AX what a class group takes off 20 at its level: (level - 1)
 ; x the group's factor / 12, the groups (CX 0-3) priest (8), warrior (12), wizard (4), rogue (6),
-; their levels the bytes at [BP-0Ah] + CX x 2. With RULE_HI_TABLES a priest's is AD&D's, 2 for
+; their levels the bytes at [BP-0Ah] + CX x 2. A priest's is AD&D's (RULE_HI_TABLES), 2 for
 ; every 3 levels (20, 20, 20, 18, 18, 18, 16...); the others are AD&D's already.
 probe_priest_thac0:
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .done
         or cx, cx
         jnz .done
         push bx
@@ -12202,11 +12125,12 @@ probe_priest_thac0:
 ; PROBE_ADND_SLOTS: INT VEC_ADND_SLOTS replaces "nop / push cs / call 5E4C2h" (5 bytes: INT + 3
 ; NOPs; DSUN.EXE 5E240h) where the game's slot routine asks one class's slots at a spell level:
 ; the arguments pushed (the class, a near pointer in SS to its level and WIS, the spell level),
-; and the routine's AX its count from both (level and WIS rules). With RULE_HI_TABLES, for a
+; and the routine's AX its count from both (level and WIS rules). AD&D's tables (always on): for a
 ; cleric, druid or preserver, AD&D's slots for its level (ADND_SLOTS) and the game's for its WIS
-; alone (the routine called with the level 0); the others', and with the rule off, the game's.
+; alone (the routine called with the level 0); the others', the game's.
 SLOT_CALL equ 0x5E4C2 - 0x5E242   ; the routine, from the INT's return
 probe_adnd_slots:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; +2 the INT's IP, +4 CS, +6 flags; +8 the class, +0Ah the
         push bx                 ; pointer, +0Ch the spell level
@@ -12215,8 +12139,6 @@ probe_adnd_slots:
         mov si, [bp + 0x0A]
         mov cx, [ss:si]         ; (CL the level, CH WIS)
         mov bx, [bp + 8]
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .game
         cmp bx, 11
         je .wizard
         cmp bx, 8
@@ -12291,7 +12213,8 @@ probe_adnd_slots:
         pop cx
         pop bx
         ret
-; AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids), then wizards
+; (ADND_SLOTS, AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids),
+; then wizards; in the tail, read through TAIL_SEG)
 SLOT_LEVELS equ 12
 
 ; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py):
@@ -12303,8 +12226,6 @@ SLOT_LEVELS equ 12
 CHA_PRICE_FIRST equ 18          ; (prices.CHA_FIRST)
 CHA_PRICE_STEPS equ 8           ; (to CHA 25)
 cha_price:
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES
-        jz .out
         cmp cx, 9999
         je .out
         jcxz .out
@@ -12409,15 +12330,9 @@ probe_xp_next:
         jz .next
         cmp si, 8
         ja .next
-        mov cl, 9               ; at the level cap (as PROBE_LEVEL): next
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .nine
-        call level_room
+        call level_room         ; at the level cap (as PROBE_LEVEL): next
         jnc .next
-        jmp .below
-.nine:  cmp al, cl
-        je .next
-.below: mov ch, al
+        mov ch, al
         imul ax, si, 40
         push si
         movzx si, ch
@@ -12427,7 +12342,7 @@ probe_xp_next:
         pop si
         push cx
         movzx cx, ch
-        call xp_need            ; (AD&D's, with RULE_HI_TABLES)
+        call xp_need            ; (AD&D's tables, always on)
         pop cx
         cmp eax, [bp - 6]
         jne .next
@@ -12706,7 +12621,7 @@ probe_script_rand:
 ; the first melee weapon held; 7ABC4h, the first worn arm, leg or chest piece that fails):
 ; a weapon on a d20 under 8 less its plus; armour with no magical power (the item's +0Fh, as
 ; the game's weapon breaking reads it) at once, without a roll, else on a d20 under 10 less
-; that byte. With RULE_ITEM_SAVES the item needs the lower (the easier) of the game's number
+; that byte. The item needs (RULE_ITEM_SAVES, always on) the lower (the easier) of the game's number
 ; and AD&D's save against acid for its material (the DMG's table: wood 8, bone 11, metal 13,
 ; leather 10, cloth 12; glass's 5 for stone and obsidian), less its plus, and 1 less again
 ; for a magical power. Each check is recorded (kind KIND_ITEM: the d20 in the low byte, the
@@ -12728,8 +12643,6 @@ probe_item_weapon:
         mov di, si
         imul di, di, 0x0A
         mov bx, [bp+di-0x320]
-        test word [cs:rules], RULE_ITEM_SAVES
-        jz .log
         call adnd_needed
         cmp cx, dx
         jge .log
@@ -12739,34 +12652,14 @@ probe_item_weapon:
 
 ; PROBE_ITEM_SKIP: INT VEC_ITEM_SKIP replaces "cmp word [bp-2],0" (4 bytes: INT + 2 NOPs;
 ; 7AC45h) before the game's "jz <destroyed>": [BP-2] the armour's magical power, SI its entry
-; in the list at BP-322h (the item at BP-31Eh + SI*0Ah). ZF as the game's (destroyed without a
-; roll, recorded so), or with RULE_ITEM_SAVES clear: it rolls.
+; in the list at BP-322h (the item at BP-31Eh + SI*0Ah). ZF clear: it rolls (RULE_ITEM_SAVES,
+; always on; the game's destroyed without a roll gone with its switch).
 probe_item_skip:
         push bp
         mov bp, sp
         and word [bp+6], ~0x40          ; (the flags IRET takes back)
         pop bp
-        test word [cs:rules], RULE_ITEM_SAVES
-        jnz .roll
-        cmp word [bp-2], 0
-        jne .roll
-        push bp
-        mov bp, sp
-        or word [bp+6], 0x40
-        pop bp
-        push si
-        push ax
-        push bx
-        push cx
-        push di
-        mov di, si
-        imul di, di, 0x0A
-        mov bx, [bp+di-0x31E]
-        xor ax, ax                      ; no roll
-        mov dx, 21                      ; (any d20 is under it)
-        mov cx, ITEM_ARMOUR
-        jmp item_record
-.roll:  iret
+        iret
 
 ; PROBE_ITEM_ARMOUR: INT VEC_ITEM_ARMOUR replaces "mov dx,0Ah / sub dx,[bp-2]" (6 bytes: INT
 ; + 4 NOPs; 7AC59h), AX the d20, [BP-2] the armour's magical power, SI as for PROBE_ITEM_SKIP.
@@ -12785,8 +12678,6 @@ probe_item_armour:
 .game:  mov di, si
         imul di, di, 0x0A
         mov bx, [bp+di-0x31E]
-        test word [cs:rules], RULE_ITEM_SAVES
-        jz .log
         call adnd_needed
         cmp cx, dx
         jge .log
@@ -13554,6 +13445,8 @@ cp_follow:                              ; (the game's timer, while a scene plays
         test byte [cs:tick_count], 3    ;   with the pointer between its steps, 30 times a second,
         jnz .out                        ;   and drawn afresh 7 times, as a still scene fades in:
         pusha                           ;   the game sets its palette with interrupts off)
+        call vga_latched
+        jnz .same                       ; (the game copying through the latches: next time)
         test byte [cs:tick_count], 15
         jz .fresh
         mov ax, 3
@@ -13568,6 +13461,32 @@ cp_follow:                              ; (the game's timer, while a scene plays
 .fresh: call cp_draw
 .same:  popa
 .out:   ret
+; VGA_LATCHED: ZF clear while the game writes through the VGA's latches (the graphics controller in
+; write mode 1-3, or a bit mask other than FFh: a copy of the screen within video memory under way),
+; where a read of the screen from the timer (CP_PASS keeping what is under the arrow) would load
+; them anew and the game's next write put the arrow's pixels in its copy. The index register kept;
+; AX, DX changed.
+vga_latched:
+        mov dx, 0x3CE
+        in al, dx
+        push ax                         ; (the index the game had)
+        mov al, 5
+        out dx, al
+        inc dx
+        in al, dx
+        mov ah, al                      ; (the mode)
+        dec dx
+        mov al, 8
+        out dx, al
+        inc dx
+        in al, dx                       ; (the bit mask)
+        dec dx
+        and ah, 3
+        not al
+        or ah, al                       ; (ZF: write mode 0, every bit)
+        pop ax
+        out dx, al
+        ret
 cp_put:
         push es
         call cine_where
@@ -14526,9 +14445,7 @@ stab_times:
         pop ax
         jne .rule
         inc ax                          ; (an Assassin: one more)
-.rule:  test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
-        jz .whole
-        cmp word [bp - 0x14], 0
+.rule:  cmp word [bp - 0x14], 0            ; (Thieves as in AD&D: the backstab's dice too)
         je .first
         mov ax, 1                       ; (the round's second attack: no backstab, as in AD&D)
         jmp .whole
@@ -14560,8 +14477,6 @@ enl_site:
         imul ax, ax, 10
         movsx eax, ax
         add eax, 100                    ; (the percent)
-        test word [cs:rules_hi], RULE_HI_ENLARGE
-        jz .whole
         cmp byte [cs:enl_known], 0
         je .whole
         movsx ebx, word [cs:stab_dice]
@@ -14598,8 +14513,6 @@ enl_site:
 ; next time) and AX the hit points from them, at most 1000; a clock gone back (a game loaded) none.
 regen_secs dd 0, 0, 0, 0
 regen_site:
-        test word [cs:rules_hi], RULE_HI_CON
-        jz .game
         push ebx
         push si
         push es
@@ -14631,7 +14544,7 @@ regen_site:
 .out:   pop es
         pop si
         pop ebx
-.game:  mov dx, cx
+        mov dx, cx
         imul dx, dx, 0x3A
         iret
 
@@ -14646,8 +14559,6 @@ con_save:
         push es
         mov bx, ax
         mov al, [bx + 0x810]
-        test word [cs:rules_hi], RULE_HI_CON
-        jz .done
         push ax
         mov ax, [bp + 6]
         call combatant_creature
@@ -15359,9 +15270,9 @@ flame_site:
         pop ax
 .out:   iret
 
-; THE SPELLS AND PSIONICS AS THE MANUAL DESCRIBES THEM, GROUP 3 (gamepatch.SPELLS_MANUAL; each site
-; only in the game's copy with the switch on, so the code needs no test of it, but MANUAL_ON's
-; places in code that runs either way). The dice log's lines: KIND_MANUAL (MN_REC).
+; THE SPELLS AND PSIONICS AS THE MANUAL DESCRIBES THEM, GROUP 3 (gamepatch.SPELLS_MANUAL, always in
+; the game's copy since its switch went: MANUAL_ON, the test of it, gone too). The dice log's lines:
+; KIND_MANUAL (MN_REC).
 KIND_MANUAL equ 14
 MN_CHILL   equ 1                ; (MN_FRAME: +6 the creature, then) Chill Touch on an undead: +8 the
                                 ;   caster, +0Ah the rounds Afraid
@@ -15401,20 +15312,6 @@ mn_rec:
         mov cx, 4
         mov word [cs:kind], KIND_MANUAL
         jmp rec_frame
-
-; MANUAL_ON: ZF set when the game's copy has the spells as the manual describes them, told as the
-; dice log tells it (game.spells_manual) by Stinking Cloud's record's dice made 1d4 (41h, gamepatch's
-; "stinking_cloud_dice"), for code that runs either way. DS the game's; all registers kept.
-manual_on:
-        push es
-        push ax
-        mov ax, ds
-        sub ax, SPELLS_FROM_DS
-        mov es, ax
-        cmp byte [es:SPELL_RECS + STINKING_CLOUD * 0x20 + 4], 0x41
-        pop ax
-        pop es
-        ret
 
 ; BLUR_SITE (gamepatch "blur_save"): the save modifiers' Barkskin test, "les bx,[bp+0Ah] / test
 ; byte [es:bx+7],2 / jz / inc si" (79DC0h; 11 bytes; [BP+0Ah] the target's effects' bits, far; SI the
@@ -15592,12 +15489,10 @@ strength_dice:
 ; GR_SHADOWED: CF set when effect entry ES:BX (the game's table of active effects: BX its index x 10,
 ; AL its number) counts for nothing, as the manual has it: a Strength (67) or an Adrenalin Control
 ; (66) where its creature has a bigger one of either, a Cat's Grace (54) where it has a bigger Cat's
-; Grace (as big: the first counts). With the spells as the manual has them (MANUAL_ON) only. DS the
+; Grace (as big: the first counts). (The spells as the manual has them.) DS the
 ; game's; all registers kept.
 gr_shadowed:
         pusha
-        call manual_on
-        jnz .no
         mov ah, GRACE_EFFECT
         cmp al, ah
         je .group
@@ -15821,8 +15716,7 @@ chill_undead:
         jmp ovr_back
 
 ;-------------------------------------------------------------------------------------------------
-; DUAL-CLASSING AS THE MANUAL HAS IT (RULE_HI_DUAL, the Loader's "dual_class"; the sites always in
-; the game's copy, each doing the game's compare with the rule off).
+; DUAL-CLASSING AS THE MANUAL HAS IT (RULE_HI_DUAL, always on; the sites always in the game's copy).
 ;
 ; DUAL_LEVEL (gamepatch "dual_level_menu", "dual_level_view", "dual_level_window"): the two portrait
 ; menus' test for DUAL (70CE4h, 70F03h) and the DUAL window's (86F58h, in 86E94h), "cmp byte
@@ -15834,11 +15728,8 @@ dual_level:
         pushad
         push es
         mov di, sp
-        mov al, DUAL_LEAST_LEVEL
-        test word [cs:rules_hi], RULE_HI_DUAL
-        jz .cmp
-        inc ax
-.cmp:   cmp [es:bx + 0x24], al
+        mov al, DUAL_LEAST_LEVEL + 1    ; (the manual's third, the game's second gone with the switch)
+        cmp [es:bx + 0x24], al
 dual_flags:
         jmp ns_flags_iret
 
@@ -15863,11 +15754,7 @@ dual_new:
         mov cx, di
 dual_primes:
         mov di, sp
-        test word [cs:rules_hi], RULE_HI_DUAL
-        jnz .rule
-        cmp [es:bx + 0x22], dl          ; (the game's)
-        jmp dual_flags
-.rule:  test cx, cx
+        test cx, cx
         jnz .class
         les bx, [0x1661]
         imul ax, si, 0x47
@@ -15901,7 +15788,7 @@ DUAL_CLASSES equ $ - dual_primes_of
 
 ;-------------------------------------------------------------------------------------------------
 ; THE MONSTERS AS THE MANUAL DESCRIBES THEM (gamepatch.SPELLS_MANUAL, group 4: each site only in the
-; game's copy with the switch on; DJINN_TURN, in code that runs either way, asks MANUAL_ON). The kinds'
+; game's copy, always, since its switch went). The kinds'
 ; properties and classes are the patches' data; kinds 38-40 (no creature of the game's had them) the
 ; Styr's, the Djinn's and the Tari's (the Loader's copy of SEGOBJEX, monsters.MANUAL_MONSTERS).
 ;
@@ -16008,7 +15895,7 @@ tari_bite:
         jmp ns_flags_iret
 
 ; DJINN_TURN: PROBE_MOVE's end, at the start of a creature's turn in a fight (57566h: DI the combatant,
-; SI its creature): a djinn (kind 39) with the monsters as the manual describes them (MANUAL_ON), at its
+; SI its creature): a djinn (kind 39) with the monsters as the manual describes them, at its
 ; first turn of a fight (DJ_DONE), "uses illusions and becomes invisible": Improved Invisibility's
 ; Invisible (23, spell 46) for 4 rounds + its 10 levels, and Mirror Image's Mirror Images (25, spell 19)
 ; 1d4 + 3 (a level in three), on itself through 598:3Eh (76442h), in a frame the overlay manager can fix
@@ -16024,8 +15911,6 @@ djinn_turn:
         sti
         pushad
         push es
-        call manual_on
-        jne .out
         cmp di, MAP_COUNT
         jae .out
         imul ax, si, 0x3A
@@ -16131,8 +16016,6 @@ rs_rec:
 ; RP_PASS, in a frame the overlay manager can fix up (the casts load the spells' overlay).
 rest_pre:
         mov word [bp - 0x10], 0         ; (the move replaced)
-        test word [cs:rules_hi], RULE_HI_REST
-        jz .iret
         cmp word [bp + 6], 0
         jne .iret
         call pp_fighting
@@ -16594,13 +16477,9 @@ save_sum:
         mov byte [cs:sv_nat], 1
         cmp ax, 40
         je .sum
-        cmp ax, 20
-        jne .not
-        test word [bp - 0x20], 0x86
-        jz .sum
-        test byte [cs:rules], RULE_NO_DOUBLE ; (no doubling: PROBE_DOUBLE)
-        jnz .sum
-.not:   mov byte [cs:sv_nat], 0
+        cmp ax, 20              ; (against fire, cold or electricity too: never doubled, PROBE_DOUBLE)
+        je .sum
+        mov byte [cs:sv_nat], 0
 .sum:   add ax, cx
         call size_spared        ; (the creature size rule: Hold and Charm Person, a large target)
         cmp ax, SAVE_MOST
@@ -16924,9 +16803,7 @@ CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after
 MN_TANGLE    equ 10
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
 cah_more:                           ; AX the attacks a round (halves) with item BX: 2 more for
-        test word [cs:rules_hi], RULE_HI_CAHULAKS ;   the cahulaks with the rule. Others kept.
-        jz .ret
-        push ax
+        push ax                     ;   the cahulaks. Others kept.
         mov ax, bx
         call item_is_cahulaks
         pop ax
@@ -16953,15 +16830,10 @@ item_is_cahulaks:                   ; ZF if item AX (its number) is of the cahul
         ret
 .no:    or sp, sp                   ; (ZF clear)
         ret
-two_cahulaks:                       ; ZF with the rule if item [BP+0Ah] (595ECh's) is the cahulaks
+two_cahulaks:                       ; ZF if item [BP+0Ah] (595ECh's) is the cahulaks
         push ax
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .no
         mov ax, [bp + 0x0A]
         call item_is_cahulaks
-        pop ax
-        ret
-.no:    or sp, sp
         pop ax
         ret
 cah_adjust:                         ; (PROBE_TWO's, the hand's base and DEX's set) DX the main
@@ -17001,8 +16873,6 @@ cah_two:
 cah_swing:
         mov word [bp - 4], 0
         call size_dice          ; (the creature size rule: a large target's dice, the call's first swing)
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .out
         cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set)
         jl .out
         cmp word [bp + 0x16], 1
@@ -17032,9 +16902,7 @@ cah_swing:
 ; CAH_HIT ("mov byte [bp-15h],0", 58B54h; 4 bytes: a weapon's hit has done damage): the cahulaks'
 ; tangle (see CAHULAKS), and the staff sling's stinkpot (STINKPOTS).
 cah_hit:
-        mov byte [bp - 0x15], 0
-        test word [cs:rules_hi], RULE_HI_CAHULAKS ; (Weapon traits: the cahulaks', the stinkpot, the hook)
-        jz .out
+        mov byte [bp - 0x15], 0     ; (Weapon traits: the cahulaks', the stinkpot, the hook)
         cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set: audit 2026-11-11)
         jl .out
         cmp word [bp + 0x14], STAFF_SLING
@@ -17213,7 +17081,7 @@ stink_hit:
 stink_none times 10 db 0
 
 ; STINK_SIDES: the staff sling's type's (0) damage dice's sides (+0Ch) as the rule has them: the
-; stinkpot's 3 with it, the game's 4 without; only in the table TYPES_FILL last saw read in (TYPES_PTR
+; stinkpot's 3 (the game's 4; always on); only in the table TYPES_FILL last saw read in (TYPES_PTR
 ; still it), and only over a 3 or a 4. DS the game's; all registers kept.
 stink_sides:
         push es
@@ -17228,10 +17096,7 @@ stink_sides:
         cmp ax, [cs:types_ptr + 2]
         jne .out
         mov al, STINK_SIDES
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jnz .set
-        mov al, SLING_SIDES
-.set:   mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
+        mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
         cmp ah, STINK_SIDES
         je .put
         cmp ah, SLING_SIDES
@@ -17267,6 +17132,7 @@ AMMO_TURN_SITE equ NS_IMAGE + 117 ; 58C38h: the attacks spent: the turn over, or
 AMMO_OK1_SITE equ NS_IMAGE + 118  ; 5843Fh: the attack command's target still Okay? (AMMO_OKAY)
 AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
+INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -17277,11 +17143,10 @@ reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REAC
              dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
 REACH_RETS   equ ($ - reach_rets) / 4
 reach_site:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         mov ax, [bp - 0x16]
         cmp ax, 2
         jne .out
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .out
         pusha
         push es
         call reach_caller
@@ -17479,9 +17344,7 @@ is_large:                           ; CF if combatant AX is large (see SIZE). DS
         popa
         stc
         ret
-size_dice:                          ; (CAH_SWING's: the call's first swing with an item, the rule on)
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .ret
+size_dice:                          ; (CAH_SWING's: the call's first swing with an item)
         pusha
         mov ax, [bp - 0x14]
         cmp ax, [bp - 0x0A]
@@ -17517,20 +17380,17 @@ size_dice:                          ; (CAH_SWING's: the call's first swing with 
         mov [bp - 0x10], ax
         movsx ax, byte [cs:si + large_dice + 2]
         add [bp - 0x12], ax
-        test word [cs:rules], RULE_SPECIALIZE ; (a grand master's: the next greater die, as its
-        jz .done                    ;   own dice's at PROBE_SPEC_DAMAGE, which these replace)
-        call spec_of
+        call spec_of                ; (a grand master's: the next greater die, as its own dice's
+                                    ;   at PROBE_SPEC_DAMAGE, which these replace)
         cmp dl, SPEC_GRAND
         jne .done
         mov ax, [bp - 0x10]
         call next_die
         mov [bp - 0x10], ax
 .done:  popa
-.ret:   ret
+        ret
 size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST for Hold or Charm
-        test word [cs:rules_hi], RULE_HI_SIZE ;   Person on a large target ([BP+6]; spell [BP+0Ah])
-        jz .ret
-        push bx
+        push bx                     ;   Person on a large target ([BP+6]; spell [BP+0Ah])
         mov bx, [bp + 0x0A]
         cmp bx, 2
         je .spell
@@ -17563,7 +17423,7 @@ size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST 
         jnc .out
         mov ax, SAVE_MOST
 .out:   pop bx
-.ret:   ret
+        ret
 ; SIZE_LINE ("inc word [bp-2]", 72AA7h; 3 bytes) in the routine writing a weapon's lines (7286Fh: an
 ; item box's, [BP-6] its creature 0; the inventory screen's and the Look box's, its creature's), its
 ; damage line just drawn from SS:[BP-2Eh] ("1D8-1"; SI the item type). With the size rule, an item
@@ -17574,8 +17434,6 @@ SL_DRAW  equ 0x72AA0 - 0x72AAA      ; (the text routine's far address in that ca
 SL_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
 size_line:
         inc word [bp - 2]
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .ret
         cmp dword [bp - 6], 0
         jne .ret                    ; (an item box's only)
         sti                         ; (interrupts on while the game's text routine draws: the INT
@@ -17706,8 +17564,6 @@ sl_parse:
 size_pre:
         pushad
         push es
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .push
         cmp si, SHILLELAGH_TYPE
         jne .push
         mov ax, 0x0601              ; 1D6, its bonus 1 more
@@ -17795,16 +17651,16 @@ sl_draw   dd 0
 sl_dice   dw 0                      ; (the large dice: the count, then the sides)
 sl_bonus  dw 0
 
-; HELD (RULE_HI_HELD, the Loader's rule "held_hit"): AD&D's held target (the 2nd edition PHB's Table
+; HELD (RULE_HI_HELD, always on): AD&D's held target (the 2nd edition PHB's Table
 ; 51, "defender sleeping or held: automatic": the attack automatically hits and causes normal damage).
 ; The game rolls the d20 as ever, and doubles a blow's damage on a helpless target (Paralyzed, effect
 ; 34, or Out Cold, its creature's +1Ch 3): the attack routine (5883Ah) hands the damage call its damage
-; x2 too (58B0Dh), which 79BF9h takes for one. With the rule:
+; x2 too (58B0Dh), which 79BF9h takes for one. DSCLOG:
 ; - HELD_HIT ("cmp word [bp-6],14h", 589E9h; 4 bytes: the natural 20's test, "je 58A00h" the hit after
-;   it): ZF in the INT's frame for that JE, set on the game's 20 or, with the rule, a helpless target
+;   it): ZF in the INT's frame for that JE, set on the game's 20 or a helpless target
 ;   (whatever the d20: a 1 too);
 ; - HELD_DAMAGE ("mov ax,[bp-4] / shl ax,1", 58B0Dh; 5 bytes: what a helpless target takes, pushed
-;   next): AX the damage, doubled only without the rule.
+;   next): AX the damage, never doubled (the game doubles it).
 ; Both sides alike: a monster's blow on a held party member too. The dice log says it (dicelog.py).
 HELD_OUT_COLD equ 3                 ; (a creature's +1Ch: Out Cold)
 held_hit:
@@ -17820,12 +17676,9 @@ held_hit:
 .out:   pop bx
         pop ax
         iret
-held_damage:
+held_damage:                        ; (normal damage: the game's doubling gone with the switch)
         mov ax, [bp - 4]
-        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; (a byte's test: a word's with 8000h is how
-        jnz .out                    ;   the unit tests find PROBE_HP_BEST)
-        shl ax, 1
-.out:   iret
+        iret
 ; The weapon attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows (or stones) left,
 ; "Out of ammo" with none, and once its attacks are made marks the attacker's attacks for the round
 ; spent (+181h 63h at 58C45h, "cmp ax,[bp-8] / jl" at 58C38h), which ends the turn (5844Eh): so a
@@ -17906,16 +17759,14 @@ ammo_okay:
         iret
 ammo_real dw -1                     ; (AMMO_CAP's: the round's attacks before the cut; -1 none)
 ammo_out dw -1                      ; (AMMO_TURN's: the party member whose shots were cut, attacks left)
-held_now:                           ; CF with the rule on and the attack's target (TARGET) helpless:
-        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; Paralyzed or Out Cold. DS the game's; all kept.
-        jz .ret                     ; (TEST clears CF)
-        push ax
+held_now:                           ; CF if the attack's target (TARGET) is helpless:
+        push ax                     ;   Paralyzed or Out Cold. DS the game's; all kept.
         mov ax, [TARGET]
         call helpless_of
         cmp al, 1                   ; (CF: none)
         cmc
         pop ax
-.ret:   ret
+        ret
 helpless_of:                        ; AL: combatant AX helpless to the game, 1 Paralyzed, 2 Out Cold, else
         push bx                     ;   0 (79B0Ch's and 79C46h's test). DS the game's; others kept.
         push cx
@@ -17947,11 +17798,9 @@ cah_extra  dw 0                     ; how much worse the off head's swing is tha
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
 rest_hp:
-        test word [cs:rules_hi], RULE_HI_REST
-        jz .game
         cmp word [bp + 6], 0
         je .rule
-.game:  mov [es:bx], ax
+        mov [es:bx], ax
         iret
 .rule:  pushad
         push es
@@ -18250,11 +18099,11 @@ amulet_mr:
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
 ; movement in a fight: unused, free for a rule)
 RULE_HELMS equ 1
-RULE_TWO_WEAPONS equ 4
-; (8: once the spell save's own, which the Loader alone acts on: free, the spell save now Saving throws
-;   against spells with RULE_NO_DOUBLE)
+RULE_TWO_WEAPONS equ 4          ; (always on: no code tests it)
+; (8: once the spell save's own, which the Loader alone acts on: free, the spell save now part of
+;   Saving throws against spells, RULE_NO_DOUBLE, always on)
 RULE_NO_DOUBLE equ 16
-RULE_NEW_SPELLS equ 32          ; three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW SPELLS)
+RULE_NEW_SPELLS equ 32          ; the sixteen new spells, wizards' and priests' (NEW SPELLS: NS_COUNT)
 RULE_STEALTH equ 64             ; (the Loader rolls the hiding and moving silently, and sets STEALTH)
 RULE_LEVEL_10 equ 128          ; class levels go up to 10, not 9
 RULE_THIEF_TABLE equ 256        ; Thieves as in AD&D: thief skills from AD&D's table and Dark Sun's DEX adjustments,
@@ -18273,8 +18122,8 @@ RULE_HI_ROLLED equ 32           ; (RULES_HI) creation's scores and hit points as
 RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' THAC0, spell slots (XP_NEED, PROBE_*)
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
-; (RULES_HI 64: once the buyback's own, now Shops as in AD&D with RULE_HI_CHA_PRICES: free)
-; (RULES_HI 128: once the backstab dice's own, now Thieves as in AD&D with RULE_THIEF_TABLE: free)
+; (RULES_HI 64: once the buyback's own, now part of Shops as in AD&D, always on: free)
+; (RULES_HI 128: once the backstab dice's own, now part of Thieves as in AD&D, always on: free)
 RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: the Loader's (aging.py; no
                                 ;   STATS age without it, so AGE_TEXT needs no test of its own)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
@@ -18316,24 +18165,14 @@ probe_move:
 ; bytes: INT + 8 NOPs) in the routine that gives an attack's to-hit adjustment for two weapons
 ; ready, after the call that reads the attacker's DEX in the game's initiative table (AX), for
 ; a non-ranger; [BP+0Ah] is the attack's item, CX the attacker's object. Leaves the
-; adjustment in DX: the game's, -AX and no less than 0; with RULE_TWO_WEAPONS, AD&D's: -2 (the
+; adjustment in DX: AD&D's (always on): -2 (the
 ; item in the right hand) or -4 (in the left) plus AX (the same numbers as the reaction
 ; adjustment), no more than 0, and only with a melee weapon in the other hand too (else 0:
 ; a two-handed weapon, a shield, a sling or bow in the missile slot don't count).
 RIGHT_HAND equ 3
 LEFT_HAND  equ 10
 probe_two:
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jnz .rule
-        call two_cahulaks       ; (the cahulaks' rule: AD&D's numbers for them, whatever this one)
-        je .rule
-        neg ax
-        mov dx, ax
-        or dx, dx
-        jge .done
-        xor dx, dx
-.done:  iret
-.rule:  push bx
+        push bx
         push es
         push cx
         mov [cs:t_adjust], ax
@@ -18407,18 +18246,15 @@ t_base   dw 0
 t_adjust dw 0
 
 ; PROBE_DOUBLE: INT VEC_DOUBLE replaces "shl al,1" (2 bytes), where the saving throw doubles
-; its d20 against fire, cold and electricity spells; not with RULE_NO_DOUBLE.
+; its d20 against fire, cold and electricity spells: never (RULE_NO_DOUBLE, always on).
 probe_double:
-        test byte [cs:rules], RULE_NO_DOUBLE
-        jnz .done
-        shl al, 1
-.done:  iret
+        iret
 
 ; PROBE_LEVEL: INT VEC_LEVEL replaces "cmp byte es:[bx+24h],9" (5 bytes: INT + 3 NOPs) in the
 ; two places the game holds a class level (ES:BX+24h, a sheet's, BX past its start by the class's
 ; slot) against its cap of 9: where a character goes up a level (87BE6h, the slot DI; on while
 ; below it: JL) and where View Character shows the XP for the next level (67D08h, the slot DX, its
-; copy of the sheet; none at it: JE). With RULE_LEVEL_10 the cap is XP_CAP's share (LEVEL_ROOM):
+; copy of the sheet; none at it: JE). The cap is (RULE_LEVEL_10, always on) XP_CAP's share (LEVEL_ROOM):
 ; the game's XP tables, hit points, THAC0, saves, spell slots and thief skills all go on past 9
 ; (the tables have 20 levels, the rest are formulas). The flags as the compare's: below the cap
 ; as "cmp 0,1", at it as "cmp 9,9". RETF 2 keeps them.
@@ -18428,12 +18264,8 @@ LV_UP_ROWS equ 0x87BE8 - 0x87B89 ; the level up's "mov ax,seg" immediates, back 
 LV_UP_XP   equ 0x87BE8 - 0x87BB0 ;   the class rows' table (+0CAh), the XP table's (+27Ch)
 LV_VIEW_XP equ 0x67D36 - 0x67D0A ; View Character's XP table's, on from the return
 probe_level:
-        sti
-        test byte [cs:rules], RULE_LEVEL_10
-        jnz .cap
-        cmp byte [es:bx+0x24], 9
-        retf 2
-.cap:   pushad
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
+        pushad
         push fs
         push gs
         mov bp, sp
@@ -18547,15 +18379,13 @@ level_room:
 
 ; A thief's hit dice. The game keeps one "dice up to this level" for thieves and psionicists
 ; together (9: after it, +2 a level), but an AD&D thief rolls a d6 up to 10th (a psionicist
-; stops at 9th). With RULE_LEVEL_10 a thief's goes to 10, in the two places it counts.
+; stops at 9th). A thief's goes to 10 (RULE_LEVEL_10, always on), in the two places it counts.
 THIEF_CLASS equ 17
 ; PROBE_HD_ROLL: INT VEC_HD_ROLL replaces "mov al,es:[bx+1]" (5 bytes: INT + 3 NOPs) where a new
 ; level's hit points are a roll or the fixed gain: ES:BX the class's hit point group, the
 ; game's [BP+8] the class.
 probe_hd_roll:
         mov al, [es:bx+1]
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .done
         cmp al, 9
         jne .done
         cmp word [bp+8], THIEF_CLASS
@@ -18567,11 +18397,9 @@ probe_hd_roll:
 ; counts the levels CON's hit point bonus applies to: AL a class's level, ES:BX its group, the
 ; game's [BP-4] the sheet (far) and CX which of its classes. RETF 2 keeps the compare's flags.
 probe_hd_con:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push dx
         mov dl, [es:bx+1]
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .cmp
         cmp dl, 9
         jne .cmp
         push es
@@ -19001,7 +18829,7 @@ probe_mc_uncon:
         sub dx, ax
         iret
 
-; CON_SHARE: with RULE_MULTI_HP, for a character of more than one class (CLASS_SHARE; SI the sheet's
+; CON_SHARE: (multiclass hit points as in AD&D, always on) for a character of more than one class (CLASS_SHARE; SI the sheet's
 ; number), CON's hit points as Demihuman Deities (TSR 1998) has a multiclassed character's: each hit
 ; die so far with CON's bonus on it, all in the total the game keeps (the sheet's +0Ah, which the
 ; game already adds each new die to and divides by the classes), the total divided by the classes.
@@ -19013,8 +18841,6 @@ LEVEL_HP_FROM_DS equ 0x4356 - 0x40B1    ; the game's hit point table: +group x 4
 LEVEL_HP_CON equ 0x52                   ;   level, then a fixed gain), +10h + class: its group
 WARRIOR_GROUP equ 1
 con_share:
-        test word [cs:rules], RULE_MULTI_HP
-        jz .ret
         push bx
         push cx
         push dx
@@ -19112,7 +18938,7 @@ con_share:
         pop dx
         pop cx
         pop bx
-.ret:   ret
+        ret
 mc_total dw 0
 mc_con   db 0
 
@@ -19133,14 +18959,12 @@ class_share:
 ; "mov ax,si / shl ax,2 / add dx,ax / mov si,dx" (9 bytes) in the game's thief skill routine,
 ; where DX is the skill's base plus the race's adjustment, SI the thief level, ES:0 the game's
 ; thief tables (the base at +skill), and the game's [BP+8] the skill, [BP-0Ch] DEX. Without
-; RULE_THIEF_TABLE (or a thief level), the game's sum (SI = DX + 4 a level), CF clear: on to
-; the game's DEX formula. With it, SI = AD&D's average for the level (THIEF_TABLE, levels past
+; a thief level, the game's sum (SI = DX + 4 a level), CF clear: on to
+; the game's DEX formula. With one, SI = AD&D's average for the level (THIEF_TABLE, levels past
 ; 13 as 13) + the race's adjustment + Dark Sun's DEX adjustment (DEX_TABLE, DEX 9-22), CF set:
 ; past the game's DEX formula, to its armour and effects (dsloader/game.py does the same sums).
 probe_thief_skill:
         sti
-        test word [cs:rules], RULE_THIEF_TABLE
-        jz .game
         cmp si, 1
         jl .game
         push ax
@@ -19208,7 +19032,7 @@ WHO_SEG equ USE_WHO_SEG          ; the segment of the character on show's number
                                 ; (the overlay's code says 0348h, which its loader relocates there)
 HALF_GIANT equ 5
 probe_two_handed:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         test word [cs:rules], RULE_HALF_GIANT
         jz .test
         push ax
@@ -19283,7 +19107,7 @@ probe_spell_text:
 ; (TU_INFO), its SPIN 1000 becomes 999 + TU_INFO (spelltexts.PICK_SPIN on). The stack check, with
 ; the routine's SP; RETF 2 keeps its flags.
 probe_chunk_id:
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp byte [cs:tu_info], TU_INFO_PICK
         jb .check
         cmp dword [bp + 6], 'SPIN'
@@ -19395,7 +19219,7 @@ probe_dos_open:
         pop cx
         pop bx
         pop ax
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push ax                 ; (the game's AX, for its own file if there's no copy)
         push ds
         push dx
@@ -19567,6 +19391,8 @@ SEG_RECORDS  equ 0x3CB4
 SEG_STACK    equ 0x3E3F
 SEG_KINDS    equ 0x3E45
 SEG_BYTES    equ 0x200
+KINDS_BYTES  equ 0x192          ; (the monster kinds' table: SEG_SPACE holds the stack and it)
+        times -((SEG_KINDS - SEG_STACK) * 16 + KINDS_BYTES > SEG_BYTES) db 0
 ; ... and the game's table of the pictures spells leave on the ground (selector 3A8h, 3C81h: 18 bytes
 ; an entry, its spell first (the damage each round the walls deal is that spell's), then a byte
 ; whose low 4 bits tell what it does (3: a wall, 1: a picture alone), then the object at +3; a
@@ -19625,7 +19451,7 @@ seg_move:
         lea ax, [bx + 0x10 + SEG_KINDS]
         cmp [es:SEL_KINDS], ax
         jne .out
-        cmp word [es:SEL_KINDS + 2], 0x192
+        cmp word [es:SEL_KINDS + 2], KINDS_BYTES
         jne .out
         lea ax, [bx + 0x10 + SEG_AREAS]
         cmp [es:SEL_AREAS], ax
@@ -19705,10 +19531,10 @@ copies:
         COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
         db 0
 
-; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
-; 138-171 psionic powers, 172-195 monsters' powers): Cat's Grace (196, 2nd level), Erdlu Claw (197,
-; 1st) and Fogbolt (198, 1st). Their records are the three after the game's, a block of 96 bytes the
-; game zeroes and never uses (its segment 3E3Fh; from 199 on is live data), and their rows in the
+; NEW SPELLS (RULE_NEW_SPELLS): sixteen spells past the game's 196 (0-68 wizard, 69-137 priest,
+; 138-171 psionic powers, 172-195 monsters' powers), the first Cat's Grace (196, 2nd level), Erdlu
+; Claw (197, 1st) and Fogbolt (198, 1st). Their records are the sixteen after the game's, the 200h
+; bytes from its segment 3E3Fh that SEG_MOVE frees (the build fails with more), and their rows in the
 ; table of spell levels (7 bytes each) are past its own too. NS_SETUP fills those in while the rule
 ; is on (and empties them while it's off): a row with the level and a wizard's mask, a record from
 ; another spell's (Strength's, Enlarge's, Charm Person's), and each one's effect's name and icon.
@@ -19781,6 +19607,11 @@ NS_ICON      equ 21000          ; a spell's icon: ICON 21000 + its number (RESOU
 NS_SHEET     equ 0x45           ; the sheet's byte with most of the bits that say it knows them
 SPHERE2_MASK equ 0x07           ;   (its low three bits the Elementalist's second sphere, 0-4)
 SPELL_RECS   equ 0x30           ; the spell records (DS - SPELLS_FROM_DS: 20h each from here)
+        ; (the new spells' records fill SEG_MOVE's room, from where the game's end: the build fails
+        ; with one more, as for the room the spell rows have before the game's data at 4010h:357h)
+        times -(SPELL_RECS + NS_FIRST * 0x20 != (SEG_STACK - SEG_RECORDS) * 16) db 0
+        times -(SPELL_RECS + (NS_FIRST + NS_COUNT) * 0x20 > (SEG_STACK - SEG_RECORDS) * 16 + SEG_BYTES) db 0
+        times -(SPELL_LEVELS + (NS_FIRST + NS_COUNT) * 7 > SPELL_ROWS_ROOM) db 0
 FLIGHTS      equ 0              ; before them the 16 flights a record's +10h names (3 bytes each:
 MISSILE_FLIGHT equ 4            ;   the object flying, a byte): Magic Missile's, and place 15,
 FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG_BOLT, in the
@@ -20680,7 +20511,11 @@ SPRAY_SITE equ NS_IMAGE + 72    ; 79F83h: Color Spray unsaved by the caster's le
 HOLD_HD_SITE equ NS_IMAGE + 73  ; 7A345h: Hold Undead on undead of more levels than its caster: immune (HOLD_HD)
 ; RL_SITES: the site RL_SITE (the byte after VEC_CR_SPELLS's INT) to its code, all registers the
 ; game's: through SITE_TAB, a word for each site from RL_SCORE (1) on, but NS_CMP's (NS_CMP_COUNT of
-; them, all NS_CMP), past the last none (IRET).
+; them, all NS_CMP), past the last none (IRET). RL_SITE is one byte for every site, so it is the
+; site's own only while interrupts are still off from the INT: a site's code that needs it (NS_CMP,
+; NS_ENTRY) reads it first, before anything turns them on or calls the game (IF_FRAME, STI, a far
+; call), and keeps what it read; the mouse's or the timer's interrupt can run the game's code
+; through another site, which sets it anew. (The read here, into BX, is before all of that.)
 rl_sites:
         push bx
         movzx bx, byte [cs:rl_site]
@@ -20845,6 +20680,7 @@ site_tab:
         site AMMO_OK1_SITE, ammo_okay
         site AMMO_OK2_SITE, ammo_okay
         site AMMO_OK3_SITE, ammo_okay
+        site INFO_HEAD_SITE, info_head
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -20886,7 +20722,7 @@ ns_cmp:
         jmp .got
 .esbx:  add bx, [ss:di + 18]    ; (the game's BX)
         mov ax, [es:bx]
-.got:   cmp byte [cs:rl_site], NS_CMP_INFO
+.got:   cmp si, ns_cmp_sites + (NS_CMP_INFO - NS_CMP) * 5 ; (its site, as read first: RL_SITES)
         jne .new
         cmp byte [cs:tu_info], 0 ; (Turn Undead's box, or the purse's: as the game has it)
         jne .cmp
@@ -21365,41 +21201,68 @@ ns_hold:
 .out:   pop bp
         iret
 ; NS_NPP: "add sp,4 / push 6 / push 27h" (7A7E9h; 7 bytes) where an undead's negative-energy
-; attack meets Negative Plane Protection on its target (7A7C5h): the charge's two arguments still
-; pushed are made the save's (6 and the record), the save then made by the game (79A71h; the
-; protection stops the attack and hurts the undead if saved). The game saved as against Vampiric
-; Touch (27h), whose record allows no save, so the protection never worked: once the records have
-; room (SEG_MOVED), as against NPP_SAVE, Vampiric Touch's record copied with a save against
-; paralysis, poison and death allowed (21h at +1Fh), AD&D's save against death magic.
+; attack meets Negative Plane Protection on its target (7A7C5h), before the game's save (79A71h,
+; called at 7A7F3h as against Vampiric Touch, 27h: the protection stops the attack and hurts the
+; undead if saved). Vampiric Touch's record allows no save, so the protection never worked. The save
+; is made here instead, through its stub (5B8:2Fh) in a frame the overlay manager can fix up, with
+; the same arguments (the target SI, DI, 27h, 6), Vampiric Touch's own record's save byte (+1Fh)
+; made 21h (a save against paralysis, poison and death allowed, AD&D's save against death magic)
+; for the call only and put back as it returns; then on at 7A7F9h ("or ax,ax"), the charge's two
+; arguments taken off and AX the save's, as the game's "add sp,4" and "add sp,8" leave them. The
+; Loader names a save against 27h whose way back is DSCLOG's this protection's (NPP_SAVE_RECORD).
+; (A copy of the record past the new spells' had been written past SEG_MOVE's room till 2026-11-18.)
 NPP_TOUCH equ 0x27
-NPP_SAVE  equ NS_FIRST + NS_COUNT ; (NS_END: past the new spells, the last of the records' room, no list's)
 NPP_SAVE_BYTE equ 0x21
+NPP_LEVEL equ 6
+NPP_ON    equ 0x7A7F9 - 0x7A7EC ; (past the game's call and its "add sp,8", less the way back)
 ns_npp:
-        push bp
-        mov bp, sp
-        mov word [bp + 10], 6
-        mov word [bp + 8], NPP_TOUCH
-        cmp byte [cs:seg_moved], 0
-        je .out
-        push ds
+        sti
+        pushad
         push es
-        pusha
+        mov bx, sp
+        add word [ss:bx + 34], NPP_ON   ; (before the call: the overlay manager may trap the way back)
         mov ax, ds
         sub ax, SPELLS_FROM_DS
-        mov ds, ax
         mov es, ax
-        mov si, SPELL_RECS + NPP_TOUCH * 0x20
-        mov di, SPELL_RECS + NPP_SAVE * 0x20
-        mov cx, 0x10
-        cld
-        rep movsw
-        mov byte [es:SPELL_RECS + NPP_SAVE * 0x20 + 0x1F], NPP_SAVE_BYTE
-        popa
+        mov [cs:npp_records], ax
+        mov al, NPP_SAVE_BYTE
+        xchg al, [es:SPELL_RECS + NPP_TOUCH * 0x20 + 0x1F]
+        mov [cs:npp_kept], al
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word NPP_LEVEL
+        push word NPP_TOUCH
+        push di
+        push si
+        th_far TH_STUB_5B8, 0x2F        ; (the save: AX 1 saved)
+        add sp, 8
+        mov es, [cs:npp_records]
+        mov cl, [cs:npp_kept]
+        mov [es:SPELL_RECS + NPP_TOUCH * 0x20 + 0x1F], cl
+        pop bp
+        pop cx                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 30], ax    ; (AX the save's, in PUSHAD's)
+        mov [ss:bx + 34], cx
+        mov [ss:bx + 36], dx
         pop es
-        pop ds
-        mov word [bp + 8], NPP_SAVE
-.out:   pop bp
+        popad
+        push bp                 ; the INT's frame moved up over the charge's two arguments
+        mov bp, sp
+        push word [bp + 6]
+        pop word [bp + 10]
+        push word [bp + 4]
+        pop word [bp + 8]
+        push word [bp + 2]
+        pop word [bp + 6]
+        pop bp
+        add sp, 4
         iret
+npp_records dw 0
+npp_kept    db 0
 
 ; NS_SIDE: "jmp 788BBh" (78785h; 3 bytes) in the routine ending an effect on a thing (7872Fh), where
 ; the effect isn't one of the six it has a case for (8053:08A3h). Berserk (3) and Confused (11)
@@ -21496,6 +21359,7 @@ WALL_HALF  equ 32               ; (two cells: a wall four long)
 WALL_DIAG  equ 23               ; (WALL_HALF / sqrt(2))
 WALL_POS   equ 0x669D
 ns_wall:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         sub sp, 8
         push bp
         mov bp, sp
@@ -21634,6 +21498,7 @@ HAND_SOME   equ 0                 ; (on as the game: the way back)
 HAND_DONE   equ 0x5F25C - 0x5ECDB ; (the routine's end, less the way back)
 FLAGS_MASK  equ 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
 pp_show:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; [BP+6] the INT's flags
         pushad
@@ -21932,6 +21797,7 @@ pp_aim:                         ; PP_CALL aimed at the game's segment AX (less t
 ; PP_CLOSE: "cmp dword [30F4h],0" (88504h; 6 bytes) where the USE screen, closing (884B3h), lets go
 ; of Turn Undead's icon: the buttons beside it let go of too, its flags given back.
 pp_close:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp
         pushad
@@ -21971,16 +21837,7 @@ cr_weapons:
         pop bp
         cmp si, LV_PARTY
         jae .iret
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .on
-        call gear_mark                  ; (no weapon window: the Loader's kit and fuller gear still due)
-        cmp si, [cs:psi_member]         ; (no weapons: the psionic powers alone, if due)
-        jne .hold
-        cmp byte [cs:psi_due], 0
-        jne .on
-        cmp byte [cs:psi_keep], 0
-        je .hold
-.on:    sti
+        sti
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
@@ -21988,8 +21845,6 @@ cr_weapons:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
@@ -22013,31 +21868,7 @@ cr_weapons:
         call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
         mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
-.hold:  sti                             ; (the BIOS timer for GEAR_HOLD's wait)
-        call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
 .iret:  iret
-
-; GEAR_MARK: (CR_WEAPONS, weapon specialization off: no weapon window) new member SI named for the
-; Loader's creation gear (GEAR_WHO, GEAR_DUE), as CR_WEAPONS' .new does after the window: its kit
-; gear, class gear and fuller starting gear don't need weapon specialization (before, a character
-; made with the rule off went into the roster without them: GEAR_HOLD waited for nothing). Not an EDIT
-; that kept its race, classes and kit (ED_SAME: its gear its own). All registers kept.
-gear_mark:
-        push ax
-        push bx
-        push es
-        les bx, [LV_SHEETS]
-        imul ax, si, 0x47
-        add bx, ax
-        call ed_same
-        jnc .out
-        mov ax, si
-        mov [cs:gear_who], al
-        mov byte [cs:gear_due], 1
-.out:   pop es
-        pop bx
-        pop ax
-        ret
 
 ; GEAR_HOLD: (CR_WEAPONS' end) a new member just made (GEAR_DUE), the Loader's pass waited for (GEAR_DUE
 ; cleared), at most GEAR_HOLD_TICKS, with the Loader there (its LOADER_BEAT under LOADER_FRESH old;
@@ -22599,7 +22430,7 @@ ns_entry:
 
 ; SELL_PRICE: "mov si,es:[bx+6]" (83CCAh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop takes the price it pays for the item the party sells (ES:BX the item; shown in its offer,
-; then paid, times the count for a stack). With RULE_HI_CHA_PRICES, SELL_PERCENT of it (rounded
+; then paid, times the count for a stack). Shops as in AD&D (always on): SELL_PERCENT of it (rounded
 ; down, never below 1): the leader's CHA takes at most 40% off buying (rounded down too), so
 ; nothing bought can be sold for more than it cost (prices.sell_price).
 SELL_PERCENT equ 60
@@ -22608,8 +22439,6 @@ sell_price:
         push es
         mov di, sp
         mov ax, [es:bx + 6]
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES
-        jz .set
         cmp ax, 9999
         je .set
         cmp ax, 1
@@ -22628,12 +22457,16 @@ sell_price:
 
 ; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop has paid for the item the party sold and empties the item list of the thing holding it,
-; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_CHA_PRICES (Shops as in AD&D) and a magical item (a plus, +14h, or a power,
-; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
-; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Loader, which puts the item in the merchant's pack,
-; where the shop lists it; any other item is pushed and freed as the game does. The push: the
-; registers kept and the interrupt's frame moved down a word, the word under them.
-SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header)
+; the pointer's (0A0h:1C94h, which does nothing for 270Fh). Shops as in AD&D (always on), the
+; Loader there (its LOADER_BEAT under LOADER_FRESH old, as for GEAR_HOLD: without it
+; nothing would take the item from the pointer, and it was lost till 2026-11-18) and a magical item
+; (a plus, +14h, or a power, +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the
+; thing, the merchant (DS:179Ch) and the list's first item queued (SOLD_Q, SOLD_ITEMS, SOLD_SEQ)
+; for the Loader, which puts the item in the merchant's pack, where the shop lists it; any other
+; item is pushed and freed as the game does. The push: the registers kept and the interrupt's
+; frame moved down a word, the word under them.
+SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header, and SOLD_ITEMS' 4)
+        times -(SOLD_SLOTS != 4) db 0
 SOLD_THING   equ 0x179E         ; DS: the thing holding the item sold ...
 SHOP_MERCHANT equ 0x179C        ; ... and the shop's merchant
 ITEM_PLUS_AT equ 0x14
@@ -22644,8 +22477,6 @@ sell_keep:
         push cx
         push es
         mov cx, [SOLD_THING]
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES ; (Shops as in AD&D: the buyback too)
-        jz .push
         cmp cx, NO_THING
         jae .push
         mov bx, ds
@@ -22657,16 +22488,28 @@ sell_keep:
         mov ax, [es:bx + THINGS + 1]    ;   ... its first)
         cmp ax, NO_THING
         jae .push
+        push ax
         les bx, [ITEMS]
         imul ax, ax, 0x15
         add bx, ax
+        pop ax
         cmp byte [es:bx + ITEM_PLUS_AT], 0
-        jg .keep
+        jg .beat
         cmp byte [es:bx + ITEM_POWER_AT], 0
         je .push
-.keep:  mov bx, [cs:sold_seq]
+.beat:  push ax
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]              ; (the BIOS timer)
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        pop ax
+        jae .push                       ; (no Loader: freed, as the game does)
+        mov bx, [cs:sold_seq]
         and bx, SOLD_SLOTS - 1
-        shl bx, 2
+        shl bx, 1
+        mov [cs:bx + sold_items], ax
+        shl bx, 1
         mov [cs:bx + sold_q], cx
         mov ax, [SHOP_MERCHANT]
         mov [cs:bx + sold_q + 2], ax
@@ -22837,9 +22680,6 @@ ef_charges:
         add di, 3
         mov al, dl
         call c_itoa                     ; (the level, then a 0: 10% a level)
-        mov si, ef_enlarge_word
-        test word [cs:rules_hi], RULE_HI_ENLARGE
-        jz .tail
         mov si, ef_enlarge_dice         ; (the weapon's dice only: ENL_SITE)
         jmp .tail
 .armour:
@@ -22870,7 +22710,6 @@ ef_charges:
         clc
         ret
 ef_charge_word db ' CHARGE', 0
-ef_enlarge_word db '0% DAMAGE)', 0
 ef_enlarge_dice db '0% DICE)', 0
 ef_shut_word db ')', 0
 
@@ -23089,7 +22928,7 @@ ns_fist:
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
 NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-NAMES_EXTRA  equ 50
+; (NAMES_EXTRA: the names in EXTRA_NAMES, counted there)
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -23590,9 +23429,8 @@ probe_stealth:
         pop word [cs:s_ip]
         pop word [cs:s_cs]
         pop word [cs:s_fl]
+        call rear_fresh
         mov byte [cs:st_now], 0
-        test byte [cs:rules], RULE_STEALTH
-        jz .push
         cmp si, 3
         ja .push
         btr word [cs:stealth], si
@@ -23644,6 +23482,37 @@ s_cs    dw 0
 s_fl    dw 0
 st_now  db 0                    ; (1 while PROBE_STEALTH runs for a hidden one's attack)
 
+; REAR_FRESH: first in PROBE_STEALTH, each attack's from behind and backstab its own. The routine
+; sets [BP-1Ah] and [BP-24h] once a call (58036h, 58040h) but runs all of a round's attacks in it
+; (the loop from 58113h, [BP-20h] the creature's THAC0 again each time), and sets them, with their
+; 2 to hit each, only when this attack is from behind: a flag left from an earlier attack (a hidden
+; thief's backstab, Seneca's Hayneedle, then her Shadowseeker swings) had no +2 on this one, and the
+; probes after (STAB_FIRST, THIEF_REAR, KIT_REAR, ITEM_REAR) gave back 2 they hadn't had: THAC0 2
+; worse than a plain attack's (17 for 15), yet from behind: the target's DEX and shield not counted. The game's own code took 0, 2 or 4 off the
+; THAC0 (the creature's +1Fh, [BP-0Eh] its creature) this time: a flag it didn't pay for cleared.
+; All registers kept.
+rear_fresh:
+        push ax
+        push bx
+        push es
+        mov ax, [bp-0x0E]
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        mov al, [es:bx+0x1F]
+        cbw
+        sub ax, [bp-0x20]               ; (what the game's from behind and backstab took off)
+        cmp ax, 2
+        jge .stab
+        mov word [bp-0x1A], 0
+.stab:  cmp ax, 4
+        jge .out
+        mov word [bp-0x24], 0
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+
 ; MISSILE_REAR: in PROBE_STEALTH, first after the stealth rule: a missile ([BP+0Eh] not 1, melee) is
 ; from behind only as a hidden archer's shot (the stealth rule's: unseen, the target's DEX and
 ; shield not counting); the game also made one from behind by the target's facing, whatever the
@@ -23660,7 +23529,7 @@ missile_rear:
         add word [bp - 0x20], 2
 .ret:   ret
 
-; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_THIEF_TABLE (Thieves as in AD&D):
+; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), Thieves as in AD&D:
 ; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test
 ; (58A71h) lets two through and the round's count STAB_TIMES read ([BP-14h]) leaves the off-hand
 ; swing out, so a thief with three attacks (two weapons and a weapon spec's extra) had the third
@@ -23669,8 +23538,6 @@ missile_rear:
 ; same clock has its backstab taken back ([BP-24h] cleared, its +2 to hit off THAC0 [BP-20h]);
 ; from behind stays as it is. All registers kept.
 stab_first:
-        test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
-        jz .ret
         cmp si, 3
         ja .ret
         push eax
@@ -24174,6 +24041,8 @@ floor_enter:
         jne .on
         cmp word [cs:dust_on], 0
         jne .on
+        cmp word [cs:squares_on], 0
+        jne .on
         cmp word [cs:rings_on], 0
         je .plain
 .on:    cmp byte [cs:floor_busy], 0
@@ -24327,7 +24196,8 @@ shadow_pass:
         pop cx
 .tnext: add di, 8
         loop .thing
-.dust:  call ring_pass
+.dust:  call tint_pass
+        call ring_pass
         call dust_pass
 .none:  pop fs
         call vga_restore
@@ -24888,6 +24758,10 @@ probe_ghost:
         pop word [cs:g_resume + 2]
         pop word [cs:g_resume_fl]
         add word [cs:g_resume], 3
+        test byte [cs:g_resume_fl + 1], 2 ; (interrupts on again if the caller had them on, as its
+        jz .masked                      ;   call ran: the figures are drawn every frame, and the
+        sti                             ;   game's clock lost its ticks; off in DSCLOG's own drawing)
+.masked:
         cmp word [cs:ghost_on], 0
         je .game
         cmp di, MAP_COUNT - 1
@@ -25313,7 +25187,9 @@ build_dark:
 ; if dragging it (the game has no use for that button).
 ;
 ; The game is told of the mouse's buttons by the mouse driver calling its handler (INT 33h, 0Ch).
-; INT33 puts MOUSE_EVENT in its place, which keeps the middle button from the game. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
+; INT33 puts MOUSE_EVENT in its place, which keeps the middle button from the game, and forgets the
+; game's handler when the game takes it away (0Ch with CX 0) or resets the driver (00h, 21h), so
+; nothing of DSCLOG's (BOX_NUDGE, TARGET_CLICK) calls a handler that is gone. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
 ; driver's 03h), to scroll the map when it is at the screen's edge; PROBE_SCROLL makes that call
 ; itself and, while dragging, has the game centre its view where the drag puts it (191F:0281h, as
 ; clicking on the overview map does: the view is then drawn again), and the pointer is kept off
@@ -25332,9 +25208,9 @@ SCROLL_MIDDLE equ 1             ; SCROLL_ON's bit: dragging with the wheel press
 
 int33:
         cmp ax, 0x0C
-        jne .chain
+        jne .reset
         or cx, cx
-        jz .chain                       ; (taking the handler away)
+        jz .gone                        ; (taking the handler away)
         mov [cs:game_handler], dx
         mov [cs:game_handler + 2], es
         mov [cs:game_mask], cx
@@ -25351,6 +25227,12 @@ int33:
         pop dx
         pop es
         iret
+.reset: or ax, ax                       ; (the driver reset, or its software reset: no handler
+        jz .gone                        ;   now, as the driver has it)
+        cmp ax, 0x21
+        jne .chain
+.gone:  mov dword [cs:game_handler], 0  ; (none: a pending nudge or Enter on an enemy calls none)
+        mov word [cs:game_mask], 0
 .chain: jmp far [cs:old33]
 
 mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
@@ -25422,6 +25304,7 @@ probe_scroll:
         jz .masked
         sti
 .masked:
+        call a20_check
         inc word [cs:main_ticks]
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
         pushf
@@ -25430,6 +25313,7 @@ probe_scroll:
         call whirl_tick
         popf
         call sound_tick
+        call save_tick
         call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
         pushf
@@ -25518,6 +25402,53 @@ probe_scroll:
         push word [cs:s_resume + 2]
         push word [cs:s_resume]
         iret
+
+; A20_CHECK (PROBE_SCROLL, each pass of the map's main loop): with the far block in the HMA
+; (FAR_SEG FFFFh), A20 still on as FAR_INIT left it, FFFFh:0010h not 0000h:0000h (FAR_INIT's test:
+; a word turned over and back, interrupts off). Nothing in the game turns it off (its XMS calls are
+; 08h-0Dh), but with it off every write to the far block would land on the interrupt vectors and
+; DOS: found off, it is turned on again (XMS's 03h, as FAR_INIT) and counted (A20_LOST, for the
+; Loader to say once). If it won't come on, the far block's segments (FAR_SEG and the header's)
+; are made the BIOS's ROM's, F000h, whose writes go nowhere, and A20_LOST gets 8000h. All kept.
+a20_check:
+        cmp word [cs:far_seg], 0xFFFF
+        jne .ret
+        pushf
+        pusha
+        push ds
+        push es
+        call a20_on
+        je .out
+        inc word [cs:a20_lost]
+        cmp word [cs:xms + 2], 0
+        je .gone
+        mov ah, 3
+        call far [cs:xms]
+        call a20_on
+        je .out
+.gone:  or word [cs:a20_lost], 0x8000
+        mov ax, 0xF000
+        mov [cs:far_seg], ax
+        mov [cs:ring_seg], ax
+        mov [cs:panel_seg], ax
+        mov [cs:sc_seg], ax
+        mov [cs:tbuf_seg], ax
+.out:   pop es
+        pop ds
+        popa
+        popf
+.ret:   ret
+a20_on:                                 ; ZF set if A20 is on; AX, DS, ES changed, interrupts off
+        xor ax, ax
+        mov ds, ax
+        dec ax
+        mov es, ax
+        cli
+        mov ax, [ds:0]
+        not word [es:0x10]
+        cmp ax, [ds:0]
+        not word [es:0x10]              ; (NOT keeps the flags; interrupts back as A20_CHECK's POPF)
+        ret
 
 pan_to:                                 ; the view's top left to (AX, SI) as far as the map goes;
         cmp ax, 0                       ;   keeps CX, DX
@@ -26506,7 +26437,7 @@ panel_draw_around:
 ; is to go over it: the game takes its pointer off by putting back the map that was under it, over
 ; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
 probe_pointer:
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         mov [cs:pointer_ds], ds
         call pp_disarm
         call pointer_panel
@@ -27245,6 +27176,34 @@ t_sy       dw 0
                                 ;   FAR_LAST_Y, a word each; how far it has walked, FAR_WALKED)
                                 ; (LIGHT and the puffs: the far block's FAR_LIGHT and FAR_PUFFS)
 
+; SQUARES (SQUARES_ON): a small light cross (five pixels each way) on the floor in the middle of each of the walk map's
+; squares the Loader marks in SQ_MAP (where the party member whose turn it is in a
+; fight can still walk, squares.py), drawn in the floor pass before the rings, by their routines
+; (RING_POINTS, RING_PX), the ground lightened four times through LIGHT (the dust's table) and
+; what isn't ground to the dust (a stone floor) darkened four times through DARK (the shadows').
+; SQ_MAP is the Loader's: the column and the row (a byte each) of the walk map's square its first
+; bit is for, then SQ_SIDE rows of SQ_SIDE bits, the leftmost square a row's bit 0. It lies in
+; DSCLOG's own PSP (CS - 10h), in the room DOS keeps there for a program's two FCBs and its
+; command line (5Ch to FFh): kept with DSCLOG, of no use to DOS once DSCLOG has stayed resident
+; (no program runs from this PSP again), so the map costs no upper memory. KEEP's stack was
+; there (what it left is not cleared: the Loader writes the whole map before SQUARES_ON is 1).
+SQ_SIDE    equ 32               ; SQ_MAP: its origin's column and row, then SQ_SIDE x SQ_SIDE bits
+SQ_MAP     equ 0x5C             ; ... its offset in the PSP (squares.py's SQ_MAP_PSP)
+SQ_MAP_BYTES equ 2 + SQ_SIDE * SQ_SIDE / 8
+        times -(SQ_MAP + SQ_MAP_BYTES > 0x100) db 0 ; (a negative count: past the PSP's end)
+tint_pass:
+        cmp word [cs:squares_on], 0
+        je .ret
+        mov ax, tint_far                ; (the work is TINT_FAR's, in the tail: TAIL_CALL)
+        call tail_call
+.ret:   ret
+ring_points_far:                        ; (TINT_FAR's way to RING_POINTS)
+        call ring_points
+        retf
+SQ_REACH   equ 2                ; how far the cross reaches from the square's middle
+SQ_DOTS    equ 5                ; (a quarter of the cross, as the rings': RING_POINTS mirrors it)
+sq_dots    db 0 << 3 | 0, 1 << 3 | 0, 2 << 3 | 0, 0 << 3 | 1, 0 << 3 | 2
+
 ; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
 ; enemy chosen with Tab in a fight, kind 2), drawn in the floor pass as the shadows are, so the
 ; figure stands in it, the ground's colours reddened through RED (made by the Loader from the
@@ -27351,20 +27310,27 @@ ring_px:                                ; redden screen x BX on the row at ROW_A
         shr bx, 2
         add bx, [cs:row_at]
         mov es, [cs:v_seg]
+        mov si, bx                      ; the pixel's place (SI is RING_DOT's to lose)
+        movzx di, byte [es:si]          ; its colour
+        mov bx, [cs:r_tab]              ; (RED, or TINT_PASS's LIGHT)
         xor ax, ax
-        mov al, [es:bx]
         mov cl, [cs:r_kind]
         inc cl                          ; (reddened twice, the chosen one three times)
-.again: mov di, ax
-        mov ah, [fs:FAR_RED + di]
-        or ah, ah
-        jz .put
-        mov al, ah
-        xor ah, ah
+.again: mov al, [fs:bx + di]
+        or al, al
+        jz .none
+        mov di, ax
         dec cl
         jnz .again
-.put:   mov [es:bx], al
+.put:   mov ax, di
+        mov [es:si], al
         ret
+.none:  cmp cl, [cs:r_kind]             ; no colour that way. At the first look, where LIGHT
+        jbe .put                        ;   has none (a colour that isn't the ground's: stone),
+        cmp bx, FAR_LIGHT               ;   a mark is darkened through the shadows' DARK
+        jne .put                        ;   instead, as many times
+        mov bx, FAR_DARK
+        jmp .again
 
 RING_OUTER equ 20                ; (a quarter of each ring: RING_POINTS mirrors them)
 RING_INNER equ 18
@@ -27373,6 +27339,7 @@ ring_outer db 0 << 3 | 6, 1 << 3 | 6, 2 << 3 | 6, 3 << 3 | 6, 4 << 3 | 6, 5 << 3
 ring_inner db 0 << 3 | 5, 1 << 3 | 5, 2 << 3 | 5, 3 << 3 | 5, 4 << 3 | 5, 5 << 3 | 4, 5 << 3 | 5, 6 << 3 | 4, 7 << 3 | 4, 8 << 3 | 4, 9 << 3 | 3, 9 << 3 | 4, 10 << 3 | 2, 10 << 3 | 3, 11 << 3 | 1, 11 << 3 | 2, 12 << 3 | 0, 12 << 3 | 1
 ring_extra db 0 << 3 | 7, 1 << 3 | 7, 2 << 3 | 7, 3 << 3 | 7, 4 << 3 | 7, 5 << 3 | 6, 5 << 3 | 7, 6 << 3 | 6, 7 << 3 | 6, 8 << 3 | 6, 9 << 3 | 5, 9 << 3 | 6, 10 << 3 | 5, 11 << 3 | 4, 11 << 3 | 5, 12 << 3 | 3, 12 << 3 | 4, 13 << 3 | 2, 13 << 3 | 3, 14 << 3 | 0, 14 << 3 | 1, 14 << 3 | 2
 r_kind     db 0
+r_tab      dw FAR_RED           ; the far block's table RING_PX changes a colour through
 r_fx       dw 0
 r_fy       dw 0
 r_qx       dw 0
@@ -27557,6 +27524,8 @@ overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         call loot_key
         call sell_key
+        call qs_key
+        jc qs_key.ret
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -27592,6 +27561,33 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         ret
 .no:    clc
         ret
+
+; QS_KEY: (OUR_KEY's) the Loader's quick save key or quick load key (QS_KEYS) with the map's main
+; loop run within the last BIOS tick or two (no window, talk or menu waiting on keys): counted in
+; its word of QS_SEQ, and CF set (taken from the game); else CF clear. Registers kept.
+qs_key:
+        push bx
+        push es
+        xor bx, bx
+        mov es, bx
+        cmp ax, [cs:qs_keys]
+        je .ours
+        mov bl, 2
+        cmp ax, [cs:qs_keys + 2]
+        jne .no
+.ours:  push ax
+        mov ax, [es:0x46C]      ; (the BIOS tick)
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        pop ax
+        ja .no
+        inc word [cs:qs_seq + bx]
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop bx
+.ret:   ret
 
 ; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
 ; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
@@ -27800,6 +27796,7 @@ ITEM_SPECIAL equ 0xF9           ; (spell bytes from here are the game's own effe
 TYPE_FRUIT   equ 60
 TYPE_SCENERY equ 0x60          ; (a type's +08h: doors, haystacks, walls...)
 probe_item_box:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         pushad
         push es
         cmp si, 0x270F
@@ -28013,13 +28010,61 @@ ib_belt    db 'Pick +5, Lock +5', 0
 ib_elf_hide  db 'Hide 90-95%', 0    ; (the Cloak of Elvenkind's chance: stealth.py)
 ib_elf_quiet db 'Silent 95%', 0
 
+; INFO_HEAD: "push ds / push 3493h" (8C1E0h; 4 bytes: the INT, the site's number and a NOP) in the
+; routine that draws the item box's INFO (8C1B8h: its heading, USEABLE BY:, then the name of each
+; party member the can-use routine allows, PROBE_CAN_USE and its ARROWS_FORBID among it, else NO
+; ONE; [BP+6] the item): the heading's far pointer pushed, as the code would have, but for a
+; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) SPELLARCHERS:, so the
+; list reads "SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE". The INT's frame moved 4 bytes down.
+INFO_HEADING equ 0x3493         ; DS: USEABLE BY:
+info_head:
+        push ax
+        push bx
+        push es
+        les bx, [ITEMS]
+        imul ax, [bp + 6], 0x15
+        add bx, ax
+        mov ax, [es:bx + 0x12]
+        sub ax, ARROW_NAME
+        cmp ax, 4
+        mov ax, ds
+        mov bx, INFO_HEADING
+        jae .put
+        mov ax, cs
+        mov bx, info_head_text
+.put:   mov [cs:ih_seg], ax
+        mov [cs:ih_off], bx
+        pop es
+        pop bx
+        pop ax
+        sub sp, 4               ; the INT's frame 4 bytes down: the pointer under it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax        ; (IP)
+        mov ax, [bp + 8]
+        mov [bp + 4], ax        ; (CS)
+        mov ax, [bp + 10]
+        mov [bp + 6], ax        ; (flags)
+        mov ax, [cs:ih_off]
+        mov [bp + 8], ax
+        mov ax, [cs:ih_seg]
+        mov [bp + 10], ax
+        pop ax
+        pop bp
+        iret
+ih_off dw 0
+ih_seg dw 0
+info_head_text db 'SPELLARCHERS:', 0
+
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
 ; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), and a
 ; Swashbuckler's bad luck, 0 to BAD_LUCK off at each roll (BAD_LUCK_WHO, the header's: the dice
 ; log's), no less than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
-; isn't light (THIEF_HEAVY); with RULE_THIEF_TABLE, no more than THIEF_MOST (AD&D's most after
+; isn't light (THIEF_HEAVY); no more than THIEF_MOST (Thieves as in AD&D, always on: AD&D's most after
 ; every adjustment: game.THIEF_MOST; the situation's bonus and the effects', which the game's caller
 ; adds after (DSUN.EXE 803D0h), not counted); then AX = the chance, as the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
@@ -28085,9 +28130,7 @@ probe_belt:
         call thief_heavy
         jnc .most
         xor dx, dx
-.most:  test word [cs:rules], RULE_THIEF_TABLE
-        jz .chance
-        cmp dx, THIEF_MOST
+.most:  cmp dx, THIEF_MOST
         jle .chance
         mov dx, THIEF_MOST
 .chance:
@@ -28098,13 +28141,11 @@ probe_belt:
         pop bx
 .out:   iret
 
-; THIEF_HEAVY: carry set if, with RULE_RESTRICT, creature AX (DS the game's) has a thief class and
+; THIEF_HEAVY: carry set if creature AX (DS the game's) has a thief class and
 ; wears armour that isn't light (HEAVY_WORN): a multiclass thief, or a human thief once a warrior
 ; (or a warrior once a thief), may wear it, but loses its thief skills and backstab in it
 ; (restrict.thief_heavy). All registers kept.
 thief_heavy:
-        test word [cs:rules], RULE_RESTRICT
-        jz .no
         pusha
         push es
         call creature_sheet
@@ -28116,7 +28157,7 @@ thief_heavy:
         loop .class
         pop es
         popa
-.no:    clc
+        clc
         ret
 .thief: mov dx, ax
         call heavy_worn
@@ -28188,6 +28229,7 @@ h_resume   dd 0
 
 old33        dd 0
 game_handler dd 0
+xms        dd 0                 ; (XMS's entry, FAR_INIT's: A20_CHECK's too)
 game_mask    dw 0
 centre       dw CENTRE_OFF, 0
 s_resume     dd 0
@@ -28757,8 +28799,8 @@ FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
 ; from the helper's MCB on. In it: the helper (PSP and the image as loaded, its install code and
 ; stack too) and the overlay buffer (OVR_RESERVE), each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
-; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
-; helper still has to fit without it.)
+; (UMBPLUS.COM, run first, moves the block's start down to CA00h where it can, 24 KB more; the
+; helper still has to fit without it, so UMB_ROOM is the limit either way.)
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (image_len + TAIL_BYTES + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
@@ -28939,7 +28981,6 @@ far_init:
         rep stosw
         clc
 .ret:   ret
-xms       dd 0
 hma_given db 0
 no_far  db 'DSCLOG: no memory for its buffers (63 KB). Not loaded.', 13, 10, '$'
 
@@ -29256,68 +29297,76 @@ extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
+save_text  times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1888)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
-; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)
+; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE), and
+; counted: NAMES_EXTRA is how many (names.EXTRA the Loader's, which test_names checks)
+%assign NAMES_LISTED 0
+%macro xname 1
+        db %1, 0
+        times -(%strlen(%1) >= NAME_KEPT) db 0 ; (a negative count: 15 letters at most)
+%assign NAMES_LISTED NAMES_LISTED + 1
+%endmacro
 extra_names:
-        db "Ring/Protection", 0
-        db "Thieves' Tools", 0
-        db "Short Sword", 0             ; (Kurzak's, of type TYPES' first)
-        db "Cloak/Protectn", 0          ; (Pehtucl's, the game's way of shortening)
-        db "Ring/Protection", 0         ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        db "Shadowseeker", 0            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        db "Kreenfang", 0               ; (the arena's Bone Gythka made +1)
-        db "Bracers/Defns", 0           ; (bracers of defense, short enough for their plus: BRACERS,
+        xname "Ring/Protection"
+        xname "Thieves' Tools"
+        xname "Short Sword"             ; (Kurzak's, of type TYPES' first)
+        xname "Cloak/Protectn"          ; (Pehtucl's, the game's way of shortening)
+        xname "Ring/Protection"         ; (Pehtucl's ring: the arena's is the first; their icons differ)
+        xname "Shadowseeker"            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
+        xname "Kreenfang"               ; (the arena's Bone Gythka made +1)
+        xname "Bracers/Defns"           ; (bracers of defense, short enough for their plus: BRACERS,
                                         ;   dsloader/worldgear.py)
-        db "Gutterknot", 0              ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        db "Deepbiter", 0               ; a stone pick +1,
-        db "Windlash", 0                ; a staff sling +1,
-        db "Greenbright", 0             ; a metal short sword +2)
-        db "Arrowbane", 0               ; (the circlet and the crown of dsloader/worldgear.py)
-        db "Sunking Crown", 0
-        db "Warden's Chest", 0          ; (the Warden's Plate of dsloader/worldgear.py)
-        db "Warden's Arms", 0
-        db "Warden's Legs", 0
-        db "Warden's Helm", 0
-        db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
-        db "Boots/Elvenkind", 0
-        db "Flame Blade", 0             ; (an obsidian long sword +1, Focus Heat on what it hits)
-        db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
-        db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        db "Glasshewer", 0              ; an obsidian axe +2,
-        db "Headsman", 0                ; a metal great axe +2)
-        db "Galefang", 0                ; (more magic weapons of dsloader/worldgear.py: an air
+        xname "Gutterknot"              ; (the magic weapons of dsloader/worldgear.py: a club +1,
+        xname "Deepbiter"               ; a stone pick +1,
+        xname "Windlash"                ; a staff sling +1,
+        xname "Greenbright"             ; a metal short sword +2)
+        xname "Arrowbane"               ; (the circlet and the crown of dsloader/worldgear.py)
+        xname "Sunking Crown"
+        xname "Warden's Chest"          ; (the Warden's Plate of dsloader/worldgear.py)
+        xname "Warden's Arms"
+        xname "Warden's Legs"
+        xname "Warden's Helm"
+        xname "Cloak/Elvenkind"         ; (the Cloak and Boots of Elvenkind)
+        xname "Boots/Elvenkind"
+        xname "Searing Blade"           ; (an obsidian short sword +2, Focus Heat on what it hits)
+        xname "Tome/Understand"         ; (the Tome of Understanding: dsloader/tome.py)
+        xname "Inixhide"                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
+        xname "Drakejaw"                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
+        xname "Glasshewer"              ; an obsidian axe +2,
+        xname "Headsman"                ; a metal great axe +2)
+        xname "Galefang"                ; (more magic weapons of dsloader/worldgear.py: an air
                                         ; cleric's dagger +2,
-        db "Mindshard", 0               ; an obsidian short sword +1,
-        db "Stillwater", 0              ; a bone short sword +1,
-        db "Linebreaker", 0             ; a metal polearm +2,
-        db "Thornwall", 0               ; a bone polearm +1)
-        db "Ashen Robe", 0              ; (the robes: dsloader/robes.py)
-        db "Veiled Robe", 0
-        db "Gutterward", 0              ; (the magic shields of dsloader/worldgear.py: a wooden
+        xname "Mindshard"               ; an obsidian short sword +1,
+        xname "Stillwater"              ; a bone short sword +1,
+        xname "Linebreaker"             ; a metal polearm +2,
+        xname "Thornwall"               ; a bone polearm +1)
+        xname "Ashen Robe"              ; (the robes: dsloader/robes.py)
+        xname "Veiled Robe"
+        xname "Gutterward"              ; (the magic shields of dsloader/worldgear.py: a wooden
                                         ; shield +1,
-        db "Ironbulwark", 0             ; a metal shield +3)
-        db "Hayneedle", 0               ; (the weapons for the kits with too few, dsloader/
+        xname "Ironbulwark"             ; a metal shield +3)
+        xname "Hayneedle"               ; (the weapons for the kits with too few, dsloader/
                                         ; worldgear.py: a bone dagger +1,
-        db "Nightsliver", 0             ; an obsidian dagger +2,
-        db "Dunesong", 0                ; a bow +1,
-        db "Skycutter", 0               ; a chatkcha +2)
-        db "Girdle/Back Def", 0         ; (the girdles and the amulet of
+        xname "Nightsliver"             ; an obsidian dagger +2,
+        xname "Dunesong"                ; a bow +1,
+        xname "Skycutter"               ; a chatkcha +2)
+        xname "Girdle/Back Def"         ; (the girdles and the amulet of
                                         ; dsloader/worldgear.py: 15 letters at most, as the
-        db "Girdle of Urnst", 0         ; game's own)
-        db "Amulet/MagicRes", 0
-        db "Burning Arrows", 0          ; (the Spellarcher's spell arrows, dsloader/
+        xname "Girdle of Urnst"         ; game's own)
+        xname "Amulet/MagicRes"
+        xname "Burning Arrows"          ; (the Spellarcher's spell arrows, dsloader/
                                         ; spellarrows.py: ARROW_NAME on)
-        db "Chill Arrows", 0
-        db "Shocking Arrows", 0
-        db "Vampiric Arrows", 0
-        db "Boots of Speed", 0          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
-        db "Emberlash", 0               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
+        xname "Chill Arrows"
+        xname "Shocking Arrows"
+        xname "Vampiric Arrows"
+        xname "Boots of Speed"          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
+        xname "Emberlash"               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
                                         ; cahulaks +1,
-        db "Ironwhirl", 0               ; a metal cahulaks +2)
-        db "Fine Bow", 0                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
-        times NAMES_EXTRA - 50 db 0     ; (empty names, if any)
+        xname "Ironwhirl"               ; a metal cahulaks +2)
+        xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
+NAMES_EXTRA  equ NAMES_LISTED           ; (the names above, counted: the room the game's table gets)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
         align 16, db 0
@@ -29386,6 +29435,104 @@ dex_table:
         db 25, 27, 15, 25, 20
         db 27, 30, 17, 30, 22
         align 16, db 0
+; the tail's code (TAIL_CALL)
+; SAVE_FAR: SAVE_TICK's work (from TAIL_CALL: GS DSCLOG's segment, DS the game's). GS is kept on the
+; stack over the game's routines (the game, and DSCLOG's handlers under it, may change it).
+save_far:
+        mov ax, [gs:save_req]
+        dec ax
+        cmp ax, 1
+        ja .ret                 ; (none, or an answer the Loader hasn't read yet)
+        mov word [gs:save_req], 0
+        push gs                 ; (MOV and PUSH keep the flags)
+        jb .save
+        mov bx, LOADW_ENTRY
+        mov ax, LOADW_SEG - DGROUP_SEG
+        call .entry
+        call far [gs:sp_call]
+.done:  mov ax, 3
+.set:   pop gs
+        mov [gs:save_req], ax
+.ret:   retf
+.save:  mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        mov ax, 5
+        cmp word [es:0x19], 0
+        jne .set
+        mov bx, SAVE_ENTRY
+        mov ax, SAVE_SEG2 - DGROUP_SEG
+        call .entry
+        push cs                 ; (the tail)
+        push word save_text + SAVE_FILE
+        push cs
+        push word save_text
+        call far [gs:sp_call]
+        add sp, 8
+        or ax, ax
+        jnz .done
+        mov al, 4
+        jmp .set
+.entry: mov [gs:sp_call], bx    ; SP_CALL: the game's routine at AX (from its DS):BX
+        mov bx, ds
+        add ax, bx
+        mov [gs:sp_call + 2], ax
+        ret
+
+; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
+tint_far:
+        mov byte [gs:r_kind], 3         ; (lightened four times)
+        mov word [gs:r_tab], FAR_LIGHT
+        xor di, di                      ; the row
+.row:   mov ax, gs
+        sub ax, 0x10
+        mov ds, ax                      ; (the PSP)
+        movzx ax, byte [SQ_MAP + 1]
+        add ax, di
+        shl ax, 4
+        add ax, 8
+        sub ax, [gs:cam_y]              ; its squares' middle, on the screen
+        mov [gs:r_fy], ax
+        add ax, SQ_REACH
+        cmp ax, [gs:clip_y0]            ; (a row or a square whose cross is all outside what is
+        jl .rnext                       ;   being drawn is passed over: a walker's rectangle is
+        sub ax, 2 * SQ_REACH            ;   small, and RING_DOT would test every pixel)
+        cmp ax, [gs:clip_y1]
+        jg .rnext
+        mov bx, di
+        shl bx, 2
+        mov edx, [bx + SQ_MAP + 2]      ; the row's bits
+        movzx si, byte [SQ_MAP]
+        shl si, 4
+        add si, 8
+        sub si, [gs:cam_x]              ; the middle of the row's first square
+.col:   shr edx, 1
+        jnc .next
+        lea ax, [si + SQ_REACH]
+        cmp ax, [gs:clip_x0]
+        jl .next
+        lea ax, [si - SQ_REACH]
+        cmp ax, [gs:clip_x1]
+        jg .next
+        mov [gs:r_fx], si
+        pusha                           ; (EDX's upper half is kept: RING_POINTS is 16-bit code)
+        mov si, sq_dots
+        mov cx, SQ_DOTS
+        push cs                         ; (RING_POINTS, in DSCLOG's segment: RING_POINTS_FAR)
+        push word .back
+        push gs
+        push word ring_points_far
+        retf
+.back:  popa
+.next:  add si, 16
+        or edx, edx
+        jnz .col
+.rnext: inc di
+        cmp di, SQ_SIDE
+        jb .row
+        mov word [gs:r_tab], FAR_RED
+        retf
+        align 16, db 0          ; (KEPT_PARAS counts whole paragraphs)
 tail_end:
 TAIL_BYTES equ tail_end - tail_start
 KEPT_PARAS equ (image_len + TAIL_BYTES) / 16    ; (what KEEP keeps after the PSP: the image to the

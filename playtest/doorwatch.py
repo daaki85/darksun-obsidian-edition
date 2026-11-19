@@ -1,5 +1,5 @@
-# doorwatch.py SECONDS: Kurzak's door and the two who use it, printed at each change (every half second):
-# the live walk map's square 99,34 (0 open, 192 shut, 96 someone in it), and Kurzak's and
+# doorwatch.py SECONDS: Kurzak's door and the two who use it, printed at each change (every half second).
+# The live walk map's square 99,34 (0 open, 192 shut, 96 someone in it), and Kurzak's and
 # Legcrusher's map places with their orders (DSUN 3972:08AAh table, objects under 48; None above).
 # Run it in the background across a call (logs/2026-11-11-doorway-blocked.md).
 import os,struct,sys,time

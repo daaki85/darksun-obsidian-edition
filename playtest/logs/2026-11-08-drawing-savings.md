@@ -1,6 +1,6 @@
 # DSCLOG's faster drawing: frame rate before and after (2026-11-08)
 
-pens-after-arena, the whole party walking, `framerate.py 20`, from `2026-11-08-drawing-savings-runs.sh`:
+pens-after-arena, the whole party walking, `framerate.py 20`, from `files/2026-11-08-drawing-savings-runs.sh`:
 
 ```
 before cycles 20000, all on, steady pace: 20.1 s: frames shown 10.3/s, undrawn (steady pace) 7.4/s, main loop 286/s; BIOS clock 18.0/s (18.2 = real time); game clock 95/s, steps run 69/s, lost while drawing 26/s (steady pace on only); walking 113 map units/s; DOSBox CPU 20%

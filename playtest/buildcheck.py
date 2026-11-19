@@ -1,4 +1,4 @@
-# buildcheck.py [NAME...]: is the DSCLOG running in DOSBox the build in obsidian-edition/dos? Compares
+# buildcheck.py [NAME...]: checks the DSCLOG running in DOSBox is the build in obsidian-edition/dos. It compares
 # 40 bytes of each routine named (default: a set touched by the 2026-11-09 memory pass) in memory with
 # dos/DSCLOG.EXE, checks every vector of the install's table (ALL_VECTORS) in segment 0 points at its
 # handler, and the tail (TAIL_SEG, the header's +1834) against the EXE's tail: its segment, and its
@@ -35,7 +35,7 @@ exe = open(os.path.join(DOS, 'DSCLOG.EXE'), 'rb').read()
 image = exe[struct.unpack_from('<H', exe, 8)[0] * 16:]
 tail_paras, = struct.unpack_from('<H', image, 1836)
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGva')
+hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGve')
 seg = hdr // 16
 w = lambda a: struct.unpack_from('<H', mem, a)[0]
 tail_seg = w(hdr + 1834)

@@ -209,7 +209,7 @@ class BruteBanTests(unittest.TestCase):
 class DualBansInHelperTests(unittest.TestCase):
     def test_helper_table_matches(self):
         """DSCLOG's dual_bans (each kit's byte and its dword of banned classes) is kits.DUAL_BANS:
-        the DUAL window greys by the helper's, the Loader checks by its own (the audit, 2026-11-10)."""
+        the DUAL window greys by DSCLOG's, the Loader checks by its own (the audit, 2026-11-10)."""
         import re
         with open(os.path.join(os.path.dirname(__file__), "..", "dos", "dsclog.asm"), encoding="latin-1") as f:
             text = f.read()

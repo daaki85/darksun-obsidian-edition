@@ -1,7 +1,7 @@
 """Dice log: shows the rolls Shattered Lands makes behind the scenes.
 
 How it works:
-  * The launcher runs DSUNLOG.EXE, a copy of the game whose rand() and two
+  * The Loader runs DSUNLOG.EXE, a copy of the game whose rand() and two
     "probe" places (the end of the saving throw and of the AC calculation)
     start with INT instructions (see gamepatch.py).
   * DSCLOG.EXE (see dos/dsclog.asm), loaded before the game, answers those
@@ -28,17 +28,18 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
-                   EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
-from .guestmem import GuestMemory
+                   MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
+from .guestmem import GuestMemory, WriteRefused
 from .process import ProcessError
 from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGva"
+HDR_SIG = b"DSCLOGve"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
+TSR_SEQ, TSR_SEED_OFF, TSR_NFILT = 8, 22, 32  # entries written; the seed's offset (and what follows); filters in use
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
 SLOT_LIST = {"Wizard": 1, "Priest": 2}  # the USE screen's list on show (DS:4AE8h + the member): 1 MAGE, 2 CLERIC, 3 PSIONIC
@@ -334,6 +335,7 @@ POLL_FAILS = 25  # passes in a row whose ring read wrong before still_patched ha
 DESTROYED_WAIT = 3.0  # seconds a creature destroyed outright may take to show its HP fall
 POISON_WAIT = 3.0  # seconds a Poisoner's poison on a helpless target may take to land (queued: about 0.5)
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
+CHANCE_EVERY = 0.5  # seconds between the header's chance to hit being worked out afresh (hitchance.py)
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
 # counts as over: the game clears it as a fight ends and between the arena's waves (and it is
 # still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
@@ -394,7 +396,7 @@ class Entry:
     kind: int  # KIND_ROLL, KIND_SAVE or KIND_AC
     extra: int = 0  # KIND_SAVE: the segment of the game's spell table
     target_state: int = 0  # the attack's target as the entry was made (DSCLOG's HELPLESS_OF): HELD_MARK
-    #                        plus 1 Paralyzed or 2 Out Cold; 0 from a helper that doesn't write it
+    #                        plus 1 Paralyzed or 2 Out Cold; 0 from a DSCLOG that doesn't write it
 
     SIZE = 192
     HELD_MARK = 0x8000
@@ -402,7 +404,7 @@ class Entry:
 
     def helpless(self) -> Optional[str]:
         """Why the attack's target was helpless as the dice were rolled (Paralyzed, Out Cold), or
-        None; Ellipsis when the entry doesn't say (an older helper): then ask the game now."""
+        None; Ellipsis when the entry doesn't say (an older DSCLOG): then ask the game now."""
         if not self.target_state & self.HELD_MARK:
             return ...
         return self.HELD_STATES.get(self.target_state & 0xFF)
@@ -446,10 +448,10 @@ def hit_chance(need: int) -> int:
     return 5 * sum(1 for d in range(1, 21) if d == 20 or (d != 1 and d >= need))
 
 
-def save_chance(needed: int, doubled: bool) -> int:
-    """The chance (percent) that a d20 (doubled for some spells) reaches `needed` after the rest
-    is added; a natural 20 always saves and a natural 1 always fails."""
-    wins = sum(1 for d in range(1, 21) if d == 20 or (d != 1 and (d * 2 if doubled else d) >= needed))
+def save_chance(needed: int) -> int:
+    """The chance (percent) that a d20 reaches `needed` after the rest is added; a natural 20
+    always saves and a natural 1 always fails."""
+    wins = sum(1 for d in range(1, 21) if d == 20 or (d != 1 and d >= needed))
     return wins * 5
 
 
@@ -505,7 +507,7 @@ def _new_fight(log) -> None:
     worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
     log._round = 0
     log._recent_damage.clear()  # (an earlier fight's rolls named this one's damage: "from Shocking Grasp")
-    for remembered in (log.last_ac, log.ac_detail):
+    for remembered in (log.last_ac, log.ac_detail, getattr(log, "ac_gap", {})):
         for index in [i for i in remembered if i >= game.PARTY_SIZE]:
             del remembered[index]
 
@@ -548,14 +550,10 @@ class DiceLog:
         self._talk: Optional[dict] = None  # the conversation on screen: its portraits and who it's with
         self.monster_info = True  # monsters' defences in the game's Look box (set_monster_info)
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
-        self.pickpockets = True  # a thief's Pick Pockets button (pickpocket.py)
-        self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
-        self.show_shadows = True  # shadows under the figures on the map (shadows.py)
-        self._shadows = shadows.Shadows()
-        self.combat_log = True  # (on, as the Options tab has it) the combat log's panel in the game, in a fight (combatlog.py)
+        self._shadows = shadows.Shadows()  # shadows under the figures on the map (shadows.py)
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
-        self._panel = combatlog.Panel()
+        self._panel = combatlog.Panel()  # the combat log's panel in the game (combatlog.py)
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
         self._poison_doses: Set[int] = set()  # (a Poisoner's weapons that poisoned this fight: member, + 4 the off hand)
         self._quiver_kind: Dict[int, bytes] = {}  # each party archer's last quiver stack (quiver.py: "Out of arrows")
@@ -567,28 +565,37 @@ class DiceLog:
         self._font_tried = False  # ... the game's font looked for (none: the panel without lines)
         self.game_dir: Optional[str] = None  # the game's folder (its font)
         self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
-        self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
-        self.see_through = True  # the hidden and the invisible drawn see-through (ghost.py)
-        self._ghosts = ghost.Ghosts()
-        self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
-        self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
+        self._ghosts = ghost.Ghosts()  # the hidden and the invisible drawn see-through (ghost.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
-        self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
-        self._dust = dust.Dust()
+        self._dust = dust.Dust()  # dust raised by walkers on sand and dirt (dust.py)
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
+        self.show_squares = True  # the squares a party member can still walk to, marked in a fight (squares.py)
+        self.squares_shown = True  # ... shown, or hidden with R in a fight (the settings' squares_shown)
+        self._squares = squares.Squares()
+        self._keys = keywatch.KeyWatch()  # the keys pressed, for R (keywatch.py)
+        self.move_back = True  # F10 after the last step: the move taken back can be walked again (moveback.py)
+        self._move_back = moveback.MoveBack()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
-        self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
-        self._targeting = targeting.Targeting()
-        self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
-        self._scrolling = scrolling.Scrolling()
+        self.hit_chance = True  # what the d20 must show to hit the chosen enemy (hitchance.py)
+        self.ac_gap: Dict[int, int] = {}  # creature index -> the game's AC for it less attack_ac's, when last attacked
+        self._chance_seen: Tuple[Optional[tuple], float, str] = (None, 0.0, "")  # (the header's, kept a moment)
+        self.show_usable = True  # Alt held on the map marks what can be used (usable.py)
+        self._usable = usable.Usable()
+        self.hit_hover = True  # the chance to hit over the enemy under the pointer (hover.py)
+        self._hover = hover.Hover()
+        self._foes: List[int] = []  # the fight's enemies as _drawn last found them (rings.enemies)
+        self._targeting = targeting.Targeting()  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
+        self._scrolling = scrolling.Scrolling()  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
         self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
         self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
+        self.quicksave = quicksave.QuickSave()  # the quick save and quick load keys, the autosave (quicksave.py)
+        self._quick_dir: Optional[str] = None  # the game's folder, for it (found once)
         self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -602,7 +609,7 @@ class DiceLog:
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
-        self.rules = 0  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules)
+        self.rules = game.RULES_ALWAYS  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules; the always-on ones from the start)
         self.stealth_roll: Callable[[], int] = lambda: random.randint(1, 100)  # hiding, moving silently
         self._ring_check = 0.0
         self._main_ticks: Optional[int] = None  # DSCLOG's count of the map's main loop, last read
@@ -641,6 +648,8 @@ class DiceLog:
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
+        self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
+        self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
         self._party_changed_at = 0.0
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
@@ -696,18 +705,18 @@ class DiceLog:
         hdr = next((m.start() for m in re.finditer(re.escape(HDR_SIG), low) if m.start() % 16 == 0), None)
         if hdr is None:
             if re.search(rb"DSCLOGv[0-9A-Za-z]", low):
-                raise DiceLogError("An older DSCLOG is loaded. Restart the game with 'Start Game with Dice Log.bat'.")
-            raise DiceLogError("DSCLOG is not loaded. Start the game with 'Start Game with Dice Log.bat'.")
+                raise DiceLogError("An older DSCLOG is loaded. Close the game and start it again from the Loader (Start the game).")
+            raise DiceLogError("DSCLOG is not loaded. Start the game from the Loader (Start the game).")
         ds = game.find_data_segment(self.guest, low)
         if ds is None:
             raise DiceLogError("Shattered Lands is not running yet.")
         rand_addr = (ds - game.DGROUP) * 16 + RAND_IP
         if low[rand_addr:rand_addr + 2] != RAND_PATCHED:
             raise DiceLogError("The game was started without the dice log. "
-                               "Restart it with 'Start Game with Dice Log.bat'.")
+                               "Close it and start it again from the Loader (Start the game).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
-            self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
             self.game = GameData(self.guest, ds)
             if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
                 old = self.guest.item_gate          # for a guest that has none, so a game started
@@ -722,6 +731,13 @@ class DiceLog:
         self._poll_fails = 0
         self._dust = dust.Dust()
         self._rings = rings.Rings()
+        self._squares = squares.Squares()
+        self._keys.forget()
+        self._move_back = moveback.MoveBack()
+        self._usable = usable.Usable()
+        self._hover = hover.Hover()
+        self._foes = []
+        self._labels.attached()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
@@ -740,10 +756,10 @@ class DiceLog:
         self.set_record_everything(self.record_everything)
         self.set_monster_info(self.monster_info)
         self.set_rules(self.rules)
-        self.set_pickpockets(self.pickpockets)
+        self.set_pickpockets()
         self._look_seq = struct.unpack("<H", self.guest.read(hdr + TSR_LOOK_SEQ, 2))[0]
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
-        self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
+        self.last_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SEQ, 2))[0]
         self._effects = None
         self._forget_partial_rolls()
         icons.COPY_OPEN = False  # (a game started anew: its copy not open until DSCLOG says so)
@@ -765,15 +781,13 @@ class DiceLog:
         if self.tsr_hdr is not None:
             filters = () if record_everything else FILTERS
             packed = b"".join(bytes([len(f)]) + f.ljust(8, b"\0") for f in filters)
-            self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
+            self.guest.write(self.tsr_hdr + TSR_NFILT, struct.pack("<H", len(filters)) + packed)
 
-    def set_pickpockets(self, on: bool) -> None:
-        """Picking pockets (ON): a thief's Pick Pockets button on the USE screen. Items used on the
-        map are asked about either way (the cooked vulture)."""
-        self.pickpockets = on
+    def set_pickpockets(self) -> None:
+        """A thief's Pick Pockets button on the USE screen (always: its switch went after 2.18), and
+        items used on the map asked about (the cooked vulture)."""
         if self.tsr_hdr is not None:
-            flags = USE_ASK | (PICK_BUTTON if on else 0)
-            self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
+            self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", USE_ASK | PICK_BUTTON))
 
     def load_picked(self, entries, known: bool = True) -> None:
         """The pockets tried, as remembered (settings.json): "key@game time" (or a bare key, from
@@ -883,14 +897,15 @@ class DiceLog:
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
             it = ring.Items(self.game)
             kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
-            if spellarrows.ARROWS_BY <= item < 0xFFFF and (item < PICKED_BY or self.pickpockets) \
-                    and not self._fighting():
+            if spellarrows.ARROWS_BY <= item < 0xFFFF and not self._fighting():
                 # (the gate held, DOSBox paused, before anything is moved: then DSCLOG's answer
                 # looked at again. One it gave up waiting for (PICK_WAIT, the game gone its own
                 # way) is dropped, nothing moved and no pocket marked tried)
                 itemgate.hold(self.game)
                 if self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2) == seq:
                     return []
+                it = ring.Items(self.game)  # (the lists read again, held: ring.held)
+                kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
             if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():
@@ -899,7 +914,7 @@ class DiceLog:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
                     if result and not result.text:  # (made: the spell's own cast sound, as it is cast,
                         cast = spellarrows.cast_sound(self.game, thing)  # by DSCLOG with the answer)
-            elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
+            elif PICKED_BY <= item < 0xFFFF:
                 taken = True
                 if self._fighting():
                     result = pickpocket.Attempt(pickpocket.NOT_IN_A_FIGHT, [])
@@ -985,10 +1000,10 @@ class DiceLog:
 
     def _locks_pass(self) -> None:
         """DSCLOG's LOCK_BARRED: the locks each member failed at its thief level now (locks.py), with
-        Thieves as in AD&D; none without it."""
+        Thieves as in AD&D (always on)."""
         if self.tsr_hdr is None:
             return
-        rows = locks.barred(self.game, self.picked) if self.game.rules & game.RULE_THIEF_TABLE else []
+        rows = locks.barred(self.game, self.picked)
         data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
         if data != self._locks_written:
             locks.write(self.game, self.tsr_hdr, data[1])
@@ -1006,28 +1021,31 @@ class DiceLog:
         saved file (it couldn't be read), so its pockets list isn't either (load_picked)."""
         self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
+        # (the switches gone from the Options tab, game.ALWAYS_ON: on whatever the settings say, so
+        # nothing here for them)
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
-        self.pickpockets = bool(settings.get("pickpockets", True))
-        self.show_gear = bool(settings.get("show_gear", True))
         self.starting_gear = bool(settings.get("starting_gear", True))
-        self.show_shadows = bool(settings.get("shadows", True))
-        self.combat_log = bool(settings.get("combat_log", True))
         self.floating_names = bool(settings.get("floating_names", True))
+        if settings.get("journal", True) is False:  # (the Journal tab's switch)
+            self.journal = None
+        elif self.journal is None:
+            self.journal = journal.Journal()
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
         self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
         self.game_dir = settings.get("game_dir") or self.game_dir
-        self.scroll_map = bool(settings.get("scroll_map", True))
-        self.show_dust = bool(settings.get("dust", True))
-        self.see_through = settings.get("see_through", True) is not False
-        self.elf_looks = settings.get("elf_looks", True) is not False
-        self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
-        self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
-        self.use_targeting = bool(settings.get("targeting", True))
+        self.hit_chance = settings.get("hit_chance", True) is not False
+        self.show_squares = settings.get("squares", True) is not False
+        self.squares_shown = settings.get("squares_shown", True) is not False
+        self.move_back = settings.get("move_back", True) is not False
+        self.quicksave.keys = settings.get("quick_save", True) is not False
+        self.quicksave.auto = settings.get("autosave", True) is not False
+        self.show_usable = settings.get("show_usable", True) is not False
+        self.hit_hover = settings.get("hit_hover", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1036,25 +1054,59 @@ class DiceLog:
         save is the game's own table, written here."""
         self.rules = rules
         game.RULES_IN_FORCE = rules
-        game.BELT_IN_FORCE = self.stealth_gear
+        game.BELT_IN_FORCE = True  # (a worn belt's bonus: the Stealth gear switch's, gone after 2.18)
         if self.game is not None:
             self.game.rules = rules
-            self.game.belt = self.stealth_gear
+            self.game.belt = True
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + TSR_RULES, struct.pack("<H", rules & 0xFFFF))
             self.guest.write(self.tsr_hdr + TSR_RULES_HI, struct.pack("<H", rules >> 16 & 0xFFFF))
-            skills = (SKILLS_STEALTH if rules & game.RULE_STEALTH and self.stealth_gear else 0) \
-                | (SKILLS_BELT if self.stealth_gear else 0) \
-                | (SKILLS_ELVEN if rules & game.RULE_STEALTH else 0)  # (the hiding rule's cloak and boots; the belt's own)
+            skills = SKILLS_STEALTH | SKILLS_BELT | SKILLS_ELVEN  # (the hiding rule's cloak and boots; the belt's own: always)
             self.guest.write(self.tsr_hdr + TSR_SKILLS_ON, struct.pack("<H", skills))
             table = self.game.ds * 16 + game.SAVE_KINDS if self.game is not None else None
             # (only over the game's own table: kind 5 is petrification/polymorph or, so far, the spell save)
             if table is not None and struct.unpack("<5H", self.guest.read(table, 10)) == game.KIND_TO_SAVE[:5] \
                     and struct.unpack("<H", self.guest.read(table + 2 * game.SPELL_KIND, 2))[0] in (3, 5):
-                save = game.kind_to_save(game.SPELL_KIND, rules)
+                save = game.kind_to_save(game.SPELL_KIND)
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
-                self.game.set_dodge(bool(rules & game.RULE_NO_DOUBLE))
+                self.game.set_dodge(True)  # (RULE_NO_DOUBLE, always on)
+
+    def _swings(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """What combatant ATTACKER needs to hit combatant TARGET (hitchance.predict), with the
+        switch for it on: the rules as they are, the attacker hidden in shadows or not (DSCLOG's
+        STEALTH), and what the game's AC for the target was above the Loader's count of it when
+        it was last attacked (ac_gap: DSCLOG's part, a kit's and such)."""
+        return self._predict(attacker, target) if self.hit_chance else []
+
+    def _predict(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """_swings, whatever its switch (the pointer's label has its own: hit_hover)."""
+        if self.tsr_hdr is None:
+            return []
+        try:
+            hidden = struct.unpack("<H", self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2))[0] >> attacker & 1 \
+                if attacker < game.PARTY_SIZE else 0
+            index = self.game.combatant_creature(target)
+            gap = self.ac_gap.get(index, 0) if index is not None and self.monster_ac(index) is not None else 0
+            return hitchance.predict(self.game, attacker, target, bool(hidden), gap)
+        except (struct.error, IndexError, ValueError):
+            return []
+
+    def _chance_brief(self, now: float) -> str:
+        """For the panel's header: what whoever's turn it is needs to hit the enemy chosen with Tab
+        (hitchance.brief), worked out afresh every CHANCE_EVERY seconds while one is chosen."""
+        chosen = self._targeting.chosen
+        try:
+            turn = self.game.whose_turn()
+        except (struct.error, IndexError, ValueError):
+            return ""
+        if chosen is None or turn is None or turn >= game.PARTY_SIZE or not self.hit_chance:
+            return ""
+        key, at, text = self._chance_seen
+        if key != (turn, chosen) or not 0 <= now - at < CHANCE_EVERY:
+            text = hitchance.brief(self._swings(turn, chosen))
+            self._chance_seen = ((turn, chosen), now, text)
+        return text
 
     def monster_ac(self, index: int) -> Optional[int]:
         """The AC the game last computed for creature INDEX, if it was this creature's: a fight
@@ -1151,7 +1203,7 @@ class DiceLog:
         out += struct.pack("<3H", *([h.item for h in weapons] + [game.NO_ITEM] * (3 - len(weapons))))
         out += struct.pack("<3b", *([clamp(h.thac0) for h in weapons] + [0] * (3 - len(weapons))))
         thief = g.thief_skills_now(member, game.PANEL_SKILLS)
-        ranger = g.ranger_skills_now(member) if self.rules & game.RULE_STEALTH and not thief else []
+        ranger = g.ranger_skills_now(member) if not thief else []
         if len(thief) == 6:
             out += struct.pack("<B6B", 1, *(n for _, n in thief))
         elif len(ranger) == 2:  # move silently and hide in shadows, in a thief's places
@@ -1162,7 +1214,7 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
-        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
+        age = aging.age_of(g.sheet(member))
         if age is None:
             out += bytes(6)
         else:
@@ -1180,20 +1232,23 @@ class DiceLog:
             return 0
         return max(0, min(100, skills[0][1])) if skills else 0
 
-    def _answer_stats(self) -> None:
+    def _answer_stats(self) -> bool:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
-        game waits for this, so an item just put on counts)."""
+        game waits for this, so an item just put on counts). False while no game is attached
+        (nothing to look at: the stats thread then takes its idle step)."""
         with self._stats_lock:
             if self.tsr_hdr is None or self.rand_addr is None:
-                return
+                return False
             now = time.monotonic()
             if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
                 self._beat_at = now
-                self._beat()
+                if self._same_game():  # (not through the header of a game since restarted)
+                    self._beat()
             req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
-            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
+            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2) and self._same_game():
                 self._write_stats_now()
                 self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+            return True
 
     def answer_stats_in_background(self) -> None:
         """Answer DSCLOG's requests for fresh STATS from a thread of their own, within a
@@ -1206,9 +1261,8 @@ class DiceLog:
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
-                try:
-                    self._answer_stats()
-                    step = STATS_ANSWER_STEP
+                try:  # (unattached: the idle step, not a look every millisecond)
+                    step = STATS_ANSWER_STEP if self._answer_stats() else STATS_ANSWER_IDLE
                 except Exception:  # (DOSBox gone or restarting: the main loop attaches again)
                     step = STATS_ANSWER_IDLE
         self._stats_thread = threading.Thread(target=run, name="stats", daemon=True)
@@ -1266,12 +1320,25 @@ class DiceLog:
         """False when the game has quit or been replaced by an unpatched one, when DSCLOG's header
         is gone from its place, or when its ring has read wrong for POLL_FAILS passes in a row
         (the callers then attach again, which finds the header afresh)."""
+        return self._same_game() and self._poll_fails < POLL_FAILS
+
+    def _same_game(self) -> bool:
+        """The game and DSCLOG attached to still there, where they were (still_patched less the
+        ring's reads): looked at before every pass and every write of the stats thread, so that
+        after the game restarts inside the same DOSBox nothing is written through the old data
+        segment or header before the callers' own check (every couple of seconds) attaches again."""
+        if self.rand_addr is None or self.tsr_hdr is None or self.game is None:
+            return False
         sig = self.guest.read(self.game.ds * 16 + game.BORLAND_SIG_OFFSET, len(game.BORLAND_SIG))
         return sig == game.BORLAND_SIG and self.guest.read(self.rand_addr, 2) == RAND_PATCHED \
-            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG and self._poll_fails < POLL_FAILS
+            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG
 
     def detach(self) -> None:
         self.rand_addr = None
+        self.quest_state = None  # (the next game's flags are read afresh)
+        if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
+            self.journal.reset()
+            self.journal.flush()
 
     def close(self) -> None:
         """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
@@ -1282,6 +1349,8 @@ class DiceLog:
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
+        if self.journal is not None:
+            self.journal.close()
 
     # ---- reading ----------------------------------------------------------------
 
@@ -1387,8 +1456,7 @@ class DiceLog:
             try:
                 rec = g.creature(attacker)
                 own = struct.unpack("b", rec[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]
-                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE),
-                                           bool(self.rules & game.RULE_KITS))
+                kid, war = kits.war_hit(g.sheet(attacker), kind, own, True, bool(self.rules & game.RULE_KITS))
             except (struct.error, IndexError, ValueError, AttributeError, TypeError):
                 kid, war = 0, 0
             if war:
@@ -1396,7 +1464,7 @@ class DiceLog:
                 to_hit += war
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
-            to_hit += kits.WILD_TO_HIT  # (whatever the check)
+            to_hit += kits.WILD_TO_HIT_MOD  # (whatever the check)
             if g.wild[attacker]:
                 damage += kits.WILD_DAMAGE
         return " and ".join(names), to_hit, damage
@@ -1404,7 +1472,10 @@ class DiceLog:
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
         """Everything new since the last call, as log lines. Call it every few tens of ms. Its
         changes to the game's item lists are made only if the game left them be all the while
-        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on)."""
+        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on).
+        None while the game or DSCLOG it was attached to is gone (_same_game: the callers attach again)."""
+        if not self._same_game():
+            return []
         gate = getattr(self.guest, "item_gate", None)
         if gate is not None:
             gate.begin()
@@ -1493,9 +1564,16 @@ class DiceLog:
         for memory read while the game has it half made (struct.error, IndexError, ValueError);
         either way the pass's next steps go on (one failing step once stopped all after it)."""
         try:
+            return self._step_run(fn, quiet)
+        finally:  # (each step a block of writes: the game let go after it, not held to the pass's end)
+            if self.game is not None:
+                itemgate.release(self.game)
+
+    def _step_run(self, fn: Callable[[], object], quiet: bool) -> List[str]:
+        try:
             got = fn()
-        except itemgate.ItemsBusy:
-            return []
+        except (itemgate.ItemsBusy, WriteRefused, game.TableGone):  # (a refused write: noted, and told
+            return []                                                #   by _tail; a table not there: later)
         except ProcessError:
             raise
         except (struct.error, IndexError, ValueError) as e:
@@ -1532,16 +1610,23 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
                 out += step(self._item_watches)
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
+                step(self._journal_sync)
+                step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
         step(self._scroll)
+        step(lambda: self._usable_key(now), quiet=True)
+        step(lambda: self._hover_pass(now), quiet=True)
+        out += step(lambda: self._squares_key(now), quiet=True)
+        out += step(self._move_back_pass, quiet=True)
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += step(self.initiative_lines)
         out += step(self.turn_lines)  # after the round's order and the last turn's XP
@@ -1563,16 +1648,68 @@ class DiceLog:
     def _take_text(self, now: float) -> List[str]:
         """The messages DSCLOG copied (lines), and the dialogue (kept for take_dialogue)."""
         out: List[str] = []
+        said = len(self._dialogue)
+        messages: List[str] = []
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
-                    out.append(f"Message: {' '.join(rec.text.split())}")
+                    messages.append(" ".join(rec.text.split()))
+                    out.append(f"Message: {messages[-1]}")
             else:
                 self._follow_talk(rec)
                 self._dialogue += self._not_ours(self.dialogue.add(rec, now))
         self._dialogue += self._not_ours(self.dialogue.idle(now))
         self._dialogue += self._not_ours(self._reply_choice(now))
+        if self.journal is not None and (messages or len(self._dialogue) > said):
+            self._journal_note(self._dialogue[said:], messages)
         return out
+
+    def _journal_note(self, talk: Sequence[DialogueEntry], messages: Sequence[str]) -> None:
+        """What was just said and shown, into the journal, with the game's clock and region now.
+        (Within a pass the talk goes before the message boxes: the order between them isn't kept.)"""
+        try:
+            clock, region = self.game.game_time(), self.game.region()
+        except (struct.error, IndexError, ValueError, OSError):
+            clock, region = None, None
+        for entry in talk:
+            if entry.chosen:
+                self.journal.add(journal.CHOSEN, entry.chosen, clock, region)
+            else:
+                self.journal.add(journal.TALK, entry.text, clock, region, entry.portrait,
+                                 self.speaker(entry.portrait) if entry.portrait is not None else "",
+                                 entry.replies, entry.title)
+        for text in messages:
+            kind = journal.kind_of_message(text)
+            if kind is not None:
+                self.journal.add(kind, text, clock, region)
+
+    def _quick_pass(self, loading: bool, now: float) -> List[str]:
+        """The quick save and quick load keys and the autosave (quicksave.py): its lines, and a word
+        floating over the leader when a save is made."""
+        from . import launch
+        if self._quick_dir is None:
+            self._quick_dir = launch.find_game_dir(self.game_dir) or ""
+        out = self.quicksave.tick(self.game, self.tsr_hdr, self._quick_dir, loading, now)
+        word, self.quicksave.label = self.quicksave.label, None
+        if word:
+            leader = self.game.whose_turn()
+            self._float(leader if leader is not None and leader < game.PARTY_SIZE else 0, word, labels.SPELL_INK, now)
+        return out
+
+    def _journal_sync(self) -> None:
+        """The journal's look at the id the game's numbers hold (journal.Journal.sync): a game
+        loaded shows its own journal. Not while a game is loading (_after_rolls)."""
+        if self.journal is not None:
+            self.journal.sync(lambda: journal.read_head(self.game), lambda head: journal.write_head(self.game, head),
+                              self.game.game_time())
+
+    def _quest_look(self) -> None:
+        """The game's flags and numbers read for the Journal tab's quests (quests.py), with the
+        journal's look and not while a game is loading. Their pointer is null at times (the arena
+        outside a script's run): the last reading is kept then."""
+        state = quests.read_state(self.game)
+        if state is not None:
+            self.quest_state = state
 
     def _item_watches(self) -> List[str]:
         """The watches that move items: each waits for a later pass while the game changes its
@@ -1580,8 +1717,7 @@ class DiceLog:
         out: List[str] = []
         new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
         try:
-            if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))
+            out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))  # (a magical item sold: into its merchant's pack)
             if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
                 out += self._step(lambda: self.defilers.watch(self.game, new_spells))
             # (the champions' gear to where it is worn and held: champions.py)
@@ -1613,10 +1749,9 @@ class DiceLog:
                 out.append(f"({self.missed} rolls came too fast to record)")
             self.missed = 0
         try:
-            if self.combat_log and out:
+            if out:
                 self._panel_lines(out, now)
-            if self.combat_log:
-                self._panel_input(now)
+            self._panel_input(now)
         except Exception as e:
             out += self._error_once(e)
         self.itemwatch.remember(out)  # (the context an item report carries)
@@ -1693,7 +1828,9 @@ class DiceLog:
         given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
         given |= self.guest.read(self.tsr_hdr + TSR_GEAR_GIVEN, 1)[0]  # (a pass before the window's end)
         self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
-        if not self._weapons_asked():
+        # (cleared only if GEAR_WHO still names the character worked on: another finished meanwhile
+        # keeps it set, its gear given in the next pass, not left the game's)
+        if not self._weapons_asked() and self.guest.read(self.tsr_hdr + TSR_GEAR_WHO, 1)[0] == who:
             self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
         return out
 
@@ -1706,10 +1843,9 @@ class DiceLog:
             # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
             # specs decide its weapon, and the steps after build on that weapon, in this order.
             new_ok = not self._weapons_asked()
-            if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
-                out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-            if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
-                out += weaponchoice.class_gear(self.game)
+            if new_ok:  # (new characters' weapon kinds and starting weapon: the long sword made a club
+                out += weaponchoice.finish_new(self.game)  #   before a psionicist's classes leave it behind;
+                out += weaponchoice.class_gear(self.game)  #   then the gear their classes can't use, left behind)
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
                 if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
                     out += weaponchoice.kit_gear(self.game)
@@ -1719,10 +1855,9 @@ class DiceLog:
             if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                 out += startgear.fill(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-            if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+            if new_ok:  # (a starting age for each who has none)
                 out += aging.give_ages(self.game)
-            if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
-                out += self._natural_aging()
+            out += self._natural_aging()  # (a year of the game's clock: each a year older)
             if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                 out += pickpocket.mend_lists(self.game)
             itemgate.release(self.game)
@@ -1733,13 +1868,11 @@ class DiceLog:
         out: List[str] = []
         quiet = lambda fn: self._step(fn, quiet=True)
         new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
-        if self.cilla_elf:
-            out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
+        out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
         # (the Styr, the Djinn and the Tari of a saved game as the game's copy has them: monsters.mend)
         quiet(lambda: monsters.mend(self.game, self.game.spells_manual()))
         # (the slave pens' and the world's new items are in the game's data: worldgear.py)
-        if self.stealth_gear:
-            quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
+        quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
         quiet(lambda: kalzith.stock(self.game, new_spells))  # (once a game, by its flag)
         quiet(lambda: semyon.watch(self.game))  # (killed: never put in the pens)
         quiet(lambda: kurzak.watch(self.game))  # (Legcrusher killed: Kurzak's lines about him missing)
@@ -1754,6 +1887,7 @@ class DiceLog:
         if left:
             out.append("Kalzith leaves: " + ", ".join(left))
         quiet(self._mend_scrolls)
+        quiet(lambda: worldgear.mend_searing_blade(self.game))  # (a saved game's Flame Blade, as it is now)
         quiet(lambda: tools.repaint(self.game))  # (sets of Thieves' Tools an earlier version gave: their name and picture)
         out += quiet(lambda: [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)])
         out += quiet(lambda: [kurzakdoor.opened_line()] if self.kurzak_door.check(self.game) else [])
@@ -1787,23 +1921,93 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
         try:
-            self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
-                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
-                                 or self.see_through)
+            self._shadows.update(self.game, self.tsr_hdr, True, now, needed=True)  # (the dust, the
+            # combat log and the see-through figures need its palettes: always on)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
-            foes = rings.enemies(self.game)
-            out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
-            self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
-                               self._targeting.chosen)
-            self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
+            self._labels_gone()
+            foes = self._foes = rings.enemies(self.game)
+            out = self._targeting.update(self.game, self.tsr_hdr, True, foes,
+                                         lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
+            self._marks(now)
+            self._dust.update(self.game, self.tsr_hdr, True, self._shadows.palettes)
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares and self.squares_shown,
+                                 self._shadows.palettes)
             hdr = self.tsr_hdr
-            self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
+            self._ghosts.update(self.game, hdr, True, self._shadows.palettes,
                                 lambda: shadows.redraw(self.game, hdr))
         except (struct.error, IndexError, ValueError):
             return []
         return out
+
+    def _marks(self, now: float) -> None:
+        """The rings: under what can be used while Alt is held out of a fight (usable.py, with the
+        names of those nearest the pointer), else the Tab ring's (rings.py, which owns the table)."""
+        if self.show_usable and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        table = self._usable.update(self.game, self.tsr_hdr, self.show_usable, now, self._labels)
+        self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
+                           self._targeting.chosen, table)
+
+    def _usable_key(self, now: float) -> None:
+        """Every pass: the marks put up or taken down as Alt is pressed or let go (and at a
+        fight's start), not at the next of _drawn's looks, a quarter of a second apart."""
+        if self.tsr_hdr is not None and self.game is not None and self._shadows.palettes \
+                and self._usable.changed(self.game, self.show_usable, now):
+            self._marks(now)
+
+    def _squares_key(self, now: float) -> List[str]:
+        """Every pass: R on the map in a fight shows or hides the squares in reach (the Options
+        tab's switch on), as L does the combat log's panel: remembered (the settings'
+        squares_shown), said in the dice log and over the member whose turn it is. The key is
+        read from the BIOS keyboard buffer (keywatch.py): the game has no use for R."""
+        if self.game is None:
+            return []
+        pressed = [key for key in self._keys.take(self.game.guest)
+                   if key in (keywatch.KEY_R, keywatch.KEY_SHIFT_R)]
+        if not pressed or not self.show_squares or self.tsr_hdr is None:
+            return []
+        if self.game._word(quicksave.SCREEN_IS) != quicksave.ON_MAP or not self.game.in_combat():
+            return []
+        if len(pressed) % 2 == 0:  # (pressed twice between two looks: as it was)
+            return []
+        self.squares_shown = not self.squares_shown
+        _remember({"squares_shown": self.squares_shown})
+        self._squares.update(self.game, self.tsr_hdr, self.squares_shown, self._shadows.palettes)
+        turn = self.game.whose_turn()
+        self._float(turn if turn is not None and turn < game.PARTY_SIZE else 0,
+                    "Squares shown" if self.squares_shown else "Squares hidden", labels.SPELL_INK, now)
+        return ["Squares in reach: shown (R hides them)" if self.squares_shown
+                else "Squares in reach: hidden (R shows them)"]
+
+    def _move_back_pass(self) -> List[str]:
+        """Every pass: a move taken back with F10 after its last step can be walked again
+        (moveback.py); the squares in reach are marked again at their next look."""
+        if self.game is None:
+            return []
+        line = self._move_back.update(self.game, self.move_back)
+        return [line] if line else []
+
+    def _hover_pass(self, now: float) -> None:
+        """Every pass: the chance to hit over the enemy the game's pointer is on, in a fight on a
+        party member's turn (hover.py); the label follows the pointer within a pass or two, not
+        at _drawn's next look."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        if self.hit_hover and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        self._hover.update(self.game, self.tsr_hdr, self.hit_hover, now, self._labels,
+                           lambda: self._foes, self._predict)
+        self._labels_gone()
+
+    def _labels_gone(self) -> None:
+        """The view drawn again once a label has been taken off or changed (Labels.took_off: what
+        DSCLOG has drawn over its old place doesn't stay in a still scene)."""
+        if self._labels.took_off() and self.tsr_hdr is not None:
+            shadows.redraw(self.game, self.tsr_hdr)
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
@@ -1832,7 +2036,7 @@ class DiceLog:
         panel = self._panel
         if not panel.shown:  # (L with the panel over the map hidden: show it)
             try:
-                if panel.keys(self.game, self.tsr_hdr) and self.combat_log:
+                if panel.keys(self.game, self.tsr_hdr):
                     panel.open = True
                     _remember({"combat_log_open": True})
                     self._update_panel(now)
@@ -1856,16 +2060,26 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             pass
 
+    def _map_up(self) -> bool:
+        """The map is the screen, with no window, screen, menu or talk over it (the game's
+        DS:0BC9h is 1)."""
+        try:
+            return self.game._word(quicksave.SCREEN_IS) == quicksave.ON_MAP
+        except (struct.error, IndexError, ValueError):
+            return True
+
     def _update_panel(self, now: float) -> None:
         """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
-        fighting = self.combat_log and self.game.in_combat()
+        fighting = self.game.in_combat()
         if fighting:
             if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self.combat_log and self._panel.open
+        # (shown only while the map is the screen: over a window, a screen or a talk DSCLOG would
+        # draw it on top, as it did over the save and load windows; back when the map is)
+        on = self._panel.open and self._map_up()
         top, names = "", {}
         if on:
             if not self._font_tried:
@@ -1881,7 +2095,7 @@ class DiceLog:
                 name = self.game.creature_name(index)
                 if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
                     self._fight_monsters.add(name)
-            top = combatlog.header(self.round_status())
+            top = combatlog.header(self.round_status(), self._chance_brief(now))
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
         in_arena = False  # (between fights in the arena: its count in the header; elsewhere the time)
         if on and not fighting:
@@ -1954,7 +2168,7 @@ class DiceLog:
         if self.tsr_hdr is None:
             return
         try:
-            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map)
+            self._scrolling.update(self.game, self.tsr_hdr, True)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -1977,12 +2191,12 @@ class DiceLog:
             import os
             copy = os.path.join(launch.DOS_DIR, icons.OBJECTS_FILE)
             self._dresser = sprites.Dresser.for_game(self.game, launch.find_game_dir(),
-                                                     copy if os.path.exists(copy) else None, self.elf_looks)
+                                                     copy if os.path.exists(copy) else None)
             if self._dresser is not None and self.tsr_hdr is not None:
                 hdr = self.tsr_hdr
                 self._dresser.request_redraw = lambda: shadows.redraw(self.game, hdr)
-        if self._dresser is not None and (self.show_gear or self._dresser.shown):
-            self._dresser.update(self.show_gear, now)
+        if self._dresser is not None:
+            self._dresser.update(True, now)
 
     def _ring_search(self) -> List[str]:
         """While the arena's ring is still to be found: have DSCLOG show ring.SEARCH_TEXT instead
@@ -2515,7 +2729,7 @@ class DiceLog:
                 out.append(f"{name} on {targets}{rule}")
             else:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
-            if eid == game.HASTED_EFFECT and self.rules & game.RULE_AGING:  # (Haste's magical aging)
+            if eid == game.HASTED_EFFECT:  # (Haste's magical aging)
                 for owner in owners:
                     creature = self.game.combatant_creature(owner)
                     if creature is not None:
@@ -2581,9 +2795,9 @@ class DiceLog:
             #             just after a fight looked like a new turn, and a thief rolled its hiding)
         name = self.game.combatant_name(turn)
         out = [f"{name}'s turn"] if name != "?" else []
-        if self.rules & game.RULE_STEALTH and turn < game.PARTY_SIZE:
+        if turn < game.PARTY_SIZE:
             try:
-                lines, hidden = stealth.turn(self.game, turn, self.stealth_roll, self.stealth_gear)
+                lines, hidden = stealth.turn(self.game, turn, self.stealth_roll, True)
             except (struct.error, IndexError, ValueError):
                 lines, hidden = [], False
             out += lines
@@ -2625,7 +2839,7 @@ class DiceLog:
             self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, now)
             if hidden:
                 self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.HIDE_SOUND))
-            if now != was and self.see_through:
+            if now != was:
                 shadows.redraw(self.game, self.tsr_hdr)  # (drawn see-through, or no longer)
 
     def round_status(self, acted_creatures: frozenset = frozenset()) -> Optional[dict]:
@@ -2773,7 +2987,7 @@ class DiceLog:
             name = "Turn Undead" if e.raw == TURN_UNDEAD_SPELL else self.game.spell_name(e.raw)
             self._float(e.arg(6), name, labels.SPELL_INK, now)
             self._tally.cast(self._name(e.arg(6)), name)  # (its damage the caster's: Magic Missile's)
-            if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
+            if e.raw == game.RESTORE_YOUTH_SPELL:  # (its years: aging.restore)
                 caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
                 if caster is not None and target is not None:
                     level = self.game.effect_caster_level(caster, e.raw) or 1
@@ -2989,8 +3203,7 @@ class DiceLog:
         if chance <= -500:  # the game takes 1000 off when an effect makes it impossible
             return [f"{head} -> failure (an effect stops it)"]
         head += f", needs {chance} or less -> {'success' if roll <= chance else 'failure'}"
-        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE \
-                and self.game.rules & game.RULE_THIEF_TABLE:  # (no other try till a level is gained)
+        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE:  # (no other try till a level is gained)
             failed = locks.failed_key(self.game, who)
             if failed is not None:
                 self._remember_pick(failed)
@@ -3014,7 +3227,7 @@ class DiceLog:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
         if luck:
             steps.append(f"-{luck} Swashbuckler's bad luck")
-        capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
+        capped = rest < 0 and chance - bonus == game.THIEF_MOST  # (AD&D's most: Thieves as in AD&D, always on)
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")
         if rest and not capped:  # the only other part of the chance: the equipment penalty
@@ -3069,7 +3282,7 @@ class DiceLog:
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)
         # AD&D's held target (RULE_HELD, DSCLOG's HELD_HIT): a Paralyzed or Out Cold one is hit whatever the d20
-        held = self._helpless(e) if self.rules & game.RULE_HELD else None
+        held = self._helpless(e)
         hit = hit or bool(held)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
 
@@ -3110,8 +3323,8 @@ class DiceLog:
         return out
 
     def weapon_skill(self, attacker: Optional[int], item_type: Optional[int]) -> int:
-        """A creature's weapon specialization skill with a weapon (specialize.skill), with the rule on."""
-        if attacker is None or not self.game.rules & game.RULE_SPECIALIZE:
+        """A creature's weapon specialization skill with a weapon (specialize.skill)."""
+        if attacker is None:
             return specialize.NONE
         sheet = self.game.sheet(attacker)
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
@@ -3130,7 +3343,7 @@ class DiceLog:
         # the cahulaks' rule (DSCLOG's CAHULAKS): each swing the main head's penalty, in the setup's
         # bonus; the off head's swing (the round's last) its more added to [BP+0Ah] after it
         heads = None
-        if mode is not None and mode <= 1 and item_type in game.CAHULAKS_TYPES and g.rules & game.RULE_CAHULAKS:
+        if mode is not None and mode <= 1 and item_type in game.CAHULAKS_TYPES:
             heads = (g.two_weapons(attacker, 0, "main"), g.two_weapons(attacker, 0, "off"))
         expected = None if None in (after_f1, hit_bonus) else after_f1 - hit_bonus - skill[1] - sum(v for _, v in kit)
         off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \
@@ -3166,8 +3379,8 @@ class DiceLog:
             parts.append(("target's Fogbolt", 2))
             situational -= 2
         if on(attacker_combatant, game.STINK_EFFECT):  # (a stinkpot's Nauseated: DSCLOG's NS_HIT)
-            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT))
-            situational -= game.STINK_TO_HIT
+            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT_MOD))
+            situational -= game.STINK_TO_HIT_MOD
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
@@ -3327,7 +3540,7 @@ class DiceLog:
                     total += kits.cure_bonus(kid, spell, outdoors)
                     kit = f" {signed(kits.cure_bonus(kid, spell, outdoors))} {kits.name(kid)}"
                 elif kits.cure_die(kid, spell):
-                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the helper's roll)"
+                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the kit's die)"
                 return self.flush(now, force=True) + [
                     f"{self.game.spell_name(spell)}: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
                     + (f" {signed(handler)}" if handler else "") + kit + (f" = {total}" if "1d" not in kit else "")]
@@ -3370,7 +3583,7 @@ class DiceLog:
         own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
         if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
             steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
-        elif own_dice and self.rules & game.RULE_SIZE and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
+        elif own_dice and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
             steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \
                 + (("a large target, grand mastery)" if grand else "a large target)") if large
@@ -3386,13 +3599,13 @@ class DiceLog:
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
-            # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
-            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down; with
-            # RULE_ENLARGE only the weapon's dice, rounded up, the rest added once (DSCLOG's ENL_SITE)
+            # Enlarge: +10% a level of the spell, the levels of every Enlarge on the attacker added
+            # up (598:52h), on the weapon's dice only, rounded up, the rest added once (RULE_ENLARGE,
+            # DSCLOG's ENL_SITE); with no dice the game's (DSUN 7C211h): the whole, rounded down
             level = self._enlarge_level(e.parent_arg(0x18))
             if level:
                 percent = 100 + 10 * level
-                if self.rules & game.RULE_ENLARGE and dice > 0:
+                if dice > 0:
                     enlarged = -(-dice * percent // 100)
                     total += enlarged - dice
                     steps += f" +{enlarged - dice} Enlarge (the dice {dice} x{percent}% = {enlarged}, level {level})"
@@ -3400,33 +3613,24 @@ class DiceLog:
                 else:  # (32-bit idiv: toward 0)
                     total = int(total * percent / 100)
                     steps = f"({steps}) x{percent}% Enlarge (level {level})"
-        # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
-        # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
-        # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
-        # first attack only (DSCLOG's STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h]
-        # from behind, [BP-14h] the attacks already made this round
+        # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies the
+        # weapon's dice, the rest added once, on the attacker's first attack of the round: x2, x3
+        # from thief level 5, x4 from 9, x5 from 13 (RULE_BACKSTAB, DSCLOG's STAB_TIMES; the game
+        # multiplies all of it, on the first two attacks). The attack's frame: [BP+1Eh] backstab,
+        # [BP+20h] from behind, [BP-14h] the attacks already made this round
         backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
-        most = 0 if self.rules & game.RULE_BACKSTAB else 1
-        if backstab and rear and made is not None and made <= most:
+        if backstab and rear and made is not None and made <= 0:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
-            if self.rules & game.RULE_BACKSTAB:
-                more = (times - 1) * dice
-                total += more
-                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
-            else:
-                total *= times
-                steps = f"({steps}) x{times} backstab"
-        # a held (Paralyzed) or Out Cold target takes double: the attack routine hands the game's
-        # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target;
-        # with RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as it is, AD&D's
+            more = (times - 1) * dice
+            total += more
+            steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+        # a held (Paralyzed) or Out Cold target takes the damage as it is, AD&D's (RULE_HELD, DSCLOG's
+        # HELD_DAMAGE; the game doubles it: the attack routine's x2 at 58B0Dh, "shl ax,1")
         helpless = self._helpless(e)
-        if helpless and total > 0 and not self.rules & game.RULE_HELD:
-            total *= game.HELPLESS_TIMES
-            steps = f"({steps}) x{game.HELPLESS_TIMES} {helpless}: a helpless target takes double"
         if total > 0 and any(x.owner == e.glob[0] and x.id == game.BIOFEEDBACK_EFFECT for x in g.effects()):
             # (the game's own 2 off a blow, 79BF9h, leaving none of 2 or less; at least 1 with the
             # spells as the manual has them: DSCLOG's BIO_SITE)
@@ -3736,13 +3940,10 @@ class DiceLog:
                 adnd += ", -1 for its power"
             if save.adnd != base:
                 adnd = f"{save.adnd} ({adnd})"
-            if g.rules & game.RULE_ITEM_SAVES:
-                if save.own is not None and needed == save.own and save.own <= save.adnd:
-                    why = f" (the game's; AD&D's: {adnd})"
-                else:
-                    why = f" (AD&D's, {adnd}; the game's: {own})"
+            if save.own is not None and needed == save.own and save.own <= save.adnd:
+                why = f" (the game's; AD&D's: {adnd})"
             else:
-                why = " (the game's)"
+                why = f" (AD&D's, {adnd}; the game's: {own})"
         need = f"needs {needed}" if needed > 1 else "safe whatever the roll"
         return [f"{head}: d20 = {roll}, {need}{why} -> {'CORRODED' if corroded else 'safe'}"]
 
@@ -3825,7 +4026,7 @@ class DiceLog:
             gained *= 2
             text += f", doubled for a half-giant = {gained}"
         classes = game.class_share(sheet)
-        if self.game.rules & game.RULE_MULTI_HP and classes > 1:  # (DSCLOG's CON_SHARE)
+        if classes > 1:  # (DSCLOG's CON_SHARE)
             per = self.game.con_per_die(sheet, con)
             text += f", {signed(per)} CON {con}, into the total shared by {classes} classes"
         cls_name = game.CLASS_NAMES.get(cls, f"class {cls}")
@@ -3986,7 +4187,7 @@ class DiceLog:
             steps = f"({steps}) x2 half-giant"
         steps += f" = {rolled}"
         classes = game.class_share(sheet)
-        multi = bool(g.rules & game.RULE_MULTI_HP) and classes > 1
+        multi = classes > 1
         con = self._creation_con if self._creation_con is not None \
             else g.creature(index)[CREATURE_ABILITIES + 2]
         levels = {}
@@ -4126,6 +4327,7 @@ class DiceLog:
         save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
+        spell = self._npp_save(spell, e.parent)
         if not self._stink_save(target, spell):  # (a stinkpot's: no spell's damage to follow)
             self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
@@ -4136,10 +4338,20 @@ class DiceLog:
         self._save_rolls[(e.ss, e.parent_bp)] = natural
         return pending
 
+    def _npp_save(self, spell: Optional[int], frame: bytes) -> Optional[int]:
+        """Negative Plane Protection's save (game.NPP_SAVE_RECORD) for one against Vampiric Touch
+        that DSCLOG made (NS_NPP: the save routine's way back, at FRAME's start, in DSCLOG's
+        segment, whose start is its header's); else SPELL."""
+        if spell == game.NPP_TOUCH and len(frame) >= 4 and self.tsr_hdr is not None \
+                and struct.unpack_from("<H", frame, 2)[0] == self.tsr_hdr >> 4:
+            return game.NPP_SAVE_RECORD
+        return spell
+
     def _save(self, e: Entry) -> List[str]:
         total, needed = e.raw & 0xFF, e.raw >> 8
         natural = self._save_rolls.pop((e.ss, e.bp), None)
         spell, target, caster = e.arg(0x0A), e.arg(6), e.arg(8)
+        spell = self._npp_save(spell, e.frame)
         return self._flush_spell(spell) + [
             self._save_line(target, caster, spell, e.local(-6), natural, total, needed)]
 
@@ -4387,16 +4599,13 @@ class DiceLog:
         if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
             return f"{who}: d20 = 20 (natural 20) -> {result(spell, True)}"
         if total > 100:
-            if g.rules & game.RULE_SIZE and sizes.spared(g, spell, target):
+            if sizes.spared(g, spell, target):
                 return f"{who}: {g.combatant_name(target)} is too big for {g.spell_name(spell)} -> unaffected"
             return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)
         steps, rolled = "d20", None
         if natural is not None:
             steps, rolled = f"d20 = {natural}", natural
-            if rules and rules.doubles_roll:
-                rolled = natural * 2
-                steps += f", doubled against {rules.doubled_for} = {rolled}"
             parts = []
             if rules and rules.save_modifier:
                 parts.append(f"{signed(rules.save_modifier)} spell")
@@ -4416,8 +4625,7 @@ class DiceLog:
             steps += f" total {total}"
         chance = ""
         if natural is not None:
-            doubled = bool(rules and rules.doubles_roll)
-            chance = f" ({save_chance(needed - (total - (rolled or 0)), doubled)}% to save)"
+            chance = f" ({save_chance(needed - (total - (rolled or 0)))}% to save)"
         return f"{who}: {steps}, needs {needed}{chance} -> {result(spell, total >= needed)}"
 
     def _save_result(self, spell: int, saved: bool) -> str:
@@ -4446,6 +4654,10 @@ class DiceLog:
         if index is not None:
             self.last_ac[index] = ac
             self._ac_whose[index] = self.game.creature_name(index)
+            attacker = self.game.combatant_creature(e.arg(8)) if e.arg(8) is not None else None
+            counted = self.game.attack_ac(index, attacker, bool(rear))
+            if counted is not None:  # (what DSCLOG added to the game's: hitchance.py)
+                self.ac_gap[index] = ac - counted
             sheet, rec = self.game.sheet(index), self.game.creature(index)
             armour = e.local(-6)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:

@@ -1,4 +1,4 @@
-"""The Loader's own game flags (DEVELOPMENT.md's The Loader's game flags): each module's in 756-807,
+"""The Loader's own game flags (DEVELOPMENT-INTERNALS.md's The Loader's game flags): each module's in 756-807,
 the 808 a save keeps, and no two modules sharing one."""
 
 import importlib

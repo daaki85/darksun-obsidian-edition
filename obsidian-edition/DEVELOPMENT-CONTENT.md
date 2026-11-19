@@ -4,31 +4,376 @@
 
 ## Contents
 
-- [The game's script bugs](#the-games-script-bugs)
-- [Mirror Image](#mirror-image)
-- [The game's spells](#the-games-spells)
-- [Worn items, the gladiator's armour and Psionic Blast](#worn-items-the-gladiators-armour-and-psionic-blast)
-- [New spells (wizard and 6th-level priest)](#new-spells-wizard-and-6th-level-priest)
-- [New items](#new-items)
-- [Bracers of defense](#bracers-of-defense)
-- [Robes](#robes)
-- [Girdles and the amulet](#girdles-and-the-amulet)
-- [Kalzith](#kalzith)
-- [Semyon](#semyon)
-- [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
-- [The game's people's gear](#the-games-peoples-gear)
-- [Pehtucl's chest](#pehtucls-chest)
-- [The champions' bout](#the-champions-bout)
-- [The cooked vulture](#the-cooked-vulture)
-- [Defilers' scrolls](#defilers-scrolls)
-- [What the party wears](#what-the-party-wears)
-- [Graphics disappearing in a busy area](#graphics-disappearing-in-a-busy-area)
-- [Elves and half-elves](#elves-and-half-elves)
-- [Shadows](#shadows)
-- [Dust](#dust)
-- [See-through figures](#see-through-figures)
-- [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
-- [An archer's last arrow and a dry quiver](#an-archers-last-arrow-and-a-dry-quiver)
+- **The game's bugs** (in the order of [GAME-BUGS.md](GAME-BUGS.md)):
+  - [Mirror Image](#mirror-image)
+  - [The game's spells](#the-games-spells)
+  - [Worn items, the gladiator's armour and Psionic Blast](#worn-items-the-gladiators-armour-and-psionic-blast)
+  - [An archer's last arrow and a dry quiver](#an-archers-last-arrow-and-a-dry-quiver)
+  - [Graphics disappearing in a busy area](#graphics-disappearing-in-a-busy-area)
+  - [The game's script bugs](#the-games-script-bugs)
+- **Spells, items, people and graphics:**
+  - [New spells (wizard and 6th-level priest)](#new-spells-wizard-and-6th-level-priest)
+  - [New items](#new-items)
+  - [Bracers of defense](#bracers-of-defense)
+  - [Robes](#robes)
+  - [Girdles and the amulet](#girdles-and-the-amulet)
+  - [Kalzith](#kalzith)
+  - [Semyon](#semyon)
+  - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
+  - [The game's people's gear](#the-games-peoples-gear)
+  - [Pehtucl's chest](#pehtucls-chest)
+  - [The champions' bout](#the-champions-bout)
+  - [The cooked vulture](#the-cooked-vulture)
+  - [Defilers' scrolls](#defilers-scrolls)
+  - [What the party wears](#what-the-party-wears)
+  - [Elves and half-elves](#elves-and-half-elves)
+  - [Shadows](#shadows)
+  - [Dust](#dust)
+  - [See-through figures](#see-through-figures)
+
+## Mirror Image
+
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).)
+
+The game's only use of the images is a d100 in the routine that lands a spell
+on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
+spell for one creature (618:20h's 8 or less: the spell record's target kinds 3,
+4, 5, 7 and 8, not an area's, a cone's or a wall's). An image taking it uses a
+charge (598:57h, 76803h) and shows it vanishing (7AD8Ah: "spell" 0BFh, cast by
+the creature on itself). The game made no exception for the caster's own
+spells, so Armor cast on oneself under Mirror Image was lost three times in
+four, an image with it, and weapon blows come to that routine with no spell
+(-1) and skip the roll, so the images stopped none.
+
+- **Spells** (`NS_IMAGE`, at 7A5CDh): the chance is 0 unless caster (DI) and
+  target (SI) are on opposite sides (party members below 4); else 75, or 50
+  for Reflected Image's (`IMAGE_CHANCE`). The dice log knows the roll by the
+  code after the dice call (`IMAGE_SPELL_RETURN`), or, with the overlay
+  manager's INT 3Fh stub there, by the routine's arguments (target, caster,
+  spell at +12h) and Mirror Images on the target; the vanishing's roll
+  (spell 0BFh) goes unmentioned.
+- **Blows** (`NS_BLOW`, replacing the attack routine's `cmp word [bp+1Ah],0`
+  at 58A00h, 5883Ah's, just after a hit is decided): with Mirror Images on the
+  target (`[494Ah]`), DSCLOG rolls the d100 with the game's own rand()
+  (load segment:0822h), from a frame of (target, attacker, chance) and with
+  `jmp short +5 / "IMAGE"` after the call, which the Loader's filters and
+  `IMAGE_BLOW_SITE` know. On the chance or less it has the game use a charge
+  (598:57h, as for a spell) and sends the attack on as a miss (58A46h, the
+  miss sound). The way back, the miss's address already, goes in a frame with
+  BP that the overlay manager can fix up: 598:57h is overlay code and may load
+  others over the attack's, and adding to the way back after the call would
+  add to the manager's INT 3Fh stub.
+
+## The game's spells
+
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).) More bugs mended
+whatever the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`,
+after the `ns_list_` patches):
+
+- **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
+  any spell or blow landed on a target with Armor (7A557h, `je` past it
+  unless effect 2 is on), and the damage routine (79A3Eh) used another for the
+  damage. `armor_charge` makes the first jump always taken, leaving one charge
+  for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
+  the damage routine too (the attack routine's one damage call, 5B8:20h at
+  58B1Fh, with spell FFFFh), so DSCLOG needs no site for blows. Seen in the
+  arena: a hit takes Armor from 9 charges to 8.
+- **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
+  under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
+  the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
+  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Only for a spell
+  lasting a number of uses (its record's time, +7, from -1 down to -9998) or
+  for a timed effect (an entry of kind 7 in the event queue, DS:2FBEh, with its
+  owner and handle, as Armor's). A permanent effect (time `PERMANENT_TIME`,
+  Charmed) and an item's power (Shadowseeker's Detect Invisibility: the game casts it for -9999 while it is readied, with no
+  timer) hold a meaningless 15 at +8, 9999's low byte. Mirror Images from Reflected Image take its name
+  and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
+  Image, whose entry that is, writes it again before its own use
+  (`ns_reflect_entry`).
+  Enlarge (effect 16) on a party member is named with its damage instead,
+  ENLARGED (+90% DICE): the level is the Loader's (`STATS_ENLARGE`, the 25th
+  byte of the member's STATS, from `GameData.enlarge_level`, the caster's level
+  as Dispel Magic weighs it), printed with a 0 after it. Working it out in
+  DSCLOG would mean calling 598:52h, the game's sum of a creature's Enlarge
+  levels, from the Effects screen's overlay. The game lets only one Enlarge on
+  a creature (verified in play: a second cast uses up the spell, nothing added).
+  Barkskin (57), Flesh Armor (59) and Magical Vestments (60) are named with the
+  armour AC they give, BARKSKIN (AC 3) (`STATS_ARMOUR`, bytes 25-27, -128 for
+  none, from `GameData.armour_spells_ac`), as the effects' part of the AC
+  routine (7C557h) works it out: at most 6 - L/4, at most 10 - L, and 5 less
+  (L - 5)/3 above 5th, L the effect's level as 7678Ch sums it, each such effect
+  at its caster's level by 81B16h: a spell's as Dispel Magic weighs it, a psionic
+  power's (138-171) the psionicist level, spell 190's the best of classes 1-4,
+  anything else's the best of the sheet's three (`GameData.effect_level`).
+  Verified in play (no log kept).
+- **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
+  removed each record of the power cast by DI with 598:48h (owner, handle), but
+  passed DI as the owner, so a receiver's record stayed (and a record of the
+  psionicist's own with that handle went instead); and after a removal
+  the records move down, so the next was skipped. `power_end_*` push each
+  record's own owner (+0) and handle (+7), step SI back after a removal, and
+  count to the live count (DS:1E24h) rather than 192; the `mov ax,390h` and
+  the far call are left where they were (their segments are fixed up).
+- **Dispel Magic** (spell 26, the preserver's): its record's effect (+19h) was
+  50, "No spell use", which Dispel Magic itself doesn't end; the cleric's
+  record has none. `dispel_effect` makes it 0.
+- **Hold Undead** (spell 31): the landing routine asks whether the target is
+  undead (7BE20h, AL) and, if not, goes on to 7A359h for any spell, which
+  looked like Hold Undead holding anything. It doesn't: every spell's targets,
+  one creature's too, are gathered by the area code (8BEB:0000h, 846D0h) and
+  sifted by 80F5:1CF7h (7A897h, its table at 80F5:1DCFh: spell 31's case asks
+  7BE20h too), which drops a living target first. `hold_undead` puts DSCLOG's
+  `NS_HOLD` site over the landing routine's `or al,al / je +22h` (7A333h) all
+  the same, a second guard: a living target of spell 31 goes to the
+  immunity's way out (7A1F0h).
+  The manual's limit, undead of no more hit dice than the caster's level, is
+  `hold_undead_level` (with "Spells and psionics as the manual describes them"): DSCLOG's
+  `HOLD_HD_SITE` over the undead's `test word [bp+0Eh],100h` (7A345h), which
+  makes that test and its jump itself, and for spell 31 sends an undead whose
+  level (its sheet's, as 5E85Fh has it: a human's +24h, else its classes'
+  highest; a classless one's +24h) is above the frame's [BP+14h], the cast's
+  level, to 7A1F0h too.
+- **The save modifiers** (79D3Ch: [BP+6] the target, [BP+14h] the spell,
+  [BP+16h] the caster's level, [BP-6] the target's level, SI the modifier):
+  the target's level comes from 508h:2Ah (5E85Fh), 0 for a creature with no
+  class (+21h..23h all 0), though its hit dice are at its sheet's +24h. With
+  "Spells and psionics as the manual describes them", `classless_save_level` puts DSCLOG's
+  `HD_SAVE_SITE` over its `mov [bp-6],ax` (79D8Ch): such a creature's 0 made
+  its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
+  `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
+  `cmp word [bp+14h],3Ch / jnz` (79F83h): Color Spray (spell 4) on a target of
+  the caster's level or lower -100 (no save, even on a natural 20: `save_natural`), then
+  Dismissal's test made in the handler (on to 79F89h, or past to 79F95h).
+- **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
+  damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
+  code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice
+  (+1Dh >> 3) plus the steps' dice (+1Ch >> 5) of the sides (+1Eh & 0Fh), and
+  adds the steps' flat bonus (+1Ch & 1Fh), the steps being (the caster level,
+  at most 10, + the adjustment, +1Eh >> 4) / the levels a step (+1Dh & 7), at
+  least 1. `cause_serious` and `cause_critical` make them 2d8 and 3d8 with a
+  step of +1 and +3 a 7 levels: one step at any level. `SpellDamage.flat` lets
+  the dice log and the Spells tab show it as 2d8+1, not "+1 for each 7 caster
+  levels".
+- **Absorb Disease** (power 147): its case in the effect handlers (80F5:089Eh,
+  7943Eh) ran on into Strength's (79470h: 1d6 STR, effect 43h, the psionicist
+  its target), and jumped there too when the target had no disease.
+  `absorb_no_strength` and `absorb_end` send both ways to the end of
+  Strength's case (794ACh: the flags it sets, then the handlers' end).
+- **Bless and Aid's filter** (7B03Dh, 80F5:249Dh): whether one of the caster's
+  side has an enemy within 28 sixteenths, measured from a point given by the
+  creature's place (DS:669Dh + 20h a thing: x, then y at +669Fh), but the
+  routine pushed the x twice. `bless_from_cell` makes the first push the y.
+- **The fire elementals** (kinds 32 and 33): their resistance classes, in the
+  monster kinds' table (3E45h:00A8h + the kind, 43918h), were 14 (+1 weapons,
+  nothing from fire) and 13 (+2 weapons, fire hurting), the wrong way round
+  (the clue book: lesser elementals +1, the others +2). `fire_elemental` makes
+  them 15, a class the game has and no kind used (+2, nothing from fire), and
+  14. DSCLOG's SEG_MOVE copies the table, so the change goes with it.
+- **Cloak of Bravery** (Brave, effect 9): the saving throw's modifiers
+  (79EBDh) give it +4 and use a charge only against a spell whose record has
+  100h in its +11h word (80F5:25A0h), which none had. `brave_fear_*` set it on
+  the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
+  Fear (78; a Cloak of Fear's too) and Insect Plague (132); Spook (200) has it
+  from DSCLOG's `NS_PATCHES`. The Loader's saves show the +4 (`FEAR_CATEGORY`).
+- **Scare's save** (spell 21, in the save modifiers' routine, 80F5:119Ch): a target of 6th
+  level or more always saves (+100); below, the usual save only for a priest (7C01Dh) whose race
+  (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
+  (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
+  (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
+  resist fear (found by yuan-ti). None of this ran before `scare_save`: Scare's record's save byte
+  (+1Fh, 4222Fh) was A0h, bit 0 ("a save allowed") clear, and the saving throw (79A71h) answers
+  "not saved" at its first test (79A89h) without it, before the modifiers. `scare_save` sets it
+  (A1h, as Charm and Hold Person's). Seen before it: Scare on a 7th-level fighter, no save rolled
+  ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-scare-no-save.md)).
+- **The creation screen's minimums** (67399h, far, `[bp+6]` the class count and `[bp+8]` the
+  ability; its answer goes to `DS:4994h`): the game's own looked each creation class (the sheet's
+  +21h, 1-8) up in the table at `338:180h` (a word, the prime requisite, then a byte) and gave 17
+  for the prime requisite, the byte (9 to 14) for any other score. `least_scores` replaces its 104
+  bytes with `dos/least_scores.asm`: a nibble a score for each class
+  (`dos/least_scores_table.inc`, the manual's minimums, 0 none), the highest of the classes', 3 if
+  none. It keeps the two `mov dx,338h` at +1Eh and +42h where they were: the overlay manager fixes
+  up their segment. The table at `338:180h` is left as it was, as the dual-class check (86E94h)
+  reads its prime requisite. `game.CREATION_MINIMUMS` is the same table for the dice log;
+  tests/test_least_scores.py runs the routine and checks both.
+- **Negative Plane Protection** (effect 42): an undead's negative-energy touch
+  (element 100h) on a creature under it (7A7C5h) uses a charge, then the
+  target saves (79A71h) as against Vampiric Touch (27h), whose record allows
+  no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
+  (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the save itself,
+  through its stub (5B8:2Fh) with the game's arguments, Vampiric Touch's own
+  record's save byte made 21h (a save against paralysis, poison and death) for
+  that call only and put back as it returns, and goes on at 7A7F9h with the
+  charge's two arguments taken off and AX the save's. Saved, the game stops the
+  touch and gives the undead 2d6. The dice log names a save against 27h made
+  from DSCLOG's code the protection's (`game.NPP_SAVE_RECORD`). (Till
+  2026-11-18 the save used a copy of the record at 212, past the new spells'
+  room: [New spells](#new-spells-wizard-and-6th-level-priest).)
+- **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
+  (the entry's +8) through 76803h, which calls the effect's handler (for Acid
+  7897Bh: 2d4 acid, the damage named Acid Arrow) and takes the entry out at
+  none, but it calls it for Acid only on chance events, and Acid Arrow's time
+  is in seconds (+8 none) on DS:[9B72h]'s clock (60 at each round's start in
+  a fight), a timer that only ends it, so the acid never burned again after
+  the hit. DSCLOG's `ACID_ROUNDS`
+  (76525h, in the routine adding an effect) makes an Acid's seconds rounds as
+  charges (1 a started minute, at most 127); `ACID_ROUND` (5741Dh, the start
+  of the routine starting each round, before its initiative) calls 76803h
+  for each creature with Acid charges through its stub (DS-0C7h:57h), the way
+  back in a frame the overlay manager can fix up; `ACID_USE` (76808h) has any
+  other call spending Acid's return at once. The burn's damage is Acid
+  Arrow's, whose record would put Acid on again at the caster's level (a new
+  entry, burnt in turn): `ACID_BURN` (78982h) notes a burn and `ACID_ONCE`
+  (78DEFh, where a spell's damage puts its record's effect on) answers "none"
+  once. The dice log shows the rounds (`Acid Arrow burns 4 rounds more, 2d4
+  at the start of each`) and each burn.
+- **Berserk and Confused** (effects 3 and 11): on a computer-run turn the
+  game rolls the creature's side (its creature's +1Dh) anew (8053:000Eh), and
+  when the effect ends (7872Fh) only a charm (10) had its side put back, from
+  the sheet's +3Ch. DSCLOG's `NS_SIDE` (over the end routine's "jmp 788BBh",
+  78785h, where an effect has no case of its own) sends Berserk and Confused
+  to the charm's case (787E9h).
+- **The computer's walls**: the AI's cast (6466:0000h) gives a spell's two
+  points the chosen cell's middle (5A38Ch, four pushes), and a wall (a record
+  whose target, +0Ch, is 2) is as long as its points are apart: one point.
+  DSCLOG's `NS_WALL` puts the points 32 sixteenths either side of the cell,
+  across the line from the caster (along an axis, or the diagonal, whichever
+  the line is nearest), so a wall four cells long; other spells as before.
+- **A thief skill for the whole party** (who 7FFEh; 801BDh, from REQUEST 3
+  and the trap's REQUEST 7 at 80A9Dh): each standing member's chance
+  (8023Bh, the same routine the roll uses, so with the Loader's skill rules)
+  is weighed against the best so far, which starts at 0 with the member 0, but
+  "cmp [bp-2],dx / jna" keeps the lower, unsigned: nothing is, so member 0
+  always rolled. `party_best` makes it "jge" (80201h): the highest chance above
+  0, else member 0 as before. A named character skips the pick altogether.
+  Found from CalvinRodo/yuan-ti's notes.
+- **An archer's pointer** (1D66Ah, the pointer's form in a fight: 6003 the
+  sword, 6004 can't attack, 6005 the missile, 6006 can't shoot; the missile
+  test 1D5AEh): a missile weapon ready (41BE:89h), arrows for it (41BE:75h)
+  and the range, then, in a fight, none of the round's melee swings (+1ABh of
+  the round's tables at 37BDh, a byte a combatant) or shots (+181h) made. The
+  weapon attack routine (5883Ah) counts the shots at +181h, makes it 63h once
+  all are made (58C45h) and lets another go while it is under 63h, so after a
+  shot that killed the pointer said "can't" while a click still shot.
+  `shots_left` makes the shots' test "cmp ...,63h / jnl" (1D657h); the melee
+  swings' stays (no shooting after a swing).
+- **Random monsters** (REQUEST 8, 80BE4h; scripts 99 and 106): `MONR` 1 of
+  `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
+  the count is 2 x the party's strength / the monster's, 1 to 6, but the slot
+  search leaves SI one past the match and "idiv word es:[bx+4]" (80CD8h) reads
+  the next slot's strength: the next record's first OJFF after the tenth, and an
+  empty slot's after the last in the records with nine or seven (regions 6, 13,
+  14, 27, 39, 40, 44 and 255). No zero divisor: in the shipped data every
+  strength is at least 1 and the empty slots are (0, 1), so the count is only
+  wrong. `monster_count` makes it [bx+0], the match's own.
+- **Resting kills the Poisoned after the cure** (the rest, 8066Dh, overlay 5E8h; its one caller
+  62C2Ch, a fire ring, mode 0). Pass 2 takes each member's effects as a bitset (598:25h = 76944h,
+  at 8075Dh, into [BP-0Ah]), then casts the free cures (809A2h -> 5B8:20h: Cure Disease, Remove
+  Curse and Remove Paralysis for the best Okay cleric and druid of 5th level or more, Neutralize
+  Poison for a druid of 7th or more), then kills the Poisoned (bit 35, `test byte [bp-6],8`,
+  80963h: 1000 damage) from the bitset read before the cure, so the druid's cure saved no one
+  (verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-rest-poison.md)). `rest_cures_first` (80765h, 136
+  bytes) and `rest_cures_loop` (80984h) move the seven casts (near calls, no overlay fixups in
+  them) ahead of the read, their `nop`s paying for two jumps: the loop's jump goes to the casts
+  (80768h), which end with `jmp 80758h` (the read), which goes on past them (`jmp 807EDh`). The
+  STR test (80929h, Diseased) reads the same bitset, so a disease cured at a rest gives STR back
+  that rest. Mode 1 (the scripts' rest; never called in DSUN.EXE) still kills the Poisoned
+  (its removal, 80808h, comes after the read).
+- **A shop's magic items shine.** The colour cycler (22F8h; its table at
+  CS:6, 16 x 8 bytes, set up by the region's load at 1CECFh: colours 1-5,
+  6-10, 11-15 and 240-248) turns only from the map's main loop (1A935h:
+  DS:1194h, set by the timer every 8 ticks, then a far call to 22F8h:047Ch,
+  then 1194h cleared). A shop, opened from a conversation, runs its own loop
+  (7DDE4h, while DS:11B2h is 1: a character's screen open) and, as the
+  pointer stands on some things, waits in the game's wait for an event
+  (2531:083Ch), so 1194h stayed 1 and the glow stood still. DSCLOG's
+  `SHOP_LOOP` (7DE11h, the loop's "cmp word [11B2h],1") and `SHOP_SHINE`
+  (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
+  is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
+  `shop_at` (header +1858), so S sells only on a shop's screen
+  ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
+
+## Worn items, the gladiator's armour and Psionic Blast
+
+([In the bugs fixed](GAME-BUGS.md); found by OpenDS, checked in
+DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One DSCLOG interrupt
+(`INT 81h`, `PROBE_WORN`), told where it was called from by its return address:
+
+- **Ability items.** The ability routine (7B758h, `80F5:2BB8`) goes through every item the
+  creature has (the list `A0:1A2D` makes) and applies the ability byte (+0Fh, FAh-FFh) of each,
+  with no look at its slot, so a ring or gauntlets in the backpack counted. Its read of that byte
+  (`mov al,es:[bx+0Fh]`, 7B8ABh) is the interrupt: the byte only for an item in a worn slot
+  (+11h below 14), else 0, which the routine's switch passes over.
+- **The gladiator.** The AC routine (58DD3h, `612E:2113`) takes a fifth of the gladiator level
+  off after its items, for the sheet's gladiator flag (+12h 40h) alone. Its test (`test word
+  es:[bx+12h],40h`, 58F86h) is the interrupt: ZF clear only when the creature also wears armour
+  (`ARMOUR_WORN`: an armour piece on the arms, legs, head or chest, not a shield, bracers or a
+  robe), so the game's `jbe` passes the bonus by otherwise. `THORNS_AC` and the Loader's
+  `GameData.counted_ac` (`armour_worn`) count it the same way.
+- **Psionic Blast.** The effect routine's case 169 (796CBh, `80F5:0B2B`), for a target that
+  failed its save, takes its hit points down to a fifth of its most (the loss in `[BP-18h]`, the
+  damage routine 79A01h dealing it), then `or byte [si],1` (79707h). That OR is the interrupt
+  (with a NOP): it does it, and for target DI 0-3 (the party's combatants) adds the loss to the
+  header's `BLAST_HP` (+1814, a word each). `psiblast.BlastWatch`, in the dice log's pass, gives
+  each loss back once the fight flag has been down `FIGHT_OVER` (2 s), up to the member's most
+  and only to one still Okay (one Out Cold or dead was put there by something real), says so
+  ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
+  clears the field; a game loaded (the clock gone back) clears it with nothing given.
+  **Knocked out, not killed:** the damage routine kills a creature when the
+  damage reaches its hit points + 10 (status 5; 8 for 10000 and up, Disintegrate's), else knocks
+  it out when the damage reaches its hit points (status 3, 0 HP). Its death test, `cmp ax,dx`
+  (5860Bh, 612E:194Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
+  party member with hit points still in `BLAST_HP` and damage under 10000, the flags of
+  "greater", so the blow knocks it out. At the fight's end one Out Cold gets the hit points back
+  too and is woken (status 1, as the game wakes a creature at 7C1F9h); one Dying or dead gets
+  none. Verified in play (no log kept).
+- **The champion's body** ([the champions' bout](#the-champions-bout)): where the game makes a
+  Dead Body for a creature dying with things on it, the object number is asked of the interrupt.
+
+The five places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h,
+`KO_RET` 194Dh, `BODY_RET` 2754h, else the ability routine's), so the one vector serves them
+all.
+
+## An archer's last arrow and a dry quiver
+
+([In the bugs fixed](GAME-BUGS.md#sides-and-blows).)
+
+The weapon attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out
+of ammo" with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h),
+which ends the turn (5844Eh). A kill with attacks left lets anyone go on (the caller's loop), so an
+archer that killed with its last arrow lost a turn any other kill keeps. `AMMO_CAP` (5899Ah) keeps
+the round's attacks before the cut, and `AMMO_TURN` (58C38h) compares a party member's attacks made
+with them, so the turn goes on after such a kill; monsters as the game has them. A party member whose
+volley its quiver cut short also keeps its turn against a target still standing: the `AMMO_OKAY`
+sites (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen"
+for it, `NEW_AS_OKAY`'s jbe/ja kept in the same patches. The count over the archer: [the quiver's
+count](DEVELOPMENT-SCREENS.md#names-over-figures). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-14-quiver-turn.md). Tests: `test_quiver.py`, `test_gamepatch`'s
+`test_new_counts_as_okay`.
+
+## Graphics disappearing in a busy area
+
+([In the bugs fixed](GAME-BUGS.md#pictures-and-memory).)
+
+How: the game's picture cache (`DSUN.EXE` 25FA6h, the slot for a WALL or BMP chunk) has 300
+slots, each 16 bytes: a picture's number, length, place in the store, memory and flags. The count
+is at DS:1F84h, and no slot is given back until a region loads, so at 300 a new picture got no
+slot and wasn't drawn. DSCLOG's `PIC_REUSE` changes nothing below 300 slots, and is always on (a
+fix). With all 300 taken, four sites (`gamepatch` "pic_full", "pic_place", "pic_count" and
+"pic_fail") do this:
+- `PIC_FULL` (26009h) picks a slot to reuse. It must be out of memory (flag 2 clear) and named by
+  no wall (the walls' slots at DS:574Eh) and no map thing (+0Fh). A slot the Loader let go
+  (`CACHE_STALE`, FFFEh) is taken first; else the first free one, the search going round from the
+  slot after the last reused, so the oldest reuse goes first. With none free, no slot, as the game.
+- `PIC_PLACE` (260CCh) puts the reused slot's picture in the first gap in the store it fits (the
+  other slots' places and lengths, the STALE ones left out), else past the furthest end.
+- `PIC_COUNT` (2612Bh) gives the reused slot's number and leaves the count at 300.
+- `PIC_FAIL` (25FD0h, the loader's "no picture") lets a reused slot go again (STALE, not in memory)
+  when its picture's read failed: it holds the new number but the old place, and would otherwise be
+  read from the wrong place later.
+
+`pf_count` counts the slots reused and `pf_failed` those let go after a failed read, for the tests
+(`test_dsclog`'s `PictureSlotTests`) and playtests (`playtest/slotcount.py`; the log is
+`playtest/logs/2026-11-09-picture-slot-reuse.md`). The picture store the
+[party's outfits](#what-the-party-wears) fill is a different limit.
 
 ## The game's script bugs
 
@@ -45,7 +390,15 @@ extract calls her menu (script 68 at 209h). They are the OpenDS project's
 file: a repair is made only where its script holds the expected bytes. The
 fourth OpenDS repair, starting the final battle's stages without their pause,
 is left out (yuan-ti keeps it off too: with the game's clock running the stage
-gate waits its window out). Not seen in play yet: all are past the slave pens.
+gate waits its window out). All are past the slave pens: [unverified](DEVELOPMENT.md#unverified).
+
+One more, from OpenDS's triage ([unverified](DEVELOPMENT.md#unverified)): script 46's first menu (the leader's "Who are you?",
+called from 313h) has Goodbye jump to the arrest at 898h while its other replies return to the caller
+(the templar's accusation at 31Fh, then the second menu); it now jumps to 583h, the routine's own return
+(a same-length edit of the reply's jump word at 57Eh). Three other OpenDS rows were looked into and left as
+the game has them: Alhena (flag 123 is the wagon train's alarm), Keldar (script 48 puts Dagolar where the
+disguised creature stood, not on the party's square) and the Hound Necklaces (script 55's "life force drains
+away" is deliberate). [The OpenDS cross-read](../reports/opends-cross-read-2026-11-16.md#6-the-changelogs-account-2026-11-17) has the evidence, and what else is left undone.
 
 Checks that read a character's own field (race 20, sex 21, the flags word 17)
 straight from the active member's object (8025h, or the actor's, 8026h), whose
@@ -109,7 +462,7 @@ stands in the passage west of the room's wall (x 53-55, y 92-95), so a guard dra
 there raised the alarm. The test is now `room or (x 42-80 and y over 90)`, that
 passage up to the wall at x 40-41 (the room west of the fountain's, with the sewer
 grate, is shut off from it at y 89-90 and stays out); its IF, to the alarm at 1081h,
-goes along. Tests: `test_scriptfixes`. Not yet seen in play (the save
+goes along. Tests: `test_scriptfixes`. In play: [unverified](DEVELOPMENT.md#unverified) (the save
 `fountain-user` loads with the ambush about to fire).
 The same sweep checked every RAND comparison and every bit test of a class or
 level: only the tracking's were wrong. A second went through every check on a
@@ -195,8 +548,8 @@ code after the script's end that says one or the other and jumps back past the
 game's lines, as `pensasks.py` does; the scripts do the rest as the game has
 them. Dinos's script is `pensasks.py`'s copy by then, whose own jumps leave bytes that don't
 read on: the places come from the game's script, and a line is changed only where the copy
-still has the game's bytes. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
-the fountain and the party late for a fight.
+still has the game's bytes. Tests: `test_kurzak`. In play: [unverified](DEVELOPMENT.md#unverified) (it needs Legcrusher killed at
+the fountain and the party late for a fight).
 
 **Legcrusher at the fountain** (the user's design, 2026-11-11): his fetching speech (136 at 31Dh,
 "Kurzak told me to bring you to the arena. If ya don't go, ") becomes a jump to code after the
@@ -206,308 +559,30 @@ script's end (`kurzak.with_fountain`): LOCATE (09h) on his kind (-326) gives his
 narration in the game's words for a guard's masked yell, GPL 137 at FF2h; 100 again), each clicked, his
 fields 74 and 75 are set to 2 (40h, as the guards' sight trigger does, GPL 74 at 2Bh), he gets the
 ambush guards' orders (08h hunt, 6Fh GPL 74 at 100, 1Bh GPL 74 at 89, range 5) and the script
-ends (31h); elsewhere the game's two lines, then back to 374h. Seen in DOSBox with the user's save
-`legcrusher-fountain-user` (the party at square 68,94): the lines, then a fight of Legcrusher alone
-(round 1: the party and him), killed in a round, DEAD (797) set. Tests: `FountainTests`.
+ends (31h); elsewhere the game's two lines, then back to 374h. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-11-legcrusher-fountain.md). Tests: `FountainTests`.
 
-## Mirror Image
+**The Trustee** (`pensasks.py`). The Trustee's key (his own pick, in his talk): a thief with no room for it has
+it dropped at his feet (script 146), and his rounds (script 8, from 3767; its
+step in word variable 135,20) test after each step whether the key is stolen
+(flag 55) and lies within 9 of him, and make for it ("There it is!") without
+picking it up, so the rounds stall. After a talk he is busy (flag 51, "I'd love
+to talk more...") until the rounds' first step clears it, so a stall left him
+busy for good. In the Loader's copy of `GPLDATA.GFF` (`pensasks.py`), the test
+asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
+jumps to code after the script's end that clears flag 51, says it and jumps
+back (`busy_once`); it also starts his rounds again (a call to 8 at 3767, as
+the game's door script 147 does), so rounds that stopped walk on.
 
-([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).)
-
-The game's only use of the images is a d100 in the routine that lands a spell
-on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
-spell for one creature (618:20h's 8 or less: the spell record's target kinds 3,
-4, 5, 7 and 8, not an area's, a cone's or a wall's). An image taking it uses a
-charge (598:57h, 76803h) and shows it vanishing (7AD8Ah: "spell" 0BFh, cast by
-the creature on itself). The game made no exception for the caster's own
-spells, so Armor cast on oneself under Mirror Image was lost three times in
-four, an image with it, and weapon blows come to that routine with no spell
-(-1) and skip the roll, so the images stopped none.
-
-- **Spells** (`NS_IMAGE`, at 7A5CDh): the chance is 0 unless caster (DI) and
-  target (SI) are on opposite sides (party members below 4); else 75, or 50
-  for Reflected Image's (`IMAGE_CHANCE`). The dice log knows the roll by the
-  code after the dice call (`IMAGE_SPELL_RETURN`), or, with the overlay
-  manager's INT 3Fh stub there, by the routine's arguments (target, caster,
-  spell at +12h) and Mirror Images on the target; the vanishing's roll
-  (spell 0BFh) goes unmentioned.
-- **Blows** (`NS_BLOW`, replacing the attack routine's `cmp word [bp+1Ah],0`
-  at 58A00h, 5883Ah's, just after a hit is decided): with Mirror Images on the
-  target (`[494Ah]`), the helper rolls the d100 with the game's own rand()
-  (load segment:0822h), from a frame of (target, attacker, chance) and with
-  `jmp short +5 / "IMAGE"` after the call, which the Loader's filters and
-  `IMAGE_BLOW_SITE` know. On the chance or less it has the game use a charge
-  (598:57h, as for a spell) and sends the attack on as a miss (58A46h, the
-  miss sound). The way back, the miss's address already, goes in a frame with
-  BP that the overlay manager can fix up: 598:57h is overlay code and may load
-  others over the attack's, and adding to the way back after the call would
-  add to the manager's INT 3Fh stub.
-
-## The game's spells
-
-([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).) More bugs mended
-whatever the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`,
-after the `ns_list_` patches):
-
-- **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
-  any spell or blow landed on a target with Armor (7A557h, `je` past it
-  unless effect 2 is on), and the damage routine (79A3Eh) used another for the
-  damage. `armor_charge` makes the first jump always taken, leaving one charge
-  for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
-  the damage routine too (the attack routine's one damage call, 5B8:20h at
-  58B1Fh, with spell FFFFh), so the helper needs no site for blows. Seen in the
-  arena: a hit takes Armor from 9 charges to 8.
-- **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
-  under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
-  the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
-  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Only for a spell
-  lasting a number of uses (its record's time, +7, from -1 down to -9998) or
-  for a timed effect (an entry of kind 7 in the event queue, DS:2FBEh, with its
-  owner and handle, as Armor's). A permanent effect (time `PERMANENT_TIME`,
-  Charmed) and an item's power (Shadowseeker's Detect Invisibility: the game casts it for -9999 while it is readied, with no
-  timer) hold a meaningless 15 at +8, 9999's low byte. Mirror Images from Reflected Image take its name
-  and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
-  Image, whose entry that is, writes it again before its own use
-  (`ns_reflect_entry`).
-  Enlarge (effect 16) on a party member is named with its damage instead,
-  ENLARGED (+90% DAMAGE): the level is the Loader's (`STATS_ENLARGE`, the 25th
-  byte of the member's STATS, from `GameData.enlarge_level`, the caster's level
-  as Dispel Magic weighs it), printed with a 0 after it. Working it out in
-  DSCLOG would mean calling 598:52h, the game's sum of a creature's Enlarge
-  levels, from the Effects screen's overlay. The game lets only one Enlarge on
-  a creature (seen in DOSBox: a second cast uses up the spell, nothing added).
-  Barkskin (57), Flesh Armor (59) and Magical Vestments (60) are named with the
-  armour AC they give, BARKSKIN (AC 3) (`STATS_ARMOUR`, bytes 25-27, -128 for
-  none, from `GameData.armour_spells_ac`), as the effects' part of the AC
-  routine (7C557h) works it out: at most 6 - L/4, at most 10 - L, and 5 less
-  (L - 5)/3 above 5th, L the effect's level as 7678Ch sums it, each such effect
-  at its caster's level by 81B16h: a spell's as Dispel Magic weighs it, a psionic
-  power's (138-171) the psionicist level, spell 190's the best of classes 1-4,
-  anything else's the best of the sheet's three (`GameData.effect_level`).
-  Checked in DOSBox: a 12th-level Barkskin on Cermak (no armour, DEX -4) made
-  his AC -1.
-- **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
-  removed each record of the power cast by DI with 598:48h (owner, handle), but
-  passed DI as the owner, so a receiver's record stayed (and a record of the
-  psionicist's own with that handle went instead); and after a removal
-  the records move down, so the next was skipped. `power_end_*` push each
-  record's own owner (+0) and handle (+7), step SI back after a removal, and
-  count to the live count (DS:1E24h) rather than 192; the `mov ax,390h` and
-  the far call are left where they were (their segments are fixed up).
-- **Dispel Magic** (spell 26, the preserver's): its record's effect (+19h) was
-  50, "No spell use", which Dispel Magic itself doesn't end; the cleric's
-  record has none. `dispel_effect` makes it 0.
-- **Hold Undead** (spell 31): the landing routine asks whether the target is
-  undead (7BE20h, AL) and, if not, goes on to 7A359h for any spell, which
-  looked like Hold Undead holding anything. It doesn't: every spell's targets,
-  one creature's too, are gathered by the area code (8BEB:0000h, 846D0h) and
-  sifted by 80F5:1CF7h (7A897h, its table at 80F5:1DCFh: spell 31's case asks
-  7BE20h too), which drops a living target first. `hold_undead` puts DSCLOG's
-  `NS_HOLD` site over the landing routine's `or al,al / je +22h` (7A333h) all
-  the same, a second guard: a living target of spell 31 goes to the
-  immunity's way out (7A1F0h).
-  The manual's limit, undead of no more hit dice than the caster's level, is
-  `hold_undead_level` (with "Spells and psionics as the manual describes them"): DSCLOG's
-  `HOLD_HD_SITE` over the undead's `test word [bp+0Eh],100h` (7A345h), which
-  makes that test and its jump itself, and for spell 31 sends an undead whose
-  level (its sheet's, as 5E85Fh has it: a human's +24h, else its classes'
-  highest; a classless one's +24h) is above the frame's [BP+14h], the cast's
-  level, to 7A1F0h too.
-- **The save modifiers** (79D3Ch: [BP+6] the target, [BP+14h] the spell,
-  [BP+16h] the caster's level, [BP-6] the target's level, SI the modifier):
-  the target's level comes from 508h:2Ah (5E85Fh), 0 for a creature with no
-  class (+21h..23h all 0), though its hit dice are at its sheet's +24h. With
-  "Spells and psionics as the manual describes them", `classless_save_level` puts DSCLOG's
-  `HD_SAVE_SITE` over its `mov [bp-6],ax` (79D8Ch): such a creature's 0 made
-  its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
-  `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
-  `cmp word [bp+14h],3Ch / jnz` (79F83h): Color Spray (spell 4) on a target of
-  the caster's level or lower -100 (no save, even on a natural 20: `save_natural`), then
-  Dismissal's test made in the handler (on to 79F89h, or past to 79F95h).
-- **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
-  damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
-  code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice
-  (+1Dh >> 3) plus the steps' dice (+1Ch >> 5) of the sides (+1Eh & 0Fh), and
-  adds the steps' flat bonus (+1Ch & 1Fh), the steps being (the caster level,
-  at most 10, + the adjustment, +1Eh >> 4) / the levels a step (+1Dh & 7), at
-  least 1. `cause_serious` and `cause_critical` make them 2d8 and 3d8 with a
-  step of +1 and +3 a 7 levels: one step at any level. `SpellDamage.flat` lets
-  the dice log and the Spells tab show it as 2d8+1, not "+1 for each 7 caster
-  levels".
-- **Absorb Disease** (power 147): its case in the effect handlers (80F5:089Eh,
-  7943Eh) ran on into Strength's (79470h: 1d6 STR, effect 43h, the psionicist
-  its target), and jumped there too when the target had no disease.
-  `absorb_no_strength` and `absorb_end` send both ways to the end of
-  Strength's case (794ACh: the flags it sets, then the handlers' end).
-- **Bless and Aid's filter** (7B03Dh, 80F5:249Dh): whether one of the caster's
-  side has an enemy within 28 sixteenths, measured from a point given by the
-  creature's place (DS:669Dh + 20h a thing: x, then y at +669Fh), but the
-  routine pushed the x twice. `bless_from_cell` makes the first push the y.
-- **The fire elementals** (kinds 32 and 33): their resistance classes, in the
-  monster kinds' table (3E45h:00A8h + the kind, 43918h), were 14 (+1 weapons,
-  nothing from fire) and 13 (+2 weapons, fire hurting), the wrong way round
-  (the clue book: lesser elementals +1, the others +2). `fire_elemental` makes
-  them 15, a class the game has and no kind used (+2, nothing from fire), and
-  14. DSCLOG's SEG_MOVE copies the table, so the change goes with it.
-- **Cloak of Bravery** (Brave, effect 9): the saving throw's modifiers
-  (79EBDh) give it +4 and use a charge only against a spell whose record has
-  100h in its +11h word (80F5:25A0h), which none had. `brave_fear_*` set it on
-  the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
-  Fear (78; a Cloak of Fear's too) and Insect Plague (132); Spook (200) has it
-  from DSCLOG's `NS_PATCHES`. The Loader's saves show the +4 (`FEAR_CATEGORY`).
-- **Scare's save** (spell 21, in the save modifiers' routine, 80F5:119Ch): a target of 6th
-  level or more always saves (+100); below, the usual save only for a priest (7C01Dh) whose race
-  (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
-  (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
-  (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
-  resist fear (found by yuan-ti). None of this ran before `scare_save`: Scare's record's save byte
-  (+1Fh, 4222Fh) was A0h, bit 0 ("a save allowed") clear, and the saving throw (79A71h) answers
-  "not saved" at its first test (79A89h) without it, before the modifiers. `scare_save` sets it
-  (A1h, as Charm and Hold Person's). Seen in DOSBox before it: Scare on a 7th-level fighter, no
-  save rolled (playtest/logs/2026-11-08-scare-no-save.md).
-- **The creation screen's minimums** (67399h, far, `[bp+6]` the class count and `[bp+8]` the
-  ability; its answer goes to `DS:4994h`): the game's own looked each creation class (the sheet's
-  +21h, 1-8) up in the table at `338:180h` (a word, the prime requisite, then a byte) and gave 17
-  for the prime requisite, the byte (9 to 14) for any other score. `least_scores` replaces its 104
-  bytes with `dos/least_scores.asm`: a nibble a score for each class
-  (`dos/least_scores_table.inc`, the manual's minimums, 0 none), the highest of the classes', 3 if
-  none. It keeps the two `mov dx,338h` at +1Eh and +42h where they were: the overlay manager fixes
-  up their segment. The table at `338:180h` is left as it was, as the dual-class check (86E94h)
-  reads its prime requisite. `game.CREATION_MINIMUMS` is the same table for the dice log;
-  tests/test_least_scores.py runs the routine and checks both.
-- **Negative Plane Protection** (effect 42): an undead's negative-energy touch
-  (element 100h) on a creature under it (7A7C5h) uses a charge, then the
-  target saves (79A71h) as against Vampiric Touch (27h), whose record allows
-  no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
-  (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the charge's two
-  arguments, still on the stack, the save's: 6 and, once the records have room
-  (SEG_MOVED), record 212 (`NPP_SAVE`, past the new spells), Vampiric Touch's
-  copied with a save against paralysis, poison and death allowed (21h). Saved,
-  the game stops the touch and gives the undead 2d6.
-- **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
-  (the entry's +8) through 76803h, which calls the effect's handler (for Acid
-  7897Bh: 2d4 acid, the damage named Acid Arrow) and takes the entry out at
-  none, but it calls it for Acid only on chance events, and Acid Arrow's time
-  is in seconds (+8 none) on DS:[9B72h]'s clock (60 at each round's start in
-  a fight), a timer that only ends it, so the acid never burned again after
-  the hit. DSCLOG's `ACID_ROUNDS`
-  (76525h, in the routine adding an effect) makes an Acid's seconds rounds as
-  charges (1 a started minute, at most 127); `ACID_ROUND` (5741Dh, the start
-  of the routine starting each round, before its initiative) calls 76803h
-  for each creature with Acid charges through its stub (DS-0C7h:57h), the way
-  back in a frame the overlay manager can fix up; `ACID_USE` (76808h) has any
-  other call spending Acid's return at once. The burn's damage is Acid
-  Arrow's, whose record would put Acid on again at the caster's level (a new
-  entry, burnt in turn): `ACID_BURN` (78982h) notes a burn and `ACID_ONCE`
-  (78DEFh, where a spell's damage puts its record's effect on) answers "none"
-  once. The dice log shows the rounds (`Acid Arrow burns 4 rounds more, 2d4
-  at the start of each`) and each burn.
-- **Berserk and Confused** (effects 3 and 11): on a computer-run turn the
-  game rolls the creature's side (its creature's +1Dh) anew (8053:000Eh), and
-  when the effect ends (7872Fh) only a charm (10) had its side put back, from
-  the sheet's +3Ch. DSCLOG's `NS_SIDE` (over the end routine's "jmp 788BBh",
-  78785h, where an effect has no case of its own) sends Berserk and Confused
-  to the charm's case (787E9h).
-- **The computer's walls**: the AI's cast (6466:0000h) gives a spell's two
-  points the chosen cell's middle (5A38Ch, four pushes), and a wall (a record
-  whose target, +0Ch, is 2) is as long as its points are apart: one point.
-  DSCLOG's `NS_WALL` puts the points 32 sixteenths either side of the cell,
-  across the line from the caster (along an axis, or the diagonal, whichever
-  the line is nearest), so a wall four cells long; other spells as before.
-- **A thief skill for the whole party** (who 7FFEh; 801BDh, from REQUEST 3
-  and the trap's REQUEST 7 at 80A9Dh): each standing member's chance
-  (8023Bh, the same routine the roll uses, so with the Loader's skill rules)
-  is weighed against the best so far, which starts at 0 with the member 0, but
-  "cmp [bp-2],dx / jna" keeps the lower, unsigned: nothing is, so member 0
-  always rolled. `party_best` makes it "jge" (80201h): the highest chance above
-  0, else member 0 as before. A named character skips the pick altogether.
-  Found from CalvinRodo/yuan-ti's notes.
-- **An archer's pointer** (1D66Ah, the pointer's form in a fight: 6003 the
-  sword, 6004 can't attack, 6005 the missile, 6006 can't shoot; the missile
-  test 1D5AEh): a missile weapon ready (41BE:89h), arrows for it (41BE:75h)
-  and the range, then, in a fight, none of the round's melee swings (+1ABh of
-  the round's tables at 37BDh, a byte a combatant) or shots (+181h) made. The
-  weapon attack routine (5883Ah) counts the shots at +181h, makes it 63h once
-  all are made (58C45h) and lets another go while it is under 63h, so after a
-  shot that killed the pointer said "can't" while a click still shot.
-  `shots_left` makes the shots' test "cmp ...,63h / jnl" (1D657h); the melee
-  swings' stays (no shooting after a swing).
-- **Random monsters** (REQUEST 8, 80BE4h; scripts 99 and 106): `MONR` 1 of
-  `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
-  the count is 2 x the party's strength / the monster's, 1 to 6, but the slot
-  search leaves SI one past the match and "idiv word es:[bx+4]" (80CD8h) reads
-  the next slot's strength: the next record's first OJFF after the tenth, and 0
-  after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
-  40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
-  it [bx+0], the match's own.
-- **Resting kills the Poisoned after the cure** (the rest, 8066Dh, overlay 5E8h; its one caller
-  62C2Ch, a fire ring, mode 0). Pass 2 takes each member's effects as a bitset (598:25h = 76944h,
-  at 8075Dh, into [BP-0Ah]), then casts the free cures (809A2h -> 5B8:20h: Cure Disease, Remove
-  Curse and Remove Paralysis for the best Okay cleric and druid of 5th level or more, Neutralize
-  Poison for a druid of 7th or more), then kills the Poisoned (bit 35, `test byte [bp-6],8`,
-  80963h: 1000 damage) from the bitset read before the cure, so the druid's cure saved no one
-  (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md). `rest_cures_first` (80765h, 136
-  bytes) and `rest_cures_loop` (80984h) move the seven casts (near calls, no overlay fixups in
-  them) ahead of the read, their `nop`s paying for two jumps: the loop's jump goes to the casts
-  (80768h), which end with `jmp 80758h` (the read), which goes on past them (`jmp 807EDh`). The
-  STR test (80929h, Diseased) reads the same bitset, so a disease cured at a rest gives STR back
-  that rest. Mode 1 (the scripts' rest; never called in DSUN.EXE) still kills the Poisoned
-  (its removal, 80808h, comes after the read).
-- **A shop's magic items shine.** The colour cycler (22F8h; its table at
-  CS:6, 16 x 8 bytes, set up by the region's load at 1CECFh: colours 1-5,
-  6-10, 11-15 and 240-248) turns only from the map's main loop (1A935h:
-  DS:1194h, set by the timer every 8 ticks, then a far call to 22F8h:047Ch,
-  then 1194h cleared). A shop, opened from a conversation, runs its own loop
-  (7DDE4h, while DS:11B2h is 1: a character's screen open) and, as the
-  pointer stands on some things, waits in the game's wait for an event
-  (2531:083Ch), so 1194h stayed 1 and the glow stood still. DSCLOG's
-  `SHOP_LOOP` (7DE11h, the loop's "cmp word [11B2h],1") and `SHOP_SHINE`
-  (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
-  is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
-  `shop_at` (header +1858), so S sells only on a shop's screen
-  ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
-
-## Worn items, the gladiator's armour and Psionic Blast
-
-([In the bugs fixed](GAME-BUGS.md); found by OpenDS, checked in
-DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One helper interrupt
-(`INT 81h`, `PROBE_WORN`), told where it was called from by its return address:
-
-- **Ability items.** The ability routine (7B758h, `80F5:2BB8`) goes through every item the
-  creature has (the list `A0:1A2D` makes) and applies the ability byte (+0Fh, FAh-FFh) of each,
-  with no look at its slot, so a ring or gauntlets in the backpack counted. Its read of that byte
-  (`mov al,es:[bx+0Fh]`, 7B8ABh) is the interrupt: the byte only for an item in a worn slot
-  (+11h below 14), else 0, which the routine's switch passes over.
-- **The gladiator.** The AC routine (58DD3h, `612E:2113`) takes a fifth of the gladiator level
-  off after its items, for the sheet's gladiator flag (+12h 40h) alone. Its test (`test word
-  es:[bx+12h],40h`, 58F86h) is the interrupt: ZF clear only when the creature also wears armour
-  (`ARMOUR_WORN`: an armour piece on the arms, legs, head or chest, not a shield, bracers or a
-  robe), so the game's `jbe` passes the bonus by otherwise. `THORNS_AC` and the Loader's
-  `GameData.counted_ac` (`armour_worn`) count it the same way.
-- **Psionic Blast.** The effect routine's case 169 (796CBh, `80F5:0B2B`), for a target that
-  failed its save, takes its hit points down to a fifth of its most (the loss in `[BP-18h]`, the
-  damage routine 79A01h dealing it), then `or byte [si],1` (79707h). That OR is the interrupt
-  (with a NOP): it does it, and for target DI 0-3 (the party's combatants) adds the loss to the
-  header's `BLAST_HP` (+1814, a word each). `psiblast.BlastWatch`, in the dice log's pass, gives
-  each loss back once the fight flag has been down `FIGHT_OVER` (2 s), up to the member's most
-  and only to one still Okay (one Out Cold or dead was put there by something real), says so
-  ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
-  clears the field; a game loaded (the clock gone back) clears it with nothing given.
-  **Knocked out, not killed:** the damage routine kills a creature when the
-  damage reaches its hit points + 10 (status 5; 8 for 10000 and up, Disintegrate's), else knocks
-  it out when the damage reaches its hit points (status 3, 0 HP). Its death test, `cmp ax,dx`
-  (5860Bh, 612E:194Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
-  party member with hit points still in `BLAST_HP` and damage under 10000, the flags of
-  "greater", so the blow knocks it out. At the fight's end one Out Cold gets the hit points back
-  too and is woken (status 1, as the game wakes a creature at 7C1F9h); one Dying or dead gets
-  none. Seen in DOSBox: Gerakis at -9 HP with 40 kept, a 1-point Psychic Crush (death by the
-  game's rule) left him at 0, and the fight's end gave him the 40.
-- **The champion's body** ([the champions' bout](#the-champions-bout)): where the game makes a
-  Dead Body for a creature dying with things on it, the object number is asked of the interrupt.
-
-The five places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h,
-`KO_RET` 194Dh, `BODY_RET` 2754h, else the ability routine's), so the one vector serves them
-all.
+His rounds pick a corner by their step (word variable 20, 0 to 5, a case each:
+27h), but steps 1 and 5 have none: a pause at the corner he has, its x and y
+left in word variables 2 and 3. Those are every script's, and a run of another
+in between (the door's 147, Kurzak's 141, the escape's 137) leaves other
+numbers there: one save had him making for x −4943. He never arrives, and the
+rounds go on only when he does, so he stood still, busy for good. The game's
+steps never reach 6 and 7 (past 5 is 0), so in the Loader's copy their cases
+are 1's and 5's (`rounds_pauses`): each case's value changed in place, its first
+command a jump to code after the script's end that sets the corner before it
+(0's for 1, 4's for 5) and goes on to the next case. Verified in play (no log kept).
 
 ## New spells (wizard and 6th-level priest)
 
@@ -516,33 +591,37 @@ all.
 
 **Numbers.** The game's spells are 0-68 wizard, 69-137 priest, 138-171 psionic
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the load
-segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the monster
-kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
+segment + 3CB4h, at 30h) ends with 195's at 3E3Fh, where 96 bytes follow (room
+for 196-198), then the monster kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
 Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-211.
 The game names none of the monsters' powers:
 the log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else
 its damage's kind, else its number; a roll before a save against one that puts
 on an effect is its duration (`_power_lasts`).
 
-**Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
+**Room for 199-211 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
 game's segment table (load + 4137h, 8 bytes a selector: segment, length) has
 selector 3B8h, a small stack of 60h bytes, there, and selector 3C0h the
 monster kinds table (192h bytes) right after. The overlay loader fixes up its
 code's selectors from that table each time it loads an overlay (3BD7Ch), and
 the table's own entries are the only relocations to the two segments. So at
-the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
+the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, DSCLOG (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its tail (`tail_seg`) and points the
-two selectors there (`seg_moved`, the header's +306). The records then run to
-212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
-which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
-spell needs room made first (that record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
-moved, nothing writes there but the helper. Spells 199-201 are set up, listed
+two selectors there (`seg_moved`, the header's +306). The room is then the
+200h bytes from 3E3F0h to 3E5F0h, exactly records 196-211: Restore Youth's
+fills its end, and the game's segment 3E5Fh and its pictures' table (3E60h)
+follow, so another new spell needs room made elsewhere first. The build fails
+if the records outgrow the room, or the spell rows theirs (below), or the stack
+and the kinds table `seg_space`. (Negative Plane Protection's save had a copy
+of Vampiric Touch's record at 212, past the room, till 2026-11-18: it now uses
+Vampiric Touch's own, [above](#the-games-spells).) The stack had been written over records 196-198's room all along; with it
+moved, nothing writes there but DSCLOG. Spells 199-211 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell
 rows for 196 on run past the game's table (3FB9h:19Ch, 7 bytes each) into
 segment 4010h from 188h, short of its data at 357h. When the rule switches on,
-the helper (`NS_SETUP`) copies in each one's record from a game spell it works
+DSCLOG (`NS_SETUP`) copies in each one's record from a game spell it works
 like, Strength (23), Enlarge (5) and Charm Person (2), with its own effect
 number and, for Fogbolt, its own duration (2d4 rounds) and save, and each
 one's sounds and Fogbolt's bolt (below); writes their rows in the spell rows
@@ -556,7 +635,7 @@ the Elementalist's second sphere), or Friends' bit 7 of the kit byte `+43h`
 (whose FFh, no kit yet, counts as not known; `NS_SHEET_KNOWS`,
 `NS_SHEET_LEARN`, `NS_SHEET_FORGET`): the routine that finds a spell's known
 byte (500:48h, `NS_KNOWN` at 5DD04h) and the one that teaches it (500:43h,
-`NS_LEARN` at 5E3F7h) go to the helper for them, and the three lists that end
+`NS_LEARN` at 5E3F7h) go to DSCLOG for them, and the three lists that end
 at 8Ah end at 0C7h (5DDEFh, 5DE72h, 5DF06h). Creation and DUAL clear the bits
 with the rest of the spells; the level-up pick, the starting picks and the INT
 limits count them.
@@ -565,12 +644,12 @@ limits count them.
 with 45h, 8Ah, 0ACh or 0C4h (the USE screen, the cast, the caster's level, a
 scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
-the helper makes a new spell compare as a wizard's spell does, and hands back
+DSCLOG makes a new spell compare as a wizard's spell does, and hands back
 the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
 their descriptions (SPIN 197-202, and 203-212 for the 6th-level priest spells:
 the spell + 1 as the game's own) and icons (21196-21201) are chunks of the
-launcher's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
-room in the helper. A description follows the game's own: the name in capitals,
+Loader's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
+room in DSCLOG. A description follows the game's own: the name in capitals,
 two spaces, then a terse line with damage as a range ("Inflicts 8 to 64 pts of
 damage"), and no level or sphere. Its box shows 7 lines of 128 pixels of the
 game's font, the first less the icon, and cuts off the rest:
@@ -596,7 +675,7 @@ numbers, and codes of those bits, the highest first, where 0 0 is colour 0 and 0
 k the last pixel k + 2 more times (worked out on the 101 spells both games have;
 38 match Shattered Lands' pixel for pixel). Its palette isn't Shattered Lands',
 so each colour becomes the nearest Shattered Lands colour no region changes.
-Checked in the game: the Heal icon in a known spell's place on the USE screen.
+Verified in play (no log kept).
 Restore Youth's icon, a fountain, is drawn in `wotrart.DRAWN` (a letter a
 colour, `DRAWN_COLOURS`, each made the nearest stable colour), with or without
 Wake of the Ravager.
@@ -673,14 +752,12 @@ and its area's entry, DS:1E26h of them; the game keeps the list as it applies
 the areas, so the creatures stay listed while the hits are sent back), at the
 first Whirlwind thing's level. A save failed there marks the creature
 (`SWEPT_MARK`: SWEPT, the far block's `FAR_SWEPT`, a bit a combatant up to
-`MAP_COUNT`, 520; 64 combatants before 2026-11-09), and `PROBE_MOVE` takes that
+`MAP_COUNT`, 520), and `PROBE_MOVE` takes that
 round's turn. A save failed as it is
 cast takes the creature's turn at once if it has yet to act (`SWEPT_NOW`: not
 the one whose turn it is, its initiative not the -1 the game gives one that has
 acted; its initiative -1 and movement 0, as `PROBE_MOVE` does), else marks it
-for the next round. Checked in DOSBox over three rounds of the arena (sligs,
-beetle and party in it): one wave of hits at each round's start, none at the
-turns, the swept ones skipped and the rest acting.
+for the next round. Verified in play (no log kept).
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the
 one-target damage roll, 761A9h, DI its spell) is 8 + the creature's AC, at least
@@ -749,15 +826,13 @@ count DS:1E24h), moving the rest down.
   comes from spell 199.
   Where the game finds an effect's entry in the effects' table (its number
   times 6: the Effects screen's icons and names, 7ED37h, 7EEC9h, 7EF34h; the
-  Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), the
-  helper gives an entry of its own for effect 25 from spell 199: name
+  Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), DSCLOG gives an entry of its own for effect 25 from spell 199: name
   REFLECTED IMAGE and icon 21199, kept past the spell rows (segment 4010h at
   1F8h, after row 211's room), which the table's segment reaches.
 - Spook is Charm Person's record (flags 4204h: mind-affecting, undead immune,
   magic resistance; 4304h with fear's 100h for Cloak of Bravery) with Afraid's
   effect 17 for 3 rounds (`+4` 13h, 3d1; `+5` 0; `+7` 60) and, as Charm Person,
-  nothing flying. In the save routine (79A71h, `PROBE_SAVE` at 79BB7h) the
-  helper takes 1 for every 2 of the caster's levels (preserver, or the Shinobi's
+  nothing flying. In the save routine (79A71h, `PROBE_SAVE` at 79BB7h) DSCLOG takes 1 for every 2 of the caster's levels (preserver, or the Shinobi's
   casting level), at most 6, off the target's d20 total; the log names it.
 - Friends goes through Strength's handler (79470h) as Cat's Grace does, with
   effect 74 (unused). The handler rolls its amount with `push dword 60001h`
@@ -775,7 +850,7 @@ count DS:1E24h), moving the rest down.
 bytes each: the object flying, then a byte, Magic Missile's 8), which the cast
 reads at 7530Ch (`imul ax,ax,3`, the object made at 0B8:55Ah and sent off by
 600:2Ah); nothing else reads the table. Magic Missile's is place 4, object
-8109, whose OJFF names BMP 2227 (36 frames, a direction each). The launcher's
+8109, whose OJFF names BMP 2227 (36 frames, a direction each). The Loader's
 SEGOBJEX.GFF copy adds object 8118 (8109's record naming BMP 2584) and BMP
 2584, 2227's frames with its white, cyan and blue (46, 220, 161) in the greys
 214, 211 and 209 (`icons.bolt_chunks`; the 208-217 ramp is the same in every
@@ -817,8 +892,8 @@ or the next of the one before, with its type and name as attributes) has the new
 items after its own, so the game makes them where it makes the object. Kreenfang
 (`arms.magic`: a gythka made +1 and renamed, its name attribute with it) is the
 champions' Tohr-kreen's ([the champions' bout](#the-champions-bout)); without
-the champions' objects it is the arena's dead body's (object 1204) own gythka,
-as up to 2.13.4. One Castle Guard, one Undermountain miner and one Magera
+the champions' objects it is the arena's dead body's (object 1204) own gythka.
+One Castle Guard, one Undermountain miner and one Magera
 (Drakejaw's) have an object of their own (2560, 2561, 2562: copies of their
 kind's, their record renumbered), their entity in the Loader's copies of
 `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF` pointing to it; so does one skeleton of
@@ -842,7 +917,7 @@ the first time the pith is delivered (flag 625), and Merzol's haystack (script
 137: `haystash.py`) leaves Hayneedle (object 2590, an item object of its own)
 beside his sack of ceramic pieces (25h at the searcher's place, as the sack's),
 the first search only (flag 502). The Lava Rift's Hermit (object 81) has
-Nightsliver in place of his stone dagger. The magic cahulaks (of the helper's
+Nightsliver in place of his stone dagger. The magic cahulaks (of DSCLOG's
 metal and obsidian cahulaks types, 146 and 147; names 0x171 and 0x172, icons
 2676-2679) are on objects of one entity each: Emberlash (an obsidian cahulaks
 +1) on Uzoma (196, entity 433 of `RGNFF.GFF`: the Drajian patrol near the Hot
@@ -850,7 +925,13 @@ Springs, made once its templar is gone), in his pack with his metal axe (the
 Loader's people readying puts the cahulaks, the better weapon, in his hands:
 `people.py`); Ironwhirl (a metal cahulaks +2) on the Subterranean Temple's
 weapon rack (2252, entity 62 of `RGN2D.GFF`), with the game's Mace +2 and metal
-axe. An object can only have so many
+axe. The Searing Blade (an obsidian short sword +2, name 0x156, its picture
+object 2550) is in the Hot Springs' Templar's pack (object 34); up to 2.18.0 it
+was the Flame Blade, an obsidian long sword +1 (type 45) of the same name entry
+and picture, so a saved game's keeps its new name and icon and the dice log
+makes it the Searing Blade wherever it lies in the region it is in (its type,
+plus and price: `worldgear.mend_searing_blade`, each pass, as Kalzith's scrolls
+are mended). An object can only have so many
 records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
 each in a table on its stack, 80 of them, and gives up on an object with 80 or
 more; the code that makes a region's people (244D3h) then frees the person's
@@ -867,7 +948,7 @@ objects, moved to 2552), its spell byte one past 176. Clicked, the icon has the
 game's routine (DSUN.EXE 8B690h) teach a scroll of those numbers its spell, or a
 psionic power from 138 to 171; from 172 to 195 it would show "CANNOT LEARN FROM
 THIS ITEM" and keep the scroll (from 196 on, the icon can't be clicked). There
-the helper (`INT B9h`) raises the reader's WIS, in the sheet and the creature
+DSCLOG (`INT B9h`) raises the reader's WIS, in the sheet and the creature
 record, writes its message in the game's buffer, and goes on as for a power
 taught: the game uses the tome up and shows it. The short sword, the cloak whose
 plus counts, the bone helm and the rest (30: Galefang's, a metal dagger whose
@@ -876,7 +957,7 @@ it was made (now every dagger type has it: below); then the bone and obsidian
 great axes, the metal one's of those materials, a bone dagger, the only dagger a
 water cleric may use, the robes', a metal shield, Ironbulwark's: the game's
 leather shield's type in metal, for the classes of its wooden one, and the
-girdles' and the amulet's) are item types the helper adds after the game's 115
+girdles' and the amulet's) are item types DSCLOG adds after the game's 115
 each time the game reads its table in (`TYPES_EXTRA`; its weapon types by item
 type, `kind_of_type`, cover them too). As it copies them in (`PROBE_TYPES_FILL`)
 it also sets the air cleric's class bit (+10h, 1) on the game's dagger types
@@ -885,8 +966,7 @@ ring's: the icon's head is the metal axe's grey and teal, the weight 70 the meta
 use any dagger, as its sphere allows; the Loader's item names
 (`dsloader/names.py`) are entries it adds after the game's 322 (the game puts
 the item type's material before the name when it shows one); and the icons are
-objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which the
-helper has the game open instead of its own (its `INT 21h` hook). The copy also
+objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which DSCLOG has the game open instead of its own (its `INT 21h` hook). The copy also
 has, for the item box alone, a copy of each weapon picture taller than 16 drawn
 16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2923; `icons.fit_box`): the box
 draws a picture of 16 or less in a frame with its text from 28 down, a bigger one
@@ -896,20 +976,26 @@ wand's charges) sat at the edge. DSCLOG's `BOX_PICS` (gamepatch `box_picture_ite
 `box_picture_object`, always applied) has the box's picture routine (8C2F1h, the
 box's alone) load the copy (8C344h: an item's own picture number, +0Ch; 8C384h: its
 object's icon, which it then keeps in the item as it is). The inventory and the
-ground draw the game's own (a dropped item lies there with its icon; the Loader
-drew the Polearm 22 pixels everywhere till 2026-11-09, and the weapon specs'
-picker still draws it so, `weaponpages.POLEARM_FIT`). Its icons of the game's
+ground draw the game's own (a dropped item lies there with its icon; the weapon
+specs' picker draws the Polearm 22 pixels, `weaponpages.POLEARM_FIT`). Its icons of the game's
 own magic items that stood still (`icons.SHINE`: the Parting Staff, the
-Chameleon Gloves, the Hornblade... 19 of them) have every other pixel of their
+Chameleon Gloves, the Hornblade... 20 of them) have every other pixel of their
 metal, gems or leather in the colours the game cycles in the inventory (water
 11-15, fire 240-248; the Silk Armor's and the Living Cloak's greens in a leaf's
-shades), as its other magic items' icons do. Three share their picture with a
+shades and the cycled green, 1-5), as its other magic items' icons do. The
+cycler's four runs (1-5 green, 6-10 violet, 11-15 water, 240-248 fire) all turn
+in the inventory, so the Loader's own items glow in the one their stories call
+for (`icons.GREEN`, `MIND`, `WATER`, `SKY`: the water's with white; fire for any
+other magic weapon), and a wielder's figure glints in the same
+(`spritegear.glow_for`). Tanelyv's chest piece is object 2004 (its item names
+picture −2004; the Wyrm Temple's script 161 makes it with the arm and leg
+pieces, 1362 and 1363), its icon 2248 its own, so it shines in place as they do. Three share their picture with a
 plain item (Cahulaks +1 with the cahulaks, Light of Dawn and El's Ring with the
 plain ring), so theirs is a new picture (BMP 2653-2655, their OJFF's +0Ch
 pointed to it), and the plain ones keep the still one. An
 item on the ground is drawn with its object's icon (the thing's map record,
 +0Fh), so the Loader's items, dropped from the inventory or left by the dead,
-lie on the ground as their own icons (checked: the Short Sword, the Ashen Robe,
+lie on the ground as their own icons (verified in play: the Short Sword, the Ashen Robe,
 the spell arrows). The items' own pictures are only given while the game has
 the copy open (`icons.ready`, DSCLOG's `objects_on`; the dice log's
 `icons.COPY_OPEN`, reset on attach): `icons.repaint` sets them each 3-second
@@ -917,7 +1003,7 @@ pass, and an item the Loader makes (`npcitems.add_to`, `pickpocket._link`: the
 arena's Ring +1, a new character's Short Sword) gets its own at once
 (`icons.fit`), since the inventory, opened before the pass, drew the plain
 picture, cached it in the item's `+0Ch`, and kept it until the item was
-clicked. Where the game adds up AC and saving throws, the helper
+clicked. Where the game adds up AC and saving throws, DSCLOG
 counts the rings and the cloak (`INT F8h` and the save probes). Shadowseeker's
 sight is the game's own way with a magic item's spell: readied, it puts Detect
 Invisibility on its wielder. In the original game the rings are plain rings
@@ -961,19 +1047,25 @@ the game's palette: each picture twice its size, the rest transparent.
 `docicons.ICONS` names each image's object; a new item needs its line there, and
 `tests/test_docicons.py` checks that every icon the guide shows is there.
 
+**Dunesong at the Bowyer's target.** Shooting at the target in Teaquetzl runs script 178, which
+counts the bows in hand (objects 1017, 1039 and 30007: the bow, the Bow +2 and Phrain's Bow) into
+variables 1 to 3, added up at 40Dh. The Loader's copy (`bowyer.with_dunesong`) jumps from there to
+code added at the script's end, which counts Dunesong (2594) into variable 5, adds the four and
+jumps back to 41Ah, so nothing in the script moves. The target itself: [the Bowyer's archery
+target](DEVELOPMENT-INTERNALS.md#the-bowyers-archery-target).
+
 ## Bracers of defense
 
 ([In the items page](ITEMS.md#bracers-of-defense).)
 
-How: where the game's AC routine asks the helper about each worn item
-(`INT F8h`) and where it starts a saving throw's modifiers (`INT F9h`), the
-helper looks at what else the character wears.
+How: where the game's AC routine asks DSCLOG about each worn item
+(`INT F8h`) and where it starts a saving throw's modifiers (`INT F9h`), DSCLOG looks at what else the character wears.
 
 ## Robes
 
 ([In the items page](ITEMS.md#robes); `robes.py`.)
 
-The robes are one new item type (`ROBE`, the 26th of the helper's types,
+The robes are one new item type (`ROBE`, the 26th of DSCLOG's types,
 `game.ROBE_TYPE`): the cloak of protection's record worn on the chest (+9: 1),
 its plus counting for AC (+0Fh, 80h), of no material, for preservers,
 psionicists and druids (+10h: 190h). `BRACERS_AX` answers for it as for the
@@ -991,7 +1083,7 @@ on him with his cloak and scrolls (`kalzith.stock`).
 
 ## Girdles and the amulet
 
-([In the item tables](ITEMS.md).) Three more helper types follow the robe:
+([In the item tables](ITEMS.md).) Three more of DSCLOG's types follow the robe:
 `GIRDLE_BACK` and `GIRDLE_URNST` (the 28th and 29th), a belt's record each (+8:
 40h, +9: 2, the waist), and `MR_AMULET` (the 30th), a necklace's (+9: 7, the
 neck), every class (+10h: 1FFFh); `game.BACK_GIRDLE_TYPE`, `URNST_GIRDLE_TYPE`,
@@ -1021,7 +1113,7 @@ is `worldgear.GIFTS` (Kel, Wyrmias, the Troop Leader).
 ([In the features page](FEATURES.md#kalzith).)
 
 How: he is the game's own kind of person, in the Loader's copies of three of
-its files, which the dice log's helper has the game open instead of the
+its files, which DSCLOG has the game open instead of the
 originals:
 
 - `SEGOBJEX.GFF`: object 1000 (a person's object with the Defiler's picture,
@@ -1051,7 +1143,7 @@ time the party is in the pens, the Loader puts his six scrolls among his
 things (from the game's free list, as for
 [the arena's ring](FEATURES.md#new-items)), once a game. If he is killed, the
 Loader marks it (flag 772) and the others speak of him as dead (see
-[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them));
+[Dinos and the Trustee](PEOPLE.md#what-dinos-and-the-trustee-say-about-them));
 after the party's escape he is gone from the pens with everyone else.
 
 With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
@@ -1064,7 +1156,7 @@ item a merchant won't sell. Once he carries nothing, his shop isn't offered any
 more ("Anything left to sell?" "Nothing. You've bought every scrap of hide I
 had, and the robe off my back. More takes time I don't have.", flag 778): set
 while talking with him (the last thing just bought) or while the map is
-running. (The dice log's helper counts the game's map loop; it doesn't run
+running. (DSCLOG counts the game's map loop; it doesn't run
 while a talk, menu or shop is open.)
 
 Killed, he leaves one of the scrolls he still had, chosen at random, and
@@ -1126,7 +1218,7 @@ in that crate." (shown with 756 and 758 set).
 
 ## What Dinos and the Trustee say about them
 
-([In the features page](FEATURES.md#what-dinos-and-the-trustee-say-about-them).)
+([In the features page](PEOPLE.md#what-dinos-and-the-trustee-say-about-them).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
 every byte where it was, since the game's jumps go to fixed places. Two
@@ -1149,11 +1241,7 @@ more of the game's memory.
 ([In the bugs fixed](GAME-BUGS.md#who-turns-up-and-how); `people.py`.)
 
 The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
-action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the
-alarm fight's start all 30 people's gear was in their packs; Kurzak, backstabbed before his turn,
-was AC 10; once Legcrusher and an Arena Guard had acted, the Guard wore his leather chest armour
-(slot 9), arm armour (0) and arrows (1) and held his obsidian long sword (3) and bow (2), and
-Legcrusher's AC from behind was 8 with his Leather Inixhide +1 on. Kurzak with two weapons fought
+action in a fight. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-06-npcs-equip.md). Kurzak with two weapons fought
 "main hand" with Shadowseeker +1 and "off hand" with his obsidian sword. A blow from outside a
 fight is struck before the game starts it: Gerakis's sling shot at Legcrusher hit AC 9 with the
 game's fight still off, which came on only after his alarm call was read.
@@ -1205,8 +1293,24 @@ the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
 Defiler 296), their records renumbered, named "Champion", their own items left
 out and their gear in (as the new items, after the person), their sheets their
 kinds' (the armour counting on top of their AC) but for DEX (`champions.DEX`:
-18, the half-giant 15; the mul and the halfling have 18 already). Their pictures
-are their kinds'.
+the Tohr-kreen, the halfling and the elf 22, the half-giant 15, the defiler 18; the mul has 18 already). The game's DEX
+tables (DS 7DCh missiles and initiative, 7F6h AC, a byte for each score 0-25; the Loader's and
+DSCLOG's reads go to 25 too) give 22 +4 and -5, AD&D's. Their pictures
+are their kinds'. The elf's bow is the Spellarcher's Fine Bow (`champions.fine_bow`: a plain bow
+with the name entry `game.FINE_BOW_NAME`, as `spellarrows.starting_gear` makes it); DSCLOG's
+`FINE_HIT` goes by the item's name alone, so its +1 to hit is the champion's too, and the bow is on
+the elf's body afterwards. Its arrows are 24 Chill Arrows (`champions.chill_arrows`,
+`spellarrows.arrows_item`): DSCLOG's `PROBE_ARROW` marks a shot one whose spell arrows cast
+(`AMMO_ARCHER`) for anyone not in the party (combatant's creature above 3) and, in the party, for a
+Spellarcher, and `ARROW_HIT` casts the arrows' spell then, so the elf's cast Chill Touch on a hit
+(the spell's save; a failed one takes 1 STR, Weakened), at its highest level, which also gives the
+arrows their plus (`ARCHER_LEVEL`, `spellarrows.archer_level`: +1 from 5th, +2 from 9th). The halfling's missile
+weapon is the game's staff sling (type 0, `game.STAFF_SLING_TYPE`): in the missile slot, which the
+game never weighs against the hands, so its bone short sword and shield stay; the game's slings
+shoot with nothing in the ammunition slot. The defiler wears
+Bracers of Defense AC 6 on its arms (`worldgear.bracers(6)`; a save that has been to Mikquetzl's
+region keeps his pair, as the game made him there with it); it wears no
+armour or helm, so they count (`PROBE_RING_AC`, `INT F8h`, asks of any creature's worn items).
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
 pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at
@@ -1224,7 +1328,7 @@ speech, and put the six in (each a group of one: the wave's own subroutine at
 9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
 else they do what the game did. What a jump leaves of a longer command is
 filled with one-byte commands (`gpl.put_jumps`, with `gpl.FILL`, 61h, as every module's jumps
-are now: eleven scripts once didn't decode after Semyon's and others' jumps), so the script still
+are), so the script still
 decodes (the Loader's other
 changes read it); and the longer script must still fit the game's script buffer
 (`pensasks.LONGEST`), as the Loader's other script changes must.
@@ -1232,12 +1336,10 @@ changes read it); and the longer script must still fit the game's script buffer
 The game's own count of visits ([the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)):
 script 2 marks the 5000th visit (number 12 at 5000, A58h) the war won, with
 flag 10 set and a call to script 62 (at FAAh), which sets the final battle's state,
-global number 49, to 3. Checked in play: the count going up once a trip,
-Scar's challenge on the fifth, and, with the count set to 5000, the 5000th
-trip's speech, the party sent back with no fight, and the final battle marked
-won. The 1000th trip is as its script reads; it wasn't played.
+global number 49, to 3. Verified in play (no log kept). The 1000th trip is as its script reads
+([unverified](DEVELOPMENT.md#unverified)).
 
-Worn and wielded: the game's [item lists](DEVELOPMENT.md#what-is-known) work
+Worn and wielded: the game's [item lists](DEVELOPMENT-INTERNALS.md#whats-known-of-the-save-and-records) work
 for anyone, not only the party (and see [The game's people's
 gear](#the-games-peoples-gear)): seen, a Tohr-kreen given Headsman in its held
 list attacked "with Headsman +2 (1d10+2)" in place of its first two natural
@@ -1246,8 +1348,9 @@ worn list went from AC 3 to -2 against the party's attacks.
 `champions.Gear` (each pass of the dice log, in the arena) moves each living
 champion's items, by type, to its slot (`pickpocket.place`, as the inventory
 screen would), once; the defiler gets its scroll first (into its backpack, while
-it still has one), a random one of `SCROLL_SPELLS` (the game's wizard spells
-without the new ones).
+it still has one), a random one of `SCROLL_SPELLS` (Fogbolt, Spook and
+Reflected Image) with the new spells on, else one of the game's wizard spells
+(`defilerscrolls.spells`).
 
 The body: the game makes a Dead Body (object 1101, a container) where a
 creature carrying something dies, and puts its things in it (DSUN.EXE 59412h,
@@ -1258,21 +1361,12 @@ object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
 81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
 "push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
 object ([BP+6]) is a thri-kreen (its sheet's race, +18h, 8), any of them, and
-the game has the Loader's objects (`OBJECTS_ON`), else 1101. (Till 2026-11-11
-only the Tohr-kreen champion, by its object number: the arena's thri-kreen died
-as a human's Dead Body, the user's report.) The body is in the Loader's
+the game has the Loader's objects (`OBJECTS_ON`), else 1101. The body is in the Loader's
 SEGOBJEX copy whatever the switches (`champions.body_chunks`, from
-`worldgear.data_chunks`). Seen in DOSBox 2026-11-11: Pehtucl's Guard made a
-thri-kreen in memory (`foeset.py 30 race=8`) and the fight fought out, its body
-object 2666, the arena guards' 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
+`worldgear.data_chunks`). Verified in play (no log kept). Object 2666 is a copy of 1101 (its record renumbered) with a picture
 of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,
 squashed to 0.75 of its height, darkened to 0.7, its gythka's pale pixels left
-out, over the red of the Dead Body's blood). Seen in DOSBox: the six came on
-(the bout forced due for the test: the arena's flags have no place in memory
-to be set from outside), each with its gear in place, the mul's two axes, the
-halfling's sling, the elf's bow and the half-giant's great axe each attacking,
-Kreenfang 2d4+1; the Tohr-kreen's body object 2666 with Kreenfang in it, the
-others' Dead Bodies with their gear.
+out, over the red of the Dead Body's blood). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-05-champions.md).
 
 ## The cooked vulture
 
@@ -1281,7 +1375,7 @@ others' Dead Bodies with their gear.
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as
 for the questions about Kalzith and Semyon, see
-[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
+[Dinos and the Trustee](PEOPLE.md#what-dinos-and-the-trustee-say-about-them)),
 shown while the game's own test says someone in the party carries the cooked
 vulture (33h, as the campfire's script asks about the plucked one; the game's
 object A4Ch), the test being the question's own condition in the menu. Chosen,
@@ -1312,13 +1406,11 @@ negated) is rolled for once in the fight (d100, 5 or less; Kalzith left out; the
 forgotten as it ends, so a later fight's defiler in the same place under the
 same name, as the arena's, is rolled for too), and a scroll
 put in its pack (`npcitems.add_to`, a list of its own if it has none), which the
-game then drops with the rest. Checked in the game: the arena Defiler given a
-scroll of Haste as it came on, the scroll in its container after the Rampager
-killed it, its lists back on the game's free list.
+game then drops with the rest. Verified in play (no log kept).
 
 The object, not the class on the creature's character sheet (`+21h`): the game
-shares and reuses its few monster sheets (the arena's three Sligs had one), and
-one of Scar's henchmen, under a defiler's sheet, was given a scroll in 2.4.0.
+shares and reuses its few monster sheets (the arena's three Sligs have one), so a henchman of
+Scar's under a defiler's sheet would be given a scroll.
 
 The rolls are kept for the session by area, creature and name, and forgotten
 when the game's clock goes back or the party changes (a game loaded); a
@@ -1336,7 +1428,7 @@ no line: it would tell the player what the body holds before the fight is won.
 ([In the features page](FEATURES.md#what-the-party-wears).)
 
 How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and the
-figure picked at character creation). The launcher's copy of the file (see
+figure picked at character creation). The Loader's copy of the file (see
 [Icons and names](ITEMS.md#icons-and-names)) gives each its own walking and fighting
 pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
@@ -1373,7 +1465,7 @@ bytes. Nothing in memory is written (the game moves its pictures' memory when
 it makes room), nor a slot's length (the memory the game frees with it), and
 DOSBox is held still for the writes. Where the store isn't found (another
 memory backend, Dark Sun Recompiled), each new outfit takes a new slot as
-before, under the same room check. It then has the helper draw the view again (see
+before, under the same room check. It then has DSCLOG draw the view again (see
 [Shadows](FEATURES.md#shadows)), so the shadows show the new outfit too. A
 picture the game loads later (in a fight, in another area) comes dressed, from
 the file. The copy also has a spare pair of pictures for each party place.
@@ -1381,32 +1473,6 @@ Each thing on the map names the picture it is drawn with and the slot in the
 game's picture table it is drawn from; for a second member of the same figure
 the Loader names their spare there and empties the slot, and the game loads
 the picture and fills it.
-
-## Graphics disappearing in a busy area
-
-([In the bugs fixed](GAME-BUGS.md#pictures-and-memory).)
-
-How: the game's picture cache (`DSUN.EXE` 25FA6h, the slot for a WALL or BMP chunk) has 300
-slots, each 16 bytes: a picture's number, length, place in the store, memory and flags. The count
-is at DS:1F84h, and no slot is given back until a region loads, so at 300 a new picture got no
-slot and wasn't drawn. DSCLOG's `PIC_REUSE` changes nothing below 300 slots, and is always on (a
-fix). With all 300 taken, four sites (`gamepatch` "pic_full", "pic_place", "pic_count" and
-"pic_fail") do this:
-- `PIC_FULL` (26009h) picks a slot to reuse. It must be out of memory (flag 2 clear) and named by
-  no wall (the walls' slots at DS:574Eh) and no map thing (+0Fh). A slot the Loader let go
-  (`CACHE_STALE`, FFFEh) is taken first; else the first free one, the search going round from the
-  slot after the last reused, so the oldest reuse goes first. With none free, no slot, as the game.
-- `PIC_PLACE` (260CCh) puts the reused slot's picture in the first gap in the store it fits (the
-  other slots' places and lengths, the STALE ones left out), else past the furthest end.
-- `PIC_COUNT` (2612Bh) gives the reused slot's number and leaves the count at 300.
-- `PIC_FAIL` (25FD0h, the loader's "no picture") lets a reused slot go again (STALE, not in memory)
-  when its picture's read failed: it holds the new number but the old place, and would otherwise be
-  read from the wrong place later.
-
-`pf_count` counts the slots reused and `pf_failed` those let go after a failed read, for the tests
-(`test_dsclog`'s `PictureSlotTests`) and playtests (`playtest/slotcount.py`; the log is
-`playtest/logs/2026-11-09-picture-slot-reuse.md`). The picture store the
-[party's outfits](#what-the-party-wears) fill is a different limit.
 
 ## Elves and half-elves
 
@@ -1449,11 +1515,10 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
   the same place in the human woman's frame, but not her purple wristbands,
   and a belt isn't drawn over it from behind.
 
-With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
-palette or the pictures they are made from are missing, or making them fails,
-a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
-have no ears. The switch counts when the launcher writes the copy; the Loader
-dresses the party with the setting it had then. A spare is drawn as the figure
+If the palette or the pictures they are made from are missing, or making them
+fails, a half-elf is the human figure recoloured (`halfelf.py`), as before (the
+switch, `elf_looks`, went after 2.18 and with it `sprites.Pictures`' LOOKS: [the
+switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)). A spare is drawn as the figure
 it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
@@ -1464,14 +1529,14 @@ the Loader then swaps for its own as for anyone). In a game begun without the
 copy, the Loader writes the figure into the running game's creature table, and
 the game draws her as an elf from its next area or load
 (`defaultparty.figure_chunks`, `defaultparty.elf_figure`), both only with the
-`cilla_elf` switch on.
+`cilla_elf` setting on (always, now).
 
 ## Shadows
 
 ([In the features page](FEATURES.md#shadows).)
 
-How: the launcher's copy of `DSUN.EXE` (see [How the dice log
-works](DEVELOPMENT.md#how-the-dice-log-works)) calls DSCLOG when the game draws the floor of
+How: the Loader's copy of `DSUN.EXE` (see [How the dice log
+works](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works)) calls DSCLOG when the game draws the floor of
 the view or of a rectangle of it. DSCLOG then lays each casting figure's current
 picture, flattened and stretched, onto the floor just drawn, darkening each
 pixel to the closest clearly darker colour of the area's palette (a table it
@@ -1486,8 +1551,7 @@ drawings: in a save in the arena every figure but one had its picture out of mem
 drawn, so no shadow. Loading one from here, in the middle of a drawing, could push out or move a
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow as it draws it
 (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow, three bytes each, at most 64, under
-the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in the
-helper's far block (`SC_SEG`, at `FAR_SC`: see [the far block](DEVELOPMENT.md#the-far-block)),
+the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in DSCLOG's far block (`SC_SEG`, at `FAR_SC`: see [the far block](DEVELOPMENT-INTERNALS.md#the-far-block)),
 the oldest given up first. A figure
 whose picture is out casts its frame's kept shadow, or another frame's of the same picture
 (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the party and the monsters seen
@@ -1573,50 +1637,4 @@ s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it draws see-throu
 each step of anyone's), has the whole view drawn once when one of them is hidden no longer: solid at
 the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB
 anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns
-shows at once (test `test_whole_view_when_the_table_changes`; seen in DOSBox, the byte cleared 0.06
-s into an enemy's turn, `playtest/logs/2026-11-07-review-fixes.md`). Seen in DOSBox, 2026-11-05: a
-figure marked drew half see-through over floor, wall and its shadow, facing either way and walking;
-in a fight, a real hide (solid again from the backstab on) and a real Invisibility, walking at the
-solid pace (`playtest/logs/2026-11-05-fight-test.md`).
-
-## Sounds for hiding and picking pockets
-
-([In the features page](FEATURES.md#picking-pockets); `sounds.py`, whose docstring has the
-detail.)
-
-Two sounds of the mod's own, chosen by the user from eight made for them: a breath sinking away
-as a thief or ranger hides and moves silently in a fight (BVOC 140, `HIDE_SOUND`), and a purse's
-jingle for a picked pocket, a thing or the coins (BVOC 141, `PICK_SOUND`; a weapon worth the
-quest's XP keeps the quest's sound). Their samples are `dsloader/sound-data/*.wav` (8000 Hz,
-8-bit mono, the game's form; `make.py` made them), put in the Loader's copy of RESOURCE.GFF as
-Creative Voice Files like the game's.
-
-The game finds a sound through its table of 181 (3A98:08A2h, 6 bytes each: its kind, then a far
-pointer to a 12-byte descriptor naming the BVOC); only 0-130 are digital, so a BVOC numbered past
-them isn't played by its number. DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
-call (one for each sound: the game keeps the last clip it loaded under an entry), as a digital
-one with a descriptor of its own, and puts the entry back. Two header words ask for
-them: `SOUND_REQ` (+1822: played from the map's main loop, `SOUND_TICK`) and `PICK_SOUND` (+1824:
-played with the pick's text, `GIVE_XP`). A Spellarcher making spell arrows hears the spell's own
-cast sound (its spell record's +0Fh, `spellarrows.cast_sound`), through `SOUND_REQ` too. Seen in
-DOSBox (2026-11-05, its output recorded with `PT_AUDIO` and matched with the clips: r 0.995 to
-0.997): both on request, in either order and after one of the game's, entries 131 and 132 as the
-game had them afterwards, and from a real pick and a real hide. Tests: `test_sounds.py`,
-`UseItemTests.test_sound_tick`, `test_pick_sound`.
-
-## An archer's last arrow and a dry quiver
-
-([In the bugs fixed](GAME-BUGS.md#sides-and-blows).)
-
-The weapon attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out
-of ammo" with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h),
-which ends the turn (5844Eh). A kill with attacks left lets anyone go on (the caller's loop), so an
-archer that killed with its last arrow lost a turn any other kill keeps. `AMMO_CAP` (5899Ah) keeps
-the round's attacks before the cut, and `AMMO_TURN` (58C38h) compares a party member's attacks made
-with them, so the turn goes on after such a kill; monsters as the game has them. A party member whose
-volley its quiver cut short also keeps its turn against a target still standing: the `AMMO_OKAY`
-sites (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen"
-for it, `NEW_AS_OKAY`'s jbe/ja kept in the same patches. The count over the archer: [the quiver's
-count](DEVELOPMENT-SCREENS.md#names-over-figures). Checked in the game
-(playtest/logs/2026-11-14-quiver-turn.md). Tests: `test_quiver.py`, `test_gamepatch`'s
-`test_new_counts_as_okay`.
+shows at once (test `test_whole_view_when_the_table_changes`; verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-07-review-fixes.md)). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-05-fight-test.md).

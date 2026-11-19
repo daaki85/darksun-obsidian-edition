@@ -1,4 +1,4 @@
-"""Weapon specialization (the Options tab's rule): the weapon kinds a fighter, gladiator or ranger
+"""Weapon specialization (always on): the weapon kinds a fighter, gladiator or ranger
 can choose, and which of the game's item types each takes in.
 
 The game has no notion of a weapon's kind: its item types are one per weapon and material (a

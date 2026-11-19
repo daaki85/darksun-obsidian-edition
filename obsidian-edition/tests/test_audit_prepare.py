@@ -199,6 +199,15 @@ class PrepareTests(unittest.TestCase):
         self.assertEqual(self.there(OBJECTS), "new")
         self.assertTrue(any(SCRIPTS in line for line in launch.LEFT_OUT))
 
+    def test_scripts_fail_kalzith_off(self):
+        """Kalzith off and the scripts copy failing: RGN29's copy (the pens' gifts alone) goes with
+        it, and the line says so, not only the scripts."""
+        self.fail.add("scripts")
+        self.prepare(kalzith=False)
+        self.assertIsNone(self.there(PENS))
+        line, = [line for line in launch.LEFT_OUT if SCRIPTS in line]
+        self.assertIn(f"with it the gifts placed in {PENS}", line)
+
     def test_region_fail(self):
         """A region copy that can't be written: none of it left, and said."""
         self.stale(*self.region_names())

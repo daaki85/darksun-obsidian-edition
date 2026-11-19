@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import game
-from dsloader.guestmem import GuestMemory, LOW_MEMORY
+from dsloader.guestmem import GuestMemory, LOW_MEMORY, WriteRefused
 
 
 class FakeProcess:
@@ -23,14 +23,14 @@ class FakeProcess:
 
 class GuardTests(unittest.TestCase):
     def test_refused_and_noted(self):
-        """A write from a pointer read while the game had it empty (0:offset) goes nowhere, and
-        says where it came from; others are made."""
+        """A write from a pointer read while the game had it empty (0:offset) goes nowhere, says
+        where it came from, and raises (WriteRefused); others are made."""
         proc = FakeProcess(0x100000)
         guest = GuestMemory(proc, 0, 0x100000)
         game.GameData(guest, 0x4000)
-        guest.write(0x10, b"\xff\xff")
-        guest.write(0x4000 * 16 + 2, b"\xff")
-        guest.write(LOW_MEMORY - 1, b"\xff\xff")  # (reaching into it)
+        for at, data in ((0x10, b"\xff\xff"), (0x4000 * 16 + 2, b"\xff"), (LOW_MEMORY - 1, b"\xff\xff")):
+            with self.assertRaises(WriteRefused):  # (raised: a change of several writes not half made)
+                guest.write(at, data)
         self.assertEqual(proc.mem[0x10], 0)
         self.assertEqual(proc.mem[0x40002], 0)
         self.assertEqual(proc.mem[LOW_MEMORY], 0)
@@ -42,6 +42,23 @@ class GuardTests(unittest.TestCase):
         guest.write(LOW_MEMORY, b"\x07")
         self.assertEqual((proc.mem[0x4000 * 16 + game.NULL_AREA], proc.mem[LOW_MEMORY]), (7, 7))
         self.assertEqual(len(guest.refused), 3)
+
+
+class NullTableTests(unittest.TestCase):
+    def test_no_write_through_a_null_table(self):
+        """A table's pointer read null (an area loading): no address made from it to write through
+        (game.TableGone), where a sheet index far enough in would pass the low-memory guard; the
+        dice log's step drops it quietly, for a later pass."""
+        from dsloader import aging, dicelog
+        proc = FakeProcess(0x100000)
+        guest = GuestMemory(proc, 0, 0x100000)
+        gd = game.GameData(guest, 0x4000)
+        with self.assertRaises(game.TableGone):
+            aging.sheet_address(gd, 30)
+        proc.mem[0x4000 * 16 + game.SHEETS_PTR:0x4000 * 16 + game.SHEETS_PTR + 4] = b"\x00\x00\x00\x50"
+        self.assertEqual(aging.sheet_address(gd, 1), 0x50000)  # (its creature, zeros: sheet 0)
+        log = dicelog.DiceLog(guest)
+        self.assertEqual(log._step(lambda: aging.sheet_address(game.GameData(GuestMemory(FakeProcess(0x100000), 0, 0x100000), 0x4000), 30)), [])
 
 
 if __name__ == "__main__":

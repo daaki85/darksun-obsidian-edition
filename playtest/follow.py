@@ -1,6 +1,6 @@
 # follow.py OBJECT [ROUNDS]: keep the party within a few squares of a map object that walks (an
-# escort: Kurzak, object 29, leads a new party from the arena's gate to its cell, a waypoint at a
-# time, each waiting until the party is within 4 squares: 141 at 0h, INLOS range 4). Each round:
+# escort). Kurzak, object 29, leads a new party from the arena's gate to its cell, a waypoint at a
+# time, each waiting until the party is within 4 squares: 141 at 0h, INLOS range 4. Each round:
 # where the object stands (gd.things_of / thing_square), and route.py to beside it; messages are
 # clicked away. Prints each round.
 import sys, os, subprocess, time

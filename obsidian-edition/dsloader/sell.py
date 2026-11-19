@@ -18,7 +18,7 @@ The dice log says what went and for how much, with the purse's sound."""
 import struct
 from typing import Dict, List, Tuple
 
-from . import game, itemgate, pickpocket, prices, restrict, ring
+from . import game, pickpocket, prices, restrict, ring
 from .game import GameData
 
 TSR_SELL_SEQ, TSR_SELL_MEMBER, TSR_SELL_MERCHANT, TSR_SHOP_AT = 1852, 1854, 1856, 1858  # (DSCLOG's header)
@@ -62,10 +62,8 @@ def plain_gear(gd: GameData, rec: bytes) -> bool:
 
 
 def price(gd: GameData, rec: bytes) -> int:
-    """What the shop pays for REC, as the game's (and DSCLOG's SELL_PRICE) works it out."""
-    value = struct.unpack_from("<H", rec, VALUE)[0]
-    if gd.rules & game.RULE_CHA_PRICES:  # (Shops as in AD&D)
-        value = prices.sell_price(value)
+    """What the shop pays for REC, as DSCLOG's SELL_PRICE works it out (Shops as in AD&D: 60%)."""
+    value = prices.sell_price(struct.unpack_from("<H", rec, VALUE)[0])
     typ = gd.item_type_record(rec)
     if len(typ) > restrict.TYPE_KIND_FLAGS and typ[restrict.TYPE_KIND_FLAGS] & STACKS:
         value *= struct.unpack_from("<H", rec, COUNT)[0]  # (as stored, as the game's 83D6Bh)
@@ -76,13 +74,12 @@ def sell(gd: GameData, member: int) -> Tuple[List[str], int]:
     """Party member MEMBER's plain gear in its backpack sold: the dice log's lines and the money."""
     if not 0 <= member < game.PARTY_SIZE:
         return [], 0
-    it = ring.Items(gd)
+    it = ring.held(gd)  # (the game busy with its lists: ItemsBusy, in a later pass; read once held)
     thing, = struct.unpack_from("<h", gd.creature(member), pickpocket.PACK_LIST)
     goods = [(i, rec) for i, rec in it.chain(thing, inside=False)
              if rec[game.ITEM_SLOT] in pickpocket.BACKPACK and plain_gear(gd, rec)]
     if not goods:
         return [f"{gd.creature_name(member)} has no plain gear in the backpack to sell."], 0
-    itemgate.hold(gd)  # (the game busy with its lists: ItemsBusy, in a later pass)
     sold: Dict[str, List[int]] = {}  # name: [how many, paid]
     total = 0
     for item, rec in goods:

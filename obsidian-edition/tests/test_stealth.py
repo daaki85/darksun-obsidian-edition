@@ -26,7 +26,7 @@ def rolls(*faces):
 
 class StealthTests(unittest.TestCase):
     def setUp(self):
-        """Dag (combatant 0), a 4th level thief: hide in shadows and move silently 16 each.
+        """Dag (combatant 0), a 4th level thief: hide in shadows 25, move silently 33 (AD&D's table).
         The Mountain Stalker (combatant 0x29) is on the other side, three squares away. In the
         arena unless a test says otherwise."""
         thief = ThiefTests()
@@ -49,10 +49,10 @@ class StealthTests(unittest.TestCase):
         struct.pack_into("<H", self.m, DS * 16 + 0x117C, number)
 
     def test_outdoors_halved(self):
-        lines, hidden = stealth.turn(self.gd, 0, rolls(8, 16))
+        lines, hidden = stealth.turn(self.gd, 0, rolls(12, 33))
         self.assertTrue(hidden)
-        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 8, needs 8 or less (16, halved in daylight) -> hidden")
-        self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 16, needs 16 or less -> unheard"))
+        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 12, needs 12 or less (25, halved in daylight) -> hidden")
+        self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 33, needs 33 or less -> unheard"))
 
     def test_not_halved_by_the_sun(self):
         """A Military Scout, and Cilla (the game's own party's elf, the Elven Shadow-walker: kits.own_race),
@@ -61,11 +61,11 @@ class StealthTests(unittest.TestCase):
         from dsloader import kits
         with mock.patch.object(self.gd, "kit_ids", lambda creature: [kits.SCOUT]):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
-        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 16, needs 26 or less (26, a Military Scout: "
+        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 16, needs 35 or less (35, a Military Scout: "
                                    "not halved in daylight) -> hidden")
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.ELF):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
-        self.assertIn("(16, the Elven Shadow-walker: not halved in daylight) -> hidden", lines[0])
+        self.assertIn("(25, the Elven Shadow-walker: not halved in daylight) -> hidden", lines[0])
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.THRI_KREEN):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
         self.assertIn("halved in daylight) -> seen", lines[0])
@@ -77,13 +77,13 @@ class StealthTests(unittest.TestCase):
         cloak[game.ITEM_SLOT], boots[game.ITEM_SLOT] = game.CLOAK_SLOT, game.FOOT
         worn = [(1, bytes(cloak), b""), (2, bytes(boots), b"")]
         self.gd._worn = lambda member: iter(worn)
-        lines, hidden = stealth.turn(self.gd, 0, rolls(13, 26))
+        lines, hidden = stealth.turn(self.gd, 0, rolls(17, 43))
         self.assertTrue(hidden)
-        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 13, needs 13 or less "
-                                   "(16 +10 cloak = 26, halved in daylight) -> hidden")
-        self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 26, needs 26 (16 +10 boots) or less -> unheard"))
+        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 17, needs 17 or less "
+                                   "(25 +10 cloak = 35, halved in daylight) -> hidden")
+        self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 43, needs 43 (33 +10 boots) or less -> unheard"))
         worn[:] = []
-        self.assertIn("needs 8 or less (16, halved in daylight)", stealth.turn(self.gd, 0, rolls(99))[0][0])
+        self.assertIn("needs 12 or less (25, halved in daylight)", stealth.turn(self.gd, 0, rolls(99))[0][0])
 
     def elven(self, cloak=True, boots=True):
         worn = []
@@ -130,24 +130,24 @@ class StealthTests(unittest.TestCase):
         cloak, boots = bytearray(game.ITEM_SIZE), bytearray(game.ITEM_SIZE)
         cloak[game.ITEM_SLOT], boots[game.ITEM_SLOT] = game.CLOAK_SLOT, game.FOOT
         self.gd._worn = lambda member: iter([(1, bytes(cloak), b""), (2, bytes(boots), b"")])
-        lines, hidden = stealth.turn(self.gd, 0, rolls(8, 16), gear=False)
-        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 8, needs 8 or less (16, halved in daylight) -> hidden")
+        lines, hidden = stealth.turn(self.gd, 0, rolls(12, 33), gear=False)
+        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 12, needs 12 or less (25, halved in daylight) -> hidden")
         self.assertNotIn("boots", lines[1])
 
     def test_seen(self):
-        self.assertEqual(stealth.turn(self.gd, 0, rolls(9)),
-                         (["Dag hides in shadows: d100 = 9, needs 8 or less (16, halved in daylight) -> seen"], False))
+        self.assertEqual(stealth.turn(self.gd, 0, rolls(13)),
+                         (["Dag hides in shadows: d100 = 13, needs 12 or less (25, halved in daylight) -> seen"], False))
 
     def test_heard(self):
-        lines, hidden = stealth.turn(self.gd, 0, rolls(3, 17))
+        lines, hidden = stealth.turn(self.gd, 0, rolls(3, 34))
         self.assertFalse(hidden)
-        self.assertEqual(lines[1], "  Dag moves silently: d100 = 17, needs 16 or less -> heard")
+        self.assertEqual(lines[1], "  Dag moves silently: d100 = 34, needs 33 or less -> heard")
 
     def test_indoors(self):
         self.region(0x29)  # the slave pens
-        lines, hidden = stealth.turn(self.gd, 0, rolls(16, 1))
+        lines, hidden = stealth.turn(self.gd, 0, rolls(25, 1))
         self.assertTrue(hidden)
-        self.assertIn("needs 16 or less (16, out of the sun)", lines[0])
+        self.assertIn("needs 25 or less (25, out of the sun)", lines[0])
 
     def test_by_the_floor(self):
         """On a map with buildings (0Bh), the tile under the thief: an indoor floor, or not."""
@@ -280,14 +280,17 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + stealth.TSR_STEALTH)[0], 0)
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_SOUND_REQ)[0], 0xFFFF)  # (no sound)
 
-    def test_rule_off(self):
+    def test_rule_bit_clear(self):
+        """The stealth rule always on: its bit clear in the rules, a thief's turn still rolls its hiding."""
         log = self.log
         log.rules = 0
         set_clock(log, 600)
         log._round_time = 600
         fight_on(log)
         struct.pack_into("<h", self.m, DS * 16 + game.WHOSE_TURN, 0)
-        self.assertEqual(log.turn_lines(), ["Dag's turn"])
+        lines = log.turn_lines()
+        self.assertEqual(lines[0], "Dag's turn")
+        self.assertTrue(lines[1].startswith("Dag hides in shadows: d100 = "), lines)
 
 
 class GearPriceTests(unittest.TestCase):

@@ -28,7 +28,7 @@ import struct
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
-from . import game, itemgate, restrict, ring
+from . import game, restrict, ring
 from .game import GameData
 
 PICK_POCKETS, MOVE_SILENTLY = 0, 3  # thief skill numbers
@@ -147,11 +147,18 @@ def free_cell(gd: GameData, it: ring.Items, member: int) -> Optional[int]:
 
 
 def _take(gd: GameData, it: ring.Items, creature: int, list_no: int, item: int, before: int) -> None:
-    """Unlink ITEM from the creature's list (freeing the list's object if it was the only one)."""
+    """Unlink ITEM from the creature's list (freeing the list's object if it was the only one).
+    BEFORE (the item ahead of it, -1 none) is checked again with the gate held: the list moved
+    since it was read, ValueError and nothing written."""
+    it = ring.held(gd)
     ds = gd.ds * 16
     offset = game.CREATURE_ITEM_LISTS[list_no]
     base = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
     thing, = struct.unpack_from("<h", gd.creature(creature), offset)
+    kind, first = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
+    ahead = first if before < 0 else struct.unpack_from("<h", it.item(before), game.ITEM_NEXT)[0]
+    if kind != game.THING_ITEM or ahead != item:
+        raise ValueError(f"item {item} is no longer where it was read")
     after = it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2]
     if before >= 0:
         gd.guest.write(it.items + before * game.ITEM_SIZE + game.ITEM_NEXT, after)
@@ -177,6 +184,7 @@ def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes 
     """The list (its object) that party member MEMBER keeps an item of type record TYP in SLOT
     in (list_for); a new one, as the game's allocator gives it, if it has none. None if there's
     none to be had."""
+    it = ring.held(gd)  # (IT as the caller read it may be from before the game's last move)
     offset = list_for(slot, typ)
     thing, = struct.unpack_from("<h", gd.creature(member), offset)
     if 0 <= thing < ring.THING_COUNT and it.thing(thing)[0] == game.THING_ITEM:
@@ -197,6 +205,7 @@ def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes 
 
 def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bool:
     """ITEM (in no list) put first in the party member's list for SLOT and its kind, in SLOT."""
+    it = ring.held(gd)
     data = it.item(item)
     typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
     thing = party_list(gd, it, member, slot, typ)
@@ -218,7 +227,7 @@ def place(gd: GameData, member: int, item: int, slot: int) -> bool:
     backpack is no longer fought with, one taken from it is. Nothing moves (False) if there is no
     list to be had for it: the list is found or made first, then the item taken out of its own
     (taken out first, it was in no list when the game's things had none left, and lost)."""
-    it = ring.Items(gd)
+    it = ring.held(gd)
     rec = gd.creature(member)
     for list_no, offset in enumerate(game.CREATURE_ITEM_LISTS):
         thing, = struct.unpack_from("<h", rec, offset)
@@ -310,16 +319,17 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if key in tried:
         return Attempt(f"{npc} keeps a close hand on their purse now: {thief} won't get another chance.", [])
     level = thief_level(gd, leader)
-    caught = caught_key(key, thief, level) if gd.rules & game.RULE_THIEF_TABLE else None
-    if caught is not None and caught in tried:
+    caught = caught_key(key, thief, level)  # (Thieves as in AD&D, always on)
+    if caught in tried:
         text = f"{npc} remembers {thief}, and keeps a close hand on their purse."
         return Attempt(text, [f"{text} ({thief} was caught at this thief level: another try once a "
                               "level is gained, with Thieves as in AD&D)"])
-    it = ring.Items(gd)
+    # (the gate held before the roll and before the lists are read: the game busy with its
+    # lists, the try waits for the next look; the thief's cell and the pocket's items as they are now)
+    it = ring.held(gd)
     cell = free_cell(gd, it, leader)
     if cell is None:
         return Attempt(f"{thief}'s backpack is full.", [])
-    itemgate.hold(gd)  # (before the roll: the game busy with its lists, the try waits for the next look)
     chance, luck = _luck(gd, leader, chance)
     d100 = roll()
     lines = [f"{thief} picks {npc}'s pocket: d100 = {d100}, needs {chance} or less{luck} -> "
@@ -341,7 +351,10 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             if party_list(gd, it, leader, cell) is None:  # (the thief's backpack list first: the item is
                 return Attempt(f"{thief} can't take anything now.", lines)  #   never left in no list)
             _take(gd, it, who, list_no, item, before)
-            if not give(gd, ring.Items(gd), leader, item, cell):
+            if not give(gd, ring.Items(gd), leader, item, cell):  # (put back: never left in no list)
+                from . import buyback
+                if not buyback.to_pack(gd, who, item):
+                    ring.free(gd, item, f"lifted from {npc}, not given")
                 return Attempt(f"{thief} can't take anything now.", lines)
             text = f"{thief} lifts {name} from {npc} unnoticed."
             special = _seen(data)
@@ -363,10 +376,8 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
         text = f"{thief} fumbles {npc}'s pockets, but slips away unnoticed."
         lines.append("  " + text)
         return Attempt(text, lines)  # (no key: free to try again)
-    if caught is not None:  # (Thieves as in AD&D: this thief again once a level is gained, others now)
-        text = f"{npc} catches {thief}'s hand!"
-        lines += ["  " + text, f"  ({thief} may try {npc} again once a thief level is gained)"]
-        return Attempt(text, lines, caught)
-    text = f"{npc} catches {thief}'s hand! {npc} will be too wary for {thief} to try again."
-    lines.append("  " + text)
-    return Attempt(text, lines, key)
+    # (Thieves as in AD&D: this thief again once a level is gained, others now; the game's "too wary
+    # to try again" went with the switch)
+    text = f"{npc} catches {thief}'s hand!"
+    lines += ["  " + text, f"  ({thief} may try {npc} again once a thief level is gained)"]
+    return Attempt(text, lines, caught)

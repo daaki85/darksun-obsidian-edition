@@ -1,5 +1,5 @@
 # turnwatch.py MEMBER SECONDS: polls whose turn it is and the member's turn bytes every 5 ms,
-# printing each change with its time: +181h attacks made this round (63h = spent, the turn ends),
+# printing each change with its time. +181h attacks made this round (63h = spent, the turn ends),
 # +1ABh attack commands, +1D5h, +5Bh (the segment DS - (4356h - 37BDh), a byte a combatant;
 # +1D5h a word). Start it in the background just before the click (logs/2026-11-14-quiver-turn.md).
 import os, sys, time, struct

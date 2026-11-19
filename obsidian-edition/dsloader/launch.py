@@ -5,7 +5,7 @@ dosbox_darksun_single.conf (the [autoexec] that mounts the game and shows a
 small menu). We keep the first and replace the second with our own
 [autoexec], which also mounts the Loader's dos folder as D:, loads
 DSCLOG.EXE into upper memory, and runs DSUNLOG.EXE: a patched copy of the
-game (see gamepatch.py) that the launcher keeps in the dos folder. Nothing in
+game (see gamepatch.py) that the Loader keeps in the dos folder. Nothing in
 the game folder is changed.
 """
 
@@ -19,7 +19,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -64,14 +64,14 @@ def is_game_dir(folder: str) -> bool:
 
 
 # Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
-# of its own, with the mod's patched game and its helper built in. The Loader starts that program
+# of its own, with the mod's patched game and DSCLOG built in. The Loader starts that program
 # instead of DOSBox when it finds it: unzipped into this folder (a "recompiled" subfolder, or its
 # files here), or in its own "darksun-recompiled..." folder beside this one (a bare dsun.exe beside
 # this folder, in Downloads say, is never taken: it could be anything), or named in SETTINGS
 # ("recompiled"; `dsloader launch --recompiled <path>` remembers a path, `--dosbox` turns the
 # program off until `--recompiled` again). It is started with the game's folder (its data files;
 # the game is recognised by its DSUN.EXE) and the mod's dos folder as drive D (DSUNLOG.EXE and
-# the data files the helper replaces); it keeps its memory images (build/ds1o) beside itself.
+# the data files DSCLOG replaces); it keeps its memory images (build/ds1o) beside itself.
 RECOMPILED_EXE = "dsun.exe" if os.name == "nt" else "dsun"
 
 
@@ -166,8 +166,7 @@ def upgrade_settings(settings: dict) -> bool:
     """Bring settings saved by an older Loader up to SETTINGS_VERSION; True if anything changed."""
     if not settings or settings_version(settings) >= SETTINGS_VERSION:
         return False
-    settings["combat_log"] = True
-    settings["settings_version"] = SETTINGS_VERSION
+    settings["settings_version"] = SETTINGS_VERSION  # (version 1's combat log turned on: always on now)
     return True
 
 
@@ -215,6 +214,8 @@ def load_settings(strict: bool = False, tries: int = SETTINGS_TRIES) -> dict:
             _keep_aside()
             return {}
         _drop_misshapen(settings)
+        from . import game
+        game.drop_always_on(settings)  # (a switch now always on: an older file's False passed over)
         if upgrade_settings(settings):
             try:
                 save_settings(settings)
@@ -252,7 +253,7 @@ def save_settings(settings: dict) -> None:
     """Written whole or not at all: into a temporary file of this write's own (two Loaders, or the
     window and `play`, never share one), then put in settings.json's place."""
     from . import game
-    game.fold_merged(settings)  # (a merged-away switch's untick kept in the one it joined)
+    game.drop_always_on(settings)  # (a switch now always on isn't kept: game.ALWAYS_ON)
     settings["settings_version"] = SETTINGS_VERSION
     with SETTINGS_LOCK:
         fd, tmp = tempfile.mkstemp(prefix=os.path.basename(SETTINGS) + ".", suffix=".tmp",
@@ -278,9 +279,68 @@ def save_settings(settings: dict) -> None:
                     pass
 
 
+SETTINGS_FILE_WAIT = 2.0  # seconds update_settings waits for another process's settings lock, at most
+_settings_file_held = threading.local()
+
+
+def _settings_file_lock():
+    """A lock on settings.lock beside settings.json, across processes (the window and `play` both
+    rewrite settings.json: a read and write of one, between the other's, lost the other's change).
+    Waited for up to SETTINGS_FILE_WAIT, then gone on without (as before); none where the folder
+    can't be written or the system can't lock. A context manager; again within it, nothing."""
+    import contextlib
+
+    @contextlib.contextmanager
+    def held():
+        if getattr(_settings_file_held, "depth", 0):
+            _settings_file_held.depth += 1
+            try:
+                yield
+            finally:
+                _settings_file_held.depth -= 1
+            return
+        try:
+            fd: Optional[int] = os.open(os.path.splitext(SETTINGS)[0] + ".lock", os.O_RDWR | os.O_CREAT, 0o644)
+        except OSError:
+            fd = None
+        taken = False
+        if fd is not None:
+            end = time.monotonic() + SETTINGS_FILE_WAIT
+            while True:
+                got = _lock_file(fd)
+                if got is not False or time.monotonic() >= end:
+                    taken = bool(got)
+                    break
+                time.sleep(0.02)
+        _settings_file_held.depth = 1
+        try:
+            yield
+        finally:
+            _settings_file_held.depth = 0
+            if fd is not None:
+                if taken:
+                    _unlock_file(fd)
+                os.close(fd)
+    return held()
+
+
+def _unlock_file(fd: int) -> None:
+    try:
+        if os.name == "nt":
+            import msvcrt
+            os.lseek(fd, _LOCK_AT, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    except OSError:
+        pass
+
+
 def update_settings(changes: dict) -> dict:
-    """settings.json with CHANGES made, read and written as one step; the settings as saved."""
-    with SETTINGS_LOCK:
+    """settings.json with CHANGES made, read and written as one step (in this process, and against
+    another's: _settings_file_lock); the settings as saved."""
+    with SETTINGS_LOCK, _settings_file_lock():
         settings = load_settings(strict=True)
         settings.update(changes)
         save_settings(settings)
@@ -292,7 +352,7 @@ def _names(settings: dict, key: str) -> Dict[int, str]:
     names = settings.get(key, {})
     if not isinstance(names, dict):
         return {}
-    return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
+    return {int(k): v for k, v in names.items() if str(k).isdecimal() and isinstance(v, str) and v}
 
 
 def _dict_in(settings: dict, key: str) -> dict:
@@ -366,6 +426,34 @@ SCALERS = {2: "normal2x", 3: "normal3x"}
 DEFAULT_SCALE = 3
 WINDOW_SCALES = (1, 2, 3, 4)
 
+# The picture: how DOSBox 0.74 draws the game's 320x200 larger (its render.cpp and sdlmain.cpp).
+# PLAIN is each pixel as a block (`normal2x`, `normal3x`). SCANLINES and TV are 0.74's `scan` and
+# `tv` scalers, which leave the last line of each game row black (scan) or dimmed (tv); they come
+# at 2x and 3x only. SHARP is 0.74's unfiltered OpenGL output (`openglnb`): whatever stretching is
+# left to DOSBox's output (the aspect correction, the four-times window, full screen up to the
+# desktop's size) is done without the smoothing GOG's DirectDraw output or `opengl` give it.
+PLAIN, SCANLINES, TV, SHARP = "plain", "scanlines", "tv", "sharp"
+PICTURES = (PLAIN, SCANLINES, TV, SHARP)
+DEFAULT_PICTURE = PLAIN
+LINE_SCALERS = {SCANLINES: "scan", TV: "tv"}  # (scan2x, scan3x; tv2x, tv3x: 0.74 has no 4x of any)
+FULL_SCREEN_LINES = 3  # (full screen: the 3x one, its dark line a third of a row, not half)
+
+
+def pictures(settings: dict) -> Tuple[str, ...]:
+    """The pictures there are for the settings' window: every one in full screen and in a window
+    of twice the game's size or more; in the single-size window (320x240, nothing scaled) only the
+    plain one."""
+    if settings.get("fullscreen"):
+        return PICTURES
+    return (PLAIN,) if settings.get("window_scale", DEFAULT_SCALE) == 1 else PICTURES
+
+
+def picture(settings: dict) -> str:
+    """The picture DOSBox is asked for: the settings' `picture` if the window has it, else the
+    plain one (also for a `picture` the Loader doesn't know)."""
+    chosen = settings.get("picture", DEFAULT_PICTURE)
+    return chosen if isinstance(chosen, str) and chosen in pictures(settings) else DEFAULT_PICTURE
+
 
 def display_lines(settings: dict) -> List[str]:
     """DOSBox's display, over GOG's settings (full screen): a window, by default three times the
@@ -373,24 +461,38 @@ def display_lines(settings: dict) -> List[str]:
     twice, 4 four times, 1 leaves it at 320x240; `fullscreen` true keeps GOG's full screen.
     Alt+Enter switches either way in DOSBox. DOSBox 0.74 has no 4x scaler, so four times is
     DOSBox scaling the window itself, which needs its OpenGL output.
+    `picture` (picture()) changes how it is drawn larger. Scanlines and TV put 0.74's scan or tv
+    scaler in the plain one's place: 2x or 3x as the window's, 2x in the four-times window (which
+    OpenGL then doubles), 3x in full screen (GOG's output stretching it to the desktop). Sharp
+    makes the output `openglnb`, with the window's size given so that OpenGL does the aspect
+    correction (the plain scaler stays, so a driver without OpenGL, where DOSBox falls back to its
+    plain surface, still opens the window at its size).
     With the pointer's start and speed (`mouse_start`, on unless switched off) the mouse's
     `sensitivity` is 100 over the scale: DOSBox moves the captured game's pointer a game pixel for
     each pixel the hand moves on the desktop, SCALE screen pixels in the window, so this makes it
     move as the desktop's pointer does (DSCLOG's MOUSE_RATIO allows for the taller pixels); the
-    mouse is captured on a click (`autolock`, as GOG has it)."""
+    mouse is captured on a click (`autolock`, as GOG has it). The picture changes none of that:
+    the window's size is the same for each."""
+    look = picture(settings)
     if settings.get("fullscreen"):
+        if look == SHARP:
+            return ["[sdl]", "output=openglnb", ""]
+        if look in LINE_SCALERS:
+            return ["[render]", f"scaler={LINE_SCALERS[look]}{FULL_SCREEN_LINES}x", ""]
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
     sdl = ["[sdl]", "fullscreen=false"]
-    if settings.get("mouse_start", True) is not False:
-        sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
-        # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
-    if scale == 4:
-        return sdl + ["output=opengl", "windowresolution=1280x960", "[render]",
-                      "aspect=true", "scaler=normal2x", ""]
-    return sdl + ["[render]", "aspect=true",
-                  "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
+    sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (the pointer where it starts, mouse_start:
+    # captured, as uncaptured DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
+    if scale == 1:
+        return sdl + ["[render]", "aspect=true", "scaler=none", ""]
+    by = 2 if scale == 4 else scale  # (the scaler's share of it)
+    scaler = f"{LINE_SCALERS[look]}{by}x" if look in LINE_SCALERS else SCALERS[by]
+    if scale == 4 or look == SHARP:
+        sdl += ["output=" + ("openglnb" if look == SHARP else "opengl"),
+                f"windowresolution={320 * scale}x{240 * scale}"]
+    return sdl + ["[render]", "aspect=true", "scaler=" + scaler, ""]
 
 
 # The game's speed: DOSBox's emulated CPU (fixed cycles: instructions a millisecond). The game
@@ -417,8 +519,8 @@ def cpu_lines(settings: dict) -> List[str]:
 
 
 # GOG's dosbox_darksun.conf has EMS on, and DOSBox 0.74 then keeps EMS's 64 KB page frame in the
-# upper memory the helper loads into, leaving it 1 KB to spare; with EMS off the block is the
-# helper's (65 KB free). The game's memory layer takes XMS when there is no EMS.
+# upper memory DSCLOG loads into, leaving it 1 KB to spare; with EMS off the block is the
+# DSCLOG's (65 KB free). The game's memory layer takes XMS when there is no EMS.
 DOS_LINES = ["[dos]", "ems=false", ""]
 
 
@@ -426,15 +528,15 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game.
     SETTINGS: the saved ones if not given."""
     settings = load_settings() if settings is None else settings
-    lines = display_lines(settings) + cpu_lines(settings)
-    if dice_log:  # (EMS's 64 KB page frame sits where the helper loads; the game takes XMS without it)
+    lines = display_lines(settings) + cpu_lines(settings) + midiout.conf_lines(settings)
+    if dice_log:  # (EMS's 64 KB page frame sits where DSCLOG loads; the game takes XMS without it)
         lines += DOS_LINES
     lines += ["[autoexec]", "@echo off", "cls", 'mount c ".."']
     if os.path.isdir(os.path.join(game_dir, "cloud_saves")):
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
     lines += [f'mount d "{DOS_DIR}"', "c:"]
     # the game runs from C: (the game folder), where the patched copy looks for its files
-    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from C900h, not D000h, 28 KB more for the helper)
+    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from CA00h, not D000h, 24 KB more for DSCLOG)
     lines += ["d:\\" + UMB_PLUS_COM.lower(), r"lh d:\dsclog.exe", "cls",
               "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
     # a game that stops with an error ("Null pointer assignment", "Stack overflow!") leaves its
@@ -462,10 +564,10 @@ def conf_encoding() -> str:
 
 
 # The Options tab's new content and game changes (settings keys), each on unless switched off;
-# the game's copies are written with them as they stand when it is started
-CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "effects_kept", "stealth_gear", "arena_ring",
-           "elf_looks", "roll_store", "cilla_elf", "camera_still", "scene_pointer", "mouse_start",
-           "steady_pace", "party_spread", "spells_manual", "spell_to_hit")
+# the game's copies are written with them as they stand when it is started (the game changes with
+# no switch, game.ALWAYS_ON, are always in: none of them here)
+CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring",
+           "steady_pace")
 # the new items' parts (worldgear.data_chunks', and the arena's ring, ring.py), all switched by
 # one box: NEW_ITEMS
 ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring"), "new_items"
@@ -503,18 +605,14 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
     chosen = load_settings(strict=True) if settings is None else settings
     on = content(chosen)
-    size_rule = chosen.get("creature_size", True) is not False  # (Hold and Charm Person's texts)
-    skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
-        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
-        | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
-        | (frozenset() if on["scene_pointer"] else frozenset(gamepatch.SCENE_POINTER)) \
-        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START)) \
-        | (frozenset() if on["steady_pace"] else frozenset(gamepatch.STEADY_PACE))\
-        | (frozenset() if on["party_spread"] else frozenset(gamepatch.PARTY_SPREAD))\
-        | (frozenset() if on["spells_manual"] else frozenset(gamepatch.SPELLS_MANUAL))\
-        | (frozenset() if on["spell_to_hit"] else frozenset(gamepatch.SPELL_TO_HIT))
+    # (every patch group in, but Steady pace's when it is unticked: the others' switches went after
+    # 2.18, game.ALWAYS_ON)
+    skip = frozenset() if on["steady_pace"] else frozenset(gamepatch.STEADY_PACE)
+    source = _find_file(game_dir, "DSUN.EXE")
+    if source is None:  # (gone since the folder was picked: said, not a TypeError)
+        return f"{game_dir} has no DSUN.EXE"
     try:
-        gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
+        gamepatch.write_patched(source, os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
         return str(e)
     objects_ok, new_objects, kalzith_object = False, (), False
@@ -585,7 +683,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             except FileNotFoundError:
                 pass  # (no region copy to take away)
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
-        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})")
+        # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
+        # him off, the region's own: said too, not dropped unseen)
+        gifts_too = f"; with it the gifts placed in {kalzith.REGION_FILE}" if pens_clones else ""
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
+                        + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             try:
                 os.remove(os.path.join(DOS_DIR, name))
@@ -598,8 +700,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
-            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"],
-                                  on["spells_manual"], size_rule)
+            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE))
             resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
         LEFT_OUT.append(f"the new spells' icons and texts ({icons.RESOURCE_FILE}: {e})")
@@ -989,9 +1090,9 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
-SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "see_through": True, "rings": "chosen", "combat_log": True,
-                   "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED,
+SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
+                   "hit_chance": True, "hit_hover": True, "squares": True, "move_back": True, "show_usable": True, "quick_save": True, "autosave": True,
+                   "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
                    "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
@@ -999,12 +1100,14 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     """Every switch as the Loader uses it: as set, else its default (rule changes and content: on)."""
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
-    out.update(content(settings))
+    out.update({key: on for key, on in content(settings).items() if key not in game.ALWAYS_ON})
     out.update({key: game.setting_on(settings, key)
                 for key, _ in game.RULE_SETTINGS})  # (as game.rules_from_settings reads them)
     from . import dicelog, rings
     out["rings"] = rings.mode(settings)  # (an older "all" is the chosen enemy's now)
     out["combat_log_level"] = dicelog.combat_log_level(settings)
+    out["picture"] = picture(settings)  # (as DOSBox is asked for it: plain where the window has no other)
+    out[midiout.SETTING] = midiout.setting(settings)
     return out
 
 
@@ -1112,6 +1215,8 @@ def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[s
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun.conf")
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
+    if not _find_file(game_dir, "DSUN.EXE"):
+        raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
     problem = prepare_patched_game(game_dir, settings)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:

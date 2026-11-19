@@ -1,9 +1,10 @@
 # Development: the rules
 
-*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, the starting gear; the kits on [their own page](DEVELOPMENT-KITS.md)) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, the starting gear; the kits on [their own page](DEVELOPMENT-KITS.md)) and the improved thieving are done: where the patched game calls DSCLOG, and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
+- [The switches always on](#the-switches-always-on)
 - [Class restrictions](#class-restrictions)
 - [Multiclass hit points](#multiclass-hit-points)
 - [Hit dice: the better of two](#hit-dice-the-better-of-two)
@@ -41,12 +42,6 @@
   - [The monsters](#the-monsters)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
-  - [The kits](DEVELOPMENT-KITS.md#the-kits)
-  - [The kit's byte](DEVELOPMENT-KITS.md#the-kits-byte)
-  - [Choosing one](DEVELOPMENT-KITS.md#choosing-one)
-  - [Multiclass kits](DEVELOPMENT-KITS.md#multiclass-kits)
-  - [Where each effect goes](DEVELOPMENT-KITS.md#where-each-effect-goes)
-  - [How they're checked](DEVELOPMENT-KITS.md#how-theyre-checked)
 - [Preservers' first spells](#preservers-first-spells)
 - [Psionic powers at creation](#psionic-powers-at-creation)
 - [Level cap by XP](#level-cap-by-xp)
@@ -60,14 +55,76 @@
   - [A lock or a pocket failed: another try a level later](#a-lock-or-a-pocket-failed-another-try-a-level-later)
 - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
   - [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)
-- [Spell arrows](#spell-arrows)
 - [Picking pockets](#picking-pockets)
+- [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
+
+## The switches always on
+
+(A note of its own, for every section below.) Most of the Options tab's switches went after 2.18
+(the owner's call: fewer switches), and what they switched is always on. `game.ALWAYS_ON` names their
+settings keys: the rule changes' (`game.RULE_SETTINGS_GONE`: `class_restrictions`, `multiclass_hp`,
+`rolled_scores`, `adnd_tables`, `con_adnd`, `aging`, `dual_class`, `level_10`, `cahulaks`,
+`creature_size`, `held_hit`, `protection_rules`, `item_saves`, `ranger_casting_level`,
+`int_learning`, `spell_save`, `enlarge_dice`, `rest_heal`, `weapon_specialization`, `cha_prices`,
+`thief_table`, `stealth`), and `combat_log`, `spells_manual`, `spell_to_hit`, `roll_store`,
+`stealth_gear`, `pickpockets`, `elf_looks`, `cilla_elf`, `show_gear`, `shadows`, `dust`,
+`see_through`, `targeting`, `scroll_map`, `camera_still`, `scene_pointer`, `mouse_start`,
+`party_spread` and `effects_kept`. The rule changes still switched are `game.RULE_SETTINGS`
+(`best_hit_die`, `half_giant_hands`, `helm_ac`, `kits`, `new_spells`).
+
+- `launch.load_settings` and `save_settings` drop those keys (`game.drop_always_on`, with the
+  old names `no_doubled_save`, `buyback`, `backstab_dice` and `two_weapons`), so an older
+  settings.json's `false` never reaches a reader.
+- Even unread, they count as on: `game.setting_on` answers True for them and `launch.content`
+  gives them True.
+- `game.RULES_ALWAYS` puts each gone rule's bit in the rules words (`RULES`, `RULES_HI`) whatever
+  the settings, as it did `RULE_TWO_WEAPONS`; the words' layout is as it was (no bit renumbered),
+  but DSCLOG no longer reads those bits (below).
+
+**What went (2026-11-19, for DSCLOG's room: about 1.1 KB).** In DSCLOG, every test of a gone rule's
+bit and the game's way behind it: rings and cloaks of protection (the game's every ring), two
+weapons (the game's DEX bonus alone, `PROBE_TWO`'s first half), the doubled d20 (`PROBE_DOUBLE` is a
+bare IRET), stealth, the level cap of 9, the thief table (the game's sums, the whole damage
+multiplied, the backstab on two attacks), class restrictions, items' saves (`PROBE_ITEM_SKIP` only
+clears ZF), multiclass hit points, weapon specialization (`WP_RULES`, the Crusader's and Mind
+Warrior's warrior attacks, `WAR_KIT_OF`, `WAR_KIT_HALVES`, the kits' kinds in `WAR_HIT`,
+`GEAR_MARK`: `CR_WEAPONS` always shows the weapon window), AD&D's tables, a ranger's casting level,
+scores as rolled (`RL_HP` a bare IRET), ages, INT's learning, CHA's prices and the buyback, Enlarge's
+whole damage (and its `% DAMAGE` word), CON as in AD&D, dual-classing, resting, Weapon traits (the
+cahulaks, the stinkpots' 1d4, the polearm's reach), creature size and held targets (`HELD_DAMAGE`
+no longer doubles); and `MANUAL_ON`, the test of `SPELLS_MANUAL` in the copy (always in now). In
+the Loader: `prepare_patched_game` leaves out only Steady pace's patches when it is unticked (every
+other group, `EFFECTS_KEPT`, `ROLL_STORE`, `CAMERA`, `SCENE_POINTER`, `MOUSE_START`, `PARTY_SPREAD`,
+`SPELLS_MANUAL`, `SPELL_TO_HIT`, always in); `icons.write_resources` and `write_objects` with STORE
+and RECALL, the manual's and the size rule's texts, the elves' looks, Cilla and the manual's
+monsters always (`sprites.Pictures`' LOOKS gone; the half-elf recolour stays, for a file without
+the pictures); `DiceLog`'s switch attributes (`pickpockets`, `show_gear`, `show_shadows`,
+`combat_log`, `scroll_map`, `show_dust`, `see_through`, `elf_looks`, `cilla_elf`, `stealth_gear`,
+`use_targeting`); the locks' and pockets' level gate always (`pickpocket`'s "too wary" gone);
+`upgrade_settings`' combat log key; the party card's reads of `rule_vars["stealth"]` and
+`["aging"]` (keys gone with their switches). The tests of an off path are tests of its bit clear
+now (`ProtectionRuleTests.test_rule_bit_clear`, `StealthTests.test_rule_bit_clear`,
+`SpecializeTests.test_rule_bit_clear` ...): the bit clear changes nothing.
+
+In the Loader's reference models too (the final code audit's fixes): `DiceLog.rules` and
+`game.RULES_IN_FORCE` start at `RULES_ALWAYS`, and `GameData`'s and the dice log's branches on a gone
+rule's bit went with their tests of the game's way (the game's thief sums, the rings, two weapons,
+the doubled d20, the whole damage backstabbed, a held target's x2 ...); `spelltexts.chunks` has no
+arguments, `launch.CONTENT` no always-on key.
+
+**What stays switchable**: the five rules of `game.RULE_SETTINGS` (`RULE_HELMS`, `RULE_HALF_GIANT`,
+`RULE_HP_BEST`, `RULE_NEW_SPELLS`, `RULE_HI_KITS`), DSCLOG's tests of them kept, and Steady pace's
+patches. **What stays in the code although unreached in play**: the kits' functions' `spec` and
+`adnd` arguments (`kits.war_hit`, `warrior_attacks`, `allows`, `slots`: their tests drive both), the
+header's `PICK_ON` and `SKILLS_ON` bits (always all set by the Loader now, but their zero also means
+"no Loader yet"). Where a section below names the game's way, it is the game's, for comparison;
+`tests/test_launch.py`'s `test_old_false_for_an_always_on_switch_is_passed_over` pins the rest.
 
 ## Class restrictions
 
 ([In the features page](FEATURES.md#class-restrictions).)
 
-How: the helper adds the classes' limits where the game checks an item against
+How: DSCLOG adds the classes' limits where the game checks an item against
 the classes allowed to use it (`INT CDh`; `DUAL_WARRIOR` lets a human thief or
 preserver who was a warrior, or a thief who was a cleric, wear that class's
 armour), a multiclass (or warrior-and-preserver human's) armour where the game
@@ -111,21 +168,19 @@ at up to +2). When CON changes it works back to the total (877BEh: the most
 less CON's bonus, times the classes).
 
 How: where the game adds CON's bonus (`INT CAh`, 87523h) and takes it off again
-(`INT C9h`, 877DAh), the helper (`CON_SHARE`) puts in Demihuman Deities' for a
+(`INT C9h`, 877DAh), DSCLOG (`CON_SHARE`) puts in Demihuman Deities' for a
 character of more than one class: (total + bonus × dice) / classes less
 total / classes, the dice each class's levels up to its group's last that
 rolls one (the game's table, `+group × 4 + 1`), the bonus the table's
 warrior bonus (`+52h` + CON) if a class is in the warrior group, else at most
-+2. One class, a human, or the rule off: the game's own. (An earlier version
-also divided each die on its own at 8735Eh; the game's running total is the
-book's, so that probe is gone.)
++2. One class, or a human: the game's own.
 
 ## Hit dice: the better of two
 
 ([In the features page](FEATURES.md#hit-dice-the-better-of-two).)
 
 How: where the game has rolled a level's die (`INT BAh`, in place of the
-`mov cx,ax` after the roll, DSUN.EXE 87319h), the helper keeps the first roll
+`mov cx,ax` after the roll, DSUN.EXE 87319h), DSCLOG keeps the first roll
 and sends the game back to the start of its roll (872FDh), so both rolls are
 the game's own and the dice log sees both; the second time it keeps the
 better. Creation goes through the same routine, a die for each starting
@@ -159,7 +214,7 @@ How (`RULE_HI_ROLLED`, the second rules word's 32: `game.RULE_ROLLED`): no
 interrupt vectors are left, so the eight sites share `PROBE_CR_SPELLS`'s
 (`INT 98h`), the byte after the `INT` saying which (`RL_SCORE` 1, `RL_HP` 2,
 `RL_ROLL` 3, `RL_SUM` 4, `RL_CON` 5, `RL_TRY` 6) where `PROBE_CR_SPELLS`'s own
-has its NOP; the helper moves the return address past it.
+has its NOP; DSCLOG moves the return address past it.
 
 * `RL_ROLL` (the three loops' write, `INT` + site + NOP) writes the score; at
   CHR it keeps the six's total as the most (`RL_POOL`): with DI 1 the total,
@@ -190,13 +245,7 @@ in the header (`+282`, four for each ability) and counts them (`+280`); the
 log reads them once the count has been still for 0.3 s, and doesn't report the
 ring's missed rolls while it moves.
 
-Checked in the game: three rolls of the die, every ability's line complete
-(none "too fast"); CON 14 to 15 to 16 took a 3rd-level preserver's hit points
-from 8 to 11 to 14, and back down; a preserver rolled 101 (`SUM:101/101`); DEX
-lowered and STR raised by one, a second raise refused; the hit points
-unchanged by left and right clicks (with the rule off, 16 to 17); the die's
-next roll `SUM:98/98`, as the dice log's line; a new class raising INT from 14
-to 17 took a fighter's 98 to 101. DONE on a preserver still opened CHOOSE A
+Verified in play (no log kept). DONE on a preserver still opened CHOOSE A
 SPELL (`PROBE_CR_SPELLS`).
 
 ## AD&D's class tables
@@ -223,7 +272,7 @@ the priest group (CX 0), 2 x (level - 1) / 3. `PROBE_ADND_SLOTS` (`INT 8Eh`)
 replaces `nop / push cs / call 5E4C2h` (5E240h): for a cleric, druid or
 preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
-`ADND_SLOTS`; anyone else, or with the rule off, the routine as it was.
+`ADND_SLOTS`; anyone else, the routine as it was.
 
 ## CON as in AD&D
 
@@ -244,8 +293,7 @@ by CON) is added to the paralysis/poison/death save, and for a dwarf or a
 halfling its CON × 2 / 7 as well. DSCLOG's `CON_SAVE` (5EAA1h) makes the
 adjustment 0 for a dwarf or a halfling with the rule, so only the racial bonus
 counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
-same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
-way 12), and the 1330 seconds left over counted towards the next. The saves
+same. Verified in play (no log kept). The saves
 are checked by the emulator (`test_dwarves_poison_saves`): the party has no
 dwarf or halfling.
 
@@ -263,10 +311,9 @@ or more (86EFCh); the new class's 17 or more (86F31h); the third class slot
 already has; a ranger good, a druid true neutral. The game's table has one
 ability a class (a ranger's, druid's and psionicist's WIS).
 
-`RULE_HI_DUAL` (`game.RULE_DUAL_CLASS`) is DSCLOG's, so the five compares are
-sites in every game's copy, each doing the game's own compare with the rule
-off: `DUAL_LEVEL` (`dual_level_menu`, `dual_level_view`, `dual_level_window`:
-`cmp byte [es:bx+24h],2`, 3 with the rule) and `DUAL_PRIMES` (`dual_old_prime`,
+`RULE_HI_DUAL` (`game.RULE_DUAL_CLASS`, always on) is DSCLOG's; the five compares are
+sites in every game's copy: `DUAL_LEVEL` (`dual_level_menu`, `dual_level_view`, `dual_level_window`:
+the game's `cmp byte [es:bx+24h],2`, 3 with the rule) and `DUAL_PRIMES` (`dual_old_prime`,
 `dual_new_prime`: with the rule every prime requisite of the class,
 `DUAL_PRIMES_OF`'s bits, the manual's as `tracker.PRIME_REQUISITES` has them,
 the old class at 15 or more, the new at 17 or more, on the creature's scores
@@ -299,8 +346,7 @@ free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
 save rows 3 pixels higher than before to make room). The category and the
 next are for the Characters tab; the game's screens show only the age (the
 inventory panel and the creation screen, below).
-Checked in DOSBox: the game's own party given ages in a new game, the
-inventory panel and the Characters tab.
+Verified in play (no log kept).
 
 ### Haste's aging
 
@@ -310,8 +356,7 @@ shock roll by the creature's CON (`SYSTEM_SHOCK`, the Player's Handbook's
 table), death on a failure (`kill`: HP 0 and the dead status, which the game
 takes as dead: no more turns, no share of the XP, "Dead" under the portrait),
 else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
-Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
-K'ratchek at CON 19 (89 against 99: 7 years old).
+Verified in play (no log kept).
 
 ### Restore Youth
 
@@ -322,8 +367,7 @@ log's `KIND_CAST` line for it calls `aging.restore` with the target and the
 caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
 by the level, never below the character's true age (`start_age`: the race's
 base and the roll kept on the sheet, `game.sheet_roll`, with the game's years;
-no cap on the years magic adds). Checked in DOSBox: K'ratchek at 12th
-level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+no cap on the years magic adds). Verified in play (no log kept).
 
 ### Natural aging
 
@@ -333,7 +377,7 @@ a save holds the age and the scores' changes together. The years counted so
 far are in the game's own flags, so a save keeps them too (`counted_years`,
 `set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
 every flag the Loader uses is in [The Loader's game
-flags](DEVELOPMENT.md#the-loaders-game-flags)). The dice log's `_natural_aging`, after
+flags](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags)). The dice log's `_natural_aging`, after
 `give_ages`, looks only when the look is steady (the same party as the last,
 the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the
 clock's years as the last look found them: a game being loaded may have its
@@ -349,8 +393,7 @@ the arena, or while the game ran without the Loader is counted at the next
 steady look. A game whose count hasn't begun (a new one; one saved before
 2.13.1) begins it at the clock's years, aging no one for those before. Restore Youth's floor, the true age, is `start_age` plus
 the clock's years (one who joined late gets fewer years back, never more).
-Checked in DOSBox: the clock put a few minutes short of a year, then past it:
-a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
+Verified in play (no log kept).
 Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
 `test_the_log_counts_each_year_once`, `test_a_long_jump_waits_and_loses_nothing`,
 `test_a_save_is_as_old_as_its_count`, `test_a_load_caught_halfway_ages_no_one`.
@@ -393,9 +436,7 @@ marked (`HEALER_BARRED`, as the kit page has it). At DONE,
 `CR_WEAPONS` asks for no weapon specs while the classes and kit are the
 member's (`ED_SAME`), keeping its specs with the screen's roll and age
 (`ED_KEEP`; an older sheet's dword as it was). Before this, EDIT took the kit
-away, rolled a new age and asked for the weapon specs again. Checked in DOSBox:
-a Sentinel fighter edited, renamed and DONE kept the kit, its long sword and
-its age; with the die rolled during EDIT, a new age and the same kit and spec.
+away, rolled a new age and asked for the weapon specs again. Verified in play (no log kept).
 Tests: `test_edit_keeps_its_specs`.
 
 The THAC0 line drawn beside the hit points, on the same redraws: [The creation
@@ -405,10 +446,7 @@ Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
 16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
 `give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep
 their way back in their own words (`cr_ip`, `cr_cs`, `cr_fl`), apart from
-`RL_SUM`'s, as they call the game's code before going back. Checked in DOSBox:
-four rolls of the die gave 23, 20, 18, 20; STORE at 20, a roll to 17, RECALL
-back to 20; CON lowered and raised, 20 both times; DONE and a weapon picked,
-the sheet's roll 4 and age byte 6 (15 + 1 + 4 = 20). Tests: `test_age_dice`
+`RL_SUM`'s, as they call the game's code before going back. Verified in play (no log kept). Tests: `test_age_dice`
 (each race's rolls in range, a human's all 0 to 7), `test_age_put`,
 `test_name_redraws_psp_and_age` (the operands read from the overlay's code, PSP
 centred, the age; none called for an operand not fixed up).
@@ -428,17 +466,16 @@ found frame by frame for each race (`COLOURS`, the hair's missing shades;
 half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the
 elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
 its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
-thri-kreen's antennae greyed were tried and left out). Checked in DOSBox:
-Gerakis old and Cilla venerable, their figures redrawn as their ages were set.
+thri-kreen's antennae greyed were tried and left out). Verified in play (no log kept).
 
 ## Two weapons
 
-([In the features page](FEATURES.md#two-weapons).) Always on since 2.18: `game.RULES_ALWAYS`
+([In the features page](FEATURES.md#two-weapons).) Always on: `game.RULES_ALWAYS`
 puts `RULE_TWO_WEAPONS` in the rules word whatever the settings (its switch is gone); DSCLOG
-still tests the bit.
+doesn't test the bit (its two weapons are always AD&D's).
 
 How: the game reads the attacker's DEX adjustment when it works out the
-two-weapon adjustment; the helper takes over from there (`INT FEh`) and gives
+two-weapon adjustment; DSCLOG takes over from there (`INT FEh`) and gives
 AD&D's for the hand the attack's weapon is in.
 
 The off hand's one attack: the game gives every weapon the character's rate
@@ -492,7 +529,7 @@ the log and the party view.
 
 How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
 twice when something goes into a hand: the other hand's ("Two handed weapon in
-use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
+use") and the one going in ("Need two free hands"). DSCLOG (`INT E3h`)
 answers both for the character on show, "not two-handed" for a half-giant.
 
 ## Cahulaks
@@ -533,9 +570,17 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
 
 ([In the features page](FEATURES.md#creature-size).)
 
+Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by the
+entry whose small and man-sized dice are the game's; the pick the footman's pick and the axe the
+battle axe of *Player's Option: Skills & Powers* (1d6+1/2d4 and 1d8/1d10: the game's pick was the
+horseman's, 1d4+1/1d4, and its 1d6+1 is the mod's, with no switch); the great axe the *Complete
+Book of Dwarves*' two-handed battle axe (1d10/2d8); the chatkcha, the gythka and the cahulaks from
+[a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
+thri-kreen's chatkcha its 2/1.
+
 How: the game keeps no size. The Loader's `sizes.py` gives each creature one
 (people by the sheet's race, the rest by name: `CREATURES.md`), and `sizes.Large`
-writes `LARGE_BITS`, a bit a combatant large or bigger, into the helper's tail (its
+writes `LARGE_BITS`, a bit a combatant large or bigger, into DSCLOG's tail (its
 offset the header's +1842), when it changes. With the rule (`RULE_HI_SIZE`, the
 Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
 (effect 16, `NS_HAS`), marked in `LARGE_BITS`, or a half-giant (the sheet's race 5):
@@ -578,17 +623,17 @@ ax,[bp-4] / shl ax,1 / push ax"), twice the damage: what a helpless target takes
 effect) has bit 34, Paralyzed, at its +4's bit 2, or its creature's +1Ch is 3, Out Cold; the save
 routine (79A71h) fails such a target before rolling (79B0Ch, the same test).
 
-With the rule (`RULE_HELD`, DSCLOG's `RULE_HI_HELD` 8000h, the Loader's `held_hit`), two sites,
-both the game's with it off (`gamepatch` "held_hit" and "held_damage"):
+The mod's rule (`RULE_HELD`, DSCLOG's `RULE_HI_HELD` 8000h, always on), two sites (`gamepatch`
+"held_hit" and "held_damage"):
 - `HELD_HIT` (589E9h; 4 bytes): the game's compare made in the handler and its ZF put in the INT's
   frame for the JE after it, set too when `HELD_NOW` finds the attack's target (DS:494Ah) Paralyzed
   (`NS_HAS`, effect 34) or Out Cold (its creature's +1Ch): the hit, whatever the d20.
-- `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, doubled only without the rule.
+- `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, not doubled (the game's doubles it).
 
 `HELD_NOW` and the dice log share one test (`HELPLESS_OF`): each ring entry keeps the attack's
 target's state at the roll at +188 (8000h, plus 1 Paralyzed or 2 Out Cold), read by
 `Entry.helpless` through `DiceLog._helpless`, so a blow that kills or a Hold that ends before the
-line is written still reads right (an older helper's entries fall back to `GameData.helpless`).
+line is written still reads right (an older DSCLOG's entries fall back to `GameData.helpless`).
 The attack's line says HIT, with `Paralyzed: hit
 automatically, for normal damage (AD&D's held target)` under it, and the damage line has no x2.
 
@@ -600,7 +645,7 @@ The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_C
 `cahulaks`; `game.RULE_STINKPOTS` names it too); DSCLOG's `STINKPOTS`; no new patch in the game:
 
 - **The dice.** The staff sling is item type 0 (IT1R's first record, `020008001400fa00...`: missile
-  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 with the rule and 4 without, in
+  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 (the game's 4), in
   the table the game read (`TYPES_FILL`, which notes it in `types_ptr`) and again at each pass of the
   main loop (`PROBE_SCROLL`), so a switch takes at once; only over a 3 or a 4, only while DS:1669h
   still points there. The game's attack, the item box, the inventory and View Character all read that
@@ -630,6 +675,9 @@ The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_C
   0 saved). Between them the game's save line is named for the stinkpot (`DiceLog._stink_save`, and no
   spell's damage window opened), `-> failed: nauseated`. The to-hit breakdown names `Nauseated -2`
   (`game.HIT_EFFECTS`).
+
+Nauseated is fumes, not magic: Dispel Magic doesn't end it, as the game's Dispel Magic weighs only
+effects 0 to 73.
 
 Tests: tests/test_stinkpots.py (`StinkHitTests` runs the site in Unicorn with the game's routines
 stubbed, `StinkSidesTests`, `StinkEffectTests`, the dice log's lines).
@@ -700,7 +748,7 @@ game: the melee callers' code and the ones left alone).
 ([In the features page](FEATURES.md#rings-and-cloaks-of-protection).)
 
 How: the game's AC routine counts a worn item's plus only if its type's +0Fh
-has bit 80h, which the Ring type lacks; the helper (`INT F8h`, at 58EBDh)
+has bit 80h, which the Ring type lacks; DSCLOG (`INT F8h`, at 58EBDh)
 sets it for rings, and the saving throw routine's sum of modifiers starts at
 the worn rings' plus (`INT F9h`, its `xor si,si` at 79D47h) rather than 0.
 With the rule, both look first at what the creature wears (`PROT_SCAN`: a
@@ -713,7 +761,7 @@ saves and AC rows weigh it the same way (`GameData.protection`).
 
 ([In the features page](FEATURES.md#helms-give-ac-1).)
 
-How: the helper sets the helm types' AC as the game's AC routine reads it
+How: DSCLOG sets the helm types' AC as the game's AC routine reads it
 (`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
 BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
 earlier rule gave boots a move in a fight; it is gone, and the boots' names it
@@ -723,9 +771,14 @@ changed go back to the game's.)
 
 ([In the features page](FEATURES.md#items-saving-against-acid).)
 
+The game's own check for armour reads the byte that holds the item's power, not its plus: a piece
+with a power rolls a d20 against 10 less the power's number (which for every such armour in the
+game means it always comes through), and any other is destroyed without a roll, Tanelyv's Armor +2
+as surely as plain leather. A weapon is destroyed on a d20 under 8 less its plus.
+
 How: where the game works out the number a weapon's d20 must reach
 (`INT D6h`), where it skips the roll for armour with no magical power
-(`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
+(`INT D5h`) and where it works out armour's number (`INT D4h`), DSCLOG
 gives the easier of the two and records the check for the dice log.
 
 ## Rangers' casting level
@@ -749,8 +802,7 @@ the best is chosen, so a cleric/ranger's cleric level can still win. A
 Seeker's 5 and a Justifier's 9 come off there whatever the rule
 (`kits.spell_class_level`).
 
-Checked in the game: a 9th-level air ranger's Protection from Evil lasted 6
-rounds (caster level 2; 27 without the rule).
+Verified in play (no log kept).
 
 ## Preservers' INT
 
@@ -773,11 +825,11 @@ class among its sheet's) and a wizard spell. Its INT is the creature record's
 counts the wizard spells of the scroll's level it knows. Full: AX 0 (the game
 refuses, the scroll kept), and `PROBE_LEARN_REFUSED` (`INT 91h`, new, 8B719h)
 pushes TOO MANY SPELLS OF THAT LEVEL in place of the game's message. Else a
-d100 of the helper's own (`D100`: a generator stirred by the BIOS's timer
+d100 of DSCLOG's own (`D100`: a generator stirred by the BIOS's timer
 ticks); over the chance, the game teaches the spell and uses the scroll up,
 and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h) takes it back (the four bits
 cleared) and pushes YOU FAIL TO LEARN THE SPELL. Each try is told to the
-Loader in the helper's header (`+272`: a count, then the member, spell, INT,
+Loader in DSCLOG's header (`+272`: a count, then the member, spell, INT,
 chance, d100 or spells known, result; `DiceLog._learn_lines`). At a level up
 (and a new preserver's picks), `PROBE_PICK_LIST` drops the game's list's
 spells of a full level, and `PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open
@@ -825,20 +877,20 @@ draws it blank.
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
 
-Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+Part of Saving throws against spells (`spell_save`, always on: [above](#the-switches-always-on); `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
-save), and puts it back when the rule is unticked.
+save): the spell kind's entry the spell save (`set_rules`, `game.kind_to_save`).
 
 ## Fire, cold and electricity: DEX instead of a doubled d20
 
 ([In the features
 page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
-Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+Part of Saving throws against spells (`spell_save`, always on: [above](#the-switches-always-on); `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
-How: the helper does the save's doubling (`INT F0h`) only while this rule is
+How: DSCLOG does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
 own "can be dodged" flag (bit 40h of the spell's category word), which no spell
 has, so the game's save routine adds the DEX defensive adjustment from its own
@@ -859,14 +911,12 @@ multiplies only those, rounded up, adds the difference, and makes the kept
 dice the enlarged ones, so a backstab with its rule multiplies those. Without
 the rule, or with no dice kept, it does the game's sum. The dice log's hit
 line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
-rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
-Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
-hit points down by the same (the game's way: 22, 23 and 26).
+rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Verified in play (no log kept).
 
 ## Spells roll to hit
 
 ([In the features page](FEATURES.md#spells-roll-to-hit).) The Options tab's box
-is the settings key `spell_to_hit` (on unless `False`); off, `launch.py` leaves
+was the settings key `spell_to_hit`, always on now ([above](#the-switches-always-on)); off, `launch.py` left
 out `gamepatch.SPELL_TO_HIT`'s two patches and the game's copy has DSUN.EXE's
 bytes there.
 
@@ -912,11 +962,7 @@ Tests: test_dsclog's `NewSpellTests.test_spell_to_hit` (the handlers in
 Unicorn, the game's routines as stand-ins), test_gamepatch's
 `test_spell_to_hit` (the switch off leaves DSUN.EXE's bytes), test_dicelog's
 `test_spell_to_hit`.
-Checked in DOSBox (playtest/logs/2026-11-08-spell-to-hit.md): Acid Arrow,
-Magical Stone (each of its three throws), Condense, Turn Pebble to Boulder,
-Chill Touch, Shocking Grasp, Vampiric Touch and Cause Light Wounds hit and
-missed as rolled, a miss taking no HP; Magic Missile, a weapon's spell on a hit
-and Acid's burn rolled nothing.
+Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-spell-to-hit.md).
 
 ## Resting as in AD&D
 
@@ -933,8 +979,8 @@ Acid off, then for an Okay member HP = the sheet's most (808AFh), PSP = the most
 the sheet unless Diseased, and kills the Poisoned (1000 damage, 80963h); then 8 x 3600 seconds on
 the clock (5A8:57h).
 
-`RULE_HI_REST` (`game.RULE_REST`, the Loader's `rest_heal`) is DSCLOG's, so both sites are in every
-game's copy, each the game's own instruction with the rule off or in mode 1:
+`RULE_HI_REST` (`game.RULE_REST`, always on) is DSCLOG's; both sites are in every game's copy,
+each the game's own instruction in mode 1:
 
 - `REST_PRE` (`rest_spells`, 80675h, `mov word [bp-10h],0`: the rest's first move, before any slot
   fills; not 806A0h's far call, whose segment word the overlay manager writes): with the rule, mode 0
@@ -972,10 +1018,10 @@ a Dying member isn't healed (pass 2 leaves it). Tests: tests/test_group4.py (`te
 ## Spells and psionics as the manual describes them
 
 ([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
-One switch, `spells_manual` (on by default, from the next start): the patches
-in `gamepatch.SPELLS_MANUAL`; off, they are left out and the game's copy has
-DSUN.EXE's bytes, and DSCLOG's code that runs either way tells it by
-`MANUAL_ON`. The points come from reports/spells-against-the-manual.md, which
+Once a switch, `spells_manual`, always on now ([above](#the-switches-always-on)): the patches
+in `gamepatch.SPELLS_MANUAL`; off, they were left out and the game's copy has
+DSUN.EXE's bytes; DSCLOG's code that runs either way told it by `MANUAL_ON`
+until the switch went (always in the copy now, the test gone). The points come from reports/spells-against-the-manual.md, which
 says what was done with each.
 
 ### The spell records, Stinking Cloud, Chaos and Free Action
@@ -1009,8 +1055,7 @@ saves (`HOLD_HD_SITE`, `SPRAY_SITE`, `HD_SAVE_SITE`) are with the game's own
 fixes to those spells: [The game's
 spells](DEVELOPMENT-CONTENT.md#the-games-spells). Tests: test_manual_spells
 (`test_records`, `test_stinking_cloud_round_more`, `test_free_action`,
-`test_remove_paralysis`, `test_level_sites`). Checked in DOSBox:
-playtest/logs/2026-11-08-manual-spells.md, 2026-11-08-hd-spells.md.
+`test_remove_paralysis`, `test_level_sites`). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-manual-spells.md), [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-hd-spells.md).
 
 ### Turn Undead, Minute Meteors and Flame Arrow
 
@@ -1033,8 +1078,7 @@ interrupt's way back to one of those three places, or the routine's end
   `NS_BLOW`'s), out through `ovr_back`;
 - under the number: the failure's way, and the priest's bit (combatants 0-7) set
   in TU_FAILED (the far block's `FAR_TU`: a byte a target, every combatant up
-  to `MAP_COUNT`, 520, since people the Loader adds are numbered past 256; 64
-  before 2026-11-09), which a later try by the same priest finds first: the
+  to `MAP_COUNT`, 520, since people the Loader adds are numbered past 256), which a later try by the same priest finds first: the
   routine's end, no roll. `FAR_TU` lies before SWEPT and DJ_DONE (`FAR_SWEPT`,
   `FAR_DJ`, a bit a combatant) and is cleared with them at a fight's first round
   (`acid_round`, DS:55Ah set), and alone by a turning out of a fight (`pp_fighting`);
@@ -1047,8 +1091,9 @@ interrupt's way back to one of those three places, or the routine's end
   rounds and the D\*'s count left (dicelog's `_turn_manual`; `rec_frame`, which
   `th_hit` uses too, pushes such a frame and records it).
 
-The game's d20 at 7AE4Dh is never reached with the switch on, so the old dice
-log line (`TURN_ROLL_RETURN`, `_overlay_turn`) is only the switch-off one.
+The game's d20 at 7AE4Dh is never reached (the manual's spells are always in
+the copy), so the old dice log line (`TURN_ROLL_RETURN`, `_overlay_turn`) is
+never written.
 
 **Minute Meteors** (33): `meteors_count` makes its record's +0 06h 16h (bits
 2-7 the casts a cast makes, as Magical Stone's 0Eh is three: five), and
@@ -1083,15 +1128,16 @@ test_spellbook's `test_casts_a_cast`.
 
 DSCLOG's sites are
 `BLUR_SITE` ... `CELL_SITE` (`NS_IMAGE` + 78 to 87, in `SITE_TAB`'s order);
-code that runs either way tells the switch by `MANUAL_ON` (Stinking Cloud's
-record's dice made 41h, as the Loader's `GameData.spells_manual`). The dice
+code that runs either way once told the switch by `MANUAL_ON` (Stinking
+Cloud's record's dice made 41h, as the Loader's `GameData.spells_manual`), gone
+with the switch: the sites are always in the copy. The dice
 log's lines are `KIND_MANUAL` (14) entries (`MN_REC`: what, then a frame of the
 creature and three words; dicelog's `_manual`).
 
 - `save_signed` (79BBDh, `jae` made `jge`): the saving throw (79A71h) compared
   its byte total with the number needed unsigned, so the save modifiers' −100
   (79F80h Chaos, 79FA1h Cloudkill, 7A018h Scare, `SPRAY_SITE`) came out as a
-  save (seen in DOSBox). Signed, −100 fails; +100 (Scare from 6th level: 7A01Fh)
+  save (verified in play). Signed, −100 fails; +100 (Scare from 6th level: 7A01Fh)
   still saves (a d20 + 100 stays under 128; the doubled d20 is only for fire,
   cold and electricity, which get no +100). The one patch here in no switch:
   always applied (a fix of the game's, the user's decision 2026-11-09), so the
@@ -1122,7 +1168,7 @@ creature and three words; dicelog's `_manual`).
   Adrenalin Control (148), a classless creature or a combatant that isn't one.
   Friends never gets there (`PROBE_GRACE_EFFECT` jumps past it). Not adding up:
   `PROBE_GRACE_ABILITY` (7B7D7h, each of a creature's effects as its abilities
-  are worked out) calls `GR_SHADOWED`, which with `MANUAL_ON` finds a bigger one
+  are worked out) calls `GR_SHADOWED`, which finds a bigger one
   of the same group on that creature (66 and 67; 54 alone; as big, the earlier
   entry wins) and puts 0 in `[bp-0Ah]`, which the game's table of cases hasn't.
   A second Strength already replaces the first in the game's add.
@@ -1137,7 +1183,7 @@ creature and three words; dicelog's `_manual`).
   the power check (5D59Dh), a user with Feeblemind (19) gets 0 (the check fails:
   the game's message and half the PSP). The INT and WIS of 3 are the game's
   (7B848h, `[bp-4]` set by effect 19, 7B9D8h). Heal's cure: `PROBE_CURE` for
-  Heal (202) with `MANUAL_ON` takes the target's Feeblemind entries out
+  Heal (202) takes the target's Feeblemind entries out
   (`DROP_EFFECT`, `HEAL_SIGHT`'s loop made a routine: Feeblemind has no timer)
   and sets the handler's `[bp-15h]` bit 1, so 79896h works the abilities out
   again.
@@ -1163,8 +1209,7 @@ creature and three words; dicelog's `_manual`).
 
 Tests: tests/test_manual_group3.py (each site in Unicorn at the game's bytes,
 the patches, `ACID_ROUNDS`, `ACID_ONCE`, `GR_SHADOWED`, Heal's cure,
-`CHILL_UNDEAD`), test_dicelog's `ManualGroup3Tests`. Checked in DOSBox:
-playtest/logs/2026-11-09-group-3.md.
+`CHILL_UNDEAD`), test_dicelog's `ManualGroup3Tests`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-group-3.md).
 
 ### The monsters
 
@@ -1183,7 +1228,7 @@ record's +16h (0 people: no hit powers, 7A6BAh, and no special actions, 5A954h/5
 - `SHADOW_DRAIN` (`shadow_drain`, 7A9ABh in 7A9A7h(target, attacker, bit dword, power), `mov
   si,[bp+8] / mov al,[bp+0Ah]`): for power 172 of kind 15 or 173 of kind 13, 598:3Eh (76442h:
   owner, caster, spell, effect, time dword, amount) adds Weakened (68) of -1 (the ability routine
-  adds a Weakened's amount, 7B80Eh: Chill Touch's is -1, 79855h; a 1 raised STR, seen in DOSBox) for
+  adds a Weakened's amount, 7B80Eh: Chill Touch's is -1, 79855h; a 1 raised STR, verified in play) for
   2d4 x 600 seconds
   with the power as its spell, and 5B8:7Fh (7B758h) works the target's abilities out again; AL made
   8 (no kind's bit) so 5C0:20h says no. 76442h always adds an entry (sorted by owner, a new handle),
@@ -1193,7 +1238,7 @@ record's +16h (0 people: no hit powers, 7A6BAh, and no special actions, 5A954h/5
 - `TARI_BITE` (`tari_bite`, 7A747h, `cmp ax,1` after the d10 of 538:89h): a Tari's (`[bp-0Eh]` the
   attacker's creature, kind 40) 1 needs a d2 of 1 too (`GAME_DIE`): 1 in 20.
 - `DJINN_TURN`: `PROBE_MOVE`'s end (57566h, the turn's movement: DI the combatant, SI its creature),
-  with `MANUAL_ON`: a kind 39's first turn in a fight (`DJ_DONE`, the far block's `FAR_DJ`: a bit a
+  a kind 39's first turn in a fight (`DJ_DONE`, the far block's `FAR_DJ`: a bit a
   combatant, every one up to `MAP_COUNT` (`MAP_BIT`), cleared with
   `SWEPT` and `TU_FAILED` at a fight's first round, `ACID_ROUND`) adds Invisible (23, spell 46, 14
   rounds: 4 + its 10 levels) and Mirror Images (25, spell 19, 1d4 + 3 charges: 76442h's negative
@@ -1215,8 +1260,8 @@ tests/test_group4.py.
 
 ## Weapon specialization
 
-([In the features page](FEATURES.md#weapon-specialization); in full on [the kits
-page](KITS.md#weapon-specialization).)
+([In the features page](FEATURES.md#weapon-specialization); in full on [the weapon specs
+page](WEAPON-SPECS.md).)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
@@ -1237,16 +1282,12 @@ through `game.spec_kinds`, `packed_specs` and `with_specs` (`respecced`, the age
 and roll kept). Tests: `test_packing`, `test_rolls`, `test_older_layouts_read`,
 `test_with_specs_keeps_the_age`, `test_spec_layouts`. The weapon
 window's trial of a kind pointed at (`PK_WORD`) puts the four bytes back as
-they were. Checked in DOSBox: Gerakis with four kinds a byte each and then
-packed with an age of 30 lists the same four on the Effects screen, his long
-sword's spec counts in the fight, and the packed bytes come back unchanged
-through a save (SAVE01.SAV's sheets) and its load. The helper adds the bonuses and attacks
+they were. Verified in play (no log kept). DSCLOG adds the bonuses and attacks
 where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
 (`INT CFh`, `INT CEh`), calls the game's psionic pop-up in weapon mode after
 the creation screen's DONE (`CR_WEAPONS`, below) and at a level gained
 (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up, window 3021), and prints
-the Effects screen's lines (`INT BBh`). (The creation panel had weapon pages
-up to 2.4.0; the weapon window after DONE took their place.)
+the Effects screen's lines (`INT BBh`).
 
 At creation, `CR_WEAPONS` (a site of `INT 98h`, new: `pop cx / push si / nop`, 3
 bytes at 666DFh in DONE, 65480h) asks the new member SI for the weapon specs it
@@ -1259,8 +1300,7 @@ opening at 62182h), while the psionicists' own still fits. The game's memory for
 it is the window's pictures: packed with repeats (`icons._pack`, as the game
 packs its own: a byte n, odd for one pixel n >> 1 + 1 times), its marble and
 sixteen slots come to 41 KB rather than 93 KB, and it opens for a fourth
-character made after CHOOSE A SPELL too. (`LV_DUE` gave a Myrmidon being made two,
-`LV_CREATING`, up to 2.17; its second is now the polearm, the Loader's: `weaponchoice.kinds_for`.) The way back is a frame the overlay manager can patch, as
+character made after CHOOSE A SPELL too. (A Myrmidon's second is the polearm, the Loader's: `weaponchoice.kinds_for`.) The way back is a frame the overlay manager can patch, as
 for `PROBE_CR_SPELLS`, whose CHOOSE A SPELL comes first. While the window is up,
 `LV_CREATING` (the header's +361) is 1, and the Loader leaves the New character
 alone (`DiceLog._weapons_asked`): otherwise it would put in the defaults before
@@ -1310,14 +1350,7 @@ creature the routine has.
 
 ## Kits
 
-([On the Kits page](KITS.md).)
-
-A kit is chosen for a class when a character is made, or by a human with none when it changes
-class (one kit a character). There are three for each class, or none (the class as it is). The
-**Kits** switch on the Options tab (`game.RULE_KITS`, bit 0 of the helper's second rules word,
-`RULES_HI` at the header's +270) switches them all off. How each kit is done (the kit's byte,
-choosing one, the multiclass kits, where each effect goes and how they're checked) is on a page of
-its own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
+([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
 
 ## Preservers' first spells
 
@@ -1396,7 +1429,7 @@ roster keeps the powers it picked.
 How: the game holds a class level against 9 in two places, where a character
 goes up a level (87BE6h: the class's slot in DI, then `JL`) and where View
 Character shows the XP for the next one (67D08h: its copy of the sheet, the
-slot in DX, then `JZ`). While the rule is on the helper's `PROBE_LEVEL`
+slot in DX, then `JZ`). While the rule is on DSCLOG's `PROBE_LEVEL`
 (`INT E7h`) answers instead from `LEVEL_ROOM`: the next level's XP, from the
 game's table (`XP_NEED`, AD&D's with the class tables rule), against the
 class's share of `XP_CAP` (749,999), flags as "cmp 0,1" below it and "cmp 9,9"
@@ -1422,7 +1455,7 @@ a 3rd-level gladiator, at 760,000, to 11th; an elf preserver/druid/thief at
 
 ([In the features page](FEATURES.md#store-and-recall-on-the-creation-screen).)
 
-With the `roll_store` switch off, the launcher leaves both out: the buttons from
+With the `roll_store` switch off (gone now: [always on](#the-switches-always-on)), the Loader left both out: the buttons from
 its copy of `RESOURCE.GFF` (`icons.write_resources`) and the click's patch from
 its copy of `DSUN.EXE` (`gamepatch.ROLL_STORE`, as `EFFECTS_KEPT`).
 
@@ -1457,11 +1490,8 @@ the AC and damage. The overlay's segment is the INT's return, and both calls
 are made with it in a frame the overlay manager can fix up (`RS_FRAMED`, as
 `PROBE_USE_ITEM`'s): the scores' redraw is another overlay's, and loading it
 can move or drop the creation screen's, which the manager then puts back and
-the frame follows. Without it (2.8.0 to 2.13.0, once the overlay buffer was
-filled differently; and only for a RECALL before the die was rolled on that visit
-to the screen: after a roll it never stopped, in 2.13.0 either) RECALL jumped into what was no longer the die's routine
-and DOSBox stopped ("DynrecCore: illegal option"). Checked in DOSBox: STORE,
-the die, RECALL twice, the scores, hit points, PSP and age put back each time.
+the frame follows. Without it, a RECALL before the die was rolled on that visit to the screen
+could jump into what was no longer the die's routine, and DOSBox stopped ("DynrecCore: illegal option"). Verified in play (no log kept).
 
 ## New characters and the roster write
 
@@ -1473,7 +1503,7 @@ and the psionic powers (66E3h: 668C3h): else a character ADDed in a later sessio
 gear alone. The handshake, DSCLOG's header fields with the Loader's names:
 
 - `GEAR_DUE` (+1830, `TSR_GEAR_DUE`): set by `CR_WEAPONS` for a new member (after the weapon
-  window's picks; with weapon specialization off, with no window, by `GEAR_MARK`; not for an EDIT
+  window's picks, the window always shown since weapon specialization's switch went; not for an EDIT
   that kept its race, classes and kit, `ED_SAME`); the dice log's `_gear_due` gives the gear at
   once and clears it, but leaves it set while the weapon window is up (`TSR_CREATING`: the gear
   waits for the specs).
@@ -1494,8 +1524,7 @@ gear alone. The handshake, DSCLOG's header fields with the Loader's names:
 - The Myrmidon's polearm spec is DSCLOG's own (`MYRM_POLEARM`, at DONE), so it is in the roster's
   copy with or without the Loader.
 
-Checked in the game: playtest/logs/2026-11-15-kit-rebalance-checks.md part 7 and
-2026-11-16-roster-gear.md (characters ADDed after a restart with their gear).
+Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-15-kit-rebalance-checks.md) (part 7), [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-roster-gear.md).
 
 ## Fuller starting gear
 
@@ -1503,7 +1532,7 @@ Checked in the game: playtest/logs/2026-11-15-kit-rebalance-checks.md part 7 and
 
 `dsloader/startgear.py`'s `fill`, from the dice log after
 `weaponchoice.finish_new`, `class_gear` and `kit_gear` (the `starting_gear`
-switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
+switch, a Python-only one: `launch.SWITCH_DEFAULTS`,
 `DiceLog.starting_gear`), for each party member whose status is New and who
 has items (the game gives a character its gear when DONE is clicked; before
 that it has none; one being made counts too: [New characters and the roster
@@ -1558,10 +1587,7 @@ alone in its list, which is left empty, as a new list is), and her byte for
 spell 0 set in the known-spells table, and with kits Cermak's kit byte
 (`+43h`) the Arcanist for his preserver class (place 0; his gladiator class,
 place 1, none), and with fuller starting gear, last, `startgear.fill_member`
-for each. Seen in play: Cilla's USE screen lists ARMOR among her 1st-level
-spells and her inventory has no chest armour (AC 5); Gerakis holds the gythka
-and the long sword; the dice log lists each one's added gear (Gerakis a sling
-and leather chest and leg armour; Cermak, Cilla and K'ratchek nothing).
+for each. Verified in play (no log kept).
 
 Their features of their own (with kits: `set_own`) go by a bit no character
 made on the creation screen has: the kit byte's bit 6 (`kits.OWN_BIT`, DSCLOG's
@@ -1577,9 +1603,7 @@ AD&D's 2/1, whatever the rules (`GameData.weapon_hits` the same). Cilla (the elf
 halved in daylight (`kits.not_halved_by_sun`, as an Assassin's and a Military
 Scout's). The Effects screen's lines are `OWN_LINES` (after the kits', in
 `EF_LINES_OF`); the Characters tab's `GameData.kit` adds `kits.OWN_FEATURES`.
-Seen in play: the dice log's lines as the game starts, Gerakis's check
-("needs 18 or less (CON 22 -4)"), Cilla's hiding at 50 in the arena, the four
-Effects screens, K'ratchek's inventory line `Chatkcha 2.5x1D6+4` (1.5x before).
+Verified in play (no log kept).
 
 ## The leader's CHA at shops
 
@@ -1601,9 +1625,7 @@ leader), its CHA its creature record's `+27h`; the price times (100 − 5 for
 each point of CHA past 17, at most 40 at CHA 25) / 100, never below 1, and
 9999 kept.
 
-Checked in the game (with the table of the time, 25% at CHA 20): Kalzith's
-scrolls showed 2,250, 4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and
-each was charged that. A bought item stays on the pointer until it is put down
+Verified in play (no log kept). A bought item stays on the pointer until it is put down
 (the game's held item, `DS:17A0h`), and the shop takes no other click
 meanwhile.
 
@@ -1625,14 +1647,21 @@ pointer's (`DS:179Eh`, 523: one of the few past the 520 objects), never freed:
 with nothing held the game has it all zeros (kind 0). `SELL_KEEP` (an `INT 98h`
 site over the push, with Shops as in AD&D, `RULE_HI_CHA_PRICES`, the second rules word's 16:
 `game.RULE_BUYBACK` names it) looks at the thing's first item (things table, kind 1) and,
-for one with a plus (`+14h` above 0) or a power (`+0Fh`), pushes 270Fh in its
+for one with a plus (`+14h` above 0) or a power (`+0Fh`), with the Loader there
+(its heartbeat, `LOADER_BEAT` +1865, under `LOADER_FRESH` old, as for
+`GEAR_HOLD`: with the Loader's window closed nothing would take the item off the
+pointer, and up to 2.18 it was lost; now it is freed as the game does), pushes 270Fh in its
 place (the registers kept, the interrupt's frame moved down a word, the word
-under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
+under it) and queues the thing, the shop's merchant (`DS:179Ch`, the object
 whose item lists the shop's list is built from at 8347Ah: Kalzith's map object,
-229, a person, creature 33) in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
-+310, four entries). The Loader (`buyback.py`, every quarter of a second) puts
-each queued item first in the merchant's last item list (a new one if it has
-none; a backpack cell of its own) and zeroes the pointer's thing, as the game
+229, a person, creature 33) and the item in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
++310, four entries, `SOLD_ITEMS` +1868 their items). The Loader (`buyback.py`, every quarter of a second,
+the item gate held before it reads the queue) puts
+each queued item, if the thing's list still starts with it (not one picked up
+since), first in the merchant's last item list (a new one if it has
+none; a backpack cell of its own), marks the entry seen to (its item 0FFFFh:
+one left by a Loader that went away is seen to by the next, and a queue that
+went round more than four times has what it still holds seen to) and zeroes the pointer's thing, as the game
 leaves it (left a list, even an empty one, the inventory screen picks nothing up
 after); a merchant that isn't a person (none known) has the item freed as the
 game would. Bought back, it costs its price less the CHA discount, at least 60%:
@@ -1645,10 +1674,10 @@ to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
 
 ([In the features page](FEATURES.md#thief-skills-from-adds-table).)
 
-How: where the game's thief skill routine adds 4 a level, the helper
+How: where the game's thief skill routine adds 4 a level, DSCLOG
 (`INT E4h`) puts AD&D's number for the level in place of the game's base and
 level, adds the DEX table's, and jumps past the game's DEX formula to its
-armour and effects. At the routine's end (`INT D9h`, below) the helper keeps
+armour and effects. At the routine's end (`INT D9h`, below) DSCLOG keeps
 the chance to 95 (`THIEF_MOST`). The Loader's screens and the inventory
 screen's panel work the chances out the same way.
 
@@ -1672,14 +1701,12 @@ fail (PERCENT_SITE's entry), remembers it with the pockets tried (`locks.key`: t
 the thing, the member and its thief level; undone by loading an earlier save, as a pocket tried) and
 each pass writes the table: the locks each member failed at the thief level it has now
 (`locks.barred`). A level gained, the pair is gone. The dice log names a barred try ("failed this lock
-at this thief level"). Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief: failed,
-barred, then rolled again at 2nd level: playtest/logs/2026-11-11-lock-retry.md); tests:
+at this thief level"). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-11-lock-retry.md); tests:
 tests/test_locks.py. **Pockets:** a thief caught (the pick and the move silently both
 failed) is remembered as `pickpocket.caught_key` (the person's key, the thief and its thief level),
 and that thief is refused until its thief level is higher (the game's message in the story: "Kurzak
-remembers Daaki, and keeps a close hand on their purse."; the reason in the dice log alone). One who
-fumbled but slipped away unnoticed may try again at once (the user's rule, 2026-11-11; until then a
-fumble barred the thief too, and the message named the level, which the user found too metagame). Tests: tests/test_pickpocket.py's `test_caught_with_thieves_as_in_add`,
+remembers Daaki, and keeps a close hand on their purse.", which doesn't name the level; the reason
+in the dice log alone). One who fumbled but slipped away unnoticed may try again at once. Tests: tests/test_pickpocket.py's `test_caught_with_thieves_as_in_add`,
 `test_slips_away_with_thieves_as_in_add`.
 
 ## Hiding in shadows to backstab
@@ -1687,10 +1714,10 @@ fumble barred the thief too, and the message named the level, which the user fou
 ([In the features page](FEATURES.md#hiding-in-shadows-to-backstab).)
 
 How (the cloak, boots and belt): the patched game's item box (`INT DAh`, where
-it has drawn the name) asks the helper, which draws the line with the game's
+it has drawn the name) asks DSCLOG, which draws the line with the game's
 own text routine when the item's type is worn as a cloak, on the feet or as a
 belt; and at the end of the game's thief skill routine (`INT D9h`, where it
-returns the chance, armour and effects counted) the helper adds the belt's 5
+returns the chance, armour and effects counted) DSCLOG adds the belt's 5
 to picking pockets and opening locks for a thief wearing one.
 
 Daylight (`stealth.daylight`): an outdoor map (`stealth.OUTDOORS`) is all
@@ -1700,7 +1727,7 @@ map of the region in memory (the far pointer at `DS:2F4Ah`, `MAP_PTR`: a tile
 number a square, 128 to a row); any other map is roofed.
 
 How (the rolls): the Loader rolls both when the turn passes to the thief and
-tells the helper, which, where the game has just worked out whether an attack
+tells DSCLOG, which, where the game has just worked out whether an attack
 is from behind and a backstab (`INT EAh`), makes the hidden thief's next one
 so, by the game's own conditions for a backstab (a thief, in melee, a weapon
 of weight 40 or less).
@@ -1712,13 +1739,12 @@ the first is a backstab.
 
 ### A backstab multiplies the weapon's dice only
 
-Part of the switch Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it,
-`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; on unless unticked). The game's backstab multiplies the whole of a
+Part of Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it, `RULE_THIEF_TABLE`;
+always on: [above](#the-switches-always-on)). The game's backstab multiplies the whole of a
 hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
 level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
 and only the round's first attack is one. Two `NS_IMAGE` sites in the attack
-routine (5883Ah), applied whatever the switch, the rule's bit read at the
-time:
+routine (5883Ah):
 
 - `STAB_ROLL` (`STAB_SITE`, 58A29h, `cmp word [bp+16h],1`, 4 bytes), just after
   the damage's roll: the dice's own sum (the damage less what the routine added
@@ -1729,94 +1755,38 @@ time:
   enlarged ones).
 - `STAB_TIMES` (`TIMES_SITE`, 58A80h, the game's `push ax / mov ax,[bp-4] / pop
   dx / imul dx / mov [bp-4],ax`, 10 bytes, AX the multiplier): an Assassin's
-  multiplier one more first (a party member, `kits.backstab_times`, rule or
-  not); then with the rule, on the round's first attack (`[BP-14h]` 0) and a
-  hit, the kept dice added again once for each time past the first; on the
-  second, no multiplying at all; without the rule, or the dice not known, the
-  game's multiplying of the whole.
+  multiplier one more first (a party member, `kits.backstab_times`); then on
+  the round's first attack (`[BP-14h]` 0) and a hit, the kept dice added again
+  once for each time past the first; on the second, no multiplying at all; the
+  dice not known, the game's multiplying of the whole.
 
 The round's count `STAB_TIMES` reads leaves the off-hand swing out, so a thief
 with three attacks (two weapons and a weapon spec's extra) had the third
 multiplied after a first that missed: `STAB_FIRST` (in `PROBE_STEALTH`,
-with the rule, a party member only) keeps each member's last attack by the
+a party member only) keeps each member's last attack by the
 game's clock (the dword through DS:9B72h's far pointer, a round at a time in a
 fight, `STAB_CLOCK`), and a later attack at the same clock has its backstab
 taken back (`[BP-24h]` cleared, its +2 to hit off THAC0 `[BP-20h]`); from
 behind stays.
 
-The dice log's damage line says which: `+10 backstab (the dice 5 x3 = 15)`
-with the rule, `(1d8 = [5] +12 STR 24) x3 backstab` without (`dicelog`'s
-backstab step, the round's count read from the attack's frame,
+The attack routine (58019h) sets from behind and backstab (`[BP-1Ah]`,
+`[BP-24h]`) once a call but runs all of a round's attacks in it, loading
+`[BP-20h]` with the creature's THAC0 again for each and taking the 2s off only
+when this attack is from behind (the target's facing, 582D0h): a flag left
+from an earlier attack (a hidden thief's backstab) stayed set with no +2 on the
+later one, and `STAB_FIRST` then gave back a 2 it hadn't had (Seneca's
+Shadowseeker after her Hayneedle's backstab: THAC0 17 for 15, the target's DEX
+and shield not counted, the dice log's `-2 STR` for her +2;
+playtest/logs/2026-11-19-backstab-str-line.md). `REAR_FRESH`, first in
+`PROBE_STEALTH`, clears a flag the game didn't pay for this time: the
+creature's THAC0 (+1Fh) less `[BP-20h]` under 2, no from behind; under 4, no
+backstab. Test: test_dsclog's `test_later_attack_flags_its_own`.
+
+The dice log's damage line says it: `+10 backstab (the dice 5 x3 = 15)`
+(`dicelog`'s backstab step, the round's count read from the attack's frame,
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
-`test_backstab_multiplies_the_damage`, `test_enlarge_before_the_backstab`.
-
-## Spell arrows
-
-([In the kits page](KITS.md#multiclass-kits): the Spellarcher; `spellarrows.py`.)
-
-**The buttons.** Outside a fight, `PP_SHOW` gives a Spellarcher
-(`KIT_SPELLARCHER` awake) a button in the USE screen's ability row for each
-touch spell it knows (`ARROW_KNOWS`: the game's known table, `ARROW_SPELLS`:
-Chill Touch, Shocking Grasp, Vampiric Touch; its first place, Burning Hands, is
-never offered since 2.18, a cone and not a touch, and kept so the others keep
-their places, `spellarrows.RETIRED`), as it gives a thief
-Pick Pockets: the first where a priest's Turn Undead is (APFM 2BEFh), unless a
-thief's purse or a priest's element has it, the rest in the row's spare places
-to its right (2BE7h-2BEAh, `PP_EXTRAS`: each drawn with Turn Undead's frame and
-handler, its icon loaded and let go of by the game's routines, `PP_CLOSE`
-letting go of them all as the screen closes). Kind 2-5 (`PP_ARROWS`+N), icons
-ICON 3049-3052 (`icons.arrow_spell_icon`: the touch spell's tile, the hand taken
-off, an arrow in its lines), names CHILL ARROWS and so on (`PP_TEXT`),
-descriptions by `PP_INFO` (each under the description box's 195 bytes). Let go
-of, the screen closes as for the thief's, and `PP_ARM` goes to `ARROWS_ARM`:
-nothing readied, then `ARROWS_ASK` in a frame the overlay manager can fix up,
-which hands the click to the Loader as an item used on the map is (`USE_ITEM`
-`ARROWS_BY` FE00h and the member, `USE_WHO` the spell's place). Made, the Loader
-answers with no text and nothing is shown; refused (not known, no slot), its
-words (`PICK_TEXT`) are.
-
-**The Loader** (`SpellArrows.make`) takes a slot of the touch spell's level from
-the wizard slots left (`SLOTS_LEFT`; none left, it says so) for one arrow
-(`ARROWS_A_SLOT`, as the Spellarcher of *Dragon* #214's "The Complete Half-Elf" casts a spell onto
-an arrow). The Spellarcher keeps one stack of each spell, `STACK_MOST` (24) at
-most: the arrow joins that spell's stack wherever it is (its count up by one; a
-full stack takes none and uses no slot); with none, a new stack of the game's
-Arrows (type 62) goes in the quiver when it is empty (`npcitems.add_to` with the
-ammunition slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the
-list), else in a backpack cell. The stack is named Chill, Shocking or
-Vampiric Arrows (names 16Dh-16Fh; 16Ch, Burning, kept unused), their pictures objects 2614-2621 (the Arrows'
-icon, its heads in the spell's colours), value 0. They last until shot: nothing
-takes them away at a rest. They are readied and put away as any arrows.
-
-**The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
-spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
-the attacker as the caster and level 6 pushed for every weapon's spell, at 58BE6h:
-`push 6 / mov al,cl / mov ah,0 / push ax`). `ARROW_LEVEL` (`NS_IMAGE+47`, over
-those 7 bytes) keeps 6 for a weapon's own spell and gives a spell arrow's (`ARROW_HIT`
-sets `ARROW_CAST`) the archer's preserver level (DI the attacker: class 11 among the
-sheet's +21h-23h, its level from +24h-26h, at least 1), moving the INT's frame down
-4 bytes to put the two words under it. `PROBE_ARROW` (58D27h, where the ammunition
-routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
-(`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
-above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
-Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
-(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves as against
-the spell (its record's save byte: Chill Touch's a save, Shocking Grasp's and Vampiric Touch's
-none). The arrows hold no spell
-themselves, so nothing else in the game (the USE screen's items, breaking, acid)
-sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
-(whatever the rules), refuses spell arrows (the equip routine's item, its
-`[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
-(`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
-another member carries back to the party's Spellarcher. The four spells' records pass the
-routine's own test (+30h's low bits 2, not 1). Checked in the game (playtest/logs/2026-11-16-spellarcher-fine-bow.md): no Burning
-Arrows button for a Spellarcher knowing Burning Hands, Chill and Shocking Arrows buttons for one
-knowing both, the starting arrows by the picks, and a shot with Shocking Arrows casting Shocking
-Grasp. A new Spellarcher's Fine Bow and starting arrows (`spellarrows.starting_gear`) and the
-arrows' plus are in [the kits' notes](DEVELOPMENT-KITS.md#where-each-effect-goes). Arrows put in the
-ammunition slot by memory writes during a fight are not shot (the game keeps its own
-list of what each combatant has readied): they're made outside fights only.
+`test_dice_only`, `test_enlarge_before_the_backstab`.
 
 ## Picking pockets
 
@@ -1825,8 +1795,7 @@ list of what each combatant has readied): they're made outside fights only.
 How (DSCLOG's PICK POCKETS, sites sharing `INT 98h`): the USE screen's Turn
 Undead button (APFM 2BEFh, its handler 630h:48h) shows for a character whose
 sheet's +12h holds a priest's element, its icon 3044 to 3047 by element. At
-89979h (`PP_SHOW`), for a character with thief levels outside a fight, the
-helper gives it an element past the game's cases (9) and its own icon, ICON
+89979h (`PP_SHOW`), for a character with thief levels outside a fight, DSCLOG gives it an element past the game's cases (9) and its own icon, ICON
 3048 (`icons.pick_icon`: Turn Undead's earth tile, a purse), letting go of
 the icon the game loaded for the screen if it was another's. The button's
 press reaches its handler only after the pointer has rested on it; let go of,
@@ -1841,27 +1810,23 @@ the closing set put back), and the pointer is made the one for talking
 its text is SPIN 1001 in Turn Undead's 1000's place (`PROBE_CHUNK_ID` asks for
 999 + `TU_INFO`; a spell arrow's button, 1002-1005), a chunk of the Loader's
 copy of RESOURCE.GFF (`spelltexts.py`). The
-new spells (196 to 201) share those numbers, so for these two boxes the
-helper leaves the box's spell test (8C64Eh, `NS_CMP_INFO`) as the game has
+new spells (196 to 201) share those numbers, so for these two boxes DSCLOG leaves the box's spell test (8C64Eh, `NS_CMP_INFO`) as the game has
 it; before, Turn Undead's showed a new spell's (Fogbolt's for an earth
 cleric). The
 next click on someone with that pointer (`PP_HAND`, 5ECD8h, the start of the
 routine that opens the box to talk, trade or look) asks the Loader as
 `PROBE_USE_ITEM` (`INT FDh`) does for an item used on the map: `USE_ITEM`
 FF00h and the thief, `USE_WHO` the thing. The Loader rolls and moves the item,
-and the helper shows the result instead of the box. With no answer within
-`PICK_WAIT` (the Loader held up, or the game busy with its lists) the helper
+and DSCLOG shows the result instead of the box. With no answer within
+`PICK_WAIT` (the Loader held up, or the game busy with its lists) DSCLOG
 goes on as the game would and marks the request answered (`USE_REPLY` =
 `USE_SEQ`), so a late Loader does nothing (the same for spell arrows); its
 wait counts the BIOS's ticks, so it runs with interrupts on. A known limit: the
 Loader looks at the request once, at the start of its answer, so a timeout
 that falls while it is already moving the item (half a second or more inside
 one pick) lets the game's own handling run alongside; a claim word the Loader
-set before acting, which DSCLOG waited on, would close it. Not seen in play. The pointer turned to
-another mode puts the try away (`PROBE_POINTER`). Checked in the game: Daaki
-(fighter/preserver/thief) lifted a scroll from Kalzith; Caron (fighter/cleric)
-keeps Turn Undead; a pick put away by a right click leaves the next talk a
-talk.
+set before acting, which DSCLOG waited on, would close it ([unverified](DEVELOPMENT.md#unverified)). The pointer turned to
+another mode puts the try away (`PROBE_POINTER`). Verified in play (no log kept).
 
 A cleric/thief (a priest's element and thief levels) keeps Turn Undead on its
 button and has the purse beside it (`PP_EXTRA_DRAW`), outside fights: the
@@ -1872,35 +1837,33 @@ of its own loaded (100h:4A4h) and let go of as the screen closes (`PP_CLOSE`,
 88504h). These calls may load overlays, so they are made in a frame the overlay
 manager can fix up. The handler tells the two by its button ([BP+8]); another
 character on show takes the slot's handler off, and the game's redraw clears
-it. Checked: Jellybelly (ranger/cleric/thief) has both outside a fight, picked
-Kalzith's pocket with the purse beside Turn Undead, and Turn Undead keeps its
-name; the screen opened and closed four times over; in a fight, no purse.
+it. Verified in play (no log kept).
 
-Earlier versions picked pockets with Thieves' Tools used on someone, Mirlon's
-(given to a thief leader on his gem deal) or Kel's: neither has them now, and
-Mirlon's script is the game's own.
+Who has caught a thief, or given up their coins, the Loader keeps in `settings.json`, for this
+party, with the time on the game's clock of the try: a game loaded from before it has the clock
+behind that time, so the try is forgotten.
 
-The Trustee's key (his own pick, in his talk): a thief with no room for it has
-it dropped at his feet (script 146), and his rounds (script 8, from 3767; its
-step in word variable 135,20) test after each step whether the key is stolen
-(flag 55) and lies within 9 of him, and make for it ("There it is!") without
-picking it up, so the rounds stall. After a talk he is busy (flag 51, "I'd love
-to talk more...") until the rounds' first step clears it, so a stall left him
-busy for good. In the Loader's copy of `GPLDATA.GFF` (`pensasks.py`), the test
-asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
-jumps to code after the script's end that clears flag 51, says it and jumps
-back (`busy_once`); it also starts his rounds again (a call to 8 at 3767, as
-the game's door script 147 does), so rounds that stopped walk on.
+## Sounds for hiding and picking pockets
 
-His rounds pick a corner by their step (word variable 20, 0 to 5, a case each:
-27h), but steps 1 and 5 have none: a pause at the corner he has, its x and y
-left in word variables 2 and 3. Those are every script's, and a run of another
-in between (the door's 147, Kurzak's 141, the escape's 137) leaves other
-numbers there: one save had him making for x −4943. He never arrives, and the
-rounds go on only when he does, so he stood still, busy for good. The game's
-steps never reach 6 and 7 (past 5 is 0), so in the Loader's copy their cases
-are 1's and 5's (`rounds_pauses`): each case's value changed in place, its first
-command a jump to code after the script's end that sets the corner before it
-(0's for 1, 4's for 5) and goes on to the next case. Checked in the game with
-the save: talked to, he said his busy line and walked his rounds again (steps
-2, 3, 4, 0, 2 within a minute).
+([In the features page](FEATURES.md#picking-pockets); `sounds.py`, whose docstring has the
+detail.)
+
+Two sounds of the mod's own, chosen by the user from eight made for them: a breath sinking away
+as a thief or ranger hides and moves silently in a fight (BVOC 140, `HIDE_SOUND`), and a purse's
+jingle for a picked pocket, a thing or the coins (BVOC 141, `PICK_SOUND`; a weapon worth the
+quest's XP keeps the quest's sound). Their samples are `dsloader/sound-data/*.wav` (8000 Hz,
+8-bit mono, the game's form; `make.py` made them), put in the Loader's copy of RESOURCE.GFF as
+Creative Voice Files like the game's.
+
+The game finds a sound through its table of 181 (3A98:08A2h, 6 bytes each: its kind, then a far
+pointer to a 12-byte descriptor naming the BVOC); only 0-130 are digital, so a BVOC numbered past
+them isn't played by its number. DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
+call (one for each sound: the game keeps the last clip it loaded under an entry), as a digital
+one with a descriptor of its own, and puts the entry back. Two header words ask for
+them: `SOUND_REQ` (+1822: played from the map's main loop, `SOUND_TICK`) and `PICK_SOUND` (+1824:
+played with the pick's text, `GIVE_XP`). A Spellarcher making spell arrows hears the spell's own
+cast sound (its spell record's +0Fh, `spellarrows.cast_sound`), through `SOUND_REQ` too. Seen in
+DOSBox (2026-11-05, its output recorded with `PT_AUDIO` and matched with the clips: r 0.995 to
+0.997): both on request, in either order and after one of the game's, entries 131 and 132 as the
+game had them afterwards, and from a real pick and a real hide. Tests: `test_sounds.py`,
+`UseItemTests.test_sound_tick`, `test_pick_sound`.
