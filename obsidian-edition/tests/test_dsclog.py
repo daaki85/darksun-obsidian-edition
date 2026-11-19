@@ -1685,8 +1685,11 @@ class SpecializeTests(unittest.TestCase):
         bonus, sides = struct.unpack("<hh", mu.mem_read(SS * 16 + BP - 0x12, 4))
         return attacks, thac0, bonus, sides
 
-    def test_off(self):
-        self.assertEqual(self.attack(3, self.AXE, chosen=(0,), rules=0), (3, 15, 3, 8))
+    def test_rule_bit_clear(self):
+        """Weapon specialization always on: its bit clear in RULES changes nothing (an axe, not the
+        chosen long sword: AD&D's plain rate, half an attack less)."""
+        self.assertEqual(self.attack(3, self.AXE, chosen=(0,), rules=0), (2, 15, 3, 8))
+        self.assertEqual(self.attack(3, self.AXE, chosen=(0,)), (2, 15, 3, 8))
 
     def test_ravager(self):
         """A Ravager's +1 to hit and damage in melee, kits on (kits.melee); none with a missile,
@@ -1750,9 +1753,8 @@ class SpecializeTests(unittest.TestCase):
 
     def test_war_hit(self):
         """WAR_HIT (kits.war_hit): a Swashbuckler's or Battle Mage's warrior THAC0 (21 less its level)
-        with its chosen weapon spec alone, where better than its own; without weapon specialization
-        with the kit's kinds (a Swashbuckler's long sword, dagger, short sword; a Battle Mage's
-        KIT_BM_KINDS); no kit, nothing."""
+        with its chosen weapon spec alone, where better than its own (weapon specialization's bit
+        clear too: the kit's kinds no longer count); no kit, nothing."""
         from dsloader import kits
         spec = game.RULE_KITS | game.RULE_SPECIALIZE
         swash = dict(classes=(17, 0, 0), levels=(9, 0, 0), kit=1, own_thac0=16)  # (warrior 12: 4 better)
@@ -1761,10 +1763,12 @@ class SpecializeTests(unittest.TestCase):
             with self.subTest(kit=kit):
                 self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **who)[1], 15 - bonus)
                 self.assertEqual(self.attack(2, self.AXE, chosen=(0,), rules=spec, **who)[1], 15)  # (not chosen)
-                self.assertEqual(self.attack(2, self.DAGGER, rules=game.RULE_KITS, **who)[1], 15 - bonus)  # (its kinds)
+                self.assertEqual(self.attack(2, self.DAGGER, rules=game.RULE_KITS, **who)[1], 15)  # (not chosen)
+                self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=game.RULE_KITS, **who)[1],
+                                 15 - bonus)
                 self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **dict(who, kit=0))[1], 15)
         self.assertEqual(self.attack(2, self.AXE, rules=game.RULE_KITS, **swash)[1], 15)  # (an axe: not a Swashbuckler's)
-        self.assertEqual(self.attack(2, self.AXE, rules=game.RULE_KITS, **mage)[1], 15 - 6)  # (a Battle Mage's)
+        self.assertEqual(self.attack(2, self.AXE, rules=game.RULE_KITS, **mage)[1], 15)  # (a Battle Mage's kind, not chosen)
         self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **dict(swash, own_thac0=11))[1], 15)
         sheet = bytearray(game.SHEET_SIZE)
         sheet[0x21], sheet[0x24], sheet[0x43] = 17, 9, 1
@@ -1917,8 +1921,8 @@ class SpecializeTests(unittest.TestCase):
 
     def test_battle_mage(self):
         """A Battle Mage (kits and weapon specialization on): the expertise rate with its chosen
-        weapon spec, 3/2 a round, 2 from 7th level, no bonuses; the game's 1 with another weapon,
-        or with either rule off (specialize.skill, expert_attacks)."""
+        weapon spec, 3/2 a round, 2 from 7th level, no bonuses (weapon specialization's bit clear
+        too); the game's 1 with another weapon, or with kits off (specialize.skill, expert_attacks)."""
         from dsloader import specialize
         both = 4096 | game.RULE_KITS
         mage = dict(classes=(11, 0, 0), levels=(3, 0, 0), chosen=(0,), kit=2)
@@ -1926,7 +1930,7 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.attack(2, self.LONG_SWORD, rules=both, **dict(mage, levels=(7, 0, 0))), (4, 15, 3, 8))
         self.assertEqual(self.attack(2, self.AXE, rules=both, **mage), (2, 15, 3, 8))
         self.assertEqual(self.attack(2, self.LONG_SWORD, rules=4096, **mage), (2, 15, 3, 8))
-        self.assertEqual(self.attack(2, self.LONG_SWORD, rules=game.RULE_KITS, **mage), (2, 15, 3, 8))
+        self.assertEqual(self.attack(2, self.LONG_SWORD, rules=game.RULE_KITS, **mage), (3, 15, 3, 8))
         self.assertEqual(self.attack(2, self.LONG_SWORD, rules=both, **dict(mage, kit=1)), (2, 15, 3, 8))
         sheet = bytearray(game.SHEET_SIZE)
         sheet[0x14], sheet[0x21], sheet[0x24], sheet[0x43] = 1, 11, 7, 2
@@ -2085,7 +2089,7 @@ class SpecializeTests(unittest.TestCase):
     def dam_line(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, kit=0):
         """(attacks, bonus, sides, count) for the DAM line (PROBE_DAM_LINE): bonus 4, 1d8 pushed."""
         mu = self.mu
-        at = load_image().find(bytes.fromhex("268a472a2ef706"))
+        at = load_image().find(bytes.fromhex("268a472a5589e5"))
         self.assertGreater(at, 0)
         mu.mem_write(VEC_DAM_LINE * 4, struct.pack("<HH", at, TSR))
         mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.RULES, struct.pack("<H", rules & 0xFFFF))
@@ -2205,10 +2209,11 @@ class SpecializeTests(unittest.TestCase):
                                      levels=(7, 0, 0))[0], 2)
 
     def test_warrior_kits_attacks(self):
-        """A Crusader (cleric) or Mind Warrior (psionicist), the rule for kits on: a warrior's extra
-        attacks in melee, 3/2 a round from 7th level, 2 from 13th, without weapon specialization (with
-        it, a weapon not its chosen spec's has none: the chosen one's expertise is its extra attacks);
-        not with a missile weapon, nor for another kit or with the rule off (kits.warrior_attacks)."""
+        """A Crusader (cleric) or Mind Warrior (psionicist), the rule for kits on: weapon
+        specialization always on (its bit clear too), a weapon not its chosen spec's has no extra
+        attacks (the chosen one's expertise is its extra attacks: the warrior's 3/2 a round from 7th
+        level, 2 from 13th, were for the rule off); not with a missile weapon, nor for another kit or
+        with the rule off (kits.warrior_attacks)."""
         from dsloader import kits as kit_rules
         on = game.RULE_KITS
         def fresh(probe):  # (a new emulator for each: its cached code at CALLER would be the last probe's)
@@ -2222,10 +2227,10 @@ class SpecializeTests(unittest.TestCase):
             for level, want in ((6, 2), (7, 3), (12, 3), (13, 4)):
                 with self.subTest(who=who, level=level):
                     lv = dict(who, levels=(level, 0, 0))
-                    self.assertEqual(self.attack(2, self.AXE, rules=on, **lv)[0], want)
+                    self.assertEqual(self.attack(2, self.AXE, rules=on, **lv)[0], 2)
                     self.assertEqual(self.attack(2, self.AXE, rules=on | 4096, **lv)[0], 2)  # (not its chosen spec)
-                    self.assertEqual(self.dam_line(2, self.AXE, rules=on, **lv)[0], want)
-                    self.assertEqual(self.view_dam(2, self.AXE, rules=on, **lv)[0], want)
+                    self.assertEqual(self.dam_line(2, self.AXE, rules=on, **lv)[0], 2)
+                    self.assertEqual(self.view_dam(2, self.AXE, rules=on, **lv)[0], 2)
                     sheet = bytearray(game.SHEET_SIZE)
                     sheet[0x21], sheet[0x24], sheet[0x43] = who["classes"][0], level, who["kit"]
                     self.assertEqual(kit_rules.warrior_attacks(2, bytes(sheet)), want)
@@ -2245,7 +2250,7 @@ class SpecializeTests(unittest.TestCase):
         """(attacks, bonus, sides) for View Character's DAM line (PROBE_VIEW_DAM): DX the bonus 4,
         1d8, character 2 on show, its weapon item 1 (of MATERIAL, metal unless said, with PLUS)."""
         mu = self.mu
-        at = load_image().find(bytes.fromhex("8956f2e8"))
+        at = load_image().find(bytes.fromhex("8956f250"))
         self.assertGreater(at, 0)
         mu.mem_write(VEC_VIEW_DAM * 4, struct.pack("<HH", at, TSR))
         mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.RULES, struct.pack("<H", rules & 0xFFFF))
@@ -2277,7 +2282,7 @@ class SpecializeTests(unittest.TestCase):
         return attacks, bonus, sides
 
     def test_view_dam(self):
-        self.assertEqual(self.view_dam(3, self.AXE, chosen=(0,), rules=0), (3, 4, 8))
+        self.assertEqual(self.view_dam(3, self.AXE, chosen=(0,), rules=0), (2, 4, 8))  # (the rule's bit clear: as on)
         self.assertEqual(self.view_dam(3, self.AXE), (3, 4, 8))
         self.assertEqual(self.view_dam(3, self.AXE, chosen=(0,)), (2, 4, 8))
         self.assertEqual(self.view_dam(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 6, 8))
@@ -2404,8 +2409,8 @@ class CanUseTests(unittest.TestCase):
         return (mask or 1) if ok else 0
 
     def test_battle_mage(self):
-        """KIT_ALLOWS: a Battle Mage its chosen weapon spec's weapons (with weapon specialization)
-        and light armour, whatever a preserver's lists and restrictions (kits.allows); nothing in
+        """KIT_ALLOWS: a Battle Mage its chosen weapon spec's weapons (weapon specialization's bit
+        clear or set alike) and light armour, whatever a preserver's lists and restrictions (kits.allows); nothing in
         the off hand all the same."""
         from dsloader import kits
         hdr = TSR * 16 + load_image().find(HDR_SIG)
@@ -2415,7 +2420,7 @@ class CanUseTests(unittest.TestCase):
             for spec in (game.RULE_SPECIALIZE, 0):
                 for restrict_rule in (game.RULE_RESTRICT, 0):
                     rules = spec | restrict_rule
-                    game.RULES_IN_FORCE = rules | game.RULE_KITS
+                    game.RULES_IN_FORCE = rules | game.RULE_KITS | game.RULE_SPECIALIZE  # (DSCLOG's always on)
                     for kit, chosen in ((2, 1), (2, 6), (2, 0), (1, 1)):
                         s = bytearray(test_restrict.sheet(11))
                         s[0x43], s[0x14] = kit, chosen
@@ -5730,7 +5735,7 @@ class LevelPickTests(unittest.TestCase):
                 self.assertEqual(self.level_up(classes, levels, chosen)[0], int(asked))
 
     def test_not_asked(self):
-        self.assertEqual(self.level_up((10,), (5,), rules=0)[0], 0)
+        self.assertEqual(self.level_up((10,), (5,), rules=0)[0], 1)  # (weapon specialization always on: its bit clear asks too)
         self.assertEqual(self.level_up((10,), (5,), member=4)[0], 0)  # (not in the party)
         # a human fighter turned preserver: not until the preserver's level passes the fighter's
         self.assertEqual(self.level_up((11, 9), (3, 4), race=game.HUMAN)[0], 0)
@@ -5741,23 +5746,25 @@ class LevelPickTests(unittest.TestCase):
 
     def test_shinobi_picks_a_spell(self):
         """A Shinobi gone up a thief level, from SHINOBI_FIRST, on to the preservers' CHOOSE A
-        SPELL (past the JNZ); before that, or the kits off, or another thief, to the JNZ's target."""
+        SPELL (past the JNZ); before that, or the kits off, or another thief, to the JNZ's target (a
+        Swashbuckler, kit 1, asked its weapon spec first)."""
         from dsloader import kits
         for level, kit, rules, to in ((6, 3, game.RULE_KITS, 0x606), (10, 3, game.RULE_KITS, 0x606),
                                       (5, 3, game.RULE_KITS, 0x60D), (6, 1, game.RULE_KITS, 0x60D),
                                       (6, 3, 0, 0x60D)):
             with self.subTest(level=level, kit=kit, rules=rules):
-                self.assertEqual(self.level_up((17,), (level,), cls=17, kit=kit, rules=rules), (0, to))
+                self.assertEqual(self.level_up((17,), (level,), cls=17, kit=kit, rules=rules), (int(kit == 1), to))
         self.assertEqual(self.level_up((17,), (8,), cls=17, kit=3, rules=game.RULE_KITS, member=4)[1], 0x60D)
         self.assertEqual(kits.SHINOBI_FIRST, 6)
 
     def test_scholar_picks_one_more(self):
         """A Scholar gone up a preserver level has CHOOSE A SPELL once from the probe (then the
-        game's own, past the JNZ); another preserver, or the kits off, none from the probe."""
+        game's own, past the JNZ); another preserver, or the kits off, none from the probe (a Battle
+        Mage, kit 2, asked its weapon spec)."""
         for kit, rules, calls in ((1, game.RULE_KITS, 1), (2, game.RULE_KITS, 0), (0, game.RULE_KITS, 0),
                                   (1, 0, 0)):
             with self.subTest(kit=kit, rules=rules):
-                self.assertEqual(self.level_up((11,), (5,), cls=11, kit=kit, rules=rules), (0, 0x606))
+                self.assertEqual(self.level_up((11,), (5,), cls=11, kit=kit, rules=rules), (int(kit == 2), 0x606))
                 self.assertEqual(self.spell_calls(), calls)
 
     def test_goes_on_as_the_compare(self):
@@ -5833,16 +5840,16 @@ class LevelPickTests(unittest.TestCase):
         self.assertEqual(roll(4)[:2], (int_at + 3, 4))
 
     def test_effects_rows_pops(self):
-        """PROBE_EF_ROWS does the "pop di / pop si" it replaced (nothing drawn: the rule off, or
-        the lower panel in use, past 21 cells)."""
+        """PROBE_EF_ROWS does the "pop di / pop si" it replaced (nothing drawn: the lower panel in
+        use, past 21 cells; the rules' bits clear or set alike)."""
         from dsloader.gamepatch import VEC_EF_ROWS
         mu = self.mu
-        for rules, cells in ((0, 3), (4096, 30)):
+        for rules, cells in ((0, 30), (4096, 30)):
             with self.subTest(rules=rules, cells=cells):
                 mu.mem_write(TSR * 16 + self.image.find(HDR_SIG) + self.RULES, struct.pack("<H", rules))
                 mu.mem_write(SS * 16 + BP - 4, struct.pack("<H", cells))
                 mu.mem_write(SS * 16 + 0x7F8, struct.pack("<HH", 0x1111, 0x2222))  # (DI's, then SI's)
-                self.run_probe(rb"\xfb\x66\x60\x06\xe8..\x74.\x83\x7e\xfc\x15", VEC_EF_ROWS,
+                self.run_probe(rb"\xfb\x66\x60\x06\x83\x7e\xfc\x15", VEC_EF_ROWS,
                                (0xCD, VEC_EF_ROWS), dict(esp=0x7F8, esi=5, edi=6), 2)
                 self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + x)) for x in ("DI", "SI", "SP", "BP")],
                                  [0x1111, 0x2222, 0x7FC, BP])

@@ -136,7 +136,7 @@ class SizeTests(tc.CahulaksTests):
     def test_grand_master_on_large(self):
         """A grand master's large dice a die larger too (Player's Option: Combat & Tactics: a long
         sword 1d20 against a large target): the attacker's sheet ([BP+10h]) a 9th-level fighter of
-        the long sword, the rule RULE_SPECIALIZE on; a master's (5th) and with the rule off as ever."""
+        the long sword; a master's (5th) as ever; and the rule's bit clear the same (always on)."""
         from dsloader import game as g
         self.target(thing=20, race=1)
         self.large(20)
@@ -155,7 +155,7 @@ class SizeTests(tc.CahulaksTests):
         sheet[0x24] = 9
         self.mu.mem_write(attacker, bytes(sheet))
         self.mu.mem_write(self.hdr + 170, struct.pack("<H", 0))
-        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=10), (1, 20, 0))
 
     def test_what_is_large(self):
         """IS_LARGE: the Loader's bit, a half-giant (its race), or Enlarged (the game's effect 16)."""

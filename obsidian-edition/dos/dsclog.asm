@@ -3255,8 +3255,9 @@ prot_scan:
 ; 58892h), the attacks a round stored. The game gives every fighter, gladiator and ranger AD&D's
 ; specialist's rate (3/2, then 2 from 7th level, 5/2 from 13th); in melee a warrior (more than 2
 ; halves) with a weapon of a kind not chosen has AD&D's plain rate, half an attack less, and a
-; grand master one more. A Crusader or Mind Warrior has a warrior's extra attacks in melee
-; (WAR_KIT_OF) without RULE_SPECIALIZE (with it, its chosen weapon spec's expertise alone). Specialization +1 to hit, mastery +3 (the THAC0 less).
+; grand master one more. A Crusader or Mind Warrior has its chosen weapon spec's expertise (the
+; warrior's extra attacks of the game's way without weapon specialization gone with its switch).
+; Specialization +1 to hit, mastery +3 (the THAC0 less).
 ; PROBE_SPEC_DAMAGE: INT VEC_SPEC_DAMAGE replaces "add [bp-12h],ax" (3 bytes: INT + NOP; 588F2h),
 ; the strength bonus added to the damage bonus: specialization +2, mastery +3, and grand mastery
 ; the damage dice the next greater die size (NEXT_DIE: d8 to d10, 2d4 to 2d6, d12 to d20), against
@@ -3440,8 +3441,6 @@ probe_attacks:
         call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
         sub [bp + 0x0A], ax
         pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .store
         push dx
         call spec_of
         cmp word [bp + 0x16], 1
@@ -3465,7 +3464,6 @@ probe_attacks:
         jmp .done
 .three: sub word [bp + 0x0A], 3
 .done:  pop dx
-.store: call war_kit_of        ; (a Crusader's or Mind Warrior's extra attacks, in melee)
         cmp word [bp + 0x16], 1
         jle .melee_kit
         call own_throws         ; (a thri-kreen's chatkcha: one more a round)
@@ -3689,22 +3687,6 @@ off_hand_halves:
         mov ax, 2
 .ret:   ret
 
-; WAR_KIT_OF: AX the attacks a round (halves) of PROBE_ATTACKS's attacker ([BP+10h]) made a
-; Crusader's or Mind Warrior's (WAR_KIT_HALVES) for a melee attack ([BP+16h] 1 or less). Others kept.
-war_kit_of:
-        cmp word [bp + 0x16], 1
-        jg .ret
-        push bx
-        push es
-        push ax
-        mov ax, [bp + 0x10]
-        call sheet_of_ax
-        pop ax
-        call war_kit_halves
-        pop es
-        pop bx
-.ret:   ret
-
 ; WAR_KIT_IS: ZF set if the character whose sheet is at ES:BX is a Crusader or a Mind Warrior (kit
 ; awake, KIT_WHERE that kit's for KIT_LEVEL), which has expertise in its one chosen weapon spec.
 ; All registers kept.
@@ -3715,44 +3697,6 @@ war_kit_is:
         call kit_is_b
         db KIT_MIND_WARRIOR
 .ret:   ret
-
-; WAR_KIT_HALVES: AX the melee attacks a round (halves) of a character who isn't a warrior (2 or
-; fewer), ES:BX its sheet: a Crusader's or Mind Warrior's (kit awake) the warrior's extra attacks,
-; 3/2 a round from 7th level of the kit's class, 2 from 13th, the better of the two kits' for a
-; human with both (kits.warrior_attacks); with RULE_SPECIALIZE none (its chosen weapon spec has
-; expertise's, EXPERT_HALVES: the extra attacks with that weapon alone). Others kept.
-war_kit_halves:
-        cmp ax, 2
-        ja .ret
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .ret
-        push dx
-        mov dx, ax
-        call kit_is_b
-        db KIT_CRUSADER
-        jne .mind
-        call .by_level
-.mind:  call kit_is_b
-        db KIT_MIND_WARRIOR
-        jne .back
-        call .by_level
-.back:  mov ax, dx
-        pop dx
-.ret:   ret
-.by_level:                      ; (DL the more of itself and the level's, KIT_WHERE's level)
-        push ax
-        call kit_level
-        mov ah, 3
-        cmp al, 13
-        jb .early
-        inc ah
-.early: cmp al, 7
-        jb .no
-        cmp dl, ah
-        jae .no
-        mov dl, ah
-.no:    pop ax
-        ret
 
 ; NOTE_SHOT: KIT_SHOT's bit for the attacker ([BP+0Eh]), a party member: set for a missile ([BP+16h]
 ; above 1: a shot or a throw), else clear; and KIT_OFF's: set for a melee attack with the weapon in
@@ -3800,8 +3744,6 @@ probe_spec_damage:
         jnc .wild
         add word [bp - 0x12], WILD_DAMAGE
 .wild:  pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         push dx
         call spec_of
         cmp dl, SPEC_SPECIAL
@@ -3823,9 +3765,8 @@ probe_spec_damage:
 ; PROBE_DAM_LINE: INT VEC_DAM_LINE replaces "mov al,es:[bx+2Ah]" (4 bytes: INT + 2 NOPs; DSUN.EXE
 ; 72A77h) in the routine that writes a melee weapon's "DAM: 1.5x1D8+4" (View Character, the
 ; inventory screen), ES:BX the sheet, SI the weapon's item type, the damage bonus, the dice's sides
-; and their count pushed (under the INT's return, in that order up). With RULE_SPECIALIZE, the
-; attacks as PROBE_ATTACKS gives them, and the bonus and sides as PROBE_SPEC_DAMAGE does; a
-; Crusader's or Mind Warrior's extra attacks (WAR_KIT_HALVES) either way.
+; and their count pushed (under the INT's return, in that order up): the attacks as PROBE_ATTACKS
+; gives them, and the bonus and sides as PROBE_SPEC_DAMAGE does.
 probe_dam_line:
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
@@ -3835,8 +3776,6 @@ probe_dam_line:
         pop ax
         pop bp
         mov al, [es:bx + 0x2a]
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         push bp
         mov bp, sp
         push dx
@@ -3876,7 +3815,6 @@ probe_dam_line:
 .done:  push cx                 ; (a Crusader's or Mind Warrior's extra attacks; the off hand's
         mov ch, ah              ;  one a round, the item DI; AH kept)
         xor ah, ah
-        call war_kit_halves
         push bx
         mov bx, di
         call off_hand_halves
@@ -3890,7 +3828,7 @@ probe_dam_line:
 ; DSUN.EXE 729FFh) in the same routine's branch for a missile weapon (the inventory screen's
 ; "1D4"), ES:BX its item type's record, SI the type, the routine's [BP-6] the creature (0 for
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
-; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
+; weapon's attacks a round (halves): the rate of fire as PROBE_ATTACKS gives
 ; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; any thri-kreen's chatkcha
 ; one more a round, as OWN_THROWS (whatever the rules). With no
 ; creature (an item box: this branch for a melee weapon too), at least one a round.
@@ -3914,8 +3852,6 @@ probe_missile_line:
         mov ax, [es:bx + 4]
         call sheet_of_ax
         pop ax
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .own
         push ax
         call spec_of_sheet
         pop ax
@@ -3950,15 +3886,12 @@ probe_missile_line:
 ; PROBE_VIEW_DAM: INT VEC_VIEW_DAM replaces "mov [bp-0Eh],dx" (3 bytes: INT + NOP; DSUN.EXE 64EB6h)
 ; in View Character's routine for its "DAM: 1.5x1D8+4": DX the damage bonus it stores, its [BP-6]
 ; the attacks a round (halves), [BP-2] the dice's count, [BP-4] their sides, [BP-0Ah] the weapon's
-; item. A Crusader's or Mind Warrior's extra attacks (WAR_KIT_HALVES, not with a missile weapon).
-; With RULE_SPECIALIZE, the attacks (not a missile weapon's), the bonus and the sides as the
+; item. The attacks (not a missile weapon's), the bonus and the sides as the
 ; attack has them (PROBE_ATTACKS, PROBE_SPEC_DAMAGE), for the character on show: its number in
 ; the segment the routine's "mov ax,seg" at 64E33h holds, +25Bh (as PROBE_VIEW's CH_WHO).
 VIEW_DAM_WHO equ 0x84           ; that operand, back from the INT's return
 probe_view_dam:
         mov [bp - 0x0E], dx
-        call wp_rules
-        jz .done
         push ax
         push bx
         push dx
@@ -3980,9 +3913,6 @@ probe_view_dam:
         call kit_melee          ; (a Ravager's, a Brute's: the rule for kits being on)
         add [bp - 0x0E], ax
         pop ax
-        mov dl, SPEC_NONE
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .bonus
         call spec_of_sheet
         mov ax, si              ; a missile weapon (the type's +0, 2) keeps its rate
         imul ax, ax, 0x14
@@ -4023,8 +3953,8 @@ probe_view_dam:
         call next_die
         mov [bp - 4], ax
         pop ax
-.out:   mov ax, si              ; (a Crusader's or Mind Warrior's extra attacks, not a missile
-        imul ax, ax, 0x14       ; weapon's)
+.out:   mov ax, si              ; (not a missile weapon's)
+        imul ax, ax, 0x14
         push es
         push bx
         les bx, [0x1669]
@@ -4034,7 +3964,6 @@ probe_view_dam:
         pop es
         jnz .gone
         mov ax, [bp - 6]
-        call war_kit_halves
         mov bx, [bp - 0x0A]             ; (the item: the off hand's one a round)
         call off_hand_halves
         mov [bp - 6], ax
@@ -4618,7 +4547,7 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         ret
 ; KIT_ALLOWS: carry set if the kit of the character whose sheet is at ES:BX lets it use item type
 ; DX whatever its classes' lists and restrictions (kits.allows): a Battle Mage the weapons of its
-; chosen weapon spec (SPEC_SLOTS' first, with RULE_SPECIALIZE) and light armour (leather, or of no
+; chosen weapon spec (SPEC_SLOTS' first) and light armour (leather, or of no
 ; material; not a shield); a Battle Dancer long swords and bows (kit_dancer), whatever its cleric's
 ; sphere. DS the game's; all registers kept.
 kit_allows:
@@ -4664,8 +4593,6 @@ kit_allows:
         je .yes
         jmp .no
 .weapon:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .no
         cmp dx, KIND_TYPES
         jae .no
         mov si, dx
@@ -5759,15 +5686,6 @@ km_rows     db 4                ; (KIT_MARKS: the page's rows)
 km_class    db 0                ; (KIT_MARKS: its class, KIT_CLASS's)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
-; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
-; line's and the Effects screen's own lines wanted).
-; All registers kept.
-wp_rules:
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .ret
-        test word [cs:rules_hi], RULE_HI_KITS
-.ret:   ret
-
 ; KINDS_ALLOWED: AX the kinds (bit 0 the long sword) the character whose sheet is at ES:BX can
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
@@ -5924,8 +5842,6 @@ probe_lv_pick:
 
 ; Character SI (DS the game's) asked for weapon kinds while it has fewer than it is due
 lv_check:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
         cmp si, LV_PARTY
         jae .ret
         cmp byte [cs:showing], 0
@@ -6383,8 +6299,6 @@ probe_ef_rows:
         sti
         pushad
         push es
-        call wp_rules
-        jz .pops
         cmp word [bp - 4], EF_CELLS
         jg .pops
         mov bx, sp
@@ -6500,8 +6414,6 @@ ef_lines_of:
         jne .own_skip
         jmp .own
 .spec_rule:
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
         xor di, di
 .slot:  cmp di, SPEC_COUNT
         jb .chosen
@@ -7039,9 +6951,7 @@ kit_melee:
 ; WAR_HIT: AX what a Swashbuckler's, Crusader's, Battle Mage's or Mind Warrior's warrior THAC0 adds
 ; to hit in the weapon attack routine (the attacker its [BP+0Eh], the sheet its [BP+10h], the item
 ; type [BP+14h]; kits.war_to_hit): with a weapon of the kit's chosen weapon spec (one of its
-; SPEC_SLOTS, with RULE_SPECIALIZE; without it, of the kit's kinds: a Swashbuckler's long sword,
-; dagger or short sword, SWASH_KINDS; a Battle Mage's KIT_BM_KINDS; a Crusader's or Mind Warrior's
-; melee ones), its creature's THAC0 (+1Fh, its classes') less a warrior's (21 less the kit's class
+; SPEC_SLOTS), its creature's THAC0 (+1Fh, its classes') less a warrior's (21 less the kit's class
 ; level, 1 at best) where that is better, else 0. The Complete Thief's Handbook's Swashbuckler has
 ; a fighter's THAC0 with its weapon of choice only. DS the game's; others kept.
 SWASH_KINDS equ 0x000D          ; (long sword, dagger, short sword)
@@ -7059,30 +6969,23 @@ war_hit:
         jz .out
         mov ax, [bp + 0x10]
         call sheet_of_ax
-        mov ax, SWASH_KINDS
         call kit_is_b
         db KIT_SWASHBUCKLER
         je .kit
-        mov ax, KIT_BM_KINDS
         call kit_is_b
         db KIT_BATTLE_MAGE
         je .kit
-        mov ax, KIT_MELEE_KINDS
         call kit_is_b
         db KIT_CRUSADER
         je .kit
         call kit_is_b
         db KIT_MIND_WARRIOR
         jne .out
-.kit:   test word [cs:rules], RULE_SPECIALIZE
-        jz .mask
-        mov cx, si              ; (CL the kind + 1, as the slots keep it)
+.kit:   mov cx, si              ; (CL the kind + 1, as the slots keep it)
         push si
         xor si, si
-.slot:  push ax
-        call spec_get
+.slot:  call spec_get
         cmp al, cl
-        pop ax
         je .chosen
         inc si
         cmp si, SPEC_COUNT
@@ -7092,12 +6995,7 @@ war_hit:
         jmp .out
 .chosen:
         pop si
-        jmp .level
-.mask:  lea cx, [si - 1]
-        bt ax, cx
-        mov cx, 0
-        jnc .out
-.level: call kit_level
+        call kit_level
         movzx cx, al
         neg cx
         add cx, 21
@@ -8400,11 +8298,7 @@ probe_dual_kit:
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        test word [cs:rules_hi], RULE_HI_KITS
-        jnz .ask
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
-.ask:   push word [ss:bx + 36]
+        push word [ss:bx + 36]
         push word [ss:bx + 34]
         push bp
         mov bp, sp
@@ -10564,8 +10458,6 @@ wp_classes:
         jnz .class
         or al, al               ; (a Battle Mage, Crusader or Mind Warrior, with weapon specialization: a warrior here)
         jnz .out
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .out
         push ax
         call kit_made
         cmp al, KIT_BATTLE_MAGE
@@ -10585,8 +10477,6 @@ probe_wp_shown:
         call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp ax, 8
         je .ret
-        call wp_rules
-        jz .ret
         push bp
         mov bp, sp
         push bx
@@ -10625,8 +10515,6 @@ probe_wp_shown:
 ; kits, goes back to the disciplines.
 probe_wp_class:
         mov cx, 1
-        call wp_rules
-        jz .ret
         push eax                ; (the classes changed: no kit; the routine runs after every click
         push es                 ;   on the screen)
         push bx
@@ -10727,8 +10615,6 @@ probe_race_panel:
         push word [cs:rp_fl]
         push word [cs:rp_cs]
         push word [cs:rp_ip]
-        call wp_rules
-        jz .ret
         sti
         pushad
         push es
@@ -10785,8 +10671,6 @@ wp_click:
         jne .which
         mov byte [cs:kit_keep], 1
 .which: pop bx
-        call wp_rules
-        jz .game
         call wp_harvest
         mov ax, [cs:wp_button]
         cmp ax, KIT_VIEW
@@ -17582,9 +17466,8 @@ size_dice:                          ; (CAH_SWING's: the call's first swing with 
         mov [bp - 0x10], ax
         movsx ax, byte [cs:si + large_dice + 2]
         add [bp - 0x12], ax
-        test word [cs:rules], RULE_SPECIALIZE ; (a grand master's: the next greater die, as its
-        jz .done                    ;   own dice's at PROBE_SPEC_DAMAGE, which these replace)
-        call spec_of
+        call spec_of                ; (a grand master's: the next greater die, as its own dice's
+                                    ;   at PROBE_SPEC_DAMAGE, which these replace)
         cmp dl, SPEC_GRAND
         jne .done
         mov ax, [bp - 0x10]
@@ -22078,16 +21961,7 @@ cr_weapons:
         pop bp
         cmp si, LV_PARTY
         jae .iret
-        test word [cs:rules], RULE_SPECIALIZE
-        jnz .on
-        call gear_mark                  ; (no weapon window: the Loader's kit and fuller gear still due)
-        cmp si, [cs:psi_member]         ; (no weapons: the psionic powers alone, if due)
-        jne .hold
-        cmp byte [cs:psi_due], 0
-        jne .on
-        cmp byte [cs:psi_keep], 0
-        je .hold
-.on:    sti
+        sti
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
@@ -22095,8 +21969,6 @@ cr_weapons:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .done
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
@@ -22120,31 +21992,7 @@ cr_weapons:
         call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
         mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
-.hold:  sti                             ; (the BIOS timer for GEAR_HOLD's wait)
-        call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
 .iret:  iret
-
-; GEAR_MARK: (CR_WEAPONS, weapon specialization off: no weapon window) new member SI named for the
-; Loader's creation gear (GEAR_WHO, GEAR_DUE), as CR_WEAPONS' .new does after the window: its kit
-; gear, class gear and fuller starting gear don't need weapon specialization (before, a character
-; made with the rule off went into the roster without them: GEAR_HOLD waited for nothing). Not an EDIT
-; that kept its race, classes and kit (ED_SAME: its gear its own). All registers kept.
-gear_mark:
-        push ax
-        push bx
-        push es
-        les bx, [LV_SHEETS]
-        imul ax, si, 0x47
-        add bx, ax
-        call ed_same
-        jnc .out
-        mov ax, si
-        mov [cs:gear_who], al
-        mov byte [cs:gear_due], 1
-.out:   pop es
-        pop bx
-        pop ax
-        ret
 
 ; GEAR_HOLD: (CR_WEAPONS' end) a new member just made (GEAR_DUE), the Loader's pass waited for (GEAR_DUE
 ; cleared), at most GEAR_HOLD_TICKS, with the Loader there (its LOADER_BEAT under LOADER_FRESH old;
