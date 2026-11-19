@@ -134,7 +134,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, walking and fighting ([what the party wears](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#what-the-party-wears)).
 - **[New]** Magic gear glows on the figures, in the colour nearest the item's icon, and twenty of the game's still magic icons shimmer ([icons](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#magic-items-icons)).
-- **[New]** Elves have pointed ears, half-elves no longer look like humans, and with ages on, hair greys ([elves and half-elves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#elves-and-half-elves)).
+- **[New]** Elves have pointed ears, half-elves no longer look like humans, and hair greys with age ([elves and half-elves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#elves-and-half-elves)).
 - **[New]** Every figure casts a soft shadow, walkers kick up dust, and the hidden and invisible are drawn half see-through ([shadows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#shadows)).
 - **[New]** The 6th-level priest spells that stay on the map have pictures of their own, some from Wake of the Ravager when installed ([spells on the ground](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#spells-on-the-ground)).
 
@@ -148,7 +148,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Changed]** In a fight the view stays put while a figure walks *(was following each one near the edge)*.
 - **[Changed]** The pointer shows in the intro and scenes, starts in the middle, keeps its place and moves at the desktop's speed ([the pointer](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-pointer-in-scenes-and-where-it-starts)).
 - **[Changed]** 40 save slots on four pages *(was 10)*, each kept under its name too, and 29 stored characters *(was 19)* ([more saves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#more-saves)).
-- **[Changed]** The game runs faster than with GOG's settings, Fastest by default, and the party keeps its walking pace with shadows and dust on ([game speed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#game-speed)).
+- **[Changed]** The game runs faster than with GOG's settings, Fastest by default, and the party keeps its walking pace with the shadows and dust drawn ([game speed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#game-speed)).
 - **[Changed]** More memory to spare with the map up, for the mod's own needs: about 97 KB *(the original game: 57 KB)*, with part of the game's code and its music buffer in upper memory, so a long session is less likely to stop with "Out of memory in OEOpenGraph".
 - **[New]** Crash, freeze and item reports, and a warning in the dice log before memory runs out ([reports](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#crash-freeze-and-item-reports)).
 - **[New]** The game's window at its own size, double, triple or quadruple, or full screen.

@@ -113,10 +113,9 @@ comes after a backstab's multiple (a backstab x3 on a held target is x6) and bef
 and the manual says nothing of any of it. A spell's damage comes with its own second number,
 the most its dice can do, which a helpless target takes instead.
 
-With [Held targets as in AD&D](FEATURES.md#held-targets) the mod has such a
-blow hit automatically for normal damage instead, as AD&D's 2nd edition does.
-
-The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`).
+With [Held targets as in AD&D](FEATURES.md#held-targets) (always on) the mod has such a
+blow hit automatically for normal damage instead, as AD&D's 2nd edition does, and the dice log
+says so under the attack (`Paralyzed: hit automatically, for normal damage`).
 
 ## The game's two weapons
 
@@ -207,10 +206,9 @@ attacks. The doubled spells are:
 In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
-game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. The mod's
+game never explains it; it may have been meant as a dodge. The mod's
 [**Saving throws against spells**](FEATURES.md#spells-saved-against-with-the-spell-save)
-puts the spell save back and takes the doubled d20 away.
+(always on) puts the spell save back and takes the doubled d20 away.
 
 The target's spells and effects:
 - Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
@@ -434,7 +432,7 @@ more, the row says so ("the log: ...").
 (The rows below are the game's own spells. Six of them, Bestow Curse, Blood Flow, Cause Fear,
 Quicksand's save, Ironskin and Free Action, are set as the manual has them by the rule change [Spells
 and psionics as the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them),
-on by default, which changes wizard spells and psionic powers too: its table lists them all.)
+always on, which changes wizard spells and psionic powers too: its table lists them all.)
 
 | Spell | The manual | The game |
 |---|---|---|
@@ -480,7 +478,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Cause Serious Wounds | 3–17 | 2d9 in the game; 2d8+1 with the patched game |
 | Dehydrate | 2d6 + 1 a level | the same, no save |
 | Dust Cloud | blocks sight and missiles | a cloud on the ground; its record has no damage or effect |
-| Focus Heat | 2d6 + 1 a level; save for half | the same, fire (the save's d20 doubled, or DEX with the rule change) |
+| Focus Heat | 2d6 + 1 a level; save for half | the same, fire (the game doubles the save's d20; the mod counts DEX instead) |
 | Free Action | breaks slow, hold and webs | ends Paralyzed and Slowed when cast; then can't be Paralyzed, Slowed or Stuck, 1 turn a level |
 | Neutralize Poison | ends poison | ends Poisoned |
 | Poison | save or die | Poisoned on a failed save against paralysis/poison/death: no harm in a fight, but 1000 damage once time passes out of one (a rest) before it's cured |
@@ -681,8 +679,7 @@ below 11, below 16, and up). Defence modes cost nothing to keep up.
 ## Spells and psionics as the manual describes them
 
 This section is the mod's, not the game's: the rule change [Spells and psionics as the manual describes
-them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default, from the next
-start. Twenty-four of the manual's spells and two psionic powers whose saves, times, damage or
+them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), always on. Twenty-four of the manual's spells and two psionic powers whose saves, times, damage or
 effects part from the manual (pp. 30-86: the bestiary, spells and psionics) are set as the manual
 has them (the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures Feeblemind), a
 priest's Turn Undead goes by AD&D's turning table ([above](#adds-turning-table)), a monster's level

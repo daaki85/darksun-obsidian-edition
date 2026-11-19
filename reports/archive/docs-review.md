@@ -1,6 +1,6 @@
 # Documentation review (2026-11-17)
 
-*Status: findings only, nothing changed yet. A review of every document in the repository: the
+*Status: acted on (#100 to #105). A review of every document in the repository: the
 player pages, the reference pages and their tables, FEATURES.md and its screenshots, the patch
 notes, release notes, CHANGELOG and HTML manual, the developer pages against the Loader's code, and
 the playtest kit, reports and CLAUDE.md. Line numbers are as of `obsidian-edition` at `44f6b60`.*

@@ -53,8 +53,8 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/stillwater.png) | Bone | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
 | ![](docs/items/mace-plus2.png) | Bone | Mace +2 | +2 | a weapon rack in the Subterranean Temple beneath Teaquetzl, with a metal axe |
 | ![](docs/items/drakejaw.png) | Bone | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
-| ![](docs/items/polearm-plus1.png) | Bone | Polearm +1 | +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
-| ![](docs/items/thornwall.png) | Bone | ***Thornwall*** | a bone polearm +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
+| ![](docs/items/polearm-plus1.png) | Bone | Polearm +1 | +1; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
+| ![](docs/items/thornwall.png) | Bone | ***Thornwall*** | a bone polearm +1; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
 | ![](docs/items/gythka-plus3.png) | Bone | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](PEOPLE.md#the-champions-bout)) |
@@ -70,7 +70,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/axe-plus1.png) | Metal | Axe +1 | +1 | hidden in a sewer hole in the Tari's warrens; or made at Teaquetzl's forge from the Meteor Metal and the Metal Rod |
 | ![](docs/items/great-axe-plus3.png) | Metal | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
 | ![](docs/items/headsman.png) | Metal | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
-| ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by the **Troop Leader** |
+| ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | carried by the **Troop Leader** |
 | ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed) | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
@@ -93,7 +93,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 |---|---|---|---|---|
 | ![](docs/items/sling-plus2.png) | Leather | Sling +2 | +2 | Chaya, and her apology chest |
 | ![](docs/items/sling-plus1.png) | Leather | Sling +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl, with the Storm Ring |
-| ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's, with [the rule](FEATURES.md#staff-sling-stinkpots) | sold by the **Bowyer** |
+| ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's ([stinkpots](FEATURES.md#staff-sling-stinkpots)) | sold by the **Bowyer** |
 | ![](docs/items/skycutter.png) | Obsidian | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | Bow +2 | +2 | a skeleton in the Upper Castle |
@@ -190,7 +190,7 @@ Worn in a hand, in this game.
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a ceramic pot (the cluebook's broken jar) in the Lower Castle |
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](PLAYER-GUIDE.md#hiding-in-shadows) (moving silently at 95 at least); thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
-| ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight (the DMG's slowing for weight, and rest after hours of running, are left out); like any boots, +10 to moving silently with the [stealth rule](FEATURES.md#hiding-in-shadows-to-backstab) | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
+| ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight (the DMG's slowing for weight, and rest after hours of running, are left out); like any boots, +10 to moving silently ([hiding in shadows](FEATURES.md#hiding-in-shadows-to-backstab)) | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](PLAYER-GUIDE.md#hiding-in-shadows) in a fight (hiding at 95 under the open sky, 90 under a roof, whatever the light); thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
@@ -262,8 +262,8 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal; 1d6+1, the footman's pick (2d4 against a large target with [Creature size](FEATURES.md#creature-size)) |
 | ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon | 1d6+1, the footman's pick (the game's 1d4+1); 2d4 against a large target with [Creature size](FEATURES.md#creature-size) |
 | ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens | — |
-| ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens | reaches two squares with [the rule](FEATURES.md#polearm-reach), held with no other weapon (a shield is fine) |
-| ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm; reaches two squares with [the rule](FEATURES.md#polearm-reach), as the bone one |
+| ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens | reaches two squares ([polearm reach](FEATURES.md#polearm-reach)), held with no other weapon (a shield is fine) |
+| ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm; reaches two squares ([polearm reach](FEATURES.md#polearm-reach)), as the bone one |
 | ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) | — |
 | ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) | — |
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; earth and air clerics may use them |
@@ -272,7 +272,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens | — |
-| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
 ## Every mundane armour piece
 
@@ -482,7 +482,7 @@ no magical power is lost at once in the game (0%); one with a power never is
 
 ### Chest
 
-| Item | Saved in the game | Saved with the rule |
+| Item | Saved in the game | Saved with the mod |
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
 | Leather Chest Armor +1, ***Inixhide*** | 0% | 60% (needs 9) |
@@ -498,7 +498,7 @@ no magical power is lost at once in the game (0%); one with a power never is
 
 Each piece on its own, as the chest.
 
-| Item | Saved in the game | Saved with the rule |
+| Item | Saved in the game | Saved with the mod |
 |---|---|---|
 | Leather arm or leg armour | 0% | 55% (needs 10) |
 | Ring, brigandine or scale arm or leg armour (bone) | 0% | 50% (needs 11) |
@@ -517,7 +517,7 @@ mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power. Only a
 melee weapon is ever taken: chatkchas (the Chatkcha +1, ***Skycutter***),
 slings and bows never are:
 
-| Item | Saved in the game | Saved with the rule |
+| Item | Saved in the game | Saved with the mod |
 |---|---|---|
 | Plain bone or metal weapons | 65% | 65% (the game's: needs 8) |
 | Plain wooden weapons | 65% | 65% (needs 8) |

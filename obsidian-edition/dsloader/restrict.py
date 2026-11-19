@@ -1,4 +1,4 @@
-"""Class restrictions (the Options tab's rule): what a character's classes keep it from equipping,
+"""Class restrictions (a rule change, always on): what a character's classes keep it from equipping,
 on top of the game's own class lists (each item type's mask of the classes that may use it, of
 which one of the character's classes is enough). The strictest class wins. DSCLOG's
 PROBE_CAN_USE does this in the game; this is its model, for the tests and the Loader.

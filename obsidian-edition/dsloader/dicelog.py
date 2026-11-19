@@ -3319,7 +3319,7 @@ class DiceLog:
                     total += kits.cure_bonus(kid, spell, outdoors)
                     kit = f" {signed(kits.cure_bonus(kid, spell, outdoors))} {kits.name(kid)}"
                 elif kits.cure_die(kid, spell):
-                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the helper's roll)"
+                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the kit's die)"
                 return self.flush(now, force=True) + [
                     f"{self.game.spell_name(spell)}: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
                     + (f" {signed(handler)}" if handler else "") + kit + (f" = {total}" if "1d" not in kit else "")]
