@@ -356,12 +356,17 @@ game's data: it is one player's account.
   the map open, in `fountain-user`'s ambush (ten combatants), with a USE screen up, 0.4 s into a
   spell's picture (Ester's Curse, below), with Kalzith's shop up (`openshop.sh`) and after it:
   upper memory never moved (its free piece 26,256 bytes at E330h with this build, 144 bytes at
-  CA00h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
+  CA00h; with 2.19.0's quick save and squares merged in, 25,712 bytes at E352h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
   the USE screen, 124,608 with the shop, 100,032 with the map open again after it. Read the free
   piece, not the heap's own free (the game's heap reads 0 KB free with the map open: the map has it).
 - **Another session editing the helper**: before a DOSBox run with the repository's Loader,
   assemble `dos/dsclog.asm` to a scratch file and `cmp` it with `dos/DSCLOG.EXE`: the same, and the
   tree's build is fine to run.
+- **The whole suite with nothing skipped** (2026-11-19, logs/2026-11-19-merge-2.19-update.md):
+  `/usr/local/bin/python3` has unicorn and capstone but no tkinter, `/usr/bin/python3.12` tkinter
+  but not them: `python3.12 -m pip install --break-system-packages unicorn capstone` once, then
+  `DISPLAY=:55 python3.12 -W error -m unittest discover -s tests` with the game's files below runs
+  all of it (2,185 tests, 0 skipped, at the 2.19.0 merge).
 - **The unit tests with the game's files** run more: `DSUN_GPLDATA=$G/GPLDATA.GFF
   DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF` (`G=$PLAYTEST_WORK/inst`). With them
   set, only the tests that need tkinter (or a display) are skipped ([the
@@ -384,7 +389,9 @@ game's data: it is one player's account.
   (no Ctrl+F10), and it connects by itself ("Connected to the game (process N)"). `import -window
   root` on that display for a picture; `xdotool mousemove X Y click 1` for its tabs (Journal at
   828,132; the Show box at 775,200, its Quests row 99 below). The window tests' display can be
-  the same one. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
+  the same one. A DOSBox killed under a window that attached by itself shows
+  "Disconnected (Read at ... failed: [Errno 5] Input/output error). Waiting for the game..." (the
+  Reconnect path says "process N has ended"); either way no party table error. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
   `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
   a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so

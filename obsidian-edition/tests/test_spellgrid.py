@@ -50,7 +50,8 @@ class SpellGridTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("DSUN_RESOURCE"), "needs the game's RESOURCE.GFF")
     def test_the_games_window(self):
         """The game's own WIND 17500 is laid out as GAME, and comes out as the grid."""
-        chunks = gff.read_gff(open(os.environ["DSUN_RESOURCE"], "rb").read())
+        with open(os.environ["DSUN_RESOURCE"], "rb") as f:
+            chunks = gff.read_gff(f.read())
         w = chunks[("WIND", spellgrid.WINDOW)]
         self.assertEqual(places(w)[2:], GAME)
         self.assertEqual(places(spellgrid.chunks(chunks)[("WIND", spellgrid.WINDOW)])[2:20],
