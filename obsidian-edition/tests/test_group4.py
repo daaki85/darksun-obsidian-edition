@@ -141,7 +141,8 @@ class SiteTests(unittest.TestCase):
     SEED = 0x4122
 
     def manual(self, on=True):
-        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (MANUAL_ON)."""
+        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (once DSCLOG's
+        MANUAL_ON, the switch's test; the game's copy always has it now, and nothing asks)."""
         self.mu.mem_write(self.RECORDS + 22 * 0x20 + 4, bytes((0x41 if on else 0x61,)))
 
     def combatant(self, thing, creature, kind=0):
@@ -319,10 +320,9 @@ class SiteTests(unittest.TestCase):
         for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
             self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
         self.mu.emu_start(start, 0, count=200000)
-        self.manual(False)
-        self.assertEqual(turn(12, 9), [])  # (without the switch)
-        self.manual(True)
+        self.manual(False)  # (Stinking Cloud's dice as the game's: nothing asks them now, the switch gone)
         self.assertEqual(len(turn(12, 9)), 2)  # (a new fight)
+        self.manual(True)
         # combatants past 64 (map things up to 520: the people the Loader adds are past 256), each its own
         self.assertEqual(len(turn(300, 9)), 2)
         self.assertEqual(turn(300, 9), [])

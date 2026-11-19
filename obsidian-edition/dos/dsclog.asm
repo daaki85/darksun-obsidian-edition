@@ -7637,9 +7637,9 @@ probe_cure:
         cmp ax, HEAL_SPELL      ; Heal (NEW SPELLS: Cure Critical Wounds' handler): every wound
         jne .cures              ;   (the routine that heals stops at the most)
         mov word [bp + 0x0C], 0x7FFF
-        call manual_on          ; ... and, with the spells as the manual has them, Feeblemind (19,
-        jnz .out                ;   no timer: until removed) taken off, the abilities worked out
-        mov dx, [bp + 0x0A]     ;   again after the handler (its flags' 1, 79896h): INT and WIS back
+        mov dx, [bp + 0x0A]     ; ... and (the spells as the manual has them) Feeblemind (19, no
+                                ;   timer: until removed) taken off, the abilities worked out again
+                                ;   after the handler (its flags' 1, 79896h): INT and WIS back
         mov al, FEEBLE_EFFECT
         call drop_effect
         or ah, ah
@@ -15223,9 +15223,9 @@ flame_site:
         pop ax
 .out:   iret
 
-; THE SPELLS AND PSIONICS AS THE MANUAL DESCRIBES THEM, GROUP 3 (gamepatch.SPELLS_MANUAL; each site
-; only in the game's copy with the switch on, so the code needs no test of it, but MANUAL_ON's
-; places in code that runs either way). The dice log's lines: KIND_MANUAL (MN_REC).
+; THE SPELLS AND PSIONICS AS THE MANUAL DESCRIBES THEM, GROUP 3 (gamepatch.SPELLS_MANUAL, always in
+; the game's copy since its switch went: MANUAL_ON, the test of it, gone too). The dice log's lines:
+; KIND_MANUAL (MN_REC).
 KIND_MANUAL equ 14
 MN_CHILL   equ 1                ; (MN_FRAME: +6 the creature, then) Chill Touch on an undead: +8 the
                                 ;   caster, +0Ah the rounds Afraid
@@ -15265,20 +15265,6 @@ mn_rec:
         mov cx, 4
         mov word [cs:kind], KIND_MANUAL
         jmp rec_frame
-
-; MANUAL_ON: ZF set when the game's copy has the spells as the manual describes them, told as the
-; dice log tells it (game.spells_manual) by Stinking Cloud's record's dice made 1d4 (41h, gamepatch's
-; "stinking_cloud_dice"), for code that runs either way. DS the game's; all registers kept.
-manual_on:
-        push es
-        push ax
-        mov ax, ds
-        sub ax, SPELLS_FROM_DS
-        mov es, ax
-        cmp byte [es:SPELL_RECS + STINKING_CLOUD * 0x20 + 4], 0x41
-        pop ax
-        pop es
-        ret
 
 ; BLUR_SITE (gamepatch "blur_save"): the save modifiers' Barkskin test, "les bx,[bp+0Ah] / test
 ; byte [es:bx+7],2 / jz / inc si" (79DC0h; 11 bytes; [BP+0Ah] the target's effects' bits, far; SI the
@@ -15456,12 +15442,10 @@ strength_dice:
 ; GR_SHADOWED: CF set when effect entry ES:BX (the game's table of active effects: BX its index x 10,
 ; AL its number) counts for nothing, as the manual has it: a Strength (67) or an Adrenalin Control
 ; (66) where its creature has a bigger one of either, a Cat's Grace (54) where it has a bigger Cat's
-; Grace (as big: the first counts). With the spells as the manual has them (MANUAL_ON) only. DS the
+; Grace (as big: the first counts). (The spells as the manual has them.) DS the
 ; game's; all registers kept.
 gr_shadowed:
         pusha
-        call manual_on
-        jnz .no
         mov ah, GRACE_EFFECT
         cmp al, ah
         je .group
@@ -15758,7 +15742,7 @@ DUAL_CLASSES equ $ - dual_primes_of
 
 ;-------------------------------------------------------------------------------------------------
 ; THE MONSTERS AS THE MANUAL DESCRIBES THEM (gamepatch.SPELLS_MANUAL, group 4: each site only in the
-; game's copy with the switch on; DJINN_TURN, in code that runs either way, asks MANUAL_ON). The kinds'
+; game's copy, always, since its switch went). The kinds'
 ; properties and classes are the patches' data; kinds 38-40 (no creature of the game's had them) the
 ; Styr's, the Djinn's and the Tari's (the Loader's copy of SEGOBJEX, monsters.MANUAL_MONSTERS).
 ;
@@ -15865,7 +15849,7 @@ tari_bite:
         jmp ns_flags_iret
 
 ; DJINN_TURN: PROBE_MOVE's end, at the start of a creature's turn in a fight (57566h: DI the combatant,
-; SI its creature): a djinn (kind 39) with the monsters as the manual describes them (MANUAL_ON), at its
+; SI its creature): a djinn (kind 39) with the monsters as the manual describes them, at its
 ; first turn of a fight (DJ_DONE), "uses illusions and becomes invisible": Improved Invisibility's
 ; Invisible (23, spell 46) for 4 rounds + its 10 levels, and Mirror Image's Mirror Images (25, spell 19)
 ; 1d4 + 3 (a level in three), on itself through 598:3Eh (76442h), in a frame the overlay manager can fix
@@ -15881,8 +15865,6 @@ djinn_turn:
         sti
         pushad
         push es
-        call manual_on
-        jne .out
         cmp di, MAP_COUNT
         jae .out
         imul ax, si, 0x3A
@@ -22682,7 +22664,6 @@ ef_charges:
         clc
         ret
 ef_charge_word db ' CHARGE', 0
-ef_enlarge_word db '0% DAMAGE)', 0
 ef_enlarge_dice db '0% DICE)', 0
 ef_shut_word db ')', 0
 
