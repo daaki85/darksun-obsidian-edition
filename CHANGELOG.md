@@ -97,6 +97,11 @@ Releases, newest first (2.12.0 and older in the archive):
   triage (no pull request: committed to the branch).
 - **A thief's later attacks in a round after a backstab** are judged on their own (#116): they
   were 2 worse to hit and still counted as from behind, the target's DEX and shield ignored.
+- **Three older Loader bugs** (no pull request yet: branch `claude/older-loader-bugs`): the dice
+  log no longer gives the character being made an age of its own after each roll of the creation
+  screen's die (it now says the screen's AGE once, at DONE); on Linux a DOSBox the Loader's window
+  didn't start is seen to close (it said "Connected" on), and a reload no longer logs "Loader error
+  in the party table" from the closed game's empty memory.
 
 **Docs**
 - **The change records** (#98): shorter patch notes, each release's news in its notes, the
@@ -140,6 +145,9 @@ Releases, newest first (2.12.0 and older in the archive):
 - **The final code audit's fixes** (no pull request yet: branch `claude/final-audit-fixes`): the
   Loader's rules start at the always-on ones and its dead off-branches are gone, the header test
   ties each constant to its own field, temporary files are each writer's own and never left behind.
+- **The last audit's two small items** (no pull request yet: branch `claude/older-loader-bugs`): the
+  stats thread takes its idle step while no game is attached (it looked every millisecond), and
+  `crash-logs` keeps the newest 20 freeze reports. Tests for these and the three bugs above.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 

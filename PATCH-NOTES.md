@@ -164,6 +164,8 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **Options**: switches for the new content and a few rules (hit dice, half-giants' weapons, helms, kits, starting gear), the combat log's level and the red ring, all on by default, and **Restore defaults** sets them back; the rest of the mod is always on.
 - **[New]** **Accessibility**: text up to 2.5 times bigger, every control from the keyboard, 4.5:1 contrast, logs as text ([accessibility](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#accessibility)).
 - **[New]** **The manual in the download**, as web pages that link to each other; the Loader's **Help** button opens it.
+- **[Fixed]** The dice log's age for a character being made could differ from the creation screen's **AGE**: it now gives the screen's age, once you press DONE.
+- **[Fixed]** On Linux, the Loader's window kept saying "Connected to the game" after a game it hadn't started was closed, with an error in the party table: it now says the game has ended.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
