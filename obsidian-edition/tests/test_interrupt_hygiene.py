@@ -165,8 +165,9 @@ class IfFrameTests(Base):
                     self.assertEqual(mu.reg_read(td.r.UC_X86_REG_SP), 0x800)
 
     def test_the_games_code_run_as_the_caller_had_it(self):
-        """PROBE_ADND_SLOTS with its rule off calls the game's slot routine (the INT's return +
-        SLOT_CALL): with interrupts on if the caller had them on, off if off."""
+        """PROBE_ADND_SLOTS for a class with no AD&D table of its own (a psionicist's) calls the game's
+        slot routine (the INT's return + SLOT_CALL): with interrupts on if the caller had them on, off
+        if off."""
         mu = self.mu
         mu.mem_write(VEC_ADND_SLOTS * 4, struct.pack("<HH", self.sym["probe_adnd_slots"], TSR))
         slot_call = 0x5E4C2 - 0x5E242
@@ -176,9 +177,9 @@ class IfFrameTests(Base):
         mu.mem_write(SS * 16 + 0x700, bytes((5, 12)))  # (the level and WIS, at the near pointer)
         for caller_if in (0, IF):
             with self.subTest(caller_if=caller_if):
-                # the arguments pushed (class 2, the pointer 700h, spell level 1), then the INT and
+                # the arguments pushed (class 12, the pointer 700h, spell level 1), then the INT and
                 # its NOPs at CALLER:100h (its way back 102h)
-                mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", 2, 0x700, 1))
+                mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", 12, 0x700, 1))
                 flags = self.run_code(bytes((0xCD, VEC_ADND_SLOTS, 0x90, 0x90, 0x90)), caller_if, esp=0x7FA)
                 noted, = struct.unpack("<H", mu.mem_read(CALLER * 16, 2))
                 self.assertEqual(noted & IF, caller_if)

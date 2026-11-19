@@ -1651,7 +1651,7 @@ class Viewer:
             label = "Thief skills now"
             if known and thief and index < game.PARTY_SIZE and gd.thief_heavy(index):
                 label = "Thief skills now (none in armour that isn't light)"
-            if known and not thief and self.rule_vars["stealth"].get():  # a ranger's, for the stealth rule
+            if known and not thief:  # a ranger's, for the stealth rule (always on)
                 thief, label = gd.ranger_skills_now(index), "Ranger skills now"
             # (before the game loads its item tables, at the menu or creating characters, items read
             # as noise: no equipment then, and attacks from the sheet alone)
@@ -1671,7 +1671,7 @@ class Viewer:
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             age = None
-            if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
+            if known and index < game.PARTY_SIZE:  # (ages: always on)
                 from . import aging
                 try:
                     age = aging.describe(gd.sheet(index))

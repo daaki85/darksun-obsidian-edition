@@ -141,6 +141,15 @@ The kit has driven Dark Sun Recompiled since 2026-11-01.
 
 - 2026-11-08: a failing tests/test_dsclog.py ran over 20 minutes for 323 tests that took 7 s
   passing (each failing emulation runs to its count): a test run that drags means failures.
+- 2026-11-19 (logs/2026-11-19-free-dsclog-room.md): the old and new builds compared in
+  `fountain-user`'s ambush: the rolls weren't the same from one load to the next, so the lines were
+  compared by form. A THAC0 line that looked wrong in the new build (a thief's attack after her
+  backstab, her STR's +2 shown as -2) came out the same on the old build: not the change's. The
+  emulated tests were the closer check: the new tests run on the old `DSCLOG.EXE` with every
+  always-on rule's bit forced set all passed, but those that find a routine by bytes the change
+  had moved.
+- 2026-11-19: in Kalzith's shop a leader changed on the shop screen didn't change the prices (drawn
+  as it opened), and Escape there chose his Farewell, after which `openshop.sh` failed.
 
 ## Two probes on one vector: target AC 255
 

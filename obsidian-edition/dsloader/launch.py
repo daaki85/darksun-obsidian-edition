@@ -166,8 +166,7 @@ def upgrade_settings(settings: dict) -> bool:
     """Bring settings saved by an older Loader up to SETTINGS_VERSION; True if anything changed."""
     if not settings or settings_version(settings) >= SETTINGS_VERSION:
         return False
-    settings["combat_log"] = True
-    settings["settings_version"] = SETTINGS_VERSION
+    settings["settings_version"] = SETTINGS_VERSION  # (version 1's combat log turned on: always on now)
     return True
 
 
@@ -444,9 +443,8 @@ def display_lines(settings: dict) -> List[str]:
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
     sdl = ["[sdl]", "fullscreen=false"]
-    if content(settings)["mouse_start"]:  # (always on now: game.ALWAYS_ON)
-        sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
-        # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
+    sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (the pointer where it starts, mouse_start:
+    # captured, as uncaptured DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
     if scale == 4:
         return sdl + ["output=opengl", "windowresolution=1280x960", "[render]",
                       "aspect=true", "scaler=normal2x", ""]
@@ -566,17 +564,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
     chosen = load_settings(strict=True) if settings is None else settings
     on = content(chosen)
-    from . import game
-    size_rule = game.setting_on(chosen, "creature_size")  # (Hold and Charm Person's texts: always on now)
-    skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
-        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
-        | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
-        | (frozenset() if on["scene_pointer"] else frozenset(gamepatch.SCENE_POINTER)) \
-        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START)) \
-        | (frozenset() if on["steady_pace"] else frozenset(gamepatch.STEADY_PACE))\
-        | (frozenset() if on["party_spread"] else frozenset(gamepatch.PARTY_SPREAD))\
-        | (frozenset() if on["spells_manual"] else frozenset(gamepatch.SPELLS_MANUAL))\
-        | (frozenset() if on["spell_to_hit"] else frozenset(gamepatch.SPELL_TO_HIT))
+    # (every patch group in, but Steady pace's when it is unticked: the others' switches went after
+    # 2.18, game.ALWAYS_ON)
+    skip = frozenset() if on["steady_pace"] else frozenset(gamepatch.STEADY_PACE)
     source = _find_file(game_dir, "DSUN.EXE")
     if source is None:  # (gone since the folder was picked: said, not a TypeError)
         return f"{game_dir} has no DSUN.EXE"
@@ -669,8 +659,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
-            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"],
-                                  on["spells_manual"], size_rule)
+            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE))
             resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
         LEFT_OUT.append(f"the new spells' icons and texts ({icons.RESOURCE_FILE}: {e})")

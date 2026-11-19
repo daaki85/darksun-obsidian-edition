@@ -788,8 +788,8 @@ class SaveTests(unittest.TestCase):
                           "needs 14 (70% to save) -> saved: half damage, 7 of 15"])
 
     def test_save_not_doubled_with_the_rule(self):
-        """With the Loader's rule the game doesn't double the d20, and neither does the log;
-        the target's DEX defensive adjustment counts instead (DEX 16: +2)."""
+        """With the Loader's rule (always on) the game doesn't double the d20, and neither does the
+        log; the target's DEX defensive adjustment counts instead (DEX 16: +2)."""
         log = make_game()
         log.set_rules(game.RULE_NO_DOUBLE)
         self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
@@ -801,9 +801,9 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(self.probe(11, needed=14, spell=FIREBALL)),
                          ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
                           "needs 14 (45% to save) -> failed: full damage, 15"])
-        log.set_rules(0)  # and the mark comes off again
+        log.set_rules(0)  # (the rule's bit clear: the mark stays, the rule always on)
         rules = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF + FIREBALL * game.SPELL_SIZE
-        self.assertFalse(log.guest.mem[rules + 1] & game.CATEGORY_DODGE)
+        self.assertTrue(log.guest.mem[rules + 1] & game.CATEGORY_DODGE)
 
     def damage_formula(self, log, spell, b0, b1, b2):
         rules = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF + spell * game.SPELL_SIZE
@@ -2753,7 +2753,7 @@ class PassTests(unittest.TestCase):
         again."""
         from unittest import mock
         log = make_game()
-        log.combat_log = False
+        log._panel_lines = log._panel_input = lambda *a: None  # (the combat log's panel out of it)
         with mock.patch.object(log, "poll", return_value=["e"]), \
                 mock.patch.object(log, "count_charges"), \
                 mock.patch.object(log, "describe", return_value=["Dag attacks: HIT"]), \
@@ -2771,7 +2771,7 @@ class PassTests(unittest.TestCase):
         from unittest import mock
         from dsloader.process import ProcessError
         log = make_game()
-        log.combat_log = False
+        log._panel_lines = log._panel_input = lambda *a: None  # (the combat log's panel out of it)
         with mock.patch.object(log, "_answer_look", side_effect=KeyError("new")), \
                 mock.patch.object(log, "turn_lines", return_value=["Dag's turn"]):
             out = log._after_rolls(False, 1.0)
@@ -2851,7 +2851,7 @@ class PassTests(unittest.TestCase):
         from collections import deque
         from unittest import mock
         log = make_game()
-        log.combat_log = False
+        log._panel_lines = log._panel_input = lambda *a: None  # (the combat log's panel out of it)
         log.guest.refused = deque(["2 bytes at 0x10 (low memory), from test"], maxlen=200)
         log.guest.refused_total = 1
         with mock.patch.object(log, "poll", return_value=[]), \
@@ -2872,7 +2872,7 @@ class PassTests(unittest.TestCase):
         overran (rolls missed): the next roll from that place starts afresh."""
         from unittest import mock
         log = make_game()
-        log.combat_log = False
+        log._panel_lines = log._panel_input = lambda *a: None  # (the combat log's panel out of it)
         log._dice[(1, 2, 3, 4)] = [5]
         log._save_rolls[(1, 2)] = 17
 
@@ -3168,7 +3168,6 @@ class Audit2Tests(unittest.TestCase):
         struct.pack_into("<H", m, HDR + dicelog.TSR_USE_WHO, 0x30)
         struct.pack_into("<H", m, HDR + dicelog.TSR_USE_SEQ, 1)
         struct.pack_into("<H", m, HDR + dicelog.TSR_USE_TAKEN, 7)
-        log.pickpockets = True
 
         def give_up(gd):  # (the gate's wait: DSCLOG's time ran out meanwhile)
             struct.pack_into("<H", m, HDR + dicelog.TSR_USE_REPLY, 1)

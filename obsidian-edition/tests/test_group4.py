@@ -82,10 +82,10 @@ class SiteTests(unittest.TestCase):
         self.assertIn(("dual_class", game.RULE_DUAL_CLASS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_dual_level(self):
-        """DUAL_LEVEL: "cmp byte [es:bx+24h],2" (the sheet's first level), 3 with RULE_HI_DUAL; the
-        menus' "jl" (no DUAL) and the window's "jnl" (on)."""
+        """DUAL_LEVEL: "cmp byte [es:bx+24h],2" (the sheet's first level) made 3 (RULE_HI_DUAL, always
+        on: its bit clear the same); the menus' "jl" (no DUAL) and the window's "jnl" (on)."""
         sheet = SHEETS * 16 + 0x100
-        for rule, level, menu in ((0, 1, False), (0, 2, True), (0, 3, True), (2048, 2, False), (2048, 3, True),
+        for rule, level, menu in ((0, 1, False), (0, 2, False), (0, 3, True), (2048, 2, False), (2048, 3, True),
                                   (2048, 9, True)):
             self.rules_hi(rule)
             self.mu.mem_write(sheet + 0x24, bytes((level,)))
@@ -97,20 +97,18 @@ class SiteTests(unittest.TestCase):
         self.mu.mem_write(CREATURES * 16 + member * 0x3A + 0x22, bytes(values))
 
     def test_dual_primes(self):
-        """DUAL_PRIMES: the game's one compare at ES:BX + 22h without the rule; with it every prime
-        requisite of the class (tracker.PRIME_REQUISITES): the old class's (the sheet's +21h) all 15+,
+        """DUAL_PRIMES: every prime requisite of the class (the rule always on: its bit clear the same;
+        the game's one compare at ES:BX + 22h gone with the switch) (tracker.PRIME_REQUISITES): the old class's (the sheet's +21h) all 15+,
         the new one's (DI) all 17+, on the creature's scores; "jl" taken when one is short."""
         member = 2
         self.mu.mem_write(SHEETS * 16 + member * 0x47 + 0x21, bytes((13, 0, 0)))  # (a ranger)
         creature = member * 0x3A
-        # without the rule: the byte the game's table points at (here WIS, +4)
+        # the rule's bit clear: as on (WIS 15 alone, the game's one compare, no longer enough)
         self.rules_hi(0)
         self.scores(member, 3, 3, 3, 3, 15, 3)
-        self.assertFalse(self.jumps("dual_old_prime", es=CREATURES, ebx=creature + 4, esi=member))
-        self.scores(member, 3, 3, 3, 3, 14, 3)
         self.assertTrue(self.jumps("dual_old_prime", es=CREATURES, ebx=creature + 4, esi=member))
-        self.scores(member, 3, 3, 3, 3, 17, 3)
-        self.assertFalse(self.jumps("dual_new_prime", es=CREATURES, ebx=creature + 4, esi=member, edi=12))
+        self.scores(member, 15, 15, 3, 3, 15, 3)
+        self.assertFalse(self.jumps("dual_old_prime", es=CREATURES, ebx=creature + 4, esi=member))
         # with the rule: a ranger's STR, DEX and WIS all 15+
         self.rules_hi(2048)
         for values, short in (((15, 15, 3, 3, 15, 3), False), ((14, 15, 3, 3, 15, 3), True),
@@ -143,7 +141,8 @@ class SiteTests(unittest.TestCase):
     SEED = 0x4122
 
     def manual(self, on=True):
-        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (MANUAL_ON)."""
+        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (once DSCLOG's
+        MANUAL_ON, the switch's test; the game's copy always has it now, and nothing asks)."""
         self.mu.mem_write(self.RECORDS + 22 * 0x20 + 4, bytes((0x41 if on else 0x61,)))
 
     def combatant(self, thing, creature, kind=0):
@@ -321,10 +320,9 @@ class SiteTests(unittest.TestCase):
         for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
             self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
         self.mu.emu_start(start, 0, count=200000)
-        self.manual(False)
-        self.assertEqual(turn(12, 9), [])  # (without the switch)
-        self.manual(True)
+        self.manual(False)  # (Stinking Cloud's dice as the game's: nothing asks them now, the switch gone)
         self.assertEqual(len(turn(12, 9)), 2)  # (a new fight)
+        self.manual(True)
         # combatants past 64 (map things up to 520: the people the Loader adds are past 256), each its own
         self.assertEqual(len(turn(300, 9)), 2)
         self.assertEqual(turn(300, 9), [])
@@ -448,20 +446,21 @@ class SiteTests(unittest.TestCase):
         """REST_PRE (80675h, the rest's first move: [BP+6] the mode): with RULE_HI_REST, mode 0 and no
         fight, the casts through 5B8:20h with 809A2h's arguments: Neutralize Poison on the Poisoned, Cell
         Adjustment on the Diseased, then the most wounded after natural healing, the cure that fits;
-        slots and PSP taken; the move made either way; nothing with the rule off or mode 1."""
+        slots and PSP taken; the move made either way; nothing in mode 1 (the rule always on: its bit
+        clear casts too)."""
         self.party()
         self.priests()
         self.effects((1, 35), (3, 13))  # (member 1 Poisoned, member 3 Diseased)
         fight = (GAME_DS - (0x4356 - 0x377E)) * 16 + 0x19
         self.mu.mem_write(fight, bytes(2))
-        for rules, mode in ((0, 0), (4096, 1)):
+        for rules, mode in ((0, 1), (4096, 1)):
             self.rules_hi(rules)
             self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", mode))
             self.mu.mem_write(SS * 16 + BP - 0x10, struct.pack("<H", 0x5555))
             self.site("rest_spells")
             self.assertEqual(struct.unpack("<H", self.mu.mem_read(SS * 16 + BP - 0x10, 2))[0], 0)
             self.assertEqual(self.logged(0x600, 0x5FE, 3), [])
-        self.rules_hi(4096)
+        self.rules_hi(0)
         self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 0))
         kept = bytes(self.mu.mem_read(CREATURES * 16 + 3 * 0x3A, 0x3A))
         self.mu.mem_write(CREATURES * 16 + 3 * 0x3A + 0x24, bytes((17,)))
@@ -487,7 +486,7 @@ class SiteTests(unittest.TestCase):
 
     def test_rest_hp(self):
         """REST_HP (808AFh, "mov [es:bx],ax": ES:BX the creature, AX the most, SI the member): the most
-        without the rule or in mode 1; with it 3 + CON's part (a warrior's, else at most +2), at most the
+        in mode 1; else (the rule always on, its bit clear too) 3 + CON's part (a warrior's, else at most +2), at most the
         most, no less than before nor 1; recorded (kind 15, 2)."""
         self.party()
         mu = self.mu
@@ -501,7 +500,7 @@ class SiteTests(unittest.TestCase):
             self.site("rest_hp", es=CREATURES, ebx=member * 0x3A, eax=most, esi=member)
             self.assertEqual((self.reg("ax"), self.reg("bx"), self.reg("si")), (most, member * 0x3A, member))
             return struct.unpack("<h", mu.mem_read(c, 2))[0]
-        self.assertEqual(rest(0, 0, 1, 20), 40)
+        self.assertEqual(rest(0, 0, 1, 20), 25)
         self.assertEqual(rest(4096, 1, 1, 20), 40)
         self.assertEqual(rest(4096, 0, 1, 20), 25)  # (3 + 2 at CON 16)
         self.assertEqual(self.entry(), (15, 2, 1, 20, 2, 25))

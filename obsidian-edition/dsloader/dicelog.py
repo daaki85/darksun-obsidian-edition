@@ -548,14 +548,10 @@ class DiceLog:
         self._talk: Optional[dict] = None  # the conversation on screen: its portraits and who it's with
         self.monster_info = True  # monsters' defences in the game's Look box (set_monster_info)
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
-        self.pickpockets = True  # a thief's Pick Pockets button (pickpocket.py)
-        self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
-        self.show_shadows = True  # shadows under the figures on the map (shadows.py)
-        self._shadows = shadows.Shadows()
-        self.combat_log = True  # (on, as the Options tab has it) the combat log's panel in the game, in a fight (combatlog.py)
+        self._shadows = shadows.Shadows()  # shadows under the figures on the map (shadows.py)
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
-        self._panel = combatlog.Panel()
+        self._panel = combatlog.Panel()  # the combat log's panel in the game (combatlog.py)
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
         self._poison_doses: Set[int] = set()  # (a Poisoner's weapons that poisoned this fight: member, + 4 the off hand)
         self._quiver_kind: Dict[int, bytes] = {}  # each party archer's last quiver stack (quiver.py: "Out of arrows")
@@ -567,22 +563,15 @@ class DiceLog:
         self._font_tried = False  # ... the game's font looked for (none: the panel without lines)
         self.game_dir: Optional[str] = None  # the game's folder (its font)
         self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
-        self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
-        self.see_through = True  # the hidden and the invisible drawn see-through (ghost.py)
-        self._ghosts = ghost.Ghosts()
-        self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
-        self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
+        self._ghosts = ghost.Ghosts()  # the hidden and the invisible drawn see-through (ghost.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
-        self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
-        self._dust = dust.Dust()
+        self._dust = dust.Dust()  # dust raised by walkers on sand and dirt (dust.py)
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
-        self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
-        self._targeting = targeting.Targeting()
-        self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
-        self._scrolling = scrolling.Scrolling()
+        self._targeting = targeting.Targeting()  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
+        self._scrolling = scrolling.Scrolling()  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
@@ -740,7 +729,7 @@ class DiceLog:
         self.set_record_everything(self.record_everything)
         self.set_monster_info(self.monster_info)
         self.set_rules(self.rules)
-        self.set_pickpockets(self.pickpockets)
+        self.set_pickpockets()
         self._look_seq = struct.unpack("<H", self.guest.read(hdr + TSR_LOOK_SEQ, 2))[0]
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
         self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
@@ -767,13 +756,11 @@ class DiceLog:
             packed = b"".join(bytes([len(f)]) + f.ljust(8, b"\0") for f in filters)
             self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
 
-    def set_pickpockets(self, on: bool) -> None:
-        """Picking pockets (ON): a thief's Pick Pockets button on the USE screen. Items used on the
-        map are asked about either way (the cooked vulture)."""
-        self.pickpockets = on
+    def set_pickpockets(self) -> None:
+        """A thief's Pick Pockets button on the USE screen (always: its switch went after 2.18), and
+        items used on the map asked about (the cooked vulture)."""
         if self.tsr_hdr is not None:
-            flags = USE_ASK | (PICK_BUTTON if on else 0)
-            self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
+            self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", USE_ASK | PICK_BUTTON))
 
     def load_picked(self, entries, known: bool = True) -> None:
         """The pockets tried, as remembered (settings.json): "key@game time" (or a bare key, from
@@ -883,8 +870,7 @@ class DiceLog:
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
             it = ring.Items(self.game)
             kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
-            if spellarrows.ARROWS_BY <= item < 0xFFFF and (item < PICKED_BY or self.pickpockets) \
-                    and not self._fighting():
+            if spellarrows.ARROWS_BY <= item < 0xFFFF and not self._fighting():
                 # (the gate held, DOSBox paused, before anything is moved: then DSCLOG's answer
                 # looked at again. One it gave up waiting for (PICK_WAIT, the game gone its own
                 # way) is dropped, nothing moved and no pocket marked tried)
@@ -901,7 +887,7 @@ class DiceLog:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
                     if result and not result.text:  # (made: the spell's own cast sound, as it is cast,
                         cast = spellarrows.cast_sound(self.game, thing)  # by DSCLOG with the answer)
-            elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
+            elif PICKED_BY <= item < 0xFFFF:
                 taken = True
                 if self._fighting():
                     result = pickpocket.Attempt(pickpocket.NOT_IN_A_FIGHT, [])
@@ -987,10 +973,10 @@ class DiceLog:
 
     def _locks_pass(self) -> None:
         """DSCLOG's LOCK_BARRED: the locks each member failed at its thief level now (locks.py), with
-        Thieves as in AD&D; none without it."""
+        Thieves as in AD&D (always on)."""
         if self.tsr_hdr is None:
             return
-        rows = locks.barred(self.game, self.picked) if self.game.rules & game.RULE_THIEF_TABLE else []
+        rows = locks.barred(self.game, self.picked)
         data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
         if data != self._locks_written:
             locks.write(self.game, self.tsr_hdr, data[1])
@@ -1008,10 +994,8 @@ class DiceLog:
         saved file (it couldn't be read), so its pockets list isn't either (load_picked)."""
         self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
-        # (the switches gone from the Options tab, game.ALWAYS_ON: on whatever the settings say)
-        self.pickpockets = self.show_gear = self.show_shadows = self.combat_log = self.scroll_map = True
-        self.show_dust = self.see_through = self.elf_looks = self.cilla_elf = self.stealth_gear = True
-        self.use_targeting = True
+        # (the switches gone from the Options tab, game.ALWAYS_ON: on whatever the settings say, so
+        # nothing here for them)
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.starting_gear = bool(settings.get("starting_gear", True))
         self.floating_names = bool(settings.get("floating_names", True))
@@ -1031,16 +1015,14 @@ class DiceLog:
         save is the game's own table, written here."""
         self.rules = rules
         game.RULES_IN_FORCE = rules
-        game.BELT_IN_FORCE = self.stealth_gear
+        game.BELT_IN_FORCE = True  # (a worn belt's bonus: the Stealth gear switch's, gone after 2.18)
         if self.game is not None:
             self.game.rules = rules
-            self.game.belt = self.stealth_gear
+            self.game.belt = True
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + TSR_RULES, struct.pack("<H", rules & 0xFFFF))
             self.guest.write(self.tsr_hdr + TSR_RULES_HI, struct.pack("<H", rules >> 16 & 0xFFFF))
-            skills = (SKILLS_STEALTH if rules & game.RULE_STEALTH and self.stealth_gear else 0) \
-                | (SKILLS_BELT if self.stealth_gear else 0) \
-                | (SKILLS_ELVEN if rules & game.RULE_STEALTH else 0)  # (the hiding rule's cloak and boots; the belt's own)
+            skills = SKILLS_STEALTH | SKILLS_BELT | SKILLS_ELVEN  # (the hiding rule's cloak and boots; the belt's own: always)
             self.guest.write(self.tsr_hdr + TSR_SKILLS_ON, struct.pack("<H", skills))
             table = self.game.ds * 16 + game.SAVE_KINDS if self.game is not None else None
             # (only over the game's own table: kind 5 is petrification/polymorph or, so far, the spell save)
@@ -1049,7 +1031,7 @@ class DiceLog:
                 save = game.kind_to_save(game.SPELL_KIND, rules)
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
-                self.game.set_dodge(bool(rules & game.RULE_NO_DOUBLE))
+                self.game.set_dodge(True)  # (RULE_NO_DOUBLE, always on)
 
     def monster_ac(self, index: int) -> Optional[int]:
         """The AC the game last computed for creature INDEX, if it was this creature's: a fight
@@ -1628,10 +1610,9 @@ class DiceLog:
                 out.append(f"({self.missed} rolls came too fast to record)")
             self.missed = 0
         try:
-            if self.combat_log and out:
+            if out:
                 self._panel_lines(out, now)
-            if self.combat_log:
-                self._panel_input(now)
+            self._panel_input(now)
         except Exception as e:
             out += self._error_once(e)
         self.itemwatch.remember(out)  # (the context an item report carries)
@@ -1750,13 +1731,11 @@ class DiceLog:
         out: List[str] = []
         quiet = lambda fn: self._step(fn, quiet=True)
         new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
-        if self.cilla_elf:
-            out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
+        out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
         # (the Styr, the Djinn and the Tari of a saved game as the game's copy has them: monsters.mend)
         quiet(lambda: monsters.mend(self.game, self.game.spells_manual()))
         # (the slave pens' and the world's new items are in the game's data: worldgear.py)
-        if self.stealth_gear:
-            quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
+        quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
         quiet(lambda: kalzith.stock(self.game, new_spells))  # (once a game, by its flag)
         quiet(lambda: semyon.watch(self.game))  # (killed: never put in the pens)
         quiet(lambda: kurzak.watch(self.game))  # (Legcrusher killed: Kurzak's lines about him missing)
@@ -1805,19 +1784,18 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
         try:
-            self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
-                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
-                                 or self.see_through)
+            self._shadows.update(self.game, self.tsr_hdr, True, now, needed=True)  # (the dust, the
+            # combat log and the see-through figures need its palettes: always on)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
             foes = rings.enemies(self.game)
-            out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
+            out = self._targeting.update(self.game, self.tsr_hdr, True, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
-            self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
+            self._dust.update(self.game, self.tsr_hdr, True, self._shadows.palettes)
             hdr = self.tsr_hdr
-            self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
+            self._ghosts.update(self.game, hdr, True, self._shadows.palettes,
                                 lambda: shadows.redraw(self.game, hdr))
         except (struct.error, IndexError, ValueError):
             return []
@@ -1850,7 +1828,7 @@ class DiceLog:
         panel = self._panel
         if not panel.shown:  # (L with the panel over the map hidden: show it)
             try:
-                if panel.keys(self.game, self.tsr_hdr) and self.combat_log:
+                if panel.keys(self.game, self.tsr_hdr):
                     panel.open = True
                     _remember({"combat_log_open": True})
                     self._update_panel(now)
@@ -1877,13 +1855,13 @@ class DiceLog:
     def _update_panel(self, now: float) -> None:
         """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
-        fighting = self.combat_log and self.game.in_combat()
+        fighting = self.game.in_combat()
         if fighting:
             if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self.combat_log and self._panel.open
+        on = self._panel.open
         top, names = "", {}
         if on:
             if not self._font_tried:
@@ -1972,7 +1950,7 @@ class DiceLog:
         if self.tsr_hdr is None:
             return
         try:
-            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map)
+            self._scrolling.update(self.game, self.tsr_hdr, True)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -1995,12 +1973,12 @@ class DiceLog:
             import os
             copy = os.path.join(launch.DOS_DIR, icons.OBJECTS_FILE)
             self._dresser = sprites.Dresser.for_game(self.game, launch.find_game_dir(),
-                                                     copy if os.path.exists(copy) else None, self.elf_looks)
+                                                     copy if os.path.exists(copy) else None)
             if self._dresser is not None and self.tsr_hdr is not None:
                 hdr = self.tsr_hdr
                 self._dresser.request_redraw = lambda: shadows.redraw(self.game, hdr)
-        if self._dresser is not None and (self.show_gear or self._dresser.shown):
-            self._dresser.update(self.show_gear, now)
+        if self._dresser is not None:
+            self._dresser.update(True, now)
 
     def _ring_search(self) -> List[str]:
         """While the arena's ring is still to be found: have DSCLOG show ring.SEARCH_TEXT instead
@@ -2599,9 +2577,9 @@ class DiceLog:
             #             just after a fight looked like a new turn, and a thief rolled its hiding)
         name = self.game.combatant_name(turn)
         out = [f"{name}'s turn"] if name != "?" else []
-        if self.rules & game.RULE_STEALTH and turn < game.PARTY_SIZE:
+        if turn < game.PARTY_SIZE:
             try:
-                lines, hidden = stealth.turn(self.game, turn, self.stealth_roll, self.stealth_gear)
+                lines, hidden = stealth.turn(self.game, turn, self.stealth_roll, True)
             except (struct.error, IndexError, ValueError):
                 lines, hidden = [], False
             out += lines
@@ -2643,7 +2621,7 @@ class DiceLog:
             self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, now)
             if hidden:
                 self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.HIDE_SOUND))
-            if now != was and self.see_through:
+            if now != was:
                 shadows.redraw(self.game, self.tsr_hdr)  # (drawn see-through, or no longer)
 
     def round_status(self, acted_creatures: frozenset = frozenset()) -> Optional[dict]:
@@ -3007,8 +2985,7 @@ class DiceLog:
         if chance <= -500:  # the game takes 1000 off when an effect makes it impossible
             return [f"{head} -> failure (an effect stops it)"]
         head += f", needs {chance} or less -> {'success' if roll <= chance else 'failure'}"
-        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE \
-                and self.game.rules & game.RULE_THIEF_TABLE:  # (no other try till a level is gained)
+        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE:  # (no other try till a level is gained)
             failed = locks.failed_key(self.game, who)
             if failed is not None:
                 self._remember_pick(failed)
@@ -3032,7 +3009,7 @@ class DiceLog:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
         if luck:
             steps.append(f"-{luck} Swashbuckler's bad luck")
-        capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
+        capped = rest < 0 and chance - bonus == game.THIEF_MOST  # (AD&D's most: Thieves as in AD&D, always on)
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")
         if rest and not capped:  # the only other part of the chance: the equipment penalty
