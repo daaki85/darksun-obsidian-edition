@@ -556,7 +556,7 @@ class ArenaHeaderTests(unittest.TestCase):
         game has shown it (kept from the slave pens too), until then the time, as everywhere else."""
         from test_now import dag
         log = dag()
-        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        log._panel.open, log._font_tried = True, True
         log._map_up = lambda: True
         g = log.game
         region, number = [0x2A], [None]

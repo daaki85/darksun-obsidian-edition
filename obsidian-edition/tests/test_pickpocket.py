@@ -170,13 +170,15 @@ class PickTests(unittest.TestCase):
         self.assertEqual((result.xp_to, result.xp), (0, pickpocket.SWORD_XP))
 
     def test_caught(self):
+        """Caught: the game's rules (the rules' bits clear) gate another try by the thief's level all
+        the same (Thieves as in AD&D, always on)."""
         result = self.attempt(12, 17)  # pick pockets 11, move silently 16
         self.assertFalse(result.lifted)
-        self.assertEqual(result.text, "Guard catches Dag's hand! Guard will be too wary for Dag to try again.")
+        self.assertEqual(result.text, "Guard catches Dag's hand!")
         self.assertEqual(self.guard_items(), [CLUB, SWORD, KEY, BOOTS])
         self.assertIn("moves silently to get away: d100 = 17, needs 16 or less -> failed", result.log[1])
         self.tried.add(result.key)  # (as the dice log does)
-        self.assertEqual(self.attempt(1).text, "Guard keeps a close hand on their purse now: Dag won't get another chance.")
+        self.assertEqual(self.attempt(1).text, "Guard remembers Dag, and keeps a close hand on their purse.")
 
     def test_slips_away(self):
         """Unnoticed: he may try again."""
@@ -299,17 +301,15 @@ class ToolsTests(unittest.TestCase):
 
 class SwitchTests(unittest.TestCase):
     def test_switch(self):
-        """DSCLOG's switch: items used on the map asked about (bit 0) either way, the Pick
-        Pockets button (bit 1) with picking pockets on."""
+        """DSCLOG's switch: items used on the map asked about (bit 0), and the Pick Pockets button
+        (bit 1) always (picking pockets' switch gone after 2.18)."""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from test_dicelog import HDR, make_game
         from dsloader import dicelog
         log = make_game()
         flags = lambda: struct.unpack("<H", log.guest.read(HDR + dicelog.TSR_PICK_ON, 2))[0]
-        log.set_pickpockets(True)
+        log.set_pickpockets()
         self.assertEqual(flags(), dicelog.USE_ASK | dicelog.PICK_BUTTON)
-        log.set_pickpockets(False)
-        self.assertEqual(flags(), dicelog.USE_ASK)
 
 
 class ListTests(unittest.TestCase):

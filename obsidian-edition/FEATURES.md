@@ -1326,8 +1326,8 @@ The Effects screen (Current Spell Effects) shows more in its lower panel and und
   specs, a page at a time ([changing class](KITS.md#changing-class) has pictures).
 - **Charges left**, with the pointer on a spell that lasts a number of uses: IMPROVED AC (4 CHARGES)
   for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
-- **Enlarge's damage**: ENLARGED (+90% DICE) from a 9th-level caster with [the
-  rule](#enlarge-multiplies-the-weapons-dice-only), (+90% DAMAGE) without it. The inventory's
+- **Enlarge's damage**: ENLARGED (+90% DICE) from a 9th-level caster ([the
+  rule](#enlarge-multiplies-the-weapons-dice-only)). The inventory's
   damage doesn't count it; each hit's dice log line does. A second Enlarge on someone enlarged adds
   nothing.
 - **The armour spells' AC**: BARKSKIN (AC 3) from a 12th-level druid (Barkskin 6 less a quarter of

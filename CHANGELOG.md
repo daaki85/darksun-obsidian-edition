@@ -86,7 +86,8 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
   field `SQUARES_ON` +1890, signature `DSCLOGve`). **DSCLOG's room**: #112 left 224 bytes of the
   segment and 36 paragraphs of upper memory, less than quick save and the squares needed, so their
   two long routines run from the tail (`TAIL_CALL`: code in the tail is new) and the squares' map
-  lies in DSCLOG's own PSP: 71,440 bytes, 48 bytes and 1 paragraph left.
+  lies in DSCLOG's own PSP (71,440 bytes then, 48 bytes and 1 paragraph left). With the room #115
+  freed: 70,256 bytes, 1,232 bytes of the segment and 75 paragraphs of upper memory left.
 - **The chance to hit under the pointer**: on a party member's turn the roll needed and the chance
   float over the enemy the game's pointer rests on (`hover.py`; DSCLOG unchanged).
 - **R hides and shows the squares in reach**, the owner's request: on the map in a fight, kept in
@@ -178,6 +179,10 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
   a branch with `-2` on it for a session's handed random name.
 - **Tidying** (#102): `dsloader/guidepage.py` taken out, the combat log's design brief archived,
   the rest-order prototype moved to `playtest/logs/files/`.
+- **DSCLOG's room freed** (no pull request yet: branch `claude/free-dsclog-room`): the off paths of
+  the switches always on since #110 taken out of DSCLOG (their rules' tests, the game's ways behind
+  them, `MANUAL_ON`) and of the Loader, about 1.1 KB freed for what comes next; the rules switched
+  still are kept.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 

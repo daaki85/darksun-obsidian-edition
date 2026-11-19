@@ -115,8 +115,8 @@ class SizeTests(tc.CahulaksTests):
     def test_large_dice(self):
         """SIZE_DICE: a long sword's 1d12 on a large target (the Loader's bit), a mace's 1d6 (its +1 off),
         an axe as it was; on a smaller one as they were; Shillelagh 1d6+1 on a smaller one and its 2d4
-        on a large one; the Spiritual Hammer 1d4 on a large one; only the call's first swing, an item,
-        and the rule on."""
+        on a large one; the Spiritual Hammer 1d4 on a large one; only the call's first swing and an item
+        (the rule always on: its bit clear the same)."""
         self.target(thing=20, race=1)
         self.large(20)
         self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
@@ -125,7 +125,8 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.dice(STAFF, count=1, sides=6), (1, 6, 0))  # (no large dice of its own)
         self.assertEqual(self.dice(sizes.SHILLELAGH_TYPE), (2, 4, 0))
         self.assertEqual(self.dice(sizes.HAMMER_TYPE, count=1, sides=4, bonus=1), (1, 4, 0))
-        for change in (dict(rules=0), dict(index=1), dict(item=-1)):
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8, rules=0), (1, 12, 0))
+        for change in (dict(index=1), dict(item=-1)):
             self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8, **change), (1, 8, 0), change)
         self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8, index=2, made=2), (1, 12, 0))
         self.large(20, False)
@@ -136,7 +137,7 @@ class SizeTests(tc.CahulaksTests):
     def test_grand_master_on_large(self):
         """A grand master's large dice a die larger too (Player's Option: Combat & Tactics: a long
         sword 1d20 against a large target): the attacker's sheet ([BP+10h]) a 9th-level fighter of
-        the long sword, the rule RULE_SPECIALIZE on; a master's (5th) and with the rule off as ever."""
+        the long sword; a master's (5th) as ever; and the rule's bit clear the same (always on)."""
         from dsloader import game as g
         self.target(thing=20, race=1)
         self.large(20)
@@ -155,7 +156,7 @@ class SizeTests(tc.CahulaksTests):
         sheet[0x24] = 9
         self.mu.mem_write(attacker, bytes(sheet))
         self.mu.mem_write(self.hdr + 170, struct.pack("<H", 0))
-        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=10), (1, 20, 0))
 
     def test_what_is_large(self):
         """IS_LARGE: the Loader's bit, a half-giant (its race), or Enlarged (the game's effect 16)."""
@@ -191,7 +192,7 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.save(30, 32), 110)
         self.assertEqual(self.save(82, 32), 12)
         self.assertEqual(self.save(63, 30), 12)
-        self.assertEqual(self.save(30, 30, rules=0), 12)
+        self.assertEqual(self.save(30, 30, rules=0), 110)  # (the rule's bit clear: as on)
 
     def line(self, text, kind, box=True, rules=RULE, x=0xEC):
         """SIZE_LINE after a damage line TEXT for a weapon of type KIND (the box's: no creature; else
@@ -213,15 +214,15 @@ class SizeTests(tc.CahulaksTests):
     def test_damage_lines(self):
         """SIZE_LINE: an item box's damage line drawn again with the large dice after a slash
         (Shillelagh's 2D4 after the 1D6+1 SIZE_PRE made); nothing on the inventory screen or in the
-        Look box, for a weapon whose large dice are its own, or with the rule off."""
+        Look box, or for a weapon whose large dice are its own; the rule's bit clear as on."""
         self.assertEqual(self.line("1D8-1", LONG_SWORD), ("1D8-1/1D12-1", 2, 1, 50))
         self.assertEqual(self.line("1D6+1", MACE)[0], "1D6+1/1D6")
         self.assertEqual(self.line("1D4+1", sizes.HAMMER_TYPE)[0], "1D4+1/1D4")
         self.assertEqual(self.line("1D6+12", MACE)[0], "1D6+12/1D6+11")
         self.assertEqual(self.line("1D6+1", sizes.SHILLELAGH_TYPE)[0], "1D6+1/2D4")
         self.assertEqual(self.line("1D8+7", LONG_SWORD, box=False)[:3], ("1D8+7", 2, 0))
-        for text, kind, rules in (("1D6", STAFF, RULE), ("1D8", LONG_SWORD, 0)):
-            self.assertEqual(self.line(text, kind, rules=rules)[:3], (text, 2, 0), (text, kind))
+        self.assertEqual(self.line("1D6", STAFF)[:3], ("1D6", 2, 0))
+        self.assertEqual(self.line("1D8", LONG_SWORD, rules=0)[:2], ("1D8/1D12", 2))
 
     def test_line_interrupts(self):
         """SIZE_LINE calls the game's text routine with interrupts on (the INT turned them off; the
@@ -261,13 +262,13 @@ class SizeTests(tc.CahulaksTests):
 
     def test_line_before(self):
         """SIZE_PRE: the push made ([BP+12h]); Shillelagh's 2D4 made 1D6+1 (the rate kept) in the
-        box, the inventory and the Look box; another weapon's line as it was; nothing with the rule
-        off."""
+        box, the inventory and the Look box; another weapon's line as it was; the rule's bit clear as
+        on."""
         self.assertEqual(self.pre("1D8+7", LONG_SWORD), ("1D8+7", 0x2F, 0x1234, 0x7FE))
         self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, box=True)[:2], ("1D6+1", 0x2F))
         self.assertEqual(self.pre("1.5x2D4+2", sizes.SHILLELAGH_TYPE)[:2], ("1.5x1D6+3", 0x2F))
         self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, x=0x50)[0], "1D6+1")
-        self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, rules=0)[:2], ("2D4", 0x2F))
+        self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, rules=0)[:2], ("1D6+1", 0x2F))
 
     def test_line_patch(self):
         for name, offset, original, site in (("size_line", 0x72AA7, "ff46fe", gamepatch.SIZE_LINE_SITE),

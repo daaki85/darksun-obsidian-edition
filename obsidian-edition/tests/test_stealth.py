@@ -280,14 +280,17 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + stealth.TSR_STEALTH)[0], 0)
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_SOUND_REQ)[0], 0xFFFF)  # (no sound)
 
-    def test_rule_off(self):
+    def test_rule_bit_clear(self):
+        """The stealth rule always on: its bit clear in the rules, a thief's turn still rolls its hiding."""
         log = self.log
         log.rules = 0
         set_clock(log, 600)
         log._round_time = 600
         fight_on(log)
         struct.pack_into("<h", self.m, DS * 16 + game.WHOSE_TURN, 0)
-        self.assertEqual(log.turn_lines(), ["Dag's turn"])
+        lines = log.turn_lines()
+        self.assertEqual(lines[0], "Dag's turn")
+        self.assertTrue(lines[1].startswith("Dag hides in shadows: d100 = "), lines)
 
 
 class GearPriceTests(unittest.TestCase):

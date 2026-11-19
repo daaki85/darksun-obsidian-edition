@@ -145,3 +145,18 @@ display or mouse). "Connected to the game".
   were not looked at; the bout itself was fought through on this helper.
 
 Water: none new (the arena has none: ROUTE.md).
+
+## After #115 (2026-11-19): the base merged in
+
+`obsidian-edition` gained #115 (the always-on switches' off paths out of DSCLOG and the Loader,
+about 1.1 KB freed) while the pull request waited; it was merged into this branch. `dsclog.asm`
+merged with no conflict (checked all the same: `test_header_offsets` passes, the signature stays
+`DSCLOGve`); the Loader's conflicts were where #115 took out the switches our code passed along
+(`combat_log`, `use_targeting`, `show_dust`, `show_shadows`), kept as theirs with our additions.
+DSCLOG.EXE rebuilt: 70,256 bytes, 1,232 bytes of the segment and 75 paragraphs of upper memory
+spare (48 bytes and 1 paragraph before).
+
+Seen on the merged build (DOSBox 0.74-3, no memory edit): `buildcheck.py` OK in
+`pens-after-arena` and in `fountain-user`'s ambush; F5 wrote `SAVQ01.SAV` ("Quick - Day 1,
+00:21": the routine that runs from the tail); the squares in reach drawn on Lex's turn (the pass
+that runs from the tail). 2,183 tests with the game's files; the window tests pass.

@@ -227,28 +227,30 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C9FFh | 8 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 70.0 KB (71,664 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush with the map open (`fountain-user`, this build): 24,576 bytes free in one piece, between the overlay buffer and the see-through tables, 144 bytes below DSCLOG (above DOSBox's tables) and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-modernisation-features.md); 25,136 before quick save and the squares in reach, [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-docs-review-2.md)) |
+| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 68.8 KB (70,480 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in the slave pens with the map open (`pens-after-arena`, this build): 26,304 bytes free in one piece, between the overlay buffer and the see-through tables, 144 bytes below DSCLOG (above DOSBox's tables) and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-19-free-dsclog-room.md)) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 71,440
-bytes: the 32-byte header, the segment's image of 65,488 and the tail's 5,920 (`TAIL_BYTES`).
-Quick save and the squares in reach together took 176 bytes of the segment and 384 of the tail:
-their header fields, `QS_KEY`, `TAIL_CALL`, the stubs of `SAVE_TICK` and `TINT_PASS` and
-`RING_PX`'s table word in the segment; `SAVE_TEXT` (112 bytes) and the two routines' code
-(`SAVE_FAR`, `TINT_FAR`: [code in the tail](#dsclogs-segment)) in the tail; the squares' map
-(`SQ_MAP`, 130 bytes) in DSCLOG's PSP, which costs nothing. The segment and upper memory are
-all but full: 48 bytes and one paragraph.
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,256
+bytes: the 32-byte header, the segment's image of 64,304 and the tail's 5,920 (`TAIL_BYTES`). The
+always-on switches' off paths, taken out on 2026-11-19, freed 1,168 bytes of the segment ([the
+switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)). Quick save and the squares in
+reach together took 176 bytes of the segment and 384 of the tail: their header fields, `QS_KEY`,
+`TAIL_CALL`, the stubs of `SAVE_TICK` and `TINT_PASS` and `RING_PX`'s table word in the segment;
+`SAVE_TEXT` (112 bytes) and the two routines' code (`SAVE_FAR`, `TINT_FAR`: [code in the
+tail](#dsclogs-segment)) in the tail; the squares' map (`SQ_MAP`, 130 bytes) in DSCLOG's PSP,
+which costs nothing. (They were made to fit before the off paths went, when 48 bytes and one
+paragraph were left.)
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,496 + `AFTER_INSTALL` 992) | 65,488 bytes | 65,536 | 48 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,312 + `AFTER_INSTALL` 992) | 64,304 bytes | 65,536 | 1,232 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,559 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,623 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,181 paragraphs | 8,182 (`UMB_ROOM`) | 1 (16 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,485 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,697 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,107 paragraphs | 8,182 (`UMB_ROOM`) | 75 (1,200 bytes) |
 | DSCLOG's PSP from 5Ch (the FCBs and the command line, of no use once it stays resident): `SQ_MAP` | 130 bytes | 164 (5Ch to FFh) | 34 bytes |
 | the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 50 names | 50 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
 
