@@ -1104,8 +1104,8 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
 LAST_SETTINGS: Optional[dict] = None
 
 
-RAVAGER_NO_LOG = ("the dice log, the window's tabs and the in-game additions aren't ported to Wake of the "
-                  "Ravager yet: the game starts with the bug fixes ported so far")
+RAVAGER_NO_LOG = ("the Loader's dice log and window don't read Wake of the Ravager yet (its helper records the "
+                  "rolls already): the game starts with the bug fixes ported so far")
 
 
 def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:

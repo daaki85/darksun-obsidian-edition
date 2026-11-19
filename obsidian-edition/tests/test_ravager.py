@@ -22,7 +22,7 @@ class TableTests(unittest.TestCase):
         for p in ravager.PATCHES:
             if (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
                 own.add(p.name)
-        self.assertEqual(own, {"path", "save_signed"})
+        self.assertEqual(own, {"path", "save_signed", "rand"})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_path_writes_dot_backslash_at_its_ds(self):
@@ -51,7 +51,8 @@ class TableTests(unittest.TestCase):
         self.assertIn(r'mount c "C:\GOG\Ravager"', lines)
         self.assertIn(r'imgmount f "C:\GOG\Ravager\game.ins" -t iso', lines)
         self.assertIn(r'mount d "C:\mod\dos"', lines)
-        self.assertLess(lines.index(r"d:\umbplus.com"), lines.index(r"d:\dsunlog2.exe -W0 -L"))
+        self.assertLess(lines.index(r"d:\umbplus.com"), lines.index(r"lh d:\dsclog2.exe"))
+        self.assertLess(lines.index(r"lh d:\dsclog2.exe"), lines.index(r"d:\dsunlog2.exe -W0 -L"))
         self.assertLess(lines.index("c:"), lines.index(r"d:\dsunlog2.exe -W0 -L"))
         self.assertEqual(lines[-3:], [r"d:\gameend.com", "exit", ""])
 

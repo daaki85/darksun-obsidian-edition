@@ -25,7 +25,7 @@ sys.path.insert(0, TESTS)
 from dsloader import gamepatch, sizes, specialize  # noqa: E402
 
 # (source, what it builds: a file in dos/, or None for the least_scores patch's bytes)
-PROGRAMS = (("dsclog.asm", "DSCLOG.EXE"), ("gameend.asm", "GAMEEND.COM"), ("umbplus.asm", "UMBPLUS.COM"),
+PROGRAMS = (("dsclog.asm", "DSCLOG.EXE"), ("dsclog2.asm", "DSCLOG2.EXE"), ("gameend.asm", "GAMEEND.COM"), ("umbplus.asm", "UMBPLUS.COM"),
             ("least_scores.asm", None))
 
 

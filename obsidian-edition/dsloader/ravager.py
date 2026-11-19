@@ -51,7 +51,13 @@ def _sl(name: str, at: int) -> Patch:
 # The program's changes. Each offset found by byte likeness and read side by side with Shattered
 # Lands' (playtest/logs/2026-11-19-ravager-fixes.md and -fixes-2.md); the bytes are checked as the
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
+VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
+HELPER_EXE = "DSCLOG2.EXE"
+
 PATCHES: Tuple[Patch, ...] = (
+    # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
+    # 5C22h, its seed at DS:384Ah): the dice log's every roll.
+    Patch("rand", 0x5A22, bytes.fromhex("8b0e4c388b"), gamepatch._interrupt(VEC_RAND, 5)),
     # The data path: argv[0] cut after its last \ or :, kept at DS:44F2h (SL's 4B81h), made ".\"
     # (the current folder: the game's, C:), the same code as SL's and the jump landing the same.
     Patch("path", 0x6740E, bytes.fromhex("8bf00bc0740346eb166a3a"),
@@ -195,12 +201,14 @@ def conf_lines(game_dir: str, dos_dir: str, cd: Optional[str] = None, umb_plus: 
                game_end: Optional[str] = None) -> List[str]:
     """The [dos] section and the autoexec that start the patched sequel: EMS off (its memory layer
     takes XMS), the game folder as C: (its saves and data, the copy reading them from there), its CD
-    as F: (CD, default its game.ins), the mod's dos folder as D:, UMBPLUS.COM, then the copy."""
+    as F: (CD, default its game.ins), the mod's dos folder as D:, UMBPLUS.COM, the helper (DSCLOG2.EXE)
+    loaded high, then the copy."""
     cd = cd or cd_image(game_dir)
     lines = ["[dos]", "ems=false", "", "[autoexec]", "@echo off", "cls", f'mount c "{game_dir}"']
     if cd:
         lines.append(f'imgmount {CD_DRIVE} "{cd}" -t iso')
-    lines += [f'mount d "{dos_dir}"', "d:\\" + umb_plus.lower(), "c:", f"d:\\{PATCHED_EXE.lower()} {ARGS}"]
+    lines += [f'mount d "{dos_dir}"', "d:\\" + umb_plus.lower(), f"lh d:\\{HELPER_EXE.lower()}", "cls", "c:",
+              f"d:\\{PATCHED_EXE.lower()} {ARGS}"]
     if game_end:
         lines.append("d:\\" + game_end.lower())
     lines += ["exit", ""]

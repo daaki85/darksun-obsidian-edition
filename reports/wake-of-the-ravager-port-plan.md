@@ -9,11 +9,13 @@ Work is on the branch `claude/ravager-port`.
 
 The same parts as for Shattered Lands (SL), the player starting WotR from the same Loader in DOSBox:
 
-- **One helper source, two builds.** `dos/dsclog.asm` gets a per-game address table (`%ifdef
-  WOTR`): every data-segment offset, program segment, routine and record layout it names has a WotR
-  value beside SL's. `nasm -DWOTR` builds `dos/DSCLOG2.EXE`. A feature not yet ported is left out
-  of the WotR build (`%ifndef WOTR` round it), so the WotR helper only holds what works, and the
-  SL build stays byte for byte what it was (its tests check that).
+- **A helper of its own, built from DSCLOG's routines.** (First planned as one source with an
+  `%ifdef WOTR` address table; changed on reading it: DSCLOG's 29,000 lines name SL's addresses inline
+  in nearly every routine, and its keyboard, mouse and DOS hooks act on every key and file open, so an
+  `%ifdef` build would have touched everything and left SL's source hard to read.) `dos/dsclog2.asm`
+  builds `dos/DSCLOG2.EXE`: each routine taken from `dsclog.asm` keeps its name there and says what
+  differs; the header keeps DSCLOG's layout for the fields the Loader reads, under the signature
+  `DSCLOGR1`. It holds only what is ported, so it never touches what it doesn't know.
 - **A patch table per game.** `gamepatch.py`'s `PATCHES` stays SL's; `PATCHES_WOTR` holds WotR's
   sites (each found and read by hand, its original bytes checked, as `playtest/ravfixes.py` does
   now), written to the patched copy `DSUNLOG2.EXE`.
@@ -86,4 +88,6 @@ Progress is kept in the table below as features land.
 | Step | State |
 |---|---|
 | Study, memory, the first fixes seen working | done (wake-of-the-ravager.md) |
-| 1. Scaffolding | **the Loader side done**: `dsloader/ravager.py` (the sequel recognised by its DSUN.EXE, its patch table: the data path and 6 fixes; its 23 spell records' fixes; its DOSBox config), `launch` taking a sequel folder its own way, `dsloader launch --ravager [FOLDER]`, `tests/test_ravager.py`. Played in DOSBox the Loader's way (`ravstart.sh` with `RAV_LOADER=1`): the copy runs from the mod's folder (D:) with the game as C: and its CD as F:, to Tyr. Still to do in step 1: the helper's `%ifdef WOTR` build; the WotR layout for the window. The spell records' copy (`RESOURC2.GFF`) is written but read only once the helper redirects the game's opens (step 2) |
+| 1. Scaffolding | **the Loader side done**: `dsloader/ravager.py` (the sequel recognised by its DSUN.EXE, its patch table: the data path and 6 fixes; its 23 spell records' fixes; its DOSBox config), `launch` taking a sequel folder its own way, `dsloader launch --ravager [FOLDER]`, `tests/test_ravager.py`. Played in DOSBox the Loader's way (`ravstart.sh` with `RAV_LOADER=1`): the copy runs from the mod's folder (D:) with the game as C: and its CD as F:, to Tyr. Still to do in step 1: the WotR layout for the window (with step 3). The spell records' copy (`RESOURC2.GFF`) is written but read only once the helper redirects the game's opens (step 2) |
+| 2. The helper loads under WotR | **done**: `dos/dsclog2.asm` (DSCLOG2.EXE, 1,280 bytes): rand() through it (the patch at 5A22h, the seed DS:384Ah), the ring in the HMA, DOS's opens of RESOURCE.GFF redirected to the Loader's copy (the spell fixes now read in play); loaded high (C91Bh) before the game. Played: to Tyr and into the Draxans' fight, 36 rolls in the ring, the same filters matching the sequel's code. In the build audit (`test_audit_builds`) |
+| 3. The dice log | next: the Loader's reader for the sequel's helper and records (its roll labels are by the calling code's address: the sequel's own table) |
