@@ -51,6 +51,10 @@ under "## Unreleased (branch `obsidian-edition`)
   room beside DOSBox's tables, and memory in pieces is warned of too.
 - **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
   triage (no pull request: committed to the branch).
+- **A thief's later attacks in a round after a backstab** are judged on their own: the game kept
+  the first attack's from behind and backstab for the round's other swings without their +2s, and
+  DSCLOG then took back a +2 they never had, so Seneca's Shadowseeker after a Hayneedle backstab
+  needed THAC0 17 for 15, the target's DEX and shield not counted (the dice log's "-2 STR").
 
 **Docs**
 - **The change records** (#98): shorter patch notes, each release's news in its notes, the

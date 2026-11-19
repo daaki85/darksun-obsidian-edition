@@ -228,17 +228,17 @@ the one place for the sizes; the sections after them name the symbols only.
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 69,712
-bytes: the 32-byte header, the segment's image of 64,144 and the tail's 5,536 (`TAIL_BYTES`). The
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 69,760
+bytes: the 32-byte header, the segment's image of 64,192 and the tail's 5,536 (`TAIL_BYTES`). The
 always-on switches' off paths, taken out on 2026-11-19, freed 1,168 bytes of it ([the switches
 always on](DEVELOPMENT-RULES.md#the-switches-always-on)):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,152 + `AFTER_INSTALL` 992) | 64,144 bytes | 65,536 | 1,392 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,200 + `AFTER_INSTALL` 992) | 64,192 bytes | 65,536 | 1,344 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,451 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,731 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,073 paragraphs | 8,182 (`UMB_ROOM`) | 109 (1,744 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,454 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,728 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,076 paragraphs | 8,182 (`UMB_ROOM`) | 106 (1,696 bytes) |
 | the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 50 names | 50 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its

@@ -179,6 +179,13 @@ raised before stopping.
 - **Where the turn's movement is** (logs/2026-11-09-boots-of-speed.md): a word a creature at
   segment DS - (4356h - 37BDh), +22Bh + creature x 2 (Move x 10, set as its turn starts: 57566h,
   DSCLOG's PROBE_MOVE).
+- **The melee attack routine** (58019h in DSUN.EXE's file; logs/2026-11-19-backstab-str-line.md):
+  one call plays all of a member's round (the loop from 58113h, [BP-22h] the attack's number).
+  [BP-1Ah] (from behind) and [BP-24h] (backstab) are cleared once at its start; [BP-20h] is the
+  creature's THAC0 (+1Fh) again on each pass, 2 off for from behind and 2 more for a backstab only
+  when this pass is from behind (582D0h: the target's facing byte, +5Bh + creature at the segment
+  below, against the attacker's direction to it, DS:494Ch). DSCLOG's REAR_FRESH clears a flag a
+  pass didn't pay for.
 - **An archer's turn bytes** (logs/2026-11-14-quiver-turn.md; `turnwatch.py`): at segment
   DS - (4356h - 37BDh), a byte a combatant: **+181h** the attacks made this round (63h: spent, the turn ends;
   set back to 0 as it does), **+1ABh** the attack commands.

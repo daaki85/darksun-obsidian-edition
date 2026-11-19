@@ -312,6 +312,12 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
   screen once (Seneca's Tab chose a foe out of reach, so Return did nothing), and closing it left
   the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
   `passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
+- 2026-11-19 (logs/2026-11-19-backstab-str-line.md): the same again, `toturn.sh 3` ran out its
+  timeout on Ester's turn with Tab cycling foes out of reach, and its E opened the Effects screen;
+  Escape closed it with the view at the map's corner (camera 1728,0: `passuntil.sh` stopped
+  "member 2 off screen"). `viewto.py 1112 1512` (the leader) brought it back, then `passuntil.sh 3`
+  went on. A reload from fountain-user six times over (the hide and the move both had to pass
+  for a backstab) ran cleanly each time.
 
 ## An archer's turn and the quiver
 

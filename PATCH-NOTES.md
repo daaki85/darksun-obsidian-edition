@@ -102,6 +102,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Fixed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, none above 95 *(was a 3rd-level elf with move silently 66)* ([thief skills](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#thief-skills-from-adds-table)).
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight; rangers to attack from behind *(was a backstab only on a target facing away)* ([hiding](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#hiding-in-shadows-to-backstab)).
 - **[Fixed]** A **backstab** multiplies only the weapon's dice, on the round's first attack only *(was the whole damage, STR included, on two attacks)*.
+- **[Fixed]** A thief's **later attacks in a round after a backstab** are from behind only when they are *(were 2 worse to hit than a plain attack, yet treated as from behind)*.
 - **[New]** **Picking pockets** with a button on the USE screen: any thief can try, and a purse holds ceramic pieces by the thief's level ([picking pockets](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#picking-pockets)).
 - **[Changed]** A thief who fails a lock, or is caught at a pocket, tries that one again only after a level *(was again and again; caught, never)*.
 - **[Changed]** A thief beside any square of a big creature can't hide there *(was its one square only)*.

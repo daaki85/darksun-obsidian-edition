@@ -1768,6 +1768,19 @@ fight, `STAB_CLOCK`), and a later attack at the same clock has its backstab
 taken back (`[BP-24h]` cleared, its +2 to hit off THAC0 `[BP-20h]`); from
 behind stays.
 
+The attack routine (58019h) sets from behind and backstab (`[BP-1Ah]`,
+`[BP-24h]`) once a call but runs all of a round's attacks in it, loading
+`[BP-20h]` with the creature's THAC0 again for each and taking the 2s off only
+when this attack is from behind (the target's facing, 582D0h): a flag left
+from an earlier attack (a hidden thief's backstab) stayed set with no +2 on the
+later one, and `STAB_FIRST` then gave back a 2 it hadn't had (Seneca's
+Shadowseeker after her Hayneedle's backstab: THAC0 17 for 15, the target's DEX
+and shield not counted, the dice log's `-2 STR` for her +2;
+playtest/logs/2026-11-19-backstab-str-line.md). `REAR_FRESH`, first in
+`PROBE_STEALTH`, clears a flag the game didn't pay for this time: the
+creature's THAC0 (+1Fh) less `[BP-20h]` under 2, no from behind; under 4, no
+backstab. Test: test_dsclog's `test_later_attack_flags_its_own`.
+
 The dice log's damage line says which: `+10 backstab (the dice 5 x3 = 15)`
 with the rule, `(1d8 = [5] +12 STR 24) x3 backstab` without (`dicelog`'s
 backstab step, the round's count read from the attack's frame,

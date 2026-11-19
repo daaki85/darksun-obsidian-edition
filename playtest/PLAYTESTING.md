@@ -748,6 +748,24 @@ game's data: it is one player's account.
   Shadowseeker in the right (logs/2026-11-14-quiver-turn.md part 6). To check a weapon's own
   damage, free the target (`addeffect.py del C 34`) or use a member who isn't a Poisoner, and read
   the "hits X for N" line.
+- **Seneca's backstab round on demand** (logs/2026-11-19-backstab-str-line.md): from
+  `fountain-user` with every foe held, `passuntil.sh 3`, the Templar freed (`addeffect.py del 25 34`),
+  Tab + Return: she backstabs only when the dice log has both `hides in shadows ... -> hidden` and
+  `moves silently ... -> unheard` (about half the loads; `heard` or `seen` gives plain attacks), so
+  loop the load until the dice log has `BACKSTAB`. Her round is the Hayneedle (left hand) first,
+  then one or two Shadowseeker swings, **all in one call of the attack routine**: a later swing's
+  frame shows what the first left behind.
+- **An attack's frame** (the same log): a copy of `rolog.py` (in the scratch folder) printing
+  `e.parent_local(-N)` under each dice-log line with ` attacks ` in it gives the attack routine's
+  locals at the roll: [BP-20h] the THAC0 before [BP-8] (the weapon's and specialization's), [BP-1Ah]
+  from behind, [BP-24h] the backstab, [BP-22h] the attack's number in the round. The way to tell a
+  wrong THAC0 from a log that only names a part wrong.
+- **An ordinary attack from behind on demand** (the same log; a memory edit, never save): the
+  game's from behind is the target's facing byte (segment DS - 4356h + 37BDh, **+5Bh + creature**,
+  the creature's number, not the combatant's; 255 none yet, set by the first attack on it) equal to
+  the attacker's direction to it (DS:494Ch after the attack, also the attacker's creature +38h).
+  Let the member attack the target once, read DS:494Ch, write that into the target's facing byte
+  before the member's next turn (standing where it was), and its next round is from behind.
 - **Hidden members** (logs/2026-11-05-fight-test.md): Cilla, thief level raised to 12 in memory,
   hides at 95. Hidden, Tab + Return walks the thief up and backstabs; it is drawn solid from the
   blow on. The see-through drawing: [see-through figures](RESEARCH.md#see-through-figures).
