@@ -69,7 +69,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
     removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
-    restarted: play in it (`loadsave.sh` would kill it).
+    restarted: play in it (`loadsave.sh` would kill it). **With that holder running, don't take the
+    lock again in a step** (`flock /tmp/playtest/dosbox.lock -c ...`): it is another open of the
+    file, so it waits for the holder, this session's own, until its `timeout` (200 s lost,
+    2026-11-19); the holder already keeps other agents out, so the steps run without it.
 
 ## 2. The checklist
 
@@ -263,6 +266,13 @@ game's data: it is one player's account.
   old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then
   put the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
   `dos/DSCLOG.EXE`).
+- **Memory at the hungry moments** (logs/2026-11-19-final-audit-memory.md): `memaudit.py` run with
+  the map open, in `fountain-user`'s ambush (ten combatants), with a USE screen up, 0.4 s into a
+  spell's picture (Ester's Curse, below), with Kalzith's shop up (`openshop.sh`) and after it:
+  upper memory never moved (its free piece 26,256 bytes at E330h with this build, 144 bytes at
+  CA00h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
+  the USE screen, 124,608 with the shop, 100,032 with the map open again after it. Read the free
+  piece, not the heap's own free (the game's heap reads 0 KB free with the map open: the map has it).
 - **Another session editing the helper**: before a DOSBox run with the repository's Loader,
   assemble `dos/dsclog.asm` to a scratch file and `cmp` it with `dos/DSCLOG.EXE`: the same, and the
   tree's build is fine to run.
@@ -809,6 +819,12 @@ game's data: it is one player's account.
   memory](RESEARCH.md#fights-and-foes-in-memory).
 
 ## Casting spells for a test
+
+**A spell's picture in one minute** (logs/2026-11-19-final-audit-memory.md): `fountain-user`,
+`dismiss.sh` (the ambush starts, Lex's turn), then on Ester's turn U, her priest icon at (194,59)
+(Curse: the aiming ring comes up) and a click on the Templar standing on the view's right
+(`foepos.py`: screen 224-240,134; click 10 pixels above). Lex's first wizard icon (176,59) is
+Shocking Grasp, a touch spell: "too far away" from there.
 
 From `fountain-user` clicked into Pehtucl's ambush (logs/2026-11-08-manual-spells.md):
 `spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every slot and sets each of the member's
