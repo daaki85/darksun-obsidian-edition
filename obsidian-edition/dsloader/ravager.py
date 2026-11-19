@@ -95,6 +95,47 @@ SPELL_COUNT = 320  # (DATA 0-319)
 SPELL_SIZE = 73
 
 
+# The sequel's records in memory and where Shattered Lands' fields are in them (for the dice log's
+# layout profile, step 3 of the plan). Far pointers in its data segment (each SL's + 364h):
+CREATURES_PTR, SHEETS_PTR, ITEMS_PTR = 0x19C9, 0x19C5, 0x19C1  # (SL's 1665h, 1661h, 165Dh)
+CREATURE_SIZE, SHEET_SIZE, ITEM_SIZE = 0x31, 0x42, 0x17  # (SL's 3Ah, 47h, 15h)
+DGROUP = 0x47E0  # its DS less its load segment (4982h - 1A2h in a GOG start; SL's 4356h)
+WHOSE_TURN, CAMERA, MAP_OBJECTS = 0x426D, 0x1408, 0x67BB  # (SL's 4979h, 1178h, 6694h; the map objects 25h bytes apart)
+SPELL_SLOTS, SLOTS_STRIDE, PRIEST_SLOTS = 0x446A, 0x22, 0x0B  # wizard casts left by level, a member a row
+KNOWN_BITSET = 15  # bytes of known wizard spells a member (bit n, spell n), the roster's SPST chunk
+AFRAID = 0x60  # a creature's +18h while Afraid
+
+# Shattered Lands' creature and sheet offsets -> the sequel's (None: no such field), found by aligning
+# the transfer's records (CHARTRAN) and checked against Gerakis's in memory (HP 165, PSP 27, sheet 3,
+# base AC 10, Move 12, Okay, THAC0 14, STR 24..CHA 14, name):
+def creature_field(sl: int) -> Optional[int]:
+    """The sequel's offset of Shattered Lands' creature field SL (CREATURE_SIZE 3Ah there)."""
+    if sl < 0x0E:
+        return sl              # HP, PSP, the sheet's number, the entity's id, the item lists
+    if 0x16 <= sl <= 0x1C:
+        return sl - 8          # 1Ah base AC -> 12h, 1Bh Move -> 13h, 1Ch status -> 14h
+    if sl == 0x1D:
+        return 0x15            # the side (00 the party's, 07 the Draxans': not in the transfer's record)
+    if 0x1F <= sl <= 0x27:
+        return sl - 9          # 1Fh THAC0 -> 16h, 22h the abilities -> 19h
+    if 0x28 <= sl < 0x38:
+        return sl - 7          # 28h the name -> 21h (16 bytes there, SL's 18: its last two have no place)
+    return None
+
+
+def sheet_field(sl: int) -> Optional[int]:
+    """The sequel's offset of Shattered Lands' sheet field SL (SHEET_SIZE 47h there)."""
+    if sl < 0x0E:
+        return sl              # XP, max HP, the HP rolled, max PSP
+    if 0x10 <= sl <= 0x13:
+        return sl - 2          # 10h the entity's id, 12h the class flags
+    if 0x18 <= sl <= 0x3B:
+        return sl - 6          # 18h race -> 12h, 21h classes -> 1Bh, 24h levels -> 1Eh, 37h saves -> 31h
+    if 0x3D <= sl <= 0x46:
+        return sl - 6          # 3Fh the levels before any were lost -> 39h, 43h the kit byte -> 3Dh
+    return None                # 0Eh-0Fh, 14h-17h (the mod's weapon specs), 3Ch: none in the sequel
+
+
 class RavagerError(Exception):
     pass
 

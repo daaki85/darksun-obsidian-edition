@@ -81,6 +81,25 @@ class TableTests(unittest.TestCase):
             launch._launch_wotr = real
 
 
+class LayoutTests(unittest.TestCase):
+    def test_fields_checked_in_memory(self):
+        """The fields read from Gerakis's records in a running game (2026-11-19)."""
+        self.assertEqual([ravager.creature_field(o) for o in (0, 2, 4, 6, 0x1A, 0x1B, 0x1C, 0x1D, 0x1F, 0x22, 0x28)],
+                         [0, 2, 4, 6, 0x12, 0x13, 0x14, 0x15, 0x16, 0x19, 0x21])
+        self.assertEqual([ravager.sheet_field(o) for o in (0, 8, 0x10, 0x12, 0x18, 0x21, 0x24, 0x37, 0x3F, 0x43, 0x45)],
+                         [0, 8, 0x0E, 0x10, 0x12, 0x1B, 0x1E, 0x31, 0x39, 0x3D, 0x3F])
+        for gone in (0x0E, 0x0F, 0x14, 0x15, 0x16, 0x17, 0x3C):
+            self.assertIsNone(ravager.sheet_field(gone))
+
+    def test_fields_fit_the_records(self):
+        for o in range(0x3A):
+            f = ravager.creature_field(o)
+            self.assertTrue(f is None or f < ravager.CREATURE_SIZE, hex(o))
+        for o in range(0x47):
+            f = ravager.sheet_field(o)
+            self.assertTrue(f is None or f < ravager.SHEET_SIZE, hex(o))
+
+
 @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
 class GameFileTests(unittest.TestCase):
     def test_copy_made(self):
