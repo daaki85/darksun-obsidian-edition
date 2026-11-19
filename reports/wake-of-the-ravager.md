@@ -218,9 +218,12 @@ a thief), with a +1 long sword in hand:
 | Read languages | 24 | 24 |
 
 The differences, 5, 10, 5 and 10, are SL's penalties (5, 0, 0, 10, 5, 0, 10, 0) exactly: the
-same bug, and the fix works in WotR's own code. The other fixes are still to be seen in play: a
-cast of a fixed spell (none of the opening party knows one), a saving throw against a "can't
-save" spell, a whole-party thief roll, a random encounter.
+same bug, and the fix works in WotR's own code. The other fixes are still to be seen in play. The opening's
+fight (the Draxans' ambush) was reached with the fixed copy and played a few turns as the
+original's would; of the party's spells only Chill Touch is a fixed one, and its touch didn't
+reach a Draxan in that test; none has a "can't save" spell (`playtest/logs/2026-11-19-ravager-fight.md`).
+Next: a fixed ranged spell taught in memory for a test, then a save against a "can't save"
+spell, a whole-party thief roll and a random encounter.
 
 **What this means for a WotR edition.** The bug fixes split three ways: data fixes (the spell
 records, by name: the easiest), plain code fixes with identical twins (applied as they are, at

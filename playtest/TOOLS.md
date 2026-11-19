@@ -90,6 +90,8 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
 | `ravclick.py X Y [left\|right\|none] [PID]` | Wake of the Ravager's click.py: moves the pointer to game pixel X,Y (320x200) by relative moves until the game's own pointer (DS:A109h x, A10Bh y; |
+| `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
+| `ravds.py HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les... |
 | `ravfixes.py [OUT]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
 | `ravthief.py [MEMBER] [PID]` | Wake of the Ravager's own thief-skill routine (its DSUN.EXE 8C647h, SL's 80240h) run in an emulator (unicorn) on the running game's memory, for party member MEMBER (default 0), once with the game's list of slots that... |

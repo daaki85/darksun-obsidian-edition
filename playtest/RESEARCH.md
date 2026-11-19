@@ -286,6 +286,15 @@ skills): most of its code is in overlays swapped out to XMS, so lay every overla
 Dark Sun Recompiled's `build_image.py` (its PSP set to the live one) with that image's stubs, the
 live memory below; and give the emulator SS = DS (Borland reads stack buffers through DS).
 
+**Its first fight** (logs/2026-11-19-ravager-fight.md): the opening talk (3, Return) ends in the
+Draxans' ambush, a fight at once; in a fight USE opens for the one whose turn it is (DS:426Dh, SL's
+4979h). Right clicks on bare floor cycle the pointer: arrow, sword, look; a figure under it turns
+red; a look opens a box (name, level, weapons) that a click on it closes. Creature records: 31h
+bytes at the far pointer DS:19C9h, +0 HP, the region's people all listed (`ravcreatures.py`).
+`ravds.py HEX` finds the WotR address of an SL data-segment offset by the code before its uses.
+Of the opening party's spells only Chill Touch is a fixed one (Ar'anda's); its aimed click wasn't
+taken on a Draxan 1.5 squares off (a touch spell: too far, likely).
+
 **Its spells, and the fixes carried over** (2026-11-19, logs/2026-11-19-ravager-fixes.md): no
 spell table in its program; each spell is `RESOURCE.GFF`'s `DATA` 0-319, 73 bytes (SL's 32-byte
 record, then the name and an 8-letter short name), read one at a time as the spell is used
