@@ -475,6 +475,11 @@ scores are the creature record's (raising INT on the sheet did nothing); the tur
   running fight for twenty rounds while the free Templar killed Seneca (no hiding, no backstab); a
   reload a try, with Reconnect each time, found one in two loads.
 
+- The window's "Connected" after DOSBox ended (2026-11-19, logs/2026-11-19-older-loader-bugs.md):
+  on Linux a read of `/proc/PID/mem` for a process that has ended returns nothing and raises
+  nothing, so a window attached to a DOSBox it hadn't started never saw it go, and its party table
+  failed on the empty reads at each kit reload; the Loader's reads now raise then.
+
 ## When things were learned
 
 The recipes in the guide mostly carry no date; a recipe with a log names its date in the log's
