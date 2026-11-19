@@ -1,7 +1,11 @@
 # Documentation review, final pass before a release (2026-11-19)
 
-*Status: applied on branch `claude/final-audit-fixes` (2026-11-19), every numbered item; what was
-left as it is is said at its item. Below is the review as it was made: a review of the player pages, the change records and the
+*Status: applied on branch `claude/final-audit-fixes` (2026-11-19), every numbered item, with
+these as they stand: item 6's GAME-BUGS row not added (in the original game a round's attacks are
+all from behind or none, by the target's facing, so the carry-over never showed there; the patch
+note's "was" names the attack routine's way instead); item 30 no change, as the review says;
+item 32 made "(the kit's die)"; item 25's option taken (the second review and its verified version
+in `reports/archive/`). Below is the review as it was made: a review of the player pages, the change records and the
 generated manual and patch notes, the developer pages, the playtest kit, `reports/`, CLAUDE.md, the
 Loader's text and the pictures in `docs/`, at `f1f8972` (branch `claude/backstab-str-line`:
 `origin/obsidian-edition` at `412bbf3`, #115, plus the unmerged backstab fix). Line numbers are at

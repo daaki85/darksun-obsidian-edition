@@ -1,7 +1,13 @@
 # Final code and memory audit before the release (2026-11-19)
 
 *Status: applied on branch `claude/final-audit-fixes` (2026-11-19), all three risks and the eight
-cleanups. Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
+cleanups. R2: the Loader's off-branches removed and their tests reworked to the rules' numbers (8
+tests that ran only an off path removed); the kits' `spec` and `adnd` arguments kept, their tests
+driving both. R1: the four literal offsets in code made constants, the docstrings' +368 and +1852
+left as text. R3: the copies also set 0644 (mkstemp's are 0600). C1: `wp_redraw` gone, the room
+unchanged (the image is padded to the paragraph). C6: `theme.py`'s re-exports were already marked
+`# noqa`. The two still open from the last audit (the stats thread's idle step, `crash-logs/`) are
+not in this list and stay open. Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
 `origin/claude/backstab-str-line` at `f1f8972`: `origin/obsidian-edition` (#110 to #115) plus the
 unmerged REAR_FRESH backstab fix. Line numbers are at that commit. The previous audit is
 `reports/code-memory-audit.md` on `origin/claude/code-memory-audit`; its fixes are #111 and #112.*
