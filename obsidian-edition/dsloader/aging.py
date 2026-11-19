@@ -159,9 +159,16 @@ def start_age(sheet: bytes, name: str) -> Optional[int]:
 def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[str]:
     """A starting age for each party member who has none, Table 7's dice rolled (the game's own
     party; one from before ages): lines for the dice log. One with an age but no roll kept (made
-    before 2.13.2) has its roll put in from natural_start, the start its age was given from."""
+    before 2.13.2) has its roll put in from natural_start, the start its age was given from.
+    Nothing while the creation screen is up (gd.creating): the party's first slot is the screen's
+    stand-in for the character being made, whose age is DSCLOG's (CR_AGE's roll, shown as AGE and
+    put in the sheet at DONE: AGE_PUT); a roll here was a second age, in the dice log alone, that
+    disagreed with the screen's after each new roll of the die). The character DONE just made
+    (gd.making): its age, the screen's, in the dice log once (made_age)."""
+    out = made_age(gd)
+    if _creating(gd):
+        return out
     rng = rng or random.Random()
-    out = []
     for member in range(game.PARTY_SIZE):
         rec, sheet = gd.creature(member), gd.sheet(member)
         if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE or not rec[game.CREATURE_NAME]:
@@ -185,6 +192,45 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
         later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
         out.append(f"{gd.creature_name(member)} is {age} ({_a(race)}{roll}){later}.")
     return out
+
+
+def made_age(gd: "game.GameData") -> List[str]:
+    """The age of the character the creation screen's DONE just made (gd.making, its sheet index:
+    DSCLOG's GEAR_WHO), as AGE showed it and AGE_PUT put it in its sheet: the race's base and the
+    screen's roll (its total: DSCLOG keeps no faces). Once for each character made (gd's
+    _ages_told); none for one without an age."""
+    making = getattr(gd, "making", None)
+    if making is None:
+        return []
+    for member in range(game.PARTY_SIZE):
+        rec, sheet = gd.creature(member), gd.sheet(member)
+        if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE or not rec[game.CREATURE_NAME] \
+                or struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0] != making:
+            continue
+        age, roll, race = age_of(sheet), game.sheet_roll(sheet), sheet[game.SHEET_RACE]
+        if age is None or race not in RACES:
+            return []
+        name = gd.creature_name(member)
+        told = gd.__dict__.setdefault("_ages_told", set())
+        if (making, name, age) in told:
+            return []
+        told.add((making, name, age))
+        ages = RACES[race]
+        count, sides = ages.start_dice
+        dice = f": {ages.start} + {count}d{sides} = {roll + count}" if count and roll is not None else ""
+        nxt = next_category(race, age)
+        later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
+        return [f"{name} is {age} ({_a(race)}{dice}, as the creation screen rolled){later}."]
+    return []
+
+
+def _creating(gd: "game.GameData") -> bool:
+    """Whether the creation screen is up (memory half made: as if it were, nothing given)."""
+    creating = getattr(gd, "creating", None)
+    try:
+        return callable(creating) and creating() is True
+    except (struct.error, IndexError, ValueError):
+        return True
 
 
 def _a(race: int) -> str:

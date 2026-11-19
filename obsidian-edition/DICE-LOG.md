@@ -279,7 +279,8 @@ With [ages](FEATURES.md#ages-and-magical-aging) on:
 
 | Line | Meaning |
 |---|---|
-| `Cyrus the Great is 21 (a human: 15 + 1d8 = [6]); middle-aged at 40.` | A character's starting age: the race's base and dice (Table 7), on the creation screen with each roll of the die, or the first time the Loader sees a character with none (the game's own party, an older save). |
+| `Cyrus the Great is 21 (a human: 15 + 1d8 = [6]); middle-aged at 40.` | A character's starting age: the race's base and dice (Table 7), the first time the Loader sees a character with none (the game's own party, an older save). |
+| `Cyrus the Great is 21 (a human: 15 + 1d8 = 6, as the creation screen rolled); middle-aged at 40.` | A character just made: the age the creation screen showed as AGE, given at DONE. |
 | `A year has passed: Gerakis is 60, middle-aged: STR -1, CON -1, INT +1, WIS +1.` | Each 365 days of game time, every party member a year older, with the score changes of an age category reached. At the most the race lives, the line ends `; that is the most a human lives: Gerakis dies of old age.` |
 | `K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -> survives` | Haste's system shock roll, and the year it ages a survivor. |
 | `Gerakis's system shock (Restore Youth): d100 = 40, needs 99 or less (CON 22) -> survives` | Restore Youth's system shock roll. |
