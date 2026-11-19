@@ -183,10 +183,10 @@ sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](https://githu
 
 1. Double-click **`Start Obsidian Edition.bat`** in that folder. The Loader
    opens on its own.
-2. On its **Options** tab, pick what you want: the rule changes, the new
-   content, picking pockets, the combat log in the game and so on (see [The
-   Loader's window](#the-loaders-window) and [Rule
-   changes](FEATURES.md#rule-changes)). They're remembered for next time.
+2. On its **Options** tab, pick what you want: the new content, a few rules,
+   the combat log's level, the Look box and so on (see [The Loader's
+   window](#the-loaders-window) and [Rule changes](FEATURES.md#rule-changes);
+   the rest is always on). They're remembered for next time.
 3. Press **Start the game** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
@@ -216,8 +216,8 @@ started without it.
 **Just the game, with the in-game additions, no Loader window:** double-click
 **`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
 when you close DOSBox. It uses the switches on the Loader's Options tab as you
-last set them (the combat log, monster descriptions, picking pockets, the rule
-changes); the new items, the new people and the cooked vulture are there too.
+last set them (the combat log's level, the Look box, the few rules with a
+switch); the new items, the new people and the cooked vulture are there too.
 If anything goes wrong it says so in a message box and writes the details to
 `play.log`. Only one Loader (a window, or the in-game rolls) can start or follow the
 game at a time: a second one says which has it and leaves the game alone.

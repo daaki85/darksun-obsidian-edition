@@ -152,7 +152,7 @@ bugs](GAME-BUGS.md) that the mod mends. All are always on now, with no switch.
 | A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](#rangers-casting-level) |
 | Preservers' spells | Any spell learnt from any scroll, every spell known | INT's chance to learn, and its most spells of each level | [Preservers' INT](#preservers-int) |
 | Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](#dual-classing-as-the-manual-has-it) |
-| Class restrictions | Any one class allowing an item is enough | The strictest class wins | [Class restrictions](#class-restrictions) |
+| Class restrictions | The game's item lists, one class allowing an item enough | Those lists as they are, and AD&D's limits for every class, the strictest winning | [Class restrictions](#class-restrictions) |
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
 | Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
@@ -170,8 +170,8 @@ on the Effects screen ending it ([Spells on the Effects screen](#spells-on-the-e
 
 #### Class restrictions
 
-Each class's limits on armour, shields and weapons hold, the strictest winning, where the game let
-any one class allow an item. A multiclass preserver casts no spells in armour (the USE screen says
+The game's own item lists still need only one of a character's classes; on top of them, each
+class's limits on armour, shields and weapons hold for every class, the strictest winning. A multiclass preserver casts no spells in armour (the USE screen says
 **NO SPELLS IN ARMOUR**), and a thief with another class has no thief skills or backstab in armour
 that isn't light; a new character starts without what its classes can't use.
 

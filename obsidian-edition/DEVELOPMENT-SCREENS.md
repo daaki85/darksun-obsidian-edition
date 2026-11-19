@@ -172,8 +172,8 @@ dice log running:
   panel unchanged (at most once a BIOS tick), is `PANEL_DRAW_AROUND`: the
   panel without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer
   stays on screen.
-- **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
-  switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
+- **On and off.** The Loader sets `panel_on` (`+326`) while the panel is to be
+  shown (in and out of fights: `combatlog.py`); cleared, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
 - **The game's windows.** A figure's menu, a question or EXIT GAME are shown
   on the other screen, the view drawn there again first: the panel is not on
@@ -748,7 +748,7 @@ report's records (32 to 16, taken half as often).
 ([In the features page](FEATURES.md#spells-on-the-effects-screen).)
 
 A click on an effect's icon on the Effects screen ends it in the game; with the
-switch on (`gamepatch.EFFECTS_KEPT`, from the next start), a spell's effect
+mod (`gamepatch.EFFECTS_KEPT`, always in the game's copy), a spell's effect
 is left on: two jumps in the screen's click handler (DSUN.EXE 7F226h and
 7F236h, the patches `effects_click_low` and `effects_click_high`) go to its way
 out instead of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is

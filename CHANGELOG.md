@@ -13,7 +13,51 @@ and the DEVELOPMENT pages, and research in `reports/`. The longer entries below
 were written before this rule and are kept as they are.
 
 **Headings.** Work on the branch `obsidian-edition` not yet merged to `main` is
-under "## Unreleased (branch `obsidian-edition`)
+under "## Unreleased (branch `obsidian-edition`)"; when its pull request is
+merged, that heading becomes "## Pull request #N (merged DATE)", with "merged
+DATE" a link to the pull request. A release's entry starts with the line
+"Obsidian Edition X", its release notes linked after it in brackets.
+
+**Sections**, each a bold line: **New**, **Changed**, **Fixed**, **Docs** (the
+documentation) and **Dev** (tests, tools, the playtest kit, the build). A label
+may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
+where the changes came from, in brackets.
+
+Releases, newest first (2.12.0 and older in the archive):
+[2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
+(#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
+[2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
+(#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
+[2.14.1](#pull-request-88-merged-2026-11-08) (#88), [2.14.0](#pull-request-87-merged-2026-11-07)
+(#86 and #87), [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
+[2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
+(#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
+[2.13.0](#pull-request-81-merged-2026-10-30) (#81), [2.12.5](#pull-request-80-merged-2026-10-30)
+(#80), [2.12.4](#pull-request-79-merged-2026-10-29) (#79),
+[2.12.3](#pull-request-76-merged-2026-10-29) (#76), [2.12.2](#pull-request-75-merged-2026-10-29)
+(#75), [2.12.1](#pull-request-74-merged-2026-10-27) (#74),
+[2.12.0](CHANGELOG-archive.md#pull-request-73-merged-2026-10-27) (#73),
+[2.11.0](CHANGELOG-archive.md#pull-request-69-merged-2026-10-26) (#69),
+[2.10.0](CHANGELOG-archive.md#pull-request-67-merged-2026-10-26) (#67),
+[2.9.0](CHANGELOG-archive.md#pull-request-63-merged-2026-10-26) (#63),
+[2.8.0](CHANGELOG-archive.md#pull-request-61-merged-2026-10-25) (#61),
+[2.7.2](CHANGELOG-archive.md#pull-request-59-merged-2026-10-24) (#59),
+[2.7.1](CHANGELOG-archive.md#pull-request-58-merged-2026-10-23) (#58),
+[2.7.0](CHANGELOG-archive.md#pull-request-56-merged-2026-10-23) (#56),
+[2.6.0](CHANGELOG-archive.md#pull-request-54-merged-2026-10-21) (#54),
+[2.5.0](CHANGELOG-archive.md#pull-request-51-merged-2026-10-19) (#51),
+[2.4.0](CHANGELOG-archive.md#pull-request-50-merged-2026-10-16) (#50),
+[2.3.0](CHANGELOG-archive.md#pull-request-47-merged-2026-10-15) (#47),
+[2.2.1](CHANGELOG-archive.md#pull-request-43-merged-2026-10-14) (#43),
+[2.2.0](CHANGELOG-archive.md#pull-request-42-merged-2026-10-14) (#42),
+[2.1.1](CHANGELOG-archive.md#pull-request-37-merged-2026-10-10) (#37),
+[2.1.0](CHANGELOG-archive.md#pull-request-36-merged-2026-10-09) (#36),
+[2.0.0](CHANGELOG-archive.md#pull-request-33-merged-2026-10-09) (#33),
+[1.2.0](CHANGELOG-archive.md#pull-request-30-merged-2026-10-08) (#30),
+[1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
+[1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
+
+## Unreleased (branch `obsidian-edition`)
 
 **New**
 - **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
@@ -51,10 +95,8 @@ under "## Unreleased (branch `obsidian-edition`)
   room beside DOSBox's tables, and memory in pieces is warned of too.
 - **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
   triage (no pull request: committed to the branch).
-- **A thief's later attacks in a round after a backstab** are judged on their own: the game kept
-  the first attack's from behind and backstab for the round's other swings without their +2s, and
-  DSCLOG then took back a +2 they never had, so Seneca's Shadowseeker after a Hayneedle backstab
-  needed THAC0 17 for 15, the target's DEX and shield not counted (the dice log's "-2 STR").
+- **A thief's later attacks in a round after a backstab** are judged on their own (#116): they
+  were 2 worse to hit and still counted as from behind, the target's DEX and shield ignored.
 
 **Docs**
 - **The change records** (#98): shorter patch notes, each release's news in its notes, the
@@ -77,6 +119,10 @@ under "## Unreleased (branch `obsidian-edition`)
   rules now always on no longer written as switches, the random monsters' divide by zero and "Out
   of memory in OEOpenGraph" out of the game's bugs, more troubleshooting, the Elvenkind picture
   retaken; this section sorted and numbered; `.gitattributes` and `.gitignore` out of the zip.
+- **The final documentation review's fixes** (no pull request yet: branch
+  `claude/final-audit-fixes`): the CHANGELOG's header back, the multiclass rule, always-on rules no
+  longer written as switches, the removed off paths out of the developer pages, the dice log's
+  picture retaken.
 
 **Dev**
 - **The playtest kit** (#99): one startup checklist, the memory edits in RESEARCH, HISTORY by
@@ -87,10 +133,13 @@ under "## Unreleased (branch `obsidian-edition`)
   a branch with `-2` on it for a session's handed random name.
 - **Tidying** (#102): `dsloader/guidepage.py` taken out, the combat log's design brief archived,
   the rest-order prototype moved to `playtest/logs/files/`.
-- **DSCLOG's room freed** (no pull request yet: branch `claude/free-dsclog-room`): the off paths of
+- **DSCLOG's room freed** (#115): the off paths of
   the switches always on since #110 taken out of DSCLOG (their rules' tests, the game's ways behind
   them, `MANUAL_ON`) and of the Loader, about 1.1 KB freed for what comes next; the rules switched
   still are kept.
+- **The final code audit's fixes** (no pull request yet: branch `claude/final-audit-fixes`): the
+  Loader's rules start at the always-on ones and its dead off-branches are gone, the header test
+  ties each constant to its own field, temporary files are each writer's own and never left behind.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 

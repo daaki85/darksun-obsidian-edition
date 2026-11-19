@@ -536,7 +536,7 @@ game's data: it is one player's account.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7,
   logs/2026-11-16-roster-gear.md): the roster keeps the character as the game wrote it at DONE, and
   DSCLOG holds that write (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later
-  session has it, with weapon specialization on or off. To check: start `timeout 115 python3
+  session has it. To check: start `timeout 115 python3
   gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's "starts with ..." lines must
   come before `charsave_written=True` (the roster write, after the psionic powers). To see the
   roster's copy: restart (start.sh, title, CREATE CHARACTERS), ADD it, then list its items with
@@ -589,7 +589,7 @@ game's data: it is one player's account.
   the Effects page's MORE: CLICK HERE is a click on the panel (220,135) (the inventory's own Effects
   icon is 243,187; the portraits there at 65/112, 55/110). It shows each member's EXP and the
   next level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
-  (AD&D's when the header's rules_hi, +270, has 8, RULE_HI_TABLES). For inventory or DUAL pictures
+  (AD&D's, always). For inventory or DUAL pictures
   use `pens-after-arena`: in `fountain-user` the ambush starts on loading.
 - **The leader**: the inventory screen's small face button left of each portrait (the first of the
   two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (from the
@@ -909,7 +909,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   saves); a natural 1 is shown before it too. Since `save_signed` (always applied, in no switch) a
   "cannot save" fails ([it used to save](HISTORY.md#cannot-save-used-to-save)). Look at the effect
   or the HP, not only the save line.
-- **Spells rolling to hit** (logs/2026-11-08-spell-to-hit.md): with `spell_to_hit` on each missile
+- **Spells rolling to hit** (logs/2026-11-08-spell-to-hit.md): each missile
   or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after its damage
   roll; each of Magical Stone's three throws rolls. Hits on demand and a weapon's spell on a hit:
   [spells and powers in memory](RESEARCH.md#spells-and-powers-in-memory).
