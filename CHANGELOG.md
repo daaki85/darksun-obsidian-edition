@@ -24,7 +24,7 @@ may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
 where the changes came from, in brackets.
 
 Releases, newest first (2.12.0 and older in the archive):
-[2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
+[2.19.0](#pull-request-119-merged-2026-11-19) (#119), [2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
 (#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
 (#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
@@ -57,7 +57,7 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
-## Unreleased (branch `obsidian-edition`)
+## Pull request #119 ([merged 2026-11-19](https://github.com/daaki85/darksun-obsidian-edition/pull/119))
 
 Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
 
