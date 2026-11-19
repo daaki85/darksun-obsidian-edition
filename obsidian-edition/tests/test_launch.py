@@ -177,7 +177,7 @@ class LaunchTests(unittest.TestCase):
     def test_conf_loads_the_helper_before_the_game(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=True)
-            conf = launch.write_conf(game, os.path.join(d, "test.conf"))
+            conf = launch.write_conf(game, os.path.join(d, "test.conf"), settings={})  # (not this folder's own settings: its engine)
             with open(conf, newline="") as f:
                 text = f.read()
         lines = text.split("\r\n")
@@ -264,7 +264,7 @@ class LaunchTests(unittest.TestCase):
     def test_conf_without_the_helper_leaves_ems_alone(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)
-            conf = launch.write_conf(game, os.path.join(d, "test.conf"), dice_log=False)
+            conf = launch.write_conf(game, os.path.join(d, "test.conf"), dice_log=False, settings={})
             with open(conf, newline="") as f:
                 self.assertNotIn("ems=", f.read())
 

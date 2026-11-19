@@ -463,6 +463,14 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   file reads and by a mapping), whether DOSBox-X can be held still, and whether a write to code
   is acted on. It is the check for Windows and macOS (its header has the owner's instructions);
   on Linux it passes.
+- **Ending it**: the game's own QUIT (Escape with nothing up, then QUIT at 130, 104) closes
+  DOSBox-X about 4 seconds later, with `dos/GAMEOK.TXT` written; the Loader then removes the
+  memory file and its `game.lock`. To watch an end, poll the process (`/proc/PID/stat`), `ls
+  /dev/shm`, the lock file and `obsidian-edition/Journal/quests.json` every tenth of a second
+  from before the click (the first such watch showed the Loader reading on for 16 s after
+  DOSBox-X had gone). The mouse is let go with Ctrl+F10 (`xdotool key --window $W ctrl+F10`)
+  before clicking in the Loader's window on the same display, and taken again by a click in the
+  game's.
 - **`codepatch.py [SECONDS] [game]`**: is a write to code acted on at once (the helper's own
   counter, or the game's main loop).
 

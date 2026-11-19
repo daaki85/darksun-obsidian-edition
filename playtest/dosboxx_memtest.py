@@ -1,4 +1,4 @@
-# dosboxx_memtest.py DOSBOX-X [normal]: can a second program read and write DOSBox-X's memory file while DOSBox-X runs?
+# dosboxx_memtest.py DOSBOX-X [normal]: says whether a second program can read and write DOSBox-X's memory file while DOSBox-X runs, without the game: the check to run on Windows and on macOS, where the mod's DOSBox-X engine is untested.
 #
 # WHAT IT IS FOR. Obsidian Edition can run the game in DOSBox-X (the Loader's Options tab, Engine).
 # The Loader then follows the game through DOSBox-X's "memory file": a file that IS the emulated

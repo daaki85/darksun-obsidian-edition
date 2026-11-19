@@ -598,11 +598,15 @@ unchanged. No access to DOSBox-X's process is needed: on Linux no root and no
   once. Windows has no `pread` and makes no such promise: there `FileMemory` maps the file
   (untested; [the engine's section](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)
   has why).
-- **A file reads on after DOSBox-X has gone**, unchanged for ever. So `FileMemory` is given
-  DOSBox-X's pid and looks every half second (`ALIVE_EVERY`) whether it still runs
-  (`process.process_running`: a process ended but not yet collected by its parent doesn't); once
-  it doesn't, the next read or write is a `ProcessError`, and the Loader's window says
-  "Disconnected" as it does for 0.74.
+- **A file reads on after DOSBox-X has gone**, unchanged for ever, and what the game left in
+  memory as it quit is not the game any more. So `FileMemory` is given DOSBox-X's pid and asks
+  after it at every read and write (a signal that sends nothing; and every tenth of a second,
+  `ALIVE_EVERY`, the fuller `process.process_running`, which also knows a process that has ended
+  but not been collected by its parent): once it has gone, the read is a `ProcessError`, as a
+  read of a closed process's memory is. The window does not wait for a read: when the DOSBox-X it
+  started closes it lets go of the file at once (`Viewer._dosbox_closed`). Before both, a game
+  ended by its own QUIT left the Loader connected for 16 seconds, and a quests reading taken
+  from the leftover memory was kept (`Journal/quests.json`).
 - **The item gate holds the game still by its pid**: `SIGSTOP` and `SIGCONT`
   (`process.stop_process`, waiting until every thread has stopped, as for 0.74); on Windows
   `NtSuspendProcess` on a handle opened for that alone. A signal needs no access to memory, and
