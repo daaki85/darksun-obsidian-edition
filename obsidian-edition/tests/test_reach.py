@@ -227,7 +227,8 @@ class ReachTests(tc.CahulaksTests):
 
     def test_other_callers(self):
         """Another caller's way back (an ambush's, a spell's, a resident IP in another segment, an overlay
-        IP whose code isn't the AI's), the rule off, or an attacker that is no creature: 2 kept."""
+        IP whose code isn't the AI's), or an attacker that is no creature: 2 kept; the rule's bit clear
+        as on."""
         self.hands((POLEARM, RIGHT))
         for back in ((0x1A0A, 0x0CA0), (0x1A0A, 0x1488), (0x1587, 0x14A2), (0x1A0A, 0x2B7A), (OVERLAY, 0x0164)):
             self.assertEqual(self.distance(back=back), 2, back)
@@ -236,8 +237,8 @@ class ReachTests(tc.CahulaksTests):
         self.assertEqual(self.distance(back=(OVERLAY, 0x0DA7)), 1)
         self.mu.mem_write(OVERLAY * 16 + 0x0DA7 - 4, b"\x00")
         self.assertEqual(self.distance(back=(OVERLAY, 0x0DA7)), 2)
-        self.assertEqual(self.distance(rules=0), 2)
-        self.assertEqual(self.distance(rules=0xFFFF ^ RULE), 2)
+        self.assertEqual(self.distance(rules=0), self.distance())
+        self.assertEqual(self.distance(rules=0xFFFF ^ RULE), self.distance())
         self.assertEqual(self.distance(attacker=7), 2)  # (no creature)
         self.assertEqual(self.distance(attacker=600), 2)  # (past the map's things)
 

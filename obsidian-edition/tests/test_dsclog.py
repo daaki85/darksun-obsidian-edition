@@ -3037,8 +3037,9 @@ class XpNextTests(unittest.TestCase):
     def test_two_due_at_once(self):
         self.assertEqual(self.run_with((3, 5, 8), (5, 4, 5), 20000), " Pr/T)")
 
-    def test_preserver_and_psionicist(self):
-        self.assertEqual(self.run_with((5, 6, 0), (4, 4, 0), 20000), " Pr/Ps)")
+    def test_cleric_and_psionicist(self):
+        """(AD&D's tables, always on: a cleric's and a psionicist's 7th both 55,000.)"""
+        self.assertEqual(self.run_with((1, 6, 0), (6, 6, 0), 55000), " C/Ps)")
 
     def test_one_class_as_the_game(self):
         """An elf fighter: one class, nothing to tell apart."""
@@ -3222,7 +3223,7 @@ class RuleTests(RingTests):
         """The cahulaks' rule (RULES_HI 8192): the cahulaks (type 21) in the right hand alone are two
         weapons, AD&D's numbers whatever the two-weapon rule: the main head's -2 plus the DEX adjustment, no
         better than 0, and CAH_EXTRA how much worse the off head's (-4 plus it) is, for attacker CX
-        (CAH_WHO); without the rule as the game's."""
+        (CAH_WHO); the rules' bits clear the same (always on)."""
         import test_dsclog_drawing as tdd
         _, sym = tdd.build()
         self.hands(right=(21, 3), left=(90, 99))
@@ -3236,11 +3237,11 @@ class RuleTests(RingTests):
                 for adj, main, off in ((-3, -5, -7), (0, -2, -4), (1, -1, -3), (2, 0, -2), (3, 0, -1), (5, 0, 0)):
                     self.assertEqual(self.two(adj, 4), main, (rules, adj))
                     self.assertEqual(extra(), (main - off, 3), (rules, adj))
-            self.mu.mem_write(rules_hi, struct.pack("<H", 0))
+            self.mu.mem_write(rules_hi, struct.pack("<H", 0))  # (the rules' bits clear: the same, always on)
             self.rules(4)
-            self.assertEqual(self.two(0, 4), 0)  # (nothing in the other hand: none, as ever)
+            self.assertEqual(self.two(0, 4), -2)
             self.rules(0)
-            self.assertEqual(self.two(-6, 4), 0)  # (the two-weapon rule's bit clear: the same)
+            self.assertEqual(self.two(-6, 4), -8)
         finally:
             self.mu.mem_write(rules_hi, struct.pack("<H", 0))
 
@@ -4608,10 +4609,10 @@ class NewSpellTests(RuleTests):
         self.assertEqual([kits.backstab_times(k, 5) for k in (kits.ASSASSIN, kits.SWASHBUCKLER, 0)], [6, 5, 5])
 
     def test_enlarge_dice(self):
-        """ENL_SITE (7C246h, AX the Enlarges' levels, SI the damage after STR): the game's (100 + 10
-        a level)% of it all, rounded down; with RULE_HI_ENLARGE (512) and STAB_ROLL's dice, only the
-        dice, rounded up, the rest added once, and the kept dice made the enlarged ones (a backstab
-        then multiplies those); the dice used once."""
+        """ENL_SITE (7C246h, AX the Enlarges' levels, SI the damage after STR): with STAB_ROLL's dice
+        (RULE_HI_ENLARGE, 512, always on: its bit clear the same), only the dice, rounded up, the rest
+        added once, and the kept dice made the enlarged ones (a backstab then multiplies those); the
+        dice used once; without dice, the game's (100 + 10 a level)% of it all, rounded down."""
         from dsloader import gamepatch
         mu = self.mu
         patches = {p.name: p for p in gamepatch.PATCHES}
@@ -4637,7 +4638,7 @@ class NewSpellTests(RuleTests):
             run("stab_times", dict(eax=times))
             return si, struct.unpack("<h", mu.mem_read(SS * 16 + BP - 4, 2))[0]
         # 1d8 rolled 5, -1 bone: 4; +12 STR: 16; Enlarge level 4 (x140%)
-        self.assertEqual(enlarge(0, 4, 16, rolled=4)[0], 22)  # (16 x 1.4 = 22.4: the game's)
+        self.assertEqual(enlarge(0, 4, 16, rolled=4)[0], 18)  # (the bit clear: 5 x 1.4 = 7: +2)
         self.assertEqual(enlarge(512, 4, 16, rolled=4)[0], 18)  # (5 x 1.4 = 7: +2)
         self.assertEqual(enlarge(512, 3, 16, rolled=4)[0], 18)  # (5 x 1.3 = 6.5, up to 7)
         self.assertEqual(enlarge(512, 4, 16)[0], 22)  # (no dice since the last: the game's)
@@ -4645,9 +4646,9 @@ class NewSpellTests(RuleTests):
 
     def test_regeneration(self):
         """REGEN_SITE (228BFh, after the game's "div ebx" by 300: EAX the 300s, EDX the rest, CX the
-        member): AX the hit points, the game's 1 a 300 seconds; with RULE_HI_CON (1024) (26 - CON) x
-        600 seconds a hit point, the rest kept for the member's next; DX the member x 3Ah, as the
-        game's own two instructions left it."""
+        member): AX the hit points, (26 - CON) x 600 seconds a hit point (RULE_HI_CON, 1024, always
+        on: its bit clear the same; the game's 1 a 300 seconds gone with the switch), the rest kept
+        for the member's next; DX the member x 3Ah, as the game's own two instructions left it."""
         from dsloader import gamepatch
         patch = next(p for p in gamepatch.PATCHES if p.name == "regen_rate")
         self.assertEqual((patch.offset, patch.replacement[2]), (0x228BF, gamepatch.REGEN_SITE))
@@ -4667,8 +4668,8 @@ class NewSpellTests(RuleTests):
             self.assertEqual(mu.reg_read(r.UC_X86_REG_DX), member * 0x3A)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_EBX), 300)
             return mu.reg_read(r.UC_X86_REG_AX)
-        self.assertEqual(regen(0, 0, 20, 3599), 11)  # (the game's: 1 a 300 seconds)
-        self.assertEqual(regen(1024, 0, 20, 3599), 0)  # (an hour a hit point at CON 20)
+        self.assertEqual(regen(0, 0, 20, 3599), 0)  # (an hour a hit point at CON 20)
+        self.assertEqual(regen(1024, 0, 20, 0), 0)  # (none more: the bit clear kept the 3599 too)
         self.assertEqual(regen(1024, 0, 20, 301), 1)  # (the 3599 kept: 3900 seconds)
         self.assertEqual(regen(1024, 0, 20, 3300), 1)  # (300 + 3300)
         self.assertEqual(regen(1024, 1, 25, 1800), 3)  # (10 minutes at CON 25; each member its own)
@@ -4677,7 +4678,8 @@ class NewSpellTests(RuleTests):
 
     def test_dwarves_poison_saves(self):
         """CON_SAVE (5EAA1h, AX the CON, [BP+6] the creature's thing): CON's adjustment from the game's
-        table (DS:810h); with RULE_HI_CON none for a dwarf or a halfling (only its racial bonus)."""
+        table (DS:810h); none for a dwarf or a halfling (only its racial bonus), RULE_HI_CON always on
+        (its bit clear the same)."""
         from dsloader import gamepatch
         patch = next(p for p in gamepatch.PATCHES if p.name == "con_save")
         self.assertEqual((patch.offset, patch.replacement[2]), (0x5EAA1, gamepatch.CON_SITE))
@@ -4701,7 +4703,7 @@ class NewSpellTests(RuleTests):
             mu.emu_start(start, start + len(patch.replacement))
             self.assertEqual(mu.reg_read(r.UC_X86_REG_ES), 0x4444)
             return mu.reg_read(r.UC_X86_REG_AL)
-        self.assertEqual([adjust(0, race) for race in (1, 2, 6)], [2, 2, 2])
+        self.assertEqual([adjust(0, race) for race in (1, 2, 6)], [2, 0, 0])
         self.assertEqual([adjust(1024, race) for race in (1, 2, 6, 7)], [2, 0, 0, 2])
 
     def test_wall_damage(self):
@@ -4931,9 +4933,9 @@ class NewSpellTests(RuleTests):
         self.rules_hi(hi)
 
     def test_sell_price(self):
-        """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): with the CHA
-        prices rule (RULE_HI 16) 60%, rounded down, never below 1; all of it without; 9999 (not for
-        sale) kept."""
+        """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): 60%, rounded down,
+        never below 1 (the CHA prices rule, RULE_HI 16, always on: its bit clear the same); 9999 (not
+        for sale) kept."""
         from dsloader import gamepatch
         item = 0x9800 * 16 + 0x40
         def pays(price, rules_hi):
@@ -4942,15 +4944,15 @@ class NewSpellTests(RuleTests):
             self.site(gamepatch.SELL_PRICE, es=0x9800, ebx=0x40, esi=0x1234)
             return self.mu.reg_read(r.UC_X86_REG_SI)
         self.assertEqual([pays(p, 16) for p in (3000, 7, 1, 0, 9999, 65000)], [1800, 4, 1, 0, 9999, 39000])
-        self.assertEqual(pays(3000, 0), 3000)
+        self.assertEqual(pays(3000, 0), 1800)
 
     def test_sell_keep(self):
         """A shop freeing the thing holding an item sold ("push word [179Eh]", SELL_KEEP): with the
         buyback (Shops as in AD&D, RULE_HI_CHA_PRICES) and a magical item (a plus or a power), 270Fh pushed in its place
         and the thing, the merchant (DS:179Ch) and the list's first item queued in the header (+308
         counted, +310 the entries, +1868 their items), with the Loader there (its heartbeat, +1865,
-        under LOADER_FRESH old); anything else, the rule off or no Loader, the thing pushed (freed as
-        the game does: the item was lost)."""
+        under LOADER_FRESH old; the rule's bit clear the same); anything else, or no Loader, the thing
+        pushed (freed as the game does: the item was lost)."""
         from dsloader import gamepatch
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         GAME_DS = 0x3800  # (the things table 9E4h paragraphs below DS: clear of DSCLOG's image)
@@ -4986,12 +4988,12 @@ class NewSpellTests(RuleTests):
         self.assertEqual(struct.unpack("<4H", self.mu.mem_read(hdr + 1868, 8)), (5, 5, 0xFFFF, 0xFFFF))
         self.assertEqual(sell(0, 0, 64), (330, 2))  # (nothing magical: freed)
         self.assertEqual(sell(-1, 0, 64), (330, 2))  # (cursed: no plus)
-        self.assertEqual(sell(2, 0, 0), (330, 2))  # (the rule off)
+        self.assertEqual(sell(2, 0, 0), (0x270F, 3))  # (the rule's bit clear: the same)
         self.mu.mem_write(hdr + 1865, struct.pack("<H", 5000 - 91))  # (no beat for five seconds:
-        self.assertEqual(sell(1, 0, 64), (330, 2))                   #   no Loader, freed)
+        self.assertEqual(sell(1, 0, 64), (330, 3))                   #   no Loader, freed)
         self.mu.mem_write(hdr + 1865, struct.pack("<H", 0))
-        self.assertEqual(sell(1, 0, 64), (330, 2))
-        self.assertEqual(struct.unpack("<4H", self.mu.mem_read(hdr + 1868, 8)), (5, 5, 0xFFFF, 0xFFFF))
+        self.assertEqual(sell(1, 0, 64), (330, 3))
+        self.assertEqual(struct.unpack("<4H", self.mu.mem_read(hdr + 1868, 8)), (5, 5, 5, 0xFFFF))
 
     def test_reflect_entry(self):
         """Where the game finds an effect's entry by its number times 6 (NS_ENTRY: the Effects
@@ -7191,7 +7193,7 @@ class KitTests(unittest.TestCase):
                                     self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
                                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX),
                                                      kits.slots(kid, magic, level, spell_level, given,
-                                                                bool(rules & game.RULE_ADND_TABLES)))
+                                                                True))  # (AD&D's tables always on)
                                     self.assertEqual([self.mu.reg_read(x) for x in (
                                         r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_DX, r.UC_X86_REG_ES,
                                         r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x4444, 0x6666, 0x7FC])
@@ -8095,7 +8097,8 @@ class KitTests(unittest.TestCase):
 
     def test_ranger_level(self):
         """PROBE_RANGER_LEVEL: AL the class's level (ES:BX the sheet + the class's place), a ranger's
-        7 less with the rule, a Seeker's 5 and a Justifier's 9 whatever it (kits.spell_class_level)."""
+        7 less (the rule always on: its bit clear too), a Seeker's 5 and a Justifier's 9
+        (kits.spell_class_level)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_RANGER_LEVEL
         for rules in (game.RULE_KITS | game.RULE_RANGER_CAST, game.RULE_KITS, game.RULE_RANGER_CAST, 0):
@@ -8107,7 +8110,7 @@ class KitTests(unittest.TestCase):
                         self.creature(cls, kit, level=level)
                         self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
                         self.run_vector(VEC_RANGER_LEVEL, 4, eax=0x1100, ebx=5 * 0x47, ecx=0x3333, es=self.SHEET)
-                        want = kits.spell_class_level(kid, cls, level, bool(rules & game.RULE_RANGER_CAST))
+                        want = kits.spell_class_level(kid, cls, level, True)
                         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1100 | want)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX,
                                                                         r.UC_X86_REG_ES)], [5 * 0x47, 0x3333, self.SHEET])
@@ -8313,6 +8316,8 @@ class KitTests(unittest.TestCase):
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
             for cls, kit in self.SHINOBI_CASES:
+                if cls == 11:  # (a preserver: PICK_INT_ANY's, INT always counting: test_int_pick's)
+                    continue
                 kid = self.kit_of(cls, kit, rules)
                 three = tuple(n for n, lvl in kits.SHINOBI_SPELLS if lvl <= 3)
                 for level, known in ((5, ()), (6, ()), (6, (6, 2, 9, 4, 11)), (8, (6, 2, 9, 4, 11)),
@@ -8403,7 +8408,7 @@ class KitTests(unittest.TestCase):
         for its INT refuses the scroll (AX 0; PROBE_LEARN_REFUSED's TOO MANY..., the scroll kept);
         else a d100 against INT's chance, a failure letting the game teach it and use the scroll up,
         then PROBE_LEARN_SAID taking it back with YOU FAIL...; the try told in the header (+272).
-        Without the rule, or a priest spell, the game's own (its messages pushed as they were)."""
+        A priest spell the game's own (its messages pushed as they were); the rule's bit clear as on."""
         from dsloader import intlearn
         from dsloader.gamepatch import VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED
         seg, who = 0x8700, 2
@@ -8459,10 +8464,10 @@ class KitTests(unittest.TestCase):
         self.assertEqual(learn(8)[1][:4], [who, 8, 9, 35])
         self.int_setup(who, 9, first[:6], kit=1)
         self.assertEqual(learn(8)[1][5], intlearn.FULL)
-        # the game's own: the rule off, a priest spell, or a spell it knows (AX 0 already)
+        # the rule's bit clear: as on (refused); the game's own: a priest spell, or a spell it knows (AX 0 already)
         self.int_setup(who, 9, first[:6])
         self.rules(0)
-        self.assertEqual(learn(8), (1, None))
+        self.assertEqual(learn(8), (0, [who, 8, 9, 35, 6, intlearn.FULL]))
         self.rules(game.RULE_INT_LEARN)
         self.assertEqual(learn(80), (1, None))
         self.assertEqual(learn(8, ax=0), (0, None))
@@ -8474,7 +8479,7 @@ class KitTests(unittest.TestCase):
         A SHINOBI CAN NOT...; the scroll kept); first a d100 against its chance to read languages
         (+362, the Loader's): above it, the game teaches it and uses the scroll up, and
         PROBE_LEARN_SAID takes it back with YOU CAN NOT READ...; read, the rule for INT's d100 as a
-        preserver's (no most a level), or learnt without the rule. Told at +272 and +366."""
+        preserver's (no most a level; the rule's bit clear the same). Told at +272 and +366."""
         from dsloader import intlearn, kits
         from dsloader.gamepatch import VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED
         seg, who = 0x8700, 2
@@ -8512,23 +8517,23 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(known_at + 9, b"\1")
         self.assertEqual(self.said(VEC_LEARN_SAID, 0x6A0)[2], b"YOU CAN NOT READ THE SCROLL")
         self.assertEqual(self.mu.mem_read(known_at + 9, 1)[0] & 0x0F, 0)
-        # read at 100%: INT 9's 35% with the rule, learnt without it (no roll)
-        results = set()
-        for n in range(30):
-            ax, told, read = learn(9, 100, both)
-            self.assertEqual((ax, told[2:4], read[1]), (1, [9, 35], 100))
-            self.assertEqual(told[5], intlearn.LEARNT if told[4] <= 35 else intlearn.FAILED)
-            results.add(told[5])
-        self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
-        ax, told, read = learn(9, 100, game.RULE_KITS)
-        self.assertEqual((ax, told[3:], read[1]), (1, [0, 0, intlearn.LEARNT], 100))
-        # read languages 50%: both ways
+        # read at 100%: INT 9's 35% (the rule's bit clear too)
+        for rules in (both, game.RULE_KITS):
+            results = set()
+            for n in range(30):
+                ax, told, read = learn(9, 100, rules)
+                self.assertEqual((ax, told[2:4], read[1]), (1, [9, 35], 100))
+                self.assertEqual(told[5], intlearn.LEARNT if told[4] <= 35 else intlearn.FAILED)
+                results.add(told[5])
+            self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
+        # read languages 50%: both ways (read, then INT's roll)
         outcomes = set()
-        for n in range(30):
+        for n in range(40):
             ax, told, read = learn(17, 50, game.RULE_KITS)
-            self.assertEqual(told[5], intlearn.LEARNT if read[0] <= 50 else intlearn.UNREAD)
+            self.assertEqual(told[5] == intlearn.UNREAD, read[0] > 50)
             outcomes.add(told[5])
-        self.assertEqual(outcomes, {intlearn.LEARNT, intlearn.UNREAD})
+        self.assertIn(intlearn.UNREAD, outcomes)
+        self.assertTrue(outcomes & {intlearn.LEARNT, intlearn.FAILED})
 
     def test_int_pick(self):
         """CHOOSE A SPELL with the rule for INT: PROBE_PICK_LIST leaves out the spells of a level the
@@ -8541,7 +8546,7 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(seg * 16 + 0x25B, struct.pack("<H", who))
         first = list(range(1, 12))
         for rules, known, want in ((game.RULE_INT_LEARN, first[:6], [12, 13]), (game.RULE_INT_LEARN, first[:5], [7, 8, 12, 13]),
-                                   (0, first[:6], [7, 8, 12, 13])):
+                                   (0, first[:6], [12, 13])):  # (the rule's bit clear: as on)
             with self.subTest(rules=rules, known=known):
                 self.int_setup(who, 9, known)
                 self.rules(rules)
@@ -8558,7 +8563,7 @@ class KitTests(unittest.TestCase):
         at = install_at(self.image, VEC_PICK_ANY)
         self.mu.mem_write(VEC_PICK_ANY * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         for rules, known, level, opens in ((game.RULE_INT_LEARN, first[:6], 1, False), (game.RULE_INT_LEARN, first[:5], 1, True),
-                                           (game.RULE_INT_LEARN, first[:6], 3, True), (0, first[:6], 1, True)):
+                                           (game.RULE_INT_LEARN, first[:6], 3, True), (0, first[:6], 1, False)):
             with self.subTest(rules=rules, known=known, level=level):
                 self.int_setup(who, 9, known)
                 self.rules(rules)
@@ -8631,7 +8636,7 @@ class KitTests(unittest.TestCase):
 class AdndTablesTests(unittest.TestCase):
     """RULE_HI_TABLES (game.RULE_ADND_TABLES) against tables.py: PROBE_XP (the XP the next level
     needs), PROBE_PRIEST_THAC0 (what a class group takes off 20) and PROBE_ADND_SLOTS (a class's
-    slots at a spell level); with the rule off, the game's."""
+    slots at a spell level); the rule always on, its bit clear (on False) the same."""
     DS, TABLE, PAIR = 0x9000, 0x8000, 0x700
     RULES, RULES_HI = 170, 270
 
@@ -8662,7 +8667,7 @@ class AdndTablesTests(unittest.TestCase):
                          (site + code_len, sp))
 
     def test_xp(self):
-        """PROBE_XP: the table's word (BX the row x 40 + the level x 2) x 100, or AD&D's."""
+        """PROBE_XP: AD&D's (the table's word x 100 gone with the switch), the bit clear or set."""
         from dsloader import tables
         from dsloader.gamepatch import VEC_XP
         for on in (False, True):
@@ -8674,7 +8679,7 @@ class AdndTablesTests(unittest.TestCase):
                         self.mu.mem_write(self.TABLE * 16 + bx + 0x27C, struct.pack("<H", 123))
                         self.run_vector(VEC_XP, 4, eax=0xDEAD0000 | 123, ebx=bx, ecx=0x3333, edx=0x4444,
                                         esi=0x5555, es=self.TABLE)
-                        want = tables.xp_needed(name, level) if on else 12300
+                        want = tables.xp_needed(name, level)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_EAX, r.UC_X86_REG_BX,
                                                                         r.UC_X86_REG_CX, r.UC_X86_REG_DX,
                                                                         r.UC_X86_REG_SI)],
@@ -8682,7 +8687,7 @@ class AdndTablesTests(unittest.TestCase):
 
     def test_priest_thac0(self):
         """PROBE_PRIEST_THAC0: [BP-2] the AX given, but a priest's (CX 0, its level at [BP-0Ah])
-        AD&D's with the rule: 2 for every 3 levels."""
+        AD&D's: 2 for every 3 levels (the bit clear or set)."""
         from dsloader import tables
         from dsloader.gamepatch import VEC_PRIEST_THAC0
         for on in (False, True):
@@ -8694,7 +8699,7 @@ class AdndTablesTests(unittest.TestCase):
                         self.run_vector(VEC_PRIEST_THAC0, 3, eax=77, ebx=0x2222, ecx=group, edx=0x4444,
                                         esi=0x5555)
                         got, = struct.unpack("<H", self.mu.mem_read(SS * 16 + BP - 2, 2))
-                        want = 20 - tables.priest_thac0(level) if on and group == 0 else 77
+                        want = 20 - tables.priest_thac0(level) if group == 0 else 77
                         self.assertEqual(got, want)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX,
                                                                         r.UC_X86_REG_DX, r.UC_X86_REG_SI)],
@@ -8705,7 +8710,7 @@ class AdndTablesTests(unittest.TestCase):
                          "8b4e0a" "69c9e803" "01c8" "bbffff" "b9ffff" "5d" "cb")
 
     def test_slots(self):
-        """PROBE_ADND_SLOTS: the routine's count; with the rule, for a cleric, druid or preserver,
+        """PROBE_ADND_SLOTS: the routine's count; for a cleric, druid or preserver (the bit clear or set),
         AD&D's for the level and the routine's for WIS alone (asked with the level 0, then the
         level put back)."""
         from dsloader import tables
@@ -8721,7 +8726,7 @@ class AdndTablesTests(unittest.TestCase):
                             stack = struct.pack("<HHH", cls, self.PAIR, spell)
                             self.run_vector(VEC_ADND_SLOTS, 5, stack=stack, eax=0x1111, ebx=0x2222,
                                             ecx=0x3333, esi=0x5555, edi=0x6666)
-                            ours = tables.slots(cls, level, spell) if on else None
+                            ours = tables.slots(cls, level, spell)
                             want = ours + 17 + spell * 1000 if ours is not None else level * 100 + 17 + spell * 1000
                             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
                             self.assertEqual(bytes(self.mu.mem_read(SS * 16 + self.PAIR, 2)), bytes((level, 17)))
@@ -8757,7 +8762,7 @@ class ChaPriceTests(AdndTablesTests):
                     with self.subTest(on=on, member=member, cha=cha, value=value):
                         self.leader(member, cha, on)
                         self.mu.mem_write(self.ITEM * 16 + 0x20 + 6, struct.pack("<H", value))
-                        want = prices.price(value, cha) if on and member < 4 else value
+                        want = prices.price(value, cha) if member < 4 else value  # (the bit clear or set)
                         self.run_vector(VEC_PRICE, 4, es=self.ITEM, ebx=0x20, ecx=0x3333, eax=0x1111,
                                         edx=0x4444)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_CX, r.UC_X86_REG_AX,
@@ -8775,7 +8780,7 @@ class RolledTests(AdndTablesTests):
     """RULE_HI_ROLLED (game.RULE_ROLLED): the creation screen's sites sharing VEC_CR_SPELLS, the
     INT followed by the site's number. RL_ROLL keeps the die's total as a loop sets CHR, RL_SCORE
     keeps a click's raise to the points to spare, RL_HP leaves the hit points as they are, and
-    RL_SUM draws "SUM:" and the totals; with the rule off, the game's."""
+    RL_SUM draws "SUM:" and the totals; the rule always on, its bit clear (on False) the same."""
     test_xp = test_priest_thac0 = test_slots = None  # (AdndTablesTests' own)
     CREATURE, WINDOW, LOG = 0x8000, 0x12345678, 0x6800
     # the game's text routine, a stand-in: x, y and the text (its far pointer, the last argument)
@@ -8835,22 +8840,22 @@ class RolledTests(AdndTablesTests):
                 self.rules(on)
                 self.scores(17, 14, 17, 18, 19, 0)
                 self.roll(17)  # the die: 102
-                self.assertEqual(self.click(0, 18), 17 if on else 18)  # nothing to spare
+                self.assertEqual(self.click(0, 18), 17)  # nothing to spare
                 self.assertEqual(self.click(0, 16), 16)  # lowering: always
                 self.scores(17, 12, 17, 18, 19, 17)  # DEX lowered by 2
                 self.assertEqual(self.click(0, 18), 18)
-                self.assertEqual(self.click(0, 22), 19 if on else 22)  # as far as the 2 to spare
+                self.assertEqual(self.click(0, 22), 19)  # as far as the 2 to spare
                 self.assertEqual(self.click(3, 3), 3)  # round from the least: down
                 self.scores(17, 12, 17, 18, 19, 0)
                 self.roll(15)  # rolled again: 98
-                self.assertEqual(self.click(1, 13), 12 if on else 13)
+                self.assertEqual(self.click(1, 13), 12)
                 self.scores(17, 12, 15, 18, 19, 0)
                 self.roll(15, di=0)  # kept, not rolled (96): the die's 98 stays
                 self.assertEqual(self.click(1, 14), 14)
-                self.assertEqual(self.click(1, 15), 14 if on else 15)
+                self.assertEqual(self.click(1, 15), 14)
                 self.scores(18, 14, 17, 18, 19, 0)
                 self.roll(18, di=0)  # raised to a new class's least (104): the most is 104
-                self.assertEqual(self.click(1, 15), 14 if on else 15)
+                self.assertEqual(self.click(1, 15), 14)
                 self.scores(18, 13, 17, 18, 19, 18)
                 self.assertEqual(self.click(1, 14), 14)
 
@@ -8862,7 +8867,7 @@ class RolledTests(AdndTablesTests):
                     self.rules(on)
                     self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<h", step))
                     self.run_site(RL_HP, 3, eax=9, ebx=0x2222)
-                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 9 if on else 9 + step & 0xFFFF)
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 9)
 
     def drawn(self):
         """The text routine's calls since the last: (x, y, text) each."""
@@ -8891,7 +8896,7 @@ class RolledTests(AdndTablesTests):
                                                                 r.UC_X86_REG_SI, r.UC_X86_REG_DI,
                                                                 r.UC_X86_REG_BP, r.UC_X86_REG_DS)],
                                  [0x1111, 0x2222, 0x5555, 0x6666, BP, self.DS])
-                self.assertEqual(self.drawn(), [(10, 177, "SUM:"), (33, 177, "100/102")] if on else [])
+                self.assertEqual(self.drawn(), [(10, 177, "SUM:"), (33, 177, "100/102")])
 
     SHEET = 0x8800
 
@@ -8939,9 +8944,8 @@ class RolledTests(AdndTablesTests):
                     self.run_site(site, 3, stack=bytes(16), popped=16)
                     drawn = self.drawn()
                     self.assertEqual(drawn[-1], (146, 170, "THAC0: M17 R17"))
-                    self.assertEqual(len(drawn), 2 if on else 1)
-                    if on:
-                        self.assertEqual(drawn[0][:2], (146, 177))
+                    self.assertEqual(len(drawn), 2)  # (ages always on: the bit clear the same)
+                    self.assertEqual(drawn[0][:2], (146, 177))
         # with a THAC0 worked out on this screen (PROBE_THAC0's, no kit): the kit on the sheet being
         # made (kits.thac0): a Scholar 1 worse, a Battle Mage the game's (its warrior THAC0 is its
         # chosen weapon's alone, on the attack); kits off, none
@@ -9019,7 +9023,7 @@ class RolledTests(AdndTablesTests):
                 self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), self.mu.reg_read(r.UC_X86_REG_SI)), (0x1111, 0x5555))
                 called = struct.unpack("<HH", self.mu.mem_read(CALLER * 16 + 0xF0, 4))
                 drawn = self.drawn()
-                if on and any(operand):
+                if any(operand):  # (ages always on: the bit clear the same)
                     self.assertEqual(called, (0x5678, 0x1234))  # (pushed 3F2h's word, then 406h's)
                     self.assertEqual(drawn[0], (86 + 0x15 - 3 * 5, 177, "28/28"))
                     self.assertEqual(drawn[1][:2], (146, 177))
@@ -9046,7 +9050,7 @@ class RolledTests(AdndTablesTests):
                     self.assertEqual((self.mu.reg_read(r.UC_X86_REG_ES), self.mu.reg_read(r.UC_X86_REG_BX),
                                       self.mu.reg_read(r.UC_X86_REG_AX)), (self.SHEET, 0, 0x1234))
                     got, = struct.unpack("<H", self.mu.mem_read(self.SHEET * 16 + 8, 2))
-                    self.assertEqual(got, hp + after - before if on else hp)
+                    self.assertEqual(got, hp + after - before)
 
     def test_tries(self):
         """RL_TRY: AX (a 4d4) plus the word at DS:499Ah, the 4d4 kept for the dice log at the

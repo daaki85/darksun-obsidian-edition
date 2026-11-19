@@ -256,10 +256,14 @@ class StinkHitTests(tc.CahulaksTests):
         self.assertEqual(self.calls(0x520, 0x5F8, 4)[0][3], 1)  # (the poison kind)
 
     def test_not(self):
-        """Without the rule, with another weapon, on a target the blow felled: nothing (the cahulaks'
-        own way after)."""
+        """With another weapon, on a target the blow felled: nothing (the cahulaks' own way after); the
+        rule's bit clear changes nothing (always on)."""
         self.target(thing=20, creature=9)
-        self.assertEqual(self.throw(rules=0), ([], [], []))
+        on = self.throw()
+        self.target(thing=20, creature=9)
+        self.assertEqual(self.throw(rules=0), on)
+        self.assertNotEqual(on, ([], [], []))
+        self.target(thing=20, creature=9)
         self.assertEqual(self.throw(kind=64), ([], [], []))  # (a sling)
         self.target(thing=20, creature=9, hp=0)
         self.assertEqual(self.throw(), ([], [], []))
@@ -274,8 +278,9 @@ class StinkHitTests(tc.CahulaksTests):
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")
 class StinkSidesTests(td.TypesTests):
-    """STINK_SIDES: type 0's sides 3 with the rule, the game's 4 without, at the table's read and again
-    whenever it runs (the main loop's pass), only in the table read and only over a 3 or 4."""
+    """STINK_SIDES: type 0's sides 3 (the rule always on: the game's 4 gone with its switch), at the
+    table's read and again whenever it runs (the main loop's pass), only in the table read and only
+    over a 3 or 4."""
 
     def rules(self, value):
         self.mu.mem_write(self.hdr + 270, struct.pack("<H", value))  # (RULES_HI: Weapon traits)
@@ -301,9 +306,10 @@ class StinkSidesTests(td.TypesTests):
         self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
         self.interrupt(td.VEC_TYPES_FILL, eax=0)
         self.assertEqual(self.sides(), 3)
+        self.mu.mem_write(self.TYPES_SEG * 16 + 0x0C, b"\x04")  # (the game's 4 back: made 3 again)
         self.rules(0)
         self.call()
-        self.assertEqual(self.sides(), 4)
+        self.assertEqual(self.sides(), 3)
         self.rules(RULE)
         self.call()
         self.assertEqual(self.sides(), 3)

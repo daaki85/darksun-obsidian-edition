@@ -7319,11 +7319,7 @@ probe_slots:
         jne .tables
         or cx, cx
         jnz .tables
-        cmp byte [bp + 0x0A], 6         ; (a 6th-level slot only with AD&D's tables: the game's
-        jb .level                       ;   own give a cleric none)
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .tables
-.level: call kit_level
+.level: call kit_level                  ; (a 6th-level slot too: AD&D's tables, always on)
         movzx ax, al
         push bx
         movzx bx, byte [bp + 0x0A]
@@ -7898,9 +7894,6 @@ probe_ranger_level:
         db KIT_JUSTIFIER
         je .take
         mov cl, 7
-        test word [cs:rules_hi], RULE_HI_RANGER
-        jnz .take
-        xor cl, cl
 .take:  pop bx
         pop ax
         sub al, cl
@@ -8841,8 +8834,6 @@ rl_score:
         push word [RL_HP_MAX]   ; (the most hit points before the click, for RL_CON)
         pop word [cs:rl_old_max]
         mov al, [bp - 2]
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .out
         cmp al, [es:bx + 0x22]
         jbe .out                ; lowered: always
         push cx
@@ -8862,12 +8853,10 @@ rl_score:
         pop cx
 .out:   iret
 
-; RL_HP replaces "add ax,[bp-2]" (63A49h), where a click adds 1 or -1 (BP-2) to the hit points.
+; RL_HP replaces "add ax,[bp-2]" (63A49h), where a click adds 1 or -1 (BP-2) to the hit points:
+; it adds nothing (the hit points as rolled).
 rl_hp:
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jnz .out
-        add ax, [bp - 2]
-.out:   iret
+        iret
 
 ; RL_CON replaces "les bx,[119Ch]" (+ NOP; 63946h) after a click on CON has had the game work out
 ; the hit points' least and most again (655D6h, not rolling): the sheet's hit points (+8) move as
@@ -8875,14 +8864,12 @@ rl_hp:
 ; lowered takes it off; the game then keeps them between the least and most, as before.
 rl_con:
         les bx, [0x119C]
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .out
         push ax
         mov ax, [RL_HP_MAX]
         sub ax, [cs:rl_old_max]
         add [es:bx + 8], ax
         pop ax
-.out:   iret
+        iret
 
 ; RL_TRY replaces "add ax,[499Ah]" (+ NOP; 6498Bh), where an ability's roll (6490Dh, the ability at
 ; [BP+8], DI the try, 0-3) adds the race's adjustment + 4 to a 4d4 (AX): the 4d4 kept in RL_TRIES,
@@ -8945,8 +8932,6 @@ rl_sum:
         call cr_thac0_draw
 .no_hp: pop es
         popad
-        test word [cs:rules_hi], RULE_HI_ROLLED
-        jz .back
         cmp word [cs:rl_pool], 0
         je .back
         sti
@@ -9144,10 +9129,8 @@ cr_ages:
 .drawn: sti
         pushad
         push es
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .thac0
         call cr_age_draw
-.thac0: call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
+        call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
         pop es
         popad
         push word [cs:cr_fl]
@@ -9181,8 +9164,6 @@ cr_names:
         pop word [cs:cr_cs]
         pop word [cs:cr_fl]
         add sp, 0x0E            ; the replaced instruction
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .back
         sti
         pushad
         push es
@@ -9555,9 +9536,7 @@ probe_pick_list:
         jb .spell
         shr di, 1
         jmp .out
-.int:   test word [cs:rules_hi], RULE_HI_INT    ; (a preserver: the list without the spells of a
-        jz .out                                 ; level it knows its INT's most of)
-        call is_preserver
+.int:   call is_preserver   ; (a preserver: the list without the spells of a level it knows its INT's most of)
         jnc .out
         mov bp, sp
         les si, [ss:bp + 14]
@@ -9595,12 +9574,10 @@ probe_pick_list:
         iret
 
 ; PICK_INT_ANY: (PROBE_PICK_ANY, not a Shinobi: SI the character, ES:BX its sheet, AX its
-; preserver level) with RULE_HI_INT, AX 0 (CHOOSE A SPELL not opened) when no wizard spell it
+; preserver level) AX 0 (CHOOSE A SPELL not opened) when no wizard spell it
 ; doesn't know is left at a spell level on offer (up to (AX + 1) / 2, no more than PICK_CAP's) that
 ; isn't full (LEVEL_FULL). DS the game's; others kept.
 pick_int_any:
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .ret
         cmp ax, 0
         jle .ret
         call is_preserver
@@ -9759,8 +9736,6 @@ learn_msg    db 0                       ; (LEARN_FAILED or LEARN_FULL: the game'
 int_learn:
         or ax, ax
         jz .ret
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .ret
         cmp dl, WIZARD_LAST
         jbe .wizard
         push ax                         ; (or a new spell: NEW SPELLS)
@@ -9832,10 +9807,7 @@ shinobi_read:
         call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]
-        test word [cs:rules_hi], RULE_HI_INT
-        jnz .rate
-        xor al, al                      ; (no INT roll)
-.rate:  mov [cs:learn_chance], al
+        mov [cs:learn_chance], al
         mov si, SHINOBI_SPELLS          ; one of its spells?
 .its:   cmp [cs:si], dl
         je .new
@@ -11178,8 +11150,6 @@ kit_redraw:
         cmp byte [cs:kit_reroll_due], 0
         je .hp
         call kit_reroll
-        test word [cs:rules_hi], RULE_HI_AGING
-        jz .thac0
         call cr_age_draw
         jmp .thac0
 .hp:    mov si, 0x3F0
@@ -12022,10 +11992,9 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
 ; XP_NEED: EAX the XP class row SI (1-8: cleric, druid, fighter, gladiator, preserver,
 ; psionicist, ranger, thief, as the game's XP table and View Character's copy number them) needs
 ; at level index CX (the entry the game reads: the level the character has), EAX coming in as the
-; game's table word: the game's x100, or with RULE_HI_TABLES AD&D's (levels 0-13). Others kept.
+; game's table word: AD&D's (levels 0-13; RULE_HI_TABLES, always on), past them the game's x100.
+; Others kept.
 xp_need:
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .game
         cmp si, 8
         ja .game
         or si, si
@@ -12081,11 +12050,9 @@ probe_xp:
 ; PROBE_PRIEST_THAC0: INT VEC_PRIEST_THAC0 replaces "mov [bp-2],ax" (3 bytes: INT + NOP; DSUN.EXE
 ; 876ABh) in the game's THAC0 routine, AX what a class group takes off 20 at its level: (level - 1)
 ; x the group's factor / 12, the groups (CX 0-3) priest (8), warrior (12), wizard (4), rogue (6),
-; their levels the bytes at [BP-0Ah] + CX x 2. With RULE_HI_TABLES a priest's is AD&D's, 2 for
+; their levels the bytes at [BP-0Ah] + CX x 2. A priest's is AD&D's (RULE_HI_TABLES), 2 for
 ; every 3 levels (20, 20, 20, 18, 18, 18, 16...); the others are AD&D's already.
 probe_priest_thac0:
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .done
         or cx, cx
         jnz .done
         push bx
@@ -12125,8 +12092,6 @@ probe_adnd_slots:
         mov si, [bp + 0x0A]
         mov cx, [ss:si]         ; (CL the level, CH WIS)
         mov bx, [bp + 8]
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .game
         cmp bx, 11
         je .wizard
         cmp bx, 8
@@ -12214,8 +12179,6 @@ SLOT_LEVELS equ 12
 CHA_PRICE_FIRST equ 18          ; (prices.CHA_FIRST)
 CHA_PRICE_STEPS equ 8           ; (to CHA 25)
 cha_price:
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES
-        jz .out
         cmp cx, 9999
         je .out
         jcxz .out
@@ -14467,8 +14430,6 @@ enl_site:
         imul ax, ax, 10
         movsx eax, ax
         add eax, 100                    ; (the percent)
-        test word [cs:rules_hi], RULE_HI_ENLARGE
-        jz .whole
         cmp byte [cs:enl_known], 0
         je .whole
         movsx ebx, word [cs:stab_dice]
@@ -14505,8 +14466,6 @@ enl_site:
 ; next time) and AX the hit points from them, at most 1000; a clock gone back (a game loaded) none.
 regen_secs dd 0, 0, 0, 0
 regen_site:
-        test word [cs:rules_hi], RULE_HI_CON
-        jz .game
         push ebx
         push si
         push es
@@ -14538,7 +14497,7 @@ regen_site:
 .out:   pop es
         pop si
         pop ebx
-.game:  mov dx, cx
+        mov dx, cx
         imul dx, dx, 0x3A
         iret
 
@@ -14553,8 +14512,6 @@ con_save:
         push es
         mov bx, ax
         mov al, [bx + 0x810]
-        test word [cs:rules_hi], RULE_HI_CON
-        jz .done
         push ax
         mov ax, [bp + 6]
         call combatant_creature
@@ -15741,11 +15698,8 @@ dual_level:
         pushad
         push es
         mov di, sp
-        mov al, DUAL_LEAST_LEVEL
-        test word [cs:rules_hi], RULE_HI_DUAL
-        jz .cmp
-        inc ax
-.cmp:   cmp [es:bx + 0x24], al
+        mov al, DUAL_LEAST_LEVEL + 1    ; (the manual's third, the game's second gone with the switch)
+        cmp [es:bx + 0x24], al
 dual_flags:
         jmp ns_flags_iret
 
@@ -15770,11 +15724,7 @@ dual_new:
         mov cx, di
 dual_primes:
         mov di, sp
-        test word [cs:rules_hi], RULE_HI_DUAL
-        jnz .rule
-        cmp [es:bx + 0x22], dl          ; (the game's)
-        jmp dual_flags
-.rule:  test cx, cx
+        test cx, cx
         jnz .class
         les bx, [0x1661]
         imul ax, si, 0x47
@@ -16038,8 +15988,6 @@ rs_rec:
 ; RP_PASS, in a frame the overlay manager can fix up (the casts load the spells' overlay).
 rest_pre:
         mov word [bp - 0x10], 0         ; (the move replaced)
-        test word [cs:rules_hi], RULE_HI_REST
-        jz .iret
         cmp word [bp + 6], 0
         jne .iret
         call pp_fighting
@@ -16827,9 +16775,7 @@ CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after
 MN_TANGLE    equ 10
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
 cah_more:                           ; AX the attacks a round (halves) with item BX: 2 more for
-        test word [cs:rules_hi], RULE_HI_CAHULAKS ;   the cahulaks with the rule. Others kept.
-        jz .ret
-        push ax
+        push ax                     ;   the cahulaks. Others kept.
         mov ax, bx
         call item_is_cahulaks
         pop ax
@@ -16856,15 +16802,10 @@ item_is_cahulaks:                   ; ZF if item AX (its number) is of the cahul
         ret
 .no:    or sp, sp                   ; (ZF clear)
         ret
-two_cahulaks:                       ; ZF with the rule if item [BP+0Ah] (595ECh's) is the cahulaks
+two_cahulaks:                       ; ZF if item [BP+0Ah] (595ECh's) is the cahulaks
         push ax
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .no
         mov ax, [bp + 0x0A]
         call item_is_cahulaks
-        pop ax
-        ret
-.no:    or sp, sp
         pop ax
         ret
 cah_adjust:                         ; (PROBE_TWO's, the hand's base and DEX's set) DX the main
@@ -16904,8 +16845,6 @@ cah_two:
 cah_swing:
         mov word [bp - 4], 0
         call size_dice          ; (the creature size rule: a large target's dice, the call's first swing)
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .out
         cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set)
         jl .out
         cmp word [bp + 0x16], 1
@@ -16935,9 +16874,7 @@ cah_swing:
 ; CAH_HIT ("mov byte [bp-15h],0", 58B54h; 4 bytes: a weapon's hit has done damage): the cahulaks'
 ; tangle (see CAHULAKS), and the staff sling's stinkpot (STINKPOTS).
 cah_hit:
-        mov byte [bp - 0x15], 0
-        test word [cs:rules_hi], RULE_HI_CAHULAKS ; (Weapon traits: the cahulaks', the stinkpot, the hook)
-        jz .out
+        mov byte [bp - 0x15], 0     ; (Weapon traits: the cahulaks', the stinkpot, the hook)
         cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set: audit 2026-11-11)
         jl .out
         cmp word [bp + 0x14], STAFF_SLING
@@ -17131,10 +17068,7 @@ stink_sides:
         cmp ax, [cs:types_ptr + 2]
         jne .out
         mov al, STINK_SIDES
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jnz .set
-        mov al, SLING_SIDES
-.set:   mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
+        mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
         cmp ah, STINK_SIDES
         je .put
         cmp ah, SLING_SIDES
@@ -17185,8 +17119,6 @@ reach_site:
         mov ax, [bp - 0x16]
         cmp ax, 2
         jne .out
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .out
         pusha
         push es
         call reach_caller
@@ -17384,9 +17316,7 @@ is_large:                           ; CF if combatant AX is large (see SIZE). DS
         popa
         stc
         ret
-size_dice:                          ; (CAH_SWING's: the call's first swing with an item, the rule on)
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .ret
+size_dice:                          ; (CAH_SWING's: the call's first swing with an item)
         pusha
         mov ax, [bp - 0x14]
         cmp ax, [bp - 0x0A]
@@ -17432,9 +17362,7 @@ size_dice:                          ; (CAH_SWING's: the call's first swing with 
 .done:  popa
 .ret:   ret
 size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST for Hold or Charm
-        test word [cs:rules_hi], RULE_HI_SIZE ;   Person on a large target ([BP+6]; spell [BP+0Ah])
-        jz .ret
-        push bx
+        push bx                     ;   Person on a large target ([BP+6]; spell [BP+0Ah])
         mov bx, [bp + 0x0A]
         cmp bx, 2
         je .spell
@@ -17478,8 +17406,6 @@ SL_DRAW  equ 0x72AA0 - 0x72AAA      ; (the text routine's far address in that ca
 SL_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
 size_line:
         inc word [bp - 2]
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .ret
         cmp dword [bp - 6], 0
         jne .ret                    ; (an item box's only)
         sti                         ; (interrupts on while the game's text routine draws: the INT
@@ -17610,8 +17536,6 @@ sl_parse:
 size_pre:
         pushad
         push es
-        test word [cs:rules_hi], RULE_HI_SIZE
-        jz .push
         cmp si, SHILLELAGH_TYPE
         jne .push
         mov ax, 0x0601              ; 1D6, its bonus 1 more
@@ -17724,12 +17648,9 @@ held_hit:
 .out:   pop bx
         pop ax
         iret
-held_damage:
+held_damage:                        ; (normal damage: the game's doubling gone with the switch)
         mov ax, [bp - 4]
-        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; (a byte's test: a word's with 8000h is how
-        jnz .out                    ;   the unit tests find PROBE_HP_BEST)
-        shl ax, 1
-.out:   iret
+        iret
 ; The weapon attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows (or stones) left,
 ; "Out of ammo" with none, and once its attacks are made marks the attacker's attacks for the round
 ; spent (+181h 63h at 58C45h, "cmp ax,[bp-8] / jl" at 58C38h), which ends the turn (5844Eh): so a
@@ -17810,10 +17731,8 @@ ammo_okay:
         iret
 ammo_real dw -1                     ; (AMMO_CAP's: the round's attacks before the cut; -1 none)
 ammo_out dw -1                      ; (AMMO_TURN's: the party member whose shots were cut, attacks left)
-held_now:                           ; CF with the rule on and the attack's target (TARGET) helpless:
-        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; Paralyzed or Out Cold. DS the game's; all kept.
-        jz .ret                     ; (TEST clears CF)
-        push ax
+held_now:                           ; CF if the attack's target (TARGET) is helpless:
+        push ax                     ;   Paralyzed or Out Cold. DS the game's; all kept.
         mov ax, [TARGET]
         call helpless_of
         cmp al, 1                   ; (CF: none)
@@ -17851,8 +17770,6 @@ cah_extra  dw 0                     ; how much worse the off head's swing is tha
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
 rest_hp:
-        test word [cs:rules_hi], RULE_HI_REST
-        jz .game
         cmp word [bp + 6], 0
         je .rule
 .game:  mov [es:bx], ax
@@ -22494,8 +22411,6 @@ sell_price:
         push es
         mov di, sp
         mov ax, [es:bx + 6]
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES
-        jz .set
         cmp ax, 9999
         je .set
         cmp ax, 1
@@ -22534,8 +22449,6 @@ sell_keep:
         push cx
         push es
         mov cx, [SOLD_THING]
-        test word [cs:rules_hi], RULE_HI_CHA_PRICES ; (Shops as in AD&D: the buyback too)
-        jz .push
         cmp cx, NO_THING
         jae .push
         mov bx, ds
@@ -22739,9 +22652,6 @@ ef_charges:
         add di, 3
         mov al, dl
         call c_itoa                     ; (the level, then a 0: 10% a level)
-        mov si, ef_enlarge_word
-        test word [cs:rules_hi], RULE_HI_ENLARGE
-        jz .tail
         mov si, ef_enlarge_dice         ; (the weapon's dice only: ENL_SITE)
         jmp .tail
 .armour:

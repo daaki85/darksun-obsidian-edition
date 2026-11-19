@@ -68,22 +68,22 @@ class HeldTests(tc.CahulaksTests):
 
     def test_held_hit_automatically(self):
         """With the rule a Paralyzed target (its effect 34) or an Out Cold one (its creature's +1Ch 3) is
-        hit whatever the d20, a 1 too; another's Paralyzed or another effect doesn't count; nothing
-        without the rule."""
+        hit whatever the d20, a 1 too (the rule always on: its bit clear the same); another's Paralyzed
+        or another effect doesn't count."""
         held = ((20, PARALYZED),)
         for d20 in (1, 7, 19):
             self.assertTrue(self.held(d20, effects=held), d20)
             self.assertTrue(self.held(d20, out_cold=True), d20)
-            self.assertFalse(self.held(d20, rules=0, effects=held), d20)
-            self.assertFalse(self.held(d20, rules=0, out_cold=True), d20)
+            self.assertTrue(self.held(d20, rules=0, effects=held), d20)
+            self.assertTrue(self.held(d20, rules=0, out_cold=True), d20)
         self.assertFalse(self.held(5, effects=((21, PARALYZED),)))  # (someone else held)
         self.assertFalse(self.held(5, effects=((20, 16),)))         # (Enlarged: not helpless)
         self.assertTrue(self.held(5, effects=((3, 4), (20, 2), (20, PARALYZED), (22, PARALYZED))))
 
     def test_damage(self):
-        """HELD_DAMAGE: AX what a helpless target takes, the damage x2 the game's way, the damage with the
-        rule; [BP-4] unchanged."""
-        for rules, want in ((0, 26), (RULE, 13)):
+        """HELD_DAMAGE: AX what a helpless target takes, the damage (the rule always on: its bit clear
+        too; the game's x2 gone with the switch); [BP-4] unchanged."""
+        for rules, want in ((0, 13), (RULE, 13)):
             self.rules_hi(rules)
             self.frame(m4=13)
             self.assertEqual(self.where("held_damage", (), eax=0xBEEF), "end")
