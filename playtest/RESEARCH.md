@@ -272,6 +272,20 @@ come with me to the Veiled Alliance!" over the map. It runs with `ems=false` and
 **`dosmem.py [PID]`** reads the memory of any DOSBox (no helper needed): both MCB chains, the
 program's far heap (load + 0FE7h in SL, **+ 135Bh** in WotR) and DOS memory after it.
 
+**Driving it** (2026-11-19, logs/2026-11-19-ravager-fixes-2.md): `sh ravstart.sh [FOLDER]` starts
+it to Tyr with no mouse (Shift twice, **S** on the menu is START GAME, 80 s). The game is 320x200
+shown at 640x480: **game y = window y / 2.4**. Its pointer is DS:A109h (x) and A10Bh (y) (SL's
+A133h); `python3 ravclick.py X Y [left|right|none]` moves there and presses slowly (0.3 s). The USE
+screen (the top-left icon, 22,17) acts for the leader out of a fight (a portrait click doesn't
+change who); the small top button left of a portrait is MAKE <NAME> LEADER (47,43 the first);
+hovering names a button in the bar below; VIEW CHARACTER 47,171, VIEW INVENTORY 74,171, LEVEL
+197,171. The opening party: Ar'anda (elf preserver/psionicist/thief 6/6/7), an earth cleric 7,
+Thy'rokh (thri-kreen fighter/druid, the leader), a half-giant gladiator 7; its sheets at the far
+pointer DS:19C5h. **Running one of its routines on the live game** (`ravthief.py`, the thief
+skills): most of its code is in overlays swapped out to XMS, so lay every overlay above A0000h from
+Dark Sun Recompiled's `build_image.py` (its PSP set to the live one) with that image's stubs, the
+live memory below; and give the emulator SS = DS (Borland reads stack buffers through DS).
+
 **Its spells, and the fixes carried over** (2026-11-19, logs/2026-11-19-ravager-fixes.md): no
 spell table in its program; each spell is `RESOURCE.GFF`'s `DATA` 0-319, 73 bytes (SL's 32-byte
 record, then the name and an 8-letter short name), read one at a time as the spell is used

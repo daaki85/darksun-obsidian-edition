@@ -176,9 +176,14 @@ to the helper. Read side by side:
 | Armor using a charge for any spell or blow | `armor_charge` | 84B7Eh, but it tests another flag (20h, not 4) | **differs**: read WotR's code before touching it |
 
 Of the program's other fixes, those that call the helper (107 with an intact twin) wait on a WotR
-helper. The rest have no clear twin and must be found by hand: the saving throw's unsigned compare
-(`save_signed`, "can't save" always saving), Negative Plane Protection's save, the fight music,
-Mirror Image and the rest.
+helper. The rest have no clear twin and must be found by hand. Found so far:
+
+| Fix | WotR | Verdict |
+|---|---|---|
+| "Can't save" always saved: the saving throw's last compare unsigned (`save_signed`) | 66EA6h: "mov al,[bp-2] / cmp al,[bp-1] / jb fail", the same unsigned compare (the branch the other way from SL's) | **the same bug; fixed by hand**: `jb` made `jl` (66EACh, `72 03` to `7C 03`), in `ravfixes.py`. This is also the dice log's saving-throw site (SL's `save` patch's six bytes) |
+| Negative Plane Protection saved as against Vampiric Touch | 84DDAh: "push 6 / push 26h", 26h being WotR's Vampiric Touch (spell 38), its effect 4Fh (SL's 2Ah) | **the same bug**; the fix needs a record that allows a save (SL's is a new one, from the helper): a new `DATA` chunk in `RESOURCE.GFF`, and a push of its number, which a one-byte `push` can't hold. Left for now |
+
+Still to find: the fight music, Mirror Image, the Psionic Blast wounds and the rest.
 
 **The spell records' fixes.** WotR has no spell table in its program: each spell is a `DATA`
 chunk of `RESOURCE.GFF` (0-319, 73 bytes: SL's 32-byte record, then its name twice), read when
@@ -192,11 +197,30 @@ the spell is used. Matched by name, field by field:
 | Not matched | the fire elementals and the other monsters' records (7) | |
 
 So 23 of them carry over as data edits to `RESOURCE.GFF`. `playtest/ravfixes.py` makes a copy of
-WotR with the five program fixes and these 23. It plays as the original does: the intro, START
+WotR with the six program fixes (the five above and the saving throw's) and these 23. It plays as the original does: the intro, START
 GAME, the cinematic and Tyr. In memory, four fixed sites are in the program and no original
 copy, and choosing Bless on the USE screen loaded its record whole from `RESOURCE.GFF`. That is
-the path every fixed record takes. No fix was yet seen at work in play: that needs a cast of a
-fixed spell (none of the opening party has one), a whole-party thief roll or a random encounter.
+the path every fixed record takes. **A fix seen at work: the thief skills' equipment penalty.** The game never shows thief skills,
+so `playtest/ravthief.py` runs WotR's own thief-skill routine in an emulator (unicorn) on the
+running game's memory, with every overlay laid in from an image of the fixed program. The
+subject is the opening party's thief, Ar'anda (an elf preserver/psionicist/thief, 7th level as
+a thief), with a +1 long sword in hand:
+
+| Skill | WotR as it is | With the fix |
+|---|---|---|
+| Pick pockets | 81 | 86 |
+| Open locks | 68 | 68 |
+| Find/remove traps | 61 | 61 |
+| Move silently | 70 | 80 |
+| Hide in shadows | 70 | 75 |
+| Hear noise | 56 | 56 |
+| Climb walls | 96 | 106 |
+| Read languages | 24 | 24 |
+
+The differences, 5, 10, 5 and 10, are SL's penalties (5, 0, 0, 10, 5, 0, 10, 0) exactly: the
+same bug, and the fix works in WotR's own code. The other fixes are still to be seen in play: a
+cast of a fixed spell (none of the opening party knows one), a saving throw against a "can't
+save" spell, a whole-party thief roll, a random encounter.
 
 **What this means for a WotR edition.** The bug fixes split three ways: data fixes (the spell
 records, by name: the easiest), plain code fixes with identical twins (applied as they are, at
