@@ -9,7 +9,7 @@ from typing import Optional
 from . import values
 from .guestmem import GuestMemory, locate
 from .layout import Layout
-from .process import ProcessMemory, find_dosbox_processes
+from .process import FileMemory, ProcessMemory, find_dosbox_processes, is_dosbox_x, memory_file
 from .savefile import load_party
 from .search import OPS, SearchSession
 
@@ -25,18 +25,48 @@ class CliError(Exception):
 def connect(args, started: Optional[int] = None) -> GuestMemory:
     """DOSBox's guest memory: in the process --pid names, else in STARTED (the pid of the DOSBox,
     or recompiled program, this Loader started: another DOSBox running beside it doesn't matter),
-    else in the only DOSBox running."""
+    else in the game started from this folder earlier if it still runs in DOSBox-X, else in the
+    only DOSBox running (of several, the only one of the Options tab's engine: a DOSBox-X beside
+    a DOSBox 0.74 is not taken for it, nor the other way). A game in DOSBox-X is read through its
+    memory file (process.FileMemory), found by its process (launch.game_memory_file); the
+    environment's DSLOADER_MEMORY_FILE names one outright (the playtest kit's)."""
+    from . import launch
     pid = args.pid if args.pid is not None else started
-    if pid is None:
-        found = find_dosbox_processes()
-        if not found:
-            raise CliError("No DOSBox process found: start the game (Start the game, top left).")
-        if len(found) > 1:
-            listing = ", ".join(f"{p} ({n})" for p, n in found)
-            raise CliError(f"Several DOSBox processes are running: {listing}. Pick one with --pid.")
-        pid = found[0][0]
     host_base = None if args.host_base is None else values.parse_int(args.host_base)
+    if memory_file():
+        return _located_file(memory_file(), pid or 0)
+    if pid is None:
+        pid, memory = launch.memory_game()
+        if pid:
+            return _located_file(memory, pid)
+        pid = _the_dosbox(find_dosbox_processes(), launch.dosboxx.engine(launch.load_settings()))
+    memory = launch.game_memory_file(pid) if host_base is None else ""
+    if memory:
+        return _located_file(memory, pid)
     return _located(pid, host_base)
+
+
+def _the_dosbox(found, engine: str) -> int:
+    """The one DOSBox of FOUND ((pid, name) each) to read: the only one; of several, the only one
+    that is the ENGINE's kind (DOSBox-X, or not). CliError when there is none, or no telling."""
+    from .dosboxx import DOSBOX_X
+    if not found:
+        raise CliError("No DOSBox process found: start the game (Start the game, top left).")
+    mine = [(p, n) for p, n in found if is_dosbox_x(n) == (engine == DOSBOX_X)]
+    if len(found) > 1 and len(mine) != 1:
+        listing = ", ".join(f"{p} ({n})" for p, n in found)
+        raise CliError(f"Several DOSBox processes are running: {listing}. Pick one with --pid.")
+    return (mine or found)[0][0]
+
+
+def _located_file(path: str, pid: int) -> GuestMemory:
+    """The guest memory in DOSBox-X's memory file PATH (PID its process, 0 if not known)."""
+    proc = FileMemory(path, pid)
+    try:
+        return locate(proc)
+    except BaseException:
+        proc.close()
+        raise
 
 
 def _located(pid: int, host_base=None) -> GuestMemory:
@@ -64,8 +94,11 @@ def cmd_processes(args) -> None:
         print("No DOSBox processes found.")
     for pid, name in found:
         try:
-            guest = _located(pid)
-            print(f"{pid:>7}  {name}  guest RAM: {guest.size // (1024 * 1024)} MB at host {guest.base:#x}")
+            from . import launch
+            memory = launch.game_memory_file(pid)
+            guest = _located_file(memory, pid) if memory else _located(pid)
+            where = f"in its memory file {memory}" if memory else f"at host {guest.base:#x}"
+            print(f"{pid:>7}  {name}  guest RAM: {guest.size // (1024 * 1024)} MB {where}")
             guest.proc.close()
         except Exception as e:
             print(f"{pid:>7}  {name}  ({e})")
@@ -265,7 +298,7 @@ def _game_dir(args) -> str:
         if not game_dir:
             raise CliError("No game folder chosen.")
         if not launch.is_game_dir(game_dir):
-            raise CliError(f"{game_dir} has no DSUN.EXE and DOSBOX folder; pick the GOG install folder.")
+            raise CliError(f"{game_dir} has no {launch.game_dir_wanted()}.")
     with launch.SETTINGS_LOCK, launch._settings_file_lock():  # (another process's change kept)
         settings = launch.load_settings(strict=True)
         changed = dict(settings, game_dir=os.path.abspath(game_dir))
