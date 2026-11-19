@@ -5467,7 +5467,6 @@ WP_CALL_PRINT  equ 0x6416F
 WP_CALL_COLOUR equ 0x6417D
 WP_CALL_HELP   equ 0x641AF
 WP_CALL_BUTTON equ 0x6422F
-WP_CALL_REDRAW equ 0x642E2
 WP_CALL_MARK   equ 0x63FC4          ; (the row's mark: A0:3180h, as 63FEEh draws it)
 WP_CALL_BACKDROP equ 0x639E9        ; (a number's backdrop put back: A0:30C3h, as 639D5h shows the PSP)
 WP_STAT_SEG    equ 0x639D5          ; ("mov ax,340h": the backdrops' words' segment)
@@ -11764,8 +11763,6 @@ wp_colour  dd 0
 wp_help    dd 0
            dw WP_CALL_BUTTON & 0xFFFF
 wp_button_fn dd 0
-           dw WP_CALL_REDRAW & 0xFFFF
-wp_redraw  dd 0
            dw WP_CALL_MARK & 0xFFFF
 wp_mark_fn dd 0
            dw WP_CALL_BACKDROP & 0xFFFF
