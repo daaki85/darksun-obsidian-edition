@@ -254,6 +254,11 @@ game's data: it is one player's account.
 - **A scratch copy of the mod for a Loader change**: `git archive HEAD | tar -x -C DIR`, the game
   copied to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the
   Loader from the kit's parent folder); restart the dice log as above, from `DIR/obsidian-edition`.
+- **Comparing two builds in play** (logs/2026-11-19-free-dsclog-room.md): the game's dice differ
+  from run to run even from the same save (`fountain-user`'s ambush went differently each load), so
+  compare the dice log's lines by their form (the THAC0 and damage parts), not roll by roll; or
+  emulate both builds with the unit tests (the session's harness ran the new tests on the old
+  `DSCLOG.EXE` with every always-on bit forced set).
 - **Comparing two builds' memory**: `git show HEAD:obsidian-edition/dos/DSCLOG.EXE > SCRATCH` (the
   old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then
   put the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
@@ -528,9 +533,10 @@ game's data: it is one player's account.
   set off in `obsidian-edition/settings.json` before `start.sh`, which keeps the other keys; take
   it out again after. **The rest are always on since 2026-11-18** (`game.ALWAYS_ON`: weapon
   specialization, `held_hit`, `spell_to_hit`, shadows ...): the Loader drops their keys as it reads
-  the file (logs/2026-11-18-fewer-switches.md), so a rule off is a memory edit of DSCLOG's rules
-  words (`setmem.py ruleshi=-N` for `rules_hi`; the dice log keeps its own idea of the rules), never
-  saved after.
+  the file (logs/2026-11-18-fewer-switches.md), and since 2026-11-19 DSCLOG no longer reads their
+  bits (logs/2026-11-19-free-dsclog-room.md): clearing one in `rules`/`rules_hi` (`setmem.py
+  ruleshi=-N`) changes nothing. To see the game's own way, run origin's build from before
+  2026-11-19 ([comparing two builds](#builds-the-loader-and-the-tests)).
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered; the menu opens at different heights: shoot it
@@ -626,6 +632,12 @@ game's data: it is one player's account.
   dsloade[r] dicelog'`), wait over 5 s (DSCLOG's LOADER_FRESH), sell; start it again as start.sh
   does (`setsid nohup python3 -u -m dsloader dicelog >> $WORK/dice.txt` from `obsidian-edition/`).
   Money for a test: `gd.add_money(N)` through live.py (never saved).
+- **The leader's CHA in a shop** (logs/2026-11-19-free-dsclog-room.md): the prices are drawn as
+  the shop opens, so a leader changed on the shop screen (its face buttons, as the inventory's)
+  doesn't change them: make the leader on the inventory screen (I, the face button, Escape) before
+  `openshop.sh`. In `selling-junk-user` Gerakis (CHA 14) leads, prices as the game's; Cermak (CHA
+  18, 7,108) 5% off. **Escape on Kalzith's shop goes back into his talk and says Farewell**; his
+  talk after that differs and `openshop.sh` then fails (the eye left up): load the save again.
 - **Shop and pocket tools**: `openshop.sh` (Kalzith's shop from `selling-junk-user`, finding him
   from memory), `pocket.sh X Y NAME` ([picking a pocket](#talking)), `carried.py NAME` (what someone
   carries, with name numbers).
@@ -725,11 +737,10 @@ game's data: it is one player's account.
   Paralyzed on each foe that shoots; then the turns come clean. Paralyzed foes also fail every save
   (handy for a failed save on demand). From `fountain-user` with every foe held, `passuntil.sh 3`
   gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the time.
-- **Held foes are hit automatically, for normal damage** (the rule `held_hit`, on by default,
+- **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
-  With it off, the game's way: the d20 as ever and double damage (the hit line's `x2 Paralyzed`).
-  So a to-hit test needs a free target (the rule is always on since 2026-11-18: `"held_hit": false`
-  in settings.json is dropped; `setmem.py ruleshi=-32768` turns DSCLOG's off, not the dice log's). **A Paralyzed target gets no save line from Hold Person** (it fails every
+  So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had
+  no off path for it since 2026-11-19: no memory edit turns it off). **A Paralyzed target gets no save line from Hold Person** (it fails every
   save; the game logs only "gives Paralyzed"): free it first (`addeffect.py del C 34`).
 - Seneca is a **Poisoner**: each of her weapons' first melee hit in a fight also poisons (10, no save
   for a held target: the log's `is poisoned by the hit` line), landing about 0.5 s later, after her
