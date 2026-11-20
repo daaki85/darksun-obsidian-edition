@@ -192,6 +192,10 @@ again)`). Nothing else changes: an attack is not taken back, and after an attack
 can leave the member its turn) F10 gives no walk, nor to a member held or stuck (Paralyzed,
 Stuck).
 
+**A held or stuck member stays put.** The game's F10 put a Paralyzed or Stuck member back on the
+square its turn began on, with its points, as if it could still move. Now F10 does nothing for
+such a member: it stays where it is. This one is always on, whatever the switch.
+
 **Switch:** *F10 takes a whole move back: after the last step too, the party member can walk again
 (the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a
 fight](PLAYER-GUIDE.md#moving-in-a-fight). How it works:

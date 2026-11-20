@@ -57,6 +57,14 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed**
+
+- **F10 moved a held member**: the game's F10 put a Paralyzed or Stuck party member back on its
+  turn's first square, with its points. It now does nothing for such a member (DSCLOG's
+  `F10_PIN`, at F10's standing-still test).
+
 ## Pull request #124 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/124))
 
 Obsidian Edition 2.19.1 ([release notes](release-notes/v2.19.1.md)).
