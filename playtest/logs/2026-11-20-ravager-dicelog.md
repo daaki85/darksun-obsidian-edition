@@ -95,6 +95,11 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     (the sword pointer, the farthest foe) on Thy'rokh's turn: no throw came of it (her turn passed);
     the missile case not seen yet.
 
+19. **Bless and Aid's measure**: found by its call's pushes ("push 1Ch / push [bx+67C5h]" twice: the map
+    things' fine x at +0Ah, y at +0Ch); the fix in. Two tries for Terrannus's Bless: his first turn's
+    icons crossed out (hit), then the party defeated while waiting for his next (ending turns only, the
+    ambush goes badly). A save past the ambush, by real play, would make spell tests cheap.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.

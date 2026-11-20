@@ -97,6 +97,10 @@ PATCHES: Tuple[Patch, ...] = (
     # armor_charge, the same bytes): the routine at 84B60h is SL's 7A539h, the sequel numbering Armor's
     # effect 5 (its flag 20h; SL's 2 and 4), its damage routine's charge at 66CF0h as SL's 79A3Bh.
     _sl("armor_charge", 0x84B7E),
+    # Bless and Aid leave out those of the caster's side with an enemy near, measured from (x, x) of where
+    # each stands: the routine (86638h; SL's 7B03Dh, the side's mask its own) pushes the map thing's fine x
+    # (+0Ah, DS:67C5h) twice; its first push made the y (+0Ch, 67C7h), as SL's bless_from_cell.
+    Patch("bless_from_cell", 0x86687, bytes((0xC5,)), bytes((0xC7,))),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word
