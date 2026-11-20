@@ -48,6 +48,10 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
 10. The party, left to stand, was defeated by the Draxans ("YOUR PARTY HAS BEEN DEFEATED"): a
     restart (ravscare.sh) gets the fight back.
 
+11. **Damage against hit points** (a script printing each hit's line and each party member's HP change):
+    21 hits, all matching, Bone Mace's "1d6 +1 weapon -1 bone" too; between two rounds Gerakis went 75 ->
+    76 on his own (the earlier "1 HP off": a regeneration, his or the sequel's, to look at sometime).
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
