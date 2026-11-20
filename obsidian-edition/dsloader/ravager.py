@@ -52,6 +52,7 @@ def _sl(name: str, at: int) -> Patch:
 # Lands' (playtest/logs/2026-11-19-ravager-fixes.md and -fixes-2.md); the bytes are checked as the
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
 VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
+VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -91,6 +92,13 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("power_end_owner", 0x61AAA, bytes.fromhex("8ec0268a8754025057"), bytes.fromhex("26ffb74d02") + b"\x90" * 4),
     Patch("power_end_again", 0x61AB8, bytes.fromhex("83c404"), bytes.fromhex("59594e")),
     Patch("power_end_count", 0x61ABC, bytes.fromhex("81fec0007cbb"), bytes.fromhex("3b3600217cbb")),
+    # Graphics disappearing in a busy area (SSI's note 2712 is this game's): the picture cache's 300
+    # slots (its loader at 2A568h, SL's 25FA6h) reused once all are taken, DSCLOG2's PIC_REUSE on four
+    # interrupts of its own at SL's four sites (SL's pic_full, pic_place, pic_count, pic_fail).
+    Patch("pic_full", 0x2A5E7, bytes.fromhex("813e5d262c01739fa15d26"), gamepatch._interrupt(VEC_PIC_FULL, 11)),
+    Patch("pic_place", 0x2A6FD, bytes.fromhex("c45efc"), gamepatch._interrupt(VEC_PIC_PLACE, 3)),
+    Patch("pic_count", 0x2A75C, bytes.fromhex("8b365d26ff065d26"), gamepatch._interrupt(VEC_PIC_COUNT, 8)),
+    Patch("pic_fail", 0x2A58E, bytes.fromhex("b8ffff"), gamepatch._interrupt(VEC_PIC_FAIL, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

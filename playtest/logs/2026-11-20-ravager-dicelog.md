@@ -63,6 +63,16 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     on the inventory screen out of a fight (the top-left icon in a fight is the END menu).
 13. A stray left click at window coordinates walked Ar'anda (ravclick.py takes the game's 320x200).
 
+14. **Step 4, Share Strength**: SL's six power_end patches at the sequel's loop (61A7Dh), read back
+    disassembled; not cast in a game yet (Ar'anda is a psionicist: her powers to look at).
+15. **Graphics disappearing** (the picture cache): DSCLOG2's PIC_REUSE. First build on INT 63h-66h hung
+    the game in its intro: **INT 66h and 67h are DOSBox's** (F000:1060), so DSCLOG2 refused to load
+    ("vectors busy") and the patched rand()'s INT 60h went nowhere; moved to C0h-C3h. Then: 253 slots
+    taken at the opening talk; the count set to 300 (test edit); the talk (3, Return x4) into the
+    ambush: 5 slots reused (the helper's count at its header + B4Ah), none failed, no two places
+    overlapping, the street drawn whole. Control (the four sites written back to the game's code in
+    memory, count 300): the fallen woman and her things up the street not drawn.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
