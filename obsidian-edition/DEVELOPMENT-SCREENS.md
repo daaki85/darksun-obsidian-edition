@@ -1102,7 +1102,11 @@ kill made on the last step's square: put back by the game, no walk);
 [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-after-spell.md)
 (after a spell: a cast zeroes the flags, nothing written, Curse, Reflected Image and Magical Stone,
 after the last step and with movement left; Paralyzed by a memory edit after the last step: the
-first version gave the walk, the mended one none, and a plain last step still walks again).
+first version gave the walk, the mended one none, and a plain last step still walks again);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-held-stays.md)
+(`F10_PIN`: Paralyzed after the last step, Stuck after the last step and Paralyzed with movement
+left, every foe Paralyzed too: F10 left the member on its square with its points, no Loader line;
+the pin taken off, F10 the game's again, after the last step with the walk given back).
 
 ## Showing what can be used: Alt
 
