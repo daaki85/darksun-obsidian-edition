@@ -61,6 +61,10 @@ PATCHES: Tuple[Patch, ...] = (
     # the saving throw's end: "mov al,[bp-2] / cmp al,[bp-1]" (SL's 79BB7h, its six bytes the same),
     # INT VEC_SAVE: DSCLOG2's PROBE_SAVE records the total and the number needed, then compares
     Patch("save", 0x66EA6, bytes.fromhex("8a46fe3a46ff"), gamepatch._interrupt(gamepatch.VEC_SAVE, 6)),
+    # INT VEC_AC: DSCLOG2's PROBE_AC records the AC the attack uses, at the AC function's end. The
+    # sequel's function (5D520h) was rewritten: the AC after armour in [bp-4], its adjustments in a
+    # local ([bp-6]) where SL's had SI, so "mov ax,[bp-4] / add ax,[bp-6]", 6 bytes (SL's 5).
+    Patch("ac", 0x5D6E6, bytes.fromhex("8b46fc0346fa"), gamepatch._interrupt(gamepatch.VEC_AC, 6)),
     # The data path: argv[0] cut after its last \ or :, kept at DS:44F2h (SL's 4B81h), made ".\"
     # (the current folder: the game's, C:), the same code as SL's and the jump landing the same.
     Patch("path", 0x6740E, bytes.fromhex("8bf00bc0740346eb166a3a"),

@@ -42,6 +42,8 @@ ADDRESSES: Dict[str, int] = {
     # the rules' small tables in the data segment, each found once by its bytes, each SL's + 70h
     "DEX_AC": 0x0866, "DEX_INITIATIVE": 0x084C, "DEX_MISSILE": 0x084C, "SAVE_CON": 0x0880,
     "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
+    # the AC function keeps the AC after armour in [BP-4] (its adjustments in [BP-6]: SL's SI)
+    "AC_ARMOUR_LOCAL": -4,
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))

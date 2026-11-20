@@ -299,6 +299,10 @@ initiative selector 308h at DCh (load + 3C4Fh), the attack's target DS:4206h, th
 (DS:19CDh), the item names RESOURCE.GFF's TEXT 1000 (a line a name, from 1), the rules' small tables SL's
 +70h. A selector's segment: the segment table at load + 45E8h, + the selector. `ravds.py --fuzzy HEX`
 maps an SL data address by the code round its uses.
+The AC function is the sequel's own (5D520h; its end 5D6E6h, PROBE_AC). `ravdice.py --all` shows every
+roll and each AC worked out. **To find an unnamed roll's code**: catch its entry (its frame's first words
+are the return address, then the arguments: the dice routine's count and sides) and read the code at
+that address at once, before the overlay moves, then find those bytes in DSUN.EXE.
 
 **Its first fight** (logs/2026-11-19-ravager-fight.md): the opening talk (3, Return) ends in the
 Draxans' ambush, a fight at once; in a fight USE opens for the one whose turn it is (DS:426Dh, SL's

@@ -2669,6 +2669,14 @@ class CreationTests(unittest.TestCase):
         e = entry(raw_for(16, 33), dicelog.DICE_SITE, words(0, 0, 1, 33), parent_code=dicelog.RANDOM_NAME_RETURNS[0])
         self.assertEqual(log.describe(e), ["Character creation: a name picked at random, 1d33 = 16"])
 
+    def test_ravager_sound_picks_named_among_all_rolls_only(self):
+        """Wake of the Ravager's combat sounds (by kind and sex: 1d12, 1d8, 1d5, 1d4): not bare "Dice:" lines."""
+        for ret, sides in zip(dicelog.SOUND_PICK_RETURNS, (12, 8, 5, 4)):
+            for show_all, want in ((False, []), (True, [f"    A fighter's sound picked at random: 1d{sides} = 2"])):
+                log = make_creation()
+                e = entry(raw_for(2, sides), dicelog.DICE_SITE, words(0, 0, 1, sides), parent_code=ret)
+                self.assertEqual(log.describe(e, show_all), want)
+
 
 if __name__ == "__main__":
     unittest.main()

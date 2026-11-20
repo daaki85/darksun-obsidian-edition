@@ -567,6 +567,9 @@ THRI_KREEN_ATTACKS = {0: "claw", 2: "bite"}
 SHEET_XP, SHEET_XP_VALUE, SHEET_MAX_HP = 0x00, 0x04, 0x08  # a monster's sheet holds its XP value at +4
 SHEET_RACE, SHEET_ABILITIES = 0x18, 0x1B
 SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
+# the AC function's local holding the AC after armour (and spells that replace armour), at its end
+# (PROBE_AC): [BP-6] here, [BP-4] in Wake of the Ravager's
+AC_ARMOUR_LOCAL = -6
 SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
 SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter

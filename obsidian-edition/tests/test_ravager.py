@@ -16,13 +16,14 @@ WOTR = os.environ.get("DSUN_WOTR")
 class TableTests(unittest.TestCase):
     def test_patches_reuse_sl_bytes_but_their_own(self):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
-        path (the sequel's DS address) and the saving throw's compare (its branch the other way) differ."""
+        path (the sequel's DS address), rand() (its seed's address), the saving throw's compare (its
+        branch the other way) and the AC function's end (rewritten) differ."""
         sl = {p.name: p for p in gamepatch.PATCHES}
         own = set()
         for p in ravager.PATCHES:
             if (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
                 own.add(p.name)
-        self.assertEqual(own, {"path", "save_signed", "rand"})
+        self.assertEqual(own, {"path", "save_signed", "rand", "ac"})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_path_writes_dot_backslash_at_its_ds(self):

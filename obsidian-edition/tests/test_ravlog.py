@@ -35,6 +35,7 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(layout["SHEET_LEVELS"], 0x1E)
         self.assertEqual(layout["ITEM_PLUS"], 0x16)
         self.assertEqual(layout["CREATURE_SIZE"], ravager.CREATURE_SIZE)
+        self.assertEqual(layout["AC_ARMOUR_LOCAL"], -4)
         self.assertNotIn("SHEET_AGE", layout)  # (no such field in the sequel: left as SL's, not ported)
         self.assertNotIn("SHEET_FLAG_RANGER", layout)  # (a flag, not an offset)
 

@@ -210,6 +210,11 @@ SPELL_HANDLER_RETURNS = (
 # ... and a name picked at random from the game's lists (the code after the dice call)
 RANDOM_NAME_RETURNS = (bytes.fromhex("83c40448eb11"), bytes.fromhex("83c4040563008b"),
                        bytes.fromhex("83c40405c700eb"))
+# Wake of the Ravager's combat sounds (its routine at 8FE00h-90048h: none in Shattered Lands): a fighter's
+# sound picked by its kind and sex, 1d12 or 1d8 from the tables at DS:2911h and 2909h, 1d5 + 99h or
+# 1d4 + 8Ch (the attacker's cry as an attack begins)
+SOUND_PICK_RETURNS = (bytes.fromhex("83c4048bd88a971129"), bytes.fromhex("83c4048bd88a970929"),
+                      bytes.fromhex("83c4040499eb"), bytes.fromhex("83c404048c8ad0"))
 
 KIND_ROLL, KIND_SAVE, KIND_AC = 0, 1, 2
 KIND_ITEM = 4  # DSCLOG's item save against acid (PROBE_ITEM_*): raw = d20 | needed << 8
@@ -3248,6 +3253,8 @@ class DiceLog:
                 return self._creation_ability(e, sum(faces), now)
             if count == 1 and e.parent_code.startswith(LEVEL_HP_RETURNS) and e.parent_arg(2) == CREATION_HP_CALLER:
                 return self._creation_hp_roll(e, sides, faces[0], now)
+            if count == 1 and any(e.parent_code.startswith(c) for c in SOUND_PICK_RETURNS):
+                return [f"    A fighter's sound picked at random: 1d{sides} = {faces[0]}"] if show_all else []
             if count == 1 and any(e.parent_code.startswith(c) for c in RANDOM_NAME_RETURNS):
                 return [f"Character creation: a name picked at random, 1d{sides} = {faces[0]}"]
             if count == 1:
@@ -4444,13 +4451,14 @@ class DiceLog:
         replace armour, such as Spirit Armor); SI adds DEX, when not attacked from behind,
         and spells."""
         target, rear = e.arg(6), e.arg(0x0A)
+        rear = rear & 0xFF if rear is not None else None  # (Wake of the Ravager passes it as a byte)
         index = self.game.combatant_creature(target) if target is not None else None
         ac = e.raw if e.raw < 0x8000 else e.raw - 0x10000
         if index is not None:
             self.last_ac[index] = ac
             self._ac_whose[index] = self.game.creature_name(index)
             sheet, rec = self.game.sheet(index), self.game.creature(index)
-            armour = e.local(-6)
+            armour = e.local(game.AC_ARMOUR_LOCAL)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:
                 base = struct.unpack("b", sheet[game.SHEET_BASE_AC:game.SHEET_BASE_AC + 1])[0]
                 dex = self.game.dex_ac(rec[CREATURE_ABILITIES + 1]) if not rear else 0

@@ -22,6 +22,7 @@ CPU 386
 
 VEC_RAND equ 0x60       ; rand() (DSUNLOG2.EXE: INT 60h at the start of rand(), 5A22h)
 VEC_SAVE equ 0x61       ; PROBE_SAVE (DSUNLOG2.EXE: INT 61h at the saving throw's end, 66EA6h)
+VEC_AC   equ 0x62       ; PROBE_AC (DSUNLOG2.EXE: INT 62h at the AC function's end, 5D6E6h)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -75,8 +76,8 @@ NFILT   equ ($ - filt) / 9
         times (8 - NFILT) * 9 db 0
 skipped  dw 0                   ; +106 calls not recorded because no filter matched
 probe_save_off dw probe_save    ; +108 offset of PROBE_SAVE in this segment
-probe_ac_off   dw 0             ; +110 (none yet)
-vectors  db VEC_RAND, VEC_SAVE, 0, 0, 0 ; +112 the interrupts the patched game uses
+probe_ac_off   dw probe_ac      ; +110 offset of PROBE_AC in this segment
+vectors  db VEC_RAND, VEC_SAVE, VEC_AC, 0, 0 ; +112 the interrupts the patched game uses
 hooked   db 0                   ; +117 1 once the vectors are ours
 int_rand_off dw int_rand        ; +118 offset of INT_RAND (VEC_RAND's handler) in this segment
 gpl_hook_off dw 0               ; +120 (none yet)
@@ -295,6 +296,22 @@ probe_save:
         pop si
         mov al, [bp-2]
         cmp al, [bp-1]
+        retf 2
+
+; INT VEC_AC replaces "mov ax,[bp-4] / add ax,[bp-6]" (6 bytes) at the AC function's end (5D6E6h):
+; the AC the attack uses recorded, kind 2 (DSCLOG's PROBE_AC without its features' changes, which
+; aren't ported yet), and left in AX as the game's code would.
+probe_ac:
+        sti
+        push si
+        mov si, sp
+        sub si, 4               ; SS:SI+6 = our return address (as RECORD wants it)
+        mov word [cs:extra], 0
+        mov ax, [bp-4]
+        add ax, [bp-6]
+        mov word [cs:kind], 2
+        call record
+        pop si
         retf 2
 
 ; ---- DOS's file opens: DSCLOG's PROBE_DOS_OPEN, for RESOURCE.GFF only ----
@@ -562,6 +579,7 @@ no_far  db 'DSCLOG2: no memory for its ring. Not loaded.', 13, 10, '$'
 all_vectors:
         vector VEC_RAND, int_rand
         vector VEC_SAVE, probe_save
+        vector VEC_AC, probe_ac
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

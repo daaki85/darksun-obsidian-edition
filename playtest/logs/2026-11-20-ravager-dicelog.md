@@ -33,6 +33,21 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
    (spell): not needed (saves automatically) -> saved", and "Scare lasts 10 rounds (caster level 6...)".
    One save's line missing (Gerakis's, likely): to look at.
 
+8. **The AC** (later the same day): SL's AC function's end ("mov ax,[bp-6] / add ax,si") isn't in the
+   sequel at all; its function found by its marks (10 to start, -99 for no combatant, the combatant
+   table 388h:C33h) at 5D520h: the AC after armour in `[bp-4]`, the adjustments in `[bp-6]`, its end
+   "mov ax,[bp-4] / add ax,[bp-6]" at 5D6E6h, now INT 62h (DSCLOG2's PROBE_AC). `ravdice.py --all`:
+   "AC of Gerakis against Draxan: 5 (base 10, armour -3, DEX -1, other -1)", Thy'rokh base 5 (a
+   thri-kreen's own), and each "needs" = THAC0 - AC.
+9. **"Dice: 1d5" and "Dice: 1d12"**: caught by a script reading the code at the roll's return addresses
+   the moment it was logged (overlays move: read later, the segment held other code). The dice
+   routine called with `push dword 00050001h` at 8FFF0h: a routine of the sequel's own (8FE00h on)
+   picking a fighter's sound by kind and its sheet +13h (1 or 2, its sex, most likely): 1d12 / 1d8 from
+   tables at DS:2911h / 2909h, 1d5 + 99h, 1d4 + 8Ch. Named now, among all rolls only. Another 1d12
+   (86762h, 867AFh: "dec ax / cmp bx,11") not seen in a fight yet.
+10. The party, left to stand, was defeated by the Draxans ("YOUR PARTY HAS BEEN DEFEATED"): a
+    restart (ravscare.sh) gets the fight back.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
