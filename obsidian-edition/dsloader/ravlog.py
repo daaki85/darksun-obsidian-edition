@@ -27,6 +27,45 @@ HDR_SIG = b"DSCLOGR1"
 
 # game.py's names -> the sequel's values (the rest of game.py's addresses are Shattered Lands' until
 # found: what reads them isn't ported yet)
+# The sequel's effects are numbered otherwise (its list alphabetical: effect_names): Shattered Lands'
+# numbers the log's rules use, by name in the sequel's list. Where the sequel's list has a name twice
+# (Hasted 42 and 51, Slowed 52 and 91) the one in alphabetical place is taken (unverified). The mod's
+# own effects (Cat's Grace, Erdlu Claw, Fogbolt, Friends, the stinkpot's Nauseated) and SL's save
+# penalty aren't in the sequel: numbers it never uses (NO_EFFECT and on), so they never match.
+NO_EFFECT = 240
+EFFECTS: Dict[str, object] = {
+    "PARALYZED_EFFECT": 69, "MIRROR_EFFECT": 46, "AFRAID_EFFECT": 35, "ENLARGE_EFFECT": 32,
+    "HASTED_EFFECT": 42, "SLOWED_EFFECT": 91, "FIRE_SHIELD_EFFECT": 38, "BLUR_EFFECT": 13,
+    "BIOFEEDBACK_EFFECT": 8, "LOW_RESISTANCE_EFFECT": 61, "AFFINITY_EFFECT": 3, "BODY_WEAPONRY_EFFECT": 14,
+    "EFFECT_BLESSED": 9, "EFFECT_BLIND": 10, "EFFECT_DETECT_INVIS": 25, "EFFECT_INVISIBLE": 53,
+    "EFFECT_INVIS_UNDEAD": 54, "EFFECT_PROT_EVIL": 75, "EFFECT_PROT_COLD": 73, "EFFECT_PROT_FIRE": 77,
+    "EFFECT_PROT_LIGHTNING": 78, "EFFECT_FIRE_SHIELD": 38, "EFFECT_SPIRIT_ARMOR": 94, "EFFECT_BARKSKIN": 6,
+    "EFFECT_PRAYER": 72, "EFFECT_FLESH_ARMOR": 40, "EFFECT_VESTMENTS": 104, "EFFECT_BRAVE": 18,
+    "EFFECT_SAVE_PENALTY": NO_EFFECT, "GRACE_EFFECT": NO_EFFECT + 1, "CLAW_EFFECT": NO_EFFECT + 2,
+    "FOG_EFFECT": NO_EFFECT + 3, "FRIENDS_EFFECT": NO_EFFECT + 4, "STINK_EFFECT": NO_EFFECT + 5,
+    "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
+    "HALVING_EFFECTS": ((77, 0x02), (73, 0x04), (78, 0x80), (38, 0x06)),  # Prot Fire, Cold, Lightning; Fire Shield
+    "HIT_EFFECTS": ((9, 1), (22, -1), (91, -4), (106, 1)),  # Blessed, Cursed, Slowed, Weapon Grafted
+    "POWER_EFFECT_NAMES": {69: "Paralysing attack", 27: "Disease attack", 71: "Poison attack"},
+}
+# Its effects' names: 31-byte records in the program's data at load + 3C870h (its file's 41A70h), the
+# name in the first 29 bytes, EFFECT_COUNT_ALL of them (some numbers unused: an empty name)
+EFFECT_RECORDS, EFFECT_RECORD, EFFECT_COUNT_ALL = 0x3C870, 31, 113
+
+
+def effect_names(guest, load: int) -> Dict[int, str]:
+    """The sequel's effect names by number, as its program holds them ({} if they don't read as names)."""
+    data = guest.read(load * 16 + EFFECT_RECORDS, EFFECT_RECORD * EFFECT_COUNT_ALL)
+    out = {}
+    for n in range(EFFECT_COUNT_ALL):
+        raw = data[n * EFFECT_RECORD:n * EFFECT_RECORD + 29].split(b"\0", 1)[0]
+        if not all(32 <= c < 127 for c in raw):
+            return {}
+        if raw:
+            out[n] = raw.decode("ascii")
+    return out if out.get(5) == "Armor" else {}
+
+
 ADDRESSES: Dict[str, object] = {
     "DGROUP": ravager.DGROUP,
     "CREATURES_PTR": ravager.CREATURES_PTR, "SHEETS_PTR": ravager.SHEETS_PTR, "ITEMS_PTR": ravager.ITEMS_PTR,
@@ -54,6 +93,9 @@ ADDRESSES: Dict[str, object] = {
     # ... its race rows two longer (16 bytes), so what follows them each SL's + 10h
     "THIEF_DEX_LOW": 0xA0, "THIEF_DEX_HIGH": 0xA8, "THIEF_DEX_TOP": 0xB0, "THIEF_ARMOUR": 0xB8,
     "THIEF_PENALTY_LIST": 0xE0,  # (its slots list: the thief_slots patch at 49C90h)
+    # the active effects, 10 bytes each (SL's record): selector 370h at 24Dh in the sequel's code (its
+    # Share Strength loop, 61A87h), selector 370h being the load segment + 3E71h (SL's 3BF6h:106h)
+    "EFFECTS_SEG": 0x3E71, "EFFECTS_OFF": 0x24D,
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
@@ -63,7 +105,7 @@ NOT_OFFSETS = {"CREATURE_SIZE", "SHEET_SIZE", "ITEM_SIZE", "ITEM_TYPE_SIZE", "IT
 
 def layout() -> Dict[str, int]:
     """game.py's name -> the sequel's value, for every name the profile changes."""
-    out = dict(ADDRESSES)
+    out = dict(ADDRESSES, **EFFECTS)
     for name, value in vars(game).items():
         if name in NOT_OFFSETS or name in out or not isinstance(value, int) or isinstance(value, bool):
             continue
@@ -280,6 +322,9 @@ class RavDiceLog(dicelog.DiceLog):
             load = found - ravager.DGROUP
             rebind("SPELLS_SEG", (SPELLS_AT + 0x10 - game.SPELLS_OFF) // 16 - load)
             rebind("CLASS_MAGIC_SEG", (CLASS_MAGIC_AT - game.CLASS_MAGIC_OFF) // 16 - load)
+            names = effect_names(self.guest.guest, load)
+            if names:
+                rebind("EFFECT_NAMES", names)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
             return super().attach()

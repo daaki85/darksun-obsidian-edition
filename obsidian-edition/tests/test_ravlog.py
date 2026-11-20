@@ -130,6 +130,30 @@ class PassTests(unittest.TestCase):
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
 
 
+class EffectTests(unittest.TestCase):
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_names_from_the_program(self):
+        g = FakeGuest()
+        load = 0x1A2
+        names = ["None", "Acid", "Adrenalin Control", "Animal Affinity", "Anti Magic Shell", "Armor"] + [""] * 107
+        for n, name in enumerate(names):
+            at = load * 16 + ravlog.EFFECT_RECORDS + n * ravlog.EFFECT_RECORD
+            g.mem[at:at + len(name)] = name.encode()
+        got = ravlog.effect_names(g, load)
+        self.assertEqual((got[5], got[1], 12 in got), ("Armor", "Acid", False))
+        g.mem[load * 16 + ravlog.EFFECT_RECORDS + 7 * ravlog.EFFECT_RECORD] = 0xFF  # (not names: none)
+        self.assertEqual(ravlog.effect_names(g, load), {})
+
+    def test_profile_effect_numbers(self):
+        ravlog.apply_layout()
+        self.assertEqual((game.PARALYZED_EFFECT, game.MIRROR_EFFECT, game.EFFECT_BLESSED, dicelog.AFRAID_EFFECT),
+                         (69, 46, 9, 35))
+        self.assertGreaterEqual(game.STINK_EFFECT, ravlog.NO_EFFECT)
+        self.assertEqual((game.EFFECTS_SEG, game.EFFECTS_OFF), (0x3E71, 0x24D))
+
+
 class NameTests(unittest.TestCase):
     def test_names_by_line_from_one(self):
         g = FakeGuest()

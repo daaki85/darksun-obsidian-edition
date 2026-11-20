@@ -73,6 +73,21 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     overlapping, the street drawn whole. Control (the four sites written back to the game's code in
     memory, count 300): the fallen woman and her things up the street not drawn.
 
+16. **Armor's charges**: the routine found by hand (SL's 7A539h: "les bx,[bp+0Ah] / test byte [es:bx],4 /
+    jz / push 2 / push si / call"; the sequel's at 84B60h tests 20h and uses effect 5's charge, its
+    damage routine taking effect 5's too at 66CF0h: the sequel numbers Armor 5). Played: Ar'anda's turn,
+    C (the first C after the fight's keys lost again: pressed twice), level 1's first icon (ARMOR on
+    hover, game 178,60), click, then her portrait on USE (game 70,56) as the target: Armor on her, 14
+    charges (effect records: selector 370h at 24Dh, the charges at +8). Fixed: one charge before each
+    damaging hit's HP fall, none for a miss; control (`RAV_SKIP` below) two.
+    **A slip**: a memory edit searched for the site's bytes, didn't find them (the overlay elsewhere) and
+    wrote at -1 + 4, into the interrupt table: that game was dropped. Guard such writes.
+    `RAV_LOADER=1 RAV_SKIP=armor_charge sh ravstart.sh`: the Loader's copy with that fix left out.
+17. **Effect names**: the log named Armor "Blink" (SL's 5). The sequel's effects are its own list,
+    alphabetical (Acid 1, Armor 5, Blessed 9 ... Hesitating 112), 31-byte records at load + 3C870h; the
+    log now reads them, maps SL's numbers its rules use by name, and reads the effect table (load +
+    3E71h:24Dh): "Armor on Ar'Anda: one charge used, 10 left".
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.

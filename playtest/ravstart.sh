@@ -4,7 +4,8 @@
 # on the menu is START GAME, then the narrated cinematic (about 60 s, no skip). D: is the CD's data
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
-# UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does: dsloader.ravager's
+# UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
+# patches of dsloader.ravager.PATCHES left out of the copy, for a test's control): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
 F=${1:-$WORK/rav}
@@ -23,6 +24,15 @@ sys.path.insert(0, os.path.join(sys.argv[2], '..'))
 from dsloader import ravager
 problem = ravager.prepare(sys.argv[1], sys.argv[2], {})
 if problem: sys.exit('ravager.prepare: ' + problem)
+skip = [s for s in os.environ.get('RAV_SKIP', '').split(',') if s]   # (a control run: those fixes left out)
+if skip:
+    exe = os.path.join(sys.argv[2], ravager.PATCHED_EXE); data = bytearray(open(exe, 'rb').read())
+    for p in ravager.PATCHES:
+        if p.name in skip:
+            assert data[p.offset:p.offset + len(p.replacement)] == p.replacement, p.name
+            data[p.offset:p.offset + len(p.original)] = p.original; skip.remove(p.name)
+    if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
+    open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])
 print('\n'.join(ravager.conf_lines(sys.argv[1], sys.argv[2], cd=os.path.join(sys.argv[1], 'data.cue'))))
 PY
 else

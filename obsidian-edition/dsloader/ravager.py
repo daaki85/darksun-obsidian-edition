@@ -92,6 +92,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("power_end_owner", 0x61AAA, bytes.fromhex("8ec0268a8754025057"), bytes.fromhex("26ffb74d02") + b"\x90" * 4),
     Patch("power_end_again", 0x61AB8, bytes.fromhex("83c404"), bytes.fromhex("59594e")),
     Patch("power_end_count", 0x61ABC, bytes.fromhex("81fec0007cbb"), bytes.fromhex("3b3600217cbb")),
+    # Armor's charge used where any spell or blow landed on its wearer as well as for damage (SL's
+    # armor_charge, the same bytes): the routine at 84B60h is SL's 7A539h, the sequel numbering Armor's
+    # effect 5 (its flag 20h; SL's 2 and 4), its damage routine's charge at 66CF0h as SL's 79A3Bh.
+    _sl("armor_charge", 0x84B7E),
     # Graphics disappearing in a busy area (SSI's note 2712 is this game's): the picture cache's 300
     # slots (its loader at 2A568h, SL's 25FA6h) reused once all are taken, DSCLOG2's PIC_REUSE on four
     # interrupts of its own at SL's four sites (SL's pic_full, pic_place, pic_count, pic_fail).
