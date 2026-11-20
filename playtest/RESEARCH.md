@@ -424,6 +424,16 @@ portrait) doesn't change whose spells show, but a click on that portrait then do
 clicking its icon (it hangs on the pointer) and then the target's portrait. The roost's second doorway's
 steps were at game (253, 90) in one run (the view differs from run to run): look at a grab first.
 
+**Its items and item boxes** (2026-11-20, logs/2026-11-20-ravager-item-box.md): an item record (17h bytes,
+DS:19C1h) keeps SL's fields to +0Eh (the charges, read as a word), then **the power, spell + 1, a word at
++10h** (SL's byte at +0Fh; +0Fh unused), then SL's +10h on two bytes later (the slot +13h, the name +14h, the
+plus +16h). Counting each field's uses in the two programs (the code `imul ..,15h/17h; les bx,[items];
+add bx,..; <op> es:[bx+N]`) matches the fields where a running game has nothing to show. The item box
+routine ends at 9A4FEh (SL's 8C1A1h); the box has an INFO button at the right of its last row, so a line
+drawn there must stay short. **Opening a box**: I (inventory), a portrait on the left for the member, a
+right click on the item (Ar'anda's left hand at game 174,92, chest 174,67); a second right click closes
+it. The material to-hit routine is 1D401h (SL's 5EB31h), the same table.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

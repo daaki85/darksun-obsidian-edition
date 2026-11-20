@@ -11,7 +11,8 @@
 ; and DOS's file opens, so the game reads the Loader's copies of RESOURCE.GFF (D:\RESOURC2.GFF, with
 ; the spell records' fixes) and GPLDATA.GFF (D:\GPLDAT2.GFF, with the scripts' fixes:
 ; dsloader/ravager.py) in place of its own. Then the engine fixes ported in step 4 (each at its
-; vector below), and the spell slots on the USE screen (PROBE_USE, PROBE_WIN: the Loader's lines).
+; vector below), the spell slots on the USE screen (PROBE_USE, PROBE_WIN: the Loader's lines) and
+; the charges in item boxes (PROBE_ITEM_BOX).
 ;
 ; The header keeps DSCLOG's layout for the fields the Loader's dice log reads (the ring, the seed,
 ; the filters, the far block), under a signature of its own, so a Loader that doesn't know the
@@ -41,6 +42,7 @@ VEC_IMAGE     equ 0xCC  ; IMAGE_SPELL (84BF8h: an image taking a spell: only a f
 VEC_BLOW      equ 0xCD  ; IMAGE_BLOW (5D09Fh: an attack's hit: an image may take it)
 VEC_USE       equ 0xCE  ; PROBE_USE (79543h: the USE screen's LEVEL button labelled: its spell slots drawn)
 VEC_WIN       equ 0xCF  ; PROBE_WIN (303BEh: a window brought to the front: the USE screen's slots again)
+VEC_ITEM_BOX  equ 0xD0  ; PROBE_ITEM_BOX (9A4FEh: an item's box filled: its charges, or a weapon's material)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -1257,6 +1259,183 @@ u_line   times SLOTS_SIZE db 0
 slots_text times 4 * SLOTS_SIZE db 0
 
 
+; ---- CHARGES IN ITEM BOXES: DSCLOG's PROBE_ITEM_BOX, IB_CHARGES and IB_MATERIAL ----
+; PROBE_ITEM_BOX: INT VEC_ITEM_BOX replaces "push 0" (9A4FEh; SL's 8C1A1h) at the end of the routine
+; filling an item's box (the same code: SI the item's type, DI the row after its lines but for AC
+; BONUS's, [BP+6] the item, [BP+8] the box's window, [BP-0Ch] the x; the text routine's far address
+; in the call before). In the next row: an item that casts a spell with charges, "Charges: n"
+; (IB_CHARGES); else a plain weapon of a weaker material, its to-hit ("Hit -2": IB_MATERIAL, the
+; game's attack's own). What differs from DSCLOG's: the sequel's records (items 17h bytes at the far
+; pointer DS:19C1h, the charges a word at +0Eh, the spell + 1 a word at +10h, the plus +16h; item types
+; 0Fh bytes at DS:19CDh, SL's +08h at +04h, +0Dh at +09h, +0Fh at +0Bh), fruit type 9, the box's own
+; colours (C200B5h, SL's 960081h), and none of the mod's (the thief skills' lines, the Fine Bow).
+IB_DRAW       equ 0x9A4F7 - 0x9A500 ; the text routine's far address in the call before, less the way back
+ITEMS_PTR     equ 0x19C1            ; DS: far pointer to the items, 17h bytes each
+ITEM_SIZE     equ 0x17
+ITEM_CHARGES  equ 0x0E              ; (a word: the charges left)
+ITEM_SPELL    equ 0x10              ; (a word: the spell + 1, or one of the game's own effects)
+ITEM_PLUS     equ 0x16
+TYPES_PTR     equ 0x19CD            ; DS: far pointer to the item types, 0Fh bytes each
+TYPE_SIZE     equ 0x0F
+TYPE_KIND     equ 0x04              ; (SL's +08h: the material, low nibble; 80h the game's exemption, 40h none)
+TYPE_DICE     equ 0x09              ; (SL's +0Dh: the damage dice' count, 0 for no weapon)
+TYPE_ARMOUR   equ 0x0B              ; (SL's +0Fh: 80h, AC BONUS drawn)
+TYPE_FRUIT    equ 9
+TYPE_SCENERY  equ 0x60              ; (in TYPE_KIND: doors, shutters...)
+SPELLS_ALL    equ 320               ; (a spell + 1 above this: one of the game's own effects)
+IB_COLOURS    equ 0x00C200B5        ; (as the box draws its lines)
+probe_item_box:
+        pushad
+        push es
+        cmp si, 0x270F
+        jae .push
+        les bx, [TYPES_PTR]             ; (DS: the game's)
+        imul ax, si, TYPE_SIZE
+        add bx, ax
+        call ib_charges                 ; (DX the line, or 0)
+        or dx, dx
+        jnz .draw
+        call ib_material                ; (a weaker material's to-hit: DX the line, or 0)
+        or dx, dx
+        jz .push
+.draw:  mov ax, di                      ; the row: after AC BONUS's, if the box drew it
+        test byte [es:bx + TYPE_ARMOUR], 0x80
+        jz .row
+        add ax, 7
+.row:   mov si, sp
+        mov bx, [ss:si + 34]            ; the way back (after ES and the PUSHAD)
+        mov es, [ss:si + 36]
+        mov ecx, [es:bx + IB_DRAW]
+        mov [cs:ib_draw], ecx
+        inc word [cs:ib_count]
+        push dword IB_COLOURS
+        push ax                         ; y
+        push word [bp - 0x0C]           ; x
+        push cs
+        push dx
+        push dword [bp + 8]             ; the box's window
+        call far [cs:ib_draw]
+        add sp, 16
+.push:  pop es
+        popad
+        sub sp, 2                       ; the PUSH 0: the interrupt's frame moved down a word
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 4]
+        mov [bp + 2], ax                ; IP
+        mov ax, [bp + 6]
+        mov [bp + 4], ax                ; CS
+        mov ax, [bp + 8]
+        mov [bp + 6], ax                ; flags
+        mov word [bp + 8], 0            ; the word pushed
+        pop ax
+        pop bp
+        iret
+
+; IB_CHARGES: DX IB_CHARGES_TEXT with the charges of PROBE_ITEM_BOX's item ([BP+6]; SI its type,
+; ES:BX its type's record) if it casts a spell with charges, else 0. Not for fruit (eaten whole) nor
+; scenery (doors: their +0Eh and +10h hold something else). DS the game's; others kept.
+ib_charges:
+        xor dx, dx
+        cmp si, TYPE_FRUIT
+        je .ret
+        push ax
+        push bx
+        push cx
+        push es
+        mov al, [es:bx + TYPE_KIND]
+        and al, TYPE_SCENERY
+        cmp al, TYPE_SCENERY
+        je .none
+        les bx, [ITEMS_PTR]
+        imul ax, [bp + 6], ITEM_SIZE
+        add bx, ax
+        mov ax, [es:bx + ITEM_SPELL]
+        or ax, ax
+        jz .none
+        cmp ax, SPELLS_ALL
+        ja .none
+        mov ax, [es:bx + ITEM_CHARGES]
+        or ax, ax
+        jz .none
+        push di                         ; (up to 65535: five digits at most)
+        mov di, ib_charges_num + 6
+        mov byte [cs:di], 0
+        mov cx, 10
+        mov byte [cs:ib_charges_num], 0
+        cmp ax, 100                     ; (a space after the colon below 100: three digits and more
+        jae .digit                      ;   reach the box's INFO button with it)
+        mov byte [cs:ib_charges_num], ' '
+.digit: xor dx, dx
+        div cx
+        add dl, '0'
+        dec di
+        mov [cs:di], dl
+        or ax, ax
+        jnz .digit
+        mov si, di                      ; (the digits moved to the front, after the space if any)
+        mov di, ib_charges_num
+        cmp byte [cs:di], ' '
+        jne .move
+        inc di
+.move:  mov al, [cs:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .move
+        pop di
+        mov dx, ib_charges_text
+        jmp .out
+.none:  xor dx, dx
+.out:   pop es
+        pop cx
+        pop bx
+        pop ax
+.ret:   ret
+
+; IB_MATERIAL: DX IB_HIT_TEXT with the to-hit penalty of PROBE_ITEM_BOX's item ([BP+6]; ES:BX its
+; type's record) if it is a weapon (its type's dice not 0) of a weaker material with no plus: the
+; type not marked 80h (clubs, staves) nor 40h (no material), its material (low nibble) wood -3, bone
+; -1, stone or obsidian -2, as the game's attack has it (game.MATERIAL_TO_HIT). Else 0. DS the game's;
+; others kept.
+ib_material:
+        xor dx, dx
+        cmp byte [es:bx + TYPE_DICE], 0
+        je .ret
+        push ax
+        push bx
+        push es
+        mov al, [es:bx + TYPE_KIND]
+        test al, 0x80 | 0x40
+        jnz .out                        ; (a club's, a staff's; 40h: no material)
+        and al, 0x0F
+        cmp al, 3
+        ja .out                         ; (metal, leather)
+        les bx, [ITEMS_PTR]
+        imul dx, [bp + 6], ITEM_SIZE
+        add bx, dx
+        xor dx, dx
+        cmp byte [es:bx + ITEM_PLUS], 0
+        jne .out                        ; (a plus: none)
+        movzx bx, al
+        mov al, [cs:ib_hit_by + bx]
+        mov [cs:ib_hit_num], al
+        mov dx, ib_hit_text
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   ret
+
+ib_hit_by  db '3', '1', '2', '2'      ; (wood, bone, stone, obsidian)
+ib_hit_text db 'Hit -'
+ib_hit_num  db '0', 0
+ib_draw    dd 0
+ib_count   dw 0                     ; lines drawn (for the tests)
+ib_charges_text db 'Charges:'
+ib_charges_num  db '000000', 0          ; (a space, then the number, or the number alone)
+
 resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
@@ -1461,6 +1640,7 @@ all_vectors:
         vector VEC_BLOW, image_blow
         vector VEC_USE, probe_use
         vector VEC_WIN, probe_win
+        vector VEC_ITEM_BOX, probe_item_box
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

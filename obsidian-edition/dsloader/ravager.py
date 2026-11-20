@@ -63,6 +63,7 @@ VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)
 VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0xC7, 0xC8, 0xC9, 0xCA, 0xCB
 VEC_IMAGE, VEC_BLOW = 0xCC, 0xCD  # (DSCLOG2's IMAGE_SPELL, IMAGE_BLOW)  # (DSCLOG2's own: 66h is DOSBox's)
 VEC_USE, VEC_WIN = 0xCE, 0xCF  # (DSCLOG2's PROBE_USE, PROBE_WIN: the spell slots on USE)
+VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -156,6 +157,9 @@ PATCHES: Tuple[Patch, ...] = (
     # ax,ax / pop si"), each drawing the Loader's lines (the helper's SLOTS_TEXT) in the panel.
     Patch("use", 0x79543, bytes.fromhex("83c40c"), gamepatch._interrupt(VEC_USE, 3)),
     Patch("window", 0x303BE, bytes.fromhex("33c05e"), gamepatch._interrupt(VEC_WIN, 3)),
+    # Charges in item boxes (SL's item_box): DSCLOG2's PROBE_ITEM_BOX at the end of the routine filling an
+    # item's box (9A4FEh, SL's 8C1A1h: "push 0"), the item's charges, or a plain weapon's material's to-hit.
+    Patch("item_box", 0x9A4FE, bytes.fromhex("6a00"), gamepatch._interrupt(VEC_ITEM_BOX, 2)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -206,12 +210,17 @@ def creature_field(sl: int) -> Optional[int]:
 
 
 def item_field(sl: int) -> Optional[int]:
-    """The sequel's offset of Shattered Lands' item field SL (ITEM_SIZE 15h there; 17h here, two bytes
-    put in before the slot: read from the party's items in a running game, the +1 long sword's plus)."""
-    if sl < 0x11:
-        return sl              # 04h the next item, 08h a container's contents, 0Ah the type, 0Fh the power
+    """The sequel's offset of Shattered Lands' item field SL (ITEM_SIZE 15h there; 17h here): SL's
+    power (its spell + 1, or its own effect: a byte at 0Fh) is a word at 10h (the sequel has 320 spells),
+    and from SL's 10h on everything is two bytes on (read from the party's items in a running game, the +1
+    long sword's plus; and the program's uses of each field counted alike, 2026-11-20: SL's 0Fh 37 uses,
+    the sequel's 10h 35, mostly words; 0Fh none)."""
+    if sl < 0x0F:
+        return sl              # 04h the next item, 08h a container's contents, 0Ah the type, 0Eh the charges
+    if sl == 0x0F:
+        return 0x10            # the power (its low byte: the word's, for spells below 255)
     if sl < 0x15:
-        return sl + 2          # 11h the slot -> 13h, 12h the name -> 14h, 14h the plus -> 16h
+        return sl + 2          # 10h -> 12h, 11h the slot -> 13h, 12h the name -> 14h, 14h the plus -> 16h
     return None
 
 
