@@ -2525,6 +2525,20 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertTrue(combatlog.header(self.log.round_status()).startswith("Round 4"))
         self.assertEqual(self.log.last_ac[STALKER], 3)
 
+    def test_round_context_counts_rounds_lost_from_the_ring(self):
+        """A long burst of skipped rounds overruns the ring (2026-11-20: rounds 4-383 played in two
+        seconds, "rolls came too fast to record"): the tie-breaks left are only the last rounds'. In
+        the same fight the burst still starts after the last round shown, not at the oldest left."""
+        set_clock(self.log, 600)
+        struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
+        self.initiative(0, 50, 1, 3)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 3: Dag 25")
+        self.initiative(0, 50, 1, 232)  # (rounds 4-231's entries lost)
+        self.initiative(0, 50, 1, 384)
+        self.assertEqual(self.log.initiative_lines()[:2], [
+            "Rounds 4-383 go by at once: no one in the fight can act", "Round 384: Dag 25"])
+        self.assertEqual(self.log.round_number, 384)
+
     def test_round_context_counts_new_fights_and_midfight_attachment(self):
         set_clock(self.log, 600)
         struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)

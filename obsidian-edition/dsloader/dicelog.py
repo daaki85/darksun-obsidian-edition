@@ -2998,6 +2998,8 @@ class DiceLog:
             if self._initiative_fight != latest.fight:
                 _new_fight(self)
                 self._initiative_fight = latest.fight
+            elif self._round:  # (the same fight: the rounds after the last shown, even those whose
+                first = self._round + 1  #   entries the ring lost, "rolls came too fast to record")
             first = max(first, self._round + 1)
             number = self._round = latest.number
             self._round_time = g.game_time()
