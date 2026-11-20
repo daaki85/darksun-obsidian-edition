@@ -66,3 +66,23 @@ B x 0.735 - 0.3; mean error 2 in 63), the nearest of 24-239. DSCLOG2.EXE 5,280 b
   coordinator's render, 3x) beside the retuned shadows at 3x. The first prototype for comparison:
   shadows-fight-after.png.
 - DSCLOG2.EXE 5,328 bytes. DOSBox stopped by pid, the lock released.
+
+## Neutral tone (the owner's choice, via the coordinator: SL's warm shift read maroon)
+
+- DARK's target now lightness x 0.73 with a and b kept: in 6-bit RGB x 0.74 a channel (gain 189/256,
+  no offset; the exact Lab result for grey 69 is 51,51,51).
+- First try: grey 69 went to (28,28,40) and 89 to (60,69,52): the sequel's only greys are its ramp at
+  240-255 (63, 58 ... 3), outside 24-239. Candidates now 32-255.
+- Leaving 240-255 in, DARK was made 65 times in a few minutes: the palette changes in 1-31, not just
+  16-23 (blues 1-5, magentas 6-10, greens 11-15, flame 16-23, water 24-31, read twice from the copy
+  DARK_CHECK keeps). Now 1-31 map to themselves and are out of the sum: DARK made 3 times, steady.
+- Same view, one run (Terrannus first, as shadows-retune-on.png): /tmp/playtest/wstone.py writes the
+  tone table (warm or neutral) into the helper in guest memory and zeroes the checksum so DARK is made
+  again; C then Escape redraws. Grey 69 to 52, 52 to 32, 89 to 69, brown 69,56,36 to 56,44,28.
+- Grabs: shadows-neutral-off.png / shadows-neutral-on.png (pair shadows-neutral-pair.png),
+  shadows-neutral-compare.png (off | warm | neutral, 640x480 each), shadows-neutral-vs-sl.png (SL's
+  pens at 3x beside the neutral at 3x), shadows-warm-on.png. The yellow figure in the off and warm
+  grabs is the turn marker's flash (colours 1-31), not the shadows.
+- No other region reachable without play: there are no Wake of the Ravager saves in playtest/saves and
+  no teleport for it yet; the opening talk is the same region.
+- DOSBox stopped by pid, the lock released.

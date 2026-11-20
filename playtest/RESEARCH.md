@@ -354,10 +354,14 @@ FLOOR_POST; the page table (SL's layout) in segment load + 0BF3h, FLOOR_ON DS:29
 Retuned to SL's own shadows (the owner: the first try "didn't look as good"): each wall square swept
 45 degrees by a full cell, so an open cell with a wall NW is all dark, W only x <= y, N only x > y;
 the walk map pads each wall a cell into the room (drawn as floor), so a wall-marked cell is darkened
-only when wholly in shadow. DARK is SL's tone (Lab L x 0.73, a + 11, b x 0.82, fitted in 6-bit RGB:
-R x 0.730 + 5.4, G x 0.705 - 1.8, B x 0.735 - 0.3), the nearest of colours 24-239, made from the DAC
-when the palette changes (once a second at most, not in a fade, the cycled 16-23 left out of the sum
-and mapped to themselves). On WR's grey cobbles it reads warm red-grey. Same-view toggle: write the
+only when wholly in shadow. DARK was SL's tone (Lab L x 0.73, a + 11, b x 0.82), which read maroon on the sequel's grey cobbles;
+the owner chose a neutral one: lightness x 0.73, a and b kept (x 0.74 a channel in 6-bit values), the
+nearest of colours 32-255 (240-255 are the sequel's only greys, its ramp), made from the DAC when
+the palette changes (once a second at most, not in a fade). The sequel cycles colours 1-31 (blues,
+magentas, greens, flame, water, the turn marker's flash): they map to themselves and stay out of the
+change check, else DARK is made again every second. `ravtone.py warm|neutral [FLAG]` swaps the tone
+in guest memory (a test edit: the table at header + 120Ch, the sum at + 1252h for this build) for a
+same-view comparison. Same-view toggle: write the
 header's +148, press C then Escape (the left half redrawn). The header (signature `DSCLOGR1`) has wall_shadows at +148, the passes drawn at +150,
 DARK's builds at +152: find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
 loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.

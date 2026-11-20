@@ -660,13 +660,13 @@ copy_path db 'D:\RESOURC2.GFF', 0
 ; along the light, from (0, 0) to (+16, +16) (the light from the upper left): in an open cell, the
 ; north-west wall's square covers all of it, the west wall's the pixels with x <= y, the north's
 ; those with x > y: full bands right of and below walls, with 45-degree ends, one span a row. DARK:
-; each colour made as SL's shadowed floor is from its floor (Lab: lightness x 0.73, a + 11,
-; b x 0.82; in the palette's 6-bit values, fitted over the sequel's palettes: red x 0.730 + 5.4,
-; green x 0.705 - 1.8, blue x 0.735 - 0.3, about 2 off in 63), then the nearest of WS_FIRST to
-; WS_LAST to that (the sequel cycles 16-23; the top of the palette holds the interface's), made from
+; each colour darkened evenly (Lab lightness x 0.73, a and b kept: SL's own tone, a + 11 and b x 0.82,
+; read maroon on the sequel's grey cobbles; in the palette's 6-bit values about x 0.74 a channel,
+; 51 for a grey 69), then the nearest of WS_FIRST to
+; WS_LAST to that (the sequel cycles 1-31: water, flame, a turn's marker; the top, 240-255, is its grey ramp, the street's too), made from
 ; the palette when it changes (at most once a second, not while the screen is dark: a fade).
-WS_FIRST    equ 24
-WS_LAST     equ 239
+WS_FIRST    equ 32
+WS_LAST     equ 255
 GMAP_PTR    equ 0x0538              ; DS: the region's GMAP, far
 FLOOR_ON    equ 0x29EA              ; DS: 0 when the floor routines draw nothing (SL's 2F44h)
 DGROUP      equ 0x47E0              ; the game's DS, less its load segment
@@ -1129,7 +1129,7 @@ dark_check:
         mov [fs:di], al
         movzx eax, al
         add si, ax
-        cmp cx, 768 - 16*3              ; (the sum leaves out the cycled colours, 16-23:
+        cmp cx, 768 - 1*3               ; (the sum leaves out the cycled colours, 1-31:
         ja .sum                         ;  they change every frame)
         cmp cx, 768 - WS_FIRST*3
         ja .skip
@@ -1160,7 +1160,7 @@ ws_build:
         imul si, si, 3
         add si, FAR_DAC
         xor di, di
-.chan:  movzx ax, byte [fs:si]          ; SL's shadowed floor: (gain x c + offset) / 256, in 0..63
+.chan:  movzx ax, byte [fs:si]          ; the shadowed colour: (gain x c + offset) / 256, in 0..63
         inc si
         push bx
         mov bx, di
@@ -1194,7 +1194,7 @@ ws_build:
         mov [lit_most], dx
         mov dword [best_d], 0xFFFFFFFF
         mov [best_c], bl
-        cmp bx, 16                      ; (the cycled colours, 16-23, stay as they are)
+        cmp bx, 1                       ; (the cycled colours, 1-31, stay as they are)
         jb .find
         cmp bx, WS_FIRST
         jb .store
@@ -1253,8 +1253,8 @@ ws_build:
         pop ds
         ret
 
-ws_gain    dw 187, 180, 188          ; (SL's shadowed floor, x 256: red, green, blue)
-ws_offset  dw 1393, -469, -72
+ws_gain    dw 189, 189, 189          ; (lightness x 0.73, x 256: red, green, blue; SL's warm
+ws_offset  dw 0, 0, 0                 ;  tone was 187, 180, 188 and 1393, -469, -72)
 resume     dd 0
 floor_ret  dd 0
 floor_frame dw 0
