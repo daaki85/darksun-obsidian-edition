@@ -133,3 +133,29 @@ work together (tall faces hiding what's behind), so the angle has to change for 
 structures at once. Options for the owner: keep WR's angle and refill surfaces with SL materials
 (consistent, cheap, half the look); or change every structure in a region together (all faces
 shortened, SL tops added, shadows), which is re-authoring the region's architecture.
+
+## Whole-region squash of Tyr (2026-11-20)
+
+Every structure and furniture picture placed in Tyr (197; not the 42 animated ones, people, doors and curtains, nor the rugs 534-537, 2385, 2386, 2896) squashed to 0.66 of its height (cos 65 / cos 50), bottom-anchored, canvas kept; entities placed at a height (10, 30, 64) lowered by the same factor in the ETAB. On the party-figures OBJEX.GFF (the pilot's pieces taken out), with the regraded ground and SL's interface. No SL tops or shadows yet.
+
+1. **Every picture squashed to 0.66:** the scene held together (the table lower, the walls lower,
+   nothing behind showing through) except the walls running north-south, which broke into
+   pieces with gaps: they are stacks of thin pictures whose height is mostly the wall's top
+   receding, not height.
+2. **Only the bottom 48 rows (the face) squashed, the rest moved down:** fewer gaps, still about
+   10 pixels at some joints.
+3. **Structures (24 wide or less, or 56 tall or more) moved down 16 rows and cut by 16 at the
+   bottom; furniture squashed:** the north-south walls joined, except where pieces stacked on top
+   of walls (entity height 64: pictures 2815, 342) came down twice, by the lowered height and the
+   picture's shift. Objects on screen found from the camera (DS:1408h) and the ETAB: **ETAB x is
+   in the camera's units** (not halved).
+4. **Pieces only ever placed on top of something keep their picture and come down by 16 through
+   their height:** the walls continuous (two small notches on the far right); the table flatter,
+   the bottom wall's top lower and its face shorter; the room reads as seen from higher up.
+   Nothing broken.
+5. DOSBox stopped by pid, the lock released.
+
+**Results (squash):** a whole region can be shown from SL's steeper angle as a data patch
+(`sl_figures.py squash WR_DIR RGN032 0.66 OUT_DIR`): structures' tops come down 16 rows, furniture
+squashed, stacked pieces lowered through their heights. The change is moderate at this factor.
+Not done yet: SL's wall tops (brick or rubble) and cast shadows, which carry much of SL's look.

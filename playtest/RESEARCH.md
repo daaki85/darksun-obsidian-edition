@@ -334,6 +334,10 @@ the opening street); put it in the copy as `RGN032.GFF`. **The sequel cycles pal
 run time** (torches, fire): a colour put there shows in the game's glow colours, not the file's.
 To check a colour on screen, sample the grab's pixels and match them to the region's PAL (in its
 `RGNxxx.GFF`). Shattered Lands draws region N in `GPLDATA.GFF`'s PAL N (the pens, RGN29, in PAL 41).
+**What's on screen where:** the camera is DS:1408h (x, y); a region's entities (its `ETAB`, 8 bytes
+each: x, y, height, flags, the object negated) are at screen x - camera x, y - camera y, **in the
+camera's units** (x not halved). An object's record (`OJFF`) anchors its picture by +2 (x) and +4 (y):
+the bottom centre. `sl_figures.py squash` lowers a region's structures for SL's angle.
 
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
