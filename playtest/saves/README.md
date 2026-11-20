@@ -58,3 +58,9 @@ cannot be loaded in a fresh install (2026-11-01).
   edit. Thy'rokh leads; Terrannus at 1/64 HP, Gerakis 143/165, Ar'anda 48/48, Thy'rokh 75/75 (she rose a
   level). The street in Tyr outside Uhubito's; the Harbinger's Roost (a room, a rest, 25 cp) to the
   southeast. Its `DARKSAVE.GFF` is the install's own (991 bytes: the save didn't rewrite it).
+- `ravager-roost` (2026-11-20): **Wake of the Ravager**, from `ravager-after-ambush`: walked (the arrow keys) east
+  along the alley north of the Harbinger's Roost, two thieves fought there (Computer Control; won), into
+  the Roost by its north door (the arrow on the doorway's steps, world ~1621, 1330), talked to Reyhan the
+  innkeeper (the look pointer on him; a room 25 cp), saved beside him before renting. **Terrannus is dead
+  in it** (the thieves' fight; status 7), Ar'anda 1 HP, Gerakis 32, Thy'rokh 59/75 (a 7th-level druid).
+  No memory edit. Its `DARKSAVE.GFF` the install's own.

@@ -333,7 +333,18 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   Harbinger's Roost's north wall (no door there: its arches are inside doorways seen through the
   cut-away) to the map's east edge (x ~2020); two thieves stop the party near x 1840 ("Run along now,
   pip" makes them fight: won by Computer Control, the party hurt). Fayina is in the Roost's back room
-  (1807, 1352). The Roost's way in not found yet (2026-11-20).
+  (1807, 1352). **The Roost's door**: on its north wall at world x ~1621 (an arched doorway with white
+  steps, drawn as if inside): the arrow clicked on the steps takes the leader through (the arrow keys
+  stop at the wall line, y 1274). Inside: Reyhan, the owner, behind the counter (the look pointer on him
+  talks: 1 rent a room, 3 one night, 25 cp: "the room at the end of the corridor, second door on your
+  left": the corridor runs east along the south front, the second doorway is open, its steps clicked
+  again). The room has a bed (barred to every pointer) and a round stone ring by it that took the look
+  pointer once and then was gone, with no rest (2026-11-20): how a rented room rests is still open.
+- **Keys** (gibberishh's walkthrough, in the private repository's guide/): I inventory, O overhead map, V
+  character, C cast, 1-4 leader, 5 the whole party shown, 6 the leader only, F1 save (straight to the save
+  screen), F2 load, Tab preferences (difficulty), A animations, H the view back to the party; in a fight
+  W wait, G guard, Q end turn; in a talk the number keys, Space to go on. The save screen's name field:
+  End, then Backspace, before typing (the cursor starts at its start).
 - **Resting**: only at a fire ring (the Look icon on it), or a room at an inn (Tyr's Harbinger's Roost,
   25 cp, southeast of the start). The Mines of Tyr level 1 have a fire ring in the room past exit C
   (the owner's map, 2026-11-20: by the dying miner).

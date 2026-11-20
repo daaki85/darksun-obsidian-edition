@@ -130,6 +130,14 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     the Roost's north wall: no way in found on its north, east (the map's edge) or by the south gate.
     Stopped there; nothing saved.
 
+24. **The Roost reached** (with gibberishh's walkthrough and keys, the user's paste, now in the private
+    repository): the area map's blue dot is the party (5.4 world px a map px across, 4.6 down); the
+    Roost's door found on its north wall; Reyhan; saved beside him (`saves/ravager-roost`: Terrannus died
+    in the thieves' fight). Then test edits (never saved): Gerakis Poisoned (effect 71: the inventory
+    showed "Poisoned"), a room rented for a night, the rented room reached. No rest came of it: the bed
+    takes no pointer; a round ring by it took the look pointer once, then vanished; the party's HP
+    unchanged, DSCLOG2's REST_POISON count 0. The rest test still waits for a working rest.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
