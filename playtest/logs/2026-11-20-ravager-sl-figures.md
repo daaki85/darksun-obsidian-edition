@@ -231,3 +231,12 @@ square of piece 343) in the game: thick sandstone walls, straight shadow bands a
 lower sides. Gerakis's walk to a cell beside the street wall was refused ("can't go" pointer): that
 cell is GMAP 64, unchanged from the shipped file, so 64 is the game's own no-walk margin beside walls
 and furniture. DOSBox stopped by pid, the lock released.
+
+## After the owner's review: party from the mod, furniture squash, creatures (2026-11-20)
+
+The ground back to Ravager's own. Party built from the Obsidian Edition's SEGOBJEX copy: in the game
+(a test copy with Terrannus and Ar'Anda as the half-elves) the mod's half-elves drawn right. Furniture
+squash (60 pictures) in the game: tables lower, walls as shipped. Creature swap, first batch: in the
+opening ambush picture 2427 (templar) turned the blonde woman who opens the game into an SL templar,
+who walked and fought on SL's frames: the swap works, but 2427 is shared with her, so it was taken out.
+DOSBox stopped by pid, the lock released.
