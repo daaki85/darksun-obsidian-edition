@@ -2492,6 +2492,52 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertEqual(self.round(660), "Round 2: Dag 25")
         self.assertEqual(self.round(5000), "Round 1: Dag 25")  # a new fight
 
+    def test_rounds_played_through_at_once(self):
+        """With no one able to act (2026-11-20: the whole party Paralyzed, the foes held) the game
+        plays round after round in a blink, nothing rolled but initiative: the log gets several
+        rounds' rolls at once. Not a new fight's "Round 1" listing them all, most as "?" (the table
+        keeps only the last round's tie-breaks): the rounds passed, then the last one's order."""
+        m = self.log.guest.mem
+        self.assertEqual(self.round(600), "Round 1: Dag 25")
+        set_clock(self.log, 840)  # three rounds, each rolled for Dag (combatant 0), then Daaki (1)
+        for tie_dag, tie_daaki in ((10, 20), (30, 40), (50, 60)):
+            for creature, tie in ((0, tie_dag), (1, tie_daaki)):
+                struct.pack_into("<hh", m, self.table + creature * 4, -1, tie)  # (turns passed: no score)
+                self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+                self.log.describe(entry(raw_for(tie + 1, 200), dicelog.INITIATIVE_TIE), now=1.0)
+        out = self.log.initiative_lines()
+        self.assertEqual(out[:2], ["Rounds 2-3 go by at once: no one in the fight can act",
+                                   "Round 4: Daaki 25, Dag 25"])
+        self.assertNotIn("?", " ".join(out))
+        self.assertEqual(self.log.round_number, 4)
+        self.assertEqual(self.round(900), "Round 5: Dag 25")  # the same fight
+        set_clock(self.log, 960)  # one round passed, and the last heading's time a round ahead
+        #                           (2026-11-20: read once the next round's 60 seconds were on)
+        for _ in range(2):
+            self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+            self.log.describe(entry(raw_for(51, 200), dicelog.INITIATIVE_TIE), now=1.0)
+        self.assertEqual(self.log.initiative_lines()[:2], [
+            "Round 6 goes by at once: no one in the fight can act", "Round 7: Dag 25"])
+
+    def test_rolls_that_dont_make_whole_rounds_stay_one(self):
+        """Rolls the table can't account for in rounds (a log started mid-round, a roll matching
+        no one): one heading, as before, and no rounds counted as passed."""
+        m = self.log.guest.mem
+        self.assertEqual(self.round(600), "Round 1: Dag 25")
+        set_clock(self.log, 660)
+        for creature, tie in ((0, 10), (1, 20), (0, 30)):  # three rolls: not whole rounds of two
+            struct.pack_into("<hh", m, self.table + creature * 4, 25, tie)
+            self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+            self.log.describe(entry(raw_for(tie + 1, 200), dicelog.INITIATIVE_TIE), now=1.0)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 2: Dag 25, Daaki 25, ? 25")
+        # (the pair's rolls twice, the clock not on a round since the last heading: no round passed)
+        for creature, tie in ((0, 70), (1, 80)):
+            struct.pack_into("<hh", m, self.table + creature * 4, 25, tie)
+        for tie in (70, 80, 70, 80):
+            self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+            self.log.describe(entry(raw_for(tie + 1, 200), dicelog.INITIATIVE_TIE), now=1.0)
+        self.assertTrue(self.log.initiative_lines()[0].startswith("Round 3: "))
+
     def test_monsters_acs_forgotten_in_a_new_fight(self):
         """The game reuses creature records: an AC from an earlier fight (the opening fight's
         Defiler, AC -9) isn't the new monster's in its Look box; the party's are kept."""

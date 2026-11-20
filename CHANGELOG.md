@@ -64,9 +64,16 @@ Releases, newest first (2.12.0 and older in the archive):
   creature) takes the old one's place in the game: the log said `Paralyzed ends on Y` beside the new
   caster's line though the hold went on, or nothing at all when the caster stayed the same. It now
   says `..., in place of the one it had` and no end (records told apart by spell and handle too).
+- With no one in a fight able to act (the whole party Paralyzed and the foes held) the game plays
+  the rounds through in a blink. The log put them all under one `Round 1` heading listing everyone
+  once a round, most of them as `?`, and took the fight for a new one (a dance rolled again,
+  the foes' ACs forgotten). It now says `Rounds 3-7 go by at once: no one in the fight can act`
+  and goes on with the right round's order and number (`Round 8: ...`); the combat log's panel
+  and its header follow.
 
 **Dev**
 - A play log: [the "Paralyzed ends on Templar" of the F10 real-pin play](playtest/logs/2026-11-20-paralyzed-ends-oddity.md).
+- A play log: [the "Round 1" at the whole party's hold](playtest/logs/2026-11-20-round-one-oddity.md).
 
 ## Pull request #127 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/127))
 
