@@ -19,6 +19,13 @@ mends only what it saw happen, in this order, in one turn of one party member:
 3. then, the flags still those, the points equal to the turn's own (DS:4964h, 10 or more), the
    member on the turn's first square and standing still: F10 has taken the move back.
 
+And never for a member pinned at that moment: the game's pin (786A9h-786CBh) clears the bit when
+effect 22h or 33h (Paralyzed or Stuck) lands, and does nothing else to the flags, so one landing
+after the last step leaves them just as the last step did and the order alone can't tell. The
+member's effects are read at F10 (the game's table, owner its combatant): with either one up,
+nothing is written. (Seen in the game: Seneca made Paralyzed after her last step walked a step on
+F10 before the game ended her turn, logs/2026-11-20-f10-after-spell.md in the playtest kit.)
+
 An attack made in the turn ends it: nothing is mended after one, before or after the walk, nor
 once the flags have changed in any other way (a spell cast, an effect, the turn's end) or the turn
 has passed. An attack is known by either of two bytes of the creature's: the swings made
@@ -45,6 +52,7 @@ START_POINTS, START_Y, START_X = 0x4964, 0x4966, 0x4968  # DS words: the turn's 
 MAP_RECORD, WALKING = 0x6694, 0x20  # DS: a map thing's record (32 bytes each), its flags' bit while it walks
 WALK_SEG, WALK_STEP, WALK_STEP_SIZE, WALK_LEFT, WALK_LEFT_SIZE = 0x3972, 0x377, 0x1C, 0x8AA, 0x13
 STEP = 10  # a straight step's points: with fewer the game lets nobody walk
+PINNING = (game.PARALYZED_EFFECT, 51)  # Paralyzed (22h) and Stuck (33h): the effects whose landing clears the bit (786A9h)
 
 
 class MoveBack:
@@ -95,6 +103,9 @@ class MoveBack:
         here = struct.unpack("<HH", guest.read(ds + game.POSITIONS + turn * 32, 4))
         walking = guest.read(ds + MAP_RECORD + turn * 32, 1)[0] & WALKING
         if points != start or points < STEP or here != (start_x, start_y) or walking:
+            return None
+        if any(e.owner == turn and e.id in PINNING for e in gd.effects()):
+            self._forget()  # (pinned: no walk to give, now or later this turn)
             return None
         walk = (gd.load_seg + WALK_SEG) * 16
         guest.write(walk + WALK_STEP + turn * WALK_STEP_SIZE, b"\xff")  # (the walk the points ran out on)

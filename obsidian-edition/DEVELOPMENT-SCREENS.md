@@ -1062,6 +1062,16 @@ the turn's first square and standing still. It also forgets the walk the points 
 3972h:0377h + thing x 1Ch, 0 at 3972h:08AAh + thing x 13h), which the game would otherwise go on
 with from the square F10 put the member on.
 
+**Never for a member pinned at F10**: the pin (786A9h-786CBh, in the routine that gives an effect)
+clears bit 0 when effect 22h or 33h lands (34 Paralyzed, 51 Stuck; nothing else there touches bit
+0, and 591BCh and 786CBh are the only `and word [bx+1D5h], 0FFFEh` in DSUN.EXE) and leaves the rest
+of the flags and the points alone. One landing after the last step therefore leaves the flags as
+the step did, and the order alone took it for the last step: the first version gave such a member
+its walk (seen in the game: Seneca, Paralyzed after her last step, walked a step on F10 before the
+game ended her turn). So at F10 the member's effects are read (`GameData.effects()`, owner its
+combatant): with 34 or 51 among them nothing is written, no line is said, and the turn's sequence is
+forgotten.
+
 **Never after an attack**: either of two bytes of the creature's ends it for the turn, the swings
 made (37BDh:0181h) or the attack commands given (37BDh:01ABh). The first alone is not enough: an
 attack ends the member's turn (the flags zeroed), but one that kills leaves the turn, with the
@@ -1072,7 +1082,11 @@ in the game, and mended before anything was committed as finished).
 Tests: `tests/test_moveback.py`. Verified:
 [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-modernisation-features.md)
 (F10 with movement left: the game's, nothing written; after the last step: walks again; after a
-kill made on the last step's square: put back by the game, no walk).
+kill made on the last step's square: put back by the game, no walk);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-after-spell.md)
+(after a spell: a cast zeroes the flags, nothing written, Curse, Reflected Image and Magical Stone,
+after the last step and with movement left; Paralyzed by a memory edit after the last step: the
+first version gave the walk, the mended one none, and a plain last step still walks again).
 
 ## Showing what can be used: Alt
 
