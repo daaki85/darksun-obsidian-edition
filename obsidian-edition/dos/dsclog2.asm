@@ -36,6 +36,8 @@ VEC_ACID_BURN   equ 0xC8 ; ACID_BURN (82BF3h: Acid's burn starting)
 VEC_ACID_ONCE   equ 0xC9 ; ACID_ONCE (651FEh: a spell's damage putting its effect on: none from a burn)
 VEC_ACID_USE    equ 0xCA ; ACID_USE (7FD99h: an effect's charges spent: Acid's only from ACID_ROUND)
 VEC_ACID_ROUND  equ 0xCB ; ACID_ROUND (5B592h: a round starting: each creature's Acid burns)
+VEC_IMAGE     equ 0xCC  ; IMAGE_SPELL (84BF8h: an image taking a spell: only a foe's)
+VEC_BLOW      equ 0xCD  ; IMAGE_BLOW (5D09Fh: an attack's hit: an image may take it)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -410,6 +412,126 @@ npp_save:
         pop bp
         iret
 npp_count dw 0                          ; times it was asked (for the tests)
+
+; ---- MIRROR IMAGE: DSCLOG's NS_IMAGE and NS_BLOW ----
+; Mirror Images (effect 46) stopped no weapon blow, and took a spell for one creature three times in
+; four whoever cast it (Armor cast on oneself lost, an image with it; the sequel already leaves out
+; area spells, its 680h:20h test).
+; IMAGE_SPELL: "cmp ax,4Bh" (84BF8h; 3 bytes) where a spell lands on thing SI ([BP+8] the caster, AX
+; the d100): with caster and target on one side (party members, below 4, or not) the chance is 0, as
+; if the d100 were over; else 75. Its flags into the INT's frame.
+; IMAGE_BLOW: "cmp word [bp+1Ah],0" (5D09Fh; 4 bytes) where an attack (its d20 rolled) hits combatant
+; [TARGET]: with Mirror Images on it, a d100 with the game's rand (rand() at the load segment's 822h)
+; of 75 or less strikes an image instead: one used up through the charge spender (stub 608h:57h, as
+; the game's spells use one: the effect ended with the last), and the attack goes on as a miss
+; (5D0E9h), in a frame the overlay manager can fix up (the spender is overlay code). Else on as
+; before, the compare's flags into the INT's frame. (Reflected Image's 50 waits for the new spells.)
+MIRROR_EFFECT equ 46
+IMAGE_CHANCE  equ 75
+IMAGE_PARTY   equ 4
+BLOW_MISS     equ 0x5D0E9 - 0x5D0A1 ; (the miss, less the INT's way back)
+RAND_OFF      equ 0x0822            ; (rand(), at the load segment)
+DGROUP_GAP    equ 0x47E0            ; (DS less the load segment)
+image_far     dd 0
+image_spells  dw 0                  ; (for the tests: images that took a spell, and a blow)
+image_blows   dw 0
+image_spell:
+        pushad
+        push es
+        mov dx, IMAGE_CHANCE
+        mov bx, [bp + 8]
+        cmp bx, IMAGE_PARTY
+        setb bl
+        cmp si, IMAGE_PARTY
+        setb bh
+        cmp bl, bh
+        jne .cmp
+        xor dx, dx
+.cmp:   cmp ax, dx
+        pushf
+        jg .flags
+        inc word [cs:image_spells]
+.flags: pop ax
+        jmp acid_flags
+
+; has_effect: ZF set if thing AX has effect CL (the active effects). DS the game's; all kept.
+has_effect:
+        push bx
+        push dx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_GAP
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_BASE
+        cmp dx, 400
+        ja .none
+.each:  or dx, dx
+        jz .none
+        cmp [es:bx], ax
+        jne .on
+        cmp [es:bx + 6], cl
+        je .out                         ; (ZF set)
+.on:    add bx, 10
+        dec dx
+        jmp .each
+.none:  or sp, sp                       ; (ZF clear)
+.out:   pop es
+        pop dx
+        pop bx
+        ret
+
+image_blow:
+        sti
+        pushad
+        push es
+        mov di, sp
+        cmp word [bp + 0x1A], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [ss:di + 38], ~FLAGS_MASK
+        or [ss:di + 38], ax
+        mov ax, [TARGET]
+        mov cl, MIRROR_EFFECT
+        call has_effect
+        jnz .out
+        mov ax, ds
+        sub ax, DGROUP_GAP
+        mov [cs:image_far + 2], ax
+        mov word [cs:image_far], RAND_OFF
+        call far [cs:image_far]         ; (rand(): 0 to 32767)
+        mov cx, 100
+        mul cx
+        shl ax, 1
+        rcl dx, 1                       ; (rand() x 100 / 32768: 0 to 99)
+        inc dx
+        cmp dx, IMAGE_CHANCE
+        ja .out
+        inc word [cs:image_blows]
+        mov bx, sp
+        add word [ss:bx + 34], BLOW_MISS ; (before the call: the overlay manager may leave its
+        push word [ss:bx + 36]          ;   trap in place of the way back, as a far call's frame)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, USE_STUB
+        mov [cs:image_far + 2], ax
+        mov word [cs:image_far], USE_ENTRY
+        push word MIRROR_EFFECT
+        push word [TARGET]
+        call far [cs:image_far]
+        add sp, 4
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
 
 ; ---- ACID: DSCLOG's ACID_ROUNDS, ACID_BURN, ACID_ONCE, ACID_USE, ACID_ROUND ----
 ; Acid Arrow's Acid (effect 1) never burned after the arrow's hit, as in Shattered Lands: the routine
@@ -1138,6 +1260,8 @@ all_vectors:
         vector VEC_ACID_ONCE, acid_once
         vector VEC_ACID_USE, acid_use
         vector VEC_ACID_ROUND, acid_round
+        vector VEC_IMAGE, image_spell
+        vector VEC_BLOW, image_blow
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

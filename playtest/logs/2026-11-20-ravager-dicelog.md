@@ -174,6 +174,13 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     blows (a round with no blow: 160 to 155), no Acid put on again by the burns. A cast's seconds made
     rounds (ACID_ROUNDS) not yet seen: no one in the party had Acid Arrow.
 
+29. **Mirror Image** (SL's ns_image, ns_blow; DSCLOG2's IMAGE_SPELL at 84BF8h, IMAGE_BLOW at 5D09Fh):
+    the sequel already kept area spells off images (its 680h:20h test), but an image still took one's
+    own or a friend's spell, and no weapon blow. In the opening ambush, Mirror Images with 4 images on
+    Gerakis (test edit, never saved), the party's turns ended: two Draxan hits taken by images (4, 3,
+    2 left; DSCLOG2's count 2; no damage from those), the others landing. A spell on someone with
+    images not yet seen.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log. A script's right-click right after closing a talk made the pointer the sword (the talk sets it

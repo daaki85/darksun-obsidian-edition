@@ -60,7 +60,8 @@ VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC
 VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)
 VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)
 VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)
-VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0xC7, 0xC8, 0xC9, 0xCA, 0xCB  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0xC7, 0xC8, 0xC9, 0xCA, 0xCB
+VEC_IMAGE, VEC_BLOW = 0xCC, 0xCD  # (DSCLOG2's IMAGE_SPELL, IMAGE_BLOW)  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -131,6 +132,11 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("acid_once", 0x651FE, bytes.fromhex("837ef600"), bytes((0xCD, VEC_ACID_ONCE, 0x90, 0x90))),
     Patch("acid_use", 0x7FD99, bytes.fromhex("8b7e06"), bytes((0xCD, VEC_ACID_USE, 0x90))),
     Patch("acid_round", 0x5B592, bytes.fromhex("803e4e0500"), bytes((0xCD, VEC_ACID_ROUND, 0x90, 0x90, 0x90))),
+    # Mirror Image stopped no weapon blow and took any spell for one creature, one's own and a friend's
+    # too (SL's ns_image, ns_blow): DSCLOG2's IMAGE_SPELL (the d100 against 75 only for a foe's spell)
+    # and IMAGE_BLOW (a hit on a target with images: 75 in 100 an image takes it, the attack a miss).
+    Patch("ns_image", 0x84BF8, bytes.fromhex("3d4b00"), bytes((0xCD, VEC_IMAGE, 0x90))),
+    Patch("ns_blow", 0x5D09F, bytes.fromhex("837e1a00"), bytes((0xCD, VEC_BLOW, 0x90, 0x90))),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word
