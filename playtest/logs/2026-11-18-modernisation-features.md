@@ -138,7 +138,9 @@ display or mouse). "Connected to the game".
   the sewers or the wastes would be needed for the squares' and Alt's marks on other floors and
   for the quests given there).
 - The squares' dark crosses on a floor the dust has no colours for; a hasted walker.
-- F10 after a spell cast, and after an effect that pins a member (held by the unit tests only).
+- F10 after a spell cast, and after an effect that pins a member (held by the unit tests only). Seen
+  2026-11-20 ([log](2026-11-20-f10-after-spell.md)): after a spell the mend stays out; a pin put
+  on after the last step (a memory edit) got the walk back, mended the same day.
 - Of #107's checks (the champions' gear) only what the elf's shots show was seen again: its
   Wooden Fine Bow ("+1 fine"), its Chill Arrows and its DEX 22 (`foeset.py`'s scores; the
   Tohr-kreen's and the halfling's 22 too). The halfling's staff sling and the defiler's bracers

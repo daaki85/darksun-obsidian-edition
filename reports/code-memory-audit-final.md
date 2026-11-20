@@ -10,7 +10,7 @@ unchanged (the image is padded to the paragraph). C6: `theme.py`'s re-exports we
 not in this list; they were fixed after, on `claude/older-loader-bugs` (their status lines below). Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
 `origin/claude/backstab-str-line` at `f1f8972`: `origin/obsidian-edition` (#110 to #115) plus the
 unmerged REAR_FRESH backstab fix. Line numbers are at that commit. The previous audit is
-`reports/code-memory-audit.md` on `origin/claude/code-memory-audit`; its fixes are #111 and #112.*
+[archive/code-memory-audit.md](archive/code-memory-audit.md); its fixes are #111 and #112.*
 
 ## The short version
 

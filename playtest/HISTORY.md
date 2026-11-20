@@ -354,6 +354,14 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
     and attacked, and the turn passed to the next member in the middle of the sweep.
   - F10 after the Move was all spent gave the points back and no walk: read as a tool's failure
     until the flags showed bit 0 still off (the game's own slip).
+- 2026-11-20 (logs/2026-11-20-f10-after-spell.md), 2.19.0's "not seen" F10 cases played: after a
+  spell (Curse, Reflected Image, Magical Stone after the last step and with movement left) the
+  flags read 0 and the mend stayed out, as meant. A pin put on by `addeffect.py` after the last step
+  got the walk back (one step, then the game ended the turn): the game's pin only clears bit 0,
+  which the last step had cleared already, so the mend couldn't tell; fixed the same day (the
+  member's effects read at F10) and played again. Getting to
+  Ester's next turn, `passuntil.sh 2` passed turns until the party was defeated: the Templar's Hold
+  Person had paralysed her, and a held member gets no turn.
   - A helper pass written before the branch was reorganised was taken out again and put back on
     the integrated base (the signature `vc` to `vd`): the design kept in the log, with its lines,
     made that an hour's work.
@@ -670,3 +678,6 @@ index](logs/README.md), by date.
   that kills leaves the turn, +1ABh counts the commands), the panel under windows; the arena
   reached with no memory edit and its autosave loaded; the Loader's window on a second display,
   where the Characters tab's KeyError showed (logs/2026-11-18-modernisation-features.md).
+- **2026-11-20**: F10 after a spell and after a pin, 2.19.0's last "not seen" item: a cast zeroes
+  the turn flags (the mend stays out); a pin after the last step got the walk back (fixed: the
+  member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
