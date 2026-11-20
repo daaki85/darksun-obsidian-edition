@@ -324,6 +324,13 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
 
 ## Fights and the turn tools
 
+- **"The game jumps its clock to the next event" (2026-11-20).** The Paralyzed-ends play read the
+  clock every 50 ms with the whole party held and saw 3326 then 3806: a jump to the next timed
+  event, it seemed, with a `Round 1` of about 50 combatants, most `?`, in the dice log. Watched
+  every 20 ms with the initiative rolls traced (logs/2026-11-20-round-one-oddity.md), the clock went
+  up 60 at a time, a round each, all in 0.1 s: the game plays the rounds, skipping every turn, and
+  the dice log, waiting 0.3 s after an initiative roll, put six rounds' rolls under one heading.
+
 - **A hang in a lasting cloud (fixed).** Moved from the guide: a kill made by DSCLOG's own far
   call of 4E0:61h inside a lasting cloud's round left the screen still and the pointer stuck at
   DS:A133h while the game's clock (DS:11D6h) ran on: `compare -metric AE` of two shots 5 s apart

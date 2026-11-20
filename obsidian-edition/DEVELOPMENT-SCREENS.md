@@ -1106,7 +1106,12 @@ first version gave the walk, the mended one none, and a plain last step still wa
 [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-held-stays.md)
 (`F10_PIN`: Paralyzed after the last step, Stuck after the last step and Paralyzed with movement
 left, every foe Paralyzed too: F10 left the member on its square with its points, no Loader line;
-the pin taken off, F10 the game's again, after the last step with the walk given back).
+the pin taken off, F10 the game's again, after the last step with the walk given back);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-real-pin.md)
+(a real pin, no memory edit to it: Stuck by the game's Web on the member's own walk, with movement
+left and after the last step, and at a Stuck turn's start; Paralyzed by the member's own Hold
+Person turned back by Spell Turning, before and after a walk: F10 left the member on its square
+with its points every time, no Loader line; the pin taken off, F10 the game's again).
 
 ## Showing what can be used: Alt
 

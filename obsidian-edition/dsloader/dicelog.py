@@ -178,7 +178,12 @@ FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
 # spells' pictures, which the log passes over)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
-# 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
+# 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties. The round's routine
+# (DSUN.EXE 57414h) puts 60 seconds on the clock, then rolls combatant by combatant in rising
+# order (57447h-5764Dh, DI the combatant), each score and tie-break kept in the table at once
+# (5751Bh, 57545h). With no one in the fight able to act (the whole party Paralyzed, the foes
+# held) the game plays round after round in a blink, nothing rolled but these: the log gets
+# several rounds' rolls in one go (initiative_lines splits them)
 INITIATIVE_ROLL = bytes.fromhex("660fbfc0666bc00a66bb00800000669966f7fb665057")
 INITIATIVE_TIE = bytes.fromhex("660fbfc06669c0c800000066bb00800000669966f7fb8bde")
 INITIATIVE_BASE = 20
@@ -2703,28 +2708,35 @@ class DiceLog:
         return self._names.get(combatant, name)
 
     def effect_changes(self, now: float = 0.0) -> List[str]:
-        """Lines for effects that started or ended since the last look."""
-        current = Counter(self.game.effects())
-        for eff in current:
+        """Lines for effects that started or ended since the last look. Records are told apart by
+        their spell and handle too: an effect put on a creature that has it already takes the old
+        record's place (Rainbow Pattern on a held foe, a second Hold Person), which is said as
+        such, not as an end and a start."""
+        current = Counter(self.game.effect_records())
+        for eff, _, _ in current:
             self._name(eff.owner)
             self._name(eff.caster)
         loading = self._party_check(now)
         if self._effects is None or loading:
             self._effects = current  # the first look, or just loaded: remember what is active
             return []
-        started, ended = current - self._effects, self._effects - current
+        started = [eff for eff, _, _ in (current - self._effects).elements()]
+        ended = [eff for eff, _, _ in (self._effects - current).elements()]
         self._effects = current
+        replaced = {(e.owner, e.id) for e in started} & {(e.owner, e.id) for e in ended}
         out = []
-        by_cast: Dict[Tuple[int, int], List[int]] = {}
-        for eff in started.elements():
-            by_cast.setdefault((eff.caster, eff.id), []).append(eff.owner)
-        for (caster, eid), owners in by_cast.items():
+        by_cast: Dict[Tuple[int, int, bool], List[int]] = {}
+        for eff in started:
+            by_cast.setdefault((eff.caster, eff.id, (eff.owner, eff.id) in replaced), []).append(eff.owner)
+        for (caster, eid, instead), owners in by_cast.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
             rule = game.effect_rule(eid, self.game.spells_manual())
             rule = f": {rule}" if rule else ""
             if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
                 rule = ": it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's turning, CHILL_UNDEAD's Chill Touch)
+            if instead:  # (the one it had is gone: this one, with its own time, holds from now)
+                rule = f", in place of the {'ones they' if len(owners) > 1 else 'one it'} had{rule}"
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
                 out.append(f"{name} on {targets}{rule}")
             else:
@@ -2735,8 +2747,9 @@ class DiceLog:
                     if creature is not None:
                         out += aging.hasted(self.game, creature)
         by_end: Dict[int, List[int]] = {}
-        for eff in ended.elements():
-            by_end.setdefault(eff.id, []).append(eff.owner)
+        for eff in ended:
+            if (eff.owner, eff.id) not in replaced:
+                by_end.setdefault(eff.id, []).append(eff.owner)
         for eid, owners in by_end.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             out.append(f"{name} ends on {', '.join(self._name(o) for o in owners)}")
@@ -2873,17 +2886,46 @@ class DiceLog:
                 out["next"].append((name, score))
         return out
 
-    def _round_number(self) -> int:
+    def _round_number(self, passed: int = 0) -> int:
         """The round of this fight: the game's clock moves 60 seconds a round, and a longer gap
-        means a new fight."""
+        means a new fight. PASSED: rounds the game played through before this one, unseen
+        (initiative_lines), whose time isn't a gap."""
         now = self.game.game_time()
         if now is None:
             return 0
-        if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
+        if self._round_time is None or now < self._round_time \
+                or now - self._round_time - passed * ROUND_SECONDS > FIGHT_GAP:  # (or a game loaded)
             _new_fight(self)
         self._round_time = now
-        self._round += 1
+        self._round += 1 + passed
         return self._round
+
+    def _rounds_passed(self, pairs: List[Tuple[int, int]], combatants: Dict[int, int],
+                       table: List[Tuple[int, int]]) -> int:
+        """How many whole rounds before the last one PAIRS hold: the game rolls a round's
+        initiative combatant by combatant in rising order and keeps each one's tie-break roll in
+        TABLE, so the last round is the run at the end whose tie-breaks are those of combatants
+        in rising order; the pairs before it are earlier rounds of as many rolls each, played
+        through by the game while no one could act (the clock gone on a round for each: at least
+        one a round passed, as the last heading's time can be the next round's already, its 60
+        seconds put on before its rolls). 0 for one round, or rolls that don't fit that (a log
+        started mid-round: shown as before)."""
+        last, below, used = 0, None, set()
+        for _, tie in reversed(pairs):
+            found = [c for c, i in combatants.items()
+                     if (below is None or c < below) and i not in used and 0 <= i < len(table) and table[i][1] == tie]
+            if not found:
+                break
+            below = max(found)
+            used.add(combatants[below])
+            last += 1
+        if not last or len(pairs) % last or len(pairs) == last:
+            return 0
+        passed = len(pairs) // last - 1
+        now = self.game.game_time()
+        if now is None or self._round_time is None or now - self._round_time < passed * ROUND_SECONDS:
+            return 0
+        return passed
 
 
     def initiative_lines(self) -> List[str]:
@@ -2895,6 +2937,9 @@ class DiceLog:
         g = self.game
         combatants = g.combatants()
         table = g.initiative(max(combatants.values(), default=0) + 1)
+        passed = self._rounds_passed(pairs, combatants, table)
+        if passed:  # (the earlier rounds' orders are gone from the table: only how many)
+            pairs = pairs[-(len(pairs) // (passed + 1)):]
         effects = g.effects()
         rows, used, path = [], set(), None
         for roll, tie in pairs:
@@ -2929,16 +2974,19 @@ class DiceLog:
             rows.append((score, tie, f"{g.creature_name(index)} {score}", steps, combatant, g.creature_name(index)))
         rows.sort(key=lambda r: (-r[0], -r[1]))
         scores = Counter(r[0] for r in rows)
-        number = self._round_number()
-        if self._kits_due and number != 1:  # (a new fight by the fight flag, the clock not yet past FIGHT_GAP:
-            _new_fight(self)                #   the arena's next wave) everything a new fight resets
-            self._round = number = 1
+        number = self._round_number(passed)
+        if self._kits_due and number - passed != 1:  # (a new fight by the fight flag, the clock not yet
+            _new_fight(self)                         #   past FIGHT_GAP: the arena's next wave) everything
+            self._round = number = 1 + passed        #   a new fight resets
         self.round_number = number
-        start, self._kits_due = number == 1, False  # (a new fight, or one after a fight's end)
+        first = number - passed if number else 0  # (the first of the rounds these rolls are)
+        start, self._kits_due = first == 1, False  # (a new fight, or one after a fight's end)
         if start:
             self._fight_seen, self._out_of_fight = False, None
-        danced = self._dances.round(g, self.tsr_hdr, number, start=start)
-        danced += self._wild.round(g, self.tsr_hdr, number, start=start)
+        danced = []
+        for each in range(first, number + 1):  # (a dance's rounds run out in the rounds passed too)
+            danced += self._dances.round(g, self.tsr_hdr, each, start=start and each == first)
+            danced += self._wild.round(g, self.tsr_hdr, each, start=start and each == first)
         if start:  # (a Poisoner's doses: each weapon poisons once a fight; DSCLOG clears its own,
             self._poison_doses = set()  #   POISON_USED, at the first round: ACID_ROUND)
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
@@ -2948,6 +2996,9 @@ class DiceLog:
         self._stale_turn, self._turn = self._turn, None
         order = ", ".join(r[2] for r in rows)
         out = [f"Round {number}" + (f": {order}" if order else "") if number else f"Initiative: {order}"]
+        if passed:
+            gone = f"Round {first} goes" if passed == 1 else f"Rounds {first}-{number - 1} go"
+            out.insert(0, f"{gone} by at once: no one in the fight can act")
         for score, tie, who, steps, _, _ in rows:
             tied = f", tie broken by {tie} (0-199 roll)" if scores[score] > 1 else ""
             out.append(f"    {who} = {INITIATIVE_BASE} + {steps}{tied}")

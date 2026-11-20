@@ -860,6 +860,19 @@ game's data: it is one player's account.
      leaves bit 0 set (the game's own pin would clear it); the site reads the effect table. Follow a
      turn with `f10watch.py MEMBER SECONDS` in the background: each change of the flags, points,
      square and the turn's start words, with its time.
+   - **A real pin for an F10 test** (logs/2026-11-20-f10-real-pin.md; no memory edit to the pin):
+     from `fountain-user` with the foes held and `spellsetup.py 0=9 2=9`, Lex's Web (wizard level 2,
+     fourth icon 230,59) at the Templar (240,124) leaves a web east of the party; a member walked into
+     it saves on the step into a web square (`saving throw vs Web (spell)`), and a failure stops the
+     walk there, Stuck, the END menu up, the turn its own (with movement left, or with 0 after a last
+     step into it: aim the walk to spend its points on that step, and try it: the path cost more than
+     worked out). F10 then does nothing. A Stuck member's later turns open with the END menu, 0
+     points and the turn's start words 0 and its own square. **Paralyzed with the turn kept**: Spell
+     Turning on the target foe (`foeset.py 25 eff=44:48`, the Templar; held foes turn too), then the
+     member's own Hold Person at it (Ester, priest level 2, 176,79): `Templar gives Paralyzed to
+     Ester`, the Hold Person pointer stays up and the turn with it (flags 0); walk first for a case
+     the game's own F10 would have moved. A Paralyzed member's turn otherwise never comes (Hold
+     Person, and Rainbow Pattern's save at each turn's start: "X's turn" logged, gone in 150 ms).
    - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
      1, the flags as they were, the turn still its own; a second swing of the same command can
      end it all the same: Jenna's did, Ester's didn't). For "walked out, killed, F10": a foe on
@@ -902,7 +915,9 @@ game's data: it is one player's account.
    **A member held by a foe's Hold Person has no turn at all** (Lex in `fountain-user`, 2026-11-20:
    no "Lex's turn" for two rounds; not the END menu below): `passuntil.sh N` for that member passes
    turns until the party is defeated; check `effects.py` for 34 on it first, and paralyze the foes
-   before passing turns.
+   before passing turns. Rainbow Pattern (it can be aimed at bare floor) does the same: each
+   creature in it saves at its turn's start, and a failure skips that turn at once (no save while
+   walking in it).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
    Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
@@ -942,6 +957,21 @@ game's data: it is one player's account.
   Paralyzed on each foe that shoots; then the turns come clean. Paralyzed foes also fail every save
   (handy for a failed save on demand). From `fountain-user` with every foe held, `passuntil.sh 3`
   gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the time.
+- **A memory-edit hold lasts only until a real one reaches the foe** (logs/2026-11-20-paralyzed-ends-oddity.md): an effect put on a creature that has it already takes the
+  old record's place, with the new spell's time. Rainbow Pattern's area (no save line: a held foe fails
+  without a roll) or a Hold Person on a `foeset.py`-held foe gives it a timer, and it acts again when
+  that runs out (the dice log: `..., in place of the one it had`, later `Paralyzed ends on`). Keep holds
+  and areas off foes that must stay held, or run `foeset.py C eff=34` again after. **With the whole
+  party Paralyzed and the foes held, the game plays the rounds through in a blink**
+  (logs/2026-11-20-round-one-oddity.md): no jump, but one round after another, 60 s each on the
+  clock, every turn skipped, a tenth of a second for six rounds, until a hold ends; the dice log
+  says `Rounds 4-5 go by at once: no one in the fight can act`. A watcher sampling every 50 ms
+  sees only the clock leap. **Getting the whole party held for real**: Lex's Rainbow Pattern
+  (`spellsetup.py 0=9 2=9 50`, wizard level 4, the only icon 176,59) at the floor among the party
+  (158,148), a second one the next round if he is still free, then `passn.sh 1` a pass at a time
+  while a count of the party's 34 records (a few lines over `live.py`) is under 4: each member saves
+  at its turn's start; each of three loads had all four held within four rounds (the pattern lasts
+  2d3 rounds: once it is gone, load again).
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had
