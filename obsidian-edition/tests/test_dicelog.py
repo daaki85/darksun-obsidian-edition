@@ -10,7 +10,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import tracker as tracker_module
-from dsloader import dicelog, game, itemgate, names
+from dsloader import combatlog, dicelog, game, itemgate, names
 from dsloader.dicelog import AcDetail, DiceLog, Entry, KIND_AC, KIND_ROLL, KIND_SAVE
 from dsloader.textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, TextBuffer
 from dsloader.tracker import PartyTracker
@@ -127,7 +127,8 @@ def words(*values):
 
 
 def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b"", parent_code=b"",
-          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0):
+          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0,
+          initiative=None):
     data = bytearray(Entry.SIZE)
     struct.pack_into("<8H", data, 0, 1, 0x10, 0x5000, raw & 0xFFFF, bp, DS, DS, parent_bp)
     data[16:16 + len(frame)] = frame
@@ -139,6 +140,8 @@ def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b""
     data[144:144 + len(parent_locals)] = parent_locals
     struct.pack_into("<H", data, 184, kind)
     struct.pack_into("<H", data, 188, target_state)
+    if initiative is not None:
+        struct.pack_into("<3H", data, 186, *initiative)  # combatant, fight, round
     return Entry.parse(bytes(data))
 
 
@@ -2491,6 +2494,49 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertEqual(self.round(600), "Round 1: Dag 25")
         self.assertEqual(self.round(660), "Round 2: Dag 25")
         self.assertEqual(self.round(5000), "Round 1: Dag 25")  # a new fight
+
+    def initiative(self, combatant, tie, fight, number):
+        self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+        self.log.describe(entry(raw_for(tie + 1, 200), dicelog.INITIATIVE_TIE,
+                                initiative=(combatant, fight, number)), now=1.0)
+
+    def test_round_context_ignores_stale_and_duplicate_ties(self):
+        m = self.log.guest.mem
+        things = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+        for combatant, creature in enumerate((2, 0, 1)):
+            struct.pack_into("<Bh", m, things + combatant * 3, 2, creature)
+        # Jellybelly didn't roll. His old tie could extend the apparent last round into round 3.
+        for creature, tie in enumerate((50, 50, 40)):
+            struct.pack_into("<hh", m, self.table + creature * 4, -1, tie)
+        set_clock(self.log, 600)
+        self.initiative(1, 50, 1, 1)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 1: Dag 25")
+        self.log.last_ac[STALKER] = 3
+
+        set_clock(self.log, 840)
+        for number, ties in enumerate(((10, 20), (30, 40), (50, 50)), start=2):
+            for combatant, tie in enumerate(ties, start=1):
+                self.initiative(combatant, tie, 1, number)
+        out = self.log.initiative_lines()
+        self.assertEqual(out[:2], ["Rounds 2-3 go by at once: no one in the fight can act",
+                                   "Round 4: Dag 25, Daaki 25"])
+        self.assertEqual(self.log.round_order, [(1, "Dag", 25), (2, "Daaki", 25)])
+        self.assertEqual(self.log.round_number, 4)
+        self.assertTrue(combatlog.header(self.log.round_status()).startswith("Round 4"))
+        self.assertEqual(self.log.last_ac[STALKER], 3)
+
+    def test_round_context_counts_new_fights_and_midfight_attachment(self):
+        set_clock(self.log, 600)
+        struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
+        self.initiative(0, 50, 9, 7)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 7: Dag 25")
+        self.log.last_ac[STALKER] = 3
+        # The first round of the next fight needn't advance the clock.
+        self.initiative(0, 50, 10, 1)
+        self.initiative(0, 50, 10, 2)
+        self.assertEqual(self.log.initiative_lines()[:2], [
+            "Round 1 goes by at once: no one in the fight can act", "Round 2: Dag 25"])
+        self.assertNotIn(STALKER, self.log.last_ac)
 
     def test_rounds_played_through_at_once(self):
         """With no one able to act (2026-11-20: the whole party Paralyzed, the foes held) the game

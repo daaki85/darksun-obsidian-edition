@@ -57,6 +57,14 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed**
+- DSCLOG records the fight, round and combatant with each initiative tie-break. The dice log can
+  count rounds that pass between polls even when inactive creatures have old tie-breaks in the
+  game's table. The in-game panel keeps skipped-round markers visible at every detail level
+  and under combat filters.
+
 ## Pull request #133 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/133))
 
 No release: the dice log's two fixes below come with the next one (2.19.2 doesn't have them).
