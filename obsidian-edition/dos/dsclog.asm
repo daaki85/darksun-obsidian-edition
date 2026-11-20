@@ -638,6 +638,7 @@ record:
         call helpless_of
         mov ah, 0x80
 .held:  mov [es:di+188], ax
+        mov word [es:di+190], 0
         pop ax
         mov cx, [ss:si+6]
         mov [es:di+2], cx
@@ -710,6 +711,22 @@ record:
         pop ds
         sub di, 184             ; back to the start of the entry
 
+        ; Initiative's 0-199 roll at 57520h: the code after the call identifies it.
+        ; Save the caller's DI (combatant), the fight and the round with that roll.
+        cmp word [cs:kind], 0
+        jne .publish
+        cmp dword [es:di+108], 0xC8C06966
+        jne .publish
+        cmp dword [es:di+124], 0xDE8BFBF7
+        jne .publish
+        mov bx, sp
+        mov cx, [ss:bx+2]       ; DI saved below ES
+        mov [es:di+186], cx
+        mov cx, [cs:initiative_fight]
+        mov [es:di+188], cx
+        mov cx, [cs:initiative_round]
+        mov [es:di+190], cx
+.publish:
         mov cx, [cs:seq]        ; publish: entry seq first, then the header's
         inc cx
         mov [es:di], cx
@@ -14300,6 +14317,8 @@ acid_use:
 ; manager can fix up, as it may load that code over the caller's), the creatures in turn by their
 ; number (the table changes as entries go); then the compare made, its flags returned. DS the
 ; game's; all registers kept.
+initiative_fight dw 0
+initiative_round dw 0
 acid_round:
         call whirl_clear                ; (DRAW_SITE: each Whirlwind's middle found again)
         pushad
@@ -14308,6 +14327,8 @@ acid_round:
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
         cmp word [0x55A], 0
         je .marks
+        inc word [cs:initiative_fight]
+        mov word [cs:initiative_round], 0
         mov byte [cs:poison_used], 0    ; (a fight's first round: each Poisoner's weapon poisons again;
                                         ;   up to 2.17 the dice log cleared it, a pass late at times)
         push cx                         ; (a fight's first round: no SWEPT left from another)
@@ -14322,7 +14343,8 @@ acid_round:
         pop es
         pop di
         pop cx
-.marks: mov byte [cs:sun_pass], 0
+.marks: inc word [cs:initiative_round]
+        mov byte [cs:sun_pass], 0
         call burn_pass                  ; each creature's Acid
         mov byte [cs:sun_pass], 1
         call burn_pass                  ; each creature Sunstroke holds: its heat

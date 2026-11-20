@@ -13,13 +13,13 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader.dicelog import FILTERS, HDR_SIG, Entry
+from dsloader.dicelog import FILTERS, HDR_SIG, INITIATIVE_TIE, Entry
 from dsloader.textlog import TextBuffer
 from dsloader.gamepatch import (VEC_WORN, VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST, VEC_CAN_USE, VEC_VIEW_DAM, VEC_DAM_LINE, VEC_SPEC_DAMAGE, VEC_ATTACKS, VEC_XP_NEXT, VEC_SCRIPT_RAND, VEC_ITEM_ARMOUR, VEC_ITEM_SKIP, VEC_ITEM_WEAPON, VEC_AC, VEC_DOUBLE, VEC_MSG, VEC_RAND, VEC_RING_AC, VEC_USE_ITEM,
                                   VEC_RING_SAVE, VEC_SAVE, VEC_TEXT, VEC_TWO, VEC_GRACE_CAST, VEC_GRACE_EFFECT,
                                   VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_NAMES_SIZE, VEC_STEALTH, VEC_TYPES_FILL,
                                   VEC_TYPES_SIZE, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
-                                  VEC_SPELL_TEXT, VEC_CHUNK_ID)
+                                  VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_CR_SPELLS, ROUND_SITE)
 from dsloader import game, restrict, specialize
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -155,6 +155,46 @@ class HeaderTests(unittest.TestCase):
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class StubTests(unittest.TestCase):
+    def test_initiative_records_the_combatant_fight_and_round(self):
+        image = load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        ring = RING_SEG * 16 + struct.unpack_from("<H", image, 16)[0]
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        for vector in (VEC_CR_SPELLS, VEC_RAND):
+            _, handler = vector_table(image)[vector]
+            mu.mem_write(vector * 4, struct.pack("<HH", handler, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        mu.mem_write(RAND * 16 + 0x822, bytes((0xCD, VEC_RAND, 0x90, 0x90, 0x90)))
+        instructions = bytes((0xCD, VEC_CR_SPELLS, ROUND_SITE, 0x90, 0x90))
+        instructions += b"\x9a" + struct.pack("<HH", 0x822, RAND)
+        start = CALLER * 16 + 0x10
+        mu.mem_write(start, instructions + INITIATIVE_TIE)
+
+        for slot, (first, combatant, fight, number) in enumerate(
+                ((1, 12, 1, 1), (0, 43, 1, 2), (1, 29, 2, 1))):
+            mu.mem_write(GAME_DS * 16 + 0x55A, struct.pack("<H", first))
+            for register, value in ((r.UC_X86_REG_CS, CALLER), (r.UC_X86_REG_DS, GAME_DS),
+                                    (r.UC_X86_REG_SS, SS), (r.UC_X86_REG_SP, 0x800),
+                                    (r.UC_X86_REG_BP, BP), (r.UC_X86_REG_DI, combatant)):
+                mu.reg_write(register, value)
+            mu.emu_start(start, start + len(instructions), count=10000)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_IP), 0x10 + len(instructions))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_DI), combatant)
+            e = Entry.parse(bytes(mu.mem_read(ring + slot * Entry.SIZE, Entry.SIZE)))
+            self.assertEqual(e.code, INITIATIVE_TIE)
+            self.assertEqual((e.extra, e.target_state, e.initiative_round), (combatant, fight, number))
+        self.assertEqual(bytes(mu.mem_read(hdr + 8, 2)), b"\x03\x00")
+
+        # A later non-initiative record can reuse a slot that had a round number.
+        mu.mem_write(hdr + 10, b"\x00\x00")
+        mu.mem_write(hdr + 32, b"\x00\x00")  # record every call
+        mu.mem_write(start + len(instructions), b"\x90" * len(INITIATIVE_TIE))
+        mu.emu_start(start + 5, start + len(instructions), count=10000)
+        e = Entry.parse(bytes(mu.mem_read(ring, Entry.SIZE)))
+        self.assertEqual((e.seq, e.initiative_round), (4, 0))
+
     def test_matches_borland_rand_and_logs_entries(self):
         image = load_image()
         hdr_off = struct.unpack_from("<H", image, 20)[0]
