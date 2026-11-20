@@ -310,6 +310,19 @@ map things' routine (2A388h: DS:67BBh, 25h bytes a thing, up to 141h, the slot a
 come through it. `ravsites.py [NAME...]` finds SL's patch sites in the sequel by likeness (about 8 minutes
 for all 454; its finds are leads to read by hand).
 
+**Shattered Lands' figures in the sequel** (2026-11-20, logs/2026-11-20-ravager-sl-figures.md):
+`darksun-recompiled/tools/sl_figures.py build SL_DIR WR_DIR OUT.GFF` writes the sequel's `OBJEX.GFF`
+with the party's 14 figures taken from SL (the walking `BMP n`, the combat `CBMP n`, the script `SCMD
+n`; the study is that repository's `docs/FIGURES.md`). To play it, **copy the install for real**
+(`cp -a $WORK/rav $WORK/ravsl`, 287 MB): with hard links the game's writes (DARKRUN.GFF, saves)
+would change the original too. Put the built file in the copy and `sh ravstart.sh $WORK/ravsl`.
+Seen working: standing, walking, the swing, hits and deaths, the anchors right. **`sh ravburst.sh
+NAME SECONDS X Y W H`** grabs the window as fast as `import` goes (about 15 a second) while an action
+plays, and makes a sheet of 24 of them cropped to X Y W H (window pixels); look at single grabs
+(`$WORK/burst/NAME-NNN.png`) round a moment at full rate. For a death on cue, set members' HP to 1
+(the creature records at DS:19C9h, +0; `ravcreatures.py` lists them): a test edit, never saved.
+SL's standing side frame has the legs apart: it isn't a walk frame left on screen.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs
