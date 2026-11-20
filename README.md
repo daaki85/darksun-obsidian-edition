@@ -38,8 +38,8 @@ tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GU
 
 ## What's new
 
-**Obsidian Edition 2.19.1** is out: F10 no longer gives a held character its walk back
-([release notes](release-notes/v2.19.1.md)). It follows 2.19.0: the chance to hit shown before the
+**Obsidian Edition 2.19.2** is out: F10 does nothing for a held or stuck character
+([release notes](release-notes/v2.19.2.md)). It follows 2.19.0: the chance to hit shown before the
 swing, the squares a character can still walk to, quick saves and autosaves, a journal with the
 quests, Alt to show what can be used, and fewer switches ([its notes](release-notes/v2.19.0.md);
 earlier releases' in [`release-notes`](release-notes)).
