@@ -27,6 +27,7 @@ VEC_PIC_FULL  equ 0xC0  ; PIC_FULL  (2A5E7h: the picture cache's 300 slots taken
 VEC_PIC_PLACE equ 0xC1  ; PIC_PLACE (2A6FDh: a reused slot's place in the store)
 VEC_PIC_COUNT equ 0xC2  ; PIC_COUNT (2A75Ch: the slot's number, the count raised for a new one)
 VEC_PIC_FAIL  equ 0xC3  ; PIC_FAIL  (2A58Eh: no picture loaded)
+VEC_REAR      equ 0xC4  ; MISSILE_REAR (5C99Fh: an attack's "from behind" pushed for the AC function)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -317,6 +318,25 @@ probe_ac:
         call record
         pop si
         retf 2
+
+; ---- MISSILE_REAR: DSCLOG's, at the sequel's attack set-up ----
+; The routine setting up an attack makes it one from behind by the target's facing alone, at any distance:
+; "from behind" (the byte [BP-19h]: +2 to hit, 2 off THAC0 [BP-1Eh], and the AC function leaves out the
+; target's DEX and shield), so a missile from across a room counted so too. Only melee ([BP+0Eh] 1) is
+; from behind: a missile's taken back. INT VEC_REAR replaces "mov al,[bp-19h]" (5C99Fh: "push ax"
+; after it kept), so it ends with AL as the game's. (DSCLOG's hidden archer's shot, the stealth rule's,
+; isn't ported.) All registers but AL kept.
+missile_rear:
+        cmp word [bp + 0x0E], 1
+        je .out
+        cmp byte [bp - 0x19], 0
+        je .out
+        mov byte [bp - 0x19], 0
+        add word [bp - 0x1E], 2
+        inc word [cs:rear_taken]
+.out:   mov al, [bp - 0x19]
+        iret
+rear_taken dw 0                         ; missiles' "from behind" taken back (for the tests)
 
 ; ---- PIC_REUSE: DSCLOG's, on the sequel's picture cache ----
 ; The game's picture cache (DSUNLOG2.EXE 2A568h, SL's 25FA6h) has 300 slots, 16 bytes each (the
@@ -830,6 +850,7 @@ all_vectors:
         vector VEC_PIC_PLACE, pic_place
         vector VEC_PIC_COUNT, pic_count
         vector VEC_PIC_FAIL, pic_fail
+        vector VEC_REAR, missile_rear
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

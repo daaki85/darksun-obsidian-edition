@@ -52,7 +52,8 @@ def _sl(name: str, at: int) -> Patch:
 # Lands' (playtest/logs/2026-11-19-ravager-fixes.md and -fixes-2.md); the bytes are checked as the
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
 VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
-VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3
+VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -96,6 +97,11 @@ PATCHES: Tuple[Patch, ...] = (
     # armor_charge, the same bytes): the routine at 84B60h is SL's 7A539h, the sequel numbering Armor's
     # effect 5 (its flag 20h; SL's 2 and 4), its damage routine's charge at 66CF0h as SL's 79A3Bh.
     _sl("armor_charge", 0x84B7E),
+    # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
+    # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
+    # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word
+    # [bp-1Ah]"): here "mov al,[bp-19h] / push ax", the INT in the mov's place.
+    Patch("stealth", 0x5C99F, bytes.fromhex("8a46e750"), bytes((0xCD, VEC_REAR, 0x50, 0x90))),
     # Graphics disappearing in a busy area (SSI's note 2712 is this game's): the picture cache's 300
     # slots (its loader at 2A568h, SL's 25FA6h) reused once all are taken, DSCLOG2's PIC_REUSE on four
     # interrupts of its own at SL's four sites (SL's pic_full, pic_place, pic_count, pic_fail).

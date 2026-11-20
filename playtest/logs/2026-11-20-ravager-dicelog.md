@@ -88,6 +88,13 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     log now reads them, maps SL's numbers its rules use by name, and reads the effect table (load +
     3E71h:24Dh): "Armor on Ar'Anda: one charge used, 10 left".
 
+18. **Missiles from behind**: the sequel's attack set-up read side by side with SL's (5C918h-5C9A2h: the
+    target's facing at selector 308h +5Eh, "from behind" the byte [bp-19h] and 2 off THAC0 [bp-1Eh], a
+    backstab the byte [bp-21h] for melee alone); DSCLOG2's MISSILE_REAR at 5C99Fh. 14 turns of the
+    ambush: no bow drawn, nobody hit from behind, 20 attacks logged as before. `ravfight.py attack`
+    (the sword pointer, the farthest foe) on Thy'rokh's turn: no throw came of it (her turn passed);
+    the missile case not seen yet.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.

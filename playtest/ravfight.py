@@ -4,7 +4,9 @@
 # camera y, in game pixels; 0-3 the party; a figure's body about 12 right and 18 down of it). end: the
 # member whose turn it is ends it (Q, the manual's key). wait N: until a party member's turn, at most N s.
 # cast X Y LEVELS: USE, LEVEL pressed LEVELS times, the spell's icon at X,Y, then aimed at the nearest
-# object that isn't the party's and pressed. Prints what it did. Run from playtest/.
+# object that isn't the party's and pressed. attack [near]: the sword pointer (a right click on bare floor:
+# arrow, sword, look in turn) and a click on the farthest foe on screen (a missile weapon's throw), or the
+# nearest with near. Prints what it did. Run from playtest/.
 import sys, os, time, struct, argparse, subprocess
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -42,6 +44,14 @@ elif cmd == 'until':        # until member N's turn, ending the others' (at most
         if turn() < 4: print('ending turn of', turn()); key('q'); time.sleep(1.5); key('e'); time.sleep(3)
         else: time.sleep(1)
     print('turn', turn())
+elif cmd == 'attack':
+    me = turn(); mx, my = figure(me)
+    foes = sorted((abs(x2 - mx) + abs(y2 - my), i, x2, y2) for i, x2, y2 in objects() if i > 3 and 0 <= x2 < 300 and 0 <= y2 < 180)
+    if not foes: sys.exit('no foe on screen')
+    d, i, fx, fy = foes[0] if 'near' in sys.argv else foes[-1]
+    click(min(mx + 40, 300), my, 'right'); time.sleep(1)
+    click(fx + 12, fy + 18); time.sleep(3)
+    print('attack by', me, 'on object', i, 'at', (fx + 12, fy + 18), 'distance', d)
 elif cmd == 'wait':
     end = time.time() + int(sys.argv[2])
     while time.time() < end and turn() >= 4: time.sleep(1)
