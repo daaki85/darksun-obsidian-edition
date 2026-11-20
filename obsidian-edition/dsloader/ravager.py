@@ -123,6 +123,16 @@ def creature_field(sl: int) -> Optional[int]:
     return None
 
 
+def item_field(sl: int) -> Optional[int]:
+    """The sequel's offset of Shattered Lands' item field SL (ITEM_SIZE 15h there; 17h here, two bytes
+    put in before the slot: read from the party's items in a running game, the +1 long sword's plus)."""
+    if sl < 0x11:
+        return sl              # 04h the next item, 08h a container's contents, 0Ah the type, 0Fh the power
+    if sl < 0x15:
+        return sl + 2          # 11h the slot -> 13h, 12h the name -> 14h, 14h the plus -> 16h
+    return None
+
+
 def sheet_field(sl: int) -> Optional[int]:
     """The sequel's offset of Shattered Lands' sheet field SL (SHEET_SIZE 47h there)."""
     if sl < 0x0E:

@@ -3091,7 +3091,9 @@ class DiceLog:
         # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind (a missile only as a
         # hidden archer's shot, DSCLOG's MISSILE_REAR: unseen)
         rear = "unseen" if mode is not None and mode > 1 else "from behind"
-        how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else f" {rear}" if e.arg(0x20) else ""
+        # (bytes: Wake of the Ravager's routine tests the low byte only, its high byte left as it was)
+        backstab, behind = (e.arg(0x1E) or 0) & 0xFF, (e.arg(0x20) or 0) & 0xFF
+        how = " BACKSTAB" if backstab and behind else f" {rear}" if behind else ""
         chance = hit_chance(need)
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
         head = (f"{g.creature_name(attacker)} attacks {target}{how}{with_what}: d20 = {d20}{note}, "
@@ -3406,6 +3408,7 @@ class DiceLog:
         # first attack only (DSCLOG's STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h]
         # from behind, [BP-14h] the attacks already made this round
         backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
+        backstab, rear = (None if backstab is None else backstab & 0xFF), (None if rear is None else rear & 0xFF)  # (bytes: the sequel's)
         most = 0 if self.rules & game.RULE_BACKSTAB else 1
         if backstab and rear and made is not None and made <= most:
             sheet = g.sheet(attacker)

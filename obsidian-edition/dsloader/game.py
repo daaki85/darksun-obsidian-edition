@@ -2700,7 +2700,7 @@ class GameData:
                               ITEM_TYPE_SIZE)
         if len(rec) < ITEM_SIZE or len(typ) < ITEM_TYPE_SIZE:
             return False
-        return not typ[0x08] & 0x80 and rec[0x14] == 0 and rec[0x0F] == 0 and typ[0x08] & 0x0F <= 3
+        return not typ[0x08] & 0x80 and rec[ITEM_PLUS] == 0 and rec[ITEM_POWER] == 0 and typ[0x08] & 0x0F <= 3
 
     def weapon(self, item: int, item_type: int) -> Optional[Weapon]:
         if item < 0 or item_type < 0:
@@ -2711,7 +2711,7 @@ class GameData:
         if len(rec) < ITEM_SIZE or len(typ) < ITEM_TYPE_SIZE:
             return None
         return Weapon(self.item_name(struct.unpack_from("<H", rec, ITEM_NAME)[0]), typ[0x0D], typ[0x0C], struct.unpack("b", typ[0x0E:0x0F])[0],
-                      struct.unpack("b", rec[0x14:0x15])[0], typ[0x08] & 0x0F, bool(typ[0x08] & 0x80))
+                      struct.unpack("b", rec[ITEM_PLUS:ITEM_PLUS + 1])[0], typ[0x08] & 0x0F, bool(typ[0x08] & 0x80))
 
     def is_fine_bow(self, item: Optional[int]) -> bool:
         """Whether item number ITEM is the Spellarcher's Fine Bow (DSCLOG's FINE_HIT: +1 to hit)."""

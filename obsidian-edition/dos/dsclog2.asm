@@ -22,11 +22,13 @@ CPU 386
 
 VEC_RAND equ 0x60       ; rand() (DSUNLOG2.EXE: INT 60h at the start of rand(), 5A22h)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
+TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
 NENT    equ 63          ; entries in the ring (as DSCLOG's)
 ESIZE   equ 192         ; bytes per entry (DSCLOG's ENTRY LAYOUT)
 TSIZE   equ 2048        ; (the text buffer: none yet, its size kept for the header's readers)
 STACK   equ 256         ; bytes of stack while installing
+HDR_SIZE equ 1872       ; DSCLOG's header to its last field (dicelog.py's TSR_ offsets end at +1867)
 
 ; ---- MZ header: no relocations, and only as much memory as the image needs (as DSCLOG's) ----
 section mz start=0
@@ -48,7 +50,7 @@ section mz start=0
 
 section image follows=mz vstart=0
 
-; ---- header, found by the Loader via SIG (16-byte aligned): DSCLOG's layout to +146 ----
+; ---- header, found by the Loader via SIG (16-byte aligned): DSCLOG's layout and length ----
 hdr:
 sig      db 'DSCLOGR1'          ; +0   (Wake of the Ravager's helper, its first header)
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
@@ -59,7 +61,8 @@ ring_off dw FAR_RING            ; +16  offset of the ring in RING_SEG's segment 
 stub_off dw stub                ; +18  offset of STUB in this segment
 hdr_off  dw hdr                 ; +20  offset of this header in this segment
 seed_off dw SEED                ; +22  DS offset of the game's 32-bit rand seed
-glob     dw 0, 0, 0, 0          ; +24  DS offsets of 4 game words to capture (0 = none)
+glob     dw TARGET, 0, 0, 0     ; +24  DS offsets of 4 game words to capture (0 = none): the attack's
+                                ;      target first, as the Loader's dice log has DSCLOG's (TARGET_GLOBAL)
 nfilt    dw NFILT               ; +32  number of filters in use (0 = record every call)
 filt:                           ; +34  DSCLOG's filters: the calling code a roll starts with
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0x6B,0xC0, 0     ; imul eax,eax,imm8
@@ -88,9 +91,11 @@ panel_off dw 0                  ; +140
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 1 once the game has opened the Loader's RESOURCE.GFF copy
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +148 to +267: none of them here yet, zero)
+ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
+        times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
+                                ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 align 16
-
-ring_seg dw 0                   ; (the far block's: FAR_SEG)
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
 old21    dd 0                   ; DOS, as it was

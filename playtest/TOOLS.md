@@ -91,7 +91,8 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
 | `ravclick.py X Y [left\|right\|none] [PID]` | Wake of the Ravager's click.py: moves the pointer to game pixel X,Y (320x200) by relative moves until the game's own pointer (DS:A109h x, A10Bh y; |
 | `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
-| `ravds.py HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les... |
+| `ravdice.py SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
+| `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
 | `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravring.py OUT SECONDS [PID]` | follows Wake of the Ravager's helper (DSCLOG2, header "DSCLOGR1") and appends every new ring entry (192 bytes, DSCLOG's ENTRY LAYOUT) to OUT as a hex line, polling 5 times a second, for SECONDS. |
