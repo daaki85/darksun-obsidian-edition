@@ -40,7 +40,7 @@ python3 ravcreatures.py "$WORK/scare-c0.txt"
 # USE (C; the first C after a fight's keys is often lost: pressed until the title's orange is there)
 for t in 1 2 3; do
   xdotool key --window "$W" c; sleep 2.5
-  R=$(import -window "$W" -crop 1x1+314+48 txt:- 2>/dev/null | tail -1 | grep -o '([0-9]*' | head -1 | tr -d '(')
+  R=$(import -window "$W" -crop 1x1+314+48 -depth 8 txt:- 2>/dev/null | tail -1 | grep -o '([0-9]*' | head -1 | tr -d '(')
   [ "${R:-0}" -gt 200 ] && break
 done
 python3 ravclick.py 197 171 >/dev/null; sleep 1.5                                           # LEVEL 2

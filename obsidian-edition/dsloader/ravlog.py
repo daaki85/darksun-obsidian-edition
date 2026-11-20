@@ -36,6 +36,9 @@ ADDRESSES: Dict[str, int] = {
     # the fight's combatants, 3 bytes each (kind, the creature's number): the sequel's code reads them
     # as selector 388h at C34h (SL's 360h at C37h), selector 388h being the load segment + 3F49h
     "COMBATANTS_SEG": 0x3F49, "COMBATANTS_OFF": 0xC33,
+    # each creature's initiative (score, tie-break: words), selector 308h at DCh in the sequel's code
+    # (its 5B7F6h: SL's 37BDh:D9h), selector 308h being the load segment + 3C4Fh
+    "INITIATIVE_SEG": 0x3C4F, "INITIATIVE_OFF": 0xDC,
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
@@ -76,6 +79,17 @@ def apply_layout() -> int:
     return len(_SAVED)
 
 
+def rebind(name: str, value: int) -> None:
+    """One more of game.py's names (and its imported copies) set to VALUE while the sequel is attached,
+    put back by restore_layout (SPELLS_SEG: its value depends on the game's load segment)."""
+    old = getattr(game, name)
+    for module in [m for n, m in sys.modules.items() if n.startswith("dsloader.") and m is not None]:
+        if name in vars(module) and vars(module)[name] in (old, value):
+            if not any(m is module and n == name for m, n, _ in _SAVED):
+                _SAVED.append((module, name, vars(module)[name]))
+            setattr(module, name, value)
+
+
 def restore_layout() -> None:
     """Shattered Lands' values back where apply_layout changed them."""
     while _SAVED:
@@ -109,6 +123,8 @@ class ReadOnlyGuest:
         self.guest = guest
         self.dropped = 0
         self.ds: Optional[int] = None  # (set by RavDiceLog once the game's found: the type table's pointer)
+        self.spells: bytes = b""  # the sequel's spell records in SL's table layout (spell_table), served
+        self.spells_at = SPELLS_AT  #   from SPELLS_AT, where the game has nothing the dice log reads
 
     def _types(self) -> Optional[int]:
         if self.ds is None:
@@ -117,6 +133,9 @@ class ReadOnlyGuest:
         return seg * 16 + off
 
     def read(self, addr: int, size: int) -> bytes:
+        if self.spells and self.spells_at <= addr < self.spells_at + len(self.spells):
+            end = min(addr + size, self.spells_at + len(self.spells))
+            return self.spells[addr - self.spells_at:end - self.spells_at]
         base = self._types()
         sl_size = game.ITEM_TYPE_SIZE
         if base is not None and base <= addr < base + TYPES_SHOWN * sl_size and size > 0:
@@ -134,6 +153,40 @@ class ReadOnlyGuest:
         if name in ("item_gate",):
             raise AttributeError(name)
         return getattr(self.guest, name)
+
+
+# The sequel's spells: RESOURCE.GFF's DATA 0-319, 73 bytes each, the first 32 Shattered Lands' record,
+# then its name (32 bytes) and a short name. Shattered Lands' code reads the table at
+# (load + SPELLS_SEG) x 16 + SPELLS_OFF + 32 x spell (SPELLS_OFF 16 bytes into the first record), so the
+# view serves the records back to back from SPELLS_AT (the BIOS's ROM, which nothing here reads) and
+# SPELLS_SEG is pointed there once the load segment is known (RavDiceLog.attach).
+SPELLS_AT = 0xF0000
+SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
+
+
+def spell_table(resources: bytes) -> Tuple[bytes, List[str]]:
+    """The sequel's RESOURCE.GFF's spell records as Shattered Lands' table (32 bytes a spell), and the
+    spells' names (title case, as game.title makes Shattered Lands')."""
+    from . import gff
+    chunks = gff.read_gff(resources)
+    table, names = bytearray(), []
+    for spell in range(SPELL_COUNT):
+        rec = chunks.get(("DATA", spell), b"")
+        table += (rec[:32] + bytes(32))[:32]
+        names.append(game.title(rec[32:64].split(b"\0", 1)[0].decode("latin1").strip()) if len(rec) >= 64 else "")
+    return bytes(table), names
+
+
+def resources_file() -> Optional[str]:
+    """The sequel's RESOURCE.GFF as the game reads it: the Loader's copy (with the spell fixes) in its
+    dos folder, else the game's own (its folder found as the Loader finds it)."""
+    import os
+    from . import launch
+    copy = os.path.join(launch.DOS_DIR, ravager.RESOURCE_COPY)
+    if os.path.isfile(copy):
+        return copy
+    folder = ravager.find_dir(launch.load_settings().get("game_dir"))
+    return os.path.join(folder, ravager.RESOURCE_FILE) if folder else None
 
 
 # The sequel's item names: RESOURCE.GFF's TEXT 1000, a name a line, an item's name number the line's
@@ -160,6 +213,13 @@ class RavGameData(game.GameData):
             self._names_at, self._names = at, [n.rstrip("\r") for n in text.split("\r\x00")]  # (the last one's CR, before its NULs)
         return self._names or []
 
+    spell_names: List[str] = []  # (set by RavDiceLog.attach: spell_table's)
+
+    def spell_name(self, spell: int) -> str:
+        if 0 <= spell < len(self.spell_names) and self.spell_names[spell]:
+            return self.spell_names[spell]
+        return super().spell_name(spell)
+
     def item_name(self, name_index: int) -> str:
         names = self._name_list()
         if 1 <= name_index <= len(names) and names[name_index - 1]:
@@ -178,6 +238,13 @@ class RavDiceLog(dicelog.DiceLog):
     def attach(self) -> str:
         found = game.find_data_segment(self.guest.guest)
         self.guest.ds = found  # (the type table's pointer is in the data segment)
+        if found is not None:
+            path = resources_file()
+            if path and not self.guest.spells:
+                with open(path, "rb") as f:
+                    self.guest.spells, RavGameData.spell_names = spell_table(f.read())
+            load = found - ravager.DGROUP
+            rebind("SPELLS_SEG", (SPELLS_AT + 0x10 - game.SPELLS_OFF) // 16 - load)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
             return super().attach()

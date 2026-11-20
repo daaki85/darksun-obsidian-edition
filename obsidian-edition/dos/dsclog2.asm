@@ -21,6 +21,7 @@ BITS 16
 CPU 386
 
 VEC_RAND equ 0x60       ; rand() (DSUNLOG2.EXE: INT 60h at the start of rand(), 5A22h)
+VEC_SAVE equ 0x61       ; PROBE_SAVE (DSUNLOG2.EXE: INT 61h at the saving throw's end, 66EA6h)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -73,9 +74,9 @@ filt:                           ; +34  DSCLOG's filters: the calling code a roll
 NFILT   equ ($ - filt) / 9
         times (8 - NFILT) * 9 db 0
 skipped  dw 0                   ; +106 calls not recorded because no filter matched
-probe_save_off dw 0             ; +108 (none yet)
+probe_save_off dw probe_save    ; +108 offset of PROBE_SAVE in this segment
 probe_ac_off   dw 0             ; +110 (none yet)
-vectors  db VEC_RAND, 0, 0, 0, 0 ; +112 the interrupts the patched game uses
+vectors  db VEC_RAND, VEC_SAVE, 0, 0, 0 ; +112 the interrupts the patched game uses
 hooked   db 0                   ; +117 1 once the vectors are ours
 int_rand_off dw int_rand        ; +118 offset of INT_RAND (VEC_RAND's handler) in this segment
 gpl_hook_off dw 0               ; +120 (none yet)
@@ -273,6 +274,28 @@ record:
         pop cx
         pop bx
         ret
+
+; ---- the saving throw: DSCLOG's PROBE_SAVE, without the spell table's segment ----
+; INT VEC_SAVE replaces "mov al,[bp-2] / cmp al,[bp-1]" (6 bytes) at the saving throw's end (66EA6h):
+; the total and the number needed (AX: AL the total, AH the save) recorded, kind 1, then the compare
+; done, its flags kept for the branch after (the "jl" the save_signed fix makes of the game's "jb").
+; DSCLOG also records the spell table's segment (+186): the sequel has no table in its program (its
+; spells are RESOURCE.GFF's records: the Loader reads them), so 0.
+probe_save:
+        sti
+        push si
+        mov si, sp
+        sub si, 4               ; SS:SI+6 = our return address (as RECORD wants it)
+        push ax
+        mov word [cs:extra], 0
+        mov ax, [bp-2]          ; AL = total, AH = save value
+        mov word [cs:kind], 1
+        call record
+        pop ax
+        pop si
+        mov al, [bp-2]
+        cmp al, [bp-1]
+        retf 2
 
 ; ---- DOS's file opens: DSCLOG's PROBE_DOS_OPEN, for RESOURCE.GFF only ----
 ; Opening a file (AH=3Dh) whose name is RESOURCE.GFF (the whole path, or after a \, : or /, in any
@@ -529,7 +552,7 @@ xms       dd 0
 hma_given db 0
 psp       dw 0
 msg     db 'DSCLOG2 loaded (Wake of the Ravager).', 13, 10, '$'
-busy    db 'DSCLOG2: interrupt 60h in use (already loaded?). Not loaded.', 13, 10, '$'
+busy    db 'DSCLOG2: interrupts 60h-61h in use (already loaded?). Not loaded.', 13, 10, '$'
 no_far  db 'DSCLOG2: no memory for its ring. Not loaded.', 13, 10, '$'
 
 %macro vector 2
@@ -538,6 +561,7 @@ no_far  db 'DSCLOG2: no memory for its ring. Not loaded.', 13, 10, '$'
 %endmacro
 all_vectors:
         vector VEC_RAND, int_rand
+        vector VEC_SAVE, probe_save
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

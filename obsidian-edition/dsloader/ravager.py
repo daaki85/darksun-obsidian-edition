@@ -58,6 +58,9 @@ PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
     # 5C22h, its seed at DS:384Ah): the dice log's every roll.
     Patch("rand", 0x5A22, bytes.fromhex("8b0e4c388b"), gamepatch._interrupt(VEC_RAND, 5)),
+    # the saving throw's end: "mov al,[bp-2] / cmp al,[bp-1]" (SL's 79BB7h, its six bytes the same),
+    # INT VEC_SAVE: DSCLOG2's PROBE_SAVE records the total and the number needed, then compares
+    Patch("save", 0x66EA6, bytes.fromhex("8a46fe3a46ff"), gamepatch._interrupt(gamepatch.VEC_SAVE, 6)),
     # The data path: argv[0] cut after its last \ or :, kept at DS:44F2h (SL's 4B81h), made ".\"
     # (the current folder: the game's, C:), the same code as SL's and the jump landing the same.
     Patch("path", 0x6740E, bytes.fromhex("8bf00bc0740346eb166a3a"),
