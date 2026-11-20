@@ -9,6 +9,9 @@
 - **Code audits**: when the user asks for a code audit / code quality review, use the project skill
   `/thermo-nuclear-code-quality-review` (`.claude/skills/thermo-nuclear-code-quality-review/SKILL.md`)
   and follow it in full.
+- **Documentation reviews**: when the user asks for a documentation / docs review or audit, use the
+  project skill `/documentation-review` (`.claude/skills/documentation-review/SKILL.md`) and follow
+  it in full.
 - `playtest/` is outside `obsidian-edition/`, so it never ships in a release zip (the zip is that
   folder alone). Keep it that way.
 
