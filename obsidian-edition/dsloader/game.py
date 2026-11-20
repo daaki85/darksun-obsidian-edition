@@ -1354,6 +1354,19 @@ class GameData:
         return [(Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]),
                  struct.unpack_from("<h", data, i * 10 + 4)[0]) for i in range(count)]
 
+    def effect_records(self) -> List[Tuple[Effect, int, int]]:
+        """Each active effect with its spell (+4) and handle (+7): what tells one record from
+        another of the same effect, owner and caster. The game puts an effect on a creature that
+        has it already by taking the old record out (598:4Dh, from the effect's routine at 786F9h)
+        and adding a new one (76442h: a new handle, the new spell's timer), so a record replaced
+        that way keeps its owner, caster and effect but not always its spell or handle."""
+        count = self._word(EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return []
+        data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+        return [(Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]),
+                 struct.unpack_from("<h", data, i * 10 + 4)[0], data[i * 10 + 7]) for i in range(count)]
+
     def charges_left(self, owner: int, effect: int) -> int:
         """The charges left on combatant OWNER's effect EFFECT (+8 of its record), 0 if it has none
         or is gone (the game removes it as the last is used)."""

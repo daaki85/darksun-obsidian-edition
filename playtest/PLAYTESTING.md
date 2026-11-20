@@ -957,6 +957,12 @@ game's data: it is one player's account.
   Paralyzed on each foe that shoots; then the turns come clean. Paralyzed foes also fail every save
   (handy for a failed save on demand). From `fountain-user` with every foe held, `passuntil.sh 3`
   gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the time.
+- **A memory-edit hold lasts only until a real one reaches the foe** (logs/2026-11-20-paralyzed-ends-oddity.md): an effect put on a creature that has it already takes the
+  old record's place, with the new spell's time. Rainbow Pattern's area (no save line: a held foe fails
+  without a roll) or a Hold Person on a `foeset.py`-held foe gives it a timer, and it acts again when
+  that runs out (the dice log: `..., in place of the one it had`, later `Paralyzed ends on`). Keep holds
+  and areas off foes that must stay held, or run `foeset.py C eff=34` again after. **With the whole
+  party Paralyzed the game jumps its clock to the next event** (every hold due then ends at once).
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had

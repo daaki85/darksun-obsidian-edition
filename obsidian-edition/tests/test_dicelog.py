@@ -117,8 +117,9 @@ def set_effects(log, effects):
     m = log.guest.mem
     struct.pack_into("<h", m, DS * 16 + game.EFFECT_COUNT, len(effects))
     base = (LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF
-    for i, (owner, caster, eid) in enumerate(effects):
-        struct.pack_into("<hhhB", m, base + i * 10, owner, caster, 0, eid)
+    for i, (owner, caster, eid, *rest) in enumerate(effects):  # (rest: the spell and the handle)
+        spell, handle = (list(rest) + [0, 0])[:2]
+        struct.pack_into("<hhhBB", m, base + i * 10, owner, caster, spell, eid, handle)
 
 
 def words(*values):
@@ -1638,6 +1639,24 @@ class OtherTests(unittest.TestCase):
                          ["Jellybelly gives Blessed to Dag, Daaki: +1 to hit, +1 on saves"])
         set_effects(log, [(0, 0, 46)])
         self.assertEqual(log.effect_changes(21.0), ["Blessed ends on Dag, Daaki"])
+
+    def test_an_effect_put_on_again_takes_the_old_ones_place(self):
+        """The game puts an effect on a creature that has it by taking the old record out and adding
+        a new one (a new handle, the new spell's time): said as the new one in the old one's place,
+        not as an end (logs/2026-11-20-paralyzed-ends-oddity.md: Rainbow Pattern over a hold)."""
+        log = make_game()
+        set_effects(log, [(0, 0, 46), (1, 1, 34, 0, 200), (2, 2, 7)])
+        self.assertEqual(log.effect_changes(10.0), [])
+        set_effects(log, [(0, 0, 46), (1, 1, 34, 50, 0), (2, 2, 7), (2, 2, 34, 50, 0)])  # (Rainbow Pattern)
+        self.assertEqual(log.effect_changes(20.0), [
+            "Paralyzed on Daaki, in place of the one it had: loses its turns, can't move, fails every saving throw",
+            "Paralyzed on Jellybelly: loses its turns, can't move, fails every saving throw"])
+        set_effects(log, [(0, 0, 46), (1, 0, 34, 31, 0), (2, 2, 7), (2, 0, 34, 31, 1)])  # (Hold Person by Dag)
+        self.assertEqual(log.effect_changes(30.0), [
+            "Dag gives Paralyzed to Daaki, Jellybelly, in place of the ones they had: loses its turns, "
+            "can't move, fails every saving throw"])
+        set_effects(log, [(0, 0, 46), (2, 2, 7)])  # (the time up: a real end)
+        self.assertEqual(log.effect_changes(40.0), ["Paralyzed ends on Daaki, Jellybelly"])
 
     def test_effects_of_a_loaded_game_are_not_news(self):
         log = make_game()
