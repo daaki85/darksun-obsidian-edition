@@ -89,3 +89,30 @@ Tyr's opening street (the Draxans' ambush): no water, jugs or waterskins seen.
 pictures and icons (rle frames among its own PLNR and PLAN ones) with no program change. Left
 for later: WR's own talk boxes (20029 and the like, laid out otherwise), the character sheet
 (not reached), and the mix of SL's bluer stone with WR's neutral grey where both show.
+
+## Phase 2: Tyr regraded (2026-11-20)
+
+`sl_figures.py regrade ... RGN032 1.0`: Tyr's palette entries 16-95 (its ground and objects) moved to SL's ground colours (Lab mean and spread, all SL regions in their own palettes); the cobbles' 32 shared colours clustered into the 10 entries Tyr's tiles and objects leave free (21, 23, 67-69, 71, 91-94). In the same copy as phases 0 and 1.
+
+1. **First run (strength 1.0):** the cobbles turned a warm stone, but the floors indoors and
+   the sandstone round them came out a harsh yellow. Pixels sampled from the grab matched palette
+   entries 16 and 19 at the game's own values, not the file's: **WR cycles entries 16-23 at run
+   time** (torch and fire glow), and the ground had been put in two of them (21, 23), which
+   looked free in the files. Fixed: the free entries come from 32-95 only (8 left in Tyr: 67-69,
+   71, 91-94).
+2. **Second run:** floors a warm tan, the street a warm stone; the light sandstone walls blown out
+   to near white: a straight lightness shift (+22 L) pushes light colours past white. Fixed:
+   lightness by a power curve (WR's mean to SL's, white kept white); a and b by mean and spread.
+3. **Third run:** warm orange sandstone, tan floors, warm pale cobbles; the interface and the
+   figures unchanged (their colours aren't touched). Compared with SL's slave pens (a screenshot
+   from the docs): SL's ground is lighter and more muted (beige-green floors, red brick); Tyr's
+   sandstone now reads more saturated orange than SL's. Strength and the spread's cap are the
+   knobs to tune it.
+4. DOSBox stopped by pid, the lock released.
+
+**Water:** none seen in Tyr's opening street (the same view as before).
+
+**Results (phase 2):** a region can be regraded as a data patch without touching the interface
+or figures: its own palette entries 16-95 (ground and scenery together) graded, the ground's
+pixels in shared colours moved into the region's spare entries. One region done (Tyr, RGN032);
+for the owner to judge.

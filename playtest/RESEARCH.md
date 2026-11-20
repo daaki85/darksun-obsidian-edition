@@ -329,6 +329,11 @@ VIEW INVENTORY 74,171 on USE (47,171 opened the inventory too, not the character
 the inventory closes it and USE together. The game writes its run files (DARKRUN.GFF and the like)
 into the folder it runs from, so copy `__support/save`'s three files back into the copy between
 runs for the same start.
+`sl_figures.py regrade SL_DIR WR_DIR RGN032 STRENGTH OUT.GFF` regrades a region (Tyr is RGN032,
+the opening street); put it in the copy as `RGN032.GFF`. **The sequel cycles palette entries 16-23 at
+run time** (torches, fire): a colour put there shows in the game's glow colours, not the file's.
+To check a colour on screen, sample the grab's pixels and match them to the region's PAL (in its
+`RGNxxx.GFF`). Shattered Lands draws region N in `GPLDATA.GFF`'s PAL N (the pens, RGN29, in PAL 41).
 
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
