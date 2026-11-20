@@ -24,10 +24,10 @@ names, as DSCLOG's page buttons do), chooses the row, and sets 2: DSCLOG opens t
 The save window never opens on the QUICK page by itself (_page_back): its slots are written over
 in turn, so a save made by hand belongs on pages 1 to 4.
 
-An autosave is asked for only out of a fight, on the map, with the main loop seen running, not
-while a game is loading and not within AUTO_GAP of the last; and none of the three with the disk
-nearly full (the game's "Disk Space Low !!!" box would stop the game for a click: DOSBox tells the
-game a made-up free space, so the Loader looks at the real folder).
+An autosave is asked for out of a fight, on the map, with the main loop running. A quick-save or
+quick-load keypress and an outstanding request take priority. Loading a game resets eligibility,
+and fight autosaves have an AUTO_GAP cooldown. The Loader checks free space before saving because
+DOSBox reports a fixed amount and the game's "Disk Space Low !!!" box waits for a click.
 """
 
 import os
@@ -132,8 +132,8 @@ class QuickSave:
         self._ticks: Optional[int] = None
         self._running = False  # the map's main loop ran between the last two passes
         self._asked: Optional[Tuple[int, float, str, int, str]] = None  # (request, when, kind, slot, name)
-        self._region: Optional[int] = None  # the area the last autosave (or the first look) was in
-        self._region_at: Optional[float] = None  # when the party was first seen in another
+        self._region: Optional[int] = None  # the area last handled (or seen on the first look)
+        self._arrival: Optional[Tuple[int, float]] = None  # (the new area, when its wait began)
         self._fought = False
         self._fight_over_at: Optional[float] = None
         self._auto_at: Optional[float] = None
@@ -234,28 +234,29 @@ class QuickSave:
         self._said_disk = True
         return False
 
-    def _auto_due(self, gd, loading: bool, now: float) -> Optional[str]:
-        """What an autosave due now is for (its name's middle), or None."""
+    def _auto_due(self, gd, loading: bool, now: float, can_request: bool) -> Optional[str]:
+        """Observe the game and return the reason for an autosave when the request slot is free."""
         region = gd.region()
         fighting = gd.fight_on()
         if loading or self._region is None:  # (a game loaded, or the first look: where it is, no save)
-            self._region, self._region_at = region, None
+            self._region, self._arrival = region, None
             self._fought, self._fight_over_at = fighting, None
             return None
+        if self._arrival is not None and self._arrival[0] != region:
+            self._arrival = None
         if fighting:
             self._fought, self._fight_over_at = True, None
-            self._region_at = None if region == self._region else self._region_at
             return None
         ready = self._running and gd._word(SCREEN_IS) == ON_MAP and not self._camping(gd)
         spaced = self._auto_at is None or now - self._auto_at >= AUTO_GAP
         if region != self._region:
             if not ready:
-                self._region_at = None  # (counted again from when the map is back)
+                self._arrival = None  # (counted again from when the map is back)
                 return None
-            if self._region_at is None:
-                self._region_at = now
-            if now - self._region_at >= AREA_WAIT:
-                self._region, self._region_at = region, None
+            if self._arrival is None:
+                self._arrival = (region, now)
+            if can_request and now - self._arrival[1] >= AREA_WAIT:
+                self._region, self._arrival = region, None
                 self._fought, self._fight_over_at = False, None
                 return journal.region_name(region)  # (always: coming in is worth its save)
             return None
@@ -265,7 +266,8 @@ class QuickSave:
                 return None
             if self._fight_over_at is None:
                 self._fight_over_at = now
-            if now - self._fight_over_at >= FIGHT_WAIT:
+            # A fight that comes due during the cooldown is skipped, even if a request is active.
+            if now - self._fight_over_at >= FIGHT_WAIT and (can_request or not spaced):
                 self._fought, self._fight_over_at = False, None
                 return "after a fight" if spaced else None
         return None
@@ -277,6 +279,7 @@ class QuickSave:
         out: List[str] = []
         if tsr_hdr != self._hdr:  # (a new DSCLOG: nothing asked, nothing pressed yet)
             self._hdr, self._seq, self._keys_set, self._ticks, self._asked = tsr_hdr, None, None, None, None
+            self._region, self._auto_at = None, None
         self._set_keys(gd)
         ticks = self._word(gd, TSR_MAIN_TICKS)
         self._running, self._ticks = self._ticks is not None and ticks != self._ticks, ticks
@@ -286,7 +289,8 @@ class QuickSave:
         if self._asked is not None:
             out += self._answer(gd, now)
         self._page_back(gd)
-        due = self._auto_due(gd, loading, now) if self.auto else None
+        can_request = self._asked is None and not (self.keys and any(pressed))
+        due = self._auto_due(gd, loading, now, can_request) if self.auto else None
         if not self.auto:
             self._region = None  # (switched on later: from where the party is then)
         if self._asked is not None or loading:

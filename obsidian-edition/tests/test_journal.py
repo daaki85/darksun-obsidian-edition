@@ -81,6 +81,34 @@ class JournalTests(unittest.TestCase):
         look(j, n, 30)
         self.assertEqual(self.texts(j), ["one", "two", "three"])
 
+    def test_window_opened_earlier_refreshes_entry_ids_before_recording(self):
+        first, second = Journal(self.path), Journal(self.path)
+        first_game, second_game = Numbers(), Numbers()
+        look(first, first_game)
+        first.add(TALK, "first campaign", 10)
+        look(first, first_game, 10, 1)
+        first.close()
+
+        look(second, second_game)
+        second.add(TALK, "second campaign", 10)
+        look(second, second_game, 10, 1)
+        again = Journal(self.path)
+        self.assertEqual([e.text for e in again.chain(first_game.value)], ["first campaign"])
+        self.assertEqual([e.text for e in again.chain(second_game.value)], ["second campaign"])
+
+    def test_load_does_not_adopt_later_entry_with_the_same_clock(self):
+        j, n = Journal(self.path), Numbers()
+        look(j, n)
+        j.add(TALK, "before the save", 10)
+        look(j, n, 10, 1)
+        saved = n.value
+        j.add(TALK, "after the save", 10)
+        look(j, n, 10, 1)
+        n.value = saved
+        look(j, n, 10)
+        self.assertEqual(self.texts(j), ["before the save"])
+        self.assertEqual(n.value, saved)
+
     def test_one_odd_read_is_not_a_load(self):
         """A game being loaded may show another id for a look: only one read twice running counts."""
         j, n = Journal(self.path), Numbers()
@@ -170,10 +198,39 @@ class JournalTests(unittest.TestCase):
         j.add(TALK, "kept", 10)
         look(j, n, 10, 1)
         self.assertTrue(j.failed)
+        self.assertEqual(n.value, 0)
         j.path = self.path
         look(j, n, 10, 1)
         self.assertFalse(j.failed)
+        self.assertEqual(n.value, 1)
         self.assertEqual(self.texts(Journal(self.path)), ["kept"])
+
+    def test_failed_append_does_not_publish_head(self):
+        from unittest.mock import patch
+
+        j, n = Journal(self.path), Numbers()
+        look(j, n)
+        j.add(TALK, "first", 10)
+        look(j, n, 10, 1)
+        j.add(TALK, "second", 11)
+        with patch("builtins.open", side_effect=PermissionError("file held")):
+            look(j, n, 11, 1)
+        self.assertTrue(j.failed)
+        self.assertEqual(n.value, 1)
+        look(j, n, 11, 1)
+        self.assertEqual(n.value, 2)
+        self.assertEqual(self.texts(Journal(self.path)), ["first", "second"])
+
+    def test_append_after_partial_record(self):
+        j, n = Journal(self.path), Numbers()
+        look(j, n)
+        j.add(TALK, "first", 10)
+        look(j, n, 10, 1)
+        with open(self.path, "ab") as f:
+            f.write(b'{"id":')
+        j.add(TALK, "second", 11)
+        look(j, n, 11, 1)
+        self.assertEqual(self.texts(Journal(self.path)), ["first", "second"])
 
     def test_broken_lines_are_passed_over(self):
         os.makedirs(os.path.dirname(self.path))
