@@ -201,3 +201,14 @@ neither `MAP ` nor `GMAP` read as 112 x 112 fitted. The region loader (DSUN.EXE 
 103 of 103 blocks, the screen's top-left at map pixel = camera (1008, 1368). Tyr drawn offline from
 these rules matches the game's frame; SL's slave pens drawn the same way come out as their maze. The
 frame isn't in guest memory (no 32-byte run of it found). DOSBox stopped by pid, the lock released.
+
+## Shadows drawn into Tyr's ground (2026-11-20)
+
+`groundshadow.py` (darksun-recompiled `tools/proto/`): each structure's outline cast 12 right and 8
+down into the ground map as darkened copies of its tiles (SL's shadowed floor), 162 new tiles (the
+255 limit), 1,642 of 1,710 cells exact. Only the ground drawing reads the map's tile numbers (DSUN.EXE
+2B8A4h, 2BA19h). In the game (`$WORK/ravsl`, the opening ambush): solid warm dark bands right of the
+walls on the street and in the rooms. Ar'Anda walked into a wall's shadow (Move 12 to 5, the camera
+scrolling 40 left, the shadows moving with the ground). DOSBox stopped by pid, the lock released.
+
+**Water:** none seen in this part of Tyr.
