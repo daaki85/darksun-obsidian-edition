@@ -189,3 +189,28 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         return []
+
+
+def running(guest) -> Optional[bool]:
+    """Which helper the game in GUEST has loaded: True the sequel's (DSCLOG2's signature), False
+    Shattered Lands' (DSCLOG's), None neither yet."""
+    try:
+        low = guest.read(0, game.CONVENTIONAL_AND_UPPER)
+    except Exception:
+        return None
+    for sig, sequel in ((HDR_SIG, True), (dicelog.HDR_SIG if not _SAVED else b"DSCLOGva", False)):
+        at = low.find(sig)
+        while at >= 0:
+            if at % 16 == 0:
+                return sequel
+            at = low.find(sig, at + 1)
+    return None
+
+
+def make(guest, **kwargs) -> dicelog.DiceLog:
+    """The dice log for the game GUEST runs: the sequel's (RavDiceLog) when its helper is there, else
+    Shattered Lands' (with Shattered Lands' layout back, if a sequel's game ran before in this Loader)."""
+    if running(guest):
+        return RavDiceLog(guest, **kwargs)
+    restore_layout()
+    return dicelog.DiceLog(guest, **kwargs)

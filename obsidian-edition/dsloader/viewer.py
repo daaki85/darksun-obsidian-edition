@@ -1184,7 +1184,8 @@ class Viewer:
                     saved, known = launch.load_settings(strict=True), True
                 except launch.SettingsUnreadable:
                     saved, known = {}, False
-                self.dice = DiceLog(self.guest)
+                from . import ravlog
+                self.dice = ravlog.make(self.guest)  # (Wake of the Ravager's when its helper is loaded)
                 self.dice.use_settings(saved, picked_known=known)  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
@@ -1219,6 +1220,10 @@ class Viewer:
                 self.dice_status.set(self.dice.attach())
             except DiceLogError as e:
                 self.dice_status.set(str(e))
+                from . import ravlog
+                if ravlog.running(self.guest) is not None and \
+                        ravlog.running(self.guest) != isinstance(self.dice, ravlog.RavDiceLog):
+                    self.dice = None  # (the other game's helper: made afresh for it at the next try)
                 self._release_game()  # (nothing followed: the lock not kept from `play` meanwhile; taken again next try)
             return
         if now >= self.next_try:  # every couple of seconds: has the game restarted?

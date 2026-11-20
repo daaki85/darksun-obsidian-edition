@@ -176,7 +176,8 @@ def _follow(args) -> None:
         except (CliError, GuestMemoryError) as e:
             print(f"{e} Waiting...", flush=True)
             time.sleep(2)
-    log = DiceLog(guest, record_everything=args.raw)
+    from . import ravlog
+    log = ravlog.make(guest, record_everything=args.raw)  # (Wake of the Ravager's when its helper is loaded)
     log.answer_stats_in_background()
     from .launch import SettingsUnreadable
     while True:  # (read strictly: one held elsewhere isn't the defaults, every rule on, no pockets tried)
@@ -281,9 +282,12 @@ def _ravager_dir(args) -> Optional[str]:
 
 def cmd_launch(args) -> None:
     from . import launch
-    game_dir = _ravager_dir(args) or _game_dir(args)
+    ravager_dir = _ravager_dir(args)
+    game_dir = ravager_dir or _game_dir(args)
     dosbox, problem = launch.launch(game_dir, "the Loader's window")
     print(launch.started_line(game_dir))
+    if ravager_dir:
+        print(launch.RAVAGER_NO_LOG[0].upper() + launch.RAVAGER_NO_LOG[1:] + ".")
     if launch.left_out_line():
         print(launch.left_out_line())
     if problem:

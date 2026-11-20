@@ -1104,14 +1104,14 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
 LAST_SETTINGS: Optional[dict] = None
 
 
-RAVAGER_NO_LOG = ("the Loader's dice log and window don't read Wake of the Ravager yet (its helper records the "
-                  "rolls already): the game starts with the bug fixes ported so far")
+RAVAGER_NO_LOG = ("Wake of the Ravager has the bug fixes ported so far and the dice log of its fights; the "
+                  "window's other tabs and the in-game additions aren't ported to it yet")
 
 
 def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
     """Wake of the Ravager with the mod: its patched copy and data in the dos folder (dsloader.ravager),
-    in its own GOG DOSBox with its own GOG config and ours after it. The helper isn't ported yet,
-    so the second value says the dice log can't run (RAVAGER_NO_LOG), or why the copy couldn't be made."""
+    in its own GOG DOSBox with its own GOG config and ours after it, its helper DSCLOG2 loaded high.
+    What isn't ported yet the caller tells (RAVAGER_NO_LOG); a copy that can't be made raises."""
     global STARTED
     from . import ravager
     STARTED = None
@@ -1130,7 +1130,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
         except OSError:
             pass
     conf = write_conf_wotr(game_dir, settings=settings)
-    return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), RAVAGER_NO_LOG
+    return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
 
 
 def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
