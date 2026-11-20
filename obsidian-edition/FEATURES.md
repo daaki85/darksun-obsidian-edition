@@ -958,10 +958,10 @@ How it works:
 ### Saves under their names
 
 Only the game's list says which file is which save. While the Loader's window is open (not with the
-`.bat` files that start the game without it), it copies every save, as the game writes it, under the
+`.bat` files that start the game without it), it copies the manual save slots under the
 name you typed for it, into its own **Named saves** folder (`Page 2 slot 05 - Before Scar's
 battle.SAV`); saving over a slot replaces that slot's copy. **Open the folder** opens it, and **Put
-a save in a slot...** copies a named save (or any save file) into the page and slot you give, asking
+a save in a slot...** copies a named save (or another Shattered Lands save) into the page and slot you give, asking
 first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot 05 - NAME.SAV`.
 
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older

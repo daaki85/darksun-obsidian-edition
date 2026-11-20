@@ -57,6 +57,19 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed**
+- The journal commits entries before giving their ID to the game. A Loader window opened
+  earlier refreshes its journal before recording, and loading an older save keeps later entries
+  with the same game time on their original branch.
+- Named Saves checks the party records before restoring a file and refreshes changed saves
+  even when their file size and timestamp match.
+
+**Docs**
+- The upgrade instructions include the `Journal` folder and ask players to verify their history
+  before deleting the old Loader folder.
+
 ## Pull request #133 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/133))
 
 No release: the dice log's two fixes below come with the next one (2.19.2 doesn't have them).

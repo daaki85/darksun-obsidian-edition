@@ -110,7 +110,9 @@ py -3-64 -m dsloader launch --dosbox</code></pre>
 </section>
 <section>
 <h2 id="updating">Updating</h2>
-<p>Unzip the new release into a folder of its own and copy two things from the old folder into it: <code>settings.json</code> (your options) and the <strong>Named saves</strong> folder (each save's copy under its name, and the <code>Replaced -</code> copies a restore keeps, which may be the only copy left of a save). The named copies are made only while the Loader's window is open, one a slot: they are not a backup history, as the game saving over a slot replaces that slot's copy (keep a save you want to go back to in a slot of its own, or copy it elsewhere). Your saves and characters are in the game folder (or its <code>cloud_saves</code> folder, where GOG keeps them when it has one), so nothing else needs moving. If you unzipped <a href="#dark-sun-recompiled">Dark Sun Recompiled</a> into the old folder, move it into the new one too (or into its own <code>darksun-recompiled...</code> folder beside it), or the Loader goes back to DOSBox. Then delete the old folder.</p>
+<p>Close the game and the Loader, then unzip the new release into a folder of its own. Copy these files and folders from the old Loader folder if present.</p>
+<ul><li><code>settings.json</code> keeps your options.</li><li><strong>Named saves</strong> keeps the named copies of manual saves and the <code>Replaced -</code> copies from restores. A restore copy can be the only remaining copy of a save.</li><li><strong>Journal</strong> keeps your journal history and the last quest reading. Each game save contains a reference to its journal history here.</li></ul>
+<p>Your game saves and characters stay in the game folder or its <code>cloud_saves</code> folder. If you installed <a href="#dark-sun-recompiled">Dark Sun Recompiled</a> inside the old Loader folder, move it into the new folder or into a <code>darksun-recompiled...</code> folder beside it. Before deleting the old Loader folder, open a known save from the new Loader and check that its journal history appears.</p>
 </section>
 <section>
 <h2 id="compatibility-with-older-saves">Compatibility with older saves</h2>
