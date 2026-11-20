@@ -57,6 +57,15 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed**
+
+- **F10 gave a held member its walk back**: a member Paralyzed or Stuck after its last step got
+  the walk back on F10 (and took a step before the game ended its turn), since the game's pin
+  leaves the turn's flags as the last step did. The Loader now gives no walk to a member with
+  either effect on it (`moveback.py`). Found in play: playtest/logs/2026-11-20-f10-after-spell.md.
+
 ## Pull request #119 ([merged 2026-11-19](https://github.com/daaki85/darksun-obsidian-edition/pull/119))
 
 Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).

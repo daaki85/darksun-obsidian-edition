@@ -26,7 +26,7 @@ Walks by `squarewalk.py COL ROW` with no POINTS (no edit), `movestate.py` before
 | 2a. Walk partway, then Reflected Image (Lex) | the cast ended his turn (90 points unused); F10 the next member's | 0 / 90, Lex stays put | nothing | yes |
 | 2b. Walk partway, then Magical Stone, one throw (Ester) | put back on the first square with 120 points | **0** / 120 | nothing | yes |
 | 3. Control: plain last step (Seneca, twice) | put back with 120 points | 3EEh then **3EFh** 20 ms later / 120 | `F10: Seneca's move taken back (can walk again)`; she walked | yes |
-| 4. Last step, then Paralyzed **by a memory edit**, then F10 (Seneca) | put back with 120 points | 3EEh then **3EFh** / 120 | **`F10: Seneca's move taken back (can walk again)`** | **no**: see below |
+| 4. Last step, then Paralyzed **by a memory edit**, then F10 (Seneca) | put back with 120 points | 3EEh then **3EFh** / 120 | **`F10: Seneca's move taken back (can walk again)`** | **no**: see below; [fixed](#the-fix-played) |
 | (4b. Held by the Templar's real Hold Person: Lex) | his turns never came (no "Lex's turn" in rounds 2 and 3) | - | - | nothing to F10 |
 
 **A spell cast zeroes the whole flags word** (37BD:01D5h = 0), whether movement is left or not, so
@@ -34,7 +34,7 @@ the mend's "same flags" never holds after a cast and it stays out. Most spells e
 Magical Stone (several throws a casting) keeps the turn with the flags at 0, and the game's F10
 then still moves the caster back and restores the points, but with the flags 0 no click walks.
 
-**The pin after the last step is a gap** (not fixed here, as asked): the effect routine that pins
+**The pin after the last step was a gap** (reported first, then fixed with the user's approval: [the fix, played](#the-fix-played)): the effect routine that pins
 (DSUN.EXE 786A9h-786CBh: effects 22h and 33h) only does `and word es:[bx+1D5h], 0FFFEh`, and after
 the last step bit 0 is already clear, so the flags stay exactly as the last step left them. The mend
 then sees FULL, SPENT and F10's points as in case 3 and gives the walk. In the game the paralysed
@@ -138,6 +138,40 @@ press F10 in (4b).
 
 **Nothing saved**: no autosave or quick save in either run (the folder's `SAVQ*` files are older);
 DOSBox and the dice log stopped by their pids.
+
+## The fix, played
+
+The user approved a fix: `moveback.py` now reads the member's effects at F10 (`GameData.effects()`,
+owner its combatant) and writes nothing with 34 (Paralyzed) or 51 (Stuck) on it, the two effects
+whose landing clears the bit (786A9h-786CBh: `cmp [bp+0Ah], 22h` / `33h`, then `and word
+es:[bx+1D5h], 0FFFEh`; only 591BCh and 786CBh have that instruction). A unit test
+(`test_not_for_a_member_pinned_after_the_last_step`) holds the state seen here; it fails with the
+check taken out.
+
+Played on the fixed Loader (`loadsave.sh fountain-user` with the change in the tree; the dice log
+started with it; autosave and quick save off; every foe Paralyzed as in run 2; nothing saved):
+
+- **Case 4 again**, Lex at (55,94), 120 points: (49,94) 60, (49,92) 40, (49,96) 0, flags 3EEh.
+  `addeffect.py 0 34` (`Paralyzed on Lex: ...`), flags still 3EEh. F10
+  ([picture](img/2026-11-20-f10-after-spell-fixed-pinned-f10.png)):
+  ```
+  15.01 turn 0 flags 0x3ee points 0 ... sq (49, 96) start (120, 1512, 888)
+  22.36 turn 0 flags 0x3ee points 120 ... sq (55, 94) start (120, 1512, 888)
+  ```
+  No Loader line, no squares marked; a click on (53,93): `NOT REACHED`, 120 points, Lex unmoved.
+  With the effect taken off again (`addeffect.py del 0 34`) the flags stayed 3EEh: the turn's
+  sequence was forgotten, so nothing is given later either.
+- **The control again**, Jenna at (56,95), 140 points: (56,88) 70, then toward (57,95): (57,94),
+  0 points, 3EEh. F10:
+  ```
+   9.65 turn 1 flags 0x3ee points 140 ... sq (56, 95) start (140, 1528, 904)
+   9.66 turn 1 flags 0x3ef points 140 ... sq (56, 95) start (140, 1528, 904)
+  ```
+  `F10: Jenna's move taken back (can walk again)`; a click on (58,93) walked her there (112 left).
+
+The suite with `-W error` (`/usr/bin/python3.12`): 2,186 tests, OK, 56 skipped without the game's
+files; 2,186, OK, none skipped with `DSUN_OBJECTS`, `DSUN_GPLDATA` and `DSUN_RESOURCE` set. DSCLOG
+untouched.
 
 ## Learned
 

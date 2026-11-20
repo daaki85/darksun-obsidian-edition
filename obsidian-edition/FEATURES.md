@@ -189,7 +189,8 @@ after the last step F10 still puts the member back, and the name box shows its M
 click walks it ([moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight)). With the Loader the
 member can walk again then too, and the dice log says so (`F10: Ester's move taken back (can walk
 again)`). Nothing else changes: an attack is not taken back, and after an attack (one that kills
-can leave the member its turn) F10 gives no walk.
+can leave the member its turn) F10 gives no walk, nor to a member held or stuck (Paralyzed,
+Stuck).
 
 **Switch:** *F10 takes a whole move back: after the last step too, the party member can walk again
 (the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a

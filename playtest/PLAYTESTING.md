@@ -848,9 +848,11 @@ game's data: it is one player's account.
    - **F10 after a spell** (logs/2026-11-20-f10-after-spell.md): a cast zeroes the whole flags
      word (37BD:01D5h), so the mend stays out. Most casts end the turn (F10 is then the next
      member's); Magical Stone keeps it till the third throw, and F10 then puts the caster back with
-     its points and the flags still 0 (no walk, no Loader line). **A pin put on after the last step
-     gets the walk back**: `addeffect.py N 34` there, then F10, gave the line and one step before
-     the game ended the turn (the game's own pin, 786CBh, only clears bit 0, already clear). Follow a
+     its points and the flags still 0 (no walk, no Loader line). **A pin put on after the last step**
+     (`addeffect.py N 34` there, then F10) got the walk back from 2.19.0's mend, one step before the
+     game ended the turn (the game's own pin, 786CBh, only clears bit 0, already clear); since the
+     fix the mend reads the member's effects at F10 and gives nothing with 34 or 51 (Stuck) on it:
+     no line, flags as the last step left them. Follow a
      turn with `f10watch.py MEMBER SECONDS` in the background: each change of the flags, points,
      square and the turn's start words, with its time.
    - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
