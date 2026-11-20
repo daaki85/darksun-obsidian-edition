@@ -81,6 +81,16 @@ PATCHES: Tuple[Patch, ...] = (
     # sequel's at 66EA6h is "cmp al,[bp-1] / jb fail / jmp saved", its branch the other way from
     # SL's, so its own bytes: jb made jl. (Seen at work: logs/2026-11-19-ravager-cant-save.md.)
     Patch("save_signed", 0x66EAC, bytes.fromhex("7203"), bytes.fromhex("7c03")),
+    # Share Strength (any maintained power on someone else) ended only on the psionicist, and could end
+    # another of its effects (SL's power_end_*): the sequel's loop at 61A7Dh is SL's 5CEECh with its
+    # effect records' fields 147h on (+24Dh owner, +24Fh creature, +251h spell, +254h handle: SL's
+    # +106h...10Dh) and the live count at DS:2100h (SL's 1E24h): SL's six patches with those.
+    Patch("power_end_live", 0x61A91, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("3b36002190")),
+    Patch("power_end_skip", 0x61A99, bytes.fromhex("8ec0"), bytes.fromhex("7d20")),
+    Patch("power_end_handle", 0x61AA2, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("26ffb75402")),
+    Patch("power_end_owner", 0x61AAA, bytes.fromhex("8ec0268a8754025057"), bytes.fromhex("26ffb74d02") + b"\x90" * 4),
+    Patch("power_end_again", 0x61AB8, bytes.fromhex("83c404"), bytes.fromhex("59594e")),
+    Patch("power_end_count", 0x61ABC, bytes.fromhex("81fec0007cbb"), bytes.fromhex("3b3600217cbb")),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

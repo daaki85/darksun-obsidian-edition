@@ -17,13 +17,15 @@ class TableTests(unittest.TestCase):
     def test_patches_reuse_sl_bytes_but_their_own(self):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
         path (the sequel's DS address), rand() (its seed's address), the saving throw's compare (its
-        branch the other way) and the AC function's end (rewritten) differ."""
+        branch the other way), the AC function's end (rewritten) and Share Strength's loop (its effect
+        records' fields and live count elsewhere) differ."""
         sl = {p.name: p for p in gamepatch.PATCHES}
         own = set()
         for p in ravager.PATCHES:
             if (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
                 own.add(p.name)
-        self.assertEqual(own, {"path", "save_signed", "rand", "ac"})
+        self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
+                               "power_end_owner", "power_end_count"})  # (Share Strength's: the sequel's fields)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_path_writes_dot_backslash_at_its_ds(self):
