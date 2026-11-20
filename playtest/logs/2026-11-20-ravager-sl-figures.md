@@ -159,3 +159,23 @@ Every structure and furniture picture placed in Tyr (197; not the 42 animated on
 (`sl_figures.py squash WR_DIR RGN032 0.66 OUT_DIR`): structures' tops come down 16 rows, furniture
 squashed, stacked pieces lowered through their heights. The change is moderate at this factor.
 Not done yet: SL's wall tops (brick or rubble) and cast shadows, which carry much of SL's look.
+
+## SL wall tops and shadows in Tyr (2026-11-20)
+
+1. **Tops, first try (a band above each face):** ashlar (the arena district's tiles 5 and 43:
+   pink-cream blocks with white joints; 54 and 55 have floor at their edges) chosen over the
+   pens' brick and rubble by eye. In the game the bottom wall got its top, but the walls running
+   north-south showed only scattered blocks: they are pieces of 46, 64 and 32 rows at uneven
+   spacing, and a thin piece's whole picture is the wall's top seen from above.
+2. **Tops, second try (thin pieces all top):** continuous ashlar walls; roofed walls left alone.
+3. **Shadows as ground tiles:** written into `GMAP`, which turned out to be per-cell flags (0, 64,
+   192 in this area), not the drawn tile map: my pattern search had lined up by chance (floor blocks
+   match several tiles, among them 0 and 64). Reverted at once (the region file back to the squash's
+   output). `MAP` doesn't match the screen at any grid offset either: how WR draws its ground is not
+   known yet. DOSBox shows a 6-bit palette value v as v*4+v/16 (134 where v*255/63 gives 133).
+4. **Shadows baked into the wall pictures:** each structure's outline offset 10 right and 6 down,
+   every other pixel near-black (palette 231), the wall drawn over it; the canvas grows right and
+   down, so the anchor (from the top-left) holds. In the game: a dark band right of each ashlar
+   wall across the street and floors, as SL's light from the upper left. Flaw: where two pictures'
+   checkerboards overlap out of step (below the bottom wall) the shadow is solid black.
+5. DOSBox stopped by pid, the lock released.
