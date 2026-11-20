@@ -28,6 +28,7 @@ VEC_PIC_PLACE equ 0xC1  ; PIC_PLACE (2A6FDh: a reused slot's place in the store)
 VEC_PIC_COUNT equ 0xC2  ; PIC_COUNT (2A75Ch: the slot's number, the count raised for a new one)
 VEC_PIC_FAIL  equ 0xC3  ; PIC_FAIL  (2A58Eh: no picture loaded)
 VEC_REAR      equ 0xC4  ; MISSILE_REAR (5C99Fh: an attack's "from behind" pushed for the AC function)
+VEC_REST_POISON equ 0xC5 ; REST_POISON (8D02Dh: the rest's test for the Poisoned, after the free cures)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -337,6 +338,51 @@ missile_rear:
 .out:   mov al, [bp - 0x19]
         iret
 rear_taken dw 0                         ; missiles' "from behind" taken back (for the tests)
+
+; ---- REST_POISON: the rest killed the Poisoned after a druid's free Neutralize Poison ----
+; The rest (its pass 2 for each member, SI: 8CD25h) reads the member's effects as a bitset into [BP-1Eh]
+; (8CD2Ah), then casts the free cures of a druid of 5th level and more (8CD47h-8CDCAh: Neutralize Poison
+; among them), then kills the member if the copy says Poisoned (8D02Dh, "test byte [bp-16h],80h", effect
+; 71; 1000 damage): from the copy taken before the cure. (SL's rest_cures_* moved the casts before the
+; read.) INT VEC_REST_POISON replaces the test (4 bytes, 2 NOPs after the INT): whether the member has
+; effect 71 now, from the active effects themselves (10 bytes each, +0 whom it's on, +6 the effect; at
+; the load + 3E71h:24Dh, the count at DS:2100h), handed back as the test's ZF for the jz after it.
+EFFECTS_GAP   equ 0x47E0 - 0x3E71    ; (the effects' segment below DS)
+EFFECTS_BASE  equ 0x24D
+EFFECTS_COUNT equ 0x2100
+POISONED      equ 71
+rest_poison:
+        push bp
+        mov bp, sp                      ; [bp+2] IP, [bp+4] CS, [bp+6] FLAGS
+        push ax
+        push bx
+        push cx
+        push es
+        mov ax, ds
+        sub ax, EFFECTS_GAP
+        mov es, ax
+        mov bx, EFFECTS_BASE
+        mov cx, [EFFECTS_COUNT]
+        or word [bp + 6], 0x0040        ; (ZF: not Poisoned, unless one is found)
+        cmp cx, 400
+        ja .out
+        jcxz .out
+.next:  cmp [es:bx], si
+        jne .on
+        cmp byte [es:bx + 6], POISONED
+        jne .on
+        and word [bp + 6], ~0x0040
+        jmp .out
+.on:    add bx, 10
+        loop .next
+.out:   inc word [cs:rest_reread]
+        pop es
+        pop cx
+        pop bx
+        pop ax
+        pop bp
+        iret
+rest_reread dw 0                        ; times the test was answered (for the tests)
 
 ; ---- PIC_REUSE: DSCLOG's, on the sequel's picture cache ----
 ; The game's picture cache (DSUNLOG2.EXE 2A568h, SL's 25FA6h) has 300 slots, 16 bytes each (the
@@ -851,6 +897,7 @@ all_vectors:
         vector VEC_PIC_COUNT, pic_count
         vector VEC_PIC_FAIL, pic_fail
         vector VEC_REAR, missile_rear
+        vector VEC_REST_POISON, rest_poison
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

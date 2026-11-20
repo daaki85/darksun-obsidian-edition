@@ -53,7 +53,8 @@ def _sl(name: str, at: int) -> Patch:
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
 VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
 VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3
-VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)
+VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -107,6 +108,10 @@ PATCHES: Tuple[Patch, ...] = (
     # SL's absorb_no_strength and absorb_end: no disease, the jz to the cure's end; there, a jmp there.
     Patch("absorb_no_strength", 0x66207, bytes.fromhex("7432"), bytes.fromhex("742c")),
     Patch("absorb_end", 0x66235, bytes.fromhex("8b5e12"), bytes.fromhex("e9d2f8")),
+    # Resting while poisoned with a druid of 5th level and more: the rest killed the Poisoned from a copy of
+    # each member's effects taken before the free Neutralize Poison (SL's rest_cures_*, which moved the
+    # casts): DSCLOG2's REST_POISON answers the test (8D02Dh) from the effects as they are then.
+    Patch("rest_cures_first", 0x8D02D, bytes.fromhex("f646ea80"), bytes((0xCD, VEC_REST_POISON, 0x90, 0x90))),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word

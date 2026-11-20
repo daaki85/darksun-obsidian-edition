@@ -85,8 +85,12 @@ record offsets), 27 unclear. Each find is read by hand before it goes in.
 | **Armor's charges** (one for each damaging hit, not also for every spell or blow landing) | **in**: SL's armor_charge bytes at 84B7Eh (the routine SL's 7A539h; WotR numbers Armor's effect 5). Seen: Ar'anda's Armor (14 charges) lost one a damaging hit; the control (`RAV_SKIP=armor_charge`) two |
 | **Missiles from behind** (only melee is from behind by facing) | **in, the missile case not yet seen in play**: DSCLOG2's MISSILE_REAR (INT C4h) at the sequel's attack set-up (5C99Fh: "from behind" a byte at [bp-19h], THAC0 [bp-1Eh]; SL's [bp-1Ah], [bp-20h]); read side by side with SL's; 20 melee attacks logged as before with it in. A shot at a turned back still to arrange (`ravfight.py attack`) |
 | **Bless and Aid's measure** (from where each stands) | **in, not yet seen in play**: the sequel's routine (86638h) pushes the map thing's fine x (DS:67C5h) twice for the place to measure from; the first made the y (67C7h), SL's bless_from_cell |
+| **Absorb Disease** (no 1d6 STR) | **in, not yet seen in play**: its handler (661FFh) ran on into Strength's (6623Bh) both ways; both now jump to Strength's end (65B0Ah) |
+| **Resting while poisoned** (a druid's free Neutralize Poison before the kill) | **in, the handler checked in an emulator, a real rest not reached** (it needs a fire ring): the rest reads each member's effects (8CD2Ah) before the free cures and kills the Poisoned from that copy (8D02Dh); DSCLOG2's REST_POISON (INT C5h) answers the test from the effects table as it is then |
+| **Free Action** | **not needed**: SSI's own handler (661A0h) also takes off Petrified, No Attacks, Cannot Move (its Stuck), Cannot Use Psionics and Can't Cast |
+| The fire elementals' resistances | set aside: the sequel's monster kinds aren't SL's table (not found by its classes) |
 | New counted as Okay | 12 of SL's 24 tests found (WotR's status at +14h); matters only between creation and the game's start: later |
-| Mirror Image, Absorb Disease, Acid Arrow, Negative Plane Protection, Free Action, the fire elementals, people's armour unworn, resting while poisoned, fight music, the quiver's last arrow | sites not found by likeness: each to be found by hand (as the AC function was), and the bug checked to be in WotR first |
+| Mirror Image, Acid Arrow, Negative Plane Protection, people's armour unworn, resting while poisoned, fight music, the quiver's last arrow | sites not found by likeness: each to be found by hand (as the AC function was), and the bug checked to be in WotR first |
 | Psionic Blast, the shop's glow, the Effects screen's click (a switch) | sites found; their helper routines to port (step 5's with the features they belong to) |
 
 ## Order of work

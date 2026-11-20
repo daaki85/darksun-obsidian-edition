@@ -100,6 +100,20 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     icons crossed out (hit), then the party defeated while waiting for his next (ending turns only, the
     ambush goes badly). A save past the ambush, by real play, would make spell tests cheap.
 
+20. **Absorb Disease**: the sequel's handler (661FFh) and Strength's (6623Bh, its shared tail 65AFBh)
+    read; both of Absorb's ways now go to the tail's end. **Free Action**: SSI's own handler already
+    frees Cannot Move (its Stuck) and more: nothing to do. **The fire elementals**: the sequel's
+    monster kinds aren't SL's table; set aside.
+21. **Resting while poisoned**: the same bug as SL's (the effects read at 8CD2Ah before the druid's
+    free casts at 8CD47h-8CDCAh, the kill from that copy at 8D02Dh). DSCLOG2's REST_POISON first called
+    the game's reader from the helper; rewritten to look at the effects table itself (no far call from
+    an interrupt). Checked in unicorn on the built DSCLOG2.EXE (a hand-made interrupt frame: unicorn
+    doesn't take a real-mode INT through the vector table): ZF right for poisoned, cured, another's
+    poison, none; registers kept. A real rest needs a fire ring (the manual: the Look icon on it);
+    the opening's fight ended by a test edit (every foe at 0 HP, dead: never saved) gave "Each party
+    member receives 2000 experience points!", but no fire ring near. The opening talk's answer 4 also
+    ends in the ambush.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
