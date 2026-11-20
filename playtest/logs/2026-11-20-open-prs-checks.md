@@ -58,3 +58,11 @@ After `fightout.sh` (the fight's 1368 rounds in its tally, from the holds above)
    cover it.
 
 No save was made. Water: no new area.
+
+## #140's fix played (2026-11-20, later)
+
+The fix (`fec409e` on `claude/combat-round-counting`: in the same fight a burst starts after the
+last round shown) played on that branch alone: `fountain-user`, every foe held, `Round 4`, the whole
+party held over Ester's END, freed two seconds later. The dice log: `(78 rolls came too fast to
+record)`, then `Rounds 5-134 go by at once` and `Round 135: ...`; the helper's round counter read
+135. Right this time.
