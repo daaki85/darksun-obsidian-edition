@@ -116,3 +116,20 @@ for later: WR's own talk boxes (20029 and the like, laid out otherwise), the cha
 or figures: its own palette entries 16-95 (ground and scenery together) graded, the ground's
 pixels in shared colours moved into the region's spare entries. One region done (Tyr, RGN032);
 for the owner to judge.
+
+## Phase 4 pilot: walls and furniture at SL's angle (2026-11-20)
+
+The owner: the ground can stay regraded, the walls and other objects need repainting; use art from all of SL, and mind the angles. SL looks down at buildings far more steeply (a square inset 21x19, about 65 degrees; WR's barrel rims 14x11, about 50), with short wall faces, big tops and cast shadows. Prototype in OBJEX.GFF, from the pens' tiles (PAL 41) in Tyr's regraded colours, each picture's size kept (its top left clear, so its base stays): the sandstone wall block 330 as an SL rubble block half as tall, the thin pillars 350 and 353 as brick columns half as tall, the table 516 as SL's bench 170.
+
+1. `sh ravstart.sh $WORK/ravsl` into the ambush. The game draws the new run-length pictures. The
+   thin pillar at the room's right edge is now a short brick stub; the bench stands where the table
+   was at the top left. But the scene breaks: WR's walls are several overlapping pictures that
+   assume its angle, and shortening one (the block 330) opened a hole where sacks behind the wall
+   show through, its rubble hidden by the pictures in front.
+2. DOSBox stopped by pid, the lock released.
+
+**Results (pilot):** SL's angle can't be brought in piece by piece: a region's structure pictures
+work together (tall faces hiding what's behind), so the angle has to change for all of a region's
+structures at once. Options for the owner: keep WR's angle and refill surfaces with SL materials
+(consistent, cheap, half the look); or change every structure in a region together (all faces
+shortened, SL tops added, shadows), which is re-authoring the region's architecture.
