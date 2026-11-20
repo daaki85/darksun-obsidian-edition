@@ -104,6 +104,10 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    What the Loader saves as it goes (picked
    pockets, learned speakers' names) is kept for the next pass if
    settings.json can't be written (`DiceLog.save_learned`).
+   For timed effects, `effect_changes` also compares absolute expiration times
+   from the event queue. If the owner, caster, spell and handle stay the same,
+   a different deadline produces a replacement line. The log keeps the last
+   known deadline while the effect is active and the timer is absent.
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking

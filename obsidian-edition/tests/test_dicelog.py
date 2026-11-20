@@ -122,6 +122,15 @@ def set_effects(log, effects):
         struct.pack_into("<hhhBB", m, base + i * 10, owner, caster, spell, eid, handle)
 
 
+def set_effect_deadlines(log, events):
+    queue = 0x6F100
+    m = log.guest.mem
+    m[DS * 16 + game.EVENT_QUEUE:DS * 16 + game.EVENT_QUEUE + 4] = far(queue)
+    struct.pack_into("<h", m, DS * 16 + game.EVENT_COUNT, len(events))
+    for i, (at, owner, handle) in enumerate(events):
+        struct.pack_into("<iBhB", m, queue + i * game.EVENT_SIZE, at, game.EVENT_EFFECT_ENDS, owner, handle)
+
+
 def words(*values):
     return struct.pack(f"<{len(values)}h", *values)
 
@@ -1657,6 +1666,73 @@ class OtherTests(unittest.TestCase):
             "can't move, fails every saving throw"])
         set_effects(log, [(0, 0, 46), (2, 2, 7)])  # (the time up: a real end)
         self.assertEqual(log.effect_changes(40.0), ["Paralyzed ends on Daaki, Jellybelly"])
+
+    def test_recast_detected_when_the_effect_record_is_reused(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1200, 1, 0), (900, 2, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+
+        set_clock(log, 660)
+        set_effect_deadlines(log, [(1200, 1, 0), (960, 2, 0)])
+        self.assertEqual(log.effect_changes(11.0), [])
+        replacement = ["Dag gives Paralyzed to Daaki, in place of the one it had: "
+                       "loses its turns, can't move, fails every saving throw"]
+        for now, due in ((20.0, 1500), (22.0, 1080)):
+            set_effect_deadlines(log, [(due, 1, 0)])
+            self.assertEqual(log.effect_changes(now), replacement)
+            self.assertEqual(log.effect_changes(now + 1), [])
+
+        set_effects(log, [])
+        set_effect_deadlines(log, [])
+        self.assertEqual(log.effect_changes(24.0), ["Paralyzed ends on Daaki"])
+
+    def test_timer_appearing_or_temporarily_missing_does_not_repeat_an_effect(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, game.HASTED_EFFECT, 45, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+        with mock.patch.object(dicelog.aging, "hasted") as hasted:
+            for now, events in ((11.0, [(1200, 1, 0)]), (12.0, []), (13.0, [(1200, 1, 0)])):
+                set_effect_deadlines(log, events)
+                self.assertEqual(log.effect_changes(now), [])
+            set_effect_deadlines(log, [])
+            self.assertEqual(log.effect_changes(14.0), [])
+            set_effect_deadlines(log, [(1500, 1, 0)])
+            self.assertIn("in place of the one it had", log.effect_changes(15.0)[0])
+            hasted.assert_not_called()
+
+    def test_timer_read_during_record_replacement_waits_for_the_new_record(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1200, 1, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+        read_deadlines = log.game.effect_deadlines
+
+        def replace():
+            set_effects(log, [(1, 2, 34, HOLD_PERSON, 0)])
+            set_effect_deadlines(log, [(1500, 1, 0)])
+            return read_deadlines()
+
+        with mock.patch.object(log.game, "effect_deadlines", side_effect=replace):
+            self.assertEqual(log.effect_changes(20.0), [])
+        self.assertEqual(log.effect_changes(21.0), [
+            "Jellybelly gives Paralyzed to Daaki, in place of the one it had: "
+            "loses its turns, can't move, fails every saving throw"])
+
+    def test_loading_reestablishes_the_effect_deadline(self):
+        log = make_game()
+        set_clock(log, 660)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1260, 1, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+
+        set_clock(log, 600)
+        set_effect_deadlines(log, [(1200, 1, 0)])
+        self.assertEqual(log.effect_changes(11.0), [])
+        self.assertEqual(log.effect_changes(12.0 + dicelog.LOAD_SETTLE), [])
 
     def test_effects_of_a_loaded_game_are_not_news(self):
         log = make_game()
