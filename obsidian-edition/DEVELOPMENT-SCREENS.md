@@ -1482,8 +1482,11 @@ save after an F9 window had gone to `SAVQ01.SAV` before this.
 **Autosave.** The Loader asks for one when the region (DS:117Ch) has changed, or a fight has
 ended, and for 4 seconds since the map's loop has run with the game on the map (DS:0BC9h 1) and
 no fight; not while a game is loading (the dice log's `_party_check`: the party changed or the
-clock went back) and, after a fight, not within a minute of the last autosave. Slots 1-5 are the
-quick saves', 6-10 the autosaves': each kind takes its first empty slot, then its oldest file.
+clock went back) and, after a fight, not within a minute of the last autosave. The Loader keeps
+observing the area and fight while a keypress or an in-progress request has priority. A due
+autosave waits for a free request slot and the usual map conditions. The dice log's load signal
+resets the area and fight timers. Slots 1-5 hold quick saves and slots 6-10 hold autosaves. Each
+kind takes its first empty slot, then its oldest file.
 
 **The disk.** The game's save shows "Disk Space Low !!!" in a box that waits for a click when
 DOS reports under about 2.7 MB free. DOSBox always reports 262 MB for a mounted folder
