@@ -303,6 +303,28 @@ The AC function is the sequel's own (5D520h; its end 5D6E6h, PROBE_AC). `ravdice
 roll and each AC worked out. **To find an unnamed roll's code**: catch its entry (its frame's first words
 are the return address, then the arguments: the dice routine's count and sides) and read the code at
 that address at once, before the overlay moves, then find those bytes in DSUN.EXE.
+**Playing it** (2026-11-20, logs/2026-11-20-ravager-dicelog.md; the walkthrough: `setup_guide.sh`, then
+`$WORK/guide/ravager.txt`, the owner's copy from the private repository):
+- **Attacking**: in a fight the **Walk pointer, the plain arrow**, clicked on a foe walks to it and attacks
+  (the manual); the sword pointer shows a barred sword in a fight and does nothing. Right clicks on bare
+  floor cycle arrow, sword, look: track the pointer by picture, not by count. A foe under the arrow turns
+  red. In a crowd a click can take the wrong figure (`ravfight.py attack` aims at a figure's place + 10,
+  22). `ravfight.py fight` attacks on every party turn; the ambush was lost that way (Gerakis never
+  struck).
+- **Computer Control**: the inventory screen (the top-left icon out of a fight; in a fight USE, then the
+  second icon of its bottom row), the lower of the two small icons left of each character box (a small
+  screen; lit orange when on; the upper one marks the character shown). All four on won the opening
+  ambush by itself (3 Draxans, a templar) with the party standing.
+- **Sides**: creature +15h: 0 the party, 7 the opening's Draxans, 1 the town's people.
+- **Saving**: the inventory's GAME MENU (game 267,187), the disk (136,100), SAVE (145,105), a slot
+  (127,46), type the name, SAVE (252,47): SAVE01.SAV, CHARSAVE.GFF (DARKSAVE.GFF not rewritten).
+  **Loading**: the title menu's LOAD SAVED GAME (159,110), the slot, LOAD (252,47): `ravload.sh NAME`
+  (`saves/ravager-after-ambush`, the opening won). Escape with nothing up brings EXIT GAME? (QUIT /
+  CANCEL at 145,116): a second Escape after closing a screen does it.
+- **Resting**: only at a fire ring (the Look icon on it), or a room at an inn (Tyr's Harbinger's Roost,
+  25 cp, southeast of the start). The Mines of Tyr level 1 have a fire ring in the room past exit C
+  (the owner's map, 2026-11-20: by the dying miner).
+
 **Its picture cache** (2026-11-20): the loader at 2A568h (SL's 25FA6h) keeps SL's 300 slots, 16 bytes each
 (number, length, store place, memory, flags), the count at DS:265Dh, the table at load + 42A2h:0CA8h;
 253 taken at the start of Tyr (`cache.py`-style dump: the count, then each slot). Its one caller is the

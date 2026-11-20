@@ -5,7 +5,8 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES left out of the copy, for a test's control): dsloader.ravager's
+# patches of dsloader.ravager.PATCHES left out of the copy, for a test's control). `RAV_MENU=1` stops at the
+# title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
 F=${1:-$WORK/rav}
@@ -46,5 +47,6 @@ echo $! > "$WORK/rav.pid"; sleep 6
 W=$(timeout 5 xdotool search --pid "$(cat "$WORK/rav.pid")" | tail -1)
 [ -z "$W" ] && { echo "no DOSBox window"; exit 1; }
 for t in 1 2; do xdotool keydown --window "$W" Shift_L; sleep 1; xdotool keyup --window "$W" Shift_L; sleep 3; done
+[ -n "$RAV_MENU" ] && { import -window "$W" "$WORK/rav-menu.png"; echo "pid $(cat "$WORK/rav.pid"), window $W: at the title menu ($WORK/rav-menu.png)"; exit 0; }
 xdotool key --window "$W" s; sleep 80
 import -window "$W" "$WORK/rav-tyr.png"; echo "pid $(cat "$WORK/rav.pid"), window $W: $WORK/rav-tyr.png"

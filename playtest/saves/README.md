@@ -50,3 +50,11 @@ cannot be loaded in a fresh install (2026-11-01).
 - `legcrusher-fountain-user`: the user's save "legcrusher fountain" (2026-11-11): the party at square (68,94) before the fountain; Legcrusher's fetching speech comes on loading (with the Loader's fountain branch: his lines, then a fight with him alone). Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are pens-after-scar's.
 - `selling-junk-user`: the user's save "selling junk" (2026-11-11), for selling the party's mundane items in one go. Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are pens-after-scar's.
 - `doorway-blocked-user`: the user's save "error doorway blocked" (2026-11-11): the party (leader 1576,600) in the corridor south of Kurzak's entryway; the door's leaves open but square 99,34 shut on the walk map, Legcrusher at 1704,328 with his fetching order. With `kurzakdoor.py` the square opens within 10 game seconds and Legcrusher comes. Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are selling-junk-user's.
+- `ravager-after-ambush` (2026-11-20): **Wake of the Ravager** (`ravload.sh ravager-after-ambush`), a new game
+  with its ready-made party, the opening talk (3, Return x4), the party up the street into the ambush (3
+  Draxans and a templar), won by the game's own Computer Control (the inventory screen's small screen icon
+  by each character box: on for all four, then off again before the save): "Each party member receives
+  10000 experience points!". On the Loader's patched copy with DSCLOG2 (the fixes of the day), no memory
+  edit. Thy'rokh leads; Terrannus at 1/64 HP, Gerakis 143/165, Ar'anda 48/48, Thy'rokh 75/75 (she rose a
+  level). The street in Tyr outside Uhubito's; the Harbinger's Roost (a room, a rest, 25 cp) to the
+  southeast. Its `DARKSAVE.GFF` is the install's own (991 bytes: the save didn't rewrite it).

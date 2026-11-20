@@ -114,6 +114,16 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     member receives 2000 experience points!", but no fire ring near. The opening talk's answer 4 also
     ends in the ambush.
 
+22. **A save past the ambush** (the user's ask, with their walkthrough, now in the private repository's
+    guide/): a clean start (no edits). Attacking by hand: the sword pointer's barred sword did nothing;
+    the manual says the Walk arrow attacks in a fight: Ar'anda hit with both weapons that way.
+    `ravfight.py fight` (the arrow on the nearest foe each turn) lost the fight: clicks in the crowd
+    took the wrong figure, Gerakis never struck. Then the game's Computer Control for all four (the
+    inventory screen's small screen icons): won, "Each party member receives 10000 experience points!",
+    the party standing (Terrannus 1 HP). A double Escape on the way brought EXIT GAME? (cancelled).
+    Computer Control off again, GAME MENU, the disk, SAVE, slot 1 "AFTER AMBUSH": saves/
+    ravager-after-ambush; loaded back from the title menu (ravload.sh's steps): the street as saved.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
