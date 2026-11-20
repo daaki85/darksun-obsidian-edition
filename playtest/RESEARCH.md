@@ -292,6 +292,14 @@ skills): most of its code is in overlays swapped out to XMS, so lay every overla
 Dark Sun Recompiled's `build_image.py` (its PSP set to the live one) with that image's stubs, the
 live memory below; and give the emulator SS = DS (Borland reads stack buffers through DS).
 
+**Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
+[OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
+running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the
+initiative selector 308h at DCh (load + 3C4Fh), the attack's target DS:4206h, the item types 15 bytes
+(DS:19CDh), the item names RESOURCE.GFF's TEXT 1000 (a line a name, from 1), the rules' small tables SL's
++70h. A selector's segment: the segment table at load + 45E8h, + the selector. `ravds.py --fuzzy HEX`
+maps an SL data address by the code round its uses.
+
 **Its first fight** (logs/2026-11-19-ravager-fight.md): the opening talk (3, Return) ends in the
 Draxans' ambush, a fight at once; in a fight USE opens for the one whose turn it is (DS:426Dh, SL's
 4979h). Right clicks on bare floor cycle the pointer: arrow, sword, look; a figure under it turns
