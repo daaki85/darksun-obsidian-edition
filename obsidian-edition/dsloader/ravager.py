@@ -64,6 +64,7 @@ VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0x
 VEC_IMAGE, VEC_BLOW = 0xCC, 0xCD  # (DSCLOG2's IMAGE_SPELL, IMAGE_BLOW)  # (DSCLOG2's own: 66h is DOSBox's)
 VEC_USE, VEC_WIN = 0xCE, 0xCF  # (DSCLOG2's PROBE_USE, PROBE_WIN: the spell slots on USE)
 VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
+VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -160,6 +161,10 @@ PATCHES: Tuple[Patch, ...] = (
     # Charges in item boxes (SL's item_box): DSCLOG2's PROBE_ITEM_BOX at the end of the routine filling an
     # item's box (9A4FEh, SL's 8C1A1h: "push 0"), the item's charges, or a plain weapon's material's to-hit.
     Patch("item_box", 0x9A4FE, bytes.fromhex("6a00"), gamepatch._interrupt(VEC_ITEM_BOX, 2)),
+    # THAC0, saves and thief skills on the inventory (SL's inventory): DSCLOG2's PROBE_CHAR after the
+    # panel's weapon lines (91286h, SL's 6F6BFh: "add sp,0Eh"), the text routine and the character's
+    # selector read from the code before it, at SL's distances.
+    Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

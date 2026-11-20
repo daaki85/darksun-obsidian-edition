@@ -12,7 +12,8 @@
 ; the spell records' fixes) and GPLDATA.GFF (D:\GPLDAT2.GFF, with the scripts' fixes:
 ; dsloader/ravager.py) in place of its own. Then the engine fixes ported in step 4 (each at its
 ; vector below), the spell slots on the USE screen (PROBE_USE, PROBE_WIN: the Loader's lines) and
-; the charges in item boxes (PROBE_ITEM_BOX).
+; the charges in item boxes (PROBE_ITEM_BOX), THAC0, saves and thief skills on the inventory
+; (PROBE_CHAR).
 ;
 ; The header keeps DSCLOG's layout for the fields the Loader's dice log reads (the ring, the seed,
 ; the filters, the far block), under a signature of its own, so a Loader that doesn't know the
@@ -43,6 +44,7 @@ VEC_BLOW      equ 0xCD  ; IMAGE_BLOW (5D09Fh: an attack's hit: an image may take
 VEC_USE       equ 0xCE  ; PROBE_USE (79543h: the USE screen's LEVEL button labelled: its spell slots drawn)
 VEC_WIN       equ 0xCF  ; PROBE_WIN (303BEh: a window brought to the front: the USE screen's slots again)
 VEC_ITEM_BOX  equ 0xD0  ; PROBE_ITEM_BOX (9A4FEh: an item's box filled: its charges, or a weapon's material)
+VEC_CHAR      equ 0xD1  ; PROBE_CHAR (91286h: the inventory panel's lines: THAC0, saves, thief skills)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -1436,6 +1438,326 @@ ib_count   dw 0                     ; lines drawn (for the tests)
 ib_charges_text db 'Charges:'
 ib_charges_num  db '000000', 0          ; (a space, then the number, or the number alone)
 
+; ---- THAC0, SAVES AND THIEF SKILLS ON THE INVENTORY: DSCLOG's PROBE_CHAR (its sheet's numbers) ----
+; PROBE_CHAR: INT VEC_CHAR replaces "add sp,0Eh" (91286h; SL's 6F6BFh) in the inventory screen's
+; routine for its right-hand panel, straight after the weapon lines. Does the add, then adds in the
+; game's lettering: THAC0 and the five saving throws above STR, the DEX reaction adjustment right of
+; SP, the DEX defensive adjustment right of the AC line, and for a character with thief levels six
+; thief skills right of the abilities, level with STR to CHA. The routine's code holds the text
+; routine's far address and the selected character's segment at the same distances before the patch
+; as SL's (IV_DRAW, IV_WHO). What differs from DSCLOG's: the sequel's records (sheets 42h bytes at
+; DS:19C5h: its entity +0Eh, race +12h, classes +1Bh, levels +1Eh, saves +31h-35h; creatures 31h bytes
+; at DS:19C9h: THAC0 +16h, DEX +1Ah), the character's number at +0B44h, the DEX tables (DS:084Ch, 0866h),
+; the thief tables (load + 449Bh:0, two more race rows: DEX limits at A0h, A8h, B0h), the abilities a
+; row lower (STR at y 38h, SL's 35h); and the numbers are always the sheet's and the game's tables'
+; (the Loader's STATS, with equipment and effects, the age and a ranger's stealth aren't ported).
+IV_DRAW     equ -0x99           ; (from the patch) "lcall SEG:OFF" operand: the text routine
+IV_WHO      equ -0x8B           ; (from the patch) "mov ax,0370h" operand: the character number's selector
+WHO_OFF     equ 0x0B44
+SHEETS_PTR  equ 0x19C5
+SHEET_SIZE  equ 0x42
+CREATURES_PTR equ 0x19C9
+CREATURE_SIZE equ 0x31
+SHEET_ENTITY equ 0x0E
+SHEET_RACE  equ 0x12
+SHEET_CLASSES equ 0x1B
+SHEET_LEVELS equ 0x1E
+SHEET_SAVES equ 0x31
+CREATURE_THAC0 equ 0x16
+CREATURE_DEX equ 0x1A
+THIEF_CLASS equ 17
+THIEF_TABLE equ 0x449B - 0x47E0 ; the thief tables' segment, relative to DS
+THIEF_RACE  equ 8
+THIEF_LOW   equ 0xA0
+THIEF_HIGH  equ 0xA8
+THIEF_TOP   equ 0xB0
+DEX_REACTION equ 0x084C         ; DS: the DEX reaction adjustment (bytes, by score: SL's 7DCh)
+DEX_DEFENCE equ 0x0866          ; DS: the DEX defensive adjustment (on AC: SL's 7F6h)
+NO_REACT    equ 0x80
+REACT_Y     equ 0x22            ; the saves' last row, right of SP
+REACT_VALUE_X equ 0x130
+DEF_Y       equ 0x71            ; the AC line's y
+DEF_VALUE_X equ 0x12D
+probe_char:
+        pop word [cs:t_ip]
+        pop word [cs:t_cs]
+        pop word [cs:t_fl]
+        add sp, 0x0E            ; the replaced instruction
+        sti
+        pushad
+        push es
+        push fs
+        push gs
+        mov es, [cs:t_cs]
+        mov di, [cs:t_ip]
+        sub di, 2               ; ES:DI = the patch
+        mov eax, [es:di + IV_DRAW]
+        mov [cs:c_draw], eax
+        mov fs, [es:di + IV_WHO]
+        mov eax, [WIN_SHOWN]    ; the panel's window
+        mov [cs:c_winptr], eax
+        mov bx, [fs:WHO_OFF]    ; the character on show
+        cmp bx, 3
+        ja .done
+        mov [cs:c_who], bx
+        imul ax, bx, SHEET_SIZE
+        les si, [SHEETS_PTR]
+        add si, ax              ; ES:SI = the character sheet
+        cmp word [es:si + SHEET_ENTITY], 0
+        je .done                ; an empty slot
+        imul bx, bx, CREATURE_SIZE
+        lfs di, [CREATURES_PTR]
+        add di, bx              ; FS:DI = the creature record
+        inc word [cs:char_count]
+        mov al, [fs:di + CREATURE_THAC0]  ; THAC0 and the saves
+        mov [cs:c_vals], al
+        mov eax, [es:si + SHEET_SAVES]
+        mov [cs:c_vals + 1], eax
+        mov al, [es:si + SHEET_SAVES + 4]
+        mov [cs:c_vals + 5], al
+        mov bx, c_cells_top
+        mov byte [cs:c_signed], 1  ; (THAC0 can be below 0)
+        mov cx, 6
+        call c_cells
+        mov byte [cs:c_react], NO_REACT ; the DEX adjustments, worked out now
+        movzx bx, byte [fs:di + CREATURE_DEX]
+        cmp bx, 26
+        jae .thieves
+        mov al, [bx + DEX_REACTION]
+        mov [cs:c_react], al
+        mov al, [bx + DEX_DEFENCE]
+        mov [cs:c_defence], al
+.thieves:
+        xor cx, cx              ; thief skills, for a character with thief levels
+        mov bx, SHEET_CLASSES
+.cls:   cmp byte [es:si + bx], THIEF_CLASS
+        je .thief
+        inc bx
+        inc cx
+        cmp cx, 3
+        jb .cls
+        jmp .react
+.thief: mov al, [es:si + bx + 3]  ; the thief level (levels follow the classes)
+        call c_thief
+.react: mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
+        cmp al, NO_REACT
+        je .done
+        mov di, c_num
+        test al, al
+        jle .sign
+        mov byte [cs:di], '+'
+        inc di
+.sign:  call c_itoa_s
+        push word REACT_Y
+        push word 0x113
+        push cs
+        push word l_react
+        call c_draw_line
+        push word REACT_Y
+        push word REACT_VALUE_X
+        push cs
+        push word c_num
+        call c_draw_line
+        mov al, [cs:c_defence]    ; right of the AC line: "DEF -4"
+        mov di, c_num
+        test al, al
+        jle .dsign
+        mov byte [cs:di], '+'
+        inc di
+.dsign: call c_itoa_s
+        push word DEF_Y
+        push word 0x113
+        push cs
+        push word l_defence
+        call c_draw_line
+        push word DEF_Y
+        push word DEF_VALUE_X
+        push cs
+        push word c_num
+        call c_draw_line
+.done:
+        pop gs
+        pop fs
+        pop es
+        popad
+        push word [cs:t_fl]
+        push word [cs:t_cs]
+        push word [cs:t_ip]
+        iret
+
+; C_THIEF: DSCLOG's, from the sequel's tables: the six thief skills shown (sheet ES:SI, creature
+; FS:DI, thief level AL): base + 4 a level + the race's adjustment + DEX's (before equipment and
+; effects).
+c_thief:
+        push si
+        mov dl, al
+        shl dl, 2               ; 4 a level
+        mov ax, ds
+        add ax, THIEF_TABLE
+        mov gs, ax
+        mov dh, [fs:di + CREATURE_DEX]
+        movzx di, byte [es:si + SHEET_RACE]
+        shl di, 3
+        add di, THIEF_RACE      ; + race * 8
+        xor bx, bx
+.skill: movsx ax, byte [gs:bx]  ; base
+        movzx cx, dl
+        add ax, cx
+        movsx cx, byte [gs:bx + di]  ; race
+        add ax, cx
+        push dx                 ; DEX: -5 a point below LOW, +5 a point above HIGH, -3 above TOP
+        movzx dx, dh
+        movzx cx, byte [gs:bx + THIEF_LOW]
+        sub cx, dx
+        jle .nolow
+        imul cx, cx, 5
+        sub ax, cx
+.nolow: mov cx, dx
+        push dx
+        movzx dx, byte [gs:bx + THIEF_HIGH]
+        sub cx, dx
+        pop dx
+        jle .nohigh
+        imul cx, cx, 5
+        add ax, cx
+.nohigh:
+        mov cx, dx
+        push dx
+        movzx dx, byte [gs:bx + THIEF_TOP]
+        sub cx, dx
+        pop dx
+        jle .notop
+        imul cx, cx, 3
+        sub ax, cx
+.notop: pop dx
+        cmp ax, 0
+        jge .pos
+        xor ax, ax              ; below 0: shown as 0
+.pos:   cmp ax, 255
+        jbe .fits
+        mov ax, 255
+.fits:  mov [cs:c_vals + bx], al
+        inc bx
+        cmp bx, 8
+        jb .skill
+        pop si
+        mov al, [cs:c_vals + 6] ; pick pockets, open locks, find traps, move silently, hide in
+        mov [cs:c_vals + 5], al ; shadows and climb walls (not hear noise nor read languages)
+        mov bx, c_cells_thief
+        mov cx, 6
+        mov byte [cs:c_signed], 0
+        ; fall through
+
+; C_CELLS: DSCLOG's: CX cells at CS:BX, each x, y, label offset, value's x (words); the values are
+; C_VALS in order. Keeps ES, SI, DI.
+c_cells:
+        push es
+        push si
+        push di
+        xor si, si
+.cell:  push cx
+        push bx
+        push word [cs:bx + 2]   ; y
+        push word [cs:bx]       ; x
+        push cs
+        push word [cs:bx + 4]   ; the label
+        call c_draw_line
+        pop bx
+        push bx
+        mov al, [cs:c_vals + si]
+        mov di, c_num
+        or si, si
+        jnz .unsigned
+        cmp byte [cs:c_signed], 0
+        je .unsigned
+        call c_itoa_s           ; the first cell of THAC0 and the saves
+        jmp .number
+.unsigned:
+        call c_itoa
+.number:
+        push word [cs:bx + 2]
+        push word [cs:bx + 6]   ; the value's x
+        push cs
+        push word c_num
+        call c_draw_line
+        pop bx
+        pop cx
+        add bx, 8
+        inc si
+        loop .cell
+        pop di
+        pop si
+        pop es
+        ret
+
+c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-terminated; keeps BX, CX
+        push bx
+        push cx
+        xor ah, ah
+        mov bl, 10
+        xor cx, cx
+.div:   div bl
+        push ax                 ; AH = a digit
+        inc cx
+        xor ah, ah
+        or al, al
+        jnz .div
+.put:   pop ax
+        add ah, '0'
+        mov [cs:di], ah
+        inc di
+        loop .put
+        mov byte [cs:di], 0
+        pop cx
+        pop bx
+        ret
+
+c_itoa_s:                       ; AL (signed) -> decimal at CS:DI, with "-" below 0; keeps BX, CX
+        test al, al
+        jns c_itoa
+        mov byte [cs:di], '-'
+        inc di
+        neg al
+        jmp c_itoa
+
+; cells: x, y, label, value's x (window coordinates, as DSCLOG's: the stats' labels at x 0ECh)
+c_cells_top:
+        dw 0xEC, 0x0D, l_thac0, 0x111
+        dw 0xEC, 0x14, l_ppd, 0x103,  0x113, 0x14, l_rsw, 0x12A
+        dw 0xEC, 0x1B, l_pp, 0x103,   0x113, 0x1B, l_bw, 0x12A
+        dw 0xEC, 0x22, l_sp, 0x103
+c_cells_thief:                  ; right of the abilities, level with STR..CHA (the sequel's rows: 38h on)
+        dw 0x113, 0x38, l_pick, 0x12D
+        dw 0x113, 0x3F, l_lock, 0x12D
+        dw 0x113, 0x46, l_trap, 0x12D
+        dw 0x113, 0x4D, l_move, 0x12D
+        dw 0x113, 0x54, l_hide, 0x12D
+        dw 0x113, 0x5B, l_clmb, 0x12D
+l_thac0 db 'THAC0:', 0
+l_ppd   db 'PPD', 0
+l_rsw   db 'RSW', 0
+l_pp    db 'PP', 0
+l_bw    db 'BW', 0
+l_sp    db 'SP', 0
+l_pick  db 'PICK', 0
+l_lock  db 'LOCK', 0
+l_trap  db 'TRAP', 0
+l_move  db 'SLNT', 0
+l_hide  db 'HIDE', 0
+l_clmb  db 'CLMB', 0
+l_react db 'REAC', 0
+l_defence db 'DEF', 0
+c_react db 0
+c_defence db 0
+c_signed db 0
+c_who   dw 0
+c_vals  times 8 db 0
+c_num   db 0, 0, 0, 0, 0
+t_ip    dw 0
+t_cs    dw 0
+t_fl    dw 0
+char_count dw 0                 ; panels drawn on (for the tests)
+
 resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
@@ -1641,6 +1963,7 @@ all_vectors:
         vector VEC_USE, probe_use
         vector VEC_WIN, probe_win
         vector VEC_ITEM_BOX, probe_item_box
+        vector VEC_CHAR, probe_char
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

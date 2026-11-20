@@ -434,6 +434,14 @@ drawn there must stay short. **Opening a box**: I (inventory), a portrait on the
 right click on the item (Ar'anda's left hand at game 174,92, chest 174,67); a second right click closes
 it. The material to-hit routine is 1D401h (SL's 5EB31h), the same table.
 
+**Its inventory panel** (2026-11-20, logs/2026-11-20-ravager-inventory.md): SL's code at the same
+distances, ending the weapon lines at 91286h (SL's 6F6BFh); the thief tables at load + 449Bh (race rows
+from +8, DEX's low/high/top at +A0h/+A8h/+B0h, the armour penalty +B8h), the DEX reaction and defence
+tables at DS:084Ch and DS:0866h. The thief routine (8C647h) gets DEX and the level from functions; for a
+check run `ravthief.py MEMBER` (it needs `ravfixes.py` run first, for `$WORK/ravfix`). **Reading the
+panel's numbers**: zoom the screenshot, the small font's 6 looks like a 5. Portraits are at game x 30,
+y 21, 67, 112 and 158.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

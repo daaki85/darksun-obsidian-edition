@@ -27,7 +27,7 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box"})  # (DSCLOG2's own interrupts)
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "inventory"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -45,8 +45,8 @@ class TableTests(unittest.TestCase):
         table = struct.unpack_from("<H", image, hdr + 144)[0]  # (ALL_VECTORS)
         vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
         self.assertTrue({ravager.VEC_USE, ravager.VEC_WIN} <= vectors)
-        self.assertIn(ravager.VEC_ITEM_BOX, vectors)
-        for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN), ("item_box", ravager.VEC_ITEM_BOX)):
+        self.assertTrue({ravager.VEC_ITEM_BOX, ravager.VEC_CHAR} <= vectors)
+        for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN), ("item_box", ravager.VEC_ITEM_BOX), ("inventory", ravager.VEC_CHAR)):
             p = next(p for p in ravager.PATCHES if p.name == name)
             self.assertEqual(p.replacement, bytes((0xCD, vec)) + b"\x90" * (len(p.original) - 2))
 
