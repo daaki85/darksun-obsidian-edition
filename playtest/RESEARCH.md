@@ -303,6 +303,11 @@ The AC function is the sequel's own (5D520h; its end 5D6E6h, PROBE_AC). `ravdice
 roll and each AC worked out. **To find an unnamed roll's code**: catch its entry (its frame's first words
 are the return address, then the arguments: the dice routine's count and sides) and read the code at
 that address at once, before the overlay moves, then find those bytes in DSUN.EXE.
+**The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
+smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
+stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs
+use the sequel's layout made from SL's. No moment out of a fight at the start: the opening talk ends in
+the ambush, so the inventory screen (to check the gear's slot names) waits for a later save.
 
 **Its first fight** (logs/2026-11-19-ravager-fight.md): the opening talk (3, Return) ends in the
 Draxans' ambush, a fight at once; in a fight USE opens for the one whose turn it is (DS:426Dh, SL's
