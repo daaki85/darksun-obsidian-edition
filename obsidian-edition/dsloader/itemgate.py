@@ -153,13 +153,16 @@ class ItemGate:
         self._state, self._heads, self._paused = "idle", None, False
 
 
-def hold(gd) -> None:
+def hold(gd, *, require_pause: bool = False) -> None:
     """Before a change to the game's item lists that can't be made twice (a roll, a counter
     moved on): the gate opened for this pass now, so that if the game is changing them (ItemsBusy)
-    nothing has been done yet and it is tried again in a later pass."""
+    nothing has been done yet and it is tried again in a later pass. REQUIRE_PAUSE also refuses
+    the write if the process could not be paused, so rollback can run with the game held still."""
     gate = getattr(getattr(gd, "guest", None), "item_gate", None)
     if gate is not None:
         gate.open()
+        if require_pause and not gate._paused:
+            raise ValueError("Could not pause the game for an item transfer")
 
 
 def release(gd) -> None:
