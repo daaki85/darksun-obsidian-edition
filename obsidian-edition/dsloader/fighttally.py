@@ -19,7 +19,7 @@ from typing import Callable, Dict, List, Optional
 
 from .ledger import save_source
 
-ROUND = re.compile(r"Round (?P<n>\d+)\b")
+ROUND = re.compile(r"Rounds? (?P<first>\d+)(?:-(?P<last>\d+))?\b")
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: from behind| BACKSTAB| unseen)?(?: with .+?)?: d20 = .*"
                     r"-> (?P<result>HIT|miss)$")
 HIT_FOR = re.compile(r"  (?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): ")
@@ -62,10 +62,10 @@ class FightTally:
     def _line(self, line: str) -> None:
         m = ROUND.match(line)
         if m:
-            n = int(m.group("n"))
-            if n == 1 and self.rounds > 1:  # (a new fight never told as over: start afresh)
+            first = int(m.group("first"))
+            if first == 1 and self.rounds > 1:  # (a new fight never told as over: start afresh)
                 self._reset()
-            self.rounds = max(self.rounds, n)
+            self.rounds = max(self.rounds, int(m.group("last") or first))
             return
         if not self.started:
             return

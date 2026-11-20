@@ -104,6 +104,17 @@ class LinesTests(unittest.TestCase):
         self.assertEqual(lines[2].text, "Defiler 29 = 20 + 4 (0-9 roll) +5 DEX, tie broken by 103 (0-199 roll)")
         self.assertEqual(lines[2].depth, 2)
 
+    def test_skipped_rounds_stay_visible_at_every_level_and_filter(self):
+        log = c.Log()
+        log.add(["Round 3 goes by at once: no one in the fight can act",
+                 "Rounds 4-5 go by at once: no one in the fight can act", "Round 6: Gerakis 25"])
+        markers = ["ROUND 3 SKIPPED", "ROUNDS 4-5 SKIPPED", "ROUND 6"]
+        for level in (c.MINIMAL, c.SHORT, c.DETAIL):
+            for filt in ("party", "damage", "saves"):
+                with self.subTest(level=level, filt=filt):
+                    self.assertEqual([row.text for row in c.filtered(log.at(level, NAMES), filt)], markers)
+        self.assertEqual(log.at(c.DETAIL, NAMES)[1].text, "no one in the fight can act")
+
     def test_sides(self):
         lines = {line.text: line.side for line in self.log.at(c.SHORT, NAMES)}
         self.assertEqual(lines["Rampager's turn"], "monster")

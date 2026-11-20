@@ -45,7 +45,7 @@ creature in red, so who acts and who is hit can be followed down the log.
 |---|---|
 | `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round: its number, and the order everyone acts in, highest first. |
 | `Initiative: K'ratchek 32, Cermak 31, ...` | The same order when the log doesn't know the round's number. |
-| `Rounds 4-5 go by at once: no one in the fight can act` | With no one in the fight able to act (the whole party Paralyzed, and the foes held too) the game plays round after round in a blink, skipping every turn. The log counts those rounds and then gives the order of the last one as usual (`Round 6: ...`). The order of the rounds that went by is lost (the game keeps only the last round's), so they are only counted. A single round shows as `Round 5 goes by at once: ...`. |
+| `Rounds 4-5 go by at once: no one in the fight can act` | When everyone is unable to act, the game can play several rounds between polls. The log counts the rounds and lists the last round's order (`Round 6: ...`). The in-game panel shows `ROUNDS 4-5 SKIPPED` at every detail level. |
 | `Gerakis's turn` | Whose turn it is now, each time the turn passes in a fight. |
 | `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice: the d20, the roll this attacker needed against this target (THAC0 − target AC) and the chance of it, the lowest AC the roll hits, and the target's AC as the game used it. More below the table. |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from, part by part. |
