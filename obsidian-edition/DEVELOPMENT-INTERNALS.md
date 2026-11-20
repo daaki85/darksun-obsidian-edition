@@ -210,6 +210,12 @@ builds DSCLOG with a symbol map and checks every field is at the offset its comm
 on each the field of its own name (`FIELDS_BY_NAME`: two branches' fields at the same offsets
 would pass the first two).
 
+Initiative tie-break entries carry the caller's combatant number at +186, the
+fight identifier at +188 and the round number at +190. The round-start probe
+advances these counters and uses the game's first-round flag to start a new
+fight. The record size and header are compatible with earlier helpers, which
+leave +190 zero and use the Loader's existing tie-break inference.
+
 ## Room and memory
 
 DSCLOG has to load into upper memory, or the game loses about 61 KB of conventional
