@@ -845,6 +845,14 @@ game's data: it is one player's account.
      dice log saw the last step (its line "F10: NAME's move taken back (can walk again)"), so a
      dice log restarted in the middle of a turn mends nothing that turn. `squarewalk.py` with
      POINTS puts the bit back itself.
+   - **F10 after a spell** (logs/2026-11-20-f10-after-spell.md): a cast zeroes the whole flags
+     word (37BD:01D5h), so the mend stays out. Most casts end the turn (F10 is then the next
+     member's); Magical Stone keeps it till the third throw, and F10 then puts the caster back with
+     its points and the flags still 0 (no walk, no Loader line). **A pin put on after the last step
+     gets the walk back**: `addeffect.py N 34` there, then F10, gave the line and one step before
+     the game ended the turn (the game's own pin, 786CBh, only clears bit 0, already clear). Follow a
+     turn with `f10watch.py MEMBER SECONDS` in the background: each change of the flags, points,
+     square and the turn's start words, with its time.
    - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
      1, the flags as they were, the turn still its own; a second swing of the same command can
      end it all the same: Jenna's did, Ester's didn't). For "walked out, killed, F10": a foe on
@@ -884,6 +892,10 @@ game's data: it is one player's account.
    | `passn.sh N` | passes N party turns by the END menu, dragging the view to each member | a party spread out | as passuntil.sh |
    | `fightout.sh` | finishes a story fight (foes at 1 HP, E for a member with no Move) | ending a fight the scripts watch | not for a fight whose foes must live (but `KEEP_HP=1`: their HP kept; `HEAL=1` heals the party each pass) |
 
+   **A member held by a foe's Hold Person has no turn at all** (Lex in `fountain-user`, 2026-11-20:
+   no "Lex's turn" for two rounds; not the END menu below): `passuntil.sh N` for that member passes
+   turns until the party is defeated; check `effects.py` for 34 on it first, and paralyze the foes
+   before passing turns.
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
    Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
@@ -1119,6 +1131,12 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
   the party's levels in memory first (6 and up only take damage). Flaming Sphere cast at a foe two
   squares off struck the caster; farther off it took a slot and logged nothing.
+- **Without `spellsetup.py`** (logs/2026-11-20-f10-after-spell.md): Ester's level-1 page is Bless
+  (176,59), Curse (194), Cure Light Wounds (212), Cause Light Wounds (230), Entangle (248);
+  Invisibility to Undead (176,79), Protection from Evil (194), Remove Fear (212), Cause Fear (230).
+  Lex's: Shocking Grasp (176,59), Erdlu Claw (194), Reflected Image (212, a self spell: cast at the
+  icon's click), Friends (230). Hover an icon and shoot to read its name; the first hover after U
+  can show nothing.
 - **Ester's pages in `fountain-user`** (after `spellsetup.py 2=9`; logs/2026-11-19-final-audit-fixes.md):
   level 1's second row, second icon (194,79) is Magical Stone; LEVEL (196,171) to level 2, whose
   second row's first icon (176,79) is Hold Person (a spell save on a free target).
