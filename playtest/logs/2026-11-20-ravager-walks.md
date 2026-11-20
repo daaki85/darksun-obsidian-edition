@@ -1,0 +1,80 @@
+# Wake of the Ravager figures: before and after (six-beat walks)
+
+2026-11-20. Branch `claude/ravager-sl-figures`. Previews only: **not yet built into the game files
+or tested in the game**.
+
+**The figures:** the nine Ravager people with no good Shattered Lands body to dress them on: the five jann, the revenant, the two knights and the lord.
+They keep Ravager's own art, restyled to Shattered Lands' size and colours
+(`darksun-recompiled/tools/proto/restyle/restyle.py`).
+
+**The problem:** Ravager walks them toward and away from the camera on two frames, with the standing frame between
+them (step, stand, step, stand). Shattered Lands' party man has four walking frames per direction and never shows his standing
+frame mid-walk. Ravager's side walk is six beats (its four frames, the standing frame twice), so
+the toward and away walks also ran faster than the side one. Read from each figure's `SCMD`:
+all nine have the same layout (frames 0 / 1 / 2 the standing frames toward / away / side; 4, 5 the
+toward steps; 6, 7 the away steps; 8-11 the side steps).
+
+**The change:** toward and away become six beats like the side walk: lift, halfway, stride, then the same for
+the other leg (`4, TA1, TA, 5, TB1, TB` toward; `6, AA1, AA, 7, AB1, AB` away). The four new
+frames per direction are the figure's own standing frame with its pixels moved, nothing painted:
+- **Stride:** the forward leg 2 pixels lower (toward) or higher (away), the back leg the other way, and the arms swung opposite.
+- **Halfway:** the same moves, half as far.
+- **Gaps:** where a moved part leaves a gap, it is filled from the pixel above.
+- **The lord:** his robe takes 1 pixel, not 2.
+- **Finding the parts:** the legs are the bottom fifth of the standing frame, split at the feet's middle; the arms are the outer three columns from the chest to the hips.
+
+**Also fixed:** Ravager's script places toward step 4 by its head but step 5 by its feet, so
+the head jumped 3 pixels up every other step (in the original game too). Step 5 is now placed at
+the standing frame's head height, a one-number change in the script.
+
+## The animations
+
+The top row in each is Ravager's walk as it is (restyled), and the bottom row is the new walk. In each row:
+toward the camera, away, then sideways (unchanged, for comparing the pace). Drawn at 4x, 160 ms a beat.
+
+### 2458: jann: black hair, orange trousers
+
+![2458 before and after](img/2026-11-20-ravager-walks/walk-2458.gif)
+
+### 2413: jann: bald, yellow-ochre trousers
+
+![2413 before and after](img/2026-11-20-ravager-walks/walk-2413.gif)
+
+### 2457: jann (as 2413): bald, yellow trousers
+
+![2457 before and after](img/2026-11-20-ravager-walks/walk-2457.gif)
+
+### 2459: jann: bald, pale grey trousers
+
+![2459 before and after](img/2026-11-20-ravager-walks/walk-2459.gif)
+
+### 2460: jann: dark maroon hair, green trousers
+
+![2460 before and after](img/2026-11-20-ravager-walks/walk-2460.gif)
+
+### 2536: revenant
+
+![2536 before and after](img/2026-11-20-ravager-walks/walk-2536.gif)
+
+### 3605: white knight in silver plate
+
+![3605 before and after](img/2026-11-20-ravager-walks/walk-3605.gif)
+
+### 3606: black knight in blue-black plate
+
+![3606 before and after](img/2026-11-20-ravager-walks/walk-3606.gif)
+
+### 2575: lord in black (cloak and armour)
+
+![2575 before and after](img/2026-11-20-ravager-walks/walk-2575.gif)
+
+## The new frames
+
+Each figure on one row: toward `4, TA1, TA, 5, TB1, TB`, then away `6, AA1, AA, 7, AB1, AB`.
+
+![The stride frames of all nine](img/2026-11-20-ravager-walks/stride-frames.png)
+
+## Still to do
+- **A pixel tidy:** the edges of the moved legs are a little blocky.
+- **Into the game:** the new frames are appended to each `BMP`. Each `SCMD`'s toward and away cycles are rewritten to the six beats, with step 5's anchor fixed. Then test in the game: walking each way, standing, turning, and a fight.
+- **The standing frames:** loosening them (arms off the body, feet apart) was tried for the jann. Once the walks no longer show the standing frame mid-step, it can be done without the arms flapping.
