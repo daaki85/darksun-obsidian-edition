@@ -346,6 +346,16 @@ v x 4 + v / 16 (`darksun-recompiled/tools/proto/frame.py`). Sampling rows at (r 
 picks the wrong row now and then, enough to spoil tile matching. The frame isn't in guest memory as a
 320x200 buffer.
 
+**Wall shadows at run time** (2026-11-20, logs/2026-11-20-ravager-shadows.md): DSCLOG2's WALL SHADOWS
+darkens the floor right of and below each wall cell (GMAP C0h, DS:0538h far, 128 a row) as the game
+draws it, as DSCLOG's SHADOWS does SL's figures': INT C4h at 2B81Ch (the view's floor: page, camera x,
+y) and INT C5h at 2B97Fh (a rectangle's: page, x0, y0, x1 + 1, y1, camera x, y), their way back made
+FLOOR_POST; the page table (SL's layout) in segment load + 0BF3h, FLOOR_ON DS:29EAh, DGROUP 47E0h.
+DARK is made from the DAC when the palette changes (once a second at most, not in a fade), from
+colours 24-239. The header (signature `DSCLOGR1`) has wall_shadows at +148, the passes drawn at +150,
+DARK's builds at +152: find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
+loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs

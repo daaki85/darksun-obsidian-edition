@@ -27,6 +27,8 @@ VEC_PIC_FULL  equ 0xC0  ; PIC_FULL  (2A5E7h: the picture cache's 300 slots taken
 VEC_PIC_PLACE equ 0xC1  ; PIC_PLACE (2A6FDh: a reused slot's place in the store)
 VEC_PIC_COUNT equ 0xC2  ; PIC_COUNT (2A75Ch: the slot's number, the count raised for a new one)
 VEC_PIC_FAIL  equ 0xC3  ; PIC_FAIL  (2A58Eh: no picture loaded)
+VEC_FLOOR_ALL  equ 0xC4 ; WALL SHADOWS: the floor of the view drawn (2B81Ch)
+VEC_FLOOR_RECT equ 0xC5 ; ... and of a rectangle of it (2B97Fh)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -97,6 +99,9 @@ panel_off dw 0                  ; +140
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 1 once the game has opened the Loader's RESOURCE.GFF copy
+wall_shadows dw 1               ; +148 1: the walls cast shadows on the floor (WALL SHADOWS)
+wall_passes  dw 0               ; +150 floor passes shadowed (counted)
+dark_builds  dw 0               ; +152 times DARK was made
         times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +148 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
@@ -638,13 +643,623 @@ res_name  db 'RESOURCE.GFF'
 RES_LEN   equ $ - res_name
 copy_path db 'D:\RESOURC2.GFF', 0
 
+
+; ---- WALL SHADOWS: SL's shadows on the floor, cast by the sequel's walls ----
+; Shattered Lands draws its walls' shadows into its floor tiles; the sequel has none. Here they are
+; drawn into the floor as the game draws it, as DSCLOG's SHADOWS draws its figures' (dsclog.asm):
+; the game draws a view of the map into a page of its planar (mode X) video memory, first the floor
+; (DSUN.EXE 2B81Ch: all of the view, arguments page, camera x, y; 2B97Fh: a rectangle of it, page,
+; x0, y0, x1 + 1, y1, camera x, y: SL's 2700Eh and 27162h, the same frames), then the walls and
+; things standing on it and the figures. The two floor routines are hooked at their start
+; (PROBE_FLOOR: INT + 4 NOPs for "push bp / mov bp,sp / sub sp,N"): their way back becomes
+; FLOOR_POST, which darkens the shadows into the floor just drawn, clipped to it.
+;
+; The walls: the cells GMAP marks (DS:0538h, far, 98 rows of 128 bytes; a wall C0h, the cells
+; beside walls and furniture 40h, which no one walks on). Each wall cell's square is cast WS_DX right
+; and WS_DY down (SL's light from the upper left): an open cell is shadowed where the squares of its
+; west, north and north-west neighbours fall, so the edges are straight. DARK: each colour's nearest
+; at 3/4 strength (SL's shadowed floor: its tile 26 against 28, about 0.73 as light) among WS_FIRST
+; to WS_LAST (the sequel cycles 16-23; the top of the palette holds the interface's), made from the
+; palette when it changes (at most once a second, not while the screen is dark: a fade).
+WS_DX       equ 12
+WS_DY       equ 8
+WS_FIRST    equ 24
+WS_LAST     equ 239
+GMAP_PTR    equ 0x0538              ; DS: the region's GMAP, far
+FLOOR_ON    equ 0x29EA              ; DS: 0 when the floor routines draw nothing (SL's 2F44h)
+DGROUP      equ 0x47E0              ; the game's DS, less its load segment
+PAGES_SEG   equ 0x0BF3              ; the page routines' segment (less the load segment): its tables
+WS_SPANS_MOST equ 256
+WS_LIT      equ 4000                ; (the palette's 768 values add up to less in a fade)
+WS_EVERY    equ 18                  ; (BIOS ticks between looks for a new palette to make DARK from)
+
+probe_floor_all:
+        mov word [cs:floor_frame], 0x1C
+        mov byte [cs:floor_kind], 0
+        jmp floor_enter
+probe_floor_rect:
+        mov word [cs:floor_frame], 0x1E
+        mov byte [cs:floor_kind], 1
+floor_enter:
+        pop word [cs:resume]
+        pop word [cs:resume + 2]
+        popf
+        cmp word [cs:wall_shadows], 0
+        je .plain
+        cmp byte [cs:floor_busy], 0
+        jne .plain
+        cmp byte [FLOOR_ON], 0          ; (DS: the game's) the routine draws nothing without it
+        je .plain
+        mov byte [cs:floor_busy], 1
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp+2]                  ; the caller's way back, kept, and FLOOR_POST in its place
+        mov [cs:floor_ret], ax
+        mov ax, [bp+4]
+        mov [cs:floor_ret + 2], ax
+        mov word [bp+2], floor_post
+        mov [bp+4], cs
+        pop ax
+        pop bp
+.plain: push bp
+        mov bp, sp
+        sub sp, [cs:floor_frame]
+        jmp far [cs:resume]
+
+floor_post:
+        pushf
+        pushad
+        push ds
+        push es
+        push fs
+        mov bp, sp
+        call wall_pass
+        pop fs
+        pop es
+        pop ds
+        popad
+        popf
+        mov byte [cs:floor_busy], 0
+        jmp far [cs:floor_ret]
+F_ARGS equ 40                   ; (FLOOR_POST's frame: FS, ES, DS, PUSHAD, flags, then the arguments)
+
+; PAGE_SETUP: DSCLOG's, the sequel's page table (PAGES_SEG): page BX, its clip and its memory
+page_setup:
+        mov [cs:game_ds], ds
+        mov ax, ds
+        sub ax, DGROUP
+        add ax, PAGES_SEG
+        mov es, ax
+        shl bx, 1
+        mov ax, [es:bx + 0x404]
+        mov [cs:clip_x0], ax
+        mov ax, [es:bx + 0x604]
+        mov [cs:clip_y0], ax
+        mov ax, [es:bx + 0x804]
+        mov [cs:clip_x1], ax
+        mov ax, [es:bx + 0xA04]
+        mov [cs:clip_y1], ax
+.parent:
+        test word [es:bx + 0xC04], 0x40
+        jz .root
+        mov bx, [es:bx + 4]
+        jmp .parent
+.root:  mov ax, [es:bx + 4]
+        mov [cs:v_seg], ax
+        mov ax, [es:bx + 0x604]
+        mov [cs:v_y0], ax
+        mov ax, [es:bx + 0x404]
+        shr ax, 2
+        mov [cs:v_x0], ax
+        mov cx, [es:bx + 0x804]
+        shr cx, 2
+        sub cx, ax
+        inc cx
+        mov [cs:v_row], cx
+        ret
+
+wall_pass:
+        cld
+        mov bx, [bp + F_ARGS]           ; the page
+        call page_setup
+        cmp byte [cs:floor_kind], 0
+        jne .rect
+        mov ax, [bp + F_ARGS + 2]
+        mov [cs:cam_x], ax
+        mov ax, [bp + F_ARGS + 4]
+        mov [cs:cam_y], ax
+        jmp .clipped
+.rect:  mov ax, [bp + F_ARGS + 10]
+        mov [cs:cam_x], ax
+        mov ax, [bp + F_ARGS + 12]
+        mov [cs:cam_y], ax
+        mov ax, [bp + F_ARGS + 2]       ; x0
+        cmp ax, [cs:clip_x0]
+        jle .rx1
+        mov [cs:clip_x0], ax
+.rx1:   mov ax, [bp + F_ARGS + 6]       ; x1 + 1
+        dec ax
+        cmp ax, [cs:clip_x1]
+        jge .ry0
+        mov [cs:clip_x1], ax
+.ry0:   mov ax, [bp + F_ARGS + 4]       ; y0
+        cmp ax, [cs:clip_y0]
+        jle .ry1
+        mov [cs:clip_y0], ax
+.ry1:   mov ax, [bp + F_ARGS + 8]       ; y1
+        cmp ax, [cs:clip_y1]
+        jge .clipped
+        mov [cs:clip_y1], ax
+.clipped:
+        mov fs, [cs:far_seg]
+        call dark_check
+        cmp byte [cs:dark_ready], 0
+        je .out
+        mov ds, [cs:game_ds]
+        cmp dword [GMAP_PTR], 0
+        je .out
+        inc word [cs:wall_passes]
+        call vga_save
+        ; the cells the clip covers: rows (cam_y + clip_y0) / 16 .. (cam_y + clip_y1) / 16
+        mov ax, [cs:cam_y]
+        add ax, [cs:clip_y0]
+        sar ax, 4
+        mov [cs:c_r0], ax
+        mov ax, [cs:cam_y]
+        add ax, [cs:clip_y1]
+        sar ax, 4
+        mov [cs:c_r1], ax
+        mov ax, [cs:cam_x]
+        add ax, [cs:clip_x0]
+        sar ax, 4
+        mov [cs:c_c0], ax
+        mov ax, [cs:cam_x]
+        add ax, [cs:clip_x1]
+        sar ax, 4
+        mov [cs:c_c1], ax
+        mov si, [cs:c_r0]
+.row:   cmp si, [cs:c_r1]
+        jg .done
+        mov di, [cs:c_c0]
+.cell:  cmp di, [cs:c_c1]
+        jg .nrow
+        mov cx, di
+        mov dx, si
+        call is_wall
+        jc .ncell                       ; (a wall: its own floor not shadowed)
+        xor bl, bl                      ; BL: bit 0 the west is a wall, 1 the north, 2 the north-west
+        dec cx
+        call is_wall
+        adc bl, 0
+        inc cx
+        dec dx
+        call is_wall
+        jnc .nn
+        or bl, 2
+.nn:    dec cx
+        call is_wall
+        jnc .nnw
+        or bl, 4
+.nnw:   or bl, bl
+        jz .ncell
+        mov [cs:c_bits], bl
+        mov ax, di                      ; the cell's top left on the screen
+        shl ax, 4
+        sub ax, [cs:cam_x]
+        mov [cs:c_sx], ax
+        mov ax, si
+        shl ax, 4
+        sub ax, [cs:cam_y]
+        mov [cs:c_sy], ax
+        push si
+        push di
+        test byte [cs:c_bits], 1        ; the west wall's square: x < WS_DX, y >= WS_DY
+        jz .w
+        mov ax, 0
+        mov cx, WS_DX - 1
+        mov bx, WS_DY
+        mov dx, 15
+        call ws_rect
+.w:     test byte [cs:c_bits], 2        ; the north wall's: x >= WS_DX, y < WS_DY
+        jz .n
+        mov ax, WS_DX
+        mov cx, 15
+        mov bx, 0
+        mov dx, WS_DY - 1
+        call ws_rect
+.n:     test byte [cs:c_bits], 4        ; the north-west's: x < WS_DX, y < WS_DY
+        jz .nw
+        mov ax, 0
+        mov cx, WS_DX - 1
+        mov bx, 0
+        mov dx, WS_DY - 1
+        call ws_rect
+.nw:    pop di
+        pop si
+.ncell: inc di
+        jmp .cell
+.nrow:  inc si
+        jmp .row
+.done:  call ws_flush
+        call vga_restore
+.out:   ret
+
+; IS_WALL: CF set if map cell CX (column), DX (row) is a wall (GMAP's C0h bits); DS the game's.
+; All registers but flags kept.
+is_wall:
+        cmp cx, 128
+        jae .no
+        cmp dx, 98
+        jae .no
+        push bx
+        push es
+        les bx, [GMAP_PTR]
+        push ax
+        mov ax, dx
+        shl ax, 7
+        add bx, ax
+        add bx, cx
+        mov al, [es:bx]
+        and al, 0xC0
+        cmp al, 0xC0
+        pop ax
+        pop es
+        pop bx
+        jne .no
+        stc
+        ret
+.no:    clc
+        ret
+
+; WS_RECT: the cell's (C_SX, C_SY) pixels AX..CX (x), BX..DX (rows) darkened, within the clip
+ws_rect:
+        add ax, [cs:c_sx]
+        add cx, [cs:c_sx]
+        add bx, [cs:c_sy]
+        add dx, [cs:c_sy]
+        mov [cs:r_x0], ax
+        mov [cs:r_x1], cx
+        mov [cs:r_y1], dx
+.row:   cmp bx, [cs:r_y1]
+        jg .ret
+        push bx
+        mov dx, [cs:r_x0]
+        mov di, [cs:r_x1]
+        call ws_darken
+        pop bx
+        inc bx
+        jmp .row
+.ret:   ret
+
+; WS_DARKEN: DSCLOG's DARKEN: DX..DI on row BX noted (FS: the far block's FAR_SPANS)
+ws_darken:
+        cmp bx, [cs:clip_y0]
+        jl .out
+        cmp bx, [cs:clip_y1]
+        jg .out
+        cmp dx, [cs:clip_x0]
+        jge .x1
+        mov dx, [cs:clip_x0]
+.x1:    cmp di, [cs:clip_x1]
+        jle .span
+        mov di, [cs:clip_x1]
+.span:  cmp dx, di
+        jg .out
+        cmp word [cs:n_spans], WS_SPANS_MOST
+        jb .room
+        push dx
+        push di
+        push bx
+        call ws_flush
+        pop bx
+        pop di
+        pop dx
+.room:  mov cx, dx
+        mov ax, bx
+        sub ax, [cs:v_y0]
+        mul word [cs:v_row]
+        sub ax, [cs:v_x0]
+        imul bx, [cs:n_spans], 6
+        mov [fs:FAR_SPANS + bx], ax
+        mov [fs:FAR_SPANS + bx + 2], cx
+        mov [fs:FAR_SPANS + bx + 4], di
+        inc word [cs:n_spans]
+.out:   ret
+
+; WS_FLUSH: DSCLOG's SPANS_FLUSH: the noted runs darkened through DARK, a plane at a time
+ws_flush:
+        cmp word [cs:n_spans], 0
+        je .ret
+        push fs
+        push ds
+        push bp
+        mov fs, [cs:far_seg]
+        mov es, [cs:v_seg]
+        imul bp, [cs:n_spans], 6
+        add bp, FAR_SPANS
+        push fs
+        pop ds
+        mov bx, FAR_DARK
+        xor ah, ah
+.plane: push ax
+        mov cl, ah
+        mov ax, 0x0102
+        shl ah, cl
+        mov dx, 0x3C4
+        out dx, ax
+        pop ax
+        mov al, 4
+        mov dx, 0x3CE
+        out dx, ax
+        mov si, FAR_SPANS
+.span:  mov dl, ah
+        sub dl, [fs:si + 2]
+        and dx, 3
+        add dx, [fs:si + 2]
+        mov cx, [fs:si + 4]
+        sub cx, dx
+        jl .nspan
+        shr cx, 2
+        inc cx
+        shr dx, 2
+        add dx, [fs:si]
+        mov di, dx
+.pix:   mov al, [es:di]
+        xlatb
+        stosb
+        loop .pix
+.nspan: add si, 6
+        cmp si, bp
+        jb .span
+        inc ah
+        cmp ah, 4
+        jb .plane
+        mov word [cs:n_spans], 0
+        pop bp
+        pop ds
+        pop fs
+.ret:   ret
+
+; VGA_SAVE, VGA_RESTORE: DSCLOG's (the registers the planes are reached by, kept and given back)
+vga_save:
+        mov dx, 0x3C4
+        in al, dx
+        mov [cs:sc_index], al
+        mov al, 2
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:sc_mask], al
+        mov dx, 0x3CE
+        in al, dx
+        mov [cs:gc_index], al
+        xor bx, bx
+.save:  mov al, [cs:gc_regs + bx]
+        out dx, al
+        inc dx
+        in al, dx
+        dec dx
+        mov [cs:gc_saved + bx], al
+        inc bx
+        cmp bx, 5
+        jb .save
+        mov ax, 0x0001
+        out dx, ax
+        mov ax, 0x0003
+        out dx, ax
+        mov ah, [cs:gc_saved + 3]
+        and ah, 0xF4
+        mov al, 5
+        out dx, ax
+        mov ax, 0xFF08
+        out dx, ax
+        ret
+vga_restore:
+        mov dx, 0x3CE
+        xor bx, bx
+.put:   mov al, [cs:gc_regs + bx]
+        mov ah, [cs:gc_saved + bx]
+        out dx, ax
+        inc bx
+        cmp bx, 5
+        jb .put
+        mov al, [cs:gc_index]
+        out dx, al
+        mov dx, 0x3C4
+        mov al, 2
+        mov ah, [cs:sc_mask]
+        out dx, ax
+        mov al, [cs:sc_index]
+        out dx, al
+        ret
+gc_regs  db 0, 1, 3, 4, 5
+gc_saved db 0, 0, 0, 0, 0
+gc_index db 0
+sc_index db 0
+sc_mask  db 0
+
+; DARK_CHECK: at most every WS_EVERY ticks, the palette read; when it differs from the one DARK was
+; made from and isn't a fade's dark, DARK made from it (DSCLOG's BUILD_DARK: the nearest at 3/4,
+; keeping the hue). FS: the far block.
+dark_check:
+        push ds
+        xor ax, ax
+        mov ds, ax
+        mov ax, [0x046C]                ; (BIOS ticks)
+        pop ds
+        mov dx, ax
+        sub dx, [cs:dark_tried]
+        cmp byte [cs:dark_ready], 0
+        je .look
+        cmp dx, WS_EVERY
+        jb .ret
+.look:  mov [cs:dark_tried], ax
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        mov di, FAR_DAC
+        mov cx, 768
+        xor ebx, ebx                    ; (EBX: a checksum; SI: how bright in all)
+        xor si, si
+.read:  in al, dx
+        mov [fs:di], al
+        movzx eax, al
+        add si, ax
+        rol ebx, 3
+        xor ebx, eax
+        inc di
+        loop .read
+        cmp si, WS_LIT
+        jb .ret                         ; (a fade: kept as it was)
+        cmp ebx, [cs:dac_sum]
+        jne .make
+        cmp byte [cs:dark_ready], 0
+        jne .ret
+.make:  mov [cs:dac_sum], ebx
+        call ws_build
+        inc word [cs:dark_builds]
+        mov byte [cs:dark_ready], 1
+.ret:   ret
+
+ws_build:
+        push ds
+        push cs
+        pop ds
+        xor bx, bx
+.colour:
+        mov si, bx
+        imul si, si, 3
+        add si, FAR_DAC
+        xor di, di
+.chan:  mov al, [fs:si]
+        inc si
+        mov ah, 3
+        mul ah
+        mov dl, 4
+        div dl
+        mov [want + di], al
+        inc di
+        cmp di, 3
+        jb .chan
+        mov si, bx
+        imul si, si, 3
+        add si, FAR_DAC
+        xor ax, ax
+        xor dx, dx
+        mov di, 3
+.own:   mov al, [fs:si]
+        inc si
+        add dx, ax
+        dec di
+        jnz .own
+        imul dx, dx, 7
+        shr dx, 3
+        mov [lit_most], dx
+        mov dword [best_d], 0xFFFFFFFF
+        mov [best_c], bl
+        mov cx, WS_FIRST
+.cand:  mov word [lit_sum], 0
+        mov si, cx
+        imul si, si, 3
+        add si, FAR_DAC
+        xor di, di
+.diff:  mov al, [fs:si]
+        inc si
+        mov ah, 0
+        add [lit_sum], ax
+        sub al, [want + di]
+        cbw
+        mov [diffs + di], al
+        inc di
+        cmp di, 3
+        jb .diff
+        mov ax, [lit_sum]
+        cmp ax, [lit_most]
+        jae .worse
+        xor edx, edx
+        xor di, di
+.sq:    movsx eax, byte [diffs + di]
+        imul eax, eax
+        add edx, eax
+        inc di
+        cmp di, 3
+        jb .sq
+        movsx eax, byte [diffs]
+        movsx edi, byte [diffs + 1]
+        sub eax, edi
+        imul eax, eax
+        shl eax, 2
+        add edx, eax
+        movsx eax, byte [diffs + 1]
+        movsx edi, byte [diffs + 2]
+        sub eax, edi
+        imul eax, eax
+        shl eax, 2
+        add edx, eax
+        cmp edx, [best_d]
+        jae .worse
+        mov [best_d], edx
+        mov [best_c], cl
+.worse: inc cx
+        cmp cx, WS_LAST
+        jbe .cand
+        mov al, [best_c]
+        mov [fs:FAR_DARK + bx], al
+        inc bx
+        cmp bx, 256
+        jb .colour
+        pop ds
+        ret
+
+resume     dd 0
+floor_ret  dd 0
+floor_frame dw 0
+floor_kind db 0
+floor_busy db 0
+game_ds    dw 0
+clip_x0    dw 0
+clip_y0    dw 0
+clip_x1    dw 0
+clip_y1    dw 0
+v_seg      dw 0
+v_y0       dw 0
+v_x0       dw 0
+v_row      dw 0
+cam_x      dw 0
+cam_y      dw 0
+c_r0       dw 0
+c_r1       dw 0
+c_c0       dw 0
+c_c1       dw 0
+c_sx       dw 0
+c_sy       dw 0
+c_bits     db 0
+r_x0       dw 0
+r_x1       dw 0
+r_y1       dw 0
+n_spans    dw 0
+dark_ready db 0
+dark_tried dw 0
+dac_sum    dd 0
+want       db 0, 0, 0
+diffs      db 0, 0, 0
+lit_most   dw 0
+lit_sum    dw 0
+best_d     dd 0
+best_c     db 0
+
 resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
 
 ; ---- the far block (FAR_INIT): the ring ----
 FAR_RING   equ 0x10
-FAR_END    equ FAR_RING + NENT * ESIZE
+FAR_SPANS  equ FAR_RING + NENT * ESIZE            ; WALL SHADOWS' spans, 6 bytes each
+FAR_DAC    equ FAR_SPANS + WS_SPANS_MOST * 6      ; ... the palette DARK was made from
+FAR_DARK   equ FAR_DAC + 768                      ; ... DARK (XLAT)
+FAR_END    equ FAR_DARK + 256
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
@@ -830,6 +1445,8 @@ all_vectors:
         vector VEC_PIC_PLACE, pic_place
         vector VEC_PIC_COUNT, pic_count
         vector VEC_PIC_FAIL, pic_fail
+        vector VEC_FLOOR_ALL, probe_floor_all
+        vector VEC_FLOOR_RECT, probe_floor_rect
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

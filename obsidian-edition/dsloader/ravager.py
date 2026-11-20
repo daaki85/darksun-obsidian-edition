@@ -53,6 +53,7 @@ def _sl(name: str, at: int) -> Patch:
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
 VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
 VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_FLOOR_ALL, VEC_FLOOR_RECT = 0xC4, 0xC5  # (DSCLOG2's WALL SHADOWS)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -99,6 +100,11 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pic_place", 0x2A6FD, bytes.fromhex("c45efc"), gamepatch._interrupt(VEC_PIC_PLACE, 3)),
     Patch("pic_count", 0x2A75C, bytes.fromhex("8b365d26ff065d26"), gamepatch._interrupt(VEC_PIC_COUNT, 8)),
     Patch("pic_fail", 0x2A58E, bytes.fromhex("b8ffff"), gamepatch._interrupt(VEC_PIC_FAIL, 3)),
+    # Shattered Lands' shadows cast by the walls, drawn into the floor (DSCLOG2's WALL SHADOWS): the
+    # two floor routines' starts, "push bp / mov bp,sp / sub sp,N" (SL's 2700Eh and 27162h, the same
+    # frames), INT VEC_FLOOR_ALL and INT VEC_FLOOR_RECT, their way back DSCLOG2's FLOOR_POST.
+    Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), gamepatch._interrupt(VEC_FLOOR_ALL, 6)),
+    Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), gamepatch._interrupt(VEC_FLOOR_RECT, 6)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
