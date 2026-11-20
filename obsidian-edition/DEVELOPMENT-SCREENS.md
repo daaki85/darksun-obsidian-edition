@@ -91,7 +91,9 @@ words) and loads back. The game's scripts read and set numbers 0-136 only
 save in `playtest/saves`. Every quarter second, not while a game is loading
 (`_journal_sync`, with the party's watches), `Journal.sync` reads the id:
 
-- the one last written: nothing to do, or the chain's new head is written;
+- the one last written: the chain's new entries are flushed to disk before their
+  head is written into the game's numbers. A refused write leaves the last head
+  in memory and is retried;
 - another, read twice running (`STEADY`: a game being loaded may show one for
   a moment): a game was loaded or begun, and its chain is shown (`_follow`,
   `changed` counted so the tab draws it again). An id no entry has (the file
@@ -100,13 +102,17 @@ save in `playtest/saves`. Every quarter second, not while a game is loading
 - none (the pointer null, as in the arena outside a script's run): nothing,
   and entries added meanwhile have ids the game doesn't hold yet. A save made
   then holds the older id; when it is loaded, and that id is on the chain shown
-  till then, the entries after it whose clock is no later than the loaded
-  game's are kept as its own.
+  till then, entries after it can be recovered if their clock is strictly
+  earlier than the loaded game's. An entry from the same game second can
+  belong to play after the save was made.
 
 Before the first id is read (the Loader just started), entries wait (up to
 500) and join the game's chain when it is known; until then the tab shows the
-chain last added to. `DiceLog.detach` (the game gone or started again) has
-the id looked at afresh (`reset`). At the title the numbers read zero, an
+chain last added to. On the first stable read after attachment, the journal
+reads from disk again before assigning IDs, under the game's lock. This
+accounts for entries another Loader wrote while the window was waiting.
+`DiceLog.detach` flushes pending entries and resets that first read.
+At the title the numbers read zero, an
 empty journal; the game's own comes back when its save is loaded, and nothing
 is written to the file until something is said.
 
@@ -1398,11 +1404,11 @@ Saves under their names (`dsloader/namedsaves.py`): every few seconds the
 Loader looks at the 40 slots' files of pages 1 to 4 (not the QUICK page's: its slots are written
 over in turn, each with the day and time in its name, so a copy of each would only come and go;
 `cloud_saves` before the game folder, as
-GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
+GOG's DOSBox mounts it over the folder), and copies a save whose bytes differ to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
 slot's copy under another name is removed. **Put a save in a slot...** copies
-a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
+a file with valid party tables back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
 the slot's save first kept as `Replaced - Page P slot NN - NAME.SAV` (which
 `sync` doesn't match, so never removes).
 

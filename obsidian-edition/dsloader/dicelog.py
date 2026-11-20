@@ -1352,8 +1352,8 @@ class DiceLog:
         self.rand_addr = None
         self.quest_state = None  # (the next game's flags are read afresh)
         if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
-            self.journal.reset()
             self.journal.flush()
+            self.journal.reset()
 
     def close(self, *, stats_timeout: Optional[float] = 0.2) -> None:
         """Stop the stats thread and remove the mouse hook. Pass None to wait for the thread to exit."""
@@ -1624,6 +1624,8 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            if not loading:
+                step(self._journal_sync)  # make the committed journal head available before asking for a save
             out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
@@ -1631,7 +1633,6 @@ class DiceLog:
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
-                step(self._journal_sync)
                 step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))

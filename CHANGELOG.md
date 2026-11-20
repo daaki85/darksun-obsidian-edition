@@ -66,6 +66,15 @@ Releases, newest first (2.12.0 and older in the archive):
   after DOSBox exits. It also releases those resources when the command stops or setup fails (#139).
 - Autosaves for a new area or a finished fight wait for any quick-save or quick-load request to
   clear. When the Loader detects a loaded save, it drops any autosave that was waiting (#138).
+- The journal commits entries before giving their ID to the game. A Loader window opened
+  earlier refreshes its journal before recording, and loading an older save keeps later entries
+  with the same game time on their original branch (#135).
+- Named Saves checks the party records before restoring a file and refreshes changed saves
+  even when their file size and timestamp match (#135).
+
+**Docs**
+- The upgrade instructions include the `Journal` folder and ask players to verify their history
+  before deleting the old Loader folder (#135).
 
 ## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
 
