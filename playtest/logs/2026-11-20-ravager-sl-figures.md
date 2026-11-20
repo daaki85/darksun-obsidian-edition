@@ -222,3 +222,12 @@ and furniture. Every wall cell given an SL ashlar top tile with an edge line (`t
 tiles). In the game: wide ashlar walls along the street, the sandstone faces at full height; the
 fight went on normally (it was the Draxans' turn, so no walk this time). DOSBox stopped by pid, the
 lock released.
+
+## Shadows along the wall cells; WR's own wall art (2026-11-20)
+
+`cellshadow.py`: each wall cell's square (GMAP 192) cast 12 right and 8 down onto open cells, 1,540
+cells in 131 tiles (12 without). Variant A (WR's wall pictures, thick tops from WR's own sandstone,
+square of piece 343) in the game: thick sandstone walls, straight shadow bands along their right and
+lower sides. Gerakis's walk to a cell beside the street wall was refused ("can't go" pointer): that
+cell is GMAP 64, unchanged from the shipped file, so 64 is the game's own no-walk margin beside walls
+and furniture. DOSBox stopped by pid, the lock released.
