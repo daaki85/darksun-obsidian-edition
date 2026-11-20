@@ -62,6 +62,8 @@ Releases, newest first (2.12.0 and older in the archive):
 **Fixed**
 - The Loader stops at startup and names the file if it cannot remove a stale game data override.
   This prevents DOSBox and Dark Sun Recompiled from loading incompatible files together (#137).
+- The `dicelog` command stops its stats worker and closes its process handle before reconnecting
+  after DOSBox exits. It also releases those resources when the command stops or setup fails (#139).
 
 ## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
 

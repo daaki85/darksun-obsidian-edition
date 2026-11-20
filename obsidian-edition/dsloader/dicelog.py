@@ -1355,12 +1355,11 @@ class DiceLog:
             self.journal.reset()
             self.journal.flush()
 
-    def close(self) -> None:
-        """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
-        hook comes off."""
+    def close(self, *, stats_timeout: Optional[float] = 0.2) -> None:
+        """Stop the stats thread and remove the mouse hook. Pass None to wait for the thread to exit."""
         self._stats_stop.set()
-        if self._stats_thread is not None:  # (out of the guest's memory before its handle closes)
-            self._stats_thread.join(0.2)
+        if self._stats_thread is not None and self._stats_thread.ident is not None:
+            self._stats_thread.join(stats_timeout)
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
