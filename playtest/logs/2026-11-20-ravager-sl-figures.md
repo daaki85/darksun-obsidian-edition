@@ -190,3 +190,14 @@ written with a ranged-index GFF writer (`tools/proto/gffr.py`). Offline over all
 patches of the shadow colour: 5,546 before, 484 after, 446 with no shadows at all (the walls' own
 dark details). In the game (one run, the opening ambush): clean checkerboards, no solid patches on
 screen. DOSBox stopped by pid, the lock released.
+
+## How Ravager draws its ground (2026-11-20)
+
+The unpatched game (`$WORK/rav`) to the opening ambush; grabs and the camera read. The grab is the
+320x200 frame doubled across and rows repeated 2 or 3 times (200 distinct rows): the exact frame,
+every pixel a palette colour. Tyr's tiles matched 101-103 blocks exactly at grid offset (0, 8), but
+neither `MAP ` nor `GMAP` read as 112 x 112 fitted. The region loader (DSUN.EXE 2B5xxh) settled it:
+`RMAP`/`MAP ` (tile numbers) and `GMAP` (flags) are **98 rows of 128**; `MAP ` read that way matched
+103 of 103 blocks, the screen's top-left at map pixel = camera (1008, 1368). Tyr drawn offline from
+these rules matches the game's frame; SL's slave pens drawn the same way come out as their maze. The
+frame isn't in guest memory (no 32-byte run of it found). DOSBox stopped by pid, the lock released.

@@ -334,10 +334,17 @@ the opening street); put it in the copy as `RGN032.GFF`. **The sequel cycles pal
 run time** (torches, fire): a colour put there shows in the game's glow colours, not the file's.
 To check a colour on screen, sample the grab's pixels and match them to the region's PAL (in its
 `RGNxxx.GFF`). Shattered Lands draws region N in `GPLDATA.GFF`'s PAL N (the pens, RGN29, in PAL 41).
-**What's on screen where:** the camera is DS:1408h (x, y); a region's entities (its `ETAB`, 8 bytes
-each: x, y, height, flags, the object negated) are at screen x - camera x, y - camera y, **in the
-camera's units** (x not halved). An object's record (`OJFF`) anchors its picture by +2 (x) and +4 (y):
+**What's on screen where:** the camera is DS:1408h (x, y), in map pixels; the screen shows map
+pixels minus the camera. The ground: **`MAP ` (or `RMAP`) is 98 rows of 128 tile numbers** (not 112 x
+112), tile (c, r) at map pixel (16c, 16r); `GMAP`, the same shape, holds per-cell flags. A region's
+entities (its `ETAB`, 8 bytes each: x, y, height, flags, the object negated) stand at map pixel (x, y). An object's record (`OJFF`) anchors its picture by +2 (x) and +4 (y):
 the bottom centre. `sl_figures.py squash` lowers a region's structures for SL's angle.
+**An exact frame from a grab:** the sequel's 320x200 frame shows in DOSBox's 640x480 window with every
+pixel doubled across and rows repeated 2 or 3 times (2, 2, 3, 2, 3...), no blending: the first row of
+each repeat, every other pixel, is the frame exactly, and each pixel matches a palette colour shown as
+v x 4 + v / 16 (`darksun-recompiled/tools/proto/frame.py`). Sampling rows at (r + 0.5) x 2.4 instead
+picks the wrong row now and then, enough to spoil tile matching. The frame isn't in guest memory as a
+320x200 buffer.
 
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
