@@ -179,3 +179,14 @@ Not done yet: SL's wall tops (brick or rubble) and cast shadows, which carry muc
    wall across the street and floors, as SL's light from the upper left. Flaw: where two pictures'
    checkerboards overlap out of step (below the bottom wall) the shadow is solid black.
 5. DOSBox stopped by pid, the lock released.
+
+## The solid shadow overlaps fixed (2026-11-20)
+
+Each picture's checkerboard had its own phase, so where two shadows overlapped out of step they
+filled in solid. Now one global phase: a shadow pixel only where its screen x + y is even. 71 of the
+137 shadowed pictures are placed at both parities: each gets an odd-phase copy (BMP 5001 on) and
+its odd placements a copy of their object pointing at it (81 objects, OJFF 32100 on, in the ETAB),
+written with a ranged-index GFF writer (`tools/proto/gffr.py`). Offline over all of Tyr, solid 2x2
+patches of the shadow colour: 5,546 before, 484 after, 446 with no shadows at all (the walls' own
+dark details). In the game (one run, the opening ambush): clean checkerboards, no solid patches on
+screen. DOSBox stopped by pid, the lock released.
