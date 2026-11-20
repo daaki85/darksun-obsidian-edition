@@ -97,5 +97,7 @@ The foes held, `spellsetup.py 0=9 2=9`.
   without a roll).
 - The game's handles: the lowest free for the owner (76AE6h), a new record at the owner's first
   place (76A99h's binary search). Untimed spells' records hold 15 in their charges (9999's low byte).
-- With the whole party Paralyzed the game skips to the next event at once.
+- With the whole party Paralyzed the game skips to the next event at once. (Not so: it plays the
+  rounds through in a blink, 60 s on the clock each; and the `Round 1` was the dice log's: [the
+  next play](2026-11-20-round-one-oddity.md).)
 - Water: none new (`fountain-user`, as in ROUTE.md).

@@ -962,7 +962,16 @@ game's data: it is one player's account.
   without a roll) or a Hold Person on a `foeset.py`-held foe gives it a timer, and it acts again when
   that runs out (the dice log: `..., in place of the one it had`, later `Paralyzed ends on`). Keep holds
   and areas off foes that must stay held, or run `foeset.py C eff=34` again after. **With the whole
-  party Paralyzed the game jumps its clock to the next event** (every hold due then ends at once).
+  party Paralyzed and the foes held, the game plays the rounds through in a blink**
+  (logs/2026-11-20-round-one-oddity.md): no jump, but one round after another, 60 s each on the
+  clock, every turn skipped, a tenth of a second for six rounds, until a hold ends; the dice log
+  says `Rounds 4-5 go by at once: no one in the fight can act`. A watcher sampling every 50 ms
+  sees only the clock leap. **Getting the whole party held for real**: Lex's Rainbow Pattern
+  (`spellsetup.py 0=9 2=9 50`, wizard level 4, the only icon 176,59) at the floor among the party
+  (158,148), a second one the next round if he is still free, then `passn.sh 1` a pass at a time
+  while a count of the party's 34 records (a few lines over `live.py`) is under 4: each member saves
+  at its turn's start; each of three loads had all four held within four rounds (the pattern lasts
+  2d3 rounds: once it is gone, load again).
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had
