@@ -70,6 +70,22 @@ The same parts as for Shattered Lands (SL), the player starting WotR from the sa
 
 **Later, if wanted:** defilers' scrolls (WotR has defilers).
 
+## Step 4: the engine fixes, where each stands (2026-11-20)
+
+`playtest/ravsites.py` looks for each of SL's 454 patch sites in WotR's program by likeness (64 bytes
+round the site, the original bytes required there): 104 found, 231 with no likeness (the code
+rewritten or moved into other shapes), 88 with other bytes (most of them the same code on WotR's
+record offsets), 27 unclear. Each find is read by hand before it goes in.
+
+| Fix | Where it stands |
+|---|---|
+| Thief skills' equipment penalty, the whole party's thief roll, random monsters' count, the slowed DAM line, the view's page freed, "can't save" signed, 23 spell records (Scare's save, Cause Serious/Critical, Brave/Fear marks...) | **in** (steps 1-2) |
+| **Share Strength** (a maintained power ended on everyone) | **in**: SL's six patches at WotR's loop (61A7Dh), its effect records' fields 147h on and the live count DS:2100h |
+| **Graphics disappearing** (SSI's note 2712 is WotR's) | **studied, not yet in**: WotR's loader (2A568h) has SL's 300 slots (count DS:265Dh, the table at load + 42A2h:0CA8h, SL's slot records) and **253 of them are taken at the start of Tyr**; but its slots' users differ (the map things at DS:67BBh, 25h bytes, slot +10h, call it; the walls don't), its in-memory flag is another bit; DSCLOG's PIC_REUSE needs those worked out before a slot can be reused safely |
+| New counted as Okay | 12 of SL's 24 tests found (WotR's status at +14h); matters only between creation and the game's start: later |
+| Armor's charges, Mirror Image, Bless/Aid's measure, Absorb Disease, Acid Arrow, Negative Plane Protection, missiles from behind, Free Action, the fire elementals, people's armour unworn, resting while poisoned, fight music, the quiver's last arrow | sites not found by likeness: each to be found by hand (as the AC function was), and the bug checked to be in WotR first |
+| Psionic Blast, the shop's glow, the Effects screen's click (a switch) | sites found; their helper routines to port (step 5's with the features they belong to) |
+
 ## Order of work
 
 Each step is shown working in WotR in DOSBox (the playtest kit's `rav*` tools) before the next.

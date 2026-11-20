@@ -303,6 +303,13 @@ The AC function is the sequel's own (5D520h; its end 5D6E6h, PROBE_AC). `ravdice
 roll and each AC worked out. **To find an unnamed roll's code**: catch its entry (its frame's first words
 are the return address, then the arguments: the dice routine's count and sides) and read the code at
 that address at once, before the overlay moves, then find those bytes in DSUN.EXE.
+**Its picture cache** (2026-11-20): the loader at 2A568h (SL's 25FA6h) keeps SL's 300 slots, 16 bytes each
+(number, length, store place, memory, flags), the count at DS:265Dh, the table at load + 42A2h:0CA8h;
+253 taken at the start of Tyr (`cache.py`-style dump: the count, then each slot). Its one caller is the
+map things' routine (2A388h: DS:67BBh, 25h bytes a thing, up to 141h, the slot at +10h); the walls don't
+come through it. `ravsites.py [NAME...]` finds SL's patch sites in the sequel by likeness (about 8 minutes
+for all 454; its finds are leads to read by hand).
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs
