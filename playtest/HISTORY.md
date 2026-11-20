@@ -681,3 +681,5 @@ index](logs/README.md), by date.
 - **2026-11-20**: F10 after a spell and after a pin, 2.19.0's last "not seen" item: a cast zeroes
   the turn flags (the mend stays out); a pin after the last step got the walk back (fixed: the
   member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
+- **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
+  it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).

@@ -852,7 +852,12 @@ game's data: it is one player's account.
      (`addeffect.py N 34` there, then F10) got the walk back from 2.19.0's mend, one step before the
      game ended the turn (the game's own pin, 786CBh, only clears bit 0, already clear); since the
      fix the mend reads the member's effects at F10 and gives nothing with 34 or 51 (Stuck) on it:
-     no line, flags as the last step left them. Follow a
+     no line, flags as the last step left them. **Since DSCLOG's `F10_PIN`
+     (logs/2026-11-20-f10-held-stays.md) the game's F10 doesn't move a member with 34 or 51 on it
+     at all**: it stays on its square with its points (0 after the last step), f10watch shows no
+     change; take the pin off (`addeffect.py del N 34`) and F10 is the game's again (and the mend
+     gives the walk, its sequence kept through the pin). An `addeffect.py` pin with movement left
+     leaves bit 0 set (the game's own pin would clear it); the site reads the effect table. Follow a
      turn with `f10watch.py MEMBER SECONDS` in the background: each change of the flags, points,
      square and the turn's start words, with its time.
    - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh

@@ -24,7 +24,9 @@ effect 22h or 33h (Paralyzed or Stuck) lands, and does nothing else to the flags
 after the last step leaves them just as the last step did and the order alone can't tell. The
 member's effects are read at F10 (the game's table, owner its combatant): with either one up,
 nothing is written. (Seen in the game: Seneca made Paralyzed after her last step walked a step on
-F10 before the game ended her turn, logs/2026-11-20-f10-after-spell.md in the playtest kit.)
+F10 before the game ended her turn, logs/2026-11-20-f10-after-spell.md in the playtest kit.) Since
+DSCLOG's F10_PIN the game's F10 itself leaves such a member where it is, points and all, so this
+never sees the points come back for one; the check stays as a second guard.
 
 An attack made in the turn ends it: nothing is mended after one, before or after the walk, nor
 once the flags have changed in any other way (a spell cast, an effect, the turn's end) or the turn

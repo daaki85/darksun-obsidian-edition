@@ -24,7 +24,7 @@ may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
 where the changes came from, in brackets.
 
 Releases, newest first (2.12.0 and older in the archive):
-[2.19.1](#pull-request-124-merged-2026-11-20) (#124), [2.19.0](#pull-request-119-merged-2026-11-19) (#119), [2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
+[2.19.2](#pull-request-127-merged-2026-11-20) (#127), [2.19.1](#pull-request-124-merged-2026-11-20) (#124), [2.19.0](#pull-request-119-merged-2026-11-19) (#119), [2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
 (#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
 (#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
@@ -56,6 +56,15 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.2.0](CHANGELOG-archive.md#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
+
+## Pull request #127 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/127))
+
+Obsidian Edition 2.19.2 ([release notes](release-notes/v2.19.2.md)).
+
+**Fixed**
+
+- **F10 moved a held member**: the game's F10 put a Paralyzed or Stuck party member back on its
+  turn's first square, with its points. It now does nothing for such a member (#126).
 
 ## Pull request #124 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/124))
 
