@@ -2,6 +2,7 @@
 fixes, the config that starts it, and the launch's choice of game. With DSUN_WOTR naming the
 player's own Wake of the Ravager folder (never in the repository), the copy is made from its files."""
 import os
+import struct
 import sys
 import tempfile
 import unittest
@@ -26,8 +27,28 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow"})  # (DSCLOG2's own interrupts)
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
+
+    def test_helper_has_the_use_probes(self):
+        """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT
+        (zeros, four members' worth, inside the image)."""
+        from dsloader import dicelog
+        exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                ravager.HELPER_EXE), "rb").read()
+        image = exe[32:]
+        hdr = image.find(b"DSCLOGR1")
+        self.assertEqual(hdr % 16, 0)
+        slots = struct.unpack_from("<H", image, hdr + dicelog.TSR_SLOTS_OFF)[0]
+        self.assertGreater(slots, hdr + 268)
+        self.assertEqual(image[slots:slots + 4 * dicelog.SLOTS_SIZE], bytes(4 * dicelog.SLOTS_SIZE))
+        table = struct.unpack_from("<H", image, hdr + 144)[0]  # (ALL_VECTORS)
+        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        self.assertTrue({ravager.VEC_USE, ravager.VEC_WIN} <= vectors)
+        for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN)):
+            p = next(p for p in ravager.PATCHES if p.name == name)
+            self.assertEqual(p.replacement, bytes((0xCD, vec, 0x90)))
+
 
     def test_path_writes_dot_backslash_at_its_ds(self):
         p = next(p for p in ravager.PATCHES if p.name == "path")

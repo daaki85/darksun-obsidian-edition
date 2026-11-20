@@ -409,6 +409,21 @@ the number keys pick a reply, the top-left icon opens USE, a right click cancels
 **`ravfixes.py [OUT]`** makes a copy of the sequel (`$WORK/ravfix`) with the mod's fixes that
 carry over unchanged: five of the program's at their twins' offsets, the spell records' by name.
 
+**Its USE screen and spell slots** (2026-11-20, logs/2026-11-20-ravager-use-slots.md): SL's code at other
+addresses: the LEVEL button labelled at 7950Dh (its "add sp,0Ch" 79543h), a window brought to the front
+ending 303BEh; the window on show DS:1431h (SL's 11A4h), the level on show DS:43ECh, the list a byte a
+member DS:43E8h (1 MAGE, 2 CLERIC, 3 PSIONIC), the character on show selector 370h:0B44h (load + 3E71h), the
+USE screen's window selector 4D8h:0 (load + 45C9h), the text routine 301Bh:172h (SL's 2B7Ah:16Dh, its one
+far caller 221E3h). **The slot routine** is 626B7h (SL's 5E0ACh): the same but for its test switch (a byte,
+DS:13F8h) and which classes cast, asked of 62B45h (spell, class): wizard spells classes 11 and 18, priest
+spells by a jump table of spheres (1-8, 13-16, and 19 all of them; the spheres a byte a spell at selector
+3D0h:7D3h, load + 41F1h). **Finding a far data address**: SL's selector (the segment table at load +
+4137h, + the selector; the sequel's at load + 45E8h) and the code using it, then the same code in the
+sequel (`b8 SEL 8e c0 26 ...`). **On USE out of a fight**: MAKE <NAME> LEADER (the small top button left of a
+portrait) doesn't change whose spells show, but a click on that portrait then does; a spell is cast by
+clicking its icon (it hangs on the pointer) and then the target's portrait. The roost's second doorway's
+steps were at game (253, 90) in one run (the view differs from run to run): look at a grab first.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

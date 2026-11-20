@@ -62,6 +62,7 @@ VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)
 VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)
 VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0xC7, 0xC8, 0xC9, 0xCA, 0xCB
 VEC_IMAGE, VEC_BLOW = 0xCC, 0xCD  # (DSCLOG2's IMAGE_SPELL, IMAGE_BLOW)  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_USE, VEC_WIN = 0xCE, 0xCF  # (DSCLOG2's PROBE_USE, PROBE_WIN: the spell slots on USE)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -149,6 +150,12 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pic_place", 0x2A6FD, bytes.fromhex("c45efc"), gamepatch._interrupt(VEC_PIC_PLACE, 3)),
     Patch("pic_count", 0x2A75C, bytes.fromhex("8b365d26ff065d26"), gamepatch._interrupt(VEC_PIC_COUNT, 8)),
     Patch("pic_fail", 0x2A58E, bytes.fromhex("b8ffff"), gamepatch._interrupt(VEC_PIC_FAIL, 3)),
+    # Spell slots on the USE screen (SL's use and window probes, the same code at the sequel's offsets):
+    # DSCLOG2's PROBE_USE after the LEVEL button is labelled (79543h, SL's 70FBBh: "add sp,0Ch"), and
+    # PROBE_WIN at the end of the routine bringing a window to the front (303BEh, SL's 2BBA9h: "xor
+    # ax,ax / pop si"), each drawing the Loader's lines (the helper's SLOTS_TEXT) in the panel.
+    Patch("use", 0x79543, bytes.fromhex("83c40c"), gamepatch._interrupt(VEC_USE, 3)),
+    Patch("window", 0x303BE, bytes.fromhex("33c05e"), gamepatch._interrupt(VEC_WIN, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

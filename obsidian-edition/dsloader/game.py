@@ -1827,6 +1827,11 @@ class GameData:
         for kid in kids:
             total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total,
                                bool(self.rules & RULE_ADND_TABLES))
+        return self.robe_slots(member, bit, spell_level, total)
+
+    def robe_slots(self, member: int, bit: int, spell_level: int, total: int) -> int:
+        """TOTAL slots at SPELL_LEVEL with the member's worn robe's (the Veiled Robe's one more:
+        robes.slots, DSCLOG's PROBE_SLOTS)."""
         from . import robes
         return robes.slots(robes.worn_plus(self._worn(member)), bit, spell_level, total)
 

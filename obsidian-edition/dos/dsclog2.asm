@@ -10,7 +10,8 @@
 ; INT VEC_RAND, as DSUNLOG.EXE does at 5C22h: the same function, its seed at DS:384Ah, SL's 4122h),
 ; and DOS's file opens, so the game reads the Loader's copies of RESOURCE.GFF (D:\RESOURC2.GFF, with
 ; the spell records' fixes) and GPLDATA.GFF (D:\GPLDAT2.GFF, with the scripts' fixes:
-; dsloader/ravager.py) in place of its own.
+; dsloader/ravager.py) in place of its own. Then the engine fixes ported in step 4 (each at its
+; vector below), and the spell slots on the USE screen (PROBE_USE, PROBE_WIN: the Loader's lines).
 ;
 ; The header keeps DSCLOG's layout for the fields the Loader's dice log reads (the ring, the seed,
 ; the filters, the far block), under a signature of its own, so a Loader that doesn't know the
@@ -38,6 +39,8 @@ VEC_ACID_USE    equ 0xCA ; ACID_USE (7FD99h: an effect's charges spent: Acid's o
 VEC_ACID_ROUND  equ 0xCB ; ACID_ROUND (5B592h: a round starting: each creature's Acid burns)
 VEC_IMAGE     equ 0xCC  ; IMAGE_SPELL (84BF8h: an image taking a spell: only a foe's)
 VEC_BLOW      equ 0xCD  ; IMAGE_BLOW (5D09Fh: an attack's hit: an image may take it)
+VEC_USE       equ 0xCE  ; PROBE_USE (79543h: the USE screen's LEVEL button labelled: its spell slots drawn)
+VEC_WIN       equ 0xCF  ; PROBE_WIN (303BEh: a window brought to the front: the USE screen's slots again)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -108,7 +111,9 @@ panel_off dw 0                  ; +140
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF
-        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +148 to +267: none of them here yet, zero)
+slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one a party member,
+                                ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
@@ -1060,6 +1065,198 @@ copies  db 12, 'RESOURCE.GFF'
 res_copy db 'D:\RESOURC2.GFF', 0
 gpl_copy db 'D:\GPLDAT2.GFF', 0
 
+; ---- SPELL SLOTS ON USE: DSCLOG's PROBE_USE, PROBE_WIN and USE_DRAW ----
+; The same routines as Shattered Lands' (the USE screen's code is SL's, at other addresses): PROBE_USE
+; replaces "add sp,0Ch" (79543h; SL's 70FBBh) after the USE screen's LEVEL button is labelled, PROBE_WIN
+; "xor ax,ax / pop si" (303BEh; SL's 2BBA9h) at the end of the routine bringing a window to the front
+; (its window the argument at its BP+6). USE_DRAW prints the selected character's heading and the line
+; of the list and level on show from SLOTS_TEXT (the Loader's, in DSCLOG's format) with the game's text
+; routine. What differs is the addresses: the window on show DS:1431h (SL's 11A4h), the level on show
+; DS:43ECh (4AECh), the list a byte a member at DS:43E8h (4AE8h), the character on show at
+; (load + 3E71h):0B44h (the selector 370h's; SL's 3931h:25Bh), the USE screen's window at
+; (load + 45C9h):0 (the selector 4D8h's; SL's 40BCh:0), the text routine 301Bh:172h (SL's 2B7Ah:16Dh),
+; its colours DS:2D16h and 2D14h (3270h, 326Eh) and its format "%C%C%C%s" at DS:0F6Ah. DSCLOG's
+; PROBE_WIN also labels the save window; that isn't here.
+WIN_SHOWN    equ 0x1431            ; DS: the window on show (a far pointer)
+USE_LEVEL    equ 0x43EC            ; DS: the spell level the USE screen shows (its LEVEL button's)
+USE_LIST     equ 0x43E8            ; DS: the list it shows, a byte a member: 1 MAGE, 2 CLERIC, 3 PSIONIC
+USE_WHO_SEG  equ 0x3E71 - 0x47E0   ; the selected character's number is at this segment:USE_WHO_OFF
+USE_WHO_OFF  equ 0x0B44
+WIN_USE_SEG  equ 0x45C9 - 0x47E0   ; the USE screen's window pointer is at this segment:0
+USE_TEXT_SEG equ 0x301B - 0x47E0   ; the text routine's segment less DS's
+USE_TEXT_OFF equ 0x0172
+TEXT_COLOUR  equ 0x2D16            ; DS: the colours the game sets for its AC line (SL's 3270h, 326Eh)
+TEXT_INK     equ 0x2D14
+TEXT_FORMAT  equ 0x0F6A            ; DS: "%C%C%C%s"
+SLOTS_SIZE   equ 128
+SLOT_KEY     equ 0x80
+USE_X        equ 0x96              ; the panel under the spells (window coordinates), as SL's
+USE_FIRST_Y  equ 0x6C
+USE_STEP     equ 7
+probe_use:
+        push bp                 ; the replaced "add sp,0Ch": move the interrupt frame (and BP)
+        mov bp, sp              ; up over the 12 bytes
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 18], ax
+        mov ax, [bp + 4]
+        mov [bp + 16], ax
+        mov ax, [bp + 2]
+        mov [bp + 14], ax
+        mov ax, [bp]
+        mov [bp + 12], ax
+        pop ax
+        mov sp, bp
+        add sp, 12
+        pop bp
+        sti
+        pushad
+        push es
+        push fs
+        mov eax, [WIN_SHOWN]    ; the USE screen is up: PROBE_WIN may redraw on this window
+        mov [cs:use_win], eax
+        inc word [cs:use_count]
+        call use_draw
+        pop fs
+        pop es
+        popad
+        iret
+
+probe_win:
+        push bp
+        mov bp, sp              ; BP+2 the interrupt frame, BP+8 the routine's saved SI
+        sti
+        pushad
+        push es
+        push fs
+        mov di, [bp]            ; the routine's BP
+        mov eax, [ss:di + 6]    ; its window
+        or eax, eax
+        jz .done
+        cmp eax, [cs:use_win]
+        jne .done               ; not a USE screen PROBE_USE has drawn on
+        cmp eax, [WIN_SHOWN]
+        jne .done               ; not the window on show
+        mov bx, ds
+        add bx, WIN_USE_SEG
+        mov es, bx
+        cmp eax, [es:0]
+        jne .done               ; not the USE screen
+        inc word [cs:win_count]
+        call use_draw
+.done:  pop fs
+        pop es
+        popad
+        xor ax, ax              ; the replaced "xor ax,ax"
+        mov si, [bp + 8]        ; ... and "pop si": move the interrupt frame up over it
+        push dx
+        mov dx, [bp + 6]
+        mov [bp + 8], dx
+        mov dx, [bp + 4]
+        mov [bp + 6], dx
+        mov dx, [bp + 2]
+        mov [bp + 4], dx
+        pop dx
+        mov sp, bp
+        pop bp
+        add sp, 2
+        iret
+
+use_draw:                       ; the selected character's slots in the USE screen's panel
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov bx, [es:USE_WHO_OFF] ; the character on show
+        cmp bx, 3
+        ja .done
+        imul si, bx, SLOTS_SIZE
+        add si, slots_text
+        cmp byte [cs:si], 0
+        je .done                ; no spells
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        mov eax, [WIN_SHOWN]    ; the screen's window
+        mov [cs:c_winptr], eax
+        mov bl, [bx + USE_LIST] ; (BX still the member)
+        and bl, 7
+        shl bl, 4
+        or bl, SLOT_KEY         ; (BL the heading's key, BH the level's line's)
+        mov bh, [USE_LEVEL]
+        and bh, 0x0F
+        or bh, bl
+        push si
+        mov dx, USE_FIRST_Y
+        call .find
+        pop si
+        jc .done                ; (no heading: no spells of that list)
+        mov bl, bh
+        mov dx, USE_FIRST_Y + USE_STEP
+        call .find
+.done:  ret
+.find:  cmp [cs:si], bl         ; the line keyed BL from SI drawn at y DX, carry clear; carry set
+        je .line                ; if none
+.next:  mov al, [cs:si]
+        inc si
+        cmp al, '|'
+        je .find
+        or al, al
+        jnz .next
+        stc
+        ret
+.line:  inc si                  ; (past its key)
+        mov di, u_line          ; copy the line (up to "|" or the end) and draw it
+.copy:  mov al, [cs:si]
+        cmp al, '|'
+        je .cut
+        cmp al, 0
+        je .cut
+        mov [cs:di], al
+        inc si
+        inc di
+        cmp di, u_line + SLOTS_SIZE - 1
+        jb .copy
+.cut:   mov byte [cs:di], 0
+        push bx
+        push dx
+        push dx                 ; y
+        push word USE_X         ; x
+        push cs
+        push word u_line
+        call c_draw_line
+        pop dx
+        pop bx
+        clc
+        ret
+
+c_draw_line:                    ; DSCLOG's: stack: text far pointer, x, y (near return address first)
+        push bp
+        mov bp, sp
+        push dword [bp + 4]     ; the text, for the format's %s
+        push word [TEXT_COLOUR] ; the colours, as the game sets them for its AC line
+        push word 0x14
+        push word [TEXT_INK]
+        push dword 0x00FE00FF
+        push word 0
+        push ds
+        push word TEXT_FORMAT   ; the format: "%C%C%C%s"
+        push dword [bp + 8]     ; x, y
+        push dword [cs:c_winptr]  ; the window
+        call far [cs:c_draw]
+        add sp, 0x1C
+        pop bp
+        ret 8
+
+use_win  dd 0                   ; the USE screen's window, as PROBE_USE last saw it
+c_draw   dd 0                   ; the text routine
+c_winptr dd 0                   ; the window it prints in
+use_count dw 0                  ; PROBE_USE's and PROBE_WIN's draws (for the tests)
+win_count dw 0
+u_line   times SLOTS_SIZE db 0
+slots_text times 4 * SLOTS_SIZE db 0
+
+
 resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
@@ -1262,6 +1459,8 @@ all_vectors:
         vector VEC_ACID_ROUND, acid_round
         vector VEC_IMAGE, image_spell
         vector VEC_BLOW, image_blow
+        vector VEC_USE, probe_use
+        vector VEC_WIN, probe_win
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

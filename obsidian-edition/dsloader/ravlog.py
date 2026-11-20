@@ -12,7 +12,8 @@ Lands' (dicelog.DiceLog), run with:
     the weapon specs) is left out of the profile, so whatever reads it isn't ported yet.
   * a read-only view of the game's memory (ReadOnlyGuest): Shattered Lands' features write to DSCLOG's
     header past +146 (in DSCLOG2 that is code) and to the game's records by its layouts, so every write
-    is dropped (and counted) until a feature is ported with writes of its own.
+    is dropped (and counted) until a feature is ported with writes of its own: so far only the spell
+    slots' lines for the USE screen (DSCLOG2's SLOTS_TEXT, by its header's +148: `writable`).
   * RavDiceLog: the sequel's helper's signature, and none of Shattered Lands' side features after the
     rolls (its people, items and screens), only the rolls' lines and the fight's tally.
 """
@@ -182,6 +183,7 @@ class ReadOnlyGuest:
         self.ds: Optional[int] = None  # (set by RavDiceLog once the game's found: the type table's pointer)
         self.spells: bytes = b""  # the sequel's spell records in SL's table layout (spell_table), served
         self.spells_at = SPELLS_AT  #   from SPELLS_AT, where the game has nothing the dice log reads
+        self.writable: List[Tuple[int, int]] = []  # (address, size): the helper's buffers a ported feature writes
 
     def _types(self) -> Optional[int]:
         if self.ds is None:
@@ -206,7 +208,10 @@ class ReadOnlyGuest:
         return self.guest.read(addr, size)
 
     def write(self, addr: int, data: bytes) -> None:
-        self.dropped += 1
+        if any(start <= addr and addr + len(data) <= start + size for start, size in self.writable):
+            self.guest.write(addr, data)
+        else:
+            self.dropped += 1
 
     def __getattr__(self, name):  # (snapshot, the base address... the guest's own, but writes)
         if name in ("item_gate",):
@@ -221,13 +226,17 @@ class ReadOnlyGuest:
 # SPELLS_SEG is pointed there once the load segment is known (RavDiceLog.attach).
 SPELLS_AT = 0xF0000
 # Which classes cast which magic (a byte every 4 by class number: bit 1 wizard, bit 2 priest, as SL's
-# table at load + 3800h:118h has them). The sequel's isn't resident (an overlay's, filled as it loads),
-# so the view serves Shattered Lands' bits (the classes are the same) from CLASS_MAGIC_AT (past the
-# spells), CLASS_MAGIC_SEG pointed there at attach. (Not the spheres: the dice log's caster levels for
-# Dispel Magic aren't ported.)
+# table at load + 3800h:118h has them). The sequel has no such table: its slot routine (626B7h) asks
+# whether the class can cast a wizard spell (8) and a priest spell (73h) of a routine (62B45h): wizard
+# spells classes 11 and 18 (SL's preserver and the sequel's new one), priest spells those whose spheres
+# (its jump table: 1-8, 13-16 and 19, the sequel's new one, all spheres) meet spell 73h's (30h: every
+# priest class). The view serves those bits from CLASS_MAGIC_AT (past the spells), CLASS_MAGIC_SEG
+# pointed there at attach. (Not the spheres: the dice log's caster levels for Dispel Magic aren't ported.)
 CLASS_MAGIC_AT = 0xF4000 + game.CLASS_MAGIC_OFF
-CLASS_MAGIC = bytes(b for c in range(32) for b in ((2 if c in (1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16)
-                                                       else 1 if c == 11 else 0), 0, 0, 0))
+WIZARD_CLASSES, PRIEST_CLASSES = (11, 18), (1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 19)
+CLASS_MAGIC = bytes(b for c in range(32) for b in ((2 if c in PRIEST_CLASSES else 1 if c in WIZARD_CLASSES
+                                                       else 0), 0, 0, 0))
+SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
 
 
@@ -263,7 +272,26 @@ NAMES_START = b"Tombstone\r\x00Olive Branch\r\x00"
 
 
 class RavGameData(game.GameData):
-    """game.GameData for the sequel: its item names from its own list (NAMES_START)."""
+    """game.GameData for the sequel: its item names from its own list (NAMES_START), and none of the
+    mod's rule changes (DSCLOG2 has none of them yet: the spell slots, for one, are the game's own)."""
+
+    @property
+    def rules(self) -> int:
+        return 0
+
+    @rules.setter
+    def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: not the sequel's yet)
+        pass
+
+    def max_spell_slots(self, member: int, bit: int, spell_level: int, wis: bool = True) -> int:
+        """The game's slot routine (626B7h; SL's 5E0ACh, the same but for its test switch, a byte at
+        DS:13F8h, SL's word at 1164h, and which classes cast: CLASS_MAGIC)."""
+        if member < 4 and self.guest.read(self.ds * 16 + SLOTS_ALL_19, 1)[0] == 1:
+            return 19
+        return super().max_spell_slots(member, bit, spell_level, wis)
+
+    def robe_slots(self, member: int, bit: int, spell_level: int, total: int) -> int:
+        return total  # (the mod's robes aren't in the sequel)
 
     _names: Optional[List[str]] = None
     _names_at: Optional[int] = None
@@ -310,6 +338,7 @@ class RavDiceLog(dicelog.DiceLog):
     def __init__(self, guest, *args, **kwargs):
         apply_layout()
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
+        self._next_slots = 0.0
 
     def attach(self) -> str:
         found = game.find_data_segment(self.guest.guest)
@@ -334,11 +363,34 @@ class RavDiceLog(dicelog.DiceLog):
     def count_charges(self, entries) -> None:  # (the charges' counting writes to the game: not yet)
         return None
 
+    def _slots_table(self) -> Optional[int]:
+        """Where DSCLOG2's SLOTS_TEXT is (its header's +148), made writable; None without the helper."""
+        if self.tsr_hdr is None:
+            return None
+        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        off = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_SLOTS_OFF, 2))[0]
+        if not off:  # (a helper before the spell slots: none)
+            return None
+        table = (base + off, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
+        if table not in self.guest.writable:
+            self.guest.writable = [table]
+        return table[0]
+
+    def _write_slots(self) -> None:
+        """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
+        if self._slots_table() is not None:
+            super()._write_slots()
+
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage): the rest reads
-        and writes what isn't ported yet."""
-        return self._step(lambda: self.hp_changes(now))
+        fall matched with the weapon hits it took in, regeneration, spells' damage) and the spell slots'
+        lines for the USE screen (_write_slots, as often as Shattered Lands' writes them): the rest
+        reads and writes what isn't ported yet."""
+        out = self._step(lambda: self.hp_changes(now))
+        if now >= self._next_slots:
+            self._next_slots = now + dicelog.EFFECT_INTERVAL
+            self._step(self._write_slots)
+        return out
 
 
 def window_layout(sl_raw: dict) -> dict:

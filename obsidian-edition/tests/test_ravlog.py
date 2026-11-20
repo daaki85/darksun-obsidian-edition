@@ -83,6 +83,14 @@ class TypeTests(unittest.TestCase):
         view.write(0x100, b"\x01")
         self.assertEqual((g.writes, view.dropped, g.mem[0x100]), (0, 1, 0))
 
+    def test_view_writes_only_where_writable(self):
+        g = FakeGuest()
+        view = ravlog.ReadOnlyGuest(g)
+        view.writable = [(0x200, 0x10)]
+        view.write(0x208, b"\x01\x02")
+        view.write(0x20F, b"\x01\x02")  # (past the end: dropped whole)
+        self.assertEqual((g.writes, view.dropped, g.mem[0x208:0x20A], g.mem[0x20F]), (1, 1, b"\x01\x02", 0))
+
 
 class WindowTests(unittest.TestCase):
     def tearDown(self):
@@ -114,7 +122,8 @@ class WindowTests(unittest.TestCase):
     def test_class_magic_served(self):
         view = ravlog.ReadOnlyGuest(FakeGuest())
         magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)
-        self.assertEqual([magic[c * 4] for c in (1, 8, 9, 10, 11, 12, 13, 17)], [2, 2, 0, 0, 1, 0, 2, 0])
+        self.assertEqual([magic[c * 4] for c in (1, 8, 9, 10, 11, 12, 13, 17, 18, 19)],
+                         [2, 2, 0, 0, 1, 0, 2, 0, 1, 2])  # (18 and 19 the sequel's new classes)
 
 
 class PassTests(unittest.TestCase):
@@ -128,6 +137,40 @@ class PassTests(unittest.TestCase):
         log.hp_changes = lambda now: ["  Gerakis now 64/165 HP (-12)"]
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
+
+
+    def test_slots_written_to_the_helper(self):
+        """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148), a member's in each
+        SLOTS_SIZE bytes, and nowhere else."""
+        g = FakeGuest()
+        seg_base, hdr, slots = 0xC91B0, 0x20, 0x900
+        struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
+        struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_SLOTS_OFF, slots)
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = seg_base + hdr
+        log.slots_lines = lambda member: "\x80SPELLS LEFT|\x81WIZ 2/4" if member == 1 else ""
+        log._write_slots()
+        at = seg_base + slots + dicelog.SLOTS_SIZE
+        self.assertEqual(bytes(g.mem[at:at + 24]), b"\x80SPELLS LEFT|\x81WIZ 2/4".ljust(24, b"\0"))
+        self.assertEqual(log.guest.dropped, 0)
+        writes = g.writes
+        log._write_slots()  # (unchanged: not written again)
+        self.assertEqual(g.writes, writes)
+
+    def test_no_rule_changes(self):
+        """The sequel's game data takes none of the mod's rules (the Loader's settings name SL's)."""
+        data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFF)
+        self.assertEqual(data.rules, 0)
+        self.assertFalse(data.no_spells(0))
+
+    def test_slots_test_switch_is_a_byte(self):
+        """The slot routine's test switch is a byte at DS:13F8h (the next byte whatever it is)."""
+        g = FakeGuest()
+        ds = 0x4982
+        data = ravlog.RavGameData(g, ds)
+        g.mem[ds * 16 + ravlog.SLOTS_ALL_19:ds * 16 + ravlog.SLOTS_ALL_19 + 2] = b"\x01\x47"
+        self.assertEqual(data.max_spell_slots(0, 1, 1), 19)
+        self.assertEqual(data.robe_slots(0, 1, 1, 3), 3)
 
 
 class EffectTests(unittest.TestCase):
