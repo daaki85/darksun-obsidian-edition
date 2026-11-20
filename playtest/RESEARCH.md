@@ -338,8 +338,12 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   stop at the wall line, y 1274). Inside: Reyhan, the owner, behind the counter (the look pointer on him
   talks: 1 rent a room, 3 one night, 25 cp: "the room at the end of the corridor, second door on your
   left": the corridor runs east along the south front, the second doorway is open, its steps clicked
-  again). The room has a bed (barred to every pointer) and a round stone ring by it that took the look
-  pointer once and then was gone, with no rest (2026-11-20): how a rented room rests is still open.
+  again). Renting adds one map object, a fire ring (object 156 at 1976, 1352, record
+  `11e702b8074805000000b80748050000ffff00ffff0078fd008802250500000000ffffffff`), beside the bed (which takes
+  no pointer). Over the ring the sword isn't barred and the look icon shows; a look click on it from a step
+  away did nothing, and stepping next to it removed the object (its record all FFh) with no rest: HP
+  unchanged, DSCLOG2's REST_POISON never called (2026-11-20, from `ravager-roost`, Terrannus dead in it). How
+  it rests is still open.
 - **Keys** (gibberishh's walkthrough, in the private repository's guide/): I inventory, O overhead map, V
   character, C cast, 1-4 leader, 5 the whole party shown, 6 the leader only, F1 save (straight to the save
   screen), F2 load, Tab preferences (difficulty), A animations, H the view back to the party; in a fight
