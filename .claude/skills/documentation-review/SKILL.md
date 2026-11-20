@@ -1,6 +1,6 @@
 ---
 name: documentation-review
-description: Run a strict review of the project's documentation for accuracy, completeness, structure, and reader usefulness. Use when the user asks for a documentation review, docs review, docs audit, or doc quality check.
+description: Run a strict full review of the project documentation: redundancy, irrelevancy, bloat, inconsistency, placement and reorganisation, patch notes, loader docs, missing content, outdated screenshots, tables, and features. Use when the user asks for a documentation review, docs review, docs audit, or doc quality check.
 disable-model-invocation: true
 ---
 
@@ -26,8 +26,68 @@ merged, split, deleted or moved, so the reader needs fewer places to look.
 3. **Read as the target reader.** Player docs are read by a player who has the game and has never
    seen the code. Development docs are read by a contributor who has the repository. Check each page
    serves its reader and does not mix the two.
-4. **Run what can be run.** Run the commands, open the links, and check the paths and anchors the
+4. **Cover the full pass** below, in that order, and keep a list of every file read, every
+   picture opened, and every claim checked so the report can show its coverage.
+5. **Run what can be run.** Run the commands, open the links, and check the paths and anchors the
    docs give. Run any doc-consistency tests the repository has.
+
+## The full pass
+
+The user's usual request is: *a full review of the documentation for redundancy, irrelevancy,
+bloat, inconsistency, and opportunities for clarity and reorganization; are items in the places
+where they logically belong; review the patch notes, the loader and the other documentation; is
+anything missing; review screenshots for anything outdated, tables, and features.* Unless the user
+narrows it, a documentation review answers every one of these, each under its own heading in the
+report, even when the answer is "nothing found" (say what was checked):
+
+1. **Redundancy**: the same fact, table, list or explanation in more than one place (README,
+   PLAYER-GUIDE, FEATURES, `manual/*.html`, DEVELOPMENT*, patch notes, changelog, release notes).
+   Which copy is canonical, and what to delete or turn into a link.
+2. **Irrelevancy**: content that no reader of that page needs (process history, superseded designs,
+   notes to self, details of removed features, material that belongs in the changelog or the
+   playtest guide).
+3. **Bloat**: pages, sections, paragraphs and sentences that can shrink without losing a fact.
+   Give the size of the page and the cut you propose.
+4. **Inconsistency**: the same thing named, numbered or described differently across pages (item
+   and creature names, stats, class and kit names, key bindings, version numbers, option names,
+   menu wording, capitalisation, units); tables whose columns or order differ for the same data.
+5. **Clarity and reorganisation**: pages to merge, split, rename or move; sections in the wrong
+   page; headings that do not say what is below; an order that does not follow the reader's task.
+   Ask of every item: is it where a reader would look for it, and is it where it logically belongs
+   (player-facing vs contributor-facing vs release record vs playtest procedure)?
+6. **Patch notes**: `PATCH-NOTES.md`, `patch-notes.html`, `CHANGELOG.md`, `CHANGELOG-archive.md`,
+   `release-notes/`, and the manual's changes page. Do they agree with each other and with the
+   shipped version? Are entries in the right release, in the same style and level of detail, free
+   of duplicates, and written for the player (not the developer)? Is every user-visible change in
+   the diff or the git log since the last release in them? Does the HTML match the Markdown?
+7. **The loader**: the documentation of `dsloader/` and the start scripts (`.bat` files, dice log,
+   Show Save): what each does, its options, its files, how to start, and what a user sees.
+   Check the docs against the loader's code and its `tests/`, and run the commands the docs give
+   where they can run here.
+8. **The other documentation**: every remaining page in scope (README files, DEVELOPMENT*,
+   ITEMS, KITS, CREATURES, PEOPLE, GAME-BUGS, HOW-THE-GAME-WORKS, WEAPON-SPECS, DICE-LOG, manual/,
+   `playtest/` guides, `reports/`). Check each page's claims, links and place in the index.
+9. **Missing**: features, options, rules, files, commands, known bugs and fixes that exist in the
+   code, data or patch notes but have no documentation, and pages a reader would expect and cannot
+   find. Compare the code and the changelog against the docs, not only the docs against
+   themselves.
+10. **Screenshots** (`obsidian-edition/docs/*.png|gif`, `docs/items`, `docs/creatures`, and any in
+    the manual): open each picture (Read the image) and compare it with the text around it and
+    with the current game. Flag a screenshot that shows an old layout, old numbers, old names, an
+    old version, a changed screen or a removed feature; one the text no longer describes; one that
+    nothing references (orphan) or that is referenced but missing; duplicates that show the same
+    thing; and a picture that would do better as a table. Check size and format (the
+    docs convention is in the playtest guide's "pictures for the docs"). To retake one, follow the
+    startup procedure in `playtest/PLAYTESTING.md` first.
+11. **Tables**: every table in scope. Are the figures right (spot-check against the data or code,
+    all rows when the table is short), the columns and order consistent with the sibling tables,
+    nothing missing or extra, the sort sensible, and does it render (Markdown pipes, HTML)? Is
+    there a table of the same data elsewhere (redundancy)? Would prose be better, or a table
+    instead of prose?
+12. **Features**: `FEATURES.md`, `manual/features.html`, the README's feature list and the
+    player's guide. Is each listed feature real, current, described the same way everywhere,
+    in a sensible group, and documented where the reader is told to look? Is any shipped feature
+    (from the changelog and the code) not listed? Is any listed feature changed, merged or removed?
 
 ## Standards
 
@@ -65,6 +125,11 @@ merged, split, deleted or moved, so the reader needs fewer places to look.
 - Dead links, broken anchors, wrong paths, commands that do not run.
 - Pages that mix player and contributor material.
 - Instructions with a missing step, an unstated prerequisite, or an unexplained jargon term.
+- A screenshot that no longer matches the game or its text, an orphan or missing picture.
+- A table with a wrong, missing or inconsistent row; a feature list that differs between pages.
+- Patch notes, changelog and release notes that disagree, or that omit a user-visible change.
+- Loader or start-script documentation that does not match what the loader does.
+- Bloat: material no reader needs, or that can be cut without losing a fact.
 - Long pages with no summary at the top and no way to find the one thing the reader came for.
 
 ## Preferred remedies
@@ -81,15 +146,18 @@ duplicated, or is wrong.
 
 ## Output
 
-Report findings in this order, highest first:
+Answer the twelve parts of the full pass under their own headings (with "nothing found, checked
+X" where that is the result), and end with a plain answer to "is anything missing?" and "are items
+where they logically belong?". Then rank the findings, highest first:
 
 1. Factually wrong or contradicted statements (with the evidence: file and line of the doc, and
    the source it disagrees with).
 2. Missing documentation for changed or existing behaviour.
 3. Duplicated facts and structural problems (merge, split, move, delete).
 4. Broken links, paths, anchors, commands.
-5. Reader-task gaps (missing steps, prerequisites, results).
-6. Writing quality.
+5. Outdated screenshots, wrong or inconsistent tables and feature lists.
+6. Reader-task gaps (missing steps, prerequisites, results).
+7. Bloat, irrelevance and writing quality.
 
 Cite `file:line` for every finding and give the concrete fix. Prefer a few high-conviction findings
 over a long list of nits. List separately what was checked and found correct, and what could not be
@@ -104,4 +172,5 @@ Do not approve because the docs read well. Approve only when:
 - every user-visible change in scope is documented, in one canonical place;
 - no dead links, wrong paths or non-running commands remain;
 - no fact is duplicated where it can drift;
+- the screenshots, tables, feature lists, patch notes and loader docs in scope were each checked;
 - the repository rules above are respected.
