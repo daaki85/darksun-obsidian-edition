@@ -8,14 +8,18 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import namedsaves
+from dsloader import game, namedsaves
+from dsloader.savefile import CREATURE_CHUNK, SHEET_CHUNK
 from test_core import build_gff
 
 
 def save(name: str) -> bytes:
     """A save as the game writes one: its name in STXT 1 (the rest of the 45 bytes old text)."""
     text = name.encode("cp437") + b"\0ded game\0s"
-    return build_gff({("SAVE", 1): b"party", ("STXT", 1): text.ljust(45, b"\0")})
+    creatures = bytearray(game.CREATURE_SIZE * game.PARTY_SIZE)
+    creatures[game.CREATURE_NAME:game.CREATURE_NAME + 4] = b"Dag\0"
+    return build_gff({CREATURE_CHUNK: bytes(creatures), SHEET_CHUNK: bytes(game.SHEET_SIZE),
+                      ("STXT", 1): text.ljust(45, b"\0")})
 
 
 class NamedSavesTests(unittest.TestCase):
@@ -92,6 +96,32 @@ class NamedSavesTests(unittest.TestCase):
         self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Pens.SAV"])
         self.put(self.game, "SAVE01.SAV", save("Pens") + b"x", 3000)  # (touched: same bytes)
         self.assertEqual(namedsaves.sync(self.game, self.named), [])
+
+    def test_same_size_and_time_other_bytes(self):
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 1000)
+        namedsaves.sync(self.game, self.named)
+        self.put(self.game, "SAVE01.SAV", save("Camp"), 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Camp.SAV"])
+        self.assertEqual(os.listdir(self.named), ["Page 1 slot 01 - Camp.SAV"])
+
+    def test_copy_removed_during_sync(self):
+        from unittest.mock import patch
+
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 1000)
+        name, = namedsaves.sync(self.game, self.named)
+        copies = namedsaves._copies(self.named)
+        os.remove(os.path.join(self.named, name))
+        with patch.object(namedsaves, "_copies", return_value=copies):
+            self.assertEqual(namedsaves.sync(self.game, self.named), [name])
+
+    def test_restore_rejects_incomplete_save_before_replacing_slot(self):
+        copy = os.path.join(self.tmp.name, "partial.SAV")
+        self.put(self.tmp.name, "partial.SAV", build_gff({("STXT", 1): b"Incomplete\0"}), 1000)
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 2000)
+        with self.assertRaises(ValueError):
+            namedsaves.restore(copy, self.game, 1, 1, self.named)
+        self.assertEqual(namedsaves.slot_name(self.game, 1, 1), "Pens")
+        self.assertFalse(os.path.exists(self.named))
 
     def test_cloud_saves_first(self):
         """GOG's cloud_saves (mounted over the folder) before the game folder's own."""

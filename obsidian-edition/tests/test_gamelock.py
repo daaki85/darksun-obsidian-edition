@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from unittest import mock
 
@@ -286,61 +287,61 @@ class SettingsTests(unittest.TestCase):
 
         class Stop(Exception):
             pass
-        got = {}
-
-        class Log:
-            def __init__(self, guest, record_everything=False):
-                pass
-
-            def answer_stats_in_background(self):
-                pass
-
-            def use_settings(self, settings, picked_known=True):
-                got.update(settings=settings, known=picked_known)
-                raise Stop()
-        with mock.patch.object(launch, "load_settings", load), mock.patch.object(cli, "connect", lambda args: object()), \
-                mock.patch("dsloader.dicelog.DiceLog", Log), mock.patch("time.sleep"), \
+        log, guest = mock.Mock(), mock.Mock()
+        log.use_settings.side_effect = Stop
+        with mock.patch.object(launch, "load_settings", load), mock.patch.object(cli, "connect", return_value=guest), \
+                mock.patch("dsloader.dicelog.DiceLog", return_value=log), mock.patch("time.sleep"), \
                 mock.patch("builtins.print"):
             with self.assertRaises(Stop):
                 cli._follow(argparse.Namespace(pid=None, host_base=None, raw=False, all=False))
         self.assertEqual(tries, [1])
-        self.assertEqual(got["settings"]["pickpocketed"], ["Dag|41|7|Trader@500"])
-        self.assertIs(got["settings"]["helms"], False)
-        self.assertTrue(got["known"])
+        settings, = log.use_settings.call_args.args
+        self.assertEqual(settings["pickpocketed"], ["Dag|41|7|Trader@500"])
+        self.assertIs(settings["helms"], False)
+        log.use_settings.assert_called_once_with(settings)
+        log.close.assert_called_once()
+        guest.proc.close.assert_called_once()
 
     def test_dicelog_waits_for_dosbox_again(self):
-        """The dicelog command with DOSBox gone mid-run (ProcessError): said, and waited for again,
-        not the bare "error:" it ended with."""
-        from unittest import mock
+        """When DOSBox exits, close the old log and handle before connecting again."""
+        from dsloader.dicelog import DiceLog
         from dsloader.process import ProcessError
-        said, made = [], []
+        first_guest, next_guest = mock.Mock(), mock.Mock()
+        first_log, next_log = DiceLog(first_guest), DiceLog(next_guest)
+        for log in (first_log, next_log):
+            self.addCleanup(log.close)
+            log.guest.proc.close.side_effect = lambda log=log: self.assertFalse(log._stats_thread.is_alive())
+        worker_started = threading.Event()
 
-        class Stop(Exception):
-            pass
+        def answer_stats():
+            worker_started.set()
+            first_log._stats_stop.wait(5)
+            return False
 
-        class Log:
-            def __init__(self, guest, record_everything=False):
-                made.append(1)
+        def disconnect():
+            self.assertTrue(worker_started.wait(5))
+            raise ProcessError("DOSBox closed")
 
-            def answer_stats_in_background(self):
-                pass
+        first_log._answer_stats = answer_stats
+        first_log.attach = mock.Mock(return_value="Dice log attached.")
+        first_log.still_patched = disconnect
+        next_log.attach = mock.Mock(side_effect=KeyboardInterrupt)
 
-            def use_settings(self, settings, picked_known=True):
-                if len(made) == 2:
-                    raise Stop()
+        def connect(args):
+            if not first_log.attach.called:
+                return first_guest
+            first_guest.proc.close.assert_called_once()
+            self.assertFalse(first_log._stats_thread.is_alive())
+            return next_guest
 
-            def attach(self):
-                raise ProcessError("DOSBox closed")
-
-            def detach(self):
-                pass
-        with mock.patch.object(cli, "connect", lambda args: object()), \
-                mock.patch("dsloader.dicelog.DiceLog", Log), mock.patch("time.sleep"), \
-                mock.patch("builtins.print", lambda *a, **k: said.append(" ".join(map(str, a)))):
-            with self.assertRaises(Stop):
-                cli._follow(argparse.Namespace(pid=None, host_base=None, raw=False, all=False))
-        self.assertEqual(len(made), 2)
-        self.assertTrue(any("DOSBox can't be read any more (DOSBox closed). Waiting" in line for line in said))
+        with mock.patch.object(cli, "connect", side_effect=connect) as opened, \
+                mock.patch("dsloader.dicelog.DiceLog", side_effect=[first_log, next_log]), mock.patch("time.sleep"), \
+                mock.patch("builtins.print") as said:
+            cli._follow(argparse.Namespace(pid=None, host_base=None, raw=False, all=False))
+        self.assertEqual(opened.call_count, 2)
+        said.assert_any_call("DOSBox can't be read any more (DOSBox closed). Waiting for it...", flush=True)
+        next_guest.proc.close.assert_called_once()
+        self.assertFalse(next_log._stats_thread.is_alive())
 
     def test_play_says_settings_unreadable(self):
         """Play Dark Sun (in-game rolls) with settings.json held elsewhere: said as the window says
@@ -391,6 +392,45 @@ class SettingsTests(unittest.TestCase):
 
 
 class ConnectTests(unittest.TestCase):
+    def test_dicelog_closes_the_process_when_log_construction_fails(self):
+        guest = mock.Mock()
+        with mock.patch.object(cli, "connect", return_value=guest), \
+                mock.patch("dsloader.dicelog.DiceLog", side_effect=RuntimeError("setup failed")):
+            with self.assertRaisesRegex(RuntimeError, "setup failed"):
+                cli._follow_once(argparse.Namespace(raw=False, all=False))
+        guest.proc.close.assert_called_once()
+
+    def test_dicelog_closes_the_process_when_the_worker_cannot_start(self):
+        guest = mock.Mock()
+        with mock.patch.object(cli, "connect", return_value=guest), \
+                mock.patch("threading.Thread.start", side_effect=RuntimeError("cannot start worker")):
+            with self.assertRaisesRegex(RuntimeError, "cannot start worker"):
+                cli._follow_once(argparse.Namespace(raw=False, all=False))
+        guest.proc.close.assert_called_once()
+
+    def test_dicelog_reattaches_inside_the_same_dosbox(self):
+        guest, log = mock.Mock(), mock.Mock()
+
+        def attach():
+            if log.attach.call_count == 1:
+                return "Dice log attached."
+            log.detach.assert_called_once()
+            log.close.assert_not_called()
+            guest.proc.close.assert_not_called()
+            raise KeyboardInterrupt
+
+        log.attach.side_effect = attach
+        log.still_patched.return_value = False
+        with mock.patch.object(cli, "connect", return_value=guest) as opened, \
+                mock.patch.object(launch, "load_settings", return_value={}), \
+                mock.patch("dsloader.dicelog.DiceLog", return_value=log), mock.patch("builtins.print"):
+            cli._follow_once(argparse.Namespace(raw=False, all=False))
+        opened.assert_called_once()
+        log.answer_stats_in_background.assert_called_once()
+        self.assertEqual(log.attach.call_count, 2)
+        log.close.assert_called_once_with(stats_timeout=None)
+        guest.proc.close.assert_called_once()
+
     def test_the_started_dosbox_by_its_pid(self):
         """With another DOSBox running too, the one the Loader started is attached by its pid; an
         explicit --pid still wins; with neither, two DOSBoxes ask for --pid."""

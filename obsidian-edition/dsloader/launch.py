@@ -598,8 +598,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     companion's additions: SEGOBJEX.GFF with its item icons (icons.py; without it the items keep
     the plain icons) and Kalzith's object, RESOURCE.GFF with Cat's Grace's icon, GPLDATA.GFF and
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
-    the saved settings if none given). Returns why the game can't be patched, or None; what of the
-    copies couldn't be made is in LEFT_OUT (left_out_line), for the player to be told."""
+    the saved settings if none given). Returns why the EXE can't be patched, or None. LEFT_OUT
+    lists any additions that were skipped. Raises LaunchError if an unusable override remains."""
     del LEFT_OUT[:]
     from . import alagorn
     del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
@@ -627,8 +627,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: not in the game's folder)")
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
         LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: {e})")
-    if not objects_ok:  # (an earlier start's copy taken away: DSCLOG would open it in place of the
-        _drop(os.path.join(DOS_DIR, icons.OBJECTS_FILE))  # game's, made with other switches)
+    if not objects_ok:
+        _remove_override(os.path.join(DOS_DIR, icons.OBJECTS_FILE))
     # the regions with a person given an object of their own for a new item (worldgear.py): only
     # with that object in the objects copy (a region naming an object that isn't there would stop
     # the game)
@@ -642,20 +642,18 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     for region in worldgear.regions(worldgear.GIFTS + worldgear.MAGIC):
         if region == kalzith.REGION and with_kalzith:
             continue
-        name, dest = worldgear.region_file(region), os.path.join(DOS_DIR, worldgear.region_file(region))
+        name = worldgear.region_file(region)
+        dest = os.path.join(DOS_DIR, name)
         mine = [g for g in gifts if g.region == region and g.clone and g.clone[1] in new_objects]
-        try:
-            source = _find_file(game_dir, name)
-            if mine and source:
-                worldgear.write_region(source, dest, region, mine)
-            elif os.path.exists(dest):
-                os.remove(dest)
-        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
-            LEFT_OUT.append(f"the gifts placed in {name} ({e})")
+        source = _find_file(game_dir, name)
+        if mine and source:
             try:
-                os.remove(dest)
-            except OSError:
-                pass
+                worldgear.write_region(source, dest, region, mine)
+            except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
+                LEFT_OUT.append(f"the gifts placed in {name} ({e})")
+            else:
+                continue
+        _remove_override(dest)
     # Kalzith, the slave pens' defiler: in his pen and with his conversation only if the objects
     # copy has him too (the pens naming an object that isn't there would stop the game)
     # (Semyon, the vulture and the pens' questions are in the scripts' copy too: with Kalzith off,
@@ -677,11 +675,6 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
                 raise OSError(f"no {name}")
             write(source, os.path.join(DOS_DIR, name))
         LEFT_OUT.extend(alagorn.LEFT_OUT)  # (a story menu of Alagorn's too long for the game's scripts: told)
-        if not with_kalzith and not pens_clones:
-            try:
-                os.remove(os.path.join(DOS_DIR, kalzith.REGION_FILE))
-            except FileNotFoundError:
-                pass  # (no region copy to take away)
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
         # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
         # him off, the region's own: said too, not dropped unseen)
@@ -689,13 +682,12 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
                         + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
-            try:
-                os.remove(os.path.join(DOS_DIR, name))
-            except OSError:
-                pass
+            _remove_override(os.path.join(DOS_DIR, name))
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
-    scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE), _find_file(game_dir, "GPLDATA.GFF"),
-                               os.path.join(DOS_DIR, scenepointer.POINTER_FILE))
+    pointer = os.path.join(DOS_DIR, scenepointer.POINTER_FILE)
+    if not scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE),
+                                      _find_file(game_dir, kalzith.SCRIPTS_FILE), pointer):
+        _remove_override(pointer)
     resources_ok = False
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
@@ -705,16 +697,19 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
         LEFT_OUT.append(f"the new spells' icons and texts ({icons.RESOURCE_FILE}: {e})")
     if not resources_ok:  # (as the objects' copy: no earlier start's in its place)
-        _drop(os.path.join(DOS_DIR, icons.RESOURCE_FILE))
+        _remove_override(os.path.join(DOS_DIR, icons.RESOURCE_FILE))
     return None
 
 
-def _drop(path: str) -> None:
-    """PATH taken away if it is there (a copy the game must not open)."""
+def _remove_override(path: str) -> None:
+    """Remove an unusable copy. The game would prefer it to the original if it remained."""
     try:
         os.remove(path)
-    except OSError:
+    except FileNotFoundError:
         pass
+    except OSError as e:
+        raise LaunchError(f'Could not remove the game data override "{path}" ({e.strerror or e}). '
+                          "Check whether the file is in use and whether you can delete it, then try again.") from e
 
 
 # One Loader at a time for this mod's game: the window, `play` and `dicelog` each take GAME_LOCK
@@ -1161,8 +1156,8 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
     """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
     can't run, why. Takes the game's lock first (hold_game, WHAT naming this Loader): GameBusy if
     another has the game; the caller lets it go (release_game) once the game has closed. Raises
-    LaunchError, too, when settings.json is there but can't be read: the copies are built by the
-    player's switches, never by the defaults in their place."""
+    LaunchError if the saved settings can't be read or an unusable game data override can't be
+    removed."""
     game_dir = os.path.abspath(game_dir)  # (DOSBox runs in its own folder: a relative path would miss)
     try:
         settings = load_settings(strict=True, tries=40)  # (two seconds: held a moment, then read)
