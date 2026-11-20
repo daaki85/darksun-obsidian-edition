@@ -1,12 +1,12 @@
 # Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.19.1 · What the mod adds and changes, and its main bug fixes*
+*A Dark Sun: Shattered Lands mod · Current version 2.19.2 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. The new content and a few rules are switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes describe version 2.19.1, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
+*These notes describe version 2.19.2, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
 
 Each release also has these notes as a web page, [`patch-notes.html`](https://github.com/daaki85/darksun-obsidian-edition/releases/latest/download/patch-notes.html), with a button that copies them as Markdown for forums.
 
