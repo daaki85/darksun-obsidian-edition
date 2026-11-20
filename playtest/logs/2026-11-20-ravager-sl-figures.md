@@ -212,3 +212,13 @@ walls on the street and in the rooms. Ar'Anda walked into a wall's shadow (Move 
 scrolling 40 left, the shadows moving with the ground). DOSBox stopped by pid, the lock released.
 
 **Water:** none seen in this part of Tyr.
+
+## Heights restored, thick walls (2026-11-20)
+
+After the second comparison (the angle not established): the squash undone; WR's own wall
+pictures with ashlar tops at full height (`build_tops.py nosquash`). `GMAP` overlaid on the opening
+street: 192 marks wall cells (two cells wide where WR draws 18-pixel strips), 64 cells next to walls
+and furniture. Every wall cell given an SL ashlar top tile with an edge line (`thickwalls.py`, 31 new
+tiles). In the game: wide ashlar walls along the street, the sandstone faces at full height; the
+fight went on normally (it was the Draxans' turn, so no walk this time). DOSBox stopped by pid, the
+lock released.
