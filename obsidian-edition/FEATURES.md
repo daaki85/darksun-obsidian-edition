@@ -931,7 +931,8 @@ third of a second, **Quick save** floats over the leader, and the dice log says 
 saves with the newest chosen: **Enter** (or LOAD) loads it. And the game saves by itself a few
 seconds after the party comes into another area (`Auto - Day 1, 16:31 - The arena`) and after a
 fight ends (`Auto - Day 1, 00:56 - after a fight`; at most one a minute, so the arena's waves don't
-fill the page).
+fill the page). An autosave due during a quick save or quick load waits until the game is back on
+the map and ready. When the Loader detects a loaded save, it drops any autosave that was waiting.
 
 All of them are on a fifth page of the [save and load window](#more-saves), **QUICK** (the button
 under PAGE 4, or PgDn past page 4): its first five rows are the quick saves and the last five the

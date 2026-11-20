@@ -330,6 +330,72 @@ class PolicyTests(unittest.TestCase):
         self.tick(30)
         self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0)  # (once for the area)
 
+    def test_area_autosave_waits_for_quick_save_key(self):
+        self.tick()
+        self.gd.area = 0x2A
+        self.tick()
+        self.press(0)
+        self.assertEqual(self.tick(q.AREA_WAIT), [])
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ01.SAV", "Quick - Day 47, 14:20"))
+
+        self.answer(q.DONE)
+        self.assertEqual(self.tick(), ['Quick save: "Quick - Day 47, 14:20" (the QUICK page, slot 1)'])
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ06.SAV", "Auto - Day 47, 14:20 - The arena"))
+        self.answer(q.DONE)
+        self.assertEqual(self.tick(), ['Autosave: "Auto - Day 47, 14:20 - The arena" (the QUICK page, slot 6)'])
+        self.tick(30)
+        self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0)
+
+    def test_area_autosave_survives_quick_load_with_no_saves(self):
+        self.tick()
+        self.gd.area = 0x2A
+        self.tick()
+        self.press(1)
+        self.assertEqual(self.tick(q.AREA_WAIT), ["Quick load: no quick save or autosave yet"])
+        self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0)
+
+        self.tick()
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ06.SAV", "Auto - Day 47, 14:20 - The arena"))
+
+    def test_deferred_area_autosave_waits_in_the_next_area(self):
+        self.tick()
+        self.gd.area = 0x2A
+        self.tick()
+        self.press(0)
+        self.tick(q.AREA_WAIT)
+        self.assertEqual(self.asked()[1], "SAVQ01.SAV")
+
+        self.gd.area = 0x2B
+        self.answer(q.DONE)
+        self.tick()
+        self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0)
+        self.tick(q.AREA_WAIT)
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ06.SAV",
+                                        q.auto_name(q.journal.region_name(0x2B), self.gd.clock)))
+
+    def test_deferred_autosave_after_the_quick_load_window_closes(self):
+        for loaded in (False, True):
+            with self.subTest(loaded=loaded):
+                self.qs = q.QuickSave()
+                self.gd.area = 0x29
+                self.answer(0)
+                self.tick()
+                self.gd.area = 0x2A
+                self.tick()
+                with open(os.path.join(self.dir, q.slot_file(1)), "wb") as save:
+                    save.write(b"x")
+                self.press(1)
+                self.tick(q.AREA_WAIT)
+                self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), q.REQ_LOAD)
+
+                self.tick(running=False)
+                self.answer(q.DONE)
+                self.tick(running=False)
+                self.tick(loading=loaded)
+                self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0)
+                self.tick(q.AREA_WAIT)
+                self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), 0 if loaded else q.REQ_SAVE)
+
     def test_no_autosave_while_the_map_is_away(self):
         """A talk, a screen or a window up as the party comes in (the main loop not running, or the
         game not on the map): the wait starts when the map is back."""
@@ -388,6 +454,20 @@ class PolicyTests(unittest.TestCase):
         self.tick()
         self.tick(q.FIGHT_WAIT + 1)
         self.assertEqual(self.gd.hdr(q.TSR_SAVE_REQ), q.REQ_SAVE)
+
+    def test_fight_autosave_waits_for_save_in_progress(self):
+        self.tick()
+        self.gd.fight = True
+        self.tick()
+        self.gd.fight = False
+        self.press(0)
+        self.tick()
+        self.tick(q.FIGHT_WAIT)
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ01.SAV", "Quick - Day 47, 14:20"))
+
+        self.answer(q.DONE)
+        self.tick()
+        self.assertEqual(self.asked(), (q.REQ_SAVE, "SAVQ06.SAV", "Auto - Day 47, 14:20 - after a fight"))
 
     def test_autosave_switched_off(self):
         self.qs.auto = False
