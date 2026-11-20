@@ -2703,28 +2703,35 @@ class DiceLog:
         return self._names.get(combatant, name)
 
     def effect_changes(self, now: float = 0.0) -> List[str]:
-        """Lines for effects that started or ended since the last look."""
-        current = Counter(self.game.effects())
-        for eff in current:
+        """Lines for effects that started or ended since the last look. Records are told apart by
+        their spell and handle too: an effect put on a creature that has it already takes the old
+        record's place (Rainbow Pattern on a held foe, a second Hold Person), which is said as
+        such, not as an end and a start."""
+        current = Counter(self.game.effect_records())
+        for eff, _, _ in current:
             self._name(eff.owner)
             self._name(eff.caster)
         loading = self._party_check(now)
         if self._effects is None or loading:
             self._effects = current  # the first look, or just loaded: remember what is active
             return []
-        started, ended = current - self._effects, self._effects - current
+        started = [eff for eff, _, _ in (current - self._effects).elements()]
+        ended = [eff for eff, _, _ in (self._effects - current).elements()]
         self._effects = current
+        replaced = {(e.owner, e.id) for e in started} & {(e.owner, e.id) for e in ended}
         out = []
-        by_cast: Dict[Tuple[int, int], List[int]] = {}
-        for eff in started.elements():
-            by_cast.setdefault((eff.caster, eff.id), []).append(eff.owner)
-        for (caster, eid), owners in by_cast.items():
+        by_cast: Dict[Tuple[int, int, bool], List[int]] = {}
+        for eff in started:
+            by_cast.setdefault((eff.caster, eff.id, (eff.owner, eff.id) in replaced), []).append(eff.owner)
+        for (caster, eid, instead), owners in by_cast.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
             rule = game.effect_rule(eid, self.game.spells_manual())
             rule = f": {rule}" if rule else ""
             if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
                 rule = ": it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's turning, CHILL_UNDEAD's Chill Touch)
+            if instead:  # (the one it had is gone: this one, with its own time, holds from now)
+                rule = f", in place of the {'ones they' if len(owners) > 1 else 'one it'} had{rule}"
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
                 out.append(f"{name} on {targets}{rule}")
             else:
@@ -2735,8 +2742,9 @@ class DiceLog:
                     if creature is not None:
                         out += aging.hasted(self.game, creature)
         by_end: Dict[int, List[int]] = {}
-        for eff in ended.elements():
-            by_end.setdefault(eff.id, []).append(eff.owner)
+        for eff in ended:
+            if (eff.owner, eff.id) not in replaced:
+                by_end.setdefault(eff.id, []).append(eff.owner)
         for eid, owners in by_end.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             out.append(f"{name} ends on {', '.join(self._name(o) for o in owners)}")

@@ -57,6 +57,17 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed: the dice log**
+- An effect put on someone who has it already (Rainbow Pattern or a second Hold Person on a held
+  creature) takes the old one's place in the game: the log said `Paralyzed ends on Y` beside the new
+  caster's line though the hold went on, or nothing at all when the caster stayed the same. It now
+  says `..., in place of the one it had` and no end (records told apart by spell and handle too).
+
+**Dev**
+- A play log: [the "Paralyzed ends on Templar" of the F10 real-pin play](playtest/logs/2026-11-20-paralyzed-ends-oddity.md).
+
 ## Pull request #127 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/127))
 
 Obsidian Edition 2.19.2 ([release notes](release-notes/v2.19.2.md)).
