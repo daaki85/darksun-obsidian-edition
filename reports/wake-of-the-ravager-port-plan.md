@@ -91,7 +91,9 @@ record offsets), 27 unclear. Each find is read by hand before it goes in.
 | **Free Action** | **not needed**: SSI's own handler (661A0h) also takes off Petrified, No Attacks, Cannot Move (its Stuck), Cannot Use Psionics and Can't Cast |
 | The fire elementals' resistances | set aside: the sequel's monster kinds aren't SL's table (not found by its classes) |
 | New counted as Okay | 12 of SL's 24 tests found (WotR's status at +14h); matters only between creation and the game's start: later |
-| Mirror Image, Acid Arrow, Negative Plane Protection, people's armour unworn, resting while poisoned, fight music, the quiver's last arrow | sites not found by likeness: each to be found by hand (as the AC function was), and the bug checked to be in WotR first |
+| **Negative Plane Protection** (saved as against Vampiric Touch, which allows none) | **in, not yet seen in play**: the same code at 84DD2h (effect 79 "Protected vs Life Drain" taken off, the save as against spell 38, Vampiric Touch, +1Fh A0h: no save allowed, so the save routine 66D26h answers "not saved" at once). DSCLOG2's NPP_SAVE (INT C6h) at 84DDAh: the save as against POISON's record (179: 21h, paralysis, poison and death; no spare record to copy Vampiric Touch into as DSCLOG does). The helper loads with it (2026-11-20) |
+| Mirror Image, Acid Arrow, people's armour unworn | sites not found by likeness: each to be found by hand (as the AC function was), and the bug checked to be in WotR first. Acid Arrow: the effect-adding check (SL's acid_rounds) is at 7FAA6h, the rest to find |
+| A fight's music, the quiver's last arrow | **not found**: no read of a region's creature levels with a word index (SL's 14-creature loop isn't in the sequel), and the sequel's ammunition code isn't SL's (no "mov es:[6],al", no cut of the round's attacks near its attack set-up): rewritten; to look at again with the music and missiles in play |
 | Psionic Blast, the shop's glow, the Effects screen's click (a switch) | sites found; their helper routines to port (step 5's with the features they belong to) |
 
 ## Order of work

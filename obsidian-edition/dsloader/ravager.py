@@ -58,7 +58,8 @@ def _sl(name: str, at: int) -> Patch:
 VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
 VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3
 VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)
-VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)
+VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -116,6 +117,10 @@ PATCHES: Tuple[Patch, ...] = (
     # each member's effects taken before the free Neutralize Poison (SL's rest_cures_*, which moved the
     # casts): DSCLOG2's REST_POISON answers the test (8D02Dh) from the effects as they are then.
     Patch("rest_cures_first", 0x8D02D, bytes.fromhex("f646ea80"), bytes((0xCD, VEC_REST_POISON, 0x90, 0x90))),
+    # Negative Plane Protection saved as against Vampiric Touch (here spell 38), whose record allows no
+    # save, so it never stopped an undead's touch (SL's npp_save): DSCLOG2's NPP_SAVE in the place of
+    # "add sp,4 / push 6 / push 26h" (84DDAh) makes the save one against paralysis, poison and death.
+    Patch("npp_save", 0x84DDA, bytes.fromhex("83c4046a066a26"), bytes((0xCD, VEC_NPP)) + b"\x90" * 5),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word

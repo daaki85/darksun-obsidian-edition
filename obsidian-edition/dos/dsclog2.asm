@@ -30,6 +30,7 @@ VEC_PIC_COUNT equ 0xC2  ; PIC_COUNT (2A75Ch: the slot's number, the count raised
 VEC_PIC_FAIL  equ 0xC3  ; PIC_FAIL  (2A58Eh: no picture loaded)
 VEC_REAR      equ 0xC4  ; MISSILE_REAR (5C99Fh: an attack's "from behind" pushed for the AC function)
 VEC_REST_POISON equ 0xC5 ; REST_POISON (8D02Dh: the rest's test for the Poisoned, after the free cures)
+VEC_NPP       equ 0xC6  ; NPP_SAVE (84DDAh: Negative Plane Protection's save, against an undead's touch)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -384,6 +385,26 @@ rest_poison:
         pop bp
         iret
 rest_reread dw 0                        ; times the test was answered (for the tests)
+
+; ---- NPP_SAVE: DSCLOG's NS_NPP ----
+; Where an undead's draining touch meets Negative Plane Protection (effect 79) on its target (84DD2h:
+; the effect taken off, then "add sp,4 / push 6 / push 26h" and the save, 598h:75h, the protection
+; stopping the touch and hurting the undead if saved), the save was as against Vampiric Touch (38),
+; whose record allows none (+1Fh A0h: bit 0 clear), so the protection never stopped anything. INT
+; VEC_NPP in the 7 bytes' place (5 NOPs after it) makes the two words still pushed (the effect's
+; removal's arguments) the save's: 6, and POISON's record (179: +1Fh 21h, a save against paralysis,
+; poison and death allowed, AD&D's against death magic; the sequel has no spare record to copy
+; Vampiric Touch into, as DSCLOG does).
+NPP_RECORD equ 179
+npp_save:
+        push bp
+        mov bp, sp                      ; [bp+2] IP, [bp+4] CS, [bp+6] FLAGS, [bp+8] the next pushed
+        mov word [bp + 8], NPP_RECORD
+        mov word [bp + 10], 6
+        inc word [cs:npp_count]
+        pop bp
+        iret
+npp_count dw 0                          ; times it was asked (for the tests)
 
 ; ---- PIC_REUSE: DSCLOG's, on the sequel's picture cache ----
 ; The game's picture cache (DSUNLOG2.EXE 2A568h, SL's 25FA6h) has 300 slots, 16 bytes each (the
@@ -934,6 +955,7 @@ all_vectors:
         vector VEC_PIC_FAIL, pic_fail
         vector VEC_REAR, missile_rear
         vector VEC_REST_POISON, rest_poison
+        vector VEC_NPP, npp_save
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
