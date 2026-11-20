@@ -765,9 +765,10 @@ When the game reads the key (not a peek: `MK_READ`), DSCLOG counts it in
 (`loot_mode`, +1850: 0 T, everything; 1 Shift+T, all but plain weapons). The
 dice log's `_loot_pass` sees the count change and, once the window is shut,
 `dsloader/loot.py` moves each item into the backpack of the first member up and
-about with room (the game's own list links: `_relink`), keeps what doesn't fit in the
-container, and writes a line of what each took. Other keys, and T with no
-window open, pass as they were.
+about with room, keeps what doesn't fit in the container, and writes a line of what
+each took. The Loader pauses the game and prepares the destination backpacks before
+relinking the container. If a write fails, it restores the saved bytes in reverse
+order before the game resumes. Other keys, and T with no window open, pass as they were.
 
 ## Selling plain gear: S
 

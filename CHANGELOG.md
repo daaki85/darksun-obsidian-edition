@@ -71,6 +71,8 @@ Releases, newest first (2.12.0 and older in the archive):
   with the same game time on their original branch (#135).
 - Named Saves checks the party records before restoring a file and refreshes changed saves
   even when their file size and timestamp match (#135).
+- Bulk loot (T and Shift+T) restores the container and backpack lists when a transfer write fails.
+  It leaves the items in place if it cannot pause the game (#136).
 
 **Docs**
 - The upgrade instructions include the `Journal` folder and ask players to verify their history
