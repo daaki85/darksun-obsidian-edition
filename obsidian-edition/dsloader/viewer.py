@@ -767,6 +767,32 @@ class Viewer:
         box.pack(side="left")
         return box
 
+    def _game_data(self) -> game.GameData:
+        """The game's records for the window's tabs: Wake of the Ravager's (ravlog.RavGameData, its memory
+        read only, none of the mod's rules: the sequel's game doesn't apply them yet) while its dice log
+        is attached, else Shattered Lands'."""
+        from . import ravlog
+        if isinstance(self.dice, ravlog.RavDiceLog):
+            return ravlog.RavGameData(self.dice.guest, self.ds, 0)
+        return game.GameData(self.guest, self.ds, self._rules())
+
+    def _layout_for_game(self) -> None:
+        """The party tabs' layout for the game the dice log follows: the sequel's made from Shattered
+        Lands' (ravlog.window_layout) while its dice log is in use, Shattered Lands' back after. Only
+        the auto-locating layout is changed (a layout of the player's own is left as it is)."""
+        from . import ravlog
+        sequel = isinstance(self.dice, ravlog.RavDiceLog)
+        held = self.__dict__.get("_sl_layout")
+        if sequel and held is None and self.layout.raw.get("auto_locate"):
+            self._sl_layout = self.layout
+            self.layout = Layout(ravlog.window_layout(self.layout.raw), self.layout.path)
+            self.layout.sequel = True  # (not saved over Shattered Lands' file: save_layout)
+            self.ds = None
+            self._apply_layout()
+        elif not sequel and held is not None:
+            self.layout, self._sl_layout, self.ds = held, None, None
+            self._apply_layout()
+
     def _apply_layout(self) -> None:
         """Refresh everything that depends on the layout (after loading or reloading it)."""
         slots = [str(i + 1) for i in range(self.layout.count)]
@@ -961,9 +987,15 @@ class Viewer:
         except (OSError, ValueError, KeyError) as e:
             messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}", parent=self.root)
             return
+        self._sl_layout = None  # (the file's, Shattered Lands': made the sequel's again while it runs)
+        self._layout_for_game()
         self._apply_layout()
 
     def save_layout(self) -> None:
+        if getattr(self.layout, "sequel", False):
+            messagebox.showinfo("Layout", "This is Wake of the Ravager's layout, made from Shattered Lands' as "
+                                "the sequel runs: there is nothing to save.", parent=self.root)
+            return
         try:
             self.layout.save()
         except OSError as e:  # (a folder that can't be written, or the file held elsewhere: said)
@@ -1186,6 +1218,7 @@ class Viewer:
                     saved, known = {}, False
                 from . import ravlog
                 self.dice = ravlog.make(self.guest)  # (Wake of the Ravager's when its helper is loaded)
+                self._layout_for_game()
                 self.dice.use_settings(saved, picked_known=known)  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
@@ -1363,7 +1396,7 @@ class Viewer:
             self.spell_text.insert("end", "Connect to the game to read its spells.")
             return
         try:
-            spells = spellbook.all_spells(game.GameData(self.guest, self.ds, self._rules()))
+            spells = spellbook.all_spells(self._game_data())
         except (struct.error, IndexError, ValueError, OSError) as e:
             self.spell_text.insert("end", f"Couldn't read the spells: {e}")
             return
@@ -1717,7 +1750,7 @@ class Viewer:
         labels = ("  THAC0 now, each weapon", "  Saves now " + "/".join(game.SAVE_SHORT))
         if self.ds is None:
             return [(label, [""] * len(slots)) for label in labels]
-        gd = game.GameData(self.guest, self.ds, self._rules())
+        gd = self._game_data()
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
         hits, saves = [], []
         for s in slots:
@@ -1736,7 +1769,7 @@ class Viewer:
         """Each slot's spell slots (GameData.spell_slots), or [] when the game isn't running."""
         if self.ds is None:
             return [[] for _ in slots]
-        gd = game.GameData(self.guest, self.ds, self._rules())
+        gd = self._game_data()
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
         out = []
         for s in slots:
@@ -1754,7 +1787,7 @@ class Viewer:
         rows = [(f"{kind} spells left", [game.slots_text(m.get(kind, [])) for m in per_member])
                 for kind, _ in game.MAGIC_KINDS]
         if self.ds is not None:  # each thief's skills as they stand (equipment and effects)
-            gd = game.GameData(self.guest, self.ds, self._rules())
+            gd = self._game_data()
             table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
             cells = []
             for s in slots:
@@ -1811,7 +1844,7 @@ class Viewer:
 
     def _refresh_cards(self, slots) -> None:
         """The Characters tab: each slot's card, with its condition and current AC."""
-        gd = game.GameData(self.guest, self.ds, self._rules()) if self.ds is not None else None
+        gd = self._game_data() if self.ds is not None else None
         effects = gd.effects_left() if gd else []
         combatants = gd.combatants() if gd else {}
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR) if gd else None

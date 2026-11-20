@@ -84,6 +84,52 @@ class TypeTests(unittest.TestCase):
         self.assertEqual((g.writes, view.dropped, g.mem[0x100]), (0, 1, 0))
 
 
+class WindowTests(unittest.TestCase):
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_window_layout(self):
+        """The party tabs' layout for the sequel, made from Shattered Lands' (layouts/shattered_lands.json)."""
+        import json
+        from dsloader import layout
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "layouts", "shattered_lands.json")
+        sl = json.load(open(path))
+        raw = ravlog.window_layout(sl)
+        lay = layout.Layout(raw)
+        self.assertEqual((lay.name.offset, lay.records["creature"].stride, lay.records["sheet"].stride),
+                         (0x21, ravager.CREATURE_SIZE, ravager.SHEET_SIZE))
+        fields = {f.label: f for f in lay.fields}
+        self.assertEqual((fields["THAC0"].offset, fields["Gender"].offset, fields["Level 1"].offset,
+                          fields["Save: Spell"].offset), (0x16, 0x13, 0x1E, 0x35))
+        self.assertEqual((fields["STR"].base.record, fields["STR"].base.offset), ("sheet", 0x15))
+        self.assertEqual(lay.records["sheet"].link.match, [(0x15, 0x19, 6), (0x0E, 0x06, 2)])
+        self.assertEqual(json.load(open(path)), sl)  # (Shattered Lands' left as it was)
+
+    def test_profile_slots_and_thief_table(self):
+        ravlog.apply_layout()
+        self.assertEqual(game.SLOTS_LEFT, {"Wizard": 0x4469, "Priest": 0x4474})
+        self.assertEqual((game.SLOTS_STRIDE, game.THIEF_TABLE_SEG, game.THIEF_DEX_LOW, game.THIEF_PENALTY_LIST),
+                         (0x22, 0x449B, 0xA0, 0xE0))
+
+    def test_class_magic_served(self):
+        view = ravlog.ReadOnlyGuest(FakeGuest())
+        magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)
+        self.assertEqual([magic[c * 4] for c in (1, 8, 9, 10, 11, 12, 13, 17)], [2, 2, 0, 0, 1, 0, 2, 0])
+
+
+class PassTests(unittest.TestCase):
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_after_rolls_runs_the_hp_watch_only(self):
+        """The hit points' changes follow the rolls (each hit matched with its fall: else the round's
+        end calls every hit "takes none"); nothing else of Shattered Lands' pass."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: ["  Gerakis now 64/165 HP (-12)"]
+        log._changes = log._answer_use = lambda *a: self.fail("not ported")
+        self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
+
+
 class NameTests(unittest.TestCase):
     def test_names_by_line_from_one(self):
         g = FakeGuest()

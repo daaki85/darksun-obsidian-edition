@@ -52,6 +52,17 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     21 hits, all matching, Bone Mace's "1d6 +1 weapon -1 bone" too; between two rounds Gerakis went 75 ->
     76 on his own (the earlier "1 HP off": a regeneration, his or the sequel's, to look at sometime).
 
+12. **The Loader's window on the sequel** (`python3.12 -m dsloader view --pid DOSBOX` on its own Xvfb, :56
+    1440x900, since :55 is smaller than the window; `apt-get install -y python3-tk` first): the
+    Characters tab with names, HP/PSP, abilities, race and sex, classes and levels, THAC0 by weapon,
+    saves, gear, spell slots left (Ar'anda wizard 3/2/2, Terrannus priest 7/6/4/2, as the game's
+    bytes), the thief skills (first read from SL's table place: 166%; then DEX from the wrong rows:
+    the sequel's race rows run 16 bytes longer); All fields; its dice log. Its round-end check said
+    "takes none of the 23 damage" of hits that had cost HP: RavDiceLog's pass had the HP watch off.
+    Terrannus's gear reads Leather Armor on arm, legs and chest, a shield in the right hand: to check
+    on the inventory screen out of a fight (the top-left icon in a fight is the END menu).
+13. A stray left click at window coordinates walked Ar'anda (ravclick.py takes the game's 320x200).
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.

@@ -27,7 +27,7 @@ HDR_SIG = b"DSCLOGR1"
 
 # game.py's names -> the sequel's values (the rest of game.py's addresses are Shattered Lands' until
 # found: what reads them isn't ported yet)
-ADDRESSES: Dict[str, int] = {
+ADDRESSES: Dict[str, object] = {
     "DGROUP": ravager.DGROUP,
     "CREATURES_PTR": ravager.CREATURES_PTR, "SHEETS_PTR": ravager.SHEETS_PTR, "ITEMS_PTR": ravager.ITEMS_PTR,
     "ITEM_TYPES_PTR": 0x19CD,  # (ravds --fuzzy: 40 uses agree)
@@ -44,6 +44,16 @@ ADDRESSES: Dict[str, int] = {
     "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
     # the AC function keeps the AC after armour in [BP-4] (its adjustments in [BP-6]: SL's SI)
     "AC_ARMOUR_LOCAL": -4,
+    # spell slots left: a member's 22h bytes from DS:446Ah, a wizard level L at +L-1, a priest's from
+    # +0Bh (each level's byte at SLOTS_LEFT + level, as SL's); the slot rules each SL's + 0Ch (ravds)
+    "SLOTS_LEFT": {"Wizard": 0x4469, "Priest": 0x4474}, "SLOTS_STRIDE": 0x22,
+    "SLOT_CLASS_RULES": 0x0670, "SLOT_RULES": 0x0684,
+    # the thief skills' table (base, race, DEX limits, the armour penalty): its bytes at the sequel's
+    # file offset 49BB0h, the load + 449Bh:0 (SL's 3FAAh)
+    "THIEF_TABLE_SEG": 0x449B,
+    # ... its race rows two longer (16 bytes), so what follows them each SL's + 10h
+    "THIEF_DEX_LOW": 0xA0, "THIEF_DEX_HIGH": 0xA8, "THIEF_DEX_TOP": 0xB0, "THIEF_ARMOUR": 0xB8,
+    "THIEF_PENALTY_LIST": 0xE0,  # (its slots list: the thief_slots patch at 49C90h)
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
@@ -138,6 +148,8 @@ class ReadOnlyGuest:
         return seg * 16 + off
 
     def read(self, addr: int, size: int) -> bytes:
+        if CLASS_MAGIC_AT <= addr < CLASS_MAGIC_AT + len(CLASS_MAGIC):
+            return CLASS_MAGIC[addr - CLASS_MAGIC_AT:addr - CLASS_MAGIC_AT + size]
         if self.spells and self.spells_at <= addr < self.spells_at + len(self.spells):
             end = min(addr + size, self.spells_at + len(self.spells))
             return self.spells[addr - self.spells_at:end - self.spells_at]
@@ -166,6 +178,14 @@ class ReadOnlyGuest:
 # view serves the records back to back from SPELLS_AT (the BIOS's ROM, which nothing here reads) and
 # SPELLS_SEG is pointed there once the load segment is known (RavDiceLog.attach).
 SPELLS_AT = 0xF0000
+# Which classes cast which magic (a byte every 4 by class number: bit 1 wizard, bit 2 priest, as SL's
+# table at load + 3800h:118h has them). The sequel's isn't resident (an overlay's, filled as it loads),
+# so the view serves Shattered Lands' bits (the classes are the same) from CLASS_MAGIC_AT (past the
+# spells), CLASS_MAGIC_SEG pointed there at attach. (Not the spheres: the dice log's caster levels for
+# Dispel Magic aren't ported.)
+CLASS_MAGIC_AT = 0xF4000 + game.CLASS_MAGIC_OFF
+CLASS_MAGIC = bytes(b for c in range(32) for b in ((2 if c in (1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16)
+                                                       else 1 if c == 11 else 0), 0, 0, 0))
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
 
 
@@ -225,6 +245,15 @@ class RavGameData(game.GameData):
             return self.spell_names[spell]
         return super().spell_name(spell)
 
+    def items_readable(self, creature: int) -> bool:
+        """Whether a creature's items read as items: each name in the sequel's list, its type in range."""
+        try:
+            names = self._name_list()
+            return bool(names) and all(1 <= struct.unpack_from("<H", item, game.ITEM_NAME)[0] <= len(names)
+                                       and len(typ) == game.ITEM_TYPE_SIZE for _, item, typ in self._worn(creature))
+        except (struct.error, IndexError, ValueError):
+            return False
+
     def item_name(self, name_index: int) -> str:
         names = self._name_list()
         if 1 <= name_index <= len(names) and names[name_index - 1]:
@@ -250,6 +279,7 @@ class RavDiceLog(dicelog.DiceLog):
                     self.guest.spells, RavGameData.spell_names = spell_table(f.read())
             load = found - ravager.DGROUP
             rebind("SPELLS_SEG", (SPELLS_AT + 0x10 - game.SPELLS_OFF) // 16 - load)
+            rebind("CLASS_MAGIC_SEG", (CLASS_MAGIC_AT - game.CLASS_MAGIC_OFF) // 16 - load)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
             return super().attach()
@@ -260,7 +290,50 @@ class RavDiceLog(dicelog.DiceLog):
         return None
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
-        return []
+        """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
+        fall matched with the weapon hits it took in, regeneration, spells' damage): the rest reads
+        and writes what isn't ported yet."""
+        return self._step(lambda: self.hp_changes(now))
+
+
+def window_layout(sl_raw: dict) -> dict:
+    """The Loader window's party layout (layouts/*.json, as a dict) for the sequel, made from Shattered
+    Lands': every record offset through ravager.creature_field / sheet_field, the strides the sequel's;
+    a field the sequel hasn't (no mapped offset) left out."""
+    import copy
+    raw = copy.deepcopy(sl_raw)
+    field = {"creature": ravager.creature_field, "sheet": ravager.sheet_field}
+    size = {"creature": ravager.CREATURE_SIZE, "sheet": ravager.SHEET_SIZE}
+
+    def mapped(record: str, offset) -> Optional[int]:
+        return field[record](int(offset, 0) if isinstance(offset, str) else offset) if record in field else None
+
+    raw["game"] = "Dark Sun: Wake of the Ravager"
+    for name, spec in raw.get("records", {}).items():
+        spec["stride"] = hex(size[name]) if name in size else spec.get("stride")
+        spec["slots"] = [None] * len(spec.get("slots", []))
+        link = spec.get("link")
+        if link:
+            pairs = [[mapped(name, a), mapped(link["to"], b), n] for a, b, n in link["match"]]
+            link["match"] = [[hex(a), hex(b), n] for a, b, n in pairs if a is not None and b is not None]
+    name = raw.get("name", {})
+    name["offset"] = hex(mapped(name.get("record", "creature"), name.get("offset", 0)))
+    fields = []
+    for f in raw.get("fields", []):
+        at = mapped(f.get("record", "creature"), f.get("offset", 0))
+        if at is None:
+            continue
+        f["offset"] = hex(at)
+        base = f.get("base")
+        if base is not None:
+            b = mapped(base["record"], base["offset"])
+            if b is None:
+                f.pop("base")
+            else:
+                base["offset"] = hex(b)
+        fields.append(f)
+    raw["fields"] = fields
+    return raw
 
 
 def running(guest) -> Optional[bool]:
