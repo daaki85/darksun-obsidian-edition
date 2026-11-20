@@ -59,3 +59,33 @@ and shadows behave.
 ## Water
 
 Tyr's opening street (the Draxans' ambush): no water, jugs or waterskins seen.
+
+## Phase 1: the interface (2026-11-20)
+
+`sl_figures.py build-ui`: RESOURCE.GFF with 45 interface pictures and 224 icons from SL (132 matched by look from another number), recoloured into the 92 colours WR keeps steady. In the same copy as the party figures. The run files reset from `__support/save`.
+
+1. `sh ravstart.sh $WORK/ravsl` to Tyr: the game loads the patched RESOURCE.GFF. The talk boxes
+   (WR's own, 20029 left out) showed a lavender ghost of a button at the top box's right edge:
+   the dimmed MORE button (ICON 12100, frames 2-3). WR draws its dimmed frame in its stone greys,
+   so it vanishes into WR's box; SL's, from SL's bluer stone, stays visible even remapped. Fixed
+   by keeping WR's MORE and scroll icons (12100-12102, `ICON_KEEP`); rebuilt (221 icons) and
+   seen gone in a second run.
+2. Into the ambush (3, Return twice): the status box and the top-left icon draw right.
+   **Q** (the END menu) opens and Escape closes it. A click on the status box (560,50 in the
+   window) captures the mouse harmlessly in a fight.
+3. **USE** (22,17): SL's frame (bluer, smoother stone), the fire border and the spell icons, all
+   in place; the spell icons matched by look show the same symbols as the unpatched game's.
+4. **VIEW INVENTORY** (74,171 on USE): SL's stone, slot icons, the carved side panel, DROP and
+   SPLIT, all in place; WR's large creation figure stays (20000-20013 left out). The party's
+   small figures down the left are SL's (the patched OBJEX). Escape there closes the inventory
+   and USE together. 47,171 opened the inventory as well, not the character sheet: the
+   character sheet wasn't reached.
+5. The unpatched game to the same screens (`$WORK/rav`) for comparison: the change is subtle
+   but consistent: WR's interface is SL's art re-encoded in fewer colours, so SL's is smoother
+   and a little bluer; nothing misplaced.
+6. DOSBoxes stopped by pid, the lock released.
+
+**Results (phase 1, the interface):** works as a data patch. Ravager draws SL's interface
+pictures and icons (rle frames among its own PLNR and PLAN ones) with no program change. Left
+for later: WR's own talk boxes (20029 and the like, laid out otherwise), the character sheet
+(not reached), and the mix of SL's bluer stone with WR's neutral grey where both show.

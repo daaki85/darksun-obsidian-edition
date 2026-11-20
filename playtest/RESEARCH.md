@@ -322,6 +322,13 @@ plays, and makes a sheet of 24 of them cropped to X Y W H (window pixels); look 
 (`$WORK/burst/NAME-NNN.png`) round a moment at full rate. For a death on cue, set members' HP to 1
 (the creature records at DS:19C9h, +0; `ravcreatures.py` lists them): a test edit, never saved.
 SL's standing side frame has the legs apart: it isn't a walk frame left on screen.
+`sl_figures.py build-ui` does the same for the interface (`RESOURCE.GFF`: pictures and icons; put it
+in the copy beside the patched OBJEX.GFF). Its screens in a fight: **Q** the END menu (Escape closes
+it); a click on the status box (window 560,50) captures the mouse harmlessly; USE at game 22,17;
+VIEW INVENTORY 74,171 on USE (47,171 opened the inventory too, not the character sheet); Escape in
+the inventory closes it and USE together. The game writes its run files (DARKRUN.GFF and the like)
+into the folder it runs from, so copy `__support/save`'s three files back into the copy between
+runs for the same start.
 
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
