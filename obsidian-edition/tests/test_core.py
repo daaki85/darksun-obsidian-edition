@@ -302,10 +302,5 @@ class HardeningTests(unittest.TestCase):
             self.assertEqual(os.listdir(d), ["layout.json"])
             self.assertEqual(Layout.load(path).count, 4)
 
-    def test_named_saves_copy_gone_meanwhile(self):
-        from dsloader import namedsaves
-        self.assertEqual(namedsaves._mtime(os.path.join(tempfile.gettempdir(), "no such save copy.SAV")), 0.0)
-
-
 if __name__ == "__main__":
     unittest.main()

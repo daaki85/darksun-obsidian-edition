@@ -1312,6 +1312,24 @@ class GameData:
     def difficulty(self) -> int:
         return self._word(DIFFICULTY)
 
+    def effect_deadlines(self) -> Dict[Tuple[int, int], int]:
+        """Absolute expiration times from the event queue, keyed by owner and effect handle."""
+        count = self._word(EVENT_COUNT)
+        if not 0 < count <= 500:
+            return {}
+        queue = far_pointer(self.guest, self.ds, EVENT_QUEUE)
+        if not queue:
+            return {}
+        events = self.guest.read(queue, count * EVENT_SIZE)
+        if len(events) != count * EVENT_SIZE:
+            return {}
+        deadlines = {}
+        for i in range(count):
+            at, kind, owner, handle = struct.unpack_from("<iBhB", events, i * EVENT_SIZE)
+            if kind == EVENT_EFFECT_ENDS:
+                deadlines[(owner, handle)] = at
+        return deadlines
+
     def effects_left(self) -> List[Tuple[Effect, Optional[int], Optional[int]]]:
         """Each active effect with its charges left (None if it has none) and its game seconds
         left (None if untimed). A timed effect sits in the game's event queue as an entry of
@@ -1320,14 +1338,7 @@ class GameData:
         if not 0 <= count <= 400:
             return []
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
-        due = {}
-        queued = self._word(EVENT_COUNT)
-        if 0 <= queued <= 500:
-            events = self.guest.read(far_pointer(self.guest, self.ds, EVENT_QUEUE), queued * EVENT_SIZE)
-            for i in range(queued):
-                at, kind, owner, handle = struct.unpack_from("<iBhB", events, i * EVENT_SIZE)
-                if kind == EVENT_EFFECT_ENDS:
-                    due[(owner, handle)] = at
+        due = self.effect_deadlines()
         now = self.game_time()
         out = []
         for i in range(count):
@@ -1358,8 +1369,8 @@ class GameData:
         """Each active effect with its spell (+4) and handle (+7): what tells one record from
         another of the same effect, owner and caster. The game puts an effect on a creature that
         has it already by taking the old record out (598:4Dh, from the effect's routine at 786F9h)
-        and adding a new one (76442h: a new handle, the new spell's timer), so a record replaced
-        that way keeps its owner, caster and effect but not always its spell or handle."""
+        and adding a new one (76442h). A replacement can reuse the same spell and handle.
+        Its absolute expiration time is available separately from effect_deadlines()."""
         count = self._word(EFFECT_COUNT)
         if not 0 <= count <= 400:
             return []

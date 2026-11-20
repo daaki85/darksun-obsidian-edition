@@ -104,6 +104,13 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    What the Loader saves as it goes (picked
    pockets, learned speakers' names) is kept for the next pass if
    settings.json can't be written (`DiceLog.save_learned`).
+   For timed effects, `effect_changes` also compares absolute expiration times
+   from the event queue. If the owner, caster, spell and handle stay the same,
+   a different deadline produces a replacement line. The log keeps the last
+   known deadline while the effect is active and the timer is absent.
+   When a `dicelog` connection ends, the command waits for the stats worker
+   before closing the process handle. A game restart inside the same DOSBox
+   reuses the connection and worker.
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
@@ -206,6 +213,12 @@ builds DSCLOG with a symbol map and checks every field is at the offset its comm
 `TSR_*` constant of the Loader's is a field's offset, and the constants of the fields from +1860
 on each the field of its own name (`FIELDS_BY_NAME`: two branches' fields at the same offsets
 would pass the first two).
+
+Initiative tie-break entries carry the caller's combatant number at +186, the
+fight identifier at +188 and the round number at +190. The round-start probe
+advances these counters and uses the game's first-round flag to start a new
+fight. The record size and header are compatible with earlier helpers, which
+leave +190 zero and use the Loader's existing tie-break inference.
 
 ## Room and memory
 

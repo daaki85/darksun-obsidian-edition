@@ -10,7 +10,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import tracker as tracker_module
-from dsloader import dicelog, game, itemgate, names
+from dsloader import combatlog, dicelog, game, itemgate, names
 from dsloader.dicelog import AcDetail, DiceLog, Entry, KIND_AC, KIND_ROLL, KIND_SAVE
 from dsloader.textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, TextBuffer
 from dsloader.tracker import PartyTracker
@@ -122,12 +122,22 @@ def set_effects(log, effects):
         struct.pack_into("<hhhBB", m, base + i * 10, owner, caster, spell, eid, handle)
 
 
+def set_effect_deadlines(log, events):
+    queue = 0x6F100
+    m = log.guest.mem
+    m[DS * 16 + game.EVENT_QUEUE:DS * 16 + game.EVENT_QUEUE + 4] = far(queue)
+    struct.pack_into("<h", m, DS * 16 + game.EVENT_COUNT, len(events))
+    for i, (at, owner, handle) in enumerate(events):
+        struct.pack_into("<iBhB", m, queue + i * game.EVENT_SIZE, at, game.EVENT_EFFECT_ENDS, owner, handle)
+
+
 def words(*values):
     return struct.pack(f"<{len(values)}h", *values)
 
 
 def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b"", parent_code=b"",
-          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0):
+          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0,
+          initiative=None):
     data = bytearray(Entry.SIZE)
     struct.pack_into("<8H", data, 0, 1, 0x10, 0x5000, raw & 0xFFFF, bp, DS, DS, parent_bp)
     data[16:16 + len(frame)] = frame
@@ -139,6 +149,8 @@ def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b""
     data[144:144 + len(parent_locals)] = parent_locals
     struct.pack_into("<H", data, 184, kind)
     struct.pack_into("<H", data, 188, target_state)
+    if initiative is not None:
+        struct.pack_into("<3H", data, 186, *initiative)  # combatant, fight, round
     return Entry.parse(bytes(data))
 
 
@@ -1658,6 +1670,73 @@ class OtherTests(unittest.TestCase):
         set_effects(log, [(0, 0, 46), (2, 2, 7)])  # (the time up: a real end)
         self.assertEqual(log.effect_changes(40.0), ["Paralyzed ends on Daaki, Jellybelly"])
 
+    def test_recast_detected_when_the_effect_record_is_reused(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1200, 1, 0), (900, 2, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+
+        set_clock(log, 660)
+        set_effect_deadlines(log, [(1200, 1, 0), (960, 2, 0)])
+        self.assertEqual(log.effect_changes(11.0), [])
+        replacement = ["Dag gives Paralyzed to Daaki, in place of the one it had: "
+                       "loses its turns, can't move, fails every saving throw"]
+        for now, due in ((20.0, 1500), (22.0, 1080)):
+            set_effect_deadlines(log, [(due, 1, 0)])
+            self.assertEqual(log.effect_changes(now), replacement)
+            self.assertEqual(log.effect_changes(now + 1), [])
+
+        set_effects(log, [])
+        set_effect_deadlines(log, [])
+        self.assertEqual(log.effect_changes(24.0), ["Paralyzed ends on Daaki"])
+
+    def test_timer_appearing_or_temporarily_missing_does_not_repeat_an_effect(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, game.HASTED_EFFECT, 45, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+        with mock.patch.object(dicelog.aging, "hasted") as hasted:
+            for now, events in ((11.0, [(1200, 1, 0)]), (12.0, []), (13.0, [(1200, 1, 0)])):
+                set_effect_deadlines(log, events)
+                self.assertEqual(log.effect_changes(now), [])
+            set_effect_deadlines(log, [])
+            self.assertEqual(log.effect_changes(14.0), [])
+            set_effect_deadlines(log, [(1500, 1, 0)])
+            self.assertIn("in place of the one it had", log.effect_changes(15.0)[0])
+            hasted.assert_not_called()
+
+    def test_timer_read_during_record_replacement_waits_for_the_new_record(self):
+        log = make_game()
+        set_clock(log, 600)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1200, 1, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+        read_deadlines = log.game.effect_deadlines
+
+        def replace():
+            set_effects(log, [(1, 2, 34, HOLD_PERSON, 0)])
+            set_effect_deadlines(log, [(1500, 1, 0)])
+            return read_deadlines()
+
+        with mock.patch.object(log.game, "effect_deadlines", side_effect=replace):
+            self.assertEqual(log.effect_changes(20.0), [])
+        self.assertEqual(log.effect_changes(21.0), [
+            "Jellybelly gives Paralyzed to Daaki, in place of the one it had: "
+            "loses its turns, can't move, fails every saving throw"])
+
+    def test_loading_reestablishes_the_effect_deadline(self):
+        log = make_game()
+        set_clock(log, 660)
+        set_effects(log, [(1, 0, 34, HOLD_PERSON, 0)])
+        set_effect_deadlines(log, [(1260, 1, 0)])
+        self.assertEqual(log.effect_changes(10.0), [])
+
+        set_clock(log, 600)
+        set_effect_deadlines(log, [(1200, 1, 0)])
+        self.assertEqual(log.effect_changes(11.0), [])
+        self.assertEqual(log.effect_changes(12.0 + dicelog.LOAD_SETTLE), [])
+
     def test_effects_of_a_loaded_game_are_not_news(self):
         log = make_game()
         self.assertEqual(log.effect_changes(10.0), [])
@@ -2491,6 +2570,63 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertEqual(self.round(600), "Round 1: Dag 25")
         self.assertEqual(self.round(660), "Round 2: Dag 25")
         self.assertEqual(self.round(5000), "Round 1: Dag 25")  # a new fight
+
+    def initiative(self, combatant, tie, fight, number):
+        self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
+        self.log.describe(entry(raw_for(tie + 1, 200), dicelog.INITIATIVE_TIE,
+                                initiative=(combatant, fight, number)), now=1.0)
+
+    def test_round_context_ignores_stale_and_duplicate_ties(self):
+        m = self.log.guest.mem
+        things = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+        for combatant, creature in enumerate((2, 0, 1)):
+            struct.pack_into("<Bh", m, things + combatant * 3, 2, creature)
+        # Jellybelly didn't roll. His old tie could extend the apparent last round into round 3.
+        for creature, tie in enumerate((50, 50, 40)):
+            struct.pack_into("<hh", m, self.table + creature * 4, -1, tie)
+        set_clock(self.log, 600)
+        self.initiative(1, 50, 1, 1)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 1: Dag 25")
+        self.log.last_ac[STALKER] = 3
+
+        set_clock(self.log, 840)
+        for number, ties in enumerate(((10, 20), (30, 40), (50, 50)), start=2):
+            for combatant, tie in enumerate(ties, start=1):
+                self.initiative(combatant, tie, 1, number)
+        out = self.log.initiative_lines()
+        self.assertEqual(out[:2], ["Rounds 2-3 go by at once: no one in the fight can act",
+                                   "Round 4: Dag 25, Daaki 25"])
+        self.assertEqual(self.log.round_order, [(1, "Dag", 25), (2, "Daaki", 25)])
+        self.assertEqual(self.log.round_number, 4)
+        self.assertTrue(combatlog.header(self.log.round_status()).startswith("Round 4"))
+        self.assertEqual(self.log.last_ac[STALKER], 3)
+
+    def test_round_context_counts_rounds_lost_from_the_ring(self):
+        """A long burst of skipped rounds overruns the ring (2026-11-20: rounds 4-383 played in two
+        seconds, "rolls came too fast to record"): the tie-breaks left are only the last rounds'. In
+        the same fight the burst still starts after the last round shown, not at the oldest left."""
+        set_clock(self.log, 600)
+        struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
+        self.initiative(0, 50, 1, 3)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 3: Dag 25")
+        self.initiative(0, 50, 1, 232)  # (rounds 4-231's entries lost)
+        self.initiative(0, 50, 1, 384)
+        self.assertEqual(self.log.initiative_lines()[:2], [
+            "Rounds 4-383 go by at once: no one in the fight can act", "Round 384: Dag 25"])
+        self.assertEqual(self.log.round_number, 384)
+
+    def test_round_context_counts_new_fights_and_midfight_attachment(self):
+        set_clock(self.log, 600)
+        struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
+        self.initiative(0, 50, 9, 7)
+        self.assertEqual(self.log.initiative_lines()[0], "Round 7: Dag 25")
+        self.log.last_ac[STALKER] = 3
+        # The first round of the next fight needn't advance the clock.
+        self.initiative(0, 50, 10, 1)
+        self.initiative(0, 50, 10, 2)
+        self.assertEqual(self.log.initiative_lines()[:2], [
+            "Round 1 goes by at once: no one in the fight can act", "Round 2: Dag 25"])
+        self.assertNotIn(STALKER, self.log.last_ac)
 
     def test_rounds_played_through_at_once(self):
         """With no one able to act (2026-11-20: the whole party Paralyzed, the foes held) the game
