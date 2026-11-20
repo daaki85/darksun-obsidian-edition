@@ -603,6 +603,9 @@ are read only by the mod's patched game.
   meanwhile may not load once the copy is back: put the cause right (often a
   file of the game's missing or held by another program) and start the game
   again.
+- **"Could not remove the game data override"** at startup. The Loader found
+  an unusable copy in its own `dos` folder. Close any program using the file
+  named in the error, check that you can delete the copy, then start the game again.
 - **"settings.json can't be read just now ...: it may be held by a backup or a
   virus scan for a moment"**: the Loader couldn't read your options just then, and changed
   nothing in them. Start the game again in a little while.

@@ -60,8 +60,23 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **Fixed**
+- The Loader stops at startup and names the file if it cannot remove a stale game data override.
+  This prevents DOSBox and Dark Sun Recompiled from loading incompatible files together (#137).
+- The `dicelog` command stops its stats worker and closes its process handle before reconnecting
+  after DOSBox exits. It also releases those resources when the command stops or setup fails (#139).
 - Autosaves for a new area or a finished fight wait for any quick-save or quick-load request to
-  clear. When the Loader detects a loaded save, it drops any autosave that was waiting.
+  clear. When the Loader detects a loaded save, it drops any autosave that was waiting (#138).
+
+## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
+
+No release: the dice log's fix below comes with the next one.
+
+**Fixed: the dice log**
+- DSCLOG records the fight, round and combatant with each initiative tie-break, so the log counts
+  the rounds that pass between its looks even when creatures out of the fight have old tie-breaks
+  in the game's table, and a long burst of skipped rounds that overruns the log's ring is counted
+  from the last round shown (`Rounds 4-383 go by at once`, not `232-383`). The in-game panel keeps
+  the skipped rounds' marker at every detail level and under the combat filters (#140).
 
 ## Pull request #133 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/133))
 
