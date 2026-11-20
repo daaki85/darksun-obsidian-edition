@@ -156,7 +156,8 @@ class RavGameData(game.GameData):
             if at < 0:
                 return []
             end = low.find(b"\x00\x00", at)
-            self._names_at, self._names = at, low[at:end if end > at else at + 4096].decode("latin1").split("\r\x00")
+            text = low[at:end if end > at else at + 4096].decode("latin1")
+            self._names_at, self._names = at, [n.rstrip("\r") for n in text.split("\r\x00")]  # (the last one's CR, before its NULs)
         return self._names or []
 
     def item_name(self, name_index: int) -> str:
