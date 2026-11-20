@@ -39,6 +39,9 @@ ADDRESSES: Dict[str, int] = {
     # each creature's initiative (score, tie-break: words), selector 308h at DCh in the sequel's code
     # (its 5B7F6h: SL's 37BDh:D9h), selector 308h being the load segment + 3C4Fh
     "INITIATIVE_SEG": 0x3C4F, "INITIATIVE_OFF": 0xDC,
+    # the rules' small tables in the data segment, each found once by its bytes, each SL's + 70h
+    "DEX_AC": 0x0866, "DEX_INITIATIVE": 0x084C, "DEX_MISSILE": 0x084C, "SAVE_CON": 0x0880,
+    "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
