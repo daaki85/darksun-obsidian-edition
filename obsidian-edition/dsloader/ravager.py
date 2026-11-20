@@ -101,6 +101,12 @@ PATCHES: Tuple[Patch, ...] = (
     # each stands: the routine (86638h; SL's 7B03Dh, the side's mask its own) pushes the map thing's fine x
     # (+0Ah, DS:67C5h) twice; its first push made the y (+0Ch, 67C7h), as SL's bless_from_cell.
     Patch("bless_from_cell", 0x86687, bytes((0xC5,)), bytes((0xC7,))),
+    # Absorb Disease (its handler at 661FFh, curing effect 27, Diseased) went on into Strength's (6623Bh):
+    # the psionicist took the disease and 1d6 STR too, the STR alone with no disease. Both ways now go to
+    # the end of Strength's handler ("mov bx,[bp+12h] / or byte [bx],2", 65B0Ah, then its way out), as
+    # SL's absorb_no_strength and absorb_end: no disease, the jz to the cure's end; there, a jmp there.
+    Patch("absorb_no_strength", 0x66207, bytes.fromhex("7432"), bytes.fromhex("742c")),
+    Patch("absorb_end", 0x66235, bytes.fromhex("8b5e12"), bytes.fromhex("e9d2f8")),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word
