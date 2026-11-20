@@ -655,14 +655,16 @@ copy_path db 'D:\RESOURC2.GFF', 0
 ; FLOOR_POST, which darkens the shadows into the floor just drawn, clipped to it.
 ;
 ; The walls: the cells GMAP marks (DS:0538h, far, 98 rows of 128 bytes; a wall C0h, the cells
-; beside walls and furniture 40h, which no one walks on). Each wall cell's square is cast WS_DX right
-; and WS_DY down (SL's light from the upper left): an open cell is shadowed where the squares of its
-; west, north and north-west neighbours fall, so the edges are straight. DARK: each colour's nearest
-; at 3/4 strength (SL's shadowed floor: its tile 26 against 28, about 0.73 as light) among WS_FIRST
-; to WS_LAST (the sequel cycles 16-23; the top of the palette holds the interface's), made from the
-; palette when it changes (at most once a second, not while the screen is dark: a fade).
-WS_DX       equ 12
-WS_DY       equ 8
+; beside walls and furniture 40h, which no one walks on). As SL's (its slave pens: floor 28,
+; shadowed floor 26, the shadow's diagonal edge 70), each wall cell's square is swept a full cell
+; along the light, from (0, 0) to (+16, +16) (the light from the upper left): in an open cell, the
+; north-west wall's square covers all of it, the west wall's the pixels with x <= y, the north's
+; those with x > y: full bands right of and below walls, with 45-degree ends, one span a row. DARK:
+; each colour made as SL's shadowed floor is from its floor (Lab: lightness x 0.73, a + 11,
+; b x 0.82; in the palette's 6-bit values, fitted over the sequel's palettes: red x 0.730 + 5.4,
+; green x 0.705 - 1.8, blue x 0.735 - 0.3, about 2 off in 63), then the nearest of WS_FIRST to
+; WS_LAST to that (the sequel cycles 16-23; the top of the palette holds the interface's), made from
+; the palette when it changes (at most once a second, not while the screen is dark: a fade).
 WS_FIRST    equ 24
 WS_LAST     equ 239
 GMAP_PTR    equ 0x0538              ; DS: the region's GMAP, far
@@ -826,9 +828,9 @@ wall_pass:
         jg .nrow
         mov cx, di
         mov dx, si
-        call is_wall
-        jc .ncell                       ; (a wall: its own floor not shadowed)
-        xor bl, bl                      ; BL: bit 0 the west is a wall, 1 the north, 2 the north-west
+        call is_wall                    ; (walls' own cells too, when wholly in shadow: the sequel's
+        setc bh                         ;  walk map pads each wall a cell into the room, drawn as
+        xor bl, bl                      ;  floor; the wall's art hides the rest)                      ; BL: bit 0 the west is a wall, 1 the north, 2 the north-west
         dec cx
         call is_wall
         adc bl, 0
@@ -843,6 +845,15 @@ wall_pass:
         or bl, 4
 .nnw:   or bl, bl
         jz .ncell
+        or bh, bh
+        jz .open
+        test bl, 4
+        jnz .open
+        mov al, bl
+        and al, 3
+        cmp al, 3
+        jne .ncell
+.open:
         mov [cs:c_bits], bl
         mov ax, di                      ; the cell's top left on the screen
         shl ax, 4
@@ -854,28 +865,39 @@ wall_pass:
         mov [cs:c_sy], ax
         push si
         push di
-        test byte [cs:c_bits], 1        ; the west wall's square: x < WS_DX, y >= WS_DY
-        jz .w
-        mov ax, 0
-        mov cx, WS_DX - 1
-        mov bx, WS_DY
-        mov dx, 15
-        call ws_rect
-.w:     test byte [cs:c_bits], 2        ; the north wall's: x >= WS_DX, y < WS_DY
-        jz .n
-        mov ax, WS_DX
+        xor si, si                      ; SI: the row in the cell, one span a row (WS_SPAN)
+.crow:  mov al, [cs:c_bits]
+        test al, 4                      ; the north-west wall's square swept: all of the cell
+        jnz .full
+        and al, 3
+        cmp al, 3                       ; the west's and the north's together: all of it too
+        je .full
+        cmp al, 1
+        je .west
+        ; the north's alone: x > y (x from y + 1 to 15)
+        cmp si, 15
+        je .cnext
+        lea ax, [si + 1]
         mov cx, 15
-        mov bx, 0
-        mov dx, WS_DY - 1
-        call ws_rect
-.n:     test byte [cs:c_bits], 4        ; the north-west's: x < WS_DX, y < WS_DY
-        jz .nw
-        mov ax, 0
-        mov cx, WS_DX - 1
-        mov bx, 0
-        mov dx, WS_DY - 1
-        call ws_rect
-.nw:    pop di
+        jmp .put
+.west:  xor ax, ax                      ; the west's alone: x <= y
+        mov cx, si
+        jmp .put
+.full:  xor ax, ax
+        mov cx, 15
+.put:   add ax, [cs:c_sx]
+        add cx, [cs:c_sx]
+        mov dx, ax
+        mov di, cx
+        mov bx, si
+        add bx, [cs:c_sy]
+        push si
+        call ws_darken
+        pop si
+.cnext: inc si
+        cmp si, 16
+        jb .crow
+        pop di
         pop si
 .ncell: inc di
         jmp .cell
@@ -1107,9 +1129,14 @@ dark_check:
         mov [fs:di], al
         movzx eax, al
         add si, ax
+        cmp cx, 768 - 16*3              ; (the sum leaves out the cycled colours, 16-23:
+        ja .sum                         ;  they change every frame)
+        cmp cx, 768 - WS_FIRST*3
+        ja .skip
+.sum:
         rol ebx, 3
         xor ebx, eax
-        inc di
+.skip:  inc di
         loop .read
         cmp si, WS_LIT
         jb .ret                         ; (a fade: kept as it was)
@@ -1133,13 +1160,21 @@ ws_build:
         imul si, si, 3
         add si, FAR_DAC
         xor di, di
-.chan:  mov al, [fs:si]
+.chan:  movzx ax, byte [fs:si]          ; SL's shadowed floor: (gain x c + offset) / 256, in 0..63
         inc si
-        mov ah, 3
-        mul ah
-        mov dl, 4
-        div dl
-        mov [want + di], al
+        push bx
+        mov bx, di
+        shl bx, 1
+        imul ax, [cs:ws_gain + bx]
+        add ax, [cs:ws_offset + bx]
+        pop bx
+        sar ax, 8
+        jns .pos
+        xor ax, ax
+.pos:   cmp ax, 63
+        jbe .keep
+        mov ax, 63
+.keep:  mov [want + di], al
         inc di
         cmp di, 3
         jb .chan
@@ -1159,6 +1194,11 @@ ws_build:
         mov [lit_most], dx
         mov dword [best_d], 0xFFFFFFFF
         mov [best_c], bl
+        cmp bx, 16                      ; (the cycled colours, 16-23, stay as they are)
+        jb .find
+        cmp bx, WS_FIRST
+        jb .store
+.find:
         mov cx, WS_FIRST
 .cand:  mov word [lit_sum], 0
         mov si, cx
@@ -1205,7 +1245,7 @@ ws_build:
 .worse: inc cx
         cmp cx, WS_LAST
         jbe .cand
-        mov al, [best_c]
+.store: mov al, [best_c]
         mov [fs:FAR_DARK + bx], al
         inc bx
         cmp bx, 256
@@ -1213,6 +1253,8 @@ ws_build:
         pop ds
         ret
 
+ws_gain    dw 187, 180, 188          ; (SL's shadowed floor, x 256: red, green, blue)
+ws_offset  dw 1393, -469, -72
 resume     dd 0
 floor_ret  dd 0
 floor_frame dw 0

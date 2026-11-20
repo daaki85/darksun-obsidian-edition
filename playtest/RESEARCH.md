@@ -351,8 +351,14 @@ darkens the floor right of and below each wall cell (GMAP C0h, DS:0538h far, 128
 draws it, as DSCLOG's SHADOWS does SL's figures': INT C4h at 2B81Ch (the view's floor: page, camera x,
 y) and INT C5h at 2B97Fh (a rectangle's: page, x0, y0, x1 + 1, y1, camera x, y), their way back made
 FLOOR_POST; the page table (SL's layout) in segment load + 0BF3h, FLOOR_ON DS:29EAh, DGROUP 47E0h.
-DARK is made from the DAC when the palette changes (once a second at most, not in a fade), from
-colours 24-239. The header (signature `DSCLOGR1`) has wall_shadows at +148, the passes drawn at +150,
+Retuned to SL's own shadows (the owner: the first try "didn't look as good"): each wall square swept
+45 degrees by a full cell, so an open cell with a wall NW is all dark, W only x <= y, N only x > y;
+the walk map pads each wall a cell into the room (drawn as floor), so a wall-marked cell is darkened
+only when wholly in shadow. DARK is SL's tone (Lab L x 0.73, a + 11, b x 0.82, fitted in 6-bit RGB:
+R x 0.730 + 5.4, G x 0.705 - 1.8, B x 0.735 - 0.3), the nearest of colours 24-239, made from the DAC
+when the palette changes (once a second at most, not in a fade, the cycled 16-23 left out of the sum
+and mapped to themselves). On WR's grey cobbles it reads warm red-grey. Same-view toggle: write the
+header's +148, press C then Escape (the left half redrawn). The header (signature `DSCLOGR1`) has wall_shadows at +148, the passes drawn at +150,
 DARK's builds at +152: find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
 loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.
 

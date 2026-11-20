@@ -35,3 +35,34 @@ Run-time wall shadows work, SL's way (drawn into the floor before walls and figu
 any shape, no tile limit). Left: the shadow's shape is per cell (12 right, 8 down: longer casts need
 cells two away); the strength (3/4) and length to tune by eye; other regions and their palettes
 (DARK is made per palette); a switch for the Loader's Options tab (the header's +148).
+
+## Retune to SL's shadows (the coordinator, from the owner: "don't look as good as SL's")
+
+SL's pens (RGN29 from RMAP, GMAP C0h outlined): full one-cell bands right of and below wall cells with
+45-degree ends; tone floor 28 to shadowed 26. Now: each wall square swept from (0, 0) to (16, 16): in an
+open cell NW's covers all of it, W's x <= y, N's x > y (one span a row); DARK's target SL's
+transform (Lab L x 0.73, a + 11, b x 0.82) fitted in 6-bit RGB (R x 0.730 + 5.4, G x 0.705 - 1.8,
+B x 0.735 - 0.3; mean error 2 in 63), the nearest of 24-239. DSCLOG2.EXE 5,280 bytes.
+
+
+### The retune tested (2026-11-20)
+
+- Geometry right: full one-cell bands with 45-degree ends (diff masks of off/on grabs).
+- The sequel's walk map pads every wall a cell into the room (the street's west wall: C0h in columns
+  68-69, its art in 69 alone; the right room's: 80-81, art in 80), drawn as floor. Skipping wall cells
+  left an unshadowed cell between a wall and its shadow; shadowing all of them put triangles inside
+  the padding. Now a wall-marked cell is shadowed only when wholly in shadow (NW wall, or W and N).
+- DARK: the cycled colours 16-23 map to themselves (a torch's flame went brighter, made from one
+  frame of the cycle) and the DAC checksum leaves them out: DARK made 3 times in the fade-in, then
+  steady (was 23 times a minute). Leaving 240-255 unmapped too was wrong: the street's greys are
+  there (no shadow on the street at all).
+- Tone: SL's transform on WR's grey cobbles gives a warm red-grey (grey 69 to 73,48,44; the exact Lab
+  transform 67,45,52), on the brown room floors a maroon. Faithful to SL; to judge by eye.
+- Redraw for a same-view toggle: set the header's +148, press C (USE, the left half) then Escape: the
+  left half redrawn. (Escape then C on the EXIT GAME? box redraws only the box. ravclick.py could not
+  move the pointer this run: it stayed at 158,99.)
+- Grabs: shadows-retune-off.png / shadows-retune-on.png (same view, the ambush's first turn, camera
+  as the run gave it); shadows-before-after-sl.png the pair; shadows-vs-sl.png SL's pens (the
+  coordinator's render, 3x) beside the retuned shadows at 3x. The first prototype for comparison:
+  shadows-fight-after.png.
+- DSCLOG2.EXE 5,328 bytes. DOSBox stopped by pid, the lock released.
