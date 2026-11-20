@@ -8,8 +8,9 @@
 ;
 ; Now: the dice log's ring and rand() (the patched copy, DSUNLOG2.EXE, starts rand() at 5A22h with
 ; INT VEC_RAND, as DSUNLOG.EXE does at 5C22h: the same function, its seed at DS:384Ah, SL's 4122h),
-; and DOS's file opens, so the game reads the Loader's copy of RESOURCE.GFF (D:\RESOURC2.GFF, with
-; the spell records' fixes: dsloader/ravager.py) in place of its own.
+; and DOS's file opens, so the game reads the Loader's copies of RESOURCE.GFF (D:\RESOURC2.GFF, with
+; the spell records' fixes) and GPLDATA.GFF (D:\GPLDAT2.GFF, with the scripts' fixes:
+; dsloader/ravager.py) in place of its own.
 ;
 ; The header keeps DSCLOG's layout for the fields the Loader's dice log reads (the ring, the seed,
 ; the filters, the far block), under a signature of its own, so a Loader that doesn't know the
@@ -98,7 +99,7 @@ tbuf_seg  dw 0                  ; +138
 panel_off dw 0                  ; +140
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
-copied    dw 0                  ; +146 1 once the game has opened the Loader's RESOURCE.GFF copy
+copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF
         times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +148 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
@@ -626,14 +627,16 @@ pf_place   dd 0
 pf_count   dw 0                         ; slots reused (for the tests: the Loader can read it)
 pf_failed  dw 0                         ; reused slots let go after a failed read
 
-; ---- DOS's file opens: DSCLOG's PROBE_DOS_OPEN, for RESOURCE.GFF only ----
-; Opening a file (AH=3Dh) whose name is RESOURCE.GFF (the whole path, or after a \, : or /, in any
-; case) opens the Loader's copy, D:\RESOURC2.GFF, instead (with the same mode), and notes it
-; (COPIED); with no copy there, the game's own. Everything else goes on to DOS.
+; ---- DOS's file opens: DSCLOG's PROBE_DOS_OPEN, for the Loader's copies ----
+; Opening a file (AH=3Dh) named in COPIES (the whole path, or after a \, : or /, in any case) opens the
+; Loader's copy instead (with the same mode) and sets its bit in COPIED: RESOURCE.GFF is D:\RESOURC2.GFF
+; (bit 1), GPLDATA.GFF D:\GPLDAT2.GFF (bit 2). With no copy there, the game's own. Everything else goes
+; on to DOS.
 probe_dos_open:
         cmp ah, 3Dh
         jne .chain
         push ax
+        push bx
         push cx
         push si
         push di
@@ -647,21 +650,30 @@ probe_dos_open:
 .at_end:
         mov cx, si
         sub cx, dx              ; CX: the path's length
-        cmp cx, RES_LEN
-        jb .no
-        sub si, RES_LEN         ; where the name would start
-        cmp cx, RES_LEN
+        mov bx, copies          ; each: its name's length, the name, the copy's path, its COPIED bit
+.entry: xor ax, ax
+        mov al, [cs:bx]
+        or ax, ax
+        jz .no                  ; (none of them)
+        cmp cx, ax
+        jb .next
+        mov si, dx
+        add si, cx
+        sub si, ax              ; where the name would start
+        cmp cx, ax
         je .compare             ; (the path is just the name)
-        mov al, [si - 1]
-        cmp al, '\'
+        mov ah, [si - 1]
+        cmp ah, '\'
         je .compare
-        cmp al, ':'
+        cmp ah, ':'
         je .compare
-        cmp al, '/'
-        jne .no
+        cmp ah, '/'
+        jne .next
 .compare:
-        mov di, res_name
-        mov cx, RES_LEN
+        push cx
+        xor cx, cx
+        mov cl, [cs:bx]
+        lea di, [bx + 1]
 .cmp:   mov al, [si]
         cmp al, 'a'
         jb .upper
@@ -669,13 +681,27 @@ probe_dos_open:
         ja .upper
         sub al, 20h
 .upper: cmp al, [cs:di]
-        jne .no
+        jne .differ
         inc si
         inc di
         loop .cmp
+        pop cx
+        jmp .match              ; (DI: the entry's copy path)
+.differ:
+        pop cx
+.next:  xor ax, ax
+        mov al, [cs:bx]
+        add bx, ax
+        add bx, 5               ; (the length byte, the path's word, the bit's word)
+        jmp .entry
+.match: mov si, [cs:di]         ; the copy's path
+        mov di, [cs:di + 2]     ; its COPIED bit
+        mov [cs:dos_bit], di
+        mov [cs:dos_path], si
         pop di
         pop si
         pop cx
+        pop bx
         pop ax
         sti
         push ax                 ; (the game's AX, for its own file if there's no copy)
@@ -683,26 +709,36 @@ probe_dos_open:
         push dx
         push cs
         pop ds
-        mov dx, copy_path
+        mov dx, [cs:dos_path]
         pushf
         call far [cs:old21]
         pop dx
         pop ds
         jc .own
         add sp, 2               ; (CF clear, AX the handle)
-        mov word [cs:copied], 1
+        push ax
+        mov ax, [cs:dos_bit]
+        or [cs:copied], ax
+        pop ax
         retf 2
 .own:   pop ax
         jmp .chain
 .no:    pop di
         pop si
         pop cx
+        pop bx
         pop ax
 .chain: jmp far [cs:old21]
 
-res_name  db 'RESOURCE.GFF'
-RES_LEN   equ $ - res_name
-copy_path db 'D:\RESOURC2.GFF', 0
+dos_path dw 0
+dos_bit  dw 0
+copies  db 12, 'RESOURCE.GFF'
+        dw res_copy, 1
+        db 11, 'GPLDATA.GFF'
+        dw gpl_copy, 2
+        db 0
+res_copy db 'D:\RESOURC2.GFF', 0
+gpl_copy db 'D:\GPLDAT2.GFF', 0
 
 resident_end:
 align 16

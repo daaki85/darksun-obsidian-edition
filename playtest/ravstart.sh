@@ -5,9 +5,9 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES left out of the copy, for a test's control). `RAV_MENU=1` stops at the
+# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES left out of the copy, for a test's control). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
-# copies (DSUNLOG2.EXE, RESOURC2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
+# copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
 F=${1:-$WORK/rav}
 [ -f "$F/DSUN.EXE" ] || { echo "no $F/DSUN.EXE (setup_ravager.sh)"; exit 1; }
@@ -32,6 +32,10 @@ if skip:
         if p.name in skip:
             assert data[p.offset:p.offset + len(p.replacement)] == p.replacement, p.name
             data[p.offset:p.offset + len(p.original)] = p.original; skip.remove(p.name)
+    gone = [s for s in skip if s in ravager.SCRIPT_FIXES]   # (a script fix: GPLDAT2.GFF without it)
+    if gone:
+        ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone))
+        skip = [s for s in skip if s not in gone]
     if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
     open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])
 print('\n'.join(ravager.conf_lines(sys.argv[1], sys.argv[2], cd=os.path.join(sys.argv[1], 'data.cue'))))

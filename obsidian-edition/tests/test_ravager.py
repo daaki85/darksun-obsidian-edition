@@ -120,6 +120,21 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(res.keys(), game.keys())
             changed_spells = {k[1] for k in game if game[k] != res[k]}
             self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()})
+            gpl = open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read()
+            own = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+            places = gff.index_places(own, "GPL ")
+            differ = [i for i, (a, b) in enumerate(zip(gpl, own)) if a != b]
+            wanted = []
+            for chunk, offset, original, replacement in ravager.SCRIPT_FIXES.values():
+                at = places[chunk][1] + offset
+                self.assertEqual(gpl[at:at + len(replacement)], replacement)
+                wanted += [at + i for i in range(len(original)) if original[i] != replacement[i]]
+            self.assertEqual((len(gpl), differ), (len(own), sorted(wanted)))
+
+    def test_script_fix_skipped(self):
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        same, done = ravager.script_fixed(data, {"inn_rest"})
+        self.assertEqual((same, done), (data, []))
 
     def test_spells_manual_off(self):
         data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()

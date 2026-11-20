@@ -138,8 +138,30 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     takes no pointer; a round ring by it took the look pointer once, then vanished; the party's HP
     unchanged, DSCLOG2's REST_POISON count 0. The rest test still waits for a working rest.
 
+25. **Why the inn doesn't rest** (the user's question: is it a bug?): counters in a test build of DSCLOG2
+    (since removed) on the program's look handler, its fire-ring branch and the rest routine: all 0 after
+    the look at the rented ring. The scripts: Reyhan's talk (GPL 140) makes the ring (kind -1317) and
+    sets the nights (var 135,83); Tyr's master (MAS 50) gives the ring a look trigger, GPL 142 at 1478.
+    A first reading took its do_action 15 for a camp, and a repair jumping to it was tried (the copy of
+    GPLDATA.GFF, D:\GPLDAT2.GFF, through the helper's redirect): no rest, the ring gone. The redirect
+    itself had a slip (each COPIES entry is 5 bytes past its name, the walk took 4: the second file never
+    matched; `copied` read 1, not 3); fixed. do_action 15 turned out to be the end of many scripts
+    (DS:1440h, the pointer mode, back to the arrow). The real path (RESEARCH.md, how a look reaches a
+    rest): the look dispatcher runs the ring's look trigger, then the program's own look, whose ring
+    branch rests 8 hours, unless the scripts took the ring away. GPL 142 counts the night down and, on
+    the last one, arms a proximity trigger (GPL 23 at 47, range 15) that deletes the ring: the party is
+    beside it, so it fires at once. One night paid, no rest (two paid would give one).
+
+26. **The inn fixed** (the Loader's `inn_rest`: a GOTO over that arming at 1499, dsloader/ravager.py
+    SCRIPT_FIXES, the copy GPLDAT2.GFF): from ravager-roost, Gerakis Poisoned (test edit, never saved),
+    one night rented, the look at the ring: the screen dims, HP Ar'Anda 1 to 48, Thy'rokh 59 to 75,
+    Gerakis 32 to 165, his poison gone, Terrannus still dead (0), DSCLOG2's REST_POISON called for all 4,
+    the ring still there; a second look took it away with no rest. Control: the same route on the game's
+    own script (that run, the redirect's slip kept the copy out; 24 and 25 too): the ring went, no rest.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
-`pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
+`pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log. A script's right-click right after closing a talk made the pointer the sword (the talk sets it
+back to the arrow): the arrow keys then did nothing, twice; walked by hand.
 
-**Water:** none new.
+**Water:** none new (the Roost: none seen in its rooms).

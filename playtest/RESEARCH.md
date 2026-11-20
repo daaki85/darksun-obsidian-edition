@@ -338,12 +338,24 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   stop at the wall line, y 1274). Inside: Reyhan, the owner, behind the counter (the look pointer on him
   talks: 1 rent a room, 3 one night, 25 cp: "the room at the end of the corridor, second door on your
   left": the corridor runs east along the south front, the second doorway is open, its steps clicked
-  again). Renting adds one map object, a fire ring (object 156 at 1976, 1352, record
-  `11e702b8074805000000b80748050000ffff00ffff0078fd008802250500000000ffffffff`), beside the bed (which takes
-  no pointer). Over the ring the sword isn't barred and the look icon shows; a look click on it from a step
-  away did nothing, and stepping next to it removed the object (its record all FFh) with no rest: HP
-  unchanged, DSCLOG2's REST_POISON never called (2026-11-20, from `ravager-roost`, Terrannus dead in it). How
-  it rests is still open.
+  again). Renting adds one map object, a fire ring (object 156 at 1976, 1352, kind -1317), beside the
+  bed (which takes no pointer). **The route** (from `ravager-roost`, about 3 minutes): the look pointer
+  (two right-clicks from the arrow) on Reyhan (game 150,128), keys 1, 3, 4 (rent, one night, goodbye: the
+  talk leaves the pointer the arrow again, so no right-click after it: the sword ignores the arrow keys),
+  the arrow keys Left 4, Down 9, Right 14 (the corridor, x 1871, y 1465), the arrow on the second
+  doorway's steps (game 270,104), Up 6 (beside the ring, 1956, 1335), the look pointer on the ring (game
+  267,108: the screen is 2.4 px a game row) and click. **A look at the ring rests the party** (the screen
+  dims, 8 hours: HP back, spells, DSCLOG2's REST_POISON per member) only with the Loader's `inn_rest`
+  fix: the game's own script loses the one paid night (dsloader/ravager.py SCRIPT_FIXES; logs/
+  2026-11-20-ravager-dicelog.md 25-26). A second look takes the spent ring away.
+- **How a look reaches a rest** (2026-11-20): the look dispatcher (63174h-63400h) runs the object's look
+  trigger scripts (a 66h trigger: trigger list load+3C10h:13h, bit 8 of 28:834's flags), then, if the
+  object is still there, the program's own look (5B0h:70h, 69473h), whose kind-525h (1317, fire ring)
+  branch calls rest(0, 8, 7FFEh) (6951Ch: the rest routine 8CA7Ah). A script's do_action 1 is rest(1, ...),
+  the healers' full heal (status 1 for all, the dead too). do_action 15 is no camp: it sets DS:1440h
+  (the pointer mode: 1 the arrow) and DS:4596h to 1, the end of many scripts. `triggers.py`-style dump:
+  the six lists' heads at load+3C10h:0Dh-17h, records 13 bytes at the far pointer DS:40C0h (+4 the
+  object, +0Bh the next).
 - **Keys** (gibberishh's walkthrough, in the private repository's guide/): I inventory, O overhead map, V
   character, C cast, 1-4 leader, 5 the whole party shown, 6 the leader only, F1 save (straight to the save
   screen), F2 load, Tab preferences (difficulty), A animations, H the view back to the party; in a fight
@@ -368,7 +380,7 @@ the ambush, so the inventory screen (to check the gear's slot names) waits for a
 
 **Its first fight** (logs/2026-11-19-ravager-fight.md): the opening talk (3, Return) ends in the
 Draxans' ambush, a fight at once; in a fight USE opens for the one whose turn it is (DS:426Dh, SL's
-4979h). Right clicks on bare floor cycle the pointer: arrow, sword, look; a figure under it turns
+4979h). Right clicks on bare floor cycle the pointer: arrow, sword, look (the mode at DS:1440h: 1 the arrow; a talk's end sets it back to the arrow, and the arrow keys walk only with the arrow); a figure under it turns
 red; a look opens a box (name, level, weapons) that a click on it closes. Creature records: 31h
 bytes at the far pointer DS:19C9h, +0 HP, the region's people all listed (`ravcreatures.py`).
 `ravds.py HEX` finds the WotR address of an SL data-segment offset by the code before its uses.

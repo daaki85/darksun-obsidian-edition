@@ -14,15 +14,17 @@ reports/wake-of-the-ravager-port-plan.md in the repository). This module holds w
     is gamepatch's patch of the same name (its bytes) written to the same field of the sequel's
     record, only where that record still holds the original bytes (SSI fixed two itself: Dispel
     Magic's "No spell use" and Bestow Curse's save, left out here).
-  * prepare: writes DSUNLOG2.EXE and RESOURCE.GFF's copy into the mod's dos folder.
+  * SCRIPT_FIXES: the game's own script slips, mended in GPLDATA.GFF's copy (bytes of a GPL chunk,
+    checked as the copy is made).
+  * prepare: writes DSUNLOG2.EXE and the copies of RESOURCE.GFF and GPLDATA.GFF into the mod's dos
+    folder (the helper, DSCLOG2.EXE, opens them for the game's own).
   * conf_lines: the DOSBox autoexec that starts it: the game folder as C: (the copy reads its data
     from the current folder, the "path" patch), its CD as D: (GOG's game.ins, as GOG's own config
     mounts it) as F:, the mod's dos folder as D: as for Shattered Lands, EMS off and UMBPLUS.COM first
     (the sequel runs on XMS without EMS: measured).
 
-The helper (DSCLOG) isn't loaded for the sequel yet: until it is, the copies of the data files are
-read in place of the game's by mounting nothing over them, so RESOURCE.GFF's copy is the one thing
-that needs the helper's file redirection; it is written now, and read once the helper is in."""
+The data files' copies are read in place of the game's through the helper's file redirection (its
+COPIES table), so the game folder is never written to."""
 
 import os
 import struct
@@ -35,6 +37,8 @@ WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
 PATCHED_EXE = "DSUNLOG2.EXE"
 RESOURCE_FILE = "RESOURCE.GFF"
 RESOURCE_COPY = "RESOURC2.GFF"  # (the copy's name in the mod's dos folder: SL's own copy is RESOURCE.GFF there)
+SCRIPT_FILE = "GPLDATA.GFF"
+SCRIPT_COPY = "GPLDAT2.GFF"  # (likewise: the helper opens it for GPLDATA.GFF)
 ARGS = "-W0 -L"  # (as GOG's RAVAGER.BAT starts it)
 CD_DRIVE = "f"  # (the game finds its CD through MSCDEX, whatever the letter: D: stays the mod's dos
 # folder, as for Shattered Lands, where GAMEEND.COM and the helper look)
@@ -259,11 +263,47 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
     """RESOURCE.GFF's copy with the spell fixes, written to DEST unless already so; the fixes applied."""
-    source = _find_file(game_dir, RESOURCE_FILE)
+    return _write_copy(game_dir, RESOURCE_FILE, dest, spell_fixed, skip)
+
+
+# The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
+#   inn_rest: Reyhan's inn in Tyr. GPL 140 rents a fire ring (object kind -1317) for so many nights;
+#   Tyr's master script gives the ring a look trigger, GPL 142 at 1478, which runs before the
+#   program's own look (whose ring branch rests the party 8 hours, rest(0, 8, 7FFEh) at 6951Ch: the
+#   program skips it if the look's scripts take the ring away). With nights left, the night is
+#   counted down, and on the last one (1499) a proximity trigger is armed (GPL 23 at 47, range 15)
+#   that deletes the ring: the party stands beside it, so it fires at once and the ring is gone
+#   before the rest. One night paid, no rest. The fix jumps over that arming (the GOTO and fill of
+#   gpl.put_jumps): the paid night rests, and a look at the spent ring (the ELSE, which arms the same
+#   trigger) takes it away. Found 2026-11-20 (playtest/logs/2026-11-20-ravager-dicelog.md).
+SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
+    "inn_rest": (142, 1499, bytes.fromhex("1b002f00179105258f0f"), bytes.fromhex("6405e561616161616161")),
+}
+
+
+def script_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+    """GPLDATA.GFF's bytes with SCRIPT_FIXES applied (but those named in SKIP), and the names of those
+    applied; anything not as a fix expects raises (a GPLDATA.GFF this module doesn't know)."""
+    places = gff.index_places(data, "GPL ")
+    out, done = bytearray(data), []
+    for name, (chunk, offset, original, replacement) in SCRIPT_FIXES.items():
+        if chunk not in places or places[chunk][2] < offset + len(original):
+            raise RavagerError(f"{SCRIPT_FILE} has no script {chunk}: not the GOG release's")
+        at = places[chunk][1] + offset
+        if bytes(out[at:at + len(original)]) != original:
+            raise RavagerError(f"{SCRIPT_FILE}'s script {chunk} is not as the fix {name} expects")
+        if name not in skip:
+            out[at:at + len(original)] = replacement
+            done.append(name)
+    return bytes(out), done
+
+
+def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
+    source = _find_file(game_dir, name)
     if not source:
-        raise RavagerError(f"no {RESOURCE_FILE} in {game_dir}")
+        raise RavagerError(f"no {name} in {game_dir}")
     with open(source, "rb") as f:
-        data, done = spell_fixed(f.read(), skip)
+        data, done = fixed(f.read(), skip)
     try:
         with open(dest, "rb") as f:
             if f.read() == data:
@@ -274,6 +314,11 @@ def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
     return done
 
 
+def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
+    """GPLDATA.GFF's copy with the script fixes, written to DEST unless already so; the fixes applied."""
+    return _write_copy(game_dir, SCRIPT_FILE, dest, script_fixed, skip)
+
+
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL)."""
@@ -282,12 +327,13 @@ def skipped(settings: dict) -> frozenset:
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict) -> Optional[str]:
-    """Write DSUNLOG2.EXE and the RESOURCE.GFF copy into DOS_DIR. Returns why the game can't be
+    """Write DSUNLOG2.EXE and the RESOURCE.GFF and GPLDATA.GFF copies into DOS_DIR. Returns why the game can't be
     patched, or None."""
     skip = skipped(settings)
     try:
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
         write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
+        write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
         return str(e)
     return None
