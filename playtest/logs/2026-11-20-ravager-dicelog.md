@@ -159,6 +159,21 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     the ring still there; a second look took it away with no rest. Control: the same route on the game's
     own script (that run, the redirect's slip kept the copy out; 24 and 25 too): the ring went, no rest.
 
+27. **Negative Plane Protection** (SL's npp_save): the same code at 84DD2h, the save as against spell 38
+    (the sequel's Vampiric Touch, +1Fh A0h: no save allowed; the save routine 66D26h answers "not
+    saved" when bit 0 is clear). DSCLOG2's NPP_SAVE (INT C6h) at 84DDAh: as against POISON's record
+    (179, 21h). Loaded from ravager-roost: the vector in the helper, the game as before. An undead's
+    touch on a protected member not yet met in play.
+
+28. **Acid Arrow's acid burns each round** (SL's acid_*, DSCLOG2's ACID_ROUNDS, ACID_BURN, ACID_ONCE,
+    ACID_USE, ACID_ROUND at 7FAA6h, 82BF3h, 651FEh, 7FD99h, 5B592h; the spender's stub 608h:57h).
+    First tried at the Roost: the sword on Reyhan played an attack but started no fight. Then a new
+    game (RAV_LOADER=1 ravstart.sh, the talk's 3 and Return: the Draxans' ambush), a test edit (an Acid
+    effect, 3 charges, on Gerakis; never saved), the party's turns ended (`ravfight.py wait`/`end`):
+    the charges 3, 2, 1, gone, one a round (DSCLOG2's count 3), Gerakis 165 to 107 with the Draxans'
+    blows (a round with no blow: 160 to 155), no Acid put on again by the burns. A cast's seconds made
+    rounds (ACID_ROUNDS) not yet seen: no one in the party had Acid Arrow.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log. A script's right-click right after closing a talk made the pointer the sword (the talk sets it

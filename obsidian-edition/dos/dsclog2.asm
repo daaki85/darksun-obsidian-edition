@@ -31,6 +31,11 @@ VEC_PIC_FAIL  equ 0xC3  ; PIC_FAIL  (2A58Eh: no picture loaded)
 VEC_REAR      equ 0xC4  ; MISSILE_REAR (5C99Fh: an attack's "from behind" pushed for the AC function)
 VEC_REST_POISON equ 0xC5 ; REST_POISON (8D02Dh: the rest's test for the Poisoned, after the free cures)
 VEC_NPP       equ 0xC6  ; NPP_SAVE (84DDAh: Negative Plane Protection's save, against an undead's touch)
+VEC_ACID_ROUNDS equ 0xC7 ; ACID_ROUNDS (7FAA6h: an effect added, Acid's time made rounds as charges)
+VEC_ACID_BURN   equ 0xC8 ; ACID_BURN (82BF3h: Acid's burn starting)
+VEC_ACID_ONCE   equ 0xC9 ; ACID_ONCE (651FEh: a spell's damage putting its effect on: none from a burn)
+VEC_ACID_USE    equ 0xCA ; ACID_USE (7FD99h: an effect's charges spent: Acid's only from ACID_ROUND)
+VEC_ACID_ROUND  equ 0xCB ; ACID_ROUND (5B592h: a round starting: each creature's Acid burns)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -405,6 +410,178 @@ npp_save:
         pop bp
         iret
 npp_count dw 0                          ; times it was asked (for the tests)
+
+; ---- ACID: DSCLOG's ACID_ROUNDS, ACID_BURN, ACID_ONCE, ACID_USE, ACID_ROUND ----
+; Acid Arrow's Acid (effect 1) never burned after the arrow's hit, as in Shattered Lands: the routine
+; spending a creature's charges of an effect (7FD94h, stub 608h:57h: each charge spent burns, Acid's
+; burn 82BECh, 2d4 acid as Acid Arrow, spell 12h) is called for Acid only on a chance event (81FC6h),
+; and Acid's time is seconds on the game clock, a timer that only ends it. ACID_ROUNDS makes the time
+; rounds (1 a started minute) as charges; ACID_ROUND, at each round's start, spends one for each
+; creature with Acid, through the stub; ACID_USE lets no other call spend Acid's. The burn's damage
+; is Acid Arrow's, whose record would put Acid on again: ACID_BURN notes a burn starting and
+; ACID_ONCE has its damage put no effect on. (DSCLOG's, without Lower Resistance's level, Sunstroke's
+; heat or Whirlwind's damage, which the sequel doesn't have from the mod yet.) Each INT is followed
+; by NOPs to the site's length; its way back is right after the INT.
+ACID_EFFECT   equ 1
+ROUND_SECONDS equ 60
+PERMANENT_DUR equ -9999
+USE_STUB      equ 0x473B - 0x47E0   ; (the spender's stub segment, 608h's, less DS's)
+USE_ENTRY     equ 0x57
+USE_OUT       equ 0x7FE8F - 0x7FD9B ; (the spender's "pop di / pop si / pop bp / retf", from the INT's return)
+FIRST_ROUND   equ 0x54E             ; DS byte: set for a fight's first round (SL's word at 55Ah)
+FLAGS_MASK    equ 0x08D5            ; (CF, PF, AF, ZF, SF, OF: a compare's)
+acid_burning db 0                   ; (1 from ACID_BURN until its damage's effect is passed: ACID_ONCE)
+acid_mine    db 0                   ; (1 while ACID_ROUND's call spends Acid: ACID_USE)
+acid_far     dd 0
+acid_burns   dw 0                   ; Acid charges spent by ACID_ROUND (for the tests)
+
+; acid_flags: the way back from a handler that did PUSHAD, then ES, with AX's flags (a compare's) in
+; its frame's FLAGS (SS:SP+38 at the jump).
+acid_flags:
+        mov di, sp
+        and ax, FLAGS_MASK
+        and word [ss:di + 38], ~FLAGS_MASK
+        or [ss:di + 38], ax
+        pop es
+        popad
+        iret
+
+; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (7FAA6h; 8 bytes) in the routine adding an effect ([BP+0Ch]
+; the effect, [BP+0Eh] its time, a dword; less than 0 charges, kept in the entry's +8): an Acid's time
+; in seconds made rounds as charges (at least 1, at most 127); then the compare made, its flags returned.
+acid_rounds:
+        pushad
+        push es
+        cmp byte [bp + 0x0C], ACID_EFFECT
+        jne .test
+        mov eax, [bp + 0x0E]
+        or eax, eax
+        jle .test
+        add eax, ROUND_SECONDS - 1
+        xor edx, edx
+        mov ecx, ROUND_SECONDS
+        div ecx
+        cmp eax, 0x7F
+        jbe .neg
+        mov eax, 0x7F
+.neg:   neg eax
+        mov [bp + 0x0E], eax
+.test:  cmp dword [bp + 0x0E], PERMANENT_DUR
+        pushf
+        pop ax
+        jmp acid_flags
+
+; ACID_BURN: "mov si,[bp+6]" (82BF3h; 3 bytes) at the start of Acid's burn ([BP+6] the creature): noted
+; (ACID_BURNING), the move made.
+acid_burn:
+        mov byte [cs:acid_burning], 1
+        mov si, [bp + 6]
+        iret
+
+; ACID_ONCE: "cmp word [bp-0Ah],0" (651FEh; 4 bytes) where a spell's damage (64F5Fh) puts the record's
+; effect ([BP-0Ah]) on the target it hurt: during an Acid burn (ACID_BURNING, then cleared) none, as if
+; the record had none; else the compare made, its flags returned.
+acid_once:
+        pushad
+        push es
+        cmp byte [cs:acid_burning], 0
+        je .test
+        mov byte [cs:acid_burning], 0
+        xor ax, ax                      ; (ZF set: "none")
+        jmp .flags
+.test:  cmp word [bp - 0x0A], 0
+.flags: pushf
+        pop ax
+        jmp acid_flags
+
+; ACID_USE: "mov di,[bp+6]" (7FD99h; 3 bytes) at the start of the routine spending creature [BP+6]'s
+; charges of effect [BP+8] (7FD94h): Acid's spent only from ACID_ROUND (ACID_MINE), any other call
+; returning at once (its "pop di / pop si / pop bp / retf"); else the move made.
+acid_use:
+        cmp byte [bp + 8], ACID_EFFECT
+        jne .go
+        cmp byte [cs:acid_mine], 0
+        jne .go
+        push bx
+        mov bx, sp
+        add word [ss:bx + 2], USE_OUT   ; (none spent: return at once)
+        pop bx
+        iret
+.go:    mov di, [bp + 6]
+        iret
+
+; ACID_ROUND: "cmp byte [54Eh],0" (5B592h; 5 bytes) in the routine starting each round (5B585h: the
+; clock moved on, then the initiative): each creature with Acid charges (ACID_ROUNDS) has one spent
+; (7FD94h through its stub, the way back in a frame the overlay manager can fix up, as it may load
+; that code over the caller's), the creatures in turn by their number (the table changes as entries
+; go); then the compare made, its flags returned. DS the game's; all registers kept.
+acid_round:
+        pushad
+        push es
+        sti
+        mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
+        call burn_pass
+        cmp byte [FIRST_ROUND], 0
+        pushf
+        pop ax
+        jmp acid_flags
+
+burn_pass:
+        mov dx, -1                      ; (DX the last creature done)
+.next:  mov ax, ds
+        sub ax, EFFECTS_GAP
+        mov es, ax
+        mov di, 0xFFFF                  ; (DI the least creature past DX with Acid charges)
+        xor cx, cx
+.scan:  cmp cx, [EFFECTS_COUNT]
+        jae .found
+        cmp cx, 400
+        jae .found
+        imul si, cx, 10
+        add si, EFFECTS_BASE
+        inc cx
+        cmp byte [es:si + 6], ACID_EFFECT
+        jne .scan
+        cmp byte [es:si + 8], 0
+        je .scan
+        mov ax, [es:si]
+        cmp dx, -1
+        je .first
+        cmp ax, dx
+        jbe .scan
+.first: cmp ax, di
+        jae .scan
+        mov di, ax
+        jmp .scan
+.found: cmp di, 0xFFFF
+        je .done
+        mov dx, di
+        push bx
+        push dx
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, USE_STUB
+        mov [cs:acid_far + 2], ax
+        mov word [cs:acid_far], USE_ENTRY
+        mov byte [cs:acid_mine], 1
+        inc word [cs:acid_burns]
+        push word ACID_EFFECT
+        push di
+        call far [cs:acid_far]
+        add sp, 4
+        mov byte [cs:acid_mine], 0
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop dx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .next
+.done:  ret
 
 ; ---- PIC_REUSE: DSCLOG's, on the sequel's picture cache ----
 ; The game's picture cache (DSUNLOG2.EXE 2A568h, SL's 25FA6h) has 300 slots, 16 bytes each (the
@@ -956,6 +1133,11 @@ all_vectors:
         vector VEC_REAR, missile_rear
         vector VEC_REST_POISON, rest_poison
         vector VEC_NPP, npp_save
+        vector VEC_ACID_ROUNDS, acid_rounds
+        vector VEC_ACID_BURN, acid_burn
+        vector VEC_ACID_ONCE, acid_once
+        vector VEC_ACID_USE, acid_use
+        vector VEC_ACID_ROUND, acid_round
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

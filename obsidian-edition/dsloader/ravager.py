@@ -59,7 +59,8 @@ VEC_RAND = gamepatch.VEC_RAND  # (as DSCLOG2's: dos/dsclog2.asm)
 VEC_PIC_FULL, VEC_PIC_PLACE, VEC_PIC_COUNT, VEC_PIC_FAIL = 0xC0, 0xC1, 0xC2, 0xC3
 VEC_REAR = 0xC4  # (DSCLOG2's MISSILE_REAR)
 VEC_REST_POISON = 0xC5  # (DSCLOG2's REST_POISON)
-VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)  # (DSCLOG2's own: 66h is DOSBox's)
+VEC_NPP = 0xC6  # (DSCLOG2's NPP_SAVE)
+VEC_ACID_ROUNDS, VEC_ACID_BURN, VEC_ACID_ONCE, VEC_ACID_USE, VEC_ACID_ROUND = 0xC7, 0xC8, 0xC9, 0xCA, 0xCB  # (DSCLOG2's own: 66h is DOSBox's)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -121,6 +122,15 @@ PATCHES: Tuple[Patch, ...] = (
     # save, so it never stopped an undead's touch (SL's npp_save): DSCLOG2's NPP_SAVE in the place of
     # "add sp,4 / push 6 / push 26h" (84DDAh) makes the save one against paralysis, poison and death.
     Patch("npp_save", 0x84DDA, bytes.fromhex("83c4046a066a26"), bytes((0xCD, VEC_NPP)) + b"\x90" * 5),
+    # Acid Arrow's acid never burned after the hit (SL's acid_*): its time made rounds as charges where
+    # an effect is added, one spent for each creature at each round's start (Acid's burn, 2d4), none
+    # spent by any other call, and the burn's damage putting no Acid on again: DSCLOG2's ACID_ROUNDS,
+    # ACID_ROUND, ACID_USE, ACID_BURN and ACID_ONCE, each INT followed by NOPs to the site's length.
+    Patch("acid_rounds", 0x7FAA6, bytes.fromhex("66817e0ef1d8ffff"), bytes((0xCD, VEC_ACID_ROUNDS)) + b"\x90" * 6),
+    Patch("acid_burn", 0x82BF3, bytes.fromhex("8b7606"), bytes((0xCD, VEC_ACID_BURN, 0x90))),
+    Patch("acid_once", 0x651FE, bytes.fromhex("837ef600"), bytes((0xCD, VEC_ACID_ONCE, 0x90, 0x90))),
+    Patch("acid_use", 0x7FD99, bytes.fromhex("8b7e06"), bytes((0xCD, VEC_ACID_USE, 0x90))),
+    Patch("acid_round", 0x5B592, bytes.fromhex("803e4e0500"), bytes((0xCD, VEC_ACID_ROUND, 0x90, 0x90, 0x90))),
     # Missiles from behind: the attack's set-up (5C8xxh, SL's 582xxh) makes an attack one from behind by
     # the target's facing alone, missiles too, whatever the distance (+2 to hit, the target's DEX and
     # shield lost). DSCLOG2's MISSILE_REAR at SL's site (its "stealth" probe's, there "push word
