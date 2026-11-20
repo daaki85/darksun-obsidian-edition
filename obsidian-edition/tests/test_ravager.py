@@ -133,8 +133,18 @@ class GameFileTests(unittest.TestCase):
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-        same, done = ravager.script_fixed(data, {"inn_rest"})
+        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES))
         self.assertEqual((same, done), (data, []))
+
+    def test_manual_check_decodes(self):
+        """The copy's GPL 331 still decodes whole, and starts with the right answer's settings."""
+        from dsloader import gpl
+        data, _ = ravager.script_fixed(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
+        scripts, types = gpl.load_scripts(data)
+        ops = gpl.decode(scripts[("GPL ", 331)], types)
+        self.assertEqual([(o.code, o.args) for o in ops[1:5]],
+                         [(0x16, [("n", 0), ("var", 14, 0)]), (0x16, [("n", 255), ("var", 7, 32)]),
+                          (0x16, [("n", 7), ("var", 7, 29)]), (0x15, [])])
 
     def test_spells_manual_off(self):
         data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()

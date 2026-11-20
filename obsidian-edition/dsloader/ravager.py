@@ -297,8 +297,17 @@ def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
 #   before the rest. One night paid, no rest. The fix jumps over that arming (the GOTO and fill of
 #   gpl.put_jumps): the paid night rests, and a look at the spent ring (the ELSE, which arms the same
 #   trigger) takes it away. Found 2026-11-20 (playtest/logs/2026-11-20-ravager-dicelog.md).
+#   no_manual_check: the mod's "no manual check" (as dsloader/manualcheck.py for Shattered Lands). The
+#   game's copy protection is GPL 331, which GPL 137 (at 3589) runs while (135,29) isn't 7: a presence
+#   "creates a mindlink" and asks for a word from the manual, three wrong answers and the party dies.
+#   Its right answer runs GPL 142 at 1 ((7,32) 255, (7,29) 7, "Your answer suffices") and returns.
+#   In the copy 331 does that from its start (after (14,0) 0, as its own start sets): no presence,
+#   no question; its first two commands (to 63) made those and the filler, so the rest still decodes.
 SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
     "inn_rest": (142, 1499, bytes.fromhex("1b002f00179105258f0f"), bytes.fromhex("6405e561616161616161")),
+    "no_manual_check": (331, 1, bytes.fromhex(
+        "2a4f00629205a9a32a0c3a7920c38b7f5e883cefea831f2c38f5eccbcd077d3d3420db873e9c787620c9a79e3d187967cbcd06141c37f7cbcb375d880180"),
+        bytes.fromhex("1600008e001600ff8720160007871d15") + b"\x61" * 46),
 }
 
 
