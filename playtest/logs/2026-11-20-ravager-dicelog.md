@@ -181,6 +181,12 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     2 left; DSCLOG2's count 2; no damage from those), the others landing. A spell on someone with
     images not yet seen.
 
+30. **People's gear before their first action** (SL's bug: in the pack till then, the Loader's people.py):
+    the opening ambush, no Draxan having acted, their item lists read (game.GameData._worn on the
+    sequel's layout): armour in the worn list, weapons in the held list, the packs empty; the Caravan
+    Master's clothes alone in his pack. The sequel has it fixed. A look click at a Draxan in the
+    ambush's first turn wasn't taken (the pointer didn't move there).
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log. A script's right-click right after closing a talk made the pointer the sword (the talk sets it
