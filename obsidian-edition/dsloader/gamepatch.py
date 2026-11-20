@@ -230,6 +230,8 @@ AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E,
 # (the item box's INFO, its USEABLE BY: heading: a Spellarcher's spell arrows SPELLARCHERS:,
 # DSCLOG's INFO_HEAD)
 INFO_HEAD_SITE = NS_IMAGE + 121
+# (F10's standing-still test: a member Paralyzed or Stuck isn't moved back, DSCLOG's F10_PIN)
+F10_PIN_SITE = NS_IMAGE + 122
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1192,6 +1194,9 @@ PATCHES = (
     # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
     Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
     Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
+    # F10 in a fight (1B83Ah): its standing-still test and the jump to the move taken back, "or ax,ax /
+    # jz 1B872h": made only for a member neither Paralyzed nor Stuck (DSCLOG's F10_PIN)
+    Patch("f10_pin", 0x1B86B, bytes.fromhex("0bc07403"), _site(F10_PIN_SITE, 4)),
     # the attack command's tests of its target still Okay after the attacks (cmp byte es:[bx+1Ch],1):
     # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
     *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))
