@@ -321,6 +321,19 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   **Loading**: the title menu's LOAD SAVED GAME (159,110), the slot, LOAD (252,47): `ravload.sh NAME`
   (`saves/ravager-after-ambush`, the opening won). Escape with nothing up brings EXIT GAME? (QUIT /
   CANCEL at 145,116): a second Escape after closing a screen does it.
+- **Walking**: the **arrow keys** (not the keypad's) walk the leader a step (16 px) a press and the view
+  follows; clicks with the arrow walk too but only on screen, and are barred near its edges or on
+  walls. Out of a fight only the leader is on the map (its object, 2 for Thy'rokh as leader); world
+  pixels are screen pixels from the camera (DS:1408h). Inside a building with its roof cut away the
+  leader can be hidden behind the roof's edge. The area map (game menu) shows a marker that doesn't
+  follow the party.
+- **Tyr from the save**: the street runs north-south at x ~1175; its south end is the city gate ("The
+  gates are locked."). Uhubito's building east of it (door on the street, y ~1340); an alley east at
+  y ~1225 (entered from the street at y ~1225-1240), past Arslan's side and the beggar, along the
+  Harbinger's Roost's north wall (no door there: its arches are inside doorways seen through the
+  cut-away) to the map's east edge (x ~2020); two thieves stop the party near x 1840 ("Run along now,
+  pip" makes them fight: won by Computer Control, the party hurt). Fayina is in the Roost's back room
+  (1807, 1352). The Roost's way in not found yet (2026-11-20).
 - **Resting**: only at a fire ring (the Look icon on it), or a room at an inn (Tyr's Harbinger's Roost,
   25 cp, southeast of the start). The Mines of Tyr level 1 have a fire ring in the room past exit C
   (the owner's map, 2026-11-20: by the dying miner).

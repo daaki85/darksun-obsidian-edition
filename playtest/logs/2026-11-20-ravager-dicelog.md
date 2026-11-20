@@ -124,6 +124,12 @@ ravstart.sh /tmp/playtest/rav`, the talk (3, Return), the party up the street (t
     Computer Control off again, GAME MENU, the disk, SAVE, slot 1 "AFTER AMBUSH": saves/
     ravager-after-ambush; loaded back from the title menu (ravload.sh's steps): the street as saved.
 
+23. **Toward a rest** (from ravager-after-ambush; Thy'rokh a 7th-level druid by real play): the walk to the
+    Harbinger's Roost. Clicks barred near the screen's edges; the arrow keys walk and scroll. Talked
+    past Uhubito, fought two thieves in the alley (Computer Control; won, Ar'anda left at 1 HP), along
+    the Roost's north wall: no way in found on its north, east (the map's edge) or by the south gate.
+    Stopped there; nothing saved.
+
 **Stalls:** `import`'s colours are 16-bit (65535), so ravscare.sh's "above 200" check passed on any
 screen and its C wasn't retried (fixed: `-depth 8`); a C lost walked Ar'anda by the LEVEL click. A
 `pkill -f` on a pattern in my own command line (against the rules: kill by pid) only stopped the old log.
