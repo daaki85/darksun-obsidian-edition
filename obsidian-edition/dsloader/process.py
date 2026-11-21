@@ -363,6 +363,23 @@ def memory_file() -> str:
     return os.environ.get(MEMORY_FILE_ENV, "")
 
 
+def _pread(fd: int, size: int, addr: int) -> bytes:
+    """os.pread where there is one; else (Windows, which maps the file instead) a seek and a read."""
+    if hasattr(os, "pread"):
+        return os.pread(fd, size, addr)
+    os.lseek(fd, addr, os.SEEK_SET)
+    return os.read(fd, size)
+
+
+def _pwrite(fd: int, data: bytes, addr: int) -> None:
+    """os.pwrite where there is one; else a seek and a write."""
+    if hasattr(os, "pwrite"):
+        os.pwrite(fd, data, addr)
+        return
+    os.lseek(fd, addr, os.SEEK_SET)
+    os.write(fd, data)
+
+
 class FileMemory:
     """DOSBox-X's memory file PATH as the game's memory; PID is DOSBox-X's process, if known (0:
     not known), used only to hold the game still for the item gate and to tell when it has closed.
@@ -426,7 +443,7 @@ class FileMemory:
             if self._map is not None:
                 data = self._map[addr:addr + size]
             else:
-                data = os.pread(self._fd, size, addr)
+                data = _pread(self._fd, size, addr)
         except (OSError, ValueError, OverflowError, TypeError) as e:
             raise ProcessError(f"Read at {addr:#x} failed: {e}") from e
         if len(data) != size:  # (the file cut: DOSBox-X starting again)
@@ -441,7 +458,7 @@ class FileMemory:
             if self._map is not None:
                 self._map[addr:addr + len(data)] = data
             else:
-                os.pwrite(self._fd, data, addr)
+                _pwrite(self._fd, data, addr)
         except (OSError, ValueError, OverflowError, TypeError) as e:
             raise ProcessError(f"Write at {addr:#x} failed: {e}") from e
 

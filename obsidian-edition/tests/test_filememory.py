@@ -229,6 +229,11 @@ class ConnectTests(unittest.TestCase):
         cli._located = lambda pid, host_base=None: ("process", pid)
         self.found = []
         cli.find_dosbox_processes = lambda: list(self.found)
+        # (the pids here are made up: whether such a process runs is the machine's, not connect's
+        # question; the liveness check has tests of its own above)
+        saved_alive = FileMemory._check_alive
+        self.addCleanup(lambda: setattr(FileMemory, "_check_alive", saved_alive))
+        FileMemory._check_alive = lambda self: None
 
     def connect(self, pid=None, started=None):
         guest = cli.connect(argparse.Namespace(pid=pid, host_base=None), started)
