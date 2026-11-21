@@ -2849,6 +2849,7 @@ site_table:
         dw strength_dice                    ; 10 SITE_STRENGTH
         dw cell_heal                        ; 11 SITE_CELL
         dw psi_feeble                       ; 12 SITE_PSI
+        dw rainbow_hurt                     ; 13 SITE_RAINBOW
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3190,6 +3191,77 @@ psi_feeble:
         pop cx
         pop bx
         iret
+; RAINBOW_HURT (site 13, "rainbow_pattern_damage"): the start of the routine taking hit points off a
+; combatant (5CBE4h, SL's 5859Ah: every blow's and spell's damage), "mov di,[bp+6] / mov dx,[bp+8]"
+; (5CBECh; 6 bytes: the combatant, the damage): any damage to a combatant Paralyzed (the sequel's 69) by
+; Rainbow Pattern (49: the entry's spell, not Hold Person's or another's) ends that hold, through
+; 608h:48h (7FB63h: the combatant, the entry's handle, +7; as the game ends an effect, its abilities
+; worked out again), in a frame the overlay manager can fix up (as ACID_ROUND's). Recorded
+; (MN_RAINBOW). Then the moves made.
+MN_RAINBOW     equ 4
+RAINBOW_SPELL  equ 49
+HELD_EFFECT    equ 69
+END_STUB       equ 0x473B - 0x47E0  ; (608h's stub segment less DS's)
+END_ENTRY      equ 0x48
+rainbow_hurt:
+        mov di, [bp + 6]
+        mov dx, [bp + 8]
+        sti
+        pushad
+        push es
+        mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
+        or dx, dx
+        jle .out
+        mov ax, ds
+        sub ax, EFFECTS_GAP
+        mov es, ax
+        mov si, EFFECTS_BASE
+        mov cx, [EFFECTS_COUNT]
+        cmp cx, 400
+        ja .out
+.each:  jcxz .out
+        cmp [es:si], di
+        jne .next
+        cmp byte [es:si + 6], HELD_EFFECT
+        jne .next
+        cmp word [es:si + 4], RAINBOW_SPELL
+        je .free
+.next:  add si, 10
+        loop .each
+.out:   pop es
+        popad
+        iret
+.free:  movzx ax, byte [es:si + 7]      ; (its handle)
+        pusha
+        mov [cs:mn_frame], di
+        mov [cs:mn_frame + 2], dx
+        mov word [cs:mn_frame + 4], 0
+        mov word [cs:mn_frame + 6], 0
+        mov ax, MN_RAINBOW
+        call mn_rec
+        popa
+        inc word [cs:manual_count]
+        push bx
+        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov cx, ds
+        add cx, END_STUB
+        mov [cs:end_far + 2], cx
+        mov word [cs:end_far], END_ENTRY
+        push ax
+        push di
+        call far [cs:end_far]           ; (the combatant, the handle)
+        add sp, 4
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .out
+end_far dd 0
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]
