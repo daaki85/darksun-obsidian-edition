@@ -51,3 +51,14 @@ dress['2426'] = dress['2427'] and dress['2428'] = dress['3613']:
 2. **The half-giant miner with his pick** (3613) as the Draxans: walking out of the house with the
    pick held in his hands, a head taller than the party (`img/2026-11-21-rav-halfgiant-pick.png`).
 Every body in this round has now been seen in game.
+
+## Fourth play: the mind flayers (stand-in slots)
+
+Seven mind flayers (2884, 2885, 2887-2891) dressed on SL's hooded robe (body 24) with face tentacles
+(darksun-recompiled `tools/proto/flayer.py`, branch claude/ravager-flayers). dress['2426'] = 2884
+(green) and dress['2428'] = 2891 (purple):
+1. The green flayer stands in the opening talk, lavender head and hands, the purple collar
+   (`img/2026-11-21-rav-flayer-green.png`).
+2. The purple flayers walk out of the house sideways and fight round the party
+   (`img/2026-11-21-rav-flayers-walking.png`). Anchors right.
+This container needed `apt-get install dosbox xdotool` again and Xvfb was gone: ravstart.sh starts it.
