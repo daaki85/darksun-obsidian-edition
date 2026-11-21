@@ -45,6 +45,9 @@ VEC_USE       equ 0xCE  ; PROBE_USE (79543h: the USE screen's LEVEL button label
 VEC_WIN       equ 0xCF  ; PROBE_WIN (303BEh: a window brought to the front: the USE screen's slots again)
 VEC_ITEM_BOX  equ 0xD0  ; PROBE_ITEM_BOX (9A4FEh: an item's box filled: its charges, or a weapon's material)
 VEC_CHAR      equ 0xD1  ; PROBE_CHAR (91286h: the inventory panel's lines: THAC0, saves, thief skills)
+VEC_CAST      equ 0xD2  ; PROBE_CAST (80585h: a spell or power cast, its caster read: recorded)
+VEC_SCROLL    equ 0xD3  ; PROBE_SCROLL (20230h: the map's main loop asking where the pointer is: LABEL_TICK)
+VEC_TICK      equ 0xD4  ; PROBE_TICK (3DA2Ch: the game's timer: LABEL_STAMP)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -117,8 +120,15 @@ vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
-        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +267: none of them here yet, zero)
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +237: none of them here yet, zero)
+dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
+                                ;      768 values 0-63, for the colours of the Loader's labels
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +240 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +270 to +1833: none of them here yet, zero)
+tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
+tail_paras dw 0                 ; +1836   in its resident part), set as it loads
+lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 align 16
@@ -1758,6 +1768,560 @@ t_cs    dw 0
 t_fl    dw 0
 char_count dw 0                 ; panels drawn on (for the tests)
 
+; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
+; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
+; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
+; spell. Recorded (kind KIND_CAST, the spell the entry's value: the Loader floats its name over the
+; caster), then the move done.
+KIND_CAST equ 8
+probe_cast:
+        push si
+        mov si, sp
+        sub si, 4               ; SS:SI+6 = our return address (as RECORD wants it)
+        push ax
+        mov word [cs:extra], 0
+        mov ax, [bp + 0x0A]
+        mov word [cs:kind], KIND_CAST
+        call record
+        pop ax
+        pop si
+        mov cx, [bp + 6]
+        iret
+
+; ---- LABELS: DSCLOG's names floating over figures, on the sequel's map ----
+; The Loader (labels.py) writes each label, two one-bit masks, into LBL_SLOTS (the header's +1834:+1838:
+; here, in this resident part); this puts them over their figures' feet. The map is drawn straight
+; into the screen on show, a rectangle at a time, so a label is put again after the game draws: from
+; the timer, every other strike (LABEL_STAMP from PROBE_TICK), and from the main loop, which also
+; places them (LABEL_TICK) and has where one was drawn again by the game's routine when it goes or
+; moves (LABEL_ERASE). DSCLOG draws the whole view again when it scrolls; here the two places a label
+; can be then (where it was, and where the game's copy of the screen moved it) are drawn again.
+LBL_SLOTS  equ 4
+LBL_ROW    equ 16
+LBL_H_MOST equ 11
+LBL_MASK   equ LBL_ROW * LBL_H_MOST
+LBL_SIZE   equ 8 + 2 * LBL_MASK
+LBL_TOP    equ 40               ; (screen rows above: the game's boxes, in a fight)
+CAM_X      equ 0x1408           ; DS: the view's top left on the map (SL's 1178h)
+CAM_Y      equ 0x140A
+OBJ_LIST   equ 0x67B7           ; DS: far pointer to the things on the map, 8 bytes each, +6 which (SL's 6690h)
+OBJ_COUNT  equ 0x264E           ;   and how many (SL's 1F72h)
+MAP_THINGS equ 0x67BB           ; DS: each thing on the map, 25h bytes (SL's 6694h, 32), its feet +0Ah, +0Ch
+THING_SIZE equ 0x25
+THING_X    equ 0x0A
+THING_Y    equ 0x0C
+MAP_COUNT  equ 0x141
+SCREEN_IS  equ 0x0DAB           ; DS: 1 on the map (SL's 0BC9h)
+REDRAW_SEG equ 0x21E0           ; the game's routine drawing a rectangle of the view again (21E0:128Ch,
+REDRAW_OFF equ 0x128C           ;   SL's 1DF3:142Fh), as its own call at 2CB06h (SL's 28185h)
+DGROUP     equ 0x47E0
+LS_SEEN  equ 0
+LS_SHOWN equ 1
+LS_W     equ 2
+LS_H     equ 3
+LS_X     equ 4
+LS_Y     equ 6
+lbl_state times LBL_SLOTS * 8 db 0
+lbl_busy  db 0
+lbl_cx    dw 0
+lbl_cy    dw 0
+lp_line   dw 0
+lp_ink    db 0
+lp_edge   db 0
+pointer_ds dw 0                 ; the game's DS (PROBE_SCROLL's)
+redraw_far dw REDRAW_OFF, 0
+tick_count dw 0
+dac_at    dw 0
+dac_reads dw 0                  ; (for the tests and a look in play)
+label_ticks dw 0
+s_ip      dw 0
+s_cs      dw 0
+s_fl      dw 0
+s_far     dw 0, 0
+
+; PROBE_SCROLL: INT VEC_SCROLL replaces the start of "call far 35B9:0034" (20230h: 9Ah 34h 00h, then
+; the segment: A9h makes it a harmless "test ax,<segment>" the loader may relocate), the map's main
+; loop asking where the pointer is (far pointers to x and y on the stack). The labels' pass done with
+; interrupts off, then the call made as the game would (its segment read from the code, relocated),
+; interrupts on again first if the caller had them on.
+probe_scroll:
+        pop word [cs:s_ip]
+        pop word [cs:s_cs]
+        pop word [cs:s_fl]
+        push es
+        push bx
+        les bx, [cs:s_ip]
+        mov bx, [es:bx + 1]             ; (the call's segment)
+        mov [cs:s_far + 2], bx
+        mov word [cs:s_far], 0x0034
+        pop bx
+        pop es
+        add word [cs:s_ip], 3           ; (past the segment)
+        mov [cs:pointer_ds], ds
+        pusha
+        push es
+        call label_tick
+        pop es
+        popa
+        test byte [cs:s_fl + 1], 2      ; (the caller's flags' IF)
+        jz .call
+        sti
+.call:  call far [cs:s_far]
+        push word [cs:s_fl]
+        push word [cs:s_cs]
+        push word [cs:s_ip]
+        iret
+
+; PROBE_TICK: INT VEC_TICK replaces "inc word cs:[0004h]" (5 bytes: INT + 3 NOPs; 3DA2Ch, SL's
+; 3925Ch), the first instruction of the game's timer handler. Does that, and every other strike puts
+; the labels again. Interrupts stay off.
+probe_tick:
+        push bp
+        mov bp, sp
+        push ds
+        mov ds, [bp + 4]                ; the handler's CS
+        inc word [4]                    ; the replaced instruction
+        pop ds
+        pop bp
+        inc word [cs:tick_count]
+        test byte [cs:tick_count], 1
+        jnz .out
+        call label_stamp
+.out:   iret
+
+; ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
+on_map:
+        push es
+        push ax
+        mov ax, [cs:pointer_ds]
+        cmp ax, 1                       ; (not known yet: ZF clear)
+        jb .out
+        mov es, ax
+        cmp word [es:SCREEN_IS], 1
+.out:   pop ax
+        pop es
+        ret
+
+; DAC_TICK: the palette read into the far block's DAC about once a second (the Loader's labels'
+; colours: combatlog.tsr_dac). DS the game's; keeps all.
+dac_tick:
+        pusha
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov dx, ax
+        sub dx, [cs:dac_at]
+        cmp dx, 18
+        jb .out
+        mov [cs:dac_at], ax
+        inc word [cs:dac_reads]
+        mov es, [cs:far_seg]
+        mov di, FAR_DAC
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        mov cx, 768
+        cld
+        rep insb
+.out:   pop es
+        popa
+        ret
+
+; LABEL_TICK: from the main loop (DS the game's): the labels placed, the old places of those gone or
+; moved drawn again, then all put
+label_tick:
+        cmp byte [cs:lbl_busy], 0
+        jne .ret
+        inc word [cs:label_ticks]
+        call dac_tick
+        pushf
+        cli
+        mov ax, [CAM_X]
+        mov bx, [CAM_Y]
+        xchg ax, [cs:lbl_cx]
+        xchg bx, [cs:lbl_cy]
+        sub ax, [cs:lbl_cx]             ; (AX, BX: where the view's scroll moved what was on screen)
+        sub bx, [cs:lbl_cy]
+        mov cx, ax
+        or cx, bx
+        jz .slots
+        mov si, lbl_state
+.moved: cmp byte [cs:si + LS_SHOWN], 0
+        je .nmoved
+        call label_erase                ; (where it was)
+        add [cs:si + LS_X], ax
+        add [cs:si + LS_Y], bx
+        call label_erase                ; (where the scroll's copy put it)
+.nmoved:
+        add si, 8
+        cmp si, lbl_state + LBL_SLOTS * 8
+        jb .moved
+.slots: push fs
+        push cs
+        pop fs
+        mov si, lbl_state
+        mov di, lbl_slots
+.slot:  call label_where
+        jc .off
+        mov dl, [fs:di]
+        cmp byte [cs:si + LS_SHOWN], 0
+        je .new
+        cmp dl, [cs:si + LS_SEEN]
+        jne .move
+        cmp ax, [cs:si + LS_X]
+        jne .move
+        cmp bx, [cs:si + LS_Y]
+        je .next
+.move:  call label_erase
+.new:   call label_adopt
+        jmp .next
+.off:   cmp byte [cs:si + LS_SHOWN], 0
+        je .next
+        call label_erase
+.next:  add di, LBL_SIZE
+        add si, 8
+        cmp si, lbl_state + LBL_SLOTS * 8
+        jb .slot
+        pop fs
+        call label_stamp
+        popf
+.ret:   ret
+
+; LABEL_ADOPT: label FS:DI (DL its number) shown from now at AX, BX (SI its state)
+label_adopt:
+        mov [cs:si + LS_SEEN], dl
+        mov [cs:si + LS_X], ax
+        mov [cs:si + LS_Y], bx
+        mov ax, [fs:di + 1]
+        mov [cs:si + LS_W], ax          ; (and LS_H)
+        mov byte [cs:si + LS_SHOWN], 1
+        ret
+
+; LABEL_WHERE: CF clear and AX, BX the top left on screen of label DI (FS:DI, the Loader's slot) if it
+; is to be shown: one, its size in bounds, on the map, its thing in OBJ_LIST; DS the game's (DSCLOG's,
+; with the sequel's 25h-byte things); CX kept
+label_where:
+        cmp byte [fs:di], 0
+        je .no
+        cmp byte [fs:di + 1], LBL_ROW * 8
+        ja .no
+        cmp byte [fs:di + 2], LBL_H_MOST
+        ja .no
+        call on_map
+        jne .no
+        push ds
+        mov ds, [cs:pointer_ds]
+        push cx
+        push es
+        les bx, [OBJ_LIST]
+        mov cx, [OBJ_COUNT]
+        mov ax, [fs:di + 6]
+        jcxz .none
+.find:  cmp [es:bx + 6], ax
+        je .got
+        add bx, 8
+        loop .find
+.none:  pop es
+        pop cx
+        pop ds
+.no:    stc
+        ret
+.got:   pop es
+        pop cx
+        cmp ax, MAP_COUNT
+        jae .no_ds
+        imul bx, ax, THING_SIZE
+        movzx ax, byte [fs:di + 1]
+        shr ax, 1
+        neg ax
+        add ax, [bx + MAP_THINGS + THING_X]  ; (its feet, on the map)
+        sub ax, [CAM_X]
+        jge .x0
+        xor ax, ax
+.x0:    push dx
+        mov dx, 320
+        sub dl, [fs:di + 1]
+        sbb dh, 0
+        cmp ax, dx
+        jle .x1
+        mov ax, dx
+.x1:    mov bx, [bx + MAP_THINGS + THING_Y]
+        sub bx, [CAM_Y]
+        mov dx, bx                      ; (its feet, on screen)
+        sub bl, [fs:di + 3]
+        sbb bh, 0
+        sub bl, [fs:di + 2]
+        sbb bh, 0
+        cmp bx, LBL_TOP
+        jge .y1
+        mov bx, dx                      ; (under its feet)
+        add bx, 2
+        or bx, bx
+        jl .off
+.y1:    mov dx, 200
+        sub dl, [fs:di + 2]
+        sbb dh, 0
+        cmp bx, dx
+        jle .y2
+        mov bx, dx
+.y2:    pop dx
+        pop ds
+        clc
+        ret
+.off:   pop dx
+.no_ds: pop ds
+        stc
+        ret
+
+; LABEL_ERASE: where label SI (its LBL_STATE) was drawn again by the game's routine for a rectangle of
+; the view (REDRAW_SEG:REDRAW_OFF, page 1 and a flip, as the game's own call), widened to whole bytes
+; of the planes; it is no longer shown. Nothing when it is all off the screen. Keeps all.
+label_erase:
+        mov byte [cs:lbl_busy], 1
+        mov byte [cs:si + LS_SHOWN], 0
+        pusha
+        push ds
+        push es
+        mov ds, [cs:pointer_ds]
+        movzx dx, byte [cs:si + LS_H]
+        add dx, [cs:si + LS_Y]
+        dec dx                          ; y1
+        jl .out
+        movzx cx, byte [cs:si + LS_W]
+        add cx, [cs:si + LS_X]
+        dec cx
+        jl .out
+        or cx, 3
+        cmp cx, 319
+        jle .x1
+        mov cx, 319
+.x1:    cmp dx, 199
+        jle .y1
+        mov dx, 199
+.y1:    mov bx, [cs:si + LS_Y]          ; y0
+        cmp bx, 199
+        jg .out
+        or bx, bx
+        jge .y0
+        xor bx, bx
+.y0:    mov ax, [cs:si + LS_X]
+        cmp ax, 319
+        jg .out
+        or ax, ax
+        jge .x0
+        xor ax, ax
+.x0:    and ax, ~3                      ; x0
+        push ax
+        mov ax, ds
+        sub ax, DGROUP - REDRAW_SEG
+        mov [cs:redraw_far + 2], ax
+        pop ax
+        push word 1                     ; (the flip)
+        push dx
+        push cx
+        push bx
+        push ax
+        push word 1                     ; (the page)
+        push word [CAM_Y]
+        push word [CAM_X]
+        call far [cs:redraw_far]
+        add sp, 16
+.out:   pop es
+        pop ds
+        popa
+        mov byte [cs:lbl_busy], 0
+        ret
+
+; LABEL_STAMP: the labels shown put on the screen on show (as the Loader has them: not one it is
+; changing), on the map only, the view where LABEL_TICK last saw it. A new label is placed here too,
+; as the main loop doesn't run while the game shows an attack or a spell. Any DS; keeps all.
+label_stamp:
+        cmp byte [cs:lbl_busy], 0
+        jne .ret
+%assign slot 0
+%rep LBL_SLOTS
+        cmp byte [cs:lbl_slots + slot * LBL_SIZE], 0
+        jne .some
+%assign slot slot + 1
+%endrep
+.ret:   ret                             ; (no label in any slot: nothing to put, nor to place)
+.some:  cmp byte [cs:vga_busy], 0
+        jne .ret
+        mov byte [cs:lbl_busy], 1
+        push fs
+        pusha
+        push ds
+        push es
+        push cs
+        pop fs
+        call on_map
+        jne .out
+        mov ds, [cs:pointer_ds]
+        mov ax, [CAM_X]
+        cmp ax, [cs:lbl_cx]
+        jne .out
+        mov ax, [CAM_Y]
+        cmp ax, [cs:lbl_cy]
+        jne .out
+        mov dx, 0x3D4                   ; the screen on show: where the VGA starts it, the CRTC's
+        in al, dx                       ;   index kept
+        mov ah, al
+        mov al, 0x0C
+        out dx, al
+        inc dx
+        in al, dx
+        dec dx
+        xchg al, ah
+        out dx, al
+        xor al, al
+        shr ax, 4
+        add ax, 0xA000
+        mov es, ax
+        call vga_save
+        mov si, lbl_state
+        mov di, lbl_slots
+.slot:  mov dl, [fs:di]
+        cmp byte [cs:si + LS_SHOWN], 0
+        jne .shown
+        push es
+        call label_where
+        pop es
+        jc .next
+        call label_adopt
+.shown: cmp dl, [cs:si + LS_SEEN]
+        jne .next
+        call label_put
+.next:  add di, LBL_SIZE
+        add si, 8
+        cmp si, lbl_state + LBL_SLOTS * 8
+        jb .slot
+        call vga_restore
+.out:   pop es
+        pop ds
+        popa
+        pop fs
+        mov byte [cs:lbl_busy], 0
+        ret
+
+; LABEL_PUT: label DI (FS:DI; SI its state) into ES, the screen, a plane at a time; AX to DX not kept
+label_put:
+        push bp
+        push di
+        mov ax, [fs:di + 4]
+        mov [cs:lp_ink], ax             ; (and LP_EDGE)
+        add di, 8                       ; (DI: the ink's mask, a row of it)
+        xor bp, bp                      ; (BP: the plane)
+.plane: mov dx, 0x3C4
+        mov cx, bp
+        mov ax, 0x0102
+        shl ah, cl
+        out dx, ax
+        mov bx, di
+        mov ax, [cs:si + LS_Y]
+        imul ax, ax, 80
+        mov [cs:lp_line], ax
+        xor dx, dx                      ; (DX: the row)
+.row:   mov cx, bp
+        sub cx, [cs:si + LS_X]
+        and cx, 3                       ; (CX: the label's first x in this plane)
+        push di
+        mov di, [cs:si + LS_X]
+        add di, cx
+        shr di, 2
+        add di, [cs:lp_line]
+.px:    cmp cl, [cs:si + LS_W]
+        jae .nrow
+        bt word [fs:bx], cx
+        mov al, [cs:lp_ink]
+        jc .w
+        bt word [fs:bx + LBL_MASK], cx
+        jnc .npx
+        mov al, [cs:lp_edge]
+.w:     mov [es:di], al
+.npx:   add cx, 4
+        inc di
+        jmp .px
+.nrow:  pop di
+        add bx, LBL_ROW
+        add word [cs:lp_line], 80
+        inc dx
+        cmp dl, [cs:si + LS_H]
+        jb .row
+        inc bp
+        cmp bp, 4
+        jb .plane
+        pop di
+        pop bp
+        ret
+
+; the VGA's registers the labels change, kept and put back (DSCLOG's VGA_SAVE, VGA_RESTORE)
+vga_busy db 0
+sc_index db 0
+sc_mask  db 0
+gc_index db 0
+gc_regs  db 1, 3, 4, 5, 8
+gc_saved times 5 db 0
+vga_save:
+        mov byte [cs:vga_busy], 1
+        mov dx, 0x3C4
+        in al, dx
+        mov [cs:sc_index], al
+        mov al, 2
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:sc_mask], al
+        mov dx, 0x3CE
+        in al, dx
+        mov [cs:gc_index], al
+        xor bx, bx
+.save:  mov al, [cs:gc_regs + bx]
+        out dx, al
+        inc dx
+        in al, dx
+        dec dx
+        mov [cs:gc_saved + bx], al
+        inc bx
+        cmp bx, 5
+        jb .save
+        mov ax, 0x0001                  ; no set/reset, no rotation, all bits, write mode 0
+        out dx, ax
+        mov ax, 0x0003
+        out dx, ax
+        mov ah, [cs:gc_saved + 3]
+        and ah, 0xF4
+        mov al, 5
+        out dx, ax
+        mov ax, 0xFF08
+        out dx, ax
+        ret
+
+vga_restore:
+        mov dx, 0x3CE
+        xor bx, bx
+.put:   mov al, [cs:gc_regs + bx]
+        mov ah, [cs:gc_saved + bx]
+        out dx, ax
+        inc bx
+        cmp bx, 5
+        jb .put
+        mov al, [cs:gc_index]
+        out dx, al
+        mov dx, 0x3C4
+        mov al, 2
+        mov ah, [cs:sc_mask]
+        out dx, ax
+        mov al, [cs:sc_index]
+        out dx, al
+        mov byte [cs:vga_busy], 0
+        ret
+
+align 2
+lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
+
+
 resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
@@ -1765,7 +2329,9 @@ RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what s
 ; ---- the far block (FAR_INIT): the ring ----
 FAR_RING   equ 0x10
 FAR_END    equ FAR_RING + NENT * ESIZE
-FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16 + 1
+FAR_DAC    equ FAR_END                         ; the palette (DAC_TICK), 768 bytes
+FAR_TOP    equ FAR_DAC + 768
+FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
 install:                        ; DS = ES = PSP, CS = the image
@@ -1824,6 +2390,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov byte [hooked], 1
         mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
+        mov [cs:tail_seg], cs   ; (the labels' slots: in this segment)
         mov es, [cs:psp]        ; our block cut down to the PSP and what stays, then kept
         mov bx, 0x10 + RESIDENT_PARAS
         mov ah, 4Ah
@@ -1872,7 +2439,7 @@ far_init:
         cmp byte [cs:hma_given], 0
         jne .hma
         mov di, FAR_RING
-        mov cx, (FAR_END - FAR_RING) / 2
+        mov cx, (FAR_TOP - FAR_RING) / 2
         xor ax, ax
         cld
         repe scasw
@@ -1890,7 +2457,7 @@ far_init:
         mov [cs:far_seg], ax
 .clear: mov es, [cs:far_seg]
         mov di, FAR_RING
-        mov cx, (FAR_END - FAR_RING) / 2
+        mov cx, (FAR_TOP - FAR_RING) / 2
         xor ax, ax
         cld
         rep stosw
@@ -1964,6 +2531,9 @@ all_vectors:
         vector VEC_WIN, probe_win
         vector VEC_ITEM_BOX, probe_item_box
         vector VEC_CHAR, probe_char
+        vector VEC_CAST, probe_cast
+        vector VEC_SCROLL, probe_scroll
+        vector VEC_TICK, probe_tick
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

@@ -3,6 +3,7 @@ the item type records served in Shattered Lands' layout, the read-only view of t
 the sequel's item names."""
 import os
 import struct
+import types
 import sys
 import unittest
 
@@ -156,6 +157,38 @@ class PassTests(unittest.TestCase):
         writes = g.writes
         log._write_slots()  # (unchanged: not written again)
         self.assertEqual(g.writes, writes)
+
+    def test_labels_written_to_the_helper(self):
+        """Names over figures go into DSCLOG2's LBL_SLOTS (its header's +1834:+1838), in the colours of
+        the palette it read (DAC, +238 in its far block), and come off when their time is up."""
+        from dsloader import combatlog, labels
+        g = FakeGuest()
+        seg, hdr, off, far = 0xC91B, 0x20, 0x2000, 0xD000
+        base = seg * 16 + hdr
+        struct.pack_into("<H", g.mem, base + dicelog.TSR_HDR_OFF, hdr)
+        struct.pack_into("<HHH", g.mem, base + labels.TSR_TAIL_SEG, seg, 0, off)
+        struct.pack_into("<H", g.mem, base + combatlog.TSR_FAR_SEG, far)
+        struct.pack_into("<H", g.mem, base + combatlog.TSR_DAC, 0x10)
+        g.mem[far * 16 + 0x10:far * 16 + 0x10 + 768] = bytes(range(64)) * 12
+
+        class Font:
+            height = 7
+            def glyph(self, c):
+                return 4, bytes([combatlog.FONT_INK] * 28)
+
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = base
+        log.game = types.SimpleNamespace(guest=log.guest)  # (as attach makes it: on the read-only view)
+        log._labels_font_tried, log._labels.font = True, Font()
+        log._float(7, labels.MISS, labels.MISS_INK, 100.0)
+        at = seg * 16 + off
+        self.assertEqual(g.mem[at], 1)                       # (the label's number)
+        self.assertEqual(g.mem[at + 1], labels.width(Font(), labels.MISS))
+        self.assertEqual(struct.unpack_from("<H", g.mem, at + 6)[0], 7)  # (over thing 7)
+        self.assertEqual(log.guest.dropped, 0)
+        log.hp_changes = lambda now: []
+        log._after_rolls(False, 100.0 + labels.SHOW_FOR + 1)
+        self.assertEqual(g.mem[at], 0)
 
     def test_no_rule_changes(self):
         """The sequel's game data takes none of the mod's rules (the Loader's settings name SL's)."""

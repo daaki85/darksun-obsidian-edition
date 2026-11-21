@@ -442,6 +442,16 @@ check run `ravthief.py MEMBER` (it needs `ravfixes.py` run first, for `$WORK/rav
 panel's numbers**: zoom the screenshot, the small font's 6 looks like a 5. Portraits are at game x 30,
 y 21, 67, 112 and 158.
 
+**Its map and names over figures** (2026-11-21, logs/2026-11-21-ravager-labels.md): the map things
+from DS:67BBh, 25h bytes each, their feet at +0Ah/+0Ch (`ravfight.py`'s +3/+5 is the top left, about 30
+above); the object list's far pointer DS:67B7h (8 bytes an entry, +6 the thing), its count DS:264Eh;
+the view DS:1408h/140Ah; DS:0DABh 1 on the map. The view's rectangle routine 21E0:128Ch (SL's
+1DF3:142Fh), the cast routine 80580h, the main loop's pointer call 20230h, the timer 3DA2Ch. **To catch
+a label**: capture frames (`import` every 0.2-0.4 s) during `ravfight.py fight` or a cast, then look for
+the label's ink in them (a Miss is about RGB 239,239,223, a spell's name 251,223,93) rather than by eye.
+A label written by a script of its own stays until cleared (its byte +0 zeroed): only the dice log
+ticks them off.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

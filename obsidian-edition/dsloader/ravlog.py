@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import dicelog, game, ravager
+from . import dicelog, game, labels, ravager
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -373,8 +373,26 @@ class RavDiceLog(dicelog.DiceLog):
             return None
         table = (base + off, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
         if table not in self.guest.writable:
-            self.guest.writable = [table]
+            self.guest.writable = [table] + self.guest.writable
         return table[0]
+
+    def _label_slots(self) -> Optional[int]:
+        """Where DSCLOG2's LBL_SLOTS are (its header's +1834:+1838, labels.slots_at), made writable;
+        None without them (a helper before the labels)."""
+        if self.tsr_hdr is None:
+            return None
+        seg, _, off = struct.unpack("<HHH", self.guest.read(self.tsr_hdr + labels.TSR_TAIL_SEG, 6))
+        if not seg or not off:
+            return None
+        slots = (seg * 16 + off, labels.SLOTS * labels.SIZE)
+        if slots not in self.guest.writable:
+            self.guest.writable = self.guest.writable + [slots]
+        return slots[0]
+
+    def _float(self, thing, text, colour, now, priority=0) -> None:
+        """Shattered Lands' names over figures (labels.py), into DSCLOG2's slots once it has them."""
+        if self._label_slots() is not None:
+            super()._float(thing, text, colour, now, priority)
 
     def _write_slots(self) -> None:
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
@@ -383,10 +401,14 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage) and the spell slots'
-        lines for the USE screen (_write_slots, as often as Shattered Lands' writes them): the rest
-        reads and writes what isn't ported yet."""
+        fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
+        figures whose time is up (labels.Labels.tick) and the spell slots' lines for the USE screen
+        (_write_slots, as often as Shattered Lands' writes them): the rest reads and writes what
+        isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
+        if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
+            self._labels.on = self.floating_names
+            self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
         if now >= self._next_slots:
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)

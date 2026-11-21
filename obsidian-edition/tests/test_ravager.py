@@ -27,7 +27,7 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "inventory"})  # (DSCLOG2's own interrupts)
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "inventory", "spell_cast", "scroll", "tick"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -49,6 +49,29 @@ class TableTests(unittest.TestCase):
         for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN), ("item_box", ravager.VEC_ITEM_BOX), ("inventory", ravager.VEC_CHAR)):
             p = next(p for p in ravager.PATCHES if p.name == name)
             self.assertEqual(p.replacement, bytes((0xCD, vec)) + b"\x90" * (len(p.original) - 2))
+
+    def test_helper_has_the_labels(self):
+        """DSCLOG2 hooks the labels' three interrupts (the scroll's segment kept as an immediate for the
+        relocation); its header has DSCLOG's DAC offset (+238) and LBL_SLOTS (+1838, zeros, in the
+        image), its +1834 the segment it sets as it loads."""
+        from dsloader import combatlog, labels
+        exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                ravager.HELPER_EXE), "rb").read()
+        image = exe[32:]
+        hdr = image.find(b"DSCLOGR1")
+        self.assertGreater(struct.unpack_from("<H", image, hdr + combatlog.TSR_DAC)[0], 0x10)
+        seg, _, off = struct.unpack_from("<HHH", image, hdr + labels.TSR_TAIL_SEG)
+        self.assertEqual(seg, 0)
+        self.assertGreater(off, hdr + 1872)
+        self.assertEqual(image[off:off + labels.SLOTS * labels.SIZE], bytes(labels.SLOTS * labels.SIZE))
+        self.assertLessEqual(off + labels.SLOTS * labels.SIZE, len(image))
+        table = struct.unpack_from("<H", image, hdr + 144)[0]
+        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        self.assertTrue({ravager.VEC_CAST, ravager.VEC_SCROLL, ravager.VEC_TICK} <= vectors)
+        by = {p.name: p for p in ravager.PATCHES}
+        self.assertEqual(by["spell_cast"].replacement, bytes((0xCD, ravager.VEC_CAST, 0x90)))
+        self.assertEqual(by["tick"].replacement, bytes((0xCD, ravager.VEC_TICK)) + b"\x90" * 3)
+        self.assertEqual(by["scroll"].replacement, bytes((0xCD, ravager.VEC_SCROLL, 0xA9)))
 
     def test_item_fields(self):
         """SL's item power (a byte at 0Fh) is the sequel's word at 10h; from SL's 10h on, two bytes on."""

@@ -11,6 +11,7 @@ show_all = '--all' in sys.argv; args = [a for a in sys.argv[1:] if a != '--all']
 secs = float(args[0]); out = open(args[1], 'a') if len(args) > 1 else None
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 log = ravlog.RavDiceLog(g)
+log.game_dir = os.environ.get('RAV', os.path.join(WORK, 'rav'))  # (its font: the names over figures)
 print(log.attach(), flush=True)
 end = time.time() + secs
 while time.time() < end:

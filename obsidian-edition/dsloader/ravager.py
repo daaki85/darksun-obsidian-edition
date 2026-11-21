@@ -65,6 +65,7 @@ VEC_IMAGE, VEC_BLOW = 0xCC, 0xCD  # (DSCLOG2's IMAGE_SPELL, IMAGE_BLOW)  # (DSCL
 VEC_USE, VEC_WIN = 0xCE, 0xCF  # (DSCLOG2's PROBE_USE, PROBE_WIN: the spell slots on USE)
 VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
+VEC_CAST, VEC_SCROLL, VEC_TICK = 0xD2, 0xD3, 0xD4  # (DSCLOG2's PROBE_CAST, PROBE_SCROLL, PROBE_TICK: names over figures)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -165,6 +166,13 @@ PATCHES: Tuple[Patch, ...] = (
     # panel's weapon lines (91286h, SL's 6F6BFh: "add sp,0Eh"), the text routine and the character's
     # selector read from the code before it, at SL's distances.
     Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
+    # Names over figures (SL's labels.py, DSCLOG's LABELS): a spell cast recorded (80585h, SL's 772AAh:
+    # "mov cx,[bp+6]", the caster), the map's main loop asking where the pointer is (20230h, SL's
+    # 1CAACh: "call far 35B9:0034", its segment kept as a "test ax,imm" for the relocation), the
+    # game's timer (3DA2Ch, SL's 3925Ch: "inc word cs:[4]").
+    Patch("spell_cast", 0x80585, bytes.fromhex("8b4e06"), gamepatch._interrupt(VEC_CAST, 3)),
+    Patch("scroll", 0x20230, bytes.fromhex("9a3400"), bytes((0xCD, VEC_SCROLL, 0xA9))),
+    Patch("tick", 0x3DA2C, bytes.fromhex("2eff060400"), gamepatch._interrupt(VEC_TICK, 5)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
