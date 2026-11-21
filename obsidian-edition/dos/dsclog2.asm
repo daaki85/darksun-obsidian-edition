@@ -53,6 +53,7 @@ VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the p
 VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
 VEC_LOOK      equ 0xDA  ; PROBE_LOOK (640FBh: the Look box's first rows drawn: the monster's defences)
 VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
+VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
@@ -2085,6 +2086,75 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .bw      db 'BW  00 ', 0
 .sp      db 'SP  00 ', 0
 
+; ---- THE CREATION SCREEN'S THAC0: DSCLOG's CR_HP and CR_THAC0_DRAW, no kits ----
+; INT VEC_CR_HP replaces "add sp,10h" (3 bytes: INT + NOP) after the creation screen draws its hit
+; points again (6B84Ch, a click on them; 6BC62h; SL's 63AC3h, 63EDAh) and after it draws PSP, which
+; follows the hit points (6D6AEh at the die, a choice and the screen opening; 6B79Ch at a click on
+; CON; SL's 65A89h, 63A13h, its CR_AGE's sites). "THAC0: M18 R19" right of the hit points, on their
+; line: the creature's THAC0 (it follows the classes chosen as they change) less STR's to-hit
+; adjustment (M, melee) and less DEX's missile adjustment (R, ranged), none below 0, as the
+; inventory's THAC0 with no weapon. The hit points' box (the 7th, DS:1224h) widened to x 243 (DONE's
+; left 244: ravager.py's "cr_thac0_box"), so its saved background clears it. What differs from
+; DSCLOG's: the sequel's records (the creature being made at DS:142Dh, 31h bytes: THAC0 +16h, STR
+; +19h, DEX +1Ah; the STR to-hit table at DS:0832h, SL's 7C2h) and no kits (the THAC0 is the game's).
+CR_CREATURE equ 0x142D          ; DS: far pointer to the creature being made (SL's 11A0h)
+CR_HP_BOX   equ 0x1224          ; DS: the hit points' box: x1, y1, x2, y2 (SL's F92h)
+CR_THAC0_X  equ 146             ; (RECALL's left edge, as DSCLOG's CR_AGE_X)
+CREATURE_STR equ 0x19
+STR_HIT     equ 0x0832          ; DS: the STR to-hit adjustment (bytes, by score)
+probe_cr_hp:
+        pop word [cs:t_ip]
+        pop word [cs:t_cs]
+        pop word [cs:t_fl]
+        add sp, 0x10            ; the replaced instruction
+        sti
+        pushad
+        push es
+        les bx, [CR_CREATURE]
+        mov cl, [es:bx + CREATURE_THAC0]
+        mov di, cr_thac0_text + 8       ; (after "THAC0: M")
+        mov si, STR_HIT
+        mov dl, [es:bx + CREATURE_STR]
+        call cr_less
+        mov word [cs:di], ' R'
+        add di, 2
+        mov si, DEX_REACTION
+        mov dl, [es:bx + CREATURE_DEX]
+        call cr_less
+        inc word [cs:cr_count]
+        mov eax, [WIN_SHOWN]
+        mov [cs:c_winptr], eax
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        mov ax, [CR_HP_BOX + 2]
+        sub ax, 2
+        push ax
+        push word CR_THAC0_X
+        push cs
+        push word cr_thac0_text
+        call c_draw_line
+        pop es
+        popad
+        push word [cs:t_fl]
+        push word [cs:t_cs]
+        push word [cs:t_ip]
+        iret
+cr_less:                        ; at CS:DI, CL less DS:SI's entry for score DL (none below 0)
+        xor dh, dh
+        cmp dl, 25
+        jbe .in
+        mov dl, 25
+.in:    add si, dx
+        mov al, cl
+        sub al, [si]
+        jns .put
+        xor al, al
+.put:   jmp c_itoa
+cr_thac0_text db 'THAC0: M', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+cr_count dw 0                   ; THAC0s drawn (for a look in play)
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -3660,6 +3730,7 @@ all_vectors:
         vector VEC_FOLLOW, probe_follow
         vector VEC_VIEW, probe_view
         vector VEC_LOOK, probe_look
+        vector VEC_CR_HP, probe_cr_hp
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

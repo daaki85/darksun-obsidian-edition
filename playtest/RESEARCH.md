@@ -447,6 +447,12 @@ code, ending its panels at 987FBh (SL's 8A471h), the text routine, window and ch
 (-1A9h, -1B4h, -19Bh); the creature's movement +13h. The game's text routine changes ES: read what you
 need before drawing. Opened by the bar's top-left icon (22,17), then VIEW CHARACTER (47,171).
 
+**Its creation screen** (2026-11-21, logs/2026-11-21-ravager-creation.md): SL's code and boxes (DS:11F4h
+on, the hit points' DS:1224h); the sheet, creature and window at DS:1429h, 142Dh, 1431h (SL's 119Ch,
+11A0h, 11A4h); the creature's THAC0 (+16h) follows the classes as they change; the hit points drawn by
+6C87Bh, PSP after them (6D6AEh, 6B79Ch); the labels' ink DS:2D14h, F0h white there. Title menu's CREATE
+CHARACTERS (160,92), right-click a slot (70,56), NEW (110,57); EXIT (280,160).
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18

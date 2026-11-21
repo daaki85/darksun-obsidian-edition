@@ -70,8 +70,10 @@ VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the c
 VEC_LOOK = 0xDA  # (DSCLOG2's PROBE_LOOK: the monster's defences in the Look box)
 VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
+VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
+DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 
 PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
@@ -183,6 +185,16 @@ PATCHES: Tuple[Patch, ...] = (
     # "mov si,ax / xor di,di" at 5FCDAh, the routine rewritten a little): DSCLOG2's PROBE_LOOK adds the
     # Loader's lines about the monster and does the moves.
     Patch("look", 0x640FB, bytes.fromhex("8bf0c746f60000"), gamepatch._interrupt(VEC_LOOK, 7)),
+    # The creation screen's THAC0 ("THAC0: M18 R19", SL's cr_thac0_*): DSCLOG2's PROBE_CR_HP right of
+    # the hit points, after they are drawn again (6B84Ch, 6BC62h; SL's 63AC3h, 63EDAh) and after PSP,
+    # drawn after them (6D6AEh at the die, a choice, the screen opening; 6B79Ch at a click on CON; SL's
+    # CR_AGE sites 65A89h, 63A13h): each "add sp,10h". The hit points' box (the 7th, DS:1224h, as SL's
+    # F92h) wider, to x 243 (DONE's left 244), so its saved background clears what is drawn there.
+    Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
+    Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
+    Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
+    Patch("cr_thac0_psp", 0x6D6AE, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
+    Patch("cr_thac0_con", 0x6B79C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
     # Names over figures (SL's labels.py, DSCLOG's LABELS): a spell cast recorded (80585h, SL's 772AAh:
     # "mov cx,[bp+6]", the caster), the map's main loop asking where the pointer is (20230h, SL's
