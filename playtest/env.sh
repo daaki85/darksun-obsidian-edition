@@ -11,4 +11,5 @@ if [ "$TARGET" = recomp ]; then WINQ="--name Recompiled"; else WINQ="--class dos
 # INSTALL: the owner's private repository of the installers and the walkthrough, checked out beside
 # this one (never public: the files are the owner's own copies; setup_game.sh joins them from it)
 INSTALL=${PT_INSTALL_FILES:-$REPO/../darksun-installation-files}
-export PT REPO WORK GAME TARGET DSUN WINQ INSTALL DISPLAY=:55; mkdir -p "$WORK"
+# PT_DISPLAY: another display than :55, for a game of its own beside the shared one (start_dosboxx.sh)
+export PT REPO WORK GAME TARGET DSUN WINQ INSTALL DISPLAY=${PT_DISPLAY:-:55}; mkdir -p "$WORK"

@@ -22,13 +22,16 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `carried.py NAME` | what the creature named NAME carries, list by list: item, name as the game shows it, type, slot, value, plus, name entry and the +02h word (2026-11-11: guavas named "Brgnd.Chst Armor"). |
 | `chestuse.sh [y\|n]` | uses Pehtucl's chest from a square beside it (ROUTE.md, Pehtucl's chest): the eye set with pointer.py look, a slow press on the chest (163,70), its look box's third button (236,101), then the walk arrow back. |
 | `click.py X Y [left\|right\|none]` | move the game's pointer to game pixel X,Y (320x200) and click. |
+| `codepatch.py [SECONDS] [game]` | does a write to CODE in the game's memory take effect at once? (The DOSBox-X experiment, 2026-11-18: the Loader patches code while the game runs, and a write that doesn't go through DOSBox's own page handlers, as one... |
 | `creationscores.py` | the creation screen's scores, classes and race, and the least and most the game last worked out |
 | `dacwatch.py SECONDS` | DSCLOG's copy of the palette (TSR_DAC) watched: each change, hashed whole and for colours 16-223 only. |
+| `dbxadopt.sh` | makes the kit's tools follow the game the Loader itself started (its window's Start the game, `launch` or `play`) rather than one of the kit's start scripts: it writes that game's pid, read from the Loader's lock... |
 | `dec.py SCRIPT LO HI` | decode GPL script SCRIPT (the game's own GPLDATA.GFF, $DS_GAME) from offset LO to HI (hex): each command's offset, number and arguments. |
 | `dismiss.sh [N]` | click away up to N (default 6) waiting messages (msgbox.sh), then print the dice log's last lines. |
 | `doorpath.py TC TR` | the shortest way from the leader to square (TC, TR) on the live grid, through closed doors too (live 192+ where the region file has a doorway); |
 | `doors.py` | the closed doors and gates on the edge of the area the party can reach now: squares the live grid blocks (192 and up) where the region file's grid has a doorway (below 192). |
 | `doorwatch.py SECONDS` | Kurzak's door and the two who use it, printed at each change (every half second). |
+| `dosboxx_memtest.py DOSBOX-X [normal]` | says whether a second program can read and write DOSBox-X's memory file while DOSBox-X runs, without the game: the check to run on Windows and on macOS, where the mod's DOSBox-X engine is untested. |
 | `drawlist.py [all]` | the game's draw list (far pointer DS:6690h, count DS:1F72h; |
 | `dsword.py ADDR [VALUE]` | the game's DS word at ADDR (hex), or set it (memory only). |
 | `effects.py` | every active effect (owner, caster, effect id), its charges and game seconds left (60 a round), as the Loader reads them. |
@@ -132,6 +135,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |
 | `squarewalk.py COL ROW [POINTS]` | on a party member's turn in a fight, click the middle of walk-map square COL,ROW with whatever pointer is up (pointer.py walk first) and say where the member stopped and what movement it has left. |
 | `start.sh` | Xvfb :55, the Loader's patched game in DOSBox as the Loader starts it (the repository's current code: rebuild = restart), and the Loader's dice log ($WORK/dice.txt). |
+| `start_dosboxx.sh DOSBOX-X [name=value ...]` | the mod in DOSBox-X (the Options tab's other engine: dsloader/dosboxx.py), a game of its own beside the shared one, for the kit's tools. |
 | `start_recomp.sh` | the game on Dark Sun Recompiled ($DSUN, its build of the mod) instead of DOSBox, with the Loader's patched game prepared as start.sh does and the dice log attached. |
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |
 | `stepfight.sh` | from the arena gate, clicks south until the fight is on (topartyfight.sh's last loop) |

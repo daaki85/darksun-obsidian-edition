@@ -579,6 +579,47 @@ scores are the creature record's (raising INT on the sheet did nothing); the tur
   nothing, so a window attached to a DOSBox it hadn't started never saw it go, and its party table
   failed on the empty reads at each kit reload; the Loader's reads now raise then.
 
+## DOSBox-X and the memory file
+
+2026-11-18, an experiment for the modernisation plan ([the log](logs/2026-11-18-dosbox-x.md)): the
+mod ran under DOSBox-X 2026.10.01 (built here) with the game's memory in a file the Loader read
+and wrote.
+
+- The first start stopped at "Mel Fatal Error #: 26 ... DSP Detect Fail": DOSBox-X's Sound
+  Blaster is on IRQ 7 by default, the game is set up for 5.
+- `follow.py 29` stalled with the view on a wall: the middle-button drag did nothing, because
+  DOSBox-X gives that button to unlocking the mouse unless `middle_unlock=none`.
+- With DOSBox-X's default `dos=high` the helper was refused the HMA and put its far block in
+  upper memory (its other path worked), leaving no room there for the game's buffers.
+- A write to code through the file was acted on at once in the helper and not in the game's own
+  code, on the dynamic core; the same test on DOSBox 0.74 (through the process) was stale in
+  both. Before that day nobody had tested whether 0.74's dynamic core sees the Loader's writes
+  to code: it doesn't, once the code has run.
+- The session was paused by a usage limit in the middle; every process was gone afterwards
+  (Xvfb and the `/dev/shm` memory file too) and the game was started afresh.
+
+2026-11-19, the engine built from it ([the log](logs/2026-11-19-dosbox-x-engine.md)):
+
+- **The pointer went three times too fast down the screen in a Triple window.** `sensitivity=33`
+  is DOSBox-X's speed across only; the speed down wants a second number (`33,33`). The
+  experiment never saw it: it played in the single window, where 100 is right either way. Found
+  by moving the hand 60 pixels each way and reading the game's pointer on both engines.
+- **Plain at Triple and Quadruple was an empty grey window** (`normal3x`, `normal4x` on the
+  surface output), while Scanlines and TV at the same sizes drew. The first grabs were taken at
+  the dark SSI logo and showed nothing wrong; only a grab at the main menu did.
+- **Full screen "switched" with nothing to see** on a bare Xvfb (the window stayed 640x400): it
+  needs a window manager. With openbox the picture filled the screen's height at 4:3.
+- **A start one second after killing the last game failed**, twice, with nothing on the screen
+  to say why: DOSBox-X was still closing, and the Loader rightly refused ("still running"). The
+  script's output had been cut by `tail`, which hid the refusal.
+- **`fightout.sh` with no edit lost the fountain ambush** (the party defeated in round 8, four
+  foes killed): a whole fight all the same, but no autosave follows a defeat, so the autosave
+  seen under DOSBox-X is the area change's.
+- The menu's first click after the title was lost twice when the game was started by the
+  Loader (never from `start_dosboxx.sh`): the clicks again loaded the save.
+- A usage limit paused the session; Xvfb, the games and the Loader were gone afterwards, the
+  built DOSBox-X and the work folder were still there.
+
 ## When things were learned
 
 The recipes in the guide mostly carry no date; a recipe with a log names its date in the log's
@@ -685,8 +726,18 @@ index](logs/README.md), by date.
   that kills leaves the turn, +1ABh counts the commands), the panel under windows; the arena
   reached with no memory edit and its autosave loaded; the Loader's window on a second display,
   where the Characters tab's KeyError showed (logs/2026-11-18-modernisation-features.md).
+- **2026-11-18**: DOSBox-X with a memory file (`start_dosboxx.sh`, `PT_DISPLAY`,
+  `DSLOADER_MEMORY_FILE`); `codepatch.py`; a dynamic core runs on with old code after a write
+  from outside (logs/2026-11-18-dosbox-x.md).
+- **2026-11-19**: DOSBox-X as the Loader's other engine: a game the Loader started adopted by the
+  kit (`dbxadopt.sh`), the tools finding its memory file by its pid; the pointer's two
+  sensitivities; the pictures that draw; the speeds measured on both engines; `dosboxx_memtest.py`
+  (logs/2026-11-19-dosbox-x-engine.md).
 - **2026-11-20**: F10 after a spell and after a pin, 2.19.0's last "not seen" item: a cast zeroes
   the turn flags (the mend stays out); a pin after the last step got the walk back (fixed: the
   member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
 - **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
   it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).
+- **2026-11-21**: DOSBox-X's unchecked items played: the start script's settings turned back for an
+  autosave (the dice log restarted); Entangle's box over the party; a killed DOSBox-X's memory file
+  left in /dev/shm (logs/2026-11-21-dosbox-x-unchecked.md).

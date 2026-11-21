@@ -57,6 +57,36 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**New**
+- **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
+  Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
+  default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
+  its version shown, an older one refused). With it the Loader writes DOSBox-X a whole
+  configuration of its own and follows the game through DOSBox-X's memory file instead of its
+  process's memory, so on Linux it needs no root and no ptrace setting, and **Start the game**
+  works there with only the game's folder. The game window's sizes, full screen, the four
+  pictures, the three speeds (measured to walk as on 0.74: 8,000 on the normal core, 22,000 and
+  42,000 on the dynamic one) and the music device each have their DOSBox-X spelling; a new
+  **soundfont file** setting plays the music through DOSBox-X's own FluidSynth. Restore defaults
+  goes back to GOG's.
+
+**Docs**
+- The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
+  pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
+  as written), the patch notes, and the experiment's findings carried into
+  `reports/modernisation-research-and-plan.md`.
+
+**Dev**
+- `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`, `tests/test_filememory.py`.
+- The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
+  `dosboxx_memtest.py`, a check without the game that a second program can read and write
+  DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
+  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
+  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
+  the creation screen).
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.
