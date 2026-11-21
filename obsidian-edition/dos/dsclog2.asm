@@ -3337,7 +3337,25 @@ size_dice:
         jne .kind
         dec word [bp - 0x14]        ; (Spiritual Hammer: 1d4)
         jmp .done
-.kind:  cmp bx, KIND_TYPES
+.kind:  mov si, rav_large                ; (the sequel's own weapons first: RAV_LARGE)
+        or bh, bh
+        jnz .table
+.own:   cmp byte [cs:si], 0
+        je .table
+        cmp bl, [cs:si]
+        je .found
+        add si, 4
+        jmp .own
+.found: movzx ax, byte [cs:si + 1]
+        or ax, ax
+        jz .done                    ; (its dice the same on any size)
+        mov [bp - 0x10], ax
+        movzx ax, byte [cs:si + 2]
+        mov [bp - 0x12], ax
+        movsx ax, byte [cs:si + 3]
+        add [bp - 0x14], ax
+        jmp .done
+.table: cmp bx, KIND_TYPES
         jae .done
         movzx si, byte [cs:bx + kind_of_type]
         or si, si
@@ -3377,6 +3395,24 @@ size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold
 ; Longswords 16, 73, 97, Crystal sword 35, Flameblade 47, Magma blade 69; Club 29, Toothed Club 89;
 ; Daggers 37, 72, 99; Maces 67, 74; Axes 8, 48; Great Axe 51; Pick 79; Quarterstaff 85; Polearm 80;
 ; Gythka 52; Cahulaks 24; Chatchka 25; Bow 18; Sling 93; Staff Sling 98. Shillelagh, 90, has none).
+; RAV_LARGE: the sequel's weapons whose game dice aren't those of SL's kind (KIND_OF_TYPE), or that have
+; none: type, then AD&D's dice against a large target (count, sides, the bonus's change; count 0: the
+; same dice on any size). By the AD&D weapon whose small and man-sized dice are the game's (the
+; reasoning: DEVELOPMENT-RULES.md, Creature size, Wake of the Ravager's weapons). Ends with type 0.
+rav_large:
+        db 35, 3, 6, 0          ; Crystal sword, two-handed 1d10: the two-handed sword's 3d6
+        db 39, 1, 8, 0          ; Double Spear 1d6: the spear's 1d8
+        db 43, 1, 3, 0          ; Darts 1d4: 1d3 (the dart one die down)
+        db 47, 0, 0, 0          ; Flameblade 1d4+4: the spell's, any size
+        db 48, 1, 4, 0          ; Axe 1d6: the hand axe's 1d4
+        db 59, 0, 0, 0          ; Javelin: the same on any size
+        db 61, 2, 6, 0          ; Lotulis 2d4: the bardiche's 2d6 (Dark Sun's lotulis does more to the large)
+        db 79, 1, 4, -1         ; Pick 1d4+1: the horseman's pick's 1d4
+        db 81, 2, 6, 0          ; Promere hammer, two-handed 1d10: the halberd's 2d6
+        db 89, 1, 6, 1          ; Toothed Club 1d8+2: the morning star's 1d6+1, its +2 kept
+        db 100, 2, 6, 0         ; Trikal 1d10: the halberd's 2d6
+        db 101, 3, 6, 0         ; Twohand Sword 1d10: the two-handed sword's 3d6
+        db 0
 kind_of_type:
         db 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 1   ; types 0-16
         db 0, 14, 0, 0, 0, 0, 0, 12, 13, 0, 0, 0, 2, 0, 0, 0, 0   ; types 17-33

@@ -611,6 +611,34 @@ Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
   click to switch them (tried 2026-11-10) found no way to have the game redraw the
   panel cleanly (playtest/logs/2026-11-10-creature-size.md).
 
+### Wake of the Ravager's weapons
+
+The sequel's helper, DSCLOG2, uses the same `LARGE_DICE` by weapon kind (`KIND_OF_TYPE`, the sequel's
+item types from OBJEX.GFF's names). Twelve of the sequel's weapons don't fit that, either because SL
+has no such weapon or because the game gives them other small dice than SL's weapon of the kind. They
+are in DSCLOG2's `RAV_LARGE` instead (checked first). Each is the AD&D 2nd Edition *Player's Handbook*
+weapon whose small and man-sized dice are the game's (the dice below are the game's, read from its
+item types in play, 2026-11-21):
+
+| Weapon (type) | The game's dice | Against a large target | Why |
+|---|---|---|---|
+| Twohand Sword (101) | 1d10, two-handed | 3d6 | The two-handed sword's 1d10/3d6 |
+| Crystal sword (35) | 1d10, two-handed | 3d6 | Two-handed with the two-handed sword's small die, not a long sword's |
+| Trikal (100) | 1d10 | 2d6 | A bladed polearm. The halberd is the PHB weapon with a 1d10 small die (1d10/2d6) |
+| Promere hammer (81) | 1d10, two-handed | 2d6 | A heavy two-handed weapon with a 1d10 small die: the halberd's large die too |
+| Lotulis (61) | 2d4, two-handed | 2d6 | The bardiche's 2d4/2d6. Dark Sun's own lotulis also does more to the large than to the small |
+| Double Spear (39) | 1d6, two-handed | 1d8 | The spear's 1d6/1d8 |
+| Toothed Club (89) | 1d8+2 | 1d6+3 | A spiked club: the morning star's large 1d6+1, the game's +2 kept. SL's club kind would have made it 1d3+2 |
+| Axe (48) | 1d6 | 1d4 | The hand axe's 1d6/1d4. The other Axe (8) is 1d8, the battle axe, and keeps the axe kind's 1d10 |
+| Pick (79) | 1d4+1, two-handed | 1d4 | The horseman's pick's 1d4+1/1d4. SL's pick kind assumes the mod's 1d6+1 footman's pick |
+| Darts (43) | 1d4 | 1d3 | One die down, as the dart's 1d3/1d2. The 1d2 Darts (38) keep 1d2 |
+| Javelin (59) | 1d4 | the same | The javelin's dice are the same on any size (1d6/1d6) |
+| Flameblade (47) | 1d4+4 | the same | Flame Blade's damage is the spell's, 1d4+4, whatever the size |
+
+The Net (71) has no damage. In play (logs/2026-11-21-ravager-size.md): Terrannus's Twohand Sword hit a
+large Draxan for "3d6 = [2 + 6 + 1] +1 weapon (3d6 for 1d10: a large target)", and Gerakis's Polearm
+for "2d6 ... (2d6 for 1d10: a large target)".
+
 ## Held targets
 
 ([In the features page](FEATURES.md#held-targets).)

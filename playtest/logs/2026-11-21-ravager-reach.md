@@ -38,8 +38,19 @@ way back.
   fight's start: the helper's reaches 1, 2, 3 in the first 45 seconds, Gerakis's five swings with the
   polearm in the log, no hang; DOSBox stopped after.
 
+## A wall between (later the same day)
+
+Gerakis's turn, his polearm as before. The map things' places moved in memory (DS:67BBh + 25h a thing:
+the top left +3/+5 and the feet +0Ah/+0Ch moved together; the figures were drawn there at the next
+redraw): Gerakis's feet to (1128, 1496), the street's square next to the left house's wall, and a
+Draxan's to (1096, 1496), inside the house two squares away, the wall's square between. The sword
+pointer on the Draxan: "no", and the helper's reaches stayed at 3. The same Draxan moved to (1160,
+1496), two squares the other way in the open street: the reaches went to 5 as the pointer passed over
+it. So the wall stops the reach. (A control before the move: a Draxan two squares up the street, the
+sword pointer valid, the reaches 0 to 3.) DOSBox stopped after, nothing saved.
+
 ## Still to do
 
-- A wall between (REACH_LINE's "no") not tried; nor the walk arrow's click on a foe two away.
+- The walk arrow's click on a foe two away not tried.
 
 Water: none new (the same street).

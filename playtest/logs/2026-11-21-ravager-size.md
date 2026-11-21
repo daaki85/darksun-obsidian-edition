@@ -41,12 +41,19 @@ the game's). The four given 250 HP (test edits; DOSBox stopped after, nothing sa
   90 and 95 (DSCLOG2's). apply_layout now rebinds sizes.SHILLELAGH_TYPE and HAMMER_TYPE
   (test_ravlog's test_size_rule_takes_the_sequels_tables).
 
+## The sequel's own weapons (later the same day, about 12:30 UTC)
+
+The game's dice for every weapon type, read from its item types in play, showed SL's kinds wrong for
+five of them as well as the twelve with none: the Toothed Club (1d8+2, the club's 1d3 would have made
+it 1d3+2), the Flameblade (the spell's 1d4+4, made 1d12+4 as a long sword), the Crystal sword (1d10
+two-handed), the 1d6 Axe (48, a hand axe) and the Pick (1d4+1). DSCLOG2's RAV_LARGE now gives them
+their AD&D dice (DEVELOPMENT-RULES.md, Creature size, has the table and why). A run with the Draxans
+taken for large (the dice log's test patch): "Terrannus hits Draxan for 17: 3d6 = [2 + 6 + 1] +1 weapon
+(3d6 for 1d10: a large target)" with a Twohand Sword (his Longsword made type 101 in memory), and
+Gerakis's Polearm "2d6 = [5 + 5] +4 weapon (2d6 for 1d10: a large target)". DOSBox stopped after.
+
 ## Still to do
 
-- The sequel's own weapons have no kind, so no large dice: Lotulis 61, Trikal 100, Twohand Sword 101,
-  Double Spear 39, Javelin 59, Darts 38/43, Net 71, Promere hammer 81 (the Toothed Club 89 counts as a
-  club, the Spirit hammer 95 as SL's Hammer). AD&D's large dice for them need choosing (the Twohand Sword's
-  3d6, the others by the nearest weapon).
 - A bonus-only change (the mace's) could say so in the log line.
 - Charm Person and Enlarge (an Enlarged target counts as large) not seen here.
 
