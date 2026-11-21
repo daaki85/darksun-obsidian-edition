@@ -208,6 +208,14 @@ class GameFileTests(unittest.TestCase):
                 wanted += [at + i for i in range(len(original)) if original[i] != replacement[i]]
             self.assertEqual((len(gpl), differ), (len(own), sorted(wanted)))
 
+    def test_effects_kept_switch(self):
+        """Spells kept on the Effects screen: SL's two patches by name, left out with the switch off."""
+        names = {p.name for p in ravager.PATCHES}
+        self.assertTrue(set(gamepatch.EFFECTS_KEPT) <= names)
+        self.assertEqual(ravager.skipped({}) & set(gamepatch.EFFECTS_KEPT), frozenset())
+        self.assertEqual(ravager.skipped({"effects_kept": False}) & set(gamepatch.EFFECTS_KEPT),
+                         frozenset(gamepatch.EFFECTS_KEPT))
+
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
         same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES))

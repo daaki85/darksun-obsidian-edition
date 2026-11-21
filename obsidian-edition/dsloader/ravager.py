@@ -173,6 +173,12 @@ PATCHES: Tuple[Patch, ...] = (
     # View Character's panels, once drawn (987FBh, SL's 8A471h: "push dword 000B0140h"; SL's code at
     # the same distances): DSCLOG2's PROBE_VIEW adds the saves, MOVE and THAC0, and does the push.
     Patch("view", 0x987FB, bytes.fromhex("666840010b00"), gamepatch._interrupt(VEC_VIEW, 6)),
+    # The Effects screen: a click on an effect's icon ends it (its handler for the selected character's
+    # effects, SL's code at 8B05Fh). Only a psionic power's effect (the sequel's powers EBh-10Ch) still
+    # ends so; a spell's is left on: the two "not a psionic power" jumps go to the handler's way out
+    # (8B104h's jump to 8B128h), as SL's "effects_click_low"/"_high" (the same bytes, the switch the same).
+    Patch("effects_click_low", 0x8B08F, bytes.fromhex("7c51"), bytes.fromhex("7c73")),
+    Patch("effects_click_high", 0x8B09F, bytes.fromhex("7d41"), bytes.fromhex("7d63")),
     # The Look box, its first status rows drawn (640FBh: "mov si,ax / mov word [bp-0Ah],0"; SL's
     # "mov si,ax / xor di,di" at 5FCDAh, the routine rewritten a little): DSCLOG2's PROBE_LOOK adds the
     # Loader's lines about the monster and does the moves.
@@ -405,9 +411,12 @@ def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
 
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
-    (as for Shattered Lands, gamepatch.SPELLS_MANUAL)."""
+    (as for Shattered Lands, gamepatch.SPELLS_MANUAL) and spells kept on the Effects screen
+    (gamepatch.EFFECTS_KEPT)."""
     on = settings.get("spells_manual", True) is not False
-    return frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)
+    kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
+    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT))
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict) -> Optional[str]:
