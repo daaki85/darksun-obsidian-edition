@@ -79,7 +79,7 @@ class WornGame(C.ClassGame):
         if o.name in PATTERN:
             self.pattern(out, own, what, LOOKS[o.name].torso, PATTERN[o.name])
         if o.name == "Robe":
-            self.gown(out, what, p, ASH, 0.85, ASH[0])
+            self.gown(out, what, p, ASH, 0.85, ASH[0], bool(cb) and f == 12)
             self.sash(out, own, what, p)
         elif o.name == "Bone scale":
             self.flaps(out, own, what, p)
@@ -109,21 +109,34 @@ class WornGame(C.ClassGame):
             if k in ("torso", "leg", "arm") and c in ramp:
                 self.put(out, x, y, ramp[sg._pattern(pattern, x, y, ramp.index(c), top)])
 
-    def gown(self, out, what, p, ramp, reach: float, hem: int) -> None:
+    def gown(self, out, what, p, ramp, reach: float, hem: int, hit: bool = False) -> None:
         """A skirt from the waist REACH of the way to the feet, all round (from behind too): the
-        legs within it and the gap between them in RAMP, a fold every fourth pixel, a pixel past
-        the legs each side, its last row HEM."""
+        legs within it and the gap between them in RAMP, a fold every fourth pixel, its last row
+        HEM. It flares from the hips a pixel every fourth row, no wider: a leg striding past it
+        shows below it as itself. HIT (the reeling frame, the body bent across): only the legs'
+        own pixels, no skirt drawn round them."""
         n = len(ramp)
         foot = p.waist + int(round(reach * (p.bottom - p.waist)))
-        cx = (p.shoulders[1] + p.shoulders[2]) / 2
+        hips = sorted(x for (x, yy), k in what.items() if yy == p.waist and k in ("torso", "leg"))
+        if not hips:
+            return
+        cx = (hips[0] + hips[-1]) / 2
+        half0 = (hips[-1] - hips[0]) / 2 + 1
         for y in range(p.waist + 1, foot + 1):
             xs = [x for (x, yy), k in what.items() if yy == y and k in ("leg", "torso", "boot")]
             if not xs:
                 continue
-            for x in range(min(xs) - 1, max(xs) + 2):
+            half = half0 + (y - p.waist) / 4
+            lo, hi = max(min(xs) - 1, int(cx - half)), min(max(xs) + 1, int(cx + half + 0.5))
+            if p.facing == sp.SIDE:  # (from the side the robe hangs from the hips, the legs swing under it)
+                lo, hi = int(cx - half), int(cx + half + 0.5)
+            for x in range(lo, hi + 1):
                 was = self.at(out, x, y)
-                if was is not None and what.get((x, y)) not in ("leg", "torso", "boot", None):
+                part = what.get((x, y))
+                if was is not None and part not in ("leg", "torso", "boot", None):
                     continue  # (a hand or an arm before the skirt)
+                if hit and part not in ("leg", "torso", "boot"):
+                    continue
                 t = n // 2 + (1 if x < cx - 1 else 0) - (1 if (x - int(cx)) % 4 == 0 and y > p.waist + 2 else 0)
                 self.put(out, x, y, hem if y == foot else ramp[max(1, min(n - 1, t))])
 
@@ -164,16 +177,17 @@ class WornGame(C.ClassGame):
             spans = [(mid - 1, mid + 2)]
         else:
             spans = [(sa - 1, sa + 2), (sb - 2, sb + 1)]
-        for a, b in spans:
-            for dy, ramp in ((-1, BONE[4]), (0, BONE[3]), (1, BONE[2]), (2, BONE_DARK)):
+        for a, b in spans:  # (rounded: the top row a pixel in each end, the outer end of each row darker)
+            outer = a if a < (sa + sb) / 2 else b
+            for dy, c in ((-1, BONE[4]), (0, BONE[3]), (1, BONE[2])):
                 y = sy + dy
                 lo, hi = (a + 1, b - 1) if dy == -1 else (a, b)
                 for x in range(lo, hi + 1):
-                    self.put(out, x, y, 254 if x in (a, b) and dy >= 0 else ramp)
+                    self.put(out, x, y, BONE_DARK if x == outer and dy >= 0 and p.facing != sp.SIDE else c)
 
     def helm(self, out, own, p) -> None:
-        """The Bone Helm: the crown above the brow in bone, a row higher than the head, and a
-        dark rim at the brow a pixel past the head each side."""
+        """The Bone Helm: the crown above the brow in bone, rounded at the top, and a darker rim
+        at the brow."""
         h = p.head
         brow = max(h.brow, h.top + 2)
         for y in range(h.top, brow + 1):
@@ -182,11 +196,11 @@ class WornGame(C.ClassGame):
             if not xs:
                 continue
             a, b = min(xs), max(xs)
-            if y == brow and p.facing != sp.SIDE:
-                a, b = a - 1, b + 1
+            if y == h.top:
+                a, b = a + 1, b - 1  # (the crown rounded)
             for x in range(a, b + 1):
                 if y == brow:
-                    c = BONE_DARK
+                    c = BONE[1]  # (the rim at the brow, no wider than the head: not a hat's brim)
                 elif x == a or y == h.top:
                     c = BONE[4] if x != a else BONE[1]
                 elif x == b:
