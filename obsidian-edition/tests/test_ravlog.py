@@ -256,6 +256,16 @@ class PassTests(unittest.TestCase):
         finally:
             game.GameData.no_spells, game.GameData.thief_heavy = real
 
+    def test_spell_level(self):
+        """A spell's level from the sequel's table of each level's first spell (DS:0656h)."""
+        g = FakeGuest()
+        ds = 0x4982
+        g.mem[ds * 16 + ravlog.SPELL_STARTS:ds * 16 + ravlog.SPELL_STARTS + 22] = bytes(
+            [0, 12, 25, 39, 56, 68, 81, 92, 102, 111, 115, 115, 127, 143, 165, 189, 208, 216, 231, 232, 233, 235])
+        data = ravlog.RavGameData(g, ds)
+        self.assertEqual([data.spell_level(s) for s in (0, 11, 12, 27, 105, 111, 115, 126, 127, 0xEB)],
+                         [1, 1, 2, 3, 9, 10, 1, 1, 2, 0])
+
     def test_effect_caster_level(self):
         """The sequel's caster level routine (97DC5h): a wizard spell the preserver's level, a priest
         spell the best priest class's (a ranger's 7 less), a psionic power the psionicist's, a

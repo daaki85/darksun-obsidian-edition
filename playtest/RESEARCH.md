@@ -988,3 +988,8 @@ and `rest-no-call-user`: all transferred, the kits kept.
   found so: the log's line had missed it).
 - **A control run**: `RAV_SKIP=patch,patch` with `RAV_LOADER=1` leaves those patches out (ravstart.sh;
   `$WORK/rav.conf` says "# left out").
+- **A scroll for a test**: copy a real scroll's item record (in the after-ambush save, item 58: entity
+  -7939h, type 77, a wizard scroll) over a party member's carried item (+0 the entity, +0Ah the type,
+  +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
+  click the spell's icon at the box's right (`ravclick.py X Y right`; xdotool alone doesn't move the
+  game's pointer). The party's items are the first item records (Ar'anda's 1-3 there).

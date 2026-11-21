@@ -268,6 +268,8 @@ CLASS_MAGIC = bytes(b for c in range(32) for b in ((2 if c in PRIEST_CLASSES els
 # The sequel's spells by kind (its DATA names): wizard 0-114, priest 115-234, psionic powers 235 (0EBh,
 # the caster level routine's bound) to 268 (10Ch), then the monsters' powers
 RAV_PRIEST_FIRST, RAV_PSIONIC_FIRST, RAV_MONSTER_FIRST = 115, 0xEB, 0x10D
+SPELL_STARTS, SPELL_STARTS_ROW, SPELL_LEVELS_MOST = 0x0656, 11, 10  # (DS bytes, a row of 11 for wizard spells then
+# priest: each level's first spell, 1 to 10, then the end: 0, 12, 25 ... 111, 115; 115, 127 ... 233, 235)
 SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
 
@@ -412,6 +414,15 @@ class RavGameData(game.GameData):
                     and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
                 ac -= 1
         return ac
+
+    def spell_level(self, spell: int) -> int:
+        """The spell's level: the sequel's table at DS:0656h (SPELL_STARTS), the first spell of each
+        level, a row for wizard spells then one for priest (SL's 7-byte table isn't in the sequel). 0 for a
+        psionic power or a monster's."""
+        if not 0 <= spell < RAV_PSIONIC_FIRST:
+            return 0
+        at = self.ds * 16 + SPELL_STARTS + (0 if spell < RAV_PRIEST_FIRST else SPELL_STARTS_ROW)
+        return sum(1 for first in self.guest.read(at, SPELL_LEVELS_MOST) if first <= spell)
 
     def no_spells(self, creature: int) -> bool:
         """SL's armour rule for a multiclass preserver (class restrictions, game.RULE_RESTRICT) isn't
@@ -658,8 +669,8 @@ class RavDiceLog(dicelog.DiceLog):
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
         fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
-        (_write_slots, as often as Shattered Lands' writes them) and the combat log's panel
-        (_panel_pass): the rest reads and writes what isn't ported yet."""
+        (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
+        (_learn_lines) and the combat log's panel (_panel_pass): the rest reads and writes what isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
         if self.monster_info:  # (the Look box: answered at once, the game waits for it)
             self.set_monster_info(True)
@@ -669,6 +680,7 @@ class RavDiceLog(dicelog.DiceLog):
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
             self._step(lambda: self._large.update(self.game, self.tsr_hdr))
+        out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
         if now >= self._next_slots:
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)

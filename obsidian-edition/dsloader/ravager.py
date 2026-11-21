@@ -75,7 +75,8 @@ VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: 
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
-VEC_REACH, VEC_RANGER_LEVEL, VEC_ENL_ROLL, VEC_ENL_SITE = 0xE9, 0xEA, 0xEB, 0xEC  # (DSCLOG2's REACH: a polearm's two squares)
+VEC_REACH, VEC_RANGER_LEVEL, VEC_ENL_ROLL, VEC_ENL_SITE = 0xE9, 0xEA, 0xEB, 0xEC
+VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0xED, 0xEE, 0xEF  # (DSCLOG2's preservers' INT)  # (DSCLOG2's REACH: a polearm's two squares)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
 # EFFECT_RECORDS), and the empty one the stinkpots' Nauseated takes (DSCLOG2's STINK_EFFECT)
 EFFECT_RECORDS_FILE, NAUSEATED = 0x3C870 + 0x5200, 12
@@ -88,7 +89,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
-                | game.RULE_ENLARGE)
+                | game.RULE_ENLARGE | game.RULE_INT_LEARN)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -263,6 +264,13 @@ PATCHES: Tuple[Patch, ...] = (
     # Enlarge multiplies the weapon's dice only (SL's stab_roll's keeping of the dice and enl_site;
     # game.RULE_ENLARGE, always on): DSCLOG2's ENL_ROLL after the attack's damage roll (5D0C8h, SL's
     # 58A29h: "cmp word [bp+16h],1") and ENL_SITE at Enlarge's multiplying (863E7h, SL's 7C246h: 32 bytes).
+    # Preservers' INT (SL's scroll_learn, learn_said, learn_refused; game.RULE_INT_LEARN, always on):
+    # DSCLOG2's SCROLL_LEARN at the scroll's "already known" test (99A2Fh: "or ax,ax", SL's 8B6D3h),
+    # LEARN_SAID at YOU LEARN THE SPELL's push (99A7Fh: "push ds / push 2E97h", SL's 8B712h) and
+    # LEARN_REFUSED at YOU ALREADY KNOW THIS SPELL's (99A86h: "push ds / push 2EABh", SL's 8B719h).
+    Patch("scroll_learn", 0x99A2F, bytes.fromhex("0bc0"), gamepatch._interrupt(VEC_SCROLL_LEARN, 2)),
+    Patch("learn_said", 0x99A7F, bytes.fromhex("1e68972e"), gamepatch._interrupt(VEC_LEARN_SAID, 4)),
+    Patch("learn_refused", 0x99A86, bytes.fromhex("1e68ab2e"), gamepatch._interrupt(VEC_LEARN_REFUSED, 4)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

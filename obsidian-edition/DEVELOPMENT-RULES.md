@@ -908,6 +908,18 @@ still. As the game's own messages there, it stays till the pointer is on
 something else. Not redrawing the window (118h:618h) afterwards matters: that
 draws it blank.
 
+In Wake of the Ravager the scroll's routine is rewritten (around 999C0h): a scroll is an item whose
+entity (+0) is 7918h-79DFh (wizard) or 7AA8h-7B0Bh, its spell the power (+10h) less 1; the reader's
+known wizard spells are a bitset, 15 bytes a member at selector 320h:39Ch (bit n spell n), the reader
+at 370h:0B44h; known, YOU ALREADY KNOW THIS SPELL (99A86h); else the bit set, the scroll used up
+(5F8h:43h) and YOU LEARN THE SPELL (99A7Fh). A spell's level: the game's table at DS:0656h, the first
+spell of each level, a row of 11 for wizard spells then priest (`ravlog.SPELL_STARTS`; SL's 7-byte
+table isn't there). DSCLOG2's `SCROLL_LEARN` (`INT EDh` for the "or ax,ax" at 99A2Fh), `LEARN_SAID`
+(`INT EEh`, 99A7Fh) and `LEARN_REFUSED` (`INT EFh`, 99A86h) do SL's for a wizard (class 11 or the
+sequel's 18) with `RULE_HI_INT`, the d100 from the game's seed, the try told at +272 as DSCLOG's. The
+level-up's spell list (SL's `PROBE_PICK_LIST`, `PICK_ANY`) isn't ported yet. Played: [the test
+log](../playtest/logs/2026-11-21-ravager-int.md).
+
 ## Spells saved against with the spell save
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)

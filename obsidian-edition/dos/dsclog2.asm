@@ -67,6 +67,9 @@ VEC_REACH     equ 0xE9  ; REACH (25CDDh: the combatant distance routine's result
 VEC_RANGER_LEVEL equ 0xEA ; RANGER_LEVEL (629F0h: a class's level for a spell's duration and damage: a ranger's 7 less)
 VEC_ENL_ROLL  equ 0xEB  ; ENL_ROLL (5D0C8h: a weapon's damage rolled: its dice kept for Enlarge)
 VEC_ENL_SITE  equ 0xEC  ; ENL_SITE (863E7h: Enlarge's x(100 + 10 a level)%: the weapon's dice only)
+VEC_SCROLL_LEARN equ 0xED ; SCROLL_LEARN (99A2Fh: whether a scroll's spell is known: INT's chance and most)
+VEC_LEARN_SAID equ 0xEE  ; LEARN_SAID (99A7Fh: YOU LEARN THE SPELL: a failed try taken back)
+VEC_LEARN_REFUSED equ 0xEF ; LEARN_REFUSED (99A86h: YOU ALREADY KNOW THIS SPELL: a full level's message)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -164,8 +167,15 @@ dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK 
                                 ;      the Loader draws its panel again in it (DSCLOG's DARK count)
         times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
-rules_hi   dw 0                 ; +270 the rules' second word, as DSCLOG's (none ported yet)
-        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +272 to +325: none of them here yet, zero)
+rules_hi   dw 0                 ; +270 the rules' second word, as DSCLOG's
+learn_seq  dw 0                 ; +272 a wizard's try at a scroll's spell (INT_LEARN), counted ...
+learn_who  db 0                 ; +274 ... the party member ...
+learn_spell db 0                ; +275 ... the spell ...
+learn_int  db 0                 ; +276 ... its INT ...
+learn_chance db 0               ; +277 ... the chance to learn (%) ...
+learn_roll db 0                 ; +278 ... the d100 (LEARN_FULL: the spells of that level known) ...
+learn_result db 0               ; +279 ... and LEARN_LEARNT, LEARN_FAILED or LEARN_FULL (DSCLOG's)
+        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +280 to +325: none of them here yet, zero)
 panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
 panel_seg  dw 0                 ; +328 the panel's picture's segment: the far block's (PANEL_W x
                                 ;      PANEL_H_MOST, each row its planes in turn: combatlog.planar)
@@ -2308,6 +2318,219 @@ enl_site:
         pop ebx
         iret
 enlarges dw 0                   ; (hits enlarged by the dice, for a look in play)
+
+; PRESERVERS' INT: SL's INT_LEARN (RULE_HI_INT, the Loader's "int_learning", always on; dsloader/intlearn.py).
+; The sequel's scroll (its box's icon clicked, 99xxxh, SL's 8B690h) tests the reader's bit in the known
+; wizard spells (selector 320h:39Ch + 15 a member, bit n spell n; the reader at 370h:0B44h, the spell
+; [BP-4]): known, YOU ALREADY KNOW THIS SPELL (99A86h: "push ds / push 2EABh"); else the bit set, the
+; scroll used up (5F8h:43h) and YOU LEARN THE SPELL (99A7Fh: "push ds / push 2E97h").
+; - SCROLL_LEARN replaces "or ax,ax" (99A2Fh; 2 bytes, then the game's "jnz" to the known path; AX 1
+;   known): for a wizard (class 11 or the sequel's 18) and a wizard spell (below WIZ_SPELLS), with the
+;   rule, INT's row (the creature's +1Ch) gives the chance (INT_CHANCE) and the most of a spell level
+;   (INT_MOST); knowing that many of the spell's level (SPELL_STARTS, the game's table at DS:0656h: the
+;   first spell of each level, 1 to 10), AX 1 and LEARN_FULL (the scroll kept, LEARN_REFUSED's text);
+;   else a d100 (the game's seed): above the chance, LEARN_FAILED (AX 0: the game teaches it and uses the
+;   scroll up, LEARN_SAID takes it back). The try told to the Loader (+272, as DSCLOG's). ZF as "or ax,ax".
+; - LEARN_SAID, LEARN_REFUSED: the message pushed (a far pointer), the helper's text in place of the
+;   game's after a failed try or a full level.
+RULE_HI_INT  equ 4
+WIZ_SPELLS   equ 115
+SPELL_STARTS equ 0x0656
+WIZ_LEVELS   equ 10
+PRESERVER_CLASS equ 11
+WIZARD_NEW_CLASS equ 18
+KNOWN_OFF    equ 0x39C                      ; (the known spells' place in selector 320h's segment)
+CREATURE_INT equ 0x1C
+INT_FIRST    equ 9
+INT_ROWS     equ 17
+INT_ALL      equ 255
+int_chance   db 35, 40, 45, 50, 55, 60, 65, 70, 75, 85, 95, 96, 97, 98, 99, 100, 100
+int_most     db 6, 7, 7, 7, 9, 9, 11, 11, 14, 18, INT_ALL, INT_ALL, INT_ALL, INT_ALL, INT_ALL, INT_ALL, INT_ALL
+LEARN_LEARNT equ 0
+LEARN_FAILED equ 1
+LEARN_FULL   equ 2
+learn_msg    db 0
+learn_es     dw 0                           ; (the bit's place: the game's ES:BX at SCROLL_LEARN ...
+learn_bx     dw 0
+learn_mask   db 0                           ;  ... and its bit)
+learnt_tries dw 0                           ; (tries, for a look in play)
+scroll_learn:
+        or ax, ax
+        jnz .flags                          ; (known: the game's)
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .flags
+        pushad
+        push es
+        mov [cs:learn_es], es
+        lea ax, [bx + KNOWN_OFF]
+        mov [cs:learn_bx], ax                ; (the game's BX: the member x 15 + the spell / 8)
+        mov dx, [bp - 4]                    ; (the spell)
+        cmp dx, WIZ_SPELLS
+        jae .out
+        mov cl, dl
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        mov [cs:learn_mask], al
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov si, [es:USE_WHO_OFF]            ; (SI the reader)
+        cmp si, 3
+        ja .out
+        imul di, si, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, di
+        movzx ax, byte [es:bx + CREATURE_INT]
+        mov [cs:learn_int], al
+        mov di, [es:bx + 4]
+        imul di, di, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, di
+        mov cx, 3
+.class: mov ah, [es:bx + SHEET_CLASSES]
+        cmp ah, PRESERVER_CLASS
+        je .wizard
+        cmp ah, WIZARD_NEW_CLASS
+        je .wizard
+        inc bx
+        loop .class
+        jmp .out
+.wizard:
+        movzx bx, byte [cs:learn_int]       ; (BX the INT's row)
+        sub bx, INT_FIRST
+        jge .high
+        xor bx, bx
+.high:  cmp bx, INT_ROWS - 1
+        jbe .row
+        mov bx, INT_ROWS - 1
+.row:   mov ax, si
+        mov [cs:learn_who], al
+        mov [cs:learn_spell], dl
+        mov al, [cs:int_chance + bx]
+        mov [cs:learn_chance], al
+        mov ch, [cs:int_most + bx]          ; (CH the most a level)
+        mov ax, dx
+        call spell_level                    ; (CL the spell's level)
+        mov es, [cs:learn_es]               ; (the reader's known spells: ES:DI)
+        mov di, [cs:learn_bx]
+        mov ax, dx
+        shr ax, 3
+        sub di, ax
+        xor ax, ax                          ; (AL a spell, AH those of that level known)
+.count: push cx
+        push ax
+        movzx bx, al
+        shr bx, 3
+        mov cl, al
+        and cl, 7
+        mov ch, 1
+        shl ch, cl
+        test [es:di + bx], ch
+        pop ax
+        pop cx
+        jz .next
+        push cx
+        mov dl, cl
+        call spell_level
+        cmp cl, dl
+        pop cx
+        jne .next
+        inc ah
+.next:  inc al
+        cmp al, WIZ_SPELLS
+        jb .count
+        mov [cs:learn_roll], ah
+        cmp ah, ch
+        jb .roll
+        mov byte [cs:learn_result], LEARN_FULL
+        mov byte [cs:learn_msg], LEARN_FULL
+        inc word [cs:learn_seq]
+        pop es
+        popad
+        mov ax, 1                           ; (the game's "known" path: the scroll kept)
+        jmp .flags
+.roll:  mov ax, 100
+        call game_die
+        mov [cs:learn_roll], al
+        mov byte [cs:learn_result], LEARN_LEARNT
+        cmp al, [cs:learn_chance]
+        jbe .told
+        mov byte [cs:learn_result], LEARN_FAILED
+        mov byte [cs:learn_msg], LEARN_FAILED
+.told:  inc word [cs:learn_seq]
+        inc word [cs:learnt_tries]
+.out:   pop es
+        popad
+.flags: push bp                             ; (ZF in the flags IRET gives back)
+        mov bp, sp
+        and word [bp + 6], ~0x40
+        or ax, ax
+        jnz .done
+        or word [bp + 6], 0x40
+.done:  pop bp
+        iret
+; SPELL_LEVEL: CL the level (1 to WIZ_LEVELS) of wizard spell AL, from the game's SPELL_STARTS. DS the
+; game's; others kept.
+spell_level:
+        push bx
+        mov bx, SPELL_STARTS + 1
+        mov cl, 1
+.next:  cmp cl, WIZ_LEVELS
+        jae .ret
+        cmp al, [bx]
+        jb .ret
+        inc bx
+        inc cl
+        jmp .next
+.ret:   pop bx
+        ret
+learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
+learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
+lm_ip dw 0
+lm_cs dw 0
+lm_fl dw 0
+learn_said:
+        pop word [cs:lm_ip]
+        pop word [cs:lm_cs]
+        pop word [cs:lm_fl]
+        cmp byte [cs:learn_msg], LEARN_FAILED
+        jne .game
+        push es
+        push bx
+        push ax
+        mov es, [cs:learn_es]
+        mov bx, [cs:learn_bx]
+        mov al, [cs:learn_mask]
+        not al
+        and [es:bx], al                     ; (the spell taken back)
+        pop ax
+        pop bx
+        pop es
+        mov byte [cs:learn_msg], 0
+        push cs
+        push learn_failed_text
+        jmp learn_back
+.game:  push ds
+        push 0x2E97
+learn_back:
+        push word [cs:lm_fl]
+        push word [cs:lm_cs]
+        push word [cs:lm_ip]
+        iret
+learn_refused:
+        pop word [cs:lm_ip]
+        pop word [cs:lm_cs]
+        pop word [cs:lm_fl]
+        cmp byte [cs:learn_msg], LEARN_FULL
+        jne .game
+        mov byte [cs:learn_msg], 0
+        push cs
+        push learn_full_text
+        jmp learn_back
+.game:  push ds
+        push 0x2EAB
+        jmp learn_back
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5126,6 +5349,9 @@ all_vectors:
         vector VEC_RANGER_LEVEL, ranger_level
         vector VEC_ENL_ROLL, enl_roll
         vector VEC_ENL_SITE, enl_site
+        vector VEC_SCROLL_LEARN, scroll_learn
+        vector VEC_LEARN_SAID, learn_said
+        vector VEC_LEARN_REFUSED, learn_refused
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
