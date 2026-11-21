@@ -39,9 +39,38 @@ log with the ported rules. Hold Person (LEVEL 3, the third icon) on the Draxan b
 save d20 4 against 13, failed. Her turn then waited with the spell pointer up: a right-click on bare
 floor and Q ended it. Computer Control for all four.
 
-- The next round a Draxan struck the held Draxan twice (the sequel's foes attack their own held
-  comrade): d20 14 and **d20 8 against 11+, both hits**, "Paralyzed: hit automatically, for normal
+- The next round a Draxan struck the held Draxan twice (not seen again since: see
+  below): d20 14 and **d20 8 against 11+, both hits**, "Paralyzed: hit automatically, for normal
   damage"; 12 and 11 damage, 2d4 - 1 + 8 STR each, not doubled. The helper's count went to 1.
 - So the rule works on a real Hold, both sides alike. A party member's blow on a held foe wasn't
   seen (the fight was stopped there).
+- No water: the street in Tyr only.
+
+## Does a foe strike its own held comrade? (about 08:30 UTC)
+
+Asked after the run above: was the Draxan's blow on the held Draxan the game's own choice of target,
+or the rule's doing? The rule's two INTs sit inside the blow, after the target is chosen and the d20
+rolled (5D088h, 5D1B7h), so they cannot pick a target; and AD&D's auto-hit is for whoever strikes a
+helpless target. To see how often the game makes that choice, the same set-up again
+(`RAV_LOADER=1 sh ravhold.sh`, Hold Person on a Draxan by the party), the dice log watching:
+
+| Run | Rule | Party | Rounds | Draxan blows on the held Draxan |
+|---|---|---|---|---|
+| t9 | off | every turn ended (Q, E) | 5 | 0 |
+| t10 | on | every turn ended | 10 (51 blows by Draxans) | 0 |
+| t11 | off | Computer Control, as the first run; the four Draxans' HP set to 300 in memory so the party kept none from it (a test edit, the game stopped unsaved) | 9 | 0 |
+
+- So it happened once in about 25 rounds, in the first run. There the striker was an ordinary
+  Draxan (it had struck Gerakis the round before), with no charm or confusion before the blow (the
+  first Charm Mammal came later that round).
+- Not settled whether the game does it with the rule off too: seen in no run with it off. The rule's
+  code cannot cause it; the game's own choice of target (not found yet) is where to look.
+- Under Computer Control Thy'rokh casts Charm Mammal on the Draxans (t6 and t11): after a charm the
+  fight can end at once ("Each party member receives 10000 experience points") with the held and the
+  charmed ones standing. Stop DOSBox then if memory was edited (the game autosaves after a fight).
+- Aiming Hold Person: the pointer on Thy'rokh (the thri-kreen up the street) colours him yellow and a
+  click does nothing; on a foe the figure shows a red edge (game 118,102 for the Draxan behind
+  Gerakis at the start).
+- In the code: far 0806:0020 is the sequel's "has effect" and 0806:004D "take it off" (SL's 598:20
+  and 598:4D); 5E5FAh goes through every combatant taking Paralyzed (69) off.
 - No water: the street in Tyr only.

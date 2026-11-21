@@ -110,6 +110,7 @@ Kept current with each step, so these can be tested together (a save or a set-up
 | Absorb Disease without the 1d6 STR | the power used on a diseased member |
 | Negative Plane Protection | the spell and a life-drain attack |
 | No manual check | the sequel's copy protection reached in play |
+| A foe striking its own held comrade | seen once (a Draxan on the held Draxan, rule on), not again in 24 rounds (rule off and on): the game's choice of target, not the rule's code; to settle, find where the game picks a target |
 | A ranger's two weapons in heavy armour | not ported (SL's RG_TWO): a ranger keeps the game's no penalty |
 
 ## Order of work
