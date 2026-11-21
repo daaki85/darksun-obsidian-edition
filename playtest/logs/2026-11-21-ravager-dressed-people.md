@@ -24,3 +24,21 @@ The opening street (RGN032) holds 715, 721, 2410, 2421, 2422, 2423, 2426, 2427, 
 
 Not seen this time: the other dressed people (they stand in other regions or further up the
 street). DOSBox stopped by pid afterwards; nothing saved.
+
+## Second play: the half-elves and the miners (stand-ins)
+
+The half-elves and the miners stand in later regions (miners RGN039; half-elves at the far ends of
+RGN032), and two ways of reaching them failed:
+- **Writing the camera** (DS:1408h) in a fight: the value takes, but nothing redraws, and the
+  camera snaps back to the member whose turn it is at the next menu.
+- **HP 0 on the Draxans** (creature records 25, 26, 29, 31, the ones with +16h = 07): the fight
+  goes on and they keep their turns; HP alone doesn't end a fight.
+
+So a test OBJEX put the figures in question into the opening's own slots instead (`people_dress.build`
+with dress['2428'] = dress['2464'] and dress['2426'] = dress['3612']; the slot's own script kept):
+1. **The miner with her pick** (3612 on the elf woman) as the woman of the opening talk: the pick in
+   her hand, the right size, on the floor (`img/2026-11-21-rav-miner-pick.png`).
+2. **The half-elf man** (2464) as the Draxans: walking out of the house and standing round the party,
+   the right size beside the party's half-giant (`img/2026-11-21-rav-halfelf-man.png`).
+Not seen: the half-elf woman (her body is the same build pipeline as the man's), 3613's pick on
+the half-giant. A save in a later region would let the real ones be checked.

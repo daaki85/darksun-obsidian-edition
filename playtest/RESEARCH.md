@@ -326,6 +326,9 @@ SL's standing side frame has the legs apart: it isn't a walk frame left on scree
 quickest seen at the start: the blonde woman of the opening talk is picture 2426, and answer 3 brings
 the Draxans' ambush, whose two Draxans are 2428 (walking, then fighting round the party). Which
 regions hold which pictures: each RGN's ETAB objects (negated) through OBJEX's OJFF (+PIC).
+To see a figure that stands elsewhere, build a test OBJEX with its dress put in a slot the opening
+shows (dress['2428'] = dress[N]): writing the camera (DS:1408h) in a fight doesn't redraw and snaps
+back, and HP 0 on the Draxans doesn't end the fight.
 `sl_figures.py build-ui` does the same for the interface (`RESOURCE.GFF`: pictures and icons; put it
 in the copy beside the patched OBJEX.GFF). Its screens in a fight: **Q** the END menu (Escape closes
 it); a click on the status box (window 560,50) captures the mouse harmlessly; USE at game 22,17;
