@@ -77,6 +77,7 @@ VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the ca
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
 VEC_REACH, VEC_RANGER_LEVEL, VEC_ENL_ROLL, VEC_ENL_SITE = 0xE9, 0xEA, 0xEB, 0xEC
 VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0xED, 0xEE, 0xEF  # (DSCLOG2's preservers' INT)
+VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h and a byte, the site's number in its SITE_TABLE)
 VEC_BLUR_SAVE, VEC_FSHIELD_SAVE = 0xF3, 0xF4  # (DSCLOG2's BLUR_SAVE, FSHIELD_SAVE: the spells as the manual has them)
 VEC_PICK_ANY, VEC_PICK_LIST, VEC_PICK_PAGE = 0xF0, 0xF1, 0xF2  # (DSCLOG2's PICK_ANY, PICK_LIST, PICK_PAGE: preservers' INT at a level up)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
@@ -96,6 +97,11 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
+
+def _site(number: int, length: int) -> bytes:
+    """DSCLOG2's SITE at a patch site: INT VEC_SITE, the site's number, NOPs to LENGTH (3 or more)."""
+    return bytes((0xCD, VEC_SITE, number)) + b"\x90" * (length - 3)
+
 
 PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
@@ -286,6 +292,18 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("blur_save", 0x8373A, bytes.fromhex("c45e0a26f607407401 47".replace(" ", "")), gamepatch._interrupt(VEC_BLUR_SAVE, 10)),
     Patch("fire_shield_save", 0x837F7, bytes.fromhex("f746fc0400740dc45e0a26f64709027403 83c703".replace(" ", "")),
           gamepatch._interrupt(VEC_FSHIELD_SAVE, 20)),
+    # ... through DSCLOG2's SITE (INT F5h, then the site's number; NOPs to the site's length): Stinking
+    # Cloud's 1d4+1 rounds (its time's routine, 80249h, SL's 76D73h: "les bx,[bp-4]"); a classless
+    # creature's hit dice as its level for saves (83656h, SL's 79D8Ch: "mov [bp-6],ax"); Chaos saved
+    # against by INT 21 and up or 4 and down (its "sub di,100", 83E83h, SL's 79F80h); Color Spray's
+    # levels (Dismissal's test, 83E86h, SL's 79F83h); Cloudkill's bands (83E98h, SL's 79F95h) and its
+    # kill (the save's answer kept, 651C5h, SL's 78DB6h: "mov [bp-1],al").
+    Patch("stinking_cloud_round", 0x80249, bytes.fromhex("c45efc"), _site(0, 3)),
+    Patch("classless_save_level", 0x83656, bytes.fromhex("8946fa"), _site(1, 3)),
+    Patch("chaos_int", 0x83E83, bytes.fromhex("83ef64"), _site(2, 3)),
+    Patch("color_spray_level", 0x83E86, bytes.fromhex("837e143c750c"), _site(3, 6)),
+    Patch("cloudkill_save", 0x83E98, bytes.fromhex("837e14397509837efa067f0383ef64"), _site(4, 15)),
+    Patch("cloudkill_kills", 0x651C5, bytes.fromhex("8846ff"), _site(5, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

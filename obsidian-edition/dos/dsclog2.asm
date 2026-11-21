@@ -74,6 +74,7 @@ VEC_PICK_ANY  equ 0xF0  ; PICK_ANY (9317Fh: a preserver's level up: CHOOSE A SPE
 VEC_PICK_PAGE equ 0xF2  ; PICK_PAGE (93487h: CHOOSE A SPELL's first page: the highest level with room)
 VEC_BLUR_SAVE equ 0xF3  ; BLUR_SAVE (8373Ah: Barkskin's +1 on saves, and Blur's)
 VEC_FSHIELD_SAVE equ 0xF4 ; FSHIELD_SAVE (837F7h: Protection from Cold's +3, and Fire Shield's +2)
+VEC_SITE      equ 0xF5  ; SITE: INT F5h + a byte, the site's number (SITE_TABLE)
 VEC_PICK_LIST equ 0xF1  ; PICK_LIST (93246h: CHOOSE A SPELL's page: none of a level the reader's INT has full)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
@@ -2778,6 +2779,167 @@ fshield_save:
         inc word [cs:manual_saves]
 .out:   iret
 manual_saves dw 0                           ; (Blur's and Fire Shield's, counted for a look in play)
+; SITE: INT VEC_SITE followed by a byte, the site's number in SITE_TABLE (gamepatch's _site, as
+; DSCLOG's): its routine is run as if INT had called it (the way back past the byte; registers and the
+; game's BP as they were). Saves the vectors (one for many sites).
+site_int:
+        push bp
+        mov bp, sp
+        push bx
+        push ds
+        lds bx, [bp + 2]                    ; (the way back: the site's byte)
+        movzx bx, byte [bx]
+        inc word [bp + 2]
+        pop ds
+        shl bx, 1
+        mov bx, [cs:site_table + bx]
+        mov [cs:site_jump], bx
+        pop bx
+        pop bp
+        jmp [cs:site_jump]
+site_jump dw 0
+site_table:
+        dw stink_round                      ; 0 SITE_STINK
+        dw hd_save                          ; 1 SITE_HD_SAVE
+        dw chaos_save                       ; 2 SITE_CHAOS
+        dw spray_save                       ; 3 SITE_SPRAY
+        dw cloud_save                       ; 4 SITE_CLOUD_SAVE
+        dw cloud_kill                       ; 5 SITE_CLOUD_KILL
+; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
+; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
+; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
+STINKING_CLOUD equ 22
+stink_round:
+        les bx, [bp - 4]
+        cmp word [bp + 6], STINKING_CLOUD
+        jne .r
+        inc eax
+        inc word [cs:manual_count]
+.r:     iret
+; HD_SAVE (site 1, "classless_save_level"): the save modifiers' "mov [bp-6],ax" (83656h), AX the target's
+; level (98h:154h), 0 for a creature with no class (the sheet's +1Bh..+1Dh all 0): its hit dice then
+; (the first level byte, +1Eh; the sheet [BP-0Eh], far). Read after by Dismissal, Cloudkill, Scare,
+; Color Spray.
+hd_save:
+        or ax, ax
+        jnz .set
+        push es
+        push bx
+        les bx, [bp - 0x0E]
+        cmp byte [es:bx + 0x1B], 0
+        jne .keep
+        cmp word [es:bx + 0x1C], 0
+        jne .keep
+        mov al, [es:bx + 0x1E]
+        cbw
+        inc word [cs:manual_count]
+.keep:  pop bx
+        pop es
+.set:   mov [bp - 6], ax
+        iret
+; CHAOS_SAVE (site 2, "chaos_int"): Chaos's "sub di,100" (83E83h) for a creature with no warrior
+; levels: none for INT 21 or more or 4 or less, as the manual has it (the creature [BP-0Ah], far; INT +1Ch).
+chaos_save:
+        push es
+        push bx
+        push ax
+        les bx, [bp - 0x0A]
+        mov al, [es:bx + 0x1C]
+        cmp al, 21
+        jge .save
+        cmp al, 4
+        jle .save
+        sub di, 100
+        jmp .out
+.save:  inc word [cs:manual_count]
+.out:   pop ax
+        pop bx
+        pop es
+        iret
+; SPRAY_SAVE (site 3, "color_spray_level"): Dismissal's "cmp word [bp+14h],3Ch / jnz" (83E86h; 6 bytes):
+; Color Spray (4) lets only creatures of more levels ([BP-6]) than its caster ([BP+16h]) save (-100).
+; Then Dismissal's case (83E8Ch) or past it (83E98h).
+COLOR_SPRAY equ 4
+DISMISSAL   equ 0x3C
+SPRAY_PAST  equ 0x83E98 - (0x83E86 + 3)
+SPRAY_CASE  equ 0x83E8C - (0x83E86 + 3)
+spray_save:
+        push ax
+        cmp word [bp + 0x14], COLOR_SPRAY
+        jne .test
+        mov al, [bp + 0x16]
+        mov ah, 0
+        cmp [bp - 6], ax
+        jg .test
+        sub di, 100
+        inc word [cs:manual_count]
+.test:  mov ax, SPRAY_CASE
+        cmp word [bp + 0x14], DISMISSAL
+        je .back
+        mov ax, SPRAY_PAST
+.back:  push bp
+        mov bp, sp
+        add [bp + 4], ax                    ; (the way back)
+        pop bp
+        pop ax
+        iret
+; CLOUD_SAVE (site 4, "cloudkill_save"): Cloudkill's "cmp word [bp+14h],39h / jnz / cmp word [bp-6],6 /
+; jg / sub di,100" (83E98h; 15 bytes): AD&D's bands, no save under 4 levels (hit dice); from 4 the record's
+; save (CLOUD_KILL: to 5, a failed one kills).
+CLOUDKILL  equ 57
+CLOUD_DIES equ 4
+CLOUD_SAVES equ 5
+cloud_save:
+        cmp word [bp + 0x14], CLOUDKILL
+        jne .out
+        cmp word [bp - 6], CLOUD_DIES
+        jge .out
+        sub di, 100
+.out:   iret
+; CLOUD_KILL (site 5, "cloudkill_kills"): where a spell's damage on one creature (DI the combatant, SI the
+; spell, [BP-6] the percent it takes, a dword) keeps the save's answer, "mov [bp-1],al" (651C5h; AL 0 not
+; saved): a Cloudkill not saved against by a creature of CLOUD_SAVES levels or fewer (its highest, the
+; first a classless one's hit dice) takes its damage a thousand times over, as SL's.
+CLOUD_PERCENT equ 100000
+cloud_kill:
+        mov [bp - 1], al
+        or al, al
+        jnz .out
+        cmp si, CLOUDKILL
+        jne .out
+        pusha
+        push es
+        cmp di, 400
+        jae .done
+        imul bx, di, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .done
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov ax, [es:bx + 4]
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        mov al, [es:bx + 0x1E]
+        cmp al, [es:bx + 0x1F]
+        jae .a
+        mov al, [es:bx + 0x1F]
+.a:     cmp al, [es:bx + 0x20]
+        jae .b
+        mov al, [es:bx + 0x20]
+.b:     cmp al, CLOUD_SAVES
+        ja .done
+        mov dword [bp - 6], CLOUD_PERCENT
+        inc word [cs:manual_count]
+.done:  pop es
+        popa
+.out:   iret
+manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5604,6 +5766,7 @@ all_vectors:
         vector VEC_PICK_PAGE, pick_page
         vector VEC_BLUR_SAVE, blur_save
         vector VEC_FSHIELD_SAVE, fshield_save
+        vector VEC_SITE, site_int
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

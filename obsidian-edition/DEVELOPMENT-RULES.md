@@ -1223,6 +1223,12 @@ creature and three words; dicelog's `_manual`).
   DSCLOG2's `BLUR_SAVE` (`INT F3h` at Barkskin's test, 8373Ah, 10 bytes) and
   `FSHIELD_SAVE` (`INT F4h` at Protection from Cold's, 837F7h, 20 bytes) do the same
   ([played](../playtest/logs/2026-11-21-ravager-blur-fire-shield.md)).
+  The rest of the tail is SL's with DI for SI, so DSCLOG2's SITE (`INT F5h` and the site's
+  number, its `SITE_TABLE`) does `stinking_cloud_round` (80249h), `classless_save_level`
+  (83656h; the sheet's first level byte, +1Eh, the hit dice), `chaos_int` (83E83h; INT the
+  creature's +1Ch), `color_spray_level` (83E86h), `cloudkill_save` (83E98h) and
+  `cloudkill_kills` (651C5h); the sequel's Cloudkill record allows no save, as its manual
+  ([played](../playtest/logs/2026-11-21-ravager-manual-saves.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
