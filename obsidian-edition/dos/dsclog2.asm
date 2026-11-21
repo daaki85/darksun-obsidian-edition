@@ -2587,7 +2587,7 @@ th_count  dw 0                  ; (half-giants let so, for a look in play)
 ;   bytes: INT + 3 NOPs): the round's last swing with the cahulaks ([BP-16h] the swing, [BP-0Ah] the
 ;   round's swings, [BP+12h] the item, [BP+16h] the range, [BP+18h] the attacker), the off head's when
 ;   there are 2 or more, pays CAH_EXTRA more on [BP+0Ah] (what the d20 must reach, before the roll).
-; The tangle (SL's CAH_HIT) isn't ported yet. A ranger keeps the game's no penalty (the routine's own
+; The tangle: CAH_HIT, below. A ranger keeps the game's no penalty (the routine's own
 ; test, before CAH_TWO).
 RULE_HI_CAHULAKS equ 0x2000
 CAHULAKS_TYPE equ 24
@@ -2653,6 +2653,7 @@ cah_two:
 cah_swing:
         mov word [bp - 4], 0
         call size_dice                  ; (the creature size rule: a large target's dice, the call's first swing)
+        call stink_swing                ; (the stinkpots: a nauseated attacker's -2, the stinkpot's 1d3)
         cmp word [bp + 0x16], 1
         jg .out
         push ax
@@ -2704,7 +2705,7 @@ TANGLE_MOST   equ 512               ; (the combatants the bitmap covers)
 cah_hit:
         mov byte [bp - 0x19], 0
         cmp word [bp + 0x16], 1
-        jg .out
+        jg stink_hit                ; (a missile: the staff sling's stinkpot, STINKPOTS)
         push ax
         mov ax, [bp + 0x12]
         call item_is_cahulaks
@@ -2903,6 +2904,182 @@ mn_frame  dw 0, 0, 0, 0
 tangled   times TANGLE_MOST / 8 db 0
 tangles   dw 0                  ; (tangles made, for a look in play)
 tangle_turns dw 0               ; (turns taken so)
+
+; STINKPOTS: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits"): the staff sling's shot is a
+; stinkpot, a clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 against
+; any size (STINK_SWING sets the call's sides, [BP-12h], on its first swing; the game's 1d4). A hit
+; (STINK_HIT, from CAH_HIT for a missile: [BP+14h] the type, [BP+18h] the thrower, TARGET the target) on a
+; target still standing, not undead (its sheet's race 9, as the sequel's own tests) and not immune to
+; poison (the damage resistance routine 85052h, stub 628h:25h = the load + 475Ah: the share it takes of
+; the poison kind, 1; 0 none), makes it save: the game's saving throw (66D26h, stub 598h:75h = the load +
+; 46A7h; AL 0 failed) against Stinking Cloud (22: the sequel has no monster poison power as SL's 176). A
+; failure: Nauseated (STINK_EFFECT, the sequel's empty effect 12, named and given Stinking Cloud's icon
+; by the Loader's patch "nauseated_name") for 1d3+1 rounds, through the effect adder (7F9E6h, stub
+; 608h:3Eh = the load + 473Bh), filed under Stinking Cloud. A nauseated attacker's swings are 2 worse
+; (STINK_SWING, whatever the rules: only the rule puts it on). The far calls are made in a frame the
+; overlay manager can fix up (the INT's way back in it, as ACID_ROUND's). Recorded: MN_STINK before the
+; save (target, thrower, 0 a save follows, 1 undead, 2 immune to poison), MN_NAUSEA after it (target,
+; thrower, the d3, the rounds; 0 and 0 saved).
+STAFF_SLING_TYPE equ 98
+STINK_SIDES  equ 3
+STINK_EFFECT equ 12
+STINK_SPELL  equ 22             ; (Stinking Cloud: the save's power and the effect's spell)
+STINK_POISON equ 1              ; (the poison damage kind)
+STINK_TO_HIT equ 2
+STINK_UNDEAD equ 1              ; (MN_STINK's +0Ah)
+STINK_IMMUNE equ 2
+RACE_UNDEAD  equ 9
+MN_STINK     equ 11
+MN_NAUSEA    equ 12
+SHARE_STUB   equ 0x475A - 0x47E0    ; (stubs, less DS)
+SHARE_ENTRY  equ 0x25
+SAVE_STUB    equ 0x46A7 - 0x47E0
+SAVE_ENTRY   equ 0x75
+ADD_STUB     equ 0x473B - 0x47E0
+ADD_ENTRY    equ 0x3E
+stink_swing:
+        push ax
+        push cx
+        mov ax, [bp + 0x18]
+        mov cl, STINK_EFFECT
+        call has_effect
+        jne .dice
+        add word [bp + 0x0A], STINK_TO_HIT
+        inc word [cs:nausea_swings]
+.dice:  pop cx
+        pop ax
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .ret
+        cmp word [bp + 0x16], 1
+        jle .ret
+        cmp word [bp + 0x12], NO_ITEM
+        jae .ret
+        cmp word [bp + 0x14], STAFF_SLING_TYPE
+        jne .ret
+        push ax
+        mov ax, [bp - 0x16]
+        cmp ax, [bp - 0x0C]
+        pop ax
+        jne .ret                    ; (the call's first swing: the dice set once a call)
+        mov word [bp - 0x12], STINK_SIDES
+.ret:   ret
+stink_hit:
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        cmp word [bp + 0x12], NO_ITEM
+        jae .out
+        cmp word [bp + 0x14], STAFF_SLING_TYPE
+        jne .out
+        sti
+        pushad
+        push es
+        mov bx, [TARGET]
+        cmp bx, TANGLE_MOST
+        jae .done
+        mov ax, bx
+        call fighter_creature
+        jc .done
+        imul si, ax, CREATURE_SIZE
+        les di, [CREATURES_PTR]
+        add di, si
+        cmp word [es:di], 0
+        jle .done                   ; (felled by the blow)
+        mov [cs:mn_frame], bx
+        mov ax, [bp + 0x18]
+        mov [cs:mn_frame + 2], ax
+        mov dword [cs:mn_frame + 4], 0
+        mov si, [es:di + 4]
+        imul si, si, SHEET_SIZE
+        les di, [SHEETS_PTR]
+        add di, si
+        mov dx, STINK_UNDEAD
+        cmp byte [es:di + SHEET_RACE], RACE_UNDEAD
+        je .spared
+        mov bx, sp
+        push word [ss:bx + 36]      ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word STINK_POISON
+        push cs
+        push word stink_none        ; (its effects' bits: none count against poison)
+        push word [cs:mn_frame]
+        mov ax, SHARE_STUB
+        mov dx, SHARE_ENTRY
+        call stink_at
+        call far [cs:stink_ptr]
+        add sp, 8
+        mov dx, STINK_IMMUNE
+        or ax, ax
+        jz .spared_back
+        inc word [cs:stinks]
+        mov ax, MN_STINK
+        call mn_rec
+        push word 0                 ; (the level)
+        push word STINK_SPELL
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        mov ax, SAVE_STUB
+        mov dx, SAVE_ENTRY
+        call stink_at
+        call far [cs:stink_ptr]
+        add sp, 8
+        or al, al
+        jnz .saved
+        mov ax, 3
+        call game_die
+        mov [cs:mn_frame + 4], ax
+        inc ax
+        mov [cs:mn_frame + 6], ax
+        inc word [cs:nauseas]
+        push word 0
+        push word 0
+        imul ax, ax, ROUND_SECONDS
+        push ax
+        push word STINK_EFFECT
+        push word STINK_SPELL
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        mov ax, ADD_STUB
+        mov dx, ADD_ENTRY
+        call stink_at
+        call far [cs:stink_ptr]
+        add sp, 14
+.saved: mov ax, MN_NAUSEA
+        call mn_rec
+        jmp .back
+.spared_back:
+        mov [cs:mn_frame + 4], dx
+        mov ax, MN_STINK
+        call mn_rec
+.back:  pop bp
+        pop ax                      ; (the way back, as the overlay manager has left it)
+        pop cx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .done
+.spared:
+        mov [cs:mn_frame + 4], dx
+        mov ax, MN_STINK
+        call mn_rec
+.done:  pop es
+        popad
+.out:   iret
+; STINK_AT: STINK_PTR made the game's stub AX (less DS), entry DX, for a far call. DS the game's; BX kept.
+stink_at:
+        push bx
+        mov bx, ds
+        add ax, bx
+        mov [cs:stink_ptr + 2], ax
+        mov [cs:stink_ptr], dx
+        pop bx
+        ret
+stink_ptr  dd 0
+stink_none times 10 db 0
+stinks     dw 0                 ; (stinkpot saves made, for a look in play)
+nauseas    dw 0                 ; (Nauseated put on)
+nausea_swings dw 0              ; (a nauseated attacker's swings)
 
 ; SIZE: DSCLOG's (RULE_HI_SIZE, always on), AD&D's creature sizes, which the game keeps none of. A
 ; combatant is large (IS_LARGE) when a half-giant (its sheet's race) or marked in LARGE_BITS (the

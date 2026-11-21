@@ -884,14 +884,27 @@ the lower small icon left of each character box (game 47,53 / 98,53 / 47,113 / 9
 **Its inventory's two hands** (2026-11-21, logs/2026-11-21-ravager-half-giant.md): the routine that
 puts an item in a hand at 7761Bh (SL's), the character on show at (load + 3E71h):0B44h, an item type's
 two-handed bit +0Bh 40h (SL's +0Fh), tested at 77976h (the other hand's: "Two handed weapon in use") and
-77A0Dh (the new one's: "Need two free hands"). The far "has effect" routine 0806:0020 and "take it off"
-0806:004D (SL's 598:20, 598:4D).
+77A0Dh (the new one's: "Need two free hands"). The far "has effect" routine 608h:20h and "take it off"
+608h:4Dh (SL's 598:20, 598:4D; the bytes in a call are `08 06`).
 
 **Its weapons and the attack's frame** (2026-11-21, logs/2026-11-21-ravager-cahulaks.md): from
 OBJEX.GFF's items, Cahulaks 24, Double Spear 39, Gythka 52, Polearm 80, Sling 93, Staff Sling 98,
 Trikal 100. The attack routine's frame: [BP-0Ah] the round's swings, [BP-16h] the swing, [BP+12h] the
 item, [BP+14h] its type, [BP+16h] the range, [BP+18h] the attacker, [BP+0Ah] - [BP+0Ch] what the d20
 must reach; each swing starts at 5D052h; a hit's damage done at 5D1FEh ("mov byte [bp-19h],0").
+
+**Its far calls and stubs** (2026-11-21, logs/2026-11-21-ravager-stinkpots.md): a far call names a
+selector (388h, 598h, 608h...), a row of the word table at file 4B080h, 8 bytes a selector, its first
+word the segment less the load (388h: 3F49h, 598h: 46A7h, 608h: 473Bh, 628h: 475Ah). Overlay routines
+are reached through a stub segment in the root (`CD 3F 00 00`, the overlay's place from file 57580h as a
+dword, its size; then 5 bytes an entry from +20h: `CD 3F` and the routine's offset). The saving throw
+66D26h is 598h:75h (target, thrower, power, level; AL 0 failed), the damage resistance 85052h 628h:25h,
+the effect adder 7F9E6h 608h:3Eh (target, thrower, spell, effect, a dword time: seconds a timer, negative
+charges; a last byte). DSCLOG2 calls them as DS + (segment - 47E0h) : entry. The effects' records (31
+bytes: name, icon ICON 21000 + spell) have two empty ones, 12 (now Nauseated) and 88. **To throw by
+hand in a fight**: walk two squares off, one right-click (the sword), hover a foe until red shows under
+it (yellow is a friend), mousedown / mouseup. Web from the Draxans gives a webbed member an END menu and
+turns its Computer Control off: E ends it; taking effect 66 off the party in memory keeps the fight going.
 
 **Creature size in it** (2026-11-21, logs/2026-11-21-ravager-size.md): the swing's dice at [BP-10h]
 count, [BP-12h] sides, [BP-14h] bonus; the call's first swing [BP-0Ch]. The Draxans are people (race

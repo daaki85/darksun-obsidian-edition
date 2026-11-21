@@ -3691,6 +3691,9 @@ class DiceLog:
         own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
         if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
             steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
+        elif own_dice and (count, sides) != own_dice and e.parent_arg(0x14) == game.STAFF_SLING_TYPE \
+                and (count, sides) == game.STINK_DICE and mode is not None and mode > 1:
+            steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: a stinkpot)"  # (DSCLOG2's STINK_SWING)
         elif own_dice and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
             steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \

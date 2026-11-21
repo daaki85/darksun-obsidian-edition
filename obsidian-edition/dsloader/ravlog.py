@@ -107,6 +107,9 @@ ADDRESSES: Dict[str, object] = {
     # SL's helm types aren't the sequel's (its 5 is Scale Armor): RavGameData.counted_ac has its own
     "HELM_TYPES": (),
     "CAHULAKS_TYPE": 24, "CAHULAKS_TYPES": frozenset((24,)),  # (the sequel's Cahulaks, OBJEX.GFF; no metal or obsidian ones)
+    # the stinkpots (DSCLOG2's STINKPOTS): the Staff Sling's type, its Nauseated (ravager.NAUSEATED), the
+    # save against Stinking Cloud (the sequel has no monster poison power as SL's 176)
+    "STAFF_SLING_TYPE": 98, "STINK_EFFECT": ravager.NAUSEATED, "STINK_SAVE_POWER": 22,
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
