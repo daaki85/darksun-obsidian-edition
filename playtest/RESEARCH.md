@@ -912,7 +912,10 @@ callers' ways back 20617h (the sword pointer), 1EADCh (the attack click), 1E2AAh
 foe), 1FF39h and 260CBh (the walk to attack), 2420Ah (the step switch), and the combat overlay's IP
 14A2h and 1A72h (the computer's). The line test 0B0Bh:00A4h (10354h); the map things' feet DS:67C5h.
 The pointer cycles on a right-click (walk arrow, sword, eye); "no" on the floor in sword mode is
-normal. A creature's item lists are things 201h and on in the combatants' table.
+normal. **To place a figure for a test**: move its map thing's top left (+3/+5) and feet (+0Ah/+0Ch,
+sixteenths of a square, `shr 4` the square) by the same amount; the game draws it there at its next
+redraw and its distance and line tests use the new place (logs/2026-11-21-ravager-reach.md). The
+game's dice for each item type: +08h the sides, +09h the count, +0Ah the bonus (signed). A creature's item lists are things 201h and on in the combatants' table.
 
 **Creature size in it** (2026-11-21, logs/2026-11-21-ravager-size.md): the swing's dice at [BP-10h]
 count, [BP-12h] sides, [BP-14h] bonus; the call's first swing [BP-0Ch]. The Draxans are people (race
