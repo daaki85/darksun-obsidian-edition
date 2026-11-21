@@ -73,6 +73,7 @@ VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a 
 VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
 VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
+VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
 VEC_TWO_HANDED = 0xE4  # (DSCLOG2's TWO_HANDED: a half-giant's two-handed weapon in one hand)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
@@ -81,7 +82,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
-                | game.RULE_HALF_GIANT)
+                | game.RULE_HALF_GIANT | game.RULE_CAHULAKS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -216,6 +217,12 @@ PATCHES: Tuple[Patch, ...] = (
     # 6F33Fh, 6F3CCh).
     Patch("two_handed_other", 0x77976, bytes.fromhex("26f6470b40"), gamepatch._interrupt(VEC_TWO_HANDED, 5)),
     Patch("two_handed_new", 0x77A0D, bytes.fromhex("26f6470b40"), gamepatch._interrupt(VEC_TWO_HANDED, 5)),
+    # The cahulaks' two heads (SL's cahulaks_two, cahulaks_swing; Weapon traits, always on): DSCLOG2's
+    # CAH_TWO at the two-weapon routine's "two weapons ready?" (5DE6Fh, SL's 59627h: on for the cahulaks
+    # too) and CAH_SWING at each swing's start (5D052h, SL's 589B6h: the off head's -4 on the round's
+    # last); the off head's one more attack a round is OFF_HAND's, PROBE_TWO the main head's -2.
+    Patch("cahulaks_two", 0x5DE6F, bytes.fromhex("837e06017e11"), gamepatch._interrupt(VEC_CAH_TWO, 6)),
+    Patch("cahulaks_swing", 0x5D052, bytes.fromhex("c746fc0000"), gamepatch._interrupt(VEC_CAH_SWING, 5)),
     # Helms count AC 1 (SL's ring_ac's helm part and box_ac; the Options tab's "helm_ac"): DSCLOG2's
     # PROBE_HELM_AC at the AC function's two reads of a worn item's type's AC (5D663h, 5D67Bh: "mov
     # al,es:[bx+0Eh] / cwde"; SL's 58EBDh) and PROBE_BOX_AC at the item box's AC BONUS (9A4B7h, SL's 8C15Ah).

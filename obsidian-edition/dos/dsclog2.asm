@@ -59,6 +59,8 @@ VEC_HELD_HIT  equ 0xDF  ; HELD_HIT (5D088h: the natural 20's test: a helpless ta
 VEC_HELD_DAMAGE equ 0xE0 ; HELD_DAMAGE (5D1B7h: a helpless target's damage, not doubled)
 VEC_TWO       equ 0xE1  ; PROBE_TWO (5DE7Ch: the two-weapon to-hit adjustment: AD&D's -2/-4 with RULE_TWO_WEAPONS)
 VEC_ROLL_MAX  equ 0xE3  ; ROLL_MAX_HP (9506Ch: a fix: the most hit points worked out again after a hit die, as SL's)
+VEC_CAH_TWO   equ 0xE5  ; CAH_TWO (5DE6Fh: the two-weapon routine on for the cahulaks, RULE_HI_CAHULAKS)
+VEC_CAH_SWING equ 0xE6  ; CAH_SWING (5D052h: a swing's start: the off head's more)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -2281,6 +2283,12 @@ probe_two:
         push bx
         push es
         mov [cs:two_adjust], ax
+        mov ax, [bp + 0x0A]
+        call item_is_cahulaks
+        jne .weapons
+        call cah_adjust                 ; (the cahulaks: the main head's here, the off head's more kept)
+        jmp .counted
+.weapons:
         xor dx, dx
         mov bx, [bp + 0x0A]
         cmp bx, NO_ITEM
@@ -2318,6 +2326,7 @@ probe_two:
         iret
 off_hand:
         mov ah, 0
+        call cah_more                   ; (the cahulaks: the off head's one more a round)
         test word [cs:rules], RULE_TWO_WEAPONS
         jz .store
         cmp ax, 2
@@ -2553,6 +2562,111 @@ two_handed:
 .out:   pop bp
         iret
 th_count  dw 0                  ; (half-giants let so, for a look in play)
+
+; CAHULAKS: DSCLOG's (RULE_HI_CAHULAKS, Weapon traits, always on), a pair of four-bladed heads on a rope, one
+; in each hand (Dark Sun's rules: the two-weapon rule, though one item; the sequel's Cahulaks, type 24, a
+; plain weapon to it). With the rule:
+; - the off head's one more attack a round (CAH_MORE, from OFF_HAND: AX the halves, [BP+12h] the item,
+;   [BP+16h] the range 1 or less);
+; - the two-weapon routine (5DE34h) asked for them as for two weapons ready: CAH_TWO replaces its "cmp
+;   word [bp+6],1 / jle" (5DE6Fh, SL's 59627h; 6 bytes: INT + 4 NOPs), going on when [BP+6] is 2 or
+;   more or the item [BP+0Ah] is the cahulaks, else to its "none" way (5DE86h);
+; - PROBE_TWO then gives AD&D's main head -2 plus DEX's reaction adjustment, no better than 0, for every
+;   swing (CAH_ADJUST), keeping how much worse the off head's -4 is (CAH_EXTRA) for attacker CX;
+; - CAH_SWING replaces the attack's "mov word [bp-4],0" at each swing's start (5D052h, SL's 589B6h; 5
+;   bytes: INT + 3 NOPs): the round's last swing with the cahulaks ([BP-16h] the swing, [BP-0Ah] the
+;   round's swings, [BP+12h] the item, [BP+16h] the range, [BP+18h] the attacker), the off head's when
+;   there are 2 or more, pays CAH_EXTRA more on [BP+0Ah] (what the d20 must reach, before the roll).
+; The tangle (SL's CAH_HIT) isn't ported yet. A ranger keeps the game's no penalty (the routine's own
+; test, before CAH_TWO).
+RULE_HI_CAHULAKS equ 0x2000
+CAHULAKS_TYPE equ 24
+CT_SKIP       equ 0x5DE86 - 0x5DE71   ; (the routine's "none" way, from after the INT)
+item_is_cahulaks:               ; ZF if item AX (its number) is the cahulaks and the rule on. DS the
+        test word [cs:rules_hi], RULE_HI_CAHULAKS   ;   game's; all kept
+        jz .no
+        cmp ax, NO_ITEM
+        jae .no
+        push es
+        push bx
+        push ax
+        imul bx, ax, ITEM_SIZE
+        les ax, [ITEMS_PTR]
+        add bx, ax
+        pop ax
+        cmp word [es:bx + ITEM_TYPE], CAHULAKS_TYPE
+        pop bx
+        pop es
+        ret
+.no:    or sp, sp               ; (ZF clear)
+        ret
+cah_more:                       ; AX the attacks a round (halves) with item [BP+12h]: 2 more for the
+        cmp word [bp + 0x16], 1 ;   cahulaks in melee. Others kept.
+        jg .ret
+        push ax
+        mov ax, [bp + 0x12]
+        call item_is_cahulaks
+        pop ax
+        jne .ret
+        add ax, 2
+        inc word [cs:cah_count]
+.ret:   ret
+cah_adjust:                     ; DX the main head's adjustment (-2 + TWO_ADJUST, no better than 0);
+        push ax                 ;   CAH_EXTRA how much worse the off head's is, for attacker CX
+        mov dx, -2
+        add dx, [cs:two_adjust]
+        jle .main
+        xor dx, dx
+.main:  mov ax, -4
+        add ax, [cs:two_adjust]
+        jle .off
+        xor ax, ax
+.off:   neg ax
+        add ax, dx
+        mov [cs:cah_extra], ax
+        mov [cs:cah_who], cx
+        pop ax
+        ret
+cah_two:
+        cmp word [bp + 6], 1
+        jg .two
+        push ax
+        mov ax, [bp + 0x0A]
+        call item_is_cahulaks
+        pop ax
+        je .two
+        push bp
+        mov bp, sp
+        add word [bp + 2], CT_SKIP
+        pop bp
+.two:   iret
+cah_swing:
+        mov word [bp - 4], 0
+        cmp word [bp + 0x16], 1
+        jg .out
+        push ax
+        mov ax, [bp + 0x12]
+        call item_is_cahulaks
+        jne .pop
+        mov ax, [bp + 0x18]
+        cmp ax, [cs:cah_who]
+        jne .pop
+        mov ax, [bp - 0x0A]
+        cmp ax, 2
+        jl .pop
+        dec ax
+        cmp ax, [bp - 0x16]
+        jne .pop
+        mov ax, [cs:cah_extra]
+        add [bp + 0x0A], ax
+        mov word [cs:cah_who], -1   ; (once)
+        inc word [cs:cah_off]
+.pop:   pop ax
+.out:   iret
+cah_extra dw 0
+cah_who   dw -1
+cah_count dw 0                  ; (rounds given the off head's attack, for a look in play)
+cah_off   dw 0                  ; (off head's swings paying the more)
 
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
@@ -4139,6 +4253,8 @@ all_vectors:
         vector VEC_OFF_HAND, off_hand
         vector VEC_ROLL_MAX, roll_max_hp
         vector VEC_TWO_HANDED, two_handed
+        vector VEC_CAH_TWO, cah_two
+        vector VEC_CAH_SWING, cah_swing
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

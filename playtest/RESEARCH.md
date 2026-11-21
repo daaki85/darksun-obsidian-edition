@@ -887,6 +887,12 @@ two-handed bit +0Bh 40h (SL's +0Fh), tested at 77976h (the other hand's: "Two ha
 77A0Dh (the new one's: "Need two free hands"). The far "has effect" routine 0806:0020 and "take it off"
 0806:004D (SL's 598:20, 598:4D).
 
+**Its weapons and the attack's frame** (2026-11-21, logs/2026-11-21-ravager-cahulaks.md): from
+OBJEX.GFF's items, Cahulaks 24, Double Spear 39, Gythka 52, Polearm 80, Sling 93, Staff Sling 98,
+Trikal 100. The attack routine's frame: [BP-0Ah] the round's swings, [BP-16h] the swing, [BP+12h] the
+item, [BP+14h] its type, [BP+16h] the range, [BP+18h] the attacker, [BP+0Ah] - [BP+0Ch] what the d20
+must reach; each swing starts at 5D052h; a hit's damage done at 5D1FEh ("mov byte [bp-19h],0").
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18
