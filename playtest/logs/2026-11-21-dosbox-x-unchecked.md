@@ -61,15 +61,37 @@ fight and its autosave, F10 after the last step, a shop, the inventory, the crea
     by pid. A killed DOSBox-X leaves its memory file in /dev/shm (removed by hand; the start script
     removes the last one at its next start).
 
+## Part 2: a damage spell and the sound
+
+13. **Started with sound captured**: `PT_SDL_AUDIO=disk PT_AUDIO=$WORK/audio.raw PT_SAVE=fountain-user
+    sh start_dosboxx.sh DOSBOX-X soundfont=/usr/share/sounds/sf2/TimGM6mb.sf2
+    'extra=midi|fluid.driver=file'` (Ubuntu's `fluid-soundfont-gm` package). The configuration the
+    Loader writes: `mididevice=fluidsynth`, `fluid.soundfont=...`; DOSBox-X's log: "fluidsynth:
+    version 2.3.4", "Loaded SoundFont", "Opened device:fluidsynth". Without `fluid.driver=file`
+    (the first try) FluidSynth wanted PulseAudio ("Failed to create PulseAudio connection ... Can't
+    create audio driver") and DOSBox-X went on with no music: on a desktop the music needs a sound
+    server FluidSynth's default driver finds.
+14. **A damage spell**: round 1, Lex's USE screen: Shocking Grasp crossed out, Erdlu Claw's click
+    said "YOU WERE HIT" (no cast); Escape, Tab + Return. Ester: `squarewalk.py 60 95` (beside the
+    Templar, points 120 -> 46), U, Cause Light Wounds (230,59), a click on the Templar (240,128):
+    `Cause Light Wounds damage: 1d8 = [6] = 6`, `Ester's Cause Light Wounds at Templar: touch attack
+    d20 = 14, needs 12+ (45%) (THAC0 19, +3 STR; target AC 4) -> HIT`, `Templar takes 6 from Cause
+    Light Wounds, now 6/41 HP`.
+15. **The sound, measured** (124 s, 48 kHz stereo): DOSBox-X's own mix (the Sound Blaster's
+    effects) peaks at 27,896 in the first two seconds, then about 2,000 in bursts at the fight's
+    swings and hits (3 to 6 in between: silence); FluidSynth's file, the music through the soundfont,
+    rises from 170 at the start to 3,000-9,900 a second through the whole fight. Both mixed, 40 s of
+    the fight: `2026-11-21-dosbox-x-sound-fight.ogg` (sent to the owner, not committed). Heard by
+    nobody here; the owner's ears are the check.
+
 ## Water
 
 The slave pens only: nothing new.
 
 ## Not seen
 
-- Windows and macOS (the owner's `dosboxx_memtest.py`), sound, full screen on a real screen.
-- A damage spell in a fight: Lex's icons were crossed out on his one turn (hit just before it),
-  and Entangle's box would have caught the party; only Bless was cast.
+- Windows and macOS (the owner's `dosboxx_memtest.py`), full screen on a real screen, music
+  through a real sound server (here only into files).
 - The lost first menu click when the Loader itself starts the game (the last play's): this play
   started every game with `start_dosboxx.sh`, where it never happens.
 - Nothing differed from 0.74 in what was played here.

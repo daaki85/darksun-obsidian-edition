@@ -477,6 +477,13 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   $WORK/dbx.pid) >> $WORK/dice.txt` from `obsidian-edition/`): it reads the settings once, at its
   start. A fight won with no edit then autosaves (logs/2026-11-21-dosbox-x-unchecked.md:
   `fountain-user` won by Tab + Return and `PT_NO_EDIT=1 fightout.sh`, 5 rounds).
+- **The sound of a DOSBox-X game, into files**: `PT_SDL_AUDIO=disk PT_AUDIO=$WORK/audio.raw` (the
+  Sound Blaster's effects, DOSBox-X's own mix: 48 kHz stereo 16-bit) and, with a soundfont,
+  `soundfont=/usr/share/sounds/sf2/TimGM6mb.sf2 'extra=midi|fluid.driver=file'` after the program
+  (the music: FluidSynth plays through its own driver, not DOSBox-X's mix, and writes
+  `$WORK/fluidsynth.wav`, whose header is filled only at the end: read past `data`). Without
+  `fluid.driver=file` and no sound server there is no music (logs/2026-11-21-dosbox-x-unchecked.md
+  part 2). `sox -t raw -r 48000 -e signed -b 16 -c 2` reads either; `sox -m` mixes them.
 - **A killed DOSBox-X leaves its memory file** in /dev/shm (32 MB): the next `start_dosboxx.sh`
   removes it, the last one's by hand (`$WORK/memfile.path` names it).
 - **`codepatch.py [SECONDS] [game]`**: is a write to code acted on at once (the helper's own
