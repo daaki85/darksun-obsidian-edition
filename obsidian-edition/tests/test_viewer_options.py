@@ -155,7 +155,7 @@ class OptionsTests(unittest.TestCase):
         v.choose_soundfont()
         self.assertEqual(self.saved()["soundfont"], font)
         self.assertIn("gm.sf2", v.soundfont_status.get())
-        self.assertIn(f"fluid.soundfont={font}", dosboxx.midi_lines(self.saved()))
+        self.assertIn(f"midiconfig={font}", dosboxx.midi_lines(self.saved()))
         v.no_soundfont()
         self.assertEqual(self.saved()["soundfont"], "")
         self.assertIn("mididevice=default", dosboxx.midi_lines(self.saved()))
