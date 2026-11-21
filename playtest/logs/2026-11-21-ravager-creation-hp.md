@@ -31,6 +31,12 @@ rolled +0Ah, the least and most): 51 (37, 21-84), 71 (43, 35-98), 54 (47, 14-77)
 
 ![View Character after creation](img/2026-11-21-ravager-creation-hp.png)
 
+## The check script (after the merge of 2.19.2, about 07:25 UTC)
+
+`sh ravcreation.sh 15` (new, the review's recommendation): 15 rolls of a 7th-level fighter, each
+right (HP 38-87, the line's numbers equal, the dice plus CON's bonus); mean 61.5 with the ported
+rules, 55.1 with `ravcreation.py 15 0` (the game's rolls) on the same screen.
+
 ## Notes
 
 - A click on the HP line or its square didn't change the hit points in the sequel (SL's click dial,
