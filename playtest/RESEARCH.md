@@ -969,3 +969,22 @@ the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh
 `+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`, which no
 `es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
 and `rest-no-call-user`: all transferred, the kits kept.
+
+### The sequel's spells in a fight (2026-11-21)
+
+- **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
+  from `ravhold.sh` (bit n spell n; Enlarge bit 5 of the first byte); her USE screen then shows it
+  at once (LEVEL cycles 1, 2, 3 with clicks on (197,171)). The spells by number: wizard 0-114,
+  priest 115-234, psionic 235-268, the monsters' powers after (RESOURCE.GFF's DATA names).
+- **Casting on a party member**: on USE, click the spell (it hangs on the pointer, its name in the
+  bottom bar), then click the member's portrait on the same screen (Gerakis's at (120,117)); the
+  slots line drops by one. An area spell (Fireball) closes USE and aims on the map instead.
+- **A class for a test**: the sheet's classes at +1Bh, levels +1Eh (three each); Thy'rokh made a
+  ranger by writing 15 and 12 there (`ravfight.py until 2` first, for his turn).
+- **The effects in force**: a word count at DS:2100h, the records 10 bytes each at (load + 3E71h):24Dh:
+  the owner, the caster, the spell (words), the effect (byte +6).
+- **The real damage, not the log's**: the dice log's "hits ... for N" is its own sum; the target's
+  "now X/Y HP (-Z)" lines are the game's, so compare the two when a rule changes the damage (Enlarge
+  found so: the log's line had missed it).
+- **A control run**: `RAV_SKIP=patch,patch` with `RAV_LOADER=1` leaves those patches out (ravstart.sh;
+  `$WORK/rav.conf` says "# left out").
