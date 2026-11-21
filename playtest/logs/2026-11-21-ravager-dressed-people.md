@@ -42,3 +42,12 @@ with dress['2428'] = dress['2464'] and dress['2426'] = dress['3612']; the slot's
    the right size beside the party's half-giant (`img/2026-11-21-rav-halfelf-man.png`).
 Not seen: the half-elf woman (her body is the same build pipeline as the man's), 3613's pick on
 the half-giant. A save in a later region would let the real ones be checked.
+
+## Third play: the half-elf woman and 3613's pick (stand-in slots)
+
+dress['2426'] = dress['2427'] and dress['2428'] = dress['3613']:
+1. **The half-elf woman** (2427) as the woman of the opening talk: red hair in its bun, the cape
+   behind, the right size (`img/2026-11-21-rav-halfelf-woman.png`).
+2. **The half-giant miner with his pick** (3613) as the Draxans: walking out of the house with the
+   pick held in his hands, a head taller than the party (`img/2026-11-21-rav-halfgiant-pick.png`).
+Every body in this round has now been seen in game.
