@@ -1244,6 +1244,11 @@ creature and three words; dicelog's `_manual`).
   ([played](../playtest/logs/2026-11-21-ravager-feeblemind.md)).
   Site 13 does `rainbow_pattern_damage` (5CBECh; the hold ended through 608h:48h, 7FB63h, the
   entry's +7 its handle) ([played](../playtest/logs/2026-11-21-ravager-rainbow.md)).
+  SL's `free_action_*` and the paralysis words have nothing to do in the sequel: its handler for
+  spells with rules of their own (the cases at 66BA3h, their addresses at 66C43h) sends Protection
+  from Paralysis (20), Remove Paralysis (159) and Free Action (175) to one start (661A0h) that takes
+  off Slowed, Paralyzed (unless Poisoned), Petrified, No Attacks, Cannot Move (Web's), Cannot Use
+  Psionics and Can't Cast.
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
