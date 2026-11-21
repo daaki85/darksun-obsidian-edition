@@ -249,6 +249,12 @@ PATCHES: Tuple[Patch, ...] = (
     # the attack's natural 20 test (5D088h, SL's 589E9h: "cmp word [bp-6],14h", before its JE to the
     # hit), a helpless target hit too; HELD_DAMAGE at what a helpless target takes (5D1B7h, SL's 58B0Dh:
     # "mov ax,[bp-4] / shl ax,1"), not doubled.
+    # Fire, cold and electricity: DEX instead of a doubled d20 (SL's RULE_NO_DOUBLE, always on: DSCLOG's
+    # PROBE_DOUBLE and the Loader's set_dodge). The saving throw doubles its d20 when the spell's flags
+    # word (its record's +1Ah) has 86h: "shl al,1" at 66E63h (SL's 79B74h), made two NOPs; the spells so
+    # flagged get the dodge bit in their category word instead (DODGE_FIX), which the modifiers routine
+    # (83606h, SL's own test: "test word [es:bx+11h],40h") turns into the target's DEX defence.
+    Patch("no_double", 0x66E63, bytes.fromhex("d0e0"), bytes.fromhex("9090")),
     Patch("held_hit", 0x5D088, bytes.fromhex("837efa14"), gamepatch._interrupt(VEC_HELD_HIT, 4)),
     Patch("held_damage", 0x5D1B7, bytes.fromhex("8b46fcd1e0"), gamepatch._interrupt(VEC_HELD_DAMAGE, 5)),
     # AD&D's two weapons (SL's two_weapons and PROBE_ATTACKS' off hand; always on, game.RULES_ALWAYS):
@@ -302,6 +308,10 @@ SPELL_FIXES: Dict[str, Tuple[int, int]] = {
 }
 SPELL_COUNT = 320  # (DATA 0-319)
 SPELL_SIZE = 73
+# ... and the dodge (with the patch no_double): every spell record whose flags word (+1Ah) has
+# game.DOUBLED_FLAGS gets game.CATEGORY_DODGE in its category word (+11h), as SL's set_dodge does in
+# memory: the fire, cold and electricity spells and the monsters' powers so flagged (32 records).
+DODGE_FIX, SPELL_FLAGS, SPELL_CATEGORY = "dodge", 0x1A, 0x11
 
 
 # The sequel's records in memory and where Shattered Lands' fields are in them (for the dice log's
@@ -418,6 +428,13 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
         if name not in skip:
             out[at:at + len(p.original)] = p.replacement
             done.append(name)
+    if DODGE_FIX not in skip:
+        for spell in range(SPELL_COUNT):
+            if spell in places and places[spell][2] == SPELL_SIZE:
+                at = places[spell][1]
+                if struct.unpack_from("<H", out, at + SPELL_FLAGS)[0] & game.DOUBLED_FLAGS:
+                    out[at + SPELL_CATEGORY] |= game.CATEGORY_DODGE
+        done.append(DODGE_FIX)
     return bytes(out), done
 
 

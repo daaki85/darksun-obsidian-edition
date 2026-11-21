@@ -31,7 +31,7 @@ class TableTests(unittest.TestCase):
                                "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach"})  # (DSCLOG2's own interrupts)
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -199,7 +199,10 @@ class GameFileTests(unittest.TestCase):
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
             self.assertEqual(res.keys(), game.keys())
             changed_spells = {k[1] for k in game if game[k] != res[k]}
-            self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()})
+            dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
+                      and len(game[k]) == ravager.SPELL_SIZE
+                      and struct.unpack_from("<H", game[k], ravager.SPELL_FLAGS)[0] & 0x86}
+            self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()} | dodged)
             gpl = open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read()
             own = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
             places = gff.index_places(own, "GPL ")
@@ -246,7 +249,24 @@ class GameFileTests(unittest.TestCase):
         data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()
         _, done = ravager.spell_fixed(data, ravager.skipped({"spells_manual": False}))
         self.assertEqual(set(done), {"cause_serious", "cause_critical", "brave_fear_21", "brave_fear_43",
-                                     "brave_fear_78", "brave_fear_132", "scare_save"})
+                                     "brave_fear_78", "brave_fear_132", "scare_save", ravager.DODGE_FIX})
+
+    def test_dodge(self):
+        """Fire, cold and electricity: the spells the saving throw doubled the d20 for (flags 86h) carry
+        the dodge bit (SL's CATEGORY_DODGE), Fireball and Cone of Cold among them, Hold Person not; the
+        doubling gone (no_double)."""
+        data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()
+        fixed, done = ravager.spell_fixed(data)
+        places = gff.index_places(fixed, "DATA")
+        marked = {s for s in range(ravager.SPELL_COUNT) if s in places
+                  and fixed[places[s][1] + ravager.SPELL_CATEGORY] & game.CATEGORY_DODGE}
+        self.assertEqual(len(marked), 32)
+        self.assertTrue({27, 58, 32, 1} <= marked)  # Fireball, Cone of Cold, Lightning Bolt, Burning Hands
+        self.assertNotIn(30, marked)  # Hold Person
+        self.assertEqual(ravager.spell_fixed(data, {ravager.DODGE_FIX})[0][places[27][1] + 0x11], 0)
+        p = next(p for p in ravager.PATCHES if p.name == "no_double")
+        self.assertEqual(open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()[p.offset - 0x0A:p.offset + 2],
+                         bytes.fromhex("f746f48600" "7408" "8a46fe" "d0e0"))
 
 
 if __name__ == "__main__":

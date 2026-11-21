@@ -924,6 +924,12 @@ own "can be dodged" flag (bit 40h of the spell's category word), which no spell
 has, so the game's save routine adds the DEX defensive adjustment from its own
 table.
 
+In Wake of the Ravager (always on too): the Loader's patch `no_double` makes the save's `shl al,1`
+(66E63h) two NOPs, and its copy of RESOURCE.GFF (`ravager.spell_fixed`, the fix `dodge`) sets the
+same bit in every spell record whose flags word (+1Ah) has 86h (32 records, the monsters' fire and
+cold powers among them); the sequel's modifiers routine (83606h) has SL's DEX test as it is. Its
+spell save needs nothing: the sequel takes a spell's kind as the save itself, kind 5 the spell save.
+
 ## Enlarge multiplies the weapon's dice only
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
