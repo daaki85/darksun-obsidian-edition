@@ -70,13 +70,17 @@ VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the c
 VEC_LOOK = 0xDA  # (DSCLOG2's PROBE_LOOK: the monster's defences in the Look box)
 VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
+VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
-RULES_PORTED = game.RULE_HP_BEST
+RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS
+# Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
+# AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
+HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 
 PATCHES: Tuple[Patch, ...] = (
@@ -197,6 +201,12 @@ PATCHES: Tuple[Patch, ...] = (
     # A hit die rolled twice, the better kept (SL's hp_best; the Options tab's "best_hit_die"):
     # DSCLOG2's PROBE_HP_BEST at the game's "mov cx,ax" after the roll (95025h, SL's 87319h).
     Patch("hp_best", 0x95025, bytes.fromhex("8bc8"), gamepatch._interrupt(VEC_HP_BEST, 2)),
+    # Helms count AC 1 (SL's ring_ac's helm part and box_ac; the Options tab's "helm_ac"): DSCLOG2's
+    # PROBE_HELM_AC at the AC function's two reads of a worn item's type's AC (5D663h, 5D67Bh: "mov
+    # al,es:[bx+0Eh] / cwde"; SL's 58EBDh) and PROBE_BOX_AC at the item box's AC BONUS (9A4B7h, SL's 8C15Ah).
+    Patch("helm_ac", 0x5D663, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_HELM_AC, 5)),
+    Patch("helm_ac_2", 0x5D67B, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_HELM_AC, 5)),
+    Patch("box_ac", 0x9A4B7, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_BOX_AC, 5)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

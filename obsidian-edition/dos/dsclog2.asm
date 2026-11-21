@@ -53,6 +53,8 @@ VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the p
 VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
 VEC_LOOK      equ 0xDA  ; PROBE_LOOK (640FBh: the Look box's first rows drawn: the monster's defences)
 VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
+VEC_HELM_AC   equ 0xDD  ; PROBE_HELM_AC (5D663h, 5D67Bh: a worn item's type's AC read: a Helm's 1 with RULE_HELMS)
+VEC_BOX_AC    equ 0xDE  ; PROBE_BOX_AC (9A4B7h: the item box's AC BONUS: the same)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
@@ -2163,7 +2165,52 @@ cr_count dw 0                   ; THAC0s drawn (for a look in play)
 ; ---- THE RULES ----
 ; The rule changes, as DSCLOG's bits in its header's RULES (+170) and RULES_HI (+270); the Loader
 ; sets only those ported (ravager.RULES_PORTED).
+RULE_HELMS   equ 1              ; helms count AC 1 (PROBE_HELM_AC, PROBE_BOX_AC)
 RULE_HP_BEST equ 32768          ; a hit die rolled twice, the better kept (PROBE_HP_BEST)
+
+; PROBE_HELM_AC: INT VEC_HELM_AC replaces "mov al,es:[bx+0Eh] / cwde" (5 bytes: INT + 3 NOPs) at the
+; two places the AC function reads a worn item's type's AC (5D663h, 5D67Bh; SL's PROBE_RING_AC's
+; read at 58EBDh): ES:BX the type's record, CX the type, DI the worn list's index (the list at
+; [BP-324h], 10 bytes an entry, the item at +0). PROBE_BOX_AC: INT VEC_BOX_AC replaces the same at the
+; item box's "AC BONUS:" (9A4B7h; SL's 8C15Ah): SI the type, [BP+6] the item. AX the type's AC; with
+; RULE_HELMS, 1 for a Helm of type 55 (HELM_TYPE: the leather helm's AC 0, which hats share: only an
+; item named Helm, HELM_NAME, counts). The sequel's other helm type (56, a Helm and the Helm of
+; Domination) has AC 1 of its own already.
+HELM_TYPE    equ 55
+HELM_NAME    equ 0x24           ; (an item's name, +14h: TEXT 1000's "Helm"; a hat's 27h)
+HELM_LIST    equ -0x324         ; (the AC function's worn list, from its BP)
+probe_helm_ac:
+        movsx ax, byte [es:bx + 0x0E]
+        cmp cx, HELM_TYPE
+        jne .done
+        push di
+        imul di, di, 10
+        mov di, [ss:bp + di + HELM_LIST]
+        call helm_named
+        pop di
+.done:  iret
+probe_box_ac:
+        movsx ax, byte [es:bx + 0x0E]
+        cmp si, HELM_TYPE
+        jne .done
+        push di
+        mov di, [bp + 6]
+        call helm_named
+        pop di
+.done:  iret
+helm_named:                     ; DI an item of HELM_TYPE: AX 1 if it is a Helm and RULE_HELMS is on
+        test word [cs:rules], RULE_HELMS
+        jz .ret
+        push bx
+        push es
+        imul di, di, ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        cmp word [es:bx + di + 0x14], HELM_NAME
+        pop es
+        pop bx
+        jne .ret
+        mov ax, 1
+.ret:   ret
 
 ; PROBE_HP_BEST: DSCLOG's. INT VEC_HP_BEST replaces "mov cx,ax" (2 bytes; 95025h, SL's 87319h) after
 ; the game's roll of a level's hit die (at creation too), AX the roll. With RULE_HP_BEST the game
@@ -3771,6 +3818,8 @@ all_vectors:
         vector VEC_LOOK, probe_look
         vector VEC_CR_HP, probe_cr_hp
         vector VEC_HP_BEST, probe_hp_best
+        vector VEC_HELM_AC, probe_helm_ac
+        vector VEC_BOX_AC, probe_box_ac
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

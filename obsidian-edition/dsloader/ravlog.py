@@ -104,6 +104,8 @@ ADDRESSES: Dict[str, object] = {
     # the active effects, 10 bytes each (SL's record): selector 370h at 24Dh in the sequel's code (its
     # Share Strength loop, 61A87h), selector 370h being the load segment + 3E71h (SL's 3BF6h:106h)
     "EFFECTS_SEG": 0x3E71, "EFFECTS_OFF": 0x24D,
+    # SL's helm types aren't the sequel's (its 5 is Scale Armor): RavGameData.counted_ac has its own
+    "HELM_TYPES": (),
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
@@ -382,6 +384,19 @@ class RavGameData(game.GameData):
     @rules.setter
     def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: the sequel's ported ones)
         self._rules = value & ravager.RULES_PORTED
+
+    def counted_ac(self, creature: int) -> Optional[int]:
+        """SL's, and with RULE_HELMS a worn Helm of the sequel's type 55 counting AC 1 (DSCLOG2's
+        PROBE_HELM_AC: ravager.HELM_TYPE, HELM_NAME; its type reads AC 0, as a hat's)."""
+        ac = super().counted_ac(creature)
+        if ac is None or not self.rules & game.RULE_HELMS:
+            return ac
+        for _, item, typ in self._worn(creature, game.CREATURE_ITEM_LISTS[:1]):
+            if len(item) >= ravager.ITEM_NAME + 2 and typ[0x0F] & 0x80 \
+                    and struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == ravager.HELM_TYPE \
+                    and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
+                ac -= 1
+        return ac
 
     def max_spell_slots(self, member: int, bit: int, spell_level: int, wis: bool = True) -> int:
         """The game's slot routine (626B7h; SL's 5E0ACh, the same but for its test switch, a byte at

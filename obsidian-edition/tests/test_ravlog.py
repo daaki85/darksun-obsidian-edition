@@ -231,6 +231,27 @@ class PassTests(unittest.TestCase):
         self.assertTrue(data.rules & game.RULE_HP_BEST)
         self.assertFalse(data.no_spells(0))
 
+    def test_helm_counts_with_the_rule(self):
+        """A worn Helm of type 55 counts AC 1 with RULE_HELMS (its type reads 0); a hat of the same
+        type, and anything without the rule, doesn't."""
+        def item(kind, name):
+            rec = bytearray(ravager.ITEM_SIZE)
+            struct.pack_into("<H", rec, 0x0A, kind)
+            struct.pack_into("<H", rec, ravager.ITEM_NAME, name)
+            return bytes(rec)
+        typ = bytearray(game.ITEM_TYPE_SIZE)
+        typ[0x0F] = 0x80
+        worn = [(1, item(ravager.HELM_TYPE, ravager.HELM_NAME), bytes(typ)), (2, item(ravager.HELM_TYPE, 0x27), bytes(typ))]
+        real = game.GameData.counted_ac
+        game.GameData.counted_ac = lambda self, c: 7
+        try:
+            for rules, ac in ((game.RULE_HELMS, 6), (0, 7)):
+                data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=rules)
+                data._worn = lambda c, lists=None: worn
+                self.assertEqual(data.counted_ac(0), ac)
+        finally:
+            game.GameData.counted_ac = real
+
     def test_slots_test_switch_is_a_byte(self):
         """The slot routine's test switch is a byte at DS:13F8h (the next byte whatever it is)."""
         g = FakeGuest()

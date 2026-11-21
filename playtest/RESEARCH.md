@@ -458,6 +458,11 @@ DSCLOG's RULES (+170) and RULES_HI (+270), written by the Loader with only ravag
 dice log started without settings (`ravdice.py`) writes 0. The hit-die rolls: 9501Dh (creation, SL's)
 and 95CCEh (level-up from XP), into the sheet's +0Ah, capped by the class table's +38h.
 
+**Its item types and helms** (2026-11-21, logs/2026-11-21-ravager-helms.md): the types' table at DS:19CDh,
+15 bytes a type (AC +0Eh, 80h at +0Bh counts for AC, slot +05h); the items' types and names can be listed
+from OBJEX.GFF's RDFF records (kind 1, 17h bytes, as in memory) without a save that has them. Helms: type
+55 (AC 0, hats too) and 56 (AC 1). The AC function's worn list is at [BP-324h], 10 bytes an entry.
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18
