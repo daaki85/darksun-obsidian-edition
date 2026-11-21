@@ -1013,3 +1013,8 @@ and `rest-no-call-user`: all transferred, the kits kept.
   spell cast again (Flaming Arrow's second bolt) puts its icon up as the pointer for the next target.
   For a caster's next turn put the others under Computer Control and use `ravfight.py wait` (with its
   HP raised the party holds); `ravfight.py until 0` ends the others' turns, so the Draxans win.
+  Aiming: a foe under the spell's pointer shows red (a friend yellow, and a hold can't take one);
+  a figure drawn behind another can't be picked; the places from `ravfight.py state` plus about
+  (7, 14) hit the figure in the ambush's street. The undead are the sheet's race (+12h) 9: a test can
+  make a kind undead there (the sheet is shared by the kind). A caster's level for a test: the class
+  level (sheet +1Eh) is the cast's level (`probe.py level=N`).

@@ -326,6 +326,9 @@ PATCHES: Tuple[Patch, ...] = (
     # ... and any damage to a creature Rainbow Pattern holds ends the hold (the start of the routine taking
     # hit points off, 5CBECh, SL's 585A2h: "mov di,[bp+6] / mov dx,[bp+8]")
     Patch("rainbow_pattern_damage", 0x5CBEC, bytes.fromhex("8b7e068b5608"), _site(13, 6)),
+    # ... and Hold Undead leaves an undead of more levels than the cast's immune (the immunity routine's
+    # common way out, 84A65h: "mov ax,si / cmp ax,0FCh"; SL's 7A345h)
+    Patch("hold_undead_level", 0x84A65, bytes.fromhex("8bc63dfc00"), _site(14, 5)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

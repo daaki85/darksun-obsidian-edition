@@ -2850,6 +2850,7 @@ site_table:
         dw cell_heal                        ; 11 SITE_CELL
         dw psi_feeble                       ; 12 SITE_PSI
         dw rainbow_hurt                     ; 13 SITE_RAINBOW
+        dw hold_hd                          ; 14 SITE_HOLD_HD
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3262,6 +3263,68 @@ rainbow_hurt:
         mov [ss:bx + 36], cx
         jmp .out
 end_far dd 0
+; HOLD_HD (site 14, "hold_undead_level"): near the end of the spells' immunity routine (8451Ah: DI the
+; target combatant, SI the spell, [BP+14h] the cast's level; AX 1 immune, 0 not), where every spell
+; not yet found immune passes, "mov ax,si / cmp ax,0FCh" (84A65h; 5 bytes): Hold Undead (31) leaves
+; an undead of more levels (hit dice: the most of its sheet's +1Eh..+20h, CLOUD_KILL's) than the
+; cast's immune (to 84A62h's "jmp 84562h"), as the manual (SL's hold_undead_level); else the move and
+; the compare made, its flags returned. The game's own Hold Undead holds only the undead (seen
+; 2026-11-21: a Draxan took nothing).
+HOLD_UNDEAD    equ 31
+HOLD_IMMUNE    equ (0x84A65 + 3) - 0x84A62
+HOLD_FLAGS     equ 0x08D5           ; (OF, SF, ZF, AF, PF, CF)
+hold_hd:
+        push bp
+        mov bp, sp                      ; ([BP+2] the INT's IP, [BP+6] its flags; [BP] the game's BP)
+        cmp si, HOLD_UNDEAD
+        jne .go
+        pusha
+        push es
+        cmp di, 400
+        jae .no
+        imul bx, di, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .no
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov ax, [es:bx + 4]
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        mov al, [es:bx + 0x1E]
+        cmp al, [es:bx + 0x1F]
+        jae .a
+        mov al, [es:bx + 0x1F]
+.a:     cmp al, [es:bx + 0x20]
+        jae .b
+        mov al, [es:bx + 0x20]
+.b:     mov si, [bp]
+        cmp al, [ss:si + 0x14]
+        jbe .no
+        inc word [cs:manual_count]
+        sub word [bp + 2], HOLD_IMMUNE
+        pop es
+        popa
+        pop bp
+        iret
+.no:    pop es
+        popa
+.go:    mov ax, si
+        push ax
+        cmp ax, 0xFC
+        pushf
+        pop ax
+        and ax, HOLD_FLAGS
+        and word [bp + 6], ~HOLD_FLAGS
+        or [bp + 6], ax
+        pop ax
+        pop bp
+        iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

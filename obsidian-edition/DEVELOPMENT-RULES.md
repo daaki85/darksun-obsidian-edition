@@ -1249,6 +1249,8 @@ creature and three words; dicelog's `_manual`).
   from Paralysis (20), Remove Paralysis (159) and Free Action (175) to one start (661A0h) that takes
   off Slowed, Paralyzed (unless Poisoned), Petrified, No Attacks, Cannot Move (Web's), Cannot Use
   Psionics and Can't Cast.
+  Site 14 does `hold_undead_level` at the sequel's own immunity routine's common way out (84A65h;
+  the undead the sheet's race 9) ([played](../playtest/logs/2026-11-21-ravager-hold-undead.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
