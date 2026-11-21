@@ -1251,6 +1251,14 @@ creature and three words; dicelog's `_manual`).
   Psionics and Can't Cast.
   Site 14 does `hold_undead_level` at the sequel's own immunity routine's common way out (84A65h;
   the undead the sheet's race 9) ([played](../playtest/logs/2026-11-21-ravager-hold-undead.md)).
+  Site 15 does `turn_undead_manual` (97C9Ch, `mov al,[es:bx+1Eh]`, the sequel's turning of one
+  undead at 97C50h, SL's 7ADB7h with the same frame; called from the case 310, Turn Undead's, of the
+  handler for spells with rules of their own): DSCLOG2's `TU_SITE`, SL's `tu_site` with the
+  sequel's places (the destroy 97CFCh, the failure 97D12h, the end 97D1Bh), Afraid its 35 through
+  608h:3Eh (7F9E6h) for spell 310, the d20 and the 3d4 from `GAME_DIE`, the failures a byte a target
+  in the helper (`TU_FAILED`, cleared with the tangles at a fight's first round and by a turning out
+  of a fight), a D\*'s more cleared by `CAST_START`
+  ([played](../playtest/logs/2026-11-21-ravager-turn-undead.md); the destroy's way read, not played).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved

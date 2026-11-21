@@ -776,6 +776,7 @@ acid_round:
         cmp byte [FIRST_ROUND], 0
         je .on
         call tangle_clear               ; (the cahulaks' tangles: none at a fight's start)
+        call tu_clear                   ; (and no failed turnings)
         cmp byte [FIRST_ROUND], 0
 .on:
         pushf
@@ -2851,6 +2852,7 @@ site_table:
         dw psi_feeble                       ; 12 SITE_PSI
         dw rainbow_hurt                     ; 13 SITE_RAINBOW
         dw hold_hd                          ; 14 SITE_HOLD_HD
+        dw tu_site                          ; 15 SITE_TURN
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3027,6 +3029,7 @@ cast_start:
         mov al, [bp + 0x0C]
         mov [cs:cast_level], al
         pop ax
+        mov word [cs:tu_more], 0        ; (a D*'s more: this cast's only, TU_SITE's)
         iret
 cast_level db 0
 ; LOWRES_SITE (site 9, "lower_resistance_manual"): the magic resistance routine (84AB5h, SL's 7A4A8h:
@@ -3325,6 +3328,270 @@ hold_hd:
         pop ax
         pop bp
         iret
+; TU_SITE (site 15, "turn_undead_manual"): Turn Undead AD&D's way, SL's TURN_SITE (tu_site). The
+; game's turning of one undead (97C50h, SL's 7ADB7h, called from the handler for spells with rules of
+; their own, 66179h, Turn Undead's case 310: [BP+6] the target, [BP+8] the priest, [BP+0Ch] the priest
+; level, [BP-4] the undead's sheet number, ES:BX its sheet) works out its number from "mov
+; al,[es:bx+1Eh]" (97C9Ch; 4 bytes: the hit dice, SL's +24h), rolls a d20 at 97CE9h, destroys at 97CFCh
+; (598:7Fh, 1000 damage) and calls 0C8h:6E1h on a failure (97D12h). The site never comes back to the
+; byte after it: the way back set to one of those, or the routine's end (97D1Bh), before any far call:
+; TU_CELL's cell from the hit dice and level; a number: a d20 (GAME_DIE), at or over it turned, under
+; it the failure's way and the priest's bit (combatants 0-7) set in TU_FAILED (a byte a target, under
+; TANGLE_MOST), a later try by the same priest refused with no roll (cleared at a fight's first round,
+; ACID_ROUND, and by a turning out of a fight); T turned; turned: 3d4 rounds Afraid (the sequel's 35)
+; through 608h:3Eh (7F9E6h, the add: target, priest, spell 310, 35, dword rounds x 60, 0) in a frame
+; the overlay manager can fix up (RAINBOW_HURT's); D the destroy; D*: the destroy, and 2d4 more of
+; that sheet this cast (TU_MORE, cleared by CAST_START) destroyed with no roll; "---" the end.
+; Recorded as KIND_TURN (13, SL's): the d20 (0 none) and TU_FRAME (dicelog's _turn_manual).
+KIND_TURN  equ 13
+TU_BACK    equ 0x97C9C + 3              ; (the INT's way back: the site's byte's next)
+TU_DESTROY equ 0x97CFC - TU_BACK
+TU_FAIL    equ 0x97D12 - TU_BACK
+TU_END     equ 0x97D1B - TU_BACK
+TU_SPELL   equ 310
+TU_AFRAID  equ 35
+ADD_ENTRY  equ 0x3E                     ; (608h's: the effect adder, END_STUB's stub segment)
+TU_T       equ 21                       ; (TU_CELL's: 1-20 the number, 0 none)
+TU_D       equ 22
+TU_DSTAR   equ 23
+TU_NOT     equ 0                        ; (the outcomes, TU_OUTCOME: SL's)
+TU_TURNED  equ 1
+TU_DESTROYED equ 2
+TU_DSTARRED equ 3
+TU_MORE_ONE equ 4
+TU_AGAIN   equ 5
+TU_NONE    equ 6
+TU_MOST    equ 512                      ; (the combatants TU_FAILED covers, TANGLE_MOST's)
+tu_site:
+        sti
+        pushad
+        push es
+        movzx ax, byte [es:bx + 0x1E]
+        mov [cs:tu_hd], ax
+        mov si, [bp + 6]
+        mov [cs:tu_target], si
+        mov cx, [bp + 8]
+        mov [cs:tu_caster], cx
+        mov ax, si
+        call tu_creature
+        mov [cs:tu_target_c], ax
+        mov ax, cx
+        call tu_creature
+        mov [cs:tu_caster_c], ax
+        movzx ax, byte [bp + 0x0C]
+        mov [cs:tu_level], ax
+        xor ax, ax
+        mov [cs:tu_d20], ax
+        mov [cs:tu_rounds], ax
+        mov [cs:tu_need], ax
+        cmp byte [IN_COMBAT], 0
+        jne .fight
+        call tu_clear                   ; (out of a fight: a new one, nothing failed yet)
+.fight: mov word [cs:tu_outcome], TU_MORE_ONE
+        mov dx, TU_DESTROY
+        cmp word [cs:tu_more], 0
+        je .again
+        mov ax, [bp - 4]
+        cmp ax, [cs:tu_kind]
+        jne .again
+        dec word [cs:tu_more]
+        jmp .done
+.again: mov word [cs:tu_outcome], TU_AGAIN
+        mov dx, TU_END
+        call tu_bit
+        jz .cell
+        test [cs:tu_failed + si], al
+        jnz .done
+.cell:  mov al, [cs:tu_hd]
+        mov cl, [cs:tu_level]
+        call tu_cell
+        mov [cs:tu_need], ax
+        mov word [cs:tu_outcome], TU_NONE
+        test al, al
+        jz .done
+        mov word [cs:tu_outcome], TU_DESTROYED
+        mov dx, TU_DESTROY
+        cmp al, TU_D
+        je .done
+        ja .dstar
+        cmp al, TU_T
+        je .turned
+        mov ax, 20
+        call game_die
+        mov [cs:tu_d20], ax
+        cmp ax, [cs:tu_need]
+        jge .turned
+        mov word [cs:tu_outcome], TU_NOT
+        mov dx, TU_FAIL
+        call tu_bit
+        jz .done
+        or [cs:tu_failed + si], al
+        jmp .done
+.dstar: mov word [cs:tu_outcome], TU_DSTARRED
+        mov ax, [bp - 4]
+        mov [cs:tu_kind], ax
+        mov ax, 4
+        call game_die
+        mov [cs:tu_more], ax
+        mov ax, 4
+        call game_die
+        add [cs:tu_more], ax
+        mov dx, TU_DESTROY
+        jmp .done
+.turned:
+        mov word [cs:tu_outcome], TU_TURNED
+        mov cx, 3
+.fear:  mov ax, 4
+        call game_die
+        add [cs:tu_rounds], ax
+        loop .fear
+        mov dx, TU_END
+.done:  mov bx, sp
+        add [ss:bx + 34], dx            ; (the way on, before any call)
+        inc word [cs:manual_count]
+        mov si, tu_frame
+        mov cx, (tu_frame_end - tu_frame) / 2
+        mov ax, [cs:tu_d20]
+        mov word [cs:kind], KIND_TURN
+        call rec_frame
+        cmp word [cs:tu_outcome], TU_TURNED
+        jne .out
+        mov bx, sp
+        push bx
+        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov cx, ds
+        add cx, END_STUB
+        mov [cs:end_far + 2], cx
+        mov word [cs:end_far], ADD_ENTRY
+        push word 0
+        push word 0
+        imul ax, [cs:tu_rounds], ROUND_SECONDS
+        push ax
+        push word TU_AFRAID
+        push word TU_SPELL
+        push word [cs:tu_caster]
+        push word [cs:tu_target]
+        call far [cs:end_far]           ; (target, priest, spell, effect, time, 0)
+        add sp, 14
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+.out:   pop es
+        popad
+        iret
+
+; TU_BIT: for TU_SITE, AL the priest's bit (TU_CASTER, 0-7) and SI the target (TU_TARGET) in
+; TU_FAILED; ZF set when there is none (a combatant past them). CL changed.
+tu_bit:
+        mov si, [cs:tu_target]
+        mov cx, [cs:tu_caster]
+        xor al, al
+        cmp si, TU_MOST
+        jae .out
+        cmp cx, 8
+        jae .out
+        mov al, 1
+        shl al, cl
+.out:   test al, al
+        ret
+tu_clear:                       ; (no failed turnings). All kept.
+        push ax
+        push cx
+        push di
+        push es
+        push cs
+        pop es
+        mov di, tu_failed
+        mov cx, TU_MOST
+        xor al, al
+        cld
+        rep stosb
+        pop es
+        pop di
+        pop cx
+        pop ax
+        ret
+; TU_CELL: SL's (AX AD&D's turning table's cell, 0 "---", 1-20 the d20 needed, TU_T, TU_D, TU_DSTAR,
+; for undead of AL hit dice and a priest of level CL; dicelog's turn_cell). BX changed.
+tu_cell:
+        mov ah, 4
+        cmp al, 1
+        jbe .row
+        mov ah, 2
+        cmp al, 2
+        je .row
+        dec ah
+        cmp al, 4
+        jbe .row
+        dec ah
+        cmp al, 5
+        je .row
+        cmp al, 11
+        jb .many
+        mov al, 11
+.many:  mov ah, 4
+        sub ah, al                      ; (6 to 11 hit dice: -2 to -7)
+.row:   mov al, cl
+        cmp al, 10
+        jb .col
+        sub al, 10
+        shr al, 1
+        cmp al, 2
+        jbe .high
+        mov al, 2
+.high:  add al, 10
+.col:   add al, ah                      ; (the run's place, from 1)
+        jle .none
+        cmp al, 12
+        jb .run
+        mov ax, TU_DSTAR
+        ret
+.run:   movzx bx, al
+        mov al, [cs:bx + tu_cells - 1]
+        mov ah, 0
+        ret
+.none:  xor ax, ax
+        ret
+; TU_CREATURE: AX the creature of combatant AX (FFFFh: none, not a creature). All else kept.
+tu_creature:
+        push bx
+        push es
+        cmp ax, TU_MOST
+        jae .none
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .none
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        jmp .ret
+.none:  mov ax, 0xFFFF
+.ret:   pop es
+        pop bx
+        ret
+tu_cells  db 20, 19, 16, 13, 10, 7, 4, TU_T, TU_T, TU_D, TU_D
+tu_kind   dw 0                  ; (TU_MORE's kind: a sheet's number)
+tu_d20    dw 0                  ; (the d20, 0 none: the entry's value)
+tu_frame:                       ; KIND_TURN's frame, from +6 (SL's):
+tu_caster dw 0                  ;   the priest
+tu_target dw 0                  ;   +8 the undead
+tu_need   dw 0                  ;   +0Ah the cell (TU_CELL's)
+tu_level  dw 0                  ;   +0Ch the priest level
+tu_hd     dw 0                  ;   +0Eh its hit dice
+tu_outcome dw 0                 ;   +10h TU_NOT ... TU_NONE
+tu_rounds dw 0                  ;   +12h turned: the rounds it flees
+tu_more   dw 0                  ;   +14h D*: how many more of its kind this cast (counted down)
+tu_caster_c dw 0                ;   +16h the priest's creature (FFFFh: not a creature)
+tu_target_c dw 0                ;   +18h the undead's
+tu_frame_end:
+tu_failed times TU_MOST db 0 ; (a byte a target: the priests, 0-7, who failed against it this fight)
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

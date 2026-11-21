@@ -1018,3 +1018,11 @@ and `rest-no-call-user`: all transferred, the kits kept.
   (7, 14) hit the figure in the ambush's street. The undead are the sheet's race (+12h) 9: a test can
   make a kind undead there (the sheet is shared by the kind). A caster's level for a test: the class
   level (sheet +1Eh) is the cast's level (`probe.py level=N`).
+- **Turn Undead in the sequel** (logs/2026-11-21-ravager-turn-undead.md): the opening party's cleric
+  is Terrannus (member 1, earth cleric 7); his USE screen has a TURN UNDEAD icon under SPELLS LEFT
+  (`ravclick.py 157 145`). It puts a circle round the pointer on the map; a click turns every undead
+  foe in it. Reach is about 100 game pixels from him, and walls block it (the pointer shows a barred
+  sign: a click there does nothing); the ambush's real undead (Giant Skeletons, sheet 9) stand far
+  off, so make a near kind undead (its sheet's race, +12h, 9; hit dice +1Eh). `ravfight.py state`'s
+  object numbers are the combatants' (a dead one's record is all FFh). `ravfight.py until 1` gives
+  him the next turn; the camera moves with whoever acts, so read `state` again before aiming.

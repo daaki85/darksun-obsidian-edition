@@ -329,6 +329,10 @@ PATCHES: Tuple[Patch, ...] = (
     # ... and Hold Undead leaves an undead of more levels than the cast's immune (the immunity routine's
     # common way out, 84A65h: "mov ax,si / cmp ax,0FCh"; SL's 7A345h)
     Patch("hold_undead_level", 0x84A65, bytes.fromhex("8bc63dfc00"), _site(14, 5)),
+    # ... and Turn Undead AD&D's way: the turning of one undead (97C50h, SL's 7ADB7h) where it reads the
+    # undead's hit dice, "mov al,[es:bx+1Eh]" (97C9Ch; SL's 7AE01h): DSCLOG2's TU_SITE, which sends the
+    # routine on to its destroy, its failure or its end
+    Patch("turn_undead_manual", 0x97C9C, bytes.fromhex("268a471e"), _site(15, 4)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),
