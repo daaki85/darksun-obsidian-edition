@@ -73,6 +73,8 @@ Releases, newest first (2.12.0 and older in the archive):
   even when their file size and timestamp match (#135).
 - Bulk loot (T and Shift+T) restores the container and backpack lists when a transfer write fails.
   It leaves the items in place if it cannot pause the game (#136).
+- The dice log reports a timed spell reapplication when the caster and effect handle are reused
+  and the scheduled expiration changes (#141).
 
 **Docs**
 - The upgrade instructions include the `Journal` folder and ask players to verify their history
