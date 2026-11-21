@@ -312,7 +312,7 @@ class ConfTests(unittest.TestCase):
             font = os.path.join(d, "gm.sf2")
             open(font, "wb").close()
             self.assertEqual(section(lines({"soundfont": font}), "midi"),
-                             ["mpu401=intelligent", "mididevice=fluidsynth", f"fluid.soundfont={font}"])
+                             ["mpu401=intelligent", "mididevice=synth", f"midiconfig={font}"])
             # (a device chosen goes before it; a file that isn't there is no soundfont)
             self.assertEqual(section(lines({"soundfont": font, "midi_device": 1}), "midi"),
                              ["mpu401=intelligent", "mididevice=win32", "midiconfig=1"])

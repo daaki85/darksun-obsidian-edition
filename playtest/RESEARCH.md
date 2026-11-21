@@ -654,10 +654,12 @@ kit's side; `dsloader/dosboxx.py` the configuration and why each line is there).
 - **A write to code** made from outside may not be acted on, on a dynamic core, on either
   engine (`codepatch.py`); `core=normal` after the program on `start_dosboxx.sh` if a test needs
   it acted on.
-- **Sound**: no device in the container (`SDL_AUDIODRIVER=dummy`); FluidSynth then fails
-  ("Failed to create PulseAudio connection") and there is no music. `extra='midi|fluid.driver=file'`
-  with `soundfont=/usr/share/sounds/sf2/TimGM6mb.sf2` renders the music to `fluidsynth.wav` in
-  DOSBox-X's folder (the experiment's way; nobody listened).
+- **Sound**: no device in the container (`SDL_AUDIODRIVER=dummy`). Since 2026-11-21 the Loader
+  writes `mididevice=synth` with the soundfont in `midiconfig`: DOSBox-X's FluidSynth playing into
+  its own mixer, so `PT_SDL_AUDIO=disk` records the music and the effects together. The other
+  device, `mididevice=fluidsynth`, plays through FluidSynth's own driver ("Failed to create
+  PulseAudio connection" here, no music; `extra='midi|fluid.driver=file'` renders it to
+  `fluidsynth.wav` instead: the experiment's way).
 
 ## The recompiled program as the target
 

@@ -318,8 +318,10 @@ def midi_lines(settings: dict) -> List[str]:
     - a device chosen (a number as Windows counts its MIDI outputs, or an ALSA port "128:0"):
       that device, `mididevice=win32` or `alsa` with `midiconfig` naming it;
     - else, with a soundfont file named: DOSBox-X's built-in FluidSynth playing through it
-      (`mididevice=fluidsynth`, `fluid.soundfont`). On Linux this is how the music is heard
-      without a synthesizer set up outside DOSBox-X;
+      (`mididevice=synth`, `midiconfig` the file). This one plays into DOSBox-X's own mixer, as
+      the Sound Blaster does, so it needs nothing outside DOSBox-X: its other FluidSynth device
+      (`mididevice=fluidsynth`, `fluid.soundfont`) plays through a sound driver of its own and
+      had no music without PulseAudio (logs/2026-11-21-dosbox-x-unchecked.md);
     - else DOSBox-X's own default (`mididevice=default`: Windows' MIDI Mapper there; on Linux,
       where FluidSynth has no soundfont to play, usually no music).
 
@@ -330,7 +332,7 @@ def midi_lines(settings: dict) -> List[str]:
     if device != midiout.DEFAULT:
         lines += ["mididevice=" + ("alsa" if isinstance(device, str) else "win32"), f"midiconfig={device}"]
     elif font:
-        lines += ["mididevice=fluidsynth", f"fluid.soundfont={font}"]
+        lines += ["mididevice=synth", f"midiconfig={font}"]
     else:
         lines += ["mididevice=default"]
     return lines

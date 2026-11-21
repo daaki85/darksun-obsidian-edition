@@ -84,6 +84,19 @@ fight and its autosave, F10 after the last step, a shop, the inventory, the crea
     the fight: `2026-11-21-dosbox-x-sound-fight.ogg` (sent to the owner, not committed). Heard by
     nobody here; the owner's ears are the check.
 
+## Part 3: the music through DOSBox-X's own mixer
+
+16. **The review's point** (the owner asked for recommendations): the music needing PulseAudio or
+    PipeWire is a weak spot. DOSBox-X has FluidSynth twice (its source, `src/gui/midi_synth.h`):
+    `mididevice=synth` with the soundfont in `midiconfig` makes a mixer channel of DOSBox-X's own,
+    while `fluidsynth` uses FluidSynth's audio driver. `dosboxx.midi_lines` now writes `synth`.
+17. **Played**: the same start as part 2 without the `extra`: `[midi]` `mpu401=intelligent`,
+    `mididevice=synth`, `midiconfig=/usr/share/sounds/sf2/TimGM6mb.sf2`; DOSBox-X's log "Opened
+    device:synth", no PulseAudio line, no `fluidsynth.wav`. The ambush and two turns: DOSBox-X's own
+    recording (118 s) now holds the music, rising from 148 to 2,000-8,400 a second and never silent
+    after the speech (part 2's recording of the same mix had only the effects' bursts, 3 to 6
+    between them). A 40 s clip of it was sent to the owner.
+
 ## Water
 
 The slave pens only: nothing new.
@@ -91,7 +104,7 @@ The slave pens only: nothing new.
 ## Not seen
 
 - Windows and macOS (the owner's `dosboxx_memtest.py`), full screen on a real screen, music
-  through a real sound server (here only into files).
+  heard through speakers (here only into files).
 - The lost first menu click when the Loader itself starts the game (the last play's): this play
   started every game with `start_dosboxx.sh`, where it never happens.
 - Nothing differed from 0.74 in what was played here.

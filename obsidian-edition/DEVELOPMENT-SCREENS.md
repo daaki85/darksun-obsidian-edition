@@ -1845,12 +1845,14 @@ window has, as for 0.74):
 |---|---|
 | a device number (Windows' MIDI outputs, as `midiout.devices` lists them) | `mididevice=win32`, `midiconfig=N` |
 | an ALSA port (`128:0`) | `mididevice=alsa`, `midiconfig=128:0` |
-| the default, and a soundfont file that is there | `mididevice=fluidsynth`, `fluid.soundfont=FILE` |
+| the default, and a soundfont file that is there | `mididevice=synth`, `midiconfig=FILE` |
 | the default, no soundfont | `mididevice=default` |
 
-DOSBox-X's FluidSynth plays through its own sound driver, not DOSBox-X's mixer (the
-experiment: a recording made by DOSBox-X has no music in it), and without a sound device it
-fails and the game has no music. MT-32 (`mididevice=mt32`, which needs the Roland ROMs) is not
+DOSBox-X has FluidSynth twice. `mididevice=synth` plays into DOSBox-X's own mixer beside the
+Sound Blaster, so the music needs nothing outside DOSBox-X and is in DOSBox-X's own recordings;
+`mididevice=fluidsynth` (with `fluid.soundfont`) plays through FluidSynth's own sound driver
+instead, which found no PulseAudio here and left the game silent (the experiment;
+playtest/logs/2026-11-21-dosbox-x-unchecked.md). The Loader writes `synth`. MT-32 (`mididevice=mt32`, which needs the Roland ROMs) is not
 written for any setting.
 
 **Windows and macOS: written, not run.** What the code does there, from DOSBox-X's source
