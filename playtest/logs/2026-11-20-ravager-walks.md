@@ -111,6 +111,7 @@ instead:
 - the six-beat walk;
 - standing frames loosened, shown only when standing now: the arms a pixel off the body, the forearms out and up another, the feet a pixel apart;
 - Ravager's own combat frames, restyled.
+- the side frames leaned forward from the hips, 3 pixels at the crown and nothing below the hips moved. The Shattered Lands man walks with his head about 3 pixels ahead of his hips, Ravager's people about 1.
 
 **The animations:** each is at 3x. The rows are the Shattered Lands party man (for scale and style), the figure
 as dressed now, and the figure restyled with the walk fix. The columns are standing, walking toward the camera, sideways, and the first
@@ -141,7 +142,7 @@ six fighting frames.
 ![2428](img/2026-11-20-ravager-walks/compare-2428.gif)
 
 **Not yet done in this test:**
-- The side standing frame (2) is not loosened: Ravager also uses it mid-stride in the side walk.
+- The side standing frame (2) is leaned but not loosened: Ravager also uses it mid-stride in the side walk.
 - Nothing here is in the game files yet.
 
 ## The new frames
