@@ -1003,3 +1003,10 @@ and `rest-no-call-user`: all transferred, the kits kept.
   +15h is 7 (`hpup.py`-style; the party's aren't those). **The helper's rules are 0 until the dice log
   attaches** (`ravdice.py`: RavDiceLog writes RULES_PORTED): a level up with no dice log is the game's
   own, a control.
+- **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
+  the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
+  spell cast in `ravhold.sh`'s fight: USE (`ravclick.py 197 171`), LEVEL (the same button again) round
+  the levels with spells known, the spell's icon (y 60, x 175/194/213/232; the name shows in the bar
+  below when the pointer rests on it), then click **on a combatant** (`ravfight.py state` gives their
+  places: game x = state x + 7, y = state y + 19 in this street); a click on bare street does nothing. A
+  spell cast again (Flaming Arrow's second bolt) puts its icon up as the pointer for the next target.

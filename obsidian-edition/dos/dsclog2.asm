@@ -2805,6 +2805,8 @@ site_table:
         dw spray_save                       ; 3 SITE_SPRAY
         dw cloud_save                       ; 4 SITE_CLOUD_SAVE
         dw cloud_kill                       ; 5 SITE_CLOUD_KILL
+        dw flame_count                      ; 6 SITE_FLAME
+        dw bio_least                        ; 7 SITE_BIO
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -2938,6 +2940,38 @@ cloud_kill:
         inc word [cs:manual_count]
 .done:  pop es
         popa
+.out:   iret
+; FLAME_COUNT (site 6, "flame_arrow_count"): in a cast's tail (the routine at 7E32Ch, SL's 7511Bh: [BP+0Ah]
+; the spell, [BP+0Ch] the cast's level), "mov dl,[es:bx]" (7E8E0h), the record's +0, bits 2-7 the times
+; the spell is cast: Flaming Arrow's (28) one for every five levels, at least one (AD&D's bolts).
+FLAME_ARROW equ 28
+flame_count:
+        mov dl, [es:bx]
+        cmp word [bp + 0x0A], FLAME_ARROW
+        jne .out
+        push ax
+        movzx ax, byte [bp + 0x0C]
+        mov dl, 5
+        div dl
+        cmp al, 1
+        adc al, 0                           ; (at least one)
+        shl al, 2
+        mov dl, al
+        pop ax
+        inc word [cs:manual_count]
+.out:   iret
+; BIO_LEAST (site 7, "biofeedback_least"): Bio-Feedback's (8) "sub si,2" in the damage adjustments
+; (8348Bh; SI the damage): at least 1 left of a blow of 2 or less, as the manual (none stays none).
+BIO_LESS equ 2
+bio_least:
+        cmp si, BIO_LESS + 1
+        jl .least
+        sub si, BIO_LESS
+        iret
+.least: cmp si, 1
+        jl .out
+        mov si, 1
+        inc word [cs:manual_count]
 .out:   iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:

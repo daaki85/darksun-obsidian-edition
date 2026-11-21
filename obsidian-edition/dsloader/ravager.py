@@ -304,6 +304,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("color_spray_level", 0x83E86, bytes.fromhex("837e143c750c"), _site(3, 6)),
     Patch("cloudkill_save", 0x83E98, bytes.fromhex("837e14397509837efa067f0383ef64"), _site(4, 15)),
     Patch("cloudkill_kills", 0x651C5, bytes.fromhex("8846ff"), _site(5, 3)),
+    # ... Flaming Arrow's bolts, one for every five levels (a cast's tail, 7E8E0h, SL's 7567Fh: "mov
+    # dl,[es:bx]", the record's count), and Biofeedback's least 1 of a blow (8348Bh, SL's 79C83h: "sub si,2")
+    Patch("flame_arrow_count", 0x7E8E0, bytes.fromhex("268a17"), _site(6, 3)),
+    Patch("biofeedback_least", 0x8348B, bytes.fromhex("83ee02"), _site(7, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

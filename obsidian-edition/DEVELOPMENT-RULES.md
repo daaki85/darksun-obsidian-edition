@@ -1229,6 +1229,9 @@ creature and three words; dicelog's `_manual`).
   creature's +1Ch), `color_spray_level` (83E86h), `cloudkill_save` (83E98h) and
   `cloudkill_kills` (651C5h); the sequel's Cloudkill record allows no save, as its manual
   ([played](../playtest/logs/2026-11-21-ravager-manual-saves.md)).
+  Sites 6 and 7 do `flame_arrow_count` (the cast's tail, 7E8E0h, `[bp+0Ah]` the spell,
+  `[bp+0Ch]` the level) and `biofeedback_least` (8348Bh; the sequel's Biofeedback is effect 8)
+  ([played](../playtest/logs/2026-11-21-ravager-flame-biofeedback.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
