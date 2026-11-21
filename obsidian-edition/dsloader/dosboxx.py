@@ -46,9 +46,26 @@ def engine(settings: dict) -> str:
     return DOSBOX_X if isinstance(chosen, str) and chosen.strip().lower() == DOSBOX_X else GOG
 
 
+def app_program(path: str) -> str:
+    """PATH, or for a macOS app (dosbox-x.app, a folder, which is what the Finder shows and the
+    file chooser gives) the program inside it, Contents/MacOS/dosbox-x."""
+    if isinstance(path, str) and path.rstrip("/\\").lower().endswith(".app") and os.path.isdir(path):
+        inside = os.path.join(path.rstrip("/\\"), "Contents", "MacOS")
+        named = os.path.join(inside, "dosbox-x")
+        if os.path.isfile(named):
+            return named
+        try:
+            programs = sorted(n for n in os.listdir(inside) if os.path.isfile(os.path.join(inside, n)))
+        except OSError:
+            programs = []
+        if programs:
+            return os.path.join(inside, programs[0])
+    return path
+
+
 def program(settings: dict) -> Optional[str]:
     """The DOSBox-X program the settings name, if it is a file; None otherwise."""
-    path = settings.get(PATH_SETTING)
+    path = app_program(settings.get(PATH_SETTING))
     return path if isinstance(path, str) and path and os.path.isfile(path) else None
 
 
@@ -93,6 +110,7 @@ def version(path: str) -> Optional[Version]:
     """DOSBox-X's version at PATH, or None if it can't be told. Asked of the program
     (`-version`) except on Windows, where that opens a console and waits for a key: there, and
     where the program gives no answer, it is read from the program's file."""
+    path = app_program(path)
     found = None
     if os.name != "nt":
         try:
@@ -117,6 +135,7 @@ def found_line(path: Optional[str], found: Optional[Version] = None, asked: bool
     says FOUND is the answer already)."""
     if not path:
         return "No DOSBox-X chosen yet: choose its program (dosbox-x, or dosbox-x.exe)."
+    path = app_program(path)
     if not os.path.isfile(path):
         return f"Not found: {path} isn't there any more. Choose the program again."
     if not asked:
@@ -132,7 +151,7 @@ def found_line(path: Optional[str], found: Optional[Version] = None, asked: bool
 
 def problem(settings: dict) -> Optional[str]:
     """Why the game can't be started in DOSBox-X with these settings, or None."""
-    path = settings.get(PATH_SETTING)
+    path = app_program(settings.get(PATH_SETTING))
     if not isinstance(path, str) or not path:
         return ("DOSBox-X is chosen as the engine, but no DOSBox-X program is: choose it on the Options tab "
                 "(Engine), or go back to GOG's DOSBox there.")

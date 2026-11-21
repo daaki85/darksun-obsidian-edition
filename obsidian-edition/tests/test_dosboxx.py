@@ -509,5 +509,21 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(launch.closed_line(3), "DOSBox closed with exit code 3.")
 
 
+class AppTests(unittest.TestCase):
+    def test_a_macos_app_is_the_program_inside_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            app = os.path.join(d, "dosbox-x.app")
+            inside = os.path.join(app, "Contents", "MacOS")
+            os.makedirs(inside)
+            self.assertEqual(dosboxx.app_program(app), app)  # (no program in it yet: as given)
+            exe = os.path.join(inside, "dosbox-x")
+            open(exe, "wb").close()
+            self.assertEqual(dosboxx.app_program(app), exe)
+            self.assertEqual(dosboxx.app_program(app + "/"), exe)
+            self.assertEqual(dosboxx.program({dosboxx.PATH_SETTING: app}), exe)
+            self.assertEqual(dosboxx.app_program(exe), exe)  # (a program is itself)
+            self.assertIsNone(dosboxx.app_program(None))
+
+
 if __name__ == "__main__":
     unittest.main()

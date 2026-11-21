@@ -1314,7 +1314,7 @@ def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, O
         raise LaunchError(wrong)
     if not _find_file(game_dir, "DSUN.EXE"):
         raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the game's folder")
-    program = os.path.abspath(settings[dosboxx.PATH_SETTING])
+    program = os.path.abspath(dosboxx.app_program(settings[dosboxx.PATH_SETTING]))
     problem = prepare_patched_game(game_dir, settings)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
