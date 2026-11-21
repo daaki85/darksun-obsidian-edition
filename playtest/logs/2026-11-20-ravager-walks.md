@@ -68,11 +68,47 @@ toward the camera, away, then sideways (unchanged, for comparing the pace). Draw
 
 ![2575 before and after](img/2026-11-20-ravager-walks/walk-2575.gif)
 
+### 2539: soulshard (grey stone man)
+
+A restyled monster that walks exactly as the people do (same frame layout), so it gets the same six beats.
+
+![2539 before and after](img/2026-11-20-ravager-walks/walk-2539.gif)
+
+## Restyled monsters
+
+Of the 45 monsters restyled from Ravager's art, most walk on frames of their own. 21 have 3 frames per direction, and 12 have 4 to 6. None of them show the standing pose mid-walk, so they're left alone. Eight don't walk: five statues and objects, the seated beggar, the crouched mushroom lady and Generoe.
+
+The aurumvorax was first listed here as frozen in one direction. That was a misreading of its script: it has 4 frames in every direction.
+
+The soulshard (above) walks like the people, so it takes their fix. The two golems are a different case.
+
+**The golems (693 magma, 2394 obsidian):** toward and away, they swap between two stride frames (A B A B), while sideways they have four. Between the strides now go passing frames (A, P1, B, P2), made from the standing frame:
+- **Swinging leg:** the leg swinging through is lifted 2 pixels.
+- **Arms:** moved 1 pixel, part way through their swing.
+
+The top row in each animation is as it was and the bottom row is new. Each row shows toward, away, then sideways (unchanged). Drawn at 3x, 200 ms a beat.
+
+### 693: magma golem
+
+![693 before and after](img/2026-11-20-ravager-walks/walk-693.gif)
+
+### 2394: obsidian golem
+
+![2394 before and after](img/2026-11-20-ravager-walks/walk-2394.gif)
+
+Their frames, toward `A, P1, B, P2` then away:
+
+![The golems' passing frames](img/2026-11-20-ravager-walks/golem-frames.png)
+
 ## The new frames
 
 Each figure on one row: toward `4, TA1, TA, 5, TB1, TB`, then away `6, AA1, AA, 7, AB1, AB`.
 
 ![The stride frames of all nine](img/2026-11-20-ravager-walks/stride-frames.png)
+
+The soulshard's:
+
+![The soulshard's stride frames](img/2026-11-20-ravager-walks/soulshard-frames.png)
 
 ## Still to do
 - **A pixel tidy:** the edges of the moved legs are a little blocky.
