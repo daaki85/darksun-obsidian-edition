@@ -738,3 +738,6 @@ index](logs/README.md), by date.
   member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
 - **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
   it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).
+- **2026-11-21**: DOSBox-X's unchecked items played: the start script's settings turned back for an
+  autosave (the dice log restarted); Entangle's box over the party; a killed DOSBox-X's memory file
+  left in /dev/shm (logs/2026-11-21-dosbox-x-unchecked.md).

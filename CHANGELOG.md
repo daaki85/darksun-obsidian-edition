@@ -83,7 +83,9 @@ Releases, newest first (2.12.0 and older in the archive):
 - The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
   `dosboxx_memtest.py`, a check without the game that a second program can read and write
   DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
-  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`.
+  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
+  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
+  the creation screen).
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 

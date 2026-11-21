@@ -471,6 +471,14 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   DOSBox-X had gone). The mouse is let go with Ctrl+F10 (`xdotool key --window $W ctrl+F10`)
   before clicking in the Loader's window on the same display, and taken again by a click in the
   game's.
+- **An autosave or a quick save in a DOSBox-X game**: `start_dosboxx.sh` writes `autosave` and
+  `quick_save` false; set them true in `obsidian-edition/settings.json` after it and restart the
+  dice log alone (kill `dice.pid`'s pid, then `python3 -u -m dsloader dicelog --pid $(cat
+  $WORK/dbx.pid) >> $WORK/dice.txt` from `obsidian-edition/`): it reads the settings once, at its
+  start. A fight won with no edit then autosaves (logs/2026-11-21-dosbox-x-unchecked.md:
+  `fountain-user` won by Tab + Return and `PT_NO_EDIT=1 fightout.sh`, 5 rounds).
+- **A killed DOSBox-X leaves its memory file** in /dev/shm (32 MB): the next `start_dosboxx.sh`
+  removes it, the last one's by hand (`$WORK/memfile.path` names it).
 - **`codepatch.py [SECONDS] [game]`**: is a write to code acted on at once (the helper's own
   counter, or the game's main loop).
 
@@ -1262,6 +1270,9 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
 - **Without `spellsetup.py`** (logs/2026-11-20-f10-after-spell.md): Ester's level-1 page is Bless
   (176,59), Curse (194), Cure Light Wounds (212), Cause Light Wounds (230), Entangle (248);
   Invisibility to Undead (176,79), Protection from Evil (194), Remove Fear (212), Cause Fear (230).
+  **Entangle's aiming box is as wide as half the view** at the ambush's start and took the party in
+  wherever it was put (2026-11-21): cancel with a right-click (the turn stays the caster's). Bless
+  aimed at a member (Jenna, 170,140) blesses those near ("Ester gives Blessed to Jenna, Ester").
   Lex's: Shocking Grasp (176,59), Erdlu Claw (194), Reflected Image (212, a self spell: cast at the
   icon's click), Friends (230). Hover an icon and shoot to read its name; the first hover after U
   can show nothing.
