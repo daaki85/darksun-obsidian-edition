@@ -62,6 +62,11 @@ class ProfileTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertEqual((sizes.TABLE, sizes.SPELLS, sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE), sl)
 
+    def test_psionic_powers_by_the_sequels_numbers(self):
+        # (DSCLOG2's records name a power from 0: the sequel's powers start at 0EBh, Cellular Adjustment 248)
+        self.assertEqual(ravlog.RavGameData.psionic_first, 0xEB)
+        self.assertEqual(game.GameData.psionic_first, game.PSIONIC_FIRST)
+
     def test_magic_resistance_reads_the_sequels_effects(self):
         # (Low Magic Res. 61 and Mind Barred 64 in the sequel's list, as its routine at 84AB5h tests them)
         ravlog.apply_layout()

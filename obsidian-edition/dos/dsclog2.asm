@@ -2848,6 +2848,7 @@ site_table:
         dw lowres_site                      ; 9 SITE_LOWRES
         dw strength_dice                    ; 10 SITE_STRENGTH
         dw cell_heal                        ; 11 SITE_CELL
+        dw psi_feeble                       ; 12 SITE_PSI
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3153,6 +3154,41 @@ cell_heal:
         popa
         inc word [cs:manual_count]
         pop bp
+        iret
+; PSI_FEEBLE (site 12, "feeblemind_psionics"): the psionic power check (61D2Eh, SL's 5D59Dh: SI the
+; user, DI the power), "or ax,ax / jnz 61D50h / mov al,0" (61D47h; 6 bytes) after the test that the user
+; has the power: a feebleminded user (the sequel's effect 37) can use none, as the manual has it (0:
+; the check fails, 61D4Dh). Recorded (MN_PSIONIC).
+MN_PSIONIC     equ 6
+FEEBLE_EFFECT  equ 37
+PSI_ON  equ 0x61D50 - (0x61D47 + 3)
+PSI_NO  equ 0x61D4D - (0x61D47 + 3)
+psi_feeble:
+        push bx
+        push cx
+        mov bx, PSI_NO
+        or ax, ax
+        jz .way
+        mov ax, si
+        mov cl, FEEBLE_EFFECT
+        call has_effect
+        mov bx, PSI_ON
+        jnz .way
+        mov [cs:mn_frame], si
+        mov [cs:mn_frame + 2], di
+        pusha
+        mov ax, MN_PSIONIC
+        call mn_rec
+        popa
+        inc word [cs:manual_count]
+        mov bx, PSI_NO
+        xor ax, ax
+.way:   push bp
+        mov bp, sp
+        add [bp + 6], bx                ; (the INT's return address)
+        pop bp
+        pop cx
+        pop bx
         iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:

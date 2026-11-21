@@ -3202,7 +3202,7 @@ class DiceLog:
         if e.raw == MANUAL_FEEBLE:
             return [f"Heal cures {name}'s Feeblemind: INT and WIS as they were"]
         if e.raw == MANUAL_PSIONIC:
-            power = self.game.spell_name(game.PSIONIC_FIRST + a) if a is not None else "a power"
+            power = self.game.spell_name(self.game.psionic_first + a) if a is not None else "a power"
             return [f"{name} is feebleminded: {power} can't be used (no psionics)"]
         if e.raw == MANUAL_DRAIN:
             return [f"{self._name(a)} drains 1 STR from {name}: Weakened for 2d4 = {b} turns (no save)"]
@@ -4379,7 +4379,7 @@ class DiceLog:
             return []
         score = struct.unpack("<b", e.parent_locals[0x28 - 2:0x28 - 1])[0]
         works = roll != 20 and (roll <= score or roll == 1)
-        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        name = self.game.spell_name(self.game.psionic_first + power)
         head = f"{self._name(who)} uses {name}: power check d20 = {roll}, needs {score} or less"
         if roll in (1, 20):
             head += f" (a {roll} always {'works' if roll == 1 else 'fails'})"
@@ -4428,7 +4428,7 @@ class DiceLog:
         if first is None or who is None or power is None or None in (keeper, against, holds):
             return []
         disrupted = first > holds or (second <= against and second >= first)
-        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        name = self.game.spell_name(self.game.psionic_first + power)
         return [f"{self._name(who)} uses {name} within {self._name(keeper)}'s Synaptic Static: "
                 f"d20 = {first} against {holds}, {self._name(keeper)}'s d20 = {second} against {against} "
                 f"(and at least {first}) -> {'disrupted by the static' if disrupted else 'not disrupted: the power check follows'}"]

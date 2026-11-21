@@ -1136,6 +1136,8 @@ class Weapon(NamedTuple):
 class GameData:
     """Lookups into the running game's memory for one session."""
 
+    psionic_first = PSIONIC_FIRST  # (the first psionic power's spell number: the sequel's view has its own)
+
     def __init__(self, guest: GuestMemory, ds: int, rules: Optional[int] = None):
         self.guest = guest
         self.ds = ds

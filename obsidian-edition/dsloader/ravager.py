@@ -320,6 +320,9 @@ PATCHES: Tuple[Patch, ...] = (
     # ... Cell Adjustment's 1d4 HP, not 2 (664C5h, SL's 795A2h: "push 2 / jmp", to Neutralize Poison's
     # "push ax" at 66545h)
     Patch("cell_adjustment_heal", 0x664C5, bytes.fromhex("6a02e947f3"), _site(11, 5)),
+    # ... and no psionic power for a feebleminded user (the power check 61D2Eh, after its test that the user
+    # has the power, 61D47h; SL's 5D5B4h)
+    Patch("feeblemind_psionics", 0x61D47, bytes.fromhex("0bc07505b000"), _site(12, 6)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

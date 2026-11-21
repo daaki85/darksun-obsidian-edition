@@ -389,6 +389,7 @@ class RavGameData(game.GameData):
     rule changes ported to it (ravager.RULES_PORTED: the spell slots, for one, are the game's own)."""
 
     _rules = 0
+    psionic_first = RAV_PSIONIC_FIRST
 
     @property
     def rules(self) -> int:

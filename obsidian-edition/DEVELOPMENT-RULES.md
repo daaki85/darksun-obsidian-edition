@@ -1240,6 +1240,8 @@ creature and three words; dicelog's `_manual`).
   and 19 a priest's) ([played](../playtest/logs/2026-11-21-ravager-strength.md)).
   Site 11 does `cell_adjustment_heal` (664C5h, back to Neutralize Poison's "push ax" at 66545h)
   ([played](../playtest/logs/2026-11-21-ravager-cell-adjustment.md)).
+  Site 12 does `feeblemind_psionics` (61D47h; the sequel's Feebleminded is effect 37)
+  ([played](../playtest/logs/2026-11-21-ravager-feeblemind.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
