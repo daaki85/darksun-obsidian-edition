@@ -1,12 +1,12 @@
 # Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.19.0 · What the mod adds and changes, and its main bug fixes*
+*A Dark Sun: Shattered Lands mod · Current version 2.19.2 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. The new content and a few rules are switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes describe version 2.19.0, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
+*These notes describe version 2.19.2, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
 
 Each release also has these notes as a web page, [`patch-notes.html`](https://github.com/daaki85/darksun-obsidian-edition/releases/latest/download/patch-notes.html), with a button that copies them as Markdown for forums.
 
@@ -148,7 +148,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **S** in a shop sells the plain gear in the backpack on show *(was a click each)* ([selling](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#selling-plain-gear-s)).
 - **[New]** **M** opens and closes the overhead map; **U** and **I** close the USE and inventory screens.
 - **[New]** **F5** saves at once, with no window, and **F9** opens the load window on those saves; the game also **saves by itself** on coming into another area and after a fight. All on a fifth page of the save window, **QUICK**, which keeps the last five of each ([quick save and autosave](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#quick-save-quick-load-and-autosave)).
-- **[Changed]** **F10**, the game's key that takes a move back in a fight, gives the walk back after the last step too *(was the character put back, unable to walk)* ([F10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#f10-takes-a-whole-move-back)).
+- **[Changed]** **F10**, the game's key that takes a move back in a fight, gives the walk back after the last step too, and leaves a held or stuck character where it is *(was the character put back, unable to walk, a held or stuck one too)* ([F10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#f10-takes-a-whole-move-back)).
 - **[Changed]** A game starts and loads with the whole party on the map, and stays so after a fight *(was the leader alone)* ([the whole party](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-whole-party-in-view)).
 - **[Changed]** In a fight the view stays put while a figure walks *(was following each one near the edge)*.
 - **[Changed]** The pointer shows in the intro and scenes, starts in the middle, keeps its place and moves at the desktop's speed ([the pointer](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-pointer-in-scenes-and-where-it-starts)).

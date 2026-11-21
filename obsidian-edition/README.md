@@ -522,18 +522,20 @@ level AA:
 
 ## Updating
 
-Unzip the new release into a folder of its own and copy two
-things from the old folder into it: `settings.json` (your options) and the
-**Named saves** folder (each save's copy under its name, and the `Replaced -`
-copies a restore keeps, which may be the only copy left of a save). The named
-copies are made only while the Loader's window is open, one a slot: they are not
-a backup history, as the game saving over a slot replaces that slot's copy (keep
-a save you want to go back to in a slot of its own, or copy it elsewhere). Your saves
-and characters are in the game folder (or its `cloud_saves` folder, where GOG
-keeps them when it has one), so nothing else needs moving. If you unzipped
-[Dark Sun Recompiled](#dark-sun-recompiled) into the old folder, move it into the
-new one too (or into its own `darksun-recompiled...` folder beside it), or the
-Loader goes back to DOSBox. Then delete the old folder.
+Close the game and the Loader, then unzip the new release into a folder of its own.
+Copy these files and folders from the old Loader folder if present.
+
+- `settings.json` keeps your options.
+- **Named saves** keeps the named copies of manual saves and the `Replaced -` copies from
+  restores. A restore copy can be the only remaining copy of a save.
+- **Journal** keeps your journal history and the last quest reading. Each game save
+  contains a reference to its journal history here.
+
+Your game saves and characters stay in the game folder or its `cloud_saves` folder.
+If you installed [Dark Sun Recompiled](#dark-sun-recompiled) inside the old Loader folder,
+move it into the new folder or into a `darksun-recompiled...` folder beside it.
+Before deleting the old Loader folder, open a known save from the new Loader and
+check that its journal history appears.
 
 ## Compatibility with older saves
 
@@ -614,6 +616,9 @@ are read only by the mod's patched game.
   meanwhile may not load once the copy is back: put the cause right (often a
   file of the game's missing or held by another program) and start the game
   again.
+- **"Could not remove the game data override"** at startup. The Loader found
+  an unusable copy in its own `dos` folder. Close any program using the file
+  named in the error, check that you can delete the copy, then start the game again.
 - **"settings.json can't be read just now ...: it may be held by a backup or a
   virus scan for a moment"**: the Loader couldn't read your options just then, and changed
   nothing in them. Start the game again in a little while.

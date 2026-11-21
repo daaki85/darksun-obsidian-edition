@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +22,7 @@ CLONES = tuple(g.clone[1] for g in worldgear.GIFTS + worldgear.MAGIC if g.clone)
 ALL_NEW = tuple(sorted(set(CLONES) | {worldgear.ELVEN_CLOAK_OBJECT, tome.TOME_OBJECT, worldgear.HAYNEEDLE_OBJECT,
                                        champions.TOHR_KREEN}))
 OBJECTS, SCRIPTS, PENS, RESOURCES = icons.OBJECTS_FILE, kalzith.SCRIPTS_FILE, kalzith.REGION_FILE, icons.RESOURCE_FILE
+POINTER = scenepointer.POINTER_FILE
 
 
 def _mark(dest, what="new"):
@@ -37,8 +39,11 @@ class PrepareTests(unittest.TestCase):
         os.mkdir(self.dos)
         for name in ["DSUN.EXE", OBJECTS, SCRIPTS, RESOURCES, PENS] + [worldgear.region_file(r) for r in REGIONS]:
             _mark(os.path.join(self.game, name), "game")
+        os.mkdir(os.path.join(self.game, "DOSBOX"))
+        _mark(os.path.join(self.game, "DOSBOX", "DOSBox.exe"), "game")
+        _mark(os.path.join(self.game, "dosbox_darksun.conf"), "game")
         self.calls = {"regions": {}, "pens": None, "scripts": None}
-        self.fail = set()  # (the writers to raise: "objects", "scripts", "resources", "patch", "region")
+        self.fail = set()
         self.new_objects = ALL_NEW
         self.kalzith_object = True  # (whether the objects copy could have Kalzith's object)
 
@@ -61,6 +66,8 @@ class PrepareTests(unittest.TestCase):
             _mark(dest)
 
         def write_pens(source, dest, gifts=()):
+            if "pens" in self.fail:
+                raise OSError("disk full")
             self.calls["pens"] = [g.clone[1] for g in gifts]
             _mark(dest)
 
@@ -95,11 +102,8 @@ class PrepareTests(unittest.TestCase):
 
     @staticmethod
     def snapshot(folder):
-        out = {}
-        for name in sorted(os.listdir(folder)):
-            with open(os.path.join(folder, name), "rb") as f:
-                out[name] = f.read()
-        return out
+        root = Path(folder)
+        return {str(path.relative_to(root)): path.read_bytes() for path in root.rglob("*") if path.is_file()}
 
     def stale(self, *names):
         """Copies an earlier start left in dos/."""
@@ -112,6 +116,17 @@ class PrepareTests(unittest.TestCase):
             return None
         with open(path) as f:
             return f.read()
+
+    def locked_override(self, name):
+        locked = os.path.join(self.dos, name)
+        remove = os.remove
+
+        def deny_remove(path):
+            if path == locked:
+                raise PermissionError("file in use")
+            remove(path)
+
+        return mock.patch.object(os, "remove", side_effect=deny_remove)
 
     def prepare(self, **settings):
         return launch.prepare_patched_game(self.game, settings)
@@ -223,6 +238,59 @@ class PrepareTests(unittest.TestCase):
         self.assertIsNone(self.prepare())
         self.assertIsNone(self.there(RESOURCES))
         self.assertTrue(any(RESOURCES in line for line in launch.LEFT_OUT))
+
+    def test_locked_overrides_abort_preparation(self):
+        region = self.region_names()[0]
+        cases = (
+            ("objects", OBJECTS, {}),
+            ("region", region, {}),
+            (None, region, {"new_items": False}),
+            ("scripts", SCRIPTS, {}),
+            ("scripts", PENS, {}),
+            ("pens", PENS, {}),
+            (None, PENS, {"kalzith": False, "new_items": False}),
+            ("resources", RESOURCES, {}),
+            (None, POINTER, {}),
+        )
+        for writer, name, settings in cases:
+            with self.subTest(writer=writer, name=name, settings=settings):
+                self.fail = {writer} if writer else set()
+                self.stale(name)
+                with self.locked_override(name), self.assertRaises(launch.LaunchError) as raised:
+                    self.prepare(**settings)
+                self.assertIn(os.path.join(self.dos, name), str(raised.exception))
+                self.assertIn("file in use", str(raised.exception))
+                self.assertEqual(self.there(name), "stale")
+
+    def test_can_retry_launch_after_locked_override_is_released(self):
+        self.fail.add("objects")
+        lock = os.path.join(self.dos, "game.lock")
+        signals = {name: os.path.join(self.dos, name) for name in ("GAME_OK", "GAME_END", "GAME_MESSAGE")}
+        with mock.patch.multiple(launch, GAME_LOCK=lock, STARTED=None, LAST_SETTINGS=None, **signals), \
+                mock.patch.object(launch, "load_settings", return_value={}), \
+                mock.patch.object(launch, "write_conf", return_value="generated.conf") as write_conf, \
+                mock.patch.object(launch.subprocess, "Popen") as start:
+            self.addCleanup(launch.release_game)
+            start.return_value.pid = 0
+            start.return_value.args = []
+            for program in (None, os.path.join(self.dos, "recompiled.exe")):
+                with self.subTest(program=program), mock.patch.object(launch, "recompiled_program", return_value=program):
+                    self.stale(OBJECTS)
+                    with self.locked_override(OBJECTS), self.assertRaises(launch.LaunchError):
+                        launch.launch(self.game)
+                    start.assert_not_called()
+                    write_conf.assert_not_called()
+                    self.assertFalse(launch.holds_game())
+
+                    process, problem = launch.launch(self.game)
+                    self.assertIs(process, start.return_value)
+                    self.assertIsNone(problem)
+                    start.assert_called_once()
+                    self.assertIsNone(self.there(OBJECTS))
+                    self.assertIn(OBJECTS, launch.left_out_line())
+                    launch.release_game()
+                    start.reset_mock()
+                    write_conf.reset_mock()
 
     def test_patch_refused(self):
         """A DSUN.EXE that can't be patched: the reason returned, no copy made."""

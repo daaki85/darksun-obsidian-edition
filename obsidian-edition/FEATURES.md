@@ -190,7 +190,12 @@ after the last step F10 still puts the member back, and the name box shows its M
 click walks it ([moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight)). With the Loader the
 member can walk again then too, and the dice log says so (`F10: Ester's move taken back (can walk
 again)`). Nothing else changes: an attack is not taken back, and after an attack (one that kills
-can leave the member its turn) F10 gives no walk.
+can leave the member its turn) F10 gives no walk, nor to a member held or stuck (Paralyzed,
+Stuck).
+
+**A held or stuck member stays put.** The game's F10 put a Paralyzed or Stuck member back on the
+square its turn began on, with its points, as if it could still move. Now F10 does nothing for
+such a member: it stays where it is. This one is always on, whatever the switch.
 
 **Switch:** *F10 takes a whole move back: after the last step too, the party member can walk again
 (the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a
@@ -979,7 +984,8 @@ third of a second, **Quick save** floats over the leader, and the dice log says 
 saves with the newest chosen: **Enter** (or LOAD) loads it. And the game saves by itself a few
 seconds after the party comes into another area (`Auto - Day 1, 16:31 - The arena`) and after a
 fight ends (`Auto - Day 1, 00:56 - after a fight`; at most one a minute, so the arena's waves don't
-fill the page).
+fill the page). An autosave due during a quick save or quick load waits until the game is back on
+the map and ready. When the Loader detects a loaded save, it drops any autosave that was waiting.
 
 All of them are on a fifth page of the [save and load window](#more-saves), **QUICK** (the button
 under PAGE 4, or PgDn past page 4): its first five rows are the quick saves and the last five the
@@ -1006,10 +1012,10 @@ How it works:
 ### Saves under their names
 
 Only the game's list says which file is which save. While the Loader's window is open (not with the
-`.bat` files that start the game without it), it copies every save, as the game writes it, under the
+`.bat` files that start the game without it), it copies the manual save slots under the
 name you typed for it, into its own **Named saves** folder (`Page 2 slot 05 - Before Scar's
 battle.SAV`); saving over a slot replaces that slot's copy. **Open the folder** opens it, and **Put
-a save in a slot...** copies a named save (or any save file) into the page and slot you give, asking
+a save in a slot...** copies a named save (or another Shattered Lands save) into the page and slot you give, asking
 first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot 05 - NAME.SAV`.
 
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older

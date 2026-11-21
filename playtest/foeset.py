@@ -7,7 +7,9 @@
 # creatures of one kind share a sheet, so all of them change), its creature's HP (+0) or INT score
 # (+25h), and adds effects to the game's table of active effects in owner order (the place the game
 # keeps them in: 598:B1h finds an owner's first entry and reads on while the owner is the same), with
-# handles from 200 up (no timer: they last until removed, as Feeblemind's or Biofeedback's).
+# handles from 200 up (no timer: they last until removed, as Feeblemind's or Biofeedback's; or until
+# the game puts the same effect on again, which takes the record's place with its own time: Rainbow
+# Pattern's area or a Hold Person on a held foe, logs/2026-11-20-paralyzed-ends-oddity.md).
 # e.g. python3 foeset.py 22 lv=3,0,0 eff=20 eff=55   (Fire Shield and Blur on combatant 22)
 import os, sys, struct
 HERE = os.path.dirname(os.path.abspath(__file__))

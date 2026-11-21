@@ -178,7 +178,12 @@ FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
 # spells' pictures, which the log passes over)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
-# 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
+# 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties. The round's routine
+# (DSUN.EXE 57414h) puts 60 seconds on the clock, then rolls combatant by combatant in rising
+# order (57447h-5764Dh, DI the combatant), each score and tie-break kept in the table at once
+# (5751Bh, 57545h). With no one in the fight able to act (the whole party Paralyzed, the foes
+# held) the game plays round after round in a blink, nothing rolled but these: the log gets
+# several rounds' rolls in one go (initiative_lines splits them)
 INITIATIVE_ROLL = bytes.fromhex("660fbfc0666bc00a66bb00800000669966f7fb665057")
 INITIATIVE_TIE = bytes.fromhex("660fbfc06669c0c800000066bb00800000669966f7fb8bde")
 INITIATIVE_BASE = 20
@@ -397,6 +402,7 @@ class Entry:
     extra: int = 0  # KIND_SAVE: the segment of the game's spell table
     target_state: int = 0  # the attack's target as the entry was made (DSCLOG's HELPLESS_OF): HELD_MARK
     #                        plus 1 Paralyzed or 2 Out Cold; 0 from a DSCLOG that doesn't write it
+    initiative_round: int = 0  # for an initiative tie-break, extra is its combatant and target_state is its fight
 
     SIZE = 192
     HELD_MARK = 0x8000
@@ -413,7 +419,7 @@ class Entry:
     def parse(cls, data: bytes) -> "Entry":
         head = struct.unpack_from("<8H", data, 0)
         return cls(*head, data[16:48], data[48:80], struct.unpack_from("<4H", data, 80), data[88:104],
-                   data[104:128], data[128:144], data[144:184], *struct.unpack_from("<3H", data, 184))
+                   data[104:128], data[128:144], data[144:184], *struct.unpack_from("<4H", data, 184))
 
     @staticmethod
     def _word(data: bytes, index: int) -> Optional[int]:
@@ -436,6 +442,14 @@ class Entry:
     def parent_local(self, bp_offset: int) -> Optional[int]:
         """Signed word at [parentBP+bp_offset] for bp_offset in -28h..-2, or None."""
         return self._word(self.parent_locals, bp_offset + 0x28)
+
+
+class InitiativePair(NamedTuple):
+    roll: int
+    tie: int
+    combatant: Optional[int]
+    fight: int
+    number: int
 
 
 def scaled(raw: int, sides: int) -> int:
@@ -647,6 +661,7 @@ class DiceLog:
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
+        self._effect_deadlines: Dict[Tuple[game.Effect, int, int], int] = {}
         self._party: Optional[bytes] = None
         self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
         self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
@@ -654,7 +669,8 @@ class DiceLog:
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
-        self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
+        self._initiative: List[InitiativePair] = []
+        self._initiative_fight: Optional[int] = None  # the helper's fight identifier last shown
         self._initiative_roll: Optional[int] = None
         self._initiative_at = 0.0
         self._names: Dict[int, str] = {}  # combatant -> name, for effects that end after a fight
@@ -761,19 +777,19 @@ class DiceLog:
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
         self.last_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SEQ, 2))[0]
         self._effects = None
+        self._initiative_fight = None
         self._forget_partial_rolls()
         icons.COPY_OPEN = False  # (a game started anew: its copy not open until DSCLOG says so)
         return "Dice log attached."
 
     def _forget_partial_rolls(self) -> None:
-        """Rolls half seen dropped: an NdS roll's dice collected so far, and the natural d20s kept
-        for a save, a Static contest or a psionic defence. Each is keyed by where in the game it
-        was rolled, so one whose rest was missed (the ring overran) or that began before an attach
-        would be finished by the next roll from the same place, a stale die in its total."""
+        """Drop partial dice, saves and initiative when attaching or losing entries from the ring."""
         self._dice.clear()
         self._save_rolls.clear()
         self._static_rolls.clear()
         self._defence_rolls.clear()
+        self._initiative.clear()
+        self._initiative_roll = None
 
     def set_record_everything(self, record_everything: bool) -> None:
         """Record every rand() call, or (the default) only the ones shaped like rolls."""
@@ -1337,15 +1353,14 @@ class DiceLog:
         self.rand_addr = None
         self.quest_state = None  # (the next game's flags are read afresh)
         if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
-            self.journal.reset()
             self.journal.flush()
+            self.journal.reset()
 
-    def close(self) -> None:
-        """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
-        hook comes off."""
+    def close(self, *, stats_timeout: Optional[float] = 0.2) -> None:
+        """Stop the stats thread and remove the mouse hook. Pass None to wait for the thread to exit."""
         self._stats_stop.set()
-        if self._stats_thread is not None:  # (out of the guest's memory before its handle closes)
-            self._stats_thread.join(0.2)
+        if self._stats_thread is not None and self._stats_thread.ident is not None:
+            self._stats_thread.join(stats_timeout)
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
@@ -1610,6 +1625,8 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            if not loading:
+                step(self._journal_sync)  # make the committed journal head available before asking for a save
             out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
@@ -1617,7 +1634,6 @@ class DiceLog:
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
-                step(self._journal_sync)
                 step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
@@ -2703,40 +2719,63 @@ class DiceLog:
         return self._names.get(combatant, name)
 
     def effect_changes(self, now: float = 0.0) -> List[str]:
-        """Lines for effects that started or ended since the last look."""
-        current = Counter(self.game.effects())
-        for eff in current:
+        """Report starts, ends and replacements, including same-record refreshes of timed effects."""
+        current = Counter(self.game.effect_records())
+        due = self.game.effect_deadlines() if current else {}
+        deadlines = {}
+        for record in current:
+            eff, _, handle = record
             self._name(eff.owner)
             self._name(eff.caster)
+            deadline = due.get((eff.owner, handle))
+            if deadline is not None:
+                deadlines[record] = deadline
         loading = self._party_check(now)
         if self._effects is None or loading:
-            self._effects = current  # the first look, or just loaded: remember what is active
+            self._effects, self._effect_deadlines = current, deadlines
             return []
-        started, ended = current - self._effects, self._effects - current
-        self._effects = current
+        started = [eff for eff, _, _ in (current - self._effects).elements()]
+        ended = [eff for eff, _, _ in (self._effects - current).elements()]
+        refreshed = []
+        for record, previous in self._effect_deadlines.items():
+            # The event can briefly disappear while the effect is still active.
+            if record in current and deadlines.setdefault(record, previous) != previous:
+                refreshed.append(record[0])
+        if refreshed and Counter(self.game.effect_records()) != current:
+            # A different caster or spell may have replaced the record during the queue read.
+            return []
+        self._effects, self._effect_deadlines = current, deadlines
+        replaced = {(e.owner, e.id) for e in started} & {(e.owner, e.id) for e in ended}
+        replaced.update((e.owner, e.id) for e in refreshed)
         out = []
-        by_cast: Dict[Tuple[int, int], List[int]] = {}
-        for eff in started.elements():
-            by_cast.setdefault((eff.caster, eff.id), []).append(eff.owner)
-        for (caster, eid), owners in by_cast.items():
+        by_cast: Dict[Tuple[int, int, bool], List[int]] = {}
+        for eff in started + refreshed:
+            by_cast.setdefault((eff.caster, eff.id, (eff.owner, eff.id) in replaced), []).append(eff.owner)
+        new_hastes = {(e.owner, e.caster) for e in started if e.id == game.HASTED_EFFECT}
+        for (caster, eid, instead), owners in by_cast.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
             rule = game.effect_rule(eid, self.game.spells_manual())
             rule = f": {rule}" if rule else ""
             if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
                 rule = ": it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's turning, CHILL_UNDEAD's Chill Touch)
+            if instead:  # (the one it had is gone: this one, with its own time, holds from now)
+                rule = f", in place of the {'ones they' if len(owners) > 1 else 'one it'} had{rule}"
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
                 out.append(f"{name} on {targets}{rule}")
             else:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
             if eid == game.HASTED_EFFECT:  # (Haste's magical aging)
                 for owner in owners:
+                    if (owner, caster) not in new_hastes:
+                        continue
                     creature = self.game.combatant_creature(owner)
                     if creature is not None:
                         out += aging.hasted(self.game, creature)
         by_end: Dict[int, List[int]] = {}
-        for eff in ended.elements():
-            by_end.setdefault(eff.id, []).append(eff.owner)
+        for eff in ended:
+            if (eff.owner, eff.id) not in replaced:
+                by_end.setdefault(eff.id, []).append(eff.owner)
         for eid, owners in by_end.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             out.append(f"{name} ends on {', '.join(self._name(o) for o in owners)}")
@@ -2770,7 +2809,9 @@ class DiceLog:
             return []
         if e.kind == KIND_ROLL and e.code.startswith(INITIATIVE_TIE):
             if self._initiative_roll is not None:
-                self._initiative.append((self._initiative_roll, scaled(e.raw, 200)))
+                combatant = e.extra if e.initiative_round else None
+                self._initiative.append(InitiativePair(self._initiative_roll, scaled(e.raw, 200),
+                                                       combatant, e.target_state, e.initiative_round))
             self._initiative_roll, self._initiative_at = None, now
             return []
         return self.initiative_lines() + self._describe_entry(e, show_all, now)
@@ -2873,17 +2914,46 @@ class DiceLog:
                 out["next"].append((name, score))
         return out
 
-    def _round_number(self) -> int:
+    def _round_number(self, passed: int = 0) -> int:
         """The round of this fight: the game's clock moves 60 seconds a round, and a longer gap
-        means a new fight."""
+        means a new fight. PASSED: rounds the game played through before this one, unseen
+        (initiative_lines), whose time isn't a gap."""
         now = self.game.game_time()
         if now is None:
             return 0
-        if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
+        if self._round_time is None or now < self._round_time \
+                or now - self._round_time - passed * ROUND_SECONDS > FIGHT_GAP:  # (or a game loaded)
             _new_fight(self)
         self._round_time = now
-        self._round += 1
+        self._round += 1 + passed
         return self._round
+
+    def _rounds_passed(self, pairs: List[InitiativePair], combatants: Dict[int, int],
+                       table: List[Tuple[int, int]]) -> int:
+        """How many whole rounds before the last one PAIRS hold: the game rolls a round's
+        initiative combatant by combatant in rising order and keeps each one's tie-break roll in
+        TABLE, so the last round is the run at the end whose tie-breaks are those of combatants
+        in rising order; the pairs before it are earlier rounds of as many rolls each, played
+        through by the game while no one could act (the clock gone on a round for each: at least
+        one a round passed, as the last heading's time can be the next round's already, its 60
+        seconds put on before its rolls). 0 for one round, or rolls that don't fit that (a log
+        started mid-round: shown as before)."""
+        last, below, used = 0, None, set()
+        for pair in reversed(pairs):
+            found = [c for c, i in combatants.items()
+                     if (below is None or c < below) and i not in used and 0 <= i < len(table) and table[i][1] == pair.tie]
+            if not found:
+                break
+            below = max(found)
+            used.add(combatants[below])
+            last += 1
+        if not last or len(pairs) % last or len(pairs) == last:
+            return 0
+        passed = len(pairs) // last - 1
+        now = self.game.game_time()
+        if now is None or self._round_time is None or now - self._round_time < passed * ROUND_SECONDS:
+            return 0
+        return passed
 
 
     def initiative_lines(self) -> List[str]:
@@ -2895,15 +2965,26 @@ class DiceLog:
         g = self.game
         combatants = g.combatants()
         table = g.initiative(max(combatants.values(), default=0) + 1)
+        latest = pairs[-1]
+        if latest.number:
+            same_fight = [p for p in pairs if p.number and p.fight == latest.fight]
+            first = same_fight[0].number
+            pairs = [p for p in same_fight if p.number == latest.number]
+        else:
+            # Entries from the previous helper lack the round and combatant fields.
+            passed = self._rounds_passed(pairs, combatants, table)
+            if passed:
+                pairs = pairs[-(len(pairs) // (passed + 1)):]
         effects = g.effects()
         rows, used, path = [], set(), None
-        for roll, tie in pairs:
-            # the game keeps each creature's tie-break roll: that says whose rolls these were
-            found = [(c, i) for c, i in sorted(combatants.items()) if i not in used and table[i][1] == tie]
-            if not found:
+        for roll, tie, combatant, _, _ in pairs:
+            if combatant is None:
+                combatant = next((c for c, i in sorted(combatants.items())
+                                  if i not in used and i < len(table) and table[i][1] == tie), None)
+            index = combatants.get(combatant)
+            if index is None or index in used:
                 rows.append((INITIATIVE_BASE + roll, tie, f"? {INITIATIVE_BASE + roll}", f"{roll} (0-9 roll)", None, "?"))
                 continue
-            combatant, index = found[0]
             used.add(index)
             parts = []
             dex = g.dex_initiative(g.creature(index)[CREATURE_ABILITIES + 1])
@@ -2921,7 +3002,7 @@ class DiceLog:
             if index < game.PARTY_SIZE and path:
                 parts.append(path)
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
-            stored = table[index][0]
+            stored = table[index][0] if index < len(table) and table[index][1] == tie else -1
             if stored >= 0 and stored != score:  # not acted yet, and something else counted
                 parts.append((stored - score, "other"))
                 score = stored
@@ -2929,25 +3010,43 @@ class DiceLog:
             rows.append((score, tie, f"{g.creature_name(index)} {score}", steps, combatant, g.creature_name(index)))
         rows.sort(key=lambda r: (-r[0], -r[1]))
         scores = Counter(r[0] for r in rows)
-        number = self._round_number()
-        if self._kits_due and number != 1:  # (a new fight by the fight flag, the clock not yet past FIGHT_GAP:
-            _new_fight(self)                #   the arena's next wave) everything a new fight resets
-            self._round = number = 1
+        if latest.number:
+            if self._initiative_fight != latest.fight:
+                _new_fight(self)
+                self._initiative_fight = latest.fight
+            elif self._round:  # (the same fight: the rounds after the last shown, even those whose
+                first = self._round + 1  #   entries the ring lost, "rolls came too fast to record")
+            first = max(first, self._round + 1)
+            number = self._round = latest.number
+            self._round_time = g.game_time()
+            passed = max(0, number - first)
+        else:
+            number = self._round_number(passed)
+            if self._kits_due and number - passed != 1:
+                _new_fight(self)
+                self._round = number = 1 + passed
+            first = number - passed if number else 0
         self.round_number = number
-        start, self._kits_due = number == 1, False  # (a new fight, or one after a fight's end)
+        start, self._kits_due = first == 1, False  # (a new fight, or one after a fight's end)
         if start:
             self._fight_seen, self._out_of_fight = False, None
-        danced = self._dances.round(g, self.tsr_hdr, number, start=start)
-        danced += self._wild.round(g, self.tsr_hdr, number, start=start)
+        danced = []
+        for each in range(first, number + 1):  # (a dance's rounds run out in the rounds passed too)
+            danced += self._dances.round(g, self.tsr_hdr, each, start=start and each == first)
+            danced += self._wild.round(g, self.tsr_hdr, each, start=start and each == first)
         if start:  # (a Poisoner's doses: each weapon poisons once a fight; DSCLOG clears its own,
             self._poison_doses = set()  #   POISON_USED, at the first round: ACID_ROUND)
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
-        self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
         # last in one round and first in the next still hides), so that one is forgotten
-        self._stale_turn, self._turn = self._turn, None
+        if first <= number:
+            self._acted = set()
+            self._stale_turn, self._turn = self._turn, None
         order = ", ".join(r[2] for r in rows)
         out = [f"Round {number}" + (f": {order}" if order else "") if number else f"Initiative: {order}"]
+        if passed:
+            gone = f"Round {first} goes" if passed == 1 else f"Rounds {first}-{number - 1} go"
+            out.insert(0, f"{gone} by at once: no one in the fight can act")
         for score, tie, who, steps, _, _ in rows:
             tied = f", tie broken by {tie} (0-199 roll)" if scores[score] > 1 else ""
             out.append(f"    {who} = {INITIATIVE_BASE} + {steps}{tied}")

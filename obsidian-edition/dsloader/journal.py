@@ -13,8 +13,8 @@ scripts use 0-136, tests/test_journal.py), written whenever an entry is added. A
 holds it; when the id in memory is not the one last written, a game was loaded (or begun: 0), and
 the journal shows that id's chain (sync). The numbers have no place in memory at times (their
 pointer is null: game.number), so an entry can be added before its id is written: when a load is
-seen and the loaded id is an entry of the chain shown till then, the entries after it that are no
-later than the loaded game's clock are kept as its own (they were there when it was saved).
+seen and the loaded id is an entry of the chain shown till then, entries after it with a strictly
+earlier clock can be kept. A save and a later entry can have the same game second.
 """
 
 import json
@@ -118,8 +118,7 @@ def read_head(gd) -> Optional[int]:
     numbers = game.far_pointer(gd.guest, gd.ds, game.NUMBERS_PTR)
     if not numbers:
         return None
-    low, high = (struct.unpack("<H", gd.guest.read(numbers + n * 2, 2))[0] for n in NUMBERS)
-    return high << 16 | low
+    return struct.unpack("<I", gd.guest.read(numbers + NUMBERS[0] * 2, 4))[0]
 
 
 def write_head(gd, head: int) -> bool:
@@ -127,8 +126,7 @@ def write_head(gd, head: int) -> bool:
     numbers = game.far_pointer(gd.guest, gd.ds, game.NUMBERS_PTR)
     if not numbers:
         return False
-    for n, word in zip(NUMBERS, (head & 0xFFFF, head >> 16 & 0xFFFF)):
-        gd.guest.write(numbers + n * 2, struct.pack("<H", word))
+    gd.guest.write(numbers + NUMBERS[0] * 2, struct.pack("<I", head))
     return True
 
 
@@ -149,36 +147,61 @@ class Journal:
         self._unwritten: List[Entry] = []  # entries the file refused, for the next try
         self._seen: Tuple[Optional[int], int] = (None, 0)  # the id read last, and the looks in a row it was read
         self._next = 1
-        self._load()
+        self._refresh_needed = True
+        self._refresh()  # for display before attaching; refresh again under the game lock
+        self._refresh_needed = True
 
     # ---- the file ---------------------------------------------------------------
 
-    def _load(self) -> None:
+    def _refresh(self) -> bool:
+        """Refresh the ID allocation before the session writes, even for a window opened earlier."""
+        entries = {}
         try:
-            with open(self.path, encoding="utf-8") as f:
+            with open(self.path, encoding="utf-8", errors="replace") as f:
                 for line in f:
                     entry = Entry.parse(line)
                     if entry is not None:
-                        self.entries[entry.id] = entry
-        except OSError:
+                        entries[entry.id] = entry
+        except FileNotFoundError:
             pass
-        self._next = max(self.entries, default=0) + 1
+        except OSError:
+            self.failed = True
+            return False
+        for pending in self._unwritten:
+            existing = entries.get(pending.id)
+            if existing is not None and existing.line() != pending.line():
+                self.failed = True
+                return False  # keep the pending entries without overwriting another game's IDs
+        self.entries.update(entries)
+        self._next = max(self._next, max(self.entries, default=0) + 1)
+        self._refresh_needed, self.failed = False, False
+        return True
 
     def flush(self) -> None:
         """What the file doesn't hold yet, written now."""
         self._write()
 
-    def _write(self) -> None:
+    def _write(self) -> bool:
         """The entries not yet in the file, added to it; kept for the next try if it can't be."""
         if not self._unwritten:
-            return
+            return True
+        if self._refresh_needed and not self._refresh():
+            return False
         try:
             os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-            with open(self.path, "a", encoding="utf-8") as f:
-                f.write("".join(entry.line() + "\n" for entry in self._unwritten))
+            with open(self.path, "a+b") as f:
+                if f.tell():
+                    f.seek(-1, os.SEEK_END)
+                    if f.read(1) != b"\n":
+                        f.write(b"\n")  # separate a partial previous record from the retry
+                f.write("".join(entry.line() + "\n" for entry in self._unwritten).encode("utf-8"))
+                f.flush()
+                os.fsync(f.fileno())
             self._unwritten, self.failed = [], False
+            return True
         except OSError:
             self.failed = True
+            return False
 
     # ---- entries ----------------------------------------------------------------
 
@@ -187,7 +210,7 @@ class Journal:
         """An entry added after the chain's newest. Before the game's id is known (sync) it waits,
         and joins the chain then."""
         entry = Entry(0, 0, kind, clock, region, portrait, speaker, text, replies, title)
-        if self.head is None:
+        if self.written is None or self.head is None:
             self._unsynced.append(entry)
             del self._unsynced[:-UNSYNCED_MOST]
         else:
@@ -225,6 +248,7 @@ class Journal:
         """The game was started again (or the Loader attached anew): the id in its numbers is
         looked at afresh, and isn't a load."""
         self.written, self._seen = None, (None, 0)
+        self._refresh_needed = True
 
     def sync(self, read: Callable[[], Optional[int]], write: Callable[[int], bool], clock: Optional[int]) -> None:
         """One look at the game's numbers (READ: the id there, None while they can't be read; WRITE
@@ -241,13 +265,12 @@ class Journal:
         if seen != self.written or self.head is None:
             if self._seen[1] < STEADY:
                 return
+            if self._refresh_needed and not self._refresh():
+                return
             self._follow(seen, clock)
-        if self.head != seen:
-            if write(self.head):
-                self.written, self._seen = self.head, (self.head, STEADY)
-        else:
             self.written = seen
-        self._write()
+        if self._write() and self.head != seen and write(self.head):
+            self.written, self._seen = self.head, (self.head, STEADY)
 
     def _follow(self, seen: int, clock: Optional[int]) -> None:
         """The chain shown becomes SEEN's (see the module's words for the entries kept past it)."""
@@ -258,7 +281,7 @@ class Journal:
             ids = [entry.id for entry in later]
             if seen in ids:  # (the save is of the game played till now)
                 for entry in later[ids.index(seen) + 1:]:
-                    if entry.clock is None or entry.clock > clock:
+                    if entry.clock is None or entry.clock >= clock:
                         break
                     head = entry.id
         self._next = max(self._next, seen + 1)  # (an id a save holds is never given to another entry)
@@ -275,7 +298,9 @@ class Journal:
         """The Loader is done: what waits is written (entries whose game was never known as their
         own chain, so they are not lost)."""
         if self._unsynced:
-            if self.head is None:
+            if self._refresh_needed and not self._refresh():
+                return
+            if self.written is None or self.head is None:
                 self.head = 0
             waiting, self._unsynced = self._unsynced, []
             for entry in waiting:

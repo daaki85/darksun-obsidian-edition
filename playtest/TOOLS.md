@@ -35,6 +35,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `drawlist.py [all]` | the game's draw list (far pointer DS:6690h, count DS:1F72h; |
 | `dsword.py ADDR [VALUE]` | the game's DS word at ADDR (hex), or set it (memory only). |
 | `effects.py` | every active effect (owner, caster, effect id), its charges and game seconds left (60 a round), as the Loader reads them. |
+| `f10watch.py MEMBER SECONDS` | follows a party member's turn for F10 tests, printing each change with its time: whose turn (DS:4979h), the member's turn flags (37BD:01D5h, bit 0 "can walk"), movement points (+22Bh), swings (+181h) and attack... |
 | `figcheck.py [LABEL]` | whether the party's figures are drawn on the map. |
 | `fightout.sh [MAX]` | finish a fight the game's own way, so its scripts see each kill: every foe to 1 HP (hp.py 1), then on each party turn Tab (the mod picks the nearest enemy) + Return (attacks). |
 | `figwatch.py SECONDS [EVERY] [TAG]` | passive watch for the party's figures (no writes). |

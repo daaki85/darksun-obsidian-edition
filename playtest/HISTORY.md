@@ -324,6 +324,13 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
 
 ## Fights and the turn tools
 
+- **"The game jumps its clock to the next event" (2026-11-20).** The Paralyzed-ends play read the
+  clock every 50 ms with the whole party held and saw 3326 then 3806: a jump to the next timed
+  event, it seemed, with a `Round 1` of about 50 combatants, most `?`, in the dice log. Watched
+  every 20 ms with the initiative rolls traced (logs/2026-11-20-round-one-oddity.md), the clock went
+  up 60 at a time, a round each, all in 0.1 s: the game plays the rounds, skipping every turn, and
+  the dice log, waiting 0.3 s after an initiative roll, put six rounds' rolls under one heading.
+
 - **A hang in a lasting cloud (fixed).** Moved from the guide: a kill made by DSCLOG's own far
   call of 4E0:61h inside a lasting cloud's round left the screen still and the pointer stuck at
   DS:A133h while the game's clock (DS:11D6h) ran on: `compare -metric AE` of two shots 5 s apart
@@ -354,6 +361,14 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
     and attacked, and the turn passed to the next member in the middle of the sweep.
   - F10 after the Move was all spent gave the points back and no walk: read as a tool's failure
     until the flags showed bit 0 still off (the game's own slip).
+- 2026-11-20 (logs/2026-11-20-f10-after-spell.md), 2.19.0's "not seen" F10 cases played: after a
+  spell (Curse, Reflected Image, Magical Stone after the last step and with movement left) the
+  flags read 0 and the mend stayed out, as meant. A pin put on by `addeffect.py` after the last step
+  got the walk back (one step, then the game ended the turn): the game's pin only clears bit 0,
+  which the last step had cleared already, so the mend couldn't tell; fixed the same day (the
+  member's effects read at F10) and played again. Getting to
+  Ester's next turn, `passuntil.sh 2` passed turns until the party was defeated: the Templar's Hold
+  Person had paralysed her, and a held member gets no turn.
   - A helper pass written before the branch was reorganised was taken out again and put back on
     the integrated base (the signature `vc` to `vd`): the design kept in the log, with its lines,
     made that an hour's work.
@@ -718,3 +733,8 @@ index](logs/README.md), by date.
   kit (`dbxadopt.sh`), the tools finding its memory file by its pid; the pointer's two
   sensitivities; the pictures that draw; the speeds measured on both engines; `dosboxx_memtest.py`
   (logs/2026-11-19-dosbox-x-engine.md).
+- **2026-11-20**: F10 after a spell and after a pin, 2.19.0's last "not seen" item: a cast zeroes
+  the turn flags (the mend stays out); a pin after the last step got the walk back (fixed: the
+  member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
+- **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
+  it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).

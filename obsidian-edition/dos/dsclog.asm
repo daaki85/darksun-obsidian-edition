@@ -638,6 +638,7 @@ record:
         call helpless_of
         mov ah, 0x80
 .held:  mov [es:di+188], ax
+        mov word [es:di+190], 0
         pop ax
         mov cx, [ss:si+6]
         mov [es:di+2], cx
@@ -710,6 +711,22 @@ record:
         pop ds
         sub di, 184             ; back to the start of the entry
 
+        ; Initiative's 0-199 roll at 57520h: the code after the call identifies it.
+        ; Save the caller's DI (combatant), the fight and the round with that roll.
+        cmp word [cs:kind], 0
+        jne .publish
+        cmp dword [es:di+108], 0xC8C06966
+        jne .publish
+        cmp dword [es:di+124], 0xDE8BFBF7
+        jne .publish
+        mov bx, sp
+        mov cx, [ss:bx+2]       ; DI saved below ES
+        mov [es:di+186], cx
+        mov cx, [cs:initiative_fight]
+        mov [es:di+188], cx
+        mov cx, [cs:initiative_round]
+        mov [es:di+190], cx
+.publish:
         mov cx, [cs:seq]        ; publish: entry seq first, then the header's
         inc cx
         mov [es:di], cx
@@ -14300,6 +14317,8 @@ acid_use:
 ; manager can fix up, as it may load that code over the caller's), the creatures in turn by their
 ; number (the table changes as entries go); then the compare made, its flags returned. DS the
 ; game's; all registers kept.
+initiative_fight dw 0
+initiative_round dw 0
 acid_round:
         call whirl_clear                ; (DRAW_SITE: each Whirlwind's middle found again)
         pushad
@@ -14308,6 +14327,8 @@ acid_round:
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
         cmp word [0x55A], 0
         je .marks
+        inc word [cs:initiative_fight]
+        mov word [cs:initiative_round], 0
         mov byte [cs:poison_used], 0    ; (a fight's first round: each Poisoner's weapon poisons again;
                                         ;   up to 2.17 the dice log cleared it, a pass late at times)
         push cx                         ; (a fight's first round: no SWEPT left from another)
@@ -14322,7 +14343,8 @@ acid_round:
         pop es
         pop di
         pop cx
-.marks: mov byte [cs:sun_pass], 0
+.marks: inc word [cs:initiative_round]
+        mov byte [cs:sun_pass], 0
         call burn_pass                  ; each creature's Acid
         mov byte [cs:sun_pass], 1
         call burn_pass                  ; each creature Sunstroke holds: its heat
@@ -17133,6 +17155,7 @@ AMMO_OK1_SITE equ NS_IMAGE + 118  ; 5843Fh: the attack command's target still Ok
 AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
 INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
+F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -17759,6 +17782,32 @@ ammo_okay:
         iret
 ammo_real dw -1                     ; (AMMO_CAP's: the round's attacks before the cut; -1 none)
 ammo_out dw -1                      ; (AMMO_TURN's: the party member whose shots were cut, attacks left)
+; F10_PIN: "or ax,ax / jz 1B872h" (1B86Bh; 4 bytes: the INT, the site's number and a NOP), the F10
+; key's last test (1B83Ah, with a fight on and a party member's turn): AX 1BF9Dh's, 0 if the member
+; stands still, and the jump to the move taken back (the member put on the turn's first square, its
+; points the turn's own), past the "jmp 1BC55h" (the key's end) after it. The jump is made, back to
+; 1B872h, only for AX 0 and the member on its turn (WHOSE_TURN) holding neither Paralyzed (34) nor
+; Stuck (51), the effects that pin (786A9h): a pinned member is left where it is, with its points.
+; Else back to the JMP. AX and every other register kept.
+F10_TO_MOVE equ 0x1B872 - 0x1B86E   ; (the move, less the address after the site's number)
+f10_pin:
+        or ax, ax
+        jnz .out                    ; (walking: the game's end)
+        push bp
+        push cx
+        mov ax, [WHOSE_TURN]
+        mov cl, HELD_EFFECT
+        call ns_has
+        je .kept
+        mov cl, STUCK_EFFECT
+        call ns_has
+        je .kept
+        mov bp, sp                  ; ([BP+4] the INT's IP)
+        add word [bp + 4], F10_TO_MOVE
+.kept:  xor ax, ax
+        pop cx
+        pop bp
+.out:   iret
 held_now:                           ; CF if the attack's target (TARGET) is helpless:
         push ax                     ;   Paralyzed or Out Cold. DS the game's; all kept.
         mov ax, [TARGET]
@@ -20681,6 +20730,7 @@ site_tab:
         site AMMO_OK2_SITE, ammo_okay
         site AMMO_OK3_SITE, ammo_okay
         site INFO_HEAD_SITE, info_head
+        site F10_PIN_SITE, f10_pin
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

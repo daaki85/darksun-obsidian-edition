@@ -131,12 +131,13 @@ From the game's code, and walked in the game square by square
   points back without the leave to walk). It gives back the place and the
   points and nothing else: an attack made stays made. An attack ends the
   member's turn, unless it kills: then the turn goes on, and F10 puts the
-  member back as before.
+  member back as before. F10 doesn't look at effects: a member Paralyzed or
+  Stuck is put back too, with its points.
 
 With the Loader the squares one click reaches are marked on the floor
 ([squares in reach](FEATURES.md#squares-in-reach)), and a move taken back
-after its last step can be walked again ([F10 takes a whole move
-back](FEATURES.md#f10-takes-a-whole-move-back)).
+after its last step can be walked again, and a held or stuck member is left
+where it is ([F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back)).
 
 ## The game's keys
 

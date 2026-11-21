@@ -15,7 +15,8 @@ import re
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-from .gff import GffError, read_gff, replace_retried
+from .gff import GffError, read_gff, write_atomic
+from .savefile import party_chunks
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
@@ -50,7 +51,9 @@ def slot_path(game_dir: str, page: int, slot: int) -> Optional[str]:
 def save_name(data: bytes) -> Optional[str]:
     """The name typed for a save in the game, or None if DATA isn't one."""
     try:
-        text = read_gff(data).get(NAME_CHUNK)
+        chunks = read_gff(data)
+        party_chunks(chunks)
+        text = chunks.get(NAME_CHUNK)
     except (GffError, ValueError, IndexError, KeyError):
         return None
     if text is None:
@@ -74,23 +77,6 @@ def _copies(folder: str) -> Dict[Tuple[int, int], List[str]]:
     return out
 
 
-def _mtime(path: str) -> float:
-    """PATH's time, or 0 if it has gone since it was listed (taken away meanwhile: one pass of sync
-    isn't stopped by it)."""
-    try:
-        return os.path.getmtime(path)
-    except OSError:
-        return 0.0
-
-
-def _same_stamp(copy: str, path: str, stamp: float) -> bool:
-    """COPY has PATH's time (sync gives each copy its save's) and size."""
-    try:
-        return os.path.getmtime(copy) == stamp and os.path.getsize(copy) == os.path.getsize(path)
-    except OSError:
-        return False
-
-
 def _same_bytes(copy: str, data: bytes) -> bool:
     try:
         with open(copy, "rb") as f:
@@ -101,7 +87,7 @@ def _same_bytes(copy: str, data: bytes) -> bool:
 
 def sync(game_dir: str, folder: str = NAMED) -> List[str]:
     """Each of the game's saves copied into FOLDER under its name, where its copy is missing or not
-    the same save (another time and size, or other bytes); a slot's copy under another name (the
+    the same save (even if its timestamp and size match); a slot's copy under another name (the
     slot saved over) is replaced. The copies made."""
     copies = _copies(folder)
     made = []
@@ -110,44 +96,32 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
             path = slot_path(game_dir, page, slot)
             if path is None:
                 continue
-            try:
-                stamp = os.path.getmtime(path)
-            except OSError:
-                continue
             existing = copies.get((page, slot), [])
-            if len(existing) == 1 and _same_stamp(os.path.join(folder, existing[0]), path, stamp):
-                continue  # (its copy, made from it: the same time and size)
             try:
                 with open(path, "rb") as f:
+                    stamp = os.fstat(f.fileno()).st_mtime
                     data = f.read()
             except OSError:
+                continue
+            if len(existing) == 1 and _same_bytes(os.path.join(folder, existing[0]), data):
                 continue
             name = save_name(data)
             if name is None:
                 continue  # (being written, or not a save)
             target = copy_name(page, slot, name)
-            # a copy with an older or newer time is the slot's only if it holds the same bytes: a
-            # backup put back in the slot with its old time kept is copied too (ChatGPT's review)
-            if existing == [target] and _same_bytes(os.path.join(folder, target), data):
-                try:  # (its time taken too, so the next pass needn't read it again)
-                    os.utime(os.path.join(folder, target), (stamp, stamp))
-                except OSError:
-                    pass
-                continue
-            tmp = os.path.join(folder, target + ".tmp")
             try:
                 os.makedirs(folder, exist_ok=True)
-                with open(tmp, "wb") as f:
-                    f.write(data)
-                os.utime(tmp, (stamp, stamp))
-                replace_retried(tmp, os.path.join(folder, target))
+                target_path = os.path.join(folder, target)
+                write_atomic(target_path, data)
+                try:
+                    os.utime(target_path, (stamp, stamp))
+                except OSError:
+                    pass
                 for old in existing:
                     if os.path.normcase(old) != os.path.normcase(target):
                         os.remove(os.path.join(folder, old))
             except OSError:
                 continue
-            finally:
-                _drop(tmp)
             made.append(target)
     return made
 
@@ -193,20 +167,5 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
                 kept, n = f"{base} ({n}).SAV", n + 1
             shutil.copy2(old, os.path.join(folder, kept))
     path = os.path.join(saves_dir(game_dir), slot_file(page, slot))
-    tmp = path + ".tmp"
-    try:
-        with open(tmp, "wb") as f:
-            f.write(data)
-        replace_retried(tmp, path)
-    finally:
-        _drop(tmp)
+    write_atomic(path, data)
     return name
-
-
-def _drop(tmp: str) -> None:
-    """A temporary file not put in place removed, so a failed replace leaves none behind."""
-    if os.path.exists(tmp):
-        try:
-            os.remove(tmp)
-        except OSError:
-            pass

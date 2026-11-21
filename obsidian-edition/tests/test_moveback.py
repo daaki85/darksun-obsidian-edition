@@ -1,5 +1,6 @@
 """F10's move back mended (dsloader/moveback.py): the "can walk" bit set again only after the last
-step and F10, seen in that order in one turn; never after an attack, an effect or the turn's end."""
+step and F10, seen in that order in one turn; never after an attack, an effect or the turn's end,
+nor for a member pinned (Paralyzed or Stuck) at F10."""
 import os
 import struct
 import sys
@@ -22,6 +23,19 @@ class Fight(Game):
     def __init__(self):
         super().__init__(points=120, flags=FULL)
         self.begin(120, *START)
+        self.on_it = []  # the game's table of active effects
+
+    def effects(self):
+        return list(self.on_it)
+
+    def pin(self, effect, owner=None):
+        """An effect landing: the game's own (786A9h) clears "can walk" for 22h and 33h, already
+        clear after the last step."""
+        owner = self.turn if owner is None else owner
+        self.on_it.append(game.Effect(owner, 20, effect))
+        if owner == self.turn and effect in (34, 51):
+            self.points(struct.unpack("<h", self.guest.read((LOAD + moveback.POINTS_SEG) * 16 + self.turn * 2
+                                                            + moveback.POINTS_OFF, 2))[0], self.flags() & ~1)
 
     def begin(self, points, col, row):
         struct.pack_into("<hHH", self.guest.mem, DS * 16 + moveback.START_POINTS, points, row * 16 + 8, col * 16 + 8)
@@ -165,6 +179,34 @@ class MoveBackTests(unittest.TestCase):
         gd.f10()
         self.assertIsNone(self.look())
         self.assertEqual(gd.flags(), SPENT & ~0x40)
+
+    def test_not_for_a_member_pinned_after_the_last_step(self):
+        """Paralyzed or Stuck landing after the last step leaves the flags as the step did (seen in
+        the game: Seneca, Paralyzed, walked a step on F10): no walk, nothing written, then or
+        later in the turn. An effect that doesn't pin, or a pin on someone else, changes nothing."""
+        for effect in (34, 51):
+            gd, mend = Fight(), moveback.MoveBack()
+            mend.update(gd, True)
+            gd.last_step()
+            gd.pending()
+            mend.update(gd, True)
+            gd.pin(effect)
+            self.assertEqual(gd.flags(), SPENT)  # (as the last step left them)
+            mend.update(gd, True)
+            gd.guest.writes.clear()
+            gd.f10()
+            self.assertIsNone(mend.update(gd, True), effect)
+            self.assertIsNone(mend.update(gd, True), effect)
+            self.assertEqual((gd.flags(), gd.guest.writes, gd.pending_now()), (SPENT, [], (3, 7)), effect)
+        for effect, owner in ((15, None), (34, 2), (34, game.PARTY_SIZE + 3)):  # (Detect Invisibility; others held)
+            gd, mend = Fight(), moveback.MoveBack()
+            mend.update(gd, True)
+            gd.last_step()
+            mend.update(gd, True)
+            gd.pin(effect, owner)
+            gd.f10()
+            self.assertIsNotNone(mend.update(gd, True), (effect, owner))
+            self.assertEqual(gd.flags(), FULL)
 
     def test_only_what_f10_does(self):
         """The points back but not the turn's own, the member not on the turn's square, or still

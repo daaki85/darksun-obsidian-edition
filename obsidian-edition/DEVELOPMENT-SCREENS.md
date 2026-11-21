@@ -92,7 +92,9 @@ words) and loads back. The game's scripts read and set numbers 0-136 only
 save in `playtest/saves`. Every quarter second, not while a game is loading
 (`_journal_sync`, with the party's watches), `Journal.sync` reads the id:
 
-- the one last written: nothing to do, or the chain's new head is written;
+- the one last written: the chain's new entries are flushed to disk before their
+  head is written into the game's numbers. A refused write leaves the last head
+  in memory and is retried;
 - another, read twice running (`STEADY`: a game being loaded may show one for
   a moment): a game was loaded or begun, and its chain is shown (`_follow`,
   `changed` counted so the tab draws it again). An id no entry has (the file
@@ -101,13 +103,17 @@ save in `playtest/saves`. Every quarter second, not while a game is loading
 - none (the pointer null, as in the arena outside a script's run): nothing,
   and entries added meanwhile have ids the game doesn't hold yet. A save made
   then holds the older id; when it is loaded, and that id is on the chain shown
-  till then, the entries after it whose clock is no later than the loaded
-  game's are kept as its own.
+  till then, entries after it can be recovered if their clock is strictly
+  earlier than the loaded game's. An entry from the same game second can
+  belong to play after the save was made.
 
 Before the first id is read (the Loader just started), entries wait (up to
 500) and join the game's chain when it is known; until then the tab shows the
-chain last added to. `DiceLog.detach` (the game gone or started again) has
-the id looked at afresh (`reset`). At the title the numbers read zero, an
+chain last added to. On the first stable read after attachment, the journal
+reads from disk again before assigning IDs, under the game's lock. This
+accounts for entries another Loader wrote while the window was waiting.
+`DiceLog.detach` flushes pending entries and resets that first read.
+At the title the numbers read zero, an
 empty journal; the game's own comes back when its save is loaded, and nothing
 is written to the file until something is said.
 
@@ -760,9 +766,10 @@ When the game reads the key (not a peek: `MK_READ`), DSCLOG counts it in
 (`loot_mode`, +1850: 0 T, everything; 1 Shift+T, all but plain weapons). The
 dice log's `_loot_pass` sees the count change and, once the window is shut,
 `dsloader/loot.py` moves each item into the backpack of the first member up and
-about with room (the game's own list links: `_relink`), keeps what doesn't fit in the
-container, and writes a line of what each took. Other keys, and T with no
-window open, pass as they were.
+about with room, keeps what doesn't fit in the container, and writes a line of what
+each took. The Loader pauses the game and prepares the destination backpacks before
+relinking the container. If a write fails, it restores the saved bytes in reverse
+order before the game resumes. Other keys, and T with no window open, pass as they were.
 
 ## Selling plain gear: S
 
@@ -1043,8 +1050,8 @@ R and the PSP's map: [log](https://github.com/daaki85/darksun-obsidian-edition/b
 
 ([In the features page](FEATURES.md#f10-takes-a-whole-move-back).)
 
-`dsloader/moveback.py`, the Loader's alone (`DiceLog._move_back_pass`, every pass; setting
-`move_back`). The game's F10 (DSUN.EXE 1B83Ah, key 4400h of the table at 1BC5Bh) acts with a
+`dsloader/moveback.py`, the Loader's (`DiceLog._move_back_pass`, every pass; setting
+`move_back`), and DSCLOG's `F10_PIN` (always on), which leaves a pinned member where it is. The game's F10 (DSUN.EXE 1B83Ah, key 4400h of the table at 1BC5Bh) acts with a
 fight on (the word at 377Eh:0019h neither 0 nor 1), a party member's turn (`DS:4979h` under 4) and
 the member standing still (1BF9Dh: bit 20h of its map record's first byte, `DS:6694h` + member x
 20h): it places the member on the turn's first square (`DS:4968h` x, `DS:4966h` y) and writes the
@@ -1063,6 +1070,31 @@ the turn's first square and standing still. It also forgets the walk the points 
 3972h:0377h + thing x 1Ch, 0 at 3972h:08AAh + thing x 13h), which the game would otherwise go on
 with from the square F10 put the member on.
 
+**Never for a member pinned at F10**: the pin (786A9h-786CBh, in the routine that gives an effect)
+clears bit 0 when effect 22h or 33h lands (34 Paralyzed, 51 Stuck; nothing else there touches bit
+0, and 591BCh and 786CBh are the only `and word [bx+1D5h], 0FFFEh` in DSUN.EXE) and leaves the rest
+of the flags and the points alone. One landing after the last step therefore leaves the flags as
+the step did, and the order alone took it for the last step: the first version gave such a member
+its walk (seen in the game: Seneca, Paralyzed after her last step, walked a step on F10 before the
+game ended her turn). So at F10 the member's effects are read (`GameData.effects()`, owner its
+combatant): with 34 or 51 among them nothing is written, no line is said, and the turn's sequence is
+forgotten. Since DSCLOG's `F10_PIN` (below) the game's F10 no longer moves such a member, so the
+mend never sees the points come back for it; the check stays as a second guard.
+
+**A pinned member isn't moved (DSCLOG's `F10_PIN`).** The game's F10 doesn't look at effects: a
+member Paralyzed or Stuck, after its last step or with movement left, was put back on the turn's
+first square with the turn's points (seen in the game: Lex, Paralyzed by a memory edit after his
+last step, back on his first square with 120 points). The site `F10_PIN` (`NS_IMAGE + 122`,
+gamepatch `f10_pin`) replaces F10's "or ax,ax / jz 1B872h" at 1B86Bh, the test of 1BF9Dh's answer
+(0: standing still) and the jump to the move, with INT 98h, the site's number and a NOP; the "jmp
+1BC55h" after it, the key's end, is the game's. DSCLOG returns past that JMP, to 1B872h (the IRET's
+IP 4 on: `F10_TO_MOVE`), only for AX 0 and the member on its turn (`WHOSE_TURN`, DS:4979h, its own
+combatant number) holding neither effect 34 nor 51 in the game's table (`ns_has`, as `held_hit`
+reads Paralyzed); else it returns to the JMP and F10 does nothing. AX and every other register are
+kept; nothing after either way reads the flags (the IRET's own come back). 32 bytes of the segment.
+Nothing else about F10 changes: a member standing still and not pinned is moved as the game does,
+and a pin on anyone else counts for nothing.
+
 **Never after an attack**: either of two bytes of the creature's ends it for the turn, the swings
 made (37BDh:0181h) or the attack commands given (37BDh:01ABh). The first alone is not enough: an
 attack ends the member's turn (the flags zeroed), but one that kills leaves the turn, with the
@@ -1070,10 +1102,24 @@ swings' count back at 0 and the commands' at 1, and F10 then still puts the memb
 points. The first version of the mend read only the swings' count and gave the walk there (seen
 in the game, and mended before anything was committed as finished).
 
-Tests: `tests/test_moveback.py`. Verified:
+Tests: `tests/test_moveback.py`; `tests/test_f10pin.py` runs `F10_PIN` in Unicorn (Paralyzed or Stuck on
+the member: no move; neither, or a pin on another combatant: the game's). Verified:
 [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-modernisation-features.md)
 (F10 with movement left: the game's, nothing written; after the last step: walks again; after a
-kill made on the last step's square: put back by the game, no walk).
+kill made on the last step's square: put back by the game, no walk);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-after-spell.md)
+(after a spell: a cast zeroes the flags, nothing written, Curse, Reflected Image and Magical Stone,
+after the last step and with movement left; Paralyzed by a memory edit after the last step: the
+first version gave the walk, the mended one none, and a plain last step still walks again);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-held-stays.md)
+(`F10_PIN`: Paralyzed after the last step, Stuck after the last step and Paralyzed with movement
+left, every foe Paralyzed too: F10 left the member on its square with its points, no Loader line;
+the pin taken off, F10 the game's again, after the last step with the walk given back);
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-20-f10-real-pin.md)
+(a real pin, no memory edit to it: Stuck by the game's Web on the member's own walk, with movement
+left and after the last step, and at a Stuck turn's start; Paralyzed by the member's own Hold
+Person turned back by Spell Turning, before and after a walk: F10 left the member on its square
+with its points every time, no Loader line; the pin taken off, F10 the game's again).
 
 ## Showing what can be used: Alt
 
@@ -1360,11 +1406,11 @@ Saves under their names (`dsloader/namedsaves.py`): every few seconds the
 Loader looks at the 40 slots' files of pages 1 to 4 (not the QUICK page's: its slots are written
 over in turn, each with the day and time in its name, so a copy of each would only come and go;
 `cloud_saves` before the game folder, as
-GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
+GOG's DOSBox mounts it over the folder), and copies a save whose bytes differ to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
 slot's copy under another name is removed. **Put a save in a slot...** copies
-a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
+a file with valid party tables back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
 the slot's save first kept as `Replaced - Page P slot NN - NAME.SAV` (which
 `sync` doesn't match, so never removes).
 
@@ -1438,8 +1484,11 @@ save after an F9 window had gone to `SAVQ01.SAV` before this.
 **Autosave.** The Loader asks for one when the region (DS:117Ch) has changed, or a fight has
 ended, and for 4 seconds since the map's loop has run with the game on the map (DS:0BC9h 1) and
 no fight; not while a game is loading (the dice log's `_party_check`: the party changed or the
-clock went back) and, after a fight, not within a minute of the last autosave. Slots 1-5 are the
-quick saves', 6-10 the autosaves': each kind takes its first empty slot, then its oldest file.
+clock went back) and, after a fight, not within a minute of the last autosave. The Loader keeps
+observing the area and fight while a keypress or an in-progress request has priority. A due
+autosave waits for a free request slot and the usual map conditions. The dice log's load signal
+resets the area and fight timers. Slots 1-5 hold quick saves and slots 6-10 hold autosaves. Each
+kind takes its first empty slot, then its oldest file.
 
 **The disk.** The game's save shows "Disk Space Low !!!" in a box that waits for a click when
 DOS reports under about 2.7 MB free. DOSBox always reports 262 MB for a mounted folder

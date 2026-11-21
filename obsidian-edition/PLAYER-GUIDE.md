@@ -1112,7 +1112,8 @@ walk is over.
   too ([F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back)).
   *Without the mod:* once the movement is all spent F10 puts the character
   back but it can't walk again that turn. An attack is never taken back, and
-  after one F10 gives no walk.
+  after one F10 gives no walk. A character held or stuck (Paralyzed, Stuck)
+  isn't moved by F10 at all *(without the mod: put back on its first square)*.
 
 The detail: [how the game works](HOW-THE-GAME-WORKS.md#moving-in-a-fight).
 

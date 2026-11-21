@@ -4,11 +4,13 @@ import os
 import struct
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, loot, ring  # noqa: E402
+from dsloader import game, itemgate, loot, ring  # noqa: E402
+from dsloader.process import ProcessError  # noqa: E402
 from test_dicelog import CREATURES, ITEM_TYPES, ITEMS  # noqa: E402
 from test_pickpocket import BOOTS, CLUB, GUARD, KEY, SWORD, THINGS, PickTests  # noqa: E402
 
@@ -97,6 +99,47 @@ class LootTests(unittest.TestCase):
         self.assertFalse(took)
         self.assertEqual(self.contents(), [CLUB, SWORD, KEY, BOOTS])
         self.assertEqual(lines, ["The party's backpacks are full: nothing taken."])
+
+    def test_bulk_loot_restores_each_write_after_a_partial_failure(self):
+        guest = self.gd.guest
+        old = bytes(self.m)
+        with patch.object(guest, "write", wraps=guest.write) as writes:
+            self.assertTrue(loot.take(self.gd, BODY, loot.ALL)[1])
+            write_count = writes.call_count
+
+        for fail_at in range(1, write_count + 1):
+            with self.subTest(write=fail_at):
+                self.m[:] = old
+                original_write = guest.write
+                calls = 0
+
+                def fail_once(at, data):
+                    nonlocal calls
+                    calls += 1
+                    if calls == fail_at:
+                        original_write(at, data[:1])
+                        raise ProcessError("simulated partial write")
+                    original_write(at, data)
+
+                with patch.object(guest, "write", side_effect=fail_once):
+                    with self.assertRaisesRegex(ProcessError, "simulated partial write"):
+                        loot.take(self.gd, BODY, loot.ALL)
+                self.assertTrue(self.m == old)
+
+        self.assertTrue(loot.take(self.gd, BODY, loot.ALL)[1])
+        self.assertIsNone(self.contents())
+
+    def test_bulk_loot_leaves_items_when_the_game_cannot_be_paused(self):
+        gate = itemgate.ItemGate(self.gd, wait=0)
+        with patch.object(self.gd.guest, "item_gate", gate, create=True):
+            gate.begin()
+            try:
+                with self.assertRaisesRegex(ValueError, "Could not pause"):
+                    loot.take(self.gd, BODY, loot.ALL)
+            finally:
+                gate.end()
+        self.assertEqual(self.contents(), [CLUB, SWORD, KEY, BOOTS])
+        self.assertTrue(set(self.dags()).isdisjoint(self.contents()))
 
     def test_listed(self):
         self.assertEqual(loot._listed(["Grapes", "Guava", "Guava", "Bloodwrath", "Guava"]),

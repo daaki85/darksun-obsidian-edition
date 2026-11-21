@@ -24,7 +24,7 @@ may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
 where the changes came from, in brackets.
 
 Releases, newest first (2.12.0 and older in the archive):
-[2.19.0](#pull-request-119-merged-2026-11-19) (#119), [2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
+[2.19.2](#pull-request-127-merged-2026-11-20) (#127), [2.19.1](#pull-request-124-merged-2026-11-20) (#124), [2.19.0](#pull-request-119-merged-2026-11-19) (#119), [2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
 (#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
 (#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
@@ -84,6 +84,91 @@ Releases, newest first (2.12.0 and older in the archive):
   `dosboxx_memtest.py`, a check without the game that a second program can read and write
   DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
   `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`.
+
+## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
+
+No release: these fixes come with the next one.
+
+**Fixed**
+- The Loader stops at startup and names the file if it cannot remove a stale game data override.
+  This prevents DOSBox and Dark Sun Recompiled from loading incompatible files together (#137).
+- The `dicelog` command stops its stats worker and closes its process handle before reconnecting
+  after DOSBox exits. It also releases those resources when the command stops or setup fails (#139).
+- Autosaves for a new area or a finished fight wait for any quick-save or quick-load request to
+  clear. When the Loader detects a loaded save, it drops any autosave that was waiting (#138).
+- The journal commits entries before giving their ID to the game. A Loader window opened
+  earlier refreshes its journal before recording, and loading an older save keeps later entries
+  with the same game time on their original branch (#135).
+- Named Saves checks the party records before restoring a file and refreshes changed saves
+  even when their file size and timestamp match (#135).
+- Bulk loot (T and Shift+T) restores the container and backpack lists when a transfer write fails.
+  It leaves the items in place if it cannot pause the game (#136).
+- The dice log reports a timed spell reapplication when the caster and effect handle are reused
+  and the scheduled expiration changes (#141).
+
+**Docs**
+- The upgrade instructions include the `Journal` folder and ask players to verify their history
+  before deleting the old Loader folder (#135).
+
+**Dev**
+- A play log: [pull requests #136, #140 and #141 in the game](playtest/logs/2026-11-20-open-prs-checks.md),
+  with #140's round count fixed and played again (#142).
+
+## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
+
+No release: the dice log's fix below comes with the next one.
+
+**Fixed: the dice log**
+- DSCLOG records the fight, round and combatant with each initiative tie-break, so the log counts
+  the rounds that pass between its looks even when creatures out of the fight have old tie-breaks
+  in the game's table, and a long burst of skipped rounds that overruns the log's ring is counted
+  from the last round shown (`Rounds 4-383 go by at once`, not `232-383`). The in-game panel keeps
+  the skipped rounds' marker at every detail level and under the combat filters (#140).
+
+## Pull request #133 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/133))
+
+No release: the dice log's two fixes below come with the next one (2.19.2 doesn't have them).
+
+**Fixed: the dice log**
+- An effect put on someone who has it already (Rainbow Pattern or a second Hold Person on a held
+  creature) takes the old one's place in the game: the log said `Paralyzed ends on Y` beside the new
+  caster's line though the hold went on, or nothing at all when the caster stayed the same. It now
+  says `..., in place of the one it had` and no end (records told apart by spell and handle too) (#131).
+- With no one in a fight able to act (the whole party Paralyzed and the foes held) the game plays
+  the rounds through in a blink. The log put them all under one `Round 1` heading listing everyone
+  once a round, most of them as `?`, and took the fight for a new one (a dance rolled again,
+  the foes' ACs forgotten). It now says `Rounds 3-7 go by at once: no one in the fight can act`
+  and goes on with the right round's order and number (`Round 8: ...`); the combat log's panel
+  and its header follow (#132).
+
+**Dev**
+- A play log: [the "Paralyzed ends on Templar" of the F10 real-pin play](playtest/logs/2026-11-20-paralyzed-ends-oddity.md).
+- A play log: [the "Round 1" at the whole party's hold](playtest/logs/2026-11-20-round-one-oddity.md).
+
+## Pull request #127 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/127))
+
+Obsidian Edition 2.19.2 ([release notes](release-notes/v2.19.2.md)).
+
+**Fixed**
+
+- **F10 moved a held member**: the game's F10 put a Paralyzed or Stuck party member back on its
+  turn's first square, with its points. It now does nothing for such a member (#126).
+
+## Pull request #124 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/124))
+
+Obsidian Edition 2.19.1 ([release notes](release-notes/v2.19.1.md)).
+
+**Fixed**
+
+- **F10 gave a held member its walk back**: a member Paralyzed or Stuck after its last step got
+  the walk back on F10 (and took a step before the game ended its turn), since the game's pin
+  leaves the turn's flags as the last step did. The Loader now gives no walk to a member with
+  either effect on it (#123).
+
+**Docs**
+
+- 2.19.0's release notes: the saved-games section's last bullet split and its repeat removed (#122).
+- The first code and memory audit's report archived in `reports/archive/` (#121).
 
 ## Pull request #119 ([merged 2026-11-19](https://github.com/daaki85/darksun-obsidian-edition/pull/119))
 

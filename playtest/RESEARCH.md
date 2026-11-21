@@ -250,6 +250,15 @@ raised before stopping.
   overlay is loaded). Death does not take effects off a member.
 - **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
   `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
+- **Where a pin comes from in the code** (logs/2026-11-20-f10-real-pin.md): every effect put on
+  goes through the far routine at DSUN.EXE 78480h (the effects' overlay; the immunities first, by
+  a table of ids at 647h in its segment), and for 34 (Paralyzed) or 51 (Stuck) it runs
+  786A9h-786CBh, which clears bit 0 of the creature's turn flags (37BDh:01D5h): whatever gives the
+  effect, on whoever's turn. 598:20 is "has effect" and 598:4D "take it off" (59D20h, the fight's
+  end, takes Paralyzed off the party that way). The only other `and ...,0FFFEh` on the flags,
+  591BCh, is the walk's (under 10 points left). In play: a Web pins on the step into it, on the
+  walker's turn; Hold Person turned back by Spell Turning pins the caster on its own turn; Rainbow
+  Pattern's save comes at each creature's turn start, and a Paralyzed member's turn is skipped.
 
 ### Spells and powers in memory
 

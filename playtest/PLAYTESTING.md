@@ -850,6 +850,12 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   BIOS's Caps Lock flag (0:0417h 40h) for a test (logs/2026-11-11-caps-lock-loot.md). **T shuts the
   window itself**: no Escape after it (with nothing open that brings EXIT: SAVE GAME?; CANCEL
   140,115) (logs/2026-11-18-audit-fixes-1.md).
+- **Bulk loot to full packs** (logs/2026-11-20-open-prs-checks.md): from `fountain-user` after
+  `fightout.sh`, the five guard bodies by the fountain (`bodyitems.py`'s screen places, a slow press
+  with the eye at the place +2 in y) fill all four packs (12 cells each, `pickpocket.BACKPACK`):
+  the third body ends with `No room in the backpacks for: ...`, the rest `The party's backpacks are
+  full: nothing taken.` `carried.py NAME` shows each pack. A guard's purse-like thing (type 60,
+  name number 9999) is named `item 9999` in the loot lines.
 - **Selling with S** (logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button Talk
   at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member on
   show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
@@ -920,6 +926,34 @@ of its own beside the shared one**: its own display and work folder, never `:55`
      dice log saw the last step (its line "F10: NAME's move taken back (can walk again)"), so a
      dice log restarted in the middle of a turn mends nothing that turn. `squarewalk.py` with
      POINTS puts the bit back itself.
+   - **F10 after a spell** (logs/2026-11-20-f10-after-spell.md): a cast zeroes the whole flags
+     word (37BD:01D5h), so the mend stays out. Most casts end the turn (F10 is then the next
+     member's); Magical Stone keeps it till the third throw, and F10 then puts the caster back with
+     its points and the flags still 0 (no walk, no Loader line). **A pin put on after the last step**
+     (`addeffect.py N 34` there, then F10) got the walk back from 2.19.0's mend, one step before the
+     game ended the turn (the game's own pin, 786CBh, only clears bit 0, already clear); since the
+     fix the mend reads the member's effects at F10 and gives nothing with 34 or 51 (Stuck) on it:
+     no line, flags as the last step left them. **Since DSCLOG's `F10_PIN`
+     (logs/2026-11-20-f10-held-stays.md) the game's F10 doesn't move a member with 34 or 51 on it
+     at all**: it stays on its square with its points (0 after the last step), f10watch shows no
+     change; take the pin off (`addeffect.py del N 34`) and F10 is the game's again (and the mend
+     gives the walk, its sequence kept through the pin). An `addeffect.py` pin with movement left
+     leaves bit 0 set (the game's own pin would clear it); the site reads the effect table. Follow a
+     turn with `f10watch.py MEMBER SECONDS` in the background: each change of the flags, points,
+     square and the turn's start words, with its time.
+   - **A real pin for an F10 test** (logs/2026-11-20-f10-real-pin.md; no memory edit to the pin):
+     from `fountain-user` with the foes held and `spellsetup.py 0=9 2=9`, Lex's Web (wizard level 2,
+     fourth icon 230,59) at the Templar (240,124) leaves a web east of the party; a member walked into
+     it saves on the step into a web square (`saving throw vs Web (spell)`), and a failure stops the
+     walk there, Stuck, the END menu up, the turn its own (with movement left, or with 0 after a last
+     step into it: aim the walk to spend its points on that step, and try it: the path cost more than
+     worked out). F10 then does nothing. A Stuck member's later turns open with the END menu, 0
+     points and the turn's start words 0 and its own square. **Paralyzed with the turn kept**: Spell
+     Turning on the target foe (`foeset.py 25 eff=44:48`, the Templar; held foes turn too), then the
+     member's own Hold Person at it (Ester, priest level 2, 176,79): `Templar gives Paralyzed to
+     Ester`, the Hold Person pointer stays up and the turn with it (flags 0); walk first for a case
+     the game's own F10 would have moved. A Paralyzed member's turn otherwise never comes (Hold
+     Person, and Rainbow Pattern's save at each turn's start: "X's turn" logged, gone in 150 ms).
    - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
      1, the flags as they were, the turn still its own; a second swing of the same command can
      end it all the same: Jenna's did, Ester's didn't). For "walked out, killed, F10": a foe on
@@ -959,6 +993,15 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    | `passn.sh N` | passes N party turns by the END menu, dragging the view to each member | a party spread out | as passuntil.sh |
    | `fightout.sh` | finishes a story fight (foes at 1 HP, E for a member with no Move) | ending a fight the scripts watch | not for a fight whose foes must live (but `KEEP_HP=1`: their HP kept; `HEAL=1` heals the party each pass) |
 
+   **A member held by a foe's Hold Person has no turn at all** (Lex in `fountain-user`, 2026-11-20:
+   no "Lex's turn" for two rounds; not the END menu below): `passuntil.sh N` for that member passes
+   turns until the party is defeated; check `effects.py` for 34 on it first, and paralyze the foes
+   before passing turns. Rainbow Pattern (it can be aimed at bare floor) does the same: each
+   creature in it saves at its turn's start, and a failure skips that turn at once (no save while
+   walking in it).
+   **The combat log panel covers the party's figures** when they stand low on the view: a click
+   at `memberpos.py`'s place then lands on the panel and `passn.sh` presses E with no END menu (the
+   Effects screen comes up; Escape closes it). `panel.sh hide` first (2026-11-20).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
    Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
@@ -998,6 +1041,28 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   Paralyzed on each foe that shoots; then the turns come clean. Paralyzed foes also fail every save
   (handy for a failed save on demand). From `fountain-user` with every foe held, `passuntil.sh 3`
   gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the time.
+- **A memory-edit hold lasts only until a real one reaches the foe** (logs/2026-11-20-paralyzed-ends-oddity.md): an effect put on a creature that has it already takes the
+  old record's place, with the new spell's time. Rainbow Pattern's area (no save line: a held foe fails
+  without a roll) or a Hold Person on a `foeset.py`-held foe gives it a timer, and it acts again when
+  that runs out (the dice log: `..., in place of the one it had`, later `Paralyzed ends on`). Keep holds
+  and areas off foes that must stay held, or run `foeset.py C eff=34` again after. **With the whole
+  party Paralyzed and the foes held, the game plays the rounds through in a blink**
+  (logs/2026-11-20-round-one-oddity.md): no jump, but one round after another, 60 s each on the
+  clock, every turn skipped, a tenth of a second for six rounds, until a hold ends; the dice log
+  says `Rounds 4-5 go by at once: no one in the fight can act`. A watcher sampling every 50 ms
+  sees only the clock leap. **Getting the whole party held for real**: Lex's Rainbow Pattern
+  (`spellsetup.py 0=9 2=9 50`, wizard level 4, the only icon 176,59) at the floor among the party
+  (158,148), a second one the next round if he is still free, then `passn.sh 1` a pass at a time
+  while a count of the party's 34 records (a few lines over `live.py`) is under 4: each member saves
+  at its turn's start; each of three loads had all four held within four rounds (the pattern lasts
+  2d3 rounds: once it is gone, load again).
+  **Untimed holds on both sides (`addeffect.py N 34` on the party, `foeset.py C eff=34` on the
+  foes) never end by themselves**: the blink then runs at about 190 rounds a second until a hold is
+  taken off by hand, the dice log's ring overruns ("N rolls came too fast to record"), and the
+  game's turn (`state.py`'s `turn`, `gd.whose_turn`) stays the same through it, so nothing waiting
+  for the turn to change fires (logs/2026-11-20-open-prs-checks.md). For a short burst take one
+  member's hold off within a second of passing the last free turn. Since #140 the helper keeps the
+  fight and round it is in: `symread.py initiative_fight initiative_round` (the first word of each).
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had
@@ -1194,9 +1259,19 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
   the party's levels in memory first (6 and up only take damage). Flaming Sphere cast at a foe two
   squares off struck the caster; farther off it took a slot and logged nothing.
+- **Without `spellsetup.py`** (logs/2026-11-20-f10-after-spell.md): Ester's level-1 page is Bless
+  (176,59), Curse (194), Cure Light Wounds (212), Cause Light Wounds (230), Entangle (248);
+  Invisibility to Undead (176,79), Protection from Evil (194), Remove Fear (212), Cause Fear (230).
+  Lex's: Shocking Grasp (176,59), Erdlu Claw (194), Reflected Image (212, a self spell: cast at the
+  icon's click), Friends (230). Hover an icon and shoot to read its name; the first hover after U
+  can show nothing.
 - **Ester's pages in `fountain-user`** (after `spellsetup.py 2=9`; logs/2026-11-19-final-audit-fixes.md):
   level 1's second row, second icon (194,79) is Magical Stone; LEVEL (196,171) to level 2, whose
   second row's first icon (176,79) is Hold Person (a spell save on a free target).
+- **Haste on the whole party** (logs/2026-11-20-open-prs-checks.md): `spellsetup.py 0=9 29`, on
+  Lex's turn U, LEVEL to page 3, the icon (176,59), a click on a member: one cast hastes all four,
+  each with the Loader's system shock roll and a year. Cast again the next turn, the dice log (since
+  #141) says `Lex gives Hasted to ..., in place of the ones they had`, with no ageing.
 - **Several casts a slot**: Magical Stone gives three throws a casting (the stone pointer comes
   back; the turn ends after the third). With the manual's spells
   (logs/2026-11-09-turn-undead-meteors.md), Minute Meteors gives five casts a slot (the pointer
