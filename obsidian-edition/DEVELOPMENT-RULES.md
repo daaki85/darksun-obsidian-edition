@@ -916,9 +916,19 @@ at 370h:0B44h; known, YOU ALREADY KNOW THIS SPELL (99A86h); else the bit set, th
 spell of each level, a row of 11 for wizard spells then priest (`ravlog.SPELL_STARTS`; SL's 7-byte
 table isn't there). DSCLOG2's `SCROLL_LEARN` (`INT EDh` for the "or ax,ax" at 99A2Fh), `LEARN_SAID`
 (`INT EEh`, 99A7Fh) and `LEARN_REFUSED` (`INT EFh`, 99A86h) do SL's for a wizard (class 11 or the
-sequel's 18) with `RULE_HI_INT`, the d100 from the game's seed, the try told at +272 as DSCLOG's. The
-level-up's spell list (SL's `PROBE_PICK_LIST`, `PICK_ANY`) isn't ported yet. Played: [the test
-log](../playtest/logs/2026-11-21-ravager-int.md).
+sequel's 18) with `RULE_HI_INT`, the d100 from the game's seed, the try told at +272 as DSCLOG's.
+
+At a level up the sequel's preserver (class 11 alone: 957ABh calls 688h:66h, 93160h, only for a level
+never reached before, the sheet's +39h) asks its list routine (94C7Ch: the unknown spells of one level,
+at 370h:7) at each level from its class level down, and opens CHOOSE A SPELL (93378h), which shows one
+spell level a page (DS:43ECh, LEVEL pages through them) from the highest it casts (698h:39h). DSCLOG2's
+`PICK_ANY` (`INT F0h`, "mov [bp-2],ax / or ax,ax" at 9317Fh, SL's 85580h) gives the highest level it
+casts with room (a spell not known and fewer known than INT's most), or 0 and no window; `PICK_PAGE`
+(`INT F2h`, "mov [43ECh],al" at 93487h, the sequel's own need) opens the window on that level;
+`PICK_LIST` (`INT F1h`, "mov di,ax" at 93246h, SL's 8563Fh) empties a page whose level is full. (The
+game's own count from the class level past spell level 10 reads the priest rows: with the rule it
+stops at the highest spell level.) Played: [scrolls](../playtest/logs/2026-11-21-ravager-int.md), [the
+level up](../playtest/logs/2026-11-21-ravager-int-levelup.md).
 
 ## Spells saved against with the spell save
 

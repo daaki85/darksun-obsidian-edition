@@ -76,7 +76,8 @@ VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, 
 VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
 VEC_REACH, VEC_RANGER_LEVEL, VEC_ENL_ROLL, VEC_ENL_SITE = 0xE9, 0xEA, 0xEB, 0xEC
-VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0xED, 0xEE, 0xEF  # (DSCLOG2's preservers' INT)  # (DSCLOG2's REACH: a polearm's two squares)
+VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0xED, 0xEE, 0xEF  # (DSCLOG2's preservers' INT)
+VEC_PICK_ANY, VEC_PICK_LIST, VEC_PICK_PAGE = 0xF0, 0xF1, 0xF2  # (DSCLOG2's PICK_ANY, PICK_LIST, PICK_PAGE: preservers' INT at a level up)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
 # EFFECT_RECORDS), and the empty one the stinkpots' Nauseated takes (DSCLOG2's STINK_EFFECT)
 EFFECT_RECORDS_FILE, NAUSEATED = 0x3C870 + 0x5200, 12
@@ -271,6 +272,13 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("scroll_learn", 0x99A2F, bytes.fromhex("0bc0"), gamepatch._interrupt(VEC_SCROLL_LEARN, 2)),
     Patch("learn_said", 0x99A7F, bytes.fromhex("1e68972e"), gamepatch._interrupt(VEC_LEARN_SAID, 4)),
     Patch("learn_refused", 0x99A86, bytes.fromhex("1e68ab2e"), gamepatch._interrupt(VEC_LEARN_REFUSED, 4)),
+    # ... and at a level up (SL's pick_any and pick_list): DSCLOG2's PICK_ANY where the preserver's level up
+    # takes its level (9317Fh: "mov [bp-2],ax / or ax,ax", SL's 85580h) and PICK_LIST after CHOOSE A
+    # SPELL's page is listed (93246h: "mov di,ax", SL's 8563Fh); and PICK_PAGE where the window takes its
+    # first page's level (93487h: "mov [43ECh],al"), the highest with room.
+    Patch("pick_any", 0x9317F, bytes.fromhex("8946fe0bc0"), gamepatch._interrupt(VEC_PICK_ANY, 5)),
+    Patch("pick_list", 0x93246, bytes.fromhex("8bf8"), gamepatch._interrupt(VEC_PICK_LIST, 2)),
+    Patch("pick_page", 0x93487, bytes.fromhex("a2ec43"), gamepatch._interrupt(VEC_PICK_PAGE, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

@@ -70,6 +70,9 @@ VEC_ENL_SITE  equ 0xEC  ; ENL_SITE (863E7h: Enlarge's x(100 + 10 a level)%: the 
 VEC_SCROLL_LEARN equ 0xED ; SCROLL_LEARN (99A2Fh: whether a scroll's spell is known: INT's chance and most)
 VEC_LEARN_SAID equ 0xEE  ; LEARN_SAID (99A7Fh: YOU LEARN THE SPELL: a failed try taken back)
 VEC_LEARN_REFUSED equ 0xEF ; LEARN_REFUSED (99A86h: YOU ALREADY KNOW THIS SPELL: a full level's message)
+VEC_PICK_ANY  equ 0xF0  ; PICK_ANY (9317Fh: a preserver's level up: CHOOSE A SPELL only with a spell its INT has room for)
+VEC_PICK_PAGE equ 0xF2  ; PICK_PAGE (93487h: CHOOSE A SPELL's first page: the highest level with room)
+VEC_PICK_LIST equ 0xF1  ; PICK_LIST (93246h: CHOOSE A SPELL's page: none of a level the reader's INT has full)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -2531,6 +2534,211 @@ learn_refused:
 .game:  push ds
         push 0x2EAB
         jmp learn_back
+; PICK_ANY: INT VEC_PICK_ANY replaces "mov [bp-2],ax / or ax,ax" (9317Fh; 5 bytes: INT + 3 NOPs) in the
+; routine a preserver's level up calls (688h:66h, 93160h; SI the member, AX its preserver level), which
+; goes on (the JG after) to ask the game's list (94C7Ch) for a spell to learn at each spell level from
+; [BP-2] down, and opens CHOOSE A SPELL (93378h) if one is found. With the rule: [BP-2] and AX the
+; highest spell level it casts (as 698h:39h works it out: (level + 1) / 2 below 10th, level / 2 from it,
+; WIZ_LEVELS the most; the game's own counted from the class level, past the wizard spells' rows), or 0
+; (the window not opened) when no level up to it has a spell it doesn't know and room for one more
+; (PICK_ROOM). Flags as "or ax,ax".
+pick_any:
+        mov [bp - 2], ax
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .flags
+        cmp ax, 0
+        jle .flags
+        cmp si, 3
+        ja .flags
+        push cx
+        cmp ax, 10
+        jae .half
+        inc ax
+.half:  shr ax, 1
+        cmp ax, WIZ_LEVELS
+        jbe .top
+        mov ax, WIZ_LEVELS
+.top:   mov cl, al
+.level: call pick_room
+        jc .found
+        dec cl
+        jnz .level
+.found: movzx ax, cl                        ; (0: none)
+        mov [bp - 2], ax
+        pop cx
+        inc word [cs:pick_asks]
+.flags: push bp
+        mov bp, sp
+        push cx
+        or ax, ax
+        pushf
+        pop cx
+        and cx, 0x08D5                      ; (OF, SF, ZF, AF, PF, CF)
+        and word [bp + 6], ~0x08D5
+        or [bp + 6], cx
+        pop cx
+        pop bp
+        iret
+; PICK_LIST: INT VEC_PICK_LIST replaces "mov di,ax" (93246h; 2 bytes) in CHOOSE A SPELL's page, after
+; the game's list (94C7Ch) put the spells of the page's level (DS:[43ECh]) the reader (USE_WHO's) doesn't
+; know at 370h:7: with the rule, none of them (DI 0) when the reader knows its INT's most of that level.
+PICK_SHOWN equ 0x43EC
+pick_list:
+        mov di, ax
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .ret
+        push ax
+        push cx
+        push si
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov si, [es:USE_WHO_OFF]
+        cmp si, 3
+        ja .out
+        mov cl, [PICK_SHOWN]
+        call pick_full
+        jnc .out
+        xor di, di
+        inc word [cs:pick_cut]
+.out:   pop es
+        pop si
+        pop cx
+        pop ax
+.ret:   iret
+; PICK_PAGE: INT VEC_PICK_PAGE replaces "mov [43ECh],al" (93487h; 3 bytes: INT + NOP) where CHOOSE A
+; SPELL opens on the highest spell level the reader (USE_WHO's) casts (AL, 698h:39h's): with the rule,
+; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
+; one. AL the page's level, as the code goes on to show it.
+pick_page:
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .set
+        push cx
+        push si
+        push es
+        push ax
+        mov cx, ds
+        add cx, USE_WHO_SEG
+        mov es, cx
+        mov si, [es:USE_WHO_OFF]
+        cmp si, 3
+        ja .keep
+        mov cl, al
+        cmp cl, WIZ_LEVELS
+        jbe .level
+        mov cl, WIZ_LEVELS
+.level: or cl, cl
+        jz .keep
+        call pick_room
+        jc .room
+        dec cl
+        jmp .level
+.room:  pop ax
+        mov al, cl
+        jmp .out
+.keep:  pop ax
+.out:   pop es
+        pop si
+        pop cx
+.set:   mov [PICK_SHOWN], al
+        iret
+pick_asks dw 0                              ; (counts, for a look in play)
+pick_cut  dw 0
+; PICK_ROOM: CF set if party member SI doesn't know a wizard spell of level CL (1 to WIZ_LEVELS) and
+; knows fewer of that level than its INT's most (PICK_FULL). DS the game's; all registers kept.
+pick_room:
+        call pick_full
+        jc .no
+        pusha
+        push es
+        call known_bits
+        movzx di, cl
+        mov al, [SPELL_STARTS + di - 1]     ; (the level's first spell ...
+        mov dl, [SPELL_STARTS + di]         ;  ... and the next level's)
+.each:  cmp al, dl
+        jae .none
+        call bit_known
+        jz .yes
+        inc al
+        jmp .each
+.yes:   pop es
+        popa
+        stc
+        ret
+.none:  pop es
+        popa
+.no:    clc
+        ret
+; PICK_FULL: CF set if party member SI knows as many wizard spells of level CL (1 to WIZ_LEVELS) as its
+; INT lets it (INT_MOST, its row from the creature's +1Ch). DS the game's; all registers kept.
+pick_full:
+        cmp cl, 1
+        jb .not
+        cmp cl, WIZ_LEVELS
+        ja .not
+        pusha
+        push es
+        imul di, si, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        movzx ax, byte [es:bx + di + CREATURE_INT]
+        sub ax, INT_FIRST
+        jge .high
+        xor ax, ax
+.high:  cmp ax, INT_ROWS - 1
+        jbe .row
+        mov ax, INT_ROWS - 1
+.row:   mov bx, ax
+        mov dh, [cs:int_most + bx]          ; (DH the most)
+        call known_bits
+        movzx di, cl
+        mov al, [SPELL_STARTS + di - 1]
+        mov dl, [SPELL_STARTS + di]
+        xor ch, ch                          ; (CH those known)
+.each:  cmp al, dl
+        jae .done
+        call bit_known
+        jz .next
+        inc ch
+.next:  inc al
+        jmp .each
+.done:  cmp ch, dh                          ; (CF while fewer)
+        cmc
+        pop es
+        popa
+        ret
+.not:   clc
+        ret
+; KNOWN_BITS: ES:BX party member SI's known wizard spells (selector 320h's segment, KNOWN_OFF + 15 a
+; member: bit n spell n, as the game's list and scroll read them). DS the game's; others kept.
+KNOWN_SEG  equ 0x3D62 - 0x47E0
+KNOWN_SIZE equ 15
+known_bits:
+        push ax
+        mov ax, ds
+        add ax, KNOWN_SEG
+        mov es, ax
+        imul bx, si, KNOWN_SIZE
+        add bx, KNOWN_OFF
+        pop ax
+        ret
+; BIT_KNOWN: ZF clear if spell AL's bit is set in ES:BX's (KNOWN_BITS). All registers kept.
+bit_known:
+        push ax
+        push bx
+        push cx
+        mov cl, al
+        and cl, 7
+        movzx ax, al
+        shr ax, 3
+        add bx, ax
+        mov al, 1
+        shl al, cl
+        test [es:bx], al
+        pop cx
+        pop bx
+        pop ax
+        ret
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5352,6 +5560,9 @@ all_vectors:
         vector VEC_SCROLL_LEARN, scroll_learn
         vector VEC_LEARN_SAID, learn_said
         vector VEC_LEARN_REFUSED, learn_refused
+        vector VEC_PICK_ANY, pick_any
+        vector VEC_PICK_LIST, pick_list
+        vector VEC_PICK_PAGE, pick_page
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

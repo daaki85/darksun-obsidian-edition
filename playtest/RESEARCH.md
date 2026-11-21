@@ -993,3 +993,13 @@ and `rest-no-call-user`: all transferred, the kits kept.
   +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
   click the spell's icon at the box's right (`ravclick.py X Y right`; xdotool alone doesn't move the
   game's pointer). The party's items are the first item records (Ar'anda's 1-3 there).
+- **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
+  fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
+  (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a
+  level above +39h. Ar'anda (member 0: preserver 6, psionicist 6, class 17 7; 40,000 XP) made a 5th-level
+  preserver levels up when the fight's XP comes, after its "Each party member receives 10000" box is
+  clicked (`ravclick.py 160 100`). Her INT is the creature's +1Ch **and** the sheet's +18h (the
+  creature's is written again from the sheet after a fight). The foes' HP: creature records whose
+  +15h is 7 (`hpup.py`-style; the party's aren't those). **The helper's rules are 0 until the dice log
+  attaches** (`ravdice.py`: RavDiceLog writes RULES_PORTED): a level up with no dice log is the game's
+  own, a control.
