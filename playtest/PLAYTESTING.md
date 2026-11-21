@@ -1109,6 +1109,11 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   scale, Chain, Cloak and hood). The names have spaces, so quote the list inside the double quotes:
   `PT_AFTER_PREPARE="python3 outfitgame.py '300=worn:Bone scale,308=worn:Robe'"`
   (logs/2026-11-21-worn-looks-in-game.md).
+- **A fight with no Loader attached**: Tab's nearest-enemy pick is the Loader's, so Tab + Return
+  opens the game's menu instead of attacking (and fightout.sh's E then the Effects screen; Escape
+  closes either, a screen being up). Attack by clicking the foe. `fountain-user` starts Pehtucl's
+  ambush on loading; its party is Seneca (halfling man), a human man, a human woman and a half-elf
+  woman, not pens-after-arena's.
 - `OBJECT=preset:CLASS` puts in `prototypes/presets.py`'s picture instead: the class as a preset of
   the Loader's own gear drawing (clothes recoloured, boots, the fitted cloak), to compare.
 - `pens-after-arena`'s party: a human man (object 300), an elf woman (Cilla, 305), a half-giant

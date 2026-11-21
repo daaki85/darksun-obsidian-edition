@@ -79,12 +79,15 @@ class WornGame(C.ClassGame):
         if o.name in PATTERN:
             self.pattern(out, own, what, LOOKS[o.name].torso, PATTERN[o.name])
         if o.name == "Robe":
-            self.gown(out, what, p, ASH, 0.85, ASH[0], bool(cb) and f == 12)
+            self.gown(out, what, p, ASH, 0.76, ASH[0], bool(cb) and f == 12)
             self.sash(out, own, what, p)
         elif o.name == "Bone scale":
             self.flaps(out, own, what, p)
             self.guards(out, p)
             self.helm(out, own, p)
+        elif o.name == "Cloak and hood" and p.facing == sp.SIDE:
+            base, _, _ = super().dress(key, LOOKS["Leather"], cb, f)
+            self.thicken(out, base, p)
         elif o.name == "Chain":  # (the coif: outfits.py's hood, in mail)
             bow = self.bow(fig, own, p) if cb and f in sp.BOW_FRAMES else frozenset()
             self.hood(out, own, p, o._replace(cloak=CHAIN), fig, bow)
@@ -110,11 +113,13 @@ class WornGame(C.ClassGame):
                 self.put(out, x, y, ramp[sg._pattern(pattern, x, y, ramp.index(c), top)])
 
     def gown(self, out, what, p, ramp, reach: float, hem: int, hit: bool = False) -> None:
-        """A skirt from the waist REACH of the way to the feet, all round (from behind too): the
-        legs within it and the gap between them in RAMP, a fold every fourth pixel, its last row
-        HEM. It flares from the hips a pixel every fourth row, no wider: a leg striding past it
-        shows below it as itself. HIT (the reeling frame, the body bent across): only the legs'
-        own pixels, no skirt drawn round them."""
+        """A skirt from the waist REACH of the way to the feet, all round (from behind too), the
+        feet showing below it: the legs within it and the gap between them in RAMP, folds on its
+        lower part only, its last row HEM, broken by the ramp's darker shade and pulled in a pixel at
+        each end (a soft hem, not a box's edge). It flares from the hips a pixel every fourth row,
+        no wider: a leg striding past it shows below it as itself. From the side it flares only in
+        front; at the back it falls nearly straight. HIT (the reeling frame, the body bent
+        across): only the legs' own pixels, no skirt drawn round them."""
         n = len(ramp)
         foot = p.waist + int(round(reach * (p.bottom - p.waist)))
         hips = sorted(x for (x, yy), k in what.items() if yy == p.waist and k in ("torso", "leg"))
@@ -122,18 +127,24 @@ class WornGame(C.ClassGame):
             return
         cx = (hips[0] + hips[-1]) / 2
         half0 = (hips[-1] - hips[0]) / 2 + 1
+        back = self.back_side(p) if p.facing == sp.SIDE else 0
         last = None
         for y in range(p.waist + 1, foot + 1):
             xs = [x for (x, yy), k in what.items() if yy == y and k in ("leg", "torso", "boot")]
             if not xs:
                 continue
-            half = half0 + (y - p.waist) / 4
+            grow = (y - p.waist) / 4
+            half = half0 + grow
             lo, hi = max(min(xs) - 1, int(cx - half)), min(max(xs) + 1, int(cx + half + 0.5))
-            if p.facing == sp.SIDE:  # (from the side the robe hangs from the hips, the legs swing under it)
-                lo, hi = int(cx - half), int(cx + half + 0.5)
+            if p.facing == sp.SIDE:  # (from the hips, the front flaring, the back nearly straight)
+                lo = int(cx - half0 - (grow / 3 if back < 0 else grow))
+                hi = int(cx + half0 + (grow / 3 if back > 0 else grow) + 0.5)
             if last is not None and not hit:  # (never narrower than the row above: no notches in its sides)
                 lo, hi = min(lo, last[0]), max(hi, last[1])
             last = (lo, hi)
+            if y == foot and hi - lo > 3:
+                lo, hi = lo + 1, hi - 1  # (the hem's corners rounded)
+            third = p.waist + (foot - p.waist) // 3
             for x in range(lo, hi + 1):
                 was = self.at(out, x, y)
                 part = what.get((x, y))
@@ -141,8 +152,44 @@ class WornGame(C.ClassGame):
                     continue  # (a hand or an arm before the skirt)
                 if hit and part not in ("leg", "torso", "boot"):
                     continue
-                t = n // 2 + (1 if x < cx - 1 else 0) - (1 if (x - int(cx)) % 4 == 0 and y > p.waist + 2 else 0)
-                self.put(out, x, y, hem if y == foot else ramp[max(1, min(n - 1, t))])
+                fold = (x - int(cx)) % 4 == 0 and y > third
+                t = n // 2 + (1 if x < cx - 1 else 0) - (1 if fold else 0)
+                if y == foot:
+                    c = hem if x % 2 or x in (lo, hi) else ramp[max(1, min(n - 1, t - 1))]
+                else:
+                    c = ramp[max(1, min(n - 1, t))]
+                self.put(out, x, y, c)
+
+    @staticmethod
+    def back_side(p) -> int:
+        """From the side, which way the back is: the game's side frames all face right (it
+        mirrors them for the left), so the back is to the left: -1. (Reading it from where the hair
+        hangs failed: the half-giant's long hair reads as in front.)"""
+        return -1
+
+    def thicken(self, out, base, p) -> None:
+        """From the side, the cloak a little fuller behind the back: past its back edge, one pixel
+        more below the shoulders and two in the middle of its fall, in its edge's colour."""
+        laid = {(x, y) for y, r in enumerate(out) for x, c in enumerate(r)
+                if c is not None and (y >= len(base) or x >= len(base[y]) or base[y][x] != c)}
+        if not laid:
+            return
+        back = self.back_side(p)
+        ys = sorted({y for _, y in laid})
+        neck = p.shoulders[0] + PAD
+        rows = [y for y in ys if y > neck + 1]
+        if not rows:
+            return
+        top, bottom = rows[0], rows[-1]
+        for y in rows[:-1]:
+            xs = [x for x, yy in laid if yy == y]
+            edge = min(xs) if back < 0 else max(xs)
+            mid = (top + bottom) / 2
+            more = 2 if abs(y - mid) < (bottom - top) / 4 else 1
+            for k in range(1, more + 1):
+                x = edge + back * k
+                if 0 <= x < len(out[y]) and out[y][x] is None:
+                    out[y][x] = out[y][edge]
 
     def sash(self, out, own, what, p) -> None:
         """A red sash at the waist, two rows, its end hanging at the side from the front."""

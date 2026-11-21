@@ -23,3 +23,27 @@ inside the double quotes). Window 320x240. A grab standing, then two walks (to 7
 **Not seen:** a fight's frames; the back view head-on; chain and leather in the game.
 
 **Water:** no new area.
+
+## Round 4: the softer robe, a fight, chain and leather (same day)
+
+**Changed first:** the robe's hem softer (feet showing, corners rounded, a broken hem line, folds on
+its lower part only), from the side flaring in front and nearly straight at the back; the cloak
+fuller behind the back from the side. The game's side frames all face right (it mirrors them), so
+the back is to the left: reading it from the hair failed on the half-giant.
+
+**How:** `fountain-user` (Pehtucl's ambush), every party object given a look
+(`'300=worn:Chain,301=worn:Leather,...,312=worn:Robe'`: outfitgame.py prints which figure each
+object is). **That save's party is not pens-after-arena's**: Seneca (a halfling man in leather),
+a human man (chain), a human woman (leather) and a half-elf woman (robe).
+
+**Seen:**
+- Chain with its coif reads clearly as a mail-clad man; leather reads on the human woman; the
+  half-elf woman's robe reads, slim on her.
+- The fight: Seneca walked up to Pehtucl and was seen from behind (the back view) in his fight
+  stance, in leather: readable, nothing misplaced.
+- **With no Loader attached, Tab + Return does not attack**: Tab's nearest-enemy pick is the
+  Loader's, so Return opens the game's menu (and fightout.sh's E then the Effects screen). Escape
+  closes it (a screen is up). Attack by clicking the foe (click.py at the foe's screen point).
+
+**Not seen:** a swing caught mid-frame (the grabs at 0.15 s showed the stance), the bone scale and
+the cloak in this fight.
