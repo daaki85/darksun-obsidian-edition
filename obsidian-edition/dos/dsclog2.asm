@@ -48,6 +48,8 @@ VEC_CHAR      equ 0xD1  ; PROBE_CHAR (91286h: the inventory panel's lines: THAC0
 VEC_CAST      equ 0xD2  ; PROBE_CAST (80585h: a spell or power cast, its caster read: recorded)
 VEC_SCROLL    equ 0xD3  ; PROBE_SCROLL (20230h: the map's main loop asking where the pointer is: LABEL_TICK)
 VEC_TICK      equ 0xD4  ; PROBE_TICK (3DA2Ch: the game's timer: LABEL_STAMP)
+VEC_FLIP      equ 0xD5  ; FLIP_SITE (16974h: the game's flip of its two screens: the panel on the new one)
+VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the panel put first)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -114,18 +116,37 @@ probe_text_off dw 0             ; +132
 probe_msg_off dw 0              ; +134
 probe_char_off dw 0             ; +136
 tbuf_seg  dw 0                  ; +138
-panel_off dw 0                  ; +140
+panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in the far block (PANEL_BLIT)
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
-        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +237: none of them here yet, zero)
+        times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +163: none of them here yet, zero)
+stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passed (RavDiceLog): older
+                                ;      than STATS_FRESH, the panel is taken off
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +166 to +237: none of them here yet, zero)
 dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
-                                ;      768 values 0-63, for the colours of the Loader's labels
-        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +240 to +267: none of them here yet, zero)
+                                ;      768 values 0-63, for the colours of the Loader's labels and panel
+dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
+                                ;      the Loader draws its panel again in it (DSCLOG's DARK count)
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
-        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +270 to +1833: none of them here yet, zero)
+        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +270 to +325: none of them here yet, zero)
+panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
+panel_seg  dw 0                 ; +328 the panel's picture's segment: the far block's (PANEL_W x
+                                ;      PANEL_H_MOST, each row its planes in turn: combatlog.planar)
+panel_new  dw 0                 ; +330 the Loader sets 1 once it has put a new picture there
+panel_mx   dw 0                 ; +332 the pointer, as the game's main loop last asked (game pixels): x,
+panel_my   dw 0                 ; +334   y
+panel_held dw 0                 ; +336 1 while the left button pressed on the panel is held
+panel_hits dw 0                 ; +338 the presses on the panel, counted, and where the last was: x,
+panel_hx   dw 0                 ; +340
+panel_hy   dw 0                 ; +342   y
+panel_top  dw PANEL_Y0          ; +344 the Loader's: the panel's top on the screen and its height
+panel_rows dw PANEL_H           ; +346   (at most PANEL_H_MOST), set before PANEL_NEW
+panel_keys dw 0                 ; +348 L pressed on the map with the panel shown (or to open it), counted
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +350 to +1833: none of them here yet, zero)
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
@@ -1860,6 +1881,11 @@ probe_scroll:
         mov [cs:pointer_ds], ds
         pusha
         push es
+        mov byte [cs:va_done], 0
+        pushf
+        cli                             ; (drawing)
+        call panel_tick
+        popf
         call label_tick
         pop es
         popa
@@ -1867,6 +1893,7 @@ probe_scroll:
         jz .call
         sti
 .call:  call far [cs:s_far]
+        call panel_mouse                ; (AX the buttons: a press on the panel kept from the game)
         push word [cs:s_fl]
         push word [cs:s_cs]
         push word [cs:s_ip]
@@ -1925,9 +1952,23 @@ dac_tick:
         mov cx, 768
         cld
         rep insb
+        mov si, FAR_DAC                 ; (changed since the last read: counted, DAC_CHANGES)
+        mov cx, 768
+        xor bx, bx
+        xor ax, ax
+.sum:   mov al, [es:si]
+        add bx, ax
+        rol bx, 1
+        inc si
+        loop .sum
+        cmp bx, [cs:dac_sum]
+        je .out
+        mov [cs:dac_sum], bx
+        inc word [cs:dac_changes]
 .out:   pop es
         popa
         ret
+dac_sum dw 0
 
 ; LABEL_TICK: from the main loop (DS the game's): the labels placed, the old places of those gone or
 ; moved drawn again, then all put
@@ -2318,6 +2359,699 @@ vga_restore:
         mov byte [cs:vga_busy], 0
         ret
 
+; ---- PANEL: DSCLOG's combat log's panel over the map, on the sequel ----
+; The Loader draws it (combatlog.py: the frame and the log's lines), PANEL_W x PANEL_H palette indices
+; in the far block (FAR_PANEL; each row its planes in turn), and this puts that picture on screen,
+; bottom right. The map is drawn straight into the screen on show, a rectangle at a time, so the
+; picture is put again from the main loop (PANEL_TICK, from PROBE_SCROLL) when the Loader has a new one
+; (PANEL_NEW), when the view scrolled (the game copies the screen, the panel too: the copy drawn over
+; again), and about once a BIOS tick round the pointer; before the game's pointer is drawn over it
+; (PROBE_POINTER), and on the new screen when the game flips its two (FLIP_SITE). PANEL_ON is the
+; Loader's: set, the panel is shown; cleared, or the Loader silent for STATS_FRESH (its STATS_STAMP),
+; the view under it is drawn again. DSCLOG's, but for the sequel's addresses and the view drawn again
+; only under the panel (the game's rectangle routine), not whole.
+PANEL_X0   equ 136              ; (x0 and the width a multiple of 4: whole bytes of the planes)
+PANEL_Y0   equ 120
+PANEL_W    equ 180
+PANEL_H    equ 78
+PANEL_H_MOST equ 130
+PANEL_BYTES equ PANEL_W * PANEL_H_MOST
+PAGES_SEG  equ 0x0BF3           ; the page routines' segment (less the load segment: SL's 0980h)
+SHOWN_PAGE equ 0x118E           ; (in it) 1: A400h shown
+STATS_FRESH equ 91              ; BIOS ticks (5 seconds) the Loader may be silent
+L_FRESH    equ 2
+panel_shown db 0
+panel_pseg  dw 0
+panel_page  dw 0
+panel_drawn dw PANEL_Y0
+panel_drawn_rows dw PANEL_H
+panel_at   dw 0
+panel_lx   dw 0
+panel_ly   dw 0
+panel_cx   dw 0
+panel_cy   dw 0
+map_tick   dw 0
+panel_puts dw 0                 ; (counted: a look in play)
+
+; LOADER_FRESH: ZF set if the Loader has passed within STATS_FRESH ticks; registers kept
+loader_fresh:
+        push es
+        push ax
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:stats_stamp]
+        cmp ax, STATS_FRESH
+        jae .no
+        xor ax, ax
+        jmp .out
+.no:    or ax, 1
+.out:   pop ax
+        pop es
+        ret
+
+; PANEL_TICK: from the main loop (DS the game's; AX to DI not kept)
+panel_tick:
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:map_tick], ax
+        cmp word [cs:panel_seg], 0
+        je .ret
+        call on_map
+        jne .ret
+        cmp word [cs:panel_on], 0
+        je .off
+        call loader_fresh
+        je .on
+.off:   cmp byte [cs:panel_shown], 0
+        je .ret
+        mov byte [cs:panel_shown], 0
+        xor ax, ax
+        xor bx, bx
+        call panel_erase                ; (the view under it drawn again)
+.ret:   ret
+.on:    mov ax, [CAM_X]                 ; the view moved by the game's own scrolling: the screen
+        xchg ax, [cs:panel_cx]          ;   copied, the panel too; that copy drawn over (AX, BX:
+        sub ax, [cs:panel_cx]           ;   how far it moved), then the panel put again
+        mov bx, [CAM_Y]
+        xchg bx, [cs:panel_cy]
+        sub bx, [cs:panel_cy]
+        mov cx, ax
+        or cx, bx
+        jz .still
+        cmp byte [cs:panel_shown], 0
+        je .still
+        call view_again                 ; (the view drawn again whole: the copies gone)
+        jmp .draw
+.still: cmp word [cs:panel_new], 0
+        je .old
+        mov word [cs:panel_new], 0
+        cmp byte [cs:panel_shown], 0
+        je .draw
+        mov ax, [cs:panel_top]          ; smaller than it was: the view drawn again under it first
+        cmp ax, [cs:panel_drawn]
+        jbe .draw
+        xor ax, ax
+        xor bx, bx
+        call panel_erase
+        jmp .draw
+.old:   cmp byte [cs:panel_shown], 0
+        je .draw
+        mov ax, [cs:map_tick]           ; put again at most once a BIOS tick
+        sub ax, [cs:panel_at]
+        cmp ax, 1
+        jb .ret
+        mov ax, [cs:panel_mx]           ; the pointer moved: put again, the pointer over it
+        cmp ax, [cs:panel_lx]
+        jne .draw
+        mov ax, [cs:panel_my]
+        cmp ax, [cs:panel_ly]
+        jne .draw
+        mov ax, [cs:map_tick]           ; and anyway, round the pointer
+        mov [cs:panel_at], ax
+        call panel_draw_around
+        ret
+.draw:  mov ax, [cs:map_tick]
+        mov [cs:panel_at], ax
+        mov byte [cs:panel_shown], 1
+        mov ax, [cs:panel_mx]
+        mov [cs:panel_lx], ax
+        mov ax, [cs:panel_my]
+        mov [cs:panel_ly], ax
+        call panel_draw_pointer
+        ret
+
+; VIEW_AGAIN: DSCLOG's: the view drawn again, all of it, as the game does when the view is centred
+; where it is (1C5F:01F3, 219E3h, SL's 191F:0281: centre on (x, y), 1 to draw it again); once a pass
+; of the main loop (VA_DONE, cleared by PROBE_SCROLL). DS the game's; keeps all.
+CENTRE_SEG equ 0x1C5F
+CENTRE_OFF equ 0x01F3
+view_again:
+        cmp byte [cs:va_done], 0
+        jne .ret
+        mov byte [cs:va_done], 1
+        pusha
+        push es
+        mov bx, ds
+        sub bx, DGROUP - CENTRE_SEG
+        mov [cs:centre + 2], bx
+        push word 1
+        mov ax, [CAM_Y]
+        add ax, 100
+        push ax
+        mov ax, [CAM_X]
+        add ax, 160
+        push ax
+        call far [cs:centre]
+        add sp, 6
+        pop es
+        popa
+.ret:   ret
+va_done db 0
+centre  dw CENTRE_OFF, 0
+
+; PANEL_ERASE: where the panel was last drawn, moved by AX, BX (a scroll's copy: 0, 0 for its own
+; place), drawn again by the game's rectangle routine (REDRAW_RECT); DS the game's; keeps all
+panel_erase:
+        pusha
+        mov si, ax
+        mov di, bx
+        mov ax, PANEL_X0
+        add ax, si
+        mov cx, PANEL_X0 + PANEL_W - 1
+        add cx, si
+        mov bx, [cs:panel_drawn]
+        add bx, di
+        mov dx, bx
+        add dx, [cs:panel_drawn_rows]
+        dec dx
+        call redraw_rect
+        popa
+        ret
+
+; REDRAW_RECT: the view's rectangle AX x0, BX y0, CX x1, DX y1 (on screen) drawn again by the game's
+; routine (REDRAW_SEG:REDRAW_OFF, page 1 and a flip, as the game's own call), kept on the screen,
+; widened to whole bytes of the planes; nothing if it is all off it. DS the game's; keeps all.
+redraw_rect:
+        pusha
+        push es
+        cmp cx, 0
+        jl .out
+        cmp dx, 0
+        jl .out
+        cmp ax, 319
+        jg .out
+        cmp bx, 199
+        jg .out
+        or ax, ax
+        jge .x0
+        xor ax, ax
+.x0:    and ax, ~3
+        or bx, bx
+        jge .y0
+        xor bx, bx
+.y0:    or cx, 3
+        cmp cx, 319
+        jle .x1
+        mov cx, 319
+.x1:    cmp dx, 199
+        jle .y1
+        mov dx, 199
+.y1:    push ax
+        mov ax, ds
+        sub ax, DGROUP - REDRAW_SEG
+        mov [cs:redraw_far + 2], ax
+        pop ax
+        push word 1                     ; (the flip)
+        push dx
+        push cx
+        push bx
+        push ax
+        push word 1                     ; (the page)
+        push word [CAM_Y]
+        push word [CAM_X]
+        call far [cs:redraw_far]
+        add sp, 16
+.out:   pop es
+        popa
+        ret
+
+; PANEL_LIVE: ZF set if the panel is on screen: shown, the page on show the one it was last drawn
+; into, and the game on the map
+panel_live:
+        cmp byte [cs:panel_shown], 0
+        je .no
+        push es
+        push ax
+        mov es, [cs:panel_pseg]
+        mov ax, [es:SHOWN_PAGE]
+        cmp ax, [cs:panel_page]
+        pop ax
+        pop es
+        jne .ret
+        call on_map
+.ret:   ret
+.no:    cmp sp, 0                       ; (ZF clear)
+        ret
+
+; PANEL_MOUSE: after the main loop's call for the pointer (AX the buttons; the far pointers to x and y
+; at [SP+4], [SP+8] past this call's return): the pointer noted for the Loader; a left press on the
+; panel, while it is shown, counted and kept from the game until released (the Loader scrolls the
+; log: combatlog.py)
+panel_mouse:
+        push bp
+        mov bp, sp
+        push es
+        push bx
+        push cx
+        push dx
+        les bx, [bp + 4]
+        mov cx, [es:bx]
+        les bx, [bp + 8]
+        mov dx, [es:bx]
+        mov [cs:panel_mx], cx
+        mov [cs:panel_my], dx
+        test al, 1
+        jz .up
+        cmp word [cs:panel_held], 0
+        jne .keep
+        call panel_live
+        jne .out
+        push cx
+        push dx
+        sub cx, PANEL_X0
+        cmp cx, PANEL_W
+        jae .off
+        sub dx, [cs:panel_top]
+        cmp dx, [cs:panel_rows]
+.off:   pop dx
+        pop cx
+        jae .out
+        mov word [cs:panel_held], 1
+        mov [cs:panel_hx], cx
+        mov [cs:panel_hy], dx
+        inc word [cs:panel_hits]
+.keep:  and al, ~1
+        jmp .out
+.up:    mov word [cs:panel_held], 0
+.out:   pop dx
+        pop cx
+        pop bx
+        pop es
+        pop bp
+        ret
+
+; PANEL_DRAW: the picture into the page on show, a plane at a time (DS the game's; registers kept)
+panel_draw:
+        cmp word [cs:panel_seg], 0
+        je .none
+        pusha
+        push ds
+        push es
+        cld
+        inc word [cs:panel_puts]
+        mov ax, ds
+        sub ax, DGROUP - PAGES_SEG
+        mov es, ax
+        mov [cs:panel_pseg], ax
+        mov ax, [es:SHOWN_PAGE]
+        mov [cs:panel_page], ax
+        mov ax, [cs:panel_top]
+        mov [cs:panel_drawn], ax
+        mov ax, [cs:panel_rows]
+        mov [cs:panel_drawn_rows], ax
+        call panel_staging
+        mov ax, 0xA000
+        cmp word [es:SHOWN_PAGE], 0
+        je .seg
+        mov ax, 0xA400
+.seg:   call panel_blit
+        mov ax, [cs:stage_seg]          ; (and into the screen the pointer is moved on)
+        or ax, ax
+        jz .done
+        mov bl, 0
+        xchg bl, [cs:pb_skip]
+        push bx
+        call panel_blit
+        pop bx
+        mov [cs:pb_skip], bl
+.done:  pop es
+        pop ds
+        popa
+.none:  ret
+
+; PANEL_STAGING: DSCLOG's: in PANEL_DRAW (DS the game's, ES the page routines' segment), the screen the
+; game moves its pointer on, when it does so ([3330h] set, the windows [33B6h] shown and [33B8h]
+; apart: SL's 3C4Ah, 3CD0h, 3CD2h). STAGE_SEG its segment, or 0; AX, BX not kept.
+PTR_STAGING  equ 0x3330
+PTR_SHOWN_W  equ 0x33B6
+PTR_STAGE_W  equ 0x33B8
+WIN_SEGS     equ 4
+panel_staging:
+        mov word [cs:stage_seg], 0
+        cmp word [PTR_STAGING], 0
+        je .ret
+        mov bx, [PTR_STAGE_W]
+        cmp bx, [PTR_SHOWN_W]
+        je .ret
+        cmp bx, 1
+        ja .ret
+        shl bx, 1
+        mov ax, [es:WIN_SEGS + bx]
+        mov bx, 0xA000
+        cmp word [es:SHOWN_PAGE], 0
+        je .shown
+        mov bx, 0xA400
+.shown: cmp ax, bx
+        je .ret
+        cmp ax, 0xA000
+        je .blit
+        cmp ax, 0xA400
+        jne .ret
+.blit:  mov [cs:stage_seg], ax
+.ret:   ret
+stage_seg dw 0
+
+; PANEL_DRAW_POINTER: PANEL_DRAW, then the game's pointer drawn again over it (2D72:0942, SL's
+; 28D1:093D). DS the game's; registers kept.
+POINTER_SEG  equ 0x2D72
+POINTER_ON   equ 0x0942
+panel_draw_pointer:
+        pusha
+        push es
+        mov ax, ds
+        sub ax, DGROUP - POINTER_SEG
+        mov [cs:pointer_far + 2], ax
+        mov word [cs:pointer_far], POINTER_ON
+        call panel_draw
+        mov byte [cs:pointer_busy], 1   ; (the panel just drawn: PROBE_POINTER leaves it)
+        call far [cs:pointer_far]
+        mov byte [cs:pointer_busy], 0
+        pop es
+        popa
+        ret
+pointer_far dw 0, 0
+pointer_busy db 0
+
+; PANEL_DRAW_AROUND: PANEL_DRAW with the box the pointer was last drawn in left as it is; if the game
+; shows no pointer, PANEL_DRAW. DS the game's; registers kept. (SL's 3C46h, A13Fh, A17Fh)
+POINTER_HIDE equ 0x332C
+POINTER_XY   equ 0xA10D
+POINTER_WAS  equ 0xA115
+POINTER_KIND equ 0xA155
+POINTER_MOST equ 32
+panel_draw_around:
+        cmp word [POINTER_HIDE], 0
+        jne .whole
+        cmp word [POINTER_KIND], -1
+        je .whole
+        push ax
+        mov ax, [POINTER_WAS]
+        sar ax, 2
+        mov [cs:pb_sx0], ax
+        add ax, POINTER_MOST / 4 + 1
+        mov [cs:pb_sx1], ax
+        mov ax, [POINTER_WAS + 2]
+        mov [cs:pb_sy0], ax
+        add ax, POINTER_MOST
+        mov [cs:pb_sy1], ax
+        pop ax
+        mov byte [cs:pb_skip], 1
+        call panel_draw
+        mov byte [cs:pb_skip], 0
+        ret
+.whole: jmp panel_draw
+
+; PROBE_POINTER: INT VEC_POINTER replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack check) in
+; the game's routine that draws its pointer (3326Ah, 2D72:0942). The panel is put first if the pointer
+; is to go over it. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
+probe_pointer:
+        sti
+        mov [cs:pointer_ds], ds
+        call pointer_panel
+        push ax
+        mov ax, sp
+        add ax, 8               ; (the routine's SP: past this push and INT's IP, CS and flags)
+        cmp [0x9C], ax
+        pop ax
+        retf 2
+
+pointer_panel:
+        cmp byte [cs:pointer_busy], 0
+        jne .ret
+        cmp word [POINTER_HIDE], 0
+        jne .ret
+        call panel_live
+        jne .ret
+        push si
+        mov si, POINTER_XY
+        call pointer_over
+        je .draw
+        mov si, POINTER_WAS
+        call pointer_over
+        jne .out
+.draw:  call panel_draw
+.out:   pop si
+.ret:   ret
+
+; POINTER_OVER: ZF set if a pointer at DS:SI (x, y: top left) is over the panel; registers kept
+pointer_over:
+        push ax
+        mov ax, [si]
+        cmp ax, PANEL_X0 + PANEL_W
+        jge .no
+        add ax, POINTER_MOST
+        cmp ax, PANEL_X0
+        jle .no
+        mov ax, [si + 2]
+        add ax, POINTER_MOST
+        cmp ax, [cs:panel_top]
+        jle .no
+        sub ax, POINTER_MOST
+        sub ax, [cs:panel_top]
+        cmp ax, [cs:panel_rows]
+        jge .no
+        cmp ax, ax
+        pop ax
+        ret
+.no:    cmp sp, 0
+        pop ax
+        ret
+
+; FLIP_SITE: INT VEC_FLIP replaces "mov ax,0A000h / cmp word [118Eh],0" (16974h; 8 bytes: INT + 6
+; NOPs; SL's 14444h) in the game's flip of its two screens (0BF3:5814), the screen to be shown set
+; ([118Eh], DS the routine's segment) and the VGA not yet told. If the panel is on the screen on show
+; now, it is put on the new one first (FLIP_PUT). Then the two replaced: AX 0A000h, ZF from the compare.
+flip_site:
+        push bp
+        mov bp, sp
+        pushad
+        push es
+        push ds
+        cld
+        call flip_put
+        pop ds
+        pop es
+        popad
+        mov ax, 0xA000
+        and word [bp + 6], ~0x40
+        cmp word [SHOWN_PAGE], 0
+        jne .nz
+        or word [bp + 6], 0x40
+.nz:    pop bp
+        iret
+
+flip_put:
+        cmp word [cs:panel_seg], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        call on_map
+        jne .ret
+        mov ax, [SHOWN_PAGE]
+        mov bx, ax
+        xor bx, 1
+        cmp bx, [cs:panel_page]
+        jne .ret
+        mov [cs:panel_page], ax
+        mov cx, 0xA000
+        or ax, ax
+        jz .seg
+        mov cx, 0xA400
+.seg:   mov ax, cx
+        mov byte [cs:pb_skip], 0
+        call panel_blit
+.ret:   ret
+
+; PANEL_BLIT: DSCLOG's: the picture into the screen at segment AX, a plane at a time (AX to DI, DS, ES
+; not kept). Its top and height read once, the height kept within the screen.
+panel_blit:
+        mov es, ax
+        mov ax, [cs:panel_top]
+        cmp ax, 200
+        jae .ret
+        mov [cs:pb_top], ax
+        mov cx, 200
+        sub cx, ax
+        mov ax, [cs:panel_rows]
+        cmp ax, PANEL_H_MOST
+        jbe .most
+        mov ax, PANEL_H_MOST
+.most:  cmp ax, cx
+        jbe .rows
+        mov ax, cx
+.rows:  or ax, ax
+        jz .ret
+        mov [cs:pb_rows], ax
+        mov ax, [cs:pb_sx0]
+        sub ax, PANEL_X0 / 4
+        call pb_clamp
+        mov [cs:pb_left], ax
+        mov ax, [cs:pb_sx1]
+        sub ax, PANEL_X0 / 4
+        call pb_clamp
+        sub ax, [cs:pb_left]
+        mov [cs:pb_mid], ax
+        push bp
+        call vga_save
+        mov ds, [cs:panel_seg]
+        xor bx, bx                      ; (BX: the plane)
+.plane: mov dx, 0x3C4
+        mov cl, bl
+        mov ah, 1
+        shl ah, cl
+        mov al, 2
+        out dx, ax
+        mov ax, [cs:pb_top]
+        mov dx, 80
+        mul dx
+        add ax, PANEL_X0 / 4
+        mov di, ax
+        mov ax, PANEL_W / 4
+        mul bx
+        mov si, ax
+        add si, FAR_PANEL
+        mov dx, [cs:pb_rows]
+        mov bp, [cs:pb_top]
+.row:   mov cx, PANEL_W / 4
+        cmp byte [cs:pb_skip], 0
+        je .pix
+        cmp bp, [cs:pb_sy0]
+        jl .pix
+        cmp bp, [cs:pb_sy1]
+        jge .pix
+        mov cx, [cs:pb_left]
+        rep movsb
+        mov cx, [cs:pb_mid]
+        add di, cx
+        add si, cx
+        mov cx, PANEL_W / 4
+        sub cx, [cs:pb_left]
+        sub cx, [cs:pb_mid]
+.pix:   shr cx, 1
+        rep movsw
+        adc cx, cx
+        rep movsb
+        add di, 80 - PANEL_W / 4
+        add si, 3 * PANEL_W / 4
+        inc bp
+        dec dx
+        jnz .row
+        inc bx
+        cmp bx, 4
+        jb .plane
+        call vga_restore
+        pop bp
+.ret:   ret
+pb_top  dw 0
+pb_rows dw 0
+pb_skip db 0
+pb_sx0  dw 0
+pb_sx1  dw 0
+pb_sy0  dw 0
+pb_sy1  dw 0
+pb_left dw 0
+pb_mid  dw 0
+
+pb_clamp:
+        cmp ax, 0
+        jge .lo
+        xor ax, ax
+.lo:    cmp ax, PANEL_W / 4
+        jle .hi
+        mov ax, PANEL_W / 4
+.hi:    ret
+
+; INT16: DSCLOG's: the game reads keys through INT 16h; L on the map, the panel on it (or off, to open
+; it: L_ON_MAP), counted for the Loader (PANEL_KEYS) and taken out of what the game sees
+KEY_L       equ 0x266C
+KEY_SHIFT_L equ 0x264C
+old16 dd 0
+int16:
+        cmp ah, 0x00
+        je .read
+        cmp ah, 0x10
+        je .read
+        cmp ah, 0x01
+        je .peek
+        cmp ah, 0x11
+        je .peek
+.chain: jmp far [cs:old16]
+.peek:  push ax
+        pushf
+        call far [cs:old16]
+        jz .none
+        call our_key
+        jc .took
+        add sp, 2
+        push bp
+        mov bp, sp
+        and word [bp + 6], ~0x40        ; ZF clear
+        pop bp
+        iret
+.took:  pop ax
+        push ax
+        xor ah, ah
+        pushf
+        call far [cs:old16]
+        pop ax
+        jmp .peek
+.none:  pop ax
+        push bp
+        mov bp, sp
+        or word [bp + 6], 0x40          ; ZF set: no key
+        pop bp
+        iret
+.read:  push ax
+.again: pop ax
+        push ax
+        pushf
+        call far [cs:old16]
+        call our_key
+        jc .again
+        add sp, 2
+        iret
+
+our_key:                                ; AX a key: CF set (and counted) if it is L for the panel
+        cmp ax, KEY_L
+        je .l
+        cmp ax, KEY_SHIFT_L
+        jne .no
+.l:     call panel_live
+        je .count
+        call l_on_map
+        jne .no
+.count: inc word [cs:panel_keys]
+        stc
+        ret
+.no:    clc
+        ret
+
+; L_ON_MAP: ZF set if L should open the panel: the panel there, not on screen, the map's main loop run
+; within the last BIOS tick or two, on the map, and the Loader there; registers kept
+l_on_map:
+        push ax
+        push es
+        cmp word [cs:panel_seg], 0
+        je .no
+        cmp byte [cs:panel_shown], 0
+        jne .no
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        ja .no
+        call on_map
+        jne .no
+        call loader_fresh
+        jmp .out
+.no:    or ax, 1
+.out:   pop es
+        pop ax
+        ret
+
 align 2
 lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
 
@@ -2330,7 +3064,8 @@ RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what s
 FAR_RING   equ 0x10
 FAR_END    equ FAR_RING + NENT * ESIZE
 FAR_DAC    equ FAR_END                         ; the palette (DAC_TICK), 768 bytes
-FAR_TOP    equ FAR_DAC + 768
+FAR_PANEL  equ FAR_DAC + 768                   ; the combat log's panel's picture (PANEL_BLIT)
+FAR_TOP    equ FAR_PANEL + PANEL_BYTES
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
@@ -2387,10 +3122,18 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2521h
         mov dx, probe_dos_open
         int 21h
+        mov ax, 3516h           ; the keyboard (INT16: L for the panel)
+        int 21h
+        mov [old16], bx
+        mov [old16 + 2], es
+        mov ax, 2516h
+        mov dx, int16
+        int 21h
         mov byte [hooked], 1
         mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:tail_seg], cs   ; (the labels' slots: in this segment)
+        mov [cs:panel_seg], ax  ; (the panel's picture: in the far block)
         mov es, [cs:psp]        ; our block cut down to the PSP and what stays, then kept
         mov bx, 0x10 + RESIDENT_PARAS
         mov ah, 4Ah
@@ -2534,6 +3277,8 @@ all_vectors:
         vector VEC_CAST, probe_cast
         vector VEC_SCROLL, probe_scroll
         vector VEC_TICK, probe_tick
+        vector VEC_FLIP, flip_site
+        vector VEC_POINTER, probe_pointer
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

@@ -190,6 +190,23 @@ class PassTests(unittest.TestCase):
         log._after_rolls(False, 100.0 + labels.SHOW_FOR + 1)
         self.assertEqual(g.mem[at], 0)
 
+    def test_in_combat_is_a_byte(self):
+        """A fight on: the byte at DS:13FAh (the next byte whatever it is) and the fight's state at
+        (DS - 47E0h + 3C10h):19h."""
+        ravlog.apply_layout()
+        g = FakeGuest()
+        ds = 0x4982
+        data = ravlog.RavGameData(g, ds)
+        g.mem[ds * 16 + 0x13FA:ds * 16 + 0x13FC] = b"\x00\x05"
+        state = (ds - 0x47E0 + 0x3C10) * 16 + 0x19
+        g.mem[state] = 2
+        self.assertFalse(data.in_combat())
+        g.mem[ds * 16 + 0x13FA] = 1
+        self.assertTrue(data.in_combat())
+        g.mem[state] = 0
+        self.assertFalse(data.in_combat())
+        ravlog.restore_layout()
+
     def test_no_rule_changes(self):
         """The sequel's game data takes none of the mod's rules (the Loader's settings name SL's)."""
         data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFF)

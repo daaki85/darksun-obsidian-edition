@@ -66,6 +66,7 @@ VEC_USE, VEC_WIN = 0xCE, 0xCF  # (DSCLOG2's PROBE_USE, PROBE_WIN: the spell slot
 VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
 VEC_CAST, VEC_SCROLL, VEC_TICK = 0xD2, 0xD3, 0xD4  # (DSCLOG2's PROBE_CAST, PROBE_SCROLL, PROBE_TICK: names over figures)
+VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the combat log's panel)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -173,6 +174,11 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("spell_cast", 0x80585, bytes.fromhex("8b4e06"), gamepatch._interrupt(VEC_CAST, 3)),
     Patch("scroll", 0x20230, bytes.fromhex("9a3400"), bytes((0xCD, VEC_SCROLL, 0xA9))),
     Patch("tick", 0x3DA2C, bytes.fromhex("2eff060400"), gamepatch._interrupt(VEC_TICK, 5)),
+    # The combat log's panel (SL's combatlog.py, DSCLOG's PANEL; the main loop's PROBE_SCROLL above):
+    # the game's flip of its two screens (16974h, SL's 14444h: "mov ax,0A000h / cmp word [118Eh],0"),
+    # and its routine drawing the pointer (3326Ah, SL's 2EA55h: the stack check).
+    Patch("panel_flip", 0x16974, bytes.fromhex("b800a0833e8e1100"), gamepatch._interrupt(VEC_FLIP, 8)),
+    Patch("pointer", 0x3326A, bytes.fromhex("39269c00"), gamepatch._interrupt(VEC_POINTER, 4)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import dicelog, game, labels, ravager
+from . import combatlog, dicelog, game, labels, ravager
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -79,6 +79,13 @@ ADDRESSES: Dict[str, object] = {
     # each creature's initiative (score, tie-break: words), selector 308h at DCh in the sequel's code
     # (its 5B7F6h: SL's 37BDh:D9h), selector 308h being the load segment + 3C4Fh
     "INITIATIVE_SEG": 0x3C4F, "INITIATIVE_OFF": 0xDC,
+    # a fight on: the game's flag, a byte at DS:13FAh in the sequel (16 uses of SL's word at 1168h matched by
+    # their code: "cmp byte [13FAh],0"; RavGameData reads the byte), and the fight's state at 3C10h:19h
+    # (the main loop's "mov ax,3C10h / mov es,ax / cmp word es:[19h],0", SL's 377Eh)
+    "IN_COMBAT": 0x13FA, "FIGHT_STATE_FROM_DS": ravager.DGROUP - 0x3C10,
+    # the game's clock: its scale (a byte) and a far pointer to the dword (ravds: SL's 9B70h, 9B72h + 9Ah;
+    # read in play: scale 1, 406 s into a new game's first fight)
+    "GAME_TIME_SCALE": 0x9C0A, "GAME_TIME_PTR": 0x9C0C,
     # the rules' small tables in the data segment, each found once by its bytes, each SL's + 70h
     "DEX_AC": 0x0866, "DEX_INITIATIVE": 0x084C, "DEX_MISSILE": 0x084C, "SAVE_CON": 0x0880,
     "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
@@ -279,6 +286,10 @@ class RavGameData(game.GameData):
     def rules(self) -> int:
         return 0
 
+    def in_combat(self) -> bool:
+        """SL's, the game's flag read as the byte it is in the sequel (DS:13FAh, IN_COMBAT)."""
+        return self.guest.read(self.ds * 16 + game.IN_COMBAT, 1)[0] != 0 and self.fight_on()
+
     @rules.setter
     def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: not the sequel's yet)
         pass
@@ -329,6 +340,10 @@ class RavGameData(game.GameData):
         if 1 <= name_index <= len(names) and names[name_index - 1]:
             return names[name_index - 1]
         return f"item {name_index}"
+
+
+TSR_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
+PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
 
 class RavDiceLog(dicelog.DiceLog):
@@ -389,6 +404,34 @@ class RavDiceLog(dicelog.DiceLog):
             self.guest.writable = self.guest.writable + [slots]
         return slots[0]
 
+    def _panel_ranges(self) -> bool:
+        """DSCLOG2's combat log panel's picture (its far block, header +328:+140) and the header's
+        words for it (+164 the Loader's stamp, +326 to +349 the panel's), made writable; False
+        without them (a helper before the panel)."""
+        if self.tsr_hdr is None:
+            return False
+        seg, = struct.unpack("<H", self.guest.read(self.tsr_hdr + combatlog.TSR_PANEL_SEG, 2))
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + combatlog.TSR_PANEL_OFF, 2))
+        if not seg or not off:
+            return False
+        want = [(seg * 16 + off, combatlog.PANEL_W * PANEL_H_MOST),
+                (self.tsr_hdr + dicelog.TSR_STATS_STAMP, 2),
+                (self.tsr_hdr + combatlog.TSR_PANEL_ON, combatlog.TSR_KEYS + 2 - combatlog.TSR_PANEL_ON)]
+        for r in want:
+            if r not in self.guest.writable:
+                self.guest.writable = self.guest.writable + [r]
+        return True
+
+    def _panel_pass(self, now: float) -> None:
+        """The Loader's stamp (DSCLOG2 takes the panel off when it is old), the palette's changes
+        (DSCLOG2's count, for the panel's colours: SL's shadows' count) and the panel drawn
+        (dicelog.DiceLog._update_panel, as Shattered Lands' four times a second)."""
+        if not self._panel_ranges():
+            return
+        self.guest.write(self.tsr_hdr + dicelog.TSR_STATS_STAMP, self.guest.read(dicelog.BIOS_TIMER, 2))
+        self._shadows.palettes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_DAC_CHANGES, 2))
+        self._update_panel(now)
+
     def _float(self, thing, text, colour, now, priority=0) -> None:
         """Shattered Lands' names over figures (labels.py), into DSCLOG2's slots once it has them."""
         if self._label_slots() is not None:
@@ -402,9 +445,9 @@ class RavDiceLog(dicelog.DiceLog):
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
         fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
-        figures whose time is up (labels.Labels.tick) and the spell slots' lines for the USE screen
-        (_write_slots, as often as Shattered Lands' writes them): the rest reads and writes what
-        isn't ported yet."""
+        figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
+        (_write_slots, as often as Shattered Lands' writes them) and the combat log's panel
+        (_panel_pass): the rest reads and writes what isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
         if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
             self._labels.on = self.floating_names
@@ -412,6 +455,7 @@ class RavDiceLog(dicelog.DiceLog):
         if now >= self._next_slots:
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)
+            out += self._step(lambda: self._panel_pass(now))
         return out
 
 
