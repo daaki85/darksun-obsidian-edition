@@ -57,7 +57,9 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
-## Unreleased (branch `obsidian-edition`)
+## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
+
+No release: these fixes come with the next one.
 
 **Fixed**
 - The Loader stops at startup and names the file if it cannot remove a stale game data override.
