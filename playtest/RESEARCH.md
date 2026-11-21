@@ -453,6 +453,11 @@ on, the hit points' DS:1224h); the sheet, creature and window at DS:1429h, 142Dh
 6C87Bh, PSP after them (6D6AEh, 6B79Ch); the labels' ink DS:2D14h, F0h white there. Title menu's CREATE
 CHARACTERS (160,92), right-click a slot (70,56), NEW (110,57); EXIT (280,160).
 
+**Its rules and hit dice** (2026-11-21, logs/2026-11-21-ravager-hit-dice.md): DSCLOG2's header has
+DSCLOG's RULES (+170) and RULES_HI (+270), written by the Loader with only ravager.RULES_PORTED; a
+dice log started without settings (`ravdice.py`) writes 0. The hit-die rolls: 9501Dh (creation, SL's)
+and 95CCEh (level-up from XP), into the sheet's +0Ah, capped by the class table's +38h.
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18

@@ -53,6 +53,7 @@ VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the p
 VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
 VEC_LOOK      equ 0xDA  ; PROBE_LOOK (640FBh: the Look box's first rows drawn: the monster's defences)
 VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
+VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
@@ -137,14 +138,18 @@ look_on    dw 0                 ; +160 the Loader sets 1 to have monsters descri
         times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +162 to +163: none of them here yet, zero)
 stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passed (RavDiceLog): older
                                 ;      than STATS_FRESH, the panel is taken off
-        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +166 to +237: none of them here yet, zero)
+        times 170 - ($ - hdr) db 0  ; (DSCLOG's fields +166 to +169: none of them here yet, zero)
+rules      dw 0                 ; +170 the rule changes the Loader turns on, as DSCLOG's (RULE_HP_BEST, ...;
+                                ;      the Loader writes only the ported ones: ravager.RULES_PORTED)
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +172 to +237: none of them here yet, zero)
 dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
                                 ;      768 values 0-63, for the colours of the Loader's labels and panel
 dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
                                 ;      the Loader draws its panel again in it (DSCLOG's DARK count)
         times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
-        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +270 to +325: none of them here yet, zero)
+rules_hi   dw 0                 ; +270 the rules' second word, as DSCLOG's (none ported yet)
+        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +272 to +325: none of them here yet, zero)
 panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
 panel_seg  dw 0                 ; +328 the panel's picture's segment: the far block's (PANEL_W x
                                 ;      PANEL_H_MOST, each row its planes in turn: combatlog.planar)
@@ -2155,6 +2160,40 @@ cr_less:                        ; at CS:DI, CL less DS:SI's entry for score DL (
 cr_thac0_text db 'THAC0: M', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 cr_count dw 0                   ; THAC0s drawn (for a look in play)
 
+; ---- THE RULES ----
+; The rule changes, as DSCLOG's bits in its header's RULES (+170) and RULES_HI (+270); the Loader
+; sets only those ported (ravager.RULES_PORTED).
+RULE_HP_BEST equ 32768          ; a hit die rolled twice, the better kept (PROBE_HP_BEST)
+
+; PROBE_HP_BEST: DSCLOG's. INT VEC_HP_BEST replaces "mov cx,ax" (2 bytes; 95025h, SL's 87319h) after
+; the game's roll of a level's hit die (at creation too), AX the roll. With RULE_HP_BEST the game
+; rolls it twice and keeps the better: the first time the roll is kept and the INT returns to the
+; start of the game's roll (9500Ah, SL's 872FDh: the die from the class's table, then the call), so
+; the dice log sees both rolls as the game's; the second time CX gets the better of the two.
+HP_BEST_BACK equ 0x95027 - 0x9500A
+probe_hp_best:
+        test word [cs:rules], RULE_HP_BEST
+        jz .game
+        cmp byte [cs:hp_again], 0
+        jne .second
+        mov [cs:hp_first], ax
+        mov byte [cs:hp_again], 1
+        push bp
+        mov bp, sp
+        sub word [bp + 2], HP_BEST_BACK ; (the INT's return IP)
+        pop bp
+        iret
+.second:
+        mov byte [cs:hp_again], 0
+        cmp ax, [cs:hp_first]
+        jge .game
+        mov ax, [cs:hp_first]
+.game:  mov cx, ax
+        iret
+
+hp_first dw 0
+hp_again db 0
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -3731,6 +3770,7 @@ all_vectors:
         vector VEC_VIEW, probe_view
         vector VEC_LOOK, probe_look
         vector VEC_CR_HP, probe_cr_hp
+        vector VEC_HP_BEST, probe_hp_best
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

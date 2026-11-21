@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import gamepatch, gff, launch, ravager  # noqa: E402
+from dsloader import game, gamepatch, gff, launch, ravager  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -29,7 +29,7 @@ class TableTests(unittest.TestCase):
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
                                "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
-                               "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con"})  # (DSCLOG2's own interrupts)
+                               "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -216,6 +216,14 @@ class GameFileTests(unittest.TestCase):
         self.assertEqual(ravager.skipped({}) & set(gamepatch.EFFECTS_KEPT), frozenset())
         self.assertEqual(ravager.skipped({"effects_kept": False}) & set(gamepatch.EFFECTS_KEPT),
                          frozenset(gamepatch.EFFECTS_KEPT))
+
+    def test_hp_best(self):
+        """The better hit die: SL's patch by name at the sequel's roll, DSCLOG2's PROBE_HP_BEST (the
+        Options tab's switch is DSCLOG2's RULES word, written by the Loader: no patch left out)."""
+        p = next(p for p in ravager.PATCHES if p.name == "hp_best")
+        self.assertEqual((p.offset, p.original, p.replacement), (0x95025, b"\x8b\xc8", bytes((0xCD, ravager.VEC_HP_BEST))))
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_HP_BEST, game.RULE_HP_BEST)
+        self.assertNotIn("hp_best", ravager.skipped({"best_hit_die": False}))
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()

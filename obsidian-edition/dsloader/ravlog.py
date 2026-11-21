@@ -366,20 +366,22 @@ def monster_lines(gd, creature: int, ac: Optional[int]) -> Tuple[List[str], List
 
 
 class RavGameData(game.GameData):
-    """game.GameData for the sequel: its item names from its own list (NAMES_START), and none of the
-    mod's rule changes (DSCLOG2 has none of them yet: the spell slots, for one, are the game's own)."""
+    """game.GameData for the sequel: its item names from its own list (NAMES_START), and only the mod's
+    rule changes ported to it (ravager.RULES_PORTED: the spell slots, for one, are the game's own)."""
+
+    _rules = 0
 
     @property
     def rules(self) -> int:
-        return 0
+        return self._rules
 
     def in_combat(self) -> bool:
         """SL's, the game's flag read as the byte it is in the sequel (DS:13FAh, IN_COMBAT)."""
         return self.guest.read(self.ds * 16 + game.IN_COMBAT, 1)[0] != 0 and self.fight_on()
 
     @rules.setter
-    def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: not the sequel's yet)
-        pass
+    def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: the sequel's ported ones)
+        self._rules = value & ravager.RULES_PORTED
 
     def max_spell_slots(self, member: int, bit: int, spell_level: int, wis: bool = True) -> int:
         """The game's slot routine (626B7h; SL's 5E0ACh, the same but for its test switch, a byte at
@@ -461,6 +463,16 @@ class RavDiceLog(dicelog.DiceLog):
             return super().attach()
         finally:
             dicelog.GameData = real
+
+    def set_rules(self, rules: int) -> None:
+        """SL's, the rules ported to the sequel alone (ravager.RULES_PORTED), into DSCLOG2's header
+        (+170, +270) made writable for them; the rest of SL's writes (the spell save's table, the
+        stealth gear's word) dropped."""
+        if self.tsr_hdr is not None:
+            for r in ((self.tsr_hdr + dicelog.TSR_RULES, 2), (self.tsr_hdr + dicelog.TSR_RULES_HI, 2)):
+                if r not in self.guest.writable:
+                    self.guest.writable = self.guest.writable + [r]
+        super().set_rules(rules & ravager.RULES_PORTED)
 
     def count_charges(self, entries) -> None:  # (the charges' counting writes to the game: not yet)
         return None

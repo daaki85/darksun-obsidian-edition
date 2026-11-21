@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Dict, List, Optional, Tuple
 
-from . import gamepatch, gff
+from . import game, gamepatch, gff
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -70,9 +70,13 @@ VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the c
 VEC_LOOK = 0xDA  # (DSCLOG2's PROBE_LOOK: the monster's defences in the Look box)
 VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
+VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
+# The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
+# header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
+RULES_PORTED = game.RULE_HP_BEST
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 
 PATCHES: Tuple[Patch, ...] = (
@@ -190,6 +194,9 @@ PATCHES: Tuple[Patch, ...] = (
     # drawn after them (6D6AEh at the die, a choice, the screen opening; 6B79Ch at a click on CON; SL's
     # CR_AGE sites 65A89h, 63A13h): each "add sp,10h". The hit points' box (the 7th, DS:1224h, as SL's
     # F92h) wider, to x 243 (DONE's left 244), so its saved background clears what is drawn there.
+    # A hit die rolled twice, the better kept (SL's hp_best; the Options tab's "best_hit_die"):
+    # DSCLOG2's PROBE_HP_BEST at the game's "mov cx,ax" after the roll (95025h, SL's 87319h).
+    Patch("hp_best", 0x95025, bytes.fromhex("8bc8"), gamepatch._interrupt(VEC_HP_BEST, 2)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

@@ -223,10 +223,12 @@ class PassTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertEqual(combatlog.LAST, 223)
 
-    def test_no_rule_changes(self):
-        """The sequel's game data takes none of the mod's rules (the Loader's settings name SL's)."""
-        data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFF)
-        self.assertEqual(data.rules, 0)
+    def test_only_ported_rules(self):
+        """The sequel's game data takes only the mod's rules ported to it (the Loader's settings name
+        SL's): the better hit die, and none of the spell slots' rules."""
+        data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFFFFFF)
+        self.assertEqual(data.rules, ravager.RULES_PORTED)
+        self.assertTrue(data.rules & game.RULE_HP_BEST)
         self.assertFalse(data.no_spells(0))
 
     def test_slots_test_switch_is_a_byte(self):
