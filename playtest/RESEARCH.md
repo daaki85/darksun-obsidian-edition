@@ -455,7 +455,12 @@ ticks them off.
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);
 the flip 16974h (pages segment 0BF3h, [118Eh]), the pointer routine 2D72:0942 and its DS:332Ch, A10Dh,
-A115h, A155h, 3330h, 33B6h, 33B8h; the view centred again by 1C5F:01F3. **To play with it**:
+A115h, A155h, 3330h, 33B6h, 33B8h; the view centred again by 1C5F:01F3. The view moves by that routine (its end 21A5Ah) or by following
+a figure (262C:0D80 given CAM_X/CAM_Y's addresses, then drawn by 262C:06C4: calls at 1E3E7h, 2018Eh,
+21439h); the game's drawing scrolls the screen, panel and all, so DSCLOG2 draws the view again after
+each (INT D7h, D8h). The interface's blue-greys are palette 232 to 239 (combatlog.LAST 253). To count
+copies: `import -window` in a loop (about 20 frames a second), the well colour (56,56,77) outside the
+panel. **To play with it**:
 `ravdice.py` running, L on the map (the dice log starts with the panel closed); the collapsed panel's
 line sits at game y about 190. A copy of the panel after a scroll lasts one frame: check by frames
 (`import` every 0.4 s) for the panel's well colour left of x 134.

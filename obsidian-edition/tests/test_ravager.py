@@ -19,15 +19,16 @@ class TableTests(unittest.TestCase):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
         path (the sequel's DS address), rand() (its seed's address), the saving throw's compare (its
         branch the other way), the AC function's end (rewritten) and Share Strength's loop (its effect
-        records' fields and live count elsewhere) differ."""
+        records' fields and live count elsewhere) differ; the sequel's own patches (none of SL's name) count
+        as differing."""
         sl = {p.name: p for p in gamepatch.PATCHES}
         own = set()
         for p in ravager.PATCHES:
-            if (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
+            if p.name not in sl or (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer"})  # (DSCLOG2's own interrupts)
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -95,6 +96,9 @@ class TableTests(unittest.TestCase):
         by = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(by["panel_flip"].replacement, bytes((0xCD, ravager.VEC_FLIP)) + b"\x90" * 6)
         self.assertEqual(by["pointer"].replacement, bytes((0xCD, ravager.VEC_POINTER, 0x90, 0x90)))
+        self.assertEqual(by["centre"].replacement, bytes((0xCD, ravager.VEC_CENTRE, 0x90, 0x90, 0x90)))
+        for n in ("follow_1", "follow_2", "follow_3"):
+            self.assertEqual(by[n].replacement, bytes((0xCD, ravager.VEC_FOLLOW, 0x90)))
 
     def test_item_fields(self):
         """SL's item power (a byte at 0Fh) is the sequel's word at 10h; from SL's 10h on, two bytes on."""

@@ -34,11 +34,30 @@ the labels), an INT 16h hook for L, and the Loader's dice log drawing combatlog.
   ![collapsed](img/2026-11-21-ravager-panel-collapse.png)
 - L hides it; the view under it is drawn back.
   ![hidden](img/2026-11-21-ravager-panel-hidden.png)
-- After a scroll a copy of the panel can show to its left for one captured frame (0.4 s), then it's gone.
+- After a scroll a copy of the panel can show beside it for a moment (fixed below).
+
+## The rough edges fixed (about 01:30 to 02:10 UTC)
+
+- **Colours**: SL's combatlog picks the nearest of palette entries 16 to 223, and in the sequel the
+  interface's blue-greys are 232 to 239 (224 to 231 warm greys, 240 to 253 greys; only 1 to 15
+  cycle, the same in the street and the Roost). `ravlog.apply_layout` sets `combatlog.LAST` to 253:
+  the panel is Shattered Lands' grey-blue in Tyr's street.
+  ![grey-blue](img/2026-11-21-ravager-panel-grey.png)
+- **The copy beside it after a scroll**: frames captured about 20 a second through a fight
+  (`import -window`, 400 of them), the panel's well colour (56,56,77) counted outside the panel.
+  Before: copies 3 to 12 frames (0.15 to 0.6 s), up to 32 rows above or 8 pixels right. The view
+  moves by two routes: the centring routine 1C5F:01F3 (the only code writing CAM_X with a MOV), and
+  the following of a figure, three routines passing CAM_X and CAM_Y's addresses to 262C:0D80 and
+  drawing with 262C:06C4. The game's drawing of a moved view scrolls what is on the screen and draws
+  only what came into view, so the panel goes along. Forcing the centring routine's "draw it whole"
+  flag didn't help (that drawing scrolls too). Now DSCLOG2 draws the view again at once after either
+  route moves it (PROBE_CENTRE, INT D7h at the centring routine's end, 21A5Ah; PROBE_FOLLOW, INT D8h
+  for the "add sp,8" after each 262C:06C4 call, 1E3ECh, 20193h, 2143Eh): one fight, 24 redraws, no
+  copy but a 2-frame (0.1 s) sliver at the panel's right edge once.
+  ![the sliver](img/2026-11-21-ravager-panel-sliver.png)
 
 ## Not yet
 
-- Its colours come from the area's palette: in Tyr's street the stone is purple, not Shattered
-  Lands' grey-blue.
+- That sliver: a third route moving the view a few pixels sideways, not found.
 - The mouse wheel over the panel and the drag of its scrollbar were not tried.
 - No water seen: the street in Tyr only.

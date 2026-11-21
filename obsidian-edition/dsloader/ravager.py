@@ -67,6 +67,8 @@ VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
 VEC_CAST, VEC_SCROLL, VEC_TICK = 0xD2, 0xD3, 0xD4  # (DSCLOG2's PROBE_CAST, PROBE_SCROLL, PROBE_TICK: names over figures)
 VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the combat log's panel)
+VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
+VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
 
 PATCHES: Tuple[Patch, ...] = (
@@ -179,6 +181,14 @@ PATCHES: Tuple[Patch, ...] = (
     # and its routine drawing the pointer (3326Ah, SL's 2EA55h: the stack check).
     Patch("panel_flip", 0x16974, bytes.fromhex("b800a0833e8e1100"), gamepatch._interrupt(VEC_FLIP, 8)),
     Patch("pointer", 0x3326A, bytes.fromhex("39269c00"), gamepatch._interrupt(VEC_POINTER, 4)),
+    # The end of the routine centring the view (1C5F:01F3, 219E3h: "mov byte [143Fh],0"): a move of
+    # the view while the panel is shown drawn again at once, the scrolled copy of the panel gone.
+    Patch("centre", 0x21A5A, bytes.fromhex("c6063f1400"), gamepatch._interrupt(VEC_CENTRE, 5)),
+    # The same after the three calls drawing the view moved after a figure (262C:06C4; the view moved
+    # by 262C:0D80): their "add sp,8".
+    Patch("follow_1", 0x1E3EC, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
+    Patch("follow_2", 0x20193, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
+    Patch("follow_3", 0x2143E, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

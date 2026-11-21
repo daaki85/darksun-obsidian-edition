@@ -207,6 +207,22 @@ class PassTests(unittest.TestCase):
         self.assertFalse(data.in_combat())
         ravlog.restore_layout()
 
+    def test_panel_colours_from_the_interface(self):
+        """The sequel's panel picks its colours from 16-253 (its interface's blue-greys are 232-239);
+        Shattered Lands' range comes back with its layout."""
+        from dsloader import combatlog
+        ravlog.apply_layout()
+        try:
+            self.assertEqual(combatlog.LAST, ravlog.PALETTE_LAST)
+            dac = bytearray(768)
+            for i in range(256):
+                dac[i * 3:i * 3 + 3] = bytes((40, 10, 40))  # (purple everywhere ...)
+            dac[236 * 3:236 * 3 + 3] = bytes((22, 22, 27))  # (... but the interface's 88,88,108)
+            self.assertEqual(combatlog.nearest(bytes(dac), (88, 88, 108)), 236)
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual(combatlog.LAST, 223)
+
     def test_no_rule_changes(self):
         """The sequel's game data takes none of the mod's rules (the Loader's settings name SL's)."""
         data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFF)

@@ -125,6 +125,11 @@ def layout() -> Dict[str, int]:
     return out
 
 
+# The colours the panel and the labels may take (combatlog.nearest: SL's 16-223, its 224-255 cycling for
+# fire and water). The sequel cycles only 1-15: its 224-253 are the interface's (232-239 its blue-greys,
+# the panel's stone and well; 240-253 greys), the same in Tyr's street and in the Roost (2026-11-21).
+PALETTE_LAST = 253
+
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
@@ -141,6 +146,9 @@ def apply_layout() -> int:
             if name in vars(module) and vars(module)[name] == originals.get(name):
                 _SAVED.append((module, name, vars(module)[name]))
                 setattr(module, name, value)
+    from . import combatlog  # (the panel's and the labels' colours: the sequel's palette, PALETTE_LAST)
+    _SAVED.append((combatlog, "LAST", combatlog.LAST))
+    combatlog.LAST = PALETTE_LAST
     return len(_SAVED)
 
 

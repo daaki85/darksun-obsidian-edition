@@ -50,6 +50,8 @@ VEC_SCROLL    equ 0xD3  ; PROBE_SCROLL (20230h: the map's main loop asking where
 VEC_TICK      equ 0xD4  ; PROBE_TICK (3DA2Ch: the game's timer: LABEL_STAMP)
 VEC_FLIP      equ 0xD5  ; FLIP_SITE (16974h: the game's flip of its two screens: the panel on the new one)
 VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the panel put first)
+VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
+VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
 
@@ -2511,6 +2513,87 @@ view_again:
 va_done db 0
 centre  dw CENTRE_OFF, 0
 
+; PROBE_CENTRE: INT VEC_CENTRE replaces "mov byte [143Fh],0" (5 bytes: INT + 3 NOPs) at the end of the
+; game's routine centring the view (1C5F:01F3, 219E3h; [BP+0Ah] 1 if it drew the view). The game's
+; drawing of a moved view scrolls what is on the screen, the panel with it, and draws only what came
+; into view: a copy of the panel left beside it. So a move while the panel is shown is drawn again at
+; once (VIEW_MOVED; twice if the game's call did not draw it: the first draw scrolls). Then the
+; replaced.
+probe_centre:
+        sti
+        mov byte [0x143F], 0
+        push ax
+        mov al, 1
+        cmp byte [bp + 0x0A], 1         ; (the routine's BP: the game drew the view?)
+        je .drawn
+        inc al
+.drawn: call view_moved
+        pop ax
+        iret
+
+; PROBE_FOLLOW: INT VEC_FOLLOW replaces "add sp,8" (3 bytes) after the game's call drawing the view
+; moved by its following a figure (262C:06C4, its "push 1" a draw; at 1E3ECh, 20193h, 2143Eh: three
+; routines moving the view by 262C:0D80, which writes CAM_X and CAM_Y): the move drawn again at once
+; (VIEW_MOVED), then the caller's 8 bytes of arguments taken off (the frame moved up over them).
+probe_follow:
+        sti
+        push ax
+        mov al, 1
+        call view_moved
+        pop ax
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]                ; (flags, CS, IP and BP up by 8)
+        mov [bp + 14], ax
+        mov ax, [bp + 4]
+        mov [bp + 12], ax
+        mov ax, [bp + 2]
+        mov [bp + 10], ax
+        mov ax, [bp]
+        mov [bp + 8], ax
+        pop ax
+        add sp, 8
+        pop bp
+        iret
+
+; VIEW_MOVED: if the view has moved (CAM_X, CAM_Y not the panel's PANEL_CX, PANEL_CY) while the panel
+; is shown on the map, it is drawn again AL times (VIEW_AGAIN); CENTRE_BUSY keeps those draws from
+; coming here again. DS the game's; keeps all.
+view_moved:
+        cmp byte [cs:centre_busy], 0
+        jne .ret
+        cmp word [cs:panel_seg], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        call on_map
+        jne .ret
+        push bx
+        mov bx, [CAM_X]
+        cmp bx, [cs:panel_cx]
+        jne .moved
+        mov bx, [CAM_Y]
+        cmp bx, [cs:panel_cy]
+        je .same
+.moved: mov bx, [CAM_X]
+        mov [cs:panel_cx], bx
+        mov bx, [CAM_Y]
+        mov [cs:panel_cy], bx
+        mov byte [cs:centre_busy], 1
+        push ax
+.again: mov byte [cs:va_done], 0
+        call view_again
+        dec al
+        jnz .again
+        pop ax
+        mov byte [cs:centre_busy], 0
+        inc word [cs:centre_redraws]
+.same:  pop bx
+.ret:   ret
+centre_busy    db 0
+centre_redraws dw 0
+
 ; PANEL_ERASE: where the panel was last drawn, moved by AX, BX (a scroll's copy: 0, 0 for its own
 ; place), drawn again by the game's rectangle routine (REDRAW_RECT); DS the game's; keeps all
 panel_erase:
@@ -3279,6 +3362,8 @@ all_vectors:
         vector VEC_TICK, probe_tick
         vector VEC_FLIP, flip_site
         vector VEC_POINTER, probe_pointer
+        vector VEC_CENTRE, probe_centre
+        vector VEC_FOLLOW, probe_follow
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
