@@ -1105,6 +1105,10 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   on, `sprites.picture_ids`): pictures put only into the pair don't show. outfitgame.py writes
   both, so everyone of that figure wears the outfit (Kurzak, a half-giant, has a picture of his
   own and doesn't).
+- `OBJECT=worn:LOOK` puts in a look by what's worn (`prototypes/wornlooks.py`: Robe, Leather, Bone
+  scale, Chain, Cloak and hood). The names have spaces, so quote the list inside the double quotes:
+  `PT_AFTER_PREPARE="python3 outfitgame.py '300=worn:Bone scale,308=worn:Robe'"`
+  (logs/2026-11-21-worn-looks-in-game.md).
 - `OBJECT=preset:CLASS` puts in `prototypes/presets.py`'s picture instead: the class as a preset of
   the Loader's own gear drawing (clothes recoloured, boots, the fitted cloak), to compare.
 - `pens-after-arena`'s party: a human man (object 300), an elf woman (Cilla, 305), a half-giant
