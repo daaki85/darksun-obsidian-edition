@@ -35,6 +35,14 @@ class FakeGuest:
         self.mem[addr:addr + len(data)] = data
 
 
+def set_rules(test, log, rules):
+    """LOG's set_rules(RULES) for TEST, the module's globals it sets (game.RULES_IN_FORCE,
+    game.BELT_IN_FORCE) put back after the test, so no later test runs under its rules."""
+    test.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_IN_FORCE)
+    test.addCleanup(setattr, game, "BELT_IN_FORCE", game.BELT_IN_FORCE)
+    log.set_rules(rules)
+
+
 def far(addr):
     return struct.pack("<HH", addr & 0xF, addr >> 4)
 
@@ -255,8 +263,7 @@ class AttackTests(unittest.TestCase):
         """With the Loader's rule: -2 main hand, -4 off hand, the DEX reaction adjustment
         (the game's initiative table) added, never above 0."""
         log = make_game()
-        log.set_rules(game.RULE_TWO_WEAPONS)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
+        set_rules(self, log, game.RULE_TWO_WEAPONS)
         m = log.guest.mem
         dex = CREATURES + game.CREATURE_ABILITIES + 1
         m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
@@ -282,8 +289,7 @@ class AttackTests(unittest.TestCase):
         """With the rule a ranger has no penalty only in light armour (DSCLOG's RG_TWO): a metal
         chest piece (item 7, type 12) brings AD&D's; leather takes it away again."""
         log = make_game()
-        log.set_rules(game.RULE_TWO_WEAPONS)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
+        set_rules(self, log, game.RULE_TWO_WEAPONS)
         m = log.guest.mem
         dex = CREATURES + game.CREATURE_ABILITIES + 1
         m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
@@ -307,7 +313,7 @@ class AttackTests(unittest.TestCase):
                 self.assertEqual(lines[1], want)
         # a Justifier (the ranger's second kit, kits on) in metal: none still
         m[typ + 8] = 4
-        log.set_rules(game.RULE_TWO_WEAPONS | game.RULE_KITS)
+        set_rules(self, log, game.RULE_TWO_WEAPONS | game.RULE_KITS)
         m[SHEETS + game.SHEET_CLASSES], m[SHEETS + 0x43] = 13, 2
         lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
@@ -761,8 +767,7 @@ class SaveTests(unittest.TestCase):
         """With the Loader's rule (always on) the game doesn't double the d20, and neither does the
         log; the target's DEX defensive adjustment counts instead (DEX 16: +2)."""
         log = make_game()
-        log.set_rules(game.RULE_NO_DOUBLE)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
+        set_rules(self, log, game.RULE_NO_DOUBLE)
         self.damage_formula(log, FIREBALL, 0x20, 0x01, 0x06)
         for f in (6, 5, 4):
             log.describe(entry(raw_for(f, 6), dicelog.DICE_SITE, words(0, 0, 3, 6), words(0, 0, FIREBALL, 3),
@@ -771,7 +776,7 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(self.probe(11, needed=14, spell=FIREBALL)),
                          ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
                           "needs 14 (45% to save) -> failed: full damage, 15"])
-        log.set_rules(0)  # (the rule's bit clear: the mark stays, the rule always on)
+        set_rules(self, log, 0)  # (the rule's bit clear: the mark stays, the rule always on)
         rules = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF + FIREBALL * game.SPELL_SIZE
         self.assertTrue(log.guest.mem[rules + 1] & game.CATEGORY_DODGE)
 
@@ -2062,7 +2067,7 @@ class NewLinesTests(unittest.TestCase):
         """RULE_HP_BEST: the game rolls the die twice (DSCLOG's PROBE_HP_BEST); the line comes with
         the second, the better kept."""
         log = make_game()
-        log.set_rules(game.RULE_HP_BEST)
+        set_rules(self, log, game.RULE_HP_BEST)
         first = entry(raw_for(2, 10), dicelog.DICE_SITE, words(0, 0, 1, 10), words(0, 0, 0, 9, 4))
         second = entry(raw_for(7, 10), dicelog.DICE_SITE, words(0, 0, 1, 10), words(0, 0, 0, 9, 4))
         self.assertEqual(log.describe(first), [])
@@ -2869,7 +2874,7 @@ class CreationTests(unittest.TestCase):
         """RULE_MULTI_HP: as Demihuman Deities, CON's bonus (a warrior's, the character having a warrior
         class) on each die, the total shared between the classes."""
         log = make_creation()
-        log.set_rules(game.RULE_MULTI_HP)
+        set_rules(self, log, game.RULE_MULTI_HP)
         for cls, sides, level, face in ((9, 10, 1, 10), (9, 10, 2, 5), (17, 6, 1, 1), (17, 6, 2, 6)):
             e = entry(raw_for(face, sides), dicelog.DICE_SITE, words(0, 0, 1, sides),
                       words(dicelog.CREATION_HP_CALLER, 0x54FA, 1, cls, level), parent_code=dicelog.LEVEL_HP_RETURN)
@@ -2882,7 +2887,7 @@ class CreationTests(unittest.TestCase):
     def test_hit_points_best_of_two(self):
         """RULE_HP_BEST: each level's die rolled twice, the better kept."""
         log = make_creation()
-        log.set_rules(game.RULE_HP_BEST)
+        set_rules(self, log, game.RULE_HP_BEST)
         for cls, sides, level, faces in ((9, 10, 1, (2, 10)), (9, 10, 2, (5, 1)), (17, 6, 1, (3, 3)), (17, 6, 2, (1, 6))):
             for face in faces:
                 e = entry(raw_for(face, sides), dicelog.DICE_SITE, words(0, 0, 1, sides),
