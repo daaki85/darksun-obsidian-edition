@@ -62,6 +62,15 @@ class ProfileTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertEqual((sizes.TABLE, sizes.SPELLS, sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE), sl)
 
+    def test_magic_resistance_reads_the_sequels_effects(self):
+        # (Low Magic Res. 61 and Mind Barred 64 in the sequel's list, as its routine at 84AB5h tests them)
+        ravlog.apply_layout()
+        try:
+            self.assertEqual((game.LOW_RESISTANCE_EFFECT, game.MIND_BAR_EFFECT), (61, 64))
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual((game.LOW_RESISTANCE_EFFECT, game.MIND_BAR_EFFECT), (31, 32))
+
 
 class TypeTests(unittest.TestCase):
     def test_sl_type(self):

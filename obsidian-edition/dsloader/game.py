@@ -456,6 +456,7 @@ def duration_bonus(spell: int, rec: bytes) -> int:
 # blow; Cloudkill's bands; Cell Adjustment's 1d4
 FIRE_SHIELD_EFFECT, BLUR_EFFECT, BIOFEEDBACK_EFFECT, LOW_RESISTANCE_EFFECT = 20, 55, 4, 31
 FIRE_SHIELD_SAVE, BLUR_SAVE, BIOFEEDBACK_LESS, LOWER_RESISTANCE_BASE = 2, 1, 2, 30
+MIND_BAR_EFFECT = 32  # (Mind Bar's +75% magic resistance against mind-affecting spells)
 CLOUD_DIES, CLOUD_SAVES = 4, 5  # (under 4 levels no save; to 5 a failed save kills)
 MANUAL_DICE = {**{c: (6, 4) for c in range(1, 9)}, 9: (8, 6), 10: (8, 6), 11: (4, 6), 12: (6, 6),
                **{c: (8, 6) for c in range(13, 17)}, 17: (6, 8)}

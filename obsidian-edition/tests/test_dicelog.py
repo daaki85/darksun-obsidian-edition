@@ -1940,7 +1940,7 @@ class ManualGroup3Tests(unittest.TestCase):
             log = self.make(manual)
             struct.pack_into("<H", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SHEET_INDEX, 3)
             log.guest.mem[sheet + game.SHEET_MAGIC_RESISTANCE] = 80
-            set_effects(log, [(0x29, 0, dicelog.LOW_RESISTANCE)] if effect else [])
+            set_effects(log, [(0x29, 0, game.LOW_RESISTANCE_EFFECT)] if effect else [])
             self.amount(log, 0, 12)
             e = entry(raw_for(20, 100), dicelog.DICE_SITE, words(0, 0, 1, 100), words(0, 0, 0x29, spell, level),
                       parent_code=dicelog.RESISTANCE_ROLL_RETURN)

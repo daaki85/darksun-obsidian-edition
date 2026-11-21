@@ -1005,8 +1005,11 @@ and `rest-no-call-user`: all transferred, the kits kept.
   own, a control.
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
-  spell cast in `ravhold.sh`'s fight: USE (`ravclick.py 197 171`), LEVEL (the same button again) round
-  the levels with spells known, the spell's icon (y 60, x 175/194/213/232; the name shows in the bar
+  spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py
+  197 171`, the screen's bottom row) round the levels with spells known (the screen opens on the last
+  level shown), the spell's icon (y 60, x 175/194/213/232; the name shows in the bar
   below when the pointer rests on it), then click **on a combatant** (`ravfight.py state` gives their
   places: game x = state x + 7, y = state y + 19 in this street); a click on bare street does nothing. A
   spell cast again (Flaming Arrow's second bolt) puts its icon up as the pointer for the next target.
+  For a caster's next turn put the others under Computer Control and use `ravfight.py wait` (with its
+  HP raised the party holds); `ravfight.py until 0` ends the others' turns, so the Draxans win.

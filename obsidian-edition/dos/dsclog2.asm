@@ -547,6 +547,35 @@ image_spell:
 .flags: pop ax
         jmp acid_flags
 
+; effect_amount: AL the amount (+9) of thing AX's effect CL, 0 if it has none. DS the game's; others kept.
+effect_amount:
+        push bx
+        push dx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_GAP
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_BASE
+        mov al, 0
+        cmp dx, 400
+        ja .out
+.each:  or dx, dx
+        jz .out
+        cmp [es:bx], ax
+        jne .on
+        cmp [es:bx + 6], cl
+        jne .on
+        mov al, [es:bx + 9]
+        jmp .out
+.on:    add bx, 10
+        dec dx
+        jmp .each
+.out:   pop es
+        pop dx
+        pop bx
+        ret
+
 ; has_effect: ZF set if thing AX has effect CL (the active effects). DS the game's; all kept.
 has_effect:
         push bx
@@ -634,7 +663,7 @@ image_blow:
 ; rounds (1 a started minute) as charges; ACID_ROUND, at each round's start, spends one for each
 ; creature with Acid, through the stub; ACID_USE lets no other call spend Acid's. The burn's damage
 ; is Acid Arrow's, whose record would put Acid on again: ACID_BURN notes a burn starting and
-; ACID_ONCE has its damage put no effect on. (DSCLOG's, without Lower Resistance's level, Sunstroke's
+; ACID_ONCE has its damage put no effect on. (DSCLOG's, without Sunstroke's
 ; heat or Whirlwind's damage, which the sequel doesn't have from the mod yet.) Each INT is followed
 ; by NOPs to the site's length; its way back is right after the INT.
 ACID_EFFECT   equ 1
@@ -663,11 +692,19 @@ acid_flags:
 
 ; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (7FAA6h; 8 bytes) in the routine adding an effect ([BP+0Ch]
 ; the effect, [BP+0Eh] its time, a dword; less than 0 charges, kept in the entry's +8): an Acid's time
-; in seconds made rounds as charges (at least 1, at most 127); then the compare made, its flags returned.
+; in seconds made rounds as charges (at least 1, at most 127); Low Resistance's (61) amount (+9, ES:BX
+; the entry less 24Dh) Lower Resistance's cast's level (CAST_LEVEL, LOWRES_SITE's); then the compare
+; made, its flags returned.
 acid_rounds:
         pushad
         push es
-        cmp byte [bp + 0x0C], ACID_EFFECT
+        cmp byte [bp + 0x0C], LOWRES_EFFECT
+        jne .acid
+        cmp word [bp + 0x0A], LOWRES_SPELL
+        jne .acid
+        mov al, [cs:cast_level]
+        mov [es:bx + EFFECTS_BASE + 9], al
+.acid:  cmp byte [bp + 0x0C], ACID_EFFECT
         jne .test
         mov eax, [bp + 0x0E]
         or eax, eax
@@ -2807,6 +2844,8 @@ site_table:
         dw cloud_kill                       ; 5 SITE_CLOUD_KILL
         dw flame_count                      ; 6 SITE_FLAME
         dw bio_least                        ; 7 SITE_BIO
+        dw cast_start                       ; 8 SITE_CAST
+        dw lowres_site                      ; 9 SITE_LOWRES
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -2973,6 +3012,54 @@ bio_least:
         mov si, 1
         inc word [cs:manual_count]
 .out:   iret
+; CAST_START (site 8, "cast_level_kept"): the cast's tail (7E32Ch, every cast from the USE screen, a
+; monster's, an item's or a scroll's: [BP+0Ah] the spell, [BP+0Ch] the cast's level) at its start, "mov
+; di,[bp+0Ah]" (7E338h): the level kept (CAST_LEVEL) for ACID_ROUNDS, which puts Lower Resistance's into
+; its effect's amount as the cast puts the effect on (SL's TH_LEVEL, CAST_SITE's).
+cast_start:
+        mov di, [bp + 0x0A]
+        push ax
+        mov al, [bp + 0x0C]
+        mov [cs:cast_level], al
+        pop ax
+        iret
+cast_level db 0
+; LOWRES_SITE (site 9, "lower_resistance_manual"): the magic resistance routine (84AB5h, SL's 7A4A8h:
+; [BP+6] the combatant, SI the spell, [BP+0Ah] the cast's level, [BP-2] the resistance, [BP-0Bh] 20h
+; the Low Resistance effect, 61, on), 84B2Eh-84B4Eh (33 bytes: the effect's halving, then Lower
+; Resistance's own 30 + the level off): 30% + 1% a level of the caster off, AD&D's (the manual's), the
+; effect's level its amount (+9, ACID_ROUNDS'), the cast's own the same, the two not added up; the
+; game's next test makes it 0 at least.
+LOWRES_EFFECT equ 61
+LOWRES_SPELL  equ 64
+LOWRES_BASE   equ 30
+lowres_site:
+        push ax
+        push cx
+        push dx
+        xor dx, dx
+        test byte [bp - 0x0B], 0x20
+        jz .cast
+        mov ax, [bp + 6]
+        mov cl, LOWRES_EFFECT
+        call effect_amount
+        movzx dx, al
+        add dx, LOWRES_BASE
+.cast:  cmp si, LOWRES_SPELL
+        jne .take
+        movzx ax, byte [bp + 0x0A]
+        add ax, LOWRES_BASE
+        cmp ax, dx
+        jbe .take
+        mov dx, ax
+.take:  or dx, dx
+        jz .out
+        sub [bp - 2], dx
+        inc word [cs:manual_count]
+.out:   pop dx
+        pop cx
+        pop ax
+        iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

@@ -1232,6 +1232,10 @@ creature and three words; dicelog's `_manual`).
   Sites 6 and 7 do `flame_arrow_count` (the cast's tail, 7E8E0h, `[bp+0Ah]` the spell,
   `[bp+0Ch]` the level) and `biofeedback_least` (8348Bh; the sequel's Biofeedback is effect 8)
   ([played](../playtest/logs/2026-11-21-ravager-flame-biofeedback.md)).
+  Sites 8 and 9 do Lower Resistance: `cast_level_kept` (7E338h, the cast's tail's start) keeps
+  the cast's level for `ACID_ROUNDS` to put into Low Magic Res.'s (61) amount, and
+  `lower_resistance_manual` (84B2Eh, the same 33 bytes as SL's) takes the 30 + the level off
+  ([played](../playtest/logs/2026-11-21-ravager-lower-resistance.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved

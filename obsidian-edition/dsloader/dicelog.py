@@ -139,7 +139,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 # the effect; while it lasts the game adds it to STR, keeping STR between 3 and 24
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
-MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
+MIND_BAR_RESISTANCE = 75  # (Mind Bar and Low Resistance: game.MIND_BAR_EFFECT, LOW_RESISTANCE_EFFECT)
 LOWER_RESISTANCE_SPELL = 64
 WAIST_SLOT, NECK_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
@@ -4638,14 +4638,14 @@ class DiceLog:
         # the game's rules (its routine at 7A4A1h): Mind Bar +75 against mind-affecting spells,
         # then Lower Resistance halves it
         on = {x.id for x in g.effects() if x.owner == target}
-        if MIND_BAR in on and g.mind_affecting(spell):
+        if game.MIND_BAR_EFFECT in on and g.mind_affecting(spell):
             resistance += MIND_BAR_RESISTANCE
             how.append(f"+{MIND_BAR_RESISTANCE} Mind Bar")
         cast = (level or 0) & 0xFF
         if g.spells_manual():  # (DSCLOG's LOWRES_SITE: 30 + the level off, the effect's or this cast's)
             taken = []
-            if LOW_RESISTANCE in on and resistance:
-                amount = g.effect_amount(target, LOW_RESISTANCE) or 0
+            if game.LOW_RESISTANCE_EFFECT in on and resistance:
+                amount = g.effect_amount(target, game.LOW_RESISTANCE_EFFECT) or 0
                 taken.append((game.LOWER_RESISTANCE_BASE + amount, f"Lower Resistance on it, level {amount}"))
             if spell == LOWER_RESISTANCE_SPELL and resistance:
                 taken.append((game.LOWER_RESISTANCE_BASE + cast, f"this Lower Resistance, level {cast}"))
@@ -4654,7 +4654,7 @@ class DiceLog:
                 resistance = max(resistance - most, 0)
                 how.append(f"-{most} {why}")
         else:
-            if LOW_RESISTANCE in on and resistance:
+            if game.LOW_RESISTANCE_EFFECT in on and resistance:
                 resistance //= 2
                 how.append("halved by Lower Resistance")
             if spell == LOWER_RESISTANCE_SPELL and resistance:  # (the game's own, 7A518h)

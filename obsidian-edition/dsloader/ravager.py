@@ -308,6 +308,12 @@ PATCHES: Tuple[Patch, ...] = (
     # dl,[es:bx]", the record's count), and Biofeedback's least 1 of a blow (8348Bh, SL's 79C83h: "sub si,2")
     Patch("flame_arrow_count", 0x7E8E0, bytes.fromhex("268a17"), _site(6, 3)),
     Patch("biofeedback_least", 0x8348B, bytes.fromhex("83ee02"), _site(7, 3)),
+    # ... Lower Resistance's 30% + 1% a caster level off, not the resistance halved (84B2Eh-84B4Eh, SL's
+    # 7A507h-7A527h), the cast's level kept from the cast's tail's start (7E338h: "mov di,[bp+0Ah]") for
+    # ACID_ROUNDS to put into the effect's amount
+    Patch("cast_level_kept", 0x7E338, bytes.fromhex("8b7e0a"), _site(8, 3)),
+    Patch("lower_resistance_manual", 0x84B2E, bytes.fromhex(
+        "f646f520740b8b46fe992bc2d1f88946fe83fe40750b8a460ab400051e002946fe"), _site(9, 33)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),
