@@ -1218,6 +1218,11 @@ creature and three words; dicelog's `_manual`).
 - `fire_shield_save` (79E03h, 20 bytes: Protection from Cold's test,
   `fshield_save`): its +3 and Fire Shield's (20) +2 when the spell's damage kinds
   (`[bp-4]`, the record's +1Ah) have fire (2) or cold (4).
+  In Wake of the Ravager the save modifiers are 83606h (DI the modifier; the effects
+  numbered otherwise: Barkskin 6, Blurry 13, Fire Shielded 38, Protected vs Cold 73):
+  DSCLOG2's `BLUR_SAVE` (`INT F3h` at Barkskin's test, 8373Ah, 10 bytes) and
+  `FSHIELD_SAVE` (`INT F4h` at Protection from Cold's, 837F7h, 20 bytes) do the same
+  ([played](../playtest/logs/2026-11-21-ravager-blur-fire-shield.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
