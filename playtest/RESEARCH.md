@@ -881,6 +881,12 @@ attack's item [BP+12h], range [BP+16h]). A creature's item lists (+8, +0Ah, +0Ch
 combatants' table numbered from 201h for the party, not below 400. Computer Control in a fight: C, then
 the lower small icon left of each character box (game 47,53 / 98,53 / 47,113 / 98,113).
 
+**Its inventory's two hands** (2026-11-21, logs/2026-11-21-ravager-half-giant.md): the routine that
+puts an item in a hand at 7761Bh (SL's), the character on show at (load + 3E71h):0B44h, an item type's
+two-handed bit +0Bh 40h (SL's +0Fh), tested at 77976h (the other hand's: "Two handed weapon in use") and
+77A0Dh (the new one's: "Need two free hands"). The far "has effect" routine 0806:0020 and "take it off"
+0806:004D (SL's 598:20, 598:4D).
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18

@@ -73,13 +73,15 @@ VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a 
 VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
 VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
+VEC_TWO_HANDED = 0xE4  # (DSCLOG2's TWO_HANDED: a half-giant's two-handed weapon in one hand)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
-RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
+RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
+                | game.RULE_HALF_GIANT)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -208,6 +210,12 @@ PATCHES: Tuple[Patch, ...] = (
     # the level-up (957E0h), so the creation screen's die never set them and a new character kept the
     # least (7 for a 7th-level fighter). DSCLOG2's ROLL_MAX_HP at the add (9506Ch) does SL's part.
     Patch("roll_max_hp", 0x9506C, bytes.fromhex("26014f0a"), gamepatch._interrupt(VEC_ROLL_MAX, 4)),
+    # Half-giants hold a two-handed weapon in one hand (SL's two_handed_other, two_handed_new; the Options
+    # tab's "half_giant_hands"): DSCLOG2's TWO_HANDED at the inventory's two reads of an item type's
+    # two-handed bit (77976h the other hand's, 77A0Dh the new one's: "test byte es:[bx+0Bh],40h"; SL's
+    # 6F33Fh, 6F3CCh).
+    Patch("two_handed_other", 0x77976, bytes.fromhex("26f6470b40"), gamepatch._interrupt(VEC_TWO_HANDED, 5)),
+    Patch("two_handed_new", 0x77A0D, bytes.fromhex("26f6470b40"), gamepatch._interrupt(VEC_TWO_HANDED, 5)),
     # Helms count AC 1 (SL's ring_ac's helm part and box_ac; the Options tab's "helm_ac"): DSCLOG2's
     # PROBE_HELM_AC at the AC function's two reads of a worn item's type's AC (5D663h, 5D67Bh: "mov
     # al,es:[bx+0Eh] / cwde"; SL's 58EBDh) and PROBE_BOX_AC at the item box's AC BONUS (9A4B7h, SL's 8C15Ah).

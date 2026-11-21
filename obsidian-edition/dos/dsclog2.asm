@@ -59,6 +59,7 @@ VEC_HELD_HIT  equ 0xDF  ; HELD_HIT (5D088h: the natural 20's test: a helpless ta
 VEC_HELD_DAMAGE equ 0xE0 ; HELD_DAMAGE (5D1B7h: a helpless target's damage, not doubled)
 VEC_TWO       equ 0xE1  ; PROBE_TWO (5DE7Ch: the two-weapon to-hit adjustment: AD&D's -2/-4 with RULE_TWO_WEAPONS)
 VEC_ROLL_MAX  equ 0xE3  ; ROLL_MAX_HP (9506Ch: a fix: the most hit points worked out again after a hit die, as SL's)
+VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
@@ -2512,6 +2513,47 @@ roll_max_hp:
 rm_target dw 0, 0
 rm_count  dw 0                  ; (rises made so, for a look in play)
 
+; HALF-GIANTS' HANDS: DSCLOG's RULE_HALF_GIANT (PROBE_TWO_HANDED), a half-giant holds a two-handed weapon
+; in one hand. INT VEC_TWO_HANDED replaces "test byte es:[bx+0Bh],40h" (5 bytes: INT + 3 NOPs), the
+; two-handed bit of an item type (ES:BX), where the inventory puts a weapon in a hand (the routine at
+; 7761Bh, SL's 6F2xxh): the other hand's ("Two handed weapon in use", 77976h, SL's 6F33Fh) and the one
+; going in ("Need two free hands", 77A0Dh, SL's 6F3CCh). ZF in the INT's frame: the game's test, or,
+; with the rule, set ("not two-handed") for a half-giant, the character on show at
+; (load + 3E71h):0B44h (the routine's own read, 77636h). The game's check that both hands don't hold
+; heavy weapons (over 30 each) still stands; the sequel has no cahulaks to leave out.
+RULE_HALF_GIANT equ 512
+RACE_HALF_GIANT equ 5
+TYPE_FLAGS    equ 0x0B
+TYPE_TWO_HANDED equ 0x40
+two_handed:
+        push bp
+        mov bp, sp                  ; ([BP+6] the INT's flags)
+        or word [bp + 6], 0x40      ; ZF: not two-handed
+        test byte [es:bx + TYPE_FLAGS], TYPE_TWO_HANDED
+        jz .out
+        test word [cs:rules], RULE_HALF_GIANT
+        jz .two
+        push ax
+        push bx
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        imul ax, [es:USE_WHO_OFF], SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        cmp byte [es:bx + SHEET_RACE], RACE_HALF_GIANT
+        pop es
+        pop bx
+        pop ax
+        jne .two
+        inc word [cs:th_count]
+        jmp .out
+.two:   and word [bp + 6], ~0x40
+.out:   pop bp
+        iret
+th_count  dw 0                  ; (half-giants let so, for a look in play)
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -4096,6 +4138,7 @@ all_vectors:
         vector VEC_TWO, probe_two
         vector VEC_OFF_HAND, off_hand
         vector VEC_ROLL_MAX, roll_max_hp
+        vector VEC_TWO_HANDED, two_handed
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
