@@ -72,6 +72,8 @@ VEC_LEARN_SAID equ 0xEE  ; LEARN_SAID (99A7Fh: YOU LEARN THE SPELL: a failed try
 VEC_LEARN_REFUSED equ 0xEF ; LEARN_REFUSED (99A86h: YOU ALREADY KNOW THIS SPELL: a full level's message)
 VEC_PICK_ANY  equ 0xF0  ; PICK_ANY (9317Fh: a preserver's level up: CHOOSE A SPELL only with a spell its INT has room for)
 VEC_PICK_PAGE equ 0xF2  ; PICK_PAGE (93487h: CHOOSE A SPELL's first page: the highest level with room)
+VEC_BLUR_SAVE equ 0xF3  ; BLUR_SAVE (8373Ah: Barkskin's +1 on saves, and Blur's)
+VEC_FSHIELD_SAVE equ 0xF4 ; FSHIELD_SAVE (837F7h: Protection from Cold's +3, and Fire Shield's +2)
 VEC_PICK_LIST equ 0xF1  ; PICK_LIST (93246h: CHOOSE A SPELL's page: none of a level the reader's INT has full)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
@@ -2739,6 +2741,43 @@ bit_known:
         pop bx
         pop ax
         ret
+; SPELLS AS THE MANUAL HAS THEM (SL's spells_manual; gamepatch.SPELLS_MANUAL, the Loader's copy without them
+; with the option off). In the sequel's save modifiers (83606h, SL's 79D46h; DI the modifier, [BP+0Ah]
+; the target's effects' bits, far: bit n effect n, the sequel's numbers; [BP-4] the spell's flags, 2
+; fire, 4 cold):
+; - BLUR_SAVE replaces Barkskin's "les bx,[bp+0Ah] / test byte [es:bx],40h / jz / inc di" (8373Ah; 10
+;   bytes): its +1, the game's, and Blurry's (13) +1 against magic, as the manual's.
+; - FSHIELD_SAVE replaces Protection from Cold's "test word [bp-4],4 / jz / les bx,[bp+0Ah] / test byte
+;   [es:bx+9],2 / jz / add di,3" (837F7h; 20 bytes): its +3, the game's, and Fire Shielded's (38) +2
+;   against fire and cold, as the manual's.
+BLURRY_EFFECT equ 13
+FIRE_SHIELD_EFFECT equ 38
+blur_save:
+        les bx, [bp + 0x0A]
+        test byte [es:bx], 0x40
+        jz .blur
+        inc di
+.blur:  test byte [es:bx + BLURRY_EFFECT / 8], 1 << (BLURRY_EFFECT % 8)
+        jz .out
+        inc di
+        inc word [cs:manual_saves]
+.out:   iret
+fshield_save:
+        les bx, [bp + 0x0A]
+        test word [bp - 4], 4
+        jz .shield
+        test byte [es:bx + 9], 2
+        jz .shield
+        add di, 3
+.shield:
+        test word [bp - 4], 6
+        jz .out
+        test byte [es:bx + FIRE_SHIELD_EFFECT / 8], 1 << (FIRE_SHIELD_EFFECT % 8)
+        jz .out
+        add di, 2
+        inc word [cs:manual_saves]
+.out:   iret
+manual_saves dw 0                           ; (Blur's and Fire Shield's, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5563,6 +5602,8 @@ all_vectors:
         vector VEC_PICK_ANY, pick_any
         vector VEC_PICK_LIST, pick_list
         vector VEC_PICK_PAGE, pick_page
+        vector VEC_BLUR_SAVE, blur_save
+        vector VEC_FSHIELD_SAVE, fshield_save
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

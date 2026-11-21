@@ -77,6 +77,7 @@ VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the ca
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
 VEC_REACH, VEC_RANGER_LEVEL, VEC_ENL_ROLL, VEC_ENL_SITE = 0xE9, 0xEA, 0xEB, 0xEC
 VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0xED, 0xEE, 0xEF  # (DSCLOG2's preservers' INT)
+VEC_BLUR_SAVE, VEC_FSHIELD_SAVE = 0xF3, 0xF4  # (DSCLOG2's BLUR_SAVE, FSHIELD_SAVE: the spells as the manual has them)
 VEC_PICK_ANY, VEC_PICK_LIST, VEC_PICK_PAGE = 0xF0, 0xF1, 0xF2  # (DSCLOG2's PICK_ANY, PICK_LIST, PICK_PAGE: preservers' INT at a level up)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
 # EFFECT_RECORDS), and the empty one the stinkpots' Nauseated takes (DSCLOG2's STINK_EFFECT)
@@ -279,6 +280,12 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pick_any", 0x9317F, bytes.fromhex("8946fe0bc0"), gamepatch._interrupt(VEC_PICK_ANY, 5)),
     Patch("pick_list", 0x93246, bytes.fromhex("8bf8"), gamepatch._interrupt(VEC_PICK_LIST, 2)),
     Patch("pick_page", 0x93487, bytes.fromhex("a2ec43"), gamepatch._interrupt(VEC_PICK_PAGE, 3)),
+    # Spells as the manual has them (SL's names, so the option's skip covers them: gamepatch.SPELLS_MANUAL):
+    # Blur's +1 on saves against magic (DSCLOG2's BLUR_SAVE at Barkskin's test, 8373Ah, SL's 79DC0h) and
+    # Fire Shield's +2 against fire and cold (FSHIELD_SAVE at Protection from Cold's, 837F7h, SL's 79E03h)
+    Patch("blur_save", 0x8373A, bytes.fromhex("c45e0a26f607407401 47".replace(" ", "")), gamepatch._interrupt(VEC_BLUR_SAVE, 10)),
+    Patch("fire_shield_save", 0x837F7, bytes.fromhex("f746fc0400740dc45e0a26f64709027403 83c703".replace(" ", "")),
+          gamepatch._interrupt(VEC_FSHIELD_SAVE, 20)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),
