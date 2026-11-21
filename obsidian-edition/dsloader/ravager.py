@@ -75,6 +75,7 @@ VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: 
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
+VEC_REACH = 0xE9  # (DSCLOG2's REACH: a polearm's two squares)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
 # EFFECT_RECORDS), and the empty one the stinkpots' Nauseated takes (DSCLOG2's STINK_EFFECT)
 EFFECT_RECORDS_FILE, NAUSEATED = 0x3C870 + 0x5200, 12
@@ -232,6 +233,8 @@ PATCHES: Tuple[Patch, ...] = (
     # starts (5B838h: its movement stored; SL's 57566h), a tangled one's turn taken.
     Patch("cahulaks_hit", 0x5D1FE, bytes.fromhex("c646e700"), gamepatch._interrupt(VEC_CAH_HIT, 4)),
     Patch("cahulaks_move", 0x5B838, bytes.fromhex("2689872e02"), gamepatch._interrupt(VEC_CAH_MOVE, 5)),
+    # a polearm's reach (DSCLOG2's REACH): the combatant distance routine's "mov ax,[bp-1Ch]" at its end
+    Patch("reach", 0x25CDD, bytes.fromhex("8b46e4"), gamepatch._interrupt(VEC_REACH, 3)),
     # the stinkpots' Nauseated (DSCLOG2's STINKPOTS): the sequel's effect 12, empty (no name, icon 0), named
     # and given Stinking Cloud's icon (ICON 21000 + 22, as the effects' icons are their spells')
     Patch("nauseated_name", EFFECT_RECORDS_FILE + NAUSEATED * 31, bytes(31),

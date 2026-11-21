@@ -63,6 +63,7 @@ VEC_CAH_TWO   equ 0xE5  ; CAH_TWO (5DE6Fh: the two-weapon routine on for the cah
 VEC_CAH_SWING equ 0xE6  ; CAH_SWING (5D052h: a swing's start: the off head's more)
 VEC_CAH_HIT   equ 0xE7  ; CAH_HIT (5D1FEh: a weapon's hit has done damage: the cahulaks' tangle)
 VEC_CAH_MOVE  equ 0xE8  ; CAH_MOVE (5B838h: a creature's turn starts: a tangled one's taken)
+VEC_REACH     equ 0xE9  ; REACH (25CDDh: the combatant distance routine's result: a polearm's two squares)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -3081,6 +3082,188 @@ stinks     dw 0                 ; (stinkpot saves made, for a look in play)
 nauseas    dw 0                 ; (Nauseated put on)
 nausea_swings dw 0              ; (a nauseated attacker's swings)
 
+; REACH: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits"): a polearm reaches two squares. INT
+; VEC_REACH replaces "mov ax,[bp-1Ch]" (25CDDh; 3 bytes: INT + NOP) at the end of the combatant distance
+; routine (1D40:35EFh, 25BEFh; SL's 1A0A:2BA5h: [BP+6] the attacker, [BP+8] the target, both combatants;
+; the least square distance between their footprints: 1 adjacent, diagonals too, 2 the square beyond).
+; It does the MOV; then with the rule, for a distance of 2 asked by one of the game's melee tests
+; (REACH_CALLER), an attacker whose hands hold a polearm and no other weapon (REACH_HANDS), and no wall
+; on the line between the two (REACH_LINE), AX 1: the game then takes the target as adjacent. The melee
+; tests, by their way back as a place in the program (the caller's CS less the load, x 16, + IP; each
+; compares the distance with 1): the pointer's sword (20617h), the attack pointer's click (1EADCh), the
+; walk arrow's click on a foe (1E2AAh), the walk to attack arriving (1FF39h and 260CBh), the step
+; switch's case (2420Ah); and the computer's choice of an attack, in the combat overlay (5A920h on,
+; loaded anywhere): its target's distance against its weapon's range (IP 14A2h, 5BDC2h) and the target
+; it found in range (IP 1A72h, 5C392h), each told by its IP and the code around it (a far call to
+; 35EFh before, its segment as the overlay loader made it; "add sp,4 / mov [bp-0Ah],ax" after). Every other caller (the spells', a missile's)
+; keeps 2. The polearm: KIND_OF_TYPE's polearm (type 80).
+REACH_AI_RANGE equ 0x14A2
+ITEM_LISTS_MOST equ 520         ; (the things the combatants' table holds)
+REACH_AI_FOUND equ 0x1A72
+POLEARM_KIND equ 10
+TYPE_WEAPON  equ 3              ; (a type's flags, +00h: 1 a melee weapon, 2 a missile weapon)
+WALL_POS     equ 0x67C5         ; DS: the map things' feet (x, y), THING_SIZE a thing (sixteenths of a square)
+REACH_LINE_SEG equ 0x0B0B - 0x47E0  ; (the line test's segment, 0B0Bh:00A4h (10354h), less DS)
+reach_rets   dd 0x20617 - 0x5200, 0x1EADC - 0x5200, 0x1E2AA - 0x5200, 0x1FF39 - 0x5200
+             dd 0x260CB - 0x5200, 0x2420A - 0x5200
+REACH_RETS   equ ($ - reach_rets) / 4
+reaches      dw 0               ; (distances of 2 made 1, for a look in play)
+reach_site:
+        mov ax, [bp - 0x1C]
+        cmp ax, 2
+        jne .out
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        sti
+        pushad
+        push es
+        call reach_caller
+        jne .no
+        mov ax, [bp + 6]
+        call reach_hands
+        jne .no
+        call reach_line
+        jne .no
+        inc word [cs:reaches]
+        pop es
+        popad
+        mov ax, 1
+        iret
+.no:    pop es
+        popad
+        mov ax, 2
+.out:   iret
+
+; REACH_CALLER: ZF if the distance routine's way back ([BP+2], [BP+4]) is one of REACH's melee tests.
+; DS the game's; EAX, CX, EDX, SI, DI, ES changed.
+reach_caller:
+        movzx edx, word [bp + 4]
+        mov ax, ds
+        sub ax, DGROUP_GAP
+        movzx eax, ax
+        sub edx, eax                    ; (the caller's CS less the load)
+        shl edx, 4
+        movzx eax, word [bp + 2]
+        add edx, eax
+        mov si, reach_rets
+        mov cx, REACH_RETS
+.res:   cmp edx, [cs:si]
+        je .ret
+        add si, 4
+        loop .res
+        mov ax, [bp + 2]
+        cmp ax, REACH_AI_RANGE
+        je .code
+        cmp ax, REACH_AI_FOUND
+        jne .ret
+.code:  mov es, [bp + 4]
+        mov di, ax
+        cmp word [es:di - 5], 0xEF9A    ; (call far 35EFh: its segment the overlay loader's)
+        jne .ret
+        cmp byte [es:di - 3], 0x35
+        jne .ret
+        cmp dword [es:di], 0x8904C483   ; (add sp,4 / mov [bp-0Ah],ax)
+        jne .ret
+        cmp word [es:di + 4], 0xF646
+.ret:   ret
+
+; REACH_HANDS: ZF if combatant AX holds a polearm in a hand (the right, RIGHT_HAND, or the left,
+; LEFT_HAND) and no other weapon (a type with a melee or missile flag) in either. Its three item lists
+; (the creature's +08h, +0Ah, +0Ch: things, kind 1, in the combatants' table), by each item's slot. DS
+; the game's; AX, BX, CX, DX, SI, DI, ES changed.
+reach_hands:
+        call fighter_creature
+        jc .none
+        imul di, ax, CREATURE_SIZE
+        xor dx, dx                      ; (DL the polearms in the hands, DH the other weapons)
+        mov cx, 8
+.list:  les bx, [CREATURES_PTR]
+        add bx, di
+        add bx, cx
+        mov si, [es:bx]
+        cmp si, ITEM_LISTS_MOST         ; (item lists are things 201h and on in the table)
+        jae .next
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        imul si, si, 3
+        cmp byte [es:si + FIGHTERS_OFF], 1
+        jne .next                       ; (not an item list)
+        mov si, [es:si + FIGHTERS_OFF + 1]
+        mov byte [cs:reach_left], 100
+.item:  cmp si, NO_ITEM
+        jae .next
+        les bx, [ITEMS_PTR]
+        imul ax, si, ITEM_SIZE
+        add bx, ax
+        mov al, [es:bx + ITEM_SLOT]
+        cmp al, RIGHT_HAND
+        je .hand
+        cmp al, LEFT_HAND
+        jne .on
+.hand:  mov ax, [es:bx + ITEM_TYPE]
+        cmp ax, KIND_TYPES
+        jae .other
+        push bx
+        mov bx, ax
+        cmp byte [cs:bx + kind_of_type], POLEARM_KIND
+        pop bx
+        jne .other
+        inc dl
+        jmp .on
+.other: push es
+        push bx
+        imul ax, ax, TYPE_SIZE
+        les bx, [ITEM_TYPES_PTR]
+        add bx, ax
+        test byte [es:bx], TYPE_WEAPON
+        pop bx
+        pop es
+        jz .on
+        inc dh
+.on:    mov si, [es:bx + ITEM_NEXT]
+        dec byte [cs:reach_left]
+        jnz .item
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        cmp dx, 1                       ; (one polearm, no other weapon)
+        ret
+.none:  or sp, sp                       ; (no creature: ZF clear)
+        ret
+reach_left db 0
+
+; REACH_LINE: ZF if no wall is on the line from attacker [BP+6]'s square to target [BP+8]'s, by the
+; game's own test (0B0Bh:00A4h, 10354h: two squares, x, y and a height of 0 each; 0, or -1 blocked),
+; the one the attack pointer's click makes (1EAA7h). DS the game's; AX, BX, CX, DX, ES changed.
+reach_line:
+        mov bx, [bp + 8]
+        imul bx, bx, THING_SIZE
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov bx, [bp + 6]
+        imul bx, bx, THING_SIZE
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov ax, ds
+        add ax, REACH_LINE_SEG
+        mov [cs:reach_line_at + 2], ax
+        call far [cs:reach_line_at]
+        add sp, 12
+        or ax, ax
+        ret
+reach_line_at dw 0xA4, 0
+
 ; SIZE: DSCLOG's (RULE_HI_SIZE, always on), AD&D's creature sizes, which the game keeps none of. A
 ; combatant is large (IS_LARGE) when a half-giant (its sheet's race) or marked in LARGE_BITS (the
 ; Loader's, from dsloader/sizes.py's sequel table: large, huge or gargantuan; Enlarge isn't counted
@@ -4811,6 +4994,7 @@ all_vectors:
         vector VEC_CAH_SWING, cah_swing
         vector VEC_CAH_HIT, cah_hit
         vector VEC_CAH_MOVE, cah_move
+        vector VEC_REACH, reach_site
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

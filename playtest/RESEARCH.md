@@ -906,6 +906,14 @@ hand in a fight**: walk two squares off, one right-click (the sword), hover a fo
 it (yellow is a friend), mousedown / mouseup. Web from the Draxans gives a webbed member an END menu and
 turns its Computer Control off: E ends it; taking effect 66 off the party in memory keeps the fight going.
 
+**Its distance routine** (2026-11-21, logs/2026-11-21-ravager-reach.md): 1D40:35EFh (file 25BEFh),
+[BP+6] and [BP+8] two combatants, the squares between in [BP-1Ch] at its end (25CDDh); its melee
+callers' ways back 20617h (the sword pointer), 1EADCh (the attack click), 1E2AAh (the walk arrow on a
+foe), 1FF39h and 260CBh (the walk to attack), 2420Ah (the step switch), and the combat overlay's IP
+14A2h and 1A72h (the computer's). The line test 0B0Bh:00A4h (10354h); the map things' feet DS:67C5h.
+The pointer cycles on a right-click (walk arrow, sword, eye); "no" on the floor in sword mode is
+normal. A creature's item lists are things 201h and on in the combatants' table.
+
 **Creature size in it** (2026-11-21, logs/2026-11-21-ravager-size.md): the swing's dice at [BP-10h]
 count, [BP-12h] sides, [BP-14h] bonus; the call's first swing [BP-0Ch]. The Draxans are people (race
 1 to 8), so medium; the Giant Skeletons up the street are large. A spell test: aim Hold Person with
