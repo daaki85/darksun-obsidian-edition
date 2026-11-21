@@ -30,7 +30,8 @@ class TableTests(unittest.TestCase):
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
                                "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
-                               "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing"})  # (DSCLOG2's own interrupts)
+                               "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
+                               "cahulaks_hit", "cahulaks_move"})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):

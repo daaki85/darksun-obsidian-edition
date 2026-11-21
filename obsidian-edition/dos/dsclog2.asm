@@ -61,6 +61,8 @@ VEC_TWO       equ 0xE1  ; PROBE_TWO (5DE7Ch: the two-weapon to-hit adjustment: A
 VEC_ROLL_MAX  equ 0xE3  ; ROLL_MAX_HP (9506Ch: a fix: the most hit points worked out again after a hit die, as SL's)
 VEC_CAH_TWO   equ 0xE5  ; CAH_TWO (5DE6Fh: the two-weapon routine on for the cahulaks, RULE_HI_CAHULAKS)
 VEC_CAH_SWING equ 0xE6  ; CAH_SWING (5D052h: a swing's start: the off head's more)
+VEC_CAH_HIT   equ 0xE7  ; CAH_HIT (5D1FEh: a weapon's hit has done damage: the cahulaks' tangle)
+VEC_CAH_MOVE  equ 0xE8  ; CAH_MOVE (5B838h: a creature's turn starts: a tangled one's taken)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -711,6 +713,10 @@ acid_round:
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
         call burn_pass
         cmp byte [FIRST_ROUND], 0
+        je .on
+        call tangle_clear               ; (the cahulaks' tangles: none at a fight's start)
+        cmp byte [FIRST_ROUND], 0
+.on:
         pushf
         pop ax
         jmp acid_flags
@@ -2668,6 +2674,230 @@ cah_who   dw -1
 cah_count dw 0                  ; (rounds given the off head's attack, for a look in play)
 cah_off   dw 0                  ; (off head's swings paying the more)
 
+; CAH_HIT: the cahulaks' tangle (DSCLOG's CAH_HIT; RULE_HI_CAHULAKS). INT VEC_CAH_HIT replaces "mov byte
+; [bp-19h],0" (5D1FEh, SL's "mov byte [bp-15h],0" at 58B54h; 4 bytes: INT + 2 NOPs), where a weapon's hit
+; has done its damage (the item in SI, 0 or more). With the rule, a melee hit with the cahulaks ([BP+12h],
+; [BP+16h] 1 or less) on a target (TARGET) still standing and man-sized or smaller (not a half-giant: its
+; sheet's race; the sequel's monsters have no size list yet) makes it save against petrification (its
+; sheet's +33h, a d20 from the game's seed, as DSCLOG's GAME_DIE; a 20 always saves). A failure: it loses
+; its next turn, at once if it has yet to act this round (SWEPT_NOW), else at its next turn's start
+; (CAH_MOVE, from the bitmap TANGLED). Recorded for the dice log (KIND_MANUAL, MN_TANGLE: the target, the
+; attacker [BP+18h], the d20, the save needed).
+; CAH_MOVE: INT VEC_CAH_MOVE replaces "mov es:[bx+22Eh],ax" (5B838h, SL's PROBE_MOVE site 57566h; 5
+; bytes: INT + 3 NOPs) where a creature's turn starts, AX its movement (DI the combatant, BX the creature
+; x 2): a tangled one's turn taken (no movement, its initiative -1, as the game marks one that has
+; acted). The bitmap is cleared at a fight's first round (ACID_ROUND).
+MN_TANGLE     equ 10
+KIND_MANUAL   equ 14
+IN_COMBAT     equ 0x13FA            ; DS byte: in a fight
+WHOSE_TURN    equ 0x426D            ; DS word: the combatant whose turn it is
+INIT_FROM_DS  equ 0x47E0 - 0x3C4F   ; (the creatures' initiative, (load + 3C4Fh):0DCh, 4 bytes each: -1
+INIT_OFF      equ 0xDC              ;   once acted; their movement for the turn at +22Eh, 2 bytes each)
+MOVE_OFF      equ 0x22E
+SHEET_PETRIFY equ 0x33
+TANGLE_MOST   equ 512               ; (the combatants the bitmap covers)
+cah_hit:
+        mov byte [bp - 0x19], 0
+        cmp word [bp + 0x16], 1
+        jg .out
+        push ax
+        mov ax, [bp + 0x12]
+        call item_is_cahulaks
+        pop ax
+        jne .out
+        sti
+        pushad
+        push es
+        mov bx, [TARGET]
+        cmp bx, TANGLE_MOST
+        jae .done
+        mov ax, bx
+        call fighter_creature
+        jc .done
+        imul si, ax, CREATURE_SIZE
+        les di, [CREATURES_PTR]
+        add di, si
+        cmp word [es:di], 0
+        jle .done                   ; (felled by the blow)
+        mov si, [es:di + 4]         ; (its sheet)
+        imul si, si, SHEET_SIZE
+        les di, [SHEETS_PTR]
+        add di, si
+        cmp byte [es:di + SHEET_RACE], RACE_HALF_GIANT
+        je .done                    ; (too big to tangle)
+        movzx cx, byte [es:di + SHEET_PETRIFY]
+        mov ax, 20
+        call game_die
+        mov [cs:mn_frame], bx
+        mov dx, [bp + 0x18]
+        mov [cs:mn_frame + 2], dx
+        mov [cs:mn_frame + 4], ax
+        mov [cs:mn_frame + 6], cx
+        push ax
+        push cx
+        mov ax, MN_TANGLE
+        call mn_rec
+        pop cx
+        pop ax
+        cmp ax, 20
+        je .done                    ; (a natural 20 saves)
+        cmp ax, cx
+        jge .done                   ; (saved)
+        inc word [cs:tangles]
+        call swept_now              ; (yet to act this round: this round's turn lost at once)
+        jc .done
+        mov si, bx
+        call tangle_bit
+        or [cs:tangled + si], al    ; (else its next turn's: CAH_MOVE)
+.done:  pop es
+        popad
+.out:   iret
+cah_move:
+        mov [es:bx + MOVE_OFF], ax
+        cmp di, TANGLE_MOST
+        jae .out
+        pusha
+        mov si, di
+        call tangle_bit
+        test [cs:tangled + si], al
+        jz .kept
+        not al
+        and [cs:tangled + si], al
+        mov word [es:bx + MOVE_OFF], 0
+        shl bx, 1                   ; (the initiative's a creature x 4)
+        mov word [es:bx + INIT_OFF], -1
+        inc word [cs:tangle_turns]
+.kept:  popa
+.out:   iret
+tangle_clear:                   ; (a fight's first round: no one tangled). All kept.
+        push cx
+        push di
+        push es
+        push cs
+        pop es
+        mov di, tangled
+        mov cx, TANGLE_MOST / 8
+        xor al, al
+        rep stosb
+        pop es
+        pop di
+        pop cx
+        ret
+; TANGLE_BIT: SI a combatant (under TANGLE_MOST): SI its byte in TANGLED, AL its bit. Others kept.
+tangle_bit:
+        push cx
+        mov cx, si
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        shr si, 3
+        pop cx
+        ret
+; SWEPT_NOW: CF set when combatant BX, in a fight, has yet to act this round: not the one whose turn it
+; is, its initiative not -1. Its turn is then taken at once, as CAH_MOVE takes a tangled one's. DS the
+; game's; all kept.
+swept_now:
+        pushad
+        push es
+        cmp byte [IN_COMBAT], 0
+        je .no
+        mov ax, bx
+        call fighter_creature
+        jc .no
+        mov di, ax
+        mov ax, [WHOSE_TURN]
+        call fighter_creature
+        jc .no
+        cmp ax, di
+        je .no                      ; (its own turn: it acts now, and loses next round's)
+        mov ax, ds
+        sub ax, INIT_FROM_DS
+        mov es, ax
+        shl di, 2
+        cmp word [es:di + INIT_OFF], -1
+        je .no                      ; (it has acted: next round's)
+        mov word [es:di + INIT_OFF], -1
+        shr di, 1
+        mov word [es:di + MOVE_OFF], 0
+        inc word [cs:tangle_turns]
+        pop es
+        popad
+        stc
+        ret
+.no:    pop es
+        popad
+        clc
+        ret
+; FIGHTER_CREATURE: AX a combatant: AX its creature, CF clear; CF set if it is none. DS the game's;
+; others kept.
+fighter_creature:
+        cmp ax, 400
+        jae .none
+        push bx
+        push es
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .no
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        pop es
+        pop bx
+        clc
+        ret
+.no:    pop es
+        pop bx
+.none:  stc
+        ret
+; GAME_DIE: AX a roll of 1 to AX from the game's own seed (SEED), as its rand() steps it. Others kept.
+game_die:
+        push ebx
+        push ecx
+        push edx
+        movzx ecx, ax
+        mov eax, [SEED]
+        imul eax, eax, 0x015A4E35
+        inc eax
+        mov [SEED], eax
+        shr eax, 16
+        and eax, 0x7FFF
+        imul eax, ecx
+        shr eax, 15
+        inc eax
+        pop edx
+        pop ecx
+        pop ebx
+        ret
+; MN_REC: a KIND_MANUAL entry, AX what (MN_*), the frame MN_FRAME's four words. CX, DX, SI, DI changed.
+mn_rec:
+        mov si, mn_frame
+        mov cx, 4
+        mov word [cs:kind], KIND_MANUAL
+; REC_FRAME: DSCLOG's, an entry recorded (kind [CS:KIND], value AX) whose frame's +6 on are the CX words
+; from CS:SI, as a far call's arguments (no return address: 0). CX, DX, SI, DI changed.
+rec_frame:
+        pop dx                          ; (the way back)
+        mov di, sp
+        add si, cx
+        add si, cx
+.push:  sub si, 2
+        push word [cs:si]
+        loop .push
+        push dword 0
+        push bp
+        mov bp, sp
+        mov si, bp
+        sub si, 4                       ; (SS:SI+6: the frame's return address, none)
+        call record
+        pop bp
+        mov sp, di
+        jmp dx
+mn_frame  dw 0, 0, 0, 0
+tangled   times TANGLE_MOST / 8 db 0
+tangles   dw 0                  ; (tangles made, for a look in play)
+tangle_turns dw 0               ; (turns taken so)
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -4255,6 +4485,8 @@ all_vectors:
         vector VEC_TWO_HANDED, two_handed
         vector VEC_CAH_TWO, cah_two
         vector VEC_CAH_SWING, cah_swing
+        vector VEC_CAH_HIT, cah_hit
+        vector VEC_CAH_MOVE, cah_move
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

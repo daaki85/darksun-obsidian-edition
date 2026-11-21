@@ -74,6 +74,7 @@ VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: 
 VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
+VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
 VEC_TWO_HANDED = 0xE4  # (DSCLOG2's TWO_HANDED: a half-giant's two-handed weapon in one hand)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
@@ -223,6 +224,11 @@ PATCHES: Tuple[Patch, ...] = (
     # last); the off head's one more attack a round is OFF_HAND's, PROBE_TWO the main head's -2.
     Patch("cahulaks_two", 0x5DE6F, bytes.fromhex("837e06017e11"), gamepatch._interrupt(VEC_CAH_TWO, 6)),
     Patch("cahulaks_swing", 0x5D052, bytes.fromhex("c746fc0000"), gamepatch._interrupt(VEC_CAH_SWING, 5)),
+    # The cahulaks' tangle (SL's cahulaks_hit and PROBE_MOVE's part): DSCLOG2's CAH_HIT where a weapon's hit
+    # has done damage (5D1FEh: "mov byte [bp-19h],0"; SL's 58B54h) and CAH_MOVE where a creature's turn
+    # starts (5B838h: its movement stored; SL's 57566h), a tangled one's turn taken.
+    Patch("cahulaks_hit", 0x5D1FE, bytes.fromhex("c646e700"), gamepatch._interrupt(VEC_CAH_HIT, 4)),
+    Patch("cahulaks_move", 0x5B838, bytes.fromhex("2689872e02"), gamepatch._interrupt(VEC_CAH_MOVE, 5)),
     # Helms count AC 1 (SL's ring_ac's helm part and box_ac; the Options tab's "helm_ac"): DSCLOG2's
     # PROBE_HELM_AC at the AC function's two reads of a worn item's type's AC (5D663h, 5D67Bh: "mov
     # al,es:[bx+0Eh] / cwde"; SL's 58EBDh) and PROBE_BOX_AC at the item box's AC BONUS (9A4B7h, SL's 8C15Ah).

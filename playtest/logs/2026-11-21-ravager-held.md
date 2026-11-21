@@ -74,3 +74,7 @@ helpless target. To see how often the game makes that choice, the same set-up ag
 - In the code: far 0806:0020 is the sequel's "has effect" and 0806:004D "take it off" (SL's 598:20
   and 598:4D); 5E5FAh goes through every combatant taking Paralyzed (69) off.
 - No water: the street in Tyr only.
+
+- Later (logs/2026-11-21-ravager-cahulaks.md, the tangle's run): a Draxan struck an unheld,
+  uncharmed-by-the-log Draxan in round 2, after an unnamed "Dice: 1d20 = [1] = 1" in Terrannus's turn.
+  A power the dice log doesn't name (a charm or domination) may be what turns a foe on its own side.
