@@ -2847,6 +2847,7 @@ site_table:
         dw cast_start                       ; 8 SITE_CAST
         dw lowres_site                      ; 9 SITE_LOWRES
         dw strength_dice                    ; 10 SITE_STRENGTH
+        dw cell_heal                        ; 11 SITE_CELL
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3125,6 +3126,32 @@ strength_dice:
         mov [bp + 10], cx
         pop es
         popa
+        pop bp
+        iret
+; CELL_HEAL (site 11, "cell_adjustment_heal"): Cell Adjustment's (248) case in the handler for spells
+; with rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 65811h" (664C5h, SL's
+; 795A2h; 5 bytes: 2 HP): 1d4 HP, AX for the game's "push ax / jmp 65811h" (66545h, Neutralize
+; Poison's and the rest's) and the healing after it; its record's cure of disease is the game's own.
+; Recorded (MN_CELL: the target, the user, the healing; no kit's more, the sequel has no kits).
+MN_CELL   equ 3
+CELL_BACK equ 0x66545 - (0x664C5 + 3)
+cell_heal:
+        push bp
+        mov bp, sp
+        add word [bp + 2], CELL_BACK
+        mov ax, 4
+        call game_die
+        pusha
+        mov [cs:mn_frame], di
+        mov bx, [ss:bp]                 ; (the game's BP)
+        mov bx, [ss:bx + 8]
+        mov [cs:mn_frame + 2], bx
+        mov [cs:mn_frame + 4], ax
+        mov word [cs:mn_frame + 6], 0
+        mov ax, MN_CELL
+        call mn_rec
+        popa
+        inc word [cs:manual_count]
         pop bp
         iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
