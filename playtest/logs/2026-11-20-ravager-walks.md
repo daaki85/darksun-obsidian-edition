@@ -100,6 +100,50 @@ Their frames, toward `A, P1, B, P2` then away:
 
 ![The golems' passing frames](img/2026-11-20-ravager-walks/golem-frames.png)
 
+## Test: six dressed people restyled instead (2026-11-21)
+
+**The problem:** Ravager draws its people fighting unarmed (fists, an overhand blow, a lunge) or with a
+bow. The Shattered Lands bodies they are dressed on each carry a weapon of their own, so a dressed
+townsman fights with whatever his body came with.
+
+**The test:** these six, with the most visible mismatches, are restyled from Ravager's own art
+instead:
+- the six-beat walk;
+- standing frames loosened, shown only when standing now: the arms a pixel off the body, the forearms out and up another, the feet a pixel apart;
+- Ravager's own combat frames, restyled.
+
+**The animations:** each is at 3x. The rows are the Shattered Lands party man (for scale and style), the figure
+as dressed now, and the figure restyled with the walk fix. The columns are standing, walking toward the camera, sideways, and the first
+six fighting frames.
+
+### 2411: thief: white shirt, red headband (dressed on SL 630: a sword)
+
+![2411](img/2026-11-20-ravager-walks/compare-2411.gif)
+
+### 2414: Draxan soldier, red shirt (SL 239: an axe)
+
+![2414](img/2026-11-20-ravager-walks/compare-2414.gif)
+
+### 2420: templar, purple robe (swapped for SL object 18: a sword)
+
+![2420](img/2026-11-20-ravager-walks/compare-2420.gif)
+
+### 2432: man in a green tunic (SL 630: a sword)
+
+![2432](img/2026-11-20-ravager-walks/compare-2432.gif)
+
+### 2421: bald man, blue loincloth (SL 559: a staff)
+
+![2421](img/2026-11-20-ravager-walks/compare-2421.gif)
+
+### 2428: bald man with wristbands (SL 563: an axe)
+
+![2428](img/2026-11-20-ravager-walks/compare-2428.gif)
+
+**Not yet done in this test:**
+- The side standing frame (2) is not loosened: Ravager also uses it mid-stride in the side walk.
+- Nothing here is in the game files yet.
+
 ## The new frames
 
 Each figure on one row: toward `4, TA1, TA, 5, TB1, TB`, then away `6, AA1, AA, 7, AB1, AB`.
