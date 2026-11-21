@@ -80,6 +80,10 @@ Releases, newest first (2.12.0 and older in the archive):
 - The upgrade instructions include the `Journal` folder and ask players to verify their history
   before deleting the old Loader folder (#135).
 
+**Dev**
+- A play log: [pull requests #136, #140 and #141 in the game](playtest/logs/2026-11-20-open-prs-checks.md),
+  with #140's round count fixed and played again (#142).
+
 ## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
 
 No release: the dice log's fix below comes with the next one.
