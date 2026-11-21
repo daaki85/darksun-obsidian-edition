@@ -295,6 +295,9 @@ class WhichTests(unittest.TestCase):
         struct.pack_into("<H", gythka, game.ITEM_TYPE, game.GYTHKA_TYPE)
         self.assertIsNone(icons.which(bytes(gythka)))  # (the plain ones: the kreen's)
         gythka[game.ITEM_PLUS] = 1
+        self.assertNotEqual(icons.which(bytes(gythka)), "Kreenfang")  # (the Elven Leader's Gythka +1)
+        from dsloader import arms
+        struct.pack_into("<H", gythka, game.ITEM_NAME, arms.GYTHKA_NAME)
         self.assertEqual(icons.which(bytes(gythka)), "Kreenfang")
         plain = bytearray(npcitems.CHEST_ARMOR)
         plain[game.ITEM_PLUS] = 0
@@ -346,18 +349,44 @@ class WriteAtomicTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             dest = os.path.join(d, "SEGOBJEX.GFF")
             gff.write_atomic(dest, b"one")
-            with mock.patch("os.replace", side_effect=PermissionError(13, "held by the game")):
+            with mock.patch("os.replace", side_effect=PermissionError(13, "held by the game")) as put, \
+                    mock.patch("time.sleep") as slept:
                 with self.assertRaises(PermissionError):
                     gff.write_atomic(dest, b"two")
+            self.assertEqual((put.call_count, slept.call_count), (gff.REPLACE_TRIES, gff.REPLACE_TRIES - 1))
             self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
             with open(dest, "rb") as f:
                 self.assertEqual(f.read(), b"one")
+
+            real = os.replace
+            calls = []
+
+            def held_once(src, dst):  # (a virus scan holding it for a moment: the second try goes)
+                calls.append(dst)
+                if len(calls) == 1:
+                    raise PermissionError(13, "held by a scan")
+                return real(src, dst)
+            with mock.patch("os.replace", side_effect=held_once), mock.patch("time.sleep"):
+                gff.write_atomic(dest, b"three")
+            with open(dest, "rb") as f:
+                self.assertEqual(f.read(), b"three")
+            gff.write_atomic(dest, b"one")
 
             class Full:
                 def __len__(self):
                     return 3
             with self.assertRaises(TypeError):  # (a write that fails part-way)
                 gff.write_atomic(dest, Full())
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+
+            used = []  # (each write's temporary file its own: two writers never share one)
+            with mock.patch("os.replace", side_effect=lambda src, dst: used.append(src) or real(src, dst)):
+                gff.write_atomic(dest, b"four")
+                gff.write_atomic(dest, b"five")
+            self.assertEqual(len(set(used)), 2)
+            self.assertNotIn(dest + ".tmp", used)
+            if os.name == "posix":  # (readable by all, as before: not mkstemp's owner-only)
+                self.assertEqual(os.stat(dest).st_mode & 0o777, gff.COPY_MODE)
             self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
 
 

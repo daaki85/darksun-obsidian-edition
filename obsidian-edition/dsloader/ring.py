@@ -19,7 +19,7 @@ import time
 from collections import deque
 from typing import Deque, Optional, Tuple
 
-from . import game
+from . import game, itemgate
 from .game import GameData
 
 REGION = 0x117C  # DS: the region the party is in (its RGNxx.GFF)
@@ -69,6 +69,7 @@ RING = bytes.fromhex("1cfa0000" "0f27") + struct.pack("<H", VALUE) + bytes.fromh
     struct.pack("<Hb", NAME_ENTRY, 1)
 MESSAGE = "{who} takes the Ring of Protection +1 (+1 AC, +1 on saves) from the Tied-up Prisoner's body."
 MAX_ITEMS = 200  # items followed before giving up (a damaged list)
+ITEM_RECORDS = itemgate.ITEM_RECORDS  # (the item table's records, 0-399: an index past them is a torn read)
 
 # The XP for finding it. The arena's script (BODY_SCRIPT) says NOTHING in a routine of its own,
 # at BODY_AT (clear the window, the line, wait for a click, clear): the line becomes a jump past
@@ -96,6 +97,10 @@ class Items:
         return struct.unpack_from("<Bh", self.table, index * 3)
 
     def item(self, index: int) -> bytes:
+        """Item record INDEX (ValueError past the table's ITEM_RECORDS: a torn pointer or list,
+        whose index would read, and a write through it land, up to 200 KB past the table)."""
+        if not 0 <= index < ITEM_RECORDS:
+            raise ValueError(f"item record {index} past the table")
         return self.guest.read(self.items + index * game.ITEM_SIZE, game.ITEM_SIZE)
 
     def word(self, offset: int) -> int:
@@ -122,7 +127,7 @@ class Items:
         if kind != game.THING_ITEM:
             return
         for _ in range(MAX_ITEMS):
-            if not 0 <= index < game.NO_ITEM:
+            if not 0 <= index < ITEM_RECORDS:  # (the end, 9999; or past the table: a torn list)
                 return
             rec = self.item(index)
             yield index, rec
@@ -130,6 +135,15 @@ class Items:
             if inside and contents < THING_COUNT:
                 yield from self.chain(contents)
             index, = struct.unpack_from("<h", rec, game.ITEM_NEXT)
+
+
+def held(gd: GameData) -> Items:
+    """The item gate held for the pass (itemgate.hold: ItemsBusy, nothing done, if the game is
+    changing its lists), then the lists read: every change to them is worked out from what is read
+    after this, never before (the gate's look sees the free lists' heads, not an item the game
+    moved between two lists during its wait, so a link read before it can be stale)."""
+    itemgate.hold(gd)
+    return Items(gd)
 
 
 def is_ring(rec: bytes) -> bool:
@@ -167,7 +181,7 @@ def give_ring(gd: GameData) -> Optional[str]:
     """The ring, into the leader's backpack (or the first in the party with room). A line for
     the log, or None if there was no room or no item record to be had."""
     from . import pickpocket
-    it = Items(gd)
+    it = held(gd)
     leader = gd.whose_turn()
     order = ([leader] if leader is not None and 0 <= leader < game.PARTY_SIZE else []) + list(range(game.PARTY_SIZE))
     for member in order:
@@ -182,14 +196,28 @@ def give_ring(gd: GameData) -> Optional[str]:
             continue  # (no backpack list to be had: the record left free, not lost, as npcitems.add_to)
         it = Items(gd)  # (read again: the list may be new)
         item = it.word(FREE_ITEMS)
-        if item >= game.NO_ITEM:
+        if item >= ITEM_RECORDS:
             continue
+        # (popped from the free list first: a failure after leaves a record in no list, never one
+        # both in a list and still on the free list for the game to hand out again; and a give
+        # that fails puts it back)
         gd.guest.write(gd.ds * 16 + FREE_ITEMS, it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
         took(item, "the Ring +1")
         gd.guest.write(it.items + item * game.ITEM_SIZE, RING)
         if pickpocket.give(gd, Items(gd), member, item, cell):
             return MESSAGE.format(who=gd.creature_name(member))
+        free(gd, item, "the Ring +1 not given")
     return None
+
+
+def free(gd: GameData, item: int, what: str) -> None:
+    """ITEM, in no list, put back first on the game's free list of item records."""
+    if not 0 <= item < ITEM_RECORDS:
+        raise ValueError(f"item record {item} past the table")
+    it = Items(gd)
+    gd.guest.write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<H", it.word(FREE_ITEMS)))
+    gd.guest.write(gd.ds * 16 + FREE_ITEMS, struct.pack("<H", item))
+    took(item, what)
 
 
 def with_xp(script: bytes, field_types: bytes = b"", original: Optional[bytes] = None) -> bytes:
@@ -229,14 +257,18 @@ def with_xp(script: bytes, field_types: bytes = b"", original: Optional[bytes] =
 def unlink(gd: GameData, it: "Items", item: int, what: str, empty: bool = False) -> bool:
     """ITEM taken out of whatever list holds it and given back to the game's free list of item
     records; the only one in its list only with EMPTY (a character's list may be empty, as a new
-    one is; a container's not)."""
+    one is; a container's not). The lists are read again after the gate is held (IT as the
+    caller read them may be from before the game's last move: ring.held)."""
+    if not 0 <= item < ITEM_RECORDS:
+        return False
+    it = held(gd)
     for thing in range(THING_COUNT):
         kind, first = it.thing(thing)
         if kind != game.THING_ITEM:
             continue
         before, index = None, first
         for _ in range(MAX_ITEMS):
-            if not 0 <= index < game.NO_ITEM:
+            if not 0 <= index < ITEM_RECORDS:
                 break
             rec = it.item(index)
             after = struct.unpack_from("<h", rec, game.ITEM_NEXT)[0]

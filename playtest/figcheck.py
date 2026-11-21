@@ -1,4 +1,4 @@
-# figcheck.py [LABEL]: are the party's figures drawn? A window grab, then DSCLOG's VIEW_REDRAW
+# figcheck.py [LABEL]: whether the party's figures are drawn on the map. A window grab, then DSCLOG's VIEW_REDRAW
 # (header +242: the whole view drawn again, as the game does), a second grab, and for each member
 # the pixels changed in a box round its figure (feet at its map place less the camera; 24 x 40
 # game pixels above them). A figure missing before the redraw shows as a big count (hundreds);
@@ -14,7 +14,7 @@ def grab(p):
     subprocess.run(['import', '-window', W, p], check=True)
     return Image.open(p).convert('RGB')
 mem = g.read(0xC0000, 0x40000)
-hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGva')
+hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGve')
 a = grab(f'{WORK}/fc-{label}-a.png')
 cx, cy = struct.unpack('<hh', g.read(ds * 16 + CAMERA, 4))
 g.write(hdr + 242, struct.pack('<H', 1))

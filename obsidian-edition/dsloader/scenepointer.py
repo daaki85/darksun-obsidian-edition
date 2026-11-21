@@ -39,15 +39,15 @@ def pointer_data(icon: bytes, palette: bytes) -> bytes:
 
 
 def write_pointer(resources: Optional[str], gpldata: Optional[str], dest: str) -> bool:
-    """POINTER.BIN at DEST from the game's files; without them (or the arrow), none: DSCLOG's own."""
+    """Write POINTER.BIN from the game's files. On failure, try to remove it and return False."""
     try:
         with open(resources, "rb") as f:
             icon = gff.read_gff(f.read())[("ICON", POINTER_ICON)]
         with open(gpldata, "rb") as f:
             palette = gff.read_gff(f.read())[("PAL ", PALETTE)]
         data = pointer_data(icon, palette)
-        with open(dest, "wb") as f:  # (a file held or a folder read-only: DSCLOG's own, the game
-            f.write(data)                #   started all the same)
+        with open(dest, "wb") as f:
+            f.write(data)
     except (TypeError, OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
         try:
             os.remove(dest)

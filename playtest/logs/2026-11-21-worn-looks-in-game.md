@@ -33,13 +33,15 @@ the back is to the left: reading it from the hair failed on the half-giant.
 
 **How:** `fountain-user` (Pehtucl's ambush), every party object given a look
 (`'300=worn:Chain,301=worn:Leather,...,312=worn:Robe'`: outfitgame.py prints which figure each
-object is). **That save's party is not pens-after-arena's**: Seneca (a halfling man in leather),
-a human man (chain), a human woman (leather) and a half-elf woman (robe).
+object is). **That save's party is not pens-after-arena's**: Lex (half-elf woman, 307: the robe), Jenna (human
+woman, 301: leather), Ester (elf woman, 305: chain) and Seneca (halfling woman, 311: leather).
+(Taken at first from the screen for a human man and others: `python3 -m dsloader save SAVE01.SAV`
+lists a save's party.)
 
 **Seen:**
-- Chain with its coif reads clearly as a mail-clad man; leather reads on the human woman; the
-  half-elf woman's robe reads, slim on her.
-- The fight: Seneca walked up to Pehtucl and was seen from behind (the back view) in his fight
+- Chain with its coif reads clearly on Ester (elf woman); leather reads on Jenna; Lex's robe
+  reads, slim on her.
+- The fight: Seneca walked up to Pehtucl and was seen from behind (the back view) in her fight
   stance, in leather: readable, nothing misplaced.
 - **With no Loader attached, Tab + Return does not attack**: Tab's nearest-enemy pick is the
   Loader's, so Return opens the game's menu (and fightout.sh's E then the Effects screen). Escape
@@ -47,3 +49,14 @@ a human man (chain), a human woman (leather) and a half-elf woman (robe).
 
 **Not seen:** a swing caught mid-frame (the grabs at 0.15 s showed the stance), the bone scale and
 the cloak in this fight.
+
+## Round 5: bone scale and the cloak in the fight (same day)
+
+`'301=worn:Cloak and hood,307=worn:Bone scale'` (Ester and Seneca left in their own clothes).
+Lex in bone scale walked up to Pehtucl: from the front the shoulder guards, the helm and the
+scales read clearly next to him; Jenna's hooded cloak reads from the side, a little wide at the hem.
+A mid-swing frame was not caught: ffmpeg's x11grab at 20-30 frames a second recorded the walks, but
+the clicks on Pehtucl opened END <NAME>'S MOVE (a click on the member's own figure under him) or
+walked without striking, and E then opened the Effects screen. The swing frames are the game's own
+attack pictures dressed, as on the sheets; seeing one drawn needs the Loader's Tab targeting or a
+foe clicked clear of the member.

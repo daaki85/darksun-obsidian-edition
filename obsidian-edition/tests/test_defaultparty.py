@@ -61,23 +61,27 @@ class DefaultPartyTests(unittest.TestCase):
         return calls, lines
 
     def test_by_the_rules(self):
-        everything = game.RULE_SPECIALIZE | game.RULE_HALF_GIANT | game.RULE_RESTRICT
-        calls, _ = self.ready(everything)
+        """The weapon kinds and Cilla's armour whatever the switches (weapon specialization and
+        class restrictions always on); the gythka with the half-giants' switch, the kit and their
+        own features with the kits'."""
+        calls, _ = self.ready(game.RULE_HALF_GIANT)
         self.assertEqual(calls, [("Gerakis", "kinds"), ("Gerakis", "gythka"), ("K'ratchek", "kinds"),
                                  ("Cermak", "kinds"), ("Cilla", "kinds"), ("Cilla", "armour"), ("Cilla", "armor spell")])
-        calls, _ = self.ready(game.RULE_SPECIALIZE)  # (no gythka without the half-giants' rule)
-        self.assertNotIn(("Gerakis", "gythka"), calls)
-        calls, _ = self.ready(game.RULE_RESTRICT)
-        self.assertEqual(calls, [("Cilla", "armour"), ("Cilla", "armor spell")])
+        calls, _ = self.ready(0)  # (no gythka without the half-giants' rule)
+        self.assertEqual(calls, [("Gerakis", "kinds"), ("K'ratchek", "kinds"), ("Cermak", "kinds"),
+                                 ("Cilla", "kinds"), ("Cilla", "armour"), ("Cilla", "armor spell")])
         calls, _ = self.ready(game.RULE_KITS)  # (Cermak's kit; the others' features of their own)
-        self.assertEqual(calls, [("Gerakis", "own"), ("K'ratchek", "own"), ("Cermak", "kit"), ("Cilla", "own")])
+        self.assertEqual(calls, [("Gerakis", "kinds"), ("Gerakis", "own"), ("K'ratchek", "kinds"),
+                                 ("K'ratchek", "own"), ("Cermak", "kinds"), ("Cermak", "kit"), ("Cilla", "kinds"),
+                                 ("Cilla", "own"), ("Cilla", "armour"), ("Cilla", "armor spell")])
 
     def test_starting_gear(self):
         """Fuller starting gear: each of them, after the other changes (Cilla's armour gone first)."""
-        calls, _ = self.ready(game.RULE_RESTRICT, gear=True)
-        self.assertEqual(calls, [("Gerakis", "gear"), ("K'ratchek", "gear"), ("Cermak", "gear"),
-                                 ("Cilla", "armour"), ("Cilla", "armor spell"), ("Cilla", "gear")])
-        self.assertNotIn("gear", [key for _, key in self.ready(game.RULE_RESTRICT)[0]])
+        calls, _ = self.ready(0, gear=True)
+        self.assertEqual([c for c in calls if c[1] != "kinds"],
+                         [("Gerakis", "gear"), ("K'ratchek", "gear"), ("Cermak", "gear"),
+                          ("Cilla", "armour"), ("Cilla", "armor spell"), ("Cilla", "gear")])
+        self.assertNotIn("gear", [key for _, key in self.ready(0)[0]])
 
     def test_cermak_arcanist(self):
         """Set_kit writes Cermak's kit byte: the Arcanist for his preserver class (place 0, the
@@ -127,12 +131,12 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual((gd.left(0, 1), gd.left(0, 2)), (1, 0))  # (the Arcanist has no slot more)
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
         self.assertEqual(gd.left(0, 1), 1)
-        # a kit with a slot more (a Scholar's) adds it to those left, not a free one if one was cast
+        # a Scholar at this INT gives no slot more (its bonus slots go by INT from 16): those left as they were
         gd = Gd(bytes(cermak))
         before = dp._most_slots(gd, 0)
         gd.guest.write(gd.at + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(gd.sheet(0), 0, kitpages.KITS[5].index("Scholar") + 1)]))
         dp._add_slots(gd, 0, before)
-        self.assertEqual(gd.left(0, 1), 1)
+        self.assertEqual(gd.left(0, 1), 0)
 
         # Cilla's own feature: the kit byte's OWN_BIT, her (no) kits as they were; once
         cilla = bytearray(sheet(3, (11, 6, 17)))

@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import gamepatch
+from dsloader import game, gamepatch
 
 
 def fake_dsun() -> bytearray:
@@ -215,9 +215,8 @@ class GamePatchTests(unittest.TestCase):
             self.assertNotEqual(on[at:at + 3], original[at:at + 3])
         changed = [i for i in range(len(on)) if on[i] != off[i]]
         self.assertEqual(changed, [0x78BA3, 0x78BA4, 0x78BA5, 0x7A15A, 0x7A15B, 0x7A15C])
-        self.assertIn("spell_to_hit", launch.CONTENT)
-        self.assertEqual(launch.content({})["spell_to_hit"], True)
-        self.assertEqual(launch.content({"spell_to_hit": False})["spell_to_hit"], False)
+        self.assertNotIn("spell_to_hit", launch.CONTENT)  # (always on: game.ALWAYS_ON, no switch to read)
+        self.assertIn("spell_to_hit", game.ALWAYS_ON)
         asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
         with open(asm, encoding="utf-8") as f:
             text = f.read()
@@ -255,11 +254,14 @@ class GamePatchTests(unittest.TestCase):
         """Each of the game's "is it Okay" tests keeps its compare and turns its jz/jnz into
         jbe/ja, so that New (0) passes as Okay (1)."""
         okay = [p for p in gamepatch.PATCHES if p.name.startswith("new_okay_")]
-        self.assertEqual(len(okay), len(gamepatch.NEW_AS_OKAY))
-        for p in okay:
+        ammo = [p for p in gamepatch.PATCHES if p.name.startswith("ammo_okay_")]  # (three, with a site)
+        self.assertEqual(len(okay) + len(ammo), len(gamepatch.NEW_AS_OKAY))
+        self.assertEqual(sorted(p.offset for p in okay + ammo), sorted(o for o, _ in gamepatch.NEW_AS_OKAY))
+        for p in okay + ammo:
             self.assertEqual(p.original[:5], bytes.fromhex("26807f1c01"))
-            self.assertEqual(p.replacement[:5], p.original[:5])
             self.assertEqual(p.replacement[5], {0x74: 0x76, 0x75: 0x77}[p.original[5]])
+        for p in okay:
+            self.assertEqual(p.replacement[:5], p.original[:5])
         self.assertIn(0x802AC, [p.offset for p in okay])  # (the thief skills)
 
     def test_other_versions_are_refused(self):

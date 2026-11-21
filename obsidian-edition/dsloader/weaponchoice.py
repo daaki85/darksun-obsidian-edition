@@ -5,7 +5,7 @@ CR_WEAPONS; weaponpages.py draws it); once the window is closed, and before it i
 (its status New), the Loader makes them whole (kinds_for), the picks left unmade given defaults:
 
 - a fighter or ranger has one kind, its kit's weapon, a thri-kreen's chatkcha, else the long
-  sword (a Myrmidon, kits.py, a second only if picked; a Battle Mage, kits.py, one of its own); a
+  sword (a Myrmidon, kits.py, the polearm its second; a Battle Mage, kits.py, one of its own); a
   gladiator two, the long sword and the club if none were picked; any other class none;
 - the game's starting weapon, the bone long sword in the right hand, becomes a plain weapon of
   the first kind, of bone or obsidian where the game has one, in a material the character can use
@@ -17,8 +17,10 @@ CR_WEAPONS; weaponpages.py draws it); once the window is closed, and before it i
 With kits (kit_gear), the game's starting gear fitted to the kit, whatever the weapon rules: a
 weapon the kit forbids becomes one it allows (a Shinobi's long sword a short sword, a Brute's a
 great axe, a Seeker's of its sphere's material), a shield it forbids is taken away (a Ravager's),
-an off-hand weapon it forbids goes to the backpack (a Brute's club), an Arena Champion's off-hand club becomes a
-shield, and a Battle Mage's quarterstaff its chosen weapon spec's weapon.
+an off-hand or missile weapon it forbids goes to the backpack (a Brute's club, a fire Seeker's
+bow), an Arena Champion's off-hand club becomes a
+shield, a Battle Mage's quarterstaff its chosen weapon spec's weapon, and a Spellarcher has its
+Fine Bow and arrows (spellarrows.starting_gear).
 """
 
 import struct
@@ -116,11 +118,13 @@ def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
         seconds = [k for k in (2, 1) if k in ok] + defaults  # (the club, as the panel puts in)
         second = chosen[1] if chosen[1] and chosen[1] != first else next((k for k in seconds if k != first), 0)
         return [first, second, 0, 0]
-    if FIGHTER in classes and specialize.myrmidon(sheet):  # (a second kind, if one was marked)
-        first = chosen[0] or defaults[0]
-        return [first, chosen[1] if chosen[1] != first else 0, 0, 0]
+    if FIGHTER in classes and specialize.myrmidon(sheet):  # (its second kind the polearm, given)
+        from . import kits
+        first = next((k for k in chosen if k and k != kits.POLEARM + 1), 0) or defaults[0]
+        return [first, kits.POLEARM + 1, 0, 0]
     if FIGHTER in classes or classes & set(RANGERS) or specialize.battle_mage(sheet) \
-            or specialize.war_kit(sheet) is not None:
+            or specialize.war_kit(sheet) is not None \
+            or game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):
         return [chosen[0] or defaults[0], 0, 0, 0]
     return [0, 0, 0, 0]
 
@@ -232,11 +236,11 @@ def finish_new(gd) -> List[str]:
     lines for the log."""
     from . import npcitems, pickpocket
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
@@ -289,12 +293,12 @@ def class_gear(gd) -> List[str]:
     what it may not wear in the backpack, where it would only weigh."""
     from . import kitpages, ring
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
@@ -346,14 +350,14 @@ def kit_gear(gd) -> List[str]:
     for the log. A change is made where the gear doesn't fit, so made once."""
     from . import kitpages, kits, pickpocket, ring
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     right, left = game.WEAPON_HANDS
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
@@ -369,7 +373,8 @@ def kit_gear(gd) -> List[str]:
             typ = read(type_)
             packed = _packed_start(item, owned)  # (the game's long sword in the backpack: the kit forbids it)
             shield = bool(typ[0] & kits.SHIELD)  # (in a hand or the backpack: left behind if forbidden)
-            if slot not in (right, left) and not packed and not shield \
+            armour = bool(typ[0x0F] & kits.ARMOUR) and not shield  # (armour or a helm: a Spellarcher wears none)
+            if slot not in (right, left, MISSILE_SLOT) and not packed and not shield and not armour \
                     or not restrict.kit_forbids(sheet, type_, typ, off_hand=slot == left):
                 continue
             at = items + item_index * game.ITEM_SIZE
@@ -380,6 +385,9 @@ def kit_gear(gd) -> List[str]:
                 if shield and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a {kit} fights without a shield")
                     continue  # (a shield the kit forbids: no use in the backpack)
+                if armour and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
+                    out.append(f"{who}'s {name(item)} is left behind: a {kit} wears no armour")
+                    continue  # (armour the kit forbids: no use in the backpack either)
                 cell = pickpocket.free_cell(gd, ring.Items(gd), member)
                 if cell is not None:
                     pickpocket.place(gd, member, item_index, cell)
@@ -418,13 +426,16 @@ def kit_gear(gd) -> List[str]:
                 if typ[0] & 0x01 and restrict.kit_forbids(sheet, type_, typ) \
                         and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a Brute fights with two-handed weapons only")
+        if kid == kits.SPELLARCHER:  # (its Fine Bow, and arrows by the touch spells it picked)
+            from . import spellarrows
+            out += spellarrows.starting_gear(gd, member, sheet, read)
         owned = list(gd._worn(member))
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)
         if kid == kits.POISONER:
             out += _poisoner_daggers(gd, member, sheet, read, chosen)
         if kid == kits.GHETTO:
             out += _ghetto_dagger(gd, member, sheet, read)
-        if kid == kits.BATTLE_MAGE and chosen and gd.rules & game.RULE_SPECIALIZE \
+        if kid == kits.BATTLE_MAGE and chosen \
                 and not any(specialize.kind_of(struct.unpack_from("<H", i, game.ITEM_TYPE)[0]) == chosen[0]
                             for _, i, _ in owned):
             for item_index, item, _ in owned:
@@ -452,7 +463,7 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
     hand = next((item for _, item, _ in owned if item[game.ITEM_SLOT] == right), None)
     who = gd.creature_name(member)
-    if kid == kits.MYRMIDON and len(chosen) > 1 and gd.rules & game.RULE_SPECIALIZE and hand is not None:
+    if kid == kits.MYRMIDON and len(chosen) > 1 and hand is not None:
         if any(kind_of(item) == chosen[1] for _, item, _ in owned):
             return []
         new = start_weapon(sheet, [chosen[1] + 1], read)

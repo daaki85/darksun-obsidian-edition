@@ -1,5 +1,8 @@
 # Spells against the manual
 
+*Status: acted on (see "Where it stands"); kept as the reference for each spell's
+entry and what was done with it.*
+
 What *Dark Sun: Shattered Lands* does with each spell and power, set against its manual
 (`Manual.pdf`, page numbers are the PDF's), where the two part ways, with a suggested resolution
 for each. Spells that match, or that the mod has already put right, are listed at the end.

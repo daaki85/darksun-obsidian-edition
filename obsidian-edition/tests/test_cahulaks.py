@@ -36,7 +36,7 @@ def load_tests(loader, tests, pattern):  # (only this file's: not group 4's, inh
 class LoaderTests(unittest.TestCase):
     def test_rule(self):
         self.assertEqual(game.RULE_CAHULAKS >> 16, RULE)
-        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
+        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_big_table(self):
         """A bit for each combatant that can't be tangled: too big by sizes.py (by race and name: the
@@ -134,11 +134,11 @@ class CahulaksTests(tg.SiteTests):
 
     def test_two_weapons_ready(self):
         """CAH_TWO: on (the game's "two weapons ready") with two, else its "none" way (595ECh's
-        jle, 5963Eh); one weapon, the cahulaks, on too with the rule."""
+        jle, 5963Eh); one weapon, the cahulaks, on too (the rule always on: its bit clear the same)."""
         skip = 0x5963E - 0x5962A
         self.item(4, CAH)
         self.item(7, 81)
-        for rules, ready, item, want in ((0, 2, 7, "end"), (0, 1, 7, skip), (0, 1, 4, skip),
+        for rules, ready, item, want in ((0, 2, 7, "end"), (0, 1, 7, skip), (0, 1, 4, "end"),
                                         (RULE, 1, 4, "end"), (RULE, 1, 7, skip), (RULE, 2, 7, "end"),
                                         (RULE, 1, 0x270F, skip)):
             self.rules_hi(rules)
@@ -148,7 +148,8 @@ class CahulaksTests(tg.SiteTests):
     def test_off_head_swing(self):
         """CAH_SWING: [BP-4] zeroed as the game's; the round's last swing ([BP-14h] = [BP-8] - 1, of 2
         or more) with the cahulaks in melee, by the attacker PROBE_TWO worked out (CAH_WHO), pays
-        CAH_EXTRA more in [BP+0Ah], once; any other swing, weapon or attacker as it was."""
+        CAH_EXTRA more in [BP+0Ah], once (the rule's bit clear the same); any other swing, weapon or
+        attacker as it was."""
         def swing(rules=RULE, index=1, swings=2, kind=CAH, reach=1, attacker=6, who=6, extra=2):
             self.rules_hi(rules)
             self.word("cah_who", who)
@@ -159,8 +160,9 @@ class CahulaksTests(tg.SiteTests):
             return struct.unpack("<h", self.mu.mem_read(SS * 16 + BP + 0x0A, 2))[0]
         self.assertEqual(swing(), 14)
         self.assertEqual(self.word("cah_who"), -1)  # (once)
+        self.assertEqual(swing(rules=0), 14)
         self.assertEqual(swing(extra=1, index=2, swings=3), 13)
-        for change in (dict(rules=0), dict(index=0), dict(swings=1, index=0), dict(kind=81), dict(reach=2),
+        for change in (dict(index=0), dict(swings=1, index=0), dict(kind=81), dict(reach=2),
                        dict(attacker=7), dict(extra=0)):
             self.assertEqual(swing(**change), 12, change)
 
@@ -200,8 +202,8 @@ class CahulaksTests(tg.SiteTests):
         """CAH_HIT: a hit with the cahulaks that did damage: the target saves against petrification (its
         sheet's +39h, a d20; a 20 saves), recorded (kind 14, 10: target, attacker, d20, needed), and a
         failure marks it SWEPT (its next turn lost); not a half-giant, one the Loader marks BIG, one the
-        blow felled, nor an Enlarged one (large, as the size rule has it), nor without the rule, another
-        weapon or a missile."""
+        blow felled, nor an Enlarged one (large, as the size rule has it), nor another weapon or a
+        missile; the rule's bit clear the same."""
         self.manual(False)
         self.target(pp=12)
         self.assertTrue(self.hit(11))
@@ -213,7 +215,10 @@ class CahulaksTests(tg.SiteTests):
         self.target(thing=22, pp=21)
         self.assertTrue(self.hit(20))
         self.assertFalse(self.swept(22))  # (a 20 saves, whatever is needed)
-        for thing, change, setup in ((23, dict(rules=0), {}), (24, dict(kind=81), {}), (25, dict(reach=2), {}),
+        self.target(thing=23, pp=12)
+        self.assertTrue(self.hit(2, rules=0))
+        self.assertTrue(self.swept(23))
+        for thing, change, setup in ((24, dict(kind=81), {}), (25, dict(reach=2), {}),
                                      (26, {}, dict(race=game.RACE_HALF_GIANT)), (27, {}, dict(hp=0))):
             self.target(thing=thing, pp=12, **setup)
             self.assertFalse(self.hit(2, **change), (change, setup))
@@ -232,16 +237,16 @@ class CahulaksTests(tg.SiteTests):
         self.assertTrue(self.swept(28))
 
     def test_off_head_attacks(self):
-        """CAH_MORE (OFF_HAND_HALVES's first): 2 more halves (one attack a round) for the cahulaks with the
-        rule; other weapons, and without it, as they were (the two-weapon rule off: its own cap none)."""
+        """CAH_MORE (OFF_HAND_HALVES's first): 2 more halves (one attack a round) for the cahulaks (the
+        rule always on, its bit clear too); other weapons as they were (the two-weapon rule's bit clear)."""
         hdr = self.hdr
         self.mu.mem_write(hdr + 170, struct.pack("<H", 0))  # (RULES: two weapons off)
         self.item(4, CAH)
         self.item(7, 81)
         at = self.sym["off_hand_halves"]
-        stub = TSR * 16 + 0xFFF0  # (a far stub in the helper's segment: a near call to it, RETF)
+        stub = TSR * 16 + 0xFFF0  # (a far stub in DSCLOG's segment: a near call to it, RETF)
         self.mu.mem_write(stub, bytes((0xE8,)) + struct.pack("<H", (at - (0xFFF0 + 3)) & 0xFFFF) + b"\xcb")
-        for rules, item, halves, want in ((RULE, 4, 2, 4), (RULE, 4, 3, 5), (RULE, 7, 2, 2), (0, 4, 2, 2)):
+        for rules, item, halves, want in ((RULE, 4, 2, 4), (RULE, 4, 3, 5), (RULE, 7, 2, 2), (0, 4, 2, 4)):
             self.rules_hi(rules)
             self.at += 0x40
             start = CALLER * 16 + self.at

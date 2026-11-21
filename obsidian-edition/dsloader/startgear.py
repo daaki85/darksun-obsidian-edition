@@ -13,8 +13,8 @@ the Loader:
   can use (a fire cleric's obsidian mace, an air cleric's obsidian dagger);
 - with the class restrictions, leaves a multiclass preserver's armour out (it can't cast in it;
   the shield stays);
-- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer or Spellarcher a bow and
-  arrows; a fire or earth cleric, who can't use one, a chatkcha of its material for the backpack);
+- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer a bow and
+  arrows; a Spellarcher has its Fine Bow already, spellarrows.starting_gear; a fire or earth cleric, who can't use one, a chatkcha of its material for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
 - gives a Stalker, Assassin or Shinobi a plain cloak.
@@ -60,14 +60,10 @@ def _type(rec: bytes) -> int:
 
 def can_use(gd, sheet: bytes, type_: int, typ: bytes) -> bool:
     """Whether the character can use an item type: the game's class lists (or its kit allowing it)
-    and, the class restrictions in force, theirs; never what its kit forbids."""
+    and the class restrictions (restrict.usable); never what its kit forbids."""
     if len(typ) < game.ITEM_TYPE_SIZE:
         return False
-    if gd.rules & game.RULE_RESTRICT:
-        return restrict.usable(sheet, type_, typ)
-    flags = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little")
-    lets = int.from_bytes(typ[restrict.TYPE_CLASSES:restrict.TYPE_CLASSES + 2], "little") & flags
-    return (bool(lets) or restrict.kit_allows(sheet, type_, typ)) and not restrict.kit_forbids(sheet, type_, typ)
+    return restrict.usable(sheet, type_, typ)
 
 
 def preserver_bare(sheet: bytes) -> bool:
@@ -89,7 +85,7 @@ def fill(gd) -> List[str]:
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         out += fill_member(gd, member)
     return out
@@ -100,7 +96,7 @@ def fill_member(gd, member: int) -> List[str]:
     defaultparty.py): lines for the log."""
     from . import pickpocket, ring
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read: Callable[[int], bytes] = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     name = lambda rec: gd.item_name(struct.unpack_from("<H", rec, game.ITEM_NAME)[0])
@@ -131,7 +127,7 @@ def fill_member(gd, member: int) -> List[str]:
         return True
 
     # a multiclass preserver's armour left out
-    if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet):
+    if preserver_bare(sheet):
         for item_index, item, _ in owned:
             if restrict.is_armour(read(_type(item))) \
                     and ring.unlink(gd, ring.Items(gd), item_index, "starting gear", empty=True):
@@ -157,11 +153,12 @@ def fill_member(gd, member: int) -> List[str]:
                     give(new[0], RIGHT, " (in hand)")
                     break
 
-    # a missile weapon (a Battle Dancer's or Spellarcher's the bow, with arrows: kits.DANCER_KINDS)
+    # a missile weapon (a Battle Dancer's the bow, with arrows: kits.DANCER_KINDS; a Spellarcher has its
+    # Fine Bow from the kit rules, spellarrows.starting_gear)
     if not any(specialize.kind_of(_type(item)) in weaponchoice.MISSILE_KINDS for _, item, _ in mine()):
         from . import kitpages
         dancer = bool(game.RULES_IN_FORCE & game.RULE_KITS) \
-            and bool({kits.BATTLE_DANCER, kits.SPELLARCHER} & set(kitpages.kit_ids(sheet)))
+            and kits.BATTLE_DANCER in kitpages.kit_ids(sheet)
         bow = _weapon(gd, sheet, KIND("bow"), read) if dancer else None
         sling = _weapon(gd, sheet, KIND("sling"), read)
         if bow is not None:
@@ -176,7 +173,7 @@ def fill_member(gd, member: int) -> List[str]:
                 give(chatkcha[0], None)
 
     # leather armour, and a cloak for the kits that hide
-    wear = [] if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet) else list(LEATHER)
+    wear = [] if preserver_bare(sheet) else list(LEATHER)
     from . import kitpages
     if game.RULES_IN_FORCE & game.RULE_KITS and set(kitpages.kit_ids(sheet)) & CLOAK_KITS:
         wear.append((SLOT("cloak"), CLOAK))

@@ -76,7 +76,8 @@ class Group3Tests(unittest.TestCase):
     # ---- the game's memory ------------------------------------------------------------------------
 
     def manual(self, on):
-        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (MANUAL_ON)."""
+        """Stinking Cloud's record's dice: 1d4 with the spells as the manual has them (once DSCLOG's
+        MANUAL_ON, the switch's test; the game's copy always has it now, and nothing asks)."""
         self.mu.mem_write(RECORDS + 22 * 0x20 + 4, bytes((0x41 if on else 0x61,)))
 
     def effects(self, *entries):
@@ -322,7 +323,7 @@ class Group3Tests(unittest.TestCase):
         """PROBE_GRACE_ABILITY (7B7D7h; AX the effect, ES:BX its entry less 106h): with the spells as the
         manual has them a Strength (67) or Adrenalin Control (66) under a bigger one of either counts for
         nothing ([BP-0Ah] 0), a Cat's Grace (54) under a bigger one (or as big, earlier) adds no DEX;
-        without, each counts as the game's."""
+        Stinking Cloud's dice the game's (on False) the same: nothing asks them now."""
         mu = self.mu
         self.effects((40, 2, 23, 67, 1, 0, 5), (40, 2, 148, 66, 2, 0, 3), (40, 2, 196, 54, 3, 0, 4),
                      (40, 2, 196, 54, 4, 0, 4), (41, 2, 23, 67, 5, 0, 8), (40, 2, 196, 54, 6, 0, 2))
@@ -335,11 +336,11 @@ class Group3Tests(unittest.TestCase):
             return self.word(-0x0A), self.word(-0x340)
         self.assertEqual(look(0), (67, 15))  # (Strength 5 over Adrenalin Control's 3: counts)
         self.assertEqual(look(1), (0, 15))  # (Adrenalin Control under it: nothing)
-        self.assertEqual(look(1, on=False), (66, 15))
+        self.assertEqual(look(1, on=False), (0, 15))
         self.assertEqual(look(2), (54, 19))  # (the first of two 4s)
         self.assertEqual(look(3), (0, 15))
         self.assertEqual(look(5), (0, 15))
-        self.assertEqual(look(5, on=False), (54, 17))
+        self.assertEqual(look(5, on=False), (0, 15))
         self.assertEqual(look(4), (67, 15))  # (another creature's: its own)
 
     def test_rainbow_damage(self):
@@ -386,8 +387,8 @@ class Group3Tests(unittest.TestCase):
                 (40, 0x80, 100, 5, 115, 0),  # (a doubled natural 20 and +100: 110, then the bonus)
                 (38, 0x80, 100, 0, 110, 0),  # (a doubled 19 and +100: kept, not read as -118)
                 (10, 0, -100, 0, -90, 0),    # (no natural 20)
-                (20, 0x80, -10, 0, 10, 0),   # (a doubled 10: no natural 20)
-                (20, 0x80, -10, 0, 14, 16)):  # (... but with RULE_NO_DOUBLE, 16, a natural 20 not doubled)
+                (20, 0x80, -10, 0, 14, 0),   # (RULE_NO_DOUBLE always on, its bit clear too: a natural 20 not doubled)
+                (20, 0x80, -10, 0, 14, 16)):
             self.mu.mem_write(TSR * 16 + self.hdr_off + 170, struct.pack("<H", rules))
             self.frame(m2=(d20 & 0xFF) | 14 << 8, m20=flags)
             self.assertEqual(self.run_site("save_sum", eax=mods & 0xFF), 8)
@@ -480,7 +481,8 @@ class Group3Tests(unittest.TestCase):
     def test_heal_cures_feeblemind(self):
         """PROBE_CURE (79619h, "nop / push cs"; [BP+0Ah] DI pushed, the target) for Heal (202): with the
         spells as the manual has them its Feeblemind (19) entries taken out of the table, the handler's
-        flags' 1 set ([BP-15h]: INT and WIS worked out again), recorded (kind 14, 5); without, kept."""
+        flags' 1 set ([BP-15h]: INT and WIS worked out again), recorded (kind 14, 5); Stinking Cloud's
+        dice the game's (on False) the same: nothing asks them now."""
         mu = self.mu
         image = self.image
         at = td.install_at(image, 0xB1)  # (VEC_CURE: PROBE_CURE)
@@ -498,8 +500,8 @@ class Group3Tests(unittest.TestCase):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(start, 0, count=20000)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800 - 6)
-            self.assertEqual(self.table(), [entries[1], entries[2]] if on else entries)
-            self.assertEqual(mu.mem_read(SS * 16 + BP - 0x15, 1)[0] & 1, 1 if on else 0)
+            self.assertEqual(self.table(), [entries[1], entries[2]])
+            self.assertEqual(mu.mem_read(SS * 16 + BP - 0x15, 1)[0] & 1, 1)
 
 
 class LoaderTests(unittest.TestCase):
@@ -515,8 +517,8 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(game.manual_die(148, sheet(9, 0, 0)), (6, ""))
 
     def test_texts(self):
-        plain, manual = spelltexts.chunks(False), spelltexts.chunks(True)
-        self.assertNotIn(("SPIN", 45), plain)
+        manual = spelltexts.chunks()
+        self.assertNotIn(45, spelltexts.TEXTS)
         self.assertIn(b"+2", manual[("SPIN", 45)])
         self.assertIn(b"1 to 8", manual[("SPIN", 197)])
         self.assertTrue(all(len(t) + 2 < 195 for t in spelltexts.MANUAL_TEXTS.values()))

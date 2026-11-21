@@ -19,14 +19,13 @@ instruction that DSCLOG.EXE answers (see dos/dsclog.asm):
 
 A last change lets the copy live outside the game folder: the game looks for
 its data files in the folder its EXE is in, and the copy looks in the current
-folder instead (the launcher runs it from the game folder).
+folder instead (the Loader runs it from the game folder).
 
 Patching the file rather than the running game means the patches are in place
 before the game runs, including in overlays each time they are loaded. The
 original DSUN.EXE is only read.
 """
 
-import os
 import struct
 from typing import NamedTuple
 
@@ -78,7 +77,6 @@ VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP = 0xA5, 0xA4, 0xA3, 0xA2
 VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW = 0xA1, 0xA0, 0x9F, 0x9E
 VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT = 0x9D, 0x9C, 0x9B, 0x9A, 0x99
 VEC_CR_SPELLS, VEC_EF_CLICK = 0x98, 0x97
-VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0x93
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_POINTER = 0xF1
@@ -94,7 +92,6 @@ VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
 VEC_WORN = 0x81
-VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
@@ -224,6 +221,17 @@ REACH_SITE = NS_IMAGE + 111
 LOCK_SITE = NS_IMAGE + 112
 # (a new member's psionic powers picked, not the game's table's: DSCLOG's PSI_GRANT, PSI_LIST, PSI_CYCLE)
 PSI_GRANT_SITE, PSI_LIST_SITE, PSI_CYCLE_SITE = NS_IMAGE + 113, NS_IMAGE + 114, NS_IMAGE + 115
+# (a party member's shot cut to the arrows left keeps its turn while attacks are left: DSCLOG's
+# AMMO_CAP and AMMO_TURN, the game's bug)
+AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
+# (the attack command's tests of its target still Okay: as fallen for that member, the turn its own)
+# (with NEW_AS_OKAY's jbe/ja after them, in the same patch: those three are left out of its own)
+AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E, NS_IMAGE + 120))
+# (the item box's INFO, its USEABLE BY: heading: a Spellarcher's spell arrows SPELLARCHERS:,
+# DSCLOG's INFO_HEAD)
+INFO_HEAD_SITE = NS_IMAGE + 121
+# (F10's standing-still test: a member Paralyzed or Stuck isn't moved back, DSCLOG's F10_PIN)
+F10_PIN_SITE = NS_IMAGE + 122
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -478,9 +486,9 @@ PATCHES = (
     Patch("shots_left", 0x1D657, bytes.fromhex("2680bc8101007505"), bytes.fromhex("2680bc8101637d05")),
     # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
     # party's strength / the monster's, but its search left SI one past the slot found, so the
-    # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
-    # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
-    # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
+    # next slot's strength (the last slot's: the next record's first OJFF; after the last in regions
+    # 6, 13, 14, 27, 39, 40, 44 and 255 an empty slot's, (0, 1) in the shipped data: a wrong count,
+    # not a divide by 0). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
     # ... and the rest (8066Dh) killed the Poisoned even after the free Neutralize Poison of a druid of
     # 7th level or more: its pass 2 took each member's effects as a bitset (598:25h, 76944h, at
@@ -489,7 +497,7 @@ PATCHES = (
     # (near calls, no fixups) moved ahead of the read, their nops dropped: the loop's jump (80984h)
     # goes to the casts (80768h), which end with a jump to the read (80758h), which goes on past
     # them (80765h: "jmp 807EDh"). A disease cured at a rest gives STR back that rest too
-    # (playtest/logs/2026-11-09-rest-order.asm)
+    # (playtest/logs/files/2026-11-09-rest-order.asm)
     Patch("rest_cures_first", 0x80765, bytes.fromhex(
         "837ef0057c368a46f050ff76ea566a60900ee8280283c4088a46f050ff76ea566a67900ee8160283c4088a46f050ff76ea"
         "566a69900ee8040283c408837eee057c308a46ee5057566a60900ee8ee0183c4088a46ee5057566a67900ee8de0183c408"
@@ -956,6 +964,9 @@ PATCHES = (
     Patch("hit", 0x25B52, bytes.fromhex("558bec83ec10"), _interrupt(VEC_HIT, 6)),
     # the end of the routine filling an item's box: a cloak's or boots' bonus to hiding, moving silently
     Patch("item_box", 0x8C1A1, bytes.fromhex("6a00"), _interrupt(VEC_ITEM_BOX, 2)),
+    # the routine drawing the item box's INFO (USEABLE BY: and the members allowed), its heading's
+    # far pointer pushed: push ds / push 3493h (DSCLOG's SPELLARCHERS: for spell arrows: INFO_HEAD)
+    Patch("info_head", 0x8C1E0, bytes.fromhex("1e689334"), _site(INFO_HEAD_SITE, 4)),
     # the end of the game's thief skill routine: mov ax,si (DSCLOG adds a worn belt's bonus to
     # picking pockets and opening locks)
     Patch("belt", 0x803B2, bytes.fromhex("8bc6"), _interrupt(VEC_BELT, 2)),
@@ -968,7 +979,7 @@ PATCHES = (
     # new game)
     Patch("save_enter", 0x74E28, bytes.fromhex("0d1c"), bytes.fromhex("ffff")),
     # ... and where a click on a button it doesn't know goes to its end: jmp (DSCLOG: PAGE 1 to
-    # PAGE 4, savepages.py)
+    # PAGE 4 and QUICK, savepages.py)
     Patch("save_click", 0x74B9F, bytes.fromhex("e94302"), _interrupt(VEC_SAVE_CLICK, 3)),
     # the game's thief skill check (803B8h): its chance, "mov [bp-2],ax" at 803D3h: a lock the thief
     # failed at the thief level it has now is out of reach (DSCLOG's LOCK_SITE; the Loader's locks.py)
@@ -1104,7 +1115,7 @@ PATCHES = (
     # Justifier's 9 (kits.spell_class_level)
     Patch("ranger_level", 0x5E3B8, bytes.fromhex("268a4724"), _interrupt(VEC_RANGER_LEVEL, 4)),
     # A kit's hit die (the Battle Mage's d6, the Arcanist's d3) where a level's die is taken from
-    # the class's group, and the Mind Warrior's a tenth fewer PSP where a level up sets them; at
+    # the class's group, and the Mind Warrior's a fifth fewer PSP where a level up sets them; at
     # creation, the die for the most hit points a new character can have, and the end of the
     # routine working out its PSP
     Patch("hit_die", 0x87308, bytes.fromhex("268a870000"), _interrupt(VEC_HIT_DIE, 5)),
@@ -1132,13 +1143,6 @@ PATCHES = (
           _interrupt(VEC_DUAL_SPELLS, 22)),
     # A click on the Effects screen's lower panel shows the next page of the kits and weapon kinds
     Patch("ef_click", 0x7EC9E, bytes.fromhex("8b7608"), _interrupt(VEC_EF_CLICK, 3)),
-    # An Arcanist's first preserver spell of its turn in a fight leaves it free to cast again: where
-    # casting marks the caster, where a turn's start clears the mark, where finishing a cast asks
-    # whether in a fight, and in the fight's routine that ends a turn
-    Patch("cast_mark", 0x845F0, bytes.fromhex("26c687af0001"), _interrupt(VEC_CAST_MARK, 6)),
-    Patch("round_mark", 0x57621, bytes.fromhex("26c684af0000"), _interrupt(VEC_ROUND_MARK, 6)),
-    Patch("cast_done", 0x722AF, bytes.fromhex("26833e190000"), _interrupt(VEC_CAST_DONE, 6)),
-    Patch("end_turn", 0x5925D, bytes.fromhex("8b7608"), _interrupt(VEC_END_TURN, 3)),
     # A scroll's spell: the message once taught (a failed INT roll takes it back) and once refused
     # (a spell level full for the reader's INT)
     Patch("learn_said", 0x8B712, bytes.fromhex("1e68f133"), _interrupt(VEC_LEARN_SAID, 4)),
@@ -1185,10 +1189,18 @@ PATCHES = (
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
-    # the routine saying whether an item may be taken from an inventory slot, where it found none
-    # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
-    # spell arrows in the quiver as those spells keep their weapons)
-    Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
+    # the weapon attack routine: a shot's attacks cut to the arrows left (mov [bp-8],dx), and the
+    # attacks made compared with the round's as it ends (cmp ax,[bp-8]): a party member whose
+    # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
+    Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
+    Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
+    # F10 in a fight (1B83Ah): its standing-still test and the jump to the move taken back, "or ax,ax /
+    # jz 1B872h": made only for a member neither Paralyzed nor Stuck (DSCLOG's F10_PIN)
+    Patch("f10_pin", 0x1B86B, bytes.fromhex("0bc07403"), _site(F10_PIN_SITE, 4)),
+    # the attack command's tests of its target still Okay after the attacks (cmp byte es:[bx+1Ch],1):
+    # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
+    *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))
+      for n, ((offset, site), jump) in enumerate(zip(AMMO_OK_SITES, (0x74, 0x75, 0x74)), 1)),
     # the sphere menu after DUAL to a cleric, druid or ranger, its answer compared: cmp ax,1 (DSCLOG
     # makes it WATER ONLY for a Healer, when the DUAL window opens, and its answer water)
     Patch("sphere", 0x86BC3, bytes.fromhex("3d0100"), _interrupt(VEC_SPHERE, 3)),
@@ -1313,7 +1325,8 @@ PATCHES = (
           bytes.fromhex("c706814b2e5c"  # mov word [4B81h], ".\"
                         "be834b"  # mov si, 4B83h
                         "eb14")),  # jmp to mov byte [si],0
-    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY),
+    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY
+      if offset not in {o for o, _ in AMMO_OK_SITES}),  # (those three: ammo_okay_*)
 )
 
 

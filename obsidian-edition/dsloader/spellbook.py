@@ -5,7 +5,7 @@ import struct
 from typing import List, NamedTuple, Optional
 
 from . import game
-from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
+from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
                    PRIEST6_LEVEL, PRIEST6_SPELLS, HEAL_SPELL, HARM_SPELL, THORNS_SPELL, SUNSTROKE_SPELL,
                    HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL,
                    PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, RULE_NEW_SPELLS, SAVE_NAMES,
@@ -23,7 +23,7 @@ DAMAGE_KINDS = ((0x02, "fire"), (0x04, "cold"), (0x80, "electricity"), (0x40, "a
 ROUND = 60  # game seconds
 # The 6th-level priest spells whose records (the game's spells they are built on: Cure and Cause
 # Critical Wounds, Slay Living, Lend Health...) don't tell what DSCLOG makes them do: those lines
-# by hand, as FEATURES.md has them (the others' lines from the record)
+# by hand, as PLAYER-GUIDE.md has them (the others' lines from the record)
 OWN_LINES = {
     HEAL_SPELL: {"damage": "", "save": "none", "effect": "every wound healed; disease and blindness cured"},
     HARM_SPELL: {"damage": "the creature is left 1d4 hit points", "save": "none"},
@@ -69,7 +69,7 @@ class SpellInfo(NamedTuple):
 
 FLAME_ARROW_SPELL = 28  # (with the spells as the manual has them: a bolt of 5d6 for every five levels)
 # The spells and powers whose lines DSCLOG's group 3 changes, with the spells as the manual has them
-# (gamepatch.SPELLS_MANUAL; their effects' rules game.MANUAL_EFFECT_RULES'), as FEATURES.md has them
+# (gamepatch.SPELLS_MANUAL; their effects' rules game.MANUAL_EFFECT_RULES'), as HOW-THE-GAME-WORKS.md has them
 CHILL_TOUCH_SPELL, RAINBOW_SPELL, CLOUDKILL_SPELL, CELL_ADJUSTMENT_SPELL = 3, 50, 57, 151
 MANUAL_LINES = {
     CHILL_TOUCH_SPELL: {"effect": "Weakened: STR 1 lower unless saved against (the game's); an undead takes no "
@@ -123,12 +123,10 @@ def save_text(gd: GameData, spell: int, rec: bytes, damages: bool) -> str:
     kind = byte >> 5
     if not byte & 1 or kind == NO_SAVE_KIND or kind >= len(KIND_TO_SAVE):
         return "none"
-    text = SAVE_NAMES.get(kind_to_save(kind, gd.rules), f"kind {kind}")
+    text = SAVE_NAMES.get(kind_to_save(kind), f"kind {kind}")
     rules = gd.spell_rules(spell)
     if rules and rules.save_modifier:
         text += f" {rules.save_modifier:+d}"
-    if rules and rules.doubles_roll:
-        text += f", d20 doubled (against {rules.doubled_for})"
     if len(rec) > 0x11 and rec[0x11] & CATEGORY_DODGE:
         text += ", DEX defensive adjustment counts (dodging)"
     if damages:

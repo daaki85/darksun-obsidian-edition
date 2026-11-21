@@ -1,6 +1,6 @@
 #!/bin/sh
 # loadsave.sh NAME: start the game (start.sh, or start_recomp.sh with PT_TARGET=recomp) with the save in saves/NAME copied into the game
-# folder (as slot 1), and load it: the title screens clicked past, LOAD SAVED GAME (170, 109), the
+# folder (as slot 1), and load it. The title screens are clicked past, LOAD SAVED GAME (170, 109), the
 # first slot (100, 46), LOAD (253, 46). Prints the state once loaded.
 . "$(dirname "$0")/env.sh"
 [ -d "$PT/saves/$1" ] || { echo "no save $PT/saves/$1"; exit 1; }

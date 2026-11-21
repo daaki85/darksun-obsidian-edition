@@ -117,7 +117,6 @@ class SpecializationsTests(unittest.TestCase):
         bow = specialize.KINDS.index("bow")
         self.assertEqual(self.gd(sheet((bow,), classes=(13, 0, 0))).specializations(0), [("bow", "expertise")])
         self.assertEqual(self.gd(sheet((0,), levels=(9, 0, 0))).specializations(0), [("long sword", "grand mastery")])
-        self.assertEqual(self.gd(s, rules=0).specializations(0), [])
         self.assertEqual(self.gd(sheet((), classes=(1, 0, 0))).specializations(0), [])   # none chosen: no bow line
         self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
@@ -209,15 +208,22 @@ class NewCharacterTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
-    def test_myrmidon_keeps_its_second(self):
-        """A Myrmidon (kits on) keeps a second kind marked; another fighter doesn't."""
-        from dsloader import weaponchoice
+    def test_myrmidon_polearm_second(self):
+        """A Myrmidon (kits on): its first kind its own pick (the long sword for none), its second
+        the polearm whatever was marked; another fighter one kind alone."""
+        from dsloader import kits, weaponchoice
         s = bytearray(sheet((0, 5), classes=(9, 0, 0)))
         s[0x43] = 1
         old = game.RULES_IN_FORCE
         try:
             game.RULES_IN_FORCE = game.RULE_KITS
-            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 6, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, kits.POLEARM + 1, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(sheet((13,), classes=(9, 0, 0)))[:0x43] + b"\x01"
+                                                    + bytes(sheet((13,), classes=(9, 0, 0)))[0x44:]),
+                             [14, kits.POLEARM + 1, 0, 0])  # (the bow, as any fighter may)
+            self.assertEqual(weaponchoice.kinds_for(bytes(sheet((), classes=(9, 0, 0)))[:0x43] + b"\x01"
+                                                    + bytes(sheet((), classes=(9, 0, 0)))[0x44:]),
+                             [1, kits.POLEARM + 1, 0, 0])  # (none picked: the long sword)
             s[0x43] = 2
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
         finally:
@@ -269,7 +275,7 @@ class NewCharacterTests(unittest.TestCase):
             game.RULES_IN_FORCE = game.RULE_KITS
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.DAGGER + 1, 0, 0, 0])
             self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 4]), [1, 0, 0, 0])
-            game.RULES_IN_FORCE = 0
+            game.RULES_IN_FORCE = game.RULES_ALWAYS
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
         finally:
             game.RULES_IN_FORCE = old
@@ -534,6 +540,22 @@ class KitGearTests(FinishNewTests):
         self.assertIn("a Shinobi can't use it", out[0])
         self.assertEqual(weaponchoice.kit_gear(self.gd), [])  # (once)
 
+    def test_seeker_bow(self):
+        """A Seeker's bow follows its ranger sphere (no bow kept whatever the sphere): a fire
+        Seeker's wooden bow goes into the backpack; an earth one keeps it."""
+        from dsloader import weaponchoice
+        bow = weaponchoice.PLAIN[specialize.KINDS.index("bow")]
+        for cls, kept in ((15, False), (14, True)):
+            with self.subTest(cls=cls):
+                self.setUp()
+                self.character(cls, 3)
+                self.give(bow[0], bow[1], weaponchoice.MISSILE_SLOT)
+                out = weaponchoice.kit_gear(self.gd)
+                self.assertEqual(self.item(0), (bow[0], weaponchoice.MISSILE_SLOT if kept else 30))
+                self.assertEqual(bool(out), not kept)
+                if out:
+                    self.assertIn("a Seeker can't use it", out[0])
+
     def test_poisoner_daggers(self):
         """A Poisoner (a halfling fighter/thief): a dagger in each hand, its long sword made one and
         its shield left behind; once. With the short sword its weapon spec, a short sword in each."""
@@ -663,9 +685,10 @@ class KitGearTests(FinishNewTests):
         self.assertIn("second", out[1])
 
     def test_myrmidon_two_weapons(self):
-        """A Myrmidon with weapon specialization: a plain weapon of its second kind in the backpack."""
+        """A Myrmidon with weapon specialization: a plain weapon of its second kind, the polearm, in the
+        backpack."""
         from dsloader import weaponchoice
-        right, left = self.character(9, 1, ("long sword", "axe"))
+        right, left = self.character(9, 1, ("long sword", "polearm"))
         self.gd.rules = game.RULE_SPECIALIZE | game.RULE_KITS
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
         self.give(4, 0x05, left)
@@ -682,7 +705,7 @@ class KitGearTests(FinishNewTests):
         with mock.patch("dsloader.npcitems.add_to", add_to):
             out = weaponchoice.kit_gear(self.gd)
             self.assertEqual(weaponchoice.kit_gear(self.gd), [])
-        self.assertEqual(self.item(2), (weaponchoice.PLAIN[specialize.KINDS.index("axe")][0], 20))
+        self.assertEqual(self.item(2), (weaponchoice.PLAIN[specialize.KINDS.index("polearm")][0], 20))
         self.assertEqual(self.item(1), (4, left))  # (the shield kept)
         self.assertIn("Myrmidon", out[0])
 
@@ -757,8 +780,6 @@ class KitGearTests(FinishNewTests):
         from dsloader import weaponchoice
         right, left = self.character(11, 2, ("axe",))
         self.give(3, 0x04, right)  # (the quarterstaff)
-        self.assertEqual(weaponchoice.kit_gear(self.gd), [])  # (weapon specialization off: no spec)
-        self.gd.rules = game.RULE_SPECIALIZE
         weaponchoice.kit_gear(self.gd)
         self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("axe")][0], right))
 
@@ -790,14 +811,14 @@ class NextDieTests(unittest.TestCase):
 
 class GrandMasteryTableTests(unittest.TestCase):
     def test_kits_table(self):
-        """KITS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
+        """WEAPON-SPECS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
         large dice sizes.LARGE_DICE's (the small ones where it has none), and both grand mastery
         columns those a die larger (specialize.next_die); the staff sling's the stinkpot's 1d3."""
         import re
         from dsloader import sizes, specialize as sp
-        with open(os.path.join(os.path.dirname(__file__), "..", "KITS.md"), encoding="utf-8") as f:
+        with open(os.path.join(os.path.dirname(__file__), "..", "WEAPON-SPECS.md"), encoding="utf-8") as f:
             text = f.read()
-        block = text[text.index("### Grand mastery's damage"):text.index("### Choosing at creation")]
+        block = text[text.index("## Grand mastery's damage"):text.index("## Choosing at creation")]
         rows = [[c.strip() for c in line.strip("|").split("|")] for line in block.splitlines()
                 if line.startswith("| ") and not line.startswith("| Weapon spec")]
         self.assertEqual([r[0] for r in rows], list(sp.KINDS))

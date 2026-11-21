@@ -21,6 +21,11 @@ BIG = 64                # (a figure wider than this drawn at its own size, not d
 # fighting picture (the next number), not the mound or ripple they walk as. Only these: for anyone
 # else the next number is another object's picture (Gilal's coffin, an elf on a box)
 BURROWERS = frozenset(("Bulette", "Fire Eel", "Silt Horror"))
+# where the game's creatures of one name are met (their objects' places in the regions' ETAB, by the
+# cluebook's names for the regions), for a name more than one kind of creature has
+NOTES = {("Guard", 1): "the towns' and camps' guards", ("Guard", 5): "the slave pens' half-giants",
+         ("Guard", 12): "a magera, at the Silt Sea Summoning", ("Slave", 1): "the elven slavers' captives, and others",
+         ("Slave", 12): "a magera, in the Wyrm Belly", ("Worker", 12): "a magera, in the Wyrm Belly"}
 
 
 class Creature(NamedTuple):
@@ -83,9 +88,16 @@ def race_name(race: int) -> str:
 
 
 def size_text(c: Creature) -> str:
+    """The size's letter (the intro gives their words), and " ?" for the mod's guess."""
     letter = sizes.size(c.name, c.race)
     unsure = c.race in sizes.UNSURE_RACES if 1 <= c.race <= 8 else c.name in sizes.UNSURE
-    return f"{letter} ({sizes.SIZE_NAMES[letter]}){' ?' if unsure else ''}"
+    return f"{letter}{' ?' if unsure else ''}"
+
+
+def name_text(c: Creature) -> str:
+    """The creature's name, and where it is met (NOTES) in brackets after it."""
+    note = NOTES.get((c.name, c.race))
+    return f"{c.name} ({note})" if note else c.name
 
 
 def tangle(c: Creature) -> str:
@@ -95,35 +107,40 @@ def tangle(c: Creature) -> str:
 
 INTRO = """# Creatures
 
+*Part of Obsidian Edition's documentation. **Spoilers:** this page names every creature in the game,
+those met late in the story too.*
+
 Every creature Shattered Lands defines, each with its figure as the game draws it standing, and
-whether [cahulaks](FEATURES.md#cahulaks) can tangle it (with the rule on: a hit that does damage
+whether [cahulaks](FEATURES.md#cahulaks) can tangle it (a hit that does damage
 tangles a man-sized or smaller creature that fails a save against petrification, and it loses
 its next turn). The game keeps no size for its creatures, so who is too big is the mod's call,
 from AD&D's sizes: half-giants and anything large or bigger can't be tangled (nor anyone Enlarged,
 while the spell lasts), nor anything with
 nothing a rope could hold, nor two the mod keeps from being tangled by name (the Sand Howler and
 the Strine). The people the party meets in towns are here too: any of them can be fought. Names
-are the game's own, cut short as the game has them ("Lsr Fire Elem").
+are the game's own, cut short as the game has them ("Lsr Fire Elem"). The mod's own people (the
+slave pens' and the arena's, and the champions) are on [their own page](PEOPLE.md).
 
 **Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which the game
 doesn't keep either: people by race (a half-giant large, a halfling small), the
 rest by name, from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the
 game's own creatures no book describes. [Creature size](FEATURES.md#creature-size) goes by it: a
 large one (or bigger) takes AD&D's large weapon dice and isn't held or charmed by Hold Person,
-Charm Person, or Charm Person or Mammal (on a person).
-
-Made from the game's own data by `dsloader/doccreatures.py`; the sizes are in `dsloader/sizes.py`.
+Charm Person, or Charm Person or Mammal (on a person). A name the game gives more than one kind of
+creature says, in brackets, where each is met.
 """
 
 
 def table(rows: List[Creature]) -> str:
-    out = [INTRO]
-    for title, keep in (("People", lambda c: 1 <= c.race <= 8), ("Monsters", lambda c: not 1 <= c.race <= 8)):
-        out += ["", f"## {title}", "", "| Figure | Creature | Race | Size | Cahulaks can tangle it |", "|---|---|---|---|---|"]
+    out = [INTRO.rstrip("\n")]
+    for title, people in (("People", True), ("Monsters", False)):
+        race = "Race | " if people else ""  # (a monster's race is the figure's name's last word: monster, undead...)
+        out += ["", f"## {title}", "", f"| Figure | Creature | {race}Size | Cahulaks can tangle it |",
+                "|---" * (5 if people else 4) + "|"]
         for c in rows:
-            if keep(c):
-                out.append(f"| ![](docs/creatures/{slug(c)}.png) | {c.name} | {race_name(c.race)} | {size_text(c)} "
-                           f"| {tangle(c)} |")
+            if (1 <= c.race <= 8) == people:
+                cells = [f"![](docs/creatures/{slug(c)}.png)", name_text(c)] + ([race_name(c.race)] if people else [])
+                out.append("| " + " | ".join(cells + [size_text(c), tangle(c)]) + " |")
     return "\n".join(out) + "\n"
 
 

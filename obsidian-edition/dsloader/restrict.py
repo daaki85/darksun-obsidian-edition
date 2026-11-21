@@ -1,4 +1,4 @@
-"""Class restrictions (the Options tab's rule): what a character's classes keep it from equipping,
+"""Class restrictions (a rule change, always on): what a character's classes keep it from equipping,
 on top of the game's own class lists (each item type's mask of the classes that may use it, of
 which one of the character's classes is enough). The strictest class wins. DSCLOG's
 PROBE_CAN_USE does this in the game; this is its model, for the tests and the Loader.
@@ -45,7 +45,7 @@ ARMOUR = 0x80  # (+0Fh: shields have it too)
 BRACERS_SLOT = 3  # (+9: where it is worn, as arm armour)
 CLOAK_SLOT = 8  # (+9: worn as a cloak)
 WOOD, BONE, STONE, OBSIDIAN, METAL, LEATHER = range(6)  # (the material's low nibble)
-NO_MATERIAL = 0x40  # (with a low nibble of 0)
+NO_MATERIAL_BIT = 0x40  # (with a low nibble of 0)
 
 # Class numbers (game.CLASS_NAMES): a cleric, druid and ranger for each element
 CLERICS, DRUIDS, RANGERS = range(1, 5), range(5, 9), range(13, 17)
@@ -61,7 +61,7 @@ PSIONICIST_KINDS = frozenset(specialize.KINDS.index(k) for k in
 def material(typ: bytes) -> int:
     """The material's number (WOOD..LEATHER), or -1 for none."""
     low = typ[TYPE_MATERIAL] & 0x0F
-    return -1 if typ[TYPE_MATERIAL] & NO_MATERIAL and not low else low
+    return -1 if typ[TYPE_MATERIAL] & NO_MATERIAL_BIT and not low else low
 
 
 def is_weapon(typ: bytes) -> bool:
@@ -154,8 +154,8 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return False
-    if any(kits.light_only(kid, typ) for kid, _, _ in kitpages.kits_of(sheet)):
-        return True  # (a thief's or archer's kit, asleep too: light armour only)
+    if any(kits.light_only(kid, typ) for kid, _, awake in kitpages.kits_of(sheet) if awake):
+        return True  # (a thief's or archer's kit, awake: light armour only; asleep, its limit sleeps too)
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     chosen = not spec and kind is not None and kind + 1 in game.spec_kinds(sheet) \
         and specs_awake(sheet)
@@ -166,8 +166,8 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
             if off_hand and kits.forbids_off_hand(kid, typ):
                 return True
             continue
-        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4  # (a ranger's, for a Seeker)
-        if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere):
+        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4  # (a ranger's for a Seeker, a druid's for a Grove Warden)
+        if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere, item_type in game.CAHULAKS_TYPES):
             return True
     return False
 
@@ -181,15 +181,15 @@ def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return None
-    for kid, _, _ in kitpages.kits_of(sheet):
-        if kits.light_only(kid, typ):
+    for kid, _, awake in kitpages.kits_of(sheet):
+        if awake and kits.light_only(kid, typ):
             return kid
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT) \
         and item_type not in game.CAHULAKS_TYPES  # (a blade in each hand: both hands, a half-giant's too)
     for kid in kitpages.kit_ids(sheet):
         sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4
-        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere):
+        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere, item_type in game.CAHULAKS_TYPES):
             return kid
     return None
 
@@ -204,7 +204,7 @@ def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     first = game.spec_kinds(sheet)[0]
     chosen = first - 1 if first else None
-    return any(kits.allows(kid, typ, kind, chosen, bool(game.RULES_IN_FORCE & game.RULE_SPECIALIZE))
+    return any(kits.allows(kid, typ, kind, chosen, True)
                for kid in kitpages.kit_ids(sheet))
 
 
@@ -296,9 +296,11 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     """The weapon kinds a character can choose: those with an item type of the game's (any
     material: a fire cleric's long sword the obsidian one) that it can use (a fighter/psionicist,
     say, only the psionicist's). TYPE_RECORD(type) gives an item type's record. DSCLOG's
-    KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already. A Battle Mage
+    KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already (but a Seeker,
+    which hasn't: its sphere's weapons alone, the bow among them where its sphere allows one). A Battle Mage
     (kits.py) its own, whatever its class; a Spellarcher the bow only; a Poisoner the dagger and
-    short sword; a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
+    short sword; a Swashbuckler the long sword, dagger and short sword; a Myrmidon any but the polearm
+    (its second weapon spec, given it: weaponchoice.kinds_for); a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
     chatkcha too)."""
     from . import kitpages, kits
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.BATTLE_MAGE in kitpages.kit_ids(sheet):
@@ -307,11 +309,16 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
         return [kits.BOW]
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.POISONER in kitpages.kit_ids(sheet):
         return sorted(kits.POISONER_KINDS)
-    ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200
+    if game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):
+        return sorted(kits.SWASHBUCKLER_KINDS)
+    ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200 \
+        and not (game.RULES_IN_FORCE & game.RULE_KITS and kits.SEEKER in kitpages.kit_ids(sheet))
     war = specialize.war_kit(sheet)
     melee = kits.MELEE_KINDS | (kits.KREEN_WARRIOR_KINDS if war == kits.MIND_WARRIOR
                                 and sheet[game.SHEET_RACE] == kits.THRI_KREEN else frozenset())
+    myrmidon = specialize.myrmidon(sheet)  # (any but the polearm, its own: DSCLOG's KINDS_ALLOWED)
     return [kind for kind, name in enumerate(specialize.KINDS)
             if not (ranger and name == "bow") and not (war is not None and kind not in melee)
+            and not (myrmidon and kind == kits.POLEARM)
             and any(usable(sheet, t, type_record(t)) and not kit_forbids(sheet, t, type_record(t), spec=True)
                     for t in specialize._TYPES[name])]

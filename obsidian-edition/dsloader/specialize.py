@@ -1,4 +1,4 @@
-"""Weapon specialization (the Options tab's rule): the weapon kinds a fighter, gladiator or ranger
+"""Weapon specialization (always on): the weapon kinds a fighter, gladiator or ranger
 can choose, and which of the game's item types each takes in.
 
 The game has no notion of a weapon's kind: its item types are one per weapon and material (a
@@ -91,9 +91,12 @@ def active_classes(sheet: bytes) -> List[Tuple[int, int]]:
 
 def skill(sheet: bytes, item_type: Optional[int]) -> int:
     """The character's skill with a weapon type, as DSCLOG's SPEC_OF_SHEET: a Justifier's (kits.py)
-    expertise is specialization."""
+    expertise with its chosen weapon spec is specialization (every ranger's bow, not chosen,
+    stays expertise)."""
     level = _skill(sheet, item_type)
-    return SPECIAL if level == EXPERT and justifier(sheet) else level
+    kind = spec_kind_of(item_type) if item_type is not None else None
+    chosen = kind is not None and kind + 1 in game.spec_kinds(sheet)
+    return SPECIAL if level == EXPERT and chosen and justifier(sheet) else level
 
 
 def justifier(sheet: bytes) -> bool:
@@ -115,8 +118,9 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
             return NONE
         return EXPERT if kind is not None and kind + 1 == chosen[0] else PLAIN
     if kind is None or kind + 1 not in chosen:
-        # (every ranger's expertise with the bow, chosen or not)
-        if kind == KINDS.index("bow") and any(c in RANGERS for c, _ in active_classes(sheet)):
+        # (every ranger's expertise with the bow, chosen or not; not a Seeker's)
+        if kind == KINDS.index("bow") and any(c in RANGERS for c, _ in active_classes(sheet)) \
+                and not (game.RULES_IN_FORCE & game.RULE_KITS and kits.SEEKER in kitpages.kit_ids(sheet)):
             return EXPERT
         return PLAIN
     active = active_classes(sheet)

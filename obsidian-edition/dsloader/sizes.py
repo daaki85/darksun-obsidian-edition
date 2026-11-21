@@ -118,7 +118,7 @@ class Large:
             return
         seg, = struct.unpack("<H", gd.guest.read(tsr_hdr + TSR_TAIL_SEG, 2))
         off, = struct.unpack("<H", gd.guest.read(tsr_hdr + TSR_LARGE, 2))
-        if not seg or not off:  # (a helper from before LARGE_BITS)
+        if not seg or not off:  # (a DSCLOG from before LARGE_BITS)
             return
         gd.guest.write(seg * 16 + off, table)
         self._table = table

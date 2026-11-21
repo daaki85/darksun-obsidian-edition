@@ -18,12 +18,12 @@ from . import arms, game, npcitems, ring, robes, spellarrows, tome, tools, world
 from .game import GameData
 
 OWN = 0x142  # the game's own names: 0-321
-EXTRA = 49  # how many DSCLOG adds (its NAMES_EXTRA)
+EXTRA = 50  # how many DSCLOG adds (its NAMES_EXTRA)
 KEPT = 16  # (DSCLOG's NAME_KEPT: a name's letters at most, and its NUL, in EXTRA_NAMES; padded to 25 in the game's table)
 RING, TOOLS = ring.NAME_ENTRY, tools.NAME_ENTRY  # 0x142, 0x143
 NAMES = {RING: ring.NAME, TOOLS: tools.NAME, **npcitems.NAMES, **arms.NAMES,
          worldgear.BRACERS_NAME: b"Bracers/Defns", **worldgear.NAMES, **tome.NAMES, **robes.NAMES,
-         **spellarrows.NAMES}  # as DSCLOG's EXTRA_NAMES has them
+         **spellarrows.NAMES, game.FINE_BOW_NAME: spellarrows.FINE_BOW}  # as DSCLOG's EXTRA_NAMES has them
 TSR_NAMES_OFF, TSR_NAMES_COUNT, TSR_NAMES_PTR = 196, 198, 200  # in DSCLOG's header
 # the entries earlier versions borrowed: what the game has there, and what they wrote over it
 BORROWED = ((0x95, b"", (b"Ring/Protection", b"Ring +1", b"Ring of Protection")),

@@ -296,7 +296,8 @@ def main(argv: List[str]) -> None:
         for ci, (cb, f) in enumerate(cols):
             own = fig.rows(cb, f)
             rows, ox, oy = (own, 0, 0) if full is None else full[cb][f][:3]
-            if label in now:  # (the Loader's own drawing of that armour, for comparison)
+            if label in now and isinstance(key, int):  # (the Loader's own drawing of that armour, for comparison;
+                # a half-elf is a figure of the Loader's own, drawn by figures.py, not here)
                 rows, ox, oy = sg.armed(own, key, f, bool(cb), {}, 10, now[label]), -10, -10
             bx, by = ci * CW + CW // 2 - len(own[0]) // 2 + ox, BASE - len(own) + oy
             for y, r in enumerate(rows):

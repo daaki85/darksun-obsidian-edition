@@ -140,13 +140,13 @@ class HitTests(unittest.TestCase):
 
     def test_unarmed_kits(self):
         """The kits' to-hit unarmed too, as DSCLOG's KIT_TO_HIT and WILD_TO_HIT: a Poisoner's none, a
-        Ghetto Fighter's -1 (no dagger), a Wild Fury's -3 with its check failed (none when passed)."""
+        Ghetto Fighter's -1 (no dagger), a Wild Fury's -3 fighting wild, its check passed or failed."""
         from dsloader import kits
         log = dag()
         struct.pack_into("<h", log.guest.mem, CREATURES + 8, game.NO_ITEM)
         g = log.game
         for kid, wild, thac0 in ((kits.POISONER, None, 10), (kits.GHETTO, None, 11),
-                                 (kits.WILD_FURY, False, 13), (kits.WILD_FURY, True, 10)):
+                                 (kits.WILD_FURY, False, 13), (kits.WILD_FURY, True, 13)):
             g.kit_ids = lambda creature, kid=kid: [kid]
             g.wild = {} if wild is None else {0: wild}
             self.assertEqual([(h.name, h.thac0) for h in g.weapon_hits(0)], [("unarmed", thac0)], kits.name(kid))
@@ -201,16 +201,13 @@ class RuleTests(unittest.TestCase):
 
 class ThiefTests(unittest.TestCase):
     def setUp(self):
-        """Dag as a 4th level thief (DEX 16), his long sword in his right hand; the game's tables
-        made simple: open locks 18 and +5 for DEX 16, the other skills 0; an equipment penalty
-        of 5 on picking pockets and 10 on climbing."""
+        """Dag as a 4th level thief (DEX 16), his long sword in his right hand: AD&D's table for
+        the level (Thieves as in AD&D: pick pockets 45, open locks 37 and +5 for DEX 16, traps 35,
+        move silently 33, hide in shadows 25, hear noise 15, climbing 88); the game's equipment
+        penalty, 5 on picking pockets and 10 on climbing."""
         self.log = log = dag()
         m = log.guest.mem
         table = (LOAD_SEG + game.THIEF_TABLE_SEG) * 16
-        for skill in range(8):
-            m[table + game.THIEF_DEX_HIGH + skill] = m[table + game.THIEF_DEX_TOP + skill] = 25
-        m[table + game.THIEF_BASE + 1] = 18
-        m[table + game.THIEF_DEX_LOW + 1], m[table + game.THIEF_DEX_HIGH + 1], m[table + game.THIEF_DEX_TOP + 1] = 11, 15, 20
         m[table + game.THIEF_ARMOUR + 0], m[table + game.THIEF_ARMOUR + 6] = 5, 10
         m[SHEETS + game.SHEET_CLASSES + 1], m[SHEETS + game.SHEET_LEVELS + 1] = game.THIEF, 4
         m[CREATURES + game.CREATURE_STATUS] = game.STATUS_OKAY
@@ -219,16 +216,16 @@ class ThiefTests(unittest.TestCase):
         return [n for _, n in self.log.game.thief_skills_now(0)]
 
     def test_equipment(self):
-        self.assertEqual(self.now(), [11, 39, 16, 16, 16, 6])  # move silently 4th
+        self.assertEqual(self.now(), [40, 42, 35, 33, 15, 78])  # move silently 4th
         self.log.guest.mem[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF  # put away
         self.log.guest.mem[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF
-        self.assertEqual(self.now(), [16, 39, 16, 16, 16, 16])
+        self.assertEqual(self.now(), [45, 42, 35, 33, 15, 88])
 
     def test_new_counts_as_okay(self):
         """A character not yet played (New) has its skills as when Okay; one Out Cold has 0."""
         m = self.log.guest.mem
         m[CREATURES + game.CREATURE_STATUS] = game.STATUS_NEW
-        self.assertEqual(self.now(), [11, 39, 16, 16, 16, 6])
+        self.assertEqual(self.now(), [40, 42, 35, 33, 15, 78])
         m[CREATURES + game.CREATURE_STATUS] = game.OUT_COLD
         self.assertEqual(self.now(), [0] * 6)
 
@@ -238,34 +235,32 @@ class ThiefTests(unittest.TestCase):
         m, gd = self.log.guest.mem, self.log.game
         m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF  # (no equipment penalty)
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.WAIST
-        plain = [16, 39, 16, 16, 16, 16]
+        plain = [45, 42, 35, 33, 15, 88]
         gd.belt = False
         self.assertEqual(self.now(), plain)
         gd.belt = True
-        self.assertEqual(self.now(), [21, 44, 16, 16, 16, 16])
+        self.assertEqual(self.now(), [50, 47, 35, 33, 15, 88])
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 20  # (in the pack)
         self.assertEqual(self.now(), plain)
 
     def test_cloak_and_boots(self):
-        """With the stealth rule and the cloak, boots and belt switch: a worn cloak adds 10 to hiding
-        in shadows, boots 10 to moving silently (no more than 95); the Cloak and Boots of Elvenkind
-        their 95. Without the rule or the switch, nothing; nor for the rolls' own chance (gear=False)."""
+        """With the cloak, boots and belt (BELT_IN_FORCE): a worn cloak adds 10 to hiding in
+        shadows, boots 10 to moving silently (no more than 95); the Cloak and Boots of Elvenkind
+        their 95. Without it, nothing; nor for the rolls' own chance (gear=False)."""
         m, gd = self.log.guest.mem, self.log.game
         m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = game.CLOAK_SLOT  # (no equipment penalty)
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FOOT
-        plain = [16, 39, 16, 16, 16, 16]
-        gd.belt, gd.rules = True, game.RULE_STEALTH
+        plain = [45, 42, 35, 33, 25, 88]
+        gd.belt = True
         skills = lambda **kw: [n for _, n in gd.thief_skills_now(0, game.PANEL_SKILLS, **kw)]
-        self.assertEqual(skills(), [16, 39, 16, 26, 26, 16])  # (pick, lock, traps, move, hide, climb)
+        self.assertEqual(skills(), [45, 42, 35, 43, 35, 88])  # (pick, lock, traps, move, hide, climb)
         self.assertEqual(skills(gear=False), plain)
         gd.belt = False
         self.assertEqual(skills(), plain)
-        gd.belt, gd.rules = True, 0
-        self.assertEqual(skills(), plain)
-        gd.rules = game.RULE_STEALTH
+        gd.belt = True
         struct.pack_into("<H", m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_TYPE, game.ELVEN_CLOAK_TYPE)
         struct.pack_into("<H", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_TYPE, game.ELVEN_BOOTS_TYPE)
-        self.assertEqual(skills(), [16, 39, 16, 95, 95, 16])
+        self.assertEqual(skills(), [45, 42, 35, 95, 95, 88])
 
     def test_a_rangers_cloak_and_boots(self):
         """A ranger's move silently and hide in shadows in the panel count a worn cloak and boots."""
@@ -274,20 +269,16 @@ class ThiefTests(unittest.TestCase):
         m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = game.CLOAK_SLOT
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FOOT
         self.log.game.belt = True
-        self.log.rules = self.log.game.rules = game.RULE_STEALTH
         self.assertEqual(list(self.log.stats_entry(0)[17:24]), [dicelog.STATS_RANGER, 0, 0, 0, 88, 73, 0])
         self.assertEqual(self.log.game.ranger_skill_now(0, 4, gear=False), 63)
 
     def test_panel_shows_a_rangers(self):
-        """A ranger (10th, no thief levels) with the stealth rule: move silently and hide in
-        shadows in a thief's places (AD&D's 78 and 63), the rest 0; nothing without the rule."""
+        """A ranger (10th, no thief levels): move silently and hide in shadows in a thief's places
+        (AD&D's 78 and 63: the stealth rule), the rest 0."""
         self.log.guest.mem[SHEETS + game.SHEET_CLASSES + 1] = 13
         self.log.guest.mem[SHEETS + game.SHEET_LEVELS + 1] = 10
-        self.log.rules = game.RULE_STEALTH
         entry = self.log.stats_entry(0)
         self.assertEqual(list(entry[17:24]), [dicelog.STATS_RANGER, 0, 0, 0, 78, 63, 0])
-        self.log.rules = 0
-        self.assertEqual(list(self.log.stats_entry(0)[17:24]), [0] * 7)
 
     def test_penalty_slots_from_the_game(self):
         """The slots come from the game's list in memory: the game's own (the sword in Dag's
@@ -296,99 +287,89 @@ class ThiefTests(unittest.TestCase):
         at = (LOAD_SEG + game.THIEF_TABLE_SEG) * 16 + game.THIEF_PENALTY_LIST
         m[at:at + 10] = struct.pack("<5H", 6, 1, 10, 3, 13)
         self.assertEqual(self.log.game.thief_penalty_slots(), (6, 1, 10, 3))
-        self.assertEqual(self.now(), [11, 39, 16, 16, 16, 6])
+        self.assertEqual(self.now(), [40, 42, 35, 33, 15, 78])
         m[at:at + 10] = struct.pack("<5H", 13, 13, 13, 13, 13)
         self.assertEqual(self.log.game.thief_penalty_slots(), ())
-        self.assertEqual(self.now(), [16, 39, 16, 16, 16, 16])
+        self.assertEqual(self.now(), [45, 42, 35, 33, 15, 88])
 
     def test_ad_d_table(self):
-        """With RULE_THIEF_TABLE: AD&D's average for the level (4th here) and Dark Sun's DEX
+        """RULE_THIEF_TABLE: AD&D's average for the level (4th here) and Dark Sun's DEX
         adjustment (17: +5 pick, +10 open, +5 move and hide), the race's as the game's."""
         m = self.log.guest.mem
         m[CREATURES + game.CREATURE_ABILITIES + 1] = 17
-        self.log.game.rules = game.RULE_THIEF_TABLE
         total = lambda skill: sum(n for _, n in self.log.game.thief_skill_parts(0, skill))
         self.assertEqual([total(s) for s in range(8)], [50, 47, 35, 38, 30, 15, 88, 20])
         self.assertEqual(self.log.game.thief_skill_parts(0, 0), [("thief level 4", 45), ("DEX 17", 5)])
-        self.log.game.rules = 0
-        self.assertEqual(self.log.game.thief_skill_parts(0, 0)[0], ("base", 0))
 
     def test_ad_d_table_most(self):
-        """With RULE_THIEF_TABLE no skill comes out above AD&D's 95 (a 13th level thief with DEX 22:
-        pick pockets 99 + 27, move silently 99 + 30, climbing 99); without it, the game's sum."""
+        """RULE_THIEF_TABLE: no skill comes out above AD&D's 95 (a 13th level thief with DEX 22:
+        pick pockets 99 + 27, move silently 99 + 30, climbing 99)."""
         m = self.log.guest.mem
         m[SHEETS + game.SHEET_LEVELS + 1], m[CREATURES + game.CREATURE_ABILITIES + 1] = 13, 22
         m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF  # (no equipment penalty)
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF
-        self.log.game.rules = game.RULE_THIEF_TABLE
         self.assertEqual(self.now(), [95, 95, 95, 95, 40, 95])
         self.assertEqual(sum(n for _, n in self.log.game.thief_skill_parts(0, 3)), 129)
-        self.log.game.rules = 0
-        self.assertGreater(max(self.now()), 95)
 
     def test_dex_adjustment(self):
         self.assertEqual([game.dex_adjustment(d, 3) for d in (5, 9, 12, 16, 18, 22, 24)], [-20, -20, -5, 0, 10, 30, 30])
         self.assertEqual(game.dex_adjustment(22, 6), 0)  # climb walls: none
 
     def test_panel_shows_hiding(self):
-        """The inventory screen's six (DSCLOG's STATS): hide in shadows in hear noise's place."""
-        self.log.guest.mem[(LOAD_SEG + game.THIEF_TABLE_SEG) * 16 + game.THIEF_BASE + 4] = 7  # hide 7 + 16
+        """The inventory screen's six (DSCLOG's STATS): hide in shadows (25) in hear noise's place."""
         entry = self.log.stats_entry(0)
-        self.assertEqual(list(entry[17:24]), [1, 11, 39, 16, 16, 23, 6])
+        self.assertEqual(list(entry[17:24]), [1, 40, 42, 35, 33, 25, 78])
 
     def test_effects(self):
         set_effects(self.log, [(0, 0, 47)])  # Slowed: picking pockets alone (DSUN.EXE 80425h)
-        self.assertEqual(self.now(), [0, 39, 16, 16, 16, 6])
+        self.assertEqual(self.now(), [0, 42, 35, 33, 15, 78])
         set_effects(self.log, [(0, 0, 14)])  # Detect Traps
         self.assertEqual(self.now()[2], 100)
 
     def test_in_stats(self):
-        self.assertEqual(struct.unpack_from("<B6B", self.log.stats_entry(0), 17), (1, 11, 39, 16, 16, 16, 6))
+        self.assertEqual(struct.unpack_from("<B6B", self.log.stats_entry(0), 17), (1, 40, 42, 35, 33, 25, 78))
 
 
 class SettingsTests(unittest.TestCase):
 
     def test_every_rule_has_its_box(self):
         """Each of game.RULE_SETTINGS has a box with its text on the Options tab (viewer.py's
-        list, read without Tk), and each its own bit."""
+        list, read without Tk), and each its own bit; the rule changes always on now
+        (RULE_SETTINGS_GONE) have none, and their bits are all in RULES_ALWAYS."""
         import re
         with open(os.path.join(os.path.dirname(game.__file__), "viewer.py"), encoding="utf-8") as f:
             source = f.read()
         for key, _ in game.RULE_SETTINGS:
-            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*(?:None|"\w+"),\s*"', key)  # (its group, then its text)
-        bits = [bit for _, bit in game.RULE_SETTINGS]
+            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)  # (its key, then its text)
+        for key, bit in game.RULE_SETTINGS_GONE:
+            self.assertNotRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)
+            self.assertTrue(game.RULES_ALWAYS & bit, key)
+            self.assertIn(key, game.ALWAYS_ON)
+        bits = [bit for _, bit in game.RULE_SETTINGS + game.RULE_SETTINGS_GONE]
         self.assertEqual(len(set(bits)), len(bits))
+        self.assertFalse(set(dict(game.RULE_SETTINGS)) & game.ALWAYS_ON)
+
     def test_merged_switches(self):
-        """A 2.15.0 settings file's merged-away halves: unticked, they untick the switch they joined
-        (game.setting_on, rules_from_settings), and fold_merged moves that over once, dropping the old
-        key, so a later tick of the merged switch counts."""
-        old = {"spell_save": True, "no_doubled_save": False, "cha_prices": True, "buyback": True,
-               "thief_table": True, "backstab_dice": False}
-        self.assertFalse(game.setting_on(old, "spell_save"))
-        self.assertTrue(game.setting_on(old, "cha_prices"))
-        self.assertFalse(game.setting_on(old, "thief_table"))
+        """A 2.15.0 settings file's merged-away halves (no_doubled_save, buyback, backstab_dice), and
+        the switches they joined, unticked: all passed over now, the switches always on."""
+        old = {"spell_save": False, "no_doubled_save": False, "cha_prices": False, "buyback": False,
+               "thief_table": False, "backstab_dice": False}
+        for key in ("spell_save", "cha_prices", "thief_table"):
+            self.assertTrue(game.setting_on(old, key), key)
         rules = game.rules_from_settings(old)
-        self.assertFalse(rules & game.RULE_SPELL_SAVE)
-        self.assertTrue(rules & game.RULE_BUYBACK)
-        self.assertFalse(rules & game.RULE_BACKSTAB)
-        folded = game.fold_merged(dict(old))
-        self.assertEqual(folded, {"spell_save": False, "cha_prices": True, "thief_table": False})
-        folded["spell_save"] = True  # (ticked again in the window)
-        self.assertTrue(game.setting_on(folded, "spell_save"))
+        for bit in (game.RULE_SPELL_SAVE, game.RULE_BUYBACK, game.RULE_BACKSTAB):
+            self.assertTrue(rules & bit, bit)
+        self.assertEqual(game.drop_always_on(dict(old)), {})
 
     def test_saved_options(self):
         log = dag()
         log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "spell_save": False})
         self.assertEqual((log.rules, log.arena_ring, log.monster_info),
-                         (game.RULE_TWO_WEAPONS | game.RULE_NEW_SPELLS
-                          | game.RULE_STEALTH | game.RULE_LEVEL_10 | game.RULE_THIEF_TABLE
-                          | game.RULE_HALF_GIANT | game.RULE_PROTECTION | game.RULE_ITEM_SAVES
-                          | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST
-                          | game.RULE_KITS | game.RULE_RANGER_CAST | game.RULE_INT_LEARN | game.RULE_ADND_TABLES | game.RULE_CHA_PRICES
-                          | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
-                          | game.RULE_ENLARGE | game.RULE_CON | game.RULE_DUAL_CLASS
-                          | game.RULE_REST | game.RULE_CAHULAKS | game.RULE_SIZE
-                          | game.RULE_HELD | game.RULE_STINKPOTS, False, True))
+                         (game.RULES_ALWAYS | game.RULE_NEW_SPELLS | game.RULE_HALF_GIANT | game.RULE_HP_BEST
+                          | game.RULE_KITS, False, True))
+        self.assertTrue(log.rules & (game.RULE_TWO_WEAPONS | game.RULE_SPELL_SAVE | game.RULE_STEALTH
+                                     | game.RULE_STINKPOTS | game.RULE_HELD))
+        self.assertFalse(log.rules & game.RULE_HELMS)
 
 
 class SpeakerTests(unittest.TestCase):

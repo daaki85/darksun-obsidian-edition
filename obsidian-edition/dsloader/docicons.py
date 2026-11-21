@@ -15,10 +15,12 @@ from . import art, gff, icons
 
 ZOOM = 2
 LEDGER = {name: number for name, _, number, _, _ in icons.ICONS}
+# a Loader item's picture under another name: the metal Short Sword, as the other metal weapons are
+RENAMED = {"Short Sword": "metal-short-sword"}
 
 ICONS: Dict[str, int] = {
     # the Loader's (icons.py)
-    **{name.lower().replace("'", "").replace(" ", "-").replace("+", "plus"): number
+    **{RENAMED.get(name, name.lower().replace("'", "").replace(" ", "-").replace("+", "plus")): number
        for name, number in LEDGER.items()},
     "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035,
     "tome-of-understanding": 1446, "kalzith-scroll": 1440, "gythka-plus2": 2534,
@@ -29,7 +31,7 @@ ICONS: Dict[str, int] = {
     "terror-blade": 2041, "blackmace": 30006, "quarterstaff-plus2": 2272, "balks-staff": 30004,
     "parting-staff": 30044, "great-axe-plus3": 1018, "bow-plus2": 1039, "phrains-bow": 30007,
     "sling-plus2": 2533, "chatkcha-plus1": 2646, "arrows-plus3": 2273, "shimmer-armor": 30014,
-    "drake-armor": 30013, "silk-armor": 2008, "tanelyvs-arm-armor": 1362, "tanelyvs-leg-armor": 1363,
+    "drake-armor": 30013, "silk-armor": 2008, "tanelyvs-chest-armor": 2004, "tanelyvs-arm-armor": 1362, "tanelyvs-leg-armor": 1363,
     "greys-scale-arms": 2518, "greys-scale-legs": 2531, "wand-of-metal-detection": 30120, "stone-pick": 1381, "helm-of-might": 1519, "leather-helm": 1021,
     "helm-of-contemplation": 30019, "els-shield": 30015, "drake-shield": 30016, "chameleon-gloves": 30020,
     "quicksilver-gauntlets": 30021, "belt-of-might": 30017, "serpent-boots": 31013, "living-cloak": 30022,
