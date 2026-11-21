@@ -2846,6 +2846,7 @@ site_table:
         dw bio_least                        ; 7 SITE_BIO
         dw cast_start                       ; 8 SITE_CAST
         dw lowres_site                      ; 9 SITE_LOWRES
+        dw strength_dice                    ; 10 SITE_STRENGTH
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3059,6 +3060,72 @@ lowres_site:
 .out:   pop dx
         pop cx
         pop ax
+        iret
+; STRENGTH_DICE (site 10, "strength_dice"): Strength's handler's dice, "push dword 60001h" (6624Eh, SL's
+; 79483h; 6 bytes: 1d6; DI the target, [BP+0Eh] the spell; Adrenalin Control's, 245, the same code):
+; Strength's (23) by the target's classes, AD&D's (warriors 1d8, priests, rogues and psionicists 1d6,
+; wizards 1d4), a multiclass character's best; Adrenalin Control's, and a creature with no class's, 1d6.
+; The dice pushed under the INT's frame (its IP, CS and flags moved down 4 bytes). The sequel's classes
+; SL's 1-17, then 18 (a wizard's) and 19 (a priest's); the sheet's classes at +1Bh.
+STRENGTH_SPELL equ 23
+STR_SIDES:              ; classes 1-19: Strength's sides
+        db 6, 6, 6, 6, 6, 6, 6, 6       ; (clerics, druids)
+        db 8, 8, 4, 6, 8, 8, 8, 8       ; (fighter, gladiator, preserver, psionicist, rangers)
+        db 6, 4, 6                      ; (thief; the sequel's 18, a wizard's, and 19, a priest's)
+strength_dice:
+        sub sp, 4                       ; (room for the dice)
+        push bp
+        mov bp, sp                      ; ([BP+2] the room, [BP+6] the INT's IP, CS and flags)
+        pusha
+        push es
+        mov cx, 6
+        mov si, [bp]                    ; (the game's BP)
+        cmp word [ss:si + 0x0E], STRENGTH_SPELL
+        jne .put
+        cmp di, 400
+        jae .put
+        imul bx, di, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .put
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov ax, [es:bx + 4]
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        xor dx, dx                      ; (DL the best sides)
+        xor si, si
+.each:  movzx di, byte [es:bx + si + 0x1B]
+        dec di
+        cmp di, 19 - 1
+        ja .skip
+        mov al, [cs:STR_SIDES + di]
+        cmp al, dl
+        jbe .skip
+        mov dl, al
+.skip:  inc si
+        cmp si, 3
+        jb .each
+        or dl, dl
+        jz .put
+        movzx cx, dl
+        inc word [cs:manual_count]
+.put:   mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], 1            ; (the count, then the sides)
+        mov [bp + 10], cx
+        pop es
+        popa
+        pop bp
         iret
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:

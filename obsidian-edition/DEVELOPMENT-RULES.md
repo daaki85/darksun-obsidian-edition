@@ -1236,6 +1236,8 @@ creature and three words; dicelog's `_manual`).
   the cast's level for `ACID_ROUNDS` to put into Low Magic Res.'s (61) amount, and
   `lower_resistance_manual` (84B2Eh, the same 33 bytes as SL's) takes the 30 + the level off
   ([played](../playtest/logs/2026-11-21-ravager-lower-resistance.md)).
+  Site 10 does `strength_dice` (6624Eh; the sheet's classes at +1Bh, the sequel's 18 a wizard's
+  and 19 a priest's) ([played](../playtest/logs/2026-11-21-ravager-strength.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
