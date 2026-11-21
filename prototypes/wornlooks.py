@@ -122,6 +122,7 @@ class WornGame(C.ClassGame):
             return
         cx = (hips[0] + hips[-1]) / 2
         half0 = (hips[-1] - hips[0]) / 2 + 1
+        last = None
         for y in range(p.waist + 1, foot + 1):
             xs = [x for (x, yy), k in what.items() if yy == y and k in ("leg", "torso", "boot")]
             if not xs:
@@ -130,6 +131,9 @@ class WornGame(C.ClassGame):
             lo, hi = max(min(xs) - 1, int(cx - half)), min(max(xs) + 1, int(cx + half + 0.5))
             if p.facing == sp.SIDE:  # (from the side the robe hangs from the hips, the legs swing under it)
                 lo, hi = int(cx - half), int(cx + half + 0.5)
+            if last is not None and not hit:  # (never narrower than the row above: no notches in its sides)
+                lo, hi = min(lo, last[0]), max(hi, last[1])
+            last = (lo, hi)
             for x in range(lo, hi + 1):
                 was = self.at(out, x, y)
                 part = what.get((x, y))
@@ -172,16 +176,23 @@ class WornGame(C.ClassGame):
         """A bone guard on each shoulder, out past the shoulder line (the outline changes): three
         rows, the top lit, a dark lower edge; from the side one guard on the near shoulder."""
         sy, sa, sb = p.shoulders
+        gw = max(3, min(8, int(round(0.3 * (sb - sa)))))  # (the guard's width: by the figure's shoulders)
+        over = max(1, gw // 3)  # (how far past the shoulder line)
+        rows = 3 if gw < 5 else 4
         if p.facing == sp.SIDE:
             mid = (sa + sb) // 2
-            spans = [(mid - 1, mid + 2)]
+            spans = [(mid - gw // 2, mid - gw // 2 + gw)]
         else:
-            spans = [(sa - 1, sa + 2), (sb - 2, sb + 1)]
+            spans = [(sa - over, sa - over + gw), (sb + over - gw, sb + over)]
+        shades = (BONE[4], BONE[3], BONE[2], BONE[1])[:rows]
         for a, b in spans:  # (rounded: the top row a pixel in each end, the outer end of each row darker)
             outer = a if a < (sa + sb) / 2 else b
-            for dy, c in ((-1, BONE[4]), (0, BONE[3]), (1, BONE[2])):
+            for i, c in enumerate(shades):
+                dy = i - 1
                 y = sy + dy
                 lo, hi = (a + 1, b - 1) if dy == -1 else (a, b)
+                if i == rows - 1 and rows > 3:
+                    lo, hi = (a + 1, b) if outer == b else (a, b - 1)  # (the lower edge tucked in)
                 for x in range(lo, hi + 1):
                     self.put(out, x, y, BONE_DARK if x == outer and dy >= 0 and p.facing != sp.SIDE else c)
 
