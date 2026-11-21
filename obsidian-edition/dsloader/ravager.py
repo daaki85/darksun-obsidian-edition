@@ -72,7 +72,7 @@ VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Char
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
 VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
 VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
-VEC_TWO, VEC_OFF_HAND = 0xE1, 0xE2  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
+VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
@@ -203,6 +203,11 @@ PATCHES: Tuple[Patch, ...] = (
     # A hit die rolled twice, the better kept (SL's hp_best; the Options tab's "best_hit_die"):
     # DSCLOG2's PROBE_HP_BEST at the game's "mov cx,ax" after the roll (95025h, SL's 87319h).
     Patch("hp_best", 0x95025, bytes.fromhex("8bc8"), gamepatch._interrupt(VEC_HP_BEST, 2)),
+    # A fix of the sequel's: its hit die routine (94F60h) adds the roll to the rolled hit points and stops,
+    # where SL's works out the most hit points again and raises the creature's; the sequel left that to
+    # the level-up (957E0h), so the creation screen's die never set them and a new character kept the
+    # least (7 for a 7th-level fighter). DSCLOG2's ROLL_MAX_HP at the add (9506Ch) does SL's part.
+    Patch("roll_max_hp", 0x9506C, bytes.fromhex("26014f0a"), gamepatch._interrupt(VEC_ROLL_MAX, 4)),
     # Helms count AC 1 (SL's ring_ac's helm part and box_ac; the Options tab's "helm_ac"): DSCLOG2's
     # PROBE_HELM_AC at the AC function's two reads of a worn item's type's AC (5D663h, 5D67Bh: "mov
     # al,es:[bx+0Eh] / cwde"; SL's 58EBDh) and PROBE_BOX_AC at the item box's AC BONUS (9A4B7h, SL's 8C15Ah).

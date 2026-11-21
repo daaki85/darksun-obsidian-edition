@@ -455,8 +455,11 @@ CHARACTERS (160,92), right-click a slot (70,56), NEW (110,57); EXIT (280,160).
 
 **Its rules and hit dice** (2026-11-21, logs/2026-11-21-ravager-hit-dice.md): DSCLOG2's header has
 DSCLOG's RULES (+170) and RULES_HI (+270), written by the Loader with only ravager.RULES_PORTED; a
-dice log started without settings (`ravdice.py`) writes 0. The hit-die rolls: 9501Dh (creation, SL's)
-and 95CCEh (level-up from XP), into the sheet's +0Ah, capped by the class table's +38h.
+dice log started without settings (`ravdice.py`) writes 0. The hit-die rolls: 9501Dh (94F60h's: creation's
+die and the level-up from XP, called from 9574Bh), into the sheet's +0Ah, the class table's +38h by CON
+a floor; and 95CCEh, a level lost (the XP set lower, the rolls taken off). The most hit points from
++0Ah: 95193h (SL's 874B0h), which the sequel calls only in the level-up (957E0h): creation's fix,
+logs/2026-11-21-ravager-creation-hp.md.
 
 **Its item types and helms** (2026-11-21, logs/2026-11-21-ravager-helms.md): the types' table at DS:19CDh,
 15 bytes a type (AC +0Eh, 80h at +0Bh counts for AC, slot +05h); the items' types and names can be listed

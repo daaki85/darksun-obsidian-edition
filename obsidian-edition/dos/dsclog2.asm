@@ -58,6 +58,7 @@ VEC_BOX_AC    equ 0xDE  ; PROBE_BOX_AC (9A4B7h: the item box's AC BONUS: the sam
 VEC_HELD_HIT  equ 0xDF  ; HELD_HIT (5D088h: the natural 20's test: a helpless target hit too)
 VEC_HELD_DAMAGE equ 0xE0 ; HELD_DAMAGE (5D1B7h: a helpless target's damage, not doubled)
 VEC_TWO       equ 0xE1  ; PROBE_TWO (5DE7Ch: the two-weapon to-hit adjustment: AD&D's -2/-4 with RULE_TWO_WEAPONS)
+VEC_ROLL_MAX  equ 0xE3  ; ROLL_MAX_HP (9506Ch: a fix: the most hit points worked out again after a hit die, as SL's)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
@@ -2469,6 +2470,48 @@ probe_hp_best:
 hp_first dw 0
 hp_again db 0
 
+; ROLL_MAX_HP: a fix of the sequel's. INT VEC_ROLL_MAX replaces "add es:[bx+0Ah],cx" (4 bytes, INT + 2
+; NOPs; 9506Ch) at the end of the routine rolling a level's hit die (94F60h; SL's 872xxh): [BP+6] the
+; member, ES:BX its sheet, CX the roll, added to the rolled hit points (+0Ah). SL's routine then works out
+; the most hit points again (SL's 874B0h, the sequel's 95193h, from the same segment) and raises the
+; creature's by as much as they rose (SL's 87362h-87391h); the sequel's left that to the level-up
+; (957E0h), so the creation screen's die rolled the dice and the new character kept the least the
+; screen opened with (a 7th-level fighter 7/7 HP on View Character). Done here, as SL's: at a level-up
+; the game's own (957E0h) then sets them again, the same.
+MAX_HP_DELTA equ 0x95193 - 0x9506E      ; (the routine, from the INT's return)
+roll_max_hp:
+        add [es:bx + 0x0A], cx
+        pusha
+        push es
+        mov di, sp
+        mov ax, [ss:di + 18]            ; (the INT's IP and CS: the routine's segment is this one)
+        add ax, MAX_HP_DELTA
+        mov [cs:rm_target], ax
+        mov ax, [ss:di + 20]
+        mov [cs:rm_target + 2], ax
+        mov si, [bp + 6]
+        imul di, si, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        mov dx, [es:bx + di + 8]        ; (the most before)
+        push dx
+        push si
+        call far [cs:rm_target]
+        pop cx
+        pop dx
+        les bx, [SHEETS_PTR]
+        mov [es:bx + di + 8], ax
+        sub ax, dx
+        jle .kept
+        imul di, si, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add [es:bx + di], ax
+        inc word [cs:rm_count]
+.kept:  pop es
+        popa
+        iret
+rm_target dw 0, 0
+rm_count  dw 0                  ; (rises made so, for a look in play)
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -4052,6 +4095,7 @@ all_vectors:
         vector VEC_HELD_DAMAGE, held_damage
         vector VEC_TWO, probe_two
         vector VEC_OFF_HAND, off_hand
+        vector VEC_ROLL_MAX, roll_max_hp
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

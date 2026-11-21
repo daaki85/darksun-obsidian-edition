@@ -9,8 +9,9 @@ set_rules, RavGameData.rules).
 ## Found first
 
 - The sequel has two hit-die rolls in its level routines: 9501Dh (SL's, used by the creation screen's
-  die) and 95CCEh (a level-up from XP, rolling up to three classes in a loop). Only the first is
-  SL's patch; the second is the sequel's own and isn't hooked yet.
+  die) and 95CCEh (rolling up to three classes in a loop). Only the first is SL's patch. (Later the
+  same day: 95CCEh is a level lost, and the level-up rolls through the first: see
+  2026-11-21-ravager-creation-hp.md.)
 - The roll goes into the sheet's +0Ah (the rolled hit points before CON), capped by a class
   table's byte (+38h). The creation screen's hit points line reads the creature's +0 over the sheet's
   +8, and showed 7/7 for a 7th-level fighter in every roll (rule on or off): what the sequel does

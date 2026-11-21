@@ -64,7 +64,9 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
     removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
-    restarted: play in it (`loadsave.sh` would kill it).
+    restarted: play in it (`loadsave.sh` would kill it). **Start Xvfb before taking the lock**: a start script
+    run under flock that starts Xvfb itself (`ravstart.sh`) hands Xvfb the lock's descriptor, and the
+    lock stays held while Xvfb runs (2026-11-21: the next flock waited for ever).
 
 ## 2. Setting up
 

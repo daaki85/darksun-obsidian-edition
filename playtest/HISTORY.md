@@ -435,3 +435,7 @@ game's RESOURCE.GFF instead (WIND 17500, the same as the Loader's copy then): 21
 columns, filled middle five first, then the right-hand column. A level-up in the unchanged game
 from fountain-user (Lex's XP to 4,999, the Templar killed by Jenna) didn't come before the party,
 passing its turns, was beaten.
+
+**2026-11-21, the shared lock held by Xvfb.** A Wake of the Ravager start (`ravstart.sh`) run under
+`flock /tmp/playtest/dosbox.lock` started Xvfb itself; Xvfb kept the lock's descriptor, so the next
+flock waited until it was killed (logs/2026-11-21-ravager-creation-hp.md). Start Xvfb first.
