@@ -37,6 +37,15 @@ rolled +0Ah, the least and most): 51 (37, 21-84), 71 (43, 35-98), 54 (47, 14-77)
 right (HP 38-87, the line's numbers equal, the dice plus CON's bonus); mean 61.5 with the ported
 rules, 55.1 with `ravcreation.py 15 0` (the game's rolls) on the same screen.
 
+## A level-up (about 07:35 UTC)
+
+The ambush won by Computer Control (Gerakis's XP raised to 120,000 by a test edit, never saved: the
+fighter's table wants more than the 10,000 the fight gives, so he stayed 7th): **Thy'rokh went from
+druid 6 to 7 by the game's own XP**. The helper: PROBE_HP_BEST's first roll 3 and its second taken
+(hp_again back to 0), so the better of the two was 3; ROLL_MAX_HP raised the most hit points once
+(72 to 75, the rolled +0Ah 84 to 87) and the creature's 51 to 54. The level-up's own code then set
+the same again. The dice log names neither roll (it shows two "0-14" rolls at that moment).
+
 ## Notes
 
 - A click on the HP line or its square didn't change the hit points in the sequel (SL's click dial,

@@ -31,3 +31,17 @@ never saved:
 - Still to do: a real Hold (Hold Person or a monster's paralysing touch) and a blow on the held
   target, the dice log saying "hit (held)" whatever the d20 and the damage not doubled.
 - No water: the street in Tyr only.
+
+## Seen in play (later the same day, about 07:50 UTC)
+
+`RAV_LOADER=1 sh ravhold.sh` (new: Ar'anda taught Hold Person by a test edit, never saved), the dice
+log with the ported rules. Hold Person (LEVEL 3, the third icon) on the Draxan beside Terrannus: its
+save d20 4 against 13, failed. Her turn then waited with the spell pointer up: a right-click on bare
+floor and Q ended it. Computer Control for all four.
+
+- The next round a Draxan struck the held Draxan twice (the sequel's foes attack their own held
+  comrade): d20 14 and **d20 8 against 11+, both hits**, "Paralyzed: hit automatically, for normal
+  damage"; 12 and 11 damage, 2d4 - 1 + 8 STR each, not doubled. The helper's count went to 1.
+- So the rule works on a real Hold, both sides alike. A party member's blow on a held foe wasn't
+  seen (the fight was stopped there).
+- No water: the street in Tyr only.
