@@ -447,6 +447,12 @@ code, ending its panels at 987FBh (SL's 8A471h), the text routine, window and ch
 (-1A9h, -1B4h, -19Bh); the creature's movement +13h. The game's text routine changes ES: read what you
 need before drawing. Opened by the bar's top-left icon (22,17), then VIEW CHARACTER (47,171).
 
+**Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
+routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
+resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18
+words; weapon kinds only below the magic bits B000h) and halved kinds at DS:25ACh (7). To Look in a
+fight: right-click to the eye (arrow, sword, eye) and a slow press on the figure.
+
 **Its map and names over figures** (2026-11-21, logs/2026-11-21-ravager-labels.md): the map things
 from DS:67BBh, 25h bytes each, their feet at +0Ah/+0Ch (`ravfight.py`'s +3/+5 is the top left, about 30
 above); the object list's far pointer DS:67B7h (8 bytes an entry, +6 the thing), its count DS:264Eh;

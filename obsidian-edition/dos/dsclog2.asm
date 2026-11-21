@@ -51,6 +51,7 @@ VEC_TICK      equ 0xD4  ; PROBE_TICK (3DA2Ch: the game's timer: LABEL_STAMP)
 VEC_FLIP      equ 0xD5  ; FLIP_SITE (16974h: the game's flip of its two screens: the panel on the new one)
 VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the panel put first)
 VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
+VEC_LOOK      equ 0xDA  ; PROBE_LOOK (640FBh: the Look box's first rows drawn: the monster's defences)
 VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
@@ -125,7 +126,14 @@ vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
 copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
-        times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +150 to +163: none of them here yet, zero)
+look_seq   dw 0                 ; +150 monsters looked at in a fight (PROBE_LOOK counts them)
+look_reply dw 0                 ; +152 the Loader sets this to LOOK_SEQ once LOOK_TEXT is ready
+look_who   dw 0                 ; +154 the combatant looked at
+look_off   dw look_text         ; +156 offset of LOOK_TEXT: up to 3 short lines for the Look box, "|"
+                                ;      between them (a first byte 1: beside LEVEL), written by the Loader
+look_full_off dw 0              ; +158 (DSCLOG's whole description for the dialogue window: none here yet)
+look_on    dw 0                 ; +160 the Loader sets 1 to have monsters described
+        times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +162 to +163: none of them here yet, zero)
 stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passed (RavDiceLog): older
                                 ;      than STATS_FRESH, the panel is taken off
         times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +166 to +237: none of them here yet, zero)
@@ -1791,6 +1799,162 @@ t_ip    dw 0
 t_cs    dw 0
 t_fl    dw 0
 char_count dw 0                 ; panels drawn on (for the tests)
+
+;---- the Look box: DSCLOG's PROBE_LOOK ----
+; PROBE_LOOK: INT VEC_LOOK replaces "mov si,ax / mov word [bp-0Ah],0" (640FBh, 7 bytes: INT + 5 NOPs;
+; SL's "mov si,ax / xor di,di" at 5FCDAh) in the routine that fills the Look box (a creature looked at
+; in a fight), where its first status rows have been drawn and AX says how many. Asks the Loader for up
+; to three short lines about the monster (LOOK_TEXT), prints them in the rows left with the game's text
+; routine, as the box prints the monster's level, and moves the game's row count past them, so its own
+; status lines follow in any row still free. The routine is SL's but for: the combatant in DI (SL's
+; [BP+0Ah]), the status lines' count in [BP-0Ah] (SL's DI), the text routine's far address -20h from the
+; patch (SL's -22h), the box's colours F3h, AFh (SL's 1Fh, 11h). DSCLOG's whole description in the
+; dialogue window as the box closes (PROBE_UNLOOK) isn't ported.
+LOOK_DRAW  equ -0x20            ; (from the patch) "lcall SEG:OFF" operand: the text routine
+LOOK_ROWS  equ 4                ; the box's status rows: y = (row + 2) * 7 + 10h
+LOOK_SIDE  equ 1                ; a line starting with this goes on LEVEL's row (row -1), to its right
+LOOK_SIDE_X equ 60              ;   at this x (past LEVEL: 10)
+LOOK_INK   equ 0xF3             ; the box's colours (its "push dword 00AF00F3h")
+LOOK_PAPER equ 0xAF
+LOOK_SIZE  equ 80
+probe_look:
+        sti
+        pushad
+        push es
+        mov si, sp              ; SS:SI: ES, then EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX, IP, CS, flags
+        mov ax, [ss:si + 30]
+        mov [cs:l_row], ax      ; the rows the game has used
+        cmp word [cs:look_on], 0
+        je .done
+        call loader_fresh
+        jne .done
+        mov [cs:look_who], di   ; the combatant
+        mov byte [cs:look_text], 0
+        inc word [cs:look_seq]
+        xor ax, ax
+        mov es, ax
+        mov dx, [es:0x46C]      ; the BIOS timer
+        call rtc_begin
+.wait:  mov ax, [cs:look_reply]
+        cmp ax, [cs:look_seq]
+        je .ready
+        mov ax, [es:0x46C]
+        sub ax, dx
+        cmp ax, LOOK_WAIT
+        jae .done               ; no answer: the Loader isn't reading
+        call rtc_waited         ; (the BIOS clock can stand still: at most 2 s by the real-time clock)
+        jnc .wait
+        jmp .done
+.ready: mov es, [ss:si + 36]
+        mov di, [ss:si + 34]
+        sub di, 2               ; ES:DI = the patch
+        mov eax, [es:di + LOOK_DRAW]
+        mov [cs:l_draw], eax
+        mov eax, [bp + 6]       ; the box's window
+        mov [cs:l_win], eax
+        mov di, look_text
+.line:  mov byte [cs:l_side], 0
+        cmp byte [cs:di], LOOK_SIDE
+        jne .rows
+        inc di
+        mov byte [cs:l_side], 1
+        jmp .take
+.rows:  cmp word [cs:l_row], LOOK_ROWS
+        jae .done
+        cmp byte [cs:di], 0
+        je .done
+.take:  mov bx, l_line          ; the next line, up to "|", into L_LINE
+.copy:  mov al, [cs:di]
+        cmp al, '|'
+        je .cut
+        or al, al
+        je .cut
+        cmp bx, l_line + L_LINE_SIZE - 1
+        jae .skip
+        mov [cs:bx], al
+        inc bx
+.skip:  inc di
+        jmp .copy
+.cut:   mov byte [cs:bx], 0
+        cmp byte [cs:di], '|'
+        jne .draw
+        inc di
+.draw:  push di
+        mov ax, [cs:l_row]
+        mov cx, 6
+        cmp byte [cs:l_side], 0
+        je .at
+        mov ax, -1              ; (LEVEL's row, above the status rows, to its right)
+        mov cx, LOOK_SIDE_X
+.at:    add ax, 2
+        imul ax, ax, 7
+        add ax, 0x10
+        push word LOOK_PAPER    ; as the box prints LEVEL
+        push word LOOK_INK
+        push ax                 ; y
+        push cx                 ; x
+        push cs
+        push word l_line
+        push dword [cs:l_win]
+        call far [cs:l_draw]
+        add sp, 16
+        pop di
+        cmp byte [cs:l_side], 0
+        jne .line               ; (beside LEVEL: no row of its own)
+        inc word [cs:l_row]
+        jmp .line
+.done:  mov ax, [cs:l_row]      ; the replaced code: SI = the rows used, [BP-0Ah] = 0
+        mov si, sp
+        mov [ss:si + 6], ax
+        mov word [bp - 0x0A], 0
+        inc word [cs:look_count]
+        pop es
+        popad
+        iret
+LOOK_WAIT equ 7                 ; timer ticks (55 ms each) the Loader has to answer (DSCLOG's TURN_WAIT)
+L_LINE_SIZE equ 24
+l_row    dw 0
+l_side   db 0
+l_draw   dd 0
+l_win    dd 0
+l_line   times L_LINE_SIZE db 0
+look_count dw 0                 ; boxes filled (for a look in play)
+look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
+
+; RTC_BEGIN, RTC_WAITED: DSCLOG's: a wait for the Loader ends after its BIOS ticks, or, as the BIOS
+; clock can stand still in fights, once the real-time clock's second has changed twice (1 to 2 s)
+rtc_begin:
+        push ax
+        call rtc_second
+        mov [cs:w_sec], al
+        mov byte [cs:w_flips], 0
+        pop ax
+        ret
+rtc_waited:                             ; CF set: the wait is over
+        push ax
+        call rtc_second
+        cmp al, [cs:w_sec]
+        je .no
+        mov [cs:w_sec], al
+        inc byte [cs:w_flips]
+        cmp byte [cs:w_flips], 2
+        jb .no
+        pop ax
+        stc
+        ret
+.no:    pop ax
+        clc
+        ret
+rtc_second:                             ; AL = the real-time clock's seconds (CMOS register 0)
+        pushf
+        cli
+        mov al, 0
+        out 0x70, al
+        in al, 0x71
+        popf
+        ret
+w_sec   db 0
+w_flips db 0
 
 ; ---- View Character: DSCLOG's PROBE_VIEW ----
 ; PROBE_VIEW: INT VEC_VIEW replaces "push dword 000B0140h" (987FBh, SL's 8A471h; 6 bytes: INT + 4 NOPs)
@@ -3495,6 +3659,7 @@ all_vectors:
         vector VEC_CENTRE, probe_centre
         vector VEC_FOLLOW, probe_follow
         vector VEC_VIEW, probe_view
+        vector VEC_LOOK, probe_look
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

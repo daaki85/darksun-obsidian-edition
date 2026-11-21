@@ -67,6 +67,7 @@ VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
 VEC_CAST, VEC_SCROLL, VEC_TICK = 0xD2, 0xD3, 0xD4  # (DSCLOG2's PROBE_CAST, PROBE_SCROLL, PROBE_TICK: names over figures)
 VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the combat log's panel)
+VEC_LOOK = 0xDA  # (DSCLOG2's PROBE_LOOK: the monster's defences in the Look box)
 VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
@@ -172,6 +173,10 @@ PATCHES: Tuple[Patch, ...] = (
     # View Character's panels, once drawn (987FBh, SL's 8A471h: "push dword 000B0140h"; SL's code at
     # the same distances): DSCLOG2's PROBE_VIEW adds the saves, MOVE and THAC0, and does the push.
     Patch("view", 0x987FB, bytes.fromhex("666840010b00"), gamepatch._interrupt(VEC_VIEW, 6)),
+    # The Look box, its first status rows drawn (640FBh: "mov si,ax / mov word [bp-0Ah],0"; SL's
+    # "mov si,ax / xor di,di" at 5FCDAh, the routine rewritten a little): DSCLOG2's PROBE_LOOK adds the
+    # Loader's lines about the monster and does the moves.
+    Patch("look", 0x640FB, bytes.fromhex("8bf0c746f60000"), gamepatch._interrupt(VEC_LOOK, 7)),
     Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
     # Names over figures (SL's labels.py, DSCLOG's LABELS): a spell cast recorded (80585h, SL's 772AAh:
     # "mov cx,[bp+6]", the caster), the map's main loop asking where the pointer is (20230h, SL's

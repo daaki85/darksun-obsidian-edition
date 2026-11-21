@@ -239,6 +239,51 @@ class PassTests(unittest.TestCase):
         self.assertEqual(data.robe_slots(0, 1, 1, 3), 3)
 
 
+class LookTests(unittest.TestCase):
+    """The sequel's damage resistance (85052h's classes) and the Look box's lines from it."""
+
+    def test_resist_percent(self):
+        # class 9 (1038h): weapons only from +1; class 6 (half 86h): fire, cold, electricity halved
+        self.assertEqual(ravlog.resist_percent(0x1038, 0, 0x10), 0)
+        self.assertEqual(ravlog.resist_percent(0x1038, 0, 0x10 | 0x1000), 100)
+        self.assertEqual(ravlog.resist_percent(0x3038, 0, 0x10 | 0x1000), 0)
+        self.assertEqual(ravlog.resist_percent(0, 0x86, 0x202), 50)
+        self.assertEqual(ravlog.resist_percent(0x7FF, 0x14, 0x202), 0)
+        self.assertEqual(ravlog.resist_percent(0x7FF, 0x14, 0x10), 50)  # (weapons: no magic needed)
+
+    def _lines(self, resist, immune, half):
+        ravlog.apply_layout()
+        try:
+            from dsloader import ravager
+            rec = bytearray(ravager.CREATURE_SIZE)
+            rec[0:2] = (25).to_bytes(2, "little")
+            rec[ravager.creature_field(0x1F)] = 15
+            rec[ravlog.CREATURE_RESIST] = resist
+            rec[0x21:0x2F] = b"Giant Skeleton"
+            sheet = bytearray(ravager.SHEET_SIZE)
+            sheet[0x08:0x0A] = (25).to_bytes(2, "little")
+            gd = types.SimpleNamespace(creature=lambda i: bytes(rec), sheet=lambda i: bytes(sheet),
+                                       counted_ac=lambda i: 6, creature_name=lambda i: "Giant Skeleton")
+            real = ravlog.resist_masks
+            ravlog.resist_masks = lambda g, r: (immune, half)
+            try:
+                return ravlog.monster_lines(gd, 20, None)
+            finally:
+                ravlog.resist_masks = real
+        finally:
+            ravlog.restore_layout()
+
+    def test_spells_immune(self):
+        short, full = self._lines(2, 0x7FF, 0x14)
+        self.assertEqual(short, ["HP 25/25 AC 6", "THAC0 15", "IMM SPELLS PSI"])
+        self.assertIn("Immune to spells and psionic attacks.", full)
+
+    def test_needs_a_magic_weapon(self):
+        short, full = self._lines(9, 0x1038, 0)
+        self.assertEqual(short[-1], "NEEDS +1 WEAPON")
+        self.assertIn("Only +1 or better weapons hurt it.", full)
+
+
 class EffectTests(unittest.TestCase):
     def tearDown(self):
         ravlog.restore_layout()

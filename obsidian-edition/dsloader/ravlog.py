@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import combatlog, dicelog, game, labels, ravager
+from . import combatlog, dicelog, game, labels, monsters, ravager
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -286,6 +286,85 @@ def resources_file() -> Optional[str]:
 NAMES_START = b"Tombstone\r\x00Olive Branch\r\x00"
 
 
+# The sequel's damage resistance (its routine at 85052h, not SL's kinds table): a creature's resistance
+# class is the byte at +0Fh of its record (0 for people; a Giant Skeleton's 2). DS:2588h holds a word a
+# class (18): the damage kinds it takes none of, its weapon kinds (crushing, edged, pointed) only from
+# weapons below the magic its bits B000h say (1000h: +1 or better hurts). DS:25ACh a word for each of
+# the first 7 classes: kinds it takes half of. (The routine also halves or stops some kinds for a
+# creature's active resistances, its record's flags, which the Look box doesn't count.)
+CREATURE_RESIST = 0x0F
+RESIST_IMMUNE, RESIST_IMMUNE_COUNT = 0x2588, 18
+RESIST_HALF, RESIST_HALF_COUNT = 0x25AC, 7
+WEAPON_BITS, MAGIC_BITS = 0x38, 0xB000
+
+
+def resist_percent(immune: int, half: int, kinds: int) -> int:
+    """The percent of a hit with KINDS a creature of a class with these masks takes, as 85052h works it out."""
+    taken = -1
+    if immune & kinds & WEAPON_BITS:
+        if (immune & MAGIC_BITS) > (kinds & MAGIC_BITS):
+            taken = 0
+    elif immune & kinds:
+        taken = 0
+    if taken < 0:
+        taken = 100
+    if half & kinds:
+        taken //= 2
+    return taken
+
+
+def resist_masks(gd, resist: int) -> Tuple[int, int]:
+    """(immune, half) for resistance class RESIST, read from the running game's data segment."""
+    immune = half = 0
+    if 0 <= resist < RESIST_IMMUNE_COUNT:
+        immune, = struct.unpack("<H", gd.guest.read(gd.ds * 16 + RESIST_IMMUNE + 2 * resist, 2))
+    if 0 <= resist < RESIST_HALF_COUNT:
+        half, = struct.unpack("<H", gd.guest.read(gd.ds * 16 + RESIST_HALF + 2 * resist, 2))
+    return immune, half
+
+
+def monster_lines(gd, creature: int, ac: Optional[int]) -> Tuple[List[str], List[str]]:
+    """monsters.monster_lines for the sequel: (the Look box's short lines, the whole description), its
+    records' fields through the layout (game's constants rebound) and its resistance classes."""
+    rec, sheet = gd.creature(creature), gd.sheet(creature)
+    if len(rec) < ravager.CREATURE_SIZE or len(sheet) < ravager.SHEET_SIZE:
+        return [], []
+    hp = struct.unpack_from("<h", rec, 0)[0]
+    max_hp = struct.unpack_from("<h", sheet, 0x08)[0]
+    thac0 = struct.unpack_from("b", rec, ravager.creature_field(0x1F))[0]
+    mr = sheet[ravager.sheet_field(0x29)]
+    attacks = sheet[ravager.sheet_field(0x2A)]
+    immune, half = resist_masks(gd, rec[CREATURE_RESIST])
+    d = monsters.defences([], 0, False, percent=lambda kinds: resist_percent(immune, half, kinds))
+    if ac is None:
+        ac = gd.counted_ac(creature)
+    ac_text = str(ac) if ac is not None else str(struct.unpack_from("b", sheet, ravager.sheet_field(0x27))[0])
+    alignment = monsters.ALIGNMENTS.get(sheet[ravager.sheet_field(monsters.SHEET_ALIGNMENT)])
+    second = f"THAC0 {thac0}"
+    if alignment and monsters.look_pixels(f"{second} AL {alignment[0]}") <= monsters.LOOK_PIXELS:
+        second += f" AL {alignment[0]}"
+    short = [monsters.look_fit(f"HP {hp}/{max_hp} AC {ac_text}", f"HP{hp}/{max_hp} AC{ac_text}"), second]
+    if mr:
+        side = f"MR {mr}" if monsters.look_pixels(f"MR {mr}") <= monsters.SIDE_PIXELS else f"MR{mr}"
+        short.insert(0, monsters.LOOK_SIDE + side)
+    line = monsters.short_line(d)
+    spells = bool(immune & monsters.MAGIC)  # (every spell carries MAGIC: none hurts it)
+    if spells and not d.weapon_plus:
+        line = "IMM SPELLS PSI" if immune & monsters.PSIONIC else "IMM SPELLS"
+    if line:
+        short.append(line)
+    said = monsters.describe(d)
+    if spells:  # (the list of kinds said as what it is)
+        said = [("Immune to spells" + (" and psionic attacks." if immune & monsters.PSIONIC else "."))
+                if t.startswith("Immune to ") else t for t in said]
+    per_round = f"{attacks // 2}" if attacks % 2 == 0 else f"{attacks}/2"
+    head = f"{gd.creature_name(creature)}: HP {hp}/{max_hp}, AC {ac_text}, THAC0 {thac0}"
+    if attacks:
+        head += f", {per_round} attack{'s' if attacks != 2 else ''} a round"
+    full = [head + (f", magic resistance {mr}%" if mr else "") + (f", {alignment[1]}" if alignment else "") + "."]
+    return short, full + said
+
+
 class RavGameData(game.GameData):
     """game.GameData for the sequel: its item names from its own list (NAMES_START), and none of the
     mod's rule changes (DSCLOG2 has none of them yet: the spell slots, for one, are the game's own)."""
@@ -440,6 +519,51 @@ class RavDiceLog(dicelog.DiceLog):
         self._shadows.palettes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_DAC_CHANGES, 2))
         self._update_panel(now)
 
+    def _look_ranges(self) -> Optional[int]:
+        """DSCLOG2's Look box words (header +150 to +161) and its LOOK_TEXT, made writable; LOOK_TEXT's
+        address, None without them (a helper before the Look box)."""
+        if self.tsr_hdr is None:
+            return None
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_OFF, 2))
+        if not off:
+            return None
+        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        for r in ((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
+                  (base + off, dicelog.LOOK_SIZE)):
+            if r not in self.guest.writable:
+                self.guest.writable = self.guest.writable + [r]
+        return base + off
+
+    def set_monster_info(self, on: bool) -> None:
+        """Shattered Lands' switch, into DSCLOG2's header once it has the Look box."""
+        self.monster_info = on
+        if self._look_ranges() is not None:
+            self.guest.write(self.tsr_hdr + dicelog.TSR_LOOK_ON, struct.pack("<H", int(on)))
+
+    def _answer_look(self) -> List[str]:
+        """Shattered Lands' (DSCLOG asks about a creature looked at in a fight), with the sequel's
+        monster_lines; only the Look box's short lines (no whole description in the dialogue window)."""
+        text_at = self._look_ranges()
+        if text_at is None:
+            return []
+        seq, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_SEQ, 2))
+        if seq == self._look_seq:
+            return []
+        self._look_seq = seq
+        who, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_WHO, 2))
+        short: List[str] = []
+        full: List[str] = []
+        index = self.game.combatant_creature(who)
+        if index is not None and index >= game.PARTY_SIZE:
+            try:
+                short, full = monster_lines(self.game, index, self.monster_ac(index))
+            except (struct.error, IndexError, ValueError):
+                short, full = [], []
+        text = "|".join(short).encode("cp437", "replace")[:dicelog.LOOK_SIZE - 1]
+        self.guest.write(text_at, text + b"\0")
+        self.guest.write(self.tsr_hdr + dicelog.TSR_LOOK_REPLY, struct.pack("<H", seq))
+        return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []
+
     def _float(self, thing, text, colour, now, priority=0) -> None:
         """Shattered Lands' names over figures (labels.py), into DSCLOG2's slots once it has them."""
         if self._label_slots() is not None:
@@ -457,6 +581,9 @@ class RavDiceLog(dicelog.DiceLog):
         (_write_slots, as often as Shattered Lands' writes them) and the combat log's panel
         (_panel_pass): the rest reads and writes what isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
+        if self.monster_info:  # (the Look box: answered at once, the game waits for it)
+            self.set_monster_info(True)
+            out += self._step(self._answer_look)
         if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
             self._labels.on = self.floating_names
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
