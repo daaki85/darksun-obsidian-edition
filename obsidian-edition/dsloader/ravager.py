@@ -75,7 +75,7 @@ VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: 
 VEC_TWO, VEC_OFF_HAND, VEC_ROLL_MAX = 0xE1, 0xE2, 0xE3  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_CAH_TWO, VEC_CAH_SWING = 0xE5, 0xE6  # (DSCLOG2's CAH_TWO, CAH_SWING: the cahulaks' two heads)
 VEC_CAH_HIT, VEC_CAH_MOVE = 0xE7, 0xE8  # (DSCLOG2's CAH_HIT, CAH_MOVE: the cahulaks' tangle)
-VEC_REACH = 0xE9  # (DSCLOG2's REACH: a polearm's two squares)
+VEC_REACH, VEC_RANGER_LEVEL = 0xE9, 0xEA  # (DSCLOG2's REACH: a polearm's two squares)
 # the effects' records (31 bytes: the name, 29, and the icon), file offset (the load + 3C870h: ravlog's
 # EFFECT_RECORDS), and the empty one the stinkpots' Nauseated takes (DSCLOG2's STINK_EFFECT)
 EFFECT_RECORDS_FILE, NAUSEATED = 0x3C870 + 0x5200, 12
@@ -87,7 +87,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
-                | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE)
+                | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -255,6 +255,10 @@ PATCHES: Tuple[Patch, ...] = (
     # flagged get the dodge bit in their category word instead (DODGE_FIX), which the modifiers routine
     # (83606h, SL's own test: "test word [es:bx+11h],40h") turns into the target's DEX defence.
     Patch("no_double", 0x66E63, bytes.fromhex("d0e0"), bytes.fromhex("9090")),
+    # Rangers' casting level (SL's ranger_level, game.RULE_RANGER_CAST, always on): DSCLOG2's RANGER_LEVEL
+    # where the level a spell's duration and damage take reads a class's level (629F0h, SL's 5E3B8h:
+    # "mov al,es:[bx+1Eh] / mov ah,0"), a ranger's 7 less as the caster level routine has it.
+    Patch("ranger_level", 0x629F0, bytes.fromhex("268a471eb400"), gamepatch._interrupt(VEC_RANGER_LEVEL, 6)),
     Patch("held_hit", 0x5D088, bytes.fromhex("837efa14"), gamepatch._interrupt(VEC_HELD_HIT, 4)),
     Patch("held_damage", 0x5D1B7, bytes.fromhex("8b46fcd1e0"), gamepatch._interrupt(VEC_HELD_DAMAGE, 5)),
     # AD&D's two weapons (SL's two_weapons and PROBE_ATTACKS' off hand; always on, game.RULES_ALWAYS):

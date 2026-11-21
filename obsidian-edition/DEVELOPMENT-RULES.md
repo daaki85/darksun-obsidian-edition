@@ -832,6 +832,13 @@ Seeker's 5 and a Justifier's 9 come off there whatever the rule
 
 Verified in play (no log kept).
 
+In Wake of the Ravager the two routines are the same: the caster level routine counts a ranger 7 less
+("sub dx,7" at 97E00h), the duration and damage level routine (628AFh) takes it whole. DSCLOG2's
+`RANGER_LEVEL` (`INT EAh` in place of "mov al,es:[bx+1Eh] / mov ah,0", 629F0h: the sheet's class at
++1Bh, its level at +1Eh) takes the 7 off with `RULE_HI_RANGER` (`ravager.RULES_PORTED` has
+`RULE_RANGER_CAST`). No kits there, so no Seeker or Justifier. Played:
+[the test log](../playtest/logs/2026-11-21-ravager-ranger.md).
+
 ## Preservers' INT
 
 ([In the features page](FEATURES.md#preservers-int).)

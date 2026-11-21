@@ -64,6 +64,7 @@ VEC_CAH_SWING equ 0xE6  ; CAH_SWING (5D052h: a swing's start: the off head's mor
 VEC_CAH_HIT   equ 0xE7  ; CAH_HIT (5D1FEh: a weapon's hit has done damage: the cahulaks' tangle)
 VEC_CAH_MOVE  equ 0xE8  ; CAH_MOVE (5B838h: a creature's turn starts: a tangled one's taken)
 VEC_REACH     equ 0xE9  ; REACH (25CDDh: the combatant distance routine's result: a polearm's two squares)
+VEC_RANGER_LEVEL equ 0xEA ; RANGER_LEVEL (629F0h: a class's level for a spell's duration and damage: a ranger's 7 less)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -2216,6 +2217,30 @@ held_hit:
 .out:   pop bx
         pop ax
         iret
+; RANGER_LEVEL: SL's PROBE_RANGER_LEVEL (RULE_HI_RANGER, the Loader's rangers' casting level, always on):
+; INT VEC_RANGER_LEVEL replaces "mov al,es:[bx+1Eh] / mov ah,0" (629F0h; 6 bytes: INT + 4 NOPs) where
+; the routine giving the level a spell is cast at for its duration and damage (628AFh, SL's 5E25Ch)
+; takes the level of a class of the caster's that casts the spell (ES:BX the sheet + the class's place:
+; +1Bh the class, +1Eh its level). The caster level routine (SL's 81B16h) counts a ranger 7 less
+; ("sub dx,7" at 97E00h, SL's 81B6Ah); this one took it whole. AX that level, a ranger's (classes 13-16) 7
+; less with the rule, no less than 0. (SL's Seeker and Justifier: kits, not in the sequel.)
+RULE_HI_RANGER equ 2
+RANGER_FIRST equ 13
+ranger_level:
+        mov al, [es:bx + 0x1E]
+        mov ah, 0
+        test word [cs:rules_hi], RULE_HI_RANGER
+        jz .out
+        push cx
+        mov cl, [es:bx + 0x1B]
+        sub cl, RANGER_FIRST
+        cmp cl, 3
+        pop cx
+        ja .out                 ; (not a ranger)
+        sub al, 7
+        jnc .out
+        xor al, al
+.out:   iret
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5031,6 +5056,7 @@ all_vectors:
         vector VEC_CAH_HIT, cah_hit
         vector VEC_CAH_MOVE, cah_move
         vector VEC_REACH, reach_site
+        vector VEC_RANGER_LEVEL, ranger_level
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
