@@ -72,13 +72,14 @@ VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Char
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
 VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
 VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
+VEC_TWO, VEC_OFF_HAND = 0xE1, 0xE2  # (DSCLOG2's PROBE_TWO, OFF_HAND: AD&D's two weapons)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
-RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD
+RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -214,6 +215,12 @@ PATCHES: Tuple[Patch, ...] = (
     # "mov ax,[bp-4] / shl ax,1"), not doubled.
     Patch("held_hit", 0x5D088, bytes.fromhex("837efa14"), gamepatch._interrupt(VEC_HELD_HIT, 4)),
     Patch("held_damage", 0x5D1B7, bytes.fromhex("8b46fcd1e0"), gamepatch._interrupt(VEC_HELD_DAMAGE, 5)),
+    # AD&D's two weapons (SL's two_weapons and PROBE_ATTACKS' off hand; always on, game.RULES_ALWAYS):
+    # DSCLOG2's PROBE_TWO at the two-weapon to-hit adjustment (5DE7Ch, SL's 59634h: "neg ax / mov dx,ax /
+    # or dx,dx / jge +2 / xor dx,dx"), -2 in the right hand and -4 in the left; OFF_HAND where the attack
+    # stores its attacks a round (5CEE8h, SL's 58892h: "mov ah,0 / mov [bp-0Ah],ax"), one in the off hand.
+    Patch("two_weapons", 0x5DE7C, bytes.fromhex("f7d88bd00bd27d0233d2"), gamepatch._interrupt(VEC_TWO, 10)),
+    Patch("off_hand", 0x5CEE8, bytes.fromhex("b4008946f6"), gamepatch._interrupt(VEC_OFF_HAND, 5)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

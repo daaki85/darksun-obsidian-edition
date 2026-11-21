@@ -57,6 +57,8 @@ VEC_HELM_AC   equ 0xDD  ; PROBE_HELM_AC (5D663h, 5D67Bh: a worn item's type's AC
 VEC_BOX_AC    equ 0xDE  ; PROBE_BOX_AC (9A4B7h: the item box's AC BONUS: the same)
 VEC_HELD_HIT  equ 0xDF  ; HELD_HIT (5D088h: the natural 20's test: a helpless target hit too)
 VEC_HELD_DAMAGE equ 0xE0 ; HELD_DAMAGE (5D1B7h: a helpless target's damage, not doubled)
+VEC_TWO       equ 0xE1  ; PROBE_TWO (5DE7Ch: the two-weapon to-hit adjustment: AD&D's -2/-4 with RULE_TWO_WEAPONS)
+VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
@@ -2241,6 +2243,159 @@ held_now:                       ; CF with the rule on and the attack's target (T
 .ret:   ret
 held_count dw 0                 ; (helpless targets hit so, for a look in play)
 
+; TWO WEAPONS: DSCLOG's RULE_TWO_WEAPONS (AD&D's two weapons), the sequel's routines SL's:
+; - PROBE_TWO: INT VEC_TWO replaces "neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx" (10 bytes, INT +
+;   8 NOPs; 5DE7Ch, SL's 59634h) in the routine that gives an attack's to-hit adjustment with two weapons
+;   ready (5DE34h, called by the attack at 5C78Ch), for a non-ranger: AX the attacker's DEX reaction
+;   adjustment (the call before), [BP+0Ah] the attack's item, [BP-2] the attacker's creature. DX the
+;   adjustment: the game's -AX, no less than 0; with the rule, -2 (the item in the right hand) or -4 (the
+;   left) plus AX, no more than 0, and only with a melee weapon in the other hand (else 0: a shield, a
+;   two-handed weapon, a sling or bow in the missile slot don't count). (SL's kits and cahulaks aren't
+;   the sequel's; a ranger keeps the game's no penalty, in any armour.)
+; - OFF_HAND: INT VEC_OFF_HAND replaces "mov ah,0 / mov [bp-0Ah],ax" (5 bytes, INT + 3 NOPs; 5CEE8h, SL's
+;   "cbw / mov [bp-8],ax" at 58892h, PROBE_ATTACKS' site), the attack routine's attacks a round (halves)
+;   stored, AL: with the rule, no more than one a round (2 halves) with a melee weapon ([BP+16h] 1 or
+;   less) in the off hand (the item [BP+12h] in slot LEFT_HAND); the extra attacks are the main hand's.
+RULE_TWO_WEAPONS equ 4
+RIGHT_HAND    equ 3
+LEFT_HAND     equ 10
+NO_ITEM       equ 9999
+ITEM_NEXT     equ 0x04
+ITEM_TYPE     equ 0x0A
+ITEM_SLOT     equ 0x13
+ITEM_TYPES_PTR equ 0x19CD           ; DS: far pointer to the item types, 0Fh bytes each
+TYPE_SIZE     equ 0x0F
+TYPE_MELEE    equ 0x06              ; (1 a melee weapon: SL's +0Ah)
+probe_two:
+        test word [cs:rules], RULE_TWO_WEAPONS
+        jnz .rule
+        neg ax
+        mov dx, ax
+        or dx, dx
+        jge .done
+        xor dx, dx
+.done:  iret
+.rule:  push ax
+        push bx
+        push es
+        mov [cs:two_adjust], ax
+        xor dx, dx
+        mov bx, [bp + 0x0A]
+        cmp bx, NO_ITEM
+        jae .out
+        imul bx, bx, ITEM_SIZE
+        mov ax, bx
+        les bx, [ITEMS_PTR]
+        add bx, ax
+        mov al, [es:bx + ITEM_SLOT]     ; the attack's hand, and the other
+        mov dx, -2
+        mov ah, LEFT_HAND
+        cmp al, RIGHT_HAND
+        je .hand
+        mov dx, -4
+        mov ah, RIGHT_HAND
+        cmp al, LEFT_HAND
+        je .hand
+        xor dx, dx
+        jmp .out
+.hand:  mov [cs:two_base], dx
+        mov al, ah
+        mov bx, [bp - 2]
+        call melee_in
+        mov dx, 0
+        jnc .out                        ; nothing to fight with in the other hand
+        mov dx, [cs:two_base]
+        add dx, [cs:two_adjust]
+        jle .counted
+        xor dx, dx
+.counted:
+        inc word [cs:two_count]
+.out:   pop es
+        pop bx
+        pop ax
+        iret
+off_hand:
+        mov ah, 0
+        test word [cs:rules], RULE_TWO_WEAPONS
+        jz .store
+        cmp ax, 2
+        jbe .store
+        cmp word [bp + 0x16], 1
+        jg .store
+        cmp word [bp + 0x12], NO_ITEM
+        jae .store
+        push bx
+        push es
+        imul bx, [bp + 0x12], ITEM_SIZE
+        push ax
+        les ax, [ITEMS_PTR]
+        add bx, ax
+        pop ax
+        cmp byte [es:bx + ITEM_SLOT], LEFT_HAND
+        pop es
+        pop bx
+        jne .store
+        mov ax, 2
+        inc word [cs:off_count]
+.store: mov [bp - 0x0A], ax
+        iret
+; MELEE_IN: CF if creature BX (DS the game's) has a melee weapon in slot AL, in any of its item lists
+; (+8, +0Ah, +0Ch: each a thing, the combatants' table's kind 1 an item, the first of a list linked by
+; +4). All registers kept.
+melee_in:
+        pusha
+        push es
+        mov [cs:mi_slot], al
+        imul bx, bx, CREATURE_SIZE
+        mov [cs:mi_creature], bx
+        mov cx, 8
+.list:  les bx, [CREATURES_PTR]
+        add bx, [cs:mi_creature]
+        add bx, cx
+        mov dx, [es:bx]
+        cmp dx, NO_ITEM                 ; (the party's lists are things 201h and up)
+        jae .next
+        imul bx, dx, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 1
+        jne .next                       ; not an item
+        mov dx, [es:bx + FIGHTERS_OFF + 1]
+        mov si, 100                     ; (no more than 100 in a list)
+.item:  cmp dx, NO_ITEM
+        jae .next
+        dec si
+        js .next
+        imul bx, dx, ITEM_SIZE
+        les di, [ITEMS_PTR]
+        add bx, di
+        mov dx, [es:bx + ITEM_NEXT]
+        mov al, [es:bx + ITEM_SLOT]
+        cmp al, [cs:mi_slot]
+        jne .item
+        imul bx, [es:bx + ITEM_TYPE], TYPE_SIZE
+        les di, [ITEM_TYPES_PTR]
+        cmp byte [es:bx + di + TYPE_MELEE], 1
+        jne .item
+        pop es
+        popa
+        stc
+        ret
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        pop es
+        popa
+        clc
+        ret
+mi_slot     db 0
+mi_creature dw 0
+two_base    dw 0
+two_adjust  dw 0
+two_count   dw 0                ; (adjustments given so, for a look in play)
+off_count   dw 0                ; (off-hand attacks cut so)
+
 ; PROBE_HELM_AC: INT VEC_HELM_AC replaces "mov al,es:[bx+0Eh] / cwde" (5 bytes: INT + 3 NOPs) at the
 ; two places the AC function reads a worn item's type's AC (5D663h, 5D67Bh; SL's PROBE_RING_AC's
 ; read at 58EBDh): ES:BX the type's record, CX the type, DI the worn list's index (the list at
@@ -3895,6 +4050,8 @@ all_vectors:
         vector VEC_BOX_AC, probe_box_ac
         vector VEC_HELD_HIT, held_hit
         vector VEC_HELD_DAMAGE, held_damage
+        vector VEC_TWO, probe_two
+        vector VEC_OFF_HAND, off_hand
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

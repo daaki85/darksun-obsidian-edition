@@ -463,6 +463,13 @@ and 95CCEh (level-up from XP), into the sheet's +0Ah, capped by the class table'
 from OBJEX.GFF's RDFF records (kind 1, 17h bytes, as in memory) without a save that has them. Helms: type
 55 (AC 0, hats too) and 56 (AC 1). The AC function's worn list is at [BP-324h], 10 bytes an entry.
 
+**Its two weapons** (2026-11-21, logs/2026-11-21-ravager-two-weapons.md): SL's two-weapon routine at
+5DE34h (called from the attack, 5C78Ch: [BP+6] the weapons ready, [BP+8] the combatant, [BP+0Ah] the
+item; the ranger test on the sheet's +10h 200h), the attacks a round stored at 5CEE8h ([BP-0Ah]; the
+attack's item [BP+12h], range [BP+16h]). A creature's item lists (+8, +0Ah, +0Ch) are things in the
+combatants' table numbered from 201h for the party, not below 400. Computer Control in a fight: C, then
+the lower small icon left of each character box (game 47,53 / 98,53 / 47,113 / 98,113).
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18
