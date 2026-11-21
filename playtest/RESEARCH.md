@@ -893,6 +893,14 @@ Trikal 100. The attack routine's frame: [BP-0Ah] the round's swings, [BP-16h] th
 item, [BP+14h] its type, [BP+16h] the range, [BP+18h] the attacker, [BP+0Ah] - [BP+0Ch] what the d20
 must reach; each swing starts at 5D052h; a hit's damage done at 5D1FEh ("mov byte [bp-19h],0").
 
+**Creature size in it** (2026-11-21, logs/2026-11-21-ravager-size.md): the swing's dice at [BP-10h]
+count, [BP-12h] sides, [BP-14h] bonus; the call's first swing [BP-0Ch]. The Draxans are people (race
+1 to 8), so medium; the Giant Skeletons up the street are large. A spell test: aim Hold Person with
+`ravclick.py X Y none` until red shows under the pointer (yellow is the pointer itself), then mousedown
+/ mouseup; a right-click on bare floor drops the pointer and ends the turn. To make a medium foe large
+for a test, patch `sizes.large_by_table` in the dice log's own process (RAV_NAMES alone won't do for a
+people: its race wins).
+
 **Its Look box and damage resistance** (2026-11-21, logs/2026-11-21-ravager-look.md): the box's
 routine at 640FBh (the combatant in DI, the lines' count [BP-0Ah], the text routine -20h); its damage
 resistance (85052h) by a class byte at the creature's +0Fh, the classes' immune kinds at DS:2588h (18

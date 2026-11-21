@@ -49,6 +49,19 @@ class ProfileTests(unittest.TestCase):
         ravlog.restore_layout()
         self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0), sl)
 
+    def test_size_rule_takes_the_sequels_tables(self):
+        from dsloader import sizes
+        sl = (sizes.TABLE, sizes.SPELLS, sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE)
+        ravlog.apply_layout()
+        try:
+            self.assertEqual((sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE), (90, 95))  # (as DSCLOG2's)
+            self.assertIs(sizes.SPELLS, sizes.RAV_SPELLS)
+            self.assertTrue(sizes.large_by_table("Giant Skeleton", 0))
+            self.assertFalse(sizes.large_by_table("Draxan", 1))  # (a people's size is its race's)
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual((sizes.TABLE, sizes.SPELLS, sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE), sl)
+
 
 class TypeTests(unittest.TestCase):
     def test_sl_type(self):

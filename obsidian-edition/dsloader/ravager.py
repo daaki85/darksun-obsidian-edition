@@ -83,7 +83,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
-                | game.RULE_HALF_GIANT | game.RULE_CAHULAKS)
+                | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14

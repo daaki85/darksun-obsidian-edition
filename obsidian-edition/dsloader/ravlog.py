@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import combatlog, dicelog, game, labels, monsters, ravager
+from . import combatlog, dicelog, game, labels, monsters, ravager, sizes
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -152,6 +152,14 @@ def apply_layout() -> int:
     from . import combatlog  # (the panel's and the labels' colours: the sequel's palette, PALETTE_LAST)
     _SAVED.append((combatlog, "LAST", combatlog.LAST))
     combatlog.LAST = PALETTE_LAST
+    from . import sizes  # (the creature size rule: the sequel's monsters and spell numbers)
+    _SAVED.append((sizes, "TABLE", sizes.TABLE))
+    _SAVED.append((sizes, "SPELLS", sizes.SPELLS))
+    _SAVED.append((sizes, "PERSON_ONLY", sizes.PERSON_ONLY))
+    _SAVED.append((sizes, "SHILLELAGH_TYPE", sizes.SHILLELAGH_TYPE))
+    _SAVED.append((sizes, "HAMMER_TYPE", sizes.HAMMER_TYPE))
+    sizes.TABLE, sizes.SPELLS, sizes.PERSON_ONLY = sizes.RAV_NAMES, sizes.RAV_SPELLS, frozenset()
+    sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE = sizes.RAV_SHILLELAGH_TYPE, sizes.RAV_HAMMER_TYPE
     return len(_SAVED)
 
 
@@ -519,6 +527,20 @@ class RavDiceLog(dicelog.DiceLog):
             self.guest.writable = self.guest.writable + [slots]
         return slots[0]
 
+    def _large_bits(self) -> Optional[int]:
+        """Where DSCLOG2's LARGE_BITS are (its header's +1834:+1842, as DSCLOG's tail), made writable;
+        None without them (a helper before the creature size rule)."""
+        if self.tsr_hdr is None:
+            return None
+        seg, = struct.unpack("<H", self.guest.read(self.tsr_hdr + sizes.TSR_TAIL_SEG, 2))
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + sizes.TSR_LARGE, 2))
+        if not seg or not off:
+            return None
+        bits = (seg * 16 + off, sizes.LARGE_BYTES)
+        if bits not in self.guest.writable:
+            self.guest.writable = self.guest.writable + [bits]
+        return bits[0]
+
     def _panel_ranges(self) -> bool:
         """DSCLOG2's combat log panel's picture (its far block, header +328:+140) and the header's
         words for it (+164 the Loader's stamp, +326 to +349 the panel's), made writable; False
@@ -615,6 +637,8 @@ class RavDiceLog(dicelog.DiceLog):
         if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
             self._labels.on = self.floating_names
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
+        if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
+            self._step(lambda: self._large.update(self.game, self.tsr_hdr))
         if now >= self._next_slots:
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)

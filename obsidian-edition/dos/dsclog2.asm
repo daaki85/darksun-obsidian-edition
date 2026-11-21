@@ -179,6 +179,9 @@ panel_keys dw 0                 ; +348 L pressed on the map with the panel shown
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
+big_off  dw 0                   ; +1840 (DSCLOG's BIG, the cahulaks' too-big list: none here, the Loader's LARGE_BITS serve)
+large_off dw large_bits         ; +1842 offset of LARGE_BITS there: the Loader's, a bit per combatant large or bigger
+                                ;      (sizes.Large, by name and race: the creature size rule, IS_LARGE)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 align 16
@@ -373,6 +376,7 @@ probe_save:
         sub si, 4               ; SS:SI+6 = our return address (as RECORD wants it)
         push ax
         mov word [cs:extra], 0
+        call size_spared        ; (the creature size rule: Hold and Charm Person on a large target)
         mov ax, [bp-2]          ; AL = total, AH = save value
         mov word [cs:kind], 1
         call record
@@ -2648,6 +2652,7 @@ cah_two:
 .two:   iret
 cah_swing:
         mov word [bp - 4], 0
+        call size_dice                  ; (the creature size rule: a large target's dice, the call's first swing)
         cmp word [bp + 0x16], 1
         jg .out
         push ax
@@ -2678,7 +2683,7 @@ cah_off   dw 0                  ; (off head's swings paying the more)
 ; [bp-19h],0" (5D1FEh, SL's "mov byte [bp-15h],0" at 58B54h; 4 bytes: INT + 2 NOPs), where a weapon's hit
 ; has done its damage (the item in SI, 0 or more). With the rule, a melee hit with the cahulaks ([BP+12h],
 ; [BP+16h] 1 or less) on a target (TARGET) still standing and man-sized or smaller (not a half-giant: its
-; sheet's race; the sequel's monsters have no size list yet) makes it save against petrification (its
+; sheet's race, or large by the Loader's table: IS_LARGE) makes it save against petrification (its
 ; sheet's +33h, a d20 from the game's seed, as DSCLOG's GAME_DIE; a 20 always saves). A failure: it loses
 ; its next turn, at once if it has yet to act this round (SWEPT_NOW), else at its next turn's start
 ; (CAH_MOVE, from the bitmap TANGLED). Recorded for the dice log (KIND_MANUAL, MN_TANGLE: the target, the
@@ -2719,12 +2724,13 @@ cah_hit:
         add di, si
         cmp word [es:di], 0
         jle .done                   ; (felled by the blow)
+        mov ax, bx
+        call is_large
+        jc .done                    ; (too big to tangle: a half-giant, or large by the Loader's table)
         mov si, [es:di + 4]         ; (its sheet)
         imul si, si, SHEET_SIZE
         les di, [SHEETS_PTR]
         add di, si
-        cmp byte [es:di + SHEET_RACE], RACE_HALF_GIANT
-        je .done                    ; (too big to tangle)
         movzx cx, byte [es:di + SHEET_PETRIFY]
         mov ax, 20
         call game_die
@@ -2897,6 +2903,147 @@ mn_frame  dw 0, 0, 0, 0
 tangled   times TANGLE_MOST / 8 db 0
 tangles   dw 0                  ; (tangles made, for a look in play)
 tangle_turns dw 0               ; (turns taken so)
+
+; SIZE: DSCLOG's (RULE_HI_SIZE, always on), AD&D's creature sizes, which the game keeps none of. A
+; combatant is large (IS_LARGE) when a half-giant (its sheet's race) or marked in LARGE_BITS (the
+; Loader's, from dsloader/sizes.py's sequel table: large, huge or gargantuan; Enlarge isn't counted
+; yet). Then:
+; - a weapon's hit on it rolls AD&D's dice for large targets (SIZE_DICE, from CAH_SWING at the call's
+;   first swing: the call's dice [BP-10h] the count, [BP-12h] the sides, [BP-14h] the bonus, SL's
+;   -0Eh..-12h; [BP-0Ch] the call's first swing), by the weapon's kind (KIND_OF_TYPE: the sequel's
+;   types of SL's kinds; its own weapons, the Twohand Sword, Trikal, Lotulis and the rest, keep the
+;   game's dice), Spiritual Hammer (95) 1d4; and Shillelagh's (90) 2d4 1d6+1 on a smaller one;
+; - Hold Person (30, the priests' 136) and Charm Person (2) don't take: SIZE_SPARED, from PROBE_SAVE,
+;   makes the save's total 101 (the dice log: "too big for ... -> unaffected"; the game's compare a
+;   save made).
+RULE_HI_SIZE  equ 0x4000
+SHILLELAGH_TYPE equ 90
+HAMMER_TYPE   equ 95
+KIND_TYPES    equ 102
+is_large:                           ; CF if combatant AX is large (see SIZE). DS the game's; all kept.
+        pusha
+        push es
+        mov dx, ax
+        test word [cs:rules_hi], RULE_HI_SIZE
+        jz .race
+        cmp ax, LARGE_MOST
+        jae .race
+        mov si, ax
+        call tangle_bit
+        test [cs:large_bits + si], al
+        jnz .yes
+.race:  mov ax, dx
+        call fighter_creature
+        jc .no
+        imul si, ax, CREATURE_SIZE
+        les di, [CREATURES_PTR]
+        add di, si
+        mov si, [es:di + 4]
+        jmp .sheet
+.no:    pop es
+        popa
+        clc
+        ret
+.sheet: imul si, si, SHEET_SIZE
+        les di, [SHEETS_PTR]
+        add di, si
+        cmp byte [es:di + SHEET_RACE], RACE_HALF_GIANT
+        jne .no
+.yes:   pop es
+        popa
+        stc
+        ret
+size_dice:
+        test word [cs:rules_hi], RULE_HI_SIZE
+        jz .ret
+        pusha
+        mov ax, [bp - 0x16]
+        cmp ax, [bp - 0x0C]
+        jne .done                   ; (the call's first swing only: the dice set once a call)
+        cmp word [bp + 0x12], NO_ITEM
+        jae .done                   ; (a natural attack: its own damage)
+        mov bx, [bp + 0x14]
+        mov ax, [TARGET]
+        call is_large
+        jc .large
+        cmp bx, SHILLELAGH_TYPE     ; (smaller: Shillelagh's 1d6+1 for the game's 2d4)
+        jne .done
+        mov word [bp - 0x10], 1
+        mov word [bp - 0x12], 6
+        inc word [bp - 0x14]
+        jmp .done
+.large: inc word [cs:large_hits]
+        cmp bx, HAMMER_TYPE
+        jne .kind
+        dec word [bp - 0x14]        ; (Spiritual Hammer: 1d4)
+        jmp .done
+.kind:  cmp bx, KIND_TYPES
+        jae .done
+        movzx si, byte [cs:bx + kind_of_type]
+        or si, si
+        jz .done
+        dec si
+        imul si, si, 3
+        movzx ax, byte [cs:si + large_dice]
+        or ax, ax
+        jz .done
+        mov [bp - 0x10], ax
+        movzx ax, byte [cs:si + large_dice + 1]
+        mov [bp - 0x12], ax
+        movsx ax, byte [cs:si + large_dice + 2]
+        add [bp - 0x14], ax
+.done:  popa
+.ret:   ret
+size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold or Charm Person on a
+        test word [cs:rules_hi], RULE_HI_SIZE   ;   large target ([BP+6]; the spell [BP+0Ah]). All kept.
+        jz .ret
+        cmp word [bp + 0x0A], 2
+        je .spell
+        cmp word [bp + 0x0A], 30
+        je .spell
+        cmp word [bp + 0x0A], 136
+        jne .ret
+.spell: push ax
+        mov ax, [bp + 6]
+        call is_large
+        pop ax
+        jnc .ret
+        mov byte [bp - 2], 101
+        inc word [cs:spared_count]
+.ret:   ret
+; KIND_OF_TYPE: the sequel's item types' weapon kinds, as specialize.KINDS + 1 (0 none): long sword 1,
+; club 2, dagger 3, short sword 4, mace 5, axe 6, great axe 7, pick 8, quarterstaff 9, polearm 10, gythka
+; 11, cahulaks 12, chatkcha 13, bow 14, sling 15, staff sling 16 (from OBJEX.GFF's items' names: the
+; Longswords 16, 73, 97, Crystal sword 35, Flameblade 47, Magma blade 69; Club 29, Toothed Club 89;
+; Daggers 37, 72, 99; Maces 67, 74; Axes 8, 48; Great Axe 51; Pick 79; Quarterstaff 85; Polearm 80;
+; Gythka 52; Cahulaks 24; Chatchka 25; Bow 18; Sling 93; Staff Sling 98. Shillelagh, 90, has none).
+kind_of_type:
+        db 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 1   ; types 0-16
+        db 0, 14, 0, 0, 0, 0, 0, 12, 13, 0, 0, 0, 2, 0, 0, 0, 0   ; types 17-33
+        db 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 0, 0   ; types 34-50
+        db 7, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5   ; types 51-67
+        db 0, 1, 0, 0, 3, 1, 5, 0, 0, 0, 0, 8, 10, 0, 0, 0, 0   ; types 68-84
+        db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 0, 0   ; types 85-101
+LARGE_MOST    equ 520
+large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, sizes.LARGE_DICE)
+             db 1, 3, 0             ; club: 1d3
+             db 1, 3, 0             ; dagger: 1d3
+             db 1, 8, 0             ; short sword: 1d8
+             db 1, 6, -1            ; mace: 1d6 (the game's 1d6+1)
+             db 1, 10, 0            ; axe: 1d10
+             db 2, 8, 0             ; great axe: 2d8
+             db 2, 4, -1            ; pick: 2d4
+             db 0, 0, 0             ; quarterstaff: the same
+             db 2, 6, 0             ; polearm: 2d6
+             db 1, 10, 0            ; gythka: 1d10
+             db 0, 0, 0             ; cahulaks: the same
+             db 1, 4, 0             ; chatkcha: 1d4
+             db 0, 0, 0             ; bow: the same
+             db 0, 0, 0             ; sling: the same
+             db 0, 0, 0             ; staff sling: the same
+large_bits times LARGE_MOST / 8 + 1 db 0
+large_hits   dw 0               ; (hits on large targets, for a look in play)
+spared_count dw 0               ; (Hold or Charm Person spared so)
 
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
