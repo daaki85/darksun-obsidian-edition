@@ -71,13 +71,14 @@ VEC_LOOK = 0xDA  # (DSCLOG2's PROBE_LOOK: the monster's defences in the Look box
 VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
 VEC_HELM_AC, VEC_BOX_AC = 0xDD, 0xDE  # (DSCLOG2's PROBE_HELM_AC, PROBE_BOX_AC: a Helm's AC 1)
+VEC_HELD_HIT, VEC_HELD_DAMAGE = 0xDF, 0xE0  # (DSCLOG2's HELD_HIT, HELD_DAMAGE: AD&D's held target)
 VEC_HP_BEST = 0xDC  # (DSCLOG2's PROBE_HP_BEST: a hit die rolled twice, the better kept)
 VEC_CR_HP = 0xDB  # (DSCLOG2's PROBE_CR_HP: THAC0 beside the hit points on the creation screen)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
 # The rule changes (game.RULE_*) ported to the sequel: the only ones the Loader turns on in DSCLOG2's
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
-RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS
+RULES_PORTED = game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -207,6 +208,12 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("helm_ac", 0x5D663, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_HELM_AC, 5)),
     Patch("helm_ac_2", 0x5D67B, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_HELM_AC, 5)),
     Patch("box_ac", 0x9A4B7, bytes.fromhex("268a470e98"), gamepatch._interrupt(VEC_BOX_AC, 5)),
+    # AD&D's held target (SL's held_hit, held_damage; the Options tab's "held_hit"): DSCLOG2's HELD_HIT at
+    # the attack's natural 20 test (5D088h, SL's 589E9h: "cmp word [bp-6],14h", before its JE to the
+    # hit), a helpless target hit too; HELD_DAMAGE at what a helpless target takes (5D1B7h, SL's 58B0Dh:
+    # "mov ax,[bp-4] / shl ax,1"), not doubled.
+    Patch("held_hit", 0x5D088, bytes.fromhex("837efa14"), gamepatch._interrupt(VEC_HELD_HIT, 4)),
+    Patch("held_damage", 0x5D1B7, bytes.fromhex("8b46fcd1e0"), gamepatch._interrupt(VEC_HELD_DAMAGE, 5)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

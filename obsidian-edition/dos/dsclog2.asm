@@ -55,6 +55,8 @@ VEC_LOOK      equ 0xDA  ; PROBE_LOOK (640FBh: the Look box's first rows drawn: t
 VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
 VEC_HELM_AC   equ 0xDD  ; PROBE_HELM_AC (5D663h, 5D67Bh: a worn item's type's AC read: a Helm's 1 with RULE_HELMS)
 VEC_BOX_AC    equ 0xDE  ; PROBE_BOX_AC (9A4B7h: the item box's AC BONUS: the same)
+VEC_HELD_HIT  equ 0xDF  ; HELD_HIT (5D088h: the natural 20's test: a helpless target hit too)
+VEC_HELD_DAMAGE equ 0xE0 ; HELD_DAMAGE (5D1B7h: a helpless target's damage, not doubled)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
 VEC_CR_HP     equ 0xDB  ; PROBE_CR_HP (6B84Ch, 6BC62h, 6D6AEh, 6B79Ch: the creation screen's hit points drawn: its THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
@@ -2167,6 +2169,77 @@ cr_count dw 0                   ; THAC0s drawn (for a look in play)
 ; sets only those ported (ravager.RULES_PORTED).
 RULE_HELMS   equ 1              ; helms count AC 1 (PROBE_HELM_AC, PROBE_BOX_AC)
 RULE_HP_BEST equ 32768          ; a hit die rolled twice, the better kept (PROBE_HP_BEST)
+RULE_HI_HELD equ 32768          ; (RULES_HI) a held or Out Cold target hit automatically, normal damage (HELD)
+
+; HELD: DSCLOG's (RULE_HI_HELD, the Loader's rule "held_hit"), AD&D's held target ("defender sleeping
+; or held: automatic": the attack hits and does normal damage). The sequel's attack routine is SL's:
+; - HELD_HIT replaces "cmp word [bp-6],14h" (5D088h, SL's 589E9h; 4 bytes, INT + 2 NOPs), the natural
+;   20's test before its "je" to the hit: ZF in the INT's frame, set on the game's 20 or, with the rule,
+;   a helpless target (whatever the d20);
+; - HELD_DAMAGE replaces "mov ax,[bp-4] / shl ax,1" (5D1B7h, SL's 58B0Dh; 5 bytes), what a helpless
+;   target takes: the damage, doubled only without the rule.
+; Helpless as the game has it: Paralyzed (the sequel's effect 69, SL's 34) or Out Cold (the creature's
+; +14h 3, SL's +1Ch). The combatants: 3 bytes each at (load + 3F49h):C33h, kind 2 a creature, its
+; number the word after (the AC function's own reads, 5D544h). Both sides alike.
+HELD_EFFECT   equ 69
+HELD_OUT_COLD equ 3
+CREATURE_STATUS equ 0x14
+FIGHTERS_SEG  equ 0x3F49 - 0x47E0   ; (the combatants' segment less DS's)
+FIGHTERS_OFF  equ 0x0C33
+held_hit:
+        push ax
+        push bx
+        mov bx, sp                  ; ([BX+8] the INT's flags)
+        and word [ss:bx + 8], ~0x40
+        cmp word [bp - 6], 20
+        je .hit
+        call held_now
+        jnc .out
+.hit:   or word [ss:bx + 8], 0x40   ; (ZF: the game's JE to the hit)
+.out:   pop bx
+        pop ax
+        iret
+held_damage:
+        mov ax, [bp - 4]
+        test word [cs:rules_hi], RULE_HI_HELD
+        jnz .out
+        shl ax, 1
+.out:   iret
+held_now:                       ; CF with the rule on and the attack's target (TARGET) helpless. DS the game's
+        test word [cs:rules_hi], RULE_HI_HELD   ; (TEST clears CF)
+        jz .ret
+        push ax
+        push bx
+        push cx
+        push es
+        mov ax, [TARGET]
+        mov cl, HELD_EFFECT
+        call has_effect
+        je .yes
+        cmp ax, 400
+        jae .no
+        imul bx, ax, 3
+        mov cx, ds
+        add cx, FIGHTERS_SEG
+        mov es, cx
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .no
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        cmp byte [es:bx + CREATURE_STATUS], HELD_OUT_COLD
+        je .yes
+.no:    clc
+        jmp .out
+.yes:   inc word [cs:held_count]
+        stc
+.out:   pop es
+        pop cx
+        pop bx
+        pop ax
+.ret:   ret
+held_count dw 0                 ; (helpless targets hit so, for a look in play)
 
 ; PROBE_HELM_AC: INT VEC_HELM_AC replaces "mov al,es:[bx+0Eh] / cwde" (5 bytes: INT + 3 NOPs) at the
 ; two places the AC function reads a worn item's type's AC (5D663h, 5D67Bh; SL's PROBE_RING_AC's
@@ -3820,6 +3893,8 @@ all_vectors:
         vector VEC_HP_BEST, probe_hp_best
         vector VEC_HELM_AC, probe_helm_ac
         vector VEC_BOX_AC, probe_box_ac
+        vector VEC_HELD_HIT, held_hit
+        vector VEC_HELD_DAMAGE, held_damage
 VECTORS equ ($ - all_vectors) / 3
 
 align 16
