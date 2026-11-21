@@ -661,6 +661,7 @@ class DiceLog:
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
+        self._effect_deadlines: Dict[Tuple[game.Effect, int, int], int] = {}
         self._party: Optional[bytes] = None
         self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
         self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
@@ -1352,15 +1353,14 @@ class DiceLog:
         self.rand_addr = None
         self.quest_state = None  # (the next game's flags are read afresh)
         if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
-            self.journal.reset()
             self.journal.flush()
+            self.journal.reset()
 
-    def close(self) -> None:
-        """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
-        hook comes off."""
+    def close(self, *, stats_timeout: Optional[float] = 0.2) -> None:
+        """Stop the stats thread and remove the mouse hook. Pass None to wait for the thread to exit."""
         self._stats_stop.set()
-        if self._stats_thread is not None:  # (out of the guest's memory before its handle closes)
-            self._stats_thread.join(0.2)
+        if self._stats_thread is not None and self._stats_thread.ident is not None:
+            self._stats_thread.join(stats_timeout)
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
@@ -1625,6 +1625,8 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            if not loading:
+                step(self._journal_sync)  # make the committed journal head available before asking for a save
             out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
@@ -1632,7 +1634,6 @@ class DiceLog:
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
-                step(self._journal_sync)
                 step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
@@ -2718,26 +2719,39 @@ class DiceLog:
         return self._names.get(combatant, name)
 
     def effect_changes(self, now: float = 0.0) -> List[str]:
-        """Lines for effects that started or ended since the last look. Records are told apart by
-        their spell and handle too: an effect put on a creature that has it already takes the old
-        record's place (Rainbow Pattern on a held foe, a second Hold Person), which is said as
-        such, not as an end and a start."""
+        """Report starts, ends and replacements, including same-record refreshes of timed effects."""
         current = Counter(self.game.effect_records())
-        for eff, _, _ in current:
+        due = self.game.effect_deadlines() if current else {}
+        deadlines = {}
+        for record in current:
+            eff, _, handle = record
             self._name(eff.owner)
             self._name(eff.caster)
+            deadline = due.get((eff.owner, handle))
+            if deadline is not None:
+                deadlines[record] = deadline
         loading = self._party_check(now)
         if self._effects is None or loading:
-            self._effects = current  # the first look, or just loaded: remember what is active
+            self._effects, self._effect_deadlines = current, deadlines
             return []
         started = [eff for eff, _, _ in (current - self._effects).elements()]
         ended = [eff for eff, _, _ in (self._effects - current).elements()]
-        self._effects = current
+        refreshed = []
+        for record, previous in self._effect_deadlines.items():
+            # The event can briefly disappear while the effect is still active.
+            if record in current and deadlines.setdefault(record, previous) != previous:
+                refreshed.append(record[0])
+        if refreshed and Counter(self.game.effect_records()) != current:
+            # A different caster or spell may have replaced the record during the queue read.
+            return []
+        self._effects, self._effect_deadlines = current, deadlines
         replaced = {(e.owner, e.id) for e in started} & {(e.owner, e.id) for e in ended}
+        replaced.update((e.owner, e.id) for e in refreshed)
         out = []
         by_cast: Dict[Tuple[int, int, bool], List[int]] = {}
-        for eff in started:
+        for eff in started + refreshed:
             by_cast.setdefault((eff.caster, eff.id, (eff.owner, eff.id) in replaced), []).append(eff.owner)
+        new_hastes = {(e.owner, e.caster) for e in started if e.id == game.HASTED_EFFECT}
         for (caster, eid, instead), owners in by_cast.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
@@ -2753,6 +2767,8 @@ class DiceLog:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
             if eid == game.HASTED_EFFECT:  # (Haste's magical aging)
                 for owner in owners:
+                    if (owner, caster) not in new_hastes:
+                        continue
                     creature = self.game.combatant_creature(owner)
                     if creature is not None:
                         out += aging.hasted(self.game, creature)

@@ -572,8 +572,8 @@ class Viewer:
         ttk.Checkbutton(kept, text="Autosave: on coming into another area and after a fight, on the QUICK page of "
                         "the save window", variable=self.autosave,
                         command=self._options_changed).pack(anchor="w", pady=(4, 8))
-        about = ttk.Label(kept, text="While this window is open, every save is copied, as the game writes it, into the Loader's \"Named "
-                          "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
+        about = ttk.Label(kept, text="While this window is open, saves in the manual slots are copied into the Loader's \"Named "
+                          "saves\" folder under their in-game names (\"Page 2 slot 05 - Before Scar's "
                           "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
         about.pack(anchor="w")
         kept.bind("<Configure>", lambda e: about.configure(wraplength=max(200, e.width - 20)), add="+")

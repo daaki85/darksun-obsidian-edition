@@ -180,10 +180,11 @@ def list_for(slot: int, typ: bytes) -> int:
     return HOLD_LIST if typ and typ[0] & WEAPON_KINDS else WEAR_LIST
 
 
-def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes = b"") -> Optional[int]:
+def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes = b"",
+               *, write: Optional[Callable[[int, bytes], None]] = None) -> Optional[int]:
     """The list (its object) that party member MEMBER keeps an item of type record TYP in SLOT
     in (list_for); a new one, as the game's allocator gives it, if it has none. None if there's
-    none to be had."""
+    none to be had. A caller restoring failed transfers can supply WRITE for the allocation."""
     it = ring.held(gd)  # (IT as the caller read it may be from before the game's last move)
     offset = list_for(slot, typ)
     thing, = struct.unpack_from("<h", gd.creature(member), offset)
@@ -194,13 +195,25 @@ def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes 
     free = it.word(ring.FREE_THINGS)
     if free >= ring.THING_COUNT or not it.spare_things():  # (the game's own left some: ring.RESERVE)
         return None
+    if write is None:
+        write = gd.guest.write
     ds = gd.ds * 16
-    gd.guest.write(ds + ring.FREE_THINGS, struct.pack("<H", it.thing(free)[1] & 0xFFFF))
-    gd.guest.write(ds + ring.THINGS_USED, struct.pack("<H", it.word(ring.THINGS_USED) + 1))
-    gd.guest.write(it.things + free * 3, struct.pack("<BH", game.THING_ITEM, game.NO_ITEM))
+    write(ds + ring.FREE_THINGS, struct.pack("<H", it.thing(free)[1] & 0xFFFF))
+    write(ds + ring.THINGS_USED, struct.pack("<H", it.word(ring.THINGS_USED) + 1))
+    write(it.things + free * 3, struct.pack("<BH", game.THING_ITEM, game.NO_ITEM))
     base = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
-    gd.guest.write(base + offset, struct.pack("<H", free))
+    write(base + offset, struct.pack("<H", free))
     return free
+
+
+def link_item(it: ring.Items, thing: int, item: int, slot: int, write: Callable[[int, bytes], None]) -> None:
+    """Put an unlinked item at the head of a prepared inventory list."""
+    at = it.items + item * game.ITEM_SIZE
+    head = it.things + thing * 3 + 1
+    first, = struct.unpack("<h", it.guest.read(head, 2))
+    write(at + game.ITEM_SLOT, bytes((slot,)))
+    write(at + game.ITEM_NEXT, struct.pack("<h", first))
+    write(head, struct.pack("<h", item))
 
 
 def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bool:
@@ -211,11 +224,7 @@ def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bo
     thing = party_list(gd, it, member, slot, typ)
     if thing is None:
         return False
-    it = ring.Items(gd)  # (read again: the list may be new)
-    at = it.items + item * game.ITEM_SIZE
-    gd.guest.write(at + game.ITEM_SLOT, bytes((slot,)))
-    gd.guest.write(at + game.ITEM_NEXT, struct.pack("<h", it.thing(thing)[1]))
-    gd.guest.write(it.things + thing * 3 + 1, struct.pack("<h", item))
+    link_item(it, thing, item, slot, gd.guest.write)
     from . import icons
     icons.fit(gd, item)  # (the Loader's own icon at once: the arena's ring)
     return True

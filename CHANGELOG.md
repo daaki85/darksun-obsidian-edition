@@ -57,6 +57,35 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
+
+No release: these fixes come with the next one.
+
+**Fixed**
+- The Loader stops at startup and names the file if it cannot remove a stale game data override.
+  This prevents DOSBox and Dark Sun Recompiled from loading incompatible files together (#137).
+- The `dicelog` command stops its stats worker and closes its process handle before reconnecting
+  after DOSBox exits. It also releases those resources when the command stops or setup fails (#139).
+- Autosaves for a new area or a finished fight wait for any quick-save or quick-load request to
+  clear. When the Loader detects a loaded save, it drops any autosave that was waiting (#138).
+- The journal commits entries before giving their ID to the game. A Loader window opened
+  earlier refreshes its journal before recording, and loading an older save keeps later entries
+  with the same game time on their original branch (#135).
+- Named Saves checks the party records before restoring a file and refreshes changed saves
+  even when their file size and timestamp match (#135).
+- Bulk loot (T and Shift+T) restores the container and backpack lists when a transfer write fails.
+  It leaves the items in place if it cannot pause the game (#136).
+- The dice log reports a timed spell reapplication when the caster and effect handle are reused
+  and the scheduled expiration changes (#141).
+
+**Docs**
+- The upgrade instructions include the `Journal` folder and ask players to verify their history
+  before deleting the old Loader folder (#135).
+
+**Dev**
+- A play log: [pull requests #136, #140 and #141 in the game](playtest/logs/2026-11-20-open-prs-checks.md),
+  with #140's round count fixed and played again (#142).
+
 ## Pull request #143 ([merged 2026-11-20](https://github.com/daaki85/darksun-obsidian-edition/pull/143))
 
 No release: the dice log's fix below comes with the next one.

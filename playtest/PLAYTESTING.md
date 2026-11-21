@@ -775,6 +775,12 @@ game's data: it is one player's account.
   BIOS's Caps Lock flag (0:0417h 40h) for a test (logs/2026-11-11-caps-lock-loot.md). **T shuts the
   window itself**: no Escape after it (with nothing open that brings EXIT: SAVE GAME?; CANCEL
   140,115) (logs/2026-11-18-audit-fixes-1.md).
+- **Bulk loot to full packs** (logs/2026-11-20-open-prs-checks.md): from `fountain-user` after
+  `fightout.sh`, the five guard bodies by the fountain (`bodyitems.py`'s screen places, a slow press
+  with the eye at the place +2 in y) fill all four packs (12 cells each, `pickpocket.BACKPACK`):
+  the third body ends with `No room in the backpacks for: ...`, the rest `The party's backpacks are
+  full: nothing taken.` `carried.py NAME` shows each pack. A guard's purse-like thing (type 60,
+  name number 9999) is named `item 9999` in the loot lines.
 - **Selling with S** (logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button Talk
   at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member on
   show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
@@ -918,6 +924,9 @@ game's data: it is one player's account.
    before passing turns. Rainbow Pattern (it can be aimed at bare floor) does the same: each
    creature in it saves at its turn's start, and a failure skips that turn at once (no save while
    walking in it).
+   **The combat log panel covers the party's figures** when they stand low on the view: a click
+   at `memberpos.py`'s place then lands on the panel and `passn.sh` presses E with no END menu (the
+   Effects screen comes up; Escape closes it). `panel.sh hide` first (2026-11-20).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
    Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
@@ -972,6 +981,13 @@ game's data: it is one player's account.
   while a count of the party's 34 records (a few lines over `live.py`) is under 4: each member saves
   at its turn's start; each of three loads had all four held within four rounds (the pattern lasts
   2d3 rounds: once it is gone, load again).
+  **Untimed holds on both sides (`addeffect.py N 34` on the party, `foeset.py C eff=34` on the
+  foes) never end by themselves**: the blink then runs at about 190 rounds a second until a hold is
+  taken off by hand, the dice log's ring overruns ("N rolls came too fast to record"), and the
+  game's turn (`state.py`'s `turn`, `gd.whose_turn`) stays the same through it, so nothing waiting
+  for the turn to change fires (logs/2026-11-20-open-prs-checks.md). For a short burst take one
+  member's hold off within a second of passing the last free turn. Since #140 the helper keeps the
+  fight and round it is in: `symread.py initiative_fight initiative_round` (the first word of each).
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   So a to-hit test needs a free target (the rule is always on since 2026-11-18, and DSCLOG has had
@@ -1177,6 +1193,10 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
 - **Ester's pages in `fountain-user`** (after `spellsetup.py 2=9`; logs/2026-11-19-final-audit-fixes.md):
   level 1's second row, second icon (194,79) is Magical Stone; LEVEL (196,171) to level 2, whose
   second row's first icon (176,79) is Hold Person (a spell save on a free target).
+- **Haste on the whole party** (logs/2026-11-20-open-prs-checks.md): `spellsetup.py 0=9 29`, on
+  Lex's turn U, LEVEL to page 3, the icon (176,59), a click on a member: one cast hastes all four,
+  each with the Loader's system shock roll and a year. Cast again the next turn, the dice log (since
+  #141) says `Lex gives Hasted to ..., in place of the ones they had`, with no ageing.
 - **Several casts a slot**: Magical Stone gives three throws a casting (the stone pointer comes
   back; the turn ends after the third). With the manual's spells
   (logs/2026-11-09-turn-undead-meteors.md), Minute Meteors gives five casts a slot (the pointer
