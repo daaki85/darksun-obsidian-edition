@@ -265,6 +265,9 @@ CLASS_MAGIC_AT = 0xF4000 + game.CLASS_MAGIC_OFF
 WIZARD_CLASSES, PRIEST_CLASSES = (11, 18), (1, 2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 19)
 CLASS_MAGIC = bytes(b for c in range(32) for b in ((2 if c in PRIEST_CLASSES else 1 if c in WIZARD_CLASSES
                                                        else 0), 0, 0, 0))
+# The sequel's spells by kind (its DATA names): wizard 0-114, priest 115-234, psionic powers 235 (0EBh,
+# the caster level routine's bound) to 268 (10Ch), then the monsters' powers
+RAV_PRIEST_FIRST, RAV_PSIONIC_FIRST, RAV_MONSTER_FIRST = 115, 0xEB, 0x10D
 SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
 
@@ -409,6 +412,30 @@ class RavGameData(game.GameData):
                     and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
                 ac -= 1
         return ac
+
+    def no_spells(self, creature: int) -> bool:
+        """SL's armour rule for a multiclass preserver (class restrictions, game.RULE_RESTRICT) isn't
+        ported: the sequel's preservers cast in armour (the USE screen's "NO SPELLS IN ARMOUR" was
+        wrong there: Ar'anda cast Enlarge in it, 2026-11-21)."""
+        return bool(self.rules & game.RULE_RESTRICT) and super().no_spells(creature)
+
+    def thief_heavy(self, creature: int) -> bool:
+        """The same for a thief's skills in heavy armour (class restrictions, not ported)."""
+        return bool(self.rules & game.RULE_RESTRICT) and super().thief_heavy(creature)
+
+    def effect_caster_level(self, creature: int, spell: int) -> Optional[int]:
+        """The level a spell effect counts as cast at: the sequel's caster level routine (698h:34h,
+        97DC5h; SL's 81B16h, which game.effect_caster_level models with SL's sphere tables, not in the
+        sequel). Below psionic powers (RAV_PSIONIC_FIRST) the best level of the classes that cast the
+        spell (wizard spells below RAV_PRIEST_FIRST: WIZARD_CLASSES; the rest PRIEST_CLASSES, spheres
+        aside), a ranger's 7 less; a psionic power the psionicist's level; Enlarge's levels for the
+        attack (DSCLOG2's ENL_SITE, 608h:52h) come from here. None for monsters' own powers."""
+        if not 0 <= spell < RAV_MONSTER_FIRST:
+            return None
+        if spell >= RAV_PSIONIC_FIRST:
+            return self.class_level(creature, game.PSIONICIST)
+        casters = WIZARD_CLASSES if spell < RAV_PRIEST_FIRST else PRIEST_CLASSES
+        return max([self.class_level(creature, c) - (7 if c in game.RANGER_CLASSES else 0) for c in casters] + [0])
 
     def max_spell_slots(self, member: int, bit: int, spell_level: int, wis: bool = True) -> int:
         """The game's slot routine (626B7h; SL's 5E0ACh, the same but for its test switch, a byte at

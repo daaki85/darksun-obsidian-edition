@@ -954,6 +954,14 @@ the rule, or with no dice kept, it does the game's sum. The dice log's hit
 line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
 rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Verified in play (no log kept).
 
+In Wake of the Ravager Enlarge is the same routine (863B2h, 628h:57h; its effect 32, its levels
+608h:52h) and works the same: the stock game made Gerakis's 24 a 38 (x160%, Ar'anda's 6th level).
+DSCLOG2's `ENL_ROLL` (`INT EBh` at the attack's "cmp word [bp+16h],1" after the damage roll, 5D0C8h:
+the dice's sum, the roll less `[BP-14h]`, the sequel's bonus local) and `ENL_SITE` (`INT ECh`, 863E7h,
+the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`; no backstab dice there (STAB_TIMES isn't
+ported). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
+caster level routine, 97DC5h). Played: [the test log](../playtest/logs/2026-11-21-ravager-enlarge.md).
+
 ## Spells roll to hit
 
 ([In the features page](FEATURES.md#spells-roll-to-hit).) The Options tab's box

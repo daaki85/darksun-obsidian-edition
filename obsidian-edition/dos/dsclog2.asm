@@ -65,6 +65,8 @@ VEC_CAH_HIT   equ 0xE7  ; CAH_HIT (5D1FEh: a weapon's hit has done damage: the c
 VEC_CAH_MOVE  equ 0xE8  ; CAH_MOVE (5B838h: a creature's turn starts: a tangled one's taken)
 VEC_REACH     equ 0xE9  ; REACH (25CDDh: the combatant distance routine's result: a polearm's two squares)
 VEC_RANGER_LEVEL equ 0xEA ; RANGER_LEVEL (629F0h: a class's level for a spell's duration and damage: a ranger's 7 less)
+VEC_ENL_ROLL  equ 0xEB  ; ENL_ROLL (5D0C8h: a weapon's damage rolled: its dice kept for Enlarge)
+VEC_ENL_SITE  equ 0xEC  ; ENL_SITE (863E7h: Enlarge's x(100 + 10 a level)%: the weapon's dice only)
 VEC_TWO_HANDED equ 0xE4 ; TWO_HANDED (77976h, 77A0Dh: an item type's two-handed bit in the inventory: not a half-giant's with RULE_HALF_GIANT)
 VEC_OFF_HAND  equ 0xE2  ; OFF_HAND (5CEE8h: the attacks a round stored: one in the off hand with RULE_TWO_WEAPONS)
 VEC_HP_BEST   equ 0xDC  ; PROBE_HP_BEST (95025h: a level's hit die rolled: twice with RULE_HP_BEST, the better kept)
@@ -2241,6 +2243,71 @@ ranger_level:
         jnc .out
         xor al, al
 .out:   iret
+; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
+; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
+; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
+; by 100 + 10 a level percent, rounded down; AD&D's enlarges the weapon, so only its dice.
+; - ENL_ROLL replaces the attack's "cmp word [bp+16h],1" (5D0C8h, SL's 58A29h, STAB_ROLL's site; 4
+;   bytes, INT + 2 NOPs) after the damage roll (AX the roll, [BP-14h] what it added to the dice: the
+;   sequel's frame, SL's [BP-12h]): the dice's sum kept, ENL_KNOWN for a melee hit (the compare's
+;   "not greater"), then the compare made, its flags in the INT's frame;
+; - ENL_SITE replaces "imul ax,ax,0Ah ... idiv ebx / mov si,ax" (863E7h; 32 bytes, SL's 7C246h): with
+;   the rule and the hit's dice known (once: ENL_KNOWN), the dice multiplied, rounded up, the rest added
+;   once; else the game's. (No backstab dice in the sequel: SL's STAB_TIMES isn't ported.)
+RULE_HI_ENLARGE equ 512
+enl_dice  dw 0
+enl_known db 0
+enl_roll:
+        push bx
+        push ax
+        sub ax, [bp - 0x14]
+        mov [cs:enl_dice], ax
+        cmp word [bp + 0x16], 1
+        pushf
+        setle byte [cs:enl_known]
+        pop ax                  ; (the compare's flags)
+        mov bx, sp
+        and word [ss:bx + 8], ~0x08D5
+        and ax, 0x08D5          ; (OF SF ZF AF PF CF)
+        or [ss:bx + 8], ax
+        pop ax
+        pop bx
+        iret
+enl_site:
+        push ebx
+        push edx
+        imul ax, ax, 10
+        movsx eax, ax
+        add eax, 100                    ; (the percent)
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jz .whole
+        cmp byte [cs:enl_known], 0
+        je .whole
+        movsx ebx, word [cs:enl_dice]
+        or ebx, ebx
+        jle .whole
+        imul eax, ebx
+        add eax, 99
+        cdq
+        push ebx
+        mov ebx, 100
+        idiv ebx                        ; (the dice enlarged, rounded up)
+        pop ebx
+        sub ax, bx
+        add si, ax
+        inc word [cs:enlarges]
+        jmp .done
+.whole: movsx edx, si
+        imul eax, edx
+        mov ebx, 100
+        cdq
+        idiv ebx
+        mov si, ax
+.done:  mov byte [cs:enl_known], 0
+        pop edx
+        pop ebx
+        iret
+enlarges dw 0                   ; (hits enlarged by the dice, for a look in play)
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
@@ -5057,6 +5124,8 @@ all_vectors:
         vector VEC_CAH_MOVE, cah_move
         vector VEC_REACH, reach_site
         vector VEC_RANGER_LEVEL, ranger_level
+        vector VEC_ENL_ROLL, enl_roll
+        vector VEC_ENL_SITE, enl_site
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

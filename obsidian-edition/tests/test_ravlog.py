@@ -244,6 +244,30 @@ class PassTests(unittest.TestCase):
         self.assertTrue(data.rules & game.RULE_HP_BEST)
         self.assertFalse(data.no_spells(0))
 
+    def test_restrictions_not_ported(self):
+        """Class restrictions aren't ported: a preserver in armour casts, a thief in heavy armour keeps
+        its skills (whatever SL's rule says of the sheet)."""
+        real = game.GameData.no_spells, game.GameData.thief_heavy
+        game.GameData.no_spells = game.GameData.thief_heavy = lambda self, c: True
+        try:
+            data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFFFFFF)
+            self.assertFalse(data.no_spells(0))
+            self.assertFalse(data.thief_heavy(0))
+        finally:
+            game.GameData.no_spells, game.GameData.thief_heavy = real
+
+    def test_effect_caster_level(self):
+        """The sequel's caster level routine (97DC5h): a wizard spell the preserver's level, a priest
+        spell the best priest class's (a ranger's 7 less), a psionic power the psionicist's, a
+        monster's power none."""
+        data = ravlog.RavGameData(FakeGuest(), 0x4982)
+        levels = {11: 6, 12: 5, 15: 12, 2: 3}
+        data.class_level = lambda creature, cls: levels.get(cls, 0)
+        self.assertEqual(data.effect_caster_level(0, 5), 6)       # Enlarge
+        self.assertEqual(data.effect_caster_level(0, 126), 5)     # Shillelagh: the ranger's 12 less 7
+        self.assertEqual(data.effect_caster_level(0, 0xEB), 5)    # a psionic power
+        self.assertIsNone(data.effect_caster_level(0, 0x10D))
+
     def test_helm_counts_with_the_rule(self):
         """A worn Helm of type 55 counts AC 1 with RULE_HELMS (its type reads 0); a hat of the same
         type, and anything without the rule, doesn't."""
