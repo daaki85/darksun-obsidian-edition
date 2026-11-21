@@ -51,6 +51,7 @@ VEC_TICK      equ 0xD4  ; PROBE_TICK (3DA2Ch: the game's timer: LABEL_STAMP)
 VEC_FLIP      equ 0xD5  ; FLIP_SITE (16974h: the game's flip of its two screens: the panel on the new one)
 VEC_POINTER   equ 0xD6  ; PROBE_POINTER (3326Ah: the game's pointer drawn: the panel put first)
 VEC_CENTRE    equ 0xD7  ; PROBE_CENTRE (21A5Ah: the view centred: drawn again at once while the panel is shown)
+VEC_VIEW      equ 0xD9  ; PROBE_VIEW (987FBh: View Character's panels drawn: the saves, MOVE and THAC0)
 VEC_FOLLOW    equ 0xD8  ; PROBE_FOLLOW (1E3ECh, 20193h, 2143Eh: the view moved after a figure: the same)
 SEED     equ 0x384A     ; DS: the game's 32-bit rand seed (SL's 4122h)
 TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 494Ah, TARGET_GLOBAL)
@@ -1791,6 +1792,135 @@ t_cs    dw 0
 t_fl    dw 0
 char_count dw 0                 ; panels drawn on (for the tests)
 
+; ---- View Character: DSCLOG's PROBE_VIEW ----
+; PROBE_VIEW: INT VEC_VIEW replaces "push dword 000B0140h" (987FBh, SL's 8A471h; 6 bytes: INT + 4 NOPs)
+; near the end of the View Character screen's routine for its panels, once the game has drawn its own
+; lines. Adds the five saves under the item icons, each with its label, and MOVE and THAC0 in the
+; lower panel right of HP and PSI (as DAM is right of AC), then does the push. The routine is SL's, its
+; code at the same distances: the text routine's far address (-1A9h from the patch), the segment of the
+; panel's window handle (-1B4h) and the selected character's segment (-19Bh: the number at +0B44h,
+; as PROBE_CHAR's). What differs from DSCLOG's: the sequel's records (PROBE_CHAR's), the movement at
+; the creature's +13h (SL's +1Bh); the numbers the sheet's (no Loader's STATS, and no GEAR_WAIT: the
+; sequel's creation screen gets none of the Loader's gear).
+CH_DRAW   equ -0x1A9            ; (from the patch) "lcall SEG:OFF" operand: the text routine
+CH_WIN    equ -0x1B4            ; (from the patch) "mov ax,04E0h" operand: the window's far pointer's segment
+CH_WHO    equ -0x19B            ; (from the patch) "mov ax,0370h" operand: the character number's selector
+CREATURE_MOVE equ 0x13
+probe_view:
+        pop word [cs:t_ip]
+        pop word [cs:t_cs]
+        pop word [cs:t_fl]
+        sti
+        pushad
+        push es
+        push fs
+        mov es, [cs:t_cs]
+        mov di, [cs:t_ip]
+        sub di, 2               ; ES:DI = the patch
+        mov eax, [es:di + CH_DRAW]
+        mov [cs:c_draw], eax
+        mov fs, [es:di + CH_WIN]
+        mov eax, [fs:0]         ; the panel's window
+        mov [cs:c_winptr], eax
+        mov fs, [es:di + CH_WHO]
+        mov bx, [fs:WHO_OFF]    ; the character on show
+        cmp bx, 3
+        ja .done
+        mov [cs:c_who], bx
+        imul ax, bx, SHEET_SIZE
+        les si, [SHEETS_PTR]
+        add si, ax              ; ES:SI = the character sheet
+        cmp word [es:si + SHEET_ENTITY], 0
+        je .done                ; an empty slot
+        imul bx, bx, CREATURE_SIZE
+        lfs di, [CREATURES_PTR]
+        add di, bx              ; FS:DI = the creature record
+        inc word [cs:view_count]
+        mov eax, [es:si + SHEET_SAVES]  ; (read now: the text routine changes ES)
+        mov [cs:c_vals], eax
+        mov al, [es:si + SHEET_SAVES + 4]
+        mov [cs:c_vals + 4], al
+        mov al, [fs:di + CREATURE_MOVE]
+        mov [cs:v_move_val], al
+        mov al, [fs:di + CREATURE_THAC0]
+        mov di, v_thac0 + 7
+        call c_itoa_s
+        mov byte [cs:di], 0
+        mov di, v_move + 7
+        mov al, [cs:v_move_val]
+        call c_itoa_s
+        mov byte [cs:di], 0
+        xor bp, bp              ; the saves, each with its label (V_SAVES)
+.save:  mov bx, bp
+        shl bx, 2
+        mov di, [cs:v_saves + bx]
+        add di, 4
+        mov al, [cs:c_vals + bp]
+        call v_two
+        push word [cs:v_saves + bx + 2]  ; (its place: y, then x)
+        mov ax, bp
+        and ax, 1
+        imul ax, ax, V_SAVE_GAP
+        add ax, V_SAVE_X
+        push ax
+        push cs
+        push word [cs:v_saves + bx]
+        call c_draw_line
+        inc bp
+        cmp bp, 5
+        jb .save
+        push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
+        push word V_LOW_X
+        push cs
+        push word v_move
+        call c_draw_line
+        push word V_LOW_Y + 7
+        push word V_LOW_X
+        push cs
+        push word v_thac0
+        call c_draw_line
+.done:  pop fs
+        pop es
+        popad
+        push dword 0x000B0140   ; the replaced instruction
+        push word [cs:t_fl]
+        push word [cs:t_cs]
+        push word [cs:t_ip]
+        iret
+
+v_two:                          ; DSCLOG's: AL (0-99) -> two digits (a space for a leading 0) and a
+        push bx                 ;   space at CS:DI; DI moves on
+        xor ah, ah
+        mov bl, 10
+        div bl
+        add ax, '00'
+        cmp al, '0'
+        jne .tens
+        mov al, ' '
+.tens:  mov [cs:di], al
+        mov [cs:di + 1], ah
+        mov byte [cs:di + 2], ' '
+        add di, 3
+        pop bx
+        ret
+
+v_thac0  db 'THAC0: ', 0, 0, 0, 0
+v_move   db 'MOVE:  ', 0, 0, 0, 0  ; (its number under THAC0's)
+v_move_val db 0
+view_count dw 0                 ; screens drawn on (for a look in play)
+; the saves under the item icons, two to a row (PPD and RSW, PP and BW, SP), with the short labels
+; the inventory panel gives them: each its text and its row's y (DSCLOG's places: the screen is SL's)
+V_SAVE_X   equ 0xCD
+V_SAVE_GAP equ 36
+V_LOW_X    equ 0xD8             ; (clear of HP's value, 7 letters from the game's place for it)
+V_LOW_Y    equ 0x7F             ; (HP's line; PSI's 7 below)
+v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
+.ppd     db 'PPD 00 ', 0
+.rsw     db 'RSW 00 ', 0
+.pp      db 'PP  00 ', 0
+.bw      db 'BW  00 ', 0
+.sp      db 'SP  00 ', 0
+
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine
 ; casting a spell or a power (80580h, SL's 772A5h): [BP+6] the caster, [BP+8] the target, [BP+0Ah] the
@@ -3364,6 +3494,7 @@ all_vectors:
         vector VEC_POINTER, probe_pointer
         vector VEC_CENTRE, probe_centre
         vector VEC_FOLLOW, probe_follow
+        vector VEC_VIEW, probe_view
 VECTORS equ ($ - all_vectors) / 3
 
 align 16

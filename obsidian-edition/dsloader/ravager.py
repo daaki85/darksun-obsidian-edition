@@ -67,6 +67,7 @@ VEC_ITEM_BOX = 0xD0  # (DSCLOG2's PROBE_ITEM_BOX: charges in item boxes)
 VEC_CHAR = 0xD1  # (DSCLOG2's PROBE_CHAR: THAC0, saves and thief skills on the inventory)
 VEC_CAST, VEC_SCROLL, VEC_TICK = 0xD2, 0xD3, 0xD4  # (DSCLOG2's PROBE_CAST, PROBE_SCROLL, PROBE_TICK: names over figures)
 VEC_FLIP, VEC_POINTER = 0xD5, 0xD6  # (DSCLOG2's FLIP_SITE, PROBE_POINTER: the combat log's panel)
+VEC_VIEW = 0xD9  # (DSCLOG2's PROBE_VIEW: the saves, MOVE and THAC0 on View Character)
 VEC_FOLLOW = 0xD8  # (DSCLOG2's PROBE_FOLLOW: the same after the view follows a figure)
 VEC_CENTRE = 0xD7  # (DSCLOG2's PROBE_CENTRE: a move of the view drawn again at once while the panel is shown)
 HELPER_EXE = "DSCLOG2.EXE"
@@ -168,6 +169,9 @@ PATCHES: Tuple[Patch, ...] = (
     # THAC0, saves and thief skills on the inventory (SL's inventory): DSCLOG2's PROBE_CHAR after the
     # panel's weapon lines (91286h, SL's 6F6BFh: "add sp,0Eh"), the text routine and the character's
     # selector read from the code before it, at SL's distances.
+    # View Character's panels, once drawn (987FBh, SL's 8A471h: "push dword 000B0140h"; SL's code at
+    # the same distances): DSCLOG2's PROBE_VIEW adds the saves, MOVE and THAC0, and does the push.
+    Patch("view", 0x987FB, bytes.fromhex("666840010b00"), gamepatch._interrupt(VEC_VIEW, 6)),
     Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
     # Names over figures (SL's labels.py, DSCLOG's LABELS): a spell cast recorded (80585h, SL's 772AAh:
     # "mov cx,[bp+6]", the caster), the map's main loop asking where the pointer is (20230h, SL's

@@ -442,6 +442,11 @@ check run `ravthief.py MEMBER` (it needs `ravfixes.py` run first, for `$WORK/rav
 panel's numbers**: zoom the screenshot, the small font's 6 looks like a 5. Portraits are at game x 30,
 y 21, 67, 112 and 158.
 
+**Its View Character screen** (2026-11-21, logs/2026-11-21-ravager-view-character.md): SL's screen and
+code, ending its panels at 987FBh (SL's 8A471h), the text routine, window and character at SL's distances
+(-1A9h, -1B4h, -19Bh); the creature's movement +13h. The game's text routine changes ES: read what you
+need before drawing. Opened by the bar's top-left icon (22,17), then VIEW CHARACTER (47,171).
+
 **Its map and names over figures** (2026-11-21, logs/2026-11-21-ravager-labels.md): the map things
 from DS:67BBh, 25h bytes each, their feet at +0Ah/+0Ch (`ravfight.py`'s +3/+5 is the top left, about 30
 above); the object list's far pointer DS:67B7h (8 bytes an entry, +6 the thing), its count DS:264Eh;
