@@ -19,7 +19,7 @@ buttons in the game's (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
 indent. Above them the round, who is acting and who is next. See the repository's
-reports/combat-log-design-handoff.md (outside the release).
+reports/archive/combat-log-design-handoff.md (outside the release).
 """
 
 import re
@@ -100,7 +100,7 @@ def line_kind(line: str) -> str:
     Undead's a hit when it works (TURN_WORKS) and a miss when not (TURN_FAILS); HP back at a rest,
     Cell Adjustment's and a shadow's drain damage; a cast at a rest and the rest of the manual's
     monsters' and spells' lines other."""
-    return ("round" if line.startswith(("Round ", "Initiative: ")) else
+    return ("round" if line.startswith(("Round ", "Initiative: ")) or ROUND_PASSED.match(line) else
             "turn" if line.endswith("'s turn") else
             "save" if "'s saving throw vs " in line or " magic resistance " in line else
             "hit" if "-> HIT" in line else
@@ -132,6 +132,7 @@ RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+
 DAMAGE_ROLL = re.compile(r"(?P<what>.+?) damage: (?P<dice>\S+) = (?:\[[^\]]*\](?: [+-]\s?\d+)? = )?(?P<total>\d+)")
 PERCENT = re.compile(r"(?P<what>.+?): d100 = (?P<roll>\d+), needs (?P<need>-?\d+) or less.*-> (?P<result>.+)")
 ROUND = re.compile(r"Round (?P<n>\d+)")
+ROUND_PASSED = re.compile(r"(?P<rounds>Rounds? \d+(?:-\d+)?) (?:go|goes) by at once: (?P<reason>.+)")
 # a spell's attack roll (dicelog's _spell_to_hit: SPELL_HIT's missile and hostile touch spells)
 SPELL_ATTACK = re.compile(r"(?P<who>.+?)'s (?P<spell>.+?) at (?P<target>.+?): (?:touch )?attack d20 = (?P<d20>\d+)"
                           r"(?: \(natural \d+\))?, (?:needs (?P<need>-?\d+)\+|only a 20 hits|"
@@ -152,6 +153,9 @@ def shorten(line: str, level: str) -> Optional[str]:
         return text
     if line.startswith("    ") or text.startswith("Initiative"):
         return None
+    m = ROUND_PASSED.match(text)
+    if m:
+        return m.group("rounds").upper() + " SKIPPED"
     m = ROUND.match(text)
     if m:
         return f"ROUND {m.group('n')}"
@@ -259,12 +263,18 @@ class Log:
                         out.append(Line("damage", _side(takes.group("who"), names), f"{takes.group('who')} {rest}"))
                     continue
             if kind == "round":  # a rule, "ROUND 3", and in detail the order after it
-                m = ROUND.match(text)
+                skipped = ROUND_PASSED.match(line)
+                if skipped:
+                    out.append(Line("round", None, skipped.group("rounds").upper() + " SKIPPED"))
+                    if level == DETAIL:
+                        out.append(Line("detail", None, skipped.group("reason"), 1))
+                    continue
+                m = ROUND.match(line)
                 if m is None:
                     kind = "detail"
                 else:
                     out.append(Line("round", None, f"ROUND {m.group('n')}", 0))
-                    rest = text[m.end():].lstrip(": ")
+                    rest = line[m.end():].lstrip(": ") if level == DETAIL else ""
                     if rest:
                         out.append(Line("detail", None, rest, 1))
                     continue
@@ -280,11 +290,15 @@ def _side(text: str, names: Dict[str, str]) -> Optional[str]:
     return None
 
 
-def header(status: Optional[dict]) -> str:
+def header(status: Optional[dict], chance: str = "") -> str:
     """The panel's top line from DiceLog.round_status: "Round 2: Gerakis, then Cermak, Cilla" (who
-    is acting, then who is still to)."""
+    is acting, then who is still to). CHANCE: what the one acting needs to hit the enemy chosen
+    with Tab (hitchance.brief, "Needs 14+ (35%)"), the whole line while one is chosen: the header
+    has no room for both (the round's line is back when the turn passes)."""
     if not status:
         return ""
+    if chance and status.get("now"):
+        return chance
     now = status["now"][0] if status.get("now") else ""
     nxt = ", ".join(name for name, _ in status.get("next", []))
     who = f"{now}, then {nxt}" if now and nxt else now or (f"then {nxt}" if nxt else "")

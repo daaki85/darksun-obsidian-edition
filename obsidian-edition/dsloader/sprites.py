@@ -251,13 +251,12 @@ def capacity(frames: List[sg.Rows], combat: bool = False) -> int:
 
 
 class Pictures:
-    """The game's own pictures each party object's are made from, and the template cloak. With
-    LOOKS, elves have pointed ears and half-elves their own figures (figures.py); without, as the
-    game draws them (half-elves in their own colours, halfelf.py)."""
+    """The game's own pictures each party object's are made from, and the template cloak. Elves
+    have pointed ears and half-elves their own figures (figures.py; their switch went after 2.18);
+    where those can't be made, a half-elf is the game's figure in its own colours (halfelf.py)."""
 
-    def __init__(self, chunks, looks: bool = True):
+    def __init__(self, chunks):
         self.chunks = chunks
-        self.looks = looks
         self.frames: Dict[int, List[sg.Rows]] = {}
         self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]]] = {}
 
@@ -290,7 +289,7 @@ class Pictures:
             self.made[key] = None
             made = figures.HalfElfMan if figure == halfelf.MAN else figures.HalfElfWoman if figure == halfelf.WOMAN else None
             source = figures.ELF_MAN if figure == halfelf.MAN else figures.HUMAN_WOMAN
-            if self.looks and made is not None and all(("BMP ", source + c) in self.chunks for c in (0, 1)) and sg._LIGHT:
+            if made is not None and all(("BMP ", source + c) in self.chunks for c in (0, 1)) and sg._LIGHT:
                 try:
                     maker = made(self.own(source), self.own(source + 1))
                     frames = maker.frames(combat)
@@ -319,7 +318,7 @@ class Pictures:
             dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f])
             if not own:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
-            if self.looks and model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
+            if model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
                 dressed = figures.ears_over(dressed, rows, model, f, combat, PAD)
             if stage:  # (the hair found for greying, not the gear's: greyhair.hair)
                 if owns[f] is not None:
@@ -350,10 +349,10 @@ def _spare_model(chunks) -> Optional[int]:
     return next((m for m in sorted(sp.MODELS) if ("BMP ", m) in chunks and ("BMP ", m + 1) in chunks), None)
 
 
-def new_chunks(chunks, looks: bool = True) -> Dict[Tuple[str, int], bytes]:
+def new_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of SEGOBJEX: each party object's own pair of pictures (as the game's,
-    with room for gear), the object pointing at them; LOOKS as Pictures has it."""
-    pics = Pictures(chunks, looks)
+    with room for gear), the object pointing at them; the looks as Pictures has them."""
+    pics = Pictures(chunks)
     out = {}
     for obj in PARTY_OBJECTS:
         if pics.model(obj) is None or pics.model(obj) not in sp.MODELS:
@@ -373,10 +372,10 @@ def new_chunks(chunks, looks: bool = True) -> Dict[Tuple[str, int], bytes]:
     return out
 
 
-def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> Dict[Tuple[str, int], int]:
+def new_room(chunks, new: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, int], int]:
     """The room to keep free in the file after each of the party's pictures in NEW (new_chunks):
     up to Pictures.room in all."""
-    pics = Pictures(chunks, looks)
+    pics = Pictures(chunks)
     out = {}
     for obj in tuple(PARTY_OBJECTS) + tuple(SPARES):
         for combat, picture in zip((False, True), picture_ids(obj)):
@@ -386,7 +385,7 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
     return out
 
 
-# The mod's magic items whose magic is the helper's or the Loader's, not a plus or a spell power: by
+# The mod's magic items whose magic is DSCLOG's or the Loader's, not a plus or a spell power: by
 # their types (the Boots of Speed, the Cloak and Boots of Elvenkind, the girdles, the amulet)
 MAGIC_TYPES = frozenset((game.SPEED_BOOTS_TYPE, game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE,
                          game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE))
@@ -452,10 +451,10 @@ class Dresser:
     load it from there."""
 
     def __init__(self, gd: GameData, objects_file: str, palette: List[Tuple[int, int, int]],
-                 copy_file: Optional[str] = None, looks: bool = True):
+                 copy_file: Optional[str] = None):
         from .gff import GffError, read_gff
         with open(objects_file, "rb") as f:
-            self.pics = Pictures(read_gff(f.read()), looks)
+            self.pics = Pictures(read_gff(f.read()))
         sg.set_palette(palette)
         self.gd = gd
         self.copy_file = copy_file
@@ -482,10 +481,8 @@ class Dresser:
         self.reused = 0  # (pictures put in a cell of the store: for tests and the freeze report)
 
     @classmethod
-    def for_game(cls, gd: GameData, game_dir: Optional[str], copy_file: Optional[str] = None,
-                 looks: bool = True) -> Optional["Dresser"]:
-        """A Dresser from the game's own files (the objects and the palette), or None; LOOKS as
-        the copy was written with (Pictures)."""
+    def for_game(cls, gd: GameData, game_dir: Optional[str], copy_file: Optional[str] = None) -> Optional["Dresser"]:
+        """A Dresser from the game's own files (the objects and the palette), or None."""
         from .gff import GffError, read_gff
         objects = art._find(game_dir, "SEGOBJEX.GFF") if game_dir else None
         gpl = art._find(game_dir, "GPLDATA.GFF") if game_dir else None
@@ -494,12 +491,12 @@ class Dresser:
         try:
             with open(gpl, "rb") as f:
                 palette = art.palette_colours(read_gff(f.read())[("PAL ", art.PORTRAIT_PALETTE)])
-            return cls(gd, objects, palette, copy_file, looks)
+            return cls(gd, objects, palette, copy_file)
         except (OSError, GffError, KeyError, struct.error, ValueError):
             return None
 
     def _check_copy(self) -> bool:
-        """The copy's index read (again, if the launcher has written it anew since: then what it
+        """The copy's index read (again, if the Loader has written it anew since: then what it
         shows is plain). Whether there is a copy to dress."""
         import os
         from .gff import GffError, index_places, rooms

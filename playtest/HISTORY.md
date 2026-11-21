@@ -3,8 +3,9 @@
 How the rules and recipes in [PLAYTESTING.md](PLAYTESTING.md) were found: the incidents behind
 them, the approaches given up, the measurements made, and when each thing was learned. The guide
 states current practice; this file keeps the story, by topic and with dates, so nothing learned is
-lost. The test logs themselves are in [logs/](logs/). Add to it when a play's incident or a
-superseded approach would clutter a recipe.
+lost. [When things were learned](#when-things-were-learned), at the end, is the date index. The test logs themselves are in [logs/](logs/), one line each in [their
+index](logs/README.md). Add to it when a play's incident or a superseded approach would clutter a
+recipe: under its topic, with its date.
 
 ## The guide and the kit
 
@@ -22,12 +23,27 @@ superseded approach would clutter a recipe.
   agent on the same DOSBox.
 - 2026-11-11: the guide was reorganised into a short startup procedure, task recipes and the route,
   with the incidents and dates moved here.
+- 2026-11-16: a script editing logs/2026-11-15-kit-rebalance-checks.md cut the file at the first
+  "Not played: the Arcanist" it found, meaning the summary's last line, but part 9 had a line
+  starting the same way: part 10 and the summary table were lost in a commit and put back in the
+  next from the version before it (the rule now in the guide's "After a play").
+- 2026-11-17: the guide's startup procedure was made one numbered checklist in the order run, the
+  memory offsets moved to RESEARCH.md, the dated notes here, and this file put strictly by topic.
 
 ## The shell
 
 `pkill -f` with a pattern the command line itself contains killed the shell running it (exit 144),
 twice on 2026-11-01, the second time with the rule already written: run the kill as its own
 command, by pid, and nothing else in it.
+
+**The lock nobody held** (2026-11-17): a session run as `flock LOCK sh script` started Xvfb through
+`start.sh`; Xvfb kept the lock's file open after the script ended, and the next sessions waited on
+it until `lslocks` named the pid. Xvfb is now started outside the lock. The same day an agent
+killed the shared display to free the lock: hence the rule to stop only what you started.
+- **2026-11-18**: DOSBox killed in place of the dice log. Their two pids had been written to two
+  files and printed with one `cat *.pid`, which lists by file name (dice.pid before dosbox.pid),
+  and were read in the order they had been written. The game and the fight in it were lost; the
+  save was loaded again. Kill a pid only after `ps -o pid,args -p PID` has named it.
 
 ## The game's installer
 
@@ -59,17 +75,17 @@ and the release zip (logs/2026-11-10-pre-merge-checks.md); `setup_game.sh` has c
   small panel); 2026-11-08 (logs/2026-11-08-panel-fight.md): passto.sh's "END menu opened" test was
   passed by the panel's new lines, and it pressed E with no menu and opened the Effects screen.
 
+## The watchdog
+
+2026-11-07: GONE lines in `guard.log` from a watchdog started without a display, two hours before,
+were taken for a new run's: the log keeps earlier runs' lines.
+
 ## Flags that read 0
 
 2026-11-01: an arena "flag 11 never set" was only the flags having no place in memory (their
 pointer, DS:1352h, null outside a script's run). 2026-11-05: the pointers at DS:1352h and 1356h were
 found to stay null in the arena even while a script waits on a message, so a poller never found
 them; hence the test builds with a branch forced.
-
-## The watchdog
-
-2026-11-07: GONE lines in `guard.log` from a watchdog started without a display, two hours before,
-were taken for a new run's: the log keeps earlier runs' lines.
 
 ## Scripts that didn't decode
 
@@ -78,12 +94,17 @@ every script in the built copy should decode.
 
 ## The pointer
 
+- **A click that moved nothing while another window was up** (2026-11-16): with a tkinter window
+  open on the same display for the Alt+Tab test, one `click.py` call left the game's pointer where
+  it was; with that window gone the same call worked. Close any other window before clicking.
 - The cycle (arrow, sword, eye, arrow) was checked on 2026-11-01; that only walkable ground takes a
   walking click is the user's (2026-11-01).
 - 2026-11-07: right-clicks guessed from shots left the sword up, hence `pointer.py`, which reads the
   mode from memory. The same day the user pointed out that the look pointer pauses the game.
 - 2026-11-06 (`restalarm.sh`): the pointer was the sword, no rest came ("rests: 0") and the click on
   the ring fell on Cilla (Gerakis attacked her out of a fight).
+- The walk arrow on a door, or on the floor beyond a closed one, does nothing: that was the stall at
+  Kurzak's last stop (95,28), before the look pointer opened it.
 
 ## The view and scrolling
 
@@ -96,6 +117,10 @@ every script in the built copy should decode.
   from and caps it since.
 - 2026-11-07 (`ghostturn.py`): in the enemies' turns the view follows the one acting; in a fight the
   view barely drags.
+- 2026-11-18 (logs/2026-11-18-champions-gear.md): in the arena, a click at screen (160, 260), meant
+  for map (488, 420) with the camera at y 160, fell below the view: EXIT: SAVE GAME? came up over an
+  empty red view (camera 344, 1360). CANCEL and viewto.py brought it back; ROUTE.md's way onto the
+  platform now brings the view down first.
 
 ## Message boxes and YES/NO questions
 
@@ -110,6 +135,8 @@ every script in the built copy should decode.
 - View Character: a 2026-11-08 note put it among the inventory's bottom icons at 52,171; on
   2026-11-10 it was found to be the inventory's first bottom icon (168,187), not 52,171 (52,171 is
   on the creation screen's VIEW CHARACTER).
+- Once a fight is on, boxclick.sh's clicks at 160,20 land on the map: on a member's turn one walked
+  Seneca 100 map units.
 
 ## The recompiled program
 
@@ -121,6 +148,23 @@ The kit has driven Dark Sun Recompiled since 2026-11-01.
 - 2026-11-06: the drag was found to scroll only with the Loader attached (it switches the helper's
   `scroll_on` on at attach).
 - The doors at Kurzak's stop were tried on the program on 2026-11-01.
+
+## Builds and tests
+
+- 2026-11-08: a failing tests/test_dsclog.py ran over 20 minutes for 323 tests that took 7 s
+  passing (each failing emulation runs to its count): a test run that drags means failures.
+- 2026-11-19 (logs/2026-11-19-free-dsclog-room.md): the old and new builds compared in
+  `fountain-user`'s ambush: the rolls weren't the same from one load to the next, so the lines were
+  compared by form. A THAC0 line that looked wrong in the new build (a thief's attack after her
+  backstab, her STR's +2 shown as -2) came out the same on the old build: not the change's. The
+  emulated tests were the closer check: the new tests run on the old `DSCLOG.EXE` with every
+  always-on rule's bit forced set all passed, but those that find a routine by bytes the change
+  had moved.
+- 2026-11-19: in Kalzith's shop a leader changed on the shop screen didn't change the prices (drawn
+  as it opened), and Escape there chose his Farewell, after which `openshop.sh` failed.
+- 2026-11-19 (logs/2026-11-19-final-audit-fixes.md): `gff.write_atomic` moved to `mkstemp` for a
+  temporary name of its own, and the game's copies in `dos/` came out mode 0600 (mkstemp's), seen in
+  `ls -l` during the play; they are set 0644 before being put in place now.
 
 ## Two probes on one vector: target AC 255
 
@@ -145,20 +189,20 @@ vectors are distinct, and `buildcheck.py` checks every hooked vector points at i
 
 ## Figures gone from the map: the picture store
 
-- 2026-11-08, the ambush after a long run of clicks: the party, and at times the foes, weren't drawn
-  though their places were right; I then Escape (the inventory opened and shut) drew them again,
-  for a while. Clicks on a figure not drawn missed (passuntil.sh gave up).
+- 2026-11-08, the ambush after a long run of clicks: the party, and at times the foes, weren't
+  drawn though their places were right; I then Escape (the inventory opened and shut) drew them
+  again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up).
 - **Found 2026-11-09** (logs/2026-11-09-missing-figures.md): the game's picture store and its 300
-  slots are given back only at an area load. Each time the Loader dressed a member anew (any change
-  to what its figure wears: inventory moves, a weapon's +0Fh written in memory) it marked the old
-  pictures FFFEh and the game took a new slot and about 7 KB of store for each. The pens take 200
-  slots and 275 KB on arrival, so after some 30-60 gear changes there a picture lay past the
-  store's end: drawn while in memory, never read back once let go, and every failed read kept the
-  memory it took, until no figure could be loaded (all gone; I then Escape frees that memory, so
-  they came back for a while). A long test in one area with many gear changes ran into it.
+  slots are given back only at an area load. Each time the Loader dressed a member anew (any
+  change to what its figure wears: inventory moves, a weapon's +0Fh written in memory) it marked
+  the old pictures FFFEh and the game took a new slot and about 7 KB of store for each. The pens
+  take 200 slots and 275 KB on arrival, so after some 30-60 gear changes there a picture lay past
+  the store's end: drawn while in memory, never read back once let go, and every failed read kept
+  the memory it took, until no figure could be loaded (all gone; I then Escape frees that memory,
+  so they came back for a while). A long test in one area with many gear changes ran into it.
 - Fixed: the Loader leaves a figure undressed when the store has no room (`_room_for`), and reuses
-  the game's slots (logs/2026-11-09-picture-store-fix.md), so the store hardly grows. `fillcache.py`,
-  which waits for the slot count to grow, has stalled since (4 s a change).
+  the game's slots (logs/2026-11-09-picture-store-fix.md), so the store hardly grows.
+  `fillcache.py`, which waits for the slot count to grow, has stalled since (4 s a change).
 
 ## Slot reuse and the inventory's icons
 
@@ -166,6 +210,14 @@ Opening the inventory puts every picture out of memory, and its icons are loaded
 cache and let go once drawn, so at 300 slots they are free for reuse: a search that always began at
 slot 0 had the icons take one slot in turn (3,590 reuses in a cycle). PIC_REUSE now searches round
 from after the last slot it reused (2026-11-09, logs/2026-11-09-picture-slot-reuse.md).
+
+## The colours the game cycles
+
+icons.py long said the game cycles only water (11-15) and fire (224-255), so the Loader's icons
+of a green or violet tint shone with the water's blue (`shining`). The cycler's table (DSUN.EXE
+22F8h, set up at 1CECFh) has four runs, 1-5 green, 6-10 violet, 11-15 and 240-248, and all turn in
+the inventory: Greenbright's green blade, 16 pixels, had 13 of them change over four shots 0.4 s
+apart (2026-11-18, logs/2026-11-18-item-glows.md).
 
 ## Frame rate measurements
 
@@ -206,6 +258,15 @@ aside (`DSCLOG_ASM=` that source for framerate.py's symbols):
 | 20000, all on, steady pace off | 16.8 → 18.9 | 0 → 0 | (not counted) | 80 → 103 |
 | 35000, all on | 16.0 → 18.9 | 1.6 → 0.2 | 25 → 14 | 113 → 141 |
 
+### The rings for "show what can be used" (2026-11-16)
+
+logs/2026-11-17-show-usable.md. The first build marked every usable thing of the region (87 in
+the pens) and cost a walking party a tenth of its frames with a single ring in view; marking only
+the view's (and 16 pixels round it) and looking again when the view moves brought the rings'
+share down to a few percent, the names costing about as much again. Three framerate runs in a
+row gave 0 or odd numbers because each began where the last had ended (the view had followed
+the party to a wall): every run now starts from the same spot.
+
 ## The arena's first bout that didn't start
 
 2026-11-02: topartyfight.sh ended "NO FIGHT" at (488, 232), and 60-odd more clicks south and walks
@@ -215,9 +276,8 @@ didn't start it; two later fresh games that day started at once. The bout is GPL
 341), beyond the bone wall, and it waits on flag 5 (MAS 42 sets it on loading); the flags can't be
 read in the arena. Why it sometimes doesn't is open.
 
-## The arena: waves and leaving
+## The arena: leaving
 
-- The arena's waves and messages as of 2026-11-01.
 - Out of the arena: done on 2026-11-01, the fourth run (`leavearena.sh` does it since); clicking
   inside the wall's boundary is the user's advice that day. The 2026-11-01 run lost its time
   getting the view to the wall: hence "don't walk south or east first".
@@ -242,6 +302,133 @@ read in the arena. Why it sometimes doesn't is open.
 - 2026-11-11: the user's save with Kurzak's door open but its square shut on the walk map
   (the party barred, Legcrusher standing still); a door action added to the call shut the door
   instead, and was dropped; the Loader's `kurzakdoor.py` opens the square.
+- route.py won't walk through a figure: with someone standing at (99, 31), in front of Kurzak's
+  entryway (99, 33-34, open), it found no way south from his stop and gave up, though the live
+  grid showed the doorway clear.
+
+## Pehtucl's chest
+
+2026-11-07 (logs/2026-11-07-pehtucls-chest.md, logs/2026-11-07-review-fixes.md): the chest's USE
+command and the shut type; `pens-new-chest` was saved then. 2026-11-08: `saves/trap-user`, a game
+from before 2.14.0, where the chest was the game's plain one.
+
+2026-11-16: `chestuse.sh`'s two blind right-clicks and its press at (161,72) opened the USE screen;
+`pointer.py look`, the press at (163,70) and the look box's third button worked, and the script
+does that since. 2026-11-17 (logs/2026-11-17-ingame-doc-checks.md), its first run in the game
+(`pens-new-chest`, `shut.py`, teleport and the two walks): the look box "Chest" and its USE brought
+"The chest is locked. Gerakis doesn't know how to pick the lock. Bash it open?", but the question
+took the right-clicks of the script's last `pointer.py walk`, so the eye stayed up (the game
+paused, rule 9). The script now takes the answer (y or n), presses it, clicks the messages after it
+away and then puts the arrow back: `chestuse.sh n` and `chestuse.sh y` ("Gerakis smashes at the
+lock, making a lot of noise but little else.") both ended with the walk arrow.
+
+## Fights and the turn tools
+
+- **"The game jumps its clock to the next event" (2026-11-20).** The Paralyzed-ends play read the
+  clock every 50 ms with the whole party held and saw 3326 then 3806: a jump to the next timed
+  event, it seemed, with a `Round 1` of about 50 combatants, most `?`, in the dice log. Watched
+  every 20 ms with the initiative rolls traced (logs/2026-11-20-round-one-oddity.md), the clock went
+  up 60 at a time, a round each, all in 0.1 s: the game plays the rounds, skipping every turn, and
+  the dice log, waiting 0.3 s after an initiative roll, put six rounds' rolls under one heading.
+
+- **A hang in a lasting cloud (fixed).** Moved from the guide: a kill made by DSCLOG's own far
+  call of 4E0:61h inside a lasting cloud's round left the screen still and the pointer stuck at
+  DS:A133h while the game's clock (DS:11D6h) ran on: `compare -metric AE` of two shots 5 s apart
+  gave 0, and clicks did nothing. A restart was the way out; DSCLOG no longer makes that call
+  there.
+- From `fountain-user` the ambush defeated the party twice when turns were only passed (a
+  Templar's Hold Person, the archers): hence every foe paralyzed first.
+- 2026-11-16: untilturn.sh stalled on a member with no Move whose END menu was at the screen's
+  left (toturn.sh presses E instead). `toturn.sh`'s E with no END menu up opened the Effects
+  screen once (Seneca's Tab chose a foe out of reach, so Return did nothing), and closing it left
+  the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
+  `passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
+- 2026-11-19 (logs/2026-11-19-backstab-str-line.md): the same again, `toturn.sh 3` ran out its
+  timeout on Ester's turn with Tab cycling foes out of reach, and its E opened the Effects screen;
+  Escape closed it with the view at the map's corner (camera 1728,0: `passuntil.sh` stopped
+  "member 2 off screen"). `viewto.py 1112 1512` (the leader) brought it back, then `passuntil.sh 3`
+  went on. A reload from fountain-user six times over (the hide and the move both had to pass
+  for a backstab) ran cleanly each time.
+
+- 2026-11-18 (logs/2026-11-18-squares-in-reach.md), walking a member square by square for the
+  squares in reach:
+  - A first sweep read every walk a square late: a walk the Move ran out on stayed the member's,
+    and once the "can walk" bit was put back in memory the game went on with it from where F10
+    had put the member. The tools now forget it with the edit.
+  - Waiting 1.2 s of stillness right after the click took the wait before a walk begins for its
+    end: wait for the place to change first.
+  - A sweep's click on the square north of the Templar was a click on him: the member walked up
+    and attacked, and the turn passed to the next member in the middle of the sweep.
+  - F10 after the Move was all spent gave the points back and no walk: read as a tool's failure
+    until the flags showed bit 0 still off (the game's own slip).
+- 2026-11-20 (logs/2026-11-20-f10-after-spell.md), 2.19.0's "not seen" F10 cases played: after a
+  spell (Curse, Reflected Image, Magical Stone after the last step and with movement left) the
+  flags read 0 and the mend stayed out, as meant. A pin put on by `addeffect.py` after the last step
+  got the walk back (one step, then the game ended the turn): the game's pin only clears bit 0,
+  which the last step had cleared already, so the mend couldn't tell; fixed the same day (the
+  member's effects read at F10) and played again. Getting to
+  Ester's next turn, `passuntil.sh 2` passed turns until the party was defeated: the Templar's Hold
+  Person had paralysed her, and a held member gets no turn.
+  - A helper pass written before the branch was reorganised was taken out again and put back on
+    the integrated base (the signature `vc` to `vd`): the design kept in the log, with its lines,
+    made that an hour's work.
+
+## An archer's turn and the quiver
+
+2026-11-14: the user reported an archer's turn ending as its quiver ran dry. The code addresses in
+the docs were first read in a memory snapshot and gave zeros (they are DSUN.EXE file offsets; the
+fight code is an overlay): read from the file they gave the cause (the shots cut to the arrows left,
+that cut count then marking the round's attacks spent, +181h 63h). With the fix the first play still
+lost the turn, which looked like a failed fix until `turnwatch.py` showed +181h at 1: the turn
+passed because the target was still standing, the game's own rule for every attack. The test that
+shows the bug is a kill with the last arrow (target at 1 HP); a baseline build without the two
+patches confirmed it. A first rerun with the quiver already emptied in that fight walked Ester up to
+strike with her sword: arrows written in a fight aren't seen, so the count is set before the fight
+starts.
+
+2026-11-15: a Spellarcher beside a Slig shot the Screamer Beetle two squares off: a bow is used
+only against a foe not beside the archer.
+
+2026-11-18 (logs/2026-11-18-champion-chill-arrows.md): the elf champion's Chill Arrows, plain
+arrows in #107's check (DSCLOG cast a spell arrow's spell for a party Spellarcher only), cast
+Chill Touch once PROBE_ARROW let anyone not in the party cast them: seen with every other
+champion Paralyzed and the party's turns passed, the elf's two shots at Cermak, one save failed
+(STR 19 -> 18), one saved. The HP lines put the first Chill Touch's 3 on the second arrow's hit.
+
+## The chance to hit: three numbers that were off
+
+2026-11-17 (logs/2026-11-17-hit-chance.md). The first predictions held against the fountain's
+swings were off three times, each a thing the code read from DSUN.EXE alone couldn't show: the
+Templar's Ring of Protection (DSCLOG has the game count a ring's plus), the order of the swings
+(the item list's, so Seneca's left-hand Hayneedle was the backstab, not her Shadowseeker), and a
+hidden thief's second weapon, 2 worse than a plain swing because the attack set's flags stay up
+from the first weapon and DSCLOG's `STAB_FIRST` takes back a backstab the swing never had. All
+three were put in the prediction and the game loaded again: every number then agreed. (The third
+was a fault of the game's and DSCLOG's, fixed by #116's `REAR_FRESH` on 2026-11-19; when the 2.19.0
+branch took that in, the prediction's second swing became a plain one, or from behind by the
+facing.) The lock
+was lost twice to a pause that killed DOSBox and every holder; and a click on bare floor, meant
+only to move the pointer off the panel, walked Lex 4 Move.
+
+## The chance to hit under the pointer: the label that came back
+
+2026-11-18 (logs/2026-11-18-hit-chance-hover.md). The label showed over the right enemy at once,
+but grabs taken half a second after the pointer had left still had it, though the Loader's slot
+was empty and DSCLOG's state said not shown. Window grabs every 30 ms showed the erase for one
+frame and the label back for good; the same happened to a "Miss" put from a script, with the
+squares in reach on or off. A whole-view redraw cleared it, so the Loader asks for one whenever a
+label goes or changes. Two more from the same play: the first probe put the pointer at x 318 and
+the view scrolled away (the figures were then looked for where the old camera had them); and a
+dice log killed while the label was up left it standing over the guard for the next one, which
+knew nothing of it.
+
+## The combat log panel's buttons
+
+2026-11-11 to 2026-11-16: the guide had two sets of coordinates for the level chip (262 or 268;
+"the chip at 292,74 docks the panel"). 2026-11-17 (logs/2026-11-17-ingame-doc-checks.md), measured
+in zoomed shots and each clicked: both were right in part. The chip is 256-290 docked and
+expanded, so 262 and 268 are both on it; 292 is the - button's left edge, which docks an expanded
+panel. The guide now has the one set, as `combatlog.level_rect` draws it.
 
 ## The LEVEL button that stuck
 
@@ -256,6 +443,29 @@ offered is in the guide.
 The game's save compare is unsigned (79BBAh), so every −100 ("cannot save") saved. Since
 `save_signed` it fails (with the manual's spells only at first; always applied, in no switch, from
 2026-11-09).
+
+Two natural 20s in a row came up on one Guard's saves (2026-11-08); nothing wrong was found.
+
+## Quick saves (2026-11-17)
+
+The first plays of quick save, quick load and autosave ([the log](logs/2026-11-17-quick-save.md)).
+
+- **A key pressed with a message box up was lost, and the clicks after it walked the party.** F2
+  sent right after `follow.py` (Kurzak's speech still up) opened no window; the clicks meant for
+  PAGE 1, a row and LOAD landed on the map, the party walked off, and the "load" was read as done
+  (the clock and the journal's id said otherwise). Now: `dismiss.sh`, then the key, then a shot.
+- **The QUICK button missed.** A click at y 156 (its y in `savepages.PAGES`, 150, plus a little)
+  did nothing: the buttons are drawn 18 lower (165). PAGE 1 at 76 had worked only by its top edge.
+- **A window save landed on the QUICK page.** After F9's LOAD window the page stayed QUICK, so the
+  next F1 save went to `SAVQ01.SAV`, a slot the rotation writes over. The Loader now puts the
+  page back once the window is shut.
+- **The research's "590:20" was not a segment to call**: overlay code names other overlays' stubs
+  by numbers of its own. The stubs' real segments came from walking the stub table (file 47470h
+  on: `CD 3F`, the overlay's file offset, its size, its entries of 5 bytes): the save is
+  4242h:0089h, the save window's overlay 428Ah (20h LOAD, 25h SAVE).
+- **The session's pauses killed DOSBox twice** in the middle of the arena trip; the quick save
+  made with Kurzak's call pending was still in the game folder, and the trip went on from it
+  (`loadquick.sh`).
 
 ## Turn Undead's unnamed target
 
@@ -275,54 +485,131 @@ in the inventory gives the shown member's portrait event 8: drawn again, and its
 opened (it then blocks every click; Escape posted after it didn't close it in step); **1-4** (the
 table at 6FDD0h + 1E3Bh) give event 7, which doesn't draw the shown member again.
 
-## Pehtucl's chest
+(2026-11-18, logs/2026-11-18-spell-arrows-info.md.) The item box's INFO: the first INFO clicks
+missed because the button was read off a full 320x200 shot at about (258,53); a zoomed crop showed
+it at (291,57), right of where it seemed. A Spellarcher made in memory by its race, classes and
+kit byte alone still showed NO ONE under the spell arrows' USEABLE BY: the sheet's class mask
+(+12h, still the preserver's 80h) failed the game's own test before DSCLOG's; with the fighter's
+20h added, "Cermak" showed. The first note, an extra row under the list (SPELLARCHERS ONLY, then
+SPELLARCHER ONLY), ran into the box's right frame (about 15 letters fit a row): the user chose the
+heading, SPELLARCHERS:, in USEABLE BY:'s place.
 
-2026-11-07 (logs/2026-11-07-pehtucls-chest.md, logs/2026-11-07-review-fixes.md): the chest's USE
-command and the shut type; `pens-new-chest` was saved then. 2026-11-08: `saves/trap-user`, a game
-from before 2.14.0, where the chest was the game's plain one.
+## The creation screen and the roster
 
-## An archer's turn and the quiver (2026-11-14)
+### The roster and the Loader's creation gear
 
-The user reported an archer's turn ending as its quiver ran dry. The code addresses in the docs were
-first read in a memory snapshot and gave zeros (they are DSUN.EXE file offsets; the fight code is an
-overlay): read from the file they gave the cause (the shots cut to the arrows left, that cut count
-then marking the round's attacks spent, +181h 63h). With the fix the first play still lost the turn,
-which looked like a failed fix until `turnwatch.py` showed +181h at 1: the turn passed because the
-target was still standing, the game's own rule for every attack. The test that shows the bug is a
-kill with the last arrow (target at 1 HP); a baseline build without the two patches confirmed it.
-A first rerun with the quiver already emptied in that fight walked Ester up to strike with her sword:
-arrows written in a fight aren't seen, so the count is set before the fight starts.
+2026-11-15, in-game checks of the kit rebalance (logs/2026-11-15-kit-rebalance-checks.md): a
+Myrmidon made in one session had "long sword, polearm" and a polearm in the backpack; ADDed from the
+roster in the next session it had the long sword spec alone and only the game's gear. The game
+writes the new character to the roster at DONE; the Loader's changes (weapon spec defaults, kit
+gear, fuller starting gear) come after, in memory, and reach the party that is played then, never
+the roster. The Myrmidon's polearm spec went into DSCLOG (MYRM_POLEARM, written at DONE) and was
+seen kept after a restart; the Loader's creation gear for the roster took three fixes (log part 7):
+VIEW CHARACTER's GEAR_WAIT cleared the gear flag when STATS weren't fresh (never, on the creation
+screen); the Loader cleared it in a pass made while the weapon window was up, giving nothing; and
+the character being made reads Okay, not New, until after the roster write, so the Loader's gear
+steps skipped it. With DSCLOG naming the character (GEAR_WHO) and holding the roster write
+(GEAR_HOLD) for the Loader's heartbeat-checked pass, two fighters ADDed after a restart had their
+gear. Along the way: a worker restart killed Xvfb and DOSBox (restart both); clicks at the main menu
+did nothing until the mouse was captured (the guide's note); a kit row ignored its click because NO
+KIT was still marked; BackSpace in the name field does nothing (Delete does).
+
+2026-11-16 (logs/2026-11-16-roster-gear.md): a review of that fix found it only for weapon
+specialization on: with the rule off, CR_WEAPONS returned before naming the character, and kit and
+fuller starting gear still missed the roster. DSCLOG's GEAR_MARK names it there too. A Swashbuckler
+made with the rule off (Arm and Leg Armor from the Loader) and a Myrmidon with it on (the bone
+polearm in the backpack, the sling, specs long sword and polearm) were each ADDed after a restart
+with all of it. A worker restart between DONE and the ADD killed Xvfb and DOSBox again, which here
+served as the restart; the main menu took about 30 s after the title clicks.
+
+### The Spellarcher's Fine Bow and starting arrows
+
+2026-11-16: Four half-elf fighter/preserver Spellarchers made from CREATE CHARACTERS
+(logs/2026-11-16-spellarcher-fine-bow.md). CHOOSE A SPELL came before the weapon window, so the
+Loader's kit gear (after the window) saw the picks. A third character, at INT 15, had two picks, not
+four: the third click meant for CHOOSE A SPELL took Shocking Grasp's place after the list closed up,
+and the fourth landed on the weapon window. Two of the four got a gear pass while their creation
+screen was still up (the stand-in record is New), its lines in the dice log before the picks; the
+game threw that gear away at DONE. The party of fresh characters then lost the arena's first wave
+in melee, so the Fine Bow's shot was taken from `tofight.sh` with Ester's bow renamed in memory.
+
+### CHOOSE A SPELL's grid and the unchanged game
+
+2026-11-16: the user saw the spell icons sit right of centre. The unchanged game (its own DSUN.EXE
+in DOSBox, no DSCLOG or Loader) gives a new preserver no CHOOSE A SPELL, so its window was read from
+the game's RESOURCE.GFF instead (WIND 17500, the same as the Loader's copy then): 21 places in seven
+columns, filled middle five first, then the right-hand column. A level-up in the unchanged game from
+fountain-user (Lex's XP to 4,999, the Templar killed by Jenna) didn't come before the party, passing
+its turns, was beaten.
+
+## DUAL and level-ups
+
+### The Brute who became an air cleric
+
+2026-11-16: checking the kits' DUAL bans in the game (logs/2026-11-15-kit-rebalance-checks.md part
+9): a Brute may not change class to air cleric, and DSCLOG greyed that class, but the DUAL window
+has one CLERIC row for all four spheres, lit while any is allowed, and the game's sphere menu after
+it makes its title row, or the menu closed, the air class. Cermak, a Brute in memory, became an air
+cleric by closing the menu. DSCLOG's PROBE_SPHERE now refuses a barred class there (no change, the
+window shut). The same session's stalls: [fights and the turn tools](#fights-and-the-turn-tools) and
+[Pehtucl's chest](#pehtucls-chest).
+
+### The level-up and DUAL checks
+
+2026-11-16: the Arcanist's and the Scholar's level-up and DUAL were played from `fountain-user` (log
+part 10). DOSBox and Xvfb had died again while the session sat idle. Lessons: the DUAL window's
+scores are the creature record's (raising INT on the sheet did nothing); the turn tools' stall is in
+[fights and the turn tools](#fights-and-the-turn-tools).
+
+## Pictures for the docs
+
+- `docs/look-box.png` (2026-11-17): the picture had only a Screamer Beetle's HP/AC and THAC0/AL
+  lines; no creature with magic resistance was in reach of the saves (all of the pens' creatures
+  read with `monsters.monster_lines`), so it was retaken on the pens' Zombie (IMM POISON).
+- Checking a figure's glow (2026-11-09): a red patch at Gerakis's feet was taken for the pointer,
+  and his boots for missing: the pointer's animation changes pixels too, so move it off first.
+- The Loader's own window (2026-11-07): keys typed with DOSBox focused reached the game (the letters
+  toggled its animations): focus the Loader before typing.
+- The window attached to the kit's game (2026-11-19): a first backstab loop passed turns in a
+  running fight for twenty rounds while the free Templar killed Seneca (no hiding, no backstab); a
+  reload a try, with Reconnect each time, found one in two loads.
+
+- The window's "Connected" after DOSBox ended (2026-11-19, logs/2026-11-19-older-loader-bugs.md):
+  on Linux a read of `/proc/PID/mem` for a process that has ended returns nothing and raises
+  nothing, so a window attached to a DOSBox it hadn't started never saw it go, and its party table
+  failed on the empty reads at each kit reload; the Loader's reads now raise then.
 
 ## When things were learned
 
 The recipes in the guide mostly carry no date; a recipe with a log names its date in the log's
-file name. The others, by the day they were found:
+file name. The others, by the day they were found. Each day's logs are listed in [the logs'
+index](logs/README.md), by date.
 
-- **2026-11-01**: the pointer's cycle; walkable ground only (the user); the middle-button drag (the
-  user); clicking ON a message box; the YES/NO check; doors with the look pointer (the user); "NO
-  LINE OF SIGHT" at the pens' gold post; the recompiled program as the target; the pens' route from
-  the scripts; the arena's waves and the way out.
-- **2026-11-02**: the window size; AC in the inventory; the party's item lists; the parts of an AC;
-  ability items and memory edits; the inventory screen's places; a spell's description box; the
-  first bout that didn't start.
+- **2026-11-01**: the pointer's cycle; walkable ground only (the user); the middle-button drag
+  (the user); clicking ON a message box; the YES/NO check; doors with the look pointer (the user);
+  "NO LINE OF SIGHT" at the pens' gold post; the recompiled program as the target; the pens' route
+  from the scripts; the arena's waves and the way out.
+- **2026-11-02**: the window size; AC in the inventory; the party's item lists; the parts of an
+  AC; ability items and memory edits; the inventory screen's places; a spell's description box;
+  the first bout that didn't start.
 - **2026-11-04**: the game making a region's map objects near the party; `teleport.py`; Psionic
   Blast without a blaster; the weapon rack's contents.
 - **2026-11-05**: a Shinobi for a test; hearing the game and the game's table of sounds; the
   see-through figures and `ghostchk.py`; the arena's flags can't be set from outside; route.py
   won't walk through a figure; looting a body (the user); reading a scroll; the inventory panel's
   picture for the docs; passing one member's turn; seeing foes attack; Kalzith.
-- **2026-11-06**: people's gear (`people.py` since); a big frame see-through; a hidden walk to Move
-  0; a blow from outside a fight; the environment's setup script; a fresh container by hand.
+- **2026-11-06**: people's gear (`people.py` since); a big frame see-through; a hidden walk to
+  Move 0; a blow from outside a fight; the environment's setup script; a fresh container by hand.
 - **2026-11-07**: the look pointer pauses the game (the user); `pointer.py`; `ghostclear.py`,
   `rec.py`; the game's free things and `arenatrip.sh`; the view in the enemies' turns and in a
   fight; the Loader's own window for a screenshot (the opening show over within about 15 s of the
   seal); picking a pocket.
 - **2026-11-08**: a creature's level / hit dice; `rolog.py`; frame rate and cycles; the creation
-  screen; the talk keys; View Character (from the inventory); the leader button; talking to someone
-  who walks; the Trustee's pocket; an XP award by hand; the panel and the turn tools; casting spells
-  for a test (the basics from 2026-11-07); a spell outside the caster's spheres; level and class
-  tests on a foe; spells rolling to hit; Turn Undead; test_dsclog's slow failures; Wake of the
-  Ravager's level-up.
+  screen; the talk keys; View Character (from the inventory); the leader button; talking to
+  someone who walks; the Trustee's pocket; an XP award by hand; the panel and the turn tools;
+  casting spells for a test (the basics from 2026-11-07); a spell outside the caster's spheres;
+  level and class tests on a foe; spells rolling to hit; Turn Undead; test_dsclog's slow failures;
+  Wake of the Ravager's level-up.
 - **2026-11-09**: a person's new gear and old saves; checking a figure's glow; the feet's place;
   the walkthrough; comparing loudness; where the turn's movement is; a weapon's rule in a fight;
   the combat log's doc pictures; giving an effect in memory; Turn Undead the AD&D way; combatants
@@ -336,16 +623,17 @@ file name. The others, by the day they were found:
   in memory; melee reach; a grand master; every HP change with its time; the sound descriptor's
   +0Ah; a clean install and the release zip; the fire room in a new game; someone else's talk
   through Kalzith; water for resting (the user's idea).
-- **2026-11-11**: reading a value inside a script; no call from Kurzak after a rest; a Spellarcher;
-  a lock barred until a level; pointer trails; the weapon rack's tool; looting with T; selling with
-  S; the shop and pocket tools; `docs/viewer.png` retaken; the combat log panel's level button and
-  its GIF; bodies under the party's figures and Caps Lock; the grate's Hack for the first melee
-  weapon in either hand; the installers' public links removed; Kurzak's door barred on the walk
-  map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from the roster.
-- **2026-11-12**: a kit chosen at creation (NO KIT clicked off first), a fire cleric/fighter Battle
-  Dancer's starting gear.
-- **2026-11-14**: an archer's shots and its turn (`turnwatch.py`, the attacks byte +181h); arrows set
-  before a fight; readying arrows in a fight; `tofight.sh`; the floating arrow count.
+- **2026-11-11**: reading a value inside a script; no call from Kurzak after a rest; a
+  Spellarcher; a lock barred until a level; pointer trails; the weapon rack's tool; looting with
+  T; selling with S; the shop and pocket tools; `docs/viewer.png` retaken; the combat log panel's
+  level button and its GIF; bodies under the party's figures and Caps Lock; the grate's Hack for
+  the first melee weapon in either hand; the installers' public links removed; Kurzak's door
+  barred on the walk map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from
+  the roster.
+- **2026-11-12**: a kit chosen at creation (NO KIT clicked off first), a fire cleric/fighter
+  Battle Dancer's starting gear.
+- **2026-11-14**: an archer's shots and its turn (`turnwatch.py`, the attacks byte +181h); arrows
+  set before a fight; readying arrows in a fight; `tofight.sh`; the floating arrow count.
 - **2026-11-15**: every kit at creation and the KITS page's rows; a name at creation (Delete, not
   BackSpace); the Loader's gear and the roster (`gearpoll.py`); the DUAL sphere menu; `kitset.py`,
   `canuse.py`, `sheetinfo.py`'s kits; a level-up for a test (XP just short, then a kill).
@@ -439,3 +727,56 @@ passing its turns, was beaten.
 **2026-11-21, the shared lock held by Xvfb.** A Wake of the Ravager start (`ravstart.sh`) run under
 `flock /tmp/playtest/dosbox.lock` started Xvfb itself; Xvfb kept the lock's descriptor, so the next
 flock waited until it was killed (logs/2026-11-21-ravager-creation-hp.md). Start Xvfb first.
+
+  first); a party made on the creation screen into a fight; CHOOSE A SPELL's picks by INT and its
+  new grid (`spellgrid.py`); a named weapon for a shot; the unchanged game for a comparison; View
+  Character's icons in play and the Effects page's MORE; `levelup.sh` on the first icon (113,71);
+  the Spellarcher's Burning Hands arrow button gone.
+- **2026-11-17**: the guide reorganised (one startup checklist; memory edits in RESEARCH.md);
+  `chestuse.sh` as ROUTE.md describes it, `setitem.py` added; the combat log's buttons measured,
+  `chestuse.sh` run (and given the answer to Bash it open?), `setitem.py` run, the look box's
+  picture retaken on the pens' Zombie, Escape not closing a Look box.
+  The picture and the music device: `picpattern.sh` (a DOSBox under another name, so no tool takes
+  it for the game), `picstart.sh`; Linux's DOSBox has no DirectDraw and doesn't stretch its full
+  screen without OpenGL; no MIDI in the container (logs/2026-11-17-picture-music.md).
+- **2026-11-18**: the colour cycler's green and violet runs seen turning in the inventory
+  (Greenbright); `setitem.py obj=` and `rec=`; Tanelyv's chest piece found as object 2004; the
+  Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).
+  The item box's INFO button and its USEABLE BY list; a Spellarcher in memory needs its class
+  mask (logs/2026-11-18-spell-arrows-info.md).
+  Most switches always on: settings.json can't turn them off any more (its keys dropped as read),
+  so a rule off for a test is a memory edit of DSCLOG's rules words; settings.json's
+  `options_open` opens the Options tab's sections for a picture (logs/2026-11-18-fewer-switches.md).
+  DSCLOG's signature went to `DSCLOGvb` (the sold items' queue names its items): every playtest
+  tool that looks for the header by it changed with it. The buyback with the Loader's dice log
+  stopped (its pid killed, 7 s past LOADER_FRESH) frees the item as the game does; T shuts the loot
+  window itself, so an Escape after it opened EXIT: SAVE GAME? (logs/2026-11-18-audit-fixes-1.md).
+  The champions' bout: one foe's AC read by naming the foes apart in memory, the rest at 1 HP and
+  the one at 200, then fightout.sh's loop with the foes' HP kept and the party healed each pass
+  (now `KEEP_HP=1 HEAL=1`); one foe's attacks by Paralyzing the others and passing turns; the dice
+  log's HP lines lag a hit when two land close together; a click below the view opened EXIT: SAVE
+  GAME? (logs/2026-11-18-champions-gear.md, logs/2026-11-18-champion-chill-arrows.md).
+  An item box opened by a right-click in the inventory closes by itself about a second after the
+  pointer moves off it; `docs/elvenkind.png`'s crops found by matching pixels (the boots' at
+  +173+95, not the +183+95 an earlier log gave) (logs/2026-11-18-docs-review-2.md).
+- **2026-11-18**: the game's rules of movement in a fight (10 and 14, a step begun with 10,
+  diagonal steps first, corners cut, enemies hold nobody), F10 and its limit, DSUN.EXE's overlay
+  stubs, the party's squares at DS:0546h, the view dragged in a fight, and the walk tools
+  (`movestate.py`, `squarewalk.py`, `squaresweep.py`, `squarecost.py`)
+  (logs/2026-11-18-squares-in-reach.md).
+- **2026-11-18** (the integration): the six additions of 2026-11-16/17 (journal, picture and music,
+  chance to hit, quick save, quests, showing what can be used) rebased onto the reorganised branch
+  and checked together in a private game: the helper's signature `DSCLOGvc`, quick save's header
+  fields moved to +1868, 29,424 bytes of upper memory free in one piece
+  (logs/2026-11-18-integration.md).
+- **2026-11-18** (the features, 2.19.0's checks): the stack on #112's helper, which had 224 bytes
+  and 36 paragraphs left: two routines moved into the tail and the squares' map into the PSP;
+  the game's three key tables read (A and F6 the animations; R free); R, F10's mend (an attack
+  that kills leaves the turn, +1ABh counts the commands), the panel under windows; the arena
+  reached with no memory edit and its autosave loaded; the Loader's window on a second display,
+  where the Characters tab's KeyError showed (logs/2026-11-18-modernisation-features.md).
+- **2026-11-20**: F10 after a spell and after a pin, 2.19.0's last "not seen" item: a cast zeroes
+  the turn flags (the mend stays out); a pin after the last step got the walk back (fixed: the
+  member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
+- **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
+  it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).

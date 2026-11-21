@@ -1,5 +1,5 @@
 """Alagorn tells of the Loader's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
-Deepbiter, Windlash, Greenbright and the Flame Blade, the axes, daggers, polearms, bow,
+Deepbiter, Windlash, Greenbright and the Searing Blade, the axes, daggers, polearms, bow,
 chatkcha and cahulaks, the Warden's Plate, Gutterward and Ironbulwark, the Cloak and Boots of
 Elvenkind, the Bracers of Defense, Arrowbane and the Sunking Crown (worldgear.py), and the Tome of
 Understanding (tome.py), Inixhide (npcitems.py), and the Rings and Cloak of Protection (ring.py,
@@ -12,7 +12,7 @@ carries (a local for each, from a query on the item's picture: the Bloodwrath's 
 there are none, or shows a menu of those, one reply each; a reply's story clears its local, and
 when none is left (a local of the script's: DONE) the menu's loop ends.
 
-With the Loader, Shadowseeker, Greenbright and the Flame Blade join the swords, Kreenfang,
+With the Loader, Shadowseeker, Greenbright and the Searing Blade join the swords, Kreenfang,
 Gutterknot, Deepbiter and Windlash the weapons, Inixhide and the Warden's Plate's four pieces the
 armour, Gutterward and Ironbulwark the shields, the Cloak and Boots of Elvenkind, the bracers, Arrowbane, the crown and the cloak of
 protection the clothes (where the game has its Helm of Contemplation and Chameleon Gloves), the
@@ -121,11 +121,11 @@ MAGIC = {
               "years of sharpening have worn it short, and the old enchantment only grew keener "
               "for it. Arant took it from a gladiator who would not kneel. He never fought fair "
               "again, and never needed to."),
-             ("Flame Blade",
-              "A Flame Blade! Its blade is no common obsidian, but glass from the heart of a "
-              "fire-mountain, and the clerics of fire sang its flames into it. Whatever it cuts, "
-              "it burns. The templars of Draj have tried to keep every one of them; the one at "
-              "the Hot Springs wore his like a badge, though he never knew the prayers to wake it."),
+             ("Searing Blade",
+              "The Searing Blade! No common obsidian, but glass from the heart of a fire-mountain, "
+              "knapped short and keen, and the clerics of fire sang their flames into it. Whatever "
+              "it cuts, it burns. The templars of Draj took it from the last of those clerics; the "
+              "one at the Hot Springs wore it like a badge, though he never knew the prayers to wake it."),
              ("Mindshard",
               "Mindshard! A psionicist knapped its blade and would let no hand but hers shape it; "
               "she held the stone in her mind as she worked, and some of her will stayed in it. It "

@@ -8,14 +8,18 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import namedsaves
+from dsloader import game, namedsaves
+from dsloader.savefile import CREATURE_CHUNK, SHEET_CHUNK
 from test_core import build_gff
 
 
 def save(name: str) -> bytes:
     """A save as the game writes one: its name in STXT 1 (the rest of the 45 bytes old text)."""
     text = name.encode("cp437") + b"\0ded game\0s"
-    return build_gff({("SAVE", 1): b"party", ("STXT", 1): text.ljust(45, b"\0")})
+    creatures = bytearray(game.CREATURE_SIZE * game.PARTY_SIZE)
+    creatures[game.CREATURE_NAME:game.CREATURE_NAME + 4] = b"Dag\0"
+    return build_gff({CREATURE_CHUNK: bytes(creatures), SHEET_CHUNK: bytes(game.SHEET_SIZE),
+                      ("STXT", 1): text.ljust(45, b"\0")})
 
 
 class NamedSavesTests(unittest.TestCase):
@@ -38,6 +42,16 @@ class NamedSavesTests(unittest.TestCase):
     def test_name(self):
         self.assertEqual(namedsaves.save_name(save("Before Scar's battle")), "Before Scar's battle")
         self.assertIsNone(namedsaves.save_name(b"not a save"))
+
+    def test_the_quick_page_is_not_copied(self):
+        """SAVQnn.SAV, the quick saves and autosaves (quicksave.py), are written over in turn: no
+        copy of them is kept, and none can be put back there."""
+        self.put(self.game, "SAVQ03.SAV", save("Quick - Day 3, 14:20"), 1000)
+        self.put(self.game, "SAVE02.SAV", save("Before Dinos"), 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 02 - Before Dinos.SAV"])
+        self.assertEqual(os.listdir(self.named), ["Page 1 slot 02 - Before Dinos.SAV"])
+        with self.assertRaises(ValueError):
+            namedsaves.restore(os.path.join(self.game, "SAVE02.SAV"), self.game, 5, 1, self.named)
 
     def test_slot_files(self):
         self.assertEqual(namedsaves.slot_file(1, 10), "SAVE10.SAV")
@@ -83,6 +97,32 @@ class NamedSavesTests(unittest.TestCase):
         self.put(self.game, "SAVE01.SAV", save("Pens") + b"x", 3000)  # (touched: same bytes)
         self.assertEqual(namedsaves.sync(self.game, self.named), [])
 
+    def test_same_size_and_time_other_bytes(self):
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 1000)
+        namedsaves.sync(self.game, self.named)
+        self.put(self.game, "SAVE01.SAV", save("Camp"), 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Camp.SAV"])
+        self.assertEqual(os.listdir(self.named), ["Page 1 slot 01 - Camp.SAV"])
+
+    def test_copy_removed_during_sync(self):
+        from unittest.mock import patch
+
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 1000)
+        name, = namedsaves.sync(self.game, self.named)
+        copies = namedsaves._copies(self.named)
+        os.remove(os.path.join(self.named, name))
+        with patch.object(namedsaves, "_copies", return_value=copies):
+            self.assertEqual(namedsaves.sync(self.game, self.named), [name])
+
+    def test_restore_rejects_incomplete_save_before_replacing_slot(self):
+        copy = os.path.join(self.tmp.name, "partial.SAV")
+        self.put(self.tmp.name, "partial.SAV", build_gff({("STXT", 1): b"Incomplete\0"}), 1000)
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 2000)
+        with self.assertRaises(ValueError):
+            namedsaves.restore(copy, self.game, 1, 1, self.named)
+        self.assertEqual(namedsaves.slot_name(self.game, 1, 1), "Pens")
+        self.assertFalse(os.path.exists(self.named))
+
     def test_cloud_saves_first(self):
         """GOG's cloud_saves (mounted over the folder) before the game folder's own."""
         cloud = os.path.join(self.game, "cloud_saves")
@@ -104,7 +144,8 @@ class NamedSavesTests(unittest.TestCase):
         self.assertEqual(namedsaves.restore(copy, self.game, 1, 4, self.named), "Trustee")
         self.assertEqual(namedsaves.slot_name(self.game, 1, 4), "Trustee")
         kept = os.path.join(self.named, "Replaced - Page 1 slot 04 - Old one.SAV")
-        self.assertEqual(namedsaves.save_name(open(kept, "rb").read()), "Old one")
+        with open(kept, "rb") as f:
+            self.assertEqual(namedsaves.save_name(f.read()), "Old one")
         self.put(self.game, "SAVE04.SAV", save("Old one"), 950)
         namedsaves.restore(copy, self.game, 1, 4, self.named)
         self.assertTrue(os.path.isfile(kept[:-4] + " (2).SAV"))
@@ -115,6 +156,30 @@ class NamedSavesTests(unittest.TestCase):
         self.put(self.tmp.name, "x.SAV", b"nothing", 1000)
         with self.assertRaises(ValueError):
             namedsaves.restore(bad, self.game, 1, 1)
+
+    def test_failed_replace_leaves_no_tmp(self):
+        """A replace Windows refuses (an antivirus holding the slot) is tried again; one that never
+        goes leaves no .tmp, in the game's save folder or the named saves' folder."""
+        from unittest import mock
+        copy = os.path.join(self.tmp.name, "x.SAV")
+        self.put(self.tmp.name, "x.SAV", save("Trustee"), 1000)
+        real, calls = os.replace, []
+
+        def held_once(src, dst):
+            calls.append(dst)
+            if len(calls) == 1:
+                raise PermissionError(13, "held by a scan")
+            return real(src, dst)
+        with mock.patch("os.replace", side_effect=held_once), mock.patch("time.sleep"):
+            self.assertEqual(namedsaves.restore(copy, self.game, 1, 2), "Trustee")
+        self.assertEqual(namedsaves.slot_name(self.game, 1, 2), "Trustee")
+        with mock.patch("os.replace", side_effect=PermissionError(13, "held")), mock.patch("time.sleep"):
+            with self.assertRaises(PermissionError):
+                namedsaves.restore(copy, self.game, 1, 3)
+            self.assertEqual(namedsaves.sync(self.game, self.named), [])
+        left = [f for d in (self.game, self.named) if os.path.isdir(d)
+                for _, _, files in os.walk(d) for f in files if f.endswith(".tmp")]
+        self.assertEqual(left, [])
 
 
 if __name__ == "__main__":

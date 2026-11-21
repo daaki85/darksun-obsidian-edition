@@ -109,8 +109,8 @@ class WildTests(unittest.TestCase):
         g = SimpleNamespace(wild={0: True, 1: False}, dance={}, kit_ids=lambda m: [])
         log = SimpleNamespace(game=g)
         attack = lambda who, mode=1: dicelog.DiceLog._kit_attack(log, who, 81, mode)
-        self.assertEqual(attack(0), ("Wild Fighting", kits.WILD_TO_HIT, kits.WILD_DAMAGE))
-        self.assertEqual(attack(1), ("Wild Fighting", kits.WILD_TO_HIT, 0))
+        self.assertEqual(attack(0), ("Wild Fighting", kits.WILD_TO_HIT_MOD, kits.WILD_DAMAGE))
+        self.assertEqual(attack(1), ("Wild Fighting", kits.WILD_TO_HIT_MOD, 0))
         self.assertEqual(attack(2), ("", 0, 0))
         self.assertEqual(attack(0, None), ("", 0, 0))
 

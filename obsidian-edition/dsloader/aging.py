@@ -140,7 +140,7 @@ def dice_text(count: int, sides: int, faces: List[int]) -> str:
 
 def sheet_address(gd: "game.GameData", member: int) -> int:
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
-    return game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
+    return game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
 
 
 def start_age(sheet: bytes, name: str) -> Optional[int]:
@@ -159,9 +159,16 @@ def start_age(sheet: bytes, name: str) -> Optional[int]:
 def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[str]:
     """A starting age for each party member who has none, Table 7's dice rolled (the game's own
     party; one from before ages): lines for the dice log. One with an age but no roll kept (made
-    before 2.13.2) has its roll put in from natural_start, the start its age was given from."""
+    before 2.13.2) has its roll put in from natural_start, the start its age was given from.
+    Nothing while the creation screen is up (gd.creating): the party's first slot is the screen's
+    stand-in for the character being made, whose age is DSCLOG's (CR_AGE's roll, shown as AGE and
+    put in the sheet at DONE: AGE_PUT); a roll here was a second age, in the dice log alone, that
+    disagreed with the screen's after each new roll of the die). The character DONE just made
+    (gd.making): its age, the screen's, in the dice log once (made_age)."""
+    out = made_age(gd)
+    if _creating(gd):
+        return out
     rng = rng or random.Random()
-    out = []
     for member in range(game.PARTY_SIZE):
         rec, sheet = gd.creature(member), gd.sheet(member)
         if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE or not rec[game.CREATURE_NAME]:
@@ -185,6 +192,45 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
         later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
         out.append(f"{gd.creature_name(member)} is {age} ({_a(race)}{roll}){later}.")
     return out
+
+
+def made_age(gd: "game.GameData") -> List[str]:
+    """The age of the character the creation screen's DONE just made (gd.making, its sheet index:
+    DSCLOG's GEAR_WHO), as AGE showed it and AGE_PUT put it in its sheet: the race's base and the
+    screen's roll (its total: DSCLOG keeps no faces). Once for each character made (gd's
+    _ages_told); none for one without an age."""
+    making = getattr(gd, "making", None)
+    if making is None:
+        return []
+    for member in range(game.PARTY_SIZE):
+        rec, sheet = gd.creature(member), gd.sheet(member)
+        if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE or not rec[game.CREATURE_NAME] \
+                or struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0] != making:
+            continue
+        age, roll, race = age_of(sheet), game.sheet_roll(sheet), sheet[game.SHEET_RACE]
+        if age is None or race not in RACES:
+            return []
+        name = gd.creature_name(member)
+        told = gd.__dict__.setdefault("_ages_told", set())
+        if (making, name, age) in told:
+            return []
+        told.add((making, name, age))
+        ages = RACES[race]
+        count, sides = ages.start_dice
+        dice = f": {ages.start} + {count}d{sides} = {roll + count}" if count and roll is not None else ""
+        nxt = next_category(race, age)
+        later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
+        return [f"{name} is {age} ({_a(race)}{dice}, as the creation screen rolled){later}."]
+    return []
+
+
+def _creating(gd: "game.GameData") -> bool:
+    """Whether the creation screen is up (memory half made: as if it were, nothing given)."""
+    creating = getattr(gd, "creating", None)
+    try:
+        return callable(creating) and creating() is True
+    except (struct.error, IndexError, ValueError):
+        return True
 
 
 def _a(race: int) -> str:
@@ -225,7 +271,7 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
 
 
 # The years counted so far, in the game's own flags so a save keeps them: COUNTING set once the
-# count has begun, then COUNT_BITS flags holding the number (the Loader's flags, as DEVELOPMENT.md's
+# count has begun, then COUNT_BITS flags holding the number (the Loader's flags, as DEVELOPMENT-INTERNALS.md's
 # "The Loader's game flags" lists them: the game's run to 755; the people 756-783, Alagorn's menus from 784 (794 at most),
 # Pehtucl's chest 795-796, Legcrusher's death 797 (kurzak.py), these 798-806, the champions 807;
 # a save keeps 808)
@@ -291,7 +337,7 @@ def _changed(gd: "game.GameData", member: int, race: int, before: int, after: in
     out = [line]
     delta = changes(race, before, after)
     if delta:
-        creature = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
+        creature = game.table_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
         parts = []
         for ability, n in sorted(delta.items()):
             for base, off in ((at, game.SHEET_ABILITIES), (creature, game.CREATURE_ABILITIES)):
@@ -313,7 +359,7 @@ def kill(gd: "game.GameData", creature: int) -> None:
     """Creature record CREATURE (its number) dead (old age, a failed system shock): no hit points,
     the game's dead status."""
     from . import kalzith
-    at = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
+    at = game.table_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
     gd.guest.write(at, struct.pack("<h", 0))
     gd.guest.write(at + game.CREATURE_STATUS, bytes([kalzith.DEAD_STATUS[1]]))
 

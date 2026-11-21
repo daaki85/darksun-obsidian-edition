@@ -2,7 +2,8 @@
 
 The game keeps its saves as SAVE01.SAV to SAVE10.SAV, and with the Loader's four pages
 (savepages.py) SAVB, SAVC and SAVD01.SAV to 10.SAV too, in its folder or, with GOG's, in
-cloud_saves. Only the game's own list says which is which: the name typed for each is inside
+cloud_saves (the fifth page, QUICK, SAVQ: quicksave.py's quick saves and autosaves, is left out:
+its slots are written over in turn, so their copies would only come and go). Only the game's own list says which is which: the name typed for each is inside
 the file (its STXT chunk). The Loader copies each into its own folder NAMED, as "Page 2 slot 05 -
 Before Scar's battle.SAV", whenever the game writes one, one copy for each slot: a slot saved over
 has its copy replaced. A copy can be put back in a slot (to be loaded from the game's list) with
@@ -14,11 +15,12 @@ import re
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-from .gff import GffError, read_gff
+from .gff import GffError, read_gff, write_atomic
+from .savefile import party_chunks
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
-PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4
+PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4 (not the QUICK page, SAVQ)
 SLOTS = 10
 NAME_CHUNK = ("STXT", 1)
 UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')  # (not in a Windows file name)
@@ -49,7 +51,9 @@ def slot_path(game_dir: str, page: int, slot: int) -> Optional[str]:
 def save_name(data: bytes) -> Optional[str]:
     """The name typed for a save in the game, or None if DATA isn't one."""
     try:
-        text = read_gff(data).get(NAME_CHUNK)
+        chunks = read_gff(data)
+        party_chunks(chunks)
+        text = chunks.get(NAME_CHUNK)
     except (GffError, ValueError, IndexError, KeyError):
         return None
     if text is None:
@@ -73,23 +77,6 @@ def _copies(folder: str) -> Dict[Tuple[int, int], List[str]]:
     return out
 
 
-def _mtime(path: str) -> float:
-    """PATH's time, or 0 if it has gone since it was listed (taken away meanwhile: one pass of sync
-    isn't stopped by it)."""
-    try:
-        return os.path.getmtime(path)
-    except OSError:
-        return 0.0
-
-
-def _same_stamp(copy: str, path: str, stamp: float) -> bool:
-    """COPY has PATH's time (sync gives each copy its save's) and size."""
-    try:
-        return os.path.getmtime(copy) == stamp and os.path.getsize(copy) == os.path.getsize(path)
-    except OSError:
-        return False
-
-
 def _same_bytes(copy: str, data: bytes) -> bool:
     try:
         with open(copy, "rb") as f:
@@ -100,7 +87,7 @@ def _same_bytes(copy: str, data: bytes) -> bool:
 
 def sync(game_dir: str, folder: str = NAMED) -> List[str]:
     """Each of the game's saves copied into FOLDER under its name, where its copy is missing or not
-    the same save (another time and size, or other bytes); a slot's copy under another name (the
+    the same save (even if its timestamp and size match); a slot's copy under another name (the
     slot saved over) is replaced. The copies made."""
     copies = _copies(folder)
     made = []
@@ -109,37 +96,27 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
             path = slot_path(game_dir, page, slot)
             if path is None:
                 continue
-            try:
-                stamp = os.path.getmtime(path)
-            except OSError:
-                continue
             existing = copies.get((page, slot), [])
-            if len(existing) == 1 and _same_stamp(os.path.join(folder, existing[0]), path, stamp):
-                continue  # (its copy, made from it: the same time and size)
             try:
                 with open(path, "rb") as f:
+                    stamp = os.fstat(f.fileno()).st_mtime
                     data = f.read()
             except OSError:
+                continue
+            if len(existing) == 1 and _same_bytes(os.path.join(folder, existing[0]), data):
                 continue
             name = save_name(data)
             if name is None:
                 continue  # (being written, or not a save)
             target = copy_name(page, slot, name)
-            # a copy with an older or newer time is the slot's only if it holds the same bytes: a
-            # backup put back in the slot with its old time kept is copied too (ChatGPT's review)
-            if existing == [target] and _same_bytes(os.path.join(folder, target), data):
-                try:  # (its time taken too, so the next pass needn't read it again)
-                    os.utime(os.path.join(folder, target), (stamp, stamp))
-                except OSError:
-                    pass
-                continue
             try:
                 os.makedirs(folder, exist_ok=True)
-                tmp = os.path.join(folder, target + ".tmp")
-                with open(tmp, "wb") as f:
-                    f.write(data)
-                os.utime(tmp, (stamp, stamp))
-                os.replace(tmp, os.path.join(folder, target))
+                target_path = os.path.join(folder, target)
+                write_atomic(target_path, data)
+                try:
+                    os.utime(target_path, (stamp, stamp))
+                except OSError:
+                    pass
                 for old in existing:
                     if os.path.normcase(old) != os.path.normcase(target):
                         os.remove(os.path.join(folder, old))
@@ -169,8 +146,8 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
     """A named copy (or any save file) put in the game's PAGE and SLOT, to be loaded from its list.
     The slot's save, if any, is kept first in FOLDER (replaced_name; "(2)" and on if that is taken):
     the slot's own named copy is replaced at the next sync, as for any slot saved over. Written
-    through a temporary file, so a failure leaves the slot as it was. Its name in the game.
-    ValueError if it isn't a save."""
+    through a temporary file, so a failure leaves the slot as it was and no temporary file. Its
+    name in the game. ValueError if it isn't a save."""
     with open(copy, "rb") as f:
         data = f.read()
     name = save_name(data)
@@ -190,8 +167,5 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
                 kept, n = f"{base} ({n}).SAV", n + 1
             shutil.copy2(old, os.path.join(folder, kept))
     path = os.path.join(saves_dir(game_dir), slot_file(page, slot))
-    tmp = path + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(data)
-    os.replace(tmp, path)
+    write_atomic(path, data)
     return name

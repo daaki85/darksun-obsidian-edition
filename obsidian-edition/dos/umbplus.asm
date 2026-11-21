@@ -1,16 +1,19 @@
-; UMBPLUS.COM: 28 KB more upper memory in DOSBox 0.74, run before the helper is loaded high.
+; UMBPLUS.COM: 24 KB more upper memory in DOSBox 0.74, run before the helper is loaded high.
 ;
 ; DOSBox 0.74 (GOG's) makes its upper memory block at D000h-EFFFh (umb=true, ems=false), but the
 ; RAM below it, C800h-CFFFh, is ordinary memory too: only C000h-C7FFh is ROM (the video BIOS)
 ; (its src/hardware/memory.cpp). DOSBox keeps its own small tables there (DOS_PRIVATE_SEGMENT, from
 ; C800h up: DOS_GetMemory, src/dos/dos_tables.cpp), to about C8B1h once the shell is up, a few
 ; paragraphs more when a program asks for more file handles (the game does, once: INT 21h AH=67h at
-; DSUN.EXE 54F3h). So the block can start at C900h: the system MCB at 9FFFh that covers the video
-; memory and the ROM is cut to end there, and a free block's MCB goes at C900h, reaching F000h as
+; DSUN.EXE 54F3h). So the block can start at CA00h, which leaves those tables 320 paragraphs from
+; C8C0h, where they were measured with the game running (C900h, the start up to 2.18, left them
+; 64; DOSBox hands them out up to D000h without knowing of the block, so a CD mount or a program
+; wanting many file handles could have reached it): the system MCB at 9FFFh that covers the video
+; memory and the ROM is cut to end there, and a free block's MCB goes at CA00h, reaching F000h as
 ; the old one did.
 ;
 ; Done only if the chain is exactly DOSBox 0.74's, untouched (the system MCB at 9FFFh, 'M', owner
-; 8, "SC", to D000h; at D000h one free block, 'Z', to F000h), and C900h-CFFFh is all zero (DOSBox
+; 8, "SC", to D000h; at D000h one free block, 'Z', to F000h), and CA00h-CFFFh is all zero (DOSBox
 ; clears its memory: nothing has used it) and holds what is written there (RAM, not ROM or a hole).
 ; Anything else (another DOSBox, EMS's page frame, the helper already loaded): left as it is.
 ; Exit code 0 if the block was moved, 1 if not. Says nothing either way.
@@ -18,7 +21,7 @@
         org 100h
 COVER   equ 9FFFh               ; the system MCB DOSBox puts before upper memory
 OLD_UMB equ 0D000h              ; its free block's MCB
-NEW_UMB equ 0C900h
+NEW_UMB equ 0CA00h
 UMB_END equ 0F000h
 
 start:  cld
@@ -41,7 +44,7 @@ start:  cld
         cmp word [es:3], UMB_END - OLD_UMB - 1
         jne no
 
-        mov ax, NEW_UMB         ; C900h-CFFFh: all zero ...
+        mov ax, NEW_UMB         ; CA00h-CFFFh: all zero ...
         mov es, ax
         xor di, di
         mov cx, (OLD_UMB - NEW_UMB) * 16
@@ -58,7 +61,7 @@ start:  cld
         cmp bx, OLD_UMB
         jb .page
 
-        mov ax, NEW_UMB         ; the free block from C900h, the system MCB cut to meet it
+        mov ax, NEW_UMB         ; the free block from CA00h, the system MCB cut to meet it
         mov es, ax
         mov byte [es:0], 'Z'
         mov word [es:1], 0

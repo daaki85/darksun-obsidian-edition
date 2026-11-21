@@ -446,7 +446,7 @@ class RavGameData(game.GameData):
         return f"item {name_index}"
 
 
-TSR_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
+DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
 
@@ -543,7 +543,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not self._panel_ranges():
             return
         self.guest.write(self.tsr_hdr + dicelog.TSR_STATS_STAMP, self.guest.read(dicelog.BIOS_TIMER, 2))
-        self._shadows.palettes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_DAC_CHANGES, 2))
+        self._shadows.palettes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))
         self._update_panel(now)
 
     def _look_ranges(self) -> Optional[int]:
@@ -667,6 +667,8 @@ def running(guest) -> Optional[bool]:
     try:
         low = guest.read(0, game.CONVENTIONAL_AND_UPPER)
     except Exception:
+        return None
+    if not isinstance(low, (bytes, bytearray)):  # (a stand-in guest: neither)
         return None
     for sig, sequel in ((HDR_SIG, True), (dicelog.HDR_SIG if not _SAVED else b"DSCLOGva", False)):
         at = low.find(sig)

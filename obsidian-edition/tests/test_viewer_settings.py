@@ -51,6 +51,28 @@ class ViewerSettingsTests(unittest.TestCase):
             self.addCleanup(patcher.stop)
         self.addCleanup(launch.release_game)
 
+    def test_the_tabs_names_show_whole(self):
+        """Six tabs, each with its Alt letter, and the divider placed so the right-hand pane is at
+        least as wide as their names need (a narrower notebook cuts every name short: "Dice lo",
+        "Journa"), at the window's default size and at its smallest."""
+        from tkinter import font as tkfont
+        v = self.window()
+        names = [v.tabs.tab(t, "text") for t in v.tabs.tabs()]
+        self.assertEqual(names, ["Dice log", "Dialogue", "Journal", "Spells", "Memory tools", "Options"])
+        letters = [name[int(v.tabs.tab(t, "underline"))].lower() for name, t in zip(names, v.tabs.tabs())]
+        self.assertEqual(letters, ["l", "i", "j", "s", "m", "o"])  # (Alt+L, Alt+I, Alt+J, Alt+S, Alt+M, Alt+O)
+        need = viewer.tabs_width(v.tabs)
+        font = tkfont.Font(root=self.root, font=viewer.ttk.Style(self.root).lookup("TNotebook.Tab", "font"))
+        self.assertGreaterEqual(need, sum(font.measure(n) + 2 * viewer.theme.TAB_PADDING[0] for n in names))
+        for width in (1320, 1080):
+            placed = []
+            with mock.patch.object(v.panes, "winfo_width", lambda: width), \
+                    mock.patch.object(v.panes, "sashpos", lambda i, at: placed.append(at) or at):
+                v._fit_party()
+            self.assertEqual(len(placed), 1)
+            self.assertGreaterEqual(width - placed[0], need, width)
+            self.assertGreaterEqual(width - placed[0], v.tools_tab.winfo_reqwidth(), width)
+
     def window(self, **kwargs):
         def no_game():
             raise OSError("no game in a test")
@@ -63,7 +85,7 @@ class ViewerSettingsTests(unittest.TestCase):
             return json.load(f)
 
     def test_an_unreadable_file_is_never_saved_over_with_the_defaults(self):
-        launch.save_settings({"dust": False, "shadows": False, "helm_ac": False, "game_dir": "C:\\GOG"})
+        launch.save_settings({"steady_pace": False, "monster_info": False, "helm_ac": False, "game_dir": "C:\\GOG"})
         real_open = builtins.open
 
         def locked(path, *args, **kwargs):
@@ -73,23 +95,23 @@ class ViewerSettingsTests(unittest.TestCase):
         with mock.patch("builtins.open", locked), mock.patch("time.sleep"):
             v = self.window()
         self.assertTrue(v._options_unread)
-        self.assertTrue(v.show_dust.get())  # (the defaults shown...)
+        self.assertTrue(v.steady_pace.get())  # (the defaults shown...)
         self.assertIn("shows the defaults", v.status.get())
-        v.rule_vars["spell_save"].set(False)  # (...and one switch changed once the file can be read)
+        v.rule_vars["best_hit_die"].set(False)  # (...and one switch changed once the file can be read)
         v._options_changed()
         settings = self.saved()
-        self.assertIs(settings["spell_save"], False)
-        self.assertEqual((settings["dust"], settings["shadows"], settings["helm_ac"], settings["game_dir"]),
+        self.assertIs(settings["best_hit_die"], False)
+        self.assertEqual((settings["steady_pace"], settings["monster_info"], settings["helm_ac"], settings["game_dir"]),
                          (False, False, False, "C:\\GOG"))  # (the player's other choices kept)
 
     def test_only_the_switch_changed_is_saved(self):
         """Another writer's change to another switch since the tab was read stays."""
         v = self.window()
-        launch.update_settings({"dust": False})
-        v.show_shadows.set(False)
+        launch.update_settings({"steady_pace": False})
+        v.monster_info.set(False)
         v._options_changed()
         settings = self.saved()
-        self.assertEqual((settings["dust"], settings["shadows"]), (False, False))
+        self.assertEqual((settings["steady_pace"], settings["monster_info"]), (False, False))
 
     def test_the_started_dosbox_attached_by_its_pid(self):
         asked = []
@@ -106,6 +128,41 @@ class ViewerSettingsTests(unittest.TestCase):
         v.dosbox = None
         v.reconnect()
         self.assertEqual(asked, [4242, "by name"])
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Linux's /proc/<pid>/mem")
+    def test_a_reconnected_game_seen_gone(self):
+        """Attached by Reconnect to a DOSBox it didn't start, the window sees that DOSBox end (its
+        memory's reads raise, not come back empty): "Disconnected", not "Connected to the game"
+        on, and no party table error from the empty reads (game.far_pointer's unpack)."""
+        import subprocess
+        from dsloader.guestmem import GuestMemory
+        from dsloader.process import ProcessError, ProcessMemory
+        child = subprocess.Popen(["sleep", "60"])
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        try:
+            proc = ProcessMemory(child.pid)
+        except ProcessError as e:
+            self.skipTest(f"can't open another process's memory here: {e}")
+        region = next(proc.regions())
+        proc.close()
+        v = self.window(connect=lambda: GuestMemory(ProcessMemory(child.pid), region.start, region.size))
+        v.reconnect()
+        self.assertTrue(v.status.get().startswith("Connected to the game"))
+        v.ds = 0  # (as if its data segment had been found: the party table reads through it)
+        errors = []
+        v._loop_error = lambda what, err: errors.append((what, err))
+        child.kill()
+        child.wait()
+        v.next_try = float("inf")  # (no new try at attaching within the test)
+        v._tick()
+        self.assertEqual(errors, [])
+        self.assertIsNone(v.guest)
+        self.assertIn("has ended", v.status.get())
+        self.assertTrue(v.status.get().startswith("Disconnected"))
+        v.reconnect(quiet=True)  # (the window's own try again, the game still gone: the reason kept)
+        self.assertIsNone(v.guest)
+        self.assertIn("has ended", v.status.get())
 
     def test_the_lock_let_go_when_the_game_closes(self):
         v = self.window()

@@ -223,7 +223,7 @@ def creature_defences(gd, tables: "MonsterTables", creature: int) -> Optional[De
 
 
 def _manual(gd) -> bool:
-    """The game's copy has the monsters as the manual describes them (its spells' switch)."""
+    """The game's copy has the monsters as the manual describes them (with its spells, always on)."""
     try:
         return bool(gd.spells_manual())
     except (AttributeError, OSError, ValueError, struct.error):

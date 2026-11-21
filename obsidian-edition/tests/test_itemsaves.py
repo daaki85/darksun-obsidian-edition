@@ -84,8 +84,9 @@ class ItemCheckTests(unittest.TestCase):
         self.assertEqual(lines(game.RULE_ITEM_SAVES, entry(9, 8, 2)),
                          ["  Rampager's acid on Gerakis's Bone Long Sword: d20 = 9, needs 8 (the game's; AD&D's: "
                           "11 for bone) -> safe"])
-        self.assertEqual(lines(0, entry(7, 8, 2)),
-                         ["  Rampager's acid on Gerakis's Bone Long Sword: d20 = 7, needs 8 (the game's) -> CORRODED"])
+        self.assertEqual(lines(game.RULE_ITEM_SAVES, entry(7, 8, 2)),
+                         ["  Rampager's acid on Gerakis's Bone Long Sword: d20 = 7, needs 8 (the game's; AD&D's: "
+                          "11 for bone) -> CORRODED"])
 
     def test_a_plus(self):
         SAVES[5] = game.ItemSave("Leather Chest Armor +1", "leather", None, 9, 1, False)

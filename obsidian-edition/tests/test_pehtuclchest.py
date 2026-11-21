@@ -128,7 +128,7 @@ class WatchTests(unittest.TestCase):
 
     def test_has_use(self):
         """has_use reads the pens' master script of a scripts file: the command there or not."""
-        import tempfile, struct as st
+        import tempfile
         use = gpl.encode_op((chest.USE, [("n", kalzith.START), ("n", chest.SCRIPT), ("n", -chest.OBJECT)]))
         end = gpl.encode_op((kalzith.END, []))
         for master, want in ((use + end, True), (end, False)):

@@ -227,6 +227,41 @@ if __name__ == "__main__":
 OBJECTS = os.environ.get("DSUN_OBJECTS")
 
 
+@unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
+class OpenDSTriageTests(unittest.TestCase):
+    """One repair from OpenDS's triage, in the Loader's copy of the scripts (the whole
+    pipeline's, so the Elven Leader's cloak in the same script is there too)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            data = f.read()
+        cls.game, cls.types = gpl.load_scripts(data)
+        cls.out = kalzith.script_chunks(data)
+
+    def ops(self, script, game=False):
+        return gpl.decode((self.game if game else self.out)[("GPL ", script)], self.types)
+
+    def test_elven_leader_goodbye_returns(self):
+        was = next(o for o in self.ops(46, True) if o.at == 0x4FA).args[0]["replies"]
+        now = next(o for o in self.ops(46) if o.at == 0x4FA).args[0]["replies"]
+        self.assertEqual([r["goto"][1] for r in was], [0x637, 0x6C2, 0x756, 0x898])
+        self.assertEqual([r["goto"][1] for r in now], [0x637, 0x6C2, 0x756, 0x583])
+        self.assertEqual(next(o for o in self.ops(46) if o.at == 0x583).code, 0x15)  # a return
+        self.assertEqual(now[3]["text"], was[3]["text"])
+        # the other menu's replies that reach the arrest are the game's
+        other = next(o for o in self.ops(46) if o.at == 0x58D).args[0]["replies"]
+        self.assertEqual([r["goto"][1] for r in other], [0x927, 0x898, 0x898, 0xB30])
+        # and with the Elven Leader's cloak on, its code after the script's end is there too
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            cloaked = kalzith.script_chunks(f.read(), cloak=True)[("GPL ", 46)]
+        self.assertGreater(len(cloaked), len(self.game[("GPL ", 46)]))
+        after = next(o for o in gpl.decode(cloaked, self.types) if o.at == 0x4FA).args[0]["replies"]
+        self.assertEqual(after[3]["goto"][1], 0x583)
+
+
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA) and OBJECTS and os.path.isfile(OBJECTS),
                      "needs the game's GPLDATA.GFF and SEGOBJEX.GFF (DSUN_GPLDATA, DSUN_OBJECTS)")
 class NotMeleeTests(unittest.TestCase):

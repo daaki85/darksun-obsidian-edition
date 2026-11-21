@@ -26,6 +26,11 @@ _scale = 1.0
 _fonts = {}  # tkinter deletes a named font when its Font object goes, so keep them
 
 
+# A tab's padding (left and right, top and bottom), and what its border adds to its width: the
+# Loader's window keeps its right-hand pane wide enough for all its tabs' names (viewer.tabs_width)
+TAB_PADDING = (10, 4)
+TAB_EDGES = 8
+
 def _family(*preferred: str) -> str:
     available = set(tkfont.families())
     return next((f for f in preferred if f in available), preferred[-1])
@@ -113,7 +118,7 @@ def apply(root: tk.Tk) -> None:
               lightcolor=[("pressed", SHADOW)], darkcolor=[("pressed", EDGE_LIT)])
     style.configure("SectionBody.TFrame", background=STONE, relief="groove", borderwidth=2)
     style.configure("TNotebook", background=STONE, bordercolor=SHADOW, tabmargins=(2, 4, 2, 0))
-    style.configure("TNotebook.Tab", padding=(14, 4), font=heading, **bevel)
+    style.configure("TNotebook.Tab", padding=TAB_PADDING, font=heading, **bevel)
     # the open tab sinks into the dark panel below it, its name in the game's amber
     style.map("TNotebook.Tab", background=[("selected", DEEP), ("active", STONE)],
               foreground=[("selected", AMBER), ("active", YELLOW)],

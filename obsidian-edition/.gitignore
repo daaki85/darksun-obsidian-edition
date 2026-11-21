@@ -5,6 +5,7 @@ settings.json
 settings.json.tmp
 settings.json.*.tmp
 game.lock
+settings.lock
 settings.json.bad
 settings.json.bad-*
 dosbox_dicelog.conf
@@ -30,3 +31,4 @@ Named saves/
 *.SAV
 GPLDAT2.GFF
 GPLDAT2.GFF.tmp
+Journal/

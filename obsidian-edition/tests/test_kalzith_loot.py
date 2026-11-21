@@ -64,6 +64,27 @@ class LootTests(unittest.TestCase):
         self.assertEqual(kalzith.loot(self.gd), [])
         self.assertEqual(self.objects(PILE), [kalzith.SCROLL_OBJECT + k for k in (0, 2, 4)])
 
+    def test_lone_scroll_on_the_ground(self):
+        """A scroll alone in a pile on the ground (450 holding 82 alone, 80 and 81 in another, 452):
+        taken away all the same, its list left empty (unlink's EMPTY: not a container's)."""
+        struct.pack_into("<h", self.m, ITEMS + 81 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        struct.pack_into("<Bh", self.m, THINGS + 452 * 3, game.THING_ITEM, 80)
+        struct.pack_into("<Bh", self.m, THINGS + PILE * 3, game.THING_ITEM, 82)
+        self.assertEqual(kalzith.loot(self.gd, choose=lambda items: 81), ["Scroll of Blur"])
+        self.assertEqual(self.objects(PILE), [])
+        self.assertEqual(self.objects(452), [kalzith.SCROLL_OBJECT + 2])
+        self.assertIn(kalzith.LOOTED, self.flags)
+
+    def test_looted_only_once_all_are_gone(self):
+        """A scroll that can't be taken away: LOOTED not set, the loot tried again in a later pass
+        (it was set first, and the scrolls left)."""
+        from unittest import mock
+        with mock.patch.object(ring, "unlink", return_value=False):
+            self.assertEqual(kalzith.loot(self.gd, choose=lambda items: 81), [])
+        self.assertNotIn(kalzith.LOOTED, self.flags)
+        self.assertEqual(kalzith.loot(self.gd, choose=lambda items: 81), ["Scroll of Blur"])
+        self.assertIn(kalzith.LOOTED, self.flags)
+
     def test_nothing_left(self):
         """All bought: nothing of his anywhere but with the party; nothing left, nothing added."""
         struct.pack_into("<Bh", self.m, THINGS + PILE * 3, 0, game.NO_ITEM)

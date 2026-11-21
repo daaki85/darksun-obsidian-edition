@@ -7,6 +7,12 @@ PARTY = {"Seneca", "Jenna", "Lex"}
 
 
 class FightTallyTests(unittest.TestCase):
+    def test_new_fight_can_start_with_skipped_rounds(self):
+        tally = FightTally(PARTY.__contains__)
+        tally.feed(["Round 9: Lex 25", "Guard is killed",
+                    "Rounds 1-2 go by at once: no one in the fight can act", "Round 3: Lex 25"])
+        self.assertEqual(tally.end(), ["Fight over: 3 rounds, 0 kills; the party dealt 0 damage and took 0"])
+
     def test_summary(self):
         t = FightTally(PARTY.__contains__)
         t.feed([

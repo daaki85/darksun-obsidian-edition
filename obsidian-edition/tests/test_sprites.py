@@ -50,8 +50,13 @@ class WornTests(unittest.TestCase):
                 return [(0, it, bytes(typ)) for it in self.items]
 
         right = game.EQUIP_SLOTS.index("right hand")
-        gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 1, right)]), 0)
+        from dsloader import arms
+        kreenfang = bytearray(item(game.GYTHKA_TYPE, 1, right))
+        struct.pack_into("<H", kreenfang, game.ITEM_NAME, arms.GYTHKA_NAME)  # (by its name too: icons.which)
+        gear, _ = sprites.worn(Worn([bytes(kreenfang)]), 0)
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang", sg.FIRE_GLOW))
+        gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 1, right)]), 0)  # (the Elven Leader's Gythka +1)
+        self.assertNotEqual(gear["right"][2:3], ("Kreenfang",))
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 0, right)]), 0)
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1))
         sword = 45  # any other weapon with a plus: MAGIC, its edge glinting
@@ -238,7 +243,7 @@ class SpriteTests(unittest.TestCase):
         self.assertEqual(gd.guest.read(gd.ds * 16 + sprites.MAP_ENTRIES, 1)[0] & sprites.MAP_CHANGED, 0)
 
     def dressed_copy(self, d, figures=(0,)):
-        """A Dresser for FIGURES with a copy of SEGOBJEX (as the launcher writes it) in D."""
+        """A Dresser for FIGURES with a copy of SEGOBJEX (as the Loader writes it) in D."""
         from test_icons import ranged_gff
         chunks = game_chunks()
         data = ranged_gff({"OJFF": {300: chunks[("OJFF", 300)]},
@@ -639,7 +644,7 @@ class SpriteTests(unittest.TestCase):
             self.assertEqual(len(asked), 2)
 
     def test_copy_written_anew(self):
-        """The launcher writes the copy anew (plain) for the next game: the outfit written again."""
+        """The Loader writes the copy anew (plain) for the next game: the outfit written again."""
         outfits = [({"right": (SWORD, METAL)}, ())]
         worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)

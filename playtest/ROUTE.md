@@ -175,7 +175,10 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   behind the party (488, 408-424): then the Announcer and the bout. **walkto.py can't take the
   gap** (it stops at (488, 216-264), NO PATH, and its view snaps back): `scroll.py 0 -100` twice
   (camera about 328, 232-256), a click on the gap's floor (screen 176-180, 106-130), then clicks at
-  map (488, 420) until `fight_on 1` (two). `setcount.py 4` makes the next trip Scar's.
+  map (488, 420) until `fight_on 1` (two). With the camera at y 256 map y 420 is off the view
+  (screen y 164 is fine, y 260 is not): after the gap's click, `viewto.py 504 360` (camera about
+  344, 280) and clicks at screen (144, 145). A click below the view (screen y 200 and more)
+  opens EXIT: SAVE GAME? over an empty red view (camera 344, 1360): CANCEL, then viewto.py. `setcount.py 4` makes the next trip Scar's.
 
 ### Kalzith
 
@@ -205,7 +208,7 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   it: `teleport.py 200 1432 40 1322`, walkto (216, 1440), then (184, 1400), a square west of it
   (from (120, 1464) the script says "You must be next to the chest"; standing on it, a figure takes
   the click); `pointer.py look`, a slow press on it (163, 70), the look box's third button (236, 101)
-  (`chestuse.sh`). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look
+  (`chestuse.sh [y|n]`: the answer to a non-thief's "Bash it open?"; checked 2026-11-17). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look
   box: first button closes, second **moves the chest**, third uses it. The game's trap objects:
   +0Fh is the trap's descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. Retrying a lock:
   [a lock barred until a level](PLAYTESTING.md#inventory-looting-selling-and-shops).
@@ -225,4 +228,7 @@ map position. Nothing is built for it yet.
 
 - The slave pens (29h): a fountain at about square (68,94), where Pehtucl's ambush and Legcrusher's
   fetching take place (`fountain-user`, `legcrusher-fountain-user`); whether it gives water is
-  unchecked.
+  unchecked. In `fountain-user` Lex carries a **Pot of Water** (item 104, type 60, value 1), so the
+  game has such an item (2026-11-18).
+- The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
+  (2026-11-18).

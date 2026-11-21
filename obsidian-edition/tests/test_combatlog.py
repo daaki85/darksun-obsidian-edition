@@ -104,6 +104,17 @@ class LinesTests(unittest.TestCase):
         self.assertEqual(lines[2].text, "Defiler 29 = 20 + 4 (0-9 roll) +5 DEX, tie broken by 103 (0-199 roll)")
         self.assertEqual(lines[2].depth, 2)
 
+    def test_skipped_rounds_stay_visible_at_every_level_and_filter(self):
+        log = c.Log()
+        log.add(["Round 3 goes by at once: no one in the fight can act",
+                 "Rounds 4-5 go by at once: no one in the fight can act", "Round 6: Gerakis 25"])
+        markers = ["ROUND 3 SKIPPED", "ROUNDS 4-5 SKIPPED", "ROUND 6"]
+        for level in (c.MINIMAL, c.SHORT, c.DETAIL):
+            for filt in ("party", "damage", "saves"):
+                with self.subTest(level=level, filt=filt):
+                    self.assertEqual([row.text for row in c.filtered(log.at(level, NAMES), filt)], markers)
+        self.assertEqual(log.at(c.DETAIL, NAMES)[1].text, "no one in the fight can act")
+
     def test_sides(self):
         lines = {line.text: line.side for line in self.log.at(c.SHORT, NAMES)}
         self.assertEqual(lines["Rampager's turn"], "monster")
@@ -525,13 +536,39 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class OnlyOnTheMapTests(unittest.TestCase):
+    def test_put_away_while_the_map_is_not_the_screen(self):
+        """The panel is asked for only while the map is the screen (the game's DS:0BC9h is 1): a
+        window, a screen, a menu or a talk (2) takes it off (it was drawn over the save and load
+        windows), and it is back with the map; L's choice (open) is left as it was."""
+        import struct
+        from test_now import dag
+        from test_dicelog import DS
+        from dsloader import quicksave
+        log = dag()
+        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        g = log.game
+        g.in_combat, g.region, g.number, g.game_time = (lambda: False), (lambda: 0x29), (lambda n: None), (lambda: 0)
+        asked = []
+        log._panel.update = lambda gd, hdr, on, *rest: asked.append(bool(on))
+        for screen, shown in ((1, True), (2, False), (3, False), (0, False), (1, True)):
+            struct.pack_into("<H", log.guest.mem, DS * 16 + quicksave.SCREEN_IS, screen)
+            log._update_panel(0.0)
+            self.assertEqual(asked[-1], shown, screen)
+            self.assertTrue(log._panel.open)
+        log._panel.open = False  # (hidden with L: not shown on the map either)
+        log._update_panel(0.0)
+        self.assertFalse(asked[-1])
+
+
 class ArenaHeaderTests(unittest.TestCase):
     def test_arena_count_only_once_known(self):
         """The dice log's header out of a fight: in the arena the count of arena fights once the
         game has shown it (kept from the slave pens too), until then the time, as everywhere else."""
         from test_now import dag
         log = dag()
-        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        log._panel.open, log._font_tried = True, True
+        log._map_up = lambda: True
         g = log.game
         region, number = [0x2A], [None]
         g.in_combat, g.region, g.number = (lambda: False), (lambda: region[0]), (lambda n: number[0])

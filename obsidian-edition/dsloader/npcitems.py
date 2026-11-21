@@ -171,14 +171,14 @@ def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) 
     non-empty) item list, or a new one if they have none: worn in `slot` if given and free,
     else in a backpack cell of its own. A party member's in the list for that slot
     (pickpocket.party_list: worn, held or in the backpack, as the inventory screen keeps it). False if there's nowhere (or no item
-    record) for it."""
-    it = ring.Items(gd)
+    record) for it. The lists read with the gate held (ring.held)."""
+    it = ring.held(gd)
     lists = [struct.unpack_from("<h", gd.creature(creature), o)[0] for o in game.CREATURE_ITEM_LISTS]
     thing = next((t for t in reversed(lists) if 0 <= t < ring.THING_COUNT), None)
     used = {data[game.ITEM_SLOT] for t in lists for _, data in it.chain(t, inside=False)}
     cell = slot if slot is not None and slot not in used else pickpocket.free_cell(gd, it, creature)
     item = it.word(ring.FREE_ITEMS)
-    if cell is None or item >= game.NO_ITEM or not it.spare_items():  # (the game's own left some: ring.RESERVE)
+    if cell is None or item >= ring.ITEM_RECORDS or not it.spare_items():  # (the game's own left some: ring.RESERVE)
         return False
     if creature < game.PARTY_SIZE:
         thing = pickpocket.party_list(gd, it, creature, cell, gd.item_type_record(rec)

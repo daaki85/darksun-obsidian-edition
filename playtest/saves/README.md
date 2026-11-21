@@ -6,6 +6,8 @@ made with this repository's Loader build of the day. `loadsave.sh NAME` copies o
 folder and loads it. Take all three at the moment of the save: a set without `DARKSAVE.GFF`
 cannot be loaded in a fresh install (2026-11-01).
 
+## Saves made in a play
+
 - `pens-after-arena` (2026-11-01): a new game with the ready-made party, through the arena's
   waves and out by the gate; in the slave pens (region 29h), Kurzak just met, party at
   (1672, 344). Cermak is a 2nd-level preserver. Nothing else done in the pens. Its
@@ -64,3 +66,41 @@ cannot be loaded in a fresh install (2026-11-01).
   innkeeper (the look pointer on him; a room 25 cp), saved beside him before renting. **Terrannus is dead
   in it** (the thieves' fight; status 7), Ar'anda 1 HP, Gerakis 32, Thy'rokh 59/75 (a 7th-level druid).
   No memory edit. Its `DARKSAVE.GFF` the install's own.
+
+  master script: the Loader's `dsloader/pehtuclchest.py`; the chest itself made before its shut
+  type: `shut.py` after loading), through the arena's waves and out by the gate; in the pens at
+  (1816, 440), Kurzak's greeting answered Goodbye. Nothing else done. Its `DARKSAVE.GFF` is the one
+  in the game folder (not rewritten at this save).
+
+## The user's saves
+
+Only the user's `SAVE01.SAV` came with each of these: its `CHARSAVE.GFF` and `DARKSAVE.GFF` are
+`pens-after-scar`'s (it loads and plays), except where said.
+
+- `fountain-user`: the user's save "templar fountain" (2026-11-08): the slave pens, Pehtucl leading
+  the party to the fountain, the ambush a moment away (its speech comes on loading). The ambush's
+  fight: Pehtucl, 4 Arena Guards and a Guard; the script also sends every guard of those kinds in
+  the region hunting (GPL 145 at 0xE99).
+- `trap-user`: the user's save "trap" (2026-11-08): the party (Lex, Jenna, Ester, Seneca) in
+  Pehtucl's room, beside his chest (leader 136,1400; the chest about 200,1393 on the map, at screen
+  200,95 with the camera 0,1296). A game that came to the pens before 2.14.0: its chest was the
+  game's plain one (type 31h), shut by the Loader since.
+- `rest-no-call-user`: the user's save "rest no call" (2026-11-11): the party (Cromwell,
+  Balthbeorn, Finster, Cenna) by the fire room's ring (leader 1960,840; the ring at screen 205,120
+  with the camera 1728,736). Flag 497 set (the Trustee's key used on a door): resting brings no
+  call.
+- `semyon-rack-user`: the user's second "rest no call" save (2026-11-11): Semyon saved and told of
+  the shipment (flag 756), the pens' weapon rack (2599, at 779,550) emptied by the party before it:
+  Thornwall had nowhere to go (`rackcheck.py`).
+- `grate-user`: the user's save "slave pen grate" (2026-11-11): the party (Cromwell leading) at map
+  (56,152) beside the sewer grate; `walkto.py 60 100` brings up its menu (Y, then 1 rip, 2 hack).
+- `legcrusher-fountain-user`: the user's save "legcrusher fountain" (2026-11-11): the party at
+  square (68,94) before the fountain; Legcrusher's fetching speech comes on loading (with the
+  Loader's fountain branch: his lines, then a fight with him alone).
+- `selling-junk-user`: the user's save "selling junk" (2026-11-11), for selling the party's mundane
+  items in one go.
+- `doorway-blocked-user`: the user's save "error doorway blocked" (2026-11-11): the party (leader
+  1576,600) in the corridor south of Kurzak's entryway; the door's leaves open but square 99,34
+  shut on the walk map, Legcrusher at 1704,328 with his fetching order. With the Loader's
+  `dsloader/kurzakdoor.py` the square opens within 10 game seconds and Legcrusher comes. Its
+  `CHARSAVE.GFF` and `DARKSAVE.GFF` are `selling-junk-user`'s.

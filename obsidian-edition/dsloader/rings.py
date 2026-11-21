@@ -5,6 +5,11 @@ marked thing's feet, the ground reddened through RED, which the Loader makes fro
 palette (each colour's nearest redder one). The Loader marks the chosen one (targeting.py) while
 the party is in a fight, among the enemies (the creatures standing on another side than the
 party's); when the mark changes, the view is drawn again.
+
+Out of a fight the same rings, in gold (GOLD, through the same table: gold_table), go under
+everything that can be used while Alt is held (usable.py, which gives update its table of marks).
+The table and its colours have this one owner: in a fight it is the Tab ring's, red, whatever is
+held.
 """
 
 import functools
@@ -14,6 +19,7 @@ from typing import Optional
 from . import game, shadows
 
 TSR_RINGS_ON, TSR_RING_TAB, TSR_RED = 244, 246, 248  # DSCLOG's header (RING_TAB's and RED's offsets in its far block)
+TSR_DAC = 238  # (DAC's offset in its far block, as dust.py)
 TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 THINGS = 520
@@ -21,6 +27,9 @@ FIRST, LAST = 16, 223  # the colours the game doesn't animate
 RED = (230, 40, 30)
 TOWARD = 0.6  # how far toward RED a colour is wanted
 HUE_WEIGHT = 2
+GOLD = (255, 214, 64)  # the tint of the rings under what can be used (usable.py)
+GOLD_TOWARD = 0.55
+GOLD_NEARER = 24  # how much nearer GOLD a colour's tinted one must be (clearly golder)
 STATUS_DEAD = 5
 SIDE_NEUTRAL = 4  # (the arena's Tied-up Prisoner: on no one's side)
 CHOSEN = 2  # (DSCLOG's ring kind: three pixels thick, reddened three times)
@@ -48,6 +57,27 @@ def red_table(dac: bytes) -> bytes:
                 continue  # (redder, clearly)
             d = sum((a - b) ** 2 for a, b in zip(p, want))
             d += HUE_WEIGHT * (((p[0] - p[1]) - (want[0] - want[1])) ** 2)
+            if score is None or d < score:
+                best, score = j, d
+        out[i] = best
+    return bytes(out)
+
+
+@functools.lru_cache(maxsize=8)
+def gold_table(dac: bytes) -> bytes:
+    """Each colour's golder one among the palette's (0: none clearly nearer GOLD), as red_table."""
+    pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
+    far = lambda p: sum((a - b) ** 2 for a, b in zip(p, GOLD)) ** 0.5
+    out = bytearray(256)
+    for i in range(FIRST, LAST + 1):
+        c = pal[i]
+        want = tuple(v + (t - v) * GOLD_TOWARD for v, t in zip(c, GOLD))
+        best, score = 0, None
+        for j in range(FIRST, LAST + 1):
+            p = pal[j]
+            if j == i or far(p) > far(c) - GOLD_NEARER:
+                continue
+            d = sum((a - b) ** 2 for a, b in zip(p, want))
             if score is None or d < score:
                 best, score = j, d
         out[i] = best
@@ -88,29 +118,42 @@ class Rings:
         self._palettes = -1
         self._table: Optional[bytes] = None
         self._on: Optional[bool] = None
+        self._tint = None
 
-    def update(self, gd, tsr_hdr: int, on: bool, palettes: int, chosen: Optional[int] = None) -> list:
-        """Keep DSCLOG's ring up under the enemy chosen. Returns the enemies."""
+    def update(self, gd, tsr_hdr: int, on: bool, palettes: int, chosen: Optional[int] = None,
+               marks: Optional[bytes] = None) -> list:
+        """Keep DSCLOG's ring up under the enemy chosen (ON: the Options tab's ring), or, out of a
+        fight, its rings under MARKS (usable.py's table of what can be used, None when not held),
+        those in gold. Returns the enemies."""
         guest = gd.guest
+        marked = enemies(gd)
+        if marks is not None and (marked or gd.in_combat()):
+            marks = None  # (a fight: the table is the Tab ring's)
+        on = on or marks is not None
+        tint = red_table if marks is None else gold_table
         far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
+        tab_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RING_TAB, 2))
         if not on:
             if self._on is not False:
                 guest.write(tsr_hdr + TSR_RINGS_ON, struct.pack("<H", 0))
                 if self._table and any(self._table):
+                    guest.write(far + tab_off, bytes(THINGS))  # (none left for the next time they are on)
                     shadows.redraw(gd, tsr_hdr)
             self._on, self._table, self._palettes = False, None, -1
-            return []
-        if palettes != self._palettes and palettes:
+            return marked
+        fresh = bool((palettes != self._palettes or tint is not self._tint) and palettes)
+        if fresh:
             red_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RED, 2))
-            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + 238, 2))  # (DSCLOG's DAC, as dust.py)
-            guest.write(far + red_off, red_table(guest.read(far + dac_off, 768)))
-            guest.write(tsr_hdr + TSR_RINGS_ON, struct.pack("<H", 1))
-            self._palettes, self._on = palettes, True
-        marked = enemies(gd)
-        table = ring_table(chosen if chosen in marked else None)
+            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
+            guest.write(far + red_off, tint(guest.read(far + dac_off, 768)))
+            if tint is not self._tint and self._table and any(self._table):
+                self._table = None  # (rings in the other tint: the view drawn again)
+        table = marks if marks is not None else ring_table(chosen if chosen in marked else None)
         if table != self._table:
-            off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RING_TAB, 2))
-            guest.write(far + off, table)
+            guest.write(far + tab_off, table)
             self._table = table
             shadows.redraw(gd, tsr_hdr)
+        if fresh:  # (on only once the table and its colours are these)
+            guest.write(tsr_hdr + TSR_RINGS_ON, struct.pack("<H", 1))
+            self._palettes, self._on, self._tint = palettes, True, tint
         return marked

@@ -14,10 +14,12 @@ nothing does (as the game leaves an emptied container: +08h 9999). What was take
 is in the dice log, with the purse's sound."""
 
 import struct
-from typing import Dict, List, Optional, Tuple
+from contextlib import contextmanager
+from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
-from . import game, itemgate, pickpocket, ring
+from . import game, icons, itemgate, pickpocket, ring
 from .game import GameData
+from .process import ProcessError
 
 TSR_LOOT_SEQ, TSR_LOOT_THING, TSR_LOOT_MODE = 1846, 1848, 1850  # in DSCLOG's header
 OPEN = 0x05E6  # the game's DS: the container whose window is open (NONE: none)
@@ -59,18 +61,48 @@ def _contents(gd: GameData, it: ring.Items, thing: int) -> Optional[Tuple[int, i
     return item, contents
 
 
-def _relink(gd: GameData, it: ring.Items, container: int, contents: int, kept: List[int]) -> None:
+def _relink(gd: GameData, it: ring.Items, container: int, contents: int, kept: List[int],
+            write: Callable[[int, bytes], None]) -> None:
     """The container's list made KEPT, in order; its thing given back to the free list if empty."""
     ds = gd.ds * 16
     if kept:
         for item, after in zip(kept, kept[1:] + [game.NO_ITEM]):
-            gd.guest.write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<H", after))
-        gd.guest.write(it.things + contents * 3, struct.pack("<BH", game.THING_ITEM, kept[0]))
+            write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<H", after))
+        write(it.things + contents * 3, struct.pack("<BH", game.THING_ITEM, kept[0]))
         return
-    gd.guest.write(it.things + contents * 3, struct.pack("<BH", 0, it.word(ring.FREE_THINGS)))
-    gd.guest.write(ds + ring.FREE_THINGS, struct.pack("<H", contents))
-    gd.guest.write(ds + ring.THINGS_USED, struct.pack("<H", max(0, it.word(ring.THINGS_USED) - 1)))
-    gd.guest.write(it.items + container * game.ITEM_SIZE + ring.ITEM_CONTENTS, struct.pack("<H", NONE))
+    write(it.things + contents * 3, struct.pack("<BH", 0, it.word(ring.FREE_THINGS)))
+    write(ds + ring.FREE_THINGS, struct.pack("<H", contents))
+    write(ds + ring.THINGS_USED, struct.pack("<H", max(0, it.word(ring.THINGS_USED) - 1)))
+    write(it.items + container * game.ITEM_SIZE + ring.ITEM_CONTENTS, struct.pack("<H", NONE))
+
+
+@contextmanager
+def _loot_writes(gd: GameData) -> Iterator[Callable[[int, bytes], None]]:
+    """Restore the item lists if a bulk-loot write fails, while the caller still holds the item gate."""
+    guest = gd.guest
+    previous = []
+
+    def write(at: int, data: bytes) -> None:
+        old = guest.read(at, len(data))
+        if len(old) != len(data):
+            raise ProcessError("Could not read the previous value for a bulk-loot write")
+        if old != data:
+            previous.append((at, old))
+            guest.write(at, data)
+
+    try:
+        yield write
+    except BaseException as error:
+        restore_error = None
+        for at, old in reversed(previous):
+            try:
+                if guest.read(at, len(old)) != old:
+                    guest.write(at, old)
+            except Exception as err:
+                restore_error = err
+        if restore_error is not None:
+            raise ProcessError(f"Could not restore all item lists after bulk loot failed: {restore_error}") from error
+        raise
 
 
 def _takers(gd: GameData) -> List[int]:
@@ -82,68 +114,51 @@ def _takers(gd: GameData) -> List[int]:
     return out
 
 
+def _destinations(gd: GameData, it: ring.Items, contents: int,
+                  write: Callable[[int, bytes], None]) -> Iterator[Tuple[int, int, int]]:
+    """Yield (member, list, cell) in party order, making a backpack list only when needed."""
+    for member in _takers(gd):
+        used = _used(gd, it, member)
+        free = [cell for cell in pickpocket.BACKPACK if cell not in used]
+        if not free:
+            continue
+        thing = pickpocket.party_list(gd, it, member, free[0], write=write)
+        if thing == contents:
+            raise ValueError("The container and backpack share the same item list")
+        if thing is not None:
+            for cell in free:
+                yield member, thing, cell
+
+
 def take(gd: GameData, thing: int, mode: int) -> Tuple[List[str], bool]:
     """Container THING's things into the party's backpacks (mode ALL or NO_PLAIN_WEAPONS): the dice
     log's lines, and whether anything was taken."""
+    # (the gate held before the lists are read: the game busy with them, ItemsBusy, tried again in
+    # a later pass; what is moved worked out from them as they are with the game held still)
+    itemgate.hold(gd, require_pause=True)
     it = ring.Items(gd)
     found = _contents(gd, it, thing)
     if found is None:
         return [], False
     container, contents = found
-    itemgate.hold(gd)  # (the game busy with its lists: ItemsBusy, tried again in a later pass)
-    items = [i for i, _ in it.chain(contents, inside=False)]
-    names = {i: gd.item_label(rec, gd.item_type_record(rec)) for i, rec in it.chain(contents, inside=False)}
-    plan: Dict[int, Tuple[int, int]] = {}  # item: (member, cell)
-    taken_cells: Dict[int, set] = {}
-    takers = _takers(gd)
-    ready: Dict[int, bool] = {}  # member: whether it has a backpack list to take into
-    plain: List[int] = []
-    for item in items:
-        if mode == NO_PLAIN_WEAPONS and plain_weapon(gd, it.item(item)):
-            plain.append(item)
-            continue
-        for member in takers:
-            cells = taken_cells.setdefault(member, set())
-            used = _used(gd, it, member) | cells  # (what it has, and what is planned for it already)
-            cell = next((c for c in pickpocket.BACKPACK if c not in used), None)
-            if cell is None:
-                continue
-            if member not in ready:  # (its backpack list, made now if it has none, before anything
-                # is unlinked: with too few free things there is none, and nothing goes to it)
-                ready[member] = pickpocket.party_list(gd, it, member, cell) is not None
-                it = ring.Items(gd)  # (read again: the list may be new)
-            if ready[member]:
-                cells.add(cell)
-                plan[item] = (member, cell)
-                break
-    if not plan:
-        lines = []
-        if plain and len(plain) == len(items):
-            lines.append("Only plain weapons there: left where they are.")
-        elif items:
-            lines.append("The party's backpacks are full: nothing taken.")
-        return lines, False
-    kept = [i for i in items if i not in plan]
-    _relink(gd, it, container, contents, kept)
+    records = dict(it.chain(contents, inside=False))
+    names = {i: gd.item_label(rec, gd.item_type_record(rec)) for i, rec in records.items()}
+    plain = [i for i, rec in records.items() if mode == NO_PLAIN_WEAPONS and plain_weapon(gd, rec)]
+    if plain and len(plain) == len(records):
+        return ["Only plain weapons there: left where they are."], False
     got: Dict[int, List[str]] = {}
-    lost: List[int] = []
-    for item, (member, cell) in plan.items():
-        gd.guest.write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<H", game.NO_ITEM))
-        if pickpocket.give(gd, ring.Items(gd), member, item, cell):
+    with _loot_writes(gd) as write:
+        candidates = (i for i in records if i not in plain)
+        plan = dict(zip(candidates, _destinations(gd, it, contents, write)))
+        if not plan:
+            return (["The party's backpacks are full: nothing taken."] if records else []), False
+        kept = [i for i in records if i not in plan]
+        _relink(gd, it, container, contents, kept, write)
+        for item, (member, destination, cell) in plan.items():
+            pickpocket.link_item(it, destination, item, cell, write)
             got.setdefault(member, []).append(names[item])
-        else:
-            lost.append(item)
-    if lost:  # (no list to be had for them: back in the container, after what stayed)
-        fresh = ring.Items(gd)
-        again = _contents(gd, fresh, thing)
-        if again is None:  # (the container's list was given back: a new one, as the rack's)
-            from .semyon import _new_contents
-            new = _new_contents(gd, fresh, container)
-            fresh = ring.Items(gd)
-            again = (container, new) if new is not None else None
-        if again is not None:
-            _relink(gd, fresh, again[0], again[1], kept + lost)
-            kept += lost
+    for item in plan:
+        icons.fit(gd, item)
     lines = [f"{gd.creature_name(m)} takes {_listed(n)}" for m, n in got.items()]
     left_room = [names[i] for i in kept if i not in plain]
     if left_room:

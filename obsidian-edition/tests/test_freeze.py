@@ -75,7 +75,7 @@ class FreezeTests(unittest.TestCase):
         self.assertIn("DSCLOG wasn't found in memory", text)
 
     def test_game_data_overwritten(self):
-        """The game's DS lost (its data segment overwritten): the helper is found by its signature
+        """The game's DS lost (its data segment overwritten): DSCLOG is found by its signature
         and the game's load segment from its DOS block, so the places still read as the game's."""
         mem, hdr = memory([(0x1A2 + 0x980, 0x70AB)] * 8)
         mem[hdr:hdr + len(freeze.HDR_SIG)] = freeze.HDR_SIG
@@ -105,6 +105,25 @@ class FreezeTests(unittest.TestCase):
                 self.assertEqual(z.read("freeze-report.txt"), b"report")
                 self.assertEqual(len(z.read("memory.bin")), game.CONVENTIONAL_AND_UPPER)
 
+
+    def test_old_reports_pruned(self):
+        """crash-logs keeps the newest KEEP_REPORTS freeze reports (about 1 MB each): the older
+        ones go as a new one is written; the crash reports' text and anything else stay."""
+        with tempfile.TemporaryDirectory() as folder:
+            for k in range(freeze.KEEP_REPORTS + 3):  # (each a day older than the next)
+                path = os.path.join(folder, f"freeze-2026-01-{k + 1:02d}-120000.zip")
+                open(path, "wb").close()
+                os.utime(path, (86400 * (k + 1), 86400 * (k + 1)))
+            for other in ("crash-2026-01-01-120000.txt", "notes.zip"):
+                open(os.path.join(folder, other), "w").close()
+            newest = freeze.write_report(folder, 86400 * 400, "report", b"")
+            kept = sorted(n for n in os.listdir(folder) if n.startswith("freeze-"))
+            self.assertEqual(len(kept), freeze.KEEP_REPORTS)
+            self.assertIn(os.path.basename(newest), kept)
+            self.assertNotIn("freeze-2026-01-04-120000.zip", kept)  # (the four oldest gone)
+            self.assertIn("freeze-2026-01-05-120000.zip", kept)
+            self.assertTrue(os.path.exists(os.path.join(folder, "crash-2026-01-01-120000.txt")))
+            self.assertTrue(os.path.exists(os.path.join(folder, "notes.zip")))
 
 if __name__ == "__main__":
     unittest.main()
