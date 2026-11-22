@@ -33,7 +33,7 @@ import collections
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import art, figures, game, greyhair, halfelf, spritegear as sg, spriteparts as sp
+from . import art, classoutfits, figures, game, greyhair, halfelf, spritegear as sg, spriteparts as sp
 from .game import GameData
 
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
@@ -257,6 +257,7 @@ class Pictures:
 
     def __init__(self, chunks):
         self.chunks = chunks
+        self.has_class_outfits = classoutfits.supports(chunks)
         self.frames: Dict[int, List[sg.Rows]] = {}
         self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]]] = {}
 
@@ -303,7 +304,7 @@ class Pictures:
         return model, frames, [None] * len(frames)
 
     def build(self, obj: int, combat: bool, gear: Dict[str, Tuple[int, ...]], armour: Tuple[int, ...],
-              model: Optional[int] = None, figure: Optional[int] = None, stage: int = 0) -> bytes:
+              model: Optional[int] = None, figure: Optional[int] = None, stage: int = 0, role: Optional[str] = None) -> bytes:
         """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's, in
         FIGURE's looks: a half-elf's are their own, figures.py and halfelf.py; an elf has pointed
         ears), the hair greyed for age category STAGE (greyhair.py)."""
@@ -313,9 +314,10 @@ class Pictures:
         own = self.made.get((figure, combat)) is not None  # (a half-elf's own figure)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
+        costumes = classoutfits.frames(role, combat) if role and model == 2095 and figure == 300 and self.has_class_outfits else None
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
-            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f])
+            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f], costumes[f] if costumes else None)
             if not own:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
             if model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
@@ -732,7 +734,10 @@ class Dresser:
             outfit = worn(self.gd, member, self.items) if on else ({}, ())
             model = self.pics.model(figure)
             stage = greyhair.stage_of(self.gd, member) if on else 0
-            key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage)
+            role = None
+            if on and figure == 300 and model == 2095 and self.pics.has_class_outfits:
+                role = classoutfits.for_sheet(self.gd.sheet(member))
+            key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage, role)
             fresh = self.shown.get(obj) != key
             if fresh:
                 built = self._built.get(obj)
@@ -743,9 +748,9 @@ class Dresser:
                     for combat, picture in zip((False, True), picture_ids(obj)):
                         # (the room the copy has, which Pictures' reckoning may overstate: _write)
                         room = min(self.pics.room(obj, combat), self.rooms.get(picture, 0))
-                        chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage)
+                        chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage, role)
                         if len(chunk) > room:  # (more than there is room for: plain)
-                            chunk = self.pics.build(obj, combat, {}, (), model, figure, stage)
+                            chunk = self.pics.build(obj, combat, {}, (), model, figure, stage, role)
                         if len(chunk) > room:
                             chunk = self.pics.build(obj, combat, {}, (), model, figure)
                         pictures[picture] = chunk

@@ -21,7 +21,7 @@ shields (all it can use). armed() makes one frame.
 import math
 from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
-from . import game, spriteparts as sp
+from . import classoutfits, game, spriteparts as sp
 
 Rows = sp.Rows
 
@@ -107,6 +107,11 @@ def sparkle(rows: Rows, before: Rows, colours: Tuple[int, ...] = GLINT) -> None:
     (a circlet, boots) at least every other pixel of it, so it shows."""
     changed = [(x, y) for y, row in enumerate(rows) for x, p in enumerate(row)
                if p is not None and p != before[y][x]]
+    sparkle_cells(rows, changed, colours)
+
+
+def sparkle_cells(rows, changed, colours):
+    """Use the game's cycled palette on the visible surface of this item."""
     step = 5 if len(changed) < 150 else 9  # (a cloak, sparser)
     picked = [(x, y) for x, y in changed if (x + 2 * y) % step == 0]
     if len(picked) < 2:
@@ -846,30 +851,75 @@ class Own(NamedTuple):
     back: Optional[Callable[[int, int], int]] = None  # where a pixel (x, y) of it is across the source
 
 
+def paint_region(rows, cells, shades, pad, pattern=None, source=None):
+    """Shade the visible pixels of one equipment region in native pose coordinates."""
+    source = rows if source is None else source
+    for x, y in cells:
+        p = source[y + pad][x + pad]
+        if p is None:
+            continue
+        if pattern is None:
+            colour = _by_light(p, shades)
+        else:
+            top = len(shades) - 1
+            rank = min(top, round(_LIGHT.get(p, 0.5) * 1.7 * top))
+            colour = shades[_pattern(pattern, x, y, rank, top)]
+        rows[y + pad][x + pad] = colour
+
+
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
           cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
-          own: Optional[Own] = None) -> Rows:
+          own: Optional[Own] = None, costume: Optional[classoutfits.Frame] = None) -> Rows:
     """One frame of MODEL with WEAPONS ({"right"/"left": (item type, material[, name in
     BLADE_COLOURS])}: in the hands in a
     fight, walking worn at the belt (two-handed ones carried upright);
     "missile": the bow, sling or chatkcha carried, "ammo": arrows, on the back or at the hip),
     padded by PAD, in ARMOUR (item types, MAGIC_ARMOUR added for a magic one: under all the rest). Nothing in the hands in the bow
     frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
-    out = padded(rows, pad)
+    out = costume.canvas(rows, pad) if costume else padded(rows, pad)
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
-    if parts.facing is not None and model != sp.KREEN:  # (no armour on a thri-kreen: sp.KREEN_KINDS)
+    if costume and parts.facing is not None and costume.cloak:
+        k = frame + (sp.WALK_FRAMES if combat else 0)
+        crown, left, right, brow, shoulder, sa, sb, waist = classoutfits.LANDMARKS[k]
+        facing = sp.FRONT if combat and frame == 11 else parts.facing
+        hair = {(x, y) for y in range(crown, shoulder) for x in range(left - 1, right + 2)
+                if 0 <= x < len(rows[y]) and rows[y][x] in sp.MODELS[model][2]}
+        parts = parts._replace(facing=facing, head=sp.Head(crown, left, right, brow),
+                               shoulders=(shoulder, sa, sb), waist=waist, hair=hair)
+    if costume:
+        base_outfit = [r[:] for r in out] if armour else None
+        # Chest first so a separately equipped pauldron takes precedence at the shoulder.
+        armour = sorted(armour, key=lambda t: ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] != ARMOUR_CHEST)
+    if (costume or parts.facing is not None) and model != sp.KREEN:  # (no armour on a thri-kreen: sp.KREEN_KINDS)
         for item_type in armour:
             kind = item_type & (MAGIC_ARMOUR - 1)
             if kind in ARMOUR:
-                before = [list(r) for r in out] if item_type & MAGIC_ARMOUR else None
-                draw_armour(out, model, parts, kind, pad, own)
+                before = [list(r) for r in out] if not costume and item_type & MAGIC_ARMOUR else None
+                if costume:
+                    piece, shades, pattern = ARMOUR[kind]
+                    bit = {ARMOUR_CHEST: classoutfits.CHEST, ARMOUR_ARMS: classoutfits.ARMS,
+                           ARMOUR_LEGS: classoutfits.LEGS}[piece]
+                    cells = costume.regions[bit]
+                    # Always take the dye value from the original cloth, even where
+                    # two pieces overlap or the chest underneath already glints.
+                    paint_region(out, cells, shades, pad, pattern, source=base_outfit)
+                    if item_type & MAGIC_ARMOUR:
+                        sparkle_cells(out, [(x + pad, y + pad) for x, y in cells],
+                                      GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
+                else:
+                    draw_armour(out, model, parts, kind, pad, own)
                 if before is not None:
                     sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
-    if parts.facing is not None and model != sp.KREEN:
+    if (parts.facing is not None or costume) and model != sp.KREEN:
         if "boots" in weapons:
             before = [list(r) for r in out]
-            draw_boots(out, parts, weapons["boots"][0], pad)
+            boot_type = weapons["boots"][0]
+            if costume and boot_type in BOOTS:
+                for foot in (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT):
+                    paint_region(out, costume.regions[foot], BOOTS[boot_type], pad)
+            elif not costume:
+                draw_boots(out, parts, boot_type, pad)
             if _magic(weapons["boots"]):
                 sparkle(out, before, _glow(weapons["boots"]))
         if "belt" in weapons:
@@ -877,7 +927,15 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             draw_belt(out, parts, weapons["belt"][0], pad, own.cloak if own is not None else frozenset())
             if _magic(weapons["belt"]):
                 sparkle(out, before, _glow(weapons["belt"]))
-    if "cloak" in weapons and parts.facing is not None and model != sp.KREEN:
+    if "cloak" in weapons and costume:
+        item = weapons["cloak"]
+        natural_green = (69, 188, 53, 54, 55, 56)
+        shades = natural_green if item[0] in (38, game.ELVEN_CLOAK_TYPE) else CLOAK_COLOURS.get(item[0], CLOAK_COLOURS[65])
+        for x, y, rank in costume.cloak:
+            out[y + pad][x + pad] = shades[rank]
+        if _magic(item):
+            sparkle_cells(out, [(x + pad, y + pad) for x, y, _ in costume.cloak], _glow(item))
+    elif "cloak" in weapons and parts.facing is not None and model != sp.KREEN:
         kind = weapons["cloak"][0]
         before = [list(r) for r in out]
         if model == CLOAK_MODEL:  # (her own cloak, in the cloak's colours: option 2)
@@ -916,6 +974,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     if "helm" in weapons and parts.facing is not None and model != sp.KREEN:
         before = [list(r) for r in out]
         draw_helm(out, parts, weapons["helm"][0], pad, model)
+        if costume:
+            for x, y in costume.regions.get(classoutfits.FOREARM, ()):
+                out[y + pad][x + pad] = before[y + pad][x + pad]
         if _magic(weapons["helm"]):
             sparkle(out, before, _glow(weapons["helm"]))
     body = [list(r) for r in out]
@@ -925,6 +986,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         bow = shape == BOW and not (combat and frame in sp.BOW_FRAMES)
         hip = MATERIAL_COLOURS.get(missile[1], MATERIAL_COLOURS[5]) if shape in (SLING, CHATKCHA) else None
         draw_back_gear(out, body, parts, pad, bow, "ammo" in weapons or shape == BOW, hip)
+    if costume and (missile or "ammo" in weapons):
+        for x, y in costume.regions.get(classoutfits.FOREARM, ()):
+            out[y + pad][x + pad] = body[y + pad][x + pad]
     hands = dict(parts.hands)
     pose = COMBAT_POSES[frame] if combat and 0 <= frame < len(COMBAT_POSES) else None
     if pose and hands:  # (in a fight, the swinging hand is the pose's, not by side)
@@ -936,7 +1000,13 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         hands = {"right": points[0]}
         if len(points) > 1:
             hands["left"] = points[1]
+    if costume and combat and classoutfits.FIGHT_GRIPS[frame]:
+        hands["right"] = classoutfits.FIGHT_GRIPS[frame]
+        hands["left"] = classoutfits.FIGHT_SHIELDS[frame]
     if combat and frame in sp.BOW_FRAMES:
+        if costume:
+            for x, y in costume.regions[classoutfits.BOW]:
+                out[y + pad][x + pad] = rows[y][x]
         return out  # (the game draws the bow in the hands)
     if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
         weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
@@ -948,6 +1018,19 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         glint = _magic(weapons[hand]) or blade is not None  # (a named blade is magic too)
         shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
+        if costume and shape == SHIELD and hand == "left":
+            centre = (classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS)[frame]
+            if centre:
+                x, y = centre
+                far = parts.facing == sp.SIDE and (not combat or frame == 7)
+                facing = SIDE_FAR if far else parts.facing
+                # In profile the far arm is behind the torso, but the swept
+                # hem trails behind the shield. Use the native torso as its occluder.
+                occluder = padded(rows, pad) if far else body
+                draw_shield(out, occluder, (x + pad, y + pad + 2), facing,
+                            MATERIAL_COLOURS.get(material, MATERIAL_COLOURS[4]),
+                            far or facing == sp.BACK, glint=glint, shine=shine)
+            continue
         side = shape == SHIELD and not combat and parts.facing == sp.SIDE  # (placed by side_shield)
         if hand not in hands and not (shape == SHIELD and pose and hand == "left") and not side:
             continue
@@ -956,6 +1039,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (pose[1] if hand == "right" else pose[2], False)
         if shape == SHIELD and (pose and hand == "left" or side):
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
+        if costume and combat and frame == 12 and hand == "right" and shape != SHIELD:
+            g = (155, False)  # Lowered across the body, clear of the baseline.
+        if costume and combat and frame == 1 and hand == "left" and shape != SHIELD:
+            g = (330, False)  # The off hand extends out at hip height.
         if shape is None or g is None or shape in (SLING, BOW, CHATKCHA):
             continue
         colours = FLAME if item_type == FLAME_BLADE else _whole(SPELL_WEAPONS[item_type]) if item_type in SPELL_WEAPONS \
