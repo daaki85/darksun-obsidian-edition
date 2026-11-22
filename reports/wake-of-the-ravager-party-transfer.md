@@ -68,7 +68,11 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
    sets it to 0). A member takes its earlier copy's place, else the lowest free one; with too few free,
    the transfer stops and asks the player to delete characters in the sequel.
 7. **Aging:** the months are rolled once per transfer. Each member gains a year with a chance of
-   months/12, through the Loader's age pass (RavDiceLog._aging_pass, age at sheet +41h).
+   months/12, through the Loader's age pass (RavDiceLog._aging_pass, age at sheet +41h). **Done**
+   (2026-11-22, `ravtransfer.roll_gap`, `gap_years`, `aged`): SL's age (sheet +17h) comes across to
+   +41h, which CHARTRAN left 0 (the Loader then gave a new random age); a year added changes the scores
+   at the categories reached; a year that would reach the race's most isn't added. Seen in the game:
+   Cenna 39 to 40, Cromwell 23 to 24.
 
 ## The mod's effects, item by item
 

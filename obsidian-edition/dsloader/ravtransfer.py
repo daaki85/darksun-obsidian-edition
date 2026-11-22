@@ -29,8 +29,10 @@ What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35
 import struct
 from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from . import dataitems
+from . import dataitems, game
 from .gff import Chunks, GffError
+
+SL_SHEET_AGE = game.SHEET_AGE
 
 NONE = 9999
 MONEY_BAG = 900
@@ -80,6 +82,13 @@ PRIEST_SCROLL_SHIFT = 97
 SPELL_MADE = (28, 29, 30)  # (SL's Shillelagh, Flame Blade, Spiritual Hammer: left behind the Loader's way,
 # their spell over; itemwatch.SPELL_MADE)
 LEFT = 0  # (what a left item became, in Moved.items)
+
+# Ages (the mod's age rule, aging.py), the Loader's way: SL keeps an age at the sheet's +17h when the
+# sheet is packed (game.SHEET_AGE, game.spec_packed), the sequel at +41h (ravlog's SHEET_AGE), which
+# CHARTRAN leaves 0. Between the games a gap of MONTHS (rolled once a transfer): each member a year
+# older with a chance of months in 12, its scores changed at the age categories reached (aging.changes)
+WOTR_SHEET_AGE, WOTR_SHEET_RACE, WOTR_SHEET_ABILITIES = 0x41, 0x12, 0x15
+MONTHS = (3, 12)
 SCROLL_NAMES = (3, 4, 73)  # (One-use Scroll, Spellbook, the priests' Bracelet: the sequel's other
 # objects of the two types are a rod, a deck of illusions, a powerstone)
 
@@ -242,6 +251,7 @@ class Moved(NamedTuple):
     name: str
     items: List[Tuple[int, int]]  # (SL's object, the sequel's)
     place: int = 0  # (its roster CHAR)
+    age: str = ""  # (what the months between the games did, for the report)
 
 
 def _chunk(save: Chunks, number: int) -> bytes:
@@ -249,6 +259,45 @@ def _chunk(save: Chunks, number: int) -> bytes:
         return save[("SAVE", number)]
     except KeyError:
         raise GffError(f"the save has no SAVE {number} chunk") from None
+
+
+def roll_gap(rng) -> int:
+    """The months between the games (MONTHS, rolled once a transfer)."""
+    return rng.randint(*MONTHS)
+
+
+def gap_years(members, months: int, rng) -> Dict[int, int]:
+    """Each of MEMBERS a year older with a chance of MONTHS in 12 (a d12 at most MONTHS), else 0."""
+    return {m: int(rng.randint(1, 12) <= months) for m in members}
+
+
+def aged(cre: bytes, sh: bytes, name: str, years: int) -> Tuple[bytes, bytes, str]:
+    """The sequel's creature CRE and sheet SH of a member named NAME, YEARS older (aging.py's rule:
+    its scores changed at the age categories reached, each within 3 to 25 unless already past; a year
+    that would bring it to the most its race lives isn't added), and a line for the report."""
+    from . import aging
+    race, stored = sh[WOTR_SHEET_RACE], sh[WOTR_SHEET_AGE]
+    if race not in aging.RACES or not stored:
+        return cre, sh, "no age yet" if race in aging.RACES else ""
+    before = aging.RACES[race].start + stored - 1
+    if not years:
+        return cre, sh, f"still {before}"
+    after = min(before + years, aging.RACES[race].start + 254)
+    if after >= aging.most_age(name, race):
+        return cre, sh, f"still {before} (a year more is the most {aging._a(race)} lives)"
+    cre, sh = bytearray(cre), bytearray(sh)
+    sh[WOTR_SHEET_AGE] = aging.stored(race, after)
+    line = f"a year older: {after}"
+    delta = aging.changes(race, before, after)
+    for ability, n in sorted(delta.items()):
+        for rec, off in ((sh, WOTR_SHEET_ABILITIES), (cre, CREATURE_SCORES)):
+            score = rec[off + ability]
+            new = score + n
+            rec[off + ability] = min(new, max(score, aging.HIGHEST)) if n > 0 else max(new, min(score, aging.LOWEST))
+    if delta:
+        line += f", {aging.CATEGORY_NAMES[aging.category(race, after)]}: " + ", ".join(
+            f"{aging.ABILITY_NAMES[a]} {n:+d}" for a, n in sorted(delta.items()))
+    return bytes(cre), bytes(sh), line
 
 
 def party_names(save: Chunks) -> Dict[int, bytes]:
@@ -294,10 +343,12 @@ def places(save: Chunks, roster_chunks: Mapping[Tuple[str, int], bytes]) -> Dict
     return out
 
 
-def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] = None) -> Tuple[Chunks, List[Moved]]:
+def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] = None,
+           years: Optional[Mapping[int, int]] = None) -> Tuple[Chunks, List[Moved]]:
     """The sequel's roster chunks (CHAR, CACT, SPST, PSST, PSIN) for the party of a parsed save,
     and what moved: each member and its items, SL's object and the sequel's. PLACE_OF: each member's
-    place (places), else CHARTRAN's (35 - M)."""
+    place (places), else CHARTRAN's (35 - M). The Loader's way (SEQUEL.loader) the age comes across,
+    each member YEARS older (gap_years; none without)."""
     creatures, sheets, items, lists = (_chunk(save, n) for n in (CREATURES, SHEETS, ITEMS, LISTS))
     spells, powers = _chunk(save, SPELLS), _chunk(save, POWERS)
     out: Dict[Tuple[str, int], bytes] = {}
@@ -310,7 +361,13 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         sh = sheets[index * SL_SHEET:(index + 1) * SL_SHEET]
         if len(sh) < SL_SHEET:
             raise GffError("a party member's sheet is missing")
-        records = [[1, 0, CREATURE_KIND, m, m, creature(rec, sh)], [3, 0, SHEET_KIND, m, SHEET_FLAGS, sheet(sh)]]
+        cre, wsh, age = creature(rec, sh), sheet(sh), ""
+        if sequel.loader:
+            wsh = bytearray(wsh)
+            wsh[WOTR_SHEET_AGE] = sh[SL_SHEET_AGE] if game.spec_packed(sh) else 0
+            name = rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1")
+            cre, wsh, age = aged(cre, bytes(wsh), name, (years or {}).get(m, 0))
+        records = [[1, 0, CREATURE_KIND, m, m, cre], [3, 0, SHEET_KIND, m, SHEET_FLAGS, wsh]]
         log: List[Tuple[int, int]] = []
         bags: List[Tuple[int, int]] = []
         seen = set()
@@ -359,7 +416,7 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
         out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
-        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid))
+        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age))
     return out, moved
 
 
@@ -473,12 +530,14 @@ def _gff_file(chunks: Chunks) -> bytes:
 
 
 def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
-               dos_dir: Optional[str] = None) -> List[Moved]:
+               dos_dir: Optional[str] = None, months: Optional[int] = None, rng=None) -> List[Moved]:
     """The party of the Shattered Lands save SAVE_PATH written into the roster in the sequel's
     FOLDER (CHARSAVE.GFF, kept first as CHARSAVE.GFF.BAK when there is none yet). With SL_DIR (the
     Shattered Lands folder) and DOS_DIR (the mod's dos folder), the items the sequel lacks become the
     Loader's own objects (with_added) instead of money bags, and the party takes free places in the
-    roster (places) instead of 32-35. The save is only read. What moved is returned for the report."""
+    roster (places) instead of 32-35, its ages with it; with MONTHS (roll_gap: the age rule on) each
+    member a year older with a chance of MONTHS in 12 (RNG). The save is only read. What moved is
+    returned for the report."""
     import os
     import shutil
     from . import icons
@@ -490,11 +549,14 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
     with open(path, "rb") as f:
         data = f.read()
     current = read_gff(data)  # (a roster the game can read, before anything is written)
-    place_of = None
+    place_of = years = None
     if sl_dir and dos_dir:
+        import random
         place_of = places(save, current)
         sequel, _ = with_added(save, sequel, sl_dir, folder, dos_dir)
-    new, moved = roster(save, sequel, place_of)
+        if months:
+            years = gap_years(party_names(save), months, rng or random.Random())
+    new, moved = roster(save, sequel, place_of, years)
     backup = path + ".BAK"
     if not os.path.exists(backup):
         shutil.copyfile(path, backup)
@@ -502,15 +564,15 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
     return moved
 
 
-def report(moved: List[Moved]) -> str:
-    """Who went across and what each item became, a line each."""
-    lines = []
+def report(moved: List[Moved], months: Optional[int] = None) -> str:
+    """Who went across and what each item became, a line each (MONTHS: the gap between the games)."""
+    lines = [f"{months} months have passed since Shattered Lands."] if months else []
     for m in moved:
         from .ravitems import OWN_HIGH
         bags = sum(1 for _, new in m.items if new == MONEY_BAG)
         own = sum(1 for _, new in m.items if new >= OWN_HIGH and new < 30000)
         lines.append(f"{m.name} (roster place {m.place - ROSTER_PLACES[0] + 1}): {len(m.items)} items, {bags} of them a money bag"
-                     + (f", {own} the Loader's own" if own else ""))
+                     + (f", {own} the Loader's own" if own else "") + (f"; age: {m.age}" if m.age else ""))
         for old, new in m.items:
             note = (" (a money bag)" if new == MONEY_BAG else " (the Loader's)" if OWN_HIGH <= new < 30000
                     else " (left behind: a spell made it)" if new == LEFT else "")
@@ -520,6 +582,7 @@ def report(moved: List[Moved]) -> str:
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) not in (3, 5):
-        sys.exit("usage: python -m dsloader.ravtransfer SAVEnn.SAV RAVAGER_FOLDER [SL_FOLDER DOS_FOLDER]")
-    print(report(take_party(*sys.argv[1:])))
+    if len(sys.argv) not in (3, 5, 6):
+        sys.exit("usage: python -m dsloader.ravtransfer SAVEnn.SAV RAVAGER_FOLDER [SL_FOLDER DOS_FOLDER [MONTHS]]")
+    gap = int(sys.argv[5]) if len(sys.argv) == 6 else None
+    print(report(take_party(*sys.argv[1:5], months=gap), gap))

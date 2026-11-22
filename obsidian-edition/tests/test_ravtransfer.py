@@ -234,6 +234,58 @@ class SpellMadeTests(unittest.TestCase):
         self.assertEqual(moved[0].items[1], (1123, rt.MONEY_BAG))
 
 
+class AgeTests(unittest.TestCase):
+    def wotr(self, race, age_byte, scores=(16, 15, 14, 13, 12, 11)):
+        cre, sh = bytearray(rt.CREATURE), bytearray(rt.SHEET)
+        sh[rt.WOTR_SHEET_RACE], sh[rt.WOTR_SHEET_AGE] = race, age_byte
+        sh[rt.WOTR_SHEET_ABILITIES:rt.WOTR_SHEET_ABILITIES + 6] = bytes(scores)
+        cre[rt.CREATURE_SCORES:rt.CREATURE_SCORES + 6] = bytes(scores)
+        return bytes(cre), bytes(sh)
+
+    def test_middle_age_reached(self):
+        cre, sh = self.wotr(1, 39 - 15 + 1)  # (a human of 39)
+        cre2, sh2, line = rt.aged(cre, sh, "Lex", 1)
+        self.assertEqual(sh2[rt.WOTR_SHEET_AGE], 40 - 15 + 1)
+        want = bytes((15, 15, 13, 14, 13, 11))  # (STR -1, CON -1, INT +1, WIS +1)
+        self.assertEqual(sh2[rt.WOTR_SHEET_ABILITIES:rt.WOTR_SHEET_ABILITIES + 6], want)
+        self.assertEqual(cre2[rt.CREATURE_SCORES:rt.CREATURE_SCORES + 6], want)
+        self.assertEqual(line, "a year older: 40, middle-aged: STR -1, CON -1, INT +1, WIS +1")
+
+    def test_plain_year_and_none(self):
+        cre, sh = self.wotr(1, 5)
+        self.assertEqual(rt.aged(cre, sh, "Lex", 1)[2], "a year older: 20")
+        self.assertEqual(rt.aged(cre, sh, "Lex", 0), (cre, sh, "still 19"))
+        self.assertEqual(rt.aged(*self.wotr(1, 0), "Lex", 1)[2], "no age yet")
+
+    def test_most_age_not_reached(self):
+        from dsloader import aging
+        most = aging.most_age("Lex", 7)
+        cre, sh = self.wotr(7, most - 1 - 15 + 1)  # (a mul a year short of the most)
+        cre2, sh2, line = rt.aged(cre, sh, "Lex", 1)
+        self.assertEqual((cre2, sh2), (cre, sh))
+        self.assertIn("the most a mul lives", line)
+
+    def test_gap(self):
+        import random
+        rng = random.Random(5)
+        self.assertTrue(all(3 <= rt.roll_gap(rng) <= 12 for _ in range(50)))
+        self.assertEqual(set(rt.gap_years(range(4), 12, rng).values()), {1})
+        counts = sum(sum(rt.gap_years(range(4), 3, rng).values()) for _ in range(1000))
+        self.assertAlmostEqual(counts / 4000, 0.25, delta=0.03)
+
+    def test_carried_the_loaders_way(self):
+        save = made_save()
+        sheets = bytearray(save[("SAVE", rt.SHEETS)])
+        sheets[0x16] |= 0x80  # (Lex's sheet packed: +17h its age)
+        sheets[0x17], sheets[0x18] = 9, 1  # (a human of 23)
+        save[("SAVE", rt.SHEETS)] = bytes(sheets)
+        out, moved = rt.roster(save, scroll_sequel(), years={0: 1})
+        sheet = dataitems.records(out[("CHAR", 35)])[0][1].data
+        self.assertEqual((sheet[rt.WOTR_SHEET_AGE], moved[0].age), (10, "a year older: 24"))
+        out, _ = rt.roster(save, made_sequel())
+        self.assertEqual(dataitems.records(out[("CHAR", 35)])[0][1].data[rt.WOTR_SHEET_AGE], 0)  # (CHARTRAN's)
+
+
 class FileTests(unittest.TestCase):
     def test_take_party_keeps_the_rest(self):
         with tempfile.TemporaryDirectory() as d:

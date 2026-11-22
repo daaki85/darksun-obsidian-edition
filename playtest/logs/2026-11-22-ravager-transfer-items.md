@@ -82,3 +82,19 @@ DOSBox and the dice log stopped by pid, nothing saved.
   it stops and says to delete characters in the sequel first. CHARTRAN writes 32-35 whatever is there.
 
 DOSBox stopped by pid, nothing saved (the test copy's roster only).
+
+## Ages and the months between the games (about 01:00 UTC, 23 November)
+
+- SL keeps a member's age at the sheet's +17h (packed sheets); the sequel's Loader reads it at +41h,
+  which CHARTRAN leaves 0. So in the runs above the Loader's age pass gave each transferred member a
+  new random age on arrival (Cromwell 21, then 17, 13, 23 in turn), not their own.
+- The Loader's way now carries it, and ages the party for the gap: `ravtransfer ... 12` (12 months:
+  each member a year older for sure). grate-user's Cromwell (23), Balthbeorn (18), Finster (20) and
+  Cenna (39): the report says 24, 19, 21 and 40, and the sequel's inventory shows **AGE: 40** for Cenna
+  and **AGE: 24** for Cromwell (her +1 Shadowseeker and +1 Hayneedle named too).
+  ![](img/2026-11-22-ravager-xfer-ages.png)
+- The age categories' score changes (aging.changes, on the sheet and the creature) and the one year
+  that would reach the race's most are in the tests (none of the kit's members crosses a category
+  in a year).
+
+DOSBox and the dice log stopped by pid, nothing saved.
