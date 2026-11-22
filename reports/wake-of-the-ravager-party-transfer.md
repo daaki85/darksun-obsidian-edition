@@ -1,0 +1,96 @@
+# The party transfer to Wake of the Ravager: every item across, every effect working
+
+*Design, 2026-11-22. Branch `claude/ravager-party-transfer`. The first part is done:
+`dsloader/ravtransfer.py` is SSI's CHARTRAN in Python. It writes the same bytes as CHARTRAN on all 15
+Shattered Lands saves in `playtest/saves` and 20 made-up ones (logs/2026-11-22-ravager-transfer-format.md).
+This page plans what the mod adds on top.*
+
+Daaki's asks (2026-11-22):
+
+- every item the party carries comes across;
+- the mod's own effects work in the sequel too, not just the item;
+- the party ages by a random gap of 3-12 months, rolled once. Each member ages a year with a chance
+  of months/12, and the age rule's usual effects apply.
+
+## What CHARTRAN loses today
+
+Every item without an ITEMS.BIN pair becomes a money bag, object 900. On the kit's saves that is
+about one item in five:
+
+| save | items | money bags |
+|---|---|---|
+| trap-user | 50 | 8 |
+| selling-junk-user | 44 | 10 |
+| rest-no-call-user | 26 | 8 |
+
+Across all 15 saves, the items that turn into money bags are of three kinds:
+
+- **The mod's items.** These are its 33 item types (SL type 115 on) and the objects it adds (2419-2678,
+  65 named in `icons.ICONS`). Examples: Short Sword, Shadowseeker, Inixhide, the Rings and Cloak of
+  Protection, Ashen Robe, Hayneedle, Bone Helm, Shocking Arrows.
+- **SL's own quest and story items** (type 60): Slavepen key, Pot of Water, Empty Water Pot, Guava,
+  the Vulture, plus SL's two Bags, 1571 and 1572. ITEMS.BIN pairs those two bags with sequel objects
+  that are only a picture.
+- **SL's scrolls** (object 1440).
+
+## How the items come across
+
+1. **The mod's item types go into the sequel's type table.** DSCLOG adds the mod's types after SL's
+   115 in Shattered Lands. DSCLOG2 will do the same after the sequel's types, about 117 of them,
+   converted to its 15-byte records (the field map is `ravlog.TYPE_FIELDS`). The table sits in the
+   program's data at DS:19CDh. So step one is to find each read of the table and check whether there
+   is room after it, or whether DSCLOG2 has to move it.
+2. **Each mod item gets a sequel object.** It goes in the Loader's copy of OBJEX.GFF, in the free ids
+   14000-29999:
+   - its RDFF item record is built from SL's, with the type, plus, power and name;
+   - its name is added to the sequel's item names (RESOURCE TEXT 1000, a name a line);
+   - its icon is copied from the player's own SL files at the Loader's run, as the mod's icons are now.
+     Nothing from the games is committed.
+
+   The transfer then maps each such SL object to its new object instead of the money bag. If a mod item
+   is a sequel weapon with a plus (a gythka, cahulaks, chatkcha, club, pick, polearm, bow or staff sling),
+   it takes the sequel's own type, with the mod's name and plus.
+3. **SL's quest items become keepsakes.** They are carried and sellable, and they do nothing in the
+   sequel's story. They take the sequel's plain item type 9 (bag, amulet, barrel...) with SL's picture
+   and name. SL's two Bags take the sequel's own bag object, and they keep what they hold.
+4. **Scrolls** keep their spell where the sequel has it (the spell map is `ravtransfer.spell_place`). A
+   scroll of a dropped spell becomes a keepsake.
+5. **Spell-made weapons** (Shillelagh, Flame Blade, Spiritual Hammer) are left behind. Their spell is
+   over.
+6. **Roster slots:** CHARTRAN overwrites slots 32-35 without asking. The Loader keeps a backup of the
+   player's CHARSAVE.GFF (CHARSAVE.GFF.BAK, done), and it will use free slots first.
+7. **Aging:** the months are rolled once per transfer. Each member gains a year with a chance of
+   months/12, through the Loader's age pass (RavDiceLog._aging_pass, age at sheet +41h).
+
+## The mod's effects, item by item
+
+Each effect is ported to DSCLOG2 in the same way as the rules (a SITE byte each, played in the sequel,
+logged). The groups are listed in the order of the build.
+
+| group | items | what makes it work in the sequel |
+|---|---|---|
+| A. Stats only (type, material, dice, plus) | Short Sword; the bone, obsidian and metal short swords, axes, daggers, maces, great axes, picks, polearms and cahulaks; Hayneedle, Stillwater, Drakejaw, Thornwall, Gythka +2, Kreenfang, Cahulaks +1, Galefang, Greenbright, Headsman, Linebreaker, Ironwhirl, Nightsliver, Mindshard, Glasshewer, Emberlash, Deepbiter, Gutterknot, Windlash, Skycutter, Dunesong, Sling +1; Inixhide, Warden's Arms and Legs, Bone Helm, Gutterward, Ironbulwark | steps 1-2 alone. The sequel's own rules already port polearm reach, stinkpots and helms (they read the type) |
+| B. Who may wield it | the cleric-element and psionicist weapons (Hayneedle, Stillwater, Drakejaw, Galefang, Nightsliver, Mindshard, Glasshewer, Emberlash; the bone and obsidian types) | the mod's wield tables added to DSCLOG2's class-restriction sites (19-21) |
+| C. On a hit | Searing Blade (Focus Heat, 2d6), Cahulaks +2 (Cause Light Wounds), Chill, Shocking, Vampiric and Burning Arrows | an item power the sequel casts on a hit, where it has the spell; else a DSCLOG2 site at the hit |
+| D. While worn | Shadowseeker (sees the invisible), Warden's Chest (Resist Fire), Warden's Helm (Cloak of Bravery), Arrowbane (Protection from Normal Missiles), Sunking Crown (Protection from Evil) | the effect put on the wearer when the item is worn and taken off when it is removed (SL's worn-effect feature, ported) |
+| E. AC and saves | Rings of Protection +1 (two), Cloak of Protection +1, Ashen Robe, Veiled Robe (with its extra wizard slots), Bracers of Defense, Golden Girdle of Urnst, Boots of Speed (with their Move) | DSCLOG2's PROBE_AC (done for helms) and the save site (done for Blur and Fire Shield), each with the mod's rule |
+| F. Other rules | Girdle of Back Defense (no rear bonus, no backstab), Boots and Cloak of Elvenkind (silent, hidden), Amulet of Magic Resistance (+15%) | the rear attack, the thief-skill site (done for class restrictions) and the magic resistance check |
+| G. Used up | Tome of Understanding (+1 WIS), Kalzith's six scrolls | the sequel's scroll use, with the mod's two cases |
+
+The display features (charges, material in the item box) are already ported. They show on all these
+items once they have types.
+
+## The build, in order
+
+1. The type table: find its reads and its room, then add the mod's types (group A's base). Test: a
+   transferred Short Sword in a fight, with its dice in the dice log.
+2. The objects, names and icons in the Loader's OBJEX and RESOURCE copies. The transfer maps to them.
+   Keepsakes, bags, scrolls and spell-made weapons are handled as above.
+3. Roster slots, aging, the Loader's button ("Take the party to Wake of the Ravager": pick an SL save,
+   then a report of every item and what it became).
+4. Groups B to G, one feature at a time, each played in the sequel with a control run (the rules' way:
+   PLAYTESTING.md, ravhold.sh).
+5. A play from an SL save to the sequel's party screen with the transferred party, and the docs and
+   the PR.
+
+Each step goes in the port plan's table (reports/wake-of-the-ravager-port-plan.md) as it lands.
