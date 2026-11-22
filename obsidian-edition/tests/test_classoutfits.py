@@ -105,16 +105,18 @@ class HumanOutfitTests(unittest.TestCase):
             self.assertEqual(geared[y + 10][x + 10], stock[y][x])
         self.assertIsNone(geared[10][10 + 13])  # the old spike was on the tip of the bow
 
-    def test_priest_neckline_clears_native_jaw_and_ponytail(self):
+    def test_warrior_and_priest_necklines_clear_native_jaw_and_ponytail(self):
         runs = [(False, 0, 8, 6, 5), (False, 1, 10, 6, 4), (True, 2, 12, 9, 5)]
         for combat, f, left, y, length in runs:
-            pose = classoutfits.frames("Priest", combat)[f]
-            cells = {(x, y) for x in range(left, left + length)}
-            # These cells retain whatever is in the player's original picture.
-            self.assertTrue(all(pose.image[yy + 6][x + 6] is None for x, yy in cells))
-            self.assertTrue(cells.isdisjoint((x, y) for x, y, _ in pose.cloak))
-            for bit in (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS):
-                self.assertTrue(cells.isdisjoint(pose.regions[bit]))
+            for role in ("Priest", "Warrior"):
+                with self.subTest(role=role, combat=combat, frame=f):
+                    pose = classoutfits.frames(role, combat)[f]
+                    cells = {(x, y) for x in range(left, left + length)}
+                    # These cells retain whatever is in the player's original picture.
+                    self.assertTrue(all(pose.image[yy + 6][x + 6] is None for x, yy in cells))
+                    self.assertTrue(cells.isdisjoint((x, y) for x, y, _ in pose.cloak))
+                    for bit in (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS):
+                        self.assertTrue(cells.isdisjoint(pose.regions[bit]))
 
     def test_woman_has_independent_outfit_layers(self):
         for combat, count in ((False, 15), (True, 14)):
