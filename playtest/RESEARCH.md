@@ -983,6 +983,9 @@ logs/2026-11-21-ravager-creation-hp.md.
 read into memory at the chunk's own length, so a longer chunk adds types (the Loader's OBJEX2.GFF adds the
 mod's 33 as 102-134). A test edit of an item's type (the word at item +0Ah, items from DS:19C1h) shows in
 the item box at once (material and dice).
+Its item names (RESOURCE.GFF's TEXT 1000, 255 lines; an item's +14h word) can't be added to by
+lines: 4 more broke the inventory screen (wrong items shown, AC -12), with a control; the mod's names
+need DSCLOG2 to make the room, as DSCLOG does in SL.
 
 **Its item types and helms** (2026-11-21, logs/2026-11-21-ravager-helms.md): the types' table at DS:19CDh,
 15 bytes a type (AC +0Eh, 80h at +0Bh counts for AC, slot +05h); the items' types and names can be listed

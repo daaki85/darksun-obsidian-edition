@@ -34,3 +34,18 @@ Not seen yet: a fight with a mod type (the dice log's damage), and the class bit
 Those come with the transferred items.
 
 Water: no new area.
+
+## The item names: no room by adding lines (about 23:10 UTC)
+
+- The item record's name (+14h) is a word, as SL's +12h is, but the sequel's TEXT 1000 (RESOURCE.GFF, a
+  name a line from 1) already has 255 names, and 236 of them are used by OBJEX's items.
+- A copy of the game folder with 4 names added to TEXT 1000 ("Testname 256" on) loaded ravager-roost, but
+  the inventory was wrong: Ar'anda's hands showed empty, her pack held armour pieces and a staff, her AC
+  read -12, though memory still had her +1 Longsword in her hand (slot 3). This was the same with the
+  test name edit (257) put back. ![](img/2026-11-22-ravager-names-added.png)
+- Control: the same copy with the game's own RESOURCE.GFF, the same steps: her inventory as it should
+  be (sling, dagger, +1 Longsword, AC 4). ![](img/2026-11-22-ravager-names-control.png)
+- So a longer name list breaks something. The likely cause is a buffer of a fixed size, or a block
+  after the names. The mod's names will go in the way DSCLOG does it in Shattered Lands instead: the
+  helper makes room after the game's names as they are read in, and fills it (names.py). That is the
+  next piece of work. DOSBox stopped by pid both times, nothing saved.
