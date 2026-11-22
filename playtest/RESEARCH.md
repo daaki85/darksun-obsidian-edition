@@ -1026,3 +1026,9 @@ and `rest-no-call-user`: all transferred, the kits kept.
   off, so make a near kind undead (its sheet's race, +12h, 9; hit dice +1Eh). `ravfight.py state`'s
   object numbers are the combatants' (a dead one's record is all FFh). `ravfight.py until 1` gives
   him the next turn; the camera moves with whoever acts, so read `state` again before aiming.
+- **Casting in the sequel's fights** (logs/2026-11-22-ravager-spell-to-hit.md): a member hit this round
+  has every spell crossed out on USE ("YOU WERE HIT" in the bar): for a cast, raise the party's base AC
+  (sheet +21h, -10) so the Draxans miss, and end the turn (`ravfight.py end`) to get a fresh round. A
+  missile spell can't take a foe right beside the caster (the barred sign). Terrannus's priest spells
+  on USE: row 1 at y 59 Bless, Curse, Cure Light Wounds, Cause Light Wounds (x 231), Entangle; the
+  icons sit about 22 apart from x 175, so hover to check the name before a click.

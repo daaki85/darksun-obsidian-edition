@@ -333,6 +333,10 @@ PATCHES: Tuple[Patch, ...] = (
     # undead's hit dice, "mov al,[es:bx+1Eh]" (97C9Ch; SL's 7AE01h): DSCLOG2's TU_SITE, which sends the
     # routine on to its destroy, its failure or its end
     Patch("turn_undead_manual", 0x97C9C, bytes.fromhex("268a471e"), _site(15, 4)),
+    # Spells that roll to hit (SL's spell_to_hit, always on): the immunity routine's "not immune" answer
+    # (84AAFh, "xor ax,ax / pop di"; the sequel has no always-hit stub to answer instead), DSCLOG2's
+    # TH_SITE: the missile and hostile touch spells' attack roll, a miss answering immune
+    Patch("spell_hit", 0x84AAF, bytes.fromhex("33c05f"), _site(16, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

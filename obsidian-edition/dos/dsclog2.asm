@@ -2853,6 +2853,7 @@ site_table:
         dw rainbow_hurt                     ; 13 SITE_RAINBOW
         dw hold_hd                          ; 14 SITE_HOLD_HD
         dw tu_site                          ; 15 SITE_TURN
+        dw th_site                          ; 16 SITE_TO_HIT
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3592,6 +3593,241 @@ tu_caster_c dw 0                ;   +16h the priest's creature (FFFFh: not a cre
 tu_target_c dw 0                ;   +18h the undead's
 tu_frame_end:
 tu_failed times TU_MOST db 0 ; (a byte a target: the priests, 0-7, who failed against it this fight)
+; TH_SITE (site 16, "spell_hit"): spells that roll to hit, SL's SPELL_HIT (th_hit). The sequel has no
+; always-hit stub and no table of the missile spells (SL's 7A1A7h): its routine of what spell SI does
+; to target DI (8451Ah, SL's 7A085h; [BP-4] 1 for the computer's look ahead, 5F2D2h's, not a cast)
+; answers 0 (not immune) only through "xor ax,ax / pop di" (84AAFh; 3 bytes), and an answer of 1 makes
+; the spell's damage and effect routine (651A0h) skip both, as SL's 7A0BEh. There the cast PROBE_CAST
+; last saw (TH_CAST: armed, not a weapon's spell on a hit, not an Acid's burn) of this spell at this
+; target rolls to hit once, as SL's: the missile spells (TH_MISSILES, the sequel's numbers: Acid
+; Arrow 18, Pebble to Boulder 53, Magic Stone 121, Condense 169, Minute Meteors 33 with its own +2; the
+; spines have no record in the sequel) as missiles (kind 2, DEX), the touch spells (TH_TOUCHES: Chill
+; Touch 3, Shocking Grasp 10, Vampiric Touch 38, Cause Light Wounds 118, Cause Disease 149, Cause
+; Serious 171, Poison 179, Cause Critical 195) at a creature of another side (+15h's low 3 bits, SL's
+; +1Dh) as melee (kind 1, STR). The caster's THAC0 (its creature's +16h, SL's +1Fh; Acid Arrow's 21
+; less the cast's level), less the game's to-hit adjustments (628h:66h, 85B??h in overlay 83400h:
+; target, attacker, no weapon, kind; their STR or DEX part 98h:2C0h or 2D9h, for the log) and a
+; monster's difficulty ([143Ah] - 1, SL's 11AEh), against the AC (4671h:7Ah, 5D520h: target, attacker,
+; not from behind, the weapon attack's), a d20 (GAME_DIE): a 20 hits, a 1 misses. A miss answers 1,
+; so the spell does nothing. The "pop di" done here (the word under the INT's frame, the frame moved
+; up over it); the far calls in a frame the overlay manager can fix up (RAINBOW_HURT's), the way back
+; never changed. Recorded (KIND_TOHIT, 12: the d20, TH_FRAME, SL's; dicelog's _spell_to_hit).
+KIND_TOHIT    equ 12
+TH_ACID       equ 18
+TH_METEORS    equ 33
+TH_DIFFICULTY equ 0x143A
+TH_ADJ_STUB   equ 0x475A - 0x47E0       ; (628h's stub segment less DS's: 66h the to-hit adjustments)
+TH_AC_STUB    equ 0x4671 - 0x47E0       ; (the attack overlay's stub: 7Ah the AC, 5D520h)
+TH_ABIL_SEG   equ 0x17E5 - 0x47E0       ; (98h's segment, the root's: 2C0h STR's to-hit, 2D9h DEX's)
+TH_SIDE       equ 0x15                  ; (the creature's side, low 3 bits; SL's +1Dh)
+TH_THAC0      equ 0x16                  ; (the creature's THAC0; SL's +1Fh)
+%macro th_far 2                         ; a far call to segment DS + %1, offset %2
+        mov ax, ds
+        add ax, %1
+        mov [cs:th_call + 2], ax
+        mov word [cs:th_call], %2
+        call far [cs:th_call]
+%endmacro
+th_site:
+        sti
+        pushad
+        push es
+        mov bx, sp                      ; (BX+34: IP, +36 CS, +38 FLAGS, +40 the DI to pop)
+        mov byte [cs:th_miss], 0
+        cmp byte [cs:th_armed], 0
+        je .done
+        cmp word [bp - 4], 0
+        jne .done                       ; (the computer's look ahead: no cast)
+        cmp si, [cs:cast_spell]
+        jne .done
+        cmp di, [cs:th_target]
+        jne .done
+        mov byte [cs:th_armed], 0       ; (one roll a cast)
+        cmp byte [cs:acid_burning], 0
+        jne .done
+        cmp si, 0xFF
+        ja .done
+        mov ax, si
+        push bx
+        mov bx, th_missiles
+        mov cx, TH_SPELLS
+.find:  cmp al, [cs:bx]
+        je .found
+        inc bx
+        loop .find
+        pop bx
+        jmp .done
+.found: mov word [cs:th_kind], 2        ; (a missile: DEX)
+        cmp bx, th_touches
+        pop bx
+        jb .who
+        mov word [cs:th_kind], 1        ; (a touch: STR)
+.who:   mov ax, [cs:cast_who]
+        mov [cs:th_caster], ax
+        call tu_creature
+        cmp ax, 0xFFFF
+        je .done
+        imul cx, ax, CREATURE_SIZE
+        mov ax, di
+        call tu_creature
+        cmp ax, 0xFFFF
+        je .done
+        imul ax, ax, CREATURE_SIZE
+        push bx
+        les bx, [CREATURES_PTR]
+        add ax, bx
+        add bx, cx                      ; (ES:BX the caster's creature, ES:AX the target's)
+        xchg ax, bx
+        mov dl, [es:bx + TH_SIDE]
+        xchg ax, bx
+        cmp word [cs:th_kind], 1
+        jne .thac0
+        xor dl, [es:bx + TH_SIDE]
+        test dl, 7
+        jnz .thac0
+        pop bx
+        jmp .done                       ; (a touch on one's own side: as the game has it)
+.thac0: movsx ax, byte [es:bx + TH_THAC0]
+        pop bx
+        cmp si, TH_ACID
+        jne .own
+        mov ax, 21
+        movzx cx, byte [cs:th_level]
+        sub ax, cx                      ; (a fighter's of the cast's level)
+.own:   mov [cs:th_thac0], ax
+        xor ax, ax
+        cmp word [cs:th_caster], IMAGE_PARTY
+        jb .diff
+        mov ax, [TH_DIFFICULTY]
+        dec ax
+.diff:  mov [cs:th_diff], ax
+        push bx
+        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word [cs:th_kind]
+        push dword 0
+        push word [cs:th_caster]
+        push di
+        th_far TH_ADJ_STUB, 0x66        ; (target, attacker, no weapon, kind)
+        add sp, 10
+        cmp si, TH_METEORS
+        jne .bonus
+        add ax, 2                       ; (Minute Meteors' own +2, as the manual's)
+.bonus: mov [cs:th_bonus], ax
+        push word [cs:th_caster]
+        cmp word [cs:th_kind], 1
+        je .str
+        th_far TH_ABIL_SEG, 0x2D9
+        jmp .part
+.str:   th_far TH_ABIL_SEG, 0x2C0
+.part:  add sp, 2
+        mov [cs:th_part], ax
+        push word 0
+        push word [cs:th_caster]
+        push di
+        th_far TH_AC_STUB, 0x7A         ; (target, attacker, not from behind)
+        add sp, 6
+        mov [cs:th_ac], ax
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        mov ax, 20
+        call game_die
+        mov [cs:th_d20], ax
+        mov dx, ax
+        mov ax, [cs:th_thac0]
+        sub ax, [cs:th_bonus]
+        sub ax, [cs:th_diff]
+        sub ax, [cs:th_ac]              ; (the d20 needed)
+        cmp dx, 20
+        je .rec
+        cmp dx, 1
+        je .miss
+        cmp dx, ax
+        jge .rec
+.miss:  mov byte [cs:th_miss], 1
+.rec:   mov [cs:th_frame + 2], di
+        mov [cs:th_frame + 4], si
+        movzx ax, byte [cs:th_miss]
+        xor al, 1
+        mov [cs:th_hitw], ax
+        inc word [cs:manual_count]
+        mov si, th_frame
+        mov cx, (th_frame_end - th_frame) / 2
+        mov ax, [cs:th_d20]
+        mov word [cs:kind], KIND_TOHIT
+        call rec_frame
+.done:  mov bx, sp
+        movzx ax, byte [cs:th_miss]
+        mov [ss:bx + 30], ax            ; (AX: 1 a miss, "immune"; else 0, the game's)
+        mov ax, [ss:bx + 40]
+        mov [ss:bx + 2], ax             ; (DI popped)
+        mov ax, [ss:bx + 38]
+        mov [ss:bx + 40], ax
+        mov ax, [ss:bx + 36]
+        mov [ss:bx + 38], ax
+        mov ax, [ss:bx + 34]
+        mov [ss:bx + 36], ax            ; (the INT's frame up over it)
+        pop es
+        popad
+        add sp, 2
+        iret
+; TH_CAST: PROBE_CAST's for TH_SITE: the cast's caster ([BP+6]), target ([BP+8]), spell ([BP+0Ah]) and
+; level ([BP+0Ch]) kept, the cast armed for one roll unless it is a weapon's spell on a hit (the cast
+; routine's way back followed by WEAPON_BACK's bytes, 5D2D1h's: the call at 5D2CCh, level 6). All kept.
+th_cast:
+        push ax
+        push bx
+        push es
+        mov ax, [bp + 6]
+        mov [cs:cast_who], ax
+        mov ax, [bp + 8]
+        mov [cs:th_target], ax
+        mov ax, [bp + 0x0A]
+        mov [cs:cast_spell], ax
+        mov al, [bp + 0x0C]
+        mov [cs:th_level], al
+        mov byte [cs:th_armed], 1
+        les bx, [bp + 2]                ; (the caller's way back)
+        cmp dword [es:bx], WEAPON_BACK
+        jne .out
+        cmp byte [es:bx + 4], WEAPON_BACK4
+        jne .out
+        mov byte [cs:th_armed], 0
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+WEAPON_BACK  equ 0x6A18C483           ; ("add sp,18h / push 2": 83 C4 18 6A 02)
+WEAPON_BACK4 equ 0x02
+th_missiles db 18, 53, 121, 169, 33              ; Acid Arrow, Pebble to Boulder, Magic Stone, Condense, Minute Meteors
+th_touches  db 3, 10, 38, 118, 149, 171, 179, 195 ; Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light
+TH_SPELLS equ $ - th_missiles                     ;   Wounds, Cause Disease, Cause Serious, Poison, Cause Critical
+th_call   dw 0, 0
+th_armed  db 0
+th_miss   db 0
+th_level  db 0
+th_target dw 0xFFFF
+cast_who  dw 0
+cast_spell dw 0
+th_frame:                       ; (SL's: the frame's +6 on)
+th_caster dw 0
+          dw 0                  ; (+8 the target, +0Ah the spell)
+          dw 0
+th_thac0  dw 0
+th_bonus  dw 0
+th_part   dw 0
+th_diff   dw 0
+th_ac     dw 0
+th_d20    dw 0
+th_kind   dw 0
+th_hitw   dw 0                  ; (+1Ah 1 a hit)
+th_frame_end:
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]
@@ -4833,6 +5069,7 @@ probe_cast:
         mov ax, [bp + 0x0A]
         mov word [cs:kind], KIND_CAST
         call record
+        call th_cast                    ; (TH_SITE's: armed for an attack roll)
         pop ax
         pop si
         mov cx, [bp + 6]

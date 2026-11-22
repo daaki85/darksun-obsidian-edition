@@ -1259,6 +1259,16 @@ creature and three words; dicelog's `_manual`).
   in the helper (`TU_FAILED`, cleared with the tangles at a fight's first round and by a turning out
   of a fight), a D\*'s more cleared by `CAST_START`
   ([played](../playtest/logs/2026-11-21-ravager-turn-undead.md); the destroy's way read, not played).
+  Spells roll to hit in the sequel through site 16, `spell_hit` (84AAFh, `xor ax,ax / pop di`, the
+  immunity routine 8451Ah's only "not immune" answer): the sequel has no always-hit stub or missile
+  table (SL's 78BA0h, 7A1A7h), so DSCLOG2's `TH_SITE` answers 1 ("immune") on a miss, and the damage
+  and effect routine (651A0h) skips both, as SL's. `PROBE_CAST` (80585h) arms it (`TH_CAST`) unless the
+  cast routine returns to the weapon's spell on a hit (5D2D1h's bytes). The spells by the sequel's
+  numbers (Magic Stone 121, Condense 169, Vampiric Touch 38, the Cause spells 118, 149, 171, 195,
+  Poison 179; no record for SL's spines); THAC0 creature +16h, side +15h; the adjustments 628h:66h,
+  STR's and DEX's part 98h:2C0h and 2D9h, the AC 4671h:7Ah (5D520h), the difficulty DS:143Ah; the
+  computer's look-ahead calls (`[bp-4]` 1, 5F2D2h's) never roll
+  ([played](../playtest/logs/2026-11-22-ravager-spell-to-hit.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
