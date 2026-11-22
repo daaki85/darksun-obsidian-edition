@@ -138,11 +138,17 @@ before the rule's site, with the rule on or off (no INT F5h in the trace), and t
 past the routine's return, so the 94 it prints isn't the game's number (Ar'anda's hear noise, which
 goes through the site, was 0 in brigandine).
 
+**A human preserver once a fighter casting in armour** (about 21:55 UTC; Ar'anda, the leader, made a
+human, classes 11 9, in her leather Armor; the inventory's CAST SPELL/USE PSIONIC, 217, 185): every
+level 1 spell crossed out, "NO SPELLS IN ARMOUR", as for the multiclass preserver above. Control, the
+rule off (LEVEL pressed to redraw): the spells plain. A human preserver alone (11) in the same armour,
+the rule on: the spells plain (SL's PROBE_NO_CAST takes only a multiclass preserver or a human once a
+warrior: a preserver alone is kept out of armour at the equip instead, as the cases above).
+
 ## Not played
 
 - A new character's starting gear (SL's weaponchoice.class_gear: the Loader's creation side isn't on the
-  sequel's creation screen yet), a human preserver once a warrior casting in armour (CLASS_AND_WARRIOR:
-  the multiclass preserver's case above is the same test).
+  sequel's creation screen yet).
 
 ## Water
 
