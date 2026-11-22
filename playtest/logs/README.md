@@ -133,6 +133,7 @@ schedules and diffs a log made or used.
 | [2026-11-20](2026-11-20-open-prs-checks.md) | Pull requests #136, #140 and #141 played together (all seven open ones merged locally): bulk loot fine to full packs; rounds counted right, but a long burst of skipped rounds that overran the ring was undercounted (`Rounds 232-383` for 4-383); a Haste recast reported `in place of`, with no ageing |
 | [2026-11-22](2026-11-22-ravager-transfer-format.md) | The party transfer to Wake of the Ravager: SSI's CHARTRAN read and redone in Python, byte for byte on every SL save in the kit |
 | [2026-11-22](2026-11-22-ravager-item-types.md) | The mod's 33 item types in the sequel's type table (OBJEX.GFF's ALL 4, read at its length): an obsidian short sword's type seen in the item box, with a control |
+| [2026-11-22](2026-11-22-ravager-item-names.md) | The mod's item names in the sequel: DSCLOG2's names past the game's 256, seen in the item box, with a control |
 
 ## files/
 

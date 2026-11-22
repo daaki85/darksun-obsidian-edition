@@ -552,9 +552,22 @@ class RavDiceLog(dicelog.DiceLog):
                 rebind("EFFECT_NAMES", names)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
-            return super().attach()
+            result = super().attach()
         finally:
             dicelog.GameData = real
+        self._write_item_names()
+        return result
+
+    def _write_item_names(self) -> None:
+        """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196, +198), if it has them."""
+        if self.tsr_hdr is None:
+            return
+        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        off, count = struct.unpack("<HH", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF, 4))
+        names = ravager.item_names()
+        if not off or count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
+            return
+        self.guest.guest.write(base + off, names)
 
     def set_rules(self, rules: int) -> None:
         """SL's, the rules ported to the sequel alone (ravager.RULES_PORTED), into DSCLOG2's header

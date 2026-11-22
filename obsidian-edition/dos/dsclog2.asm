@@ -166,7 +166,11 @@ stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passe
         times 170 - ($ - hdr) db 0  ; (DSCLOG's fields +166 to +169: none of them here yet, zero)
 rules      dw 0                 ; +170 the rule changes the Loader turns on, as DSCLOG's (RULE_HP_BEST, ...;
                                 ;      the Loader writes only the ported ones: ravager.RULES_PORTED)
-        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +172 to +237: none of them here yet, zero)
+        times 196 - ($ - hdr) db 0  ; (DSCLOG's fields +172 to +195: none of them here yet, zero)
+names_off  dw item_names        ; +196 offset of ITEM_NAMES in this segment: the item names past the
+names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), NAME_KEPT bytes each,
+                                ;        written by the Loader (dsloader/ravager.item_names)
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +200 to +237: none of them here yet, zero)
 dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
                                 ;      768 values 0-63, for the colours of the Loader's labels and panel
 dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
@@ -2064,6 +2068,50 @@ l_line   times L_LINE_SIZE db 0
 look_count dw 0                 ; boxes filled (for a look in play)
 look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
 
+; ---- ITEM NAMES: the mod's items' names, past the game's 256 ----
+; The game's item names are RESOURCE.GFF's TEXT 1000, a name a line, read into a table of 256 far
+; pointers at DS:56F3h (name 0 the first line; 255 lines in the game's file): more lines run past the
+; table and break the game (playtest/logs/2026-11-22-ravager-item-types.md). An item names its entry by
+; a word (+14h), and the game's 7 reads of the table, "push dword [bx+56F3h]" with BX the number x4
+; (59296h, 716A3h, 75E36h, 75E81h, 93AAAh, 95027h, 95052h: the inventory, the item box, the shops...),
+; are SITE_NAME: name 256 on is ITEM_NAMES' (the Loader's, from the party transfer), an empty name past them.
+NAMES_TABLE equ 0x56F3
+NAMES_GAME  equ 256
+NAMES_ROOM  equ 160
+NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
+name_push:
+        pop word [cs:np_ip]
+        pop word [cs:np_cs]
+        pop word [cs:np_fl]
+        cmp bx, NAMES_GAME * 4
+        jb .game
+        cmp bx, (NAMES_GAME + NAMES_ROOM) * 4
+        jae .none
+        push cs
+        push ax
+        mov ax, bx
+        sub ax, NAMES_GAME * 4
+        shl ax, 2                   ; (x4 to x16: NAME_KEPT)
+        add ax, item_names
+        push bp
+        mov bp, sp
+        xchg ax, [bp + 2]           ; (the offset in place of the AX pushed, AX back)
+        pop bp
+        jmp .back
+.none:  push cs
+        push word no_name
+        jmp .back
+.game:  push dword [bx + NAMES_TABLE]
+.back:  push word [cs:np_fl]
+        push word [cs:np_cs]
+        push word [cs:np_ip]
+        iret
+np_ip   dw 0
+np_cs   dw 0
+np_fl   dw 0
+no_name db 0
+item_names times NAMES_ROOM * NAME_KEPT db 0
+
 ; RTC_BEGIN, RTC_WAITED: DSCLOG's: a wait for the Loader ends after its BIOS ticks, or, as the BIOS
 ; clock can stand still in fights, once the real-time clock's second has changed twice (1 to 2 s)
 rtc_begin:
@@ -2938,6 +2986,7 @@ site_table:
         dw dual_new                         ; 39 SITE_DUAL_NEW
         dw probe_floor_all                  ; 40 SITE_FLOOR_ALL (WALL SHADOWS: the view's floor drawn, 2B81Ch)
         dw probe_floor_rect                 ; 41 SITE_FLOOR_RECT (... a rectangle of it, 2B97Fh)
+        dw name_push                        ; 42 SITE_NAME (an item's name read, ITEM NAMES)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.

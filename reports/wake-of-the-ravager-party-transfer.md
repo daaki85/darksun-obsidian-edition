@@ -44,7 +44,8 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
 2. **Each mod item gets a sequel object.** It goes in the Loader's copy of OBJEX.GFF, in the free ids
    14000-29999:
    - its RDFF item record is built from SL's, with the type, plus, power and name;
-   - its name is added to the sequel's item names (RESOURCE TEXT 1000, a name a line);
+   - its name is one of DSCLOG2's names past the game's 256 (done 2026-11-22: the game's list is full
+     and can't grow, so the helper answers the game's 7 reads of it for numbers 256-415);
    - its icon is copied from the player's own SL files at the Loader's run, as the mod's icons are now.
      Nothing from the games is committed.
 

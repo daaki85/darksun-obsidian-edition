@@ -34,8 +34,26 @@ class TableTests(unittest.TestCase):
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
                                "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect"}
-                         | {"xp_need_%x" % at for at in ravager.XP_READS})  # (DSCLOG2's own interrupts)
+                         | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
+                         | {"item_name_%x" % at for at in ravager.NAME_READS})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
+
+    def test_item_names(self):
+        """The helper's header names ITEM_NAMES (+196) and its room (+198), as ravager has them; the mod's
+        names land at their places (the Short Sword, SL's 144h, at 258)."""
+        exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "DSCLOG2.EXE"), "rb").read()
+        at = exe.index(b"DSCLOGR1")
+        off, count = struct.unpack_from("<HH", exe, at + ravager.TSR_NAMES_OFF)
+        hdr_off, = struct.unpack_from("<H", exe, at + 20)
+        self.assertEqual(count, ravager.NAMES_ROOM)
+        self.assertEqual(exe[at - hdr_off + off:at - hdr_off + off + count * ravager.NAME_KEPT],
+                         bytes(count * ravager.NAME_KEPT))
+        table = ravager.item_names()
+        self.assertEqual(ravager.mod_name(npcitems.SHORT_SWORD), 258)
+        place = (258 - 256) * ravager.NAME_KEPT
+        self.assertEqual(table[place:place + 12], b"Short Sword\0")
+        self.assertTrue(len(table) == count * ravager.NAME_KEPT)
 
     def test_helper_has_the_use_probes(self):
         """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT

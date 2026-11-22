@@ -104,6 +104,32 @@ HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
 XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 
+# The game's reads of an item's name (file offsets: SITE_NAME's)
+NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
+# The item names: the game's table holds 256 (RESOURCE.GFF's TEXT 1000: its 255 lines are names 0-254);
+# DSCLOG2's ITEM_NAMES (its header's +196, NAMES_ROOM of NAME_KEPT bytes, written by the Loader as it
+# attaches) are names 256 on. The mod's own come first, each at 256 + its Shattered Lands entry less
+# names.OWN (so the mod's Short Sword, SL's 144h, is 258).
+NAMES_GAME, NAMES_ROOM, NAME_KEPT = 256, 160, 16
+TSR_NAMES_OFF, TSR_NAMES_COUNT = 196, 198
+
+
+def mod_name(sl_entry: int) -> int:
+    """The sequel's name number for the mod's Shattered Lands name entry SL_ENTRY (names.OWN on)."""
+    from . import names
+    return NAMES_GAME + sl_entry - names.OWN
+
+
+def item_names() -> bytes:
+    """DSCLOG2's ITEM_NAMES as the Loader writes them: the mod's names at mod_name's places."""
+    from . import names
+    out = bytearray(NAMES_ROOM * NAME_KEPT)
+    for entry, name in names.NAMES.items():
+        at = (mod_name(entry) - NAMES_GAME) * NAME_KEPT
+        out[at:at + NAME_KEPT] = name[:NAME_KEPT - 1].ljust(NAME_KEPT, b"\0")
+    return bytes(out)
+
+
 def _site(number: int, length: int) -> bytes:
     """DSCLOG2's SITE at a patch site: INT VEC_SITE, the site's number, NOPs to LENGTH (3 or more)."""
     return bytes((0xCD, VEC_SITE, number)) + b"\x90" * (length - 3)
@@ -450,6 +476,10 @@ PATCHES: Tuple[Patch, ...] = (
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
     Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), _site(40, 6)),
     Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), _site(41, 6)),
+    # The game's 7 reads of an item's name, "push dword [bx+56F3h]" (its table of 256 far pointers):
+    # DSCLOG2's SITE_NAME, names 256 on the Loader's (NAMES_GAME, item_names).
+    *(Patch("item_name_%x" % at, at, bytes.fromhex("66ffb7f356"), _site(42, 5))
+      for at in NAME_READS),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
