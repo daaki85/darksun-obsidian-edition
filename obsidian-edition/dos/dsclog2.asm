@@ -1577,7 +1577,8 @@ ib_charges_num  db '000000', 0          ; (a space, then the number, or the numb
 ; at DS:19C9h: THAC0 +16h, DEX +1Ah), the character's number at +0B44h, the DEX tables (DS:084Ch, 0866h),
 ; the thief tables (load + 449Bh:0, two more race rows: DEX limits at A0h, A8h, B0h), the abilities a
 ; row lower (STR at y 38h, SL's 35h); and the numbers are always the sheet's and the game's tables'
-; (the Loader's STATS, with equipment and effects, the age and a ranger's stealth aren't ported).
+; (the Loader's STATS, with equipment and effects, and a ranger's stealth aren't ported); and with
+; ages the age in the row between the saves and STR, from the sheet (RULE_HI_AGING, below).
 IV_DRAW     equ -0x99           ; (from the patch) "lcall SEG:OFF" operand: the text routine
 IV_WHO      equ -0x8B           ; (from the patch) "mov ax,0370h" operand: the character number's selector
 WHO_OFF     equ 0x0B44
@@ -1605,6 +1606,12 @@ REACT_Y     equ 0x22            ; the saves' last row, right of SP
 REACT_VALUE_X equ 0x130
 DEF_Y       equ 0x71            ; the AC line's y
 DEF_VALUE_X equ 0x12D
+; ages (RULE_HI_AGING, the Loader's aging.py): the age at the sheet's +41h, a byte the sequel's program
+; never touches (the Loader's SHEET_AGE there): the years past the race's base starting age, + 1 (0 none)
+RULE_HI_AGING equ 256
+SHEET_AGE   equ 0x41
+AGE_RACES   equ 8
+AGE_Y       equ 0x2D            ; (the free row between SP's at 22h and STR's at 38h)
 probe_char:
         pop word [cs:t_ip]
         pop word [cs:t_cs]
@@ -1666,7 +1673,25 @@ probe_char:
         jmp .react
 .thief: mov al, [es:si + bx + 3]  ; the thief level (levels follow the classes)
         call c_thief
-.react: mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
+.react: test word [cs:rules_hi], RULE_HI_AGING  ; the age (the Loader's: SHEET_AGE) in the free
+        jz .reac                        ;   row between the saves and STR, "AGE: 23"
+        movzx ax, byte [es:si + SHEET_AGE]
+        or ax, ax
+        jz .reac                        ; (none given yet)
+        movzx bx, byte [es:si + SHEET_RACE]
+        dec bx
+        cmp bx, AGE_RACES
+        jae .reac
+        movzx bx, byte [cs:age_bases + bx]
+        lea ax, [eax + ebx - 1]         ; the race's base starting age, + the byte - 1
+        mov di, c_age_n
+        call c_wtoa
+        push word AGE_Y
+        push word 0xEC
+        push cs
+        push word c_age
+        call c_draw_line
+.reac:  mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
         cmp al, NO_REACT
         je .done
         mov di, c_num
@@ -1839,6 +1864,29 @@ c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-termina
         pop bx
         ret
 
+c_wtoa:                         ; AX (unsigned) -> decimal at CS:DI, NUL-terminated; keeps BX, CX
+        push bx
+        push cx
+        push dx
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop ax
+        add al, '0'
+        mov [cs:di], al
+        inc di
+        loop .put
+        mov byte [cs:di], 0
+        pop dx
+        pop cx
+        pop bx
+        ret
+
 c_itoa_s:                       ; AL (signed) -> decimal at CS:DI, with "-" below 0; keeps BX, CX
         test al, al
         jns c_itoa
@@ -1873,6 +1921,9 @@ l_move  db 'SLNT', 0
 l_hide  db 'HIDE', 0
 l_clmb  db 'CLMB', 0
 l_react db 'REAC', 0
+c_age   db 'AGE: '
+c_age_n times 6 db 0
+age_bases db 15, 25, 15, 15, 20, 25, 15, 6  ; the races' base starting ages (Table 7: aging.RACES)
 l_defence db 'DEF', 0
 c_react db 0
 c_defence db 0

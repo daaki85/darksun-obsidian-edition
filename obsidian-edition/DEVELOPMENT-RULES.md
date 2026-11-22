@@ -527,6 +527,23 @@ elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
 its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
 thri-kreen's antennae greyed were tried and left out). Verified in play (no log kept).
 
+### Ages in Wake of the Ravager
+
+In Wake of the Ravager (`RULE_AGING` in `RULES_PORTED`) the Loader's `RavDiceLog._aging_pass` does it
+all, four times a second on a steady look (the same party, the clock on by no more than
+`NATURAL_JUMP`): `give_ages`, a year for each year the clock passes from the last look
+(`natural_tick`), and Haste's aging for each Hasted effect (42) not there at the last look (`hasted`).
+The age is kept alone in the sheet's +41h (`SHEET_AGE` there, `AGE_PLAIN`: no roll and no weapon specs
+beside it), a byte no instruction of the sequel's touches; the only other such bytes, +3Dh and +3Fh,
+hold CHARTRAN's kit and second sphere. The sequel's flags have no place for SL's count of the years,
+so only the years the clock passes while the Loader watches are counted (none lost to a load: the age
+is saved with the sheet). Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
+by `apply_layout`). DSCLOG2's `PROBE_CHAR` writes `AGE: 23` between SP and STR (`AGE_Y` 2Dh) from the
+sheet and the races' bases (`age_bases`), with RULE_HI_AGING. Not ported: Restore Youth (the mod's own
+spell, not in the sequel), the creation screen's roll (a new character gets its age when it joins), the Characters
+tab's other numbers from STATS. A character brought over by CHARTRAN gets a new age (its SL age was
+beside the weapon specs, which the transfer leaves behind).
+
 ## Two weapons
 
 ([In the features page](FEATURES.md#two-weapons).) Always on: `game.RULES_ALWAYS`

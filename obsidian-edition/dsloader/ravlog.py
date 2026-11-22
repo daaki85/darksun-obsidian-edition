@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import combatlog, dicelog, game, labels, monsters, ravager, sizes
+from . import aging, combatlog, dicelog, game, labels, monsters, ravager, sizes
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -115,6 +115,10 @@ ADDRESSES: Dict[str, object] = {
     # the hit point table (dice by class group, CON's bonus at +52h): SL's own bytes, at the load + 45BEh
     # (the most hit points' 4D0h:52h; SL's 40B1h)
     "LEVEL_HP_SEG": 0x45BE,
+    # ages (aging.py): the age alone at the sheet's +41h, a byte the sequel's program never reads or
+    # writes (no instruction with its offset on a sheet; 0 in every sheet of a new game and the saves,
+    # 2026-11-22), and none more: +3Dh and +3Fh, the only others, hold CHARTRAN's kit and second sphere
+    "SHEET_AGE": 0x41, "AGE_PLAIN": True,
     "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
                      284: "corroding touch"},
 }
@@ -170,6 +174,9 @@ def apply_layout() -> int:
     _SAVED.append((sizes, "HAMMER_TYPE", sizes.HAMMER_TYPE))
     sizes.TABLE, sizes.SPELLS, sizes.PERSON_ONLY = sizes.RAV_NAMES, sizes.RAV_SPELLS, frozenset()
     sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE = sizes.RAV_SHILLELAGH_TYPE, sizes.RAV_HAMMER_TYPE
+    from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
+    _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
+    kalzith.DEAD_STATUS = RAV_DEAD_STATUS
     return len(_SAVED)
 
 
@@ -195,6 +202,7 @@ def restore_layout() -> None:
 # bytes and its last byte gone; from SL's +8 on (material, rate of fire, damage dice, flags, the icon,
 # AC) the same, one for one (SL's type 1 and the sequel's 18, the same item, side by side, 2026-11-20).
 TYPE_SIZE = 15
+RAV_DEAD_STATUS = (4, 7)  # a creature's status (+14h): dying, dead (SL's 4, 5)
 TYPE_FIELDS = {0: 0, 2: 1, 4: 2, 6: 3, **{sl: sl - 4 for sl in range(8, 19)}}  # SL's offset -> the sequel's
 TYPES_SHOWN = 256  # (the types a read of the table may name: SL's layout served for this many)
 
@@ -422,6 +430,11 @@ class RavGameData(game.GameData):
                     and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
                 ac -= 1
         return ac
+
+    def creating(self) -> bool:
+        """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen
+        rolls no age, so the character being made may have one given at once (aging.give_ages)."""
+        return False
 
     def spell_level(self, spell: int) -> int:
         """The spell's level: the sequel's table at DS:0656h (SPELL_STARTS), the first spell of each
@@ -699,6 +712,56 @@ class RavDiceLog(dicelog.DiceLog):
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)
             out += self._step(lambda: self._panel_pass(now))
+            if self.game is not None and self.game.rules & game.RULE_AGING:
+                out += self._step(self._aging_pass)
+        return out
+
+    _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)
+    _hastes: Optional[set] = None  # (the Hasted effects' records the last steady look found)
+
+    def _aging_writable(self, creatures) -> None:
+        """The bytes aging.py writes made writable: for each of CREATURES (numbers) its hit points,
+        status and abilities, and for a party member its sheet's abilities and SHEET_AGE."""
+        sheets = game.table_pointer(self.guest, self.game.ds, game.SHEETS_PTR)
+        table = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+        ranges = []
+        for c in creatures:
+            at = table + c * game.CREATURE_SIZE
+            ranges += [(at, 2), (at + game.CREATURE_STATUS, 1), (at + game.CREATURE_ABILITIES, 6)]
+            if c < game.PARTY_SIZE:
+                index = struct.unpack_from("<H", self.game.creature(c), game.CREATURE_SHEET_INDEX)[0]
+                sheet = sheets + index * game.SHEET_SIZE
+                ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1)]
+        self.guest.writable = self.guest.writable + [r for r in ranges if r not in self.guest.writable]
+
+    def _aging_pass(self) -> List[str]:
+        """Ages (RULE_AGING, aging.py), on a steady look only (the same party as the last, the clock
+        on by no more than NATURAL_JUMP: not a game being loaded): a starting age for each member
+        without one (give_ages), a year for each year the clock passes from the last look
+        (natural_tick: the years it passes while the Loader watches; the sequel has no place for
+        Shattered Lands' count of them, natural_years_due's flags), and Haste's aging (hasted: a
+        system shock, a year) for each Hasted effect not there at the last look."""
+        gd = self.game
+        party, clock = gd.party_signature(), gd.game_time()
+        last, self._aging_at = self._aging_at, (party, clock)
+        hastes = {(e.owner, e.caster, spell, handle) for e, spell, handle in gd.effect_records()
+                  if e.id == game.HASTED_EFFECT}
+        before, self._hastes = self._hastes, hastes
+        if clock is None or last is None or last[0] != party or last[1] is None \
+                or not 0 <= clock - last[1] <= dicelog.NATURAL_JUMP:
+            self._hastes = None  # (what a loaded game has already is not news)
+            return []
+        self._aging_writable(range(game.PARTY_SIZE))
+        out = aging.give_ages(gd)
+        if clock // aging.YEAR > last[1] // aging.YEAR:
+            out += aging.natural_tick(gd, clock // aging.YEAR - last[1] // aging.YEAR)
+        if before is None:
+            return out
+        for owner, caster, _, _ in sorted(hastes - before):
+            creature = gd.combatant_creature(owner)
+            if creature is not None:
+                self._aging_writable([creature])
+                out += [f"{self._name(caster)} gives Hasted to {self._name(owner)}"] + aging.hasted(gd, creature)
         return out
 
 

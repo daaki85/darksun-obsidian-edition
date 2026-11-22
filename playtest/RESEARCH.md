@@ -1049,6 +1049,12 @@ and `rest-no-call-user`: all transferred, the kits kept.
   once (a member needs CON 20 or more). A save that takes CON's adjustment is the paralysis/poison/death
   save (kind 1): Stinking Cloud's (spell 22, `ravknow.py 22`, USE level 2, the third icon at 213, 60), not
   Hold Person's (the spell save). A foe made a dwarf: its sheet's +12h 2 (the kind's sheet, shared).
+- **Ages in the sequel** (logs/2026-11-22-ravager-ages.md): the sheet bytes no instruction touches are
+  +3Dh, +3Fh and +41h (ndisasm of DSUN.EXE, `ndisasm -b16 -e 0x5200`, every `[es:..+NNh]`); CHARTRAN puts
+  SL's kit and second sphere in the first two, so the age is at +41h. The game clock: scale a byte at
+  DS:9C0Ah, the dword through the far pointer at DS:9C0Ch (seconds x scale); it stands still during a
+  turn and runs with the fight's rounds. Ar'anda's Haste: USE, LEVEL 3, the middle icon (196, 60); it
+  aims on the map (an area spell); with class restrictions on she can't cast it (rules 4804h for a test).
 - **The DUAL window in the sequel** (logs/2026-11-22-ravager-dual-class.md): the inventory (I), a
   right-click on a portrait (game 30, 69 for the second member) gives EDIT NAME / DROP / DUAL (CANCEL
   when it isn't offered); DUAL at game (70, 98), the window's EXIT at (219, 146). Only a human (sheet

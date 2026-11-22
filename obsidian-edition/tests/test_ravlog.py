@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dicelog, game, ravager, ravlog  # noqa: E402
+from dsloader import aging, dicelog, game, ravager, ravlog  # noqa: E402
 
 
 class FakeGuest:
@@ -37,7 +37,7 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(layout["ITEM_PLUS"], 0x16)
         self.assertEqual(layout["CREATURE_SIZE"], ravager.CREATURE_SIZE)
         self.assertEqual(layout["AC_ARMOUR_LOCAL"], -4)
-        self.assertNotIn("SHEET_AGE", layout)  # (no such field in the sequel: left as SL's, not ported)
+        self.assertEqual(layout["SHEET_AGE"], 0x41)  # (its own byte in the sequel: AGE_PLAIN)
         self.assertNotIn("SHEET_FLAG_RANGER", layout)  # (a flag, not an offset)
 
     def test_apply_and_restore(self):
@@ -193,6 +193,107 @@ class WindowTests(unittest.TestCase):
                          [2, 2, 0, 0, 1, 0, 2, 0, 1, 2])  # (18 and 19 the sequel's new classes)
 
 
+class AgingTests(unittest.TestCase):
+    """Ages in the sequel (RULE_AGING: RavDiceLog._aging_pass), on a party in fake memory: the age alone
+    at the sheet's +41h, the years the clock passes, Haste's aging, the sequel's dead status."""
+    DS, SHEETS, CREATURES = 0x1000, 0x20000, 0x30000
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def make(self, rules=game.RULE_AGING):
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)  # (the sequel's layout from here)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.SHEETS_PTR, 0, self.SHEETS >> 4)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.CREATURES_PTR, 0, self.CREATURES >> 4)
+        for m, (name, race) in enumerate((("Gerakis", 5), ("Ar'Anda", 3))):
+            c = self.CREATURES + m * game.CREATURE_SIZE
+            struct.pack_into("<hH", g.mem, c, 50, 0)
+            struct.pack_into("<H", g.mem, c + game.CREATURE_SHEET_INDEX, m)
+            g.mem[c + game.CREATURE_STATUS] = 1
+            g.mem[c + game.CREATURE_ABILITIES:c + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 25, 13, 15, 14))
+            g.mem[c + game.CREATURE_NAME:c + game.CREATURE_NAME + len(name)] = name.encode()
+            s = self.SHEETS + m * game.SHEET_SIZE
+            g.mem[s + game.SHEET_RACE] = race
+            g.mem[s + game.SHEET_ABILITIES:s + game.SHEET_ABILITIES + 6] = bytes((18, 15, 25, 13, 15, 14))
+        class Game(ravlog.RavGameData):
+            clock, hastes = 100, []
+
+            def game_time(self):
+                return self.clock
+
+            def effect_records(self):
+                return [(game.Effect(o, 1, game.HASTED_EFFECT), 41, h) for o, h in self.hastes]
+
+            def combatant_creature(self, combatant):
+                return combatant
+
+            def combatant_name(self, combatant):
+                return self.creature_name(combatant)
+
+        log.game = Game(log.guest, self.DS, rules)
+        return g, log
+
+    def test_ages_given_alone_in_their_byte(self):
+        g, log = self.make()
+        self.assertEqual(log._aging_pass(), [])  # (the first look only records)
+        lines = log._aging_pass()
+        self.assertTrue(lines[0].startswith("Gerakis is "), lines)
+        self.assertTrue(lines[1].startswith("Ar'Anda is "), lines)
+        age = g.mem[self.SHEETS + game.SHEET_AGE]
+        self.assertTrue(6 <= age <= 21, age)  # (a half-giant: 20 + 5d4, the byte the age less 19)
+        self.assertEqual(game.SHEET_AGE, 0x41)
+        self.assertEqual(log.guest.dropped, 0)
+        self.assertEqual(log._aging_pass(), [])  # (given once)
+
+    def test_a_year_of_the_clock(self):
+        g, log = self.make()
+        log._aging_pass(), log._aging_pass()
+        before = g.mem[self.SHEETS + game.SHEET_AGE]
+        log.game.clock = aging.YEAR + 50  # (a long jump, as a load: waits for a steady look)
+        self.assertEqual(log._aging_pass(), [])
+        self.assertEqual(log._aging_pass(), [])
+        log.game.clock = 2 * aging.YEAR - 10
+        log._aging_pass()
+        log.game.clock = 2 * aging.YEAR + 10
+        lines = log._aging_pass()
+        self.assertTrue(lines[0].startswith("A year has passed: Gerakis is "), lines)
+        self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], before + 1)
+        self.assertEqual(log.guest.dropped, 0)
+
+    def test_hastes_age_a_year(self):
+        g, log = self.make()
+        log.game.hastes = [(1, 7)]  # (Ar'Anda's, there at the first look: not news)
+        log._aging_pass(), log._aging_pass()
+        before = g.mem[self.SHEETS + game.SHEET_AGE]
+        log.game.hastes = [(1, 7), (0, 8)]
+        lines = log._aging_pass()
+        self.assertEqual(lines[0], "Ar'Anda gives Hasted to Gerakis")
+        self.assertIn("system shock (Haste's aging)", lines[1])
+        self.assertIn("survives", lines[1])  # (CON 25: 100%)
+        self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], before + 1)
+        self.assertEqual(log._aging_pass(), [])  # (the same effect: once)
+
+    def test_dead_is_the_sequels_status(self):
+        from dsloader import kalzith
+        g, log = self.make()
+        aging.kill(log.game, 1)
+        self.assertEqual(kalzith.DEAD_STATUS, (4, 7))
+        self.assertEqual(g.mem[self.CREATURES + game.CREATURE_SIZE + game.CREATURE_STATUS], 1)  # (read-only: not writable yet)
+        log._aging_writable([1])
+        aging.kill(log.game, 1)
+        self.assertEqual(g.mem[self.CREATURES + game.CREATURE_SIZE + game.CREATURE_STATUS], 7)
+
+    def test_rule_off_nothing(self):
+        g, log = self.make(rules=0)
+        log.hp_changes = lambda now: []
+        log._after_rolls(False, 1.0), log._after_rolls(False, 2.0)
+        self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], 0)
+
+    def test_aging_ported(self):
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_AGING, game.RULE_AGING)
+
+
 class PassTests(unittest.TestCase):
     def tearDown(self):
         ravlog.restore_layout()
@@ -244,7 +345,7 @@ class PassTests(unittest.TestCase):
 
         log = ravlog.RavDiceLog(g)
         log.tsr_hdr = base
-        log.game = types.SimpleNamespace(guest=log.guest)  # (as attach makes it: on the read-only view)
+        log.game = types.SimpleNamespace(guest=log.guest, rules=0)  # (as attach makes it: on the read-only view)
         log._labels_font_tried, log._labels.font = True, Font()
         log._float(7, labels.MISS, labels.MISS_INK, 100.0)
         at = seg * 16 + off

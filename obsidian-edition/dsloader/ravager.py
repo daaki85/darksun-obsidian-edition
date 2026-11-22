@@ -94,7 +94,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
-                | game.RULE_CON | game.RULE_DUAL_CLASS)
+                | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14

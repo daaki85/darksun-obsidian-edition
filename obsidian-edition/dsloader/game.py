@@ -221,6 +221,9 @@ SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET).
 SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
 SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
+# Wake of the Ravager (ravlog's layout) keeps the age alone in a byte of its own (SHEET_AGE there: a
+# byte the sequel's program never reads or writes), no weapon specs and no roll beside it
+AGE_PLAIN = False
 
 
 def spec_packed(sheet: bytes) -> bool:
@@ -246,13 +249,17 @@ def spec_kinds(sheet: bytes) -> bytes:
 
 
 def sheet_age(sheet: bytes) -> int:
-    """+17h of a packed sheet: years past the race's base starting age, plus 1 (0: none given yet)."""
+    """+17h of a packed sheet: years past the race's base starting age, plus 1 (0: none given yet);
+    the sequel's SHEET_AGE byte (AGE_PLAIN)."""
+    if AGE_PLAIN:
+        return sheet[SHEET_AGE] if len(sheet) > SHEET_AGE else 0
     return sheet[SHEET_AGE] if len(sheet) > SHEET_AGE and spec_packed(sheet) else 0
 
 
 def sheet_roll(sheet: bytes) -> Optional[int]:
-    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none."""
-    if not spec_v2(sheet):
+    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none (the
+    sequel keeps none: AGE_PLAIN)."""
+    if AGE_PLAIN or not spec_v2(sheet):
         return None
     roll = int.from_bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3], "little") >> ROLL_SHIFT & 0x1F
     return None if roll == ROLL_UNKNOWN else roll
