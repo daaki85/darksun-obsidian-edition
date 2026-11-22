@@ -62,6 +62,19 @@ DROPPED_SPELLS = (34, 42, 49, 64)  # (none in the sequel)
 POWER_KEPT = 0xF8
 DISCIPLINES = ((0, 6, 1), (6, 20, 2), (20, 34, 4))  # (the powers' places of each, its PSIN bit)
 
+# Scrolls, the mod's way (Sequel.scrolls; CHARTRAN gives each SL scroll object one sequel object,
+# whatever spell the item names, and Kalzith's a money bag). SL's wizard scrolls (type 60h) and
+# priest scrolls (63h) name their spell at +2, one past SL's number for it; the sequel's (types 4Dh
+# and 4Eh) at +2 and at +10h, by its own numbers: a wizard spell's place in SPST plus one
+# (spell_place), a priest spell SL's word plus 97 (so all ten of ITEMS.BIN's priest pairs).
+SL_TYPE, SCROLL_SPELL, SCROLL_POWER, SCROLL_USES = 0x0A, 0x02, 0x10, 0x0E  # (uses: the object's own,
+# 1 on a One-use Scroll, where CHARTRAN copies SL's 0)
+SL_WIZARD_SCROLL, SL_PRIEST_SCROLL = 0x60, 0x63
+WIZARD_SCROLL, PRIEST_SCROLL = 0x4D, 0x4E
+PRIEST_SCROLL_SHIFT = 97
+SCROLL_NAMES = (3, 4, 73)  # (One-use Scroll, Spellbook, the priests' Bracelet: the sequel's other
+# objects of the two types are a rod, a deck of illusions, a powerstone)
+
 
 def spell_place(spell: int) -> Optional[int]:
     """The sequel's place in SPST of SL's wizard spell SPELL, or None (not carried)."""
@@ -74,10 +87,28 @@ def spell_place(spell: int) -> Optional[int]:
     return spell - 2
 
 
+def is_scroll(rec: bytes) -> bool:
+    return struct.unpack_from("<H", rec, SL_TYPE)[0] in (SL_WIZARD_SCROLL, SL_PRIEST_SCROLL)
+
+
+def scroll_spell(rec: bytes) -> Optional[Tuple[int, int]]:
+    """For SL's scroll item REC, the sequel's scroll type and its number for the spell; None for a
+    spell the sequel lacks (or an item that isn't a scroll)."""
+    kind, = struct.unpack_from("<H", rec, SL_TYPE)
+    word, = struct.unpack_from("<H", rec, SCROLL_SPELL)
+    if kind == SL_PRIEST_SCROLL and word:
+        return PRIEST_SCROLL, word + PRIEST_SCROLL_SHIFT
+    place = spell_place(word - 1) if kind == SL_WIZARD_SCROLL and word else None
+    return None if place is None else (WIZARD_SCROLL, place + 1)
+
+
 class Sequel(NamedTuple):
-    """What the transfer reads from the sequel's folder: ITEMS.BIN's pairs and the objects' records."""
+    """What the transfer reads from the sequel's folder: ITEMS.BIN's pairs and the objects' records;
+    with SCROLLS (scroll_objects: each scroll type and spell, the sequel's object) scrolls go the
+    mod's way."""
     counterparts: Dict[int, int]
     objects: Chunks
+    scrolls: Optional[Dict[Tuple[int, int], int]] = None
 
     def record(self, obj: int) -> bytes:
         """The item record the sequel's object OBJ holds (its first record's data)."""
@@ -128,13 +159,50 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     counterpart, or the money bag when there is none or the counterpart has no record (ITEMS.BIN
     pairs a few SL objects with sequel objects that are only a picture, as 1572 with 2228:
     CHARTRAN gives those the money bag too)."""
-    new = sequel.counterparts.get(sl_object(rec), MONEY_BAG)
+    spell = None
+    if sequel.scrolls is not None and is_scroll(rec):
+        spell = scroll_spell(rec)
+        if spell is None:  # (a keepsake of the Loader's: with_added)
+            from .ravitems import own_object
+            new = own_object(sl_object(rec)) or MONEY_BAG
+        else:
+            new = sequel.scrolls.get(spell, sequel.scrolls.get((spell[0], 0), MONEY_BAG))
+    else:
+        new = sequel.counterparts.get(sl_object(rec), MONEY_BAG)
     if ("RDFF", new) not in sequel.objects:
-        new = MONEY_BAG
+        new, spell = MONEY_BAG, None
     out = bytearray(sequel.record(new))
     for w, s, n in ITEM_RUNS:
         out[w:w + n] = rec[s:s + n]
+    if spell is not None:
+        out[SCROLL_USES] = sequel.record(new)[SCROLL_USES]
+        struct.pack_into("<H", out, SCROLL_SPELL, spell[1])
+        struct.pack_into("<H", out, SCROLL_POWER, spell[1])
     return bytes(out), new
+
+
+def scroll_objects(sequel: Sequel) -> Dict[Tuple[int, int], int]:
+    """Each sequel scroll type and spell (by its numbers), the object to give: one ITEMS.BIN gives an
+    SL scroll, else its lowest; under spell 0, the type's first One-use Scroll (whose record a scroll
+    of a spell with no object of its own takes, its spell set)."""
+    found: Dict[Tuple[int, int], List[int]] = {}
+    first: Dict[int, List[Tuple[int, int]]] = {}
+    for (kind, obj) in sequel.objects:
+        if kind != "RDFF":
+            continue
+        try:
+            rec = sequel.record(obj)
+        except GffError:
+            continue
+        t, = struct.unpack_from("<H", rec, SL_TYPE)
+        if t in (WIZARD_SCROLL, PRIEST_SCROLL) and struct.unpack_from("<H", rec, 0x14)[0] in SCROLL_NAMES:
+            found.setdefault((t, struct.unpack_from("<H", rec, SCROLL_POWER)[0]), []).append(obj)
+            first.setdefault(t, []).append((SCROLL_NAMES.index(struct.unpack_from("<H", rec, 0x14)[0]), obj))
+    paired = set(sequel.counterparts.values())
+    out = {key: min(objs, key=lambda o: (o not in paired, o)) for key, objs in found.items()}
+    for t, objs in first.items():
+        out[(t, 0)] = min(objs)[1]
+    return out
 
 
 def spells_known(row: bytes) -> bytes:
@@ -251,16 +319,24 @@ def load_sequel(folder: str) -> Sequel:
 
 
 def lacking(save: Chunks, sequel: Sequel) -> Dict[int, bytes]:
-    """The party's items with no object in the sequel (CHARTRAN's money bags): each SL object, the
+    """The party's items with no object in the sequel (CHARTRAN's money bags; with SEQUEL's scrolls,
+    the scrolls of a spell it lacks instead of all scrolls without a pair): each SL object, the
     first of the save's item records of it."""
     _, moved = roster(save, sequel)
     objects = {old for m in moved for old, new in m.items if new == MONEY_BAG and old != MONEY_BAG}
+    carried = {old for m in moved for old, _ in m.items}
     items = _chunk(save, ITEMS)
     out: Dict[int, bytes] = {}
     for at in range(0, len(items) - SL_ITEM + 1, SL_ITEM):
         rec = items[at:at + SL_ITEM]
-        if sl_object(rec) in objects and sl_object(rec) not in out:
-            out[sl_object(rec)] = rec
+        obj = sl_object(rec)
+        if obj in out or obj not in carried:
+            continue
+        if sequel.scrolls is not None and is_scroll(rec):
+            if scroll_spell(rec) is None:  # (a scroll of a spell the sequel lacks: a keepsake)
+                out[obj] = rec
+        elif obj in objects:
+            out[obj] = rec
     return out
 
 
@@ -272,6 +348,7 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
     import os
     from . import art, icons, ravager, ravitems
     from .gff import read_gff, write_atomic
+    sequel = sequel._replace(scrolls=scroll_objects(sequel))
     need = lacking(save, sequel)
     kept = ravager.read_added(dos_dir)
     names_text = kept.get(ravitems.NAMES_CHUNK, b"")
@@ -307,7 +384,7 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
         write_atomic(os.path.join(dos_dir, ravitems.ADDED_FILE), _gff_file(out))
     objects = dict(sequel.objects)
     objects.update(added)
-    return Sequel({**sequel.counterparts, **pairs}, objects), failed
+    return sequel._replace(counterparts={**sequel.counterparts, **pairs}, objects=objects), failed
 
 
 def _gff_file(chunks: Chunks) -> bytes:

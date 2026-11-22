@@ -32,3 +32,37 @@ mod's effects (groups B-G of reports/wake-of-the-ravager-party-transfer.md). Not
 dice in a fight (the dice log doesn't yet name items past 256).
 
 DOSBox and the dice log stopped by pid, nothing saved. Water: no new area.
+
+## Scrolls keep their spell (about 00:10 UTC, 23 November)
+
+- What the files say: SL's wizard scrolls (type 60h) and priest scrolls (63h) name their spell at +2, one
+  past SL's number. The sequel's (types 4Dh and 4Eh) name it at +2 and at +10h, by its own numbers:
+  a wizard spell's SPST place plus one (all of ITEMS.BIN's wizard pairs agree, but for 3 pairs where SSI
+  chose another spell), a priest spell SL's word plus 97 (all 10 priest pairs). Its wizard scrolls are
+  of two kinds: "One-use Scroll" (313xx, +0Eh 1) and "Spellbook" (310xx, +0Eh 0).
+- CHARTRAN gives each SL scroll *object* one sequel object, whatever spell the item names (a defiler's
+  scroll, object 1400, would come across as a scroll of spell 1), and Kalzith's scrolls (1440-1445) a
+  money bag. The Loader's way (`ravtransfer.Sequel.scrolls`): the sequel's scroll of that spell (the
+  one ITEMS.BIN gives, else the lowest), else its first One-use Scroll with the spell set; a spell the
+  sequel lacks (the mod's new spells, the four dropped ones) gives a keepsake.
+- grate-user transferred: Cromwell (fighter/preserver) carries Kalzith's Shield scroll. In the
+  sequel's inventory: **One-use Scroll, 3000, the Shield icon**; its summary reads "SHIELD: Negates
+  enemy magic missiles...". ![](img/2026-11-22-ravager-xfer-scroll-box1.png)
+  ![](img/2026-11-22-ravager-xfer-scroll-box2.png) Without the Loader it is a money bag (the trap-user
+  control above, and the file: `lacking` names 1440).
+- Learning from it: **not seen yet**. With Shield taken out of Cromwell's spells in the copy's roster
+  (a test copy, never the player's), a click on the spell icon did nothing, at the roster screen and in
+  the game, for the One-use Scroll and for a Spellbook alike (the record changed to 31002 in the copy).
+  ![](img/2026-11-22-ravager-xfer-scroll-learn.png) The transferred One-use Scroll had 0 uses
+  (CHARTRAN copies SL's +0Eh), the sequel's own have 1: the Loader now keeps the object's. To try next:
+  the sequel's own scroll as a control, out of a fight.
+- **The whole transferred party in a new game**: Cenna, Finster, Balthbeorn and Cromwell added from the
+  roster, START GAME: they start in Tyr (Cromwell leading), the mod's items in their packs (Finster's:
+  the Warden's pieces with their pictures). ![](img/2026-11-22-ravager-xfer-scroll-party.png)
+  ![](img/2026-11-22-ravager-xfer-tyr.png) ![](img/2026-11-22-ravager-xfer-scroll-finster.png)
+  A first try with Cromwell alone went back to the title menu soon after the opening talk: the
+  opening fight (a party of one, lost). Nothing saved.
+- Water: the first scene in Tyr has a red pot and a jug on the table in the room to the west (not
+  looked at yet).
+
+DOSBox and the dice log stopped by pid, nothing saved.

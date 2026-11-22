@@ -28,10 +28,10 @@ def sl_item(obj, nxt=rt.NONE, contents=rt.NONE, slot=4, plus=0):
     return bytes(rec)
 
 
-def wotr_record(obj, kind, power, name):
+def wotr_record(obj, kind, power, name, uses=0):
     rec = bytearray(rt.ITEM)
     struct.pack_into("<hHHHHH", rec, 0, -obj, 0, rt.NONE, 0, rt.NONE, kind)
-    rec[0x10], rec[0x12], rec[0x13], rec[0x14] = power, 6, 0xFF, name
+    rec[0x0E], rec[0x10], rec[0x12], rec[0x13], rec[0x14] = uses, power, 6, 0xFF, name
     head = dataitems.Record(1, 0, 1, 1, 0, bytes(rec))
     return dataitems.chunk([head], dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0))
 
@@ -144,6 +144,67 @@ class RosterTests(unittest.TestCase):
         save[("SAVE", rt.ITEMS)] = bytes(items)
         with self.assertRaises(gff.GffError):
             rt.roster(save, made_sequel())
+
+
+def sl_scroll(obj, kind, word):
+    rec = bytearray(sl_item(obj))
+    struct.pack_into("<H", rec, rt.SL_TYPE, kind)
+    struct.pack_into("<H", rec, rt.SCROLL_SPELL, word)
+    return bytes(rec)
+
+
+def scroll_sequel():
+    """The sequel with a One-use Scroll of spell 1 (31300, SL 1400's pair), a Spellbook of spell 1
+    (31002), a Rod (31201) and a priest's scroll of 242 (31407)."""
+    objects = dict(made_sequel().objects)
+    objects[("RDFF", 31300)] = wotr_record(31300, rt.WIZARD_SCROLL, 1, 3, uses=1)
+    objects[("RDFF", 31002)] = wotr_record(31002, rt.WIZARD_SCROLL, 1, 4)
+    objects[("RDFF", 31201)] = wotr_record(31201, rt.WIZARD_SCROLL, 5, 167)
+    objects[("RDFF", 31407)] = wotr_record(31407, rt.PRIEST_SCROLL, 242, 73)
+    objects[("RDFF", 21440)] = wotr_record(21440, 9, 0, 8)
+    sequel = rt.Sequel({1010: 704, 1400: 31300}, objects)
+    return sequel._replace(scrolls=rt.scroll_objects(sequel))
+
+
+class ScrollTests(unittest.TestCase):
+    def test_spells(self):
+        self.assertEqual(rt.scroll_spell(sl_scroll(1400, rt.SL_WIZARD_SCROLL, 1)), (rt.WIZARD_SCROLL, 1))
+        self.assertEqual(rt.scroll_spell(sl_scroll(1400, rt.SL_WIZARD_SCROLL, 46)), (rt.WIZARD_SCROLL, 44))
+        self.assertIsNone(rt.scroll_spell(sl_scroll(1400, rt.SL_WIZARD_SCROLL, 35)))  # (34, dropped)
+        self.assertIsNone(rt.scroll_spell(sl_scroll(1440, rt.SL_WIZARD_SCROLL, 197)))  # (Cat's Grace)
+        self.assertEqual(rt.scroll_spell(sl_scroll(1419, rt.SL_PRIEST_SCROLL, 145)), (rt.PRIEST_SCROLL, 242))
+        self.assertIsNone(rt.scroll_spell(sl_item(1010)))
+
+    def test_objects(self):
+        objs = scroll_sequel().scrolls
+        self.assertEqual(objs[(rt.WIZARD_SCROLL, 1)], 31300)  # (ITEMS.BIN's pair before the lower one)
+        self.assertEqual(objs[(rt.WIZARD_SCROLL, 0)], 31300)  # (a One-use Scroll)
+        self.assertNotIn((rt.WIZARD_SCROLL, 5), objs)  # (a rod)
+        self.assertEqual(objs[(rt.PRIEST_SCROLL, 242)], 31407)
+
+    def test_items(self):
+        sequel = scroll_sequel()
+        rec, new = rt.item(sl_scroll(1440, rt.SL_WIZARD_SCROLL, 10), sequel)  # (Kalzith's Shield)
+        self.assertEqual((new, struct.unpack_from("<HH", rec, 2)[0], struct.unpack_from("<H", rec, 0x10)[0],
+                          rec[rt.SCROLL_USES]), (31300, 10, 10, 1))
+        rec, new = rt.item(sl_scroll(1400, rt.SL_PRIEST_SCROLL, 145), sequel)
+        self.assertEqual((new, struct.unpack_from("<H", rec, 0x10)[0]), (31407, 242))
+        self.assertEqual(rt.item(sl_scroll(1440, rt.SL_WIZARD_SCROLL, 197), sequel)[1], 21440)  # (a keepsake)
+        self.assertEqual(rt.item(sl_scroll(1400, rt.SL_WIZARD_SCROLL, 35), sequel)[1], rt.MONEY_BAG)  # (none made)
+        # CHARTRAN's way (no scrolls): the pair, the spell word copied, the power the object's
+        rec, new = rt.item(sl_scroll(1400, rt.SL_WIZARD_SCROLL, 10), sequel._replace(scrolls=None))
+        self.assertEqual((new, struct.unpack_from("<H", rec, 2)[0], rec[0x10]), (31300, 10, 1))
+
+    def test_lacking(self):
+        save = made_save()
+        items = bytearray(save[("SAVE", rt.ITEMS)])
+        items[3 * rt.SL_ITEM:4 * rt.SL_ITEM] = sl_scroll(1440, rt.SL_WIZARD_SCROLL, 197)
+        items[2 * rt.SL_ITEM:3 * rt.SL_ITEM] = sl_scroll(1441, rt.SL_WIZARD_SCROLL, 2)[:rt.ITEM_CONTENTS] + \
+            struct.pack("<H", 11) + sl_scroll(1441, rt.SL_WIZARD_SCROLL, 2)[rt.ITEM_CONTENTS + 2:]
+        save[("SAVE", rt.ITEMS)] = bytes(items)
+        sequel = scroll_sequel()
+        self.assertEqual(sorted(rt.lacking(save, sequel)), [1440])
+        self.assertEqual(sorted(rt.lacking(save, sequel._replace(scrolls=None))), [1440, 1441])
 
 
 class FileTests(unittest.TestCase):

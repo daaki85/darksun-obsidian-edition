@@ -232,3 +232,5 @@ map position. Nothing is built for it yet.
   game has such an item (2026-11-18).
 - The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
   (2026-11-18).
+- Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the
+  table of the room to the west; not looked at (2026-11-22, logs/2026-11-22-ravager-transfer-items.md).

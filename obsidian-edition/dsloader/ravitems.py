@@ -15,7 +15,7 @@ Loader's instead, made from the player's own files (nothing from either game is 
 - its type: the mod's (SL 115 on: ravager.mod_type, the types the Loader adds); else the sequel type
   most of SL's objects of that type are paired with (ITEMS.BIN: SL's bags with the sequel's bag);
   else KEEPSAKE_TYPE, a plain carried thing (SL's quest items: keepsakes, which the sequel's story
-  doesn't know);
+  doesn't know; a scroll of a spell the sequel lacks too);
 - its name: the mod's own (ravager.mod_name); else the sequel's name of the same letters; else one
   of KEEPSAKE names, after the mod's in DSCLOG2's ITEM_NAMES.
 
@@ -69,7 +69,9 @@ def type_map(pairs: Dict[int, int], sl_objects: gff.Chunks, sequel_objects: gff.
 
 
 def sequel_type(sl_type: int, types: Dict[int, int]) -> int:
-    from . import game, ravager
+    from . import game, ravager, ravtransfer
+    if sl_type in (ravtransfer.SL_WIZARD_SCROLL, ravtransfer.SL_PRIEST_SCROLL):
+        return KEEPSAKE_TYPE  # (the scrolls made here are of spells the sequel lacks: ravtransfer.item)
     if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:
         return ravager.mod_type(sl_type)
     return types.get(sl_type, KEEPSAKE_TYPE)
