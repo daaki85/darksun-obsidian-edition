@@ -98,3 +98,11 @@ DOSBox stopped by pid, nothing saved (the test copy's roster only).
   in a year).
 
 DOSBox and the dice log stopped by pid, nothing saved.
+
+## The Loader's button and its report (about 01:30 UTC, 23 November)
+
+- Options, **Wake of the Ravager (optional)**: "Take the party to Wake of the Ravager..." picks a
+  Shattered Lands save (from Named saves, else the game's folder), asks, runs the transfer the Loader's
+  way and shows its report in a window of its own. Drawn here with the dialogs answered by the test's
+  stand-ins (no game running) and the report of a real transfer of grate-user (6 months rolled):
+  ![](img/2026-11-22-ravager-transfer-button.png) ![](img/2026-11-22-ravager-transfer-report.png)
