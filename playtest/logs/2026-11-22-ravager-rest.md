@@ -48,3 +48,20 @@ Gerakis Poisoned (an effects entry: 71, spell 179).
 - Cure Blindness and Cure Disease at rest (the same path as Neutralize Poison's, not seen).
 
 Water: a jug on a stand in the room beside the rented one (seen, not looked at); nothing new.
+
+## A psionicist's Cell Adjustment at rest (2026-11-22, about 21:30-21:45 UTC)
+
+Ported after the user asked for it: DSCLOG2's RP_PSI_CAST (SL's), on the Diseased and on the most
+wounded when no cure is left. Found first: the sequel's "knows this power" test is 5C340h, the byte at
+370h:9CDh + 22h a member + the power's place from 235 (bits 1-7; Ar'anda's 18 known powers are her 18
+icons on USE's PSIONIC pages), and the powers' table at 3D0h:7E0h (3 bytes a power, +1 the cost: Cell
+Adjustment, 248, place 13, costs 5).
+
+The Roost's rest (`ravload.sh ravager-roost`, the walk to the ring as before), test edit, never saved:
+Thy'rokh's priest slots all 0, so no cure is left (Terrannus is dead in this save).
+
+- **The rule on** (rules_hi FF2Eh): "At rest: Ar'Anda casts Cellular Adjustment on Gerakis (93 PSP
+  left)" and 18 more, 5 PSP each, down to 3 PSP left, each "Cell Adjustment: 1d4 = N -> Gerakis healed
+  N HP"; then the night (Gerakis 32 -> 83 at the rest's end, his CON 22 regeneration after it).
+- **Control** (rules_hi EF2Eh, RULE_HI_REST off): no casts; the game's own rest, everyone to full HP.
+- Water: nothing new.

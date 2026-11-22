@@ -4033,8 +4033,9 @@ rs_frame dw 0, 0, 0, 0, 0, 0
 ; RP_MOST_CASTS. A priest knows every priest spell (the sequel has no spheres: its USE screen shows a
 ; cleric all of them); it casts with a slot of the spell's level left (DS:4474h + 22h a member + the
 ; level, taken: pass 1 fills them again), through the rest's own free-cure cast (4787h:25h, 8D074h:
-; spell, target, caster, level; 598h:66h with the rest's arguments). Not ported: SL's psionicists'
-; Cell Adjustment. Recorded (KIND_REST, RS_CAST: caster, target, spell, the slot's level, left, 0).
+; spell, target, caster, level; 598h:66h with the rest's arguments). Then, as SL's, a psionicist's Cell
+; Adjustment (RP_PSI_CAST) on the Diseased, and on the most wounded when no cure is left. Recorded
+; (KIND_REST, RS_CAST: caster, target, spell, the slot's level (0 for a power), left (slots or PSP), 0).
 RS_CAST       equ 1
 RP_MEMBERS    equ 4
 RP_MOST_CASTS equ 24
@@ -4097,14 +4098,28 @@ rp_pass:
         mov cl, 27
         call rp_effect
 .wounds:
+        xor si, si                      ; (a psionicist's Cell Adjustment on the Diseased still: its
+.ill:   call rp_alive                   ;  record's cure of disease)
+        jnz .well
+        mov ax, si
+        mov cl, 27
+        call has_effect
+        jnz .well
+        call rp_psi_cast
+.well:  inc si
+        cmp si, RP_MEMBERS
+        jb .ill
         mov cx, RP_MOST_CASTS
 .again: push cx
         call rp_worst
         jc .done
         call rp_choose
-        jc .done
+        jc .psi
         call rp_cast
-        pop cx
+        jmp .on
+.psi:   call rp_psi_cast                ; (no cure left: a psionicist's Cell Adjustment)
+        jc .done
+.on:    pop cx
         loop .again
         ret
 .done:  pop cx
@@ -4254,6 +4269,11 @@ rp_cast:
         add bx, ax
         dec byte [bx + PRIEST_SLOTS2]
         movzx ax, byte [bx + PRIEST_SLOTS2]
+        mov cl, [cs:rp_level + di]
+; RP_CAST_AT: member DI casts RP_SPELL on member SI at level CL, recorded (RS_CAST: RP_SLOT the slot's
+; level, AX what is left), through 4787h:25h. SI and DI kept.
+rp_cast_at:
+        mov [cs:rp_cast_level], cl
         push si
         push di
         mov [cs:rs_frame], di
@@ -4272,7 +4292,7 @@ rp_cast:
         call rec_frame
         pop di
         pop si
-        movzx ax, byte [cs:rp_level + di]
+        movzx ax, byte [cs:rp_cast_level]
         push ax                         ; (the level)
         push di                         ; (the caster)
         push si                         ; (the target)
@@ -4347,6 +4367,57 @@ rp_choose:
         jb .up
         stc
 .ok:    ret
+; RP_PSI_CAST: Cell Adjustment (CELL_ADJUST) on member SI by the first member who can (RP_ABLE), knows it
+; (its byte at 370h:9CDh + 22h a member + the power's place from 235: bits 1-7, the game's own test at
+; 5C340h) and has its PSP (the powers' table 3D0h:7E0h, 3 bytes a power, +1 the cost: 5), taken off
+; (the creature's +2); cast at level 1, as SL's; CF set if none. SI kept.
+CELL_ADJUST     equ 248
+CELL_PLACE      equ CELL_ADJUST - 235
+PSI_KNOWN_SEG   equ 0x47E0 - 0x3E71     ; (selector 370h: DS less this)
+PSI_KNOWN       equ 0x9CD
+PSI_COSTS_SEG   equ 0x47E0 - 0x41F1     ; (selector 3D0h)
+PSI_COSTS       equ 0x7E0
+rp_psi_cast:
+        mov word [cs:rp_spell], CELL_ADJUST
+        mov byte [cs:rp_slot], 0
+        xor di, di
+.each:  call rp_able_di
+        jnz .next
+        mov ax, ds
+        sub ax, PSI_KNOWN_SEG
+        mov es, ax
+        imul bx, di, 0x22
+        test byte [es:bx + PSI_KNOWN + CELL_PLACE], 0xFE
+        jz .next
+        mov ax, ds
+        sub ax, PSI_COSTS_SEG
+        mov es, ax
+        movzx dx, byte [es:PSI_COSTS + CELL_PLACE * 3 + 1]
+        push si
+        mov si, di
+        call rp_creature
+        pop si
+        mov ax, [es:bx + 2]
+        sub ax, dx
+        jl .next
+        mov [es:bx + 2], ax
+        mov cl, 1
+        call rp_cast_at                 ; (AX the PSP left)
+        clc
+        ret
+.next:  inc di
+        cmp di, RP_MEMBERS
+        jb .each
+        stc
+        ret
+; RP_ABLE_DI: RP_ABLE for member DI. All kept.
+rp_able_di:
+        push si
+        mov si, di
+        call rp_able
+        pop si
+        ret
+rp_cast_level db 0
 rp_level   times RP_MEMBERS db 0
 rp_best    db 0
 rp_slot    db 0

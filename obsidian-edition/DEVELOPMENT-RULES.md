@@ -1363,8 +1363,11 @@ creature and three words; dicelog's `_manual`).
   rest's own free-cure cast (4787h:25h, 8D074h: spell, target, caster, level); the sequel's numbers
   (Neutralize Poison 178 on Poisoned 71, Cure Blindness 146 on Blind 10, Cure Disease 148 on Diseased
   27; Cure Light 117, Serious 170, Critical 194, Heal 210), the levels from its table at DS:0656h + 11.
-  A priest knows every priest spell (the sequel has no spheres); SL's psionicists' Cell Adjustment is
-  not ported ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
+  A priest knows every priest spell (the sequel has no spheres). A psionicist's Cell Adjustment (248) as
+  SL's (`RP_PSI_CAST`: on the Diseased, then on the most wounded when no cure is left): known if its
+  byte at 370h:9CDh + 22h a member + the power's place from 235 has bits 1-7 (the game's own test,
+  5C340h), its cost the powers' table's (3D0h:7E0h, 3 bytes a power, +1: 5), taken from the creature's
+  +2, cast at level 1 through the same free cast ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
