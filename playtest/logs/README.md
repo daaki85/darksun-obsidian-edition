@@ -134,6 +134,7 @@ schedules and diffs a log made or used.
 | [2026-11-22](2026-11-22-ravager-transfer-format.md) | The party transfer to Wake of the Ravager: SSI's CHARTRAN read and redone in Python, byte for byte on every SL save in the kit |
 | [2026-11-22](2026-11-22-ravager-item-types.md) | The mod's 33 item types in the sequel's type table (OBJEX.GFF's ALL 4, read at its length): an obsidian short sword's type seen in the item box, with a control |
 | [2026-11-22](2026-11-22-ravager-item-names.md) | The mod's item names in the sequel: DSCLOG2's names past the game's 256, seen in the item box, with a control |
+| [2026-11-22](2026-11-22-ravager-transfer-items.md) | The transferred party's items in the sequel: the mod's items and SL's keepsakes as the Loader's own objects, with names and pictures, and a control of money bags |
 
 ## files/
 

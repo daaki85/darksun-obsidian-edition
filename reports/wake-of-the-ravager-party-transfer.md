@@ -87,7 +87,9 @@ items once they have types.
 1. The type table: done (above). Still to see: a transferred Short Sword in a fight, with its dice
    in the dice log.
 2. The objects, names and icons in the Loader's OBJEX and RESOURCE copies. The transfer maps to them.
-   Keepsakes, bags, scrolls and spell-made weapons are handled as above.
+   **Done for the mod's items and the keepsakes** (2026-11-22, playtest/logs/2026-11-22-ravager-transfer-items.md:
+   Shocking Arrows, Ring of Protection +1, Bone Short Sword and Pot of Water in a transferred fighter's
+   inventory, money bags in the control). Scrolls' spells and spell-made weapons are still to do.
 3. Roster slots, aging, the Loader's button ("Take the party to Wake of the Ravager": pick an SL save,
    then a report of every item and what it became).
 4. Groups B to G, one feature at a time, each played in the sequel with a control run (the rules' way:
