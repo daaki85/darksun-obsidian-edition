@@ -29,5 +29,15 @@ the clock put at 365 days less 5 minutes (DS:9C0Ch's far pointer).
   party with no shock and no year, the clock past a year with nothing, and no AGE line on the panel.
 - Water: nothing new (Tyr's street).
 
+## Save and load (about 20:43-20:50 UTC)
+
+`ravload.sh ravager-roost`, the dice log on: ages given (Ar'Anda 23, Terrannus 21, Thy'rokh 6, Gerakis
+31; +41h 9, 7, 1, 12). No test edits; saved over slot 1 in the working copy (`$WORK/rav`, not the
+repository's save): the inventory's GAME MENU, the disk, SAVE, the slot, SAVE. DOSBox and the dice log
+stopped, the game started again and slot 1 loaded with no dice log: +41h 9, 7, 1, 12. The dice log
+then attached and gave no age again. So the age is kept by the game's own save. What is lost is a year
+the clock passes with the Loader not running, or within one jump of more than 2 days (a load's first
+look only records, so nothing is counted twice).
+
 Result: ages and magical aging work in the sequel. Not played: a failed system shock (death), a
 category's score changes, death of old age (the same aging.py code as SL's, its tests).

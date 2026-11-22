@@ -536,8 +536,10 @@ all, four times a second on a steady look (the same party, the clock on by no mo
 The age is kept alone in the sheet's +41h (`SHEET_AGE` there, `AGE_PLAIN`: no roll and no weapon specs
 beside it), a byte no instruction of the sequel's touches; the only other such bytes, +3Dh and +3Fh,
 hold CHARTRAN's kit and second sphere. The sequel's flags have no place for SL's count of the years,
-so only the years the clock passes while the Loader watches are counted (none lost to a load: the age
-is saved with the sheet). Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
+so only the years the clock passes while the Loader watches are counted: a year crossed with the
+Loader not running, or inside one jump of the clock of more than `NATURAL_JUMP` (2 days), is lost.
+None is counted twice: the age is saved with the sheet (seen: saved and loaded again, the four ages
+came back the same, and the dice log gave none again), and a load's first look only records. Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
 by `apply_layout`). DSCLOG2's `PROBE_CHAR` writes `AGE: 23` between SP and STR (`AGE_Y` 2Dh) from the
 sheet and the races' bases (`age_bases`), with RULE_HI_AGING. Not ported: Restore Youth (the mod's own
 spell, not in the sequel), the creation screen's roll (a new character gets its age when it joins), the Characters
