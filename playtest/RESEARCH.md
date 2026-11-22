@@ -815,6 +815,75 @@ map things' routine (2A388h: DS:67BBh, 25h bytes a thing, up to 141h, the slot a
 come through it. `ravsites.py [NAME...]` finds SL's patch sites in the sequel by likeness (about 8 minutes
 for all 454; its finds are leads to read by hand).
 
+**Shattered Lands' figures in the sequel** (2026-11-20, logs/2026-11-20-ravager-sl-figures.md):
+`darksun-recompiled/tools/sl_figures.py build SL_DIR WR_DIR OUT.GFF` writes the sequel's `OBJEX.GFF`
+with the party's 14 figures taken from SL (the walking `BMP n`, the combat `CBMP n`, the script `SCMD
+n`; the study is that repository's `docs/FIGURES.md`). To play it, **copy the install for real**
+(`cp -a $WORK/rav $WORK/ravsl`, 287 MB): with hard links the game's writes (DARKRUN.GFF, saves)
+would change the original too. Put the built file in the copy and `sh ravstart.sh $WORK/ravsl`.
+Seen working: standing, walking, the swing, hits and deaths, the anchors right. **`sh ravburst.sh
+NAME SECONDS X Y W H`** grabs the window as fast as `import` goes (about 15 a second) while an action
+plays, and makes a sheet of 24 of them cropped to X Y W H (window pixels); look at single grabs
+(`$WORK/burst/NAME-NNN.png`) round a moment at full rate. For a death on cue, set members' HP to 1
+(the creature records at DS:19C9h, +0; `ravcreatures.py` lists them): a test edit, never saved.
+SL's standing side frame has the legs apart: it isn't a walk frame left on screen.
+**The dressed people** (`people_dress.py build`, 2026-11-21, logs/2026-11-21-ravager-dressed-people.md) are
+quickest seen at the start: the blonde woman of the opening talk is picture 2426, and answer 3 brings
+the Draxans' ambush, whose two Draxans are 2428 (walking, then fighting round the party). Which
+regions hold which pictures: each RGN's ETAB objects (negated) through OBJEX's OJFF (+PIC).
+To see a figure that stands elsewhere, build a test OBJEX with its dress put in a slot the opening
+shows (dress['2428'] = dress[N]): writing the camera (DS:1408h) in a fight doesn't redraw and snaps
+back, and HP 0 on the Draxans doesn't end the fight.
+A **restyled creature** goes in the same way, its own chunks written over the slot's (BMP, CBMP
+and SCMD of 2428 or 2426 replaced by the creature's from `restyle.py`/`loosen.py`'s `build(pic)`, then
+`write_ranged` on the built OBJEX): the creature then walks the Draxans' route and fights, its own
+script driving it (2026-11-22, logs/2026-11-22-restyled-creatures.md). Tyr's street is grey: a grey
+creature (the soulshard) is hard to see there.
+`sl_figures.py build-ui` does the same for the interface (`RESOURCE.GFF`: pictures and icons; put it
+in the copy beside the patched OBJEX.GFF). Its screens in a fight: **Q** the END menu (Escape closes
+it); a click on the status box (window 560,50) captures the mouse harmlessly; USE at game 22,17;
+VIEW INVENTORY 74,171 on USE (47,171 opened the inventory too, not the character sheet); Escape in
+the inventory closes it and USE together. The game writes its run files (DARKRUN.GFF and the like)
+into the folder it runs from, so copy `__support/save`'s three files back into the copy between
+runs for the same start.
+`sl_figures.py regrade SL_DIR WR_DIR RGN032 STRENGTH OUT.GFF` regrades a region (Tyr is RGN032,
+the opening street); put it in the copy as `RGN032.GFF`. **The sequel cycles palette entries 16-23 at
+run time** (torches, fire): a colour put there shows in the game's glow colours, not the file's.
+To check a colour on screen, sample the grab's pixels and match them to the region's PAL (in its
+`RGNxxx.GFF`). Shattered Lands draws region N in `GPLDATA.GFF`'s PAL N (the pens, RGN29, in PAL 41).
+**What's on screen where:** the camera is DS:1408h (x, y), in map pixels; the screen shows map
+pixels minus the camera. The ground: **`MAP ` (or `RMAP`) is 98 rows of 128 tile numbers** (not 112 x
+112), tile (c, r) at map pixel (16c, 16r); `GMAP`, the same shape, holds per-cell flags. A region's
+entities (its `ETAB`, 8 bytes each: x, y, height, flags, the object negated) stand at map pixel (x, y). An object's record (`OJFF`) anchors its picture by +2 (x) and +4 (y):
+the bottom centre. `sl_figures.py squash` lowers a region's structures for SL's angle.
+**An exact frame from a grab:** the sequel's 320x200 frame shows in DOSBox's 640x480 window with every
+pixel doubled across and rows repeated 2 or 3 times (2, 2, 3, 2, 3...), no blending: the first row of
+each repeat, every other pixel, is the frame exactly, and each pixel matches a palette colour shown as
+v x 4 + v / 16 (`darksun-recompiled/tools/proto/frame.py`). Sampling rows at (r + 0.5) x 2.4 instead
+picks the wrong row now and then, enough to spoil tile matching. The frame isn't in guest memory as a
+320x200 buffer.
+
+**Wall shadows at run time** (2026-11-20, logs/2026-11-20-ravager-shadows.md): DSCLOG2's WALL SHADOWS
+darkens the floor right of and below each wall cell (GMAP C0h, DS:0538h far, 128 a row) as the game
+draws it, as DSCLOG's SHADOWS does SL's figures': site 40 at 2B81Ch (the view's floor: page, camera x,
+y) and site 41 at 2B97Fh (a rectangle's: page, x0, y0, x1 + 1, y1, camera x, y), their way back made
+FLOOR_POST; the page table (SL's layout) in segment load + 0BF3h, FLOOR_ON DS:29EAh, DGROUP 47E0h.
+Retuned to SL's own shadows (the owner: the first try "didn't look as good"): each wall square swept
+45 degrees by a full cell, so an open cell with a wall NW is all dark, W only x <= y, N only x > y;
+the walk map pads each wall a cell into the room (drawn as floor), so a wall-marked cell is darkened
+only when wholly in shadow. DARK was SL's tone (Lab L x 0.73, a + 11, b x 0.82), which read maroon on the sequel's grey cobbles;
+the owner chose a neutral one: lightness x 0.73, a and b kept (x 0.74 a channel in 6-bit values), the
+nearest of colours 32-255 (240-255 are the sequel's only greys, its ramp), made from the DAC when
+the palette changes (once a second at most, not in a fade). The sequel cycles colours 1-31 (blues,
+magentas, greens, flame, water, the turn marker's flash): they map to themselves and stay out of the
+change check, else DARK is made again every second. `ravtone.py warm|neutral [FLAG]` swaps the tone
+in guest memory (a test edit: WS_GAIN at header + 5F8Bh, WS_DAC_SUM at + 5FD1h in the 2026-11-22 build:
+check the listing) for a same-view comparison. Same-view toggle: write the
+header's +1872, press C then Escape (the left half redrawn). The header (signature `DSCLOGR1`) has
+wall_shadows at +1872, the passes drawn at +1874, DARK's builds at +1876 (DSCLOG2's own, past DSCLOG's
+header; +148 to +152 were theirs before the port's fields took them): find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
+loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs
@@ -1098,3 +1167,5 @@ and `rest-no-call-user`: all transferred, the kits kept.
   missile spell can't take a foe right beside the caster (the barred sign). Terrannus's priest spells
   on USE: row 1 at y 59 Bless, Curse, Cure Light Wounds, Cause Light Wounds (x 231), Entangle; the
   icons sit about 22 apart from x 175, so hover to check the name before a click.
+
+The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
