@@ -72,6 +72,9 @@ SL_TYPE, SCROLL_SPELL, SCROLL_POWER, SCROLL_USES = 0x0A, 0x02, 0x10, 0x0E  # (us
 SL_WIZARD_SCROLL, SL_PRIEST_SCROLL = 0x60, 0x63
 WIZARD_SCROLL, PRIEST_SCROLL = 0x4D, 0x4E
 PRIEST_SCROLL_SHIFT = 97
+SPELL_MADE = (28, 29, 30)  # (SL's Shillelagh, Flame Blade, Spiritual Hammer: left behind the Loader's way,
+# their spell over; itemwatch.SPELL_MADE)
+LEFT = 0  # (what a left item became, in Moved.items)
 SCROLL_NAMES = (3, 4, 73)  # (One-use Scroll, Spellbook, the priests' Bracelet: the sequel's other
 # objects of the two types are a rod, a deck of illusions, a powerstone)
 
@@ -109,6 +112,11 @@ class Sequel(NamedTuple):
     counterparts: Dict[int, int]
     objects: Chunks
     scrolls: Optional[Dict[Tuple[int, int], int]] = None
+
+    @property
+    def loader(self) -> bool:
+        """The Loader's way (with_added), not CHARTRAN's."""
+        return self.scrolls is not None
 
     def record(self, obj: int) -> bytes:
         """The item record the sequel's object OBJ holds (its first record's data)."""
@@ -160,7 +168,7 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     pairs a few SL objects with sequel objects that are only a picture, as 1572 with 2228:
     CHARTRAN gives those the money bag too)."""
     spell = None
-    if sequel.scrolls is not None and is_scroll(rec):
+    if sequel.loader and is_scroll(rec):
         spell = scroll_spell(rec)
         if spell is None:  # (a keepsake of the Loader's: with_added)
             from .ravitems import own_object
@@ -267,6 +275,14 @@ def roster(save: Chunks, sequel: Sequel) -> Tuple[Chunks, List[Moved]]:
                     raise GffError(f"the save's item list {lst} is broken at item {number}")
                 seen.add(number)
                 it = items[number * SL_ITEM:(number + 1) * SL_ITEM]
+                if sequel.loader and struct.unpack_from("<H", it, SL_TYPE)[0] in SPELL_MADE:
+                    log.append((sl_object(it), LEFT))
+                    number, = struct.unpack_from("<H", it, ITEM_NEXT)
+                    if before is not None:  # (the item before it now leads to the next)
+                        data = bytearray(records[before][5])
+                        struct.pack_into("<H", data, ITEM_NEXT, number)
+                        records[before][5] = bytes(data)
+                    continue
                 data, new = item(it, sequel)
                 log.append((sl_object(it), new))
                 if before is None:
@@ -332,7 +348,7 @@ def lacking(save: Chunks, sequel: Sequel) -> Dict[int, bytes]:
         obj = sl_object(rec)
         if obj in out or obj not in carried:
             continue
-        if sequel.scrolls is not None and is_scroll(rec):
+        if sequel.loader and is_scroll(rec):
             if scroll_spell(rec) is None:  # (a scroll of a spell the sequel lacks: a keepsake)
                 out[obj] = rec
         elif obj in objects:
@@ -444,7 +460,8 @@ def report(moved: List[Moved]) -> str:
         lines.append(f"{m.name}: {len(m.items)} items, {bags} of them a money bag"
                      + (f", {own} the Loader's own" if own else ""))
         for old, new in m.items:
-            note = " (a money bag)" if new == MONEY_BAG else " (the Loader's)" if OWN_HIGH <= new < 30000 else ""
+            note = (" (a money bag)" if new == MONEY_BAG else " (the Loader's)" if OWN_HIGH <= new < 30000
+                    else " (left behind: a spell made it)" if new == LEFT else "")
             lines.append(f"  object {old} -> {new}{note}")
     return "\n".join(lines)
 

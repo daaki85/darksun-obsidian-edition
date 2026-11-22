@@ -207,6 +207,33 @@ class ScrollTests(unittest.TestCase):
         self.assertEqual(sorted(rt.lacking(save, sequel._replace(scrolls=None))), [1440, 1441])
 
 
+class SpellMadeTests(unittest.TestCase):
+    def setUp(self):
+        save = made_save()
+        items = bytearray(save[("SAVE", rt.ITEMS)]) + bytearray(rt.SL_ITEM)
+        items[1 * rt.SL_ITEM:2 * rt.SL_ITEM] = sl_item(1010, nxt=4, slot=0, plus=1)
+        hammer = bytearray(sl_item(1123, nxt=2))
+        struct.pack_into("<H", hammer, rt.SL_TYPE, 30)
+        items[4 * rt.SL_ITEM:5 * rt.SL_ITEM] = hammer
+        save[("SAVE", rt.ITEMS)] = bytes(items)
+        self.save = save
+
+    def test_left_behind(self):
+        _, moved = rt.roster(self.save, scroll_sequel())
+        self.assertEqual(moved[0].items, [(1010, 704), (1123, rt.LEFT), (2419, 900), (2431, 900)])
+        self.assertIn("left behind", rt.report(moved))
+
+    def test_list_closes_over_it(self):
+        out, _ = rt.roster(self.save, scroll_sequel())
+        recs, _ = dataitems.records(out[("CHAR", 35)])
+        self.assertEqual([(r.level, r.of, r.number) for r in recs[2:]], [(2, 0, 1), (4, 2, 2), (2, 3, 3)])
+        self.assertEqual(struct.unpack_from("<H", recs[2].data, rt.ITEM_NEXT)[0], 2)
+
+    def test_chartran_keeps_it(self):
+        _, moved = rt.roster(self.save, made_sequel())
+        self.assertEqual(moved[0].items[1], (1123, rt.MONEY_BAG))
+
+
 class FileTests(unittest.TestCase):
     def test_take_party_keeps_the_rest(self):
         with tempfile.TemporaryDirectory() as d:

@@ -60,7 +60,8 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
    Kalzith's Shield scroll comes across as the sequel's One-use Scroll of Shield. Learning from a
    transferred scroll is not seen yet (playtest/logs/2026-11-22-ravager-transfer-items.md).
 5. **Spell-made weapons** (Shillelagh, Flame Blade, Spiritual Hammer) are left behind. Their spell is
-   over.
+   over. **Done** (2026-11-22, `ravtransfer.SPELL_MADE`: the list closes over them, the report names
+   them; tests only, as no kit save carries one).
 6. **Roster slots:** CHARTRAN overwrites slots 32-35 without asking. The Loader keeps a backup of the
    player's CHARSAVE.GFF (CHARSAVE.GFF.BAK, done), and it will use free slots first.
 7. **Aging:** the months are rolled once per transfer. Each member gains a year with a chance of
@@ -91,7 +92,7 @@ items once they have types.
 2. The objects, names and icons in the Loader's OBJEX and RESOURCE copies. The transfer maps to them.
    **Done for the mod's items and the keepsakes** (2026-11-22, playtest/logs/2026-11-22-ravager-transfer-items.md:
    Shocking Arrows, Ring of Protection +1, Bone Short Sword and Pot of Water in a transferred fighter's
-   inventory, money bags in the control). Scrolls keep their spell; spell-made weapons are still to do.
+   inventory, money bags in the control). Scrolls keep their spell; spell-made weapons are left behind.
 3. Roster slots, aging, the Loader's button ("Take the party to Wake of the Ravager": pick an SL save,
    then a report of every item and what it became).
 4. Groups B to G, one feature at a time, each played in the sequel with a control run (the rules' way:
