@@ -1103,6 +1103,9 @@ spell's summary. Escape goes back to the title menu, and S there starts a new ga
 The sequel's scrolls: types 4Dh (wizard: One-use Scroll, 313xx, +0Eh 1; Spellbook, 310xx) and 4Eh
 (priest), the spell at +2 and +10h; SL's wizard spell n is the sequel's spell_place(n) + 1, SL's
 priest scroll word w is w + 97.
+The roster the ADD list offers is CHAR 32-39, a place listed while its CACT word isn't 0 (the
+install's 32-35 are 0; CHAR 44-46 and 60 with CACT set weren't listed); the game's DELETE writes CACT
+0 at once and keeps the CHAR.
 
 ### The sequel's spells in a fight (2026-11-21)
 
