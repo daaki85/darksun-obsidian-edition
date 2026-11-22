@@ -1128,6 +1128,14 @@ and `rest-no-call-user`: all transferred, the kits kept.
   right-click on a portrait (game 30, 69 for the second member) gives EDIT NAME / DROP / DUAL (CANCEL
   when it isn't offered); DUAL at game (70, 98), the window's EXIT at (219, 146). Only a human (sheet
   +12h 1) gets it; a dead member (creature +14h 7) can be made Okay with +14h 1 and some HP.
+  Its class buttons in game pixels: FIGHTER (189, 87), the others about 9 apart down the list. A
+  class taken puts **the new class first**: Terrannus (cleric 7) as a fighter has classes 9, 2, levels
+  1, 7 and class bits (+10h) the fighter's alone (logs/2026-11-22-ravager-class-restrictions.md).
+- **An equip test in the sequel** (the same log): the inventory on the member, the chest armour (game
+  173, 80) to the backpack (195, 35) and back, the shield at (65, 90); the item's worn slot (+13h) says
+  how it went (9 the chest, 255 still on the pointer). A member's classes and race can be test-edited
+  (sheet +1Bh, +12h) with his class bits (+10h) left, so that the game's own test passes and only the
+  Loader's rule can refuse.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
   fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
   (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a

@@ -70,12 +70,43 @@ Test edits (DOSBox stopped after, nothing saved): DSCLOG2's rules word written f
 - The helper's count rose by 2 for every refused try: the screen asks once to light the slots it can
   take and once on the click.
 
+## A druid and the human dual-class cases (ravload.sh ravager-after-ambush, the Loader, the dice log on, about 21:45-22:05 UTC)
+
+Test edits, DOSBox stopped after, nothing saved: Terrannus's (member 1, a human cleric of 7th level)
+classes (sheet +1Bh) and race (+12h) written for each case, his class bits (+10h, cleric) left so the
+game's own test lets him wear it all; for the thief's cases his leather Armor (item 7) made Brigandine
+(type 32 to 30, bone). Each case: the inventory on him, his chest armour (game 173, 80) to the backpack
+(195, 35) and back; the item's worn slot (+13h) read after, 9 worn, 255 still on the pointer. Controls
+with the rules word 4804h (RULE_RESTRICT off). (The inventory's slots in game coordinates: the screen's
+x / 2, y / 2.4; the shield at 65, 90.)
+
+| Case | Classes, race | The rule on | Control, the rule off |
+|---|---|---|---|
+| A human druid, leather Armor | 6, human | **CANNOT USE THIS ITEM** | worn |
+| A human druid, his (leather) shield | 6, human | **CANNOT USE THIS ITEM** | worn |
+| A half-elf druid/fighter (multiclass) | 6 9, half-elf | **refused** | |
+| A human fighter, once a druid | 9 6, human | worn | |
+| A human preserver, leather Armor | 11, human | **refused** | worn |
+| A human preserver, once a fighter | 11 9, human | worn | |
+| A human thief, Brigandine | 17, human | **CANNOT USE THIS ITEM** | worn |
+| A human thief, once a fighter | 17 9, human | worn | |
+| A human thief, once a cleric | 17 2, human | worn | |
+| An elf thief/fighter (multiclass) | 17 9, elf | worn (as the fighter allows) | |
+
+- The armour he already wore stayed on through every edit: the rule refuses a new equip only.
+- **The order of a human's classes, in the game's own DUAL**: Terrannus (dualset.py's scores) in the
+  DUAL window (the rule on) took FIGHTER: his classes became 9, 2 (the new class first), levels 1, 7,
+  class bits 0020h (the fighter's alone), THAC0 20. So the cases above, the new class first, are how
+  the sequel keeps a dual-classed human, as DSCLOG2's CLASS_FORBIDS and DUAL_WARRIOR read it.
+- The helper's count rose 2 to 7 for a refused try (the screen asks for each slot it lights).
+
 ## Not played
 
 - A new character's starting gear (SL's weaponchoice.class_gear: the Loader's creation side isn't on the
-  sequel's creation screen yet), the human dual-class cases, a ranger's bow, a druid's bare rule (the
-  party's druid is a thri-kreen, whom the game keeps out of armour first).
+  sequel's creation screen yet), a ranger's bow, a human thief once a warrior keeping his skills at 0
+  in heavy armour (THIEF_HEAVY: the skills seen at 0 for a multiclass thief above), a human preserver
+  once a warrior casting in armour.
 
 ## Water
 
-None new: the Tyr street outside the save's place, as before.
+None new: the Tyr street outside the save's place, as before (both sessions).
