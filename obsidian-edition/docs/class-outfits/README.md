@@ -11,3 +11,17 @@ Both galleries show all eight human outfits in sync. The caption identifies each
 ## Male human
 
 ![Eight male human class outfits animated through all 29 map poses](human-male.gif)
+
+## Dwarf outfit study
+
+These first-pass animations fit the same eight classes to the original female and male dwarf figures. Compare the opening strike in each loop. The female dwarf holds her stance while the male dwarf raises his arm. Each gallery shows all 29 poses at the same scale.
+
+The dwarf designs are available for art review. In-game equipment integration is still pending.
+
+### Female dwarf
+
+![Female dwarf outfit study showing eight classes through all 29 poses](dwarf-female.gif)
+
+### Male dwarf
+
+![Male dwarf outfit study showing eight classes through all 29 poses](dwarf-male.gif)
