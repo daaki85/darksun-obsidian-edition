@@ -28,7 +28,7 @@ COPIES table), so the game folder is never written to."""
 
 import os
 import struct
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from . import game, gamepatch, gff
 from .gamepatch import Patch
@@ -106,12 +106,13 @@ DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGRO
 
 # The game's reads of an item's name (file offsets: SITE_NAME's)
 NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
-# The item names: the game's table holds 256 (RESOURCE.GFF's TEXT 1000: its 255 lines are names 0-254);
+# The item names: the game's table holds 256 (RESOURCE.GFF's TEXT 1000: its 255 lines are names 1-255);
 # DSCLOG2's ITEM_NAMES (its header's +196, NAMES_ROOM of NAME_KEPT bytes, written by the Loader as it
 # attaches) are names 256 on. The mod's own come first, each at 256 + its Shattered Lands entry less
 # names.OWN (so the mod's Short Sword, SL's 144h, is 258).
 NAMES_GAME, NAMES_ROOM, NAME_KEPT = 256, 160, 16
 TSR_NAMES_OFF, TSR_NAMES_COUNT = 196, 198
+KEEPSAKE_NAMES_FIRST = NAMES_GAME + 50  # (after the mod's, names.EXTRA of them: the party transfer's keepsakes, ravitems)
 
 
 def mod_name(sl_entry: int) -> int:
@@ -120,12 +121,16 @@ def mod_name(sl_entry: int) -> int:
     return NAMES_GAME + sl_entry - names.OWN
 
 
-def item_names() -> bytes:
-    """DSCLOG2's ITEM_NAMES as the Loader writes them: the mod's names at mod_name's places."""
+def item_names(kept: Sequence[bytes] = ()) -> bytes:
+    """DSCLOG2's ITEM_NAMES as the Loader writes them: the mod's names at mod_name's places, then the
+    party transfer's keepsakes' KEPT from KEEPSAKE_NAMES_FIRST (as many as there is room for)."""
     from . import names
     out = bytearray(NAMES_ROOM * NAME_KEPT)
     for entry, name in names.NAMES.items():
         at = (mod_name(entry) - NAMES_GAME) * NAME_KEPT
+        out[at:at + NAME_KEPT] = name[:NAME_KEPT - 1].ljust(NAME_KEPT, b"\0")
+    for i, name in enumerate(kept[:NAMES_GAME + NAMES_ROOM - KEEPSAKE_NAMES_FIRST]):
+        at = (KEEPSAKE_NAMES_FIRST - NAMES_GAME + i) * NAME_KEPT
         out[at:at + NAME_KEPT] = name[:NAME_KEPT - 1].ljust(NAME_KEPT, b"\0")
     return bytes(out)
 
@@ -699,6 +704,7 @@ def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
 TYPES_CHUNK = ("ALL ", 4)
 TYPE_SIZE = 15
 GAME_TYPES = 102
+MOD_TYPES = 33  # (npcitems.TYPES)
 
 
 def wotr_type(sl: bytes) -> bytes:
@@ -719,22 +725,46 @@ def mod_type(sl_type: int) -> int:
     return GAME_TYPES + sl_type - game.GAME_TYPES
 
 
-def objects_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
-    """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP)."""
-    from . import icons, npcitems
+def mod_types_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4) with the mod's after it."""
+    from . import npcitems
+    return types + b"".join(wotr_type(t) for t in npcitems.TYPES)
+
+
+def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None) -> Tuple[bytes, List[str]]:
+    """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
+    and ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is."""
+    from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
     if types is None or len(types) != GAME_TYPES * TYPE_SIZE:
         raise RavagerError(f"{OBJECTS_FILE}'s item types are not the GOG release's")
-    if "mod_types" in skip:
-        return data, []
-    added = b"".join(wotr_type(t) for t in npcitems.TYPES)
-    return icons.with_chunks(data, {TYPES_CHUNK: types + added}), ["mod_types"]
+    new: gff.Chunks = {}
+    done: List[str] = []
+    if "mod_types" not in skip:
+        new[TYPES_CHUNK] = mod_types_table(types)
+        done.append("mod_types")
+    if added and "transfer_items" not in skip:
+        new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
+        done.append("transfer_items")
+    return (icons.with_chunks(data, new) if new else data), done
+
+
+def read_added(dos_dir: str) -> gff.Chunks:
+    """The party transfer's objects kept in DOS_DIR (ravitems.ADDED_FILE), {} if none."""
+    from . import ravitems
+    try:
+        with open(os.path.join(dos_dir, ravitems.ADDED_FILE), "rb") as f:
+            return gff.read_gff(f.read())
+    except (OSError, gff.GffError, struct.error):
+        return {}
 
 
 def write_objects(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """OBJEX.GFF's copy with the mod's item types, written to DEST unless already so."""
-    return _write_copy(game_dir, OBJECTS_FILE, dest, objects_fixed, skip)
+    """OBJEX.GFF's copy with the mod's item types and the party transfer's objects (beside DEST),
+    written to DEST unless already so."""
+    added = read_added(os.path.dirname(dest))
+    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:

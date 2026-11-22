@@ -564,7 +564,9 @@ class RavDiceLog(dicelog.DiceLog):
             return
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
         off, count = struct.unpack("<HH", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF, 4))
-        names = ravager.item_names()
+        from . import launch, ravitems
+        kept = ravager.read_added(launch.DOS_DIR).get(ravitems.NAMES_CHUNK, b"")
+        names = ravager.item_names([n for n in kept.split(b"\n") if n])
         if not off or count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
             return
         self.guest.guest.write(base + off, names)

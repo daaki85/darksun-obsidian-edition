@@ -250,17 +250,102 @@ def load_sequel(folder: str) -> Sequel:
     return Sequel(pairs, objects)
 
 
-def take_party(save_path: str, folder: str) -> List[Moved]:
+def lacking(save: Chunks, sequel: Sequel) -> Dict[int, bytes]:
+    """The party's items with no object in the sequel (CHARTRAN's money bags): each SL object, the
+    first of the save's item records of it."""
+    _, moved = roster(save, sequel)
+    objects = {old for m in moved for old, new in m.items if new == MONEY_BAG and old != MONEY_BAG}
+    items = _chunk(save, ITEMS)
+    out: Dict[int, bytes] = {}
+    for at in range(0, len(items) - SL_ITEM + 1, SL_ITEM):
+        rec = items[at:at + SL_ITEM]
+        if sl_object(rec) in objects and sl_object(rec) not in out:
+            out[sl_object(rec)] = rec
+    return out
+
+
+def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: str) -> Tuple[Sequel, List[Tuple[int, str]]]:
+    """SEQUEL with the Loader's objects for the party's items it lacks (ravitems), made from the
+    Shattered Lands in SL_DIR and the sequel in FOLDER, and kept in DOS_DIR's ADDED_FILE with the earlier
+    transfers' (their keepsakes' names too); and the items that couldn't be made, with why."""
+    import glob
+    import os
+    from . import art, icons, ravager, ravitems
+    from .gff import read_gff, write_atomic
+    need = lacking(save, sequel)
+    kept = ravager.read_added(dos_dir)
+    names_text = kept.get(ravitems.NAMES_CHUNK, b"")
+    old_pairs = {sl: ravitems.own_object(sl) for sl in need if ("OJFF", ravitems.own_object(sl) or -1) in kept}
+    need = {sl: rec for sl, rec in need.items() if sl not in old_pairs}
+    failed: List[Tuple[int, str]] = []
+    pairs = dict(old_pairs)
+    added = {k: v for k, v in kept.items() if k[0] in ravitems.OBJECT_KINDS}
+    if need:
+        def read(path):
+            with open(path, "rb") as f:
+                return read_gff(f.read())
+        sl_objects = read(os.path.join(sl_dir, "SEGOBJEX.GFF"))
+        sl_objects.update(icons.new_chunks(sl_objects))
+        gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
+        sl_names = next(v for k, v in sorted(gpl.items()) if k[0] == "NAME")
+        sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)
+        resources = read(os.path.join(folder, ravager.RESOURCE_FILE))
+        regions = [v for f in sorted(glob.glob(os.path.join(folder, "RGN*.GFF")))
+                   for k, v in read(f).items() if k[0] == "PAL "]
+        names = ravitems.Names(sl_names, resources[("TEXT", 1000)],
+                               [n for n in names_text.split(b"\n") if n])
+        types = ravitems.type_map(sequel.counterparts, sl_objects, sequel.objects)
+        table = ravager.mod_types_table(sequel.objects[ravager.TYPES_CHUNK])
+        numbers = [r.number for k, v in added.items() if k[0] == "RDFF" for r in dataitems.records(v)[0]]
+        new_pairs, chunks, failed = ravitems.make(need, sl_objects, sequel.objects, types, names, sl_palette,
+                                                  ravitems.stable_colours(resources, regions), table,
+                                                  max(numbers + [ravitems.ITEM_NUMBER_FIRST - 1]) + 1)
+        pairs.update(new_pairs)
+        added.update(chunks)
+        out = dict(added)
+        out[ravitems.NAMES_CHUNK] = b"".join(n + b"\n" for n in names.kept)
+        write_atomic(os.path.join(dos_dir, ravitems.ADDED_FILE), _gff_file(out))
+    objects = dict(sequel.objects)
+    objects.update(added)
+    return Sequel({**sequel.counterparts, **pairs}, objects), failed
+
+
+def _gff_file(chunks: Chunks) -> bytes:
+    """A GFF file holding CHUNKS (each type's listed one by one)."""
+    types: Dict[str, List[int]] = {}
+    for kind, cid in sorted(chunks):
+        types.setdefault(kind, []).append(cid)
+    data = bytearray(b"GFFI" + bytes(24))
+    places = {}
+    for key in sorted(chunks):
+        places[key] = (len(data), len(chunks[key]))
+        data += chunks[key]
+    toc = bytearray(struct.pack("<IIH", 0, 0, len(types)))
+    for kind, ids in types.items():
+        toc += struct.pack("<4sI", kind.encode("latin1"), len(ids))
+        for cid in ids:
+            toc += struct.pack("<III", cid, *places[(kind, cid)])
+    struct.pack_into("<II", data, 12, len(data), len(toc))
+    return bytes(data + toc)
+
+
+def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
+               dos_dir: Optional[str] = None) -> List[Moved]:
     """The party of the Shattered Lands save SAVE_PATH written into the roster in the sequel's
-    FOLDER (CHARSAVE.GFF, kept first as CHARSAVE.GFF.BAK when there is none yet). The save is
-    only read. What moved is returned for the report."""
+    FOLDER (CHARSAVE.GFF, kept first as CHARSAVE.GFF.BAK when there is none yet). With SL_DIR (the
+    Shattered Lands folder) and DOS_DIR (the mod's dos folder), the items the sequel lacks become the
+    Loader's own objects (with_added) instead of money bags. The save is only read. What moved is
+    returned for the report."""
     import os
     import shutil
     from . import icons
     from .gff import read_gff, write_atomic
     with open(save_path, "rb") as f:
         save = read_gff(f.read())
-    new, moved = roster(save, load_sequel(folder))
+    sequel = load_sequel(folder)
+    if sl_dir and dos_dir:
+        sequel, _ = with_added(save, sequel, sl_dir, folder, dos_dir)
+    new, moved = roster(save, sequel)
     path = os.path.join(folder, ROSTER)
     with open(path, "rb") as f:
         data = f.read()
@@ -276,15 +361,19 @@ def report(moved: List[Moved]) -> str:
     """Who went across and what each item became, a line each."""
     lines = []
     for m in moved:
+        from .ravitems import OWN_HIGH
         bags = sum(1 for _, new in m.items if new == MONEY_BAG)
-        lines.append(f"{m.name}: {len(m.items)} items, {bags} of them a money bag")
+        own = sum(1 for _, new in m.items if new >= OWN_HIGH and new < 30000)
+        lines.append(f"{m.name}: {len(m.items)} items, {bags} of them a money bag"
+                     + (f", {own} the Loader's own" if own else ""))
         for old, new in m.items:
-            lines.append(f"  object {old} -> {new}{' (a money bag)' if new == MONEY_BAG else ''}")
+            note = " (a money bag)" if new == MONEY_BAG else " (the Loader's)" if OWN_HIGH <= new < 30000 else ""
+            lines.append(f"  object {old} -> {new}{note}")
     return "\n".join(lines)
 
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) != 3:
-        sys.exit("usage: python -m dsloader.ravtransfer SAVEnn.SAV RAVAGER_FOLDER")
-    print(report(take_party(sys.argv[1], sys.argv[2])))
+    if len(sys.argv) not in (3, 5):
+        sys.exit("usage: python -m dsloader.ravtransfer SAVEnn.SAV RAVAGER_FOLDER [SL_FOLDER DOS_FOLDER]")
+    print(report(take_party(*sys.argv[1:])))

@@ -2070,7 +2070,7 @@ look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
 
 ; ---- ITEM NAMES: the mod's items' names, past the game's 256 ----
 ; The game's item names are RESOURCE.GFF's TEXT 1000, a name a line, read into a table of 256 far
-; pointers at DS:56F3h (name 0 the first line; 255 lines in the game's file): more lines run past the
+; pointers at DS:56F3h (line k is name k + 1, name 0 the first line too): more lines run past the
 ; table and break the game (playtest/logs/2026-11-22-ravager-item-types.md). An item names its entry by
 ; a word (+14h), and the game's 7 reads of the table, "push dword [bx+56F3h]" with BX the number x4
 ; (59296h, 716A3h, 75E36h, 75E81h, 93AAAh, 95027h, 95052h: the inventory, the item box, the shops...),

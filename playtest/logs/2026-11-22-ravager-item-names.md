@@ -7,8 +7,8 @@ lacks (49 of the mod's alone), and adding lines to the game's list breaks the ga
 ## Found first
 
 - The names' loader (68F03h-6E04Fh in the file): TEXT 1000 read into a block (DS:55BEh), then a table
-  of 256 far pointers at DS:56F3h, all first pointed at an empty string, then one a line from name 0
-  ("Tombstone") on, with no bound. That is why more lines broke the game: they ran past the table.
+  of 256 far pointers at DS:56F3h, all first pointed at an empty string, then one a line (line k is
+  name k + 1; name 0 is the first line too, "Tombstone"), with no bound. That is why more lines broke the game: they ran past the table.
 - An item's name is a word (+14h), and the game reads the table in 7 places, each
   `push dword [bx+56F3h]` with BX the number x4 (file 5E496h, 768A3h, 7B036h, 7B081h, 98CAAh, 9A227h,
   9A252h).
