@@ -1,9 +1,11 @@
 """Class outfit layers registered to the human map poses.
 
-Each archive has walk and combat chunks per class. A transparent edit keeps
-the player's original pixel, 255 clears it, and any other value paints it.
+Each archive has walk and combat chunks per class. The woman's outfits layer
+over a shared redrawn base. In each layer a transparent edit keeps the pixel
+underneath, 255 clears it, and any other value paints it.
 The matching region chunk assigns equipment ownership. The cloak chunk stores
-its fold values from 1 (dark) to 6 (light) for recolouring on equip.
+its fold values from 1 (dark) to 6 (light) for recolouring on equip. The shared
+head mask keeps back gear behind the face and hair.
 """
 from functools import lru_cache
 from hashlib import sha256
@@ -63,11 +65,11 @@ FIGHT_GRIPS = (
 )
 
 
-# Centres of the woman's supporting wrist. For the rear walk the other arm is
-# behind the original sweeping cloak, and the shield follows the shoulder.
+# Centres of the woman's supporting wrist, including the reconstructed arm
+# that swings underneath the cloak in the rear walk.
 WOMAN_WALK_SHIELDS = (
     (15, 11), (2, 10), (8, 12), (13, 10), (16, 8), (15, 10), (13, 13),
-    (3, 9), (4, 9), (5, 9), (5, 9), (11, 14), (6, 13), (15, 12), (13, 14),
+    (3, 9), (4, 9), (4, 13), (4, 12), (11, 14), (6, 13), (15, 12), (13, 14),
 )
 WOMAN_FIGHT_SHIELDS = (
     (8, 22), (19, 18), (10, 1), (3, 13), (2, 21), (10, 8),
@@ -95,6 +97,7 @@ class Frame(NamedTuple):
     image: list
     regions: dict
     cloak: tuple = ()  # (native x, y, fold shade from 0 to 5)
+    head: tuple = ()  # foreground face and locks, in native coordinates
 
     def canvas(self, source, pad):
         """Apply authored pixels to the matching pose read from the player's install."""
@@ -116,12 +119,20 @@ def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
     with ZipFile(Path(__file__).with_name(filename)) as archive:
+        base = archive.read(f"Base/{tag}") if model == 2099 else None
+        heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
         pictures = archive.read(f"{role}/{tag}")
         cloaks = archive.read(f"{role}/{tag}-cloak")
         masks = archive.read(f"{role}/{tag}-regions")
     poses = []
     for f in range(14 if combat else 15):
         image = art.decode_frame(pictures, f)[2]
+        if base is not None:
+            # Both edits use the same registration. Preserve clear (255) edits
+            # here so the final canvas can erase the stock cloak underneath.
+            body = art.decode_frame(base, f)[2]
+            image = [[under if over is None else over for under, over in zip(body_row, outfit_row)]
+                     for body_row, outfit_row in zip(body, image)]
         mask = art.decode_frame(masks, f)[2]
         regions = {bit: [] for bit in (CHEST, ARMS, LEGS, LEFT_FOOT, RIGHT_FOOT, FOREARM, BOW)}
         # Frame 13 has extra transparent columns for the swept priest hem.
@@ -136,5 +147,10 @@ def frames(role, combat, model=2095):
         folds = tuple((x - left, y - top, shade - 1)
                       for y, row in enumerate(art.decode_frame(cloaks, f)[2])
                       for x, shade in enumerate(row) if shade is not None)
-        poses.append(Frame(image, regions, folds))
+        head = ()
+        if heads is not None:
+            head = tuple((x - left, y - top)
+                         for y, row in enumerate(art.decode_frame(heads, f)[2])
+                         for x, pixel in enumerate(row) if pixel is not None)
+        poses.append(Frame(image, regions, folds, head))
     return tuple(poses)

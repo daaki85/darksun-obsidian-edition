@@ -1,6 +1,7 @@
 import os
 import unittest
 from pathlib import Path
+from zipfile import ZipFile
 
 from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
 
@@ -170,3 +171,31 @@ class HumanOutfitTests(unittest.TestCase):
                 hem = [x for x, y, _ in poses[f].cloak if y >= 17]
                 self.assertTrue(hem, (role, f))
                 self.assertGreaterEqual(max(hem) - min(hem), 10, (role, f))
+
+    def test_woman_fighters_keep_shared_head_and_rebuilt_rear_arms(self):
+        with ZipFile(Path(classoutfits.__file__).with_name("woman_outfit_layers.zip")) as archive:
+            for combat, tag in ((False, "walk"), (True, "combat")):
+                body = archive.read(f"Base/{tag}")
+                for role in ("Warrior", "Gladiator"):
+                    for f, pose in enumerate(classoutfits.frames(role, combat, 2099)):
+                        base = art.decode_frame(body, f)[2]
+                        self.assertTrue(pose.head)
+                        for x, y in pose.head:
+                            self.assertEqual(pose.image[y + 6][x + 6], base[y + 6][x + 6], (role, f))
+                        if not combat and f in (1, 7, 8, 9, 10):
+                            arms = [x for x, y in pose.regions[classoutfits.FOREARM] if y == 10]
+                            self.assertTrue(any(x <= 5 for x in arms), (role, f))
+                            self.assertTrue(any(x >= 14 for x in arms), (role, f))
+
+    def test_druid_rear_idle_and_walk_have_a_draped_hem(self):
+        poses = classoutfits.frames("Druid", False, 2099)
+        hems = []
+        for f in (1, 7, 8, 9, 10):
+            hem = {}
+            for x, y, _ in poses[f].cloak:
+                hem[x] = max(y, hem.get(x, 0))
+            bottom = max(hem.values())
+            self.assertGreaterEqual(bottom, 16, f)
+            self.assertGreaterEqual(len({y for y in hem.values() if y >= bottom - 2}), 3, f)
+            hems.append(bottom)
+        self.assertLessEqual(max(hems) - min(hems), 2)
