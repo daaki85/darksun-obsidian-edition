@@ -27,3 +27,17 @@ lacks (49 of the mod's alone), and adding lines to the game's list breaks the ga
 - DOSBox and the dice log stopped by pid, nothing saved.
 
 Water: no new area.
+
+## Icons: Shattered Lands' pictures in the sequel (about 23:50 UTC)
+
+- The sequel's item pictures are its own format (a 0FFh row, "PLNR": wotrart.py), but **it draws a
+  Shattered Lands picture as it is**: in a copy of the game folder, the Longsword's icon (BMP 2028)
+  replaced by SL's long sword's (object 1013) showed in Ar'anda's hand, in the wrong colours (pink and
+  teal: SL's palette numbers in the sequel's palette). Left, beside the sequel's own:
+  ![](img/2026-11-22-ravager-sl-icon-raw.png)
+- With its colours mapped to the nearest of the sequel's 104 stable colours (RESOURCE.GFF's PAL 1000
+  entries that no region palette changes; the inventory's palette is PAL 1000 for 173 entries), the
+  mod's Short Sword (2427) shows in its own steel and brown, beside the sequel's longsword:
+  ![](img/2026-11-22-ravager-sl-icon-mapped.png)
+- So each transferred item's picture can be Shattered Lands' own (the mod's icons too, made at the
+  Loader's run from the player's files), its colours mapped. DOSBox stopped by pid, nothing saved.
