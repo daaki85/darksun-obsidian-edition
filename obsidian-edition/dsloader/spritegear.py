@@ -879,7 +879,19 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
     out = costume.canvas(rows, pad) if costume else padded(rows, pad)
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
-    if costume and parts.facing is not None and costume.cloak:
+    if costume and model == 2099 and combat and frame == 7:
+        # The thrusting arm and flying cloak span most of the frame. The quiver
+        # stays at the shoulder, inside that span.
+        parts = parts._replace(shoulders=(9, 11, 17), waist=15)
+    if costume and model == 2099 and combat and frame in (10, 11):
+        # Her vertical bow and raised hand both project above the face.
+        if frame == 10:
+            parts = parts._replace(facing=sp.SIDE, head=sp.Head(3, 4, 9, 5),
+                                   shoulders=(10, 3, 10), waist=16)
+        else:
+            parts = parts._replace(facing=sp.FRONT, head=sp.Head(3, 5, 10, 5),
+                                   shoulders=(10, 5, 13), waist=16)
+    if costume and model == 2095 and parts.facing is not None and costume.cloak:
         k = frame + (sp.WALK_FRAMES if combat else 0)
         crown, left, right, brow, shoulder, sa, sb, waist = classoutfits.LANDMARKS[k]
         facing = sp.FRONT if combat and frame == 11 else parts.facing
@@ -1000,9 +1012,15 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         hands = {"right": points[0]}
         if len(points) > 1:
             hands["left"] = points[1]
-    if costume and combat and classoutfits.FIGHT_GRIPS[frame]:
-        hands["right"] = classoutfits.FIGHT_GRIPS[frame]
-        hands["left"] = classoutfits.FIGHT_SHIELDS[frame]
+    if model == 2099:
+        grips = classoutfits.WOMAN_FIGHT_GRIPS
+        shields = classoutfits.WOMAN_FIGHT_SHIELDS if combat else classoutfits.WOMAN_WALK_SHIELDS
+    else:
+        grips = classoutfits.FIGHT_GRIPS
+        shields = classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS
+    if costume and combat and grips[frame]:
+        hands["right"] = grips[frame]
+        hands["left"] = shields[frame]
     if combat and frame in sp.BOW_FRAMES:
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
@@ -1019,14 +1037,14 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
         if costume and shape == SHIELD and hand == "left":
-            centre = (classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS)[frame]
+            centre = shields[frame]
             if centre:
                 x, y = centre
                 far = parts.facing == sp.SIDE and (not combat or frame == 7)
                 facing = SIDE_FAR if far else parts.facing
                 # In profile the far arm is behind the torso, but the swept
                 # hem trails behind the shield. Use the native torso as its occluder.
-                occluder = padded(rows, pad) if far else body
+                occluder = padded(rows, pad) if far and model == 2095 else body
                 draw_shield(out, occluder, (x + pad, y + pad + 2), facing,
                             MATERIAL_COLOURS.get(material, MATERIAL_COLOURS[4]),
                             far or facing == sp.BACK, glint=glint, shine=shine)
@@ -1043,6 +1061,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (155, False)  # Lowered across the body, clear of the baseline.
         if costume and combat and frame == 1 and hand == "left" and shape != SHIELD:
             g = (330, False)  # The off hand extends out at hip height.
+        if costume and model == 2099 and combat and frame == 2 and hand == "right":
+            g = (200, False)  # Keep the butt of a staff above the lower edge.
+        if costume and model == 2099 and not combat and frame == 6 and hand == "left" and shape in TWO_HANDED:
+            g = (52, False)
         if shape is None or g is None or shape in (SLING, BOW, CHATKCHA):
             continue
         colours = FLAME if item_type == FLAME_BLADE else _whole(SPELL_WEAPONS[item_type]) if item_type in SPELL_WEAPONS \

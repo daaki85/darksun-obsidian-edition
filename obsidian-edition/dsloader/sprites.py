@@ -257,9 +257,12 @@ class Pictures:
 
     def __init__(self, chunks):
         self.chunks = chunks
-        self.has_class_outfits = classoutfits.supports(chunks)
+        self.outfit_models = {model for model in classoutfits.MODELS.values() if classoutfits.supports(chunks, model)}
         self.frames: Dict[int, List[sg.Rows]] = {}
         self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]]] = {}
+
+    def supports_outfits(self, figure, model):
+        return model in self.outfit_models and classoutfits.MODELS.get(figure) == model
 
     def model(self, obj: int) -> Optional[int]:
         rec = self.chunks.get(("OJFF", obj))
@@ -314,7 +317,7 @@ class Pictures:
         own = self.made.get((figure, combat)) is not None  # (a half-elf's own figure)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
-        costumes = classoutfits.frames(role, combat) if role and model == 2095 and figure == 300 and self.has_class_outfits else None
+        costumes = classoutfits.frames(role, combat, model) if role and self.supports_outfits(figure, model) else None
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
             dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f], costumes[f] if costumes else None)
@@ -735,7 +738,7 @@ class Dresser:
             model = self.pics.model(figure)
             stage = greyhair.stage_of(self.gd, member) if on else 0
             role = None
-            if on and figure == 300 and model == 2095 and self.pics.has_class_outfits:
+            if on and self.pics.supports_outfits(figure, model):
                 role = classoutfits.for_sheet(self.gd.sheet(member))
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage, role)
             fresh = self.shown.get(obj) != key

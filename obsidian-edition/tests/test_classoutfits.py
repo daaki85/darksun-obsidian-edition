@@ -1,6 +1,8 @@
+import os
 import unittest
+from pathlib import Path
 
-from dsloader import classoutfits, game, spritegear as sg
+from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
 
 
 class HumanOutfitTests(unittest.TestCase):
@@ -112,3 +114,42 @@ class HumanOutfitTests(unittest.TestCase):
             self.assertTrue(cells.isdisjoint((x, y) for x, y, _ in pose.cloak))
             for bit in (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS):
                 self.assertTrue(cells.isdisjoint(pose.regions[bit]))
+
+    def test_woman_has_independent_outfit_layers(self):
+        for combat, count in ((False, 15), (True, 14)):
+            for role in classoutfits.CLASSES[1:]:
+                poses = classoutfits.frames(role, combat, 2099)
+                self.assertEqual(len(poses), count)
+                self.assertIsNot(poses, classoutfits.frames(role, combat, 2095))
+                for f, pose in enumerate(poses):
+                    bow = set(pose.regions[classoutfits.BOW])
+                    self.assertEqual(bool(bow), combat and f in (9, 10, 11))
+                    cloak = {(x, y) for x, y, _ in pose.cloak}
+                    self.assertTrue(bow.isdisjoint(cloak))
+                    if role in ("Mage", "Thief", "Druid", "Ranger", "Psionicist"):
+                        for part in (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS):
+                            self.assertTrue(cloak.isdisjoint(pose.regions[part]))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_human_woman_picture_and_cloak_in_the_loader(self):
+        chunks = gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes())
+        pictures = sprites.Pictures(chunks)
+        self.assertTrue(pictures.supports_outfits(301, pictures.model(301)))
+        self.assertFalse(pictures.supports_outfits(301, 2095))
+        self.assertFalse(pictures.supports_outfits(303, 2099))
+        self.assertFalse(classoutfits.supports({("BMP ", 2099): chunks["BMP ", 2099]}, 2099))
+        magic = (88 | sg.MAGIC_ARMOUR | (sg.BLUE_GLOW << sg.GLOW_SHIFT),)
+        for combat in (False, True):
+            side, top = sprites.room(combat)
+            plain = pictures.build(301, combat, {}, (), role="Mage")
+            plate = pictures.build(301, combat, {}, magic, role="Mage")
+            cloaked = pictures.build(301, combat, {"cloak": (65, 5)}, magic, role="Mage")
+            self.assertNotEqual(plain, plate)
+            for f, pose in enumerate(classoutfits.frames("Mage", combat, 2099)):
+                original = pictures.own(2099 + combat)[f]
+                base, wearing, covered = [art.decode_frame(chunk, f)[2] for chunk in (plain, plate, cloaked)]
+                for x, y, rank in pose.cloak:
+                    self.assertEqual(wearing[y + top][x + side], base[y + top][x + side])
+                    self.assertEqual(covered[y + top][x + side], sg.CLOAK_COLOURS[65][rank])
+                for x, y in pose.regions[classoutfits.BOW]:
+                    self.assertEqual(covered[y + top][x + side], original[y][x])
