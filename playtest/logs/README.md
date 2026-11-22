@@ -135,6 +135,7 @@ schedules and diffs a log made or used.
 | [2026-11-22](2026-11-22-ravager-item-types.md) | The mod's 33 item types in the sequel's type table (OBJEX.GFF's ALL 4, read at its length): an obsidian short sword's type seen in the item box, with a control |
 | [2026-11-22](2026-11-22-ravager-item-names.md) | The mod's item names in the sequel: DSCLOG2's names past the game's 256, seen in the item box, with a control |
 | [2026-11-22](2026-11-22-ravager-transfer-items.md) | The transferred party's items in the sequel: the mod's items and SL's keepsakes as the Loader's own objects, with names and pictures, and a control of money bags |
+| [2026-11-23](2026-11-23-ravager-item-wield.md) | Who may wield the mod's items in the sequel: their weapon kinds and their bracers, robes and cloak in DSCLOG2's class rules; a druid's Ashen Robe worn, refused in the control |
 
 ## files/
 

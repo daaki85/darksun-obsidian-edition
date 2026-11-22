@@ -4483,8 +4483,9 @@ RP_CURES_END equ $
 ; THIEF_HEAVY; game.RULE_RESTRICT, always on in SL; dsloader/restrict.py). The sequel's records: an item
 ; type's flags +0 (4 a shield, 2 missile, 10h thrown), material +4 (its low nibble; 40h with 0 none),
 ; armour +0Bh 80h, the classes that may use it +0Ch; a sheet's class bits +10h, race +12h (1 human),
-; classes +1Bh, levels +1Eh. Not in the sequel, so not here: the mod's kits, weapon specs, bracers and
-; robes, the Cloak of Protection, the Spellarcher's arrows.
+; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-134 in
+; OBJEX2.GFF, with the party transfer) aren't armour (ARMOUR_TYPE). Not in the sequel, so not here:
+; the mod's kits, weapon specs, the Spellarcher's arrows.
 ; - CU_SITE (site 19) replaces "mov [bp-1],al" (775FDh) at the end of the sequel's "may this character
 ;   equip this item" (77525h on; SL's 6EE5xh, the same tests but its answer a byte): AL 1 if the item
 ;   type's classes include one of the character's, DX the type, [BP+0Ah] the sheet (far). An item the
@@ -4524,7 +4525,7 @@ SPHERE_WATER equ 0x03           ; wood, bone
 CU_BOW_KIND equ 14              ; (KIND_OF_TYPE's bow)
 CU_FIGHTER  equ 9
 CU_GLADIATOR equ 10
-KIND_TYPES  equ 102             ; (KIND_OF_TYPE's types)
+KIND_TYPES  equ 135             ; (KIND_OF_TYPE's types: the sequel's 102 and the mod's 33)
 ARM_SLOT    equ 0               ; (an item's +13h while worn: arms, legs, head, chest)
 LEG_SLOT    equ 6
 HEAD_SLOT   equ 7
@@ -4683,13 +4684,15 @@ class_forbids:
         jz .mat
         mov al, NO_MATERIAL
 .mat:   mov [cs:cu_mat], al
-        xor al, al                      ; armour: +0Bh 80h, and not a shield
-        test byte [si + CU_KIND_FLAGS], 0x80
-        jz .armour
-        test byte [cs:cu_flags], 4
-        jnz .armour
-        inc ax
-.armour:
+        push es                         ; armour (ARMOUR_TYPE): not a shield, bracers, a robe or a cloak
+        push bx
+        push ds
+        pop es
+        mov bx, si
+        call armour_type
+        pop bx
+        pop es
+        setc al
         mov [cs:cu_armour], al
         mov ax, [si + CU_CLASSES]       ; the classes but thief that may use it
         and ax, [es:bx + SH_CLASS_BITS]
@@ -4895,6 +4898,44 @@ warrior_al:
         ret
 .no:    clc
         ret
+; ARMOUR_TYPE: carry set if the item type at ES:BX is armour (restrict.is_armour): +0Bh 80h, and not a
+; shield (+0 4), nor of these the mod's types bring (OBJEX2.GFF's 102-134): bracers of defense (worn on
+; the arms, +5 3, of no material: +4 40h), a robe (on the chest, +5 1, +4 40h, for preservers,
+; psionicists and druids alone: +0Ch 190h) or a cloak of protection (+5 8, as a cloak). All kept.
+CU_WORN     equ 0x05
+CU_BRACERS_WORN equ 3
+CU_ROBE_WORN equ 1
+CU_CLOAK_WORN equ 8
+CU_ROBE_CLASSES equ 0x0190
+armour_type:
+        push ax
+        test byte [es:bx + CU_KIND_FLAGS], 0x80
+        jz .no
+        test byte [es:bx + CU_FLAGS], 4
+        jnz .no
+        mov al, [es:bx + CU_WORN]
+        cmp al, CU_CLOAK_WORN
+        je .no
+        mov ah, [es:bx + CU_MATERIAL]
+        cmp al, CU_BRACERS_WORN
+        jne .robe
+        test ah, 0x40
+        jz .yes
+        test ah, 0x0F
+        jz .no
+        jmp .yes
+.robe:  cmp al, CU_ROBE_WORN
+        jne .yes
+        cmp ah, 0x40
+        jne .yes
+        cmp word [es:bx + CU_CLASSES], CU_ROBE_CLASSES
+        je .no
+.yes:   pop ax
+        stc
+        ret
+.no:    pop ax
+        clc
+        ret
 ; CU_HEAVY: carry set for armour not light (not leather, and of a material)
 cu_heavy:
         cmp byte [cs:cu_armour], 0
@@ -5029,10 +5070,8 @@ armour_worn:
 .slot:  imul bx, [es:bx + ITEM_TYPE], CU_TYPE_SIZE
         les di, [ITEM_TYPES_PTR]
         add bx, di
-        test byte [es:bx + CU_FLAGS], 4
-        jnz .item
-        test byte [es:bx + CU_KIND_FLAGS], 0x80
-        jz .item
+        call armour_type
+        jnc .item
         cmp byte [cs:aw_heavy], 0
         je .yes
         mov al, [es:bx + CU_MATERIAL]   ; (light: leather, or of no material: SL's)
@@ -6971,7 +7010,6 @@ reach_line_at dw 0xA4, 0
 RULE_HI_SIZE  equ 0x4000
 SHILLELAGH_TYPE equ 90
 HAMMER_TYPE   equ 95
-KIND_TYPES    equ 102
 is_large:                           ; CF if combatant AX is large (see SIZE). DS the game's; all kept.
         pusha
         push es
@@ -7112,6 +7150,10 @@ kind_of_type:
         db 7, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5   ; types 51-67
         db 0, 1, 0, 0, 3, 1, 5, 0, 0, 0, 0, 8, 10, 0, 0, 0, 0   ; types 68-84
         db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 0, 0   ; types 85-101
+        ; the mod's types (OBJEX2.GFF's 102-134, SL's 115-147: ravager.mod_type), SL's kinds
+        ; (specialize.KIND_OF_TYPE): its short swords, axes, great axes, picks, polearms, cahulaks
+        db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
+        db 0, 0, 0, 0, 3, 7, 7, 3, 0, 0, 0, 0, 0, 0, 12, 12      ; types 119-134
 LARGE_MOST    equ 520
 large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, sizes.LARGE_DICE)
              db 1, 3, 0             ; club: 1d3

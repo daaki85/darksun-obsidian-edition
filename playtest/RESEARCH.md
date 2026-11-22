@@ -1106,6 +1106,11 @@ priest scroll word w is w + 97.
 The roster the ADD list offers is CHAR 32-39, a place listed while its CACT word isn't 0 (the
 install's 32-35 are 0; CHAR 44-46 and 60 with CACT set weren't listed); the game's DELETE writes CACT
 0 at once and keeps the CHAR.
+A control for a DSCLOG2 change: the build before is git's (`git show HEAD:obsidian-edition/dos/DSCLOG2.EXE >
+obsidian-edition/dos/DSCLOG2.EXE`, the new one kept aside and put back after; ravstart.sh's Loader way
+copies it). An equip test on the roster's inventory: a click picks an item up, a click on a pack
+square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves it on the pointer
+(logs/2026-11-23-ravager-item-wield.md).
 
 ### The sequel's spells in a fight (2026-11-21)
 

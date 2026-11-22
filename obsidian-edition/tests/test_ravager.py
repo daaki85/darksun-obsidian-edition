@@ -206,6 +206,28 @@ class ItemTypeTests(unittest.TestCase):
             ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
 
 
+    def test_mod_kinds_in_dsclog2(self):
+        """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 33 (SL's 115-147 as
+        mod_type numbers them), each SL's kind (specialize.KIND_OF_TYPE) + 1: its class restrictions,
+        polearm reach and large dice take them in (KIND_TYPES)."""
+        from dsloader import specialize
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        body = asm[asm.index("\nkind_of_type:") + 1:]
+        rows = []
+        for line in body.splitlines()[1:]:
+            code = line.split(";")[0].strip()
+            if not code:
+                continue
+            if not code.startswith("db "):
+                break
+            rows += [int(n) for n in code[3:].split(",")]
+        self.assertEqual(len(rows), ravager.GAME_TYPES + ravager.MOD_TYPES)
+        self.assertIn("KIND_TYPES  equ %d" % len(rows), asm)
+        for sl in range(game.GAME_TYPES, game.GAME_TYPES + ravager.MOD_TYPES):
+            self.assertEqual(rows[ravager.mod_type(sl)], specialize.KIND_OF_TYPE.get(sl, -1) + 1, sl)
+
+
 class LayoutTests(unittest.TestCase):
     def test_fields_checked_in_memory(self):
         """The fields read from Gerakis's records in a running game (2026-11-19)."""
