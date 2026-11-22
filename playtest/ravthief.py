@@ -6,6 +6,10 @@
 # A0000h with every overlay laid above from an image of ravfix's DSUN.EXE (Dark Sun Recompiled's
 # tools/build_image.py, built once with the live PSP, 0192h, into $WORK/ravimg) and that image's stubs.
 # Borland's model: SS is DS (buffers on the stack are read through DS). Needs: pip install unicorn.
+# --helper: the Loader's game instead (class restrictions): the routine's end patched as the Loader
+# patches it (INT F5h, site 20, DSCLOG2's BELT_SITE) and every INT dispatched through the live vector
+# table, DSCLOG2's segment copied to A01Bh (its upper memory block is where the overlays are laid), so
+# the helper's own code runs; one column, the game's slot list.
 import sys, os, json, struct, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -15,8 +19,9 @@ from unicorn.x86_const import UC_X86_REG_CS, UC_X86_REG_DS, UC_X86_REG_ES, UC_X8
 WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 FIX = os.path.join(WORK, 'ravfix', 'DSUN.EXE'); IMG = os.path.join(WORK, 'ravimg')
 RECOMP = os.environ.get('RECOMP', os.path.join(PT, '..', '..', 'darksun-recompiled'))
-member = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-pid = int(sys.argv[2]) if len(sys.argv) > 2 else int(open(os.path.join(WORK, 'rav.pid')).read())
+HELPER = '--helper' in sys.argv; args = [a for a in sys.argv[1:] if a != '--helper']
+member = int(args[0]) if args else 0
+pid = int(args[1]) if len(args) > 1 else int(open(os.path.join(WORK, 'rav.pid')).read())
 g = connect(argparse.Namespace(pid=pid, host_base=None)); ds = game.find_data_segment(g)
 live = g.read(0, 0xA0000)
 psp = next(s for s in range(0x100, 0x400) if live[s*16:s*16+2] == b'\xcd\x20' and live[(s-1)*16] == 0x4D
@@ -41,11 +46,30 @@ def chance(skill, table):
     u.mem_write(ds*16 + sp, struct.pack('<HHHI', 0x0500, 0, member, skill))  # far return, member, the skill (a long)
     for r, v in ((UC_X86_REG_CS, cs), (UC_X86_REG_DS, ds), (UC_X86_REG_ES, ds), (UC_X86_REG_SS, ds), (UC_X86_REG_SP, sp)): u.reg_write(r, v)
     stop = []
-    u.hook_add(UC_HOOK_INTR, lambda uc, n, d: (stop.append(n), uc.emu_stop()))
+    if HELPER:
+        u.hook_add(UC_HOOK_INTR, dispatch)
+    else:
+        u.hook_add(UC_HOOK_INTR, lambda uc, n, d: (stop.append(n), uc.emu_stop()))
     try: u.emu_start(L, 0x500, count=500000)
     except UcError as e: return 'error %s' % e
     if stop: return 'INT %Xh' % stop[0]
     ax = u.reg_read(UC_X86_REG_AX); return ax - 0x10000 if ax & 0x8000 else ax
+def dispatch(uc, n, d):  # a real-mode INT: FLAGS, CS, IP pushed, CS:IP from the vector table
+    from unicorn.x86_const import UC_X86_REG_EFLAGS
+    ip, cs, ss, sp = (uc.reg_read(r) for r in (UC_X86_REG_IP, UC_X86_REG_CS, UC_X86_REG_SS, UC_X86_REG_SP))
+    sp = (sp - 6) & 0xFFFF; uc.mem_write(ss*16 + sp, struct.pack('<HHH', ip, cs, uc.reg_read(UC_X86_REG_EFLAGS) & 0xFFFF))
+    off, seg = struct.unpack('<HH', bytes(uc.mem_read(n*4, 4)))
+    for r, v in ((UC_X86_REG_SP, sp), (UC_X86_REG_CS, seg), (UC_X86_REG_IP, off)): uc.reg_write(r, v)
+if HELPER:
+    full = g.read(0, 0x110000); hseg = struct.unpack_from('<H', full, 0xF5*4 + 2)[0]
+    mem[0xA01B0:0xA01B0 + 0x8000] = full[hseg*16:hseg*16 + 0x8000]
+    mem[0xF5*4:0xF5*4 + 4] = struct.pack('<HH', struct.unpack_from('<H', full, 0xF5*4)[0], 0xA01B)
+    site = L + (0x8C7C5 - FN); assert mem[site:site+3] == b'\x8b\xc6\x5f'; mem[site:site+3] = b'\xcd\xf5\x14'
+    NAMES = ('pick pockets', 'open locks', 'find/remove traps', 'move silently', 'hide in shadows', 'hear noise', 'climb walls', 'read languages')
+    print('member %d through DSCLOG2 (its rules %04X)' % (member, struct.unpack_from('<H', full, hseg*16 + 170)[0]))
+    for s, n in enumerate(NAMES):
+        print('  %-18s %5s' % (n, chance(s, ORIG)))
+    sys.exit()
 NAMES = ('pick pockets', 'open locks', 'find/remove traps', 'move silently', 'hide in shadows', 'hear noise', 'climb walls', 'read languages')
 print('member %d (DS %04X, PSP %04X): the game\'s slot list, the fix' % (member, ds, psp))
 for s, n in enumerate(NAMES):

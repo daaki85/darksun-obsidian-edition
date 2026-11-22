@@ -426,13 +426,14 @@ class RavGameData(game.GameData):
         return sum(1 for first in self.guest.read(at, SPELL_LEVELS_MOST) if first <= spell)
 
     def no_spells(self, creature: int) -> bool:
-        """SL's armour rule for a multiclass preserver (class restrictions, game.RULE_RESTRICT) isn't
-        ported: the sequel's preservers cast in armour (the USE screen's "NO SPELLS IN ARMOUR" was
-        wrong there: Ar'anda cast Enlarge in it, 2026-11-21)."""
-        return bool(self.rules & game.RULE_RESTRICT) and super().no_spells(creature)
+        """SL's armour rule for a multiclass preserver (class restrictions' PROBE_NO_CAST) isn't ported:
+        the sequel's preservers cast in armour (the USE screen's "NO SPELLS IN ARMOUR" was wrong there:
+        Ar'anda cast Enlarge in it, 2026-11-21), so never."""
+        return False
 
     def thief_heavy(self, creature: int) -> bool:
-        """The same for a thief's skills in heavy armour (class restrictions, not ported)."""
+        """SL's, with class restrictions on (DSCLOG2's BELT_SITE and THIEF_REAR: no thief skills or
+        backstab in armour that isn't light)."""
         return bool(self.rules & game.RULE_RESTRICT) and super().thief_heavy(creature)
 
     def effect_caster_level(self, creature: int, spell: int) -> Optional[int]:

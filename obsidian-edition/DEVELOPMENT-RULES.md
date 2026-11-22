@@ -155,6 +155,21 @@ or ranger, cleric, thief, psionicist, preserver and druid: seen in play, every
 two-class combination as a half-elf) and puts what it can't wear in the
 backpack.
 
+In Wake of the Ravager (the port, `dsloader/ravager.py`; `RULE_RESTRICT` in `RULES_PORTED`): DSCLOG2's
+`CU_SITE` (site 19, `class_can_use`: 775FDh, `mov [bp-1],al`, the end of the sequel's equip test, its
+answer a byte) runs `CLASS_FORBIDS` with the sequel's offsets (a type's flags +0, material +4, armour
++0Bh 80h, classes +0Ch; a sheet's class bits +10h, race +12h, classes +1Bh, levels +1Eh) and the sequel's
+`KIND_OF_TYPE`; `BELT_SITE` (site 20, `thief_skill_armour`: 8C7C5h, `mov ax,si / pop di`, the thief
+skill routine 8C647h's end) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
+`ARMOUR_WORN` reading the item lists as `MELEE_IN` does); `THIEF_REAR`, called from `MISSILE_REAR`
+(5C99Fh), takes the backstab back (the byte `[bp-21h]`, THAC0 `[bp-1Eh]`). The sequel has no kits,
+weapon specs, robes, bracers or cloak of protection, so none of their exceptions; its only weapon
+exception is the ranger's bow (`RANGER_BOW`). Not ported: `PROBE_NO_CAST` (the sequel's test of
+whether a character can cast, SL's 89B4Dh, isn't found: it never asks its effect test, 608h:20h, for
+Can't Cast, 68, by number), so the dice log's `no_spells` stays off; a new character's starting gear
+([played](../playtest/logs/2026-11-22-ravager-class-restrictions.md): the equip test and the thief
+skills; the backstab not).
+
 ## Multiclass hit points
 
 ([In the features page](FEATURES.md#multiclass-hit-points).)

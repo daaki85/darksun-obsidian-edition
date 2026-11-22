@@ -700,6 +700,19 @@ skills): most of its code is in overlays swapped out to XMS, so lay every overla
 Dark Sun Recompiled's `build_image.py` (its PSP set to the live one) with that image's stubs, the
 live memory below; and give the emulator SS = DS (Borland reads stack buffers through DS).
 
+**Running a routine through the helper** (2026-11-22, logs/2026-11-22-ravager-class-restrictions.md): an
+overlay routine the Loader has patched with INT F5h (DSCLOG2's sites) can't run in the emulator as above,
+which stops at an INT and lays the overlays over C0000h-FFFFFh, where DSCLOG2's upper memory block is
+(CA1Bh:0 in that run). `ravthief.py --helper` shows the way: patch the site's bytes in the emulator's
+copy, copy DSCLOG2's segment (the INT F5h vector's) to A01Bh:0 (A0000h-BFFFFh is free in the image) and
+point the vector there, and dispatch every INT as real mode does (FLAGS, CS, IP pushed; CS:IP from the
+vector table). **Moving items on the inventory screen**: a click on an item picks it up (the backpack's
+cells light where it may go), a click on a slot puts it down ("CANNOT USE THIS ITEM", "ILLEGAL
+PLACEMENT", "NEED TWO FREE HANDS", "THRIKREEN CAN'T USE" leave it on the pointer); a click on another
+portrait shows that character with the item still held, so it can be carried across. Window to game:
+x / 2, y / 2.4 (Ar'anda's right hand game 65,92, the left 172,92, the legs 172,127, the backpack's first
+cells 195,27 and 207,27; the portraits 25 by 25, 69, 117, 165).
+
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the

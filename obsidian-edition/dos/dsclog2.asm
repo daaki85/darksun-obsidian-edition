@@ -437,7 +437,8 @@ missile_rear:
         mov byte [bp - 0x19], 0
         add word [bp - 0x1E], 2
         inc word [cs:rear_taken]
-.out:   mov al, [bp - 0x19]
+.out:   call thief_rear                 ; (class restrictions: no backstab in heavy armour)
+        mov al, [bp - 0x19]
         iret
 rear_taken dw 0                         ; missiles' "from behind" taken back (for the tests)
 
@@ -2856,6 +2857,8 @@ site_table:
         dw th_site                          ; 16 SITE_TO_HIT
         dw rest_hp                          ; 17 SITE_REST_HP
         dw rest_pre                         ; 18 SITE_REST_PRE
+        dw cu_site                          ; 19 SITE_CAN_USE
+        dw belt_site                        ; 20 SITE_THIEF_SKILL
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4277,6 +4280,511 @@ rp_wound   dw 0
 rp_stops   db 37, 68, 69, 0         ; (Feebleminded, Can't Cast, Paralyzed)
 rp_cures   dw 117, 4, 170, 10, 194, 16, 210, 30 ; (Cure Light, Serious, Critical Wounds, Heal)
 RP_CURES_END equ $
+; CLASS RESTRICTIONS (SL's, DSCLOG's PROBE_CAN_USE, CLASS_FORBIDS, PROBE_BELT's and THIEF_REAR's
+; THIEF_HEAVY; game.RULE_RESTRICT, always on in SL; dsloader/restrict.py). The sequel's records: an item
+; type's flags +0 (4 a shield, 2 missile, 10h thrown), material +4 (its low nibble; 40h with 0 none),
+; armour +0Bh 80h, the classes that may use it +0Ch; a sheet's class bits +10h, race +12h (1 human),
+; classes +1Bh, levels +1Eh. Not in the sequel, so not here: the mod's kits, weapon specs, bracers and
+; robes, the Cloak of Protection, the Spellarcher's arrows.
+; - CU_SITE (site 19) replaces "mov [bp-1],al" (775FDh) at the end of the sequel's "may this character
+;   equip this item" (77525h on; SL's 6EE5xh, the same tests but its answer a byte): AL 1 if the item
+;   type's classes include one of the character's, DX the type, [BP+0Ah] the sheet (far). An item the
+;   game allows that the classes' limits forbid (CLASS_FORBIDS) is refused, the game then saying it can't
+;   use it, as SL's.
+; - BELT_SITE (site 20) replaces "mov ax,si / pop di" (8C7C5h) at the end of the thief skill routine
+;   (8C647h; SL's 803B2h): SI the chance, DI the thief's combatant. 0 for a thief in armour that isn't
+;   light (THIEF_HEAVY).
+; - THIEF_REAR, called from MISSILE_REAR (5C99Fh, in the attack's set-up after its from behind, [BP-19h],
+;   and backstab, [BP-21h], bytes; [BP-1Eh] the THAC0 both lower by 2; SI the attacker): a party thief in
+;   armour that isn't light backstabs no more.
+RULE_RESTRICT equ 8192
+CU_TYPE_SIZE equ 0x0F
+CU_FLAGS    equ 0x00
+CU_MATERIAL equ 0x04
+CU_KIND_FLAGS equ 0x0B
+CU_CLASSES  equ 0x0C
+SH_CLASS_BITS equ 0x10
+SH_RACE     equ 0x12
+SH_CLASSES  equ 0x1B
+SH_LEVELS   equ 0x1E
+CU_SHEET_SIZE equ 0x42
+CU_HUMAN    equ 1
+NO_MATERIAL equ 0xFF
+LEATHER     equ 5
+THIEF_BIT   equ 0x400
+PSI_KINDS   equ 0x701E          ; bits by kind: club, dagger, short sword, mace, chatkcha, bow, sling
+SPHERE_EARTH equ 0x1D           ; bits by material: wood, stone, obsidian, metal
+SPHERE_FIRE equ 0x08            ; obsidian
+SPHERE_WATER equ 0x03           ; wood, bone
+CU_BOW_KIND equ 14              ; (KIND_OF_TYPE's bow)
+CU_FIGHTER  equ 9
+CU_GLADIATOR equ 10
+KIND_TYPES  equ 102             ; (KIND_OF_TYPE's types)
+ARM_SLOT    equ 0               ; (an item's +13h while worn: arms, legs, head, chest)
+LEG_SLOT    equ 6
+HEAD_SLOT   equ 7
+CHEST_SLOT  equ 9
+cu_site:
+        test word [cs:rules], RULE_RESTRICT
+        jz .out
+        or al, al
+        jz .out
+        push bx
+        push es
+        les bx, [bp + 0x0A]
+        call class_forbids
+        pop es
+        pop bx
+        jnc .out
+        xor al, al
+        inc word [cs:restrict_count]
+.out:   mov [bp - 1], al
+        iret
+belt_site:
+        sti
+        mov ax, si
+        test word [cs:rules], RULE_RESTRICT
+        jz .pop
+        push ax
+        mov ax, di
+        call fighter_creature
+        jc .game
+        call thief_heavy
+        jnc .game
+        pop ax
+        xor ax, ax
+        inc word [cs:restrict_count]
+        jmp .pop
+.game:  pop ax
+.pop:   push bp                         ; (the replaced "pop di": the INT's frame moved up over it)
+        mov bp, sp
+        push ax
+        mov ax, [bp + 8]
+        mov di, ax
+        mov ax, [bp + 6]
+        mov [bp + 8], ax                ; FLAGS
+        mov ax, [bp + 4]
+        mov [bp + 6], ax                ; CS
+        mov ax, [bp + 2]
+        mov [bp + 4], ax                ; IP
+        mov ax, [bp]
+        mov [bp + 2], ax                ; BP
+        pop ax
+        pop bp                          ; (the old [BP] slot: thrown away)
+        pop bp
+        iret
+thief_rear:
+        test word [cs:rules], RULE_RESTRICT
+        jz .ret
+        cmp si, 3
+        ja .ret
+        cmp byte [bp - 0x21], 0
+        je .ret
+        push ax
+        mov ax, si
+        call fighter_creature
+        jc .no
+        call thief_heavy
+        jnc .no
+        mov byte [bp - 0x21], 0
+        add word [bp - 0x1E], 2
+        inc word [cs:restrict_count]
+.no:    pop ax
+.ret:   ret
+restrict_count dw 0             ; (items refused, skills and backstabs taken: for a look in play)
+
+; CLASS_FORBIDS: carry set if the classes of the character whose sheet is at ES:BX keep it from
+; item type DX (SL's, restrict.py says why): a psionicist, a thief (light armour, but a multiclass
+; one, or a human thief once a warrior, as its other class allows: CU_DUAL; a multiclass one its shields
+; too), a preserver of that class alone (or a human once a warrior), a druid, a cleric. A human's first
+; class alone holds it (the one it has now); another race's every class. DS the game's; all kept.
+class_forbids:
+        pusha
+        push ds
+        mov ax, dx
+        imul ax, ax, CU_TYPE_SIZE
+        lds si, [ITEM_TYPES_PTR]
+        add si, ax
+        mov al, [si + CU_FLAGS]         ; the flags: 1 melee, 2 missile, 4 shield, 10h thrown
+        mov [cs:cu_flags], al
+        mov al, [si + CU_MATERIAL]
+        mov ah, al
+        and al, 0x0F
+        jnz .mat
+        test ah, 0x40
+        jz .mat
+        mov al, NO_MATERIAL
+.mat:   mov [cs:cu_mat], al
+        xor al, al                      ; armour: +0Bh 80h, and not a shield
+        test byte [si + CU_KIND_FLAGS], 0x80
+        jz .armour
+        test byte [cs:cu_flags], 4
+        jnz .armour
+        inc ax
+.armour:
+        mov [cs:cu_armour], al
+        mov ax, [si + CU_CLASSES]       ; the classes but thief that may use it
+        and ax, [es:bx + SH_CLASS_BITS]
+        and ax, 0xFFFF - THIEF_BIT
+        mov [cs:cu_others], ax
+        pop ds
+        mov byte [cs:cu_kind], 0xFF     ; a weapon's kind (0FFh none)
+        test byte [cs:cu_flags], 3
+        jz .kind
+        cmp dx, KIND_TYPES
+        jae .kind
+        mov si, dx
+        mov al, [cs:si + kind_of_type]
+        dec al
+        mov [cs:cu_kind], al
+.kind:  call ranger_bow                 ; (a ranger's bow: its own, as the game has it)
+        jnc .holds0
+        mov byte [cs:cu_kind], 0xFF
+.holds0:
+        call dual_warrior
+        mov cx, 3                       ; CL the classes that hold, CH more than one (not human)
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .multi
+        mov cl, 1
+        jmp .holds
+.multi: cmp byte [es:bx + SH_CLASSES + 1], 0
+        je .holds
+        inc ch
+.holds: xor di, di
+.each:  mov al, [es:bx + di + SH_CLASSES]
+        or al, al
+        jz .next
+        call class_forbids_one
+        jc .out
+.next:  inc di
+        cmp di, cx                      ; (CH 1: DI never reaches it, and the third slot ends it)
+        jae .out                        ; (CF clear)
+        cmp di, 3
+        jb .each
+        clc
+.out:   popa
+        ret
+; RANGER_BOW: carry set if CU_KIND is the bow and the character (sheet ES:BX) is a ranger, a
+; multiclass one always, a human while a ranger or once its new class's level has passed its ranger
+; level (SL's SPECIALIZED_BACK's bow; the sequel has no weapon specs). All kept.
+ranger_bow:
+        pusha
+        cmp byte [cs:cu_kind], CU_BOW_KIND - 1
+        jne .no
+        xor si, si
+.class: mov al, [es:bx + si + SH_CLASSES]
+        cmp al, 13
+        jb .next
+        cmp al, 16
+        ja .next
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .yes
+        or si, si
+        jz .yes
+        mov al, [es:bx + si + SH_LEVELS]
+        cmp al, [es:bx + SH_LEVELS]
+        jb .yes
+.next:  inc si
+        cmp si, 3
+        jb .class
+.no:    popa
+        clc
+        ret
+.yes:   popa
+        stc
+        ret
+; CLASS_FORBIDS_ONE: carry set if class AL keeps the character (sheet ES:BX, CH 1 if multiclass)
+; from the item CLASS_FORBIDS has described in CU_*.
+class_forbids_one:
+        cmp al, 12                      ; psionicist
+        jne .thief
+        call cu_heavy
+        jc .ret
+        call shield_not_leather
+        jc .ret
+        mov dl, [cs:cu_kind]
+        cmp dl, 0xFF
+        je .ok
+        push cx
+        mov cl, dl
+        mov dx, 1
+        shl dx, cl
+        pop cx
+        test dx, PSI_KINDS
+        jnz .ok
+        stc
+        ret
+.thief: cmp al, THIEF_CLASS
+        jne .pres
+        call cu_heavy                   ; (a thief: light armour only, but a multiclass one, or a
+        jnc .tshield                    ;   human once a warrior: as its other class allows, its
+        or ch, ch                       ;   thief skills lost in it: THIEF_HEAVY)
+        jnz .tshield
+        cmp byte [cs:cu_dual], 0
+        jne .ok
+        stc
+        ret
+.tshield:
+        or ch, ch                       ; (a multiclass one: a leather shield another class allows)
+        jz .ok
+        call shield_not_leather
+        jc .ret
+        test byte [cs:cu_flags], 4
+        jz .ok
+        cmp word [cs:cu_others], 0
+        jne .ok
+        stc
+        ret
+.pres:  cmp al, PRESERVER_CLASS
+        jne .druid
+        or ch, ch
+        jnz .ok
+        cmp byte [cs:cu_dual], 0        ; (a human once a warrior: as a multiclass one)
+        jne .ok
+        jmp .bare
+.druid: cmp al, 5
+        jb .cleric
+        cmp al, 8
+        ja .ok
+.bare:  cmp byte [cs:cu_armour], 0      ; no armour, no shield
+        jne .no
+        test byte [cs:cu_flags], 4
+        jz .ok
+.no:    stc
+        ret
+.cleric:                                ; (1-4)
+        cmp byte [cs:cu_kind], 0xFF
+        je .ok
+        push si
+        xor si, si
+.sphere:
+        mov al, [es:bx + si + SH_CLASSES] ; a cleric's or ranger's sphere: its class less 1 (13 a ranger's), mod 4
+        dec al
+        cmp al, 4
+        jb .is
+        sub al, 12
+        cmp al, 4
+        jae .nexts
+.is:    call sphere_allows
+        jnc .yes
+.nexts: inc si
+        cmp si, 3
+        jb .sphere
+        pop si
+        stc
+        ret
+.yes:   pop si
+.ok:    clc
+.ret:   ret
+; DUAL_WARRIOR: CU_DUAL 1 if the character (sheet ES:BX) is a human whose class now is thief or
+; preserver and who was a fighter, gladiator or ranger before, or a thief who was a cleric before
+; (restrict.dual_warrior), else 0. All registers kept.
+dual_warrior:
+        push ax
+        push cx
+        mov byte [cs:cu_dual], 0
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .out
+        mov cl, [es:bx + SH_CLASSES]
+        cmp cl, THIEF_CLASS
+        je .was
+        cmp cl, PRESERVER_CLASS
+        jne .out
+.was:   mov al, [es:bx + SH_CLASSES + 1]
+        call .before
+        jc .yes
+        mov al, [es:bx + SH_CLASSES + 2]
+        call .before
+        jnc .out
+.yes:   mov byte [cs:cu_dual], 1
+.out:   pop cx
+        pop ax
+        ret
+.before:                        ; (carry set: class AL a warrior, or a cleric for a thief, CL, now)
+        call warrior_al
+        jc .ret
+        cmp cl, THIEF_CLASS
+        jne .no
+        cmp al, 1
+        jb .no
+        cmp al, 4
+        ja .no
+        stc
+        ret
+.no:    clc
+.ret:   ret
+; WARRIOR_AL: carry set if class AL is a fighter, gladiator or ranger. All registers kept.
+warrior_al:
+        cmp al, CU_FIGHTER
+        je .yes
+        cmp al, CU_GLADIATOR
+        je .yes
+        cmp al, 13
+        jb .no
+        cmp al, 16
+        ja .no
+.yes:   stc
+        ret
+.no:    clc
+        ret
+; CU_HEAVY: carry set for armour not light (not leather, and of a material)
+cu_heavy:
+        cmp byte [cs:cu_armour], 0
+        je .light
+        cmp byte [cs:cu_mat], LEATHER
+        je .light
+        cmp byte [cs:cu_mat], NO_MATERIAL
+        je .light
+        stc
+        ret
+.light: clc
+        ret
+; SHIELD_NOT_LEATHER: carry set for a shield of a material not leather
+shield_not_leather:
+        test byte [cs:cu_flags], 4
+        jz .ok
+        cmp byte [cs:cu_mat], LEATHER
+        je .ok
+        stc
+        ret
+.ok:    clc
+        ret
+; SPHERE_ALLOWS: carry clear if sphere AL (0 air, 1 earth, 2 fire, 3 water) allows the weapon:
+; air, missile and thrown weapons, daggers and the cahulaks; the others by material (SL's).
+sphere_allows:
+        push cx
+        or al, al
+        jnz .mat
+        test byte [cs:cu_flags], 0x12
+        jnz .yes
+        cmp byte [cs:cu_kind], 2        ; (a dagger)
+        je .yes
+        cmp byte [cs:cu_kind], 11       ; (the cahulaks)
+        je .yes
+        jmp .no
+.mat:   mov ah, SPHERE_EARTH
+        cmp al, 1
+        je .test
+        mov ah, SPHERE_FIRE
+        cmp al, 2
+        je .test
+        mov ah, SPHERE_WATER
+.test:  mov cl, [cs:cu_mat]
+        cmp cl, 8
+        jae .no
+        mov ch, 1
+        shl ch, cl
+        test ah, ch
+        jnz .yes
+.no:    pop cx
+        stc
+        ret
+.yes:   pop cx
+        clc
+        ret
+cu_flags   db 0
+cu_mat     db 0
+cu_armour  db 0
+cu_kind    db 0
+cu_dual    db 0
+cu_others  dw 0
+; THIEF_HEAVY: carry set if creature AX (DS the game's) has a thief class and wears armour that isn't
+; light (HEAVY_WORN): a multiclass thief, or a human thief once a warrior, may wear it, but loses its
+; thief skills and backstab in it (restrict.thief_heavy). All registers kept.
+thief_heavy:
+        pusha
+        push es
+        mov dx, ax
+        imul bx, ax, CREATURE_SIZE
+        les si, [CREATURES_PTR]
+        mov ax, [es:bx + si + 4]        ; (its sheet's number)
+        imul bx, ax, CU_SHEET_SIZE
+        les si, [SHEETS_PTR]
+        add bx, si
+        mov cx, 3
+        xor si, si
+.class: cmp byte [es:bx + si + SH_CLASSES], THIEF_CLASS
+        je .thief
+        inc si
+        loop .class
+        pop es
+        popa
+        clc
+        ret
+.thief: mov byte [cs:aw_heavy], 1
+        call armour_worn
+        mov byte [cs:aw_heavy], 0
+        pop es
+        popa
+        ret
+; ARMOUR_WORN: carry set if creature DX (DS the game's) wears armour, a helm too: an item of a type
+; marked armour (+0Bh 80h), not a shield, on its arms, legs, head or chest, in any of its item lists
+; (as MELEE_IN reads them); with AW_HEAVY only armour that isn't light (not leather, and of a material).
+; All registers kept.
+armour_worn:
+        pusha
+        push es
+        imul bx, dx, CREATURE_SIZE
+        mov [cs:mi_creature], bx
+        mov cx, 8
+.list:  les bx, [CREATURES_PTR]
+        add bx, [cs:mi_creature]
+        add bx, cx
+        mov dx, [es:bx]
+        cmp dx, NO_ITEM
+        jae .next
+        imul bx, dx, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 1
+        jne .next                       ; not an item
+        mov dx, [es:bx + FIGHTERS_OFF + 1]
+        mov si, 100                     ; (no more than 100 in a list)
+.item:  cmp dx, NO_ITEM
+        jae .next
+        dec si
+        js .next
+        imul bx, dx, ITEM_SIZE
+        les di, [ITEMS_PTR]
+        add bx, di
+        mov dx, [es:bx + ITEM_NEXT]
+        mov al, [es:bx + ITEM_SLOT]
+        cmp al, ARM_SLOT
+        je .slot
+        cmp al, LEG_SLOT
+        je .slot
+        cmp al, HEAD_SLOT
+        je .slot
+        cmp al, CHEST_SLOT
+        jne .item
+.slot:  imul bx, [es:bx + ITEM_TYPE], CU_TYPE_SIZE
+        les di, [ITEM_TYPES_PTR]
+        add bx, di
+        test byte [es:bx + CU_FLAGS], 4
+        jnz .item
+        test byte [es:bx + CU_KIND_FLAGS], 0x80
+        jz .item
+        cmp byte [cs:aw_heavy], 0
+        je .yes
+        mov al, [es:bx + CU_MATERIAL]   ; (light: leather, or of no material: SL's)
+        and al, 0x4F
+        cmp al, LEATHER
+        je .item
+        cmp al, 0x40
+        je .item
+.yes:   pop es
+        popa
+        stc
+        ret
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        pop es
+        popa
+        clc
+        ret
+aw_heavy db 0
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

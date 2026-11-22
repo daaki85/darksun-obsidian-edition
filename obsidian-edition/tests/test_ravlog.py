@@ -258,14 +258,16 @@ class PassTests(unittest.TestCase):
         self.assertTrue(data.rules & game.RULE_HP_BEST)
         self.assertFalse(data.no_spells(0))
 
-    def test_restrictions_not_ported(self):
-        """Class restrictions aren't ported: a preserver in armour casts, a thief in heavy armour keeps
-        its skills (whatever SL's rule says of the sheet)."""
+    def test_restrictions_ported(self):
+        """Class restrictions: a thief in heavy armour loses its skills (DSCLOG2's BELT_SITE) with the rule
+        on; a preserver in armour still casts (PROBE_NO_CAST isn't ported)."""
         real = game.GameData.no_spells, game.GameData.thief_heavy
         game.GameData.no_spells = game.GameData.thief_heavy = lambda self, c: True
         try:
             data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0xFFFFFFFF)
             self.assertFalse(data.no_spells(0))
+            self.assertTrue(data.thief_heavy(0))
+            data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=0)
             self.assertFalse(data.thief_heavy(0))
         finally:
             game.GameData.no_spells, game.GameData.thief_heavy = real

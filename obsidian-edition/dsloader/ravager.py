@@ -92,7 +92,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
-                | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST)
+                | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -343,6 +343,13 @@ PATCHES: Tuple[Patch, ...] = (
     # ... and the party's priests spending their spells left on the party first (SL's rest_spells): the
     # rest's first move (8CA82h, "mov word [bp-6],0", SL's 80675h), DSCLOG2's REST_PRE
     Patch("rest_spells", 0x8CA82, bytes.fromhex("c746fa0000"), _site(18, 5)),
+    # Class restrictions (SL's PROBE_CAN_USE, PROBE_BELT's and THIEF_REAR's THIEF_HEAVY; RULE_RESTRICT,
+    # always on): the end of "may this character equip it" (775FDh, "mov [bp-1],al", SL's 6EF34h),
+    # DSCLOG2's CU_SITE (the classes' limits); the thief skill routine's end (8C7C5h, "mov ax,si / pop di",
+    # SL's 803B2h), BELT_SITE (no skills in armour that isn't light); the backstab is taken back at the
+    # "stealth" patch's MISSILE_REAR (THIEF_REAR)
+    Patch("class_can_use", 0x775FD, bytes.fromhex("8846ff"), _site(19, 3)),
+    Patch("thief_skill_armour", 0x8C7C5, bytes.fromhex("8bc65f"), _site(20, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),
