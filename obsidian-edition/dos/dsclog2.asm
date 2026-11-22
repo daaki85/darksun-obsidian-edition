@@ -2875,6 +2875,9 @@ site_table:
         dw adnd_slots                       ; 34 SITE_ADND_SLOTS
         dw regen_site                       ; 35 SITE_REGEN
         dw con_save                         ; 36 SITE_CON_SAVE
+        dw dual_level                       ; 37 SITE_DUAL_LEVEL
+        dw dual_old                         ; 38 SITE_DUAL_OLD
+        dw dual_new                         ; 39 SITE_DUAL_NEW
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5638,6 +5641,92 @@ con_save:
         jmp .out
 .keep:  pop ax
 .out:   iret
+; DUAL-CLASSING AS THE MANUAL HAS IT: DSCLOG's DUAL_LEVEL and DUAL_PRIMES (RULE_HI_DUAL, the second
+; rules word's 2048), the sequel's code SL's with its records and unsigned jumps:
+; - DUAL_LEVEL (site 37, "dual_level_menu", "dual_level_view", "dual_level_window"): the two portrait
+;   menus' test for DUAL (7926Ch, 7948Bh) and the DUAL window's (94BCCh, in its class test), "cmp byte
+;   [es:bx+1Eh],2" (5 bytes; ES:BX the sheet, +1Eh its first class's level, SL's +24h): 3 with the rule
+;   ("at least third level in your current class", the manual). The flags are the game's next jump's.
+; - DUAL_PRIMES (sites 38 and 39, "dual_old_prime", "dual_new_prime"): the DUAL window's class test (SI
+;   the member, DI the class offered), "cmp byte [es:bx+19h],0Fh" (94B70h; ES:BX the creature plus the
+;   old class's one prime requisite from the game's table) and "cmp byte [es:bx+19h],11h" (94BA5h, the
+;   new class's), each with a "jc" (no) after: with the rule every prime requisite of the class
+;   (DUAL_PRIMES_OF), the old class's (the sheet's +1Bh) at 15 or more, the new one's at 17 or more, on
+;   the creature's scores (+19h on); else the game's compare.
+RULE_HI_DUAL equ 2048
+DUAL_LEAST_LEVEL equ 2          ; (the game's)
+DUAL_OLD_LEAST equ 15
+DUAL_NEW_LEAST equ 17
+dual_count dw 0                 ; (the rule's tests made, for a look in play)
+dual_level:
+        pushad
+        push es
+        mov di, sp
+        mov al, DUAL_LEAST_LEVEL
+        test word [cs:rules_hi], RULE_HI_DUAL
+        jz .cmp
+        inc al                          ; (the manual's third)
+        inc word [cs:dual_count]
+.cmp:   cmp [es:bx + 0x1E], al
+dual_flags:
+        pushf
+        pop ax
+        and ax, 0x08D5
+        and word [ss:di + 38], ~0x08D5
+        or [ss:di + 38], ax
+        pop es
+        popad
+        iret
+dual_old:
+        pushad
+        push es
+        mov di, sp
+        mov dl, DUAL_OLD_LEAST
+        xor cx, cx                      ; (the class from the sheet)
+        jmp dual_primes
+dual_new:
+        pushad
+        push es
+        mov cx, di
+        mov di, sp
+        mov dl, DUAL_NEW_LEAST
+dual_primes:
+        test word [cs:rules_hi], RULE_HI_DUAL
+        jnz .rule
+        cmp [es:bx + 0x19], dl          ; (the game's)
+        jmp dual_flags
+.rule:  inc word [cs:dual_count]
+        test cx, cx
+        jnz .class
+        les bx, [SHEETS_PTR]
+        imul ax, si, SHEET_SIZE
+        add bx, ax
+        mov cl, [es:bx + 0x1B]
+.class: les bx, [CREATURES_PTR]
+        imul ax, si, CREATURE_SIZE
+        lea si, [bx + 0x19]
+        add si, ax                      ; (ES:SI the creature's STR)
+        xor ax, ax
+        cmp cx, DUAL_CLASSES
+        jae .ok
+        mov bx, cx
+        mov al, [cs:dual_primes_of + bx]
+.ok:    mov ah, dl                      ; (AH DL while every one passes, 0 once one doesn't)
+.each:  shr al, 1
+        jnc .next
+        cmp [es:si], dl
+        jae .next
+        xor ah, ah
+.next:  inc si
+        test al, al
+        jnz .each
+        cmp ah, dl
+        jmp dual_flags
+; each class's prime requisites (bit 0 STR ... bit 5 CHA; tracker.PRIME_REQUISITES): clerics WIS,
+; druids WIS and CHA, fighter and gladiator STR, preserver INT, psionicist CON and WIS, rangers STR,
+; DEX and WIS, thief DEX; the sequel's 18 a wizard's (INT), 19 a priest's (WIS)
+dual_primes_of db 0, 16, 16, 16, 16, 48, 48, 48, 48, 1, 1, 8, 20, 19, 19, 19, 19, 2, 8, 16
+DUAL_CLASSES equ $ - dual_primes_of
 manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

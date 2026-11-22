@@ -375,6 +375,14 @@ first class's level and primes, the game's way). Checked by the emulator
 menu after CLERIC, DRUID or RANGER, are the kits' ([Where each effect goes](DEVELOPMENT-KITS.md#where-each-effect-goes):
 `PROBE_DUAL_BAN`, `DUAL_SPHERES`, `PROBE_SPHERE` and its `SPHERE_BARRED`).
 
+In Wake of the Ravager (`RULE_DUAL_CLASS` in `RULES_PORTED`) the code is SL's with the sequel's records
+and unsigned jumps: the two portrait menus' test (7926Ch, 7948Bh) and the DUAL window's (94BCCh) are
+`cmp byte [es:bx+1Eh],2`, the primes `cmp byte [es:bx+19h],0Fh` and `...,11h` (94B70h, 94BA5h; the
+creature's scores from +19h, the class map 360h:9Dh). DSCLOG2's `DUAL_LEVEL` (site 37) and
+`DUAL_PRIMES` (sites 38 and 39) do what DSCLOG's do with the rule, the game's compare without;
+`DUAL_PRIMES_OF` gives the sequel's classes 18 and 19 a wizard's INT and a priest's WIS. The kits'
+parts aren't ported (the sequel has no kits).
+
 ## Ages and magical aging
 
 ([In the features page](FEATURES.md#ages-and-magical-aging).)

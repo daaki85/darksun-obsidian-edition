@@ -94,7 +94,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
-                | game.RULE_CON)
+                | game.RULE_CON | game.RULE_DUAL_CLASS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -396,6 +396,16 @@ PATCHES: Tuple[Patch, ...] = (
     # mov al,[bx+880h]", SL's 5EAA1h): DSCLOG2's REGEN_SITE and CON_SAVE
     Patch("regen_rate", 0x26599, bytes.fromhex("8bd16bd231"), _site(35, 5)),
     Patch("con_save", 0x1D36B, bytes.fromhex("8bd88a878008"), _site(36, 6)),
+    # Dual-classing as the manual has it (SL's dual_*; game.RULE_DUAL_CLASS, always on): the level DUAL
+    # needs on the two portrait menus (7926Ch, 7948Bh) and in the DUAL window (94BCCh), "cmp byte
+    # [es:bx+1Eh],2" (SL's 70CE4h, 70F03h, 86F58h), and the old and new class's prime requisite (94B70h,
+    # 94BA5h, "cmp byte [es:bx+19h],0Fh" and "...,11h", SL's 86EFCh, 86F31h): DSCLOG2's DUAL_LEVEL and
+    # DUAL_PRIMES
+    Patch("dual_level_menu", 0x7926C, bytes.fromhex("26807f1e02"), _site(37, 5)),
+    Patch("dual_level_view", 0x7948B, bytes.fromhex("26807f1e02"), _site(37, 5)),
+    Patch("dual_level_window", 0x94BCC, bytes.fromhex("26807f1e02"), _site(37, 5)),
+    Patch("dual_old_prime", 0x94B70, bytes.fromhex("26807f190f"), _site(38, 5)),
+    Patch("dual_new_prime", 0x94BA5, bytes.fromhex("26807f1911"), _site(39, 5)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

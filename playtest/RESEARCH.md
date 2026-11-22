@@ -1049,6 +1049,10 @@ and `rest-no-call-user`: all transferred, the kits kept.
   once (a member needs CON 20 or more). A save that takes CON's adjustment is the paralysis/poison/death
   save (kind 1): Stinking Cloud's (spell 22, `ravknow.py 22`, USE level 2, the third icon at 213, 60), not
   Hold Person's (the spell save). A foe made a dwarf: its sheet's +12h 2 (the kind's sheet, shared).
+- **The DUAL window in the sequel** (logs/2026-11-22-ravager-dual-class.md): the inventory (I), a
+  right-click on a portrait (game 30, 69 for the second member) gives EDIT NAME / DROP / DUAL (CANCEL
+  when it isn't offered); DUAL at game (70, 98), the window's EXIT at (219, 146). Only a human (sheet
+  +12h 1) gets it; a dead member (creature +14h 7) can be made Okay with +14h 1 and some HP.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
   fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
   (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a
