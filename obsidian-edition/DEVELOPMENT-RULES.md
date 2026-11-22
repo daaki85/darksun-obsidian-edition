@@ -826,6 +826,13 @@ How: where the game works out the number a weapon's d20 must reach
 (`INT D5h`) and where it works out armour's number (`INT D4h`), DSCLOG
 gives the easier of the two and records the check for the dice log.
 
+In Wake of the Ravager the same two checks are the same code (its 7CEC0h and 7D02Ah), an item's
+power a word at +10h and its plus at +16h. Its power handler sends three powers there: Crystal
+Brittle (103, the weapon, then the armour if the weapon came through), and monster powers 275 and
+283 (the armour) and 284 (the weapon). DSCLOG2's ITEM_WEAPON, ITEM_SKIP and ITEM_ARMOUR (sites 22, 23
+and 24 at 7CF22h, 7D0AAh and 7D0BEh) do what DSCLOG's do. So Crystal Brittle, which the sequel runs
+through the acid check, now gives each item the acid save for its material too.
+
 ## Rangers' casting level
 
 ([In the features page](FEATURES.md#rangers-casting-level).)

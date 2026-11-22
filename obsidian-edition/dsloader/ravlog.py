@@ -110,6 +110,10 @@ ADDRESSES: Dict[str, object] = {
     # the stinkpots (DSCLOG2's STINKPOTS): the Staff Sling's type, its Nauseated (ravager.NAUSEATED), the
     # save against Stinking Cloud (the sequel has no monster poison power as SL's 176)
     "STAFF_SLING_TYPE": 98, "STINK_EFFECT": ravager.NAUSEATED, "STINK_SAVE_POWER": 22,
+    # the powers that can destroy an item (its power handler's switch, 656ECh: 103 the weapon then the
+    # armour, 275 and 283 the armour, 284 the weapon; SL's 178, 186, 187), as the dice log names them
+    "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
+                     284: "corroding touch"},
 }
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))

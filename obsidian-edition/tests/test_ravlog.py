@@ -147,6 +147,18 @@ class WindowTests(unittest.TestCase):
         self.assertEqual((game.SLOTS_STRIDE, game.THIEF_TABLE_SEG, game.THIEF_DEX_LOW, game.THIEF_PENALTY_LIST),
                          (0x22, 0x449B, 0xA0, 0xE0))
 
+    def test_item_attacks_named(self):
+        """Items saving against acid: the sequel's powers that can destroy an item, named in the dice log
+        (Crystal Brittle 103, the monsters' touches 275, 283, 284) in place of SL's 178, 186, 187."""
+        ravlog.apply_layout()
+        try:
+            self.assertEqual(game.ITEM_ATTACKS[103], "Crystal Brittle")
+            self.assertEqual(sorted(game.ITEM_ATTACKS), [103, 275, 283, 284])
+            self.assertEqual(game.RULES_ALWAYS & ravager.RULES_PORTED & game.RULE_ITEM_SAVES, game.RULE_ITEM_SAVES)
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual(sorted(game.ITEM_ATTACKS), [game.ACID, game.TOUCH_ARMOUR, game.TOUCH_WEAPON])
+
     def test_class_magic_served(self):
         view = ravlog.ReadOnlyGuest(FakeGuest())
         magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)

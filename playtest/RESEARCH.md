@@ -725,6 +725,16 @@ member is from behind and a backstab, as the game makes one. **Tyr's thieves for
 pip"), Space: two thieves and two thugs; Computer Control for all four on the USE screen in the fight
 (the lower small icon by each box, game 47,52 / 100,52 / 47,112 / 100,112), Escape to close it.
 
+**Items saving against acid in the sequel** (2026-11-22, logs/2026-11-22-ravager-item-saves.md): the acid checks
+(7CEC0h the weapon, 7D02Ah the armour) are reached only from the power handler's switch (656ECh, the power at
+[BP+0Eh], 81 cases at CS:28C1h): Crystal Brittle 103 and the monster powers 275, 283, 284. To play one,
+`ravknow.py 103 18` and cast it from USE (level 9) on a foe; the armour loop takes only the worn slots 0, 6
+and 9, and Tyr's street thieves had their armour in slots 14-16 at the fight's start (`ravitems.py N
+--worn` moves it). A foe under the spell's pointer shows red; `ravclick.py` takes 320x200 game pixels, and
+a foe was taken about (8, 5) off its `ravfight.py state` place. A rule-off control records nothing in
+the helper: read the dice log's plain d20 and the items gone (`ravitems.py`). Casting the last of a
+level's slots shows "ZERO LEVEL 9 SPELLS TO CAST": write the slots again and press LEVEL round.
+
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the

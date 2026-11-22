@@ -92,7 +92,8 @@ HELPER_EXE = "DSCLOG2.EXE"
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
-                | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT)
+                | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
+                | game.RULE_ITEM_SAVES)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -353,6 +354,12 @@ PATCHES: Tuple[Patch, ...] = (
     # ... and a multiclass preserver casting in armour (SL's PROBE_NO_CAST): the "yes" of the casting case
     # (84F6Eh, "mov ax,1") of the sequel's "can this creature do it" (84E94h), DSCLOG2's CAST_ARMOUR
     Patch("cast_armour", 0x84F6E, bytes.fromhex("b80100"), _site(21, 3)),
+    # Items saving against acid (SL's item_weapon, item_skip, item_armour; always on, game.RULES_ALWAYS):
+    # DSCLOG2's ITEM SAVES, the game's acid and corroding touch on the first melee weapon (7CEC0h) and
+    # worn armour (7D02Ah) needing the easier of its number and AD&D's for the item's material
+    Patch("item_weapon", 0x7CF22, bytes.fromhex("ba08002b56fe"), _site(22, 6)),
+    Patch("item_skip", 0x7D0AA, bytes.fromhex("837efe00"), _site(23, 4)),
+    Patch("item_armour", 0x7D0BE, bytes.fromhex("ba0a002b56fe"), _site(24, 6)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

@@ -2860,6 +2860,9 @@ site_table:
         dw cu_site                          ; 19 SITE_CAN_USE
         dw belt_site                        ; 20 SITE_THIEF_SKILL
         dw cast_armour                      ; 21 SITE_CAST_ARMOUR
+        dw item_weapon                      ; 22 SITE_ITEM_WEAPON
+        dw item_skip                        ; 23 SITE_ITEM_SKIP
+        dw item_armour                      ; 24 SITE_ITEM_ARMOUR
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4855,7 +4858,149 @@ armour_worn:
         clc
         ret
 aw_heavy db 0
-manual_count dw 0                           ; (the sites above at work, counted for a look in play)
+
+; ITEM SAVES: DSCLOG's RULE_ITEM_SAVES (always on), the sequel's routines SL's. Acid and a corroding
+; touch after a failed save can destroy an item (DSUN.EXE 7CEC0h, the first melee weapon held, SL's
+; 7AA5Ah; 7D02Ah, the first worn arm, leg or chest piece that fails, SL's 7ABC4h): a weapon on a d20
+; under 8 less its plus (+16h); armour with no magical power (the word at +10h, ITEM_SPELL) at once,
+; without a roll, else on a d20 under 10 less that word. With the rule the item needs the lower (the
+; easier) of the game's number and AD&D's save against acid for its material (the DMG's: wood 8,
+; bone 11, metal 13, leather 10, cloth 12; glass's 5 for stone and obsidian), less its plus, and 1 less
+; again for a magical power; armour always rolls. Each check is recorded as DSCLOG's (kind KIND_ITEM:
+; the d20 in the low byte, the number needed in the high, 0 for none rolled; EXTRA the item, 8000h
+; for armour).
+RULE_ITEM_SAVES equ 2048
+KIND_ITEM     equ 4
+ITEM_ARMOUR   equ 0x8000
+MATERIAL_CLOTH equ 6
+MATERIAL_METAL equ 4
+; ITEM_WEAPON (site 22, "item_weapon"): "mov dx,8 / sub dx,[bp-2]" (7CF22h; 6 bytes), AX the d20,
+; [BP-2] the weapon's plus, SI its entry in the list at BP-324h (the item at BP-320h + SI*0Ah). DX the
+; number needed (a roll under it corrodes).
+item_weapon:
+        mov dx, 8
+        sub dx, [bp - 2]
+        test word [cs:rules], RULE_ITEM_SAVES
+        jz .r
+        push si
+        push ax
+        push bx
+        push cx
+        push di
+        mov di, si
+        imul di, di, 0x0A
+        mov bx, [bp + di - 0x320]
+        call adnd_needed
+        cmp cx, dx
+        jge .log
+        mov dx, cx
+.log:   xor cx, cx                      ; (a weapon)
+        jmp item_record
+.r:     iret
+; ITEM_SKIP (site 23, "item_skip"): "cmp word [bp-2],0" (7D0AAh; 4 bytes) before the game's "jz
+; <destroyed>", [BP-2] the armour's magical power. With the rule ZF clear: it rolls; else the game's
+; compare.
+item_skip:
+        push ax
+        mov ax, [bp - 2]
+        push bp
+        mov bp, sp                      ; ([BP+8]: the flags IRET takes back)
+        or word [bp + 8], 0x40
+        test word [cs:rules], RULE_ITEM_SAVES
+        jnz .roll
+        or ax, ax
+        jz .out
+.roll:  and word [bp + 8], ~0x40
+.out:   pop bp
+        pop ax
+        iret
+; ITEM_ARMOUR (site 24, "item_armour"): "mov dx,0Ah / sub dx,[bp-2]" (7D0BEh; 6 bytes), AX the d20,
+; [BP-2] the armour's magical power, SI its entry in the list at BP-322h (the item at BP-31Eh +
+; SI*0Ah). DX the number needed.
+item_armour:
+        mov dx, 10
+        sub dx, [bp - 2]
+        test word [cs:rules], RULE_ITEM_SAVES
+        jz .r
+        push si
+        push ax
+        push bx
+        push cx
+        push di
+        cmp word [bp - 2], 0
+        jne .game
+        mov dx, 21                      ; (no power: the game's, destroyed whatever the roll)
+.game:  mov di, si
+        imul di, di, 0x0A
+        mov bx, [bp + di - 0x31E]
+        call adnd_needed
+        cmp cx, dx
+        jge .log
+        mov dx, cx
+.log:   mov cx, ITEM_ARMOUR
+        jmp item_record
+.r:     iret
+; ITEM_RECORD: (jumped to with SI, AX, BX, CX, DI pushed, in that order, on the INT's frame) records
+; the check: AL the d20, DL the number needed, BX the item, CX ITEM_ARMOUR or 0; then IRETs with
+; those registers back and DX as given.
+item_record:
+        or cx, bx
+        mov [cs:extra], cx
+        mov ah, dl
+        mov si, sp
+        add si, 4                       ; (SS:SI+6: the INT's return address)
+        mov word [cs:kind], KIND_ITEM
+        call record
+        inc word [cs:item_count]
+        pop di
+        pop cx
+        pop bx
+        pop ax
+        pop si
+        iret
+item_count dw 0                         ; (the checks made, for a look in play)
+; ADND_NEEDED: CX = AD&D's save against acid for item BX (DS the game's): its material's number, less
+; its plus, less 1 for a magical power. Keeps every other register.
+adnd_needed:
+        push ax
+        push bx
+        push di
+        push es
+        imul di, bx, ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        add bx, di
+        mov al, [es:bx + ITEM_PLUS]
+        cbw
+        mov cx, ax
+        cmp word [es:bx + ITEM_SPELL], 0
+        je .type
+        inc cx                          ; a magical power: one plus more
+.type:  imul di, [es:bx + ITEM_TYPE], CU_TYPE_SIZE
+        les bx, [ITEM_TYPES_PTR]
+        add bx, di
+        mov al, [es:bx + CU_MATERIAL]   ; (40h with 0: none, cloth)
+        mov ah, al
+        and al, 0x0F
+        test ah, 0x40
+        jz .known
+        or al, al
+        jnz .known
+        mov al, MATERIAL_CLOTH
+.known: cmp al, MATERIAL_CLOTH
+        jbe .look
+        mov al, MATERIAL_METAL          ; (no other is used)
+.look:  xor ah, ah
+        mov bx, ax
+        mov al, [cs:acid_saves + bx]
+        sub ax, cx
+        mov cx, ax
+        pop es
+        pop di
+        pop bx
+        pop ax
+        ret
+acid_saves db 8, 11, 5, 5, 13, 10, 12   ; wood, bone, stone, obsidian, metal, leather; cloth
+manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]
         test word [cs:rules_hi], RULE_HI_HELD
