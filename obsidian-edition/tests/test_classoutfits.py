@@ -199,3 +199,22 @@ class HumanOutfitTests(unittest.TestCase):
             self.assertGreaterEqual(len({y for y in hem.values() if y >= bottom - 2}), 3, f)
             hems.append(bottom)
         self.assertLessEqual(max(hems) - min(hems), 2)
+
+    def test_woman_raised_hands_remain_in_front_of_clothing(self):
+        for role in classoutfits.CLASSES[1:]:
+            poses = classoutfits.frames(role, True, 2099)
+            for f, cells in ((2, {(11, 0), (12, 0), (13, 1)}), (11, {(2, 8), (6, 7), (7, 7)})):
+                pose = poses[f]
+                self.assertTrue(cells.issubset(pose.regions[classoutfits.FOREARM]), (role, f))
+                self.assertTrue(cells.isdisjoint((x, y) for x, y, shade in pose.cloak), (role, f))
+
+    def test_woman_front_bow_mask_leaves_the_ankle_and_face_free(self):
+        for role in classoutfits.CLASSES[1:]:
+            pose = classoutfits.frames(role, True, 2099)[9]
+            bow = pose.regions[classoutfits.BOW]
+            self.assertIn((16, 6), bow)
+            self.assertNotIn((10, 6), bow)
+            self.assertNotIn((1, 21), bow)
+            # The priest's hem covers the ankle in this pose.
+            region = classoutfits.LEGS if role == "Priest" else classoutfits.LEFT_FOOT
+            self.assertIn((1, 21), pose.regions[region])
