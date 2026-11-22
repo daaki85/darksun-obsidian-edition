@@ -254,7 +254,47 @@ class FileTests(unittest.TestCase):
             self.assertEqual((got[("CHAR", 40)], got[("PREF", 100)]), (b"other", b"p"))
             self.assertIn(("CHAR", 35), got)
             self.assertTrue(os.path.exists(os.path.join(d, "CHARSAVE.GFF.BAK")))
-            self.assertIn("Lex: 3 items, 2 of them a money bag", rt.report(moved))
+            self.assertIn("Lex (roster place 4): 3 items, 2 of them a money bag", rt.report(moved))
+
+
+def listed(place, name, act=b"\x18\x80"):
+    """A roster's chunks for a character NAME listed at PLACE (ACT its CACT: 0 not listed)."""
+    cre = bytearray(rt.CREATURE)
+    cre[rt.CREATURE_NAME:rt.CREATURE_NAME + len(name)] = name
+    chunk = dataitems.chunk([dataitems.Record(1, 1, 2, 0, 0, bytes(cre))], dataitems.HEADER.pack(dataitems.END, 1, 2, 0, 0, 0))
+    return {("CHAR", place): chunk, ("CACT", place): act}
+
+
+class PlacesTests(unittest.TestCase):
+    def test_install(self):
+        """The install's roster: 32-35 not listed (CACT 0), 36-39 its four: the party takes 32-35."""
+        chunks = {}
+        for p in range(32, 36):
+            chunks.update(listed(p, b"Frin'kal", b"\0\0"))
+        for p, n in zip(range(36, 40), (b"Clk'whrr", b"Meggyn", b"Zontorra", b"Borzak")):
+            chunks.update(listed(p, n))
+        self.assertEqual(rt.places(made_save(), chunks), {0: 33, 1: 32})
+        self.assertIsNone(rt.roster_name(chunks, 32))
+        self.assertEqual(rt.roster_name(chunks, 37), b"Meggyn")
+
+    def test_own_place_again_then_free(self):
+        chunks = {}
+        for p, n in zip(range(32, 40), (b"A", b"Jenna", b"B", b"C", b"D", b"E", b"F", b"G")):
+            chunks.update(listed(p, n))
+        del chunks[("CACT", 36)]  # (a free place)
+        self.assertEqual(rt.places(made_save(), chunks), {1: 33, 0: 36})
+
+    def test_full(self):
+        chunks = {}
+        for p in range(32, 40):
+            chunks.update(listed(p, b"X%d" % p))
+        with self.assertRaisesRegex(gff.GffError, "needs 2 more places"):
+            rt.places(made_save(), chunks)
+
+    def test_roster_at_places(self):
+        out, moved = rt.roster(made_save(), made_sequel(), {0: 38, 1: 32})
+        self.assertEqual(sorted(k for k in out if k[0] == "CHAR"), [("CHAR", 32), ("CHAR", 38)])
+        self.assertEqual([m.place for m in moved], [38, 32])
 
 
 def _gff(chunks):

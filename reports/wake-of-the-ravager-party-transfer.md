@@ -63,7 +63,10 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
    over. **Done** (2026-11-22, `ravtransfer.SPELL_MADE`: the list closes over them, the report names
    them; tests only, as no kit save carries one).
 6. **Roster slots:** CHARTRAN overwrites slots 32-35 without asking. The Loader keeps a backup of the
-   player's CHARSAVE.GFF (CHARSAVE.GFF.BAK, done), and it will use free slots first.
+   player's CHARSAVE.GFF (CHARSAVE.GFF.BAK, done). **Done** (2026-11-22, `ravtransfer.places`): the
+   roster is CHAR 32-39, a place listed while its CACT isn't 0 (seen in the game, and the game's DELETE
+   sets it to 0). A member takes its earlier copy's place, else the lowest free one; with too few free,
+   the transfer stops and asks the player to delete characters in the sequel.
 7. **Aging:** the months are rolled once per transfer. Each member gains a year with a chance of
    months/12, through the Loader's age pass (RavDiceLog._aging_pass, age at sheet +41h).
 

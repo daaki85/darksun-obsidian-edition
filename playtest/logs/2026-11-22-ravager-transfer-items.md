@@ -66,3 +66,19 @@ DOSBox and the dice log stopped by pid, nothing saved. Water: no new area.
   looked at yet).
 
 DOSBox and the dice log stopped by pid, nothing saved.
+
+## The roster's places (about 00:40 UTC, 23 November)
+
+- The install's CHARSAVE.GFF has CHAR 29-43 and 50-53, but the ADD list showed only the transferred
+  four (32-35) and Clk'whrr, Meggyn, Zontorra and Borzak (36-39). The install's own 32-35 (Frin'kal and
+  others) have CACT 0 and aren't listed.
+- The transferred party written to CHAR 44, 45, 46 and 60 (CACT and all) instead: **none listed**, only
+  36-39. ![](img/2026-11-22-ravager-roster-places.png) So the roster is CHAR 32-39, a place listed while
+  its CACT isn't 0.
+- Borzak deleted in the game (ADD list, DELETE, YES): CHARSAVE.GFF at once has CACT 39 = 0, his CHAR
+  kept. ![](img/2026-11-22-ravager-roster-delete.png)
+- So the Loader's transfer (`ravtransfer.places`): each member takes its earlier copy's place (same
+  name), else the lowest free places (CACT 0 or none), member 0 the highest as CHARTRAN's; with too few
+  it stops and says to delete characters in the sequel first. CHARTRAN writes 32-35 whatever is there.
+
+DOSBox stopped by pid, nothing saved (the test copy's roster only).

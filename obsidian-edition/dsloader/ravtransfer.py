@@ -35,6 +35,11 @@ from .gff import Chunks, GffError
 NONE = 9999
 MONEY_BAG = 900
 FIRST_CHAR = 32  # (CHARTRAN's: member M goes to 35 - M)
+# The sequel's roster, the characters its ADD list offers: CHAR 32-39, a place taken while its CACT
+# word isn't 0 (the install's 32-35 are 0, and their characters unlisted; 36-39 its four to pick).
+# CHARTRAN writes 32-35 whatever is there; the Loader takes the places of the party's own earlier
+# copies (by name), then free ones (places)
+ROSTER_PLACES = range(32, 40)
 PARTY = 4
 
 SL_CREATURE, SL_SHEET, SL_ITEM = 0x3A, 0x47, 0x15
@@ -236,6 +241,7 @@ class Moved(NamedTuple):
     member: int
     name: str
     items: List[Tuple[int, int]]  # (SL's object, the sequel's)
+    place: int = 0  # (its roster CHAR)
 
 
 def _chunk(save: Chunks, number: int) -> bytes:
@@ -245,9 +251,53 @@ def _chunk(save: Chunks, number: int) -> bytes:
         raise GffError(f"the save has no SAVE {number} chunk") from None
 
 
-def roster(save: Chunks, sequel: Sequel) -> Tuple[Chunks, List[Moved]]:
+def party_names(save: Chunks) -> Dict[int, bytes]:
+    """The save's party members (their places 0-3) and names."""
+    creatures = _chunk(save, CREATURES)
+    out = {}
+    for m in range(PARTY):
+        rec = creatures[m * SL_CREATURE:(m + 1) * SL_CREATURE]
+        if len(rec) == SL_CREATURE and rec[SL_NAME]:
+            out[m] = rec[SL_NAME:SL_CREATURE].split(b"\0")[0][:NAME_LENGTH]
+    return out
+
+
+def roster_name(chunks: Mapping[Tuple[str, int], bytes], place: int) -> Optional[bytes]:
+    """The name of the character listed at PLACE of a roster's CHUNKS (None: a free place)."""
+    act = chunks.get(("CACT", place))
+    if not act or not any(act) or ("CHAR", place) not in chunks:
+        return None
+    try:
+        recs, _ = dataitems.records(chunks[("CHAR", place)])
+    except (GffError, struct.error):
+        return None
+    return recs[0].data[CREATURE_NAME:CREATURE_NAME + NAME_LENGTH].split(b"\0")[0] if recs else None
+
+
+def places(save: Chunks, roster_chunks: Mapping[Tuple[str, int], bytes]) -> Dict[int, int]:
+    """For each party member, its roster place (CHAR number): the place of a character of its name,
+    else a free one (member 0 the highest, as CHARTRAN's order); GffError when there are too few."""
+    names = party_names(save)
+    listed = {p: roster_name(roster_chunks, p) for p in ROSTER_PLACES}
+    out: Dict[int, int] = {}
+    for m, name in names.items():
+        same = [p for p, n in listed.items() if n == name and p not in out.values()]
+        if same:
+            out[m] = same[0]
+    need = [m for m in names if m not in out]
+    free = sorted(p for p, n in listed.items() if n is None)
+    if len(free) < len(need):
+        raise GffError(f"the sequel's roster has room for {len(ROSTER_PLACES)} characters and the party "
+                       f"needs {len(need) - len(free)} more places: delete some in the sequel first "
+                       "(CREATE CHARACTERS, a character's DELETE)")
+    out.update(zip(need, reversed(free[:len(need)])))  # (the lowest free ones, member 0 highest: CHARTRAN's order)
+    return out
+
+
+def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] = None) -> Tuple[Chunks, List[Moved]]:
     """The sequel's roster chunks (CHAR, CACT, SPST, PSST, PSIN) for the party of a parsed save,
-    and what moved: each member and its items, SL's object and the sequel's."""
+    and what moved: each member and its items, SL's object and the sequel's. PLACE_OF: each member's
+    place (places), else CHARTRAN's (35 - M)."""
     creatures, sheets, items, lists = (_chunk(save, n) for n in (CREATURES, SHEETS, ITEMS, LISTS))
     spells, powers = _chunk(save, SPELLS), _chunk(save, POWERS)
     out: Dict[Tuple[str, int], bytes] = {}
@@ -304,12 +354,12 @@ def roster(save: Chunks, sequel: Sequel) -> Tuple[Chunks, List[Moved]]:
         records[0][1] = count
         recs = [dataitems.Record(*r) for r in records]
         end = dataitems.HEADER.pack(dataitems.END, count, CREATURE_KIND, m, m, 0)
-        cid = FIRST_CHAR + PARTY - 1 - m
+        cid = place_of[m] if place_of is not None else FIRST_CHAR + PARTY - 1 - m
         out[("CHAR", cid)] = dataitems.chunk(recs, end)
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
         out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
-        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log))
+        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid))
     return out, moved
 
 
@@ -427,8 +477,8 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
     """The party of the Shattered Lands save SAVE_PATH written into the roster in the sequel's
     FOLDER (CHARSAVE.GFF, kept first as CHARSAVE.GFF.BAK when there is none yet). With SL_DIR (the
     Shattered Lands folder) and DOS_DIR (the mod's dos folder), the items the sequel lacks become the
-    Loader's own objects (with_added) instead of money bags. The save is only read. What moved is
-    returned for the report."""
+    Loader's own objects (with_added) instead of money bags, and the party takes free places in the
+    roster (places) instead of 32-35. The save is only read. What moved is returned for the report."""
     import os
     import shutil
     from . import icons
@@ -436,13 +486,15 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
     with open(save_path, "rb") as f:
         save = read_gff(f.read())
     sequel = load_sequel(folder)
-    if sl_dir and dos_dir:
-        sequel, _ = with_added(save, sequel, sl_dir, folder, dos_dir)
-    new, moved = roster(save, sequel)
     path = os.path.join(folder, ROSTER)
     with open(path, "rb") as f:
         data = f.read()
-    read_gff(data)  # (a roster the game can read, before anything is written)
+    current = read_gff(data)  # (a roster the game can read, before anything is written)
+    place_of = None
+    if sl_dir and dos_dir:
+        place_of = places(save, current)
+        sequel, _ = with_added(save, sequel, sl_dir, folder, dos_dir)
+    new, moved = roster(save, sequel, place_of)
     backup = path + ".BAK"
     if not os.path.exists(backup):
         shutil.copyfile(path, backup)
@@ -457,7 +509,7 @@ def report(moved: List[Moved]) -> str:
         from .ravitems import OWN_HIGH
         bags = sum(1 for _, new in m.items if new == MONEY_BAG)
         own = sum(1 for _, new in m.items if new >= OWN_HIGH and new < 30000)
-        lines.append(f"{m.name}: {len(m.items)} items, {bags} of them a money bag"
+        lines.append(f"{m.name} (roster place {m.place - ROSTER_PLACES[0] + 1}): {len(m.items)} items, {bags} of them a money bag"
                      + (f", {own} the Loader's own" if own else ""))
         for old, new in m.items:
             note = (" (a money bag)" if new == MONEY_BAG else " (the Loader's)" if OWN_HIGH <= new < 30000
