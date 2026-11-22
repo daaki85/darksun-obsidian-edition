@@ -340,6 +340,9 @@ PATCHES: Tuple[Patch, ...] = (
     # Resting as in AD&D (SL's rest_hp; RULE_REST, always on): the rest's HP restore (8CF79h, "mov
     # [es:bx],ax", SL's 808AFh): DSCLOG2's REST_HP, a night's natural healing, 3 + CON's bonus
     Patch("rest_hp", 0x8CF79, bytes.fromhex("268907"), _site(17, 3)),
+    # ... and the party's priests spending their spells left on the party first (SL's rest_spells): the
+    # rest's first move (8CA82h, "mov word [bp-6],0", SL's 80675h), DSCLOG2's REST_PRE
+    Patch("rest_spells", 0x8CA82, bytes.fromhex("c746fa0000"), _site(18, 5)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

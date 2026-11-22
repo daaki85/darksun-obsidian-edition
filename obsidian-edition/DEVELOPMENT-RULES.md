@@ -1272,8 +1272,14 @@ creature and three words; dicelog's `_manual`).
   Resting heals by nature in the sequel through site 17, `rest_hp` (8CF79h, `mov [es:bx],ax` in the
   rest 8CA7Ah's pass 2, SL's 808AFh): DSCLOG2's `REST_HP` with `RULE_HI_REST` (in `RULES_PORTED`), the
   creature's CON at +1Bh, the level hit point table at load + 45BEh (selector 4D0h; the same bytes as
-  SL's, classes 18 and 19 added: groups 2 and 0); `REST_PRE`, the priests' spells first, not yet
-  ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
+  SL's, classes 18 and 19 added: groups 2 and 0) ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
+  Site 18, `rest_spells` (8CA82h, the rest's first move), is `REST_PRE`: the priests (classes 1-8 and
+  19, the sheet's own levels) spend their slots left (DS:4474h + 22h a member + the level) through the
+  rest's own free-cure cast (4787h:25h, 8D074h: spell, target, caster, level); the sequel's numbers
+  (Neutralize Poison 178 on Poisoned 71, Cure Blindness 146 on Blind 10, Cure Disease 148 on Diseased
+  27; Cure Light 117, Serious 170, Critical 194, Heal 210), the levels from its table at DS:0656h + 11.
+  A priest knows every priest spell (the sequel has no spheres); SL's psionicists' Cell Adjustment is
+  not ported ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved

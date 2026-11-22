@@ -2855,6 +2855,7 @@ site_table:
         dw tu_site                          ; 15 SITE_TURN
         dw th_site                          ; 16 SITE_TO_HIT
         dw rest_hp                          ; 17 SITE_REST_HP
+        dw rest_pre                         ; 18 SITE_REST_PRE
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3938,6 +3939,344 @@ rest_con2:
         pop bx
         ret
 rs_frame dw 0, 0, 0, 0, 0, 0
+; REST_PRE (site 18, "rest_spells"; RULE_HI_REST): SL's REST_PRE, the party's priests spending the
+; spells they have left on the party before the night. The rest's first move, "mov word [bp-6],0"
+; (8CA82h; 5 bytes), before its fight test and its slots' refill. With the rule, mode 0 and no fight
+; (DS:13FAh): RP_PASS in a frame the overlay manager can fix up (the casts load the spells' overlay
+; over the rest's). Each member's priest level: the best level of its cleric, druid or class-19 classes
+; (the sheet's +1Bh..+1Dh, levels +1Eh..), 0 if it can't cast (RP_ABLE: status, creature +14h, Okay or
+; New; not Feebleminded 37, Can't Cast 68 or Paralyzed 69). Then Neutralize Poison (178) on the
+; Poisoned (71), Cure Blindness (146) on the Blind (10), Cure Disease (148) on the Diseased (27) only
+; with no priest of FREE_CURES (5) or more (the rest's own pass casts it free then), then the wounds:
+; the member (status Okay to Out Cold) with the most hit points missing after the night's natural
+; healing (REST_HP's), the biggest cure (Cure Light 117, Serious 170, Critical 194, Heal 210: for 4,
+; 10, 16 and 30 or more missing) of no more than that someone can cast, else the smallest, at most
+; RP_MOST_CASTS. A priest knows every priest spell (the sequel has no spheres: its USE screen shows a
+; cleric all of them); it casts with a slot of the spell's level left (DS:4474h + 22h a member + the
+; level, taken: pass 1 fills them again), through the rest's own free-cure cast (4787h:25h, 8D074h:
+; spell, target, caster, level; 598h:66h with the rest's arguments). Not ported: SL's psionicists'
+; Cell Adjustment. Recorded (KIND_REST, RS_CAST: caster, target, spell, the slot's level, left, 0).
+RS_CAST       equ 1
+RP_MEMBERS    equ 4
+RP_MOST_CASTS equ 24
+FREE_CURES    equ 5
+RP_STATUS     equ 0x14              ; (the creature's status: 1 Okay, 0 New ... 3 Out Cold)
+PRIEST_SLOTS2 equ 0x4474            ; DS: a priest's slots left, + the level, 22h a member
+SLOTS_STRIDE2 equ 0x22
+RP_CAST_STUB  equ 0x4787 - 0x47E0   ; (the rest's overlay stub: 25h the free cure's cast)
+rest_pre:
+        mov word [bp - 6], 0            ; (the move replaced)
+        cmp word [bp + 6], 0
+        jne .iret
+        test word [cs:rules_hi], RULE_HI_REST
+        jz .iret
+        cmp byte [IN_COMBAT], 0
+        jne .iret
+        sti
+        pushad
+        push es
+        mov bx, sp
+        push bx
+        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call rp_pass
+        mov sp, bp
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        pop es
+        popad
+.iret:  iret
+rp_pass:
+        mov byte [cs:rp_best], 0
+        xor si, si
+.level: mov byte [cs:rp_level + si], 0
+        call rp_able
+        jnz .next
+        call rp_priest
+        mov [cs:rp_level + si], al
+        cmp al, [cs:rp_best]
+        jbe .next
+        mov [cs:rp_best], al
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .level
+        mov ax, 178                     ; (Neutralize Poison on the Poisoned)
+        mov cl, 71
+        call rp_effect
+        mov ax, 146                     ; (Cure Blindness on the Blind)
+        mov cl, 10
+        call rp_effect
+        cmp byte [cs:rp_best], FREE_CURES
+        jae .wounds
+        mov ax, 148                     ; (Cure Disease on the Diseased)
+        mov cl, 27
+        call rp_effect
+.wounds:
+        mov cx, RP_MOST_CASTS
+.again: push cx
+        call rp_worst
+        jc .done
+        call rp_choose
+        jc .done
+        call rp_cast
+        pop cx
+        loop .again
+        ret
+.done:  pop cx
+        ret
+; RP_CREATURE: ES:BX member SI's creature (the party's creatures 0-3, as the rest reads them). All kept.
+rp_creature:
+        push ax
+        imul ax, si, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        pop ax
+        ret
+; RP_ABLE: ZF set if member SI can cast (Okay or New, none of RP_STOPS). All kept.
+rp_able:
+        push ax
+        push bx
+        push cx
+        push es
+        call rp_creature
+        cmp byte [es:bx + RP_STATUS], 1
+        ja .no
+        mov bx, rp_stops
+.each:  mov cl, [cs:bx]
+        or cl, cl
+        jz .yes
+        mov ax, si
+        call has_effect
+        jz .no
+        inc bx
+        jmp .each
+.yes:   xor ax, ax
+        jmp .out
+.no:    or sp, sp
+.out:   pop es
+        pop cx
+        pop bx
+        pop ax
+        ret
+; RP_PRIEST: AL member SI's priest level (its best cleric's, druid's or class 19's level). Others kept.
+rp_priest:
+        push bx
+        push cx
+        push di
+        push es
+        call rp_creature
+        mov bx, [es:bx + 4]
+        imul bx, bx, SHEET_SIZE
+        push bx
+        les bx, [SHEETS_PTR]
+        pop di
+        add bx, di
+        xor al, al
+        xor di, di
+.class: mov cl, [es:bx + di + 0x1B]
+        cmp cl, 0
+        je .next
+        cmp cl, 8
+        jbe .priest
+        cmp cl, 19
+        jne .next
+.priest:
+        cmp al, [es:bx + di + 0x1E]
+        jae .next
+        mov al, [es:bx + di + 0x1E]
+.next:  inc di
+        cmp di, 3
+        jb .class
+        pop es
+        pop di
+        pop cx
+        pop bx
+        ret
+; RP_ALIVE: ZF set if member SI is Okay, New, Stunned or Out Cold; ES:BX its creature. Others kept.
+rp_alive:
+        call rp_creature
+        cmp byte [es:bx + RP_STATUS], 3
+        ja .no
+        cmp al, al
+        ret
+.no:    or sp, sp
+        ret
+; RP_EFFECT: spell AX on each member with effect CL (RP_ALIVE), by the first who can (RP_FIND).
+rp_effect:
+        mov [cs:rp_spell], ax
+        mov [cs:rp_effect_n], cl
+        xor si, si
+.each:  call rp_alive
+        jnz .next
+        mov ax, si
+        mov cl, [cs:rp_effect_n]
+        call has_effect
+        jnz .next
+        call rp_find
+        jc .next
+        call rp_cast
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .each
+        ret
+; RP_FIND: DI a member with a priest level and a slot of RP_SPELL's level left, RP_SLOT the level; CF
+; set if none. Others kept.
+rp_find:
+        push ax
+        push bx
+        mov ax, [cs:rp_spell]
+        call rp_spell_level
+        mov [cs:rp_slot], al
+        xor di, di
+.each:  cmp byte [cs:rp_level + di], 0
+        je .next
+        imul bx, di, SLOTS_STRIDE2
+        movzx ax, byte [cs:rp_slot]
+        add bx, ax
+        cmp byte [bx + PRIEST_SLOTS2], 0
+        je .next
+        clc
+        jmp .out
+.next:  inc di
+        cmp di, RP_MEMBERS
+        jb .each
+        stc
+.out:   pop bx
+        pop ax
+        ret
+; RP_SPELL_LEVEL: AL priest spell AX's level (the sequel's table at DS:0656h + 11, the first spell of
+; each level). Others kept.
+rp_spell_level:
+        push bx
+        push cx
+        mov cx, ax
+        xor al, al
+        mov bx, 0x0656 + 11
+.lvl:   cmp cl, [bx]
+        jb .out
+        inc al
+        inc bx
+        cmp al, 10
+        jb .lvl
+.out:   pop cx
+        pop bx
+        ret
+; RP_CAST: member DI casts RP_SPELL on member SI with a slot of RP_SLOT's level (taken) at its priest
+; level, recorded (RS_CAST), through 4787h:25h. SI and DI kept.
+rp_cast:
+        imul bx, di, SLOTS_STRIDE2
+        movzx ax, byte [cs:rp_slot]
+        add bx, ax
+        dec byte [bx + PRIEST_SLOTS2]
+        movzx ax, byte [bx + PRIEST_SLOTS2]
+        push si
+        push di
+        mov [cs:rs_frame], di
+        mov [cs:rs_frame + 2], si
+        mov [cs:rs_frame + 8], ax
+        mov ax, [cs:rp_spell]
+        mov [cs:rs_frame + 4], ax
+        movzx ax, byte [cs:rp_slot]
+        mov [cs:rs_frame + 6], ax
+        mov word [cs:rs_frame + 10], 0
+        inc word [cs:manual_count]
+        mov si, rs_frame
+        mov cx, 6
+        mov word [cs:kind], KIND_REST
+        mov ax, RS_CAST
+        call rec_frame
+        pop di
+        pop si
+        movzx ax, byte [cs:rp_level + di]
+        push ax                         ; (the level)
+        push di                         ; (the caster)
+        push si                         ; (the target)
+        push word [cs:rp_spell]
+        th_far RP_CAST_STUB, 0x25       ; (spell, target, caster, level: the rest's free cure)
+        add sp, 8
+        ret
+; RP_WORST: SI the member (RP_ALIVE) with the most hit points missing after the night's natural healing
+; (REST_HP's), AX how many; CF set if none is wounded.
+rp_worst:
+        xor ax, ax
+        mov [cs:rp_wound], ax
+        mov di, -1
+        xor si, si
+.each:  call rp_alive
+        jnz .next
+        call rest_con2
+        add ax, REST_NATURAL
+        cmp ax, 1
+        jge .nat
+        mov ax, 1
+.nat:   add ax, [es:bx]
+        push bx
+        push es
+        mov bx, [es:bx + 4]
+        imul bx, bx, SHEET_SIZE
+        push bx
+        les bx, [SHEETS_PTR]
+        pop dx
+        add bx, dx
+        mov dx, [es:bx + 8]             ; (the most)
+        pop es
+        pop bx
+        sub dx, ax
+        cmp dx, [cs:rp_wound]
+        jle .next
+        mov [cs:rp_wound], dx
+        mov di, si
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .each
+        mov si, di
+        mov ax, [cs:rp_wound]
+        cmp di, -1
+        je .none
+        clc
+        ret
+.none:  stc
+        ret
+; RP_CHOOSE: for a wound of AX, RP_SPELL the biggest cure (RP_CURES) of no more than it that someone
+; can cast (RP_FIND: DI, RP_SLOT), else the smallest that someone can; CF set if none. SI kept.
+rp_choose:
+        mov [cs:rp_wound], ax
+        mov bx, RP_CURES_END - 4
+.down:  mov ax, [cs:bx + 2]
+        cmp ax, [cs:rp_wound]
+        jg .lower
+        mov ax, [cs:bx]
+        mov [cs:rp_spell], ax
+        call rp_find
+        jnc .ok
+.lower: sub bx, 4
+        cmp bx, rp_cures
+        jae .down
+        mov bx, rp_cures
+.up:    mov ax, [cs:bx]
+        mov [cs:rp_spell], ax
+        call rp_find
+        jnc .ok
+        add bx, 4
+        cmp bx, RP_CURES_END
+        jb .up
+        stc
+.ok:    ret
+rp_level   times RP_MEMBERS db 0
+rp_best    db 0
+rp_slot    db 0
+rp_effect_n db 0
+rp_spell   dw 0
+rp_wound   dw 0
+rp_stops   db 37, 68, 69, 0         ; (Feebleminded, Can't Cast, Paralyzed)
+rp_cures   dw 117, 4, 170, 10, 194, 16, 210, 30 ; (Cure Light, Serious, Critical Wounds, Heal)
+RP_CURES_END equ $
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

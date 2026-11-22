@@ -26,8 +26,25 @@ the Okay.
   CON 20 and more regenerates as the clock jumps the 8 hours (the game's own, kept as in SL).
 - The game read the same afterwards (15, 18, 115); the helper's count 3.
 
+## The priests' spells first (SITE 18, REST_PRE; about 18:40 UTC)
+
+Ported after the run above: the rest's first move (8CA82h) runs SL's pass with the sequel's numbers,
+casting through the rest's own free-cure cast (4787h:25h, 8D074h). The same route, then (test edits)
+Terrannus alive (status 1), every member's HP 10, Terrannus's priest slots 3 for levels 1-4, and
+Gerakis Poisoned (an effects entry: 71, spell 179).
+
+- "At rest: Terrannus casts Neutralize Poison on Gerakis (4th-level slots: 2 left)"; the effects table
+  empty after, Gerakis alive (the rest's poison kill had nothing to kill).
+- Then the cures on the most wounded (Gerakis, 146 missing after the night): Cure Serious Wounds three
+  times (Terrannus twice, Thy'rokh the druid once), then Cure Light Wounds until both priests' 1st-level
+  slots were gone; 2d8 and 1d8 each, the game's own spells. Their 2nd- and 3rd-level slots (no cures)
+  kept.
+- Then the night: "+3, +2 (CON 17)" and the rest as before; Gerakis 90/165, then 165 by his CON 22
+  regeneration. The helper's count 17 (14 casts and 3 nights' healing).
+
 ## Still to do
 
-- REST_PRE: the party's priests spending their spells left on the party before the night.
+- The psionicists' Cell Adjustment at rest (SL's RP_PSI_CAST): the sequel's power bytes not found yet.
+- Cure Blindness and Cure Disease at rest (the same path as Neutralize Poison's, not seen).
 
 Water: a jug on a stand in the room beside the rented one (seen, not looked at); nothing new.
