@@ -625,7 +625,7 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
             pos += 12 * n
             types.append([kind, False, entries])
     out = bytearray(data)
-    gffi = next(info for kind, ranged, info in types if kind == b"GFFI" and not ranged)
+    gffi = next((info for kind, ranged, info in types if kind == b"GFFI" and not ranged), [])  # (none in a roster)
     for kind, ranged, info in types:
         ids = sorted(cid for (k, cid) in added if k.encode("latin1") == kind)
         if not ids:
