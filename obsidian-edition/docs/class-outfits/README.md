@@ -14,7 +14,11 @@ Both galleries show all eight human outfits in sync. The caption identifies each
 
 ## Dwarf outfit study
 
-These first-pass animations fit the same eight classes to the original female and male dwarf figures. Compare the opening strike in each loop. The female dwarf holds her stance while the male dwarf raises his arm. Each gallery shows all 29 poses at the same scale.
+Dwarves can start as **Clerics, Fighters, Gladiators, Psionicists, or Thieves**. The original eight-outfit study below labels the Cleric “Priest” and the Fighter “Warrior.” Its Mage, Druid, and Ranger are exploratory drawings. The next art pass focuses on the five playable outfits. [Classes by race](../../PLAYER-GUIDE.md#races)
+
+After cleaning both body bases, review the Gladiator for exposed anatomy, the Fighter for shoulder and head clearance, and the Cleric for robe folds and coverage. The galleries show all 29 poses. In the opening strike, the female dwarf holds her stance while the male dwarf raises his arm.
+
+Dwarves have five two-class choices (Cleric/Fighter, Cleric/Psionicist, Fighter/Psionicist, Fighter/Thief, Psionicist/Thief) and two three-class choices (Cleric/Fighter/Psionicist and Fighter/Psionicist/Thief). The first proposed multiclass art test is a Fighter/Thief with the Fighter’s shoulder pieces and the Thief’s hood. Compare it with both single classes at game size before choosing a rule for the other combinations. [Multiclass combinations by race](../../PLAYER-GUIDE.md#more-than-one-class)
 
 The dwarf designs are available for art review. In-game equipment integration is still pending.
 
