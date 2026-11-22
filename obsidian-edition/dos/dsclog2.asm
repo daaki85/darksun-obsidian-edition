@@ -2863,6 +2863,8 @@ site_table:
         dw item_weapon                      ; 22 SITE_ITEM_WEAPON
         dw item_skip                        ; 23 SITE_ITEM_SKIP
         dw item_armour                      ; 24 SITE_ITEM_ARMOUR
+        dw mc_con                           ; 25 SITE_MC_CON
+        dw mc_uncon                         ; 26 SITE_MC_UNCON
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5000,6 +5002,162 @@ adnd_needed:
         pop ax
         ret
 acid_saves db 8, 11, 5, 5, 13, 10, 12   ; wood, bone, stone, obsidian, metal, leather; cloth
+
+; MULTICLASS HIT POINTS: DSCLOG's CON_SHARE (RULE_MULTI_HP, always on), the sequel's routines SL's: the
+; most hit points (95193h, SL's 874B0h: the sheet's total of rolled dice, +0Ah, scaled by the levels now,
+; +1Eh, over the levels before any were lost, +39h, divided by the classes, 9521Ah, plus CON's bonus,
+; 95261h) and its reverse (954A5h, SL's 877BEh: the most, +8, less CON's bonus, times the classes).
+; MC_CON (site 25, "mc_con"): "add di,ax / mov ax,di" (95208h; 4 bytes), AX the game's CON hit points,
+; DI the total shared, SI the sheet's number. MC_UNCON (site 26, "mc_uncon"): "mov dx,[es:bx+8] / sub
+; dx,ax" (954BDh; 6 bytes), ES:BX the sheet, AX the game's CON hit points, SI the number. Each puts in
+; CON_SHARE's.
+RULE_MULTI_HP equ 16384
+LEVEL_HP_FROM_DS equ 0x47E0 - 0x45BE    ; the game's hit point table (SL's): +group x 4 (die, its last
+LEVEL_HP_CON  equ 0x52                  ;   level, then a fixed gain), +10h + class: its group; +52h +
+WARRIOR_GROUP equ 1                     ;   CON a warrior's bonus a level
+mc_con:
+        call con_share
+        add di, ax
+        mov ax, di
+        iret
+mc_uncon:
+        mov dx, [es:bx + 8]
+        call con_share
+        sub dx, ax
+        iret
+; CON_SHARE: for a character of more than one class (MC_CLASSES; SI the sheet's and creature's number)
+; with the rule, CON's hit points as Demihuman Deities (TSR 1998) has a multiclassed character's: each
+; hit die so far with CON's bonus on it, all in the total, the total divided by the classes. The bonus
+; is a warrior's (LEVEL_HP_CON + CON, the creature's +1Bh) on every die if any class is a warrior's,
+; else at most +2; the dice, each class's levels up to its group's last that rolls one. AX (the game's
+; own) becomes (total + bonus x dice) / classes less total / classes, the total as the game scales it
+; for lost levels. Others kept.
+con_share:
+        test word [cs:rules], RULE_MULTI_HP
+        jz .ret
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push bp
+        push es
+        push fs
+        push ax                 ; (the game's: one class keeps it)
+        les bx, [CREATURES_PTR]
+        imul ax, si, CREATURE_SIZE
+        add bx, ax
+        mov al, [es:bx + 0x1B]  ; CON
+        mov [cs:mc_con_score], al
+        les bx, [SHEETS_PTR]
+        imul ax, si, SHEET_SIZE
+        add bx, ax
+        call mc_classes
+        cmp ax, 1
+        jbe .game
+        mov bp, ax              ; BP the classes
+        mov si, bx              ; ES:SI the sheet
+        mov ax, ds
+        sub ax, LEVEL_HP_FROM_DS
+        mov fs, ax
+        xor cx, cx              ; (the levels, and before any were lost)
+        xor di, di
+        xor bx, bx
+.sum:   movzx ax, byte [es:si + bx + 0x1E]
+        add cx, ax
+        movzx ax, byte [es:si + bx + 0x39]
+        add di, ax
+        inc bx
+        cmp bx, 3
+        jb .sum
+        mov ax, [es:si + 0x0A]
+        or di, di
+        jz .total
+        mul cx                  ; (as the game: unsigned, its low word)
+        xor dx, dx
+        div di
+.total: mov [cs:mc_total], ax
+        xor cx, cx              ; CX the dice, DL 1 for a warrior's class
+        xor dx, dx
+        xor di, di
+.class: movzx bx, byte [es:si + 0x1B]
+        or bx, bx
+        jz .next
+        cmp bx, 32
+        jae .next
+        movzx bx, byte [fs:bx + 0x10]
+        cmp bx, 4
+        jae .next
+        cmp bx, WARRIOR_GROUP
+        jne .dice
+        mov dl, 1
+.dice:  shl bx, 2
+        mov al, [fs:bx + 1]
+        cmp al, [es:si + 0x1E]
+        jbe .count
+        mov al, [es:si + 0x1E]
+.count: movzx ax, al
+        add cx, ax
+.next:  inc si                  ; (the next class)
+        inc di
+        cmp di, 3
+        jb .class
+        movzx bx, byte [cs:mc_con_score]
+        cmp bx, 25
+        jbe .con
+        mov bx, 25
+.con:   movsx ax, byte [fs:bx + LEVEL_HP_CON]
+        or dl, dl
+        jnz .bonus
+        cmp ax, 2
+        jle .bonus
+        mov ax, 2
+.bonus: imul cx                 ; (the bonus on every die)
+        add ax, [cs:mc_total]
+        cwd
+        idiv bp
+        mov cx, ax
+        mov ax, [cs:mc_total]
+        xor dx, dx
+        div bp
+        sub cx, ax
+        mov ax, cx
+        add sp, 2
+        inc word [cs:mc_count]
+        jmp .out
+.game:  pop ax
+.out:   pop fs
+        pop es
+        pop bp
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+mc_total dw 0
+mc_count dw 0                           ; (the hit points shared so, for a look in play)
+mc_con_score db 0
+; MC_CLASSES: AX the classes the sheet at ES:BX shares its hit points between (the sequel's 9521Ah): 1
+; for a human (+12h 1, who dual-classes), else its classes (+1Bh-1Dh not 0), at least 1. Others kept.
+mc_classes:
+        mov ax, 1
+        cmp byte [es:bx + 0x12], 1
+        je .ret
+        xor ax, ax
+        cmp byte [es:bx + 0x1B], 0
+        je .two
+        inc ax
+.two:   cmp byte [es:bx + 0x1C], 0
+        je .three
+        inc ax
+.three: cmp byte [es:bx + 0x1D], 0
+        je .least
+        inc ax
+.least: or ax, ax
+        jnz .ret
+        inc ax
+.ret:   ret
 manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

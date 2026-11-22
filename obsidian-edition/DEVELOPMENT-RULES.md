@@ -192,6 +192,12 @@ rolls one (the game's table, `+group × 4 + 1`), the bonus the table's
 warrior bonus (`+52h` + CON) if a class is in the warrior group, else at most
 +2. One class, or a human: the game's own.
 
+In Wake of the Ravager the routines are SL's (the most 95193h, CON's 95261h, the reverse 954A5h), the
+sheet 42h bytes (levels +1Eh, before any were lost +39h), CON the creature's +1Bh, the hit point table
+SL's own bytes at the load + 45BEh. DSCLOG2's MC_CON (site 25 at 95208h) and MC_UNCON (site 26 at
+954BDh) put in the same CON_SHARE, with the rule (RULE_MULTI_HP). The sequel works the most out only
+at a level up (957E2h) and when a character is made from a script (6E8CEh, the reverse).
+
 ## Hit dice: the better of two
 
 ([In the features page](FEATURES.md#hit-dice-the-better-of-two).)

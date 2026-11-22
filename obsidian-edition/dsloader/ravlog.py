@@ -112,6 +112,9 @@ ADDRESSES: Dict[str, object] = {
     "STAFF_SLING_TYPE": 98, "STINK_EFFECT": ravager.NAUSEATED, "STINK_SAVE_POWER": 22,
     # the powers that can destroy an item (its power handler's switch, 656ECh: 103 the weapon then the
     # armour, 275 and 283 the armour, 284 the weapon; SL's 178, 186, 187), as the dice log names them
+    # the hit point table (dice by class group, CON's bonus at +52h): SL's own bytes, at the load + 45BEh
+    # (the most hit points' 4D0h:52h; SL's 40B1h)
+    "LEVEL_HP_SEG": 0x45BE,
     "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
                      284: "corroding touch"},
 }

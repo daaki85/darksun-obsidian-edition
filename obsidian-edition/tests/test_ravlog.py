@@ -159,6 +159,17 @@ class WindowTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertEqual(sorted(game.ITEM_ATTACKS), [game.ACID, game.TOUCH_ARMOUR, game.TOUCH_WEAPON])
 
+    def test_multiclass_hp_ported(self):
+        """Multiclass hit points: the rule's bit passed to DSCLOG2, and the dice log reading the sequel's
+        hit point table (SL's bytes at the load + 45BEh) for CON's bonus."""
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_MULTI_HP, game.RULE_MULTI_HP)
+        ravlog.apply_layout()
+        try:
+            self.assertEqual(game.LEVEL_HP_SEG, 0x45BE)
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual(game.LEVEL_HP_SEG, 0x40B1)
+
     def test_class_magic_served(self):
         view = ravlog.ReadOnlyGuest(FakeGuest())
         magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)

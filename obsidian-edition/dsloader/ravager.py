@@ -93,7 +93,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
-                | game.RULE_ITEM_SAVES)
+                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -360,6 +360,11 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("item_weapon", 0x7CF22, bytes.fromhex("ba08002b56fe"), _site(22, 6)),
     Patch("item_skip", 0x7D0AA, bytes.fromhex("837efe00"), _site(23, 4)),
     Patch("item_armour", 0x7D0BE, bytes.fromhex("ba0a002b56fe"), _site(24, 6)),
+    # Multiclass hit points (SL's mc_con, mc_uncon; RULE_MULTI_HP, always on): the most hit points' CON
+    # (95208h, "add di,ax / mov ax,di", SL's 87523h) and its reverse (954BDh, "mov dx,[es:bx+8] / sub
+    # dx,ax", SL's 877DAh): DSCLOG2's MC_CON and MC_UNCON, CON's bonus on each die, the total shared
+    Patch("mc_con", 0x95208, bytes.fromhex("03f88bc7"), _site(25, 4)),
+    Patch("mc_uncon", 0x954BD, bytes.fromhex("268b57082bd0"), _site(26, 6)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),
