@@ -881,6 +881,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if costume and costume.head:
         parts = parts._replace(hair=costume.head)
+    if costume and model == 2099 and not combat and frame == 1:
+        # The rear idle has a relaxed grip on each side of the hips.
+        parts = parts._replace(hands={"left": (4, 15), "right": (15, 15)},
+                               shoulders=(7, 5, 14))
     if costume and model == 2099 and not combat and frame == 6:
         # The raised wrist is outside the shoulder in the last front-walk pose.
         parts = parts._replace(shoulders=(7, 4, 11))

@@ -218,3 +218,12 @@ class HumanOutfitTests(unittest.TestCase):
             # The priest's hem covers the ankle in this pose.
             region = classoutfits.LEGS if role == "Priest" else classoutfits.LEFT_FOOT
             self.assertIn((1, 21), pose.regions[region])
+
+    def test_woman_rear_idle_boots_rest_side_by_side(self):
+        for role in classoutfits.CLASSES[1:]:
+            pose = classoutfits.frames(role, False, 2099)[1]
+            left = pose.regions[classoutfits.LEFT_FOOT]
+            right = pose.regions[classoutfits.RIGHT_FOOT]
+            self.assertTrue(left and right, role)
+            self.assertLess(max(x for x, _ in left), min(x for x, _ in right), role)
+            self.assertLessEqual(abs(max(y for _, y in left) - max(y for _, y in right)), 1, role)

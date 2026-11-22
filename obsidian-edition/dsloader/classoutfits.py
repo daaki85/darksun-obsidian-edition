@@ -68,7 +68,7 @@ FIGHT_GRIPS = (
 # Centres of the woman's supporting wrist, including the reconstructed arm
 # that swings underneath the cloak in the rear walk.
 WOMAN_WALK_SHIELDS = (
-    (15, 11), (2, 10), (8, 12), (13, 10), (16, 8), (15, 10), (13, 13),
+    (15, 11), (4, 13), (8, 12), (13, 10), (16, 8), (15, 10), (13, 13),
     (3, 9), (4, 9), (4, 13), (4, 12), (11, 14), (6, 13), (15, 12), (13, 14),
 )
 WOMAN_FIGHT_SHIELDS = (
