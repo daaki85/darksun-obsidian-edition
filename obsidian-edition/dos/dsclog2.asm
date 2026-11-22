@@ -2865,6 +2865,11 @@ site_table:
         dw item_armour                      ; 24 SITE_ITEM_ARMOUR
         dw mc_con                           ; 25 SITE_MC_CON
         dw mc_uncon                         ; 26 SITE_MC_UNCON
+        dw rl_score                         ; 27 SITE_RL_SCORE
+        dw rl_hp                            ; 28 SITE_RL_HP
+        dw rl_roll                          ; 29 SITE_RL_ROLL
+        dw rl_con                           ; 30 SITE_RL_CON
+        dw rl_sum                           ; 31 SITE_RL_SUM
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5158,6 +5163,165 @@ mc_classes:
         jnz .ret
         inc ax
 .ret:   ret
+
+; SCORES AND HIT POINTS AS ROLLED: DSCLOG's RL_* (RULE_HI_ROLLED, the second rules word's 32:
+; game.RULE_ROLLED), the sequel's creation screen SL's (its code 7D89h on, the data 6C0h back): a hit
+; point click does nothing, and a score is raised only while the six add up to no more than the die
+; gave (RL_POOL), lowering one freeing points for another; under CHR "SUM:100/102", the six's total and
+; the die's; a click on CON moves the hit points as far as the most they may be (CON's bonus a level).
+; The creature being made is DS:142Dh (scores from +19h), its sheet DS:1429h (hit points +8).
+RULE_HI_ROLLED equ 32
+RL_HP_MAX   equ 0x42D6              ; DS: the most hit points the classes could roll (SL's 4996h)
+RL_BOX      equ 0x11F4              ; DS: the scores' box (x1, y1, x2, y2; SL's F62h)
+RL_LABEL_X  equ 23                  ; "SUM:" this far left of the scores' x
+RL_ROW_Y    equ 6 * 7 - 2           ; the line under CHR: 7 apart, from 2 above the box's top
+RL_SHEET    equ 0x1429              ; DS: the sheet being made (SL's 119Ch)
+RL_SCORES   equ 0x19                ; the creature's STR, then DEX ... CHA
+; RL_TOTAL: DX the six scores of the creature being made added up. DS the game's; others kept.
+rl_total:
+        push es
+        push ax
+        push bx
+        push cx
+        les bx, [CR_CREATURE]
+        xor ax, ax
+        xor dx, dx
+        mov cx, 6
+.add:   mov al, [es:bx + RL_SCORES]
+        add dx, ax
+        inc bx
+        loop .add
+        pop cx
+        pop bx
+        pop ax
+        pop es
+        ret
+; RL_SCORE (site 27, "rl_score"): "mov al,[bp-2]" (6D1DDh, SL's 655C6h), where a click sets a score
+; (ES:BX the creature plus the score's number, [BP-2] the value the click gives). A raise is kept to
+; the points to spare.
+rl_score:
+        push word [RL_HP_MAX]   ; (the most hit points before the click, for RL_CON)
+        pop word [cs:rl_old_max]
+        mov al, [bp - 2]
+        test word [cs:rules_hi], RULE_HI_ROLLED
+        jz .out
+        cmp al, [es:bx + RL_SCORES]
+        jbe .out                ; lowered: always
+        push cx
+        push dx
+        mov cx, [cs:rl_pool]
+        jcxz .done              ; (no roll seen)
+        call rl_total
+        sub cx, dx              ; the points to spare
+        jg .some
+        mov al, [es:bx + RL_SCORES] ; none: as it was
+        inc word [cs:rl_count]
+        jmp .done
+.some:  add cl, [es:bx + RL_SCORES] ; the most it may be
+        cmp al, cl
+        jbe .done
+        mov al, cl
+        inc word [cs:rl_count]
+.done:  pop dx
+        pop cx
+.out:   iret
+; RL_HP (site 28, "rl_hp"): "add ax,[bp-2]" (6B7D2h, SL's 63A49h), a click's 1 or -1 on the hit
+; points: with the rule nothing added (the hit points as rolled).
+rl_hp:
+        test word [cs:rules_hi], RULE_HI_ROLLED
+        jnz .out
+        add ax, [bp - 2]
+.out:   iret
+; RL_ROLL (site 29, "rl_roll_4", "rl_roll_6", "rl_roll_7"): "mov es:[bx+19h],al" in the die's three
+; loops (6D55Ah, 6D593h, 6D5CCh; SL's 65944h...), SI the score, the byte [BP+6] 1 for a roll, 0 for
+; the scores kept (raised to a new class's least): after CHR the six's total is the die's (a roll),
+; or no less.
+rl_roll:
+        mov [es:bx + RL_SCORES], al
+        cmp si, 5
+        jne .out
+        push dx
+        call rl_total
+        cmp byte [bp + 6], 0
+        jne .set
+        cmp dx, [cs:rl_pool]
+        jbe .done
+.set:   mov [cs:rl_pool], dx
+.done:  pop dx
+.out:   iret
+; RL_CON (site 30, "rl_con"): "les bx,[1429h]" (6B6CFh, SL's 63946h) after a click on CON has had the
+; game work out the hit points' least and most again: with the rule the sheet's hit points (+8) move
+; as far as the most did (RL_SCORE kept it before the click); the game then keeps them in range.
+rl_con:
+        les bx, [RL_SHEET]
+        test word [cs:rules_hi], RULE_HI_ROLLED
+        jz .out
+        push ax
+        mov ax, [RL_HP_MAX]
+        sub ax, [cs:rl_old_max]
+        add [es:bx + 8], ax
+        pop ax
+.out:   iret
+; RL_SUM (site 31, "rl_sum"): "add sp,4" (6CD98h, SL's 65185h) in the scores' redraw (6CD7Bh), after
+; the game has put back what was under them (its box, RL_BOX, made a line taller and wider by
+; ravager.py's "rl_sum_box"): with the rule and a roll seen, "SUM:" and the totals, the six's and the
+; die's, in the game's lettering.
+rl_sum:
+        pop word [cs:rl_ip]
+        pop word [cs:rl_cs]
+        pop word [cs:rl_fl]
+        add sp, 4               ; the replaced instruction
+        test word [cs:rules_hi], RULE_HI_ROLLED
+        jz .back
+        cmp word [cs:rl_pool], 0
+        je .back
+        sti
+        pushad
+        push es
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        mov eax, [WIN_SHOWN]    ; the screen's window
+        mov [cs:c_winptr], eax
+        mov dx, [RL_BOX + 2]
+        add dx, RL_ROW_Y
+        mov ax, [RL_BOX]
+        push dx
+        push ax
+        push cs
+        push word rl_text
+        push dx
+        sub ax, RL_LABEL_X
+        push ax
+        push cs
+        push word rl_label
+        call c_draw_line
+        call rl_total
+        mov al, dl
+        mov di, rl_text
+        call c_itoa
+        mov byte [cs:di], '/'
+        inc di
+        mov al, [cs:rl_pool]
+        call c_itoa
+        call c_draw_line
+        inc word [cs:rl_drawn]
+        pop es
+        popad
+.back:  push word [cs:rl_fl]
+        push word [cs:rl_cs]
+        push word [cs:rl_ip]
+        iret
+rl_old_max dw 0                 ; (RL_HP_MAX before a score's click)
+rl_pool  dw 0                   ; the die's total, the most the six may add up to (0: none seen)
+rl_count dw 0                   ; (raises cut, for a look in play)
+rl_drawn dw 0                   ; (SUM lines drawn)
+rl_ip    dw 0
+rl_cs    dw 0
+rl_fl    dw 0
+rl_label db 'SUM:', 0
+rl_text  db '000/000', 0, 0
 manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

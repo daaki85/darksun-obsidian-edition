@@ -271,6 +271,13 @@ ring's missed rolls while it moves.
 Verified in play (no log kept). DONE on a preserver still opened CHOOSE A
 SPELL (`PROBE_CR_SPELLS`).
 
+In Wake of the Ravager the creation screen is SL's code 7D89h on (the data 6C0h back: the least and
+most score DS:42D4h, 42D2h, the most hit points DS:42D6h; the creature being made DS:142Dh, its scores
+from +19h; the sheet DS:1429h). DSCLOG2's RL_SCORE, RL_HP, RL_ROLL, RL_CON and RL_SUM (sites 27-31
+at 6D1DDh, 6B7D2h, the three loops' 6D55Ah, 6D593h, 6D5CCh, 6B6CFh and 6CD98h) do what DSCLOG's do;
+the die's loops read the roll flag from `[BP+6]` (SL's DI). The scores' box (DS:11F4h) is made a line
+taller and wider as SL's. RL_TRY (the dice log's 4d4) is not ported.
+
 ## AD&D's class tables
 
 ([In the features page](FEATURES.md#adds-class-tables); `tables.py`.)

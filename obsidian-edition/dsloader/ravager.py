@@ -93,7 +93,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
-                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP)
+                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -365,6 +365,20 @@ PATCHES: Tuple[Patch, ...] = (
     # dx,ax", SL's 877DAh): DSCLOG2's MC_CON and MC_UNCON, CON's bonus on each die, the total shared
     Patch("mc_con", 0x95208, bytes.fromhex("03f88bc7"), _site(25, 4)),
     Patch("mc_uncon", 0x954BD, bytes.fromhex("268b57082bd0"), _site(26, 6)),
+    # Creation's scores and hit points as rolled (SL's rl_*; game.RULE_ROLLED): the creation screen's
+    # score click (6D1DDh, "mov al,[bp-2]", SL's 655C6h), hit point click (6B7D2h, "add ax,[bp-2]", SL's
+    # 63A49h), the die's three loops (6D55Ah, 6D593h, 6D5CCh, "mov es:[bx+19h],al", SL's 65944h...),
+    # CON's case (6B6CFh, "les bx,[1429h]", SL's 63946h) and the scores' redraw (6CD98h, "add sp,4", SL's
+    # 65185h): DSCLOG2's RL_SCORE, RL_HP, RL_ROLL, RL_CON and RL_SUM; the scores' box (DS:11F4h, SL's
+    # F62h) a line taller and wider for SUM (SL's rl_sum_box)
+    Patch("rl_score", 0x6D1DD, bytes.fromhex("8a46fe"), _site(27, 3)),
+    Patch("rl_hp", 0x6B7D2, bytes.fromhex("0346fe"), _site(28, 3)),
+    Patch("rl_roll_4", 0x6D55A, bytes.fromhex("26884719"), _site(29, 4)),
+    Patch("rl_roll_6", 0x6D593, bytes.fromhex("26884719"), _site(29, 4)),
+    Patch("rl_roll_7", 0x6D5CC, bytes.fromhex("26884719"), _site(29, 4)),
+    Patch("rl_con", 0x6B6CF, bytes.fromhex("c41e2914"), _site(30, 4)),
+    Patch("rl_sum", 0x6CD98, bytes.fromhex("83c404"), _site(31, 3)),
+    Patch("rl_sum_box", DS_FILE + 0x11F8, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

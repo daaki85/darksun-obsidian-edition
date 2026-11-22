@@ -896,6 +896,12 @@ on, the hit points' DS:1224h); the sheet, creature and window at DS:1429h, 142Dh
 6C87Bh, PSP after them (6D6AEh, 6B79Ch); the labels' ink DS:2D14h, F0h white there. Title menu's CREATE
 CHARACTERS (160,92), right-click a slot (70,56), NEW (110,57); EXIT (280,160).
 
+**Its creation screen's clicks** (2026-11-22, logs/2026-11-22-ravager-rolled.md): after `ravcreation.sh`, a score
+answers a click on its number (`ravclick.py 40 Y`, Y 140, 147, 154, 161, 168, 175 for STR to CHR; left +1,
+right -1, going round past the least and most), the hit points on the line below their numbers (`ravclick.py
+100 176`). The screen's numbers: the creature being made DS:142Dh (scores +19h), the sheet DS:1429h (hit
+points +8), the least and most score DS:42D4h and 42D2h, the hit points' most and least DS:42D6h, 42D8h.
+
 **Its rules and hit dice** (2026-11-21, logs/2026-11-21-ravager-hit-dice.md): DSCLOG2's header has
 DSCLOG's RULES (+170) and RULES_HI (+270), written by the Loader with only ravager.RULES_PORTED; a
 dice log started without settings (`ravdice.py`) writes 0. The hit-die rolls: 9501Dh (94F60h's: creation's
