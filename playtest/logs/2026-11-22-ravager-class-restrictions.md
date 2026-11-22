@@ -23,10 +23,13 @@ set-up). RULE_RESTRICT added to ravager.RULES_PORTED.
   THAC0 [BP-1Eh]), and MISSILE_REAR's INT already sits on the next `mov al,[bp-19h]` (5C99Fh): the
   check went there rather than in a site of its own (a second patch there failed the Loader's check of
   the original bytes).
-- Not found: the sequel's "can't cast" test (SL's 89B4Dh, which DSCLOG's PROBE_NO_CAST hooks). The
-  sequel never calls its effect test (608h:20h) with Can't Cast (68) as SL does with its 50, yet its
-  USE screen crosses a Can't Cast character's spells out (seen: Ar'anda with effect 68 added). So a
-  multiclass preserver in armour still casts, and the dice log's "NO SPELLS IN ARMOUR" stays off.
+- The sequel's "can't cast" test (SL's 89B4Dh) is a case of a larger routine, 84E94h ("can this creature
+  do it": [BP+6] the kind, DI the creature, SI a second argument; its jump table at CS:1C44h): it reads
+  the creature's effect bits through 608h:25h into [BP-10h] and its casting case (84EE7h) wants a sheet,
+  Okay, not hit this round (308h:[DI+B2h]), none of Can't Cast (68: `test byte [bp-8],10h`), effect 4,
+  Afraid 35, Feebleminded 37, effect 7, and a roll for effect 62; its "yes" is `mov ax,1` at 84F6Eh. A
+  first search missed it: the sequel never asks the effect test (608h:20h) for 68 by number; reading
+  the bitset's callers (608h:25h) for a test of byte +8, bit 10h found it.
 
 ## In the game (ravload.sh ravager-after-ambush, the Loader, the dice log on, about 17:45-18:10 UTC)
 
@@ -48,15 +51,30 @@ Test edits (DOSBox stopped after, nothing saved): DSCLOG2's rules word written f
   its routines... through the helper"): every skill 0 (INT F5h seen). Control, the rule off: pick
   pockets 81, open locks 68, traps 61, move silently 70, hide 70, hear 56, climb 96, read 24; with the
   rule on and the leather back, the same numbers.
+- **A multiclass preserver in armour** (a second run, about 18:10 UTC): Ar'anda in her leather Armor,
+  the USE screen: every spell crossed out, her status Okay, the dice log's "NO SPELLS IN ARMOUR"; a click
+  on a spell, "YOU CANNOT CAST SPELLS". Control, the rule off (LEVEL pressed to redraw): the level 2
+  spells plain, one cast (WIZ 2/2 to 1/2). In the thieves' fight below, her spells crossed out too.
+- **The backstab in a fight** (two thieves and two thugs in the alley north of the Roost, provoked with
+  "Run along now, pip"; ravager-after-ambush, the arrow keys Up 8 and Right 40 from the save; Computer
+  Control for all four; test edits: Ar'anda in brigandine, everyone's HP 250). No attack of hers came
+  from behind by itself in two fights, and a live edit of the overlay's facing test didn't hold (the
+  overlay is reloaded several times a round, at other addresses: playtest/RESEARCH.md); so DSCLOG2's
+  MISSILE_REAR start was changed in memory to make the first member's every attack from behind and a
+  backstab (the game's own [BP-19h], [BP-21h] and THAC0 2 + 2), THIEF_REAR left as it is. Control, the
+  rule off: "Ar'Anda attacks Thug BACKSTAB with Obsidian Dagger (1d4)... THAC0 17 base, +4 in bonuses",
+  "+4 backstab (the dice 2 x3 = 6)"; "...BACKSTAB with Longsword +1... +7 in bonuses". The rule on, the
+  same fight: "Ar'Anda attacks Thief from behind with Obsidian Dagger (1d4)... +2 in bonuses", "...from
+  behind with Longsword +1 (1d8+1)... +5 in bonuses", "Ar'Anda hits Thief for 8: 1d8 = [3] +1 weapon
+  +4 STR 18": from behind kept, the backstab's +2 and its multiplied dice gone.
 - The helper's count rose by 2 for every refused try: the screen asks once to light the slots it can
   take and once on the click.
 
 ## Not played
 
-- A backstab taken back in armour (THIEF_REAR): no fight with a thief behind a foe set up.
-- A new character's starting gear (SL's weaponchoice.class_gear: the Loader's creation side isn't on
-  the sequel's creation screen yet), the human dual-class cases, a ranger's bow, a druid's bare rule.
-- The multiclass preserver's casting in armour (above: the sequel's cast test not found).
+- A new character's starting gear (SL's weaponchoice.class_gear: the Loader's creation side isn't on the
+  sequel's creation screen yet), the human dual-class cases, a ranger's bow, a druid's bare rule (the
+  party's druid is a thri-kreen, whom the game keeps out of armour first).
 
 ## Water
 

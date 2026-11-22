@@ -350,6 +350,9 @@ PATCHES: Tuple[Patch, ...] = (
     # "stealth" patch's MISSILE_REAR (THIEF_REAR)
     Patch("class_can_use", 0x775FD, bytes.fromhex("8846ff"), _site(19, 3)),
     Patch("thief_skill_armour", 0x8C7C5, bytes.fromhex("8bc65f"), _site(20, 3)),
+    # ... and a multiclass preserver casting in armour (SL's PROBE_NO_CAST): the "yes" of the casting case
+    # (84F6Eh, "mov ax,1") of the sequel's "can this creature do it" (84E94h), DSCLOG2's CAST_ARMOUR
+    Patch("cast_armour", 0x84F6E, bytes.fromhex("b80100"), _site(21, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

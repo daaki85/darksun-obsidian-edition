@@ -426,10 +426,9 @@ class RavGameData(game.GameData):
         return sum(1 for first in self.guest.read(at, SPELL_LEVELS_MOST) if first <= spell)
 
     def no_spells(self, creature: int) -> bool:
-        """SL's armour rule for a multiclass preserver (class restrictions' PROBE_NO_CAST) isn't ported:
-        the sequel's preservers cast in armour (the USE screen's "NO SPELLS IN ARMOUR" was wrong there:
-        Ar'anda cast Enlarge in it, 2026-11-21), so never."""
-        return False
+        """SL's, with class restrictions on (DSCLOG2's CAST_ARMOUR: a multiclass preserver casts nothing
+        in armour)."""
+        return bool(self.rules & game.RULE_RESTRICT) and super().no_spells(creature)
 
     def thief_heavy(self, creature: int) -> bool:
         """SL's, with class restrictions on (DSCLOG2's BELT_SITE and THIEF_REAR: no thief skills or

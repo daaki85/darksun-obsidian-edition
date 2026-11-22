@@ -164,11 +164,13 @@ skill routine 8C647h's end) gives 0 for a thief in armour that isn't light (`THI
 `ARMOUR_WORN` reading the item lists as `MELEE_IN` does); `THIEF_REAR`, called from `MISSILE_REAR`
 (5C99Fh), takes the backstab back (the byte `[bp-21h]`, THAC0 `[bp-1Eh]`). The sequel has no kits,
 weapon specs, robes, bracers or cloak of protection, so none of their exceptions; its only weapon
-exception is the ranger's bow (`RANGER_BOW`). Not ported: `PROBE_NO_CAST` (the sequel's test of
-whether a character can cast, SL's 89B4Dh, isn't found: it never asks its effect test, 608h:20h, for
-Can't Cast, 68, by number), so the dice log's `no_spells` stays off; a new character's starting gear
-([played](../playtest/logs/2026-11-22-ravager-class-restrictions.md): the equip test and the thief
-skills; the backstab not).
+exception is the ranger's bow (`RANGER_BOW`). `CAST_ARMOUR` (site 21, `cast_armour`: 84F6Eh, `mov
+ax,1`, the "yes" of the casting case, 84EE7h, of the sequel's "can this creature do it", 84E94h, which
+reads the effect bits through 608h:25h: Can't Cast 68 is `test byte [bp-8],10h` there, never asked by
+number) is `PROBE_NO_CAST`: a multiclass preserver in armour, a helm too, or a human preserver and
+warrior, can't cast; the dice log's `no_spells` follows it. Not ported: a new character's starting
+gear ([played](../playtest/logs/2026-11-22-ravager-class-restrictions.md): the equip test, the thief
+skills, casting in armour and the backstab in a fight).
 
 ## Multiclass hit points
 

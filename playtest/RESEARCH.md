@@ -713,6 +713,18 @@ portrait shows that character with the item still held, so it can be carried acr
 x / 2, y / 2.4 (Ar'anda's right hand game 65,92, the left 172,92, the legs 172,127, the backpack's first
 cells 195,27 and 207,27; the portraits 25 by 25, 69, 117, 165).
 
+**Forcing a case in a fight** (2026-11-22): an edit of the game's own overlay code in memory doesn't hold:
+the fight's overlays are reloaded from XMS several times a round, each time at another address (the
+attack set-up was found at 5B865h, 5C215h, 5E445h, 5F3D5h and 60025h within one fight), so a loop
+re-patching it every 50 ms still missed most attacks. Edit DSCLOG2's own code instead (it stays put in
+its upper memory block, its segment the INT F5h vector's; offsets from `nasm -l`): for the backstab test
+MISSILE_REAR's first 25 bytes (914h, the class restrictions' version) became `or si,si / jnz .out / mov
+byte [bp-19h],1 / mov byte [bp-21h],1 / sub word [bp-1Eh],4` and NOPs, so every attack of the first
+member is from behind and a backstab, as the game makes one. **Tyr's thieves for a fight**: from
+`ravager-after-ambush`, the arrow keys Up 8 and Right 40 (world 1839, 1224), answer 2 ("Run along now,
+pip"), Space: two thieves and two thugs; Computer Control for all four on the USE screen in the fight
+(the lower small icon by each box, game 47,52 / 100,52 / 47,112 / 100,112), Escape to close it.
+
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the

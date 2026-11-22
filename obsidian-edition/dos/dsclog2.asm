@@ -2859,6 +2859,7 @@ site_table:
         dw rest_pre                         ; 18 SITE_REST_PRE
         dw cu_site                          ; 19 SITE_CAN_USE
         dw belt_site                        ; 20 SITE_THIEF_SKILL
+        dw cast_armour                      ; 21 SITE_CAST_ARMOUR
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4297,6 +4298,12 @@ RP_CURES_END equ $
 ; - THIEF_REAR, called from MISSILE_REAR (5C99Fh, in the attack's set-up after its from behind, [BP-19h],
 ;   and backstab, [BP-21h], bytes; [BP-1Eh] the THAC0 both lower by 2; SI the attacker): a party thief in
 ;   armour that isn't light backstabs no more.
+; - CAST_ARMOUR (site 21) replaces "mov ax,1" (84F6Eh) at the "yes" of the casting case of the sequel's
+;   "can this creature do it" (84E94h: [BP+6] the kind, DI the creature; the casting case at 84EE7h tests
+;   a sheet, Okay, not hit this round, and its effect bits: Can't Cast 68, Feebleminded 37 and the rest,
+;   SL's 89B4Dh's test inside it): a multiclass preserver can't while it wears armour, a helm too
+;   (ARMOUR_WORN; a shield doesn't count), nor a human who has been a preserver and a fighter, gladiator
+;   or ranger (CLASS_AND_WARRIOR): SL's PROBE_NO_CAST.
 RULE_RESTRICT equ 8192
 CU_TYPE_SIZE equ 0x0F
 CU_FLAGS    equ 0x00
@@ -4391,6 +4398,69 @@ thief_rear:
         inc word [cs:restrict_count]
 .no:    pop ax
 .ret:   ret
+cast_armour:
+        mov ax, 1
+        test word [cs:rules], RULE_RESTRICT
+        jz .out
+        cmp di, 3
+        ja .out
+        push bx
+        push dx
+        push es
+        imul bx, di, CREATURE_SIZE
+        les dx, [CREATURES_PTR]
+        add bx, dx
+        mov bx, [es:bx + 4]             ; (its sheet)
+        imul bx, bx, CU_SHEET_SIZE
+        les dx, [SHEETS_PTR]
+        add bx, dx
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .multi
+        call preserver_warrior
+        jc .pres
+        jmp .done
+.multi: cmp byte [es:bx + SH_CLASSES + 1], 0     ; one class: none
+        je .done
+        cmp byte [es:bx + SH_CLASSES], PRESERVER_CLASS
+        je .pres
+        cmp byte [es:bx + SH_CLASSES + 1], PRESERVER_CLASS
+        je .pres
+        cmp byte [es:bx + SH_CLASSES + 2], PRESERVER_CLASS
+        jne .done
+.pres:  mov dx, di
+        call armour_worn
+        jnc .done
+        xor ax, ax
+        inc word [cs:restrict_count]
+.done:  pop es
+        pop dx
+        pop bx
+.out:   iret
+; PRESERVER_WARRIOR: carry set if the character (sheet ES:BX) has the preserver class and a warrior
+; class among its classes (SL's CLASS_AND_WARRIOR with AL the preserver). All kept.
+preserver_warrior:
+        push ax
+        push cx
+        push si
+        xor cx, cx                      ; CL the preserver found, CH a warrior
+        xor si, si
+.each:  mov al, [es:bx + si + SH_CLASSES]
+        cmp al, PRESERVER_CLASS
+        jne .war
+        mov cl, 1
+.war:   call warrior_al
+        jnc .next
+        mov ch, 1
+.next:  inc si
+        cmp si, 3
+        jb .each
+        and cl, ch
+        cmp cl, 1                       ; (CF set if CL < 1)
+        cmc
+        pop si
+        pop cx
+        pop ax
+        ret
 restrict_count dw 0             ; (items refused, skills and backstabs taken: for a look in play)
 
 ; CLASS_FORBIDS: carry set if the classes of the character whose sheet is at ES:BX keep it from
