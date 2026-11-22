@@ -93,7 +93,8 @@ HELPER_EXE = "DSCLOG2.EXE"
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
-                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES)
+                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
+                | game.RULE_CON)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -390,6 +391,11 @@ PATCHES: Tuple[Patch, ...] = (
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
     Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
+    # CON as in AD&D (SL's regen_rate, con_save; game.RULE_CON): regeneration's rate (26599h, "mov dx,cx /
+    # imul dx,dx,31h" after its "div ebx", SL's 228BFh) and CON's save adjustment (1D36Bh, "mov bx,ax /
+    # mov al,[bx+880h]", SL's 5EAA1h): DSCLOG2's REGEN_SITE and CON_SAVE
+    Patch("regen_rate", 0x26599, bytes.fromhex("8bd16bd231"), _site(35, 5)),
+    Patch("con_save", 0x1D36B, bytes.fromhex("8bd88a878008"), _site(36, 6)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

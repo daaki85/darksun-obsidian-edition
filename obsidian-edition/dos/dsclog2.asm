@@ -2873,6 +2873,8 @@ site_table:
         dw xp_need                          ; 32 SITE_XP_NEED
         dw priest_thac0                     ; 33 SITE_PRIEST_THAC0
         dw adnd_slots                       ; 34 SITE_ADND_SLOTS
+        dw regen_site                       ; 35 SITE_REGEN
+        dw con_save                         ; 36 SITE_CON_SAVE
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5547,6 +5549,95 @@ rav_slots:
         db 5, 5, 5, 5, 5, 3, 3, 2, 1
         db 5, 5, 5, 5, 5, 3, 3, 3, 1
         db 5, 5, 5, 5, 5, 4, 3, 3, 2    ; 20
+; CON AS IN AD&D: DSCLOG's REGEN_SITE and CON_SAVE (RULE_HI_CON, the second rules word's 1024), the
+; sequel's routines SL's:
+; - REGEN_SITE (site 35, "regen_rate"): "mov dx,cx / imul dx,dx,31h" (26599h; 5 bytes, SL's 228BFh)
+;   in the regeneration routine (264BFh, SL's 227E5h: once more than 300 seconds of game time have
+;   passed since the last, DS:19B8h; a hit point for each 300 to a member with CON 20 or more, what is
+;   left over dropped), after its "div ebx" (EAX the 300s, EDX the rest; CX the member). With the
+;   rule the seconds added to the member's own (REGEN_SECS, the rest kept for next time) and AX the
+;   hit points from them, one for each (26 - CON) x 600 seconds (AD&D's one an hour at CON 20 to one
+;   every 10 minutes at 25), at most 1000; a clock gone back (a game loaded) none.
+; - CON_SAVE (site 36, "con_save"): "mov bx,ax / mov al,[bx+880h]" (1D36Bh; 6 bytes, SL's 5EAA1h) in
+;   CON's save adjustment (1D35Bh, DS:880h by CON: +1 at 19 to +4 at 25), which the save modifiers
+;   (83A81h) and the poison check (8E092h) add to a dwarf's or halfling's CON x 2 / 7. With the rule
+;   0 for a dwarf or a halfling (the sheet's race +12h 2 or 6: the racial bonus alone); else the
+;   table's. [BP+6] the thing (a combatant).
+RULE_HI_CON equ 1024
+regen_secs dd 0, 0, 0, 0
+regen_count dw 0                        ; (hit points so given, for a look in play)
+regen_site:
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .game
+        push ebx
+        push si
+        push es
+        imul eax, eax, 300
+        add eax, edx                    ; (the seconds since the last)
+        mov si, cx
+        shl si, 2
+        add eax, [cs:regen_secs + si]
+        js .back
+        les bx, [CREATURES_PTR]
+        imul dx, cx, CREATURE_SIZE
+        add bx, dx
+        movzx ebx, byte [es:bx + 0x1B]  ; (CON)
+        cmp bl, 25
+        jbe .con
+        mov bl, 25
+.con:   neg ebx
+        add ebx, 26
+        imul ebx, ebx, 600              ; (the seconds a hit point)
+        xor edx, edx
+        div ebx
+        mov [cs:regen_secs + si], edx
+        cmp eax, 1000
+        jbe .out
+        mov eax, 1000
+        jmp .out
+.back:  xor eax, eax
+        mov [cs:regen_secs + si], eax
+.out:   add [cs:regen_count], ax
+        pop es
+        pop si
+        pop ebx
+.game:  mov dx, cx
+        imul dx, dx, CREATURE_SIZE
+        iret
+DWARF_RACE    equ 2
+HALFLING_RACE equ 6
+con_save_count dw 0                     ; (dwarves' and halflings' adjustments taken, for a look in play)
+con_save:
+        mov bx, ax
+        mov al, [bx + 0x880]
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .out
+        push ax
+        mov ax, [bp + 6]
+        call fighter_creature
+        jc .keep
+        push es
+        les bx, [CREATURES_PTR]         ; (its sheet: the creature's +4)
+        imul ax, ax, CREATURE_SIZE
+        add bx, ax
+        mov ax, [es:bx + 4]
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        mov bl, [es:bx + 0x12]          ; (the race)
+        pop es
+        pop ax
+        cmp bl, DWARF_RACE
+        je .none
+        cmp bl, HALFLING_RACE
+        jne .out
+.none:  or al, al
+        jz .out
+        xor al, al
+        inc word [cs:con_save_count]
+        jmp .out
+.keep:  pop ax
+.out:   iret
 manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

@@ -1044,6 +1044,11 @@ and `rest-no-call-user`: all transferred, the kits kept.
   it is the one that talks to Reyhan and rests at the ring; after Reyhan's "Goodbye." and Space one more
   right-click gives the arrow. The second doorway's steps were at game (253, 90), then (253, 118) to step
   through, the ring at (267, 121) after Up 6.
+- **Regeneration and poison saves in the sequel** (logs/2026-11-22-ravager-con.md): regeneration runs
+  outside a fight once the clock is 300 s past DS:19B8h (a dword): put that back 3600 s and it runs at
+  once (a member needs CON 20 or more). A save that takes CON's adjustment is the paralysis/poison/death
+  save (kind 1): Stinking Cloud's (spell 22, `ravknow.py 22`, USE level 2, the third icon at 213, 60), not
+  Hold Person's (the spell save). A foe made a dwarf: its sheet's +12h 2 (the kind's sheet, shared).
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
   fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
   (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a

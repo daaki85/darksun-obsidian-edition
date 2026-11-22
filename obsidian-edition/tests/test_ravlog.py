@@ -182,6 +182,10 @@ class WindowTests(unittest.TestCase):
         data.rules = 0
         self.assertIsNone(data.adnd_slots(11, 16, 1))
 
+    def test_con_ported(self):
+        """CON as in AD&D: the rule's bit passed to DSCLOG2 (REGEN_SITE, CON_SAVE)."""
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_CON, game.RULE_CON)
+
     def test_class_magic_served(self):
         view = ravlog.ReadOnlyGuest(FakeGuest())
         magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)

@@ -341,6 +341,13 @@ same. Verified in play (no log kept). The saves
 are checked by the emulator (`test_dwarves_poison_saves`): the party has no
 dwarf or halfling.
 
+In Wake of the Ravager (`RULE_CON` in `RULES_PORTED`) both routines are SL's: regeneration at 264BFh
+(the last time DS:19B8h, the creatures' +1Bh CON, 31h bytes a creature) and CON's save adjustment at
+1D35Bh (DS:880h by CON), added with a dwarf's or halfling's CON x 2 / 7 by the save modifiers (83A81h)
+and a poison check (8E092h). DSCLOG2's `REGEN_SITE` (site 35, `regen_rate`, 26599h) and `CON_SAVE`
+(site 36, `con_save`, 1D36Bh; the race the sheet's +12h through the creature's +4) do what DSCLOG's do,
+each with the rule. The dice log's save modifiers drop the CON adjustment only with the rule.
+
 ## Dual-classing as the manual has it
 
 ([In the features page](FEATURES.md#dual-classing-as-the-manual-has-it).)

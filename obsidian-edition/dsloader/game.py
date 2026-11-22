@@ -1776,7 +1776,7 @@ class GameData:
             if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 out.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
             adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
-            if sheet[SHEET_RACE] in (DWARF, HALFLING):
+            if sheet[SHEET_RACE] in (DWARF, HALFLING) and self.rules & RULE_CON:
                 adjust = 0  # (only the racial bonus: DSCLOG's CON_SAVE)
             if adjust:
                 out.append((adjust, f"CON {con}"))
@@ -2259,7 +2259,7 @@ class GameData:
                 if sheet[SHEET_RACE] in (DWARF, HALFLING):
                     parts.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
                 adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
-                if sheet[SHEET_RACE] in (DWARF, HALFLING):
+                if sheet[SHEET_RACE] in (DWARF, HALFLING) and self.rules & RULE_CON:
                     adjust = 0
                 if adjust:
                     parts.append((adjust, f"CON {con}"))
