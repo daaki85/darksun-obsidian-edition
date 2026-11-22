@@ -39,6 +39,8 @@ RESOURCE_FILE = "RESOURCE.GFF"
 RESOURCE_COPY = "RESOURC2.GFF"  # (the copy's name in the mod's dos folder: SL's own copy is RESOURCE.GFF there)
 SCRIPT_FILE = "GPLDATA.GFF"
 SCRIPT_COPY = "GPLDAT2.GFF"  # (likewise: the helper opens it for GPLDATA.GFF)
+OBJECTS_FILE = "OBJEX.GFF"
+OBJECTS_COPY = "OBJEX2.GFF"  # (likewise: the helper opens it for OBJEX.GFF)
 ARGS = "-W0 -L"  # (as GOG's RAVAGER.BAT starts it)
 CD_DRIVE = "f"  # (the game finds its CD through MSCDEX, whatever the letter: D: stays the mod's dos
 # folder, as for Shattered Lands, where GAMEEND.COM and the helper look)
@@ -659,6 +661,52 @@ def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
     return done
 
 
+# The item types: OBJEX.GFF's ALL 4, the sequel's 102 types (15 bytes each: ravlog.TYPE_FIELDS), read into
+# memory at the chunk's own length (a copy with 3 more had 105 there, the item names' block after them,
+# 2026-11-22: playtest/logs/2026-11-22-ravager-item-types.md). The copy adds the mod's 33 (Shattered Lands'
+# 115-147, npcitems.TYPES, DSCLOG's EXTRA_TYPES) after them, as MOD_TYPES on: the party transfer's items
+# of those types take 102 on (mod_type).
+TYPES_CHUNK = ("ALL ", 4)
+TYPE_SIZE = 15
+GAME_TYPES = 102
+
+
+def wotr_type(sl: bytes) -> bytes:
+    """A Shattered Lands item type (20 bytes) in the sequel's layout: its words at +2, +4 and +6 as
+    bytes (none of the mod's is over 255), +8 to +12h one for one, its last byte gone."""
+    out = bytearray(TYPE_SIZE)
+    for at, to in ((0, 0), (2, 1), (4, 2), (6, 3)):
+        word, = struct.unpack_from("<H", sl, at)
+        if word > 0xFF:
+            raise RavagerError(f"an item type's word {word} at +{at:X}h doesn't fit the sequel's byte")
+        out[to] = word
+    out[4:TYPE_SIZE] = sl[8:8 + TYPE_SIZE - 4]
+    return bytes(out)
+
+
+def mod_type(sl_type: int) -> int:
+    """The sequel's number for the mod's Shattered Lands item type SL_TYPE (115 on)."""
+    return GAME_TYPES + sl_type - game.GAME_TYPES
+
+
+def objects_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+    """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP)."""
+    from . import icons, npcitems
+    chunks = gff.read_gff(data)
+    types = chunks.get(TYPES_CHUNK)
+    if types is None or len(types) != GAME_TYPES * TYPE_SIZE:
+        raise RavagerError(f"{OBJECTS_FILE}'s item types are not the GOG release's")
+    if "mod_types" in skip:
+        return data, []
+    added = b"".join(wotr_type(t) for t in npcitems.TYPES)
+    return icons.with_chunks(data, {TYPES_CHUNK: types + added}), ["mod_types"]
+
+
+def write_objects(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
+    """OBJEX.GFF's copy with the mod's item types, written to DEST unless already so."""
+    return _write_copy(game_dir, OBJECTS_FILE, dest, objects_fixed, skip)
+
+
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
     """GPLDATA.GFF's copy with the script fixes, written to DEST unless already so; the fixes applied."""
     return _write_copy(game_dir, SCRIPT_FILE, dest, script_fixed, skip)
@@ -675,13 +723,14 @@ def skipped(settings: dict) -> frozenset:
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict) -> Optional[str]:
-    """Write DSUNLOG2.EXE and the RESOURCE.GFF and GPLDATA.GFF copies into DOS_DIR. Returns why the game can't be
+    """Write DSUNLOG2.EXE and the RESOURCE.GFF, GPLDATA.GFF and OBJEX.GFF copies into DOS_DIR. Returns why the game can't be
     patched, or None."""
     skip = skipped(settings)
     try:
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
         write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
+        write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
         return str(e)
     return None

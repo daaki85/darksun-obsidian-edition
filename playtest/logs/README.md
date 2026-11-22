@@ -131,6 +131,8 @@ schedules and diffs a log made or used.
 | [2026-11-20](2026-11-20-paralyzed-ends-oddity.md) | The real-pin play's "Paralyzed ends on Templar": Rainbow Pattern caught the held Templar and the game put its timed hold in place of the untimed one (an effect already on a creature is replaced); the dice log said nothing then, or an end beside another caster's hold: fixed (`..., in place of the one it had`) and shown with Hold Person and Rainbow Pattern; a whole party held makes the game jump to the next event (not so: [the next play](2026-11-20-round-one-oddity.md)) |
 | [2026-11-20](2026-11-20-round-one-oddity.md) | The `Round 1` of about 50 combatants, most `?`, at the whole party's hold: the game plays round after round in a blink with no one able to act (no jump, nothing reset), and the dice log put several rounds' initiative under one heading and took it for a new fight; fixed (`Rounds 4-5 go by at once: no one in the fight can act`, then the last round's order and number) and shown in two plays |
 | [2026-11-20](2026-11-20-open-prs-checks.md) | Pull requests #136, #140 and #141 played together (all seven open ones merged locally): bulk loot fine to full packs; rounds counted right, but a long burst of skipped rounds that overran the ring was undercounted (`Rounds 232-383` for 4-383); a Haste recast reported `in place of`, with no ageing |
+| [2026-11-22](2026-11-22-ravager-transfer-format.md) | The party transfer to Wake of the Ravager: SSI's CHARTRAN read and redone in Python, byte for byte on every SL save in the kit |
+| [2026-11-22](2026-11-22-ravager-item-types.md) | The mod's 33 item types in the sequel's type table (OBJEX.GFF's ALL 4, read at its length): an obsidian short sword's type seen in the item box, with a control |
 
 ## files/
 

@@ -979,6 +979,11 @@ a floor; and 95CCEh, a level lost (the XP set lower, the rolls taken off). The m
 +0Ah: 95193h (SL's 874B0h), which the sequel calls only in the level-up (957E0h): creation's fix,
 logs/2026-11-21-ravager-creation-hp.md.
 
+**Its item types are OBJEX.GFF's ALL 4** (2026-11-22, logs/2026-11-22-ravager-item-types.md): 102 types,
+read into memory at the chunk's own length, so a longer chunk adds types (the Loader's OBJEX2.GFF adds the
+mod's 33 as 102-134). A test edit of an item's type (the word at item +0Ah, items from DS:19C1h) shows in
+the item box at once (material and dice).
+
 **Its item types and helms** (2026-11-21, logs/2026-11-21-ravager-helms.md): the types' table at DS:19CDh,
 15 bytes a type (AC +0Eh, 80h at +0Bh counts for AC, slot +05h); the items' types and names can be listed
 from OBJEX.GFF's RDFF records (kind 1, 17h bytes, as in memory) without a save that has them. Helms: type

@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, gamepatch, gff, launch, ravager  # noqa: E402
+from dsloader import game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -168,6 +168,26 @@ class TableTests(unittest.TestCase):
             launch._launch_wotr = real
 
 
+class ItemTypeTests(unittest.TestCase):
+    def test_wotr_type(self):
+        """The mod's metal short sword (SL 115) in the sequel's 15 bytes: the words as bytes, the rest moved up."""
+        self.assertEqual(ravager.wotr_type(npcitems.TYPES[0]).hex(), "01301efa040501010601000072160001"[:30])
+        self.assertEqual(ravager.mod_type(game.SHORT_SWORD_TYPE), 102)
+        with self.assertRaises(ravager.RavagerError):
+            ravager.wotr_type(bytes(2) + struct.pack("<H", 300) + bytes(16))
+
+    def test_objects_fixed(self):
+        from test_ravtransfer import _gff
+        data = _gff({("ALL ", 4): bytes(range(102)) * 15, ("ALL ", 5): b"names", ("OJFF", 1): b"o" * 16})
+        out, done = ravager.objects_fixed(data)
+        got = gff.read_gff(out)
+        self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], 135, b"names"))
+        self.assertEqual(got[("ALL ", 4)][102 * 15:103 * 15], ravager.wotr_type(npcitems.TYPES[0]))
+        self.assertEqual(ravager.objects_fixed(data, {"mod_types"}), (data, []))
+        with self.assertRaises(ravager.RavagerError):
+            ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
+
+
 class LayoutTests(unittest.TestCase):
     def test_fields_checked_in_memory(self):
         """The fields read from Gerakis's records in a running game (2026-11-19)."""
@@ -230,6 +250,12 @@ class GameFileTests(unittest.TestCase):
                 self.assertEqual(gpl[at:at + len(replacement)], replacement)
                 wanted += [at + i for i in range(len(original)) if original[i] != replacement[i]]
             self.assertEqual((len(gpl), differ), (len(own), sorted(wanted)))
+            objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
+            own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
+            types = objs[ravager.TYPES_CHUNK]
+            self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], own[ravager.TYPES_CHUNK])
+            self.assertEqual(len(types), (ravager.GAME_TYPES + len(npcitems.TYPES)) * ravager.TYPE_SIZE)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK})  # (GFFI: the index)
 
     def test_effects_kept_switch(self):
         """Spells kept on the Effects screen: SL's two patches by name, left out with the switch off."""

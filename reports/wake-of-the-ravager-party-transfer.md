@@ -35,11 +35,12 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
 
 ## How the items come across
 
-1. **The mod's item types go into the sequel's type table.** DSCLOG adds the mod's types after SL's
-   115 in Shattered Lands. DSCLOG2 will do the same after the sequel's types, about 117 of them,
-   converted to its 15-byte records (the field map is `ravlog.TYPE_FIELDS`). The table sits in the
-   program's data at DS:19CDh. So step one is to find each read of the table and check whether there
-   is room after it, or whether DSCLOG2 has to move it.
+1. **The mod's item types go into the sequel's type table. Done** (2026-11-22,
+   playtest/logs/2026-11-22-ravager-item-types.md). The table turned out to be data: OBJEX.GFF's chunk
+   ALL 4, 102 types, read into memory at the chunk's own length. The Loader's copy (D:\OBJEX2.GFF,
+   opened by DSCLOG2 in place of OBJEX.GFF) has the mod's 33 types after them as 102-134, converted to
+   15 bytes (`ravager.objects_fixed`). Seen in the game: an item given type 107 shows as an obsidian
+   1d6 blade, and the control as the metal 1d8 longsword it was.
 2. **Each mod item gets a sequel object.** It goes in the Loader's copy of OBJEX.GFF, in the free ids
    14000-29999:
    - its RDFF item record is built from SL's, with the type, plus, power and name;
@@ -82,8 +83,8 @@ items once they have types.
 
 ## The build, in order
 
-1. The type table: find its reads and its room, then add the mod's types (group A's base). Test: a
-   transferred Short Sword in a fight, with its dice in the dice log.
+1. The type table: done (above). Still to see: a transferred Short Sword in a fight, with its dice
+   in the dice log.
 2. The objects, names and icons in the Loader's OBJEX and RESOURCE copies. The transfer maps to them.
    Keepsakes, bags, scrolls and spell-made weapons are handled as above.
 3. Roster slots, aging, the Loader's button ("Take the party to Wake of the Ravager": pick an SL save,
