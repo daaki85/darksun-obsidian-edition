@@ -27,7 +27,7 @@ What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35
 """
 
 import struct
-from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
 from . import dataitems, game
 from .gff import Chunks, GffError
@@ -49,7 +49,7 @@ CREATURE, SHEET, ITEM = 0x31, 0x42, 0x17
 CREATURES, SHEETS, ITEMS, LISTS, SPELLS, POWERS = 5, 6, 7, 3, 19, 20
 SL_SPELLS, SL_POWERS = 138, 34
 SL_NAME, SL_SHEET_INDEX, SL_ACTIONS, SL_LISTS = 0x28, 0x04, 0x06, ((0x08, 16), (0x0A, 17), (0x0C, 4))
-ITEM_NEXT, ITEM_CONTENTS = 0x04, 0x08
+ITEM_NEXT, ITEM_CONTENTS, SL_ITEM_NAME = 0x04, 0x08, 0x12
 BAG_FLAGS, NEXT_FLAGS = 4, 2
 CREATURE_KIND, SHEET_KIND, SHEET_FLAGS = 2, 3, 15
 
@@ -252,6 +252,7 @@ class Moved(NamedTuple):
     items: List[Tuple[int, int]]  # (SL's object, the sequel's)
     place: int = 0  # (its roster CHAR)
     age: str = ""  # (what the months between the games did, for the report)
+    named: Optional[Dict[int, int]] = None  # (each SL object's name entry, its item record's +12h)
 
 
 def _chunk(save: Chunks, number: int) -> bytes:
@@ -369,6 +370,7 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
             cre, wsh, age = aged(cre, bytes(wsh), name, (years or {}).get(m, 0))
         records = [[1, 0, CREATURE_KIND, m, m, cre], [3, 0, SHEET_KIND, m, SHEET_FLAGS, wsh]]
         log: List[Tuple[int, int]] = []
+        named: Dict[int, int] = {}
         bags: List[Tuple[int, int]] = []
         seen = set()
 
@@ -382,6 +384,7 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
                     raise GffError(f"the save's item list {lst} is broken at item {number}")
                 seen.add(number)
                 it = items[number * SL_ITEM:(number + 1) * SL_ITEM]
+                named.setdefault(sl_object(it), struct.unpack_from("<H", it, SL_ITEM_NAME)[0])
                 if sequel.loader and struct.unpack_from("<H", it, SL_TYPE)[0] in SPELL_MADE:
                     log.append((sl_object(it), LEFT))
                     number, = struct.unpack_from("<H", it, ITEM_NEXT)
@@ -416,7 +419,7 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
         out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
-        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age))
+        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age, named))
     return out, moved
 
 
@@ -530,14 +533,15 @@ def _gff_file(chunks: Chunks) -> bytes:
 
 
 def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
-               dos_dir: Optional[str] = None, months: Optional[int] = None, rng=None) -> List[Moved]:
+               dos_dir: Optional[str] = None, months: Optional[int] = None,
+               rng=None) -> Tuple[List[Moved], List[Tuple[int, str]]]:
     """The party of the Shattered Lands save SAVE_PATH written into the roster in the sequel's
     FOLDER (CHARSAVE.GFF, kept first as CHARSAVE.GFF.BAK when there is none yet). With SL_DIR (the
     Shattered Lands folder) and DOS_DIR (the mod's dos folder), the items the sequel lacks become the
     Loader's own objects (with_added) instead of money bags, and the party takes free places in the
     roster (places) instead of 32-35, its ages with it; with MONTHS (roll_gap: the age rule on) each
-    member a year older with a chance of MONTHS in 12 (RNG). The save is only read. What moved is
-    returned for the report."""
+    member a year older with a chance of MONTHS in 12 (RNG). The save is only read. What moved, and
+    the items that couldn't be made (each SL object and why), are returned for the report."""
     import os
     import shutil
     from . import icons
@@ -550,10 +554,11 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
         data = f.read()
     current = read_gff(data)  # (a roster the game can read, before anything is written)
     place_of = years = None
+    failed: List[Tuple[int, str]] = []
     if sl_dir and dos_dir:
         import random
         place_of = places(save, current)
-        sequel, _ = with_added(save, sequel, sl_dir, folder, dos_dir)
+        sequel, failed = with_added(save, sequel, sl_dir, folder, dos_dir)
         if months:
             years = gap_years(party_names(save), months, rng or random.Random())
     new, moved = roster(save, sequel, place_of, years)
@@ -561,7 +566,7 @@ def take_party(save_path: str, folder: str, sl_dir: Optional[str] = None,
     if not os.path.exists(backup):
         shutil.copyfile(path, backup)
     write_atomic(path, icons.with_chunks(data, new))
-    return moved
+    return moved, failed
 
 
 def report(moved: List[Moved], months: Optional[int] = None) -> str:
@@ -580,9 +585,56 @@ def report(moved: List[Moved], months: Optional[int] = None) -> str:
     return "\n".join(lines)
 
 
+def player_report(moved: List[Moved], months: Optional[int], failed: List[Tuple[int, str]],
+                  item_name: Callable[[int], str]) -> str:
+    """The report the Loader shows after a transfer: the months, each member's roster place and age,
+    and its items by name, what came across as the sequel's own, as the Loader's, left behind or a
+    money bag (ITEM_NAME: an SL name entry's text)."""
+    from .ravitems import OWN_HIGH
+    lines = [f"{months} months have passed since Shattered Lands." if months else "",
+             "Start Wake of the Ravager from the Loader: the items made for it are in the Loader's copy of "
+             "its files, and the sequel started by itself shows them as money bags.", ""]
+    why = dict(failed)
+    for m in moved:
+        lines.append(f"{m.name}: place {m.place - ROSTER_PLACES[0] + 1} of the roster (CREATE CHARACTERS, ADD)"
+                     + (f"; {m.age}" if m.age else ""))
+        kinds: Dict[str, List[str]] = {}
+        for old, new in m.items:
+            name = item_name((m.named or {}).get(old, 0)) or f"object {old}"
+            kind = ("left behind (a spell made it, and the spell is over)" if new == LEFT
+                    else f"a money bag ({why.get(old, 'no object for it')})" if new == MONEY_BAG
+                    else "made for the sequel by the Loader" if OWN_HIGH <= new < 30000
+                    else "the sequel's own")
+            kinds.setdefault(kind, []).append(name)
+        for kind, names in kinds.items():
+            counted = {n: names.count(n) for n in names}
+            lines.append(f"  {kind}: " + ", ".join(n if k == 1 else f"{n} ({k})" for n, k in counted.items()))
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
+def transfer(save_path: str, folder: str, sl_dir: str, dos_dir: str, rng=None) -> str:
+    """The Loader's button: the party of SAVE_PATH into the sequel in FOLDER, the Loader's way (its
+    items made, free roster places, the months rolled and the ages with them), and the report."""
+    import os
+    import random
+    from . import ravitems
+    from .gff import read_gff
+    rng = rng or random.Random()
+    months = roll_gap(rng)
+    moved, failed = take_party(save_path, folder, sl_dir, dos_dir, months, rng)
+    with open(os.path.join(sl_dir, "GPLDATA.GFF"), "rb") as f:
+        gpl = read_gff(f.read())
+    names = ravitems.Names(next(v for k, v in sorted(gpl.items()) if k[0] == "NAME"), b"")
+    return player_report(moved, months, failed, lambda e: names.sl_name(e).decode("latin1"))
+
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) not in (3, 5, 6):
         sys.exit("usage: python -m dsloader.ravtransfer SAVEnn.SAV RAVAGER_FOLDER [SL_FOLDER DOS_FOLDER [MONTHS]]")
     gap = int(sys.argv[5]) if len(sys.argv) == 6 else None
-    print(report(take_party(*sys.argv[1:5], months=gap), gap))
+    moved, failed = take_party(*sys.argv[1:5], months=gap)
+    print(report(moved, gap))
+    for obj, why in failed:
+        print(f"object {obj} couldn't be made: {why}")

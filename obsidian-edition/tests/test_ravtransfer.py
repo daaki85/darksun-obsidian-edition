@@ -286,6 +286,20 @@ class AgeTests(unittest.TestCase):
         self.assertEqual(dataitems.records(out[("CHAR", 35)])[0][1].data[rt.WOTR_SHEET_AGE], 0)  # (CHARTRAN's)
 
 
+class PlayerReportTests(unittest.TestCase):
+    def test_report(self):
+        moved = [rt.Moved(0, "Lex", [(1010, 704), (2419, 22419), (1123, rt.LEFT), (2431, 900), (1010, 704)], 35,
+                          "a year older: 24", {1010: 1, 2419: 2, 1123: 3, 2431: 4})]
+        names = {1: "Long Sword", 2: "Short Sword", 3: "Shillelagh", 4: "Ring"}
+        text = rt.player_report(moved, 7, [(2431, "no picture")], names.get)
+        self.assertIn("7 months have passed", text)
+        self.assertIn("Lex: place 4 of the roster (CREATE CHARACTERS, ADD); a year older: 24", text)
+        self.assertIn("  the sequel's own: Long Sword (2)", text)
+        self.assertIn("  made for the sequel by the Loader: Short Sword", text)
+        self.assertIn("  left behind (a spell made it, and the spell is over): Shillelagh", text)
+        self.assertIn("  a money bag (no picture): Ring", text)
+
+
 class FileTests(unittest.TestCase):
     def test_take_party_keeps_the_rest(self):
         with tempfile.TemporaryDirectory() as d:
@@ -301,7 +315,7 @@ class FileTests(unittest.TestCase):
             save = os.path.join(d, "SAVE01.SAV")
             with open(save, "wb") as f:
                 f.write(_gff(made_save()))
-            moved = rt.take_party(save, d)
+            moved, failed = rt.take_party(save, d)
             got = gff.read_gff(open(os.path.join(d, "CHARSAVE.GFF"), "rb").read())
             self.assertEqual((got[("CHAR", 40)], got[("PREF", 100)]), (b"other", b"p"))
             self.assertIn(("CHAR", 35), got)

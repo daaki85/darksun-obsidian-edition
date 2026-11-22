@@ -101,7 +101,10 @@ items once they have types.
    Shocking Arrows, Ring of Protection +1, Bone Short Sword and Pot of Water in a transferred fighter's
    inventory, money bags in the control). Scrolls keep their spell; spell-made weapons are left behind.
 3. Roster slots, aging, the Loader's button ("Take the party to Wake of the Ravager": pick an SL save,
-   then a report of every item and what it became).
+   then a report of every item and what it became). **Done** (2026-11-22): the button is on the Options
+   tab's Wake of the Ravager section (`viewer.take_party_to_wotr`, `ravtransfer.transfer`); the report
+   names each member's roster place, age and items by kind (the sequel's own, made by the Loader, left
+   behind, a money bag and why). The player's docs come with step 5.
 4. Groups B to G, one feature at a time, each played in the sequel with a control run (the rules' way:
    PLAYTESTING.md, ravhold.sh).
 5. A play from an SL save to the sequel's party screen with the transferred party, and the docs and

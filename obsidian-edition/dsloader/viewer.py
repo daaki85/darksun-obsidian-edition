@@ -561,6 +561,15 @@ class Viewer:
         found.pack(anchor="w")
         ravager.bind("<Configure>", lambda e: found.configure(wraplength=max(200, e.width - 20)), add="+")
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
+        # the party into the sequel (ravtransfer.transfer): every item, the ages and the months between
+        about_party = ttk.Label(ravager, text="Take a saved party into Wake of the Ravager's roster, every item with it "
+                                "(the ones the sequel hasn't made by the Loader), its ages too, and the months "
+                                "between the games. Then start the sequel from the Loader and ADD them on CREATE "
+                                "CHARACTERS.", style="Status.TLabel", wraplength=460, justify="left")
+        about_party.pack(anchor="w", pady=(8, 0))
+        ravager.bind("<Configure>", lambda e: about_party.configure(wraplength=max(200, e.width - 20)), add="+")
+        ttk.Button(ravager, text="Take the party to Wake of the Ravager...",
+                   command=self.take_party_to_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
         # F5, F9 and the saves the game makes by itself, on the save window's QUICK page (quicksave.py)
@@ -605,6 +614,46 @@ class Viewer:
             return
         self._save_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " From the next start.")
+
+    def take_party_to_wotr(self) -> None:
+        """A Shattered Lands save's party into Wake of the Ravager's roster (ravtransfer.transfer),
+        after asking, and the report in a window of its own."""
+        from . import ravager, ravtransfer, wotrart
+        title = "Take the party to Wake of the Ravager"
+        sl_dir = self._saves_game_dir()
+        if sl_dir is None:
+            return
+        found = wotrart.find_resources(sl_dir)
+        wotr_dir = os.path.dirname(found) if found else None
+        if not ravager.is_wotr_dir(wotr_dir):
+            messagebox.showinfo(title, "The Loader hasn't found Wake of the Ravager (GOG's release): choose its "
+                                "folder above first.", parent=self.root)
+            return
+        start = namedsaves.NAMED if os.path.isdir(namedsaves.NAMED) else sl_dir
+        save = filedialog.askopenfilename(parent=self.root, title="Whose party? (a Shattered Lands save)",
+                                          initialdir=start, filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
+        if not save:
+            return
+        if not messagebox.askyesno(title, f"Put the party of {os.path.basename(save)} into Wake of the Ravager's "
+                                   f"roster ({wotr_dir})? The save itself isn't changed. The roster is kept "
+                                   "first as CHARSAVE.GFF.BAK (the first time); the party takes free places, or "
+                                   "its own from an earlier transfer.", parent=self.root):
+            return
+        try:
+            text = ravtransfer.transfer(save, wotr_dir, sl_dir, launch.DOS_DIR)
+        except (OSError, ravtransfer.GffError, StopIteration, KeyError) as e:
+            messagebox.showerror(title, f"The party couldn't be taken across: {e}", parent=self.root)
+            return
+        window = tk.Toplevel(self.root)
+        window.title(title)
+        box = tk.Text(window, wrap="word", height=24, width=90, font="TkTextFont")
+        bar = ttk.Scrollbar(window, command=box.yview)
+        box.configure(yscrollcommand=bar.set)
+        bar.pack(side="right", fill="y")
+        box.pack(side="left", fill="both", expand=True)
+        box.insert("1.0", text)
+        box.configure(state="disabled")
+        self.status.set("The party is in Wake of the Ravager's roster.")
 
     def _saves_game_dir(self) -> Optional[str]:
         game_dir = self._game_dir or launch.find_game_dir()
