@@ -29,4 +29,15 @@ DUAL (70, 98); EXIT (219, 146).
   place (the manual's third level).
 - Water: nothing new.
 
+## The View Character menu's test (ravager-after-ambush, about 21:45 UTC)
+
+DUAL_LEVEL's second place (7948Bh): the portrait menu of the View Character screen (the inventory's bar,
+VIEW CHARACTER at game 170, 185; a right-click on Terrannus's portrait, 120, 56). Test edits, nothing
+saved: Terrannus a human cleric (classes 2, class bits 0002h, dualset.py's scores), his level written.
+
+- **2nd level, the rule on** (rules_hi FF2Eh): EDIT NAME / DROP / **CANCEL**.
+- **Control, the rule off** (F72Eh): EDIT NAME / DROP / **DUAL** (and DUAL opens the window).
+- **3rd level, the rule on**: **DUAL**.
+- Water: nothing new.
+
 Result: dual-classing as the manual has it works in the sequel as in Shattered Lands.

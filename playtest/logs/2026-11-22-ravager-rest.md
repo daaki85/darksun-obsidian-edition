@@ -64,4 +64,15 @@ Thy'rokh's priest slots all 0, so no cure is left (Terrannus is dead in this sav
   left)" and 18 more, 5 PSP each, down to 3 PSP left, each "Cell Adjustment: 1d4 = N -> Gerakis healed
   N HP"; then the night (Gerakis 32 -> 83 at the rest's end, his CON 22 regeneration after it).
 - **Control** (rules_hi EF2Eh, RULE_HI_REST off): no casts; the game's own rest, everyone to full HP.
+
+**When it stops** (two more runs, about 21:33-21:38 UTC; `t55`: the same rest with test edits for HP): the
+casts stop at the first of three ends, as SL's RP_PASS (the same loop, RP_MOST_CASTS 24 in both):
+nobody wounded once the night's natural healing is counted (RP_WORST), no psionicist with the power's
+5 PSP left, or 24 casts.
+- The first run above ended on PSP: 19 casts from 98 PSP, 3 left (under 5); Gerakis still short.
+- Ar'anda 1/48 and Gerakis 40 short: 19 casts again (on whichever was the most wounded: 12 on
+  Ar'anda, 7 on Gerakis), 3 PSP left: PSP again.
+- **Ar'anda and Thy'rokh at their most, Gerakis 40 short (125/165)**: 12 casts on Gerakis, 33 HP, then
+  none with **38 PSP left**: his night's 9 (3, and 6 for CON 22) made up the rest, and he ended at
+  165/165. So the casts stop once nobody is wounded, and the psionicist keeps what she didn't need.
 - Water: nothing new.

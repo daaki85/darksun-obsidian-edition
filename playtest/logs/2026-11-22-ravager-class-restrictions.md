@@ -70,7 +70,7 @@ Test edits (DOSBox stopped after, nothing saved): DSCLOG2's rules word written f
 - The helper's count rose by 2 for every refused try: the screen asks once to light the slots it can
   take and once on the click.
 
-## A druid and the human dual-class cases (ravload.sh ravager-after-ambush, the Loader, the dice log on, about 21:45-22:05 UTC)
+## A druid and the human dual-class cases (ravload.sh ravager-after-ambush, the Loader, the dice log on, about 21:00-21:20 UTC)
 
 Test edits, DOSBox stopped after, nothing saved: Terrannus's (member 1, a human cleric of 7th level)
 classes (sheet +1Bh) and race (+12h) written for each case, his class bits (+10h, cleric) left so the
@@ -100,12 +100,49 @@ x / 2, y / 2.4; the shield at 65, 90.)
   the sequel keeps a dual-classed human, as DSCLOG2's CLASS_FORBIDS and DUAL_WARRIOR read it.
 - The helper's count rose 2 to 7 for a refused try (the screen asks for each slot it lights).
 
+## A ranger's bow and a human ex-warrior thief's skills (the same save, about 21:38-21:45 UTC)
+
+Test edits as above, DOSBox stopped after, nothing saved. **A ranger's bow**: Terrannus's shield and
+sword to the backpack (both hands free), the sword (item 8) made a bow (type 18: no material, missile);
+the bow from the backpack (213, 29) to the bow's own slot (65, 50: the top left one, which the game
+lights for a bow; a hand gives "ILLEGAL PLACEMENT"). His classes and levels written per case; a cleric of
+earth (class 2) may not use a bow (no material: not of his sphere), a ranger is let use its bow
+whatever its other classes say (RANGER_BOW), a human ranger only while a ranger or once his new class
+has passed his ranger level.
+
+| Case | Classes, levels, race | The rule on | Control, the rule off |
+|---|---|---|---|
+| An earth cleric | 2, 7, human | **refused** (the slot not lit) | worn |
+| An earth cleric, half-elf | 2, 7, half-elf | **refused** | |
+| A cleric/ranger (earth, multiclass) | 2 14, 7 7, half-elf | worn | |
+| A human cleric 7, once an earth ranger 5 | 2 14, 7 5, human | worn | |
+| A human cleric 3, once an earth ranger 7 | 2 14, 3 7, human | **refused** | worn |
+
+- With an air ranger (class 13) the last case wore it too: an air sphere lets a priest use missile
+  weapons, and SL's rule (restrict.spheres) counts every class's sphere, a human's earlier ones too.
+  So the earth ranger (14) is the one that shows the bow's own rule.
+
+**A human thief once a fighter, in brigandine** (classes 17 9, levels 7 7, human; class bits 0400h, the
+thief's alone, as the game's DUAL leaves them): `ravthief.py 1 --helper` (the thief skill routine run in
+an emulator through the patched site, as above).
+
+| | Pick | Locks | Traps | Silent | Hide | Climb | Read |
+|---|---|---|---|---|---|---|---|
+| The rule on, brigandine | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Control, the rule off, brigandine | 56 | 56 | 41 | 51 | 46 | 96 | 24 |
+| The rule on, his leather Armor | 56 | 56 | 41 | 51 | 46 | 96 | 24 |
+
+So he may wear it (above) but loses his skills in it, as SL's THIEF_HEAVY. Hear noise isn't in the
+table: for him the routine takes its own early exit (8C6C1h, `xor ax,ax`, after its test at 8C802h)
+before the rule's site, with the rule on or off (no INT F5h in the trace), and the emulator then runs
+past the routine's return, so the 94 it prints isn't the game's number (Ar'anda's hear noise, which
+goes through the site, was 0 in brigandine).
+
 ## Not played
 
 - A new character's starting gear (SL's weaponchoice.class_gear: the Loader's creation side isn't on the
-  sequel's creation screen yet), a ranger's bow, a human thief once a warrior keeping his skills at 0
-  in heavy armour (THIEF_HEAVY: the skills seen at 0 for a multiclass thief above), a human preserver
-  once a warrior casting in armour.
+  sequel's creation screen yet), a human preserver once a warrior casting in armour (CLASS_AND_WARRIOR:
+  the multiclass preserver's case above is the same test).
 
 ## Water
 

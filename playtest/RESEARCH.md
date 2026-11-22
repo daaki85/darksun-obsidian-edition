@@ -1136,6 +1136,20 @@ and `rest-no-call-user`: all transferred, the kits kept.
   how it went (9 the chest, 255 still on the pointer). A member's classes and race can be test-edited
   (sheet +1Bh, +12h) with his class bits (+10h) left, so that the game's own test passes and only the
   Loader's rule can refuse.
+  A bow goes in the slot at the top left (65, 50), which the game lights when the bow is picked up
+  (in a hand: "ILLEGAL PLACEMENT"). The inventory's bar, hovered: VIEW CHARACTER (170, 185), VIEW
+  INVENTORY (195, 185), CAST SPELL/USE PSIONIC (217, 185), CURRENT SPELL EFFECTS (242, 185), GAME MENU
+  (267, 187), RETURN TO GAME (302, 185). On the View Character screen a right-click on a portrait
+  ((70, 56), (120, 56), (70, 117), (120, 117)) gives the second portrait menu (EDIT NAME / DROP /
+  DUAL or CANCEL; its third line at (165, 81), so a click there on DUAL opens the window: EXIT 219, 146).
+  A priest's weapons: SL's rule counts every class's sphere (a human's earlier class too), so an air
+  ranger's sphere lets a cleric use a bow: test a ranger's bow with an earth ranger (class 14).
+- **`ravthief.py --helper` and hear noise**: for Terrannus the routine leaves early for hear noise
+  (8C6C1h, after its test at 8C802h), the rule's site never reached, and the emulator then runs on past
+  the routine's return: its number for that skill is no reading (94 here). Check the trace for an INT
+  F5h before trusting a skill's line.
+- **`ravload.sh` doesn't stop an older DOSBox**: two `ravload.sh` runs leave two (the tools take the
+  newest). Kill the old one by pid before a second load.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
   fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
   (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a
