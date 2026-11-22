@@ -2870,6 +2870,9 @@ site_table:
         dw rl_roll                          ; 29 SITE_RL_ROLL
         dw rl_con                           ; 30 SITE_RL_CON
         dw rl_sum                           ; 31 SITE_RL_SUM
+        dw xp_need                          ; 32 SITE_XP_NEED
+        dw priest_thac0                     ; 33 SITE_PRIEST_THAC0
+        dw adnd_slots                       ; 34 SITE_ADND_SLOTS
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5322,6 +5325,228 @@ rl_cs    dw 0
 rl_fl    dw 0
 rl_label db 'SUM:', 0
 rl_text  db '000/000', 0, 0
+; AD&D'S CLASS TABLES: DSCLOG's XP_NEED, PROBE_PRIEST_THAC0 and PROBE_ADND_SLOTS (RULE_HI_TABLES, the
+; second rules word's 8), the sequel's tables to 20th level (tables.RAV_*). The game's own: its XP
+; table (RESOURCE.GFF's DATA 1000, in hundreds) AD&D's but for the thief's, gladiator's and ranger's
+; 2nd levels (1,200 and 2,200), the druid's from 11th (the cleric's), the gladiator's 16th and up
+; (the fighter's) and the psionicist's 18th and 19th (1,400,000 and 1,700,000); priests' THAC0 2/3 a
+; level; its own slot rule.
+RULE_HI_TABLES equ 8
+;
+; XP_NEED (site 32, "xp_need_*"): "add sp,6 / imul eax,eax,64h" (7 bytes) after the game reads its XP
+; table (5C8:20, a far call: the resource 3E8h, the row, the index), at the eight places that do
+; (6C3E4h, 6C48Ah, 6C4CCh, 6FB8Bh, 958E3h, 95931h, 9597Ah, 95C84h): EAX the table's word, the three
+; arguments still at the INT's SP (the row 0-7: cleric, druid, fighter, gladiator, preserver,
+; psionicist, ranger, thief; the index the level, the next one's XP). EAX the game's x100, with the
+; rule AD&D's where it differs (XP_FIXES); the arguments taken off, as the ADD did (the INT's frame
+; moved up over them).
+xp_need:
+        push bp
+        mov bp, sp                      ; +2 the way back, +4 CS, +6 flags; +8 3E8h, +0Ah the row,
+        imul eax, eax, 100              ;   +0Ch the index
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .drop
+        push dx
+        push si
+        mov dl, [bp + 0x0A]
+        mov dh, [bp + 0x0C]
+        mov si, xp_fixes
+.next:  cmp byte [cs:si], 0xFF
+        je .done
+        cmp dx, [cs:si]
+        je .fix
+        add si, 6
+        jmp .next
+.fix:   mov eax, [cs:si + 2]
+        inc word [cs:xp_count]
+.done:  pop si
+        pop dx
+.drop:  push ax
+        mov ax, [bp + 6]
+        mov [bp + 0x0C], ax
+        mov ax, [bp + 4]
+        mov [bp + 0x0A], ax
+        mov ax, [bp + 2]
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        add sp, 6
+        iret
+%macro XP_FIX 3                         ; the row, the index, AD&D's XP
+        db %1, %2
+        dd %3
+%endmacro
+xp_fixes:
+        XP_FIX 1, 10, 200000            ; druid (Dark Sun's)
+        XP_FIX 1, 11, 300000
+        XP_FIX 1, 12, 750000
+        XP_FIX 1, 13, 1500000
+        XP_FIX 1, 14, 3000000
+        XP_FIX 1, 15, 3500000
+        XP_FIX 1, 16, 4000000
+        XP_FIX 1, 17, 4500000
+        XP_FIX 1, 18, 5000000
+        XP_FIX 1, 19, 5500000
+        XP_FIX 3, 1, 2250               ; gladiator (Dark Sun's)
+        XP_FIX 3, 15, 2400000
+        XP_FIX 3, 16, 2700000
+        XP_FIX 3, 17, 3000000
+        XP_FIX 3, 18, 3300000
+        XP_FIX 3, 19, 3600000
+        XP_FIX 5, 17, 2400000           ; psionicist
+        XP_FIX 5, 18, 2700000
+        XP_FIX 6, 1, 2250               ; ranger
+        XP_FIX 7, 1, 1250               ; thief
+        db 0xFF
+xp_count dw 0                           ; (AD&D's XP given, for a look in play)
+;
+; PRIEST_THAC0 (site 33, "priest_thac0"): "mov [bp-2],ax" (95391h; 3 bytes, SL's 876ABh) in the THAC0
+; routine (9534Ch), AX what a class group takes off 20 at its level ((level - 1) x the group's
+; factor / 12; CX the group 0-3: priest, warrior, wizard, rogue; the levels the bytes at [BP-0Ah] +
+; CX x 2). With the rule a priest's AD&D's, 2 for every 3 levels.
+priest_thac0:
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .done
+        or cx, cx
+        jnz .done
+        push bx
+        push dx
+        mov al, [bp - 0x0A]
+        cbw
+        dec ax
+        jns .some
+        xor ax, ax
+.some:  xor dx, dx
+        mov bx, 3
+        div bx
+        add ax, ax
+        pop dx
+        pop bx
+.done:  mov [bp - 2], ax
+        iret
+;
+; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
+; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
+; (the class in the low byte, a near pointer in SS to its level and WIS, the spell level), AX the
+; count from both (the level's rule and WIS's). With the rule, a cleric's, druid's or preserver's:
+; AD&D's for the level (RAV_SLOTS) and the game's for its WIS alone (the routine called with level
+; 0); the others', and all without the rule, the game's.
+SLOT_CALL   equ 0x62A10 - 0x62896       ; (the routine, from the INT's way back)
+SLOT_LEVELS equ 20                      ; (class levels in RAV_SLOTS; more are the 20th's)
+SLOT_SPELLS equ 9                       ; (spell levels in a row)
+adnd_slots:
+        push bp
+        mov bp, sp                      ; +2 the way back, +4 CS, +6 flags; +8 the class, +0Ah the
+        push bx                         ;   pointer, +0Ch the spell level
+        push cx
+        push si
+        mov si, [bp + 0x0A]
+        mov cx, [ss:si]                 ; (CL the level, CH WIS)
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .game
+        movzx bx, byte [bp + 8]
+        cmp bx, 11
+        je .wizard
+        cmp bx, 8
+        ja .game
+        or bx, bx
+        jz .game
+        xor bx, bx                      ; (a priest: the first table)
+        jmp .ours
+.wizard:
+        mov bx, SLOT_LEVELS * SLOT_SPELLS
+.ours:  mov byte [ss:si], 0             ; the game's for WIS alone
+        call .call
+        mov [ss:si], cl
+        push ax
+        movzx ax, cl                    ; and AD&D's for the level
+        cmp al, SLOT_LEVELS
+        jbe .lv
+        mov al, SLOT_LEVELS
+.lv:    dec ax
+        js .none
+        imul ax, ax, SLOT_SPELLS
+        add bx, ax
+        mov ax, [bp + 0x0C]
+        dec ax
+        cmp ax, SLOT_SPELLS
+        jae .none
+        add bx, ax
+        mov al, [cs:bx + rav_slots]
+        mov ah, 0
+        inc word [cs:slot_count]
+        jmp .sum
+.none:  xor ax, ax
+.sum:   pop bx
+        add ax, bx
+        jmp .out
+.game:  call .call
+.out:   pop si
+        pop cx
+        pop bx
+        pop bp
+        iret
+.call:  push bx                         ; (the routine, a far call in the game's segment: CS from
+        push cx                         ;   the INT; it keeps only SI, DI and BP)
+        push dx
+        push word [bp + 0x0C]
+        push word [bp + 0x0A]
+        push word [bp + 8]
+        push cs
+        push word .back
+        push word [bp + 4]
+        mov ax, [bp + 2]
+        add ax, SLOT_CALL
+        push ax
+        retf
+.back:  add sp, 6
+        pop dx
+        pop cx
+        pop bx
+        ret
+slot_count dw 0                         ; (AD&D's slots given, for a look in play)
+; by class level 1-20, the slots at spell levels 1-9 (tables.RAV_PRIEST_SLOTS, RAV_WIZARD_SLOTS)
+rav_slots:
+        db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; priests (clerics, druids): 1
+        db 2, 0, 0, 0, 0, 0, 0, 0, 0
+        db 2, 1, 0, 0, 0, 0, 0, 0, 0
+        db 3, 2, 0, 0, 0, 0, 0, 0, 0
+        db 3, 3, 1, 0, 0, 0, 0, 0, 0    ; 5
+        db 3, 3, 2, 0, 0, 0, 0, 0, 0
+        db 3, 3, 2, 1, 0, 0, 0, 0, 0
+        db 3, 3, 3, 2, 0, 0, 0, 0, 0
+        db 4, 4, 3, 2, 1, 0, 0, 0, 0
+        db 4, 4, 3, 3, 2, 0, 0, 0, 0    ; 10
+        db 5, 4, 4, 3, 2, 1, 0, 0, 0
+        db 6, 5, 5, 3, 2, 2, 0, 0, 0
+        db 6, 6, 6, 4, 2, 2, 0, 0, 0
+        db 6, 6, 6, 5, 3, 2, 1, 0, 0
+        db 6, 6, 6, 6, 4, 2, 1, 0, 0    ; 15
+        db 7, 7, 7, 6, 4, 3, 1, 0, 0
+        db 7, 7, 7, 7, 5, 3, 2, 0, 0
+        db 8, 8, 8, 8, 6, 4, 2, 0, 0
+        db 9, 9, 8, 8, 6, 4, 2, 0, 0
+        db 9, 9, 9, 8, 7, 5, 2, 0, 0    ; 20
+        db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; wizards (preservers): 1
+        db 2, 0, 0, 0, 0, 0, 0, 0, 0
+        db 2, 1, 0, 0, 0, 0, 0, 0, 0
+        db 3, 2, 0, 0, 0, 0, 0, 0, 0
+        db 4, 2, 1, 0, 0, 0, 0, 0, 0    ; 5
+        db 4, 2, 2, 0, 0, 0, 0, 0, 0
+        db 4, 3, 2, 1, 0, 0, 0, 0, 0
+        db 4, 3, 3, 2, 0, 0, 0, 0, 0
+        db 4, 3, 3, 2, 1, 0, 0, 0, 0
+        db 4, 4, 3, 2, 2, 0, 0, 0, 0    ; 10
+        db 4, 4, 4, 3, 3, 0, 0, 0, 0
+        db 4, 4, 4, 4, 4, 1, 0, 0, 0
+        db 5, 5, 5, 4, 4, 2, 0, 0, 0
+        db 5, 5, 5, 4, 4, 2, 1, 0, 0
+        db 5, 5, 5, 5, 5, 2, 1, 0, 0    ; 15
+        db 5, 5, 5, 5, 5, 3, 2, 1, 0
+        db 5, 5, 5, 5, 5, 3, 3, 2, 0
+        db 5, 5, 5, 5, 5, 3, 3, 2, 1
+        db 5, 5, 5, 5, 5, 3, 3, 3, 1
+        db 5, 5, 5, 5, 5, 4, 3, 3, 2    ; 20
 manual_count dw 0                          ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

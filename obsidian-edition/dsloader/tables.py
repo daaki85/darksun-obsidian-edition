@@ -56,3 +56,51 @@ def slots(cls: int, level: int, spell_level: int) -> Optional[int]:
 def priest_thac0(level: int) -> int:
     """A priest's THAC0 at LEVEL, AD&D's: 2 better every 3 levels."""
     return 20 - 2 * ((max(level, 1) - 1) // 3)
+
+
+# Wake of the Ravager (ravager.py; DSCLOG2's XP_NEED, PRIEST_THAC0 and ADND_SLOTS): its XP table
+# runs to index 19 (20 levels, in hundreds as SL's), the same as AD&D's but for the thief's,
+# gladiator's and ranger's 2nd levels (1,200 and 2,200), the druid's from 11th (the cleric's
+# copied), the gladiator's 16th and up (the fighter's) and the psionicist's 18th and 19th (1,400,000
+# and 1,700,000 for 2,400,000 and 2,700,000). AD&D's past 14th: each level the same step more (the
+# druid's Dark Sun's, 500,000 from 16th).
+def _steps(last: int, step: int) -> tuple:
+    return tuple(last + step * n for n in range(1, 7))
+
+
+RAV_XP = {
+    "cleric": XP["cleric"] + _steps(1350000, 225000),
+    "druid": XP["druid"] + (3000000, 3500000, 4000000, 4500000, 5000000, 5500000),
+    "fighter": XP["fighter"] + _steps(1500000, 250000),
+    "gladiator": XP["gladiator"] + _steps(1800000, 300000),
+    "preserver": XP["preserver"] + _steps(1500000, 375000),
+    "psionicist": XP["psionicist"] + _steps(1200000, 300000),
+    "ranger": XP["ranger"] + _steps(1800000, 300000),
+    "thief": XP["thief"] + _steps(880000, 220000),
+}
+# the sequel's spell slots by class level 1-20 (more is 20th's), spell levels 1-9 (a priest's 1-7):
+# the Player's Handbook's tables in full
+RAV_PRIEST_SLOTS = PRIEST_SLOTS[:10] + (
+    (5, 4, 4, 3, 2, 1), (6, 5, 5, 3, 2, 2), (6, 6, 6, 4, 2, 2), (6, 6, 6, 5, 3, 2, 1),
+    (6, 6, 6, 6, 4, 2, 1), (7, 7, 7, 6, 4, 3, 1), (7, 7, 7, 7, 5, 3, 2), (8, 8, 8, 8, 6, 4, 2),
+    (9, 9, 8, 8, 6, 4, 2), (9, 9, 9, 8, 7, 5, 2))
+RAV_WIZARD_SLOTS = WIZARD_SLOTS[:11] + (
+    (4, 4, 4, 4, 4, 1), (5, 5, 5, 4, 4, 2), (5, 5, 5, 4, 4, 2, 1), (5, 5, 5, 5, 5, 2, 1),
+    (5, 5, 5, 5, 5, 3, 2, 1), (5, 5, 5, 5, 5, 3, 3, 2), (5, 5, 5, 5, 5, 3, 3, 2, 1),
+    (5, 5, 5, 5, 5, 3, 3, 3, 1), (5, 5, 5, 5, 5, 4, 3, 3, 2))
+RAV_SLOT_LEVELS = 20
+
+
+def rav_slots(cls: int, level: int, spell_level: int) -> Optional[int]:
+    """The sequel's: AD&D's slots for the class levels of sheet class CLS at SPELL_LEVEL (1-9), None
+    for a class whose slots stay the game's."""
+    if cls == PRESERVER:
+        table = RAV_WIZARD_SLOTS
+    elif cls in PRIESTS:
+        table = RAV_PRIEST_SLOTS
+    else:
+        return None
+    if level < 1:
+        return 0
+    row = table[min(level, RAV_SLOT_LEVELS) - 1]
+    return row[spell_level - 1] if 1 <= spell_level <= len(row) else 0

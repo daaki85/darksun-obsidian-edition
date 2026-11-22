@@ -1034,6 +1034,16 @@ and `rest-no-call-user`: all transferred, the kits kept.
   +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
   click the spell's icon at the box's right (`ravclick.py X Y right`; xdotool alone doesn't move the
   game's pointer). The party's items are the first item records (Ar'anda's 1-3 there).
+- **XP, THAC0 and slots in the sequel** (logs/2026-11-22-ravager-class-tables.md): a sheet's XP is its
+  +0 dword; the class needs the XP table's entry at the index **of its level** (an 11th-level cleric
+  needs entry 11, 900,000, the 12th level's), and the level up caps the XP at the entry 3 above. A
+  combatant's THAC0 is the creature's +16h, worked out only at a level up (so an edited level shows its
+  THAC0 only after one). The slots left are the game's bytes at DS:4469h + level (wizard) and
+  DS:4474h + level (priest), a member 22h on; a rest at the Roost's ring sets them from the slot routine.
+  On the Roost's route the "look" pointer two right-clicks from the arrow is the face (talk) icon:
+  it is the one that talks to Reyhan and rests at the ring; after Reyhan's "Goodbye." and Space one more
+  right-click gives the arrow. The second doorway's steps were at game (253, 90), then (253, 118) to step
+  through, the ring at (267, 121) after Up 6.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
   fight lower a class's level (the sheet's +1Eh + the class's place) **and** its best level reached
   (+39h + the place): the game gives a new level's extras (a preserver's CHOOSE A SPELL) only for a

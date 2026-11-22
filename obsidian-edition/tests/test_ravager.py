@@ -2,6 +2,7 @@
 fixes, the config that starts it, and the launch's choice of game. With DSUN_WOTR naming the
 player's own Wake of the Ravager folder (never in the repository), the copy is made from its files."""
 import os
+import re
 import struct
 import sys
 import tempfile
@@ -31,7 +32,8 @@ class TableTests(unittest.TestCase):
                                "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum"})  # (DSCLOG2's own interrupts)
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots"}
+                         | {"xp_need_%x" % at for at in ravager.XP_READS})  # (DSCLOG2's own interrupts)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_helper_has_the_use_probes(self):
@@ -186,6 +188,20 @@ class LayoutTests(unittest.TestCase):
 
 @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
 class GameFileTests(unittest.TestCase):
+    def test_xp_table_fixed(self):
+        """The sequel's XP table (DATA 1000, in hundreds) with DSCLOG2's XP_FIXES is tables.RAV_XP;
+        the fixes are where they differ."""
+        from dsloader import tables
+        data = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())[("DATA", 1000)]
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        fixes = {(int(r), int(i)): int(x) for r, i, x in re.findall(r"^\s+XP_FIX (\d+), (\d+), (\d+)", asm, re.M)}
+        for row, name in enumerate(tables.ROWS):
+            game = struct.unpack_from("<20H", data, row * 40)
+            for index in range(20):
+                self.assertEqual(fixes.get((row, index), game[index] * 100), tables.RAV_XP[name][index])
+                self.assertEqual((row, index) in fixes, game[index] * 100 != tables.RAV_XP[name][index])
+
     def test_copy_made(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertIsNone(ravager.prepare(WOTR, d, {}))

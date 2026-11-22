@@ -463,6 +463,12 @@ class RavGameData(game.GameData):
             return 19
         return super().max_spell_slots(member, bit, spell_level, wis)
 
+    def adnd_slots(self, cls: int, level: int, spell_level: int) -> Optional[int]:
+        """The sequel's: AD&D's to 20th level with AD&D's class tables (tables.rav_slots, DSCLOG2's
+        ADND_SLOTS), else None (the game's own rule for the level)."""
+        from . import tables
+        return tables.rav_slots(cls, level, spell_level) if self.rules & game.RULE_ADND_TABLES else None
+
     def robe_slots(self, member: int, bit: int, spell_level: int, total: int) -> int:
         return total  # (the mod's robes aren't in the sequel)
 

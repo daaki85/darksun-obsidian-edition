@@ -93,10 +93,12 @@ HELPER_EXE = "DSCLOG2.EXE"
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
-                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED)
+                | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
+# the XP table's reads (its "imul eax,eax,64h": XP_NEED's sites, 3 bytes on)
+XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 
 def _site(number: int, length: int) -> bytes:
@@ -379,6 +381,15 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("rl_con", 0x6B6CF, bytes.fromhex("c41e2914"), _site(30, 4)),
     Patch("rl_sum", 0x6CD98, bytes.fromhex("83c404"), _site(31, 3)),
     Patch("rl_sum_box", DS_FILE + 0x11F8, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
+    # AD&D's class tables (SL's xp_level_up, xp_view, priest_thac0, adnd_slots; game.RULE_ADND_TABLES,
+    # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
+    # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
+    # routine's call (62893h, "nop / push cs / call 2A10h", SL's 5E240h): DSCLOG2's XP_NEED, PRIEST_THAC0
+    # and ADND_SLOTS, AD&D's tables to 20th level (tables.RAV_*)
+    *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
+      for at in XP_READS),
+    Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
+    Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

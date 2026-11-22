@@ -170,6 +170,18 @@ class WindowTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertEqual(game.LEVEL_HP_SEG, 0x40B1)
 
+    def test_adnd_tables_ported(self):
+        """AD&D's class tables: the rule's bit passed to DSCLOG2, and the slots the dice log counts
+        AD&D's to 20th level with it (tables.rav_slots), the game's own rule without."""
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_ADND_TABLES, game.RULE_ADND_TABLES)
+        data = ravlog.RavGameData.__new__(ravlog.RavGameData)
+        data.rules = game.RULE_ADND_TABLES
+        self.assertEqual([data.adnd_slots(11, 16, s) for s in range(1, 10)], [5, 5, 5, 5, 5, 3, 2, 1, 0])
+        self.assertEqual(data.adnd_slots(5, 12, 3), 5)
+        self.assertIsNone(data.adnd_slots(13, 12, 1))  # (a ranger's the game's)
+        data.rules = 0
+        self.assertIsNone(data.adnd_slots(11, 16, 1))
+
     def test_class_magic_served(self):
         view = ravlog.ReadOnlyGuest(FakeGuest())
         magic = view.read(ravlog.CLASS_MAGIC_AT, 4 * 20)

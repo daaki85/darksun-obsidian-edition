@@ -1864,7 +1864,7 @@ class GameData:
             if n and sheet[SHEET_RACE] == HUMAN and level >= sheet[SHEET_LEVELS]:
                 continue
             rules = self.guest.read(self.ds * 16 + SLOT_CLASS_RULES + cls, 1)[0]
-            ours = tables.slots(cls, level, spell_level)
+            ours = self.adnd_slots(cls, level, spell_level)
             if ours is not None:  # (AD&D's for the level, the game's for WIS: DSCLOG's PROBE_ADND_SLOTS)
                 total += ours
                 rules >>= 4
@@ -1881,6 +1881,11 @@ class GameData:
         for kid in kids:
             total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total, True)
         return self.robe_slots(member, bit, spell_level, total)
+
+    def adnd_slots(self, cls: int, level: int, spell_level: int) -> Optional[int]:
+        """AD&D's slots for a class's level (tables.slots; always on), None for a class with the game's."""
+        from . import tables
+        return tables.slots(cls, level, spell_level)
 
     def robe_slots(self, member: int, bit: int, spell_level: int, total: int) -> int:
         """TOTAL slots at SPELL_LEVEL with the member's worn robe's (the Veiled Robe's one more:

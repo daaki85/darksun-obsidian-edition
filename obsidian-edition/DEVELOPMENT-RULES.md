@@ -304,6 +304,20 @@ preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
 `ADND_SLOTS`; anyone else, the routine as it was.
 
+In Wake of the Ravager (`RULE_ADND_TABLES` in `RULES_PORTED`) the table is RESOURCE.GFF's DATA 1000,
+read through 5C8:20 (the resource, the row 0-7, the index) at eight places (6C3E4h, 6C48Ah, 6C4CCh,
+6FB8Bh, 958E3h, 95931h, 9597Ah, 95C84h): the creation screen, View Character and the level up, which
+also caps the XP at the level 3 above's. It runs to 20 levels and is AD&D's but for the thief's,
+gladiator's and ranger's 2nd levels, the druid's from 11th (the cleric's copied), the gladiator's 16th
+and up (the fighter's) and the psionicist's 18th and 19th (1,400,000 and 1,700,000). DSCLOG2's
+`XP_NEED` (site 32, `xp_need_*`) replaces `add sp,6 / imul eax,eax,64h` at each: the game's x 100 but
+for those (`XP_FIXES`, tables.RAV_XP), the arguments taken off as the ADD did. The THAC0 routine
+(9534Ch, run only at a level up, its answer the creature's +16h) and the slot routine (62A10h, asked
+from 62893h at a rest) are SL's: `PRIEST_THAC0` (site 33 at 95391h) and `ADND_SLOTS` (site 34 at
+62893h) do what DSCLOG's do, the slots AD&D's to 20th level at spell levels 1-9 (the Player's
+Handbook's tables, `tables.RAV_PRIEST_SLOTS`, `RAV_WIZARD_SLOTS`; the class byte is the low byte of
+the pushed word). The dice log's slot counts follow (`RavGameData.adnd_slots`).
+
 ## CON as in AD&D
 
 ([In the features page](FEATURES.md#con-as-in-add).)
