@@ -1089,6 +1089,21 @@ the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh
 `es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
 and `rest-no-call-user`: all transferred, the kits kept.
 
+**The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
+`python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`
+(its roster first reset from `__support/save/CHARSAVE.GFF`; with the two folders, the items the sequel
+lacks become the Loader's objects, kept in the dos folder's RAVITEMS.GFF), then `RAV_LOADER=1 RAV_MENU=1
+sh ravstart.sh COPY` and `ravdice.py` attached (it writes the names past 256). In the game, at
+`ravclick.py`'s coordinates (320x200, whatever the window's size): CREATE CHARACTERS (160,92); a slot
+right-clicked (the four: (70,56), (120,56), (70,115), (120,115)), ADD 45 right and 14 down of it; the
+ADD list's rows at y 45, 56, 67, 78... (x 130), its ADD button (252,47); the inventory icon (75,171);
+an inventory item right-clicked for its box, the box's spell icon (287,83) right-clicked for the
+spell's summary. Escape goes back to the title menu, and S there starts a new game with the party
+(the opening talk: "Lead on!" at (100,171)). A party of one loses the opening fight (back to the title).
+The sequel's scrolls: types 4Dh (wizard: One-use Scroll, 313xx, +0Eh 1; Spellbook, 310xx) and 4Eh
+(priest), the spell at +2 and +10h; SL's wizard spell n is the sequel's spell_place(n) + 1, SL's
+priest scroll word w is w + 97.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
