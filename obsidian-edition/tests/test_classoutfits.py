@@ -153,3 +153,20 @@ class HumanOutfitTests(unittest.TestCase):
                     self.assertEqual(covered[y + top][x + side], sg.CLOAK_COLOURS[65][rank])
                 for x, y in pose.regions[classoutfits.BOW]:
                     self.assertEqual(covered[y + top][x + side], original[y][x])
+
+    def test_woman_recoil_boots_follow_the_kick(self):
+        for role in classoutfits.CLASSES[1:]:
+            pose = classoutfits.frames(role, True, 2099)[12]
+            raised = pose.regions[classoutfits.LEFT_FOOT]
+            grounded = pose.regions[classoutfits.RIGHT_FOOT]
+            self.assertTrue(raised and grounded, role)
+            self.assertGreater(min(x for x, y in raised), max(x for x, y in grounded), role)
+            self.assertLess(max(y for x, y in raised), min(y for x, y in grounded), role)
+
+    def test_long_back_capes_extend_below_the_braid(self):
+        for role in ("Thief", "Mage", "Ranger"):
+            poses = classoutfits.frames(role, False, 2099)
+            for f in (1, 7, 8, 9, 10):
+                hem = [x for x, y, _ in poses[f].cloak if y >= 17]
+                self.assertTrue(hem, (role, f))
+                self.assertGreaterEqual(max(hem) - min(hem), 10, (role, f))
