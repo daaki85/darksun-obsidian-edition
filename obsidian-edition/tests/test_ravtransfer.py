@@ -45,7 +45,7 @@ def made_save(names=("Lex", "Jenna")):
         struct.pack_into("<HHHH", creatures, at, 0x17 + m, 0x15, m, 0x8001 + m)
         struct.pack_into("<HHH", creatures, at + 8, 10 if m == 0 else rt.NONE, rt.NONE, rt.NONE)
         creatures[at + rt.SL_NAME:at + rt.SL_NAME + len(name)] = name.encode()
-        creatures[at + 0x22:at + 0x28] = bytes([18, 17, 16, 15, 14, 13])
+        creatures[at + 0x22:at + 0x28] = bytes([18, 17, 16, 15, 14, 13])  # (not these: the sheet's)
         sheets[m * rt.SL_SHEET:(m + 1) * rt.SL_SHEET] = bytes(range(m, m + rt.SL_SHEET))
     items = bytearray(rt.SL_ITEM * 4)
     items[1 * rt.SL_ITEM:2 * rt.SL_ITEM] = sl_item(1010, nxt=2, slot=0, plus=1)
@@ -101,7 +101,7 @@ class RosterTests(unittest.TestCase):
                          [(1, 5, 2, 0, 0), (3, 0, 3, 0, 15), (2, 0, 1, 1, 16), (4, 2, 1, 2, 2), (2, 3, 1, 3, 4)])
         self.assertEqual(end, dataitems.HEADER.pack(0xFF, 5, 2, 0, 0, 0))
         cre, sheet = recs[0].data, recs[1].data
-        self.assertEqual((len(cre), cre[0x21:0x24], cre[0x19:0x1F], cre[0x17]), (0x31, b"Lex", bytes([18, 17, 16, 15, 14, 13]), 7))
+        self.assertEqual((len(cre), cre[0x21:0x24], cre[0x19:0x1F], cre[0x17]), (0x31, b"Lex", bytes(range(0x1B, 0x21)), 7))
         self.assertEqual((len(sheet), sheet[0x0E], sheet[0x12], sheet[0x37]), (0x42, 0x10, 0x18, 0x3D))
 
     def test_items(self):
@@ -117,6 +117,25 @@ class RosterTests(unittest.TestCase):
         self.assertEqual(self.out[("SPST", 35)], bytes([1, 0, 0, 0, 4, 0, 0, 0, 0]))
         self.assertEqual(self.out[("PSST", 35)][3], 2)
         self.assertEqual(self.out[("PSIN", 35)], b"\x01")
+
+    def test_bags_last_first(self):
+        save = made_save()
+        items = bytearray(save[("SAVE", rt.ITEMS)] + rt.SL_ITEM * b"\0")
+        items[1 * rt.SL_ITEM:2 * rt.SL_ITEM] = sl_item(2419, nxt=2, contents=12)  # two bags, the first holding item 4
+        items[4 * rt.SL_ITEM:5 * rt.SL_ITEM] = sl_item(2431)
+        lists = bytearray(save[("SAVE", rt.LISTS)] + bytes(3))
+        struct.pack_into("<BH", lists, 36, 1, 4)
+        save[("SAVE", rt.ITEMS)], save[("SAVE", rt.LISTS)] = bytes(items), bytes(lists)
+        out, _ = rt.roster(save, made_sequel())
+        recs, _ = dataitems.records(out[("CHAR", 35)])
+        self.assertEqual([(r.level, r.of, r.number, r.flags) for r in recs[2:]],
+                         [(2, 0, 1, 16), (4, 2, 2, 2), (2, 3, 3, 4), (2, 2, 4, 4)])
+
+    def test_counterpart_without_record(self):
+        sequel = made_sequel()
+        sequel.counterparts[1010] = 2228  # (as ITEMS.BIN pairs 1572: a picture, no record)
+        _, moved = rt.roster(made_save(), sequel)
+        self.assertEqual(moved[0].items[0], (1010, rt.MONEY_BAG))
 
     def test_broken_list(self):
         save = made_save()

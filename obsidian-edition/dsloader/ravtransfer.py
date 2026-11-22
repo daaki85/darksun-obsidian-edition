@@ -17,8 +17,8 @@ What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35
   of, kind, number, flags, length) and its data, an end record after them: the creature (level 1,
   kind 2, 31h bytes), its sheet (level 3, kind 3, 42h bytes), then its three item lists in turn (the
   creature's +8, +0Ah and +0Ch, flags 16, 17 and 4), each a first item (level 2, "of" 0) and the
-  next ones (level 4, "of" the record before), the contents of a bag after the list it is in (its
-  first "of" the bag's record, flags 4). The items keep their numbers, the lists theirs.
+  next ones (level 4, "of" the record before), each list followed by the contents of its bags,
+  the last bag first and a bag in a bag next (its first "of" the bag's record, flags 4). The items keep their numbers, the lists theirs.
 - CACT: the creature's +6 (its word of actions); SPST: the wizard's spells known, a bit each (72);
   PSST: the powers known (their byte >> 2); PSIN: the disciplines with a power known (1, 2, 4).
 - Each item becomes the sequel's object that ITEMS.BIN (in the sequel's folder: an SL object and the
@@ -48,7 +48,8 @@ CREATURE_KIND, SHEET_KIND, SHEET_FLAGS = 2, 3, 15
 
 # The creature: the sequel's byte from the save's (as CHARTRAN copies them), the name after them
 CREATURE_BYTES = [(w, w) for w in range(0x0E)] + [(0x10, 0x18), (0x12, 0x1A), (0x13, 0x1B), (0x14, 0x1C),
-                                                  (0x16, 0x1F)] + [(0x19 + i, 0x22 + i) for i in range(6)] + [(0x1F, 0x38)]
+                                                  (0x16, 0x1F), (0x1F, 0x38)]
+CREATURE_SCORES, SHEET_SCORES = 0x19, 0x1B  # the six scores: the sheet's (its base ones, not the creature's +22h)
 CREATURE_FIXED = {0x17: 7}
 CREATURE_NAME, NAME_LENGTH = 0x21, 15
 # The sheet: SL's less seven bytes (+0Eh, +0Fh, the weapon specs +14h-+17h, +3Ch)
@@ -98,10 +99,12 @@ def counterparts(items_bin: bytes) -> Dict[int, int]:
     return out
 
 
-def creature(rec: bytes) -> bytes:
+def creature(rec: bytes, sh: bytes) -> bytes:
+    """The sequel's creature for the save's creature REC with its sheet SH."""
     out = bytearray(CREATURE)
     for w, s in CREATURE_BYTES:
         out[w] = rec[s]
+    out[CREATURE_SCORES:CREATURE_SCORES + 6] = sh[SHEET_SCORES:SHEET_SCORES + 6]
     for w, value in CREATURE_FIXED.items():
         out[w] = value
     name = rec[SL_NAME:SL_CREATURE].split(b"\0")[0][:NAME_LENGTH]
@@ -121,8 +124,13 @@ def sl_object(rec: bytes) -> int:
 
 
 def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
-    """The sequel's item record for the save's item REC, and the object it became."""
+    """The sequel's item record for the save's item REC, and the object it became: ITEMS.BIN's
+    counterpart, or the money bag when there is none or the counterpart has no record (ITEMS.BIN
+    pairs a few SL objects with sequel objects that are only a picture, as 1572 with 2228:
+    CHARTRAN gives those the money bag too)."""
     new = sequel.counterparts.get(sl_object(rec), MONEY_BAG)
+    if ("RDFF", new) not in sequel.objects:
+        new = MONEY_BAG
     out = bytearray(sequel.record(new))
     for w, s, n in ITEM_RUNS:
         out[w:w + n] = rec[s:s + n]
@@ -176,7 +184,7 @@ def roster(save: Chunks, sequel: Sequel) -> Tuple[Chunks, List[Moved]]:
         sh = sheets[index * SL_SHEET:(index + 1) * SL_SHEET]
         if len(sh) < SL_SHEET:
             raise GffError("a party member's sheet is missing")
-        records = [[1, 0, CREATURE_KIND, m, m, creature(rec)], [3, 0, SHEET_KIND, m, SHEET_FLAGS, sheet(sh)]]
+        records = [[1, 0, CREATURE_KIND, m, m, creature(rec, sh)], [3, 0, SHEET_KIND, m, SHEET_FLAGS, sheet(sh)]]
         log: List[Tuple[int, int]] = []
         bags: List[Tuple[int, int]] = []
         seen = set()
@@ -206,7 +214,7 @@ def roster(save: Chunks, sequel: Sequel) -> Tuple[Chunks, List[Moved]]:
         for at, flags in SL_LISTS:
             walk(struct.unpack_from("<H", rec, at)[0], 0, flags)
             while bags:
-                contents, bag = bags.pop(0)
+                contents, bag = bags.pop()
                 walk(contents, bag, BAG_FLAGS)
         count = len(records)
         records[0][1] = count
