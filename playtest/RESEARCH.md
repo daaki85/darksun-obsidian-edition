@@ -329,6 +329,11 @@ regions hold which pictures: each RGN's ETAB objects (negated) through OBJEX's O
 To see a figure that stands elsewhere, build a test OBJEX with its dress put in a slot the opening
 shows (dress['2428'] = dress[N]): writing the camera (DS:1408h) in a fight doesn't redraw and snaps
 back, and HP 0 on the Draxans doesn't end the fight.
+A **restyled creature** goes in the same way, its own chunks written over the slot's (BMP, CBMP
+and SCMD of 2428 or 2426 replaced by the creature's from `restyle.py`/`loosen.py`'s `build(pic)`, then
+`write_ranged` on the built OBJEX): the creature then walks the Draxans' route and fights, its own
+script driving it (2026-11-22, logs/2026-11-22-restyled-creatures.md). Tyr's street is grey: a grey
+creature (the soulshard) is hard to see there.
 `sl_figures.py build-ui` does the same for the interface (`RESOURCE.GFF`: pictures and icons; put it
 in the copy beside the patched OBJEX.GFF). Its screens in a fight: **Q** the END menu (Escape closes
 it); a click on the status box (window 560,50) captures the mouse harmlessly; USE at game 22,17;
