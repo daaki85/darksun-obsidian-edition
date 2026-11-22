@@ -430,3 +430,5 @@ the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh
 `+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`, which no
 `es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
 and `rest-no-call-user`: all transferred, the kits kept.
+
+The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
