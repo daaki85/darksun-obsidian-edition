@@ -1269,6 +1269,11 @@ creature and three words; dicelog's `_manual`).
   STR's and DEX's part 98h:2C0h and 2D9h, the AC 4671h:7Ah (5D520h), the difficulty DS:143Ah; the
   computer's look-ahead calls (`[bp-4]` 1, 5F2D2h's) never roll
   ([played](../playtest/logs/2026-11-22-ravager-spell-to-hit.md)).
+  Resting heals by nature in the sequel through site 17, `rest_hp` (8CF79h, `mov [es:bx],ax` in the
+  rest 8CA7Ah's pass 2, SL's 808AFh): DSCLOG2's `REST_HP` with `RULE_HI_REST` (in `RULES_PORTED`), the
+  creature's CON at +1Bh, the level hit point table at load + 45BEh (selector 4D0h; the same bytes as
+  SL's, classes 18 and 19 added: groups 2 and 0); `REST_PRE`, the priests' spells first, not yet
+  ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved

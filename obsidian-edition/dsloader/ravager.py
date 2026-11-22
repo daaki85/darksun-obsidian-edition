@@ -92,7 +92,7 @@ HELPER_EXE = "DSCLOG2.EXE"
 # header and counts in the dice log; the rest of the Options tab's rules leave the sequel as it is.
 RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE_TWO_WEAPONS
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
-                | game.RULE_ENLARGE | game.RULE_INT_LEARN)
+                | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -337,6 +337,9 @@ PATCHES: Tuple[Patch, ...] = (
     # (84AAFh, "xor ax,ax / pop di"; the sequel has no always-hit stub to answer instead), DSCLOG2's
     # TH_SITE: the missile and hostile touch spells' attack roll, a miss answering immune
     Patch("spell_hit", 0x84AAF, bytes.fromhex("33c05f"), _site(16, 3)),
+    # Resting as in AD&D (SL's rest_hp; RULE_REST, always on): the rest's HP restore (8CF79h, "mov
+    # [es:bx],ax", SL's 808AFh): DSCLOG2's REST_HP, a night's natural healing, 3 + CON's bonus
+    Patch("rest_hp", 0x8CF79, bytes.fromhex("268907"), _site(17, 3)),
     Patch("enlarge_roll", 0x5D0C8, bytes.fromhex("837e1601"), gamepatch._interrupt(VEC_ENL_ROLL, 4)),
     Patch("enlarge_dice", 0x863E7, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb64000000669966f7fb8bf0"),
           gamepatch._interrupt(VEC_ENL_SITE, 32)),

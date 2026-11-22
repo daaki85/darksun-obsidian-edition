@@ -2854,6 +2854,7 @@ site_table:
         dw hold_hd                          ; 14 SITE_HOLD_HD
         dw tu_site                          ; 15 SITE_TURN
         dw th_site                          ; 16 SITE_TO_HIT
+        dw rest_hp                          ; 17 SITE_REST_HP
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3828,6 +3829,115 @@ th_d20    dw 0
 th_kind   dw 0
 th_hitw   dw 0                  ; (+1Ah 1 a hit)
 th_frame_end:
+; REST_HP (site 17, "rest_hp"; RULE_HI_REST, the Loader's "rest_heal", always on): SL's REST_HP. The
+; sequel's rest (8CA7Bh(mode [BP+6], hours [BP+8]), SL's 8066Dh) sets an Okay member's HP to its sheet's
+; most in pass 2 with "mov [es:bx],ax" (8CF79h; 3 bytes: ES:BX the creature, AX the most, SI the
+; member). With the rule and mode 0: HP + REST_NATURAL (3) + CON's hit point bonus (the creature's
+; +1Bh, at most 25; the game's level hit point table, load + 45BEh (selector 4D0h, SL's 40B1h): +52h +
+; CON, a warrior's in full if one of the sheet's classes (+1Bh..+1Dh) is of group 1 there (+10h +
+; class), else at most +2), at least 1, no more than the most, never less than it had nor 1. Mode 1
+; (the scripts' full restore) and the rule off: the move as the game's. Recorded (KIND_REST, RS_HEAL:
+; the member, HP before, CON's part, after, the most, CON; dicelog's rest lines).
+RULE_HI_REST  equ 4096
+KIND_REST     equ 15
+RS_HEAL       equ 2
+REST_NATURAL  equ 3
+LEVEL_HP_GAP  equ 0x47E0 - 0x45BE       ; (the level hit point table's segment below DS)
+LEVEL_HP_CON  equ 0x52
+WARRIOR_GROUP equ 1
+REST_CON_AT   equ 0x1B                  ; (the creature's CON; SL's +24h)
+rest_hp:
+        cmp word [bp + 6], 0
+        jne .game
+        test word [cs:rules_hi], RULE_HI_REST
+        jnz .rule
+.game:  mov [es:bx], ax
+        iret
+.rule:  pushad
+        push es
+        mov cx, ax
+        mov di, [es:bx]
+        mov [cs:rs_frame], si
+        mov [cs:rs_frame + 2], di
+        mov [cs:rs_frame + 8], cx
+        call rest_con2
+        mov [cs:rs_frame + 4], ax
+        add ax, REST_NATURAL
+        cmp ax, 1
+        jge .heal
+        mov ax, 1
+.heal:  add ax, di
+        cmp ax, cx
+        jle .most
+        mov ax, cx
+.most:  cmp ax, di
+        jge .least
+        mov ax, di
+.least: cmp ax, 1
+        jge .set
+        mov ax, 1
+.set:   mov [es:bx], ax
+        mov [cs:rs_frame + 6], ax
+        movzx ax, byte [es:bx + REST_CON_AT]
+        mov [cs:rs_frame + 10], ax
+        inc word [cs:manual_count]
+        mov si, rs_frame
+        mov cx, 6
+        mov word [cs:kind], KIND_REST
+        mov ax, RS_HEAL
+        call rec_frame
+        pop es
+        popad
+        iret
+; REST_CON2: AX CON's hit point bonus of creature ES:BX (REST_HP's). Others kept.
+rest_con2:
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        push fs
+        movzx cx, byte [es:bx + REST_CON_AT]
+        cmp cx, 25
+        jbe .con
+        mov cx, 25
+.con:   mov ax, [es:bx + 4]
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        mov ax, ds
+        sub ax, LEVEL_HP_GAP
+        mov fs, ax
+        xor dx, dx
+        xor si, si
+.class: push bx
+        movzx bx, byte [es:bx + si + 0x1B]
+        or bx, bx
+        jz .other
+        cmp bx, 32
+        jae .other
+        cmp byte [fs:bx + 0x10], WARRIOR_GROUP
+        jne .other
+        mov dl, 1
+.other: pop bx
+        inc si
+        cmp si, 3
+        jb .class
+        mov bx, cx
+        movsx ax, byte [fs:bx + LEVEL_HP_CON]
+        or dl, dl
+        jnz .out
+        cmp ax, 2
+        jle .out
+        mov ax, 2
+.out:   pop fs
+        pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+rs_frame dw 0, 0, 0, 0, 0, 0
 manual_count dw 0                           ; (the sites above at work, counted for a look in play)
 held_damage:
         mov ax, [bp - 4]

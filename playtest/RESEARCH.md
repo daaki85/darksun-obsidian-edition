@@ -749,7 +749,7 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   again). Renting adds one map object, a fire ring (object 156 at 1976, 1352, kind -1317), beside the
   bed (which takes no pointer). **The route** (from `ravager-roost`, about 3 minutes): the look pointer
   (two right-clicks from the arrow) on Reyhan (game 150,128), keys 1, 3, 4 (rent, one night, goodbye: the
-  talk leaves the pointer the arrow again, so no right-click after it: the sword ignores the arrow keys),
+  talk ends on Reyhan's "Goodbye.": Space closes it, and in the 2026-11-22 run the pointer was then the look's: one right-click gave the walk arrow; check before the arrow keys: the sword ignores the arrow keys),
   the arrow keys Left 4, Down 9, Right 14 (the corridor, x 1871, y 1465), the arrow on the second
   doorway's steps (game 270,104), Up 6 (beside the ring, 1956, 1335), the look pointer on the ring (game
   267,108: the screen is 2.4 px a game row) and click. **A look at the ring rests the party** (the screen
