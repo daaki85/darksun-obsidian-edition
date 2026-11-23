@@ -675,7 +675,7 @@ class ElfOutfitTests(unittest.TestCase):
                     self.assertEqual({x for x, row in folds if row == y}, tip)
                     self.assertTrue(all(row <= y for x, row in folds))
 
-    def test_hood_covers_the_rear_crown_and_releases_the_flying_lock(self):
+    def test_hood_covers_the_moving_crown_and_releases_the_fallen_lock(self):
         for role in classoutfits.ELF_ROLES.values():
             if "Thief" not in role.split("/"):
                 continue
@@ -688,12 +688,16 @@ class ElfOutfitTests(unittest.TestCase):
                                  (13, (6, 1)), (13, (7, 1)), (13, (8, 1)), (13, (4, 2))):
                 frame = classoutfits.frames(role, False, 2059)[index]
                 self.assertIn(point, {(a, b) for a, b, _ in frame.cloak})
-            for index, tip in ((1, (7, 2)), (12, (1, 6)), (13, (2, 15))):
+            for index, crown in ((1, ((7, 0), (5, 2), (7, 2), (7, 6))),
+                                 (12, ((6, 0), (2, 3), (1, 6), (2, 8)))):
                 with self.subTest(role=role, frame=index):
                     frame = classoutfits.frames(role, True, 2059)[index]
-                    self.assertNotIn(tip, {(a, b) for a, b, _ in frame.cloak})
-                    x, y = tip
-                    self.assertIsNone(frame.image[y + 4][x + 4])
+                    dye = {(x, y) for x, y, _ in frame.cloak}
+                    self.assertTrue(set(crown) <= dye)
+                    self.assertTrue(all(frame.image[y + 4][x + 4] is not None for x, y in crown))
+            fallen = classoutfits.frames(role, True, 2059)[13]
+            self.assertNotIn((2, 15), {(a, b) for a, b, _ in fallen.cloak})
+            self.assertIsNone(fallen.image[15 + 4][2 + 4])
 
     def test_moving_mantle_keeps_underfold_and_fighter_fastening(self):
         for role in classoutfits.ELF_ROLES.values():

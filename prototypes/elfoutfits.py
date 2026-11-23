@@ -189,8 +189,8 @@ PROFILE_PANELS = {
 # Left and right edges of the fitted hood above the face in each row.
 # Coordinates follow the retail hairline; fallen is traced feet-down.
 FLYING_HOODS = {
-    16: ((10, 15), (9, 16), (9, 17), (9, 17), (9, 16), (10, 16), (10, 15)),
-    27: ((5, 7), (4, 7), (3, 8), (3, 6), (3, 5), (4, 5), (3, 3)),
+    16: ((7, 15), (6, 16), (5, 17), (6, 17), (7, 16), (7, 16), (7, 15)),
+    27: ((5, 7), (4, 7), (3, 8), (2, 6), (1, 5), (1, 5), (0, 3), (0, 3), (0, 2), (1, 1)),
     28: ((5, 6), (5, 10), (5, 11), (4, 12), (4, 12), (4, 12), (5, 12), (6, 10)),
 }
 
@@ -265,6 +265,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
             (x, y) for y, (left, right) in enumerate(FLYING_HOODS[pose])
             for x in range(left, right + 1) if rows[y][x] not in (None, 23)
         }
+        if pose == 27:
+            locks.add((6, 0))  # Cloth spans the notch between two raised hair tips.
     # Fingers extend past the waist in the recoil and the front follow-through.
     # Register them to the green retail wristbands, independently of the tunic.
     wrists = {point_up(p) for p in fig.bands(combat, frame)}
