@@ -187,6 +187,37 @@ FALLEN_HEAD = ((-2, 2), (-3, 2), (-3, 2), (-3, 1), (-2, 0))
 HIT_HEAD = ((-1, 1), (-2, 2), (-2, 3), (-2, 2), (-1, 1))
 
 
+# Front edge of the Cleric's folded robe in the side and oblique views.
+# Each landmark runs from the collar (x, y) to the belt (x). The elbow can
+# cross this line; the foreground arm and bow are painted afterwards.
+ROBE_FRONTS = {
+    2: (8, 6, 7),
+    11: (6, 6, 6), 12: (10, 6, 9), 13: (7, 6, 7), 14: (10, 6, 9),
+    21: (10, 7, 11), 22: (13, 6, 10), 23: (12, 6, 9),
+    24: (8, 6, 8), 25: (7, 8, 8), 26: (10, 9, 11),
+}
+
+
+def hood_pixel(x, row, head_rows, turned):
+    """Slate crown, lit outer fold and shaded lining around the open face."""
+    if not 0 <= row < len(head_rows):
+        return None
+    lo, hi = head_rows[row]
+    if row == 0 and -2 <= x <= (0 if turned else 2):
+        return HOOD[4 if x == -1 else 3 if x < 1 else 2]
+    if row == 1 and -3 <= x <= (2 if turned else 3):
+        return HOOD[3 if x <= -1 else 2 if x < 2 else 1]
+    if row >= 2:
+        # The thicker trailing fold descends behind the profile ear. Taper
+        # both edges toward the collar and preserve the eyes and cheek.
+        outer = lo - (2 if turned and row in (3, 4) else 1)
+        if outer <= x <= lo + int(turned and row <= 3):
+            return HOOD[2 if x == outer else 3 if x <= lo else 1]
+        if not turned and hi <= x <= hi + 1:
+            return HOOD[2 if x == hi else 1]
+    return None
+
+
 def shoulder_guard(rows, point, side, ramp):
     """Fit a domed plate to the lit upper arm and stitch its lower edge."""
     if point is None:
@@ -240,6 +271,7 @@ def draw(game, model, k, role, design=None, layers=None):
     else:
         head_rows = FRONT_HEAD
     hooded = role == "Thief" or (design and design.hood)
+    robe_front = ROBE_FRONTS.get(k) if role == "Priest" else None
     left, right = SHOULDERS[registration]
     guards = {}
     if role == "Warrior" or (design and design.shoulders):
@@ -269,6 +301,10 @@ def draw(game, model, k, role, design=None, layers=None):
             for xx in range(max(0, x - 2), min(width, x + 3)):
                 if (x - xx) ** 2 + (y - yy) ** 2 <= 5:
                     hands.add((xx, yy))
+    if k == 13:
+        # In side step three the wrist crosses the abdomen. The top of the
+        # usual wrist radius catches the stock harness above the knuckles.
+        hands.difference_update(((5, 7), (6, 7), (5, 8), (6, 8), (7, 8), (7, 9)))
     bare_rows = game.fig(2055).rows(combat, f) if model == 2053 else rows
     if dead and model == 2053:
         bare_rows = bare_rows[::-1]
@@ -276,6 +312,12 @@ def draw(game, model, k, role, design=None, layers=None):
         t = min(1, max(0, (y - sy) / max(1, hy - sy)))
         mid = sx * (1 - t) + hx * t
         radius = (3 if profile else 4.3) - 0.55 * t
+        front_edge = None
+        if robe_front:
+            collar_x, collar_y, belt_x = robe_front
+            if collar_y <= y <= hy + 5:
+                travel = min(1, (y - collar_y) / (hy - collar_y))
+                front_edge = round(collar_x + (belt_x - collar_x) * travel)
         for x in range(-pad, width + pad):
             c = rows[y][x] if 0 <= x < width else None
             dx = x - mid
@@ -385,6 +427,23 @@ def draw(game, model, k, role, design=None, layers=None):
             if d == 0 and abs(dx) <= radius and not (rear and role in CLOAK_LENGTHS):
                 surface = co.LEGS
                 paint = 169 if abs(dx) < 0.5 else 205
+            if front_edge is not None and front_edge - 2 <= x <= front_edge:
+                # The return fold wraps around the rib cage, then drops
+                # from the belt. A thin dark seam defines the leading edge.
+                if c is not None or paint is not None or d >= 1:
+                    edge = x - front_edge
+                    if edge == 0:
+                        tone = 1 if d >= 2 else 2
+                    elif edge == -1:
+                        tone = 4 if d < -1 or d in (2, 3) else 3
+                    else:
+                        tone = 2 if d >= 3 else 3
+                    paint = CREAM[tone]
+                    if y == hy:
+                        paint = 205
+                    cape = False
+                    fold_rank = None
+                    surface = co.CHEST if d < 0 else co.LEGS
             if (
                 role == "Ranger"
                 and -1 <= depth < hy - sy
@@ -412,21 +471,21 @@ def draw(game, model, k, role, design=None, layers=None):
                 cape = False
             if role is None:
                 paint = skin
-            if head or neck:
+            # The exposed neckline ends at the collar in a profile robe.
+            open_neck = neck and (front_edge is None or x > front_edge or (x, y) in guards)
+            if head or open_neck:
                 surface = 0
                 fold_rank = None
                 paint = c if head else skin
-                # The hood closes at the back but leaves the native face open.
-                if hooded and head and (rear or row == 0):
-                    paint = HOOD[min(3, int(hue[c] // 48))]
-            if hooded and not rear and 1 <= row < len(head_rows) - 1:
-                lo, hi = head_rows[row]
-                # Only the trailing rim shows in profile. Both temples
-                # are framed in front. Source hands and bows remain above it.
-                if x == cx + lo - 1 or (not profile and x == cx + hi + 1):
-                    paint = HOOD[3 if x < cx else 1]
-                    surface = 0
+            if hooded:
+                if rear:
+                    hood = HOOD[min(3, int(hue[c] // 48))] if head else None
+                else:
+                    hood = hood_pixel(x - cx, row, head_rows, profile and k != 21)
+                if hood is not None:
+                    paint = hood
                     fold_rank = None
+                    surface = 0
             if hand:
                 # The stock cuff ends here. Keep the hand outline and the bow.
                 paint = (
@@ -436,7 +495,7 @@ def draw(game, model, k, role, design=None, layers=None):
                 point = (x, height - 1 - y if dead else y)
                 if head and not hand:
                     layers["head"][point] = 1
-                if hand or head or neck:
+                if hand or head or open_neck:
                     fold_rank = None
                     surface = co.BOW if (x, y) in bow else co.FOREARM if hand else 0
                 elif paint == skin and body:

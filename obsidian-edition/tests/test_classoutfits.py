@@ -284,6 +284,43 @@ class DwarfOutfitTests(unittest.TestCase):
                                 self.assertTrue(guard)
                                 self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
+    def test_thief_crown_stays_visible_in_every_pose(self):
+        slate = {208, 17, 20, 24, 28}
+        for model in classoutfits.DWARVES:
+            for role in classoutfits.DWARF_ROLES.values():
+                if "Thief" not in role:
+                    continue
+                for combat in (False, True):
+                    for f, pose in enumerate(classoutfits.frames(role, combat, model)):
+                        fallen = combat and f == 13
+                        crown = (max if fallen else min)(y for x, y in pose.head)
+                        tips = [x for x, y in pose.head if y == crown]
+                        center = (min(tips) + max(tips)) // 2
+                        brow = crown - 1 if fallen else crown + 1
+                        with self.subTest(model=model, role=role, combat=combat, frame=f):
+                            fabric = [pose.image[y + 4][x + 4] for y in (crown, brow)
+                                      for x in range(center - 4, center + 5)]
+                            self.assertGreaterEqual(sum(c in slate for c in fabric), 8)
+
+    def test_cleric_front_fold_tracks_the_rib_cage_in_profile(self):
+        # The visible fold changes sides relative to the crossing wrist.
+        # Include the two oblique bow poses along with the nine side views.
+        samples = ((False, 2, 7, 7), (False, 11, 6, 7), (False, 12, 10, 7),
+                   (False, 13, 7, 7), (False, 14, 9, 7), (True, 6, 10, 7),
+                   (True, 7, 12, 7), (True, 8, 11, 7), (True, 9, 7, 7),
+                   (True, 10, 6, 11), (True, 11, 9, 10))
+        for model in classoutfits.DWARVES:
+            for role in classoutfits.DWARF_ROLES.values():
+                if "Cleric" not in role:
+                    continue
+                for combat, f, x, y in samples:
+                    pose = classoutfits.frames(role, combat, model)[f]
+                    with self.subTest(model=model, role=role, combat=combat, frame=f):
+                        self.assertIn((x, y), pose.regions[classoutfits.CHEST])
+                        self.assertNotIn((x, y), pose.head)
+                        if role == "Cleric":
+                            self.assertIn(pose.image[y + 4][x + 4], (61, 199, 155))
+
     def test_raised_foot_and_hit_hood_follow_native_landmarks(self):
         for model in classoutfits.DWARVES:
             feet = classoutfits.frames("Gladiator", False, model)[0].regions
