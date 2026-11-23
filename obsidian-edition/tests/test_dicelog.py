@@ -2001,6 +2001,19 @@ class ManualGroup3Tests(unittest.TestCase):
         self.assertEqual(rest(dicelog.REST_HEAL, 0, 38, 2, 40, 40, 16),
                          ["Dag rests 8 hours: +3, +2 (CON 16) = +5 (+2: no more than the most), now 40/40 HP"])
 
+    def test_ravager_weapon_lines(self):
+        """The trikal's trip and the lotulis' and double spear's second foe (KIND_MANUAL 13, 14)."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_TRIP, 0x29, 0, 7, 12),
+                         ["    Dag's trikal trips Mountain Stalker? Save against paralysis: d20 = 7, needs 12+ -> "
+                          "tripped: loses its next turn"])
+        self.assertTrue(say(dicelog.MANUAL_TRIP, 0x29, 0, 20, 21)[0].endswith("-> saved"))
+        self.assertEqual(say(dicelog.MANUAL_SECOND, 0x29, 0, 1, 0),
+                         ["    Dag turns the lotulis's last swing from Daaki to Mountain Stalker, beside it "
+                          "(a specialist's second foe)"])
+        self.assertTrue(say(dicelog.MANUAL_SECOND, 0x29, 0, 1, 1)[0].endswith("(a specialist's second foe, 1 less damage)"))
+
     def test_biofeedback_hit(self):
         """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
         for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),

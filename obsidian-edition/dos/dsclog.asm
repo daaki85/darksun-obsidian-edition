@@ -6661,8 +6661,7 @@ ef_lines_of:
         jz .next
         dec si
         mov [cs:ef_kind], si
-        shl si, 1
-        mov si, [cs:si + wp_plain]  ; (its plain weapon's type: SPEC_OF_SHEET's skill with it)
+        call plain_type             ; (a weapon of it: SPEC_OF_SHEET's skill with it)
         call spec_of_sheet
         mov al, 3
         cmp dl, SPEC_EXPERT
@@ -6681,8 +6680,7 @@ ef_lines_of:
         call ef_line
         mov byte [cs:ef_is_head], 0
 .kind:  mov si, [cs:ef_kind]
-        shl si, 1
-        mov si, [cs:si + ef_kinds]
+        call ef_kind_text
         call ef_line
 .next:  inc di
         cmp di, SPEC_COUNT
@@ -8948,10 +8946,8 @@ pk_hover:
         xor ah, ah
         call pk_word
         mov si, ax
-        add si, si
-        mov ax, [cs:ef_kinds + si]
-        inc ax                  ; (the kinds' names begin with two spaces)
-        inc ax
+        call ef_kind_text
+        lea ax, [si + 2]        ; (the kinds' names begin with two spaces)
         push ax
         push cs
         push dx
@@ -9013,8 +9009,7 @@ pk_word:
         call spec_set
         dec al
         mov si, ax
-        shl si, 1
-        mov si, [cs:si + wp_plain]
+        call plain_type
         push dx
         call spec_of_sheet
         mov al, dl
@@ -10594,8 +10589,19 @@ ef_skills    dw .s0, .s1, .s2, lv_expert
 .s0     db 'SPECIALIZED IN', 0
 .s1     db 'MASTER OF', 0
 .s2     db 'GRAND MASTER OF', 0
-ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
-             dw .k16, .k17, .k18, .k19, .k20, .k21
+; EF_KIND_TEXT: CS:SI the name of kind SI (EF_KINDS', one after another). Others kept.
+ef_kind_text:
+        push cx
+        mov cx, si
+        mov si, ef_kinds
+        jcxz .ret
+.z:     inc si
+        cmp byte [cs:si - 1], 0
+        jne .z
+        loop .z
+.ret:   pop cx
+        ret
+ef_kinds:
 .k0     db '  LONG SWORD', 0
 .k1     db '  CLUB', 0
 .k2     db '  DAGGER', 0
@@ -10619,8 +10625,19 @@ ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k
 .k20    db '  JAVELIN', 0
 .k21    db '  DARTS', 0
 
-wp_plain   dw 81, 18, 17, 115, 20, 22, 2, 112, 3, 19, 44, 21, 48, 1, 64, 0   ; (weaponchoice.PLAIN's types, by kind)
-           dw 148, 149, 150, 151, 152, 153
+; PLAIN_TYPE: SI an item type of kind SI (from 0): the first KIND_OF_TYPE has of it, as good as any
+; for SPEC_OF_SHEET, which goes by its kind (SPEC_KIND). Others kept.
+plain_type:
+        push ax
+        lea ax, [si + 1]
+        xor si, si
+.find:  cmp [cs:si + kind_of_type], al
+        je .ret
+        inc si
+        cmp si, KIND_TYPES
+        jb .find
+.ret:   pop ax
+        ret
 
 ; WP_CLASSES: AL 1 if the sheet being made has a fighter, gladiator or ranger class, AH 1 if a
 ; cleric, druid or ranger one (a sphere). Others kept.
@@ -14608,6 +14625,7 @@ burn_pass:
 stab_dice  dw 0
 stab_known db 0                 ; (1 from STAB_ROLL to STAB_TIMES: a hit's dice kept)
 stab_roll:
+        call sf_less                    ; (the double spear's second foe: 1 less, before STR)
         push di
         push ax
         sub ax, [bp - 0x12]
@@ -16992,6 +17010,13 @@ METAL_CAHULAKS equ 115 + 31         ; (EXTRA_TYPES' 32nd: the metal ones, the ch
 OBSIDIAN_CAHULAKS equ 115 + 32      ; (... 33rd: the obsidian ones, an earth or fire cleric-warrior's start; air clerics may use them too)
 CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after the site's number)
 MN_TANGLE    equ 10
+MN_TRIP      equ 13             ; (as MN_TANGLE's frame: the trikal's trip)
+MN_SECOND    equ 14             ; (+6 the second foe, +8 the attacker, +0Ah the first, +0Ch 1 the double spear's -1)
+TANGLE_SAVE  equ 0x39           ; (the sheet's save against petrification/polymorph)
+TRIP_SAVE    equ 0x37           ; (... against paralysis/poison/death)
+TRIKAL       equ 115 + 36       ; (EXTRA_TYPES' 37th: Wake of the Ravager's trikal; the next two, the
+LOTULIS      equ 115 + 34       ;   lotulis and the double spear)
+DOUBLE_SPEAR equ 115 + 35
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
 cah_more:                           ; AX the attacks a round (halves) with item BX: 2 more for
         push ax                     ;   the cahulaks. Others kept.
@@ -17068,6 +17093,7 @@ cah_swing:
         jl .out
         cmp word [bp + 0x16], 1
         jg .out
+        call sf_swing           ; (a lotulis or double spear specialist's last swing: a second foe)
         cmp word [bp + 0x14], CAHULAKS
         je .cah
         cmp word [bp + 0x14], METAL_CAHULAKS
@@ -17102,12 +17128,21 @@ cah_hit:
         jg stink_hit
 .rule:  cmp word [bp + 0x16], 1
         jg .out
+        mov word [cs:tg_how], MN_TANGLE << 8 | TANGLE_SAVE
         cmp word [bp + 0x14], CAHULAKS
         je .cah
         cmp word [bp + 0x14], METAL_CAHULAKS
         je .cah
         cmp word [bp + 0x14], OBSIDIAN_CAHULAKS
+        je .cah
+        cmp word [bp + 0x14], TRIKAL
         jne .out
+        push dx                     ; (the trikal: a specialist's trip)
+        call spec_of
+        cmp dl, SPEC_SPECIAL
+        pop dx
+        jb .out
+        mov word [cs:tg_how], MN_TRIP << 8 | TRIP_SAVE
 .cah:   sti
         pushad
         push es
@@ -17128,7 +17163,8 @@ cah_hit:
         mov ax, [TARGET]
         call is_large               ; (too big to tangle: a half-giant, large by the Loader's table,
         jc .done                    ;   or Enlarged, as the size rule has it; all kept)
-        movzx cx, byte [es:bx + 0x39]   ; (its save against petrification)
+        movzx si, byte [cs:tg_how]      ; (its save against petrification, or paralysis for a trip)
+        movzx cx, byte [es:bx + si]
         mov si, [TARGET]
         call map_bit
         push fs
@@ -17147,7 +17183,7 @@ cah_hit:
         mov [cs:mn_frame + 6], cx
         push ax
         push cx
-        mov ax, MN_TANGLE
+        movzx ax, byte [cs:tg_how + 1]
         call mn_rec
         pop cx
         pop ax
@@ -17167,6 +17203,121 @@ cah_hit:
 .done:  pop es
         popad
 .out:   iret
+
+;
+; THE TRIKAL AND THE TWO-HEADED WEAPONS (Weapon traits, with CAHULAKS' sites; the Dark Sun weapons
+; guide's specialists): a trikal specialist's hit that does damage trips a man-sized or smaller target
+; as the cahulaks tangle one (CAH_HIT; its save against paralysis, TRIP_SAVE; MN_TRIP). A lotulis or
+; double spear specialist's last swing of a round of two or more (SF_SWING, at CAH_SWING) goes to a
+; second foe beside it, when one is: a combatant on the first target's side (the creatures' +1Dh, its
+; low 3 bits), standing and Okay (+1Ch 1), the attacker's distance 1 from it (the game's distance
+; routine, 1A0A:2BA5h); the first such in the things' order. TARGET is that foe for the swing and the
+; attack's AC ([BP+0Ch]) its own (THORNS_AC's: the sheet and the armour worn, not spells'), both put
+; back as the attack routine's round ends (SF_BACK, from AMMO_TURN's site, which every swing that
+; ends the round passes). The double spear's swing at it does 1 less (at least 1: SF_LESS, from
+; STAB_ROLL). Recorded (MN_SECOND).
+DISTANCE_SEG equ 0x1A0A
+SIDE_BITS    equ 7
+sf_swing:                           ; (CAH_SWING's: an item, in melee)
+        mov ax, [bp + 0x14]
+        sub ax, LOTULIS
+        cmp ax, DOUBLE_SPEAR - LOTULIS
+        ja .ret                     ; AX 0 the lotulis, 1 the double spear
+        pushad
+        push es
+        mov cx, [bp - 8]
+        dec cx
+        jle .done                   ; (one swing)
+        cmp cx, [bp - 0x14]
+        jne .done                   ; (not the round's last)
+        push ax
+        call spec_of
+        pop ax
+        cmp dl, SPEC_SPECIAL
+        jb .done
+        mov [cs:mn_frame + 6], ax
+        mov ax, [TARGET]
+        mov [cs:mn_frame + 4], ax
+        call sf_side
+        jc .done
+        mov di, ax                  ; DI the first target's side (the distance routine keeps it)
+        mov ax, ds
+        sub ax, DGROUP_SEG - DISTANCE_SEG
+        mov [cs:sf_distance + 2], ax
+        xor si, si
+.each:  mov ax, si
+        cmp ax, [TARGET]
+        je .next
+        call sf_side
+        jc .next
+        cmp ax, di
+        jne .next
+        push si
+        push word [bp + 0x0E]
+        call far [cs:sf_distance]   ; (SI and DI kept, as the game's routines keep them)
+        add sp, 4
+        dec ax
+        jz .found
+.next:  inc si
+        cmp si, MAP_COUNT
+        jb .each
+        jmp .done
+.found: mov ax, [TARGET]
+        mov [cs:sf_target], ax
+        mov [TARGET], si
+        mov [cs:mn_frame], si
+        mov ax, [bp + 0x0C]
+        mov [cs:sf_ac], ax
+        call thorns_ac              ; (SI the foe: EAX its AC)
+        mov [bp + 0x0C], ax
+        mov ax, [bp + 0x0E]
+        mov [cs:mn_frame + 2], ax
+        mov ax, MN_SECOND
+        call mn_rec
+.done:  pop es
+        popad
+.ret:   ret
+; SF_SIDE: AX combatant AX's side, CF if it is no creature or isn't standing and Okay. BX, ES changed.
+sf_side:
+        call combatant_creature
+        jc .ret
+        imul bx, ax, 0x3A
+        les ax, [CREATURES]
+        add bx, ax
+        mov al, [es:bx + 0x1D]
+        and ax, SIDE_BITS
+        cmp byte [es:bx + 0x1C], 1
+        jne .no
+        cmp word [es:bx], 0
+        jg .ret                     ; (CF clear: 0 taken from it)
+.no:    stc
+.ret:   ret
+; SF_BACK: the first target and its AC put back after a swing at a second foe (all kept).
+sf_back:
+        cmp word [cs:sf_target], -1
+        je .ret
+        push ax
+        mov ax, -1
+        xchg ax, [cs:sf_target]
+        mov [TARGET], ax
+        mov ax, [cs:sf_ac]
+        mov [bp + 0x0C], ax
+        pop ax
+.ret:   ret
+; SF_LESS: the double spear's swing at a second foe 1 less damage ([BP-4], at least 1). All kept.
+sf_less:
+        cmp word [cs:sf_target], -1
+        je .ret
+        cmp word [bp + 0x14], DOUBLE_SPEAR
+        jne .ret
+        cmp word [bp - 4], 1
+        jle .ret
+        dec word [bp - 4]
+.ret:   ret
+sf_distance dw 0x2BA5, 0
+sf_target  dw -1                    ; (the first target while a second foe is swung at; -1 none)
+sf_ac      dw 0
+tg_how     dw 0                     ; (CAH_HIT: the save's offset, and above it the record's MN_)
 
 ; STINKPOTS (RULE_HI_CAHULAKS, the Loader's rule "cahulaks", Weapon traits): the staff sling's shot is a stinkpot, a
 ; clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 crushing against
@@ -17902,6 +18053,7 @@ ammo_cap:
         mov [bp - 8], dx
         iret
 ammo_turn:
+        call sf_back                    ; (a lotulis or double spear's second foe: the first back)
         push bx
         push bp
         mov bx, [cs:ammo_real]
