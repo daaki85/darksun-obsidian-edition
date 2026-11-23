@@ -53,6 +53,8 @@ Compare every outfit, on both figures, beside original Shattered Lands figures a
 
 ### Equipped play
 
+- [ ] In side idle and all four steps, trace the cloak below the swinging elbow to the hem at 1×. Check class colors and equipped dye, especially when the near arm crosses the waist. Look for enclosed terrain pixels between lining and calf. Follow the breastplate reflection through front, back, and profile walks. It should travel with the rib cage and leave the crossing arm in front. [Cloak loop](cloak-stride.gif) · [Plate loop](plate-stride.gif)
+
 - [ ] Compare the uncovered outfit, chest plate, complete plate, and magical set at 1× on terrain. Follow edges from chest to arms and legs, then compare the rear mantle between renders. Try each named robe with its actual inventory record. Check its binding, lower folds, glow and removal. Compare both glove weapons on the hand that actually swings, the two exposed boots, and the difference between a bracer and a glove. Include long and short weapons on a canvas extended below the feet, the dwarf recoil, the great-axe head through the swing and the sling or chatkcha at the walking hip. [Six-figure equipment review](worn-equipment.md)
 
 | Reproduce the human test | Passing appearance on the new model |

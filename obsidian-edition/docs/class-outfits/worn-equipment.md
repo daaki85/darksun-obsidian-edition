@@ -4,6 +4,14 @@
 
 Read across a row for the same equipment and pose on the human, dwarf and elf, male then female. The last column is the retail comparison. The large pictures are 2×, the small pictures are 1×, and the ground is the same arena tile throughout. Compare the first three rows to see exactly where adding the arm and leg pieces changes the Fighter. The two robe rows use the same Psionicist, pose and lighting.
 
+## Cloaks and chest plate in motion
+
+On the human Thieves, side walk step 2 previously showed just one cloak pixel at or below the waist on each figure. The revised step shows 29 on the man and 44 on the woman. The fold starts at the shoulder, opens behind the elbow, and turns inward above the ankle. The dwarf’s shorter drape and the male elf’s tapered Preserver and Ranger hems keep their own lengths. The class cloth supplies the silhouette when worn alone. Equipping a cloak supplies the item dye, including on outfits that normally leave the back bare.
+
+[All six equipped cloaks through side idle and four steps, before and after](cloak-stride.gif) · [Both male elf class cloaks beside retail figures, step by step](elf-class-cloak-stride.png)
+
+On the chest plate, the broad reflection sits on the upper curve of the rib cage and the lower rim rolls into shadow. The light follows the torso through each step. Look at the two elf Fighters when the near arm crosses the chest, or compare the human woman from the front and side. Each pair shows the preceding build at left and the revision at right, enlarged with a native-size copy below. [Compare chest plate through the front, rear and profile walks](plate-stride.gif)
+
 ## What the items look like
 
 | Item | What to look for on the map | Retail comparison |
@@ -38,7 +46,7 @@ Each link opens all 29 native poses. Each tile is labeled with its equipment and
 
 ## Texture at native resolution
 
-Each entry below gives the percentage of fully sampled 2×2 squares that have one palette index, averaged by pose, before and after this pass. Full plate uses the Fighter’s covered chest, arm and leg regions. Cloak uses the Thief’s visible registered cloak pixels. Both comparisons use identical coordinates before and after.
+The table and CSV record the earlier equipment pass at `a7912ae`, before the profile and breastplate corrections above. Each entry gives the percentage of fully sampled 2×2 squares that have one palette index, averaged by pose, before and after this pass. Full plate uses the Fighter’s covered chest, arm and leg regions. Cloak uses the Thief’s visible registered cloak pixels. Both comparisons use identical coordinates before and after.
 
 | Figure | Full plate, before → after | Worn cloak, before → after |
 |---|---:|---:|

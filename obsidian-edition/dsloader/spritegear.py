@@ -884,6 +884,33 @@ def paint_region(rows, cells, shades, pad, pattern=None, source=None):
         rows[y + pad][x + pad] = colour
 
 
+def paint_breastplate(rows, cells, shades, pad, source):
+    """Round the steel over the visible rib cage and turn its light with the torso."""
+    if not cells:
+        return
+    top = min(y for x, y in cells)
+    bottom = max(y for x, y in cells)
+    depth = max(1, bottom - top)
+    upper = [x for x, y in cells if (y - top) * 3 <= depth]
+    lower = [x for x, y in cells if (bottom - y) * 3 <= depth]
+    upper_x = (min(upper) + max(upper)) / 2
+    lower_x = (min(lower) + max(lower)) / 2
+    radius = max(2, (max(x for x, y in cells) - min(x for x, y in cells)) / 2)
+    for x, y in cells:
+        color = source[y + pad][x + pad]
+        if color is None:
+            continue
+        v = (y - top) / depth
+        u = (x - upper_x - (lower_x - upper_x) * v) / radius
+        crest = max(0, 1 - ((u + 0.22) / 1.05) ** 2 - ((v - 0.38) / 0.85) ** 2)
+        light = min(1, _LIGHT.get(color, 0.5) * 1.5)
+        # A short reflected edge sits on the lit shoulder. The lower rim
+        # rolls into shadow as the abdomen turns under the breastplate.
+        gleam = max(0, 1 - 2.5 * abs(u + 0.36) - 3.6 * abs(v - 0.28))
+        value = min(1, 0.055 + 0.48 * crest + 0.41 * light + 0.18 * gleam)
+        rows[y + pad][x + pad] = shades[round(value * (len(shades) - 1))]
+
+
 # Palette from the inventory art: the Chameleon Gloves are blue-grey;
 # the Quicksilver Glove has a silvery face over a leather palm.
 GLOVE_SHADES = {37: (17, 19, 22, 24, 26, 29), 113: (204, 207, 210, 212, 214, 215)}
@@ -992,7 +1019,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         cells = [*cells, *skirt]
                     # Always take the dye value from the original cloth, even where
                     # two pieces overlap or the chest underneath already glints.
-                    paint_region(out, cells, shades, pad, pattern, source=base_outfit)
+                    if piece == ARMOUR_CHEST and pattern == PLATE:
+                        paint_breastplate(out, cells, shades, pad, base_outfit)
+                    else:
+                        paint_region(out, cells, shades, pad, pattern, source=base_outfit)
                     if kind == game.ROBE_TYPE:
                         robe_binding(out, cells, pad, base_outfit, bool(item_type & VEILED_DYE))
                     if item_type & MAGIC_ARMOUR:

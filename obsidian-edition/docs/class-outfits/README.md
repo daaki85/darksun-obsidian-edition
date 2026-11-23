@@ -46,6 +46,8 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 ## Equipment
 
+[Watch all six cloaks in profile](cloak-stride.gif) · [Compare chest plate through all three walks](plate-stride.gif)
+
 [Compare all six equipped figures beside retail artwork](worn-equipment.md) · [See plate, mail, robes, footwear and weapon materials in the same pose](worn-materials.png)
 
 Equipped armor recolors the parts of the outfit it covers. Magical chest plate adds shine to the chest armor. Equipped cloaks use their own colors, and boots recolor each visible foot. The equipment comparison shows the same pose with different gear and the base outfit after removal. [Watch the equipment comparison](checklist-equipment.gif) · [Read the loader and in-game checks](checklist-review.md)

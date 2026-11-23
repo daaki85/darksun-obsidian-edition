@@ -7,6 +7,31 @@ from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
 
 
 class WornMaterialTests(unittest.TestCase):
+    def test_breastplate_highlight_moves_with_a_translated_torso(self):
+        shades = tuple(range(16, 26))
+        cells = [(x, y) for y in range(6) for x in range(7)]
+        rows = [[64] * 17 for _ in range(12)]
+
+        def sample(dx, dy):
+            canvas = [row[:] for row in rows]
+            sg.paint_breastplate(canvas, [(x + dx, y + dy) for x, y in cells], shades, 1, rows)
+            return [canvas[y + dy + 1][x + dx + 1] for x, y in cells]
+
+        first = sample(0, 0)
+        self.assertGreater(first[2 * 7 + 2], first[-1])
+        self.assertEqual(first, sample(3, 2))
+
+    def test_thief_profile_keeps_a_visible_cloak_below_the_waist(self):
+        for model, waists in ((2095, (16, 15, 16, 15, 16)), (2099, (15, 14, 15, 15, 15)),
+                              (2053, (12, 12, 11, 12, 12)), (2055, (12, 12, 11, 12, 12)),
+                              (2059, (14, 14, 14, 15, 14)), (2061, (15, 14, 15, 15, 15))):
+            walk = classoutfits.frames("Thief", False, model)
+            for pose, waist in zip((2, 11, 12, 13, 14), waists):
+                with self.subTest(model=model, pose=pose):
+                    hem = [(x, y) for x, y, _ in walk[pose].cloak if y >= waist]
+                    self.assertGreaterEqual(len(hem), 20)
+                    self.assertGreaterEqual(max(y for x, y in hem), waist + 3)
+
     def test_actual_robe_items_select_distinct_visuals(self):
         from dsloader import robes
 

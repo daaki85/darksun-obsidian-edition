@@ -184,6 +184,81 @@ def shade_frame(rows, paint, regions, folds, heads, base, model, role, waist, pa
             folds[y][x] = max(1, min(6, folds[y][x] + round(delta / 22)))
 
 
+# Profile landmarks in the native frames (idle, then steps 1..4).
+# Each pair locates the shoulder seam and the free corner behind the elbow.
+# The near arm, existing garment, legs and hair are all in front of this layer.
+PROFILE_SEAMS = {
+    2095: ((2, -3), (4, -4), (6, -3), (3, -5), (5, -3)),
+    2099: ((2, -3), (3, -3), (4, -3), (9, 0), (5, -2)),
+    2053: ((2, -3), (1, -4), (6, -2), (2, -4), (5, -2)),
+    2055: ((2, -3), (1, -4), (6, -2), (2, -4), (5, -2)),
+    2059: ((2, -3), (2, -3), (7, 0), (2, -4), (4, -2)),
+    2061: ((2, -3), (1, -4), (5, -3), (4, -4), (4, -2)),
+}
+
+
+def profile_material(model, role):
+    classes = role.split("/")
+    if model in co.ELVES:
+        if "Preserver" in classes:
+            return "plum"
+        if "Ranger" in classes:
+            return "leaf"
+        if "Thief" in classes:
+            if "Cleric" in classes:
+                return "linen"
+            return "hide" if "Fighter" in classes else "slate"
+    elif model in co.DWARVES:
+        if "Thief" in classes and "Fighter" not in classes:
+            return "slate"
+    else:
+        return {"Mage": "plum", "Thief": "slate", "Ranger": "leaf", "Druid": "leaf"}.get(role)
+    return None
+
+
+def profile_cloak(rows, paint, regions, folds, heads, base, model, role, pose, parts):
+    """Expose the trailing fold, even when the foreground arm covers the clasp."""
+    step = 0 if pose == 2 else pose - 10
+    seam, tip = PROFILE_SEAMS[model][step]
+    shoulder, waist = parts.shoulders[0], parts.waist
+    hem = waist + (4 if model in co.DWARVES or role == "Druid" else 5)
+    turn = hem - 3
+    margin = (len(paint[0]) - len(rows[0])) // 2
+    above = len(paint) - len(rows)
+    family = profile_material(model, role)
+    for y in range(shoulder, hem + 1):
+        fall = (y - shoulder) / (turn - shoulder)
+        outer = round(seam + (tip - seam) * min(1, fall)) + max(0, y - turn)
+        width = round(2 + 4 * min(1, fall)) - max(0, y - turn)
+        # Carry the lining to the torso above the open hem, under the swinging
+        # forearm. Otherwise a narrow strip can close around a fleck of ground.
+        inner = max(outer + width - 1, seam + 3 - max(0, y - turn) * 2)
+        # In these two steps the human woman's calf turns under the lining.
+        if model == 2099 and y == 19 and (pose == 14 or pose == 12 and role != "Druid"):
+            inner = max(inner, 4)
+        for x in range(outer, inner + 1):
+            offset = x - outer
+            px, py = x + margin, y + above
+            if not 0 <= px < len(paint[0]) or regions[py][px] or (heads and heads[py][px]):
+                continue
+            stock = rows[y][x] if 0 <= x < len(rows[0]) else None
+            under = base[py][px] if base is not None else None
+            existing = paint[py][px]
+            visible = existing if existing is not None else under if under is not None else stock
+            if visible not in (None, 255):
+                continue
+            # A lit crease turns into the hem. Both hues follow the moving seam.
+            rank = (1, 3, 4, 2, 1, 2)[min(5, offset)]
+            if y == hem or x == inner:
+                rank = 1
+            elif offset == 1 and (y - shoulder) % 3 == 0:
+                rank = 2
+            folds[py][px] = rank + 1
+            if family:
+                ramp = RAMPS[family]
+                paint[py][px] = ramp[round((rank + 0.3) * (len(ramp) - 1) / 6)]
+
+
 def finish_archive(game, source, output):
     """Rebuild only the outfit paint. Retain the original paint for repeatable exports."""
     output = Path(output)
@@ -217,9 +292,12 @@ def finish_archive(game, source, output):
                         rows = game.fr(model + cb, f)
                         paint = art.decode_frame(raw, f)[2]
                         masks = [art.decode_frame(b, f)[2] if b else None for b in aux]
-                        waist = game.fig(model).parts(cb, f).waist
+                        parts = game.fig(model).parts(cb, f)
+                        waist = parts.waist
                         shade_frame(rows, paint, *masks, model, role, waist if waist is not None else len(rows) // 2,
                                     palette, swatches, f + 15 * cb)
+                        if not cb and f in (2, 11, 12, 13, 14):
+                            profile_cloak(rows, paint, *masks, model, role, f, parts)
                         frames.append(paint)
                         dyes.append(masks[1])
                     data = sprites.encode_frames(frames)
