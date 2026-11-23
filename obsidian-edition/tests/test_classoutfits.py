@@ -284,6 +284,29 @@ class DwarfOutfitTests(unittest.TestCase):
                                 self.assertTrue(guard)
                                 self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
+    def test_fighter_details_remain_visible_at_map_size(self):
+        for model in classoutfits.DWARVES:
+            for role in ("Fighter", "Fighter/Thief", "Fighter/Psionicist", "Fighter/Psionicist/Thief"):
+                idle = classoutfits.frames(role, False, model)[0]
+                # The near-black square occupied the four rows at the right belt end.
+                hip = [idle.image[y + 4][x + 4] for y in range(12, 16) for x in range(11, 16)]
+                self.assertNotIn(208, hip, (model, role))
+            fighter = classoutfits.frames("Fighter", False, model)
+            for f in (2, 11, 12, 13, 14):
+                pose = fighter[f]
+                panels = [pose.image[y + 4][x + 4] for x, y in pose.regions[classoutfits.CHEST]]
+                self.assertTrue({168, 199}.intersection(panels), (model, f))
+            for role in ("Cleric/Fighter", "Cleric/Fighter/Psionicist"):
+                pose = classoutfits.frames(role, False, model)[0]
+                caps = [pose.image[y + 4][x + 4] for x, y in pose.regions[classoutfits.ARMS]]
+                self.assertIn(92, caps)
+                self.assertNotIn(199, caps)
+            for f in (0, 1):
+                pose = classoutfits.frames("Fighter/Psionicist", False, model)[f]
+                # A single bright thread was lost against the tunic in these views.
+                runs = (row[x:x + 3] for row in pose.image for x in range(len(row) - 2))
+                self.assertTrue(any(set(run) <= {70, 71, 73} for run in runs), (model, f))
+
     hood_fabrics = {
         "Thief": {208, 17, 20, 24, 28},
         "Fighter/Thief": {208, 88, 207, 92, 96},

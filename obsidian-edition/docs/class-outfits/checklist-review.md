@@ -2,6 +2,14 @@
 
 Both dwarf figures were checked across 12 legal builds and both humans across eight class outfits. Each figure has 15 idle and walking poses and 14 combat poses. The review covered 696 dwarf and 464 human outfit poses. The still sheets below use the decoded loader output. [Review checklist](workflow.md#human-figure-review-checklist)
 
+## Fighter shoulders, hips and sash
+
+The comparison opens on front idle. Look across the first two columns to compare the plain Cleric’s cream shoulders with the Cleric/Fighter’s fitted dark leather. In the Fighter column, the two flaps below the belt follow the thighs through the stride. The old right flap used the same near-black shade across several rows and could extend into the space beside the leg.
+
+In side idle and all four side steps, the Fighter’s jerkin has overlapping leather panels with small pale stitches. The crossing wrist still passes in front on step three. The Fighter/Psionicist wears a broader teal sash with a shaded edge, visible across the chest and the back. Both triples that combine Fighter and Psionicist use this sash.
+
+![Previous and revised dwarf Cleric, Cleric/Fighter, Fighter and Fighter/Psionicist on both figures](dwarf-fighter-review.gif)
+
 ## Thief hood in profile
 
 In side idle and several walking frames, a strip of skin separated the back of the hood from the garment. The revised fold follows the dwarf’s lean from behind the ear onto the shoulder. In the first side strike and the side bow, follow the fold on the far side while the hand crosses the head. The comparison opens on side idle, then shows the walk, strike and bow poses for both figures in all four Thief outfits.

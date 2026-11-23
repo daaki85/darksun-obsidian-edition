@@ -61,6 +61,7 @@ POSES = [
 ROLES = ("Warrior", "Thief", "Priest", "Mage", "Druid", "Ranger", "Gladiator", "Psionicist")
 LEATHER = (208, 88, 207, 92, 96)
 BONE = (205, 206, 199, 155)
+HIDE = (88, 92, 95, 168)  # turned edge, shadow, face and worn leather
 HOOD = (208, 17, 20, 24, 28)
 CREAM = (207, 194, 61, 199, 155)
 PLUM = (17, 174, 175, 58, 119)
@@ -301,12 +302,18 @@ def draw(game, model, k, role, design=None, layers=None):
     # and fallen heads keep a fourth row of cloth at the temples.
     hood_end = len(head_rows) if turned_hood else max(4, len(head_rows) - 2)
     shoulder_fold = HOOD_SHOULDERS.get(k) if hooded else None
-    robe_front = ROBE_FRONTS.get(k) if role == "Priest" else None
+    fighter = role == "Warrior"
+    robe_guard = design and design.shoulders
+    broad_sash = design and design.sash and (fighter or robe_guard)
+    # The jerkin and the robe follow the same rib cage in a side view.
+    side_jerkin = fighter and k in (2, 11, 12, 13, 14)
+    garment_front = ROBE_FRONTS.get(k) if role == "Priest" or side_jerkin else None
     left, right = SHOULDERS[registration]
     guards = {}
-    if role == "Warrior" or (design and design.shoulders):
-        guards.update(shoulder_guard(rows, left, 1, BONE))
-        guards.update(shoulder_guard(rows, right, -1, BONE))
+    if fighter or robe_guard:
+        ramp = HIDE if robe_guard else BONE
+        guards.update(shoulder_guard(rows, left, 1, ramp))
+        guards.update(shoulder_guard(rows, right, -1, ramp))
     elif role == "Gladiator":
         # The same anatomical arm is on screen left in a rear view.
         # Only its leather strap is visible when the arm turns away.
@@ -343,8 +350,8 @@ def draw(game, model, k, role, design=None, layers=None):
         mid = sx * (1 - t) + hx * t
         radius = (3 if profile else 4.3) - 0.55 * t
         front_edge = None
-        if robe_front:
-            collar_x, collar_y, belt_x = robe_front
+        if garment_front:
+            collar_x, collar_y, belt_x = garment_front
             if collar_y <= y <= hy + 5:
                 travel = min(1, (y - collar_y) / (hy - collar_y))
                 front_edge = round(collar_x + (belt_x - collar_x) * travel)
@@ -395,8 +402,12 @@ def draw(game, model, k, role, design=None, layers=None):
                 if role == "Gladiator" and abs(dx - (2 - 4 * t)) > 1.1:
                     paint = skin
                     surface = 0
-                if role == "Warrior" and abs(dx - (2.5 - 5 * t)) < 1:
-                    paint = LEATHER[4 if dx < 2.5 - 5 * t else 1]
+                if fighter:
+                    # Warm side shadow above the belt, with a lighter baldric
+                    # crossing the jerkin from the shoulder to the far hip.
+                    paint = HIDE[0] if shade == 0 else palette[shade]
+                    if abs(dx - (2.5 - 5 * t)) < 1:
+                        paint = HIDE[2 if dx < 2.5 - 5 * t else 0]
                 if role == "Priest" and -0.7 < dx + 1.6 - 0.4 * t < 0.7:
                     paint = CREAM[4 if depth % 4 else 1]
                 if role == "Mage" and not rear and depth in (2, 3) and abs(dx + 1.1) < 1:
@@ -442,7 +453,16 @@ def draw(game, model, k, role, design=None, layers=None):
                     paint = CREAM[
                         1 if u > 0.55 else 4 if -0.55 < u < -0.25 else 0 if 0.05 < u < 0.26 else 2
                     ]
-            if role != "Priest" and 0 <= d <= (4 if role in ("Thief", "Druid") else 3):
+            if fighter and body and 1 <= d <= 3 and abs(dx) <= radius + 0.4:
+                # Two hip flaps hang from the belt. The outer corners turn
+                # inward on the final row and leave the space between legs open.
+                if d < 3 or 0.8 <= abs(dx) < radius - 0.5:
+                    paint = HIDE[0 if abs(dx) < 0.8 else 2 if -2.8 < dx < -0.8 else 1]
+                    if d == 1 and 1 < dx < 3.2:
+                        paint = 205
+                    surface = co.LEGS
+                    cape = False
+            elif role not in ("Priest", "Warrior") and 0 <= d <= (4 if role in ("Thief", "Druid") else 3):
                 if abs(dx) <= radius + 0.22 * d and (body or role != "Thief" and d <= 2):
                     if (
                         not rear
@@ -462,7 +482,17 @@ def draw(game, model, k, role, design=None, layers=None):
             if d == 0 and abs(dx) <= radius and not (rear and role in CLOAK_LENGTHS):
                 surface = co.LEGS
                 paint = 169 if abs(dx) < 0.5 else 205
-            if front_edge is not None and front_edge - 2 <= x <= front_edge:
+            if fighter and front_edge is not None and body and d < 0:
+                # The near arm can cover most of the abdomen. Let the lit
+                # edge of the overlapping leather panels show above the wrist.
+                if front_edge - 6 <= x <= front_edge:
+                    seam = (hy - y + (front_edge - x) // 2) % 4
+                    tone = 0 if x == front_edge or seam == 0 else 3 if seam == 1 else 1
+                    paint = HIDE[tone]
+                    if seam == 1 and 2 <= front_edge - x <= 3:
+                        paint = BONE[2]  # pale stitching along the near panel
+                    surface = co.CHEST
+            if role == "Priest" and front_edge is not None and front_edge - 2 <= x <= front_edge:
                 # The return fold wraps around the rib cage, then drops
                 # from the belt. A thin dark seam defines the leading edge.
                 if c is not None or paint is not None or d >= 1:
@@ -488,6 +518,19 @@ def draw(game, model, k, role, design=None, layers=None):
                 paint = 155 if depth == -1 else 168 if depth == 1 else 205 if dx < -1.8 else 207
             if role == "Psionicist" and torso and abs(dx - (2.5 - 5 * t)) < 0.8:
                 paint = 72 if depth > 1 else 169
+            if robe_guard and body:
+                # The leather backing extends below each fitted cap. Taper it
+                # into a harness on the ribs without widening the arm silhouette.
+                for point, inward in ((left, 1), (right, -1)):
+                    if point is None:
+                        continue
+                    rise = y - point[1]
+                    across = inward * (x - point[0])
+                    if 1 <= rise <= 4 and -2 + rise // 2 <= across <= 2:
+                        paint = HIDE[0 if across == 2 or rise == 4 else 2 if across == 0 else 1]
+                        surface = co.CHEST
+                        cape = False
+                        fold_rank = None
             if design:
                 # A short cowl leaves the fighter's shoulder caps and legs visible.
                 if design.hood and body and 0 <= depth <= 2 and abs(dx) <= 2.5 - 0.55 * depth:
@@ -497,7 +540,14 @@ def draw(game, model, k, role, design=None, layers=None):
                 if design.sash and paint is not None and 0 <= depth and d <= 3:
                     strap_x = (1.8 - 3.9 * t) * (-1 if rear else 1)
                     delta = dx - strap_x
-                    if abs(delta) <= (1.05 if d <= 0 else 0.78):
+                    if broad_sash:
+                        # The diagonal widens over the ribs and gathers into a
+                        # short end below the belt. The lit seam turns with it.
+                        sash_width = 1.85 if d < 0 else 2.1 if d == 0 else 1.3
+                        if abs(delta) <= sash_width:
+                            paint = (169 if d == 0 and abs(delta) < 0.6 else
+                                     TEAL[2 if delta > sash_width - 0.8 else 4 if delta < -sash_width + 1 else 3])
+                    elif abs(delta) <= (1.05 if d <= 0 else 0.78):
                         paint = 169 if d == 0 else TEAL[4 if delta < -0.12 else 3 if d < 0 else 2]
             if (x, y) in guards:
                 paint = guards[x, y]

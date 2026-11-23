@@ -16,7 +16,7 @@ The [dwarf and human checklist results](checklist-review.md) include the repaire
 
 ## Dwarf outfit study
 
-[Compare the dwarf hoods in profile](dwarf-hood-profile.gif) · [Compare the four current dwarf Thief hoods](dwarf-thief-hoods.gif) · [Watch the earlier Thief hood and Cleric profile revision](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the revised faces and shoulder guards against the original game poses](checklist-review.md#faces-and-shoulder-guards).
+[Compare the revised Fighter builds](dwarf-fighter-review.gif) · [Compare the dwarf hoods in profile](dwarf-hood-profile.gif) · [Compare the four current dwarf Thief hoods](dwarf-thief-hoods.gif) · [Watch the earlier Thief hood and Cleric profile revision](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the revised faces and shoulder guards against the original game poses](checklist-review.md#faces-and-shoulder-guards).
 
 The current proposal covers five single classes, five two-class combinations, and two three-class combinations. Each animation shows the female and male figures together through all 29 poses. [See the dwarf outfit proposals](dwarves.md)
 
