@@ -20,7 +20,7 @@ Within each tile the female elf is on the left and the male on the right. The up
 |---|---|
 | Cleric | The cream robe opens below the jaw and hangs behind the wrist in the side walk. |
 | Fighter | The ochre stitching crosses the leather jerkin. Small bone caps turn with the upper arm. |
-| Gladiator | The bronze guard and diagonal harness leave the chest and arms exposed. |
+| Gladiator | The male figure wears a diagonal harness. On the female figure a two-row bronze breastband wraps beneath it and passes behind her moving arms. |
 | Preserver | The deep plum mantle opens over leather in front and flares below the hair from behind. |
 | Psionicist | The teal tunic carries its identifying color below the face. |
 | Ranger | A leather strap crosses the green cape. The pinned corner sits higher over one hip. |
@@ -39,7 +39,25 @@ Elves can combine Cleric, Fighter, Preserver, Psionicist, Ranger, and Thief in p
 | Eight triples, starting with Cleric/Fighter/Preserver | [Triple gallery A](elf-3-a.gif) | [Frame sheet](elf-3-a-frames.png) |
 | Eight triples, ending with Psionicist/Ranger/Thief | [Triple gallery B](elf-3-b.gif) | [Frame sheet](elf-3-b-frames.png) |
 
-Follow the hood to spot a Thief, the teal sash for a Psionicist, and the bone shoulder or leather tab for a Fighter. A Cleric keeps the cream robe. Adding a Preserver brings a plum mantle, and a Ranger paired with a Preserver adds green edging to that mantle.
+Follow the hood to spot a Thief and the teal sash for a Psionicist. A Fighter wears a dark sword belt over the cream Cleric robe or a leather strap fastened with bone on the Preserver mantle. A Ranger paired with a Preserver shows green lining along the open edge and hem.
+
+## Profile walk and outfit details
+
+Watch the arm swing through side steps 2 and 3. The old male cape almost disappears as the elbow crosses the torso. The revised cape keeps a trailing panel behind that elbow. On the female figure it also stays visible through step 3. Each pair shows the previous outfit on the left and the revision on the right. The smaller figures underneath show how much cloth is visible at game size.
+
+![Both elves walking in the previous and revised Preserver, Ranger and Thief cloaks](elf-profile-drape.gif)
+
+In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike, hit and fall, the free lock extends past the hood. The Fighter’s shoulder pieces sit below her hairline and a chest band follows the Gladiator through all 29 poses. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
+
+![Previous and revised hood, breastband, shoulder, hip and multiclass details beside the revised figure at game size](elf-outfit-details.png)
+
+The table gives the median number of pixels that differ from the same pose in the parent outfit, across all 29 poses. The before column uses the art in commit `a6f5bfc`. The gallery above shows the same details at game size.
+
+| Comparison | Female before → revised | Male before → revised |
+|---|---:|---:|
+| Cleric/Fighter beside Cleric | 7 → 20 | 12 → 25 |
+| Fighter/Preserver beside Preserver | 9 → 19 | 14 → 26 |
+| Preserver/Ranger beside Preserver | 6 → 24 | 6 → 24 |
 
 ## Frame-by-frame review
 
@@ -54,7 +72,9 @@ The review followed all 29 poses on both figures, starting with the seven single
 | Fighter/Psionicist, side walk 3/4 | The teal sash remains visible beside the crossing wrist. This also carries through to the Thief variant. |
 | Equipped weapons, forward strikes and hit | The female elf's sword previously ended at the bottom edge during recoil. Adjusted grip angles also keep long weapon points and staff butts inside the picture on both figures. |
 
-![Original, previous and revised figures in seven affected poses](elf-pixel-review.png)
+The comparison below records the preceding seam and weapon pass at `a6f5bfc`. The animations above use the current art.
+
+![Original, previous and revised figures in seven affected poses from the preceding pass](elf-pixel-review.png)
 
 The updated loader pictures retain every occupied pixel of the original silhouette, including the registered bow. The review checked enclosed patches of terrain against the original limb placement and kept openings between separated limbs. Each triple still differs from each of its parent pairs in every pose.
 

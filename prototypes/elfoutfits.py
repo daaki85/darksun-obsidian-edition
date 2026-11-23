@@ -168,6 +168,24 @@ ROBE_SEAMS = {
 }
 
 
+# Native back edge at the shoulder and the free corner of the trailing
+# panel. In these profile steps the swinging arm hides the stock shirt.
+PROFILE_PANELS = {
+    (2061, 12): (4, -1),
+    (2061, 13): (3, -2),
+    (2059, 13): (2, -2),
+}
+# Left and right edges of the fitted hood above the face in each row.
+# Coordinates follow the retail hairline; fallen is traced feet-down.
+FLYING_HOODS = {
+    16: ((10, 15), (9, 16), (9, 17), (9, 17), (9, 16), (10, 16), (10, 15)),
+    27: ((5, 7), (4, 7), (3, 8), (3, 6), (3, 5), (4, 5), (3, 3)),
+    28: ((5, 6), (5, 10), (5, 11), (4, 12), (4, 12), (4, 12), (5, 12), (6, 10)),
+}
+
+# Isolated rust highlights within locks at the temple and the rear edge.
+HOOD_HIGHLIGHTS = {5: ((11, 4), (11, 5)), 8: ((0, 8),), 12: ((11, 1),)}
+
 # The gold and brown inside a continuous lock belong to the same hood panel.
 # Below the crown keep the native face opening in the front and side views.
 def hood_hair(rows, model, pose, bow, face):
@@ -187,6 +205,25 @@ def hood_hair(rows, model, pose, bow, face):
                 row[x] in figures.HAIRS and (posterior or crown) and not visible_face
             ):
                 cloth.add((x, y))
+        # These rust and shadow tones also occur in skin. Follow the lock
+        # to its edge behind the head; leave the open cheek in a front view.
+        left, right = min(locks), max(locks)
+        if pose in BACK and y <= cy + 1:
+            hair_shadows = (128, 129, 135, 136, 138, 140)
+            while left > 0 and row[left - 1] in hair_shadows and left > cx - 7:
+                left -= 1
+            while right + 1 < len(row) and row[right + 1] in hair_shadows and right < cx + 7:
+                right += 1
+        for x in range(left, right + 1):
+            if (x, y) in bow:
+                continue
+            rear_lock = pose in BACK and row[x] in (74, 128, 129, 135, 136, 138, 140, 144, 148)
+            crown = y <= cy - 4 and row[x] in (138, 140)
+            temple = x < cx - 2 and row[x] in (138, 140)
+            if rear_lock or crown or temple:
+                cloth.add((x, y))
+    if model == figures.ELF_WOMAN:
+        cloth.update(HOOD_HIGHLIGHTS.get(pose, ()))
     return cloth
 
 
@@ -211,6 +248,12 @@ def render(game, model, pose, role, layers=None):
     face = face_pixels(rows, model, pose)
     locks = hood_hair(rows, model, pose, bow, face)
     protected = hair | bow | locks | face
+    if model == figures.ELF_WOMAN and pose in FLYING_HOODS:
+        # Preserve the original slate pixel above the cheek in the hit pose.
+        locks = {
+            (x, y) for y, (left, right) in enumerate(FLYING_HOODS[pose])
+            for x in range(left, right + 1) if rows[y][x] not in (None, 23)
+        }
     # Fingers extend past the waist in the recoil and the front follow-through.
     # Register them to the green retail wristbands, independently of the tunic.
     wrists = {point_up(p) for p in fig.bands(combat, frame)}
@@ -242,6 +285,11 @@ def render(game, model, pose, role, layers=None):
     cape = next((key for key in ("Preserver", "Ranger", "Thief") if key in members), None)
     cloak_ramp = RAMPS[base] if cape == "Thief" else RAMPS.get(cape, dwarf.HOOD)
     cx, cy = JAWS[model][pose]
+    hood_center = cx
+    if model == figures.ELF_WOMAN and pose in FLYING_HOODS:
+        left, right = FLYING_HOODS[pose][2]
+        hood_center = (left + right) / 2
+    hood_top = min((y for x, y in locks if abs(x - hood_center) <= 3), default=cy - 6)
     # Feet on the overturned sprite are at the top of the native bitmap.
     feet = parts.feet
     if fallen and model == figures.ELF_WOMAN:
@@ -284,6 +332,15 @@ def render(game, model, pose, role, layers=None):
     hip = axis(waist - 2)
     profile = pose in (2, 11, 12, 13, 14, 21, 22, 23, 24, 25)
     rear = pose in (1, 7, 8, 9, 10, 18, 19, 20, 25)
+    cap_top = shoulder - 2
+    cap_bottom = shoulder + 1
+    low_cap = "Fighter" in members and (model == figures.ELF_WOMAN or fallen)
+    if low_cap:
+        cap_top = max(shoulder + 1, cy + 2)
+        cap_bottom = cap_top + 1
+    panel = PROFILE_PANELS.get((model, pose))
+    panel_hem = waist + (3 if cape == "Thief" else 5)
+    band_top = shoulder + (4 if rear else 2)
     lit = [sum(v * w for v, w in zip(rgb, (0.299, 0.587, 0.114))) for rgb in game.palette]
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
@@ -352,8 +409,11 @@ def render(game, model, pose, role, layers=None):
                         paint = dwarf.LEATHER[0 if depth == -1 else rank]
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
+                    if model == figures.ELF_WOMAN and torso and y in (band_top, band_top + 1):
+                        paint = dwarf.BRONZE[1 if y > band_top else min(rank, 2)]
                 elif base == "Fighter":
-                    if torso or (c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
+                    if (torso or model == figures.ELF_WOMAN and c in shirt and shoulder <= y <= waist
+                        or c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
                         paint = dwarf.LEATHER[rank]
                         if torso and abs(dx - (1.9 - 4 * t)) < 0.8:
                             paint = dwarf.HIDE[2]
@@ -402,6 +462,11 @@ def render(game, model, pose, role, layers=None):
                     if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1):
                         tunic = RAMPS[base] if base == "Psionicist" else dwarf.LEATHER
                         paint = tunic[rank]
+                # Keep a narrow contact shadow at the far hip; turn the fold
+                # toward warm brown (or deep teal) as it meets the leg.
+                shadow_turn = -1 <= depth <= 4 or base == "Psionicist" and torso and t > 0.35
+                if paint == 208 and shadow_turn and (x - 1, y + 1) in body:
+                    paint = 69 if base == "Psionicist" else 88
                 if (
                     paint is not None
                     and paint not in outfits.SKINC
@@ -434,6 +499,13 @@ def render(game, model, pose, role, layers=None):
                 # The folded lining joins the outer panel to the jerkin behind
                 # the wrist. It shares the equipped cloak's dye and shine mask.
                 drape = drape or (point in cape_fill and c is None)
+                if panel and cape and shoulder - 1 <= y <= panel_hem:
+                    join, corner = panel
+                    drop = (y - shoulder + 1) / (panel_hem - shoulder + 1)
+                    edge = round(corner + (join - corner) * (1 - drop) ** 1.6) + int(y == panel_hem)
+                    if edge <= x <= center and (y > shoulder or c is not None):
+                        drape = True
+                        fold = (x - center) / max(1.0, center - edge)
                 if drape:
                     crease = -0.15 - fall * 0.24
                     shade = 2
@@ -453,7 +525,7 @@ def render(game, model, pose, role, layers=None):
                             paint = dwarf.LEATHER[3 if dx < 2.1 - 4.8 * t else 1]
                 # Keep a borrowed class detail visible on the lower torso or
                 # hem while the shoulder is turned away or hidden by long hair.
-                if "Ranger" in members and cape != "Ranger" and drape and depth == hem:
+                if "Ranger" in members and cape != "Ranger" and drape and (depth == hem or -0.62 < fold < -0.32 or profile and -0.44 < fold < -0.15):
                     paint = dwarf.FOREST[3 if fold < 0 else 2]
                 if "Preserver" in members and base == "Cleric" and depth in (3, 4) and armour:
                     paint = dwarf.PLUM[rank]
@@ -472,9 +544,12 @@ def render(game, model, pose, role, layers=None):
                     and "Psionicist" not in members
                 ):
                     paint = 169 if abs(dx) < 0.55 else 205
-                # A small bone toggle fastens the Fighter's baldric over
-                # the back of the mantle when the shoulder caps turn out of view.
-                if rear and cape == "Preserver" and "Fighter" in members and drape:
+                if cape == "Preserver" and "Fighter" in members and drape:
+                    # A leather strap crosses the visible plum panel and ends
+                    # in bone below the braid, above the Psionicist sash.
+                    strap = fold + 0.76 - 0.34 * t
+                    if -0.24 < strap < 0.20 and depth <= 1:
+                        paint = dwarf.LEATHER[3 if strap < -0.04 else 2]
                     if depth in (0, 1) and -0.85 <= fold <= -0.25:
                         paint = dwarf.BONE[2 if depth == 0 else 0]
                 # Follow the actual sleeve pixels on the upper arm; the far
@@ -483,21 +558,31 @@ def render(game, model, pose, role, layers=None):
                 if (
                     ("Gladiator" in members or "Fighter" in members)
                     and c in shirt
-                    and shoulder - 2 <= y <= shoulder + 1
+                    and cap_top <= y <= cap_bottom
                     and abs(u) > 0.55
                     and ("Fighter" in members or outside > 0)
                 ):
                     ramp = dwarf.BONE if "Fighter" in members else dwarf.BRONZE
                     paint = ramp[3 if y == shoulder - 1 else 0 if y == shoulder + 1 else 2]
+                    if low_cap:
+                        paint = ramp[1 if y == cap_bottom else 2]
                     armour = classoutfits.ARMS
                 if (
                     "Fighter" in members
                     and base == "Cleric"
-                    and depth in (1, 2)
-                    and abs(dx + 1.5) < 1.2
+                    and (depth in (0, 1) and abs(dx) <= radius + 0.5
+                         or depth in (2, 3) and abs(dx + 1.4) < 1.35)
+                    and (cape == "Thief" or not (cape and drape))
                     and paint is not None
                 ):
-                    paint = dwarf.LEATHER[rank]
+                    # Keep the teal sash visible above the leather sword belt.
+                    if "Psionicist" not in members or paint not in dwarf.TEAL or depth >= 1:
+                        paint = dwarf.LEATHER[rank] if depth > 0 else dwarf.LEATHER[1]
+                if "Fighter" in members and "Psionicist" in members and len(members) == 3 and paint is not None:
+                    # The narrow turned end hangs below the crossing part of
+                    # the sash, on the opposite hip from the Fighter's tab.
+                    if 1 <= depth <= 3 and 0.1 < dx - depth * 0.25 < 2.1:
+                        paint = dwarf.TEAL[3 if dx < 1.5 else 2]
             # At the nape the hood runs from the rear of the skull to the
             # shoulder seam. The face and the raised bow remain in front.
             nape = (
@@ -511,11 +596,14 @@ def render(game, model, pose, role, layers=None):
             )
             hood = hooded and point not in bow and (point in locks or nape)
             if hood:
-                distance = (x - cx) / 5
-                shade = 1 if distance > 0.48 else 3 if distance < -0.48 else 2
-                if y < cy - 3 and -0.8 < distance < -0.1:
-                    shade = 4
-                if y > cy - 3 and (c in (128, 129, 179, 180) or y == cy + 2):
+                distance = (x - hood_center) / 4.5
+                drop = y - hood_top
+                shade = 1 if distance > 0.45 else 3 if distance < -0.35 else 2
+                if drop <= 3 and -0.85 < distance + 0.12 * (3 - drop) < 0.05:
+                    shade = 4 if drop < 3 else 3
+                if drop >= 5 and (distance > 0.15 or distance < -0.60):
+                    shade = max(1, shade - 1)
+                if nape or (drop >= 4 and c in (128, 129, 179, 180)):
                     shade = max(1, shade - 1)
                 paint = RAMPS[base][shade]
                 cloak_shade = shade + 1

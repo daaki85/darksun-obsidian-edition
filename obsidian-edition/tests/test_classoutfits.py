@@ -495,6 +495,37 @@ class ElfOutfitTests(unittest.TestCase):
                             self.assertNotIn((11, y), bow.regions[classoutfits.CHEST])
                             self.assertIsNotNone(bow.image[y + 4][11 + 4])
 
+    def test_profile_capes_continue_behind_the_swinging_elbow(self):
+        # Both intermediate steps used to expose the ground at these seams.
+        for role in classoutfits.ELF_ROLES.values():
+            if not {"Preserver", "Ranger", "Thief"}.intersection(role.split("/")):
+                continue
+            for model, index, x in ((2061, 12, 0), (2061, 13, -1), (2059, 13, -1)):
+                with self.subTest(model=model, role=role, step=index):
+                    frame = classoutfits.frames(role, False, model)[index]
+                    self.assertIn((x, 14), {(a, b) for a, b, _ in frame.cloak})
+                    self.assertIsNotNone(frame.image[14 + 4][x + 4])
+                    self.assertNotIn((x, 14), frame.regions[classoutfits.CHEST])
+
+    def test_hood_covers_the_rear_crown_and_releases_the_flying_lock(self):
+        for role in classoutfits.ELF_ROLES.values():
+            if "Thief" not in role.split("/"):
+                continue
+            for model, x, y in ((2059, 8, 0), (2061, 10, 3)):
+                with self.subTest(model=model, role=role):
+                    rear = classoutfits.frames(role, False, model)[1]
+                    self.assertIn((x, y), {(a, b) for a, b, _ in rear.cloak})
+                    self.assertIsNotNone(rear.image[y + 4][x + 4])
+            for index, point in ((5, (11, 4)), (5, (11, 5)), (8, (0, 8)), (12, (11, 1))):
+                frame = classoutfits.frames(role, False, 2059)[index]
+                self.assertIn(point, {(a, b) for a, b, _ in frame.cloak})
+            for index, tip in ((1, (7, 2)), (12, (1, 6)), (13, (2, 15))):
+                with self.subTest(role=role, frame=index):
+                    frame = classoutfits.frames(role, True, 2059)[index]
+                    self.assertNotIn(tip, {(a, b) for a, b, _ in frame.cloak})
+                    x, y = tip
+                    self.assertIsNone(frame.image[y + 4][x + 4])
+
     def test_moving_mantle_keeps_underfold_and_fighter_fastening(self):
         for role in classoutfits.ELF_ROLES.values():
             if "Preserver" in role.split("/"):
