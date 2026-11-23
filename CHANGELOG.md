@@ -75,6 +75,12 @@ Releases, newest first (2.12.0 and older in the archive):
   features page, the player's guide, Items and the dice log page have the new weapons and traits.
 
 **Dev**
+- The sixth memory pass: 1,104 bytes of upper memory back for DSCLOG (32 were left with the six
+  weapons; 1,136 now) and 688 of its segment, by one far call into the game for 35 sites
+  (`GAME_FAR`), shared code moving an interrupt's frame (`FRAME_UP`, `FRAME_DOWN`, `OVR_FRAME`) and
+  the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
+  through the install's vector table; `test_framecode` runs the shared routines. A play log:
+  [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
 
