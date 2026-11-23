@@ -902,6 +902,32 @@ fireball either way, a picture Shattered Lands has too. The Options tab's **Wake
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
 [requirements](README.md#requirements).
 
+### Taking the party to Wake of the Ravager
+
+The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered
+Lands save into the sequel's roster, for a game that goes on with the same characters. Choose the
+save; the save itself is not changed. Then start Wake of the Ravager from the Loader and **ADD** them
+on its CREATE CHARACTERS screen. A window lists what came across.
+
+- **Every item comes across.** What the sequel has, it gets as the sequel's own item (as SSI's
+  CHARTRAN does); the rest, which CHARTRAN turns into money bags, the Loader makes for the sequel,
+  with its picture and name from your own Shattered Lands files: the mod's weapons, armour and magic
+  items, and the game's quest items as keepsakes (carried and sold, no use in the sequel's story).
+  Scrolls come across as the sequel's scroll of that spell; a spell the sequel lacks makes a keepsake.
+  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind.
+- **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
+  their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
+  the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
+  the Tome of Understanding (+1 WIS). The sequel's own rules hold where they differ: Focus Heat burns
+  for 2d6+6, and an item is used from its box only in a fight, on its owner's turn. Still to come:
+  the Boots and Cloak of Elvenkind.
+- **Kits, weapon specs and spells** come across with each character.
+- **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
+  chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.
+- **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character
+  taken across before takes its old place again; the others take free places. With too few free, the
+  Loader says so: delete characters in the sequel first.
+
 ## Saves
 
 The Options tab's **Saves** section (quick save and autosave, and the named saves), and the room the Loader makes for more saves and characters
