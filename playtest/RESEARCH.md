@@ -428,6 +428,13 @@ raised before stopping.
   picture against its store bytes (`check`; all should match), lists the STALE cells (`stale`) or
   dumps a slot. The picture pool is 60,000 bytes; opening the inventory (I) puts every picture out
   of memory (`cachelist.py`: 0 in memory).
+- **A class outfit checked live** (logs/2026-11-23-elf-outfits-live.md): `outfitlive.py MEMBER
+  classes=C1,C2,C3 slot=SLOT` sets the member's class bytes (creation codes: 1 cleric, 6 druid, 9
+  fighter, 10 gladiator, 11 preserver, 12 psionicist, 13 ranger, 17 thief) and takes an item off and
+  on, and after each change compares the Loader's copy of SEGOBJEX.GFF with `Pictures.build` of the
+  outfit and the worn gear, byte for byte; it puts the classes back. `pens-after-arena`'s elf, Cilla
+  (member 3, object 305), is a Preserver/Druid/Thief: no elf outfit has a druid, so she needs a
+  class byte changed to be dressed. Memory edit: autosave and quick save off first.
 - **Changing outfits for a test**: `outfitcycle.py MEMBER SLOT N` changes an outfit N times
   (waiting for the Loader's copy to be written, not for the slots to grow) and prints slots, STALE,
   the store's end and whether the figure is drawn each time; `randout.py N [SEED]` puts random items
