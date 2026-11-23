@@ -119,13 +119,66 @@ def scroll_spell(rec: bytes) -> Optional[Tuple[int, int]]:
     return None if place is None else (WIZARD_SCROLL, place + 1)
 
 
+# An item's spell (a weapon's on a hit, a worn item's on its wearer), the Loader's way. Shattered
+# Lands keeps it at the item's +0Fh, one past its number (worldgear.ITEM_SPELL; its box's icon the
+# word at +2); the sequel at +10h, a word, one past its own number, the icon's at +2 too (its weapons'
+# hit casts it: DSUN 5D20Dh, SL's 58B63h). The two games number their spells apart (Focus Heat SL's
+# 116, the sequel's 174), so spell_map matches them by name: SL's RESOURCE.GFF's SPIN n (spell n - 1,
+# "NAME: what it does") with the sequel's spell records' names (ravlog.spell_table). CHARTRAN's
+# objects keep the sequel's own spell; the Loader's own objects (ravitems: the mod's items) take
+# their SL item's. The Spellarcher's arrows have their spell by their name (spellarrows.ARROWS).
+SL_ITEM_SPELL, ITEM_POWER, ITEM_SPELL_SHOWN = 0x0F, 0x10, 0x02
+SPELL_ALIASES = {  # (SL's name: the sequel's, where the two spell one spell apart)
+    "DETECT INVISIBILITY": "DETECT INVISIBLE", "MELF'S ACID ARROW": "ACID ARROW",
+    "MELF'S MINUTE METEORS": "MINUTE METEORS", "PROTECTION FROM NORMAL MISSILES": "PROTECTION FROM MISSILES",
+    "STONESKIN": "STONE SKIN", "TURN PEBBLE TO BOULDER": "PEBBLE TO BOULDER", "CLOUDKILL": "CLOUD KILL",
+    "FEEBLEMIND": "FEEBLE MIND", "INVISIBILITY TO UNDEAD": "INVISIBLE TO UNDEAD", "MAGICAL STONE": "MAGIC STONE",
+    "MAGICAL VESTMENT": "MAGIC VESTMENT", "GLITTERDUST": "GLITTER DUST", "FLAME ARROW": "FLAMING ARROW",
+    "PROTECTION FROM EVIL, 10' RADIUS": "PROTECTION FROM EVIL 10", "IRONSKIN": "IRON SKIN",
+    "CURE BLINDNESS OR DEAFNESS": "CURE BLINDNESS", "CAUSE BLINDNESS OR DEAFNESS": "CAUSE BLINDNESS",
+    "LIFE DRAINING": "LIFE DRAIN", "MINOR GLOBE OF INVULNERABILITY": "M GLOBE OF INVULNERABILITY",
+}
+
+
+def spell_map(sl_resources: Chunks, sequel_names: List[str]) -> Dict[int, int]:
+    """Each SL spell (its number) the sequel has, and the sequel's number for it, by their names."""
+    ours = {n.upper(): i for i, n in enumerate(sequel_names) if n}
+    out: Dict[int, int] = {}
+    for (kind, number), text in sl_resources.items():
+        if kind != "SPIN" or number < 1:
+            continue
+        name = text.split(b":", 1)[0].decode("latin1").strip().upper()
+        spell = ours.get(SPELL_ALIASES.get(name, name))
+        if spell is not None:
+            out[number - 1] = spell
+    return out
+
+
+def is_own(obj: int) -> bool:
+    """One of the Loader's own objects (ravitems: OWN_HIGH on, below SL_HIGH)."""
+    from .ravitems import OWN_HIGH, SL_HIGH
+    return OWN_HIGH <= obj < SL_HIGH
+
+
+def item_spell(rec: bytes, spells: Mapping[int, int]) -> int:
+    """The sequel's spell, one past its number (0: none), for SL's item REC: its +0Fh, or a spell
+    arrow's by its name; 0 for a spell the sequel lacks."""
+    from .spellarrows import ARROWS
+    spell = rec[SL_ITEM_SPELL] - 1
+    if spell < 0:
+        name, = struct.unpack_from("<H", rec, game.ITEM_NAME)
+        spell = next((a.spell for a in ARROWS if a.name == name), -1)
+    return spells[spell] + 1 if spell in spells else 0
+
+
 class Sequel(NamedTuple):
     """What the transfer reads from the sequel's folder: ITEMS.BIN's pairs and the objects' records;
     with SCROLLS (scroll_objects: each scroll type and spell, the sequel's object) scrolls go the
-    mod's way."""
+    mod's way, and with SPELLS (spell_map) the Loader's own objects take their SL item's spell."""
     counterparts: Dict[int, int]
     objects: Chunks
     scrolls: Optional[Dict[Tuple[int, int], int]] = None
+    spells: Optional[Dict[int, int]] = None
 
     @property
     def loader(self) -> bool:
@@ -200,6 +253,10 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
         out[SCROLL_USES] = sequel.record(new)[SCROLL_USES]
         struct.pack_into("<H", out, SCROLL_SPELL, spell[1])
         struct.pack_into("<H", out, SCROLL_POWER, spell[1])
+    elif sequel.spells is not None and is_own(new) and not is_scroll(rec):  # (a keepsake scroll: none)
+        power = item_spell(rec, sequel.spells)
+        struct.pack_into("<H", out, ITEM_POWER, power)
+        struct.pack_into("<H", out, ITEM_SPELL_SHOWN, power)
     return bytes(out), new
 
 
@@ -474,7 +531,13 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
     import os
     from . import art, icons, ravager, ravitems
     from .gff import read_gff, write_atomic
+    from . import ravlog
     sequel = sequel._replace(scrolls=scroll_objects(sequel))
+    with open(os.path.join(sl_dir, ravager.RESOURCE_FILE), "rb") as f:
+        sl_resources = read_gff(f.read())
+    with open(os.path.join(folder, ravager.RESOURCE_FILE), "rb") as f:
+        sequel_names = ravlog.spell_table(f.read())[1]
+    sequel = sequel._replace(spells=spell_map(sl_resources, sequel_names))
     need = lacking(save, sequel)
     kept = ravager.read_added(dos_dir)
     names_text = kept.get(ravitems.NAMES_CHUNK, b"")

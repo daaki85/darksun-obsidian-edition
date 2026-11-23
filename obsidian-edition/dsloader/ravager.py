@@ -494,6 +494,10 @@ PATCHES: Tuple[Patch, ...] = (
     # the Amulet of Magic Resistance (SL's AMULET_MR): DSCLOG2's site 45 at the magic resistance routine's
     # "cmp word [bp-2],0" (84B24h, SL's 7A4FDh), its 15% added first (the girdles: ITEM_REAR, from MISSILE_REAR)
     Patch("amulet_resistance", 0x84B24, bytes.fromhex("837efe00"), bytes((0xCD, VEC_SITE, 45, 0x90))),
+    # a weapon's spell on a hit rolls no attack (SL's ARROW_LEVEL, TH_WEAPON): DSCLOG2's WEAPON_CAST
+    # makes the cast's pushes of its level and spell ("push 6 / push word [bp-18h]", 5D2C2h, SL's
+    # 58BE6h) and marks the cast a weapon's for TH_CAST
+    Patch("weapon_cast", 0x5D2C2, bytes.fromhex("6a06ff76e8"), _site(46, 5)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

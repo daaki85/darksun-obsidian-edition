@@ -397,3 +397,49 @@ class SequelTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ItemSpellTests(unittest.TestCase):
+    """An item's spell, the Loader's way (ravtransfer.spell_map, item_spell): the mod's items keep it."""
+
+    def test_spell_map(self):
+        sl = {("SPIN", 117): b"FOCUS HEAT:  Inflicts 2 to 12 pts\r\n", ("SPIN", 73): b"CAUSE LIGHT WOUNDS: x",
+              ("SPIN", 14): b"DETECT INVISIBILITY: x", ("SPIN", 200): b"NOTHING THERE: x", ("TEXT", 1): b"X: y"}
+        names = [""] * 200
+        names[174], names[118], names[13] = "Focus Heat", "Cause Light Wounds", "Detect Invisible"
+        self.assertEqual(rt.spell_map(sl, names), {116: 174, 72: 118, 13: 13})
+
+    def test_own_objects(self):
+        sequel = made_sequel()
+        objects = dict(sequel.objects)
+        objects[("RDFF", 21500)] = wotr_record(21500, 106, 0, 30)  # (a Loader's object: the Searing Blade's)
+        sequel = sequel._replace(counterparts={1010: 704, 1500: 21500}, objects=objects,
+                                 scrolls={}, spells={116: 174, 3: 3})
+        blade = bytearray(sl_item(1500))
+        blade[rt.SL_ITEM_SPELL] = 117
+        rec, new = rt.item(bytes(blade), sequel)
+        self.assertEqual((new, struct.unpack_from("<H", rec, rt.ITEM_POWER)[0],
+                          struct.unpack_from("<H", rec, rt.ITEM_SPELL_SHOWN)[0]), (21500, 175, 175))
+        arrows = bytearray(sl_item(1500))
+        struct.pack_into("<H", arrows, 0x12, 0x16D)  # (Chill Arrows, by name)
+        self.assertEqual(struct.unpack_from("<H", rt.item(bytes(arrows), sequel)[0], rt.ITEM_POWER)[0], 4)
+        blade[rt.SL_ITEM_SPELL] = 50  # (a spell the sequel lacks: none)
+        self.assertEqual(struct.unpack_from("<H", rt.item(bytes(blade), sequel)[0], rt.ITEM_POWER)[0], 0)
+        # the sequel's own object keeps its spell; CHARTRAN's way (no spells) changes nothing
+        sword = bytearray(sl_item(1010))
+        sword[rt.SL_ITEM_SPELL] = 117
+        self.assertEqual(rt.item(bytes(sword), sequel)[0][rt.ITEM_POWER], 0)
+        self.assertEqual(rt.item(bytes(blade), sequel._replace(spells=None))[0][rt.ITEM_POWER], 0)
+
+    @unittest.skipUnless(WOTR and os.environ.get("DSUN_SL"), "needs DSUN_WOTR and DSUN_SL (the games' folders)")
+    def test_real_names(self):
+        from dsloader import ravlog
+        with open(os.path.join(os.environ["DSUN_SL"], "RESOURCE.GFF"), "rb") as f:
+            sl = gff.read_gff(f.read())
+        with open(os.path.join(WOTR, "RESOURCE.GFF"), "rb") as f:
+            names = ravlog.spell_table(f.read())[1]
+        spells = rt.spell_map(sl, names)
+        # the mod's items' spells: Focus Heat, Cause Light Wounds, Detect Invisibility, Resist Fire,
+        # Cloak of Bravery, Protection from Normal Missiles, Protection from Evil; the arrows' touches
+        self.assertEqual([spells.get(s) for s in (116, 72, 13, 87, 109, 36, 76, 3, 10, 39)],
+                         [174, 118, 13, 138, 167, 35, 122, 3, 10, 38])

@@ -2991,6 +2991,7 @@ site_table:
         dw prot_ac                          ; 43 SITE_PROT_AC (a worn item's AC counted, PROTECTION)
         dw prot_save                        ; 44 SITE_PROT_SAVE (a save's modifiers started)
         dw amulet_mr                        ; 45 SITE_AMULET_MR (a target's magic resistance tested)
+        dw weapon_cast                      ; 46 SITE_WEAPON_CAST (a weapon's spell cast on a hit)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3930,7 +3931,12 @@ th_cast:
         mov al, [bp + 0x0C]
         mov [cs:th_level], al
         mov byte [cs:th_armed], 1
-        les bx, [bp + 2]                ; (the caller's way back)
+        cmp byte [cs:th_weapon], 0      ; (WEAPON_CAST's: a weapon's spell on a hit, no roll)
+        je .back
+        mov byte [cs:th_weapon], 0
+        mov byte [cs:th_armed], 0
+        jmp .out
+.back:  les bx, [bp + 2]                ; (the caller's way back)
         cmp dword [es:bx], WEAPON_BACK
         jne .out
         cmp byte [es:bx + 4], WEAPON_BACK4
@@ -3948,6 +3954,35 @@ TH_SPELLS equ $ - th_missiles                     ;   Wounds, Cause Disease, Cau
 th_call   dw 0, 0
 th_armed  db 0
 th_miss   db 0
+th_weapon db 0                                    ; (WEAPON_CAST: the next cast a weapon's)
+; WEAPON_CAST (site 46, "weapon_cast"): "push 6 / push word [bp-18h]" (5D2C2h; 5 bytes), the level and
+; the spell pushed for the cast of a weapon's spell on the target hit (608h:89h, 5D2CCh; SL's
+; ARROW_LEVEL at 58BE6h). The pushes made, under the INT's frame as they would have been, and the cast
+; marked a weapon's (TH_WEAPON) so it rolls no attack (TH_CAST). TH_CAST's test of the way back's bytes
+; failed in play (2026-11-23: a Cause Light Wounds and an arrow's Chill Touch from a hit each rolled a
+; touch attack; the overlay manager's return to the attack's overlay need not be its code). All
+; registers kept.
+WEAPON_CAST_LEVEL equ 6
+weapon_cast:
+        sub sp, 4
+        push bx
+        push ax
+        mov bx, sp                      ; (BX+8 the INT's IP, +10 CS, +12 FLAGS: moved 4 down)
+        mov ax, [ss:bx + 8]
+        mov [ss:bx + 4], ax
+        mov ax, [ss:bx + 10]
+        mov [ss:bx + 6], ax
+        mov ax, [ss:bx + 12]
+        mov [ss:bx + 8], ax
+        mov ax, [bp - 0x18]             ; (the spell + 1, less 1: the game's [BP-18h])
+        mov [ss:bx + 10], ax
+        mov word [ss:bx + 12], WEAPON_CAST_LEVEL
+        mov byte [cs:th_weapon], 1
+        inc word [cs:weapon_casts]
+        pop ax
+        pop bx
+        iret
+weapon_casts dw 0
 th_level  db 0
 th_target dw 0xFFFF
 cast_who  dw 0

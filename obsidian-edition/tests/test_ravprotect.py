@@ -252,11 +252,24 @@ class ProtectionTests(unittest.TestCase):
                 self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), after == 0)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_SI), 0x33)
 
+    def test_weapon_cast(self):
+        """WEAPON_CAST: the game's "push 6 / push word [bp-18h]" made under the IRET frame, the cast
+        marked a weapon's (TH_WEAPON), every register kept."""
+        mu = self.machine([])
+        mu.mem_write(SS * 16 + 0x600 - 0x18, struct.pack("<H", 174))
+        self.call(mu, "weapon_cast", eax=0x1111, ebx=0x2222)
+        sp = mu.reg_read(r.UC_X86_REG_SP)
+        self.assertEqual(sp, 0x800 - 4)
+        self.assertEqual(struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4)), (174, 6))
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX)), (0x1111, 0x2222))
+        self.assertEqual(mu.mem_read(TSR * 16 + self.sym["th_weapon"], 1)[0], 1)
+
     def test_patches(self):
         """The two sites are where the game has what they replace."""
         patches = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(patches["protection_ac"].replacement, bytes((0xCD, ravager.VEC_SITE, 43, 0x90, 0x90, 0x90)))
         self.assertEqual(patches["protection_save"].replacement, bytes((0xCD, ravager.VEC_SITE, 44, 0x90, 0x90)))
+        self.assertEqual(patches["weapon_cast"].replacement, bytes((0xCD, ravager.VEC_SITE, 46, 0x90, 0x90)))
 
 
 if __name__ == "__main__":

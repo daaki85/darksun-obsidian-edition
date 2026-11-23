@@ -1131,6 +1131,11 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   with `timeout`.
   With a new Xvfb the same cast on the same build ran clean three times (00:45-01:00 UTC,
   logs/2026-11-23-ravager-girdles-amulet.md), so the display, not the helper's new code, is the likely cause.
+- **An item's spell in the sequel** (2026-11-23, logs/2026-11-23-ravager-on-hit.md): the item's +10h word, the
+  spell + 1 (its box's icon the +2 word, the same); a weapon's is cast on the one hit at level 6 (5D2CCh), and
+  for a shot the ammunition's first (a word at 308h:[7]). To try one, write both words in memory on a held
+  weapon or on arrows (the Draxans' are type 18, items 154, 148 and 142 in ravhold.sh's fight). SL and the
+  sequel number spells apart: match them by name (`ravtransfer.spell_map`).
 - **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).
