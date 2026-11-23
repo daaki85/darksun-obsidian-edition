@@ -285,7 +285,13 @@ class DwarfOutfitTests(unittest.TestCase):
                                 self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
     def test_thief_crown_stays_visible_in_every_pose(self):
-        slate = {208, 17, 20, 24, 28}
+        leather = {208, 88, 207, 92, 96}
+        fabrics = {
+            "Thief": {208, 17, 20, 24, 28},
+            "Fighter/Thief": leather,
+            "Psionicist/Thief": {17, 69, 70, 71, 73},
+            "Fighter/Psionicist/Thief": leather | {71, 73},
+        }
         for model in classoutfits.DWARVES:
             for role in classoutfits.DWARF_ROLES.values():
                 if "Thief" not in role:
@@ -300,7 +306,21 @@ class DwarfOutfitTests(unittest.TestCase):
                         with self.subTest(model=model, role=role, combat=combat, frame=f):
                             fabric = [pose.image[y + 4][x + 4] for y in (crown, brow)
                                       for x in range(center - 4, center + 5)]
-                            self.assertGreaterEqual(sum(c in slate for c in fabric), 8)
+                            self.assertGreaterEqual(sum(c in fabrics[role] for c in fabric), 8)
+
+    def test_front_hoods_leave_the_jaw_open(self):
+        for model in classoutfits.DWARVES:
+            for role in classoutfits.DWARF_ROLES.values():
+                if "Thief" not in role:
+                    continue
+                for f, cx in ((0, 10), (3, 9), (4, 9), (5, 9), (6, 10)):
+                    pose = classoutfits.frames(role, False, model)[f]
+                    with self.subTest(model=model, role=role, frame=f):
+                        # These five points across the jaw keep the native skin pixels.
+                        self.assertTrue(all(pose.image[4 + 5][4 + x] is None
+                                            for x in range(cx - 2, cx + 3)))
+                        if role == "Fighter/Psionicist/Thief":
+                            self.assertEqual(pose.image[4][4 + cx - 1], 73)
 
     def test_cleric_front_fold_tracks_the_rib_cage_in_profile(self):
         # The visible fold changes sides relative to the crossing wrist.

@@ -4,6 +4,8 @@ Both dwarf figures were checked across 12 legal builds and both humans across ei
 
 ## Thief hood and Cleric profile
 
+The comparison below records the earlier profile pass. The latest hood revision opens the front below the chin and matches each multiclass hood to its leather or teal clothing. [Watch all four current Thief hoods](dwarf-thief-hoods.gif)
+
 The comparison opens on side idle. Follow the Cleric’s cream fold from beneath the jaw to the belt as the wrist moves across it. The previous robe showed mainly behind the arm. On side-walk step 3 the raised arm crosses the chest. A six-pixel correction to the shared wrist mask keeps the cloth above the knuckles visible on the Cleric and the other dressed torsos. On the Thief, the slate crown extends down behind the ear while leaving the eyes and cheek visible. The loop covers all 29 poses on both dwarves.
 
 ![Previous and revised dwarf Cleric and Thief in synchronized poses, female above male](dwarf-hood-robe.gif)

@@ -198,23 +198,23 @@ ROBE_FRONTS = {
 }
 
 
-def hood_pixel(x, row, head_rows, turned):
-    """Slate crown, lit outer fold and shaded lining around the open face."""
+def hood_shade(x, row, head_rows, turned):
+    """Value on the crown, outer fold or lining of the open hood."""
     if not 0 <= row < len(head_rows):
         return None
     lo, hi = head_rows[row]
     if row == 0 and -2 <= x <= (0 if turned else 2):
-        return HOOD[4 if x == -1 else 3 if x < 1 else 2]
+        return 4 if x == -1 else 3 if x < 1 else 2
     if row == 1 and -3 <= x <= (2 if turned else 3):
-        return HOOD[3 if x <= -1 else 2 if x < 2 else 1]
+        return 3 if x <= -1 else 2 if x < 2 else 1
     if row >= 2:
         # The thicker trailing fold descends behind the profile ear. Taper
         # both edges toward the collar and preserve the eyes and cheek.
         outer = lo - (2 if turned and row in (3, 4) else 1)
         if outer <= x <= lo + int(turned and row <= 3):
-            return HOOD[2 if x == outer else 3 if x <= lo else 1]
+            return 2 if x == outer else 3 if x <= lo else 1
         if not turned and hi <= x <= hi + 1:
-            return HOOD[2 if x == hi else 1]
+            return 2 if x == hi else 1
     return None
 
 
@@ -271,6 +271,16 @@ def draw(game, model, k, role, design=None, layers=None):
     else:
         head_rows = FRONT_HEAD
     hooded = role == "Thief" or (design and design.hood)
+    hood_ramp = HOOD
+    if design and design.hood:
+        hood_ramp = LEATHER
+    elif hooded and design and design.sash:
+        hood_ramp = TEAL
+    trimmed_hood = design and design.hood and design.sash
+    turned_hood = profile and k != 21
+    # Front flaps stop above the two lower jaw rows. The short recoil
+    # and fallen heads keep a fourth row of cloth at the temples.
+    hood_end = len(head_rows) if turned_hood else max(4, len(head_rows) - 2)
     robe_front = ROBE_FRONTS.get(k) if role == "Priest" else None
     left, right = SHOULDERS[registration]
     guards = {}
@@ -456,7 +466,7 @@ def draw(game, model, k, role, design=None, layers=None):
             if design:
                 # A short cowl leaves the fighter's shoulder caps and legs visible.
                 if design.hood and body and 0 <= depth <= 2 and abs(dx) <= 2.5 - 0.55 * depth:
-                    paint = HOOD[1 if dx > 1 else 3 if dx < -0.5 else 2]
+                    paint = hood_ramp[1 if dx > 1 else 3 if dx < -0.5 else 2]
                 # Carry the baldric across the back as well as the front. The
                 # short woven end falls over the belt and remains visible in profile.
                 if design.sash and paint is not None and 0 <= depth and d <= 3:
@@ -479,11 +489,21 @@ def draw(game, model, k, role, design=None, layers=None):
                 paint = c if head else skin
             if hooded:
                 if rear:
-                    hood = HOOD[min(3, int(hue[c] // 48))] if head else None
+                    shade = min(3, int(hue[c] // 48)) if head else None
                 else:
-                    hood = hood_pixel(x - cx, row, head_rows, profile and k != 21)
-                if hood is not None:
-                    paint = hood
+                    shade = hood_shade(x - cx, row, head_rows, turned_hood) if row < hood_end else None
+                    # Let the stock jaw and the clean base beside it show
+                    # between the two ends of the hood, even above a cowl.
+                    if hood_end <= row < len(head_rows) and abs(x - cx) <= 2 and (x, y) not in guards:
+                        paint = c if head else skin
+                        fold_rank = None
+                        surface = 0
+                if shade is not None:
+                    paint = hood_ramp[shade]
+                    # A single seam picks up the triple-class sash, including
+                    # on the back where the front opening is out of view.
+                    if trimmed_hood and x == cx - 1 and row <= (3 if rear else 1):
+                        paint = TEAL[4 if row == 0 else 3]
                     fold_rank = None
                     surface = 0
             if hand:
@@ -621,10 +641,12 @@ def proposal_sheet(game):
 
 def render_proposals(game, output):
     proposal_sheet(game).save(output / "dwarf-proposals.png")
+    thieves = tuple(d for d in SINGLES + PAIRS + TRIPLES if d.hood or d.base == "Thief")
     for key, title, designs in (
         ("single", "Dwarf single classes", SINGLES),
         ("double", "Dwarf two-class outfits", PAIRS),
         ("triple", "Dwarf three-class outfits", TRIPLES),
+        ("thief-hoods", "Dwarf Thief hoods", thieves),
     ):
         frames = [proposal_board(game, title, designs, k) for k in range(len(NAMES))]
         frames[0].save(
