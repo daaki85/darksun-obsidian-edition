@@ -36,6 +36,8 @@ The cream Cleric robe gathers at the belt and opens over the knee. On the Preser
 
 The comparison uses the loader’s walking and fighting pictures on both figures. Previous shows commit `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
 
+The male Preserver and Ranger have the heaviest outlines on side walk steps 2 and 3. The cloth gathers into a blunt wedge behind the elbow. The original blue Mage and cloaked human also flare during the stride, but their trailing edges taper to a point. The female Thief’s hood has a broad slate highlight in front strike 2. It looks angular at 3× and still reads as a hood at game size. The Psionicist’s straight teal side in profile is another small flat area. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
+
 | Checklist item | Result |
 |---|---|
 | Single classes | Reviewed 406 poses, including the three idles, all walk steps, strikes, bows, hit and fall. The bronze guard and bone caps remain small. The Gladiator keeps the diagonal harness. |
