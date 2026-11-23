@@ -303,17 +303,14 @@ def draw(game, model, k, role, design=None, layers=None):
     hood_end = len(head_rows) if turned_hood else max(4, len(head_rows) - 2)
     shoulder_fold = HOOD_SHOULDERS.get(k) if hooded else None
     fighter = role == "Warrior"
-    robe_guard = design and design.shoulders
-    broad_sash = design and design.sash and (fighter or robe_guard)
     # The jerkin and the robe follow the same rib cage in a side view.
     side_jerkin = fighter and k in (2, 11, 12, 13, 14)
     garment_front = ROBE_FRONTS.get(k) if role == "Priest" or side_jerkin else None
     left, right = SHOULDERS[registration]
     guards = {}
-    if fighter or robe_guard:
-        ramp = HIDE if robe_guard else BONE
-        guards.update(shoulder_guard(rows, left, 1, ramp))
-        guards.update(shoulder_guard(rows, right, -1, ramp))
+    if fighter or (design and design.shoulders):
+        guards.update(shoulder_guard(rows, left, 1, BONE))
+        guards.update(shoulder_guard(rows, right, -1, BONE))
     elif role == "Gladiator":
         # The same anatomical arm is on screen left in a rear view.
         # Only its leather strap is visible when the arm turns away.
@@ -518,36 +515,18 @@ def draw(game, model, k, role, design=None, layers=None):
                 paint = 155 if depth == -1 else 168 if depth == 1 else 205 if dx < -1.8 else 207
             if role == "Psionicist" and torso and abs(dx - (2.5 - 5 * t)) < 0.8:
                 paint = 72 if depth > 1 else 169
-            if robe_guard and body:
-                # The leather backing extends below each fitted cap. Taper it
-                # into a harness on the ribs without widening the arm silhouette.
-                for point, inward in ((left, 1), (right, -1)):
-                    if point is None:
-                        continue
-                    rise = y - point[1]
-                    across = inward * (x - point[0])
-                    if 1 <= rise <= 4 and -2 + rise // 2 <= across <= 2:
-                        paint = HIDE[0 if across == 2 or rise == 4 else 2 if across == 0 else 1]
-                        surface = co.CHEST
-                        cape = False
-                        fold_rank = None
             if design:
                 # A short cowl leaves the fighter's shoulder caps and legs visible.
                 if design.hood and body and 0 <= depth <= 2 and abs(dx) <= 2.5 - 0.55 * depth:
                     paint = hood_ramp[1 if dx > 1 else 3 if dx < -0.5 else 2]
                 # Carry the baldric across the back as well as the front. The
                 # short woven end falls over the belt and remains visible in profile.
-                if design.sash and paint is not None and 0 <= depth and d <= 3:
+                # The raised profile jerkin fills the neckline below the jaw;
+                # the sash still starts at its original shoulder seam.
+                if design.sash and paint is not None and 0 <= depth and d <= 3 and not (side_jerkin and neck):
                     strap_x = (1.8 - 3.9 * t) * (-1 if rear else 1)
                     delta = dx - strap_x
-                    if broad_sash:
-                        # The diagonal widens over the ribs and gathers into a
-                        # short end below the belt. The lit seam turns with it.
-                        sash_width = 1.85 if d < 0 else 2.1 if d == 0 else 1.3
-                        if abs(delta) <= sash_width:
-                            paint = (169 if d == 0 and abs(delta) < 0.6 else
-                                     TEAL[2 if delta > sash_width - 0.8 else 4 if delta < -sash_width + 1 else 3])
-                    elif abs(delta) <= (1.05 if d <= 0 else 0.78):
+                    if abs(delta) <= (1.05 if d <= 0 else 0.78):
                         paint = 169 if d == 0 else TEAL[4 if delta < -0.12 else 3 if d < 0 else 2]
             if (x, y) in guards:
                 paint = guards[x, y]

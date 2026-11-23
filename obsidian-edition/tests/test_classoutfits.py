@@ -299,13 +299,14 @@ class DwarfOutfitTests(unittest.TestCase):
             for role in ("Cleric/Fighter", "Cleric/Fighter/Psionicist"):
                 pose = classoutfits.frames(role, False, model)[0]
                 caps = [pose.image[y + 4][x + 4] for x, y in pose.regions[classoutfits.ARMS]]
-                self.assertIn(92, caps)
-                self.assertNotIn(199, caps)
+                self.assertIn(199, caps)
+                self.assertNotIn(92, caps)
             for f in (0, 1):
                 pose = classoutfits.frames("Fighter/Psionicist", False, model)[f]
-                # A single bright thread was lost against the tunic in these views.
-                runs = (row[x:x + 3] for row in pose.image for x in range(len(row) - 2))
-                self.assertTrue(any(set(run) <= {70, 71, 73} for run in runs), (model, f))
+                # The diagonal is two pixels wide on the lower rib cage.
+                for y in (9, 11):
+                    self.assertEqual(sum(c in (70, 71, 73) for c in pose.image[4 + y]), 2,
+                                     (model, f, y))
 
     hood_fabrics = {
         "Thief": {208, 17, 20, 24, 28},

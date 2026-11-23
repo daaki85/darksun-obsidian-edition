@@ -4,9 +4,9 @@ Both dwarf figures were checked across 12 legal builds and both humans across ei
 
 ## Fighter shoulders, hips and sash
 
-The comparison opens on front idle. Look across the first two columns to compare the plain Cleric’s cream shoulders with the Cleric/Fighter’s fitted dark leather. In the Fighter column, the two flaps below the belt follow the thighs through the stride. The old right flap used the same near-black shade across several rows and could extend into the space beside the leg.
+The comparison opens on front idle. Look across the first two columns to compare the plain Cleric’s cream shoulders with the Cleric/Fighter’s restored pale bone caps. In the Fighter column, the two flaps below the belt follow the thighs through the stride. The comparison shows the tapered hip flaps in both versions.
 
-In side idle and all four side steps, the Fighter’s jerkin has overlapping leather panels with small pale stitches. The crossing wrist still passes in front on step three. The Fighter/Psionicist wears a broader teal sash with a shaded edge, visible across the chest and the back. Both triples that combine Fighter and Psionicist use this sash.
+In side idle and all four side steps, the Fighter’s jerkin has overlapping leather panels with small pale stitches. The crossing wrist still passes in front on step three. The Fighter/Psionicist again wears the narrow teal sash, visible across the chest and the back. Both triples that combine Fighter and Psionicist use this sash.
 
 ![Previous and revised dwarf Cleric, Cleric/Fighter, Fighter and Fighter/Psionicist on both figures](dwarf-fighter-review.gif)
 

@@ -22,9 +22,9 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 
 | Combination | Proposed outfit |
 |---|---|
-| Cleric/Fighter | Keep the long cream robe. Dark leather shoulders wrap around the upper arms and taper over the ribs, with a single worn highlight on each cap. |
+| Cleric/Fighter | Keep the long cream robe. Small pale bone caps sit on the upper arms. |
 | Cleric/Psionicist | Carry a teal sash diagonally across the robe. Its short end crosses the waist and leaves the robe folds visible below. |
-| Fighter/Psionicist | Keep the leather tunic and bone caps. A broad teal sash with a light edge crosses the chest and back and gathers at the belt. |
+| Fighter/Psionicist | Keep the leather tunic and bone caps. A narrow teal sash crosses the chest and back and ends just below the belt. |
 | Fighter/Thief | The warm brown hood and short cowl match the Fighter’s leather tunic. The cowl fits between the bone caps. |
 | Psionicist/Thief | The teal hood matches the sash across the Thief’s dark cloak. The longer rear hem distinguishes this figure from the hooded Fighter. |
 
@@ -34,7 +34,7 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 
 | Combination | Proposed outfit |
 |---|---|
-| Cleric/Fighter/Psionicist | Add the teal sash to the Cleric/Fighter. The long cream hem, dark leather shoulders, and wide teal diagonal occupy different parts of the figure. |
+| Cleric/Fighter/Psionicist | Add the teal sash to the Cleric/Fighter. The long cream hem, pale bone shoulders, and narrow teal diagonal occupy different parts of the figure. |
 | Fighter/Psionicist/Thief | Add the teal sash to the Fighter/Thief. A narrow teal seam on the brown hood picks up the sash. The bone shoulder caps remain visible. |
 
 ![Both three-class combinations, female above male, synchronized through all 29 poses](dwarf-triple.gif)
