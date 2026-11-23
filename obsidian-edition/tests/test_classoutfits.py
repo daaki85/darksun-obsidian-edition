@@ -49,8 +49,35 @@ class WornMaterialTests(unittest.TestCase):
             for pose, waist in zip((2, 11, 12, 13, 14), waists):
                 with self.subTest(model=model, pose=pose):
                     hem = [(x, y) for x, y, _ in walk[pose].cloak if y >= waist]
-                    self.assertGreaterEqual(len(hem), 20)
-                    self.assertGreaterEqual(max(y for x, y in hem), waist + 3)
+                    # The male elf lifts his trailing corner above the bent knee in step two.
+                    if model == 2061 and pose == 12:
+                        self.assertEqual(len(hem), 15)
+                        self.assertEqual(max(y for x, y in hem), waist + 2)
+                    else:
+                        self.assertGreaterEqual(len(hem), 20)
+                        self.assertGreaterEqual(max(y for x, y in hem), waist + 3)
+
+    def test_profile_hems_leave_exposed_feet_and_ground_clear(self):
+        for obj, model in classoutfits.MODELS.items():
+            roles = (classoutfits.CLASSES[1:] if obj < 302 else classoutfits.DWARF_ROLES.values()
+                     if obj < 304 else classoutfits.ELF_ROLES.values())
+            for role in roles:
+                walk = classoutfits.frames(role, False, model)
+                for f in (2, 11, 12, 13, 14):
+                    with self.subTest(model=model, role=role, pose=f):
+                        frame = walk[f]
+                        cloth = {(x, y) for x, y, _ in frame.cloak}
+                        for foot in (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT):
+                            self.assertTrue(cloth.isdisjoint(frame.regions[foot]))
+                        if model == 2059 and f == 14:
+                            self.assertNotIn((7, 16), cloth)
+                            if role in ("Preserver", "Thief", "Ranger"):
+                                self.assertIsNone(frame.image[16 + 4][7 + 4])
+                        if model == 2095 and f == 12:
+                            strip = {(6, 18), (7, 18), (5, 19), (6, 19), (7, 19), (4, 20), (5, 20), (3, 21)}
+                            self.assertTrue(cloth.isdisjoint(strip))
+                            if role in ("Mage", "Thief", "Ranger"):
+                                self.assertTrue(all(frame.image[y + 6][x + 6] is None for x, y in strip))
 
     def test_actual_robe_items_select_distinct_visuals(self):
         from dsloader import robes
@@ -614,15 +641,14 @@ class ElfOutfitTests(unittest.TestCase):
                     self.assertIsNotNone(frame.image[14 + 4][x + 4])
                     self.assertNotIn((x, 14), frame.regions[classoutfits.CHEST])
 
-    def test_long_profile_cloaks_turn_in_after_the_widest_point(self):
+    def test_profile_cloak_lifts_clear_of_the_elfs_bent_leg(self):
         for role in classoutfits.ELF_ROLES.values():
-            if not {"Preserver", "Ranger"}.intersection(role.split("/")):
-                continue
-            for f in (12, 13):
-                pose = classoutfits.frames(role, False, 2061)[f]
-                edge = [min(x for x, row, _ in pose.cloak if row == y) for y in (17, 18, 19, 20)]
-                with self.subTest(role=role, frame=f):
-                    self.assertTrue(all(a < b for a, b in zip(edge, edge[1:])), edge)
+            walk = classoutfits.frames(role, False, 2061)
+            for f, y, tip in ((12, 17, {-6, -5, -4}), (13, 18, {-6, -5, -4, -3})):
+                with self.subTest(role=role, pose=f):
+                    folds = {(x, row) for x, row, _ in walk[f].cloak}
+                    self.assertEqual({x for x, row in folds if row == y}, tip)
+                    self.assertTrue(all(row <= y for x, row in folds))
 
     def test_hood_covers_the_rear_crown_and_releases_the_flying_lock(self):
         for role in classoutfits.ELF_ROLES.values():

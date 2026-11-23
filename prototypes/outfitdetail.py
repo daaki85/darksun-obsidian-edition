@@ -14,6 +14,7 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import outfits
+from elfcloak import SWING_EDGES, lifted_hem, paint_swing
 from dsloader import art, classoutfits as co, sprites
 
 # Material ramps include intermediate warm/cool shades between the main fold
@@ -236,7 +237,10 @@ def profile_cloak(rows, paint, regions, folds, heads, base, model, role, pose, p
         # In these two steps the human woman's calf turns under the lining.
         if model == 2099 and y == 19 and (pose == 14 or pose == 12 and role != "Druid"):
             inner = max(inner, 4)
+        body_left = next((x for x, c in enumerate(rows[y]) if c is not None), len(rows[y]))
         for x in range(outer, inner + 1):
+            if lifted_hem(model, pose, x, y, body_left):
+                continue
             offset = x - outer
             px, py = x + margin, y + above
             if not 0 <= px < len(paint[0]) or regions[py][px] or (heads and heads[py][px]):
@@ -257,6 +261,27 @@ def profile_cloak(rows, paint, regions, folds, heads, base, model, role, pose, p
             if family:
                 ramp = RAMPS[family]
                 paint[py][px] = ramp[round((rank + 0.3) * (len(ramp) - 1) / 6)]
+
+
+def finish_profile(game, rows, paint, regions, folds, model, role, pose):
+    if model == 2095 and pose == 12:
+        # Only the main cape used this patch as paint. Other classes can
+        # have a robe or kilt there even though the cloak dye must lift away.
+        margin = (len(paint[0]) - len(rows[0])) // 2
+        above = len(paint) - len(rows)
+        for y, xs in ((18, (6, 7)), (19, (5, 6, 7)), (20, (4, 5)), (21, (3,))):
+            for x in xs:
+                folds[y + above][x + margin] = None
+                if role in ("Mage", "Ranger", "Thief"):
+                    paint[y + above][x + margin] = None
+    for y, row in enumerate(regions):
+        for x, bits in enumerate(row):
+            if bits and bits & (co.LEFT_FOOT | co.RIGHT_FOOT):
+                folds[y][x] = None
+    if model == 2061 and pose in SWING_EDGES:
+        family = profile_material(model, role)
+        return paint_swing(game, pose, rows, paint, folds, regions, family, RAMPS.get(family))
+    return paint, folds
 
 
 def finish_archive(game, source, output):
@@ -298,8 +323,11 @@ def finish_archive(game, source, output):
                                     palette, swatches, f + 15 * cb)
                         if not cb and f in (2, 11, 12, 13, 14):
                             profile_cloak(rows, paint, *masks, model, role, f, parts)
+                            paint, folds = finish_profile(game, rows, paint, masks[0], masks[1], model, role, f)
+                        else:
+                            folds = masks[1]
                         frames.append(paint)
-                        dyes.append(masks[1])
+                        dyes.append(folds)
                     data = sprites.encode_frames(frames)
                     dst.writestr(ZipInfo(name + "-dye"), sprites.encode_frames(dyes), ZIP_DEFLATED)
                     dst.writestr(ZipInfo(original), raw, ZIP_DEFLATED)

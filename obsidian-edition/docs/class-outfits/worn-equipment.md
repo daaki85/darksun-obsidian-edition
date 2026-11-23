@@ -22,33 +22,23 @@ In the previous Fighter, chest metal covered the swinging upper arm and the belt
 
 The original Mage (724) gathers several bright marks across the shoulder. Farther down, one long shadow stays legible through the swing. On the original Thief (630), short ridges end at different heights above the hem. The male elf Preserver has less cloth visible below his hair. On that smaller panel the current scatter of lights makes a crease hard to follow.
 
-The proposed mantle has two creases of unequal length. They start under the shoulder and spread as the hem swings out. The plum highlight breaks at the turn of the cloth. The equipped sample uses the same creases in the ordinary cloak’s six dye shades. This is an art study for rear and profile motion, with the existing outfit still used in play.
+The early fold study explored two creases of unequal length and the same shading in an equipped cloak. [Early mantle study beside the retail Mage and Thief](elf-mantle-fold-study.gif)
 
-[Compare the current and proposed mantle with the retail Mage and Thief in motion](elf-mantle-fold-study.gif) · [See the class mantle and equipped dye side by side](elf-mantle-fold-study.png)
+### Corrected profile walk
 
-### How the cloak trails in profile
+The male elf’s loose cloak lifts clear of his bent leg in steps 2 and 3. The loader reveals the leather, skin, robe or open ground underneath each outfit. The exposed garment has its own armor regions. Watch the Preserver’s plum mantle, the Ranger’s green cape, and the shorter hooded outfit at the hip. Wearing a cloak dyes the same visible folds. [Male elf alongside the original Mage and Thief](elf-mantle-swing.gif) · [Each step with the equipped cloak](elf-mantle-swing.png)
 
-The original Mage and Thief lift the lower corner of their cloaks clear of the calf. In profile step 2 the previous Preserver proposal moved the trailing edge, but kept the old plum hem across the raised thigh and the space between the legs. That leftover panel took the equipped cloak dye as well.
+[Watch the previous and corrected frames on all six figures](cloak-hem-fixes.gif) · [Inspect individual examples at game size and 3×](cloak-hem-fixes.png)
 
-The corrected study reveals the Preserver’s leather tunic, bent leg, and open ground wherever the hem lifts away. A short seam below the hairline carries the cloth over the shoulder when the near arm crosses it. Follow the same plum fold behind the elbow into step 3. The ordinary equipped cloak follows that outline in its own dye.
-
-[Compare the previous proposal, the same Preserver with the mantle removed, and the corrected mantle in steps 2 and 3](elf-mantle-midstride.png)
-
-[Watch the four-step profile loop at game size and 3×](elf-mantle-swing.gif) · [Inspect every step, including the equipped cloak dye](elf-mantle-swing.png)
-
-### Cloak hems on the other figures
-
-The [profile comparison sheet](cloak-hem-audit.png) shows class colors, an equipped green cloak, leather boots, and the same boots under the cloak. Yellow marks the pixels discussed below. In the human woman’s Mage row yellow marks the lower garment that keeps its own color. In the two elf step-2 rows it marks the lower cloth that changes when the class mantle is removed. [Watch all six figures at game size and 2×](cloak-hem-audit.gif).
-
-| Figure | Finding |
+| Figure | What to inspect |
 |---|---|
-| Human man | In profile step 2 the Mage, Ranger, and Thief share an eight-pixel strip between the legs. It is separated from the main visible cloak, takes the cloak dye, and occupies open ground in the original human drawing. This is the closest human match to the lifted-hem problem. |
-| Human woman | In profile step 3 the Mage’s purple thigh detail keeps its class color when the cloak turns green. Her Warrior and Gladiator do have an equipment overlap in profile idle. Three Warrior boot pixels and four Gladiator boot pixels take the cloak dye. |
-| Both dwarves | The equipped cloak covers five pixels of the raised boot in profile step 2 and two in step 3. The same coordinates recur on the Fighter, Gladiator, Psionicist, Fighter/Psionicist, Fighter/Thief, and Fighter/Psionicist/Thief. Toggling the cloak on an already booted Fighter makes the overlap visible on each dwarf. |
-| Male elf | In step 2 the Ranger covers 31 of the 33 lower-hem pixels identified on the base Preserver, and the Thief covers 20. In step 3 the corresponding counts are 29 and 17 of 31. Preserver/Ranger and Preserver/Thief inherit the full lower patch in both steps. These counts compare each outfit with its own mantle removed. The single-class Preserver correction above is an art study. |
-| Female elf | In step 2 the crossing arm divides the visible cloth. On the Preserver, 23 of the 33 pixels below the waist in the larger panel trail outside the stock body. Cutting that whole panel would remove the trailing cloak. A clearer defect is the Ranger’s single dye pixel beside the leg in step 4. It occupies open ground on her mantle-off drawing. The same isolated pixel occurs on 22 of her outfit masks, including some that show it only with a cloak equipped. |
+| Human man | Step 2 opens the eight-pixel gap between the legs on the Mage, Ranger and Thief. The equipped cloak also leaves this gap clear. |
+| Human woman | In profile idle the Warrior and Gladiator’s forward boot keeps its color under an equipped cloak. The Mage’s purple thigh detail belongs to her class garment. |
+| Both dwarves | Five pixels on the raised boot in step 2 and two in step 3 now keep their boot shading under a cloak. The correction follows the exposed foot on the Fighter, Gladiator, Psionicist, Fighter/Psionicist, Fighter/Thief, and Fighter/Psionicist/Thief. |
+| Male elf | The old panel on the thigh also affected Ranger, Thief and multiclass outfits. The new trailing edge and the cloak’s equipment dye follow the same swing in all 37 builds. A class without a mantle shows that drape when a cloak is equipped. |
+| Female elf | Step 4 clears the stray dye pixel beside the leg, including the Ranger’s green fleck. Where a Cleric robe fills that space, the robe supplies the pixel. The trailing panel behind the crossing arm in step 2 stays visible. |
 
-The audit compared ordinary and green cloak dyes through the party picture builder for all 114 figure/outfit combinations. The changed pixels matched the registered cloak in all 1,710 idle and walking poses. That check establishes which garment owns a pixel. The profile comparisons above also use the surrounding walk steps, uncovered artwork, or boot toggles to judge whether a patch belongs there. Front and rear masks were screened for overlaps. The illustrated findings concern the profile walk and idle. These are loader renders from the branch, with the earlier Preserver study shown separately above.
+The comparisons use the loader’s party picture builder and retail game art. The verification covered all 114 outfits in profile idle and all four side steps, including boots under an equipped cloak. The [pre-fix audit](cloak-hem-audit.png) records the original dye and boot overlaps. The [earlier Preserver study](elf-mantle-midstride.png) shows the raised thigh with the mantle removed.
 
 ## What the items look like
 

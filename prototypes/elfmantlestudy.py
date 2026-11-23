@@ -126,88 +126,16 @@ def render(atlas, output):
     sheet.save(output / "elf-mantle-fold-study.png")
 
 
-# Trailing cloth outside the male elf's silhouette, from row 6 down.
-# Narrowing the last runs opens the space beneath the lifted corner.
-SWING_EDGES = {
-    11: ((0, 0), (-1, -1), (-2, -1), (-3, -1), (-4, 0), (-5, 1), (-5, 1),
-         (-6, 1), (-6, 1), (-6, 2), (-5, 2), (-5, 2), (-5, -2), (-4, -3)),
-    12: ((4, 4), (2, 4), (0, 3), (-1, 2), (-2, 1), (-3, 1), (-4, 1),
-         (-4, 1), (-5, 1), (-5, 1), (-6, -2), (-6, -4)),
-    13: ((2, 2), (1, 2), (0, 2), (0, 2), (-1, 1), (-2, 1), (-2, 1),
-         (-3, 2), (-3, 2), (-4, 2), (-5, 2), (-6, 2), (-6, -3)),
-    14: ((3, 3), (2, 2), (1, 1), (0, 2), (-1, 3), (-1, 4), (-2, 4),
-         (-2, 3), (-3, 3), (-3, 3), (-4, 3), (-4, 3), (-4, 3), (-4, 0), (-4, -2)),
-}
-
-# Pigments from the outer fold of retail Mage 724. Each maps to a plum
-# pigment for the class mantle and a relief rank for the six-color worn dye.
-MAGE_FOLD = {
-    158: (17, 0), 159: (174, 1), 38: (112, 2), 160: (175, 2),
-    71: (58, 3), 39: (239, 4), 161: (232, 5), 40: (233, 5),
-    49: (115, 3), 50: (119, 4), 212: (118, 4),
-}
-
-
-def swing_tile(atlas, pose, item, scale):
-    side, top = sprites.room(False)
-    source = atlas.sequence(304, False, "Preserver", item)[pose]
-    rows = [row[:] for row in source]
-    frame = classoutfits.frames("Preserver", False, 2061)[pose]
-    body = atlas.game.fr(2061, pose)
-    mage = atlas.game.fr(724, pose)
-    body_edge = [next((x for x, c in enumerate(row) if c is not None), len(row)) for row in body]
-    cloth = {(x, y) for x, y, _ in frame.cloak}
-    # The old hem also crosses the thigh and spans the space between the
-    # legs. Reveal the Preserver's own underlayer wherever the new diagonal
-    # hem has lifted away, including transparent pixels between the limbs.
-    under = elf.render(atlas.game, 2061, pose, "Preserver", show_cape=False)
-    hip_diagonal = {11: 15, 12: 18, 13: 16, 14: 18}[pose]
-    for x, y in cloth:
-        if x < body_edge[y]:
-            rows[y + top][x + side] = None
-        elif y >= 11 and x + y > hip_diagonal:
-            rows[y + top][x + side] = under[y + elf.PAD][x + elf.PAD]
-    for y, (left, right) in enumerate(SWING_EDGES[pose], 6):
-        body_left = body_edge[y]
-        # Read the continuous strip inward from the Mage's trailing edge.
-        # Stop before the original arm, staff, or open ground.
-        start = next(i for i, c in enumerate(mage[y]) if c in MAGE_FOLD)
-        strip = []
-        for color in mage[y][start:]:
-            if color not in MAGE_FOLD:
-                break
-            strip.append(MAGE_FOLD[color])
-        width = right - left + 1
-        for offset in range(width):
-            x = left + offset
-            if x >= body_left or rows[y + top][x + side] is not None:
-                continue
-            # Keep the short underfold where the loose cloth turns into the
-            # existing panel. The tucked edge moves with the hip.
-            if x >= body_left - 2 and (x, y) in cloth:
-                rows[y + top][x + side] = source[y + top][x + side]
-                continue
-            # Sample at pixel centers so rounding a narrow strip does not
-            # discard both the highlight and the valley on a two-pixel hem.
-            index = (2 * offset + 1) * len(strip) // (2 * width)
-            plum, rank = strip[index]
-            rows[y + top][x + side] = sg.CLOAK_COLOURS[65][rank] if item == "Cloak" else plum
-    if pose == 12:
-        # The wrist cuts between the two panels in this step. The rear
-        # shoulder seam passes immediately above it, below the hairline.
-        rows[6 + top][5 + side] = source[7 + top][6 + side]
-    return elf.placed_tile(atlas.game, rows, atlas.floor, scale, side, top, 0)
-
-
+# The approved profile swing is now read from the loader archive.
 def swing_comparison(atlas, output):
-    columns = (("Original Mage", 724), ("Current Preserver", 304),
-               ("Revised mantle", 304), ("Original Thief", 630))
+    columns = (("Original Mage", 724), ("Retail elf", 2061),
+               ("Preserver", 304), ("Original Thief", 630))
     frames = []
     sheet = Image.new("RGB", (82 + 5 * 156, 34 + 4 * 132), dwarf.PAPER)
-    label(sheet, (160 + 4 * 156, 8), "Equipped cloak study", 14, "ma")
+    label(sheet, (160 + 4 * 156, 8), "Equipped cloak", 14, "ma")
     for i, (title, _) in enumerate(columns):
         label(sheet, (160 + i * 156, 8), title, 14, "ma")
-    for step, pose in enumerate(SWING_EDGES, 1):
+    for step, pose in enumerate((11, 12, 13, 14), 1):
         image = Image.new("RGB", (624, 255), dwarf.PAPER)
         label(image, (8, 6), "Male elf Preserver · profile walk", 18)
         label(image, (616, 9), f"Step {step}/4", 14, "ra")
@@ -216,12 +144,11 @@ def swing_comparison(atlas, output):
             x = 156 * i
             label(image, (x + 78, 37), title, 14, "ma")
             for scale, dx, y in ((3, 0, 57), (1, 52, 197)):
-                tile = (swing_tile(atlas, pose, "Class colors", scale) if i == 2
-                        else atlas.tile(obj, pose, "Preserver", "Class colors", scale))
+                tile = atlas.tile(obj, pose, "Preserver", "Class colors", scale)
                 image.paste(tile, (x + dx, y))
                 if scale == 3:
                     sheet.paste(tile, (82 + x, 34 + (step - 1) * 132))
-        sheet.paste(swing_tile(atlas, pose, "Cloak", 3), (82 + 4 * 156, 34 + (step - 1) * 132))
+        sheet.paste(atlas.tile(304, pose, "Preserver", "Cloak", 3), (82 + 4 * 156, 34 + (step - 1) * 132))
         frames.append(image)
     frames[0].save(output / "elf-mantle-swing.gif", save_all=True, append_images=frames[1:],
                    duration=210, loop=0)

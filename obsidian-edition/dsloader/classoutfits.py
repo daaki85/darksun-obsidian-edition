@@ -225,8 +225,10 @@ def frames(role, combat, model=2095):
                     for bit in regions:
                         if bits & bit:
                             regions[bit].append((x - left, y - top))
-        folds = tuple((x - left, y - top, shade - 1)
-                      for y, row in enumerate(art.decode_frame(cloaks, f)[2])
+        dye_rows = art.decode_frame(cloaks, f)[2]
+        dye_left = left + (len(dye_rows[0]) - len(mask[0])) // 2
+        folds = tuple((x - dye_left, y - top, shade - 1)
+                      for y, row in enumerate(dye_rows)
                       for x, shade in enumerate(row) if shade is not None)
         head = ()
         if heads is not None:

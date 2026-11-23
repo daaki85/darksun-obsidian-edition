@@ -4,9 +4,9 @@ Enable **What the party wears** for both elf figures. The loader reads the chara
 
 [Revised cloth beside retail figures and before-and-after measurements](cloth-detail.md) · [Watch the male Preserver and Ranger in profile](elf-stock-side-walk.gif)
 
-[Female elf profile plate fit](elf-woman-plate-fit.gif) · [Male Preserver cloak fold proposal beside the retail Mage and Thief](elf-mantle-fold-study.gif)
+[Female elf profile plate fit](elf-woman-plate-fit.gif) · [Early cloak fold study](elf-mantle-fold-study.gif)
 
-[Watch the Preserver’s trailing mantle beside the original Mage and Thief](elf-mantle-swing.gif) · [Four steps with class and equipment colors](elf-mantle-swing.png)
+[Watch the loader’s Preserver mantle beside the original Mage and Thief](elf-mantle-swing.gif) · [Four steps with class and equipment colors](elf-mantle-swing.png)
 
 ## Face and body
 

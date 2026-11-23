@@ -46,7 +46,7 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 ## Equipment
 
-[Watch all six cloaks in profile](cloak-stride.gif) · [Compare chest plate through all three walks](plate-stride.gif)
+[Compare the corrected cloak hems and boots on all six figures](cloak-hem-fixes.gif) · [Compare chest plate through all three walks](plate-stride.gif)
 
 [Compare all six equipped figures beside retail artwork](worn-equipment.md) · [See plate, mail, robes, footwear and weapon materials in the same pose](worn-materials.png)
 

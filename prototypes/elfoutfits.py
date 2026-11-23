@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw
 
 import dwarfoutfits as dwarf
 import outfits
+from elfcloak import lifted_hem
 from dsloader import classoutfits, figures, sprites
 
 MODELS = ((figures.ELF_WOMAN, "Female"), (figures.ELF_MAN, "Male"))
@@ -356,6 +357,7 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
     for y, row in enumerate(rows):
+        body_left = next((x for x, color in enumerate(row) if color is not None), width)
         t = max(0, min(1, (y - shoulder) / max(1, waist - shoulder)))
         center = upper + (hip - upper) * t
         radius = (2.8 if profile else 4.3) - 0.7 * t
@@ -531,6 +533,12 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     remaining = panel_hem - y
                     if 0 <= remaining <= 2 and x < panel[1] + (4, 2, 1)[remaining]:
                         drape = False
+                # Reveal this outfit's own tunic, leg and equipment regions
+                # where the lifted profile hem no longer crosses the thigh.
+                if lifted_hem(model, pose, x, y, body_left):
+                    drape = False
+                if model == figures.ELF_MAN and pose == 12 and point == (5, 6) and cape:
+                    drape = True
                 drape = drape and show_cape
                 if drape:
                     # Cloth fans out from the shoulder and bunches at the
