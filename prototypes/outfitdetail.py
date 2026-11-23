@@ -284,6 +284,37 @@ def finish_profile(game, rows, paint, regions, folds, model, role, pose):
     return paint, folds
 
 
+# Retint finished cloth after the pose-specific drape has been painted.
+TEAL_TUNIC = {188: 69, 53: 70, 225: 71, 48: 69, 49: 70, 226: 71, 160: 70,
+              210: 70, 211: 71, 212: 71, 213: 72, 215: 73, 18: 69}
+PLUM_MANTLE = {19: 112, 22: 58, 23: 115, 113: 174, 114: 58, 115: 74,
+               116: 59, 117: 239, 118: 239, 119: 238, 120: 238, 112: 174}
+
+
+def finish_class_color(model, role, paint, regions, folds, heads):
+    if model in co.ELVES and role == "Psionicist":
+        pigments = TEAL_TUNIC
+    elif (model in co.ELVES and role == "Preserver") or (model == 2095 and role == "Mage"):
+        pigments = PLUM_MANTLE
+    else:
+        return
+    # The swinging elf mantle extends beyond the registered equipment masks.
+    margin = (len(paint[0]) - len(regions[0])) // 2
+    for y, row in enumerate(paint):
+        for x, color in enumerate(row):
+            if color not in pigments:
+                continue
+            rx = x - margin
+            bits = 0
+            if 0 <= rx < len(regions[y]):
+                bits = regions[y][rx] or 0
+                if bits & BLOCKED or (heads and heads[y][rx] is not None):
+                    continue
+            on_cloth = bits & SHELL if role == "Psionicist" else folds[y][x] is not None
+            if on_cloth:
+                row[x] = pigments[color]
+
+
 def finish_archive(game, source, output):
     """Rebuild only the outfit paint. Retain the original paint for repeatable exports."""
     output = Path(output)
@@ -326,6 +357,7 @@ def finish_archive(game, source, output):
                             paint, folds = finish_profile(game, rows, paint, masks[0], masks[1], model, role, f)
                         else:
                             folds = masks[1]
+                        finish_class_color(model, role, paint, masks[0], folds, masks[2])
                         frames.append(paint)
                         dyes.append(folds)
                     data = sprites.encode_frames(frames)
