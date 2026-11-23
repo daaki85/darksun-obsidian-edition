@@ -115,6 +115,7 @@ Run these in order, from `playtest/`, at the start of every test and again after
    figwatch.py, ghostturn.py), which at 960x720 read the wrong pixels (before pixmatch.py sampled down,
    message boxes and CHOOSE A SPELL went unseen that way and the loops stalled: [the
    story](HISTORY.md#the-window-size-and-pixel-checks)).
+   In a detached DOSBox run, confirm the visible pointer is over LOAD SAVED GAME before clicking. The 320 × 240 window stretches the vertical coordinates of the 320 × 200 game. For the PENS save, wait until the slot list has appeared and then check the pointer over the first slot and LOAD. [Staged elf outfit test](logs/2026-11-22-elf-outfits.md)
 5. **Check the build under test is in place** (after every restart: memory edits are lost on any
    restart). The game runs `obsidian-edition/dos/` (GPLDATA.GFF, DSUN.EXE's patched copy...).
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in

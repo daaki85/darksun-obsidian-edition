@@ -890,6 +890,16 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if temples:
             facing = sp.FRONT if combat and frame == 11 else parts.facing
             parts = parts._replace(head=sp.Head(top, min(temples), max(temples), brow), facing=facing)
+    if costume and model in classoutfits.ELVES and combat and frame in (10, 11):
+        # The raised bow reaches higher than the crown. Locate the circlet and
+        # quiver on the figure, including the turned-to-camera final bow frame.
+        if frame == 10:
+            parts = parts._replace(facing=sp.BACK, head=sp.Head(3, 3, 9, 5),
+                                   shoulders=(10, 3, 10), waist=17)
+        else:
+            crown = 3 if model == 2059 else 4
+            parts = parts._replace(facing=sp.FRONT, head=sp.Head(crown, 5, 10, crown+1),
+                                   shoulders=(10, 4, 12), waist=18)
     if costume and model == 2099 and not combat and frame == 1:
         # The rear idle has a relaxed grip on each side of the hips.
         parts = parts._replace(hands={"left": (4, 15), "right": (15, 15)},
@@ -1042,9 +1052,19 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     else:
         grips = classoutfits.FIGHT_GRIPS
         shields = classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS
-    if costume and combat and grips[frame]:
+    if costume and model not in classoutfits.ELVES and combat and grips[frame]:
         hands["right"] = grips[frame]
         hands["left"] = shields[frame]
+    if costume and model in classoutfits.ELVES:
+        # Wristbands disappear behind the torso or share a cluster in these poses.
+        # Coordinates follow each native picture, including the woman's raised off hand.
+        if combat:
+            corrections = classoutfits.ELF_MELEE_HANDS[model].get(frame)
+            if corrections:
+                hands["right"], hands["left"] = corrections
+        elif parts.facing == sp.SIDE and "left" not in hands and "right" in hands:
+            hx, hy = hands["right"]
+            hands["left"] = (hx-2, hy-1)
     if combat and frame in sp.BOW_FRAMES:
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
@@ -1061,9 +1081,11 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
         if costume and shape == SHIELD and hand == "left":
-            centre = shields[frame]
+            centre = hands.get("left") if model in classoutfits.ELVES else shields[frame]
             if centre:
                 x, y = centre
+                if model in classoutfits.ELVES and not combat:
+                    y -= 2  # hand finder reports the fist, two rows below the band
                 far = parts.facing == sp.SIDE and (not combat or frame == 7)
                 facing = SIDE_FAR if far else parts.facing
                 # In profile the far arm is behind the torso, but the swept
@@ -1081,9 +1103,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (pose[1] if hand == "right" else pose[2], False)
         if shape == SHIELD and (pose and hand == "left" or side):
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
-        if costume and model not in classoutfits.DWARVES and combat and frame == 12 and hand == "right" and shape != SHIELD:
+        if costume and model in (2095, 2099) and combat and frame == 12 and hand == "right" and shape != SHIELD:
             g = (155, False)  # Lowered across the body, clear of the baseline.
-        if costume and model not in classoutfits.DWARVES and combat and frame == 1 and hand == "left" and shape != SHIELD:
+        if costume and model in (2095, 2099) and combat and frame == 1 and hand == "left" and shape != SHIELD:
             g = (330, False)  # The off hand extends out at hip height.
         if costume and model == 2099 and combat and frame == 2 and hand == "right":
             g = (200, False)  # Keep the butt of a staff above the lower edge.

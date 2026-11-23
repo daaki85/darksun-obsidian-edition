@@ -1,4 +1,4 @@
-"""Build the elf body and first three outfit studies from a Shattered Lands installation.
+"""Build the registered elf bodies, class outfits and review galleries from a Shattered Lands installation.
 
 python prototypes/elfoutfits.py GAME_DIR OUTPUT_DIR
 """
@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 import dwarfoutfits as dwarf
 import outfits
-from dsloader import classoutfits, figures
+from dsloader import classoutfits, figures, sprites
 
 MODELS = ((figures.ELF_WOMAN, "Female"), (figures.ELF_MAN, "Male"))
 STUDIES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
@@ -29,7 +29,112 @@ SIDE_HEMS = {
 PAD = 4
 
 
-def render(game, model, pose, role):
+# Centre of the lower face (or nape from behind), in native coordinates.
+# The head finder follows the raised hand in several strikes. The mouth itself
+# is below its brow rectangle and shares colours with both stock shirts.
+# The final frame is traced with the fallen figure turned feet-down.
+JAWS = {
+    figures.ELF_WOMAN: (
+        (8, 8),
+        (9, 6),
+        (7, 4),
+        (7, 9),
+        (8, 6),
+        (8, 6),
+        (7, 6),
+        (6, 6),
+        (4, 6),
+        (7, 6),
+        (8, 7),
+        (8, 4),
+        (13, 4),
+        (8, 4),
+        (10, 4),
+        (10, 14),
+        (11, 10),
+        (16, 8),
+        (12, 6),
+        (7, 15),
+        (16, 6),
+        (12, 13),
+        (13, 5),
+        (13, 5),
+        (10, 6),
+        (6, 8),
+        (8, 8),
+        (6, 7),
+        (7, 6),
+    ),
+    figures.ELF_MAN: (
+        (8, 6),
+        (9, 6),
+        (7, 4),
+        (7, 6),
+        (8, 6),
+        (8, 6),
+        (7, 6),
+        (6, 6),
+        (4, 6),
+        (7, 6),
+        (8, 6),
+        (6, 4),
+        (10, 4),
+        (8, 4),
+        (10, 4),
+        (10, 15),
+        (11, 7),
+        (14, 8),
+        (6, 8),
+        (7, 15),
+        (15, 6),
+        (16, 12),
+        (13, 6),
+        (12, 5),
+        (10, 6),
+        (6, 8),
+        (8, 8),
+        (8, 6),
+        (9, 6),
+    ),
+}
+BACK = {1, 7, 8, 9, 10, 18, 19, 20, 25, 28}
+SIDE_FACE = {2, 11, 12, 13, 14, 22, 23}
+RAMPS = {
+    "Cleric": dwarf.CREAM,
+    "Fighter": dwarf.LEATHER,
+    "Preserver": dwarf.PLUM,
+    "Ranger": dwarf.FOREST,
+    "Thief": dwarf.HOOD,
+    "Psionicist": dwarf.TEAL,
+}
+
+
+def face_pixels(rows, model, pose):
+    """Native eyes, cheeks, mouth and jaw. Coordinates are upright for the fallen pose."""
+    cx, cy = JAWS[model][pose]
+    points = set()
+    for y in range(max(0, cy - 7), min(len(rows), cy + 2)):
+        # The jaw tapers inward on its last row. In profile it projects to the right.
+        left, right = (-5, 3) if pose in SIDE_FACE else (-4, 4)
+        if y == cy:
+            left, right = (-3, 0) if pose in SIDE_FACE else (-2, 2)
+        if y == cy + 1:
+            left, right = (-3, -1) if pose in SIDE_FACE else (-1, 1)
+        for x in range(max(0, cx + left), min(len(rows[y]), cx + right + 1)):
+            c = rows[y][x]
+            if (
+                c in outfits.SKINC
+                or c in GOLD
+                or (
+                    pose not in BACK
+                    and (c in (77, 158, 159, 188, 254) or y >= cy and c in (174, 175))
+                )
+            ):
+                points.add((x, y))
+    return points
+
+
+def render(game, model, pose, role, layers=None):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
     source = fig.rows(combat, frame)
@@ -48,17 +153,43 @@ def render(game, model, pose, role):
     bow = game.bow(fig, source, parts) if pose in (24, 25, 26) else set()
     bow = {point_up(p) for p in bow}
     protected = hair | bow
-    head = parts.head
-    if head:
-        face_x = (head.left + head.right) / 2
-        brow = head.brow
-    else:
-        # The fallen sprites are drawn head-down; find the crown in the
-        # upright copy. Gold hair and the bow use common palette entries.
-        crown = [(x, y) for y, row in enumerate(rows[:8]) for x, c in enumerate(row) if c in GOLD]
-        face_x = median(x for x, y in crown)
-        brow = min(y for x, y in crown) + 3
-
+    face = face_pixels(rows, model, pose)
+    protected.update(face)
+    members = role.split("/")
+    base = next(
+        (
+            key
+            for key in (
+                "Cleric",
+                "Fighter",
+                "Preserver",
+                "Ranger",
+                "Thief",
+                "Psionicist",
+                "Gladiator",
+            )
+            if key in members
+        ),
+        role,
+    )
+    hooded = "Thief" in members
+    cape = next((key for key in ("Preserver", "Ranger", "Thief") if key in members), None)
+    cloak_ramp = RAMPS[base] if cape == "Thief" else RAMPS.get(cape, dwarf.HOOD)
+    cx, cy = JAWS[model][pose]
+    # Feet on the overturned sprite are at the top of the native bitmap.
+    feet = parts.feet
+    if fallen and model == figures.ELF_WOMAN:
+        feet = [(height - 1, 6, 7), (height - 1, 11, 13)]
+    elif fallen:
+        feet = [(height - 5, 4, 5), (height - 1, 12, 13)]
+    if pose == 4:
+        feet = [(19, 4, 6), (24, 9, 11)]
+    elif pose == 6:
+        feet = [(24, 2, 4), (19, 8, 9)]
+    elif model == figures.ELF_WOMAN and pose == 27:
+        # The run below the left wrist is her hand. Her lifted toe is at the right.
+        feet = [(23, 13, 14), (16, 16, 18)]
+    feet = sorted(feet, key=lambda foot: foot[1])
     if fallen:
         # Each death frame is a separate drawing. Read the torso feet-down.
         shoulder, waist = (8, 13) if model == figures.ELF_WOMAN else (7, 14)
@@ -89,13 +220,11 @@ def render(game, model, pose, role):
             paint = c
             # The original chin and hair fall in front of the costume. The stock
             # cuffs are removed, but the hand crossing the chest stays in front.
-            face = abs(x - face_x) <= 2.5 and brow - 1 <= y <= brow + 3
-            # The two green (woman) or blue (man) eye pixels in front view
-            # share colors with the stock costume. Preserve them inside the face.
-            native_face = c in outfits.SKINC or c in (77, 158, 159, 188, 254)
-            foreground = c is not None and (
-                (x, y) in protected or c in GOLD or (face and native_face)
-            )
+            point = (x, y)
+            foreground = point in protected or c in GOLD
+            native = point_up(point)
+            cloak_shade = None
+            armour = 0
             arm = c is not None and (
                 c in (249, 250)
                 or (
@@ -138,17 +267,17 @@ def render(game, model, pose, role):
                 rank = 0 if u > 0.85 else 1 if u > 0.25 else 3 if -0.9 < u < -0.22 else 2
                 if c is not None and lit[c] > 125 and rank == 3:
                     rank = 4
-                if role == "Gladiator":
+                if base == "Gladiator":
                     if torso and abs(dx - (1.8 - 3.8 * t)) < 1.12:
                         paint = dwarf.LEATHER[0 if depth == -1 else rank]
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
-                elif role == "Fighter":
+                elif base == "Fighter":
                     if torso or (c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
                         paint = dwarf.LEATHER[rank]
                         if torso and abs(dx - (1.9 - 4 * t)) < 0.8:
                             paint = dwarf.HIDE[2]
-                elif role == "Cleric" and shoulder - 1 <= y <= waist + 6:
+                elif base == "Cleric" and shoulder - 1 <= y <= waist + 6:
                     fall = max(0, depth) / 6
                     hem_center = center - (1.7 * fall if profile else 0.5 * fall)
                     breadth = radius + 1.65 * fall
@@ -179,26 +308,139 @@ def render(game, model, pose, role):
                         if depth == 6 or (depth == 5 and fold > 0.35):
                             shade = max(1, shade - 1)
                         paint = dwarf.CREAM[shade]
-                if depth == 0 and abs(dx) <= radius and paint is not None:
+                elif base in ("Preserver", "Ranger", "Thief", "Psionicist"):
+                    if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1):
+                        tunic = RAMPS[base] if base == "Psionicist" else dwarf.LEATHER
+                        paint = tunic[rank]
+                if (
+                    paint is not None
+                    and paint not in outfits.SKINC
+                    and shoulder - 2 <= y <= waist + 6
+                ):
+                    armour = classoutfits.CHEST if depth <= 0 else classoutfits.LEGS
+                # A mantle opens over the chest in front and falls behind the
+                # crossing wrist in profile. Offset its folds as the cloth flares.
+                fall = max(0, depth) / 6
+                breadth = radius + 0.8 + min(1, fall) * 1.6
+                sweep = (-1.4 if profile else -0.7) * min(1, fall)
+                fold = (dx - sweep) / breadth
+                hem = (4 if cape == "Thief" else 6) - round(abs(fold + 0.2) * 1.8)
+                if cape == "Ranger":
+                    # One pinned corner lifts over the hip. The opposite panel
+                    # is long enough to follow the striding leg.
+                    hem -= round((fold + 1) * 1.55)
+                drape = (
+                    shoulder - 1 <= y <= waist + hem
+                    and abs(fold) <= 1
+                    and (c is not None or y > shoulder)
+                    and (
+                        rear
+                        or fold < (-0.06 if profile else -0.49)
+                        or not profile
+                        and fold > 0.54
+                        or y <= shoulder + 1
+                    )
+                )
+                if drape:
+                    crease = -0.15 - fall * 0.24
+                    shade = 2
+                    if fold > 0.86:
+                        shade = 0
+                    elif abs(fold - crease) < 0.19 or fold > 0.46:
+                        shade = 1
+                    elif -0.86 + 0.15 * fall < fold < -0.54 + 0.12 * fall:
+                        shade = 4
+                    elif 0.17 < fold < 0.43:
+                        shade = 3
+                    cloak_shade = shade + 1
+                    if cape:
+                        paint = cloak_ramp[shade]
+                        armour = 0
+                        if cape == "Ranger" and torso and abs(dx - (2.1 - 4.8 * t)) < 0.85:
+                            paint = dwarf.LEATHER[3 if dx < 2.1 - 4.8 * t else 1]
+                # Keep a borrowed class detail visible on the lower torso or
+                # hem while the shoulder is turned away or hidden by long hair.
+                if "Ranger" in members and cape != "Ranger" and drape and depth == hem:
+                    paint = dwarf.FOREST[3 if fold < 0 else 2]
+                if "Preserver" in members and base == "Cleric" and depth in (3, 4) and armour:
+                    paint = dwarf.PLUM[rank]
+                if "Psionicist" in members and base != "Psionicist" and paint is not None:
+                    if (
+                        -2 <= depth <= 1
+                        and abs(dx) <= radius + 0.5
+                        and abs(depth + 0.35 * dx) < 1.15
+                    ):
+                        paint = dwarf.TEAL[4 if depth + 0.35 * dx < -0.15 else 2]
+                if (
+                    depth == 0
+                    and abs(dx) <= radius
+                    and paint is not None
+                    and not (cape and drape)
+                    and "Psionicist" not in members
+                ):
                     paint = 169 if abs(dx) < 0.55 else 205
                 # Follow the actual sleeve pixels on the upper arm; the far
                 # shoulder can disappear behind the braid or raised forearm.
                 outside = (1 if rear else -1) * dx
                 if (
-                    role in ("Gladiator", "Fighter")
+                    ("Gladiator" in members or "Fighter" in members)
                     and c in shirt
                     and shoulder - 2 <= y <= shoulder + 1
                     and abs(u) > 0.55
-                    and (role == "Fighter" or outside > 0)
+                    and ("Fighter" in members or outside > 0)
                 ):
-                    ramp = dwarf.BONE if role == "Fighter" else dwarf.BRONZE
+                    ramp = dwarf.BONE if "Fighter" in members else dwarf.BRONZE
                     paint = ramp[3 if y == shoulder - 1 else 0 if y == shoulder + 1 else 2]
+                    armour = classoutfits.ARMS
+                if (
+                    "Fighter" in members
+                    and base == "Cleric"
+                    and depth in (1, 2)
+                    and abs(dx + 1.5) < 1.2
+                    and paint is not None
+                ):
+                    paint = dwarf.LEATHER[rank]
+            hood = (
+                hooded
+                and point not in bow
+                and (point in hair or c in GOLD and y <= cy + 1 and abs(x - cx) <= 8)
+            )
+            if hood and (point not in face or c in GOLD):
+                distance = (x - cx) / 5
+                shade = 1 if distance > 0.48 else 3 if distance < -0.48 else 2
+                if y < cy - 3 and -0.8 < distance < -0.1:
+                    shade = 4
+                paint = RAMPS[base][shade]
+                cloak_shade = shade + 1
+                armour = 0
+            if layers is not None:
+                if foreground and point not in bow:
+                    layers["head"][native] = 1
+                if cloak_shade is not None:
+                    layers["cloak"][native] = cloak_shade
+                if point in bow:
+                    armour = classoutfits.BOW
+                elif arm and not foreground:
+                    armour = classoutfits.FOREARM
+                    if c in outfits.SKINC and shoulder <= y < shoulder + 3 and abs(u) > 0.8:
+                        armour |= classoutfits.ARMS
+                elif paint is not None and not foreground and y > waist and paint in outfits.SKINC:
+                    for foot_no, (sole, left, right) in enumerate(feet[:2]):
+                        if sole - 3 <= y <= sole and left - 1 <= x <= right + 1:
+                            armour = (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT)[foot_no]
+                            break
+                if armour:
+                    layers["regions"][native] = armour
             if paint is not None:
                 out[y + PAD][x + PAD] = paint
     if fallen:
         out.reverse()
     # Use the same foreground ear pass as the live elf renderer.
-    return figures.ears_over(out, source, model, frame, bool(combat), PAD)
+    return (
+        out
+        if layers is not None
+        else figures.ears_over(out, source, model, frame, bool(combat), PAD)
+    )
 
 
 def tile(game, model, pose, role, terrain, scale):
@@ -327,9 +569,44 @@ def gallery(game, output):
     )
 
 
+def export_layers(game, output):
+    from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+
+    with ZipFile(output / "elf_outfit_layers.zip", "w") as archive:
+        for model, _ in MODELS:
+            for role in classoutfits.ELF_ROLES.values():
+                for combat, tag in enumerate(("walk", "combat")):
+                    streams = {key: [] for key in ("image", "head", "cloak", "regions")}
+                    for f in range(14 if combat else 15):
+                        source = game.fr(model + combat, f)
+                        layers = {key: {} for key in ("head", "cloak", "regions")}
+                        drawing = render(game, model, f + 15 * combat, role, layers)
+                        image = drawing[:-PAD]
+                        for y, row in enumerate(image):
+                            for x, pixel in enumerate(row):
+                                stock = (
+                                    source[y - PAD][x - PAD]
+                                    if y >= PAD and PAD <= x < len(row) - PAD
+                                    else None
+                                )
+                                row[x] = None if pixel == stock else 255 if pixel is None else pixel
+                        streams["image"].append(image)
+                        for key, points in layers.items():
+                            mask = [[None] * len(row) for row in image]
+                            for (x, y), value in points.items():
+                                mask[y + PAD][x + PAD] = value
+                            streams[key].append(mask)
+                    for key, frames in streams.items():
+                        suffix = "" if key == "image" else "-" + key
+                        entry = ZipInfo(f"{model}/{role}/{tag}{suffix}")
+                        archive.writestr(entry, sprites.encode_frames(frames), ZIP_DEFLATED)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game_dir")
     parser.add_argument("output_dir", type=Path)
+    parser.add_argument("--layers", action="store_true")
     args = parser.parse_args()
-    gallery(outfits.Game(args.game_dir), args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    (export_layers if args.layers else gallery)(outfits.Game(args.game_dir), args.output_dir)

@@ -1078,7 +1078,7 @@ woman's, in a new game and in one already begun (from the next area or load).
 
 ### What the party wears
 
-See the [animated female and male class outfits](docs/class-outfits/README.md) for the human poses, all twelve playable dwarf builds, and the equipment review.
+See the [animated female and male class outfits](docs/class-outfits/README.md) for the human poses, all twelve dwarf builds, all thirty-seven elf builds, and the equipment comparisons.
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
 pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:

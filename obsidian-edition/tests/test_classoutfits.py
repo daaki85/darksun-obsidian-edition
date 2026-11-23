@@ -437,3 +437,61 @@ class HumanClothContinuityTests(unittest.TestCase):
             for x in (6, 7):
                 self.assertEqual(folds[x, 8], folds[x, 9], role)
                 self.assertNotIn(pose.image[6 + 8][6 + x], (None, 255), role)
+
+
+class ElfOutfitTests(unittest.TestCase):
+    def test_elf_roster_reads_all_three_slots_in_any_order(self):
+        from itertools import permutations
+        from dsloader import kitpages
+
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = game.ELF
+        raw = {group: slot for slot, group in kitpages.CREATION_CLASS.items()}
+        counts = [sum(len(c) == n for c in classoutfits.ELF_ROLES) for n in (1, 2, 3)]
+        self.assertEqual(counts, [7, 14, 16])
+        slots = slice(game.SHEET_CLASSES, game.SHEET_CLASSES + 3)
+        for combo, role in classoutfits.ELF_ROLES.items():
+            for order in permutations(combo):
+                sheet[slots] = bytes(raw[c] for c in order).ljust(3, b"\0")
+                for model in classoutfits.ELVES:
+                    self.assertEqual(classoutfits.for_sheet(sheet, model), role)
+                self.assertIsNone(classoutfits.for_sheet(sheet, 2099))
+        for illegal in ((9, 13, 0), (10, 17, 0), (5, 0, 0), (9, 9, 0), (0, 0, 0)):
+            sheet[slots] = bytes(illegal)
+            self.assertIsNone(classoutfits.for_sheet(sheet, 2059))
+
+    def test_cleaned_faces_and_necklines_keep_the_original_mouth(self):
+        # Native coordinates inspected against the retail sprites. In the second
+        # forward strike the woman's head drops much farther than the man's.
+        mouths = {2059: [(0, 7, 8), (3, 6, 9), (15, 10, 14), (16, 10, 10),
+                         (17, 15, 8), (21, 12, 13), (22, 13, 5), (26, 8, 8)],
+                  2061: [(0, 7, 6), (3, 6, 6), (15, 10, 15), (16, 10, 7),
+                         (17, 13, 8), (21, 16, 12), (22, 13, 6), (27, 7, 6)]}
+        for model, markers in mouths.items():
+            for role in classoutfits.ELF_ROLES.values():
+                for pose, x, y in markers:
+                    cb, f = divmod(pose, 15)
+                    frame = classoutfits.frames(role, cb, model)[f]
+                    with self.subTest(model=model, role=role, pose=pose):
+                        self.assertIsNone(frame.image[y + 4][x + 4])
+                        self.assertIn((x, y), frame.head)
+                        self.assertNotIn((x, y), {(a, b) for a, b, _ in frame.cloak})
+                        for cells in frame.regions.values():
+                            self.assertNotIn((x, y), cells)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_final_bow_helm_sits_on_the_elf_crown(self):
+        chunks = gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes())
+        pictures = sprites.Pictures(chunks)
+        helm = {"helm": (game.BONE_HELM_TYPE, 1)}
+        for obj, crown in ((304, 4), (305, 3)):
+            self.assertTrue(pictures.supports_outfits(obj, pictures.model(obj)))
+            regular, wearing = [art.decode_frame(pictures.build(obj, True, gear, (), role="Thief"), 11)[2]
+                                for gear in ({}, helm)]
+            side, top = sprites.room(True)
+            # The bow tip at y=0 previously put a helmet spike in the air at x=12.
+            self.assertEqual(wearing[:top + crown - 1], regular[:top + crown - 1])
+            changed = {(x-side, y-top) for y, row in enumerate(wearing) for x, c in enumerate(row)
+                       if c != regular[y][x]}
+            self.assertTrue(changed)
+            self.assertTrue(all(3 <= x <= 11 and crown-1 <= y <= crown+2 for x, y in changed))

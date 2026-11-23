@@ -1,4 +1,4 @@
-"""Class outfit layers registered to the human and dwarf map poses.
+"""Class outfit layers registered to the human, dwarf and elf map poses.
 
 Each archive has walk and combat chunks per class. The woman's outfits layer
 over a shared redrawn base. In each layer a transparent edit keeps the pixel
@@ -9,6 +9,7 @@ head mask keeps back gear behind the face and hair.
 """
 from functools import lru_cache
 from hashlib import sha256
+from itertools import combinations
 from pathlib import Path
 from typing import NamedTuple
 from zipfile import ZipFile
@@ -16,12 +17,16 @@ from zipfile import ZipFile
 from . import art, game, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
-MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053}
+MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
 SOURCE = {
     2053: "91c133abf78323f5b0b83a9f706b8750d99e6e9efe97a54c984c40e55539efb3",
     2054: "aaadd31defbf1b021812b47bb38cd37d8b0f7c97871a760e0a5e842b3d536f6f",
     2055: "80d16c5f0bdc4b75fa5c960771731c32d9777477b7218d57a32af2027dba1bf6",
     2056: "088895b889a46c91bf1117c294e0b1748d26082687f121c565bdf622069db045",
+    2059: "a8991e16fbe5394117e4ccfd5ec2297126ea3007151c30a309dd4ef02cf6c103",
+    2060: "8728f7590c10ce77873689d0612216c911e438500fa45dd0a2f702df075a4af0",
+    2061: "f395ce3621fc59a7dd3f559a0419554fc05f4b30500ac860fda10dc4d9102013",
+    2062: "6a2949b3fc70fd3f0325b806b8f08e6908175bb28de6e819647991ef1e0af713",
     2095: "b0f5fd9b7f07fe8deb1b106bc786ca067930a467a8b338ed5d3cd96f25d9492f",
     2096: "e787121b4d79e554dd071da1fe8db9a93c25cfeb344fc69b22022fb456163723",
     2099: "92b22183387db3382e56f31747a1e40af7393af6baa8ffa07a82bd9c22cf8481",
@@ -100,6 +105,20 @@ DWARF_FIGHT_GRIPS = (
 )
 
 
+# Swinging grip and supporting wrist, in each retail combat drawing.
+# The far forearm sits behind the torso in the side thrust.
+ELF_MELEE_HANDS = {
+    2059: {0: ((14, 8), (6, 21)), 1: ((1, 7), (19, 18)), 2: ((11, 16), (10, 1)),
+           3: ((16, 8), (9, 8)), 4: ((11, 11), (2, 21)), 5: ((13, 13), (10, 8)),
+           6: ((4, 10), (19, 19)), 7: ((21, 10), (8, 8)), 8: ((16, 12), (2, 5)),
+           12: ((4, 18), (10, 2))},
+    2061: {0: ((14, 9), (6, 22)), 1: ((1, 4), (19, 15)), 2: ((10, 16), (8, 1)),
+           3: ((10, 12), (3, 10)), 4: ((11, 10), (2, 21)), 5: ((13, 13), (10, 8)),
+           6: ((8, 10), (23, 18)), 7: ((21, 11), (6, 9)), 8: ((16, 12), (2, 5)),
+           12: ((0, 14), (15, 11))},
+}
+
+
 def supports(chunks, model):
     return all(sha256(chunks.get(("BMP ", picture), b"")).hexdigest() == SOURCE[picture]
                for picture in (model, model + 1))
@@ -112,17 +131,28 @@ DWARF_ROLES = {
     (1, 3, 6): "Cleric/Fighter/Psionicist", (3, 6, 8): "Fighter/Psionicist/Thief",
 }
 DWARVES = (2053, 2055)
+ELVES = (2059, 2061)
+_ELF_CLASSES = {1: "Cleric", 3: "Fighter", 4: "Gladiator", 5: "Preserver",
+                6: "Psionicist", 7: "Ranger", 8: "Thief"}
+ELF_ROLES = {combo: "/".join(_ELF_CLASSES[c] for c in combo)
+             for size in (1, 2, 3) for combo in combinations(_ELF_CLASSES, size)
+             if size == 1 or (4 not in combo and not {3, 7}.issubset(combo))}
 
 
 def for_sheet(sheet, model=None):
     if len(sheet) <= game.SHEET_CLASSES:
         return None
     race = sheet[game.SHEET_RACE]
-    if race == game.DWARF and (model is None or model in DWARVES):
+    roles = None
+    if race == game.ELF and (model is None or model in ELVES):
+        roles = ELF_ROLES
+    elif race == game.DWARF and (model is None or model in DWARVES):
+        roles = DWARF_ROLES
+    if roles is not None:
         slots = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
         if len(slots) < 3:
             return None
-        return DWARF_ROLES.get(tuple(sorted(kitpages.CREATION_CLASS.get(c, 0) for c in slots if c)))
+        return roles.get(tuple(sorted(kitpages.CREATION_CLASS.get(c, 0) for c in slots if c)))
     if race == game.HUMAN and (model is None or model in (2095, 2099)):
         group = kitpages.CREATION_CLASS.get(sheet[game.SHEET_CLASSES])
         return CLASSES[group] if group else None
@@ -154,13 +184,15 @@ class Frame(NamedTuple):
 def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
-    dwarf = model in DWARVES
-    if dwarf:
+    by_model = model in DWARVES + ELVES
+    if model in ELVES:
+        filename = "elf_outfit_layers.zip"
+    elif model in DWARVES:
         filename = "dwarf_outfit_layers.zip"
-    prefix = f"{model}/{role}" if dwarf else role
+    prefix = f"{model}/{role}" if by_model else role
     with ZipFile(Path(__file__).with_name(filename)) as archive:
         base = archive.read(f"Base/{tag}") if model == 2099 else None
-        if dwarf:
+        if by_model:
             heads = archive.read(f"{prefix}/{tag}-head")
         else:
             heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
@@ -181,7 +213,7 @@ def frames(role, combat, model=2095):
         # Frame 13 has extra transparent columns for the swept priest hem.
         left = 8 if model == 2095 and not combat and f == 13 else 6
         top = 6
-        if dwarf:
+        if by_model:
             left = top = 4
         for y, row in enumerate(mask):
             for x, bits in enumerate(row):
