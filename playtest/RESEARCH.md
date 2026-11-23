@@ -1111,6 +1111,19 @@ obsidian-edition/dos/DSCLOG2.EXE`, the new one kept aside and put back after; ra
 copies it). An equip test on the roster's inventory: a click picks an item up, a click on a pack
 square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves it on the pointer
 (logs/2026-11-23-ravager-item-wield.md).
+**The sequel's AC function and save modifiers** (2026-11-23, logs/2026-11-23-ravager-protection.md):
+- **The AC function** is at 5D520h. SI is the combatant (things at 388h:SI*3 + 0C33h, kind 2 a
+  creature). [BP-4] is the AC, starting from the creature's +21h. [BP-6] is the other total (DEX, the
+  Armor spell's call 628h:6Bh). [BP-7] is 0 when effect 4 is on, and then no plus counts.
+- **Its worn list** is at [BP-324h], 10 bytes an entry. Each worn item counts only with its type's
+  +0Bh bit 80h (the test at 5D61Ah), as its plus (+16h) plus its type's AC (+0Eh).
+- **The save modifiers** are at 83606h. [BP+6] is the one saving, DI the modifier (higher is better),
+  [BP+14h] the spell.
+- **Slots and rings.** The item slots (+13h) are SL's: fingers 4 and 11, the back 12, the feet 13.
+  The sequel's Ring is type 45, of no AC. Its own rings carry a spell power and plus 0.
+- **The inventory panel's saves** are the sheet's own: a ring's save bonus shows only in a fight.
+- **The first click.** After `RAV_MENU=1` the first click on the title menu is often lost: click
+  CREATE CHARACTERS again.
 
 ### The sequel's spells in a fight (2026-11-21)
 

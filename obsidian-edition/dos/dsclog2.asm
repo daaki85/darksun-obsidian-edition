@@ -2987,6 +2987,8 @@ site_table:
         dw probe_floor_all                  ; 40 SITE_FLOOR_ALL (WALL SHADOWS: the view's floor drawn, 2B81Ch)
         dw probe_floor_rect                 ; 41 SITE_FLOOR_RECT (... a rectangle of it, 2B97Fh)
         dw name_push                        ; 42 SITE_NAME (an item's name read, ITEM NAMES)
+        dw prot_ac                          ; 43 SITE_PROT_AC (a worn item's AC counted, PROTECTION)
+        dw prot_save                        ; 44 SITE_PROT_SAVE (a save's modifiers started)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -6192,6 +6194,264 @@ helm_named:                     ; DI an item of HELM_TYPE: AX 1 if it is a Helm 
         jne .ret
         mov ax, 1
 .ret:   ret
+
+; PROTECTION: SL's RULE_PROTECTION (always on), DSCLOG's PROBE_RING_AC, PROT_SCAN, RING_PLUS and
+; ROBE_PLUS with the sequel's numbers, for the mod's items the party transfer brings (ravitems): a ring of
+; protection is the sequel's Ring (PROT_RING, of no AC: +0Bh 0) with a plus; the cloak of protection,
+; bracers of defense and the robes are the mod's types (ravager.mod_type), whose plus the sequel's AC
+; function counts already (+0Bh 80h: the plus less the type's AC). As AD&D has it:
+; - a ring of protection betters AC only without magical armour, and of two only the better (the left
+;   hand's if they're equal); a cloak of protection only without magical or metal armour and without a
+;   shield; bracers of defense only without armour (a helm too); a robe's plus on top of the rest, as a
+;   ring's (in [BP-6], after the Armor spell's armour value: SL's ROBE in PROBE_RING_AC);
+; - on saves, the better ring's plus whatever the armour, the cloak's as for AC, the Veiled Robe +1 on
+;   every save and the Ashen Robe +1 against a spell (DSCLOG's KIT_SAVE's robe part).
+; PROT_AC (site 43, "protection_ac"): the AC function's "mov al,es:[bx+0Bh] / mov ah,0" (5D61Ah; 6
+; bytes), whether a worn item counts for AC (AX bit 80h): ES:BX its type's record, CX the type, DX the
+; item, SI the combatant, [BP-6] the function's other total (better the lower). PROT_SAVE (site 44,
+; "protection_save"): the save modifiers' "mov si,[bp+6] / xor di,di" (8360Eh; 5 bytes; SL's 79D47h),
+; SI the one saving, DI the modifier (the higher the better), [BP+14h] the spell.
+PROT_RING      equ 45            ; (the sequel's Ring; its own carry a spell power, plus 0: OBJEX.GFF)
+PROT_CLOAK     equ 103           ; (SL's 116, 123, 140: ravager.mod_type)
+PROT_BRACERS   equ 110
+PROT_ROBE      equ 127
+FINGER_SLOT    equ 4             ; (an item's +13h while worn: the left hand's finger, the right's, the back;
+FINGER2_SLOT   equ 11            ; SL's, which the transfer keeps)
+CLOAK_SLOT     equ 12
+P_MAGIC_ARMOUR equ 1             ; (PROT_SCAN's P_FLAGS: armour with a plus, armour of metal, a shield in a
+P_METAL_ARMOUR equ 2             ; hand, any armour)
+P_SHIELD       equ 4
+P_ARMOUR       equ 8
+PROT_SPELL_LAST equ 0xEA         ; (the sequel's spells: its psionic powers EBh on)
+prot_ac:
+        movzx ax, byte [es:bx + 0x0B]
+        cmp cx, PROT_RING
+        je .ring
+        cmp cx, PROT_CLOAK
+        je .cloak
+        cmp cx, PROT_BRACERS
+        je .bracers
+        cmp cx, PROT_ROBE
+        je .robe
+        iret
+.ring:  call prot_here
+        jc .out
+        test byte [cs:p_flags], P_MAGIC_ARMOUR
+        jnz .out
+        push bx
+        push di
+        push es
+        les di, [ITEMS_PTR]
+        imul bx, dx, ITEM_SIZE
+        add bx, di
+        mov byte [cs:p_counts], 0
+        cmp byte [es:bx + ITEM_PLUS], 0
+        jle .ringed                     ; (a plain or cursed ring: none)
+        mov ah, [cs:p_ring]
+        cmp byte [es:bx + ITEM_SLOT], FINGER_SLOT
+        jne .right
+        cmp ah, [cs:p_ring2]            ; the left hand's counts unless the other is better
+        jl .ringed
+        jmp .count
+.right: cmp byte [es:bx + ITEM_SLOT], FINGER2_SLOT
+        jne .ringed
+        cmp [cs:p_ring2], ah            ; the right hand's only if better
+        jle .ringed
+.count: mov byte [cs:p_counts], 1
+.ringed:
+        pop es
+        pop di
+        pop bx
+        mov ah, 0
+        cmp byte [cs:p_counts], 0
+        je .out
+        or al, 0x80
+        inc word [cs:prot_count]
+.out:   iret
+.cloak: call prot_here
+        jc .out
+        test byte [cs:p_flags], P_MAGIC_ARMOUR | P_METAL_ARMOUR | P_SHIELD
+        jz .out
+.off:   and al, 0x7F
+        inc word [cs:prot_count]
+        iret
+.bracers:
+        call prot_here
+        jc .out
+        test byte [cs:p_flags], P_ARMOUR
+        jz .out
+        jmp .off
+.robe:  push ax
+        push bx
+        push es
+        les bx, [ITEMS_PTR]
+        imul ax, dx, ITEM_SIZE
+        add bx, ax
+        movsx ax, byte [es:bx + ITEM_PLUS]
+        sub [bp - 6], ax
+        pop es
+        pop bx
+        pop ax
+        jmp .off                        ; (and not as armour)
+prot_save:
+        mov si, [bp + 6]
+        xor di, di
+        call prot_here
+        jc .out
+        push ax
+        movsx ax, byte [cs:p_ring]
+        cmp al, [cs:p_ring2]
+        jge .ring
+        movsx ax, byte [cs:p_ring2]
+.ring:  add di, ax
+        test byte [cs:p_flags], P_MAGIC_ARMOUR | P_METAL_ARMOUR | P_SHIELD
+        jnz .robe
+        movsx ax, byte [cs:p_cloak]
+        or ax, ax
+        jle .robe
+        add di, ax
+.robe:  mov al, [cs:p_robe]
+        cmp al, 2
+        jae .one                        ; (the Veiled Robe, +2)
+        cmp al, 1
+        jne .done
+        cmp word [bp + 0x14], PROT_SPELL_LAST
+        ja .done
+.one:   inc di
+.done:  pop ax
+        inc word [cs:prot_saves]
+.out:   iret
+; PROT_HERE: PROT_SCAN for combatant SI (DS the game's); CF if it isn't a creature. All kept.
+prot_here:
+        pusha
+        push es
+        imul bx, si, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .not
+        mov dx, [es:bx + FIGHTERS_OFF + 1]
+        call prot_scan
+        pop es
+        popa
+        clc
+        ret
+.not:   pop es
+        popa
+        stc
+        ret
+; PROT_SCAN: what creature DX (DS the game's) wears that the protection rules weigh, in any of its item
+; lists (as ARMOUR_WORN reads them): P_FLAGS; P_RING, P_RING2 (the plus of a ring of protection on each
+; hand's finger, 0 for none or less); P_CLOAK (a cloak of protection's plus, worn on the back); P_ROBE (a
+; robe's plus, worn on the chest; 0 none). All kept.
+prot_scan:
+        pusha
+        push es
+        xor ax, ax
+        mov [cs:p_flags], al
+        mov [cs:p_ring], ax             ; (and P_RING2)
+        mov [cs:p_cloak], ax            ; (and P_ROBE)
+        imul bx, dx, CREATURE_SIZE
+        mov [cs:p_creature], bx
+        mov cx, 8
+.list:  les bx, [CREATURES_PTR]
+        add bx, [cs:p_creature]
+        add bx, cx
+        mov dx, [es:bx]
+        cmp dx, NO_ITEM
+        jae .next
+        imul bx, dx, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 1
+        jne .next                       ; not an item
+        mov dx, [es:bx + FIGHTERS_OFF + 1]
+        mov si, 100                     ; (no more than 100 in a list)
+.item:  cmp dx, NO_ITEM
+        jae .next
+        dec si
+        js .next
+        imul bx, dx, ITEM_SIZE
+        les di, [ITEMS_PTR]
+        add bx, di
+        mov dx, [es:bx + ITEM_NEXT]
+        mov al, [es:bx + ITEM_SLOT]
+        mov ah, [es:bx + ITEM_PLUS]
+        mov di, [es:bx + ITEM_TYPE]
+        cmp di, PROT_RING
+        jne .cloak
+        cmp ah, 0
+        jle .item
+        cmp al, FINGER_SLOT
+        jne .ring2
+        mov [cs:p_ring], ah
+        jmp .item
+.ring2: cmp al, FINGER2_SLOT
+        jne .item
+        mov [cs:p_ring2], ah
+        jmp .item
+.cloak: cmp di, PROT_CLOAK
+        jne .robe
+        cmp al, CLOAK_SLOT
+        jne .item
+        mov [cs:p_cloak], ah
+        jmp .item
+.robe:  cmp di, PROT_ROBE
+        jne .type
+        cmp al, CHEST_SLOT
+        jne .item
+        mov [cs:p_robe], ah
+        jmp .item
+.type:  imul di, di, CU_TYPE_SIZE
+        les bx, [ITEM_TYPES_PTR]
+        add bx, di
+        test byte [es:bx], 4            ; a shield (the flag the AC function reads for one)
+        jz .body
+        cmp al, RIGHT_HAND
+        je .shield
+        cmp al, LEFT_HAND
+        jne .item
+.shield:
+        or byte [cs:p_flags], P_SHIELD
+        jmp .item
+.body:  cmp al, ARM_SLOT                ; armour: worn on the arms, legs, head or chest
+        je .armour
+        cmp al, LEG_SLOT
+        je .armour
+        cmp al, HEAD_SLOT
+        je .armour
+        cmp al, CHEST_SLOT
+        jne .item
+.armour:
+        call armour_type
+        jnc .item
+        or byte [cs:p_flags], P_ARMOUR
+        cmp ah, 0
+        jle .metal
+        or byte [cs:p_flags], P_MAGIC_ARMOUR
+.metal: mov al, [es:bx + CU_MATERIAL]   ; (no material: 40h with 0)
+        and al, 0x4F
+        cmp al, MATERIAL_METAL
+        jne .item
+        or byte [cs:p_flags], P_METAL_ARMOUR
+        jmp .item
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        pop es
+        popa
+        ret
+p_flags    db 0
+p_counts   db 0
+p_ring     db 0
+p_ring2    db 0
+p_cloak    db 0
+p_robe     db 0
+p_creature dw 0
+prot_count dw 0                 ; (AC counts changed so, and saves weighed, for a look in play)
+prot_saves dw 0
 
 ; PROBE_HP_BEST: DSCLOG's. INT VEC_HP_BEST replaces "mov cx,ax" (2 bytes; 95025h, SL's 87319h) after
 ; the game's roll of a level's hit die (at creation too), AX the roll. With RULE_HP_BEST the game

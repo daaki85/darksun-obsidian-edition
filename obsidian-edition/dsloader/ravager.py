@@ -485,6 +485,12 @@ PATCHES: Tuple[Patch, ...] = (
     # DSCLOG2's SITE_NAME, names 256 on the Loader's (NAMES_GAME, item_names).
     *(Patch("item_name_%x" % at, at, bytes.fromhex("66ffb7f356"), _site(42, 5))
       for at in NAME_READS),
+    # AD&D's rings, cloaks, bracers and robes of protection (SL's RULE_PROTECTION, always on; the party
+    # transfer's items): DSCLOG2's PROT_AC at the AC function's test of whether a worn item counts
+    # (5D61Ah: "mov al,es:[bx+0Bh] / mov ah,0", SL's PROBE_RING_AC at 58EBDh) and PROT_SAVE at the
+    # start of the save modifiers (8360Eh: "mov si,[bp+6] / xor di,di", SL's PROBE_RING_SAVE at 79D47h).
+    Patch("protection_ac", 0x5D61A, bytes.fromhex("268a470bb400"), _site(43, 6)),
+    Patch("protection_save", 0x8360E, bytes.fromhex("8b760633ff"), _site(44, 5)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
