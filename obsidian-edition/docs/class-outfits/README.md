@@ -32,7 +32,7 @@ The male gallery uses the same layout. Watch the first front strike in each gall
 
 Each human gallery shows all eight outfits in sync on game terrain. The caption identifies each of the 29 poses as the figures turn, walk, strike, draw a bow, take a hit, and fall. The walk and melee cycles repeat.
 
-The Thief's slate hood has a raised crown and an open rim. The brown hair visible beneath it keeps its color when a cloak is equipped. [Compare her original hair, previous hood, revised hood, and equipped cloak in all 29 poses](human-thief-hood.gif) · [Compare all six figures beside their uncovered heads](thief-hood-comparison.gif)
+The Thief's slate hood has a raised crown and an open rim. From behind, the nape panel folds onto the cloak through the walk and strike. Loose hair shows at the sides in front views, and the crown stays closed through the hit. [Compare her original hair, previous hood, revised hood, and equipped cloak in all 29 poses](human-thief-hood.gif) · [Compare all six figures beside their uncovered heads](thief-hood-comparison.gif)
 
 ![Eight female human class outfits animated through all 29 map poses](human-female.gif)
 

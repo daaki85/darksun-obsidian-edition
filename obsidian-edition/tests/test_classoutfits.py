@@ -247,7 +247,7 @@ class HumanOutfitTests(unittest.TestCase):
 
     def test_woman_thief_hood_has_a_crown_and_leaves_free_hair_below_it(self):
         # Crown above the stock hairline; a visible lock below the turned rim.
-        cases = ((False, 0, (8, -1), (1, 8)), (False, 1, (9, -1), (9, 12)),
+        cases = ((False, 0, (8, -1), (1, 8)),
                  (False, 2, (5, -1), (0, 8)), (True, 1, (10, -1), (8, 9)))
         for combat, index, crown, lock in cases:
             with self.subTest(combat=combat, frame=index):
@@ -260,6 +260,15 @@ class HumanOutfitTests(unittest.TestCase):
                 self.assertNotIn(lock, dye)
                 x, y = lock
                 self.assertEqual(hood.image[y + 6][x + 6], bare_head.image[y + 6][x + 6])
+
+    def test_thief_rear_panel_and_moving_crown_take_cloak_dye(self):
+        # Previously these pixels exposed a dark wedge on the back or hair above the brim.
+        for pose, point in ((1, (9, 12)), (7, (8, 12)), (8, (10, 12)), (9, (10, 11)),
+                            (10, (9, 11)), (18, (5, 14)), (19, (5, 20)), (20, (20, 5)),
+                            (16, (17, 2)), (27, (5, 0))):
+            combat, frame = divmod(pose, 15)
+            hood = classoutfits.frames("Thief", combat, 2099)[frame]
+            self.assertIn(point, {(x, y) for x, y, _ in hood.cloak}, pose)
 
     def test_woman_has_independent_outfit_layers(self):
         for combat, count in ((False, 15), (True, 14)):
@@ -675,7 +684,8 @@ class ElfOutfitTests(unittest.TestCase):
                     rear = classoutfits.frames(role, False, model)[1]
                     self.assertIn((x, y), {(a, b) for a, b, _ in rear.cloak})
                     self.assertIsNotNone(rear.image[y + 4][x + 4])
-            for index, point in ((5, (11, 4)), (5, (11, 5)), (8, (0, 8)), (12, (11, 1))):
+            for index, point in ((5, (11, 4)), (5, (11, 5)), (8, (0, 8)), (12, (11, 1)),
+                                 (13, (6, 1)), (13, (7, 1)), (13, (8, 1)), (13, (4, 2))):
                 frame = classoutfits.frames(role, False, 2059)[index]
                 self.assertIn(point, {(a, b) for a, b, _ in frame.cloak})
             for index, tip in ((1, (7, 2)), (12, (1, 6)), (13, (2, 15))):

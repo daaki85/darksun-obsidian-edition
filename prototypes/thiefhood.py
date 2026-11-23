@@ -2,8 +2,8 @@
 
 from elfoutfits import RAMPS as ELF_FABRICS
 
-# A continuous turned rim opens at the cheeks. The rear panel ends in a
-# folded point above the free hair. A dot leaves the underlying pixel alone.
+# A continuous turned rim opens at the cheeks. The rear crown folds
+# into a longer panel at the nape. A dot leaves the underlying pixel alone.
 FRONT = (
     "...23332...", "..2455432..", ".235322231.", ".2431...131",
     "2341.....21", "231......12", "231......12", ".32......1.",
@@ -43,10 +43,38 @@ SLATE = (17, 19, 21, 24, 26, 28)
 OLD_SLATE = frozenset((*range(17, 32), 48, 49, 50, 208))
 
 
+# Secondary panels in native coordinates. The eight rear-facing drawings
+# need a nape fold that follows the shoulders all the way onto the cloak.
+# The strike and recoil instead close the crown above the moving head.
+SEAMS = {
+    1: (7, ((7, "232321"), (7, "342321"), (7, "323221"), (7, "23421"), (7, "2321"), (8, "321"))),
+    7: (7, ((6, "232321"), (6, "342321"), (6, "323221"), (6, "23421"), (7, "321"), (8, "21"))),
+    8: (6, ((6, "2323321"), (6, "3432321"), (5, "234232321"), (5, "23234321"),
+            (6, "2323321"), (8, "2321"), (9, "321"))),
+    9: (6, ((7, "23234321"), (7, "23423321"), (7, "22343221"), (8, "232321"),
+            (9, "23421"), (10, "321"))),
+    10: (7, ((7, "2323321"), (6, "23432321"), (6, "23234321"), (7, "2323321"), (8, "23221"))),
+    18: (7, ((8, "21"), (7, "321"), (5, "2321"), (2, "234321"), (2, "32321"),
+             (2, "23221"), (3, "23421"), (4, "321"))),
+    19: (15, ((6, "23221"), (2, "23432321"), (2, "23234321"), (3, "2323321"),
+              (5, "23421"), (5, "321"))),
+    20: (2, ((17, "2321"), (17, "23321"), (17, "234321"), (16, "2323321"),
+             (16, "232321"), (16, "23421"), (17, "321"))),
+    16: (0, ((14, "21"), (14, "321"), (14, "2321"), (14, "2321"), (14, "321"), (15, "21"))),
+    27: (0, ((4, "23321"), (3, "343321"), (3, "323221"))),
+}
+
+
 def human_woman(rows, paint, regions, cloak, head, base, pose):
     top = len(paint) - len(rows)
     left = (len(paint[0]) - len(rows[0])) // 2
     panel, ox, oy = PANELS[pose]
+    stitches = {(ox + x, oy + y): mark for y, strip in enumerate(panel)
+                for x, mark in enumerate(strip) if mark != "."}
+    if pose in SEAMS:
+        start_y, strips = SEAMS[pose]
+        for dy, (start_x, strip) in enumerate(strips):
+            stitches.update(((start_x + dx, start_y + dy), mark) for dx, mark in enumerate(strip))
     for y, row in enumerate(paint):
         for x, old in enumerate(row):
             sx, sy = x - left, y - top
@@ -62,11 +90,8 @@ def human_woman(rows, paint, regions, cloak, head, base, pose):
                     continue  # native face, including black eyes and mouth
                 row[x] = None
                 cloak[y][x] = None
-            dy, dx = sy - oy, sx - ox
-            if not (0 <= dy < len(panel) and 0 <= dx < len(panel[dy])):
-                continue
-            mark = panel[dy][dx]
-            if mark == "." or regions[y][x]:
+            mark = stitches.get((sx, sy))
+            if mark is None or regions[y][x]:
                 continue
             if head[y][x] is None and not old_cloth and under not in (None, 255):
                 continue  # the hand and weapon pass in front
@@ -103,3 +128,10 @@ def elf_profile(model, role, pose, rows, paint, folds):
             rank = int(mark)
             paint[py][px] = ramp[rank]
             folds[py][px] = rank + 1
+
+    # Three warm pixels enclosed between the crown and the turned brim,
+    # and one at the rear of the same fold. The ear below stays in front.
+    if model == 2059 and pose == 13:
+        for x, y, rank in ((6, 1, 2), (7, 1, 2), (8, 1, 1), (4, 2, 2)):
+            paint[top + y][left + x] = ramp[rank]
+            folds[top + y][left + x] = rank + 1
