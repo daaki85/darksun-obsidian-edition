@@ -14,6 +14,7 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import outfits
+import thiefhood
 from elfcloak import SWING_EDGES, lifted_hem, paint_swing
 from dsloader import art, classoutfits as co, sprites
 
@@ -357,6 +358,11 @@ def finish_archive(game, source, output):
                             paint, folds = finish_profile(game, rows, paint, masks[0], masks[1], model, role, f)
                         else:
                             folds = masks[1]
+                        if model == 2099 and role == "Thief":
+                            thiefhood.human_woman(rows, paint, masks[0], folds, masks[2], masks[3], f + 15 * cb)
+                        if (model in co.ELVES and "Thief" in role.split("/") and not cb
+                                and f in thiefhood.ELF_CROWNS[model]):
+                            thiefhood.elf_profile(model, role, f, rows, paint, folds)
                         finish_class_color(model, role, paint, masks[0], folds, masks[2])
                         frames.append(paint)
                         dyes.append(folds)

@@ -245,6 +245,22 @@ class HumanOutfitTests(unittest.TestCase):
                     for bit in (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS):
                         self.assertTrue(cells.isdisjoint(pose.regions[bit]))
 
+    def test_woman_thief_hood_has_a_crown_and_leaves_free_hair_below_it(self):
+        # Crown above the stock hairline; a visible lock below the turned rim.
+        cases = ((False, 0, (8, -1), (1, 8)), (False, 1, (9, -1), (9, 12)),
+                 (False, 2, (5, -1), (0, 8)), (True, 1, (10, -1), (8, 9)))
+        for combat, index, crown, lock in cases:
+            with self.subTest(combat=combat, frame=index):
+                hood = classoutfits.frames("Thief", combat, 2099)[index]
+                bare_head = classoutfits.frames("Gladiator", combat, 2099)[index]
+                dye = {(x, y) for x, y, _ in hood.cloak}
+                self.assertIn(crown, dye)
+                self.assertNotIn(crown, hood.head)
+                self.assertIn(lock, hood.head)
+                self.assertNotIn(lock, dye)
+                x, y = lock
+                self.assertEqual(hood.image[y + 6][x + 6], bare_head.image[y + 6][x + 6])
+
     def test_woman_has_independent_outfit_layers(self):
         for combat, count in ((False, 15), (True, 14)):
             for role in classoutfits.CLASSES[1:]:
