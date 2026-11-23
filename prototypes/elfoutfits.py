@@ -134,6 +134,16 @@ def face_pixels(rows, model, pose):
     return points
 
 
+# The near upper arm crosses the shirt in these profile drawings. Only native
+# skin inside the traced runs belongs to it. The shirt can show on either side.
+PROFILE_UPPER_ARM = {
+    2: ((7, 3, 5), (8, 3, 5), (9, 4, 5), (10, 5, 6), (11, 5, 7)),
+    11: ((7, 5, 7), (8, 5, 7), (9, 5, 7), (10, 6, 8), (11, 6, 8)),
+    12: ((7, 8, 10), (8, 7, 10), (9, 6, 9)),
+    13: ((7, 3, 4), (8, 3, 5), (9, 3, 5)),
+    14: ((7, 5, 7), (8, 5, 8), (9, 7, 9), (10, 8, 10)),
+}
+
 # Pin the garment under the long hair. Sampling the few uncovered shirt
 # pixels in these poses instead follows the swinging arm.
 BACK_SHOULDERS = {1: 9, 7: 6, 8: 4, 9: 7, 10: 8}
@@ -322,6 +332,9 @@ def render(game, model, pose, role, layers=None):
     cape_fill = {(x, y) for y, a, b in cape_seams for x in range(a, b + 1)}
     robe_fill = {(x, y) for y, a, b in ROBE_SEAMS.get((model, pose), ()) for x in range(a, b + 1)}
 
+    arm_runs = PROFILE_UPPER_ARM.get(pose, ()) if model == figures.ELF_WOMAN else ()
+    near_arm = {(x, y) for y, left, right in arm_runs for x in range(left, right + 1)}
+
     def axis(y):
         points = [x for r in rows[max(0, y - 1) : y + 2] for x, c in enumerate(r) if c in shirt]
         return median(points) if points else (width - 1) / 2
@@ -361,7 +374,7 @@ def render(game, model, pose, role, layers=None):
             armour = 0
             arm = c is not None and (
                 c in (249, 250)
-                or (point in fingers and c in outfits.SKINC)
+                or ((point in fingers or point in near_arm) and c in outfits.SKINC)
                 or (
                     c in outfits.SKINC
                     and shoulder - 1 <= y <= waist + 2

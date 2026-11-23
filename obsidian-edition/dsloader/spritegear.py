@@ -1020,6 +1020,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                     # Always take the dye value from the original cloth, even where
                     # two pieces overlap or the chest underneath already glints.
                     if piece == ARMOUR_CHEST and pattern == PLATE:
+                        if model == 2059 and not combat and frame in (2, 11, 12, 13, 14):
+                            # The stock belt begins at row 13 throughout this stride.
+                            # On the last step one tunic pixel also peeks through her hair.
+                            cells = [(x, y) for x, y in cells if 6 <= y < 13]
                         paint_breastplate(out, cells, shades, pad, base_outfit)
                     else:
                         paint_region(out, cells, shades, pad, pattern, source=base_outfit)

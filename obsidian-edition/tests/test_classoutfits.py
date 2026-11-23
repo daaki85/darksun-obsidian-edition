@@ -21,6 +21,26 @@ class WornMaterialTests(unittest.TestCase):
         self.assertGreater(first[2 * 7 + 2], first[-1])
         self.assertEqual(first, sample(3, 2))
 
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_elf_woman_profile_plate_keeps_near_arm_and_belt_visible(self):
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        side, top = sprites.room(False)
+        plain = pictures.build(305, False, {}, (), role="Fighter")
+        # Trace one upper-arm pixel in each native profile drawing.
+        arm = {2: (4, 8), 11: (6, 9), 12: (9, 8), 13: (4, 9), 14: (8, 9)}
+        for kind in (88, 88 | sg.MAGIC_ARMOUR):
+            plate = pictures.build(305, False, {}, (kind,), role="Fighter")
+            for pose, (ax, ay) in arm.items():
+                with self.subTest(kind=kind, pose=pose):
+                    bare = art.decode_frame(plain, pose)[2]
+                    worn = art.decode_frame(plate, pose)[2]
+                    changed = {(x - side, y - top) for y, row in enumerate(worn)
+                               for x, c in enumerate(row) if c != bare[y][x]}
+                    self.assertTrue(changed)
+                    self.assertTrue(all(6 <= y < 13 for x, y in changed))
+                    self.assertNotIn((ax, ay), changed)
+                    self.assertIn(bare[ay + top][ax + side], range(128, 154))
+
     def test_thief_profile_keeps_a_visible_cloak_below_the_waist(self):
         for model, waists in ((2095, (16, 15, 16, 15, 16)), (2099, (15, 14, 15, 15, 15)),
                               (2053, (12, 12, 11, 12, 12)), (2055, (12, 12, 11, 12, 12)),

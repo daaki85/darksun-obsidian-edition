@@ -4,6 +4,8 @@ Enable **What the party wears** for both elf figures. The loader reads the chara
 
 [Revised cloth beside retail figures and before-and-after measurements](cloth-detail.md) · [Watch the male Preserver and Ranger in profile](elf-stock-side-walk.gif)
 
+[Female elf profile plate fit](elf-woman-plate-fit.gif) · [Male Preserver cloak fold proposal beside the retail Mage and Thief](elf-mantle-fold-study.gif)
+
 ## Face and body
 
 The original head is the first column. Compare the mouth highlight and the dark pixel under the jaw with the cleaned body, cream Cleric collar, open Thief hood, and Psionicist tunic. The first cleanup painted over the lower face on both elves. The corrected body follows each figure’s jaw through the swing, including front strike 2 where the female elf bends low. Each enlarged crop has the full figure at game size underneath. The dressed figures include the loader’s pointed ears.

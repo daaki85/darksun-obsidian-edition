@@ -12,6 +12,20 @@ On the human Thieves, side walk step 2 previously showed just one cloak pixel at
 
 On the chest plate, the broad reflection sits on the upper curve of the rib cage and the lower rim rolls into shadow. The light follows the torso through each step. Look at the two elf Fighters when the near arm crosses the chest, or compare the human woman from the front and side. Each pair shows the preceding build at left and the revision at right, enlarged with a native-size copy below. [Compare chest plate through the front, rear and profile walks](plate-stride.gif)
 
+### Elf woman in profile
+
+In the previous Fighter, chest metal covered the swinging upper arm and the belt. In step 2 it picked out alternating belt pixels. In step 3 it left a single steel pixel below the crossing wrist. The revised picture keeps the original exposed upper arm in front and ends the plate above the belt. Read the still from top to bottom for empty chest slot, previous plate and revised plate. The loop shows those three states left to right. Both use the loader’s picture builder.
+
+[Watch the four-step plate comparison](elf-woman-plate-fit.gif) · [Inspect the four steps individually](elf-woman-plate-fit.png)
+
+### Cloak fold study
+
+The original Mage (724) gathers several bright marks across the shoulder. Farther down, one long shadow stays legible through the swing. On the original Thief (630), short ridges end at different heights above the hem. The male elf Preserver has less cloth visible below his hair. On that smaller panel the current scatter of lights makes a crease hard to follow.
+
+The proposed mantle has two creases of unequal length. They start under the shoulder and spread as the hem swings out. The plum highlight breaks at the turn of the cloth. The equipped sample uses the same creases in the ordinary cloak’s six dye shades. This is an art study for rear and profile motion, with the existing outfit still used in play.
+
+[Compare the current and proposed mantle with the retail Mage and Thief in motion](elf-mantle-fold-study.gif) · [See the class mantle and equipped dye side by side](elf-mantle-fold-study.png)
+
 ## What the items look like
 
 | Item | What to look for on the map | Retail comparison |
