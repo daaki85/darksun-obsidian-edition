@@ -157,9 +157,16 @@ def swing_tile(atlas, pose, item, scale):
     mage = atlas.game.fr(724, pose)
     body_edge = [next((x for x, c in enumerate(row) if c is not None), len(row)) for row in body]
     cloth = {(x, y) for x, y, _ in frame.cloak}
+    # The old hem also crosses the thigh and spans the space between the
+    # legs. Reveal the Preserver's own underlayer wherever the new diagonal
+    # hem has lifted away, including transparent pixels between the limbs.
+    under = elf.render(atlas.game, 2061, pose, "Preserver", show_cape=False)
+    hip_diagonal = {11: 15, 12: 18, 13: 16, 14: 18}[pose]
     for x, y in cloth:
         if x < body_edge[y]:
             rows[y + top][x + side] = None
+        elif y >= 11 and x + y > hip_diagonal:
+            rows[y + top][x + side] = under[y + elf.PAD][x + elf.PAD]
     for y, (left, right) in enumerate(SWING_EDGES[pose], 6):
         body_left = body_edge[y]
         # Read the continuous strip inward from the Mage's trailing edge.
@@ -185,6 +192,10 @@ def swing_tile(atlas, pose, item, scale):
             index = (2 * offset + 1) * len(strip) // (2 * width)
             plum, rank = strip[index]
             rows[y + top][x + side] = sg.CLOAK_COLOURS[65][rank] if item == "Cloak" else plum
+    if pose == 12:
+        # The wrist cuts between the two panels in this step. The rear
+        # shoulder seam passes immediately above it, below the hairline.
+        rows[6 + top][5 + side] = source[7 + top][6 + side]
     return elf.placed_tile(atlas.game, rows, atlas.floor, scale, side, top, 0)
 
 

@@ -28,9 +28,11 @@ The proposed mantle has two creases of unequal length. They start under the shou
 
 ### How the cloak trails in profile
 
-Watch the lower corner of the original Mage and Thief as each takes a stride. The collar travels with the shoulder while the hem lifts behind the elbow. At the broadest part of the swing, a wedge of floor opens between cloth and calf. The first trailing version removed cloth over the hip in steps 2 and 3 and reduced the mantle to eight shades. In the revision, the collar, cloth behind the forearm, and layered folds over the hip retain their original Preserver pixels. Only the loose cloth behind the body moves. Its lower corner lifts in step 2, sweeps back in step 3, and settles in step 4. For the latest profile study, the free edge takes its light and shadow from the original Mage in the matching step. The elf’s shorter mantle uses a plum palette. The corner now narrows to a few pixels behind the elbow during steps 2 and 3. The tucked fold at the hip retains its earlier paint. Equipping the ordinary cloak maps the same folds into its six dye shades.
+The original Mage and Thief lift the lower corner of their cloaks clear of the calf. In profile step 2 the previous Preserver proposal moved the trailing edge, but kept the old plum hem across the raised thigh and the space between the legs. That leftover panel took the equipped cloak dye as well.
 
-[Compare steps 2 and 3 in the base class outfit, the previous study (482ed5d), this revision, and the original Mage](elf-mantle-midstride.png)
+The corrected study reveals the Preserver’s leather tunic, bent leg, and open ground wherever the hem lifts away. A short seam below the hairline carries the cloth over the shoulder when the near arm crosses it. Follow the same plum fold behind the elbow into step 3. The ordinary equipped cloak follows that outline in its own dye.
+
+[Compare the previous proposal, the same Preserver with the mantle removed, and the corrected mantle in steps 2 and 3](elf-mantle-midstride.png)
 
 [Watch the four-step profile loop at game size and 3×](elf-mantle-swing.gif) · [Inspect every step, including the equipped cloak dye](elf-mantle-swing.png)
 

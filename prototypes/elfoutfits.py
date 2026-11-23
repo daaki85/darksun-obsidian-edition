@@ -237,7 +237,7 @@ def hood_hair(rows, model, pose, bow, face):
     return cloth
 
 
-def render(game, model, pose, role, layers=None):
+def render(game, model, pose, role, layers=None, *, show_cape=True):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
     source = fig.rows(combat, frame)
@@ -531,6 +531,7 @@ def render(game, model, pose, role, layers=None):
                     remaining = panel_hem - y
                     if 0 <= remaining <= 2 and x < panel[1] + (4, 2, 1)[remaining]:
                         drape = False
+                drape = drape and show_cape
                 if drape:
                     # Cloth fans out from the shoulder and bunches at the
                     # waist. Use broad midtones with one short crest per fold.
