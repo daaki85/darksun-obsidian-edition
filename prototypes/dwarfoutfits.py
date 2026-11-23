@@ -2,7 +2,8 @@
 
     python3 prototypes/dwarfoutfits.py GAME_DIR OUTPUT_DIR
 
-Write a labeled animation for each dwarf figure. Coordinates below are in its
+Use --proposals for the playable class and multiclass galleries.
+The default writes the original eight-outfit study for each dwarf figure. Coordinates below are in its
 native frame. The fallen pose is drawn feet-down, then turned back for display.
 """
 
@@ -78,7 +79,35 @@ NAMES = (
 )
 
 
-def draw(game, model, k, role):
+class Design(NamedTuple):
+    name: str
+    base: str
+    shoulders: bool = False
+    hood: bool = False
+    sash: bool = False
+
+
+SINGLES = (
+    Design("Cleric", "Priest"),
+    Design("Fighter", "Warrior"),
+    Design("Gladiator", "Gladiator"),
+    Design("Psionicist", "Psionicist"),
+    Design("Thief", "Thief"),
+)
+PAIRS = (
+    Design("Cleric/Fighter", "Priest", shoulders=True),
+    Design("Cleric/Psionicist", "Priest", sash=True),
+    Design("Fighter/Psionicist", "Warrior", sash=True),
+    Design("Fighter/Thief", "Warrior", hood=True),
+    Design("Psionicist/Thief", "Thief", sash=True),
+)
+TRIPLES = (
+    Design("Cleric/Fighter/Psionicist", "Priest", shoulders=True, sash=True),
+    Design("Fighter/Psionicist/Thief", "Warrior", hood=True, sash=True),
+)
+
+
+def draw(game, model, k, role, design=None):
     combat, f = divmod(k, 15)
     figure = game.fig(model)
     rows = figure.rows(combat, f)
@@ -216,9 +245,26 @@ def draw(game, model, k, role):
                 paint = 155 if depth == -1 else 168 if depth == 1 else 205 if dx < -1.8 else 207
             if role == "Psionicist" and torso and abs(dx - (2.5 - 5 * t)) < 0.8:
                 paint = 72 if depth > 1 else 169
+            if design:
+                # A short cowl leaves the fighter's shoulder caps and legs visible.
+                if design.hood and body and 0 <= depth <= 2 and abs(dx) <= 2.5 - 0.55 * depth:
+                    paint = HOOD[1 if dx > 1 else 3 if dx < -0.5 else 2]
+                # Seat the bone on dark leather so it also reads against ivory cloth.
+                if design.shoulders and body and 0 <= depth <= 3 and 2 <= abs(dx) <= radius + 0.9:
+                    paint = LEATHER[1] if depth >= 2 else BONE[4 if depth == 0 else 2]
+                # Carry the baldric across the back as well as the front. The
+                # short woven end falls over the belt and remains visible in profile.
+                if design.sash and paint is not None and 0 <= depth and d <= 3:
+                    strap_x = (1.8 - 3.9 * t) * (-1 if rear else 1)
+                    delta = dx - strap_x
+                    if abs(delta) <= (1.05 if d <= 0 else 0.78):
+                        paint = 169 if d == 0 else TEAL[4 if delta < -0.12 else 3 if d < 0 else 2]
             if head:
+                hood_x = x - cx if design else dx
                 paint = c
-                if role == "Thief" and (rear or y <= cy + 1 or dx < -1.3 or dx > 2.2):
+                if (role == "Thief" or (design and design.hood)) and (
+                    rear or y <= cy + 1 or hood_x < -1.3 or hood_x > 2.2
+                ):
                     paint = HOOD[min(4, int(hue[c] // 42))]
                 elif role == "Psionicist" and y == cy + 1:
                     paint = 169 if x == cx else 71
@@ -256,13 +302,119 @@ def gallery(game, model, name):
     return frames
 
 
+FIGURES = ((2053, "Female"), (2055, "Male"))
+PAPER = "#302d2a"
+INK = "#f2e8d8"
+SAND = "#b8a996"
+MUTED = "#c8b9a6"
+
+
+def board_font(size):
+    try:
+        return ImageFont.truetype("DejaVuSans.ttf", size)
+    except OSError:
+        return ImageFont.load_default()
+
+
+def figure_tile(game, model, pose, design, scale):
+    actor = draw(game, model, pose, design.base, design)
+    tile = Image.new("RGB", (38, 32), SAND)
+    origin = ((tile.width - actor.width) // 2, tile.height - actor.height + 2)
+    tile.paste(actor, origin, actor)
+    return tile.resize((38 * scale, 32 * scale), Image.Resampling.NEAREST)
+
+
+def caption(pen, x, y, design, font):
+    # Two lines keep the triple-class names readable even on a narrow screen.
+    parts = design.name.split("/")
+    if len(parts) == 3:
+        pen.text((x, y), "/".join(parts[:2]) + "/", font=font, fill=INK, anchor="mt")
+        pen.text((x, y + 17), parts[2], font=font, fill=INK, anchor="mt")
+    else:
+        pen.text((x, y), design.name, font=font, fill=INK, anchor="mt")
+
+
+def proposal_board(game, title, designs, pose):
+    column = 151
+    width = 64 + column * len(designs)
+    board = Image.new("RGB", (width, 310), PAPER)
+    pen = ImageDraw.Draw(board)
+    font, small = board_font(17), board_font(14)
+    pen.text((10, 8), title, font=font, fill=INK)
+    pen.text((width - 10, 10), NAMES[pose], font=small, fill=MUTED, anchor="ra")
+    centers = [64 + column * col + column // 2 for col in range(len(designs))]
+    for center, design in zip(centers, designs):
+        caption(pen, center, 258, design, small)
+    for row, (_, gender) in enumerate(FIGURES):
+        pen.text((8, 92 + row * 106), gender, font=small, fill=INK, anchor="lm")
+    # Reserve the rest of the GIF palette for the game's original sprite shades.
+    board = board.quantize(colors=48).convert("RGB")
+    for row, (model, _) in enumerate(FIGURES):
+        for center, design in zip(centers, designs):
+            tile = figure_tile(game, model, pose, design, 3)
+            board.paste(tile, (center - tile.width // 2, 46 + row * 106))
+    return board
+
+
+def proposal_sheet(game):
+    groups = (("Single classes", SINGLES), ("Two classes", PAIRS), ("Three classes", TRIPLES))
+    cell = 158
+    sheet = Image.new("RGB", (5 * cell + 20, 448), PAPER)
+    pen = ImageDraw.Draw(sheet)
+    pen.text((10, 7), "Dwarf outfits", font=board_font(21), fill=INK)
+    pen.text(
+        (sheet.width - 10, 12),
+        "Female front  /  Male rear",
+        font=board_font(15),
+        fill=MUTED,
+        anchor="ra",
+    )
+    font = board_font(14)
+    for row, (title, designs) in enumerate(groups):
+        y = 44 + row * 132
+        pen.text((10, y), title, font=font, fill=INK)
+        for col, design in enumerate(designs):
+            x = 10 + col * cell
+            for side, (model, _) in enumerate(FIGURES):
+                tile = figure_tile(game, model, side, design, 2)
+                sheet.paste(tile, (x + side * tile.width, y + 23))
+            caption(pen, x + 76, y + 94, design, font)
+    return sheet
+
+
+def render_proposals(game, output):
+    proposal_sheet(game).save(output / "dwarf-proposals.png")
+    for key, title, designs in (
+        ("single", "Dwarf single classes", SINGLES),
+        ("double", "Dwarf two-class outfits", PAIRS),
+        ("triple", "Dwarf three-class outfits", TRIPLES),
+    ):
+        frames = [proposal_board(game, title, designs, k) for k in range(len(NAMES))]
+        frames[0].save(
+            output / f"dwarf-{key}.gif",
+            save_all=True,
+            append_images=frames[1:],
+            duration=[1050 if k < 3 or k >= 24 else 290 for k in range(len(frames))],
+            loop=0,
+            disposal=1,
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game_dir")
     parser.add_argument("output_dir", type=Path)
+    parser.add_argument(
+        "--proposals",
+        action="store_true",
+        help="render the playable single and multiclass review boards",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     game = outfits.Game(args.game_dir)
+    if args.proposals:
+        render_proposals(game, args.output_dir)
+        return
     for model, gender in ((2053, "female"), (2055, "male")):
         frames = gallery(game, model, "Dwarf " + gender)
         frames[0].save(
