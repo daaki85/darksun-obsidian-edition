@@ -20,7 +20,7 @@ Within each tile the female elf is on the left and the male on the right. The up
 |---|---|
 | Cleric | The cream robe opens below the jaw and hangs behind the wrist in the side walk. |
 | Fighter | The ochre stitching crosses the leather jerkin. Small bone caps turn with the upper arm. |
-| Gladiator | The male figure wears a diagonal harness. On the female figure a two-row bronze breastband wraps beneath it and passes behind her moving arms. |
+| Gladiator | Both figures wear a diagonal leather harness and a bronze shoulder guard. |
 | Preserver | The deep plum mantle opens over leather in front and flares below the hair from behind. |
 | Psionicist | The teal tunic carries its identifying color below the face. |
 | Ranger | A leather strap crosses the green cape. The pinned corner sits higher over one hip. |
@@ -47,9 +47,9 @@ Watch the arm swing through side steps 2 and 3. The old male cape almost disappe
 
 ![Both elves walking in the previous and revised Preserver, Ranger and Thief cloaks](elf-profile-drape.gif)
 
-In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike, hit and fall, the free lock extends past the hood. The Fighter’s shoulder pieces sit below her hairline and a chest band follows the Gladiator through all 29 poses. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
+In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike, hit and fall, the free lock extends past the hood. The Fighter’s shoulder pieces sit below her hairline. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
 
-![Previous and revised hood, breastband, shoulder, hip and multiclass details beside the revised figure at game size](elf-outfit-details.png)
+![Previous and revised hood, shoulder, hip and multiclass details beside the revised figure at game size](elf-outfit-details.png)
 
 The table gives the median number of pixels that differ from the same pose in the parent outfit, across all 29 poses. The before column uses the art in commit `a6f5bfc`. The gallery above shows the same details at game size.
 

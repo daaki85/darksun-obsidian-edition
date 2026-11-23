@@ -340,7 +340,6 @@ def render(game, model, pose, role, layers=None):
         cap_bottom = cap_top + 1
     panel = PROFILE_PANELS.get((model, pose))
     panel_hem = waist + (3 if cape == "Thief" else 5)
-    band_top = shoulder + (4 if rear else 2)
     lit = [sum(v * w for v, w in zip(rgb, (0.299, 0.587, 0.114))) for rgb in game.palette]
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
@@ -409,8 +408,6 @@ def render(game, model, pose, role, layers=None):
                         paint = dwarf.LEATHER[0 if depth == -1 else rank]
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
-                    if model == figures.ELF_WOMAN and torso and y in (band_top, band_top + 1):
-                        paint = dwarf.BRONZE[1 if y > band_top else min(rank, 2)]
                 elif base == "Fighter":
                     if (torso or model == figures.ELF_WOMAN and c in shirt and shoulder <= y <= waist
                         or c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
