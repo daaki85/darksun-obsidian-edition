@@ -2,6 +2,8 @@
 
 The dwarf Cleric’s cream folds and the Psionicist’s teal tunic read clearly beside the humans. The contrast pass focused on three smaller details that were harder to see in motion.
 
+[See the original dwarf comparison, including the recoil close-ups](original-dwarves.md)
+
 ## Gladiator, Fighter, and Thief before and after
 
 ![Female and male dwarf Gladiator, Fighter, and Thief side by side before and after the contrast pass, through all 29 poses](dwarf-garment-contrast.gif)
