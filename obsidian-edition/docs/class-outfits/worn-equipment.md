@@ -28,7 +28,9 @@ The proposed mantle has two creases of unequal length. They start under the shou
 
 ### How the cloak trails in profile
 
-Watch the lower corner of the original Mage and Thief as each takes a stride. The collar travels with the shoulder while the hem lifts behind the elbow. At the broadest part of the swing, a wedge of floor opens between cloth and calf. The first Preserver study changed the folds inside the shipped mantle outline. This second study redraws the outline in each of the four steps. The corner rises in step 2, stretches back in step 3, then falls toward the heel in step 4. The rear view and the in-game outfit still use their existing drawings.
+Watch the lower corner of the original Mage and Thief as each takes a stride. The collar travels with the shoulder while the hem lifts behind the elbow. At the broadest part of the swing, a wedge of floor opens between cloth and calf. The first trailing version removed cloth over the hip in steps 2 and 3 and reduced the mantle to eight shades. In the revision, the collar, cloth behind the forearm, and layered folds over the hip retain their original Preserver pixels. Only the loose cloth behind the body moves. Its lower corner lifts in step 2, sweeps back in step 3, and settles in step 4. The lit edge uses the same motion in the equipped cloak’s dye. This is a profile art study.
+
+[Compare the two reported poses in the earlier mantle, last proposal, revision, and original Mage](elf-mantle-midstride.png)
 
 [Watch the four-step profile loop at game size and 3×](elf-mantle-swing.gif) · [Inspect every step, including the equipped cloak dye](elf-mantle-swing.png)
 

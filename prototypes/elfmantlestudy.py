@@ -126,74 +126,73 @@ def render(atlas, output):
     sheet.save(output / "elf-mantle-fold-study.png")
 
 
-# Profile overlays in native coordinates, starting at row 7. Each line gives
-# the trailing edge and the painted ranks up to the leading edge. The collar
-# stays on its original pixels. The corner lifts in step 2, then unrolls in 3.
-PROFILE_SWING = {
-    11: (
-        (0, "245654"), (-1, "2456754"), (-2, "24676653"),
-        (-3, "246654532"), (-4, "246545431"), (-4, "356435431"),
-        (-5, "246424531"), (-6, "245324431"), (-6, "353213421"),
-        (-6, "34210331"), (-6, "2410231"), (-5, "31021"),
-        (-5, "2011"), (-4, "10"),
-    ),
-    12: (
-        (5, "2456654"), (3, "245676654"), (1, "24567546543"),
-        (0, "24665456432"), (-1, "24654565432"), (-2, "24643654321"),
-        (-3, "2464354321"), (-4, "246324321"), (-5, "24532321"),
-        (-5, "3532131"), (-5, "342101"), (-5, "241"), (-5, "1"),
-    ),
-    13: (
-        (3, "245654"), (2, "2456754"), (1, "24567543"),
-        (0, "246655432"), (-1, "246545431"), (-1, "356435431"),
-        (-2, "246435431"), (-2, "356425431"), (-3, "246424321"),
-        (-4, "24632431"), (-5, "24532310"), (-6, "24532110"),
-        (-6, "3521"), (-6, "21"),
-    ),
-    14: (
-        (4, "245654"), (3, "2456754"), (2, "245675432"),
-        (1, "246655432"), (0, "2465454321"), (0, "3564354321"),
-        (-1, "2464354321"), (-2, "2464245321"), (-2, "356424321"),
-        (-3, "246324321"), (-4, "24532431"), (-4, "35321310"),
-        (-4, "3421010"), (-4, "241"), (-4, "1"),
-    ),
+# The outer fold runs behind the stock silhouette. Each run begins at the
+# trailing edge and ends at the arm, hip, or lifted corner in that drawing.
+# All cloth inside the stock silhouette keeps its registered Preserver paint.
+SWING_EDGES = {
+    11: (None, None, (-1, -1), (-2, 0), (-3, 1), (-4, 1), (-5, 1), (-5, 1),
+         (-6, 2), (-6, 2), (-5, 2), (-5, 1), (-4, 0)),
+    12: ((4, 4), (3, 3), (1, 2), (0, 1), (-1, 1), (-2, 1), (-3, 1), (-4, 1),
+         (-5, 1), (-5, 2), (-5, 2), (-4, -2)),
+    13: ((2, 2), (1, 2), (0, 2), (-1, 1), (-1, 1), (-2, 1), (-2, 2), (-3, 2),
+         (-4, 2), (-5, 2), (-6, 2), (-6, 1), (-5, -3)),
+    14: (None, None, (2, 2), (1, 3), (0, 4), (-1, 4), (-2, 3), (-2, 3),
+         (-3, 3), (-4, 3), (-4, 3), (-4, 3), (-3, 2), (-3, -1)),
 }
 
 
 def swing_tile(atlas, pose, item, scale):
     side, top = sprites.room(False)
-    rows = [row[:] for row in atlas.sequence(304, False, "Preserver", item)[pose]]
+    source = atlas.sequence(304, False, "Preserver", item)[pose]
+    rows = [row[:] for row in source]
     frame = classoutfits.frames("Preserver", False, 2061)[pose]
-    old_cloth = {(x, y) for x, y, _ in frame.cloak}
-    head = set(frame.head)
-    # The single-class Fighter supplies the leather and limbs under this
-    # mantle. Only uncover pixels inside the native body when lifting the hem.
-    under = atlas.sequence(304, False, "Fighter", "Class colors")[pose]
     body = atlas.game.fr(2061, pose)
-    for x, y in old_cloth - head:
-        if y >= 7:
-            on_body = 0 <= x < len(body[y]) and body[y][x] is not None
-            rows[y + top][x + side] = under[y + top][x + side] if on_body else None
-    ramp = PLUM if item == "Class colors" else sg.CLOAK_COLOURS[65]
-    for y, (left, ranks) in enumerate(PROFILE_SWING[pose], 7):
-        for x, rank in enumerate(ranks, left):
-            if (x, y) in head:
+    folds = {}
+    for x, y, _ in frame.cloak:
+        folds.setdefault(y, []).append(x)
+    edges = SWING_EDGES[pose]
+    crease = (115, 239, 118, 238, 239)
+    if item == "Cloak":
+        crease = tuple(sg.CLOAK_COLOURS[65][i] for i in (2, 4, 3, 5, 4))
+    hem = max(folds)
+    for y in range(7, hem + 1):
+        body_left = next(x for x, color in enumerate(body[y]) if color is not None)
+        cloth = sorted(folds.get(y, ()))
+        fringe = [x for x in cloth if x < body_left]
+        for x in fringe:
+            rows[y + top][x + side] = None
+        if y - 7 >= len(edges) or edges[y - 7] is None:
+            continue
+        left, right = edges[y - 7]
+        # Lift the outer part of the fold. Take its actual indexed artwork
+        # from farther down the same mantle, including its ordinary item dye.
+        lower_y = min(y + 2, hem)
+        sample = sorted(folds[lower_y])
+        for x in range(left, right + 1):
+            if x >= body_left or rows[y + top][x + side] is not None:
                 continue
-            if (x, y) not in old_cloth and rows[y + top][x + side] is not None:
-                continue
-            rows[y + top][x + side] = ramp[round(int(rank) * (len(ramp) - 1) / 7)]
+            if x in fringe and x >= right - 1:
+                color = source[y + top][x + side]
+            else:
+                col = round((x - left) * (len(sample) - 1) / max(1, right - left))
+                color = source[lower_y + top][sample[col] + side]
+            # The narrow lit lip follows the trailing crease behind the elbow.
+            # Keep the woven midtones on both sides and break the light at the hem.
+            if right - left >= 3 and x == left + (1 if y < 14 else 2) and 10 <= y <= 17:
+                color = crease[(y - 10) % len(crease)]
+            rows[y + top][x + side] = color
     return elf.placed_tile(atlas.game, rows, atlas.floor, scale, side, top, 0)
 
 
 def swing_comparison(atlas, output):
     columns = (("Original Mage", 724), ("Current Preserver", 304),
-               ("Trailing mantle", 304), ("Original Thief", 630))
+               ("Revised mantle", 304), ("Original Thief", 630))
     frames = []
     sheet = Image.new("RGB", (82 + 5 * 156, 34 + 4 * 132), dwarf.PAPER)
     label(sheet, (160 + 4 * 156, 8), "Equipped cloak study", 14, "ma")
     for i, (title, _) in enumerate(columns):
         label(sheet, (160 + i * 156, 8), title, 14, "ma")
-    for step, pose in enumerate(PROFILE_SWING, 1):
+    for step, pose in enumerate(SWING_EDGES, 1):
         image = Image.new("RGB", (624, 255), dwarf.PAPER)
         label(image, (8, 6), "Male elf Preserver · profile walk", 18)
         label(image, (616, 9), f"Step {step}/4", 14, "ra")
