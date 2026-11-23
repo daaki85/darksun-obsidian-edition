@@ -2014,6 +2014,20 @@ class ManualGroup3Tests(unittest.TestCase):
                           "(a specialist's second foe)"])
         self.assertTrue(say(dicelog.MANUAL_SECOND, 0x29, 0, 1, 1)[0].endswith("(a specialist's second foe, 1 less damage)"))
 
+    def test_second_head_damage(self):
+        """The double spear's hit on the second foe shows SF_LESS's 1 less; the lotulis' none, nor a hit
+        on another foe."""
+        for spear, target, want in ((1, 0x29, "for 17: 1d8 = [5] +1 weapon +12 STR 24 -1 second head"),
+                                    (0, 0x29, "for 18: 1d8 = [5] +1 weapon +12 STR 24"),
+                                    (1, 0x2A, "for 18: 1d8 = [5] +1 weapon +12 STR 24")):
+            log = self.make()
+            log.describe(entry(dicelog.MANUAL_SECOND, frame=words(0, 0, target, 0, 1, spear), kind=dicelog.KIND_MANUAL))
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, game.DOUBLE_SPEAR_TYPE, 1)
+            e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                      parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+            with self.subTest(spear=spear, target=target):
+                self.assertTrue(log.describe(e)[0].endswith(want), log.describe(e))
+
     def test_biofeedback_hit(self):
         """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
         for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),

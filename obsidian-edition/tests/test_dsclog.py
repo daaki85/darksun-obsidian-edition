@@ -2867,7 +2867,12 @@ class KindsAllowedTests(unittest.TestCase):
                game.METAL_PICK_TYPE: (1, 4, 0x1772), game.METAL_POLEARM_TYPE: (1, 4, 0x1672),
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
                game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
-               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F)}
+               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F),
+               # (Wake of the Ravager's kinds, npcitems.TYPES' last seven: the double spear and trikal gladiators')
+               game.TWOHAND_SWORD_TYPE: (1, 3, 0x166E), game.LOTULIS_TYPE: (1, 2, 0x167A),
+               game.DOUBLE_SPEAR_TYPE: (1, 0x80, 0x1040), game.TRIKAL_TYPE: (1, 0x80, 0x1040),
+               game.JAVELIN_TYPE: (0x12, 0x83, 0x127E), game.DARTS_TYPE: (0x12, 0x80, 0x1FF3),
+               game.NET_TYPE: (0x12, 0x40, 0x167A)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):
@@ -2888,7 +2893,7 @@ class KindsAllowedTests(unittest.TestCase):
         mu.mem_write(TSR * 16, image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where KINDS_ALLOWED returns)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
-        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(148)))  # (KIND_TYPES: the game's and the Loader's)
+        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(game.NET_TYPE + 1)))  # (KIND_TYPES: the game's and the Loader's)
         sheet = test_restrict.sheet
         combos = [(9,), (13,), (10,), (11,), (12,), (17,), (9, 12), (9, 17), (9, 11), (13, 5), (13, 12)]
         for c in range(1, 5):
@@ -3020,7 +3025,8 @@ class KindsAllowedTests(unittest.TestCase):
         self.assertIn(specialize.KINDS.index("bow"), restrict.allowed_kinds(sheet(9), self.record))
         fire = restrict.allowed_kinds(sheet(9, 3), self.record)
         self.assertEqual([specialize.KINDS[k] for k in fire],
-                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha"])
+                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha",
+                          "two-handed sword", "javelin"])
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
