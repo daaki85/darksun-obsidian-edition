@@ -284,6 +284,15 @@ class DwarfOutfitTests(unittest.TestCase):
                                 self.assertTrue(guard)
                                 self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
+    def test_short_recoil_hems_leave_ground_visible_beside_the_raised_leg(self):
+        for model in classoutfits.DWARVES:
+            for role in ("Gladiator", "Psionicist"):
+                with self.subTest(model=model, role=role):
+                    recoil = classoutfits.frames(role, True, model)[12]
+                    for y in (12, 13, 14):
+                        self.assertIsNone(recoil.image[y + 4][12 + 4])
+                        self.assertNotIn((12, y), recoil.regions[classoutfits.LEGS])
+
     def test_fighter_details_remain_visible_at_map_size(self):
         for model in classoutfits.DWARVES:
             for role in ("Fighter", "Fighter/Thief", "Fighter/Psionicist", "Fighter/Psionicist/Thief"):

@@ -400,9 +400,12 @@ def draw(game, model, k, role, design=None, layers=None):
             if torso:
                 surface = co.CHEST
                 paint = palette[shade]
-                if role == "Gladiator" and abs(dx - (2 - 4 * t)) > 1.1:
-                    paint = skin
-                    surface = 0
+                if role == "Gladiator":
+                    if abs(dx - (2 - 4 * t)) > 1.1:
+                        paint = skin
+                        surface = 0
+                    elif d == -1:
+                        paint = LEATHER[0]  # shadow where the strap tucks under the belt
                 if fighter:
                     # Warm side shadow above the belt, with a lighter baldric
                     # crossing the jerkin from the shoulder to the far hip.
@@ -454,6 +457,8 @@ def draw(game, model, k, role, design=None, layers=None):
                     paint = CREAM[
                         1 if u > 0.55 else 4 if -0.55 < u < -0.25 else 0 if 0.05 < u < 0.26 else 2
                     ]
+            # The raised leg in recoil leaves a one-pixel channel under the short hem.
+            trim_hem = k == 27 and (x, y) == (12, 13) and role in ("Gladiator", "Psionicist")
             if fighter and body and 1 <= d <= 3 and abs(dx) <= radius + 0.4:
                 # Two hip flaps hang from the belt. The outer corners turn
                 # inward on the final row and leave the space between legs open.
@@ -464,7 +469,7 @@ def draw(game, model, k, role, design=None, layers=None):
                     surface = co.LEGS
                     cape = False
             elif role not in ("Priest", "Warrior") and 0 <= d <= (4 if role in ("Thief", "Druid") else 3):
-                if abs(dx) <= radius + 0.22 * d and (body or role != "Thief" and d <= 2):
+                if not trim_hem and abs(dx) <= radius + 0.22 * d and (body or role != "Thief" and d <= 2):
                     if (
                         not rear
                         or role not in CLOAK_LENGTHS
@@ -493,6 +498,8 @@ def draw(game, model, k, role, design=None, layers=None):
                     stitch_start = 1 if 11 <= k <= 14 else 2
                     if seam == 1 and stitch_start <= front_edge - x <= 3:
                         paint = BONE[2]  # pale stitching along the near panel
+                    elif k == 13 and (x, y) in ((5, 7), (6, 8)):
+                        paint = LEATHER[0]  # panel shadow just behind the crossing wrist
                     surface = co.CHEST
             if role == "Priest" and front_edge is not None and front_edge - 2 <= x <= front_edge:
                 # The return fold wraps around the rib cage, then drops

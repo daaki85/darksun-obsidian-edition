@@ -8,7 +8,7 @@ The dwarf Cleric’s cream folds and the Psionicist’s teal tunic read clearly 
 
 ![Female and male dwarf Gladiator, Fighter, and Thief side by side before and after the contrast pass, through all 29 poses](dwarf-garment-contrast.gif)
 
-Each pair shows the previous outfit on the left and the current outfit on the right. The small figures are at game size and the figures above them are enlarged 2×. Look at the Gladiator’s upper shoulder rim in front idle, the Fighter’s light stitch just above the crossing wrist in side-walk step 3, and the Thief’s slate ridge as the hood turns into profile. Shared garments receive the same shading where visible on multiclasses. The Cleric/Fighter keeps its pale shoulder caps and the Fighter/Psionicist keeps its narrow teal sash.
+Each pair shows the outfits before and after the first contrast pass. The small figures are at game size and the figures above them are enlarged 2×. Look at the Gladiator’s upper shoulder rim in front idle, the Fighter’s light stitch just above the crossing wrist in side-walk step 3, and the Thief’s slate ridge as the hood turns into profile. Shared garments receive the same shading where visible on multiclasses. The Cleric/Fighter keeps its pale shoulder caps and the Fighter/Psionicist keeps its narrow teal sash.
 
 ## Dwarves, humans, and original game figures in motion
 
@@ -43,7 +43,7 @@ Each party pair shows the woman on the left and the man on the right in front id
 |---|---:|---:|---:|---:|---:|
 | Cleric | 149 | 141 | 166 | 146 | 97 · Priest |
 | Fighter | 123 | 118 | 120 | 110 | 157 · Warrior |
-| Gladiator | 122 | 111 | 108 | 121 | 145 · stock dwarf |
+| Gladiator | 123 | 111 | 108 | 121 | 145 · stock dwarf |
 | Psionicist | 122 | 112 | 106 | 112 | 120 · Mage |
 | Thief | 97 | 97 | 122 | 100 | 142 · Thief |
 
