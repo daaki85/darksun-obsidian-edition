@@ -49,6 +49,17 @@ class HumanOutfitTests(unittest.TestCase):
                     if role == "Mage":
                         self.assertTrue(left and right, (combat, f))
 
+    def test_male_priest_side_walk_keeps_cloth_behind_the_arm(self):
+        # At full stride the ground used to show through these folds.
+        poses = classoutfits.frames("Priest", False, 2095)
+        for f, cells in ((12, ((4, 10), (4, 11), (3, 12), (4, 12), (3, 13), (3, 14), (4, 14))),
+                         (13, ((1, 12), (1, 13), (1, 14)))):
+            pose = poses[f]
+            left = 8 if f == 13 else 6
+            for x, y in cells:
+                with self.subTest(frame=f, x=x, y=y):
+                    self.assertIn(pose.image[y + 6][x + left], (207, 194, 61, 155))
+
     def test_plate_and_cloak_have_independent_colours_and_magic(self):
         magic_plate = 88 | sg.MAGIC_ARMOUR | (sg.BLUE_GLOW << sg.GLOW_SHIFT)
         magic_cloak = (65, 5, sg.MAGIC, sg.GREEN_GLOW)

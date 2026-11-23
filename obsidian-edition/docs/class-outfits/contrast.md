@@ -47,7 +47,7 @@ Each party pair shows the woman on the left and the man on the right in front id
 
 | Outfit | Dwarf woman | Dwarf man | Human woman | Human man | Original figure |
 |---|---:|---:|---:|---:|---:|
-| Cleric | 149 | 141 | 166 | 146 | 97 · Priest |
+| Cleric | 149 | 141 | 166 | 143 | 97 · Priest |
 | Fighter | 123 | 118 | 120 | 110 | 157 · Warrior |
 | Gladiator | 123 | 111 | 108 | 121 | 145 · stock dwarf |
 | Psionicist | 123 | 112 | 106 | 112 | 120 · Mage |

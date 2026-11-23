@@ -32,6 +32,8 @@ Each human gallery shows all eight outfits in sync on game terrain. The caption 
 
 ## Male human
 
+In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The short loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](human-priest-profile.gif)
+
 ![Eight male human class outfits animated through all 29 map poses](human-male.gif)
 
 ## Equipment
