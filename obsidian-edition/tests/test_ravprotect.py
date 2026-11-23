@@ -28,7 +28,7 @@ FIGHTERS_OFF, ITEM_SIZE, CREATURE_SIZE = 0xC33, 0x17, 0x31
 RING, CLOAK, BRACERS, ROBE = 45, ravager.mod_type(game.CLOAK_TYPE), ravager.mod_type(game.BRACERS_TYPE), \
     ravager.mod_type(game.ROBE_TYPE)
 PLATE, SHIELD, LEATHER = ravager.mod_type(game.PLATE_CHEST_TYPE), ravager.mod_type(game.METAL_SHIELD_TYPE), 140
-FINGER, FINGER2, BACK, ARMS, CHEST, RIGHT_HAND, LEFT_HAND, FOOT = 4, 11, 12, 0, 9, 3, 10, 13
+FINGER, FINGER2, BACK, ARMS, CHEST, RIGHT_HAND, LEFT_HAND, FOOT, WAIST, NECK = 4, 11, 12, 0, 9, 3, 10, 13, 5, 8
 BOOTS = ravager.mod_type(game.SPEED_BOOTS_TYPE)
 COMBATANT, THING, LIST = 7, 0x300, 0x301  # (the combatant attacked or saving, its creature's list)
 
@@ -208,6 +208,49 @@ class ProtectionTests(unittest.TestCase):
             mu.emu_start(TSR * 16 + self.sym["veiled_slot"], TSR * 16 + 0xFFF0)
             with self.subTest(robe=robe, cls=cls, level=level, slots=slots):
                 self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_SI)), (want, 0x55))
+
+    def test_girdles(self):
+        """ITEM_REAR (from MISSILE_REAR): the Girdle of Back Defense at the waist takes back an attack from
+        behind and a backstab (2 each on the THAC0 [BP-1Eh]); the Golden Girdle of Urnst makes a melee long or
+        short sword 3 worse, not an axe nor a missile; a girdle in the pack does nothing."""
+        def run(worn, rear, stab, weapon, melee=1):
+            mu = self.machine(worn)
+            mu.mem_write(SS * 16 + 0x600 - 0x21, bytes((stab,)))
+            mu.mem_write(SS * 16 + 0x600 - 0x19, bytes((rear,)))
+            mu.mem_write(SS * 16 + 0x600 - 0x1E, struct.pack("<h", 10))
+            mu.mem_write(SS * 16 + 0x600 - 4, struct.pack("<H", weapon))
+            mu.mem_write(SS * 16 + 0x600 + 0x0E, struct.pack("<H", melee))
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=0x600, edi=COMBATANT, esi=0x22,
+                                    eflags=0x2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + self.sym["item_rear"], TSR * 16 + 0xFFF0)
+            return (mu.mem_read(SS * 16 + 0x600 - 0x19, 1)[0], mu.mem_read(SS * 16 + 0x600 - 0x21, 1)[0],
+                    struct.unpack("<h", mu.mem_read(SS * 16 + 0x600 - 0x1E, 2))[0])
+        back, urnst = ravager.mod_type(game.BACK_GIRDLE_TYPE), ravager.mod_type(game.URNST_GIRDLE_TYPE)
+        long_sword, axe = 16, 8  # (the sequel's types: KIND_OF_TYPE's long sword and axe)
+        for worn, rear, stab, weapon, melee, want in (
+                ([(back, WAIST, 0)], 1, 1, axe, 1, (0, 0, 14)), ([(back, WAIST, 0)], 1, 0, axe, 1, (0, 0, 12)),
+                ([(back, 20, 0)], 1, 1, axe, 1, (1, 1, 10)), ([], 1, 1, axe, 1, (1, 1, 10)),
+                ([(urnst, WAIST, 0)], 0, 0, long_sword, 1, (0, 0, 13)), ([(urnst, WAIST, 0)], 0, 0, axe, 1, (0, 0, 10)),
+                ([(urnst, WAIST, 0)], 0, 0, long_sword, 2, (0, 0, 10)), ([(urnst, WAIST, 0)], 1, 0, long_sword, 1, (1, 0, 13))):
+            with self.subTest(worn=worn, rear=rear, stab=stab, weapon=weapon, melee=melee):
+                self.assertEqual(run(worn, rear, stab, weapon, melee), want)
+
+    def test_amulet(self):
+        """AMULET_MR: the Amulet of Magic Resistance at the neck adds 15 to [BP-2]; ZF handed back as
+        "cmp word [bp-2],0" sets it."""
+        amulet = ravager.mod_type(game.MR_AMULET_TYPE)
+        for worn, before, after in (([(amulet, NECK, 0)], 0, 15), ([(amulet, NECK, 0)], 20, 35), ([], 0, 0),
+                                    ([], 30, 30), ([(amulet, 20, 0)], 0, 0)):
+            mu = self.machine(worn)
+            mu.mem_write(SS * 16 + 0x600 - 2, struct.pack("<h", before))
+            mu.mem_write(SS * 16 + 0x606, struct.pack("<H", COMBATANT))
+            self.call(mu, "amulet_mr", esi=0x33)
+            with self.subTest(worn=worn, before=before):
+                self.assertEqual(struct.unpack("<h", mu.mem_read(SS * 16 + 0x600 - 2, 2))[0], after)
+                self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), after == 0)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_SI), 0x33)
 
     def test_patches(self):
         """The two sites are where the game has what they replace."""

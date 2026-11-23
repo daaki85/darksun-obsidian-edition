@@ -445,7 +445,8 @@ missile_rear:
         mov byte [bp - 0x19], 0
         add word [bp - 0x1E], 2
         inc word [cs:rear_taken]
-.out:   call thief_rear                 ; (class restrictions: no backstab in heavy armour)
+.out:   call item_rear                  ; (the girdles: ITEM_REAR)
+        call thief_rear                 ; (class restrictions: no backstab in heavy armour)
         mov al, [bp - 0x19]
         iret
 rear_taken dw 0                         ; missiles' "from behind" taken back (for the tests)
@@ -2989,6 +2990,7 @@ site_table:
         dw name_push                        ; 42 SITE_NAME (an item's name read, ITEM NAMES)
         dw prot_ac                          ; 43 SITE_PROT_AC (a worn item's AC counted, PROTECTION)
         dw prot_save                        ; 44 SITE_PROT_SAVE (a save's modifiers started)
+        dw amulet_mr                        ; 45 SITE_AMULET_MR (a target's magic resistance tested)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -6271,6 +6273,81 @@ boots_move:
         shl ax, 1
         inc word [cs:boots_count]
 .ret:   ret
+; THE GIRDLES AND THE AMULET (SL's worldgear.py; DSCLOG's ITEM_REAR, AMULET_MR), the mod's types in the sequel:
+; - ITEM_REAR (from MISSILE_REAR, in the attack's set-up at 5C99Fh: DI the target, [BP-19h] from behind and
+;   [BP-21h] the backstab, each 2 off the THAC0 [BP-1Eh]; [BP-4] the weapon's type, [BP+0Eh] 1 melee): a
+;   target wearing the Girdle of Back Defense takes back the attack from behind and the backstab (their 2
+;   each given back); the Golden Girdle of Urnst makes a sword's melee attack 3 worse (a long or short
+;   sword kind, KIND_OF_TYPE). All registers kept.
+; - AMULET_MR (site 45, "amulet_resistance"): the magic resistance routine's "cmp word [bp-2],0" (84B24h,
+;   4 bytes; SL's 7A4FDh; [BP+6] the target, [BP-2] its resistance, Mind Bar's 75 added): an Amulet of
+;   Magic Resistance at the neck adds AMULET_PERCENT, before Lower Resistance (LOWRES_SITE). The compare's
+;   ZF handed back for the game's jne.
+BACK_GIRDLE    equ 129           ; (SL's 142, 143, 144: ravager.mod_type)
+URNST_GIRDLE   equ 130
+MR_AMULET      equ 131
+WAIST_SLOT     equ 5
+NECK_SLOT      equ 8
+URNST_AC       equ 3
+AMULET_PERCENT equ 15
+KIND_LONG_SWORD  equ 1
+KIND_SHORT_SWORD equ 4
+item_rear:
+        push si
+        mov si, di
+        call prot_here
+        pop si
+        jc .ret
+        cmp byte [cs:p_girdle], 1
+        jne .urnst
+        cmp byte [bp - 0x19], 0
+        je .stab
+        mov byte [bp - 0x19], 0
+        add word [bp - 0x1E], 2
+        inc word [cs:girdle_count]
+.stab:  cmp byte [bp - 0x21], 0
+        je .ret
+        mov byte [bp - 0x21], 0
+        add word [bp - 0x1E], 2
+        inc word [cs:girdle_count]
+        ret
+.urnst: cmp byte [cs:p_girdle], 2
+        jne .ret
+        cmp word [bp + 0x0E], 1
+        jne .ret
+        push bx
+        mov bx, [bp - 4]
+        cmp bx, KIND_TYPES
+        jae .not
+        mov bl, [cs:kind_of_type + bx]
+        cmp bl, KIND_LONG_SWORD
+        je .sword
+        cmp bl, KIND_SHORT_SWORD
+        jne .not
+.sword: add word [bp - 0x1E], URNST_AC
+        inc word [cs:girdle_count]
+.not:   pop bx
+.ret:   ret
+amulet_mr:
+        push si
+        mov si, [bp + 6]
+        call prot_here
+        pop si
+        jc .test
+        cmp byte [cs:p_amulet], 0
+        je .test
+        add word [bp - 2], AMULET_PERCENT
+        inc word [cs:amulet_count]
+.test:  push bx
+        mov bx, sp                      ; ([ss:bx+2] the INT's IP, +4 CS, +6 FLAGS)
+        or word [ss:bx + 6], 0x40
+        cmp word [bp - 2], 0
+        je .zero
+        and word [ss:bx + 6], ~0x40
+.zero:  pop bx
+        iret
+girdle_count dw 0
+amulet_count dw 0
 prot_ac:
         movzx ax, byte [es:bx + 0x0B]
         cmp cx, PROT_RING
@@ -6420,7 +6497,9 @@ prot_here:
 ; PROT_SCAN: what creature DX (DS the game's) wears that the protection rules weigh, in any of its item
 ; lists (as ARMOUR_WORN reads them): P_FLAGS; P_RING, P_RING2 (the plus of a ring of protection on each
 ; hand's finger, 0 for none or less); P_CLOAK (a cloak of protection's plus, worn on the back); P_ROBE (a
-; robe's plus, worn on the chest; 0 none); P_BOOTS (1 for the Boots of Speed on the feet). All kept.
+; robe's plus, worn on the chest; 0 none); P_BOOTS (1 for the Boots of Speed on the feet); P_GIRDLE (1 the
+; Girdle of Back Defense, 2 the Golden Girdle of Urnst, at the waist); P_AMULET (1 for the Amulet of Magic
+; Resistance at the neck). All kept.
 prot_scan:
         pusha
         push es
@@ -6429,6 +6508,7 @@ prot_scan:
         mov [cs:p_ring], ax             ; (and P_RING2)
         mov [cs:p_cloak], ax            ; (and P_ROBE)
         mov [cs:p_boots], al
+        mov [cs:p_girdle], ax           ; (and P_AMULET)
         imul bx, dx, CREATURE_SIZE
         mov [cs:p_creature], bx
         mov cx, 8
@@ -6482,10 +6562,28 @@ prot_scan:
         mov [cs:p_robe], ah
         jmp .item
 .boots: cmp di, PROT_BOOTS
-        jne .type
+        jne .girdle
         cmp al, FOOT_SLOT
         jne .item
         mov byte [cs:p_boots], 1
+        jmp .item
+.girdle:
+        cmp di, BACK_GIRDLE
+        je .waist
+        cmp di, URNST_GIRDLE
+        jne .amulet
+.waist: cmp al, WAIST_SLOT
+        jne .item
+        sub di, BACK_GIRDLE - 1         ; (1 back defense, 2 Urnst)
+        mov ax, di
+        mov [cs:p_girdle], al
+        jmp .item
+.amulet:
+        cmp di, MR_AMULET
+        jne .type
+        cmp al, NECK_SLOT
+        jne .item
+        mov byte [cs:p_amulet], 1
         jmp .item
 .type:  imul di, di, CU_TYPE_SIZE
         les bx, [ITEM_TYPES_PTR]
@@ -6533,6 +6631,8 @@ p_ring2    db 0
 p_cloak    db 0
 p_robe     db 0
 p_boots    db 0
+p_girdle   db 0                 ; (1 the Girdle of Back Defense, 2 the Golden Girdle of Urnst, at the waist)
+p_amulet   db 0                 ; (1 the Amulet of Magic Resistance at the neck)
 boots_count dw 0                ; (the boots' AC and movement given, for a look in play)
 p_creature dw 0
 prot_count dw 0                 ; (AC counts changed so, and saves weighed, for a look in play)

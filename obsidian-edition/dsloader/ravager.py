@@ -491,6 +491,9 @@ PATCHES: Tuple[Patch, ...] = (
     # start of the save modifiers (8360Eh: "mov si,[bp+6] / xor di,di", SL's PROBE_RING_SAVE at 79D47h).
     Patch("protection_ac", 0x5D61A, bytes.fromhex("268a470bb400"), _site(43, 6)),
     Patch("protection_save", 0x8360E, bytes.fromhex("8b760633ff"), _site(44, 5)),
+    # the Amulet of Magic Resistance (SL's AMULET_MR): DSCLOG2's site 45 at the magic resistance routine's
+    # "cmp word [bp-2],0" (84B24h, SL's 7A4FDh), its 15% added first (the girdles: ITEM_REAR, from MISSILE_REAR)
+    Patch("amulet_resistance", 0x84B24, bytes.fromhex("837efe00"), bytes((0xCD, VEC_SITE, 45, 0x90))),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
