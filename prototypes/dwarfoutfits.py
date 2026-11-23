@@ -8,13 +8,14 @@ native frame. The fallen pose is drawn feet-down, then turned back for display.
 """
 
 import argparse
+from functools import lru_cache
 from pathlib import Path
 from typing import NamedTuple
 
 from PIL import Image, ImageDraw, ImageFont
 
 import outfits
-from dsloader import classoutfits as co, sprites
+from dsloader import art, classoutfits as co, sprites
 
 
 class Pose(NamedTuple):
@@ -648,11 +649,24 @@ def board_font(size):
         return ImageFont.load_default()
 
 
+@lru_cache(maxsize=64)
+def proposal_sequence(game, model, combat, role):
+    pictures = sprites.Pictures(game.chunks)
+    obj = 303 if model == 2053 else 302
+    return pictures.build(obj, combat, {}, (), role=role)
+
+
 def figure_tile(game, model, pose, design, scale):
-    actor = draw(game, model, pose, design.base, design)
+    combat, frame = divmod(pose, 15)
+    chunk = proposal_sequence(game, model, combat, design.name)
+    rows = art.decode_frame(chunk, frame)[2]
     tile = Image.new("RGB", (38, 32), SAND)
-    origin = ((tile.width - actor.width) // 2, tile.height - actor.height + 2)
-    tile.paste(actor, origin, actor)
+    left = (tile.width - len(rows[0])) // 2
+    top = tile.height - len(rows) - 2
+    for y, row in enumerate(rows):
+        for x, colour in enumerate(row):
+            if colour is not None:
+                tile.putpixel((x + left, y + top), game.palette[colour])
     return tile.resize((38 * scale, 32 * scale), Image.Resampling.NEAREST)
 
 
@@ -767,6 +781,9 @@ def export_layers(game, output):
                         suffix = "" if key == "image" else "-" + key
                         entry = ZipInfo(f"{model}/{design.name}/{tag}{suffix}")
                         archive.writestr(entry, sprites.encode_frames(frames), ZIP_DEFLATED)
+    from outfitdetail import finish_archive
+    path = output / "dwarf_outfit_layers.zip"
+    finish_archive(game, path, path)
 
 
 def main():

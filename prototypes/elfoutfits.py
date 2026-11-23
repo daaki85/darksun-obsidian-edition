@@ -804,6 +804,9 @@ def export_layers(game, output):
                         suffix = "" if key == "image" else "-" + key
                         entry = ZipInfo(f"{model}/{role}/{tag}{suffix}")
                         archive.writestr(entry, sprites.encode_frames(frames), ZIP_DEFLATED)
+    from outfitdetail import finish_archive
+    path = output / "elf_outfit_layers.zip"
+    finish_archive(game, path, path)
 
 
 if __name__ == "__main__":

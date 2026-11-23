@@ -51,6 +51,8 @@ class HumanOutfitTests(unittest.TestCase):
 
     def test_male_priest_side_walk_keeps_cloth_behind_the_arm(self):
         # At full stride the ground used to show through these folds.
+        cream_fold = {208, 204, 207, 205, 194, 206, 120, 121, 61, 123, 199, 125, 62, 155, 63,
+                      92, 95, 97, 118, 119, 122, 124, 214, 215, 126}
         poses = classoutfits.frames("Priest", False, 2095)
         for f, cells in ((12, ((4, 10), (4, 11), (3, 12), (4, 12), (3, 13), (3, 14), (4, 14))),
                          (13, ((1, 12), (1, 13), (1, 14)))):
@@ -58,7 +60,7 @@ class HumanOutfitTests(unittest.TestCase):
             left = 8 if f == 13 else 6
             for x, y in cells:
                 with self.subTest(frame=f, x=x, y=y):
-                    self.assertIn(pose.image[y + 6][x + left], (207, 194, 61, 155))
+                    self.assertIn(pose.image[y + 6][x + left], cream_fold)
 
     def test_plate_and_cloak_have_independent_colours_and_magic(self):
         magic_plate = 88 | sg.MAGIC_ARMOUR | (sg.BLUE_GLOW << sg.GLOW_SHIFT)
@@ -328,12 +330,14 @@ class DwarfOutfitTests(unittest.TestCase):
                     self.assertEqual(sum(c in (70, 71, 73) for c in pose.image[4 + y]), 2,
                                      (model, f, y))
 
-    hood_fabrics = {
-        "Thief": {208, 17, 20, 25, 26, 29},
-        "Fighter/Thief": {208, 88, 207, 94, 98},
-        "Psionicist/Thief": {208, 69, 70, 71, 73},
-        "Fighter/Psionicist/Thief": {208, 88, 207, 94, 98, 71, 73},
-    }
+    # The open hood can be slate, stitched leather or teal. Include the
+    # intermediate VGA threads as well as the old crown and rim colors.
+    slate = {208, 17, 18, 19, 20, 21, 22, 49, 23, 24, 25, 50, 26, 27, 28, 29}
+    leather = {208, 88, 204, 89, 90, 207, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100}
+    teal = {208, 17, 69, 188, 53, 70, 225, 71, 40, 72, 73, 209, 18, 48, 210, 49,
+            211, 160, 212, 226, 213, 215}
+    hood_fabrics = {"Thief": slate, "Fighter/Thief": leather, "Psionicist/Thief": teal,
+                    "Fighter/Psionicist/Thief": leather | {71, 73}}
 
     def test_thief_crown_stays_visible_in_every_pose(self):
         for model in classoutfits.DWARVES:
@@ -414,7 +418,8 @@ class DwarfOutfitTests(unittest.TestCase):
                         self.assertIn((x, y), pose.regions[classoutfits.CHEST])
                         self.assertNotIn((x, y), pose.head)
                         if role == "Cleric":
-                            self.assertIn(pose.image[y + 4][x + 4], (61, 199, 155))
+                            self.assertIn(pose.image[y + 4][x + 4],
+                                          (61, 62, 63, 120, 121, 122, 123, 124, 125, 126, 155, 199, 214, 215))
 
     def test_raised_foot_and_hit_hood_follow_native_landmarks(self):
         for model in classoutfits.DWARVES:
@@ -440,6 +445,21 @@ class HumanClothContinuityTests(unittest.TestCase):
 
 
 class ElfOutfitTests(unittest.TestCase):
+    def test_rear_psionicist_tunic_breaks_up_flat_cloth(self):
+        for model in classoutfits.ELVES:
+            poses = classoutfits.frames("Psionicist", False, model)
+            for f in (1, 8, 9):
+                cloth = poses[f]
+                torso = set(cloth.regions[classoutfits.CHEST]) - set(cloth.regions[classoutfits.FOREARM])
+                squares = []
+                for x, y in torso:
+                    points = ((x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1))
+                    if torso.issuperset(points):
+                        squares.append({cloth.image[py + 4][px + 4] for px, py in points})
+                with self.subTest(model=model, frame=f):
+                    self.assertGreaterEqual(len(squares), 8)
+                    self.assertLess(sum(len(colors) == 1 for colors in squares), len(squares) / 8)
+
     def test_elf_roster_reads_all_three_slots_in_any_order(self):
         from itertools import permutations
         from dsloader import kitpages

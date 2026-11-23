@@ -2,6 +2,8 @@
 
 Enable **What the party wears** for both elf figures. The loader reads the character’s class slots and selects one of 37 outfits. Each animation names the current pose and follows the elf through the game’s 15 walking and 14 combat frames.
 
+[Revised cloth beside retail figures and before-and-after measurements](cloth-detail.md) · [Watch the male Preserver and Ranger in profile](elf-stock-side-walk.gif)
+
 ## Face and body
 
 The original head is the first column. Compare the mouth highlight and the dark pixel under the jaw with the cleaned body, cream Cleric collar, open Thief hood, and Psionicist tunic. The first cleanup painted over the lower face on both elves. The corrected body follows each figure’s jaw through the swing, including front strike 2 where the female elf bends low. Each enlarged crop has the full figure at game size underneath. The dressed figures include the loader’s pointed ears.
@@ -34,9 +36,9 @@ The cream Cleric robe gathers at the belt and opens over the knee. On the Preser
 
 ![All seven single-class outfits before and after the texture pass, enlarged and at game size](elf-texture.gif)
 
-The comparison uses the loader’s walking and fighting pictures on both figures. Previous shows commit `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
+This historical comparison shows the first texture pass after `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
 
-The male Preserver and Ranger have the heaviest outlines on side walk steps 2 and 3. The cloth gathers into a blunt wedge behind the elbow. The original blue Mage and cloaked human also flare during the stride, but their trailing edges taper to a point. The female Thief’s hood has a broad slate highlight in front strike 2. It looks angular at 3× and still reads as a hood at game size. The Psionicist’s straight teal side in profile is another small flat area. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
+The male Preserver and Ranger have the heaviest outlines on side walk steps 2 and 3. The cloth gathers into a blunt wedge behind the elbow. The original blue Mage and cloaked human also flare during the stride, but their trailing edges taper to a point. The female Thief’s hood keeps an angular silhouette in front strike 2, with a lit crown and darker neck folds. The Psionicist’s straight tunic edge in profile now encloses several teal shades. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
 
 | Checklist item | Result |
 |---|---|
@@ -99,7 +101,7 @@ The updated loader pictures retain every occupied pixel of the original silhouet
 
 [Watch both Preservers with boots, cloak, shield, mundane plate, and magical plate](elf-equipment.gif) · [Equipment frame sheet](elf-equipment-frames.png)
 
-The loops above use the loader’s rendered pictures. The capture below shows the revised textures in the patched game running the PENS save with four looks staged in the party’s picture slots. The two Clerics wear cream, the male Preserver wears magical plate, and the female Fighter/Psionicist/Thief wears boots. The large figure is an arena character. The staged run could display these pictures, but the read-only process-memory file prevented a fresh live inventory test.
+The loops above use the loader’s rendered pictures. The earlier capture below shows the first texture pass in the patched game running the PENS save with four looks staged in the party’s picture slots. The two Clerics wear cream, the male Preserver wears magical plate, and the female Fighter/Psionicist/Thief wears boots. The large figure is an arena character. The staged run could display these pictures, but the read-only process-memory file prevented a fresh live inventory test.
 
 ![Four staged elf figures in the arena at native game resolution](elf-in-game.png)
 

@@ -1,6 +1,6 @@
 # Dwarf outfit contrast at game size
 
-The current dwarf outfits use a little more separation between the lit and shaded sides of each garment. Both figures and all twelve builds use these colors.
+This earlier contrast study predates the [six-figure cloth detail pass](cloth-detail.md). The dwarf outfits here use a little more separation between the lit and shaded sides of each garment. Both figures and all twelve builds use these colors.
 
 ## Current garments beside the previous revision
 
