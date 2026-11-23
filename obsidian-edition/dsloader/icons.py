@@ -144,10 +144,12 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671),
 # the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
 # pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
-# (2679), ICONS'.
+# (2679), and Wake of the Ravager's two-handed sword (2681, 18), lotulis (2683, 22), double spear,
+# trikal and javelin (2685, 2687, 2689, 18), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679)
+            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679,
+            2681, 2683, 2685, 2687, 2689)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -391,6 +393,129 @@ def crown_icon(_rows: Rows = None) -> Rows:
 # the plain one's)
 
 
+# Wake of the Ravager's weapon kinds (worldgear.py's RAVAGER_NAMES), made from the game's own: the
+# two-handed sword the obsidian long sword's, its blade longer; the lotulis the gythka's, its blades in
+# the stone pick's blue-greys with a hook back from each; the double spear, the trikal and the javelin
+# the quarterstaff's, a flint head on each end, three blades on its head, or thinned to a shaft with a
+# head; the darts and the net drawn
+def longer_blade(rows: Rows, steps: int = 3, cut: int = 8) -> Rows:
+    """A sword drawn from top left to bottom right, its blade STEPS diagonal steps longer: the
+    pixels from row CUT down moved down and right STEPS, the row above CUT repeated down the gap."""
+    width = max((len(r) for r in rows), default=0)
+    if len(rows) < cut:
+        return padded(rows)
+    out: Rows = [[None] * (width + steps) for _ in range(len(rows) + steps)]
+    for y, row in enumerate(rows):
+        for x, p in enumerate(row):
+            if p is not None:
+                out[y if y < cut else y + steps][x if y < cut else x + steps] = p
+    for i in range(1, steps + 1):
+        for x, p in enumerate(rows[cut - 1]):
+            if p is not None:
+                out[cut - 1 + i][x + i] = p
+    return out
+
+
+GYTHKA_STONE = {161: 48, 210: 48, 211: 49, 212: 24, 213: 50, 214: 51, 215: 51, 216: 51, 217: 50}
+LOTULIS_HOOKS = ((3, 0, 50), (4, 0, 49), (5, 1, 48), (18, 21, 50), (17, 21, 49), (16, 20, 48))
+
+
+def padded(rows: Rows) -> Rows:
+    """ROWS as a copy, each row as wide as the widest."""
+    width = max((len(r) for r in rows), default=0)
+    return [list(r) + [None] * (width - len(r)) for r in rows]
+
+
+def put(rows: Rows, points) -> Rows:
+    """ROWS with each of POINTS (x, y, colour) drawn, those outside the picture left out."""
+    for x, y, p in points:
+        if 0 <= y < len(rows) and 0 <= x < len(rows[y]):
+            rows[y][x] = p
+    return rows
+
+
+def lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(recolour(rows, GYTHKA_STONE)), LOTULIS_HOOKS)
+
+
+# a flint head along the diagonal, its point at (0, 0): (x, y, colour)
+FLINT_HEAD = ((0, 0, 214), (1, 0, 212), (0, 1, 212), (1, 1, 213), (2, 1, 210), (1, 2, 210), (2, 2, 211),
+              (3, 2, 209), (2, 3, 209), (3, 3, 208))
+TRIKAL_BLADES = ((2, 0, 211), (3, 0, 213), (4, 0, 214), (3, 1, 212), (0, 2, 211), (0, 3, 213), (0, 4, 214),
+                 (1, 3, 212), (5, 1, 210), (6, 0, 212), (1, 5, 210), (0, 6, 212), (2, 2, 209), (3, 3, 135),
+                 (1, 1, 210))
+
+
+def staff_ends(rows: Rows, cut: int) -> Rows:
+    """A staff drawn from top left to bottom right, CUT diagonal steps off each end."""
+    rows = padded(rows)
+    last = (len(rows[0]) if rows else 0) + len(rows) - 2
+    return [[None if x + y < 2 * cut or x + y > last - 2 * cut else p for x, p in enumerate(r)] for y, r in enumerate(rows)]
+
+
+def double_spear_icon(rows: Rows) -> Rows:
+    out = staff_ends(rows, 3)
+    height, width = len(out), len(out[0]) if out else 0
+    return put(out, FLINT_HEAD + tuple((width - 1 - x, height - 1 - y, p) for x, y, p in FLINT_HEAD))
+
+
+def trikal_icon(rows: Rows) -> Rows:
+    return put(staff_ends(rows, 3), TRIKAL_BLADES)
+
+
+def javelin_icon(rows: Rows) -> Rows:
+    """The staff thinned to a shaft (each row's middle pixel, in the row's brightest colour), a head on top."""
+    rows = padded(rows)
+    out: Rows = [[None] * len(r) for r in rows]
+    for y, row in enumerate(rows):
+        xs = [x for x, p in enumerate(row) if p is not None]
+        if xs and xs[len(xs) // 2] + y >= 4:
+            out[y][xs[len(xs) // 2]] = max(row[x] for x in xs)
+    return put(out, FLINT_HEAD[:8] + ((3, 2, 208), (2, 3, 208)))
+
+
+def drawn(pattern: Tuple[str, ...], colours: Dict[str, int], at: Tuple[Tuple[int, int], ...],
+          size: Tuple[int, int]) -> Rows:
+    """PATTERN (a letter a colour of COLOURS, "." none) drawn at each of AT on a SIZE (width, height) picture."""
+    out: Rows = [[None] * size[0] for _ in range(size[1])]
+    for left, top in at:
+        for y, line in enumerate(pattern):
+            for x, c in enumerate(line):
+                if c != ".":
+                    out[top + y][left + x] = colours[c]
+    return out
+
+
+# a dart: G its point, S its shaft, R its flights
+DART = ("G....",
+        ".G...",
+        "..S..",
+        "...SR",
+        "...RS")
+# a net: R its cords, k the knots' shadows
+NET = ("..R...R...R..",
+       ".RkR.RkR.RkR.",
+       "R...R...R...R",
+       ".R.R.R.R.R.R.",
+       "..R...R...R..",
+       ".R.R.R.R.R.R.",
+       "R...R...R...R",
+       ".RkR.RkR.RkR.",
+       "..R...R...R..",
+       ".R.R.R.R.R.R.",
+       "R...R...R...R",
+       ".R.R.R.R.R.R.",
+       "..R...R...R..")
+
+
+def darts_icon(_rows: Rows = None) -> Rows:
+    return drawn(DART, {"G": 213, "S": 139, "R": 202}, ((0, 3), (4, 1), (8, 0)), (13, 8))
+
+
+def net_icon(_rows: Rows = None) -> Rows:
+    return drawn(NET, {"R": 138, "k": 129}, ((0, 0),), (13, 13))
+
+
 def ironwhirl_icon(rows: Rows) -> Rows:
     """Ironwhirl (worldgear.py): the metal cahulaks', every pixel of its blades' greys in the fire
     colours, their blue edges kept (Emberlash and the Cahulaks +1 burn every other pixel)."""
@@ -523,6 +648,15 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Nightsliver", 0xFB60, 2592, 2593, lambda r: glow(r, lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
     ("Dunesong", 0xFC07, 2594, 2595, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214 and (x + y) % 2 == 0, FIRE)),
     ("Skycutter", 0xFC0E, 2596, 2597, lambda r: shining(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, SKY)),
+    # Wake of the Ravager's weapon kinds (worldgear.py): on the map, the obsidian Long Sword, the Gythka,
+    # the Quarterstaff and the Chatkcha
+    ("Two-hand Sword", 0xFC0B, 2680, 2681, longer_blade),
+    ("Lotulis", 0xFC0D, 2682, 2683, lotulis_icon),
+    ("Double Spear", 0xFC05, 2684, 2685, double_spear_icon),
+    ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
+    ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
+    ("Darts", 0xFC0E, 2690, 2691, darts_icon),
+    ("Net", 0xFC0E, 2692, 2693, net_icon),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -1146,6 +1280,16 @@ def _plate_types() -> Dict[int, str]:
 
 
 PLATE_TYPES = _plate_types()
+
+
+def _ravager_kinds() -> Dict[int, str]:
+    from . import game
+    return {game.TWOHAND_SWORD_TYPE: "Two-hand Sword", game.LOTULIS_TYPE: "Lotulis",
+            game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
+            game.DARTS_TYPE: "Darts", game.NET_TYPE: "Net"}
+
+
+RAVAGER_KINDS = _ravager_kinds()  # (any plus: one picture each kind)
 OBSIDIAN_LONG_SWORD, SEARING_BLADE_NAME = 45, 0x156  # (the Searing Blade, worldgear.py: its name; an obsidian
 # long sword, the Flame Blade, up to 2.18.0, which a saved game's keeps until worldgear.mend_searing_blade)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
@@ -1241,6 +1385,8 @@ def which(rec: bytes) -> Optional[str]:
         return "Ironwhirl"
     if kind in METAL_TYPES and plus == 0:
         return METAL_TYPES[kind]
+    if kind in RAVAGER_KINDS:
+        return RAVAGER_KINDS[kind]
     if plus == 1 and kind in MAGIC_KINDS:
         return MAGIC_KINDS[kind]
     if kind == game.GYTHKA_TYPE and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == arms.GYTHKA_NAME:

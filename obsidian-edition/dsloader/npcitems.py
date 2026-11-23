@@ -94,6 +94,16 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # obsidian, the fire cleric's bit added (+10h: 4): earth and fire clerics' (restrict.py; air clerics
     # may use any cahulaks)
     bytes.fromhex("010028007800fa0003050101060100" "407f160001"),
+    # Wake of the Ravager's weapon kinds (DSCLOG's, game.RAVAGER_TYPES): a two-handed sword (obsidian
+    # 1d10), a lotulis (stone 1d10), a double spear and a trikal (wood, gladiators'), a javelin, darts
+    # and a net (thrown as the chatkcha)
+    bytes.fromhex("010010009600fa00030501010a0100" "406e160002"),
+    bytes.fromhex("010038006400fa00020501010a0100" "407a160002"),
+    bytes.fromhex("010020003c00fa0080050101080100" "4040100001"),
+    bytes.fromhex("010018005000fa00800501010a0100" "4040100001"),
+    bytes.fromhex("120020001400fa00830c0602060100" "007e120000"),
+    bytes.fromhex("120020000500fa00800c0404030100" "00f31f0000"),
+    bytes.fromhex("120008006400fa00400c0302020100" "007a160000"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214
 

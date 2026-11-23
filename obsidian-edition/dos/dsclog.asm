@@ -12038,7 +12038,7 @@ conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)
-KIND_TYPES equ 148
+KIND_TYPES equ 154
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
               db 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 5, 1, 13, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
               db 15, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
@@ -12046,6 +12046,7 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
               db 10, 0, 0, 0, 0, 0, 0, 0, 3   ; (136: the air clerics' metal dagger, Galefang's)
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
               db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
+              db 0, 0, 0, 0, 0, 0             ; (148-153: Wake of the Ravager's kinds; the net, 154, none)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -16563,6 +16564,8 @@ box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 11
          dw 2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679 ; (the Loader's own: icons.BOX_TALL;
                                         ;   2497 and 2511 the picks', 19 rows: icons.PICK_PICTURE_FROM;
                                         ;   the last three the obsidian and magic cahulaks')
+         dw 2681, 2683, 2685, 2687, 2689 ; (Wake of the Ravager's two-handed sword, lotulis, double
+                                        ;   spear, trikal and javelin)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -23050,7 +23053,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 33
+TYPES_EXTRA equ 40
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -29343,6 +29346,41 @@ extra_types:
         ; the game's Cahulaks' (21), of obsidian (+8: 3), the fire cleric's bit added (+10h: 4)
         db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
+        ; Wake of the Ravager's weapon kinds the game has none of (dsloader/game.py's RAVAGER_TYPES:
+        ; each the sequel's own type in a party carried across). The dice and weights are the Dark Sun
+        ; weapons guide's where it has them, else AD&D's.
+        ; a two-handed sword: obsidian (+8: 3), 1d10 slashing, two-handed (+0Fh: 40h), 15 lb (+4:
+        ; 150), for the obsidian great axe's classes (+10h: 166Eh)
+        db 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        ; a lotulis: stone (+8: 2), 1d10 piercing, slashing and bludgeoning (+2: 38h), two-handed,
+        ; 10 lb, for the stone pick's classes but psionicists (+10h: 167Ah)
+        db 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x02, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
+        ; a double spear (double-bladed): wood spared its penalty (+8: 80h, as the quarterstaff),
+        ; 1d8 piercing, two-handed, 6 lb, for gladiators (+10h: 40h, as the sequel's)
+        db 0x01, 0x00, 0x20, 0x00, 0x3C, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01
+        db 0x08, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
+        ; a trikal: wood spared its penalty, 1d10 slashing and bludgeoning (+2: 18h), two-handed,
+        ; 8 lb, for gladiators
+        db 0x01, 0x00, 0x18, 0x00, 0x50, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
+        ; a javelin: thrown from the missile slot as the chatkcha (+0: 12h; +9: 0Ch; never used
+        ; up), obsidian spared its penalty (+8: 83h, as the chatkcha), range 6 (+0Ah), one a round
+        ; (+0Bh: 2 halves), 1d6 piercing, 2 lb, for the obsidian weapons' classes but thieves (+10h:
+        ; 127Eh)
+        db 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02
+        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x12, 0x00, 0x00
+        ; darts (a set): thrown as the javelin, wood spared its penalty, range 4, two a round (+0Bh:
+        ; 4 halves), 1d3 piercing, half a pound, for the dagger's classes (+10h: 1FF3h; preservers
+        ; and psionicists too)
+        db 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04
+        db 0x03, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; a net: thrown as the javelin, no material (+8: 40h), range 3, one a round, 1d2 bludgeoning
+        ; (the item's Hold Person does the work: dsloader/worldgear.py), 10 lb, for warriors,
+        ; thieves, druids and earth and water clerics (+10h: 167Ah, the sequel's)
+        db 0x12, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x40, 0x0C, 0x03, 0x02
+        db 0x02, 0x01, 0x00, 0x00, 0x7A, 0x16, 0x00, 0x00
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
@@ -29416,6 +29454,13 @@ extra_names:
                                         ; cahulaks +1,
         xname "Ironwhirl"               ; a metal cahulaks +2)
         xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
+        xname "Two-hand Sword"          ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
+        xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last seven)
+        xname "Double Spear"
+        xname "Trikal"
+        xname "Javelin"
+        xname "Darts"
+        xname "Net"
 NAMES_EXTRA  equ NAMES_LISTED           ; (the names above, counted: the room the game's table gets)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in

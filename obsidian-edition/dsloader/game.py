@@ -115,6 +115,13 @@ METAL_CAHULAKS_TYPE = GAME_TYPES + 31
 # cahulaks): the game's Cahulaks (21),
 # of obsidian, the fire cleric's bit added (DSCLOG's OBSIDIAN_CAHULAKS)
 OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
+# Wake of the Ravager's weapon kinds the game has none of (DSCLOG's EXTRA_TYPES' last seven): a two-handed
+# sword, a lotulis, a double spear, a trikal, a javelin, darts and a net
+TWOHAND_SWORD_TYPE, LOTULIS_TYPE, DOUBLE_SPEAR_TYPE = GAME_TYPES + 33, GAME_TYPES + 34, GAME_TYPES + 35
+TRIKAL_TYPE, JAVELIN_TYPE, DARTS_TYPE, NET_TYPE = GAME_TYPES + 36, GAME_TYPES + 37, GAME_TYPES + 38, GAME_TYPES + 39
+# ... and the sequel's own type each is (its OBJEX's), for a party carried across: one to one
+RAVAGER_TYPES = {TWOHAND_SWORD_TYPE: 101, LOTULIS_TYPE: 61, DOUBLE_SPEAR_TYPE: 39, TRIKAL_TYPE: 100,
+                 JAVELIN_TYPE: 59, DARTS_TYPE: 38, NET_TYPE: 71}
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
