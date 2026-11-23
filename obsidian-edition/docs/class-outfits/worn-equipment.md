@@ -26,6 +26,12 @@ The proposed mantle has two creases of unequal length. They start under the shou
 
 [Compare the current and proposed mantle with the retail Mage and Thief in motion](elf-mantle-fold-study.gif) · [See the class mantle and equipped dye side by side](elf-mantle-fold-study.png)
 
+### How the cloak trails in profile
+
+Watch the lower corner of the original Mage and Thief as each takes a stride. The collar travels with the shoulder while the hem lifts behind the elbow. At the broadest part of the swing, a wedge of floor opens between cloth and calf. The first Preserver study changed the folds inside the shipped mantle outline. This second study redraws the outline in each of the four steps. The corner rises in step 2, stretches back in step 3, then falls toward the heel in step 4. The rear view and the in-game outfit still use their existing drawings.
+
+[Watch the four-step profile loop at game size and 3×](elf-mantle-swing.gif) · [Inspect every step, including the equipped cloak dye](elf-mantle-swing.png)
+
 ## What the items look like
 
 | Item | What to look for on the map | Retail comparison |

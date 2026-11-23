@@ -6,6 +6,8 @@ Enable **What the party wears** for both elf figures. The loader reads the chara
 
 [Female elf profile plate fit](elf-woman-plate-fit.gif) · [Male Preserver cloak fold proposal beside the retail Mage and Thief](elf-mantle-fold-study.gif)
 
+[Watch the Preserver’s trailing mantle beside the original Mage and Thief](elf-mantle-swing.gif) · [Four steps with class and equipment colors](elf-mantle-swing.png)
+
 ## Face and body
 
 The original head is the first column. Compare the mouth highlight and the dark pixel under the jaw with the cleaned body, cream Cleric collar, open Thief hood, and Psionicist tunic. The first cleanup painted over the lower face on both elves. The corrected body follows each figure’s jaw through the swing, including front strike 2 where the female elf bends low. Each enlarged crop has the full figure at game size underneath. The dressed figures include the loader’s pointed ears.
