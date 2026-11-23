@@ -3336,9 +3336,8 @@ SPEC_V2 equ 0x40                ; (+16h's next: the specs base 17, and the start
 SPEC_KINDS_MASK equ 0x1FFFF     ; (the four specs, base 17, in the packed bits' 0-16)
 ROLL_SHIFT equ 17               ; (the starting roll in bits 17-21: Table 7's dice less their count)
 ROLL_UNKNOWN equ 31             ; (no roll kept: a character from before; the Loader puts it in)
-SPEC_V3_MARK equ 0x18000        ; (bits 15 and 16 of the kinds' 17 both set, a number no four base 17
-                                ;   reach (17^4 = 14641h): the specs a set ranked, SPEC_RANK_MASK)
-SPEC_RANK_MASK equ 0x7FFF
+V3_BASE equ 17 * 17 * 17 * 17  ; (past every four base 17: the V3 numbers from here, SPEC_V3)
+REST_SETS equ 1 + 22 + 231 + 1540 ; (the sets of up to three of the 22 kinds: the specs after the first)
 KIND_COUNT equ 22               ; (the weapon kinds: dsloader/specialize.py's KINDS)
 
 ; The sheet's +14h..+17h (the game never reads or writes them), in one of four layouts: up to 2.12
@@ -3346,9 +3345,11 @@ KIND_COUNT equ 22               ; (the weapon kinds: dsloader/specialize.py's KI
 ; +14h..+16h, and +17h the character's age (dsloader/aging.py); then (SPEC_V2 too) the four a number
 ; base 17 in bits 0-16 (each kind + 1, 0 none: 17 values, so four fit in 17 bits, not 20), the
 ; starting roll in bits 17-21 (ROLL_UNKNOWN: none kept), and +17h the age; now, with 22 kinds (23
-; values: four base 23 would take 19 bits, and the roll 5 more, of the 22 there are), the four a set
-; (no kind twice) ranked in bits 0-14 (SPEC_RANK: 14,950 sets of up to four of 22), bits 15 and 16
-; set (SPEC_V3_MARK), the roll and age as SPEC_V2's. A V3 sheet's specs read back the kinds in
+; values: four base 23 would take 19 bits, and the roll 5 more, of the 22 there are), the
+; first spec and the rest in bits 0-16 from V3_BASE (17^4, past every V2 number): the first (0-22,
+; the one picked first: a Battle Mage's kit and the starting weapon go by it) times REST_SETS, plus
+; the others' rank as a set (up to three, no kind twice: SPEC_REPACK), the roll and age as
+; SPEC_V2's. A V3 sheet's specs read back the first, the others in
 ; ascending order, then the empty slots. A sheet keeps its layout until something is written to it
 ; (SPEC_SET: SPEC_PACK first, then V3), so all four are read. A new member's starts with no specs,
 ; the creation screen's roll and its age (CR_WEAPONS: AGE_PUT). Each takes the sheet at ES:BX and
@@ -3385,10 +3386,8 @@ spec_unpack:
         push si
         mov eax, [es:bx + SPEC_SLOTS]
         and eax, SPEC_KINDS_MASK
-        mov ecx, eax
-        and ecx, SPEC_V3_MARK
-        cmp ecx, SPEC_V3_MARK
-        je .v3
+        cmp eax, V3_BASE
+        jae .v3
         mov ecx, 17
         xor si, si
 .digit: xor edx, edx
@@ -3398,40 +3397,37 @@ spec_unpack:
         cmp si, SPEC_COUNT
         jb .digit
         jmp .out
-.v3:    and eax, SPEC_RANK_MASK         ; (the set's rank: SPEC_RANK's, undone from its greatest)
-        mov si, SPEC_COUNT - 1
-.place: mov cl, KIND_COUNT + SPEC_COUNT - 1
-.try:   mov ch, cl                      ; (the greatest C under the rank left: C(CL, SI + 1))
+.v3:    sub eax, V3_BASE                ; (the first, and the others' rank: SPEC_REPACK's undone)
+        xor edx, edx
+        mov ecx, REST_SETS
+        div ecx
+        mov [cs:spec_digits], al
+        mov eax, edx
+        mov si, 3                       ; (how many others: the sets of fewer come first)
+.size:  push si
+        add si, si
+        movzx ecx, word [cs:si + spec_rest_from]
+        pop si
+        cmp eax, ecx
+        jae .sized
+        dec si
+        jmp .size
+.sized: sub eax, ecx
+        mov dword [cs:spec_digits + 1], 0  ; (one past: SPEC_SORTED's room)
+        dec si
+        js .out
+.place: mov cl, KIND_COUNT - 1          ; (the greatest C(CL, SI + 1) under the rank left: the
+.try:   mov ch, cl                      ;   other in slot SI + 1 is CL + 1)
         call spec_choose
         cmp edx, eax
         jbe .found
         dec cl
         jmp .try
 .found: sub eax, edx
-        mov dx, si
-        sub cl, dl                      ; (the slot's kind + 1: C's N less the slot)
-        mov [cs:si + spec_sorted], cl
+        inc cl
+        mov [cs:si + spec_digits + 1], cl
         dec si
         jns .place
-        xor si, si                      ; the nonzero ones first, then the empty
-        xor cx, cx                      ; (CX: where the next goes)
-.kinds: mov dl, [cs:si + spec_sorted]
-        or dl, dl
-        jz .kn
-        push si
-        mov si, cx
-        mov [cs:si + spec_digits], dl
-        pop si
-        inc cx
-.kn:    inc si
-        cmp si, SPEC_COUNT
-        jb .kinds
-.empty: cmp cx, SPEC_COUNT
-        jae .out
-        mov si, cx
-        mov byte [cs:si + spec_digits], 0
-        inc cx
-        jmp .empty
 .out:   pop si
         pop edx
         pop ecx
@@ -3443,48 +3439,62 @@ spec_repack:
         push edx
         push si
         push di
-        mov si, SPEC_COUNT - 1          ; (SPEC_SORTED: the digits, a kind twice made none once)
-.copy:  mov al, [cs:si + spec_digits]
-        mov [cs:si + spec_sorted], al
-        dec si
-        jns .copy
+        mov dword [cs:spec_sorted], 0   ; SPEC_SORTED: the kinds in order, none and a second of one
+        xor di, di                      ;   left out (DI how many)
         xor si, si
-.dup:   mov al, [cs:si + spec_sorted]
+.copy:  mov al, [cs:si + spec_digits]
         or al, al
-        jz .dn
-        lea di, [si + 1]
-.dup2:  cmp di, SPEC_COUNT
-        jae .dn
-        cmp al, [cs:di + spec_sorted]
-        jne .dn2
-        mov byte [cs:di + spec_sorted], 0
-.dn2:   inc di
-        jmp .dup2
-.dn:    inc si
+        jz .next
+        cmp al, KIND_COUNT
+        ja .next
+        mov cx, di
+        jcxz .keep
+.dup:   push si
+        mov si, cx
+        cmp al, [cs:si + spec_sorted - 1]
+        pop si
+        je .next
+        loop .dup
+.keep:  mov [cs:di + spec_sorted], al
+        inc di
+.next:  inc si
         cmp si, SPEC_COUNT
-        jb .dup
-        mov cx, SPEC_COUNT              ; (sorted ascending: four, a bubble at most four times)
-.pass:  xor si, si
-.swap:  mov al, [cs:si + spec_sorted]
+        jb .copy
+        xor eax, eax
+        or di, di
+        jz .put                         ; (none: V3_BASE alone)
+        mov cx, 2                       ; the others ascending (three at most: a bubble twice)
+.pass:  mov si, 1
+.swap:  lea dx, [si + 1]
+        cmp dx, di
+        jae .passed
+        mov al, [cs:si + spec_sorted]
         mov ah, [cs:si + spec_sorted + 1]
         cmp al, ah
         jbe .ok
         mov [cs:si + spec_sorted], ah
         mov [cs:si + spec_sorted + 1], al
 .ok:    inc si
-        cmp si, SPEC_COUNT - 1
-        jb .swap
+        jmp .swap
+.passed:
         loop .pass
-        xor eax, eax                    ; the rank: the sum of C(v + i, i + 1), v slot i's sorted
-        mov si, SPEC_COUNT - 1
-.rank:  mov cx, si
-        add cl, [cs:si + spec_sorted]
-        mov ch, cl
+        movzx eax, byte [cs:spec_sorted] ; the first times REST_SETS, the others' rank: the sets of
+        imul eax, eax, REST_SETS        ;   fewer, and C(other - 1, I + 1) for each, I from 0
+        dec di
+        mov si, di
+        add si, si
+        movzx edx, word [cs:si + spec_rest_from]
+        add eax, edx
+        mov si, di
+        dec si
+        js .put
+.rank:  mov ch, [cs:si + spec_sorted + 1]
+        dec ch
         call spec_choose
         add eax, edx
         dec si
         jns .rank
-        or eax, SPEC_V3_MARK
+.put:   add eax, V3_BASE
         mov edx, [es:bx + SPEC_SLOTS]
         and edx, ~SPEC_KINDS_MASK
         or edx, eax
@@ -3495,6 +3505,7 @@ spec_repack:
         pop ecx
         pop eax
         ret
+spec_rest_from dw 0, 1, 1 + 22, 1 + 22 + 231 ; (REST_SETS' sets of 0, 1, 2 and 3 before each size)
 ; SPEC_CHOOSE: EDX = C(CH, SI + 1) (the binomial: how many sets of SI + 1 of CH). Others kept.
 spec_choose:
         push eax
@@ -3530,8 +3541,8 @@ spec_choose:
         pop ecx
         pop eax
         ret
-spec_digits times SPEC_COUNT db 0
-spec_sorted times SPEC_COUNT + 1 db 0  ; (one past: SPEC_REPACK's last compare reads it)
+spec_digits times SPEC_COUNT + 1 db 0  ; (one past: SPEC_UNPACK clears four from the second)
+spec_sorted times SPEC_COUNT db 0
 
 ; SPEC_FIND: ZF set when kind + 1 AL is in one of the four slots.
 spec_find:
@@ -3561,9 +3572,9 @@ spec_any:
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
         jz .five
         and eax, SPEC_KINDS_MASK
-        cmp eax, SPEC_V3_MARK
-        jb .test                        ; (V2's number: none, 0; V3's at the mark or above, its rank)
-        and eax, SPEC_RANK_MASK
+        cmp eax, V3_BASE
+        jb .test                        ; (V2's number: none, 0; V3's from V3_BASE, none V3_BASE)
+        sub eax, V3_BASE
         jmp .test
 .five:  and eax, 0x000FFFFF
 .test:  test eax, eax
@@ -6244,7 +6255,7 @@ lv_ask:
 ;   (PK_TAKE), then the window closed (as for a close, 86370h) once none are left to pick, or left up
 ;   (86367h).
 PICK_WIN      equ 0xBCD             ; (weaponpages.PICKER: 3021)
-PICK_FIRST    equ 0x860             ; (weaponpages.PICK_FIRST: its rows)
+PICK_FIRST    equ 0x8C0             ; (weaponpages.PICK_FIRST: its rows)
 PICK_COUNT_BUTTON equ 0x2C37
 PK_FILL_DONE  equ 0x862A7 - 0x86111 ; (the drawing routine's end, less the address after the INT)
 PK_STAY       equ 0x86367 - 0x862D6 ; (the click handler's way out, and its close's)
@@ -6261,6 +6272,9 @@ PK_GAME_Y     equ 0x46
 PK_PICK_WIDTH equ 214               ; (weaponpages.PICK_WIDTH, PICK_TITLE_Y: the lines under the slots)
 PK_PICK_Y     equ 7 + 4 * 34 + 3
 PK_PICK_X     equ (320 - 214) / 2   ; (the window's place, "push 2B0050h" before PROBE_PK_WIN: centred,
+PK_FIRST_Y    equ 0x7F              ; (PROBE_PK_TITLE's: the game's "push 46h" takes a byte, signed, and
+                                    ;   PK_PICK_Y is past it: no lines there, PK_HOVER puts the title)
+PK_UNDRAWN    equ 0xFE              ; (LV_HOVERED: neither a slot's lines nor the title drawn yet)
 PK_PICK_TOP   equ (200 - 182) / 2   ;   weaponpages.PICK_HEIGHT 182)
 PK_GAME_SECOND equ 0xD0
 PK_GAME_INK   equ 0xD3              ; (dark grey)
@@ -6335,10 +6349,6 @@ probe_pk_title:
         mov word [bp + 8], 0x3026
         push ds
         push bx
-        cmp byte [cs:lv_mode], 0
-        je .colours
-        call lv_title_of        ; (AX the title, while DS is still the game's)
-.colours:
         lds bx, [bp + 2]        ; the line's colours, in the pushes that come next: the game's ...
         mov byte [bx + PK_TITLE_SECOND], PK_GAME_SECOND
         mov byte [bx + PK_TITLE_INK], PK_GAME_INK
@@ -6349,9 +6359,11 @@ probe_pk_title:
         mov byte [bx + PK_TITLE_SECOND], PK_PICK_SECOND  ; ... or near-white on black, under the
         mov byte [bx + PK_TITLE_INK], PK_PICK_INK         ;   slots, centred in the wider window
         mov byte [bx + PK_TITLE_WIDTH], PK_PICK_WIDTH
-        mov byte [bx + PK_TITLE_Y], PK_PICK_Y
+        mov byte [bx + PK_TITLE_Y], PK_FIRST_Y
         mov [bp + 10], cs
-        mov [bp + 8], ax
+        mov word [bp + 8], pk_no_title
+        mov [bp + 14], cs       ; (and the name, pushed before: neither line here)
+        mov word [bp + 12], pk_no_title
 .out:   pop bx
         pop ds
         pop ax
@@ -6377,7 +6389,7 @@ probe_pk_fill:
         pop ds
         add word [bp + 2], PK_FILL_DONE
         pop bp
-        mov byte [cs:lv_hovered], 0xFF ; (the title, as the window is drawn)
+        mov byte [cs:lv_hovered], PK_UNDRAWN ; (no title yet: PK_HOVER draws it, at once)
         call pk_ops
 .out:   iret
 
@@ -6477,6 +6489,7 @@ lv_class  db 0                  ; 0Bh while PROBE_LV_PICK has a preserver gone u
 lv_op_call dd 0                 ; 140:71Ah, a button's state (0 in use, 1 out of use)
 lv_label_call dd 0              ; 140:7FAh, a button's text
 lv_lines_call dd 0              ; 85CC9h, the window's two lines (as PK_HOVER finds it)
+pk_no_title db 0                ; (PROBE_PK_TITLE's lines in weapon mode: none)
 lv_hovered db 0FFh              ; the slot PK_HOVER last named (0FFh none: the title)
 lv_hover  db 'SPECIALIZE IN', 0
 lv_expert db 'EXPERT IN', 0

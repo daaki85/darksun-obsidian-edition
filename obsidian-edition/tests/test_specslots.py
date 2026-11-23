@@ -22,47 +22,47 @@ def v2(kinds, age=0, roll=31) -> bytes:
 class SpecSlotTests(unittest.TestCase):
     def test_layouts_read_alike(self):
         """A gladiator's four kinds (16 the most), a Myrmidon's two, none: the same from a byte
-        each (no age), base 17 (V2) and ranked (V3: ascending, then the empty), the age kept."""
-        for kinds in ((1, 16, 9, 2), (6, 1, 0, 0), (0, 0, 0, 0)):
+        each (no age), base 17 (V2) and V3 (the first, the others ascending, then the empty), the
+        age kept."""
+        for kinds, v3 in (((9, 16, 1, 2), (9, 1, 2, 16)), ((6, 1, 0, 0), (6, 1, 0, 0)), ((0, 0, 0, 0), (0, 0, 0, 0))):
             with self.subTest(kinds=kinds):
                 old, base17, new = sheet_with(bytes(kinds)), sheet_with(v2(kinds, 30)), sheet_with(game.packed_specs(kinds, 30))
                 self.assertFalse(game.spec_packed(old))
                 self.assertTrue(game.spec_packed(new))
                 self.assertEqual(game.spec_kinds(old), bytes(kinds))
                 self.assertEqual(game.spec_kinds(base17), bytes(kinds))
-                ascending = sorted(k for k in kinds if k)
-                self.assertEqual(game.spec_kinds(new), bytes(ascending + [0] * (4 - len(ascending))))
+                self.assertEqual(game.spec_kinds(new), bytes(v3))
                 self.assertEqual((game.sheet_age(old), game.sheet_age(base17), game.sheet_age(new)), (0, 30, 30))
 
     def test_packing(self):
-        """V3: the four a set ranked in bits 0-14 (the combinatorial number of the sorted kinds), bits
-        15 and 16 set (no four base 17 reach them), the starting roll in bits 17-21 (31: none kept),
-        +16h's two top bits set, +17h the age. Every set of up to four of the 22 kinds its own rank, and
-        read back; a kind twice counted once."""
+        """V3: bits 0-16 17^4 (past every base 17 number) and then the first spec times REST_SETS plus
+        the others' rank as a set, the starting roll in bits 17-21 (31: none kept), +16h's two top bits
+        set, +17h the age. Every pick of up to four of the 22 kinds, in every order, read back as the
+        first and the others ascending, and the number of each such its own; a kind twice counted once."""
         import itertools
-        value = game.spec_rank((1, 2, 3, 4)) | 0x18000 | 31 << 17 | 0xC00000
+        value = game.V3_BASE + game.spec_rank((4, 1, 2, 3)) | 31 << 17 | 0xC00000
         self.assertEqual(game.packed_specs((4, 2, 3, 1), 9), value.to_bytes(3, "little") + bytes((9,)))
-        self.assertEqual(game.packed_specs(()), bytes((0, 0x80, 0xFF, 0)))
-        self.assertEqual(game.packed_specs((), 3, 0), bytes((0, 0x80, 0xC1, 3)))
+        self.assertEqual(game.packed_specs(()), bytes((0x41, 0x46, 0xFF, 0)))
+        self.assertEqual(game.packed_specs((), 3, 0), bytes((0x41, 0x46, 0xC1, 3)))
         self.assertEqual(len(specialize.KINDS), game.KIND_COUNT)
-        self.assertLess(17 ** 4, game.SPEC_V3_MARK)
-        ranks = set()
+        self.assertEqual(game.V3_BASE, 16 * (1 + 17 + 17 ** 2 + 17 ** 3) + 1)  # (V2's greatest, + 1)
+        numbers = {}
         for count in range(5):
-            for kinds in itertools.combinations(range(1, game.KIND_COUNT + 1), count):
-                rank = game.spec_rank(kinds)
-                self.assertLessEqual(rank, game.SPEC_RANK_MASK)
-                ranks.add(rank)
-                self.assertEqual(game.spec_kinds(sheet_with(game.packed_specs(kinds[::-1], 5, 3))),
-                                 bytes(kinds + (0,) * (4 - count)))
-        self.assertEqual(len(ranks), sum(len(list(itertools.combinations(range(22), n))) for n in range(5)))
-        self.assertEqual(game.spec_kinds(sheet_with(game.packed_specs((5, 5, 2)))), bytes((2, 5, 0, 0)))
+            for kinds in itertools.permutations(range(1, game.KIND_COUNT + 1), count):
+                packed = game.packed_specs(kinds, 5, 3)
+                number = int.from_bytes(packed[:3], "little") & game.SPEC_KINDS_MASK
+                want = bytes(kinds[:1] + tuple(sorted(kinds[1:])) + (0,) * (4 - count))
+                self.assertEqual(numbers.setdefault(number, want), want)
+                self.assertEqual(game.spec_kinds(sheet_with(packed)), want)
+        self.assertEqual(len(numbers), 1 + 22 + 22 * 21 + 22 * 210 + 22 * 1330)
+        self.assertEqual(game.spec_kinds(sheet_with(game.packed_specs((5, 5, 2)))), bytes((5, 2, 0, 0)))
 
     def test_rolls(self):
         """The starting roll: none kept in the older layouts or as 31; else 0 to 20."""
         self.assertIsNone(game.sheet_roll(sheet_with(game.packed_specs((1,), 9))))
         self.assertIsNone(game.sheet_roll(sheet_with(bytes((0x41, 0x0C, 0x82, 9)))))  # (2.13's)
         self.assertEqual(game.sheet_roll(sheet_with(game.packed_specs((1, 2), 9, 20))), 20)
-        self.assertEqual(game.spec_kinds(sheet_with(game.packed_specs((2, 1), 9, 20))), bytes((1, 2, 0, 0)))
+        self.assertEqual(game.spec_kinds(sheet_with(game.packed_specs((2, 1), 9, 20))), bytes((2, 1, 0, 0)))
         self.assertEqual(game.sheet_roll(sheet_with(v2((1, 2), 9, 20))), 20)
 
     def test_older_layouts_read(self):

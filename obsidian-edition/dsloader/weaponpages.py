@@ -19,7 +19,7 @@ from .art import decode_frame
 DISCIPLINES, SPHERES = 3012, 3013  # the game's windows
 PICKER = 3021  # the level-up window (like the psionicists', 17501)
 PSIONIC_PICKER = 17501
-PICK_FIRST = 0x860  # its slots, 0x860 + kind
+PICK_FIRST = 0x8C0  # its slots, 0x8C0 + kind (past the kit pages' rows and STORE and RECALL)
 PICK_COUNT_BUTTON, PICK_EXIT = 0x2C37, 0x4396  # (the psionicists' window's: picks left, EXIT)
 # The level-up window: each kind a slot with a weapon's picture (the game's inventory picture of
 # one of that kind: PICTURES, objects in SEGOBJEX.GFF), six to a row, the window bigger than

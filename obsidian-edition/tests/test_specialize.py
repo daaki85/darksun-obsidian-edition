@@ -127,8 +127,12 @@ class PickerTests(unittest.TestCase):
         dialogue window's replies are 81Ch-821h), and its id is none of the game's windows
         (3000-3013, 3020, 3024...) nor the kit panel's."""
         from dsloader import kitpages, weaponpages
+        from dsloader import rollstore
         rows = [weaponpages.PICK_FIRST + k for k in range(22)]
         self.assertTrue(all(0x834 <= i < 0xBB8 and i != kitpages.KIT_BACK for i in rows))
+        # (and clear of the kit pages' rows, 870h to 8A8h and so on, and STORE and RECALL: the 17th
+        # to 22nd slots at 870h-875h were the kit rows' buttons, and the window left them out)
+        self.assertFalse(set(rows) & set(range(kitpages.KIT_ROW, max(rollstore.STORE, rollstore.RECALL) + 1)))
         self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024, kitpages.KIT_DISCIPLINES,
                                                                        kitpages.KIT_SPHERES})
         # (six slots across, four rows, inside the 214 by 182 window and above its title)

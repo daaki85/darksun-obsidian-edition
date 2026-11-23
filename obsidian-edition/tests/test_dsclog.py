@@ -6270,13 +6270,13 @@ class KitTests(unittest.TestCase):
     AGE_PUT = rb"\x66\x50\x66\x52\x56\x26\x0f\xb6\x77\x18"
 
     def test_spec_layouts(self):
-        """SPEC_GET reads the three layouts alike (a gladiator's four kinds: a byte each up to 2.12,
-        5 bits each in 2.13, base 17 now); SPEC_SET puts any in the new one first, 2.13's age kept
+        """SPEC_GET reads the four layouts alike (a gladiator's four kinds: a byte each up to 2.12,
+        5 bits each in 2.13, base 17 in V2; V3's the first and the others ascending); SPEC_SET puts any in V3, 2.13's age kept
         and no roll known, a roll kept as it was. As game.spec_kinds and game.packed_specs."""
         import re
         for pattern in (self.SPEC_GET, self.SPEC_SET, self.AGE_PUT):
             self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
-        kinds = (1, 16, 9, 2)
+        kinds = (9, 16, 1, 2)
         at = self.SHEET * 16
         five = (sum(k << 5 * i for i, k in enumerate(kinds)) | 0x800000).to_bytes(3, "little") + bytes((30,))
         base17 = (sum(k * 17 ** i for i, k in enumerate(kinds)) | 7 << 17 | 0xC00000).to_bytes(3, "little") + bytes((30,))
@@ -6289,7 +6289,7 @@ class KitTests(unittest.TestCase):
             return tuple(out)
 
         for name, layout, want in (("bytes", bytes(kinds), kinds), ("2.13", five, kinds), ("base 17", base17, kinds),
-                                   ("ranked", game.packed_specs(kinds, 30, 7), (1, 2, 9, 16))):
+                                   ("V3", game.packed_specs(kinds, 30, 7), (9, 1, 2, 16))):
             with self.subTest(layout=name):
                 sheet = bytes(0x14) + layout + bytes(0x2F)
                 self.mu.mem_write(at, sheet)
@@ -6299,19 +6299,24 @@ class KitTests(unittest.TestCase):
                                   (game.packed_specs(kinds, 30, 7), 30, 7)):
             with self.subTest(set_on=layout.hex()):
                 self.mu.mem_write(at, bytes(0x14) + layout + bytes(0x2F))
-                new = list(slots())  # (slot 3 as SPEC_GET reads it now: 2, or the ranked one's 16)
+                new = list(slots())  # (slot 3 as SPEC_GET reads it now: 2, or V3's 16)
                 new[3] = 22
                 self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=22)
                 self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs(new, age, roll))
-                self.assertEqual(slots(), tuple(sorted(new)))
-        for many in ((22, 21, 20, 19), (17, 0, 0, 0), (0, 0, 0, 0), (3, 22, 0, 0)):
-            with self.subTest(many=many):  # (SPEC_SET slot by slot: as game.packed_specs, read back ascending)
+                self.assertEqual(slots(), tuple(game.spec_kinds(bytes(0x14) + game.packed_specs(new))))
+        import random
+        picks = [(22, 21, 20, 19), (17, 0, 0, 0), (0, 0, 0, 0), (3, 22, 0, 0), (19, 18, 0, 0), (1, 2, 3, 4)]
+        rng = random.Random(5)
+        picks += [tuple(rng.sample(range(1, 23), 4)) for _ in range(40)]
+        for many in picks:
+            with self.subTest(many=many):  # (SPEC_SET slot by slot: as game.packed_specs, the first kept first)
                 self.mu.mem_write(at, bytes(0x14) + game.packed_specs((), 4, 2) + bytes(0x2F))
                 for i, k in enumerate(many):
                     if k:
                         self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=i, eax=k)
                 self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs(many, 4, 2))
-                chosen = sorted(k for k in many if k)
+                chosen = [k for k in many if k]
+                chosen = chosen[:1] + sorted(chosen[1:])
                 self.assertEqual(slots(), tuple(chosen + [0] * (4 - len(chosen))))
 
     def test_age_put(self):
