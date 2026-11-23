@@ -340,7 +340,6 @@ def render(game, model, pose, role, layers=None):
         cap_bottom = cap_top + 1
     panel = PROFILE_PANELS.get((model, pose))
     panel_hem = waist + (3 if cape == "Thief" else 5)
-    lit = [sum(v * w for v, w in zip(rgb, (0.299, 0.587, 0.114))) for rgb in game.palette]
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
     for y, row in enumerate(rows):
@@ -401,11 +400,16 @@ def render(game, model, pose, role, layers=None):
             if role != "Body base" and not foreground and not arm:
                 torso = c is not None and shoulder - 2 <= y <= waist and abs(dx) <= radius + 1
                 rank = 0 if u > 0.85 else 1 if u > 0.25 else 3 if -0.9 < u < -0.22 else 2
-                if c is not None and lit[c] > 125 and rank == 3:
+                # A short highlight turns over the ribs; the lower leather
+                # stays matte. Anchor it to the garment as the torso leans.
+                if rank == 3 and torso and 0.18 <= t <= 0.52:
                     rank = 4
+                elif rank == 3 and t > 0.78 and depth < 0:
+                    rank = 2
                 if base == "Gladiator":
                     if torso and abs(dx - (1.8 - 3.8 * t)) < 1.12:
-                        paint = dwarf.LEATHER[0 if depth == -1 else rank]
+                        strap_edge = dx - (1.8 - 3.8 * t)
+                        paint = dwarf.HIDE[2 if strap_edge < 0 and 0.12 < t < 0.70 else 1]
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
                 elif base == "Fighter":
@@ -432,14 +436,17 @@ def render(game, model, pose, role, layers=None):
                         and (y > shoulder or c is not None)
                         and depth <= 6 - int(fold > 0.25)
                     ):
-                        crease = 0.22 - 0.55 * fall + 0.12 * (1 - t)
+                        # The crease gathers at the belt and opens toward
+                        # the moving knee. Its bright lip stops above the hem.
+                        crease = 0.12 + 0.56 * (1 - t) - 0.55 * fall
                         shade = (
                             0
                             if fold > 0.87
                             else 1 if abs(fold - crease) < 0.16 or fold > 0.58 else 2
                         )
-                        if -0.76 + 0.17 * fall < fold < -0.44 + 0.13 * fall:
-                            shade = 4 if y > shoulder + 1 else 3
+                        ridge = -0.48 - 0.34 * (1 - t) + 0.24 * fall
+                        if abs(fold - ridge) < 0.21:
+                            shade = 4 if 0.25 < t < 0.8 or 1 <= depth <= 4 else 3
                         if 0.39 < fold < 0.60 and depth >= 2:
                             shade = 3
                         if depth == 6 or (depth == 5 and fold > 0.35):
@@ -458,6 +465,8 @@ def render(game, model, pose, role, layers=None):
                 elif base in ("Preserver", "Ranger", "Thief", "Psionicist"):
                     if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1):
                         tunic = RAMPS[base] if base == "Psionicist" else dwarf.LEATHER
+                        if base == "Psionicist" and torso and abs(t - 0.68 - 0.22 * u) < 0.12:
+                            rank = max(1, rank - 1)
                         paint = tunic[rank]
                 # Keep a narrow contact shadow at the far hip; turn the fold
                 # toward warm brown (or deep teal) as it meets the leg.
@@ -504,15 +513,18 @@ def render(game, model, pose, role, layers=None):
                         drape = True
                         fold = (x - center) / max(1.0, center - edge)
                 if drape:
-                    crease = -0.15 - fall * 0.24
+                    # Cloth fans out from the shoulder and bunches at the
+                    # waist. Use broad midtones with one short crest per fold.
+                    crease = -0.04 + 0.47 * (1 - t) - 0.38 * fall
+                    ridge = -0.49 - 0.31 * (1 - t) - 0.12 * fall
                     shade = 2
                     if fold > 0.86:
                         shade = 0
                     elif abs(fold - crease) < 0.19 or fold > 0.46:
                         shade = 1
-                    elif -0.86 + 0.15 * fall < fold < -0.54 + 0.12 * fall:
-                        shade = 4
-                    elif 0.17 < fold < 0.43:
+                    elif abs(fold - ridge) < 0.22:
+                        shade = 4 if 0.18 < t < 0.7 or 1 <= depth <= 3 else 3
+                    elif crease + 0.24 < fold < crease + 0.52:
                         shade = 3
                     cloak_shade = shade + 1
                     if cape:

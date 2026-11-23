@@ -28,6 +28,21 @@ Within each tile the female elf is on the left and the male on the right. The up
 
 [All 29 poses as stills](elf-singles-frames.png) · [Compare both elves with humans and original game figures on light and dark ground](elf-contrast.png)
 
+## Texture and checklist
+
+The cream Cleric robe gathers at the belt and opens over the knee. On the Preserver, Ranger and Thief, follow the lit fold from the shoulder into the trailing panel. The brightest part ends before the hem. The Fighter’s jerkin catches a short highlight over the ribs, the Gladiator’s narrow harness has a worn edge, and a diagonal crease breaks up the Psionicist’s teal tunic.
+
+![All seven single-class outfits before and after the texture pass, enlarged and at game size](elf-texture.gif)
+
+The comparison uses the loader’s walking and fighting pictures on both figures. Previous shows commit `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
+
+| Checklist item | Result |
+|---|---|
+| Single classes | Reviewed 406 poses, including the three idles, all walk steps, strikes, bows, hit and fall. The bronze guard and bone caps remain small. The Gladiator keeps the diagonal harness. |
+| Pairs, then triples | Reviewed 812 pair poses and 928 triple poses against every immediate parent. The belt, bone fastening and green lining still distinguish their combinations. On the female Fighter/Psionicist’s third side step the crossing wrist leaves just two pixels of difference from the Fighter. |
+| Body, silhouette and clipping | Compared every revised picture with the preceding build at identical coordinates. Occupied pixels and transparent gaps matched exactly. The head, foreground arm, bow and both foot regions retained their pixels. |
+| Equipment | Checked empty slots, boots, cloak, shield, sword, bow and quiver, mundane plate, magical plate, and a combined loadout. Boots recolor each exposed foot region and plate shine stays inside the chest region. Equipping and removing boots refreshed both picture sets for all 74 figure/outfit combinations. |
+
 ## Multiclasses
 
 Elves can combine Cleric, Fighter, Preserver, Psionicist, Ranger, and Thief in pairs or triples. Fighter and Ranger exclude each other. Gladiator is a single-class choice. The gallery uses creation-screen names. [Character creation rules](../../PLAYER-GUIDE.md#more-than-one-class)
@@ -82,11 +97,11 @@ The updated loader pictures retain every occupied pixel of the original silhouet
 
 [Watch both Preservers with boots, cloak, shield, mundane plate, and magical plate](elf-equipment.gif) · [Equipment frame sheet](elf-equipment-frames.png)
 
-The loops above use the loader’s rendered pictures. The capture below is from the patched game running the PENS save with four looks staged in the party’s picture slots. The two Clerics wear cream, the male Preserver wears magical plate, and the female Fighter/Psionicist/Thief wears boots. The large figure is an arena character.
+The loops above use the loader’s rendered pictures. The capture below shows the revised textures in the patched game running the PENS save with four looks staged in the party’s picture slots. The two Clerics wear cream, the male Preserver wears magical plate, and the female Fighter/Psionicist/Thief wears boots. The large figure is an arena character. The staged run could display these pictures, but the read-only process-memory file prevented a fresh live inventory test.
 
 ![Four staged elf figures in the arena at native game resolution](elf-in-game.png)
 
-The renderer check covered 2,146 dressed poses in nine equipment states. It caught a floating helmet pixel where the final bow frame had used the bow tip to locate the crown. The loader fixture also exercised class selection, equipping boots, removing them, and switching the display off on both figures. [Renderer and staged-game checks](../../../playtest/logs/2026-11-22-elf-outfits.md)
+The renderer check covered 2,146 dressed poses in nine equipment states. It caught a floating helmet pixel where the final bow frame had used the bow tip to locate the crown. The loader fixture also exercised class selection, equipping boots, removing them, and switching the display off on both figures. [Renderer and staged-game checks](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-22-elf-outfits.md)
 
 Claude’s live DOSBox test used the female elf Cilla in the `pens-after-arena` save. With the Loader attached, changing her classes in memory to Preserver/Ranger/Thief and then Cleric/Preserver/Thief refreshed both walking and fighting pictures within a second. Both matched the Loader’s expected pictures byte for byte. Her long sword disappeared and returned on the map through six unequip/equip cycles. After allocating one additional picture slot, the game reused it. The male elf, live cloak and boot changes, and the appearance of the fighting pictures during combat remain unverified in play. [Live test log and sword comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/1a0f0d59d510ffa4204814fa663508dc5f1b3166/playtest/logs/2026-11-23-elf-outfits-live.md)
 
