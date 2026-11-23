@@ -21,6 +21,11 @@
 
 BITS 16
 CPU 386
+%macro game_far 2               ; a far call to the game's code: GAME_FAR (FAR_GAME, below)
+        push cs
+        call far_game
+        dw (%1) & 0xFFFF, %2
+%endmacro
 
 VEC_RAND equ 0x60     ; rand() (DSUNLOG.EXE: INT 60h at the start of rand())
 VEC_SAVE equ 0x61     ; PROBE_SAVE
@@ -1494,12 +1499,9 @@ give_xp:
         xchg ax, [cs:pick_sound]        ; (PICK_SOUND: played in the XP's place, once)
         cmp word [cs:xp_who], 0xFFFF
         je play_sound
-        mov ax, ds
-        sub ax, DGROUP_SEG - XP_SEG
-        mov [cs:xp_call + 2], ax
         push word [cs:xp_amount]
         push word [cs:xp_who]
-        call far [cs:xp_call]
+        game_far XP_SEG - DGROUP_SEG, XP_OFF
         add sp, 4
         mov word [cs:xp_who], 0xFFFF
         mov ax, QUEST_SOUND
@@ -1584,6 +1586,70 @@ ovr_out:
         popad
         iret
 
+; GAME_FAR (the macro: GAME_FAR distance, offset; the distance what is added to the game's DS for
+; the segment, as the stubs' equates, X_STUB, have it, or a DSUN.EXE segment less DGROUP_SEG): a
+; far call to the game's code there, in 8 bytes where setting a far pointer and calling through it
+; took 21 (memory pass 6). The macro is "push cs / call far_game" and the two words after it: what
+; is added to DS for the segment, and the offset. FAR_GAME puts the routine's far address over two
+; words of its own and RETFs to it, the way back made the words' end: the stack is then as a "call
+; far" at the site would have left it, so the callee finds its arguments, the overlay manager the
+; frame it can fix up (OVR_BACK's), and the routine returns past the words. DS the game's. All
+; registers but AX kept (AX the offset as the callee starts; a far pointer's setting left it the
+; segment); the flags as the routine leaves them. (The macro is at the file's start.)
+far_game:
+        push ax                 ; (the routine's segment, then its offset, over these two)
+        push ax
+        push bp
+        mov bp, sp              ; [bp+2] offset, [bp+4] segment, [bp+6] the words, [bp+8] CS
+        push bx
+        mov bx, [bp + 6]
+        mov ax, ds
+        add ax, [cs:bx]
+        mov [bp + 4], ax
+        mov ax, [cs:bx + 2]
+        mov [bp + 2], ax
+        add word [bp + 6], 4    ; (the way back: past the words)
+        pop bx
+        pop bp
+        retf
+
+; FRAME_UP: an interrupt's frame (IP, CS, flags at SP) a word up, over the word under it: what an
+; "add sp,2" the INT stands for would have dropped (memory pass 6). All registers and the flags kept.
+frame_up:
+        push bp
+        mov bp, sp              ; [bp+2] the way back, [bp+4] IP, [bp+6] CS, [bp+8] flags, [bp+10]
+        push ax                 ;   the word dropped
+        mov ax, [bp + 8]
+        mov [bp + 10], ax
+        mov ax, [bp + 6]
+        mov [bp + 8], ax
+        mov ax, [bp + 4]
+        mov [bp + 6], ax
+        pop ax
+        pop bp
+        ret 2                   ; (past the word IP was in)
+
+; FRAME_DOWN: an interrupt's frame (IP, CS, flags at SP as the handler was entered, or as it is
+; again) a word down, to make room under it for a word the game's code after the INT pops (its
+; flags' old word left there: each site writes the room it makes); called twice for two words
+; (memory pass 6: each site moved the three words itself). All registers and the flags kept.
+frame_down:
+        push ax                 ; (room for the way back, a word below)
+        push bp
+        mov bp, sp              ; [bp+4] the way back, [bp+6] IP, [bp+8] CS, [bp+10] flags
+        push ax
+        mov ax, [bp + 4]
+        mov [bp + 2], ax
+        mov ax, [bp + 6]
+        mov [bp + 4], ax
+        mov ax, [bp + 8]
+        mov [bp + 6], ax
+        mov ax, [bp + 10]
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        ret
+
 ; SHEET_CLASSES: EAX the classes of the character sheet at ES:BX (its three class bytes, +21h).
 sheet_classes:
         mov eax, [es:bx + 0x21]
@@ -1641,8 +1707,6 @@ sound_tick:
 .ret:   ret
 
 use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
-xp_call dw XP_OFF, 0
-drop_call dw DROP_OFF, 0
 sound_call dw SOUND_OFF, 0
 
 ; PROBE_USE_ITEM: INT VEC_USE_ITEM replaces "cmp si,-1 / jne +3" (5 bytes: INT + 3 NOPs) in the
@@ -1720,11 +1784,8 @@ probe_use_item:
         ; 2: the item is used up (the cooked vulture, eaten): let go of the pointer's items the
         ; way the game does once it has counted coins picked up, and hold nothing
         push bx
-        mov ax, ds
-        sub ax, DGROUP_SEG - DROP_SEG
-        mov [cs:drop_call + 2], ax
         push word [HELD_LIST]
-        call far [cs:drop_call]
+        game_far DROP_SEG - DGROUP_SEG, DROP_OFF
         add sp, 2
         mov word [HELD], -1
         mov ax, ds              ; (the drop routine's AX is its own)
@@ -2114,16 +2175,13 @@ sp_button_id:                   ; (AX the button)
         movsx eax, ax
         push eax
         push dword [es:SAVE_WIN]
-        mov ax, ds
-        add ax, BTN_SEG
-        mov [cs:sp_btn + 2], ax
-        call far [cs:sp_btn]
+        game_far BTN_SEG, BTN_OFF
         add sp, 10
         call sp_es
         pop bp
         ret 2
 
-sp_btn  dw BTN_OFF, 0           ; the game's routine for a button's state
+; the game's routine for a button's state
 sp_call dd 0
 sp_was  db 0
 sp_letters db 'EBCDQ'           ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD; SAVQ: the quick
@@ -2691,16 +2749,11 @@ arrow_level:
         pop bx
         pop ax
         pop bp
-        sub sp, 4               ; the INT's frame 4 bytes down: the level and the spell under it
+        call frame_down         ; the INT's frame 4 bytes down: the level and the spell under it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax        ; (IP)
-        mov ax, [bp + 8]
-        mov [bp + 4], ax        ; (CS)
-        mov ax, [bp + 10]
-        mov [bp + 6], ax        ; (flags)
         mov ax, [cs:arrow_lvl]
         mov [bp + 10], ax
         movzx ax, cl
@@ -5705,16 +5758,10 @@ WP_SHOWN_CALL  equ 0x63372          ; (118:C36h's call, and PROBE_WP_SHOWN's ret
 WP_SHOWN_RET   equ 0x6337C
 
 probe_wp_disc_win:
-        sub sp, 2               ; push the window's id: the frame down a word
+        call frame_down         ; push the window's id: the frame down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         push dx
         call wp_ids
         mov [bp + 8], ax
@@ -5754,16 +5801,10 @@ probe_wp_disc_win:
         iret
 
 probe_wp_sphere_win:
-        sub sp, 2
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         push dx
         call wp_ids
         mov [bp + 8], dx
@@ -6302,16 +6343,10 @@ probe_pk_count:
         iret
 
 probe_pk_win:
-        sub sp, 2               ; push the window's id: the frame down a word
+        call frame_down         ; push the window's id: the frame down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         mov word [bp + 8], 0x445D
         cmp byte [cs:lv_mode], 0
         je .out
@@ -6335,16 +6370,11 @@ probe_pk_left:
 .out:   iret
 
 probe_pk_title:
-        sub sp, 4               ; push a far pointer: the frame down two words
+        call frame_down         ; push a far pointer: the frame down two words
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov [bp + 10], ds
         mov word [bp + 8], 0x3026
         push ds
@@ -8371,12 +8401,8 @@ pick_spells:
 .one:   push cx                 ; (CF set if the window was left with no spell learnt)
         call pick_known
         push ax
-        mov ax, ds
-        add ax, PICK_STUB
-        mov [cs:pick_far + 2], ax
-        mov word [cs:pick_far], PICK_ENTRY
         push si
-        call far [cs:pick_far]
+        game_far PICK_STUB, PICK_ENTRY
         add sp, 2
         call pick_known
         pop cx
@@ -8390,7 +8416,6 @@ pick_spells:
 .none:  pop cx
         stc
         ret
-pick_far   dd 0
 pick_cap   db 0
 
 ; PICK_KNOWN: AX the preserver spells member SI knows (KNOWN_OFF's bytes, the low four bits set
@@ -10764,11 +10789,7 @@ probe_wp_class:
         add sp, 8
         mov [WP_DISC_MASK], ax
         mov byte [cs:kit_keep], 1
-        mov ax, ds              ; and the game opens it again (641B9h), as for the class now
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC     ; and the game opens it again (641B9h), as for the class now
         jmp .done
 .page:  mov ax, [WP_SPHERE]     ; the spheres or a kit page up: the window's id (+8)
         or ax, [WP_SPHERE + 2]
@@ -10845,11 +10866,7 @@ probe_race_panel:
         add sp, 8
         mov [WP_DISC_MASK], ax
         mov byte [cs:kit_keep], 1
-        mov ax, ds              ; the game opens it again (641B9h), as for the class now
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC     ; the game opens it again (641B9h), as for the class now
 .done:  pop es
         popad
         iret
@@ -11089,11 +11106,7 @@ wp_marked:
         push word [bp + 10]
         push word [bp + 8]
         push dword [bp + 4]
-        mov ax, ds
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_MARKED
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_MARKED
         add sp, 8
         pop bp
         ret
@@ -11151,11 +11164,7 @@ wp_page_button:
         add sp, 4
         mov dword [WP_SPHERE], 0
         mov byte [cs:kit_keep], 1
-        mov ax, ds
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC
 .ret:   ret
 
 ; KIT_ROW: kit row AX of the kit page clicked (KIT_NONE: NO KIT), as the game's spheres: with
@@ -13972,18 +13981,14 @@ spread_tick:
         mov es, ax
         cmp word [es:0x19], 0
         jne .out
-        mov ax, ds
-        sub ax, SPREAD_FROM_DS
-        mov [cs:spread_far + 2], ax
         push word 1
-        call far [cs:spread_far]
+        game_far -SPREAD_FROM_DS, 0x3109
         add sp, 2
 .out:   pop es
         pop ds
         popa
 .ret:   ret
 spread_due db 0
-spread_far dw 0x3109, 0
 
 ; MOUSE_SET: "mov word [0A12Dh],0" (2A912h; 6 bytes) just after the game gives the mouse its
 ; ranges (the screen's 320 by 200), as its screens start. A video mode set leaves the driver's
@@ -14958,11 +14963,7 @@ TH_STUB_5B8 equ 0x42AB            ; (DSUN.EXE) the stub segments: 5B8h (EDh the 
 TH_STUB_508 equ 0x41F1            ;   508h (61h STR's to-hit, 66h DEX's missile adjustment),
 TH_STUB_4E0 equ 0x41BE            ;   4E0h (7Fh the AC)
 %macro th_far 2                   ; a far call to the game's stub segment %1, offset %2
-        mov ax, ds
-        sub ax, DGROUP_SEG - %1
-        mov [cs:th_call + 2], ax
-        mov word [cs:th_call], %2
-        call far [cs:th_call]
+        game_far %1 - DGROUP_SEG, %2
 %endmacro
 th_hit:
         mov [bp - 6], si                ; (the move replaced)
@@ -15128,7 +15129,6 @@ th_missiles db 18, 53, 75, 111, 180, 33          ; Acid Arrow, Turn Pebble to Bo
                                                  ;   Minute Meteors
 th_touches  db 3, 10, 39, 72, 97, 113, 119, 128  ; Chill Touch, Shocking Grasp, Vampiric Touch, Cause
 TH_SPELLS equ $ - th_missiles                    ;   Light Wounds, Cause Disease, Cause Serious, Poison, Cause Critical
-th_call   dw 0, 0
 th_armed  db 0
 th_weapon db 0
 th_miss   db 0
@@ -15172,10 +15172,7 @@ rec_frame:
 ; the game's; AX and BX changed.
 rand_die:
         push cx
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:blow_rand + 2], ax
-        call far [cs:blow_rand]
+        game_far -DGROUP_SEG, RAND_OFF
         pop cx
         mul cx
         shl ax, 1
@@ -17626,14 +17623,10 @@ reach_line:
         mov ax, [bx + WALL_POS]
         shr ax, 4
         push ax
-        mov ax, ds
-        sub ax, DGROUP_SEG - REACH_LINE_SEG
-        mov [cs:reach_line_at + 2], ax
-        call far [cs:reach_line_at]
+        game_far REACH_LINE_SEG - DGROUP_SEG, 0xA4
         add sp, 12
         or ax, ax
         ret
-reach_line_at dw 0xA4, 0
 ; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
 ; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
 ; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
@@ -19463,13 +19456,12 @@ th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address:
 ; RESOURCE.GFF (spelltexts.py; PROBE_CHUNK_ID): here TU_INFO is done with.
 TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
 probe_spell_text:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         mov byte [cs:tu_info], 0
         iret
 
@@ -21329,10 +21321,7 @@ ns_blow:
         push dword 0
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:blow_rand + 2], ax
-        call far [cs:blow_rand]
+        game_far -DGROUP_SEG, RAND_OFF
 ..@blow_rolled:                  ; (the Loader knows the roll by the code from here)
         jmp short .rolled
         db 'IMAGE'
@@ -21352,12 +21341,9 @@ ns_blow:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG - CHARGE_STUB
-        mov [cs:blow_charge + 2], ax
         push word MIRROR_EFFECT
         push word [BLOW_TARGET]
-        call far [cs:blow_charge]
+        game_far CHARGE_STUB - DGROUP_SEG, CHARGE_OFF
         add sp, 4
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .out:   jmp ovr_out
@@ -21387,7 +21373,6 @@ BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
 ; (BOX_TEXT: AFTER_INSTALL's, over the install code)
 box_at   dw 0
 box_nudge db 0
-box_line dd 0
 box_said:
         sti
         pushad
@@ -21485,15 +21470,11 @@ box_put:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG - BOX_LINE_SEG
-        mov [cs:box_line + 2], ax
-        mov word [cs:box_line], BOX_LINE_OFF
         push cs
         push word box_text
         push word BOX_LINE_ARG
         push dword [BOX_WIN]
-        call far [cs:box_line]
+        game_far BOX_LINE_SEG - DGROUP_SEG, BOX_LINE_OFF
         add sp, 10
         pop bp
         pop ax                  ; the way back, as the overlay manager has left it
@@ -21505,28 +21486,16 @@ box_put:
 .ret:   ret
 
 ; BOX_POP4, BOX_POP6, BOX_POP10: "add sp,4" / 6 / "0Ah" (all registers as the INT had them): the INT's
-; frame moved up over the bytes under it, then IRET.
-%macro box_pop_n 1
-        push bp
-        mov bp, sp
-        push ax
-        mov ax, [bp + 6]
-        mov [bp + 6 + %1], ax
-        mov ax, [bp + 4]
-        mov [bp + 4 + %1], ax
-        mov ax, [bp + 2]
-        mov [bp + 2 + %1], ax
-        pop ax
-        pop bp
-        add sp, %1
-        iret
-%endmacro
-box_pop4:
-        box_pop_n 4
+; frame moved up over the bytes under it (FRAME_UP, a word each), then IRET.
 box_pop10:
-        box_pop_n 10
+        call frame_up
+        call frame_up
 box_pop6:
-        box_pop_n 6
+        call frame_up
+box_pop4:
+        call frame_up
+        call frame_up
+        iret
 
 ; SCROLL_USE: "test [es:bx+10h],ax" (6D3B9h; 4 bytes: the INT, the site's number and a NOP) as the
 ; inventory opens an item's box: ES:BX its type, AX the member's class mask, SI its sheet (in the
@@ -21824,8 +21793,6 @@ ns_wall:
         pop bp
         iret
 
-blow_rand dw RAND_OFF, 0
-blow_charge dw CHARGE_OFF, 0
 
 ; PICK POCKETS (PICK_BUTTON): a character with thief levels, outside a fight, has a button of
 ; their own on the USE screen where a priest's Turn Undead is: a purse (PP_ICON). Let go of, the
@@ -21933,11 +21900,8 @@ pp_show:
         cmp ax, [cs:pp_loaded]
         je .keep
         push ax                 ; another's loaded: let go of it
-        mov ax, ds
-        sub ax, DGROUP_SEG - FREE_SEG
-        mov [cs:free_call + 2], ax
         push dword [TU_CACHE]
-        call far [cs:free_call]
+        game_far FREE_SEG - DGROUP_SEG, FREE_OFF
         add sp, 4
         mov [TU_CACHE], ax
         mov [TU_CACHE + 2], dx
@@ -22145,13 +22109,10 @@ pp_list_push:                   ; pushes slot SI's button, then the window (far)
 pp_free_icon:                   ; the icon at CS:BX let go of, if loaded (the game's 1A8h:8Ch); AX, CX, DX lost
         cmp dword [cs:bx], 0
         je .ret
-        mov ax, ds
-        sub ax, DGROUP_SEG - FREE_SEG
-        mov [cs:free_call + 2], ax
         push bx                 ; (the game's far calls lose BX and ES)
         push es
         push dword [cs:bx]
-        call far [cs:free_call]
+        game_far FREE_SEG - DGROUP_SEG, FREE_OFF
         add sp, 4
         pop es
         pop bx
@@ -22398,16 +22359,11 @@ TU_INFO_TURN equ 1
 TU_INFO_PICK equ 2
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
 pp_text:
-        sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
+        call frame_down         ; the game's two pushes: the INT's frame moved down over them
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov word [bp + 8], TU_NAME
         mov [bp + 10], ds
         push bx
@@ -22454,16 +22410,11 @@ pp_lit:
 pp_arm:
         cmp byte [cs:pp_arming], 0
         jne .pick
-        sub sp, 4               ; the game's push: the INT's frame moved down over it
+        call frame_down         ; the game's push: the INT's frame moved down over it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov word [bp + 8], 0xFFFF
         mov word [bp + 10], 0x00BE
         pop ax
@@ -22712,7 +22663,6 @@ arrows_n3    db "VAMPIRIC ARROWS", 0
 pp_name  db "PICK POCKETS", 0
 pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
 pp_icons_end:
-free_call dw FREE_OFF, 0
 pp_shown  db 0                  ; 1 while the button on show is a thief's
 pp_arming db 0                  ; 1 from its letting go to PP_ARM
 pp_armed  db 0                  ; 1 while the next talk is a pick
@@ -23312,26 +23262,24 @@ NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 probe_names_size:
         add word [bp-4], NAMES_EXTRA * NAME_SIZE
         adc word [bp-2], 0
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        push dword 1
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_down                 ; (the "push dword 1", under the frame)
+        call frame_down
+        push bp
+        mov bp, sp
+        mov dword [bp + 8], 1
+        pop bp
         iret
 
 ; PROBE_NAMES_FILL: INT VEC_NAMES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the call
 ; that reads the NAME chunk into the table (AX 0: read). Does the add, then, if it was read,
 ; copies EXTRA_NAMES after the game's names and notes the table in NAMES_PTR.
 probe_names_fill:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         or ax, ax
         jnz .out
         push ax
@@ -23366,9 +23314,6 @@ probe_names_fill:
         pop cx
         pop ax
 .out:   iret
-n_ip    dw 0
-n_cs    dw 0
-n_fl    dw 0
 
 ; TYPES: the game's item types (GPLDATA's IT1R chunk, 20 bytes each, which items name by
 ; number), read in just before the names, get TYPES_EXTRA more in the same way: for the
@@ -23399,13 +23344,12 @@ AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): t
 probe_types_size:
         add word [bp-4], TYPES_EXTRA * TYPE_SIZE
         adc word [bp-2], 0
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        push dword 1
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_down                 ; (the "push dword 1", under the frame)
+        call frame_down
+        push bp
+        mov bp, sp
+        mov dword [bp + 8], 1
+        pop bp
         iret
 
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
@@ -23419,13 +23363,12 @@ probe_types_size:
 ; are daggers and missile and thrown ones); and the staff sling's dice as the stinkpots' rule has
 ; them (STINK_SIDES, again at each pass of the main loop, the rule switched or not).
 probe_types_fill:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         or ax, ax
         jnz .out
         push ax
@@ -28229,16 +28172,10 @@ probe_item_box:
         add sp, 16
 .push:  pop es
         popad
-        sub sp, 2                       ; the PUSH 0: the interrupt's frame moved down a word
+        call frame_down         ; the PUSH 0: the interrupt's frame moved down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax                ; IP
-        mov ax, [bp + 6]
-        mov [bp + 4], ax                ; CS
-        mov ax, [bp + 8]
-        mov [bp + 6], ax                ; flags
         mov word [bp + 8], 0            ; the word pushed
         pop ax
         pop bp
@@ -28412,16 +28349,11 @@ info_head:
         pop es
         pop bx
         pop ax
-        sub sp, 4               ; the INT's frame 4 bytes down: the pointer under it
+        call frame_down         ; the INT's frame 4 bytes down: the pointer under it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax        ; (IP)
-        mov ax, [bp + 8]
-        mov [bp + 4], ax        ; (CS)
-        mov ax, [bp + 10]
-        mov [bp + 6], ax        ; (flags)
         mov ax, [cs:ih_off]
         mov [bp + 8], ax
         mov ax, [cs:ih_seg]

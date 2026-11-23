@@ -85,11 +85,10 @@ def install_at(image, vector):
 
 
 def fill_probes(image):
-    """PROBE_NAMES_FILL and PROBE_TYPES_FILL, in that order: "add sp,0Ch", its three pushes back,
-    then "or ax,ax" (other probes replace an "add sp,0Ch" the same way)."""
-    import re
-    return [m.start() - 15 for m in re.finditer(re.escape(bytes.fromhex("83c40c" "2eff36")), image)
-            if image[m.start() + 18:m.start() + 20] == bytes.fromhex("09c0")]
+    """PROBE_NAMES_FILL and PROBE_TYPES_FILL, in that order: their handlers, from ALL_VECTORS."""
+    from dsloader.gamepatch import VEC_NAMES_FILL, VEC_TYPES_FILL
+    table = vector_table(image)
+    return [table[VEC_NAMES_FILL][1], table[VEC_TYPES_FILL][1]]
 
 
 def if_framed(image, rest):
@@ -3590,13 +3589,14 @@ class RuleTests(RingTests):
         self.assertEqual(self.two_handed(5), True)
 
     def tu_info_at(self, image):
-        """DSCLOG's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
-        three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
+        """DSCLOG's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT (its handler in ALL_VECTORS):
+        six calls (FRAME_UP: "add sp,0Ch"), then "mov byte [cs:tu_info],0" and IRET; and the
+        probe's offset."""
         import re
-        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x2e\xc6\x06(..)\x00\xcf",
-                          image, re.S)
+        probe = vector_table(image)[VEC_SPELL_TEXT][1]
+        found = re.compile(rb"(?:\xe8..){6}\x2e\xc6\x06(..)\x00\xcf", re.S).match(image, probe)
         self.assertIsNotNone(found)
-        return TSR * 16 + struct.unpack("<H", found.group(1))[0], found.start()
+        return TSR * 16 + struct.unpack("<H", found.group(1))[0], probe
 
     def test_spell_text_ends_tu_info(self):
         """After the game read a description (SPIN DI, 12 bytes of arguments): SP past them,
@@ -5857,7 +5857,7 @@ class LevelPickTests(unittest.TestCase):
 
     def run_probe(self, pattern, vector, code, regs, stop):
         import re
-        at = re.search(pattern, self.image, re.S).start()
+        at = vector_table(self.image)[vector][1] if pattern is None else re.search(pattern, self.image, re.S).start()
         mu = self.mu
         mu.mem_write(vector * 4, struct.pack("<HH", at, TSR))
         self.code_at = getattr(self, "code_at", 0x800) + 0x20  # (each its own: the emulator keeps
@@ -5878,10 +5878,10 @@ class LevelPickTests(unittest.TestCase):
             self.run_probe(rb"\x89\xc2\x2e\x80\x3e..\x00\x74\x03\xba\x02\x00", VEC_PK_COUNT, (0xCD, VEC_PK_COUNT, 0x90, 0x90), dict(eax=ax, edx=0x99), 4)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_DX), ax)
             self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), zero)
-        self.run_probe(rb"\x83\xec\x02\x55\x89\xe5\x50.{18}\xc7\x46\x08\x5d\x44", VEC_PK_WIN, (0xCD, VEC_PK_WIN, 0x90), {}, 3)
+        self.run_probe(None, VEC_PK_WIN, (0xCD, VEC_PK_WIN, 0x90), {}, 3)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FA)
         self.assertEqual(struct.unpack("<H", mu.mem_read(SS * 16 + 0x7FA, 2))[0], 0x445D)
-        self.run_probe(rb"\x83\xec\x04\x55\x89\xe5\x50.{18}\x8c\x5e\x0a", VEC_PK_TITLE, bytes((0xCD, VEC_PK_TITLE, 0x90, 0x90)) + bytes(16), {}, 4)
+        self.run_probe(None, VEC_PK_TITLE, bytes((0xCD, VEC_PK_TITLE, 0x90, 0x90)) + bytes(16), {}, 4)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F8)
         self.assertEqual(struct.unpack("<HH", mu.mem_read(SS * 16 + 0x7F8, 4)), (0x3026, GAME_DS))
         after = CALLER * 16 + self.code_at + 2  # (the line's colours, in the pushes after it: the game's)
