@@ -126,18 +126,25 @@ def render(atlas, output):
     sheet.save(output / "elf-mantle-fold-study.png")
 
 
-# The outer fold runs behind the stock silhouette. Each run begins at the
-# trailing edge and ends at the arm, hip, or lifted corner in that drawing.
-# All cloth inside the stock silhouette keeps its registered Preserver paint.
+# Trailing cloth outside the male elf's silhouette, from row 6 down.
+# Narrowing the last runs opens the space beneath the lifted corner.
 SWING_EDGES = {
-    11: (None, None, (-1, -1), (-2, 0), (-3, 1), (-4, 1), (-5, 1), (-5, 1),
-         (-6, 2), (-6, 2), (-5, 2), (-5, 1), (-4, 0)),
-    12: ((4, 4), (3, 3), (1, 2), (0, 1), (-1, 1), (-2, 1), (-3, 1), (-4, 1),
-         (-5, 1), (-5, 2), (-5, 2), (-4, -2)),
-    13: ((2, 2), (1, 2), (0, 2), (-1, 1), (-1, 1), (-2, 1), (-2, 2), (-3, 2),
-         (-4, 2), (-5, 2), (-6, 2), (-6, 1), (-5, -3)),
-    14: (None, None, (2, 2), (1, 3), (0, 4), (-1, 4), (-2, 3), (-2, 3),
-         (-3, 3), (-4, 3), (-4, 3), (-4, 3), (-3, 2), (-3, -1)),
+    11: ((0, 0), (-1, -1), (-2, -1), (-3, -1), (-4, 0), (-5, 1), (-5, 1),
+         (-6, 1), (-6, 1), (-6, 2), (-5, 2), (-5, 2), (-5, -2), (-4, -3)),
+    12: ((4, 4), (2, 4), (0, 3), (-1, 2), (-2, 1), (-3, 1), (-4, 1),
+         (-4, 1), (-5, 1), (-5, 1), (-6, -2), (-6, -4)),
+    13: ((2, 2), (1, 2), (0, 2), (0, 2), (-1, 1), (-2, 1), (-2, 1),
+         (-3, 2), (-3, 2), (-4, 2), (-5, 2), (-6, 2), (-6, -3)),
+    14: ((3, 3), (2, 2), (1, 1), (0, 2), (-1, 3), (-1, 4), (-2, 4),
+         (-2, 3), (-3, 3), (-3, 3), (-4, 3), (-4, 3), (-4, 3), (-4, 0), (-4, -2)),
+}
+
+# Pigments from the outer fold of retail Mage 724. Each maps to a plum
+# pigment for the class mantle and a relief rank for the six-color worn dye.
+MAGE_FOLD = {
+    158: (17, 0), 159: (174, 1), 38: (112, 2), 160: (175, 2),
+    71: (58, 3), 39: (239, 4), 161: (232, 5), 40: (233, 5),
+    49: (115, 3), 50: (119, 4), 212: (118, 4),
 }
 
 
@@ -147,40 +154,37 @@ def swing_tile(atlas, pose, item, scale):
     rows = [row[:] for row in source]
     frame = classoutfits.frames("Preserver", False, 2061)[pose]
     body = atlas.game.fr(2061, pose)
-    folds = {}
-    for x, y, _ in frame.cloak:
-        folds.setdefault(y, []).append(x)
-    edges = SWING_EDGES[pose]
-    crease = (115, 239, 118, 238, 239)
-    if item == "Cloak":
-        crease = tuple(sg.CLOAK_COLOURS[65][i] for i in (2, 4, 3, 5, 4))
-    hem = max(folds)
-    for y in range(7, hem + 1):
-        body_left = next(x for x, color in enumerate(body[y]) if color is not None)
-        cloth = sorted(folds.get(y, ()))
-        fringe = [x for x in cloth if x < body_left]
-        for x in fringe:
+    mage = atlas.game.fr(724, pose)
+    body_edge = [next((x for x, c in enumerate(row) if c is not None), len(row)) for row in body]
+    cloth = {(x, y) for x, y, _ in frame.cloak}
+    for x, y in cloth:
+        if x < body_edge[y]:
             rows[y + top][x + side] = None
-        if y - 7 >= len(edges) or edges[y - 7] is None:
-            continue
-        left, right = edges[y - 7]
-        # Lift the outer part of the fold. Take its actual indexed artwork
-        # from farther down the same mantle, including its ordinary item dye.
-        lower_y = min(y + 2, hem)
-        sample = sorted(folds[lower_y])
-        for x in range(left, right + 1):
+    for y, (left, right) in enumerate(SWING_EDGES[pose], 6):
+        body_left = body_edge[y]
+        # Read the continuous strip inward from the Mage's trailing edge.
+        # Stop before the original arm, staff, or open ground.
+        start = next(i for i, c in enumerate(mage[y]) if c in MAGE_FOLD)
+        strip = []
+        for color in mage[y][start:]:
+            if color not in MAGE_FOLD:
+                break
+            strip.append(MAGE_FOLD[color])
+        width = right - left + 1
+        for offset in range(width):
+            x = left + offset
             if x >= body_left or rows[y + top][x + side] is not None:
                 continue
-            if x in fringe and x >= right - 1:
-                color = source[y + top][x + side]
-            else:
-                col = round((x - left) * (len(sample) - 1) / max(1, right - left))
-                color = source[lower_y + top][sample[col] + side]
-            # The narrow lit lip follows the trailing crease behind the elbow.
-            # Keep the woven midtones on both sides and break the light at the hem.
-            if right - left >= 3 and x == left + (1 if y < 14 else 2) and 10 <= y <= 17:
-                color = crease[(y - 10) % len(crease)]
-            rows[y + top][x + side] = color
+            # Keep the short underfold where the loose cloth turns into the
+            # existing panel. The tucked edge moves with the hip.
+            if x >= body_left - 2 and (x, y) in cloth:
+                rows[y + top][x + side] = source[y + top][x + side]
+                continue
+            # Sample at pixel centers so rounding a narrow strip does not
+            # discard both the highlight and the valley on a two-pixel hem.
+            index = (2 * offset + 1) * len(strip) // (2 * width)
+            plum, rank = strip[index]
+            rows[y + top][x + side] = sg.CLOAK_COLOURS[65][rank] if item == "Cloak" else plum
     return elf.placed_tile(atlas.game, rows, atlas.floor, scale, side, top, 0)
 
 
