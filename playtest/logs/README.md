@@ -141,6 +141,7 @@ schedules and diffs a log made or used.
 | [2026-11-23](2026-11-23-ravager-veiled-robe.md) | The Veiled Robe's wizard slot more at levels 1-3 in the sequel: Ar'anda's slots after a night at the Roost 5, 3, 3 (her 4, 2, 2 before); robes' AC under the bracers' armour rule |
 | [2026-11-23](2026-11-23-ravager-girdles-amulet.md) | The girdles and the Amulet of Magic Resistance in the sequel: the Golden Girdle of Urnst's sword attacks 3 worse (Dragonsbane +8 on a Draxan without, +5 on a wearer); the amulet's 15% run in a fight; the Girdle of Back Defense by its count only; the hung display restarted and Hold Person replayed clean |
 | [2026-11-23](2026-11-23-ravager-on-hit.md) | Weapons and arrows that cast on a hit in the sequel: its own item power (+10h) cast on a hit, the ammunition's for a shot; the transfer gives the mod's items their spell by name; a weapon's touch spell no longer rolls a second hit (DSCLOG2's WEAPON_CAST, 11 casts, no roll) |
+| [2026-11-23](2026-11-23-ravager-worn.md) | Items whose spell is on their wearer in the sequel: Resist Fire and Detect Invisible put on Ar'anda when chest and sword were readied again; taken off, the spells stayed (the sequel's own way) |
 
 ## files/
 
