@@ -67,6 +67,7 @@ def effect_names(guest, load: int) -> Dict[int, str]:
     return out if out.get(5) == "Armor" else {}
 
 
+RAV_ITEM_TYPE, RAV_ITEM_SLOT, RAV_ITEM_PLUS = 0x0A, 0x13, 0x16  # (the sequel's item fields, as DSCLOG2's)
 ADDRESSES: Dict[str, object] = {
     "DGROUP": ravager.DGROUP,
     "CREATURES_PTR": ravager.CREATURES_PTR, "SHEETS_PTR": ravager.SHEETS_PTR, "ITEMS_PTR": ravager.ITEMS_PTR,
@@ -483,7 +484,14 @@ class RavGameData(game.GameData):
         return tables.rav_slots(cls, level, spell_level) if self.rules & game.RULE_ADND_TABLES else None
 
     def robe_slots(self, member: int, bit: int, spell_level: int, total: int) -> int:
-        return total  # (the mod's robes aren't in the sequel)
+        """TOTAL slots with the member's worn robe's: the party transfer's robes are the mod's type in the
+        sequel (ravager.mod_type), the Veiled Robe's one more as SL's (robes.slots; DSCLOG2's VEILED_SLOT)."""
+        from . import robes
+        robe = ravager.mod_type(game.ROBE_TYPE)
+        plus = next((struct.unpack("b", rec[RAV_ITEM_PLUS:RAV_ITEM_PLUS + 1])[0] for _, rec, _ in self._worn(member)
+                     if struct.unpack_from("<H", rec, RAV_ITEM_TYPE)[0] == robe and rec[RAV_ITEM_SLOT] == robes.CHEST_SLOT),
+                    0)
+        return robes.slots(plus, bit, spell_level, total)
 
     _names: Optional[List[str]] = None
     _names_at: Optional[int] = None

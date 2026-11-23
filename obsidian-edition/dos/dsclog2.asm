@@ -5707,7 +5707,8 @@ adnd_slots:
         add ax, bx
         jmp .out
 .game:  call .call
-.out:   pop si
+.out:   call veiled_slot
+        pop si
         pop cx
         pop bx
         pop bp
@@ -5731,6 +5732,30 @@ adnd_slots:
         pop bx
         ret
 slot_count dw 0                         ; (AD&D's slots given, for a look in play)
+; VEILED_SLOT: (ADND_SLOTS's, its frame) AX the slots of class [BP+8] at spell level [BP+0Ch], the
+; combatant at [BP-6] (the SI it pushed): the Veiled Robe (a robe of plus 2 on the chest, PROT_SCAN; SL's
+; robes.slots) a preserver's slot more at spell levels 1 to 3 where it has any. Others kept.
+WIZARD_CLASS equ 11
+veiled_slot:
+        or ax, ax
+        jz .ret
+        cmp byte [bp + 8], WIZARD_CLASS
+        jne .ret
+        cmp word [bp + 0x0C], 1
+        jb .ret
+        cmp word [bp + 0x0C], 3
+        ja .ret
+        push si
+        mov si, [bp - 6]
+        call prot_here
+        pop si
+        jc .ret
+        cmp byte [cs:p_robe], 2
+        jb .ret
+        inc ax
+        inc word [cs:veiled_count]
+.ret:   ret
+veiled_count dw 0
 ; by class level 1-20, the slots at spell levels 1-9 (tables.RAV_PRIEST_SLOTS, RAV_WIZARD_SLOTS)
 rav_slots:
         db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; priests (clerics, druids): 1
@@ -6202,8 +6227,8 @@ helm_named:                     ; DI an item of HELM_TYPE: AX 1 if it is a Helm 
 ; function counts already (+0Bh 80h: the plus less the type's AC). As AD&D has it:
 ; - a ring of protection betters AC only without magical armour, and of two only the better (the left
 ;   hand's if they're equal); a cloak of protection only without magical or metal armour and without a
-;   shield; bracers of defense only without armour (a helm too); a robe's plus on top of the rest, as a
-;   ring's (in [BP-6], after the Armor spell's armour value: SL's ROBE in PROBE_RING_AC);
+;   shield; bracers of defense only without armour (a helm too); a robe's plus, likewise, on top of the
+;   rest, as a ring's (in [BP-6], after the Armor spell's armour value: SL's ROBE in PROBE_RING_AC);
 ; - on saves, the better ring's plus whatever the armour, the cloak's as for AC, the Veiled Robe +1 on
 ;   every save and the Ashen Robe +1 against a spell (DSCLOG's KIT_SAVE's robe part).
 ; PROT_AC (site 43, "protection_ac"): the AC function's "mov al,es:[bx+0Bh] / mov ah,0" (5D61Ah; 6
@@ -6328,7 +6353,11 @@ prot_ac:
         test byte [cs:p_flags], P_ARMOUR
         jz .out
         jmp .off
-.robe:  push ax
+.robe:  call prot_here               ; (a robe: as bracers, nothing over armour on the arms, legs or head)
+        jc .out
+        test byte [cs:p_flags], P_ARMOUR
+        jnz .off
+        push ax
         push bx
         push es
         les bx, [ITEMS_PTR]

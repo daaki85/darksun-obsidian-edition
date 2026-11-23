@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, ravager, ravlog  # noqa: E402
+from dsloader import aging, dicelog, game, kits, ravager, ravlog  # noqa: E402
 
 
 class FakeGuest:
@@ -464,6 +464,25 @@ class PassTests(unittest.TestCase):
         g.mem[ds * 16 + ravlog.SLOTS_ALL_19:ds * 16 + ravlog.SLOTS_ALL_19 + 2] = b"\x01\x47"
         self.assertEqual(data.max_spell_slots(0, 1, 1), 19)
         self.assertEqual(data.robe_slots(0, 1, 1, 3), 3)
+
+    def test_veiled_robe_slots(self):
+        """The Veiled Robe (the mod's robe type in the sequel, plus 2, on the chest) gives a wizard a slot more
+        at spell levels 1-3 where there are any (DSCLOG2's VEILED_SLOT); the Ashen Robe, a robe in the pack,
+        a priest and level 4 don't."""
+        data = ravlog.RavGameData(FakeGuest(), 0x4982)
+
+        def robe(plus, slot=0x09):
+            rec = bytearray(ravager.ITEM_SIZE)
+            struct.pack_into("<H", rec, 0x0A, ravager.mod_type(game.ROBE_TYPE))
+            rec[0x13], rec[0x16] = slot, plus
+            return [(1, bytes(rec), bytes(game.ITEM_TYPE_SIZE))]
+        for worn, bit, level, total, want in ((robe(2), kits.WIZARD, 1, 3, 4), (robe(2), kits.WIZARD, 3, 2, 3),
+                                              (robe(2), kits.WIZARD, 4, 2, 2), (robe(2), kits.WIZARD, 2, 0, 0),
+                                              (robe(1), kits.WIZARD, 1, 3, 3), (robe(2, 20), kits.WIZARD, 1, 3, 3),
+                                              (robe(2), kits.PRIEST, 1, 3, 3), ([], kits.WIZARD, 1, 3, 3)):
+            data._worn = lambda c, lists=None, worn=worn: worn
+            with self.subTest(worn=worn, bit=bit, level=level):
+                self.assertEqual(data.robe_slots(0, bit, level, total), want)
 
 
 class LookTests(unittest.TestCase):

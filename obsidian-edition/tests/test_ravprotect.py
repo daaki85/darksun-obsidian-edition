@@ -146,7 +146,7 @@ class ProtectionTests(unittest.TestCase):
                     elif typ == BRACERS:
                         self.assertEqual(counts, want["bracers"])
                     elif typ == ROBE:
-                        self.assertEqual((counts, other), (False, 3 - plus))  # (its plus on top)
+                        self.assertEqual((counts, other), (False, 3 - (0 if armour else plus)))  # (on top)
                     else:
                         self.assertEqual(counts, bool(type_table()[typ * 15 + 0x0B] & 0x80))
                     if typ != ROBE:
@@ -191,6 +191,23 @@ class ProtectionTests(unittest.TestCase):
             mu.emu_start(TSR * 16 + self.sym["boots_move"], TSR * 16 + 0xFFF0)
             with self.subTest(slot=feet):
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), want)
+
+    def test_veiled_robe_slots(self):
+        """VEILED_SLOT (ADND_SLOTS's end): a preserver's (class 11) slot more at spell levels 1-3 where it has
+        any, with the Veiled Robe (+2) on the chest; not the Ashen Robe (+1), another class, level 4, none."""
+        cases = [(2, 11, 1, 2, 3), (2, 11, 3, 1, 2), (2, 11, 4, 1, 1), (2, 11, 2, 0, 0), (1, 11, 1, 2, 2),
+                 (2, 2, 1, 2, 2), (None, 11, 1, 2, 2)]
+        for robe, cls, level, slots, want in cases:
+            mu = self.machine([(ROBE, CHEST, robe)] if robe else [])
+            mu.mem_write(SS * 16 + 0x600 - 6, struct.pack("<H", COMBATANT))
+            mu.mem_write(SS * 16 + 0x608, struct.pack("<HHH", cls, 0, level))
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=0x600, eax=slots, esi=0x55,
+                                    eflags=0x2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + self.sym["veiled_slot"], TSR * 16 + 0xFFF0)
+            with self.subTest(robe=robe, cls=cls, level=level, slots=slots):
+                self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_SI)), (want, 0x55))
 
     def test_patches(self):
         """The two sites are where the game has what they replace."""
