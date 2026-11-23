@@ -137,6 +137,7 @@ schedules and diffs a log made or used.
 | [2026-11-22](2026-11-22-ravager-transfer-items.md) | The transferred party's items in the sequel: the mod's items and SL's keepsakes as the Loader's own objects, with names and pictures, and a control of money bags |
 | [2026-11-23](2026-11-23-ravager-item-wield.md) | Who may wield the mod's items in the sequel: their weapon kinds and their bracers, robes and cloak in DSCLOG2's class rules; a druid's Ashen Robe worn, refused in the control |
 | [2026-11-23](2026-11-23-ravager-protection.md) | Rings, cloaks, bracers and robes of protection in the sequel: AD&D's limits on AC and their plus on saves (DSCLOG2's sites 43 and 44); Balthbeorn's AC 3 with ring, cloak and robe, 4 in the control; the limits with magical and metal armour and a shield, and the saves in a Fireball (+9, +6, +4) |
+| [2026-11-23](2026-11-23-ravager-boots-of-speed.md) | The Boots of Speed in the sequel: a turn's movement doubled (Ar'anda's Move 24) and AC 2 better in a fight (Terrannus's "other" +0, then -2) |
 
 ## files/
 

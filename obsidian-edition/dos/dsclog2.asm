@@ -6223,6 +6223,29 @@ P_METAL_ARMOUR equ 2             ; hand, any armour)
 P_SHIELD       equ 4
 P_ARMOUR       equ 8
 PROT_SPELL_LAST equ 0xEA         ; (the sequel's spells: its psionic powers EBh on)
+; BOOTS OF SPEED (DSCLOG's BOOTS_AC, BOOTS_MOVE): worn on the feet, the mod's type (SL's 145), AC 2 better
+; in a fight unless Cannot Move, Paralyzed or Slowed (PROT_AC: in [BP-6]), and the movement for a turn in
+; a fight doubled (BOOTS_MOVE, from CAH_MOVE). The sequel has two effects named Slowed (52 and 91).
+PROT_BOOTS     equ 132
+FOOT_SLOT      equ 13
+SPEED_AC       equ 2
+STUCK_FX       equ 66            ; (the sequel's effects: Cannot Move, Paralyzed, Slowed and Slowed)
+PARALYZED_FX   equ 69
+SLOWED_FX      equ 52
+SLOWED_FX_2    equ 91
+; BOOTS_MOVE: AX (a creature's movement for its turn in a fight; DI the combatant) doubled if it wears
+; the Boots of Speed. All else kept.
+boots_move:
+        push si
+        mov si, di
+        call prot_here
+        pop si
+        jc .ret
+        cmp byte [cs:p_boots], 0
+        je .ret
+        shl ax, 1
+        inc word [cs:boots_count]
+.ret:   ret
 prot_ac:
         movzx ax, byte [es:bx + 0x0B]
         cmp cx, PROT_RING
@@ -6233,6 +6256,30 @@ prot_ac:
         je .bracers
         cmp cx, PROT_ROBE
         je .robe
+        cmp cx, PROT_BOOTS
+        je .boots
+        iret
+.boots: cmp byte [IN_COMBAT], 0         ; the Boots of Speed: AC 2 better in a fight, unless held
+        je .out
+        push ax
+        push cx
+        mov ax, si
+        mov cl, STUCK_FX
+        call has_effect
+        je .held
+        mov cl, PARALYZED_FX
+        call has_effect
+        je .held
+        mov cl, SLOWED_FX
+        call has_effect
+        je .held
+        mov cl, SLOWED_FX_2
+        call has_effect
+        je .held
+        sub word [bp - 6], SPEED_AC
+        inc word [cs:boots_count]
+.held:  pop cx
+        pop ax
         iret
 .ring:  call prot_here
         jc .out
@@ -6344,7 +6391,7 @@ prot_here:
 ; PROT_SCAN: what creature DX (DS the game's) wears that the protection rules weigh, in any of its item
 ; lists (as ARMOUR_WORN reads them): P_FLAGS; P_RING, P_RING2 (the plus of a ring of protection on each
 ; hand's finger, 0 for none or less); P_CLOAK (a cloak of protection's plus, worn on the back); P_ROBE (a
-; robe's plus, worn on the chest; 0 none). All kept.
+; robe's plus, worn on the chest; 0 none); P_BOOTS (1 for the Boots of Speed on the feet). All kept.
 prot_scan:
         pusha
         push es
@@ -6352,6 +6399,7 @@ prot_scan:
         mov [cs:p_flags], al
         mov [cs:p_ring], ax             ; (and P_RING2)
         mov [cs:p_cloak], ax            ; (and P_ROBE)
+        mov [cs:p_boots], al
         imul bx, dx, CREATURE_SIZE
         mov [cs:p_creature], bx
         mov cx, 8
@@ -6399,10 +6447,16 @@ prot_scan:
         mov [cs:p_cloak], ah
         jmp .item
 .robe:  cmp di, PROT_ROBE
-        jne .type
+        jne .boots
         cmp al, CHEST_SLOT
         jne .item
         mov [cs:p_robe], ah
+        jmp .item
+.boots: cmp di, PROT_BOOTS
+        jne .type
+        cmp al, FOOT_SLOT
+        jne .item
+        mov byte [cs:p_boots], 1
         jmp .item
 .type:  imul di, di, CU_TYPE_SIZE
         les bx, [ITEM_TYPES_PTR]
@@ -6449,6 +6503,8 @@ p_ring     db 0
 p_ring2    db 0
 p_cloak    db 0
 p_robe     db 0
+p_boots    db 0
+boots_count dw 0                ; (the boots' AC and movement given, for a look in play)
 p_creature dw 0
 prot_count dw 0                 ; (AC counts changed so, and saves weighed, for a look in play)
 prot_saves dw 0
@@ -6684,7 +6740,8 @@ cah_off   dw 0                  ; (off head's swings paying the more)
 ; CAH_MOVE: INT VEC_CAH_MOVE replaces "mov es:[bx+22Eh],ax" (5B838h, SL's PROBE_MOVE site 57566h; 5
 ; bytes: INT + 3 NOPs) where a creature's turn starts, AX its movement (DI the combatant, BX the creature
 ; x 2): a tangled one's turn taken (no movement, its initiative -1, as the game marks one that has
-; acted). The bitmap is cleared at a fight's first round (ACID_ROUND).
+; acted). The bitmap is cleared at a fight's first round (ACID_ROUND). First the Boots of Speed's
+; movement doubled (BOOTS_MOVE).
 MN_TANGLE     equ 10
 KIND_MANUAL   equ 14
 IN_COMBAT     equ 0x13FA            ; DS byte: in a fight
@@ -6752,6 +6809,7 @@ cah_hit:
         popad
 .out:   iret
 cah_move:
+        call boots_move
         mov [es:bx + MOVE_OFF], ax
         cmp di, TANGLE_MOST
         jae .out

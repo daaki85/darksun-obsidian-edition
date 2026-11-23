@@ -28,7 +28,8 @@ FIGHTERS_OFF, ITEM_SIZE, CREATURE_SIZE = 0xC33, 0x17, 0x31
 RING, CLOAK, BRACERS, ROBE = 45, ravager.mod_type(game.CLOAK_TYPE), ravager.mod_type(game.BRACERS_TYPE), \
     ravager.mod_type(game.ROBE_TYPE)
 PLATE, SHIELD, LEATHER = ravager.mod_type(game.PLATE_CHEST_TYPE), ravager.mod_type(game.METAL_SHIELD_TYPE), 140
-FINGER, FINGER2, BACK, ARMS, CHEST, RIGHT_HAND, LEFT_HAND = 4, 11, 12, 0, 9, 3, 10
+FINGER, FINGER2, BACK, ARMS, CHEST, RIGHT_HAND, LEFT_HAND, FOOT = 4, 11, 12, 0, 9, 3, 10, 13
+BOOTS = ravager.mod_type(game.SPEED_BOOTS_TYPE)
 COMBATANT, THING, LIST = 7, 0x300, 0x301  # (the combatant attacked or saving, its creature's list)
 
 
@@ -165,6 +166,31 @@ class ProtectionTests(unittest.TestCase):
         counts, _ = self.ac_counts(mu, [(RING, FINGER, 2)], 0)
         self.assertFalse(counts)
         self.assertEqual(self.save(mu, 5), (0, COMBATANT))
+
+    def test_boots_of_speed(self):
+        """The Boots of Speed on the feet: AC 2 better ([BP-6]) in a fight unless Cannot Move, Paralyzed or
+        Slowed (either of the sequel's two), none out of a fight; a turn's movement doubled (BOOTS_MOVE)."""
+        worn = [(BOOTS, FOOT, 0)]
+        for fight, effect, want in ((1, None, 1), (0, None, 0), (1, 66, 0), (1, 69, 0), (1, 52, 0), (1, 91, 0),
+                                    (1, 9, 1)):
+            mu = self.machine(worn)
+            mu.mem_write(GAME_DS * 16 + 0x13FA, bytes((fight,)))
+            effects = (GAME_DS - (0x47E0 - 0x3E71)) * 16
+            mu.mem_write(GAME_DS * 16 + 0x2100, struct.pack("<H", 0 if effect is None else 1))
+            if effect is not None:
+                mu.mem_write(effects + 0x24D, struct.pack("<HHHB", COMBATANT, 0, 0, effect))
+            with self.subTest(fight=fight, effect=effect):
+                counts, other = self.ac_counts(mu, worn, 0, other=3)
+                self.assertEqual((counts, other), (False, 3 - 2 * want))
+        for feet, want in ((FOOT, 120), (ARMS, 60)):
+            mu = self.machine([(BOOTS, feet, 0)])
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FC, eax=60, edi=COMBATANT,
+                                    eflags=0x2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + self.sym["boots_move"], TSR * 16 + 0xFFF0)
+            with self.subTest(slot=feet):
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), want)
 
     def test_patches(self):
         """The two sites are where the game has what they replace."""
