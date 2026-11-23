@@ -3336,15 +3336,23 @@ SPEC_V2 equ 0x40                ; (+16h's next: the specs base 17, and the start
 SPEC_KINDS_MASK equ 0x1FFFF     ; (the four specs, base 17, in the packed bits' 0-16)
 ROLL_SHIFT equ 17               ; (the starting roll in bits 17-21: Table 7's dice less their count)
 ROLL_UNKNOWN equ 31             ; (no roll kept: a character from before; the Loader puts it in)
+SPEC_V3_MARK equ 0x18000        ; (bits 15 and 16 of the kinds' 17 both set, a number no four base 17
+                                ;   reach (17^4 = 14641h): the specs a set ranked, SPEC_RANK_MASK)
+SPEC_RANK_MASK equ 0x7FFF
+KIND_COUNT equ 22               ; (the weapon kinds: dsloader/specialize.py's KINDS)
 
-; The sheet's +14h..+17h (the game never reads or writes them), in one of three layouts: up to 2.12
+; The sheet's +14h..+17h (the game never reads or writes them), in one of four layouts: up to 2.12
 ; a byte for each of the four specs; in 2.13 (SPEC_PACKED in +16h) the four packed 5 bits each in
-; +14h..+16h, and +17h the character's age (dsloader/aging.py); now (SPEC_V2 too) the four a number
+; +14h..+16h, and +17h the character's age (dsloader/aging.py); then (SPEC_V2 too) the four a number
 ; base 17 in bits 0-16 (each kind + 1, 0 none: 17 values, so four fit in 17 bits, not 20), the
-; starting roll in bits 17-21 (ROLL_UNKNOWN: none kept), and +17h the age. A sheet keeps its layout
-; until something is written to it (SPEC_SET: SPEC_PACK first), so all three are read. A new
-; member's starts with no specs, the creation screen's roll and its age (CR_WEAPONS: AGE_PUT).
-; Each takes the sheet at ES:BX and keeps the rest.
+; starting roll in bits 17-21 (ROLL_UNKNOWN: none kept), and +17h the age; now, with 22 kinds (23
+; values: four base 23 would take 19 bits, and the roll 5 more, of the 22 there are), the four a set
+; (no kind twice) ranked in bits 0-14 (SPEC_RANK: 14,950 sets of up to four of 22), bits 15 and 16
+; set (SPEC_V3_MARK), the roll and age as SPEC_V2's. A V3 sheet's specs read back the kinds in
+; ascending order, then the empty slots. A sheet keeps its layout until something is written to it
+; (SPEC_SET: SPEC_PACK first, then V3), so all four are read. A new member's starts with no specs,
+; the creation screen's roll and its age (CR_WEAPONS: AGE_PUT). Each takes the sheet at ES:BX and
+; keeps the rest.
 ; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none).
 spec_get:
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
@@ -3368,7 +3376,8 @@ spec_get:
         pop ecx
         ret
 
-; SPEC_UNPACK: SPEC_DIGITS the four specs of a SPEC_V2 sheet. SPEC_REPACK: put back. Keep all.
+; SPEC_UNPACK: SPEC_DIGITS the four specs of a SPEC_V2 or V3 sheet. SPEC_REPACK: put back, V3 (each
+; kind once; a second of one dropped). Keep all.
 spec_unpack:
         push eax
         push ecx
@@ -3376,6 +3385,10 @@ spec_unpack:
         push si
         mov eax, [es:bx + SPEC_SLOTS]
         and eax, SPEC_KINDS_MASK
+        mov ecx, eax
+        and ecx, SPEC_V3_MARK
+        cmp ecx, SPEC_V3_MARK
+        je .v3
         mov ecx, 17
         xor si, si
 .digit: xor edx, edx
@@ -3384,7 +3397,42 @@ spec_unpack:
         inc si
         cmp si, SPEC_COUNT
         jb .digit
+        jmp .out
+.v3:    and eax, SPEC_RANK_MASK         ; (the set's rank: SPEC_RANK's, undone from its greatest)
+        mov si, SPEC_COUNT - 1
+.place: mov cl, KIND_COUNT + SPEC_COUNT - 1
+.try:   mov ch, cl                      ; (the greatest C under the rank left: C(CL, SI + 1))
+        call spec_choose
+        cmp edx, eax
+        jbe .found
+        dec cl
+        jmp .try
+.found: sub eax, edx
+        mov dx, si
+        sub cl, dl                      ; (the slot's kind + 1: C's N less the slot)
+        mov [cs:si + spec_sorted], cl
+        dec si
+        jns .place
+        xor si, si                      ; the nonzero ones first, then the empty
+        xor cx, cx                      ; (CX: where the next goes)
+.kinds: mov dl, [cs:si + spec_sorted]
+        or dl, dl
+        jz .kn
+        push si
+        mov si, cx
+        mov [cs:si + spec_digits], dl
         pop si
+        inc cx
+.kn:    inc si
+        cmp si, SPEC_COUNT
+        jb .kinds
+.empty: cmp cx, SPEC_COUNT
+        jae .out
+        mov si, cx
+        mov byte [cs:si + spec_digits], 0
+        inc cx
+        jmp .empty
+.out:   pop si
         pop edx
         pop ecx
         pop eax
@@ -3394,23 +3442,96 @@ spec_repack:
         push ecx
         push edx
         push si
-        xor eax, eax
-        mov si, SPEC_COUNT - 1
-.digit: imul eax, eax, 17
-        movzx ecx, byte [cs:si + spec_digits]
-        add eax, ecx
+        push di
+        mov si, SPEC_COUNT - 1          ; (SPEC_SORTED: the digits, a kind twice made none once)
+.copy:  mov al, [cs:si + spec_digits]
+        mov [cs:si + spec_sorted], al
         dec si
-        jns .digit
+        jns .copy
+        xor si, si
+.dup:   mov al, [cs:si + spec_sorted]
+        or al, al
+        jz .dn
+        lea di, [si + 1]
+.dup2:  cmp di, SPEC_COUNT
+        jae .dn
+        cmp al, [cs:di + spec_sorted]
+        jne .dn2
+        mov byte [cs:di + spec_sorted], 0
+.dn2:   inc di
+        jmp .dup2
+.dn:    inc si
+        cmp si, SPEC_COUNT
+        jb .dup
+        mov cx, SPEC_COUNT              ; (sorted ascending: four, a bubble at most four times)
+.pass:  xor si, si
+.swap:  mov al, [cs:si + spec_sorted]
+        mov ah, [cs:si + spec_sorted + 1]
+        cmp al, ah
+        jbe .ok
+        mov [cs:si + spec_sorted], ah
+        mov [cs:si + spec_sorted + 1], al
+.ok:    inc si
+        cmp si, SPEC_COUNT - 1
+        jb .swap
+        loop .pass
+        xor eax, eax                    ; the rank: the sum of C(v + i, i + 1), v slot i's sorted
+        mov si, SPEC_COUNT - 1
+.rank:  mov cx, si
+        add cl, [cs:si + spec_sorted]
+        mov ch, cl
+        call spec_choose
+        add eax, edx
+        dec si
+        jns .rank
+        or eax, SPEC_V3_MARK
         mov edx, [es:bx + SPEC_SLOTS]
         and edx, ~SPEC_KINDS_MASK
         or edx, eax
         mov [es:bx + SPEC_SLOTS], edx
+        pop di
         pop si
         pop edx
         pop ecx
         pop eax
         ret
+; SPEC_CHOOSE: EDX = C(CH, SI + 1) (the binomial: how many sets of SI + 1 of CH). Others kept.
+spec_choose:
+        push eax
+        push ecx
+        push si
+        mov eax, 1
+        movzx ecx, ch
+        inc si                          ; (K: SI + 1; the product's steps, C(N, J) * (N - J) / (J + 1))
+        xor edx, edx
+        push bx
+        xor bx, bx
+.step:  cmp bx, si
+        jae .done
+        push edx
+        mov edx, ecx
+        sub dx, bx
+        jbe .zero                       ; (N under K: none)
+        imul eax, edx
+        pop edx
+        push ecx
+        movzx ecx, bx
+        inc ecx
+        xor edx, edx
+        div ecx
+        pop ecx
+        inc bx
+        jmp .step
+.zero:  pop edx
+        xor eax, eax
+.done:  pop bx
+        mov edx, eax
+        pop si
+        pop ecx
+        pop eax
+        ret
 spec_digits times SPEC_COUNT db 0
+spec_sorted times SPEC_COUNT + 1 db 0  ; (one past: SPEC_REPACK's last compare reads it)
 
 ; SPEC_FIND: ZF set when kind + 1 AL is in one of the four slots.
 spec_find:
@@ -3440,6 +3561,9 @@ spec_any:
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
         jz .five
         and eax, SPEC_KINDS_MASK
+        cmp eax, SPEC_V3_MARK
+        jb .test                        ; (V2's number: none, 0; V3's at the mark or above, its rank)
+        and eax, SPEC_RANK_MASK
         jmp .test
 .five:  and eax, 0x000FFFFF
 .test:  test eax, eax
@@ -3477,13 +3601,34 @@ spec_pack:
         pop eax
 .ret:   ret
 
-; SPEC_SET: AL (kind + 1, 0 none) into slot SI.
+; SPEC_SET: AL (kind + 1, 0 none) into slot SI, the slots as SPEC_GET reads them now (the sheet made
+; V3 after, which reads them back ascending).
 spec_set:
-        call spec_pack
-        call spec_unpack
+        push ax
+        push si
+        push di
+        mov di, si
+        xor si, si
+.read:  push ax
+        call spec_get
+        mov [cs:si + spec_kept], al
+        pop ax
+        inc si
+        cmp si, SPEC_COUNT
+        jb .read
+        mov [cs:di + spec_kept], al
+        call spec_pack                  ; (the age and roll in V2's place, if an older layout's)
+        mov si, SPEC_COUNT - 1
+.copy:  mov al, [cs:si + spec_kept]
         mov [cs:si + spec_digits], al
+        dec si
+        jns .copy
         call spec_repack
+        pop di
+        pop si
+        pop ax
         ret
+spec_kept times SPEC_COUNT db 0
 
 FIGHTER_CLASS equ 9
 GLADIATOR_CLASS equ 10
@@ -4628,8 +4773,8 @@ kit_allows:
         movzx cx, byte [cs:si + kind_of_type]
         jcxz .no                ; (not a weapon of a kind)
         dec cx
-        mov ax, [cs:kit_dancer]
-        shr ax, cl
+        mov eax, [cs:kit_dancer]
+        shr eax, cl
         test al, 1
         jnz .yes
         jmp .no
@@ -4679,10 +4824,10 @@ kit_allows:
         clc
         ret
 
-kit_blunt  dw KIT_BLUNT
-kit_dancer dw 0x2001           ; bits by kind: the long sword, the bow (a Battle Dancer's)
-kit_shinobi dw 0xF10C           ; bits by kind: dagger, short sword, quarterstaff, chatkcha, bow, sling,
-                                ;   staff sling
+kit_blunt  dd KIT_BLUNT         ; (dwords: KIT_FORBIDS' BT reads 32 bits, the kinds being 22)
+kit_dancer dd 0x2001           ; bits by kind: the long sword, the bow (a Battle Dancer's)
+kit_shinobi dd 0x20F10C         ; bits by kind: dagger, short sword, quarterstaff, chatkcha, bow, sling,
+                                ;   staff sling, darts
 kf_spec    db 0
 kf_off_hand db 0               ; (KIT_FORBIDS: the item going to the off hand)
 kf_sphere  db 0                 ; (KIT_FORBIDS: a ranger's or druid's sphere, 0 air to 3 water)
@@ -4699,7 +4844,7 @@ RESTRICT_TYPE equ 0x14          ; (the item type record's size)
 NO_MATERIAL equ 0xFF            ; (CU_MAT: none)
 LEATHER equ 5
 THIEF_BIT equ 0x400
-PSI_KINDS equ 0x701E            ; bits by kind: club, dagger, short sword, mace, chatkcha, bow, sling
+PSI_KINDS equ 0x20701E          ; bits by kind: club, dagger, short sword, mace, chatkcha, bow, sling, darts
 SPHERE_EARTH equ 0x1D           ; bits by material: stone, obsidian, metal, wood
 SPHERE_FIRE equ 0x08            ; obsidian
 SPHERE_WATER equ 0x03           ; bone, wood
@@ -4899,10 +5044,10 @@ class_forbids_one:
         je .ok
         push cx
         mov cl, dl
-        mov dx, 1
-        shl dx, cl
+        mov edx, 1
+        shl edx, cl
         pop cx
-        test dx, PSI_KINDS
+        test edx, PSI_KINDS
         jnz .ok
         stc
         ret
@@ -5758,44 +5903,44 @@ multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet 
 ; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
 KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
-KIT_MELEE_KINDS equ 0x0FFF      ; (not the chatkcha, bow, sling or staff sling)
+KIT_MELEE_KINDS equ 0xF0FFF     ; (not the chatkcha, bow, sling, staff sling, javelin or darts)
 MYRM_POLEARM equ 9              ; (the polearm's kind, less 1: a Myrmidon's own second weapon spec)
 KIT_POISON_KINDS equ 0x000C     ; a Poisoner's: dagger, short sword
 kinds_allowed:
         push cx
         push dx
         push si
-        push di
+        push edi
         call kit_is_b             ; (a Battle Mage: its own, whatever its class)
         db KIT_BATTLE_MAGE
         jne .archer
-        mov di, KIT_BM_KINDS
+        mov edi, KIT_BM_KINDS
         jmp .all
 .archer:
         call kit_is_b             ; (a Spellarcher: the bow only)
         db KIT_SPELLARCHER
         jne .poisoner
-        mov di, 1 << (BOW_KIND - 1)
+        mov edi, 1 << (BOW_KIND - 1)
         jmp .all
 .poisoner:
         call kit_is_b             ; (a Poisoner: the dagger and short sword)
         db KIT_POISONER
         jne .swash
-        mov di, KIT_POISON_KINDS
+        mov edi, KIT_POISON_KINDS
         jmp .all
 .swash:
         call kit_is_b             ; (a Swashbuckler: the long sword, dagger and short sword)
         db KIT_SWASHBUCKLER
         jne .types
-        mov di, SWASH_KINDS
+        mov edi, SWASH_KINDS
         jmp .all
 .types: xor dx, dx              ; DX each item type of a kind, CL its kind
-        xor di, di
+        xor edi, edi
 .type:  mov si, dx
         mov cl, [cs:si + kind_of_type]
         sub cl, 1
         jc .no
-        bt di, cx
+        bt edi, ecx
         jc .no                  ; (one of its types already let in)
         call kit_allows         ; (a Battle Dancer's long sword, whatever its cleric's sphere)
         jc .let
@@ -5815,34 +5960,34 @@ kinds_allowed:
         call kit_forbids
         jc .no
 .let:   movzx cx, cl
-        bts di, cx
+        bts edi, ecx
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
         call kit_is_b           ; (a Myrmidon: any but the polearm, its second spec given it: weaponchoice.kinds_for)
         db KIT_MYRMIDON
         jne .war
-        btr di, MYRM_POLEARM
+        btr edi, MYRM_POLEARM
 .war:   call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
         jne .ranger             ;   thri-kreen Mind Warrior's chatkcha too)
-        mov ax, di
-        and di, KIT_MELEE_KINDS
+        mov eax, edi
+        and edi, KIT_MELEE_KINDS
         cmp byte [es:bx + 0x18], THRI_KREEN_RACE
         jne .ranger
         call kit_is_b
         db KIT_MIND_WARRIOR
         jne .ranger
-        and ax, KIT_KREEN_KINDS
-        or di, ax
+        and eax, KIT_KREEN_KINDS
+        or edi, eax
 .ranger:
         test word [es:bx + 0x12], 0x200
         jz .all                 ; (a ranger)
         call kit_is_b           ; (a Seeker has no bow expertise: the bow offered, where its sphere allows one)
         db KIT_SEEKER
         je .all
-        btr di, BOW_KIND - 1
-.all:   mov ax, di
-        pop di
+        btr edi, BOW_KIND - 1
+.all:   mov eax, edi
+        pop edi
         pop si
         pop dx
         pop cx
@@ -5933,27 +6078,27 @@ lv_check:
         call kinds_allowed
         push si
         xor si, si              ; less those it has
-.mine:  push ax
+.mine:  push eax
         call spec_get
         mov cx, ax
-        pop ax
+        pop eax
         jcxz .mine_next
         dec cx
-        btr ax, cx
+        btr eax, ecx
 .mine_next:
         inc si
         cmp si, SPEC_COUNT
         jb .mine
         pop si
-        or ax, ax
+        or eax, eax
         jz .ret
         mov cl, [cs:lv_left]    ; (no more than there are to pick)
         xor dx, dx
         xor di, di
-.count: bt ax, di
+.count: bt eax, edi
         adc dl, 0
         inc di
-        cmp di, 16
+        cmp di, KIND_COUNT
         jb .count
         cmp dl, cl
         jae .left
@@ -6072,7 +6217,7 @@ lv_due:
 lv_ask:
         pusha
         push es
-        mov [cs:lv_avail], ax
+        mov [cs:lv_avail], eax
         mov [cs:lv_member], si
         mov byte [cs:lv_mode], 1
         mov byte [cs:showing], 1
@@ -6114,9 +6259,9 @@ PK_TITLE_Y    equ 0x860D4 - 0x860C5 ;   "push 46h": the lines' place)
 PK_GAME_WIDTH equ 0x9F
 PK_GAME_Y     equ 0x46
 PK_PICK_WIDTH equ 214               ; (weaponpages.PICK_WIDTH, PICK_TITLE_Y: the lines under the slots)
-PK_PICK_Y     equ 7 + 3 * 34 + 3
+PK_PICK_Y     equ 7 + 4 * 34 + 3
 PK_PICK_X     equ (320 - 214) / 2   ; (the window's place, "push 2B0050h" before PROBE_PK_WIN: centred,
-PK_PICK_TOP   equ (200 - 156) / 2   ;   weaponpages.PICK_HEIGHT 156)
+PK_PICK_TOP   equ (200 - 182) / 2   ;   weaponpages.PICK_HEIGHT 182)
 PK_GAME_SECOND equ 0xD0
 PK_GAME_INK   equ 0xD3              ; (dark grey)
 PK_PICK_SECOND equ 0xD0             ; (as the game has it)
@@ -6253,7 +6398,7 @@ pk_ops:
         call far [cs:lv_op_call]
         add sp, 10
         inc si
-        cmp si, 16
+        cmp si, KIND_COUNT
         jb .row
         pop es
         popa
@@ -6268,7 +6413,7 @@ probe_pk_click:
         cmp byte [cs:lv_mode], 0
         je .out
         sub ax, PICK_FIRST
-        cmp ax, 16
+        cmp ax, KIND_COUNT
         jae .back
         bt [cs:lv_avail], ax
         jnc .back
@@ -6338,7 +6483,7 @@ lv_expert db 'EXPERT IN', 0
 lv_mode   db 0                  ; 1 while LV_ASK has the pop-up up for weapons
 lv_left   db 0
 lv_have   db 0
-lv_avail  dw 0
+lv_avail  dd 0
 lv_member dw 0
 lv_count_text db '  0', 0
 lv_title  db 'PICK A WEAPON SPECIALTY,', 0
@@ -8763,7 +8908,7 @@ pk_hover:
         mov ah, 6
         mul ah
         add al, ch
-        cmp ax, 16
+        cmp ax, KIND_COUNT
         jb .got
 .none:  mov al, 0xFF
 .got:   cmp al, [cs:lv_hovered]
@@ -10437,6 +10582,7 @@ ef_skills    dw .s0, .s1, .s2, lv_expert
 .s1     db 'MASTER OF', 0
 .s2     db 'GRAND MASTER OF', 0
 ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
+             dw .k16, .k17, .k18, .k19, .k20, .k21
 .k0     db '  LONG SWORD', 0
 .k1     db '  CLUB', 0
 .k2     db '  DAGGER', 0
@@ -10453,8 +10599,15 @@ ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k
 .k13    db '  BOW', 0
 .k14    db '  SLING', 0
 .k15    db '  STAFF SLING', 0
+.k16    db '  TWO-HAND SWORD', 0
+.k17    db '  LOTULIS', 0
+.k18    db '  DOUBLE SPEAR', 0
+.k19    db '  TRIKAL', 0
+.k20    db '  JAVELIN', 0
+.k21    db '  DARTS', 0
 
 wp_plain   dw 81, 18, 17, 115, 20, 22, 2, 112, 3, 19, 44, 21, 48, 1, 64, 0   ; (weaponchoice.PLAIN's types, by kind)
+           dw 148, 149, 150, 151, 152, 153
 
 ; WP_CLASSES: AL 1 if the sheet being made has a fighter, gladiator or ranger class, AH 1 if a
 ; cleric, druid or ranger one (a sphere). Others kept.
@@ -12046,7 +12199,7 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
               db 10, 0, 0, 0, 0, 0, 0, 0, 3   ; (136: the air clerics' metal dagger, Galefang's)
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
               db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
-              db 0, 0, 0, 0, 0, 0             ; (148-153: Wake of the Ravager's kinds; the net, 154, none)
+              db 17, 18, 19, 20, 21, 22       ; (148-153: Wake of the Ravager's kinds; the net, 154, none)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -17342,6 +17495,10 @@ large_dice   db 1, 12, 0            ; long sword: 1d12
              db 0, 0, 0             ; cahulaks: 1d6
              db 1, 4, 0             ; chatkcha: 1d4+2 (1d6+2: the +2 against any size)
              db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; bow, sling, staff sling: as small
+             db 3, 6, 0             ; two-handed sword: 3d6
+             db 1, 12, 0            ; lotulis: 1d12 (the Dark Sun weapons guide's 1d10/1d12)
+             db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; double spear, trikal, javelin: as small
+             db 1, 2, 0             ; darts: 1d2
 is_large:                           ; CF if combatant AX is large (see SIZE). DS the game's; all kept.
         pusha
         push es

@@ -120,6 +120,12 @@ weak material's penalty, STR and mastery's +3 damage add as ever.
 | bow | 1d8 | 1d8 | 1d10 | 1d10 |
 | sling | 1d4 | 1d4 | 1d6 | 1d6 |
 | staff sling | 1d3 | 1d3 | 1d4 | 1d4 |
+| two-handed sword | 1d10 | 3d6 | 1d12 | 3d8 |
+| lotulis | 1d10 | 1d12 | 1d12 | 1d20 |
+| double spear | 1d8 | 1d8 | 1d10 | 1d10 |
+| trikal | 1d10 | 1d10 | 1d12 | 1d12 |
+| javelin | 1d6 | 1d6 | 1d8 | 1d8 |
+| darts | 1d3 | 1d2 | 1d4 | 1d3 |
 
 A bow's, sling's or staff sling's dice are the weapon's own, as the game rolls them for a shot (a
 bow 1d8 with the game's arrows); missile weapons have no large dice of their own. The staff sling's
