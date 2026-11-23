@@ -12,7 +12,7 @@ hammer's nearest); restrictions treat them as the game does.
 
 The kinds come in the order of the weapon window's slots, long sword first: the default for a
 pick left unmade; a gladiator's second is the club, the next. The last six are Wake of the Ravager's
-kinds (game.RAVAGER_TYPES; the net, thrown to hold, is none).
+kinds (game.RAVAGER_TYPES).
 """
 
 from typing import Dict, List, Optional, Tuple

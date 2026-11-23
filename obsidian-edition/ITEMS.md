@@ -279,7 +279,6 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/trikal.png) | trikal | wood | Jark | — | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)) |
 | ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | — | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | — | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
-| ![](docs/items/net.png) | net | — | Bowyer | — | **new**, from Wake of the Ravager: 1d2, thrown from the missile slot; casts Hold Person on whatever it hits; no weapon spec |
 
 ## Every mundane armour piece
 

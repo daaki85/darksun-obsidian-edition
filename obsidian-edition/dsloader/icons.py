@@ -397,7 +397,7 @@ def crown_icon(_rows: Rows = None) -> Rows:
 # two-handed sword the obsidian long sword's, its blade longer; the lotulis the gythka's, its blades in
 # the stone pick's blue-greys with a hook back from each; the double spear, the trikal and the javelin
 # the quarterstaff's, a flint head on each end, three blades on its head, or thinned to a shaft with a
-# head; the darts and the net drawn
+# head; the darts drawn
 def longer_blade(rows: Rows, steps: int = 3, cut: int = 8) -> Rows:
     """A sword drawn from top left to bottom right, its blade STEPS diagonal steps longer: the
     pixels from row CUT down moved down and right STEPS, the row above CUT repeated down the gap."""
@@ -492,28 +492,10 @@ DART = ("G....",
         "..S..",
         "...SR",
         "...RS")
-# a net: R its cords, k the knots' shadows
-NET = ("..R...R...R..",
-       ".RkR.RkR.RkR.",
-       "R...R...R...R",
-       ".R.R.R.R.R.R.",
-       "..R...R...R..",
-       ".R.R.R.R.R.R.",
-       "R...R...R...R",
-       ".RkR.RkR.RkR.",
-       "..R...R...R..",
-       ".R.R.R.R.R.R.",
-       "R...R...R...R",
-       ".R.R.R.R.R.R.",
-       "..R...R...R..")
 
 
 def darts_icon(_rows: Rows = None) -> Rows:
     return drawn(DART, {"G": 213, "S": 139, "R": 202}, ((0, 3), (4, 1), (8, 0)), (13, 8))
-
-
-def net_icon(_rows: Rows = None) -> Rows:
-    return drawn(NET, {"R": 138, "k": 129}, ((0, 0),), (13, 13))
 
 
 def ironwhirl_icon(rows: Rows) -> Rows:
@@ -656,7 +638,6 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
     ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
     ("Darts", 0xFC0E, 2690, 2691, darts_icon),
-    ("Net", 0xFC0E, 2692, 2693, net_icon),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -1286,7 +1267,7 @@ def _ravager_kinds() -> Dict[int, str]:
     from . import game
     return {game.TWOHAND_SWORD_TYPE: "Two-hand Sword", game.LOTULIS_TYPE: "Lotulis",
             game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
-            game.DARTS_TYPE: "Darts", game.NET_TYPE: "Net"}
+            game.DARTS_TYPE: "Darts"}
 
 
 RAVAGER_KINDS = _ravager_kinds()  # (any plus: one picture each kind)

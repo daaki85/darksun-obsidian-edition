@@ -31,7 +31,7 @@ axe; great axe, pick, quarterstaff, polearm, gythka, cahulaks; chatkcha, bow, sl
 two-handed sword, lotulis; double spear, trikal, javelin, darts. The last six are Wake of the
 Ravager's kinds, which the mod brings into Shattered Lands ([new items](FEATURES.md#new-items)):
 the double spear and the trikal are for gladiators only, as in the sequel (greyed for a fighter or
-ranger), and the net, thrown for its Hold Person, has no weapon spec. The lotulis, double spear and
+ranger). The sequel's net is left out. The lotulis, double spear and
 trikal have [traits](FEATURES.md#lotulis-and-double-spear) of their own for a specialist. They take in
 the game's weapons of every material and its named ones (Bloodwrath, Swiftbite and the like are
 long swords; [the items by weapon spec](ITEMS.md#by-weapon-spec)); gloves are none. The weapons

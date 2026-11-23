@@ -140,7 +140,7 @@ WEAPON_SHAPES: Dict[int, str] = {
     # Wake of the Ravager's kinds: the long blade a sword, the double-ended staves the gythka's and the
     # staff's, the trikal a polearm, the thrown ones a chatkcha
     game.TWOHAND_SWORD_TYPE: SWORD, game.LOTULIS_TYPE: GYTHKA, game.DOUBLE_SPEAR_TYPE: STAFF,
-    game.TRIKAL_TYPE: POLEARM, game.JAVELIN_TYPE: CHATKCHA, game.DARTS_TYPE: CHATKCHA, game.NET_TYPE: CHATKCHA,
+    game.TRIKAL_TYPE: POLEARM, game.JAVELIN_TYPE: CHATKCHA, game.DARTS_TYPE: CHATKCHA,
 }
 FLAME_BLADE = 29
 

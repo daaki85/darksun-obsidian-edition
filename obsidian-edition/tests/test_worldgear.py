@@ -62,16 +62,14 @@ class WorldGearTests(unittest.TestCase):
 
     def test_ravager_kinds(self):
         """Wake of the Ravager's weapon kinds: each its own type and name (DSCLOG's), sold (the Bowyer the
-        thrown ones; the net with Hold Person on a hit), and the sequel's own type noted for each."""
+        thrown ones; no net), and the sequel's own type noted for each."""
         self.assertEqual([icons.which(r) for g in worldgear.GIFTS if g.name == "Bowyer" for r in g.items],
-                         ["Javelin", "Darts", "Net"])
-        net = next(r for g in worldgear.GIFTS if g.name == "Bowyer" for r in g.items if icons.which(r) == "Net")
-        self.assertEqual(net[worldgear.ITEM_SPELL], worldgear.HOLD_PERSON + 1)
+                         ["Javelin", "Darts"])
         specs = (worldgear.TWOHAND_SWORD, worldgear.LOTULIS, worldgear.DOUBLE_SPEAR, worldgear.TRIKAL,
-                 worldgear.JAVELIN, worldgear.DARTS, worldgear.NET)
-        self.assertEqual([s[0] for s in specs], list(range(game.GAME_TYPES + 33, game.GAME_TYPES + 40)))
+                 worldgear.JAVELIN, worldgear.DARTS)
+        self.assertEqual([s[0] for s in specs], list(range(game.GAME_TYPES + 33, game.GAME_TYPES + 39)))
         self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs])
-        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 71, 100, 101])
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 100, 101])
         for spec in specs:
             self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
             self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])

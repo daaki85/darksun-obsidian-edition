@@ -20,7 +20,8 @@ from dsloader.gamepatch import (VEC_WORN, VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST,
                                   VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_NAMES_SIZE, VEC_STEALTH, VEC_TYPES_FILL,
                                   VEC_TYPES_SIZE, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
                                   VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_CR_SPELLS, ROUND_SITE)
-from dsloader import game, restrict, specialize
+from dsloader import game, npcitems, restrict, specialize
+from dsloader import names as item_names
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import test_restrict  # noqa: E402 (its item types and sheets)
@@ -2868,11 +2869,10 @@ class KindsAllowedTests(unittest.TestCase):
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
                game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
                game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F),
-               # (Wake of the Ravager's kinds, npcitems.TYPES' last seven: the double spear and trikal gladiators')
+               # (Wake of the Ravager's kinds, npcitems.TYPES' last six: the double spear and trikal gladiators')
                game.TWOHAND_SWORD_TYPE: (1, 3, 0x166E), game.LOTULIS_TYPE: (1, 2, 0x167A),
                game.DOUBLE_SPEAR_TYPE: (1, 0x80, 0x1040), game.TRIKAL_TYPE: (1, 0x80, 0x1040),
-               game.JAVELIN_TYPE: (0x12, 0x83, 0x127E), game.DARTS_TYPE: (0x12, 0x80, 0x1FF3),
-               game.NET_TYPE: (0x12, 0x40, 0x167A)}
+               game.JAVELIN_TYPE: (0x12, 0x83, 0x127E), game.DARTS_TYPE: (0x12, 0x80, 0x1FF3)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):
@@ -2893,7 +2893,7 @@ class KindsAllowedTests(unittest.TestCase):
         mu.mem_write(TSR * 16, image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where KINDS_ALLOWED returns)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
-        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(game.NET_TYPE + 1)))  # (KIND_TYPES: the game's and the Loader's)
+        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(game.DARTS_TYPE + 1)))  # (KIND_TYPES: the game's and the Loader's)
         sheet = test_restrict.sheet
         combos = [(9,), (13,), (10,), (11,), (12,), (17,), (9, 12), (9, 17), (9, 11), (13, 5), (13, 12)]
         for c in range(1, 5):
@@ -5258,7 +5258,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc9105" "8356fe00"))  # 57 names of 25 bytes: 591h
+        size = image.find(b"\x81\x46\xfc" + struct.pack("<H", item_names.EXTRA * 25) + bytes.fromhex("8356fe00"))  # (item_names.EXTRA names of 25 bytes)
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -5277,7 +5277,8 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9475), (0xFF00, 0xFF00 + 1425)):  # (57 names of 25 bytes)
+        room = item_names.EXTRA * 25  # (names.EXTRA names of 25 bytes)
+        for size, want in ((8050, 8050 + room), (0xFF00, 0xFF00 + room)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -5567,7 +5568,7 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc2003" "8356fe00"))  # 40 types of 20 bytes: 320h
+        size = image.find(b"\x81\x46\xfc" + struct.pack("<H", len(npcitems.TYPES) * 20) + bytes.fromhex("8356fe00"))  # (TYPES_EXTRA types of 20 bytes)
         names_fill, fill = fill_probes(image)
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -5586,12 +5587,12 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 800 bytes more reserved, and after the read
+        """The game's 115 types (2300 bytes): 20 bytes more reserved for each of DSCLOG's, and after the read
         DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
         from dsloader import npcitems
         self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
         self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 3100)
+        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2300 + 20 * len(npcitems.TYPES))
         self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
         at = self.TYPES_SEG * 16 + 115 * 20

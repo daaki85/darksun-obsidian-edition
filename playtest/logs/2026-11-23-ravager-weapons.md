@@ -1,8 +1,8 @@
 # Test log: Wake of the Ravager's weapons in Shattered Lands (2026-11-23)
 
 Branch `claude/sl-ravager-weapons`: the sequel's seven weapon kinds the game has none of (a
-two-handed sword, the lotulis, the double spear, the trikal, the javelin, darts and a net), six
-weapon specs for them (the net none), and the traits of the lotulis, double spear and trikal. DOSBox
+two-handed sword, the lotulis, the double spear, the trikal, the javelin, darts and, at first, a
+net, which the user then left out), six weapon specs for them, and the traits of the lotulis, double spear and trikal. DOSBox
 with the Loader's patched game, the window 320x240, `buildcheck.py` OK before each play. Each step
 has a control run on `origin/obsidian-edition` (a worktree; its own `playtest/loadsave.sh`, so its
 own DSCLOG). Every change below was in memory; nothing was saved (`"autosave": false`,
@@ -63,6 +63,26 @@ x thing) and held (`foeset.py N eff=34`), then Tab to the held one and Return.
   round, the Bone Long Sword in the right hand, two held Guards beside her): both swings on the
   same Guard (`Guard now 29/50 HP (-21)`, `Guard now 13/50 HP (-16)`), no second foe.
 
+## 3. The trikal's lost turn, one foe told apart (the coordinator's ask)
+
+The trip line came up in section 2, but every foe near was an "Arena Guard", so the turn it lost
+couldn't be seen. Played again from `fountain-user`, the same set-up (Jenna a gladiator 9, two
+attacks a round, the trikal her weapon spec, in her right hand), and one Arena Guard (combatant 34)
+named apart and kept up: `foeset.py 34 name=Tripme hp=200` (`name=` new in foeset.py), put beside
+her (`placefoe.py 34 1 0 1`), not held.
+
+- Round 1: `Jenna hits Tripme for 15: 1d10 = [5] +2 specialized +8 STR 20 / Jenna's trikal trips
+  Tripme? Save against paralysis: d20 = 2, needs 13+ -> tripped: loses its next turn`.
+- Round 2: `Round 2: Tripme 29, Guard 28, Arena Guard 26, Arena Guard 23, Arena Guard 22`: Tripme
+  first of the foes, and **no "Tripme's turn"** in the round: the Guard's, three Arena Guards' and
+  the Templar's turns, then Round 3.
+- Rounds 3 and 4: `Tripme's turn`, each time shooting at Ester with its bow (`Tripme attacks Ester
+  with Wooden Bow (1d8) ...`): it acts again once the turn is lost.
+
+The net was taken out afterwards (the user's call). The build without it: `buildcheck.py` OK,
+`fountain-user` loads, and an item made darts (`setitem.py 115 rec=...`) reads "Wooden Darts", type
+153, its name entry 377 (0x179), as before.
+
 ## What was learned (in the guide)
 
 - A member with no Move left at the start of a turn gets the END menu at once, and a Tab + Return
@@ -75,5 +95,6 @@ x thing) and held (`foeset.py N eff=34`), then Tab to the held one and Return.
 - A sheet's address moves with the build (DSCLOG's size moves DS): read it from `sheetedit.py`
   before writing to it, every load.
 - `specset.py MEMBER KIND...` writes a member's weapon specs in memory, the first kept first.
+- `foeset.py C name=S` names one foe apart, so the dice log shows its turns (and the ones it loses).
 
 No new area: no water to note.

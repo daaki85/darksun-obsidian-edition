@@ -294,12 +294,11 @@ def magic_weapon(spec: Tuple[int, int, int, int], plus: int, spell: int) -> byte
 # named for its kind (DSCLOG's names) and priced as the game prices its plain weapons of the
 # material (obsidian and stone blades in the tens; the Dark Sun weapons guide's costs, the two-handed
 # sword's 1,500 out of line): sold by the Weapon Merchant (the obsidian and stone ones), Jark (the
-# gladiators' two) and the Bowyer (the thrown ones). The net throws Hold Person (as a weapon's spell:
-# on whatever it hits, every hit), priced as a missile weapon with a spell.
+# gladiators' two) and the Bowyer (the thrown ones). Not the sequel's net (the user's call, 2026-11-23).
 TWOHAND_SWORD_NAME, LOTULIS_NAME, DOUBLE_SPEAR_NAME, TRIKAL_NAME = 0x174, 0x175, 0x176, 0x177
-JAVELIN_NAME, DARTS_NAME, NET_NAME = 0x178, 0x179, 0x17A
+JAVELIN_NAME, DARTS_NAME = 0x178, 0x179
 RAVAGER_NAMES = {TWOHAND_SWORD_NAME: b"Two-hand Sword", LOTULIS_NAME: b"Lotulis", DOUBLE_SPEAR_NAME: b"Double Spear",
-                 TRIKAL_NAME: b"Trikal", JAVELIN_NAME: b"Javelin", DARTS_NAME: b"Darts", NET_NAME: b"Net"}
+                 TRIKAL_NAME: b"Trikal", JAVELIN_NAME: b"Javelin", DARTS_NAME: b"Darts"}
 NAMES.update(RAVAGER_NAMES)
 TWOHAND_SWORD = (game.TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2680, 150)
 LOTULIS = (game.LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2682, 20)
@@ -307,15 +306,12 @@ DOUBLE_SPEAR = (game.DOUBLE_SPEAR_TYPE, DOUBLE_SPEAR_NAME, 0x10000 - 2684, 25)
 TRIKAL = (game.TRIKAL_TYPE, TRIKAL_NAME, 0x10000 - 2686, 24)
 JAVELIN = (game.JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2688, 50)
 DARTS = (game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2690, 20)
-NET = (game.NET_TYPE, NET_NAME, 0x10000 - 2692, 500)
-HOLD_PERSON = 30  # (the game's wizard Hold Person)
 
 
 # priced as Shadowseeker (a plus and a spell: 22,000), 20,800 a plus more
 SEARING_BLADE_VALUE = 2 * PLUS_VALUE + 1200
 SEARING_BLADE = magic_weapon((game.OBSIDIAN_SHORT_SWORD_TYPE, SEARING_BLADE_NAME, 0x10000 - 2550, SEARING_BLADE_VALUE),
                              2, FOCUS_HEAT)
-NET_ITEM = magic_weapon(NET, 0, HOLD_PERSON)
 
 
 def is_old_flame_blade(rec: bytes) -> bool:
@@ -373,7 +369,7 @@ GIFTS: Tuple[Gift, ...] = (
                                            BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER, OBSIDIAN_CAHULAKS,
                                            DOUBLE_SPEAR, TRIKAL)),
          (106,), 0x1A),
-    Gift("Bowyer", (weapon(JAVELIN), weapon(DARTS), NET_ITEM), (283,), 0x0B),
+    Gift("Bowyer", (weapon(JAVELIN), weapon(DARTS)), (283,), 0x0B),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
@@ -512,7 +508,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               # Wake of the Ravager's: the obsidian Long Sword (45), the Gythka (44), the Quarterstaff
               # (3), the Polearm (19) and the Chatkcha (48)
               game.TWOHAND_SWORD_TYPE: 45, game.LOTULIS_TYPE: 44, game.DOUBLE_SPEAR_TYPE: 3,
-              game.TRIKAL_TYPE: 19, game.JAVELIN_TYPE: 48, game.DARTS_TYPE: 48, game.NET_TYPE: 48,
+              game.TRIKAL_TYPE: 19, game.JAVELIN_TYPE: 48, game.DARTS_TYPE: 48,
               # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
               # Speed: the Boots (68), as npcitems.TYPES makes their types
               game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,

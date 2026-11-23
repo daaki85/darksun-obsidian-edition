@@ -130,7 +130,7 @@ raised before stopping.
   the right hand (`itemedit.py M 10 slot=3`): one in the left hand (slot 10) swings once a round
   whatever the rate. A second weapon moved to slot 20 is still worn and still swings: make it
   something else (`setitem.py N 60`). The Loader's types with no SEGOBJEX record (Wake of the
-  Ravager's, 148-154) need `rec=` (`worldgear.weapon(worldgear.LOTULIS).hex()`); `specset.py M
+  Ravager's, 148-153) need `rec=` (`worldgear.weapon(worldgear.LOTULIS).hex()`); `specset.py M
   KIND...` gives the member the weapon specs. **A sheet's address moves with the build** (the
   origin worktree's DSCLOG put Jenna's at 669FBh, the branch's at 66A3Bh): read it from
   `sheetedit.py` at every load before writing to it.

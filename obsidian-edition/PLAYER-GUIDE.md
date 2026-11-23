@@ -1957,7 +1957,6 @@ class](#magic-weapons-by-class).
 | Lotulis | Wake of the Ravager's: stone, 1d10 (1d12 against a large target), two-handed, two-headed ([below](#lotulis-double-spear-and-trikal)) |
 | Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([below](#lotulis-double-spear-and-trikal)) |
 | Javelin, darts | Wake of the Ravager's, thrown from the missile slot: obsidian 1d6, one a round; darts 1d3, two a round |
-| Net | Wake of the Ravager's, thrown from the missile slot: 1d2, and Hold Person on whatever it hits; no weapon spec |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

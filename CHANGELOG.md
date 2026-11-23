@@ -60,10 +60,10 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **New**
-- Wake of the Ravager's seven weapons the game has none of: a two-handed sword, the lotulis, the
-  double spear and trikal (gladiators only, as in the sequel), the javelin, darts and a net that
-  throws Hold Person, each with a name and an icon of its own, sold in Teaquetzl and Kel's caravan.
-- Six weapon specs for them (the net has none): the weapon window grows to four rows of six, the
+- Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
+  double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
+  name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
+- Six weapon specs for them: the weapon window grows to four rows of six, the
   title under them, and the specs are stored in a new layout (v3) that keeps the first pick first;
   older saves read as before.
 - Their traits, for a specialist: the lotulis' and double spear's last swing of a round goes to a

@@ -573,9 +573,9 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
 
 Where the traits come from: [the Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html)'s
 entries for Wake of the Ravager's weapons, for a specialist (`SPEC_OF` at `SPEC_SPECIAL` or above:
-its weapon spec chosen, specialized or a master). The types (148-154, DSCLOG's `EXTRA_TYPES`' last
-seven, `game.RAVAGER_TYPES`) and their kinds (16-21, `KIND_OF_TYPE`) are the Loader's; the net has
-no kind. Both traits ride the cahulaks' sites, with the same rule:
+its weapon spec chosen, specialized or a master). The types (148-153, DSCLOG's `EXTRA_TYPES`' last
+six, `game.RAVAGER_TYPES`) and their kinds (16-21, `KIND_OF_TYPE`) are the Loader's; the sequel's
+net is left out. Both traits ride the cahulaks' sites, with the same rule:
 
 - **The trikal** (type 151): `CAH_HIT` takes it as the cahulaks, a man-sized or smaller target not
   felled and not in `BIG`, with `TG_HOW` its save (the sheet's +37h, paralysis: `TRIP_SAVE`) and

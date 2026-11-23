@@ -12229,7 +12229,7 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
               db 10, 0, 0, 0, 0, 0, 0, 0, 3   ; (136: the air clerics' metal dagger, Galefang's)
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
               db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
-              db 17, 18, 19, 20, 21, 22       ; (148-153: Wake of the Ravager's kinds; the net, 154, none)
+              db 17, 18, 19, 20, 21, 22       ; (148-153: Wake of the Ravager's kinds)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -23375,7 +23375,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 40
+TYPES_EXTRA equ 39
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -29698,11 +29698,6 @@ extra_types:
         ; and psionicists too)
         db 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04
         db 0x03, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; a net: thrown as the javelin, no material (+8: 40h), range 3, one a round, 1d2 bludgeoning
-        ; (the item's Hold Person does the work: dsloader/worldgear.py), 10 lb, for warriors,
-        ; thieves, druids and earth and water clerics (+10h: 167Ah, the sequel's)
-        db 0x12, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x40, 0x0C, 0x03, 0x02
-        db 0x02, 0x01, 0x00, 0x00, 0x7A, 0x16, 0x00, 0x00
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
@@ -29777,12 +29772,11 @@ extra_names:
         xname "Ironwhirl"               ; a metal cahulaks +2)
         xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
         xname "Two-hand Sword"          ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
-        xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last seven)
+        xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last six)
         xname "Double Spear"
         xname "Trikal"
         xname "Javelin"
         xname "Darts"
-        xname "Net"
 NAMES_EXTRA  equ NAMES_LISTED           ; (the names above, counted: the room the game's table gets)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in

@@ -946,7 +946,8 @@ game's data: it is one player's account.
 
 - **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
   apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
-  all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
+  all "Champion"; `foeset.py C name=S` writes it, logs/2026-11-23-ravager-weapons.md: a tripped
+  foe's lost turn seen that way), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
   combatant number `foeset.py` lists), then `KEEP_HP=1 HEAL=1 sh fightout.sh` (the foes' HP kept,
   the party healed each pass): the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
