@@ -2,7 +2,7 @@
 
 Enable **What the party wears** to see class outfits on human and dwarf party members. Humans wear the outfit for their active class. Dwarves wear one of twelve outfits selected from their class slots. The galleries show the base colors with equipment slots empty.
 
-[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Equipment](#equipment)
+[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfit study](#elf-outfit-study) · [Equipment](#equipment)
 
 ## Dwarf outfits
 
@@ -35,6 +35,10 @@ Each human gallery shows all eight outfits in sync on game terrain. The caption 
 In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The short loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](human-priest-profile.gif)
 
 ![Eight male human class outfits animated through all 29 map poses](human-male.gif)
+
+## Elf outfit study
+
+The first elf art pass pairs the original female and male figures with their cleaned bodies and three outfits: Gladiator, Fighter, and Cleric. Each figure follows its own 29 native poses. The playable elf roster and review sheets are on the study page. [Watch the elf animation and inspect individual poses](elves.md)
 
 ## Equipment
 
