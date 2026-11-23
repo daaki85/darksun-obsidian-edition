@@ -919,7 +919,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
   the Tome of Understanding (+1 WIS). The sequel's own rules hold where they differ: Focus Heat burns
-  for 2d6+6, and an item is used from its box only in a fight, on its owner's turn. Still to come:
+  for 2d6+6. The tome is read from its box (right-click it in the pack, then its icon) in a fight, on its
+  reader's turn: outside a fight its icon does nothing. Still to come:
   the Boots and Cloak of Elvenkind.
 - **Kits, weapon specs and spells** come across with each character.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a

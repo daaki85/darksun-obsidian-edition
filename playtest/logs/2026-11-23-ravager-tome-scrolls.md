@@ -25,23 +25,27 @@ box's icon (opener 99260h, handler 995AFh, the use at 999CDh: `[bp-4]` holds the
 
 Test edits in memory, never saved (scratch `mktome.py` turns a keepsake into a tome).
 
-- **Items work only in a fight, on the member's turn.** Outside a fight the box's icon does nothing:
-  the opener sets `[9D8Ch]` from its caller's flag, 1 only in a fight. That holds for the sequel's
-  own Spellbook of Blur too. (Earlier, learning from a transferred scroll "did nothing" for this
-  reason.)
+- **The tome's icon works only in a fight, on the member's turn.** Outside a fight it does nothing:
+  the opener sets `[9D8Ch]` from its caller's flag, 1 only in a fight. (A spellbook is different: the
+  sequel's own scrolls were learnt outside a fight on 2026-11-21, logs/2026-11-21-ravager-int.md.)
 - **The tome, Lex's turn**: the box ("Scroll", 5000), its icon clicked: the tome gone from the pack,
   Lex's WIS 6 to 7 (sheet and creature, DSCLOG2's `tomes_read` 1). A second tome (a keepsake made one
   in memory): WIS 7 to 8 on the inventory screen, `tomes_read` 2.
   ![](img/2026-11-23-ravager-tome-read.png)
 - **The message was not seen**: no text in the inventory's bar nor on the map after the box closed
-  (a 20-a-second burst). The sequel's own Spellbook of Blur, clicked the same way, shows nothing
-  either and stays in the pack: whether Lex learned Blur is **not yet checked** (her spell list, or a
-  wizard who can).
+  (a 20-a-second burst). That is the game's own way: its message routine (560h:2Ah) shows nothing on
+  the inventory screen for its own scrolls either (logs/2026-11-21-ravager-int.md).
+- **Kalzith's Blur, as the sequel's Spellbook of Blur (object 31010), in a fight** (a second run,
+  Jenna's turn and then Lex's, `ravfight.py until 0`): the icon clicked, the book kept and no bit set in
+  Lex's known spells (320h:39Ch, spell 12), also with its spell edited in memory to 36 (a spell she
+  lacks, not a self spell). The gate was not found (the box's handler 995AFh reaches the learning only
+  through 9986Fh, `[bp+18h]` < 8 first). The book is the sequel's own object with the sequel's spell, so
+  it learns as the sequel's own spellbooks do: outside a fight, played on 2026-11-21.
 - **Not played**: the WIS 25 case (unit test only).
 
 ## Open
 
-- Where the routine's message shows (if it does in a fight's inventory), and a Kalzith scroll learned
-  by a wizard (the sequel's own spellbook object, so the sequel's rule).
+- Why a spellbook's icon did nothing in a fight, and a Kalzith book learnt outside one by a wizard in
+  a transferred party.
 
 No new area, no water noted.
