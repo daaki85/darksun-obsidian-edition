@@ -1124,6 +1124,11 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
 - **The inventory panel's saves** are the sheet's own: a ring's save bonus shows only in a fight.
 - **The first click.** After `RAV_MENU=1` the first click on the title menu is often lost: click
   CREATE CHARACTERS again.
+- **A hung display** (2026-11-23, 01:00 UTC). During the Draxans' fight, a Hold Person cast left
+  DOSBox gone. The `import -window` that followed, on the dead window, never returned, and the Xvfb on
+  :55 stopped answering (`timeout 10 xdpyinfo` fails), even after that import and every DOSBox were
+  killed. Which came first is not known. Only a new Xvfb gets the display back, so take every grab
+  with `timeout`.
 
 ### The sequel's spells in a fight (2026-11-21)
 
