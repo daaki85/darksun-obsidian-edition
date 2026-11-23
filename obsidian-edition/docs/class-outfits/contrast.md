@@ -1,8 +1,14 @@
 # Dwarf outfit contrast at game size
 
-The dwarf Cleric’s cream folds and the Psionicist’s teal tunic read clearly beside the humans. The contrast pass focused on three smaller details that were harder to see in motion.
+The current dwarf outfits use a little more separation between the lit and shaded sides of each garment. Both figures and all twelve builds use these colors.
 
-[See the original dwarf comparison, including the recoil close-ups](original-dwarves.md)
+## Current garments beside the previous revision
+
+![Female and male dwarves in five single-class outfits, each with the previous and current garment shown alone and on the figure](dwarf-material-contrast.png)
+
+The small figure is at game size on paving. Beside it, the clothing alone is enlarged 3×. In front idle, follow the lighter brown across the Fighter’s jerkin and the Gladiator’s harness and wrap. The Thief’s slate ridge is easiest to follow as the figure turns away. The Cleric’s cream fold has a deeper, cooler shadow, and the darkest edge of the Psionicist’s tunic separates more clearly from the teal beside it. The pale bone caps and narrow teal sash keep their approved shapes and colors.
+
+[Watch all 29 poses beside the original game dwarves and the previous revision](dwarf-material-contrast.gif) · [Inspect the original dwarf comparison and recoil close-ups](original-dwarves.md)
 
 ## Gladiator, Fighter, and Thief before and after
 
@@ -44,7 +50,7 @@ Each party pair shows the woman on the left and the man on the right in front id
 | Cleric | 149 | 141 | 166 | 146 | 97 · Priest |
 | Fighter | 123 | 118 | 120 | 110 | 157 · Warrior |
 | Gladiator | 123 | 111 | 108 | 121 | 145 · stock dwarf |
-| Psionicist | 122 | 112 | 106 | 112 | 120 · Mage |
+| Psionicist | 123 | 112 | 106 | 112 | 120 · Mage |
 | Thief | 97 | 97 | 122 | 100 | 142 · Thief |
 
 For each pose, the range is the difference between the 90th and 10th percentile brightness of opaque figure pixels, using grayscale weights of 0.299 red, 0.587 green, and 0.114 blue on a 0–255 scale. The table gives the median over 27 poses. It includes skin, hair, clothing, and any gear drawn into the original figure. The terrain sheet shows the separate question of how well a particular edge stands out against the ground.

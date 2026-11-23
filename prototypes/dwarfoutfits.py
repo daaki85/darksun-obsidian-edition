@@ -59,18 +59,18 @@ POSES = [
     (6, 1, 6, 5, 7, 11),
 ]
 ROLES = ("Warrior", "Thief", "Priest", "Mage", "Druid", "Ranger", "Gladiator", "Psionicist")
-LEATHER = (208, 88, 207, 92, 96)
+LEATHER = (208, 88, 207, 94, 98)
 BONE = (205, 206, 199, 155)
-HIDE = (88, 92, 95, 168)  # turned edge, shadow, face and worn leather
-HOOD = (208, 17, 20, 24, 28)
-LIT_HOOD = (*HOOD[:3], 25, HOOD[4])
-CREAM = (207, 194, 61, 199, 155)
+HIDE = (88, 91, 96, 168)  # turned edge, shadow, face and worn leather
+HOOD = (208, 17, 20, 25, 29)
+LIT_HOOD = (*HOOD[:3], 26, HOOD[4])
+CREAM = (207, 115, 61, 199, 155)
 PLUM = (17, 174, 175, 58, 119)
 LEAF = (207, 188, 54, 55, 56)
 OCHRE = (204, 95, 168, 169, 170)
 FOREST = (17, 69, 53, 54, 56)
 BRONZE = (204, 94, 168, 186)
-TEAL = (17, 69, 70, 71, 73)
+TEAL = (208, 69, 70, 71, 73)
 FLESH = (134, 132, 130, 145, 147)
 CLOAK_LENGTHS = {"Thief": 4, "Mage": 3, "Druid": 3, "Ranger": 4, "Priest": 5}
 RAMPS = (LEATHER, HOOD, CREAM, PLUM, LEAF, FOREST, LEATHER, TEAL)

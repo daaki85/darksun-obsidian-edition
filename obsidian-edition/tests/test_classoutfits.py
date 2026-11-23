@@ -318,10 +318,10 @@ class DwarfOutfitTests(unittest.TestCase):
                                      (model, f, y))
 
     hood_fabrics = {
-        "Thief": {208, 17, 20, 24, 25, 28},
-        "Fighter/Thief": {208, 88, 207, 92, 96},
-        "Psionicist/Thief": {17, 69, 70, 71, 73},
-        "Fighter/Psionicist/Thief": {208, 88, 207, 92, 96, 71, 73},
+        "Thief": {208, 17, 20, 25, 26, 29},
+        "Fighter/Thief": {208, 88, 207, 94, 98},
+        "Psionicist/Thief": {208, 69, 70, 71, 73},
+        "Fighter/Psionicist/Thief": {208, 88, 207, 94, 98, 71, 73},
     }
 
     def test_thief_crown_stays_visible_in_every_pose(self):
