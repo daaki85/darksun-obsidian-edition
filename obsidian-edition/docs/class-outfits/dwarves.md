@@ -1,6 +1,6 @@
 # Dwarf class proposals
 
-Each tile in the overview pairs the female dwarf facing forward with the male dwarf facing away. The animations below show both in the same pose. These are art proposals rendered from the original dwarf poses. Dwarf outfit selection and equipment behavior still need in-game verification. [Outfit workflow](workflow.md) · [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
+Each tile in the overview pairs the female dwarf facing forward with the male dwarf facing away. The animations below show both in the same pose. The branch loader now selects these registered outfits from the dwarf’s class slots. The [dwarf and human checklist results](checklist-review.md) include equipment comparisons, screenshots, and the remaining live inventory check. [Outfit workflow](workflow.md) · [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
 
 ![All twelve playable dwarf outfits, grouped by number of classes, with front and rear views](dwarf-proposals.png)
 

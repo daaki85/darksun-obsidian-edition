@@ -1,4 +1,4 @@
-"""Class outfit layers registered to the human map poses.
+"""Class outfit layers registered to the human and dwarf map poses.
 
 Each archive has walk and combat chunks per class. The woman's outfits layer
 over a shared redrawn base. In each layer a transparent edit keeps the pixel
@@ -16,8 +16,12 @@ from zipfile import ZipFile
 from . import art, game, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
-MODELS = {300: 2095, 301: 2099}
+MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053}
 SOURCE = {
+    2053: "91c133abf78323f5b0b83a9f706b8750d99e6e9efe97a54c984c40e55539efb3",
+    2054: "aaadd31defbf1b021812b47bb38cd37d8b0f7c97871a760e0a5e842b3d536f6f",
+    2055: "80d16c5f0bdc4b75fa5c960771731c32d9777477b7218d57a32af2027dba1bf6",
+    2056: "088895b889a46c91bf1117c294e0b1748d26082687f121c565bdf622069db045",
     2095: "b0f5fd9b7f07fe8deb1b106bc786ca067930a467a8b338ed5d3cd96f25d9492f",
     2096: "e787121b4d79e554dd071da1fe8db9a93c25cfeb344fc69b22022fb456163723",
     2099: "92b22183387db3382e56f31747a1e40af7393af6baa8ffa07a82bd9c22cf8481",
@@ -81,16 +85,48 @@ WOMAN_FIGHT_GRIPS = (
 )
 
 
+# The two dwarves share the limb registration except for the first forward strike.
+DWARF_WALK_SHIELDS = (
+    (18, 9), (2, 10), (8, 11), (17, 9), (16, 7), (15, 8), (17, 10),
+    (2, 9), (2, 8), (1, 9), (1, 11), (6, 11), (4, 10), (4, 10), (9, 10),
+)
+DWARF_FIGHT_SHIELDS = (
+    (3, 13), (15, 11), (4, 2), (3, 8), (2, 11), (3, 7), (16, 10), (8, 9), (4, 5),
+    None, None, None, (15, 2), None,
+)
+DWARF_FIGHT_GRIPS = (
+    (12, 1), (2, 3), (3, 14), (11, 9), (10, 3), (7, 11), (2, 5), (21, 8), (16, 11),
+    None, None, None, (2, 13), None,
+)
+
+
 def supports(chunks, model):
     return all(sha256(chunks.get(("BMP ", picture), b"")).hexdigest() == SOURCE[picture]
                for picture in (model, model + 1))
 
 
-def for_sheet(sheet):
-    if len(sheet) <= game.SHEET_CLASSES or sheet[game.SHEET_RACE] != game.HUMAN:
+DWARF_ROLES = {
+    (1,): "Cleric", (3,): "Fighter", (4,): "Gladiator", (6,): "Psionicist", (8,): "Thief",
+    (1, 3): "Cleric/Fighter", (1, 6): "Cleric/Psionicist", (3, 6): "Fighter/Psionicist",
+    (3, 8): "Fighter/Thief", (6, 8): "Psionicist/Thief",
+    (1, 3, 6): "Cleric/Fighter/Psionicist", (3, 6, 8): "Fighter/Psionicist/Thief",
+}
+DWARVES = (2053, 2055)
+
+
+def for_sheet(sheet, model=None):
+    if len(sheet) <= game.SHEET_CLASSES:
         return None
-    group = kitpages.CREATION_CLASS.get(sheet[game.SHEET_CLASSES])
-    return CLASSES[group] if group else None
+    race = sheet[game.SHEET_RACE]
+    if race == game.DWARF and (model is None or model in DWARVES):
+        slots = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+        if len(slots) < 3:
+            return None
+        return DWARF_ROLES.get(tuple(sorted(kitpages.CREATION_CLASS.get(c, 0) for c in slots if c)))
+    if race == game.HUMAN and (model is None or model in (2095, 2099)):
+        group = kitpages.CREATION_CLASS.get(sheet[game.SHEET_CLASSES])
+        return CLASSES[group] if group else None
+    return None
 
 
 class Frame(NamedTuple):
@@ -118,12 +154,19 @@ class Frame(NamedTuple):
 def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
+    dwarf = model in DWARVES
+    if dwarf:
+        filename = "dwarf_outfit_layers.zip"
+    prefix = f"{model}/{role}" if dwarf else role
     with ZipFile(Path(__file__).with_name(filename)) as archive:
         base = archive.read(f"Base/{tag}") if model == 2099 else None
-        heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
-        pictures = archive.read(f"{role}/{tag}")
-        cloaks = archive.read(f"{role}/{tag}-cloak")
-        masks = archive.read(f"{role}/{tag}-regions")
+        if dwarf:
+            heads = archive.read(f"{prefix}/{tag}-head")
+        else:
+            heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
+        pictures = archive.read(f"{prefix}/{tag}")
+        cloaks = archive.read(f"{prefix}/{tag}-cloak")
+        masks = archive.read(f"{prefix}/{tag}-regions")
     poses = []
     for f in range(14 if combat else 15):
         image = art.decode_frame(pictures, f)[2]
@@ -138,6 +181,8 @@ def frames(role, combat, model=2095):
         # Frame 13 has extra transparent columns for the swept priest hem.
         left = 8 if model == 2095 and not combat and f == 13 else 6
         top = 6
+        if dwarf:
+            left = top = 4
         for y, row in enumerate(mask):
             for x, bits in enumerate(row):
                 if bits:

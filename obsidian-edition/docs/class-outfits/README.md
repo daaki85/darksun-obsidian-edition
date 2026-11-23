@@ -1,10 +1,10 @@
 # Class outfits on the map
 
-On the class-outfits branch, human party members wear the outfit for their active class when **What the party wears** is enabled. The galleries show the base class colors. In play, equipped armor recolors the parts it covers, while equipped cloaks and boots use their own colors.
+On the class-outfits branch, human party members wear the outfit for their active class and dwarves wear the outfit for their legal class combination when **What the party wears** is enabled. The galleries show the base class colors. In play, equipped armor recolors the parts it covers, while equipped cloaks and boots use their own colors.
 
 Both galleries show all eight human outfits in sync. The caption identifies each of the 29 poses as the figures turn, walk, strike, draw a bow, take a hit, and fall. The walking and melee cycles repeat so their movement is easier to follow. These previews use the sprite loader’s output on game terrain.
 
-For future races, follow the [class outfit workflow](workflow.md).
+The [dwarf and human checklist results](checklist-review.md) include the repaired frames and equipped comparisons. For future races, follow the [class outfit workflow](workflow.md).
 
 ## Female human
 

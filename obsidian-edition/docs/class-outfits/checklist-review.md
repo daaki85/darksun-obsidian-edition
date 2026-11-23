@@ -1,0 +1,50 @@
+# Dwarf and human outfit review
+
+Both dwarf figures were checked across 12 legal builds and both humans across eight class outfits. Each figure has 15 idle and walking poses and 14 combat poses. The review covered 696 dwarf and 464 human outfit poses. The still sheets below use the decoded loader output. [Review checklist](workflow.md#human-figure-review-checklist)
+
+## Dwarves
+
+| Finding | Correction and retest |
+|---|---|
+| A horizontal strip of leather appeared at the bottom of the bare feet. It followed the lowest rows of the picture as the feet traded places. | Restored skin shading along the original leg and foot outlines. Registered the toes separately, including the raised foot. Compared both dwarves’ original, cleaned body, and Gladiator through idle, walk, strike, bow, hit, and fallen. |
+| A second foot marker on side-walk step 1 reached toward the hanging hand. Step 3 exposed a small raised heel that lacked its own marker. | Moved the second boot treatment to the visible heel on step 3. Checked the two steps independently and the complete four-step profile walk in both directions. The Cleric’s robe can hide a foot that is visible on the Gladiator. |
+| In recoil, the hood sat on the shoulder beside the face. With a helm and bow equipped, the side shot could leave a piece of helm above the figure. | Repositioned the hood on the lowered head. The loader now fits the circlet to the registered crown and brow while protecting the foreground hand and bow. Reran the combined kit through all 29 poses and all 12 builds. |
+| The Gladiator’s single shoulder guard changed anatomical sides on the turn away. The Thief’s rear cloak had a straight, evenly spaced fold. | Reversed the guard position in rear views and bent the fold from shoulder to hem. Compared rear idle with steps 1–4 and checked the Fighter/Thief and three-class outfits for loss of their shoulder, hood, or sash detail. |
+
+![Dwarf feet, hit pose, shoulder guard and rear cloak before and after the review](checklist-dwarf-fixes.png)
+
+[Original, cleaned base, and Gladiator in motion](checklist-dwarf-bodies.gif) · [Female dwarf, every frame](checklist-dwarf-female.png) · [Male dwarf, every frame](checklist-dwarf-male.png) · [All dwarf builds in motion](dwarves.md)
+
+## Humans
+
+The woman had a two-pixel opening where the shoulder cloth passes below the hair on **side-walk step 2**. It appeared on the Cleric, Druid, Mage, Psionicist, and Thief. The repair continues the neighboring fold into both pixels and assigns them the matching equipped-cloak shades. The Ranger’s strap already covered that spot. Open spaces beside the arms, between the legs, and under the lifted foot were compared with the uncloaked figure and retained.
+
+![Five female outfits, previous and repaired shoulder at the same point in the stride](checklist-human-shoulder.png)
+
+The male pass found no further correction across the eight outfits. The Fighter and Cleric necklines clear the head, the plum mantle keeps its front and rear contrast, and the Thief’s shorts remain visible through the stride. Both human reviews included the female rear walk and Druid hem, the first side strike, bow, hit, fallen, and the stop after the walk. [Female human, every frame](checklist-human-female.png) · [Male human, every frame](checklist-human-male.png) · [Human animations](README.md#female-human)
+
+## Game-size comparison
+
+The stock Shattered Lands fighter and finished human Fighter share a ground line with the five dwarf single classes. The upper rows show native pixels on map terrain and on a darkened copy of that terrain. The lower row doubles each pixel.
+
+![Stock fighter, human Fighter, and five dwarf classes at one and two times game size](checklist-lineup.png)
+
+## Equipment
+
+For every outfit and pose, the loader rendered nine states: empty, Boots of Speed, cloak, shield, sword, bow with ammunition, mundane chest plate, magical chest plate, and a combined kit. Across **10,440 renders**, the wider reference canvas detected no clipped pixels. The finished frames contained no detached islands, the bow retained its protected pixels, and the plate changed only its assigned chest pixels. Each visible foot region responded to boots. Rebuilding the empty state recovered the original outfit. A four-member party fixture also exercised the dresser update: equipping boots changed all four figures, removing them restored both picture chunks per member, and switching the feature off restored the stock chunks.
+
+To rerun the full pose and equipment sweep with a local game installation, run `python prototypes/check_class_frames.py GAME_DIR` from the repository root.
+
+The comparison loop shows four representative outfits in the same pose. The shield and sword appear together here so their grips can be followed through a swing. The last column shows the empty-slot appearance after removal. The magical plate column shows the loader’s shine pixels; the DOSBox crop below shows palette cycling over time.
+
+[Compare equipment across all 29 poses](checklist-equipment.gif)
+
+## DOSBox check
+
+A disposable copy of the slave-pens save displayed four staged loader outputs: a male dwarf Fighter/Psionicist/Thief with Boots of Speed, a female dwarf Cleric with a cloak, a male human Mage in magical plate, and a female human Fighter with a shield. The party was observed standing and moving at 320 × 240. A stationary capture sequence showed the Mage’s plate pixels cycling.
+
+![Four staged outfit and equipment combinations in the slave pens](checklist-dosbox.png)
+
+[Enlarged DOSBox palette cycle](checklist-dosbox-cycle.gif)
+
+**Pending in play:** changing inventory or toggling the display option with the loader attached. The test environment denied the loader write access to the disposable DOSBox process. The captures demonstrate the fixed equipment states in the game. The equip, remove, and option-off transitions above were exercised through the loader against a test party.

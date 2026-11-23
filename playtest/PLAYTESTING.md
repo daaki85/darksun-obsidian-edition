@@ -1276,6 +1276,8 @@ tools, and where each is described:
 
 ## Pictures for the docs
 
+For an outfit review with the loader detached, stage the walking and fighting chunks in the disposable pictures file before DOSBox starts. Record the object, figure, class combination, and worn items for each party member. A fixed-state capture can verify how the sprite and its palette cycle look in the map view. Exercise inventory changes separately with the loader attached. [Dwarf and human play log](logs/2026-11-23-dwarf-human-outfits.md)
+
 - **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
 - **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette
   in the inventory too (1-5 green, 6-10 violet, 11-15 the water's, 240-248 fire). Move the pointer

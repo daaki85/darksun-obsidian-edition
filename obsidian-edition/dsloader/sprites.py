@@ -739,7 +739,7 @@ class Dresser:
             stage = greyhair.stage_of(self.gd, member) if on else 0
             role = None
             if on and self.pics.supports_outfits(figure, model):
-                role = classoutfits.for_sheet(self.gd.sheet(member))
+                role = classoutfits.for_sheet(self.gd.sheet(member), model)
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage, role)
             fresh = self.shown.get(obj) != key
             if fresh:

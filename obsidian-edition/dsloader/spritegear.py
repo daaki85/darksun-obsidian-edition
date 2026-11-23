@@ -881,6 +881,15 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if costume and costume.head:
         parts = parts._replace(hair=costume.head)
+    if costume and model in classoutfits.DWARVES and parts.facing and costume.head:
+        # In a bow or hit pose the raised hand can be higher than the crown.
+        # Seat the circlet on the registered head, excluding those foreground pixels.
+        top = min(y for x, y in costume.head)
+        brow = top + 2
+        temples = [x for x, y in costume.head if y == brow]
+        if temples:
+            facing = sp.FRONT if combat and frame == 11 else parts.facing
+            parts = parts._replace(head=sp.Head(top, min(temples), max(temples), brow), facing=facing)
     if costume and model == 2099 and not combat and frame == 1:
         # The rear idle has a relaxed grip on each side of the hips.
         parts = parts._replace(hands={"left": (4, 15), "right": (15, 15)},
@@ -1021,7 +1030,13 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         hands = {"right": points[0]}
         if len(points) > 1:
             hands["left"] = points[1]
-    if model == 2099:
+    if model in classoutfits.DWARVES:
+        grips = classoutfits.DWARF_FIGHT_GRIPS
+        shields = classoutfits.DWARF_FIGHT_SHIELDS if combat else classoutfits.DWARF_WALK_SHIELDS
+        if model == 2053 and combat and frame == 0:
+            grips = ((1, 11),) + grips[1:]
+            shields = (classoutfits.DWARF_WALK_SHIELDS[0],) + shields[1:]
+    elif model == 2099:
         grips = classoutfits.WOMAN_FIGHT_GRIPS
         shields = classoutfits.WOMAN_FIGHT_SHIELDS if combat else classoutfits.WOMAN_WALK_SHIELDS
     else:
@@ -1066,9 +1081,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (pose[1] if hand == "right" else pose[2], False)
         if shape == SHIELD and (pose and hand == "left" or side):
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
-        if costume and combat and frame == 12 and hand == "right" and shape != SHIELD:
+        if costume and model not in classoutfits.DWARVES and combat and frame == 12 and hand == "right" and shape != SHIELD:
             g = (155, False)  # Lowered across the body, clear of the baseline.
-        if costume and combat and frame == 1 and hand == "left" and shape != SHIELD:
+        if costume and model not in classoutfits.DWARVES and combat and frame == 1 and hand == "left" and shape != SHIELD:
             g = (330, False)  # The off hand extends out at hip height.
         if costume and model == 2099 and combat and frame == 2 and hand == "right":
             g = (200, False)  # Keep the butt of a staff above the lower edge.

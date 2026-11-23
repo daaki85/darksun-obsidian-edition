@@ -229,3 +229,40 @@ class HumanOutfitTests(unittest.TestCase):
             self.assertTrue(left and right, role)
             self.assertLess(max(x for x, _ in left), min(x for x, _ in right), role)
             self.assertLessEqual(abs(max(y for _, y in left) - max(y for _, y in right)), 1, role)
+
+
+class DwarfOutfitTests(unittest.TestCase):
+    def test_legal_builds_resolve_independently_of_slot_order(self):
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = game.DWARF
+        for slots, expected in (
+            ((4, 0, 0), "Cleric"), ((17, 9, 12), "Fighter/Psionicist/Thief"),
+            ((12, 4, 9), "Cleric/Fighter/Psionicist"), ((17, 12, 0), "Psionicist/Thief"),
+            ((11, 0, 0), None), ((10, 9, 0), None), ((9, 255, 0), None),
+        ):
+            sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = slots
+            self.assertEqual(classoutfits.for_sheet(sheet, 2053), expected)
+            self.assertEqual(classoutfits.for_sheet(sheet, 2055), expected)
+            self.assertIsNone(classoutfits.for_sheet(sheet, 2099))
+
+    def test_raised_foot_and_hit_hood_follow_native_landmarks(self):
+        for model in classoutfits.DWARVES:
+            feet = classoutfits.frames("Gladiator", False, model)[0].regions
+            self.assertLess(max(y for x, y in feet[classoutfits.RIGHT_FOOT]),
+                            min(y for x, y in feet[classoutfits.LEFT_FOOT]))
+            steps = classoutfits.frames("Gladiator", False, model)
+            self.assertFalse(steps[11].regions[classoutfits.RIGHT_FOOT])
+            self.assertTrue(steps[13].regions[classoutfits.RIGHT_FOOT])
+            hit = classoutfits.frames("Fighter/Thief", True, model)[12]
+            self.assertIn((3, 5), hit.head)
+            self.assertNotIn((8, 5), hit.head)
+
+
+class HumanClothContinuityTests(unittest.TestCase):
+    def test_woman_second_profile_step_has_continuous_shoulder_cloth(self):
+        for role in ("Priest", "Druid", "Thief", "Mage", "Psionicist"):
+            pose = classoutfits.frames(role, False, 2099)[12]
+            folds = {(x, y): rank for x, y, rank in pose.cloak}
+            for x in (6, 7):
+                self.assertEqual(folds[x, 8], folds[x, 9], role)
+                self.assertNotIn(pose.image[6 + 8][6 + x], (None, 255), role)

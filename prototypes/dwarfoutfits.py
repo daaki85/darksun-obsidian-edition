@@ -3,7 +3,7 @@
     python3 prototypes/dwarfoutfits.py GAME_DIR OUTPUT_DIR
 
 Use --proposals for the playable class and multiclass galleries.
-The default writes the original eight-outfit study for each dwarf figure. Coordinates below are in its
+The default renders the exploratory eight-outfit lineup for each dwarf figure. Coordinates below are in its
 native frame. The fallen pose is drawn feet-down, then turned back for display.
 """
 
@@ -14,6 +14,7 @@ from typing import NamedTuple
 from PIL import Image, ImageDraw, ImageFont
 
 import outfits
+from dsloader import classoutfits as co, sprites
 
 
 class Pose(NamedTuple):
@@ -54,7 +55,7 @@ POSES = [
     (8, 0, 7, 5, 6, 12),
     (5, 3, 6, 8, 6, 14),
     (7, 3, 8, 8, 9, 14),
-    (7, 3, 6, 7, 8, 11),
+    (3, 4, 6, 8, 8, 11),
     (6, 1, 6, 5, 7, 11),
 ]
 ROLES = ("Warrior", "Thief", "Priest", "Mage", "Druid", "Ranger", "Gladiator", "Psionicist")
@@ -107,7 +108,43 @@ TRIPLES = (
 )
 
 
-def draw(game, model, k, role, design=None):
+# Toe centres in the native picture, with the fallen figure turned upright.
+# A raised foot often ends several rows above the planted foot.
+TOES = (
+    ((6, 20), (14, 17)),
+    ((5, 18), (14, 20)),
+    ((2, 20), (8, 16)),
+    ((5, 20), (11, 18)),
+    ((6, 15), (12, 19)),
+    ((5, 18), (11, 20)),
+    ((6, 19), (13, 15)),
+    ((4, 20), (9, 17)),
+    ((4, 21), (8, 16)),
+    ((4, 18), (10, 20)),
+    ((5, 17), (8, 22)),
+    ((3, 18), None),
+    ((2, 17), (10, 19)),
+    ((4, 20), (1, 16)),
+    ((1, 19), (10, 17)),
+    ((1, 22), (9, 20)),
+    ((6, 18), (14, 14)),
+    ((5, 19), (14, 15)),
+    ((1, 17), (10, 20)),
+    ((3, 19), (12, 20)),
+    ((4, 19), (13, 20)),
+    ((7, 20), (13, 16)),
+    ((1, 19), (8, 16)),
+    ((2, 18), (9, 14)),
+    ((1, 20), (9, 18)),
+    ((2, 20), (11, 23)),
+    ((8, 24), (15, 20)),
+    ((9, 19), (14, 14)),
+    ((3, 16), (11, 16)),
+)
+
+
+def draw(game, model, k, role, design=None, layers=None):
+    """Draw one registered pose. Optional layer maps use native, unpadded coordinates."""
     combat, f = divmod(k, 15)
     figure = game.fig(model)
     rows = figure.rows(combat, f)
@@ -118,20 +155,20 @@ def draw(game, model, k, role, design=None):
     pose = Pose(*POSES[k])
     if model == 2053 and k == 15:
         pose = Pose(*POSES[0])  # her first strike uses a standing wind-up
+    toes = TOES[0 if model == 2053 and k == 15 else k]
     cx, cy, sx, sy, hx, hy = pose
     profile = k in (2, 11, 12, 13, 14, 21, 22, 23, 24, 25)
     rear = k in (1, 7, 8, 9, 10, 18, 19, 20, 25)
     bow = game.bow(figure, rows, figure.parts(combat, f)) if k in (24, 25, 26) else set()
-    palette = RAMPS[ROLES.index(role)]
+    palette = RAMPS[ROLES.index(role)] if role else FLESH
     lower = OCHRE if role == "Druid" else LEATHER if role == "Ranger" else palette
-    band = {249: 168, 250: 205}
     hue = [sum(c * v for c, v in zip(rgb, (0.30, 0.59, 0.11))) for rgb in game.palette]
     pad = 4
     pixels = Image.new("P", (width + 2 * pad, height + 2 * pad), 255)
     pixels.putpalette([c for rgb in game.palette for c in rgb])
     hands = set(bow)
     if dead:
-        wrists = [(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c in band]
+        wrists = [(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c in (249, 250)]
     else:
         wrists = figure.bands(combat, f)
     for x, y in wrists:
@@ -139,6 +176,9 @@ def draw(game, model, k, role, design=None):
             for xx in range(max(0, x - 2), min(width, x + 3)):
                 if (x - xx) ** 2 + (y - yy) ** 2 <= 5:
                     hands.add((xx, yy))
+    bare_rows = game.fig(2055).rows(combat, f) if model == 2053 else rows
+    if dead and model == 2053:
+        bare_rows = bare_rows[::-1]
     for y in range(height):
         t = min(1, max(0, (y - sy) / max(1, hy - sy)))
         mid = sx * (1 - t) + hx * t
@@ -159,13 +199,23 @@ def draw(game, model, k, role, design=None):
                 shade = min(4, shade + 1)
             if c is not None and c not in outfits.SKINC and not (head or hand):
                 paint = FLESH[shade if abs(dx) < radius else 1 + int(hue[c] > 65)]
-            if body and y >= height - 3 and d > 1:
-                paint = LEATHER[1 + int(hue[c] > 65)]
+            # The woman's grey boots and the man's skin have the same stride
+            # except in their opening attack. Borrow shading only inside her outline.
+            if body and d > 1 and c not in outfits.SKINC:
+                ref = rows if model == 2053 and k == 15 else bare_rows
+                sample = ref[y][x] if y < len(ref) and x < len(ref[y]) else None
+                paint = sample if sample in outfits.SKINC else FLESH[min(4, int(hue[c] // 38))]
+            skin = paint
+            surface = 0
+            fold_rank = None
+            cape = False
             torso = body and 0 <= depth and d <= 1 and abs(dx) <= radius + 0.5
             if torso:
+                surface = co.CHEST
                 paint = palette[shade]
                 if role == "Gladiator" and abs(dx - (2 - 4 * t)) > 1.1:
-                    paint = c if c in outfits.SKINC else FLESH[shade]
+                    paint = skin
+                    surface = 0
                 if role == "Warrior" and abs(dx - (2.5 - 5 * t)) < 1:
                     paint = LEATHER[4 if dx < 2.5 - 5 * t else 1]
                 if role == "Priest" and -0.7 < dx + 1.6 - 0.4 * t < 0.7:
@@ -174,16 +224,17 @@ def draw(game, model, k, role, design=None):
                     paint = PLUM[4 if depth == 2 else 1]
             # Outer cloth rests on the shoulders. Its trailing side swings
             # with the weight transfer and clears the forearm in front views.
-            if role in CLOAK_LENGTHS and depth >= 0 and d <= CLOAK_LENGTHS[role]:
-                progress = depth / (hy - sy + CLOAK_LENGTHS[role] + 1)
+            length = CLOAK_LENGTHS.get(role, 4)
+            if (role in CLOAK_LENGTHS or layers is not None) and depth >= 0 and d <= length:
+                progress = depth / (hy - sy + length + 1)
                 sway = (-1, 0, 1, 0)[f % 4] if k not in (0, 1, 2, 28) else 0
                 center = mid - (2.6 if profile else 0.4) * progress + sway * progress
                 breadth = (3.7 if profile else 4.4) + 1.3 * progress
                 u = (x - center) / breadth
-                if abs(u) < 1 and d <= CLOAK_LENGTHS[role] - max(0, round((u + 0.2) * 1.6)):
+                if abs(u) < 1 and d <= length - max(0, round((u + 0.2) * 1.6)):
                     face = rear or (profile and u < -0.28) or c is None or depth <= 2 and torso
                     if face:
-                        crease = u + 0.22 * progress
+                        crease = u + 0.55 * progress - 0.12 * (1 - progress) ** 2
                         fold = (
                             0
                             if u > 0.85
@@ -195,7 +246,11 @@ def draw(game, model, k, role, design=None):
                         )
                         if -0.63 < crease < -0.48 and depth >= 2:
                             fold = 4
-                        paint = palette[fold]
+                        fold_rank = (0, 1, 2, 4, 5)[fold]
+                        if role in CLOAK_LENGTHS:
+                            paint = palette[fold]
+                            cape = True
+                            surface = 0
                         if role == "Druid" and d == CLOAK_LENGTHS[role] - max(
                             0, round((u + 0.2) * 1.6)
                         ):
@@ -203,6 +258,8 @@ def draw(game, model, k, role, design=None):
             if role == "Priest" and 0 <= d <= min(height - 3 - hy, 6):
                 u = dx / (radius + 0.45 * d)
                 if abs(u) <= 1 and (d < 6 or abs(u) < 0.8):
+                    surface = co.LEGS
+                    cape = False
                     paint = CREAM[
                         1 if u > 0.55 else 4 if -0.55 < u < -0.25 else 0 if 0.05 < u < 0.26 else 2
                     ]
@@ -221,7 +278,10 @@ def draw(game, model, k, role, design=None):
                             else 3 if -2.9 < dx < -0.6 else 1 if abs(dx - 0.7) < 1 else 2
                         )
                         paint = lower[rank]
+                        surface = co.LEGS
+                        cape = False
             if d == 0 and abs(dx) <= radius and not (rear and role in CLOAK_LENGTHS):
+                surface = co.LEGS
                 paint = 169 if abs(dx) < 0.5 else 205
             if (
                 body
@@ -230,9 +290,11 @@ def draw(game, model, k, role, design=None):
                     role == "Warrior"
                     and abs(abs(dx) - 3.3) < 1.6
                     or role == "Gladiator"
-                    and abs(dx - 3) < 1.6
+                    and abs(dx - (-3 if rear else 3)) < 1.6
                 )
             ):
+                surface = co.ARMS
+                cape = False
                 paint = (BONE if role == "Warrior" else BRONZE)[
                     4 if depth == 0 else 3 if depth == 1 and dx < 4 else 1
                 ]
@@ -251,6 +313,8 @@ def draw(game, model, k, role, design=None):
                     paint = HOOD[1 if dx > 1 else 3 if dx < -0.5 else 2]
                 # Seat the bone on dark leather so it also reads against ivory cloth.
                 if design.shoulders and body and 0 <= depth <= 3 and 2 <= abs(dx) <= radius + 0.9:
+                    surface = co.ARMS
+                    cape = False
                     paint = LEATHER[1] if depth >= 2 else BONE[4 if depth == 0 else 2]
                 # Carry the baldric across the back as well as the front. The
                 # short woven end falls over the belt and remains visible in profile.
@@ -259,7 +323,10 @@ def draw(game, model, k, role, design=None):
                     delta = dx - strap_x
                     if abs(delta) <= (1.05 if d <= 0 else 0.78):
                         paint = 169 if d == 0 else TEAL[4 if delta < -0.12 else 3 if d < 0 else 2]
+            if role is None:
+                paint = skin
             if head:
+                surface = 0
                 hood_x = x - cx if design else dx
                 paint = c
                 if (role == "Thief" or (design and design.hood)) and (
@@ -269,13 +336,32 @@ def draw(game, model, k, role, design=None):
                 elif role == "Psionicist" and y == cy + 1:
                     paint = 169 if x == cx else 71
             if hand:
-                paint = band.get(c, c) if (x, y) not in bow else c
+                # The stock cuff ends here. Keep the hand outline and the bow.
+                paint = (
+                    c if (x, y) in bow or c in outfits.SKINC else FLESH[min(4, int(hue[c] // 38))]
+                )
+            if layers is not None:
+                point = (x, height - 1 - y if dead else y)
+                if head and not hand:
+                    layers["head"][point] = 1
+                if hand or head:
+                    fold_rank = None
+                    surface = co.BOW if (x, y) in bow else co.FOREARM if hand else 0
+                elif paint == skin and body:
+                    for toe, foot in zip(toes, (co.LEFT_FOOT, co.RIGHT_FOOT)):
+                        if toe and 0 <= toe[1] - y < 3 and abs(x - toe[0]) <= 3:
+                            surface = foot
+                            break
+                if fold_rank is not None:
+                    layers["cloak"][point] = fold_rank + 1
+                if surface and not (cape and not hand):
+                    layers["regions"][point] = surface
             if paint is not None:
                 pixels.putpixel((x + pad, y + pad), paint)
     if dead:
         pixels = pixels.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
     pixels.info["transparency"] = 255
-    return pixels.convert("RGBA")
+    return pixels if layers is not None else pixels.convert("RGBA")
 
 
 def gallery(game, model, name):
@@ -400,6 +486,41 @@ def render_proposals(game, output):
         )
 
 
+def export_layers(game, output):
+    """Pack only edits to the player's bitmap and authored equipment masks."""
+    from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+
+    with ZipFile(output / "dwarf_outfit_layers.zip", "w") as archive:
+        for model, _ in FIGURES:
+            for design in SINGLES + PAIRS + TRIPLES:
+                for combat, tag in ((0, "walk"), (1, "combat")):
+                    streams = {key: [] for key in ("image", "regions", "head", "cloak")}
+                    for f in range(14 if combat else 15):
+                        source = game.fig(model).rows(combat, f)
+                        layers = {key: {} for key in ("regions", "cloak", "head")}
+                        art = draw(game, model, f + 15 * combat, design.base, design, layers)
+                        width, height = len(source[0]), len(source)
+                        frames = {
+                            key: [[None] * (width + 8) for _ in range(height + 4)]
+                            for key in streams
+                        }
+                        for y in range(height):
+                            for x in range(-4, width + 4):
+                                c = art.getpixel((x + 4, y + 4))
+                                stock = source[y][x] if 0 <= x < width else None
+                                if (None if c == 255 else c) != stock:
+                                    frames["image"][y + 4][x + 4] = c
+                        for key, points in layers.items():
+                            for (x, y), value in points.items():
+                                frames[key][y + 4][x + 4] = value
+                        for key, rows in frames.items():
+                            streams[key].append(rows)
+                    for key, frames in streams.items():
+                        suffix = "" if key == "image" else "-" + key
+                        entry = ZipInfo(f"{model}/{design.name}/{tag}{suffix}")
+                        archive.writestr(entry, sprites.encode_frames(frames), ZIP_DEFLATED)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game_dir")
@@ -409,9 +530,15 @@ def main():
         action="store_true",
         help="render the playable single and multiclass review boards",
     )
+    parser.add_argument(
+        "--layers", action="store_true", help="export the registered dwarf loader layers"
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     game = outfits.Game(args.game_dir)
+    if args.layers:
+        export_layers(game, args.output_dir)
+        return
     if args.proposals:
         render_proposals(game, args.output_dir)
         return
