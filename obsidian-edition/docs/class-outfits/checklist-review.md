@@ -2,9 +2,15 @@
 
 Both dwarf figures were checked across 12 legal builds and both humans across eight class outfits. Each figure has 15 idle and walking poses and 14 combat poses. The review covered 696 dwarf and 464 human outfit poses. The still sheets below use the decoded loader output. [Review checklist](workflow.md#human-figure-review-checklist)
 
+## Thief hood in profile
+
+In side idle and several walking frames, a strip of skin separated the back of the hood from the garment. The revised fold follows the dwarf’s lean from behind the ear onto the shoulder. In the first side strike and the side bow, follow the fold on the far side while the hand crosses the head. The comparison opens on side idle, then shows the walk, strike and bow poses for both figures in all four Thief outfits.
+
+![Previous and revised Thief hoods at the shoulder on both dwarf figures](dwarf-hood-profile.gif)
+
 ## Thief hood and Cleric profile
 
-The comparison below records the earlier profile pass. The latest hood revision opens the front below the chin and matches each multiclass hood to its leather or teal clothing. [Watch all four current Thief hoods](dwarf-thief-hoods.gif)
+The comparison below records the earlier profile pass. The following hood revision opened the front below the chin and matched each multiclass hood to its leather or teal clothing. [Watch all four current Thief hoods](dwarf-thief-hoods.gif)
 
 The comparison opens on side idle. Follow the Cleric’s cream fold from beneath the jaw to the belt as the wrist moves across it. The previous robe showed mainly behind the arm. On side-walk step 3 the raised arm crosses the chest. A six-pixel correction to the shared wrist mask keeps the cloth above the knuckles visible on the Cleric and the other dressed torsos. On the Thief, the slate crown extends down behind the ear while leaving the eyes and cheek visible. The loop covers all 29 poses on both dwarves.
 

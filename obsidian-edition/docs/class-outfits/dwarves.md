@@ -39,7 +39,7 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 
 ![Both three-class combinations, female above male, synchronized through all 29 poses](dwarf-triple.gif)
 
-[Compare all four Thief hoods through 29 poses](dwarf-thief-hoods.gif)
+The profile fold runs from behind the ear into the cloak or leather tunic. The front of the hood stays open below the chin. [Watch the profile before and after](dwarf-hood-profile.gif) · [Compare all four Thief hoods through 29 poses](dwarf-thief-hoods.gif)
 
 To review the third class cue, compare Fighter/Thief with Fighter/Psionicist/Thief in the rear walk. Compare Cleric/Fighter with Cleric/Fighter/Psionicist in the bow and hit poses, where the forearm crosses the sash. The two dwarf figures also have different opening strikes.
 

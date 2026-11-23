@@ -284,14 +284,14 @@ class DwarfOutfitTests(unittest.TestCase):
                                 self.assertTrue(guard)
                                 self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
+    hood_fabrics = {
+        "Thief": {208, 17, 20, 24, 28},
+        "Fighter/Thief": {208, 88, 207, 92, 96},
+        "Psionicist/Thief": {17, 69, 70, 71, 73},
+        "Fighter/Psionicist/Thief": {208, 88, 207, 92, 96, 71, 73},
+    }
+
     def test_thief_crown_stays_visible_in_every_pose(self):
-        leather = {208, 88, 207, 92, 96}
-        fabrics = {
-            "Thief": {208, 17, 20, 24, 28},
-            "Fighter/Thief": leather,
-            "Psionicist/Thief": {17, 69, 70, 71, 73},
-            "Fighter/Psionicist/Thief": leather | {71, 73},
-        }
         for model in classoutfits.DWARVES:
             for role in classoutfits.DWARF_ROLES.values():
                 if "Thief" not in role:
@@ -306,7 +306,38 @@ class DwarfOutfitTests(unittest.TestCase):
                         with self.subTest(model=model, role=role, combat=combat, frame=f):
                             fabric = [pose.image[y + 4][x + 4] for y in (crown, brow)
                                       for x in range(center - 4, center + 5)]
-                            self.assertGreaterEqual(sum(c in fabrics[role] for c in fabric), 8)
+                            self.assertGreaterEqual(sum(c in self.hood_fabrics[role] for c in fabric), 8)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_profile_hood_reaches_the_shoulder(self):
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        # Frame, visible side of the head (inclusive x bounds), crown and collar rows.
+        profiles = ((2, 0, 7, 1, 7), (11, 0, 6, 1, 7), (12, 3, 11, 1, 6),
+                    (13, 0, 7, 1, 7), (14, 2, 10, 1, 6), (21, 9, 14, 1, 6),
+                    (22, 5, 13, 1, 6), (23, 4, 12, 1, 6), (24, 0, 7, 1, 6),
+                    (25, 0, 4, 4, 9), (26, 8, 14, 4, 9))
+        for model in classoutfits.DWARVES:
+            for role, fabric in self.hood_fabrics.items():
+                for k, left, right, top, collar in profiles:
+                    combat, f = divmod(k, 15)
+                    pose = classoutfits.frames(role, combat, model)[f]
+                    native = pictures.own(model + combat)[f]
+                    image = pose.canvas(native, 4)
+                    cloth = {(x, y) for y in range(top, collar + 1)
+                             for x in range(left, right + 1) if image[y + 4][x + 4] in fabric}
+                    # In the turned wind-up the bone plate overlaps the fold.
+                    if k == 21:
+                        cloth.update((x, y) for x, y in pose.regions[classoutfits.ARMS]
+                                     if left <= x <= right and top < y <= collar)
+                    path = {(x, top) for x in range(left, right + 1)} & cloth
+                    pending = list(path)
+                    while pending:
+                        x, y = pending.pop()
+                        for point in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                            if point in cloth and point not in path:
+                                path.add(point)
+                                pending.append(point)
+                    self.assertTrue(any(y == collar for x, y in path), (model, role, k))
 
     def test_front_hoods_leave_the_jaw_open(self):
         for model in classoutfits.DWARVES:

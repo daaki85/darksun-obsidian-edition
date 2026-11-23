@@ -198,6 +198,25 @@ ROBE_FRONTS = {
 }
 
 
+# One run per row from the hood's back fold to the garment on the shoulder.
+# Coordinates follow the actual lean in each side view. At the side bow
+# the bow hand masks the near edge, leaving the opposite fold visible.
+HOOD_SHOULDERS = {
+    # First row, then inclusive (left, right) bounds down the fold.
+    2:  (3, ((4, 6), (3, 6), (2, 6), (2, 6), (1, 6), (1, 4))),
+    11: (3, ((3, 5), (2, 5), (2, 5), (1, 4), (1, 3), (0, 2))),
+    12: (3, ((8, 10), (7, 10), (6, 10), (5, 10), (5, 9))),
+    13: (3, ((4, 6), (3, 6), (2, 6), (2, 6), (2, 6), (1, 4))),
+    14: (3, ((7, 9), (6, 9), (5, 9), (4, 8), (4, 7))),
+    21: (3, ((11, 12), (10, 12), (11, 12), (10, 12), (10, 12), (10, 11))),
+    22: (3, ((10, 12), (9, 12), (8, 12), (7, 11), (6, 9))),
+    23: (3, ((9, 11), (8, 11), (7, 11), (7, 10), (6, 8))),
+    24: (3, ((4, 6), (3, 6), (3, 6), (3, 6), (3, 5))),
+    25: (6, ((3, 4), (3, 5), (2, 5), (2, 4), (2, 4))),
+    26: (6, ((10, 11), (10, 12), (10, 13), (10, 12), (10, 11))),
+}
+
+
 def hood_shade(x, row, head_rows, turned):
     """Value on the crown, outer fold or lining of the open hood."""
     if not 0 <= row < len(head_rows):
@@ -281,6 +300,7 @@ def draw(game, model, k, role, design=None, layers=None):
     # Front flaps stop above the two lower jaw rows. The short recoil
     # and fallen heads keep a fourth row of cloth at the temples.
     hood_end = len(head_rows) if turned_hood else max(4, len(head_rows) - 2)
+    shoulder_fold = HOOD_SHOULDERS.get(k) if hooded else None
     robe_front = ROBE_FRONTS.get(k) if role == "Priest" else None
     left, right = SHOULDERS[registration]
     guards = {}
@@ -328,6 +348,11 @@ def draw(game, model, k, role, design=None, layers=None):
             if collar_y <= y <= hy + 5:
                 travel = min(1, (y - collar_y) / (hy - collar_y))
                 front_edge = round(collar_x + (belt_x - collar_x) * travel)
+        fold_bounds = None
+        if shoulder_fold:
+            first_y, runs = shoulder_fold
+            if first_y <= y < first_y + len(runs):
+                fold_bounds = runs[y - first_y]
         for x in range(-pad, width + pad):
             c = rows[y][x] if 0 <= x < width else None
             dx = x - mid
@@ -498,13 +523,22 @@ def draw(game, model, k, role, design=None, layers=None):
                         paint = c if head else skin
                         fold_rank = None
                         surface = 0
+                on_shoulder = (
+                    fold_bounds is not None and fold_bounds[0] <= x <= fold_bounds[1]
+                    and (x, y) not in guards
+                )
+                if on_shoulder:
+                    # The light ridge continues down the nape, with the
+                    # darker turn toward the neck. Hands pass in front.
+                    lo, hi = fold_bounds
+                    shade = 2 if x == lo else 1 if x == hi else 3
                 if shade is not None:
                     paint = hood_ramp[shade]
                     # A single seam picks up the triple-class sash, including
                     # on the back where the front opening is out of view.
                     if trimmed_hood and x == cx - 1 and row <= (3 if rear else 1):
                         paint = TEAL[4 if row == 0 else 3]
-                    fold_rank = None
+                    fold_rank = (0, 1, 2, 4, 5)[shade] if on_shoulder and y >= sy else None
                     surface = 0
             if hand:
                 # The stock cuff ends here. Keep the hand outline and the bow.
