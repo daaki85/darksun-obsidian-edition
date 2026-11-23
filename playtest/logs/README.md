@@ -139,6 +139,7 @@ schedules and diffs a log made or used.
 | [2026-11-23](2026-11-23-ravager-protection.md) | Rings, cloaks, bracers and robes of protection in the sequel: AD&D's limits on AC and their plus on saves (DSCLOG2's sites 43 and 44); Balthbeorn's AC 3 with ring, cloak and robe, 4 in the control; the limits with magical and metal armour and a shield, and the saves in a Fireball (+9, +6, +4) |
 | [2026-11-23](2026-11-23-ravager-boots-of-speed.md) | The Boots of Speed in the sequel: a turn's movement doubled (Ar'anda's Move 24) and AC 2 better in a fight (Terrannus's "other" +0, then -2) |
 | [2026-11-23](2026-11-23-ravager-veiled-robe.md) | The Veiled Robe's wizard slot more at levels 1-3 in the sequel: Ar'anda's slots after a night at the Roost 5, 3, 3 (her 4, 2, 2 before); robes' AC under the bracers' armour rule |
+| [2026-11-23](2026-11-23-ravager-girdles-amulet.md) | The girdles and the Amulet of Magic Resistance in the sequel: the Golden Girdle of Urnst's sword attacks 3 worse (Dragonsbane +8 on a Draxan without, +5 on a wearer); the amulet's 15% run in a fight; the Girdle of Back Defense by its count only; the hung display restarted and Hold Person replayed clean |
 
 ## files/
 

@@ -1129,6 +1129,11 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   :55 stopped answering (`timeout 10 xdpyinfo` fails), even after that import and every DOSBox were
   killed. Which came first is not known. Only a new Xvfb gets the display back, so take every grab
   with `timeout`.
+  With a new Xvfb the same cast on the same build ran clean three times (00:45-01:00 UTC,
+  logs/2026-11-23-ravager-girdles-amulet.md), so the display, not the helper's new code, is the likely cause.
+- **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
+  number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
+  Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).
 
 ### The sequel's spells in a fight (2026-11-21)
 
