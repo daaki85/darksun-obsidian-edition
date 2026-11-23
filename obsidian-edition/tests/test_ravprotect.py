@@ -264,12 +264,41 @@ class ProtectionTests(unittest.TestCase):
         self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX)), (0x1111, 0x2222))
         self.assertEqual(mu.mem_read(TSR * 16 + self.sym["th_weapon"], 1)[0], 1)
 
+    def test_join_ready(self):
+        """JOIN_READY: each worn item with a spell (+10h) of the member on show readied once through the
+        game's routine (5E8h:39h: the creature, the item), none in the backpack (15) or without a
+        spell; the compare's ZF in the INT's frame, every register kept."""
+        worn = [(LEATHER, CHEST, 0), (RING, FINGER, 0), (RING, 15, 0), (RING, NECK, 0)]
+        mu = self.machine(worn)
+        for n, power in enumerate((139, 14, 36, 0)):  # (the backpack's and the last's not readied)
+            mu.mem_write(ITEMS * 16 + n * ITEM_SIZE + 0x10, struct.pack("<H", power))
+        stub = GAME_DS + 0x4713 - 0x47E0
+        log = 0x200  # (in the stub's segment: a count of calls, then (creature, item) each)
+        ready = bytes.fromhex("558bec5053" "2e8b1e0002" "8b4606" "2e898702" "02" "8b4608" "2e898704" "02"
+                              "2e8306000204" "5b585dcb")
+        mu.mem_write(stub * 16 + 0x39, ready)
+        mu.mem_write(stub * 16 + log, bytes(2))
+        mu.mem_write((GAME_DS + 0x3E71 - 0x47E0) * 16 + 0x0B44, struct.pack("<H", 0))
+        for flag, zf in ((0, 0x40), (1, 0)):
+            mu.mem_write(stub * 16 + log, bytes(2))
+            mu.mem_write(GAME_DS * 16 + 0x13FA, bytes((flag,)))
+            self.call(mu, "join_ready", eax=0x1111, ebx=0x2222, esi=0x3333, edi=0x4444)
+            calls = struct.unpack("<H", mu.mem_read(stub * 16 + log, 2))[0] // 4
+            got = [struct.unpack_from("<HH", mu.mem_read(stub * 16 + log + 2 + 4 * i, 4)) for i in range(calls)]
+            self.assertEqual(got, [(0, 0), (0, 1)])
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40, zf)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_SP, r.UC_X86_REG_BP)],
+                             [0x1111, 0x2222, 0x3333, 0x4444, 0x800, 0x600])
+
     def test_patches(self):
-        """The two sites are where the game has what they replace."""
+        """The sites are where the game has what they replace."""
         patches = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(patches["protection_ac"].replacement, bytes((0xCD, ravager.VEC_SITE, 43, 0x90, 0x90, 0x90)))
         self.assertEqual(patches["protection_save"].replacement, bytes((0xCD, ravager.VEC_SITE, 44, 0x90, 0x90)))
         self.assertEqual(patches["weapon_cast"].replacement, bytes((0xCD, ravager.VEC_SITE, 46, 0x90, 0x90)))
+        self.assertEqual(patches["join_ready"].replacement, bytes((0xCD, ravager.VEC_SITE, 47, 0x90, 0x90)))
+        self.assertEqual(patches["worn_spell_off"].replacement, bytes.fromhex("7e10"))
 
 
 if __name__ == "__main__":

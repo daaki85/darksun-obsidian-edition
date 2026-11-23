@@ -2992,6 +2992,7 @@ site_table:
         dw prot_save                        ; 44 SITE_PROT_SAVE (a save's modifiers started)
         dw amulet_mr                        ; 45 SITE_AMULET_MR (a target's magic resistance tested)
         dw weapon_cast                      ; 46 SITE_WEAPON_CAST (a weapon's spell cast on a hit)
+        dw join_ready                       ; 47 SITE_JOIN_READY (a member joined: its worn items readied)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3983,6 +3984,100 @@ weapon_cast:
         pop bx
         iret
 weapon_casts dw 0
+; JOIN_READY (site 47, "join_ready"): "cmp byte [13FAh],0" (58D81h; 5 bytes) in the ADD screen's routine,
+; right after a roster character is loaded into the party (its CHAR, c8h:0Ah, at 58D33h). The game puts
+; an item's spell (its +10h, the spell + 1) on its wearer only when the item is readied on the inventory
+; screen (77C1Ah, 5E8h:39h, as Shattered Lands' 6F7F7h), so a member added from the roster (the party
+; carried over from Shattered Lands, or the sequel's own) wore its magic armour with no spell on. Each
+; worn item (+13h below JR_WORN) with a spell is readied once through that routine (the creature, the
+; item), in a frame the overlay manager can fix up (as IMAGE_BLOW's). The compare's flags into the INT's
+; frame. (logs/2026-11-23-ravager-worn.md)
+JR_STUB    equ 0x4713 - 0x47E0  ; (5E8h's stub segment less DS's: 39h the ready routine)
+JR_ENTRY   equ 0x39
+JR_WORN    equ 14               ; (worn slots 0-13; 15 the backpack, 255 on the pointer)
+JR_POWER   equ 0x10
+JR_FLAG    equ 0x13FA
+join_ready:
+        sti
+        pushad
+        push es
+        mov di, sp
+        cmp byte [JR_FLAG], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [ss:di + 38], ~FLAGS_MASK
+        or [ss:di + 38], ax
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]
+        mov [cs:jr_who], ax
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back as a far call's frame, for the overlay manager)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov word [cs:jr_list], 8
+.list:  imul bx, [cs:jr_who], CREATURE_SIZE
+        les si, [CREATURES_PTR]
+        add bx, si
+        add bx, [cs:jr_list]
+        mov dx, [es:bx]
+        cmp dx, NO_ITEM
+        jae .next
+        imul bx, dx, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 1
+        jne .next                       ; not an item
+        mov dx, [es:bx + FIGHTERS_OFF + 1]
+        mov word [cs:jr_left], 100      ; (no more than 100 in a list)
+.item:  cmp dx, NO_ITEM
+        jae .next
+        dec word [cs:jr_left]
+        js .next
+        mov [cs:jr_item], dx
+        imul bx, dx, ITEM_SIZE
+        les si, [ITEMS_PTR]
+        add bx, si
+        mov dx, [es:bx + ITEM_NEXT]
+        cmp byte [es:bx + ITEM_SLOT], JR_WORN
+        jae .item
+        cmp word [es:bx + JR_POWER], 0
+        je .item
+        mov [cs:jr_next], dx
+        mov ax, ds
+        add ax, JR_STUB
+        mov [cs:jr_far + 2], ax
+        mov word [cs:jr_far], JR_ENTRY
+        push word [cs:jr_item]
+        push word [cs:jr_who]
+        call far [cs:jr_far]            ; (the creature, the item)
+        add sp, 4
+        inc word [cs:join_readied]
+        mov dx, [cs:jr_next]
+        jmp .item
+.next:  add word [cs:jr_list], 2
+        cmp word [cs:jr_list], 0x0E
+        jb .list
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        iret
+jr_far   dd 0
+jr_who   dw 0
+jr_list  dw 0
+jr_item  dw 0
+jr_next  dw 0
+jr_left  dw 0
+join_readied dw 0               ; worn items readied as a member joined (for the tests)
 th_level  db 0
 th_target dw 0xFFFF
 cast_who  dw 0

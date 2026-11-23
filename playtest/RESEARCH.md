@@ -1136,6 +1136,15 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   for a shot the ammunition's first (a word at 308h:[7]). To try one, write both words in memory on a held
   weapon or on arrows (the Draxans' are type 18, items 154, 148 and 142 in ravhold.sh's fight). SL and the
   sequel number spells apart: match them by name (`ravtransfer.spell_map`).
+- **A worn item's spell** (2026-11-23, logs/2026-11-23-ravager-worn.md): readied (77C1Ah, 5E8h:39h:
+  the creature, the item) it is cast on the wearer if the spell is the self kind; unreadied (77CDBh) it
+  ends (628h:BBh, 864EDh: the wearer's effects of that spell), which only the Loader's `worn_spell_off`
+  makes work. A roster member added on the ADD screen is readied by DSCLOG2's JOIN_READY. **To test
+  the ADD screen with a powered item**: a copy of `$WORK/rav` (`cp -al`, then the roster replaced by a
+  real file) with a roster CHAR's item records changed through `icons.with_chunks` on the original
+  file (`ravtransfer._gff_file` makes a file the ADD list reads as empty). Read effects raw at the
+  load + 3E71h:24Dh (owner, caster, spell, the effect's id at +6). `shot.sh` fails for the sequel's
+  copy; `import -window ID` (xdotool search --pid) grabs it.
 - **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).

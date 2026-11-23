@@ -498,6 +498,15 @@ PATCHES: Tuple[Patch, ...] = (
     # makes the cast's pushes of its level and spell ("push 6 / push word [bp-18h]", 5D2C2h, SL's
     # 58BE6h) and marks the cast a weapon's for TH_CAST
     Patch("weapon_cast", 0x5D2C2, bytes.fromhex("6a06ff76e8"), _site(46, 5)),
+    # A worn item's spell never ended when the item was taken off (SL's does: its 6F8B9h): the unready
+    # routine (77CDBh, the item's +10h less 1 in DX) skips the removal (628h:BBh, 864EDh: the wearer's
+    # effects of that spell) with "cmp dx,-1 / jbe" (77D0Fh), an unsigned compare every spell passes
+    # (the C's "spell > -1" on an unsigned): jbe made jle (logs/2026-11-23-ravager-worn.md)
+    Patch("worn_spell_off", 0x77D12, bytes.fromhex("7610"), bytes.fromhex("7e10")),
+    # a member added from the roster (the ADD screen, 58CB5h) wears its items with no spell on, the
+    # game putting one on only as an item is readied: DSCLOG2's JOIN_READY readies each worn item with
+    # a spell (77C1Ah) at "cmp byte [13FAh],0" (58D81h), right after the character's CHAR is loaded
+    Patch("join_ready", 0x58D81, bytes.fromhex("803efa1300"), _site(47, 5)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
