@@ -1,6 +1,7 @@
 """DSCLOG's shared frame code from the sixth memory pass, run in a CPU emulator (needs `pip install
 unicorn`): FAR_GAME (the GAME_FAR macro's far call into the game), FRAME_UP and FRAME_DOWN (an
-interrupt's frame a word up or down), and the sites that use them."""
+interrupt's frame a word up or down), OVR_FRAME (a handler's frame for the overlay manager), and
+the sites that use them."""
 import os
 import re
 import struct
@@ -90,6 +91,16 @@ class FrameCodeTests(unittest.TestCase):
         self.assertEqual([self.word(0x7EC + 2 * k) for k in range(3)], [0x1A1A, 0x2B2B, 0x0246])
         self.assertEqual(self.word(0x7F6), 0x4444)  # (the caller's own words below the room kept)
         self.assertEqual([self.reg("ax"), self.reg("bp"), self.reg("eflags") & 0xFFF], [0xA1A1, 0x1111, td.IF | 0x83])
+
+    def test_ovr_frame_pushes_the_way_back_as_a_far_call(self):
+        """OVR_FRAME after PUSHAD and PUSH ES (34 bytes over the interrupt's IP, CS, flags): CS then IP
+        pushed, then BP, BP = SP, BX the SP before them; other registers and flags as they were."""
+        self.mu.mem_write(SS * 16 + 0x7DE, bytes(34) + struct.pack("<HHH", 0x1A1A, 0x2B2B, 0x0246))
+        self.run_stub(self.near("ovr_frame", self.at + 0x40), 3, esp=0x7DE, eax=0xA1A1, ecx=0xC1C1,
+                      eflags=td.IF | 0x83)
+        self.assertEqual([self.reg("sp"), self.reg("bp"), self.reg("bx")], [0x7D8, 0x7D8, 0x7DE])
+        self.assertEqual([self.word(0x7D8 + 2 * k) for k in range(3)], [0x1111, 0x1A1A, 0x2B2B])
+        self.assertEqual([self.reg("ax"), self.reg("cx"), self.reg("eflags") & 0xFFF], [0xA1A1, 0xC1C1, td.IF | 0x83])
 
     def test_box_pops_drop_their_bytes(self):
         """BOX_POP4, BOX_POP6, BOX_POP10 as the game's "add sp,4" / 6 / 0Ah after the INT: back at the
