@@ -512,6 +512,12 @@ def render(game, model, pose, role, layers=None):
                     if edge <= x <= center and (y > shoulder or c is not None):
                         drape = True
                         fold = (x - center) / max(1.0, center - edge)
+                # The free tip reaches its widest point above the hem. The last
+                # three rows fold back toward the trailing knee on the two long steps.
+                if panel and model == figures.ELF_MAN and cape in ("Preserver", "Ranger"):
+                    remaining = panel_hem - y
+                    if 0 <= remaining <= 2 and x < panel[1] + (4, 2, 1)[remaining]:
+                        drape = False
                 if drape:
                     # Cloth fans out from the shoulder and bunches at the
                     # waist. Use broad midtones with one short crest per fold.

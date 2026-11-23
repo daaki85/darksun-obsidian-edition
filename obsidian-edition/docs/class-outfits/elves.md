@@ -38,7 +38,9 @@ The cream Cleric robe gathers at the belt and opens over the knee. On the Preser
 
 This historical comparison shows the first texture pass after `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
 
-The male Preserver and Ranger have the heaviest outlines on side walk steps 2 and 3. The cloth gathers into a blunt wedge behind the elbow. The original blue Mage and cloaked human also flare during the stride, but their trailing edges taper to a point. The female Thief’s hood keeps an angular silhouette in front strike 2, with a lit crown and darker neck folds. The Psionicist’s straight tunic edge in profile now encloses several teal shades. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
+The male Preserver and Ranger reach their widest point above the hem in side walk steps 2 and 3. The last three rows taper back toward the knee like the original Mage’s trailing cloak. The equipped cloak follows the new outline. [Previous and revised walk](worn-elf-profile.gif) · [Equipment on all six figures](worn-equipment.md)
+
+The female Thief’s hood keeps an angular silhouette in front strike 2, with a lit crown and darker neck folds. The Psionicist’s straight tunic edge in profile now encloses several teal shades. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
 
 | Checklist item | Result |
 |---|---|

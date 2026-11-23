@@ -48,6 +48,7 @@ GLINT = tuple(range(240, 249))
 FIRE_GLOW, GREEN_GLOW, VIOLET_GLOW, BLUE_GLOW = range(4)
 GLOWS = (GLINT, (1, 2, 3, 4, 5), (6, 7, 8, 9, 10), (11, 12, 13, 14, 15))
 MAGIC_ARMOUR = 0x10000  # (with an armour's item type in armed's ARMOUR: it is magic, and glints)
+VEILED_DYE = 1 << 20  # visual variant; the underlying chest item retains its game type
 GLOW_SHIFT = 17  # (... in the colours GLOWS[type >> GLOW_SHIFT])
 # The other weapons spells make: drawn whole in the colours the game cycles, as the Flame Blade in
 # the fire's, in those their icons glow in: Shillelagh (28) the fire's, Spiritual Hammer (30) the blue
@@ -110,9 +111,9 @@ def sparkle(rows: Rows, before: Rows, colours: Tuple[int, ...] = GLINT) -> None:
     sparkle_cells(rows, changed, colours)
 
 
-def sparkle_cells(rows, changed, colours):
+def sparkle_cells(rows, changed, colours, spacing=None):
     """Use the game's cycled palette on the visible surface of this item."""
-    step = 5 if len(changed) < 150 else 9  # (a cloak, sparser)
+    step = spacing or (5 if len(changed) < 150 else 9)
     picked = [(x, y) for x, y in changed if (x + 2 * y) % step == 0]
     if len(picked) < 2:
         picked = changed[::2]
@@ -454,7 +455,7 @@ def _line(a: Tuple[float, float], b: Tuple[float, float]) -> List[Tuple[float, f
 
 
 def draw_back_gear(rows: Rows, body: Rows, parts: sp.Parts, pad: int, bow: bool, quiver: bool,
-                   at_hip: Optional[Tuple[int, int]] = None) -> None:
+                   at_hip: Optional[Tuple[int, int, int]] = None, missile_shape: Optional[str] = None) -> None:
     """A bow and a quiver on the back (across it from behind; their tops past the shoulders and a
     strap across the chest from the front; hanging behind the back from the side), and a sling or
     chatkcha at the hip (AT_HIP: its colours)."""
@@ -488,7 +489,15 @@ def draw_back_gear(rows: Rows, body: Rows, parts: sp.Parts, pad: int, bow: bool,
             _put(rows, x, y, QUIVER[0], False, body)
     if at_hip:
         side = sa if parts.facing != sp.BACK else sb
-        for dx, dy, c in ((0, 0, 0), (0, 1, 1), (0, 2, 1), (-1, 2, 0), (1, 2, 0), (0, 3, 0)):
+        # Fasten the pouch or throwing blade to the visible waist rather
+        # than projecting the shoulder width down to belt height.
+        belt = [x for x, p in enumerate(body[waist]) if p is not None]
+        if belt:
+            side = min(belt, key=lambda x: abs(x - side))
+        hip_pixels = ((0, 0, 0), (0, 1, 1), (0, 2, 1), (-1, 2, 0), (1, 2, 0), (0, 3, 0))
+        if missile_shape == CHATKCHA:
+            hip_pixels = ((0, 0, 0), (0, 1, 1), (-1, 2, 2), (0, 2, 1), (1, 2, 0), (-2, 3, 0))
+        for dx, dy, c in hip_pixels:
             _put(rows, side + dx, waist + dy, at_hip[c], False, body)
     # long hair falls over what is on the back
     for x, y in parts.hair:
@@ -862,9 +871,35 @@ def paint_region(rows, cells, shades, pad, pattern=None, source=None):
             colour = _by_light(p, shades)
         else:
             top = len(shades) - 1
-            rank = min(top, round(_LIGHT.get(p, 0.5) * 1.7 * top))
+            light = _LIGHT.get(p, 0.5)
+            if pattern == PLATE:
+                # The cream and bone highlights need room above the midtone.
+                # Resolve fractional steel shades with a staggered one-pixel glint.
+                value = min(1.0, 1.55 * min(light, 0.45) + 0.55 * max(0.0, light - 0.45))
+                threshold = ((x + 2 * y + y // 3) % 4 + 0.5) / 4
+                rank = min(top, int(top * value + threshold))
+            else:
+                rank = min(top, round(light * 1.7 * top))
             colour = shades[_pattern(pattern, x, y, rank, top)]
         rows[y + pad][x + pad] = colour
+
+
+# Palette from the inventory art: the Chameleon Gloves are blue-grey;
+# the Quicksilver Glove has a silvery face over a leather palm.
+GLOVE_SHADES = {37: (17, 19, 22, 24, 26, 29), 113: (204, 207, 210, 212, 214, 215)}
+VEILED_CLOTH = (17, 18, 20, 22, 23, 25, 26, 28)
+ASHEN_BINDING = (209, 210, 211, 212, 213, 214, 215, 216)
+VEILED_BINDING = (204, 205, 64, 65, 168, 45)
+
+
+def robe_binding(rows, cells, pad, source, veiled):
+    """Follow the visible fold one pixel inside the chest panel."""
+    right = {}
+    for x, y in cells:
+        right[y] = max(x, right.get(y, x))
+    trim = VEILED_BINDING if veiled else ASHEN_BINDING
+    seam = [(x, y) for x, y in cells if x == right[y] - 1]
+    paint_region(rows, seam, trim, pad, source=source)
 
 
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
@@ -940,15 +975,32 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                     piece, shades, pattern = ARMOUR[kind]
                     bit = {ARMOUR_CHEST: classoutfits.CHEST, ARMOUR_ARMS: classoutfits.ARMS,
                            ARMOUR_LEGS: classoutfits.LEGS}[piece]
+                    if item_type & VEILED_DYE and kind == game.ROBE_TYPE:
+                        shades = VEILED_CLOTH
                     cells = costume.regions[bit]
+                    if kind == game.ROBE_TYPE:
+                        # The robe falls over existing lower garment pixels. Preserve
+                        # bare legs, boots and the class mantle above it.
+                        protected = set(cells)
+                        for owner in (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT, classoutfits.BOW,
+                                      classoutfits.FOREARM, classoutfits.ARMS):
+                            protected.update(costume.regions[owner])
+                        protected.update((x, y) for x, y, _ in costume.cloak)
+                        skirt = [(x, y) for x, y in costume.regions[classoutfits.LEGS]
+                                 if (x, y) not in protected and base_outfit[y + pad][x + pad] is not None
+                                 and not 128 <= base_outfit[y + pad][x + pad] <= 154]
+                        cells = [*cells, *skirt]
                     # Always take the dye value from the original cloth, even where
                     # two pieces overlap or the chest underneath already glints.
                     paint_region(out, cells, shades, pad, pattern, source=base_outfit)
+                    if kind == game.ROBE_TYPE:
+                        robe_binding(out, cells, pad, base_outfit, bool(item_type & VEILED_DYE))
                     if item_type & MAGIC_ARMOUR:
                         sparkle_cells(out, [(x + pad, y + pad) for x, y in cells],
-                                      GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
+                                      GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)],
+                                      spacing=11 if kind == game.ROBE_TYPE or pattern == PLATE else None)
                 else:
-                    draw_armour(out, model, parts, kind, pad, own)
+                    draw_armour(out, model, parts, kind, pad, own, bool(item_type & VEILED_DYE))
                 if before is not None:
                     sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
     if (parts.facing is not None or costume) and model != sp.KREEN:
@@ -1025,7 +1077,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         shape = WEAPON_SHAPES.get(missile[0]) if missile else None
         bow = shape == BOW and not (combat and frame in sp.BOW_FRAMES)
         hip = MATERIAL_COLOURS.get(missile[1], MATERIAL_COLOURS[5]) if shape in (SLING, CHATKCHA) else None
-        draw_back_gear(out, body, parts, pad, bow, "ammo" in weapons or shape == BOW, hip)
+        draw_back_gear(out, body, parts, pad, bow, "ammo" in weapons or shape == BOW, hip, shape)
     if costume and (missile or "ammo" in weapons):
         for x, y in costume.regions.get(classoutfits.FOREARM, ()):
             out[y + pad][x + pad] = body[y + pad][x + pad]
@@ -1065,6 +1117,20 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         elif parts.facing == sp.SIDE and "left" not in hands and "right" in hands:
             hx, hy = hands["right"]
             hands["left"] = (hx-2, hy-1)
+    if costume:
+        for hand, point in hands.items():
+            item = weapons.get(hand)
+            if item and item[0] in GLOVE_SHADES and point:
+                hx, hy = point
+                # The same owner mask that keeps swords and cloaks behind the arm.
+                # A hidden hand has no visible pixels to dye.
+                cells = [(x, y) for x, y in costume.regions[classoutfits.FOREARM]
+                         if abs(x - hx) + abs(y - hy) <= 3
+                         and out[y + pad][x + pad] == body[y + pad][x + pad]]
+                paint_region(out, cells, GLOVE_SHADES[item[0]], pad)
+                if cells and _magic(item):
+                    x, y = min(cells, key=lambda p: (p[1], p[0]))
+                    out[y + pad][x + pad] = _glow(item)[(x + y) % len(_glow(item))]
     if combat and frame in sp.BOW_FRAMES:
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
@@ -1114,6 +1180,15 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 g = (160, g[1])
             elif combat and model == 2061 and frame == 2 and hand == "right" and shape in (STAFF, GYTHKA):
                 g = (200, g[1])
+        if costume and model in classoutfits.DWARVES and combat and hand == "right":
+            # The shorter figure's low recoil and follow-through expose the tip
+            # below its soles. Keep the hand fixed and turn the shaft outward.
+            if frame == 12:
+                g = (150, False)
+            elif frame == 8 and shape in (GREAT_AXE, POLEARM):
+                g = (45, False)
+            elif shape == GREAT_AXE and frame in (0, 1, 6):
+                g = ({0: 280, 1: 205, 6: 245}[frame], g[1])
         if costume and model in (2095, 2099) and combat and frame == 12 and hand == "right" and shape != SHIELD:
             g = (155, False)  # Lowered across the body, clear of the baseline.
         if costume and model in (2095, 2099) and combat and frame == 1 and hand == "left" and shape != SHIELD:
@@ -1130,8 +1205,12 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         scale = MODEL_SCALE.get(model, 1.0)
         if shape in TWO_HANDED and not combat and hand == "right":
             g = UPRIGHT.get(parts.facing, g)
+            if costume and model in classoutfits.DWARVES and frame == 11 and shape in (STAFF, GYTHKA):
+                g = (315, False)
         elif not combat and shape != SHIELD and shape not in TWO_HANDED and parts.facing in SHEATHED:
             g = SHEATHED[parts.facing][hand]
+            if costume and model in classoutfits.DWARVES and frame == 11 and shape == MACE:
+                g = (130, g[1])
             hx, hy = _hip(out, parts, hx, pad)
             draw_hilt(out, body, (hx + pad, hy + pad), g[0], colours, g[1])
             scale = SHEATHED_SCALE * MODEL_SCALE.get(model, 1.0)
@@ -1169,7 +1248,7 @@ PLAIN, RINGS, STUDS, SCALES, CHAIN, PLATE = "plain", "rings", "studs", "scales",
 # shades, dark to light (muted, from the colours no region changes)
 LEATHER_SHADES = (204, 207, 205, 194, 206)  # (faded browns)
 BONE_SHADES = (207, 194, 206, 213, 214, 215)
-METAL_SHADES = (18, 22, 23, 25, 27, 28)  # plate: blue-grey iron
+METAL_SHADES = (17, 18, 20, 22, 23, 24, 25, 26, 27, 29)  # plate: blue-grey iron
 CHAIN_SHADES = (209, 210, 211, 212, 213, 214)  # mail: plain grey
 SILK_SHADES = (194, 206, 213, 214, 215, 216)
 DRAKE_SHADES = (210, 53, 54, 55, 56)
@@ -1228,6 +1307,8 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     """The shade (0 the darkest) with a light touch of the armour's pattern, on its lighter shades."""
     if shade < 2:
         return shade
+    if pattern == PLATE and shade >= top - 2 and (x + 2 * y) % 5 == 0:
+        return min(top, shade + 1)  # short specular edges on the brightest planes
     if pattern == CHAIN and (x + y) % 2 == 0:
         return shade - 1  # (mail's fine weave)
     if pattern == SCALES and y % 2 == 1 and (x + (y // 2) % 2) % 2 == 0:
@@ -1237,10 +1318,13 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     return shade
 
 
-def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int, own: Optional[Own] = None) -> None:
+def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int,
+                own: Optional[Own] = None, veiled: bool = False) -> None:
     """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
     (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
     piece, shades, pattern = ARMOUR[item_type]
+    if veiled and item_type == game.ROBE_TYPE:
+        shades = VEILED_CLOTH
     clothes = own.clothes if own is not None and own.clothes else CLOTHES.get(model, ())
     cloak = own.cloak if own is not None else frozenset()
     if not clothes or parts.waist is None:

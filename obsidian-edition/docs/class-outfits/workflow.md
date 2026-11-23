@@ -53,6 +53,8 @@ Compare every outfit, on both figures, beside original Shattered Lands figures a
 
 ### Equipped play
 
+- [ ] Compare the uncovered outfit, chest plate, complete plate, and magical set at 1× on terrain. Follow edges from chest to arms and legs, then compare the rear mantle between renders. Try each named robe with its actual inventory record. Check its binding, lower folds, glow and removal. Compare both glove weapons on the hand that actually swings, the two exposed boots, and the difference between a bracer and a glove. Include long and short weapons on a canvas extended below the feet, the dwarf recoil, the great-axe head through the swing and the sling or chatkcha at the walking hip. [Six-figure equipment review](worn-equipment.md)
+
 | Reproduce the human test | Passing appearance on the new model |
 |---|---|
 | Empty foot slot → equip Boots of Speed → remove, in poses showing both feet and poses with one foot hidden | Bare feet are an accepted empty-slot appearance. Both visible feet take the boot treatment, with the far foot correctly hidden when the pose calls for it. Removal restores each foot. Inspect the hit pose separately for a leftover stock boot. |

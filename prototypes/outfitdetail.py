@@ -177,6 +177,11 @@ def shade_frame(rows, paint, regions, folds, heads, base, model, role, waist, pa
             if 11 <= x - left <= 15 and 12 <= y - top <= 15:
                 shade = 88
         paint[y][x] = shade
+        if folds[y][x] and shade != c:
+            # Translate the new fold relief into the six steps used by an equipped cloak.
+            delta = sum((v - u) * weight for u, v, weight in
+                        zip(palette[c], palette[shade], (0.299, 0.587, 0.114)))
+            folds[y][x] = max(1, min(6, folds[y][x] + round(delta / 22)))
 
 
 def finish_archive(game, source, output):
@@ -191,7 +196,7 @@ def finish_archive(game, source, output):
             entries = set(src.namelist())
             female = "Base/walk" in entries
             for name in src.namelist():
-                if name.endswith("-underpaint"):
+                if name.endswith(("-underpaint", "-dye")):
                     continue
                 data = src.read(name)
                 prefix, tag = name.rsplit("/", 1)
@@ -207,7 +212,7 @@ def finish_archive(game, source, output):
                     aux = [stream(name + "-regions"), stream(name + "-cloak"),
                            stream(("Base/" + tag if female else name) + "-head"),
                            stream("Base/" + tag) if female else None]
-                    frames = []
+                    frames, dyes = [], []
                     for f in range(14 if cb else 15):
                         rows = game.fr(model + cb, f)
                         paint = art.decode_frame(raw, f)[2]
@@ -216,7 +221,9 @@ def finish_archive(game, source, output):
                         shade_frame(rows, paint, *masks, model, role, waist if waist is not None else len(rows) // 2,
                                     palette, swatches, f + 15 * cb)
                         frames.append(paint)
+                        dyes.append(masks[1])
                     data = sprites.encode_frames(frames)
+                    dst.writestr(ZipInfo(name + "-dye"), sprites.encode_frames(dyes), ZIP_DEFLATED)
                     dst.writestr(ZipInfo(original), raw, ZIP_DEFLATED)
                 dst.writestr(ZipInfo(name), data, ZIP_DEFLATED)
         os.replace(temp_path, output)

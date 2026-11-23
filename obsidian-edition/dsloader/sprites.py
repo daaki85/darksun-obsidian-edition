@@ -426,6 +426,7 @@ def worn(gd: GameData, member: int, chunks=None) -> Tuple[Dict[str, Tuple[int, .
     MAGIC_ARMOUR added (it glints too). With the objects file's CHUNKS, each glows in the colours
     nearest its icon's (item_glow: a 4th element, or GLOW_SHIFT's bits); without, the fire's."""
     from .icons import which
+    from .robes import VEILED_PLUS
     gear: Dict[str, Tuple[int, ...]] = {}
     armour: List[int] = []
     for _, item, typ in gd._worn(member):
@@ -438,6 +439,8 @@ def worn(gd: GameData, member: int, chunks=None) -> Tuple[Dict[str, Tuple[int, .
         magic = _magic(item) or kind in sg.SPELL_WEAPONS  # (Shillelagh's no plus, but a spell's)
         glow = item_glow(chunks, item) if magic and chunks is not None else sg.FIRE_GLOW
         if name in ARMOUR_SLOTS:
+            if kind == game.ROBE_TYPE and VEILED_PLUS <= item[game.ITEM_PLUS] < 128:
+                kind |= sg.VEILED_DYE
             armour.append(kind | (sg.MAGIC_ARMOUR | glow << sg.GLOW_SHIFT if magic else 0))
         elif name in HANDS:
             special = which(bytes(item))

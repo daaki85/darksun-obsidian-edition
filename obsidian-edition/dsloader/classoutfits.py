@@ -197,7 +197,11 @@ def frames(role, combat, model=2095):
         else:
             heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
         pictures = archive.read(f"{prefix}/{tag}")
-        cloaks = archive.read(f"{prefix}/{tag}-cloak")
+        dye = f"{prefix}/{tag}-dye"
+        try:
+            cloaks = archive.read(dye)
+        except KeyError:
+            cloaks = archive.read(f"{prefix}/{tag}-cloak")
         masks = archive.read(f"{prefix}/{tag}-regions")
     poses = []
     for f in range(14 if combat else 15):

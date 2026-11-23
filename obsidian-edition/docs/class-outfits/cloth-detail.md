@@ -6,7 +6,7 @@ The largest changes are on the elf Psionicists, the cream robes and the slate ho
 
 [Watch four representative outfits through the side, rear, and front walks](cloth-detail.gif) · [All human and dwarf animations](README.md) · [All elf animations](elves.md)
 
-The middle two steps of the male elf Preserver and Ranger still have the broadest outline. Both now have a dark recess and a lit fold inside that panel. The squared-off trailing corner remains visible in profile. [Watch those four steps beside the retail Mage and cloaked human](elf-stock-side-walk.gif)
+The male elf Preserver and Ranger still had a squared-off corner in this revision. The following equipment pass tapered the hem in side walk steps two and three and carried the fold shading into equipped cloaks. [Compare the previous and revised steps](worn-elf-profile.gif) · [Equipped figures and measurements](worn-equipment.md)
 
 ## In the arena
 

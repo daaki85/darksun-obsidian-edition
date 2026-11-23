@@ -6,6 +6,48 @@ from zipfile import ZipFile
 from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
 
 
+class WornMaterialTests(unittest.TestCase):
+    def test_actual_robe_items_select_distinct_visuals(self):
+        from dsloader import robes
+
+        class Wearing:
+            def __init__(self, name):
+                self.record = bytearray(robes.item(name))
+                self.record[game.ITEM_SLOT] = robes.CHEST_SLOT
+
+            def _worn(self, member):
+                return [(0, self.record, bytes(game.ITEM_TYPE_SIZE))]
+
+        for name, dye in ((robes.ASHEN, 0), (robes.VEILED, sg.VEILED_DYE)):
+            _, (piece,) = sprites.worn(Wearing(name), 0)
+            self.assertEqual(piece & (sg.MAGIC_ARMOUR - 1), game.ROBE_TYPE)
+            self.assertEqual(piece & sg.VEILED_DYE, dye)
+            self.assertTrue(piece & sg.MAGIC_ARMOUR)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_glove_tracks_striking_hand_and_robe_keeps_the_mantle(self):
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        for obj, model in classoutfits.MODELS.items():
+            role = "Mage" if obj < 302 else "Thief" if obj < 304 else "Preserver"
+            pose = classoutfits.frames(role, True, model)[1]
+            side, top = sprites.room(True)
+
+            def render(items, armour):
+                return art.decode_frame(pictures.build(obj, True, items, armour, role=role), 1)[2]
+
+            plain = render({}, ())
+            glove = render({"right": (113, 5, sg.MAGIC, sg.BLUE_GLOW)}, ())
+            changes = {(x - side, y - top) for y, row in enumerate(glove)
+                       for x, color in enumerate(row) if color != plain[y][x]}
+            with self.subTest(model=model):
+                self.assertTrue(changes)
+                self.assertTrue(changes.issubset(pose.regions[classoutfits.FOREARM]))
+                robed = render({}, (game.ROBE_TYPE | sg.MAGIC_ARMOUR | sg.VEILED_DYE,))
+                self.assertTrue(all(robed[y+top][x+side] == plain[y+top][x+side]
+                                    for x, y, _ in pose.cloak))
+                self.assertEqual(render({}, ()), plain)
+
+
 class HumanOutfitTests(unittest.TestCase):
     def test_class_uses_current_slot_of_human_sheet(self):
         sheet = bytearray(game.SHEET_SIZE)
@@ -526,6 +568,16 @@ class ElfOutfitTests(unittest.TestCase):
                     self.assertIn((x, 14), {(a, b) for a, b, _ in frame.cloak})
                     self.assertIsNotNone(frame.image[14 + 4][x + 4])
                     self.assertNotIn((x, 14), frame.regions[classoutfits.CHEST])
+
+    def test_long_profile_cloaks_turn_in_after_the_widest_point(self):
+        for role in classoutfits.ELF_ROLES.values():
+            if not {"Preserver", "Ranger"}.intersection(role.split("/")):
+                continue
+            for f in (12, 13):
+                pose = classoutfits.frames(role, False, 2061)[f]
+                edge = [min(x for x, row, _ in pose.cloak if row == y) for y in (17, 18, 19, 20)]
+                with self.subTest(role=role, frame=f):
+                    self.assertTrue(all(a < b for a, b in zip(edge, edge[1:])), edge)
 
     def test_hood_covers_the_rear_crown_and_releases_the_flying_lock(self):
         for role in classoutfits.ELF_ROLES.values():
