@@ -63,12 +63,13 @@ LEATHER = (208, 88, 207, 92, 96)
 BONE = (205, 206, 199, 155)
 HIDE = (88, 92, 95, 168)  # turned edge, shadow, face and worn leather
 HOOD = (208, 17, 20, 24, 28)
+LIT_HOOD = (*HOOD[:3], 25, HOOD[4])
 CREAM = (207, 194, 61, 199, 155)
 PLUM = (17, 174, 175, 58, 119)
 LEAF = (207, 188, 54, 55, 56)
 OCHRE = (204, 95, 168, 169, 170)
 FOREST = (17, 69, 53, 54, 56)
-BRONZE = (204, 94, 168, 185)
+BRONZE = (204, 94, 168, 186)
 TEAL = (17, 69, 70, 71, 73)
 FLESH = (134, 132, 130, 145, 147)
 CLOAK_LENGTHS = {"Thief": 4, "Mage": 3, "Druid": 3, "Ranger": 4, "Priest": 5}
@@ -238,7 +239,7 @@ def hood_shade(x, row, head_rows, turned):
     return None
 
 
-def shoulder_guard(rows, point, side, ramp):
+def shoulder_guard(rows, point, side, ramp, crest=2):
     """Fit a domed plate to the lit upper arm and stitch its lower edge."""
     if point is None:
         return {}
@@ -246,7 +247,7 @@ def shoulder_guard(rows, point, side, ramp):
     # Run the light over the shoulder, then turn the outer lip down
     # the arm. The inside rivet and dark welt sit against the harness.
     shape = (
-        (0, -1, 2),
+        (0, -1, crest),
         (-1, 0, 3),
         (0, 0, 2),
         (1, 0, 1),
@@ -291,7 +292,9 @@ def draw(game, model, k, role, design=None, layers=None):
     else:
         head_rows = FRONT_HEAD
     hooded = role == "Thief" or (design and design.hood)
-    hood_ramp = HOOD
+    # The open hood and side cloak catch one more step of slate on the ridge.
+    slate = HOOD if rear else LIT_HOOD
+    hood_ramp = slate
     if design and design.hood:
         hood_ramp = LEATHER
     elif hooded and design and design.sash:
@@ -315,9 +318,10 @@ def draw(game, model, k, role, design=None, layers=None):
         # The same anatomical arm is on screen left in a rear view.
         # Only its leather strap is visible when the arm turns away.
         point, side = (left, 1) if rear or profile else (right, -1)
-        guards.update(shoulder_guard(rows, point, side, BRONZE))
+        guards.update(shoulder_guard(rows, point, side, BRONZE, crest=3))
     bow = game.bow(figure, rows, figure.parts(combat, f)) if k in (24, 25, 26) else set()
     palette = RAMPS[ROLES.index(role)] if role else FLESH
+    cloak_ramp = slate if role == "Thief" else palette
     lower = OCHRE if role == "Druid" else LEATHER if role == "Ranger" else palette
     hue = [sum(c * v for c, v in zip(rgb, (0.30, 0.59, 0.11))) for rgb in game.palette]
     pad = 4
@@ -435,7 +439,7 @@ def draw(game, model, k, role, design=None, layers=None):
                             fold = 4
                         fold_rank = (0, 1, 2, 4, 5)[fold]
                         if role in CLOAK_LENGTHS:
-                            paint = palette[fold]
+                            paint = cloak_ramp[fold]
                             cape = True
                             surface = 0
                         if role == "Druid" and d == CLOAK_LENGTHS[role] - max(
@@ -486,7 +490,8 @@ def draw(game, model, k, role, design=None, layers=None):
                     seam = (hy - y + (front_edge - x) // 2) % 4
                     tone = 0 if x == front_edge or seam == 0 else 3 if seam == 1 else 1
                     paint = HIDE[tone]
-                    if seam == 1 and 2 <= front_edge - x <= 3:
+                    stitch_start = 1 if 11 <= k <= 14 else 2
+                    if seam == 1 and stitch_start <= front_edge - x <= 3:
                         paint = BONE[2]  # pale stitching along the near panel
                     surface = co.CHEST
             if role == "Priest" and front_edge is not None and front_edge - 2 <= x <= front_edge:

@@ -2,7 +2,7 @@
 
 Each tile in the overview pairs the female dwarf facing forward with the male dwarf facing away. The animations below show both in the same pose. The branch loader now selects these registered outfits from the dwarf’s class slots. The [dwarf and human checklist results](checklist-review.md) include equipment comparisons, screenshots, and the remaining live inventory check. [Outfit workflow](workflow.md) · [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
 
-[Compare dwarf outfit contrast with both humans and the original game figures](contrast.md) · [Compare the revised Fighter builds](dwarf-fighter-review.gif) · [Watch the previous and revised Thief hood and Cleric robe side by side](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the original faces and shoulders with the previous and revised outfits](face-shoulder-review.png)
+[Compare dwarf outfit contrast with both humans and the original game figures](contrast.md) · [Watch the three garment contrast edits before and after](contrast.md#gladiator-fighter-and-thief-before-and-after) · [Compare the earlier Fighter revision](dwarf-fighter-review.gif) · [Watch the previous and revised Thief hood and Cleric robe side by side](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the original faces and shoulders with the previous and revised outfits](face-shoulder-review.png)
 
 ![All twelve playable dwarf outfits, grouped by number of classes, with front and rear views](dwarf-proposals.png)
 
@@ -11,10 +11,10 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 | Class | Proposed outfit |
 |---|---|
 | Cleric | The cream robe opens below the chin and falls below the knee. A narrow highlight and brown recess break up the front folds. |
-| Fighter | Small bone caps curve over the visible upper arms, with a leather edge under each. In profile, light stitching picks out the overlapping leather panels. Two tapered flaps hang below the belt. |
-| Gladiator | A bronze guard on one shoulder and a narrow harness leave most of the torso and both arms visible. |
+| Fighter | Small bone caps curve over the visible upper arms, with a leather edge under each. During the side walk, a pale stitch follows the edge of the overlapping leather panels above the wrist. Two tapered flaps hang below the belt. |
+| Gladiator | A bronze guard with a bright upper rim on one shoulder and a narrow harness leave most of the torso and both arms visible. |
 | Psionicist | A bright binding crosses the teal tunic below the jaw. The original brow and cheeks remain visible. |
-| Thief | The slate hood frames the temples and leaves the chin open. The rear wrap falls past the belt, with dark shorts visible in front. |
+| Thief | A lighter slate ridge picks out the front and side folds. The hood frames the temples and leaves the chin open. The rear wrap falls past the belt, with dark shorts visible in front. |
 
 ![Five single classes, female above male, synchronized through all 29 poses](dwarf-single.gif)
 

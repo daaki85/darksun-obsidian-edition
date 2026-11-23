@@ -1,6 +1,12 @@
 # Dwarf outfit contrast at game size
 
-The dwarf Cleric and Psionicist read clearly beside both humans. The two places where detail gets lost are the Fighter’s brown jerkin in the side walk and the Thief’s slate hood against dark paving. I would keep the current pale Cleric/Fighter caps and narrow Fighter/Psionicist sash. The larger contrast differences are in the single-class outfits.
+The dwarf Cleric’s cream folds and the Psionicist’s teal tunic read clearly beside the humans. The contrast pass focused on three smaller details that were harder to see in motion.
+
+## Gladiator, Fighter, and Thief before and after
+
+![Female and male dwarf Gladiator, Fighter, and Thief side by side before and after the contrast pass, through all 29 poses](dwarf-garment-contrast.gif)
+
+Each pair shows the previous outfit on the left and the current outfit on the right. The small figures are at game size and the figures above them are enlarged 2×. Look at the Gladiator’s upper shoulder rim in front idle, the Fighter’s light stitch just above the crossing wrist in side-walk step 3, and the Thief’s slate ridge as the hood turns into profile. Shared garments receive the same shading where visible on multiclasses. The Cleric/Fighter keeps its pale shoulder caps and the Fighter/Psionicist keeps its narrow teal sash.
 
 ## Dwarves, humans, and original game figures in motion
 
@@ -11,7 +17,7 @@ Each row follows one outfit through the 27 poses shared by all the comparison fi
 - **Cleric.** The dwarf’s cream hem splits into a light panel and a dark fold, much like the human woman’s robe. The split is easy to follow on paving. On bright sand the shaded fold does more to define the hem than the highlight. The original red Priest shows how a saturated color can stand out even with a narrower brightness range.
 - **Fighter and Gladiator.** In front view the Fighter’s light stitching and dark jerkin separate the armor from the arms. In side-walk step 3 both dwarves turn far enough that skin, leather, and bronze form a narrow brown strip. The human woman’s light shoulder and the original Warrior’s dark boots and bright weapon remain visible in the same pose. This is the view where the two dwarf classes are easiest to confuse.
 - **Psionicist.** The teal tunic stays distinct from the skin on both dwarves, as it does on the humans. The original blue Mage makes a larger patch of color across the back. The teal is clearest from the front, where it runs across the chest and down to the waist.
-- **Thief.** The dwarf’s slate hood frames the face on sand and ordinary paving. On dark paving its outer fold starts merging into the background. The human man’s muted hood is close in overall contrast. The human woman has a lighter fold, and the original green Thief has a stronger light-to-dark edge.
+- **Thief.** The dwarf’s slate hood frames the face on sand and ordinary paving. The raised fold now has a lighter slate edge in front and profile. Its outer shadow still blends into dark paving. The human man’s muted hood is close in overall contrast. The human woman has a lighter fold, and the original green Thief has a stronger light-to-dark edge.
 
 ## The two restored multiclasses
 
@@ -34,8 +40,8 @@ Each party pair shows the woman on the left and the man on the right in front id
 | Outfit | Dwarf woman | Dwarf man | Human woman | Human man | Original figure |
 |---|---:|---:|---:|---:|---:|
 | Cleric | 149 | 141 | 166 | 146 | 97 · Priest |
-| Fighter | 123 | 117 | 120 | 110 | 157 · Warrior |
-| Gladiator | 119 | 111 | 108 | 121 | 145 · stock dwarf |
+| Fighter | 123 | 118 | 120 | 110 | 157 · Warrior |
+| Gladiator | 122 | 111 | 108 | 121 | 145 · stock dwarf |
 | Psionicist | 122 | 112 | 106 | 112 | 120 · Mage |
 | Thief | 97 | 97 | 122 | 100 | 142 · Thief |
 
