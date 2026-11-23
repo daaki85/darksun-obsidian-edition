@@ -64,12 +64,43 @@ ROBE_PLUS) ported with the sequel's numbers. It uses two sites:
   | cloak off | 5 |
 
   ![](img/2026-11-23-ravager-protection-ac-control.png)
-- **Not seen in play yet:**
-  - **The limits.** No transferred member wears magical or metal armour or a shield with these items.
-    The emulation covers the limits.
-  - **The saves.** The inventory's save numbers are the sheet's own, without modifiers (they stay the
-    same with the ring on or off in both builds). The save site only runs in a fight. The emulation
-    covers the saves.
+- **The limits on AC** (about 00:20 UTC, at the coordinator's ask). These are test edits of
+  Balthbeorn's items in memory, made with a scratch script on the roster screen, and never saved. Each
+  setup was read three ways: everything on, the ring taken off, then the cloak taken off.
+
+  | setup | AC: all / ring off / cloak off | control |
+  |---|---|---|
+  | robe made leather armour +1 (magical) | **4 / 4 / 4**: the ring and cloak don't count | 3 / 3 / 4: the cloak counts |
+  | robe made metal chest armour +0 | **3 / 4 / 3**: the ring counts, the cloak doesn't | |
+  | robe made plain leather +0; a leather shield in the left hand | **3 / 4 / 3**: the ring counts, the cloak doesn't (the shield) | 3 / 3 / 4: the cloak counts |
+
+  Base AC 6 (DEX 20), leather 1, metal chest 2, the shield 1.
+  ![](img/2026-11-23-ravager-protection-magic-armour.png)
+  ![](img/2026-11-23-ravager-protection-metal-armour.png)
+  ![](img/2026-11-23-ravager-protection-shield.png)
+  ![](img/2026-11-23-ravager-protection-limits-control.png) (control: magical armour, then the shield)
+- **Saving throws in a fight** (about 00:35 UTC, `RAV_LOADER=1 sh ravhold.sh`, the Draxans' ambush,
+  the dice log `--all` attached). Three Draxans of the same sheet and scores (DEX 20) were given items
+  in memory, as test edits, and DOSBox was stopped before the fight ended, with nothing saved:
+  - combatant 26: a ring +2 on the left finger and a cloak +3;
+  - combatant 27: the same, and metal chest armour +0;
+  - combatant 23: nothing.
+
+  Ar'anda's armour was put in her pack (she is a multiclass preserver: "YOU CANNOT CAST SPELLS" in
+  armour), then her Fireball hit all three. ![](img/2026-11-23-ravager-protection-fireball.png)
+
+  The game's own save totals (PROBE_SAVE) less the d20:
+
+  | Draxan | d20 | total (needs 13) | modifier | what it is |
+  |---|---|---|---|---|
+  | 26, ring and cloak | 8 | 17 | +9 | +4 base, +2 ring, +3 cloak |
+  | 27, ring, cloak, metal armour | 7 | 13 | +6 | +4 base, +2 ring; the cloak blocked by metal armour |
+  | 23, nothing | 19 | 23 | +4 | the base |
+
+  The damage picks out 27: it took 11 of 23 (59/70 HP after), the only save of 23 damage. 26 and 23
+  took 12 each, so the damage doesn't say which of them made which save. The three are alike but for
+  the items, so their base is the same, and +9 and +4 differ by exactly the ring and cloak's 5.
+- **Water:** none new (the same street).
 - **The first click.** The first click after the title menu comes up was lost twice: CREATE
   CHARACTERS needed a second click.
 
