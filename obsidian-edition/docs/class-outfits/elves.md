@@ -41,6 +41,23 @@ Elves can combine Cleric, Fighter, Preserver, Psionicist, Ranger, and Thief in p
 
 Follow the hood to spot a Thief, the teal sash for a Psionicist, and the bone shoulder or leather tab for a Fighter. A Cleric keeps the cream robe. Adding a Preserver brings a plum mantle, and a Ranger paired with a Preserver adds green edging to that mantle.
 
+## Frame-by-frame review
+
+The review followed all 29 poses on both figures, starting with the seven single classes (406 dressed frames), then the 14 pairs (812), then the 16 triples (928). Each single was compared with its original figure and clean body. Each multiclass frame was compared with the same pose in every outfit obtained by removing one class.
+
+| Where to look | What changed |
+|---|---|
+| Thief, side walk and rear view | The hood joins the collar in profile. Dark strands inside a lock now take the hood color with the surrounding hair. The front opening follows the original face. |
+| Female Preserver, rear walk 2/4 | The mantle follows the shoulder under her hair. Its corner previously jumped outward with her swinging arm. |
+| Side bow, side strikes and profile walk | The lining closes narrow gaps under the forearm. The Cleric skirt opens over the stepping knee. The lowered fingertips stay visible in the hit pose. |
+| Fighter/Preserver, rear strikes | A small bone fastening on the mantle remains visible when the hair or raised arm hides the shoulder. Previously the female version matched the plain Preserver throughout this strike. |
+| Fighter/Psionicist, side walk 3/4 | The teal sash remains visible beside the crossing wrist. This also carries through to the Thief variant. |
+| Equipped weapons, forward strikes and hit | The female elf's sword previously ended at the bottom edge during recoil. Adjusted grip angles also keep long weapon points and staff butts inside the picture on both figures. |
+
+![Original, previous and revised figures in seven affected poses](elf-pixel-review.png)
+
+The updated loader pictures retain every occupied pixel of the original silhouette, including the registered bow. The review checked enclosed patches of terrain against the original limb placement and kept openings between separated limbs. Each triple still differs from each of its parent pairs in every pose.
+
 ## Equipment and in-game review
 
 [Watch both Preservers with boots, cloak, shield, mundane plate, and magical plate](elf-equipment.gif) · [Equipment frame sheet](elf-equipment-frames.png)

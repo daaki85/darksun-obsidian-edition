@@ -134,6 +134,62 @@ def face_pixels(rows, model, pose):
     return points
 
 
+# Pin the garment under the long hair. Sampling the few uncovered shirt
+# pixels in these poses instead follows the swinging arm.
+BACK_SHOULDERS = {1: 9, 7: 6, 8: 4, 9: 7, 10: 8}
+# Underfolds traced between the moving garment and the body. Each entry is
+# (row, left, right) in the native picture. Leave the gap between feet open.
+CAPE_SEAMS = {
+    (2059, 11): ((16, 4, 4), (17, 4, 4)),
+    (2061, 2): ((19, 1, 1),),
+    (2061, 11): ((15, 2, 2), (16, 2, 2), (17, 2, 2), (18, 1, 1)),
+    (2061, 12): ((18, 8, 8),),
+    (2061, 15): ((18, 10, 10), (19, 10, 10), (20, 9, 9), (21, 9, 9)),
+    (2059, 22): ((15, 7, 7), (16, 6, 7), (17, 6, 6), (18, 5, 6), (19, 5, 5)),
+    (2059, 26): ((12, 11, 11), (13, 11, 11), (14, 11, 11)),
+    (2061, 26): ((13, 11, 11), (14, 11, 11)),
+}
+# The longer Preserver panel reaches the thigh in these poses. The gap
+# beside the lower arm in front walk 3 stays open above this underfold.
+PLUM_UNDERFOLDS = {
+    (2059, 0): ((22, 3, 3),),
+    (2059, 3): ((23, 2, 2),),
+    (2059, 4): ((18, 4, 4),),
+    (2059, 6): ((19, 2, 2),),
+    (2059, 15): ((27, 8, 8),),
+    (2061, 3): ((20, 9, 9),),
+    (2061, 5): tuple((y, 11, 11) for y in range(13, 19)),
+    (2061, 26): ((22, 6, 6), (23, 6, 6)),
+}
+ROBE_SEAMS = {
+    (2059, 0): ((19, 10, 10),),
+    (2059, 24): ((16, 9, 9), (17, 8, 9), (18, 8, 8)),
+    (2059, 26): ((19, 11, 11), (20, 11, 11)),
+}
+
+
+# The gold and brown inside a continuous lock belong to the same hood panel.
+# Below the crown keep the native face opening in the front and side views.
+def hood_hair(rows, model, pose, bow, face):
+    cx, cy = JAWS[model][pose]
+    cloth = set()
+    for y, row in enumerate(rows[: cy + 7]):
+        locks = [x for x, c in enumerate(row) if c in GOLD and (x, y) not in bow]
+        if not locks:
+            continue
+        for x in range(min(locks), max(locks) + 1):
+            if (x, y) in bow:
+                continue
+            crown = y <= cy - 4
+            posterior = pose in BACK or pose in SIDE_FACE and x <= cx - 4
+            visible_face = pose not in BACK and (x, y) in face
+            if row[x] in GOLD or (
+                row[x] in figures.HAIRS and (posterior or crown) and not visible_face
+            ):
+                cloth.add((x, y))
+    return cloth
+
+
 def render(game, model, pose, role, layers=None):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
@@ -152,9 +208,19 @@ def render(game, model, pose, role, layers=None):
     hair = {point_up(p) for p in parts.hair}
     bow = game.bow(fig, source, parts) if pose in (24, 25, 26) else set()
     bow = {point_up(p) for p in bow}
-    protected = hair | bow
     face = face_pixels(rows, model, pose)
-    protected.update(face)
+    locks = hood_hair(rows, model, pose, bow, face)
+    protected = hair | bow | locks | face
+    # Fingers extend past the waist in the recoil and the front follow-through.
+    # Register them to the green retail wristbands, independently of the tunic.
+    wrists = {point_up(p) for p in fig.bands(combat, frame)}
+    fingers = {
+        (x + dx, y + dy)
+        for x, y in wrists
+        for dx in range(-3, 4)
+        for dy in range(-3, 4)
+        if dx * dx + dy * dy <= 10
+    }
     members = role.split("/")
     base = next(
         (
@@ -195,13 +261,26 @@ def render(game, model, pose, role, layers=None):
         shoulder, waist = (8, 13) if model == figures.ELF_WOMAN else (7, 14)
     else:
         shoulder, waist = parts.shoulders[0], parts.waist
+    if model == figures.ELF_WOMAN and pose == 16:
+        shoulder, waist = 11, 16
     shirt = SHIRTS[model]
+    # Shade these cells only in the matching garment. A shorter hem ends
+    # above the extended thigh in the side thrust.
+    cape_seams = CAPE_SEAMS.get((model, pose), ())
+    if cape == "Preserver":
+        cape_seams += PLUM_UNDERFOLDS.get((model, pose), ())
+    if pose == 22 and cape == "Thief":
+        cape_seams = ()
+    cape_fill = {(x, y) for y, a, b in cape_seams for x in range(a, b + 1)}
+    robe_fill = {(x, y) for y, a, b in ROBE_SEAMS.get((model, pose), ()) for x in range(a, b + 1)}
 
     def axis(y):
         points = [x for r in rows[max(0, y - 1) : y + 2] for x, c in enumerate(r) if c in shirt]
         return median(points) if points else (width - 1) / 2
 
     upper = axis(shoulder)
+    if model == figures.ELF_WOMAN:
+        upper = BACK_SHOULDERS.get(pose, upper)
     hip = axis(waist - 2)
     profile = pose in (2, 11, 12, 13, 14, 21, 22, 23, 24, 25)
     rear = pose in (1, 7, 8, 9, 10, 18, 19, 20, 25)
@@ -227,6 +306,7 @@ def render(game, model, pose, role, layers=None):
             armour = 0
             arm = c is not None and (
                 c in (249, 250)
+                or (point in fingers and c in outfits.SKINC)
                 or (
                     c in outfits.SKINC
                     and shoulder - 1 <= y <= waist + 2
@@ -291,7 +371,7 @@ def render(game, model, pose, role, layers=None):
                         breadth += 0.5
                     fold = (x - hem_center) / breadth
                     if (
-                        abs(fold) <= 1
+                        (abs(fold) <= 1 or point in robe_fill)
                         and (y > shoulder or c is not None)
                         and depth <= 6 - int(fold > 0.25)
                     ):
@@ -308,6 +388,16 @@ def render(game, model, pose, role, layers=None):
                         if depth == 6 or (depth == 5 and fold > 0.35):
                             shade = max(1, shade - 1)
                         paint = dwarf.CREAM[shade]
+                        if c is None and (
+                            (
+                                model == figures.ELF_WOMAN
+                                and pose == 21
+                                and y >= 27
+                                and x in (13, 14)
+                            )
+                            or (model == figures.ELF_MAN and pose == 23 and y >= 16 and 4 <= x <= 6)
+                        ):
+                            paint = None
                 elif base in ("Preserver", "Ranger", "Thief", "Psionicist"):
                     if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1):
                         tunic = RAMPS[base] if base == "Psionicist" else dwarf.LEATHER
@@ -341,6 +431,9 @@ def render(game, model, pose, role, layers=None):
                         or y <= shoulder + 1
                     )
                 )
+                # The folded lining joins the outer panel to the jerkin behind
+                # the wrist. It shares the equipped cloak's dye and shine mask.
+                drape = drape or (point in cape_fill and c is None)
                 if drape:
                     crease = -0.15 - fall * 0.24
                     shade = 2
@@ -368,7 +461,7 @@ def render(game, model, pose, role, layers=None):
                     if (
                         -2 <= depth <= 1
                         and abs(dx) <= radius + 0.5
-                        and abs(depth + 0.35 * dx) < 1.15
+                        and abs(depth + 0.35 * dx) < (1.65 if profile else 1.15)
                     ):
                         paint = dwarf.TEAL[4 if depth + 0.35 * dx < -0.15 else 2]
                 if (
@@ -379,6 +472,11 @@ def render(game, model, pose, role, layers=None):
                     and "Psionicist" not in members
                 ):
                     paint = 169 if abs(dx) < 0.55 else 205
+                # A small bone toggle fastens the Fighter's baldric over
+                # the back of the mantle when the shoulder caps turn out of view.
+                if rear and cape == "Preserver" and "Fighter" in members and drape:
+                    if depth in (0, 1) and -0.85 <= fold <= -0.25:
+                        paint = dwarf.BONE[2 if depth == 0 else 0]
                 # Follow the actual sleeve pixels on the upper arm; the far
                 # shoulder can disappear behind the braid or raised forearm.
                 outside = (1 if rear else -1) * dx
@@ -400,16 +498,25 @@ def render(game, model, pose, role, layers=None):
                     and paint is not None
                 ):
                     paint = dwarf.LEATHER[rank]
-            hood = (
-                hooded
-                and point not in bow
-                and (point in hair or c in GOLD and y <= cy + 1 and abs(x - cx) <= 8)
+            # At the nape the hood runs from the rear of the skull to the
+            # shoulder seam. The face and the raised bow remain in front.
+            nape = (
+                profile
+                and not rear
+                and cy < y <= shoulder
+                and c is not None
+                and point not in face
+                and not arm
+                and abs(x - (upper - radius + 1)) <= 1
             )
-            if hood and (point not in face or c in GOLD):
+            hood = hooded and point not in bow and (point in locks or nape)
+            if hood:
                 distance = (x - cx) / 5
                 shade = 1 if distance > 0.48 else 3 if distance < -0.48 else 2
                 if y < cy - 3 and -0.8 < distance < -0.1:
                     shade = 4
+                if y > cy - 3 and (c in (128, 129, 179, 180) or y == cy + 2):
+                    shade = max(1, shade - 1)
                 paint = RAMPS[base][shade]
                 cloak_shade = shade + 1
                 armour = 0

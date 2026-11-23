@@ -479,6 +479,69 @@ class ElfOutfitTests(unittest.TestCase):
                         for cells in frame.regions.values():
                             self.assertNotIn((x, y), cells)
 
+    def test_mantle_closes_under_bow_arm_and_recoil_preserves_fingers(self):
+        for role in classoutfits.ELF_ROLES.values():
+            for model in classoutfits.ELVES:
+                with self.subTest(role=role, model=model):
+                    poses = classoutfits.frames(role, True, model)
+                    if model == 2059:
+                        self.assertIn((4, 19), poses[12].regions[classoutfits.FOREARM])
+                        self.assertIsNone(poses[12].image[19 + 4][4 + 4])
+                    if {"Preserver", "Ranger", "Thief"}.intersection(role.split("/")):
+                        bow = poses[11]
+                        folds = {(x, y) for x, y, _ in bow.cloak}
+                        for y in (13, 14):
+                            self.assertIn((11, y), folds)
+                            self.assertNotIn((11, y), bow.regions[classoutfits.CHEST])
+                            self.assertIsNotNone(bow.image[y + 4][11 + 4])
+
+    def test_moving_mantle_keeps_underfold_and_fighter_fastening(self):
+        for role in classoutfits.ELF_ROLES.values():
+            if "Preserver" in role.split("/"):
+                walk = classoutfits.frames(role, False, 2061)[5]
+                folds = {(x, y) for x, y, _ in walk.cloak}
+                self.assertTrue({(11, y) for y in range(13, 19)} <= folds, role)
+        for model in classoutfits.ELVES:
+            single = classoutfits.frames("Preserver", True, model)
+            pair = classoutfits.frames("Fighter/Preserver", True, model)
+            for index in (3, 4, 5):
+                with self.subTest(model=model, strike=index - 2):
+                    self.assertTrue(any(pair[index].image[y + 4][x + 4] != single[index].image[y + 4][x + 4]
+                                        for x, y, _ in pair[index].cloak))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_elf_weapons_fit_the_picture_on_all_four_edges(self):
+        from unittest.mock import patch
+
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        canvas = classoutfits.Frame.canvas
+
+        def with_floor(frame, rows, pad):
+            result = canvas(frame, rows, pad)
+            return result + [[None] * len(result[0]) for _ in range(20)]
+
+        # A larger normal pad alone cannot reveal a tip cut off below the feet.
+        weapons = {shape: item for item, shape in sg.WEAPON_SHAPES.items()
+                   if shape not in (sg.BOW, sg.SLING, sg.CHATKCHA)}
+        with patch.object(classoutfits.Frame, "canvas", with_floor):
+            for model in classoutfits.ELVES:
+                for combat in (False, True):
+                    side, top = sprites.room(combat)
+                    poses = classoutfits.frames("Fighter/Preserver/Thief", combat, model)
+                    for index, frame in enumerate(poses):
+                        rows = pictures.own(model + combat)[index]
+                        left, right = 32 - side, 32 + len(rows[0]) + side
+                        ceiling, floor = 32 - top, 32 + len(rows)
+                        for hand in ("right", "left"):
+                            for shape, item in weapons.items():
+                                with self.subTest(model=model, combat=combat, frame=index,
+                                                  hand=hand, shape=shape):
+                                    out = sg.armed(rows, model, index, combat, {hand: (item, 4)},
+                                                   pad=32, costume=frame)
+                                    for y, row in enumerate(out):
+                                        outside = row if y < ceiling or y >= floor else row[:left] + row[right:]
+                                        self.assertTrue(all(c is None for c in outside))
+
     @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
     def test_final_bow_helm_sits_on_the_elf_crown(self):
         chunks = gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes())

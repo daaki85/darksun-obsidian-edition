@@ -1103,6 +1103,17 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (pose[1] if hand == "right" else pose[2], False)
         if shape == SHIELD and (pose and hand == "left" or side):
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
+        if costume and model in classoutfits.ELVES and g and shape != SHIELD:
+            # The picture ends at the soles. Turn a long point or staff butt
+            # away from that edge while keeping the grip on the registered hand.
+            if not combat and hand == "left" and shape == POLEARM and frame in (6, 11):
+                g = (55 if frame == 6 else 130, g[1])
+            elif combat and frame == 1 and hand == "left":
+                g = (70 if model == 2059 else 15, g[1])
+            elif combat and model == 2059 and frame == 12 and hand == "right":
+                g = (160, g[1])
+            elif combat and model == 2061 and frame == 2 and hand == "right" and shape in (STAFF, GYTHKA):
+                g = (200, g[1])
         if costume and model in (2095, 2099) and combat and frame == 12 and hand == "right" and shape != SHIELD:
             g = (155, False)  # Lowered across the body, clear of the baseline.
         if costume and model in (2095, 2099) and combat and frame == 1 and hand == "left" and shape != SHIELD:
