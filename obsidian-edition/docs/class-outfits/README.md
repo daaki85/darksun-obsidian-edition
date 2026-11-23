@@ -16,6 +16,8 @@ The [dwarf and human checklist results](checklist-review.md) include the repaire
 
 ## Dwarf outfit study
 
+[Compare the revised faces and shoulder guards against the original game poses](checklist-review.md#faces-and-shoulder-guards).
+
 The current proposal covers five single classes, five two-class combinations, and two three-class combinations. Each animation shows the female and male figures together through all 29 poses. [See the dwarf outfit proposals](dwarves.md)
 
 [![Twelve playable dwarf builds showing the female front and male rear poses](dwarf-proposals.png)](dwarves.md)

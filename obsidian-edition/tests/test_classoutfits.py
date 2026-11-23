@@ -105,10 +105,10 @@ class HumanOutfitTests(unittest.TestCase):
             self.assertEqual(geared[y + 10][x + 10], stock[y][x])
         self.assertIsNone(geared[10][10 + 13])  # the old spike was on the tip of the bow
 
-    def test_warrior_and_priest_necklines_clear_native_jaw_and_ponytail(self):
+    def test_open_necklines_clear_native_jaw_and_ponytail(self):
         runs = [(False, 0, 8, 6, 5), (False, 1, 10, 6, 4), (True, 2, 12, 9, 5)]
         for combat, f, left, y, length in runs:
-            for role in ("Priest", "Warrior"):
+            for role in ("Priest", "Warrior", "Psionicist"):
                 with self.subTest(role=role, combat=combat, frame=f):
                     pose = classoutfits.frames(role, combat)[f]
                     cells = {(x, y) for x in range(left, left + length)}
@@ -174,11 +174,11 @@ class HumanOutfitTests(unittest.TestCase):
                 self.assertTrue(hem, (role, f))
                 self.assertGreaterEqual(max(hem) - min(hem), 10, (role, f))
 
-    def test_woman_fighters_keep_shared_head_and_rebuilt_rear_arms(self):
+    def test_woman_fighters_and_psionicist_keep_shared_head_and_rebuilt_rear_arms(self):
         with ZipFile(Path(classoutfits.__file__).with_name("woman_outfit_layers.zip")) as archive:
             for combat, tag in ((False, "walk"), (True, "combat")):
                 body = archive.read(f"Base/{tag}")
-                for role in ("Warrior", "Gladiator"):
+                for role in ("Warrior", "Gladiator", "Psionicist"):
                     for f, pose in enumerate(classoutfits.frames(role, combat, 2099)):
                         base = art.decode_frame(body, f)[2]
                         self.assertTrue(pose.head)
@@ -244,6 +244,45 @@ class DwarfOutfitTests(unittest.TestCase):
             self.assertEqual(classoutfits.for_sheet(sheet, 2053), expected)
             self.assertEqual(classoutfits.for_sheet(sheet, 2055), expected)
             self.assertIsNone(classoutfits.for_sheet(sheet, 2099))
+
+    def test_front_faces_stay_open_in_every_build(self):
+        # These coordinates follow the original brow down through the cheek.
+        # The woman stands upright in the opening strike while the man leans.
+        for model in classoutfits.DWARVES:
+            opening = (10, 2) if model == 2053 else (7, 4)
+            for combat, landmarks in (
+                (False, {0: (10, 2), 3: (9, 2), 4: (9, 2), 5: (9, 2), 6: (10, 2)}),
+                (True, {0: opening, 1: (11, 2), 2: (8, 6), 9: (8, 2), 12: (3, 6)}),
+            ):
+                for role in classoutfits.DWARF_ROLES.values():
+                    poses = classoutfits.frames(role, combat, model)
+                    for f, (x, brow) in landmarks.items():
+                        with self.subTest(model=model, role=role, combat=combat, frame=f):
+                            pose = poses[f]
+                            for y in range(brow, brow + 3):
+                                self.assertIn((x, y), pose.head)
+                                self.assertIsNone(pose.image[y + 4][x + 4])
+                                self.assertNotIn((x, y), pose.regions[classoutfits.CHEST])
+                                self.assertFalse(any((x, y) == (u, v) for u, v, _ in pose.cloak))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_shoulder_guards_follow_original_arm_silhouettes(self):
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        for model in classoutfits.DWARVES:
+            for combat in (False, True):
+                originals = pictures.own(model + combat)
+                fighters = classoutfits.frames("Fighter", combat, model)
+                for role in classoutfits.DWARF_ROLES.values():
+                    if "Fighter" not in role and role != "Gladiator":
+                        continue
+                    for f, pose in enumerate(classoutfits.frames(role, combat, model)):
+                        with self.subTest(model=model, role=role, combat=combat, frame=f):
+                            guard = set(pose.regions[classoutfits.ARMS])
+                            self.assertTrue(guard.isdisjoint(pose.head))
+                            self.assertTrue(all(originals[f][y][x] is not None for x, y in guard))
+                            if "Fighter" in role:
+                                self.assertTrue(guard)
+                                self.assertTrue(guard.issubset(fighters[f].regions[classoutfits.ARMS]))
 
     def test_raised_foot_and_hit_hood_follow_native_landmarks(self):
         for model in classoutfits.DWARVES:

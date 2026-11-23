@@ -60,14 +60,14 @@ POSES = [
 ]
 ROLES = ("Warrior", "Thief", "Priest", "Mage", "Druid", "Ranger", "Gladiator", "Psionicist")
 LEATHER = (208, 88, 207, 92, 96)
-BONE = (207, 194, 61, 199, 63)
+BONE = (205, 206, 199, 155)
 HOOD = (208, 17, 20, 24, 28)
 CREAM = (207, 194, 61, 199, 155)
 PLUM = (17, 174, 175, 58, 119)
 LEAF = (207, 188, 54, 55, 56)
 OCHRE = (204, 95, 168, 169, 170)
 FOREST = (17, 69, 53, 54, 56)
-BRONZE = (88, 203, 94, 168, 185)
+BRONZE = (204, 94, 168, 185)
 TEAL = (17, 69, 70, 71, 73)
 FLESH = (134, 132, 130, 145, 147)
 CLOAK_LENGTHS = {"Thief": 4, "Mage": 3, "Druid": 3, "Ranger": 4, "Priest": 5}
@@ -143,6 +143,76 @@ TOES = (
 )
 
 
+# Native deltoid crests, listed from screen left to right. A hidden
+# shoulder has no cap. The offsets follow the arm swing, including the
+# high elbow in the third front strike and the woman's separate wind-up.
+SHOULDERS = (
+    ((5, 5), (15, 5)),
+    ((5, 6), (14, 6)),
+    ((4, 5), None),
+    ((4, 4), (14, 5)),
+    ((4, 5), (15, 3)),
+    ((4, 4), (14, 4)),
+    ((5, 3), (15, 6)),
+    ((2, 6), (11, 6)),
+    ((2, 5), (11, 7)),
+    ((3, 6), (12, 6)),
+    ((3, 5), (12, 6)),
+    ((4, 6), None),
+    ((8, 5), None),
+    ((4, 5), None),
+    ((6, 4), None),
+    ((3, 8), None),
+    ((7, 3), (16, 5)),
+    (None, (12, 8)),
+    ((3, 4), None),
+    ((5, 6), None),
+    ((7, 6), None),
+    ((5, 5), (12, 6)),
+    ((8, 4), None),
+    ((8, 4), None),
+    ((4, 4), None),
+    ((4, 9), (9, 8)),
+    ((3, 8), (12, 8)),
+    (None, (8, 4)),
+    ((2, 6), (10, 6)),
+)
+
+# Inclusive cheek and jaw spans relative to the crown. The front chin
+# overlaps the torso by two native rows. In profile the nose leads it.
+FRONT_HEAD = ((-1, 1), (-2, 2), (-3, 3), (-3, 3), (-3, 2), (-2, 2), (-1, 1))
+SIDE_HEAD = ((-1, 1), (-2, 2), (-3, 2), (-2, 3), (-2, 3), (-1, 2))
+REAR_HEAD = ((-1, 1), (-2, 2), (-2, 3), (-2, 3), (-2, 2))
+FALLEN_HEAD = ((-2, 2), (-3, 2), (-3, 2), (-3, 1), (-2, 0))
+HIT_HEAD = ((-1, 1), (-2, 2), (-2, 3), (-2, 2), (-1, 1))
+
+
+def shoulder_guard(rows, point, side, ramp):
+    """Fit a domed plate to the lit upper arm and stitch its lower edge."""
+    if point is None:
+        return {}
+    ax, ay = point
+    # Run the light over the shoulder, then turn the outer lip down
+    # the arm. The inside rivet and dark welt sit against the harness.
+    shape = (
+        (0, -1, 2),
+        (-1, 0, 3),
+        (0, 0, 2),
+        (1, 0, 1),
+        (-1, 1, 1),
+        (0, 1, 0),
+        (-2, 1, 1),
+        (-2, 2, 0),
+        (1, 1, 0),
+    )
+    result = {}
+    for u, v, shade in shape:
+        x, y = ax + side * u, ay + v
+        if 0 <= y < len(rows) and 0 <= x < len(rows[y]) and rows[y][x] is not None:
+            result[x, y] = ramp[shade]
+    return result
+
+
 def draw(game, model, k, role, design=None, layers=None):
     """Draw one registered pose. Optional layer maps use native, unpadded coordinates."""
     combat, f = divmod(k, 15)
@@ -152,13 +222,34 @@ def draw(game, model, k, role, design=None, layers=None):
     if dead:
         rows = rows[::-1]
     height, width = len(rows), len(rows[0])
-    pose = Pose(*POSES[k])
-    if model == 2053 and k == 15:
-        pose = Pose(*POSES[0])  # her first strike uses a standing wind-up
-    toes = TOES[0 if model == 2053 and k == 15 else k]
+    # The female dwarf uses a standing wind-up in her first strike.
+    registration = 0 if model == 2053 and k == 15 else k
+    pose = Pose(*POSES[registration])
+    toes = TOES[registration]
     cx, cy, sx, sy, hx, hy = pose
     profile = k in (2, 11, 12, 13, 14, 21, 22, 23, 24, 25)
     rear = k in (1, 7, 8, 9, 10, 18, 19, 20, 25)
+    if dead:
+        head_rows = FALLEN_HEAD
+    elif k == 27:
+        head_rows = HIT_HEAD
+    elif rear:
+        head_rows = REAR_HEAD
+    elif profile and k != 21:
+        head_rows = SIDE_HEAD
+    else:
+        head_rows = FRONT_HEAD
+    hooded = role == "Thief" or (design and design.hood)
+    left, right = SHOULDERS[registration]
+    guards = {}
+    if role == "Warrior" or (design and design.shoulders):
+        guards.update(shoulder_guard(rows, left, 1, BONE))
+        guards.update(shoulder_guard(rows, right, -1, BONE))
+    elif role == "Gladiator":
+        # The same anatomical arm is on screen left in a rear view.
+        # Only its leather strap is visible when the arm turns away.
+        point, side = (left, 1) if rear or profile else (right, -1)
+        guards.update(shoulder_guard(rows, point, side, BRONZE))
     bow = game.bow(figure, rows, figure.parts(combat, f)) if k in (24, 25, 26) else set()
     palette = RAMPS[ROLES.index(role)] if role else FLESH
     lower = OCHRE if role == "Druid" else LEATHER if role == "Ranger" else palette
@@ -168,7 +259,9 @@ def draw(game, model, k, role, design=None, layers=None):
     pixels.putpalette([c for rgb in game.palette for c in rgb])
     hands = set(bow)
     if dead:
-        wrists = [(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c in (249, 250)]
+        wrists = [
+            (x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c in (249, 250)
+        ]
     else:
         wrists = figure.bands(combat, f)
     for x, y in wrists:
@@ -188,7 +281,16 @@ def draw(game, model, k, role, design=None, layers=None):
             dx = x - mid
             d = y - hy
             depth = y - sy
-            head = c is not None and cy <= y < sy and abs(x - cx) <= min(3, 1.5 + (y - cy))
+            row = y - cy
+            on_head = 0 <= row < len(head_rows) and head_rows[row][0] <= x - cx <= head_rows[row][1]
+            head = c is not None and on_head
+            # Leave the skin and occlusion shadow directly under the jaw open.
+            neck = (
+                not rear
+                and len(head_rows) <= row < len(head_rows) + 2
+                and abs(x - cx) <= (2 if row == len(head_rows) else 1)
+            )
+
             hand = c is not None and (x, y) in hands
             body = c is not None and not (head or hand)
             paint = c
@@ -284,21 +386,6 @@ def draw(game, model, k, role, design=None, layers=None):
                 surface = co.LEGS
                 paint = 169 if abs(dx) < 0.5 else 205
             if (
-                body
-                and 0 <= depth <= 2
-                and (
-                    role == "Warrior"
-                    and abs(abs(dx) - 3.3) < 1.6
-                    or role == "Gladiator"
-                    and abs(dx - (-3 if rear else 3)) < 1.6
-                )
-            ):
-                surface = co.ARMS
-                cape = False
-                paint = (BONE if role == "Warrior" else BRONZE)[
-                    4 if depth == 0 else 3 if depth == 1 and dx < 4 else 1
-                ]
-            if (
                 role == "Ranger"
                 and -1 <= depth < hy - sy
                 and abs(dx - (-3.6 + 0.32 * depth)) < 1.25
@@ -311,11 +398,6 @@ def draw(game, model, k, role, design=None, layers=None):
                 # A short cowl leaves the fighter's shoulder caps and legs visible.
                 if design.hood and body and 0 <= depth <= 2 and abs(dx) <= 2.5 - 0.55 * depth:
                     paint = HOOD[1 if dx > 1 else 3 if dx < -0.5 else 2]
-                # Seat the bone on dark leather so it also reads against ivory cloth.
-                if design.shoulders and body and 0 <= depth <= 3 and 2 <= abs(dx) <= radius + 0.9:
-                    surface = co.ARMS
-                    cape = False
-                    paint = LEATHER[1] if depth >= 2 else BONE[4 if depth == 0 else 2]
                 # Carry the baldric across the back as well as the front. The
                 # short woven end falls over the belt and remains visible in profile.
                 if design.sash and paint is not None and 0 <= depth and d <= 3:
@@ -323,18 +405,28 @@ def draw(game, model, k, role, design=None, layers=None):
                     delta = dx - strap_x
                     if abs(delta) <= (1.05 if d <= 0 else 0.78):
                         paint = 169 if d == 0 else TEAL[4 if delta < -0.12 else 3 if d < 0 else 2]
+            if (x, y) in guards:
+                paint = guards[x, y]
+                surface = co.ARMS
+                fold_rank = None
+                cape = False
             if role is None:
                 paint = skin
-            if head:
+            if head or neck:
                 surface = 0
-                hood_x = x - cx if design else dx
-                paint = c
-                if (role == "Thief" or (design and design.hood)) and (
-                    rear or y <= cy + 1 or hood_x < -1.3 or hood_x > 2.2
-                ):
-                    paint = HOOD[min(4, int(hue[c] // 42))]
-                elif role == "Psionicist" and y == cy + 1:
-                    paint = 169 if x == cx else 71
+                fold_rank = None
+                paint = c if head else skin
+                # The hood closes at the back but leaves the native face open.
+                if hooded and head and (rear or row == 0):
+                    paint = HOOD[min(3, int(hue[c] // 48))]
+            if hooded and not rear and 1 <= row < len(head_rows) - 1:
+                lo, hi = head_rows[row]
+                # Only the trailing rim shows in profile. Both temples
+                # are framed in front. Source hands and bows remain above it.
+                if x == cx + lo - 1 or (not profile and x == cx + hi + 1):
+                    paint = HOOD[3 if x < cx else 1]
+                    surface = 0
+                    fold_rank = None
             if hand:
                 # The stock cuff ends here. Keep the hand outline and the bow.
                 paint = (
@@ -344,7 +436,7 @@ def draw(game, model, k, role, design=None, layers=None):
                 point = (x, height - 1 - y if dead else y)
                 if head and not hand:
                     layers["head"][point] = 1
-                if hand or head:
+                if hand or head or neck:
                     fold_rank = None
                     surface = co.BOW if (x, y) in bow else co.FOREARM if hand else 0
                 elif paint == skin and body:

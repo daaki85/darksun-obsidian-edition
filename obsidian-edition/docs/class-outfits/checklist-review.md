@@ -2,6 +2,16 @@
 
 Both dwarf figures were checked across 12 legal builds and both humans across eight class outfits. Each figure has 15 idle and walking poses and 14 combat poses. The review covered 696 dwarf and 464 human outfit poses. The still sheets below use the decoded loader output. [Review checklist](workflow.md#human-figure-review-checklist)
 
+## Faces and shoulder guards
+
+The first row of each comparison shows the original game pose. Read down each column to see the previous outfit and the revised one. In the Thief’s front walk, follow the dark line of the eyes and the lighter cheek below it. In the Fighter’s profile, watch where the bone highlight turns down the upper arm.
+
+![Ten comparisons of original, previous and revised faces and shoulders on dwarves and human Psionicists](face-shoulder-review.png)
+
+The dwarf Cleric’s collar now opens below the chin. The Thief’s front hood leaves the face visible down to the jaw. Both human Psionicists and the dwarf Psionicist carry their identifying color on the garment. The Fighter’s bone caps and the Gladiator’s single bronze guard follow the visible arms in each source pose, including the female dwarf’s distinct first strike. The multiclasses use the same face openings and shoulder placements as their parent outfits.
+
+[Single classes in motion](dwarf-single.gif) · [Two classes](dwarf-double.gif) · [Three classes](dwarf-triple.gif)
+
 ## Dwarves
 
 | Finding | Correction and retest |
@@ -21,7 +31,7 @@ The woman had a two-pixel opening where the shoulder cloth passes below the hair
 
 ![Five female outfits, previous and repaired shoulder at the same point in the stride](checklist-human-shoulder.png)
 
-The male pass found no further correction across the eight outfits. The Fighter and Cleric necklines clear the head, the plum mantle keeps its front and rear contrast, and the Thief’s shorts remain visible through the stride. Both human reviews included the female rear walk and Druid hem, the first side strike, bow, hit, fallen, and the stop after the walk. [Female human, every frame](checklist-human-female.png) · [Male human, every frame](checklist-human-male.png) · [Human animations](README.md#female-human)
+The earlier male pass focused on the following details. The Psionicist brow correction is shown above. The Fighter and Cleric necklines clear the head, the plum mantle keeps its front and rear contrast, and the Thief’s shorts remain visible through the stride. Both human reviews included the female rear walk and Druid hem, the first side strike, bow, hit, fallen, and the stop after the walk. [Female human, every frame](checklist-human-female.png) · [Male human, every frame](checklist-human-male.png) · [Human animations](README.md#female-human)
 
 ## Game-size comparison
 
@@ -41,7 +51,7 @@ The comparison loop shows four representative outfits in the same pose. The shie
 
 ## DOSBox check
 
-A disposable copy of the slave-pens save displayed four staged loader outputs: a male dwarf Fighter/Psionicist/Thief with Boots of Speed, a female dwarf Cleric with a cloak, a male human Mage in magical plate, and a female human Fighter with a shield. The party was observed standing and moving at 320 × 240. A stationary capture sequence showed the Mage’s plate pixels cycling.
+Before the face and shoulder revision, a disposable copy of the slave-pens save displayed four staged loader outputs: a male dwarf Fighter/Psionicist/Thief with Boots of Speed, a female dwarf Cleric with a cloak, a male human Mage in magical plate, and a female human Fighter with a shield. The party was observed standing and moving at 320 × 240. A stationary capture sequence showed the Mage’s plate pixels cycling.
 
 ![Four staged outfit and equipment combinations in the slave pens](checklist-dosbox.png)
 
