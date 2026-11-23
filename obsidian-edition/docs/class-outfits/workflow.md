@@ -1,6 +1,6 @@
 # Class outfit workflow
 
-Use this sequence when taking a playable race from its original Shattered Lands map figures to equipped party sprites. Keep the roster, comparison images, and open art decisions together on the race’s gallery page.
+Use this sequence when taking a playable race from its original Shattered Lands map figures to equipped party sprites. Keep the roster, comparison images, and open art decisions together on the race’s gallery page. Apply the [human figure review checklist](#human-figure-review-checklist) to every new model, including both figures and every playable single-class and multiclass outfit.
 
 | Stage | What to make | What to look for |
 |---|---|---|
@@ -12,3 +12,44 @@ Use this sequence when taking a playable race from its original Shattered Lands 
 | 6. Verify equipped play | After integrating outfit selection, create or load examples of each supported class combination. Compare an empty slot, the equipped item, and the slot after removal on both figures. Follow the project’s [playtest procedure](../../../playtest/PLAYTESTING.md#startup-procedure). | Check each visible foot with boots, shield grip through a swing, cloak coverage from front and rear, and armor recoloring on the intended garment. Compare mundane and magical armor in the same pose. Watch a full shine cycle for spill onto skin, hair, or cloak. Verify the base outfit returns on removal and the stock appearance when the display option is off. |
 
 Publish the current sheets and loops with a short status line identifying an art proposal, a loader-rendered preview, or a verified in-game capture. Keep the pose caption visible so feedback can identify a frame precisely.
+
+## Human figure review checklist
+
+Use these checks during body cleanup, outfit review, and equipment testing. The human examples identify where a defect was easiest to see. Inspect the equivalent pose on each new figure, then inspect the rest of its frames. Use the finished [female](README.md#female-human) and [male](README.md#male-human) human loops as references.
+
+### Body base and motion
+
+- [ ] **Stop after a walk.** Play front idle → four front steps → front idle on a fixed ground line. The early male idle had a larger head, wider shoulders, darker skin, and a different stance. Check the head, shoulder width, skin ramp, and planted foot against that model’s original frame. Repeat from behind and in profile.
+- [ ] **Strip the default outfit on every frame.** On the man, the black riveted harness returned as soon as the Fighter or Gladiator started walking. On the woman, black cloak lining left wedges beside the arms and hips, the Gladiator retained the stock top and red/magenta gems, and an orange neck gem survived in side and melee views across classes. The hit pose retained a black cloak and one blue boot. Compare the original, cleaned body, and dressed figure in the same pose. The female review flagged roughly 8–9% black in front views versus 2% on the man. Use that discrepancy to locate leftover lining, and judge each outline against its own figure. Trace suspicious colors back to their source. Green belongs on the Druid and Ranger, and dark outlines belong where the anatomy calls for them.
+- [ ] **Check the body with the cloak off.** Inspect the bust, torso depth, shoulders, arms, hands, hair, hips, knees, and heels against the original from each direction. The human woman lost bust definition, hair and arm pixels were missing on the Fighter and Gladiator, and the uncloaked rear idle exposed an awkward hip-to-leg join. Check the least-covered class first and correct shared anatomy on the base.
+- [ ] **Follow each foot through the rear walk.** On the woman, the right foot appeared to turn into the left leg. Step from rear idle through steps 1–4 and back to idle, tracking each heel and toe. Inspect rear step 4 and side idle against contrasting ground for missing edge pixels. The Gladiator exposed gaps that other clothes hid.
+- [ ] **Inspect the whole outline and its interior.** At integer enlargement, look for detached pixels, transparent pinholes, abrupt edges, and gaps in continuous cloth. Preserve deliberate openings between an arm and the torso or between the legs. Male trouble spots included the Fighter’s front idle and bow, Gladiator front walk 2, mantle rear walks 1 and 3 and rear strike 2, Ranger side walk 1, and Druid rear strike 2 and bow. On the woman, inspect the first side strike and the bow pose where the Cleric draws across her body. Check the fallen pose for a return to stock clothing.
+
+### Outfit and palette at game size
+
+Compare every outfit, on both figures, beside original Shattered Lands figures and a finished human on light and dark game terrain. View at 1×, then 2× or 3× to locate a fault. For human references, the game’s own Fighter (picture 1252), Thief (630), Cleric (1563), and Mage (724) show how much shape and shading survive at map size. Use exact game palette entries and compare the exported pixels. Keep class colors consistent across figures, retain the original skin tones, and check contrast across the full roster. Each outfit needs a recognizable outline and a readable area of color from the front, side, and rear.
+
+| Human outfit | What to inspect wherever this class or detail appears |
+|---|---|
+| Fighter (Warrior) | The red-brown leather jerkin should cover the stock harness while walking. Bone shoulder caps and hip flaps should break up the outline. Keep the neckline below the face, as with the Cleric. Track the woman’s bone pieces across all four rear steps for sliding or changes of side. |
+| Thief | Show pants or shorts clearly below the waist, including in a stride. Separate the slate hood and short cloak from dark leather with a midtone. Check the hood’s profile and the cloak below long hair from behind. |
+| Cleric (Priest) | Keep the face clear above the collar. Use the long cream robe and shaded folds to convey cloth texture. In side strike 1, the forward-swinging panel should stay cream through the swing. Inspect its edge in the bow pose for holes. |
+| Preserver (Mage) | The selected human design is the plum **mantle**. The full robe was an earlier silhouette study. Give the mantle depth over the shoulders and down the back, texture in its folds, and a highlight that survives dark terrain. Compare front idle and front walk directly with the rear view to catch pale mauve blending into skin. |
+| Druid | Keep the green shoulders and ochre kilt legible with a few broad marks. Watch the shorter cloak through rear idle → walk → idle. Its hem should settle in folds and follow the hips through the transition. The woman’s idle hem had an abrupt horizontal cut. |
+| Ranger | Follow the strap, quiver, hood, or green-brown cloak in profile, where a shield can disappear behind the body. Inspect the rear cloak’s width below the hair and the angled folds at rest. |
+| Gladiator | The exposed chest, harness or arm guard, and bone or bronze shoulder piece should read through every step and strike. Check the exposed arm and the outer torso for lost pixels or leftover stock clothing. Separate dark red leather from skin in rear and side views. |
+| Psionicist | Give the headband, collar, or sash enough contrast to show at 1×. The early dark straps disappeared against the stock harness. Follow the identifying color around the back and check that a multiclass garment leaves it visible. |
+
+- [ ] **Follow the cloth as the figure turns or raises an arm.** The woman’s Thief, Mage, and Ranger need cloak visible below the hair. Also check the Fighter and Gladiator from behind for a class detail visible beside or below the hair. Compare Mage and Ranger rear idle with their walking folds for evenly spaced “barcode” stripes. On Thief, Mage, Druid, and Ranger, compare bow and hit poses with the original figure’s side panels. Check the first side strike for ground-colored holes. Preserve the foreground hand, bow, and intended cloth behind them.
+- [ ] **Review motion and explain the preview.** Show both figures, label each outfit and pose, and identify whether viewers are seeing base colors, equipped renders, or gameplay. Play every direction and action and provide stills for individual frames. Compare the final sprite on game terrain with its design drawing to catch details that disappeared at native size. Inspect mirrored side views with asymmetric gear. The engine mirrors the arm along with the figure, so the relevant check is whether the item stays attached to that arm.
+
+### Equipped play
+
+| Reproduce the human test | Passing appearance on the new model |
+|---|---|
+| Empty foot slot → equip Boots of Speed → remove, in poses showing both feet and poses with one foot hidden | Bare feet are an accepted empty-slot appearance. Both visible feet take the boot treatment, with the far foot correctly hidden when the pose calls for it. Removal restores each foot. Inspect the hit pose separately for a leftover stock boot. |
+| Equip a cloak over an outfit with its own cape or mantle. Turn, walk, strike, and unequip. | The equipped cloak covers the underlying cloth at shoulders, sides, and hem. Hair and foreground limbs retain their proper overlap. The class cloak reappears on removal. |
+| Equip a shield and weapon. Step through each strike and bow frame in each direction. | The grip follows the hand and the shield follows the arm throughout the swing. Catch a one-frame floating shield by inspecting the preceding and following frames. Check weapon and bow pixels where they overlap cloth. |
+| Equip mundane armor, then magical plate, then remove it. Compare the same pose through a complete shine cycle, especially on the Mage. | Armor recolors the covered areas of the existing outfit while preserving their shading. Magical shine stays on the equipped material. The mage’s cloak keeps its own color and lighting when only the plate is magical. Removal restores the underlying outfit. |
+
+For each new model, record which figures, outfits, poses, and equipment states were inspected, along with any open defect and a labeled frame that shows it. Mark in-game checks pending until they have been exercised in play. After a shared fix, rerender every affected class and multiclass and replay the transition where the fault first appeared.
