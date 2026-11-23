@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dsloader import game, npcitems, ravager  # noqa: E402
 
 try:
-    from unicorn import Uc, UC_ARCH_X86, UC_MODE_16
+    from unicorn import Uc, UC_ARCH_X86, UC_MODE_16, UC_HOOK_CODE
     from unicorn import x86_const as r
 except ImportError:
     Uc = None
@@ -90,6 +90,20 @@ class ProtectionTests(unittest.TestCase):
         for name, value in values.items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(TSR * 16 + self.sym[site], TSR * 16 + 0xFFF0)
+
+    def call_to(self, mu, site, ways, **regs):
+        """Run SITE as the game's INT would reach it, its way back BACK; it ends at BACK + one of WAYS
+        (which is returned)."""
+        back = 0xF000
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", back, TSR, 0x2))
+        values = dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FA, ebp=0x600, eflags=0x2)
+        values.update(regs)
+        for name, value in values.items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        ends = {TSR * 16 + back + w: w for w in ways}
+        mu.hook_add(UC_HOOK_CODE, lambda uc, address, size, data: uc.emu_stop() if address in ends else None)
+        mu.emu_start(TSR * 16 + self.sym[site], 0, count=200000)
+        return ends[mu.reg_read(r.UC_X86_REG_CS) * 16 + mu.reg_read(r.UC_X86_REG_IP)]
 
     def ac_counts(self, mu, worn, n, other=0):
         """PROT_AC on worn item N: whether it counts for AC (AX bit 80h), and [BP-6] after."""
@@ -291,6 +305,33 @@ class ProtectionTests(unittest.TestCase):
                                                        r.UC_X86_REG_DI, r.UC_X86_REG_SP, r.UC_X86_REG_BP)],
                              [0x1111, 0x2222, 0x3333, 0x4444, 0x800, 0x600])
 
+    def test_tome_read(self):
+        """TOME: the tome (object 21446, power 318) read by the member on show: WIS up by one in the
+        sheet (+19h) and the creature (+1Dh), the message in [BP-56h], the way on the used-up path
+        (99B44h); at 25 only the message and the shown one (99B67h); anything else the DEC."""
+        sheets = 0xB000
+        for wis, power, obj in ((18, 318, 21446), (25, 318, 21446), (18, 175, 21446), (18, 318, 31300)):
+            mu = self.machine([])
+            mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
+            mu.mem_write((GAME_DS + 0x3E71 - 0x47E0) * 16 + 0x0B44, struct.pack("<H", 1))
+            sheet = bytearray(0x42); sheet[0x19] = wis
+            mu.mem_write(sheets * 16 + 0x42, bytes(sheet))
+            cre = bytearray(CREATURE_SIZE); cre[0x1D] = wis; cre[0x21:0x27] = b"Meggyn"
+            mu.mem_write(CREATURES * 16 + CREATURE_SIZE, bytes(cre))
+            mu.mem_write(SS * 16 + 0x600 - 4, struct.pack("<H", power))
+            ip = self.call_to(mu, "tome_read", (0, 0x99B44 - 0x999D0, 0x99B67 - 0x999D0), edi=obj, esi=7, eax=0x1111)
+            text = bytes(mu.mem_read(SS * 16 + 0x600 - 0x56, 40)).split(b"\0")[0]
+            got_power = struct.unpack("<H", mu.mem_read(SS * 16 + 0x600 - 4, 2))[0]
+            new_wis = mu.mem_read(sheets * 16 + 0x42 + 0x19, 1)[0], mu.mem_read(CREATURES * 16 + CREATURE_SIZE + 0x1D, 1)[0]
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_SI), mu.reg_read(r.UC_X86_REG_DI)),
+                             (0x1111, 7, obj))
+            if (power, obj) != (318, 21446):
+                self.assertEqual((ip, got_power, new_wis), (0, power - 1, (wis, wis)))
+            elif wis < 25:
+                self.assertEqual((ip, text, new_wis), (0x99B44 - 0x999D0, b"Meggyn reads the tome: WIS 19.", (19, 19)))
+            else:
+                self.assertEqual((ip, text, new_wis), (0x99B67 - 0x999D0, b"Meggyn can grow no wiser.", (25, 25)))
+
     def test_patches(self):
         """The sites are where the game has what they replace."""
         patches = {p.name: p for p in ravager.PATCHES}
@@ -299,6 +340,7 @@ class ProtectionTests(unittest.TestCase):
         self.assertEqual(patches["weapon_cast"].replacement, bytes((0xCD, ravager.VEC_SITE, 46, 0x90, 0x90)))
         self.assertEqual(patches["join_ready"].replacement, bytes((0xCD, ravager.VEC_SITE, 47, 0x90, 0x90)))
         self.assertEqual(patches["worn_spell_off"].replacement, bytes.fromhex("7e10"))
+        self.assertEqual(patches["tome"].replacement, bytes((0xCD, ravager.VEC_SITE, 48)))
 
 
 if __name__ == "__main__":

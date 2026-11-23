@@ -38,6 +38,7 @@ OJFF_ICON = 0x0C
 SL_ITEM_TYPE, SL_ITEM_NAME = 0x0A, 0x12
 ITEM_TYPE, ITEM_NAME = 0x0A, 0x14
 ITEM_RECORD = bytes.fromhex("0000" "0000" "0f27" "0100" "0f27" "0000" "0000" "0000" "0000" "04ff" "0000" "00")
+TOME_LIKE = 31300  # (the sequel's One-use Scroll whose object record the tome's copies, its icon its own)
 ITEM_NUMBER_FIRST = 2000  # (the RDFF item records' numbers: the sequel's go to 1316)
 
 
@@ -154,7 +155,7 @@ def make(sl_items: Dict[int, bytes], sl_objects: gff.Chunks, sequel_objects: gff
          ) -> Tuple[Dict[int, int], gff.Chunks, List[Tuple[int, str]]]:
     """For each SL object in SL_ITEMS (a save's item record of it), the Loader's object: the pairs
     (SL object -> its own), their chunks, and those that couldn't be made, with why."""
-    from . import ravager
+    from . import ravager, ravtransfer
     pairs: Dict[int, int] = {}
     chunks: gff.Chunks = {}
     failed: List[Tuple[int, str]] = []
@@ -170,6 +171,10 @@ def make(sl_items: Dict[int, bytes], sl_objects: gff.Chunks, sequel_objects: gff
             failed.append((sl, "no picture"))
             continue
         wotr_type = sequel_type(struct.unpack_from("<H", rec, SL_ITEM_TYPE)[0], types)
+        tome = ravtransfer.is_tome(rec)
+        if tome:  # (the Tome of Understanding: a scroll of the sequel's, read through DSCLOG2's TOME)
+            wotr_type = ravtransfer.WIZARD_SCROLL
+            oj = sequel_objects.get(("OJFF", TOME_LIKE), oj)
         t = type_table[wotr_type * ravager.TYPE_SIZE:(wotr_type + 1) * ravager.TYPE_SIZE]
         if len(t) != ravager.TYPE_SIZE:
             failed.append((sl, f"no type {wotr_type}"))
@@ -179,7 +184,8 @@ def make(sl_items: Dict[int, bytes], sl_objects: gff.Chunks, sequel_objects: gff
         struct.pack_into("<H", record, OJFF_ICON, own)
         chunks[("OJFF", own)] = bytes(record)
         chunks[("BMP ", own)] = picture(pic, sl_palette, stable)
-        chunks[("RDFF", own)] = item_records(own, number, t, wotr_type, name, 0)
+        chunks[("RDFF", own)] = item_records(own, number, t, wotr_type, name,
+                                             ravtransfer.WOTR_TOME_SPELL + 1 if tome else 0)
         pairs[sl] = own
         number += 1
     return pairs, chunks, failed

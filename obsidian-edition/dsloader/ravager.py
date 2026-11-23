@@ -507,6 +507,10 @@ PATCHES: Tuple[Patch, ...] = (
     # game putting one on only as an item is readied: DSCLOG2's JOIN_READY readies each worn item with
     # a spell (77C1Ah) at "cmp byte [13FAh],0" (58D81h), right after the character's CHAR is loaded
     Patch("join_ready", 0x58D81, bytes.fromhex("803efa1300"), _site(47, 5)),
+    # the Tome of Understanding (SL's tome, DSCLOG's PROBE_TOME), as the transfer makes it (ravtransfer's
+    # WOTR_TOME_SPELL): DSCLOG2's TOME at "dec word [bp-4]" (999CDh) where a scroll's clicked icon reads
+    # the item's power, a point of WIS for the reader and the tome used up
+    Patch("tome", 0x999CD, bytes.fromhex("ff4efc"), _site(48, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

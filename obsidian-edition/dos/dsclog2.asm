@@ -2993,6 +2993,7 @@ site_table:
         dw amulet_mr                        ; 45 SITE_AMULET_MR (a target's magic resistance tested)
         dw weapon_cast                      ; 46 SITE_WEAPON_CAST (a weapon's spell cast on a hit)
         dw join_ready                       ; 47 SITE_JOIN_READY (a member joined: its worn items readied)
+        dw tome_read                        ; 48 SITE_TOME (the Tome of Understanding read: +1 WIS)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4078,6 +4079,102 @@ jr_item  dw 0
 jr_next  dw 0
 jr_left  dw 0
 join_readied dw 0               ; worn items readied as a member joined (for the tests)
+; TOME (site 48, "tome_read"): "dec word [bp-4]" (999CDh; 3 bytes) in the routine run when a scroll's
+; icon is clicked in its box (SL's 8B690h, DSCLOG's PROBE_TOME): SI the item, DI its object, [BP-4] its
+; power (+10h, the spell + 1). The Tome of Understanding as the transfer makes it (ravtransfer's
+; WOTR_TOME_SPELL, the Loader's object TM_OBJECT) gives the one on show a point of WIS, in the sheet and
+; the creature record, at most TM_MOST, and the game goes on as for a psionic power taught (99B44h): the
+; tome used up and the message in its buffer at [BP-56h] shown, "<name> reads the tome: WIS <n>." At
+; TM_MOST already, only the message ("... can grow no wiser.", 99B67h) and the tome kept. Anything
+; else: the DEC, and on.
+TM_OBJECT   equ 21446               ; (ravitems.own_object(1446))
+TM_POWER    equ 317 + 1
+TM_MOST     equ 25
+TM_SHEET_WIS equ 0x19
+TM_CRE_WIS  equ 0x1D
+TM_NAME     equ 0x21
+TM_USE      equ 0x99B44 - 0x999D0
+TM_SHOW     equ 0x99B67 - 0x999D0
+tome_read:
+        cmp di, TM_OBJECT
+        jne .game
+        cmp word [bp - 4], TM_POWER
+        je .tome
+.game:  dec word [bp - 4]
+        iret
+.tome:  pushad
+        push es
+        push fs
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov bx, [es:USE_WHO_OFF]        ; the reader
+        mov byte [cs:tr_used], 0
+        les di, [SHEETS_PTR]
+        imul ax, bx, SHEET_SIZE
+        add di, ax                      ; ES:DI: their sheet
+        lfs si, [CREATURES_PTR]
+        imul ax, bx, CREATURE_SIZE
+        add si, ax                      ; FS:SI: their creature record
+        mov al, [es:di + TM_SHEET_WIS]
+        cmp al, TM_MOST
+        jae .text
+        inc al
+        mov [es:di + TM_SHEET_WIS], al
+        mov byte [cs:tr_used], 1
+        cmp byte [fs:si + TM_CRE_WIS], TM_MOST
+        jae .text
+        inc byte [fs:si + TM_CRE_WIS]
+.text:  mov [cs:tr_wis], al
+        push ss
+        pop es
+        lea di, [bp - 0x56]             ; ES:DI: the game's message buffer
+        mov cx, 15
+        add si, TM_NAME
+.name:  mov al, [fs:si]
+        or al, al
+        jz .named
+        stosb
+        inc si
+        loop .name
+.named: push ds
+        push cs
+        pop ds
+        mov si, tr_reads
+        cmp byte [cs:tr_used], 0
+        jne .copy
+        mov si, tr_wiser
+.copy:  lodsb
+        stosb
+        or al, al
+        jnz .copy
+        pop ds
+        mov ax, TM_SHOW
+        cmp byte [cs:tr_used], 0
+        je .on
+        dec di                          ; (the number, after "WIS ")
+        mov al, [cs:tr_wis]
+        aam                             ; AH tens, AL ones
+        or ax, 0x3030
+        cmp ah, 0x30
+        je .ones
+        mov [es:di], ah
+        inc di
+.ones:  mov [es:di], al
+        mov word [es:di + 1], '.'
+        inc word [cs:tomes_read]
+        mov ax, TM_USE
+.on:    mov si, sp
+        add [ss:si + 36], ax            ; (the INT's IP, above FS, ES and PUSHAD's 32 bytes)
+        pop fs
+        pop es
+        popad
+        iret
+tr_wis   db 0
+tr_used  db 0
+tr_reads db " reads the tome: WIS ", 0
+tr_wiser db " can grow no wiser.", 0
+tomes_read dw 0                 ; (for the tests)
 th_level  db 0
 th_target dw 0xFFFF
 cast_who  dw 0

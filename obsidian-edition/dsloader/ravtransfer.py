@@ -171,6 +171,18 @@ def item_spell(rec: bytes, spells: Mapping[int, int]) -> int:
     return spells[spell] + 1 if spell in spells else 0
 
 
+# The Tome of Understanding (tome.py) in the sequel: a wizard scroll of the Loader's (ravitems) whose
+# power names TOME_SPELL, one of the sequel's unused monster spells (Mons317: 269-319 the scroll routine
+# answers CANNOT LEARN FROM THIS ITEM, 99B6Eh; below 320h-327h, which a readied item's routine treats
+# apart), so that DSCLOG2's TOME (site 48) knows it when its box's icon is clicked: +1 WIS
+WOTR_TOME_SPELL = 317
+
+
+def is_tome(rec: bytes) -> bool:
+    from . import tome
+    return tome.is_tome(rec)
+
+
 class Sequel(NamedTuple):
     """What the transfer reads from the sequel's folder: ITEMS.BIN's pairs and the objects' records;
     with SCROLLS (scroll_objects: each scroll type and spell, the sequel's object) scrolls go the
@@ -249,7 +261,10 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     out = bytearray(sequel.record(new))
     for w, s, n in ITEM_RUNS:
         out[w:w + n] = rec[s:s + n]
-    if spell is not None:
+    if is_tome(rec) and is_own(new):
+        struct.pack_into("<H", out, ITEM_POWER, WOTR_TOME_SPELL + 1)
+        struct.pack_into("<H", out, ITEM_SPELL_SHOWN, WOTR_TOME_SPELL + 1)
+    elif spell is not None:
         out[SCROLL_USES] = sequel.record(new)[SCROLL_USES]
         struct.pack_into("<H", out, SCROLL_SPELL, spell[1])
         struct.pack_into("<H", out, SCROLL_POWER, spell[1])
@@ -552,6 +567,9 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
                 return read_gff(f.read())
         sl_objects = read(os.path.join(sl_dir, "SEGOBJEX.GFF"))
         sl_objects.update(icons.new_chunks(sl_objects))
+        loader_copy = os.path.join(dos_dir, icons.OBJECTS_FILE)  # (the Loader's copy for Shattered Lands:
+        if os.path.exists(loader_copy):  # its own objects too, Kalzith's scrolls, the tome, the new items)
+            sl_objects.update(read(loader_copy))
         gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
         sl_names = next(v for k, v in sorted(gpl.items()) if k[0] == "NAME")
         sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)

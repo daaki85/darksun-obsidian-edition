@@ -1145,6 +1145,12 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   file (`ravtransfer._gff_file` makes a file the ADD list reads as empty). Read effects raw at the
   load + 3E71h:24Dh (owner, caster, spell, the effect's id at +6). `shot.sh` fails for the sequel's
   copy; `import -window ID` (xdotool search --pid) grabs it.
+- **Using an item from its box** (2026-11-23, logs/2026-11-23-ravager-tome-scrolls.md): the box's
+  icon works only in a fight, on the member's turn (the opener 99260h sets `[9D8Ch]` from its caller,
+  1 only in a fight); the handler 995AFh goes on through 9986Fh, 999A9h and 999CDh (`[bp-4]` the
+  spell, power - 1; learning from objects 31000-31199 and 31400-31499; spells 0EBh-10Ch psionic,
+  10Dh up "CANNOT LEARN"); 99B44h uses the item up with the message at `[bp-56h]`, 99B67h shows it
+  only. DSCLOG2's TOME_READ (site 48) is the tome's case there.
 - **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).

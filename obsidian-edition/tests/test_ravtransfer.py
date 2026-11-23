@@ -431,6 +431,22 @@ class ItemSpellTests(unittest.TestCase):
         self.assertEqual(rt.item(bytes(sword), sequel)[0][rt.ITEM_POWER], 0)
         self.assertEqual(rt.item(bytes(blade), sequel._replace(spells=None))[0][rt.ITEM_POWER], 0)
 
+    def test_tome(self):
+        """The Tome of Understanding: the Loader's object of it with the power DSCLOG2's TOME knows (spell
+        WOTR_TOME_SPELL + 1), on the item and shown; made a wizard scroll with a sequel scroll's OJFF."""
+        from dsloader import ravitems, tome
+        sequel = made_sequel()
+        objects = dict(sequel.objects)
+        own = ravitems.own_object(tome.TOME_OBJECT)
+        objects[("RDFF", own)] = wotr_record(own, rt.WIZARD_SCROLL, 0, 30)
+        sequel = sequel._replace(objects=objects, scrolls={}, spells={})
+        rec, new = rt.item(tome.item(), sequel)
+        self.assertEqual((new, struct.unpack_from("<H", rec, rt.ITEM_POWER)[0],
+                          struct.unpack_from("<H", rec, rt.ITEM_SPELL_SHOWN)[0]), (21446, 318, 318))
+        self.assertEqual(own, 21446)  # (DSCLOG2's TM_OBJECT)
+        self.assertIn("TM_POWER    equ 317 + 1", open(os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "dos", "dsclog2.asm")).read())
+
     @unittest.skipUnless(WOTR and os.environ.get("DSUN_SL"), "needs DSUN_WOTR and DSUN_SL (the games' folders)")
     def test_real_names(self):
         from dsloader import ravlog
