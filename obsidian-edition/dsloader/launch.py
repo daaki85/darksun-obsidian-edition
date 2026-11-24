@@ -564,7 +564,12 @@ def _write_conf_file(lines: List[str], path: str) -> str:
 
 def write_conf_wotr(game_dir: str, path: str = CONF, settings: Optional[dict] = None) -> str:
     """The config that starts Wake of the Ravager with the mod (dsloader.ravager: its patched copy,
-    its CD as F:, the mod's dos folder as D:), with the window and speed of the Options tab."""
+    its CD as F:, the mod's dos folder as D:), with the window and speed of the Options tab. Not
+    the music device (midiout.conf_lines): the sequel's music is its CD's audio tracks (game.ins,
+    the .ogg files DOSBox plays), not MIDI. Its sound setup (SOUND.INI) says MidiNotEnabled, GOG's
+    SOUND.CFG picks the Sound Blaster Pro II's FM driver, not the MPU-401's, and its RESOURCE.GFF
+    holds one empty XMIDI (a tempo and the end) where Shattered Lands' holds its score: a `[midi]`
+    section would route nothing."""
     from . import ravager
     settings = load_settings() if settings is None else settings
     lines = display_lines(settings) + cpu_lines(settings) + ravager.conf_lines(

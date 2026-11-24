@@ -884,7 +884,10 @@ the device (on an MT-32 that is the wrong set of instruments; the game's own MT-
 in its sound setup, which the Loader leaves alone), and sound effects and speech don't go to this
 device. Where the Loader can't read Windows' list (it runs on Linux, say, with the game's DOSBox
 under Wine), there is a field for the device's number in place of the list, 0 the first; a Linux
-DOSBox takes an ALSA port there, such as `128:0`. Empty is the default.
+DOSBox takes an ALSA port there, such as `128:0`. Empty is the default. The device is for
+Shattered Lands only: [Wake of the Ravager](#wake-of-the-ravager)'s music is its CD's audio tracks,
+which DOSBox plays itself, so the Loader starts it with the picture and speed chosen here but leaves
+its music as it is.
 
 **Switches** (Picture and music, from the next start): *Plain: every pixel of the game as a block
 (the default)*, *Scanlines: a black line under each row of the picture, as on an old monitor*, *TV: a

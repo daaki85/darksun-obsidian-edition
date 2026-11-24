@@ -706,6 +706,27 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(launch.effective_switches({"midi_device": 3})["midi_device"], 3)
         self.assertEqual(launch.effective_switches({"midi_device": -1})["midi_device"], "default")
 
+    def test_the_sequels_configuration_has_the_picture_and_speed_but_no_music_device(self):
+        """write_conf_wotr: the Options tab's picture and speed reach Wake of the Ravager, the music
+        device doesn't (its music is the CD's audio tracks, not MIDI: write_conf_wotr)."""
+        def conf(settings):
+            with tempfile.TemporaryDirectory() as d:
+                game = os.path.join(d, "Ravager")
+                os.mkdir(game)
+                open(os.path.join(game, "game.ins"), "w").close()
+                path = launch.write_conf_wotr(game, os.path.join(d, "test.conf"), settings=settings)
+                with open(path, newline="") as f:
+                    text = f.read().replace(d, "GAMES")  # (each call's own folder)
+                return text.split("\r\n")
+        usual = conf({})
+        self.assertIn(f"cycles=fixed {launch.DEFAULT_SPEED}", usual)
+        lines = conf({"picture": "scanlines", "cycles": 20000, "midi_device": 2})
+        self.assertIn("scaler=scan3x", lines)
+        self.assertIn("cycles=fixed 20000", lines)
+        self.assertNotIn("[midi]", lines)
+        self.assertFalse([line for line in lines if line.startswith("midiconfig")])
+        self.assertEqual(conf({"midi_device": "128:0"}), usual)
+
     def test_without_the_dice_log_it_runs_the_game_as_usual(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)
