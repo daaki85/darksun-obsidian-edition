@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, labels, monsters, ravager, sizes, stealth
+from . import aging, combatlog, dicelog, game, kitpages, kits, labels, monsters, ravager, sizes, stealth
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -133,11 +133,25 @@ ADDRESSES: Dict[str, object] = {
     "LEVEL_HP_SEG": 0x45BE,
     # ages (aging.py): the age alone at the sheet's +41h, a byte the sequel's program never reads or
     # writes (no instruction with its offset on a sheet; 0 in every sheet of a new game and the saves,
-    # 2026-11-22), and none more: +3Dh and +3Fh, the only others, hold CHARTRAN's kit and second sphere
+    # 2026-11-22), and none more: +3Dh and +3Fh, the only others, hold the kit and the second sphere
+    # (MOD_BYTES); the starting age's roll is in the known-spells bits (ravager.known_roll)
     "SHEET_AGE": 0x41, "AGE_PLAIN": True,
     "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
                      284: "corroding touch"},
 }
+# The mod's sheet bytes, by the names that hold them in Shattered Lands' layout (+43h the kit byte, +45h
+# the second sphere and the new spells known), at the sequel's +3Dh and +3Fh, where the party transfer
+# copies them (as CHARTRAN does; the Loader's copy of the game reads the sound words below them as
+# bytes: ravager's sound_3c, sound_3e). Only their storage and reading: the kits' rules aren't ported.
+MOD_BYTES = {"KIT_SHEET": (game, "KIT_SHEET"), "NEW_KNOWN_SHEET": (game, "NEW_KNOWN_SHEET"),
+             "KIT_BYTE": (kitpages, "KIT_BYTE"), "SPHERE2": (kits, "SPHERE2")}
+
+
+def _new_known() -> Dict[int, Tuple[int, int]]:
+    """game.NEW_KNOWN with its sheet offsets the sequel's."""
+    return {spell: (ravager.sheet_field(at), bit) for spell, (at, bit) in game.NEW_KNOWN.items()}
+
+
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
                 ("ITEM_", ravager.item_field))
 NOT_OFFSETS = {"CREATURE_SIZE", "SHEET_SIZE", "ITEM_SIZE", "ITEM_TYPE_SIZE", "ITEM_NAME_SIZE",
@@ -147,6 +161,9 @@ NOT_OFFSETS = {"CREATURE_SIZE", "SHEET_SIZE", "ITEM_SIZE", "ITEM_TYPE_SIZE", "IT
 def layout() -> Dict[str, int]:
     """game.py's name -> the sequel's value, for every name the profile changes."""
     out = dict(ADDRESSES, **EFFECTS)
+    for name, (module, sl_name) in MOD_BYTES.items():
+        out[name] = ravager.sheet_field(getattr(module, sl_name))
+    out["NEW_KNOWN"] = _new_known()
     for name, value in vars(game).items():
         if name in NOT_OFFSETS or name in out or not isinstance(value, int) or isinstance(value, bool):
             continue
@@ -174,6 +191,8 @@ def apply_layout() -> int:
     profile = dict(layout(), HDR_SIG=HDR_SIG)
     originals = {name: getattr(game, name) for name in profile if hasattr(game, name)}
     originals["HDR_SIG"] = dicelog.HDR_SIG
+    for name, (module, sl_name) in MOD_BYTES.items():
+        originals.setdefault(name, getattr(module, sl_name))
     for module in [m for name, m in sys.modules.items() if name.startswith("dsloader.") and m is not None]:
         for name, value in profile.items():
             if name in vars(module) and vars(module)[name] == originals.get(name):
@@ -461,6 +480,15 @@ class RavGameData(game.GameData):
                     and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
                 ac -= 1
         return ac
+
+    def start_roll(self, member: int) -> Optional[int]:
+        """The starting age's roll of party member MEMBER (game.sheet_roll's, Table 7's dice less their
+        count) as the Loader's party transfer keeps it in the member's known-spells bits
+        (ravager.known_roll), None for none (one the sequel made, or CHARTRAN's)."""
+        if self.ds is None or not 0 <= member < game.PARTY_SIZE:
+            return None
+        at = (self.ds - ravager.DGROUP + ravager.KNOWN_SEG) * 16 + ravager.KNOWN_OFF + member * ravager.KNOWN_BITSET
+        return ravager.known_roll(self.guest.read(at, ravager.KNOWN_BITSET))
 
     def creating(self) -> bool:
         """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen

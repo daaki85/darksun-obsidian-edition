@@ -4,8 +4,10 @@ from a Shattered Lands save, as SSI's own transfer program (the sequel's CHARTRA
 This first part is CHARTRAN's work, in Python: on every save tried it gives the very bytes CHARTRAN
 writes (playtest/logs/2026-11-22-ravager-transfer-format.md), but for one stray spell bit CHARTRAN
 sets now and then (its 72nd, set for no spell the member knows). What the mod adds to it (the items
-the sequel lacks, the months between the games) builds on this; kits and weapon specs are not kept
-(the sequel's sheet has no room for them).
+the sequel lacks, the months between the games, the starting age's roll) builds on this. Kits, the
+second sphere and the new spells known come across in the sheet's +3Dh and +3Fh as CHARTRAN copies
+them (the Loader's DSUNLOG2 reads the sound words below them as bytes: ravager's sound_3c, sound_3e);
+weapon specs are not kept (the sequel's sheet has no room for them).
 
 What it reads from the save (SAVEnn.SAV, its SAVE chunks):
 - 5: the creatures (3Ah bytes; the party first), 6: their sheets (47h), 7: the items (15h), 3: the
@@ -20,7 +22,8 @@ What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35
   creature's +8, +0Ah and +0Ch, flags 16, 17 and 4), each a first item (level 2, "of" 0) and the
   next ones (level 4, "of" the record before), each list followed by the contents of its bags,
   the last bag first and a bag in a bag next (its first "of" the bag's record, flags 4). The items keep their numbers, the lists theirs.
-- CACT: the creature's +6 (its word of actions); SPST: the wizard's spells known, a bit each (72);
+- CACT: the creature's +6 (its word of actions); SPST: the wizard's spells known, a bit each (72;
+  the Loader's way the game's 15 bytes, the starting age's roll in bits 115-119: ravager.known_roll);
   PSST: the powers known (their byte >> 2); PSIN: the disciplines with a power known (1, 2, 4).
 - Each item becomes the sequel's object that ITEMS.BIN (in the sequel's folder: an SL object and the
   object to give, a pair of words each) names for it, else 900, a money bag: its record is that
@@ -30,7 +33,7 @@ What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35
 import struct
 from typing import Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from . import dataitems, game
+from . import dataitems, game, ravager
 from .gff import Chunks, GffError
 
 SL_SHEET_AGE = game.SHEET_AGE
@@ -63,10 +66,10 @@ CREATURE_NAME, NAME_LENGTH = 0x21, 15
 # The sheet: SL's less seven bytes (+0Eh, +0Fh, the weapon specs +14h-+17h, +3Ch)
 SHEET_RUNS = ((0x00, 0x00, 0x0E), (0x0E, 0x10, 4), (0x12, 0x18, 0x24), (0x37, 0x3D, 0x0A))
 # The mod's kit byte (SL +43h) and its new-spells/second-sphere byte (+45h) land, as CHARTRAN copies
-# the sheet, at +3Dh and +3Fh: the high bytes of two words the sequel reads whole, +3Ch and +3Eh, sound
-# numbers it plays at a member's turn in a fight (0 its default). Left in, a kit made a sound 100h or
-# 8100h there, and the game stopped with "Mel Fatal Error" (playtest/RESEARCH.md). So the sheet keeps
-# neither; the kit and those bits are not carried into the sequel's sheet.
+# the sheet, at +3Dh and +3Fh (ravlog's layout reads them there): the high bytes of two words the
+# sequel reads whole, +3Ch and +3Eh, sound numbers it plays at a member's turn in a fight (0 its
+# default). The unpatched game took a kit for a sound 100h or 8100h and stopped with "Mel Fatal Error"
+# (playtest/RESEARCH.md); the Loader's copy reads the low bytes alone (ravager's sound_3c, sound_3e).
 MOD_SHEET_BYTES = (0x3D, 0x3F)
 # An item: the save's links, flags, slot and plus over the new object's record
 ITEM_RUNS = ((0x02, 0x02, 8), (0x0E, 0x0E, 1), (0x12, 0x10, 1), (0x13, 0x11, 1), (0x16, 0x14, 1))
@@ -445,8 +448,6 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         if sequel.loader:
             wsh = bytearray(wsh)
             wsh[WOTR_SHEET_AGE] = sh[SL_SHEET_AGE] if game.spec_packed(sh) else 0
-            for at in MOD_SHEET_BYTES:  # (the mod's bytes: high bytes of the sequel's sound words)
-                wsh[at] = 0
             name = rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1")
             cre, wsh, age = aged(cre, bytes(wsh), name, (years or {}).get(m, 0))
         records = [[1, 0, CREATURE_KIND, m, m, cre], [3, 0, SHEET_KIND, m, SHEET_FLAGS, wsh]]
@@ -498,7 +499,10 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         cid = place_of[m] if place_of is not None else FIRST_CHAR + PARTY - 1 - m
         out[("CHAR", cid)] = dataitems.chunk(recs, end)
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
-        out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
+        known = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
+        if sequel.loader:  # (the game's own 15 bytes, the starting age's roll in the spare bits)
+            known = ravager.with_known_roll(known, game.packed_roll(sh))
+        out[("SPST", cid)] = known
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
         moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age, named))
     return out, moved
@@ -683,7 +687,8 @@ def player_report(moved: List[Moved], months: Optional[int], failed: List[Tuple[
     from .ravitems import OWN_HIGH
     lines = [f"{months} months have passed since Shattered Lands." if months else "",
              "Start Wake of the Ravager from the Loader: the items made for it are in the Loader's copy of "
-             "its files, and the sequel started by itself shows them as money bags.", ""]
+             "its files, and the sequel started by itself shows them as money bags (and can stop in a fight "
+             "over a member with a kit).", ""]
     why = dict(failed)
     for m in moved:
         lines.append(f"{m.name}: place {m.place - ROSTER_PLACES[0] + 1} of the roster (CREATE CHARACTERS, ADD)"

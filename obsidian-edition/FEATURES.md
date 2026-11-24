@@ -932,7 +932,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
   95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
-- **Kits, weapon specs and spells** come across with each character.
+- **Kits, spells and the starting age** come across with each character (the kits are kept on the
+  sheet, the Elementalist's second sphere and the new spells known with them, though their rules don't
+  work in the sequel yet); weapon specs don't (the sequel's sheet has no room for them yet). Start the
+  sequel from the Loader: started by itself, it can stop in a fight on the turn of a member with a kit.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character

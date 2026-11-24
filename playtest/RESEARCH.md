@@ -1104,9 +1104,43 @@ dx,[es:bx+3Ch]` at 6012Ah, overlaid, and `mov ax,[es:bx+3Eh]` at 89859h, after `
 bx,[19C5h]`): sound numbers played at a member's turn in a fight (0: the default, 62h), through
 B8:0A22h. A kit made the sound 100h or 8100h, the sound manager stopped the game ("Mel Fatal Error",
 through 39DEFh, then exit to DOS: the "crash" of the transferred party's Tyr fights, about 1 in 4, on
-the druid Ester's turn). The Loader's transfer now leaves both bytes 0 (ravtransfer.MOD_SHEET_BYTES):
-the kits are not carried in the sheet. Tried on the user's saves `selling-junk-user`, `trap-user`
-and `rest-no-call-user`: all transferred.
+the druid Ester's turn). For a while the Loader's transfer left both bytes 0; tried on the user's
+saves `selling-junk-user`, `trap-user` and `rest-no-call-user`: all transferred. **Now (2026-11-24,
+`claude/ravager-sheet-room`)** the bytes stay (as CHARTRAN copies them) and DSUNLOG2 reads the words'
+low bytes alone, in place, no helper code (`ravager.PATCHES` `sound_3c` at file 65333h, `sound_3e` at
+8EA59h: `xor ax,ax / or al,es:[bx+N]`, then the game's own move, ZF as before). Every decode of the
+whole program (each start offset, capstone) with a displacement 3Ch-3Fh on an ES base: only those
+two words and two byte reads of `+3Ch` (8ACB7h, 8ADA5h image), none of `+3Dh`/`+3Fh`; the sheet's
+42h-byte copies (CHARSAVE's load and save, 6950Bh/69C67h/6B17Ch: a GFF call of 42h) copy whole;
+DSCLOG2 reads none of them. ravlog's layout reads the kit (`KIT_SHEET`, `kitpages.KIT_BYTE`) at `+3Dh`
+and the second sphere and new spells (`NEW_KNOWN_SHEET`, `kits.SPHERE2`, `NEW_KNOWN`) at `+3Fh`;
+kitpages and kits read race, classes and levels by `game.SHEET_*`. Only verified statically: a
+transferred party with kits must play the Tyr fight with no quit and its turn sounds still heard.
+
+**The starting age's roll in the sequel** (2026-11-24): the known wizard spells are 15 bytes a member
+at selector 320h:39Ch (load + 3D62h); the game's loops and tests stop at bit 114 (`cmp ...,73h`:
+19CFAh, 5D425h, 6990Fh, 8F8A5h image; its scrolls' spells are 1-112, its priest scrolls' 236 and up
+take another branch at 947EEh, `cmp [bp-4],0EBh`), so bits 115-119 are free: the roll + 1 there
+(`ravager.known_roll`, 0 none: the install's characters' SPST are 15 zero bytes), written by the
+Loader's transfer (a 15-byte SPST; CHARTRAN's is 9). The roster's load (6A782h image, `128h:4ABh` =
+29497h, GFF read with length -1: the chunk's own) reads the chunk whole; its save (6A6B6h) writes 15;
+a save game keeps the 60-byte table (SAVE 20). Nothing writes bits 115-119, and nothing clears them:
+a character made in a slot keeps the slot's (creation clears 0-114 only), and a 9-byte SPST leaves
+bytes 9-14 as they were. `RavGameData.start_roll(member)` reads it.
+
+**Room for the weapon specs in the sequel's sheet** (2026-11-24, static, not built): the specs need 17
+bits (with the roll 22). `+3Dh`, `+3Fh` and `+41h` are the kit, the sphere and new spells, the age.
+Candidates, by the reads found (every ES-based decode by displacement, and the uses after each `les
+bx,[19C5h]`): **`+36h`** (SL's `+3Ch` place, CHARTRAN leaves 0): no instruction reads or writes it on
+any base, yet the game's own sheets hold 0, 1, 4, 7 there (CHARSAVE 29-53, SAVE01's chunk 6), so
+something fills it, perhaps the GPL's table-driven object fields (gpl.FIELD_TYPES_AT) or a block copy:
+a watch on it in play must come first; 8 bits, not enough alone. **`+40h`** (SL's `+46h`): read as a
+byte at 5A24Ah and 82400h (each "> 0"), 0 in every party sheet; full byte. **`+37h`** (footprint, 4
+reads incl. `cmp ...,1Eh` at 60C55h), 0 for the party, monsters' own. High bytes of small words: `+0Ah`
+(the HP rolled: a write of 0, a write of AX at 696DFh, a read at 8FFC4h) and `+0Ch` (max PSP, 4 reads
+found, values to CAh seen), both able to pass 255 at the sequel's levels and each write would need
+patching too; the abilities, levels and saves' top 3 bits are read at dozens of sites. None is safe
+without an in-game watch; the roll stays in the known-spells bits.
 
 **Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
 printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case

@@ -29,6 +29,55 @@ class ProfileTests(unittest.TestCase):
     def tearDown(self):
         ravlog.restore_layout()
 
+    def test_mod_bytes(self):
+        """The kit byte and the second sphere / new spells byte at the sequel's +3Dh and +3Fh (SL's +43h,
+        +45h) while the layout is on, in game, kitpages and kits alike; Shattered Lands' back after."""
+        from dsloader import kitpages
+        layout = ravlog.layout()
+        self.assertEqual((layout["KIT_SHEET"], layout["KIT_BYTE"], layout["NEW_KNOWN_SHEET"], layout["SPHERE2"]),
+                         (0x3D, 0x3D, 0x3F, 0x3F))
+        self.assertEqual(layout["NEW_KNOWN"][game.FRIENDS_SPELL], (0x3D, 0x80))
+        self.assertEqual(layout["NEW_KNOWN"][game.FOG_SPELL], (0x3F, 0x40))
+        sl = (game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2, dict(game.NEW_KNOWN))
+        ravlog.apply_layout()
+        self.assertEqual((game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2), (0x3D, 0x3F, 0x3D, 0x3F))
+        ravlog.restore_layout()
+        self.assertEqual((game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2, game.NEW_KNOWN), sl)
+
+    def test_kits_read_from_a_sequel_sheet(self):
+        """A transferred sheet (SL's through ravtransfer.sheet) reads the same kits, sphere, own feature
+        and new spells under the sequel's layout as the SL sheet does under SL's."""
+        from dsloader import kitpages, ravtransfer
+        sl = bytearray(game.SHEET_SIZE)
+        sl[game.SHEET_RACE], sl[game.SHEET_CLASSES], sl[game.SHEET_LEVELS] = 3, 11, 7  # (an elf preserver)
+        sl[0x43] = kitpages.KIT_IDS["Battle Mage"] % 4  # (the class's second kit)
+        sl[0x45] = 0x40 | 3  # (Fogbolt known; a second sphere's bits, an Elementalist's only)
+        sl[0x42], sl[0x44] = 0x2A, 0x2B  # (the sounds)
+        want = (kitpages.kit_names(bytes(sl)), kits.second_sphere(kits.ELEMENTALIST, bytes(sl)),
+                game.knows_new_spell(bytes(sl), game.FOG_SPELL), kitpages.kit_level(bytes(sl), kitpages.KIT_IDS["Battle Mage"]))
+        self.assertEqual(want, (["Battle Mage"], 2, True, 7))
+        wotr = ravtransfer.sheet(bytes(sl))
+        ravlog.apply_layout()
+        try:
+            got = (kitpages.kit_names(wotr), kits.second_sphere(kits.ELEMENTALIST, wotr),
+                   game.knows_new_spell(wotr, game.FOG_SPELL), kitpages.kit_level(wotr, kitpages.KIT_IDS["Battle Mage"]))
+            self.assertEqual(got, want)
+            self.assertEqual((wotr[0x3C], wotr[0x3E]), (0x2A, 0x2B))
+        finally:
+            ravlog.restore_layout()
+
+    def test_start_roll(self):
+        """RavGameData.start_roll: a member's roll from its known-spells bits (selector 320h:39Ch, the load
+        + 3D62h, 15 bytes a member), None for none."""
+        g, ds = FakeGuest(), 0x4982
+        load = ds - ravager.DGROUP
+        base = (load + 0x3D62) * 16 + 0x39C
+        g.write(base + 15 * 2, ravager.with_known_roll(b"\x01", 17))
+        data = ravlog.RavGameData(g, ds)
+        self.assertEqual(data.start_roll(2), 17)
+        self.assertIsNone(data.start_roll(0))
+        self.assertIsNone(data.start_roll(4))
+
     def test_layout_maps_record_fields(self):
         layout = ravlog.layout()
         self.assertEqual(layout["CREATURE_NAME"], 0x21)

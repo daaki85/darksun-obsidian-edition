@@ -15,10 +15,10 @@ shortened as the game shortens its own (P-KINESIS).
 
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import gff
+from . import game, gff
 from . import weaponpages as wp
 
-KIT_BYTE = 0x43
+KIT_BYTE = 0x43  # (the sequel's +3Dh: ravlog's layout; the race, classes and levels by game.SHEET_*)
 # By class as the creation screen numbers them (game.CREATION_CLASS_NAMES): the kits' names
 KITS = {1: ("Elementalist", "Healer", "Crusader"),
         2: ("Grove Warden", "Lifebinder", "Wanderer"),
@@ -107,9 +107,9 @@ def multi_group(race: int, classes: Sequence[int]) -> int:
 
 def sheet_group(sheet: bytes) -> int:
     """The multiclass group of a sheet (its classes 1-17), or 0: one class, a human, or none."""
-    if len(sheet) <= KIT_BYTE or sheet[0x18] == 1 or not sheet[0x22]:
+    if len(sheet) <= KIT_BYTE or sheet[game.SHEET_RACE] == 1 or not sheet[game.SHEET_CLASSES + 1]:
         return 0
-    return multi_group(sheet[0x18], [CREATION_CLASS.get(c, 0) for c in sheet[0x21:0x24]])
+    return multi_group(sheet[game.SHEET_RACE], [CREATION_CLASS.get(c, 0) for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]])
 
 
 def kit_place(sheet: bytes) -> Optional[int]:
@@ -119,11 +119,11 @@ def kit_place(sheet: bytes) -> Optional[int]:
     classes; None for more than one class otherwise (no kits)."""
     if len(sheet) <= KIT_BYTE:
         return None
-    if not sheet[0x22] and not sheet[0x23]:
+    if not sheet[game.SHEET_CLASSES + 1] and not sheet[game.SHEET_CLASSES + 2]:
         return 0
-    if sheet[0x18] != 1:  # (a human's: game.HUMAN)
+    if sheet[game.SHEET_RACE] != 1:  # (a human's: game.HUMAN)
         return 0 if sheet_group(sheet) else None
-    return 2 if sheet[0x23] else 1
+    return 2 if sheet[game.SHEET_CLASSES + 2] else 1
 
 
 def kit_at(sheet: bytes, place: int) -> int:
@@ -133,7 +133,7 @@ def kit_at(sheet: bytes, place: int) -> int:
     oldest = kit_place(sheet)
     if oldest is None or not 0 <= place <= oldest or sheet[KIT_BYTE] == 0xFF:  # (0xFF: KIT_OPEN)
         return 0
-    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[0x21 + place])
+    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[game.SHEET_CLASSES + place])
     if cls in KITS and kit > len(KITS[cls]):
         return 0  # (a group's kit it hasn't)
     return cls * 4 + kit if cls is not None and kit else 0
@@ -143,7 +143,7 @@ def kit_awake(sheet: bytes, place: int) -> bool:
     """Whether the kit of the class at PLACE counts, as DSCLOG's KIT_AWAKE: the class a human has
     now always; a class it had before once the class it has now is of a higher level (as the game
     counts its earlier classes). Asleep till then."""
-    return place == 0 or sheet[0x24] > sheet[0x24 + place]
+    return place == 0 or sheet[game.SHEET_LEVELS] > sheet[game.SHEET_LEVELS + place]
 
 
 def kits_of(sheet: bytes) -> List[Tuple[int, int, bool]]:
@@ -168,13 +168,13 @@ def kit_level(sheet: bytes, kid: int) -> int:
     """The level of the class the sheet has kit KID for, 0 for none: DSCLOG's KIT_LEVEL (a Ravager's
     AC, a Seeker's slots, a Shinobi's casting go by it)."""
     place = kit_place_of(sheet, kid)
-    return 0 if place is None else sheet[0x24 + place]
+    return 0 if place is None else sheet[game.SHEET_LEVELS + place]
 
 
 def kit_class_of(sheet: bytes, kid: int) -> int:
     """The class (1-17) the sheet has kit KID for, 0 for none: DSCLOG's KIT_CLASS_OF_SHEET."""
     place = kit_place_of(sheet, kid)
-    return 0 if place is None else sheet[0x21 + place]
+    return 0 if place is None else sheet[game.SHEET_CLASSES + place]
 
 
 # KIT_IS's numbers, by name

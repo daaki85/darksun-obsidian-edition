@@ -222,7 +222,8 @@ SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
 SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
 # Wake of the Ravager (ravlog's layout) keeps the age alone in a byte of its own (SHEET_AGE there: a
-# byte the sequel's program never reads or writes), no weapon specs and no roll beside it
+# byte the sequel's program never reads or writes), no weapon specs and no roll beside it (the roll is
+# in the member's known-spells bits there: ravager.known_roll)
 AGE_PLAIN = False
 
 
@@ -261,8 +262,14 @@ def sheet_age(sheet: bytes) -> int:
 
 def sheet_roll(sheet: bytes) -> Optional[int]:
     """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none (the
-    sequel keeps none: AGE_PLAIN)."""
-    if AGE_PLAIN or not spec_v2(sheet):
+    sequel's sheet keeps none, AGE_PLAIN: its roll is in the member's known-spells bits,
+    ravager.known_roll, RavGameData.start_roll)."""
+    return None if AGE_PLAIN else packed_roll(sheet)
+
+
+def packed_roll(sheet: bytes) -> Optional[int]:
+    """sheet_roll of a Shattered Lands sheet whatever layout is on (the party transfer's)."""
+    if not spec_v2(sheet):
         return None
     roll = int.from_bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3], "little") >> ROLL_SHIFT & 0x1F
     return None if roll == ROLL_UNKNOWN else roll

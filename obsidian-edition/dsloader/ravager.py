@@ -513,6 +513,19 @@ PATCHES: Tuple[Patch, ...] = (
     # WOTR_TOME_SPELL): DSCLOG2's TOME at "dec word [bp-4]" (999CDh) where a scroll's clicked icon reads
     # the item's power, a point of WIS for the reader and the tome used up
     Patch("tome", 0x999CD, bytes.fromhex("ff4efc"), _site(48, 3)),
+    # The two sound numbers on a sheet, +3Ch and +3Eh (SL's +42h and +44h), read as words, though the
+    # bytes above them are the mod's (the transfer's kit byte +3Dh and second sphere / new spells +3Fh,
+    # SL's +43h and +45h: kitpages.KIT_BYTE, kits.SPHERE2 in ravlog's layout): the low byte alone, as
+    # SL's sound_42 and sound_44 (DSCLOG's PROBE_SOUND_*), but in place, no helper code: "xor ax,ax /
+    # or al,es:[bx+N]" (ZF as the game's "or ax,ax" had it), then the game's own move. These are the
+    # sequel's only reads of +3Ch..+3Fh (every decode of the program with those displacements, ES or
+    # not, 2026-11-24; the other two, 8ACB7h and 8ADA5h, read +3Ch as a byte already). A kit in +3Dh read
+    # whole made sound 100h or 8100h, "Mel Fatal Error" (playtest/logs/2026-11-24-ravager-quit-hunt.md).
+    # A member's turn in a fight (6012Ah in the image: "mov dx,es:[bx+3Ch] / mov ax,dx / or ax,ax",
+    # 62h when 0, pushed to the sound routine B8h:0A22h):
+    Patch("sound_3c", 0x65333, bytes.fromhex("268b573c8bc20bc0"), bytes.fromhex("33c0260a473c8bd0")),
+    # ... and 89859h in the image ("mov ax,es:[bx+3Eh] / mov [bp-4],ax / or ax,ax", its low byte pushed)
+    Patch("sound_3e", 0x8EA59, bytes.fromhex("268b473e8946fc0bc0"), bytes.fromhex("33c0260a473e8946fc")),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -546,6 +559,34 @@ DGROUP = 0x47E0  # its DS less its load segment (4982h - 1A2h in a GOG start; SL
 WHOSE_TURN, CAMERA, MAP_OBJECTS = 0x426D, 0x1408, 0x67BB  # (SL's 4979h, 1178h, 6694h; the map objects 25h bytes apart)
 SPELL_SLOTS, SLOTS_STRIDE, PRIEST_SLOTS = 0x446A, 0x22, 0x0B  # wizard casts left by level, a member a row
 KNOWN_BITSET = 15  # bytes of known wizard spells a member (bit n, spell n), the roster's SPST chunk
+# ... at selector 320h:39Ch (the load + KNOWN_SEG), a member's after another's (DSCLOG2's KNOWN_BITS).
+# The game's loops and tests cover bits 0-114 (its wizard spells: "cmp ...,73h" at 19CFAh, 5D425h,
+# 6990Fh, 8F8A5h in the image; its scrolls' spells 1-112), so bits 115-119 are the mod's: the
+# starting age's roll (game.sheet_roll's, which SL keeps on the sheet; the sequel's sheet has no room)
+# plus 1, 0 none kept (the game's own characters' 15 bytes are 0 there). A roster SPST is read whole
+# into the member's 15 bytes (6A782h in the image: GFF read with length -1, the chunk's own) and saved
+# as 15 (6A6B6h); a save game keeps the table whole (SAVE 20, 60 bytes). Nothing in the program writes
+# those bits, nor clears them: a character made in a slot keeps the slot's (the creation clears 0-114).
+KNOWN_SEG, KNOWN_OFF = 0x3D62, 0x39C
+ROLL_BIT, ROLL_MASK = 115, 0x1F
+
+
+def known_roll(bits: bytes) -> Optional[int]:
+    """The starting age's roll a member's known-spells bits BITS keep (ROLL_BIT), None for none."""
+    if len(bits) < KNOWN_BITSET:
+        return None
+    value = int.from_bytes(bits[:KNOWN_BITSET], "little") >> ROLL_BIT & ROLL_MASK
+    return value - 1 if value else None
+
+
+def with_known_roll(bits: bytes, roll: Optional[int]) -> bytes:
+    """BITS (a member's known spells, up to KNOWN_BITSET bytes) made KNOWN_BITSET long with the starting
+    age's ROLL in bits ROLL_BIT on (None: none kept); the spells' bits below as they were."""
+    value = int.from_bytes(bytes(bits[:KNOWN_BITSET]).ljust(KNOWN_BITSET, b"\0"), "little")
+    value &= ~(ROLL_MASK << ROLL_BIT)
+    if roll is not None:
+        value |= (min(max(roll, 0), ROLL_MASK - 1) + 1) << ROLL_BIT
+    return value.to_bytes(KNOWN_BITSET, "little")
 AFRAID = 0x60  # a creature's +18h while Afraid
 
 # Shattered Lands' creature and sheet offsets -> the sequel's (None: no such field), found by aligning
