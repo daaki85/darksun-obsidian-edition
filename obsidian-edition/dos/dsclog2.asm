@@ -4088,18 +4088,43 @@ weapon_cast:
 ; the attack takes the spell + 1 of the hit (AX: the ammunition's for a shot, else the weapon's). Made;
 ; then for a spell arrow (WC_ARCHER's carry: a party archer with no preserver class) the spell put past
 ; the game's (PA_NONE), so the game's own test (5D24Eh) skips the cast as for an item with no spell
-; (5D2DCh): a plain arrow. ARROWS_PLAIN counts them. All registers kept.
+; (5D2DCh): a plain arrow. ARROWS_PLAIN counts them. A melee hit ([BP+16h] 1, as the routine's Fire Shield
+; test at 5D1D6h has it) casts the weapon's own spell alone: the game takes the quiver's arrows' (308h:[7])
+; first whatever the weapon, so a member with Shocking Arrows in the quiver cast Shocking Grasp with a
+; sword hit, and the game died a few turns later (2026-11-24, with or without WEAPON_CAST); the arrows'
+; spell is put past the game's too (MELEE_ARROWS counts them). All registers kept.
 PA_NONE equ 0x148
 plain_arrow:
         mov [bp - 0x18], ax
         dec word [bp - 0x18]
+        cmp word [bp + 0x16], 1
+        jne .shot
         push ax
+        push bx
+        push es
+        cmp si, NO_ITEM
+        jae .none
+        imul bx, si, ITEM_SIZE
+        les ax, [ITEMS_PTR]             ; (AX the offset, ES the segment)
+        add bx, ax
+        mov ax, [es:bx + 0x10]
+        dec ax
+        cmp ax, [bp - 0x18]
+        je .own                         ; (the weapon's own spell)
+.none:  mov word [bp - 0x18], PA_NONE
+        inc word [cs:melee_arrows]
+.own:   pop es
+        pop bx
+        pop ax
+        iret
+.shot:  push ax
         call wc_archer
         pop ax
         jnc .out
         mov word [bp - 0x18], PA_NONE
         inc word [cs:arrows_plain]
 .out:   iret
+melee_arrows dw 0
 ; WC_ARCHER: AX the level the hit's spell ([BP-18h]) is cast at by combatant DI with item SI, carry set
 ; for none (a plain arrow). All else kept.
 wc_archer:
