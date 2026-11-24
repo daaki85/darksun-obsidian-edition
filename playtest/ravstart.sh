@@ -49,7 +49,7 @@ else
   echo "c:"; echo "DSUN -W0 -L"; } >> "$C"
 fi
 [ -n "$RAV_CORE" ] && sed -i "s/^core=.*/core=$RAV_CORE/" "$C"   # (DOSBox's CPU core: normal for a control of the dynamic one)
-[ -n "$RAV_NOEXIT" ] && sed -i '$ {/^exit$/d}' "$C"   # (the game's own exit leaves DOSBox up: its last words on screen)
+[ -n "$RAV_NOEXIT" ] && sed -i '/^exit$/d' "$C"   # (the game's own exit leaves DOSBox up: its last words on screen)
 pgrep -x Xvfb >/dev/null || { setsid nohup Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 & sleep 2; }
 setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
 echo $! > "$WORK/rav.pid"; sleep 6
