@@ -1172,8 +1172,7 @@ patches and no file format change; a bigger sheet is worth it only if the mod ne
 later. Verifying it would take a unicorn test per patch shape, a scan test for leftover 42h strides,
 and play of create, ADD, save, load (old and new saves), level up, a fight and a talk.
 
-**The 48h sheet, built** (2026-11-24, `claude/ravager-sheet-room`, static and unicorn only, not yet
-played): `ravager.SHEET_SIZE` 48h (`GAME_SHEET_SIZE` 42h). +42h..+44h hold SL's +14h..+16h as
+**The 48h sheet, built** (2026-11-24, `claude/ravager-sheet-room`; played the same day, below): `ravager.SHEET_SIZE` 48h (`GAME_SHEET_SIZE` 42h). +42h..+44h hold SL's +14h..+16h as
 `game.packed_specs` packs them (specs base 17, the roll, the flag bits; ravlog's `SPEC_SLOTS` 42h,
 `sheet_field` 14h-16h -> 42h-44h), +45h..+47h spare (0); the age stays at +41h. **392 patches**
 (`ravager.PATCHES`, each checking its original bytes): the 386 strides `sheet_stride_*`
@@ -1204,6 +1203,20 @@ template's three, NEW_SHEET run, widen/narrow round trips on the install's roste
 play**: create a character (its +42h..+47h 0), ADD (old and transferred), save and load (an old save
 widened, a new one), level up, a fight, a talk, the dice log reading the transferred party's specs;
 playtest tools that index sheets (ravhold.sh, ravscare.sh, ravknow.py) take 48h with RAV_LOADER.
+**Played** (2026-11-24, logs/2026-11-24-ravager-48h-sheet-play.md): all nine checks passed. Read the table
+at far DS:19C5h in steps of 48h. On CREATE CHARACTERS the creation sheet (far DS:1429h) is table slot 0 until
+NEW, then the template (360h:29h, its "+42h" the creature's bytes). Bytes put in a slot's +42h..+47h
+before NEW were 0 after it, and an EDIT kept them. The dice log reads the transferred specs, rolls and ages
+through `ravlog.apply_layout()` (`game.spec_kinds`, `game.sheet_roll`, `aging.age_of`). No spec bonus shows
+in an attack: weapon specialization isn't a ported rule (`RULE_SPECIALIZE` not in `RULES_PORTED`). The
+game writes DARKRUN.GFF as it plays, with the region's sheets in it (48h, so `narrow` changes it too).
+**The TOC the Loader writes**: SSI's GFF TOC is the type table, then a word count of free holes where its
+second dword says, then 8 bytes a hole (the TOC's length = that place + 2 + 8 x holes). `icons.with_chunks`
+(widen, narrow, the transfer's roster) left the count out with the dword at `len - 2`, on the last entry's
+length high word; the game's next roster write (a character made) put its count (1) there: CHAR 53 1E1h ->
+101E1h, the file unreadable by `gff.read_gff`. Fixed (a count of 0 written; `test_free_list_count`). Check a
+file with: second dword == type table's end, TOC length == it + 2 + 8 x count. A file the old writer made
+and the game then wrote keeps its one bad length (the last type's last entry): repair by hand.
 
 **Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
 printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case
@@ -1355,6 +1368,13 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   (8C6C1h, after its test at 8C802h), the rule's site never reached, and the emulator then runs on past
   the routine's return: its number for that skill is no reading (94 here). Check the trace for an INT
   F5h before trusting a skill's line.
+- **After a load, and at the edge** (2026-11-24, logs/2026-11-24-ravager-48h-sheet-play.md): after LOAD
+  (the title menu's or F2's) a picture (the dragon's orb, a progress bar under it) waits for a click
+  (`ravclick.py 160 100`). Once, after F2, `ravclick.py` found the game's pointer stuck at the LOAD
+  button and the picture stayed; an `xdotool mousemove` with a `mousemove_relative` then showed the map. The camera scrolls while the pointer rests at the window's edge (the
+  save screen then shows another part of the map behind it); H brings it back to the party. A Computer
+  Control click on USE can fail to take (a member's turn then waits for ever): look for the orange lit
+  icon by each portrait and click again.
 - **`ravload.sh` doesn't stop an older DOSBox**: two `ravload.sh` runs leave two (the tools take the
   newest). Kill the old one by pid before a second load.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
