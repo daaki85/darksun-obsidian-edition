@@ -85,6 +85,27 @@ def triple_groups():
     return groups
 
 
+# Warm reflected light breaks the black column below the male cowl.
+# The hollow beneath the chin and the outside edge of the lining stay dark.
+CHEST_FOLDS = {
+    0: ((8, 7, 89), (8, 8, 91), (9, 8, 89), (9, 9, 90), (10, 9, 89),
+        (8, 10, 92), (9, 10, 89), (8, 11, 90), (9, 11, 89)),
+    2: ((4, 8, 91), (5, 8, 89), (5, 9, 90), (6, 9, 89), (3, 10, 91),
+        (4, 10, 90), (4, 11, 91), (5, 11, 89), (3, 13, 90), (4, 13, 89)),
+    11: ((3, 8, 91), (4, 8, 89), (2, 9, 91), (3, 9, 90),
+         (3, 10, 91), (4, 10, 89), (3, 12, 90), (4, 12, 89)),
+}
+# The seam curves from the shoulder blade toward the tucked waist.
+TEAL_BACK_FOLD = {
+    1: (6, 7, 7, 8, 8, 9, 9),
+    7: (6, 7, 8, 8, 8, 9, 9),
+    8: (6, 7, 8, 9, 9, 9, 9),
+    9: (7, 8, 9, 9, 9, 10, 10),
+    10: (6, 7, 8, 9, 9, 9, 10),
+}
+SKIN_HALFTONES = {130: 131, 132: 133, 134: 132, 145: 144, 146: 145, 147: 146}
+
+
 class Study:
     def __init__(self, game_dir):
         self.game = outfits.Game(game_dir)
@@ -225,6 +246,32 @@ class Study:
         if female and role == "Thief":
             for x, y in {21: ((17, 9), (17, 10)), 26: ((11, 6),)}.get(pose, ()):
                 out[y + MARGIN][x + MARGIN] = SLATE[0]
+        if not female and role in ("Ranger", "Thief"):
+            for x, y, shade in CHEST_FOLDS.get(pose, ()):
+                if out[y + MARGIN][x + MARGIN] == 208:
+                    out[y + MARGIN][x + MARGIN] = shade
+        if female and role == "Psionicist" and pose in TEAL_BACK_FOLD:
+            for y, x in enumerate(TEAL_BACK_FOLD[pose], 7):
+                row = out[y + MARGIN]
+                for dx, shade in ((0, 71 if y in (7, 13) else 72), (1, 70)):
+                    if row[x + dx + MARGIN] in (69, 70, 71, 72, 73):
+                        row[x + dx + MARGIN] = shade
+        if not female:
+            # A one-step halftone inside broad areas of exposed skin follows
+            # the fitted chest, clear of the head, wrists and bow.
+            fitted = co.frames("Fighter", cb, model)[f]
+            chest = set(fitted.regions[co.CHEST]) - set(fitted.head) - bow - set(fitted.regions[co.FOREARM])
+            sy, left = (7, 4) if pose == 28 else parts.shoulders[:2]
+            for py in range(MARGIN + (sy % 2), len(out) - 1, 2):
+                stagger = (left + (py - MARGIN - sy) // 2) % 2
+                for px in range(MARGIN + stagger, len(out[py]) - 1, 2):
+                    color = out[py][px]
+                    if color not in SKIN_HALFTONES or color != out[py][px + 1]:
+                        continue
+                    if color == out[py + 1][px] == out[py + 1][px + 1]:
+                        x, y = px - MARGIN, py - MARGIN
+                        if (back(x, y), y) in chest:
+                            out[py][px] = SKIN_HALFTONES[color]
         return out, MARGIN
 
     def finish_hood(self, out, key, pose, fields, back):

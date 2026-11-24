@@ -25,6 +25,14 @@ A second frame review caught the belt and sash taking the color all the way to t
 
 All 1,044 pair poses were checked against their parent garments. The Druid/Thief uses the Thief’s hood above the Druid’s lower silhouette. All 58 frames of this combination were rechecked for detached pixels, new enclosed gaps and bow coverage after the hem revision. These are art-study renders. Equipped gameplay checks are pending.
 
+### Sash, belt and torso detail
+
+From behind, the Psionicist sash runs two pixels deep on the diagonal, leaving the cloak folds visible on both figures. The woman’s Preserver/Psionicist shows 17–22 sash pixels in rear idle, the four rear steps and rear strike 2, down from 30–44. These counts measure pixels changed by the sash on its parent garment. The woman’s Cleric/Fighter has a dark leather belt with a small pale bone toggle, and her single Psionicist has a lit fold through the back of the teal wrap.
+
+On the male Thief and Ranger, warm brown folds break up the black chest stripe in front idle (00), side idle (02) and the first profile step (11). Sparse skin halftones follow the exposed torso, most clearly on the Druid. All 48 builds on both figures retain their silhouettes, native bow pixels and registered foreground limbs through these shading changes.
+
+[Compare seven poses before and after with the elf Loader render and original Shattered Lands figures](half-elf-material-revisions.png)
+
 ## Three-class outfits
 
 All 22 combinations are art proposals from the study renderer with empty equipment slots. The woman is on the top row of each animation and the man is below. Each loop shows all 29 poses, including the bow, recoil and fall. The smaller copy is game size.

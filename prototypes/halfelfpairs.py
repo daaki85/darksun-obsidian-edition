@@ -193,13 +193,20 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
                     continue
             elif accent == "Fighter":
                 # A dark sword belt crosses the waist and turns down at the hip.
+                if female and base == "Cleric":
+                    dye = (88, 88, 89, 89, 90, 91, 93)
                 seam = belt_depth + max(-1, min(1, round(dx / 4)))
                 if seam not in (-1, 0, 1) and not (1 <= belt_depth <= 3 and -3 <= dx <= -1):
                     continue
             elif accent == "Psionicist":
                 # The broader teal sash slopes to a tucked end on the near side.
                 seam = belt_depth + max(-3, min(3, round(dx * 0.45)))
-                if abs(seam + 1) > 1 and not (0 <= belt_depth <= 3 and -2 <= dx <= 0):
+                if pose in (1, 7, 8, 9, 10, 18, 19, 20, 25):
+                    # A folded sash is two pixels deep at the back. The tucked
+                    # end is on the front, out of sight behind the waist.
+                    if seam not in (-1, 0) or abs(dx) > 5:
+                        continue
+                elif abs(seam + 1) > 1 and not (0 <= belt_depth <= 3 and -2 <= dx <= 0):
                     continue
             else:
                 # A turned panel follows the swept edge from shoulder to hem.
@@ -216,7 +223,10 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
             color = single[y][x]
             rank = min(6, bisect_left(values, light(color)) * 7 // len(values))
             if accent == "Fighter" and belt_depth == 0 and -1 <= dx <= 0:
-                out[y][x] = 168  # Worn bone toggle at the top of the leather tab.
+                if female and base == "Cleric" and not baldric:
+                    out[y][x] = 155 if dx < -0.25 else 199
+                else:
+                    out[y][x] = 168  # Worn bone toggle at the top of the leather tab.
             else:
                 out[y][x] = dye[rank]
     return out, pad
