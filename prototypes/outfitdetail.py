@@ -81,6 +81,21 @@ def reference_folds(game):
     return swatches
 
 
+def fit_psionicist_collar(rows, paint, folds, waist):
+    """Keep the man's short collar on his shoulders through the torso turn."""
+    left = (len(paint[0]) - len(rows[0])) // 2
+    top = len(paint) - len(rows)
+    for y in range(waist):
+        native = rows[y]
+        for px, rank in enumerate(folds[y + top]):
+            if rank is None or paint[y + top][px] in (None, 255):
+                continue
+            x = px - left
+            if not 0 <= x < len(native) or native[x] is None:
+                paint[y + top][px] = None
+                folds[y + top][px] = None
+
+
 def shade_frame(rows, paint, regions, folds, heads, base, model, role, waist, palette, swatches, pose):
     """Shade opaque, authored garment texels. Image and masks share the archive canvas."""
     fallen = pose == 28
@@ -355,15 +370,18 @@ def finish_archive(game, source, output):
                         masks = [art.decode_frame(b, f)[2] if b else None for b in aux]
                         parts = game.fig(model).parts(cb, f)
                         waist = parts.waist
+                        pose = f + 15 * cb
+                        if model == 2095 and role == "Psionicist" and pose < len(co.LANDMARKS):
+                            fit_psionicist_collar(rows, paint, masks[1], co.LANDMARKS[pose][-1])
                         shade_frame(rows, paint, *masks, model, role, waist if waist is not None else len(rows) // 2,
-                                    palette, swatches, f + 15 * cb)
+                                    palette, swatches, pose)
                         if not cb and f in (2, 11, 12, 13, 14):
                             profile_cloak(rows, paint, *masks, model, role, f, parts)
                             paint, folds = finish_profile(game, rows, paint, masks[0], masks[1], model, role, f)
                         else:
                             folds = masks[1]
                         if model == 2099 and role == "Thief":
-                            thiefhood.human_woman(rows, paint, masks[0], folds, masks[2], masks[3], f + 15 * cb)
+                            thiefhood.human_woman(rows, paint, masks[0], folds, masks[2], masks[3], pose)
                         if (model in co.ELVES and "Thief" in role.split("/") and not cb
                                 and f in thiefhood.ELF_CROWNS[model]):
                             thiefhood.elf_profile(model, role, f, rows, paint, folds)

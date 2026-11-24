@@ -40,6 +40,8 @@ The Thief's slate hood has a raised crown and an open rim. From behind, the nape
 
 ## Male human
 
+The Psionicist’s short teal collar follows his shoulder as he turns in profile. [Compare the previous and fitted collar through all four steps, alongside an equipped cloak](human-psionicist-fit.gif)
+
 In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The earlier profile repair loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](human-priest-profile.gif)
 
 ![Eight male human class outfits animated through all 29 map poses](human-male.gif)

@@ -176,6 +176,24 @@ class HumanOutfitTests(unittest.TestCase):
                     if role == "Mage":
                         self.assertTrue(left and right, (combat, f))
 
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_male_psionicist_collar_follows_the_native_shoulders(self):
+        pictures = sprites.Pictures(gff.read_gff(Path(os.environ["DSUN_OBJECTS"]).read_bytes()))
+        for combat in (False, True):
+            side, top = sprites.room(combat)
+            dressed = pictures.build(300, combat, {}, (), role="Psionicist")
+            for f, source in enumerate(pictures.own(2095 + combat)):
+                pose = f + 15 * combat
+                if pose == 28:  # The fallen figure has no upright waist line.
+                    continue
+                waist = classoutfits.LANDMARKS[pose][-1]
+                upper = art.decode_frame(dressed, f)[2][top:top + waist]
+                with self.subTest(pose=pose):
+                    self.assertTrue(any(c in range(69, 74) for row in upper for c in row))
+                    for y, row in enumerate(upper):
+                        body = {side + x for x, c in enumerate(source[y]) if c is not None}
+                        self.assertLessEqual({x for x, c in enumerate(row) if c is not None}, body)
+
     def test_male_priest_side_walk_keeps_cloth_behind_the_arm(self):
         # At full stride the ground used to show through these folds.
         cream_fold = {208, 204, 207, 205, 194, 206, 120, 121, 61, 123, 199, 125, 62, 155, 63,
