@@ -1129,18 +1129,26 @@ a character made in a slot keeps the slot's (creation clears 0-114 only), and a 
 bytes 9-14 as they were. `RavGameData.start_roll(member)` reads it.
 
 **Room for the weapon specs in the sequel's sheet** (2026-11-24, static, not built): the specs need 17
-bits (with the roll 22). `+3Dh`, `+3Fh` and `+41h` are the kit, the sphere and new spells, the age.
-Candidates, by the reads found (every ES-based decode by displacement, and the uses after each `les
-bx,[19C5h]`): **`+36h`** (SL's `+3Ch` place, CHARTRAN leaves 0): no instruction reads or writes it on
-any base, yet the game's own sheets hold 0, 1, 4, 7 there (CHARSAVE 29-53, SAVE01's chunk 6), so
-something fills it, perhaps the GPL's table-driven object fields (gpl.FIELD_TYPES_AT) or a block copy:
-a watch on it in play must come first; 8 bits, not enough alone. **`+40h`** (SL's `+46h`): read as a
-byte at 5A24Ah and 82400h (each "> 0"), 0 in every party sheet; full byte. **`+37h`** (footprint, 4
-reads incl. `cmp ...,1Eh` at 60C55h), 0 for the party, monsters' own. High bytes of small words: `+0Ah`
-(the HP rolled: a write of 0, a write of AX at 696DFh, a read at 8FFC4h) and `+0Ch` (max PSP, 4 reads
-found, values to CAh seen), both able to pass 255 at the sequel's levels and each write would need
-patching too; the abilities, levels and saves' top 3 bits are read at dozens of sites. None is safe
-without an in-game watch; the roll stays in the known-spells bits.
+bits (four base-17 digits, filled in order, repeats possible), 22 with the roll. Bytes 0 in every sheet
+of CHARSAVE.GFF and SAVE01's chunk 6: 03, 07, 09, 0B, 0D (high bytes of XP, the +4 XP cap, max HP, HP
+rolled, max PSP: all can grow there), 23, 26, 29, 2C, 2F (a third class, a second natural attack's
+fields), 37 (footprint), 3D, 3F, 40, 41. Found clean:
+- **`+36h`, 8 bits, no site at all.** It is SL's `+3Ch`, the default side SL copies into the creature's
+  `+1Dh` (SL 7340Eh, `cmp byte [es:bx+3Ch],2` at 73685h); the sequel dropped that code: no
+  instruction reads or writes the sheet's `+36h` (every decode with displacement 36h on an ES base:
+  only another record's, `[3411h]`). The sequel's scripts have no GPLX (SL's table of object field
+  offsets, loaded to DS:4D7Ah at SL 65027h: its sheet fields +18h-+46h): its GPLDATA.GFF has none, the
+  program loads none, and no table of sheet offsets is in the program; so its fields are compiled code,
+  all in the scan. The game's own sheets hold 0, 1, 4, 7 there (SSI's data, inert): a reader needs a
+  marker to tell a transferred member's bits from those.
+- **`+40h`'s high nibble, 4 bits, 2 patches.** `+40h` (SL's `+46h`) is read twice as an index 1-8 into
+  the table at 410h:3 (5A24Ah: `mov al / mov ah,0 / mov di,ax / or di,di / jg`; 82400h: `... / mov
+  [bp-6],ax / cmp word [bp-6],0 / jg`), never written; same-length rewrites `mov ax,es:[bx+40h] / and
+  ax,0Fh` then the move (flags from the AND, OF 0 for the jg) keep the game's nibble.
+That is 12. Five more clean bits are only in the mod's own bytes: `+3Fh`'s new-spell bits (08h-80h:
+Cat's Grace, Erdlu Claw, Fogbolt, Reflect, Spook, spells the sequel hasn't) and `+3Dh`'s Friends bit
+(80h) as the marker: 8 + 4 + 5 + 1 = 18, the new spells known not carried. Everything else costs
+dozens of sites (abilities, levels, saves: top bits) or can overflow (the words' high bytes).
 
 **Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
 printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case
