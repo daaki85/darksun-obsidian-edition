@@ -47,6 +47,15 @@ EFFECTS: Dict[str, object] = {
     "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
     "HALVING_EFFECTS": ((77, 0x02), (73, 0x04), (78, 0x80), (38, 0x06)),  # Prot Fire, Cold, Lightning; Fire Shield
     "HIT_EFFECTS": ((9, 1), (22, -1), (91, -4), (106, 1)),  # Blessed, Cursed, Slowed, Weapon Grafted
+    # the effects that rule thief skills out or make one certain (game.THIEF_BLOCKED, THIEF_CERTAIN): SL's
+    # by name in the sequel's numbers (SL's 25, Mirror Images, is the sequel's Detect Invisible, which had a
+    # thief in Tyr hiding at 0): Berserk 7 and 102, Blind 10, Confused 21, Afraid 35, Feebleminded 37,
+    # Fire Shielded 38, Mirror Images 46, Paralyzed 69, Slowed 52 and 91, Weapon Grafted 106; Detect Traps
+    # 26, Invisible 53
+    "THIEF_BLOCKED": {7: tuple(range(8)), 102: tuple(range(8)), 10: (0, 1, 2, 3, 4, 6, 7), 21: tuple(range(8)),
+                      35: tuple(range(8)), 69: tuple(range(8)), 52: (0,), 91: (0,), 38: (0, 4), 46: (4,),
+                      106: (0, 1, 6), 37: (7,)},
+    "THIEF_CERTAIN": {26: (2,), 53: (4,)},
     "POWER_EFFECT_NAMES": {69: "Paralysing attack", 27: "Disease attack", 71: "Poison attack"},
 }
 # Its effects' names: 31-byte records in the program's data at load + 3C870h (its file's 41A70h), the

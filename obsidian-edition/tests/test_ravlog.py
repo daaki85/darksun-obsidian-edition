@@ -597,6 +597,14 @@ class StealthPortTests(unittest.TestCase):
         self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE,
                           game.ELVEN_CLOAK_TYPE), sl)
 
+    def test_thief_effects_by_the_sequels_numbers(self):
+        """The effects that rule a thief skill out are SL's by name in the sequel's numbers: its 25 is Detect
+        Invisible (a thief in Tyr hid at 0 with it), Mirror Images (46) rules hiding out."""
+        ravlog.apply_layout()
+        self.assertNotIn(25, game.THIEF_BLOCKED)
+        self.assertEqual(game.THIEF_BLOCKED[46], (4,))
+        self.assertEqual(game.THIEF_CERTAIN, {26: (2,), 53: (4,)})
+
     def test_daylight_by_region(self):
         """Under the open sky in Tyr, the forest, the Jann's desert, the Silt Sea islands and the clouds;
         not in the Veiled Alliance's headquarters, the mines, the volcano, Under Tyr."""
