@@ -1150,6 +1150,28 @@ Cat's Grace, Erdlu Claw, Fogbolt, Reflect, Spook, spells the sequel hasn't) and 
 (80h) as the marker: 8 + 4 + 5 + 1 = 18, the new spells known not carried. Everything else costs
 dozens of sites (abilities, levels, saves: top bits) or can overflow (the words' high bytes).
 
+**A bigger sheet in the sequel (42h to 48h)?** (2026-11-24, static study, nothing built.) What depends
+on the size: **386** `imul r,r,42h` (`6B xx 42`), every one followed within four instructions by a load
+of the sheets' pointer [19C5h]/[19C7h], so all sheets, root and overlays alike (the overlays load from
+the file, so file patches reach them); each a one-byte change of the immediate. Besides: one stride,
+`add di,42h` at 1C57Bh (a loop over the party's four); the table's allocation, `1D0h:8` with dword
+462h (6DE4Dh: 17 sheets x 42h, at [19C5h], far heap, freed at 6E0D5h), +102 bytes; the save game's
+chunk sizes, a dword table at selector 378h:0 (file 3F38h x 16 + 5200h; SAVE 6's 462h, 5th entry); the
+CHARSAVE record copies of 42h (`push 42h` to the GFF calls at 6950Bh, 69560h, 69C67h, 6B17Ch); no
+`shl 6` or word-immediate forms found near a sheet load. DSCLOG2: 23 uses of SHEET_SIZE/CU_SHEET_SIZE/42h
+(one constant); the Loader: ravager.SHEET_SIZE, ravtransfer.SHEET, ravlog's profile, the tests. So the
+program's patches are about 395, all mechanical and checkable by a scan (every `imul 42h` before a
+19C5h load patched, none left). **The cost is compatibility**: a save's SAVE 6 is read whole (length
+-1) into the table, so an old save's 17 x 42h would land misaligned, and an old CHARSAVE record (42h,
+CHARTRAN's too) read as 48h overruns; both need converting (by the Loader on the files, or a DSCLOG2
+hook after the load), and every save and roster written by the patched game is unreadable by the game
+started by itself (and by CHARTRAN's world). Monster sheets copied in at 42h would leave the 6 new
+bytes stale from the slot's last owner unless cleared. **Verdict: feasible, not recommended for 17-22
+bits**: the in-place room above (+36h, +40h's nibble, the mod's spell bits) gives 18 bits with 2
+patches and no file format change; a bigger sheet is worth it only if the mod needs many more bytes
+later. Verifying it would take a unicorn test per patch shape, a scan test for leftover 42h strides,
+and play of create, ADD, save, load (old and new saves), level up, a fight and a talk.
+
 **Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
 printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case
 prints nothing there); `RAV_MARK=1` writes `ENDED.TXT` when the program ends; `RAV_POKE=OFF=HEX` puts
