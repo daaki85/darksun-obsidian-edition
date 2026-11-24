@@ -104,6 +104,13 @@ class RosterTests(unittest.TestCase):
         self.assertEqual((len(cre), cre[0x21:0x24], cre[0x19:0x1F], cre[0x17]), (0x31, b"Lex", bytes(range(0x1B, 0x21)), 7))
         self.assertEqual((len(sheet), sheet[0x0E], sheet[0x12], sheet[0x37]), (0x42, 0x10, 0x18, 0x3D))
 
+    def test_mod_bytes_left_out_of_the_sound_words(self):
+        # (CHARTRAN's way copies SL +42h-+45h whole; the Loader's leaves out the kit's and the new
+        # spells' bytes, the high bytes of the sequel's sound words +3Ch and +3Eh: "Mel Fatal Error")
+        self.assertEqual(dataitems.records(self.out[("CHAR", 35)])[0][1].data[0x3C:0x40], bytes((0x42, 0x43, 0x44, 0x45)))
+        out, _ = rt.roster(made_save(), scroll_sequel())
+        self.assertEqual(dataitems.records(out[("CHAR", 35)])[0][1].data[0x3C:0x40], bytes((0x42, 0, 0x44, 0)))
+
     def test_items(self):
         recs, _ = dataitems.records(self.out[("CHAR", 35)])
         sword, bag, ring = (r.data for r in recs[2:])
