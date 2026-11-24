@@ -72,7 +72,7 @@ Watch the arm swing through side steps 2 and 3. The old male cape almost disappe
 
 ![Both elves walking in the previous and revised Preserver, Ranger and Thief cloaks](elf-profile-drape.gif)
 
-In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike and hit, a fold covers the windblown hair behind the crown and takes the equipped cloak’s dye. Her fallen pose shows a loose lock below the rim. [Compare both combat poses with the previous hood and the male elf](elf-thief-strike-hit.png). The Fighter’s shoulder pieces sit below her hairline. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
+In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike and hit, a fold covers the windblown hair behind the crown and takes the equipped cloak’s dye. Her fallen pose shows a loose lock below the rim. [Compare both combat poses](elf-thief-strike-hit.png) · [Watch the front strike and hit with the previous hood and the male elf at 1× and 4×](elf-thief-front-motion.gif). The Fighter’s shoulder pieces sit below her hairline. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
 
 ![Previous and revised hood, shoulder, hip and multiclass details beside the revised figure at game size](elf-outfit-details.png)
 
