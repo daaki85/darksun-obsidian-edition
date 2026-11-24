@@ -106,6 +106,28 @@ TEAL_BACK_FOLD = {
 SKIN_HALFTONES = {130: 131, 132: 133, 134: 132, 145: 144, 146: 145, 147: 146}
 
 
+# Contours on the widened male figure. Each mark gives the native position,
+# exposed base shade and replacement. The bright pectoral turns down to the
+# ribs, and the thigh highlight tapers toward the weight-bearing knee.
+FRONT_SKIN = {
+    0: ((5, 8, 145, 144), (6, 10, 147, 145), (10, 10, 147, 144), (11, 9, 132, 130),
+        (11, 11, 134, 133), (9, 13, 132, 131), (9, 14, 130, 131),
+        (5, 16, 145, 146), (5, 18, 145, 144), (13, 18, 145, 130)),
+    3: ((4, 8, 145, 144), (5, 10, 147, 145), (9, 10, 147, 144), (10, 9, 134, 132),
+        (10, 11, 134, 133), (8, 13, 132, 131), (8, 14, 130, 131),
+        (4, 16, 145, 146), (4, 18, 145, 144), (10, 18, 145, 130)),
+    4: ((4, 8, 145, 144), (5, 9, 147, 145), (9, 9, 147, 144), (10, 9, 134, 132),
+        (10, 10, 134, 133), (9, 13, 130, 131), (8, 14, 145, 144),
+        (9, 16, 132, 130), (10, 17, 145, 146), (9, 18, 132, 131)),
+    5: ((5, 8, 145, 144), (6, 9, 147, 145), (10, 9, 147, 144), (11, 9, 134, 132),
+        (10, 10, 134, 133), (9, 13, 130, 131), (8, 14, 145, 144),
+        (9, 16, 132, 130), (10, 17, 145, 146), (5, 18, 145, 144)),
+    6: ((4, 8, 145, 144), (4, 9, 147, 145), (8, 9, 147, 144), (9, 9, 132, 130),
+        (9, 10, 134, 133), (7, 13, 130, 131), (7, 14, 132, 131),
+        (4, 16, 145, 146), (4, 17, 145, 144), (4, 18, 132, 130)),
+}
+
+
 class Study:
     def __init__(self, game_dir):
         self.game = outfits.Game(game_dir)
@@ -272,6 +294,9 @@ class Study:
                         x, y = px - MARGIN, py - MARGIN
                         if (back(x, y), y) in chest:
                             out[py][px] = SKIN_HALFTONES[color]
+            for x, y, exposed, shade in FRONT_SKIN.get(pose, ()):
+                if out[y + MARGIN][x + MARGIN] == exposed:
+                    out[y + MARGIN][x + MARGIN] = shade
         return out, MARGIN
 
     def finish_hood(self, out, key, pose, fields, back):
