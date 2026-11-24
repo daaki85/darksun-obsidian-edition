@@ -23,6 +23,30 @@ def at(rows, x, y):
     return rows[y][x] if 0 <= y < len(rows) and 0 <= x < len(rows[y]) else None
 
 
+# Near edge of the narrow strap, traced from shoulder to belt on the rear poses.
+# A missing point skips the near arm as it passes in front during the swing.
+BACK_STRAP = {
+    1: (6, (13, 12, 12, 11, 10, 10, 9, 8)),
+    7: (6, (12, 12, 11, 11, 10, 9, 8, 7)),
+    8: (6, (13, 12, 12, 11, 11, 10, 9, 8)),
+    9: (6, (14, 13, 12, 12, 11, 11, 10, 9)),
+    10: (6, (13, 12, 12, 11, 10, 9, 9, 8)),
+    18: (9, (7, 7, None, None, None, 7, 6, 5)),
+    19: (15, (10, 10, 10, 9, 9, 8, 7)),
+}
+# Brown creases across the foreshortened leather. Keep the dark outer edge.
+JERKIN_FOLDS = {
+    0: ((9, 10, 91), (9, 11, 89), (10, 13, 89)),
+    1: ((11, 10, 91), (11, 11, 90), (10, 12, 89), (10, 13, 90)),
+    18: ((7, 15, 89), (7, 16, 90)),
+    19: ((11, 18, 89), (11, 19, 90), (10, 20, 89), (10, 21, 91),
+         (10, 22, 89), (12, 25, 89)),
+    21: ((18, 18, 89), (18, 19, 90), (18, 20, 89)),
+    27: ((9, 7, 89), (9, 8, 91), (10, 8, 90), (9, 9, 89),
+         (8, 10, 90), (11, 9, 89), (11, 10, 90)),
+}
+
+
 class Study:
     def __init__(self, game_dir):
         self.game = outfits.Game(game_dir)
@@ -96,6 +120,32 @@ class Study:
                         color = self.behind_locks(dressed, scalp, bow, sx, y, role)
                 line.append(color)
             out.append(line)
+        if female and role == "Gladiator" and pose in BACK_STRAP:
+            body, pad = self.rows(key, pose, "Body base")
+            start, edge = BACK_STRAP[pose]
+            for y, right in enumerate(edge, start):
+                if right is None:
+                    continue
+                for x in range(right - 4, right + 4):
+                    px, py = x + pad, y + pad
+                    skin = body[py][px]
+                    if skin not in outfits.SKINC or (back(x, y), y) in fields.regions[co.FOREARM]:
+                        continue
+                    if x == right:
+                        out[py][px] = 168 if y in (start, start + 4) else 95
+                    elif x == right - 1:
+                        out[py][px] = 205 if y % 3 else 94
+                    elif out[py][px] in (88, 94, 95, 168, 185, 203, 205):
+                        out[py][px] = skin
+        elif not female and role == "Fighter":
+            for x, y, brown in JERKIN_FOLDS.get(pose, ()):
+                if out[y + MARGIN][x + MARGIN] in (88, 204, 208):
+                    out[y + MARGIN][x + MARGIN] = brown
+        elif female and role == "Cleric" and pose == 0:
+            # Lit lip of the left fold and the turned-under right shoulder.
+            for x, y, shade in ((4, 5, 199), (2, 6, 206), (3, 6, 123), (5, 6, 194),
+                                (11, 5, 199), (11, 6, 206), (12, 6, 123), (13, 6, 194)):
+                out[y + MARGIN][x + MARGIN] = shade
         return out, MARGIN
 
     @staticmethod

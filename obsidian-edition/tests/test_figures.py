@@ -136,6 +136,19 @@ class GameTests(unittest.TestCase):
         with open(icons_palette, "rb") as f:
             sg.set_palette(art.palette_colours(gff.read_gff(f.read())[("PAL ", art.PORTRAIT_PALETTE)]))
 
+    def test_half_elf_woman_eye_cheek_and_nape(self):
+        pics = sprites.Pictures(self.chunks)
+        for combat, frame, x, y, expected in (
+            (False, 0, 7, 3, 129), (False, 0, 8, 3, 146),  # front eye and bridge
+            (False, 1, 11, 2, 179), (False, 1, 11, 6, 134),  # hair and nape
+            (False, 13, 16, 2, 129), (True, 1, 12, 7, 132),  # profile and strike
+        ):
+            with self.subTest(combat=combat, frame=frame, x=x, y=y):
+                built = pics.build(he.WOMAN, combat, {}, ())
+                left, top = sprites.room(combat)
+                rows = art.decode_frame(built, frame)[2]
+                self.assertEqual(rows[y + top][x + left], expected)
+
     def test_figures(self):
         pics = sprites.Pictures(self.chunks)
         for figure, source in ((he.MAN, fg.ELF_MAN), (he.WOMAN, fg.HUMAN_WOMAN)):

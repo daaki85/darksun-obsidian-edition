@@ -6,6 +6,8 @@ The first art pass covers both figures in all 29 poses. Read each row from left 
 
 [Female half-elf frame sheet](half-elf-female-poses.png) · [Male half-elf frame sheet](half-elf-male-poses.png)
 
+The Loader now draws the woman’s eye, cheek, and nape separately from the deep gold shadow under her bun. The outfit study also narrows her rear Gladiator strap, adds two folds to her front Cleric collar, and breaks up the male Fighter’s jerkin shadow during the second rear strike and hit. Each pair in the comparison shows the first pass on the left and the revision on the right. [Compare the eight views](half-elf-detail-revisions.png)
+
 ## What to look for
 
 - **Gladiator.** The short leather kilt leaves the shoulders, spine and legs visible. Compare the two rear strikes with the cleaned body to follow the near arm as it crosses the ribs.
