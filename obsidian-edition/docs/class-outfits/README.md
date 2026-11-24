@@ -2,7 +2,7 @@
 
 Enable **What the party wears** to see class outfits on human, dwarf, and elf party members. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. The galleries show the base colors with equipment slots empty.
 
-[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Equipment](#equipment)
+[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf study](half-elves.md) · [Equipment](#equipment)
 
 [Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](cloth-detail.gif)
 
