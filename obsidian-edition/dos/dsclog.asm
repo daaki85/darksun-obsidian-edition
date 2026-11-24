@@ -17427,7 +17427,7 @@ stink_sides:
 ; both combatants; the least square distance between their footprints, 898:000Ch's: 1 adjacent,
 ; diagonals too, 2 the square beyond, two across and one down too, two across and two down 3). It
 ; does the MOV; then with the rule, for a distance of 2 asked by one of the game's melee tests
-; (REACH_CALLER), an attacker whose hands hold a polearm and no other weapon (REACH_HANDS), and no wall
+; (REACH_CALLER), an attacker whose hands hold a polearm or a trikal and no other weapon (REACH_HANDS), and no wall
 ; on the line between the two (REACH_LINE), AX 1: the game then takes the target as adjacent. The melee tests, by their way back (each compares the
 ; distance with 1): the pointer's sword (1587:2B7Ah, 1D7EAh), the attack pointer's click (1587:0AC5h,
 ; 1B735h), the walk arrow's click on a foe (1587:04B8h, 1B128h), the walk to attack arriving
@@ -17454,6 +17454,7 @@ REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
 REACH_AI_FOUND equ 0x1229
 POLEARM_KIND equ 10               ; (kind_of_type's polearm: its kind, 9, + 1)
+TRIKAL_KIND  equ 20               ; (and the trikal's, a pole with three blades: its kind, 19, + 1)
 TYPE_WEAPON  equ 3                ; (a type's flags, +00h: 1 a melee weapon, 2 a missile weapon)
 reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REACH_1587, 0x1C36
              dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
@@ -17509,9 +17510,9 @@ reach_caller:
         cmp word [es:di + 4], 0xF646
 .ret:   ret
 
-; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) in a hand, the right
-; (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type with a melee or missile flag) in
-; either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
+; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) or a trikal
+; (TRIKAL_KIND) in a hand, the right (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type
+; with a melee or missile flag) in either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
 ; (+08h, +0Ah, +0Ch), by each item's slot (+11h). DS the game's; AX, BX, CX, DX, SI, DI, ES changed.
 reach_hands:
         call combatant_creature
@@ -17546,8 +17547,11 @@ reach_hands:
         jae .other
         push bx
         mov bx, ax
-        cmp byte [cs:bx + kind_of_type], POLEARM_KIND
-        pop bx
+        mov bl, [cs:bx + kind_of_type]
+        cmp bl, POLEARM_KIND
+        je .pole
+        cmp bl, TRIKAL_KIND
+.pole:  pop bx
         jne .other
         inc dl
         jmp .on

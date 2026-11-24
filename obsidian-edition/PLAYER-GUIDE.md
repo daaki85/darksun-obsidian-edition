@@ -1849,7 +1849,8 @@ weapon spec chosen; mastery too). The **lotulis** and **double spear** have a he
 round of two swings or more, the last goes to a second foe beside the wielder, on the first
 target's side, if there is one; the double spear's second head does 1 less damage. A **trikal**
 hit that does damage **trips** a man-sized or smaller foe unless it saves against paralysis: it
-loses its next turn (who is too big, as for the [cahulaks](#cahulaks)). The double spear and
+loses its next turn (who is too big, as for the [cahulaks](#cahulaks)). A trikal also has a
+polearm's [reach](#polearm-reach), for anyone who holds it. The double spear and
 trikal are for gladiators only, as in the sequel. *Without the mod:* the game has none of them.
 
 ### Stinkpots
@@ -1867,7 +1868,7 @@ which only a half-giant can hold beside it, is fine; a bow in the missile slot
 too) strikes a foe two squares away as well as an adjacent one: two squares
 straight, or two across and one along, not two diagonally. The attack pointer
 shows the sword over such a foe; it reaches over a creature in between, not
-through a wall. Foes with polearms have the reach too. With a bow in the
+through a wall. The trikal, a polearm with three blades, has it too. Foes with polearms have the reach too. With a bow in the
 missile slot, a click on a foe two squares away swings the polearm; from three
 on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 

@@ -276,7 +276,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
 | ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/double-spear.png) | double spear | wood | Jark | — | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
-| ![](docs/items/trikal.png) | trikal | wood | Jark | — | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)) |
+| ![](docs/items/trikal.png) | trikal | wood | Jark | — | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)); reaches two squares as a polearm ([polearm reach](FEATURES.md#polearm-reach)) |
 | ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | — | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | — | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 

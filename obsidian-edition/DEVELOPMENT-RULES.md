@@ -751,7 +751,8 @@ does the MOV, then, with the rule, makes a result of 2 a 1 when all three hold:
 - **The attacker's hands hold a polearm and no other weapon** (`REACH_HANDS`): its creature
   (`COMBATANT_CREATURE`), its three item lists (+08h, +0Ah, +0Ch), each item's slot (+11h): in the
   right hand (3) or the left (10), a type `kind_of_type` makes a polearm (10, the kind + 1: the
-  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) counts one, any other
+  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) or a trikal (`TRIKAL_KIND`,
+  20: `game.TRIKAL_TYPE`, Wake of the Ravager's, a polearm with three blades) counts one, any other
   type with a weapon flag (its +00h's 1 melee or 2 missile, `restrict.is_weapon`) one other weapon.
   Reach is one polearm and no other: a shield (flag 4) or nothing beside it. The missile slot (2) and
   the backpack aren't hands.
