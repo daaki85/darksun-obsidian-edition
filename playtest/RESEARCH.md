@@ -735,6 +735,19 @@ a foe was taken about (8, 5) off its `ravfight.py state` place. A rule-off contr
 the helper: read the dice log's plain d20 and the items gone (`ravitems.py`). Casting the last of a
 level's slots shows "ZERO LEVEL 9 SPELLS TO CAST": write the slots again and press LEVEL round.
 
+**Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
+keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
+at 5C6EEh each attack), the sheet in `[BP-12h]`, the weapon type in `[BP-4]`, the target-is-an-object
+byte `[BP-1Ah]`, from behind `[BP-19h]` and backstab `[BP-21h]` (both cleared once a call, 5C5FEh, while
+the loop back to 5C6DDh runs a round's attacks); melee is `[BP+0Eh]` 1 there and `[BP+16h]` 1 in the hit
+routine (5D1D6h). Map objects' x, y at DS:67C5h, 25h apart. Each RGNxx.GFF names itself in an `RNME`
+chunk (forest, Tyr, VA Headquarters, Pyramid, Yuan-ti Tunnels, El's Temple, Mines1-3, Jann, Mosaic,
+Volcano Level 1-3, Silt Giants, Cloud, Crypt, Cosmos, UnderTyr, Limbo). The sequel's effect numbers
+are not SL's (its 25 is Detect Invisible): map SL's tables by name (`ravlog.effect_names`).
+`ravdice.py` with `RAV_STEALTH_ROLL=1` hides every thief and ranger who can. **DOSBox dying** in the
+transferred party's Tyr fight (about half the runs): `ravstart.sh`'s `RAV_CORE=normal` (the CPU core)
+and `RAV_NOEXIT=1` (DOSBox stays up if the game quits) ruled out the dynamic core and the game's own
+exit; `strace -f -e trace=exit_group,kill,tgkill -p PID` on DOSBox to see how it ends.
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the

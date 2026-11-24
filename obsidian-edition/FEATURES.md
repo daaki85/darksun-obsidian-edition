@@ -923,8 +923,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   for 2d6+6. The spell arrows (Chill, Shocking and Vampiric Arrows) cast their spell at the archer's
   preserver level, as in Shattered Lands; shot by a member with no preserver class they are plain
   arrows. The tome is read from its box (right-click it in the pack, then its icon) in a fight, on its
-  reader's turn: outside a fight its icon does nothing. Still to come:
-  the Boots and Cloak of Elvenkind.
+  reader's turn: outside a fight its icon does nothing.
+- **Hiding in shadows** comes too, as in Shattered Lands: in a fight a thief or a ranger with no enemy
+  beside them may hide and move silently, and then their next attack is from behind (a thief's, in
+  melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
+  95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
+  Jann's desert, the Silt Sea islands and the clouds count as daylight.
 - **Kits, weapon specs and spells** come across with each character.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.
