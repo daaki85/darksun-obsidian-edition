@@ -74,6 +74,8 @@ Releases, newest first (2.12.0 and older in the archive):
   like carry the new weapons: the arena's gladiators, one of Scar's henchmen, the Drajian Guards, a
   Templar in the pens, the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and
   Elite Guards, and the pens' weapon rack.
+- The sequel's Darts +1, with a shining icon of its own, thrown by the halfling among the arena's
+  champions (in place of its staff sling).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the

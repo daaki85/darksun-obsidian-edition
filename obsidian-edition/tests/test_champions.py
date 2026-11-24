@@ -118,12 +118,19 @@ class ObjectTests(unittest.TestCase):
             self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], 22)
             self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], 22)
 
-    def test_halfling_staff_sling(self):
-        """The halfling's missile weapon is the game's staff sling (type 0), no plain sling."""
-        kinds = [struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
-                 for r in dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.HALFLING)])]
-        self.assertIn(game.STAFF_SLING_TYPE, kinds)
+    def test_halfling_darts(self):
+        """The halfling's missile weapon is Wake of the Ravager's Darts +1 (the user's, 2026-11-24: its
+        staff sling before), its own shining picture; no sling of either kind."""
+        from dsloader import icons
+        items = dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.HALFLING)])
+        kinds = [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items]
+        self.assertNotIn(game.STAFF_SLING_TYPE, kinds)
         self.assertNotIn(champions.SLING_TYPE, kinds)
+        darts, = [r for r in items if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == game.DARTS_TYPE]
+        self.assertEqual(darts[game.ITEM_PLUS], 1)
+        self.assertEqual(icons.which(darts), "Darts +1")
+        self.assertEqual(struct.unpack_from("<H", darts, 0)[0], icons.PICTURES["Darts +1"])
+        self.assertIn((game.DARTS_TYPE, champions.MISSILE), champions.SLOTS[champions.HALFLING])
 
     def test_elf_chill_arrows(self):
         """The elf's arrows are 24 Chill Arrows, made as a Spellarcher's (spellarrows.arrows_item)."""
