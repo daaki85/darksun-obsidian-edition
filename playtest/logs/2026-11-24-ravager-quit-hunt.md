@@ -33,3 +33,9 @@ minutes, a frame every 10 s).
 
 Kits and the Elementalist's bits are therefore not in the sequel's sheet (nothing there used them).
 Water: none new (no new area).
+
+**Later (claude/ravager-sheet-room 26ad495): the kits put back.** The two sound words are now read as
+their low bytes only (patches `sound_3c` at file 65333h and `sound_3e` at 8EA59h), so +3Dh and +3Fh
+hold the kit byte (SL +43h) and the sphere/new-spell byte (SL +45h) again. The party was transferred
+again with its kits kept and the Tyr ambush fought 8 times (`trial2.sh kt1`..`kt8`): **all 8 ALIVE,
+none quit**, no fatal message in STDOUT.TXT, Ester taking up to 3 turns a run. Water: none new.
