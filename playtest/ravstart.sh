@@ -5,7 +5,7 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_MENU=1` stops at the
+# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits (an error's message stays on screen). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
@@ -48,6 +48,8 @@ else
   [ -n "$RAV_UMB" ] && { echo "mount e $REPO/obsidian-edition/dos"; echo 'e:\umbplus.com'; }
   echo "c:"; echo "DSUN -W0 -L"; } >> "$C"
 fi
+[ -n "$RAV_CORE" ] && sed -i "s/^core=.*/core=$RAV_CORE/" "$C"   # (DOSBox's CPU core: normal for a control of the dynamic one)
+[ -n "$RAV_NOEXIT" ] && sed -i '$ {/^exit$/d}' "$C"   # (the game's own exit leaves DOSBox up: its last words on screen)
 pgrep -x Xvfb >/dev/null || { setsid nohup Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 & sleep 2; }
 setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
 echo $! > "$WORK/rav.pid"; sleep 6

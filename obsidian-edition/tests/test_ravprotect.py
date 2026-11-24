@@ -305,10 +305,12 @@ class ProtectionTests(unittest.TestCase):
         self.assertEqual(got_spell, shot[-1])
         return level
 
-    def arrow_spell(self, *shot):
-        """PLAIN_ARROW for SHOT (its spell given as the game's AX, the spell + 1): [BP-18h] after."""
+    def arrow_spell(self, *shot, melee=2):
+        """PLAIN_ARROW for SHOT (its spell given as the game's AX, the spell + 1; [BP+16h] MELEE, 1 a melee
+        hit): [BP-18h] after."""
         mu = self.arrow_machine(*shot)
         mu.mem_write(SS * 16 + 0x600 - 0x18, bytes(2))
+        mu.mem_write(SS * 16 + 0x600 + 0x16, struct.pack("<H", melee))
         self.call(mu, "plain_arrow", eax=shot[-1] + 1, ebx=0x2222, esi=0, edi=9)
         self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_SI,
                                                    r.UC_X86_REG_DI, r.UC_X86_REG_SP)],
@@ -336,6 +338,18 @@ class ProtectionTests(unittest.TestCase):
             self.assertEqual(self.arrow_spell(*fighter, spell + 1, spell), spell)
         self.assertEqual(self.arrow_level(*fighter, 0, 174), 6)  # (not an arrow's)
         self.assertEqual(self.arrow_spell(*fighter, 0, 174), 174)
+
+    def test_melee_casts_the_weapons_own(self):
+        """PLAIN_ARROW: a melee hit casts the weapon's own spell alone, never the quiver's arrows' (the game
+        takes those first: a sword hit with Shocking Arrows in the quiver cast Shocking Grasp, and the game
+        died a few turns later); whoever hits, any spell; MELEE_ARROWS counts them."""
+        pres, foe = (0, (2, 11, 0), (7, 5, 0)), (12, (2, 7, 0), (4, 9, 0))
+        for who in (pres, foe):
+            for spell in (10, 3, 174):
+                with self.subTest(who=who[0], spell=spell):
+                    self.assertEqual(self.arrow_spell(*who, 0, spell, melee=1), 0x148)  # (the arrows')
+                    self.assertEqual(self.arrow_spell(*who, 200, spell, melee=1), 0x148)  # (a sword of another)
+                    self.assertEqual(self.arrow_spell(*who, spell + 1, spell, melee=1), spell)  # (its own)
 
     def test_join_ready(self):
         """JOIN_READY: each worn item with a spell (+10h) of the member on show readied once through the
