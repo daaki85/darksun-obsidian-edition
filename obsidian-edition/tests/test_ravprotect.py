@@ -251,6 +251,62 @@ class ProtectionTests(unittest.TestCase):
             with self.subTest(worn=worn, rear=rear, stab=stab, weapon=weapon, melee=melee):
                 self.assertEqual(run(worn, rear, stab, weapon, melee), want)
 
+    def stealth_run(self, rules, bits, member=0, thief=True, melee=1, weapon_weight=0x10, obj=0,
+                    rear=0, stab=0, thac0=10):
+        """MISSILE_REAR (its STEALTH) for party member MEMBER (SI) attacking COMBATANT (DI), wearing
+        nothing: creature 1 (THAC0 10, [BP-0Eh]) with sheet 2 ([BP-12h]; a thief or not), weapon type 3
+        ([BP-4], its byte +2 WEAPON_WEIGHT); RULES and BITS (STEALTH) in the header; the game's flags
+        REAR, STAB, OBJ and THAC0 [BP-1Eh] as it left them. ((rear, stab, THAC0, AL), STEALTH, STEALTH_USED)."""
+        mu = self.machine([])
+        sheets = 0xB000
+        mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
+        mu.mem_write(sheets * 16 + 2 * 0x42 + 0x10, struct.pack("<H", 0x400 if thief else 0x100))
+        mu.mem_write(CREATURES * 16 + 1 * CREATURE_SIZE + 0x16, bytes((10,)))
+        mu.mem_write(TYPES * 16 + 3 * 15 + 2, bytes((weapon_weight,)))
+        bp = SS * 16 + 0x600
+        mu.mem_write(bp - 0x0E, struct.pack("<H", 1))
+        mu.mem_write(bp - 0x12, struct.pack("<H", 2))
+        mu.mem_write(bp - 4, struct.pack("<H", 3))
+        mu.mem_write(bp + 0x0E, struct.pack("<H", melee))
+        mu.mem_write(bp - 0x1A, bytes((obj,)))
+        mu.mem_write(bp - 0x19, bytes((rear,)))
+        mu.mem_write(bp - 0x21, bytes((stab,)))
+        mu.mem_write(bp - 0x1E, struct.pack("<h", thac0))
+        mu.mem_write(TSR * 16 + self.sym["rules"], struct.pack("<H", rules))
+        mu.mem_write(TSR * 16 + self.sym["stealth"], struct.pack("<H", bits))
+        self.call(mu, "missile_rear", esi=member, edi=COMBATANT, eax=0x1100)
+        got = (mu.mem_read(bp - 0x19, 1)[0], mu.mem_read(bp - 0x21, 1)[0],
+               struct.unpack("<h", mu.mem_read(bp - 0x1E, 2))[0], mu.reg_read(r.UC_X86_REG_AX))
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SI), mu.reg_read(r.UC_X86_REG_DI)), (member, COMBATANT))
+        return got, struct.unpack("<H", mu.mem_read(TSR * 16 + self.sym["stealth"], 2))[0], \
+            struct.unpack("<H", mu.mem_read(TSR * 16 + self.sym["stealth_used"], 2))[0]
+
+    def test_stealth(self):
+        """MISSILE_REAR's STEALTH (SL's PROBE_STEALTH): with RULE_STEALTH, a hidden party member's attack is
+        from behind (2 off THAC0) and, for a thief in melee with a light weapon, a backstab (2 more); the bit
+        is cleared and counted; a hidden archer's shot stays from behind; an object has no back. Without
+        the rule, or for someone not hidden, nothing changes; a missile's own "from behind" is taken back."""
+        on = game.RULE_STEALTH
+        for args, want in (
+                (dict(rules=0, bits=1), ((0, 0, 10, 0x1100), 1, 0)),
+                (dict(rules=on, bits=1), ((1, 1, 6, 0x1101), 0, 1)),
+                (dict(rules=on, bits=4, member=2), ((1, 1, 6, 0x1101), 0, 1)),
+                (dict(rules=on, bits=1, thief=False), ((1, 0, 8, 0x1101), 0, 1)),
+                (dict(rules=on, bits=1, weapon_weight=0x30), ((1, 0, 8, 0x1101), 0, 1)),
+                (dict(rules=on, bits=1, melee=2), ((1, 0, 8, 0x1101), 0, 1)),
+                (dict(rules=on, bits=1, obj=1), ((0, 0, 10, 0x1100), 0, 1)),
+                (dict(rules=on, bits=2), ((0, 0, 10, 0x1100), 2, 0)),
+                (dict(rules=on, bits=0, member=5), ((0, 0, 10, 0x1100), 0, 0)),
+                (dict(rules=on, bits=1, rear=1, thac0=8), ((1, 1, 6, 0x1101), 0, 1)),  # (the game's own rear)
+                (dict(rules=on, bits=0, rear=1, thac0=8, melee=2), ((0, 0, 10, 0x1100), 0, 0)),  # (a shot's)
+                (dict(rules=on, bits=0, rear=1, stab=1, thac0=6), ((1, 1, 6, 0x1101), 0, 0)),
+                # REAR_FRESH: flags an earlier attack left, not paid for this one, cleared
+                (dict(rules=on, bits=0, rear=1, stab=1, thac0=10), ((0, 0, 10, 0x1100), 0, 0)),
+                (dict(rules=on, bits=0, rear=1, stab=1, thac0=8), ((1, 0, 8, 0x1101), 0, 0)),
+                (dict(rules=on, bits=1, rear=1, stab=1, thac0=10), ((1, 1, 6, 0x1101), 0, 1))):
+            with self.subTest(**args):
+                self.assertEqual(self.stealth_run(**args), want)
+
     def test_amulet(self):
         """AMULET_MR: the Amulet of Magic Resistance at the neck adds 15 to [BP-2]; ZF handed back as
         "cmp word [bp-2],0" sets it."""

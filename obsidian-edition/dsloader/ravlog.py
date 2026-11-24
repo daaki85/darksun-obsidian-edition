@@ -22,7 +22,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, labels, monsters, ravager, sizes
+from . import aging, combatlog, dicelog, game, labels, monsters, ravager, sizes, stealth
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -107,6 +107,9 @@ ADDRESSES: Dict[str, object] = {
     "EFFECTS_SEG": 0x3E71, "EFFECTS_OFF": 0x24D,
     # SL's helm types aren't the sequel's (its 5 is Scale Armor): RavGameData.counted_ac has its own
     "HELM_TYPES": (),
+    # the Cloak and Boots of Elvenkind: the party transfer's (the mod's types in the sequel, ravager.mod_type)
+    "ELVEN_CLOAK_TYPE": ravager.mod_type(game.ELVEN_CLOAK_TYPE),
+    "ELVEN_BOOTS_TYPE": ravager.mod_type(game.ELVEN_BOOTS_TYPE),
     "CAHULAKS_TYPE": 24, "CAHULAKS_TYPES": frozenset((24,)),  # (the sequel's Cahulaks, OBJEX.GFF; no metal or obsidian ones)
     # the stinkpots (DSCLOG2's STINKPOTS): the Staff Sling's type, its Nauseated (ravager.NAUSEATED), the
     # save against Stinking Cloud (the sequel has no monster poison power as SL's 176)
@@ -178,6 +181,12 @@ def apply_layout() -> int:
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
+    from . import stealth  # (hiding in shadows: the sequel's positions, regions, footprint, dying and dead)
+    for name, value in (("POSITIONS", RAV_POSITIONS), ("POSITION_SIZE", RAV_POSITION_SIZE),
+                        ("OUTDOORS", RAV_OUTDOORS), ("INDOOR_TILES", {}), ("STATUS_GONE", RAV_DEAD_STATUS),
+                        ("SHEET_FOOTPRINT", ravager.sheet_field(stealth.SHEET_FOOTPRINT))):
+        _SAVED.append((stealth, name, getattr(stealth, name)))
+        setattr(stealth, name, value)
     return len(_SAVED)
 
 
@@ -204,6 +213,15 @@ def restore_layout() -> None:
 # AC) the same, one for one (SL's type 1 and the sequel's 18, the same item, side by side, 2026-11-20).
 TYPE_SIZE = 15
 RAV_DEAD_STATUS = (4, 7)  # a creature's status (+14h): dying, dead (SL's 4, 5)
+# Each map object's x, y (16ths of a square), 25h bytes apart (the attack's set-up reads them for the
+# attacker SI and the target DI: 5C8B7h; SL's 669Dh, 32 apart)
+RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
+# The regions under the open sky (stealth.daylight), by each RGNxx.GFF's own name (its RNME): forest
+# (Humbleton Forest), Tyr (its streets; its buildings' floors aren't told apart yet), Jann (the Jann
+# tribe's desert), Silt Giants (the Silt Sea islands), Cloud and Limbo. The rest are under a roof or
+# underground: VA Headquarters, Pyramid, Yuan-ti Tunnels, El's Temple, Mines1-3, Mosaic, Volcano
+# Levels 1-3, Crypt, Cosmos, UnderTyr.
+RAV_OUTDOORS = frozenset((0x01, 0x32, 0x3B, 0x41, 0x42, 0xFF))
 TYPE_FIELDS = {0: 0, 2: 1, 4: 2, 6: 3, **{sl: sl - 4 for sl in range(8, 19)}}  # SL's offset -> the sequel's
 TYPES_SHOWN = 256  # (the types a read of the table may name: SL's layout served for this many)
 
@@ -589,6 +607,17 @@ class RavDiceLog(dicelog.DiceLog):
                     self.guest.writable = self.guest.writable + [r]
         super().set_rules(rules & ravager.RULES_PORTED)
 
+    def _set_stealth(self, hidden: bool, member: int = 0) -> None:
+        """SL's: DSCLOG2's STEALTH (its header's +204) made writable and set, this party member's next
+        attack one from behind (MISSILE_REAR); not the hiding's sound nor the figure drawn see-through
+        (SL's SOUND_REQ and shadows: not in DSCLOG2 yet)."""
+        if self.tsr_hdr is None:
+            return
+        word = (self.tsr_hdr + stealth.TSR_STEALTH, 2)
+        if word not in self.guest.writable:
+            self.guest.writable = self.guest.writable + [word]
+        self.guest.write(word[0], struct.pack("<H", 1 << member if hidden else 0))
+
     def count_charges(self, entries) -> None:  # (the charges' counting writes to the game: not yet)
         return None
 
@@ -731,6 +760,8 @@ class RavDiceLog(dicelog.DiceLog):
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
             self._step(lambda: self._large.update(self.game, self.tsr_hdr))
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
+        if self.game is not None and self.game.rules & game.RULE_STEALTH:
+            out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
         if now >= self._next_slots:
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)

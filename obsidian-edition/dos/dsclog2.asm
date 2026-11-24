@@ -170,7 +170,11 @@ rules      dw 0                 ; +170 the rule changes the Loader turns on, as 
 names_off  dw item_names        ; +196 offset of ITEM_NAMES in this segment: the item names past the
 names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), NAME_KEPT bytes each,
                                 ;        written by the Loader (dsloader/ravager.item_names)
-        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +200 to +237: none of them here yet, zero)
+        times 204 - ($ - hdr) db 0  ; (DSCLOG's fields +200 to +203: none of them here yet, zero)
+stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and unheard
+                                ;      (RULE_STEALTH, stealth.py): their next attack is from behind
+stealth_used dw 0               ; +206 counted up each time one is (the bit cleared: MISSILE_REAR)
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +237: none of them here yet, zero)
 dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
                                 ;      768 values 0-63, for the colours of the Loader's labels and panel
 dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
@@ -430,16 +434,63 @@ probe_ac:
         pop si
         retf 2
 
-; ---- MISSILE_REAR: DSCLOG's, at the sequel's attack set-up ----
+; ---- MISSILE_REAR: DSCLOG's, at the sequel's attack set-up, with its STEALTH (PROBE_STEALTH) ----
 ; The routine setting up an attack makes it one from behind by the target's facing alone, at any distance:
 ; "from behind" (the byte [BP-19h]: +2 to hit, 2 off THAC0 [BP-1Eh], and the AC function leaves out the
 ; target's DEX and shield), so a missile from across a room counted so too. Only melee ([BP+0Eh] 1) is
-; from behind: a missile's taken back. INT VEC_REAR replaces "mov al,[bp-19h]" (5C99Fh: "push ax"
-; after it kept), so it ends with AL as the game's. (DSCLOG's hidden archer's shot, the stealth rule's,
-; isn't ported.) All registers but AL kept.
+; from behind: a missile's taken back, but for a hidden archer's shot. INT VEC_REAR replaces "mov al,[bp-19h]"
+; (5C99Fh: "push ax" after it kept), so it ends with AL as the game's. All registers but AL kept.
+; STEALTH (RULE_STEALTH, SL's PROBE_STEALTH): a party member (SI 0-3) whose bit the Loader set in STEALTH
+; (hidden in shadows and unheard: stealth.py) has the bit cleared (attacking gives them away) and this
+; attack made one from behind (unless the target is an object, [BP-1Ah]: no back), and a backstab
+; ([BP-21h], 2 more off THAC0) on the game's own conditions (5C952h-5C983h): a thief (the sheet's word
+; +10h, bit 400h; [BP-12h] the sheet), in melee, with a weapon whose type's byte +2 is 28h or less
+; ([BP-4] the type, 0Fh bytes each).
 missile_rear:
+        call rear_fresh
+        mov byte [cs:st_now], 0
+        test word [cs:rules], RULE_STEALTH
+        jz .rear
+        cmp si, 3
+        ja .rear
+        btr word [cs:stealth], si
+        jnc .rear
+        inc word [cs:stealth_used]
+        mov byte [cs:st_now], 1         ; (this attack the hidden one's: a shot stays from behind)
+        cmp byte [bp - 0x1A], 0
+        jne .rear
+        push ax
+        push bx
+        push es
+        cmp byte [bp - 0x19], 0
+        jne .stab
+        mov byte [bp - 0x19], 1
+        sub word [bp - 0x1E], 2
+.stab:  cmp byte [bp - 0x21], 0
+        jne .done
+        mov ax, [bp - 0x12]
+        imul ax, ax, 0x42
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        test word [es:bx + 0x10], 0x400
+        jz .done
         cmp word [bp + 0x0E], 1
+        jne .done
+        mov ax, [bp - 4]
+        imul ax, ax, 0x0F
+        les bx, [TYPES_PTR]
+        add bx, ax
+        cmp byte [es:bx + 2], 0x28
+        ja .done
+        sub word [bp - 0x1E], 2
+        mov byte [bp - 0x21], 1
+.done:  pop es
+        pop bx
+        pop ax
+.rear:  cmp word [bp + 0x0E], 1
         je .out
+        cmp byte [cs:st_now], 0
+        jne .out
         cmp byte [bp - 0x19], 0
         je .out
         mov byte [bp - 0x19], 0
@@ -449,6 +500,37 @@ missile_rear:
         call thief_rear                 ; (class restrictions: no backstab in heavy armour)
         mov al, [bp - 0x19]
         iret
+RULE_STEALTH equ 64
+st_now  db 0                            ; (1 while MISSILE_REAR runs for a hidden one's attack)
+
+; REAR_FRESH (SL's): first in MISSILE_REAR, each attack's from behind and backstab its own. The routine
+; clears [BP-19h] and [BP-21h] once a call (5C5FEh, 5C606h) but runs all of a round's attacks in it (the
+; loop back to 5C6DDh, [BP-1Eh] the creature's THAC0, its +16h, again each time), and sets them, with
+; their 2 off THAC0 each, only when this attack is from behind: a flag left from an earlier attack (a
+; hidden thief's backstab, then their second swing) had no 2 off this one, and the probes after it
+; (ITEM_REAR, THIEF_REAR) gave back 2 it hadn't had. What the game took off the THAC0 this time says
+; which flags it paid for; the others are cleared. All registers kept.
+rear_fresh:
+        push ax
+        push bx
+        push es
+        mov ax, [bp - 0x0E]
+        imul ax, ax, 0x31
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov al, [es:bx + 0x16]
+        cbw
+        sub ax, [bp - 0x1E]             ; (what the game's from behind and backstab took off)
+        cmp ax, 2
+        jge .stab
+        mov byte [bp - 0x19], 0
+.stab:  cmp ax, 4
+        jge .out
+        mov byte [bp - 0x21], 0
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 rear_taken dw 0                         ; missiles' "from behind" taken back (for the tests)
 
 ; ---- REST_POISON: the rest killed the Poisoned after a druid's free Neutralize Poison ----

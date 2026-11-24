@@ -571,3 +571,69 @@ class NameTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StealthPortTests(unittest.TestCase):
+    """SL's stealth (stealth.py) in the sequel: its positions, regions, footprint, dying and dead, the
+    Elvenkind types; the Loader's word in DSCLOG2's header (STEALTH, +204) the only write."""
+    DS = 0x4982
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_rule_ported(self):
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_STEALTH, game.RULE_STEALTH)
+
+    def test_layout(self):
+        from dsloader import stealth
+        sl = (stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE, game.ELVEN_CLOAK_TYPE)
+        ravlog.apply_layout()
+        self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE), (0x67C5, 0x25))
+        self.assertEqual(stealth.STATUS_GONE, (4, 7))
+        self.assertEqual(stealth.SHEET_FOOTPRINT, ravager.sheet_field(0x3D))
+        self.assertEqual((game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE),
+                         (ravager.mod_type(134), ravager.mod_type(135)))
+        ravlog.restore_layout()
+        self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE,
+                          game.ELVEN_CLOAK_TYPE), sl)
+
+    def test_daylight_by_region(self):
+        """Under the open sky in Tyr, the forest, the Jann's desert, the Silt Sea islands and the clouds;
+        not in the Veiled Alliance's headquarters, the mines, the volcano, Under Tyr."""
+        from dsloader import stealth
+        g = FakeGuest()
+        ravlog.apply_layout()
+        data = ravlog.RavGameData(g, self.DS)
+        for region, sun in ((0x32, True), (0x01, True), (0x3B, True), (0x41, True), (0x42, True),
+                            (0x33, False), (0x38, False), (0x3D, False), (0x45, False), (0x36, False)):
+            struct.pack_into("<H", g.mem, self.DS * 16 + 0x140C, region)
+            with self.subTest(region=hex(region)):
+                self.assertEqual(stealth.daylight(data, 0), sun)
+
+    def test_square_from_the_sequels_positions(self):
+        from dsloader import stealth
+        g = FakeGuest()
+        ravlog.apply_layout()
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x67C5 + 2 * 0x25, 0x123, 0x456)
+        self.assertEqual(stealth.square(ravlog.RavGameData(g, self.DS), 2), (0x12, 0x45))
+
+    def test_hidden_word_written(self):
+        """_set_stealth writes DSCLOG2's STEALTH alone (no sound, no see-through figure: not in DSCLOG2)."""
+        from dsloader import stealth
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = 0xC91D0
+        log._set_stealth(True, 2)
+        self.assertEqual(struct.unpack_from("<H", g.mem, log.tsr_hdr + stealth.TSR_STEALTH)[0], 4)
+        self.assertEqual(g.writes, 1)
+        log._set_stealth(False)
+        self.assertEqual(struct.unpack_from("<H", g.mem, log.tsr_hdr + stealth.TSR_STEALTH)[0], 0)
+
+    def test_turn_lines_with_the_rule(self):
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: []
+        log.turn_lines = lambda: ["Lex's turn"]
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=game.RULE_STEALTH)
+        self.assertIn("Lex's turn", log._after_rolls(False, 1.0))
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=0)
+        self.assertNotIn("Lex's turn", log._after_rolls(False, 2.0))
