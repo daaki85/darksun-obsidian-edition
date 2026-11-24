@@ -95,7 +95,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/sling-plus1.png) | Leather | Sling +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl, with the Storm Ring |
 | ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's ([stinkpots](FEATURES.md#staff-sling-stinkpots)) | sold by the **Bowyer** |
 | ![](docs/items/skycutter.png) | Obsidian | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
-| ![](docs/items/darts-plus1.png) | Wooden | Darts +1 | +1 (Wake of the Ravager's) | carried by the **halfling** among the arena's champions, who throws them |
+| ![](docs/items/darts-plus1.png) | Wooden | Darts +1 | +1 (Wake of the Ravager's) | carried by the **defiler** among the arena's champions, who throws them |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | Bow +2 | +2 | a skeleton in the Upper Castle |
 | ![](docs/items/phrains-bow.png) | Wooden | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
@@ -274,7 +274,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, a chest in the slave pens, a bag in the slave pens | — |
-| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 | ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | one of Scar's three henchmen in the champions' bout | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
 | ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | Drajian Guard, a Templar in the slave pens | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/double-spear.png) | double spear | wood | Jark | the arena's Gladiators (two of the three) | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |

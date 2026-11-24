@@ -121,13 +121,14 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         MUL: [(worldgear.weapon(worldgear.METAL_CAHULAKS), RIGHT),
               (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
               (bonescale.HELM, HEAD)],
-        HALFLING: [(worldgear.weapon(*worldgear.DARTS_1), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
+        HALFLING: [(item(STAFF_SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
                    (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
               (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
-        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT), (worldgear.bracers(6), ARM)],
+        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT), (worldgear.weapon(*worldgear.DARTS_1), MISSILE),
+                  (worldgear.bracers(6), ARM)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
     if missing:
@@ -220,11 +221,11 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
                  (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     MUL: ((game.METAL_CAHULAKS_TYPE, RIGHT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
-    HALFLING: ((game.DARTS_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+    HALFLING: ((STAFF_SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
           (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
-    DEFILER: ((BONE_DAGGER_TYPE, RIGHT), (game.BRACERS_TYPE, ARM)),
+    DEFILER: ((BONE_DAGGER_TYPE, RIGHT), (game.DARTS_TYPE, MISSILE), (game.BRACERS_TYPE, ARM)),
 }
 
 

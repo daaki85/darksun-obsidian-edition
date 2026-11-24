@@ -306,7 +306,7 @@ DOUBLE_SPEAR = (game.DOUBLE_SPEAR_TYPE, DOUBLE_SPEAR_NAME, 0x10000 - 2684, 25)
 TRIKAL = (game.TRIKAL_TYPE, TRIKAL_NAME, 0x10000 - 2686, 24)
 JAVELIN = (game.JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2688, 50)
 DARTS = (game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2690, 20)
-DARTS_1 = ((game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2692, SLING_VALUE), 1)  # (the sequel's Darts +1: the halfling champion's; as Windlash)
+DARTS_1 = ((game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2692, SLING_VALUE), 1)  # (the sequel's Darts +1: the defiler champion's; as Windlash)
 
 
 # priced as Shadowseeker (a plus and a spell: 22,000), 20,800 a plus more

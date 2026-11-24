@@ -638,7 +638,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
     ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
     ("Darts", 0xFC0E, 2690, 2691, darts_icon),
-    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's halfling champion's): their points in the fire
+    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the fire
     # colours, as the Loader's magic weapons shine
     ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p == 213, FIRE)),
 )
