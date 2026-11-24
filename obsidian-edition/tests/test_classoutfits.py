@@ -120,6 +120,19 @@ class WornMaterialTests(unittest.TestCase):
                 self.assertEqual(render({}, ()), plain)
 
 
+class PsionicistColorTests(unittest.TestCase):
+    def test_single_class_human_and_dwarf_cloth_uses_teal_in_every_pose(self):
+        green = {53, 188, 225, 226}
+        teal = {69, 70, 71, 72, 73}
+        for model in (2095, 2099, *classoutfits.DWARVES):
+            for combat in (False, True):
+                for pose, frame in enumerate(classoutfits.frames("Psionicist", combat, model)):
+                    colors = {color for row in frame.image for color in row}
+                    with self.subTest(model=model, combat=combat, pose=pose):
+                        self.assertTrue(colors & teal)
+                        self.assertTrue(colors.isdisjoint(green))
+
+
 class HumanOutfitTests(unittest.TestCase):
     def test_class_uses_current_slot_of_human_sheet(self):
         sheet = bytearray(game.SHEET_SIZE)

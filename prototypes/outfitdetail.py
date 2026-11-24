@@ -293,7 +293,7 @@ PLUM_MANTLE = {19: 112, 22: 58, 23: 115, 113: 174, 114: 58, 115: 74,
 
 
 def finish_class_color(model, role, paint, regions, folds, heads):
-    if model in co.ELVES and role == "Psionicist":
+    if role == "Psionicist":
         pigments = TEAL_TUNIC
     elif (model in co.ELVES and role == "Preserver") or (model == 2095 and role == "Mage"):
         pigments = PLUM_MANTLE
@@ -311,7 +311,11 @@ def finish_class_color(model, role, paint, regions, folds, heads):
                 bits = regions[y][rx] or 0
                 if bits & BLOCKED or (heads and heads[y][rx] is not None):
                     continue
-            on_cloth = bits & SHELL if role == "Psionicist" else folds[y][x] is not None
+            if role == "Psionicist":
+                # Part of each human tunic is registered only for equipped cloak dye.
+                on_cloth = bits & SHELL or (model in (2095, 2099) and folds[y][x] is not None)
+            else:
+                on_cloth = folds[y][x] is not None
             if on_cloth:
                 row[x] = pigments[color]
 

@@ -6,7 +6,9 @@ Enable **What the party wears** to see class outfits on human, dwarf, and elf pa
 
 [Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](cloth-detail.gif)
 
-The single-class elf Psionicists wear teal tunics. Both elf Preservers and the male human Mage wear plum mantles. In the comparison, the top row shows the colors at `9c4ef3c`. The middle and bottom rows show the approved colors enlarged and at game size. The green Ranger is the reference. [Watch all four profile steps](teal-plum-walk.gif)
+All six single-class Psionicists use the same teal cloth palette. [Compare the updated figures at game size](psionicist-teal-roster.png) · [Watch all 29 poses beside the colors at `aa2c782`](psionicist-teal-poses.gif)
+
+Both elf Preservers and the male human Mage wear plum mantles. In the comparison, the top row shows the colors at `9c4ef3c`. The middle and bottom rows show the approved colors enlarged and at game size. The green Ranger is the reference. [Watch all four profile steps](teal-plum-walk.gif)
 
 ## Dwarf outfits
 
