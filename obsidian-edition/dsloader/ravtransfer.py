@@ -4,8 +4,8 @@ from a Shattered Lands save, as SSI's own transfer program (the sequel's CHARTRA
 This first part is CHARTRAN's work, in Python: on every save tried it gives the very bytes CHARTRAN
 writes (playtest/logs/2026-11-22-ravager-transfer-format.md), but for one stray spell bit CHARTRAN
 sets now and then (its 72nd, set for no spell the member knows). What the mod adds to it (the items
-the sequel lacks, kits kept (weapon specs not yet: the
-sequel's sheet has no room for them), the months between the games) builds on this.
+the sequel lacks, the months between the games) builds on this; kits and weapon specs are not kept
+(the sequel's sheet has no room for them).
 
 What it reads from the save (SAVEnn.SAV, its SAVE chunks):
 - 5: the creatures (3Ah bytes; the party first), 6: their sheets (47h), 7: the items (15h), 3: the
@@ -62,6 +62,12 @@ CREATURE_FIXED = {0x17: 7}
 CREATURE_NAME, NAME_LENGTH = 0x21, 15
 # The sheet: SL's less seven bytes (+0Eh, +0Fh, the weapon specs +14h-+17h, +3Ch)
 SHEET_RUNS = ((0x00, 0x00, 0x0E), (0x0E, 0x10, 4), (0x12, 0x18, 0x24), (0x37, 0x3D, 0x0A))
+# The mod's kit byte (SL +43h) and its new-spells/second-sphere byte (+45h) land, as CHARTRAN copies
+# the sheet, at +3Dh and +3Fh: the high bytes of two words the sequel reads whole, +3Ch and +3Eh, sound
+# numbers it plays at a member's turn in a fight (0 its default). Left in, a kit made a sound 100h or
+# 8100h there, and the game stopped with "Mel Fatal Error" (playtest/RESEARCH.md). So the sheet keeps
+# neither; the kit and those bits are not carried into the sequel's sheet.
+MOD_SHEET_BYTES = (0x3D, 0x3F)
 # An item: the save's links, flags, slot and plus over the new object's record
 ITEM_RUNS = ((0x02, 0x02, 8), (0x0E, 0x0E, 1), (0x12, 0x10, 1), (0x13, 0x11, 1), (0x16, 0x14, 1))
 
@@ -439,6 +445,8 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         if sequel.loader:
             wsh = bytearray(wsh)
             wsh[WOTR_SHEET_AGE] = sh[SL_SHEET_AGE] if game.spec_packed(sh) else 0
+            for at in MOD_SHEET_BYTES:  # (the mod's bytes: high bytes of the sequel's sound words)
+                wsh[at] = 0
             name = rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1")
             cre, wsh, age = aged(cre, bytes(wsh), name, (years or {}).get(m, 0))
         records = [[1, 0, CREATURE_KIND, m, m, cre], [3, 0, SHEET_KIND, m, SHEET_FLAGS, wsh]]

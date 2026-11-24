@@ -1098,9 +1098,23 @@ pairs of words, so every mod item) and each spell or psionic aptitude it couldn'
 The party goes into free `CHAR` slots (32-35 of the install's roster, their `CACT` set from 0 to
 the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh`), the sheet at
 `+45h`, SL's sheet less `+0Eh`-`+0Fh`, `+14h`-`+17h` (the mod's weapon specs: lost) and `+3Ch`; SL's
-`+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`, which no
-`es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
-and `rest-no-call-user`: all transferred, the kits kept.
+`+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`. **Wrong, found
+2026-11-24:** those are the high bytes of two WORDS the sequel reads whole, `+3Ch` and `+3Eh` (`mov
+dx,[es:bx+3Ch]` at 6012Ah, overlaid, and `mov ax,[es:bx+3Eh]` at 89859h, after `imul 42h` and `les
+bx,[19C5h]`): sound numbers played at a member's turn in a fight (0: the default, 62h), through
+B8:0A22h. A kit made the sound 100h or 8100h, the sound manager stopped the game ("Mel Fatal Error",
+through 39DEFh, then exit to DOS: the "crash" of the transferred party's Tyr fights, about 1 in 4, on
+the druid Ester's turn). The Loader's transfer now leaves both bytes 0 (ravtransfer.MOD_SHEET_BYTES):
+the kits are not carried in the sheet. Tried on the user's saves `selling-junk-user`, `trap-user`
+and `rest-no-call-user`: all transferred.
+
+**Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
+printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case
+prints nothing there); `RAV_MARK=1` writes `ENDED.TXT` when the program ends; `RAV_POKE=OFF=HEX` puts
+bytes in the patched program: a probe `1E 31C0 8ED8 8926F204 8C16F404 892EF604 C706F004 xxxx 1F EBFE`
+(SS:SP and BP to 0:4F2h, a flag to 0:4F0h, then a hang) at the fatal routine (file 3EFEFh), the
+illegal-op routine (2660Ch) or `exit` (55DFh), and `/tmp`'s hangwatch (a guest dump when the flag
+comes) gave the call chain by BP. The overlaid code is only in the dump, not at its file offsets.
 
 **The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
 `python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`
@@ -1215,8 +1229,8 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   save (kind 1): Stinking Cloud's (spell 22, `ravknow.py 22`, USE level 2, the third icon at 213, 60), not
   Hold Person's (the spell save). A foe made a dwarf: its sheet's +12h 2 (the kind's sheet, shared).
 - **Ages in the sequel** (logs/2026-11-22-ravager-ages.md): the sheet bytes no instruction touches are
-  +3Dh, +3Fh and +41h (ndisasm of DSUN.EXE, `ndisasm -b16 -e 0x5200`, every `[es:..+NNh]`); CHARTRAN puts
-  SL's kit and second sphere in the first two, so the age is at +41h. The game clock: scale a byte at
+  +41h alone (+3Dh and +3Fh, which a byte search found free, are the high bytes of the sound words
+  +3Ch and +3Eh: see the party's sheet above), so the age is at +41h. The game clock: scale a byte at
   DS:9C0Ah, the dword through the far pointer at DS:9C0Ch (seconds x scale); it stands still during a
   turn and runs with the fight's rounds. Ar'anda's Haste: USE, LEVEL 3, the middle icon (196, 60); it
   aims on the map (an area spell); with class restrictions on she can't cast it (rules 4804h for a test).
