@@ -278,6 +278,65 @@ class ProtectionTests(unittest.TestCase):
         self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX)), (0x1111, 0x2222))
         self.assertEqual(mu.mem_read(TSR * 16 + self.sym["th_weapon"], 1)[0], 1)
 
+    def arrow_machine(self, creature, classes, levels, power, spell):
+        """Combatant 9 (DI, the attacker: creature CREATURE, its sheet 2 of CLASSES and LEVELS) hitting
+        with item 0 (SI, the weapon: its power POWER), the hit's spell SPELL ([BP-18h]: the weapon's, or
+        its ammunition's)."""
+        mu = self.machine([(RING, RIGHT_HAND, 0)])
+        mu.mem_write(ITEMS * 16 + 0x10, struct.pack("<H", power))
+        mu.mem_write(SS * 16 + 0x600 - 0x18, struct.pack("<H", spell))
+        mu.mem_write(GAME_DS * 16 + 0x4206, struct.pack("<H", 5))  # (the target: not the archer)
+        mu.mem_write(FIGHTERS * 16 + FIGHTERS_OFF + 9 * 3, struct.pack("<BH", 2, creature))
+        sheets = 0xB000
+        mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
+        mu.mem_write(CREATURES * 16 + creature * CREATURE_SIZE + 4, struct.pack("<H", 2))
+        mu.mem_write(sheets * 16 + 2 * 0x42 + 0x1B, bytes(classes) + bytes(levels))
+        return mu
+
+    def arrow_level(self, *shot):
+        """WEAPON_CAST's level pushed for SHOT (arrow_machine's), the spell under it, registers kept."""
+        mu = self.arrow_machine(*shot)
+        self.call(mu, "weapon_cast", eax=0x1111, ebx=0x2222, esi=0, edi=9)
+        sp = mu.reg_read(r.UC_X86_REG_SP)
+        self.assertEqual(sp, 0x800 - 4)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_SI,
+                                                   r.UC_X86_REG_DI)], [0x1111, 0x2222, 0, 9])
+        got_spell, level = struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
+        self.assertEqual(got_spell, shot[-1])
+        return level
+
+    def arrow_spell(self, *shot):
+        """PLAIN_ARROW for SHOT (its spell given as the game's AX, the spell + 1): [BP-18h] after."""
+        mu = self.arrow_machine(*shot)
+        mu.mem_write(SS * 16 + 0x600 - 0x18, bytes(2))
+        self.call(mu, "plain_arrow", eax=shot[-1] + 1, ebx=0x2222, esi=0, edi=9)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_SI,
+                                                   r.UC_X86_REG_DI, r.UC_X86_REG_SP)],
+                         [shot[-1] + 1, 0x2222, 0, 9, 0x800])
+        return struct.unpack("<H", mu.mem_read(SS * 16 + 0x600 - 0x18, 2))[0]
+
+    def test_spell_arrows(self):
+        """The spell arrows (the user's choice, 2026-11-23): an arrow's Chill Touch, Shocking Grasp or
+        Vampiric Touch (not the weapon's, item SI's, own spell: its ammunition's) cast at a party archer's
+        preserver level; for a party archer with no preserver class not cast at all (PLAIN_ARROW: the
+        spell past the game's, 148h, which the game skips); at a foe's highest level. A weapon's own
+        spell, and any other spell, at 6 and kept."""
+        PRES, FIGHTER, THIEF = 11, 2, 7
+        pres, fighter, foe = (0, (FIGHTER, PRES, 0), (7, 5, 0)), (1, (FIGHTER, THIEF, 0), (7, 8, 0)), \
+            (12, (FIGHTER, THIEF, 0), (4, 9, 0))
+        for spell in (3, 10, 38):
+            arrow = (0, spell)  # (a bow of no spell)
+            self.assertEqual(self.arrow_level(*pres, *arrow), 5)
+            self.assertEqual(self.arrow_spell(*pres, *arrow), spell)
+            self.assertEqual(self.arrow_spell(*fighter, *arrow), 0x148)
+            self.assertEqual(self.arrow_level(*foe, *arrow), 9)
+            self.assertEqual(self.arrow_spell(*foe, *arrow), spell)
+            self.assertEqual(self.arrow_level(*pres, spell + 4, spell), 5)  # (a bow of another spell)
+            self.assertEqual(self.arrow_level(*pres, spell + 1, spell), 6)  # (the weapon's own)
+            self.assertEqual(self.arrow_spell(*fighter, spell + 1, spell), spell)
+        self.assertEqual(self.arrow_level(*fighter, 0, 174), 6)  # (not an arrow's)
+        self.assertEqual(self.arrow_spell(*fighter, 0, 174), 174)
+
     def test_join_ready(self):
         """JOIN_READY: each worn item with a spell (+10h) of the member on show readied once through the
         game's routine (5E8h:39h: the creature, the item), none in the backpack (15) or without a
@@ -338,6 +397,7 @@ class ProtectionTests(unittest.TestCase):
         self.assertEqual(patches["protection_ac"].replacement, bytes((0xCD, ravager.VEC_SITE, 43, 0x90, 0x90, 0x90)))
         self.assertEqual(patches["protection_save"].replacement, bytes((0xCD, ravager.VEC_SITE, 44, 0x90, 0x90)))
         self.assertEqual(patches["weapon_cast"].replacement, bytes((0xCD, ravager.VEC_SITE, 46, 0x90, 0x90)))
+        self.assertEqual(patches["plain_arrow"].replacement, bytes((0xCD, ravager.VEC_SITE, 49, 0x90, 0x90, 0x90)))
         self.assertEqual(patches["join_ready"].replacement, bytes((0xCD, ravager.VEC_SITE, 47, 0x90, 0x90)))
         self.assertEqual(patches["worn_spell_off"].replacement, bytes.fromhex("7e10"))
         self.assertEqual(patches["tome"].replacement, bytes((0xCD, ravager.VEC_SITE, 48)))

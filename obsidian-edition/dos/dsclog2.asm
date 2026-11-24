@@ -2994,6 +2994,7 @@ site_table:
         dw weapon_cast                      ; 46 SITE_WEAPON_CAST (a weapon's spell cast on a hit)
         dw join_ready                       ; 47 SITE_JOIN_READY (a member joined: its worn items readied)
         dw tome_read                        ; 48 SITE_TOME (the Tome of Understanding read: +1 WIS)
+        dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -3965,7 +3966,23 @@ th_weapon db 0                                    ; (WEAPON_CAST: the next cast 
 ; touch attack; the overlay manager's return to the attack's overlay need not be its code). All
 ; registers kept.
 WEAPON_CAST_LEVEL equ 6
+; The spell arrows (the user's choice, 2026-11-23: SL's ARCHER_LEVEL, "the caster's spell level"): a
+; shot's ammunition casting one of the Spellarcher's arrows' spells (WC_ARROWS; the hit's spell is the
+; ammunition's, 308h:[7], when it isn't the weapon's own, item SI's +10h less 1; played 2026-11-24)
+; casts it at the archer's level (the attacker, combatant DI): a
+; party member's (creatures 0-3) preserver's level; anyone else's highest level, as SL's. A party member
+; with no preserver class casts nothing (PLAIN_ARROW, below: a plain arrow). A weapon's own spell keeps
+; level 6 (the Searing Blade's 2d6+6).
+wc_arrows db 3, 10, 38                    ; Chill Touch, Shocking Grasp, Vampiric Touch (the sequel's)
+WC_ARROWS equ $ - wc_arrows
+wc_level  dw 0
 weapon_cast:
+        push ax
+        call wc_archer
+        jnc .level
+        mov ax, WEAPON_CAST_LEVEL       ; (no cast is left to come here: PLAIN_ARROW's)
+.level: mov [cs:wc_level], ax
+        pop ax
         sub sp, 4
         push bx
         push ax
@@ -3978,12 +3995,113 @@ weapon_cast:
         mov [ss:bx + 8], ax
         mov ax, [bp - 0x18]             ; (the spell + 1, less 1: the game's [BP-18h])
         mov [ss:bx + 10], ax
-        mov word [ss:bx + 12], WEAPON_CAST_LEVEL
+        mov ax, [cs:wc_level]
+        mov [ss:bx + 12], ax
         mov byte [cs:th_weapon], 1
         inc word [cs:weapon_casts]
         pop ax
         pop bx
         iret
+; PLAIN_ARROW (site 49, "plain_arrow"): "mov [bp-18h],ax / dec word [bp-18h]" (5D248h; 6 bytes), where
+; the attack takes the spell + 1 of the hit (AX: the ammunition's for a shot, else the weapon's). Made;
+; then for a spell arrow (WC_ARCHER's carry: a party archer with no preserver class) the spell put past
+; the game's (PA_NONE), so the game's own test (5D24Eh) skips the cast as for an item with no spell
+; (5D2DCh): a plain arrow. ARROWS_PLAIN counts them. All registers kept.
+PA_NONE equ 0x148
+plain_arrow:
+        mov [bp - 0x18], ax
+        dec word [bp - 0x18]
+        push ax
+        call wc_archer
+        pop ax
+        jnc .out
+        mov word [bp - 0x18], PA_NONE
+        inc word [cs:arrows_plain]
+.out:   iret
+; WC_ARCHER: AX the level the hit's spell ([BP-18h]) is cast at by combatant DI with item SI, carry set
+; for none (a plain arrow). All else kept.
+wc_archer:
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        mov [cs:wc_archer_is], di
+        mov ax, [bp - 0x18]
+        cmp si, NO_ITEM
+        jae .six
+        imul bx, si, ITEM_SIZE
+        les di, [ITEMS_PTR]
+        add bx, di
+        mov cx, [es:bx + 0x10]
+        dec cx
+        cmp cx, ax
+        je .six                         ; (the weapon's own spell, not its ammunition's: 308h:[7])
+        mov cx, WC_ARROWS
+        mov di, wc_arrows
+.arrow: cmp al, [cs:di]
+        je .archer
+        inc di
+        loop .arrow
+        jmp .six
+.archer:
+        mov bx, [cs:wc_archer_is]
+        cmp bx, 400
+        jae .six
+        imul bx, bx, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        cmp byte [es:bx + FIGHTERS_OFF], 2
+        jne .six
+        mov si, [es:bx + FIGHTERS_OFF + 1]
+        imul bx, si, CREATURE_SIZE
+        les di, [CREATURES_PTR]
+        add bx, di
+        imul bx, [es:bx + 4], SHEET_SIZE
+        les di, [SHEETS_PTR]
+        add bx, di
+        xor ax, ax
+        mov cx, 3
+        cmp si, 3
+        ja .foe
+.pres:  mov dl, [es:bx + SHEET_CLASSES]
+        cmp dl, PRESERVER_CLASS
+        je .got
+        cmp dl, WIZARD_NEW_CLASS
+        je .got
+        inc bx
+        loop .pres
+        stc
+        jmp .out
+.got:   mov al, [es:bx + SHEET_LEVELS]
+        inc word [cs:arrows_cast]
+        jmp .least
+.foe:   mov dl, [es:bx + SHEET_LEVELS]
+        cmp dl, al
+        jbe .next
+        mov al, dl
+.next:  inc bx
+        loop .foe
+        inc word [cs:arrows_foe]
+.least: or ax, ax
+        jnz .ok
+        inc ax
+        jmp .ok
+.six:   mov ax, WEAPON_CAST_LEVEL
+.ok:    clc
+.out:   pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+arrows_plain dw 0
+arrows_cast  dw 0                         ; (a party preserver's, counted for a look in play)
+arrows_foe   dw 0                         ; (anyone else's)
+wc_archer_is dw 0
 weapon_casts dw 0
 ; JOIN_READY (site 47, "join_ready"): "cmp byte [13FAh],0" (58D81h; 5 bytes) in the ADD screen's routine,
 ; right after a roster character is loaded into the party (its CHAR, c8h:0Ah, at 58D33h). The game puts

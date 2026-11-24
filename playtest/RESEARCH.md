@@ -1153,6 +1153,12 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   spell, power - 1; learning from objects 31000-31199 and 31400-31499; spells 0EBh-10Ch psionic,
   10Dh up "CANNOT LEARN"); 99B44h uses the item up with the message at `[bp-56h]`, 99B67h shows it
   only. DSCLOG2's TOME_READ (site 48) is the tome's case there.
+- **A shot's items and a skipped cast** (2026-11-24, logs/2026-11-24-ravager-spell-arrows.md): in the
+  sequel's items arrows are type 6 (slot 1) and a bow type 18 (slot 2); the attack's item SI is the bow,
+  and `308h:[7]` the arrows' power (first). The cast on a hit starts with 5F0h:D4h (5D285h) before its
+  pushes: skip a cast before that (the game's own test of the spell at 5D24Eh, PLAIN_ARROW's way), never
+  after it (a skipped 608h:89h crashed the game a round later). A test archer: memory edits (power at
+  +10h and +2, plus at +16h), never saved.
 - **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).

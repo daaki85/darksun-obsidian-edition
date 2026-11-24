@@ -498,6 +498,8 @@ PATCHES: Tuple[Patch, ...] = (
     # makes the cast's pushes of its level and spell ("push 6 / push word [bp-18h]", 5D2C2h, SL's
     # 58BE6h) and marks the cast a weapon's for TH_CAST
     Patch("weapon_cast", 0x5D2C2, bytes.fromhex("6a06ff76e8"), _site(46, 5)),
+    # a spell arrow shot by a party member with no preserver class: a plain arrow (DSCLOG2's PLAIN_ARROW)
+    Patch("plain_arrow", 0x5D248, bytes.fromhex("8946e8ff4ee8"), _site(49, 6)),
     # A worn item's spell never ended when the item was taken off (SL's does: its 6F8B9h): the unready
     # routine (77CDBh, the item's +10h less 1 in DX) skips the removal (628h:BBh, 864EDh: the wearer's
     # effects of that spell) with "cmp dx,-1 / jbe" (77D0Fh), an unsigned compare every spell passes
