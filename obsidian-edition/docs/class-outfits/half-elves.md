@@ -1,10 +1,16 @@
 # Half-elf outfit study
 
-The first art pass covers both figures in all 29 poses. Read each row from left to right to compare the Loader’s half-elf, the cleaned body, and the Gladiator, Fighter and Cleric proposals. The enlarged figure and its game-size copy share the same terrain and foot position. The outfit columns are art previews with empty equipment slots. Gameplay integration and equipped checks are pending.
+Both half-elves now have art proposals for all eight single classes in all 29 map poses. The woman is on the top row and the man is below. Each enlarged figure has a game-size copy beneath it, with equipment slots empty. The live Loader draws the corrected half-elf faces. Class selection and equipped gameplay checks for these outfits are pending.
 
-![Male and female half-elves through all poses with three proposed outfits](half-elf-study.gif)
+![All eight single classes on both half-elves in motion](half-elf-singles.gif)
 
-[Female half-elf frame sheet](half-elf-female-poses.png) · [Male half-elf frame sheet](half-elf-male-poses.png)
+[Female single-class frame sheet](half-elf-singles-female-poses.png) · [Male single-class frame sheet](half-elf-singles-male-poses.png)
+
+The Druid’s short leaf cape lifts above a woven ochre kilt. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. The Preserver has a plum mantle, the Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
+
+## Body and first three silhouettes
+
+The initial review puts the original figure and cleaned body beside the Gladiator, Fighter and Cleric. [Watch the body comparison](half-elf-study.gif) · [Female comparison sheet](half-elf-female-poses.png) · [Male comparison sheet](half-elf-male-poses.png)
 
 The Loader now draws the woman’s eye, cheek, and nape separately from the deep gold shadow under her bun. The outfit study also narrows her rear Gladiator strap, adds two folds to her front Cleric collar, and breaks up the male Fighter’s jerkin shadow during the second rear strike and hit. Each pair in the comparison shows the first pass on the left and the revision on the right. [Compare the eight views](half-elf-detail-revisions.png)
 
@@ -33,4 +39,4 @@ The artist’s reference is the figure produced by the Loader. The retail party 
 | Two classes | 18 | The elf’s 14 pairs, plus Druid with Fighter, Preserver, Psionicist or Thief |
 | Three classes | 22 | The elf’s 16 triples, plus Druid with any two of Fighter, Preserver, Psionicist and Thief |
 
-The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. For the next five singles the proposed cues are a short leaf-green Druid cape, a plum Preserver mantle, a fitted teal Psionicist wrap, a long green Ranger cloak and a slate Thief hood. The pairs and triples follow the single-class silhouette review. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)
+The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The next art stage is the 18 two-class outfits, followed by the 22 triples. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)

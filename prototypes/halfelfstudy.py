@@ -1,4 +1,4 @@
-"""Draw the initial half-elf outfit study on the Loader's actual figure geometry.
+"""Draw the half-elf single-class outfit study on the Loader's actual figure geometry.
 
 python prototypes/halfelfstudy.py GAME_DIR OUTPUT_DIR
 """
@@ -11,10 +11,13 @@ from PIL import Image
 
 import elfoutfits as elf
 import outfits
+from outfitdetail import RAMPS
+from thiefhood import FRONT, OLD_SLATE, SLATE
 from dsloader import art, classoutfits as co, figures
 from elfreview import TERRAIN, dwarf, label, loop
 
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
+NEW_SINGLES = ("Druid", "Preserver", "Psionicist", "Ranger", "Thief")
 FIGURES = (outfits.HALF_ELF_WOMAN, outfits.HALF_ELF_MAN)
 MARGIN = 10
 
@@ -65,7 +68,9 @@ class Study:
         model = fig.model
         src = self.game.fr(model + cb, f)
         female = key == outfits.HALF_ELF_WOMAN
-        parent = {"Fighter": "Warrior", "Cleric": "Priest"}.get(role, role) if female else role
+        if role == "Druid" and not female:
+            return self.druid(key, pose, fig), MARGIN
+        parent = {"Fighter": "Warrior", "Cleric": "Priest", "Preserver": "Mage"}.get(role, role) if female else role
         fields = co.frames("Gladiator" if role == "Body base" else parent, cb, model)[f]
         if role != "Body base":
             dressed = fields.canvas(src, MARGIN)
@@ -78,6 +83,7 @@ class Study:
         back = figures.mover_back(fig.maker.cuts[bool(cb), f])
         scalp = set(fields.head)
         bow = set(fields.regions[co.BOW])
+        folds = {(x, y) for x, y, _ in fields.cloak}
         parts = fig.parts(cb, f)
         if female and cb and f in figures.WOMAN_FIGHTS:
             _, (_, _, _, jaw), _, _ = figures.WOMAN_FIGHTS[f]
@@ -97,10 +103,11 @@ class Study:
                 own = at(stock, x, y)
                 native = at(src, sx, y)
                 head_row = y <= jaw if pose != 28 else y >= jaw
+                hood = role == "Thief" and (sx, y) in folds and color in OLD_SLATE
                 if (sx, y) in bow:
                     color = native
-                elif (sx, y) in scalp or (head_row and own != native and
-                        (own in figures.GOLDEN_HAIR or own in outfits.SKINC or own is None)):
+                elif not hood and ((sx, y) in scalp or (head_row and own != native and
+                        (own in figures.GOLDEN_HAIR or own in outfits.SKINC or own is None))):
                     if female and pose == 16 and (x, y) == (5, 2):
                         color = None  # Tip of the tossed stock cape above her striking wrist.
                     elif female and own in figures.CLOAK:
@@ -146,7 +153,136 @@ class Study:
             for x, y, shade in ((4, 5, 199), (2, 6, 206), (3, 6, 123), (5, 6, 194),
                                 (11, 5, 199), (11, 6, 206), (12, 6, 123), (13, 6, 194)):
                 out[y + MARGIN][x + MARGIN] = shade
+        elif female and role == "Ranger" and pose in (2, 11, 13):
+            # A tip of the human quiver shows through the shortened hair.
+            x, y = {2: (0, 4), 11: (4, 4), 13: (9, 5)}[pose]
+            out[y + MARGIN][x + MARGIN] = None
+        elif female and role == "Druid":
+            out = self.druid(key, pose, fig, out)
+        elif role == "Psionicist" and female:
+            # Fit the wrap to the narrow torso. The human cape underpaint
+            # also has cloth trailing behind her shoulder and striking wrist.
+            body, pad = self.rows(key, pose, "Body base")
+            forearm = set(fields.regions[co.FOREARM])
+            for py, row in enumerate(out):
+                for px in range(len(row)):
+                    x, y = px - pad, py - pad
+                    if body[py][px] is None or (back(x, y), y) in forearm:
+                        row[px] = body[py][px]
+        elif role == "Thief":
+            self.finish_hood(out, key, pose, fields, back)
         return out, MARGIN
+
+    def finish_hood(self, out, key, pose, fields, back):
+        # These are the half-elf's actual bun and jaw positions. The human
+        # woman's flying hair had lifted the crown far above her raised arm.
+        panels = {
+            16: (6, 2, FRONT),
+            21: (9, 5, FRONT),
+            27: (1, -1, ("...2332...", "..344321..", ".24323221.",
+                          ".23221..21", "2321....11", "231......1",
+                          "231.......", ".21.......")),
+        }
+        if key == FIGURES[0] and pose in panels:
+            body, pad = self.rows(key, pose, "Body base")
+            ox, oy, panel = panels[pose]
+            bottom = oy + len(panel)
+            # Preserve the hanging cloak below the end of the hood. At the
+            # struck shoulder the hand stays in front of the near cheek.
+            for y in range(-pad, bottom):
+                for x in range(-pad, len(out[0])-pad):
+                    point = back(x, y), y
+                    if point in fields.regions[co.FOREARM] or point in fields.regions[co.BOW]:
+                        continue
+                    old = out[y+pad][x+pad]
+                    if old in OLD_SLATE:
+                        out[y+pad][x+pad] = body[y+pad][x+pad]
+                    cx, cy = x-ox, y-oy
+                    if 0 <= cy < len(panel) and 0 <= cx < len(panel[cy]):
+                        stitch = panel[cy][cx]
+                        if stitch != ".":
+                            out[y+pad][x+pad] = SLATE[int(stitch)]
+        if key == FIGURES[0]:
+            # Cover the back of the bun where it extends past the parent rim.
+            # The fallen figure's crown points toward the bottom of the frame.
+            crown = {
+                2: ((1, 0, "2"),), 11: ((5, 0, "2"),), 12: ((7, 0, "23"),),
+                13: ((10, 0, "2"),), 14: ((5, 0, "23"), (5, 1, "2"), (5, 2, "1")),
+                22: ((12, 0, "23"), (12, 1, "2")), 23: ((12, 0, "23"),),
+                28: ((3, 13, "2"), (3, 14, "2"), (3, 15, "2"),
+                     (3, 16, "2343221"), (3, 17, "2344321"), (4, 18, "232")),
+            }
+            for left, y, strip in crown.get(pose, ()):
+                for x, rank in enumerate(strip, left):
+                    if out[y+MARGIN][x+MARGIN] in figures.GOLDEN_HAIR:
+                        out[y+MARGIN][x+MARGIN] = SLATE[int(rank)]
+        # Close the single-pixel gap where the shortened nape meets the rim.
+        nape = ({4: (13, 3), 5: (12, 3)} if key == FIGURES[0]
+                else {11: (3, 5), 13: (5, 5)})
+        if pose in nape:
+            x, y = nape[pose]
+            out[y+MARGIN][x+MARGIN] = SLATE[1]
+
+    def druid(self, key, pose, fig, source=None):
+        """Shape the leaf cape and reed wrap at the registered hip in each pose."""
+        cb, f = divmod(pose, 15)
+        body, pad = self.rows(key, pose, "Body base")
+        linen, _ = self.rows(key, pose, "Cleric")
+        female = key == FIGURES[0]
+        source_role = "Druid" if female else "Ranger"
+        if source is None:
+            source, _ = self.rows(key, pose, source_role)
+        frame = co.frames(source_role, cb, fig.model)[f]
+        folds = {(x, y) for x, y, _ in frame.cloak}
+        robe = co.frames("Priest" if female else "Cleric", cb, fig.model)[f]
+        legs = set(robe.regions[co.LEGS])
+        crossed = set(frame.regions[co.BOW] + frame.regions[co.FOREARM])
+        back = figures.mover_back(fig.maker.cuts[bool(cb), f])
+        parts = fig.parts(cb, f)
+        if pose == 28:
+            waist, center = (12, 9) if female else (14, 10)
+        else:
+            waist = parts.waist
+            _, left, right = parts.shoulders
+            center = (left + right) // 2
+        height = len(body) - pad
+        cape = dict(zip(RAMPS["leaf"], (208, 17, 69, 188, 53, 53, 54, 54, 55, 55, 56, 56, 57)))
+        reed = (204, 205, 94, 95, 97, 168, 169, 170, 171)
+        out = [row[:] for row in body]
+        for py, row in enumerate(out):
+            y = py - pad
+            upright = height - 1 - y if pose == 28 else y
+            for px, skin in enumerate(row):
+                x = px - pad
+                point = back(x, y), y
+                hem = waist + 1 - min(4, abs(x - center + 2) // 2)
+                if female and (upright <= hem or point in crossed):
+                    row[px] = source[py][px]
+                    continue
+                if point in crossed:
+                    continue
+                # The wrapped skirt sits higher on the far hip. Use the
+                # registered robe folds down to the upper thigh only.
+                depth = upright - waist
+                hem_depth = 4 - int(x > center + 1) - int(x < center - 4)
+                if -1 <= depth <= hem_depth and point in legs:
+                    cloth = linen[py][px]
+                    if cloth is not None:
+                        r, g, b = self.game.palette[cloth]
+                        rank = min(8, (2*r + 3*g + b) // 150)
+                        row[px] = reed[rank] if depth < hem_depth else reed[max(0, rank-2)]
+                # The folded corner is longest toward the trailing shoulder.
+                cloth = source[py][px]
+                if upright <= hem and point in folds and cloth in cape and cloth != skin:
+                    row[px] = cape[cloth]
+                    if upright == hem and (x - center) % 3:
+                        row[px] = 188 if cloth in (54, 55, 56, 57) else 69
+        # These Ranger fold tips belong to the part of the long cape that
+        # swings clear of the shorter Druid cape.
+        tips = {} if female else {13: ((10, 9),), 17: ((22, 8), (23, 8), (22, 9))}
+        for x, y in tips.get(pose, ()):
+            out[y+pad][x+pad] = body[y+pad][x+pad]
+        return out
 
     @staticmethod
     def behind_locks(dressed, scalp, bow, x, y, role):
@@ -185,24 +321,51 @@ class Study:
         label(page, (10, 465), "Retail warrior 1252 and priest 1563 are shown in their own map colors.", 12)
         page.save(out / "half-elf-references.png")
 
+    def cloak_reference(self, out):
+        samples = ("Druid", "Ranger", "Preserver", 724, "Thief", 630)
+        page = Image.new("RGB", (806, 604), dwarf.PAPER)
+        label(page, (10, 8), "Cloaks on the arena floor", 20)
+        for col, caption in enumerate(("Druid", "Ranger", "Preserver", "Retail mage", "Thief", "Retail thief")):
+            label(page, (143 + 120 * col, 40), caption, 13, "ma")
+        for i, (key, pose) in enumerate((key, p) for key in FIGURES for p in (1, 12)):
+            y = 61 + i * 135
+            label(page, (6, y + 32), "Female" if key == FIGURES[0] else "Male")
+            label(page, (6, y + 52), dwarf.NAMES[pose], 11)
+            for col, sample in enumerate(samples):
+                if isinstance(sample, str):
+                    tile = self.tile(key, pose, sample, 1)
+                else:
+                    rows = self.game.fr(sample, pose)
+                    tile = elf.placed_tile(self.game, rows, self.floor, 1, 0, 0, 0)
+                x = 90 + col * 120
+                page.paste(tile.resize((104, 88), Image.Resampling.NEAREST), (x, y))
+                page.paste(tile, (x + 26, y + 88))
+        page.save(out / "half-elf-cloak-references.png")
+
     def gallery(self, out):
         out.mkdir(parents=True, exist_ok=True)
         self.references(out)
+        self.cloak_reference(out)
+        self.pose_gallery(out, ROLES, "study", "Half-elf outfit study")
+        self.pose_gallery(out, ROLES[2:] + NEW_SINGLES, "singles", "Half-elf single classes")
+
+    def pose_gallery(self, out, roles, stem, title):
         frames = []
-        sheets = [Image.new("RGB", (704, 45 + 29 * 80), dwarf.PAPER) for key in FIGURES]
+        width = 684 + (len(roles) - 5) * 124
+        sheets = [Image.new("RGB", (104 + len(roles) * 120, 45 + 29 * 80), dwarf.PAPER) for key in FIGURES]
         for sheet, key in zip(sheets, FIGURES):
             label(sheet, (8, 5), key.capitalize() + " · all poses", 15)
-            for j, role in enumerate(ROLES):
+            for j, role in enumerate(roles):
                 label(sheet, (157 + j * 120, 26), role, 12, "ma")
         for pose, name in enumerate(dwarf.NAMES):
-            page = Image.new("RGB", (684, 339), dwarf.PAPER)
-            label(page, (12, 8), "Half-elf outfit study", 20)
-            label(page, (672, 10), name, 15, "ra")
+            page = Image.new("RGB", (width, 339), dwarf.PAPER)
+            label(page, (12, 8), title, 20)
+            label(page, (width - 12, 10), name, 15, "ra")
             for i, key in enumerate(FIGURES):
                 y = 65 + i * 135
                 label(page, (9, y + 40), ("Female", "Male")[i], 14)
                 label(sheets[i], (6, 67 + pose * 80), f"{pose:02d}  {name}", 11)
-                for j, role in enumerate(ROLES):
+                for j, role in enumerate(roles):
                     x = 66 + j * 124
                     if i == 0:
                         label(page, (x + 57, 39), role, 14, "ma")
@@ -212,10 +375,11 @@ class Study:
                     sheets[i].paste(tile.crop((2, 4, 50, 44)).resize((96, 80), Image.Resampling.NEAREST),
                                     (109 + j*120, 45 + pose*80))
             frames.append(page)
-        loop(frames, out / "half-elf-study.gif")
-        frames[0].save(out / "half-elf-study.png")
+        loop(frames, out / f"half-elf-{stem}.gif")
+        frames[0].save(out / f"half-elf-{stem}.png")
         for sheet, sex in zip(sheets, ("female", "male")):
-            sheet.save(out / f"half-elf-{sex}-poses.png")
+            prefix = "" if stem == "study" else stem + "-"
+            sheet.save(out / f"half-elf-{prefix}{sex}-poses.png")
 
 
 if __name__ == "__main__":
