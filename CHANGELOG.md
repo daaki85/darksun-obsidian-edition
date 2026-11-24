@@ -69,6 +69,11 @@ Releases, newest first (2.12.0 and older in the archive):
 - Their traits, for a specialist: the lotulis' and double spear's last swing of a round goes to a
   second foe beside the wielder (the double spear's for 1 less), and a trikal hit trips a man-sized
   foe that fails a save against paralysis, which loses its next turn.
+- The trikal reaches two squares, as a polearm does; a specialist throws the javelin (3/2, 2, 5/2
+  a round by level) and darts (3, 4, 5) faster, as for the other missile weapons; and people of the
+  like carry the new weapons: the arena's gladiators, one of Scar's henchmen, the Drajian Guards, a
+  Templar in the pens, the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and
+  Elite Guards, and the pens' weapon rack.
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
