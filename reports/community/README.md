@@ -22,6 +22,7 @@ has been posted anywhere.
 | Date | For | Subject | Status |
 |---|---|---|---|
 | 2026-11-24 | OpenDS | [Cure Critical Wounds' dice and the GF123 flag (Alhena)](2026-11-24-opends-cure-and-alhena.md) | not posted |
+| 2026-11-24 | OpenDS | [Runtime QA of darkfix-ds1 0.2.0-beta.4: the sewer grate played; notes on tracking and the halfling](2026-11-24-opends-darkfix-beta-qa.md) | not posted |
 
 Older drafts for OpenDS, from before this folder: [the exchange draft](../opends-exchange-draft-2026-11-17.md)
 and [six issue texts](../opends-issues-draft-2026-11-18.md).
@@ -30,7 +31,7 @@ and [six issue texts](../opends-issues-draft-2026-11-18.md).
 
 Most useful first:
 
-1. **Runtime QA for OpenDS's darkfix betas.** darkfix-ds1 0.2.0-beta.4 ships ten fixes switched off
+1. **Runtime QA for OpenDS's darkfix betas** (started 2026-11-24: site G played; R and L next). darkfix-ds1 0.2.0-beta.4 ships ten fixes switched off
    until someone plays them (their issue #18; `docs/qa/qa-packet-ds1-script-repairs-beta.md` asks for
    reports as `beta QA: <site> <pass/fail>`). Our DOSBox play rig (`playtest/`) and saves can run
    those checks, and several of the same repairs are already in our Loader. A pass/fail list with

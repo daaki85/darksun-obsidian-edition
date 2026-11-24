@@ -143,3 +143,4 @@ schedules and diffs a log made or used.
 | [2026-11-09-rest-order.asm](files/2026-11-09-rest-order.asm) | The rest's "cures first" order tried in the overlay buffer ([the rest and poison](2026-11-09-rest-poison.md), `restfixmem.py`); the Loader's `dsloader/gamepatch.py` names it in a comment |
 | [2026-11-17-show-usable-session-b.sh](files/2026-11-17-show-usable-session-b.sh), [-c.sh](files/2026-11-17-show-usable-session-c.sh), [-d.sh](files/2026-11-17-show-usable-session-d.sh) | The sessions of [showing what can be used](2026-11-17-show-usable.md): a fight beginning with Alt held, a click with Alt held, the check after the rebase |
 | [2026-11-17-show-usable-flagfoes.py](files/2026-11-17-show-usable-flagfoes.py) | Alt's flag held during every foe's turn and let go in the party's, for the same log |
+| [2026-11-24](2026-11-24-darkfix-beta-qa.md) | OpenDS darkfix beta.4 in the stock game: the sewer grate |

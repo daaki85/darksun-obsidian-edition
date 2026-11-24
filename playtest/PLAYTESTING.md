@@ -288,6 +288,15 @@ game's data: it is one player's account.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
 
+- **The stock game** (no Loader, no dice log: OpenDS's darkfix betas, or the original's behaviour):
+  `darkfix_apply.py inst/GPLDATA.GFF darkfix-inst/GPLDATA.GFF FIXES` into a copy of `inst` in the work
+  folder (it reads their fix files, never runs them), then `start_stock.sh` (GOG's
+  `dosbox_darksun.conf` first: with our conf alone DSUN.EXE went straight back to DOS). The intro
+  plays (Escape), then the main menu and loadsave.sh's clicks; the Loader's saves load in it, and
+  `click.py`, `walkto.py`, `pointer.py`, `state.py` work (they read memory). No dice log: read the
+  screen. **A reload replays the same rolls** (a load doesn't reseed): wait a different time before a
+  roll to see the other outcome ([the grate's QA](logs/2026-11-24-darkfix-beta-qa.md)).
+
 ## Reading the game
 
 - `python3 state.py [FLAG...]`: fight on, whose turn (0-3 the party), region, the leader's map
