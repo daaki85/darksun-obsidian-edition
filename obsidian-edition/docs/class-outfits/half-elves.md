@@ -6,7 +6,7 @@ Both half-elves now have art proposals for all eight single classes in all 29 ma
 
 [Female single-class frame sheet](half-elf-singles-female-poses.png) · [Male single-class frame sheet](half-elf-singles-male-poses.png)
 
-The Druid’s short leaf cape lifts above a woven ochre kilt. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. The Preserver has a plum mantle, the Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
+The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit reed edge and its brown shadow mark the overlapping pleat as he steps toward the viewer. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. A plum highlight follows the trailing fold of each Preserver’s mantle through the profile walk. The Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
 
 ## Body and first three silhouettes
 

@@ -49,6 +49,28 @@ JERKIN_FOLDS = {
          (8, 10, 90), (11, 9, 89), (11, 10, 90)),
 }
 
+# Crest of the trailing fold, from shoulder towards hem in each profile pose.
+# The gap above the woman's third step is where her raised arm crosses the cloth.
+MANTLE_CREST = {
+    outfits.HALF_ELF_WOMAN: {
+        2: (8, (3, 3, 2, 2, 1, 1, 0, 0, -1, -1)),
+        11: (8, (2, 2, 2, 1, 1, 1, 0, 0, -1)),
+        12: (8, (4, 4, 3, 3, 2, 2, 1, 1, 0, -1)),
+        13: (9, (7, 7, 6, 6, 5, 5, 4, 3, 2)),
+        14: (8, (6, 5, 5, 4, 4, 3, 2, 2, 1, 0, 1)),
+    },
+    outfits.HALF_ELF_MAN: {
+        2: (9, (2, 1, 1, 1, 0, 0, -1, 0, -1, -1)),
+        11: (8, (-1, -1, -2, -2, -3, -3, -4, -4, -3, -3, -4)),
+        12: (7, (3, 2, 1, 0, -1, -2, -2, -3, -3, -4, -5)),
+        13: (7, (2, 1, 1, 0, -1, -1, -2, -2, -2, -3, -4, -5)),
+        14: (9, (1, 1, 1, 0, 0, -1, -1, -2, -2, -2, -3)),
+    },
+}
+
+# Left edge of the overlapping reeds on the near hip, one x per front pose.
+REED_PLEAT = {0: 7, 3: 6, 4: 8, 5: 8, 6: 5, 15: 6, 16: 10, 17: 13, 24: 9}
+
 
 class Study:
     def __init__(self, game_dir):
@@ -159,6 +181,17 @@ class Study:
             out[y + MARGIN][x + MARGIN] = None
         elif female and role == "Druid":
             out = self.druid(key, pose, fig, out)
+        elif role == "Preserver" and pose in MANTLE_CREST[key]:
+            start, crest = MANTLE_CREST[key][pose]
+            for step, x in enumerate(crest):
+                row = out[start + step + MARGIN]
+                # Ease the highlight into the shoulder and back into the hem.
+                dist = min(step, len(crest) - 1 - step)
+                light = (59, 118, 239)[min(dist, 2)]
+                for dx, tone in ((0, light), (1, 175)):
+                    px = x + dx + MARGIN
+                    if row[px] in RAMPS["plum"] or row[px] in (18, 19, 233, 238):
+                        row[px] = tone
         elif role == "Psionicist" and female:
             # Fit the wrap to the narrow torso. The human cape underpaint
             # also has cloth trailing behind her shoulder and striking wrist.
@@ -271,6 +304,15 @@ class Study:
                         r, g, b = self.game.palette[cloth]
                         rank = min(8, (2*r + 3*g + b) // 150)
                         row[px] = reed[rank] if depth < hem_depth else reed[max(0, rank-2)]
+                        if not female and pose in REED_PLEAT and depth >= 1:
+                            # Warm the broad lit panel, then turn one lip into shadow.
+                            lip = REED_PLEAT[pose] - int(depth >= 3)
+                            if row[px] == 171:
+                                row[px] = 169
+                            if x == lip:
+                                row[px] = 168 if depth == hem_depth else 170
+                            elif x == lip + 1:
+                                row[px] = 95 if depth == hem_depth else 94
                 # The folded corner is longest toward the trailing shoulder.
                 cloth = source[py][px]
                 if upright <= hem and point in folds and cloth in cape and cloth != skin:
