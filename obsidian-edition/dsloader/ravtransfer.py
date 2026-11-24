@@ -4,7 +4,8 @@ from a Shattered Lands save, as SSI's own transfer program (the sequel's CHARTRA
 This first part is CHARTRAN's work, in Python: on every save tried it gives the very bytes CHARTRAN
 writes (playtest/logs/2026-11-22-ravager-transfer-format.md), but for one stray spell bit CHARTRAN
 sets now and then (its 72nd, set for no spell the member knows). What the mod adds to it (the items
-the sequel lacks, kits and weapon specs kept, the months between the games) builds on this.
+the sequel lacks, kits kept (weapon specs not yet: the
+sequel's sheet has no room for them), the months between the games) builds on this.
 
 What it reads from the save (SAVEnn.SAV, its SAVE chunks):
 - 5: the creatures (3Ah bytes; the party first), 6: their sheets (47h), 7: the items (15h), 3: the

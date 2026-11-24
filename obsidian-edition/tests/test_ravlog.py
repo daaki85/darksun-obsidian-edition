@@ -49,6 +49,13 @@ class ProfileTests(unittest.TestCase):
         ravlog.restore_layout()
         self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0), sl)
 
+    def test_no_weapon_specs_in_the_sequel(self):
+        # (its +14h..+17h are other fields: DEX 16 once read as a staff sling's spec, "+2 specialized")
+        sheet = bytearray(0x42); sheet[0x14:0x18] = bytes((5, 18, 16, 15))
+        self.assertEqual(game.spec_kinds(bytes(sheet)), bytes((5, 18, 16, 15)))
+        ravlog.apply_layout()
+        self.assertEqual(game.spec_kinds(bytes(sheet)), bytes(4))
+
     def test_size_rule_takes_the_sequels_tables(self):
         from dsloader import sizes
         sl = (sizes.TABLE, sizes.SPELLS, sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE)

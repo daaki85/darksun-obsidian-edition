@@ -237,7 +237,10 @@ def spec_v2(sheet: bytes) -> bool:
 
 
 def spec_kinds(sheet: bytes) -> bytes:
-    """The four weapon specs chosen, kind + 1 each (0 none), from any layout."""
+    """The four weapon specs chosen, kind + 1 each (0 none), from any layout; none in the sequel
+    (AGE_PLAIN: its sheet has no specs, and +14h..+17h there are other fields)."""
+    if AGE_PLAIN:
+        return bytes(SPEC_COUNT)
     raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
     if not spec_packed(sheet):
         return raw
