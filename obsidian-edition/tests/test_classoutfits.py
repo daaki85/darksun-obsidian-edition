@@ -194,6 +194,16 @@ class HumanOutfitTests(unittest.TestCase):
                         body = {side + x for x, c in enumerate(source[y]) if c is not None}
                         self.assertLessEqual({x for x, c in enumerate(row) if c is not None}, body)
 
+    def test_psionicist_wrap_reaches_the_belt_in_the_turning_poses(self):
+        # Follow the two central ribs in each pose, down the formerly bare midriff.
+        for pose, x, y in ((1, 10, 11), (2, 3, 12), (5, 8, 10),
+                           (7, 6, 11), (18, 5, 15), (19, 7, 18)):
+            combat, index = divmod(pose, 15)
+            frame = classoutfits.frames("Psionicist", combat, 2095)[index]
+            with self.subTest(pose=pose):
+                for row in frame.image[y + 6:y + 9]:
+                    self.assertTrue(all(c in range(69, 74) for c in row[x + 6:x + 8]))
+
     def test_male_priest_side_walk_keeps_cloth_behind_the_arm(self):
         # At full stride the ground used to show through these folds.
         cream_fold = {208, 204, 207, 205, 194, 206, 120, 121, 61, 123, 199, 125, 62, 155, 63,
