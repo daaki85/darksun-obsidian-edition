@@ -21,6 +21,8 @@ All 18 legal pairs are shown on the arena floor with empty equipment slots. Each
 
 In the male Druid/Fighter’s second profile step, the leather belt follows the ochre kilt while the cape swings clear behind it. In the male Fighter/Psionicist’s third profile step, the wrist obscures the sash and its teal end shows below the arm. The male Cleric’s front bow leaves the smallest opening for the belt or sash. Among the hooded figures, the Ranger has a long green panel and the Druid has an ochre lower panel. Compare their rear walks to see the difference.
 
+A second frame review caught the belt and sash taking the color all the way to the free corner of a swinging cloak. In profile step 3 (13), compare the male Preserver/Psionicist and female Fighter/Preserver with their earlier versions. The corner now carries the mantle’s folds as it moves away from the waist. The male Cleric/Thief’s front walk 2 (04) shows the cream lining above his leather shorts. On the woman, side strike 1 (21) and side bow (26) show the repaired inner rim of the hood. On the male Druid, the tied edge of the kilt closes gaps in strikes 16, 21 and 22, and the leaf panel joins behind the bent arm in side bow (26). [Compare nine individual frames at 3× and game size](half-elf-pair-details.png)
+
 All 1,044 pair poses were checked against their single-class silhouette for transparency, detached pixels and native bow coverage. These are art-study renders. The three-class outfits and equipped gameplay checks are pending.
 
 ## Body and first three silhouettes

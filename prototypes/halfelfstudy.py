@@ -207,6 +207,10 @@ class Study:
                         row[px] = body[py][px]
         elif role == "Thief":
             self.finish_hood(out, key, pose, fields, back)
+        # Pinholes inside the rim beside her cheek on the side strike and bow.
+        if female and role == "Thief":
+            for x, y in {21: ((17, 9), (17, 10)), 26: ((11, 6),)}.get(pose, ()):
+                out[y + MARGIN][x + MARGIN] = SLATE[0]
         return out, MARGIN
 
     def finish_hood(self, out, key, pose, fields, back):
@@ -327,6 +331,19 @@ class Study:
         tips = {} if female else {13: ((10, 9),), 17: ((22, 8), (23, 8), (22, 9))}
         for x, y in tips.get(pose, ()):
             out[y+pad][x+pad] = body[y+pad][x+pad]
+        # His spread-leg strikes expose terrain between the tied reeds and
+        # the torso. Turn the top lip of the kilt upward into that space.
+        if not female:
+            seams = {
+                16: ((11, 12, 205), (10, 13, 97), (11, 13, 94),
+                     (12, 13, 168), (13, 13, 95)),
+                21: ((18, 22, 95),),
+                22: ((7, 16, 95),),
+                # The short leaf panel shows behind the bent arm on the bow.
+                26: ((11, 12, 69), (11, 14, 188), (12, 15, 69)),
+            }
+            for x, y, color in seams.get(pose, ()):
+                out[y + pad][x + pad] = color
         return out
 
     @staticmethod
