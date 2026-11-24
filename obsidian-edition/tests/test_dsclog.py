@@ -2070,6 +2070,7 @@ class SpecializeTests(unittest.TestCase):
         staff sling and chatkcha; a grand master one more, as in melee. As specialize.missile_attacks."""
         from dsloader import specialize
         BOW, SLING, STAFF_SLING, CHATKCHA = 1, 64, 0, 48
+        JAVELIN, DARTS = game.JAVELIN_TYPE, game.DARTS_TYPE
         cases = ((4, BOW, 13, (9, 0, 0), (4, 0, 0), (6, 14, 5, 8)),       # bow 3/1 at 1-6
                  (4, BOW, 13, (9, 0, 0), (7, 0, 0), (8, 12, 6, 8)),       # 4/1 at 7 (and mastery)
                  (4, BOW, 13, (9, 0, 0), (9, 0, 0), (10, 12, 6, 10)),     # grand mastery: one more
@@ -2087,7 +2088,16 @@ class SpecializeTests(unittest.TestCase):
                  (4, BOW, 0, (9, 14, 0), (8, 3, 0), (8, 15, 3, 8)),       # a fighter/ranger: the higher level
                  (2, SLING, 0, (13, 0, 0), (6, 0, 0), (2, 15, 3, 8)),     # a ranger's unchosen sling: the game's
                  (2, SLING, 0, (13, 0, 0), (8, 0, 0), (3, 15, 3, 8)),     # ... 3/2 from 7th
-                 (2, SLING, 0, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)))     # not a warrior: the game's
+                 (2, SLING, 0, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)),     # not a warrior: the game's
+                 (2, JAVELIN, 20, (9, 0, 0), (4, 0, 0), (3, 14, 5, 8)),   # the javelin 3/2 at 1-6
+                 (2, JAVELIN, 20, (10, 0, 0), (8, 0, 0), (4, 14, 5, 8)),  # 2/1 at 7-12 (a gladiator)
+                 (2, JAVELIN, 20, (9, 0, 0), (13, 0, 0), (7, 12, 6, 10)),  # 5/2 at 13, grand mastery one more
+                 (4, DARTS, 21, (9, 0, 0), (4, 0, 0), (6, 14, 5, 8)),     # darts 3/1 at 1-6 (the weapon's 2/1)
+                 (4, DARTS, 21, (10, 0, 0), (9, 0, 0), (8, 14, 5, 8)),    # 4/1 at 7-12 (a gladiator)
+                 (4, DARTS, 21, (9, 0, 0), (9, 0, 0), (10, 12, 6, 10)),   # a fighter's grand mastery: one more
+                 (4, DARTS, 0, (9, 0, 0), (6, 0, 0), (4, 15, 3, 8)),      # another kind: the weapon's
+                 (4, DARTS, 0, (9, 0, 0), (8, 0, 0), (6, 15, 3, 8)),      # from 7th, a specialist's 1-6
+                 (2, JAVELIN, 20, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)))  # not a warrior: the weapon's
         for halves, weapon, kind, classes, levels, want in cases:
             with self.subTest(weapon=weapon, classes=classes, levels=levels):
                 self.assertEqual(self.attack(halves, weapon, chosen=(kind,), classes=classes, levels=levels,

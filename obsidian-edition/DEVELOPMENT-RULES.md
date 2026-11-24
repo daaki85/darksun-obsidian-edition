@@ -1369,9 +1369,10 @@ weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
 `SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name with the
 routine the powers' handler names a power with (85CC9h, which rubs out the
 lines it drew before), or the title again off the slots. A missile weapon's
-attacks a round are its item type's (+0Bh, in halves: a bow 4, the rest 2),
+attacks a round are its item type's (+0Bh, in halves: a bow and darts 4, the rest 2),
 not the character's (sheet +2Ah) as in melee; `INT D1h` raises them to a
-specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level; a
+specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level, by kind:
+the chatkcha, bow, sling and staff sling, kinds 13-16, and the javelin and darts, 21-22, `MISSILE_RAV`; a
 grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`). Every ranger's expertise with the bow is in

@@ -3842,11 +3842,14 @@ cr_own_race:
 ; ES:BX, by the warrior's level (the highest fighter, gladiator or ranger level of the classes it
 ; has now: 1-6, 7-12, 13 on): AD&D's
 ; for the sling, 3/2, 2, 5/2 a round; the bow, staff sling and chatkcha a step above AD&D's, the bow
-; 3, 4, 5, the staff sling and chatkcha 3/2, 2, 5/2; a grand master one more. A warrior's weapon of
+; 3, 4, 5, the staff sling and chatkcha 3/2, 2, 5/2; Wake of the Ravager's javelin AD&D's (its other
+; thrown weapons'), 3/2, 2, 5/2, and darts AD&D's one more a round than the weapon's, 3, 4, 5 (the
+; weapon two: MISSILE_RAV, kinds 21 and 22 kept after the staff sling's); a grand master one more. A warrior's weapon of
 ; a kind not chosen (SPEC_PLAIN), from 7th level: the specialist's rate a band lower, as in melee
 ; (a bow 3 at 7-12, a sling 3/2).
 MISSILE_KIND equ 13             ; (the chatkcha's kind + 1; then the bow, the sling, the staff sling)
-missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5
+MISSILE_RAV  equ 21             ; (the javelin's kind + 1; then the darts)
+missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5, 3, 4, 5, 6, 8, 10
 missile_rate:
         cmp dl, SPEC_PLAIN
         jb .ret
@@ -3859,7 +3862,13 @@ missile_rate:
         sub cx, MISSILE_KIND
         jb .out
         cmp cx, 3
+        jbe .kind
+        sub cx, MISSILE_RAV - MISSILE_KIND - 4  ; (the javelin 4, the darts 5)
+        cmp cx, 4
+        jb .out
+        cmp cx, 5
         ja .out
+.kind:
         xor dx, dx              ; DL the specialist's level
         xor si, si
 .class: push ax

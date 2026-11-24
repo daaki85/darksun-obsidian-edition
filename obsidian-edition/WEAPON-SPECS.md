@@ -72,7 +72,8 @@ rate (a grand master one more).
 Missile weapons have a rate of fire of their own in the game, the same for everyone (a bow 2 a
 round, a sling, staff sling or chatkcha 1). With the rule, fighters and gladiators shoot faster
 with a chosen weapon spec, and rangers with theirs and every bow: AD&D's specialist's rate for the
-sling, a step above it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
+sling and javelin, a step above it for the bow, staff sling and chatkcha, and one more a round than the
+weapon's own for darts. From 7th level every warrior shoots
 its other missile weapons faster too, a step behind a specialist, as in melee (AD&D keeps the
 weapon's own rate). Mastery's and grand mastery's bonuses to hit and damage count for missiles too.
 
@@ -81,7 +82,7 @@ By skill and level: a warrior's level is the highest of its fighter, gladiator a
 and Mind Warrior go by their own class's level. 3/2 means one attack one round and two the next;
 — means none at that level, or not that kind of weapon.
 
-| With the weapon | Melee, 1–6 | Melee, 7–10 | Bow, 1–6 | Bow, 7–10 | Sling, staff sling, chatkcha, 1–6 | Sling, staff sling, chatkcha, 7–10 |
+| With the weapon | Melee, 1–6 | Melee, 7–10 | Bow, darts, 1–6 | Bow, darts, 7–10 | Sling, staff sling, chatkcha, javelin, 1–6 | Sling, staff sling, chatkcha, javelin, 7–10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior (clerics, druids, preservers, psionicists, thieves) | 1 | 1 | 2 | 2 | 1 | 1 |
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
@@ -91,9 +92,10 @@ and Mind Warrior go by their own class's level. 3/2 means one attack one round a
 | a thri-kreen Mind Warrior, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | — | — | — | — | 3/2 | 2 |
 | a Battle Mage, Crusader or Mind Warrior, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
-- The **javelin** and **darts** (Wake of the Ravager's) keep their own rate whoever throws them,
-  a javelin 1 a round and darts 2: no faster rate for a specialist, whose bonuses to hit and
-  damage still count.
+- The **javelin** and **darts** (Wake of the Ravager's) are in the table with the weapons that
+  share their rate: the javelin, 1 a round, with the sling (AD&D's specialist's rate for it, as
+  for its other thrown weapons), and darts, 2 a round, with the bow (AD&D's darts specialist throws
+  one more a round than the weapon's own).
 - A **thri-kreen** throws a chatkcha once more a round than the table says, whatever the rule (2
   instead of 1: AD&D's 2/1 for the thri-kreen's own weapon).
 - With [two weapons](PLAYER-GUIDE.md#two-weapons), the off hand attacks once a round whatever the
