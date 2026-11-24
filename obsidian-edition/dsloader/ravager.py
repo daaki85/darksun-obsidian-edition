@@ -140,6 +140,66 @@ def _site(number: int, length: int) -> bytes:
     return bytes((0xCD, VEC_SITE, number)) + b"\x90" * (length - 3)
 
 
+# The sheet made 48h bytes (SHEET_SIZE; the game's 42h, GAME_SHEET_SIZE), as Shattered Lands' 47h has
+# room for the weapon specs: +42h..+44h hold SL's +14h..+16h as game.packed_specs packs them (the specs
+# less 17, the starting age's roll, the flag bits: game.SPEC_SLOTS in ravlog's layout), +45h..+47h spare
+# (0). Every "imul r,r,42h" of the program is followed within four instructions by a load of the sheets'
+# pointer [19C5h]/[19C7h] (386 of them, all "imul ax,ax,42h" or "imul dx,dx,42h", root and overlays, no
+# other form; the overlays are read from the file, so file patches reach them): each one's 42h made 48h
+# (sheet_stride_*; tests/test_ravsheet.py scans the patched program for one left). The rest that knows
+# the size is at the end of PATCHES (sheet_*).
+SHEET_STRIDES_AX = (
+    0x1D084, 0x1D096, 0x1D0B0, 0x1D0C4, 0x1D0DC, 0x1D100, 0x1D138, 0x1D151, 0x1D177, 0x1D18A,
+    0x1D1C9, 0x1D1DC, 0x1D1F4, 0x1D209, 0x1D225, 0x1DFB6, 0x1DFF8, 0x1E028, 0x1EDB9, 0x1EDD0,
+    0x1EDE7, 0x1EDFE, 0x1EE15, 0x1EE2C, 0x21CF0, 0x2297E, 0x24B0A, 0x2532F, 0x2534B, 0x25A75,
+    0x26550, 0x265D8, 0x590B5, 0x59109, 0x59145, 0x59CEC, 0x5A02C, 0x5A3C3, 0x5C566, 0x5C7E4,
+    0x5C7F7, 0x5C80A, 0x5C824, 0x5C83E, 0x5C858, 0x5C955, 0x5CB86, 0x5CEDB, 0x5D187, 0x5D58D,
+    0x5D6AA, 0x5DA28, 0x5DE5E, 0x5F441, 0x5F963, 0x5F987, 0x615B0, 0x61734, 0x61FC1, 0x61FD7,
+    0x62250, 0x6228B, 0x622D6, 0x626FA, 0x62732, 0x6275E, 0x627BD, 0x62802, 0x6283E, 0x62883,
+    0x6291A, 0x62C2D, 0x62C59, 0x62C95, 0x62CF2, 0x62D5D, 0x62E2D, 0x62E7B, 0x62EC2, 0x62F67,
+    0x62FAE, 0x63AF7, 0x63B30, 0x63F08, 0x63F43, 0x63F6B, 0x64003, 0x6529B, 0x652CA, 0x6532A,
+    0x656BD, 0x65728, 0x65842, 0x65C29, 0x66029, 0x66E20, 0x66F3C, 0x6819C, 0x68219, 0x68278,
+    0x6CA4C, 0x6D221, 0x6D23E, 0x6D2A9, 0x6D2DA, 0x6D306, 0x6D36F, 0x6D3B4, 0x6E19A, 0x6E450,
+    0x6E486, 0x6E4AE, 0x6E6B9, 0x6E716, 0x6E76A, 0x6E7EB, 0x6E7FD, 0x6E80D, 0x6E82D, 0x6E83D,
+    0x6E84D, 0x6E85F, 0x6E86F, 0x6E87F, 0x6E88F, 0x6E89F, 0x6E8AF, 0x6E929, 0x6EA2B, 0x6EA41,
+    0x6EA77, 0x6EAAC, 0x6EE22, 0x6EEA3, 0x6EF7B, 0x6EF8B, 0x6F2AC, 0x70384, 0x703A1, 0x73760,
+    0x73ADE, 0x7453F, 0x74556, 0x7456B, 0x74AC2, 0x74B1B, 0x74BC6, 0x75176, 0x752A9, 0x752DE,
+    0x75321, 0x75BD8, 0x75CC2, 0x75D6B, 0x7763E, 0x77A6F, 0x7876D, 0x787E2, 0x78855, 0x78961,
+    0x789AA, 0x78B71, 0x78C56, 0x78D20, 0x79170, 0x79263, 0x7927C, 0x793C0, 0x79482, 0x7949B,
+    0x7976D, 0x7A061, 0x7A133, 0x7A1AE, 0x7AA70, 0x7AB40, 0x7ABCB, 0x7AEE0, 0x7B195, 0x7BA38,
+    0x7CA7C, 0x81BFB, 0x81F2D, 0x8243F, 0x82622, 0x8283F, 0x83437, 0x8363C, 0x8376C, 0x83799,
+    0x837C6, 0x84248, 0x84274, 0x84584, 0x84805, 0x84A9C, 0x84ADE, 0x84D0F, 0x84DC2, 0x84E6C,
+    0x84EE9, 0x852C7, 0x852F9, 0x85391, 0x853A8, 0x85835, 0x85868, 0x85B18, 0x85CE4, 0x85D26,
+    0x85D53, 0x85D80, 0x8614D, 0x86199, 0x8638A, 0x86572, 0x866B5, 0x869E4, 0x869FD, 0x86A16,
+    0x86A2F, 0x86E1C, 0x875F7, 0x87797, 0x877C3, 0x8780A, 0x8A4A8, 0x8A566, 0x8A5E8, 0x8A699,
+    0x8CF54, 0x8CF98, 0x8CFDD, 0x8D019, 0x8D512, 0x8D529, 0x8D540, 0x8DF5E, 0x8DFFA, 0x8EA50,
+    0x8FEAE, 0x8FEE7, 0x8FF35, 0x8FF9C, 0x8FFD5, 0x9001E, 0x9114D, 0x9121A, 0x92836, 0x9286A,
+    0x9289B, 0x928C7, 0x928F6, 0x92928, 0x92957, 0x93391, 0x93BFD, 0x94478, 0x944D8, 0x94599,
+    0x945F2, 0x9461C, 0x94651, 0x94749, 0x9478B, 0x947BB, 0x9494F, 0x94973, 0x94997, 0x949C4,
+    0x949D6, 0x949F6, 0x94B1C, 0x94B33, 0x94BAE, 0x94BC3, 0x94BDA, 0x94C20, 0x94C32, 0x94C44,
+    0x94C63, 0x94F71, 0x950B5, 0x951A0, 0x951CE, 0x95225, 0x9523E, 0x95300, 0x95312, 0x95329,
+    0x95339, 0x953CC, 0x954EF, 0x95590, 0x955A2, 0x955ED, 0x95605, 0x95639, 0x956CF, 0x95701,
+    0x95720, 0x95731, 0x95753, 0x9576B, 0x957F7, 0x9585F, 0x95876, 0x9588F, 0x958AC, 0x958FA,
+    0x95946, 0x9599A, 0x959BC, 0x959DA, 0x959FC, 0x95B19, 0x95BDB, 0x95C33, 0x95C50, 0x95C9B,
+    0x95CDD, 0x95CFF, 0x95D1C, 0x95D78, 0x95E18, 0x95ED6, 0x95F58, 0x96009, 0x9602C, 0x9610D,
+    0x96996, 0x96AEE, 0x97C7D, 0x97C93, 0x97E77, 0x9820D, 0x982D1, 0x98359, 0x98463, 0x98524,
+    0x98554, 0x98584, 0x985B4, 0x985F5, 0x9867F, 0x986F5, 0x98772, 0x99C64, 0x9A55A, 0x9A56C,
+)
+SHEET_STRIDES_DX = (
+    0x2653F, 0x265C7, 0x5AEA1, 0x61CD4, 0x61D07, 0x621CE, 0x62789, 0x628E0, 0x6294A, 0x62975,
+    0x629A4, 0x629E5, 0x62C84, 0x6D258, 0x6E7CD, 0x6E8D6, 0x703D1, 0x74516, 0x82814, 0x8C6F0,
+    0x94961, 0x94985, 0x949A9, 0x949E7, 0x94A09, 0x94A1F, 0x951BA, 0x954B4, 0x957E8, 0x958E9,
+    0x95937, 0x95980, 0x95C22, 0x95C8A, 0x95D4A, 0x95D67,
+)
+SHEET_STRIDES = tuple(sorted(SHEET_STRIDES_AX + SHEET_STRIDES_DX))
+GAME_SHEET_SIZE = 0x42
+
+
+def _stride(at: int) -> Patch:
+    modrm = 0xC0 if at in SHEET_STRIDES_AX else 0xD2
+    return Patch("sheet_stride_%x" % at, at, bytes((0x6B, modrm, GAME_SHEET_SIZE)), bytes((0x6B, modrm, 0x48)))
+
+
 PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
     # 5C22h, its seed at DS:384Ah): the dice log's every roll.
@@ -526,6 +586,33 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("sound_3c", 0x65333, bytes.fromhex("268b573c8bc20bc0"), bytes.fromhex("33c0260a473c8bd0")),
     # ... and 89859h in the image ("mov ax,es:[bx+3Eh] / mov [bp-4],ax / or ax,ax", its low byte pushed)
     Patch("sound_3e", 0x8EA59, bytes.fromhex("268b473e8946fc0bc0"), bytes.fromhex("33c0260a473e8946fc")),
+    # The 48h sheet (SHEET_SIZE, above): the strides,
+    *(_stride(at) for at in SHEET_STRIDES),
+    # ... the loop over the party's four sheets at 1C57Bh in the image ("add di,42h", beside the
+    # creatures' "add si,31h"),
+    Patch("sheet_party_loop", 0x2177B, bytes.fromhex("83c742"), bytes.fromhex("83c748")),
+    # ... the table's allocation (6DE4Dh: "push dword 462h" to the far heap's 1D0h:8, 17 sheets, its
+    # pointer to [19C5h]; freed at 6E0D5h, no size there): 17 x 48h,
+    Patch("sheet_table", 0x7304D, bytes.fromhex("666862040000"), bytes.fromhex("6668c8040000")),
+    # ... the record sizes by kind (6DD62h: "mov word es:[616Dh],42h" in 6D0h's table at 6169h, the
+    # sheets' beside the items' 17h and the creatures' 31h; the record writer at 1F6BDh puts it in a
+    # record's header, and the generic accessors at AA46h, AB66h, AC46h, 1E259h and 1F6AEh step by it):
+    # a CHARSAVE or SAVE file's sheet record is written 48h long,
+    Patch("sheet_record_size", 0x72F62, bytes.fromhex("26c7066d614200"), bytes.fromhex("26c7066d614800")),
+    # ... a sheet record read from a file into its slot (6B17Ch: "push 42h" to memcpy 0:3F5Ah, from
+    # the record's data: an ADD from the roster, a map's monsters from OBJEX.GFF's RDFF): 48h, so the
+    # files' records must be 48h too (widened: the Loader's OBJEX copy, objects_fixed, and the game
+    # folder's files, widen_files),
+    Patch("sheet_record_load", 0x7037C, bytes.fromhex("6a42"), bytes.fromhex("6a48")),
+    # ... a save game's chunk sizes (a dword table at selector 378h:0, file 3F38h x 16 + 5200h; SAVE 6,
+    # the sheets' table, 462h at +14h; a load reads the chunk whole, length -1): 48h x 17,
+    Patch("sheet_save_size", 0x44594, bytes.fromhex("62040000"), bytes.fromhex("c8040000")),
+    # ... and a character made on the creation screen: its template (360h:29h, 42h bytes, the creature's
+    # at 360h:6Bh right after it, so the three copies of 42h between it and a sheet, 6950Bh, 69560h and
+    # 69C67h, stay 42h: an edit keeps the sheet's +42h..+47h as they were) copied into a new slot at
+    # 69560h, whose last six bytes would be the slot's last owner's: DSCLOG2's NEW_SHEET clears them at
+    # the "add sp,0Ah" after that memcpy (6957Dh in the image).
+    Patch("sheet_new_tail", 0x6E77D, bytes.fromhex("83c40a"), _site(50, 3)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -554,39 +641,14 @@ DODGE_FIX, SPELL_FLAGS, SPELL_CATEGORY = "dodge", 0x1A, 0x11
 # The sequel's records in memory and where Shattered Lands' fields are in them (for the dice log's
 # layout profile, step 3 of the plan). Far pointers in its data segment (each SL's + 364h):
 CREATURES_PTR, SHEETS_PTR, ITEMS_PTR = 0x19C9, 0x19C5, 0x19C1  # (SL's 1665h, 1661h, 165Dh)
-CREATURE_SIZE, SHEET_SIZE, ITEM_SIZE = 0x31, 0x42, 0x17  # (SL's 3Ah, 47h, 15h)
+CREATURE_SIZE, SHEET_SIZE, ITEM_SIZE = 0x31, 0x48, 0x17  # (SL's 3Ah, 47h, 15h; the sheet the Loader's: GAME_SHEET_SIZE)
 DGROUP = 0x47E0  # its DS less its load segment (4982h - 1A2h in a GOG start; SL's 4356h)
 WHOSE_TURN, CAMERA, MAP_OBJECTS = 0x426D, 0x1408, 0x67BB  # (SL's 4979h, 1178h, 6694h; the map objects 25h bytes apart)
 SPELL_SLOTS, SLOTS_STRIDE, PRIEST_SLOTS = 0x446A, 0x22, 0x0B  # wizard casts left by level, a member a row
 KNOWN_BITSET = 15  # bytes of known wizard spells a member (bit n, spell n), the roster's SPST chunk
-# ... at selector 320h:39Ch (the load + KNOWN_SEG), a member's after another's (DSCLOG2's KNOWN_BITS).
-# The game's loops and tests cover bits 0-114 (its wizard spells: "cmp ...,73h" at 19CFAh, 5D425h,
-# 6990Fh, 8F8A5h in the image; its scrolls' spells 1-112), so bits 115-119 are the mod's: the
-# starting age's roll (game.sheet_roll's, which SL keeps on the sheet; the sequel's sheet has no room)
-# plus 1, 0 none kept (the game's own characters' 15 bytes are 0 there). A roster SPST is read whole
-# into the member's 15 bytes (6A782h in the image: GFF read with length -1, the chunk's own) and saved
-# as 15 (6A6B6h); a save game keeps the table whole (SAVE 20, 60 bytes). Nothing in the program writes
-# those bits, nor clears them: a character made in a slot keeps the slot's (the creation clears 0-114).
-KNOWN_SEG, KNOWN_OFF = 0x3D62, 0x39C
-ROLL_BIT, ROLL_MASK = 115, 0x1F
-
-
-def known_roll(bits: bytes) -> Optional[int]:
-    """The starting age's roll a member's known-spells bits BITS keep (ROLL_BIT), None for none."""
-    if len(bits) < KNOWN_BITSET:
-        return None
-    value = int.from_bytes(bits[:KNOWN_BITSET], "little") >> ROLL_BIT & ROLL_MASK
-    return value - 1 if value else None
-
-
-def with_known_roll(bits: bytes, roll: Optional[int]) -> bytes:
-    """BITS (a member's known spells, up to KNOWN_BITSET bytes) made KNOWN_BITSET long with the starting
-    age's ROLL in bits ROLL_BIT on (None: none kept); the spells' bits below as they were."""
-    value = int.from_bytes(bytes(bits[:KNOWN_BITSET]).ljust(KNOWN_BITSET, b"\0"), "little")
-    value &= ~(ROLL_MASK << ROLL_BIT)
-    if roll is not None:
-        value |= (min(max(roll, 0), ROLL_MASK - 1) + 1) << ROLL_BIT
-    return value.to_bytes(KNOWN_BITSET, "little")
+# ... at selector 320h:39Ch (the load + 3D62h), a member's after another's (DSCLOG2's KNOWN_BITS); the
+# game's spells are bits 0-114, 115-119 unused (playtest/RESEARCH.md: the starting age's roll was kept
+# there before the sheet was made 48h, SHEET_SIZE)
 AFRAID = 0x60  # a creature's +18h while Afraid
 
 # Shattered Lands' creature and sheet offsets -> the sequel's (None: no such field), found by aligning
@@ -632,7 +694,9 @@ def sheet_field(sl: int) -> Optional[int]:
         return sl - 6          # 18h race -> 12h, 21h classes -> 1Bh, 24h levels -> 1Eh, 37h saves -> 31h
     if 0x3D <= sl <= 0x46:
         return sl - 6          # 3Fh the levels before any were lost -> 39h, 43h the kit byte -> 3Dh
-    return None                # 0Eh-0Fh, 14h-17h (the mod's weapon specs), 3Ch: none in the sequel
+    if 0x14 <= sl <= 0x16:
+        return sl + 0x2E       # the mod's weapon specs and starting roll -> 42h, the Loader's bytes (SHEET_SIZE)
+    return None                # 0Eh-0Fh, 17h (the mod's age: +41h, ravlog's SHEET_AGE), 3Ch: none in the sequel
 
 
 class RavagerError(Exception):
@@ -816,7 +880,94 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")
+    wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
+    if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
+        new.update(wide)
+        done.append("wide_sheets")
     return (icons.with_chunks(data, new) if new else data), done
+
+
+# The game folder's files that hold sheets (the roster's CHAR records, a save's SAVE 6 table and any
+# RDFF or CHAR records), made the Loader's 48h (widen_files, at each start of the sequel from the
+# Loader) or the game's 42h again (python -m dsloader.ravager narrow FOLDER: the game started by
+# itself reads them then, the weapon specs and the six bytes dropped). By length, so a file already so
+# is left as it is, and a roster with both (the party transfer's 48h, CHARTRAN's 42h) is made one.
+SHEET_RECORDS = ("CHAR", "RDFF")  # (record lists: a sheet is kind 3, SHEET_KIND)
+SHEET_KIND = 3
+SHEETS_CHUNK, SHEETS_COUNT = ("SAVE", 6), 17  # (a save game's sheet table, whole: sheet_save_size)
+SHEET_FILES = ("CHARSAVE.GFF", "DARKRUN.GFF", "DARKSAVE.GFF")  # (and every SAVEnn.SAV)
+BACKUP = {SHEET_SIZE: ".42H", GAME_SHEET_SIZE: ".48H"}  # (the file before it was made that size)
+
+
+def _other(size: int) -> int:
+    return GAME_SHEET_SIZE if size == SHEET_SIZE else SHEET_SIZE
+
+
+def _resized(sheet: bytes, size: int) -> bytes:
+    return bytes(sheet[:size]).ljust(size, b"\0")
+
+
+def resized_sheets(chunk: bytes, size: int) -> Optional[bytes]:
+    """A record list CHUNK (dataitems) with every sheet record of the other size (42h or 48h) made
+    SIZE (zeros added, or the bytes past 42h dropped); None if there was none to change."""
+    from . import dataitems
+    other = _other(size)
+    try:
+        recs, end = dataitems.records(chunk)
+    except (ValueError, struct.error):
+        return None
+    if not any(r.kind == SHEET_KIND and len(r.data) == other for r in recs):
+        return None
+    return dataitems.chunk([r._replace(data=_resized(r.data, size)) if r.kind == SHEET_KIND and len(r.data) == other
+                            else r for r in recs], end)
+
+
+def resized_chunks(chunks: gff.Chunks, size: int) -> gff.Chunks:
+    """The chunks of CHUNKS that hold sheets of the other size, made SIZE (resized_sheets; the save's
+    table SHEETS_CHUNK, 17 sheets one after another)."""
+    other = _other(size)
+    out: gff.Chunks = {}
+    for key, chunk in chunks.items():
+        if key == SHEETS_CHUNK and len(chunk) == SHEETS_COUNT * other:
+            out[key] = b"".join(_resized(chunk[i * other:(i + 1) * other], size) for i in range(SHEETS_COUNT))
+        elif key[0] in SHEET_RECORDS:
+            new = resized_sheets(chunk, size)
+            if new is not None:
+                out[key] = new
+    return out
+
+
+def sheet_files(game_dir: str) -> List[str]:
+    """The files of GAME_DIR that may hold sheets (SHEET_FILES, the saves SAVEnn.SAV)."""
+    try:
+        names = sorted(os.listdir(game_dir))
+    except OSError:
+        return []
+    wanted = {n.upper() for n in SHEET_FILES}
+    return [os.path.join(game_dir, n) for n in names
+            if n.upper() in wanted or (n.upper().startswith("SAVE") and n.upper().endswith(".SAV"))]
+
+
+def widen_files(game_dir: str, size: int = SHEET_SIZE) -> List[str]:
+    """GAME_DIR's files with sheets of the other size made SIZE (the Loader's 48h; GAME_SHEET_SIZE: the
+    game's), each copied first as it was (its name + BACKUP's suffix, an older copy replaced). The
+    names of the files changed."""
+    import shutil
+    from . import icons
+    done = []
+    for path in sheet_files(game_dir):
+        with open(path, "rb") as f:
+            data = f.read()
+        try:
+            new = resized_chunks(gff.read_gff(data), size)
+        except (gff.GffError, struct.error, ValueError):
+            continue  # (not a GFF file the game wrote: left alone)
+        if not new:
+            continue
+        shutil.copyfile(path, path + BACKUP[size])
+        gff.write_atomic(path, icons.with_chunks(data, new))
+        done.append(os.path.basename(path))
+    return done
 
 
 def read_added(dos_dir: str) -> gff.Chunks:
@@ -886,3 +1037,13 @@ def conf_lines(game_dir: str, dos_dir: str, cd: Optional[str] = None, umb_plus: 
         lines.append("d:\\" + game_end.lower())
     lines += ["exit", ""]
     return lines
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 3 or sys.argv[1] not in ("widen", "narrow"):
+        sys.exit("usage: python -m dsloader.ravager widen|narrow RAVAGER_FOLDER\n"
+                 "  narrow: the roster and the saves the game's 42-byte sheets again, for the sequel started\n"
+                 "  by itself (the weapon specs dropped); widen: the Loader's 48 (it does so at each start)")
+    changed = widen_files(sys.argv[2], SHEET_SIZE if sys.argv[1] == "widen" else GAME_SHEET_SIZE)
+    print("\n".join(changed) if changed else "nothing to change")

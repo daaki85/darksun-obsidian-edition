@@ -16,5 +16,5 @@ KNOWN = 0x3F3DC
 b = bytearray(g.read(KNOWN, 15)); b[spell // 8] |= 1 << (spell % 8); g.write(KNOWN, bytes(b))
 g.write(ds*16 + 0x446A + 0x22*member, bytes([3] * 9))
 if len(sys.argv) > 2:
-    o, s = struct.unpack('<HH', g.read(ds*16 + 0x19C5, 4)); g.write(s*16 + o + member*0x42 + 0x1E, bytes([int(sys.argv[2])]))
+    o, s = struct.unpack('<HH', g.read(ds*16 + 0x19C5, 4)); g.write(s*16 + o + member*(0x48 if os.environ.get('RAV_LOADER') else 0x42) + 0x1E, bytes([int(sys.argv[2])]))
 print('known', [i for i in range(120) if g.read(KNOWN, 15)[i // 8] >> (i % 8) & 1])

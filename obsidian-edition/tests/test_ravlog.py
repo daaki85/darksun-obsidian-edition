@@ -66,18 +66,6 @@ class ProfileTests(unittest.TestCase):
         finally:
             ravlog.restore_layout()
 
-    def test_start_roll(self):
-        """RavGameData.start_roll: a member's roll from its known-spells bits (selector 320h:39Ch, the load
-        + 3D62h, 15 bytes a member), None for none."""
-        g, ds = FakeGuest(), 0x4982
-        load = ds - ravager.DGROUP
-        base = (load + 0x3D62) * 16 + 0x39C
-        g.write(base + 15 * 2, ravager.with_known_roll(b"\x01", 17))
-        data = ravlog.RavGameData(g, ds)
-        self.assertEqual(data.start_roll(2), 17)
-        self.assertIsNone(data.start_roll(0))
-        self.assertIsNone(data.start_roll(4))
-
     def test_layout_maps_record_fields(self):
         layout = ravlog.layout()
         self.assertEqual(layout["CREATURE_NAME"], 0x21)
@@ -98,12 +86,22 @@ class ProfileTests(unittest.TestCase):
         ravlog.restore_layout()
         self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0), sl)
 
-    def test_no_weapon_specs_in_the_sequel(self):
-        # (its +14h..+17h are other fields: DEX 16 once read as a staff sling's spec, "+2 specialized")
-        sheet = bytearray(0x42); sheet[0x14:0x18] = bytes((5, 18, 16, 15))
+    def test_weapon_specs_in_the_loaders_bytes(self):
+        """The sequel's +14h..+17h are other fields (DEX 16 once read as a staff sling's spec, "+2
+        specialized"): the specs and the roll are read at +42h (the Loader's 48h sheet), the age at +41h,
+        and none for a sheet of the game's own (0 there); a respec writes the three bytes alone."""
+        sheet = bytearray(ravager.SHEET_SIZE); sheet[0x14:0x18] = bytes((5, 18, 16, 15))
         self.assertEqual(game.spec_kinds(bytes(sheet)), bytes((5, 18, 16, 15)))
         ravlog.apply_layout()
-        self.assertEqual(game.spec_kinds(bytes(sheet)), bytes(4))
+        self.assertEqual((game.SPEC_SLOTS, game.SHEET_AGE), (0x42, 0x41))
+        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet))), (bytes(4), None))
+        sheet[0x41], sheet[0x42:0x45] = 7, game.packed_specs([4, 2], 0, 11)[:3]
+        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet)), game.sheet_age(bytes(sheet))),
+                         (bytes((4, 2, 0, 0)), 11, 7))
+        new = game.with_specs(bytes(sheet), [1])
+        self.assertEqual((len(new), new[:0x42], new[0x45:]), (ravager.SHEET_SIZE, bytes(sheet[:0x42]), bytes(3)))
+        self.assertEqual((game.spec_kinds(new), game.sheet_roll(new), new[0x41]), (bytes((1, 0, 0, 0)), 11, 7))
+        self.assertEqual(len(game.respecced(bytes(sheet), [1])), 3)
 
     def test_size_rule_takes_the_sequels_tables(self):
         from dsloader import sizes

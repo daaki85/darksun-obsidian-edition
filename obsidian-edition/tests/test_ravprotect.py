@@ -260,7 +260,7 @@ class ProtectionTests(unittest.TestCase):
         mu = self.machine([])
         sheets = 0xB000
         mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
-        mu.mem_write(sheets * 16 + 2 * 0x42 + 0x10, struct.pack("<H", 0x400 if thief else 0x100))
+        mu.mem_write(sheets * 16 + 2 * ravager.SHEET_SIZE + 0x10, struct.pack("<H", 0x400 if thief else 0x100))
         mu.mem_write(CREATURES * 16 + 1 * CREATURE_SIZE + 0x16, bytes((10,)))
         mu.mem_write(TYPES * 16 + 3 * 15 + 2, bytes((weapon_weight,)))
         bp = SS * 16 + 0x600
@@ -346,7 +346,7 @@ class ProtectionTests(unittest.TestCase):
         sheets = 0xB000
         mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
         mu.mem_write(CREATURES * 16 + creature * CREATURE_SIZE + 4, struct.pack("<H", 2))
-        mu.mem_write(sheets * 16 + 2 * 0x42 + 0x1B, bytes(classes) + bytes(levels))
+        mu.mem_write(sheets * 16 + 2 * ravager.SHEET_SIZE + 0x1B, bytes(classes) + bytes(levels))
         return mu
 
     def arrow_level(self, *shot):
@@ -443,15 +443,15 @@ class ProtectionTests(unittest.TestCase):
             mu = self.machine([])
             mu.mem_write(GAME_DS * 16 + self.consts["SHEETS_PTR"], struct.pack("<HH", 0, sheets))
             mu.mem_write((GAME_DS + 0x3E71 - 0x47E0) * 16 + 0x0B44, struct.pack("<H", 1))
-            sheet = bytearray(0x42); sheet[0x19] = wis
-            mu.mem_write(sheets * 16 + 0x42, bytes(sheet))
+            sheet = bytearray(ravager.SHEET_SIZE); sheet[0x19] = wis
+            mu.mem_write(sheets * 16 + ravager.SHEET_SIZE, bytes(sheet))
             cre = bytearray(CREATURE_SIZE); cre[0x1D] = wis; cre[0x21:0x27] = b"Meggyn"
             mu.mem_write(CREATURES * 16 + CREATURE_SIZE, bytes(cre))
             mu.mem_write(SS * 16 + 0x600 - 4, struct.pack("<H", power))
             ip = self.call_to(mu, "tome_read", (0, 0x99B44 - 0x999D0, 0x99B67 - 0x999D0), edi=obj, esi=7, eax=0x1111)
             text = bytes(mu.mem_read(SS * 16 + 0x600 - 0x56, 40)).split(b"\0")[0]
             got_power = struct.unpack("<H", mu.mem_read(SS * 16 + 0x600 - 4, 2))[0]
-            new_wis = mu.mem_read(sheets * 16 + 0x42 + 0x19, 1)[0], mu.mem_read(CREATURES * 16 + CREATURE_SIZE + 0x1D, 1)[0]
+            new_wis = mu.mem_read(sheets * 16 + ravager.SHEET_SIZE + 0x19, 1)[0], mu.mem_read(CREATURES * 16 + CREATURE_SIZE + 0x1D, 1)[0]
             self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_SI), mu.reg_read(r.UC_X86_REG_DI)),
                              (0x1111, 7, obj))
             if (power, obj) != (318, 21446):

@@ -1228,6 +1228,10 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     problem = ravager.prepare(game_dir, DOS_DIR, settings)
     if problem:
         raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
+    try:  # (the roster's and the saves' sheets the copy's 48h: ravager.widen_files)
+        ravager.widen_files(game_dir)
+    except OSError as e:
+        raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)

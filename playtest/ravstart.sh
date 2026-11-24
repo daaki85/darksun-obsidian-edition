@@ -4,7 +4,7 @@
 # on the menu is START GAME, then the narrated cinematic (about 60 s, no skip). D: is the CD's data
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
-# UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
+# UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (its 48h sheets: FOLDER's roster and saves widened, NAME.42H backups; `python -m dsloader.ravager narrow FOLDER` before a plain start; `RAV_SKIP=NAME,...` with it: those
 # patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.join(sys.argv[2], '..'))
 from dsloader import ravager
 problem = ravager.prepare(sys.argv[1], sys.argv[2], {})
 if problem: sys.exit('ravager.prepare: ' + problem)
+ravager.widen_files(sys.argv[1])   # (the roster's and the saves' sheets the copy's 48h, as launch does; .42H backups)
 skip = [s for s in os.environ.get('RAV_SKIP', '').split(',') if s]   # (a control run: those fixes left out)
 if skip:
     exe = os.path.join(sys.argv[2], ravager.PATCHED_EXE); data = bytearray(open(exe, 'rb').read())

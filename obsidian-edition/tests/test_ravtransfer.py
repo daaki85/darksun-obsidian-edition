@@ -112,30 +112,40 @@ class RosterTests(unittest.TestCase):
         out, _ = rt.roster(made_save(), scroll_sequel())
         self.assertEqual(dataitems.records(out[("CHAR", 35)])[0][1].data[0x3C:0x40], bytes((0x42, 0x43, 0x44, 0x45)))
 
-    def test_start_roll_in_spst(self):
-        """The Loader's way: SPST the game's 15 bytes, the starting age's roll (SL's sheet, packed) in
-        bits 115-119; none kept (0) for a sheet with none; CHARTRAN's way its 9 bytes, no roll."""
+    def test_specs_on_the_loader_sheet(self):
+        """The Loader's way: a 48h sheet (ravager.SHEET_SIZE), SL's weapon specs and starting roll packed
+        at +42h..+44h (the age at +41h), +45h..+47h 0; nothing there for a sheet with neither; SPST
+        CHARTRAN's 9 bytes both ways; CHARTRAN's way the game's 42h sheet."""
         from dsloader import game, ravager
         save = made_save()
         sheets = bytearray(save[("SAVE", rt.SHEETS)])
-        sheets[game.SPEC_SLOTS:game.SPEC_SLOTS + 4] = game.packed_specs([3], age=5, roll=9)
+        sheets[game.SPEC_SLOTS:game.SPEC_SLOTS + 4] = game.packed_specs([3, 0, 5], age=5, roll=9)
+        sheets[rt.SL_SHEET + game.SPEC_SLOTS:rt.SL_SHEET + game.SPEC_SLOTS + 4] = bytes(4)
         save[("SAVE", rt.SHEETS)] = bytes(sheets)
         out, _ = rt.roster(save, scroll_sequel())
-        lex, jenna = out[("SPST", 35)], out[("SPST", 34)]
-        self.assertEqual(len(lex), ravager.KNOWN_BITSET)
-        self.assertEqual(lex[:9], bytes([1, 0, 0, 0, 4, 0, 0, 0, 0]))
-        self.assertEqual(ravager.known_roll(lex), 9)
-        self.assertEqual((len(jenna), ravager.known_roll(jenna)), (15, None))
-        self.assertEqual(dataitems.records(out[("CHAR", 35)])[0][1].data[rt.WOTR_SHEET_AGE], 5)
+        lex, jenna = (dataitems.records(out[("CHAR", n)])[0][1].data for n in (35, 34))
+        self.assertEqual((len(lex), len(jenna)), (ravager.SHEET_SIZE, ravager.SHEET_SIZE))
+        self.assertEqual(game.specs_of(lex[0x42:0x45] + b"\0"), (bytes((3, 0, 5, 0)), 9))
+        self.assertEqual((lex[0x41], lex[0x45:]), (5, bytes(3)))
+        self.assertEqual(jenna[0x42:], bytes(6))
+        self.assertEqual(lex[:0x42], rt.sheet(sheets[:rt.SL_SHEET])[:0x41] + lex[0x41:0x42])
+        self.assertEqual(out[("SPST", 35)], bytes([1, 0, 0, 0, 4, 0, 0, 0, 0]))
         chartran, _ = rt.roster(save, made_sequel())
+        self.assertEqual(len(dataitems.records(chartran[("CHAR", 35)])[0][1].data), 0x42)
         self.assertEqual(chartran[("SPST", 35)], bytes([1, 0, 0, 0, 4, 0, 0, 0, 0]))
         # (whatever layout is on: the transfer reads SL's sheet as SL's)
         from dsloader import ravlog
         ravlog.apply_layout()
         try:
-            self.assertEqual(ravager.known_roll(rt.roster(save, scroll_sequel())[0][("SPST", 35)]), 9)
+            again = dataitems.records(rt.roster(save, scroll_sequel())[0][("CHAR", 35)])[0][1].data
         finally:
             ravlog.restore_layout()
+        self.assertEqual(again, lex)
+        # (an old unpacked SL sheet: its specs a byte each, packed here, no roll)
+        sheets[game.SPEC_SLOTS:game.SPEC_SLOTS + 4] = bytes((2, 1, 0, 0))
+        save[("SAVE", rt.SHEETS)] = bytes(sheets)
+        old = dataitems.records(rt.roster(save, scroll_sequel())[0][("CHAR", 35)])[0][1].data
+        self.assertEqual((game.specs_of(old[0x42:0x45] + b"\0"), old[0x41]), ((bytes((2, 1, 0, 0)), None), 0))
 
     def test_items(self):
         recs, _ = dataitems.records(self.out[("CHAR", 35)])

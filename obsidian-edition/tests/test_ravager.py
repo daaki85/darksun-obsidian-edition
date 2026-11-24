@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -34,7 +34,9 @@ class TableTests(unittest.TestCase):
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
                                "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow",
-                            "sound_3c", "sound_3e"}
+                            "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
+                            "sheet_record_load", "sheet_save_size", "sheet_new_tail"}
+                         | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
@@ -236,8 +238,9 @@ class LayoutTests(unittest.TestCase):
                          [0, 2, 4, 6, 0x12, 0x13, 0x14, 0x15, 0x16, 0x19, 0x21])
         self.assertEqual([ravager.sheet_field(o) for o in (0, 8, 0x10, 0x12, 0x18, 0x21, 0x24, 0x37, 0x3F, 0x43, 0x45)],
                          [0, 8, 0x0E, 0x10, 0x12, 0x1B, 0x1E, 0x31, 0x39, 0x3D, 0x3F])
-        for gone in (0x0E, 0x0F, 0x14, 0x15, 0x16, 0x17, 0x3C):
+        for gone in (0x0E, 0x0F, 0x17, 0x3C):
             self.assertIsNone(ravager.sheet_field(gone))
+        self.assertEqual([ravager.sheet_field(o) for o in (0x14, 0x15, 0x16)], [0x42, 0x43, 0x44])  # (the Loader's)
 
     def test_fields_fit_the_records(self):
         for o in range(0x3A):
@@ -296,7 +299,15 @@ class GameFileTests(unittest.TestCase):
             types = objs[ravager.TYPES_CHUNK]
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], own[ravager.TYPES_CHUNK])
             self.assertEqual(len(types), (ravager.GAME_TYPES + len(npcitems.TYPES)) * ravager.TYPE_SIZE)
-            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK})  # (GFFI: the index)
+            sheets = {k for k in own if k[0] == "RDFF" and any(
+                r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
+            self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK} | sheets)  # (GFFI: the index)
+            for k in sheets:
+                old, new = dataitems.records(own[k])[0], dataitems.records(objs[k])[0]
+                self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)
+                self.assertEqual({len(r.data) for r in new if r.kind == ravager.SHEET_KIND}, {ravager.SHEET_SIZE})
+                self.assertFalse(any(any(r.data[ravager.GAME_SHEET_SIZE:]) for r in new))
 
     def test_effects_kept_switch(self):
         """Spells kept on the Effects screen: SL's two patches by name, left out with the switch off."""

@@ -469,7 +469,7 @@ missile_rear:
 .stab:  cmp byte [bp - 0x21], 0
         jne .done
         mov ax, [bp - 0x12]
-        imul ax, ax, 0x42
+        imul ax, ax, SHEET_SIZE
         les bx, [SHEETS_PTR]
         add bx, ax
         test word [es:bx + 0x10], 0x400
@@ -1677,7 +1677,7 @@ IV_DRAW     equ -0x99           ; (from the patch) "lcall SEG:OFF" operand: the 
 IV_WHO      equ -0x8B           ; (from the patch) "mov ax,0370h" operand: the character number's selector
 WHO_OFF     equ 0x0B44
 SHEETS_PTR  equ 0x19C5
-SHEET_SIZE  equ 0x42
+SHEET_SIZE  equ 0x48                ; (the Loader's sheet: ravager.SHEET_SIZE; the game's 42h)
 CREATURES_PTR equ 0x19C9
 CREATURE_SIZE equ 0x31
 SHEET_ENTITY equ 0x0E
@@ -3077,6 +3077,7 @@ site_table:
         dw join_ready                       ; 47 SITE_JOIN_READY (a member joined: its worn items readied)
         dw tome_read                        ; 48 SITE_TOME (the Tome of Understanding read: +1 WIS)
         dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
+        dw new_sheet                        ; 50 SITE_NEW_SHEET (a character made: its sheet's last 6 bytes cleared)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4400,6 +4401,44 @@ tr_used  db 0
 tr_reads db " reads the tome: WIS ", 0
 tr_wiser db " can grow no wiser.", 0
 tomes_read dw 0                 ; (for the tests)
+; NEW_SHEET (site 50, "sheet_new_tail"): "add sp,0Ah" (6957Dh; 3 bytes) after the creation screen's
+; memcpy (0:3F5Ah) of its template (360h:29h, the game's 42h bytes: GAME_SHEET_SIZE) into the new
+; character's sheet, the Loader's 48h (SHEET_SIZE: ravager's sheet patches): the six bytes past the
+; template's (the weapon specs and the starting age's roll, +42h..+44h, then three spare) cleared, else
+; they were the slot's last owner's; then the ADD SP done (the way back, its CS and flags and the
+; game's BP moved up 10 over memcpy's arguments, the destination far at [BP+8] here). SHEETS_MADE
+; counts them. All registers kept.
+GAME_SHEET_SIZE equ 0x42
+new_sheet:
+        push bp
+        mov bp, sp
+        push es
+        push di
+        push cx
+        push ax
+        les di, [bp + 8]                ; (memcpy's destination: the sheet)
+        add di, GAME_SHEET_SIZE
+        xor ax, ax
+        mov cx, (SHEET_SIZE - GAME_SHEET_SIZE) / 2
+        cld
+        rep stosw
+        inc word [cs:sheets_made]
+        mov ax, [bp]                    ; (the game's BP, the way back, its CS, the flags: 10 up)
+        mov [bp + 10], ax
+        mov ax, [bp + 2]
+        mov [bp + 12], ax
+        mov ax, [bp + 4]
+        mov [bp + 14], ax
+        mov ax, [bp + 6]
+        mov [bp + 16], ax
+        pop ax
+        pop cx
+        pop di
+        pop es
+        lea sp, [bp + 10]
+        pop bp
+        iret
+sheets_made dw 0                ; (for the tests)
 th_level  db 0
 th_target dw 0xFFFF
 cast_who  dw 0
@@ -4969,7 +5008,7 @@ SH_CLASS_BITS equ 0x10
 SH_RACE     equ 0x12
 SH_CLASSES  equ 0x1B
 SH_LEVELS   equ 0x1E
-CU_SHEET_SIZE equ 0x42
+CU_SHEET_SIZE equ SHEET_SIZE
 CU_HUMAN    equ 1
 NO_MATERIAL equ 0xFF
 LEATHER     equ 5

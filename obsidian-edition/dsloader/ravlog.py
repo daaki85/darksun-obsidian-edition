@@ -8,8 +8,9 @@ Lands' (dicelog.DiceLog), run with:
   * the sequel's layout (LAYOUT): game.py's addresses and record offsets, and the copies other modules
     imported, rebound to the sequel's values while it is attached (apply_layout; restore_layout puts
     Shattered Lands' back). Record offsets come from ravager.creature_field, sheet_field and
-    item_field (each checked in a running game); a Shattered Lands field the sequel hasn't (SHEET_AGE,
-    the weapon specs) is left out of the profile, so whatever reads it isn't ported yet.
+    item_field (each checked in a running game); a Shattered Lands field the sequel hasn't is left out
+    of the profile, so whatever reads it isn't ported yet (the mod's age, weapon specs and starting
+    roll have places of their own: SHEET_AGE, SPEC_SLOTS, the Loader's 48h sheet).
   * a read-only view of the game's memory (ReadOnlyGuest): Shattered Lands' features write to DSCLOG's
     header past +146 (in DSCLOG2 that is code) and to the game's records by its layouts, so every write
     is dropped (and counted) until a feature is ported with writes of its own: so far only the spell
@@ -133,9 +134,10 @@ ADDRESSES: Dict[str, object] = {
     "LEVEL_HP_SEG": 0x45BE,
     # ages (aging.py): the age alone at the sheet's +41h, a byte the sequel's program never reads or
     # writes (no instruction with its offset on a sheet; 0 in every sheet of a new game and the saves,
-    # 2026-11-22), and none more: +3Dh and +3Fh, the only others, hold the kit and the second sphere
-    # (MOD_BYTES); the starting age's roll is in the known-spells bits (ravager.known_roll)
-    "SHEET_AGE": 0x41, "AGE_PLAIN": True,
+    # 2026-11-22); +3Dh and +3Fh hold the kit and the second sphere (MOD_BYTES); the weapon specs and
+    # the starting age's roll (SL's +14h..+16h) in the three bytes the Loader's copy adds, +42h..+44h
+    # (ravager.SHEET_SIZE 48h, sheet_field)
+    "SHEET_AGE": 0x41, "AGE_PLAIN": True, "SPEC_SLOTS": ravager.sheet_field(game.SPEC_SLOTS),
     "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
                      284: "corroding touch"},
 }
@@ -481,15 +483,6 @@ class RavGameData(game.GameData):
                 ac -= 1
         return ac
 
-    def start_roll(self, member: int) -> Optional[int]:
-        """The starting age's roll of party member MEMBER (game.sheet_roll's, Table 7's dice less their
-        count) as the Loader's party transfer keeps it in the member's known-spells bits
-        (ravager.known_roll), None for none (one the sequel made, or CHARTRAN's)."""
-        if self.ds is None or not 0 <= member < game.PARTY_SIZE:
-            return None
-        at = (self.ds - ravager.DGROUP + ravager.KNOWN_SEG) * 16 + ravager.KNOWN_OFF + member * ravager.KNOWN_BITSET
-        return ravager.known_roll(self.guest.read(at, ravager.KNOWN_BITSET))
-
     def creating(self) -> bool:
         """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen
         rolls no age, so the character being made may have one given at once (aging.give_ages)."""
@@ -815,7 +808,8 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _aging_writable(self, creatures) -> None:
         """The bytes aging.py writes made writable: for each of CREATURES (numbers) its hit points,
-        status and abilities, and for a party member its sheet's abilities and SHEET_AGE."""
+        status and abilities, and for a party member its sheet's abilities, SHEET_AGE and the packed
+        specs and roll (SPEC_SLOTS' three bytes)."""
         sheets = game.table_pointer(self.guest, self.game.ds, game.SHEETS_PTR)
         table = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
         ranges = []
@@ -825,7 +819,7 @@ class RavDiceLog(dicelog.DiceLog):
             if c < game.PARTY_SIZE:
                 index = struct.unpack_from("<H", self.game.creature(c), game.CREATURE_SHEET_INDEX)[0]
                 sheet = sheets + index * game.SHEET_SIZE
-                ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1)]
+                ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1), (sheet + game.SPEC_SLOTS, 3)]
         self.guest.writable = self.guest.writable + [r for r in ranges if r not in self.guest.writable]
 
     def _aging_pass(self) -> List[str]:

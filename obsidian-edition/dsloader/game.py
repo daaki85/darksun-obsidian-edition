@@ -222,8 +222,9 @@ SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
 SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
 # Wake of the Ravager (ravlog's layout) keeps the age alone in a byte of its own (SHEET_AGE there: a
-# byte the sequel's program never reads or writes), no weapon specs and no roll beside it (the roll is
-# in the member's known-spells bits there: ravager.known_roll)
+# byte the sequel's program never reads or writes), and the specs and the roll (+14h..+16h's three
+# bytes, as here) in the three the Loader's copy adds to its sheet (SPEC_SLOTS there, +42h: ravager's
+# SHEET_SIZE); the fourth (+17h here) is not the age there (respecced writes three)
 AGE_PLAIN = False
 
 
@@ -237,19 +238,28 @@ def spec_v2(sheet: bytes) -> bool:
     return spec_packed(sheet) and bool(sheet[SPEC_SLOTS + 2] & SPEC_V2)
 
 
-def spec_kinds(sheet: bytes) -> bytes:
-    """The four weapon specs chosen, kind + 1 each (0 none), from any layout; none in the sequel
-    (AGE_PLAIN: its sheet has no specs, and +14h..+17h there are other fields)."""
-    if AGE_PLAIN:
-        return bytes(SPEC_COUNT)
-    raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
-    if not spec_packed(sheet):
-        return raw
+def specs_of(raw: bytes) -> Tuple[bytes, Optional[int]]:
+    """The four weapon specs (kind + 1 each, 0 none) and the starting age's roll (None: none kept) in
+    RAW, the four bytes at SPEC_SLOTS in any of its layouts (unpacked: the specs a byte each, no roll).
+    Read by no name a layout rebinds: the party transfer reads a Shattered Lands sheet with the
+    sequel's attached."""
+    raw = bytes(raw[:SPEC_COUNT]).ljust(SPEC_COUNT, b"\0")
+    if not raw[2] & SPEC_PACKED:
+        return raw, None
     value = int.from_bytes(raw[:3], "little")
-    if spec_v2(sheet):
-        value &= SPEC_KINDS_MASK
-        return bytes(value // 17 ** i % 17 for i in range(SPEC_COUNT))
-    return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
+    if not raw[2] & SPEC_V2:
+        return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT)), None
+    roll = value >> ROLL_SHIFT & 0x1F
+    return (bytes((value & SPEC_KINDS_MASK) // 17 ** i % 17 for i in range(SPEC_COUNT)),
+            None if roll == ROLL_UNKNOWN else roll)
+
+
+def spec_kinds(sheet: bytes) -> bytes:
+    """The four weapon specs chosen, kind + 1 each (0 none), from any layout; in the sequel
+    (AGE_PLAIN) only from the packed bytes (a sheet of its own has 0 there, the Loader's widening)."""
+    if AGE_PLAIN and not spec_packed(sheet):
+        return bytes(SPEC_COUNT)
+    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[0]
 
 
 def sheet_age(sheet: bytes) -> int:
@@ -261,18 +271,8 @@ def sheet_age(sheet: bytes) -> int:
 
 
 def sheet_roll(sheet: bytes) -> Optional[int]:
-    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none (the
-    sequel's sheet keeps none, AGE_PLAIN: its roll is in the member's known-spells bits,
-    ravager.known_roll, RavGameData.start_roll)."""
-    return None if AGE_PLAIN else packed_roll(sheet)
-
-
-def packed_roll(sheet: bytes) -> Optional[int]:
-    """sheet_roll of a Shattered Lands sheet whatever layout is on (the party transfer's)."""
-    if not spec_v2(sheet):
-        return None
-    roll = int.from_bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3], "little") >> ROLL_SHIFT & 0x1F
-    return None if roll == ROLL_UNKNOWN else roll
+    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none."""
+    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[1]
 
 
 def packed_specs(kinds: Sequence[int], age: int = 0, roll: Optional[int] = None) -> bytes:
@@ -286,12 +286,15 @@ def packed_specs(kinds: Sequence[int], age: int = 0, roll: Optional[int] = None)
 
 def with_specs(sheet: bytes, kinds: Sequence[int]) -> bytes:
     """SHEET with its weapon specs KINDS, packed, its age and roll kept."""
-    return bytes(sheet[:SPEC_SLOTS]) + respecced(sheet, kinds) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
+    new = respecced(sheet, kinds)
+    return bytes(sheet[:SPEC_SLOTS]) + new + bytes(sheet[SPEC_SLOTS + len(new):])
 
 
 def respecced(sheet: bytes, kinds: Sequence[int]) -> bytes:
-    """+14h to +17h for SHEET with weapon specs KINDS, its age and starting roll as they are."""
-    return packed_specs(kinds, sheet_age(sheet), sheet_roll(sheet))
+    """+14h to +17h for SHEET with weapon specs KINDS, its age and starting roll as they are (AGE_PLAIN:
+    the three bytes before the age alone, the age a byte elsewhere)."""
+    out = packed_specs(kinds, sheet_age(sheet), sheet_roll(sheet))
+    return out[:3] if AGE_PLAIN else out
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
 ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 5), 4: ("metal", 13),

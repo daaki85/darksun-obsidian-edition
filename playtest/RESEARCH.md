@@ -1117,7 +1117,7 @@ and the second sphere and new spells (`NEW_KNOWN_SHEET`, `kits.SPHERE2`, `NEW_KN
 kitpages and kits read race, classes and levels by `game.SHEET_*`. Only verified statically: a
 transferred party with kits must play the Tyr fight with no quit and its turn sounds still heard.
 
-**The starting age's roll in the sequel** (2026-11-24): the known wizard spells are 15 bytes a member
+**The starting age's roll in the sequel** (2026-11-24; **replaced the same day** by the 48h sheet below: the roll is on the sheet again, the transfer's SPST CHARTRAN's 9 bytes, `known_roll` and `start_roll` gone): the known wizard spells are 15 bytes a member
 at selector 320h:39Ch (load + 3D62h); the game's loops and tests stop at bit 114 (`cmp ...,73h`:
 19CFAh, 5D425h, 6990Fh, 8F8A5h image; its scrolls' spells are 1-112, its priest scrolls' 236 and up
 take another branch at 947EEh, `cmp [bp-4],0EBh`), so bits 115-119 are free: the roll + 1 there
@@ -1150,7 +1150,7 @@ Cat's Grace, Erdlu Claw, Fogbolt, Reflect, Spook, spells the sequel hasn't) and 
 (80h) as the marker: 8 + 4 + 5 + 1 = 18, the new spells known not carried. Everything else costs
 dozens of sites (abilities, levels, saves: top bits) or can overflow (the words' high bytes).
 
-**A bigger sheet in the sequel (42h to 48h)?** (2026-11-24, static study, nothing built.) What depends
+**A bigger sheet in the sequel (42h to 48h)?** (2026-11-24, static study; **built** after it, next paragraph.) What depends
 on the size: **386** `imul r,r,42h` (`6B xx 42`), every one followed within four instructions by a load
 of the sheets' pointer [19C5h]/[19C7h], so all sheets, root and overlays alike (the overlays load from
 the file, so file patches reach them); each a one-byte change of the immediate. Besides: one stride,
@@ -1171,6 +1171,39 @@ bits**: the in-place room above (+36h, +40h's nibble, the mod's spell bits) give
 patches and no file format change; a bigger sheet is worth it only if the mod needs many more bytes
 later. Verifying it would take a unicorn test per patch shape, a scan test for leftover 42h strides,
 and play of create, ADD, save, load (old and new saves), level up, a fight and a talk.
+
+**The 48h sheet, built** (2026-11-24, `claude/ravager-sheet-room`, static and unicorn only, not yet
+played): `ravager.SHEET_SIZE` 48h (`GAME_SHEET_SIZE` 42h). +42h..+44h hold SL's +14h..+16h as
+`game.packed_specs` packs them (specs base 17, the roll, the flag bits; ravlog's `SPEC_SLOTS` 42h,
+`sheet_field` 14h-16h -> 42h-44h), +45h..+47h spare (0); the age stays at +41h. **392 patches**
+(`ravager.PATCHES`, each checking its original bytes): the 386 strides `sheet_stride_*`
+(`SHEET_STRIDES_AX`/`_DX`, file offsets: 350 `imul ax,ax,42h`, 36 `imul dx,dx,42h`, no overlap with an
+earlier patch); `sheet_party_loop` (`add di,42h`, 1C57Bh image); `sheet_table` (6DE4Dh, 17 x 48h);
+`sheet_record_size` (6DD62h: the record-size table 6D0h:6169h + 2 x (kind - 1), sheets' 616Dh: the
+record writer 1F6BDh and the generic accessors AA46h, AB66h, AC46h, 1E259h, 1F6AEh use it);
+`sheet_record_load` (6B17Ch `push 42h`, memcpy of a sheet record's data into its slot: an ADD from the
+roster, a map's monsters from OBJEX's RDFF); `sheet_save_size` (SAVE 6's dword in the table at 378h:0,
+file 44594h); `sheet_new_tail` (site 50, below). **Kept 42h**: the creation screen's template copies
+6950Bh (template -> sheet [112Eh], an edit), 69560h (template -> new sheet) and 69C67h (sheet, a far
+argument, -> template): the template at 360h:29h is 42h bytes with the creature's at 360h:6Bh right
+after it, so an edit leaves +42h..+47h as they were; a new character's six would be the slot's last
+owner's, so DSCLOG2's `NEW_SHEET` (site 50) replaces the `add sp,0Ah` after 69560h's memcpy (6957Dh),
+clears dst+42h..+47h and does the ADD SP by moving its IRET frame and BP up 10. The other `push 42h`s
+(608A3h, 60FDAh, 7D14Ah, 80D19h...) are effect or text numbers, not sizes. DSCLOG2: `SHEET_SIZE` 48h,
+`CU_SHEET_SIZE` its alias, the one literal 42h stride (STEALTH's, line 472) by name. **Files**: kind-3
+records are always sheets (42h, level 3) in the sequel's OBJEX.GFF (352, RDFF) and CHARSAVE.GFF (19,
+CHAR); no RGN or other file has any. `objects_fixed` widens OBJEX2's (`wide_sheets`), and
+`ravager.widen_files(game_dir)` (launch's `_launch_wotr` after prepare, and `ravstart.sh` with
+RAV_LOADER) widens CHARSAVE.GFF, DARKRUN.GFF, DARKSAVE.GFF and SAVEnn.SAV: CHAR/RDFF sheet records 42h
+-> 48h, SAVE 6 462h -> 4C8h (17 sheets), each by length (idempotent; a roster with the transfer's 48h
+beside CHARTRAN's 42h is made one), the file copied first to NAME.42H. `python -m dsloader.ravager
+narrow FOLDER` does the reverse (NAME.48H backups) for the game started by itself. Not prepare: the
+tests run it on the player's own folder. Tests: `tests/test_ravsheet.py` (each patch shape run, the
+patched program scanned: no `6B /r 42` before a [19C5h]/[19C7h] load, no `push 42h` memcpy but the
+template's three, NEW_SHEET run, widen/narrow round trips on the install's roster and save). **To
+play**: create a character (its +42h..+47h 0), ADD (old and transferred), save and load (an old save
+widened, a new one), level up, a fight, a talk, the dice log reading the transferred party's specs;
+playtest tools that index sheets (ravhold.sh, ravscare.sh, ravknow.py) take 48h with RAV_LOADER.
 
 **Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
 printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case

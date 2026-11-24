@@ -932,10 +932,17 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
   95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
-- **Kits, spells and the starting age** come across with each character (the kits are kept on the
-  sheet, the Elementalist's second sphere and the new spells known with them, though their rules don't
-  work in the sequel yet); weapon specs don't (the sequel's sheet has no room for them yet). Start the
-  sequel from the Loader: started by itself, it can stop in a fight on the turn of a member with a kit.
+- **Kits, weapon specs, spells and the starting age** come across with each character, on its
+  character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
+  with the kits, though the kits' and the specs' rules don't work in the sequel yet). The Loader's
+  copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
+  folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
+  them, nor shows the Loader's items (it shows money bags), and it can stop in a fight on the turn of
+  a member with a kit. To play the sequel by itself again, run `python -m dsloader.ravager narrow
+  FOLDER` (FOLDER: the sequel's) from the Loader's folder: the roster and the saves become the game's
+  again, the weapon specs dropped (each kept first as NAME.48H); the Loader makes them its own again
+  at its next start.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character

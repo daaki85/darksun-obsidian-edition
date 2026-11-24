@@ -7,7 +7,8 @@ sets now and then (its 72nd, set for no spell the member knows). What the mod ad
 the sequel lacks, the months between the games, the starting age's roll) builds on this. Kits, the
 second sphere and the new spells known come across in the sheet's +3Dh and +3Fh as CHARTRAN copies
 them (the Loader's DSUNLOG2 reads the sound words below them as bytes: ravager's sound_3c, sound_3e);
-weapon specs are not kept (the sequel's sheet has no room for them).
+the Loader's way, the weapon specs and the starting age's roll (SL's +14h..+16h) in the three bytes
+its copy of the game adds to the sheet (48h bytes, ravager.SHEET_SIZE: +42h..+44h).
 
 What it reads from the save (SAVEnn.SAV, its SAVE chunks):
 - 5: the creatures (3Ah bytes; the party first), 6: their sheets (47h), 7: the items (15h), 3: the
@@ -18,12 +19,11 @@ What it reads from the save (SAVEnn.SAV, its SAVE chunks):
 What it writes, for party member M, in the sequel's CHARSAVE.GFF under number 35 - M:
 - CHAR: the character, as a list of records each with a 10-byte header (dataitems.HEADER: level,
   of, kind, number, flags, length) and its data, an end record after them: the creature (level 1,
-  kind 2, 31h bytes), its sheet (level 3, kind 3, 42h bytes), then its three item lists in turn (the
-  creature's +8, +0Ah and +0Ch, flags 16, 17 and 4), each a first item (level 2, "of" 0) and the
+  kind 2, 31h bytes), its sheet (level 3, kind 3, 42h bytes; the Loader's way 48h, LOADER_SHEET),
+  then its three item lists in turn (the creature's +8, +0Ah and +0Ch, flags 16, 17 and 4), each a first item (level 2, "of" 0) and the
   next ones (level 4, "of" the record before), each list followed by the contents of its bags,
   the last bag first and a bag in a bag next (its first "of" the bag's record, flags 4). The items keep their numbers, the lists theirs.
-- CACT: the creature's +6 (its word of actions); SPST: the wizard's spells known, a bit each (72;
-  the Loader's way the game's 15 bytes, the starting age's roll in bits 115-119: ravager.known_roll);
+- CACT: the creature's +6 (its word of actions); SPST: the wizard's spells known, a bit each (72);
   PSST: the powers known (their byte >> 2); PSIN: the disciplines with a power known (1, 2, 4).
 - Each item becomes the sequel's object that ITEMS.BIN (in the sequel's folder: an SL object and the
   object to give, a pair of words each) names for it, else 900, a money bag: its record is that
@@ -50,6 +50,10 @@ PARTY = 4
 
 SL_CREATURE, SL_SHEET, SL_ITEM = 0x3A, 0x47, 0x15
 CREATURE, SHEET, ITEM = 0x31, 0x42, 0x17
+# The Loader's way the sheet is its copy's 48h (ravager.SHEET_SIZE; the game started by itself can't
+# read it), SL's packed +14h..+16h at +42h (LOADER_SPECS)
+LOADER_SHEET, LOADER_SPECS = ravager.SHEET_SIZE, 0x42
+SL_SPECS = 0x14  # (game.SPEC_SLOTS in SL's layout: read by its own name, which no layout rebinds)
 CREATURES, SHEETS, ITEMS, LISTS, SPELLS, POWERS = 5, 6, 7, 3, 19, 20
 SL_SPELLS, SL_POWERS = 138, 34
 SL_NAME, SL_SHEET_INDEX, SL_ACTIONS, SL_LISTS = 0x28, 0x04, 0x06, ((0x08, 16), (0x0A, 17), (0x0C, 4))
@@ -240,10 +244,17 @@ def creature(rec: bytes, sh: bytes) -> bytes:
     return bytes(out)
 
 
-def sheet(rec: bytes) -> bytes:
-    out = bytearray(SHEET)
+def sheet(rec: bytes, loader: bool = False) -> bytes:
+    """The sequel's sheet for the save's sheet REC: CHARTRAN's 42h bytes, or (LOADER) the Loader's 48h
+    with the weapon specs and the starting age's roll packed at LOADER_SPECS (game.packed_specs' first
+    three; 0 for a sheet with neither)."""
+    out = bytearray(LOADER_SHEET if loader else SHEET)
     for w, s, n in SHEET_RUNS:
         out[w:w + n] = rec[s:s + n]
+    if loader:
+        kinds, roll = game.specs_of(rec[SL_SPECS:SL_SPECS + game.SPEC_COUNT])
+        if any(kinds) or roll is not None:
+            out[LOADER_SPECS:LOADER_SPECS + 3] = game.packed_specs(kinds, 0, roll)[:3]
     return bytes(out)
 
 
@@ -444,10 +455,10 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         sh = sheets[index * SL_SHEET:(index + 1) * SL_SHEET]
         if len(sh) < SL_SHEET:
             raise GffError("a party member's sheet is missing")
-        cre, wsh, age = creature(rec, sh), sheet(sh), ""
+        cre, wsh, age = creature(rec, sh), sheet(sh, sequel.loader), ""
         if sequel.loader:
             wsh = bytearray(wsh)
-            wsh[WOTR_SHEET_AGE] = sh[SL_SHEET_AGE] if game.spec_packed(sh) else 0
+            wsh[WOTR_SHEET_AGE] = sh[SL_SHEET_AGE] if sh[SL_SPECS + 2] & game.SPEC_PACKED else 0
             name = rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1")
             cre, wsh, age = aged(cre, bytes(wsh), name, (years or {}).get(m, 0))
         records = [[1, 0, CREATURE_KIND, m, m, cre], [3, 0, SHEET_KIND, m, SHEET_FLAGS, wsh]]
@@ -499,10 +510,7 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         cid = place_of[m] if place_of is not None else FIRST_CHAR + PARTY - 1 - m
         out[("CHAR", cid)] = dataitems.chunk(recs, end)
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
-        known = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
-        if sequel.loader:  # (the game's own 15 bytes, the starting age's roll in the spare bits)
-            known = ravager.with_known_roll(known, game.packed_roll(sh))
-        out[("SPST", cid)] = known
+        out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
         moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age, named))
     return out, moved
@@ -687,8 +695,10 @@ def player_report(moved: List[Moved], months: Optional[int], failed: List[Tuple[
     from .ravitems import OWN_HIGH
     lines = [f"{months} months have passed since Shattered Lands." if months else "",
              "Start Wake of the Ravager from the Loader: the items made for it are in the Loader's copy of "
-             "its files, and the sequel started by itself shows them as money bags (and can stop in a fight "
-             "over a member with a kit).", ""]
+             "its files, and the Loader's character sheets are bigger than the game's (they keep the weapon "
+             "specs): the sequel started by itself shows the items as money bags and can't read the roster "
+             "or the saves once the Loader has started it (python -m dsloader.ravager narrow FOLDER makes "
+             "them the game's again, the specs dropped).", ""]
     why = dict(failed)
     for m in moved:
         lines.append(f"{m.name}: place {m.place - ROSTER_PLACES[0] + 1} of the roster (CREATE CHARACTERS, ADD)"
