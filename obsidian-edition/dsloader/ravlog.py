@@ -119,6 +119,9 @@ ADDRESSES: Dict[str, object] = {
     # the Cloak and Boots of Elvenkind: the party transfer's (the mod's types in the sequel, ravager.mod_type)
     "ELVEN_CLOAK_TYPE": ravager.mod_type(game.ELVEN_CLOAK_TYPE),
     "ELVEN_BOOTS_TYPE": ravager.mod_type(game.ELVEN_BOOTS_TYPE),
+    "BACK_GIRDLE_TYPE": ravager.mod_type(game.BACK_GIRDLE_TYPE),  # (the dice log's magic resistance
+    "URNST_GIRDLE_TYPE": ravager.mod_type(game.URNST_GIRDLE_TYPE),  # line and its girdles: SL's numbers
+    "MR_AMULET_TYPE": ravager.mod_type(game.MR_AMULET_TYPE),  # read 0% on a sequel wearer)
     "CAHULAKS_TYPE": 24, "CAHULAKS_TYPES": frozenset((24,)),  # (the sequel's Cahulaks, OBJEX.GFF; no metal or obsidian ones)
     # the stinkpots (DSCLOG2's STINKPOTS): the Staff Sling's type, its Nauseated (ravager.NAUSEATED), the
     # save against Stinking Cloud (the sequel has no monster poison power as SL's 176)

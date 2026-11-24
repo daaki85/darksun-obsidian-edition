@@ -600,6 +600,7 @@ class StealthPortTests(unittest.TestCase):
         self.assertEqual(stealth.SHEET_FOOTPRINT, ravager.sheet_field(0x3D))
         self.assertEqual((game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE),
                          (ravager.mod_type(134), ravager.mod_type(135)))
+        self.assertEqual((game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE), (129, 130, 131))
         ravlog.restore_layout()
         self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE,
                           game.ELVEN_CLOAK_TYPE), sl)
