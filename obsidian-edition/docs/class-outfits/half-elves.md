@@ -8,6 +8,21 @@ Both half-elves now have art proposals for all eight single classes in all 29 ma
 
 The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit reed edge and its brown shadow mark the overlapping pleat as he steps toward the viewer. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. A plum highlight follows the trailing fold of each Preserver’s mantle through the profile walk. The Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
 
+## Two-class outfits
+
+All 18 legal pairs are shown on the arena floor with empty equipment slots. Each loop shows the woman above the man at 2× and game size. The still sheets identify each of the 29 poses. Select a group to watch it in motion.
+
+| Outfit family | Pairs in the loop | Front idle | All frames |
+|---|---|---|---|
+| [Cleric robes](half-elf-pairs-robes.gif) | Cleric with Fighter, Preserver, Psionicist or Ranger | [Both figures](half-elf-pairs-robes.png) | [Woman](half-elf-pairs-robes-female-poses.png) · [Man](half-elf-pairs-robes-male-poses.png) |
+| [Druid capes](half-elf-pairs-leaf.gif) | Druid with Fighter, Preserver or Psionicist | [Both figures](half-elf-pairs-leaf.png) | [Woman](half-elf-pairs-leaf-female-poses.png) · [Man](half-elf-pairs-leaf-male-poses.png) |
+| [Mantles, cloaks and jerkins](half-elf-pairs-mantles.gif) | Fighter/Preserver, Fighter/Psionicist, Preserver/Psionicist, Preserver/Ranger and Psionicist/Ranger | [Both figures](half-elf-pairs-mantles.png) | [Woman](half-elf-pairs-mantles-female-poses.png) · [Man](half-elf-pairs-mantles-male-poses.png) |
+| [Thief hoods](half-elf-pairs-hoods.gif) | Thief with Cleric, Fighter, Preserver, Psionicist, Ranger or Druid | [Both figures](half-elf-pairs-hoods.png) | [Woman](half-elf-pairs-hoods-female-poses.png) · [Man](half-elf-pairs-hoods-male-poses.png) |
+
+In the male Druid/Fighter’s second profile step, the leather belt follows the ochre kilt while the cape swings clear behind it. In the male Fighter/Psionicist’s third profile step, the wrist obscures the sash and its teal end shows below the arm. The male Cleric’s front bow leaves the smallest opening for the belt or sash. Among the hooded figures, the Ranger has a long green panel and the Druid has an ochre lower panel. Compare their rear walks to see the difference.
+
+All 1,044 pair poses were checked against their single-class silhouette for transparency, detached pixels and native bow coverage. These are art-study renders. The three-class outfits and equipped gameplay checks are pending.
+
 ## Body and first three silhouettes
 
 The initial review puts the original figure and cleaned body beside the Gladiator, Fighter and Cleric. [Watch the body comparison](half-elf-study.gif) · [Female comparison sheet](half-elf-female-poses.png) · [Male comparison sheet](half-elf-male-poses.png)
@@ -39,4 +54,4 @@ The artist’s reference is the figure produced by the Loader. The retail party 
 | Two classes | 18 | The elf’s 14 pairs, plus Druid with Fighter, Preserver, Psionicist or Thief |
 | Three classes | 22 | The elf’s 16 triples, plus Druid with any two of Fighter, Preserver, Psionicist and Thief |
 
-The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The next art stage is the 18 two-class outfits, followed by the 22 triples. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)
+The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The next art stage is the 22 three-class outfits. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)

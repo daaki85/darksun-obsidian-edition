@@ -10,6 +10,7 @@ from zipfile import ZipFile
 from PIL import Image
 
 import elfoutfits as elf
+import halfelfpairs as pairs
 import outfits
 from outfitdetail import RAMPS
 from thiefhood import FRONT, OLD_SLATE, SLATE
@@ -82,6 +83,8 @@ class Study:
 
     @lru_cache(None)
     def rows(self, key, pose, role):
+        if role in pairs.ROSTER:
+            return pairs.draw_pair(self, key, pose, role)
         cb, f = divmod(pose, 15)
         fig = self.game.fig(key)
         stock = fig.rows(cb, f)
@@ -391,6 +394,10 @@ class Study:
         self.pose_gallery(out, ROLES, "study", "Half-elf outfit study")
         self.pose_gallery(out, ROLES[2:] + NEW_SINGLES, "singles", "Half-elf single classes")
 
+        for group, bases in pairs.GROUPS:
+            roles = [role for role in pairs.ROSTER if pairs.base_class(role) in bases]
+            self.pose_gallery(out, roles, "pairs-" + group, "Half-elf two-class outfits")
+
     def pose_gallery(self, out, roles, stem, title):
         frames = []
         width = 684 + (len(roles) - 5) * 124
@@ -398,7 +405,7 @@ class Study:
         for sheet, key in zip(sheets, FIGURES):
             label(sheet, (8, 5), key.capitalize() + " · all poses", 15)
             for j, role in enumerate(roles):
-                label(sheet, (157 + j * 120, 26), role, 12, "ma")
+                label(sheet, (157 + j * 120, 26), role, 10 if "/" in role else 12, "ma")
         for pose, name in enumerate(dwarf.NAMES):
             page = Image.new("RGB", (width, 339), dwarf.PAPER)
             label(page, (12, 8), title, 20)
@@ -410,7 +417,7 @@ class Study:
                 for j, role in enumerate(roles):
                     x = 66 + j * 124
                     if i == 0:
-                        label(page, (x + 57, 39), role, 14, "ma")
+                        label(page, (x + 57, 39), role, 11 if "/" in role else 14, "ma")
                     tile = self.tile(key, pose, role, 1)
                     page.paste(tile.resize((104, 88), Image.Resampling.NEAREST), (x+5, y))
                     page.paste(tile, (x+31, y+89))
