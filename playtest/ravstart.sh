@@ -5,7 +5,7 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (`RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits (an error's message stays on screen). `RAV_MENU=1` stops at the
+# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
@@ -41,6 +41,10 @@ if skip:
         skip.remove('mod_types')
     if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
     open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])
+for poke in [p for p in os.environ.get('RAV_POKE', '').split(',') if p]:   # (FILEOFFSET=HEX: bytes put in the copy, a test's probe)
+    exe = os.path.join(sys.argv[2], ravager.PATCHED_EXE); data = bytearray(open(exe, 'rb').read())
+    at, new = poke.split('='); at = int(at, 16); new = bytes.fromhex(new)
+    data[at:at + len(new)] = new; open(exe, 'wb').write(data); print('# poked %X: %s' % (at, new.hex()))
 print('\n'.join(ravager.conf_lines(sys.argv[1], sys.argv[2], cd=os.path.join(sys.argv[1], 'data.cue'))))
 PY
 else
@@ -50,6 +54,9 @@ else
 fi
 [ -n "$RAV_CORE" ] && sed -i "s/^core=.*/core=$RAV_CORE/" "$C"   # (DOSBox's CPU core: normal for a control of the dynamic one)
 [ -n "$RAV_NOEXIT" ] && sed -i '/^exit$/d' "$C"   # (the game's own exit leaves DOSBox up: its last words on screen)
+[ -n "$RAV_PAUSE" ] && sed -i 's/^exit$/echo The game has ended.\npause\nexit/' "$C"   # (the game's exit then a key: its last words on screen, the autoexec unchanged before it)
+[ -n "$RAV_MARK" ] && sed -i 's/^exit$/echo ended > c:\\ENDED.TXT\nexit/' "$C"   # (a file when the autoexec goes on past the game: when it ended)
+[ -n "$RAV_STDOUT" ] && sed -i 's/^\(.*dsun[a-z0-9]*\.exe -W0 -L\)$/\1 > c:\\STDOUT.TXT/I' "$C"   # (the game's own printing, a fatal error's message among it, to a file)
 pgrep -x Xvfb >/dev/null || { setsid nohup Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 & sleep 2; }
 setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
 echo $! > "$WORK/rav.pid"; sleep 6
