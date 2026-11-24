@@ -101,6 +101,9 @@ ADDRESSES: Dict[str, object] = {
     "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
     # the AC function keeps the AC after armour in [BP-4] (its adjustments in [BP-6]: SL's SI)
     "AC_ARMOUR_LOCAL": -4,
+    # the attack's count of the attacker's attacks made this round: [BP-16h] (5D04Ch, SL's [BP-14h]), its
+    # [BP-14h] what the damage roll adds to the dice (DSCLOG2's STAB_TIMES)
+    "ATTACKS_MADE_LOCAL": -0x16,
     # spell slots left: a member's 22h bytes from DS:446Ah, a wizard level L at +L-1, a priest's from
     # +0Bh (each level's byte at SLOTS_LEFT + level, as SL's); the slot rules each SL's + 0Ch (ravds)
     "SLOTS_LEFT": {"Wizard": 0x4469, "Priest": 0x4474}, "SLOTS_STRIDE": 0x22,

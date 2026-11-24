@@ -932,6 +932,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
   95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
+- **[Thieves as in AD&D](#thief-skills-from-adds-table)** hold in the sequel too: a thief's skills are
+  the Player's Handbook's average for the thief level plus the race's and Dark Sun's DEX adjustment
+  (no more than 95 after armour), the inventory shows those numbers, and a backstab multiplies the
+  weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
+  round's first attack. (An Assassin's one more multiplier isn't ported: the kits' rules aren't.)
 - **Kits, weapon specs and spells** come across with each character.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.

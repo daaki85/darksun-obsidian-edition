@@ -521,14 +521,37 @@ class BackstabTests(unittest.TestCase):
                          ["  Dag hits Mountain Stalker for 33: 1d8 = [5] +12 STR 24 +2 Enlarge (the dice 5 x140% = 7, "
                           "level 4) +14 backstab (the dice 7 x3 = 21)"])
 
-    def backstab(self, level, made=0):
+    def backstab(self, level, made=0, rules=None, local="m14"):
         log = make_game()
+        if rules is not None:
+            log.game.rules = rules
         sheet = SHEETS + 0 * game.SHEET_SIZE
         log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=made))
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, **{local: made}))
         return log.describe(e)
+
+    def test_rule_off(self):
+        """Without RULE_BACKSTAB (the sequel's helper with the rule off: DSCLOG2's STAB_TIMES) the game's:
+        all of the damage multiplied, on the round's first two attacks."""
+        off = game.RULES_ALWAYS & ~game.RULE_BACKSTAB
+        self.assertEqual(self.backstab(6, rules=off), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, made=1, rules=off),
+                         ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, made=2, rules=off), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+
+    def test_attacks_made_local(self):
+        """The count of the round's attacks is game.ATTACKS_MADE_LOCAL (the sequel's [BP-16h], its [BP-14h]
+        the roll's bonus: ravlog's layout)."""
+        old = game.ATTACKS_MADE_LOCAL
+        try:
+            game.ATTACKS_MADE_LOCAL = -0x16
+            self.assertEqual(self.backstab(6, made=1, local="m16"), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+            self.assertEqual(self.backstab(6, made=0, local="m16"),
+                             ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)"])
+        finally:
+            game.ATTACKS_MADE_LOCAL = old
 
     def test_the_rounds_second_attack(self):
         """Only the round's first attack ([BP-14h] 0) is multiplied, as in AD&D (RULE_BACKSTAB,

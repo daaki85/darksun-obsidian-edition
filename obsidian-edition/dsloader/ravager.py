@@ -96,7 +96,8 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
-                | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH)
+                | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
+                | game.RULE_THIEF_TABLE)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -513,6 +514,15 @@ PATCHES: Tuple[Patch, ...] = (
     # WOTR_TOME_SPELL): DSCLOG2's TOME at "dec word [bp-4]" (999CDh) where a scroll's clicked icon reads
     # the item's power, a point of WIS for the reader and the tome used up
     Patch("tome", 0x999CD, bytes.fromhex("ff4efc"), _site(48, 3)),
+    # Thieves as in AD&D (SL's RULE_THIEF_TABLE, always on): a thief skill from AD&D's table and Dark Sun's
+    # DEX adjustment, "mov ax,si / shl ax,2 / add dx,ax / mov si,dx" (8C716h, SL's thief_skill at 80307h,
+    # the same bytes) made DSCLOG2's site 50 (THIEF_SKILL) and "jc" past the game's DEX formula to its
+    # armour and effects (8C795h); and a backstab multiplying the weapon's dice only (SL's stab_times):
+    # "push ax / mov ax,[bp-4] / pop dx / imul dx / mov [bp-4],ax" (5D11Bh, SL's 58A80h, the same bytes),
+    # DSCLOG2's STAB_TIMES, the dice from ENL_ROLL (the enlarge_roll patch, SL's stab_roll's site)
+    Patch("thief_table", 0x8C716, _SL["thief_skill"].original,
+          bytes((0xCD, VEC_SITE, 50, 0x72, 0x8C795 - 0x8C71B)) + b"\x90" * 4),
+    Patch("backstab_dice", 0x5D11B, _SL["stab_times"].original, _site(51, 10)),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
