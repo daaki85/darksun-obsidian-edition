@@ -21,13 +21,11 @@ GROUPS = (
 )
 DYES = {
     "Cleric": (205, 206, 121, 123, 199, 125, 62),
-    "Druid": (69, 188, 53, 54, 55, 56, 57),
     "Fighter": (88, 89, 91, 93, 95, 97, 98),
     "Preserver": (174, 175, 58, 74, 59, 239, 232),
     "Psionicist": (69, 70, 211, 71, 72, 73, 215),
     "Ranger": (69, 53, 189, 54, 226, 55, 56),
 }
-REEDS = (205, 94, 95, 97, 168, 169, 170)
 
 # The colored lining turns with the mantle. Leather shorts and straps below
 # the moving hem must keep their own shade, particularly in front views.
@@ -42,7 +40,52 @@ def base_class(role):
     return next(name for name in BASE_ORDER if name in members)
 
 
+def short_hooded_cape(study, key, pose):
+    hood, pad = study.rows(key, pose, "Thief")
+    druid, _ = study.rows(key, pose, "Druid")
+    out = [row[:] for row in druid]
+    cb, frame = divmod(pose, 15)
+    fig = study.game.fig(key)
+    if pose == 28:
+        shoulder, neck = 7, (7 if key == outfits.HALF_ELF_WOMAN else 9)
+    else:
+        parts = fig.parts(cb, frame)
+        shoulder = parts.shoulders[0]
+        neck = (parts.head.left + parts.head.right) // 2
+
+    # Lay the shaped tail of the hood over the Druid's registered leaf cape.
+    # Using the whole kilt below it keeps the hip wrap attached during recoil.
+    height = len(out) - pad
+    for y, row in enumerate(out):
+        level = height - 1 - (y - pad) if pose == 28 else y - pad
+        for x in range(len(row)):
+            collar = shoulder + 2 - min(4, abs(x - pad - neck) // 2)
+            if level <= collar:
+                row[x] = hood[y][x]
+
+    if key == outfits.HALF_ELF_MAN and pose in (1, 7, 8, 9, 10):
+        # With his hood up the two leaf panels meet across his back. Continue
+        # the Thief's own folds through the join, above the lifted corner.
+        fields = co.frames("Thief", cb, fig.model)[frame]
+        arm = set(fields.regions[co.FOREARM])
+        back = figures.mover_back(fig.maker.cuts[bool(cb), frame])
+        slate = RAMPS["slate"]
+        leaf = (69, 69, 188, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57)
+        for y in range(shoulder + 1, parts.waist + 1):
+            row = out[y + pad]
+            edges = [x for x, c in enumerate(row) if c in (53, 54, 55, 56, 57, 188)]
+            if not edges:
+                continue
+            for x in range(edges[0] + 1, edges[-1]):
+                fold = hood[y + pad][x]
+                if row[x] in outfits.SKINC and fold in slate and (back(x-pad, y), y) not in arm:
+                    row[x] = leaf[slate.index(fold)]
+    return out, pad
+
+
 def draw_pair(study, key, pose, role):
+    if role == "Druid/Thief":
+        return short_hooded_cape(study, key, pose)
     base = base_class(role)
     accent, = (name for name in role.split("/") if name != base)
     single, pad = study.rows(key, pose, base)
@@ -115,7 +158,6 @@ def draw_pair(study, key, pose, role):
                     for level, panel in panels.items() for x in panel)
     for level, panel in panels.items():
         y = pad + (height - 1 - level if pose == 28 else level)
-        depth = level - waist
         for x in panel:
             belt_depth = level - belt
             if waist_detail:
@@ -145,8 +187,6 @@ def draw_pair(study, key, pose, role):
                 if base == "Thief":
                     if level < shoulder + 1 or inset > max(2, width * .66):
                         continue
-                    if accent == "Druid" and depth >= 0:
-                        dye = REEDS
                 elif inset > max(2, width * .39) or (inset == 0 and width > 4):
                     continue
             color = single[y][x]

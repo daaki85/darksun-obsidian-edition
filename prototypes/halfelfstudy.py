@@ -404,10 +404,38 @@ class Study:
                 page.paste(tile, (x + 26, y + 88))
         page.save(out / "half-elf-cloak-references.png")
 
+    def hooded_cape_walk(self, out):
+        cycle = (1, 7, 8, 9, 10, 1, 2, 11, 12, 13, 14, 2, 0, 3, 4, 5, 6, 0)
+        frames = []
+        for pose in cycle:
+            page = Image.new("RGB", (684, 213), dwarf.PAPER)
+            label(page, (10, 7), "Half-elf capes in motion", 19)
+            label(page, (page.width - 10, 9), dwarf.NAMES[pose], 14, "ra")
+            for col, (caption, role) in enumerate((
+                    ("Half-elf woman", "Druid/Thief"), ("Half-elf woman", "Ranger/Thief"),
+                    ("Half-elf man", "Druid/Thief"), ("Half-elf man", "Ranger/Thief"),
+                    ("Shattered Lands", 630), ("Shattered Lands", 724))):
+                x = 5 + col * 113
+                if isinstance(role, str):
+                    tile = self.tile(FIGURES[col // 2], pose, role, 1)
+                    name = role
+                else:
+                    tile = elf.placed_tile(self.game, self.game.fr(role, pose), self.floor, 1, 0, 0, 0)
+                    name = "Thief" if role == 630 else "Mage"
+                label(page, (x + 54, 40), caption, 11, "ma")
+                label(page, (x + 54, 57), name, 14, "ma")
+                page.paste(tile.resize((104, 88), Image.Resampling.NEAREST), (x, 77))
+                page.paste(tile, (x + 26, 167))
+            frames.append(page.quantize(256, dither=Image.Dither.NONE))
+        frames[0].save(out / "half-elf-hooded-cape-walk.gif", save_all=True,
+                       append_images=frames[1:], loop=0, disposal=1,
+                       duration=[780 if pose < 3 else 230 for pose in cycle])
+
     def gallery(self, out):
         out.mkdir(parents=True, exist_ok=True)
         self.references(out)
         self.cloak_reference(out)
+        self.hooded_cape_walk(out)
         self.pose_gallery(out, ROLES, "study", "Half-elf outfit study")
         self.pose_gallery(out, ROLES[2:] + NEW_SINGLES, "singles", "Half-elf single classes")
 
