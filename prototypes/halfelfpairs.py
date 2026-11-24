@@ -1,6 +1,7 @@
 """Borrow a garment detail on the visible cloth of each half-elf single."""
 
 from bisect import bisect_left
+from itertools import combinations
 from statistics import median
 
 import outfits
@@ -12,6 +13,9 @@ from thiefhood import OLD_SLATE
 BASE_ORDER = ("Thief", "Cleric", "Druid", "Preserver", "Ranger", "Fighter")
 ROSTER = tuple(role for combo, role in co.ELF_ROLES.items() if len(combo) == 2) + (
     "Druid/Fighter", "Druid/Preserver", "Druid/Psionicist", "Druid/Thief",
+)
+TRIPLES = tuple(role for combo, role in co.ELF_ROLES.items() if len(combo) == 3) + tuple(
+    "Druid/" + "/".join(pair) for pair in combinations(("Fighter", "Preserver", "Psionicist", "Thief"), 2)
 )
 GROUPS = (
     ("robes", ("Cleric",)),
@@ -40,10 +44,10 @@ def base_class(role):
     return next(name for name in BASE_ORDER if name in members)
 
 
-def short_hooded_cape(study, key, pose):
+def hooded_outfit(study, key, pose, garment):
     hood, pad = study.rows(key, pose, "Thief")
-    druid, _ = study.rows(key, pose, "Druid")
-    out = [row[:] for row in druid]
+    fitted, _ = study.rows(key, pose, garment)
+    out = [row[:] for row in fitted]
     cb, frame = divmod(pose, 15)
     fig = study.game.fig(key)
     if pose == 28:
@@ -53,8 +57,7 @@ def short_hooded_cape(study, key, pose):
         shoulder = parts.shoulders[0]
         neck = (parts.head.left + parts.head.right) // 2
 
-    # Lay the shaped tail of the hood over the Druid's registered leaf cape.
-    # Using the whole kilt below it keeps the hip wrap attached during recoil.
+    # Fit the tip of the hood over the registered garment at the nape.
     height = len(out) - pad
     for y, row in enumerate(out):
         level = height - 1 - (y - pad) if pose == 28 else y - pad
@@ -63,7 +66,7 @@ def short_hooded_cape(study, key, pose):
             if level <= collar:
                 row[x] = hood[y][x]
 
-    if key == outfits.HALF_ELF_MAN and pose in (1, 7, 8, 9, 10):
+    if "Druid" in garment and key == outfits.HALF_ELF_MAN and pose in (1, 7, 8, 9, 10):
         # With his hood up the two leaf panels meet across his back. Continue
         # the Thief's own folds through the join, above the lifted corner.
         fields = co.frames("Thief", cb, fig.model)[frame]
@@ -80,12 +83,15 @@ def short_hooded_cape(study, key, pose):
                 fold = hood[y + pad][x]
                 if row[x] in outfits.SKINC and fold in slate and (back(x-pad, y), y) not in arm:
                     row[x] = leaf[slate.index(fold)]
+    if key == outfits.HALF_ELF_WOMAN and pose == 28 and garment == "Fighter/Psionicist":
+        # The turned lip lies between the fallen shoulder guard and hood.
+        out[9 + pad][4 + pad] = hood[9 + pad][4 + pad]
     return out, pad
 
 
-def draw_pair(study, key, pose, role):
+def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
     if role == "Druid/Thief":
-        return short_hooded_cape(study, key, pose)
+        return hooded_outfit(study, key, pose, "Druid")
     base = base_class(role)
     accent, = (name for name in role.split("/") if name != base)
     single, pad = study.rows(key, pose, base)
@@ -109,6 +115,10 @@ def draw_pair(study, key, pose, role):
 
     # Read the fallen figure feet-down. Visible fabric can extend behind the
     # body in profile. Only its painted pixels may take a lining or a belt.
+    chest = set()
+    if baldric:
+        jerkin = co.frames("Warrior" if female else "Fighter", cb, fig.model)[frame]
+        chest = set(jerkin.regions[co.CHEST]) - set(jerkin.head) - set(jerkin.regions[co.FOREARM])
     panels = {}
     for y, row in enumerate(single):
         native_y = y - pad
@@ -117,8 +127,11 @@ def draw_pair(study, key, pose, role):
             continue
         panel = []
         for x, c in enumerate(row):
-            if (c is None or c == body[y][x] or c in outfits.SKINC
-                    or (back(x - pad, native_y), native_y) in blocked):
+            point = back(x - pad, native_y), native_y
+            # The leather crosses the exposed torso where the Druid cape
+            # opens. Follow the Fighter's chest mask under the crossing arm.
+            exposed_chest = point in chest and level > shoulder and c in outfits.SKINC
+            if c is None or point in blocked or ((c == body[y][x] or c in outfits.SKINC) and not exposed_chest):
                 continue
             panel.append(x)
         if panel:
@@ -133,7 +146,7 @@ def draw_pair(study, key, pose, role):
         # clean body's legs part or the outer cloak swings past the calf.
         fitted, _ = study.rows(key, pose, "Gladiator")
         footprint = {}
-        for level in range(belt - 6, belt + 6):
+        for level in range(min(shoulder, belt - 6), belt + 6):
             y = pad + (height - 1 - level if pose == 28 else level)
             if not 0 <= y < len(fitted):
                 continue
@@ -167,7 +180,18 @@ def draw_pair(study, key, pose, role):
                     continue
                 dx = x - hip
             dye = DYES[accent]
-            if accent == "Fighter":
+            if baldric:
+                # Run the sword strap from the near shoulder to the other hip.
+                # The separate teal waist wrap crosses it in front.
+                drop = (level - shoulder) / max(1, belt - shoulder)
+                edge = -2.5 + 4 * drop
+                if not female and pose == 24 and base == "Druid":
+                    # He turns under the bow. The visible strap crosses the
+                    # narrow shoulder at x=5 before disappearing at the wrist.
+                    edge = pad + 5 + drop - hip
+                if level > belt + 2 or not edge - 1.3 <= dx <= edge + 1.4:
+                    continue
+            elif accent == "Fighter":
                 # A dark sword belt crosses the waist and turns down at the hip.
                 seam = belt_depth + max(-1, min(1, round(dx / 4)))
                 if seam not in (-1, 0, 1) and not (1 <= belt_depth <= 3 and -3 <= dx <= -1):
@@ -183,11 +207,11 @@ def draw_pair(study, key, pose, role):
                 if base in LINING and single[y][x] not in LINING[base]:
                     continue
                 width = panel[-1] - panel[0] + 1
-                inset = x - panel[0]
+                inset = panel[-1] - x if far_lining else x - panel[0]
                 if base == "Thief":
                     if level < shoulder + 1 or inset > max(2, width * .66):
                         continue
-                elif inset > max(2, width * .39) or (inset == 0 and width > 4):
+                elif inset > max(2, width * (.25 if far_lining else .39)) or (inset == 0 and width > 4):
                     continue
             color = single[y][x]
             rank = min(6, bisect_left(values, light(color)) * 7 // len(values))
@@ -195,4 +219,32 @@ def draw_pair(study, key, pose, role):
                 out[y][x] = 168  # Worn bone toggle at the top of the leather tab.
             else:
                 out[y][x] = dye[rank]
+    return out, pad
+
+
+def draw_triple(study, key, pose, role):
+    members = role.split("/")
+    if "Thief" in members:
+        return hooded_outfit(study, key, pose, "/".join(name for name in members if name != "Thief"))
+
+    base = base_class(role)
+    # Carry the lining first so the waist detail passes in front. Where two
+    # linings meet, put the Ranger green along the opposite turned edge.
+    accents = [name for name in ("Preserver", "Ranger", "Fighter", "Psionicist")
+               if name in members and name != base]
+    first, second = ("/".join(name for name in members if name in (base, accent)) for accent in accents)
+    if accents == ["Fighter", "Psionicist"]:
+        under, pad = draw_pair(study, key, pose, first, baldric=True)
+    else:
+        under, pad = study.rows(key, pose, first)
+    if accents == ["Preserver", "Ranger"]:
+        over, _ = draw_pair(study, key, pose, second, far_lining=True)
+    else:
+        over, _ = study.rows(key, pose, second)
+    plain, _ = study.rows(key, pose, base)
+    out = [row[:] for row in under]
+    for row, accent_row, base_row in zip(out, over, plain):
+        for x, (accent_pixel, base_pixel) in enumerate(zip(accent_row, base_row)):
+            if accent_pixel != base_pixel:
+                row[x] = accent_pixel
     return out, pad

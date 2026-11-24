@@ -23,7 +23,24 @@ In the male Druid/Fighter’s second profile step, the leather belt follows the 
 
 A second frame review caught the belt and sash taking the color all the way to the free corner of a swinging cloak. In profile step 3 (13), compare the male Preserver/Psionicist and female Fighter/Preserver with their earlier versions. The corner now carries the mantle’s folds as it moves away from the waist. The male Cleric/Thief’s front walk 2 (04) shows the cream lining above his leather shorts. On the woman, side strike 1 (21) and side bow (26) show the repaired inner rim of the hood. On the male Druid, the tied edge of the kilt closes gaps in strikes 16, 21 and 22, and the leaf panel joins behind the bent arm in side bow (26). [Compare nine individual frames at 3× and game size](half-elf-pair-details.png)
 
-All 1,044 pair poses were checked against their parent garments. The Druid/Thief uses the Thief’s hood above the Druid’s lower silhouette. All 58 frames of this combination were rechecked for detached pixels, new enclosed gaps and bow coverage after the hem revision. These are art-study renders. The three-class outfits and equipped gameplay checks are pending.
+All 1,044 pair poses were checked against their parent garments. The Druid/Thief uses the Thief’s hood above the Druid’s lower silhouette. All 58 frames of this combination were rechecked for detached pixels, new enclosed gaps and bow coverage after the hem revision. These are art-study renders. Equipped gameplay checks are pending.
+
+## Three-class outfits
+
+All 22 combinations are art proposals from the study renderer with empty equipment slots. The woman is on the top row of each animation and the man is below. Each loop shows all 29 poses, including the bow, recoil and fall. The smaller copy is game size.
+
+| Outfits | Animation | Front idle | Frame sheets |
+|---|---|---|---|
+| Five Cleric combinations with an open collar | [Watch the robes](half-elf-triples-robes.gif) | [Both figures](half-elf-triples-robes.png) | [Woman](half-elf-triples-robes-female-poses.png) · [Man](half-elf-triples-robes-male-poses.png) |
+| Four Cleric/Thief combinations | [Watch the hooded robes](half-elf-triples-hooded-robes.gif) | [Both figures](half-elf-triples-hooded-robes.png) | [Woman](half-elf-triples-hooded-robes-female-poses.png) · [Man](half-elf-triples-hooded-robes-male-poses.png) |
+| Six Druid combinations | [Watch the leaf capes](half-elf-triples-druids.gif) | [Both figures](half-elf-triples-druids.png) | [Woman](half-elf-triples-druids-female-poses.png) · [Man](half-elf-triples-druids-male-poses.png) |
+| Seven remaining Fighter, Preserver, Psionicist, Ranger and Thief combinations | [Watch the mantles and jerkins](half-elf-triples-mantles.gif) | [Both figures](half-elf-triples-mantles.png) | [Woman](half-elf-triples-mantles-female-poses.png) · [Man](half-elf-triples-mantles-male-poses.png) |
+
+**What to follow in motion.** On Cleric/Preserver/Ranger, plum and green turn along opposite edges of the cream robe. On Druid/Preserver/Thief, the slate hood overlaps the short leaf cape and the plum lining lifts above the ochre kilt. On Fighter/Preserver/Psionicist, the teal sash crosses the leather sword strap on the torso. During the woman’s front strike 3 (17) the bent arm hides most of the strap. On the male Druid/Fighter/Psionicist’s front bow (24), the upper part of the strap remains visible at the shoulder while the arm crosses the waist.
+
+The four rows below show all three two-class parents followed by the triple and an original Shattered Lands figure in the same pose. The review checked all 1,276 triple frames against their immediate parents for a visible costume change, detached pixels, new enclosed terrain gaps and bow coverage.
+
+![Four triples at game size and 2× beside their two-class parents and the original priest, mage, thief and warrior](half-elf-triple-references.png)
 
 ## Body and first three silhouettes
 
@@ -56,4 +73,4 @@ The artist’s reference is the figure produced by the Loader. The retail party 
 | Two classes | 18 | The elf’s 14 pairs, plus Druid with Fighter, Preserver, Psionicist or Thief |
 | Three classes | 22 | The elf’s 16 triples, plus Druid with any two of Fighter, Preserver, Psionicist and Thief |
 
-The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The next art stage is the 22 three-class outfits. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)
+The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The study covers all 48 builds. Loader outfit selection and equipped gameplay verification are next. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)

@@ -4,6 +4,7 @@ python prototypes/halfelfstudy.py GAME_DIR OUTPUT_DIR
 """
 import argparse
 from functools import lru_cache
+from itertools import combinations
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -73,6 +74,17 @@ MANTLE_CREST = {
 REED_PLEAT = {0: 7, 3: 6, 4: 8, 5: 8, 6: 5, 15: 6, 16: 10, 17: 13, 24: 9}
 
 
+def triple_groups():
+    groups = {"robes": [], "hooded-robes": [], "druids": [], "mantles": []}
+    for role in pairs.TRIPLES:
+        if "Cleric" in role:
+            group = "hooded-robes" if "Thief" in role else "robes"
+        else:
+            group = "druids" if "Druid" in role else "mantles"
+        groups[group].append(role)
+    return groups
+
+
 class Study:
     def __init__(self, game_dir):
         self.game = outfits.Game(game_dir)
@@ -83,6 +95,8 @@ class Study:
 
     @lru_cache(None)
     def rows(self, key, pose, role):
+        if role in pairs.TRIPLES:
+            return pairs.draw_triple(self, key, pose, role)
         if role in pairs.ROSTER:
             return pairs.draw_pair(self, key, pose, role)
         cb, f = divmod(pose, 15)
@@ -431,17 +445,47 @@ class Study:
                        append_images=frames[1:], loop=0, disposal=1,
                        duration=[780 if pose < 3 else 230 for pose in cycle])
 
+    def triple_references(self, out):
+        examples = (
+            (FIGURES[0], 1, "Cleric/Preserver/Ranger", 1563, "Priest"),
+            (FIGURES[1], 12, "Fighter/Preserver/Psionicist", 724, "Mage"),
+            (FIGURES[0], 13, "Druid/Preserver/Thief", 630, "Thief"),
+            (FIGURES[1], 5, "Druid/Fighter/Psionicist", 1252, "Warrior"),
+        )
+        page = Image.new("RGB", (804, 732), dwarf.PAPER)
+        label(page, (10, 6), "Half-elf triples beside their two-class parents", 18)
+        for i, (key, pose, role, picture, npc) in enumerate(examples):
+            y = 36 + i * 174
+            label(page, (10, y), f"{key.capitalize()} · {dwarf.NAMES[pose]}", 14)
+            parents = ["/".join(pair) for pair in combinations(role.split("/"), 2)]
+            for j, sample in enumerate([*parents, role, picture]):
+                x = 6 + j * 159
+                if sample == picture:
+                    tile = elf.placed_tile(self.game, self.game.fr(picture, pose), self.floor, 1, 0, 0, 0)
+                    caption = "SL " + npc
+                else:
+                    tile = self.tile(key, pose, sample, 1)
+                    caption = sample
+                label(page, (x + 74, y + 22), caption, 11, "ma")
+                page.paste(tile.resize((104, 88), Image.Resampling.NEAREST), (x + 22, y + 38))
+                page.paste(tile, (x + 48, y + 127))
+        page.save(out / "half-elf-triple-references.png")
+
     def gallery(self, out):
         out.mkdir(parents=True, exist_ok=True)
         self.references(out)
         self.cloak_reference(out)
         self.hooded_cape_walk(out)
+        self.triple_references(out)
         self.pose_gallery(out, ROLES, "study", "Half-elf outfit study")
         self.pose_gallery(out, ROLES[2:] + NEW_SINGLES, "singles", "Half-elf single classes")
 
         for group, bases in pairs.GROUPS:
             roles = [role for role in pairs.ROSTER if pairs.base_class(role) in bases]
             self.pose_gallery(out, roles, "pairs-" + group, "Half-elf two-class outfits")
+
+        for group, roles in triple_groups().items():
+            self.pose_gallery(out, roles, "triples-" + group, "Half-elf three-class outfits")
 
     def pose_gallery(self, out, roles, stem, title):
         frames = []
@@ -450,7 +494,12 @@ class Study:
         for sheet, key in zip(sheets, FIGURES):
             label(sheet, (8, 5), key.capitalize() + " · all poses", 15)
             for j, role in enumerate(roles):
-                label(sheet, (157 + j * 120, 26), role, 10 if "/" in role else 12, "ma")
+                if role.count("/") == 2:
+                    parents, third = role.rsplit("/", 1)
+                    label(sheet, (157 + j * 120, 16), parents, 10, "ma")
+                    label(sheet, (157 + j * 120, 29), "+ " + third, 10, "ma")
+                else:
+                    label(sheet, (157 + j * 120, 26), role, 10 if "/" in role else 12, "ma")
         for pose, name in enumerate(dwarf.NAMES):
             page = Image.new("RGB", (width, 339), dwarf.PAPER)
             label(page, (12, 8), title, 20)
@@ -462,7 +511,12 @@ class Study:
                 for j, role in enumerate(roles):
                     x = 66 + j * 124
                     if i == 0:
-                        label(page, (x + 57, 39), role, 11 if "/" in role else 14, "ma")
+                        if role.count("/") == 2:
+                            parents, third = role.rsplit("/", 1)
+                            label(page, (x + 57, 32), parents, 12, "ma")
+                            label(page, (x + 57, 47), "+ " + third, 12, "ma")
+                        else:
+                            label(page, (x + 57, 39), role, 11 if "/" in role else 14, "ma")
                     tile = self.tile(key, pose, role, 1)
                     page.paste(tile.resize((104, 88), Image.Resampling.NEAREST), (x+5, y))
                     page.paste(tile, (x+31, y+89))
