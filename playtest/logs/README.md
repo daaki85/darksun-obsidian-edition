@@ -146,6 +146,7 @@ schedules and diffs a log made or used.
 | [2026-11-24](2026-11-24-ravager-spell-arrows.md) | The spell arrows at the archer's level in the sequel: Lex's Shocking Arrows at caster level 2 (1d8+2, was +6); Ester's and Jenna's (no preserver class) plain, DSCLOG2's PLAIN_ARROW; a first build that skipped the cast crashed the game |
 | [2026-11-24](2026-11-24-ravager-stealth.md) | Shattered Lands' stealth in the sequel: Seneca's hidden backstab, Jenna's hidden attack from behind, the Cloak and Boots of Elvenkind; thief skills' effects in the sequel's numbers; a melee hit no longer casts the quiver's arrows' spell; DOSBox dying in about half of the Tyr fights, causes ruled out |
 | [2026-11-24](2026-11-24-ravager-quit-hunt.md) | Why the sequel quit in the transferred party's Tyr fights: the mod's kit byte in the high byte of a combat sound number, a fatal error; found with probes in the program and a memory dump; the transfer fixed, 10 fights without a quit |
+| [2026-11-24](2026-11-24-ravager-girdle-amulet-play.md) | The Girdle of Back Defense seen working against a hidden backstab and a hidden rear attack; the amulet not yet seen (the test caster blocked as "in armour") |
 
 ## files/
 
