@@ -913,7 +913,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   CHARTRAN does); the rest, which CHARTRAN turns into money bags, the Loader makes for the sequel,
   with its picture and name from your own Shattered Lands files: the mod's weapons, armour and magic
   items, and the game's quest items as keepsakes (carried and sold, no use in the sequel's story).
-  Scrolls come across as the sequel's scroll of that spell; a spell the sequel lacks makes a keepsake.
+  Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
+  box outside a fight); a spell the sequel lacks makes a keepsake.
   Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind.
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,

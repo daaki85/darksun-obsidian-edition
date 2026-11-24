@@ -1147,9 +1147,9 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   copy; `import -window ID` (xdotool search --pid) grabs it.
 - **Using an item from its box** (2026-11-23, logs/2026-11-23-ravager-tome-scrolls.md): the box's
   icon for the tome worked only in a fight, on the member's turn (the opener 99260h sets `[9D8Ch]`
-  from its caller, 1 only in a fight), while a spellbook was learnt outside a fight on 2026-11-21
-  (logs/2026-11-21-ravager-int.md) and not from Lex's box in a fight (spell 12 and, edited, 36: the
-  item kept, no bit set; the gate not found); the handler 995AFh goes on through 9986Fh, 999A9h and 999CDh (`[bp-4]` the
+  from its caller, 1 only in a fight), while a spellbook is learnt outside a fight (2026-11-21, and
+  Kalzith's transferred Blur on 2026-11-24) and not in a fight nor on the roster's inventory (the book
+  kept; the gate not found); the known spells at `(load + 3D62h):39Ch` + 15 a member; the handler 995AFh goes on through 9986Fh, 999A9h and 999CDh (`[bp-4]` the
   spell, power - 1; learning from objects 31000-31199 and 31400-31499; spells 0EBh-10Ch psionic,
   10Dh up "CANNOT LEARN"); 99B44h uses the item up with the message at `[bp-56h]`, 99B67h shows it
   only. DSCLOG2's TOME_READ (site 48) is the tome's case there.

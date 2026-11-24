@@ -36,16 +36,21 @@ Test edits in memory, never saved (scratch `mktome.py` turns a keepsake into a t
   (a 20-a-second burst). That is the game's own way: its message routine (560h:2Ah) shows nothing on
   the inventory screen for its own scrolls either (logs/2026-11-21-ravager-int.md).
 - **Kalzith's Blur, as the sequel's Spellbook of Blur (object 31010), in a fight** (a second run,
-  Jenna's turn and then Lex's, `ravfight.py until 0`): the icon clicked, the book kept and no bit set in
-  Lex's known spells (320h:39Ch, spell 12), also with its spell edited in memory to 36 (a spell she
-  lacks, not a self spell). The gate was not found (the box's handler 995AFh reaches the learning only
-  through 9986Fh, `[bp+18h]` < 8 first). The book is the sequel's own object with the sequel's spell, so
-  it learns as the sequel's own spellbooks do: outside a fight, played on 2026-11-21.
+  Jenna's turn and then Lex's, `ravfight.py until 0`): the icon clicked, the book kept (also with its
+  spell edited in memory to 36). The known-spells bits read in that run were at a wrong address (see
+  2026-11-24 below), so only the kept book counts: not learnt. On the roster's inventory (CREATE
+  CHARACTERS) the click doesn't reach the routine either (DSCLOG2's `learnt_tries` 0).
+- **Learnt outside a fight (2026-11-24)**: `ravload.sh ravager-after-ambush` (Tyr's street after the
+  Draxans), Ar'anda's item 3 made, in memory, the record the transfer writes for Kalzith's Blur
+  (object 31010, type 4Dh, power 13, its name; scratch `putbook.py`). Her inventory, the book
+  right-clicked (game 66,60), the box's spell icon clicked (158,45): the book gone, bit 12 (Blur) set in
+  her known spells (now 0, 3, 8, 11, 12, 13, 17, 24, 27, 29), DSCLOG2's `learnt_tries` 1 (INT 18's 85%).
+  ![](img/2026-11-24-ravager-kalzith-book.png) ![](img/2026-11-24-ravager-kalzith-learnt.png)
+  The known spells are at `(load + 3D62h):39Ch` + 15 a member (3F3DCh in that start, ravhold.sh's).
 - **Not played**: the WIS 25 case (unit test only).
 
 ## Open
 
-- Why a spellbook's icon did nothing in a fight, and a Kalzith book learnt outside one by a wizard in
-  a transferred party.
+- Why a spellbook's icon did nothing in a fight (the sequel's own way, most likely).
 
 No new area, no water noted.
