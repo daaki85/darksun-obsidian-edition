@@ -355,6 +355,10 @@ class Gift(NamedTuple):
 
 
 PLAIN = (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_AXE, OBSIDIAN_MACE)
+PENS = 0x29  # (the slave pens' region, the arena's too)
+HENCHMAN, HENCHMAN_SWORD = 229, 306  # (Scar's henchmen's object; the pens' entity of one of the three)
+ARENA_GLADIATOR, ARENA_GLADIATOR_TRIKAL = 181, 175  # (the arena's gladiators; one of the three, its entity)
+CLUB_TYPE, SLING_TYPE, OBSIDIAN_LONG_SWORD = 18, 64, 45  # (the game's wooden club, sling, obsidian long sword)
 # (the objects: the people of each name in the region, as SEGOBJEX and the region's ETAB have them)
 GIFTS: Tuple[Gift, ...] = (
     # (the great axes in every material, a warrior's starting one being bone, and bone breaks:
@@ -377,7 +381,7 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
     # (every one; they carried nothing: a bone great axe (the user's choice, 2026-11-10; a bone axe
     # before), and leather chest and arm armour, as Merzol wears)
-    Gift("Scar's henchman", (weapon(BONE_GREAT_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (229,)),
+    Gift("Scar's henchman", (weapon(BONE_GREAT_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (HENCHMAN,)),
     # Scar (object 87, the arena's and the break-out's): a pair of plain obsidian cahulaks in place of
     # his obsidian long sword (the user's choice)
     Gift("Scar", (weapon(OBSIDIAN_CAHULAKS),), (SCAR,), instead=(45, 0)),
@@ -392,9 +396,29 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Tobrian", (weapon(METAL_DAGGER),), (104,), 0x1A),  # (a stone dagger)
     Gift("Templar", (weapon(METAL_MACE),), (131,), 0x14),  # the slavers' camp's (a bone mace)
     Gift("Castle Guard", (weapon(METAL_POLEARM),), (55,), 0x1C, clone=(121, 2560)),  # (one of six)
+    # Wake of the Ravager's weapons on people of the like (the backport's report, its section 3):
+    # the arena's gladiators (181, three in the pens' region) a double spear in place of the club,
+    # one of them (its own object) a trikal; one of Scar's three henchmen in the champions' bout
+    # (its own object) a two-handed sword, the other two the bone great axe the user chose
+    # (2026-11-10); the Village Heroes and Elite Guards of Teaquetzl a javelin in place of the bow
+    # (their arrows left in the pack); the Silt Runners darts in place of the sling, and the White
+    # Sand Outlaws (the Slave Hunters, KITS: they had nothing) darts beside their swords; the armed
+    # Drajian Guard (214, and those armed like him: ARMED_LIKE) and the pens' Templar with an
+    # obsidian long sword (321) a lotulis in place of it
+    Gift("Gladiator", (weapon(DOUBLE_SPEAR),), (ARENA_GLADIATOR,), instead=(CLUB_TYPE, 0)),
+    Gift("Gladiator", (weapon(TRIKAL),), (ARENA_GLADIATOR,), PENS, clone=(ARENA_GLADIATOR_TRIKAL, 2610),
+         instead=(CLUB_TYPE, 0)),
+    Gift("Scar's henchman", (weapon(TWOHAND_SWORD), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (HENCHMAN,), PENS,
+         clone=(HENCHMAN_SWORD, 2611)),
+    Gift("Village Hero", (weapon(JAVELIN),), (294,), instead=(BOW, 0)),
+    Gift("Elite Guard", (weapon(JAVELIN),), (272,), instead=(BOW, 0)),
+    Gift("Silt Runner", (weapon(DARTS),), (291,), instead=(SLING_TYPE, 0)),
+    Gift("Slave Hunter", (weapon(DARTS),), (199, 201)),
+    Gift("Drajian Guard", (weapon(LOTULIS),), (214,), instead=(OBSIDIAN_LONG_SWORD, 0)),
+    Gift("Templar", (weapon(LOTULIS),), (321,), instead=(OBSIDIAN_LONG_SWORD, 0)),
 )
 CHAYAS_CHEST = 2249  # (her script's)
-WEAPON_RACK, PENS, PENS_RACK = 1647, 0x29, 131  # (the slave pens' rack: its region, its entity)
+WEAPON_RACK, PENS_RACK = 1647, 131  # (the slave pens' rack, its entity in PENS)
 # Object 2563 is never one of ours: with an object of that number in SEGOBJEX, the game won't let
 # an item be put down on another in a character's pack (the swap is refused, whatever the items
 # and whoever's pack; 2400 and 2599 tested as fine). The pens' rack was 2563 from 1.2.0 to 2.5.0;
@@ -449,7 +473,7 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),
     Gift("Troop Leader", (weapon(*POLEARM_2), BACK_GIRDLE_ITEM), (TROOP_LEADER,), 0x21),
-    Gift("Weapon Rack", (), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT)),
+    Gift("Weapon Rack", (weapon(JAVELIN),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT)),
     # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on
     # the Guardian of Balkazar's fortress
     Gift("Skeleton", (WOODEN_SHIELD_1,), (SKELETON,), WARRENS, clone=(WARRENS_SKELETON, 2585)),
@@ -642,13 +666,22 @@ def game_object_item(chunks, obj: int) -> Optional[bytes]:
     return recs[0].data if recs and len(recs[0].data) == game.ITEM_SIZE else None
 
 
-def fighters(chunks) -> List[Tuple[int, Sequence[bytes]]]:
-    """(object, items) for ARMED_LIKE and KITS, each only if it has no items of its own yet."""
+def fighters(chunks, gifts: Sequence[Gift] = ()) -> List[Tuple[int, Sequence[bytes]]]:
+    """(object, items) for ARMED_LIKE and KITS, each only if it has no items of its own yet; an
+    ARMED_LIKE's items as its like's are after GIFTS' swaps (INSTEAD) of them."""
     from .champions import game_item
     out: List[Tuple[int, Sequence[bytes]]] = []
     for obj, like in ARMED_LIKE:
         if ("RDFF", obj) in chunks and ("RDFF", like) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
-            out.append((obj, dataitems.items_of(chunks[("RDFF", like)])))
+            items = dataitems.items_of(chunks[("RDFF", like)])
+            for gift in gifts:
+                if gift.instead and not gift.clone and like in gift.objects:
+                    kind, plus = gift.instead
+                    at = next((n for n, r in enumerate(items) if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == kind
+                               and r[game.ITEM_PLUS] == plus), None)
+                    if at is not None:
+                        items = items[:at] + [gift.items[0]] + items[at + 1:]
+            out.append((obj, items))
     for obj, kinds in KITS.items():
         if ("RDFF", obj) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
             items = [game_item(chunks, kind) for kind in kinds]
@@ -667,7 +700,7 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
     extra: List[Tuple[int, Sequence[bytes]]] = []
     if on.get("world_gear", True) is not False:
         gifts += GIFTS
-        extra += fighters(chunks)  # (those the party fights with nothing to fight with)
+        extra += fighters(chunks, GIFTS)  # (those the party fights with nothing to fight with)
     if on.get("world_magic", True) is not False:
         gifts += MAGIC
         gythka = game_object_item(chunks, GYTHKA_3_OBJECT)

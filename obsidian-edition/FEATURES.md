@@ -824,7 +824,9 @@ Bone Helm, rings and a cloak of protection, bracers of defense, two robes, the W
 Boots of Speed, the Cloak and Boots of Elvenkind and more, on the game's people, in its shops and
 chests; and six of Wake of the Ravager's weapons the game has none of (a two-handed sword, the
 lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
-caravan, each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
+the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
+table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,

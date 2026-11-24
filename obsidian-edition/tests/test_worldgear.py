@@ -262,7 +262,8 @@ class WorldGearTests(unittest.TestCase):
             g = next(g for g in worldgear.MAGIC if item in g.items)
             self.assertEqual((g.name, g.objects, g.region), (holder, objects, region))
         rack = next(g for g in worldgear.MAGIC if g.name == "Weapon Rack")
-        self.assertEqual((rack.clone, rack.instead, rack.items), ((131, worldgear.PENS_RACK_OBJECT), None, ()))
+        self.assertEqual((rack.clone, rack.instead, rack.items),
+                         ((131, worldgear.PENS_RACK_OBJECT), None, (worldgear.weapon(worldgear.JAVELIN),)))
         self.assertEqual(gift("Magera").clone, (122, 2562))
         # (the plain axes still the plain ones)
         self.assertEqual(icons.which(worldgear.weapon(worldgear.BONE_AXE)), "Bone Axe")
@@ -477,7 +478,8 @@ class DataTests(unittest.TestCase):
     def test_in_place_of_one(self):
         """Thornwall on the pens' weapon rack (a thing, its number first in its record): a new
         object, in place of the first of its two plain bone polearms (its type, name and header
-        number following), the rest kept; the Lower Castle's rack, the same object, unchanged."""
+        number following), the rest kept, and a javelin (Wake of the Ravager's) put with them; the Lower
+        Castle's rack, the same object, unchanged."""
         from dsloader import dataitems as d
         rack_head = bytes.fromhex("91f900000000010000006c000000000005ffef0000")
         polearm = bytes.fromhex("5efb000000000700000013000000000004ff120000")
@@ -492,8 +494,10 @@ class DataTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<h", recs[0].data)[0], -worldgear.PENS_RACK_OBJECT)
         self.assertEqual(recs[0].data[2:], rack_head[2:])
         # (Thornwall comes later, once Semyon has told of it: semyon.ship)
-        self.assertEqual(d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)]), [polearm, staff, polearm])
-        self.assertEqual(len(recs), len(d.records(self.chunks[("RDFF", 1647)])[0]))
+        items = d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])
+        self.assertEqual(items[:3], [polearm, staff, polearm])
+        self.assertEqual([struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items[3:]], [game.JAVELIN_TYPE])
+        self.assertEqual(len(recs), len(d.records(self.chunks[("RDFF", 1647)])[0]) + 3)  # (the javelin's three)
         # (none to replace: unchanged)
         self.assertEqual(d.with_item_replaced(self.chunks[("RDFF", 26)], lambda r: True, polearm), self.chunks[("RDFF", 26)])
 
@@ -610,6 +614,39 @@ class FightersTests(unittest.TestCase):
         self.assertEqual(got[292], [0x2C])
         self.assertEqual(sorted(got[213]), sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
                                                    for r in dataitems.items_of(chunks[("RDFF", 214)])))
+        # (with the gifts: the armed Drajian Guard's lotulis in place of his long sword, theirs too)
+        got = {obj: [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items]
+               for obj, items in worldgear.fighters(chunks, worldgear.GIFTS)}
+        for obj in (195, 213):
+            self.assertIn(game.LOTULIS_TYPE, got[obj])
+            self.assertNotIn(worldgear.OBSIDIAN_LONG_SWORD, got[obj])
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_ravager_weapons_carried(self):
+        """Wake of the Ravager's weapons on people of the like (the report's section 3): each object's
+        item types after the gifts, the weapons they take the place of gone, the rest kept."""
+        from dsloader import dataitems, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        out = worldgear.data_chunks(chunks, {})
+        types = lambda obj: [struct.unpack_from("<H", r, game.ITEM_TYPE)[0]  # noqa: E731
+                             for r in dataitems.items_of(out.get(("RDFF", obj)) or chunks[("RDFF", obj)])]
+        L, J, D = game.LOTULIS_TYPE, game.JAVELIN_TYPE, game.DARTS_TYPE
+        self.assertEqual(types(181), [game.DOUBLE_SPEAR_TYPE, 4, 13])  # (the arena's gladiators: the club's place)
+        self.assertEqual(types(2610), [game.TRIKAL_TYPE, 4, 13])  # (one of them, its own object)
+        self.assertEqual(types(229), [game.BONE_GREAT_AXE_TYPE, 6, 7])  # (Scar's henchmen: the user's great axe)
+        self.assertEqual(types(2611), [game.TWOHAND_SWORD_TYPE, 6, 7])  # (one of them, its own object)
+        self.assertEqual(types(294), [J, 62, 62, 63, 6, 7, 8])  # (the Village Heroes: the bow's place)
+        self.assertEqual(types(272), [J, 62, 62, 63, 15, 55, 56])  # (the Elite Guards)
+        self.assertEqual(types(291), [D, 81])  # (the Silt Runners: the sling's)
+        for obj in (199, 201):  # (the White Sand Outlaws: beside their swords)
+            self.assertEqual(types(obj), [D, 81, 6])
+        for obj in (214, 213, 195):  # (the Drajian Guards)
+            self.assertEqual(types(obj), [6, 1, L, 62])
+        self.assertEqual(types(321), [4, 12, 13, 14, L])  # (the pens' Templar)
+        self.assertEqual(types(worldgear.PENS_RACK_OBJECT)[-1], J)  # (the pens' weapon rack)
+        self.assertEqual(sorted(g.clone[0] for g in worldgear.GIFTS if g.clone and g.region == worldgear.PENS),
+                         [worldgear.ARENA_GLADIATOR_TRIKAL, worldgear.HENCHMAN_SWORD])
 
 
 class MagicCahulaksTests(unittest.TestCase):
