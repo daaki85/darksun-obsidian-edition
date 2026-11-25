@@ -180,7 +180,18 @@ dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palet
                                 ;      768 values 0-63, for the colours of the Loader's labels and panel
 dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
                                 ;      the Loader draws its panel again in it (DSCLOG's DARK count)
-        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +267: none of them here yet, zero)
+        times 244 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +243: none of them here yet, zero)
+rings_on   dw 0                 ; +244 the Loader sets 1 to have a ring drawn under the enemy chosen with
+                                ;      Tab (RINGS: HIT_TARGET's), once RED is made
+ring_tab_off dw 0               ; +246 (DSCLOG's RING_TAB: none here, the one ring is HIT_TARGET's)
+red_off    dw FAR_RED           ; +248 offset of RED in the far block: each colour's reddened one (0:
+                                ;      none), the Loader's (rings.red_table)
+target_on  dw 0                 ; +250 the Loader sets 1 while Tab chooses an enemy (TARGETING)
+tab_seq    dw 0                 ; +252 Tab pressed (counted) ...
+back_seq   dw 0                 ; +254 ... and Shift+Tab
+hit_target dw 0xFFFF            ; +256 the enemy chosen (the Loader sets it; FFFFh: none)
+attack_seq dw 0                 ; +258 Enter pressed on it (counted)
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +260 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
 rules_hi   dw 0                 ; +270 the rules' second word, as DSCLOG's
 learn_seq  dw 0                 ; +272 a wizard's try at a scroll's spell (INT_LEARN), counted ...
@@ -228,6 +239,9 @@ wall_shadows dw 1               ; +1872 (DSCLOG2's own, past DSCLOG's header) 1:
                                 ;      the floor (WALL SHADOWS)
 wall_passes  dw 0               ; +1874 floor passes shadowed (counted)
 dark_builds  dw 0               ; +1876 times DARK was made
+attack_clicks dw 0              ; +1878 Enter's clicks given on the chosen enemy (TARGETING, counted)
+hit_answers  dw 0               ; +1880 the finder's answers made the chosen enemy (PROBE_HIT, counted)
+ring_draws   dw 0               ; +1882 rings drawn into the floor (RINGS, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -3427,7 +3441,7 @@ site_table:
         dw ef_click                         ; 74 SITE_EF_CLICK (a click on its cells: the next page of them)
         dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
         dw dual_kit                         ; 76 SITE_DUAL_KIT (a human's new class: its kit asked on the game's menu)
-        dw site_none                        ; 77 (none here)
+        dw probe_hit                        ; 77 SITE_HIT (29DBDh: the finder of what is under the pointer: the chosen enemy after Enter)
         dw site_none                        ; 78 (none here)
         dw site_none                        ; 79 (none here)
         dw site_none                        ; 80 (none here)
@@ -12004,11 +12018,13 @@ probe_scroll:
         pusha
         push es
         mov byte [cs:va_done], 0
+        inc word [cs:main_ticks]
         pushf
         cli                             ; (drawing)
         call panel_tick
         popf
         call label_tick
+        call ring_tick
         pop es
         popa
         test byte [cs:s_fl + 1], 2      ; (the caller's flags' IF)
@@ -12016,6 +12032,7 @@ probe_scroll:
         sti
 .call:  call far [cs:s_far]
         call panel_mouse                ; (AX the buttons: a press on the panel kept from the game)
+        call target_mouse               ; (... Enter's click on the chosen enemy: TARGETING)
         push word [cs:s_fl]
         push word [cs:s_cs]
         push word [cs:s_ip]
@@ -13167,9 +13184,15 @@ pb_clamp:
 .hi:    ret
 
 ; INT16: DSCLOG's: the game reads keys through INT 16h; L on the map, the panel on it (or off, to open
-; it: L_ON_MAP), counted for the Loader (PANEL_KEYS) and taken out of what the game sees
+; it: L_ON_MAP), counted for the Loader (PANEL_KEYS) and taken out of what the game sees; and, while the
+; Loader has TARGET_ON (a party member's turn in a fight), Tab, Shift+Tab and, with an enemy chosen,
+; Enter on the map (TARGETING, below)
 KEY_L       equ 0x266C
 KEY_SHIFT_L equ 0x264C
+KEY_TAB     equ 0x0F09
+KEY_BACKTAB equ 0x0F00
+KEY_ENTER   equ 0x1C0D
+KEY_PAD_ENTER equ 0xE00D
 old16 dd 0
 int16:
         cmp ah, 0x00
@@ -13216,16 +13239,40 @@ int16:
         add sp, 2
         iret
 
-our_key:                                ; AX a key: CF set (and counted) if it is L for the panel
+our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
-        jne .no
+        jne .tabs
 .l:     call panel_live
         je .count
         call l_on_map
         jne .no
 .count: inc word [cs:panel_keys]
+        stc
+        ret
+.tabs:  cmp word [cs:target_on], 0      ; (DSCLOG's TARGETING: the Loader's, on a party member's turn)
+        je .no
+        call on_map                     ; (not with a window, a menu or a talk over the map)
+        jne .no
+        cmp ax, KEY_TAB
+        jne .back
+        inc word [cs:tab_seq]
+        stc
+        ret
+.back:  cmp ax, KEY_BACKTAB
+        jne .enter
+        inc word [cs:back_seq]
+        stc
+        ret
+.enter: cmp word [cs:hit_target], 0xFFFF
+        je .no
+        cmp ax, KEY_ENTER
+        je .go
+        cmp ax, KEY_PAD_ENTER
+        jne .no
+.go:    inc word [cs:attack_seq]
+        mov byte [cs:t_click], 1
         stc
         ret
 .no:    clc
@@ -13303,8 +13350,10 @@ floor_enter:
         pop word [cs:resume + 2]
         popf
         cmp word [cs:wall_shadows], 0
-        je .plain
-        cmp byte [cs:floor_busy], 0
+        jne .want
+        call ring_wanted                ; (or the chosen enemy's ring: RINGS)
+        jnc .plain
+.want:  cmp byte [cs:floor_busy], 0
         jne .plain
         cmp byte [FLOOR_ON], 0          ; (DS: the game's) the routine draws nothing without it
         je .plain
@@ -13411,12 +13460,14 @@ wall_pass:
         mov [cs:clip_y1], ax
 .clipped:
         mov fs, [cs:far_seg]
+        cmp word [cs:wall_shadows], 0
+        je .ring
         call dark_check
         cmp byte [cs:dark_ready], 0
-        je .out
+        je .ring
         mov ds, [cs:game_ds]
         cmp dword [GMAP_PTR], 0
-        je .out
+        je .ring
         inc word [cs:wall_passes]
         call vga_save
         ; the cells the clip covers: rows (cam_y + clip_y0) / 16 .. (cam_y + clip_y1) / 16
@@ -13521,7 +13572,8 @@ wall_pass:
         jmp .row
 .done:  call ws_flush
         call vga_restore
-.out:   ret
+.ring:  call ring_pass                  ; (the chosen enemy's ring over the shadows: RINGS)
+        ret
 
 ; IS_WALL: CF set if map cell CX (column), DX (row) is a wall (GMAP's C0h bits); DS the game's.
 ; All registers but flags kept.
@@ -13856,6 +13908,367 @@ resident_end:
 align 16
 RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
 
+; ---- TARGETING and RINGS: choosing an enemy with Tab, Enter attacking it, a red ring under it ----
+; DSCLOG's (dsclog.asm: TARGETING, PROBE_HIT, RINGS), on the sequel. While the Loader has TARGET_ON (a
+; party member's turn in a fight), INT16 takes Tab and Shift+Tab from the game and counts them; the
+; Loader steps through the enemies, the nearest first, and puts the chosen one in HIT_TARGET
+; (dsloader/targeting.py). Enter then (INT16: T_CLICK) has the main loop's next pass (TARGET_MOUSE, from
+; PROBE_SCROLL) give the game the pointer a little above the enemy's feet with the left button pressed,
+; and let go the pass after: the click the game reads from its own call there. For HIT_PASSES passes
+; from it the routine finding what is under the pointer (29DBDh, SL's 25B52h: PROBE_HIT, site 77)
+; answers with the chosen enemy whatever stands in front of it. The ring (RINGS_ON) is drawn into the
+; floor as the game draws it (FLOOR_POST, after the walls' shadows), the floor's colours reddened
+; three times through RED (the Loader's, from the palette: rings.red_table); RING_TICK draws the view
+; again where it was and where it is when the chosen enemy changes or walks.
+HIT_PASSES  equ 600             ; passes of the main loop the finder answers with the chosen enemy, from
+                                ;   the click (SL's: the walk to it never stalls on a figure in front)
+T_ABOVE     equ 8               ; (the click a little above the feet, on the figure)
+RING_W      equ 16              ; (the ring's room round the feet, drawn again when it moves: wide ...
+RING_H      equ 9               ;   ... and high)
+main_ticks dw 0                 ; passes of the map's main loop (PROBE_SCROLL)
+hit_until  dw 0
+hit_forced db 0
+t_click    db 0                 ; (INT16's: Enter pressed on the chosen enemy)
+t_phase    db 0                 ; (TARGET_MOUSE's: 1 the press to give, 2 the letting go)
+t_x        dw 0
+t_y        dw 0
+h_resume   dd 0
+
+; TARGET_MOUSE: after PANEL_MOUSE (AX the buttons; the far pointers to the pointer's x and y as
+; PANEL_MOUSE has them): Enter's click, two passes: the pointer put on the
+; chosen enemy and the left button pressed, then let go. AX changed only then; others kept.
+target_mouse:
+        cmp byte [cs:t_phase], 0
+        jne .give
+        cmp byte [cs:t_click], 0
+        je .ret
+        mov byte [cs:t_click], 0
+        push ds
+        push bx
+        push cx
+        push dx
+        mov ds, [cs:pointer_ds]
+        mov bx, [cs:hit_target]
+        cmp bx, MAP_COUNT - 1
+        ja .no
+        call on_map
+        jne .no
+        imul bx, bx, THING_SIZE
+        mov cx, [bx + MAP_THINGS + THING_X]
+        mov dx, [bx + MAP_THINGS + THING_Y]
+        sub cx, [CAM_X]
+        sub dx, [CAM_Y]
+        sub dx, T_ABOVE
+        cmp cx, 1                       ; (on the screen: else nothing, as SL's)
+        jl .no
+        cmp cx, 318
+        jg .no
+        cmp dx, 1
+        jl .no
+        cmp dx, 198
+        jg .no
+        mov [cs:t_x], cx
+        mov [cs:t_y], dx
+        mov byte [cs:t_phase], 1
+        mov cx, [cs:main_ticks]
+        add cx, HIT_PASSES
+        mov [cs:hit_until], cx
+        mov byte [cs:hit_forced], 1
+        inc word [cs:attack_clicks]
+.no:    pop dx
+        pop cx
+        pop bx
+        pop ds
+        cmp byte [cs:t_phase], 0
+        je .ret
+.give:  push bp
+        mov bp, sp
+        push es
+        push bx
+        push cx
+        les bx, [bp + 4]                ; (past BP and this call's return: x's)
+        mov cx, [cs:t_x]
+        mov [es:bx], cx
+        les bx, [bp + 8]                ; (y's)
+        mov cx, [cs:t_y]
+        mov [es:bx], cx
+        pop cx
+        pop bx
+        pop es
+        pop bp
+        cmp byte [cs:t_phase], 1
+        jne .up
+        or al, 1                        ; the press
+        mov byte [cs:t_phase], 2
+        ret
+.up:    and al, ~1                      ; let go
+        mov byte [cs:t_phase], 0
+.ret:   ret
+
+; PROBE_HIT (site 77): "push bp / mov bp,sp / sub sp,0Eh" (6 bytes: the site and 3 NOPs) at the start of
+; the routine that finds the thing under the pointer (29DBDh: camera x, y, pointer x, y; the thing, or
+; FFFFh): for HIT_PASSES passes after TARGET_MOUSE's click, the chosen enemy, wherever the pointer is.
+probe_hit:
+        pop word [cs:h_resume]
+        pop word [cs:h_resume + 2]
+        popf
+        cmp byte [cs:hit_forced], 0
+        je .plain
+        cmp word [cs:hit_target], 0xFFFF
+        je .over                        ; (none chosen any more: a new turn, the click done)
+        push ax
+        mov ax, [cs:main_ticks]
+        sub ax, [cs:hit_until]
+        pop ax
+        jns .over
+        inc word [cs:hit_answers]
+        mov ax, [cs:hit_target]
+        retf                            ; (back to the finder's caller, the enemy its answer)
+.over:  mov byte [cs:hit_forced], 0
+.plain: push bp
+        mov bp, sp
+        sub sp, 0x0E
+        jmp far [cs:h_resume]
+
+; RING_WANTED: CF set if a ring is to be drawn: RINGS_ON and an enemy chosen. Registers kept.
+ring_wanted:
+        cmp word [cs:rings_on], 0
+        je .no
+        cmp word [cs:hit_target], MAP_COUNT - 1
+        ja .no
+        stc
+        ret
+.no:    clc
+        ret
+
+; RING_TICK: (PROBE_SCROLL's, DS the game's) on the map, when the ring to show isn't the one drawn (the
+; chosen enemy changed or walked, the rings switched): the view drawn again round where it was and
+; where it is now (RING_REDRAW), the floor pass drawing the new one. Keeps all.
+ring_tick:
+        pusha
+        mov bx, 0xFFFF
+        call ring_wanted
+        jnc .which
+        mov bx, [cs:hit_target]
+.which: xor cx, cx
+        xor dx, dx
+        cmp bx, 0xFFFF
+        je .same
+        mov si, bx
+        imul si, si, THING_SIZE
+        mov cx, [si + MAP_THINGS + THING_X]
+        mov dx, [si + MAP_THINGS + THING_Y]
+.same:  cmp bx, [cs:r_thing]
+        jne .moved
+        cmp cx, [cs:r_mx]
+        jne .moved
+        cmp dx, [cs:r_my]
+        je .out
+.moved: call on_map
+        jne .out
+        cmp byte [cs:lbl_busy], 0
+        jne .out
+        cmp byte [cs:vga_busy], 0
+        jne .out
+        push bx
+        push cx
+        push dx
+        cmp word [cs:r_thing], 0xFFFF
+        je .new
+        mov cx, [cs:r_mx]
+        mov dx, [cs:r_my]
+        call ring_redraw
+.new:   pop dx
+        pop cx
+        pop bx
+        mov [cs:r_thing], bx
+        mov [cs:r_mx], cx
+        mov [cs:r_my], dx
+        cmp bx, 0xFFFF
+        je .out
+        call ring_redraw
+.out:   popa
+        ret
+r_thing dw 0xFFFF               ; (the ring last drawn: its thing and its feet on the map)
+r_mx    dw 0
+r_my    dw 0
+
+; RING_REDRAW: the view drawn again (the game's routine for a rectangle of it, as LABEL_ERASE) round
+; map point CX, DX (a ring's feet). Nothing when it is off the screen. DS the game's; keeps all.
+ring_redraw:
+        pusha
+        push es
+        mov byte [cs:lbl_busy], 1
+        sub cx, [CAM_X]
+        sub dx, [CAM_Y]
+        mov ax, cx
+        sub ax, RING_W
+        add cx, RING_W
+        mov bx, dx
+        sub bx, RING_H
+        add dx, RING_H
+        cmp cx, 0
+        jl .out
+        cmp dx, 0
+        jl .out
+        cmp ax, 319
+        jg .out
+        cmp bx, 199
+        jg .out
+        or ax, ax
+        jge .x1
+        xor ax, ax
+.x1:    or bx, bx
+        jge .x2
+        xor bx, bx
+.x2:    or cx, 3
+        cmp cx, 319
+        jle .y1
+        mov cx, 319
+.y1:    cmp dx, 199
+        jle .go
+        mov dx, 199
+.go:    and ax, ~3
+        push ax
+        mov ax, ds
+        sub ax, DGROUP - REDRAW_SEG
+        mov [cs:redraw_far + 2], ax
+        pop ax
+        push word 1                     ; (the flip)
+        push dx
+        push cx
+        push bx
+        push ax
+        push word 1                     ; (the page)
+        push word [CAM_Y]
+        push word [CAM_X]
+        call far [cs:redraw_far]
+        add sp, 16
+.out:   mov byte [cs:lbl_busy], 0
+        pop es
+        popa
+        ret
+
+; RING_PASS: (WALL_PASS's, the floor just drawn: PAGE_SETUP's page and clip, CAM_X/CAM_Y the floor
+; routine's camera, FS the far block) the chosen enemy's ring round its feet, three rings of points
+; (DSCLOG's RING_OUTER, RING_INNER, RING_EXTRA), each pixel reddened three times through RED.
+ring_pass:
+        call ring_wanted
+        jnc .ret
+        push ds
+        mov ds, [cs:game_ds]
+        mov bx, [cs:hit_target]
+        imul bx, bx, THING_SIZE
+        mov ax, [bx + MAP_THINGS + THING_X]
+        sub ax, [cs:cam_x]
+        mov [cs:r_fx], ax
+        mov ax, [bx + MAP_THINGS + THING_Y]
+        sub ax, [cs:cam_y]
+        mov [cs:r_fy], ax
+        pop ds
+        mov ax, [cs:r_fx]               ; (wholly outside the clip: nothing)
+        add ax, RING_W
+        cmp ax, [cs:clip_x0]
+        jl .ret
+        sub ax, 2 * RING_W
+        cmp ax, [cs:clip_x1]
+        jg .ret
+        mov ax, [cs:r_fy]
+        add ax, RING_H
+        cmp ax, [cs:clip_y0]
+        jl .ret
+        sub ax, 2 * RING_H
+        cmp ax, [cs:clip_y1]
+        jg .ret
+        inc word [cs:ring_draws]
+        call vga_save
+        mov es, [cs:v_seg]
+        mov si, ring_outer
+        mov cx, RING_OUTER
+        call ring_points
+        mov si, ring_inner
+        mov cx, RING_INNER
+        call ring_points
+        mov si, ring_extra
+        mov cx, RING_EXTRA
+        call ring_points
+        call vga_restore
+.ret:   ret
+
+ring_points:                            ; CX points at CS:SI round (R_FX, R_FY): each a quarter's
+.pt:    push cx                         ;   (x << 3 | y, x and y not negative), with its mirror
+        mov al, [cs:si]                 ;   images (x and y each negated, if not 0)
+        inc si
+        movzx bx, al
+        shr bx, 3
+        and ax, 7
+        mov [cs:r_qx], bx
+        mov [cs:r_qy], ax
+        call ring_dot                   ; (x, y)
+        neg word [cs:r_qx]
+        jz .neg_y
+        call ring_dot                   ; (-x, y)
+.neg_y: neg word [cs:r_qy]
+        jz .next
+        call ring_dot                   ; (-x, -y), or (0, -y)
+        neg word [cs:r_qx]
+        jz .next
+        call ring_dot                   ; (x, -y)
+.next:  pop cx
+        loop .pt
+        ret
+
+ring_dot:                               ; the point (R_QX, R_QY) round (R_FX, R_FY) reddened, if in
+        mov bx, [cs:r_qx]               ;   the clip; SI kept
+        add bx, [cs:r_fx]
+        mov ax, [cs:r_qy]
+        add ax, [cs:r_fy]
+        cmp ax, [cs:clip_y0]
+        jl .skip
+        cmp ax, [cs:clip_y1]
+        jg .skip
+        cmp bx, [cs:clip_x0]
+        jl .skip
+        cmp bx, [cs:clip_x1]
+        jg .skip
+        sub ax, [cs:v_y0]               ; the row's place in the page
+        mul word [cs:v_row]
+        sub ax, [cs:v_x0]
+        mov di, ax
+        mov cx, bx                      ; the pixel's plane, read and written
+        and cx, 3
+        mov dx, 0x3C4
+        mov al, 2
+        mov ah, 1
+        shl ah, cl
+        out dx, ax
+        mov dx, 0x3CE
+        mov al, 4
+        mov ah, cl
+        out dx, ax
+        shr bx, 2
+        add di, bx
+        movzx bx, byte [es:di]          ; its colour, reddened three times (as far as RED goes)
+        mov cx, 3
+.again: mov al, [fs:FAR_RED + bx]
+        or al, al
+        jz .put
+        mov bl, al
+        loop .again
+.put:   mov [es:di], bl
+.skip:  ret
+
+RING_OUTER equ 20                ; (a quarter of each ring, DSCLOG's: RING_POINTS mirrors them)
+RING_INNER equ 18
+RING_EXTRA equ 22
+ring_outer db 0 << 3 | 6, 1 << 3 | 6, 2 << 3 | 6, 3 << 3 | 6, 4 << 3 | 6, 5 << 3 | 5, 5 << 3 | 6, 6 << 3 | 5, 7 << 3 | 5, 8 << 3 | 5, 9 << 3 | 4, 9 << 3 | 5, 10 << 3 | 4, 11 << 3 | 3, 11 << 3 | 4, 12 << 3 | 2, 12 << 3 | 3, 13 << 3 | 0, 13 << 3 | 1, 13 << 3 | 2
+ring_inner db 0 << 3 | 5, 1 << 3 | 5, 2 << 3 | 5, 3 << 3 | 5, 4 << 3 | 5, 5 << 3 | 4, 5 << 3 | 5, 6 << 3 | 4, 7 << 3 | 4, 8 << 3 | 4, 9 << 3 | 3, 9 << 3 | 4, 10 << 3 | 2, 10 << 3 | 3, 11 << 3 | 1, 11 << 3 | 2, 12 << 3 | 0, 12 << 3 | 1
+ring_extra db 0 << 3 | 7, 1 << 3 | 7, 2 << 3 | 7, 3 << 3 | 7, 4 << 3 | 7, 5 << 3 | 6, 5 << 3 | 7, 6 << 3 | 6, 7 << 3 | 6, 8 << 3 | 6, 9 << 3 | 5, 9 << 3 | 6, 10 << 3 | 5, 11 << 3 | 4, 11 << 3 | 5, 12 << 3 | 3, 12 << 3 | 4, 13 << 3 | 2, 13 << 3 | 3, 14 << 3 | 0, 14 << 3 | 1, 14 << 3 | 2
+r_fx       dw 0
+r_fy       dw 0
+r_qx       dw 0
+r_qy       dw 0
+
 ; ---- the far block (FAR_INIT): the ring ----
 FAR_RING   equ 0x10
 FAR_END    equ FAR_RING + NENT * ESIZE
@@ -13864,7 +14277,8 @@ FAR_PANEL  equ FAR_DAC + 768                   ; the combat log's panel's pictur
 FAR_SPANS  equ FAR_PANEL + PANEL_BYTES         ; WALL SHADOWS' spans, 6 bytes each
 FAR_WS_DAC equ FAR_SPANS + WS_SPANS_MOST * 6   ; ... the palette DARK was made from
 FAR_DARK   equ FAR_WS_DAC + 768                ; ... DARK (XLAT)
-FAR_TOP    equ FAR_DARK + 256
+FAR_RED    equ FAR_DARK + 256                 ; RINGS' RED (XLAT), the Loader's
+FAR_TOP    equ FAR_RED + 256
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----

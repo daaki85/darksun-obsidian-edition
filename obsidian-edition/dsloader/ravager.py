@@ -632,6 +632,10 @@ PATCHES: Tuple[Patch, ...] = (
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
     Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), _site(40, 6)),
     Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), _site(41, 6)),
+    # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
+    # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
+    # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
+    Patch("hit", 0x29DBD, bytes.fromhex("558bec83ec0e"), _site(77, 6)),
     # The game's 7 reads of an item's name, "push dword [bx+56F3h]" (its table of 256 far pointers):
     # DSCLOG2's SITE_NAME, names 256 on the Loader's (NAMES_GAME, item_names).
     *(Patch("item_name_%x" % at, at, bytes.fromhex("66ffb7f356"), _site(42, 5))

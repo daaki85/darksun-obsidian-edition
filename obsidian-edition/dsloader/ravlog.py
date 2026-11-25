@@ -23,7 +23,8 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, kitpages, kits, labels, monsters, ravager, sizes, stealth
+from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, ravager, \
+    rings, sizes, stealth, targeting, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -90,6 +91,9 @@ ADDRESSES: Dict[str, object] = {
     # each creature's initiative (score, tie-break: words), selector 308h at DCh in the sequel's code
     # (its 5B7F6h: SL's 37BDh:D9h), selector 308h being the load segment + 3C4Fh
     "INITIATIVE_SEG": 0x3C4F, "INITIATIVE_OFF": 0xDC,
+    # ... and each creature's facing, a byte at +5Eh there (the attack set-up's "cmp byte es:[bx+5Eh],0"
+    # with selector 308h, 5CA36h; SL's +5Bh): an attack from behind (hitchance.predict)
+    "FACING_OFF": 0x5E,
     # a fight on: the game's flag, a byte at DS:13FAh in the sequel (16 uses of SL's word at 1168h matched by
     # their code: "cmp byte [13FAh],0"; RavGameData reads the byte), and the fight's state at 3C10h:19h
     # (the main loop's "mov ax,3C10h / mov es,ax / cmp word es:[19h],0", SL's 377Eh)
@@ -192,6 +196,24 @@ PALETTE_LAST = 253
 RAV_CHARMS = (2, 39, 61, 94, 131, 255, 256)
 RAV_SPELL_LAST = 0xEA
 
+# Choosing an enemy with Tab, the ring and the chance to hit under the pointer (targeting.py, rings.py,
+# hover.py): the sequel's map things (DS:67BBh, 25h bytes; the feet +0Ah, +0Ch; its finder, 29DBDh, reads
+# the flags +0, left +3, top +5, rise +0Eh, picture +10h, width +13h and height +14h, unsigned), the view
+# DS:1408h, the pointer DS:A109h, its mode DS:1440h (the routine setting it, 2037Bh; SL's 11B8h), the
+# thing under it DS:0DADh and the map up DS:0DABh (the routine lighting it, 21060h; SL's 0BCBh, 0BC9h),
+# the eight directions' byte DS:0442h (the direction routine, 1109Dh: "cmp byte [0442h],1")
+RAV_TARGETING = {
+    targeting: {"MAP_THINGS": 0x67BB, "MAP_THING_SIZE": 0x25, "MAP_FEET": 0x0A, "CAMERA": 0x1408},
+    hover: {"UNDER": 0x0DAD, "ON_MAP": 0x0DAB, "MODE": 0x1440, "MAP_RISE": 0x0E, "MAP_PICTURE": 0x10,
+            "MAP_WIDTH": 0x13, "MAP_HEIGHT": 0x14, "MAP_SIZES": "<BB"},
+    usable: {"POINTER": 0xA109},
+    hitchance: {"EIGHT_WAYS": 0x0442},
+    rings: {"STATUS_DEAD": 7},
+}
+# The ring's colours: the sequel cycles 1-31 (water, flame, a turn's marker) and its street's floor has
+# greys up to 255 (WALL SHADOWS' WS_FIRST, WS_LAST)
+RED_FIRST, RED_LAST = 32, 255
+
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
@@ -230,6 +252,10 @@ def apply_layout() -> int:
     for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)):
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
+    for module, names in RAV_TARGETING.items():  # (Tab, the ring, the chance under the pointer)
+        for name, value in names.items():
+            _SAVED.append((module, name, getattr(module, name)))
+            setattr(module, name, value)
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -809,6 +835,49 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.writable = self.guest.writable + [kit_bytes]
         super()._kit_tick(now)
 
+    def _target_ranges(self) -> Optional[int]:
+        """DSCLOG2's words for choosing an enemy and its ring (header +244 to +259: RINGS_ON, RED's
+        offset, TARGET_ON, the Tab and Enter counts, HIT_TARGET) and RED, made writable; RED's address,
+        None without them (a helper before Tab: its RED offset 0)."""
+        if self.tsr_hdr is None:
+            return None
+        red_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_RED, 2))
+        far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
+        if not red_off or not far:
+            return None
+        for r in ((self.tsr_hdr + rings.TSR_RINGS_ON, targeting.TSR_ATTACK + 2 - rings.TSR_RINGS_ON),
+                  (far * 16 + red_off, 256)):
+            if r not in self.guest.writable:
+                self.guest.writable = self.guest.writable + [r]
+        return far * 16 + red_off
+
+    def _target_pass(self, now: float) -> List[str]:
+        """Shattered Lands' choosing an enemy (targeting.py: Tab and Shift+Tab counted by DSCLOG2, the
+        enemies the nearest first, HIT_TARGET; the line "Chosen with Tab: ..., needs 14+ (35%)" with the
+        chance to hit, hit_chance) and its ring (ring_mode; RED made from DSCLOG2's palette, DAC_TICK's,
+        whenever it changes: rings.red_table in the sequel's colours)."""
+        red_at = self._target_ranges()
+        if red_at is None or self.game is None:
+            return []
+        foes = self._foes = rings.enemies(self.game)
+        out = self._targeting.update(self.game, self.tsr_hdr, True, foes,
+                                     lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
+        on = self.ring_mode != rings.OFF
+        changes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))
+        if on and changes and changes != self._red_at:
+            dac_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_DAC, 2))
+            far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
+            self.guest.write(red_at, rings.red_table(self.guest.read(far * 16 + dac_off, 768), RED_FIRST, RED_LAST))
+            self._red_at = changes
+        want = int(on and self._red_at is not None)
+        if want != self._rings_on:
+            self.guest.write(self.tsr_hdr + rings.TSR_RINGS_ON, struct.pack("<H", want))
+            self._rings_on = want
+        return out
+
+    _red_at: Optional[int] = None  # (DSCLOG2's count of palette changes RED was made at)
+    _rings_on: Optional[int] = None  # (RINGS_ON as last written)
+
     def _write_slots(self) -> None:
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
@@ -828,6 +897,9 @@ class RavDiceLog(dicelog.DiceLog):
         if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
             self._labels.on = self.floating_names
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
+        out += self._step(lambda: self._target_pass(now))  # (Tab, Enter and the ring: DSCLOG2's TARGETING)
+        if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)
+            self._step(lambda: self._hover_pass(now))
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
             self._step(lambda: self._large.update(self.game, self.tsr_hdr))
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
