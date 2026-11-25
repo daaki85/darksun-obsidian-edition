@@ -8,6 +8,12 @@ Both half-elves now have art proposals for all eight single classes in all 29 ma
 
 The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit reed edge and its brown shadow mark the overlapping pleat as he steps toward the viewer. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. A plum highlight follows the trailing fold of each Preserver’s mantle through the profile walk. The Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
 
+## Male body fitting
+
+In front idle (00) and the hit (27), the previous abdomen ended in a straight shelf above the thighs. In rear walk step two (08), the light on the back ran into the hip and obscured the shift onto the planted leg. The revised skin carries a short light over the shoulder blade, turns to shadow at the waist and picks up the light again on the loaded hip. In profile step two (12) the hip sits behind the passing forearm. On the Gladiator the turn is visible beside the strap. On the Druid the vest covers the ribs, and the moving knee is the easier comparison.
+
+[Before and after in four poses](half-elf-man-body.png) · [Watch all 29 poses beside the retail elf and the finished human body](half-elf-man-body.gif) · [Inspect each pose as a still](half-elf-man-body-poses.png)
+
 ## Male Druid fitting
 
 Front idle showed a rectangular patch of bare torso between two green cloak edges. The short cape had inherited the Ranger’s outer folds while the fitted garment between them was missing. The man now wears a leaf-green vest underneath. Follow its diagonal overlap down to the ochre waist tie in the front walk, then watch the near forearm pass across it in profile and on the strike. The same fitting carries into his four Druid pairs and six Druid triples.

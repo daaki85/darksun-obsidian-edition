@@ -87,6 +87,12 @@ def hooded_outfit(study, key, pose, garment):
 
 
 def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_belt=False):
+    # Review tools also call this entry point directly with a finished study.
+    # Compose on the registered fabrics before applying the exposed skin.
+    if hasattr(study, "registered"):
+        rows, pad = draw_pair(study.registered, key, pose, role, baldric=baldric,
+                              far_lining=far_lining, above_belt=above_belt)
+        return study.exposed_skin(key, pose, rows, pad)
     if role == "Druid/Thief":
         return hooded_outfit(study, key, pose, "Druid")
     base = base_class(role)
@@ -237,6 +243,8 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
 
 
 def draw_triple(study, key, pose, role):
+    if hasattr(study, "registered"):
+        return study.rows(key, pose, role)
     members = role.split("/")
     if "Thief" in members and role != "Fighter/Psionicist/Thief":
         return hooded_outfit(study, key, pose, "/".join(name for name in members if name != "Thief"))

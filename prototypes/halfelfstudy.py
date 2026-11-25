@@ -11,6 +11,7 @@ from zipfile import ZipFile
 from PIL import Image
 
 import elfoutfits as elf
+import halfelfbody
 import halfelfpairs as pairs
 import outfits
 from outfitdetail import RAMPS
@@ -133,10 +134,11 @@ FRONT_SKIN = {
 }
 
 
-class Study:
+class RegisteredOutfits:
+    """Fit the parent layers and compose class details in the half-elf’s native coordinates."""
+
     def __init__(self, game_dir):
         self.game = outfits.Game(game_dir)
-        self.floor = Image.open(TERRAIN).convert("RGB").crop((50, 150, 102, 194))
         with ZipFile(Path(co.__file__).with_name("woman_outfit_layers.zip")) as archive:
             self.body = [art.decode_frame(archive.read("Base/" + tag), f)[2]
                          for tag, count in (("walk", 15), ("combat", 14)) for f in range(count)]
@@ -478,6 +480,43 @@ class Study:
                 if role != "Body base" or color in outfits.SKINC:
                     return color
         return {"Cleric": 206, "Fighter": 136}.get(role, 132)
+
+
+class Study:
+    def __init__(self, game_dir):
+        self.registered = RegisteredOutfits(game_dir)
+        self.game = self.registered.game
+        self.body = self.registered.body
+        self.floor = Image.open(TERRAIN).convert("RGB").crop((50, 150, 102, 194))
+
+    @lru_cache(None)
+    def male_skin(self, pose):
+        cb, f = divmod(pose, 15)
+        fig = self.game.fig(FIGURES[1])
+        source = self.game.fr(fig.model + cb, f)
+        body, pad = self.registered.rows(FIGURES[1], pose, "Body base")
+        fields = co.frames("Fighter", cb, fig.model)[f]
+        protected = set(fields.head) | set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
+        back = figures.mover_back(fig.maker.cuts[bool(cb), f])
+        return halfelfbody.paint(pose, body, pad, source, back, protected, outfits.SKINC)
+
+    @lru_cache(None)
+    def rows(self, key, pose, role):
+        rows, pad = self.registered.rows(key, pose, role)
+        if role == "Original":
+            return rows, pad
+        return self.exposed_skin(key, pose, rows, pad)
+
+    def exposed_skin(self, key, pose, rows, pad):
+        if key != FIGURES[1]:
+            return rows, pad
+        # Resolve cloth overlaps, belt positions and dyes on the registered
+        # figure first. A skin highlight must never change a garment mask.
+        out = [row[:] for row in rows]
+        for x, y, old, shade in self.male_skin(pose):
+            if rows[y][x] == old:
+                out[y][x] = shade
+        return out, pad
 
     def tile(self, key, pose, role, scale):
         rows, pad = self.rows(key, pose, role)
