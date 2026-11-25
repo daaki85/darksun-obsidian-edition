@@ -1848,6 +1848,17 @@ marks each). Twin-blades fight with them as with any two weapons, with no
 penalty in light armour; Battle Dancers and Brutes can't use them.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
+### Lotulis, double spear and trikal
+
+Wake of the Ravager's weapons have their sequel's traits, for a character specialized in them (its
+weapon spec chosen; mastery too). The **lotulis** and **double spear** have a head at each end: in a
+round of two swings or more, the last goes to a second foe beside the wielder, on the first
+target's side, if there is one; the double spear's second head does 1 less damage. A **trikal**
+hit that does damage **trips** a man-sized or smaller foe unless it saves against paralysis: it
+loses its next turn (who is too big, as for the [cahulaks](#cahulaks)). A trikal also has a
+polearm's [reach](#polearm-reach), for anyone who holds it. The double spear and
+trikal are for gladiators only, as in the sequel. *Without the mod:* the game has none of them.
+
 ### Stinkpots
 
 The staff sling throws clay pots of burning sulphur: 1d3 damage
@@ -1863,7 +1874,7 @@ which only a half-giant can hold beside it, is fine; a bow in the missile slot
 too) strikes a foe two squares away as well as an adjacent one: two squares
 straight, or two across and one along, not two diagonally. The attack pointer
 shows the sword over such a foe; it reaches over a creature in between, not
-through a wall. Foes with polearms have the reach too. With a bow in the
+through a wall. The trikal, a polearm with three blades, has it too. Foes with polearms have the reach too. With a bow in the
 missile slot, a click on a foe two squares away swings the polearm; from three
 on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 
@@ -1949,6 +1960,10 @@ class](#magic-weapons-by-class).
 | Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
+| Two-handed sword | Wake of the Ravager's: obsidian, 1d10 (3d6 against a large target), two-handed |
+| Lotulis | Wake of the Ravager's: stone, 1d10 (1d12 against a large target), two-handed, two-headed ([below](#lotulis-double-spear-and-trikal)) |
+| Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([below](#lotulis-double-spear-and-trikal)) |
+| Javelin, darts | Wake of the Ravager's, thrown from the missile slot: obsidian 1d6, one a round; darts 1d3, two a round; a specialist throws either faster ([rates of fire](WEAPON-SPECS.md)) |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

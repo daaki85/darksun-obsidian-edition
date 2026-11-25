@@ -20,15 +20,15 @@ NO_KIND = (28, 29, 30, 31, 32, 37, 93, 107, 113)
 
 
 class KindTests(unittest.TestCase):
-    def test_sixteen_kinds(self):
-        self.assertEqual(len(specialize.KINDS), 16)
+    def test_twenty_two_kinds(self):
+        self.assertEqual(len(specialize.KINDS), 22)
         self.assertEqual(specialize.KINDS[specialize.DEFAULT], "long sword")
 
     def test_every_weapon_sorted(self):
         """Every weapon type is a kind, or one of the few that are none; every kind has a type."""
         for t in WEAPON_TYPES:
             self.assertEqual(specialize.kind_of(t) is None, t in NO_KIND, t)
-        self.assertEqual(set(specialize.KIND_OF_TYPE.values()), set(range(16)))
+        self.assertEqual(set(specialize.KIND_OF_TYPE.values()), set(range(22)))
 
     def test_some_kinds(self):
         name = lambda t: specialize.KINDS[specialize.kind_of(t)]
@@ -127,15 +127,19 @@ class PickerTests(unittest.TestCase):
         dialogue window's replies are 81Ch-821h), and its id is none of the game's windows
         (3000-3013, 3020, 3024...) nor the kit panel's."""
         from dsloader import kitpages, weaponpages
-        rows = [weaponpages.PICK_FIRST + k for k in range(16)]
+        from dsloader import rollstore
+        rows = [weaponpages.PICK_FIRST + k for k in range(22)]
         self.assertTrue(all(0x834 <= i < 0xBB8 and i != kitpages.KIT_BACK for i in rows))
+        # (and clear of the kit pages' rows, 870h to 8A8h and so on, and STORE and RECALL: the 17th
+        # to 22nd slots at 870h-875h were the kit rows' buttons, and the window left them out)
+        self.assertFalse(set(rows) & set(range(kitpages.KIT_ROW, max(rollstore.STORE, rollstore.RECALL) + 1)))
         self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024, kitpages.KIT_DISCIPLINES,
                                                                        kitpages.KIT_SPHERES})
-        # (six slots across, three rows, inside the 214 by 156 window and above its title)
+        # (six slots across, four rows, inside the 214 by 182 window and above its title)
         w = weaponpages
         left = (w.PICK_WIDTH - w.PICK_COLUMNS * w.PICK_PITCH + (w.PICK_PITCH - w.PICK_SLOT)) // 2
-        xs = [left + w.PICK_PITCH * (k % w.PICK_COLUMNS) for k in range(16)]
-        ys = [w.PICK_TOP + w.PICK_PITCH * (k // w.PICK_COLUMNS) for k in range(16)]
+        xs = [left + w.PICK_PITCH * (k % w.PICK_COLUMNS) for k in range(22)]
+        ys = [w.PICK_TOP + w.PICK_PITCH * (k // w.PICK_COLUMNS) for k in range(22)]
         self.assertGreaterEqual(min(xs), 4)
         self.assertLessEqual(max(xs) + w.PICK_SLOT, w.PICK_WIDTH - 4)
         self.assertLess(max(ys) + w.PICK_SLOT, w.PICK_TITLE_Y)
@@ -369,7 +373,7 @@ class FinishNewTests(unittest.TestCase):
         self.items = 0
         for patch in (mock.patch("dsloader.pickpocket.free_cell", lambda gd, it, m: 30),
                       mock.patch("dsloader.ring.Items", lambda gd: None),
-                      mock.patch("dsloader.restrict.allowed_kinds", lambda sheet, read: list(range(16))),
+                      mock.patch("dsloader.restrict.allowed_kinds", lambda sheet, read: list(range(22))),
                       mock.patch("dsloader.pickpocket.place", self.place)):
             patch.start()
             self.addCleanup(patch.stop)

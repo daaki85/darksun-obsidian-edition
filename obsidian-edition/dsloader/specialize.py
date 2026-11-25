@@ -3,7 +3,7 @@ can choose, and which of the game's item types each takes in.
 
 The game has no notion of a weapon's kind: its item types are one per weapon and material (a
 metal, a bone and an obsidian long sword are three), and its named weapons are types of their
-own (Bloodwrath, Swiftbite). KIND_OF_TYPE sorts every weapon type into one of the sixteen KINDS,
+own (Bloodwrath, Swiftbite). KIND_OF_TYPE sorts every weapon type into one of the 22 KINDS,
 by its dice, weight and name; the spell-made weapons (Flame Blade, Shillelagh, Spiritual
 Hammer), the gloves and the broken weapon are none. For specialization alone the spell-made ones
 count as their AD&D weapon's kind (CONJURED_KINDS, spec_kind_of): the Flame Blade a long sword
@@ -11,7 +11,8 @@ count as their AD&D weapon's kind (CONJURED_KINDS, spec_kind_of): the Flame Blad
 hammer's nearest); restrictions treat them as the game does.
 
 The kinds come in the order of the weapon window's slots, long sword first: the default for a
-pick left unmade; a gladiator's second is the club, the next.
+pick left unmade; a gladiator's second is the club, the next. The last six are Wake of the Ravager's
+kinds (game.RAVAGER_TYPES).
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -21,7 +22,8 @@ from . import game
 KINDS = ("long sword", "club", "dagger", "short sword",
          "mace", "axe", "great axe", "pick",
          "quarterstaff", "polearm", "gythka", "cahulaks",
-         "chatkcha", "bow", "sling", "staff sling")
+         "chatkcha", "bow", "sling", "staff sling",
+         "two-handed sword", "lotulis", "double spear", "trikal", "javelin", "darts")
 DEFAULT = 0  # long sword
 
 # The game's item types (DSUN's IT1R, numbered from 0) by kind, and the Loader's own short sword
@@ -44,6 +46,12 @@ _TYPES = {
     "bow": (1, 69),  # Bow, Seeker; Phrain's Bow
     "sling": (64,),
     "staff sling": (0,),
+    "two-handed sword": (game.TWOHAND_SWORD_TYPE, game.METAL_TWOHAND_SWORD_TYPE, game.BONE_GREAT_SWORD_TYPE),
+    "lotulis": (game.LOTULIS_TYPE, game.METAL_LOTULIS_TYPE, game.OBSIDIAN_LOTULIS_TYPE),
+    "double spear": (game.DOUBLE_SPEAR_TYPE,),
+    "trikal": (game.TRIKAL_TYPE,),
+    "javelin": (game.JAVELIN_TYPE, game.METAL_JAVELIN_TYPE),
+    "darts": (game.DARTS_TYPE,),
 }
 KIND_OF_TYPE: Dict[int, int] = {t: KINDS.index(kind) for kind, types in _TYPES.items() for t in types}
 
@@ -182,8 +190,10 @@ def attacks(halves: int, level: int, missile: bool = False) -> int:
 
 # A specialist's rate of fire (in halves) by kind, at specialist levels 1-6, 7-12 and 13 on
 # (DSCLOG's MISSILE_RATE): AD&D's for the sling; the bow, staff sling and chatkcha (AD&D's other
-# thrown weapons) a step above AD&D's
-MISSILE_RATES = {"bow": (6, 8, 10), "sling": (3, 4, 5), "staff sling": (3, 4, 5), "chatkcha": (3, 4, 5)}
+# thrown weapons) a step above AD&D's; Wake of the Ravager's javelin AD&D's (an other thrown weapon),
+# its darts AD&D's one more a round than the weapon's own (the mod's two a round: 3, 4, 5)
+MISSILE_RATES = {"bow": (6, 8, 10), "sling": (3, 4, 5), "staff sling": (3, 4, 5), "chatkcha": (3, 4, 5),
+                 "javelin": (3, 4, 5), "darts": (6, 8, 10)}
 
 
 def warrior_level(sheet: bytes) -> int:

@@ -55,7 +55,7 @@ AIR_KINDS = (specialize.KINDS.index("dagger"), specialize.KINDS.index("cahulaks"
 THIEF_BIT = 0x400  # (the sheet's class flags, +12h)
 
 PSIONICIST_KINDS = frozenset(specialize.KINDS.index(k) for k in
-                             ("dagger", "short sword", "mace", "club", "chatkcha", "bow", "sling"))
+                             ("dagger", "short sword", "mace", "club", "chatkcha", "bow", "sling", "darts"))
 
 
 def material(typ: bytes) -> int:

@@ -86,7 +86,7 @@ class TableTests(unittest.TestCase):
 
     def test_large_dice(self):
         """sizes.LARGE_DICE (count, sides, the bonus's change by kind, None as 0, 0, 0) is DSCLOG's
-        large_dice, all 16 kinds."""
+        large_dice, all 22 kinds."""
         self.assertEqual(len(sizes.LARGE_DICE), len(specialize.KINDS))
         want = b"".join(struct.pack("<BBb", *(dice or (0, 0, 0))) for dice in sizes.LARGE_DICE)
         self.assertEqual(self.table("large_dice"), want)

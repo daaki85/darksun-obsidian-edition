@@ -54,6 +54,8 @@ creature in red, so who acts and who is hit can be followed down the log.
 | `  X hits Bulette for 10: 1d12 = [11] -1 bone (1d12 for 1d8: a large target)` | A weapon's dice for the target's size, with [Creature size as in AD&D](FEATURES.md#creature-size). |
 | `  X hits Y for 17: 1d8 = [4] +12 STR 24 +1 Enlarge (the dice 4 x110% = 5, level 1)` | A blow by an Enlarged attacker. |
 | `    X's cahulaks tangle Y? Save against petrification: d20 = 2, needs 19+ -> tangled: loses its next turn` | A cahulaks hit's tangle: the target's save against petrification. |
+| `    X's trikal trips Y? Save against paralysis: d20 = 12, needs 13+ -> tripped: loses its next turn` | A trikal specialist's hit's trip: the target's save against paralysis ([the trikal](FEATURES.md#trikal)). |
+| `    X turns the double spear's last swing from Y to Z, beside it (a specialist's second foe, 1 less damage)` | A lotulis or double spear specialist's last swing of the round, on a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)); the attack line after it is that swing. |
 | `Y's saving throw vs a stinkpot from X (paralysis/poison/death): d20 = 7, needs 14 (40% to save) -> failed: nauseated` | A staff sling's stinkpot: the target's save against poison. |
 | `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` | A held or Out Cold target hit whatever the d20, with [Held targets as in AD&D](FEATURES.md#held-targets). |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` | A Battle Dancer's dance as a fight starts. |
