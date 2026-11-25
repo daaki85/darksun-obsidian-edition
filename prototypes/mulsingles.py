@@ -5,6 +5,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+import mulfront
 import mulstudy as fit
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
@@ -418,6 +419,8 @@ def draw(game, pose, swatches):
                 if (x, y+1) not in hood or (x+1, y) not in hood:
                     light -= 1.8
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)
+    if pose in mulfront.FRONT or pose in mulfront.TURNS:
+        out.update(mulfront.dress(pose, body, protected, limbs, bow, hood))
     return rows | out
 
 

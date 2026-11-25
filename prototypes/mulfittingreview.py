@@ -55,7 +55,56 @@ def druid_contact(name, pose, samples, previous, reference):
     return page
 
 
-def render(game_dir, output, previous, previous_druid=None):
+def front_review(atlas, folds, sand, output, previous):
+    poses = (0, 3, 4, 5, 6, 15, 16, 17, 24)
+    poses_sheet = Image.open(previous).convert("RGB")
+    roles = singles.fit.ROLES + singles.NEW
+    frames = {}
+    strip = Image.new("RGB", (740, 494), dwarf.PAPER)
+    label(strip, (12, 8), "Mul front walk", 21)
+    for column, name in enumerate(("Idle", "Step 1", "Step 2", "Step 3", "Step 4")):
+        label(strip, (180+124*column, 42), name, 15, "ma")
+    atlas.floor = sand
+    for pose in poses:
+        rows = singles.draw(atlas.game, pose, folds)
+        page = Image.new("RGB", (737, 410), dwarf.PAPER)
+        label(page, (10, 8), "Mul Druid and Thief", 20)
+        label(page, (725, 10), f"{pose:02}  {dwarf.NAMES[pose]}", 16, "ra")
+        for j, title in enumerate(("Body", "Previous Mul", "Revised Mul", "Human", "Retail Thief")):
+            label(page, (160+127*j, 47), title, 15, "ma")
+        for index, role in enumerate(("Druid", "Thief")):
+            left = 123+110*roles.index(role)
+            top = 44+105*pose
+            old = poses_sheet.crop((left, top, left+108, top+102)).resize((54, 51), Image.Resampling.NEAREST)
+            body, revised = (elf.placed_tile(atlas.game, rows[name], sand, 1, 0, 0, 0)
+                             for name in ("Body base", role))
+            npc_pose = pose if pose%15 < atlas.game.count(630+pose//15) else 0
+            tiles = (body, old, revised, atlas.tile(300, pose, role, "Class colors", 1),
+                     atlas.tile(630, npc_pose, "", "", 1))
+            y = 69+168*index
+            label(page, (10, y+41), role, 18)
+            for j, tile in enumerate(tiles):
+                x = 100+127*j
+                crop = tile.crop((7, 12, 47, 51))
+                page.paste(crop.resize((120, 117), Image.Resampling.NEAREST), (x, y))
+                page.paste(crop, (x+40, y+120))
+            if pose in poses[:5]:
+                for row, tile in enumerate((old, revised)):
+                    y = 64+index*215+row*104
+                    label(strip, (12, y+28), role, 16)
+                    label(strip, (12, y+52), ("Previous", "Revised")[row], 14)
+                    crop = tile.crop((9, 17, 47, 51))
+                    strip.paste(crop.resize((114, 102), Image.Resampling.NEAREST),
+                                (124+124*poses.index(pose), y))
+        frames[pose] = page.quantize(256, dither=Image.Dither.NONE)
+    strip.save(output/"mul-front-walk.png")
+    cycle = (0, 3, 4, 5, 6, 3, 4, 5, 6, 0, 15, 16, 17, 0, 24)
+    frames[0].save(output/"mul-front-fit.gif", save_all=True, loop=0, disposal=1,
+                   append_images=[frames[p] for p in cycle[1:]],
+                   duration=[800 if p in (0, 24) else 340 if p >= 15 else 220 for p in cycle])
+
+
+def render(game_dir, output, previous, previous_druid=None, previous_front=None):
     atlas = Atlas(game_dir)
     game = atlas.game
     folds = reference_folds(game)
@@ -101,6 +150,8 @@ def render(game_dir, output, previous, previous_druid=None):
                         im.paste(small, (left+(width-54)//2, top+51*scale+1))
             frames.append(frame)
     output.mkdir(exist_ok=True, parents=True)
+    if previous_front is not None:
+        front_review(atlas, folds, sand, output, previous_front)
     if druid_frames:
         druid_frames[22].save(output/"mul-druid-side-strike.png")
         loop(druid_frames, output/"mul-druid-contact.gif")
@@ -114,5 +165,6 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("previous", type=Path, help="mul-singles-poses.png at 6363eea")
     parser.add_argument("--previous-druid", type=Path, help="mul-singles-poses.png at bf80eb5")
+    parser.add_argument("--previous-front", type=Path, help="mul-singles-poses.png at 27911e0")
     args = parser.parse_args()
-    render(args.game_dir, args.output, args.previous, args.previous_druid)
+    render(args.game_dir, args.output, args.previous, args.previous_druid, args.previous_front)

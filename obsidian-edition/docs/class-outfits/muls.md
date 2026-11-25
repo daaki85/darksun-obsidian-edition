@@ -2,9 +2,17 @@
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
+## Front walk, strikes and bow
+
+In the previous front walk the Druid’s green collar held its V while the hips shifted. The Thief’s long lapels hung on either side of his bare chest. The new front poses have individually drawn folds. On steps two and three, look at the Druid’s ochre pleat over the raised knee. On step four, follow the Thief’s cloak across his ribs and down beside the advancing thigh. The darker breeches remain visible through the split.
+
+![Previous and revised Mul Druid and Thief in front idle and the four front walk steps](mul-front-walk.png)
+
+[Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous fitting at `27911e0`, revised fitting, human class outfit and retail Thief share the same sand tile. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
+
 ## Mantle attachment and clipping
 
-Side strike 2 (22) shows the Druid issue most clearly. In the previous fitting a copper strip split the mantle into two green patches on his back. Follow the revised fold from the shoulder blade to its short free tip. The extended arm passes in front. Front idle (00) shows the overlapping lapel meeting the waist. Side strike 3 (23) and hit (27) show how the mantle gathers when he ducks. The close-up uses the previous fitting at `bf80eb5`.
+Side strike 2 (22) shows the Druid issue most clearly. In the previous fitting a copper strip split the mantle into two green patches on his back. Follow the revised fold from the shoulder blade to its short free tip. The extended arm passes in front. Front idle (00) shows the mantle falling from one shoulder to the belted wrap. Side strike 3 (23) and hit (27) show how the mantle gathers when he ducks. The close-up uses the previous fitting at `bf80eb5`.
 
 ![Mul Druid in side strike two, beside his body, previous fitting, the human Druid and the retail Thief](mul-druid-side-strike.png)
 
@@ -25,9 +33,9 @@ The large figures share one patch of arena sand. Each small figure stands on pav
 | Gladiator, rear walk 2 (08) | The bronze shoulder piece and diagonal strap turn with the bare back. Follow the strap to the opposite hip and the lit leather edge over the advancing thigh. |
 | Fighter, side walk 2 (12) | The bone scale sits above the moving elbow. Dark leather continues behind the forearm, with a short tab behind the hip. This is still the hardest view for distinguishing the two leather outfits at game size. |
 | Cleric, side walk 3 (13) | The near arm crosses the fitted sleeve. Behind it, the outer linen fold swings back from the waist and catches light above the hem. |
-| Druid, front idle (00) | Both shoulders carry the short green mantle. Its dark lower edge lifts over the longer ochre flap. Compare the bright lip with the human Druid’s waist. |
+| Druid, front idle (00) | The green mantle gathers on one shoulder. The bound edge turns across the ribs above a belted ochre wrap. Compare the lifted pleat with the human Druid’s waist. |
 | Psionicist, front bow (24) | Follow the continuous teal along the ribs and into the lapped hip cloth where the bent forearm crosses the wrap. The copper wrist and the bow stay visible. |
-| Thief, rear walk 2 (08) | The shade changes from hood to shoulder. The wider cloak opens over the lifted leg, and the two corners fall to different heights. Front idle shows the shorter lapel on the opposite side of the chest. |
+| Thief, rear walk 2 (08) | The shade changes from hood to shoulder. The wider cloak opens over the lifted leg, and the two corners fall to different heights. Front idle shows the overlap across the chest and the open hem over the breeches. |
 
 The review covers the cleaned body and 174 empty-slot outfit poses. The checks compared the face opening, foreground hand and bow with their underlying pixels, and each silhouette with the retail cel for new enclosed holes or detached pieces. The shaded torso keeps the retail copper highlights. Equipment and live play remain pending.
 
