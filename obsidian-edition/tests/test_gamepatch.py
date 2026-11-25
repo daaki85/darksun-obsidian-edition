@@ -1,4 +1,6 @@
 import os
+import re
+import struct
 import sys
 import tempfile
 import unittest
@@ -6,6 +8,8 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import game, gamepatch
+
+SL_EXE = os.environ.get("DSUN_EXE") or "/tmp/playtest/inst/DSUN.EXE"  # (the game's, from setup_game.sh)
 
 
 def fake_dsun() -> bytearray:
@@ -383,3 +387,60 @@ class ScareTests(unittest.TestCase):
         self.assertEqual(patch.replacement[0], 0x74)  # je
         self.assertEqual(patch.offset + 2 + patch.replacement[1], 0x7A01D)  # the second test's je
         self.assertEqual(patch.offset + 2 + patch.original[1], 0x7A018)  # was: the -100
+
+
+class JumpIntoSiteTests(unittest.TestCase):
+    """A near jump from outside a patch must not land past a patch's first byte: there it runs the
+    middle of the patch's INT and its site number (Wake of the Ravager's spell_hit: "Illegal Op").
+    SL's one such jump, the window routine's failure exit, is sent to the same epilogue nearby."""
+    REDIRECTS = {"window_fail": ("window", bytes.fromhex("5ec9cb"))}  # name: (the patch, the epilogue)
+    # "jmp rel16" and "call rel16" bytes a byte scan finds landing in a patch that are no instruction
+    # (data or the middle of one, checked against a disassembly): rand's, camera_still's, party_spread's
+    # and pp_click's. (Short jumps, the switch tables' targets and the overlays' entries were checked
+    # once against a disassembly too: only "path"'s jnz at 60D82h, in code that patch steps over.)
+    NOT_CODE = {0x7BE9, 0x1BFCA, 0x6BBCC, 0x89251}
+
+    @staticmethod
+    def target(at: int, code: bytes) -> int:
+        """The file offset a 3-byte "jmp/call rel16" at AT goes to."""
+        return at + 3 + struct.unpack("<h", code[1:3])[0]
+
+    def test_redirects(self):
+        by_name = {p.name: p for p in gamepatch.PATCHES}
+        for name, (site, epilogue) in self.REDIRECTS.items():
+            p, s = by_name[name], by_name[site]
+            self.assertEqual((p.original[0], p.replacement[0]), (0xE9, 0xE9), name)
+            old, new = self.target(p.offset, p.original), self.target(p.offset, p.replacement)
+            self.assertTrue(s.offset < old < s.offset + len(s.replacement), name)  # (the jump's old place)
+            self.assertEqual(s.original[old - s.offset:], epilogue[:s.offset + len(s.original) - old], name)
+            self.assertLess(abs(new - p.offset), 0x800, name)  # (near: the same routine's segment)
+
+    @unittest.skipUnless(os.path.isfile(SL_EXE) and os.path.getsize(SL_EXE) == gamepatch.GOG_SIZE,
+                         "DSUN_EXE: the game's DSUN.EXE (GOG 1.1)")
+    def test_in_the_program(self):
+        """Each redirect lands on its epilogue, left unpatched, and a byte scan of every "jmp rel16"
+        and "call rel16" of the patched program finds none from outside a patch landing in one past
+        its first byte (but NOT_CODE's); the game's own program has the redirects' jumps besides."""
+        with open(SL_EXE, "rb") as f:
+            exe = f.read()
+        patched = gamepatch.patched(exe)
+        by_name = {p.name: p for p in gamepatch.PATCHES}
+        covered, inside = set(), {}
+        for p in gamepatch.PATCHES:
+            covered.update(range(p.offset, p.offset + len(p.replacement)))
+            for k in range(1, len(p.replacement)):
+                if p.replacement[k:] != p.original[k:]:
+                    inside[p.offset + k] = p.name
+        for name, (_, epilogue) in self.REDIRECTS.items():
+            new = self.target(by_name[name].offset, by_name[name].replacement)
+            self.assertEqual(patched[new:new + len(epilogue)], epilogue, name)
+            self.assertFalse(covered & set(range(new, new + len(epilogue))), name)
+        start = gamepatch.struct.unpack_from("<H", exe, 8)[0] * 16  # (the header's end)
+        redirects = {by_name[n].offset for n in self.REDIRECTS}
+
+        def into(data, skip):
+            return sorted(at for at in (start + m.start() for m in re.finditer(rb"[\xe8\xe9]", data[start:]))
+                          if not skip & {at, at + 1, at + 2} and self.target(at, data[at:at + 3]) in inside)
+        self.assertEqual(into(patched, covered), sorted(self.NOT_CODE))
+        others = covered - {at + k for at in redirects for k in range(3)}
+        self.assertEqual(into(exe, others), sorted(self.NOT_CODE | redirects))
