@@ -814,3 +814,16 @@ class RavagerMagicTests(unittest.TestCase):
         for spec, name in ((worldgear.METAL_TWOHAND_SWORD, "Metal Great Sword"),
                            (worldgear.METAL_LOTULIS, "Metal Lotulis"), (worldgear.METAL_JAVELIN, "Metal Javelin")):
             self.assertEqual(icons.which(worldgear.weapon(spec)), name)
+
+    def test_cleric_spheres(self):
+        """The javelins air clerics' too (a thrown weapon: the user's, 2026-11-25), the darts water
+        clerics' too (wood): in the type's class mask (+10h: the air cleric 1, the water 8)."""
+        from dsloader import restrict
+        for t, bits in ((game.JAVELIN_TYPE, 0x1), (game.METAL_JAVELIN_TYPE, 0x1), (game.DARTS_TYPE, 0x9)):
+            typ = npcitems.TYPES[t - game.GAME_TYPES]
+            mask = int.from_bytes(typ[restrict.TYPE_CLASSES:restrict.TYPE_CLASSES + 2], "little")
+            self.assertEqual(mask & bits, bits, t)
+            kind = restrict.specialize.kind_of(t)
+            self.assertTrue(restrict.sphere_allows(restrict.AIR, typ, kind))
+        typ = npcitems.TYPES[game.DARTS_TYPE - game.GAME_TYPES]
+        self.assertTrue(restrict.sphere_allows(restrict.WATER, typ, restrict.specialize.kind_of(game.DARTS_TYPE)))

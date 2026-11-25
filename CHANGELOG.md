@@ -82,6 +82,8 @@ Releases, newest first (2.12.0 and older in the archive):
   +2, Lotulis +1 and +2, Great Sword +2 and +3, Javelin +1, each with a shining icon of its own
   ([the table](obsidian-edition/ITEMS.md#weapons)). A metal lotulis strikes a second foe as any
   lotulis.
+- Air clerics may use the javelins (a thrown weapon) and water clerics the darts (wood), as their
+  spheres allow (the user's).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
