@@ -1105,6 +1105,21 @@ def rav_spec_kinds() -> Dict[int, int]:
     return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
+# Shattered Lands' types past the mod's first 33 (SL_WEAPON_TYPES' kinds: the sequel's own weapons
+# backported, their metal and magic ones): in the sequel the sequel's own type of that weapon, by its
+# kind (specialize.KINDS' two-handed sword, lotulis, double spear, trikal, javelin, darts)
+SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59, 21: 43}
+
+
+def sequel_weapon_type(sl_type: int) -> Optional[int]:
+    """The sequel's own type for SL_TYPE when it is one of the Ravager weapons backported to
+    Shattered Lands (past MOD_TYPES), else None."""
+    from . import specialize
+    if sl_type < game.GAME_TYPES + MOD_TYPES:
+        return None
+    return SEQUEL_WEAPON_OF_KIND.get(specialize.KIND_OF_TYPE.get(sl_type, -1))
+
+
 def mod_type(sl_type: int) -> int:
     """The sequel's number for the mod's Shattered Lands item type SL_TYPE (115 on)."""
     return GAME_TYPES + sl_type - game.GAME_TYPES
@@ -1113,7 +1128,7 @@ def mod_type(sl_type: int) -> int:
 def mod_types_table(types: bytes) -> bytes:
     """The sequel's type table TYPES (ALL 4) with the mod's after it."""
     from . import npcitems
-    return types + b"".join(wotr_type(t) for t in npcitems.TYPES)
+    return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None) -> Tuple[bytes, List[str]]:

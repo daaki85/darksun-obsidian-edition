@@ -75,6 +75,9 @@ def sequel_type(sl_type: int, types: Dict[int, int]) -> int:
         return KEEPSAKE_TYPE  # (the scrolls made here are of spells the sequel lacks: ravtransfer.item)
     if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:
         return ravager.mod_type(sl_type)
+    weapon = ravager.sequel_weapon_type(sl_type)
+    if weapon is not None:
+        return weapon
     return types.get(sl_type, KEEPSAKE_TYPE)
 
 

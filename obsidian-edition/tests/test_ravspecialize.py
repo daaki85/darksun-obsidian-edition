@@ -124,6 +124,17 @@ class SpecializeTests(unittest.TestCase):
                 got = self.run_routine("spec_get", bytes(sheet), esi=slot, eax=0x12340000)["eax"]
                 self.assertEqual((got >> 16, got & 0xFFFF), (0x1234, game.specs_of(raw)[0][slot]), (raw.hex(), slot))
 
+    def test_spec_get_folds_sl_kinds(self):
+        """A V3 sheet's kinds past the sequel's sixteen (SL's backported Ravager weapons, carried by the
+        party transfer) read as the kind the sequel counts that weapon as (FOLD_KINDS)."""
+        folded = {"two-handed sword": "long sword", "lotulis": "gythka", "double spear": "polearm",
+                  "trikal": "polearm", "javelin": "chatkcha", "darts": "chatkcha"}
+        for sl, sequel in folded.items():
+            sheet = bytearray(ravager.SHEET_SIZE)
+            sheet[0x42:0x46] = game.packed_specs((K(sl) + 1, K("bow") + 1), 0, 7)[:3] + b"\0"
+            got = [self.run_routine("spec_get", bytes(sheet), esi=slot)["eax"] & 0xFFFF for slot in range(4)]
+            self.assertEqual(got, [K(sequel) + 1, K("bow") + 1, 0, 0], sl)
+
     def test_next_die(self):
         for sides in range(1, 25):
             self.assertEqual(self.run_routine("next_die", bytes(ravager.SHEET_SIZE), eax=sides)["eax"] & 0xFFFF,

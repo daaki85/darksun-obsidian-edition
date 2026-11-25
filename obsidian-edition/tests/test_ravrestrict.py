@@ -52,7 +52,7 @@ class ModTypeRestrictionTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where CLASS_FORBIDS returns)
         mu.mem_write(GAME_DS * 16 + ravager_types_ptr(), struct.pack("<HH", 0, TYPES))
         table = bytes(ravager.TYPE_SIZE * ravager.GAME_TYPES) + b"".join(
-            ravager.wotr_type(bytes.fromhex(t) if isinstance(t, str) else t) for t in npcitems.TYPES)
+            ravager.wotr_type(bytes.fromhex(t) if isinstance(t, str) else t) for t in npcitems.TYPES[:ravager.MOD_TYPES])
         mu.mem_write(TYPES * 16, table)
         refused = 0
         for classes in CLASSES:
@@ -61,7 +61,7 @@ class ModTypeRestrictionTests(unittest.TestCase):
                 if race == 1 and len(classes) > 1:
                     continue  # (a human's classes come one at a time: dual-class)
                 wotr = ravtransfer.sheet(bytes(sl) + bytes(ravtransfer.SL_SHEET - len(sl)))
-                for k, typ in enumerate(npcitems.TYPES):
+                for k, typ in enumerate(npcitems.TYPES[:ravager.MOD_TYPES]):
                     sl_type = game.GAME_TYPES + k
                     record = bytes.fromhex(typ) if isinstance(typ, str) else typ
                     want = not restrict.allowed(bytes(sl), sl_type, record)
@@ -79,7 +79,7 @@ class ModTypeRestrictionTests(unittest.TestCase):
         mu.mem_write(TSR * 16, self.image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
         kinds = []
-        for k, typ in enumerate(npcitems.TYPES):
+        for k, typ in enumerate(npcitems.TYPES[:ravager.MOD_TYPES]):
             mu.mem_write(TYPES * 16, ravager.wotr_type(typ))
             mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
             for name, value in dict(cs=TSR, es=TYPES, ebx=0, ss=SS, esp=0x7FC, eflags=0x2).items():

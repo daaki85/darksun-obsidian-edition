@@ -48,6 +48,18 @@ class NumbersTests(unittest.TestCase):
         self.assertEqual(ravitems.sequel_type(60, {}), ravitems.KEEPSAKE_TYPE)
 
 
+    def test_backported_weapons_are_the_sequels(self):
+        """SL's types past the mod's first 33 (the sequel's own weapons backported, and their metal and
+        magic ones) become the sequel's type of that weapon, not keepsakes."""
+        from dsloader import game, specialize
+        want = {"two-handed sword": 101, "lotulis": 61, "double spear": 39, "trikal": 100, "javelin": 59,
+                "darts": 43}
+        extra = range(game.GAME_TYPES + ravager.MOD_TYPES, game.GAME_TYPES + len(npcitems.TYPES))
+        self.assertTrue(extra)
+        for t in extra:
+            self.assertEqual(ravitems.sequel_type(t, {}), want[specialize.KINDS[specialize.KIND_OF_TYPE[t]]], t)
+
+
 class NamesTests(unittest.TestCase):
     def test_names(self):
         sl = bytearray(25 * 4)
