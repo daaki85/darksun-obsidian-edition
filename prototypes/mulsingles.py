@@ -184,8 +184,16 @@ def thief_hood(pose):
                     shell.add((left+b+1, top+k))
                     if 2 <= k <= 4:
                         shell.add((left+b+2, top+k))
-    if pose == 18:
-        shell.add((9, 7))
+    # Native nape highlights can show through the back panel and along
+    # its profile seam. Trace the cloth through those points; the bare
+    # shoulder and the arm crossing the lower cape retain their own light.
+    shell.update({
+        1: ((10, 8),), 2: ((3, 4), (1, 6), (0, 7), (0, 8)),
+        7: ((10, 6),), 8: ((11, 6), (6, 8)), 9: ((11, 6),),
+        10: ((5, 6),), 11: ((5, 4), (3, 6)),
+        12: ((8, 4),), 13: ((4, 4),), 14: ((6, 3), (4, 5), (3, 6)),
+        18: ((9, 7), (5, 8)), 20: ((8, 9),),
+    }.get(pose, ()))
     if pose == 24:
         shell.discard((12, 5))
     if pose == 28:
@@ -270,7 +278,7 @@ def draw(game, pose, swatches):
     # below the reaching arm, and on the back edge of the side idle.
     lining = {
         2: ((1, 13), (1, 14), (1, 15)),
-        19: ((11, 12),),
+        19: ((10, 10), (10, 11), (11, 12)),
         22: ((6, 10), (5, 11), (4, 12), (5, 12), (4, 13), (4, 14)),
         23: ((6, 8), (5, 9), (6, 9), (4, 10), (4, 11), (3, 11), (3, 12)),
         25: ((11, 17),),

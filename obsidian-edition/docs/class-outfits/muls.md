@@ -12,6 +12,8 @@ On the Thief, the lit rim follows the viewer’s left temple into the cowl. Unde
 
 [Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous and revised fittings, human class outfit and retail Thief share the same sand tile. The previous Druid is from `b8447ce` and the previous Thief from `d1c46a4`. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
 
+The Thief’s pixel review covered all 29 poses. In front idle and walk steps one and two, the dark slate seam now covers the copper fleck at the far ribs. In the rear and profile walks, the cowl meets the cloak across the nape. The copper visible lower down in profile steps two and three follows the exposed forearm. [Compare three seams at 8×](mul-thief-seam-details.png) · [Inspect every pose on the full sheet](mul-singles-poses.png).
+
 ## Mantle attachment and clipping
 
 Side strike 2 (22) shows the Druid issue most clearly. In the previous fitting a copper strip split the mantle into two green patches on his back. Follow the revised fold from the shoulder blade to its short free tip. The extended arm passes in front. Front idle (00) shows the mantle falling from one shoulder to the belted wrap. Side strike 3 (23) and hit (27) show how the mantle gathers when he ducks. The close-up uses the previous fitting at `bf80eb5`.
