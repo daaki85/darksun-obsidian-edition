@@ -19,13 +19,15 @@ Compare each prior outfit at `34220d3` with its revised fit in the same pose. Th
 - **Fighter.** The armhole turns under the shoulder and the jerkin narrows to the belt. Its two leather flaps separate over the thighs. Front walk step 4 (06) shows the open space between the swinging hand and the right edge of the garment.
 - **Cleric.** In profile steps 2 and 3 (12–13), a short linen sleeve turns with the upper arm. The exposed forearm passes in front of the cloth at the ribs. The cream panel continues to the belt and lifts at the knee. The woman’s neckline and armholes follow her own chest.
 
-The fitting review covered both cleaned bodies and 174 dressed poses, including the bow, recoil and fall. Both body bases match the preceding revision pixel for pixel. The study preserves the native bow and the corrected lower hair in the woman’s profile walk. These are study renders with empty equipment slots.
+The fitting review covered both cleaned bodies and 174 dressed poses, including the bow, recoil and fall. The study preserves the native bow and the corrected lower hair in the woman’s profile walk. These are study renders with empty equipment slots.
 
 The cleaned bodies have bare feet. Each outfit adds an open leather sandal with a dark sole and ankle tie. Follow the lifted heel and the planted toes across the profile walk. [Compare the earlier materials pass beside the retail Warrior, retail Priest, and approved human outfits](half-giant-materials.png)
 
 In the woman’s third profile step, two charcoal pixels join the lower lock to the hair above her shoulder. The base and each garment retain the retail hair through profile idle and all four steps. [Inspect the shoulder and hair at 4×](half-giant-profile-hair.png)
 
 The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman. The body preserves each original pose’s silhouette and foot placement. The exposed limbs retain the figure’s skin tones, with a deep brown edge under the foot and on the shadow side of the calf. The robe draws its fold shading from the retail Priest.
+
+In rear walk step 2 (08), look just below the woman’s hair and above the Gladiator strap. The cleaned nape follows the neck shadow into the shoulder. The same harness edge showed in the man’s rear views. The correction is shared by the singles and pairs. [Compare the nape and the Cleric/Fighter at game size](halfling-half-giant-fit-review.png)
 
 ## Two-class outfits
 

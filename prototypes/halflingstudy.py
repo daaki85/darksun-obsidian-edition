@@ -187,6 +187,12 @@ def garment_masks(ref, native, twin, pose, dx, dy, half):
     return top, legs, bands, thigh_light
 
 
+# Highlights surviving on the outer edge of his retail cuffs. Trace these
+# in the native cel because the same ochres also paint hair and the bow.
+MALE_CUFF_TIPS = {1: ((1, 9), (2, 10)), 2: ((11, 11),), 3: ((18, 10),),
+                  7: ((13, 8),), 10: ((0, 13),), 27: ((0, 10),)}
+
+
 def rows_for(game, model, pose, swatch):
     cb, f = divmod(pose, 15)
     hands = game.fig(model).parts(cb, f).hands.values() if pose != 28 else ()
@@ -205,9 +211,20 @@ def rows_for(game, model, pose, swatch):
     rows = {k: [r[:] for r in original] for k in ROLES}
     half = 3 if pose in PROFILE else 4
     top, legs, bands, thigh_light = garment_masks(ref, native, game.fr(2070+cb, f), pose, dx, dy, half)
+    if model == 2068:
+        bands.update(MALE_CUFF_TIPS.get(pose, ()))
     belt_l, belt_r = (hx-half+1, hy), (hx+half-1, hy)
     hem = (left, (left[0]+2, left[1]+1), (hx, (left[1]+right[1])//2-1),
            (right[0]-1, right[1]+1), right)
+    # In front and rear views the near knee pushes the linen sideways.
+    # The middle of the hem spans the stride, with one low point over the
+    # weight-bearing side and no upward cut between the thighs.
+    broad_robe = pose in (0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 18, 19, 20, 21, 25, 26)
+    if broad_robe:
+        lx, ly = left
+        rx, ry = right
+        hem = ((lx, ly), (lx+2, ly+1), (hx, (ly+ry+1)//2+1),
+               (rx-2, ry+1), (rx, ry))
     robe = pixels((belt_l, belt_r, *reversed(hem)))
     # Short leather overlaps the front of the thighs. Keep the gap between
     # the moving legs and the contrasting arc of linen on the long robe.
@@ -327,6 +344,20 @@ def rows_for(game, model, pose, swatch):
                     if y > hy+1 and pose != 22 and abs(x-hx-.25*(y-hy)) < .85:
                         continue
                     light += 2*math.cos((x-hx)*.9)+2*(x == hx-half+1)
+                elif role == 'Cleric' and broad_robe:
+                    # A broad lit apron turns over the knee. The deepest
+                    # fold drifts toward the side seam as it drops, and
+                    # the curved hem carries light across the middle.
+                    near = -1 if left[1] < right[1] else 1
+                    crease = hx+near*(1.2+2.3*fall)
+                    dist = x-crease
+                    light = (9.5+.71*grain-3.0*abs(x-hx)/max(1, span)
+                             -4.7*math.exp(-.75*dist*dist)
+                             +1.5*math.exp(-.52*(dist+1.5)**2))
+                    if (x+1, y) not in panel:
+                        light -= 2.5
+                    if (x, y+1) not in panel:
+                        light += .7 if abs(x-hx) < half else -1.3
                 elif role == 'Cleric':
                     light += 1.3*fold - 1.3*((x+1, y) not in panel)
                 elif role == 'Gladiator':

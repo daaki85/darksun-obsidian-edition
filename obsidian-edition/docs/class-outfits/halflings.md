@@ -24,6 +24,8 @@ The first fitting covers the Gladiator, Fighter and Cleric on both halflings. Ea
 
 [Compare leather and linen beside retail art in idle and profile walk](halfling-materials.png) · [Male pose sheet](halfling-man-poses.png) · [Female pose sheet](halfling-woman-poses.png)
 
+In front walk step 1 (03) and rear walk step 2 (08), the Cleric’s linen spans the knees in one curved hem. Its deepest crease falls to the side of the advancing thigh. The man’s bare wrist also keeps its skin shading in rear and side idle. [Compare the previous and revised robe and hand](halfling-half-giant-fit-review.png)
+
 ## Face and neckline
 
 In front idle, look at the strip of skin between the man’s jaw and the cream collar. In the second side strike, the Fighter’s bone guard sits farther back on his shoulder, leaving the profile clear. The woman’s front strike shows why the jaw needs its own outline as she ducks under her raised arm. Both figures keep the fringe and eye shadow drawn into their retail heads.

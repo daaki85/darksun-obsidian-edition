@@ -495,6 +495,28 @@ def dress_pairs(pieces, visible, model, pose, dx, dy):
             out[sy][sx] = color
 
 
+# Rear poses reuse the harness just below the scalp. Each entry gives
+# its first scanline and native x on the man and woman. The woman's
+# longer locks fall on opposite sides of the neck as the shoulder turns.
+NAPE = {1: (10, 12, 15), 7: (10, 7, 8), 8: (10, 6, 7), 9: (10, 8, 11),
+        10: (10, 11, 11), 18: (10, 6, 6), 19: (10, 8, 9), 20: (10, 14, 14),
+        25: (14, 11, 11)}
+
+
+def clean_nape(pieces, model, pose, margin):
+    top, man, woman = NAPE[pose]
+    start = woman if model == 2074 else man
+    # Keep the deepest shadow immediately under the hair. It tapers into
+    # the warm half-light on the trapezius before the garment is drawn.
+    for y, shades in ((top, (132, 130, 144, 132, 131, 134, 129, 134)),
+                      (top+1, (145, 146, 145, 144, 130, 132, 134, 132))):
+        for i, color in enumerate(shades):
+            x = margin+start+i
+            if x < len(pieces["Body base"][y]) and pieces["Body base"][y][x] in (208, 209, 254):
+                for rows in pieces.values():
+                    rows[y][x] = color
+
+
 def study_rows(game, model, pose, texture, *, pairs=False):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
@@ -593,6 +615,8 @@ def study_rows(game, model, pose, texture, *, pairs=False):
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     pieces[role][sy][sx] = body if foot is None else foot
+    if pose in NAPE:
+        clean_nape(pieces, model, pose, margin)
     visible = {name: set() for name in ("Cleric", "Fighter", "cloak", "sleeve")} if pairs else None
     dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
     if pairs:
