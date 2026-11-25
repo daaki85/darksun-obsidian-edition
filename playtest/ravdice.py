@@ -6,6 +6,11 @@
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
 # RAV_TAB_OFF=1: the red ring under the enemy chosen with Tab and the chances to hit (its line's, the pointer's) off.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
+# RAV_NO_PAN=1: the view not scrolled to an enemy chosen with Tab off the screen (targeting.Targeting._show a no-op: the
+# Loader as it was before DSCLOG2's PAN, a control).
+# RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
+# the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
+# kept from its last attack (ac_gap) and the game's last AC for it, the effects on it, each swing's THAC0 and AC.
 import sys, os, time, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -32,6 +37,39 @@ if os.environ.get('RAV_TAB_OFF'):  # (a control: no ring, no chance to hit on th
     print('Tab: ring and chances off', flush=True)
 if os.environ.get('RAV_STEALTH_ROLL'):
     log.stealth_roll = lambda n=int(os.environ['RAV_STEALTH_ROLL']): n
+if os.environ.get('RAV_NO_PAN'):  # (a control: DSCLOG2's PAN_X and PAN_Y never added to)
+    from dsloader import targeting
+    targeting.Targeting._show = staticmethod(lambda gd, tsr_hdr, thing: False)
+    print('Tab: the view not scrolled to the chosen enemy', flush=True)
+if os.environ.get('RAV_PREDICT'):  # (what each Tab line's chance was made of: hitchance.predict's inputs)
+    from dsloader import hitchance
+    _swings = log._swings
+    def _detail(attacker, target):
+        out = _swings(attacker, target)
+        try:
+            gd = log.game
+            me, it = gd.combatant_creature(attacker), gd.combatant_creature(target)
+            facing = gd.facing(it) if it is not None else None
+            parts = ['%s THAC0 %d AC %d need %d%s' % (s.weapon, s.thac0, s.ac, s.need,
+                     '' if s.behind is None else ' behind %d' % s.behind) for s in out]
+            hits = ['%s %d %s' % (h.name, h.thac0, h.parts) for h in gd.weapon_hits(me, unarmed=True)]
+            line = ('  predict: %s -> %s: squares %d, facing %s, way %s, AC front %s back %s, gap %s, '
+                    'game AC %s, effects on it %s; %s; hits %s' % (
+                        gd.combatant_name(attacker), gd.combatant_name(target), hitchance.squares(gd, attacker, target),
+                        facing, hitchance.way(gd, target, attacker), gd.attack_ac(it, me, False),
+                        gd.attack_ac(it, me, True), log.ac_gap.get(it), log.monster_ac(it),
+                        sorted(e.id for e in gd.effects() if e.owner == target), '; '.join(parts), ' | '.join(hits)))
+        except Exception as e:  # (a tool's line: never the log's end)
+            line = '  predict: (%r)' % e
+        if line == _last[0]:  # (the same again: the panel's header asks every few seconds)
+            return out
+        _last[0] = line
+        print(line, flush=True)
+        if out_file:
+            out_file.write(line + '\n'); out_file.flush()
+        return out
+    out_file, _last = out, [None]
+    log._swings = _detail
 end = time.time() + secs
 while time.time() < end:
     for line in log.lines(show_all):

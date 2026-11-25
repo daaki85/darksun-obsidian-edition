@@ -840,8 +840,10 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _target_ranges(self) -> Optional[int]:
         """DSCLOG2's words for choosing an enemy and its ring (header +244 to +259: RINGS_ON, RED's
-        offset, TARGET_ON, the Tab and Enter counts, HIT_TARGET) and RED, made writable; RED's address,
-        None without them (a helper before Tab: its RED offset 0)."""
+        offset, TARGET_ON, the Tab and Enter counts, HIT_TARGET; +230 and +232, PAN_X and PAN_Y, the
+        view scrolled to the chosen enemy off the screen, as DSCLOG's: targeting.TSR_PAN) and RED, made
+        writable; RED's address, None without them (a helper before Tab: its RED offset 0). (A helper
+        before PAN had zeros there that nothing read: the Loader's adding to them did nothing.)"""
         if self.tsr_hdr is None:
             return None
         red_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_RED, 2))
@@ -849,7 +851,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not red_off or not far:
             return None
         for r in ((self.tsr_hdr + rings.TSR_RINGS_ON, targeting.TSR_ATTACK + 2 - rings.TSR_RINGS_ON),
-                  (far * 16 + red_off, 256)):
+                  (self.tsr_hdr + targeting.TSR_PAN, 4), (far * 16 + red_off, 256)):
             if r not in self.guest.writable:
                 self.guest.writable = self.guest.writable + [r]
         return far * 16 + red_off

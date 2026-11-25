@@ -2444,6 +2444,21 @@ class GameData:
         return any(item[ITEM_SLOT] in ARMOUR_SLOTS and len(typ) > 0x0F and restrict.is_armour(typ)
                    for _, item, typ in self._worn(creature))
 
+    def armour_ready(self, creature: int) -> bool:
+        """armour_worn, or, for a monster none of whose items is in place yet (every item's slot byte
+        past EQUIP_SLOTS: one that hasn't fought yet, its gear as it was loaded), an armour piece
+        among them: the game puts its gear on as it first fights, before the AC routine weighs an
+        attack on it (a Draxan in Wake of the Ravager's Tyr ambush: its brigandine's three pieces in
+        slots 14-16 until then, at 9, 6 and 0 by its first attacker's swing; a gladiator's AC a fifth
+        of its level better with armour on, so the chance shown before its first fight was 1 too
+        easy, 2026-11-25)."""
+        if self.armour_worn(creature):
+            return True
+        from . import restrict
+        gear = list(self._worn(creature)) if creature >= PARTY_SIZE else []
+        return bool(gear) and all(item[ITEM_SLOT] >= len(EQUIP_SLOTS) for _, item, _ in gear) \
+            and any(len(typ) > 0x0F and restrict.is_armour(typ) for _, _, typ in gear)
+
     def heavy_armour_worn(self, creature: int) -> bool:
         """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
         a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
@@ -2690,7 +2705,7 @@ class GameData:
                 armour -= part
             else:
                 other -= part
-        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_worn(target):
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_ready(target):
             for n in range(3):
                 if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
                     level = sheet[SHEET_LEVELS + n]

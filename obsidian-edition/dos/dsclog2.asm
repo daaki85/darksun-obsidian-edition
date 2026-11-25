@@ -175,7 +175,10 @@ names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), N
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and unheard
                                 ;      (RULE_STEALTH, stealth.py): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared: MISSILE_REAR)
-        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +237: none of them here yet, zero)
+        times 230 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +229: none of them here yet, zero)
+pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to scroll the view by as many
+pan_y      dw 0                 ; +232   pixels, as DSCLOG's (to the enemy chosen with Tab: PAN_TICK)
+        times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +234 to +237: none of them here yet, zero)
 dac_off  dw FAR_DAC             ; +238 offset of DAC in the far block: the palette as last read (DAC_TICK),
                                 ;      768 values 0-63, for the colours of the Loader's labels and panel
 dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK finds the palette changed:
@@ -12326,6 +12329,7 @@ probe_scroll:
         popf
         call label_tick
         call ring_tick
+        call pan_tick                   ; (the view to the enemy chosen with Tab: the Loader's PAN)
         pop es
         popa
         test byte [cs:s_fl + 1], 2      ; (the caller's flags' IF)
@@ -14319,6 +14323,61 @@ t_event:                                ; the game's handler called with event A
 t_none: retf                            ; (the handler for the moment of the swap)
 t_handler dd 0
 t_mask    dw 0
+
+; PAN_TICK: (PROBE_SCROLL's, DS the game's) DSCLOG's PAN: the Loader adds to PAN_X and PAN_Y (wrapping)
+; the pixels the view is to scroll by (targeting.py: to the enemy chosen with Tab, when it is off the
+; screen, so Enter's click has it to click on), and the next pass on the map moves the view by what was
+; added since the last (PAN_X_DONE, PAN_Y_DONE) through the game's own routine centring it (1C5F:01F3,
+; VIEW_AGAIN's CENTRE: it keeps the view inside the map's limits, DS:14D7h to 14DDh, and draws it again;
+; PROBE_CENTRE then draws the panel's view again too). Off the map what was added is dropped; while a
+; label or the ring is being drawn it waits a pass. Keeps all.
+pan_tick:
+        pusha
+        mov ax, [cs:pan_x]
+        sub ax, [cs:pan_x_done]
+        mov si, [cs:pan_y]
+        sub si, [cs:pan_y_done]
+        mov di, ax
+        or di, si
+        jz .out
+        call on_map
+        jne .drop
+        cmp byte [cs:lbl_busy], 0
+        jne .out
+        cmp byte [cs:vga_busy], 0
+        jne .out
+        add [cs:pan_x_done], ax
+        add [cs:pan_y_done], si
+        add ax, [CAM_X]
+        add si, [CAM_Y]
+        and ax, 0xFFF8                  ; (as the game keeps it)
+        and si, 0xFFF8
+        cmp ax, [CAM_X]
+        jne .go
+        cmp si, [CAM_Y]
+        je .out
+.go:    mov bx, ds
+        sub bx, DGROUP - CENTRE_SEG
+        mov [cs:centre + 2], bx
+        pushf
+        cli                             ; (drawing)
+        push word 1
+        add si, 100
+        push si
+        add ax, 160
+        push ax
+        call far [cs:centre]
+        add sp, 6
+        popf
+        inc word [cs:pan_moves]
+        jmp .out
+.drop:  add [cs:pan_x_done], ax
+        add [cs:pan_y_done], si
+.out:   popa
+        ret
+pan_x_done dw 0
+pan_y_done dw 0
+pan_moves  dw 0                 ; (the view moved by PAN, counted: ravtab.py)
 
 ; PROBE_HIT (site 77): "push bp / mov bp,sp / sub sp,0Eh" (6 bytes: the site and 3 NOPs) at the start of
 ; the routine that finds the thing under the pointer (29DBDh: camera x, y, pointer x, y; the thing, or

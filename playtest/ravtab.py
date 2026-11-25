@@ -1,9 +1,10 @@
 """ravtab.py: the state of choosing an enemy with Tab in the running sequel ($WORK/rav.pid; DSCLOG2's TARGETING and
 RINGS, from a symbol map of obsidian-edition/dos/dsclog2.asm, as ravkits.py count).
   python3 ravtab.py            one line: DSCLOG2's words (rings_on, target_on, the Tab, Shift+Tab and Enter counts,
-                               hit_target, the clicks given, the finder's forced answers, the rings drawn, the main
-                               loop's passes) and the game's (whose turn, the pointer's mode at DS:1440h, the thing
-                               under the pointer DS:0DADh, the pointer DS:A109h)
+                               hit_target, the clicks given, the finder's forced answers, the rings drawn, PAN_X and
+                               PAN_Y as the Loader added to them, the view's moves by them, the main loop's passes)
+                               and the game's (the view's top left DS:1408h, whose turn, the pointer's mode at
+                               DS:1440h, the thing under the pointer DS:0DADh, the pointer DS:A109h)
   python3 ravtab.py feet       each combatant's map thing's feet (DS:67BBh + 25h x thing, +0Ah, +0Ch) and the view
                                (DS:1408h), the screen place of each (window x = game x x 2, y x 2.4 at 640x480)"""
 import argparse, os, struct, subprocess, sys, tempfile
@@ -15,7 +16,8 @@ WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 HEADER = (('rings_on', 244), ('target_on', 250), ('tab_seq', 252), ('back_seq', 254), ('hit_target', 256),
-          ('attack_seq', 258), ('attack_clicks', 1878), ('hit_answers', 1880), ('ring_draws', 1882))
+          ('attack_seq', 258), ('attack_clicks', 1878), ('hit_answers', 1880), ('ring_draws', 1882),
+          ('pan_x', 230), ('pan_y', 232))
 
 
 def helper():
@@ -61,6 +63,7 @@ else:
     hdr = base + sym['hdr']
     print(' '.join('%s=%#x' % (n, word(hdr + o)) if n == 'hit_target' else '%s=%d' % (n, word(hdr + o))
                    for n, o in HEADER),
-          'main_ticks=%d' % word(base + sym['main_ticks']),
-          'turn=%d mode=%d under=%#x pointer=%d,%d' % (word(ds + ravager.WHOSE_TURN), word(ds + 0x1440),
-                                                      word(ds + 0x0DAD), *struct.unpack('<hh', g.read(ds + 0xA109, 4))))
+          'pan_moves=%d main_ticks=%d' % (word(base + sym['pan_moves']), word(base + sym['main_ticks'])),
+          'view=%d,%d turn=%d mode=%d under=%#x pointer=%d,%d' % (
+              *struct.unpack('<hh', g.read(ds + 0x1408, 4)), word(ds + ravager.WHOSE_TURN), word(ds + 0x1440),
+              word(ds + 0x0DAD), *struct.unpack('<hh', g.read(ds + 0xA109, 4))))

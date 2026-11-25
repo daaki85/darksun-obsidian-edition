@@ -154,6 +154,31 @@ class TableTests(unittest.TestCase):
         for n in ("follow_1", "follow_2", "follow_3"):
             self.assertEqual(by[n].replacement, bytes((0xCD, ravager.VEC_FOLLOW, 0x90)))
 
+    def test_helper_pans_to_the_chosen_enemy(self):
+        """DSCLOG2 has DSCLOG's PAN_X and PAN_Y (+230, +232: zeros in the file, targeting.TSR_PAN), PAN_TICK
+        called from PROBE_SCROLL and kept resident (before RESIDENT_END), and the Loader makes the two words
+        writable with Tab's (RavDiceLog._target_ranges); with DSUN_WOTR, the game's centring routine (file
+        219E3h, VIEW_AGAIN's CENTRE) starts as PAN_TICK has it: x less 160 and y less 100, rounded to 8, to
+        the view's top left (DS:1408h, 140Ah), then kept inside the map's limits (DS:14D7h to 14DDh)."""
+        import inspect
+        from dsloader import ravlog, targeting
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        image = open(os.path.join(here, "dos", ravager.HELPER_EXE), "rb").read()[32:]
+        hdr = image.find(b"DSCLOGR1")
+        self.assertEqual(struct.unpack_from("<HH", image, hdr + targeting.TSR_PAN), (0, 0))
+        src = open(os.path.join(here, "dos", "dsclog2.asm")).read()
+        self.assertRegex(src, r"\npan_x +dw 0 +; \+%d " % targeting.TSR_PAN)
+        self.assertRegex(src, r"\npan_y +dw 0 +; \+%d " % (targeting.TSR_PAN + 2))
+        scroll = src[src.index("\nprobe_scroll:"):]
+        self.assertIn("call pan_tick", scroll[:scroll.index("iret")])
+        self.assertLess(src.index("\npan_tick:"), src.index("\nresident_end:"))
+        self.assertIn("targeting.TSR_PAN", inspect.getsource(ravlog.RavDiceLog._target_ranges))
+        if WOTR:
+            exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+            self.assertEqual(exe[0x219E3:0x219E3 + 15], bytes.fromhex("558bec8b46060560ff25f8ffa30814"))
+            self.assertEqual(exe[0x219E3 + 0x1E:0x219E3 + 0x22], bytes.fromhex("3b06d714"))
+            self.assertEqual(exe[0x219E3 + 0x54:0x219E3 + 0x58], bytes.fromhex("3b06dd14"))
+
     def test_item_fields(self):
         """SL's item power (a byte at 0Fh) is the sequel's word at 10h; from SL's 10h on, two bytes on."""
         self.assertEqual([ravager.item_field(sl) for sl in (0x0A, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x14, 0x15)],

@@ -1125,6 +1125,22 @@ TARGET_MOUSE). **Tab** without the Loader opens the game's own menu (the save/lo
 Loader on a party member's turn in a fight it is the Loader's. **A DSCLOG2 routine must go above
 RESIDENT_END**: code after it is freed as the helper goes resident, and the next allocation writes over it
 (the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then).
+**The view to the chosen enemy, and a monster's gear before it fights** (2026-11-25,
+logs/2026-11-25-ravager-tab-followups.md): the sequel's centring routine 1C5F:01F3 (file 219E3h; x, y the
+view's middle, then 1 to draw) sets the view's top left to (x - 160, y - 100) rounded down to 8 and keeps it
+inside the map's limits itself (DS:14D7h, 14D9h the least, 14DBh, 14DDh the most, right and bottom edges), so
+DSCLOG2's PAN_TICK (PROBE_SCROLL's, DSCLOG's PAN_X/PAN_Y at +230/+232) only adds the Loader's pixels to the
+view and calls it; `ravtab.py` prints PAN and `pan_moves`. **To scroll the view off a fight's figures for a
+test**: `ravclick.py 319 100 none`, then `xdotool mousemove_relative -- 20 0` a few times (the game's edge
+scrolling: about 500 pixels in 3 s); `ravclick.py 160 100 none` stops it. **A monster's items are unplaced
+until it first fights**: their slot bytes (item +13h) run 14, 15, ... in list order (a Draxan's brigandine in
+14-16, its weapons in 17-19); by its first attacker's swing the game has put them on (chest 9, legs 6, arm 0,
+right hand 3, missile 2, ammo 1), and the AC routine weighs them so. The Draxans are gladiators of level 8
+(sheet flags 40h, class 10): AC 1 better in armour, which the Loader's armour_worn (by the slots) missed
+before their first fight (`game.armour_ready`). `ravdice.py` with `RAV_PREDICT=1` takes a Tab line's chance
+apart; `RAV_NO_PAN=1` is the control for the view. The Tab list here holds the street's other people too
+(Caravan Master, Dhukkar, Arslan, Templar, Boric, pedestrians: rings.enemies), and Enter on one out of reach (in
+a room behind the doorway) gives the click and the game does nothing.
 
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);
