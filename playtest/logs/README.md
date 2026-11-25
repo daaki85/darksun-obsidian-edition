@@ -134,6 +134,7 @@ schedules and diffs a log made or used.
 | [2026-11-20](2026-11-20-round-one-oddity.md) | The `Round 1` of about 50 combatants, most `?`, at the whole party's hold: the game plays round after round in a blink with no one able to act (no jump, nothing reset), and the dice log put several rounds' initiative under one heading and took it for a new fight; fixed (`Rounds 4-5 go by at once: no one in the fight can act`, then the last round's order and number) and shown in two plays |
 | [2026-11-20](2026-11-20-open-prs-checks.md) | Pull requests #136, #140 and #141 played together (all seven open ones merged locally): bulk loot fine to full packs; rounds counted right, but a long burst of skipped rounds that overran the ring was undercounted (`Rounds 232-383` for 4-383); a Haste recast reported `in place of`, with no ageing |
 | [2026-11-21](2026-11-21-dosbox-x-unchecked.md) | DOSBox-X, what the last play left unseen: Bless cast in `fountain-user`'s ambush, the fight won with no edit and its autosave made and loaded, F10 after the last step (the Loader's walk back), Kalzith's shop (S, a purchase), the inventory (an item given), the creation screen to VIEW CHARACTER (a Myrmidon, the weapon and psionic windows); nothing differed from 0.74 |
+| [2026-11-25](2026-11-25-dosbox-x-upper-memory.md) | DOSBox-X's upper memory: which options move it, and `umb end=FBFF` with a 16 KB ROM BIOS giving DSCLOG 48 KB more free upper memory in `fountain-user` (a fight won with it) |
 
 ## files/
 

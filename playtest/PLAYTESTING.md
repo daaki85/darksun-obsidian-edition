@@ -484,6 +484,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   device:synth"). `sox -t raw -r 48000 -e signed -b 16 -c 2 audio.raw out.ogg trim 70 40` makes a
   clip. Its other FluidSynth, `mididevice=fluidsynth`, needs a sound server (no music here:
   logs/2026-11-21-dosbox-x-unchecked.md part 3).
+- **More upper memory in DOSBox-X** (logs/2026-11-25-dosbox-x-upper-memory.md): `extra=dos|umb
+  end=FBFF extra=dosbox|rom bios allocation max=16 extra=dosbox|rom bios minimum size=16` gives
+  48 KB more (CC00-FBFF; `memaudit.py` free upper 16,368 to 65,520 bytes), the game played a
+  fight with it. `umb end` past EFFF without the two BIOS lines turns upper memory off.
 - **A killed DOSBox-X leaves its memory file** in /dev/shm (32 MB): the next `start_dosboxx.sh`
   removes it, the last one's by hand (`$WORK/memfile.path` names it).
 - **`codepatch.py [SECONDS] [game]`**: is a write to code acted on at once (the helper's own
