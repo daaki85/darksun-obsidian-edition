@@ -6,11 +6,11 @@ The playable Mul in Shattered Lands is male only. All six single classes are fit
 
 Compare the Druid on front walk steps three and four. The green mantle turns with his ribs, and the ochre wrap lifts across the raised thigh before the weight changes sides. The shorter hem exposes the bend of each knee.
 
-On the Thief, follow the lit rim down the viewer’s left temple into the cowl. On step three the cloak passes behind the swinging arm. Its free corner reaches past the hip while the brown breeches follow the bent leg in front. The retail Thief in the animation shows the same overlap.
+On the Thief, the lit rim follows the viewer’s left temple into the cowl. Under it, a single fold runs down from the near shoulder toward the belt. The far side of the tunic stays in shadow as he steps. [Compare the two Thief fittings through the front walk](mul-thief-front-walk.png). On step three the cloak passes behind the swinging arm. Its free corner reaches past the hip while the brown breeches follow the bent leg in front. The retail Thief in the animation shows the same overlap.
 
 ![Previous and revised Mul Druid and Thief in front idle and the four front walk steps](mul-front-walk.png)
 
-[Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous fitting at `b8447ce`, revised fitting, human class outfit and retail Thief share the same sand tile. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
+[Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous and revised fittings, human class outfit and retail Thief share the same sand tile. The previous Druid is from `b8447ce` and the previous Thief from `d1c46a4`. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
 
 ## Mantle attachment and clipping
 

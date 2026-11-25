@@ -55,9 +55,12 @@ def druid_contact(name, pose, samples, previous, reference):
     return page
 
 
-def front_review(atlas, folds, sand, output, previous):
+def front_review(atlas, folds, sand, output, previous, previous_thief=None):
     poses = (0, 3, 4, 5, 6, 15, 16, 17, 24)
     poses_sheet = Image.open(previous).convert("RGB")
+    sources = {"Druid": poses_sheet, "Thief": poses_sheet}
+    if previous_thief is not None:
+        sources["Thief"] = Image.open(previous_thief).convert("RGB")
     roles = singles.fit.ROLES + singles.NEW
     frames = {}
     strip = Image.new("RGB", (740, 494), dwarf.PAPER)
@@ -82,7 +85,7 @@ def front_review(atlas, folds, sand, output, previous):
         for index, role in enumerate(("Druid", "Thief")):
             left = 123+110*roles.index(role)
             top = 44+105*pose
-            old = poses_sheet.crop((left, top, left+108, top+102)).resize((54, 51), Image.Resampling.NEAREST)
+            old = sources[role].crop((left, top, left+108, top+102)).resize((54, 51), Image.Resampling.NEAREST)
             body, revised = (elf.placed_tile(atlas.game, rows[name], sand, 1, 0, 0, 0)
                              for name in ("Body base", role))
             npc_pose = pose if pose%15 < atlas.game.count(630+pose//15) else 0
@@ -112,13 +115,19 @@ def front_review(atlas, folds, sand, output, previous):
         frames[pose] = page.quantize(256, dither=Image.Dither.NONE)
     details.save(output/"mul-front-details.png")
     strip.save(output/"mul-front-walk.png")
+    if previous_thief is not None:
+        thief_walk = Image.new("RGB", (strip.width, strip.height-215), dwarf.PAPER)
+        thief_walk.paste(strip.crop((0, 38, strip.width, 64)), (0, 38))
+        thief_walk.paste(strip.crop((0, 279, strip.width, strip.height)), (0, 64))
+        label(thief_walk, (12, 8), "Mul Thief  /  front walk", 21)
+        thief_walk.save(output/"mul-thief-front-walk.png")
     cycle = (0, 3, 4, 5, 6, 3, 4, 5, 6, 0, 15, 16, 17, 0, 24)
     frames[0].save(output/"mul-front-fit.gif", save_all=True, loop=0, disposal=1,
                    append_images=[frames[p] for p in cycle[1:]],
                    duration=[800 if p in (0, 24) else 340 if p >= 15 else 220 for p in cycle])
 
 
-def render(game_dir, output, previous, previous_druid=None, previous_front=None):
+def render(game_dir, output, previous, previous_druid=None, previous_front=None, previous_thief=None):
     atlas = Atlas(game_dir)
     game = atlas.game
     folds = reference_folds(game)
@@ -165,7 +174,7 @@ def render(game_dir, output, previous, previous_druid=None, previous_front=None)
             frames.append(frame)
     output.mkdir(exist_ok=True, parents=True)
     if previous_front is not None:
-        front_review(atlas, folds, sand, output, previous_front)
+        front_review(atlas, folds, sand, output, previous_front, previous_thief)
     if druid_frames:
         druid_frames[22].save(output/"mul-druid-side-strike.png")
         loop(druid_frames, output/"mul-druid-contact.gif")
@@ -180,5 +189,6 @@ if __name__ == "__main__":
     parser.add_argument("previous", type=Path, help="mul-singles-poses.png at 6363eea")
     parser.add_argument("--previous-druid", type=Path, help="mul-singles-poses.png at bf80eb5")
     parser.add_argument("--previous-front", type=Path, help="mul-singles-poses.png at b8447ce")
+    parser.add_argument("--previous-thief", type=Path, help="mul-singles-poses.png at d1c46a4")
     args = parser.parse_args()
-    render(args.game_dir, args.output, args.previous, args.previous_druid, args.previous_front)
+    render(args.game_dir, args.output, args.previous, args.previous_druid, args.previous_front, args.previous_thief)
