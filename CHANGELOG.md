@@ -59,7 +59,7 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #179;
+(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #187;
 each pull request's own entry is below, grouped.)
 
 **New: Shattered Lands** (#149, #154, #157, #187)
