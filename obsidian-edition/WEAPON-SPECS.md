@@ -23,6 +23,7 @@ How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian
 - [At a level gained](#at-a-level-gained)
 - [Changing class](#changing-class)
 - [Where it shows](#where-it-shows)
+- [In Wake of the Ravager](#in-wake-of-the-ravager)
 
 ## The sixteen weapon specs
 
@@ -226,3 +227,25 @@ with, chosen or not; and View Character, as the game has it, gives a character's
 whatever weapon is ready.
 
 ![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)
+
+## In Wake of the Ravager
+
+A party taken to the sequel ([Taking the party to Wake of the Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager))
+keeps its weapon specs, and they work in its fights as here: the to-hit and damage, mastery and grand
+mastery, the attacks a round and the rates of fire. Nobody picks new ones there (the sequel has no
+weapon window), and the kits' parts (a Battle Mage's or Crusader's expertise, a Justifier's, a
+Myrmidon's second kind) wait for the kits. The sequel's own weapons count as the nearest of the
+sixteen:
+
+| The sequel's weapon | Counts as |
+|---|---|
+| Twohand Sword, Bloodletter (and the Crystal sword) | long sword |
+| Lotulis | gythka |
+| Trikal, Double Spear | polearm |
+| Promere hammer, Jasmine, Spirit hammer | mace |
+| Darts, Javelin | chatkcha (its rate of fire) |
+| Shillelagh | club |
+| Rainbow (the spell's bow) | bow |
+
+The Net and the Rock count as none. The sequel's own characters have no specs, so they fight as the
+sequel has them.

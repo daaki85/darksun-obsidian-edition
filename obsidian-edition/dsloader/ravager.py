@@ -96,7 +96,8 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_HALF_GIANT | game.RULE_CAHULAKS | game.RULE_SIZE | game.RULE_RANGER_CAST
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
-                | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH)
+                | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
+                | game.RULE_SPECIALIZE)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -510,6 +511,11 @@ PATCHES: Tuple[Patch, ...] = (
     # stores its attacks a round (5CEE8h, SL's 58892h: "mov ah,0 / mov [bp-0Ah],ax"), one in the off hand.
     Patch("two_weapons", 0x5DE7C, bytes.fromhex("f7d88bd00bd27d0233d2"), gamepatch._interrupt(VEC_TWO, 10)),
     Patch("off_hand", 0x5CEE8, bytes.fromhex("b4008946f6"), gamepatch._interrupt(VEC_OFF_HAND, 5)),
+    # Weapon specialization (SL's PROBE_ATTACKS and PROBE_SPEC_DAMAGE, game.RULE_SPECIALIZE, always on;
+    # the transferred party's specs at the sheet's +42h..+44h): OFF_HAND above makes the attacks a round
+    # and the THAC0 the skill's (DSCLOG2's SPEC_ATTACKS), and DSCLOG2's SPEC_DAMAGE (site 51) adds its
+    # damage where the attack adds the strength bonus to the weapon's ("add [bp-14h],ax", 5CF6Dh, SL's 588F2h)
+    Patch("spec_damage", 0x5CF6D, bytes.fromhex("0146ec"), _site(51, 3)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
@@ -851,6 +857,47 @@ def wotr_type(sl: bytes) -> bytes:
         out[to] = word
     out[4:TYPE_SIZE] = sl[8:8 + TYPE_SIZE - 4]
     return bytes(out)
+
+
+# The sequel's item types' weapon kinds (specialize.KINDS' numbers: DSCLOG2's KIND_OF_TYPE, less 1), from
+# OBJEX.GFF's items' names: its own (the Longswords, Crystal sword, Flameblade, Magma blade; Club, Toothed
+# Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka; Bow;
+# Sling; Staff Sling), and the mod's (mod_type: SL's 115-147, specialize.KIND_OF_TYPE's). ravlog's layout
+# makes it specialize.KIND_OF_TYPE while the sequel is attached.
+_RAV_OWN_KINDS = {
+    "long sword": (16, 35, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
+    "axe": (8, 48), "great axe": (51,), "pick": (79,), "quarterstaff": (85,), "polearm": (80,),
+    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,)}
+
+
+def rav_kinds() -> Dict[int, int]:
+    """The sequel's item types' weapon kinds (_RAV_OWN_KINDS, and the mod's types SL's)."""
+    from . import specialize
+    out = {t: specialize.KINDS.index(kind) for kind, types in _RAV_OWN_KINDS.items() for t in types}
+    for kind, types in specialize._TYPES.items():  # (SL's, whatever ravlog's layout has made KIND_OF_TYPE)
+        out.update({mod_type(t): specialize.KINDS.index(kind) for t in types
+                    if game.GAME_TYPES <= t < game.GAME_TYPES + MOD_TYPES})
+    return out
+
+
+# The sequel's weapons with no kind of SL's, and the kind each counts as for weapon specialization alone
+# (DSCLOG2's SPEC_KINDS_OWN; as SL's spell-made weapons, specialize.CONJURED_KINDS, which ravlog's
+# layout makes these): the nearest of SL's kinds, the reasoning in DEVELOPMENT-RULES.md
+_RAV_SPEC_KINDS = {
+    13: "long sword", 101: "long sword",  # Bloodletter (a 1d8 blade), Twohand Sword
+    61: "gythka",  # Lotulis (a blade at each end of a shaft)
+    39: "polearm", 100: "polearm",  # Double Spear, Trikal
+    81: "mace", 68: "mace", 95: "mace",  # Promere hammer, Jasmine, Spirit hammer (the spell's)
+    38: "chatkcha", 43: "chatkcha", 59: "chatkcha",  # Darts, Darts, Javelin: SL's thrown weapon
+    90: "club",  # Shillelagh (the spell's)
+    87: "bow",  # Rainbow (the spell's bow)
+}
+
+
+def rav_spec_kinds() -> Dict[int, int]:
+    """_RAV_SPEC_KINDS by specialize.KINDS' numbers."""
+    from . import specialize
+    return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
 def mod_type(sl_type: int) -> int:

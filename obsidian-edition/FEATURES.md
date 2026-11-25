@@ -934,7 +934,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
-  with the kits, though the kits' and the specs' rules don't work in the sequel yet). The Loader's
+  with the kits, though the kits' rules don't work in the sequel yet). The weapon specs work there:
+  a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
+  weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
+  kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
+  as the chatkcha). The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read

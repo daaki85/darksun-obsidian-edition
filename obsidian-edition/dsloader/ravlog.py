@@ -211,6 +211,11 @@ def apply_layout() -> int:
     _SAVED.append((sizes, "HAMMER_TYPE", sizes.HAMMER_TYPE))
     sizes.TABLE, sizes.SPELLS, sizes.PERSON_ONLY = sizes.RAV_NAMES, sizes.RAV_SPELLS, frozenset()
     sizes.SHILLELAGH_TYPE, sizes.HAMMER_TYPE = sizes.RAV_SHILLELAGH_TYPE, sizes.RAV_HAMMER_TYPE
+    from . import specialize  # (weapon specialization: the sequel's item types' kinds, DSCLOG2's
+    for name, value in (("KIND_OF_TYPE", ravager.rav_kinds()),  # KIND_OF_TYPE and SPEC_KINDS_OWN)
+                        ("CONJURED_KINDS", ravager.rav_spec_kinds())):
+        _SAVED.append((specialize, name, getattr(specialize, name)))
+        setattr(specialize, name, value)
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS

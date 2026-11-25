@@ -3429,8 +3429,9 @@ class DiceLog:
         return out
 
     def weapon_skill(self, attacker: Optional[int], item_type: Optional[int]) -> int:
-        """A creature's weapon specialization skill with a weapon (specialize.skill)."""
-        if attacker is None:
+        """A creature's weapon specialization skill with a weapon (specialize.skill), with the rule in
+        force (always in Shattered Lands; Wake of the Ravager's control runs turn it off)."""
+        if attacker is None or not game.RULES_IN_FORCE & game.RULE_SPECIALIZE:
             return specialize.NONE
         sheet = self.game.sheet(attacker)
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
@@ -3455,7 +3456,8 @@ class DiceLog:
         off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \
             and thac0 == expected + heads[0][1] - heads[1][1]
         if expected is None or thac0 != expected and not off_head:
-            return f"THAC0 {base} base, {signed(base - thac0)} in bonuses = {thac0}"
+            named = f", {signed(skill[1])} {skill[0]}" if skill[1] else ""  # (DSCLOG's, taken off last)
+            return f"THAC0 {base} base, {signed(base - thac0 - skill[1])} in bonuses{named} = {thac0}"
         rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
             if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
         if rear:

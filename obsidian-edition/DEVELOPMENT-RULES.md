@@ -1569,6 +1569,45 @@ the same routine as the DAM line, with the weapon's own rate of fire (its type's
 does (`MISSILE_RATE`) and the bonus and sides PROBE_SPEC_DAMAGE does, for the
 creature the routine has.
 
+### Weapon specialization in Wake of the Ravager
+
+The party transfer keeps each character's specs (SL's +14h..+16h) at the
+Loader's sheet +42h..+44h (`SPEC_SLOTS` in ravlog's layout), and DSCLOG2 reads
+them with DSCLOG's `SPEC_GET` and `SPEC_ANY` (all three layouts). The sequel's
+weapon attack routine (5CE80h) is SL's 58780h with its locals two bytes lower
+(the attacks a round `[BP-0Ah]`, the dice `[BP-10h]`, the sides `[BP-12h]`, the
+bonus `[BP-14h]`; `[BP+0Ah]` the THAC0, `[BP+10h]` the sheet, `[BP+14h]` the
+type, `[BP+16h]` above 1 a missile, as SL's). `SPEC_ATTACKS`, called from
+OFF_HAND at the attacks' store (5CEE8h, SL's PROBE_ATTACKS' site), and
+`SPEC_DAMAGE` (site 51 at the strength bonus's `add [bp-14h],ax`, 5CF6Dh) do
+what PROBE_ATTACKS and PROBE_SPEC_DAMAGE do; `SIZE_DICE` calls
+`SPEC_GRAND_DIE` after AD&D's large dice. `SPEC_OF_SHEET` and `MISSILE_RATE`
+are DSCLOG's on the sequel's sheet (race +12h, classes +1Bh, levels +1Eh)
+without the kits' parts, which wait for the kits' rules
+(`tests/test_ravspecialize.py` runs them against `specialize.skill` and
+`missile_attacks`). The rule's bit is tested (`RULE_SPECIALIZE` in
+`ravager.RULES_PORTED`), so `RAV_RULES_OFF=0x1000` makes a control run.
+
+The kinds are DSCLOG2's `KIND_OF_TYPE` (`ravager.rav_kinds`, which ravlog's
+layout makes `specialize.KIND_OF_TYPE` while the sequel is attached). The
+sequel's weapons with no kind of SL's count as the nearest of SL's 16 for
+specialization alone (DSCLOG2's `SPEC_KINDS_OWN`, `ravager.rav_spec_kinds`,
+made `specialize.CONJURED_KINDS`), as SL's spell-made weapons do, so no
+transferred warrior is left with the plain rate for want of a kind; their
+restrictions and large dice stay as they were:
+
+| The sequel's weapon (type) | Counts as | Why |
+|---|---|---|
+| Twohand Sword (101), Bloodletter (13) | long sword | SL's swords are one kind (the Crystal sword, 35, already is) |
+| Lotulis (61) | gythka | A shaft with a blade at each end, as the gythka |
+| Trikal (100), Double Spear (39) | polearm | A bladed polearm; a long-shafted thrusting weapon |
+| Promere hammer (81), Jasmine (68), Spirit hammer (95) | mace | A hammer, as SL's Spiritual Hammer; a mace's 1d6+1 |
+| Darts (38, 43), Javelin (59) | chatkcha | SL's thrown weapon: their specialist's rate of fire is the chatkcha's |
+| Shillelagh (90) | club | The spell's, as SL's |
+| Rainbow (87) | bow | The Rainbow spell's bow |
+
+The Net (71) and the Rock (94) have none.
+
 ## Kits
 
 ([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).

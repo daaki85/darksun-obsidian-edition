@@ -3078,6 +3078,7 @@ site_table:
         dw tome_read                        ; 48 SITE_TOME (the Tome of Understanding read: +1 WIS)
         dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
         dw new_sheet                        ; 50 SITE_NEW_SHEET (a character made: its sheet's last 6 bytes cleared)
+        dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -6588,6 +6589,7 @@ probe_two:
         iret
 off_hand:
         mov ah, 0
+        call spec_attacks               ; (weapon specialization: the skill's rate and THAC0)
         call cah_more                   ; (the cahulaks: the off head's one more a round)
         test word [cs:rules], RULE_TWO_WEAPONS
         jz .store
@@ -6668,6 +6670,438 @@ two_base    dw 0
 two_adjust  dw 0
 two_count   dw 0                ; (adjustments given so, for a look in play)
 off_count   dw 0                ; (off-hand attacks cut so)
+
+; WEAPON SPECIALIZATION: DSCLOG's RULE_SPECIALIZE (dsloader/specialize.py) in the sequel's weapon attack
+; routine (5CE80h, SL's 58780h: the same code, its frame [BP+0Ah] the THAC0 the d20 is held against,
+; [BP+10h] the attacker's sheet, [BP+12h] the weapon's item, [BP+14h] its type, [BP+16h] above 1 for a
+; missile; its locals [BP-0Ah] the attacks a round in halves, [BP-10h] the damage dice, [BP-12h] their
+; sides, [BP-14h] the damage bonus: SL's -8, -0Eh, -10h, -12h). The chosen kinds come over with the party
+; (the transfer's sheet +42h..+44h, SL's +14h..+16h: SPEC_SLOTS); no one picks them in the sequel.
+; - SPEC_ATTACKS, from OFF_HAND (5CEE8h, SL's PROBE_ATTACKS' site), before the off hand's cut: in melee
+;   a warrior (more than 2 halves, the game's own specialist's rate for every fighter, gladiator and
+;   ranger) with a weapon of a kind not chosen half an attack less, a grand master one more; a missile
+;   a specialist's rate of fire (MISSILE_RATE); specialization +1 to hit, mastery +3 (the THAC0 less);
+; - SPEC_DAMAGE (site 51 at 5CF6Dh, "add [bp-14h],ax", the strength bonus added; SL's 588F2h,
+;   PROBE_SPEC_DAMAGE): specialization +2, mastery +3, grand mastery the dice the next greater die size
+;   (NEXT_DIE), against a large target too (SIZE_DICE: SPEC_GRAND_DIE).
+; SL's kits' parts (a Battle Mage's, Crusader's, Mind Warrior's expertise, a Justifier's, a Myrmidon's
+; second kind, a Seeker's bow) wait for the kits' rules: the sequel's helper has none yet.
+RULE_SPECIALIZE equ 4096
+SPEC_SLOTS  equ 0x42            ; (the Loader's 48h sheet: SL's +14h..+16h there, +45h spare, 0)
+SPEC_COUNT  equ 4
+SPEC_PACKED equ 0x80
+SPEC_V2     equ 0x40
+SPEC_KINDS_MASK equ 0x1FFFF
+SHEETS_COUNT equ 17
+SPEC_NONE   equ 0               ; (SPEC_OF's levels, DSCLOG's)
+SPEC_PLAIN  equ 1
+SPEC_EXPERT equ 2
+SPEC_SPECIAL equ 3
+SPEC_MASTER equ 4
+SPEC_GRAND  equ 5
+MASTERY     equ 5               ; (the fighter levels)
+GRAND_MASTERY equ 9
+BOW_KIND    equ 14              ; (the bow's kind + 1)
+spec_attacks:                   ; AX the attacks a round (halves): made the skill's. Others kept.
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .ret
+        push dx
+        call spec_of
+        cmp word [bp + 0x16], 1
+        jg .missile
+        cmp ax, 2
+        jbe .hit                ; (not a warrior: the game's)
+        cmp dl, SPEC_PLAIN
+        jne .grand
+        dec ax
+        inc word [cs:spec_rates]
+        jmp .hit
+.grand: cmp dl, SPEC_GRAND
+        jne .hit
+        add ax, 2
+        inc word [cs:spec_rates]
+        jmp .hit
+.missile:
+        push bx
+        push cx
+        push si
+        push es
+        mov cx, ax
+        call spec_sheet
+        jc .kept
+        mov si, [bp + 0x14]
+        call missile_rate
+        cmp ax, cx
+        je .kept
+        inc word [cs:spec_rates]
+.kept:  pop es
+        pop si
+        pop cx
+        pop bx
+.hit:   cmp dl, SPEC_SPECIAL
+        jb .done
+        inc word [cs:spec_hits]
+        cmp dl, SPEC_SPECIAL
+        ja .three
+        dec word [bp + 0x0A]
+        jmp .done
+.three: sub word [bp + 0x0A], 3
+.done:  pop dx
+.ret:   ret
+spec_damage:                    ; (site 51) the strength bonus added, and the skill's
+        add [bp - 0x14], ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .ret
+        push dx
+        call spec_of
+        cmp dl, SPEC_SPECIAL
+        jb .out
+        inc word [cs:spec_damages]
+        cmp dl, SPEC_SPECIAL
+        ja .three
+        add word [bp - 0x14], 2
+        jmp .out
+.three: add word [bp - 0x14], 3
+        cmp dl, SPEC_GRAND
+        jne .out
+        push ax
+        mov ax, [bp - 0x12]
+        call next_die
+        mov [bp - 0x12], ax
+        pop ax
+.out:   pop dx
+.ret:   iret
+spec_grand_die:                 ; (SIZE_DICE's, its dice for a large target set) a grand master's sides
+        test word [cs:rules], RULE_SPECIALIZE   ;   [BP-12h] the next greater die. All kept.
+        jz .ret
+        push ax
+        push dx
+        call spec_of
+        cmp dl, SPEC_GRAND
+        jne .out
+        mov ax, [bp - 0x12]
+        call next_die
+        mov [bp - 0x12], ax
+.out:   pop dx
+        pop ax
+.ret:   ret
+spec_hits    dw 0               ; (attacks with specialization's to-hit, for a look in play)
+spec_damages dw 0               ; (... its damage)
+spec_rates   dw 0               ; (... and their attacks a round changed)
+
+; SPEC_SHEET: ES:BX the sheet of the attack routine's attacker ([BP+10h]); CF set for none (past the
+; table's 17). Others kept.
+spec_sheet:
+        push ax
+        mov ax, [bp + 0x10]
+        cmp ax, SHEETS_COUNT
+        jae .none
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        pop ax
+        clc
+        ret
+.none:  pop ax
+        stc
+        ret
+
+; SPEC_OF: DL the attacker's skill with the attack's weapon (SPEC_OF_SHEET, for the attack routine's
+; [BP+10h] sheet and [BP+14h] item type). Others kept.
+spec_of:
+        push bx
+        push si
+        push es
+        mov dl, SPEC_NONE
+        call spec_sheet
+        jc .out
+        mov si, [bp + 0x14]
+        call spec_of_sheet
+.out:   pop es
+        pop si
+        pop bx
+        ret
+
+; SPEC_OF_SHEET: DL the skill with item type SI of the character whose sheet is at ES:BX (DSCLOG's, on
+; the sequel's sheet: the race +12h, the classes +1Bh, their levels +1Eh; no kits): SPEC_NONE (no kinds
+; chosen), SPEC_PLAIN (not this kind; a dual-classed warrior whose warrior class isn't back yet),
+; SPEC_EXPERT (a ranger's, with no fighter or gladiator class; and every ranger's with the bow, chosen
+; or not), SPEC_SPECIAL, SPEC_MASTER (a fighter's own kind, the first, from 5th level), SPEC_GRAND (9th).
+; Others kept.
+spec_of_sheet:
+        push ax
+        push cx
+        push si
+        mov dl, SPEC_NONE
+        call spec_any
+        jz .out
+        mov dl, SPEC_PLAIN
+        call spec_kind
+        or cl, cl
+        jz .out
+        xor si, si
+.slot:  call spec_get
+        cmp al, cl
+        je .found
+        inc si
+        cmp si, SPEC_COUNT
+        jb .slot
+        cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same)
+        jne .out
+        xor si, si
+.rbow:  mov al, [es:bx + si + SH_CLASSES]
+        or si, si               ; (a human's earlier classes once the first's level has passed theirs)
+        jz .ron
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .ron
+        mov ah, [es:bx + si + SH_LEVELS]
+        cmp ah, [es:bx + SH_LEVELS]
+        jae .rnext
+.ron:   cmp al, 13
+        jb .rnext
+        cmp al, 16
+        ja .rnext
+        mov dl, SPEC_EXPERT
+        jmp .out
+.rnext: inc si
+        cmp si, 3
+        jb .rbow
+        jmp .out
+.found: mov dl, SPEC_EXPERT
+        xor ax, ax              ; AH a fighter or gladiator, AL any warrior, CH the fighter level
+        xor ch, ch
+        push si
+        xor si, si
+.class: mov cl, [es:bx + si + SH_CLASSES]
+        or si, si               ; a human's earlier classes (dual-classed) count only once the
+        jz .on                  ; first's level has passed theirs
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .on
+        push ax
+        mov al, [es:bx + si + SH_LEVELS]
+        cmp al, [es:bx + SH_LEVELS]
+        pop ax
+        jae .next
+.on:    cmp cl, CU_FIGHTER
+        jne .glad
+        mov ax, 0x0101
+        mov ch, [es:bx + si + SH_LEVELS]
+.glad:  cmp cl, CU_GLADIATOR
+        jne .ranger
+        mov ax, 0x0101
+.ranger:
+        cmp cl, 13
+        jb .next
+        cmp cl, 16
+        ja .next
+        mov al, 1
+.next:  inc si
+        cmp si, 3
+        jb .class
+        pop si
+        or al, al
+        jnz .warrior
+        mov dl, SPEC_PLAIN      ; (a warrior class not back yet)
+        jmp .out
+.warrior:
+        or ah, ah
+        jz .out                 ; (a ranger's: expertise)
+        mov dl, SPEC_SPECIAL
+        or si, si
+        jnz .out                ; (a fighter's first kind goes on to mastery)
+        cmp ch, MASTERY
+        jb .out
+        mov dl, SPEC_MASTER
+        cmp ch, GRAND_MASTERY
+        jb .out
+        mov dl, SPEC_GRAND
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+
+; SPEC_KIND: CL the kind + 1 that item type SI counts as for weapon specialization (0 none):
+; KIND_OF_TYPE's, else SPEC_KINDS_OWN's (specialize.spec_kind_of with ravlog's layout:
+; ravager.RAV_SPEC_KINDS). Others kept.
+spec_kind:
+        xor cl, cl
+        cmp si, KIND_TYPES
+        jae .ret
+        mov cl, [cs:si + kind_of_type]
+        or cl, cl
+        jnz .ret
+        push ax
+        push bx
+        mov ax, si
+        mov bx, spec_kinds_own
+.own:   cmp byte [cs:bx], 0
+        je .done
+        cmp al, [cs:bx]
+        je .got
+        add bx, 2
+        jmp .own
+.got:   mov cl, [cs:bx + 1]
+.done:  pop bx
+        pop ax
+.ret:   ret
+; SPEC_KINDS_OWN: the sequel's weapons with no kind of SL's (KIND_OF_TYPE's 0), and the kind + 1 each
+; counts as for specialization alone, as SL's spell-made weapons do (CONJURED_KINDS): its type, the kind
+; (the reasoning: DEVELOPMENT-RULES.md, Weapon specialization in Wake of the Ravager). Ends with type 0.
+spec_kinds_own:
+        db 13, 1                ; Bloodletter (a 1d8 blade): long sword
+        db 101, 1               ; Twohand Sword: long sword (SL's swords' one kind)
+        db 61, 11               ; Lotulis (a blade at each end of a shaft): gythka
+        db 39, 10               ; Double Spear: polearm
+        db 100, 10              ; Trikal (a bladed polearm): polearm
+        db 81, 5                ; Promere hammer: mace (a hammer, as Spiritual Hammer)
+        db 68, 5                ; Jasmine (a mace's 1d6+1): mace
+        db 38, 13               ; Darts: chatkcha (SL's thrown weapon)
+        db 43, 13               ; Darts
+        db 59, 13               ; Javelin
+        db 90, 2                ; Shillelagh (the spell's): club
+        db 95, 5                ; Spirit hammer (the spell's): mace
+        db 87, 14               ; Rainbow (the spell's bow): bow
+        db 0
+
+; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none) of sheet ES:BX, in any of its layouts (DSCLOG's:
+; a byte each; packed 5 bits each; SPEC_V2, base 17). SPEC_ANY: ZF clear when a spec is chosen.
+; Others kept.
+spec_get:
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jnz .packed
+        movzx ax, byte [es:bx + si + SPEC_SLOTS]
+        ret
+.packed:
+        push ecx
+        push edx
+        push eax
+        mov edx, [es:bx + SPEC_SLOTS]
+        test edx, SPEC_V2 << 16
+        jz .five
+        mov eax, edx
+        and eax, SPEC_KINDS_MASK
+        mov ecx, 17
+        push si
+.digit: xor edx, edx            ; (digit SI: the remainder of the (SI + 1)th division)
+        div ecx
+        dec si
+        jns .digit
+        pop si
+        jmp .got
+.five:  imul cx, si, 5
+        shr edx, cl
+        and dl, 0x1F
+.got:   pop eax
+        movzx ax, dl
+        pop edx
+        pop ecx
+        ret
+spec_any:
+        push eax
+        mov eax, [es:bx + SPEC_SLOTS]
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jz .test                        ; (the old layout: any of the four bytes)
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
+        jz .five
+        and eax, SPEC_KINDS_MASK
+        jmp .test
+.five:  and eax, 0x000FFFFF
+.test:  test eax, eax
+        pop eax
+        ret
+
+; MISSILE_RATE: AX (the attacks a round in halves: the weapon type's, +7, as the game has a missile's)
+; made a specialist's rate of fire when greater, for skill DL (SPEC_EXPERT or above) with item type SI
+; (its kind SPEC_KIND's: the sequel's darts and javelins as the chatkcha), the sheet at ES:BX, by the
+; warrior's level (the highest fighter, gladiator or ranger level of the classes it has now: 1-6, 7-12,
+; 13 on): DSCLOG's, the bow 3, 4, 5 a round, the sling, staff sling and chatkcha 3/2, 2, 5/2; a grand
+; master one more; a kind not chosen (SPEC_PLAIN), from 7th level, the specialist's a band lower.
+; Others kept.
+MISSILE_KIND equ 13             ; (the chatkcha's kind + 1; then the bow, the sling, the staff sling)
+missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5
+missile_rate:
+        cmp dl, SPEC_PLAIN
+        jb .ret
+        push cx
+        push dx
+        push si
+        call spec_kind
+        movzx cx, cl
+        sub cx, MISSILE_KIND
+        jb .out
+        cmp cx, 3
+        ja .out
+        xor dx, dx              ; DL the specialist's level
+        xor si, si
+.class: push ax
+        mov al, [es:bx + si + SH_CLASSES]
+        mov ah, [es:bx + si + SH_LEVELS]
+        or si, si               ; (a human's earlier classes once the first's level has passed theirs)
+        jz .on
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .on
+        cmp ah, [es:bx + SH_LEVELS]
+        jae .next
+.on:    cmp al, CU_FIGHTER
+        je .warrior
+        cmp al, CU_GLADIATOR
+        je .warrior
+        cmp al, 13              ; (a ranger, 13-16)
+        jb .next
+        cmp al, 16
+        ja .next
+.warrior:
+        cmp ah, dl
+        jbe .next
+        mov dl, ah
+.next:  pop ax
+        inc si
+        cmp si, 3
+        jb .class
+        imul cx, cx, 3
+        cmp dl, 7
+        jb .tier
+        inc cx
+        cmp dl, 13
+        jb .tier
+        inc cx
+.tier:  mov si, sp
+        cmp byte [ss:si + 2], SPEC_PLAIN  ; (the skill: DX, pushed before SI)
+        jne .rate
+        cmp dl, 7
+        jb .out                 ; (a kind not chosen before 7th level: the weapon's own rate)
+        dec cx                  ; (from 7th: a specialist's a band lower)
+.rate:  mov si, cx
+        movzx cx, byte [cs:si + missile_halves]
+        cmp cx, ax
+        jbe .grand
+        mov ax, cx
+.grand: mov si, sp
+        cmp byte [ss:si + 2], SPEC_GRAND
+        jne .out
+        add ax, 2               ; (a grand master one more shot, as in melee)
+.out:   pop si
+        pop dx
+        pop cx
+.ret:   ret
+
+; NEXT_DIE: AX a die's sides; AX the next greater die size (grand mastery's, Player's Option: Combat
+; & Tactics: d2, d3, d4, d6, d8, d10, d12, d20; a die past d20 kept). Others kept.
+next_die:
+        push si
+        mov si, die_sizes
+.next:  cmp ax, [cs:si]
+        jb .got
+        add si, 2
+        cmp si, die_sizes_end
+        jb .next
+        pop si
+        ret
+.got:   mov ax, [cs:si]
+        pop si
+        ret
+die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
+die_sizes_end:
 
 ; PROBE_HELM_AC: INT VEC_HELM_AC replaces "mov al,es:[bx+0Eh] / cwde" (5 bytes: INT + 3 NOPs) at the
 ; two places the AC function reads a worn item's type's AC (5D663h, 5D67Bh; SL's PROBE_RING_AC's
@@ -8022,7 +8456,8 @@ size_dice:
         mov [bp - 0x12], ax
         movsx ax, byte [cs:si + 3]
         add [bp - 0x14], ax
-        jmp .done
+        call spec_grand_die         ; (a grand master's: the next greater die, as its own dice's at
+        jmp .done                   ;   SPEC_DAMAGE, which these replace)
 .table: cmp bx, KIND_TYPES
         jae .done
         movzx si, byte [cs:bx + kind_of_type]
@@ -8038,6 +8473,7 @@ size_dice:
         mov [bp - 0x12], ax
         movsx ax, byte [cs:si + large_dice + 2]
         add [bp - 0x14], ax
+        call spec_grand_die
 .done:  popa
 .ret:   ret
 size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold or Charm Person on a
