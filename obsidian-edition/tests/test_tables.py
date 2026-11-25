@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import tables
+from dsloader import game, tables
 
 
 class TablesTests(unittest.TestCase):
@@ -60,9 +60,10 @@ class TablesTests(unittest.TestCase):
         """The Player's Handbook's to 20th level; DSCLOG2's RAV_SLOTS the same."""
         self.assertEqual([tables.rav_slots(11, 20, s) for s in range(1, 10)], [5, 5, 5, 5, 5, 4, 3, 3, 2])
         self.assertEqual([tables.rav_slots(1, 20, s) for s in range(1, 10)], [9, 9, 9, 8, 7, 5, 2, 0, 0])
-        self.assertEqual(tables.rav_slots(5, 25, 1), 9)
+        self.assertEqual(tables.rav_slots(1, 25, 1), 9)
         self.assertEqual(tables.rav_slots(1, 0, 1), 0)
-        self.assertIsNone(tables.rav_slots(13, 9, 1))
+        self.assertIsNone(tables.rav_slots(12, 9, 1))  # (a psionicist)
+        self.assertIsNone(tables.rav_slots(17, 9, 1))
         for level in range(1, 13):  # (SL's to 12th)
             for spell in range(1, 6):
                 self.assertEqual(tables.rav_slots(1, level, spell), tables.slots(1, level, spell))
@@ -71,9 +72,68 @@ class TablesTests(unittest.TestCase):
                                 "dsclog2.asm")).read()
         body = asm[asm.index("\nrav_slots:"):]
         rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
-                for line in body.splitlines()[2:42]]
-        want = [(r + (0,) * 9)[:9] for r in tables.RAV_PRIEST_SLOTS + tables.RAV_WIZARD_SLOTS]
+                for line in body.splitlines()[2:62]]
+        want = [(r + (0,) * 9)[:9] for r in tables.RAV_PRIEST_SLOTS + tables.RAV_WIZARD_SLOTS
+                + tables.RAV_RANGER_SLOTS]
         self.assertEqual(rows, want)
+        self.assertIn("DRUID_SLOT_LEVELS equ 15", asm)  # (ADND_SLOTS: a druid's rows stop at 15th's)
+
+    def test_ravager_druid_slots(self):
+        """The owner's table (2026-11-25): a druid's slots the cleric's to 15th, then 15th's, 6 6 6 6 4 2 1."""
+        for level in range(1, 16):
+            for spell in range(1, 10):
+                self.assertEqual(tables.rav_slots(5, level, spell), tables.rav_slots(1, level, spell))
+        for cls in tables.DRUIDS:
+            for level in range(15, 26):
+                self.assertEqual([tables.rav_slots(cls, level, s) for s in range(1, 10)],
+                                 [6, 6, 6, 6, 4, 2, 1, 0, 0])
+        self.assertEqual([tables.rav_slots(1, 16, s) for s in range(1, 8)], [7, 7, 7, 6, 4, 3, 1])
+
+    def test_ravager_ranger_slots(self):
+        """A ranger's priest spells, the Player's Handbook's (the owner's table): none to 7th, 1 at 8th, 3 3 3
+        from 16th; the game's formula gave more at 12th to 14th."""
+        got = {level: tuple(tables.rav_slots(14, level, s) for s in (1, 2, 3)) for level in range(1, 21)}
+        self.assertEqual(got[7], (0, 0, 0))
+        self.assertEqual([got[level] for level in range(8, 17)],
+                         [(1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (3, 2, 1), (3, 2, 2), (3, 3, 2),
+                          (3, 3, 3)])
+        self.assertEqual(got[20], (3, 3, 3))
+        self.assertEqual(tables.rav_slots(14, 20, 4), 0)
+
+    def test_ravager_saves(self):
+        """The Player's Handbook's Table 60 by group; DSCLOG2's SAVE_TABLE the same, a row a level 1-21."""
+        self.assertEqual(tables.rav_saves(1, 9), (8, 10, 9, 9, 11))
+        self.assertEqual(tables.rav_saves(1, 20), (3, 5, 4, 4, 6))
+        self.assertEqual(tables.rav_saves(0, 19), (2, 6, 5, 8, 7))
+        self.assertEqual(tables.rav_saves(2, 21), (8, 3, 5, 7, 4))
+        self.assertEqual(tables.rav_saves(3, 13), (10, 8, 9, 13, 9))
+        for group in range(4):
+            for level in range(2, 30):
+                self.assertTrue(all(a <= b for a, b in zip(tables.rav_saves(group, level),
+                                                          tables.rav_saves(group, level - 1))))
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        body = asm[asm.index("\nsave_table:"):]
+        rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
+                for line in body.splitlines()[2:2 + 4 * tables.RAV_SAVE_LEVELS]]
+        self.assertEqual(rows, [tables.rav_saves(g, level) for g in range(4)
+                                for level in range(1, tables.RAV_SAVE_LEVELS + 1)])
+
+    def test_ravager_thief_table(self):
+        """DSCLOG2's THIEF_TABLE: game.AD_D_THIEF, 17 levels (the owner's table, SL's to 13th)."""
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        body = asm[asm.index("\nthief_table:"):]
+        rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
+                for line in body.splitlines()[2:10]]
+        self.assertEqual(rows, [tuple(r) for r in game.AD_D_THIEF])
+        self.assertIn("THIEF_LEVELS equ 17", asm)
+        sl = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                               "dsclog.asm")).read()
+        body = sl[sl.index("\nthief_table:"):]
+        rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
+                for line in body.splitlines()[2:10]]
+        self.assertEqual(rows, [tuple(r[:13]) for r in game.AD_D_THIEF])
 
 
 if __name__ == "__main__":
