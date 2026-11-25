@@ -5,6 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from halfgiantfit import fitted_panels
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
@@ -182,83 +183,137 @@ def upright(rows):
     return [r[::-1] for r in rows[::-1]]
 
 
-def garment(role, u, t, lower, profile, rear, texture):
-    """Work from the cloth grain, with the warp running shoulder to hip."""
-    wrap = 1 - abs(2*u-0.85)
-    grain = math.floor(u*(9 if profile else 15))
-    height = math.floor(t*12)
-    relief = texture[height % 8][grain % 8]
-    fold = math.sin(grain*1.24 + 2.1*t + (0.8 if rear else 0) + 0.9*u*t)
-    if role == "Cleric" and not lower:
-        fold = math.cos(10*t-5*u) * (0.7+0.3*u)
-    shade = 5.8 + 3*wrap + 2.2*fold + 0.7*relief
-    # A lapped edge catches the light above the darker return. It bends
-    # with the wearer, so the highlight travels with the same piece of hide.
-    if role == "Cleric":
-        shade += 1.4*fold + 0.4*relief
-        # The cream changes to warm brown where the pleat turns away from
-        # the shoulder. Leave the outer fold light enough to read on sand.
-        if not lower:
-            gather = t - (.70 - .46*u + .12*math.sin(4*u))
-            if -.07 < gather < .11:
-                shade += 3 if gather < 0 else -3.5
-        if lower:
-            pleat = u - (0.32 + 0.16*t*t)
-            if abs(pleat) < .055:
-                shade += 3.5 if pleat < 0 else -4
-    else:
-        shade += 1.2*fold + 0.45*relief
-    if min(u, 1-u) < 0.08:
-        shade -= 3
-    if lower:
-        hem = 0.43 if role == "Gladiator" else 0.55 if role == "Fighter" else 1
-        if role == "Gladiator" and (rear or profile):
-            hem -= .13
-        hem += 0.08*math.sin(u*5.5+0.6) - (0.1 if profile else 0)*u
-        if t > hem:
-            return None
-        if t < 0.09+0.08*math.sin(u*2.8):
-            if role == "Fighter":
-                # The lower welt of the jerkin sits over a dark sword belt.
-                if .28 < u < .41:
-                    return 168 if t < .07 else 95
-                return pigment(RAMPS["hide"], (11 if t < .045 else 2)+2*wrap+relief*.45)
-            return pigment(RAMPS["hide"], 3+4*wrap+relief)
-        if t > hem-0.09:
-            shade -= 3
-        if role == "Cleric" and t > 0.70 and u > 0.69:
-            shade -= 2.2
-        if role != "Cleric":
-            lap = u-(.62-.44*t)
-            if -.08 < lap < .10:
-                shade += 5 if lap < 0 else -4
-            if hem-.16 < t <= hem-.08 and .09 < u < .60:
-                shade += 3
-        if role == "Gladiator":
-            shade += 1.8*math.cos(grain*1.1-t*2)
-        return pigment(LINEN if role == "Cleric" else RAMPS["hide"], shade)
-    neckline = (0.15 if rear else 0.30)*(1-abs(2*u-1))
-    if t < neckline:
-        return None
-    if role == "Gladiator":
-        center = (0.80-0.66*t) if rear else (0.18+0.66*t)
-        distance = u-center
-        half_width = .065 if rear else .105 if profile else .10
-        if abs(distance) > half_width:
-            return None
-        return pigment(RAMPS["hide"], (11 if distance < -.035 else 3)+.65*relief)
-    if role == "Fighter" and t < 0.22 and (u < 0.23 or u > 0.80):
-        return pigment(BONE, 2+2.8*(1-t/.22)+0.45*relief)
-    if role == "Fighter":
-        seam = t - (.70 - .42*u + .09*u*u)
-        if -.10 < seam < .08:
-            return pigment(RAMPS["hide"], (12 if seam < -.01 else 2)+wrap+.5*relief)
-        if .12 < u < .25 and t < .63:
-            shade += 2.5
-        lip = u - (.22 + .15*t*t)
-        if -.065 < lip < .045 and .28 < t < .88:
-            shade += 4 if lip < 0 else -4
-    return pigment(LINEN if role == "Cleric" else RAMPS["hide"], shade)
+def row_limits(panel):
+    spans = {}
+    for x, y in panel:
+        left, right = spans.get(y, (x, x))
+        spans[y] = min(left, x), max(right, x)
+    return spans
+
+
+def dress(pieces, source, model, pose, dx, dy, bow, texture):
+    """Lay the pattern on the cleaned cel, then bring the near arm and hair forward."""
+    female = model == 2074
+    top, wrap, jerkin, robe, arm, hair, sleeve, belt = fitted_panels(pose, female)
+    body = pieces["Body base"]
+    shoulder, _, _ = CUTS[pose]
+    guard = GUARD[pose]
+    if female and guard:
+        # Her cap meets the slope of the deltoid below the hair.
+        shift = {0: (0, 1), 3: (0, 1), 4: (1, 1), 5: (0, 1), 6: (1, 1),
+                 12: (0, 1), 13: (-1, 1), 14: (0, 1), 21: (0, 1), 26: (1, 1)}.get(pose, (0, 0))
+        guard = guard[0]+shift[0], guard[1]+shift[1]
+    # A compact, sloped cap cups the upper arm. Its downturned lip is on
+    # the outer side and the inboard end hides the start of the strap.
+    outside = 1 if pose in REAR or pose in (17, 22, 23) else -1
+    cap = {}
+    if guard:
+        gx, gy = guard
+        for depth, (start, end) in enumerate(((-1, 1), (-2, 2), (-1, 2), (1, 2))):
+            for side in range(start, end+1):
+                x, y = gx+outside*side, gy+depth-1
+                cap[x, y] = 6-depth*1.4-.5*side
+    locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if female else (0, ())
+    rib_span = row_limits(top)
+    for role in ROLES[2:]:
+        skirt = {"Cleric": robe, "Fighter": jerkin, "Gladiator": wrap}[role]
+        skirt_span = row_limits(skirt)
+        hem = {}
+        for x, y in skirt:
+            hem[x] = max(hem.get(x, y), y)
+        colors = LINEN if role == "Cleric" else RAMPS["hide"]
+        shoulder_piece = sleeve if role == "Cleric" else cap.keys()
+        for x, y in top | skirt | shoulder_piece:
+            sx, sy = x+dx, y+dy
+            if not (0 <= sy < len(body) and 0 <= sx < len(body[sy])):
+                continue
+            point = x, y
+            c = source[sy][sx]
+            if point in hair or (sx-5, sy) in bow:
+                continue
+            if 0 <= sy-locks_start < len(locks):
+                left, right = locks[sy-locks_start]
+                if left <= sx-5 <= right:
+                    continue
+            if pose in LOW_HEAD:
+                cx, cy, rx, ry = LOW_HEAD[pose]
+                if ((x-cx)/rx)**2+((y-cy)/ry)**2 <= 1:
+                    continue
+            if role == "Cleric" and point in sleeve and c is not None:
+                flesh = body[sy][sx]
+                relief = SKIN.index(flesh) if flesh in SKIN else 2
+                underside = (x, y+1) not in sleeve and (point not in top or point in arm)
+                shade = 3.5 + .82*relief + .35*texture[y % 8][x % 8] - 2*underside
+                pieces[role][sy][sx] = pigment(LINEN, shade)
+                continue
+            if point in cap and role != "Cleric" and c is not None:
+                pieces[role][sy][sx] = pigment(BONE if role == "Fighter" else BRONZE, cap[point])
+                continue
+            if point in arm and c is not None:
+                continue
+            if point not in top and point not in skirt:
+                continue
+            if point not in skirt and c is None:
+                continue
+            if pose == 17 and x >= 20 and y >= 21 and role != "Cleric":
+                continue
+            left, mid, right = belt
+            at = min(1, max(0, (x-left[0])/max(1, right[0]-left[0])))
+            edge = mix(left[1], mid[1], 2*at) if at < .5 else mix(mid[1], right[1], 2*at-1)
+            lower = y >= round(edge) and point in skirt
+            lo, hi = (skirt_span if lower or point not in top else rib_span)[y]
+            u = (x-lo+.5)/max(1, hi-lo+1)
+            shadow = abs(u-.38)
+            grain = texture[(y-mid[1]) % 8][(x-mid[0]) % 8]
+            if lower:
+                t = (y-edge)/max(1, hem[x]-edge)
+                # The free edge turns up at the leading knee. The lap line
+                # originates at the hip and fans out into the hanging panel.
+                if pose in PROFILE:
+                    crease = .69-.22*t
+                else:
+                    crease = .34+.18*t
+                fold = u-crease
+                shade = 9-6*shadow + 2.3*math.cos(12*u-2*t)+.75*grain
+                if -.075 < fold < .09:
+                    shade += 3.2 if fold < 0 else -3.8
+                if y == hem[x]:
+                    shade -= 3
+                if role == "Fighter" and .58 < u < .79 and t > .43:
+                    shade -= 3
+                color = pigment(colors, shade)
+                if y-edge < 1.5:
+                    belt_light = 5 + 3*(y-edge < .55) - 4*shadow
+                    color = pigment(RAMPS["hide"], belt_light+.65*grain)
+                    if role == "Fighter" and abs(x-mid[0]+2) < 1:
+                        color = 168
+            elif role == "Gladiator":
+                if guard is None:
+                    continue
+                # Run the strap from the actual bronze pin, across the
+                # convex ribs, to the opposite edge of the shared waistband.
+                gx, gy = guard
+                t = min(1, max(0, (y-gy)/max(1, edge-gy)))
+                end = left[0]+1 if outside == 1 else right[0]-1
+                center = mix(gx, end, t) - outside*1.35*math.sin(math.pi*t)
+                dist = x-center
+                if abs(dist) > (1.0 if pose in PROFILE else 1.25):
+                    continue
+                color = pigment(RAMPS["hide"], (10 if dist < -.20 else 3)+.45*grain)
+            else:
+                # Keep the light on the ribcage in the underlying cel.
+                # Smooth leather changes plane more slowly than creased linen.
+                skin = body[sy][sx]
+                relief = SKIN.index(skin)-5 if skin in SKIN else -2
+                t = (y-min(shoulder[1], shoulder[3]))/max(1, edge-min(shoulder[1], shoulder[3]))
+                shade = 8.5-5*shadow+.53*relief+.68*grain
+                seam = t-(.62-.40*u+.14*u*u)
+                if -.12 < seam < .075:
+                    shade += 3 if seam < -.01 else -3.5
+                if role == "Cleric":
+                    shade += 1.8*math.cos(11*u-2*t)
+                color = pigment(colors, shade)
+            pieces[role][sy][sx] = color
 
 
 def study_rows(game, model, pose, texture):
@@ -278,10 +333,6 @@ def study_rows(game, model, pose, texture):
     if model == 2074 and pose == 27:
         soles = ((16, 34), soles[1])
     bow = game.bow(fig, native, fig.parts(combat, frame)) if 24 <= pose <= 26 else set()
-    # The ankle-length linen opens behind the knee on the long profile
-    # steps. Hide panels stop at the thigh and stay close to the leg.
-    trail = {2: 2, 11: 3, 12: 5, 13: 2, 14: 4, 22: 3, 23: 2, 24: 2}.get(pose, 0)
-    linen_knee = (knee[0]-trail, knee[1]+1, knee[2], knee[3]+1)
     pieces = {role: [r[:] for r in source] for role in ROLES[1:]}
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if model == 2074 else (0, ())
     for sy, row in enumerate(source):
@@ -362,47 +413,8 @@ def study_rows(game, model, pose, texture):
                     foot = None
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
-                    paint = None
-                    if not near_arm:
-                        if in_top:
-                            paint = garment(role, u, t, False, pose in PROFILE, pose in REAR, texture)
-
-                        else:
-                            cu, ch = fabric_coords(x, y, waist, linen_knee) if role == "Cleric" else (v, h)
-                            if 0 <= cu <= 1 and ch >= 0:
-                                paint = garment(role, cu, ch, True, pose in PROFILE, pose in REAR, texture)
-                    if GUARD[pose] and role in ("Fighter", "Gladiator"):
-                        gx, gy = GUARD[pose]
-                        fx, fy = x-gx, y-gy
-                        if (fx/3.1)**2+((fy-.45)/1.95)**2 < 1 and c not in (179, 180, 181):
-                            material = BONE if role == "Fighter" else BRONZE
-                            paint = pigment(material, 4.5-1.35*fy-.58*fx+(fx+fy) % 2)
-                    # Only the edge of the folded hip projects behind the
-                    # crossing forearm on the last front strike.
-                    if pose == 17 and 17 <= y <= 22 and x >= 19 and not near_arm:
-                        ramp = RAMPS["linen" if role == "Cleric" else "hide"]
-                        paint = pigment(ramp, 8+.7*(20-x)+texture[y % 8][x % 8])
-                    # On the tucked front strike the far toes turn up
-                    # against the hip. They cross in front of the short wrap.
-                    if paint is None or (pose == 17 and x >= 20 and y >= 21
-                                         and foot is not None and role != "Cleric"):
-                        paint = foot
-                    pieces[role][sy][sx] = body if paint is None else paint
-    # Bridge the panel between the thighs. Extend the cloth only inside the
-    # hem, so the native stride shows through again below the knees.
-    for sy, row in enumerate(source):
-        y = sy-dy
-        if y < min(waist[1], waist[3]) or y > max(linen_knee[1], linen_knee[3])+2:
-            continue
-        for sx, c in enumerate(row):
-            if c is not None:
-                continue
-            v, h = fabric_coords(sx-dx, y, waist, knee)
-            for role in ROLES[2:]:
-                cu, ch = fabric_coords(sx-dx, y, waist, linen_knee) if role == "Cleric" else (v, h)
-                if 0 <= cu <= 1 and ch >= 0:
-                    pieces[role][sy][sx] = garment(
-                        role, cu, ch, True, pose in PROFILE, pose in REAR, texture)
+                    pieces[role][sy][sx] = body if foot is None else foot
+    dress(pieces, source, model, pose, dx, dy, bow, texture)
     return {"Original": original, **{role: upright(rows) if reverse else rows for role, rows in pieces.items()}}
 
 
