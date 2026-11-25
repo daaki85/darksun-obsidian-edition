@@ -1578,10 +1578,7 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   eye on him, talk 3, 1, 3, 2) sells. **His talk script drops "Show me your goods" for the rest of the
   conversation after any visit to the shop**: a sale, a sale by hand, or none. It does so in the plain sequel too,
   and a new talk offers it again (logs/2026-11-25-ravager-loot-tabs-join.md). His line after the shop tells a
-  trade from none: "Thank you, your business is appreciated." after a sale by hand, "Sometimes the wisest purchase
-  is none at all, yes?" after none, **and after S**. The script reads something the shop's own SELL sets, which
-  the Loader's sale (`sell.py`) doesn't set. That byte isn't found yet: a diff of the data segment around a sale
-  changed too much. The sequel's offer for an item is the mod's `sell_price` (28 for Bone Brigandine Armor; the
+  trade from none by the money (next item); S gets the thank-you since the fix. The sequel's offer for an item is the mod's `sell_price` (28 for Bone Brigandine Armor; the
   plain sequel offers 48). `ravloot.py` shows all of the above.
 - **The plain sequel as a control** (no Loader, no DSCLOG2, no patch): `ravstart.sh` without `RAV_LOADER`,
   `RAV_MENU=1`, on a fresh copy of `rav` with the save's three files copied in (narrow as they come from
@@ -1589,6 +1586,17 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   ([the script](logs/files/2026-11-25-ravager-loot-tabs-join-plain.sh)). `dosmem.py` shows no DSCLOG2 (upper
   memory 9FFFh SC and D000h free). The view doesn't follow the leader the same way there (no `centre`), so look
   for a figure before clicking on it.
+- **A merchant's script tells a sale from none by the money**: Notaku's (GPL 153) keeps the party's money
+  (variable 85h 0, the dword at 2E8h:357h) in 89h 42 before the shop (3EFh), and tests it again as the shop
+  returns (400h): changed, "Thank you, your business is appreciated."; not, "Sometimes the wisest purchase is
+  none at all, yes?". Other sequel scripts test 85h 0 too (28, 91, 129, 140, 157-159, 165, 174, 322, 325;
+  SL's 2, 24, 65, 88, 135, 149, 152, 206). So the Loader's S must pay before the shop returns to the
+  script. DSCLOG2's SHOP_LOOP holds the loop's way out after S until the Loader's SELL_DONE (+1884) is
+  SELL_SEQ, at most 3 s (logs/2026-11-25-ravager-loot-keys.md). A memory diff around a sale didn't find this,
+  but the script's decode did (`dec.py` with `GPLDATA` the sequel's, from 0 to the line).
+- **The pointer's mode before a click on someone**: right-clicks cycle 1 arrow, 4 sword, 2 eye (DS:1440h).
+  After the inventory is closed the mode isn't always the arrow, so read it: a sword's click on Notaku
+  started a fight.
 
 ### The sequel's spells in a fight (2026-11-21)
 
