@@ -8,7 +8,13 @@ Follow either row across the animation to see the original half-giant, the clean
 
 The Gladiator wears a bronze guard and a diagonal strap that crosses the ribs and tucks into a short hide wrap. The Fighter wears a sleeveless leather jerkin with pale bone at the shoulders. The Cleric’s cream robe gathers at the belt and opens around the advancing shin. Compare the four profile steps to see the near arm pass across each garment. Front strike 3 shows the greatest foreshortening, with only the overlapping edge of the Gladiator’s wrap visible behind the arm.
 
-The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman. The body preserves each original pose’s silhouette and foot placement. The exposed limbs use the figure’s own skin palette. The robe draws its fold shading from the retail Priest.
+The rear idle shows the Gladiator’s narrow strap crossing the exposed shoulder blades. Beside it, the Fighter’s jerkin closes over the back with a lapped seam and a dark sword belt. On the third profile step, the lit edge of the short hide wrap turns with the hip. The Cleric’s deeper tan fold shows where the cream cloth doubles back over the advancing knee.
+
+The cleaned bodies have bare feet. Each of the three outfits adds an open leather sandal with a dark sole and ankle tie. Follow the lifted heel and the planted toes across the profile walk. [Compare the previous and revised figures beside the retail Warrior, retail Priest, and approved human outfits](half-giant-materials.png)
+
+In the woman’s third profile step, two charcoal pixels join the lower lock to the hair above her shoulder. The base and each garment retain the retail hair through profile idle and all four steps. [Inspect the shoulder and hair at 4×](half-giant-profile-hair.png)
+
+The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman. The body preserves each original pose’s silhouette and foot placement. The exposed limbs retain the figure’s skin tones, with a deep brown edge under the foot and on the shadow side of the calf. The robe draws its fold shading from the retail Priest.
 
 ## Remaining artwork
 

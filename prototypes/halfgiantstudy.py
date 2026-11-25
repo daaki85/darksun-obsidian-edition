@@ -71,6 +71,7 @@ ARMS = {
 LOW_HEAD = {16: (16, 8, 5, 5), 17: (12, 12, 5, 5), 23: (21, 6, 4, 5),
             27: (7, 13, 5, 6), 28: (12, 6, 5, 5)}
 SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 151)
+LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
 BRONZE = (88, 90, 93, 95, 98, 100, 168, 169, 170)
 STOCK = {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 48, 49, 50, 51, 52, 194,
@@ -88,6 +89,48 @@ GUARD = ((8, 10), (21, 11), (8, 11), (7, 10), (7, 10), (6, 10), (6, 10), (16, 11
          (15, 11), (17, 11), (19, 11), (12, 11), (15, 10), (9, 11), (16, 11),
          (7, 14), (10, 10), None, (12, 12), (11, 11), (14, 12), (8, 10),
          (19, 12), (17, 11), (9, 11), (10, 16), (8, 16), (15, 9), (18, 11))
+
+
+# Midpoint of each sole on its last visible scanline, in the same upright
+# coordinates as CUTS. Trace the lifted foot separately from the planted one.
+SOLES = (
+    ((7, 39), (20, 34)), ((9, 33), (22, 38)), ((4, 39), (14, 31)),
+    ((8, 38), (17, 31)), ((8, 30), (17, 38)), ((9, 32), (18, 38)),
+    ((8, 38), (16, 30)), ((7, 37), (14, 32)), ((8, 40), (13, 30)),
+    ((8, 32), (15, 37)), ((10, 30), (15, 40)), ((4, 37), (10, 33)),
+    ((4, 33), (19, 37)), ((1, 32), (7, 39)), ((4, 37), (18, 31)),
+    ((2, 40), (14, 35)), ((9, 31), (22, 25)), ((7, 29), (22, 22)),
+    ((2, 31), (15, 37)), ((5, 33), (18, 37)), ((9, 33), (23, 37)),
+    ((14, 40), (23, 32)), ((2, 37), (13, 30)), ((2, 32), (12, 26)),
+    ((6, 38), (17, 33)), ((6, 35), (19, 41)), ((14, 46), (24, 38)),
+    ((16, 33), (26, 25)), ((3, 28), (17, 28)),
+)
+
+
+# Last locks visible over her near shoulder. Retail uses the same charcoal
+# indices for hair shadow and metal. Protect these native scanlines before
+# replacing the harness or outlining the body. Coordinates are hers.
+PROFILE_LOCKS = {
+    2: (9, ((4, 10), (3, 6), (3, 5), (3, 4), (3, 3), (3, 3))),
+    11: (9, ((4, 12), (4, 9), (3, 8), (3, 7), (4, 6))),
+    12: (8, ((5, 17), (6, 15), (7, 11), (8, 9), (8, 8))),
+    13: (9, ((3, 11), (3, 6), (2, 5), (2, 3))),
+    14: (9, ((4, 15), (5, 14), (7, 13), (8, 11))),
+}
+
+
+def sandal(x, y, soles, across):
+    for toe, bottom in soles:
+        rise = bottom - y
+        offset = x - toe
+        if not (0 <= rise <= 4 and abs(offset) <= 4):
+            continue
+        if rise == 0:
+            return 88
+        # Hide sole, an open instep, and a slanted ankle tie.
+        if rise == 1 or rise == 3 + (offset >= 0):
+            return 95 if across < .48 and rise > 1 else 90
+    return None
 
 
 def mix(a, b, t):
@@ -149,36 +192,73 @@ def garment(role, u, t, lower, profile, rear, texture):
     if role == "Cleric" and not lower:
         fold = math.cos(10*t-5*u) * (0.7+0.3*u)
     shade = 5.8 + 3*wrap + 2.2*fold + 0.7*relief
+    # A lapped edge catches the light above the darker return. It bends
+    # with the wearer, so the highlight travels with the same piece of hide.
+    if role == "Cleric":
+        shade += 1.4*fold + 0.4*relief
+        # The cream changes to warm brown where the pleat turns away from
+        # the shoulder. Leave the outer fold light enough to read on sand.
+        if not lower:
+            gather = t - (.70 - .46*u + .12*math.sin(4*u))
+            if -.07 < gather < .11:
+                shade += 3 if gather < 0 else -3.5
+        if lower:
+            pleat = u - (0.32 + 0.16*t*t)
+            if abs(pleat) < .055:
+                shade += 3.5 if pleat < 0 else -4
+    else:
+        shade += 1.2*fold + 0.45*relief
     if min(u, 1-u) < 0.08:
         shade -= 3
     if lower:
         hem = 0.43 if role == "Gladiator" else 0.55 if role == "Fighter" else 1
+        if role == "Gladiator" and (rear or profile):
+            hem -= .13
         hem += 0.08*math.sin(u*5.5+0.6) - (0.1 if profile else 0)*u
         if t > hem:
             return None
         if t < 0.09+0.08*math.sin(u*2.8):
+            if role == "Fighter":
+                # The lower welt of the jerkin sits over a dark sword belt.
+                if .28 < u < .41:
+                    return 168 if t < .07 else 95
+                return pigment(RAMPS["hide"], (11 if t < .045 else 2)+2*wrap+relief*.45)
             return pigment(RAMPS["hide"], 3+4*wrap+relief)
         if t > hem-0.09:
             shade -= 3
         if role == "Cleric" and t > 0.70 and u > 0.69:
             shade -= 2.2
+        if role != "Cleric":
+            lap = u-(.62-.44*t)
+            if -.08 < lap < .10:
+                shade += 5 if lap < 0 else -4
+            if hem-.16 < t <= hem-.08 and .09 < u < .60:
+                shade += 3
         if role == "Gladiator":
             shade += 1.8*math.cos(grain*1.1-t*2)
-        return pigment(RAMPS["linen" if role == "Cleric" else "hide"], shade)
+        return pigment(LINEN if role == "Cleric" else RAMPS["hide"], shade)
     neckline = (0.15 if rear else 0.30)*(1-abs(2*u-1))
     if t < neckline:
         return None
     if role == "Gladiator":
         center = (0.80-0.66*t) if rear else (0.18+0.66*t)
         distance = u-center
-        if abs(distance) > (0.14 if profile else 0.10):
+        half_width = .065 if rear else .105 if profile else .10
+        if abs(distance) > half_width:
             return None
-        return pigment(RAMPS["hide"], 4.5-22*distance+0.6*relief)
+        return pigment(RAMPS["hide"], (11 if distance < -.035 else 3)+.65*relief)
     if role == "Fighter" and t < 0.22 and (u < 0.23 or u > 0.80):
         return pigment(BONE, 2+2.8*(1-t/.22)+0.45*relief)
-    if role == "Fighter" and abs(t-0.79+0.52*u) < 0.075:
-        return pigment(RAMPS["hide"], 3+2*wrap)
-    return pigment(RAMPS["linen" if role == "Cleric" else "hide"], shade)
+    if role == "Fighter":
+        seam = t - (.70 - .42*u + .09*u*u)
+        if -.10 < seam < .08:
+            return pigment(RAMPS["hide"], (12 if seam < -.01 else 2)+wrap+.5*relief)
+        if .12 < u < .25 and t < .63:
+            shade += 2.5
+        lip = u - (.22 + .15*t*t)
+        if -.065 < lip < .045 and .28 < t < .88:
+            shade += 4 if lip < 0 else -4
+    return pigment(LINEN if role == "Cleric" else RAMPS["hide"], shade)
 
 
 def study_rows(game, model, pose, texture):
@@ -194,13 +274,18 @@ def study_rows(game, model, pose, texture):
     dx, dy = FEMALE_OFFSETS[pose] if model == 2074 else (0, 0)
     dx += margin
     shoulder, waist, knee = CUTS[pose]
+    soles = SOLES[pose]
+    if model == 2074 and pose == 27:
+        soles = ((16, 34), soles[1])
     bow = game.bow(fig, native, fig.parts(combat, frame)) if 24 <= pose <= 26 else set()
     # The ankle-length linen opens behind the knee on the long profile
     # steps. Hide panels stop at the thigh and stay close to the leg.
     trail = {2: 2, 11: 3, 12: 5, 13: 2, 14: 4, 22: 3, 23: 2, 24: 2}.get(pose, 0)
     linen_knee = (knee[0]-trail, knee[1]+1, knee[2], knee[3]+1)
     pieces = {role: [r[:] for r in source] for role in ROLES[1:]}
+    locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if model == 2074 else (0, ())
     for sy, row in enumerate(source):
+        lock = locks[sy-locks_start] if 0 <= sy-locks_start < len(locks) else None
         # Each contiguous leg/arm has its own light plane; a gap keeps its
         # native width even when the far leg crosses behind the near one.
         runs = []
@@ -214,6 +299,8 @@ def study_rows(game, model, pose, texture):
             for sx in range(left, right+1):
                 x, y = sx-dx, sy-dy
                 c = row[sx]
+                if lock and lock[0] <= sx-margin <= lock[1]:
+                    continue
                 u, t = fabric_coords(x, y, shoulder, waist)
                 v, h = fabric_coords(x, y, waist, knee)
                 in_top = 0 <= u <= 1 and 0 <= t < 1
@@ -248,7 +335,31 @@ def study_rows(game, model, pose, texture):
                     else:
                         ridge = abs(across-0.34)
                         grain = ((sx+2*sy) % 5 == 1)-((sx+sy) % 4 == 0)
-                        body = pigment(SKIN, 7.7-11*ridge+grain-1.2*(y > knee[1]))
+                        body = pigment(SKIN, 8.8-16*ridge+grain-1.6*(y > knee[1]))
+                # Keep the warm highlight on the upper-left plane. The
+                # shadow side and underside meet the sand in a broken outline.
+                below = sy+1 == len(source) or source[sy+1][sx] is None
+                if sx == right or below:
+                    body = 88 if below and (sx == right or across > .45) else 129
+                elif sx == left and (c in STOCK or deep):
+                    body = 134
+                elif right-sx == 1 and body in SKIN:
+                    body = SKIN[max(0, SKIN.index(body)-3)]
+                if (pose in REAR and in_top and not near_arm and .14 < t < .70
+                        and body in SKIN and sx not in (left, right)):
+                    # Two scapular planes turn away from the spine, visible
+                    # beneath the diagonal strap. Leave the neck and hair free.
+                    blade = abs(abs(2*u-1)-(.48-.17*t))
+                    if blade < .17:
+                        body = SKIN[min(len(SKIN)-1, SKIN.index(body)+2)]
+                    elif abs(u-.54) < .07:
+                        body = SKIN[max(0, SKIN.index(body)-2)]
+                foot = sandal(x, y, soles, across)
+                # In these two crossing profile steps the back foot lies
+                # directly beside the planted shin. Only its toes take a sole.
+                if (pose == 11 and x <= 6 and 29 <= y <= 32
+                        or pose == 13 and x >= 4 and 28 <= y <= 32):
+                    foot = None
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     paint = None
@@ -271,6 +382,11 @@ def study_rows(game, model, pose, texture):
                     if pose == 17 and 17 <= y <= 22 and x >= 19 and not near_arm:
                         ramp = RAMPS["linen" if role == "Cleric" else "hide"]
                         paint = pigment(ramp, 8+.7*(20-x)+texture[y % 8][x % 8])
+                    # On the tucked front strike the far toes turn up
+                    # against the hip. They cross in front of the short wrap.
+                    if paint is None or (pose == 17 and x >= 20 and y >= 21
+                                         and foot is not None and role != "Cleric"):
+                        paint = foot
                     pieces[role][sy][sx] = body if paint is None else paint
     # Bridge the panel between the thighs. Extend the cloth only inside the
     # hem, so the native stride shows through again below the knees.
