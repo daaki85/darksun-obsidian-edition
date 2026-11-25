@@ -122,6 +122,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravkeys.py` | R, F10 and Alt in the running sequel ($WORK/rav.pid): DSCLOG2's words for them and the game's. |
 | `ravkits.py` | the kits in the running sequel ($WORK/rav.pid; |
 | `ravknow.py SPELL [LEVEL]` | a test edit (never saved): Wake of the Ravager's first party member (Ar'anda in the opening party; |
+| `ravlevel.py` | the level cap by XP in the running sequel ($WORK/rav.pid; |
 | `ravload.sh NAME [FOLDER]` | Wake of the Ravager from the save in saves/NAME (SAVE01.SAV, CHARSAVE.GFF, DARKSAVE.GFF copied into FOLDER, default $WORK/rav, as slot 1), started as the Loader starts it (RAV_LOADER=1; |
 | `ravloot.py` | looting with T, selling with S and M/U/I in the running sequel ($WORK/rav.pid): DSCLOG2's LOOT_KEY and SELL_KEY fields (its header's +1846 to +1859, DSCLOG's), the shop loop's passes and OVERHEAD (from `nasm -l`'s... |
 | `ravquick.py` | the quick saves in the running sequel ($WORK/rav.pid): DSCLOG2's QUICK SAVES (its header's +1904 on, MAIN_TICKS at +260) and the game's words the Loader writes for them. |

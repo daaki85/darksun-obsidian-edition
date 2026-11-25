@@ -829,6 +829,33 @@ Character's bar's right icon (270,171) goes back to the title menu, then CREATE 
 slot 2 (117,56) puts its menu top right (NEW 160,57), on slot 3 (70,127) beside the slot (NEW 110,118). PSIONICIST
 on the classes' list is (265,53).
 
+**The level up, the XP table and the saves in the sequel** (2026-11-25, logs/2026-11-25-ravager-level-cap.md): the
+level up (95820h on: SI the member, DI the class's place; `[BP+6]` nonzero levels without the XP) holds the
+sheet's XP to the table's entry level + 3 (958AAh-95940h: "add ax,3" at 958BDh, the reads at 958E3h and
+95931h), then reads entry level (9597Ah: the next level's XP) and at 959A5h holds the level below 15; it
+loops on the same place while a level comes (95A85h "dec di"), a human only on place 0 (9587Fh). The XP
+table is read only through 5C8:20 (6F640h: the resource DATA 3E8h loaded by 128:4ABh, the word at row x
+40 + index x 2, let go by 1D0:92h each call): nothing stays in memory, so DSCLOG2 keeps its own copy
+(RAV_XP_AT). Out of range it reads on into the next row (row 7, the thief's, past the resource). The
+class-to-row map is 360h:9Dh (a word a class: 1-4 cleric 1, 5-8 druid 2, 9 fighter 3, 10 gladiator 4, 11
+preserver 5, 12 psionicist 6, 13-16 ranger 7, 17 thief 8). View Character's next XP (6FB21h): its copy's
+classes are rows, the least next XP at `[BP-6]`, "push 1383h" "(" and "push 1386h" ")" around it (6FBDFh,
+6FC08h). Creation (6C3A4h-6C4E7h) puts a class at 6th or 7th (XP the most of their needs), then one
+level more where the XP allows: 8th at most. **Hit dice**: the class-to-group bytes 4D0h:10h + class
+(0 priest, 1 warrior, 2 wizard, 3 rogue: psionicist 12 and thief 17), the groups 4D0h:0 four bytes each
+(die, levels rolled, fixed gain after, CON's most): (8,9,2), (10,9,3), (4,10,1), (6,9,2). **Saves**:
+954D2h, the per-group levels from 953A9h (`[BP-0Ah]` + group x 2), the table 4D0h:6Ch + group x 15 + save x 3
+(1st level's, a rate in hundredths, AD&D's last row), save = first - min((level - 1) x rate / 100, last); a
+dwarf's or halfling's CON x 2 / 7 is added for the warrior group (it tests the group, CX, for 1 or 4: SL's
+the same). **Spell slots**: 62A10h by a formula (DS:0670h + class: a nibble list of DS:0684h words: start
+level, odd/even, most), a ranger's 3 2 1 at 12th, 3 2 2 at 13th, 3 3 2 at 14th, AD&D's 2 2 1, 3 2 1, 3 2 2
+(ADND_SLOTS now gives the Handbook's). `ravlevel.py` shows the party's levels, XP, saves and the helper's
+counts, and sets a member for a test. **Played** (2026-11-25, logs/2026-11-25-ravager-level-cap.md): without the fix the game's XP clamp reads
+past the table's end for a class at 17th or more and sets the XP to 0; the saves are the least of each group's
+(954D2h's loop); a fight's XP goes a third to each class of a triple class. On View Character a click on a
+portrait at the Effects screen's spots (70,56) (117,56) (70,127) (117,127) shows that member; level-up messages
+come one a click of the box (160,100), the dice log's "Message:" lines list them all.
+
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
 at 5C6EEh each attack), the sheet in `[BP-12h]`, the weapon type in `[BP-4]`, the target-is-an-object

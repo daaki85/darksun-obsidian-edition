@@ -57,8 +57,8 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
             self.assertEqual(p.replacement[3:], b"\x90" * (len(p.original) - 3), name)
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
-        # (86, 89, 101-104: none; 83 STORE and RECALL's RS_CLICK, 85 GEAR_DONE, 82 the shop loop's SHOP_LOOP, 79-80 Psionic Blast's, 81 RL_TRY, 84 the quick saves' GREQ_LOAD, 78 RG_TWO, 52-53 the thief table's, 54-59 the shops' and the message box's, 77 Tab's PROBE_HIT, 90-92 the second sphere's, 87-88 and 95-99 the first spells' and powers', 100 F10's F10_PIN)
-        self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 6)
+        # (86, 89, 101-109: none; 83 STORE and RECALL's RS_CLICK, 85 GEAR_DONE, 82 the shop loop's SHOP_LOOP, 79-80 Psionic Blast's, 81 RL_TRY, 84 the quick saves' GREQ_LOAD, 78 RG_TWO, 52-53 the thief table's, 54-59 the shops' and the message box's, 77 Tab's PROBE_HIT, 90-92 the second sphere's, 87-88 and 95-99 the first spells' and powers', 100 F10's F10_PIN)
+        self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 11)
 
     FIRST = {"cr_picks": (87, "cr_picks"), "psi_grant": (88, "psi_grant"), "psi_grant_psionicist": (88, "psi_grant"),
              "psi_count": (95, "psi_count"), "psi_list": (96, "psi_list"), "psi_cycle": (97, "psi_cycle"),
@@ -73,7 +73,7 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
             self.assertEqual(p.replacement[3:], b"\x90" * (len(p.original) - 3), name)
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (routine, number))
-        self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 105)  # (sites 0-104)
+        self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 118)  # (sites 0-117)
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
     def test_in_the_program(self):

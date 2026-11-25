@@ -264,7 +264,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
     dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
     its own by their pid files. Run a tool there through a wrapper that sets `PLAYTEST_WORK` and
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
-    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
+    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart. For the sequel (logs/2026-11-25-ravager-level-cap.md): the copied
+    kit's `ravstart.sh` with `dosbox` changed to the renamed copy and its Xvfb line off, `env.sh` and
+    `paths.py` on the copy's display; ravstart's tools read `$WORK/rav.pid`, so a `PLAYTEST_WORK` of its
+    own keeps them on the copy's game.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
     game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
     in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the

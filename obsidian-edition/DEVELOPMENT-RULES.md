@@ -1780,6 +1780,25 @@ fighter/preserver set near their shares held at 749,999 and 374,999 through
 the fountain ambush's kills; with the old Loader they went on to 750,690 and
 375,293.
 
+In Wake of the Ravager (DSCLOG2, `ravager.py`'s `level_cap_*` patches) the game stops a class at
+15th in the same two places (the level up's `cmp byte es:[bx+1Eh],0Fh` at 959A5h, then `JB`; View
+Character's at 6FB51h, then `JE`), each a SITE of its own (110, 111), so nothing tells them apart by
+the code after them. `LEVEL_ROOM` is SL's with `RAV_XP_CAP` (5,625,000, `ravager.RAV_XP_CAP`), the
+sheet's classes mapped to rows by its own `class_rows` (the game's 360h:9Dh) and the XP from
+`RAV_XP_AT`: `tables.RAV_XP` in hundreds with `XP_FIXES`' exact values over them (the game reads its
+table through a resource load each time, 5C8:20, so there is nothing in memory to read). The level
+up holds the sheet's XP to its table's entry 3 levels on (958C0h-95940h); from 17th that entry is past
+the table's 20, so `LV_CLAMP` (site 112, its `add ax,3`) makes the index 19 and has `XP_NEED`'s next
+answer the most, which passes the hold by. At the same site `XP_HOLD` (the owner's, 2026-11-25: XP
+stops growing at the cap) holds the sheet's XP at `LR_SHARE` first, so the game's hold, where it reads
+the table, can only take it lower. `XP_SUFFIX` (117) is `PROBE_XP_NEXT` at View Character's
+`push 1386h`. A thief's d6 to 10th is `PROBE_HD_ROLL` and `PROBE_HD_CON` (113, 114) and a third site
+(115) for the sequel's `mov` that keeps the levels after the compare. The saves (`SAVE_BASE`, 116,
+RULE_HI_TABLES): the save routine (954D2h) is SL's (87844h), save = the 1st level's less
+min((level - 1) x rate / 100, the table's third byte), that byte AD&D's last save, not the most a save
+improves; at its `mov al,es:[bx+6Ch]` the site gives the Handbook's save plus the game's improvement,
+so the game's `sub` leaves the Handbook's less a dwarf's or halfling's CON bonus.
+
 ## STORE and RECALL on the creation screen
 
 ([In the features page](FEATURES.md#store-and-recall-on-the-creation-screen).)

@@ -113,7 +113,14 @@ RAV_WIZARD_SLOTS = WIZARD_SLOTS[:11] + (
     (4, 4, 4, 4, 4, 1), (5, 5, 5, 4, 4, 2), (5, 5, 5, 4, 4, 2, 1), (5, 5, 5, 5, 5, 2, 1),
     (5, 5, 5, 5, 5, 3, 2, 1), (5, 5, 5, 5, 5, 3, 3, 2), (5, 5, 5, 5, 5, 3, 3, 2, 1),
     (5, 5, 5, 5, 5, 3, 3, 3, 1), (5, 5, 5, 5, 5, 4, 3, 3, 2))
+# a druid's: the cleric's to 15th, then 15th's (the owner's table, 2026-11-25: a druid's slots stop growing)
+RAV_DRUID_SLOTS = RAV_PRIEST_SLOTS[:15] + (RAV_PRIEST_SLOTS[14],) * 5
+# a ranger's priest spells (8th level on; the game's own formula gave 3 2 1 at 12th, 3 2 2 at 13th, 3 3 2
+# at 14th): the Player's Handbook's, as the owner's table has them
+RAV_RANGER_SLOTS = ((),) * 7 + ((1,), (2,), (2, 1), (2, 2), (2, 2, 1), (3, 2, 1), (3, 2, 2), (3, 3, 2)) \
+    + ((3, 3, 3),) * 5
 RAV_SLOT_LEVELS = 20
+DRUIDS, RANGERS = range(5, 9), range(13, 17)
 
 
 def rav_slots(cls: int, level: int, spell_level: int) -> Optional[int]:
@@ -121,11 +128,45 @@ def rav_slots(cls: int, level: int, spell_level: int) -> Optional[int]:
     for a class whose slots stay the game's."""
     if cls == PRESERVER:
         table = RAV_WIZARD_SLOTS
+    elif cls in DRUIDS:
+        table = RAV_DRUID_SLOTS
     elif cls in PRIESTS:
         table = RAV_PRIEST_SLOTS
+    elif cls in RANGERS:
+        table = RAV_RANGER_SLOTS
     else:
         return None
     if level < 1:
         return 0
     row = table[min(level, RAV_SLOT_LEVELS) - 1]
     return row[spell_level - 1] if 1 <= spell_level <= len(row) else 0
+
+
+# The sequel's saving throws (DSCLOG2's SAVE_BASE, RULE_HI_TABLES): the Player's Handbook's (2nd
+# edition, Table 60) by the game's class groups (0 priest, 1 warrior, 2 wizard, 3 rogue: thieves and
+# psionicists, as Dark Sun has them) and level, each band (first level, the five saves: paralysis,
+# poison and death; rod, staff and wand; petrification and polymorph; breath; spell). The game's own
+# (954D2h: the 1st level's save less (level - 1) x a rate / 100) took the table's last row as the most
+# a save could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and a priest's
+# paralysis save at 8 from 9th; no save of any class went below 8.
+RAV_SAVE_BANDS = (
+    ((1, (10, 14, 13, 16, 15)), (4, (9, 13, 12, 15, 14)), (7, (7, 11, 10, 13, 12)), (10, (6, 10, 9, 12, 11)),
+     (13, (5, 9, 8, 11, 10)), (16, (4, 8, 7, 10, 9)), (19, (2, 6, 5, 8, 7))),
+    ((1, (14, 16, 15, 17, 17)), (3, (13, 15, 14, 16, 16)), (5, (11, 13, 12, 13, 14)), (7, (10, 12, 11, 12, 13)),
+     (9, (8, 10, 9, 9, 11)), (11, (7, 9, 8, 8, 10)), (13, (5, 7, 6, 5, 8)), (15, (4, 6, 5, 4, 7)),
+     (17, (3, 5, 4, 4, 6))),
+    ((1, (14, 11, 13, 15, 12)), (6, (13, 9, 11, 13, 10)), (11, (11, 7, 9, 11, 8)), (16, (10, 5, 7, 9, 6)),
+     (21, (8, 3, 5, 7, 4))),
+    ((1, (13, 14, 12, 16, 15)), (5, (12, 12, 11, 15, 13)), (9, (11, 10, 10, 14, 11)), (13, (10, 8, 9, 13, 9)),
+     (17, (9, 6, 8, 12, 7)), (21, (8, 4, 7, 11, 5))),
+)
+RAV_SAVE_LEVELS = 21  # (DSCLOG2's SAVE_TABLE: a row a level 1-21, more is 21st's)
+
+
+def rav_saves(group: int, level: int) -> tuple:
+    """The five saves of class group GROUP (0-3) at LEVEL (1 and up), the Player's Handbook's."""
+    out = RAV_SAVE_BANDS[group][0][1]
+    for first, saves in RAV_SAVE_BANDS[group]:
+        if level >= first:
+            out = saves
+    return out

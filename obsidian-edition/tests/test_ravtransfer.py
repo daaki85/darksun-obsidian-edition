@@ -129,7 +129,8 @@ class RosterTests(unittest.TestCase):
         self.assertEqual(game.specs_of(lex[0x42:0x45] + b"\0"), (bytes((3, 5, 0, 0)), 9))
         self.assertEqual((lex[0x41], lex[0x45:]), (5, bytes(3)))
         self.assertEqual(jenna[0x42:], bytes(6))
-        self.assertEqual(lex[:0x42], rt.sheet(sheets[:rt.SL_SHEET])[:0x41] + lex[0x41:0x42])
+        self.assertEqual(lex[4:0x42], rt.sheet(sheets[:rt.SL_SHEET])[4:0x41] + lex[0x41:0x42])
+        self.assertEqual(struct.unpack_from("<I", lex, 0)[0], game.XP_CAP // 3)  # (its XP held: sl_xp_share)
         self.assertEqual(out[("SPST", 35)], bytes([1, 0, 0, 0, 4, 0, 0, 0, 0]))
         chartran, _ = rt.roster(save, made_sequel())
         self.assertEqual(len(dataitems.records(chartran[("CHAR", 35)])[0][1].data), 0x42)
@@ -147,6 +148,30 @@ class RosterTests(unittest.TestCase):
         save[("SAVE", rt.SHEETS)] = bytes(sheets)
         old = dataitems.records(rt.roster(save, scroll_sequel())[0][("CHAR", 35)])[0][1].data
         self.assertEqual((game.specs_of(old[0x42:0x45] + b"\0"), old[0x41]), ((bytes((2, 1, 0, 0)), None), 0))
+
+    def test_xp_held_at_sl_cap(self):
+        """The Loader's way, XP past Shattered Lands' cap stays behind (the owner's, 2026-11-25): a fighter's
+        2,000,000 arrives as 749,999, a fighter/thief's as 374,999, a human's as the cap less its old
+        class's level's XP, XP below the share as it is; CHARTRAN's way, as it is; the report says so."""
+        def sl_sheet(xp, race, classes, levels):
+            rec = bytearray(rt.SL_SHEET)
+            struct.pack_into("<I", rec, 0, xp)
+            rec[rt.SL_SHEET_RACE] = race
+            rec[rt.SL_SHEET_CLASSES:rt.SL_SHEET_CLASSES + 3] = bytes(classes)
+            rec[rt.SL_SHEET_LEVELS:rt.SL_SHEET_LEVELS + 3] = bytes(levels)
+            return bytes(rec)
+        from dsloader import tables
+        cases = ((sl_sheet(2000000, 3, (9, 0, 0), (10, 0, 0)), 749999),
+                 (sl_sheet(2000000, 3, (9, 17, 0), (9, 11, 0)), 374999),
+                 (sl_sheet(2000000, 3, (9, 11, 17), (8, 9, 11)), 249999),
+                 (sl_sheet(2000000, 1, (11, 2, 0), (10, 7, 0)), 749999 - tables.XP["cleric"][6]),
+                 (sl_sheet(100000, 3, (9, 0, 0), (7, 0, 0)), 100000))
+        for rec, want in cases:
+            self.assertEqual(struct.unpack_from("<I", rt.sheet(rec, loader=True), 0)[0], want)
+            self.assertEqual(struct.unpack_from("<I", rt.sheet(rec), 0)[0], struct.unpack_from("<I", rec, 0)[0])
+        moved = [rt.Moved(0, "Lex", [], 35, "", {}, (2000000, 749999))]
+        self.assertIn("Lex: place 4 of the roster (CREATE CHARACTERS, ADD); XP 749,999 (Shattered Lands' cap: "
+                      "2,000,000 in the save)", rt.player_report(moved, None, [], {}.get))
 
     def test_items(self):
         recs, _ = dataitems.records(self.out[("CHAR", 35)])
