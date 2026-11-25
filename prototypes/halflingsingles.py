@@ -285,18 +285,18 @@ def draw(game, model, pose, swatches):
                 light = 8.8-5*abs(across-.3)-.50*i+.43*grain-3.5*rim
                 out["Thief"][v][u] = fit.dye(RAMPS["slate"], light)
     if model == 2070:
-        tuck_hair(game, pose, swatches, out["Thief"], fitted["Original"], dx, dy, bow, shell, opening)
+        twin = draw(game, 2068, pose, swatches)
+        donor, original = twin["Thief"], twin["Original"]
+        if pose == 28:
+            donor, original = fit.flip(donor), fit.flip(original)
+        tuck_hair(pose, out["Thief"], fitted["Original"], dx, dy, bow, shell, opening, donor, original)
     return {k: fit.flip(v) if pose == 28 else v for k, v in (fitted | out).items()}
 
 
-def tuck_hair(game, pose, swatches, thief, native, dx, dy, bow, shell, opening):
+def tuck_hair(pose, thief, native, dx, dy, bow, shell, opening, donor, original):
     # Both retail bodies use the same registered movement. Where a lock of
     # hair tucks into the hood it exposes either air, skin, or the cloak fold
     # underneath. Sample that particular layer from the short-haired twin.
-    twin = draw(game, 2068, pose, swatches)
-    donor, original = twin["Thief"], twin["Original"]
-    if pose == 28:
-        donor, original = fit.flip(donor), fit.flip(original)
     _, top, spans = fit.HEADS[pose]
     end = max(fit.CUT[pose][1][1]+1, top+len(spans)+1)
     hair_tones = {157, 179, 180, 181, 182, 183, 184, 200, 201}
@@ -318,12 +318,12 @@ def tuck_hair(game, pose, swatches, thief, native, dx, dy, bow, shell, opening):
                 thief[v][u] = donor[y][col] if inside else None
 
 
-def verify_face(outfits, model, pose):
+def verify_face(outfits, model, pose, roles=SINGLES):
     dx, dy = fit.CUT[pose][-1] if model == 2070 else (0, 0)
     _, opening, head = hood(pose)
-    for role in SINGLES:
+    for role in roles:
         rows, original = outfits[role], outfits["Original"]
-        points = opening if role == "Thief" else head
+        points = opening if "Thief" in role.split("/") else head
         for x, y in points:
             u, v = x+dx+4, y+dy
             if pose == 28:

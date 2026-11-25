@@ -1,6 +1,21 @@
 # Halfling outfit study
 
-All seven legal single classes are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
+All seven single classes, twelve pairs and two triples are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
+
+## Multiclass animations
+
+Each large figure wears the combination named above it. For a pair, read the three small figures beneath it from left to right for the first class, the pair and the second class. Both small rows are game size, on sand and paving. The triple gallery labels the three parent pairs individually. Retail figures and the approved human Psionicist appear along the bottom.
+
+| Gallery | Where to look |
+|---|---|
+| [Four Cleric pairs](halfling-multiclass-cleric.gif) | In front walk step 1 (03), the Fighter’s dark sword belt and bone guard break up the cream robe. The Ranger’s cloak opens onto the same continuous linen hem. |
+| [Three Druid pairs](halfling-multiclass-druid.gif) | Rear walk step 2 (08) shows the short leaf cape above the ochre kilt. The Druid/Thief has a slate hood tucked into that cape. |
+| [Five Fighter, Psionicist, Ranger and Thief pairs](halfling-multiclass-leather.gif) | Follow the Ranger/Thief beside the plain Thief through side steps 1–4. The green trailing fold carries the Ranger color and the hood keeps its slate rim. |
+| [Both triples and their parent pairs](halfling-multiclass-triples.gif) | In rear idle (01), compare the leather belt and slate cloak on Fighter/Psionicist/Thief with the green cloak on Psionicist/Ranger/Thief. Both carry a teal wrap. In front strike 2 (16), the raised arm leaves only six teal pixels visible on the Fighter triple. |
+
+[Man, every multiclass pose](halfling-man-multiclass.png) · [Woman, every multiclass pose](halfling-woman-multiclass.png)
+
+The frame review covered 696 pair frames and 116 triple frames. Each pair differs from both singles and each triple differs from all three parent pairs in every pose. The exposed face, visible bow and shared bare-hand pixels were checked against the underlying figures. The galleries are study renders.
 
 ## Druid, Psionicist, Ranger and Thief
 
