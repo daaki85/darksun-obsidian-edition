@@ -13255,6 +13255,8 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         je .no
         call on_map                     ; (not with a window, a menu or a talk over the map)
         jne .no
+        call loader_fresh               ; (nor with the Loader gone: TARGET_ON left as it was)
+        jne .no
         cmp ax, KEY_TAB
         jne .back
         inc word [cs:tab_seq]
@@ -13913,8 +13915,8 @@ RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what s
 ; party member's turn in a fight), INT16 takes Tab and Shift+Tab from the game and counts them; the
 ; Loader steps through the enemies, the nearest first, and puts the chosen one in HIT_TARGET
 ; (dsloader/targeting.py). Enter then (INT16: T_CLICK) has the main loop's next pass (TARGET_MOUSE, from
-; PROBE_SCROLL) give the game the pointer a little above the enemy's feet with the left button pressed,
-; and let go the pass after: the click the game reads from its own call there. For HIT_PASSES passes
+; PROBE_SCROLL) put the pointer a little above the enemy's feet and give the game's own mouse handler a
+; left click there. For HIT_PASSES passes
 ; from it the routine finding what is under the pointer (29DBDh, SL's 25B52h: PROBE_HIT, site 77)
 ; answers with the chosen enemy whatever stands in front of it. The ring (RINGS_ON) is drawn into the
 ; floor as the game draws it (FLOOR_POST, after the walls' shadows), the floor's colours reddened
@@ -13929,30 +13931,30 @@ main_ticks dw 0                 ; passes of the map's main loop (PROBE_SCROLL)
 hit_until  dw 0
 hit_forced db 0
 t_click    db 0                 ; (INT16's: Enter pressed on the chosen enemy)
-t_phase    db 0                 ; (TARGET_MOUSE's: 1 the press to give, 2 the letting go)
 t_x        dw 0
 t_y        dw 0
 h_resume   dd 0
 
-; TARGET_MOUSE: after PANEL_MOUSE (AX the buttons; the far pointers to the pointer's x and y as
-; PANEL_MOUSE has them): Enter's click, two passes: the pointer put on the
-; chosen enemy and the left button pressed, then let go. AX changed only then; others kept.
+; TARGET_MOUSE: after PANEL_MOUSE (DS the game's): Enter's click (T_CLICK): the pointer put a little
+; above the chosen enemy's feet (INT 33h 4) and the game's own mouse handler called there with a left
+; press and a letting go, as the mouse driver calls it (the game reads clicks from the handler it set
+; with INT 33h 0Ch, not from its main loop's call for the pointer: that handler found by INT 33h 14h,
+; given back at once). Registers kept.
+EVENT_LEFT_PRESS equ 2
+EVENT_LEFT_LEAVE equ 4
 target_mouse:
-        cmp byte [cs:t_phase], 0
-        jne .give
         cmp byte [cs:t_click], 0
         je .ret
         mov byte [cs:t_click], 0
+        pusha
         push ds
-        push bx
-        push cx
-        push dx
+        push es
         mov ds, [cs:pointer_ds]
         mov bx, [cs:hit_target]
         cmp bx, MAP_COUNT - 1
-        ja .no
+        ja .out
         call on_map
-        jne .no
+        jne .out
         imul bx, bx, THING_SIZE
         mov cx, [bx + MAP_THINGS + THING_X]
         mov dx, [bx + MAP_THINGS + THING_Y]
@@ -13960,50 +13962,66 @@ target_mouse:
         sub dx, [CAM_Y]
         sub dx, T_ABOVE
         cmp cx, 1                       ; (on the screen: else nothing, as SL's)
-        jl .no
+        jl .out
         cmp cx, 318
-        jg .no
+        jg .out
         cmp dx, 1
-        jl .no
+        jl .out
         cmp dx, 198
-        jg .no
+        jg .out
         mov [cs:t_x], cx
         mov [cs:t_y], dx
-        mov byte [cs:t_phase], 1
-        mov cx, [cs:main_ticks]
-        add cx, HIT_PASSES
-        mov [cs:hit_until], cx
+        mov ax, 0x14                    ; the game's handler: swapped for none, then given back
+        xor cx, cx
+        push cs
+        pop es
+        mov dx, t_none
+        int 0x33
+        mov [cs:t_handler], dx
+        mov [cs:t_handler + 2], es
+        mov [cs:t_mask], cx
+        mov ax, 0x14
+        int 0x33                        ; (CX, ES:DX: the game's again)
+        cmp word [cs:t_handler + 2], 0
+        je .out
+        mov ax, [cs:main_ticks]
+        add ax, HIT_PASSES
+        mov [cs:hit_until], ax
         mov byte [cs:hit_forced], 1
         inc word [cs:attack_clicks]
-.no:    pop dx
-        pop cx
-        pop bx
-        pop ds
-        cmp byte [cs:t_phase], 0
-        je .ret
-.give:  push bp
-        mov bp, sp
-        push es
-        push bx
-        push cx
-        les bx, [bp + 4]                ; (past BP and this call's return: x's)
+        mov ax, 4                       ; the pointer there
         mov cx, [cs:t_x]
-        mov [es:bx], cx
-        les bx, [bp + 8]                ; (y's)
-        mov cx, [cs:t_y]
-        mov [es:bx], cx
-        pop cx
-        pop bx
-        pop es
-        pop bp
-        cmp byte [cs:t_phase], 1
-        jne .up
-        or al, 1                        ; the press
-        mov byte [cs:t_phase], 2
-        ret
-.up:    and al, ~1                      ; let go
-        mov byte [cs:t_phase], 0
+        mov dx, [cs:t_y]
+        int 0x33
+        pushf                           ; (the handler as the driver calls it: interrupts off)
+        cli
+        mov ax, EVENT_LEFT_PRESS
+        mov bx, 1
+        call t_event
+        mov ax, EVENT_LEFT_LEAVE
+        xor bx, bx
+        call t_event
+        popf
+.out:   pop es
+        pop ds
+        popa
 .ret:   ret
+t_event:                                ; the game's handler called with event AX, buttons BX at T_X, T_Y
+        pusha
+        push ds
+        push es
+        mov cx, [cs:t_x]
+        mov dx, [cs:t_y]
+        xor si, si
+        xor di, di
+        call far [cs:t_handler]
+        pop es
+        pop ds
+        popa
+        ret
+t_none: retf                            ; (the handler for the moment of the swap)
+t_handler dd 0
+t_mask    dw 0
 
 ; PROBE_HIT (site 77): "push bp / mov bp,sp / sub sp,0Eh" (6 bytes: the site and 3 NOPs) at the start of
 ; the routine that finds the thing under the pointer (29DBDh: camera x, y, pointer x, y; the thing, or
@@ -14030,12 +14048,15 @@ probe_hit:
         sub sp, 0x0E
         jmp far [cs:h_resume]
 
-; RING_WANTED: CF set if a ring is to be drawn: RINGS_ON and an enemy chosen. Registers kept.
+; RING_WANTED: CF set if a ring is to be drawn: RINGS_ON, an enemy chosen and the Loader there.
+; Registers kept.
 ring_wanted:
         cmp word [cs:rings_on], 0
         je .no
         cmp word [cs:hit_target], MAP_COUNT - 1
         ja .no
+        call loader_fresh               ; (the Loader gone: none, HIT_TARGET left as it was)
+        jne .no
         stc
         ret
 .no:    clc
