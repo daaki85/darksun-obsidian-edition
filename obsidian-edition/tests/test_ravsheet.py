@@ -319,19 +319,19 @@ class WidenTests(unittest.TestCase):
                          {ravager.SHEETS_CHUNK: table})
 
     def test_folder(self):
-        """The roster and the saves widened, a backup of each first (.42H); twice is once; narrowed back
-        to the same chunks (a .48H backup); other files untouched."""
+        """The roster and the saves widened (the quick saves' SAVQnn.SAV too), a backup of each first (.42H);
+        twice is once; narrowed back to the same chunks (a .48H backup); other files untouched."""
         roster = {("CHAR", 32): record_list(0x42), ("CHAR", 33): record_list(0x48), ("CACT", 32): b"\x01\x00",
                   ("SPST", 32): bytes(9)}
         save = {ravager.SHEETS_CHUNK: bytes(range(256)) * 4 + bytes(0x462 - 1024), ("SAVE", 1): bytes(10)}
         with tempfile.TemporaryDirectory() as d:
             for name, chunks in (("CHARSAVE.GFF", roster), ("SAVE01.SAV", save), ("save02.sav", save),
-                                 ("RGN001.GFF", roster), ("DARKRUN.GFF", {("ETME", 0): b"x"})):
+                                 ("SAVQ03.SAV", save), ("RGN001.GFF", roster), ("DARKRUN.GFF", {("ETME", 0): b"x"})):
                 with open(os.path.join(d, name), "wb") as f:
                     f.write(gff_file(chunks))
             before = {n: open(os.path.join(d, n), "rb").read() for n in os.listdir(d)}
-            self.assertEqual(ravager.widen_files(d), ["CHARSAVE.GFF", "SAVE01.SAV", "save02.sav"])
-            for n in ("CHARSAVE.GFF", "SAVE01.SAV", "save02.sav"):
+            self.assertEqual(ravager.widen_files(d), ["CHARSAVE.GFF", "SAVE01.SAV", "SAVQ03.SAV", "save02.sav"])
+            for n in ("CHARSAVE.GFF", "SAVE01.SAV", "SAVQ03.SAV", "save02.sav"):
                 self.assertEqual(open(os.path.join(d, n + ".42H"), "rb").read(), before[n])
             for n in ("RGN001.GFF", "DARKRUN.GFF"):
                 self.assertEqual(open(os.path.join(d, n), "rb").read(), before[n])
@@ -340,7 +340,7 @@ class WidenTests(unittest.TestCase):
                              {0x48})
             self.assertEqual(len(gff.read_gff(open(os.path.join(d, "SAVE01.SAV"), "rb").read())[ravager.SHEETS_CHUNK]), 0x4C8)
             self.assertEqual(ravager.widen_files(d), [])
-            self.assertEqual(ravager.widen_files(d, ravager.GAME_SHEET_SIZE), ["CHARSAVE.GFF", "SAVE01.SAV", "save02.sav"])
+            self.assertEqual(ravager.widen_files(d, ravager.GAME_SHEET_SIZE), ["CHARSAVE.GFF", "SAVE01.SAV", "SAVQ03.SAV", "save02.sav"])
             narrow = gff.read_gff(open(os.path.join(d, "CHARSAVE.GFF"), "rb").read())
             self.assertEqual(narrow[("CHAR", 32)], roster[("CHAR", 32)])
             self.assertEqual({len(x.data) for x in dataitems.records(narrow[("CHAR", 33)])[0] if x.kind == 3}, {0x42})

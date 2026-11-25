@@ -194,7 +194,9 @@ tab_seq    dw 0                 ; +252 Tab pressed (counted) ...
 back_seq   dw 0                 ; +254 ... and Shift+Tab
 hit_target dw 0xFFFF            ; +256 the enemy chosen (the Loader sets it; FFFFh: none)
 attack_seq dw 0                 ; +258 Enter pressed on it (counted)
-        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +260 to +267: none of them here yet, zero)
+main_ticks dw 0                 ; +260 passes of the map's main loop (PROBE_SCROLL), as DSCLOG's: the Loader
+                                ;      sees the loop running by it (quicksave.py)
+        times 268 - ($ - hdr) db 0  ; (DSCLOG's fields +262 to +267: none of them here yet, zero)
 ring_seg dw 0                   ; +268 the ring's segment: the far block's (FAR_SEG), as DSCLOG's
 rules_hi   dw 0                 ; +270 the rules' second word, as DSCLOG's
 learn_seq  dw 0                 ; +272 a wizard's try at a scroll's spell (INT_LEARN), counted ...
@@ -252,6 +254,21 @@ dark_builds  dw 0               ; +1876 times DARK was made
 attack_clicks dw 0              ; +1878 Enter's clicks given on the chosen enemy (TARGETING, counted)
 hit_answers  dw 0               ; +1880 the finder's answers made the chosen enemy (PROBE_HIT, counted)
 ring_draws   dw 0               ; +1882 rings drawn into the floor (RINGS, counted)
+        times 1904 - ($ - hdr) db 0 ; (+1884 to +1903: none yet, zero. DSCLOG's quick save fields are at
+                                ;   +1878 to +1889 there, where this header has others: here they follow)
+qs_keys    dw 0xFFFF, 0xFFFF    ; +1904 the Loader's: the quick save key and the quick load key, as INT 16h
+                                ;      gives them (FFFFh: none), taken on the map (QS_KEY) ...
+qs_seq     dw 0, 0              ; +1908 ... and counted, each in its word: the Loader acts (DSCLOG's +1878, +1882)
+save_req   dw 0                 ; +1912 the Loader sets 1 to have the game saved from the map's main loop
+                                ;      (SAVE_TICK: the file and the name in SAVE_TEXT), 2 to have the game's
+                                ;      LOAD window opened; 0 while DSCLOG2 is at it, then 3 done, 4 the game's
+                                ;      save failed, 5 not in a fight (DSCLOG's +1886)
+save_off   dw save_text         ; +1914 offset of SAVE_TEXT in this segment (+1834's): the Loader's: the save's
+                                ;      file (SAVE_FILE bytes with its NUL), then its name (DSCLOG's +1888)
+save_greq  dw 0                 ; +1916 the Loader's, with a save's request: the number of the save's GREQ
+                                ;      chunk (the map's limits, kept in the roster file: GREQ_WRITE), 0 none
+greq_saves dw 0                 ; +1918 GREQ chunks written (GREQ_WRITE, counted) ...
+greq_loads dw 0                 ; +1920 ... and a load's taken from the quick saves' (GREQ_LOAD, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -3759,7 +3776,7 @@ site_table:
         dw rl_try                           ; 81 SITE_RL_TRY (6C585h: an ability's 4d4 on the creation screen, for the dice log)
         dw site_none                        ; 82 (none here)
         dw site_none                        ; 83 (none here)
-        dw site_none                        ; 84 (none here)
+        dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
         dw site_none                        ; 85 (none here)
         dw site_none                        ; 86 (none here)
         dw site_none                        ; 87 (none here)
@@ -12366,6 +12383,7 @@ probe_scroll:
         call label_tick
         call ring_tick
         call pan_tick                   ; (the view to the enemy chosen with Tab: the Loader's PAN)
+        call save_tick                  ; (the Loader's quick save or quick load: QUICK SAVES)
         pop es
         popa
         test byte [cs:s_fl + 1], 2      ; (the caller's flags' IF)
@@ -13581,6 +13599,10 @@ int16:
         iret
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
+        call qs_key                     ; (the Loader's quick save and quick load keys: QUICK SAVES)
+        jnc .not_qs
+        ret
+.not_qs:
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -14264,7 +14286,6 @@ HIT_PASSES  equ 600             ; passes of the main loop the finder answers wit
 T_ABOVE     equ 8               ; (the click a little above the feet, on the figure)
 RING_W      equ 16              ; (the ring's room round the feet, drawn again when it moves: wide ...
 RING_H      equ 9               ;   ... and high)
-main_ticks dw 0                 ; passes of the map's main loop (PROBE_SCROLL)
 hit_until  dw 0
 hit_forced db 0
 t_click    db 0                 ; (INT16's: Enter pressed on the chosen enemy)
@@ -14748,6 +14769,233 @@ rl_try:
 .add:   pop bx
         add ax, [0x42DA]                ; (the game's)
         iret
+
+; ---- QUICK SAVES: DSCLOG's quick save, quick load and autosave (quicksave.py), on the sequel's routines ----
+; The Loader's two keys (QS_KEYS, F5 and F9 with its switch on) are counted (QS_SEQ) and taken from the game
+; when the map's main loop has run within a tick or two, on the map, with the Loader there (QS_KEY, from
+; INT16's OUR_KEY). For a save the Loader writes the file and the name into SAVE_TEXT, the number of its
+; GREQ chunk into SAVE_GREQ, and sets SAVE_REQ 1; for a load it makes the quick saves' page the window's
+; (the letter Q in the game's two file names, DS:2088h "SAVE??.SAV" and DS:20B9h "SAVE%.2d.SAV"), chooses
+; the row (the window's word at 2F8h:0, the load + 3C4Ch) and sets 2. SAVE_TICK, from the top of the map's
+; main loop (PROBE_SCROLL, DS the game's), does it once: the routine the SAVE window's wrapper (7D6FFh on)
+; calls, save(far file, far name) (overlay stub 46EFh:0084h, its selector 5D8h; AL 0 if it failed), unless a
+; fight is on (3C10h:19h, as F1's "CAN'T SAVE DURING COMBAT", 79AFDh); or the LOAD window, as F2 opens it
+; (4736h:0020h, selector 600h; 79B74h). SAVE_REQ is 0 while it runs, then what came of it.
+;
+; The sequel's wrapper also keeps the map's limits (DS:14D7h-14DEh, set by a script, the whole map again
+; at an area change; the view's centring keeps inside them) and DS:4459h as a GREQ chunk numbered by the
+; slot in the roster file (DS:144Ah, opened by 46E9h:0052h), not in the save, and its load reads that
+; chunk back. A quick save's GREQ is written the same way by GREQ_WRITE with the Loader's number (100 and
+; the slot), and a load from the quick saves' page reads that one (GREQ_LOAD, site 84), so a quick save
+; never takes a slot's limits from the save of the same number on the game's own page.
+QS_DGROUP     equ 0x47E0            ; the game's DS, less its load segment
+QS_SAVE_SEG   equ 0x46EF            ; (less the load segment) the save routine's overlay stub ...
+QS_SAVE_ENTRY equ 0x0084            ;   ... and its entry: save(far file, far name), AL 0 if it failed
+QS_LOAD_SEG   equ 0x4736            ; the save window's stub: its entry 20h opens it to load (F2's)
+QS_LOAD_ENTRY equ 0x0020
+QS_FIGHT_SEG  equ 0x3C10            ; the fight's state: a word at +19h, not 0 in a fight
+QS_FILE_SEG   equ 0x46E9            ; the roster file opened (52h; its handle DS:144Ah) and closed (57h)
+QS_OPEN       equ 0x0052
+QS_CLOSE      equ 0x0057
+QS_CHECK_SEG  equ 0x27ED            ; (27EDh:64h(handle): not 0, nothing written: the wrapper's test)
+QS_CHECK      equ 0x0064
+QS_GFF_SEG    equ 0x27FC            ; the open GFF's chunks: 5C5h(type, number) taken out, E8h(far data,
+QS_DELETE     equ 0x05C5            ;   length, type, number) written
+QS_WRITE      equ 0x00E8
+QS_HANDLE     equ 0x144A            ; DS: the roster file's handle (a dword)
+QS_LIMITS     equ 0x14D7            ; DS: the map's limits, four words ...
+QS_LIMIT_MORE equ 0x4459            ; ... and a byte, then the byte at 4458h (the wrapper's 10 bytes, of which
+GREQ_LENGTH   equ 9                 ;   it writes 9)
+GREQ_PAGE     equ 100               ; (a quick save's GREQ number: this and its slot, the Loader's)
+QS_LETTER     equ 0x2088            ; DS: the page's letter in "SAVE??.SAV" (the window's list)
+SAVE_FILE     equ 64                ; (SAVE_TEXT: the file's bytes, then the name's, SAVE_NAME)
+SAVE_NAME     equ 48
+
+; QS_KEY: (OUR_KEY's) AX a key: CF set, and counted in its word of QS_SEQ, if it is the Loader's quick save
+; or quick load key with the map's main loop run within the last BIOS tick or two (no window, talk or
+; menu waiting on keys), the map on show and the Loader there; else CF clear. Registers kept.
+qs_key:
+        push bx
+        xor bx, bx
+        cmp ax, 0xFFFF
+        je .no
+        cmp ax, [cs:qs_keys]
+        je .ours
+        mov bl, 2
+        cmp ax, [cs:qs_keys + 2]
+        jne .no
+.ours:  push ax
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        pop es
+        cmp ax, L_FRESH
+        pop ax
+        ja .no
+        call on_map
+        jne .no
+        call loader_fresh
+        jne .no
+        inc word [cs:qs_seq + bx]
+        pop bx
+        stc
+        ret
+.no:    pop bx
+        clc
+        ret
+
+; SAVE_TICK: from PROBE_SCROLL (DS the game's, interrupts off): what the Loader asked in SAVE_REQ, once,
+; with interrupts on again if the game's loop had them on. PROBE_SCROLL's way back (S_IP, S_CS, S_FL, S_FAR)
+; kept on the stack meanwhile, in case the game's routine runs a pass of its loop. AX to DI, ES changed.
+save_tick:
+        mov ax, [cs:save_req]
+        dec ax
+        cmp ax, 1
+        ja .ret                         ; (none, or an answer the Loader hasn't read yet)
+        push word [cs:s_ip]
+        push word [cs:s_cs]
+        push word [cs:s_fl]
+        push word [cs:s_far]
+        push word [cs:s_far + 2]
+        pushf
+        test byte [cs:s_fl + 1], 2      ; (the caller's flags' IF)
+        jz .work
+        sti
+.work:  call save_work
+        popf
+        pop word [cs:s_far + 2]
+        pop word [cs:s_far]
+        pop word [cs:s_fl]
+        pop word [cs:s_cs]
+        pop word [cs:s_ip]
+.ret:   ret
+
+save_work:
+        mov ax, [cs:save_req]
+        mov word [cs:save_req], 0
+        cmp ax, 2
+        je .load
+        mov ax, ds
+        sub ax, QS_DGROUP - QS_FIGHT_SEG
+        mov es, ax
+        mov ax, 5
+        cmp word [es:0x19], 0
+        jne .set                        ; (a fight: the game saves none)
+        mov ax, QS_SAVE_SEG
+        mov bx, QS_SAVE_ENTRY
+        call qs_far
+        push cs                         ; save(file, name)
+        push word save_text + SAVE_FILE
+        push cs
+        push word save_text
+        call far [cs:qs_call]
+        add sp, 8
+        or al, al
+        mov ax, 4
+        jz .set
+        inc word [cs:quick_saves]
+        call greq_write
+        mov ax, 3
+        jmp .set
+.load:  mov ax, QS_LOAD_SEG
+        mov bx, QS_LOAD_ENTRY
+        call qs_far
+        call far [cs:qs_call]
+        inc word [cs:quick_loads]
+        mov ax, 3
+.set:   mov [cs:save_req], ax
+        ret
+
+; QS_FAR: QS_CALL made the game's routine at AX (less the load segment):BX (DS the game's)
+qs_far:
+        mov [cs:qs_call], bx
+        mov bx, ds
+        add ax, bx
+        sub ax, QS_DGROUP
+        mov [cs:qs_call + 2], ax
+        ret
+
+; GREQ_WRITE: after a quick save, its GREQ chunk (SAVE_GREQ, the Loader's number; 0 none) written as the
+; SAVE window's wrapper writes a slot's (7D85Fh-7D8D9h, its PREF chunk left out): the roster file opened,
+; the wrapper's test, the chunk taken out and written again (GREQ_LENGTH bytes: the map's limits and the
+; byte after them), the file closed.
+greq_write:
+        cmp word [cs:save_greq], 0
+        je .ret
+        mov si, QS_LIMITS
+        mov di, greq_data
+        mov ax, [si]
+        mov [cs:di], ax
+        mov ax, [si + 2]
+        mov [cs:di + 2], ax
+        mov ax, [si + 4]
+        mov [cs:di + 4], ax
+        mov ax, [si + 6]
+        mov [cs:di + 6], ax
+        mov al, [QS_LIMIT_MORE]
+        mov [cs:di + 8], al
+        mov al, [QS_LIMIT_MORE - 1]
+        mov [cs:di + 9], al
+        mov ax, QS_FILE_SEG
+        mov bx, QS_OPEN
+        call qs_far
+        call far [cs:qs_call]
+        push word [QS_HANDLE + 2]
+        push word [QS_HANDLE]
+        mov ax, QS_CHECK_SEG
+        mov bx, QS_CHECK
+        call qs_far
+        call far [cs:qs_call]
+        add sp, 4
+        or ax, ax
+        jnz .close
+        push word 0                     ; (the chunk's number, a dword)
+        push word [cs:save_greq]
+        push word 'EQ'                  ; (its type, "GREQ")
+        push word 'GR'
+        mov ax, QS_GFF_SEG
+        mov bx, QS_DELETE
+        call qs_far
+        call far [cs:qs_call]
+        add sp, 8
+        push word 0
+        push word [cs:save_greq]
+        push word 'EQ'
+        push word 'GR'
+        push word 0                     ; (its length, a dword)
+        push word GREQ_LENGTH
+        push cs
+        push word greq_data
+        mov ax, QS_GFF_SEG
+        mov bx, QS_WRITE
+        call qs_far
+        call far [cs:qs_call]
+        add sp, 16
+        inc word [cs:greq_saves]
+.close: mov ax, QS_FILE_SEG
+        mov bx, QS_CLOSE
+        call qs_far
+        call far [cs:qs_call]
+.ret:   ret
+
+; GREQ_LOAD (site 84, SITE_GREQ_LOAD): "mov ax,es:[2]" (7DA30h: 4 bytes, the site's INT, its number, a NOP)
+; in the load's wrapper, the window's first row (ES its data, 2F8h) the GREQ chunk's number is made from
+; (it, the row and 1): GREQ_PAGE more on the quick saves' page, whose saves GREQ_WRITE numbered so.
+greq_load:
+        mov ax, [es:2]
+        cmp byte [QS_LETTER], 'Q'
+        jne .r
+        add ax, GREQ_PAGE
+        inc word [cs:greq_loads]
+.r:     iret
+
+qs_call     dd 0
+quick_saves dw 0                ; (saves and loads made, for a look in play)
+quick_loads dw 0
+greq_data   times 10 db 0
+save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914)
 
 resident_end:
 align 16

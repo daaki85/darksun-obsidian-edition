@@ -1493,6 +1493,40 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   at world (2112, 1632) in one try, not the alley; the transferred party's ambush (the Tab log's run script) is
   the surer fight.
 
+**Saves in the sequel: quick saves, GREQ, the save window and the roster** (2026-11-25, logs/2026-11-25-ravager-quick-saves.md):
+- **The save call**: the LOAD/SAVE window's wrapper saves with `lcall 5D8:84h` (file far, name far) at 7D84Ah,
+  the result in AL (SL's 4242h:89h). The selector table is at file 4B080h (8 bytes a selector; SL's 46770h):
+  5D8h→46EFh the save stub, 600h→4736h the window's stub (20h load, 25h save), 5D0h→46E9h the roster file's
+  open (52h) and close (57h), 2E0h→3C10h the fight state (+19h, F1's "CAN'T SAVE DURING COMBAT" test at 79AFDh),
+  2F8h→3C4Ch the list window's data (+0 the chosen row, +2 the first row shown).
+- **Its strings**: the save path DS:44F2h; "SAVE??.SAV" at DS:2085h (the page letter 2088h), "SAVE%.2d.SAV"
+  at DS:20B6h (20B9h); SCREEN_IS DS:0DABh. The window allocates 10 entries of 7Dh bytes and takes the number
+  from SAVEnn.
+- **GREQ**: after the save the wrapper writes into the roster file (DS:144Ah) PREF 100 and **GREQ slot**, 9
+  bytes: the map's limits DS:14D7h..14DDh (4 words, set by a script at 8C322h, 0,0,800h,620h at an area
+  change) and the byte at DS:4459h; the load reads GREQ (es:[2] = row + 1, 7DA2Bh-7DA48h) and puts them back.
+  The calls: open 46E9:52, check 27ED:64(dword [144Ah]) (nonzero: skip), delete 27FC:5C5(type, id), write
+  27FC:E8(far buffer, 9, type, id), close 46E9:57. A quick save therefore writes **GREQ 100+slot** (DSCLOG2's
+  `greq_write`), and site 84 (7DA30h, `mov ax,es:[2]`) adds 100 when the page letter is Q, so a quick load gets
+  its own limits and not those of the manual save in the same row. `ravquick.py greq FOLDER` lists them.
+- **Its keys** (the main loop's table at cs:1F44h, code base 78340h): F1 the save window, F2 the load window
+  (`lcall 600:20` at 79B74h), F3 like Esc, F4 the music, **F5 the sound effects**, F6 the animations; F9 isn't
+  taken. DSCLOG2 takes F5 and F9 only while the Loader is there (`loader_fresh`) with the quick save on; with
+  the Loader gone F5 is the game's again. No camp: rests are at fire rings and inns, so the camp autosave has no
+  sequel side.
+- **The roster holds 40 already** (28h at 58380h, 58A34h, 585C0h, 591F5h, 6E541h, 6EDFAh, 6EE05h, 6FB08h; SL
+  14h), and the roster window scrolls with 2F8:0/2 (58742h sets the first row).
+- **More save pages** would go where SL's do: SL's save_page (74901h) and save_click (74B9Fh), the switches'
+  default jumps, are the sequel's 7DABCh (`jmp 7E00Fh`) and 7DD51h (`jmp 7E008h`). But the sequel's
+  RESOURCE.GFF has no WIND 3009 and no ICON/BUTN 80Ah (SL's page buttons), so the window's own resource and
+  room for the arrows must be found first.
+- **Played** (the log): F5, F9 and the autosave after a won fight in the sequel, GREQ 101-103 and 106 written,
+  a quick load through site 84 with GREQ 102's limits; F5 with the dice log stopped the game's SOUND EFFECTS
+  ON. **DOSBox caches a mounted folder's listing**: a save written into the folder by the Loader from outside
+  (a named save put back) isn't in the game's list until DOSBox restarts (the quick saves are the game's own
+  writes, so they show). The sequel's save rows are narrower than SL's: an autosave's "- after a fight" runs
+  past the row.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
