@@ -149,6 +149,7 @@ schedules and diffs a log made or used.
 | [2026-11-24](2026-11-24-ravager-girdle-amulet-play.md) | The Girdle of Back Defense seen working against a hidden backstab and a hidden rear attack; the amulet not yet seen (the test caster blocked as "in armour") |
 | [2026-11-24](2026-11-24-ravager-48h-sheet-play.md) | The sequel's 48h sheet played: a new character's +42h..+47h cleared, an edit, ADD (native and transferred), a save at 4C8h and an old save widened, a level up, three fights, talks, the dice log reading the transferred specs and ages, `narrow` and the plain game; the Loader's GFF writer found leaving out the TOC's free count (the game then wrote it into a chunk length), fixed |
 | [2026-11-24](2026-11-24-ravager-specialize.md) | Weapon specialization in the sequel: the transferred party's specs in Tyr's ambush, Ester's and Seneca's +1 to hit and +2 damage, Lex's bow 3 shots a round (control 2), Lex's short sword not chosen 1 a round; controls with the rule off; "Illegal Op (gpl=49)" quits with the rule on or off alike |
+| [2026-11-25](2026-11-25-ravager-illegal-op.md) | "Illegal Op (gpl=49)" in the sequel's Tyr ambush: the spell immunity routine's "immune" jump landed on the `spell_hit` site's number (Charm Mammal at an immune foe), and two more jumps into patched sites; each sent to an unpatched epilogue; the sound loader's trap-6Ah warning; the summoned ally's sheet made 48h-based |
 
 ## files/
 
