@@ -204,14 +204,16 @@ RAV_SPELL_LAST = 0xEA
 # the flags +0, left +3, top +5, rise +0Eh, picture +10h, width +13h and height +14h, unsigned), the view
 # DS:1408h, the pointer DS:A109h, its mode DS:1440h (the routine setting it, 2037Bh; SL's 11B8h), the
 # thing under it DS:0DADh and the map up DS:0DABh (the routine lighting it, 21060h; SL's 0BCBh, 0BC9h),
-# the eight directions' byte DS:0442h (the direction routine, 1109Dh: "cmp byte [0442h],1")
+# the eight directions' byte DS:0442h (the direction routine, 1109Dh: "cmp byte [0442h],1"); the party's
+# foes those on sides 7-11 (rings.HOSTILE_SIDES: the creature's +15h, the game's own mask 0F80h at 21112h,
+# the figure under the pointer coloured as a foe)
 RAV_TARGETING = {
     targeting: {"MAP_THINGS": 0x67BB, "MAP_THING_SIZE": 0x25, "MAP_FEET": 0x0A, "CAMERA": 0x1408},
     hover: {"UNDER": 0x0DAD, "ON_MAP": 0x0DAB, "MODE": 0x1440, "MAP_RISE": 0x0E, "MAP_PICTURE": 0x10,
             "MAP_WIDTH": 0x13, "MAP_HEIGHT": 0x14, "MAP_SIZES": "<BB"},
     usable: {"POINTER": 0xA109},
     hitchance: {"EIGHT_WAYS": 0x0442},
-    rings: {"STATUS_DEAD": 7},
+    rings: {"STATUS_DEAD": 7, "HOSTILE_SIDES": 0xF80},
 }
 # The ring's colours: the sequel cycles 1-31 (water, flame, a turn's marker) and its street's floor has
 # greys up to 255 (WALL SHADOWS' WS_FIRST, WS_LAST)

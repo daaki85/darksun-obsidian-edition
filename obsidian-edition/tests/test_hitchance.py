@@ -247,6 +247,24 @@ class PredictTests(unittest.TestCase):
             self.assertEqual(hitchance.squares(log.game, 0, FOE), squares, (x, y))
 
 
+class EnemiesTests(unittest.TestCase):
+    def test_the_sequels_sides(self):
+        """Shattered Lands': another side than the leader's, not the neutral 4. Wake of the Ravager's
+        (rings.HOSTILE_SIDES, ravlog's 0F80h): the sides whose bit is in the mask, 7-11 (the Draxans' 7),
+        not the street's people on 1-6."""
+        from dsloader import rings
+        log = fight()
+        log.game.in_combat = lambda: True
+        side = CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SIDE
+        struct.pack_into("<h", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE, 30)  # (its HP)
+        self.assertEqual(rings.enemies(log.game), [FOE])
+        self.addCleanup(setattr, rings, "HOSTILE_SIDES", rings.HOSTILE_SIDES)
+        rings.HOSTILE_SIDES = 0xF80
+        for value, foe in ((2, False), (1, False), (6, False), (7, True), (11, True), (12, False), (200, False)):
+            log.guest.mem[side] = value
+            self.assertEqual(rings.enemies(log.game), [FOE] if foe else [], value)
+
+
 class AttackAcTests(unittest.TestCase):
     """The game's AC routine (58DD3h, 7C557h) as GameData.attack_ac counts it."""
 

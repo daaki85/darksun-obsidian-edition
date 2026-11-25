@@ -1138,9 +1138,17 @@ until it first fights**: their slot bytes (item +13h) run 14, 15, ... in list or
 right hand 3, missile 2, ammo 1), and the AC routine weighs them so. The Draxans are gladiators of level 8
 (sheet flags 40h, class 10): AC 1 better in armour, which the Loader's armour_worn (by the slots) missed
 before their first fight (`game.armour_ready`). `ravdice.py` with `RAV_PREDICT=1` takes a Tab line's chance
-apart; `RAV_NO_PAN=1` is the control for the view. The Tab list here holds the street's other people too
-(Caravan Master, Dhukkar, Arslan, Templar, Boric, pedestrians: rings.enemies), and Enter on one out of reach (in
-a room behind the doorway) gives the click and the game does nothing.
+apart; `RAV_NO_PAN=1` is the control for the view. Enter on an enemy out of reach (in a room behind the
+doorway) gives the click and the game does nothing. **The sequel's sides** (the creature's +15h): an index into
+bit masks, not SL's "same or not": the game colours the figure under the pointer as a foe when `1 << side` is in
+**0F80h** (sides 7-11; 21112h: "shl ax,cl / test ax,0F80h", then side 1 another colour), and its combat code
+tests them too (near 5B649h "test ax,0F80h" and "test ax,0C58h"; at 5C29Dh and 8664Eh a mask of 0F80h made for
+side 0, the party's; at 5F027h 71h).
+In the Tyr ambush the party is 0, the four ambushing Draxans 7, and everyone else on the map 1 (the Caravan
+Master, Notaku, Templar, Boric, the soldiers, the pedestrians, the Giant Skeletons up the street, other
+Draxans): SL's rule (another side than the leader's, not 4) made 31 of them foes for Tab; `rings.HOSTILE_SIDES`
+(0F80h, set by ravlog) makes 4. `ravtab.py sides` lists every combatant's side through the dice log's reading
+and Tab's list both ways; `ravdice.py` with `RAV_FOES_SL=1` is the control.
 
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);

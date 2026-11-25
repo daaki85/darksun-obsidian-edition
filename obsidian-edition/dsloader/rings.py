@@ -32,6 +32,11 @@ GOLD_TOWARD = 0.55
 GOLD_NEARER = 24  # how much nearer GOLD a colour's tinted one must be (clearly golder)
 STATUS_DEAD = 5
 SIDE_NEUTRAL = 4  # (the arena's Tied-up Prisoner: on no one's side)
+# Wake of the Ravager's sides are bits: the party's foes are those whose bit (1 << side) is in this mask,
+# as the game itself colours the figure under the pointer (21112h: "test ax,0F80h", sides 7-11, the
+# Draxans' 7) and picks targets; the street's other people (sides 1-6) aren't. None: Shattered Lands'
+# rule (another side than the leader's, not the neutral one). ravlog sets it.
+HOSTILE_SIDES: Optional[int] = None
 CHOSEN = 2  # (DSCLOG's ring kind: three pixels thick, reddened three times)
 OFF, ONLY_CHOSEN = "off", "chosen"  # the Options tab's choice of rings
 
@@ -87,7 +92,7 @@ def gold_table(dac: bytes) -> bytes:
 
 def enemies(gd) -> list:
     """The things (combatants) standing on another side than the party's leader (not a neutral
-    one's), in a fight."""
+    one's), in a fight; in the sequel those on a side in HOSTILE_SIDES."""
     if not gd.in_combat():
         return []
     leader = gd.creature(0)
@@ -102,7 +107,11 @@ def enemies(gd) -> list:
             continue
         hp = struct.unpack_from("<h", rec, 0)[0]
         side = rec[game.CREATURE_SIDE]
-        if hp > 0 and rec[game.CREATURE_STATUS] != STATUS_DEAD and side not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL):
+        if HOSTILE_SIDES is not None:
+            foe = side < 16 and bool(HOSTILE_SIDES >> side & 1)
+        else:
+            foe = side not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL)
+        if hp > 0 and rec[game.CREATURE_STATUS] != STATUS_DEAD and foe:
             out.append(combatant)
     return out
 

@@ -8,6 +8,9 @@
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
 # RAV_NO_PAN=1: the view not scrolled to an enemy chosen with Tab off the screen (targeting.Targeting._show a no-op: the
 # Loader as it was before DSCLOG2's PAN, a control).
+# RAV_FOES_SL=1: Tab's list by Shattered Lands' rule (another side than the leader's, not side 4), not the sequel's
+# foes (rings.HOSTILE_SIDES: the sides 7-11): a control. With RAV_PREDICT, each change of the list is printed ("Tab
+# list: N: Draxan#26 (side 7), ...").
 # RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
 # the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
 # kept from its last attack (ac_gap) and the game's last AC for it, the effects on it, each swing's THAC0 and AC.
@@ -41,6 +44,24 @@ if os.environ.get('RAV_NO_PAN'):  # (a control: DSCLOG2's PAN_X and PAN_Y never 
     from dsloader import targeting
     targeting.Targeting._show = staticmethod(lambda gd, tsr_hdr, thing: False)
     print('Tab: the view not scrolled to the chosen enemy', flush=True)
+if os.environ.get('RAV_FOES_SL'):  # (a control: SL's rule for who is a foe)
+    from dsloader import rings
+    rings.HOSTILE_SIDES = None
+    print('Tab: the list by Shattered Lands\' rule', flush=True)
+if os.environ.get('RAV_PREDICT'):  # (Tab's list, printed as it changes)
+    from dsloader import rings
+    _enemies, _was = rings.enemies, [None]
+    def _listed(gd):
+        out = _enemies(gd)
+        if out != _was[0]:
+            _was[0] = out
+            line = 'Tab list: %d: %s' % (len(out), ', '.join('%s (side %d)' % (gd.combatant_name(c), gd.creature(
+                gd.combatant_creature(c))[game.CREATURE_SIDE]) for c in out))
+            print(line, flush=True)
+            if out_file_l: out_file_l.write(line + '\n'); out_file_l.flush()
+        return out
+    out_file_l = out
+    rings.enemies = _listed
 if os.environ.get('RAV_PREDICT'):  # (what each Tab line's chance was made of: hitchance.predict's inputs)
     from dsloader import hitchance
     _swings = log._swings

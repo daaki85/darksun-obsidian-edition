@@ -1,4 +1,4 @@
-# 2026-11-25: Tab in the sequel, the two things left open: the view to an enemy off the screen, the walk-up one off
+# 2026-11-25: Tab in the sequel, the things left open: the view to an enemy off the screen, the walk-up one off, the street's people in the list
 
 **Under test:** branch `claude/ravager-tab-followups` (on `claude/ravager-shops-tab`): DSCLOG2's PAN (DSCLOG's
 PAN_X and PAN_Y at its header's +230/+232, PAN_TICK from PROBE_SCROLL: the view moved by what the Loader adds,
@@ -45,14 +45,35 @@ its control); run c with both.
   Seneca's walk-up to the same Draxan: the line `Bone item 291 +1 needs 15+ (30%) ...; Metal item 261 +1 needs
   14+ (35%)`, the dice log `needs 15+` and `needs 14+`: **matches** (the case the Tab log left open, 14+/13+
   said there).
-- Seen too: the Tab list in the sequel holds the street's other people (Caravan Master, Dhukkar, Arslan,
-  Templar, Boric, pedestrians), over 20 after Jenna had walked; Enter on one out of reach (#27 in the room
+- Seen too: the Tab list in the sequel held the street's other people (Caravan Master, Dhukkar, Arslan,
+  Templar, Boric, pedestrians), over 20 after Jenna had walked (fixed in run d, below); Enter on one out of reach (#27 in the room
   behind the doorway, a pedestrian) gives the click and the game does nothing; a shot with the attack pointer at
   #27 in the room did nothing either.
 - No Illegal Op (`STDOUT.TXT` empty), the watchdog quiet. Not measured: the upper memory after DSCLOG2 (144
   bytes more than the join's, which left 114448 free).
 
+## Run d: Tab through the foes only
+
+Under test: `rings.HOSTILE_SIDES` (ravlog's 0F80h: a combatant is a foe when `1 << side` is in it, the game's own
+mask for the party's foes, 21112h), in place of Shattered Lands' rule (another side than the leader's, not 4);
+`ravtab.py sides`, `ravdice.py`'s `RAV_FOES_SL` (the control) and its "Tab list" lines. The same run script (tag
+d), the lock taken after another agent's session.
+
+- **The sides** (`ravtab.py sides`'s reading, Ester's turn first): the party 0; Draxans #21, #23, #26, #27 (the
+  ambush) **7**; all 27 others on the map **1**: Pedestrians, Thieves, the Caravan Master, Fayina, three Giant
+  Skeletons, Arslan, Dhukkar, a Miner, Notaku, two Warriors, two Tyrian Soldiers, a Butler, Boric, Kalaobuta,
+  Acar, a Templar and five other Draxans.
+- **With the fix**: `Tab list: 4: Draxan#21 (side 7), Draxan#23 (side 7), Draxan#26 (side 7), Draxan#27 (side
+  7)`; Tab x9: `0x1a 0x15 0x1b 0x17 0x1a 0x15 0x1b 0x17 0x1a` (the four, round and round); Enter on #26: Ester
+  attacked it (`needs 16+`, the line's 16+; her dance's +1 counted from her third swing on).
+  [picture](img/2026-11-25-ravager-tab-foes-only.png)
+- **Control** (the dice log again with `RAV_FOES_SL=1`, Seneca's turn): `Tab list: 31`; Tab x12 went past the
+  four Draxans to the Caravan Master, Dhukkar, Arslan, a Pedestrian, Fayina, the Miner and the Thieves, a ring
+  under each.
+- `ravtab.py feet` read the combatants' kinds wrong in this run (255 and stray numbers where the dice log read
+  the Draxans): `ravtab.py sides` reads them as the Loader does. No Illegal Op, the watchdog quiet.
+
 No new area (Tyr's ambush street only).
 
 Pictures for the docs: `/mnt/project-files/ravager/2026-11-25-ravager-tab-pan.png`, `-tab-pan-far.png`,
-`-tab-pan-control.png`.
+`-tab-pan-control.png`, `-tab-foes-only.png`, `-tab-foes-control.png`.

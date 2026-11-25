@@ -6,7 +6,12 @@ RINGS, from a symbol map of obsidian-edition/dos/dsclog2.asm, as ravkits.py coun
                                and the game's (the view's top left DS:1408h, whose turn, the pointer's mode at
                                DS:1440h, the thing under the pointer DS:0DADh, the pointer DS:A109h)
   python3 ravtab.py feet       each combatant's map thing's feet (DS:67BBh + 25h x thing, +0Ah, +0Ch) and the view
-                               (DS:1408h), the screen place of each (window x = game x x 2, y x 2.4 at 640x480)"""
+                               (DS:1408h), the screen place of each (window x = game x x 2, y x 2.4 at 640x480)
+  python3 ravtab.py sides      each combatant's side (the creature's +15h), HP, status and name through the dice log's
+                               own reading (a RavDiceLog attached read-only), and Tab's list both ways: the sequel's
+                               foes (rings.HOSTILE_SIDES, the sides 7-11) and Shattered Lands' rule (not the leader's
+                               side, not 4). (`feet` read the combatants' kinds wrong in one run, 2026-11-25: this
+                               reads them as the Loader does.)"""
 import argparse, os, struct, subprocess, sys, tempfile
 PT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
@@ -46,7 +51,21 @@ def word(at):
 
 ds = game.find_data_segment(g) * 16
 cmd = sys.argv[1] if len(sys.argv) > 1 else 'state'
-if cmd == 'feet':
+if cmd == 'sides':
+    from dsloader import ravlog, rings
+    g.write = lambda *a, **k: None  # (read only: the attach writes nothing)
+    log = ravlog.RavDiceLog(g)
+    log.attach()
+    gd = log.game
+    for c, i in sorted(gd.combatants().items()):
+        rec = gd.creature(i)
+        if len(rec) >= game.CREATURE_SIZE:
+            print('#%d creature %d %-16s side %d hp %d status %d' % (c, i, gd.creature_name(i), rec[game.CREATURE_SIDE],
+                                                                    struct.unpack_from('<h', rec, 0)[0], rec[game.CREATURE_STATUS]))
+    foes = rings.enemies(gd)
+    rings.HOSTILE_SIDES = None
+    print('Tab list: %d foes %s; by Shattered Lands\' rule %d' % (len(foes), foes, len(rings.enemies(gd))))
+elif cmd == 'feet':
     cx, cy = struct.unpack('<hh', g.read(ds + 0x1408, 4))
     print('view %d,%d' % (cx, cy))
     seg, off = 0x3F49, 0xC33  # (the fight's combatants, ravlog's COMBATANTS_SEG/OFF)
