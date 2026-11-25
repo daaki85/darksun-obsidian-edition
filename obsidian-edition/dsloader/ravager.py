@@ -670,6 +670,10 @@ PATCHES: Tuple[Patch, ...] = (
     # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2
     # numbers so (GREQ_WRITE).
     Patch("greq_load", 0x7DA30, bytes.fromhex("26a10200"), _site(84, 4)),
+    # S on a shop's screen sells the member's plain gear (DSCLOG's SELL_KEY, SHOP_LOOP; sell.py): the test of
+    # the shop's own loop (88D52h, "while byte [143Dh] is 1", 143Dh set at 7BCA6h for a merchant's shop; SL's
+    # word [11B2h] at 7DE11h), DSCLOG2's site 82 (SITE_SHOP_LOOP): the BIOS tick kept while the shop is open.
+    Patch("shop_loop", 0x88D99, bytes.fromhex("803e3d1401"), _site(82, 5)),
     # The game's 7 reads of an item's name, "push dword [bx+56F3h]" (its table of 256 far pointers):
     # DSCLOG2's SITE_NAME, names 256 on the Loader's (NAMES_GAME, item_names).
     *(Patch("item_name_%x" % at, at, bytes.fromhex("66ffb7f356"), _site(42, 5))

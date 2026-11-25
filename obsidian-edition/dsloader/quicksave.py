@@ -86,6 +86,9 @@ class Layout(NamedTuple):
     camp: Optional[Tuple[int, int]] = (CAMP_BYTE, CAMPING)  # (a creature's byte, its value while camping)
     kept_pages: Tuple[bytes, ...] = KEPT_PAGES
     region_name: Callable[[Optional[int]], str] = journal.region_name
+    name_most: int = NAME_MOST  # an autosave's name at most this long (the sequel's rows are narrower)
+    name_join: str = " - "  # between an autosave name's parts
+    after_fight: str = "after a fight"  # an autosave's after a fight, in its name
 
 
 SL_LAYOUT = Layout()
@@ -132,13 +135,14 @@ def quick_name(clock: Optional[int]) -> str:
     return " - ".join(part for part in (QUICK, journal.time_of(clock)) if part)[:NAME_MOST]
 
 
-def auto_name(what: str, clock: Optional[int]) -> str:
+def auto_name(what: str, clock: Optional[int], most: int = NAME_MOST, join: str = " - ") -> str:
     """ "Auto - Day 47, 14:20 - The slave pens": the time first (a row of the window shows about 32
-    letters, so it is the place that is cut off there), WHAT cut short if the name would be too
-    long for the game."""
+    letters, so it is the place that is cut off there), WHAT cut short if the name would be longer
+    than MOST (the game's 42; the sequel's row and name field show about 29: Layout.name_most), the
+    parts joined by JOIN."""
     when = journal.time_of(clock)
-    room = NAME_MOST - len(AUTO) - 3 - (len(when) + 3 if when else 0)
-    return " - ".join(part for part in (AUTO, when, what[:max(0, room)].rstrip()) if part)
+    room = most - len(AUTO) - len(join) - (len(when) + len(join) if when else 0)
+    return join.join(part for part in (AUTO, when, what[:max(0, room)].rstrip()) if part)
 
 
 def disk_free(game_dir: str) -> Optional[int]:
@@ -320,7 +324,7 @@ class QuickSave:
             # A fight that comes due during the cooldown is skipped, even if a request is active.
             if now - self._fight_over_at >= FIGHT_WAIT and (can_request or not spaced):
                 self._fought, self._fight_over_at = False, None
-                return "after a fight" if spaced else None
+                return self.layout.after_fight if spaced else None
         return None
 
     def tick(self, gd, tsr_hdr: Optional[int], game_dir: Optional[str], loading: bool, now: float) -> List[str]:
@@ -355,7 +359,8 @@ class QuickSave:
         elif self.keys and pressed[1]:
             line = self._ask_load(gd, game_dir, now)
         elif due is not None and self._disk_ok(game_dir, out, False):
-            line = self._ask_save(gd, AUTO, next_slot(game_dir, AUTO_SLOTS), auto_name(due, gd.game_time()), now)
+            name = auto_name(due, gd.game_time(), self.layout.name_most, self.layout.name_join)
+            line = self._ask_save(gd, AUTO, next_slot(game_dir, AUTO_SLOTS), name, now)
         if line:
             out.append(line)
         return out
