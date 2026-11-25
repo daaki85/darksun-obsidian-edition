@@ -35,6 +35,9 @@ SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
+# (the Music device's hint: the device is for Shattered Lands; launch.write_conf_wotr leaves the sequel's music, its
+# CD's audio tracks, as it is)
+RAVAGER_MUSIC = " Shattered Lands only: Wake of the Ravager's music is its CD's audio, not MIDI."
 # the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
 JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
                  ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
@@ -539,14 +542,14 @@ class Viewer:
             self.midi_device = tk.StringVar(value="" if device == midiout.DEFAULT else str(device))
             self.midi_box: tk.Widget = ttk.Entry(music, textvariable=self.midi_device, width=8)
             hint = ("Empty for the default. Else a device's number as Windows counts them, from 0 (their names "
-                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0.")
+                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0." + RAVAGER_MUSIC)
         else:
             self.midi_device = tk.StringVar(value=midiout.label(device, self.midi_names))
             self.midi_box = ttk.Combobox(music, textvariable=self.midi_device, state="readonly", width=44,
                                          values=midiout.labels(self.midi_names, device))
             self.midi_box.bind("<<ComboboxSelected>>", lambda _e: self._midi_chosen())
             hint = ("Windows' default, or one of its MIDI devices: a software synthesizer with a soundfont, or an "
-                    "MT-32 driver, that you have installed.")
+                    "MT-32 driver, that you have installed." + RAVAGER_MUSIC)
         self.midi_box.pack(side="left", padx=(6, 0))
         self.midi_box.bind("<Return>", lambda _e: self._midi_chosen())
         self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())

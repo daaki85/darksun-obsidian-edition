@@ -3743,7 +3743,7 @@ site_table:
         dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
         dw dual_kit                         ; 76 SITE_DUAL_KIT (a human's new class: its kit asked on the game's menu)
         dw probe_hit                        ; 77 SITE_HIT (29DBDh: the finder of what is under the pointer: the chosen enemy after Enter)
-        dw site_none                        ; 78 (none here)
+        dw rg_two                           ; 78 SITE_RG_TWO (5DE67h: a ranger with two weapons: none of the penalty in light armour only)
         dw site_none                        ; 79 (none here)
         dw site_none                        ; 80 (none here)
         dw site_none                        ; 81 (none here)
@@ -7336,7 +7336,12 @@ held_count dw 0                 ; (helpless targets hit so, for a look in play)
 ;   adjustment: the game's -AX, no less than 0; with the rule, -2 (the item in the right hand) or -4 (the
 ;   left) plus AX, no more than 0, and only with a melee weapon in the other hand (else 0: a shield, a
 ;   two-handed weapon, a sling or bow in the missile slot don't count). (SL's kits and cahulaks aren't
-;   the sequel's; a ranger keeps the game's no penalty, in any armour.)
+;   the sequel's.)
+; - RG_TWO (site 78, SITE_RG_TWO): "test word es:[bx+10h],200h" (6 bytes: the site's INT, its number and 3
+;   NOPs; 5DE67h, SL's RG_TWO at 5961Fh), the routine's test whether the attacker (sheet ES:BX, creature
+;   [BP-2]) is a ranger, who has no penalty: its "jnz" after it kept. With the rule a ranger has none only
+;   in light armour (ARMOUR_WORN with AW_HEAVY: not leather, and of a material); in other armour ZF is set,
+;   as for anyone else, and PROBE_TWO gives AD&D's. A Justifier (KITS) has none in any armour.
 ; - OFF_HAND: INT VEC_OFF_HAND replaces "mov ah,0 / mov [bp-0Ah],ax" (5 bytes, INT + 3 NOPs; 5CEE8h, SL's
 ;   "cbw / mov [bp-8],ax" at 58892h, PROBE_ATTACKS' site), the attack routine's attacks a round (halves)
 ;   stored, AL: with the rule, no more than one a round (2 halves) with a melee weapon ([BP+16h] 1 or
@@ -7408,6 +7413,30 @@ probe_two:
         pop bx
         pop ax
         iret
+RANGER_FLAG   equ 0x200             ; (the sheet's +10h: a ranger; SL's +12h)
+rg_two:
+        pushad
+        push es
+        mov di, sp
+        and word [ss:di + 38], ~0x40    ; (ZF clear: the game's jump to no penalty)
+        test word [es:bx + 0x10], RANGER_FLAG
+        jz .plain
+        test word [cs:rules], RULE_TWO_WEAPONS
+        jz .out
+        call kit_is_b                   ; (a Justifier: none in any armour; kits.py)
+        db KIT_JUSTIFIER
+        je .out
+        mov dx, [bp - 2]
+        mov byte [cs:aw_heavy], 1
+        call armour_worn
+        mov byte [cs:aw_heavy], 0
+        jnc .out
+        inc word [cs:rg_heavy]
+.plain: or word [ss:di + 38], 0x40      ; (ZF set: on to the penalty, PROBE_TWO's)
+.out:   pop es
+        popad
+        iret
+rg_heavy    dw 0                ; (rangers in armour not light given the penalty, for a look in play)
 off_hand:
         mov ah, 0
         call kit_attacks                ; (the kits' to hit: KITS)

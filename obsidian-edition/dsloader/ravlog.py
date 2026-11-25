@@ -104,6 +104,9 @@ ADDRESSES: Dict[str, object] = {
     # the game's clock: its scale (a byte) and a far pointer to the dword (ravds: SL's 9B70h, 9B72h + 9Ah;
     # read in play: scale 1, 406 s into a new game's first fight)
     "GAME_TIME_SCALE": 0x9C0A, "GAME_TIME_PTR": 0x9C0C,
+    # the event queues (far pointers, then their counts: SL's 2FBEh and 2FC6h; ravds), 11h bytes an event,
+    # an effect's end kind 7 there with its owner and handle (the queue routines at 2C4FCh on: "imul eax,11h")
+    "EVENT_QUEUE": 0x2A63, "EVENT_COUNT": 0x2A6B,
     # the rules' small tables in the data segment, each found once by its bytes, each SL's + 70h
     "DEX_AC": 0x0866, "DEX_INITIATIVE": 0x084C, "DEX_MISSILE": 0x084C, "SAVE_CON": 0x0880,
     "SAVE_WIS": 0x089A, "STR_DAMAGE_TABLE": 0x0818, "STR_TO_HIT": 0x0832,
@@ -699,9 +702,6 @@ class RavDiceLog(dicelog.DiceLog):
         if word not in self.guest.writable:
             self.guest.writable = self.guest.writable + [word]
         self.guest.write(word[0], struct.pack("<H", 1 << member if hidden else 0))
-
-    def count_charges(self, entries) -> None:  # (the charges' counting writes to the game: not yet)
-        return None
 
     def _slots_table(self) -> Optional[int]:
         """Where DSCLOG2's SLOTS_TEXT is (its header's +148), made writable; None without the helper."""
