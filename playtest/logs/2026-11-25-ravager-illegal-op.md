@@ -71,7 +71,17 @@ dummy audio device, so the game finds its card and loads them.
 
 ## After the fix
 
-The fix's runs (3 controls with the three redirects left out by `RAV_SKIP`, then 10 with them,
-HP 250, the specialize head with 71afcd1 merged) are being played; their counts follow here.
+The specialize head with 71afcd1 merged, HP 250 (`SAFE=1`; from f1 and c4 on also set
+before the opening talk ends, so no one dies before the edit), the same party and steps:
+
+| Runs | The three redirects | Ester's turns | Charm Mammal saves | Outcome |
+|---|---|---|---|---|
+| c1, c2 | left out (`RAV_SKIP`) | 0 (Ester died before the HP edit) | 0 | alive, the party defeated: no test |
+| c3-c6 | left out | 6, 7, 11, 3 | 0 | **4 of 4 caught at the illegal-op routine**, each at Ester's turn |
+| f1-f6, f8-f12 | in | 6 to 17 a run | 2 to 4 a run | **11 of 11 alive**, 6 minutes each, nothing in STDOUT.TXT |
+| f7 | in | 0 (Lex's turn waiting: his Computer Control click missed) | 0 | alive: no test |
+
+With the fix Ester cast Charm Mammal 2 to 4 times a run (the saves the dice log shows; an immune
+target makes none), where every control that reached her turn quit there.
 
 Water: none new (no new area).
