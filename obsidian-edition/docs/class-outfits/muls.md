@@ -2,6 +2,21 @@
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
+## Multiclass fittings
+
+The male Mul has nine legal pairs and three triples. Each has 29 empty-slot poses. The two views below show how much of each garment is visible in front idle and as the figure steps away. [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
+
+![All twelve Mul multiclass outfits in front idle and rear walk step two](mul-multiclass.png)
+
+| Watch all 29 poses | What to compare |
+|---|---|
+| [Cleric pairs](mul-multiclass-cleric.gif) | The Fighter’s small bone guard and dark sword belt sit on the linen. The Psionicist wears teal at the waist. The Thief’s slate cowl meets the shoulders of the cream robe. |
+| [Druid pairs](mul-multiclass-druid.gif) | Follow the green mantle into the ochre wrap in front walk steps three and four. Compare the Fighter’s belt, the Psionicist’s sash and the Thief’s hood against that same moving waist and shoulder. |
+| [Fighter/Psionicist, Fighter/Thief and Psionicist/Thief](mul-multiclass-leather.gif) | The Fighter/Psionicist wears a leather jerkin. Both Thief pairs retain the slate cloak and its swinging corner. Compare where the dark belt and teal sash emerge from behind the crossing arm in profile. |
+| [Three-class outfits](mul-multiclass-triples.gif) | Compare all three parent pairs beneath each triple. The first two keep the Cleric’s cream robe or the Druid’s short green mantle under the slate hood. On Fighter/Psionicist/Thief, the teal sash sits above the sword belt. |
+
+The large figures stand on sand. Under each, the smaller figures show the family at game size on paving. The retail Priest, Thief and Warrior are below for comparison. Front bow (24) is the least readable angle for the Fighter/Psionicist sash because the arm crosses the waist. The review checked faces, hands, bows, silhouette gaps and class details in all 348 multiclass poses. These are study renders. [Inspect every multiclass pose as a still](mul-multiclass-poses.png)
+
 ## Front walk, strikes and bow
 
 Compare the Druid on front walk steps three and four. The green mantle turns with his ribs, and the ochre wrap lifts across the raised thigh before the weight changes sides. The shorter hem exposes the bend of each knee.
@@ -104,5 +119,3 @@ The Gladiator’s strap, the Fighter’s armhole, and their waist and thigh piec
 | Cleric | Watch the linen swing behind the calf in the profile walk (11–14). In side step two (12) the hand passes in front of the folds. The side bow (26) shows the draw hand and bow against the cream robe. |
 
 The fittings use the retail Mul’s walking and combat pictures (2093 and 2094). The cleaned body keeps the original stance, scalp, jaw and copper highlights. The reconstructed ribs and hip use the registered human body for depth and the Mul’s copper tones for light and shadow. The leather and bone follow shoulder, belt and knee positions on the Mul. The revised linen follows cross-sections traced on each Mul pose, with texture sampled from the back of the retail Priest’s robe.
-
-The remaining Mul art studies are the nine legal pairs and three triples. [Playable classes and combinations](../../PLAYER-GUIDE.md)
