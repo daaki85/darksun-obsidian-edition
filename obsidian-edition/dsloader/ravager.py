@@ -555,6 +555,21 @@ PATCHES: Tuple[Patch, ...] = (
     # SL's PROBE_RANGER_CAST at 81B6Ah): a Seeker's 5, a Justifier's 9 (RANGER_LEVEL has them for a spell's
     # duration and damage)
     Patch("kit_ranger_cast", 0x97E00, bytes.fromhex("83ea07"), _site(61, 3)),
+    # ... and the creation panel's KIT pages (SL's PROBE_WP_* and PROBE_RACE_PANEL: kitpages.rav_chunks' windows
+    # in the Loader's RESOURC2.GFF): DSCLOG2's KIT PAGE, sites 62-69. The creation overlay is SL's code at the
+    # sequel's offsets (SL's in brackets): the disciplines' and spheres' windows opened ("push 4C30h", "push
+    # 4C31h": 6FA45h, 6BEC2h [67BFBh, 6413Bh]), their clicks ("mov bx,[bp+8]": 6C096h, 6C036h [64311h,
+    # 642B0h]), the spheres' window asked for ("cmp ax,8": 6B10Ah [6337Ah]), the routine after each click
+    # ("mov cl,1 / les bx,[1429h]": 6E026h [66406h, "mov cx,1"]), a new race ("add sp,6": 6B191h [63403h]),
+    # the screen opening ("mov byte [1C96h],0FFh": 6D891h [65C68h, CR_OPEN's])
+    Patch("kp_disc_win", 0x6FA45, bytes.fromhex("68304c"), _site(62, 3)),
+    Patch("kp_sphere_win", 0x6BEC2, bytes.fromhex("68314c"), _site(63, 3)),
+    Patch("kp_disc_click", 0x6C096, bytes.fromhex("8b5e08"), _site(64, 3)),
+    Patch("kp_sphere_click", 0x6C036, bytes.fromhex("8b5e08"), _site(65, 3)),
+    Patch("kp_shown", 0x6B10A, bytes.fromhex("3d0800"), _site(66, 3)),
+    Patch("kp_class", 0x6E026, bytes.fromhex("b101c41e2914"), _site(67, 6)),
+    Patch("kp_race", 0x6B191, bytes.fromhex("83c406"), _site(68, 3)),
+    Patch("kp_open", 0x6D891, bytes.fromhex("c606961cff"), _site(69, 5)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
@@ -838,9 +853,30 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
     return bytes(out), done
 
 
+KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
+
+
+def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+    """RESOURCE.GFF's bytes with the spell fixes (spell_fixed) and the creation panel's kit pages
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) unless in SKIP; the names
+    of those applied."""
+    from . import icons, kitpages
+    out, done = spell_fixed(data, skip)
+    if KIT_PAGES not in skip:
+        try:
+            added = kitpages.rav_chunks(gff.read_gff(out))
+        except (KeyError, ValueError, IndexError, StopIteration, struct.error):
+            added = {}  # (a RESOURCE.GFF without the panel's windows: no kit pages, KITS never shown)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(KIT_PAGES)
+    return out, done
+
+
 def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """RESOURCE.GFF's copy with the spell fixes, written to DEST unless already so; the fixes applied."""
-    return _write_copy(game_dir, RESOURCE_FILE, dest, spell_fixed, skip)
+    """RESOURCE.GFF's copy with the spell fixes and kit pages (resources_fixed), written to DEST unless
+    already so; the fixes applied."""
+    return _write_copy(game_dir, RESOURCE_FILE, dest, resources_fixed, skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.

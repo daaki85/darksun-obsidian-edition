@@ -33,7 +33,8 @@ class TableTests(unittest.TestCase):
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
                                "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
-                            "kit_initiative", "kit_ranger_cast",
+                            "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
+                            "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail"}
@@ -62,7 +63,7 @@ class TableTests(unittest.TestCase):
 
     def test_screens_sites(self):
         """The DAM lines, the Effects screen's lines and the Look box's whole description are DSCLOG2's sites
-        70-75 (the kits' take 60 up), each a routine in its SITE_TABLE (no site 52-69 runs code here), and the
+        70-75 (the kits' take 60 up, the kit pages 62-69), each a routine in its SITE_TABLE, and the
         header's +158 points at LOOK_FULL (700 zeros inside the image)."""
         from dsloader import dicelog
         sites = {"dam_line": 70, "missile_line": 71, "view_dam": 72, "ef_rows": 73, "ef_click": 74, "unlook": 75}
@@ -358,8 +359,9 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            self.assertEqual(res.keys(), game.keys())
-            changed_spells = {k[1] for k in game if game[k] != res[k]}
+            from dsloader import kitpages
+            self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game)))  # (the kit pages)
+            changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE
                       and struct.unpack_from("<H", game[k], ravager.SPELL_FLAGS)[0] & 0x86}

@@ -68,6 +68,17 @@ def decode_frame(chunk: bytes, index: int = 0) -> Tuple[int, int, List[List[Opti
     width, height = struct.unpack_from("<HH", chunk, offset)
     rows: List[List[Optional[int]]] = [[None] * width for _ in range(height)]
     pos = offset + 4
+    if chunk[pos:pos + len(PLANAR)] == PLANAR:  # (Wake of the Ravager's labels: planar_frame)
+        planes, = struct.unpack_from("<H", chunk, pos + len(PLANAR))
+        pos += len(PLANAR) + 2
+        size = (width * height + 7) // 8
+        for _ in range(planes):
+            colour, bits = chunk[pos], chunk[pos + 1:pos + 1 + size]
+            pos += 1 + size
+            for i in range(width * height):
+                if bits[i >> 3] >> (7 - (i & 7)) & 1:
+                    rows[i // width][i % width] = colour
+        return width, height, rows
     while pos < len(chunk) and chunk[pos] != 0xFF:
         y = chunk[pos]
         pos += 1
@@ -90,6 +101,39 @@ def decode_frame(chunk: bytes, index: int = 0) -> Tuple[int, int, List[List[Opti
             if flags & 0x80:
                 break
     return width, height, rows
+
+
+# Wake of the Ravager's labels are planar: after the width and height, FFh "PLAN", a word the planes, and
+# each plane its colour and its bits (MSB first, the rows run on with no padding, the last byte filled out)
+PLANAR = b"\xffPLAN"
+
+
+def planar_frame(rows: List[List[Optional[int]]]) -> bytes:
+    """One frame in the planar form (decode_frame reads it): a plane for each colour in ROWS."""
+    height, width = len(rows), len(rows[0]) if rows else 0
+    colours = sorted({p for r in rows for p in r if p is not None})
+    out = bytearray(struct.pack("<HH", width, height) + PLANAR + struct.pack("<H", len(colours)))
+    for colour in colours:
+        bits = bytearray((width * height + 7) // 8)
+        for i in range(width * height):
+            if rows[i // width][i % width] == colour:
+                bits[i >> 3] |= 0x80 >> (i & 7)
+        out += bytes((colour,)) + bits
+    return bytes(out)
+
+
+def planar_frames(frames: List[List[List[Optional[int]]]]) -> bytes:
+    """A picture chunk of FRAMES in the planar form, laid out as the sequel's own (its length, the count,
+    each frame's offset, then the frames)."""
+    data = [planar_frame(f) for f in frames]
+    at = 6 + 4 * len(data)
+    head = bytearray(struct.pack("<IH", 0, len(data)))
+    for d in data:
+        head += struct.pack("<I", at)
+        at += len(d)
+    out = head + b"".join(data)
+    struct.pack_into("<I", out, 0, len(out))
+    return bytes(out)
 
 
 def palette_colours(chunk: bytes) -> List[Tuple[int, int, int]]:
