@@ -235,7 +235,11 @@ kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py): bi
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took from each party member this fight
                                 ;      (BLAST_LOSS), for the Loader to give back and clear as the fight
                                 ;      ends (psiblast.py); while one is owed, BLAST_KO knocks out
-        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1822 to +1833: none of them here yet, zero)
+        times 1830 - ($ - hdr) db 0 ; (DSCLOG's fields +1822 to +1829: none of them here yet, zero)
+gear_due   db 0                 ; +1830 a new character just made (GEAR_DONE, at DONE): the Loader gives its
+                                ;      starting gear (startgear.py), then clears it (DSCLOG's GEAR_DUE)
+gear_given db 0                 ; +1831 ... bit N: party member N's items changed by it (DSCLOG's GEAR_GIVEN)
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1832 to +1833: none of them here yet, zero)
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
@@ -256,6 +260,9 @@ shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last 
         times 1862 - ($ - hdr) db 0 ; (DSCLOG's fields +1860 to +1861: none of them here yet, zero)
 bad_luck db 0                   ; +1862 a Swashbuckler's bad luck as KIT_SKILL last rolled it (0-25) ...
 bad_luck_who dw 0               ; +1863 ... and whose (the creature), for the dice log (kits.TSR_BAD_LUCK)
+loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass (DSCLOG's LOADER_BEAT): GEAR_DONE
+                                ;      waits for the Loader only while it is fresh
+gear_who   db 0xFF              ; +1867 the sheet index of the character DONE just made (DSCLOG's GEAR_WHO)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 wall_shadows dw 1               ; +1872 (DSCLOG2's own, past DSCLOG's header) 1: the walls cast shadows on
@@ -3911,9 +3918,9 @@ site_table:
         dw blast_ko                         ; 80 SITE_BLAST_KO (5CC51h: the death test: knocked out while BLAST_HP is owed)
         dw rl_try                           ; 81 SITE_RL_TRY (6C585h: an ability's 4d4 on the creation screen, for the dice log)
         dw shop_loop                        ; 82 SITE_SHOP_LOOP (88D99h: the shop's loop's test: SHOP_AT for S, SELL_KEY)
-        dw site_none                        ; 83 (none here)
+        dw rs_click                         ; 83 SITE_RS_CLICK (6DE85h: a button on the creation screen: STORE and RECALL)
         dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
-        dw site_none                        ; 85 (none here)
+        dw gear_done                        ; 85 SITE_GEAR_DONE (6E2F2h: DONE has given a new character the game's gear: the Loader's)
         dw site_none                        ; 86 (none here)
         dw site_none                        ; 87 (none here)
         dw site_none                        ; 88 (none here)
@@ -15371,6 +15378,228 @@ quick_loads dw 0
 pages_back  dw 0                ; (the QUICK page taken off by SAVE_TICK, for a look in play)
 greq_data   times 10 db 0
 save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914)
+
+; ---- STORE AND RECALL: DSCLOG's PROBE_RS_CLICK on the sequel's creation screen (rollstore.py) ----
+; RS_CLICK (site 83, "roll_store"): "mov cx,16h" (6DE85h, SL's 6625Dh) where the screen's click routine (its
+; overlay 6D090h, stub 46DDh) looks the button ([BP+8]) up among its own; STORE and RECALL are the Loader's
+; buttons in its window 19503 (rollstore.rav_chunks). STORE keeps the roll on screen (RS_FIELDS: the sheet's
+; race, sex, classes and kit, then its hit points, hit points rolled and most PSP; the creature's hit points,
+; PSP and six scores; the hit points' most and least, DS:42D6h; the die's total, RL_POOL), RECALL puts it back.
+; A stored roll is forgotten at the first button pressed after the race, sex, classes or kit have changed
+; (RS_SAME), and RECALL then does nothing. Either way the routine goes on as for a button not its own
+; (RS_DONE). After a recall the scores are shown again (the creation overlay's routine for it, WP_STUB's
+; entry RS_SCORES, 6CD7Bh, which RL_SUM follows with the totals), then the rest as the die shows a roll: its
+; routine (6D3CEh) from where it has rolled the hit points (RS_TAIL, 6D5F1h, with its frame and its byte
+; argument 1, a roll), which shows them and the PSP (worked out again from the same scores: no dice), the AC,
+; damage and THAC0; each call with the way back in a frame the overlay manager can fix up (RS_FRAMED).
+RS_STORE  equ 0x8B0
+RS_RECALL equ 0x8B1
+RS_DONE   equ 0x6DF97 - 0x6DE88    ; (the routine's way on for another button, less the site's return)
+RS_TAIL   equ 0x6D5F1 - 0x6D090    ; (in the die's routine: the overlay's from 6D090h)
+RS_SCORES equ 0xB6                 ; (WP_STUB's entry: SL's 0BBh)
+RS_HP_MOST equ 0x42D6              ; DS: the hit points' most and least (RL_HP_MAX's; SL's 4996h)
+rs_click:
+        mov cx, 0x16
+        cmp byte [cs:rs_have], 0
+        je .which
+        call rs_same                        ; (race, sex, classes or kit changed: the roll forgotten)
+        je .which
+        mov byte [cs:rs_have], 0
+.which: cmp word [bp + 8], RS_STORE
+        je .ours
+        cmp word [bp + 8], RS_RECALL
+        jne .out
+.ours:  sti
+        pushad
+        push es
+        mov si, sp
+        add word [ss:si + 34], RS_DONE      ; (on as for another button)
+        xor dl, dl
+        cmp word [bp + 8], RS_STORE
+        je .xfer
+        cmp byte [cs:rs_have], 0
+        je .done
+        inc dl
+.xfer:  call rs_xfer
+        or dl, dl
+        jz .stored
+        inc word [cs:rs_recalls]
+        mov word [cs:wp_far], RS_SCORES
+        mov ax, ds
+        add ax, WP_STUB
+        mov [cs:wp_far + 2], ax
+        call rs_framed                      ; (the scores' routine: another overlay's)
+        mov word [cs:wp_far], .tail
+        mov [cs:wp_far + 2], cs
+        call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        jmp .done
+.tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the site's way back)
+        push word 1                         ; (its byte argument: a roll)
+        push cs
+        push word .back
+        push bp                             ; (the die's frame, as its routine makes it)
+        mov bp, sp
+        sub sp, 2
+        push si
+        jmp far [cs:rs_tail]
+.back:  add sp, 2
+        retf
+.stored:
+        mov byte [cs:rs_have], 1
+        inc word [cs:rs_stores]
+.done:  pop es
+        popad
+.out:   iret
+
+; RS_FRAMED: a far call to WP_FAR with the site's way back (RS_CLICK's, past ES and PUSHAD: SP+2 on entry,
+; +36 and +38) in a frame the overlay manager can fix up, as DSCLOG's: the call may load another overlay over
+; the click routine's or move it, which leaves the way back where the manager has put it (DX its segment, for
+; RS_TAIL). Keeps BX, SI, DI.
+rs_framed:
+        push bx
+        mov bx, sp
+        push word [ss:bx + 40]
+        push word [ss:bx + 38]
+        push bp
+        mov bp, sp
+        mov dx, [ss:bx + 40]
+        call far [cs:wp_far]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 38], ax
+        mov [ss:bx + 40], dx
+        pop bx
+        ret
+
+; RS_SAME: ZF set if the sheet being made (DS:[1429h]) has the stored roll's race, sex, classes and kit
+; (RS_BUF's first 6 bytes, in RS_FIELDS' order: the sheet's +12h, +13h, +1Bh..+1Dh, +3Dh). DS the game's;
+; keeps all but flags.
+rs_same:
+        push es
+        push bx
+        push ax
+        les bx, [WP_CREATION]
+        mov al, [es:bx + 0x12]
+        cmp al, [cs:rs_buf]
+        jne .out
+        mov al, [es:bx + 0x13]
+        cmp al, [cs:rs_buf + 1]
+        jne .out
+        mov ax, [es:bx + 0x1B]
+        cmp ax, [cs:rs_buf + 2]
+        jne .out
+        mov al, [es:bx + 0x1D]
+        cmp al, [cs:rs_buf + 4]
+        jne .out
+        mov al, [es:bx + 0x3D]
+        cmp al, [cs:rs_buf + 5]
+.out:   pop ax
+        pop bx
+        pop es
+        ret
+
+; RS_XFER: the roll's fields (RS_FIELDS, then the hit points' most and least and RL_POOL) into RS_BUF (DL 0)
+; or back (DL 1). DS the game's; keeps DL.
+rs_xfer:
+        push es
+        mov si, rs_fields
+        mov di, rs_buf
+.field: mov al, [cs:si]
+        cmp al, 0xFF
+        je .rest
+        les bx, [WP_CREATION]
+        or al, al
+        jz .got
+        les bx, [CR_CREATURE]
+.got:   movzx ax, byte [cs:si + 1]
+        add bx, ax
+        movzx cx, byte [cs:si + 2]
+        call rs_bytes
+        add si, 3
+        jmp .field
+.rest:  push ds
+        pop es
+        mov bx, RS_HP_MOST
+        mov cx, 4
+        call rs_bytes
+        push cs
+        pop es
+        mov bx, rl_pool
+        mov cx, 2
+        call rs_bytes
+        pop es
+        ret
+rs_bytes:                       ; CX bytes ES:BX <-> CS:DI (DL 0: into CS:DI)
+        mov al, [es:bx]
+        or dl, dl
+        jz .keep
+        mov al, [cs:di]
+        mov [es:bx], al
+.keep:  mov [cs:di], al
+        inc bx
+        inc di
+        loop rs_bytes
+        ret
+; (sheet 0 / creature 1, offset, bytes): the sheet's race, sex, classes, kit (the key), hit points, rolled
+; and most PSP; the creature's hit points and PSP, and its six scores
+rs_fields db 0, 0x12, 1, 0, 0x13, 1, 0, 0x1B, 3, 0, 0x3D, 1
+          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0xFF
+rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 db 0
+rs_have   db 0
+rs_tail   dw RS_TAIL, 0
+rs_stores  dw 0                 ; (STOREs and RECALLs taken, for a look in play)
+rs_recalls dw 0
+
+; ---- FULLER STARTING GEAR: DSCLOG's GEAR_DUE and GEAR_HOLD on the sequel's DONE (startgear.py) ----
+; GEAR_DONE (site 85, "gear_done"): "pop cx / push si / nop" (6E2F2h, SL's 666DFh, CR_WEAPONS' place) in the
+; creation screen's DONE, between its calls for the new character SI (its sheet index) that give it the game's
+; starting gear (6F197h, SL's 67401h) and write it to the roster (6E4D6h, SL's 668C3h, CHARSAVE.GFF's CHAR
+; chunk, from memory). The two instructions are done on the stack under the site's way back (the word popped
+; into CX is SI, pushed before the call: SI put back). Then, with the Loader there (LOADER_BEAT under
+; LOADER_FRESH old), GEAR_DUE set for SI (GEAR_WHO) and the Loader's pass waited for (GEAR_DUE cleared), at
+; most GEAR_HOLD_TICKS: its fuller starting gear (startgear.fill, the sequel's items: ravlog's) is then in the
+; roster's copy and in View Character's first drawing, which come after (so DSCLOG's GEAR_WAIT, its redraw of
+; View Character when the gear came after it, isn't needed here). On a timeout GEAR_DUE stays set: the Loader
+; gives the gear at its next pass, the roster's copy without it. All registers kept but CX (the game's).
+GEAR_HOLD_TICKS equ 182         ; (about ten seconds, at most)
+LOADER_FRESH    equ 91          ; (about five seconds)
+gear_done:
+        push bp
+        mov bp, sp
+        mov cx, [bp + 8]                ; (pop cx: the word under the way back)
+        mov [bp + 8], si                ; (push si: in its place)
+        pop bp
+        sti
+        push ax
+        push bx
+        push es
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
+        mov ax, bx
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        jae .out                        ; (no Loader: the game's gear, as ever)
+        mov ax, si
+        mov [cs:gear_who], al
+        mov byte [cs:gear_given], 0
+        mov byte [cs:gear_due], 1
+        inc word [cs:gear_holds]
+.wait:  cmp byte [cs:gear_due], 0
+        je .out
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, GEAR_HOLD_TICKS
+        jb .wait
+        inc word [cs:gear_timeouts]     ; (the Loader slow: GEAR_DUE left for its next pass)
+.out:   pop es
+        pop bx
+        pop ax
+        iret
+gear_holds    dw 0              ; (DONEs held for the Loader, and those it was too slow for: for a look in play)
+gear_timeouts dw 0
 
 resident_end:
 align 16

@@ -36,7 +36,7 @@ class TableTests(unittest.TestCase):
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
-                            "psionic_blast", "blast_knockout", "rl_try",
+                            "psionic_blast", "blast_knockout", "rl_try", "roll_store", "gear_done",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
                             "message_window", "message_shown", "text", "message",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
@@ -388,8 +388,9 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            from dsloader import kitpages
-            self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game)))  # (the kit pages)
+            from dsloader import kitpages, rollstore
+            self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
+                             | set(rollstore.rav_chunks(game)))  # STORE and RECALL)
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE

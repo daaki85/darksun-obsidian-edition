@@ -980,7 +980,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
   panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
   game's menu right after DUAL. What else kits do to spells
-  and psionic powers, gear and hit dice doesn't carry over yet. The weapon specs work there:
+  and psionic powers, gear and hit dice doesn't carry over yet. The creation screen has [STORE and
+  RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
+  gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
+  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
   kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
