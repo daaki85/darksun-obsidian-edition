@@ -2,7 +2,7 @@
 
 Enable **What the party wears** to see class outfits on human, dwarf, and elf party members. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. The galleries show the base colors with equipment slots empty.
 
-[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen shell study](thri-kreen.md) · [Equipment](#equipment)
+[Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
 [Compare all eight body bases with the Gladiator and Fighter in every pose](body-texture.md)
 
