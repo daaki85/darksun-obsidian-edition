@@ -2219,8 +2219,8 @@ once.")
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| GOG's DOSBox 0.74, which comes with the game (the default) / DOSBox-X, your own copy of it: new, and tested on Linux only so far | GOG's DOSBox | next start | what runs the game: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
-| Choose the DOSBox-X program... | (a button) | | where your DOSBox-X is (2025.01.01 or later; nothing is downloaded); the tab then says its version: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+| DOSBox-X (the default when there is one: it comes with the mod on Windows; elsewhere choose your own below) / GOG's DOSBox 0.74, which comes with the game | DOSBox-X when there is one, else GOG's DOSBox | next start | what runs the game: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+| Choose the DOSBox-X program... | (a button) | | where your own DOSBox-X is (2025.01.01 or later), before the one that comes with the mod on Windows; the tab then says its version: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
 
 **Game speed (from the next start)**
 
