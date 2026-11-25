@@ -2,7 +2,7 @@
 the weapon specs the sequel has too few of (Daaki, 2026-11-25).
 
 The sequel has no short sword at all and no magic pick, and one magic great axe, cahulaks, staff sling
-and polearm each, found late or only as random loot (reports/ravager-weapon-gaps.md has the survey). Of
+and polearm each, found late or only as random loot (FEATURES.md's "Magic weapons for every spec" has where). Of
 the mod's new plain items in Shattered Lands (ITEMS.md's "new" rows) it has only an obsidian axe and an
 obsidian great axe of its own. Here:
 
@@ -10,8 +10,8 @@ obsidian great axe of its own. Here:
   daggers, metal and obsidian maces, a bone axe, bone and metal great axes, a metal pick and polearm,
   metal and obsidian cahulaks) and the Bone Helm, of the mod's item types the Loader already adds to the
   sequel (ravager.mod_type) or the sequel's own (its obsidian mace's, 74);
-- MAGIC: fourteen magic weapons, named as the sequel names its own ("Pick" +1: the game shows the
-  material and the plus), from early Tyr to its late regions;
+- MAGIC: fourteen magic weapons, named as the sequel names its own (the game adds the material: "Metal
+  Short Sword"; its own plus shows in no name), from early Tyr to its late regions;
 - WHERE: the people and things that carry or sell them. A shop's stock is its seller's items (the
   Weaponer, the Armorers, the Salespersons, Notaku), a person's loot their items, a body's or a crate's
   its contents: each such object's record (OBJEX.GFF's RDFF) has the new items after its own, in its pack
@@ -33,7 +33,8 @@ from . import dataitems, game, gff, icons, ravitems
 
 PACK, NEXT_FLAGS = 4, 2  # (the item lists' first record's header flags: the pack's; each next item's)
 ITEM_VALUE, ITEM_POWER, ITEM_PLUS = 0x06, 0x10, 0x16  # (the sequel's item record: a word, a word, a byte)
-OWN_ICONS = 13000  # (the pictures drawn here: objects 13000 on, which the sequel's 13999 alone uses)
+OWN_ICONS = 19900  # (the pictures drawn here: objects 19900 on, free: ravitems' OWN_HIGH range ends at 16003 for
+# Shattered Lands' highest, 32003; 13000 on drew another picture in the game, a grey ring)
 SHORT_SWORD_NAME = 0x144  # (the mod's "Short Sword", names.NAMES: ravager.mod_name)
 MELEE_PLUS = 20800  # (the mod's price of a magic melee weapon, a plus: ITEMS.md's Prices)
 
