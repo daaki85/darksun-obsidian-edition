@@ -1365,7 +1365,42 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
 - **The sites**: initiative's "add dx,14h" at 5B7E9h (SI the creature: site 60); the caster level
   routine's "sub dx,7" for a ranger at 97E00h ([BP+6] the combatant: site 61). Priest spheres are asked
   per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
-  Elementalist's second sphere would need a hook there that knows the character.
+  Elementalist's second sphere is hooked after its callers instead (next).
+
+**The priests' spheres and the Elementalist's second sphere** (2026-11-25, logs/2026-11-25-ravager-sphere.md):
+- **The sequel keeps no spells known for a priest.** A wizard's are bits a member (selector 320h, +39Ch,
+  0Fh bytes a member); a priest's are worked out every time: the USE screen's list (62500h, a level's
+  spells from the tables DS:656h/661h) asks 6260Ah "does member SI know spell N", which for a priest spell
+  (73h-EAh) asks 62C00h (spell, member: does one of its classes cast it) and then the spell's level
+  (62AC5h) against the member's highest (97E9Ch, from the caster level of spell 73h). **62B45h (spell,
+  class)** answers by a byte a spell (selector 3D0h:7D3h, file 478E3h: 1 air, 2 earth, 4 fire, 8 water,
+  10h every priest's, 20h the druids') met by the class's mask from its jump table (CS:0ADAh, the overlay's
+  code from file 62100h): a cleric 10h + its element, a druid 30h + its element, a ranger as its element's
+  cleric, class 19 all; wizard spells (below 73h) classes 11 and 18. So a cleric never casts a 20h spell
+  (Cure Serious Wounds, Raise Dead, Heal...: the druids' alone in the sequel), which is where SL's
+  Healer's cosmos would go (its water cleric's 20h spells) with the same hook.
+- **Its callers**: four in its own overlay (62C00h at 62CABh, 628AFh at 629BBh, 626B7h's two at 627D3h and
+  62818h, the slot count's "is this class a caster" with spells 8 and 73h) and one far, 97DC5h (the
+  caster level) at 97DDCh through its stub 588h:20h (overlay far calls name the stub by a selector: the
+  segment table's word, load + 45E8h + the selector, is the stub's segment less the load's). Every
+  caller that asks for a member has it: 62C00h in DI, 628AFh and 97DC5h at [BP+6]; each call is followed
+  by "add sp,4 / or al,al". DSCLOG2's EL_SPHERE (sites 90-92) replaces the ADD: the frame's two words
+  (spell, class) under the INT's are read and dropped, AL made 1 for an Elementalist's own cleric class
+  and a spell of its second sphere. `tests/test_ravsphere.py` runs 62B45h from DSUN.EXE against
+  `ravager.class_spheres` and checks no other call to it exists.
+- **Finding an overlay routine's callers** (scratch, in the log's files): the module from
+  `ravimg/layout.json`'s `modules` (`file`, `size`, `stubs`: `entry` an offset in the module, `stub_off`,
+  `stub_seg` with the load segment 418 added), then "0E E8 rel16" inside the module and "9A stub_off
+  selector" anywhere, the selector found by its segment-table word.
+- **Giving a member a second sphere for a test**: `ravkits.py set M 0x01 - C` (a single-class cleric C:
+  the Elementalist is a cleric's kit, and a multiclass character's kit is its group's), `ravkits.py
+  levels M 5`, `ravkits.py sphere M S` (1 air, 2 earth, 3 fire, 4 water); `ravkits.py count`'s
+  `el_spheres` counts the game's no made yes (thousands: USE asks at every redraw). Never save after.
+- **Playing a spell on a chosen member's turn** (the log's run script): Computer Control for the others
+  (View Character's small icons, as the kits' runs), a test base AC of -10 for the caster (a caster hit in
+  the round finds every spell crossed out, "YOU WERE HIT"), then wait for the member's name in the top-right
+  panel (a crop compared with `compare -metric AE`); the top-left icon, then the bar's third (97,171), CAST
+  SPELL. Tab then Return brought the game's menu, not an attack: a click on an adjacent foe ends a turn.
 
 **Choosing a kit in the sequel** (2026-11-25, logs/2026-11-25-ravager-kit-choice.md):
 - **The creation overlay is SL's code at other addresses** (overlay 6AFE0h-6CE93h, its stub 46CCh,

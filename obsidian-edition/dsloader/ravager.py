@@ -574,6 +574,15 @@ PATCHES: Tuple[Patch, ...] = (
     # (94A57h) in the routine that changes a human's class (9493Ch), the new class's kit asked on the game's
     # three-choice menu
     Patch("dual_kit", 0x94A57, bytes.fromhex("837e080c"), _site(76, 4)),
+    # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
+    # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
+    # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
+    # sphere after each of its three callers that know the member: "add sp,4" (the call's words) after the
+    # call in 62C00h (the USE screen's spells known, 62CAEh: the member DI), 628AFh (the cast's level,
+    # 629BEh) and 97DC5h (the caster level, 97DE1h: both [BP+6]); the "or al,al" after kept.
+    Patch("el_sphere_know", 0x62CAE, bytes.fromhex("83c404"), _site(90, 3)),
+    Patch("el_sphere_level", 0x629BE, bytes.fromhex("83c404"), _site(91, 3)),
+    Patch("el_sphere_cast", 0x97DE1, bytes.fromhex("83c404"), _site(92, 3)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
@@ -797,6 +806,39 @@ def sheet_field(sl: int) -> Optional[int]:
     if 0x14 <= sl <= 0x16:
         return sl + 0x2E       # the mod's weapon specs and starting roll -> 42h, the Loader's bytes (SHEET_SIZE)
     return None                # 0Eh-0Fh, 17h (the mod's age: +41h, ravlog's SHEET_AGE), 3Ch: none in the sequel
+
+
+# The priests' spheres in the sequel: a byte a priest spell (73h-EAh; DSUN.EXE's data at selector 3D0h:7D3h,
+# SPHERES_FILE) met by its class's (62B45h's jump table: a cleric's EVERY_PRIEST and its element's, a druid's
+# DRUIDS too, a ranger's as its element's cleric, class 19 all), asked each time a priest spell is listed or
+# cast (DSCLOG2's EL_SPHERE).
+SPHERES_FILE = 0x41F1 * 16 + 0x5200 + 0x7D3
+PRIEST_SPELLS = range(0x73, 0xEB)
+AIR, EARTH, FIRE, WATER, EVERY_PRIEST, DRUIDS = 1, 2, 4, 8, 0x10, 0x20
+
+
+def class_spheres(cls: int) -> int:
+    """The sphere bits class CLS (the sheet's 1-19) casts by: 62B45h's."""
+    if 1 <= cls <= 4 or 13 <= cls <= 16:
+        return EVERY_PRIEST | 1 << (cls - 1) % 4
+    if 5 <= cls <= 8:
+        return DRUIDS | EVERY_PRIEST | 1 << (cls - 5)
+    return 0x3F if cls == 19 else 0
+
+
+def casts(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
+    """Whether class CLS of SHEET casts priest spell SPELL (its sphere byte SPHERE): the game's answer,
+    and with the kits an Elementalist's (kits.spell_spheres): its own cleric class casts its second
+    sphere's spells too (kits.SPHERE2's low bits: the sheet's +3Fh in ravlog's layout, which SHEET is read
+    in). DSCLOG2's EL_SPHERE."""
+    from . import kitpages, kits
+    if sphere & class_spheres(cls):
+        return True
+    if spell not in PRIEST_SPELLS or kits.ELEMENTALIST not in kitpages.kit_ids(sheet) \
+            or kitpages.kit_class_of(sheet, kits.ELEMENTALIST) != cls:
+        return False
+    second = sheet[kits.SPHERE2] & kits.SPHERE2_MASK
+    return 1 <= second <= 4 and bool(sphere & 1 << (second - 1))
 
 
 class RavagerError(Exception):

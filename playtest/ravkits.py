@@ -7,6 +7,9 @@
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
+  python3 ravkits.py levels MEMBER L1 [L2 L3]  a test edit: the class levels (+1Eh..+20h; the rest 0)
+  python3 ravkits.py sphere MEMBER N           a test edit: an Elementalist's second sphere (+3Fh's low three bits:
+                                               0 none, 1 air, 2 earth, 3 fire, 4 water), the bits above kept
   python3 ravkits.py hp MEMBER N               a test edit: the creature's hit points (+0) N, and its sheet's most
   python3 ravkits.py page                      the creation screen's KIT pages (DSCLOG2's KIT PAGE): the sheet being
                                                made (far DS:1429h: race, classes, kit byte), the panel's windows
@@ -21,8 +24,8 @@ WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
-            'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'spec_hits', 'spec_damages',
-            'spec_rates')
+            'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
+            'spec_damages', 'spec_rates')
 
 
 def helper():
@@ -58,7 +61,7 @@ if cmd == 'show':
     for m in range(4):
         s = g.read(base + m * ravager.SHEET_SIZE, ravager.SHEET_SIZE)
         print(m, 'race', s[0x12], 'classes', list(s[0x1B:0x1E]), 'levels', list(s[0x1E:0x21]),
-              'kit byte %#04x' % s[0x3D], 'base AC', struct.unpack('b', s[0x21:0x22])[0], 'specs', s[0x42:0x45].hex())
+              'kit byte %#04x' % s[0x3D], 'sphere byte %#04x' % s[0x3F], 'base AC', struct.unpack('b', s[0x21:0x22])[0], 'specs', s[0x42:0x45].hex())
 elif cmd in ('set', 'match'):
     m, byte = int(sys.argv[2]) if cmd == 'set' else None, int(sys.argv[3], 0)
     if m is None:
@@ -75,6 +78,14 @@ elif cmd in ('set', 'match'):
     if len(sys.argv) > 5:
         g.write(at + 0x1B, bytes(([int(c) for c in sys.argv[5:8]] + [0, 0, 0])[:3]))
     print('member', m, 'kit byte %#04x' % g.read(at + 0x3D, 1)[0], 'race', g.read(at + 0x12, 1)[0])
+elif cmd == 'levels':
+    at = sheets_at() + int(sys.argv[2]) * ravager.SHEET_SIZE
+    g.write(at + 0x1E, bytes(([int(n) for n in sys.argv[3:6]] + [0, 0, 0])[:3]))
+    print('member', sys.argv[2], 'levels', list(g.read(at + 0x1E, 3)))
+elif cmd == 'sphere':
+    at = sheets_at() + int(sys.argv[2]) * ravager.SHEET_SIZE + 0x3F
+    g.write(at, bytes((g.read(at, 1)[0] & 0xF8 | int(sys.argv[3]),)))
+    print('member', sys.argv[2], 'sphere byte %#04x' % g.read(at, 1)[0])
 elif cmd == 'hp':
     from dsloader import game
     ds = game.find_data_segment(g)

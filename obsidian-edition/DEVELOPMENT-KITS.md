@@ -746,24 +746,30 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | the two-weapon penalty | Ghetto Fighter, Twin-blade, Battle Dancer | `KIT_TWO` from `PROBE_TWO` | 5DE7Ch (59634h) |
 | initiative | Myrmidon, Wayfinder, Military Scout | `KIT_INIT` (site 60, new) | `add dx,14h` at 5B7E9h (5750Eh), SI the creature |
 | casting level | Seeker (the ranger level less 5), Justifier (less 9) | `KIT_RANGER_CAST` (site 61, new); `RANGER_DROP` in `RANGER_LEVEL` | the caster level routine's `sub dx,7`, 97E00h (81B6Ah); the spell's level, 629F0h (5E3B8h) |
+| a second sphere's spells | Elementalist (the sheet's `+3Fh`, low three bits) | `EL_SPHERE` (sites 90-92, new) | `add sp,4` after each call to 62B45h (spell, class) that has the member: 62CAEh in 62C00h (the USE screen's spells known; DI the member), 629BEh in 628AFh (the cast's level) and 97DE1h in 97DC5h (the caster level; both `[BP+6]`) |
 
 The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
 `RavDiceLog._kit_tick` makes them writable while the kits are on and keeps them as Shattered Lands'
 dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
-`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`: `playtest/ravkits.py
-count`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
+`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`, `el_spheres`:
+`playtest/ravkits.py count`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
 `EXPERT_HALVES` and `KIT_MELEE` against `kitpages` and `kits` on transferred sheets, and checks the
-tables.
+tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
+against `ravager.class_spheres`.
 
 Not in the sequel yet: what kits do to spells and powers (slots, the Shinobi's casting, a spell's level, PSP
-costs, cures' and Cause spells' dice, spells never known, casting though hit, the Elementalist's
-second sphere), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, hit dice and
-PSP at a level up, a Scholar's THAC0, the kits' parts of the DAM lines, and choosing a kit (the
-sequel's creation screen and DUAL). The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
+costs, cures' and Cause spells' dice, spells never known, casting though hit, a Healer's
+cosmos), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, hit dice and
+PSP at a level up, a Scholar's THAC0 and the kits' parts of the DAM lines. Choosing a kit (the
+creation panel's KIT pages, sites 62-69, and `DUAL_KIT`, site 76) is DSCLOG2's KIT PAGE. The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
 KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's
-loops do (66F89h, 86E1Eh): it asks 62B45h (spell, class) at each use, its spheres a jump table, so the
-second sphere needs a hook there that knows the character (the USE screen's 370h:0B44h). The new
-spells' bits at `+3Fh` have no use while the sequel has no new spells.
+loops do (66F89h, 86E1Eh): it asks 62B45h (spell, class) at each use, by a byte a spell (selector
+3D0h:7D3h) met by the class's mask from a jump table; 62B45h has no character, but its three callers
+that ask for a member's class do, so `EL_SPHERE` answers after them. A Healer's cosmos would go the same
+way: the sequel's druid-only spells (the byte's 20h) for its water cleric. The new spells' bits at
+`+3Fh` (3-7) have no use while the sequel has no new spells: a wizard's spells known are bits a member
+(selector 320h:39Ch) that 6260Ah reads for spells below 73h, so the new spells' port would answer
+there from them.
 
 ## How they're checked
 
