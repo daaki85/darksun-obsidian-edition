@@ -27,6 +27,20 @@ In the woman’s third profile step, two charcoal pixels join the lower lock to 
 
 The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman. The body preserves each original pose’s silhouette and foot placement. The exposed limbs retain the figure’s skin tones, with a deep brown edge under the foot and on the shadow side of the calf. The robe draws its fold shading from the retail Priest.
 
-## Remaining artwork
+## Two-class outfits
 
-Five legal pairs remain for the next studies. They are Cleric/Fighter, Cleric/Psionicist, Cleric/Ranger, Fighter/Psionicist, and Psionicist/Ranger. Half-giants have no three-class combinations. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)
+Watch the large figure in each column for the proposed pair. The three game-size figures below it show the first single class, the pair, and the second single class in the same pose. The man is in the upper row and the woman is below. The bottom row shows retail figures on the same sand.
+
+![All five half-giant pairs through 29 poses](half-giant-pairs.gif)
+
+[All male pair frames](half-giant-man-pairs.png) · [All female pair frames](half-giant-woman-pairs.png)
+
+| Pair | What to follow in motion |
+|---|---|
+| Cleric/Fighter | A dark leather belt and bronze buckle follow the hips across the cream robe. |
+| Cleric/Psionicist | A narrow teal sash turns across the lower ribs and passes behind the near arm. |
+| Cleric/Ranger | The green cloak opens onto linen in profile. A turned cream edge shows the robe's color from behind. |
+| Fighter/Psionicist | The bone shoulder and split leather jerkin frame the teal sash. Its tied end shows below the arm in front strike 3 (17). |
+| Psionicist/Ranger | The teal wrap shows through the open green cloak. A teal facing follows the lifted hem during the rear walk. |
+
+The study covers both figures, all five legal pairs, and all 29 poses with empty equipment slots. Half-giants have no three-class combinations. Equipped gameplay awaits Loader integration. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)

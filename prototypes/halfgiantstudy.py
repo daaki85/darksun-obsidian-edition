@@ -12,6 +12,8 @@ from wornreview import Atlas
 
 MODELS = (2072, 2074)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric", "Psionicist", "Ranger")
+PAIRS = ("Cleric/Fighter", "Cleric/Psionicist", "Cleric/Ranger",
+         "Fighter/Psionicist", "Psionicist/Ranger")
 # Outline of the garment laid open on the pose: shoulder, waist and knee.
 # Each entry is (left x, left y, right x, right y). The final edge follows
 # the nearer knee, including the crouch, recoil and upside-down fall.
@@ -213,7 +215,7 @@ def rear_cloak_color(x, y, pose, texture):
     return shade + .68*grain
 
 
-def dress(pieces, source, model, pose, dx, dy, bow, texture):
+def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     """Lay the pattern on the cleaned cel, then bring the near arm and hair forward."""
     female = model == 2074
     top, wrap, jerkin, robe, arm, hair, sleeve, belt = fitted_panels(pose, female)
@@ -293,6 +295,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                         shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
                     if (x,y+1) not in cloak or (x+1,y) not in cloak:
                         shade -= 3.1
+                    if visible is not None:
+                        visible["cloak"].add(point)
                     pieces[role][sy][sx] = pigment(RAMPS["leaf"], shade)
                     continue
             if role == "Cleric" and point in sleeve and c is not None:
@@ -377,9 +381,71 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                     turn = 2.0 if -.12 < overlap < 0 else -1.5 if 0 <= overlap < .10 else 0
                     color = pigment(TEAL, .55*shade+turn+.5)
             pieces[role][sy][sx] = color
+            if visible is not None and role in visible:
+                visible[role].add(point)
 
 
-def study_rows(game, model, pose, texture):
+def dress_pairs(pieces, visible, model, pose, dx, dy):
+    # Coordinates here are the same feet-down sewing lines used for singles.
+    # Only pixels actually laid down by the parent garment can take its trim.
+    _, _, _, _, _, _, _, belt = fitted_panels(pose, model == 2074)
+    left, middle, right = belt
+    cloak = visible["cloak"]
+    cloak_floor = {}
+    for x, y in stamp(RANGER_CLOAK[pose]):
+        cloak_floor[x] = max(y, cloak_floor.get(x, y))
+    for pair in PAIRS:
+        parent, accent = pair.split("/")
+        out = [row[:] for row in pieces[parent]]
+        pieces[pair] = out
+        if accent == "Ranger":
+            facing = LINEN if parent == "Cleric" else TEAL
+            for x, y in cloak:
+                sy, sx = y+dy, x+dx
+                green = pieces["Ranger"][sy][sx]
+                # A turned edge of the lining peeks out at the lifted hem.
+                # Preserve the outer shadow contour and the motion of every fold.
+                depth = cloak_floor[x]-y
+                if 1 <= depth <= 2 and x <= middle[0]+1:
+                    relief = RAMPS["leaf"].index(green)/(len(RAMPS["leaf"])-1)
+                    out[sy][sx] = pigment(facing, (len(facing)-1)*relief)
+                else:
+                    out[sy][sx] = green
+            if parent == "Cleric" and pose == 24:
+                # The swept cloak meets the longer linen hem in side bow.
+                out[30+dy][2+dx] = LINEN[3]
+            continue
+
+        for x, y in visible[parent]:
+            sy, sx = y+dy, x+dx
+            u = max(0, min(1, (x-left[0])/max(1, right[0]-left[0])))
+            waist = (mix(left[1], middle[1], 2*u) if u < .5
+                     else mix(middle[1], right[1], 2*u-1))
+            # The belt rides the hips; the teal wrap crosses the lower ribs.
+            if accent == "Fighter":
+                distance = y-waist+.5+.9*(u-.5)
+                if not -1.2 <= distance < 1.9:
+                    continue
+                light = 5.7-4*abs(u-.35)+1.4*(distance < -.2)-2*(distance > .95)
+                color = pigment(RAMPS["hide"], light)
+                if abs(x-middle[0]+2) < 1 and distance < .9:
+                    color = 168 if distance < -.1 else 95
+            else:
+                # In the low front strike the forearm covers the ribs and
+                # the tied end of the wrap drops across the foremost hip.
+                rise = {17: -2, 20: .7}.get(pose, 2.6)
+                distance = y-waist+rise+2.9*(u-.5)
+                if not -1.4 <= distance < 1.2:
+                    continue
+                ground = pieces[parent][sy][sx]
+                ramp = LINEN if parent == "Cleric" else RAMPS["hide"]
+                relief = ramp.index(ground)/len(ramp) if ground in ramp else .35
+                light = 3.3 + 4.3*relief + 1.4*(distance < -.35) - 2*(distance > .65)
+                color = pigment(TEAL, light)
+            out[sy][sx] = color
+
+
+def study_rows(game, model, pose, texture, *, pairs=False):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
     native = fig.rows(combat, frame)
@@ -477,7 +543,10 @@ def study_rows(game, model, pose, texture):
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     pieces[role][sy][sx] = body if foot is None else foot
-    dress(pieces, source, model, pose, dx, dy, bow, texture)
+    visible = {name: set() for name in ("Cleric", "Fighter", "cloak")} if pairs else None
+    dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
+    if pairs:
+        dress_pairs(pieces, visible, model, pose, dx, dy)
     return {"Original": original, **{role: upright(rows) if reverse else rows for role, rows in pieces.items()}}
 
 
