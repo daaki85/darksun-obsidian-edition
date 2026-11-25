@@ -2659,6 +2659,96 @@ kit_ranger_cast:
 .take:  sub dx, bx
         pop bx
         iret
+; EL_SPHERE (sites 90-92): the Elementalist's second sphere (SL's EL_SPHERES, PROBE_EL_GRANT,
+; PROBE_EL_KNOW, PROBE_EL_CAST, PROBE_EL_LEVEL: kits.spell_spheres). The sequel keeps no spells known
+; for a priest: it asks 62B45h (spell, class: AL 1 if the class casts it) every time, by a byte a spell
+; (selector 3D0h:7D3h, SPHERES_OFF: 1 air, 2 earth, 4 fire, 8 water, 10h every priest's, 20h the
+; druids') met by the class's (a cleric's 10h and its element's, a druid's 30h and its element's, a
+; ranger's as its element's cleric). 62B45h has no character, but each of its three callers that asks
+; for one has it, and each is followed by "add sp,4 / or al,al" (the call's two words, spell then
+; class, on the stack): INT + the site's byte replace the ADD (3 bytes), the OR kept.
+; - site 90 (62CAEh): 62C00h (spell, member: does a class of member DI cast it), which the USE screen's
+;   list (6260Ah, "member knows spell") asks before the spell's level against the member's highest;
+; - site 91 (629BEh): 628AFh (member [BP+6], spell: the highest level of its classes that cast it),
+;   the cast's level (625F0h) and the spells' effects' (91E88h on);
+; - site 92 (97DE1h): 97DC5h (member [BP+6], spell: the caster level, each class 0-19 asked; site 61
+;   in its loop).
+; For an Elementalist (awake, the kits' rule on), the game's 0 for its own cleric class (KIT_WHERE's)
+; made 1 when the spell (73h-EAh, the priests') has its second sphere's bit (SPHERE2's low three bits:
+; the sphere + 1); then the call's two words taken off as the ADD did. Others kept.
+KIT_ELEMENTALIST equ 5
+SPHERE2       equ 0x3F              ; (SL's +45h: ravlog's layout, kits.SPHERE2)
+SPHERE2_MASK  equ 0x07              ; (the bits above it SL's new spells known: NEW_KNOWN)
+SPHERES_SEG   equ 0x41F1 - 0x47E0   ; (the spheres' segment, selector 3D0h's, less DS's)
+SPHERES_OFF   equ 0x07D3
+PRIEST_FIRST  equ 0x73
+PRIEST_END    equ 0xEB
+el_sphere_di:
+        push ax
+        mov ax, di
+        jmp el_sphere
+el_sphere_bp:
+        push ax
+        mov ax, [bp + 6]
+el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS, FLAGS, +0Ah the
+        push bp                     ;   spell, +0Ch the class)
+        mov bp, sp
+        cmp byte [bp + 2], 0
+        jne .back                   ; (the game's yes)
+        push bx
+        push cx
+        push si
+        push es
+        cmp ax, 400                 ; (a combatant: its creature, as the game reads it, 388h:0C34h)
+        jae .out
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        call kit_sheet
+        call kit_is_b
+        db KIT_ELEMENTALIST
+        jne .out
+        mov si, [cs:kit_where]
+        movzx cx, byte [es:bx + si + SH_CLASSES]
+        cmp cx, [bp + 0x0C]
+        jne .out                    ; (not its cleric class)
+        mov cl, [es:bx + SPHERE2]
+        and cl, SPHERE2_MASK
+        jz .out
+        dec cl
+        cmp cl, 3
+        ja .out
+        mov si, [bp + 0x0A]
+        cmp si, PRIEST_FIRST
+        jb .out
+        cmp si, PRIEST_END
+        jae .out
+        mov ax, ds
+        add ax, SPHERES_SEG
+        mov es, ax
+        mov al, 1
+        shl al, cl
+        test [es:si + SPHERES_OFF], al
+        jz .out
+        mov byte [bp + 2], 1
+        inc word [cs:el_spheres]
+.out:   pop es
+        pop si
+        pop cx
+        pop bx
+.back:  mov ax, [bp + 8]            ; (the INT's frame moved over the call's two words; AX the
+        mov [bp + 0x0C], ax         ;   game's, its AL the answer, popped after)
+        mov ax, [bp + 6]
+        mov [bp + 0x0A], ax
+        mov ax, [bp + 4]
+        mov [bp + 8], ax
+        pop bp
+        pop ax
+        add sp, 4
+        iret
+el_spheres dw 0                     ; (the game's no made yes, counted for a look in play)
 ; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
 ; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
 ; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
@@ -3277,6 +3367,23 @@ site_table:
         dw ef_rows                          ; 73 SITE_EF_ROWS (the Effects screen's cells filled: the kits and weapon kinds)
         dw ef_click                         ; 74 SITE_EF_CLICK (a click on its cells: the next page of them)
         dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
+        dw site_none                        ; 76 (none here)
+        dw site_none                        ; 77 (none here)
+        dw site_none                        ; 78 (none here)
+        dw site_none                        ; 79 (none here)
+        dw site_none                        ; 80 (none here)
+        dw site_none                        ; 81 (none here)
+        dw site_none                        ; 82 (none here)
+        dw site_none                        ; 83 (none here)
+        dw site_none                        ; 84 (none here)
+        dw site_none                        ; 85 (none here)
+        dw site_none                        ; 86 (none here)
+        dw site_none                        ; 87 (none here)
+        dw site_none                        ; 88 (none here)
+        dw site_none                        ; 89 (none here)
+        dw el_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere)
+        dw el_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
+        dw el_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
