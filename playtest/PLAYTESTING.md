@@ -85,7 +85,11 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     loop. **With that holder running, don't take the lock again in a step** (`flock
     /tmp/playtest/dosbox.lock -c ...`): it is another open of the file, so it waits for the holder,
     this session's own, until its `timeout` (200 s lost, 2026-11-19); the holder already keeps other
-    agents out, so the steps run without it.
+    agents out, so the steps run without it. **A dice log is not under the lock**: another agent's Loader
+    test once attached its dice log to a DOSBox it didn't start (2026-11-24) and wrote its own rules
+    into the sequel's helper, voiding that run: check the helper's rules word (header +170) is the one
+    your run set before trusting a rule's run ([the sequel's
+    specialization](RESEARCH.md#wake-of-the-ravager)).
 
 ## 2. The checklist
 

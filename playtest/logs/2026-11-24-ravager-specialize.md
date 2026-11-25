@@ -46,11 +46,11 @@ bonuses = 17", "1d8 = [4] -2 wooden" for 2.
 
 | | Rule on | Control |
 |---|---|---|
-| Lex, the bow (specialized) | **3 a round** (on5 round 1, on6 rounds 3-5, on7 round 14) | 2 a round (ctl1 rounds 2-7) |
-| Jenna, the bow (a ranger's expertise) | 3 a round (on6, on7: 13 rounds) | (not shot) |
+| Lex, the bow (specialized) | **3 a round** (on5 round 1, on6 rounds 3-5, on7 round 14, on8 rounds 2-4, on9 round 1) | 2 a round (ctl1 rounds 2-7) |
+| Jenna, the bow (a ranger's expertise) | 3 a round (on6, on7: 13 rounds; on8) | 2 a round (ctl5 rounds 1-5) |
 | Ester, the bow (not chosen, fighter 2) | 2 a round: the bow's own (below 7th level) | 2 a round |
 | Seneca, the short sword (specialized) | 2, 1, 2, 1 ... (3/2), the off-hand dagger 1 | the same |
-| Lex, the short sword (not chosen) | **1 a round** (on4: 35 rounds) | the game's 3/2 for every warrior |
+| Lex, the short sword (not chosen) | **1 a round** (on4: 35 rounds; on10) | 2, 1, 2, 1 ...: the game's 3/2 for every warrior (ctl2, ctl3, ctl5) |
 | Jenna, the long sword (expertise) | 3, 2, 3, 2 ... (as the game has her), no to-hit or damage bonus | the same |
 
 DSCLOG2's counters at the end of on4 (36 rounds): `spec_hits` 53, `spec_damages` 53 (every specialized swing),
@@ -58,14 +58,17 @@ DSCLOG2's counters at the end of on4 (36 rounds): `spec_hits` 53, `spec_damages`
 
 ## The game quitting: not this rule
 
-Six of the runs (on1, on3, on5, on6, on8 and the controls ctl2, ctl3 alike) ended with the game quitting
-about 30 s to 2 minutes into the fight, mostly at Ester's turn: `RAV_STDOUT=1` gave **"Illegal Op (gpl=49)"**
-and `RAV_MARK=1` ENDED.TXT, with the rule off as with it on. The quit hunt's sound fix
+Many runs ended with the game quitting 30 s to 2 minutes into the fight, mostly at Ester's turn:
+`RAV_STDOUT=1` gave **"Illegal Op (gpl=49)"** and `RAV_MARK=1` wrote ENDED.TXT. It happened with the rule off as
+often as with it on: **rule on, 5 of 9 runs quit** (on1, on5, on6, on8, on9; on2, on4, on7, on10 played on to
+defeat, victory or the 4.5-minute watch); **controls, 4 of 5** (ctl2, ctl3, ctl5 "Illegal Op (gpl=49)", ctl4 with
+no message; ctl1 played on). The quit hunt's sound fix
 (logs/2026-11-24-ravager-quit-hunt.md) left 8 runs alive on the 42h-sheet copy; this is the 48h copy
 (ravG48), and the cause is not yet looked into. On3's dice log is void: another agent's Loader test attached
 its dice log to this DOSBox and wrote its own rules word (0xEA05, the rule off) into DSCLOG2's header.
 
-BATCH_RESULTS
+The container restarted once between ctl3 and on9 (Xvfb and the lock holder gone with it); the runs went on
+after Xvfb was started again and the lock taken.
 
 ## Not ported
 
