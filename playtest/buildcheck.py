@@ -1,8 +1,10 @@
 # buildcheck.py [NAME...]: checks the DSCLOG running in DOSBox is the build in obsidian-edition/dos. It compares
 # 40 bytes of each routine named (default: a set touched by the 2026-11-09 memory pass) in memory with
 # dos/DSCLOG.EXE, checks every vector of the install's table (ALL_VECTORS) in segment 0 points at its
-# handler, and the tail (TAIL_SEG, the header's +1834) against the EXE's tail: its segment, and its
-# data that starts with values (the item types, the names), byte for byte. Read-only.
+# handler, the tail (TAIL_SEG, the header's +1834) against the EXE's tail: its segment, and its
+# data that starts with values (the kits' names), byte for byte; and the game's item types and names
+# in memory against the Loader's (the chunks of its copy of GPLDATA, dsloader/itemtables.py), with
+# DSCLOG's notes of them (the header's TYPES_FIRST, TYPES_PTR, NAMES_PTR). Read-only.
 import sys, os, struct, subprocess, tempfile
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT); __file__ = os.path.join(PT, 'live.py')
 exec(open(__file__).read())
@@ -65,9 +67,29 @@ while image[at]:
 print('vectors in the table: %d, %s' % (vectors, 'all at their handlers' if vectors_ok else 'see above'))
 # (SEG_MOVE's two tables of the game's, seg_space and area_space, sit between the names and the kits'
 # names: the game fills them as it runs, so they aren't compared)
-for name, end in (('extra_types', 'extra_types_end'), ('extra_names', 'seg_space'), ('kit_names', 'tail_end')):
+for name, end in (('kit_names', 'tail_end'),):
     lo, hi = sym[name][1], sym[end][1]
     same = mem[tail_seg * 16 + lo:tail_seg * 16 + hi] == image[tail_paras * 16 + lo:tail_paras * 16 + hi]
     bad += not same
     print('  tail %-12s +%04X-%04X: %s' % (name, lo, hi, 'same as the EXE' if same else 'DIFFERS'))
+# the item tables: the game's as read from the Loader's copy of GPLDATA (the memory pass 7), and
+# DSCLOG's notes of them
+sys.path.insert(0, os.path.join(os.path.dirname(PT), 'obsidian-edition'))
+from dsloader import gff, itemtables, names, npcitems
+chunks = gff.read_gff(open(os.path.join(DOS, 'GPLDATA.GFF'), 'rb').read())  # (the copy the game reads)
+far = lambda a: w(a + 2) * 16 + w(a)
+for what, ptr, chunk, note in (('types', 0x1669, itemtables.TYPES_CHUNK, 214), ('names', 0x166D, itemtables.NAMES_CHUNK, 200)):
+    at, want = far(ds * 16 + ptr), chunks[chunk]
+    if len(want) != {'types': 20 * (115 + len(npcitems.TYPES)), 'names': 25 * (names.OWN + names.EXTRA)}[what]:
+        print('  %s: the copy\'s chunk is %d bytes, not the game\'s and the Loader\'s' % (what, len(want)))
+        bad += 1
+    if what == 'types':  # (the staff sling's dice: STINK_SIDES's, as the rule has them)
+        want = want[:0x0C] + mem[at + 0x0C:at + 0x0D] + want[0x0D:]
+    same = mem[at:at + len(want)] == want
+    noted = far(hdr + note) == at
+    bad += not (same and noted)
+    print('  %s at %05X: %s, %s' % (what, at, 'the Loader\'s' if same else 'DIFFER', 'noted' if noted else 'NOT NOTED'))
+first = w(hdr + 212)
+bad += first != 115
+print('  types_first %d' % first)
 print('OK' if not bad else 'NOT THE BUILD (%d)' % bad)
