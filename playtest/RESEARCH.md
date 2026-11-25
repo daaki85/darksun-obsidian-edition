@@ -758,6 +758,16 @@ target less that address (one byte late, PSI_LIST jumped into an instruction: "I
 icons from (121,62) 19 apart; CHOOSE A SPELL's icons five a row from (124,74), 19 by 17 apart, LEVEL (107,147), EXIT
 (205,147); "YOU HAVEN'T CHOSEN"/"YOU HAVE MORE"'s EXIT (112,92).
 
+**With STORE/RECALL and the starting gear** (2026-11-25, logs/2026-11-25-ravager-join-gear-spells.md): DONE's
+windows (CHOOSE A SPELL, then the powers' pop-up, which every class gets: everyone has a discipline) all come before
+GEAR_DONE (6E2F2h), so its hold for the Loader starts only once the last window is closed, however long they stay up
+(gear_timeouts stays 0). CHOOSE A SPELL's LEVEL button does nothing while the level being picked is 1 (CR_CAP is that
+level). A stored roll outlives NEW: it is forgotten only at the first button after a change of race, sex, classes
+or kit, so a new character like the stored one could RECALL it (SL's DSCLOG the same). Making more than one: View
+Character's bar's right icon (270,171) goes back to the title menu, then CREATE CHARACTERS again; a right-click on
+slot 2 (117,56) puts its menu top right (NEW 160,57), on slot 3 (70,127) beside the slot (NEW 110,118). PSIONICIST
+on the classes' list is (265,53).
+
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
 at 5C6EEh each attack), the sheet in `[BP-12h]`, the weapon type in `[BP-4]`, the target-is-an-object
