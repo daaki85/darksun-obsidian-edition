@@ -17,10 +17,11 @@ from dsloader.dicelog import FILTERS, HDR_SIG, INITIATIVE_TIE, Entry
 from dsloader.textlog import TextBuffer
 from dsloader.gamepatch import (VEC_WORN, VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST, VEC_CAN_USE, VEC_VIEW_DAM, VEC_DAM_LINE, VEC_SPEC_DAMAGE, VEC_ATTACKS, VEC_XP_NEXT, VEC_SCRIPT_RAND, VEC_ITEM_ARMOUR, VEC_ITEM_SKIP, VEC_ITEM_WEAPON, VEC_AC, VEC_DOUBLE, VEC_MSG, VEC_RAND, VEC_RING_AC, VEC_USE_ITEM,
                                   VEC_RING_SAVE, VEC_SAVE, VEC_TEXT, VEC_TWO, VEC_GRACE_CAST, VEC_GRACE_EFFECT,
-                                  VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_NAMES_SIZE, VEC_STEALTH, VEC_TYPES_FILL,
-                                  VEC_TYPES_SIZE, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
+                                  VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_FILL,
+                                  VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
                                   VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_CR_SPELLS, ROUND_SITE)
-from dsloader import game, restrict, specialize
+from dsloader import game, npcitems, restrict, specialize
+from dsloader import names as item_names
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import test_restrict  # noqa: E402 (its item types and sheets)
@@ -84,11 +85,10 @@ def install_at(image, vector):
 
 
 def fill_probes(image):
-    """PROBE_NAMES_FILL and PROBE_TYPES_FILL, in that order: "add sp,0Ch", its three pushes back,
-    then "or ax,ax" (other probes replace an "add sp,0Ch" the same way)."""
-    import re
-    return [m.start() - 15 for m in re.finditer(re.escape(bytes.fromhex("83c40c" "2eff36")), image)
-            if image[m.start() + 18:m.start() + 20] == bytes.fromhex("09c0")]
+    """PROBE_NAMES_FILL and PROBE_TYPES_FILL, in that order: their handlers, from ALL_VECTORS."""
+    from dsloader.gamepatch import VEC_NAMES_FILL, VEC_TYPES_FILL
+    table = vector_table(image)
+    return [table[VEC_NAMES_FILL][1], table[VEC_TYPES_FILL][1]]
 
 
 def if_framed(image, rest):
@@ -1627,7 +1627,7 @@ class KindTableTests(unittest.TestCase):
         """DSCLOG's weapon kinds by item type are specialize.py's."""
         from dsloader import specialize
         image = load_image()
-        want = bytearray(148)
+        want = bytearray(max(specialize.KIND_OF_TYPE) + 1)
         for t, k in specialize.KIND_OF_TYPE.items():
             want[t] = k + 1
         self.assertGreater(image.find(bytes(want)), 0)
@@ -2070,6 +2070,7 @@ class SpecializeTests(unittest.TestCase):
         staff sling and chatkcha; a grand master one more, as in melee. As specialize.missile_attacks."""
         from dsloader import specialize
         BOW, SLING, STAFF_SLING, CHATKCHA = 1, 64, 0, 48
+        JAVELIN, DARTS = game.JAVELIN_TYPE, game.DARTS_TYPE
         cases = ((4, BOW, 13, (9, 0, 0), (4, 0, 0), (6, 14, 5, 8)),       # bow 3/1 at 1-6
                  (4, BOW, 13, (9, 0, 0), (7, 0, 0), (8, 12, 6, 8)),       # 4/1 at 7 (and mastery)
                  (4, BOW, 13, (9, 0, 0), (9, 0, 0), (10, 12, 6, 10)),     # grand mastery: one more
@@ -2087,7 +2088,16 @@ class SpecializeTests(unittest.TestCase):
                  (4, BOW, 0, (9, 14, 0), (8, 3, 0), (8, 15, 3, 8)),       # a fighter/ranger: the higher level
                  (2, SLING, 0, (13, 0, 0), (6, 0, 0), (2, 15, 3, 8)),     # a ranger's unchosen sling: the game's
                  (2, SLING, 0, (13, 0, 0), (8, 0, 0), (3, 15, 3, 8)),     # ... 3/2 from 7th
-                 (2, SLING, 0, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)))     # not a warrior: the game's
+                 (2, SLING, 0, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)),     # not a warrior: the game's
+                 (2, JAVELIN, 20, (9, 0, 0), (4, 0, 0), (3, 14, 5, 8)),   # the javelin 3/2 at 1-6
+                 (2, JAVELIN, 20, (10, 0, 0), (8, 0, 0), (4, 14, 5, 8)),  # 2/1 at 7-12 (a gladiator)
+                 (2, JAVELIN, 20, (9, 0, 0), (13, 0, 0), (7, 12, 6, 10)),  # 5/2 at 13, grand mastery one more
+                 (4, DARTS, 21, (9, 0, 0), (4, 0, 0), (6, 14, 5, 8)),     # darts 3/1 at 1-6 (the weapon's 2/1)
+                 (4, DARTS, 21, (10, 0, 0), (9, 0, 0), (8, 14, 5, 8)),    # 4/1 at 7-12 (a gladiator)
+                 (4, DARTS, 21, (9, 0, 0), (9, 0, 0), (10, 12, 6, 10)),   # a fighter's grand mastery: one more
+                 (4, DARTS, 0, (9, 0, 0), (6, 0, 0), (4, 15, 3, 8)),      # another kind: the weapon's
+                 (4, DARTS, 0, (9, 0, 0), (8, 0, 0), (6, 15, 3, 8)),      # from 7th, a specialist's 1-6
+                 (2, JAVELIN, 20, (11, 0, 0), (8, 0, 0), (2, 15, 3, 8)))  # not a warrior: the weapon's
         for halves, weapon, kind, classes, levels, want in cases:
             with self.subTest(weapon=weapon, classes=classes, levels=levels):
                 self.assertEqual(self.attack(halves, weapon, chosen=(kind,), classes=classes, levels=levels,
@@ -2867,7 +2877,13 @@ class KindsAllowedTests(unittest.TestCase):
                game.METAL_PICK_TYPE: (1, 4, 0x1772), game.METAL_POLEARM_TYPE: (1, 4, 0x1672),
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
                game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
-               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F)}
+               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F),
+               # (Wake of the Ravager's kinds, npcitems.TYPES' 34th to 42nd, three metal: the double spear and trikal gladiators')
+               game.TWOHAND_SWORD_TYPE: (1, 3, 0x166E), game.LOTULIS_TYPE: (1, 2, 0x167A),
+               game.DOUBLE_SPEAR_TYPE: (1, 0x80, 0x1040), game.TRIKAL_TYPE: (1, 0x80, 0x1040),
+               game.JAVELIN_TYPE: (0x12, 0x83, 0x127F), game.DARTS_TYPE: (0x12, 0x80, 0x1FFB),
+               game.METAL_TWOHAND_SWORD_TYPE: (1, 4, 0x166E), game.METAL_LOTULIS_TYPE: (1, 4, 0x167A),
+               game.METAL_JAVELIN_TYPE: (0x12, 4, 0x127F)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):
@@ -2881,14 +2897,14 @@ class KindsAllowedTests(unittest.TestCase):
     def test_as_the_python(self):
         image = load_image()
         import re
-        start = re.search(rb"\x51\x52\x56\x57\xe8..\x16", image, re.S).start()  # (KINDS_ALLOWED: its kit first)
+        start = re.search(rb"\x51\x52\x56\x66\x57\xe8..\x16", image, re.S).start()  # (KINDS_ALLOWED: its kit first)
         self.assertGreater(start, 0)
         mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where KINDS_ALLOWED returns)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
-        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(148)))  # (KIND_TYPES: the game's and the Loader's)
+        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(game.DARTS_TYPE + 1)))  # (KIND_TYPES: the game's and the Loader's)
         sheet = test_restrict.sheet
         combos = [(9,), (13,), (10,), (11,), (12,), (17,), (9, 12), (9, 17), (9, 11), (13, 5), (13, 12)]
         for c in range(1, 5):
@@ -2901,9 +2917,9 @@ class KindsAllowedTests(unittest.TestCase):
                 for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                     mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                 mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-                got = mu.reg_read(r.UC_X86_REG_AX)
+                got = mu.reg_read(r.UC_X86_REG_EAX)
                 want = restrict.allowed_kinds(s, self.record)
-                self.assertEqual([k for k in range(16) if got >> k & 1], want)
+                self.assertEqual([k for k in range(len(specialize.KINDS)) if got >> k & 1], want)
         old, hdr = game.RULES_IN_FORCE, TSR * 16 + image.find(HDR_SIG)
         try:  # the kits that limit weapons: a Brute's two-handed melee kinds (no missile spec), a Lifebinder's blunt
             game.RULES_IN_FORCE = game.RULE_KITS
@@ -2919,8 +2935,8 @@ class KindsAllowedTests(unittest.TestCase):
                     for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-                    got = mu.reg_read(r.UC_X86_REG_AX)
-                    self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
+                    got = mu.reg_read(r.UC_X86_REG_EAX)
+                    self.assertEqual([k for k in range(len(specialize.KINDS)) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
             from dsloader import kits
             # a Seeker: the bow offered where its sphere allows one (no ranger's expertise with it), never
             # for fire; every kind offered one it can use (restrict.kit_forbids passes it); another
@@ -2961,9 +2977,9 @@ class KindsAllowedTests(unittest.TestCase):
                     for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-                    got = mu.reg_read(r.UC_X86_REG_AX)
+                    got = mu.reg_read(r.UC_X86_REG_EAX)
                     want = restrict.allowed_kinds(bytes(s), self.record)
-                    self.assertEqual([k for k in range(16) if got >> k & 1], want)
+                    self.assertEqual([k for k in range(len(specialize.KINDS)) if got >> k & 1], want)
                     self.assertEqual(chatkcha in want, race == 8)
                     self.assertTrue(set(want) - {chatkcha} <= kits.MELEE_KINDS)
             s = bytearray(sheet(9, 11))  # a half-elf fighter/preserver Spellarcher: the bow only
@@ -2973,7 +2989,7 @@ class KindsAllowedTests(unittest.TestCase):
             for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
             mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-            self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), 1 << specialize.KINDS.index("bow"))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_EAX), 1 << specialize.KINDS.index("bow"))
             self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), [specialize.KINDS.index("bow")])
             s = bytearray(sheet(9, 17))  # a halfling fighter/thief Poisoner: the dagger and short sword
             s[0x18], s[0x43] = 6, 1
@@ -2983,7 +2999,7 @@ class KindsAllowedTests(unittest.TestCase):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
             mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
             poison = [specialize.KINDS.index("dagger"), specialize.KINDS.index("short sword")]
-            self.assertEqual([k for k in range(16) if mu.reg_read(r.UC_X86_REG_AX) >> k & 1], poison)
+            self.assertEqual([k for k in range(len(specialize.KINDS)) if mu.reg_read(r.UC_X86_REG_EAX) >> k & 1], poison)
             self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), poison)
             for cls in (1, 2, 3, 4):  # an elf cleric/fighter Battle Dancer: the long sword and bow, whatever its sphere
                 s = bytearray(sheet(9, cls))
@@ -2994,8 +3010,8 @@ class KindsAllowedTests(unittest.TestCase):
                     for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-                    got = mu.reg_read(r.UC_X86_REG_AX)
-                    self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
+                    got = mu.reg_read(r.UC_X86_REG_EAX)
+                    self.assertEqual([k for k in range(len(specialize.KINDS)) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
                     self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), [0, specialize.KINDS.index("bow")])
             game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_RESTRICT  # an Elementalist's second sphere's kinds too
             for cls, second in ((1, 3), (3, 3), (3, 0), (2, 2)):
@@ -3007,9 +3023,9 @@ class KindsAllowedTests(unittest.TestCase):
                     for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
-                    got = mu.reg_read(r.UC_X86_REG_AX)
+                    got = mu.reg_read(r.UC_X86_REG_EAX)
                     want = restrict.allowed_kinds(bytes(s), self.record)
-                    self.assertEqual([k for k in range(16) if got >> k & 1], want)
+                    self.assertEqual([k for k in range(len(specialize.KINDS)) if got >> k & 1], want)
                     s[0x45] = 0
                     self.assertLessEqual(set(restrict.allowed_kinds(bytes(s), self.record)), set(want))
         finally:
@@ -3020,7 +3036,8 @@ class KindsAllowedTests(unittest.TestCase):
         self.assertIn(specialize.KINDS.index("bow"), restrict.allowed_kinds(sheet(9), self.record))
         fire = restrict.allowed_kinds(sheet(9, 3), self.record)
         self.assertEqual([specialize.KINDS[k] for k in fire],
-                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha"])
+                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha",
+                          "two-handed sword", "javelin"])
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -3584,13 +3601,14 @@ class RuleTests(RingTests):
         self.assertEqual(self.two_handed(5), True)
 
     def tu_info_at(self, image):
-        """DSCLOG's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
-        three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
+        """DSCLOG's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT (its handler in ALL_VECTORS):
+        six calls (FRAME_UP: "add sp,0Ch"), then "mov byte [cs:tu_info],0" and IRET; and the
+        probe's offset."""
         import re
-        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x2e\xc6\x06(..)\x00\xcf",
-                          image, re.S)
+        probe = vector_table(image)[VEC_SPELL_TEXT][1]
+        found = re.compile(rb"(?:\xe8..){6}\x2e\xc6\x06(..)\x00\xcf", re.S).match(image, probe)
         self.assertIsNotNone(found)
-        return TSR * 16 + struct.unpack("<H", found.group(1))[0], found.start()
+        return TSR * 16 + struct.unpack("<H", found.group(1))[0], probe
 
     def test_spell_text_ends_tu_info(self):
         """After the game read a description (SPIN DI, 12 bytes of arguments): SP past them,
@@ -5244,7 +5262,8 @@ class NewSpellTests(RuleTests):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class NamesTests(unittest.TestCase):
-    """The game's name table: room for NAMES_EXTRA more names, and DSCLOG's copied in."""
+    """The game's name table: noted in NAMES_PTR once read with the Loader's names in it (its copy of
+    GPLDATA's NAME chunk, dsloader/itemtables.py: the chunk's length the dword at [BP-4])."""
     NAMES_SEG = 0x5000
 
     def setUp(self):
@@ -5252,46 +5271,41 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fce204" "8356fe00"))  # 50 names of 25 bytes: 4E2h
         fill = fill_probes(image)[0]
-        self.assertGreater(min(size, fill), 0)
-        mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
+        self.assertGreater(fill, 0)
         mu.mem_write(VEC_NAMES_FILL * 4, struct.pack("<HH", fill, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x166D, struct.pack("<HH", 4, self.NAMES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
 
-    def interrupt(self, vector, **regs):
+    def interrupt(self, vector, size=(0x142 + item_names.EXTRA) * 25, **regs):
         mu = self.mu
+        mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, vector, 0x90)))
         for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x602)
         return mu.reg_read(r.UC_X86_REG_SP)
 
-    def test_room(self):
-        """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9300), (0xFF00, 0xFF00 + 1250)):  # (50 names of 25 bytes)
-            self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
-            self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
-            self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
-                                           self.mu.mem_read(SS * 16 + BP - 4, 4)), (1, want))
-
-    def test_filled(self):
-        """In place of "add sp,0Ch": with the chunk read (AX 0), DSCLOG's names after the game's."""
-        names = self.NAMES_SEG * 16 + 4 + 0x142 * 25
-        self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=0), 0x80C)
-        self.assertEqual(bytes(self.mu.mem_read(names, 50)),
-                         b"Ring/Protection".ljust(25, b"\0") + b"Thieves' Tools".ljust(25, b"\0"))
+    def test_noted(self):
+        """In place of "add sp,0Ch": with the chunk read (AX 0) and the Loader's names in it, the
+        table noted; nothing written to it; registers as they were."""
+        self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=0, edi=0xD1D1, es=0xE5E5), 0x80C)
         self.assertEqual(struct.unpack("<HH", self.mu.mem_read(self.hdr + 200, 4)), (4, self.NAMES_SEG))
-        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_BP)],
-                         [0, GAME_DS, BP])
+        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_BP,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_ES)],
+                         [0, GAME_DS, BP, 0xD1D1, 0xE5E5])
 
     def test_not_read(self):
         self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=1), 0x80C)
-        self.assertEqual(bytes(self.mu.mem_read(self.NAMES_SEG * 16 + 4 + 0x142 * 25, 4)), bytes(4))
         self.assertEqual(bytes(self.mu.mem_read(self.hdr + 200, 4)), bytes(4))
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 1)
+
+    def test_the_games_own_chunk(self):
+        """The game's own file read (322 names, no copy of the Loader's): not noted, so the Loader
+        names none of its items."""
+        self.assertEqual(self.interrupt(VEC_NAMES_FILL, size=8050, eax=0), 0x80C)
+        self.assertEqual(bytes(self.mu.mem_read(self.hdr + 200, 4)), bytes(4))
 
 
 def kits_to_level():
@@ -5553,7 +5567,8 @@ class StealthTests(unittest.TestCase):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TypesTests(unittest.TestCase):
-    """The game's item type table: room for TYPES_EXTRA more, and DSCLOG's copied in after."""
+    """The game's item type table: noted, and the Loader's types counted from the game's 115 when
+    the chunk read has them (its copy of GPLDATA's IT1R chunk, dsloader/itemtables.py)."""
     TYPES_SEG = 0x5000
 
     def setUp(self):
@@ -5561,12 +5576,9 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc9402" "8356fe00"))  # 33 types of 20 bytes: 294h
         names_fill, fill = fill_probes(image)
-        self.assertGreater(min(size, fill - names_fill), 0)
-        mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
+        self.assertGreater(fill - names_fill, 0)
         mu.mem_write(VEC_TYPES_FILL * 4, struct.pack("<HH", fill, TSR))
-        # (EXTRA_TYPES: the tail's, loaded with the image; load_image sets TAIL_SEG)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
@@ -5580,32 +5592,26 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 660 bytes more reserved, and after the read
-        DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
+        """The Loader's chunk read (the game's 115 types and its 44 more): the table noted, its types
+        numbered from 115; registers as they were."""
         from dsloader import npcitems
-        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
-        self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2960)
-        self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
-        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
-        at = self.TYPES_SEG * 16 + 115 * 20
-        self.assertEqual(bytes(self.mu.mem_read(at, 20 * len(npcitems.TYPES))), b"".join(npcitems.TYPES))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300 + 20 * len(npcitems.TYPES)))
+        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0, edi=0xD1D1, es=0xE5E5), 0x80C)
         first, off, seg = struct.unpack("<HHH", self.mu.mem_read(self.hdr + 212, 6))
         self.assertEqual((first, off, seg), (115, 0, self.TYPES_SEG))
-        for kind in (24, 54):  # (Grey's Scale's legs and arms)
-            self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + kind * 20 + 0x12, 1)[0], 3)
-        for dagger in (17, 33, 84, 94):  # (the game's daggers: the air cleric's bit set, the rest kept)
-            self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + dagger * 20 + 0x10, 2), b"\x01\x00")
-        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
-        self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
-        # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
-        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 112 * 20 + 0x0C, 1)[0], 6)
-        # (the game's pick, Deepbiter's and the stone picks': the footman's pick's 1d6+1, Skills & Powers)
-        self.assertEqual(npcitems.TYPES[127 - 115][0x0C], 6)  # (the Loader's Metal Pick's too)
-        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
+        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_DI,
+                                                       r.UC_X86_REG_ES)], [0, GAME_DS, 0xD1D1, 0xE5E5])
+
+    def test_the_games_own_chunk(self):
+        """The game's own 115 (no copy of the Loader's): the table noted (for STINK_SIDES), but none
+        of the Loader's types counted in (TYPES_FIRST 0)."""
+        self.mu.mem_write(self.hdr + 212, struct.pack("<H", 115))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
+        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
+        self.assertEqual(struct.unpack("<HHH", self.mu.mem_read(self.hdr + 212, 6)), (0, 0, self.TYPES_SEG))
 
     def test_not_read(self):
-        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2460))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 3180))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=1), 0x80C)
         self.assertEqual(bytes(self.mu.mem_read(self.hdr + 212, 6)), bytes(6))
 
@@ -5850,7 +5856,7 @@ class LevelPickTests(unittest.TestCase):
 
     def run_probe(self, pattern, vector, code, regs, stop):
         import re
-        at = re.search(pattern, self.image, re.S).start()
+        at = vector_table(self.image)[vector][1] if pattern is None else re.search(pattern, self.image, re.S).start()
         mu = self.mu
         mu.mem_write(vector * 4, struct.pack("<HH", at, TSR))
         self.code_at = getattr(self, "code_at", 0x800) + 0x20  # (each its own: the emulator keeps
@@ -5871,10 +5877,10 @@ class LevelPickTests(unittest.TestCase):
             self.run_probe(rb"\x89\xc2\x2e\x80\x3e..\x00\x74\x03\xba\x02\x00", VEC_PK_COUNT, (0xCD, VEC_PK_COUNT, 0x90, 0x90), dict(eax=ax, edx=0x99), 4)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_DX), ax)
             self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), zero)
-        self.run_probe(rb"\x83\xec\x02\x55\x89\xe5\x50.{18}\xc7\x46\x08\x5d\x44", VEC_PK_WIN, (0xCD, VEC_PK_WIN, 0x90), {}, 3)
+        self.run_probe(None, VEC_PK_WIN, (0xCD, VEC_PK_WIN, 0x90), {}, 3)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FA)
         self.assertEqual(struct.unpack("<H", mu.mem_read(SS * 16 + 0x7FA, 2))[0], 0x445D)
-        self.run_probe(rb"\x83\xec\x04\x55\x89\xe5\x50.{18}\x8c\x5e\x0a", VEC_PK_TITLE, bytes((0xCD, VEC_PK_TITLE, 0x90, 0x90)) + bytes(16), {}, 4)
+        self.run_probe(None, VEC_PK_TITLE, bytes((0xCD, VEC_PK_TITLE, 0x90, 0x90)) + bytes(16), {}, 4)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F8)
         self.assertEqual(struct.unpack("<HH", mu.mem_read(SS * 16 + 0x7F8, 4)), (0x3026, GAME_DS))
         after = CALLER * 16 + self.code_at + 2  # (the line's colours, in the pushes after it: the game's)
@@ -6265,20 +6271,21 @@ class KitTests(unittest.TestCase):
             game.RULES_IN_FORCE = old
 
     SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
-    SPEC_SET = rb"\xe8..\xe8..\x2e\x88\x84..\xe8..\xc3"
+    SPEC_SET = rb"\x50\x56\x57\x89\xf7\x31\xf6\x50\xe8"
     # (a new member's sheet at creation's DONE, CR_WEAPONS: no specs and no age, packed)
     AGE_PUT = rb"\x66\x50\x66\x52\x56\x26\x0f\xb6\x77\x18"
 
     def test_spec_layouts(self):
-        """SPEC_GET reads the three layouts alike (a gladiator's four kinds: a byte each up to 2.12,
-        5 bits each in 2.13, base 17 now); SPEC_SET puts any in the new one first, 2.13's age kept
+        """SPEC_GET reads the four layouts alike (a gladiator's four kinds: a byte each up to 2.12,
+        5 bits each in 2.13, base 17 in V2; V3's the first and the others ascending); SPEC_SET puts any in V3, 2.13's age kept
         and no roll known, a roll kept as it was. As game.spec_kinds and game.packed_specs."""
         import re
         for pattern in (self.SPEC_GET, self.SPEC_SET, self.AGE_PUT):
             self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
-        kinds = (1, 16, 9, 2)
+        kinds = (9, 16, 1, 2)
         at = self.SHEET * 16
         five = (sum(k << 5 * i for i, k in enumerate(kinds)) | 0x800000).to_bytes(3, "little") + bytes((30,))
+        base17 = (sum(k * 17 ** i for i, k in enumerate(kinds)) | 7 << 17 | 0xC00000).to_bytes(3, "little") + bytes((30,))
 
         def slots():
             out = []
@@ -6287,18 +6294,36 @@ class KitTests(unittest.TestCase):
                 out.append(self.mu.reg_read(r.UC_X86_REG_AX))
             return tuple(out)
 
-        for name, layout in (("bytes", bytes(kinds)), ("2.13", five), ("base 17", game.packed_specs(kinds, 30, 7))):
+        for name, layout, want in (("bytes", bytes(kinds), kinds), ("2.13", five, kinds), ("base 17", base17, kinds),
+                                   ("V3", game.packed_specs(kinds, 30, 7), (9, 1, 2, 16))):
             with self.subTest(layout=name):
                 sheet = bytes(0x14) + layout + bytes(0x2F)
                 self.mu.mem_write(at, sheet)
-                self.assertEqual(slots(), kinds)
-                self.assertEqual(tuple(game.spec_kinds(sheet)), kinds)
-        for layout, age, roll in ((bytes(kinds), 0, None), (five, 30, None), (game.packed_specs(kinds, 30, 7), 30, 7)):
+                self.assertEqual(slots(), want)
+                self.assertEqual(tuple(game.spec_kinds(sheet)), want)
+        for layout, age, roll in ((bytes(kinds), 0, None), (five, 30, None), (base17, 30, 7),
+                                  (game.packed_specs(kinds, 30, 7), 30, 7)):
             with self.subTest(set_on=layout.hex()):
                 self.mu.mem_write(at, bytes(0x14) + layout + bytes(0x2F))
-                self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=7)
-                self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 16, 9, 7), age, roll))
-                self.assertEqual(slots(), (1, 16, 9, 7))
+                new = list(slots())  # (slot 3 as SPEC_GET reads it now: 2, or V3's 16)
+                new[3] = 22
+                self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=22)
+                self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs(new, age, roll))
+                self.assertEqual(slots(), tuple(game.spec_kinds(bytes(0x14) + game.packed_specs(new))))
+        import random
+        picks = [(22, 21, 20, 19), (17, 0, 0, 0), (0, 0, 0, 0), (3, 22, 0, 0), (19, 18, 0, 0), (1, 2, 3, 4)]
+        rng = random.Random(5)
+        picks += [tuple(rng.sample(range(1, 23), 4)) for _ in range(40)]
+        for many in picks:
+            with self.subTest(many=many):  # (SPEC_SET slot by slot: as game.packed_specs, the first kept first)
+                self.mu.mem_write(at, bytes(0x14) + game.packed_specs((), 4, 2) + bytes(0x2F))
+                for i, k in enumerate(many):
+                    if k:
+                        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=i, eax=k)
+                self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs(many, 4, 2))
+                chosen = [k for k in many if k]
+                chosen = chosen[:1] + sorted(chosen[1:])
+                self.assertEqual(slots(), tuple(chosen + [0] * (4 - len(chosen))))
 
     def test_age_put(self):
         """DONE's AGE_PUT: the new member's +14h..+17h no specs, a roll of its race's dice (0 to the

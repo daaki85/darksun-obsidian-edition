@@ -14,7 +14,7 @@ How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian
 
 ## Contents
 
-- [The sixteen weapon specs](#the-sixteen-weapon-specs)
+- [The twenty-two weapon specs](#the-twenty-two-weapon-specs)
 - [Who picks what](#who-picks-what)
 - [Attacks a round](#attacks-a-round)
 - [Grand mastery's damage](#grand-masterys-damage)
@@ -25,10 +25,15 @@ How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian
 - [Where it shows](#where-it-shows)
 - [In Wake of the Ravager](#in-wake-of-the-ravager)
 
-## The sixteen weapon specs
+## The twenty-two weapon specs
 
-The weapon window's rows, from the top: long sword, club, dagger, short sword; mace, axe, great
-axe, pick; quarterstaff, polearm, gythka, cahulaks; chatkcha, bow, sling, staff sling. They take in
+The weapon window's rows, six to a row, from the top: long sword, club, dagger, short sword, mace,
+axe; great axe, pick, quarterstaff, polearm, gythka, cahulaks; chatkcha, bow, sling, staff sling,
+two-handed sword, lotulis; double spear, trikal, javelin, darts. The last six are Wake of the
+Ravager's kinds, which the mod brings into Shattered Lands ([new items](FEATURES.md#new-items)):
+the double spear and the trikal are for gladiators only, as in the sequel (greyed for a fighter or
+ranger). The sequel's net is left out. The lotulis, double spear and
+trikal have [traits](FEATURES.md#lotulis-and-double-spear) of their own for a specialist. They take in
 the game's weapons of every material and its named ones (Bloodwrath, Swiftbite and the like are
 long swords; [the items by weapon spec](ITEMS.md#by-weapon-spec)); gloves are none. The weapons
 spells make count for specialization as their AD&D weapon: the Flame Blade a long sword (AD&D's
@@ -68,7 +73,8 @@ rate (a grand master one more).
 Missile weapons have a rate of fire of their own in the game, the same for everyone (a bow 2 a
 round, a sling, staff sling or chatkcha 1). With the rule, fighters and gladiators shoot faster
 with a chosen weapon spec, and rangers with theirs and every bow: AD&D's specialist's rate for the
-sling, a step above it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
+sling and javelin, a step above it for the bow, staff sling and chatkcha, and one more a round than the
+weapon's own for darts. From 7th level every warrior shoots
 its other missile weapons faster too, a step behind a specialist, as in melee (AD&D keeps the
 weapon's own rate). Mastery's and grand mastery's bonuses to hit and damage count for missiles too.
 
@@ -77,7 +83,7 @@ By skill and level: a warrior's level is the highest of its fighter, gladiator a
 and Mind Warrior go by their own class's level. 3/2 means one attack one round and two the next;
 — means none at that level, or not that kind of weapon.
 
-| With the weapon | Melee, 1–6 | Melee, 7–10 | Bow, 1–6 | Bow, 7–10 | Sling, staff sling, chatkcha, 1–6 | Sling, staff sling, chatkcha, 7–10 |
+| With the weapon | Melee, 1–6 | Melee, 7–10 | Bow, darts, 1–6 | Bow, darts, 7–10 | Sling, staff sling, chatkcha, javelin, 1–6 | Sling, staff sling, chatkcha, javelin, 7–10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior (clerics, druids, preservers, psionicists, thieves) | 1 | 1 | 2 | 2 | 1 | 1 |
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
@@ -87,6 +93,10 @@ and Mind Warrior go by their own class's level. 3/2 means one attack one round a
 | a thri-kreen Mind Warrior, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | — | — | — | — | 3/2 | 2 |
 | a Battle Mage, Crusader or Mind Warrior, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
+- The **javelin** and **darts** (Wake of the Ravager's) are in the table with the weapons that
+  share their rate: the javelin, 1 a round, with the sling (AD&D's specialist's rate for it, as
+  for its other thrown weapons), and darts, 2 a round, with the bow (AD&D's darts specialist throws
+  one more a round than the weapon's own).
 - A **thri-kreen** throws a chatkcha once more a round than the table says, whatever the rule (2
   instead of 1: AD&D's 2/1 for the thri-kreen's own weapon).
 - With [two weapons](PLAYER-GUIDE.md#two-weapons), the off hand attacks once a round whatever the
@@ -121,6 +131,12 @@ weak material's penalty, STR and mastery's +3 damage add as ever.
 | bow | 1d8 | 1d8 | 1d10 | 1d10 |
 | sling | 1d4 | 1d4 | 1d6 | 1d6 |
 | staff sling | 1d3 | 1d3 | 1d4 | 1d4 |
+| two-handed sword | 1d10 | 3d6 | 1d12 | 3d8 |
+| lotulis | 1d10 | 1d12 | 1d12 | 1d20 |
+| double spear | 1d8 | 1d8 | 1d10 | 1d10 |
+| trikal | 1d10 | 1d10 | 1d12 | 1d12 |
+| javelin | 1d6 | 1d6 | 1d8 | 1d8 |
+| darts | 1d3 | 1d2 | 1d4 | 1d3 |
 
 A bow's, sling's or staff sling's dice are the weapon's own, as the game rolls them for a shot (a
 bow 1d8 with the game's arrows); missile weapons have no large dice of their own. The staff sling's
@@ -139,12 +155,12 @@ the game (or the Loader) has a weapon the character may use, in any material. Th
 
 | A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
 |---|---|---|
-| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow; a Seeker its sphere's, the bow among them where the sphere allows) | the game's bone long sword |
-| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
-| …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow (the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
-| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha | an obsidian long sword |
-| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
+| …of one class, or with thief, preserver or druid | a gladiator all twenty-two; a fighter or ranger all but the double spear and trikal (a ranger not the bow either; a Seeker its sphere's, the bow among them where the sphere allows) | the game's bone long sword |
+| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling, darts | a wooden club |
+| …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling, javelin, darts | an obsidian dagger |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow, two-handed sword, lotulis, javelin, darts (a gladiator the double spear and trikal too; the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
+| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha, two-handed sword, lotulis (the mod's obsidian), javelin | an obsidian long sword |
+| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow, two-handed sword (the mod's bone), darts (a gladiator the double spear and trikal too) | the game's bone long sword |
 
 (The starting weapon is for the weapon spec picked first; [Starting weapons](#starting-weapons) has
 the rest. A ranger but a Seeker never has the bow to choose: its expertise with the bow comes
@@ -181,6 +197,10 @@ sword`). A kit with a weapon spec of its own starts with a plain weapon of it to
 | great axe | bone, the mod's | obsidian (fire, earth) |
 | pick | stone | — |
 | sling, staff sling | leather | — |
+| two-handed sword | obsidian | bone, the mod's (water) |
+| javelin | obsidian | — |
+| lotulis | stone | obsidian, the mod's (fire) |
+| double spear, trikal, darts | wooden | — |
 
 A two-handed weapon held in the hands puts the game's starting shield in the backpack (not a
 half-giant's, with [its rule](FEATURES.md#half-giants-two-handed-weapons)). A bow or staff sling

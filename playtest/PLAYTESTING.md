@@ -124,8 +124,9 @@ Run these in order, from `playtest/`, at the start of every test and again after
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
      memory with `dos/DSCLOG.EXE` (name others to compare them), checks every hooked vector in
      segment 0 points at its handler (two probes on one vector once made every attack's AC 255:
-     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)) and checks the tail's segment
-     and data. Compare code, not the whole image: the variables in it differ once the game runs.
+     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)), checks the tail's segment
+     and data, and checks the game's item types and names in memory are the chunks of the Loader's copy
+     of GPLDATA (`itemtables.py`, memory pass 7) with DSCLOG's notes of them (`types_first` 115). Compare code, not the whole image: the variables in it differ once the game runs.
      To do it by hand, take the offsets from [the helper's
      segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
      block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data
@@ -679,6 +680,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
   comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
   the inventory bar. Escape on Effects goes all the way back to the main menu.
+- **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
+  over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
+  gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
+  A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
+  click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
@@ -690,9 +696,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   fighter/preserver 2/2: four at INT 16-17, two at INT 15), and a click past the last pick lands in
   the weapon window. LEVEL 1 turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks.
 - **The weapon window** (after CHOOSE A SPELL, at DONE; PICK A WEAPON SPECIALTY, or OF EXPERTISE for
-  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46),
-  three rows; the cahulaks are the second row's last (245,78), the bow the third row's second
-  (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
+  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart, **four rows
+  of six since Wake of the Ravager's kinds** (logs/2026-11-23-ravager-weapons.md), the window taller
+  and the rows higher: row four is y 134 (the double spear 75,134, the trikal 109,134), so row one
+  about 35 (the long sword about 72,35). The title is under row four. Before 2026-11-23: three rows
+  from (72,46), the cahulaks (245,78), the bow (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
   obsidian cahulaks ... in place of the bone long sword"). A Battle Dancer's has only the long
   sword (72,46) and the bow in use, a Spellarcher's the bow alone.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after the weapon window PICK A
@@ -745,6 +753,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
 
 ## Inventory, looting, selling and shops
 
+- **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
+  backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
+  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click
+  with `click.py X Y right` at game pixels (the backpack's first column x 195, y 27, 45, 63, 81
+  opened the four boxes; 250,33 closes one): an `xdotool click --window` never reaches the game,
+  whose pointer DOSBox holds (logs/2026-11-25-obsidian-lotulis-bone-great-sword.md).
 - **The inventory screen's places** (from hovering: the name shows in the bar at the bottom; the
   ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest (173,70), left
   hand (173,92), legs (173,128); **the feet** (174,147) (logs/2026-11-09-silent-labels.md; a
@@ -845,7 +859,8 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   chest, `pointer.py walk` then `look` again. The chest itself: [Pehtucl's
   chest](ROUTE.md#pehtucls-chest).
 - **The pens' weapon rack** (logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
-  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no
+  2599), what's in it and where any Thornwall is. In a new game answer Kurzak's greeting first: until then
+  it finds no thing of the rack (logs/2026-11-25-ravager-magic-metal.md). A rack the party emptied has contents 9999 (no
   list). Where it is: [the slave pens](ROUTE.md#the-way-west-the-stalker-pen-and-the-grate).
 
 ## Fights
@@ -963,7 +978,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
    Effects screen comes up; Escape closes it). `panel.sh hide` first (2026-11-20).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
-   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
+   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. So does
+   a member with no Move left at its turn's start (seen after memory edits that moved foes):
+   `untilturn.sh` then presses Tab for ever; click the figure and E, or use `passuntil.sh`
+   (logs/2026-11-23-ravager-weapons.md). A turn
    passed can come straight back (the round's last but one, then first in the next): check the round
    order in the dice log. `stepfight.sh` from the arena gate clicks south until the fight is on. The
    incidents behind these notes are in [HISTORY.md](HISTORY.md).
@@ -975,7 +993,8 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
 
 - **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
   apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
-  all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
+  all "Champion"; `foeset.py C name=S` writes it, logs/2026-11-23-ravager-weapons.md: a tripped
+  foe's lost turn seen that way), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
   combatant number `foeset.py` lists), then `KEEP_HP=1 HEAL=1 sh fightout.sh` (the foes' HP kept,
   the party healed each pass): the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
@@ -1312,7 +1331,7 @@ tools, and where each is described:
 | Subject | Tools |
 |---|---|
 | [The party and the map's people](RESEARCH.md#the-party-and-the-maps-people) | `itemlists.py`, `party.py`, `sheetedit.py`, `thief.py`, `award.py`, `kitset.py`, `scrolltest.py`, `npcgear.py`, `thingsfree.py`, `arenatrip.sh` |
-| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
+| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `specset.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
 | [Fights and foes](RESEARCH.md#fights-and-foes-in-memory) | `foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, `restfixmem.py`, `setmem.py`, `turnwatch.py` |
 | [Spells and powers](RESEARCH.md#spells-and-powers-in-memory) | `spellsetup.py`, `turnsetup.py`, `powers.py`, `setmem.py power=` |
 | [Creation and levels](RESEARCH.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |

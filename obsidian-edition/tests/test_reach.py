@@ -25,6 +25,7 @@ RULE = 8192                 # RULES_HI's RULE_HI_CAHULAKS
 TYPES = 0xB000              # (the item types here)
 OVERLAY = 0xD000            # (overlay 612Eh's code, loaded here)
 POLEARM, METAL_POLEARM, LONG_SWORD, SHIELD, BOW = 19, game.METAL_POLEARM_TYPE, 81, 4, 1
+TRIKAL, LOTULIS, DOUBLE_SPEAR = game.TRIKAL_TYPE, game.LOTULIS_TYPE, game.DOUBLE_SPEAR_TYPE
 RIGHT, LEFT, MISSILE, PACK = 3, 10, 2, 0xFF
 # The distance routine's melee callers: (DSUN.EXE's segment, the way back's IP), and DSUN.EXE's offset
 RESIDENT = ((0x1587, 0x2B7A), (0x1587, 0x0AC5), (0x1587, 0x04B8), (0x1587, 0x1C36), (0x1A0A, 0x3071),
@@ -60,6 +61,13 @@ class LoaderTests(unittest.TestCase):
         kind = specialize.KINDS.index("polearm")
         self.assertEqual(kind + 1, 10)
         self.assertEqual(sorted(t for t, k in specialize.KIND_OF_TYPE.items() if k == kind), [19, 111, METAL_POLEARM])
+
+    def test_trikal_kind(self):
+        """The trikal, a pole with three blades, reaches too: kind_of_type's 20 (DSCLOG's TRIKAL_KIND), its
+        type alone."""
+        kind = specialize.KINDS.index("trikal")
+        self.assertEqual(kind + 1, 20)
+        self.assertEqual([t for t, k in specialize.KIND_OF_TYPE.items() if k == kind], [TRIKAL])
 
     @unittest.skipUnless(os.environ.get("DSUN_GPLDATA"), "DSUN_GPLDATA (the game's GPLDATA.GFF) not given")
     def test_game_types(self):
@@ -127,7 +135,7 @@ class ReachTests(tc.CahulaksTests):
         super().setUp()
         mu = self.mu
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, TYPES))
-        for t, flags in ((POLEARM, 1), (METAL_POLEARM, 1), (LONG_SWORD, 1), (SHIELD, 4), (BOW, 0x0A), (102, 0)):
+        for t, flags in ((POLEARM, 1), (METAL_POLEARM, 1), (TRIKAL, 1), (LOTULIS, 1), (DOUBLE_SPEAR, 1), (LONG_SWORD, 1), (SHIELD, 4), (BOW, 0x0A), (102, 0)):
             mu.mem_write(TYPES * 16 + t * 20, bytes((flags,)))
         for ip in OVERLAY_RETS:  # (the overlay's code around its two ways back, as loaded)
             mu.mem_write(OVERLAY * 16 + ip - 5, bytes.fromhex("9aa52b0010") + bytes.fromhex("83c4048946f6"))
@@ -182,8 +190,9 @@ class ReachTests(tc.CahulaksTests):
         return mu.reg_read(r.UC_X86_REG_AX)
 
     def test_polearm_alone(self):
-        """A polearm in either hand, the other empty, from every melee caller: 2 is 1; 1 and 3 kept."""
-        for kind in (POLEARM, METAL_POLEARM):
+        """A polearm or a trikal in either hand, the other empty, from every melee caller: 2 is 1; 1 and 3
+        kept."""
+        for kind in (POLEARM, METAL_POLEARM, TRIKAL):
             for slot in (RIGHT, LEFT):
                 self.hands((kind, slot))
                 for back in RESIDENT + tuple((OVERLAY, ip) for ip in OVERLAY_RETS):
@@ -202,10 +211,12 @@ class ReachTests(tc.CahulaksTests):
         self.assertEqual(self.distance(), 1)
 
     def test_another_weapon(self):
-        """Another weapon in a hand (a long sword, a second polearm, a bow), or no polearm: 2 kept."""
+        """Another weapon in a hand (a long sword, a second polearm, a bow), or no polearm (the lotulis and
+        double spear none): 2 kept."""
         for items in (((POLEARM, RIGHT), (LONG_SWORD, LEFT)), ((LONG_SWORD, RIGHT), (POLEARM, LEFT)),
                       ((POLEARM, RIGHT), (METAL_POLEARM, LEFT)), ((POLEARM, RIGHT), (BOW, LEFT)),
-                      ((LONG_SWORD, RIGHT),), ((SHIELD, LEFT),), ((POLEARM, PACK),), ((POLEARM, MISSILE),), ()):
+                      ((LONG_SWORD, RIGHT),), ((SHIELD, LEFT),), ((POLEARM, PACK),), ((POLEARM, MISSILE),), (),
+                      ((TRIKAL, RIGHT), (LONG_SWORD, LEFT)), ((LOTULIS, RIGHT),), ((DOUBLE_SPEAR, RIGHT),)):
             self.hands(*items)
             self.assertEqual(self.distance(), 2, items)
 

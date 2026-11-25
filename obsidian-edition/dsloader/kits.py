@@ -57,7 +57,7 @@ METAL, LEATHER, NO_MATERIAL_BIT = 4, 5, 0x40
 # a Lifebinder's weapon kinds (specialize.KINDS' numbers): club, mace, quarterstaff, sling, staff sling
 BLUNT = frozenset((1, 4, 8, 14, 15))
 # a Shinobi's: dagger, short sword, quarterstaff, chatkcha, bow, sling, staff sling
-SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15))
+SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15, 21))
 SHINOBI = KIT_IDS["Shinobi"]
 BOW = 13  # (the bow's weapon kind: every ranger's expertise but a Seeker's, whose sphere decides)
 # an Elementalist's second sphere: the low three bits of the sheet's byte SPHERE2, 0 none, else the
@@ -70,7 +70,7 @@ BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # a Crusader's and a Mind Warrior's one weapon spec of expertise (DSCLOG's SPEC_OF_SHEET): any
 # melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
 WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
-MELEE_KINDS = frozenset(range(12))
+MELEE_KINDS = frozenset(range(12)) | frozenset(range(16, 20))  # (and Wake of the Ravager's four)
 # ... and a thri-kreen Mind Warrior's the chatkcha as well (DSCLOG's KIT_KREEN_KINDS)
 KREEN_WARRIOR_KINDS = frozenset((12,))
 # a Poisoner's weapon specs to choose from (DSCLOG's KIT_POISON_KINDS): the dagger and short sword

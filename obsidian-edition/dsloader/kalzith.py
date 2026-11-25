@@ -574,8 +574,10 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     Semyon's, semyon.py; Dinos's and the Trustee's questions, pensasks.py; Alagorn on Kreenfang
     and Shadowseeker, alagorn.py), each part only if switched on (the Options tab's new content)."""
     chunks = read_gff(gpldata)
+    from . import itemtables  # the item types and names, the Loader's after the game's (itemtables.py): always
+    items = itemtables.chunks(chunks)
     if ("MAS ", MASTER) not in chunks:
-        return {}
+        return items
     field_types = next((v for k, v in chunks.items() if k[0] == "GPLX"), b"")[gpl.FIELD_TYPES_AT:]
     out: Dict[Tuple[str, int], bytes] = {}
     # The scripts the pens' commands run (Kalzith's and Semyon's talks, the chest's use) and their
@@ -642,6 +644,7 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
             changed = rg.with_xp(out.get(body, chunks[body]), field_types, chunks[body])
             if changed != out.get(body, chunks[body]):
                 out[body] = changed
+    out.update(items)
     return out
 
 
