@@ -25,6 +25,8 @@ Use the exposed torso, shoulder armor and robe to check the new figure before bo
 | New figure → fitted parent → retail figure in motion | Locate the new figure’s shoulder, crossing forearm, waist and advancing knee on each cel. Watch where a sleeve ends and where the hem lifts, then follow both back to idle. On the Mul, the borrowed sleeves extended past the rear elbows and the profile hem followed the human stride. Check for isolated cloth pixels inside the silhouette as well as holes through it. [Mul robe in motion](mul-cleric-fitting.gif) |
 | Finished skin, leather and linen beside retail materials | At 1×, check that the face separates from the collar, bare limbs turn from light into shadow, and the garment reads against sand and paving. Enlarge to inspect folds, hide edges and highlights, then replay at 1× for flicker. Save a labeled close-up of the hardest overlap alongside the full-pose sheet. |
 
+Use the clean body to mark where each garment touches the shoulder, ribs and hip. Reuse those anatomical points across classes and trace each armhole, fastening and hem for the garment that owns it. Using the painted Mul Cleric robe to place three other outfits gave a tunic and two capes the same fit. Compare their silhouettes together in front idle, rear walk and profile stride before carrying those garments into multiclasses. [Mul fitting comparison](mul-singles-fit.gif)
+
 If the defect starts on the clean body, correct the body first. If dressing it causes the defect, correct the garment, then replay every single and multiclass that inherits it. During equipment review repeat the difficult pose with the relevant slot empty, equipped and removed.
 
 ## Human figure review checklist

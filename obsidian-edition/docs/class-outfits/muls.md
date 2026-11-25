@@ -4,6 +4,12 @@ Shattered Lands uses one map figure for male and female Muls. All six single cla
 
 ## Druid, Psionicist and Thief
 
+The fitting comparison shows the previous outfits from `a42a969` on the top row and the revisions below. The cleaned Mul on the left gives both rows the same shoulder, waist and foot reference. In front idle (00), follow the Druid’s mantle across the ribs, the Psionicist’s wrap from its single shoulder to the far hip, and the Thief’s cloak down one flank. In rear walk step two (08), the free corner of each cape follows the weight on the advancing leg. In profile step two (12), watch the near arm cross the cloth while the fold continues behind the shoulder.
+
+![Previous and refitted Mul Druid, Psionicist and Thief beside the same body, enlarged and at game size](mul-singles-fit.gif)
+
+### Retail comparison
+
 The top row shows the retail Mul followed by the three new outfits. The small copies beneath each figure show game size on sand and paving. The bottom row follows the retail Warrior, Mage and Thief alongside the approved human Druid and Psionicist. A retail reference returns to idle when its picture set lacks the corresponding action.
 
 ![Mul Druid, Psionicist and Thief through all 29 poses beside retail figures and human references](mul-singles.gif)
@@ -11,7 +17,7 @@ The top row shows the retail Mul followed by the three new outfits. The small co
 | Outfit | Where to look |
 |---|---|
 | Druid | In profile step two (12) the short green cape swings back from the shoulder and the ochre wrap follows the forward thigh. In rear step two (08) the curved folds part above the wrap. |
-| Psionicist | The sleeveless teal tunic follows the open neckline. In side bow (26), follow the copper draw hand across the folded chest and the leather tie at the waist. |
+| Psionicist | The teal wrap sits on one shoulder, crosses the ribs and tucks under the angled belt. In side bow (26), follow the copper draw hand across the folded chest and the leather tie at the waist. |
 | Thief | Compare side idle (02) with the four profile steps (11–14). The hood rim follows the brow, its back seam falls toward the shoulder, and the longer slate cloak swings behind the stride. Front strike two (16) shows the cheek and jaw inside the opening. |
 
 The frame review covered all 87 new dressed poses. It checked the visible hand and bow pixels against the underlying figure and examined the Thief’s face opening separately from its covered crown. The silhouettes were checked for new enclosed gaps and detached pixels. The approved body, Gladiator, Fighter and Cleric match the earlier pose sheet in all 29 poses.

@@ -16,105 +16,129 @@ REAR = {1, 7, 8, 9, 10, 18, 19, 20, 25}
 PROFILE = {2, 11, 12, 13, 14, 15, 22, 23, 26}
 TEAL = (17, 69, 70, 71, 40, 72, 73)
 MOSS = (208, 69, 188, 53, 189, 54, 226, 55, 227)
-# Back corner of the long cloak in each profile and deep lean. The second
-# step lifts the corner behind the hip. The fourth drops it toward the heel.
-TRAIL = {2: (-2, 21), 11: (-2, 20), 12: (-3, 18), 13: (-4, 19), 14: (-1, 21),
-         15: (-3, 21), 17: (19, 15), 21: (2, 19), 22: (-3, 18), 23: (-3, 16),
-         24: (1, 21), 26: (0, 23), 27: (19, 11)}
-
-SHORT_TRAIL = {2: (0, 17), 11: (0, 17), 12: (-2, 16), 13: (-2, 17), 14: (1, 18),
-               15: (-1, 18), 17: (17, 13), 21: (4, 16), 22: (0, 16), 23: (0, 14),
-               24: (1, 18), 26: (2, 19), 27: (16, 10)}
+# Trace the pleat over the leading thigh and both free corners on the retail
+# figure. A short mantle breaks above the hip; the slate fall clears the calf.
+# Coordinates are (near thigh x, y, mantle tip x, y, cloak tip x, y).
+CUT = (
+    (8, 19, 5, 16, 4, 21), (15, 19, 15, 17, 17, 23), (3, 19, 0, 16, -2, 21),
+    (7, 19, 4, 16, 3, 21), (11, 19, 4, 15, 3, 20), (12, 19, 4, 16, 3, 20),
+    (7, 19, 4, 15, 3, 21), (5, 19, 10, 17, 12, 22), (5, 19, 10, 17, 11, 23),
+    (10, 19, 12, 17, 13, 21), (11, 19, 12, 18, 14, 22),
+    (5, 19, 0, 16, -2, 20), (10, 19, -1, 15, -4, 18), (5, 20, -2, 16, -4, 19),
+    (7, 19, 1, 17, -1, 21), (6, 19, 0, 17, -2, 20), (8, 15, 6, 13, 4, 16),
+    (8, 16, 16, 13, 19, 15), (8, 18, 9, 17, 11, 21), (10, 18, 12, 17, 14, 20),
+    (13, 19, 14, 16, 16, 20), (10, 19, 4, 16, 2, 20), (6, 18, 0, 15, -3, 18),
+    (6, 16, 0, 14, -2, 17), (6, 19, 2, 16, 0, 20), (10, 21, 12, 20, 14, 24),
+    (8, 22, 3, 18, 0, 22), (9, 14, 16, 9, 19, 10), (7, 16, 4, 15, 2, 18),
+)
+SIDE_FALL = PROFILE | {17, 21, 24, 27}
+SLATE = RAMPS["slate"]
 
 
 def shade(ramp, light):
     return ramp[max(0, min(len(ramp)-1, round(light)))]
 
 
+def panel(points):
+    left = min(x for x, y in points)
+    top = min(y for x, y in points)
+    width = max(x for x, y in points)-left+1
+    height = max(y for x, y in points)-top+1
+    mask = Image.new("1", (width, height))
+    ImageDraw.Draw(mask).polygon([(x-left, y-top) for x, y in points], fill=1)
+    return {(x+left, y+top) for y in range(height) for x in range(width) if mask.getpixel((x, y))}
+
+
 def cape(pose, short):
-    shoulder, ribs, waist, hem, lift = fit.ROBE_CUTS[pose]
-    sy, sl, sr = shoulder
-    wy, wl, wr = waist
+    (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = fit.ROBE_CUTS[pose]
+    knee, _, mx, my, cx, cy = CUT[pose]
+    tx, ty = (mx, my) if short else (cx, cy)
     hip = (wl+wr)//2
-    if pose == 27:
-        # Recoil sends the cloth into the space under the raised arm.
-        # The bent thigh stays visible below the fold.
-        points = (((9, 6), (12, 6), (16, 8), (15, 10), (12, 10), (8, 9)) if short else
-                  ((9, 6), (12, 6), (15, 7), (19, 7), (18, 10), (16, 12), (10, 12), (8, 10)))
-    elif pose in TRAIL:
-        tx, ty = SHORT_TRAIL[pose] if short else TRAIL[pose]
-        right = tx > hip
-        near = wr if right else wl
-        shoulder_x = sr if right else sl
-        edge = 1 if right else -1
-        points = ((shoulder_x, sy), (shoulder_x+edge, sy+3), (tx, ty-1),
-                  (tx-edge, ty), (near, ty-1), (hip, wy+1), (hip, ribs[0]))
+    if pose in SIDE_FALL:
+        # The outside edge runs behind the near shoulder. Its inner return
+        # crosses the hip before it folds back to the flying corner.
+        sign = 1 if tx > hip else -1
+        shoulder = sr if sign == 1 else sl
+        flank = wr if sign == 1 else wl
+        root = (shoulder-sign, sy+1)
+        high = ((shoulder+tx)//2, (sy+ty)//2-1)
+        points = (root, high, (tx, ty-1), (tx, ty), (tx-sign*2, ty),
+                  (flank, wy+(1 if short else 3)), (hip, wy), (hip, ry+1))
+    elif pose in REAR:
+        # Let the back turn in at the far armpit. The loaded hip pushes one
+        # fold outward; the other corner sits higher on the swinging leg.
+        far_x = wl-1 if short else min(wl-1, knee-1)
+        far_y = wy if short else ty-3
+        points = ((sl+1, sy+1), (sr-1, sy), (rr, ry+1),
+                  (tx-1, wy+1), (tx, ty), (tx-2, ty+1),
+                  (hip, ty-1), (far_x, far_y), (rl+1, ry+1))
     else:
-        ey = wy+2 if short else hem[0]
-        if pose == 28:
-            ey -= 1
-        left, right = (wl-2, wr+1) if short else (hem[1]-1, hem[2]+1)
-        points = ((sl, sy), (sr, sy), (sr, ribs[0]), (right, ey-max(0, lift)),
-                  (right-2, ey-max(0, lift)+1), (hip+1, ey-1),
-                  (hip-2, ey+1), (left, ey-max(0, -lift)), (sl, ribs[0]))
-    # Rasterize in native coordinates, allowing the flying corner outside
-    # the original bounding box as in the retail cloaks.
-    mask = Image.new("1", (64, 54))
-    ImageDraw.Draw(mask).polygon([(x+fit.PAD, y) for x, y in points], fill=1)
-    return {(x-fit.PAD, y) for y in range(mask.height) for x in range(mask.width) if mask.getpixel((x, y))}
+        # Viewed from the front the fastened cloth sweeps from the far
+        # clavicle towards the near flank. It leaves the opposite hip free.
+        attach = (sl+3, sy+2)
+        chest = (wr-1, wy-2)
+        if short:
+            points = ((sl, sy+1), attach, (hip, ry+1), chest, (wl+2, wy),
+                      (tx+1, ty), (tx, ty), (rl, ry+3))
+        else:
+            points = ((sl+1, sy+1), attach, (hip, ry+1), chest, (wl+2, wy),
+                      (wl+1, ty-2), (tx, ty+1), (tx-1, ty), (rl, ry+2))
+    cloth = panel(points)
+    if not short:
+        # Turn the lining over the projected calf at the overlap.
+        cloth.update({4: ((5, 20),), 8: ((6, 22),), 11: ((2, 19), (1, 20)),
+                      19: ((3, 13),)}.get(pose, ()))
+    return cloth
+
+
+# The outer shoulder rolls forward and back under the cape in profile.
+# Trace its turn down to the rear armhole before releasing the loose hem.
+PROFILE_YOKE = {
+    2: ((4, 5), (2, 6), (0, 9), (1, 12), (4, 10), (5, 7)),
+    11: ((6, 5), (4, 6), (2, 9), (2, 12), (5, 10), (7, 7)),
+    12: ((10, 4), (7, 6), (4, 9), (4, 12), (7, 10), (10, 7)),
+    13: ((6, 4), (3, 6), (1, 9), (1, 12), (4, 10), (6, 7)),
+    14: ((8, 4), (5, 5), (3, 7), (3, 11), (6, 10), (8, 7)),
+}
 
 
 def thief_hood(pose):
     """Round crown, open cheeks, and a trailing nape around the Mul's own head."""
     left, top, spans = fit.HEADS[pose]
     shell = set()
-    for y, (a, b) in enumerate(spans):
-        # Extend the crown outline by a pixel at the turn; its lower edge
-        # leaves the brow and cheek as native skin in front and in profile.
-        lo = left+a-(1 if y < 5 else 0)
-        hi = left+b+(1 if y < 3 or pose in REAR else 0)
-        for x in range(lo, hi+1):
-            crown = y < 2
-            if pose in REAR:
-                crown = True
-            elif pose in PROFILE:
-                crown |= x < left+a or (y == 2 and x < left+a+2)
-            else:
-                crown |= x < left+a or x > left+b
-            if crown:
-                shell.add((x, top+y))
-    # Drape the temple panels over the shoulders. On the backswing the
-    # left arm is raised behind the head, so the far panel disappears.
     sy, sl, sr = fit.ROBE_CUTS[pose][0]
+    for y, (a, b) in enumerate(spans):
+        # Keep the original crown height. Turn the rim behind the temple
+        # instead of running a second contour around the whole face.
+        lo = left+a-int(1 <= y <= 4)
+        hi = left+b+int(1 <= y <= 2)
+        for x in range(lo, hi+1):
+            if (pose in REAR or y < 2 or
+                    (y == 2 and (x <= left+a or (pose not in PROFILE and x >= left+b))) or
+                    x < left+a or (pose not in PROFILE and x > left+b)):
+                shell.add((x, top+y))
     if pose in REAR:
-        shell.update((left+x, top+y) for y in range(len(spans)-1, len(spans)+3)
-                     for x in range(1, 5))
+        # The hood lining falls over the far shoulder blade. Its shadow
+        # overlaps the back of the cloak even on the shortest rear stride.
+        last = top+len(spans)-1
+        shell |= panel(((left, top+3), (left+5, top+3), (left+5, last),
+                        (sr-2, sy+3), (left+3, sy+5), (left+1, last+1)))
     else:
-        bends = [(left-1, sl)]
-        if pose in (17, 27):
-            bends = []
+        near = left-1
+        if pose not in (17, 27):
+            shell |= panel(((near, top+2), (left+1, top+2), (left, top+4),
+                            (sl+1, sy+3), (sl, sy+2), (near, top+4)))
         if pose not in PROFILE:
-            bends.append((left+max(b for _, b in spans)+1, sr))
-        for temple, shoulder in bends:
-            last = max(top+6, sy+3)
-            for y in range(top+2, last+1):
-                t = (y-top-2)/(last-top-2)
-                x = round(temple*(1-t) + shoulder*t)
-                outer = -1 if temple < left else 1
-                shell.update(((x, y), (x+outer, y)))
-        # Blend the crown into the rims on either side of the open brow.
-        a, b = spans[2]
-        shell.add((left+a, top+2))
-        if pose not in PROFILE:
-            shell.add((left+b, top+2))
-    # Return the inner lip of the flared temple to the cheek contour.
-    # These cells are floor on the bare head, visible between brim and rim.
-    returned = {0: ((15, 3), (15, 4)), 3: ((14, 4),), 4: ((13, 3), (13, 4), (5, 5)),
-                6: ((14, 4), (14, 5)), 10: ((4, 5),), 21: ((12, 4),),
-                24: ((11, 7),), 28: ((15, 3),)}
-    shell.update(returned.get(pose, ()))
-    if pose == 17:
-        shell.difference_update(((3, 6), (2, 8)))
+            far = left+max(b for _, b in spans)
+            if pose in (17, 27):
+                shell |= panel(((far, top+2), (far+1, top+3), (sr-1, sy+3),
+                                (sr-2, sy+3), (far, top+4)))
+            else:
+                shell.add((far+1, top+3))
+    if pose == 18:
+        shell.add((9, 7))
+    if pose == 28:
+        shell.add((15, 3))
     return shell
 
 
@@ -135,20 +159,27 @@ def draw(game, pose, swatches):
         ImageDraw.Draw(arm).line((elbow, bend, wrist), fill=1, width=thickness)
         limbs.update((x, y) for y in range(h) for x in range(w) if arm.getpixel((x, y)))
     protected = fit.head_pixels(pose, w, h) | fit.neckline_pixels(pose, w, h)
-    cuts = fit.ROBE_CUTS[pose]
-    sy, sl, sr = cuts[0]
-    wy, wl, wr = cuts[2]
+    shoulder, ribs, waist, _, _ = fit.ROBE_CUTS[pose]
+    sy, sl, sr = shoulder
+    ry, rl, rr = ribs
+    wy, wl, wr = waist
+    knee, knee_y, mx, my, cx, cy = CUT[pose]
     hip = (wl+wr)/2
+    # Armholes turn inside the deltoids. Trace a separate waist and thigh
+    # for the short tunic so the stride can lift one skirt flap at a time.
+    torso = panel(((sl+2, sy+1), (sr-2, sy+1), (rr-1, ry+1), (wr, wy),
+                   (wl, wy+1), (rl+1, ry+1)))
+    skirt = panel(((wl, wy-1), (wr, wy-1), (wr+1, knee_y-2),
+                   (knee+1, knee_y), (knee-1, knee_y), (wl-1, knee_y-2)))
+    # At front step four the off hand passes the hip. Pull the far corner
+    # in against the thigh to leave open air beneath the elbow.
+    if pose == 6:
+        skirt.discard((14, 16))
+        skirt.discard((14, 17))
     panels = {"Druid": cape(pose, True), "Thief": cape(pose, False)}
-    # At a swinging elbow open the cape back out to the floor, or continue
-    # its lining behind the wrist when that side of the cape is on top.
-    for role, panel in panels.items():
-        if pose == 10:
-            panel.add((2, 13))
-        if role == "Druid":
-            for pt in {0: ((4, 13),), 6: ((16, 12), (15, 13), (15, 14)),
-                       12: ((3, 16),), 13: ((0, 17), (1, 17)), 14: ((3, 18),), 17: ((15, 13),)}.get(pose, ()):
-                panel.add(pt)
+    yoke = panel(PROFILE_YOKE[pose]) if pose in PROFILE_YOKE else set()
+    for cloth in panels.values():
+        cloth.update(yoke)
     hood = thief_hood(pose)
     face = fit.head_pixels(pose, w, h)
     hx, hy, spans = fit.HEADS[pose]
@@ -164,46 +195,72 @@ def draw(game, pose, swatches):
             grain = swatches["slate"][(y-wy) % 8][(x-wl) % 8]
             depth = (y-sy)/(wy-sy)
             axis = (sl+sr)/2 + (hip-(sl+sr)/2)*min(max(depth, 0), 1)
+            offset = x-axis
+            # Carry the light on the native pecs, scapula and lifted knee
+            # into close-fitting cloth. Free cloth has its own fold shading.
+            light = 0 if skin is None else (game.palette[skin][0]-149)/56
             if point not in protected:
-                # Use the proven armhole and neckline of the Mul tunic,
-                # then fit the shorts to each leg inside its native silhouette.
-                tailored = skin is not None and rows["Cleric"][py][i] != skin
-                if tailored and y <= wy+4:
-                    u = (x-axis)/max(2, (wr-wl)*.58)
-                    grain_light = .70*grain - 1.4*abs(u+.23)
-                    for role, ramp in (("Druid", RAMPS["ochre"]), ("Thief", RAMPS["hide"]), ("Psionicist", TEAL)):
-                        light = .62*(len(ramp)-1) + grain_light
-                        if role == "Psionicist":
-                            # Narrow diagonal folds curve across the rib cage.
-                            light = 3.65 + .35*grain - .8*abs(u+.2) + 1.05*cos((y-sy)*.8 + (x-axis)*.51)
-                        else:
-                            light += 1.7*cos(x-axis+.32*(y-wy))
-                        if y == wy or (y == wy+1 and u < -.55):
-                            color = 94 if u < 0 else 89
-                        else:
-                            color = shade(ramp, light - (1.2 if y > wy else 0))
-                        out[role][py][i] = color
-                for role, panel in panels.items():
-                    if (x, y) not in panel:
+                if (x, y) in skirt and y >= wy-1:
+                    # Lapped hide spans the space between the thighs.
+                    # Turn the free edge up over the advancing leg.
+                    across_hip = (x-hip)/max(2, (wr-wl)/2)
+                    lap = x-knee-.45*(knee_y-y)
+                    light_hide = 6.2+.47*grain-.73*abs(across_hip)-2.3*(0 <= lap < 1.4)
+                    if (x, y+1) not in skirt:
+                        light_hide -= 1.8
+                    out["Druid"][py][i] = shade(RAMPS["ochre"], light_hide)
+                if skin is not None and ((x, y) in torso or (x, y) in skirt):
+                    u = offset/max(2, (wr-wl)/2)
+                    belt = wy - round(.7*u) - int(.55 < abs(u) < 1.2)
+                    relief = .55*grain + light
+                    hides = RAMPS["hide"]
+                    out["Thief"][py][i] = shade(hides, 6.3+relief-2.1*abs(u+.22))
+                    wrap = y-ry + .40*offset
+                    teal = 3.4 + .74*light + .28*grain - .85*abs(u+.25)
+                    teal += .7*cos(1.12*wrap)
+                    # One shoulder bears the wrap. Its upper edge crosses
+                    # the ribs on the way to the opposite hip. The belt
+                    # holds a short overlapping flap against the near thigh.
+                    side = -1 if pose in REAR else 1
+                    across = max(-1, min(1, side*u))
+                    edge = sy+1+round((1+across)*.42*(wy-sy))
+                    if pose in SIDE_FALL:
+                        edge = sy+1+round((1+across)*.20*(wy-sy))
+                    if y > wy:
+                        teal -= .40 + .19*abs(x-knee)
+                    if y >= edge:
+                        if y == edge:
+                            teal += .7
+                        out["Psionicist"][py][i] = shade(TEAL, teal)
+                    if y == belt:
+                        buckle = 96 if abs(x-knee) < 1 else 90
+                        for role in NEW:
+                            out[role][py][i] = buckle
+                for role, cloth in panels.items():
+                    if (x, y) not in cloth:
                         continue
-                    # Keep arms and the front opening on top. In profile
-                    # only the trailing side crosses the visible tunic.
-                    if skin is not None:
-                        if not tailored and (pose not in REAR or y <= wy):
+                    # The flesh outside the armhole is in front of the drape.
+                    # Below the elbow keep its free edge separate from the arm.
+                    if skin is not None and y <= wy and (x, y) not in torso and (x, y) not in yoke:
+                        if y > ry or not sl <= x <= sr:
                             continue
-                        if pose in TRAIL:
-                            direction = 1 if TRAIL[pose][0] > hip else -1
-                            if (x-axis)*direction < .6:
-                                continue
-                        elif pose not in REAR and abs(x-axis) < (.7+2*min(1, max(0, depth))):
-                            continue
-                    ramp = MOSS if role == "Druid" else RAMPS["slate"]
-                    swing = (TRAIL[pose][0]-hip)*.52 if pose in TRAIL else cuts[3][1]-wl
-                    fold = x-axis - swing*min(depth, 1.7)
-                    light = .57 + .14*cos(.94*fold+.65*depth) + .045*grain
-                    if (x+1, y) not in panel or (x, y+1) not in panel:
-                        light -= .21
-                    out[role][py][i] = shade(ramp, light*(len(ramp)-1))
+                    tx, ty = (mx, my) if role == "Druid" else (cx, cy)
+                    along = min(1, max(0, (y-sy)/(ty-sy)))
+                    ridge = (sl+sr)*.5 + (tx+1-(sl+sr)*.5)*along
+                    dist = x-ridge
+                    fold_width = max(3, abs(wr-wl)*.64)
+                    fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .045*grain
+                    if pose in REAR and y < wy:
+                        fall += .06*(1-abs(offset)/(wr-wl+1))
+                    if y < ry+1 and skin is not None:
+                        fall += .06*light
+                    if (x+1, y) not in cloth or (x, y+1) not in cloth:
+                        fall -= .20
+                    ramp = MOSS if role == "Druid" else SLATE
+                    color = shade(ramp, fall*(len(ramp)-1))
+                    if role == "Druid" and pose not in REAR | SIDE_FALL and (x, y) == (wr-1, wy-2):
+                        color = 169
+                    out[role][py][i] = color
             if (x, y) in hood:
                 # Leave the eye, ear, cheek and jaw exactly as drawn on the
                 # clean head, including the low face on the second strike.
@@ -212,14 +269,44 @@ def draw(game, pose, swatches):
                 k = min(len(spans)-1, max(0, y-hy))
                 a, b = spans[k]
                 across = (x-hx-a)/max(1, b-a)
-                light = 10.6 - 6*abs(across-.28) - .67*k + .50*grain
+                light = 9.8 - 7*abs(across-.33) - .38*k + .50*grain
+                if k >= 3:
+                    # The cowl turns onto the shoulder outside the crown's
+                    # width. Shade the roll locally where it meets the cape.
+                    light = 6.9 + .65*grain + 1.15*((x-1, y) not in hood)
+                    if pose in REAR:
+                        light += .9*(x <= hx+2)
                 if (x, y+1) not in hood or (x+1, y) not in hood:
-                    light -= 2
+                    light -= 1.8
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)
     return rows | out
 
 
-def render(game_dir, output):
+def fit_comparison(game, pose, rows, sand, previous):
+    roles = fit.ROLES + NEW
+    page = Image.new("RGB", (810, 524), dwarf.PAPER)
+    label(page, (12, 7), "Mul outfit fit", 20)
+    label(page, (797, 8), f"{pose:02}   {dwarf.NAMES[pose]}", 16, "ra")
+    for col, role in enumerate(("Body base",) + NEW):
+        left = 91 + col*179
+        label(page, (left+80, 42), role, 16, "ma")
+        # Read the earlier render directly from the lossless full-pose
+        # sheet. Both tiles have the same floor origin and native scale.
+        x = 123 + roles.index(role)*110
+        y = 44 + 105*pose
+        old = previous.crop((x, y, x+108, y+102)).resize((54, 51), Image.Resampling.NEAREST)
+        new = elf.placed_tile(game, rows[role], sand, 1, 0, 0, 0)
+        for line, tile in enumerate((old, new)):
+            top = 66+line*228
+            page.paste(tile.crop((7, 8, 47, 51)).resize(
+                (160, 172), Image.Resampling.NEAREST), (left, top))
+            page.paste(tile, (left+53, top+174))
+    label(page, (12, 147), "Previous", 15)
+    label(page, (12, 375), "Refitted", 15)
+    return page
+
+
+def render(game_dir, output, previous_sheet=None):
     atlas = Atlas(game_dir)
     game = atlas.game
     swatches = reference_folds(game)
@@ -232,6 +319,8 @@ def render(game_dir, output):
     for j, role in enumerate(roles):
         label(sheet, (177+j*110, 12), role, 15, "ma")
     frames = []
+    comparisons = []
+    previous = Image.open(previous_sheet).convert("RGB") if previous_sheet else None
     for pose, name in enumerate(dwarf.NAMES):
         rows = draw(game, pose, swatches)
         y = 44+105*pose
@@ -272,14 +361,19 @@ def render(game_dir, output):
             page.paste(large, (x, 344))
             page.paste(small, (x+108, 395))
         frames.append(page)
+        if previous is not None:
+            comparisons.append(fit_comparison(game, pose, rows, sand, previous))
     output.mkdir(parents=True, exist_ok=True)
     sheet.save(output/"mul-singles-poses.png")
     loop(frames, output/"mul-singles.gif")
+    if comparisons:
+        loop(comparisons, output/"mul-singles-fit.gif")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game_dir", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--previous-sheet", type=Path, help="mul-singles-poses.png from a42a969")
     args = parser.parse_args()
-    render(args.game_dir, args.output)
+    render(args.game_dir, args.output, args.previous_sheet)
