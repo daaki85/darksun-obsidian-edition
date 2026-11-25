@@ -23,8 +23,8 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, ravager, \
-    rings, sizes, stealth, targeting, usable
+from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, quicksave, \
+    ravager, rings, sizes, stealth, targeting, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -635,6 +635,48 @@ class RavGameData(game.GameData):
         return f"item {name_index}"
 
 
+# The sequel's areas (each RGNxx.GFF's RNME chunk names it: forest, Tyr, VA Headquarters, ...), for an
+# autosave's name ("Auto - Day 1, 08:12 - Tyr")
+REGIONS = {0x01: "The forest", 0x32: "Tyr", 0x33: "The Veiled Alliance", 0x34: "The pyramid",
+           0x36: "The yuan-ti tunnels", 0x37: "El's temple", 0x38: "The mines, level 1", 0x39: "The mines, level 2",
+           0x3A: "The mines, level 3", 0x3B: "The jann", 0x3C: "The mosaic", 0x3D: "The volcano, level 2",
+           0x3E: "The volcano, level 1", 0x3F: "The volcano, level 3", 0x41: "The silt giants", 0x42: "The cloud",
+           0x43: "The crypt", 0x44: "The cosmos", 0x45: "Under Tyr", 0xFF: "Limbo"}
+
+
+def region_name(region: Optional[int]) -> str:
+    if region is None:
+        return ""
+    return REGIONS.get(region) or f"Area {region:02X}h"
+
+
+# Quick save, quick load and autosave (quicksave.py) on DSCLOG2's QUICK SAVES: its header's fields past
+# DSCLOG's (+1904 on: DSCLOG's +1878 to +1889 are others there), its MAIN_TICKS at DSCLOG's +260, and the
+# sequel's addresses: the map's screen word (DS:0DABh, SL's 0BC9h), the save path (44F2h, SL's 4B81h, the
+# Loader's "path" patch), the page letter in "SAVE??.SAV" and "SAVE%.2d.SAV" (DS:2085h + 3, 20B6h + 3), the
+# save window's chosen row (its data 2F8h, the load + 3C4Ch: the word at 0; SL's 388h:4E4h). The sequel has
+# no camp the F9 key breaks (its rests are at fire rings and inns, the party not on the map), and one page.
+QUICK_LAYOUT = quicksave.Layout(keys=1904, seq=1908, req=1912, save_off=1914, tail_seg=1834, main_ticks=260,
+                                greq=1916, screen_is=0x0DAB, save_path=0x44F2, name_find=0x2085 + 3,
+                                name_save=0x20B6 + 3, window_from_ds=ravager.DGROUP - 0x3C4C, chosen=0,
+                                camp=None, kept_pages=(b"E",), region_name=region_name)
+QUICK_GREQ_SAVES, QUICK_GREQ_LOADS = 1918, 1920  # (DSCLOG2's counts of the GREQ chunks written and read)
+
+
+def wotr_folder(given: Optional[str]) -> Optional[str]:
+    """The sequel's folder, where its saves are: GIVEN if it is one, else the one the Loader finds (wotrart's
+    search: the folder chosen on the Options tab, beside Shattered Lands', GOG's usual places)."""
+    if ravager.is_wotr_dir(given):
+        return given
+    from . import launch, wotrart
+    try:
+        found = wotrart.find_resources(launch.find_game_dir())
+    except OSError:
+        return None
+    folder = found and __import__("os").path.dirname(found)
+    return folder if ravager.is_wotr_dir(folder) else None
+
+
 KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from the header's +350 (DSCLOG's)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -648,6 +690,9 @@ class RavDiceLog(dicelog.DiceLog):
         apply_layout()
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
         self._next_slots = 0.0
+        keys, auto = self.quicksave.keys, self.quicksave.auto
+        self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
+        self.quicksave.keys, self.quicksave.auto = keys, auto
 
     def attach(self) -> str:
         found = game.find_data_segment(self.guest.guest)
@@ -885,6 +930,29 @@ class RavDiceLog(dicelog.DiceLog):
     _red_at: Optional[int] = None  # (DSCLOG2's count of palette changes RED was made at)
     _rings_on: Optional[int] = None  # (RINGS_ON as last written)
 
+    def _quick_ranges(self) -> bool:
+        """DSCLOG2's quick save words (its header's +1904 to +1917), SAVE_TEXT, and the game's page letters
+        and the save window's chosen row, made writable (quicksave.QuickSave.ranges); False without them (a
+        helper before QUICK SAVES: SAVE_TEXT's offset 0)."""
+        if self.tsr_hdr is None or self.game is None:
+            return False
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + QUICK_LAYOUT.save_off, 2))
+        if not off:
+            return False
+        for r in self.quicksave.ranges(self.game, self.tsr_hdr):
+            if r not in self.guest.writable:
+                self.guest.writable = self.guest.writable + [r]
+        return True
+
+    def _quick_pass(self, loading: bool, now: float) -> List[str]:
+        """Shattered Lands' (quicksave.py: F5, F9, the autosaves; "Quick save" over the leader), on DSCLOG2's
+        QUICK SAVES, the saves in the sequel's folder (wotr_folder)."""
+        if not self._quick_ranges():
+            return []
+        if not self._quick_dir:
+            self._quick_dir = wotr_folder(self.game_dir) or ""
+        return super()._quick_pass(loading, now)
+
     def _write_slots(self) -> None:
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
@@ -918,6 +986,11 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._panel_pass(now))
             if self.game is not None and self.game.rules & game.RULE_AGING:
                 out += self._step(self._aging_pass)
+            try:
+                loading = self._party_check(now)
+            except Exception:  # (unknown: no save asked for this pass)
+                loading = True
+            out += self._step(lambda: self._quick_pass(loading, now))  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
         return out
 
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)

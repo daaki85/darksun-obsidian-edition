@@ -655,6 +655,11 @@ PATCHES: Tuple[Patch, ...] = (
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
     Patch("hit", 0x29DBD, bytes.fromhex("558bec83ec0e"), _site(77, 6)),
+    # Quick saves (DSCLOG2's QUICK SAVES, quicksave.py): the load's wrapper (7D8EEh on) reads the slot's GREQ
+    # chunk (the map's limits, in the roster file) numbered by "mov ax,es:[2]" (the window's first row) + the row
+    # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2
+    # numbers so (GREQ_WRITE).
+    Patch("greq_load", 0x7DA30, bytes.fromhex("26a10200"), _site(84, 4)),
     # The game's 7 reads of an item's name, "push dword [bx+56F3h]" (its table of 256 far pointers):
     # DSCLOG2's SITE_NAME, names 256 on the Loader's (NAMES_GAME, item_names).
     *(Patch("item_name_%x" % at, at, bytes.fromhex("66ffb7f356"), _site(42, 5))
@@ -1123,6 +1128,7 @@ SHEET_RECORDS = ("CHAR", "RDFF")  # (record lists: a sheet is kind 3, SHEET_KIND
 SHEET_KIND = 3
 SHEETS_CHUNK, SHEETS_COUNT = ("SAVE", 6), 17  # (a save game's sheet table, whole: sheet_save_size)
 SHEET_FILES = ("CHARSAVE.GFF", "DARKRUN.GFF", "DARKSAVE.GFF")  # (and every SAVEnn.SAV)
+SAVE_PREFIXES = ("SAVE", "SAVQ")  # (the saves: the game's page, the quick saves' page: quicksave.py)
 BACKUP = {SHEET_SIZE: ".42H", GAME_SHEET_SIZE: ".48H"}  # (the file before it was made that size)
 
 
@@ -1165,14 +1171,15 @@ def resized_chunks(chunks: gff.Chunks, size: int) -> gff.Chunks:
 
 
 def sheet_files(game_dir: str) -> List[str]:
-    """The files of GAME_DIR that may hold sheets (SHEET_FILES, the saves SAVEnn.SAV)."""
+    """The files of GAME_DIR that may hold sheets (SHEET_FILES, the saves SAVEnn.SAV and the quick saves
+    SAVQnn.SAV)."""
     try:
         names = sorted(os.listdir(game_dir))
     except OSError:
         return []
     wanted = {n.upper() for n in SHEET_FILES}
     return [os.path.join(game_dir, n) for n in names
-            if n.upper() in wanted or (n.upper().startswith("SAVE") and n.upper().endswith(".SAV"))]
+            if n.upper() in wanted or (n.upper()[:4] in SAVE_PREFIXES and n.upper().endswith(".SAV"))]
 
 
 def widen_files(game_dir: str, size: int = SHEET_SIZE) -> List[str]:

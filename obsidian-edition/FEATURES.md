@@ -1038,6 +1038,15 @@ windows never open on the QUICK page by themselves: once the window is shut it i
 of 1 to 4 it showed last. With less than 4 MB free on the disk no quick save or autosave is made,
 and the dice log says so.
 
+**In Wake of the Ravager** (started from the Loader) F5, F9 and the autosaves work the same way,
+in the sequel's own save and load window: F9 opens its LOAD window on the quick saves (`SAVQ01.SAV`
+to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window is back on the game's
+own ten. Each quick save keeps its own part of the map's limits, which the sequel stores beside a
+save, so loading one never takes another save's. There is no camp in the sequel, so no camp
+autosave. While the switch is on and the Loader is there, F5 is the quick save, not the sequel's own
+F5 (the sound effects on and off: F4 and the game's menu still have the music, and the menu the
+sound effects); with the switch off or without the Loader, F5 is the game's again.
+
 **Switches:** *Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save
 window, and F9 opens the load window there* (off, F5 and F9 are the game's own: F5 draws the view
 again, F9 breaks the camp of the game's rest, where the Loader leaves both to the game anyway) and
@@ -1053,6 +1062,11 @@ name you typed for it, into its own **Named saves** folder (`Page 2 slot 05 - Be
 battle.SAV`); saving over a slot replaces that slot's copy. **Open the folder** opens it, and **Put
 a save in a slot...** copies a named save (or another Shattered Lands save) into the page and slot you give, asking
 first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot 05 - NAME.SAV`.
+
+Wake of the Ravager's saves get the same: its ten manual slots are copied into **Named saves (Wake
+of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the Ravager's** button opens that folder,
+and a sequel's save put back into a slot is made the Loader's (the bigger character sheets) as it
+goes in.
 
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older
 saves](README.md#compatibility-with-older-saves). How it works:
