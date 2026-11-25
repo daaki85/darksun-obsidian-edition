@@ -158,7 +158,8 @@ look_reply dw 0                 ; +152 the Loader sets this to LOOK_SEQ once LOO
 look_who   dw 0                 ; +154 the combatant looked at
 look_off   dw look_text         ; +156 offset of LOOK_TEXT: up to 3 short lines for the Look box, "|"
                                 ;      between them (a first byte 1: beside LEVEL), written by the Loader
-look_full_off dw 0              ; +158 (DSCLOG's whole description for the dialogue window: none here yet)
+look_full_off dw look_full      ; +158 offset of LOOK_FULL: the whole description, shown in the dialogue
+                                ;      window as the Look box closes (UNLOOK), written by the Loader
 look_on    dw 0                 ; +160 the Loader sets 1 to have monsters described
         times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +162 to +163: none of them here yet, zero)
 stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passed (RavDiceLog): older
@@ -2051,8 +2052,8 @@ char_count dw 0                 ; panels drawn on (for the tests)
 ; routine, as the box prints the monster's level, and moves the game's row count past them, so its own
 ; status lines follow in any row still free. The routine is SL's but for: the combatant in DI (SL's
 ; [BP+0Ah]), the status lines' count in [BP-0Ah] (SL's DI), the text routine's far address -20h from the
-; patch (SL's -22h), the box's colours F3h, AFh (SL's 1Fh, 11h). DSCLOG's whole description in the
-; dialogue window as the box closes (PROBE_UNLOOK) isn't ported.
+; patch (SL's -22h), the box's colours F3h, AFh (SL's 1Fh, 11h). If the Loader also gave the whole
+; description (LOOK_FULL), UNLOOK shows it in the dialogue window as the box closes.
 LOOK_DRAW  equ -0x20            ; (from the patch) "lcall SEG:OFF" operand: the text routine
 LOOK_ROWS  equ 4                ; the box's status rows: y = (row + 2) * 7 + 10h
 LOOK_SIDE  equ 1                ; a line starting with this goes on LEVEL's row (row -1), to its right
@@ -2073,6 +2074,7 @@ probe_look:
         jne .done
         mov [cs:look_who], di   ; the combatant
         mov byte [cs:look_text], 0
+        mov byte [cs:look_full], 0
         inc word [cs:look_seq]
         xor ax, ax
         mov es, ax
@@ -2088,7 +2090,10 @@ probe_look:
         call rtc_waited         ; (the BIOS clock can stand still: at most 2 s by the real-time clock)
         jnc .wait
         jmp .done
-.ready: mov es, [ss:si + 36]
+.ready: cmp byte [cs:look_full], 0
+        je .short
+        mov byte [cs:look_pending], 1   ; (the whole description: UNLOOK's, as the box closes)
+.short: mov es, [ss:si + 36]
         mov di, [ss:si + 34]
         sub di, 2               ; ES:DI = the patch
         mov eax, [es:di + LOOK_DRAW]
@@ -2163,6 +2168,102 @@ l_win    dd 0
 l_line   times L_LINE_SIZE db 0
 look_count dw 0                 ; boxes filled (for a look in play)
 look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
+LOOK_FULL_SIZE equ 700
+look_full times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's)
+look_pending db 0               ; 1 once LOOK_FULL has a description UNLOOK hasn't shown
+
+; UNLOOK (site 75 at 6378Dh, "mov word [08CAh],270Fh", SL's PROBE_UNLOOK at 5F2AAh): the end of the routine
+; that closes the Look box (the game forgets whom it was looking at). Does that, then shows the monster's
+; whole description (LOOK_FULL) in the dialogue window (SHOW_WINDOW), in a frame the overlay manager can fix
+; up (the window may load other overlays over this routine's while it waits for Continue).
+unlook:
+        mov word [0x8CA], 0x270F  ; the replaced instruction (DS the game's)
+        sti
+        pushad
+        push es
+        cmp byte [cs:look_pending], 0
+        je .out
+        cmp byte [cs:showing], 0
+        jne .out
+        mov byte [cs:look_pending], 0
+        inc word [cs:unlook_count]
+        mov word [cs:show_text], look_full
+        mov bx, sp              ; the frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back, pushed as a far call's, with BP
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call show_window
+        pop bp
+        pop ax                  ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
+unlook_count dw 0               ; (descriptions shown, for a look in play)
+
+; SHOW_WINDOW: DSCLOG's: the text at CS:SHOW_TEXT in the game's dialogue window (its stub 476Ch, SL's 42CAh:
+; the entries 25h, the window's input, and 34h, the wait for a reply, as SL's), with "Press continue" and
+; one reply, Continue, until it's clicked, then the window closed. DS the game's.
+DLG_STUB  equ 0x476C - 0x47E0   ; the stub's segment less DS's
+DLG_FEED  equ 0x25              ; the window's input: (kind, far text, word)
+DLG_WAIT  equ 0x34              ; wait for a reply to be clicked
+S_PRESS   equ 0x1956            ; DS: "Press continue" (SL's 15E8h)
+S_CONT    equ 0x1965            ; DS: "Continue" (15F7h)
+S_CLOSE   equ 0x25C8            ; DS: "CLOSE" (1F11h)
+show_window:
+        mov byte [cs:showing], 1
+        mov ax, ds
+        add ax, DLG_STUB
+        mov [cs:dlg + 2], ax
+        mov word [cs:dlg], DLG_FEED
+        xor bx, bx
+        push word 0             ; the emblem (portrait 0)
+        push bx
+        push bx
+        push word 1
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; the text
+        push cs
+        push word [cs:show_text]
+        push word 2
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; "Press continue": the replies' title, then the one reply
+        push ds
+        push word S_PRESS
+        push word 0
+        call far [cs:dlg]
+        add sp, 8
+        push word 0
+        push ds
+        push word S_CONT
+        push word 0
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; show the reply
+        push dword 0
+        push word 3
+        call far [cs:dlg]
+        add sp, 8
+        mov word [cs:dlg], DLG_WAIT
+        call far [cs:dlg]       ; until it's clicked
+        mov word [cs:dlg], DLG_FEED
+        push word 0             ; and close the window
+        push ds
+        push word S_CLOSE
+        push word 2
+        call far [cs:dlg]
+        add sp, 8
+        mov byte [cs:showing], 0
+        ret
+show_text dw 0                  ; the text SHOW_WINDOW shows
+dlg     dd 0                    ; the dialogue window routine being called
+showing db 0                    ; 1 while SHOW_WINDOW has its window up
 
 ; ---- ITEM NAMES: the mod's items' names, past the game's 256 ----
 ; The game's item names are RESOURCE.GFF's TEXT 1000, a name a line, read into a table of 256 far
@@ -3152,9 +3253,30 @@ site_table:
         dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
         dw new_sheet                        ; 50 SITE_NEW_SHEET (a character made: its sheet's last 6 bytes cleared)
         dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
-        times 60 - ($ - site_table) / 2 dw site_none ; (52-59: none yet, another port's to take)
+        dw site_none                        ; 52 (none here)
+        dw site_none                        ; 53 (none here)
+        dw site_none                        ; 54 (none here)
+        dw site_none                        ; 55 (none here)
+        dw site_none                        ; 56 (none here)
+        dw site_none                        ; 57 (none here)
+        dw site_none                        ; 58 (none here)
+        dw site_none                        ; 59 (none here)
         dw kit_init                         ; 60 SITE_KIT_INIT (a combatant's initiative: the kits')
         dw kit_ranger_cast                  ; 61 SITE_KIT_RANGER_CAST (a ranger's caster level: a Seeker's, a Justifier's)
+        dw site_none                        ; 62 (none here)
+        dw site_none                        ; 63 (none here)
+        dw site_none                        ; 64 (none here)
+        dw site_none                        ; 65 (none here)
+        dw site_none                        ; 66 (none here)
+        dw site_none                        ; 67 (none here)
+        dw site_none                        ; 68 (none here)
+        dw site_none                        ; 69 (none here)
+        dw dam_line                         ; 70 SITE_DAM_LINE (the inventory's DAM line, a melee weapon's attacks)
+        dw missile_line                     ; 71 SITE_MISSILE_LINE (... a missile weapon's, or an item box's)
+        dw view_dam                         ; 72 SITE_VIEW_DAM (View Character's DAM line)
+        dw ef_rows                          ; 73 SITE_EF_ROWS (the Effects screen's cells filled: the kits and weapon kinds)
+        dw ef_click                         ; 74 SITE_EF_CLICK (a click on its cells: the next page of them)
+        dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -7054,7 +7176,9 @@ spec_of_sheet:
 ; KIND_OF_TYPE's, else SPEC_KINDS_OWN's (specialize.spec_kind_of with ravlog's layout:
 ; ravager.RAV_SPEC_KINDS). Others kept.
 spec_kind:
-        xor cl, cl
+        mov cl, [cs:spec_forced]        ; (EF_LINES_OF's: a kind itself, not an item type's)
+        or cl, cl
+        jnz .ret
         cmp si, KIND_TYPES
         jae .ret
         mov cl, [cs:si + kind_of_type]
@@ -7233,6 +7357,606 @@ next_die:
 die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
 die_sizes_end:
 
+; THE DAM LINES: SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE and PROBE_VIEW_DAM as sites, so the inventory's
+; and View Character's "DAM: 1.5x1D8+4" show what the attack does with weapon specialization (SPEC_ATTACKS,
+; SPEC_DAMAGE), the cahulaks' off head (CAH_MORE) and the off hand's one a round (OFF_HAND). The sequel's
+; line routine (7AF9Eh, SL's 7286Ah; its item DI, the type SI, the creature far at [BP-6], 0 for none)
+; pushes the damage bonus, the dice's sides and their count, then the attacks a round (halves) it reads
+; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
+; bonus from SP at entry). What SL's add and these don't: the kits' (KITS has them in the attack, not on the lines yet), a
+; thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
+; own, 628h:5Ch, not SL's effects), a weak material's damage on View Character (VIEW_MATERIAL).
+; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
+; the attacks a round (the game's "mov ah,0" follows).
+dam_line:
+        mov al, [es:bx + 0x24]
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .hand
+        push bp
+        mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
+        push dx
+        call spec_of_sheet
+        cmp al, 2
+        jbe .bonus              ; (not a warrior: the game's)
+        cmp dl, SPEC_PLAIN
+        jne .grand
+        dec al
+        jmp .bonus
+.grand: cmp dl, SPEC_GRAND
+        jne .bonus
+        add al, 2
+.bonus: lea bp, [bp + 0x0A]
+        call dam_spec_bonus
+        pop dx
+        pop bp
+.hand:  push ax
+        movzx ax, al
+        call dam_hand
+        mov [cs:dam_halves], al
+        pop ax
+        mov al, [cs:dam_halves]
+        inc word [cs:dam_count]
+        iret
+; DAM_SPEC_BONUS: skill DL's damage on the line: [BP+2] (the bonus) 2 more for specialization, 3 for
+; mastery, and for grand mastery [BP] (the sides) the next die. All registers kept.
+dam_spec_bonus:
+        cmp dl, SPEC_SPECIAL
+        jb .ret
+        ja .three
+        add word [bp + 2], 2
+        ret
+.three: add word [bp + 2], 3
+        cmp dl, SPEC_GRAND
+        jne .ret
+        push ax
+        mov ax, [bp]
+        call next_die
+        mov [bp], ax
+        pop ax
+.ret:   ret
+; DAM_HAND: AX the attacks a round (halves) with melee weapon item DI, as the attack has them after the
+; skill's (OFF_HAND's order): the cahulaks 2 more (CAH_MORE's), then with RULE_TWO_WEAPONS one a round in
+; the left hand. DS the game's; others kept.
+dam_hand:
+        push bx
+        push es
+        push ax
+        mov ax, di
+        call item_is_cahulaks
+        pop ax
+        jne .two
+        add ax, 2
+.two:   test word [cs:rules], RULE_TWO_WEAPONS
+        jz .out
+        cmp ax, 2
+        jbe .out
+        cmp di, NO_ITEM
+        jae .out
+        push ax
+        imul bx, di, ITEM_SIZE
+        les ax, [ITEMS_PTR]
+        add bx, ax
+        pop ax
+        cmp byte [es:bx + ITEM_SLOT], LEFT_HAND
+        jne .out
+        mov ax, 2
+.out:   pop es
+        pop bx
+        ret
+dam_halves db 0
+dam_count  dw 0                 ; (the DAM lines made so, for a look in play)
+; MISSILE_LINE (site 71 at 7B124h, "mov al,es:[bx+7]", SL's 729FFh): the missile branch (and with no
+; creature, an item box's, a melee weapon's too), ES:BX the type's record; AL the type's attacks a round.
+; With a creature: a specialist's rate of fire (MISSILE_RATE) and the skill's damage, as SPEC_DAMAGE. With
+; none, at least one a round (SL's: the line shows no rate, as the game's did before DAM_HALF).
+missile_line:
+        mov al, [es:bx + 7]
+        cmp dword [bp - 6], 0
+        jne .held
+        cmp al, 2
+        jae .ret
+        mov al, 2
+.ret:   iret
+.held:  test word [cs:rules], RULE_SPECIALIZE
+        jz .ret
+        push bp
+        mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
+        push bx
+        push dx
+        push es
+        movzx ax, al
+        push ax
+        mov bx, [bp]            ; (the line routine's BP: its creature)
+        les bx, [ss:bx - 6]
+        mov ax, [es:bx + 4]     ; its sheet
+        cmp ax, SHEETS_COUNT
+        jae .none
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        call spec_of_sheet
+        pop ax
+        call missile_rate
+        lea bp, [bp + 0x0A]
+        call dam_spec_bonus
+        inc word [cs:dam_count]
+        jmp .out
+.none:  pop ax
+.out:   pop es
+        pop dx
+        pop bx
+        pop bp
+        iret
+; VIEW_DAM (site 72 at 6CAC9h, "mov [bp-0Eh],dx", SL's 64EB6h PROBE_VIEW_DAM): View Character's line, DX the
+; damage bonus it stores; its [BP-6] the attacks a round (halves, the sheet's +24h), [BP-2] the dice's
+; count, [BP-4] their sides, [BP-0Ah] the weapon's item; the character on show at USE_WHO_SEG:USE_WHO_OFF.
+; A missile weapon (its type's +6 above 1) keeps the game's attacks (as SL's).
+view_dam:
+        mov [bp - 0x0E], dx
+        pusha
+        push es
+        mov ax, [bp - 0x0A]     ; the item, its type
+        cmp ax, NO_ITEM
+        jae .out
+        imul ax, ax, ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        add bx, ax
+        mov si, [es:bx + ITEM_TYPE]
+        mov di, [bp - 0x0A]
+        mov dl, SPEC_NONE
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .kind
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF] ; the character on show, its sheet
+        cmp ax, SHEETS_COUNT
+        jae .out
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        call spec_of_sheet
+.kind:  imul bx, si, TYPE_SIZE
+        les ax, [ITEM_TYPES_PTR]
+        add bx, ax
+        cmp byte [es:bx + TYPE_MELEE], 1
+        ja .bonus               ; (a missile weapon: its rate kept)
+        mov ax, [bp - 6]
+        cmp ax, 2
+        jbe .hand               ; (not a warrior: the game's)
+        cmp dl, SPEC_PLAIN
+        jne .grand
+        dec ax
+        jmp .hand
+.grand: cmp dl, SPEC_GRAND
+        jne .hand
+        add ax, 2
+.hand:  call dam_hand
+        mov [bp - 6], ax
+.bonus: cmp dl, SPEC_SPECIAL
+        jb .done
+        ja .three
+        add word [bp - 0x0E], 2
+        jmp .done
+.three: add word [bp - 0x0E], 3
+        cmp dl, SPEC_GRAND
+        jne .done
+        mov ax, [bp - 4]
+        call next_die
+        mov [bp - 4], ax
+.done:  inc word [cs:dam_count]
+.out:   pop es
+        popa
+        iret
+
+; ---- The Effects screen's lines: DSCLOG's PROBE_EF_ROWS and PROBE_EF_CLICK ----
+; EF_ROWS (site 73 at 8AFA9h, "pop di / pop si / leave", SL's 7F13Eh): the end of the Effects screen's
+; routine that puts the selected character's effects in their cells (8AC6Fh, SL's 7EDFAh: run when the
+; screen opens and when another character is picked; [BP-4] the cells it has used, 23h at most). With the
+; lower panel free (the game puts effects there only past EF_CELLS), the character's kits (with the kits'
+; rule: RULE_HI_KITS) and weapon kinds (RULE_SPECIALIZE) are listed there, in the game's text as the USE
+; screen's spell slots are (C_DRAW_LINE, at the same place): a line a kit, then a line for the skill and a
+; line a kind. Then the routine's last three instructions, and on to its RETF. The character on show is
+; USE_WHO's (370h:0B44h), the window WIN_SHOWN (the routine's own [1431h]).
+; EF_CLICK (site 74 at 8AB1Ah, "mov si,[bp+8]", SL's 7EC9Eh): the Effects screen's handler for its cells
+; (8AB13h; [BP+8] the cell's button, from EF_CELL_ID, [BP+0Ah] the event): a click on the lower panel while
+; the lines take more than a page (EF_COUNT above EF_LINES) shows the next page (EF_NEXT): the window drawn
+; again as the handler does after an effect's click (its "call 140:60Dh" at 8AC62h with [1431h]), the way
+; back in a frame the overlay manager can fix up, and out of the handler (8AC6Ah). Else SI [BP+8].
+; What SL's has and this doesn't: a Shinobi's read languages and the game's own party's lines (SL's).
+EF_CELLS     equ 21                 ; (the upper panel's)
+EF_LINES     equ 5
+EF_CELL_ID   equ 0x2BCD
+EF_CLICKED   equ 0x20               ; (the events: 2 the pointer onto a cell, 4 a button down, 20h a click)
+EF_CLICK_OUT equ 0x8AC6A - 0x8AB1D  ; (the handler's way out, less the address after the site)
+EF_REDRAW_CALL equ 0x8AC63 - 0x8AB1D ; (its "call 140:60Dh"'s operand, less that)
+EF_PARTY     equ 4
+ef_rows:
+        sti
+        pushad
+        push es
+        cmp word [bp - 4], EF_CELLS
+        jg .pops
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]
+        cmp ax, EF_PARTY
+        jae .pops
+        mov dx, ds
+        add dx, USE_TEXT_SEG
+        mov [cs:c_draw + 2], dx
+        mov word [cs:c_draw], USE_TEXT_OFF
+        mov edx, [WIN_SHOWN]
+        mov [cs:c_winptr], edx
+        inc word [cs:ef_draws]
+        call ef_draw
+.pops:  pop es
+        popad
+        pop word [cs:ef_back]           ; the replaced "pop di / pop si / leave", under the frame
+        pop word [cs:ef_back + 2]
+        popf
+        pop di
+        pop si
+        leave
+        jmp far [cs:ef_back]            ; (the routine's RETF)
+ef_click:
+        mov si, [bp + 8]
+        cmp word [bp + 0x0A], EF_CLICKED
+        jne .iret
+        cmp si, EF_CELL_ID + EF_CELLS
+        jb .iret
+        cmp word [cs:ef_count], EF_LINES
+        ja .page
+.iret:  iret
+.page:  sti
+        pushad
+        push es
+        mov bx, sp              ; the frame at BX+34: IP, CS, flags
+        mov byte [cs:ef_next], 1
+        push ds
+        lds si, [ss:bx + 34]    ; (the window redraw's far address, in its call, as fixed up)
+        mov eax, [si + EF_REDRAW_CALL]
+        pop ds
+        mov [cs:ef_far], eax
+        push word [ss:bx + 36]
+        mov ax, [ss:bx + 34]
+        add ax, EF_CLICK_OUT
+        push ax
+        push bp
+        mov bp, sp
+        push dword [WIN_SHOWN]
+        call far [cs:ef_far]
+        add sp, 4
+        pop bp
+        pop ax                  ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        iret
+
+; EF_DRAW: party member AX's lines (DS the game's): a line for each kit, the oldest class's first (EF_KIT_LINE,
+; " (ASLEEP)" after a kit asleep), then its weapon kinds, the skill's line where it changes, then the kind's
+; (EF_LINES_OF). The panel has room for EF_LINES: with more, a page at a time, EF_LINES - 1 of them and EF_MORE
+; under them; a click on the panel (EF_CLICK) shows the next page, after the last the first again.
+ef_draw:
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        mov byte [cs:ef_drawing], 0     ; (counted first)
+        mov word [cs:ef_index], 0
+        call ef_lines_of
+        mov cx, [cs:ef_index]           ; (CX the lines)
+        xor ax, ax                      ; the page: the first, or the next if asked (EF_NEXT)
+        cmp byte [cs:ef_next], 0
+        je .page
+        mov byte [cs:ef_next], 0
+        mov ax, [cs:ef_after]           ; (the line after the last one shown)
+        cmp ax, cx
+        jb .page
+        xor ax, ax
+.page:  cmp cx, EF_LINES
+        ja .set
+        xor ax, ax
+.set:   mov [cs:ef_first], ax
+        mov [cs:ef_count], cx
+        mov word [cs:ef_rows_n], EF_LINES
+        cmp cx, EF_LINES
+        jbe .draw
+        dec word [cs:ef_rows_n]
+.draw:  mov byte [cs:ef_drawing], 1
+        mov word [cs:ef_index], 0
+        mov word [cs:ef_used], 0
+        mov word [cs:ef_y], USE_FIRST_Y
+        call ef_lines_of
+        cmp cx, EF_LINES
+        jbe .ret
+        mov word [cs:ef_y], USE_FIRST_Y + (EF_LINES - 1) * USE_STEP
+        mov si, ef_more
+        call ef_put
+.ret:   ret
+
+; EF_LINES_OF: EF_DRAW's lines of the character whose sheet is ES:BX, each through EF_LINE.
+ef_lines_of:
+        mov byte [cs:ef_last], 0xFF
+        mov word [cs:ef_head], 0
+        call kit_place       ; (a line for each kit, the oldest class's first; a human's kit
+        jc .specs               ;   asleep until its class is passed, as the game's classes are)
+.kit:   call kit_at
+        jz .kit_next
+        call ef_kit_line
+        call ef_line
+.kit_next:
+        dec di
+        jns .kit
+.specs: test word [cs:rules], RULE_SPECIALIZE
+        jz .ret
+        xor di, di
+.slot:  cmp di, SPEC_COUNT
+        jb .chosen
+        mov si, BOW_KIND                ; (then the bow, a ranger's whether chosen or not, unless
+        push di                         ;   it is among the chosen: SPEC_OF_SHEET's skill with it)
+        xor di, di
+.bow:   push si
+        mov si, di
+        call spec_get
+        pop si
+        cmp al, BOW_KIND
+        je .bow_had
+        inc di
+        cmp di, SPEC_COUNT
+        jb .bow
+        pop di
+        jmp .kind_of
+.bow_had:
+        pop di
+        jmp .ret
+.chosen:
+        mov si, di
+        call spec_get
+        mov si, ax
+.kind_of:
+        or si, si
+        jz .next
+        mov ax, si
+        mov [cs:spec_forced], al        ; (SPEC_OF_SHEET's skill with that kind)
+        dec si
+        mov [cs:ef_kind], si
+        call spec_of_sheet
+        mov byte [cs:spec_forced], 0
+        mov al, 3
+        cmp dl, SPEC_EXPERT
+        je .skill
+        cmp dl, SPEC_SPECIAL
+        jb .next                ; (a warrior class not back yet: none)
+        mov al, dl
+        sub al, SPEC_SPECIAL
+.skill: cmp al, [cs:ef_last]
+        je .kind
+        mov [cs:ef_last], al
+        movzx si, al
+        shl si, 1
+        mov si, [cs:si + ef_skills]
+        mov byte [cs:ef_is_head], 1
+        call ef_line
+        mov byte [cs:ef_is_head], 0
+.kind:  mov si, [cs:ef_kind]
+        cmp si, 16
+        jae .next
+        shl si, 1
+        mov si, [cs:si + ef_kinds]
+        call ef_line
+.next:  inc di
+        cmp di, SPEC_COUNT
+        jbe .slot
+.ret:   ret
+
+; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing and on
+; the page shown. All registers kept. (DSCLOG's.)
+ef_line:
+        push ax
+        mov ax, [cs:ef_index]
+        inc word [cs:ef_index]
+        cmp byte [cs:ef_is_head], 0     ; (a skill's line: the kinds' under it, EF_HEAD)
+        je .drawing
+        mov [cs:ef_head], si
+.drawing:
+        cmp byte [cs:ef_drawing], 0
+        je .out
+        cmp ax, [cs:ef_first]
+        jb .out
+        push ax
+        mov ax, [cs:ef_used]
+        cmp ax, [cs:ef_rows_n]
+        pop ax
+        jae .out
+        cmp word [cs:ef_used], 0        ; (the page's first line: a kind's, its skill's line over it)
+        jne .put
+        cmp ax, 0
+        je .put
+        cmp byte [cs:ef_is_head], 0
+        jne .put
+        cmp byte [cs:si], ' '
+        jne .put
+        cmp word [cs:ef_head], 0
+        je .put
+        push si
+        mov si, [cs:ef_head]
+        call ef_put
+        pop si
+        inc word [cs:ef_used]
+.put:   cmp byte [cs:ef_is_head], 0      ; (a skill's line last on a page: on the next, with its kinds)
+        je .shown
+        push ax
+        mov ax, [cs:ef_used]
+        inc ax
+        cmp ax, [cs:ef_rows_n]
+        pop ax
+        jb .shown
+        cmp word [cs:ef_count], EF_LINES
+        jbe .shown
+        mov ax, [cs:ef_rows_n]
+        mov [cs:ef_used], ax
+        jmp .out
+.shown: call ef_put
+        inc word [cs:ef_used]
+        inc ax
+        mov [cs:ef_after], ax
+.out:   pop ax
+        ret
+; EF_PUT: CS:SI on the panel's next line (all registers kept: the game's text routine changes ES)
+ef_put:
+        pusha
+        push es
+        cmp word [cs:ef_y], USE_FIRST_Y + (EF_LINES - 1) * USE_STEP
+        ja .out
+        push word [cs:ef_y]
+        push word USE_X
+        push cs
+        push si
+        call c_draw_line
+.out:   add word [cs:ef_y], USE_STEP
+        pop es
+        popa
+        ret
+
+; THE KITS ON THE EFFECTS SCREEN: EF_LINES_OF's kit lines, by the KITS section's KIT_PLACE and KIT_AT (the
+; sequel's sheet: the kit byte at +3Dh, the race +12h, the classes +1Bh, their levels +1Eh). The names in CS
+; (DSCLOG's TAIL_SEG's).
+; EF_KIT_LINE: CS:SI the line naming kit AL (EF_KIT_AT's, not 0: "KIT: RAVAGER"), a long name shorter
+; (EF_KIT_SHORT), " (ASLEEP)" after it if the kit of the class at place DI sleeps (a human's first class,
+; until the class it has now is of a higher level). Others kept.
+ef_kit_line:
+        push ax
+        push cx
+        push di
+        mov si, ef_kit_short
+.short: cmp byte [cs:si], 0
+        je .long
+        cmp [cs:si], al
+        je .found
+.skip:  inc si
+        cmp byte [cs:si], 0
+        jne .skip
+        inc si
+        jmp .short
+.found: inc si
+        jmp .name
+.long:  movzx cx, al            ; (the kit's place in EF_KIT_NAMES, from 1: (class - 1) * 3 + kit)
+        and cl, 3
+        shr al, 2
+        dec al
+        mov ah, 3
+        mul ah
+        add cx, ax
+        mov si, ef_kit_names
+.next:  dec cx
+        jz .name
+.past:  cs lodsb
+        or al, al
+        jnz .past
+        jmp .next
+.name:  mov di, ef_kit_text + 5 ; (after "KIT: ")
+.char:  cs lodsb
+        mov [cs:di], al
+        inc di
+        or al, al
+        jnz .char
+        pop cx                  ; (the place)
+        push cx
+        jcxz .out               ; (asleep: a later place, its level not passed by the first's)
+        push bx
+        add bx, cx
+        mov al, [es:bx + SH_LEVELS]
+        pop bx
+        cmp [es:bx + SH_LEVELS], al
+        ja .out
+        dec di
+        mov si, ef_asleep
+.copy:  cs lodsb
+        mov [cs:di], al
+        inc di
+        or al, al
+        jnz .copy
+.out:   mov si, ef_kit_text
+        pop di
+        pop cx
+        pop ax
+        ret
+; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each; then the
+; multiclass groups', three to each
+ef_kit_names db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
+        db 'GROVE WARDEN', 0, 'LIFEBINDER', 0, 'WANDERER', 0
+        db 'MYRMIDON', 0, 'SENTINEL', 0, 'RAVAGER', 0
+        db 'ARENA CHAMPION', 0, 'TWIN-BLADE', 0, 'BRUTE', 0
+        db 'SCHOLAR', 0, 'BATTLE MAGE', 0, 'ARCANIST', 0
+        db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
+        db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
+        db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
+        db 'BATTLE DANCER', 0, 0, 0
+        db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
+        db 'WILDERNESS AVENGER', 0, 0, 0
+        db 'RESCUER', 0, 0, 0
+        db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
+        db 'SPELLARCHER', 0, 0, 0
+        db 'TITAN MIND', 0, 0, 0
+        db 'POISONER', 0, 0, 0
+        db 'SPIRIT CALLER', 0, 0, 0
+        db 'WASTELAND SEER', 0, 0, 0
+        db 'WILD FURY', 0, 0, 0
+; Shorter names for the line (kitpages.SHORT): the kit (class x 4 + kit + 1), the name. 0 ends it.
+ef_kit_short db 17, 'CHAMPION', 0, 33, 'SWASHBUCK', 0, 5, 'ELEMENTAL', 0
+        db 9, 'WARDEN', 0, 22, 'BATTLMAGE', 0, 25, 'M-BENDER', 0
+        db 26, 'M-WARRIOR', 0, 37, 'B-DANCER', 0, 41, 'SHADOWBLD', 0
+        db 42, 'M-SCOUT', 0, 45, 'W-AVENGER', 0, 53, 'G-FIGHTER', 0
+        db 57, 'SPELLARCH', 0, 69, 'S-CALLER', 0, 73, 'WASTE SEER', 0, 0
+ef_asleep    db ' (ASLEEP)', 0
+ef_kit_text  db 'KIT: '
+             times 24 db 0          ; (the longest name, 14, and " (ASLEEP)")
+ef_more      db 'MORE: CLICK HERE', 0
+ef_skills    dw .s0, .s1, .s2, .s3
+.s0     db 'SPECIALIZED IN', 0
+.s1     db 'MASTER OF', 0
+.s2     db 'GRAND MASTER OF', 0
+.s3     db 'EXPERT IN', 0
+ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
+.k0     db '  LONG SWORD', 0
+.k1     db '  CLUB', 0
+.k2     db '  DAGGER', 0
+.k3     db '  SHORT SWORD', 0
+.k4     db '  MACE', 0
+.k5     db '  AXE', 0
+.k6     db '  GREAT AXE', 0
+.k7     db '  PICK', 0
+.k8     db '  QUARTERSTAFF', 0
+.k9     db '  POLEARM', 0
+.k10    db '  GYTHKA', 0
+.k11    db '  CAHULAKS', 0
+.k12    db '  CHATKCHA', 0
+.k13    db '  BOW', 0
+.k14    db '  SLING', 0
+.k15    db '  STAFF SLING', 0
+spec_forced  db 0
+ef_back      dd 0
+ef_far       dd 0
+ef_draws     dw 0               ; (EF_ROWS' draws, for a look in play)
+ef_drawing   db 0
+ef_index     dw 0
+ef_first     dw 0
+ef_rows_n    dw 0
+ef_count     dw 0
+ef_next      db 0
+ef_after     dw 0
+ef_used      dw 0
+ef_head      dw 0
+ef_is_head   db 0
+ef_y         dw 0
+ef_kind      dw 0
+ef_last      db 0
+
 ; ---- KITS: DSCLOG's RULE_KITS (rules_hi bit 0: dsloader/kits.py, kitpages.py) in the sequel ----
 ; The transferred party keeps its kits (the transfer's sheet +3Dh, SL's +43h: KIT_BYTE, two bits for
 ; each class place, 40h OWN_BIT, 80h Friends known). Their rules, as DSCLOG's (DEVELOPMENT-KITS.md, Where
@@ -7254,7 +7978,7 @@ die_sizes_end:
 ; damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
-KIT_OPEN     equ 0xFF
+KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
 SH_BASE_AC   equ 0x21               ; (SL's +27h)
 CR_THAC0     equ 0x16               ; (a creature's THAC0: SL's +1Fh)
 CR_STATUS    equ 0x14               ; (... its status, 0 New, 1 Okay: SL's +1Ch)

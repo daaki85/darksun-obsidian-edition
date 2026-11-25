@@ -33,8 +33,8 @@ class TableTests(unittest.TestCase):
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
                                "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
-                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage",
                             "kit_initiative", "kit_ranger_cast",
+                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
@@ -59,6 +59,27 @@ class TableTests(unittest.TestCase):
         place = (258 - 256) * ravager.NAME_KEPT
         self.assertEqual(table[place:place + 12], b"Short Sword\0")
         self.assertTrue(len(table) == count * ravager.NAME_KEPT)
+
+    def test_screens_sites(self):
+        """The DAM lines, the Effects screen's lines and the Look box's whole description are DSCLOG2's sites
+        70-75 (the kits' take 60 up), each a routine in its SITE_TABLE (no site 52-69 runs code here), and the
+        header's +158 points at LOOK_FULL (700 zeros inside the image)."""
+        from dsloader import dicelog
+        sites = {"dam_line": 70, "missile_line": 71, "view_dam": 72, "ef_rows": 73, "ef_click": 74, "unlook": 75}
+        for name, number in sites.items():
+            p = next(p for p in ravager.PATCHES if p.name == name)
+            self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        for name, number in sites.items():
+            self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
+        exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                ravager.HELPER_EXE), "rb").read()
+        image = exe[32:]
+        hdr = image.find(b"DSCLOGR1")
+        full = struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
+        self.assertGreater(full, hdr + 268)
+        self.assertEqual(image[full:full + dicelog.LOOK_FULL_SIZE], bytes(dicelog.LOOK_FULL_SIZE))
 
     def test_helper_has_the_use_probes(self):
         """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT
