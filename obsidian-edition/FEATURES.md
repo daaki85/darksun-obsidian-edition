@@ -405,7 +405,8 @@ light weapon in the other*. Rules: [races](PLAYER-GUIDE.md#races). How it works:
 #### Weapon traits
 
 The mod gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
-heads and their tangle, the staff sling its stinkpots, the polearm its reach.
+heads and their tangle, the staff sling its stinkpots, the polearm its reach; and Wake of the
+Ravager's lotulis, double spear and trikal what the sequel's weapons guide gives them.
 
 **Always on** (no switch).
 
@@ -427,6 +428,36 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 Rules: [cahulaks](PLAYER-GUIDE.md#cahulaks). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#cahulaks).
 
+##### Lotulis and double spear
+
+Two-headed weapons, a blade or a point at each end: a specialist (its weapon spec chosen, mastery
+too) fighting with one turns the round's last swing on **a second foe** beside it, one on the first
+target's side and next to the wielder, when the round has two swings or more. The double spear's
+second head does 1 less damage (no less than 1). With no other foe beside it, the swing stays on
+the first.
+
+```
+  Jenna hits Arena Guard for 14: 1d8 = [4] +2 specialized +8 STR 20
+    Jenna turns the double spear's last swing from Arena Guard to Arena Guard, beside it (a specialist's second foe, 1 less damage)
+Jenna attacks Arena Guard with Wooden Double Spear (1d8): d20 = 6, needs 10+ (55%), hits AC 8, target AC 4 -> HIT
+```
+
+##### Trikal
+
+A three-bladed polearm with a hooked haft: a specialist's hit that does damage **trips** a
+man-sized or smaller foe unless it saves against paralysis: it loses its next turn. Who is too big,
+or has nothing to trip, is the [cahulaks](#cahulaks)' list. Held with no other weapon, it reaches two
+squares as a polearm does ([polearm reach](#polearm-reach)).
+
+```
+  Jenna hits Arena Guard for 15: 1d10 = [5] +2 specialized +8 STR 20
+    Jenna's trikal trips Arena Guard? Save against paralysis: d20 = 12, needs 13+ -> tripped: loses its next turn
+```
+
+Rules: [two-headed weapons and the trikal](PLAYER-GUIDE.md#lotulis-double-spear-and-trikal). How
+it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#lotulis-double-spear-and-trikal).
+
 ##### Staff sling stinkpots
 
 AD&D's *Arms and Equipment Guide* gives the staff sling a clay pot of burning sulphur to throw: 1d3
@@ -442,7 +473,7 @@ damage](WEAPON-SPECS.md#grand-masterys-damage). How it works:
 A polearm held with no other weapon (a shield or a bow in the missile slot is fine) strikes in melee
 at two squares as well as one, straight or two across and one along, over a creature in between but
 not through a wall. It holds for the party and its foes alike; every polearm has it, ***Thornwall***
-and ***Linebreaker*** too. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
+and ***Linebreaker*** too, and Wake of the Ravager's [trikal](#trikal), a polearm with three blades. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#polearm-reach).
 
 #### Creature size
@@ -791,7 +822,21 @@ bone and obsidian axes and great axes, metal and obsidian cahulaks...), twenty-t
 (Shadowseeker, Kreenfang, Thornwall, Emberlash, Ironwhirl...), the rest of the bone scale set with a
 Bone Helm, rings and a cloak of protection, bracers of defense, two robes, the Warden's Plate, the
 Boots of Speed, the Cloak and Boots of Elvenkind and more, on the game's people, in its shops and
-chests. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+chests; and six of Wake of the Ravager's weapons the game has none of (a two-handed sword, the
+lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
+caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
+the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
+table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own: three of them in metal too (a two-handed
+sword and a lotulis at Melkor's in Gedron, a javelin on the slave pens' weapon rack), an obsidian
+lotulis for fire clerics and a bone great sword for water clerics (at Melkor's too), and magic ones
+along the way through the game, the weaker early (Darts +1 on the arena's defiler champion; a Double
+Spear +1 at the Fields' gate, a Trikal +1 with the elven slavers, a Lotulis +1 at the Hot Springs, a
+Javelin +1 with the Silt Sea's ssurans, a Lotulis +2 in the Lower Castle, a Great Sword +2 in the
+Upper Castle, a Trikal +2 at the way into the Wyrm Belly, a Double Spear +2 at the gladiators' camp,
+a Great Sword +3 in Balkazar's treasure room; an Obsidian Lotulis +1 on Dagger, the White Sand
+Outlaws' chief, and a Bone Great Sword +1 on Dakaren at the Silt Sea). Those carried by one of a group are given to one
+person there, an object of their own in the Loader's copy of the region, so they show only in a
+region the party hasn't yet entered in that game. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,
@@ -896,7 +941,7 @@ any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*.
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
 of Thorns their pictures, from your copy of Dark Sun: Wake of the Ravager (GOG sells it with
-Shattered Lands), when the Loader finds it; without it they have icons of their own (the game's,
+Shattered Lands), when the Loader finds it, and so do its weapons and the great axes their inventory icons (in the game's colours, each head in its material); without it they have icons of their own (the game's,
 recoloured) and the walls are the game's fire wall in grey or dark brown. Fire Seeds bursts as a
 fireball either way, a picture Shattered Lands has too. The Options tab's **Wake of the Ravager (optional)** section says where
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
