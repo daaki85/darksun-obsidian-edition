@@ -43,15 +43,16 @@ def mode(settings: dict) -> str:
 
 
 @functools.lru_cache(maxsize=8)  # (the same palette, the same table: worked out once)
-def red_table(dac: bytes) -> bytes:
-    """Each colour's redder one among the palette's (0: none redder enough). DAC: 0-63 values."""
+def red_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
+    """Each colour's redder one among the palette's (0: none redder enough). DAC: 0-63 values;
+    FIRST to LAST the colours taken and given (the sequel's: ravlog.RED_FIRST, RED_LAST)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     out = bytearray(256)
-    for i in range(FIRST, LAST + 1):
+    for i in range(first, last + 1):
         c = pal[i]
         want = tuple(v + (r - v) * TOWARD for v, r in zip(c, RED))
         best, score = 0, None
-        for j in range(FIRST, LAST + 1):
+        for j in range(first, last + 1):
             p = pal[j]
             if j == i or p[0] - (p[1] + p[2]) / 2 <= c[0] - (c[1] + c[2]) / 2 + 8:
                 continue  # (redder, clearly)

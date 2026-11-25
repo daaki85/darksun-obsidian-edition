@@ -965,7 +965,14 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
   the Effects screen's lower panel each one's weapon kinds ([the Effects
   screen](#the-effects-screen)). The Look box's whole description of a monster comes up in the
-  dialogue window as the box closes there too. The Loader's
+  dialogue window as the box closes there too. [Choosing an
+  enemy](#choosing-an-enemy-tab-enter-and-the-rings) works there as well: in a fight, on a party
+  member's turn, Tab chooses the nearest enemy (then the next; Shift+Tab goes back), a red ring on
+  the ground marks it, the dice log names it with [the chance to hit](#the-chance-to-hit-before-the-swing)
+  (`Chosen with Tab: Draxan (12 HP), needs 14+ (35%) - Enter attacks it`), and Enter attacks it;
+  the chance to hit floats over the enemy under the pointer too. The view doesn't scroll to an
+  enemy out of sight there yet: Enter does nothing until it is on the screen. (Without the Loader,
+  Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read

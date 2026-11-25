@@ -4,6 +4,7 @@
 # worked out (base, armour, DEX, other). --numbers: each combatant's number after its name ("Draxan#26"), to
 # tell apart foes of one name (as ravitems.py and ravfight.py number them). RAV_RULES_OFF=MASK (game.RULE_* bits, as 0x1000000): those rules off
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
+# RAV_TAB_OFF=1: the red ring under the enemy chosen with Tab and the chances to hit (its line's, the pointer's) off.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
 import sys, os, time, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
@@ -25,6 +26,10 @@ if numbers:
 log.set_rules(game.rules_from_settings(launch.load_settings()) & ~int(os.environ.get('RAV_RULES_OFF') or '0', 0))
 if os.environ.get('RAV_RULES_OFF'):
     print('rules off: %s, now %#x' % (os.environ['RAV_RULES_OFF'], log.game.rules), flush=True)
+if os.environ.get('RAV_TAB_OFF'):  # (a control: no ring, no chance to hit on the Tab line or under the pointer)
+    from dsloader import rings
+    log.ring_mode, log.hit_chance, log.hit_hover = rings.OFF, False, False
+    print('Tab: ring and chances off', flush=True)
 if os.environ.get('RAV_STEALTH_ROLL'):
     log.stealth_roll = lambda n=int(os.environ['RAV_STEALTH_ROLL']): n
 end = time.time() + secs

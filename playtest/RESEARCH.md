@@ -1108,6 +1108,24 @@ the label's ink in them (a Miss is about RGB 239,239,223, a spell's name 251,223
 A label written by a script of its own stays until cleared (its byte +0 zeroed): only the dice log
 ticks them off.
 
+**Choosing an enemy, the ring, the pointer** (2026-11-25, logs/2026-11-25-ravager-tab-target.md): the
+routine lighting the thing under the pointer is 21060h (SL's 1E126h; found by its pushes of the pointer
+DS:A109h and the view DS:140Ah/1408h before the finder's far call), keeping that thing in **DS:0DADh**
+(SL's 0BCBh; FFFFh none) beside DS:0DABh (1 on the map); the finder is 21E0:2DBD (file **29DBDh**, SL's
+25B52h: "push bp / mov bp,sp / sub sp,0Eh", DSCLOG2's site 77 there), reading a map thing's flags +0
+(10h drawn), left +3, top +5, rise +0Eh, picture +10h, width +13h and height +14h (unsigned bytes). The
+pointer's mode is **DS:1440h** (1 walk, 2 look, 4 attack; the routine setting it 2037Bh, SL's 11B8h), the
+facing byte a creature at +5Eh of the round's segment (load + 3C4Fh; SL's +5Bh), the eight directions'
+flag a byte at DS:0442h (the direction routine 1109Dh, SL's word DS:01F8h). `ravtab.py` prints DSCLOG2's
+Tab words and these; `ravtab.py feet` each combatant's feet and screen place. **Clicks** reach the game
+through the handler it sets with INT 33h 0Ch (its mouse routines at 35B9:0000 on: 35B9:0034 is INT 33h 3,
+the pointer's place for edge scrolling only; the button bits it returns aren't the clicks): to give the game
+a click, find that handler (INT 33h 14h, swapped and given back) and call it with event 2 then 4 (DSCLOG2's
+TARGET_MOUSE). **Tab** without the Loader opens the game's own menu (the save/load/options panel), with the
+Loader on a party member's turn in a fight it is the Loader's. **A DSCLOG2 routine must go above
+RESIDENT_END**: code after it is freed as the helper goes resident, and the next allocation writes over it
+(the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then).
+
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);
 the flip 16974h (pages segment 0BF3h, [118Eh]), the pointer routine 2D72:0942 and its DS:332Ch, A10Dh,
