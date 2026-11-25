@@ -235,17 +235,28 @@ class OptionsTests(unittest.TestCase):
         return started, shown, buttons[0]
 
     def test_top_row_wraps_when_narrow(self):
-        """At the window's least width the right-hand group of the top row (Game window, Text size,
-        Freeze report...) goes under the start buttons whole; wide, it is beside them."""
+        """The right-hand group of the top row (Game window, Text size, Freeze report...) goes under
+        the start buttons, whole, exactly when the row is too narrow for both groups, and is beside
+        them otherwise. (Measured, not by fixed widths: the fonts, and the widest window the
+        screen allows, differ from one computer to another.)"""
         row, starts, top = self.viewer.top_row
         self.root.deiconify()
-        for width, line in ((1080, 1), (1600, 0)):
+        need = None
+        for width in (1080, 2400):
             self.root.geometry(f"{width}x700")
             self.root.update()
             self.viewer._wrap_top()
             self.root.update()
-            self.assertEqual(int(top.grid_info()["row"]), line, width)
+            need = starts.winfo_reqwidth() + top.winfo_reqwidth()
+            wrapped = need > row.winfo_width() - 12
+            self.assertEqual(int(top.grid_info()["row"]), 1 if wrapped else 0, (width, row.winfo_width(), need))
             self.assertLessEqual(top.winfo_reqwidth(), row.winfo_width(), width)
+        # (so narrow that it must wrap, wherever it runs: below the Loader's least width)
+        self.root.minsize(1, 1)
+        self.root.geometry(f"{need // 2}x700")
+        self.root.update()
+        self.viewer._wrap_top()
+        self.assertEqual(int(top.grid_info()["row"]), 1)
 
     def test_ravager_button_not_found(self):
         """Without the sequel found, the button starts nothing and points to Options' Choose its folder..."""
