@@ -121,10 +121,12 @@ TWOHAND_SWORD_TYPE, LOTULIS_TYPE, DOUBLE_SPEAR_TYPE = GAME_TYPES + 33, GAME_TYPE
 TRIKAL_TYPE, JAVELIN_TYPE, DARTS_TYPE = GAME_TYPES + 36, GAME_TYPES + 37, GAME_TYPES + 38
 # ... metal ones of three (the user's, 2026-11-25): a two-handed sword, a lotulis and a javelin
 METAL_TWOHAND_SWORD_TYPE, METAL_LOTULIS_TYPE, METAL_JAVELIN_TYPE = GAME_TYPES + 39, GAME_TYPES + 40, GAME_TYPES + 41
+# ... an obsidian lotulis for fire clerics and a bone great sword for water clerics (the user's, 2026-11-25)
+OBSIDIAN_LOTULIS_TYPE, BONE_GREAT_SWORD_TYPE = GAME_TYPES + 42, GAME_TYPES + 43
 # ... and the sequel's own type each is (its OBJEX's), for a party carried across (a metal one as its kind's)
 RAVAGER_TYPES = {TWOHAND_SWORD_TYPE: 101, LOTULIS_TYPE: 61, DOUBLE_SPEAR_TYPE: 39, TRIKAL_TYPE: 100,
                  JAVELIN_TYPE: 59, DARTS_TYPE: 38, METAL_TWOHAND_SWORD_TYPE: 101, METAL_LOTULIS_TYPE: 61,
-                 METAL_JAVELIN_TYPE: 59}
+                 METAL_JAVELIN_TYPE: 59, OBSIDIAN_LOTULIS_TYPE: 61, BONE_GREAT_SWORD_TYPE: 101}
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;

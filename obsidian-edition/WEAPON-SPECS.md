@@ -158,8 +158,8 @@ the game (or the Loader) has a weapon the character may use, in any material. Th
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling, darts | a wooden club |
 | …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling, javelin, darts | an obsidian dagger |
 | …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow, two-handed sword, lotulis, javelin, darts (a gladiator the double spear and trikal too; the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
-| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha, two-handed sword, javelin | an obsidian long sword |
-| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow, darts (a gladiator the double spear and trikal too) | the game's bone long sword |
+| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha, two-handed sword, lotulis (the mod's obsidian), javelin | an obsidian long sword |
+| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow, two-handed sword (the mod's bone), darts (a gladiator the double spear and trikal too) | the game's bone long sword |
 
 (The starting weapon is for the weapon spec picked first; [Starting weapons](#starting-weapons) has
 the rest. A ranger but a Seeker never has the bow to choose: its expertise with the bow comes
@@ -196,8 +196,9 @@ sword`). A kit with a weapon spec of its own starts with a plain weapon of it to
 | great axe | bone, the mod's | obsidian (fire, earth) |
 | pick | stone | — |
 | sling, staff sling | leather | — |
-| two-handed sword, javelin | obsidian | — |
-| lotulis | stone | — |
+| two-handed sword | obsidian | bone, the mod's (water) |
+| javelin | obsidian | — |
+| lotulis | stone | obsidian, the mod's (fire) |
 | double spear, trikal, darts | wooden | — |
 
 A two-handed weapon held in the hands puts the game's starting shield in the backpack (not a

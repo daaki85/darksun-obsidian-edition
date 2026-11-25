@@ -237,6 +237,7 @@ ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 
 # Encyclopedia Magica prices them and as the game's Serpent Boots. Carried by Dagger, the White Sand
 # Outlaws' chief (202; script 133's second band: met whatever came of Hototo's, and fought for the slave)
 BOOTS_OF_SPEED, DAGGER = 0x170, 202
+DAKAREN = 20  # (who comes for the party once Jasmine is freed and the Silt Horrors are dead)
 NAMES[BOOTS_OF_SPEED] = b"Boots of Speed"
 SPEED_BOOTS = armour(game.SPEED_BOOTS_TYPE, BOOTS_OF_SPEED, 0x10000 - 2668, 20000, plus=0)
 # the magic cahulaks of the Loader's types (the game has only bone ones): Emberlash, an obsidian
@@ -310,6 +311,10 @@ DARTS = (game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2690, 20)
 METAL_TWOHAND_SWORD = (game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2696, 500)
 METAL_LOTULIS = (game.METAL_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2698, 150)
 METAL_JAVELIN = (game.METAL_JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2700, 150)
+# ... an obsidian lotulis for fire clerics and a bone great sword for water clerics (the user's,
+# 2026-11-25), at Melkor's too
+OBSIDIAN_LOTULIS = weaponchoice.OTHERS[KIND("lotulis")][0]
+BONE_GREAT_SWORD = weaponchoice.OTHERS[KIND("two-handed sword")][0]
 # ... and magic (the user's, 2026-11-25; RAVAGER_MAGIC places them): each its kind's plain name, the plus
 # shown by the game, valued as the game's magic weapons (PLUS_VALUE a plus); the two-handed sword's
 # and the lotulis' +2 and +3 of metal, the rest of their kind's own material
@@ -322,6 +327,8 @@ LOTULIS_1 = ((game.LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2710, PLUS_VALUE), 1)
 LOTULIS_2 = ((game.METAL_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2712, 2 * PLUS_VALUE), 2)
 TWOHAND_SWORD_2 = ((game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2714, 2 * PLUS_VALUE), 2)
 TWOHAND_SWORD_3 = ((game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2716, 3 * PLUS_VALUE), 3)
+OBSIDIAN_LOTULIS_1 = ((game.OBSIDIAN_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2722, PLUS_VALUE), 1)
+BONE_GREAT_SWORD_1 = ((game.BONE_GREAT_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2724, PLUS_VALUE), 1)
 DARTS_1 = ((game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2692, SLING_VALUE), 1)  # (the sequel's Darts +1: the defiler champion's; as Windlash)
 
 
@@ -393,7 +400,8 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Bowyer", (weapon(JAVELIN), weapon(DARTS)), (283,), 0x0B),
     # the metal two-handed sword and lotulis at Melkor's, Gedron's merchant (who sold nothing of use):
     # the Weapon Merchant's and Jark's lists are full (DataTests: the shop's 34, the object's records)
-    Gift("Melkor", (weapon(METAL_TWOHAND_SWORD), weapon(METAL_LOTULIS)), (233,), 0x03),
+    Gift("Melkor", tuple(weapon(w) for w in (METAL_TWOHAND_SWORD, METAL_LOTULIS, OBSIDIAN_LOTULIS, BONE_GREAT_SWORD)),
+         (233,), 0x03),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
@@ -472,6 +480,11 @@ RAVAGER_MAGIC: Tuple[Gift, ...] = (
     Gift("Magera", (weapon(*TRIKAL_2),), (71,), SSURAN_RUINS, clone=(49, 2627)),
     Gift("Arant's Guard", (weapon(*DOUBLE_SPEAR_2),), (82,), GLADIATORS, clone=(349, 2628)),
     Gift("Treasure chest", (weapon(*TWOHAND_SWORD_3),), (TREASURE_CHEST,), WYRM_SCHOOL, clone=(337, 2629)),
+    # the obsidian lotulis +1 and the bone great sword +1 (the user's, 2026-11-25): each on a foe
+    # of his own object (RGNFF's people, no clone): Dakaren, Jasmine's captor at the Silt Sea (with
+    # his Shimmer Armor), and Dagger, the White Sand Outlaws' chief (with the Boots of Speed, MAGIC)
+    Gift("Dakaren", (weapon(*BONE_GREAT_SWORD_1),), (DAKAREN,)),
+    Gift("Dagger", (weapon(*OBSIDIAN_LOTULIS_1),), (DAGGER,)),
 )
 MAGIC: Tuple[Gift, ...] = (
     Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
@@ -580,6 +593,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.TWOHAND_SWORD_TYPE: 45, game.LOTULIS_TYPE: 44, game.DOUBLE_SPEAR_TYPE: 3,
               game.TRIKAL_TYPE: 19, game.JAVELIN_TYPE: 48, game.DARTS_TYPE: 48,
               game.METAL_TWOHAND_SWORD_TYPE: 45, game.METAL_LOTULIS_TYPE: 44, game.METAL_JAVELIN_TYPE: 48,
+              game.OBSIDIAN_LOTULIS_TYPE: 44, game.BONE_GREAT_SWORD_TYPE: 45,
               # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
               # Speed: the Boots (68), as npcitems.TYPES makes their types
               game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,

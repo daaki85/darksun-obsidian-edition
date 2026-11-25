@@ -55,6 +55,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/drakejaw.png) | Bone | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
 | ![](docs/items/polearm-plus1.png) | Bone | Polearm +1 | +1; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
 | ![](docs/items/thornwall.png) | Bone | ***Thornwall*** | a bone polearm +1; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
+| ![](docs/items/bone-great-sword-plus1.png) | Bone | ***Bone Great Sword +1*** | +1 (Wake of the Ravager's kind, in bone): a water cleric can wield it | carried by **Dakaren**, who comes once Jasmine is freed at the Silt Sea and the Silt Horrors are dead |
 | ![](docs/items/gythka-plus3.png) | Bone | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](PEOPLE.md#the-champions-bout)) |
@@ -75,6 +76,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/great-sword-plus3.png) | Metal | ***Great Sword +3*** | +3 (Wake of the Ravager's kind) | in the chest of Balkazar's treasure room in the Wyrm School, by the Belt of Might |
 | ![](docs/items/great-sword-plus2.png) | Metal | ***Great Sword +2*** | +2 (Wake of the Ravager's kind) | a **skeleton** in the Upper Castle (by the earth elemental), with the Bow +2 |
 | ![](docs/items/lotulis-plus2.png) | Metal | ***Lotulis +2*** | +2 (Wake of the Ravager's kind); a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) | carried by one of the **Guards** of the Lower Castle (a +2 weapon before the vrocks that need one) |
+| ![](docs/items/obsidian-lotulis-plus1.png) | Obsidian | ***Obsidian Lotulis +1*** | +1 (Wake of the Ravager's kind, in obsidian): a fire or earth cleric can wield it; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) | carried by **Dagger**, chief of the White Sand Outlaws, with the Boots of Speed (fought if the party keeps the blank-eyed slave from him) |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
 | ![](docs/items/terror-blade.png) | Obsidian | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
@@ -141,8 +143,8 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Sling | Sling +2, Sling +1 |
 | Staff sling | ***Windlash*** +1 |
-| Two-handed sword | ***Great Sword +3***, ***Great Sword +2*** |
-| Lotulis | ***Lotulis +2***, ***Lotulis +1*** |
+| Two-handed sword | ***Great Sword +3***, ***Great Sword +2***, ***Bone Great Sword +1*** |
+| Lotulis | ***Lotulis +2***, ***Lotulis +1***, ***Obsidian Lotulis +1*** |
 | Double spear | ***Double Spear +2***, ***Double Spear +1*** |
 | Trikal | ***Trikal +2***, ***Trikal +1*** |
 | Javelin | ***Javelin +1*** |
@@ -296,6 +298,8 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | Village Hero, Elite Guard (in place of the bow) | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
 | ![](docs/items/metal-great-sword.png) | two-handed sword | metal | Melkor (Gedron) | — | **new**: the two-handed sword, in metal |
 | ![](docs/items/metal-lotulis.png) | lotulis | metal | Melkor (Gedron) | — | **new**: the lotulis, in metal |
+| ![](docs/items/obsidian-lotulis.png) | lotulis | obsidian | Melkor (Gedron) | — | **new**: the lotulis, in obsidian: a fire cleric's too |
+| ![](docs/items/bone-great-sword.png) | two-handed sword | bone | Melkor (Gedron) | — | **new**: the two-handed sword, in bone: a water cleric's too |
 | ![](docs/items/metal-javelin.png) | javelin | metal | — | the slave pens' weapon rack | **new**: the javelin, in metal |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | Silt Runner (in place of the sling), the White Sand Outlaws (Slave Hunters) | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 
@@ -355,6 +359,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Skycutter | 3,500 (as the game's Sling +2) |
 | Plain metal weapons | 50 to 500 (metal cahulaks 200, metal two-handed sword 500, lotulis and javelin 150) |
 | Plain obsidian cahulaks | 15 (bone 10, as the other obsidian weapons dearer than bone) |
+| Plain obsidian lotulis, bone two-handed sword | 30 (the stone lotulis 20), 100 (the obsidian one 150, the metal 500) |
 | Bracers of Defense | 5,000 a point of AC |
 | Ring of Protection +1 | 15,000 |
 | Cloak of Protection +1 | 15,000 |

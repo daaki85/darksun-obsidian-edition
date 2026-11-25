@@ -146,12 +146,13 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
 # (2679), and Wake of the Ravager's two-handed sword (2681, 18), lotulis (2683, 22), double spear,
 # trikal and javelin (2685, 2687, 2689, 18), and their Javelin +1 (2695), metal ones (2697, 2699, 2701)
-# and magic ones (2703-2717), ICONS'.
+# and magic ones (2703-2717), and the obsidian lotulis, the bone great sword and their +1s (2719,
+# 2721, 2723, 2725), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
             2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679,
             2681, 2683, 2685, 2687, 2689, 2695, 2697, 2699, 2701, 2703, 2705, 2707, 2709, 2711,
-            2713, 2715, 2717)
+            2713, 2715, 2717, 2719, 2721, 2723, 2725)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -451,6 +452,18 @@ def metal_lotulis_icon(rows: Rows) -> Rows:
     return put(padded(rows), LOTULIS_METAL_HOOKS)
 
 
+# the obsidian lotulis (the user's, 2026-11-25): the Gythka's metal blades in the obsidian greys (as
+# AXE_OBSIDIAN darkens the axe's), the hooks in them too
+GYTHKA_OBSIDIAN = {161: 208, 210: 208, 211: 209, 212: 210, 213: 210, 214: 211, 215: 211, 216: 212, 217: 212}
+LOTULIS_OBSIDIAN_HOOKS = tuple((x, y, {50: 210, 49: 209, 48: 208}[p]) for x, y, p in LOTULIS_HOOKS)
+LOTULIS_OBSIDIAN = tuple(range(208, 213))  # (its blades' and hooks' greys)
+SWORD_BONE = (146, 148, 152, 156)  # (the bone Long Sword's blade)
+
+
+def obsidian_lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(recolour(rows, GYTHKA_OBSIDIAN)), LOTULIS_OBSIDIAN_HOOKS)
+
+
 # a flint head along the diagonal, its point at (0, 0): (x, y, colour)
 FLINT_HEAD = ((0, 0, 214), (1, 0, 212), (0, 1, 212), (1, 1, 213), (2, 1, 210), (1, 2, 210), (2, 2, 211),
               (3, 2, 209), (2, 3, 209), (3, 3, 208))
@@ -682,6 +695,14 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False)),
     ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
     ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
+    # the obsidian lotulis (fire clerics') and the bone great sword (water clerics': the bone Long
+    # Sword's, longer) (the user's, 2026-11-25), and their +1s: the lotulis' blades burning, the
+    # sword's blade in the water's colours (as Hayneedle's: a water cleric prayed over it)
+    ("Obsidian Lotulis", 0xFC0D, 2718, 2719, obsidian_lotulis_icon),
+    ("Bone Great Sword", 0xFC0C, 2720, 2721, longer_blade),
+    ("Obsidian Lotulis +1", 0xFC0D, 2722, 2723, burning(obsidian_lotulis_icon, LOTULIS_OBSIDIAN)),
+    ("Bone Great Sword +1", 0xFC0C, 2724, 2725,
+     lambda r: glow(longer_blade(r), lambda p, x, y: p in SWORD_BONE and (x + y) % 2 == 0, WATER)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -1311,7 +1332,8 @@ def _ravager_kinds() -> Dict[int, str]:
     return {game.TWOHAND_SWORD_TYPE: "Great Sword", game.LOTULIS_TYPE: "Lotulis",
             game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
             game.DARTS_TYPE: "Darts", game.METAL_TWOHAND_SWORD_TYPE: "Metal Great Sword",
-            game.METAL_LOTULIS_TYPE: "Metal Lotulis", game.METAL_JAVELIN_TYPE: "Metal Javelin"}
+            game.METAL_LOTULIS_TYPE: "Metal Lotulis", game.METAL_JAVELIN_TYPE: "Metal Javelin",
+            game.OBSIDIAN_LOTULIS_TYPE: "Obsidian Lotulis", game.BONE_GREAT_SWORD_TYPE: "Bone Great Sword"}
 
 
 RAVAGER_KINDS = _ravager_kinds()  # (any plus but RAVAGER_MAGIC's: one picture each kind)
@@ -1323,7 +1345,8 @@ def _ravager_magic() -> Dict[Tuple[int, int], str]:
             (game.TRIKAL_TYPE, 1): "Trikal +1", (game.TRIKAL_TYPE, 2): "Trikal +2",
             (game.LOTULIS_TYPE, 1): "Lotulis +1", (game.METAL_LOTULIS_TYPE, 2): "Lotulis +2",
             (game.METAL_TWOHAND_SWORD_TYPE, 2): "Great Sword +2",
-            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Great Sword +3"}
+            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Great Sword +3",
+            (game.OBSIDIAN_LOTULIS_TYPE, 1): "Obsidian Lotulis +1", (game.BONE_GREAT_SWORD_TYPE, 1): "Bone Great Sword +1"}
 
 
 RAVAGER_MAGIC = _ravager_magic()  # (worldgear.RAVAGER_MAGIC's: by type and plus)

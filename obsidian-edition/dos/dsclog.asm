@@ -12247,7 +12247,7 @@ conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)
-KIND_TYPES equ 157
+KIND_TYPES equ 159
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
               db 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 5, 1, 13, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
               db 15, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
@@ -12257,6 +12257,7 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
               db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
               db 17, 18, 19, 20, 21, 22       ; (148-153: Wake of the Ravager's kinds)
               db 17, 18, 21                   ; (154-156: their metal two-handed sword, lotulis and javelin)
+              db 18, 17                       ; (157, 158: the obsidian lotulis and the bone great sword)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -16739,6 +16740,7 @@ box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 11
                                         ;   spear, trikal and javelin)
          dw 2695, 2697, 2699, 2701       ; (their Javelin +1, metal two-handed sword, lotulis, javelin)
          dw 2703, 2705, 2707, 2709, 2711, 2713, 2715, 2717 ; (their magic ones: icons.RAVAGER_MAGIC)
+         dw 2719, 2721, 2723, 2725       ; (the obsidian lotulis, the bone great sword and their +1s)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -23324,7 +23326,7 @@ probe_names_fill:
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 42
+TYPES_EXTRA equ 44
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -29679,6 +29681,12 @@ extra_types:
         xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
         xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
         xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x04, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7F, 0x12, 0x00, 0x00
+        ; an obsidian lotulis, for fire clerics (the user's, 2026-11-25): the lotulis of obsidian (+8:
+        ; 3), the fire cleric's bit added (+10h: 167Eh)
+        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7E, 0x16, 0x00, 0x02
+        ; a bone great sword, for water clerics (the user's, 2026-11-25): the two-handed sword of
+        ; bone (+8: 1), its classes (water clerics among them)
+        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
 extra_types_end:
         times -(XT_N != TYPES_EXTRA) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)

@@ -84,6 +84,9 @@ Releases, newest first (2.12.0 and older in the archive):
   lotulis.
 - Air clerics may use the javelins (a thrown weapon) and water clerics the darts (wood), as their
   spheres allow (the user's).
+- An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
+  sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
+  chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the

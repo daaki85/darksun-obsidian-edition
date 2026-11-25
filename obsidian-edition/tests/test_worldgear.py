@@ -68,10 +68,11 @@ class WorldGearTests(unittest.TestCase):
         specs = (worldgear.TWOHAND_SWORD, worldgear.LOTULIS, worldgear.DOUBLE_SPEAR, worldgear.TRIKAL,
                  worldgear.JAVELIN, worldgear.DARTS)
         self.assertEqual([s[0] for s in specs], list(range(game.GAME_TYPES + 33, game.GAME_TYPES + 39)))
-        metal = (game.METAL_TWOHAND_SWORD_TYPE, game.METAL_LOTULIS_TYPE, game.METAL_JAVELIN_TYPE)
-        self.assertEqual(metal, tuple(range(game.GAME_TYPES + 39, game.GAME_TYPES + 42)))
+        metal = (game.METAL_TWOHAND_SWORD_TYPE, game.METAL_LOTULIS_TYPE, game.METAL_JAVELIN_TYPE,
+                 game.OBSIDIAN_LOTULIS_TYPE, game.BONE_GREAT_SWORD_TYPE)
+        self.assertEqual(metal, tuple(range(game.GAME_TYPES + 39, game.GAME_TYPES + 44)))
         self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs] + list(metal))
-        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 59, 61, 61, 100, 101, 101])
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 59, 61, 61, 61, 100, 101, 101, 101])
         for spec in specs:
             self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
             self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])
@@ -796,7 +797,9 @@ class RavagerMagicTests(unittest.TestCase):
                 "Lotulis +1": (98, 0x23, (168, 2624)), "Javelin +1": (84, 0x05, (431, 2625)),
                 "Lotulis +2": (108, 0x1D, (17, 2626)), "Great Sword +2": (2265, 0x1C, None),
                 "Trikal +2": (71, 0x0F, (49, 2627)), "Double Spear +2": (82, 0x04, (349, 2628)),
-                "Great Sword +3": (1063, 0x0D, (337, 2629))}
+                "Great Sword +3": (1063, 0x0D, (337, 2629)),
+                "Bone Great Sword +1": (worldgear.DAKAREN, None, None),
+                "Obsidian Lotulis +1": (worldgear.DAGGER, None, None)}
         got = {icons.which(g.items[0]): (g.objects[0], g.region, g.clone) for g in G.RAVAGER_MAGIC}
         self.assertEqual(got, want)
         for g in G.RAVAGER_MAGIC:
@@ -809,10 +812,13 @@ class RavagerMagicTests(unittest.TestCase):
 
     def test_metal_sold(self):
         melkor = next(g for g in worldgear.GIFTS if g.name == "Melkor")
-        self.assertEqual((melkor.objects, melkor.items), ((233,), (worldgear.weapon(worldgear.METAL_TWOHAND_SWORD),
-                                                                  worldgear.weapon(worldgear.METAL_LOTULIS))))
+        self.assertEqual((melkor.objects, melkor.items),
+                         ((233,), tuple(worldgear.weapon(w) for w in (worldgear.METAL_TWOHAND_SWORD, worldgear.METAL_LOTULIS,
+                                                                      worldgear.OBSIDIAN_LOTULIS, worldgear.BONE_GREAT_SWORD))))
         for spec, name in ((worldgear.METAL_TWOHAND_SWORD, "Metal Great Sword"),
-                           (worldgear.METAL_LOTULIS, "Metal Lotulis"), (worldgear.METAL_JAVELIN, "Metal Javelin")):
+                           (worldgear.METAL_LOTULIS, "Metal Lotulis"), (worldgear.METAL_JAVELIN, "Metal Javelin"),
+                           (worldgear.OBSIDIAN_LOTULIS, "Obsidian Lotulis"),
+                           (worldgear.BONE_GREAT_SWORD, "Bone Great Sword")):
             self.assertEqual(icons.which(worldgear.weapon(spec)), name)
 
     def test_cleric_spheres(self):
@@ -827,3 +833,21 @@ class RavagerMagicTests(unittest.TestCase):
             self.assertTrue(restrict.sphere_allows(restrict.AIR, typ, kind))
         typ = npcitems.TYPES[game.DARTS_TYPE - game.GAME_TYPES]
         self.assertTrue(restrict.sphere_allows(restrict.WATER, typ, restrict.specialize.kind_of(game.DARTS_TYPE)))
+
+    def test_cleric_materials(self):
+        """The obsidian lotulis fire clerics' (its mask's fire bit, 4, and obsidian), the bone great
+        sword water clerics' (8, bone); the stone lotulis and obsidian great sword neither's (the
+        user's, 2026-11-25)."""
+        from dsloader import restrict
+        for t, sphere, bit in ((game.OBSIDIAN_LOTULIS_TYPE, restrict.FIRE, 0x4),
+                               (game.BONE_GREAT_SWORD_TYPE, restrict.WATER, 0x8)):
+            typ = npcitems.TYPES[t - game.GAME_TYPES]
+            self.assertEqual(int.from_bytes(typ[restrict.TYPE_CLASSES:restrict.TYPE_CLASSES + 2], "little") & bit, bit)
+            self.assertTrue(restrict.sphere_allows(sphere, typ, restrict.specialize.kind_of(t)))
+            self.assertEqual((typ[8], restrict.specialize.KINDS[restrict.specialize.kind_of(t)]),
+                             {restrict.FIRE: (3, "lotulis"), restrict.WATER: (1, "two-handed sword")}[sphere])
+            self.assertEqual(game.RAVAGER_TYPES[t], game.RAVAGER_TYPES[{restrict.FIRE: game.LOTULIS_TYPE,
+                                                                        restrict.WATER: game.TWOHAND_SWORD_TYPE}[sphere]])
+        for t, sphere in ((game.LOTULIS_TYPE, restrict.FIRE), (game.TWOHAND_SWORD_TYPE, restrict.WATER)):
+            typ = npcitems.TYPES[t - game.GAME_TYPES]
+            self.assertFalse(restrict.sphere_allows(sphere, typ, restrict.specialize.kind_of(t)))

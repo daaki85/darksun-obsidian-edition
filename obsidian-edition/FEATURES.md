@@ -827,12 +827,14 @@ lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquet
 caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
 the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
 table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own: three of them in metal too (a two-handed
-sword and a lotulis at Melkor's in Gedron, a javelin on the slave pens' weapon rack), and magic ones
+sword and a lotulis at Melkor's in Gedron, a javelin on the slave pens' weapon rack), an obsidian
+lotulis for fire clerics and a bone great sword for water clerics (at Melkor's too), and magic ones
 along the way through the game, the weaker early (Darts +1 on the arena's defiler champion; a Double
 Spear +1 at the Fields' gate, a Trikal +1 with the elven slavers, a Lotulis +1 at the Hot Springs, a
 Javelin +1 with the Silt Sea's ssurans, a Lotulis +2 in the Lower Castle, a Great Sword +2 in the
 Upper Castle, a Trikal +2 at the way into the Wyrm Belly, a Double Spear +2 at the gladiators' camp,
-a Great Sword +3 in Balkazar's treasure room). Those carried by one of a group are given to one
+a Great Sword +3 in Balkazar's treasure room; an Obsidian Lotulis +1 on Dagger, the White Sand
+Outlaws' chief, and a Bone Great Sword +1 on Dakaren at the Silt Sea). Those carried by one of a group are given to one
 person there, an object of their own in the Loader's copy of the region, so they show only in a
 region the party hasn't yet entered in that game. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's

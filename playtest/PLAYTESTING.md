@@ -722,7 +722,10 @@ game's data: it is one player's account.
 
 - **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
   backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
-  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back).
+  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click
+  with `click.py X Y right` at game pixels (the backpack's first column x 195, y 27, 45, 63, 81
+  opened the four boxes; 250,33 closes one): an `xdotool click --window` never reaches the game,
+  whose pointer DOSBox holds (logs/2026-11-25-obsidian-lotulis-bone-great-sword.md).
 - **The inventory screen's places** (from hovering: the name shows in the bar at the bottom; the
   ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest (173,70), left
   hand (173,92), legs (173,128); **the feet** (174,147) (logs/2026-11-09-silent-labels.md; a
