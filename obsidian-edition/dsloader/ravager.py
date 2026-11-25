@@ -547,6 +547,20 @@ PATCHES: Tuple[Patch, ...] = (
     # and the THAC0 the skill's (DSCLOG2's SPEC_ATTACKS), and DSCLOG2's SPEC_DAMAGE (site 51) adds its
     # damage where the attack adds the strength bonus to the weapon's ("add [bp-14h],ax", 5CF6Dh, SL's 588F2h)
     Patch("spec_damage", 0x5CF6D, bytes.fromhex("0146ec"), _site(51, 3)),
+    # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
+    # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
+    # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
+    # bonus (6CAC9h): DSCLOG2's DAM_LINE, MISSILE_LINE and VIEW_DAM (sites 70-72) give the attack's numbers
+    # with weapon specialization, the cahulaks' off head and the off hand's one a round.
+    Patch("dam_line", 0x7B19E, bytes.fromhex("268a4724"), _site(70, 4)),
+    Patch("missile_line", 0x7B124, bytes.fromhex("268a4707"), _site(71, 4)),
+    Patch("view_dam", 0x6CAC9, bytes.fromhex("8956f2"), _site(72, 3)),
+    # The Effects screen's lines (SL's PROBE_EF_ROWS, PROBE_EF_CLICK): the end of its routine that fills the
+    # selected character's cells (8AC6Fh, SL's 7EDFAh: "pop di / pop si / leave" at 8AFA9h) and its handler for
+    # them (8AB13h, SL's 7EC97h: "mov si,[bp+8]" at 8AB1Ah): DSCLOG2's EF_ROWS (site 73) lists the kits and
+    # weapon kinds in the lower panel, EF_CLICK (site 74) shows their next page on a click there.
+    Patch("ef_rows", 0x8AFA9, bytes.fromhex("5f5ec9"), _site(73, 3)),
+    Patch("ef_click", 0x8AB1A, bytes.fromhex("8b7608"), _site(74, 3)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
