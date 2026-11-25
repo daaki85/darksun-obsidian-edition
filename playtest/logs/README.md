@@ -177,6 +177,7 @@ schedules and diffs a log made or used.
 | [2026-11-21](2026-11-21-dosbox-x-unchecked.md) | DOSBox-X, what the last play left unseen: Bless cast in `fountain-user`'s ambush, the fight won with no edit and its autosave made and loaded, F10 after the last step (the Loader's walk back), Kalzith's shop (S, a purchase), the inventory (an item given), the creation screen to VIEW CHARACTER (a Myrmidon, the weapon and psionic windows); nothing differed from 0.74 |
 | [2026-11-25](2026-11-25-dosbox-x-upper-memory.md) | DOSBox-X's upper memory: which options move it, and `umb end=FBFF` with a 16 KB ROM BIOS giving DSCLOG 48 KB more free upper memory in `fountain-user` (a fight won with it) |
 | [2026-11-25](2026-11-25-ravager-loot-tabs-join.md) | The Loader's Dialogue/Journal tabs and the loot keys joined in one build of DSCLOG2 (43216 bytes; 42688 resident, 112768 free after it): T on a body, F5, F9 and Return, Uhubito in the Dialogue tab, S at Notaku's; Notaku's "Show me your goods" dropped after any shop visit in that talk (the plain sequel too: the game's), and a save with an empty name from SAVE or Return with the box empty (the game's) |
+| [2026-11-25](2026-11-25-combined-playtest.md) | Every open pull request together on `claude/combined-playtest`: the V3 specs read by DSCLOG2, SL's new weapon types in the sequel, 2,596 tests (1 known failure), `fountain-user`'s ambush won with DSCLOG's item tables checked, the transferred party's Tyr ambush won with V3 specs |
 
 ## files/
 
