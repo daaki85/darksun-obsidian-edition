@@ -83,13 +83,10 @@ def hooded_outfit(study, key, pose, garment):
                 fold = hood[y + pad][x]
                 if row[x] in outfits.SKINC and fold in slate and (back(x-pad, y), y) not in arm:
                     row[x] = leaf[slate.index(fold)]
-    if key == outfits.HALF_ELF_WOMAN and pose == 28 and garment == "Fighter/Psionicist":
-        # The turned lip lies between the fallen shoulder guard and hood.
-        out[9 + pad][4 + pad] = hood[9 + pad][4 + pad]
     return out, pad
 
 
-def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
+def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_belt=False):
     if role == "Druid/Thief":
         return hooded_outfit(study, key, pose, "Druid")
     base = base_class(role)
@@ -161,6 +158,10 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
             hip, belt = pad + 8, 16
         elif not female and pose == 12 and base == "Druid":
             hip, belt = pad + 9, 18
+    if above_belt:
+        # The teal wrap sits above the Thief’s leather sword belt. Both
+        # tuck against the same hip as the cloak swings behind the legs.
+        belt -= 2
     palette = study.game.palette
 
     def light(c):
@@ -169,6 +170,12 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
 
     values = sorted(light(single[pad + (height - 1 - level if pose == 28 else level)][x])
                     for level, panel in panels.items() for x in panel)
+    dye = DYES[accent]
+    if not female and base == "Cleric" and accent == "Preserver":
+        # The narrower turned edge on his robe needs plum through the mids.
+        dye = (174, 174, 175, 175, 58, 74, 59)
+    elif female and base == "Cleric" and accent == "Fighter" and not baldric:
+        dye = (88, 88, 89, 89, 90, 91, 93)
     for level, panel in panels.items():
         y = pad + (height - 1 - level if pose == 28 else level)
         for x in panel:
@@ -179,7 +186,6 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
                 if not any(xx in support for xx in (x - 1, x, x + 1)):
                     continue
                 dx = x - hip
-            dye = DYES[accent]
             if baldric:
                 # Run the sword strap from the near shoulder to the other hip.
                 # The separate teal waist wrap crosses it in front.
@@ -193,8 +199,6 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
                     continue
             elif accent == "Fighter":
                 # A dark sword belt crosses the waist and turns down at the hip.
-                if female and base == "Cleric":
-                    dye = (88, 88, 89, 89, 90, 91, 93)
                 seam = belt_depth + max(-1, min(1, round(dx / 4)))
                 if seam not in (-1, 0, 1) and not (1 <= belt_depth <= 3 and -3 <= dx <= -1):
                     continue
@@ -234,7 +238,7 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False):
 
 def draw_triple(study, key, pose, role):
     members = role.split("/")
-    if "Thief" in members:
+    if "Thief" in members and role != "Fighter/Psionicist/Thief":
         return hooded_outfit(study, key, pose, "/".join(name for name in members if name != "Thief"))
 
     base = base_class(role)
@@ -243,12 +247,14 @@ def draw_triple(study, key, pose, role):
     accents = [name for name in ("Preserver", "Ranger", "Fighter", "Psionicist")
                if name in members and name != base]
     first, second = ("/".join(name for name in members if name in (base, accent)) for accent in accents)
-    if accents == ["Fighter", "Psionicist"]:
+    if accents == ["Fighter", "Psionicist"] and base != "Thief":
         under, pad = draw_pair(study, key, pose, first, baldric=True)
     else:
         under, pad = study.rows(key, pose, first)
     if accents == ["Preserver", "Ranger"]:
         over, _ = draw_pair(study, key, pose, second, far_lining=True)
+    elif base == "Thief":
+        over, _ = draw_pair(study, key, pose, second, above_belt=True)
     else:
         over, _ = study.rows(key, pose, second)
     plain, _ = study.rows(key, pose, base)
