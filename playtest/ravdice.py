@@ -5,10 +5,10 @@
 # tell apart foes of one name (as ravitems.py and ravfight.py number them). RAV_RULES_OFF=MASK (game.RULE_* bits, as 0x1000000): those rules off
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
-import sys, os, time, argparse, struct
+import sys, os, time, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
-from dsloader import dicelog, ravlog
+from dsloader import game, launch, ravlog
 WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 show_all = '--all' in sys.argv; numbers = '--numbers' in sys.argv
 args = [a for a in sys.argv[1:] if a not in ('--all', '--numbers')]
@@ -20,11 +20,10 @@ print(log.attach(), flush=True)
 if numbers:
     name = log.game.combatant_name
     log.game.combatant_name = lambda n: '%s#%d' % (name(n), n)
-if log.tsr_hdr is not None:  # (the rules as the Loader set them in DSCLOG2's header: the settings' switches too)
-    lo, hi = (struct.unpack('<H', g.read(log.tsr_hdr + at, 2))[0] for at in (dicelog.TSR_RULES, dicelog.TSR_RULES_HI))
-    log.rules = log.game.rules = lo | hi << 16
+# the rules as the Loader sets them (its settings, kits and the other switches with them: DSCLOG2's
+# assembled word has only the always-on ones), then RAV_RULES_OFF's off
+log.set_rules(game.rules_from_settings(launch.load_settings()) & ~int(os.environ.get('RAV_RULES_OFF') or '0', 0))
 if os.environ.get('RAV_RULES_OFF'):
-    log.set_rules(log.rules & ~int(os.environ['RAV_RULES_OFF'], 0))
     print('rules off: %s, now %#x' % (os.environ['RAV_RULES_OFF'], log.game.rules), flush=True)
 if os.environ.get('RAV_STEALTH_ROLL'):
     log.stealth_roll = lambda n=int(os.environ['RAV_STEALTH_ROLL']): n
