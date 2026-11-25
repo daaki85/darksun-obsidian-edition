@@ -7709,6 +7709,9 @@ SPEC_COUNT  equ 4
 SPEC_PACKED equ 0x80
 SPEC_V2     equ 0x40
 SPEC_KINDS_MASK equ 0x1FFFF
+V3_BASE equ 17 * 17 * 17 * 17  ; (DSCLOG's V3 layout: the Loader's game.packed_specs)
+REST_SETS equ 1 + 22 + 231 + 1540
+KIND_COUNT equ 22
 SHEETS_COUNT equ 17
 SPEC_NONE   equ 0               ; (SPEC_OF's levels, DSCLOG's)
 SPEC_PLAIN  equ 1
@@ -8039,30 +8042,127 @@ spec_get:
         movzx ax, byte [es:bx + si + SPEC_SLOTS]
         ret
 .packed:
-        push ecx
-        push edx
-        push eax
-        mov edx, [es:bx + SPEC_SLOTS]
-        test edx, SPEC_V2 << 16
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
         jz .five
-        mov eax, edx
-        and eax, SPEC_KINDS_MASK
-        mov ecx, 17
-        push si
-.digit: xor edx, edx            ; (digit SI: the remainder of the (SI + 1)th division)
-        div ecx
-        dec si
-        jns .digit
-        pop si
-        jmp .got
-.five:  imul cx, si, 5
+        call spec_unpack
+        movzx ax, byte [cs:si + spec_digits]
+        cmp al, SL_KINDS                ; (a kind of SL's own past the sequel's sixteen: FOLD_KINDS')
+        jbe .ret
+        push bx
+        movzx bx, al
+        mov al, [cs:bx + fold_kinds - SL_KINDS - 1]
+        pop bx
+.ret:   ret
+.five:  push ecx
+        push edx
+        mov edx, [es:bx + SPEC_SLOTS]
+        imul cx, si, 5
         shr edx, cl
-        and dl, 0x1F
-.got:   pop eax
         movzx ax, dl
+        and al, 0x1F
         pop edx
         pop ecx
         ret
+; FOLD_KINDS: SL's weapon kinds 17-22 (specialize.KINDS' Ravager weapons: two-handed sword, lotulis,
+; double spear, trikal, javelin, darts), a spec of one carried by the party transfer, as the kind + 1
+; the sequel counts that weapon as (SPEC_KINDS_OWN's): long sword, gythka, polearm, polearm, chatkcha,
+; chatkcha.
+SL_KINDS equ 16
+fold_kinds db 1, 11, 10, 10, 13, 13
+
+; SPEC_UNPACK, SPEC_CHOOSE: DSCLOG's (a SPEC_V2 or V3 sheet's four specs in SPEC_DIGITS: the Loader
+; writes V3, game.packed_specs).
+spec_unpack:
+        push eax
+        push ecx
+        push edx
+        push si
+        mov eax, [es:bx + SPEC_SLOTS]
+        and eax, SPEC_KINDS_MASK
+        cmp eax, V3_BASE
+        jae .v3
+        mov ecx, 17
+        xor si, si
+.digit: xor edx, edx
+        div ecx
+        mov [cs:si + spec_digits], dl
+        inc si
+        cmp si, SPEC_COUNT
+        jb .digit
+        jmp .out
+.v3:    sub eax, V3_BASE                ; (the first, and the others' rank: SPEC_REPACK's undone)
+        xor edx, edx
+        mov ecx, REST_SETS
+        div ecx
+        mov [cs:spec_digits], al
+        mov eax, edx
+        mov si, 3                       ; (how many others: the sets of fewer come first)
+.size:  push si
+        add si, si
+        movzx ecx, word [cs:si + spec_rest_from]
+        pop si
+        cmp eax, ecx
+        jae .sized
+        dec si
+        jmp .size
+.sized: sub eax, ecx
+        mov dword [cs:spec_digits + 1], 0  ; (one past: SPEC_SORTED's room)
+        dec si
+        js .out
+.place: mov cl, KIND_COUNT - 1          ; (the greatest C(CL, SI + 1) under the rank left: the
+.try:   mov ch, cl                      ;   other in slot SI + 1 is CL + 1)
+        call spec_choose
+        cmp edx, eax
+        jbe .found
+        dec cl
+        jmp .try
+.found: sub eax, edx
+        inc cl
+        mov [cs:si + spec_digits + 1], cl
+        dec si
+        jns .place
+.out:   pop si
+        pop edx
+        pop ecx
+        pop eax
+        ret
+spec_rest_from dw 0, 1, 1 + 22, 1 + 22 + 231 ; (REST_SETS' sets of 0, 1, 2 and 3 before each size)
+spec_choose:
+        push eax
+        push ecx
+        push si
+        mov eax, 1
+        movzx ecx, ch
+        inc si                          ; (K: SI + 1; the product's steps, C(N, J) * (N - J) / (J + 1))
+        xor edx, edx
+        push bx
+        xor bx, bx
+.step:  cmp bx, si
+        jae .done
+        push edx
+        mov edx, ecx
+        sub dx, bx
+        jbe .zero                       ; (N under K: none)
+        imul eax, edx
+        pop edx
+        push ecx
+        movzx ecx, bx
+        inc ecx
+        xor edx, edx
+        div ecx
+        pop ecx
+        inc bx
+        jmp .step
+.zero:  pop edx
+        xor eax, eax
+.done:  pop bx
+        mov edx, eax
+        pop si
+        pop ecx
+        pop eax
+        ret
+spec_digits times SPEC_COUNT + 1 db 0  ; (one past: SPEC_UNPACK clears four from the second)
+
 spec_any:
         push eax
         mov eax, [es:bx + SPEC_SLOTS]
@@ -8071,6 +8171,9 @@ spec_any:
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
         jz .five
         and eax, SPEC_KINDS_MASK
+        cmp eax, V3_BASE
+        jb .test                        ; (V2's number: none, 0; V3's from V3_BASE, none V3_BASE)
+        sub eax, V3_BASE
         jmp .test
 .five:  and eax, 0x000FFFFF
 .test:  test eax, eax
