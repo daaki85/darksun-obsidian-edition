@@ -387,6 +387,14 @@ def draw(game, model, k, role, design=None, layers=None):
                 shade = min(4, shade + 1)
             if c is not None and c not in outfits.SKINC and not (head or hand):
                 paint = FLESH[shade if abs(dx) < radius else 1 + int(hue[c] > 65)]
+                if depth >= 0 and d <= 0 and not neck:
+                    # A short oblique ridge turns over the near shoulder.
+                    # A darker pixel beneath it separates the ribs from the hip.
+                    crest = -1.6 + 0.9 * t
+                    if abs(dx - crest) < 0.85:
+                        paint = 147 if t < 0.34 else 144 if t < 0.62 else 130
+                    elif 0.8 < dx - crest < 1.9 and 0.35 <= t < 0.75:
+                        paint = 131
             # The woman's grey boots and the man's skin have the same stride
             # except in their opening attack. Borrow shading only inside her outline.
             if body and d > 1 and c not in outfits.SKINC:

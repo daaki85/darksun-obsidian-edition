@@ -257,9 +257,17 @@ def torso_skin(u, depth, rear, profile):
     rib = 0.24 + (0.19 if rear else 0.12) * distance
     hip = 0.89 - 0.18 * distance
     if abs(depth - rib) < 0.19 and abs(distance) < 0.49:
-        return 148 if abs(depth - rib) + 0.45 * abs(distance) < 0.14 else 146
+        crest = abs(depth - rib) + 0.45 * abs(distance)
+        if crest < 0.075:
+            return 149
+        return 147 if crest < 0.22 else 145
     if abs(depth - hip) < 0.14 and abs(distance) < 0.48:
         return 146 if abs(distance) < 0.23 else 144
+    # The lower edge of the lit ribs curves up towards the far side.
+    # A few warm pixels catch that edge before it turns into the waist.
+    flank = 0.63 - 0.24 * distance
+    if -0.34 < distance < 0.48 and abs(depth - flank) < 0.08:
+        return 144 if distance < 0.16 else 130
     if distance < -0.54:
         return 132 if distance > -0.92 else 134
     if distance < 0.10:
@@ -403,6 +411,7 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     if low_cap:
         cap_top = max(shoulder + 1, cy + 2)
         cap_bottom = cap_top + 1
+    profile_walk = pose in (2, 11, 12, 13, 14)
     panel = PROFILE_PANELS.get((model, pose))
     panel_hem = waist + (3 if cape == "Thief" else 5)
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
@@ -466,12 +475,20 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     if not arm and c not in outfits.SKINC and y >= shoulder:
                         if y <= waist:
                             paint = torso_skin(u, t, rear, profile)
-                        elif feet and end - start >= 2:
+                        elif feet and (end - start >= 2 or profile_walk and end > start):
                             # The kneecap and calf turn at different heights on
                             # the two legs, especially on the lifted bow/hit leg.
                             sole = min(feet, key=lambda ft: abs(x - (ft[1] + ft[2]) / 2))[0]
                             leg = (y - waist) / max(1, sole - waist)
-                            if leg < 0.78:
+                            if profile_walk and 0.59 <= leg < 0.93:
+                                # The calf bulges below the knee and the light
+                                # tapers into the ankle, even on a two-pixel shin.
+                                ridge = 0.29 + 0.25 * (leg - 0.59)
+                                if abs(pos - ridge) < 0.23:
+                                    paint = 146 if leg < 0.70 else 144 if leg < 0.80 else 130
+                                else:
+                                    paint = 134 if pos > ridge else 132
+                            elif leg < 0.78 and end - start >= 2:
                                 paint = leg_skin(pos, leg, rear)
                         if model == figures.ELF_WOMAN and pose == 27:
                             paint = HIT_THIGH.get((x, y), paint)

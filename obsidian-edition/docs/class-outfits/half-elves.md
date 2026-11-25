@@ -54,7 +54,7 @@ The four rows below show all three two-class parents followed by the triple and 
 
 The initial review puts the original figure and cleaned body beside the Gladiator, Fighter and Cleric. [Watch the body comparison](half-elf-study.gif) · [Female comparison sheet](half-elf-female-poses.png) · [Male comparison sheet](half-elf-male-poses.png)
 
-In front idle and the four front steps, the man’s chest highlight turns into shadow below the ribs and the thigh highlight tapers toward the knee. The smaller figures in the comparison show what remains visible around the Gladiator’s strap and kilt at game size. [First front-walk revision beside the retail warrior](half-elf-skin.png) · [Current shading beside the Gladiator and Fighter](body-detail-comparison.png) · [Watch all eight body bases](body-texture.gif)
+In front idle and the four front steps, the man’s chest highlight turns into shadow below the ribs and the thigh highlight tapers toward the knee. The smaller figures in the comparison show what remains visible around the Gladiator’s strap and kilt at game size. [First front-walk revision beside the retail warrior](half-elf-skin.png) · [Current rib and hip shading through the side walk](body-profile-detail.gif) · [Watch all eight body bases](body-texture.gif)
 
 The Loader now draws the woman’s eye, cheek, and nape separately from the deep gold shadow under her bun. The outfit study also narrows her rear Gladiator strap, adds two folds to her front Cleric collar, and breaks up the male Fighter’s jerkin shadow during the second rear strike and hit. Each pair in the comparison shows the first pass on the left and the revision on the right. [Compare the eight views](half-elf-detail-revisions.png)
 
