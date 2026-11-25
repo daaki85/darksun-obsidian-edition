@@ -1687,6 +1687,13 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   and 3 together) are taken first by the first of them: make both 7 (`files/2026-11-25-ravager-blast-log-side.py`),
   and to have the target fail its save, its sheet's five saves (+30h: the save routine's `[bp-1]`) 30
   (`-saves.py`). The spot's members' objects at (x, y) are hit by a click at about (x + 11, y + 11).
+- **The Draxans' HP for a test** (2026-11-25, logs/2026-11-25-ravager-blast-saves-join.md): the dice log's
+  numbers (Draxan#21-27) are combatant numbers, not creature indices: `ravkits.py hp 21` writes creature 21 (not a
+  Draxan) and the sheet's +8, which three Draxans share as their most. Write the HP at +0 of the creature records
+  whose +15h is 7 (indices 25, 26, 29, 31 in the ambush). **Quick saves off for a test-edit run**: `ravdice.py`
+  doesn't read settings.json's `quick_save` and `autosave`; hold `QuickSave.keys` and `.auto` False (a
+  `sitecustomize.py` on PYTHONPATH patching `dsloader.quicksave.QuickSave`) and check `ravquick.py` shows keys
+  FFFF FFFF.
 - **The saving throw's frame** (66D26h): the target's creature record's far pointer at `[bp-0Ah]`:`[bp-8]` (SL's
   `[bp-1Eh]`), set before the d20 (66E33h, `push dword 140001h` to the dice routine 0B0h:391Dh); the number needed
   `[bp-1]`, the save `[bp-6]`, the spell `[bp+0Ah]` as SL's. A natural 1 leaves before the save probe: with SL's
