@@ -792,6 +792,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
   A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
   click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
+- **First spells and powers in Wake of the Ravager** (logs/2026-11-25-ravager-first-spells.md): DONE opens
+  CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
+  107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
+  discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row

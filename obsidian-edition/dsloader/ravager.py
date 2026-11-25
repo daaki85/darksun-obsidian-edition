@@ -616,6 +616,24 @@ PATCHES: Tuple[Patch, ...] = (
     # (94A57h) in the routine that changes a human's class (9493Ch), the new class's kit asked on the game's
     # three-choice menu
     Patch("dual_kit", 0x94A57, bytes.fromhex("837e080c"), _site(76, 4)),
+    # Preservers' first spells and psionic powers at creation (SL's PROBE_CR_SPELLS, PSI_GRANT, PSI_ASK,
+    # PSI_LIST, PSI_CYCLE; always on): DSCLOG2's FIRST SPELLS AND POWERS. The creation screen's DONE (6E0B9h,
+    # SL's 6649Ch) gives the powers (6E906h [66CF1h]) and then a preserver's spells (6EA10h [66DF7h], the
+    # sequel's own grants, some drawn by rand()): PSI_GRANT (site 88) at the powers' "cmp dx,-1" in both loops
+    # (6E9C9h the psionicist's, 6E9F7h the others' [66DDEh]), CR_PICKS (site 87) at the spells' routine's end
+    # ("cmp byte [bp-6],0", 6ED55h), which has the given spells and powers picked on the level up's CHOOSE A
+    # SPELL (93160h [85560h]) and psionicists' pop-up (93B62h [85EECh]); in the pop-up PSI_COUNT (site 95,
+    # "or dx,dx / jz", 93B95h [85F01h]), PSI_LIST (96, "or ax,ax / jz", 93E1Bh [86143h]), PSI_CYCLE (97, "inc
+    # byte [bx-6285h]", 93FF1h [8631Ah]), PSI_CLICK (98, "or al,al / jz", 94245h); in CHOOSE A SPELL PICK_TOP
+    # (99, "cmp ax,[bp-2]", 93831h: its level button) with PICK_ANY and PICK_PAGE for the levels on offer
+    Patch("psi_grant_psionicist", 0x6E9C9, bytes.fromhex("83faff"), _site(88, 3)),
+    Patch("psi_grant", 0x6E9F7, bytes.fromhex("83faff"), _site(88, 3)),
+    Patch("cr_picks", 0x6ED55, bytes.fromhex("807efa00"), _site(87, 4)),
+    Patch("psi_count", 0x93B95, bytes.fromhex("0bd2743a"), _site(95, 4)),
+    Patch("psi_list", 0x93E1B, bytes.fromhex("0bc07422"), _site(96, 4)),
+    Patch("psi_cycle", 0x93FF1, bytes.fromhex("fe877b9d"), _site(97, 4)),
+    Patch("psi_click", 0x94245, bytes.fromhex("0ac07420"), _site(98, 4)),
+    Patch("pick_top", 0x93831, bytes.fromhex("3b46fe"), _site(99, 3)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
