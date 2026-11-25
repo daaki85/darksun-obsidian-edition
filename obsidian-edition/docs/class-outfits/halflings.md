@@ -1,5 +1,21 @@
 # Halfling outfit study
 
+All seven legal single classes are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
+
+## Druid, Psionicist, Ranger and Thief
+
+The animation pairs each new outfit with its retail halfling. Below them, the retail Thief, Mage and Warrior and the approved human Psionicist and Druid use the same scale and floor. The small copies show native size on sand and paving.
+
+![Both halflings in four new outfits through idle, walks, strikes, bow, hit and fall](halfling-singles.gif)
+
+[Man, all seven singles in all 29 poses](halfling-man-singles.png) · [Woman, all seven singles in all 29 poses](halfling-woman-singles.png)
+
+In side walk 2 (12), compare the back corner of the Ranger’s cloak with the retail Thief’s. The cloth swings behind the leading knee. The Druid’s leaf cape ends near the belt, leaving the ochre kilt visible. The difference is easiest to see in rear walk 2 (08) and hardest to see in the woman’s side idle (02), where her hair overlaps the short cape.
+
+The Psionicist’s teal vest follows the turning ribs into a leather belt. Front walk 3 (05) shows the separation between the vest, the bare forearms and the shaded hip flap. The Thief’s slate hood has its own crown and a dark rim. Follow the visible cheek from side idle through the four steps, then look at front strike 3 (17) as the head dips under the arm. The gallery checks exposed face pixels against each original pose.
+
+## Gladiator, Fighter and Cleric
+
 The first fitting covers the Gladiator, Fighter and Cleric on both halflings. Each row starts with the retail figure and the cleaned body. The large figures appear at 2× on arena sand, with game-size copies on darker paving. The retail Warrior (1252), Priest (1563), Thief (630) and the approved human Gladiator share those scales and floors. Retail references switch to a labeled idle where their picture sets omit a combat pose.
 
 ![Both halflings and three class outfits through all 29 poses](halfling-study.gif)
@@ -28,6 +44,6 @@ The cleaned man and woman use their own retail walk and combat pictures (2068/20
 
 ## Roster
 
-Halflings can be Clerics, Druids, Fighters, Gladiators, Psionicists, Rangers and Thieves. Druid, Psionicist, Ranger and Thief are the remaining singles.
+Halflings can be Clerics, Druids, Fighters, Gladiators, Psionicists, Rangers and Thieves. All seven singles are available in the pose sheets above.
 
 The twelve pairs are Cleric/Fighter, Cleric/Psionicist, Cleric/Ranger, Cleric/Thief, Druid/Fighter, Druid/Psionicist, Druid/Thief, Fighter/Psionicist, Fighter/Thief, Psionicist/Ranger, Psionicist/Thief and Ranger/Thief. The two triples are Fighter/Psionicist/Thief and Psionicist/Ranger/Thief. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)
