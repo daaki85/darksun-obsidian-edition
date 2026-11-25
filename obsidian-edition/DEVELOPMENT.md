@@ -466,6 +466,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 |---|---|---|
 | `icons.py` | inventory and spell icons of the Loader's own; writes its RESOURCE.GFF copy | [CONTENT: new items](DEVELOPMENT-CONTENT.md#new-items) |
 | `wotrart.py` | Wake of the Ravager's spell icons, from the player's copy | [CONTENT: new spells](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest) |
+| `sequelicons.py` | Wake of the Ravager's weapon and great axe icons, from the player's copy | [CONTENT: new items](DEVELOPMENT-CONTENT.md#new-items) |
 | `whirlart.py` | Whirlwind's picture on the ground | [CONTENT: new spells](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest) |
 | `sprites.py` | the party's map figures with what each wears | [CONTENT: what the party wears](DEVELOPMENT-CONTENT.md#what-the-party-wears) |
 | `spriteparts.py` | where each part of a figure is, frame by frame | [CONTENT: what the party wears](DEVELOPMENT-CONTENT.md#what-the-party-wears) |

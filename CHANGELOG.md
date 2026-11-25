@@ -90,6 +90,11 @@ each pull request's own entry is below, grouped.)
 - An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
   sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
   chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
+- The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
+  own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
+  material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
+  fire), not all in fire; without it, the Loader's own, the double spear, trikal and
+  darts redrawn at the sequel's sizes (the user's).
 
 **New: Wake of the Ravager** (#148, #151, #152, #155, #156, #158, #160 to #177)
 - The mod's bug fixes, rules and displays ported to the sequel (#148): hit dice, helms, held
