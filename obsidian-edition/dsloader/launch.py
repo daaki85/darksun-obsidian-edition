@@ -23,7 +23,8 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, dosboxx, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome, worldgear
+from . import (champions, dosboxx, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome,
+               worldgear)
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
