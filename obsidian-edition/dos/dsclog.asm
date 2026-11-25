@@ -10858,13 +10858,9 @@ probe_wp_class:
 ; in with no click to have the panel follow it: the disciplines' window is opened again here if
 ; it isn't the one for the class now (KITS), as after a click on a class.
 probe_race_panel:
-        pop word [cs:rp_ip]
-        pop word [cs:rp_cs]
-        pop word [cs:rp_fl]
-        add sp, 6
-        push word [cs:rp_fl]
-        push word [cs:rp_cs]
-        push word [cs:rp_ip]
+        call frame_up                   ; (the replaced "add sp,6": the frame three words up)
+        call frame_up
+        call frame_up
         sti
         pushad
         push es
@@ -10886,10 +10882,6 @@ probe_race_panel:
 .done:  pop es
         popad
         iret
-
-rp_ip   dw 0
-rp_cs   dw 0
-rp_fl   dw 0
 
 probe_wp_disc_click:
         push bp
