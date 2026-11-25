@@ -738,6 +738,10 @@ game's data: it is one player's account.
   213,134). **To give an item to another member**: click it, click the other's portrait (22,160 for
   the fourth), click the place. The screen can draw the backpack one change behind: close the
   inventory and open it again (Escape, I) before believing a cell is empty.
+- **Wake of the Ravager's weapon icons** (`sequelicons.py`) are put in the Loader's copy only when
+  it finds the sequel (`$WORK/rav`, from `setup_ravager.sh`); without it the game shows the
+  Loader's own drawings. Check which a play has before judging an icon
+  (logs/2026-11-25-sequel-weapon-icons.md).
 - **AC in the inventory**: the AC line is the game's own, worked out afresh from what is worn, but
   drawn one change behind: switch to another member's portrait and back (20,62 then 20,20) before
   reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the THAC0 line
