@@ -753,12 +753,13 @@ transferred party's Tyr fight (about half the runs): `ravstart.sh`'s `RAV_CORE=n
 and `RAV_NOEXIT=1` (DOSBox stays up if the game quits) ruled out the dynamic core and the game's own
 exit; `strace -f -e trace=exit_group,kill,tgkill -p PID` on DOSBox to see how it ends.
 **Thieves as in AD&D in the sequel** (2026-11-24, found statically, the sites run on the game's own bytes in
-`tests/test_ravthief.py` with `DSUN_WOTR`; not yet played): the thief skill routine is 8C647h (SL's 8023Bh),
+`tests/test_ravthief.py` with `DSUN_WOTR`; played 2026-11-25 on the kits branch, logs/2026-11-25-ravager-thieves.md,
+where the two sites became 52 and 53 and STAB_TIMES gives an Assassin one more): the thief skill routine is 8C647h (SL's 8023Bh),
 the same code with the sequel's frame: DEX in `[BP-2]` (SL's `[BP-0Ch]`), the skill a dword at `[BP+8]`,
 the thief level in SI (580h:61h, class 11h), the tables at the game's segment 4A0h (file 49BB0h, load +
 449Bh: the base at +skill, race R's row at 8 + 8R, the DEX limits A0h, A8h, B0h, the armour penalty B8h).
 SL's `thief_skill` bytes are at 8C716h ("mov ax,si / shl ax,2 / add dx,ax / mov si,dx", DX base + race),
-the game's DEX formula after them to 8C795h ("push di", its armour and effects): DSCLOG2's site 50
+the game's DEX formula after them to 8C795h ("push di", its armour and effects): DSCLOG2's site 52
 (THIEF_SKILL, then "jc" +7Ah) does SL's PROBE_THIEF_SKILL there, and BELT_SITE (8C7C5h) keeps the chance
 to 95. The attack's hit routine (5CE80h, SL's 5883Ah) keeps the round's attacks so far in `[BP-16h]` (from
 the creature's byte at selector 308h, +184h; SL's `[BP-14h]`), the damage roll's bonus in `[BP-14h]`; the
@@ -771,7 +772,14 @@ open locks: d100 = N, needs C or less"` with the second line `open locks C = <AD
 + <DEX>` and no "equipment" part when nothing is worn in the hands, legs or quiver (the old game sum showed a
 large "equipment" remainder), the inventory's skills the same numbers before equipment, and a backstab as
 `"+M backstab (the dice D xT = D*T)"` with the damage the dice x T plus STR once (DSCLOG2's `stabs` counts
-them).
+them). **Played** (2026-11-25): Seneca's inventory (USE, VIEW INVENTORY, her portrait at 25,69) is AD&D's
+average + the sequel's race row + Dark Sun's DEX (the control, `RAV_RULES_OFF=0x100`, the game's sum); a hidden
+backstab in the Draxans' ambush "1d4 = [4] +1 weapon +4 STR 18 +4 backstab (the dice 4 x2 = 8)", 13 HP off
+(control "(1d4 = [2] +1 weapon +4 STR 18) x2 backstab", 14); a human thief 3 made an Assassin (`ravkits.py
+set 1 2 1 17`: a halfling fighter/thief's only kit is the Poisoner) "+6 backstab (the dice 3 x3 = 9)", x2 with
+the kits off (`kit_stabs` in `ravkits.py count`). With `RAV_STEALTH_ROLL=1` the CC AI hides Seneca every turn
+but shoots her sling at range: half the runs end without a backstab. The dice log's hiding chance is the
+Loader's (stealth.py, the table always), so it doesn't follow a thief-table control.
 
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
@@ -795,7 +803,9 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
 - **Computer Control**: the inventory screen (the top-left icon out of a fight; in a fight USE, then the
   second icon of its bottom row), the lower of the two small icons left of each character box (a small
   screen; lit orange when on; the upper one marks the character shown). All four on won the opening
-  ambush by itself (3 Draxans, a templar) with the party standing.
+  ambush by itself (3 Draxans, a templar) with the party standing. Once the inventory has been opened in a fight,
+  the top-left icon brings it back (the menu keeps its last screen) and its lower icons may miss one
+  (2026-11-25): **C** then the USE screen's lower small icons (47,53 / 98,53 / 47,112 / 98,112) is sure.
 - **Sides**: creature +15h: 0 the party, 7 the opening's Draxans, 1 the town's people.
 - **Saving**: the inventory's GAME MENU (game 267,187), the disk (136,100), SAVE (145,105), a slot
   (127,46), type the name, SAVE (252,47): SAVE01.SAV, CHARSAVE.GFF (DARKSAVE.GFF not rewritten).
