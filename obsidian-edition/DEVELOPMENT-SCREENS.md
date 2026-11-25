@@ -40,6 +40,7 @@
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
 - [Picture and music](#picture-and-music)
+- [The engine: GOG's DOSBox or DOSBox-X](#the-engine-gogs-dosbox-or-dosbox-x)
 
 ## The Dialogue tab
 
@@ -1705,3 +1706,203 @@ Tests: `tests/test_launch.py` (the picture's lines for every window), `tests/tes
 stored choice read, anything unknown the default; DOSBox's `[midi]` lines; Windows' device names
 read through a stand-in for winmm; the Loader's list) and `tests/test_viewer_options.py` (the
 window's two choices).
+
+## The engine: GOG's DOSBox or DOSBox-X
+
+([In the features page](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x).)
+
+`engine` in `settings.json` is "dosbox-x" or "gog" when the player chose one (`dosboxx.chosen`).
+With neither (the default, and anything else stored) `dosboxx.engine` gives DOSBox-X when one is
+found that isn't too old (`dosboxx.usable`, its version asked once a program and file time), else
+GOG's. The program (`dosboxx.program`) is `dosbox_x_path`, the player's, if that file is there,
+else the one in the Loader's `dosbox-x` folder (`dosboxx.bundled`: `dosbox-x.exe` on Windows,
+`dosbox-x` or `dosbox-x.app` elsewhere), which the release puts there for Windows (below).
+`soundfont` is a `.sf2` file. The order at a start (`launch._launch`): DOSBox-X chosen; the
+[recompiled program](README.md#dark-sun-recompiled) when it is found; DOSBox-X by default; GOG's
+DOSBox. Restore defaults removes `engine` (`SWITCH_DEFAULTS` has `None` for it). With GOG's
+nothing below runs: `launch._launch`, `write_conf` and `is_game_dir` take their old path. With
+DOSBox-X (`launch._launch_dosbox_x`):
+
+1. `dosboxx.problem` refuses the start with no program, one that is gone, or one older than
+   2025.01.01 (`dosboxx.version`: `dosbox-x -version` asked of the program; on Windows, where
+   that opens a console and waits for a key, and where the program gives no answer, the version
+   is read from the program's own file, which holds the name of its configuration file,
+   `dosbox-x-2026.10.01.conf`). A version that can't be read at all is let through: the memory
+   file then says (below).
+2. The patched game and the copies are made as ever (`prepare_patched_game`).
+3. The memory file's name is `dosboxx.memory_path`: `obsidian-edition-<ten hex digits of the
+   Loader folder's path>.mem`, in `/dev/shm` on Linux (memory, not a disk), else the temp folder
+   (`dosbox_x_memory_dir` in `settings.json` names another folder; hand-edited). One name for
+   each Loader folder, since only one game runs from a folder at a time ([the game's
+   lock](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory)). A file left by an earlier game is
+   removed before the start.
+4. `launch.write_conf` writes DOSBox-X's **whole** configuration to `dosbox-x/obsidian.conf` in
+   the Loader's folder (`dosboxx.conf_lines`; nothing of GOG's `dosbox_darksun.conf` is read,
+   because DOSBox-X's defaults differ from 0.74's), and DOSBox-X is started in that folder as
+   `dosbox-x -conf obsidian.conf -nopromptfolder -nomenu -fastlaunch`, what it prints kept in
+   `dosbox-x/dosbox-x.log` for the crash report. The game's folder is mounted by its full path
+   and never written to.
+5. `launch.note_game` writes the game's pid, program and memory file in `game.lock` (a third
+   line, `memory PATH`), so a Loader opened later finds the game and its file again
+   (`launch.memory_game`).
+
+**Following the game.** `__main__.connect` reads a game in DOSBox-X through
+`process.FileMemory` (the file) and anything else through `process.ProcessMemory` (the
+process): [reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory)
+has how, and the memory's layout under each engine. Which file a process has is
+`launch.game_memory_file(pid)`: the Loader's own record, the lock file's, or, for a DOSBox-X
+started outside the Loader (the playtest kit's `start_dosboxx.sh`), the `memory file=` line of
+the configuration its command line names (`dosboxx.process_memory_file`, Linux's `/proc`).
+With no pid given and several DOSBoxes running, the only one of the chosen engine's kind is
+taken (`process.is_dosbox_x`: a `dosbox-x` beside a `dosbox` is never taken for it, nor the
+other way), and two of a kind are listed for `--pid` as before. The window's status line says
+"Connected to the game (DOSBox-X, process N, through its memory file PATH)".
+
+**The end.** `launch.closed_line` names what closed ("DOSBox-X closed."; ended by a signal on
+Linux, "it was ended by signal 9 (killed)"), `GAMEEND.COM` and `GAMEOK.TXT` work as on 0.74 (a
+DOSBox-X closed mid-game is a [crash report](DEVELOPMENT-INTERNALS.md#the-crash-report) with
+"The game didn't end on its own"), and `launch.release_game` removes the memory file once the
+game has ended (DOSBox-X leaves it). The window lets go of the file the moment its DOSBox-X
+closes (`_dosbox_closed`), so file and lock are gone a tenth of a second after the process (a
+kill: 2.5 seconds, the crash report written first). If the Loader closes first the file stays, with the lock
+file's lines, for the next Loader to attach by; if the game then ends unseen, the next
+`hold_game` or start removes the file.
+
+**The configuration**, line by line (`dosboxx.conf_lines`; each was needed, found in
+[the experiment](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-dosbox-x.md)
+and [the engine's own log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-19-dosbox-x-engine.md)):
+
+| Setting | Without it |
+|---|---|
+| `[dosbox] memory file=PATH`, `memsize=32`, `machine=svga_s3` | (the point; GOG's machine and memory) the file is 32 MB, sparse, mode 0600, made as DOSBox-X starts |
+| `[sblaster] irq=5` (`sb16`, 220h, DMA 1, high DMA 5) | DOSBox-X's default is IRQ 7: the game stops, "Mel Fatal Error ... DSP Detect Fail" |
+| `[config] dos=umb` (not DOSBox-X's `high, umb`) | DOS takes the HMA; DSCLOG's far block goes into upper memory and leaves no room there for the game's overlay buffer |
+| `[dos] minimum mcb free=100`, `kernel allocation in umb=true` | the game loads at 0824h, not 0224h: 26.7 KB less conventional memory than on 0.74 |
+| `[dos] ems=false`, `xms=true`, `umb=true` | as on 0.74 ([EMS off](DEVELOPMENT-INTERNALS.md#ems-off)) |
+| `[dos] umb end=FBFF`, with `[dosbox] rom bios allocation max=16` and `rom bios minimum size=16` | upper memory ends at EFFFh (the BIOS takes F000h up): 48 KB less for DSCLOG (free upper memory 16,368 bytes in place of 65,520 in `fountain-user`). `umb end` past EFFFh without the two BIOS lines turns upper memory off ([the log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-25-dosbox-x-upper-memory.md)) |
+| `[sdl] autolock=true`, `middle_unlock=none`, `clip_mouse_button=none`, `autolock_feedback=none` | the middle button unlocks the mouse and the right one is DOSBox-X's clipboard: no map drag |
+| `[sdl] sensitivity=N,N` (100 over the window's scale, across and down) | one number alone is across only: in a Triple window the pointer went three times too fast down the screen (60 of the hand's pixels moved it 48 game pixels; 16 on 0.74 and with both) |
+| `[render] doublescan=false`, `aspect=true` | the 320x200 mode handed on as 640x400: a window twice the size asked for |
+| `[sdl] showmenu=false`, and `-nomenu` | DOSBox-X's menu bar makes the window taller than the picture |
+| `[dosbox] quit warning=false`, `fastbioslogo=true`, `startbanner=false`; `-fastlaunch`, `-nopromptfolder` | a question at closing, a logo and a banner at the start, a question about the working folder |
+| `[dos] log console=true` | (kept for the crash report: DOS's own text, "DSCLOG loaded.", goes to `dosbox-x.log`) |
+
+`UMBPLUS.COM` runs in the autoexec as on 0.74 and changes nothing (the upper memory chain isn't
+0.74's; DOSBox-X's block already starts lower, at CC00h, after the VGA BIOS, C000h-C3FFh, and
+DOS's own tables, C400h-CBFFh, and ends at FBFFh: 192 KB, where 0.74's D000h-EFFFh is 128 KB).
+Moving DOS's tables out of upper memory (`kernel allocation in umb=false`, `private area in
+umb=false`) would add 32 KB there but take 32 KB of conventional memory; `umb start` can't go
+below them.
+
+**DOSBox-X in the release.** `.github/workflows/release.yml` downloads DOSBox-X's own 64-bit
+Windows build of `DOSBOX_X_VERSION` (`dosbox-x-vsbuild-win64-VERSION-portable.zip` from its GitHub
+release; `DOSBOX_X_SHA256`, when set, is checked) and adds `dosbox-x.exe`, `COPYING.txt` (GPL 2),
+its `README.txt` and a `SOURCE.txt` of its own to the zip's `dosbox-x` folder. DOSBox-X's source
+archive of the same tag goes beside the zip as an asset of the release, so the source is offered
+from the same place as the program (GPL 2, section 3). Nothing of DOSBox-X is in this repository
+(`dosbox-x/` is in `.gitignore`: the Loader's work folder). Linux has no DOSBox-X build of its
+own (its project ships a Flatpak) and macOS's is unsigned, so neither comes with the mod.
+
+**The Options tab's other settings on this engine.**
+
+*Game speed* (`dosboxx.SPEEDS`; the `cycles` setting's three values name the choice, not
+DOSBox-X's cycles). DOSBox-X does less with the same cycles than 0.74, and each core needs its
+own number. Measured with `playtest/framerate.py 20` in the slave pens (`pens-after-arena`), the
+whole party walking, everything on, a fresh start for each run, both engines in one session
+(2026-11-19; 0.74 is Ubuntu's 0.74-3 with the Loader's configuration):
+
+| Engine, core, cycles | Pictures a second | Steps run / lost a second | Walking, map units a second | Host CPU |
+|---|---|---|---|---|
+| 0.74, GOG's own (normal core, 7,000; two runs) | 6.4, 6.0 | 44 / 35, 46 / 33 | 97, 102 | 14%, 13% |
+| **DOSBox-X normal 8,000** (through the Loader's start; two runs) | 6.5, 6.8 | 50 / 33, 49 / 34 | 99, 97 | 14% |
+| DOSBox-X normal 7,000; 8,500; 10,000 | 6.1; 7.1; 7.7 | 42 / 38; 49 / 33; 58 / 31 | 91; 99; 106 | 15%; 15%; 16% |
+| 0.74 dynamic 20,000 | 15.4 | 68 / 26 | 113 | 20% |
+| **DOSBox-X dynamic 22,000** | 15.2 | 67 / 26 | 114 | 16% |
+| DOSBox-X dynamic 20,000; 24,000 | 14.2; 15.9 | 67 / 26; 68 / 26 | 114; 113 | 15%; 17% |
+| 0.74 dynamic 35,000 (two runs) | 18.8, 18.9 | 81 / 13, 81 / 14 | 139, 142 | 28%, 26% |
+| **DOSBox-X dynamic 42,000** | 18.8 | 81 / 14 | 141 | 23% |
+| DOSBox-X dynamic 40,000; 44,000 | 18.4; 18.9 | 78 / 17; 83 / 12 | 133; 141 | 22%; 22% |
+
+So: **GOG's own** is `core=normal`, `cycles=fixed 8000` (0.74's `core=auto` runs this game on its
+normal core at GOG's 7,000); **Faster** `core=dynamic`, 22,000; **Fastest** `core=dynamic`,
+42,000. `dynamic` is DOSBox-X's dynamic core for the computer it runs on: `dynamic_x86` here; on
+an ARM computer (an Apple Silicon Mac) it is `dynamic_rec`, which did more per cycle in the
+experiment (165 map units a second at 45,000 against 151), so the numbers would want measuring
+there. The BIOS clock and the game's clock kept real time in every run.
+
+*The game window and the picture* (`dosboxx.display`; `launch.picture` decides which picture the
+window has, as for 0.74):
+
+| Game window | Plain | Scanlines, TV | Sharp |
+|---|---|---|---|
+| Single | `output=surface`, `scaler=none` | plain | plain |
+| Double | `output=surface`, `scaler=normal2x` | `output=surface`, `scaler=scan2x`, `tv2x` | `output=openglnb`, `windowresolution=640x480`, `scaler=none` |
+| Triple | `output=openglnb`, `windowresolution=960x720`, `scaler=normal3x` | `output=surface`, `scaler=scan3x`, `tv3x` | `output=openglnb`, `windowresolution=960x720`, `scaler=none` |
+| Quadruple | `output=openglnb`, `windowresolution=1280x960`, `scaler=normal4x` | `output=openglnb`, `windowresolution=1280x960`, `scaler=scan2x`, `tv2x` | `output=openglnb`, `windowresolution=1280x960`, `scaler=none` |
+| Full screen | `fullscreen=true`, `fullresolution=desktop`, `output=opengl`, `scaler=normal3x` | the same with `scan3x`, `tv3x` | the same with `output=openglnb`, `scaler=none` |
+
+- Seen (Xvfb, Mesa's software OpenGL 4.5): every window opens at its size with every picture;
+  Scanlines and TV draw as on 0.74; Sharp is hard-edged.
+- **`normal3x` and `normal4x` on the surface output drew an empty grey window** with this game
+  (`normal2x`, `scan3x` and `tv3x` draw there), so Plain at Triple and Quadruple goes through
+  `openglnb`, which stretches the scaler's picture to 4:3 unsmoothed, as 0.74's surface does
+  with its line table. Where OpenGL fails DOSBox-X falls back to the surface by itself.
+- Quadruple Scanlines and TV are the 2x scaler doubled by `openglnb` (0.74: by `opengl`,
+  smoothed), so the dark lines stay whole lines.
+- Full screen was seen under a window manager (openbox on Xvfb, a 1280x720 screen): the window
+  takes the screen and the picture is 942 pixels wide, as in the 960x720 window: 4:3, black at
+  the sides. Without a window manager (bare Xvfb) SDL2 switches to full screen in name only.
+  Plain is smoothed there (`opengl`), as GOG's own full screen is.
+- Not offered yet: `output=openglpp` (pixel-perfect: whole multiples only, so 4:3 just at
+  1600x1200, 5x6; at 960x720 it draws 960x600), which fits none of the four windows, and
+  `glshader=` (CRT shaders: files that come with DOSBox-X's packages, not with every build). Both
+  want a setting of their own.
+- Full screen is switched while playing with DOSBox-X's host key and F (F12, on Windows F11);
+  the window's status line says so.
+
+*The music device* (`dosboxx.midi_lines`, from `midi_device` and `soundfont`):
+
+| Chosen | Written |
+|---|---|
+| a device number (Windows' MIDI outputs, as `midiout.devices` lists them) | `mididevice=win32`, `midiconfig=N` |
+| an ALSA port (`128:0`) | `mididevice=alsa`, `midiconfig=128:0` |
+| the default, and a soundfont file that is there | `mididevice=synth`, `midiconfig=FILE` |
+| the default, no soundfont | `mididevice=default` |
+
+DOSBox-X has FluidSynth twice. `mididevice=synth` plays into DOSBox-X's own mixer beside the
+Sound Blaster, so the music needs nothing outside DOSBox-X and is in DOSBox-X's own recordings;
+`mididevice=fluidsynth` (with `fluid.soundfont`) plays through FluidSynth's own sound driver
+instead, which found no PulseAudio here and left the game silent (the experiment;
+playtest/logs/2026-11-21-dosbox-x-unchecked.md). The Loader writes `synth`. MT-32 (`mididevice=mt32`, which needs the Roland ROMs) is not
+written for any setting.
+
+**Windows and macOS: written, not run.** What the code does there, from DOSBox-X's source
+(`src/hardware/memory.cpp`, 2026.10.01):
+
+- *Windows.* DOSBox-X opens the memory file with `CreateFile` (read and write, sharing
+  `FILE_SHARE_READ | FILE_SHARE_WRITE`, not delete), cuts it to nothing, sets its size, marks it
+  sparse, and maps it with `CreateFileMapping` **with no name**: another program can't open the
+  mapping, only the file. Python's `os.open` shares read and write, so the open succeeds. There
+  is no `pread` on Windows, and Windows doesn't promise that `ReadFile`/`WriteFile` agree with a
+  mapped view; it does promise that views of one local file agree, whichever mapping object they
+  come from. So `FileMemory` maps the file itself there (`mmap`). While the Loader holds its
+  mapping the file can't be cut (`ERROR_USER_MAPPED_FILE`): a DOSBox-X started again would get
+  no memory file, so the Loader drops the mapping when the game ends and removes the file before
+  each start (a start is refused, with the reason, if it can't). The game is held still for the
+  item gate with `NtSuspendProcess` on a handle opened by pid. `-version` isn't run there. The
+  configuration is written in the ANSI code page, as for 0.74 (`conf_encoding`): untried.
+- *macOS.* The same code as Linux (`mmap` of the file, `MAP_SHARED`; the Loader reads with
+  `pread`). No `/dev/shm`: the file goes in the temp folder, on disk, where the system writes
+  changed pages back now and then. The process list comes from `ps` (no `/proc`), and a stop
+  signal is taken as done. The Loader has never run on macOS with either engine.
+- `playtest/dosboxx_memtest.py` checks the file's half of this on any system without the game
+  ([the kit's tools](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/TOOLS.md)).
+
+Tests: `tests/test_dosboxx.py` (the engine setting, the version read three ways and refused when
+old, the memory file's name and folder, every line of the configuration for each window, picture,
+speed, music device and soundfont, the start with a stand-in program: the lock file's memory
+line, the file removed at the end, a killed DOSBox-X's lines), `tests/test_filememory.py` (the
+file as guest memory both ways, `pread` and mapped; a cut file and a closed DOSBox-X as
+`ProcessError`; holding the process still by pid; `connect`'s choice among a DOSBox, a DOSBox-X
+and the Loader's own game), `tests/test_viewer_options.py` (the Engine section: chosen, saved,
+an old program refused, the soundfont, Restore defaults).

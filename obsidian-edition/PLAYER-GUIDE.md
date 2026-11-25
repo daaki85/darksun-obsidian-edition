@@ -2039,6 +2039,11 @@ in the roster ([more saves and characters](FEATURES.md#saves)).
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
 speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
 MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
+**The engine**: the game runs in DOSBox-X, which comes with the mod on Windows (on Linux and macOS
+choose your own on the Options tab's **Engine** section). It gives the mod more memory to work
+with, lets the whole mod work on Linux without root, and can play the music through a soundfont
+file of yours. GOG's DOSBox 0.74 is still there to choose in the same section, and is used when no
+DOSBox-X is found ([Features: the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 **Running the game** (the game window's size, crash and freeze
 reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
 [journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your
@@ -2112,8 +2117,8 @@ dice log, line by line](DICE-LOG.md) says what each of its lines means.
 Every switch on the Loader's **Options** tab, in the tab's order and under its
 sections, with the words the Loader gives it. They count in games started from
 the Loader or its `.bat` files. **Restore defaults**, at the bottom of the tab,
-sets every switch back to the default below; it leaves the Wake of the Ravager folder and the
-settings [elsewhere in the Loader](#elsewhere-in-the-loader) as they are. Where a row lists
+sets every switch back to the default below; it leaves the Wake of the Ravager folder, the DOSBox-X
+program, the soundfont file and the settings [elsewhere in the Loader](#elsewhere-in-the-loader) as they are. Where a row lists
 choices (separated by /), one of them is picked.
 
 **Takes effect** says when a change counts:
@@ -2210,6 +2215,13 @@ once.")
 | Defilers' scrolls: a defiler in a fight carries a scroll of a random preserver spell one time in 20, dropped where it dies | on | at once | [Defilers' scrolls](FEATURES.md#defilers-scrolls) (spoilers) |
 | New items, magical and mundane: weapons, armour and other gear on the game's people, in its shops and chests, and the champions' arena bout after Scar's death | on | first visit (each item's area) | [New items](FEATURES.md#new-items) (spoilers); this guide's [New items](#new-items) |
 
+**Engine (from the next start)**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| DOSBox-X (the default when there is one: it comes with the mod on Windows; elsewhere choose your own below) / GOG's DOSBox 0.74, which comes with the game | DOSBox-X when there is one, else GOG's DOSBox | next start | what runs the game: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+| Choose the DOSBox-X program... | (a button) | | where your own DOSBox-X is (2025.01.01 or later), before the one that comes with the mod on Windows; the tab then says its version: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+
 **Game speed (from the next start)**
 
 | Loader label | Default | Takes effect | Details |
@@ -2223,6 +2235,7 @@ once.")
 |---|---|---|---|
 | Plain: every pixel of the game as a block (the default) / Scanlines: a black line under each row of the picture, as on an old monitor / TV: a dimmed line under each row of the picture, softer than scanlines / Sharp: hard-edged pixels at any size, the stretching left unsmoothed (DOSBox's OpenGL) | Plain | next start | [Picture and music](FEATURES.md#picture-and-music) |
 | Music device | Windows' default | next start | a MIDI device of Windows' to play the game's music, by name: [Picture and music](FEATURES.md#picture-and-music) |
+| Choose a soundfont file... | (a button) | | with DOSBox-X as the engine, the soundfont (a `.sf2` file of your own) its built-in synthesizer plays the music through; **No soundfont** forgets it: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
 
 **Wake of the Ravager (optional)** and **Saves**
 
@@ -2247,6 +2260,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Show unlabelled rolls** | above the dice log | off | for this session |
 | **The game folder** | asked for at the first **Start the game** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
 | **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
+| **The DOSBox-X program** and **the soundfont file** | the Options tab (**Choose the DOSBox-X program...**, **Choose a soundfont file...**: [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)) | none | remembered (`settings.json`); **Restore defaults** sets the engine back to GOG's DOSBox and leaves these two |
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
 | **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |

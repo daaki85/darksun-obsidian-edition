@@ -43,7 +43,7 @@ def snap():
     ran, lost = struct.unpack("<H", g.read(hdr + RAN, 2))[0], struct.unpack("<H", g.read(hdr + LOST, 2))[0]
     clock, = struct.unpack("<I", g.read(ds * 16 + 0x11D6, 4))
     return time.monotonic(), ticks, skipped, bios, x, yy, flips, ran, lost, clock
-pid = subprocess.run(["pgrep", "-x", "dosbox"], capture_output=True, text=True).stdout.split()[0]
+pid = _pid()  # (live.py's: the work folder's dsun.pid, a game of its own, else the newest DOSBox)
 cpu0 = sum(int(v) for v in open(f"/proc/{pid}/stat").read().split()[13:15])
 first = last = snap(); walked = 0; moving = 0.0; target = 0; next_click = 0.0
 while time.monotonic() - first[0] < secs:

@@ -124,6 +124,17 @@ says what the mod writes, and where).
   `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
   distributions package apart from Python (on Debian and Ubuntu,
   `python3-tk`). macOS isn't supported.
+- **Linux with DOSBox-X**: with [DOSBox-X as the
+  engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) (the default once the Loader finds
+  one: choose its program on the Options tab), **Start the game**
+  works on Linux, with the dice log and everything else, and needs neither root nor
+  `kernel.yama.ptrace_scope=0`. What it needs: the game's files (the folder holding `DSUN.EXE`, as
+  GOG's installer unpacks them; GOG's `DOSBOX` folder isn't used), your own **DOSBox-X 2025.01.01
+  or later** (many distributions' packages are older: Ubuntu 24.04's is 2024.03.01), Python 3.8+
+  with tkinter, a `/dev/shm` or temp folder your user can write to (the Loader keeps a 32 MB file
+  there while the game runs), and for music a soundfont (`.sf2`) file. Start the Loader with
+  `python3 -m dsloader view` in this folder. On Windows the mod brings DOSBox-X with it (the
+  `dosbox-x` folder) and runs the game there; GOG's DOSBox can be chosen instead.
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from your copy as the game starts; without it they have
@@ -550,6 +561,7 @@ saves and characters:
 | `Named saves` | a copy of each save under the name you gave it, made while the Loader's window is open: one a slot, replaced when the game saves over that slot (not a backup history), and the `Replaced -` copies a restore keeps |
 | `Journal` | the journal: everything said and every reward, for every game played, and the quests as last read from the game ([the Journal tab](#the-journal-tab)) |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
+| `dosbox-x` | [DOSBox-X](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x): on Windows the program itself (`dosbox-x.exe`, with its licence `COPYING.txt` and `SOURCE.txt`, where its source is); with it as the engine, its settings for the game (`obsidian.conf`), what it printed (`dosbox-x.log`) and anything it writes itself; and, while the game runs, a 32 MB file `obsidian-edition-....mem` in `/dev/shm` or the temp folder, removed when the game ends |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |

@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, quests, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, dosboxx, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, quests, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -503,6 +503,33 @@ class Viewer:
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
+        # what runs the game: DOSBox-X (dosboxx.py: the mod's own copy on Windows, or the player's),
+        # or GOG's DOSBox 0.74
+        motor = section("engine", "Engine (from the next start)")
+        self.engine = tk.StringVar(value=dosboxx.engine(settings))
+        for value, text in ((dosboxx.DOSBOX_X, "DOSBox-X (the default when there is one: it comes with the mod "
+                                               "on Windows; elsewhere choose your own below)"),
+                            (dosboxx.GOG, "GOG's DOSBox 0.74, which comes with the game")):
+            ttk.Radiobutton(motor, text=text, value=value, variable=self.engine,
+                            command=self._engine_chosen).pack(anchor="w")
+        self.dosbox_x_path = settings.get(dosboxx.PATH_SETTING) if isinstance(
+            settings.get(dosboxx.PATH_SETTING), str) else ""
+        self.dosbox_x_status = tk.StringVar(value=self._dosbox_x_line())
+        found_x = ttk.Label(motor, textvariable=self.dosbox_x_status, style="Status.TLabel", wraplength=460,
+                            justify="left")
+        found_x.pack(anchor="w", pady=(4, 0))
+        ttk.Button(motor, text="Choose the DOSBox-X program...", command=self.choose_dosbox_x).pack(
+            anchor="w", pady=(4, 0))
+        about_x = ttk.Label(motor, text="DOSBox-X gives the mod more memory to work with than GOG's DOSBox. The "
+                            "Windows download of the mod brings DOSBox-X with it (its dosbox-x folder, with its "
+                            "licence); on Linux and macOS install it yourself (2025.01.01 or later) and choose its "
+                            "program here. The Loader starts it with a configuration of its own and follows the "
+                            "game through DOSBox-X's memory file, so on Linux it needs neither root nor a ptrace "
+                            "setting. The game's saves are the same on both engines.", style="Status.TLabel",
+                            wraplength=460, justify="left")
+        about_x.pack(anchor="w", pady=(4, 0))
+        motor.bind("<Configure>", lambda e: [label.configure(wraplength=max(200, e.width - 20))
+                                             for label in (found_x, about_x)], add="+")
         # the game's speed (DOSBox's CPU)
         pace = section("speed", "Game speed (from the next start)")
         speed = settings.get("cycles", launch.DEFAULT_SPEED)
@@ -555,7 +582,20 @@ class Viewer:
         self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())
         about_midi = ttk.Label(look, text=hint, style="Status.TLabel", wraplength=460, justify="left")
         about_midi.pack(anchor="w", pady=(2, 0))
-        look.bind("<Configure>", lambda e: about_midi.configure(wraplength=max(200, e.width - 20)), add="+")
+        # DOSBox-X's own synthesizer plays through a soundfont the player names (dosboxx.midi_lines)
+        self.soundfont = settings.get(dosboxx.SOUNDFONT_SETTING) if isinstance(
+            settings.get(dosboxx.SOUNDFONT_SETTING), str) else ""
+        font = ttk.Frame(look)
+        font.pack(anchor="w", fill="x", pady=(8, 0))
+        ttk.Label(font, text="Soundfont file (DOSBox-X only)").pack(side="left")
+        ttk.Button(font, text="Choose a soundfont file...", command=self.choose_soundfont).pack(side="left", padx=(6, 0))
+        ttk.Button(font, text="No soundfont", command=self.no_soundfont).pack(side="left", padx=(6, 0))
+        self.soundfont_status = tk.StringVar(value=self._soundfont_line())
+        about_font = ttk.Label(look, textvariable=self.soundfont_status, style="Status.TLabel", wraplength=460,
+                               justify="left")
+        about_font.pack(anchor="w", pady=(2, 0))
+        look.bind("<Configure>", lambda e: [label.configure(wraplength=max(200, e.width - 20))
+                                            for label in (about_midi, about_font)], add="+")
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")
         self.wotr_status = tk.StringVar(value=self._wotr_status())
@@ -609,6 +649,66 @@ class Viewer:
                     "pictures.")
         return ("Not found (looked beside the game's folder and in GOG's usual folders): the 6th-level "
                 "priest spells use the Loader's own icons. If it is installed, choose its folder.")
+
+    def _engine_chosen(self) -> None:
+        """Remember the engine; it applies the next time the game is started. DOSBox-X chosen with
+        no program named, or one too old: said, and the choice kept (the start says it again)."""
+        self._options_changed()
+        if self._options_shown.get(dosboxx.SETTING) != self.engine.get():
+            return  # (not saved: the status line says why)
+        if self.engine.get() == dosboxx.DOSBOX_X:
+            line = self._dosbox_x_line()
+            self.dosbox_x_status.set(line)
+            wrong = dosboxx.problem({dosboxx.PATH_SETTING: self.dosbox_x_path})
+            self.status.set("Engine: DOSBox-X, from the next start." if wrong is None else
+                            "Engine: DOSBox-X, but it can't start yet: " + line)
+        else:
+            self.status.set("Engine: GOG's DOSBox, from the next start.")
+
+    def _dosbox_x_line(self) -> str:
+        """The DOSBox-X that would run the game: the one chosen, else the one that comes with the mod."""
+        path = dosboxx.program({dosboxx.PATH_SETTING: self.dosbox_x_path})
+        if path is None or (self.dosbox_x_path and not os.path.isfile(dosboxx.app_program(self.dosbox_x_path))):
+            return dosboxx.found_line(self.dosbox_x_path or None)
+        line = dosboxx.found_line(path)
+        return line + (" (the one that comes with the mod)" if path == dosboxx.bundled() and not
+                       self.dosbox_x_path else "")
+
+    def choose_dosbox_x(self) -> None:
+        """The player's DOSBox-X program: asked for, its version read, and remembered unless it
+        is too old for the memory file (then said, and not kept)."""
+        path = filedialog.askopenfilename(parent=self.root, title="Where is the DOSBox-X program (dosbox-x)?")
+        if not path:
+            return
+        found = dosboxx.version(path)
+        line = dosboxx.found_line(path, found, asked=True)
+        if found is not None and not dosboxx.new_enough(found):
+            messagebox.showerror("DOSBox-X", line, parent=self.root)
+            return
+        if self._save_settings({dosboxx.PATH_SETTING: path}):
+            self.dosbox_x_path = path
+            self.dosbox_x_status.set(line)
+            self.status.set("DOSBox-X: remembered. Choose it as the engine above to play in it, from the "
+                            "next start." if self.engine.get() != dosboxx.DOSBOX_X else
+                            "DOSBox-X: remembered, from the next start.")
+
+    def _soundfont_line(self) -> str:
+        return dosboxx.music_line({dosboxx.SOUNDFONT_SETTING: self.soundfont,
+                                   midiout.SETTING: getattr(self, "_options_shown", {}).get(midiout.SETTING)})
+
+    def choose_soundfont(self) -> None:
+        path = filedialog.askopenfilename(parent=self.root, title="Which soundfont file?",
+                                          filetypes=[("Soundfonts", "*.sf2 *.SF2 *.sf3 *.SF3"), ("All files", "*")])
+        if path and self._save_settings({dosboxx.SOUNDFONT_SETTING: path}):
+            self.soundfont = path
+            self.soundfont_status.set(self._soundfont_line())
+            self.status.set("Soundfont file: from the next start, in DOSBox-X.")
+
+    def no_soundfont(self) -> None:
+        if self._save_settings({dosboxx.SOUNDFONT_SETTING: ""}):
+            self.soundfont = ""
+            self.soundfont_status.set(self._soundfont_line())
+            self.status.set("Soundfont file: none, from the next start.")
 
     def choose_wotr(self) -> None:
         from . import wotrart
@@ -777,6 +877,9 @@ class Viewer:
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self.picture.set(launch.DEFAULT_PICTURE)
+        # (no engine chosen: DOSBox-X when one is found, else GOG's; the DOSBox-X program and the
+        # soundfont file stay remembered)
+        self.engine.set(dosboxx.engine({dosboxx.PATH_SETTING: self.dosbox_x_path}))
         self._show_midi(midiout.DEFAULT)
         self._options_changed(every=True)
         self._speed_chosen()
@@ -936,7 +1039,9 @@ class Viewer:
                 self.status.set(f"Not connected: {e}")
             self.next_try = time.monotonic() + RETRY_SECONDS
             return
-        self.status.set(f"Connected to the game (process {self.guest.proc.pid})")
+        self.status.set(f"Connected to the game (DOSBox-X, process {self.guest.proc.pid}, through its memory "
+                        f"file {self.guest.proc.path})" if getattr(self.guest.proc, "by_file", False)
+                        else f"Connected to the game (process {self.guest.proc.pid})")
 
     def start_game(self) -> None:
         """Start Shattered Lands with the dice log, as "Start Game with Dice Log.bat" does; the
@@ -950,8 +1055,8 @@ class Viewer:
             if not game_dir:
                 return
             if not launch.is_game_dir(game_dir):
-                messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
-                                     "pick the GOG install folder of Shattered Lands.", parent=self.root)
+                messagebox.showerror("Start the game", f"{game_dir} has no {launch.game_dir_wanted()}.",
+                                     parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
@@ -984,6 +1089,11 @@ class Viewer:
         note = launch.game_end_note()
         if code != 0 or note:
             self._crash_report(code, note)
+        if self.guest is not None and getattr(self.guest.proc, "by_file", False):
+            # (a game in DOSBox-X: its memory file reads on after it, unchanged, where a closed
+            # process's memory can't be read at all: let go of it now, so nothing more is read
+            # from what the game left behind, and the file goes at once)
+            self._disconnected(ProcessError(f"{launch.engine_name()} has closed"))
         self._start_state()
 
     def _crash_report(self, code: int, note) -> None:
@@ -1356,8 +1466,10 @@ class Viewer:
                                {"fullscreen": False, "window_scale": scale}):
             plain = (" The picture is plain in a Single window."
                      if scale == 1 and self.picture.get() != launch.PLAIN else "")
+            keys = ("in DOSBox-X, F12 and F together, F11 and F on Windows, switch"
+                    if self.engine.get() == dosboxx.DOSBOX_X else "Alt+Enter switches")
             self.status.set(f"Game window: {self.window_choice.get()}, from the next start "
-                            f"(Alt+Enter switches full screen while playing).{plain}")
+                            f"({keys} full screen while playing).{plain}")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
@@ -1400,6 +1512,7 @@ class Viewer:
             return
         if device != self._options_shown.get(midiout.SETTING):
             self._options_changed()
+            self.soundfont_status.set(self._soundfont_line())
             self.status.set("Music device: from the next start.")
 
     def _option_values(self) -> dict:
@@ -1408,7 +1521,8 @@ class Viewer:
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
                   "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
                   "hit_chance": self.hit_chance.get(), "hit_hover": self.hit_hover.get(), "squares": self.show_squares.get(), "move_back": self.move_back.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
-                  "autosave": self.autosave.get(), "picture": self.picture.get()}
+                  "autosave": self.autosave.get(), "picture": self.picture.get(),
+                  dosboxx.SETTING: self.engine.get()}
         device = self._midi_value()  # (something typed that is no device: the one remembered stays)
         values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
             midiout.SETTING, midiout.DEFAULT) if device is None else device
@@ -1425,12 +1539,16 @@ class Viewer:
         shown = getattr(self, "_options_shown", {})
         changes = values if every else {key: value for key, value in values.items()
                                         if key not in shown or shown[key] != value}
+        if every:  # (Restore defaults: no engine chosen, so DOSBox-X when one is found, as for a new player)
+            changes = {key: value for key, value in changes.items() if key != dosboxx.SETTING}
         try:
             with launch.SETTINGS_LOCK:  # (read and written as one step)
                 settings = launch.load_settings(strict=True)
                 for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
                     settings.pop(old, None)
                 settings.update(changes)
+                if every:
+                    settings.pop(dosboxx.SETTING, None)
                 launch.save_settings(settings)
         except OSError as e:  # (settings.json held elsewhere: kept as it was, not saved over)
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")

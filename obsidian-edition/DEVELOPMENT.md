@@ -15,6 +15,12 @@ patched game calls: it records the dice, draws the in-game additions and makes t
 count. The two talk through DSCLOG's header in the game's memory. Nothing of the game's own files
 is changed.
 
+DOSBox 0.74 is the default engine and the one these pages mean by "DOSBox". The player's own
+DOSBox-X can be chosen in its place (experimental; `dosboxx.py`): the Loader then writes it a
+configuration of its own and reads and writes the game's memory through DOSBox-X's memory file,
+not its process; DSCLOG and the patched game are the same ([the
+engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
+
 ## Contents
 
 - [Architecture](#architecture)
@@ -220,7 +226,7 @@ to trust when a test file is added):
 - **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
   `test_dsclog_drawing`, `test_squares_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
-  `test_viewer_options`, `test_journal`'s and `test_quests`' tab, and `test_compiles`' window part; `test_viewer_settings` also needs a
+  `test_viewer_options` (the Engine section among them), `test_journal`'s and `test_quests`' tab, and `test_compiles`' window part; `test_viewer_settings` also needs a
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its `GPLDATA.GFF`:
   `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`, `test_champions`,
@@ -263,7 +269,10 @@ has the tools and how to use them.
 The **Release** workflow (`.github/workflows/release.yml`) runs the tests on Windows, zips the
 `obsidian-edition` folder as `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip` with `git
 archive` (so only what is committed goes in), and publishes the zip and `../patch-notes.html` with
-`release-notes/v<version>.md` as its notes (`tests/test_release.py` checks it does).
+`release-notes/v<version>.md` as its notes (`tests/test_release.py` checks it does). It adds
+DOSBox-X's own 64-bit Windows program to the zip's `dosbox-x` folder, with its licence and a
+`SOURCE.txt`, and puts DOSBox-X's source archive beside the zip
+([DOSBox-X in the release](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
 
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),
@@ -328,7 +337,8 @@ of DOSBox from then on (`--dosbox` goes back: [the README](README.md#dark-sun-re
 `--game-dir` names the game's folder (for `launch`, `play` and `checks`; remembered after the first
 time). `dicelog --all` also shows the rolls the log can't label (as **Show unlabelled rolls**), and
 `dicelog --raw` records every `rand()` call, not just rolls. If more than one DOSBox is running,
-add `--pid <number>` (from `processes`). The memory tools (`find-text`, `dump`, `search`, `next`)
+add `--pid <number>` (from `processes`; a DOSBox-X beside a DOSBox 0.74 is told from it by the
+Options tab's engine, and `processes` says which is read through its memory file). The memory tools (`find-text`, `dump`, `search`, `next`)
 are in [Command-line mapping tools](DEVELOPMENT-INTERNALS.md#command-line-mapping-tools).
 
 ## Module map
@@ -352,7 +362,8 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `quests.py` | the game's quests, for the Journal tab: which are open and which are finished in the game being played | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
 | `questdraft.py` | a draft of the quest table, read from the game's scripts: for developers (`python -m dsloader.questdraft`; not in the release zip) | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
 | `guestmem.py` | finds DOSBox's guest memory in its process | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
-| `process.py` | reads, writes and pauses another process's memory (Windows, Linux) | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
+| `process.py` | reads, writes and pauses another process's memory (Windows, Linux); `FileMemory`, the same through DOSBox-X's memory file | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
+| `dosboxx.py` | DOSBox-X as the game's engine: its configuration, its memory file, its version | [SCREENS: the engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x) |
 | `itemgate.py` | the Loader's item-list writes, only while the game leaves the lists be | [INTERNALS: the item gate](DEVELOPMENT-INTERNALS.md#the-item-gate) |
 | `itemwatch.py` | the party's items watched, a report when one goes missing | [INTERNALS: the item watch](DEVELOPMENT-INTERNALS.md#the-item-watch) |
 | `heapcheck.py` | the game's far heap and DOS memory, for crash reports and the low-memory warning | [INTERNALS: low memory in play](DEVELOPMENT-INTERNALS.md#low-memory-in-play) |

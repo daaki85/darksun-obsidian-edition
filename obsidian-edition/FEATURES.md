@@ -30,6 +30,7 @@ window are in the [README](README.md).
 - [New content](#new-content)
 - [Game speed](#game-speed)
 - [Picture and music](#picture-and-music)
+- [The engine: GOG's DOSBox or DOSBox-X](#the-engine-gogs-dosbox-or-dosbox-x)
 - [Wake of the Ravager](#wake-of-the-ravager)
 - [Saves](#saves)
 - Always on: [Expanded features](#expanded-features), [Graphics](#graphics),
@@ -894,6 +895,70 @@ its music as it is.
 dimmed line under each row of the picture, softer than scanlines* or *Sharp: hard-edged pixels at
 any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#picture-and-music).
+
+## The engine: GOG's DOSBox or DOSBox-X
+
+The game runs in an emulator of an old PC. GOG's release comes with one, DOSBox 0.74; the mod
+runs it in a newer one, [DOSBox-X](https://dosbox-x.com), whenever there is one, and in GOG's
+DOSBox otherwise (nothing about that start has changed). **On Windows DOSBox-X comes with the
+mod**: the release's `dosbox-x` folder holds DOSBox-X's own 64-bit Windows program, unchanged, with
+its licence (it is free software under the GNU GPL, version 2) and `SOURCE.txt`, which says where
+its source is (a copy of it is beside the mod's download). **On Linux and macOS** install DOSBox-X
+yourself and point the Loader to its program with **Choose the DOSBox-X program...** on the
+Options tab's **Engine** section; the tab then says which version it found. It needs **DOSBox-X
+2025.01.01 or later**; an older one is refused, with the reason, and isn't used by default. A
+DOSBox-X you choose goes before the one that comes with the mod. To play in GOG's DOSBox, choose it
+in the same section.
+
+Why DOSBox-X:
+
+- **More memory for the mod.** The mod's helper in the game, DSCLOG, lives in the PC's *upper
+  memory*, a few blocks between the screen's memory and the BIOS. GOG's DOSBox has 128 KB of it;
+  DOSBox-X, as the Loader sets it up, 192 KB (its BIOS made smaller), so the helper has about
+  64 KB more room to grow into.
+
+- **Linux without root.** The Loader has to read and write the game's memory while it runs. With
+  DOSBox 0.74 it does that through DOSBox's process, which on Linux needs root or a system setting
+  (`kernel.yama.ptrace_scope=0`), and GOG's DOSBox is a Windows program there besides. DOSBox-X
+  can keep the emulated PC's memory in a file, and the Loader follows the game through that file:
+  no root, no setting, and **Start the game** works on Linux with only the game's folder (GOG's
+  `DOSBOX` folder isn't needed with this engine).
+- **Music without a synthesizer set up outside.** DOSBox-X has a synthesizer of its own
+  (FluidSynth). Give it a soundfont, a `.sf2` file of instrument sounds that you have, with
+  **Choose a soundfont file...** in the **Picture and music** section, and it plays the game's
+  music through it. The Loader comes with no soundfont. A **Music device** chosen there goes
+  before the soundfont; with neither, DOSBox-X uses its own default, which on Linux usually means
+  no music.
+
+What stays the same: the saves (a game saved on one engine loads on the other), every feature of
+the mod, the Loader's window, the dice log, the game window's four sizes and full screen, the four
+pictures and the three game speeds, each set to walk as it does on GOG's DOSBox. What differs:
+
+| | GOG's DOSBox 0.74 | DOSBox-X |
+|---|---|---|
+| Comes with | the game | the mod, on Windows; elsewhere your own copy, 2025.01.01 or later |
+| Upper memory (DSCLOG's room) | 128 KB (D000h-EFFFh) | 192 KB (CC00h-FBFFh) |
+| Full screen while playing | Alt+Enter | F12 and F together (F11 and F on Windows) |
+| **Plain** at Triple and Quadruple, and **Sharp** | Plain is DOSBox's own drawing; Sharp needs OpenGL | both drawn with OpenGL, and they look alike: every pixel a block |
+| **Scanlines** and **TV** at Quadruple | the twice-size picture doubled and smoothed | the twice-size picture doubled, not smoothed |
+| Music | Windows' MIDI devices | the same, or its own synthesizer with your soundfont file |
+| Screenshots, DOSBox's own keys | DOSBox 0.74's (Ctrl+F5) | DOSBox-X's (its menu is hidden; F12, F11 on Windows, is its key for its own commands) |
+
+**What has and hasn't been tried.** On Linux, with DOSBox-X 2026.10.01, the mod was played
+through a fight, quick saves and autosaves, a rest, the walk from the slave pens into the arena
+and twenty minutes without a stop. **On Windows and macOS it has not been run at all**: the
+Loader's side is written for both, from DOSBox-X's source, but nobody has started it there. A
+packaged DOSBox-X that runs in a sandbox (a Flatpak, a Snap, the Steam Deck's) may not be able to
+reach the Loader's memory file; that is untried too. If it doesn't work for you, choose GOG's
+DOSBox. **Restore defaults** takes the choice away again (DOSBox-X whenever there is one) and
+remembers where your DOSBox-X is.
+
+**Switches** (Engine, from the next start): *DOSBox-X (the default when there is one: it comes
+with the mod on Windows; elsewhere choose your own below)* or *GOG's DOSBox 0.74, which comes with
+the game*; the button
+**Choose the DOSBox-X program...**; and, under Picture and music, **Choose a soundfont file...**
+and **No soundfont**. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x).
 
 ## Wake of the Ravager
 

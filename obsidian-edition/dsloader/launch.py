@@ -7,6 +7,10 @@ small menu). We keep the first and replace the second with our own
 DSCLOG.EXE into upper memory, and runs DSUNLOG.EXE: a patched copy of the
 game (see gamepatch.py) that the Loader keeps in the dos folder. Nothing in
 the game folder is changed.
+
+With DOSBox-X chosen as the engine (the Options tab; dosboxx.py) the Loader starts the player's
+own DOSBox-X instead, with a configuration of its own written whole (nothing of GOG's is read),
+and follows the game through DOSBox-X's memory file.
 """
 
 import json
@@ -19,12 +23,17 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
+from . import champions, dosboxx, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
 SETTINGS = os.path.join(HERE, "settings.json")
 CONF = os.path.join(HERE, "dosbox_dicelog.conf")
+# DOSBox-X's own folder in the Loader's: its configuration, what it prints (DBX_LOG, for the crash
+# report), and whatever it writes beside itself (it runs here, never in the game's folder)
+DBX_DIR = os.path.join(HERE, "dosbox-x")
+DBX_CONF = os.path.join(DBX_DIR, "obsidian.conf")
+DBX_LOG = os.path.join(DBX_DIR, "dosbox-x.log")
 PATCHED_EXE = "DSUNLOG.EXE"
 
 GOG_SUBDIRS = (
@@ -56,11 +65,22 @@ def _find_file(folder: str, name: str) -> Optional[str]:
 
 def is_game_dir(folder: str) -> bool:
     """The GOG install: DSUN.EXE and its DOSBox (just DSUN.EXE and the data files, when the game
-    is to run as Dark Sun Recompiled instead of in DOSBox)."""
+    is to run as Dark Sun Recompiled instead of in DOSBox, or in the player's own DOSBox-X: the
+    Options tab's engine)."""
     dosbox = _find_file(folder, "DOSBOX")
     if not _find_file(folder, "DSUN.EXE"):
         return False
-    return bool(dosbox and _find_file(dosbox, "DOSBox.exe")) or recompiled_program() is not None
+    if dosbox and _find_file(dosbox, "DOSBox.exe"):
+        return True
+    settings = load_settings()
+    return recompiled_program(settings) is not None or dosboxx.engine(settings) == dosboxx.DOSBOX_X
+
+
+def game_dir_wanted() -> str:
+    """What a folder must hold to be the game's, for the message when it doesn't."""
+    if dosboxx.engine(load_settings()) == dosboxx.DOSBOX_X:
+        return "DSUN.EXE: pick the game's folder (with DOSBox-X as the engine, GOG's DOSBOX folder isn't needed)"
+    return "DSUN.EXE and DOSBOX folder; pick the GOG install folder of Shattered Lands"
 
 
 # Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
@@ -524,10 +544,22 @@ def cpu_lines(settings: dict) -> List[str]:
 DOS_LINES = ["[dos]", "ems=false", ""]
 
 
-def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings: Optional[dict] = None) -> str:
-    """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game.
-    SETTINGS: the saved ones if not given."""
+def write_conf(game_dir: str, path: Optional[str] = None, dice_log: bool = True, settings: Optional[dict] = None,
+               memory_file: Optional[str] = None, options: Optional[dict] = None) -> str:
+    """Our replacement for dosbox_darksun_single.conf (at CONF unless PATH says where). Without the
+    dice log it just runs the game. SETTINGS: the saved ones if not given.
+    With DOSBox-X as the settings' engine it is DOSBox-X's whole configuration instead (at
+    DBX_CONF; dosboxx.conf_lines, with MEMORY_FILE the memory file: the Loader's own for this
+    folder if not given; OPTIONS are dosboxx.conf_lines')."""
     settings = load_settings() if settings is None else settings
+    if dosboxx.engine(settings) == dosboxx.DOSBOX_X:
+        path = path or DBX_CONF
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        lines = dosboxx.conf_lines(
+            game_dir, DOS_DIR, memory_file or dosboxx.memory_path(HERE, settings), settings, dice_log,
+            picture(settings), (UMB_PLUS_COM, PATCHED_EXE, GAME_END_COM), options)
+        return _write_conf_file(path, lines, "DOSBox-X")
+    path = path or CONF
     lines = display_lines(settings) + cpu_lines(settings) + midiout.conf_lines(settings)
     if dice_log:  # (EMS's 64 KB page frame sits where DSCLOG loads; the game takes XMS without it)
         lines += DOS_LINES
@@ -543,17 +575,17 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     # message on screen until a key is pressed, rather than DOSBox closing over it, and saved for
     # the crash report (GAMEEND.COM: the screen's text, or a return code other than 0)
     lines += ["d:\\" + GAME_END_COM.lower(), "exit", ""]
-    return _write_conf_file(lines, path)
+    return _write_conf_file(path, lines, "DOSBox")
 
 
-def _write_conf_file(lines: List[str], path: str) -> str:
-    """LINES written to PATH as DOSBox reads a config (Windows' code page, CR LF)."""
+def _write_conf_file(path: str, lines: List[str], name: str) -> str:
+    """LINES written as the configuration file PATH, in the encoding NAME (DOSBox, DOSBox-X) reads."""
     encoding = conf_encoding()
     try:
         data = "\n".join(lines).replace("\n", "\r\n").encode(encoding)
     except UnicodeEncodeError as e:
         line = e.object[e.object.rfind("\n", 0, e.start) + 1:].split("\r", 1)[0]  # (the mount naming it)
-        raise LaunchError(f"DOSBox can't be given a folder whose path has {e.object[e.start:e.end]!r} in it "
+        raise LaunchError(f"{name} can't be given a folder whose path has {e.object[e.start:e.end]!r} in it "
                           f"({line}): its configuration is read in Windows' code page ({encoding}), which "
                           "hasn't those letters. Move the game, or the Obsidian Edition folder, to a folder "
                           "whose path has only letters of that code page.") from None
@@ -574,7 +606,7 @@ def write_conf_wotr(game_dir: str, path: str = CONF, settings: Optional[dict] = 
     settings = load_settings() if settings is None else settings
     lines = display_lines(settings) + cpu_lines(settings) + ravager.conf_lines(
         game_dir, DOS_DIR, umb_plus=UMB_PLUS_COM, game_end=GAME_END_COM)
-    return _write_conf_file(lines, path)
+    return _write_conf_file(path, lines, "DOSBox")
 
 
 def conf_encoding() -> str:
@@ -861,6 +893,44 @@ def lock_holder(path: Optional[str] = None) -> Tuple[int, str]:
 
 
 GAME_LINE = "game"  # (the lock file's second line: "game PID PROGRAM", the game the holder started)
+MEMORY_LINE = "memory"  # (its third, for a game in DOSBox-X: "memory PATH", that game's memory file)
+
+
+def lock_memory(path: Optional[str] = None) -> str:
+    """The memory file the lock file says its game has (DOSBox-X's: dosboxx.py), or ""."""
+    try:
+        with open(path or GAME_LOCK, encoding="utf-8", errors="replace") as f:
+            for line in f.read().splitlines()[1:]:
+                word, _, rest = line.strip().partition(" ")
+                if word == MEMORY_LINE and rest:
+                    return rest
+    except OSError:
+        pass
+    return ""
+
+
+def memory_game(path: Optional[str] = None) -> Tuple[int, str]:
+    """(pid, memory file) of the DOSBox-X game started from this folder if it still runs and has a
+    memory file; (0, "") otherwise."""
+    pid = running_game(path)
+    memory = lock_memory(path) if pid else ""
+    return (pid, memory) if pid and memory else (0, "")
+
+
+def game_memory_file(pid: int) -> str:
+    """The memory file of the game running as process PID, if it is a DOSBox-X this Loader (or one
+    before it, from this folder) started with one, or one whose own configuration names one
+    (dosboxx.process_memory_file: a DOSBox-X started by the playtest kit); "" for a DOSBox 0.74
+    or anything else, whose memory is read from its process."""
+    if isinstance(_HELD.get("game"), tuple) and _HELD["game"][0] == pid and _HELD.get("memory"):
+        return str(_HELD["memory"])
+    known, memory = memory_game()
+    if known == pid and memory:
+        return memory
+    from .process import is_dosbox_x
+    if is_dosbox_x(process_name(pid) or ""):
+        return dosboxx.process_memory_file(pid) or ""
+    return ""
 
 
 def lock_game(path: Optional[str] = None) -> Tuple[int, str]:
@@ -927,7 +997,11 @@ def hold_game(what: str, path: Optional[str] = None) -> None:
                 continue
         break
     game = lock_game(path)  # (a game a closed Loader started, still running: its line kept)
-    _HELD.update(fd=fd, path=path, what=what, game=game if game[0] and game_alive(*game) else (0, ""))
+    alive = bool(game[0]) and game_alive(*game)
+    memory = lock_memory(path)
+    if memory and not alive:  # (a DOSBox-X game that ended with no Loader watching: its file left behind)
+        dosboxx.remove_memory_file(memory)
+    _HELD.update(fd=fd, path=path, what=what, game=game if alive else (0, ""), memory=memory if alive else "")
     _write_lock()
 
 
@@ -937,6 +1011,8 @@ def _write_lock() -> None:
     fd = _HELD["fd"]
     pid, name = _HELD.get("game", (0, ""))
     text = f"{os.getpid()} {_HELD['what']}\n" + (f"{GAME_LINE} {pid} {name}\n" if pid else "")
+    if pid and _HELD.get("memory"):
+        text += f"{MEMORY_LINE} {_HELD['memory']}\n"
     try:
         os.lseek(fd, 0, os.SEEK_SET)
         os.ftruncate(fd, 0)
@@ -945,12 +1021,14 @@ def _write_lock() -> None:
         pass
 
 
-def note_game(pid: int, program: str) -> None:
-    """The game this process started (its pid and program) written in the held lock file: while it
-    runs, no Loader starts the game again from this folder (running_game), even once this one has
-    let the lock go (the window closed with the game still running)."""
+def note_game(pid: int, program: str, memory: str = "") -> None:
+    """The game this process started (its pid and program; MEMORY its memory file, for one in
+    DOSBox-X) written in the held lock file: while it runs, no Loader starts the game again from
+    this folder (running_game), even once this one has let the lock go (the window closed with the
+    game still running), and a Loader opened later finds its memory (memory_game)."""
     if "fd" in _HELD:
         _HELD["game"] = (pid, os.path.basename(os.path.realpath(program)).lower() if program else "")
+        _HELD["memory"] = memory
         _write_lock()
 
 
@@ -959,9 +1037,12 @@ def release_game() -> None:
     fd, path = _HELD.pop("fd", None), _HELD.pop("path", None)
     _HELD.pop("what", None)
     game = _HELD.pop("game", (0, ""))
+    memory = _HELD.pop("memory", "")
     if fd is None:
         return
     keep = bool(game[0]) and game_alive(*game)  # (the game still runs: its line stays for the next Loader)
+    if memory and not keep:  # (the game in DOSBox-X has ended: its memory file goes)
+        dosboxx.remove_memory_file(str(memory))
     try:
         if os.name != "nt" and not keep:
             os.remove(path)  # (while still locked: no one takes the file being removed)
@@ -997,22 +1078,39 @@ CRASH_CODES = {0xC0000005: "an access violation", 0xC00000FD: "a stack overflow"
 # what launch() last started: the recompiled program's path, or None for DOSBox (closed_line,
 # started_line: by what was started, not by what the settings say now)
 STARTED: Optional[str] = None
+# ... and, when it was DOSBox, which: GOG's 0.74 (dosboxx.GOG) or the player's DOSBox-X, and that
+# one's program
+STARTED_ENGINE: str = dosboxx.GOG
+STARTED_DOSBOX_X: Optional[str] = None
+
+
+def engine_name() -> str:
+    """What launch() last started, as the log names it."""
+    if STARTED:
+        return "Dark Sun Recompiled"
+    return dosboxx.NAME if STARTED_ENGINE == dosboxx.DOSBOX_X else "DOSBox"
 
 
 def started_line(game_dir: str) -> str:
-    """The log's line for the game started from GAME_DIR: in DOSBox, or as Dark Sun Recompiled
-    (which program), so a player sees which one runs."""
+    """The log's line for the game started from GAME_DIR: in DOSBox, in DOSBox-X (which program),
+    or as Dark Sun Recompiled (which program), so a player sees which one runs."""
     if STARTED:
         return f"Starting Shattered Lands from {game_dir} as Dark Sun Recompiled ({STARTED})."
+    if STARTED_ENGINE == dosboxx.DOSBOX_X:
+        return f"Starting Shattered Lands from {game_dir} in DOSBox-X ({STARTED_DOSBOX_X})."
     return f"Starting Shattered Lands from {game_dir} in DOSBox."
 
 
 def closed_line(code: int) -> str:
-    """The log's line for DOSBox (or the recompiled program, if that was started) closing with exit
-    code CODE."""
-    name = "Dark Sun Recompiled" if STARTED else "DOSBox"
+    """The log's line for DOSBox (or DOSBox-X, or the recompiled program, if that was started)
+    closing with exit code CODE."""
+    name = engine_name()
     if code == 0:
         return f"{name} closed."
+    if code < 0 and code & 0xFFFFFFFF not in CRASH_CODES:  # (not Windows: ended by a signal)
+        return f"{name} closed: it was ended by signal {-code}" + (
+            " (killed)." if code in (-9, -15) else f". That is {name} itself failing, not the game stopping "
+            "with an error.")
     known = CRASH_CODES.get(code & 0xFFFFFFFF)
     if known:
         return (f"{name} closed: it crashed ({known}, code {code & 0xFFFFFFFF:08X}h). That is {name} "
@@ -1090,8 +1188,17 @@ def game_end_note() -> Optional[str]:
 
 
 def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
-    """DOSBox's stdout.txt and stderr.txt (in its folder; only read) written since SINCE."""
+    """DOSBox's stdout.txt and stderr.txt (in its folder; only read) written since SINCE; for a
+    game in DOSBox-X, what it printed (DBX_LOG, which the Loader keeps)."""
     out: Dict[str, str] = {}
+    if STARTED_ENGINE == dosboxx.DOSBOX_X and not STARTED:
+        try:
+            if os.path.getmtime(DBX_LOG) >= since - 1:
+                with open(DBX_LOG, encoding="utf-8", errors="replace") as f:
+                    out["output (dosbox-x.log)"] = f.read()[-20000:].rstrip()
+        except OSError:
+            pass
+        return out
     folder = _find_file(game_dir, "DOSBOX") if game_dir else None
     for name in DOSBOX_OUTPUT if folder else ():
         path = _find_file(folder, name)
@@ -1108,6 +1215,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
                    "hit_chance": True, "hit_hover": True, "squares": True, "move_back": True, "show_usable": True, "quick_save": True, "autosave": True,
                    "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
+                   dosboxx.SETTING: None,  # (none chosen: DOSBox-X when one is found, else GOG's: dosboxx.engine)
                    "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
@@ -1123,6 +1231,7 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     out["combat_log_level"] = dicelog.combat_log_level(settings)
     out["picture"] = picture(settings)  # (as DOSBox is asked for it: plain where the window has no other)
     out[midiout.SETTING] = midiout.setting(settings)
+    out[dosboxx.SETTING] = dosboxx.engine(settings)
     return out
 
 
@@ -1197,7 +1306,7 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
             release_game()  # (nothing started: nothing held)
         raise
     args = proc.args if isinstance(proc.args, (list, tuple)) else [proc.args]
-    note_game(proc.pid, str(args[0]) if args else "")
+    note_game(proc.pid, str(args[0]) if args else "", MEMORY_FILE or "")
     LAST_SETTINGS = settings
     return proc, problem
 
@@ -1241,12 +1350,58 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
 
 
+# the memory file of the DOSBox-X game launch() last started (None: not DOSBox-X)
+MEMORY_FILE: Optional[str] = None
+
+
+def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
+    """The game started in the player's DOSBox-X (dosboxx.py): its configuration written whole,
+    its memory file named (an earlier game's taken away first), what it prints kept in DBX_LOG."""
+    global STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE
+    wrong = dosboxx.problem(settings)
+    if wrong:
+        raise LaunchError(wrong)
+    if not _find_file(game_dir, "DSUN.EXE"):
+        raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the game's folder")
+    program = os.path.abspath(dosboxx.program(settings))  # (problem() said None: it is there)
+    problem = prepare_patched_game(game_dir, settings)
+    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
+        try:
+            os.remove(old)
+        except OSError:
+            pass
+    memory = dosboxx.memory_path(HERE, settings)
+    if not dosboxx.remove_memory_file(memory):  # (Windows: still open somewhere; DOSBox-X couldn't cut it)
+        raise LaunchError(f"The memory file of an earlier game is still in use ({memory}): close the "
+                          "DOSBox-X or the Loader that holds it, then start the game again.")
+    conf = write_conf(game_dir, dice_log=problem is None, settings=settings, memory_file=memory)
+    try:
+        log = open(DBX_LOG, "wb")
+    except OSError:
+        log = None
+    try:
+        proc = subprocess.Popen([program] + dosboxx.arguments(conf), cwd=DBX_DIR, stdin=subprocess.DEVNULL,
+                                stdout=log or subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    except OSError as e:
+        raise LaunchError(f"DOSBox-X couldn't be started ({program}: {e.strerror or e}).") from None
+    finally:
+        if log is not None:
+            log.close()  # (DOSBox-X has its own handle on it)
+    STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE = None, dosboxx.DOSBOX_X, program, memory
+    return proc, problem
+
+
 def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
-    global STARTED
+    global STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE
     from . import ravager
+    STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE = dosboxx.GOG, None, None
     if ravager.is_wotr_dir(game_dir):
         return _launch_wotr(game_dir, settings)
+    if dosboxx.chosen(settings) == dosboxx.DOSBOX_X:  # (chosen on the Options tab: before the recompiled
+        return _launch_dosbox_x(game_dir, settings)    #   program found beside the mod, a choice made there)
     program = recompiled_program(settings)
+    if program is None and dosboxx.engine(settings) == dosboxx.DOSBOX_X:  # (the default, with one found)
+        return _launch_dosbox_x(game_dir, settings)
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):
             raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
