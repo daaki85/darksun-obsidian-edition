@@ -37,6 +37,7 @@ class TableTests(unittest.TestCase):
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
+                         | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
