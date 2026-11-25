@@ -1594,6 +1594,11 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   window: DSCLOG2's and, after ANSWER_WAIT, the Loader's own. Now only DSCLOG2 does it, and only when
   SCREEN_IS is 1. The sequel's autosave names are short ("Auto Day 1, 00:06 fight", `ravlog.region_short`,
   at most 28 letters).
+- **The save window's name** (2026-11-25, logs/2026-11-25-ravager-loot-tabs-join.md): a click on an empty row
+  puts the cursor in the name box at the bottom, and the letters typed go there (the mod's T, S, M/U/I, F5 and F9
+  take none of them). **SAVE (252,46) or Return with the box empty saves at once, with an empty name**, in the
+  plain sequel as with the mod. Escape in the name box doesn't close the window; EXIT (252,67) does. A save's name
+  is `namedsaves.save_name(data, wotr=True)`.
 
 **Looting, selling and the pointer in the sequel** (2026-11-25, logs/2026-11-25-ravager-loot-keys.md):
 - **The pointer's modes** (DS:1440h): 1 the walk arrow, 4 the sword, 2 the eye (look), 3 an item held.
@@ -1615,8 +1620,20 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
 - **Keys**: O is the sequel's overhead map, so DSCLOG2's M is made O. U and I are USE and the inventory,
   as in SL.
 - **Notaku** (Tyr, south of Shadow Square; arrow keys y 1224, x 296, y 936 from `ravager-after-ambush`; the
-  eye on him, talk 3, 1, 3, 2) sells. After a sale his "Show me your goods" is gone from the talk.
-  `ravloot.py` shows all of the above.
+  eye on him, talk 3, 1, 3, 2) sells. **His talk script drops "Show me your goods" for the rest of the
+  conversation after any visit to the shop**: a sale, a sale by hand, or none. It does so in the plain sequel too,
+  and a new talk offers it again (logs/2026-11-25-ravager-loot-tabs-join.md). His line after the shop tells a
+  trade from none: "Thank you, your business is appreciated." after a sale by hand, "Sometimes the wisest purchase
+  is none at all, yes?" after none, **and after S**. The script reads something the shop's own SELL sets, which
+  the Loader's sale (`sell.py`) doesn't set. That byte isn't found yet: a diff of the data segment around a sale
+  changed too much. The sequel's offer for an item is the mod's `sell_price` (28 for Bone Brigandine Armor; the
+  plain sequel offers 48). `ravloot.py` shows all of the above.
+- **The plain sequel as a control** (no Loader, no DSCLOG2, no patch): `ravstart.sh` without `RAV_LOADER`,
+  `RAV_MENU=1`, on a fresh copy of `rav` with the save's three files copied in (narrow as they come from
+  `saves/`), then `ravload.sh`'s three clicks
+  ([the script](logs/files/2026-11-25-ravager-loot-tabs-join-plain.sh)). `dosmem.py` shows no DSCLOG2 (upper
+  memory 9FFFh SC and D000h free). The view doesn't follow the leader the same way there (no `centre`), so look
+  for a figure before clicking on it.
 
 ### The sequel's spells in a fight (2026-11-21)
 
@@ -1664,8 +1681,11 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   started on at (load + 3C13h):365h (SL's 3781h). DSCLOG2's TEXT (sites 93, 94) copies it and the message box into
   its text buffer; `ravtext.py` prints the last records. To talk to Uhubito from `ravager-after-ambush`: a click on
   his office's floor (game 240,140), then 220,170, the look pointer (two right-clicks) on him (210,165), the Look
-  box's first button (230,188). The Loader's window there: `python3.12 -m dsloader view --pid` on Xvfb `:56`
-  1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
+  box's first button (230,188). A second click at (220,170) straight after the walk-in can open his talk by
+  itself and choose a reply. That talk's "talked to" (`ravtext.py`) was thing 16, and the Dialogue tab kept
+  "Portrait 18" after CLOSE: no name learned (logs/2026-11-25-ravager-loot-tabs-join.md; the tabs log's talk,
+  through the Look box, learned "Caravan Master"). The Loader's window there: `python3.12 -m dsloader view --pid`
+  on Xvfb `:56` 1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
   global numbers' pointer (SL's DS:1356h) isn't found by `ravds.py --fuzzy`, and 93 of its scripts don't decode
   with SL's decoder (those that do use numbers up to 150): the journal can't keep its head in a save there yet.
 - **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
