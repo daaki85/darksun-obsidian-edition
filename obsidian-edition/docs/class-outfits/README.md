@@ -4,6 +4,8 @@ Enable **What the party wears** to see class outfits on human, dwarf, and elf pa
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Equipment](#equipment)
 
+[Compare all eight body bases with the Gladiator and Fighter in every pose](body-texture.md)
+
 [Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](cloth-detail.gif)
 
 All six single-class Psionicists use the same teal cloth palette. [Compare the updated figures at game size](psionicist-teal-roster.png) · [Watch all 29 poses beside the colors at `aa2c782`](psionicist-teal-poses.gif)

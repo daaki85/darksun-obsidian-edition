@@ -1,29 +1,29 @@
 # Skin beneath the stock outfits
 
-[Watch both figures of all four races through all 29 poses](body-texture.gif). Read each group from left to right. The original shows which anatomy the game artist painted, the body base shows what was reconstructed, and the Gladiator shows which marks survive beside the strap and kilt. The small copy is game size. All figures share the arena floor and ground line. The first six Gladiators use the empty-slot Loader picture builder. The half-elves use their Loader-made original figures and the proposed outfit art. The human man’s cleaned body comes from the indexed body study.
+[Watch all eight figures through all 29 poses](body-texture.gif). Each group shows the original, the cleaned body, the Gladiator and the Fighter on the same arena tile. The small copy is game size. Use the original to locate the light on surviving skin, the Gladiator to see whether it continues under a strap, and the Fighter to judge how much shape survives beside a fully clothed figure. The two humans, dwarves and elves use empty-slot Loader outfit renders. The half-elf outfits are art-study renders.
+
+![Five poses comparing the original, previous body, revised body, Gladiator and Fighter at 3× and game size](body-detail-comparison.png)
 
 | Figures | Where to look |
 |---|---|
-| Human | On the man, compare the broad area below the shoulder blades in rear idle (01) with rear walk 4 (10). The Gladiator’s strap breaks up the middle of the back, but a smooth patch beside it stays visible. On the woman, rear strike 2 (19) exposes more of the back on the base than the finished Gladiator shows. |
-| Dwarf | The original shoulders and arms give a reference close to the rebuilt torso. The man’s exposed patches are particularly small. On the woman, compare the near shoulder in front walk 1 (03) and the hip in rear walk 4 (10) before deciding whether another shade would read at game size. |
-| Elf | The man’s front walk 2 and 4 (04, 06) are the clearest remaining candidates for a skin revision. A bright band crosses the ribs and the long thigh highlight changes little towards the knee. The Gladiator still exposes parts of both. On the woman, the hit (27) shows a broad smooth plane between the waist and the lifted leg. |
-| Half-elf | The man’s wider torso inherited the elf’s horizontal band. In front idle and all four forward steps, ten indexed pixels per pose now taper the chest and thigh highlights and turn the waist into shadow. Follow the exposed edge beside the Gladiator’s strap to judge the change. On the woman, compare the shorter nape and the shoulder under it through the rear walk. |
-
-![Half-elf man's front walk before and after, beside the retail warrior](half-elf-skin.png)
+| Human | In rear idle and the four rear steps the man's shoulder blade catches a short diagonal light. It tapers beside the spine and returns at the hip. Rear walk 4 (10) shows the shading above the Gladiator's kilt. The woman's near hip now turns into shadow above the thigh through rear idle, the four rear steps and all three rear strikes. Compare the back of the leg below her hair in rear strike 2 (19). |
+| Dwarf | The near shoulder, bent elbow and lit knee already read beside the Gladiator's straps. The rebuilt areas are small. The man's entire 29-pose sequence has only 196 eligible 2×2 squares wholly inside newly exposed skin. Both dwarves retain their existing paint. Compare the man's rear idle (01) and the woman's front walk 1 (03). |
+| Elf | The light on the near ribs now turns down toward the waist, leaving a separate, shorter light on the far side. The highlights on the thigh, knee and calf follow each foot's height. Check the man's front walk 2 and 4 (04, 06). On the woman's hit (27), a short light follows the upper edge of the raised thigh as it swings sideways. |
+| Half-elf | The male figure inherits the elf's rib and thigh shading. Where his wider torso duplicates a column, an intermediate skin shade carries the light across it. The woman inherits the human woman's revised hip and thigh beneath her shorter hair. Compare the male front walk with the female rear walk. |
 
 ## Locating flat areas
 
-The table counts same-color 2×2 squares as a percentage of eligible squares, pooled across the 29 indexed frames. Each square must lie entirely inside the mask. The original and base columns use the game's skin palette indices (128–153). The last column uses only base skin where the aligned original had another index or transparency. Some leather and hair share those colors, so the mask is a way to find a pose for visual inspection. The small retail skin samples, especially on a covered elf, also make a poor target for a whole reconstructed back.
+These percentages count uniform 2×2 squares among squares entirely inside the body's skin-color mask, pooled across all 29 poses within the original picture bounds. The last two columns restrict the mask to body skin where the aligned original had another color or transparency. The baseline is the previous body review at `aad133b`. The skin range (palette indices 128–153) overlaps some hair and leather. Judge flagged patches against the pictures before deciding what to repaint.
 
-| Figure | Original skin colors | Base skin colors | Newly exposed skin colors |
-|---|---:|---:|---:|
-| Human man | 2.3% | 9.4% | 17.0% |
-| Human woman | 2.5% | 5.1% | 4.8% |
-| Dwarf man | 2.0% | 2.2% | 13.8% |
-| Dwarf woman | 0.0% | 2.7% | 11.8% |
-| Elf man | 0.0% | 12.7% | 21.7% |
-| Elf woman | 1.0% | 7.8% | 14.4% |
-| Half-elf man | 0.0% | 8.7% | 15.4% |
-| Half-elf woman | 0.1% | 4.7% | 7.2% |
+| Figure | Whole base before | Whole base now | Reconstructed area before | Reconstructed area now |
+|---|---:|---:|---:|---:|
+| Human man | 9.4% | 7.9% | 17.0% | 12.8% |
+| Human woman | 5.1% | 4.2% | 4.8% | 2.2% |
+| Dwarf man | 2.2% | 2.2% | 13.8% | 13.8% |
+| Dwarf woman | 2.7% | 2.7% | 11.8% | 11.8% |
+| Elf man | 12.7% | 8.3% | 21.8% | 14.8% |
+| Elf woman | 7.9% | 5.4% | 14.5% | 12.8% |
+| Half-elf man | 8.7% | 7.7% | 15.4% | 14.0% |
+| Half-elf woman | 4.7% | 4.3% | 7.2% | 6.1% |
 
-Before the front-walk revision, the half-elf man’s newly exposed skin measured 17.0% on this mask. Follow the shading in motion before changing another pose. The retail warrior’s own upper arm has a short lit ridge and a plain shadow beside it, both of which stay readable at 1×.
+To regenerate the current comparison from an installation, run `python prototypes/bodyreview.py GAME_DIR OUTPUT_DIR` at the repository root. The human man's indexed body edits are in the human outfit archive under `Study/walk-body` and `Study/combat-body`.

@@ -238,6 +238,55 @@ def hood_hair(rows, model, pose, bow, face):
     return cloth
 
 
+# Her far thigh points across the hit frame. Its short lit edge follows the
+# upper contour of the raised leg rather than the axis of the standing leg.
+HIT_THIGH = {(10, 12): 130, (11, 12): 145, (12, 12): 144,
+             (10, 13): 132, (11, 13): 130, (12, 13): 144, (13, 13): 130,
+             (14, 13): 131, (13, 14): 132, (14, 14): 133}
+
+
+def torso_skin(u, depth, rear, profile):
+    """Model the light over one shoulder, ribs and iliac crest in pose coordinates."""
+    # The near and far planes have unequal widths when the figure turns.
+    ridge = -0.46 + 0.24 * depth
+    if profile:
+        ridge = -0.26 - 0.18 * depth
+    distance = u - ridge
+    # Two short oblique ridges leave a recessed spine or sternum. The
+    # darker waist separates the rib cage from the light on the near hip.
+    rib = 0.24 + (0.19 if rear else 0.12) * distance
+    hip = 0.89 - 0.18 * distance
+    if abs(depth - rib) < 0.19 and abs(distance) < 0.49:
+        return 148 if abs(depth - rib) + 0.45 * abs(distance) < 0.14 else 146
+    if abs(depth - hip) < 0.14 and abs(distance) < 0.48:
+        return 146 if abs(distance) < 0.23 else 144
+    if distance < -0.54:
+        return 132 if distance > -0.92 else 134
+    if distance < 0.10:
+        return 145 if depth < 0.53 else 130
+    if distance < 0.51:
+        return 130 if depth < rib or depth > hip else 132
+    far_rib = 0.31 - 0.14 * distance
+    if 0.62 < distance < 1.10 and abs(depth - far_rib) < 0.17:
+        return 144 if abs(depth - far_rib) < 0.085 else 130
+    return 133 if distance < 1.08 else 134
+
+
+def leg_skin(across, depth, rear):
+    # Carry the broad upper-thigh light into a smaller knee highlight.
+    ridge = 0.30 + 0.20 * depth
+    distance = abs(across - ridge)
+    if 0.39 < depth < 0.58:
+        if distance < 0.19:
+            return 130 if rear else 146
+        return 134 if across > ridge else 132
+    if distance < 0.14:
+        return 146 if 0.13 < depth < 0.38 else 145
+    if distance < 0.28:
+        return 144 if depth < 0.4 else 130
+    return 134 if across > ridge else 132
+
+
 def render(game, model, pose, role, layers=None, *, show_cape=True):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
@@ -414,6 +463,19 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                         tone = 3
                 if c not in outfits.SKINC or (not arm and y >= shoulder - 1):
                     paint = FLESH[tone]
+                    if not arm and c not in outfits.SKINC and y >= shoulder:
+                        if y <= waist:
+                            paint = torso_skin(u, t, rear, profile)
+                        elif feet and end - start >= 2:
+                            # The kneecap and calf turn at different heights on
+                            # the two legs, especially on the lifted bow/hit leg.
+                            sole = min(feet, key=lambda ft: abs(x - (ft[1] + ft[2]) / 2))[0]
+                            leg = (y - waist) / max(1, sole - waist)
+                            if leg < 0.78:
+                                paint = leg_skin(pos, leg, rear)
+                        if model == figures.ELF_WOMAN and pose == 27:
+                            paint = HIT_THIGH.get((x, y), paint)
+
             if role != "Body base" and not foreground and not arm:
                 torso = c is not None and shoulder - 2 <= y <= waist and abs(dx) <= radius + 1
                 rank = 0 if u > 0.85 else 1 if u > 0.25 else 3 if -0.9 < u < -0.22 else 2

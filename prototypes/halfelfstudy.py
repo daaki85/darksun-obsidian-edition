@@ -103,6 +103,11 @@ TEAL_BACK_FOLD = {
     9: (7, 8, 9, 9, 9, 10, 10),
     10: (6, 7, 8, 9, 9, 9, 10),
 }
+# Ordered by lightness along the rose-brown ramp. On a widened body the
+# inserted column can carry the transition to the next painted plane.
+SKIN_RAMP = (134, 133, 132, 131, 130, 144, 145, 146, 147, 148)
+SKIN_BLEND = {(a, b): SKIN_RAMP[(i + j + 1) // 2] for i, a in enumerate(SKIN_RAMP)
+              for j, b in enumerate(SKIN_RAMP) if abs(i - j) >= 2}
 SKIN_HALFTONES = {130: 131, 132: 133, 134: 132, 145: 144, 146: 145, 147: 146}
 
 
@@ -294,6 +299,16 @@ class Study:
                         x, y = px - MARGIN, py - MARGIN
                         if (back(x, y), y) in chest:
                             out[py][px] = SKIN_HALFTONES[color]
+            cut = fig.maker.cuts[bool(cb), f]
+            if cut and cut[2] > 0:
+                start, column, _ = cut
+                for y in range(start, len(stock)):
+                    # The widened column duplicates the previous one. Keep its
+                    # new half-tone between those two neighboring skin planes.
+                    px = column + 1 + MARGIN
+                    row = out[y + MARGIN]
+                    if (column, y) in chest and row[px - 1] == row[px] and at(src, column, y) not in outfits.SKINC:
+                        row[px] = SKIN_BLEND.get((row[px], row[px + 1]), row[px])
             for x, y, exposed, shade in FRONT_SKIN.get(pose, ()):
                 if out[y + MARGIN][x + MARGIN] == exposed:
                     out[y + MARGIN][x + MARGIN] = shade
