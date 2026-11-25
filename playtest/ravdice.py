@@ -5,6 +5,8 @@
 # tell apart foes of one name (as ravitems.py and ravfight.py number them). RAV_RULES_OFF=MASK (game.RULE_* bits, as 0x1000000): those rules off
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
 # RAV_TAB_OFF=1: the red ring under the enemy chosen with Tab and the chances to hit (its line's, the pointer's) off.
+# RAV_FRAMES=1: each THAC0 line followed by the attack set-up's locals it was read from (game.SETUP_*: the THAC0, the
+# weapon's bonus, the from-behind and backstab flags, the weapons ready) and the type, range, skill and after-set-up parts.
 # RAV_CHARGES_OFF=1: the charges' pass off (DiceLog.count_charges, as before its port: the charge routine's 2d4 behind the
 # overlay manager's stub not known, its label "Armor: 7 left" with it), a control.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
@@ -93,6 +95,16 @@ if os.environ.get('RAV_PREDICT'):  # (what each Tab line's chance was made of: h
         return out
     out_file, _last = out, [None]
     log._swings = _detail
+if os.environ.get('RAV_FRAMES'):  # (each THAC0 line's set-up locals, as the breakdown read them)
+    _breakdown = log._thac0_breakdown
+    def _framed(e, thac0, attacker, ac, tc, weapon, mode, item_type=None, skill=('', 0), kit=()):
+        text = _breakdown(e, thac0, attacker, ac, tc, weapon, mode, item_type, skill, kit)
+        return text + '  [set-up: THAC0 %s, bonus %s, rear %s, backstab %s, ready %s; type %s, mode %s, skill %s, after %s]' % (
+            e.parent_local(game.SETUP_THAC0_LOCAL), e.parent_local(game.SETUP_BONUS_LOCAL),
+            (e.parent_local(game.SETUP_REAR_LOCAL) or 0) & game.SETUP_FLAG_MASK,
+            (e.parent_local(game.SETUP_BACKSTAB_LOCAL) or 0) & game.SETUP_FLAG_MASK,
+            e.parent_local(game.SETUP_READY_LOCAL), item_type, mode, skill[1], list(kit))
+    log._thac0_breakdown = _framed
 if os.environ.get('RAV_CHARGES_OFF'):
     log.count_charges = lambda entries: None
     print('charges pass off', flush=True)

@@ -761,6 +761,23 @@ class RavGameData(game.GameData):
                     0)
         return robes.slots(plus, bit, spell_level, total)
 
+    def spell_record(self, spell: int) -> bytes:
+        """SL's, for all of the sequel's spells (SPELL_COUNT: its psionic powers and monsters' powers go past
+        255, Psionic Blast 266)."""
+        if not 0 <= spell < SPELL_COUNT:
+            return b""
+        return self.guest.read((self.load_seg + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE,
+                               game.SPELL_SIZE)
+
+    def spell_rules(self, spell: int) -> Optional[game.SpellRules]:
+        """SL's (the save modifier in the record's +1Fh bits 1-4: the saving throw's 66E99h), for all the
+        sequel's spells."""
+        rec = self.spell_record(spell)
+        if len(rec) < game.SPELL_SIZE:
+            return None
+        nibble = (rec[0x1F] >> 1) & 0x0F
+        return game.SpellRules(nibble - 16 if nibble & 8 else nibble)
+
     def _effect_ids(self, combatant: Optional[int]) -> set:
         """The effects COMBATANT has (608h:25h's bit set: none for a combatant past 2Fh)."""
         if combatant is None or not 0 <= combatant < 0x30:

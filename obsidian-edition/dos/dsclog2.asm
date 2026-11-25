@@ -7567,6 +7567,10 @@ probe_two:
         mov ax, [bp + 0x0A]
         call item_is_cahulaks
         jne .weapons
+        mov word [cs:two_base], -2      ; (the cahulaks: the main head's base, as SL's)
+        xor dx, dx
+        call kit_two                    ; (a Ghetto Fighter's 2 better; a Twin-blade or Battle Dancer in light
+        jc .out                         ;  armour none, as SL's PROBE_TWO has it for the cahulaks too)
         call cah_adjust                 ; (the cahulaks: the main head's here, the off head's more kept)
         jmp .counted
 .weapons:
@@ -10530,13 +10534,14 @@ cah_more:                       ; AX the attacks a round (halves) with item [BP+
         add ax, 2
         inc word [cs:cah_count]
 .ret:   ret
-cah_adjust:                     ; DX the main head's adjustment (-2 + TWO_ADJUST, no better than 0);
-        push ax                 ;   CAH_EXTRA how much worse the off head's is, for attacker CX
-        mov dx, -2
+cah_adjust:                     ; DX the main head's adjustment (TWO_BASE + TWO_ADJUST, no better than 0);
+        push ax                 ;   CAH_EXTRA how much worse the off head's is (2 more), for attacker CX
+        mov dx, [cs:two_base]
         add dx, [cs:two_adjust]
         jle .main
         xor dx, dx
-.main:  mov ax, -4
+.main:  mov ax, [cs:two_base]
+        sub ax, 2
         add ax, [cs:two_adjust]
         jle .off
         xor ax, ax
