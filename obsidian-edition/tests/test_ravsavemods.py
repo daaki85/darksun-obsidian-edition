@@ -150,6 +150,21 @@ class SaveModifierTests(unittest.TestCase):
         sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 2] = bytes((4, 7))
         self.assertEqual(self.data.dual_level(1, 12), 0)
 
+    def test_spell_record_past_255(self):
+        """The sequel's records go past SL's 255 (Psionic Blast is 266): read from its table, and the
+        record's +1Fh save modifier (bits 1-4, signed) decoded; nothing past SPELL_COUNT."""
+        g = FakeGuest()
+        data = ravlog.RavGameData(g, DS, rules=0)
+        data.load_seg = 0x1000
+        at = (data.load_seg + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + 266 * game.SPELL_SIZE
+        rec = bytearray(game.SPELL_SIZE)
+        rec[0x1F] = 0x0E << 1  # (-2)
+        g.write(at, bytes(rec))
+        self.assertEqual(data.spell_record(266), bytes(rec))
+        self.assertEqual(data.spell_rules(266).save_modifier, -2)
+        self.assertEqual(data.spell_record(ravlog.SPELL_COUNT), b"")
+        self.assertIsNone(data.spell_rules(ravlog.SPELL_COUNT))
+
     def test_spell_record_layout(self):
         """The sequel's records as the dice log serves them (RESOURCE.GFF's first 32 bytes) hold the words
         the routine reads: Psionic Blast's category has WIS's bits, Lightning Bolt's kinds electricity's."""
