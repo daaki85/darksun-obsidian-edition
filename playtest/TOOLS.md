@@ -26,15 +26,15 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `codepatch.py [SECONDS] [game]` | does a write to CODE in the game's memory take effect at once? (The DOSBox-X experiment, 2026-11-18: the Loader patches code while the game runs, and a write that doesn't go through DOSBox's own page handlers, as one... |
 | `creationscores.py` | the creation screen's scores, classes and race, and the least and most the game last worked out |
 | `dacwatch.py SECONDS` | DSCLOG's copy of the palette (TSR_DAC) watched: each change, hashed whole and for colours 16-223 only. |
-| `dbxadopt.sh` | makes the kit's tools follow the game the Loader itself started (its window's Start the game, `launch` or `play`) rather than one of the kit's start scripts: it writes that game's pid, read from the Loader's lock... |
 | `darkfix_apply.py GPLDATA_IN GPLDATA_OUT FIXES_DIR` | put OpenDS darkfix-ds1 GPL repairs (every fix .py in FIXES_DIR, a checkout of their ds1-patch/fixes) into a copy of GPLDATA.GFF, with our own code: each fix's REPAIRS list is read by AST, never imported or run, and... |
+| `dbxadopt.sh` | makes the kit's tools follow the game the Loader itself started (its window's Start the game, `launch` or `play`) rather than one of the kit's start scripts: it writes that game's pid, read from the Loader's lock... |
 | `dec.py SCRIPT LO HI` | decode GPL script SCRIPT (the game's own GPLDATA.GFF, $DS_GAME) from offset LO to HI (hex): each command's offset, number and arguments. |
 | `dismiss.sh [N]` | click away up to N (default 6) waiting messages (msgbox.sh), then print the dice log's last lines. |
 | `doorpath.py TC TR` | the shortest way from the leader to square (TC, TR) on the live grid, through closed doors too (live 192+ where the region file has a doorway); |
 | `doors.py` | the closed doors and gates on the edge of the area the party can reach now: squares the live grid blocks (192 and up) where the region file's grid has a doorway (below 192). |
 | `doorwatch.py SECONDS` | Kurzak's door and the two who use it, printed at each change (every half second). |
-| `dosmem.py [PID]` | DOS memory in any running DOSBox, no helper needed (so either game, modded or not, or Wake of the Ravager): every block of the conventional chain and the upper memory chain (owner's name, size), the largest free... |
 | `dosboxx_memtest.py DOSBOX-X [normal]` | says whether a second program can read and write DOSBox-X's memory file while DOSBox-X runs, without the game: the check to run on Windows and on macOS, where the mod's DOSBox-X engine is untested. |
+| `dosmem.py [PID]` | DOS memory in any running DOSBox, no helper needed (so either game, modded or not, or Wake of the Ravager): every block of the conventional chain and the upper memory chain (owner's name, size), the largest free... |
 | `drawlist.py [all]` | the game's draw list (far pointer DS:6690h, count DS:1F72h; |
 | `dsword.py ADDR [VALUE]` | the game's DS word at ADDR (hex), or set it (memory only). |
 | `effects.py` | every active effect (owner, caster, effect id), its charges and game seconds left (60 a round), as the Loader reads them. |
@@ -114,9 +114,8 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
-| `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
+| `ravfight.py [state\|end\|wait N\|until N\|cast X Y LEVELS\|attack\|fight [S]\|tabfight [S]]` | Wake of the Ravager's fight by its memory. |
 | `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
-| `ravfight.py [state\|end\|wait N\|until N\|cast X Y LEVELS\|attack\|fight [S]\|tabfight [S]]` | Wake of the Ravager's fight by its memory. `tabfight`: Tab (the nearest enemy) and Return (attack) on every party turn, which reaches foes indoors where `fight` stops at "no foe on screen". |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravhold.sh [FOLDER]` | a real Hold Person in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the held-target rule (DSCLOG2's HELD_HIT, HELD_DAMAGE): ravstart.sh FOLDER (default $WORK/rav; |
 | `ravitems.py N... [--worn]` | Wake of the Ravager's combatant N's items, as its helper reads them: the item number, type, worn slot (+13h), plus (+16h), power (the word at +10h) and the type's material (+4), flags (+0) and armour byte (+0Bh). |
