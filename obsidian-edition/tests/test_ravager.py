@@ -59,6 +59,27 @@ class TableTests(unittest.TestCase):
         self.assertEqual(table[place:place + 12], b"Short Sword\0")
         self.assertTrue(len(table) == count * ravager.NAME_KEPT)
 
+    def test_screens_sites(self):
+        """The DAM lines, the Effects screen's lines and the Look box's whole description are DSCLOG2's sites
+        70-75 (the kits' take 60 up), each a routine in its SITE_TABLE (no site 52-69 runs code here), and the
+        header's +158 points at LOOK_FULL (700 zeros inside the image)."""
+        from dsloader import dicelog
+        sites = {"dam_line": 70, "missile_line": 71, "view_dam": 72, "ef_rows": 73, "ef_click": 74, "unlook": 75}
+        for name, number in sites.items():
+            p = next(p for p in ravager.PATCHES if p.name == name)
+            self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        for name, number in sites.items():
+            self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
+        exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                ravager.HELPER_EXE), "rb").read()
+        image = exe[32:]
+        hdr = image.find(b"DSCLOGR1")
+        full = struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
+        self.assertGreater(full, hdr + 268)
+        self.assertEqual(image[full:full + dicelog.LOOK_FULL_SIZE], bytes(dicelog.LOOK_FULL_SIZE))
+
     def test_helper_has_the_use_probes(self):
         """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT
         (zeros, four members' worth, inside the image)."""
