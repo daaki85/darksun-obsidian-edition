@@ -937,7 +937,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
   skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
   specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
-  two-weapon penalty and initiative, the Seeker's and Justifier's casting level, and the Battle
+  two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
+  Elementalist's second sphere's spells (known, cast and at its cleric level), and the Battle
   Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). What else kits do to spells
   and psionic powers, gear and hit dice doesn't carry over yet, nor can a kit be chosen in the sequel. The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
