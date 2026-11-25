@@ -97,7 +97,7 @@ elif cmd == 'page':
     print('marks: disciplines %#x spheres %#x' % struct.unpack('<HH', g.read(ds * 16 + 0x42C0, 4)))
     base, sym = helper()
     print('rules_hi %#06x' % struct.unpack('<H', g.read(base + sym['hdr'] + 270, 2)),
-          ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('kit_pages_shown', 'kit_rows_taken')),
+          ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('kit_pages_shown', 'kit_rows_taken', 'dual_asks', 'dual_kits')),
           'seen %08x keep %d first %d' % (struct.unpack('<I', g.read(base + sym['wp_classes_seen'], 4))[0],
                                           g.read(base + sym['kit_keep'], 1)[0], g.read(base + sym['kp_first'], 1)[0]))
 elif cmd == 'count':

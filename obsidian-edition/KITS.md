@@ -567,6 +567,13 @@ without asking again (a new name, a new roll of the die); choosing another
 class takes the kit back, and DONE then asks for the weapon specs as for a new
 character, as it does after another kit is chosen.
 
+**In Wake of the Ravager** (started from the Loader) the creation panel has the same KITS
+button and KIT page, in the sequel's own letters, and a human with no kit is asked for one after
+DUAL on the same menu. There a kit chosen goes with the character as it does here; what the
+sequel doesn't do yet: a Battle Mage's, Mind Warrior's or Arcanist's hit points and PSP rolled
+again as its kit is chosen, the Elementalist's second sphere, and EDIT giving a kit back after
+its classes are changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
+
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
 back afterwards takes the Healer back with it, as choosing another class does.

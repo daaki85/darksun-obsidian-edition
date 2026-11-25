@@ -661,6 +661,20 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   mul druid/fighter: WILD FURY; a dwarf fighter/thief: G-FIGHTER, WAYFINDER). `sheetinfo.py` lists
   each member's classes, kits and weapon specs by name; `known.py M` its spells; `canuse.py M
   TYPE...` the kit rules for item types; `carried.py NAME` what it holds.
+- **A kit in Wake of the Ravager** (logs/2026-11-25-ravager-kit-choice.md; `ravclick.py`, its
+  coordinates the same 320x200 game pixels): from the main menu CREATE CHARACTERS (160,92); the
+  roster's slots are 2 by 2 (portraits at 70,56, 120,56, 70,112): a right click on an empty one
+  brings NEW / ADD / CANCEL, NEW just under the click (slot 1 110,57, slot 2 160,57, slot 3
+  140,117). The class list is at x 255 from fighter's y 29 (the same order and spacing as SL's), a
+  class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
+  130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
+  being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
+  19504/19505 the game's own: no KITS button). **DUAL**: the roster's inventory (75,171), a right
+  click on the member's portrait (30,69 / 30,114 / ...) gives EDIT / DROP / DUAL, DUAL just under
+  (the menu's third row: 70,98 for the top member, 100,147 for the third); in the DUAL window the
+  classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
+  comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
+  the inventory bar. Escape on Effects goes all the way back to the main menu.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row

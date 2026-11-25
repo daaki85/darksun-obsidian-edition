@@ -1336,6 +1336,29 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
   Elementalist's second sphere would need a hook there that knows the character.
 
+**Choosing a kit in the sequel** (2026-11-25, logs/2026-11-25-ravager-kit-choice.md):
+- **The creation overlay is SL's code at other addresses** (overlay 6AFE0h-6CE93h, its stub 46CCh,
+  the same entries as SL's 421Dh: 66h the rows marked 6BC81h, 7Ah back to the disciplines 6BF3Fh; the
+  next overlay 6D090h-6F3B0h, stub 46DDh). A stub's header (`CD 3F 00 00`, then the overlay's file
+  offset as a dword, its size, fixups, entries) gives the overlay's place: file offset = the dword +
+  57580h (the root image's end + 10h; SL's + 52EB0h). Side by side with SL's (`paste` of two
+  disassemblies) the routines line up byte for byte but the DS addresses: the panel's windows
+  DS:1134h/1138h (SL's EA2h/EA6h), their marks 42C0h/42C2h (4980h/4982h), the sheet being made
+  1429h, EDIT's member 112Eh (0E9Ch), the marks' window 11C4h (F32h) and table 360h:17Eh (338h:1ABh),
+  the title's format 109Fh (E11h), the ink 2D16h (3270h, F0h for 34h), the help line's text 4A9Dh.
+  The window ids are the sequel's own: the creation screen 19503, the disciplines 19504, the spheres
+  19505 (SL's 3011-3013; the buttons' ids are SL's). The sites: `ravager.PATCHES`' kp_* (62-69).
+- **Its labels are planar pictures**: after the width and height, FFh "PLAN", a word the planes, then
+  each plane's colour byte and its bits (MSB first, the rows run on unpadded). SL's RLE form decoded
+  them as empty; `art.decode_frame` reads both, `art.planar_frames` writes it. The letters are SL's
+  shapes, so `weaponpages.glyphs` and its CUTS work on the sequel's icons.
+- **After DUAL**: the routine that changes a human's class is 9493Ch (SI the member, [BP+8] the new
+  class; SL's 86C80h), its "cmp word [bp+8],0Ch" at 94A57h (site 76); the game's three-choice menu
+  (the new cleric's sphere's) is its call 560:25h at 94878h, read from the code at run time.
+- **Looking at it**: `ravkits.py page` shows the sheet being made (race, classes, kit byte), the
+  panel's windows by id (19504/19505 the game's, 3022/3023 the KITS ones, 3026 on a kit page) and
+  DSCLOG2's counters (kit_pages_shown, kit_rows_taken; dual_asks, dual_kits for DUAL).
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
