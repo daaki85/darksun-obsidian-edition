@@ -37,7 +37,7 @@ Watch the large figure in each column for the proposed pair. The three game-size
 
 | Pair | What to follow in motion |
 |---|---|
-| Cleric/Fighter | A dark leather belt and bronze buckle follow the hips across the cream robe. |
+| Cleric/Fighter | A dark leather belt and bronze buckle follow the hips across the cream robe. The belt is easiest to see in front idle (00). The reaching arm hides most of it in front strike 3 (17). [Compare both outfits at 3× and game size](half-giant-cleric-comparison.gif) |
 | Cleric/Psionicist | A narrow teal sash turns across the lower ribs and passes behind the near arm. |
 | Cleric/Ranger | The green cloak opens onto linen in profile. A turned cream edge shows the robe's color from behind. |
 | Fighter/Psionicist | The bone shoulder and split leather jerkin frame the teal sash. Its tied end shows below the arm in front strike 3 (17). |
