@@ -14,6 +14,14 @@ In front idle (00) and the hit (27), the previous abdomen ended in a straight sh
 
 [Before and after in four poses](half-elf-man-body.png) · [Watch all 29 poses beside the retail elf and the finished human body](half-elf-man-body.gif) · [Inspect each pose as a still](half-elf-man-body-poses.png)
 
+## Male Druid and Preserver waist fitting
+
+Front idle (00) shows two ways the outfits made the same body look broad. On the Druid, bright green extended past the ribs and reappeared below the waist tie. The vest now tapers into the ochre binding. In front walk step two (04), follow the near forearm across the tucked side and compare the exposed flank with the clean body.
+
+On the Preserver, two nearly parallel plum edges framed a dark rectangle across the ribs. The front panels now turn inward at the waist and part again over the moving thighs. The far panel on step 04 curls out over the lifted knee. This adjustment covers front idle, the four front steps, front strike two (16) and hit (27). Profile step two (12) shows the longer loose mantle swinging behind him. The comparisons include the previous fittings at `1ec61d3`, the clean body, the corresponding half-elf woman or elf man, and a retail figure.
+
+[Compare front idle, front step two and profile step two](half-elf-man-garment-fit.png) · [Watch both fittings through all 29 poses](half-elf-man-garment-fit.gif)
+
 ## Male Druid fitting
 
 Front idle showed a rectangular patch of bare torso between two green cloak edges. The short cape had inherited the Ranger’s outer folds while the fitted garment between them was missing. The man now wears a leaf-green vest underneath. Follow its diagonal overlap down to the ochre waist tie in the front walk, then watch the near forearm pass across it in profile and on the strike. The same fitting carries into his four Druid pairs and six Druid triples.

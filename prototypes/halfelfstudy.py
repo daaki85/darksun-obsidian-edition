@@ -75,6 +75,107 @@ MANTLE_CREST = {
 REED_PLEAT = {0: 7, 3: 6, 4: 8, 5: 8, 6: 5, 15: 6, 16: 10, 17: 13, 24: 9}
 
 
+# Side seams of the man's leaf vest at the underarms and waist, in the
+# widened figure's upright coordinates. The turning strikes and the bow
+# follow the ribs behind the arm; the profile cape hangs behind the vest.
+DRUID_SEAMS = (
+    ((7, 3, 12), (14, 6, 10)), ((8, 5, 15), (15, 6, 12)), ((8, 1, 6), (15, 3, 6)),
+    ((7, 2, 11), (14, 5, 9)), ((7, 3, 12), (13, 5, 10)), ((7, 3, 12), (13, 5, 10)),
+    ((7, 2, 11), (13, 4, 9)), ((8, 2, 11), (15, 4, 9)), ((8, 0, 9), (15, 2, 7)),
+    ((8, 2, 11), (15, 4, 9)), ((8, 4, 12), (15, 5, 10)), ((8, 0, 5), (14, 3, 6)),
+    ((8, 5, 10), (15, 5, 9)), ((8, 3, 8), (15, 4, 7)), ((8, 4, 9), (15, 5, 9)),
+    ((16, 4, 11), (21, 5, 10)), ((9, 8, 15), (12, 9, 14)), ((9, 12, 20), (12, 13, 17)),
+    ((11, 2, 8), (18, 3, 7)), ((16, 4, 11), (23, 6, 11)), ((9, 16, 21), (14, 16, 20)),
+    ((15, 12, 19), (21, 14, 19)), ((10, 6, 11), (16, 5, 9)), ((7, 5, 12), (13, 4, 9)),
+    ((8, 5, 10), (14, 5, 8)), ((11, 3, 8), (18, 4, 7)), ((11, 6, 12), (18, 7, 12)),
+    ((7, 3, 12), (14, 6, 10)), ((8, 5, 14), (14, 6, 11)),
+)
+
+
+def fit_leaf_vest(out, body, pose, pad, waist, crossed, head, back):
+    (top, left, right), (tuck, near, far) = DRUID_SEAMS[pose]
+    profile = pose in (2, 11, 12, 13, 14, 21, 22, 23, 26)
+    leaf = RAMPS["leaf"]
+    protected = crossed | head
+    for level in range(top, waist+2):
+        y = len(body)-pad-1-level if pose == 28 else level
+        row = out[y+pad]
+        depth = min(1, (level-top)/(tuck-top))
+        lo = round(left+(near-left)*depth)
+        hi = round(right+(far-right)*depth)
+        for px, color in enumerate(row):
+            skin = body[y+pad][px]
+            x = px-pad
+            point = back(x, y), y
+            if color == skin or color not in leaf or point in protected:
+                continue
+            # The profile's free panel belongs behind the swinging forearm.
+            if profile and x < lo and skin is None:
+                continue
+            if x < lo or x > hi:
+                row[px] = skin
+            elif level >= waist:
+                # Carry the reed binding over the vest where it tucks in.
+                # The previous fitting showed a second green band below it.
+                row[px] = 95 if x == near+1 else 205 if x < far-1 else 94
+            elif level >= top+2 and x == hi:
+                row[px] = 69 if color in (208, 17, 69, 188) else 188
+
+
+# The Preserver's two long fronts turn inward over the ribs, then fall free
+# again below the belt. Trace the crests from the shoulder to the waist to
+# the upper thigh. The last two points move with the weight-bearing leg.
+PRESERVER_FRONTS = {
+    0: ((7, 3, 12), (13, 5, 11), (17, 4, 12)),
+    3: ((7, 2, 11), (13, 4, 10), (17, 3, 11)),
+    4: ((7, 3, 12), (12, 5, 10), (16, 5, 12)),
+    5: ((7, 3, 12), (12, 5, 10), (16, 5, 12)),
+    6: ((7, 2, 11), (12, 4, 9), (16, 3, 10)),
+    16: ((8, 9, 16), (11, 10, 14), (14, 8, 15)),
+    27: ((7, 3, 12), (12, 5, 10), (16, 5, 12)),
+}
+
+
+def fit_mantle_front(out, body, pose, pad, crossed, head, back):
+    shoulder, waist, thigh = PRESERVER_FRONTS[pose]
+    protected = crossed | head
+    for y in range(shoulder[0], thigh[0]+1):
+        start, end = (shoulder, waist) if y <= waist[0] else (waist, thigh)
+        depth = (y-start[0])/(end[0]-start[0])
+        near = round(start[1]+(end[1]-start[1])*depth)
+        far = round(start[2]+(end[2]-start[2])*depth)
+        row = out[y+pad]
+        for px, color in enumerate(row):
+            skin = body[y+pad][px]
+            x = px-pad
+            if color is None or color == skin or (back(x, y), y) in protected:
+                continue
+            if x < near-1 or x > far+1:
+                row[px] = skin
+            elif x == near-1:
+                row[px] = 175 if color in (208, 17, 112, 174) else 58
+            elif x == near:
+                if color in (208, 17, 112, 174, 175):
+                    row[px] = 58 if y <= waist[0] else 115
+                else:
+                    row[px] = 118 if color in (59, 118, 239, 238) else 59
+            elif x == near+1:
+                row[px] = 174
+            elif x == far:
+                row[px] = 58 if y < waist[0]+1 else 175
+            elif x == far+1:
+                row[px] = 174
+            elif y < waist[0] and color in (208, 17, 88, 204, 207):
+                # A little reflected light on the far ribs breaks up the
+                # nearly black rectangle between the two panels.
+                row[px] = 90 if y == waist[0]-1 or x == far-1 else 92
+    if pose == 4:
+        # The far panel swings clear of the raised knee on this step. Its
+        # top curls outward from the tucked waist to the existing hem.
+        out[13+pad][12+pad] = 175
+        out[14+pad][12+pad] = 58
+
+
 def triple_groups():
     groups = {"robes": [], "hooded-robes": [], "druids": [], "mantles": []}
     for role in pairs.TRIPLES:
@@ -314,6 +415,10 @@ class RegisteredOutfits:
             for x, y, exposed, shade in FRONT_SKIN.get(pose, ()):
                 if out[y + MARGIN][x + MARGIN] == exposed:
                     out[y + MARGIN][x + MARGIN] = shade
+        if not female and role == "Preserver" and pose in PRESERVER_FRONTS:
+            body, pad = self.rows(key, pose, "Body base")
+            crossed = bow | set(fields.regions[co.FOREARM])
+            fit_mantle_front(out, body, pose, pad, crossed, scalp, back)
         return out, MARGIN
 
     def finish_hood(self, out, key, pose, fields, back):
@@ -451,14 +556,13 @@ class RegisteredOutfits:
                     row[px] = cape[cloth]
                     if upright == hem and (x - center) % 3:
                         row[px] = 188 if cloth in (54, 55, 56, 57) else 69
-        # These Ranger fold tips belong to the part of the long cape that
-        # swings clear of the shorter Druid cape.
-        tips = {} if female else {13: ((10, 9),), 17: ((22, 8), (23, 8), (22, 9))}
-        for x, y in tips.get(pose, ()):
-            out[y+pad][x+pad] = body[y+pad][x+pad]
-        # His spread-leg strikes expose terrain between the tied reeds and
-        # the torso. Turn the top lip of the kilt upward into that space.
         if not female:
+            fit_leaf_vest(out, body, pose, pad, waist, crossed, set(frame.head), back)
+            # These tips belong to the Ranger's longer cape.
+            tips = {13: ((10, 9),), 17: ((22, 8), (23, 8), (22, 9)), 20: ((22, 8), (23, 8))}
+            for x, y in tips.get(pose, ()):
+                out[y+pad][x+pad] = body[y+pad][x+pad]
+            # Turn the top of the reed kilt upward under the spread-leg strikes.
             seams = {
                 16: ((11, 12, 205), (10, 13, 97), (11, 13, 94),
                      (12, 13, 168), (13, 13, 95)),
