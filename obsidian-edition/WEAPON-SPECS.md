@@ -252,10 +252,12 @@ whatever weapon is ready.
 
 A party taken to the sequel ([Taking the party to Wake of the Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager))
 keeps its weapon specs, and they work in its fights as here: the to-hit and damage, mastery and grand
-mastery, the attacks a round and the rates of fire. Nobody picks new ones there (the sequel has no
-weapon window), and the kits' parts (a Battle Mage's or Crusader's expertise, a Justifier's, a
-Myrmidon's second kind) wait for the kits. The sequel's own weapons count as the nearest of the
-sixteen:
+mastery, the attacks a round and the rates of fire, and the kits' parts (a Battle Mage's or
+Crusader's expertise, a Justifier's, a Myrmidon's second kind). Nobody picks new ones there (the
+sequel has no weapon window). The sequel knows the first sixteen kinds; its own weapons count as the
+nearest of them, and a spec in one of the six kinds the mod brought into Shattered Lands from the
+sequel counts as the same nearest kind (a lotulis specialist is a gythka specialist there, as the
+sequel's Lotulis is a gythka):
 
 | The sequel's weapon | Counts as |
 |---|---|
