@@ -1,4 +1,4 @@
-# ravfight.py [state|end|wait N|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]: Wake of the Ravager's fight by
+# ravfight.py [state|end|wait N|until N|cast X Y LEVELS|attack|fight [S]|tabfight [S]]: Wake of the Ravager's fight by
 # its memory. state: whose turn (DS:426Dh: 0-3 the party), the camera (DS:1408h) and each map object's
 # place (the records 25h bytes apart from DS:67BBh, map x +3, y +5; on screen x - camera x, y -
 # camera y, in game pixels; 0-3 the party; a figure's body about 12 right and 18 down of it). end: the
@@ -7,7 +7,8 @@
 # object that isn't the party's and pressed. attack: the member whose turn it is attacks the nearest foe (side
 # FOE_SIDE, standing) with the Walk pointer, the plain arrow (the manual: in a fight it walks to the foe and
 # attacks; the sword and bow pointers start fights, they show a barred sword in one); fight [SECONDS]: that
-# on every party turn until no foe stands or the party is down. Prints what it did. Run from playtest/.
+# on every party turn until no foe stands or the party is down; tabfight [SECONDS]: the same with the mod's
+# Tab (the nearest enemy) and Return (attack) instead, which reaches foes indoors. Prints what it did. Run from playtest/.
 import sys, os, time, struct, argparse, subprocess
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -46,7 +47,7 @@ elif cmd == 'until':        # until member N's turn, ending the others' (at most
         if turn() < 4: print('ending turn of', turn()); key('q'); time.sleep(1.5); key('e'); time.sleep(3)
         else: time.sleep(1)
     print('turn', turn())
-elif cmd in ('attack', 'fight'):
+elif cmd in ('attack', 'fight', 'tabfight'):
     # the manual's way: in a fight the Walk pointer (the plain arrow) on a foe walks to it and attacks
     def foes():
         load = ds - 0x47E0
@@ -68,8 +69,18 @@ elif cmd in ('attack', 'fight'):
         d, i, fx, fy = near[0]; click(fx + 10, fy + 22); time.sleep(5)
         print('attack by', me, 'on', i, 'distance', d, flush=True)
         if turn() == me: key('q'); time.sleep(1.5); key('e'); time.sleep(3)   # (its moves left: the turn ended)
+    def tab_strike():  # (the mod's Tab, the nearest enemy, and Return, attack: no walk to aim, so foes indoors too)
+        me = turn(); key('Tab'); time.sleep(1); key('Return'); time.sleep(6)
+        print('Tab + Return by', me, flush=True)
+        if turn() == me: key('q'); time.sleep(1.5); key('e'); time.sleep(3)   # (its moves left: the turn ended)
     if cmd == 'attack':
         strike()
+    elif cmd == 'tabfight':  # tabfight [SECONDS]: Tab + Return on every party turn, as fight
+        end = time.time() + (int(sys.argv[2]) if len(sys.argv) > 2 else 600)
+        while time.time() < end and foes() and party_up():
+            if turn() < 4: tab_strike()
+            else: time.sleep(1)
+        print('foes standing', len(foes()), 'party up', party_up())
     else:                    # fight [SECONDS]: until no foe stands, the party is down, or SECONDS (default 600)
         end = time.time() + (int(sys.argv[2]) if len(sys.argv) > 2 else 600)
         while time.time() < end and foes() and party_up():

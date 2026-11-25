@@ -1,6 +1,7 @@
 # ravdice.py [--all] SECONDS [OUT]: the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the
 # sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed
-# (and appended to OUT) as they come, for SECONDS; then how many writes the read-only view dropped. --all: every roll, and each attack's AC
+# (and appended to OUT) as they come, for SECONDS (the game's folder for F9 and the saves: $RAV, else
+# $WORK/rav: set RAV to the copy under test, else F9 says "no quick save or autosave yet"); then how many writes the read-only view dropped. --all: every roll, and each attack's AC
 # worked out (base, armour, DEX, other). --numbers: each combatant's number after its name ("Draxan#26"), to
 # tell apart foes of one name (as ravitems.py and ravfight.py number them). RAV_RULES_OFF=MASK (game.RULE_* bits, as 0x1000000): those rules off
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
