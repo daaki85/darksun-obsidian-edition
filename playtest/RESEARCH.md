@@ -789,7 +789,11 @@ dwarf's or halfling's CON x 2 / 7 is added for the warrior group (it tests the g
 the same). **Spell slots**: 62A10h by a formula (DS:0670h + class: a nibble list of DS:0684h words: start
 level, odd/even, most), a ranger's 3 2 1 at 12th, 3 2 2 at 13th, 3 3 2 at 14th, AD&D's 2 2 1, 3 2 1, 3 2 2
 (ADND_SLOTS now gives the Handbook's). `ravlevel.py` shows the party's levels, XP, saves and the helper's
-counts, and sets a member for a test.
+counts, and sets a member for a test. **Played** (2026-11-25, logs/2026-11-25-ravager-level-cap.md): without the fix the game's XP clamp reads
+past the table's end for a class at 17th or more and sets the XP to 0; the saves are the least of each group's
+(954D2h's loop); a fight's XP goes a third to each class of a triple class. On View Character a click on a
+portrait at the Effects screen's spots (70,56) (117,56) (70,127) (117,127) shows that member; level-up messages
+come one a click of the box (160,100), the dice log's "Message:" lines list them all.
 
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
