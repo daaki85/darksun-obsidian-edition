@@ -1,7 +1,7 @@
 """The Options tab's switches (viewer.Viewer._options_changed, restore_defaults) on a real Loader
 window: every switch the Loader reads (launch.CONTENT, game.RULE_SETTINGS, launch.SWITCH_DEFAULTS)
 saved when one changes, and set back by Restore defaults; the picture and the music device; and the Help button, which opens the
-player's guide. Needs tkinter and a display (else skipped:
+player's guide; and Play Wake of the Ravager, beside Start the game. Needs tkinter and a display (else skipped:
 run under xvfb-run for it)."""
 
 import json
@@ -203,6 +203,55 @@ class OptionsTests(unittest.TestCase):
         viewer.webbrowser.open = lambda url: False
         self.viewer.open_guide()
         self.assertIn(os.path.join("manual", "index.html"), self.viewer.status.get())
+
+    def _ravager_button(self, found):
+        """Play Wake of the Ravager pressed with ravager.find_dir answering FOUND: what launch.launch
+        was given and the message boxes shown."""
+        from dsloader import ravager
+        started, shown = [], []
+
+        class Running:
+            args, pid, returncode = ["DOSBox.exe"], 1, None
+
+            def poll(self):
+                return None
+        for module, name, stand_in in (
+                (ravager, "find_dir", lambda sl_dir=None, given=None: found),
+                (launch, "launch", lambda game_dir, what="": started.append(game_dir) or (Running(), None)),
+                (viewer.messagebox, "showinfo", lambda *a, **k: shown.append(a)),
+                (viewer.messagebox, "showerror", lambda *a, **k: shown.append(a))):
+            real = getattr(module, name)
+            self.addCleanup(setattr, module, name, real)
+            setattr(module, name, stand_in)
+        def every(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from every(child)
+        buttons = [b for b in every(self.root)
+                   if isinstance(b, viewer.ttk.Button) and b.cget("text") == "Play Wake of the Ravager"]
+        self.assertEqual(len(buttons), 1)
+        self.assertFalse(buttons[0].instate(["disabled"]))
+        buttons[0].invoke()
+        return started, shown, buttons[0]
+
+    def test_ravager_button_not_found(self):
+        """Without the sequel found, the button starts nothing and points to Options' Choose its folder..."""
+        started, shown, _ = self._ravager_button(None)
+        self.assertEqual(started, [])
+        self.assertEqual(len(shown), 1)
+        self.assertIn("Choose its folder...", shown[0][1])
+        self.assertIsNone(self.viewer.dosbox)
+
+    def test_ravager_button_starts_the_sequel(self):
+        """Found, the button starts the game in the sequel's folder (launch._launch runs it as Wake of
+        the Ravager), says what isn't ported yet, and both start buttons wait for the game to close."""
+        folder = os.path.join(os.sep, "games", "Dark Sun 2")
+        started, shown, button = self._ravager_button(folder)
+        self.assertEqual((started, shown), ([folder], []))
+        self.assertEqual(self.viewer._game_dir, folder)
+        self.assertIn(launch.RAVAGER_NO_LOG[1:], self.viewer.dice_text.get("1.0", "end"))
+        self.assertTrue(button.instate(["disabled"]))
+        self.assertTrue(self.viewer.start_button.instate(["disabled"]))
 
 
 if __name__ == "__main__":

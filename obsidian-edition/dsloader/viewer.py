@@ -134,6 +134,9 @@ class Viewer:
         # for when the Loader was opened on its own: start the game (with the dice log) from here
         self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
         self.start_button.pack(side="left")
+        # the sequel, from its folder (found, or chosen on Options' Wake of the Ravager section)
+        self.ravager_button = ttk.Button(top, text="Play Wake of the Ravager", command=self.start_ravager)
+        self.ravager_button.pack(side="left", padx=(4, 0))
         # text size, also Ctrl + / Ctrl - / Ctrl 0
         ttk.Button(top, text="A+", width=3, command=lambda: self.zoom(1.15)).pack(side="right", padx=(4, 12))
         ttk.Button(top, text="A-", width=3, command=lambda: self.zoom(1 / 1.15)).pack(side="right")
@@ -875,11 +878,34 @@ class Viewer:
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
+        self._start(game_dir, "Start the game")
+
+    def start_ravager(self) -> None:
+        """Start Wake of the Ravager, as `launch --ravager` does: its folder the one chosen on the
+        Options tab or found (ravager.find_dir); not found, the player is told where to choose it."""
+        if self.guest or (self.dosbox and self.dosbox.poll() is None):
+            return
+        from . import ravager
+        folder = ravager.find_dir(launch.find_game_dir())
+        if folder is None:
+            messagebox.showinfo(
+                "Play Wake of the Ravager",
+                f"Wake of the Ravager (GOG's install, DSUN.EXE {ravager.WOTR_SIZE:,} bytes) isn't found beside "
+                "the game's folder or in GOG's usual folders. If it is installed, choose its folder on the "
+                "Options tab: Wake of the Ravager (optional), Choose its folder...", parent=self.root)
+            return
+        self._start(folder, "Play Wake of the Ravager")
+        if self.dosbox is not None:
+            self._append_dice([launch.RAVAGER_NO_LOG[0].upper() + launch.RAVAGER_NO_LOG[1:] + "."])
+
+    def _start(self, game_dir: str, title: str) -> None:
+        """Start the game in GAME_DIR (Shattered Lands, or the sequel: launch._launch tells them apart);
+        a failure in a message box headed TITLE."""
         try:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
         except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
-            messagebox.showerror("Start the game", str(e), parent=self.root)
+            messagebox.showerror(title, str(e), parent=self.root)
             return
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
@@ -924,9 +950,10 @@ class Viewer:
                                    "of what happened just before."])
 
     def _start_state(self) -> None:
-        """"Start the game" only while there's no game to attach to."""
+        """"Start the game" and "Play Wake of the Ravager" only while there's no game to attach to."""
         running = self.guest is not None or (self.dosbox is not None and self.dosbox.poll() is None)
-        self.start_button.state(["disabled"] if running else ["!disabled"])
+        for button in (self.start_button, self.ravager_button):
+            button.state(["disabled"] if running else ["!disabled"])
 
     def reload_layout(self) -> None:
         try:

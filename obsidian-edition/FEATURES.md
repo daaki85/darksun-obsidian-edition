@@ -902,6 +902,13 @@ fireball either way, a picture Shattered Lands has too. The Options tab's **Wake
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
 [requirements](README.md#requirements).
 
+The sequel itself starts from the Loader too: **Play Wake of the Ravager**, beside **Start the game**
+at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that folder in its own
+DOSBox, with the bug fixes ported to it so far, the dice log of its fights and the party tabs
+(Characters, All fields); the window's other tabs and the in-game additions aren't ported to it
+yet. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
+([starting it](README.md#other-ways-to-start)).
+
 ## Saves
 
 The Options tab's **Saves** section (quick save and autosave, and the named saves), and the room the Loader makes for more saves and characters

@@ -129,7 +129,8 @@ says what the mod writes, and where).
   and pictures, read from your copy as the game starts; without it they have
   the Loader's own. The Loader looks beside Shattered Lands and in GOG's usual
   folders; the Options tab's **Wake of the Ravager** section says whether it
-  found it, and **Choose its folder...** points it anywhere else.
+  found it, and **Choose its folder...** points it anywhere else. The sequel can
+  be played from the Loader too: [Wake of the Ravager](#other-ways-to-start).
 
 ### Suggested system requirements
 
@@ -232,6 +233,13 @@ If anything goes wrong it says so in a message box and writes the details to
 `play.log`. Only one Loader (a window, or the in-game rolls) can start or follow the
 game at a time: a second one says which has it and leaves the game alone.
 
+**Wake of the Ravager:** the Loader's **Play Wake of the Ravager** button, beside
+**Start the game**, or **`Play Wake of the Ravager.bat`**, starts the sequel (found
+as above, or the folder chosen on the Options tab) in its own DOSBox, with the bug
+fixes ported to it so far, the dice log of its fights and the party tabs; the
+Loader's other tabs and the in-game additions aren't ported to it yet. Not found,
+the button says so and points to the Options tab's **Choose its folder...**.
+
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
@@ -270,7 +278,7 @@ the Loader does that).
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
-**Start the game**, the game window's size, the text size, **Freeze report**
+**Start the game**, **Play Wake of the Ravager** ([the sequel](#other-ways-to-start)), the game window's size, the text size, **Freeze report**
 (see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
 game again) and **Help** (this manual, in your browser) along the top. The party pane has the
 **Characters** tab (Alt+C): a card for each character, laid out like the game's View Character

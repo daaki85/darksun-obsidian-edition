@@ -2228,7 +2228,7 @@ once.")
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures: [Requirements](README.md#requirements) |
+| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures and for **Play Wake of the Ravager** ([starting the sequel](README.md#other-ways-to-start)): [Requirements](README.md#requirements) |
 | Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save window, and F9 opens the load window there | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Autosave: on coming into another area and after a fight, on the QUICK page of the save window | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
