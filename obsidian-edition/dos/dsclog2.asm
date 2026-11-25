@@ -512,6 +512,7 @@ missile_rear:
 .out:   call kit_rear                   ; (the kits': KITS)
         call item_rear                  ; (the girdles: ITEM_REAR)
         call thief_rear                 ; (class restrictions: no backstab in heavy armour)
+        call stab_first                 ; (Thieves as in AD&D: a member's first attack of a round only)
         mov al, [bp - 0x19]
         iret
 RULE_STEALTH equ 64
@@ -1847,7 +1848,9 @@ probe_char:
 
 ; C_THIEF: DSCLOG's, from the sequel's tables: the six thief skills shown (sheet ES:SI, creature
 ; FS:DI, thief level AL): base + 4 a level + the race's adjustment + DEX's (before equipment and
-; effects).
+; effects); with Thieves as in AD&D (RULE_THIEF_TABLE) AD&D's average for the level +
+; the race's + Dark Sun's DEX adjustment, no more than THIEF_MOST, as the thief skill routine has them
+; (THIEF_SKILL).
 c_thief:
         push si
         mov dl, al
@@ -1860,10 +1863,25 @@ c_thief:
         shl di, 3
         add di, THIEF_RACE      ; + race * 8
         xor bx, bx
-.skill: movsx ax, byte [gs:bx]  ; base
-        movzx cx, dl
+.skill: movsx ax, byte [gs:bx + di]  ; race
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .game
+        push si                 ; (Thieves as in AD&D: AD&D's average and Dark Sun's DEX, THIEF_ADND)
+        push ax
+        movzx si, dl
+        shr si, 2
+        movzx cx, dh
+        call thief_adnd
+        pop cx
+        pop si
         add ax, cx
-        movsx cx, byte [gs:bx + di]  ; race
+        cmp ax, THIEF_MOST
+        jle .sum
+        mov ax, THIEF_MOST
+        jmp .sum
+.game:  movsx cx, byte [gs:bx]  ; base
+        add ax, cx
+        movzx cx, dl
         add ax, cx
         push dx                 ; DEX: -5 a point below LOW, +5 a point above HIGH, -3 above TOP
         movzx dx, dh
@@ -1890,6 +1908,7 @@ c_thief:
         imul cx, cx, 3
         sub ax, cx
 .notop: pop dx
+.sum:
         cmp ax, 0
         jge .pos
         xor ax, ax              ; below 0: shown as 0
@@ -2669,7 +2688,15 @@ kit_ranger_cast:
 ;   "not greater"), then the compare made, its flags in the INT's frame;
 ; - ENL_SITE replaces "imul ax,ax,0Ah ... idiv ebx / mov si,ax" (863E7h; 32 bytes, SL's 7C246h): with
 ;   the rule and the hit's dice known (once: ENL_KNOWN), the dice multiplied, rounded up, the rest added
-;   once; else the game's. (No backstab dice in the sequel: SL's STAB_TIMES isn't ported.)
+;   once, and the dice kept made the enlarged ones (a backstab multiplies those); else the game's.
+; - STAB_TIMES (site 53, "backstab_dice", Thieves as in AD&D: RULE_THIEF_TABLE) replaces "push ax / mov
+;   ax,[bp-4] / pop dx / imul dx / mov [bp-4],ax" (5D11Bh; 10 bytes, SL's 58A80h, the same) where the
+;   attack multiplies a backstab's damage ([BP-4], STR's bonus and Enlarge's in it) by AX (x2 to x5 by
+;   thief level: 5DE0Ch, SL's 595C4h; on the round's first two attacks, the game's test at 5D10Ch): with
+;   the rule, the dice's sum (ENL_DICE, ENL_ROLL's, Enlarge's after ENL_SITE) added again for each time
+;   past the first, only on the round's first attack ([BP-16h] the attacks so far, SL's [BP-14h]; a miss,
+;   [BP-4] 0, none); else the game's. Either way, with the kits (RULE_HI_KITS), an Assassin's multiplier
+;   one more (x3 to x6: SL's STAB_TIMES, kits.backstab_times; the attacker [BP+0Eh], a party member).
 RULE_HI_ENLARGE equ 512
 enl_dice  dw 0
 enl_known db 0
@@ -2711,6 +2738,7 @@ enl_site:
         pop ebx
         sub ax, bx
         add si, ax
+        add [cs:enl_dice], ax           ; (the dice enlarged: a backstab's, STAB_TIMES)
         inc word [cs:enlarges]
         jmp .done
 .whole: movsx edx, si
@@ -2724,6 +2752,37 @@ enl_site:
         pop ebx
         iret
 enlarges dw 0                   ; (hits enlarged by the dice, for a look in play)
+stab_times:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .rule
+        cmp word [bp + 0x0E], 3
+        ja .rule                        ; (not a party member)
+        push ax
+        mov ax, [bp + 0x0E]
+        call cr_is
+        db KIT_ASSASSIN
+        pop ax
+        jne .rule
+        inc ax                          ; (an Assassin: one more)
+        inc word [cs:kit_stabs]
+.rule:  test word [cs:rules], RULE_THIEF_TABLE
+        jz .whole
+        cmp word [bp - 0x16], 0
+        je .first
+        mov ax, 1                       ; (the round's second attack: no backstab, as in AD&D)
+        jmp .whole
+.first: cmp word [bp - 4], 0
+        jle .whole                      ; (a miss: none)
+        dec ax
+        imul word [cs:enl_dice]
+        add ax, [bp - 4]
+        inc word [cs:stabs]
+        jmp .put
+.whole: imul word [bp - 4]
+.put:   mov [bp - 4], ax
+        iret
+stabs   dw 0                    ; (backstabs by the dice, for a look in play)
+kit_stabs dw 0                  ; (an Assassin's backstabs, one more, for a look in play)
 
 ; PRESERVERS' INT: SL's INT_LEARN (RULE_HI_INT, the Loader's "int_learning", always on; dsloader/intlearn.py).
 ; The sequel's scroll (its box's icon clicked, 99xxxh, SL's 8B690h) tests the reader's bit in the known
@@ -3253,8 +3312,8 @@ site_table:
         dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
         dw new_sheet                        ; 50 SITE_NEW_SHEET (a character made: its sheet's last 6 bytes cleared)
         dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
-        dw site_none                        ; 52 (none here)
-        dw site_none                        ; 53 (none here)
+        dw thief_skill                      ; 52 SITE_THIEF_TABLE (a thief skill: AD&D's table, Dark Sun's DEX)
+        dw stab_times                       ; 53 SITE_STAB (a backstab: the weapon's dice multiplied; an Assassin's one more)
         dw site_none                        ; 54 (none here)
         dw site_none                        ; 55 (none here)
         dw site_none                        ; 56 (none here)
@@ -5244,7 +5303,12 @@ belt_site:
         sti
         mov ax, si
         call kit_skill                  ; (the kits': KITS)
-        test word [cs:rules], RULE_RESTRICT
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .heavy
+        cmp ax, THIEF_MOST
+        jle .heavy
+        mov ax, THIEF_MOST              ; (Thieves as in AD&D: AD&D's most, SL's PROBE_BELT)
+.heavy: test word [cs:rules], RULE_RESTRICT
         jz .pop
         push ax
         mov ax, di
@@ -5274,6 +5338,136 @@ belt_site:
         pop bp                          ; (the old [BP] slot: thrown away)
         pop bp
         iret
+; THIEVES AS IN AD&D: SL's RULE_THIEF_TABLE (game.RULE_THIEF_TABLE, its RULE_BACKSTAB; the Loader's
+; "thief_table", always on; DSCLOG's PROBE_THIEF_SKILL, PROBE_BELT's THIEF_MOST and STAB_TIMES):
+; - THIEF_SKILL (site 52, "thief_table") replaces "mov ax,si / shl ax,2 / add dx,ax / mov si,dx"
+;   (8C716h; 9 bytes, SL's 80307h, the same) in the thief skill routine (8C647h): INT VEC_SITE, 52, then
+;   "jc" past the game's DEX formula to its armour and effects (8C795h) and 4 NOPs. DX the skill's base
+;   plus the race's adjustment, SI the thief level, ES:0 the thief tables (the base at +skill), [BP+8]
+;   the skill, [BP-2] DEX (SL's [BP-0Ch]). With the rule and a thief level, SI = AD&D's average for the
+;   level (THIEF_ADND) + the race's + Dark Sun's DEX adjustment, CF set; else the game's sum (SI = DX + 4
+;   a level), CF clear, on to the game's DEX formula.
+; - BELT_SITE (above): with the rule, the chance (armour and effects counted) no more than THIEF_MOST.
+; - C_THIEF (the inventory's skills): with the rule, AD&D's average + race + DEX, no more than THIEF_MOST.
+; - STAB_TIMES (ENLARGE DICE, below): a backstab multiplies the weapon's dice only.
+RULE_THIEF_TABLE equ 256
+THIEF_MOST  equ 95
+THIEF_LEVELS equ 13
+thief_skill:
+        sti
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .game
+        cmp si, 1
+        jl .game
+        push bx
+        push cx
+        mov bx, [bp + 8]
+        and bx, 7
+        movsx ax, byte [es:bx]          ; (the game's base, out)
+        sub dx, ax
+        mov cx, [bp - 2]
+        call thief_adnd
+        add dx, ax
+        pop cx
+        pop bx
+        mov si, dx
+        push bp
+        mov bp, sp
+        or byte [bp + 6], 1             ; (CF in the flags IRET restores: past the game's DEX formula)
+        pop bp
+        iret
+.game:  shl si, 2
+        add si, dx
+        push bp
+        mov bp, sp
+        and byte [bp + 6], 0xFE
+        pop bp
+        iret
+; THIEF_ADND: AX = AD&D's average for thief skill BX (0-7) at thief level SI (1 on; past THIEF_LEVELS as
+; THIEF_LEVELS) + Dark Sun's DEX adjustment for DEX CX (below 9 as 9, past 22 as 22; the first five
+; skills only): game.AD_D_THIEF, DEX_ADJUST. Others kept.
+thief_adnd:
+        push bx
+        push cx
+        push si
+        cmp si, THIEF_LEVELS
+        jbe .level
+        mov si, THIEF_LEVELS
+.level: imul ax, bx, THIEF_LEVELS
+        add si, ax
+        movzx ax, byte [cs:thief_table + si - 1]
+        cmp bx, 5
+        jae .out
+        cmp cx, 9
+        jge .low
+        mov cx, 9
+.low:   cmp cx, 22
+        jle .high
+        mov cx, 22
+.high:  imul cx, cx, 5
+        add bx, cx
+        movsx cx, byte [cs:dex_table + bx - 9 * 5]
+        add ax, cx
+.out:   pop si
+        pop cx
+        pop bx
+        ret
+; AD&D's average thief skills, levels 1-13, a row per skill (game.AD_D_THIEF)
+thief_table:
+        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99     ; pick pockets
+        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82     ; open locks
+        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80     ; find/remove traps
+        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99     ; move silently
+        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85     ; hide in shadows
+        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40     ; hear noise
+        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99     ; climb walls
+        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65        ; read languages
+; Dark Sun's DEX adjustments, DEX 9-22, a row per DEX: pick, open, traps, move, hide (game.DEX_ADJUST)
+dex_table:
+        db -15, -10, -10, -20, -10
+        db -10, -5, -10, -15, -5
+        db -5, 0, -5, -10, 0
+        db 0, 0, 0, -5, 0
+        times 3 * 5 db 0
+        db 0, 5, 0, 0, 0
+        db 5, 10, 0, 5, 5
+        db 10, 15, 5, 10, 10
+        db 15, 20, 10, 15, 15
+        db 20, 25, 12, 20, 17
+        db 25, 27, 15, 25, 20
+        db 27, 30, 17, 30, 22
+; STAB_FIRST (SL's, called from MISSILE_REAR: SI the attacker, DS the game's): with the rule, only a party
+; member's first attack of a round is a backstab, as in AD&D. The game's own test (5D10Ch) lets two through
+; and the round's count STAB_TIMES reads ([BP-16h] in the hit routine) leaves the off-hand swing out (two
+; weapons: OFF_HAND), so a third attack could be multiplied after a first that missed. Each party
+; member's attack keeps the game's clock (the dword through DS:9C0Ch's far pointer, SL's 9B72h: in a fight
+; it moves a round at a time); a later attack at the same clock has its backstab taken back ([BP-21h]
+; cleared, its 2 off THAC0 [BP-1Eh] given back); from behind stays. All registers kept.
+GAME_CLOCK  equ 0x9C0C
+stab_first:
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .ret
+        cmp si, 3
+        ja .ret
+        push eax
+        push bx
+        push es
+        les bx, [GAME_CLOCK]
+        mov eax, [es:bx]
+        mov bx, si
+        shl bx, 2
+        cmp eax, [cs:bx + stab_clock]
+        mov [cs:bx + stab_clock], eax
+        jne .done                       ; (the round's first)
+        cmp byte [bp - 0x21], 0
+        je .done
+        mov byte [bp - 0x21], 0
+        add word [bp - 0x1E], 2
+.done:  pop es
+        pop bx
+        pop eax
+.ret:   ret
+stab_clock dd -1, -1, -1, -1    ; (each party member's last attack, by the game's clock)
 thief_rear:
         test word [cs:rules], RULE_RESTRICT
         jz .ret

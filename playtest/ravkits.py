@@ -18,7 +18,8 @@ WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
-            'kit_moves', 'kit_twos', 'kit_inits', 'spec_hits', 'spec_damages', 'spec_rates')
+            'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'spec_hits', 'spec_damages',
+            'spec_rates')
 
 
 def helper():

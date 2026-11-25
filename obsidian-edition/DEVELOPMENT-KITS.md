@@ -741,6 +741,7 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | saves | Sentinel, Myrmidon (the sequel's charms, `KIT_CHARMS`: `ravlog.RAV_CHARMS`), Wanderer (`WANDER_SPELLS`: the sequel's spell records with `+1Ah` fire or cold) | `KIT_SAVE` from `PROT_SAVE` (site 44) | 8360Eh (79D47h) |
 | thief skills | Assassin, Shadowblade, Ghetto Fighter, Wayfinder, Military Scout, Swashbuckler (its bad luck, `BAD_LUCK` at the header's +1862) | `KIT_SKILL` from `BELT_SITE` (site 20) | 8C7C5h (803B2h) |
 | from behind, backstab | Military Scout, Rescuer | `KIT_REAR` from `MISSILE_REAR` | 5C99Fh |
+| the backstab's multiplier | Assassin (one more, x3 to x6) | `STAB_TIMES` (site 53, Thieves as in AD&D's) | 5D11Bh (58A80h) |
 | movement | Stalker, Rescuer | `KIT_MOVE` from `CAH_MOVE` | 5B838h (57566h) |
 | the two-weapon penalty | Ghetto Fighter, Twin-blade, Battle Dancer | `KIT_TWO` from `PROBE_TWO` | 5DE7Ch (59634h) |
 | initiative | Myrmidon, Wayfinder, Military Scout | `KIT_INIT` (site 60, new) | `add dx,14h` at 5B7E9h (5750Eh), SI the creature |
@@ -749,15 +750,14 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
 `RavDiceLog._kit_tick` makes them writable while the kits are on and keeps them as Shattered Lands'
 dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
-`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`: `playtest/ravkits.py
+`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`: `playtest/ravkits.py
 count`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
 `EXPERT_HALVES` and `KIT_MELEE` against `kitpages` and `kits` on transferred sheets, and checks the
 tables.
 
 Not in the sequel yet: what kits do to spells and powers (slots, the Shinobi's casting, a spell's level, PSP
 costs, cures' and Cause spells' dice, spells never known, casting though hit, the Elementalist's
-second sphere), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, an Assassin's backstab
-multiplier (the sequel's backstab damage isn't ported), gear a kit forbids or allows, hit dice and
+second sphere), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, hit dice and
 PSP at a level up, a Scholar's THAC0, the kits' parts of the DAM lines, and choosing a kit (the
 sequel's creation screen and DUAL). The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
 KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's

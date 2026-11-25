@@ -932,6 +932,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
   95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
+- **[Thieves as in AD&D](#thief-skills-from-adds-table)** hold in the sequel too: a thief's skills are
+  the Player's Handbook's average for the thief level plus the race's and Dark Sun's DEX adjustment
+  (no more than 95 after armour), the inventory shows those numbers, and a backstab multiplies the
+  weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
+  round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
+  Lands.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon

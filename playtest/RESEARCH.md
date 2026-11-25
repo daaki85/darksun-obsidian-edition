@@ -752,6 +752,27 @@ are not SL's (its 25 is Detect Invisible): map SL's tables by name (`ravlog.effe
 transferred party's Tyr fight (about half the runs): `ravstart.sh`'s `RAV_CORE=normal` (the CPU core)
 and `RAV_NOEXIT=1` (DOSBox stays up if the game quits) ruled out the dynamic core and the game's own
 exit; `strace -f -e trace=exit_group,kill,tgkill -p PID` on DOSBox to see how it ends.
+**Thieves as in AD&D in the sequel** (2026-11-24, found statically, the sites run on the game's own bytes in
+`tests/test_ravthief.py` with `DSUN_WOTR`; not yet played): the thief skill routine is 8C647h (SL's 8023Bh),
+the same code with the sequel's frame: DEX in `[BP-2]` (SL's `[BP-0Ch]`), the skill a dword at `[BP+8]`,
+the thief level in SI (580h:61h, class 11h), the tables at the game's segment 4A0h (file 49BB0h, load +
+449Bh: the base at +skill, race R's row at 8 + 8R, the DEX limits A0h, A8h, B0h, the armour penalty B8h).
+SL's `thief_skill` bytes are at 8C716h ("mov ax,si / shl ax,2 / add dx,ax / mov si,dx", DX base + race),
+the game's DEX formula after them to 8C795h ("push di", its armour and effects): DSCLOG2's site 50
+(THIEF_SKILL, then "jc" +7Ah) does SL's PROBE_THIEF_SKILL there, and BELT_SITE (8C7C5h) keeps the chance
+to 95. The attack's hit routine (5CE80h, SL's 5883Ah) keeps the round's attacks so far in `[BP-16h]` (from
+the creature's byte at selector 308h, +184h; SL's `[BP-14h]`), the damage roll's bonus in `[BP-14h]`; the
+backstab multiply (SL's 58A80h) is 5D11Bh, the same 10 bytes, after the game's test (`[BP+1Eh]` and
+`[BP+20h]` bytes, the attacks at most 1, 5D0F8h-5D112h) and the multiplier routine 5DE0Ch (SL's 595C4h,
+the same: x2 to x5 by thief level). Enlarge (628h:57h) runs before it at 5D0D2h, so ENL_SITE's enlarged
+dice are the ones multiplied. STAB_FIRST (from MISSILE_REAR) takes back a member's second backstab at the
+same game clock (the far pointer at DS:9C0Ch, SL's 9B72h: the timer set-up at 2CB40h writes it). In a play: `ravdice.py` should show a thief's skill check as `"<name> tries to
+open locks: d100 = N, needs C or less"` with the second line `open locks C = <AD&D's> thief level L + <race>
++ <DEX>` and no "equipment" part when nothing is worn in the hands, legs or quiver (the old game sum showed a
+large "equipment" remainder), the inventory's skills the same numbers before equipment, and a backstab as
+`"+M backstab (the dice D xT = D*T)"` with the damage the dice x T plus STR once (DSCLOG2's `stabs` counts
+them).
+
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the
