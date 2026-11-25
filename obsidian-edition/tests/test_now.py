@@ -195,6 +195,8 @@ class RuleTests(unittest.TestCase):
 
     def test_rules_for_dsclog(self):
         log = dag()
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_IN_FORCE)
+        self.addCleanup(setattr, game, "BELT_IN_FORCE", game.BELT_IN_FORCE)
         log.set_rules(dicelog.RULE_HELMS | game.RULE_TWO_WEAPONS)
         self.assertEqual(struct.unpack_from("<H", log.guest.mem, log.tsr_hdr + dicelog.TSR_RULES)[0], 5)
 
