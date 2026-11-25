@@ -1000,6 +1000,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   scrolled into view, so Enter reaches it. (Without the Loader,
   Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
+  creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
+  Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
+  of 2nd, two of 3rd, one of 4th), and a psionicist a fixed eighteen powers, anyone else four or five of its
+  discipline. With the Loader, **DONE** opens the game's **CHOOSE A SPELL** for as many as it would have
+  given, level by level from 1st (the window's pages no higher than the level being picked), then **PICK A
+  PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
+  Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
+  spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
   them, nor shows the Loader's items (it shows money bags), and it can stop in a fight on the turn of

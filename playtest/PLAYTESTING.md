@@ -683,6 +683,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
   comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
   the inventory bar. Escape on Effects goes all the way back to the main menu.
+- **First spells and powers in Wake of the Ravager** (logs/2026-11-25-ravager-first-spells.md): DONE opens
+  CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
+  107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
+  discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
