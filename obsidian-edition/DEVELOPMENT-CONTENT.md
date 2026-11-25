@@ -968,7 +968,7 @@ use any dagger, as its sphere allows; the Loader's item names
 the item type's material before the name when it shows one); and the icons are
 objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which DSCLOG has the game open instead of its own (its `INT 21h` hook). The copy also
 has, for the item box alone, a copy of each weapon picture taller than 16 drawn
-16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2923; `icons.fit_box`): the box
+16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2952; `icons.fit_box`): the box
 draws a picture of 16 or less in a frame with its text from 28 down, a bigger one
 bare with its text from its height + 12 down (8BBE4h), so at the Polearm's own 36
 its lines ran out of the box and at the gythka's 22 its last row (`Hit -1`, a
@@ -1039,6 +1039,31 @@ Alagorn's new menu lines are in the Loader's copy of his scripts
   are one too many, so items past the locals use the Loader's flags from 784
   on (set afresh as the part starts, as the locals are). The new stories'
   "none left" test is one subroutine they all call.
+
+Wake of the Ravager's weapons, and the great axes, take the sequel's own
+inventory icons when the player has it (`dsloader/sequelicons.py`, found as for
+its spell icons, `wotrart.find_resources`, and never kept in the repository; the
+user's choice, 2026-11-25): its Twohand Sword's, Lotulis', Double Spear's,
+Trikal's, fast Darts' and Great Axe's pictures (OBJEX.GFF's BMP 3531, 2390, 3898,
+3899, 2165 and 2321; its plain darts, objects 703 and 732, have none), and its
+magic Great Axe's (2239, a gem in its head) for the game's own Great Axe +3
+(object 1018), as a picture of its own (2727, the object pointed at it: the
+game's 2084 is Soulcrusher's too, a hand axe). Most are `0FFh "PLNR"`; some are `0FFh "PLAN"`: the same header and
+colour map, the pixels plain codes of that many bits, code 0 none. Each colour of
+the sequel's palette (RESOURCE.GFF's PAL 1000) is sorted by kind
+(`sequelicons.kind_of`): wood goes to the Quarterstaff's red-browns, steel to the
+item's own material (the obsidian, metal, stone or bone blade's greys of the
+game's icons), a gem to the cycled green, and the rest (a dart's gold point, an
+outline's black) to the nearest stable colour, each kind in its brightness order.
+A magic one burns every other pixel of its steel and gold (all of them for the
+stronger of a kind), as the Loader's own do. The great sword is three steps
+longer than the sequel's (which draws it its long sword's size), so it stands
+bigger than the long sword. Not the javelin: the sequel's is black steel end to
+end, a black stick in the game's colours. Without the sequel the Loader's own
+drawings stay (`icons.double_spear_icon`, `trikal_icon` and `darts_icon`, drawn
+at the sequel's sizes: 36, 33 and 17 by 16). The tall ones (the double spear,
+trikal, great axes, darts and the Great Axe +3's 2727) have their item-box
+copies in `BOX_TALL`, and DSCLOG's `box_tall` lists the same.
 
 The icons in the item tables of `ITEMS.md` (`docs/items/*.png`) are drawn from
 the game's data by `python -m dsloader.docicons GAME_FOLDER`, from the Loader's

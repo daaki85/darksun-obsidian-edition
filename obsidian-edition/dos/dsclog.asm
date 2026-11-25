@@ -16741,6 +16741,8 @@ box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 11
          dw 2695, 2697, 2699, 2701       ; (their Javelin +1, metal two-handed sword, lotulis, javelin)
          dw 2703, 2705, 2707, 2709, 2711, 2713, 2715, 2717 ; (their magic ones: icons.RAVAGER_MAGIC)
          dw 2719, 2721, 2723, 2725       ; (the obsidian lotulis, the bone great sword and their +1s)
+         dw 2691, 2693, 2727, 2493, 2509, 2575, 2577, 2559 ; (drawn as the sequel's: the darts; the
+                                        ;   great axes, the game's +3 first: icons.BOX_TALL)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,

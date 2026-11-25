@@ -87,6 +87,10 @@ Releases, newest first (2.12.0 and older in the archive):
 - An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
   sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
   chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
+- The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
+  own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
+  material, the magic ones burning; without it, the Loader's own, the double spear, trikal and
+  darts redrawn at the sequel's sizes (the user's).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
