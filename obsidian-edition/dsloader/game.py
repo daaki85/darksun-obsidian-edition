@@ -145,7 +145,7 @@ STINK_EFFECT, STINK_TO_HIT_MOD, STINK_SAVE_POWER = 75, -2, 176  # (_MOD signed, 
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
-XP_CAP = 749_999  # DSCLOG's XP_CAP
+XP_CAP = 749_999  # DSCLOG's XP_CAP: the XP a character may gather (xp_share), and so its levels
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments
 RULE_HALF_GIANT = 512  # half-giants wield two-handed weapons in one hand
 # AD&D's rings and cloaks of protection: of two rings only the better counts, and a ring betters
@@ -997,6 +997,15 @@ def class_share(sheet: bytes) -> int:
     if sheet[SHEET_RACE] == HUMAN:
         return 1
     return max(sum(1 for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c), 1)
+
+
+def xp_share(sheet: bytes) -> int:
+    """The XP a character may gather: its share of XP_CAP (tables.xp_share, DSCLOG's LEVEL_ROOM).
+    The Loader holds a party member's XP there (tracker.py), so that none is banked past the
+    character's top level."""
+    from . import tables
+    return tables.xp_share(sheet[SHEET_CLASSES:SHEET_CLASSES + 3], sheet[SHEET_LEVELS:SHEET_LEVELS + 3],
+                           sheet[SHEET_RACE] == HUMAN, XP_CAP)
 
 
 def con_share(sheet: bytes, bonus: int, groups: Dict[int, int], last_die: Dict[int, int]) -> Optional[int]:

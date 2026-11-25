@@ -288,7 +288,7 @@ classes ([kits](#kits)).
 
 The change starts the new class at 0 XP, and any XP past the old level's need
 is lost: change as soon as the level you want comes. How far the new class can
-then rise: [XP left over at the top](#xp-left-over-at-the-top).
+then rise: [XP stops at the cap](#xp-stops-at-the-cap).
 
 ## The classes
 
@@ -919,7 +919,8 @@ Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly
 (374,999 each), three too (249,999); and a human who changed class has the
 cap less what its old classes' levels needed (the game starts the new class
-at 0 XP). XP keeps counting past the cap. The highest levels:
+at 0 XP). XP stops at the cap too ([XP stops at the cap](#xp-stops-at-the-cap)). The
+highest levels:
 
 | Class | One class | Two classes | Three classes |
 |---|---|---|---|
@@ -965,18 +966,23 @@ AD&D's tables:
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
 
-### XP left over at the top
+### XP stops at the cap
 
-The cap stops levels, not XP: past a class's highest level the XP keeps
-counting (to the game's own limit, 2,000,000,000), but no level comes of it.
-What is left over is the cap less the XP the highest level needed. For a human
-it is also the room a new class has: dual-classing starts the new class at 0
-XP, and the new class may rise only as far as the cap less the old class's
-level's XP allows.
+A character's XP stops at its share of the cap: once it gets there, nothing
+more counts. The Loader holds it there as each award comes, and the dice log
+says what wasn't counted (`Jenna's XP held at the cap: 749,999 (30 not
+counted)`); View Character shows the XP held. So no XP is banked past the top: a character at its share is at its
+highest level, and the XP between that level's need and the share brings no
+level. *Without the mod* (or the game played without the Loader following it):
+XP counts on to the game's own limit, 2,000,000,000, and no level comes of it.
+
+The share is also, for a human, the room a new class has: dual-classing starts
+the new class at 0 XP, and the new class may rise only as far as the cap less
+the old class's level's XP allows; its XP stops there.
 
 One class, with AD&D's tables:
 
-| Class | Highest level | XP it needs | Next level needs | Left over |
+| Class | Highest level | XP it needs | Next level needs | XP past it, to the cap |
 |---|---|---|---|---|
 | Fighter | 10 | 500,000 | 750,000 | 249,999 |
 | Gladiator | 10 | 600,000 | 900,000 | 149,999 |

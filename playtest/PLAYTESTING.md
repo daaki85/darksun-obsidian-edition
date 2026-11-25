@@ -257,7 +257,12 @@ game's data: it is one player's account.
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
     `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
-    game's: in a copy, change the display in `env.sh` and `paths.py` only.
+    game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
+    in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the
+    save there and the copy's `start.sh` starts DOSBox from it. **A control run with the old
+    Loader**: the kit's `obsidian-edition` a link to a detached `git worktree` of
+    `origin/obsidian-edition` (its own patched files and `settings.json`), then the same steps;
+    remove the worktree after (logs/2026-11-25-xp-held-at-cap.md: `:56`, `dbxp`).
   - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
     arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
     rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The

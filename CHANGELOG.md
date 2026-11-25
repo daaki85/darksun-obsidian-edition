@@ -112,6 +112,13 @@ Releases, newest first (2.12.0 and older in the archive):
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
 
+**Changed**
+
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.

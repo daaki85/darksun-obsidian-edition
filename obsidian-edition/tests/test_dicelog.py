@@ -2319,6 +2319,46 @@ class NewLinesTests(unittest.TestCase):
         # no gain, no bonus
         self.assertEqual(bonus(sheet(dwarf, [9], [18, 10, 10, 10, 10, 10]), -50), (0, []))
 
+    def test_xp_held_at_the_cap(self):
+        """A party member's XP above its share of the XP cap (game.xp_share: 749,999 for one class)
+        is held there on the sheet as soon as it is seen, with a line; the XP line then shows the
+        gain that counted, and the prime requisite bonus stops at the share too."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        struct.pack_into("<I", m, SHEETS, 749_000)
+        self.assertEqual(tracker.check(1.0), [])
+        struct.pack_into("<I", m, SHEETS, 761_345)  # (an award of 12,345)
+        self.assertEqual(tracker.check(2.0), ["Dag's XP held at the cap: 749,999 (11,346 not counted)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 749_999)
+        self.assertEqual(tracker.check(3.0), ["XP: Dag +999"])
+        struct.pack_into("<I", m, SHEETS, 750_100)  # (another: all of it held)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), ["Dag's XP held at the cap: 749,999 (101 not counted)"])
+        # the prime requisite bonus: what passes the share held
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_ABILITIES] = 17
+        struct.pack_into("<I", m, SHEETS, 749_000)
+        tracker.check(6.0)
+        struct.pack_into("<I", m, SHEETS, 749_950)
+        self.assertEqual(tracker.check(8.0) + tracker.check(9.0),
+                         ["XP: Dag +999 (+49 for Fighter, STR 17, 46 of it held at the cap)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 749_999)
+        # a fighter/thief: half the cap each; a save from before, over it, held at the first look
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES:SHEETS + game.SHEET_CLASSES + 3] = bytes((9, 17, 0))
+        struct.pack_into("<I", m, SHEETS, 400_000)
+        self.assertEqual(tracker.check(1.0), ["Dag's XP held at the cap: 374,999, 749,999 shared by 2 classes "
+                                              "(25,001 not counted)"])
+        self.assertEqual(tracker.check(2.0) + tracker.check(3.0), [])
+        # a human once a 7th level fighter, now a thief: the cap less the 64,000 the fighter's levels needed
+        m[SHEETS + game.SHEET_RACE] = game.HUMAN
+        m[SHEETS + game.SHEET_CLASSES:SHEETS + game.SHEET_LEVELS + 3] = bytes((17, 9, 0, 10, 7, 0))
+        struct.pack_into("<I", m, SHEETS, 700_000)
+        self.assertEqual(tracker.check(4.0)[0], "Dag's XP held at the cap: 685,999, 749,999 less the 64,000 the old "
+                                                "class needed (14,001 not counted)")  # (then its levels, new to it)
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 685_999)
+
     def test_leaving_an_area_kills_no_one(self):
         """Going to another area the game drops the old area's people and clears or reuses their
         records: no deaths logged (once every guard of the arena was "killed" on leaving the pens).

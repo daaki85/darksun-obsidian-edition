@@ -53,7 +53,8 @@ Only the user's `SAVE01.SAV` came with each of these: its `CHARSAVE.GFF` and `DA
 - `fountain-user`: the user's save "templar fountain" (2026-11-08): the slave pens, Pehtucl leading
   the party to the fountain, the ambush a moment away (its speech comes on loading). The ambush's
   fight: Pehtucl, 4 Arena Guards and a Guard; the script also sends every guard of those kinds in
-  the region hunting (GPL 145 at 0xE99).
+  the region hunting (GPL 145 at 0xE99). A click on the speech (160,30) puts it away and the fight
+  starts; `fightout.sh 120` then finishes it (about 11 passes, 6 kills).
 - `trap-user`: the user's save "trap" (2026-11-08): the party (Lex, Jenna, Ester, Seneca) in
   Pehtucl's room, beside his chest (leader 136,1400; the chest about 200,1393 on the map, at screen
   200,95 with the camera 0,1296). A game that came to the pens before 2.14.0: its chest was the
