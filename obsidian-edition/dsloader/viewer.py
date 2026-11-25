@@ -515,30 +515,30 @@ class Viewer:
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
-        # what runs the game: GOG's DOSBox 0.74, or the player's own DOSBox-X (dosboxx.py)
+        # what runs the game: DOSBox-X (dosboxx.py: the mod's own copy on Windows, or the player's),
+        # or GOG's DOSBox 0.74
         motor = section("engine", "Engine (from the next start)")
         self.engine = tk.StringVar(value=dosboxx.engine(settings))
-        for value, text in ((dosboxx.GOG, "GOG's DOSBox 0.74, which comes with the game (the default)"),
-                            (dosboxx.DOSBOX_X, "DOSBox-X, your own copy of it: new, and tested on Linux only "
-                                               "so far")):
+        for value, text in ((dosboxx.DOSBOX_X, "DOSBox-X (the default when there is one: it comes with the mod "
+                                               "on Windows; elsewhere choose your own below)"),
+                            (dosboxx.GOG, "GOG's DOSBox 0.74, which comes with the game")):
             ttk.Radiobutton(motor, text=text, value=value, variable=self.engine,
                             command=self._engine_chosen).pack(anchor="w")
         self.dosbox_x_path = settings.get(dosboxx.PATH_SETTING) if isinstance(
             settings.get(dosboxx.PATH_SETTING), str) else ""
-        self.dosbox_x_status = tk.StringVar(value=dosboxx.found_line(self.dosbox_x_path)
-                                            if self.dosbox_x_path or self.engine.get() == dosboxx.DOSBOX_X
-                                            else "No DOSBox-X chosen.")
+        self.dosbox_x_status = tk.StringVar(value=self._dosbox_x_line())
         found_x = ttk.Label(motor, textvariable=self.dosbox_x_status, style="Status.TLabel", wraplength=460,
                             justify="left")
         found_x.pack(anchor="w", pady=(4, 0))
         ttk.Button(motor, text="Choose the DOSBox-X program...", command=self.choose_dosbox_x).pack(
             anchor="w", pady=(4, 0))
-        about_x = ttk.Label(motor, text="DOSBox-X is not part of the mod and is not downloaded: install it "
-                            "yourself (2025.01.01 or later) and choose its program here. The Loader starts it with "
-                            "a configuration of its own and follows the game through DOSBox-X's memory file, so on "
-                            "Linux it needs neither root nor a ptrace setting. This engine is new: it has been "
-                            "played on Linux only, and is untested on Windows and macOS. The game's saves are the "
-                            "same on both engines.", style="Status.TLabel", wraplength=460, justify="left")
+        about_x = ttk.Label(motor, text="DOSBox-X gives the mod more memory to work with than GOG's DOSBox. The "
+                            "Windows download of the mod brings DOSBox-X with it (its dosbox-x folder, with its "
+                            "licence); on Linux and macOS install it yourself (2025.01.01 or later) and choose its "
+                            "program here. The Loader starts it with a configuration of its own and follows the "
+                            "game through DOSBox-X's memory file, so on Linux it needs neither root nor a ptrace "
+                            "setting. The game's saves are the same on both engines.", style="Status.TLabel",
+                            wraplength=460, justify="left")
         about_x.pack(anchor="w", pady=(4, 0))
         motor.bind("<Configure>", lambda e: [label.configure(wraplength=max(200, e.width - 20))
                                              for label in (found_x, about_x)], add="+")
@@ -669,13 +669,22 @@ class Viewer:
         if self._options_shown.get(dosboxx.SETTING) != self.engine.get():
             return  # (not saved: the status line says why)
         if self.engine.get() == dosboxx.DOSBOX_X:
-            line = dosboxx.found_line(self.dosbox_x_path)
+            line = self._dosbox_x_line()
             self.dosbox_x_status.set(line)
             wrong = dosboxx.problem({dosboxx.PATH_SETTING: self.dosbox_x_path})
             self.status.set("Engine: DOSBox-X, from the next start." if wrong is None else
                             "Engine: DOSBox-X, but it can't start yet: " + line)
         else:
             self.status.set("Engine: GOG's DOSBox, from the next start.")
+
+    def _dosbox_x_line(self) -> str:
+        """The DOSBox-X that would run the game: the one chosen, else the one that comes with the mod."""
+        path = dosboxx.program({dosboxx.PATH_SETTING: self.dosbox_x_path})
+        if path is None or (self.dosbox_x_path and not os.path.isfile(dosboxx.app_program(self.dosbox_x_path))):
+            return dosboxx.found_line(self.dosbox_x_path or None)
+        line = dosboxx.found_line(path)
+        return line + (" (the one that comes with the mod)" if path == dosboxx.bundled() and not
+                       self.dosbox_x_path else "")
 
     def choose_dosbox_x(self) -> None:
         """The player's DOSBox-X program: asked for, its version read, and remembered unless it
@@ -880,7 +889,9 @@ class Viewer:
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self.picture.set(launch.DEFAULT_PICTURE)
-        self.engine.set(dosboxx.GOG)  # (the DOSBox-X program and the soundfont file stay remembered)
+        # (no engine chosen: DOSBox-X when one is found, else GOG's; the DOSBox-X program and the
+        # soundfont file stay remembered)
+        self.engine.set(dosboxx.engine({dosboxx.PATH_SETTING: self.dosbox_x_path}))
         self._show_midi(midiout.DEFAULT)
         self._options_changed(every=True)
         self._speed_chosen()
@@ -1575,12 +1586,16 @@ class Viewer:
         shown = getattr(self, "_options_shown", {})
         changes = values if every else {key: value for key, value in values.items()
                                         if key not in shown or shown[key] != value}
+        if every:  # (Restore defaults: no engine chosen, so DOSBox-X when one is found, as for a new player)
+            changes = {key: value for key, value in changes.items() if key != dosboxx.SETTING}
         try:
             with launch.SETTINGS_LOCK:  # (read and written as one step)
                 settings = launch.load_settings(strict=True)
                 for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
                     settings.pop(old, None)
                 settings.update(changes)
+                if every:
+                    settings.pop(dosboxx.SETTING, None)
                 launch.save_settings(settings)
         except OSError as e:  # (settings.json held elsewhere: kept as it was, not saved over)
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")

@@ -943,15 +943,24 @@ any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*.
 
 ## The engine: GOG's DOSBox or DOSBox-X
 
-**Experimental, and played on Linux only so far.** The game runs in an emulator of an old PC.
-GOG's release comes with one, DOSBox 0.74, and that is what the Loader starts unless you choose
-otherwise: nothing about it has changed. The Options tab's **Engine** section offers a second one,
-[DOSBox-X](https://dosbox-x.com), a newer emulator that is still being worked on. It is not part of
-the mod and the Loader never downloads it: you install DOSBox-X yourself and point the Loader to
-its program with **Choose the DOSBox-X program...**. The tab then says which version it found.
-It needs **DOSBox-X 2025.01.01 or later**; an older one is refused, with the reason.
+The game runs in an emulator of an old PC. GOG's release comes with one, DOSBox 0.74; the mod
+runs it in a newer one, [DOSBox-X](https://dosbox-x.com), whenever there is one, and in GOG's
+DOSBox otherwise (nothing about that start has changed). **On Windows DOSBox-X comes with the
+mod**: the release's `dosbox-x` folder holds DOSBox-X's own 64-bit Windows program, unchanged, with
+its licence (it is free software under the GNU GPL, version 2) and `SOURCE.txt`, which says where
+its source is (a copy of it is beside the mod's download). **On Linux and macOS** install DOSBox-X
+yourself and point the Loader to its program with **Choose the DOSBox-X program...** on the
+Options tab's **Engine** section; the tab then says which version it found. It needs **DOSBox-X
+2025.01.01 or later**; an older one is refused, with the reason, and isn't used by default. A
+DOSBox-X you choose goes before the one that comes with the mod. To play in GOG's DOSBox, choose it
+in the same section.
 
-Why you might want it:
+Why DOSBox-X:
+
+- **More memory for the mod.** The mod's helper in the game, DSCLOG, lives in the PC's *upper
+  memory*, a few blocks between the screen's memory and the BIOS. GOG's DOSBox has 128 KB of it;
+  DOSBox-X, as the Loader sets it up, 192 KB (its BIOS made smaller), so the helper has about
+  64 KB more room to grow into.
 
 - **Linux without root.** The Loader has to read and write the game's memory while it runs. With
   DOSBox 0.74 it does that through DOSBox's process, which on Linux needs root or a system setting
@@ -972,7 +981,8 @@ pictures and the three game speeds, each set to walk as it does on GOG's DOSBox.
 
 | | GOG's DOSBox 0.74 | DOSBox-X |
 |---|---|---|
-| Comes with the game | yes | no: your own copy, 2025.01.01 or later |
+| Comes with | the game | the mod, on Windows; elsewhere your own copy, 2025.01.01 or later |
+| Upper memory (DSCLOG's room) | 128 KB (D000h-EFFFh) | 192 KB (CC00h-FBFFh) |
 | Full screen while playing | Alt+Enter | F12 and F together (F11 and F on Windows) |
 | **Plain** at Triple and Quadruple, and **Sharp** | Plain is DOSBox's own drawing; Sharp needs OpenGL | both drawn with OpenGL, and they look alike: every pixel a block |
 | **Scanlines** and **TV** at Quadruple | the twice-size picture doubled and smoothed | the twice-size picture doubled, not smoothed |
@@ -985,10 +995,12 @@ and twenty minutes without a stop. **On Windows and macOS it has not been run at
 Loader's side is written for both, from DOSBox-X's source, but nobody has started it there. A
 packaged DOSBox-X that runs in a sandbox (a Flatpak, a Snap, the Steam Deck's) may not be able to
 reach the Loader's memory file; that is untried too. If it doesn't work for you, choose GOG's
-DOSBox again: **Restore defaults** does that too, and remembers where your DOSBox-X is.
+DOSBox. **Restore defaults** takes the choice away again (DOSBox-X whenever there is one) and
+remembers where your DOSBox-X is.
 
-**Switches** (Engine, from the next start): *GOG's DOSBox 0.74, which comes with the game (the
-default)* or *DOSBox-X, your own copy of it: new, and tested on Linux only so far*; the button
+**Switches** (Engine, from the next start): *DOSBox-X (the default when there is one: it comes
+with the mod on Windows; elsewhere choose your own below)* or *GOG's DOSBox 0.74, which comes with
+the game*; the button
 **Choose the DOSBox-X program...**; and, under Picture and music, **Choose a soundfont file...**
 and **No soundfont**. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x).

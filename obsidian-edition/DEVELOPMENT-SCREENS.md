@@ -1720,10 +1720,17 @@ window's two choices).
 
 ([In the features page](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x).)
 
-`engine` in `settings.json` is "gog" (the default, and anything else stored) or "dosbox-x"
-(`dosboxx.engine`); `dosbox_x_path` is the player's DOSBox-X program and `soundfont` a `.sf2`
-file. With "gog" nothing below runs: `launch._launch`, `write_conf` and `is_game_dir` take their
-old path. With "dosbox-x" (`launch._launch_dosbox_x`):
+`engine` in `settings.json` is "dosbox-x" or "gog" when the player chose one (`dosboxx.chosen`).
+With neither (the default, and anything else stored) `dosboxx.engine` gives DOSBox-X when one is
+found that isn't too old (`dosboxx.usable`, its version asked once a program and file time), else
+GOG's. The program (`dosboxx.program`) is `dosbox_x_path`, the player's, if that file is there,
+else the one in the Loader's `dosbox-x` folder (`dosboxx.bundled`: `dosbox-x.exe` on Windows,
+`dosbox-x` or `dosbox-x.app` elsewhere), which the release puts there for Windows (below).
+`soundfont` is a `.sf2` file. The order at a start (`launch._launch`): DOSBox-X chosen; the
+[recompiled program](README.md#dark-sun-recompiled) when it is found; DOSBox-X by default; GOG's
+DOSBox. Restore defaults removes `engine` (`SWITCH_DEFAULTS` has `None` for it). With GOG's
+nothing below runs: `launch._launch`, `write_conf` and `is_game_dir` take their old path. With
+DOSBox-X (`launch._launch_dosbox_x`):
 
 1. `dosboxx.problem` refuses the start with no program, one that is gone, or one older than
    2025.01.01 (`dosboxx.version`: `dosbox-x -version` asked of the program; on Windows, where
@@ -1781,6 +1788,7 @@ and [the engine's own log](https://github.com/daaki85/darksun-obsidian-edition/b
 | `[config] dos=umb` (not DOSBox-X's `high, umb`) | DOS takes the HMA; DSCLOG's far block goes into upper memory and leaves no room there for the game's overlay buffer |
 | `[dos] minimum mcb free=100`, `kernel allocation in umb=true` | the game loads at 0824h, not 0224h: 26.7 KB less conventional memory than on 0.74 |
 | `[dos] ems=false`, `xms=true`, `umb=true` | as on 0.74 ([EMS off](DEVELOPMENT-INTERNALS.md#ems-off)) |
+| `[dos] umb end=FBFF`, with `[dosbox] rom bios allocation max=16` and `rom bios minimum size=16` | upper memory ends at EFFFh (the BIOS takes F000h up): 48 KB less for DSCLOG (free upper memory 16,368 bytes in place of 65,520 in `fountain-user`). `umb end` past EFFFh without the two BIOS lines turns upper memory off ([the log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-25-dosbox-x-upper-memory.md)) |
 | `[sdl] autolock=true`, `middle_unlock=none`, `clip_mouse_button=none`, `autolock_feedback=none` | the middle button unlocks the mouse and the right one is DOSBox-X's clipboard: no map drag |
 | `[sdl] sensitivity=N,N` (100 over the window's scale, across and down) | one number alone is across only: in a Triple window the pointer went three times too fast down the screen (60 of the hand's pixels moved it 48 game pixels; 16 on 0.74 and with both) |
 | `[render] doublescan=false`, `aspect=true` | the 320x200 mode handed on as 640x400: a window twice the size asked for |
@@ -1789,7 +1797,20 @@ and [the engine's own log](https://github.com/daaki85/darksun-obsidian-edition/b
 | `[dos] log console=true` | (kept for the crash report: DOS's own text, "DSCLOG loaded.", goes to `dosbox-x.log`) |
 
 `UMBPLUS.COM` runs in the autoexec as on 0.74 and changes nothing (the upper memory chain isn't
-0.74's; DOSBox-X's block already starts lower, at CC00h).
+0.74's; DOSBox-X's block already starts lower, at CC00h, after the VGA BIOS, C000h-C3FFh, and
+DOS's own tables, C400h-CBFFh, and ends at FBFFh: 192 KB, where 0.74's D000h-EFFFh is 128 KB).
+Moving DOS's tables out of upper memory (`kernel allocation in umb=false`, `private area in
+umb=false`) would add 32 KB there but take 32 KB of conventional memory; `umb start` can't go
+below them.
+
+**DOSBox-X in the release.** `.github/workflows/release.yml` downloads DOSBox-X's own 64-bit
+Windows build of `DOSBOX_X_VERSION` (`dosbox-x-vsbuild-win64-VERSION-portable.zip` from its GitHub
+release; `DOSBOX_X_SHA256`, when set, is checked) and adds `dosbox-x.exe`, `COPYING.txt` (GPL 2),
+its `README.txt` and a `SOURCE.txt` of its own to the zip's `dosbox-x` folder. DOSBox-X's source
+archive of the same tag goes beside the zip as an asset of the release, so the source is offered
+from the same place as the program (GPL 2, section 3). Nothing of DOSBox-X is in this repository
+(`dosbox-x/` is in `.gitignore`: the Loader's work folder). Linux has no DOSBox-X build of its
+own (its project ships a Flatpak) and macOS's is unsigned, so neither comes with the mod.
 
 **The Options tab's other settings on this engine.**
 

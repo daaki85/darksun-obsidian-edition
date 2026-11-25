@@ -44,6 +44,9 @@ class OptionsTests(unittest.TestCase):
         devices = viewer.midiout.devices
         self.addCleanup(lambda: setattr(viewer.midiout, "devices", devices))
         viewer.midiout.devices = lambda: None
+        bundled = viewer.dosboxx.BUNDLED_DIR  # (the Loader's own may hold a DOSBox-X a release brought)
+        self.addCleanup(lambda: (setattr(viewer.dosboxx, "BUNDLED_DIR", bundled), viewer.dosboxx._USABLE.clear()))
+        viewer.dosboxx.BUNDLED_DIR = os.path.join(d, "mod-dosbox-x")
 
         def no_game():
             raise OSError("no game in a test")
@@ -101,9 +104,10 @@ class OptionsTests(unittest.TestCase):
         self.assertEqual(launch.effective_switches(settings), launch.effective_switches({}))
 
     def test_engine(self):
-        """The engine (Engine, from the next start): GOG's DOSBox unless DOSBox-X is chosen; the
-        DOSBox-X program asked for, its version said, one too old for the memory file refused and
-        not kept; the soundfont file; Restore defaults back to GOG's with the program remembered."""
+        """The engine (Engine, from the next start): GOG's DOSBox with no DOSBox-X found and none
+        chosen; the DOSBox-X program asked for, its version said, one too old for the memory file
+        refused and not kept; the soundfont file; Restore defaults back to no engine chosen (so
+        DOSBox-X, one being remembered) with the program remembered; the mod's own DOSBox-X."""
         v = self.viewer
         dosboxx = viewer.dosboxx
         self.assertEqual(v.engine.get(), "gog")
@@ -170,8 +174,17 @@ class OptionsTests(unittest.TestCase):
         v._engine_chosen()
         viewer.messagebox.askyesno = lambda *a, **k: True
         v.restore_defaults()
-        self.assertEqual((v.engine.get(), self.saved()["engine"]), ("gog", "gog"))
+        self.assertEqual(v.engine.get(), "dosbox-x")  # (none chosen, and one is remembered)
+        self.assertNotIn("engine", self.saved())
         self.assertEqual(self.saved()["dosbox_x_path"], new)  # (the program stays remembered)
+        self.assertEqual(launch.effective_switches(self.saved())["engine"], "dosbox-x")
+        # the mod's own DOSBox-X (a release's dosbox-x folder): said as the one that runs the game
+        v.dosbox_x_path = ""
+        os.makedirs(dosboxx.BUNDLED_DIR, exist_ok=True)
+        with open(os.path.join(dosboxx.BUNDLED_DIR, dosboxx.BUNDLED_NAMES[0]), "wb") as f:
+            f.write(b"dosbox-x-2026.10.01.conf")
+        self.assertIn("comes with the mod", v._dosbox_x_line())
+        self.assertEqual(dosboxx.engine({}), "dosbox-x")
 
     def test_a_stored_engine_the_loader_doesnt_know_is_gogs(self):
         with open(launch.SETTINGS, "w") as f:

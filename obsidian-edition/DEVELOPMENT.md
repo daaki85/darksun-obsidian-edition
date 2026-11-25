@@ -269,7 +269,10 @@ has the tools and how to use them.
 The **Release** workflow (`.github/workflows/release.yml`) runs the tests on Windows, zips the
 `obsidian-edition` folder as `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip` with `git
 archive` (so only what is committed goes in), and publishes the zip and `../patch-notes.html` with
-`release-notes/v<version>.md` as its notes (`tests/test_release.py` checks it does).
+`release-notes/v<version>.md` as its notes (`tests/test_release.py` checks it does). It adds
+DOSBox-X's own 64-bit Windows program to the zip's `dosbox-x` folder, with its licence and a
+`SOURCE.txt`, and puts DOSBox-X's source archive beside the zip
+([DOSBox-X in the release](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
 
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),

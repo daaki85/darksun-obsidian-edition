@@ -28,8 +28,33 @@ def section(conf, name):
     return [line for line in conf[at:end] if line]
 
 
+def no_bundled(test):
+    """dosboxx.BUNDLED_DIR an empty folder of the test's own for the test (the Loader's real one
+    may hold the DOSBox-X a release brought); returns that folder."""
+    d = tempfile.mkdtemp()
+    saved = dosboxx.BUNDLED_DIR
+    test.addCleanup(lambda: (setattr(dosboxx, "BUNDLED_DIR", saved), dosboxx._USABLE.clear(),
+                             __import__("shutil").rmtree(d, ignore_errors=True)))
+    dosboxx.BUNDLED_DIR = d
+    dosboxx._USABLE.clear()
+    return d
+
+
+def fake_program(folder, version="2026.10.01", name=None):
+    """A file that reads as DOSBox-X VERSION (its own file names its configuration file), and on
+    Linux and macOS answers -version as the real one does."""
+    path = os.path.join(folder, name or dosboxx.BUNDLED_NAMES[0])
+    with open(path, "w") as f:
+        f.write(f"#!/bin/sh\n# dosbox-x-{version}.conf\necho 'DOSBox-X version {version} SDL2'\n")
+    os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
+    return path
+
+
 class EngineSettingTests(unittest.TestCase):
-    def test_gogs_is_the_default_and_anything_unknown(self):
+    def setUp(self):
+        self.bundled = no_bundled(self)
+
+    def test_gogs_with_no_dosbox_x_and_for_anything_unknown(self):
         for settings in ({}, {"engine": "gog"}, {"engine": None}, {"engine": 3}, {"engine": "dosbox"},
                          {"engine": True}, {"engine": ["dosbox-x"]}):
             self.assertEqual(dosboxx.engine(settings), dosboxx.GOG, settings)
@@ -37,12 +62,45 @@ class EngineSettingTests(unittest.TestCase):
     def test_dosbox_x_however_it_is_typed(self):
         for value in ("dosbox-x", "DOSBox-X", " dosbox-x "):
             self.assertEqual(dosboxx.engine({"engine": value}), dosboxx.DOSBOX_X)
+            self.assertEqual(dosboxx.chosen({"engine": value}), dosboxx.DOSBOX_X)
+        self.assertEqual(dosboxx.chosen({"engine": " GOG"}), dosboxx.GOG)
+        for value in (None, "dosbox", 3):
+            self.assertIsNone(dosboxx.chosen({"engine": value}))
 
-    def test_it_is_one_of_the_switches_and_restores_to_gogs(self):
-        self.assertEqual(launch.SWITCH_DEFAULTS["engine"], "gog")
+    def test_dosbox_x_is_the_default_when_the_mod_brings_one(self):
+        path = fake_program(self.bundled)
+        self.assertEqual(dosboxx.bundled(), path)
+        self.assertEqual(dosboxx.program({}), path)
+        for settings in ({}, {"engine": None}, {"engine": "nonsense"}, {"dosbox_x_path": "/gone/dosbox-x"}):
+            self.assertEqual(dosboxx.engine(settings), dosboxx.DOSBOX_X, settings)
+        self.assertEqual(dosboxx.engine({"engine": "gog"}), dosboxx.GOG)  # (chosen on the Options tab)
+        self.assertIsNone(dosboxx.problem({}))
+        self.assertIsNone(dosboxx.problem({"engine": "dosbox-x"}))
+
+    def test_or_when_the_player_named_one(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))
+        mine = fake_program(d, name="dosbox-x")
+        bundled = fake_program(self.bundled)
+        self.assertEqual(dosboxx.program({"dosbox_x_path": mine}), mine)  # (the player's before the mod's)
+        self.assertEqual(dosboxx.engine({"dosbox_x_path": mine}), dosboxx.DOSBOX_X)
+        os.remove(bundled)
+        self.assertEqual(dosboxx.engine({"dosbox_x_path": mine}), dosboxx.DOSBOX_X)
+
+    def test_one_too_old_is_no_default(self):
+        fake_program(self.bundled, "2024.03.01")
+        self.assertEqual(dosboxx.engine({}), dosboxx.GOG)
+        self.assertEqual(dosboxx.engine({"engine": "dosbox-x"}), dosboxx.DOSBOX_X)  # (chosen: the start says why not)
+        self.assertIn("too old", dosboxx.problem({"engine": "dosbox-x"}))
+
+    def test_it_is_one_of_the_switches_and_restores_to_none_chosen(self):
+        self.assertIsNone(launch.SWITCH_DEFAULTS["engine"])
         self.assertEqual(launch.effective_switches({})["engine"], "gog")
         self.assertEqual(launch.effective_switches({"engine": "dosbox-x"})["engine"], "dosbox-x")
         self.assertEqual(launch.effective_switches({"engine": "nonsense"})["engine"], "gog")
+        fake_program(self.bundled)
+        self.assertEqual(launch.effective_switches({})["engine"], "dosbox-x")
+        self.assertEqual(launch.effective_switches({"engine": "gog"})["engine"], "gog")
 
 
 class VersionTests(unittest.TestCase):
@@ -186,8 +244,12 @@ class ConfTests(unittest.TestCase):
     def test_the_settings_the_mod_relies_on_are_all_said(self):
         conf = lines()
         self.assertEqual(section(conf, "dosbox")[:3], ["machine=svga_s3", "memsize=32", "memory file=/dev/shm/x.mem"])
-        for line in ("ems=false", "xms=true", "umb=true", "minimum mcb free=100", "kernel allocation in umb=true"):
+        for line in ("ems=false", "xms=true", "umb=true", "minimum mcb free=100", "kernel allocation in umb=true",
+                     "umb end=FBFF"):
             self.assertIn(line, section(conf, "dos"))
+        # (the BIOS in 16 KB, so upper memory can run to FBFFh: `umb end` alone would turn it off)
+        for line in ("rom bios allocation max=16", "rom bios minimum size=16"):
+            self.assertIn(line, section(conf, "dosbox"))
         self.assertEqual(section(conf, "config"), ["dos=umb"])
         self.assertEqual(section(conf, "sblaster"), ["sbtype=sb16", "sbbase=220", "irq=5", "dma=1", "hdma=5"])
         for line in ("showmenu=false", "autolock=true", "middle_unlock=none", "clip_mouse_button=none"):
@@ -349,7 +411,7 @@ class LaunchTests(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         d = self.dir.name
         names = ("SETTINGS", "HERE", "DBX_DIR", "DBX_CONF", "DBX_LOG", "GAME_LOCK", "CONF", "prepare_patched_game",
-                 "STARTED", "STARTED_ENGINE", "STARTED_DOSBOX_X", "MEMORY_FILE", "LAST_SETTINGS", "recompiled_program",
+                 "STARTED", "STARTED_ENGINE", "STARTED_DOSBOX_X", "MEMORY_FILE", "LAST_SETTINGS", "recompiled_program", "recompiled_command",
                  "process_name")
         saved = {name: getattr(launch, name) for name in names}
         self.addCleanup(lambda: [setattr(launch, name, value) for name, value in saved.items()])
@@ -364,6 +426,7 @@ class LaunchTests(unittest.TestCase):
         launch.prepare_patched_game = lambda game_dir, settings=None: None
         launch.recompiled_program = lambda settings=None: None
         launch.process_name = lambda pid: "dosbox-x"  # (the stand-in is a shell script: the system names its shell)
+        self.bundled = no_bundled(self)
         self.game = os.path.join(d, "game")
         os.mkdir(self.game)
         open(os.path.join(self.game, "DSUN.EXE"), "wb").close()
@@ -431,6 +494,46 @@ class LaunchTests(unittest.TestCase):
             launch.launch(self.game)
         self.assertIn("too old", str(raised.exception))
         self.assertFalse(launch.holds_game())
+
+    @unittest.skipIf(os.name == "nt", "a shell script stands in for the program")
+    def test_with_none_chosen_the_mods_dosbox_x_starts_unless_the_recompiled_program_is_there(self):
+        program = self.program()
+        os.replace(program, os.path.join(self.bundled, "dosbox-x"))
+        program = os.path.join(self.bundled, "dosbox-x")
+        launch.save_settings({"dosbox_x_memory_dir": self.memory})
+        self.assertTrue(launch.is_game_dir(self.game))  # (no DOSBOX folder needed)
+        proc, problem = launch.launch(self.game, "a test")
+        try:
+            self.assertEqual(proc.args[0], program)
+            self.assertEqual(launch.STARTED_ENGINE, dosboxx.DOSBOX_X)
+        finally:
+            proc.kill()
+            proc.wait()
+            launch.release_game()
+        # the recompiled program, found beside the mod, comes before DOSBox-X none chosen...
+        started = []
+
+        class Started:
+            pid = os.getpid()
+            args = ["recompiled"]
+
+        popen = launch.subprocess.Popen
+        self.addCleanup(lambda: setattr(launch.subprocess, "Popen", popen))
+        launch.recompiled_program = lambda settings=None: os.path.join(self.dir.name, "dsun-recompiled")
+        launch.recompiled_command = lambda program, game_dir: [program]
+        launch.subprocess.Popen = lambda args, **k: started.append(args) or Started()
+        launch._launch(self.game, launch.load_settings())
+        self.assertEqual(started, [[os.path.join(self.dir.name, "dsun-recompiled")]])
+        self.assertEqual(launch.STARTED_ENGINE, dosboxx.GOG)
+        # ... but not before DOSBox-X chosen on the Options tab
+        launch.subprocess.Popen = popen
+        launch.save_settings({"dosbox_x_memory_dir": self.memory, "engine": "dosbox-x"})
+        proc, problem = launch._launch(self.game, launch.load_settings())
+        try:
+            self.assertEqual(proc.args[0], program)
+        finally:
+            proc.kill()
+            proc.wait()
 
     @unittest.skipIf(os.name == "nt", "a shell script stands in for the program")
     def test_the_start_the_lock_files_memory_line_and_the_end(self):

@@ -1217,7 +1217,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
                    "hit_chance": True, "hit_hover": True, "squares": True, "move_back": True, "show_usable": True, "quick_save": True, "autosave": True,
                    "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
-                   dosboxx.SETTING: dosboxx.GOG,
+                   dosboxx.SETTING: None,  # (none chosen: DOSBox-X when one is found, else GOG's: dosboxx.engine)
                    "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
@@ -1365,7 +1365,7 @@ def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, O
         raise LaunchError(wrong)
     if not _find_file(game_dir, "DSUN.EXE"):
         raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the game's folder")
-    program = os.path.abspath(dosboxx.app_program(settings[dosboxx.PATH_SETTING]))
+    program = os.path.abspath(dosboxx.program(settings))  # (problem() said None: it is there)
     problem = prepare_patched_game(game_dir, settings)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
@@ -1399,9 +1399,11 @@ def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[s
     STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE = dosboxx.GOG, None, None
     if ravager.is_wotr_dir(game_dir):  # (the sequel always in its own GOG DOSBox)
         return _launch_wotr(game_dir, settings)
-    if dosboxx.engine(settings) == dosboxx.DOSBOX_X:  # (the Options tab's engine: before the recompiled
+    if dosboxx.chosen(settings) == dosboxx.DOSBOX_X:  # (chosen on the Options tab: before the recompiled
         return _launch_dosbox_x(game_dir, settings)    #   program found beside the mod, a choice made there)
     program = recompiled_program(settings)
+    if program is None and dosboxx.engine(settings) == dosboxx.DOSBOX_X:  # (the default, with one found)
+        return _launch_dosbox_x(game_dir, settings)
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):
             raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
