@@ -1117,7 +1117,14 @@ DS:A109h and the view DS:140Ah/1408h before the finder's far call), keeping that
 pointer's mode is **DS:1440h** (1 walk, 2 look, 4 attack; the routine setting it 2037Bh, SL's 11B8h), the
 facing byte a creature at +5Eh of the round's segment (load + 3C4Fh; SL's +5Bh), the eight directions'
 flag a byte at DS:0442h (the direction routine 1109Dh, SL's word DS:01F8h). `ravtab.py` prints DSCLOG2's
-Tab words and these; `ravtab.py feet` each combatant's feet and screen place.
+Tab words and these; `ravtab.py feet` each combatant's feet and screen place. **Clicks** reach the game
+through the handler it sets with INT 33h 0Ch (its mouse routines at 35B9:0000 on: 35B9:0034 is INT 33h 3,
+the pointer's place for edge scrolling only; the button bits it returns aren't the clicks): to give the game
+a click, find that handler (INT 33h 14h, swapped and given back) and call it with event 2 then 4 (DSCLOG2's
+TARGET_MOUSE). **Tab** without the Loader opens the game's own menu (the save/load/options panel), with the
+Loader on a party member's turn in a fight it is the Loader's. **A DSCLOG2 routine must go above
+RESIDENT_END**: code after it is freed as the helper goes resident, and the next allocation writes over it
+(the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then).
 
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);

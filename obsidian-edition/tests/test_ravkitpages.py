@@ -57,8 +57,8 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
             self.assertEqual(p.replacement[3:], b"\x90" * (len(p.original) - 3), name)
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
-        # (54-59 and 77-89: none; 52-53 the thief table's, 90-92 the second sphere's)
-        self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 19)
+        # (54-59 and 78-89: none; 52-53 the thief table's, 77 Tab's PROBE_HIT, 90-92 the second sphere's)
+        self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 18)
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
     def test_in_the_program(self):

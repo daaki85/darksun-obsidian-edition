@@ -962,7 +962,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   the ground marks it, the dice log names it with [the chance to hit](#the-chance-to-hit-before-the-swing)
   (`Chosen with Tab: Draxan (12 HP), needs 14+ (35%) - Enter attacks it`), and Enter attacks it;
   the chance to hit floats over the enemy under the pointer too. The view doesn't scroll to an
-  enemy out of sight there yet: Enter does nothing until it is on the screen. The Loader's
+  enemy out of sight there yet: Enter does nothing until it is on the screen. (Without the Loader,
+  Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
