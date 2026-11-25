@@ -12,6 +12,12 @@ own party gets features of its own ([The game's own
 party](FEATURES.md#the-games-own-party)). A human who changes class may take a
 kit for the new class if it has none yet ([Changing class](#changing-class)).
 
+A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
+Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
+skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative and the Seeker's
+and Justifier's casting level work there; what else they do to spells and powers, gear and hit dice
+doesn't yet, and a kit can't be chosen in the sequel.
+
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
 ([Starting gear](#starting-gear)) and what else to know ([Kits that rule out
