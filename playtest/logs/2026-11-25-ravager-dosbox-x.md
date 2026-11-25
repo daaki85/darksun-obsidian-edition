@@ -23,9 +23,26 @@ read its memory file through the lock file).
   the building, its known limit), so the fight was not finished (4 foes standing, the party up)
   when the session stopped for the owner's usage limit. DOSBox-X never quit.
 
+## Resumed after the pause (18:30-19:05 UTC)
+
+- **The fight to its end, without edits.** A fresh `ravX`, the four at their own HP, autosave and quick
+  save on; `ravfight.py tabfight` (new: Tab, the nearest enemy, and Return on each party turn, so foes
+  indoors are reached). The Draxans (140 HP) won: YOUR PARTY HAS BEEN DEFEATED, as in GOG's DOSBox
+  (the quick-save log's first run). The dice log followed every turn through the memory file, and
+  DOSBox-X never quit.
+- **Save and load.** `saves/ravager-after-ambush` copied in, started through the Loader, LOAD SAVED GAME,
+  row 1, LOAD: the party on the street after the ambush. **F5**: "Quick save: Quick - Day 1, 00:05 (the
+  QUICK page, slot 1)", SAVQ01.SAV written (51771 bytes, the Loader's 72-byte sheet). The party walked
+  away (the leader from 135,73 to 95,154 on screen; "The gates are locked."). **F9**: the LOAD window
+  on the quick save (![F9](img/2026-11-25-ravager-dosbox-x-f9.png)); **Return**: the party back at
+  135,73 and every other place as saved (![loaded](img/2026-11-25-ravager-dosbox-x-loaded.png)).
+- **A trap of the test, not the game:** the first dice log was started without `RAV`, so it looked for
+  saves in `$WORK/rav` (another copy) and answered F9 with "no quick save or autosave yet". With
+  `RAV=$WORK/ravX` F9 worked at once. ravdice.py's header now says so.
+
 ## Still to do
 
-- Finish the Draxans' fight (Tab + Return on each party turn, the sequel's Tab), and a save and load.
 - The music heard: the CD's tracks are loaded; nobody has listened.
+- On Windows: the same with the bundled DOSBox-X (the owner's test of #146 first).
 - Pre-existing, not this branch: `test_ravitems.GameTests` (with DSUN_WOTR) expects no `wide_sheets`
   from `objects_fixed`; it fails on the base branch too.

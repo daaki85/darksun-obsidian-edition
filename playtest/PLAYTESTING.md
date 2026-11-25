@@ -953,7 +953,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    sends waves, `fight_on` is 0 only a moment between them and fightout.sh stops "DONE" there: run
    it again. **In Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md) a Tab + Return
    loop must press Q and then E to end a member's turn (Q alone leaves END MOVE up), and
-   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door).
+   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door): `ravfight.py tabfight` is that loop and does.
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory
