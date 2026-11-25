@@ -308,6 +308,11 @@ PATCHES: Tuple[Patch, ...] = (
     # ax,ax / pop si"), each drawing the Loader's lines (the helper's SLOTS_TEXT) in the panel.
     Patch("use", 0x79543, bytes.fromhex("83c40c"), gamepatch._interrupt(VEC_USE, 3)),
     Patch("window", 0x303BE, bytes.fromhex("33c05e"), gamepatch._interrupt(VEC_WIN, 3)),
+    # ... and the routine's failure exit (2AF11h in the image, "jmp 2B1C0h") jumped to that "pop si", the
+    # second byte of the patch (its NOP after the INT): SI was not restored. Sent instead to the same
+    # "pop si / leave / retf" at 2B4F0h in the same segment (window_fail; SL's gamepatch has the same
+    # jump into its window patch, 264FCh to 267ABh in SL's image)
+    Patch("window_fail", 0x30111, bytes.fromhex("e9ac02"), bytes.fromhex("e9dc05")),
     # Charges in item boxes (SL's item_box): DSCLOG2's PROBE_ITEM_BOX at the end of the routine filling an
     # item's box (9A4FEh, SL's 8C1A1h: "push 0"), the item's charges, or a plain weapon's material's to-hit.
     Patch("item_box", 0x9A4FE, bytes.fromhex("6a00"), gamepatch._interrupt(VEC_ITEM_BOX, 2)),
@@ -451,6 +456,12 @@ PATCHES: Tuple[Patch, ...] = (
     # (84AAFh, "xor ax,ax / pop di"; the sequel has no always-hit stub to answer instead), DSCLOG2's
     # TH_SITE: the missile and hostile touch spells' attack roll, a miss answering immune
     Patch("spell_hit", 0x84AAF, bytes.fromhex("33c05f"), _site(16, 3)),
+    # ... and the routine's "immune" answer (7F362h, "mov ax,1 / jmp 7F8B1h") jumped to that "pop di",
+    # the third byte of the site: the site number 10h, so "adc [bp-37h],bl", then the "retf" took DI:SI
+    # for the return address, and the game quit with "Illegal Op (gpl=49)" when a spell met an immune
+    # target (Ester's Charm Mammal in Tyr's ambush: playtest/logs/2026-11-25-ravager-illegal-op.md). Sent
+    # instead to the same "pop di / pop si / leave / retf" at 7F2FEh, in the same overlay
+    Patch("spell_hit_immune", 0x84565, bytes.fromhex("e94905"), bytes.fromhex("e996ff")),
     # Resting as in AD&D (SL's rest_hp; RULE_REST, always on): the rest's HP restore (8CF79h, "mov
     # [es:bx],ax", SL's 808AFh): DSCLOG2's REST_HP, a night's natural healing, 3 + CON's bonus
     Patch("rest_hp", 0x8CF79, bytes.fromhex("268907"), _site(17, 3)),
@@ -464,6 +475,10 @@ PATCHES: Tuple[Patch, ...] = (
     # "stealth" patch's MISSILE_REAR (THIEF_REAR)
     Patch("class_can_use", 0x775FD, bytes.fromhex("8846ff"), _site(19, 3)),
     Patch("thief_skill_armour", 0x8C7C5, bytes.fromhex("8bc65f"), _site(20, 3)),
+    # ... whose "jmp 875C7h" (874C3h in the image) to that "pop di" landed on the site number 14h, so
+    # the skill came back about 5Eh where the game's answer was 0: sent to the same "pop di / pop si /
+    # leave / retf" at 87443h
+    Patch("thief_skill_armour_out", 0x8C6C3, bytes.fromhex("e90101"), bytes.fromhex("e97dff")),
     # ... and a multiclass preserver casting in armour (SL's PROBE_NO_CAST): the "yes" of the casting case
     # (84F6Eh, "mov ax,1") of the sequel's "can this creature do it" (84E94h), DSCLOG2's CAST_ARMOUR
     Patch("cast_armour", 0x84F6E, bytes.fromhex("b80100"), _site(21, 3)),
@@ -640,8 +655,8 @@ PATCHES: Tuple[Patch, ...] = (
     # routine (81515h in the image: Conjure Elemental, Monster Summoning, Dustdevil...) gives it race 0Eh
     # (+12h) and 4 at +36h, Mordenkainen's Sword (58h, 814A1h) its level (+1Eh), Bigby's Clenched Fist (5Ch)
     # the caster's +08h in its +08h and +0Ah. Left 42h-based they went to sheet 3's +38h, +3Ah and +42h and
-    # sheet 4's +06h and +1Eh, and the summoned creature's turn quit the game ("Illegal Op (gpl=49)", the
-    # druid's Dustdevil in Tyr's ambush: playtest/logs/2026-11-25-ravager-summon-quit.md). Each 4 x 48h + field:
+    # sheet 4's +06h and +1Eh (found hunting the "Illegal Op (gpl=49)" quit in Tyr's ambush, though not
+    # its cause, spell_hit_immune: playtest/logs/2026-11-25-ravager-illegal-op.md). Each 4 x 48h + field:
     *(_sheet4(at, opcode, field, imm) for at, opcode, field, imm in SHEET4_FIELDS),
 )
 

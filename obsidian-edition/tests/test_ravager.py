@@ -29,10 +29,10 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail"}
@@ -188,6 +188,63 @@ class TableTests(unittest.TestCase):
                 self.assertEqual(called, [d])
         finally:
             launch._launch_wotr = real
+
+
+class JumpIntoSiteTests(unittest.TestCase):
+    """A near jump from outside a patch must not land past a patch's first byte: there it runs the
+    middle of the patch's INT and its site number (spell_hit's "immune" exit quit the game). The three
+    such jumps of the game's are sent to the same epilogue elsewhere in their segment."""
+    REDIRECTS = {  # name: (the patch the jump landed in, the epilogue's bytes)
+        "window_fail": ("window", bytes.fromhex("5ec9cb")),
+        "spell_hit_immune": ("spell_hit", bytes.fromhex("5f5ec9cb")),
+        "thief_skill_armour_out": ("thief_skill_armour", bytes.fromhex("5f5ec9cb")),
+    }
+
+    @staticmethod
+    def target(at: int, code: bytes) -> int:
+        """The file offset a 3-byte "jmp rel16" at AT goes to."""
+        assert code[0] == 0xE9
+        return at + 3 + struct.unpack("<h", code[1:3])[0]
+
+    def test_redirects(self):
+        by_name = {p.name: p for p in ravager.PATCHES}
+        for name, (site, epilogue) in self.REDIRECTS.items():
+            p, s = by_name[name], by_name[site]
+            old, new = self.target(p.offset, p.original), self.target(p.offset, p.replacement)
+            self.assertTrue(s.offset < old < s.offset + len(s.replacement), name)  # (the jump's old place)
+            self.assertEqual(s.original[old - s.offset:], epilogue[:s.offset + len(s.original) - old], name)
+            self.assertLess(abs(new - p.offset), 0x800, name)  # (near: the same routine's segment)
+
+    @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
+    def test_in_the_program(self):
+        """Each redirect lands on its epilogue, left unpatched, and a scan of every "jmp rel16" of the
+        patched program finds none from outside a patch landing in one past its first byte (a byte scan:
+        calls and short jumps found the same way were all data or mid-instruction bytes, checked against
+        a disassembly)."""
+        exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+        patched = gamepatch.patched(exe, patches=ravager.PATCHES, size=ravager.WOTR_SIZE)
+        by_name = {p.name: p for p in ravager.PATCHES}
+        covered, inside = set(), {}
+        for p in ravager.PATCHES:
+            covered.update(range(p.offset, p.offset + len(p.replacement)))
+            for k in range(1, len(p.replacement)):
+                if p.replacement[k:] != p.original[k:]:
+                    inside[p.offset + k] = p.name
+        for name, (_, epilogue) in self.REDIRECTS.items():
+            new = self.target(by_name[name].offset, by_name[name].replacement)
+            self.assertEqual(patched[new:new + len(epilogue)], epilogue, name)
+            self.assertFalse(covered & set(range(new, new + len(epilogue))), name)
+        found = []
+        for m in re.finditer(rb"\xe9", patched[0x5200:]):
+            at = 0x5200 + m.start()
+            if not covered & {at, at + 1, at + 2} and self.target(at, patched[at:at + 3]) in inside:
+                found.append(hex(at))
+        self.assertEqual(found, [])
+        # (and in the game's own program, the redirects' three jumps and no others)
+        others = covered - {by_name[n].offset + k for n in self.REDIRECTS for k in range(3)}
+        found = [hex(at) for at in (0x5200 + m.start() for m in re.finditer(rb"\xe9", exe[0x5200:]))
+                 if self.target(at, exe[at:at + 3]) in inside and not others & {at, at + 1, at + 2}]
+        self.assertEqual(sorted(found), sorted(hex(by_name[n].offset) for n in self.REDIRECTS))
 
 
 class ItemTypeTests(unittest.TestCase):
