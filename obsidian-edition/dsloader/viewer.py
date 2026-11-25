@@ -121,8 +121,17 @@ class Viewer:
         self.banner.pack(fill="x")
         if self.art.font:
             self.banner.use_game_font(self.art.font)
-        top = ttk.Frame(self.root, padding=(6, 6, 6, 0))
-        top.pack(fill="x")
+        row = ttk.Frame(self.root, padding=(6, 6, 6, 0))
+        row.pack(fill="x")
+        # the start buttons on the left, the rest on the right; in a window too narrow for both, the
+        # right-hand group goes on a line of its own under them (_wrap_top), so nothing is cut off
+        starts = ttk.Frame(row)
+        top = ttk.Frame(row)
+        row.columnconfigure(1, weight=1)
+        starts.grid(row=0, column=0, sticky="w")
+        top.grid(row=0, column=1, sticky="e")
+        self.top_row = (row, starts, top)
+        row.bind("<Configure>", lambda _e: self._wrap_top(), add="+")
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
@@ -132,10 +141,10 @@ class Viewer:
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
-        self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
+        self.start_button = ttk.Button(starts, text="Start the game", command=self.start_game)
         self.start_button.pack(side="left")
         # the sequel, from its folder (found, or chosen on Options' Wake of the Ravager section)
-        self.ravager_button = ttk.Button(top, text="Play Wake of the Ravager", command=self.start_ravager)
+        self.ravager_button = ttk.Button(starts, text="Play Wake of the Ravager", command=self.start_ravager)
         self.ravager_button.pack(side="left", padx=(4, 0))
         # text size, also Ctrl + / Ctrl - / Ctrl 0
         ttk.Button(top, text="A+", width=3, command=lambda: self.zoom(1.15)).pack(side="right", padx=(4, 12))
@@ -767,6 +776,17 @@ class Viewer:
         theme.set_scale(self.root, 1.0 if factor is None else theme.scale() * factor)
         self.banner.redraw()
         self._fit_party()
+
+    def _wrap_top(self) -> None:
+        """The top row's right-hand group beside the start buttons when the window is wide enough
+        for both, else on a line of its own under them."""
+        row, starts, top = self.top_row
+        room = row.winfo_width() - 12  # (the row's padding)
+        wrapped = starts.winfo_reqwidth() + top.winfo_reqwidth() > room
+        place = dict(row=1, column=0, columnspan=2, sticky="e", pady=(4, 0)) if wrapped else \
+            dict(row=0, column=1, columnspan=1, sticky="e", pady=0)
+        if int(top.grid_info().get("row", 0)) != place["row"]:
+            top.grid(**place)
 
     def _fit_party(self, divider: bool = True) -> None:
         """Columns wide enough for the text size and the longest label and value, and (DIVIDER)

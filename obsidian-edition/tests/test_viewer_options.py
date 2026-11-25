@@ -234,6 +234,19 @@ class OptionsTests(unittest.TestCase):
         buttons[0].invoke()
         return started, shown, buttons[0]
 
+    def test_top_row_wraps_when_narrow(self):
+        """At the window's least width the right-hand group of the top row (Game window, Text size,
+        Freeze report...) goes under the start buttons whole; wide, it is beside them."""
+        row, starts, top = self.viewer.top_row
+        self.root.deiconify()
+        for width, line in ((1080, 1), (1600, 0)):
+            self.root.geometry(f"{width}x700")
+            self.root.update()
+            self.viewer._wrap_top()
+            self.root.update()
+            self.assertEqual(int(top.grid_info()["row"]), line, width)
+            self.assertLessEqual(top.winfo_reqwidth(), row.winfo_width(), width)
+
     def test_ravager_button_not_found(self):
         """Without the sequel found, the button starts nothing and points to Options' Choose its folder..."""
         started, shown, _ = self._ravager_button(None)
