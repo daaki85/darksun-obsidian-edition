@@ -532,6 +532,13 @@ PATCHES: Tuple[Patch, ...] = (
     # ability's roll's "add ax,[42DAh]" (6C585h, SL's "add ax,[499Ah]" at 6498Bh), into its header's RL_TRIES
     Patch("rl_try", 0x6C585, bytes.fromhex("0306da42"), _site(81, 4)),
     Patch("rl_sum_box", DS_FILE + 0x11F8, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
+    # STORE and RECALL (SL's roll_store, PROBE_RS_CLICK; rollstore.rav_chunks puts the buttons in the window):
+    # the click routine's "mov cx,16h" as it looks the button up (6DE85h, SL's 6625Dh), DSCLOG2's RS_CLICK
+    Patch("roll_store", 0x6DE85, bytes.fromhex("b91600"), _site(83, 3)),
+    # Fuller starting gear (SL's GEAR_DUE and GEAR_HOLD at its cr_weapons' place): DONE's "pop cx / push si /
+    # nop" between the game's gear for the new character and its roster write (6E2F2h, SL's 666DFh),
+    # DSCLOG2's GEAR_DONE, which waits there for the Loader's gear (startgear.py)
+    Patch("gear_done", 0x6E2F2, bytes.fromhex("595690"), _site(85, 3)),
     # AD&D's class tables (SL's xp_level_up, xp_view, priest_thac0, adnd_slots; game.RULE_ADND_TABLES,
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
     # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
@@ -609,6 +616,24 @@ PATCHES: Tuple[Patch, ...] = (
     # (94A57h) in the routine that changes a human's class (9493Ch), the new class's kit asked on the game's
     # three-choice menu
     Patch("dual_kit", 0x94A57, bytes.fromhex("837e080c"), _site(76, 4)),
+    # Preservers' first spells and psionic powers at creation (SL's PROBE_CR_SPELLS, PSI_GRANT, PSI_ASK,
+    # PSI_LIST, PSI_CYCLE; always on): DSCLOG2's FIRST SPELLS AND POWERS. The creation screen's DONE (6E0B9h,
+    # SL's 6649Ch) gives the powers (6E906h [66CF1h]) and then a preserver's spells (6EA10h [66DF7h], the
+    # sequel's own grants, some drawn by rand()): PSI_GRANT (site 88) at the powers' "cmp dx,-1" in both loops
+    # (6E9C9h the psionicist's, 6E9F7h the others' [66DDEh]), CR_PICKS (site 87) at the spells' routine's end
+    # ("cmp byte [bp-6],0", 6ED55h), which has the given spells and powers picked on the level up's CHOOSE A
+    # SPELL (93160h [85560h]) and psionicists' pop-up (93B62h [85EECh]); in the pop-up PSI_COUNT (site 95,
+    # "or dx,dx / jz", 93B95h [85F01h]), PSI_LIST (96, "or ax,ax / jz", 93E1Bh [86143h]), PSI_CYCLE (97, "inc
+    # byte [bx-6285h]", 93FF1h [8631Ah]), PSI_CLICK (98, "or al,al / jz", 94245h); in CHOOSE A SPELL PICK_TOP
+    # (99, "cmp ax,[bp-2]", 93831h: its level button) with PICK_ANY and PICK_PAGE for the levels on offer
+    Patch("psi_grant_psionicist", 0x6E9C9, bytes.fromhex("83faff"), _site(88, 3)),
+    Patch("psi_grant", 0x6E9F7, bytes.fromhex("83faff"), _site(88, 3)),
+    Patch("cr_picks", 0x6ED55, bytes.fromhex("807efa00"), _site(87, 4)),
+    Patch("psi_count", 0x93B95, bytes.fromhex("0bd2743a"), _site(95, 4)),
+    Patch("psi_list", 0x93E1B, bytes.fromhex("0bc07422"), _site(96, 4)),
+    Patch("psi_cycle", 0x93FF1, bytes.fromhex("fe877b9d"), _site(97, 4)),
+    Patch("psi_click", 0x94245, bytes.fromhex("0ac07420"), _site(98, 4)),
+    Patch("pick_top", 0x93831, bytes.fromhex("3b46fe"), _site(99, 3)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -958,12 +983,13 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
+ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 
 
 def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
-    """RESOURCE.GFF's bytes with the spell fixes (spell_fixed) and the creation panel's kit pages
-    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) unless in SKIP; the names
-    of those applied."""
+    """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) and the creation screen's STORE
+    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) unless in SKIP; the names of those applied."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
     if KIT_PAGES not in skip:
@@ -974,6 +1000,15 @@ def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
         if added:
             out = icons.with_chunks(out, added)
             done.append(KIT_PAGES)
+    if ROLL_BUTTONS not in skip:  # (STORE and RECALL: DSCLOG2's RS_CLICK, site 83)
+        from . import rollstore
+        try:
+            added = rollstore.rav_chunks(gff.read_gff(out))
+        except (KeyError, ValueError, IndexError, struct.error):
+            added = {}  # (no such buttons to copy: the screen as the game has it)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ROLL_BUTTONS)
     return out, done
 
 

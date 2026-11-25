@@ -235,7 +235,11 @@ kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py): bi
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took from each party member this fight
                                 ;      (BLAST_LOSS), for the Loader to give back and clear as the fight
                                 ;      ends (psiblast.py); while one is owed, BLAST_KO knocks out
-        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1822 to +1833: none of them here yet, zero)
+        times 1830 - ($ - hdr) db 0 ; (DSCLOG's fields +1822 to +1829: none of them here yet, zero)
+gear_due   db 0                 ; +1830 a new character just made (GEAR_DONE, at DONE): the Loader gives its
+                                ;      starting gear (startgear.py), then clears it (DSCLOG's GEAR_DUE)
+gear_given db 0                 ; +1831 ... bit N: party member N's items changed by it (DSCLOG's GEAR_GIVEN)
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1832 to +1833: none of them here yet, zero)
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
@@ -256,6 +260,9 @@ shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last 
         times 1862 - ($ - hdr) db 0 ; (DSCLOG's fields +1860 to +1861: none of them here yet, zero)
 bad_luck db 0                   ; +1862 a Swashbuckler's bad luck as KIT_SKILL last rolled it (0-25) ...
 bad_luck_who dw 0               ; +1863 ... and whose (the creature), for the dice log (kits.TSR_BAD_LUCK)
+loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass (DSCLOG's LOADER_BEAT): GEAR_DONE
+                                ;      waits for the Loader only while it is fresh
+gear_who   db 0xFF              ; +1867 the sheet index of the character DONE just made (DSCLOG's GEAR_WHO)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 wall_shadows dw 1               ; +1872 (DSCLOG2's own, past DSCLOG's header) 1: the walls cast shadows on
@@ -3573,15 +3580,19 @@ learn_refused:
 ; highest spell level it casts (as 698h:39h works it out: (level + 1) / 2 below 10th, level / 2 from it,
 ; WIZ_LEVELS the most; the game's own counted from the class level, past the wizard spells' rows), or 0
 ; (the window not opened) when no level up to it has a spell it doesn't know and room for one more
-; (PICK_ROOM). Flags as "or ax,ax".
+; (PICK_ROOM). While CR_SPELLS picks (CR_CAP set), the same with the levels no higher than CR_CAP, rule
+; or none. Flags as "or ax,ax".
 pick_any:
         mov [bp - 2], ax
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .flags
         cmp ax, 0
         jle .flags
         cmp si, 3
         ja .flags
+        test word [cs:rules_hi], RULE_HI_INT
+        jnz .levels
+        cmp byte [cs:cr_cap], 0
+        je .flags
+.levels:
         push cx
         cmp ax, 10
         jae .half
@@ -3590,15 +3601,24 @@ pick_any:
         cmp ax, WIZ_LEVELS
         jbe .top
         mov ax, WIZ_LEVELS
-.top:   mov cl, al
+.top:   cmp byte [cs:cr_cap], 0     ; (CR_SPELLS's: no higher than CR_CAP)
+        je .capped
+        cmp al, [cs:cr_cap]
+        jbe .capped
+        movzx ax, byte [cs:cr_cap]
+.capped:
+        mov [bp - 2], ax
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .pop
+        mov cl, al
 .level: call pick_room
         jc .found
         dec cl
         jnz .level
 .found: movzx ax, cl                        ; (0: none)
         mov [bp - 2], ax
-        pop cx
         inc word [cs:pick_asks]
+.pop:   pop cx
 .flags: push bp
         mov bp, sp
         push cx
@@ -3644,7 +3664,12 @@ pick_list:
 ; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
 ; one. AL the page's level, as the code goes on to show it.
 pick_page:
-        test word [cs:rules_hi], RULE_HI_INT
+        cmp byte [cs:cr_cap], 0             ; (CR_SPELLS's: no higher than CR_CAP)
+        je .rule
+        cmp al, [cs:cr_cap]
+        jbe .rule
+        mov al, [cs:cr_cap]
+.rule:  test word [cs:rules_hi], RULE_HI_INT
         jz .set
         push cx
         push si
@@ -3913,18 +3938,23 @@ site_table:
         dw blast_ko                         ; 80 SITE_BLAST_KO (5CC51h: the death test: knocked out while BLAST_HP is owed)
         dw rl_try                           ; 81 SITE_RL_TRY (6C585h: an ability's 4d4 on the creation screen, for the dice log)
         dw shop_loop                        ; 82 SITE_SHOP_LOOP (88D99h: the shop's loop's test: SHOP_AT for S, SELL_KEY)
-        dw site_none                        ; 83 (none here)
+        dw rs_click                         ; 83 SITE_RS_CLICK (6DE85h: a button on the creation screen: STORE and RECALL)
         dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
-        dw site_none                        ; 85 (none here)
+        dw gear_done                        ; 85 SITE_GEAR_DONE (6E2F2h: DONE has given a new character the game's gear: the Loader's)
         dw site_none                        ; 86 (none here)
-        dw site_none                        ; 87 (none here)
-        dw site_none                        ; 88 (none here)
+        dw cr_picks                        ; 87 SITE_CR_PICKS (6ED55h: a new member's spells and powers given: picked on the game's windows)
+        dw psi_grant                       ; 88 SITE_PSI_GRANT (6E9C9h, 6E9F7h: a new member's power given: a pick, or kept on EDIT)
         dw site_none                        ; 89 (none here)
         dw el_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere)
         dw el_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
         dw el_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
         dw probe_text                       ; 93 SITE_TEXT (87BA0h: the dialogue window's input: TEXT, for the Loader's Dialogue tab)
         dw probe_msg                        ; 94 SITE_MSG (59A0Bh: the message box: TEXT, the same)
+        dw psi_count                       ; 95 SITE_PSI_COUNT (93B95h: the psionicists' pop-up opening: PSI_DUE's picks)
+        dw psi_list                        ; 96 SITE_PSI_LIST (93E1Bh: its list: no power known)
+        dw psi_cycle                       ; 97 SITE_PSI_CYCLE (93FF1h: its discipline button: its own only for one not a psionicist)
+        dw psi_click                       ; 98 SITE_PSI_CLICK (94245h: a known power clicked: nothing)
+        dw pick_top                        ; 99 SITE_PICK_TOP (93831h: CHOOSE A SPELL's level button: no higher than CR_CAP)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -11530,6 +11560,7 @@ kp_open:
         mov byte [cs:kp_first], 1
         mov byte [cs:kit_keep], 0
         mov dword [cs:wp_classes_seen], 0xFFFFFFFF
+        call psi_snap           ; (an EDIT's powers, for PSI_KEEP)
         iret
 
 ; KP_DISC_WIN (site 62) and KP_SPHERE_WIN (site 63): the window's id pushed under the INT's frame: the
@@ -15507,6 +15538,765 @@ quick_loads dw 0
 pages_back  dw 0                ; (the QUICK page taken off by SAVE_TICK, for a look in play)
 greq_data   times 10 db 0
 save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914)
+
+; ---- STORE AND RECALL: DSCLOG's PROBE_RS_CLICK on the sequel's creation screen (rollstore.py) ----
+; RS_CLICK (site 83, "roll_store"): "mov cx,16h" (6DE85h, SL's 6625Dh) where the screen's click routine (its
+; overlay 6D090h, stub 46DDh) looks the button ([BP+8]) up among its own; STORE and RECALL are the Loader's
+; buttons in its window 19503 (rollstore.rav_chunks). STORE keeps the roll on screen (RS_FIELDS: the sheet's
+; race, sex, classes and kit, then its hit points, hit points rolled and most PSP; the creature's hit points,
+; PSP and six scores; the hit points' most and least, DS:42D6h; the die's total, RL_POOL), RECALL puts it back.
+; A stored roll is forgotten at the first button pressed after the race, sex, classes or kit have changed
+; (RS_SAME), and RECALL then does nothing. Either way the routine goes on as for a button not its own
+; (RS_DONE). After a recall the scores are shown again (the creation overlay's routine for it, WP_STUB's
+; entry RS_SCORES, 6CD7Bh, which RL_SUM follows with the totals), then the rest as the die shows a roll: its
+; routine (6D3CEh) from where it has rolled the hit points (RS_TAIL, 6D5F1h, with its frame and its byte
+; argument 1, a roll), which shows them and the PSP (worked out again from the same scores: no dice), the AC,
+; damage and THAC0; each call with the way back in a frame the overlay manager can fix up (RS_FRAMED).
+RS_STORE  equ 0x8B0
+RS_RECALL equ 0x8B1
+RS_DONE   equ 0x6DF97 - 0x6DE88    ; (the routine's way on for another button, less the site's return)
+RS_TAIL   equ 0x6D5F1 - 0x6D090    ; (in the die's routine: the overlay's from 6D090h)
+RS_SCORES equ 0xB6                 ; (WP_STUB's entry: SL's 0BBh)
+RS_HP_MOST equ 0x42D6              ; DS: the hit points' most and least (RL_HP_MAX's; SL's 4996h)
+rs_click:
+        mov cx, 0x16
+        cmp byte [cs:rs_have], 0
+        je .which
+        call rs_same                        ; (race, sex, classes or kit changed: the roll forgotten)
+        je .which
+        mov byte [cs:rs_have], 0
+.which: cmp word [bp + 8], RS_STORE
+        je .ours
+        cmp word [bp + 8], RS_RECALL
+        jne .out
+.ours:  sti
+        pushad
+        push es
+        mov si, sp
+        add word [ss:si + 34], RS_DONE      ; (on as for another button)
+        xor dl, dl
+        cmp word [bp + 8], RS_STORE
+        je .xfer
+        cmp byte [cs:rs_have], 0
+        je .done
+        inc dl
+.xfer:  call rs_xfer
+        or dl, dl
+        jz .stored
+        inc word [cs:rs_recalls]
+        mov word [cs:wp_far], RS_SCORES
+        mov ax, ds
+        add ax, WP_STUB
+        mov [cs:wp_far + 2], ax
+        call rs_framed                      ; (the scores' routine: another overlay's)
+        mov word [cs:wp_far], .tail
+        mov [cs:wp_far + 2], cs
+        call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        jmp .done
+.tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the site's way back)
+        push word 1                         ; (its byte argument: a roll)
+        push cs
+        push word .back
+        push bp                             ; (the die's frame, as its routine makes it)
+        mov bp, sp
+        sub sp, 2
+        push si
+        jmp far [cs:rs_tail]
+.back:  add sp, 2
+        retf
+.stored:
+        mov byte [cs:rs_have], 1
+        inc word [cs:rs_stores]
+.done:  pop es
+        popad
+.out:   iret
+
+; RS_FRAMED: a far call to WP_FAR with the site's way back (RS_CLICK's, past ES and PUSHAD: SP+2 on entry,
+; +36 and +38) in a frame the overlay manager can fix up, as DSCLOG's: the call may load another overlay over
+; the click routine's or move it, which leaves the way back where the manager has put it (DX its segment, for
+; RS_TAIL). Keeps BX, SI, DI.
+rs_framed:
+        push bx
+        mov bx, sp
+        push word [ss:bx + 40]
+        push word [ss:bx + 38]
+        push bp
+        mov bp, sp
+        mov dx, [ss:bx + 40]
+        call far [cs:wp_far]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 38], ax
+        mov [ss:bx + 40], dx
+        pop bx
+        ret
+
+; RS_SAME: ZF set if the sheet being made (DS:[1429h]) has the stored roll's race, sex, classes and kit
+; (RS_BUF's first 6 bytes, in RS_FIELDS' order: the sheet's +12h, +13h, +1Bh..+1Dh, +3Dh). DS the game's;
+; keeps all but flags.
+rs_same:
+        push es
+        push bx
+        push ax
+        les bx, [WP_CREATION]
+        mov al, [es:bx + 0x12]
+        cmp al, [cs:rs_buf]
+        jne .out
+        mov al, [es:bx + 0x13]
+        cmp al, [cs:rs_buf + 1]
+        jne .out
+        mov ax, [es:bx + 0x1B]
+        cmp ax, [cs:rs_buf + 2]
+        jne .out
+        mov al, [es:bx + 0x1D]
+        cmp al, [cs:rs_buf + 4]
+        jne .out
+        mov al, [es:bx + 0x3D]
+        cmp al, [cs:rs_buf + 5]
+.out:   pop ax
+        pop bx
+        pop es
+        ret
+
+; RS_XFER: the roll's fields (RS_FIELDS, then the hit points' most and least and RL_POOL) into RS_BUF (DL 0)
+; or back (DL 1). DS the game's; keeps DL.
+rs_xfer:
+        push es
+        mov si, rs_fields
+        mov di, rs_buf
+.field: mov al, [cs:si]
+        cmp al, 0xFF
+        je .rest
+        les bx, [WP_CREATION]
+        or al, al
+        jz .got
+        les bx, [CR_CREATURE]
+.got:   movzx ax, byte [cs:si + 1]
+        add bx, ax
+        movzx cx, byte [cs:si + 2]
+        call rs_bytes
+        add si, 3
+        jmp .field
+.rest:  push ds
+        pop es
+        mov bx, RS_HP_MOST
+        mov cx, 4
+        call rs_bytes
+        push cs
+        pop es
+        mov bx, rl_pool
+        mov cx, 2
+        call rs_bytes
+        pop es
+        ret
+rs_bytes:                       ; CX bytes ES:BX <-> CS:DI (DL 0: into CS:DI)
+        mov al, [es:bx]
+        or dl, dl
+        jz .keep
+        mov al, [cs:di]
+        mov [es:bx], al
+.keep:  mov [cs:di], al
+        inc bx
+        inc di
+        loop rs_bytes
+        ret
+; (sheet 0 / creature 1, offset, bytes): the sheet's race, sex, classes, kit (the key), hit points, rolled
+; and most PSP; the creature's hit points and PSP, and its six scores
+rs_fields db 0, 0x12, 1, 0, 0x13, 1, 0, 0x1B, 3, 0, 0x3D, 1
+          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0xFF
+rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 db 0
+rs_have   db 0
+rs_tail   dw RS_TAIL, 0
+rs_stores  dw 0                 ; (STOREs and RECALLs taken, for a look in play)
+rs_recalls dw 0
+
+; ---- FULLER STARTING GEAR: DSCLOG's GEAR_DUE and GEAR_HOLD on the sequel's DONE (startgear.py) ----
+; GEAR_DONE (site 85, "gear_done"): "pop cx / push si / nop" (6E2F2h, SL's 666DFh, CR_WEAPONS' place) in the
+; creation screen's DONE, between its calls for the new character SI (its sheet index) that give it the game's
+; starting gear (6F197h, SL's 67401h) and write it to the roster (6E4D6h, SL's 668C3h, CHARSAVE.GFF's CHAR
+; chunk, from memory). The two instructions are done on the stack under the site's way back (the word popped
+; into CX is SI, pushed before the call: SI put back). Then, with the Loader there (LOADER_BEAT under
+; LOADER_FRESH old), GEAR_DUE set for SI (GEAR_WHO) and the Loader's pass waited for (GEAR_DUE cleared), at
+; most GEAR_HOLD_TICKS: its fuller starting gear (startgear.fill, the sequel's items: ravlog's) is then in the
+; roster's copy and in View Character's first drawing, which come after (so DSCLOG's GEAR_WAIT, its redraw of
+; View Character when the gear came after it, isn't needed here). On a timeout GEAR_DUE stays set: the Loader
+; gives the gear at its next pass, the roster's copy without it. All registers kept but CX (the game's).
+GEAR_HOLD_TICKS equ 182         ; (about ten seconds, at most)
+LOADER_FRESH    equ 91          ; (about five seconds)
+gear_done:
+        push bp
+        mov bp, sp
+        mov cx, [bp + 8]                ; (pop cx: the word under the way back)
+        mov [bp + 8], si                ; (push si: in its place)
+        pop bp
+        sti
+        push ax
+        push bx
+        push es
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
+        mov ax, bx
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        jae .out                        ; (no Loader: the game's gear, as ever)
+        mov ax, si
+        mov [cs:gear_who], al
+        mov byte [cs:gear_given], 0
+        mov byte [cs:gear_due], 1
+        inc word [cs:gear_holds]
+.wait:  cmp byte [cs:gear_due], 0
+        je .out
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, GEAR_HOLD_TICKS
+        jb .wait
+        inc word [cs:gear_timeouts]     ; (the Loader slow: GEAR_DUE left for its next pass)
+.out:   pop es
+        pop bx
+        pop ax
+        iret
+gear_holds    dw 0              ; (DONEs held for the Loader, and those it was too slow for: for a look in play)
+gear_timeouts dw 0
+
+; FIRST SPELLS AND POWERS (SL's PROBE_CR_SPELLS and PSI_GRANT, PSI_ASK, PSI_LIST, PSI_CYCLE: always on).
+; The creation screen's DONE (6E0B9h, 5C0:57h) saves the new member (SI) and calls, among others, the
+; routine that gives its psionic powers (6E906h, 5C0:2Ah) and then the one that gives a preserver its
+; spells (6EA10h, 5C0:2Fh). The sequel's grants are its own (not SL's Grease and Magic Missile): a preserver
+; whose level isn't the one the screen opened with (selector 360h's word 0: 0 for a new member) has its 115
+; wizard spells' bits cleared (selector 320h, KNOWN_OFF + 15 a member) and is given Wall of Fog at 1st
+; level; from 2nd Fireball, Haste, Detect Invisible, Magic Missile, Wall of Fog and four spells drawn by
+; rand() from fours (two 1st-level, two 2nd), and at 7th Ice Storm too. The powers: everyone's disciplines
+; from the panel's choice (DS:42C0h, into selector 370h's A55h + the member), its 34 powers cleared
+; (580:3Eh) and given from selector 360h's table (580:39h): a psionicist's 20 entries at +15h, anyone
+; else's five of its discipline at +6 + 5 x the discipline, -1 none; the power's byte at selector 370h's
+; 9CDh + 22h a member (bits 1-7 its number, none unknown).
+; - PSI_GRANT (site 88): "cmp dx,-1" (6E9C9h the psionicist's loop, 6E9F7h the others'; 3 bytes, the JZ
+;   kept): Mind Blank (30) and Detonate (0, which the psionicists' pop-up never lists) given as the game
+;   gives them; any other power, once, a pick due (PSI_DUE) and a default (PSI_DEFS), not given. EDIT on a
+;   member that keeps its psionicist class and disciplines (PSI_SNAP, at the screen's opening: KP_OPEN)
+;   gives none and asks none (PSI_KEEP): its powers are put back.
+; - CR_PICKS (site 87): "cmp byte [bp-6],0" (6ED55h; 4 bytes) at the spells' routine's end: for a new
+;   member ([CR_EDITING] -1) given spells ([BP-5]), the spells given are taken back and as many picked on
+;   the game's CHOOSE A SPELL (688:66h, the level up's), level by level from 1st, each with the pages up
+;   to that level (CR_CAP: PICK_ANY, PICK_PAGE and PICK_TOP heed it); then the psionicists' pop-up (688:61h,
+;   the level up's) for PSI_DUE picks (PSI_MODE: PSI_COUNT, PSI_LIST, PSI_CYCLE, PSI_CLICK). EXIT on
+;   either leaves the rest to the game's own, in spell or table order, less any known (CR_FILL, PSI_FILL).
+;   The windows are overlay code of their own: the way back is put in a frame the overlay manager can fix
+;   up, as DUAL_KIT's. Then the compare, its flags back (RETF 2).
+CR_STUB        equ 0x47B0 - 0x47E0  ; (688h's stub segment less DS's)
+CR_SPELL_ENTRY equ 0x66             ; (CHOOSE A SPELL, 93160h)
+CR_PSI_ENTRY   equ 0x61             ; (the psionicists' pop-up, 93B62h)
+POW_SEG        equ USE_WHO_SEG      ; (selector 370h's segment: the powers, the disciplines)
+POW_OFF        equ 0x9CD
+POW_SIZE       equ 0x22
+POWER_COUNT    equ 34
+DISC_OFF       equ 0xA55
+PSI_SHOWN      equ 0x9D7B           ; DS: the discipline the pop-up shows, a byte a member
+MIND_BLANK     equ 30
+PSI_CLASS      equ 0x0C
+cr_picks:
+        call kp_if_frame        ; (interrupts as the caller had them: RETF 2 keeps these flags)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov di, [bp]            ; (the routine's frame: [DI+6] the member, [DI-5] spells given)
+        mov si, [ss:di + 6]
+        cmp si, 4
+        jae .back
+        cmp byte [ss:di - 5], 0
+        je .psi
+        cmp word [CR_EDITING], -1
+        jne .psi
+        call cr_spells
+.psi:   call psi_ask
+.back:  mov byte [cs:psi_due], 0
+        mov byte [cs:psi_keep], 0
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        cmp byte [bp - 6], 0
+        retf 2
+
+; CR_SPELLS: member SI (DS the game's) given wizard spells by the game: those taken back (CR_DEFS, CR_DUE
+; by level) and as many picked on CHOOSE A SPELL; on EXIT the rest from CR_DEFS (CR_FILL). Registers changed.
+cr_spells:
+        call known_bits         ; (ES:BX the member's bits)
+        xor di, di
+.clear: mov byte [cs:cr_due + di], 0
+        inc di
+        cmp di, WIZ_LEVELS
+        jb .clear
+        xor di, di              ; (DI the spells given)
+        xor al, al
+.each:  cmp al, [SPELL_STARTS + WIZ_LEVELS]
+        jae .got
+        call bit_known
+        jz .next
+        mov [cs:cr_defs + di], al
+        inc di
+        call wiz_level          ; (DL its level)
+        movzx dx, dl
+        push bx
+        mov bx, dx
+        inc byte [cs:cr_due + bx - 1]
+        pop bx
+        call bit_clear
+.next:  inc al
+        jmp .each
+.got:   mov [cs:cr_n], di
+        mov [cs:cr_left], di
+        or di, di
+        jz .ret
+        inc word [cs:cr_members]
+        mov cl, 1               ; (CL the level, CH its picks)
+.level: movzx di, cl
+        mov ch, [cs:cr_due + di - 1]
+.one:   or ch, ch
+        jz .up
+        mov [cs:cr_cap], cl
+        call cr_one
+        jc .fill
+        dec word [cs:cr_left]
+        inc word [cs:cr_picked]
+        movzx di, cl
+        dec byte [cs:cr_due + di - 1]   ; (CR_DUE: those still due at each level, for CR_FILL)
+        dec ch
+        jmp .one
+.up:    inc cl
+        cmp cl, WIZ_LEVELS
+        jbe .level
+        jmp .done
+.fill:  call cr_fill
+.done:  mov byte [cs:cr_cap], 0
+.ret:   ret
+
+; CR_ONE: CHOOSE A SPELL for member SI; CF set if it was left with no spell learnt. CX kept; DS the game's.
+cr_one:
+        push cx
+        call wiz_count
+        push ax
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:cr_windows]
+        call wiz_count
+        pop cx
+        cmp ax, cx
+        je .none
+        pop cx
+        clc
+        ret
+.none:  pop cx
+        stc
+        ret
+
+; CR_FILL: member SI given CR_LEFT more of CR_DEFS, less any known: first those of a level with picks
+; still due there (CR_DUE), in their order; then any still left, in their order. Registers changed.
+cr_fill:
+        call known_bits
+        xor di, di
+.level: cmp word [cs:cr_left], 0
+        je .ret
+        cmp di, [cs:cr_n]
+        jae .rest
+        mov al, [cs:cr_defs + di]
+        inc di
+        call bit_known
+        jnz .level
+        call wiz_level
+        movzx dx, dl
+        push bx
+        mov bx, dx
+        cmp byte [cs:cr_due + bx - 1], 0
+        je .later
+        dec byte [cs:cr_due + bx - 1]
+        pop bx
+        call bit_set
+        dec word [cs:cr_left]
+        inc word [cs:cr_filled]
+        jmp .level
+.later: pop bx
+        jmp .level
+.rest:  xor di, di
+.each:  cmp word [cs:cr_left], 0
+        je .ret
+        cmp di, [cs:cr_n]
+        jae .ret
+        mov al, [cs:cr_defs + di]
+        inc di
+        call bit_known
+        jnz .each
+        call bit_set
+        dec word [cs:cr_left]
+        inc word [cs:cr_filled]
+        jmp .each
+.ret:   ret
+
+; WIZ_COUNT: AX the wizard spells member SI knows (KNOWN_BITS). DS the game's; others kept.
+wiz_count:
+        push bx
+        push dx
+        push es
+        call known_bits
+        xor dx, dx
+        xor al, al
+.each:  cmp al, [SPELL_STARTS + WIZ_LEVELS]
+        jae .out
+        call bit_known
+        jz .next
+        inc dx
+.next:  inc al
+        jmp .each
+.out:   mov ax, dx
+        pop es
+        pop dx
+        pop bx
+        ret
+
+; WIZ_LEVEL: DL wizard spell AL's level (SPELL_STARTS). DS the game's; others kept.
+wiz_level:
+        push bx
+        mov bx, 1
+.each:  cmp al, [SPELL_STARTS + bx]
+        jb .out
+        inc bx
+        cmp bx, WIZ_LEVELS
+        jb .each
+.out:   mov dl, bl
+        pop bx
+        ret
+
+; BIT_SET, BIT_CLEAR: spell AL's bit in ES:BX's (KNOWN_BITS) set, cleared. All registers kept.
+bit_set:
+        push ax
+        push bx
+        push cx
+        call bit_place
+        or [es:bx], al
+        pop cx
+        pop bx
+        pop ax
+        ret
+bit_clear:
+        push ax
+        push bx
+        push cx
+        call bit_place
+        not al
+        and [es:bx], al
+        pop cx
+        pop bx
+        pop ax
+        ret
+bit_place:                      ; (BX the byte, AL the bit's mask; CX changed)
+        mov cl, al
+        and cl, 7
+        movzx ax, al
+        shr ax, 3
+        add bx, ax
+        mov al, 1
+        shl al, cl
+        ret
+
+; PSI_ASK: member SI (DS the game's): PSI_KEEP's powers put back, or PSI_DUE picked on the psionicists'
+; pop-up (the discipline shown its own for one not a psionicist, the first for a psionicist), the rest on
+; EXIT from PSI_DEFS (PSI_FILL). Registers changed.
+psi_ask:
+        mov ax, ds
+        add ax, POW_SEG
+        mov es, ax
+        imul bx, si, POW_SIZE
+        add bx, POW_OFF
+        cmp byte [cs:psi_keep], 0
+        je .ask
+        xor di, di
+.back:  mov al, [cs:psi_saved + di]
+        mov [es:bx + di], al
+        inc di
+        cmp di, POWER_COUNT
+        jb .back
+        inc word [cs:psi_kept]
+        ret
+.ask:   cmp byte [cs:psi_due], 0
+        je .ret
+        xor al, al
+        cmp byte [cs:psi_isp], 0
+        jne .shown
+        mov al, [cs:psi_disc]
+.shown: mov [PSI_SHOWN + si], al
+        inc word [cs:psi_asks]
+        mov byte [cs:psi_mode], 1
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_PSI_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        mov byte [cs:psi_mode], 0
+        movzx cx, byte [PICK_SHOWN]     ; (the picks left: none, or EXIT's)
+        cmp cl, [cs:psi_due]
+        jbe .fill
+        movzx cx, byte [cs:psi_due]
+.fill:  mov ax, ds
+        add ax, POW_SEG
+        mov es, ax
+        imul bx, si, POW_SIZE
+        add bx, POW_OFF
+        xor di, di
+.each:  jcxz .ret
+        cmp di, [cs:psi_n]
+        jae .ret
+        movzx ax, byte [cs:psi_defs + di]
+        inc di
+        push bx
+        add bx, ax
+        test byte [es:bx], 0xFE
+        jnz .known
+        and byte [es:bx], 1     ; (as 580:39h gives one)
+        or byte [es:bx], 2
+        inc word [cs:psi_filled]
+        dec cx
+.known: pop bx
+        jmp .each
+.ret:   ret
+
+; PSI_GRANT (site 88): "cmp dx,-1" in the powers' routine (DX the power, DI the member, SI the entry,
+; [BP-5] 1 a psionicist, [BP-4] the discipline): ZF set (none given) for -1, a pick (PSI_DUE) or PSI_KEEP.
+psi_grant:
+        push ax
+        push bx
+        or si, si
+        jnz .which
+        call psi_start
+.which: cmp dx, -1
+        je .none
+        cmp di, 4
+        jae .give
+        cmp byte [cs:psi_keep], 0
+        jne .none
+        cmp dx, MIND_BLANK
+        je .give
+        or dx, dx
+        jz .give
+        xor bx, bx
+.seen:  cmp bx, [cs:psi_n]
+        jae .new
+        cmp [cs:psi_defs + bx], dl
+        je .none
+        inc bx
+        jmp .seen
+.new:   cmp bx, POWER_COUNT
+        jae .none
+        mov [cs:psi_defs + bx], dl
+        inc word [cs:psi_n]
+        inc byte [cs:psi_due]
+.none:  mov bx, sp
+        or word [ss:bx + 8], 0x40       ; (ZF: the JZ past the grant)
+        jmp .out
+.give:  mov bx, sp
+        and word [ss:bx + 8], ~0x40
+.out:   pop bx
+        pop ax
+        iret
+; PSI_START: the routine's first entry: the picks none, PSI_ISP and PSI_DISC its, PSI_KEEP for an EDIT of
+; PSI_SNAP's member with the same psionicist class and disciplines (selector 370h's A55h, set by now).
+psi_start:
+        mov byte [cs:psi_due], 0
+        mov word [cs:psi_n], 0
+        mov byte [cs:psi_keep], 0
+        mov al, [bp - 5]
+        mov [cs:psi_isp], al
+        mov al, [bp - 4]
+        mov [cs:psi_disc], al
+        cmp word [CR_EDITING], -1
+        je .ret
+        cmp byte [cs:psi_snap_ok], 0
+        je .ret
+        mov ax, di
+        cmp al, [cs:psi_snap_who]
+        jne .ret
+        mov al, [bp - 5]
+        cmp al, [cs:psi_snap_isp]
+        jne .ret
+        push es
+        push bx
+        mov ax, ds
+        add ax, POW_SEG
+        mov es, ax
+        mov al, [es:DISC_OFF + di]
+        and al, 7
+        pop bx
+        pop es
+        cmp al, [cs:psi_snap_disc]
+        jne .ret
+        mov byte [cs:psi_keep], 1
+.ret:   ret
+
+; PSI_SNAP: from KP_OPEN, an EDIT's member ([CR_EDITING], 0-3): its powers, disciplines and whether a
+; psionicist (its sheet's classes), for PSI_KEEP. DS the game's; all registers kept.
+psi_snap:
+        pusha
+        push es
+        mov byte [cs:psi_snap_ok], 0
+        mov si, [CR_EDITING]
+        cmp si, 4
+        jae .out
+        mov ax, si
+        mov [cs:psi_snap_who], al
+        les bx, [SHEETS_PTR]
+        imul ax, si, SHEET_SIZE
+        add bx, ax
+        xor al, al
+        mov cx, 3
+.class: cmp byte [es:bx + SH_CLASSES], PSI_CLASS
+        jne .other
+        mov al, 1
+.other: inc bx
+        loop .class
+        mov [cs:psi_snap_isp], al
+        mov ax, ds
+        add ax, POW_SEG
+        mov es, ax
+        mov al, [es:DISC_OFF + si]
+        and al, 7
+        mov [cs:psi_snap_disc], al
+        imul bx, si, POW_SIZE
+        add bx, POW_OFF
+        xor di, di
+.copy:  mov al, [es:bx + di]
+        mov [cs:psi_saved + di], al
+        inc di
+        cmp di, POWER_COUNT
+        jb .copy
+        mov byte [cs:psi_snap_ok], 1
+.out:   pop es
+        popa
+        ret
+
+; (SITE's way back is the byte after the site's number: the NOP of a 4-byte site, so a jump's target is counted
+; from there.)
+; PSI_COUNT (site 95): "or dx,dx / jz" (93B95h; 4 bytes) in the pop-up's opening (DX the psionicist's
+; level, 0 none: the window not opened): in PSI_MODE the picks left (DS:43ECh) PSI_DUE's, the window opened.
+psi_count:
+        cmp byte [cs:psi_mode], 0
+        je .game
+        push ax
+        mov al, [cs:psi_due]
+        mov [PICK_SHOWN], al
+        pop ax
+        iret
+.game:  or dx, dx
+        jnz .out
+        push bp
+        mov bp, sp
+        add word [bp + 2], 0x93BD3 - 0x93B98
+        pop bp
+.out:   iret
+
+; PSI_LIST (site 96): "or ax,ax / jz" (93E1Bh; 4 bytes) in the list of the discipline shown (AX 1 when the
+; member has power SI): listed when not; a known one listed too (to raise its number) but in PSI_MODE.
+psi_list:
+        push bp
+        mov bp, sp
+        or ax, ax
+        jz .list
+        cmp byte [cs:psi_mode], 0
+        je .out
+        add word [bp + 2], 0x93E4A - 0x93E1E
+        jmp .out
+.list:  add word [bp + 2], 0x93E41 - 0x93E1E
+.out:   pop bp
+        iret
+
+; PSI_CYCLE (site 97): "inc byte [bx-6285h]" (93FF1h; the discipline button): the next discipline, but in
+; PSI_MODE for one not a psionicist (its own only).
+psi_cycle:
+        cmp byte [cs:psi_mode], 0
+        je .inc
+        cmp byte [cs:psi_isp], 0
+        je .out
+.inc:   inc byte [bx + PSI_SHOWN - 0x10000]
+.out:   iret
+
+; PSI_CLICK (site 98): "or al,al / jz" (94245h; 4 bytes) where a power's button is clicked (AL 1 when the
+; member has it: the game raises its number): in PSI_MODE a known one does nothing.
+psi_click:
+        push bp
+        mov bp, sp
+        or al, al
+        jz .give
+        cmp byte [cs:psi_mode], 0
+        je .out
+        add word [bp + 2], 0x94389 - 0x94248
+        jmp .out
+.give:  add word [bp + 2], 0x94269 - 0x94248
+.out:   pop bp
+        iret
+
+; PICK_TOP (site 99): "cmp ax,[bp-2]" (93831h; 3 bytes) where CHOOSE A SPELL's level button goes on a page
+; (AX the next, [BP-2] the highest the reader casts): no higher than CR_CAP while it is set. Its flags back.
+pick_top:
+        push cx
+        mov cx, [bp - 2]
+        cmp byte [cs:cr_cap], 0
+        je .cmp
+        cmp cl, [cs:cr_cap]
+        jbe .cmp
+        movzx cx, byte [cs:cr_cap]
+.cmp:   push bp
+        mov bp, sp              ; ([BP+2] CX, +4 IP, +6 CS, +8 the flags)
+        cmp ax, cx
+        pushf
+        pop cx
+        and cx, 0x08D5
+        and word [bp + 8], ~0x08D5
+        or [bp + 8], cx
+        pop bp
+        pop cx
+        iret
+
+cr_far     dd 0
+cr_cap     db 0                 ; (the spell levels on offer up to this one: 0 none set)
+cr_due     times WIZ_LEVELS db 0
+cr_defs    times 128 db 0
+cr_n       dw 0
+cr_left    dw 0
+psi_defs   times POWER_COUNT db 0
+psi_n      dw 0
+psi_due    db 0
+psi_mode   db 0
+psi_isp    db 0
+psi_disc   db 0
+psi_keep   db 0
+psi_snap_ok db 0
+psi_snap_who db 0
+psi_snap_isp db 0
+psi_snap_disc db 0
+psi_saved  times POWER_COUNT db 0
+cr_members dw 0                 ; (counts, for a look in play)
+cr_windows dw 0
+cr_picked  dw 0
+cr_filled  dw 0
+psi_asks   dw 0
+psi_filled dw 0
+psi_kept   dw 0
 
 resident_end:
 align 16

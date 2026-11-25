@@ -111,6 +111,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
 | `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
+| `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravhold.sh [FOLDER]` | a real Hold Person in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the held-target rule (DSCLOG2's HELD_HIT, HELD_DAMAGE): ravstart.sh FOLDER (default $WORK/rav; |
 | `ravitems.py N... [--worn]` | Wake of the Ravager's combatant N's items, as its helper reads them: the item number, type, worn slot (+13h), plus (+16h), power (the word at +10h) and the type's material (+4), flags (+0) and armour byte (+0Bh). |
@@ -124,6 +125,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravshop.py CMD ...` | Wake of the Ravager's shops and scrolls for a test (run from playtest/; |
 | `ravsites.py [NAME...]` | where Shattered Lands' patch sites (dsloader.gamepatch.PATCHES) are in Wake of the Ravager's DSUN.EXE, by likeness: SL's 64 bytes round each site (the patch's own bytes left out) scored against every place in WotR's... |
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
+| `ravstore.py [roll\|gear]` | STORE and RECALL and the fuller starting gear in the running sequel ($WORK/rav.pid). |
 | `ravtab.py` | the state of choosing an enemy with Tab in the running sequel ($WORK/rav.pid; |
 | `ravtext.py [N]` | Wake of the Ravager's text buffer (DSCLOG2's TEXT, sites 93 and 94): the last N records (default 40) the dialogue window's input and the message box left in it (kind 0 a reply, 1 a portrait and its number, 2 text, 3... |
 | `ravthief.py [MEMBER] [PID]` | Wake of the Ravager's own thief-skill routine (its DSUN.EXE 8C647h, SL's 80240h) run in an emulator (unicorn) on the running game's memory, for party member MEMBER (default 0), once with the game's list of slots that... |

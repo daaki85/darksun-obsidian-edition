@@ -674,7 +674,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button). **DUAL**: the roster's inventory (75,171), a right
+  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
+  (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
+  starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
+  AIR (240,106), FIRE (240,122). The roster's slot 4 NEW at (162,117). **DUAL**: the roster's inventory (75,171), a right
   click on the member's portrait (30,69 / 30,114 / ...) gives EDIT / DROP / DUAL, DUAL just under
   (the menu's third row: 70,98 for the top member, 100,147 for the third); in the DUAL window the
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
@@ -685,6 +689,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
   A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
   click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
+- **First spells and powers in Wake of the Ravager** (logs/2026-11-25-ravager-first-spells.md): DONE opens
+  CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
+  107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
+  discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
