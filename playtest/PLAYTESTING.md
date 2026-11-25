@@ -1345,7 +1345,7 @@ tools, and where each is described:
   hit on the second). For the picture: `xdotool windowsize` 1320x880, the panes' sash dragged from
   x 951 to 420 (mousedown, two moves, mouseup), the round cropped from the root window with **Show
   details** ticked, and again unticked (its box at 438,240), one crop above the other.
-- **The window's Start the game in the container** (the same log): it runs `prepare_patched_game`
+- **The window's Play Shattered Lands (once Start the game) in the container** (the same log): it runs `prepare_patched_game`
   (the copies rewritten, a check of `write_atomic`), then stops at GOG's `DOSBox.exe`, a Windows
   program ("[Errno 13] Permission denied", a message box: OK at 1000,470). A game it was attached
   to that is killed is seen within a few seconds since 2026-11-19 (`Disconnected (process N has

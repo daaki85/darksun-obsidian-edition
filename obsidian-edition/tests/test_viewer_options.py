@@ -1,7 +1,7 @@
 """The Options tab's switches (viewer.Viewer._options_changed, restore_defaults) on a real Loader
 window: every switch the Loader reads (launch.CONTENT, game.RULE_SETTINGS, launch.SWITCH_DEFAULTS)
 saved when one changes, and set back by Restore defaults; the picture and the music device; and the Help button, which opens the
-player's guide; and Play Wake of the Ravager, beside Start the game. Needs tkinter and a display (else skipped:
+player's guide; and Play Wake of the Ravager, beside Play Shattered Lands. Needs tkinter and a display (else skipped:
 run under xvfb-run for it)."""
 
 import json

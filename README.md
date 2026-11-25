@@ -17,7 +17,7 @@ tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GU
 2. Download the latest release from the
    [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases) and unzip it
    anywhere.
-3. Double-click **`Start Obsidian Edition.bat`**, pick your options and press **Start the game**
+3. Double-click **`Start Obsidian Edition.bat`**, pick your options and press **Play Shattered Lands**
    ([running it](obsidian-edition/README.md#running-it-windows), step by step).
 
 ## Documentation

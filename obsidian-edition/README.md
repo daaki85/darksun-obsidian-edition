@@ -7,7 +7,7 @@ which loads the mod with your options.
 **Where to start**
 
 - **To play:** [Running it](#running-it-windows): unzip, double-click
-  `Start Obsidian Edition.bat`, press **Start the game**.
+  `Start Obsidian Edition.bat`, press **Play Shattered Lands**.
 - **To learn the rules:** [the player's guide](PLAYER-GUIDE.md), without
   spoilers, with a [glossary](PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and
   the rest.
@@ -119,8 +119,8 @@ says what the mod writes, and where).
 - **Linux**: the Loader's window can show the party of a DOSBox you start
   yourself, if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`); the dice log can't follow it (it needs DSCLOG and
-  the patched game, which only **Start the game** prepares). The `.bat` files,
-  **Start the game** and the Python install are Windows only. The Loader's window is
+  the patched game, which only **Play Shattered Lands** prepares). The `.bat` files,
+  **Play Shattered Lands** and the Python install are Windows only. The Loader's window is
   `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
   distributions package apart from Python (on Debian and Ubuntu,
   `python3-tk`). macOS isn't supported.
@@ -193,7 +193,7 @@ sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](https://githu
    the combat log's level, the Look box and so on (see [The Loader's
    window](#the-loaders-window) and [Rule changes](FEATURES.md#rule-changes);
    the rest is always on). They're remembered for next time.
-3. Press **Start the game** (top left).
+3. Press **Play Shattered Lands** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
 loaded and your options in force, and the Loader picks it up once DOSBox is up.
@@ -234,7 +234,7 @@ If anything goes wrong it says so in a message box and writes the details to
 game at a time: a second one says which has it and leaves the game alone.
 
 **Wake of the Ravager:** the Loader's **Play Wake of the Ravager** button, beside
-**Start the game**, or **`Play Wake of the Ravager.bat`**, starts the sequel (found
+**Play Shattered Lands**, or **`Play Wake of the Ravager.bat`**, starts the sequel (found
 as above, or the folder chosen on the Options tab) in its own DOSBox, with the bug
 fixes ported to it so far, the dice log of its fights and the party tabs; the
 Loader's other tabs and the in-game additions aren't ported to it yet. Not found,
@@ -278,7 +278,7 @@ the Loader does that).
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
-**Start the game**, **Play Wake of the Ravager** ([the sequel](#other-ways-to-start)), the game window's size, the text size, **Freeze report**
+**Play Shattered Lands**, **Play Wake of the Ravager** ([the sequel](#other-ways-to-start)), the game window's size, the text size, **Freeze report**
 (see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
 game again) and **Help** (this manual, in your browser) along the top. The party pane has the
 **Characters** tab (Alt+C): a card for each character, laid out like the game's View Character

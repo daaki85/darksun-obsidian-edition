@@ -726,15 +726,15 @@ class DiceLog:
         hdr = next((m.start() for m in re.finditer(re.escape(HDR_SIG), low) if m.start() % 16 == 0), None)
         if hdr is None:
             if re.search(rb"DSCLOGv[0-9A-Za-z]", low):
-                raise DiceLogError("An older DSCLOG is loaded. Close the game and start it again from the Loader (Start the game).")
-            raise DiceLogError("DSCLOG is not loaded. Start the game from the Loader (Start the game).")
+                raise DiceLogError("An older DSCLOG is loaded. Close the game and start it again from the Loader (Play Shattered Lands).")
+            raise DiceLogError("DSCLOG is not loaded. Start the game from the Loader (Play Shattered Lands).")
         ds = game.find_data_segment(self.guest, low)
         if ds is None:
             raise DiceLogError("Shattered Lands is not running yet.")
         rand_addr = (ds - game.DGROUP) * 16 + RAND_IP
         if low[rand_addr:rand_addr + 2] != RAND_PATCHED:
             raise DiceLogError("The game was started without the dice log. "
-                               "Close it and start it again from the Loader (Start the game).")
+                               "Close it and start it again from the Loader (Play Shattered Lands).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
             self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))

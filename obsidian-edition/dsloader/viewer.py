@@ -91,7 +91,7 @@ class Viewer:
         self.ds: Optional[int] = None  # the game's data segment, once found
         self.dice: Optional[DiceLog] = None
         self.next_try = 0.0  # when to retry connecting / attaching
-        self.dosbox = dosbox  # the game, when started from here (Start the game, or `launch`)
+        self.dosbox = dosbox  # the game, when started from here (Play Shattered Lands, or `launch`)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
@@ -141,7 +141,7 @@ class Viewer:
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
-        self.start_button = ttk.Button(starts, text="Start the game", command=self.start_game)
+        self.start_button = ttk.Button(starts, text="Play Shattered Lands", command=self.start_game)
         self.start_button.pack(side="left")
         # the sequel, from its folder (found, or chosen on Options' Wake of the Ravager section)
         self.ravager_button = ttk.Button(starts, text="Play Wake of the Ravager", command=self.start_ravager)
@@ -893,12 +893,12 @@ class Viewer:
             if not game_dir:
                 return
             if not launch.is_game_dir(game_dir):
-                messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
+                messagebox.showerror("Play Shattered Lands", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.", parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
-        self._start(game_dir, "Start the game")
+        self._start(game_dir, "Play Shattered Lands")
 
     def start_ravager(self) -> None:
         """Start Wake of the Ravager, as `launch --ravager` does: its folder the one chosen on the
@@ -935,7 +935,7 @@ class Viewer:
         left_out = launch.left_out_line()
         if left_out:  # (a copy that couldn't be made: told, not silent)
             self._append_dice([left_out])
-            messagebox.showwarning("Start the game", left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
+            messagebox.showwarning(title, left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 
@@ -970,7 +970,7 @@ class Viewer:
                                    "of what happened just before."])
 
     def _start_state(self) -> None:
-        """"Start the game" and "Play Wake of the Ravager" only while there's no game to attach to."""
+        """"Play Shattered Lands" and "Play Wake of the Ravager" only while there's no game to attach to."""
         running = self.guest is not None or (self.dosbox is not None and self.dosbox.poll() is None)
         for button in (self.start_button, self.ravager_button):
             button.state(["disabled"] if running else ["!disabled"])

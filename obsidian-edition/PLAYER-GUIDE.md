@@ -2245,7 +2245,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Readable layout** | above the dice log | on | remembered (`settings.json`) |
 | **Show details (the sums behind each roll)** | above the dice log | on | for this session |
 | **Show unlabelled rolls** | above the dice log | off | for this session |
-| **The game folder** | asked for at the first **Start the game** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
+| **The game folder** | asked for at the first **Play Shattered Lands** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
 | **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
