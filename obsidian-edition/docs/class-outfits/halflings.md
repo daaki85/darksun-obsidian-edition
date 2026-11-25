@@ -12,6 +12,8 @@ The animation pairs each new outfit with its retail halfling. Below them, the re
 
 In side walk 2 (12), compare the back corner of the Ranger’s cloak with the retail Thief’s. The cloth swings behind the leading knee. The Druid’s leaf cape ends near the belt, leaving the ochre kilt visible. The difference is easiest to see in rear walk 2 (08) and hardest to see in the woman’s side idle (02), where her hair overlaps the short cape.
 
+[Watch the previous and revised rear walk on both halflings](halfling-rear-fit.gif). The first column shows the cleaned body in the same pose. In rear step 2 (08), follow the swinging elbow past the Psionicist’s armhole and the bent leg below the Druid’s ochre kilt. The Ranger and Thief hems shift over the supporting hip as the other foot lifts. The game-size pairs below show the man on the left and the woman on the right.
+
 The Psionicist’s teal vest follows the turning ribs into a leather belt. Front walk 3 (05) shows the separation between the vest, the bare forearms and the shaded hip flap. The Thief’s slate hood has its own crown and a dark rim. Follow the visible cheek from side idle through the four steps, then look at front strike 3 (17) as the head dips under the arm. The gallery checks exposed face pixels against each original pose.
 
 ## Gladiator, Fighter and Cleric

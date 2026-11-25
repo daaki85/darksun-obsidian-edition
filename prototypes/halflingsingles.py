@@ -95,13 +95,123 @@ def hood(pose):
     return shell - opening, opening, head
 
 
+# Inclusive scanline spans in the retail man's cel. The woman uses the
+# registration in CUT. The upper rows track the two armholes from shoulders
+# to waist (y=5..11). Each hem starts on the row below the waist.
+# Short cloth follows the pelvis; the long cloth lags the advancing leg.
+REAR_FIT = {
+    1: (((7,13),(6,13),(6,13),(7,13),(7,13),(7,12),(7,12)),
+        ((6,13),(6,13),(6,12)), ((6,13),(5,14),(5,14),(5,14),(6,14))),
+    7: (((3,9),(3,10),(3,10),(3,10),(4,9),(4,8),(4,8)),
+        ((3,9),(3,9),(4,9)), ((3,10),(2,10),(2,10),(2,10),(2,8))),
+    8: (((3,9),(2,10),(3,10),(3,9),(3,9),(3,8),(3,8)),
+        ((3,9),(3,9),(3,8)), ((2,10),(2,10),(1,10),(1,9),(1,7))),
+    9: (((4,10),(3,11),(4,11),(4,11),(4,9),(5,10),(5,10)),
+        ((4,10),(4,10),(5,10)), ((4,11),(4,11),(4,12),(5,12),(7,12))),
+    10: (((4,10),(4,11),(4,11),(4,9),(4,9),(5,10),(5,10)),
+         ((4,10),(4,10),(5,10)), ((4,11),(4,11),(4,12),(5,12),(7,12))),
+}
+# Position of the dominant fold at the shoulder, waist and hem. The hem
+# turns a little later than the waist at each change of support.
+REAR_FOLD = {1: (9, 9, 10), 7: (6, 6, 5), 8: (6, 5, 3),
+             9: (7, 7, 8), 10: (8, 8, 10)}
+
+
+def rear_single_rows(fitted, model, pose, swatches):
+    body = fitted["Body base"]
+    out = {k: [row[:] for row in body] for k in SINGLES}
+    upper, skirt, train = REAR_FIT[pose]
+    shoulder, waist, hem = REAR_FOLD[pose]
+    dx, dy = fit.CUT[pose][-1] if model == 2070 else (0, 0)
+    head = fit.head_pixels(pose)
+    # Carry her shaded lower locks across the cloth. At the tips the hair
+    # separates again and the material between the strands shows through.
+    hair = set()
+    if model == 2070:
+        for y in range(5, 11):
+            row = fitted["Original"][y+dy]
+            locks = [u-4-dx for u, c in enumerate(row) if c in (179, 180, 181, 182)]
+            if locks:
+                hair.update((x, y) for x in locks)
+                if y <= 7:
+                    hair.update((x, y) for x in range(min(locks), max(locks)+1))
+                if y == 7:
+                    hair.update((x, y+1) for x in locks[1:])
+
+    for role, ramp in (("Druid", MOSS), ("Psionicist", TEAL), ("Ranger", RAMPS["leaf"]),
+                       ("Thief", RAMPS["slate"])):
+        long = role in ("Ranger", "Thief")
+        rows = upper + (train if long else skirt)
+        for i, (lo, hi) in enumerate(rows):
+            y = 5+i
+            v = y+dy
+            pivot = (shoulder+(waist-shoulder)*i/6 if i <= 6 else
+                     waist+(hem-waist)*(i-6)/5)
+            if long and (5 if pose == 8 else 4) <= i <= 6:
+                # Cloth falls past the waist at the back. Ease it towards
+                # the hem while keeping the swinging arm in front of it.
+                hem_left, hem_right = train[0]
+                lo -= int(lo > hem_left)
+                hi += int(hi < hem_right)
+            for x in range(lo, hi+1):
+                u = x+4+dx
+                if (x, y) in head or role != "Thief" and (x, y) in hair:
+                    continue
+                # Armholes are cut into the native shoulder silhouette.
+                if long and i < 7 and not upper[i][0] <= x <= upper[i][1] and body[v][u] is not None:
+                    continue
+                if i < 4 and body[v][u] is None:
+                    continue
+                grain = swatches["slate"][(i+2)%8][(x-waist-i//3)%8]
+                distance = x-pivot
+                # The upper fold passes over the shoulder blade and opens
+                # into a wider crease below the belt.
+                fold = math.cos(distance*(1.05 if i < 6 else 1.45)+.75*math.sin(i*.65))
+                shade = .56+.17*fold+.062*grain
+                if i < 3:
+                    shade += .08 if x < shoulder else -.07
+                if x == hi or (i > 5 and x == lo):
+                    shade -= .19
+                color = fit.dye(ramp, shade*(len(ramp)-1))
+                if role == "Psionicist":
+                    # The vest is fitted to the ribcage, with leather below
+                    # a tie that tips down onto the weight-bearing hip.
+                    if i >= 7:
+                        if i == 9 and (x <= lo or x >= hi or abs(distance) > 2):
+                            continue
+                        color = fit.dye(RAMPS["hide"], 5.4+.7*grain+1.1*math.cos(distance))
+                        # A short overlapping teal panel turns down from the
+                        # tie at one hip instead of splitting over both legs.
+                        if -2.5 < x-waist+.5*(i-7) < 1:
+                            color = fit.dye(TEAL, 4.1+.54*grain-.7*(i-7))
+                    if i == 6 or i == 5 and x > waist+1:
+                        color = fit.dye(TEAL, 2+.3*grain)
+                elif role == "Druid":
+                    # A short leaf cape folds over the ochre skirt. Leave
+                    # one longer fold above the hip swinging away.
+                    if i >= 7+(abs(distance) < 1.5):
+                        if i == 9 and abs(distance) > 2.7:
+                            continue
+                        color = fit.dye(RAMPS["ochre"], 5.9+.65*grain-1.2*(x == hi))
+                elif i == len(rows)-1:
+                    if abs(distance) > 2.2:
+                        continue
+                    color = fit.dye(ramp, (shade-.13)*(len(ramp)-1))
+                if role == "Thief" and i < 3 and abs(x-shoulder) <= 3-i:
+                    color = fit.dye(ramp, 4.8+.5*grain-.4*i)
+                out[role][v][u] = color
+    return out
+
+
 def draw(game, model, pose, swatches):
     fitted = fit.rows_for(game, model, pose, swatches["linen"])
     fit.check_uncovered_head(game, model, pose, fitted)
     if pose == 28:
         fitted = {k: fit.flip(v) for k, v in fitted.items()}
     body, fighter = fitted["Body base"], fitted["Fighter"]
-    out = {k: [r[:] for r in body] for k in SINGLES}
+    rear_walk = pose in REAR_FIT
+    out = rear_single_rows(fitted, model, pose, swatches) if rear_walk else {
+        k: [r[:] for r in body] for k in SINGLES}
     (sx, sy), (hx, hy), _, _, offset = fit.CUT[pose]
     dx, dy = offset if model == 2070 else (0, 0)
     shell, opening, head = hood(pose)
@@ -128,7 +238,7 @@ def draw(game, model, pose, swatches):
             grain = swatches["slate"][(y-sy)%8][(x-hx)%8]
             turn = 1.6*math.cos((x-axis)*1.24-.65*depth)
             shade = 5.2+turn+.65*grain-.36*abs(x-axis)
-            if pt not in face_and_neck and tailored:
+            if not rear_walk and pt not in face_and_neck and tailored:
                 # Cross the fitted teal vest with a narrow leather tie. The
                 # back flap hangs from the belt and clears the forward thigh.
                 if y == hy or (y == hy+1 and x == hx-2):
@@ -139,7 +249,7 @@ def draw(game, model, pose, swatches):
                     ramp = RAMPS["ochre"] if role == "Druid" else RAMPS["hide"]
                     lift = 1.8 if role == "Druid" and y > hy else 0
                     out[role][v][u] = fit.dye(ramp, shade+lift+(2 if y < hy else 0))
-            if pt not in face_and_neck and (skin is None or pt not in grip):
+            if not rear_walk and pt not in face_and_neck and (skin is None or pt not in grip):
                 for role, panel, ramp in (("Druid", short, MOSS), ("Ranger", long, RAMPS["leaf"]),
                                           ("Thief", long, RAMPS["slate"])):
                     if pt not in panel:
