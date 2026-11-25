@@ -1,14 +1,15 @@
 """DOSBox-X as the game's engine: its configuration, its memory file, its version.
 
-An option (the Options tab's Engine; `engine` in settings.json), new and played on Linux only so
-far; GOG's DOSBox 0.74 stays the default and nothing of its start is changed. With it chosen the
-Loader starts the player's own DOSBox-X (`dosbox_x_path`: nothing is bundled or downloaded) with a
-configuration written whole here (nothing of GOG's dosbox_darksun.conf is used: DOSBox-X's
-defaults differ from 0.74's, so every setting the mod relies on is said), and follows the game
-through DOSBox-X's memory file: `[dosbox] memory file=PATH` (DOSBox-X 2025.01.01 and later) keeps
-the emulated PC's RAM in a file, mapped shared, which the Loader reads and writes
-(process.FileMemory) in place of another process's memory. So on Linux this engine needs no root
-and no ptrace setting.
+The default engine (the Options tab's Engine; `engine` in settings.json) whenever a DOSBox-X is
+found: the one the release zip brings for Windows (BUNDLED_DIR, the Loader's dosbox-x folder; the
+release workflow puts it there with its licence and a pointer to its source), or the player's own
+(`dosbox_x_path`). Without one, or with `engine` "gog", GOG's DOSBox 0.74 runs the game as before.
+The Loader starts DOSBox-X with a configuration written whole here (nothing of GOG's
+dosbox_darksun.conf is used: DOSBox-X's defaults differ from 0.74's, so every setting the mod
+relies on is said), and follows the game through DOSBox-X's memory file: `[dosbox] memory
+file=PATH` (DOSBox-X 2025.01.01 and later) keeps the emulated PC's RAM in a file, mapped shared,
+which the Loader reads and writes (process.FileMemory) in place of another process's memory. So
+on Linux this engine needs no root and no ptrace setting.
 
 What each line of the configuration is for is said where it is written (conf_lines); how it was
 found is in reports/modernisation-research-and-plan.md ("DOSBox-X: what was found") and
@@ -40,10 +41,24 @@ MIN_VERSION = (2025, 1, 1)               # the first DOSBox-X with "memory file"
 NAME = "DOSBox-X"
 
 
+# The DOSBox-X that comes with the mod: the Loader's own dosbox-x folder (launch.DBX_DIR, where
+# its configuration and log go too), filled by the release workflow (.github/workflows/release.yml)
+BUNDLED_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dosbox-x")
+BUNDLED_NAMES = ("dosbox-x.exe",) if os.name == "nt" else ("dosbox-x", "dosbox-x.app")
+
+
+def chosen(settings: dict) -> Optional[str]:
+    """The engine the settings name outright ("gog" or "dosbox-x", however typed), or None: no
+    choice made (the default, DOSBox-X when one is found) or one that is no engine."""
+    value = settings.get(SETTING)
+    value = value.strip().lower() if isinstance(value, str) else None
+    return value if value in ENGINES else None
+
+
 def engine(settings: dict) -> str:
-    """The engine the settings ask for: "dosbox-x", else GOG's (also for anything unknown)."""
-    chosen = settings.get(SETTING, GOG)
-    return DOSBOX_X if isinstance(chosen, str) and chosen.strip().lower() == DOSBOX_X else GOG
+    """The engine the game starts in: the one chosen on the Options tab; with none chosen,
+    DOSBox-X if one is found that is new enough (usable), else GOG's."""
+    return chosen(settings) or (DOSBOX_X if usable(settings) else GOG)
 
 
 def app_program(path: str) -> str:
@@ -63,10 +78,42 @@ def app_program(path: str) -> str:
     return path
 
 
+def bundled() -> Optional[str]:
+    """The DOSBox-X in the Loader's dosbox-x folder (the one the release brings, or one the
+    player put there), or None."""
+    for name in BUNDLED_NAMES:
+        path = app_program(os.path.join(BUNDLED_DIR, name))
+        if os.path.isfile(path):
+            return path
+    return None
+
+
 def program(settings: dict) -> Optional[str]:
-    """The DOSBox-X program the settings name, if it is a file; None otherwise."""
+    """The DOSBox-X program to start: the one the settings name, if it is a file; else the
+    bundled one; None if neither is there."""
     path = app_program(settings.get(PATH_SETTING))
-    return path if isinstance(path, str) and path and os.path.isfile(path) else None
+    if isinstance(path, str) and path and os.path.isfile(path):
+        return path
+    return bundled()
+
+
+_USABLE: Dict[Tuple[str, float], bool] = {}
+
+
+def usable(settings: dict) -> bool:
+    """A DOSBox-X is there and not too old (its version, asked once for each program and file
+    time: engine() is asked often)."""
+    path = program(settings)
+    if path is None:
+        return False
+    try:
+        key = (path, os.path.getmtime(path))
+    except OSError:
+        return False
+    if key not in _USABLE:
+        found = version(path)
+        _USABLE[key] = found is None or new_enough(found)  # (unknown: tried; the start says if it fails)
+    return _USABLE[key]
 
 
 # ---- the version ---------------------------------------------------------------------------
@@ -151,13 +198,14 @@ def found_line(path: Optional[str], found: Optional[Version] = None, asked: bool
 
 def problem(settings: dict) -> Optional[str]:
     """Why the game can't be started in DOSBox-X with these settings, or None."""
-    path = app_program(settings.get(PATH_SETTING))
-    if not isinstance(path, str) or not path:
+    named = settings.get(PATH_SETTING)
+    path = program(settings)
+    if path is None:
+        if isinstance(named, str) and named:
+            return (f"DOSBox-X is chosen as the engine, but its program isn't there any more ({named}): choose it "
+                    "again on the Options tab (Engine), or go back to GOG's DOSBox there.")
         return ("DOSBox-X is chosen as the engine, but no DOSBox-X program is: choose it on the Options tab "
                 "(Engine), or go back to GOG's DOSBox there.")
-    if not os.path.isfile(path):
-        return (f"DOSBox-X is chosen as the engine, but its program isn't there any more ({path}): choose it "
-                "again on the Options tab (Engine), or go back to GOG's DOSBox there.")
     found = version(path)
     if found is not None and not new_enough(found):
         return (f"{path} is DOSBox-X {version_text(found)}, too old for the Loader: it follows the game "
@@ -372,6 +420,9 @@ def music_line(settings: dict) -> str:
             "play the music; without it there is usually none.")
 
 
+ROM_BIOS_KB, UMB_END = 16, "FBFF"  # (conf_lines: the BIOS's size and the end of upper memory)
+
+
 def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional[dict] = None,
                dice_log: bool = True, look: str = PLAIN, autoexec: Tuple[str, str, str] = ("", "", ""),
                options: Optional[dict] = None) -> List[str]:
@@ -390,6 +441,9 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
     lines += [
         # GOG's machine and memory; the file that is the emulated PC's RAM (process.FileMemory)
         "[dosbox]", "machine=svga_s3", "memsize=32", f"memory file={memory_file}",
+        # the emulated BIOS in the last 16 KB below 1 MB (FC00h-FFFFh) in place of 64 KB (F000h):
+        # with [dos] umb end, 48 KB more upper memory for DSCLOG (logs/2026-11-25-dosbox-x-upper-memory.md)
+        f"rom bios allocation max={ROM_BIOS_KB}", f"rom bios minimum size={ROM_BIOS_KB}",
         "quit warning=false", "fastbioslogo=true", "startbanner=false",
         *([f"captures={o['capture']}"] if o.get("capture") else []), "",
         "[render]"] + render + [
@@ -405,8 +459,12 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
         # keeps DOS's own structures in the 640 KB and pads them up to segment 0700h, and the game
         # then loads at 0824h, 26.7 KB higher than on 0.74 (01A2h). With the last two lines it
         # loads at 0224h (2 KB higher); the structures go in DOSBox-X's private area
-        # (C800h-CBFFh), which takes nothing from the upper memory DSCLOG loads into (CC00h-EFFFh)
-        "[dos]", "xms=true", "ems=false", "umb=true", "log console=true",
+        # (C400h-CBFFh, after the VGA BIOS), which takes nothing from the upper memory DSCLOG
+        # loads into. That runs from CC00h to UMB_END, FBFFh: up to the BIOS made small above
+        # (`umb end` past EFFFh without the two BIOS lines turns upper memory off). 0.74's is
+        # D000h-EFFFh: 64 KB more here, and DSCLOG's free upper memory 16,368 bytes at EFFFh,
+        # 65,520 at FBFFh (`fountain-user`, playtest/logs/2026-11-25-dosbox-x-upper-memory.md)
+        "[dos]", "xms=true", "ems=false", "umb=true", f"umb end={UMB_END}", "log console=true",
         "minimum mcb free=100", "kernel allocation in umb=true", "",
         # DOS itself not in the HMA (DOSBox-X's default is "dos=high, umb"): DSCLOG's far block
         # takes the HMA, as on 0.74; refused it, its far block would go into upper memory and
@@ -423,7 +481,7 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
     run = "dx-capture /a " if o.get("capture") else ""
     if dice_log:
         # (UMBPLUS.COM changes nothing under DOSBox-X: its chain isn't 0.74's, and its upper
-        # memory already starts lower, at CC00h; run all the same, so one autoexec serves both)
+        # memory already starts lower, at CC00h, and ends higher; run all the same, so one autoexec serves both)
         lines += ["d:\\" + umbplus.lower(), r"lh d:\dsclog.exe", run + "d:\\" + patched.lower()]
     else:
         lines += [run + "dsun.exe" if run else "darksun"]

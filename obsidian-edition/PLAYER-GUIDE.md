@@ -2039,11 +2039,11 @@ in the roster ([more saves and characters](FEATURES.md#saves)).
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
 speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
 MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
-**The engine**: the game runs in GOG's DOSBox 0.74, as it always has. The Options tab's **Engine**
-section can run it in your own copy of DOSBox-X instead, which lets the whole mod work on Linux
-without root and can play the music through a soundfont file of yours. That choice is new and
-experimental: it has been played on Linux only, is untested on Windows and macOS, and GOG's DOSBox
-stays the default ([Features: the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
+**The engine**: the game runs in DOSBox-X, which comes with the mod on Windows (on Linux and macOS
+choose your own on the Options tab's **Engine** section). It gives the mod more memory to work
+with, lets the whole mod work on Linux without root, and can play the music through a soundfont
+file of yours. GOG's DOSBox 0.74 is still there to choose in the same section, and is used when no
+DOSBox-X is found ([Features: the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 **Running the game** (the game window's size, crash and freeze
 reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
 [journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your

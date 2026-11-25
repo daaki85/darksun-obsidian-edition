@@ -72,6 +72,15 @@ Releases, newest first (2.12.0 and older in the archive):
   **soundfont file** setting plays the music through DOSBox-X's own FluidSynth. Restore defaults
   goes back to GOG's.
 
+**Changed** (on top of the above, for when the Windows check passes)
+- **DOSBox-X is the default engine whenever one is found**: the Windows release brings DOSBox-X's
+  own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and the source
+  archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used when
+  none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
+  program goes before DOSBox-X unless DOSBox-X was chosen.
+- **48 KB more upper memory under DOSBox-X** for DSCLOG: `[dos] umb end=FBFF` with the BIOS in
+  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB).
+
 **Docs**
 - The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
   pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
