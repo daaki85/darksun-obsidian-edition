@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from halfgiantfit import RANGER_CLOAK, fitted_panels, stamp
+from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, fitted_panels, stamp
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
@@ -192,6 +192,27 @@ def row_limits(panel):
     return spans
 
 
+def rear_cloak_color(x, y, pose, texture):
+    # Follow the two gathers at the shoulder blades into unequal folds at
+    # the hem. Sample in garment coordinates so the grain travels with them.
+    (left, right, neck), (hem_left, hem_right, hem) = REAR_FOLD_GUIDES[pose]
+    depth = max(0, min(1, (y-neck)/(hem-neck)))
+    loft = math.sin(math.pi*depth)
+    start = mix(left, hem_left, depth) + 1.3*loft
+    end = mix(right, hem_right, depth) - 1.2*loft
+    u = (x-start)/max(1, end-start)
+    # Upper light crosses the shoulder blades. Below them two narrow
+    # troughs frame the broad lit face of the hanging cloth.
+    shade = 7.5 - 3.3*abs(u-.30) + 1.4*math.cos(4*u+depth)
+    for crease, bend in ((.28, -.12), (.73, .09)):
+        dist = (u-crease-bend*loft)*(end-start)
+        shade -= 4.1*math.exp(-.48*dist*dist)
+        shade += 2.3*math.exp(-.37*(dist+1.7)**2)
+    across = round(x-start)
+    grain = texture[round(y-neck) % 8][across % 8]
+    return shade + .68*grain
+
+
 def dress(pieces, source, model, pose, dx, dy, bow, texture):
     """Lay the pattern on the cleaned cel, then bring the near arm and hair forward."""
     female = model == 2074
@@ -233,7 +254,12 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 continue
             point = x, y
             c = source[sy][sx]
-            if point in hair or (sx-5, sy) in bow:
+            # The hair outline encloses some exposed back between the locks.
+            # Let the collar cover those skin pixels up to the actual strands.
+            under_lock = (point in hair and role == "Ranger" and pose in REAR and point in cloak
+                          and body[sy][sx] in (130, 131, 132, 144, 145, 146,
+                                               147, 148, 149, 150, 151))
+            if (point in hair and not under_lock) or (sx-5, sy) in bow:
                 continue
             if 0 <= sy-locks_start < len(locks):
                 left, right = locks[sy-locks_start]
@@ -248,7 +274,7 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 # hair, hands and the bent bow arm cross the cloth.
                 exposed = c is None
                 if pose in REAR:
-                    exposed |= point in top or point in robe
+                    exposed |= under_lock or point in top or point in sleeve or y >= belt[1][1]-2
                 elif pose in PROFILE:
                     back_edge = rib_span.get(y, (belt[0][0],))[0]
                     exposed |= (x <= back_edge+2 and (point in top or point in robe))
@@ -256,12 +282,15 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                     neckline = min(shoulder[1], shoulder[3]) + 3
                     exposed |= y <= neckline or x < rib_span[y][0]+2
                 if exposed and (point not in arm or c is None):
-                    lo, hi = cloak_span[y]
-                    u = (x-lo+.5)/(hi-lo+1)
-                    depth = (y-shoulder[1])/max(1, belt[1][1]-shoulder[1])
-                    fold = 12*u + 1.4*depth + .65*math.sin(depth*2.4)
-                    grain = texture[(y-shoulder[1]) % 8][int(16*u) % 8]
-                    shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
+                    if pose in REAR:
+                        shade = rear_cloak_color(x, y, pose, texture)
+                    else:
+                        lo, hi = cloak_span[y]
+                        u = (x-lo+.5)/(hi-lo+1)
+                        depth = (y-shoulder[1])/max(1, belt[1][1]-shoulder[1])
+                        fold = 12*u + 1.4*depth + .65*math.sin(depth*2.4)
+                        grain = texture[(y-shoulder[1]) % 8][int(16*u) % 8]
+                        shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
                     if (x,y+1) not in cloak or (x+1,y) not in cloak:
                         shade -= 3.1
                     pieces[role][sy][sx] = pigment(RAMPS["leaf"], shade)

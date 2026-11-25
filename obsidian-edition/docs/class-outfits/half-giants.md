@@ -9,7 +9,7 @@ Follow either row across the animation to see the original half-giant, the clean
 ## Psionicist and Ranger
 
 - **Psionicist.** The sleeveless teal wrap crosses the ribs and tucks into a leather belt. In rear walk steps 1–4 (07–10), the diagonal overlap turns with the shoulders. In profile the near arm passes across it.
-- **Ranger.** The leaf-green cloak fastens over a hide jerkin. In profile walk steps 1–4 (11–14), follow the hem behind the hips as the stride opens and closes. Rear idle (01) shows the full folds below the hair. Side bow (24) shows the leading arm and bow in front.
+- **Ranger.** The leaf-green cloak fastens over a hide jerkin. In profile walk steps 1–4 (11–14), follow the hem behind the hips as the stride opens and closes. From behind, the cloth gathers at the shoulders, skims the waist, and lifts over the advancing leg. On the woman the green collar shows between the ends of her hair. Side bow (24) shows the leading arm and bow in front. [Compare the earlier and revised rear cloaks beside the retail figures](half-giant-ranger-rear.gif)
 
 ## Gladiator, Fighter and Cleric fit
 
