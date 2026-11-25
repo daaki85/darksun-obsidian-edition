@@ -5893,7 +5893,7 @@ CU_HUMAN    equ 1
 NO_MATERIAL equ 0xFF
 LEATHER     equ 5
 THIEF_BIT   equ 0x400
-PSI_KINDS   equ 0x701E          ; bits by kind: club, dagger, short sword, mace, chatkcha, bow, sling
+PSI_KINDS   equ 0x20701E        ; bits by kind: club, dagger, short sword, mace, chatkcha, bow, sling, darts
 SPHERE_EARTH equ 0x1D           ; bits by material: wood, stone, obsidian, metal
 SPHERE_FIRE equ 0x08            ; obsidian
 SPHERE_WATER equ 0x03           ; wood, bone
@@ -6288,11 +6288,13 @@ class_forbids_one:
         cmp dl, 0xFF
         je .ok
         push cx
+        push edx
         mov cl, dl
-        mov dx, 1
-        shl dx, cl
+        mov edx, 1
+        shl edx, cl
+        test edx, PSI_KINDS
+        pop edx
         pop cx
-        test dx, PSI_KINDS
         jnz .ok
         stc
         ret
@@ -8046,28 +8048,23 @@ spec_kind:
 .done:  pop bx
         pop ax
 .ret:   ret
-; SPEC_KINDS_OWN: the sequel's weapons with no kind of SL's (KIND_OF_TYPE's 0), and the kind + 1 each
+; SPEC_KINDS_OWN: the sequel's weapons with no kind of SL's 22 (KIND_OF_TYPE's 0), and the kind + 1 each
 ; counts as for specialization alone, as SL's spell-made weapons do (CONJURED_KINDS): its type, the kind
 ; (the reasoning: DEVELOPMENT-RULES.md, Weapon specialization in Wake of the Ravager). Ends with type 0.
+; (The Twohand Sword, Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts have KIND_OF_TYPE's
+; own kinds, SL's 17-22.)
 spec_kinds_own:
         db 13, 1                ; Bloodletter (a 1d8 blade): long sword
-        db 101, 1               ; Twohand Sword: long sword (SL's swords' one kind)
-        db 61, 11               ; Lotulis (a blade at each end of a shaft): gythka
-        db 39, 10               ; Double Spear: polearm
-        db 100, 10              ; Trikal (a bladed polearm): polearm
         db 81, 5                ; Promere hammer: mace (a hammer, as Spiritual Hammer)
         db 68, 5                ; Jasmine (a mace's 1d6+1): mace
-        db 38, 13               ; Darts: chatkcha (SL's thrown weapon)
-        db 43, 13               ; Darts
-        db 59, 13               ; Javelin
         db 90, 2                ; Shillelagh (the spell's): club
         db 95, 5                ; Spirit hammer (the spell's): mace
         db 87, 14               ; Rainbow (the spell's bow): bow
         db 0
 
-; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none) of sheet ES:BX, in any of its layouts (DSCLOG's:
-; a byte each; packed 5 bits each; SPEC_V2, base 17). SPEC_ANY: ZF clear when a spec is chosen.
-; Others kept.
+; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none; SL's 22 kinds, as KIND_OF_TYPE has them) of sheet
+; ES:BX, in any of its layouts (DSCLOG's: a byte each; packed 5 bits each; SPEC_V2, base 17, or V3).
+; SPEC_ANY: ZF clear when a spec is chosen. Others kept.
 spec_get:
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
         jnz .packed
@@ -8078,13 +8075,7 @@ spec_get:
         jz .five
         call spec_unpack
         movzx ax, byte [cs:si + spec_digits]
-        cmp al, SL_KINDS                ; (a kind of SL's own past the sequel's sixteen: FOLD_KINDS')
-        jbe .ret
-        push bx
-        movzx bx, al
-        mov al, [cs:bx + fold_kinds - SL_KINDS - 1]
-        pop bx
-.ret:   ret
+        ret
 .five:  push ecx
         push edx
         mov edx, [es:bx + SPEC_SLOTS]
@@ -8095,13 +8086,6 @@ spec_get:
         pop edx
         pop ecx
         ret
-; FOLD_KINDS: SL's weapon kinds 17-22 (specialize.KINDS' Ravager weapons: two-handed sword, lotulis,
-; double spear, trikal, javelin, darts), a spec of one carried by the party transfer, as the kind + 1
-; the sequel counts that weapon as (SPEC_KINDS_OWN's): long sword, gythka, polearm, polearm, chatkcha,
-; chatkcha.
-SL_KINDS equ 16
-fold_kinds db 1, 11, 10, 10, 13, 13
-
 ; SPEC_UNPACK, SPEC_CHOOSE: DSCLOG's (a SPEC_V2 or V3 sheet's four specs in SPEC_DIGITS: the Loader
 ; writes V3, game.packed_specs).
 spec_unpack:
@@ -8214,13 +8198,14 @@ spec_any:
 
 ; MISSILE_RATE: AX (the attacks a round in halves: the weapon type's, +7, as the game has a missile's)
 ; made a specialist's rate of fire when greater, for skill DL (SPEC_EXPERT or above) with item type SI
-; (its kind SPEC_KIND's: the sequel's darts and javelins as the chatkcha), the sheet at ES:BX, by the
-; warrior's level (the highest fighter, gladiator or ranger level of the classes it has now: 1-6, 7-12,
-; 13 on): DSCLOG's, the bow 3, 4, 5 a round, the sling, staff sling and chatkcha 3/2, 2, 5/2; a grand
-; master one more; a kind not chosen (SPEC_PLAIN), from 7th level, the specialist's a band lower.
-; Others kept.
+; (its kind SPEC_KIND's), the sheet at ES:BX, by the warrior's level (the highest fighter, gladiator or
+; ranger level of the classes it has now: 1-6, 7-12, 13 on): DSCLOG's, the bow 3, 4, 5 a round, the
+; sling, staff sling and chatkcha 3/2, 2, 5/2, the javelin 3/2, 2, 5/2 and darts 3, 4, 5 (MISSILE_RAV,
+; kinds 21 and 22 after the staff sling's); a grand master one more; a kind not chosen (SPEC_PLAIN), from
+; 7th level, the specialist's a band lower. Others kept.
 MISSILE_KIND equ 13             ; (the chatkcha's kind + 1; then the bow, the sling, the staff sling)
-missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5
+MISSILE_RAV  equ 21             ; (the javelin's kind + 1; then the darts)
+missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5, 3, 4, 5, 6, 8, 10
 missile_rate:
         cmp dl, SPEC_PLAIN
         jb .ret
@@ -8232,7 +8217,13 @@ missile_rate:
         sub cx, MISSILE_KIND
         jb .out
         cmp cx, 3
+        jbe .kind
+        sub cx, MISSILE_RAV - MISSILE_KIND - 4  ; (the javelin 4, the darts 5)
+        cmp cx, 4
+        jb .out
+        cmp cx, 5
         ja .out
+.kind:
         xor dx, dx              ; DL the specialist's level
         xor si, si
 .class: push ax
@@ -8692,7 +8683,7 @@ ef_lines_of:
         call ef_line
         mov byte [cs:ef_is_head], 0
 .kind:  mov si, [cs:ef_kind]
-        cmp si, 16
+        cmp si, KIND_COUNT
         jae .next
         shl si, 1
         mov si, [cs:si + ef_kinds]
@@ -8871,6 +8862,7 @@ ef_skills    dw .s0, .s1, .s2, .s3
 .s2     db 'GRAND MASTER OF', 0
 .s3     db 'EXPERT IN', 0
 ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
+             dw .k16, .k17, .k18, .k19, .k20, .k21
 .k0     db '  LONG SWORD', 0
 .k1     db '  CLUB', 0
 .k2     db '  DAGGER', 0
@@ -8887,6 +8879,12 @@ ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k
 .k13    db '  BOW', 0
 .k14    db '  SLING', 0
 .k15    db '  STAFF SLING', 0
+.k16    db '  TWO-HANDED SWORD', 0
+.k17    db '  LOTULIS', 0
+.k18    db '  DOUBLE SPEAR', 0
+.k19    db '  TRIKAL', 0
+.k20    db '  JAVELIN', 0
+.k21    db '  DARTS', 0
 spec_forced  db 0
 ef_back      dd 0
 ef_far       dd 0
@@ -9429,7 +9427,9 @@ kit_to_hit:
         cmp si, KIND_TYPES
         jae .missile
         cmp byte [cs:si + kind_of_type], BOW_KIND
-        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15; not the javelin's
+        cmp byte [cs:si + kind_of_type], BOW_KIND + 2   ;   and the darts' past them)
+        ja .missile
         push ax
         mov ax, [bp + 0x0E]
         call cr_is
@@ -11408,16 +11408,19 @@ size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold
 .ret:   ret
 ; KIND_OF_TYPE: the sequel's item types' weapon kinds, as specialize.KINDS + 1 (0 none): long sword 1,
 ; club 2, dagger 3, short sword 4, mace 5, axe 6, great axe 7, pick 8, quarterstaff 9, polearm 10, gythka
-; 11, cahulaks 12, chatkcha 13, bow 14, sling 15, staff sling 16 (from OBJEX.GFF's items' names: the
-; Longswords 16, 73, 97, Crystal sword 35, Flameblade 47, Magma blade 69; Club 29, Toothed Club 89;
-; Daggers 37, 72, 99; Maces 67, 74; Axes 8, 48; Great Axe 51; Pick 79; Quarterstaff 85; Polearm 80;
-; Gythka 52; Cahulaks 24; Chatchka 25; Bow 18; Sling 93; Staff Sling 98. Shillelagh, 90, has none).
+; 11, cahulaks 12, chatkcha 13, bow 14, sling 15, staff sling 16, two-handed sword 17, lotulis 18, double
+; spear 19, trikal 20, javelin 21, darts 22 (from OBJEX.GFF's items' names, dice and two-handed bit: the
+; Longswords 16, 73, 97, Flameblade 47, Magma blade 69; Club 29, Toothed Club 89; Daggers 37, 72, 99;
+; Maces 67, 74; Axes 8, 48; Great Axe 51; Pick 79; Quarterstaff 85; Polearm 80; Gythka 52; Cahulaks 24;
+; Chatchka 25; Bow 18; Sling 93; Staff Sling 98; Twohand Sword 101 and Crystal sword 35 (two-handed
+; 1d10); Lotulis 61; Double Spear 39; Trikal 100; Javelin 59; Darts 38, 43. Shillelagh, 90, has none).
 ; RAV_LARGE: the sequel's weapons whose game dice aren't those of SL's kind (KIND_OF_TYPE), or that have
 ; none: type, then AD&D's dice against a large target (count, sides, the bonus's change; count 0: the
 ; same dice on any size). By the AD&D weapon whose small and man-sized dice are the game's (the
 ; reasoning: DEVELOPMENT-RULES.md, Creature size, Wake of the Ravager's weapons). Ends with type 0.
 rav_large:
         db 35, 3, 6, 0          ; Crystal sword, two-handed 1d10: the two-handed sword's 3d6
+        db 38, 0, 0, 0          ; Darts 1d2: the same on any size
         db 39, 1, 8, 0          ; Double Spear 1d6: the spear's 1d8
         db 43, 1, 3, 0          ; Darts 1d4: 1d3 (the dart one die down)
         db 47, 0, 0, 0          ; Flameblade 1d4+4: the spell's, any size
@@ -11433,10 +11436,10 @@ rav_large:
 kind_of_type:
         db 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 1   ; types 0-16
         db 0, 14, 0, 0, 0, 0, 0, 12, 13, 0, 0, 0, 2, 0, 0, 0, 0   ; types 17-33
-        db 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 0, 0   ; types 34-50
-        db 7, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5   ; types 51-67
+        db 0, 17, 0, 3, 22, 19, 0, 0, 0, 22, 0, 0, 0, 1, 6, 0, 0   ; types 34-50
+        db 7, 11, 0, 0, 0, 0, 0, 0, 21, 0, 18, 0, 0, 0, 0, 0, 5   ; types 51-67
         db 0, 1, 0, 0, 3, 1, 5, 0, 0, 0, 0, 8, 10, 0, 0, 0, 0   ; types 68-84
-        db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 0, 0   ; types 85-101
+        db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 20, 17   ; types 85-101
         ; the mod's types (OBJEX2.GFF's 102-134, SL's 115-147: ravager.mod_type), SL's kinds
         ; (specialize.KIND_OF_TYPE): its short swords, axes, great axes, picks, polearms, cahulaks
         db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
@@ -11458,6 +11461,10 @@ large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, siz
              db 0, 0, 0             ; bow: the same
              db 0, 0, 0             ; sling: the same
              db 0, 0, 0             ; staff sling: the same
+             db 3, 6, 0             ; two-handed sword: 3d6 (the sequel's own weapons: RAV_LARGE first)
+             db 1, 12, 0            ; lotulis: 1d12
+             db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; double spear, trikal, javelin: the same
+             db 1, 2, 0             ; darts: 1d2
 large_bits times LARGE_MOST / 8 + 1 db 0
 large_hits   dw 0               ; (hits on large targets, for a look in play)
 spared_count dw 0               ; (Hold or Charm Person spared so)

@@ -32,7 +32,8 @@ CHARACTERS = [((9,), (1,), 2), ((9,), (5,), 2), ((9,), (9,), 2), ((9,), (13,), 2
               ((16,), (3,), 1), ((13,), (8,), 2), ((9, 11), (3, 2), 4), ((17, 9), (2, 3), 6),
               ((11,), (6,), 2), ((17, 9), (3, 5), 1), ((17, 9), (6, 5), 1), ((15, 7), (12, 14), 8)]
 SPECS = ([], [K("long sword")], [K("bow"), K("short sword")], [K("polearm"), K("dagger"), K("sling")],
-         [K("chatkcha"), K("gythka"), K("mace"), K("club")])
+         [K("chatkcha"), K("gythka"), K("mace"), K("club")], [K("lotulis"), K("javelin")],
+         [K("two-handed sword"), K("darts"), K("trikal"), K("double spear")])
 
 
 def wotr_sheet(classes, levels, race, kinds) -> bytes:
@@ -51,6 +52,7 @@ class SpecializeTests(unittest.TestCase):
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
         cls.sheets = [(c, l, race, kinds, wotr_sheet(c, l, race, kinds))
                       for c, l, race in CHARACTERS for kinds in SPECS]
+        cls.fighters = {kind: wotr_sheet((9,), (3,), 2, [K(kind)]) for kind in specialize.KINDS}
 
     def setUp(self):
         self.mu = Uc(UC_ARCH_X86, UC_MODE_16)
@@ -124,16 +126,38 @@ class SpecializeTests(unittest.TestCase):
                 got = self.run_routine("spec_get", bytes(sheet), esi=slot, eax=0x12340000)["eax"]
                 self.assertEqual((got >> 16, got & 0xFFFF), (0x1234, game.specs_of(raw)[0][slot]), (raw.hex(), slot))
 
-    def test_spec_get_folds_sl_kinds(self):
-        """A V3 sheet's kinds past the sequel's sixteen (SL's backported Ravager weapons, carried by the
-        party transfer) read as the kind the sequel counts that weapon as (FOLD_KINDS)."""
-        folded = {"two-handed sword": "long sword", "lotulis": "gythka", "double spear": "polearm",
-                  "trikal": "polearm", "javelin": "chatkcha", "darts": "chatkcha"}
-        for sl, sequel in folded.items():
+    def test_spec_get_keeps_sl_kinds(self):
+        """A V3 sheet's kinds past the first sixteen (SL's six from the sequel, carried by the party
+        transfer) read as themselves: the sequel knows all 22."""
+        for sl in specialize.KINDS[16:]:
             sheet = bytearray(ravager.SHEET_SIZE)
             sheet[0x42:0x46] = game.packed_specs((K(sl) + 1, K("bow") + 1), 0, 7)[:3] + b"\0"
             got = [self.run_routine("spec_get", bytes(sheet), esi=slot)["eax"] & 0xFFFF for slot in range(4)]
-            self.assertEqual(got, [K(sequel) + 1, K("bow") + 1, 0, 0], sl)
+            self.assertEqual(got, [K(sl) + 1, K("bow") + 1, 0, 0], sl)
+
+    def test_six_kinds(self):
+        """The sequel's own weapons of SL's six kinds from it: a fighter specialized in each is
+        specialized with them (SPEC_OF_SHEET), and not with the kind #181 folded it into."""
+        own = {"two-handed sword": (101, 35), "lotulis": (61,), "double spear": (39,), "trikal": (100,),
+               "javelin": (59,), "darts": (38, 43)}
+        old = {"two-handed sword": "long sword", "lotulis": "gythka", "double spear": "polearm",
+               "trikal": "polearm", "javelin": "chatkcha", "darts": "chatkcha"}
+        for kind, types in own.items():
+            spec, folded = self.fighters[kind], self.fighters[old[kind]]
+            for t in types:
+                self.assertEqual(specialize.spec_kind_of(t), K(kind), (kind, t))
+                got = self.run_routine("spec_of_sheet", spec, esi=t, edx=0xFF)["edx"] & 0xFF
+                self.assertEqual(got, specialize.SPECIAL, (kind, t))
+                got = self.run_routine("spec_of_sheet", folded, esi=t, edx=0xFF)["edx"] & 0xFF
+                self.assertEqual(got, specialize.PLAIN, (kind, t))
+
+    def test_effects_names(self):
+        """EF_LINES_OF's names (ef_kinds) are specialize.KINDS', all 22."""
+        at = self.sym["ef_kinds"]
+        for i, kind in enumerate(specialize.KINDS):
+            ptr = struct.unpack_from("<H", self.image, at + 2 * i)[0]
+            name = bytes(self.image[ptr:self.image.index(0, ptr)]).decode()
+            self.assertEqual(name, "  " + kind.upper())
 
     def test_next_die(self):
         for sides in range(1, 25):
