@@ -2,6 +2,14 @@
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
+## Detail beside the other races
+
+The plates pair the previous Mul at `eaaf23e` with the revised fitting in the same pose. The next columns show the same outfit on other playable figures, followed by a retail figure for its leather, linen or cloak. Each enlargement has a game-size copy directly beneath it. [Six singles](mul-detail-singles.png) · [Nine pairs](mul-detail-pairs.png) · [Three triples](mul-detail-triples.png)
+
+- In the Gladiator’s front step, a bronze stud catches the light on the diagonal strap. On the Fighter, the seam runs down the jerkin and the split leather tabs turn over the thigh. The smaller belt keepers on the multiclasses follow the angle of the hips.
+- In the Cleric’s profile step, the ivory lip sits above a brown hem and the warm folds pass behind the arm. The robe now averages 24 distinct outfit colours per pose, up from 16. The male half-elf Cleric averages 24 in the same comparison, counting pixels that differ from each figure’s cleaned body.
+- On the Druid, the green mantle and ochre wrap each have a lit fold with a shadow underneath it. In the Psionicist’s profile stride the rolled teal edge crosses the ribs and tucks into the waist. On the Thief, compare the lit crown, the fold beneath the nape and the longer fold opening over the advancing leg.
+
 ## Multiclass fittings
 
 The male Mul has nine legal pairs and three triples. Each has 29 empty-slot poses. The two views below show how much of each garment is visible in front idle and as the figure steps away. [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
@@ -27,7 +35,7 @@ On the Thief, the lit rim follows the viewer’s left temple into the cowl. Unde
 
 [Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous and revised fittings, human class outfit and retail Thief share the same sand tile. The previous Druid is from `b8447ce` and the previous Thief from `d1c46a4`. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
 
-The Thief’s pixel review covered all 29 poses. In front idle and walk steps one and two, the dark slate seam now covers the copper fleck at the far ribs. In the rear and profile walks, the cowl meets the cloak across the nape. The copper visible lower down in profile steps two and three follows the exposed forearm. [Compare three seams at 8×](mul-thief-seam-details.png) · [Inspect every pose on the full sheet](mul-singles-poses.png).
+The Thief’s pixel review covered all 29 poses. In front idle and walk steps one and two, the dark slate seam now covers the copper fleck at the far ribs. In the rear and profile walks, the cowl meets the cloak across the nape. The copper visible lower down in profile steps two and three follows the exposed forearm. [Earlier seam correction at 8×](mul-thief-seam-details.png) · [Inspect every pose on the full sheet](mul-singles-poses.png).
 
 ## Mantle attachment and clipping
 

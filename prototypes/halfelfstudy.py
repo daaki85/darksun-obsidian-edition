@@ -387,6 +387,9 @@ class Study:
             _, left, right = parts.shoulders
             center = (left + right) // 2
         height = len(body) - pad
+        shoulder_y = 7 if pose == 28 else parts.shoulders[0]
+        chest = set(frame.regions[co.CHEST])
+        vest = (17, 69, 188, 53, 54, 226, 55, 56)
         cape = dict(zip(RAMPS["leaf"], (208, 17, 69, 188, 53, 53, 54, 54, 55, 55, 56, 56, 57)))
         reed = (204, 205, 94, 95, 97, 168, 169, 170, 171)
         out = [row[:] for row in body]
@@ -402,6 +405,25 @@ class Study:
                     continue
                 if point in crossed:
                     continue
+                # His Ranger has a jerkin between the separate cloak panels.
+                # Follow that fitted surface beneath the short leaf cape. Its
+                # armholes and open neck already turn with the widened body.
+                cloth = source[py][px]
+                if (not female and skin is not None and cloth is not None and cloth != skin
+                        and point not in frame.head and upright <= waist
+                        and (point in chest or (upright >= shoulder_y
+                             and abs(x-center) <= 4 and linen[py][px] != skin))):
+                    r, g, b = self.game.palette[cloth]
+                    # The Ranger hide is very dark over the ribs. The linen
+                    # donor carries the light over that same turning shoulder.
+                    lining = linen[py][px]
+                    bounce = self.game.palette[lining][1] if lining is not None else g
+                    seam = x-center+round(.45*(waist-upright))
+                    tone = (r+2*g+b)//118 + bounce//60
+                    tone += 2*(seam == -1) - 2*(seam == 0)
+                    row[px] = vest[max(0, min(len(vest)-1, tone))]
+                    if upright == waist-1:
+                        row[px] = 168 if x == center-1 else 94 if tone > 3 else 205
                 # The wrapped skirt sits higher on the far hip. Use the
                 # registered robe folds down to the upper thigh only.
                 depth = upright - waist

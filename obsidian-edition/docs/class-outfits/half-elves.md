@@ -8,6 +8,12 @@ Both half-elves now have art proposals for all eight single classes in all 29 ma
 
 The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit reed edge and its brown shadow mark the overlapping pleat as he steps toward the viewer. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. A plum highlight follows the trailing fold of each Preserver’s mantle through the profile walk. The Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
 
+## Male Druid fitting
+
+Front idle showed a rectangular patch of bare torso between two green cloak edges. The short cape had inherited the Ranger’s outer folds while the fitted garment between them was missing. The man now wears a leaf-green vest underneath. Follow its diagonal overlap down to the ochre waist tie in the front walk, then watch the near forearm pass across it in profile and on the strike. The same fitting carries into his four Druid pairs and six Druid triples.
+
+[Compare front idle, front and profile steps, and the front strike](half-elf-druid-fitting.png) · [Watch all 29 poses beside the previous fitting, the half-elf woman and the human man](half-elf-druid-fitting.gif)
+
 ## Two-class outfits
 
 All 18 legal pairs are shown on the arena floor with empty equipment slots. Each loop shows the woman above the man at 2× and game size. The still sheets identify each of the 29 poses. Select a group to watch it in motion.

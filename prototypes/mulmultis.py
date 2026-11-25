@@ -41,6 +41,9 @@ def draw(game, pose, swatches):
     h, w = len(body), len(body[0])-2*fit.PAD
     hood = hood_pixels(pose)
     gx, gy, _, _ = fit.HIDE_POINTS[pose]
+    _, shoulder_left, shoulder_right = fit.ROBE_CUTS[pose][0]
+    inward = 1 if gx < (shoulder_left+shoulder_right)/2 else -1
+    profile_guard = pose in fit.PROFILE_HIDE
     wy, left, right = fit.ROBE_CUTS[pose][2]
     dx, dy = HIP_OFFSET.get(pose, (0, 0))
     hip = (left+right)/2+dx
@@ -71,6 +74,10 @@ def draw(game, pose, swatches):
                     if not (0 <= v < h and 0 <= u < len(out[v])):
                         continue
                     bone = rows["Fighter"][v][u]
+                    # Hide and bone share shadow colours. Transfer those
+                    # shadows only within the actual shoulder scale.
+                    if bone in fit.JERKIN and not fit.bone_surface(x, y, gx, gy, inward, profile_guard):
+                        continue
                     if (bone in fit.BONE and bone != body[v][u] and body[v][u] is not None
                             and not ("Thief" in base and (x, y) in hood)):
                         out[v][u] = bone
@@ -98,6 +105,16 @@ def draw(game, pose, swatches):
                 light = (.3*red+.55*green+.15*blue)/110
                 grain = swatches["slate"][(y-wy)%8][(x-left)%8]
                 level = 2.6+light+.65*grain+1.1*(depth == -1)-.7*tail-.15*across
+                # A bound edge on the teal wrap and two leather keepers
+                # follow the same sloping belt through the turn. Break their
+                # highlights where the parent cloth folds into shadow.
+                if wrap:
+                    level += .8*(depth == -1 and grain >= 0) - 1.15*(depth == 0)
+                    if tail and round(end) == 2:
+                        level += 1.4
+                else:
+                    keeper = round(knot) in (-3, 2) and depth in (-1, 0)
+                    level += 1.7*keeper - 1.3*(depth == 0 and not keeper)
                 out[v][u] = singles.shade(ramp, level)
                 if not wrap and round(knot) == 1 and depth == 0:
                     out[v][u] = 199

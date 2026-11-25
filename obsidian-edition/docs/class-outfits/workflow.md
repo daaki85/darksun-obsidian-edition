@@ -29,6 +29,8 @@ Use the clean body to mark where each garment touches the shoulder, ribs and hip
 
 When two leather outfits blend into the same skin tone in profile, line up their previous and revised versions with the finished human and retail Warrior. Trace the near shoulder into the armhole, and the belt into the flap over the leading thigh. Check the same landmarks again on paving. On the Mul, the borrowed human leather covered too little of the turning torso even though the face and silhouette checks passed. [Six-class fitting review](mul-fitting-details.png)
 
+When shortening a cloak borrowed from another figure, compare the unclothed torso, the donor outfit and the fitted result in front idle and through a crossing-arm pose. Trace the fabric between the outer folds down to the belt. On the male half-elf Druid, both edges moved correctly even though the middle of the garment was missing. [Half-elf Druid comparison](half-elf-druid-fitting.gif)
+
 If the defect starts on the clean body, correct the body first. If dressing it causes the defect, correct the garment, then replay every single and multiclass that inherits it. During equipment review repeat the difficult pose with the relevant slot empty, equipped and removed.
 
 ## Human figure review checklist

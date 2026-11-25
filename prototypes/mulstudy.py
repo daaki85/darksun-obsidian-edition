@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from PIL import Image, ImageDraw
 
 from elfreview import TERRAIN, dwarf, elf, label, loop
-from outfitdetail import RAMPS, reference_folds
+from outfitdetail import HALFTONES, RAMPS, reference_folds
 from wornreview import Atlas
 from dsloader import art, classoutfits as co
 
@@ -225,7 +225,7 @@ def cleric_robe(game, pose, body, protected, arm):
                         or (skin is not None and 0 <= px < width and arm.getpixel((px, py)))):
                     continue
                 relief = grain[(y-waist[0]) % 8][(x-waist[1]) % 8]
-                shade = 9.1 + .9*relief - 3.5*u + .8*sin(pi*u)
+                shade = 9.0 + .72*relief - 4.4*u + 1.2*sin(pi*u)
                 if y < waist[0]:
                     # A shallow back yoke and diagonal front overlap leave the
                     # neck open. In profile only the near lapel is visible.
@@ -233,14 +233,16 @@ def cleric_robe(game, pose, body, protected, arm):
                     if rear:
                         seam_y = shoulder[0] + 1 + round(2*sin(pi*u))
                         if y == seam_y:
-                            shade -= 2.4
+                            shade -= 3.8
+                        elif y == seam_y-1:
+                            shade += 1.6
                     else:
                         seam = .76 - .65*depth
                         distance = (u-seam)*(right-left)
                         if abs(distance) < .68:
-                            shade -= 3.3
+                            shade -= 4.8
                         elif .68 <= distance < 1.7:
-                            shade += 2.1
+                            shade += 3.2
                     shade += 1.5*(1-depth) - 1.3*exp(-.7*(y-waist[0]+1)**2)
                 else:
                     drop = (y-waist[0])/(hem[0]-waist[0])
@@ -255,15 +257,21 @@ def cleric_robe(game, pose, body, protected, arm):
                 if y == belt_y:
                     color = 94 if u < .55 else 90
                 else:
+                    # A turned linen hem has a dark underside and an ivory
+                    # lip. Its interrupted stitch rides over the moving knee.
                     if y == bottom:
-                        shade -= 4.8
+                        shade = min(shade-4.1, 2.2+.45*relief)
+                    elif y == bottom-2 and (x-waist[1])%3 == 1:
+                        shade -= 2.9
                     elif y == bottom-1:
-                        shade += 1.7*sin(pi*u)
+                        shade += 2.7*sin(pi*u)
                     if x == right:
-                        shade -= 3.8
+                        shade -= 5.0
                     if x == left:
                         shade -= 1.8
                     color = MUL_LINEN[max(0, min(len(MUL_LINEN)-1, round(shade)))]
+                    if (x-waist[1]+2*(y-waist[0]))%3 == 1:
+                        color = HALFTONES["linen"].get(color, color)
                 result[py][px+PAD] = color
     return result
 
@@ -285,10 +293,22 @@ HIDE_POINTS = (
 BONE = (88, 204, 205, 194, 206, 61, 199, 125, 62, 155)
 JERKIN = (208, 88, 204, 89, 90, 207, 91, 205, 92, 93, 94, 95, 96, 97, 98)
 BRONZE = (88, 89, 90, 94, 95, 168, 169, 170, 171)
+PROFILE_HIDE = {2, 11, 12, 13, 14, 15, 22, 23, 24}
 
 
 def material_color(ramp, level):
     return ramp[max(0, min(len(ramp)-1, round(level)))]
+
+
+def bone_surface(x, y, gx, gy, inward, profile):
+    """Identify the painted dome and inward bevel, in upright coordinates."""
+    dx, dy = x-gx, y-gy
+    if -2 <= dy <= 1 and abs(dx) <= (3 if profile else 2) and abs(dx)+abs(dy) <= (4 if profile else 3):
+        return "dome"
+    joint = dx*inward
+    if 0 <= dy <= 3 and 0 <= joint <= 4 and abs(joint-(1+dy*.65)) <= 1.1:
+        return "bevel"
+    return None
 
 
 def leather_outfits(game, pose, body, keep, arm):
@@ -296,7 +316,7 @@ def leather_outfits(game, pose, body, keep, arm):
     h, w = len(body), len(body[0])-2*PAD
     (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = ROBE_CUTS[pose]
     gx, gy, knee, hem = HIDE_POINTS[pose]
-    profile = pose in (2, 11, 12, 13, 14, 15, 22, 23, 24)
+    profile = pose in PROFILE_HIDE
     # The far end of the baldric is sewn into the opposite side of the
     # belt. The jerkin has a separate breast, side seam and overlapping tabs.
     anchor = wl+1 if gx > (sl+sr)/2 else wr-1
@@ -334,27 +354,28 @@ def leather_outfits(game, pose, body, keep, arm):
                     # cut edge beside the inset seam even in the side stride.
                     rim = x-lo
                     shade += 3.2*exp(-.9*(rim-.6)**2) - 1.8*exp(-(rim-2)**2)
-                    fighter[py][u] = material_color(JERKIN, shade-1.6)
+                    fighter[py][u] = material_color(JERKIN, shade-2.0+1.8*exp(-(rim-1)**2))
                     # Two short bindings attach the pauldron to the jerkin.
                     lacing = x - (gx+(strap-gx)*.75)
                     if y in (gy+2, gy+4) and abs(lacing) <= 1 and y < wy-1:
                         fighter[py][u] = 199 if lacing < .1 else 94
                 dist = x-strap
                 if abs(dist) <= (1.45 if profile else 1.85):
-                    glad[py][u] = material_color(hide, 4.8+.6*weave+relief+2.8*(dist < -.35)-2*(dist > .65))
+                    glad[py][u] = material_color(hide, 5.1+.5*weave+relief+3.2*(dist < -.35)-3.2*(dist > .65))
+                    if gy+2 <= y < wy-1 and -.95 <= dist < .05 and (y-gy)%4 == 2:
+                        glad[py][u] = 169  # Stud in the dark edge of the baldric.
             # The bevel of the bone scale continues inward from the
             # pauldron onto its leather backing. It ends at the armhole.
-            if skin is not None and gy <= y <= gy+3:
-                inward = 1 if gx < (sl+sr)/2 else -1
-                joint = (x-gx)*inward
-                ridge = 1 + (y-gy)*.65
-                if 0 <= joint <= 4 and abs(joint-ridge) <= 1.1:
-                    fighter[py][u] = material_color(BONE, 6.9+.5*weave-1.15*(y-gy)-1.3*(joint>ridge))
+            inward = 1 if gx < (sl+sr)/2 else -1
+            surface = bone_surface(x, y, gx, gy, inward, profile) if skin is not None else None
+            if surface == "bevel":
+                outer = (x-gx)*inward > 1+(y-gy)*.65
+                fighter[py][u] = material_color(BONE, 6.9+.5*weave-1.15*(y-gy)-1.3*outer)
             # Each upper arm rolls out from beneath a short guard. Its
             # highlight follows the dome; a dark lower lip touches the strap.
             cx = abs(x-gx)
             gyoff = y-gy
-            if skin is not None and cx <= (3 if profile else 2) and -2 <= gyoff <= 1 and cx+abs(gyoff) <= (4 if profile else 3):
+            if surface == "dome":
                 dome = 7.0 - .9*cx - 1.1*gyoff + .35*weave
                 fighter[py][u] = material_color(BONE, dome-2.7*(gyoff == 1))
                 if gyoff == 1 and x > gx-1:
@@ -394,7 +415,7 @@ def leather_outfits(game, pose, body, keep, arm):
                 fighter[py][u] = 199 if x == anchor and y == wy-1 else belt
                 continue
             shade = 8.0+.85*weave-3.4*exp(-lap**2)+3.7*exp(-(lap+1.2)**2)
-            shade -= 2.7*(y == lower) + 2*(x == right)
+            shade -= 3.8*(y == lower) + 2.9*(x == right)
             # The lit ridge on the flap breaks the russet-on-copper edge.
             glad[py][u] = material_color(hide, shade+.9)
             if -.95 <= lap < .15 and y < lower:
@@ -404,6 +425,10 @@ def leather_outfits(game, pose, body, keep, arm):
             tab = x-(wl+.32*(wr-wl)+.35*(knee-anchor)*drop)
             if y < lower-1 or abs(tab) < 1.15:
                 fighter[py][u] = material_color(JERKIN, shade-2.7+2.0*cos(tab*1.3))
+                # Raised piping beside the split keeps the two dark leather
+                # tabs distinct from the calf when the far leg comes forward.
+                if .8 < tab < 1.9 and y > wy+1:
+                    fighter[py][u] = 97 if (y-wy)%3 else 205
                 if abs(tab) < .85 and y <= wy+2:
                     fighter[py][u] = 199 if y == wy+1 else 205
     # Return the two profile tabs over the thigh where their folds meet.

@@ -16,7 +16,7 @@ NEW = ("Druid", "Psionicist", "Thief")
 REAR = {1, 7, 8, 9, 10, 18, 19, 20, 25}
 PROFILE = {2, 11, 12, 13, 14, 15, 22, 23, 26}
 TEAL = (17, 69, 70, 71, 40, 72, 73)
-MOSS = (208, 69, 188, 53, 189, 54, 226, 55, 227)
+MOSS = (208, 69, 188, 53, 189, 54, 226, 55, 56, 57)
 # Trace the pleat over the leading thigh and both free corners on the retail
 # figure. A short mantle breaks above the hip; the slate fall clears the calf.
 # Coordinates are (near thigh x, y, mantle tip x, y, cloak tip x, y).
@@ -314,14 +314,14 @@ def draw(game, pose, swatches):
                     # Turn the free edge up over the advancing leg.
                     across_hip = (x-hip)/max(2, (wr-wl)/2)
                     lap = x-knee-.45*(knee_y-y)
-                    light_hide = 6.2+.47*grain-.73*abs(across_hip)-2.3*(0 <= lap < 1.4)
-                    light_hide += 2.4*(-1.35 <= lap < 0)
+                    light_hide = 6.3+.65*grain-.95*abs(across_hip)-3.1*(0 <= lap < 1.4)
+                    light_hide += 3.1*(-1.35 <= lap < 0)
                     if (x, y+1) not in ochre_flap:
-                        light_hide -= 1.8
+                        light_hide -= 3.2
                     out["Druid"][py][i] = shade(RAMPS["ochre"], light_hide)
                 if (x, y) in wrap_flap and y > wy:
                     diagonal = x-knee-.42*(knee_y-y)
-                    fold = 3.9+.36*grain+1.15*cos(diagonal*1.22)
+                    fold = 3.5+.39*grain+1.45*cos(diagonal*1.22)
                     if (x, y+1) not in wrap_flap:
                         fold -= 1.5
                     out["Psionicist"][py][i] = shade(TEAL, fold)
@@ -350,8 +350,14 @@ def draw(game, pose, swatches):
                     if y <= wy:
                         edge -= 2
                     if y >= edge and y <= wy:
+                        # The overlap has a narrow rolled lip with a shadow
+                        # underneath. Its diagonal follows the loaded shoulder.
                         if y == edge:
-                            teal += .7
+                            teal += 1.55
+                        elif y == edge+1:
+                            teal -= 1.35
+                        elif y > edge+2 and round(offset + .45*(y-ry)) == -1:
+                            teal += 1.1
                         out["Psionicist"][py][i] = shade(TEAL, teal)
                     if y == belt:
                         buckle = 96 if abs(x-knee) < 1 else 90
@@ -364,10 +370,10 @@ def draw(game, pose, swatches):
                     fall = max(0, y-shoulder_y)
                     fold = x-scapula-(hip-scapula)*min(1, fall/max(1, wy-shoulder_y))
                     ridge = cos(1.18*fold+.35*cos(fall*.5))
-                    level = 4.6+1.20*ridge+.33*grain
+                    level = 4.7+2.05*ridge+.52*grain
                     level += .80*light*max(0, 1-fall/6)
                     if (x, y+1) not in mantle:
-                        level -= 2.5
+                        level -= 3.25
                     elif (x-1, y) not in mantle:
                         level += .65
                     elif (x+1, y) not in mantle:
@@ -389,7 +395,7 @@ def draw(game, pose, swatches):
                         ridge = (sl+sr)*.5 + (cx+1-(sl+sr)*.5)*along
                         dist = x-ridge
                         fold_width = max(3, abs(wr-wl)*.64)
-                        fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .045*grain
+                        fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .05*grain
                         if pose in REAR:
                             seam = dist+2.2-.6*cos(along*4)
                             fall += .20*max(0, 1-abs(seam+1.3)) - .32*max(0, 1-abs(seam)/1.4)
@@ -397,10 +403,15 @@ def draw(game, pose, swatches):
                                 fall += .06*(1-abs(offset)/(wr-wl+1))
                         fold = dist*.95 + .85*cos(along*3.4)
                         fall += .13*cos(fold) - .08 + .021*grain
+                        # A turned lip and its underfold move together from
+                        # nape to hem; keep the lit side narrower than the
+                        # hollow, as on the retail Thief's back.
+                        crease = dist + .31*fold_width - 1.4*along
+                        fall += .35*max(0, 1-abs(crease+1.2)) - .30*max(0, 1-abs(crease)/1.3)
                         if y < ry+1 and skin is not None:
                             fall += .06*light
                         if (x+1, y) not in cloak or (x, y+1) not in cloak:
-                            fall -= .20
+                            fall -= .28
                         out["Thief"][py][i] = shade(SLATE, fall*(len(SLATE)-1))
             if (x, y) in hood:
                 # Leave the eye, ear, cheek and jaw exactly as drawn on the
@@ -414,7 +425,9 @@ def draw(game, pose, swatches):
                 if pose in REAR:
                     # Shade the crown around the skull; break the highlight
                     # where it rolls down into the overhanging back panel.
-                    light += 1.5*cos(5.5*across+.42*k)-2.1*across
+                    crown = across - .31 + .07*k
+                    light += 2.5*cos(5.5*across+.42*k)-2.1*across
+                    light += 3.0*max(0, 1-abs(crown)/.19)
                 if k >= 3:
                     # The cowl turns onto the shoulder outside the crown's
                     # width. Shade the roll locally where it meets the cape.
@@ -423,7 +436,7 @@ def draw(game, pose, swatches):
                         # Turn the hanging cowl over the upper back. The
                         # shadow and adjacent lit seam travel with its tip.
                         turn = y - (sy+2.5-.42*abs(x-hx-3))
-                        light += 2.1*max(0, 1-abs(turn+1)) - 4.5*max(0, 1-abs(turn)/1.6)
+                        light += 4.0*max(0, 1-abs(turn+1)) - 4.5*max(0, 1-abs(turn)/1.6)
                 if (x, y+1) not in hood or (x+1, y) not in hood:
                     light -= 1.8
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)
