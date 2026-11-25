@@ -107,6 +107,7 @@ class SellDoneTests(unittest.TestCase):
         patch = mock.patch("dsloader.dicelog.DiceLog._sell_pass", autospec=True, side_effect=self.pass_)
         patch.start()
         self.addCleanup(patch.stop)
+        self.addCleanup(ravlog.restore_layout)  # (RavDiceLog() applies the sequel's layout: SL's back for the rest)
 
     def pass_(self, log):
         log._sell_seen = self.seen
