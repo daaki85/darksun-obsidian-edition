@@ -247,8 +247,8 @@ the one place for the sizes; the sections after them name the symbols only.
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 69,232
-bytes: the 32-byte header, the segment's image of 64,560 and the tail's 4,640 (`TAIL_BYTES`). The
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 69,248
+bytes: the 32-byte header, the segment's image of 64,576 and the tail's 4,640 (`TAIL_BYTES`). The
 always-on switches' off paths, taken out on 2026-11-19 (#115), freed 1,168 bytes of the segment ([the
 switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)); the backstab fix's `REAR_FRESH`
 (#116) took 48 back; F10 left alone for a pinned member (`F10_PIN`, 2026-11-20) 32 and two
