@@ -49,10 +49,10 @@ VEC_DOUBLE equ 0xF0   ; PROBE_DOUBLE
 VEC_GRACE_CAST equ 0xED    ; PROBE_GRACE_CAST
 VEC_GRACE_EFFECT equ 0xEE  ; PROBE_GRACE_EFFECT
 VEC_GRACE_ABILITY equ 0xEF ; PROBE_GRACE_ABILITY
-VEC_NAMES_SIZE equ 0xEC    ; PROBE_NAMES_SIZE
+VEC_NAMES_SIZE equ 0xEC    ; (free: PROBE_NAMES_SIZE until the seventh memory pass)
 VEC_NAMES_FILL equ 0xEB    ; PROBE_NAMES_FILL
 VEC_STEALTH equ 0xEA       ; PROBE_STEALTH
-VEC_TYPES_SIZE equ 0xE9    ; PROBE_TYPES_SIZE
+VEC_TYPES_SIZE equ 0xE9    ; (free: PROBE_TYPES_SIZE until the seventh memory pass)
 VEC_TYPES_FILL equ 0xE8    ; PROBE_TYPES_FILL
 VEC_LEVEL equ 0xE7         ; PROBE_LEVEL
 VEC_HD_ROLL equ 0xE6       ; PROBE_HD_ROLL
@@ -276,17 +276,16 @@ swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialog
 swap_seq   dw 0                 ; +192 counted up when it has been
 swap_off   dw swap_match        ; +194 offset of SWAP_MATCH (SWAP_SIZE bytes, NUL-terminated),
                                 ;      then SWAP_TEXT (TSIZE_SWAP bytes)
-names_off  dw extra_names       ; +196 offset of EXTRA_NAMES in the tail (TAIL_SEG): the names past
-                                ;      the game's own (NAMES_EXTRA, each NUL-terminated), copied into
-                                ;      the game's table (NAME_SIZE each) each time it loads
-names_count dw NAMES_EXTRA      ; +198 how many
+names_off  dw 0                 ; +196 (unused: the names past the game's own are in the Loader's copy
+                                ;      of GPLDATA since the seventh memory pass, dsloader/itemtables.py)
+names_count dw NAMES_EXTRA      ; +198 how many names there are past the game's own
 names_ptr  dd 0                 ; +200 the game's name table, as last loaded with them (0: not yet)
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and
                                 ;      unheard (RULE_STEALTH): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared)
-types_off  dw extra_types       ; +208 offset of EXTRA_TYPES in the tail: item types past the game's own
-                                ;      (TYPES_EXTRA of TYPE_SIZE bytes), copied in as it loads them
-types_count dw TYPES_EXTRA      ; +210 how many
+types_off  dw 0                 ; +208 (unused: the item types past the game's own are in the Loader's
+                                ;      copy of GPLDATA, as the names)
+types_count dw TYPES_EXTRA      ; +210 how many item types there are past the game's own
 types_first dw 0                ; +212 the number the first of them gets (the game's own count)
 types_ptr  dd 0                 ; +214 the game's item type table, as last loaded with them
 objects_on dw 0                 ; +218 1 once the game has opened the Loader's copy of
@@ -10859,13 +10858,9 @@ probe_wp_class:
 ; in with no click to have the panel follow it: the disciplines' window is opened again here if
 ; it isn't the one for the class now (KITS), as after a click on a class.
 probe_race_panel:
-        pop word [cs:rp_ip]
-        pop word [cs:rp_cs]
-        pop word [cs:rp_fl]
-        add sp, 6
-        push word [cs:rp_fl]
-        push word [cs:rp_cs]
-        push word [cs:rp_ip]
+        call frame_up                   ; (the replaced "add sp,6": the frame three words up)
+        call frame_up
+        call frame_up
         sti
         pushad
         push es
@@ -10887,10 +10882,6 @@ probe_race_panel:
 .done:  pop es
         popad
         iret
-
-rp_ip   dw 0
-rp_cs   dw 0
-rp_fl   dw 0
 
 probe_wp_disc_click:
         push bp
@@ -23252,35 +23243,23 @@ ns_fist:
 .test:  cmp word [bp - 0x0C], 0
         jmp ns_flags_iret
 
-; NAMES: the game's name table (GPLDATA's NAME chunk: 322 names of 25 bytes, which items name
-; by number) gets NAMES_EXTRA more, for the Loader's own items (the Ring of Protection, the
-; Thieves' Tools...). Where the game reserves memory for the chunk (as it starts, and as a game
-; is loaded) PROBE_NAMES_SIZE makes the room for them; once it has read the chunk in,
-; PROBE_NAMES_FILL copies EXTRA_NAMES after the game's own. Nothing in the game limits the
-; numbers to its own 322.
+; NAMES and TYPES: the game's item names (GPLDATA's NAME chunk: 322 of 25 bytes) and item types
+; (its IT1R chunk: 115 of 20 bytes, read in just before the names), which items name by number,
+; have the Loader's own after the game's (NAMES_EXTRA names, TYPES_EXTRA types) in the Loader's
+; copy of GPLDATA (dsloader/itemtables.py, with a few of the game's own types mended there: Grey's
+; Scale's AC, the Great Axe +3's metal, the pick's dice, the Quicksilver Glove's leather, the
+; daggers for air clerics). The game reserves as much memory as a chunk is long, and nothing in it
+; limits the numbers to its own. (Until the seventh memory pass DSCLOG kept the lists and copied
+; them in as the game read the chunks.) The probes below note where the tables are, and that the
+; ones the game read have the Loader's: with the game's own file they haven't.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-; (NAMES_EXTRA: the names in EXTRA_NAMES, counted there)
+NAMES_EXTRA  equ 56             ; (the Loader's names.EXTRA: test_header_offsets checks)
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
-; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
-; the game reserves memory for the NAME chunk, its size the dword at [BP-4]: adds the room,
-; then does the push (under the interrupt's return frame).
-probe_names_size:
-        add word [bp-4], NAMES_EXTRA * NAME_SIZE
-        adc word [bp-2], 0
-        call frame_down                 ; (the "push dword 1", under the frame)
-        call frame_down
-        push bp
-        mov bp, sp
-        mov dword [bp + 8], 1
-        pop bp
-        iret
-
 ; PROBE_NAMES_FILL: INT VEC_NAMES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the call
-; that reads the NAME chunk into the table (AX 0: read). Does the add, then, if it was read,
-; copies EXTRA_NAMES after the game's names and notes the table in NAMES_PTR.
+; that reads the NAME chunk into the table (AX 0: read; its length the dword at [BP-4]). Does the
+; add, then, if it was read with the Loader's names, notes the table in NAMES_PTR.
 probe_names_fill:
         call frame_up                   ; (the "add sp,0Ch": the frame six words up)
         call frame_up
@@ -23290,43 +23269,17 @@ probe_names_fill:
         call frame_up
         or ax, ax
         jnz .out
-        push ax
-        push cx
-        push dx
-        push si
+        cmp dword [bp-4], (NAMES_OWN + NAMES_EXTRA) * NAME_SIZE
+        jb .out
         push di
-        push ds
         push es
         les di, [NAMES_PTR]
         mov [cs:names_ptr], di
         mov [cs:names_ptr+2], es
-        add di, NAMES_OWN * NAME_SIZE
-        mov ds, [cs:tail_seg]           ; (EXTRA_NAMES: the tail's)
-        mov si, extra_names
-        mov dx, NAMES_EXTRA
-        cld
-.name:  mov cx, NAME_SIZE
-.char:  lodsb                           ; (EXTRA_NAMES' each up to its NUL ...
-        stosb
-        dec cx
-        or al, al
-        jnz .char
-        rep stosb                       ;   ... then the rest of the game's 25, blank)
-        dec dx
-        jnz .name
         pop es
-        pop ds
         pop di
-        pop si
-        pop dx
-        pop cx
-        pop ax
 .out:   iret
 
-; TYPES: the game's item types (GPLDATA's IT1R chunk, 20 bytes each, which items name by
-; number), read in just before the names, get TYPES_EXTRA more in the same way: for the
-; companion's own items that no type of the game's fits (a metal short sword, a cloak of
-; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
 TYPES_EXTRA equ 44
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
@@ -23337,39 +23290,14 @@ GIRDLE_URNST equ 28             ;   Amulet of Magic Resistance: dsloader/worldge
 MR_AMULET   equ 29              ;   AMULET_MR)
 ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
-GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
-GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
-PICK_TYPE   equ 112             ; (PROBE_TYPES_FILL: the game's pick, Deepbiter's and the stone picks')
-GREAT_AXE   equ 2               ; the game's Great Axe +3's type: no material (40h, a ring's), made metal
-METAL_MAT   equ 4               ; a type's +8 for metal (the material's low nibble, as the metal short sword's)
-QUICKSILVER equ 113             ; the Quicksilver Glove's type: no material (40h), which the game's to-hit
-                                ;   and damage (5EB49h, 5EBC1h) read as wood (-3, -2): made leather (LEATHER),
-                                ;   as the Chameleon Gloves' (the user's decision, 2026-11-09)
-AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): the air cleric's bit
 
-; PROBE_TYPES_SIZE: INT VEC_TYPES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) before the
-; game reserves memory for the IT1R chunk, its size the dword at [BP-4]: adds the room.
-probe_types_size:
-        add word [bp-4], TYPES_EXTRA * TYPE_SIZE
-        adc word [bp-2], 0
-        call frame_down                 ; (the "push dword 1", under the frame)
-        call frame_down
-        push bp
-        mov bp, sp
-        mov dword [bp + 8], 1
-        pop bp
-        iret
+TYPES_OWN   equ 115             ; (the game's own: the number the Loader's first gets, TYPES_FIRST)
 
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
-; call that reads the chunk in (AX 0: read). Does the add, then, if it was read, copies
-; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where;
-; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; makes the Great
-; Axe +3's type metal (the game gave it none, so its name showed none; its icon's head is the
-; metal axe's grey and teal, its weight the metal great axe's 70); makes the Quicksilver Glove's
-; type leather (no material, which the game's to-hit and damage took for wood); and lets air
-; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
-; are daggers and missile and thrown ones); and the staff sling's dice as the stinkpots' rule has
-; them (STINK_SIDES, again at each pass of the main loop, the rule switched or not).
+; call that reads the chunk in (AX 0: read; its length the dword at [BP-4]). Does the add, then,
+; if it was read, notes where (TYPES_PTR) and sets the staff sling's dice as the stinkpots' rule
+; has them (STINK_SIDES, again at each pass of the main loop, the rule switched or not); and, with
+; the Loader's types in it, TYPES_FIRST the number of their first (else 0: none).
 probe_types_fill:
         call frame_up                   ; (the "add sp,0Ch": the frame six words up)
         call frame_up
@@ -23379,78 +23307,20 @@ probe_types_fill:
         call frame_up
         or ax, ax
         jnz .out
-        push ax
-        push cx
-        push dx
-        push si
         push di
-        push ds
         push es
         les di, [TYPES_PTR]
         mov [cs:types_ptr], di
         mov [cs:types_ptr+2], es
         call stink_sides                ; (the staff sling's dice as the stinkpots' rule has them)
-        mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
-        mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
-        mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
-        mov byte [es:di+PICK_TYPE*TYPE_SIZE+0x0C], 6 ; (the footman's pick's 1d6+1, Skills & Powers: was 1d4+1)
-        mov byte [es:di+QUICKSILVER*TYPE_SIZE+8], LEATHER
-        or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
-        or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
-        or byte [es:di+84*TYPE_SIZE+0x10], AIR_CLERIC
-        or byte [es:di+94*TYPE_SIZE+0x10], AIR_CLERIC
-        mov ax, [bp-4]
-        sub ax, TYPES_EXTRA * TYPE_SIZE
-        add di, ax              ; after the game's own
-        xor dx, dx
-        mov cx, TYPE_SIZE
-        div cx
-        mov [cs:types_first], ax
-        mov ds, [cs:tail_seg]           ; (EXTRA_TYPES: the tail's, packed: XTYPE)
-        mov si, extra_types
-        cld
-        push bx
-        mov bx, di                      ; (the first of them, in the game's table)
-        mov dl, TYPES_EXTRA
-.type:  lodsb
-        mov cx, TYPE_SIZE
-        cmp al, 0xFF
-        je .bytes                       ; (FFh: its 20 bytes)
-        push si                         ; (else the earlier one it is like, copied...
-        push ds
-        push es
-        pop ds
-        mov ah, TYPE_SIZE
-        mul ah
-        add ax, bx
-        xchg si, ax
-        rep movsb
-        pop ds
-        pop si
-        lodsb                           ; ... then the bytes that differ: place, value)
-        mov cl, al
-        jcxz .next
-.byte:  lodsw
-        push bx
-        movzx bx, al
-        mov [es:di + bx - TYPE_SIZE], ah
-        pop bx
-        loop .byte
-        jmp .next
-.bytes: rep movsb
-.next:  dec dl
-        jnz .type
-        pop bx
+        xor di, di
+        cmp dword [bp-4], (TYPES_OWN + TYPES_EXTRA) * TYPE_SIZE
+        jb .first
+        mov di, TYPES_OWN
+.first: mov [cs:types_first], di
         pop es
-        pop ds
         pop di
-        pop si
-        pop dx
-        pop cx
-        pop ax
 .out:   iret
-; (EXTRA_TYPES' bytes: the tail's)
-; (EXTRA_NAMES: the tail's)
 
 ; LOCK_SITE: "mov [bp-2],ax" (803D3h; 3 bytes: the INT and the site's number) in the game's thief
 ; skill check (803B8h(character [BP+6], skill [BP+8], bonus [BP+0Ch]): a d100 under [BP-2] succeeds).
@@ -29375,10 +29245,8 @@ all_vectors:
         vector VEC_GRACE_CAST, probe_grace_cast
         vector VEC_GRACE_EFFECT, probe_grace_effect
         vector VEC_GRACE_ABILITY, probe_grace_ability
-        vector VEC_NAMES_SIZE, probe_names_size
         vector VEC_NAMES_FILL, probe_names_fill
         vector VEC_STEALTH, probe_stealth
-        vector VEC_TYPES_SIZE, probe_types_size
         vector VEC_TYPES_FILL, probe_types_fill
         vector VEC_LEVEL, probe_level
         vector VEC_HD_ROLL, probe_hd_roll
@@ -29513,262 +29381,10 @@ kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
 ; offset here in their header field.
 section tail follows=image vstart=0 align=16
 tail_start:
-; XTYPE: one of EXTRA_TYPES, its 20 bytes, packed (memory pass 6): the earlier type of them it
-; differs least from, if in fewer than 10 bytes, then the number of bytes that differ and each's
-; place and value; otherwise FFh and the 20 bytes. PROBE_TYPES_FILL unpacks them into the game's
-; table, each after the last.
-%assign XT_N 0
-%macro xtype 20
-  %assign %%k 0
-  %rep 20
-    %assign XT_%[XT_N]_%[%%k] %1
-    %rotate 1
-    %assign %%k %%k + 1
-  %endrep
-  %assign %%best -1
-  %assign %%bestn 10
-  %assign %%j 0
-  %rep XT_N
-    %assign %%n 0
-    %assign %%k 0
-    %rep 20
-      %if XT_%[%%j]_%[%%k] != XT_%[XT_N]_%[%%k]
-        %assign %%n %%n + 1
-      %endif
-      %assign %%k %%k + 1
-    %endrep
-    %if %%n < %%bestn
-      %assign %%bestn %%n
-      %assign %%best %%j
-    %endif
-    %assign %%j %%j + 1
-  %endrep
-  %if %%best < 0
-        db 0xFF
-    %assign %%k 0
-    %rep 20
-        db XT_%[XT_N]_%[%%k]
-      %assign %%k %%k + 1
-    %endrep
-  %else
-        db %%best, %%bestn
-    %assign %%k 0
-    %rep 20
-      %if XT_%[%%best]_%[%%k] != XT_%[XT_N]_%[%%k]
-        db %%k, XT_%[XT_N]_%[%%k]
-      %endif
-      %assign %%k %%k + 1
-    %endrep
-  %endif
-  %assign XT_N XT_N + 1
-%endmacro
-; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
-; dsloader/npcitems.py), the rest unused (XTYPE: each packed)
-extra_types:
-        ; a metal short sword: the metal long sword's type (63), 1d6
-        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
-        ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
-        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
-        ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
-        xtype 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
-        ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
-        ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
-        xtype 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
-        ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
-        ; obsidian one: light enough for the off hand
-        xtype 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
-        ; classes and psionicists
-        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
-        xtype 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
-        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
-        ; arm armour's slot), their plus counting for AC; not armour to anything else here
-        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
-        ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
-        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
-        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; the Mace's (20)
-        xtype 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; the Great Axe's (2)
-        xtype 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
-        ; the pick's (112), its 1d6+1 the footman's pick's (Player's Option: Skills & Powers), as
-        ; PROBE_TYPES_FILL makes the game's
-        xtype 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
-        ; the Polearm's (19)
-        xtype 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
-        ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
-        ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        xtype 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
-        ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
-        xtype 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
-        xtype 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        xtype 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
-        ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
-        ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
-        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
-        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
-        ; fire and water clerics not); the type its own, as it was made when no other dagger was
-        ; an air cleric's
-        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
-        ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
-        ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
-        xtype 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
-        xtype 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-        ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
-        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
-        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
-        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
-        ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
-        ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
-        ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
-        ; druids (+10h: 190h)
-        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
-        ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
-        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
-        ; 126Fh, no thieves); the game has no metal shield
-        xtype 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
-        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
-        ; no material shown (+8: 40h), for every class
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; the Boots of Speed (SPEED_BOOTS: dsloader/worldgear.py): the game's Boots' (68), anyone's
-        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; metal cahulaks (METAL_CAHULAKS: dsloader/champions.py's mul): the game's Cahulaks' (21), of
-        ; metal (+8: 4)
-        xtype 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
-        ; obsidian cahulaks (OBSIDIAN_CAHULAKS: an earth or fire cleric-warrior's start, weaponchoice.py;
-        ; air clerics may use them as any cahulaks, restrict.py):
-        ; the game's Cahulaks' (21), of obsidian (+8: 3), the fire cleric's bit added (+10h: 4)
-        xtype 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
-        ; Wake of the Ravager's weapon kinds the game has none of (dsloader/game.py's RAVAGER_TYPES:
-        ; each the sequel's own type in a party carried across). The dice and weights are the Dark Sun
-        ; weapons guide's where it has them, else AD&D's.
-        ; a two-handed sword: obsidian (+8: 3), 1d10 slashing, two-handed (+0Fh: 40h), 15 lb (+4:
-        ; 150), for the obsidian great axe's classes (+10h: 166Eh)
-        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-        ; a lotulis: stone (+8: 2), 1d10 piercing, slashing and bludgeoning (+2: 38h), two-handed,
-        ; 10 lb, for the stone pick's classes but psionicists (+10h: 167Ah)
-        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x02, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
-        ; a double spear (double-bladed): wood spared its penalty (+8: 80h, as the quarterstaff),
-        ; 1d8 piercing, two-handed, 6 lb, for gladiators (+10h: 40h, as the sequel's)
-        xtype 0x01, 0x00, 0x20, 0x00, 0x3C, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
-        ; a trikal: wood spared its penalty, 1d10 slashing and bludgeoning (+2: 18h), two-handed,
-        ; 8 lb, for gladiators
-        xtype 0x01, 0x00, 0x18, 0x00, 0x50, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
-        ; a javelin: thrown from the missile slot as the chatkcha (+0: 12h; +9: 0Ch; never used
-        ; up), obsidian spared its penalty (+8: 83h, as the chatkcha), range 6 (+0Ah), one a round
-        ; (+0Bh: 2 halves), 1d6 piercing, 2 lb, for the obsidian weapons' classes but thieves, and air
-        ; clerics too, a thrown weapon (+10h: 127Fh; the user's, 2026-11-25)
-        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7F, 0x12, 0x00, 0x00
-        ; darts (a set): thrown as the javelin, wood spared its penalty, range 4, two a round (+0Bh:
-        ; 4 halves), 1d3 piercing, half a pound, for the dagger's classes and water clerics (wood)
-        ; (+10h: 1FFBh; preservers and psionicists too; water clerics the user's, 2026-11-25)
-        xtype 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04, 0x03, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
-        ; metal ones of three (the user's, 2026-11-25): the two-handed sword, the lotulis and the
-        ; javelin as above, of metal (+8: 4)
-        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
-        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x04, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7F, 0x12, 0x00, 0x00
-        ; an obsidian lotulis, for fire clerics (the user's, 2026-11-25): the lotulis of obsidian (+8:
-        ; 3), the fire cleric's bit added (+10h: 167Eh)
-        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7E, 0x16, 0x00, 0x02
-        ; a bone great sword, for water clerics (the user's, 2026-11-25): the two-handed sword of
-        ; bone (+8: 1), its classes (water clerics among them)
-        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-extra_types_end:
-        times -(XT_N != TYPES_EXTRA) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
 save_text  times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1888)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
-; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
-; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE), and
-; counted: NAMES_EXTRA is how many (names.EXTRA the Loader's, which test_names checks)
-%assign NAMES_LISTED 0
-%macro xname 1
-        db %1, 0
-        times -(%strlen(%1) >= NAME_KEPT) db 0 ; (a negative count: 15 letters at most)
-%assign NAMES_LISTED NAMES_LISTED + 1
-%endmacro
-extra_names:
-        xname "Ring/Protection"
-        xname "Thieves' Tools"
-        xname "Short Sword"             ; (Kurzak's, of type TYPES' first)
-        xname "Cloak/Protectn"          ; (Pehtucl's, the game's way of shortening)
-        xname "Ring/Protection"         ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        xname "Shadowseeker"            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        xname "Kreenfang"               ; (the arena's Bone Gythka made +1)
-        xname "Bracers/Defns"           ; (bracers of defense, short enough for their plus: BRACERS,
-                                        ;   dsloader/worldgear.py)
-        xname "Gutterknot"              ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        xname "Deepbiter"               ; a stone pick +1,
-        xname "Windlash"                ; a staff sling +1,
-        xname "Greenbright"             ; a metal short sword +2)
-        xname "Arrowbane"               ; (the circlet and the crown of dsloader/worldgear.py)
-        xname "Sunking Crown"
-        xname "Warden's Chest"          ; (the Warden's Plate of dsloader/worldgear.py)
-        xname "Warden's Arms"
-        xname "Warden's Legs"
-        xname "Warden's Helm"
-        xname "Cloak/Elvenkind"         ; (the Cloak and Boots of Elvenkind)
-        xname "Boots/Elvenkind"
-        xname "Searing Blade"           ; (an obsidian short sword +2, Focus Heat on what it hits)
-        xname "Tome/Understand"         ; (the Tome of Understanding: dsloader/tome.py)
-        xname "Inixhide"                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        xname "Drakejaw"                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        xname "Glasshewer"              ; an obsidian axe +2,
-        xname "Headsman"                ; a metal great axe +2)
-        xname "Galefang"                ; (more magic weapons of dsloader/worldgear.py: an air
-                                        ; cleric's dagger +2,
-        xname "Mindshard"               ; an obsidian short sword +1,
-        xname "Stillwater"              ; a bone short sword +1,
-        xname "Linebreaker"             ; a metal polearm +2,
-        xname "Thornwall"               ; a bone polearm +1)
-        xname "Ashen Robe"              ; (the robes: dsloader/robes.py)
-        xname "Veiled Robe"
-        xname "Gutterward"              ; (the magic shields of dsloader/worldgear.py: a wooden
-                                        ; shield +1,
-        xname "Ironbulwark"             ; a metal shield +3)
-        xname "Hayneedle"               ; (the weapons for the kits with too few, dsloader/
-                                        ; worldgear.py: a bone dagger +1,
-        xname "Nightsliver"             ; an obsidian dagger +2,
-        xname "Dunesong"                ; a bow +1,
-        xname "Skycutter"               ; a chatkcha +2)
-        xname "Girdle/Back Def"         ; (the girdles and the amulet of
-                                        ; dsloader/worldgear.py: 15 letters at most, as the
-        xname "Girdle of Urnst"         ; game's own)
-        xname "Amulet/MagicRes"
-        xname "Burning Arrows"          ; (the Spellarcher's spell arrows, dsloader/
-                                        ; spellarrows.py: ARROW_NAME on)
-        xname "Chill Arrows"
-        xname "Shocking Arrows"
-        xname "Vampiric Arrows"
-        xname "Boots of Speed"          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
-        xname "Emberlash"               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
-                                        ; cahulaks +1,
-        xname "Ironwhirl"               ; a metal cahulaks +2)
-        xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
-        xname "Great Sword"             ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
-        xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last six)
-        xname "Double Spear"
-        xname "Trikal"
-        xname "Javelin"
-        xname "Darts"
-NAMES_EXTRA  equ NAMES_LISTED           ; (the names above, counted: the room the game's table gets)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
         align 16, db 0

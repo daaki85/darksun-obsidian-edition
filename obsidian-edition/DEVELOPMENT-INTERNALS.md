@@ -247,8 +247,8 @@ the one place for the sizes; the sections after them name the symbols only.
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,320
-bytes: the 32-byte header, the segment's image of 64,608 and the tail's 5,680 (`TAIL_BYTES`). The
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 69,248
+bytes: the 32-byte header, the segment's image of 64,576 and the tail's 4,640 (`TAIL_BYTES`). The
 always-on switches' off paths, taken out on 2026-11-19 (#115), freed 1,168 bytes of the segment ([the
 switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)); the backstab fix's `REAR_FRESH`
 (#116) took 48 back; F10 left alone for a pinned member (`F10_PIN`, 2026-11-20) 32 and two
@@ -265,15 +265,20 @@ upper memory (69 paragraphs) and 688 of the segment: `GAME_FAR`, `FRAME_UP` and 
 `OVR_FRAME` (below) and the extra item types packed (`XTYPE`, 368 bytes of the tail). The Ravager
 weapons' follow-ups (#154) took 2 paragraphs; their metal and magic ones (2026-11-25: three item
 types, eleven tall icons for the item box, eight more region files opened from the copies) 10 more.
+The seventh memory pass (2026-11-25) gave back 81 paragraphs (1,296 bytes) of upper memory and 240
+bytes of the segment: the Loader's item types and names, and the mends to the game's own types, went
+into the Loader's copy of GPLDATA (`dsloader/itemtables.py`), so DSCLOG lost `EXTRA_TYPES`,
+`EXTRA_NAMES`, the two size probes and the copying (the fill probes only note the tables now), and
+`PROBE_RACE_PANEL` drops its words with `FRAME_UP`.
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,856 + `AFTER_INSTALL` 992) | 64,848 bytes | 65,536 | 688 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,616 + `AFTER_INSTALL` 992) | 64,608 bytes | 65,536 | 928 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,503 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,679 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,125 paragraphs | 8,182 (`UMB_ROOM`) | 57 (912 bytes): the limit for new code and data, the segment's and the tail's alike |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,422 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,760 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,044 paragraphs | 8,182 (`UMB_ROOM`) | 138 (2,208 bytes): the limit for new code and data, the segment's and the tail's alike |
 | DSCLOG's PSP from 5Ch (the FCBs and the command line, of no use once it stays resident): `SQ_MAP` | 130 bytes | 164 (5Ch to FFh) | 34 bytes |
-| the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 56 names | 56 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
+| the Loader's item names and types: `NAMES_EXTRA` and `TYPES_EXTRA` (`names.EXTRA` and `len(npcitems.TYPES)`, the chunks of the Loader's copy of GPLDATA, `itemtables.py`; `test_names` and `test_header_offsets` check they agree) | 56 names, 44 types | the same | 0: a new one raises both sides' count; it costs no resident memory (the game's tables are as long as the chunks) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -285,7 +290,8 @@ passes' steps, each verified in the game, are in the logs of [2026-11-08](https:
 [2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md),
 [2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md)
 [the fifth, also 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)
-and [the sixth, 2026-11-23](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-23-memory-pass-6.md).
+[the sixth, 2026-11-23](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-23-memory-pass-6.md)
+and [the seventh, 2026-11-25](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-25-memory-pass-7.md).
 
 ### DSCLOG's segment
 
@@ -352,13 +358,12 @@ leaves. The ways to free the segment:
   sheet; `NS_FLAGS_IRET`, a site's way back with AX's flags in its frame; `FINE_ITEM`, the Fine
   Bow's name look-up: use them rather than writing the instructions out again; the sites after
   `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
-  tables packed (the extra item types, each as the earlier one it is most like and the bytes
-  that differ, `XTYPE`, unpacked by `PROBE_TYPES_FILL`; the rings' outlines a quarter each, mirrored by
-  `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names
-  NUL-terminated);
+  tables packed (the rings' outlines a quarter each, mirrored by
+  `RING_POINTS`; the AD&D XP table as words of 50 XP);
 - **the Loader's files**: text the game reads from RESOURCE.GFF belongs in the
   Loader's copy of it, not in DSCLOG (`spelltexts.py`: the descriptions
-  moved there freed 1.6 KB), and so does data read from the player's game (the
+  moved there freed 1.6 KB), item types and names in its copy of GPLDATA
+  (`itemtables.py`: 1.3 KB, the seventh memory pass), and data read from the player's game (the
   pointer's picture, `POINTER.BIN`).
 
 The install's 256-byte stack is past the image and the tail, in its own

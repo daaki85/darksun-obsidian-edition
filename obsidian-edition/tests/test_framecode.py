@@ -117,6 +117,23 @@ class FrameCodeTests(unittest.TestCase):
             self.mu.emu_start(TSR * 16 + self.at, td.CALLER * 16 + back)
             self.assertEqual([self.reg("sp"), self.reg("ax"), self.reg("bp")], [0x7E6 + n, 0x7777, 0x1111], name)
 
+    def test_race_panel_drops_its_words(self):
+        """PROBE_RACE_PANEL (memory pass 7: FRAME_UP for its own saved frame), the disciplines'
+        window not open: back at the frame's IP with the six bytes under the frame dropped (the
+        game's "add sp,6"), registers as they were."""
+        wp_disc = int(re.search(r"^WP_DISC\s+equ\s+(0x[0-9A-Fa-f]+)", open(tdd.ASM).read(), re.M).group(1), 16)
+        self.mu.mem_write(GAME_DS * 16 + wp_disc, bytes(4))
+        back = 0x90
+        self.mu.mem_write(td.CALLER * 16 + back, b"\xf4")
+        self.mu.mem_write(SS * 16 + 0x7E0, struct.pack("<HHH", back, td.CALLER, td.IF | 2) + bytes(6))
+        self.at += 0x40
+        self.mu.mem_write(TSR * 16 + self.at, b"\xe9" + struct.pack("<H", (self.sym["probe_race_panel"] - (self.at + 3)) & 0xFFFF))
+        for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7E0, eax=0x7777, ebx=0xB0B0, ebp=0x1111, es=0xE5E5).items():
+            self.mu.reg_write(getattr(td.r, "UC_X86_REG_" + reg.upper()), value)
+        self.mu.emu_start(TSR * 16 + self.at, td.CALLER * 16 + back)
+        self.assertEqual([self.reg(n) for n in ("sp", "ax", "bx", "bp", "es", "ds")],
+                         [0x7E6 + 6, 0x7777, 0xB0B0, 0x1111, 0xE5E5, GAME_DS])
+
     def test_no_far_pointer_left_for_a_single_call(self):
         """The GAME_FAR sites' far pointers are gone; th_far is GAME_FAR."""
         with open(tdd.ASM) as f:
