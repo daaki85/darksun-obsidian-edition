@@ -349,6 +349,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   `python3 -u -m dsloader dicelog >> $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup
   (or `python3 -u -m dsloader dicelog --pid ... >> $PLAYTEST_WORK/dice.txt`, naming the game's
   process).
+- **A queued series of runs** (logs/2026-11-25-ravager-kits.md): never edit a shell script while it
+  runs (`sh` reads it as it goes, and an edit breaks the run in progress): write a new file. In a run
+  script, keep the arguments in variables before any `set --` in a loop, which replaces them. A run on
+  a merged build can use a second worktree (`git worktree add DIR HEAD --detach`): the tools use the
+  Loader beside them (`env.sh`'s REPO).
 - **A scratch copy of the mod for a Loader change**: `git archive HEAD | tar -x -C DIR`, the game
   copied to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the
   Loader from the kit's parent folder); restart the dice log as above, from `DIR/obsidian-edition`.

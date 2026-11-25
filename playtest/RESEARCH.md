@@ -1317,6 +1317,25 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).
 
+**The kits in the sequel** (2026-11-25, logs/2026-11-25-ravager-kits.md):
+- **Giving a kit for a test**: `ravkits.py show` lists each member's race, classes (sheet +1Bh, the
+  sheet's numbering: 1-4 clerics, 5-8 druids, 9 fighter, 10 gladiator, 11 preserver, 12 psionicist,
+  13-16 rangers, 17 thief), levels and kit byte (+3Dh); `ravkits.py match C1,C2 BYTE [RACE|- [CLASS...]]`
+  edits the member with those classes (a race edit makes a multiclass group: race 2 dwarf, 3 elf, 4
+  half-elf, 5 half-giant, 6 halfling, 7 mul). Never save after. The `fountain-user` party transferred
+  already has kits: Lex 81h, the others 01h (Ester an elf Battle Dancer).
+- **The rules word**: DSCLOG2's assembled `rules`/`rules_hi` hold only the always-on rules; the Loader's
+  dice log writes the switched ones (kits are `rules_hi` bit 0). A tool that writes the header must start
+  from `game.rules_from_settings`, as `ravdice.py` now does; `ravkits.py count` shows the words.
+- **Seeing a kit work**: `ravkits.py count`'s counters count the changes each kit routine made
+  (AC, to hit, damage, rates, saves, skills, rears, moves, two weapons, initiative), so a control run
+  (`RAV_RULES_OFF=0x10000`) reads all 0. The game's AC in the dice log is DSCLOG2's (PROBE_AC), so a
+  kit's AC shows there even with the Python side's kits off; initiative's lines are the Python side's.
+- **The sites**: initiative's "add dx,14h" at 5B7E9h (SI the creature: site 60); the caster level
+  routine's "sub dx,7" for a ranger at 97E00h ([BP+6] the combatant: site 61). Priest spheres are asked
+  per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
+  Elementalist's second sphere would need a hook there that knows the character.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

@@ -758,8 +758,9 @@ Not in the sequel yet: what kits do to spells and powers (slots, the Shinobi's c
 costs, cures' and Cause spells' dice, spells never known, casting though hit, the Elementalist's
 second sphere), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, an Assassin's backstab
 multiplier (the sequel's backstab damage isn't ported), gear a kit forbids or allows, hit dice and
-PSP at a level up, a Scholar's THAC0, the Effects screen's kit lines, and choosing a kit (the
-sequel's creation screen and DUAL). The sequel marks no priest spells known by class masks as SL's
+PSP at a level up, a Scholar's THAC0, the kits' parts of the DAM lines, and choosing a kit (the
+sequel's creation screen and DUAL). The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
+KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's
 loops do (66F89h, 86E1Eh): it asks 62B45h (spell, class) at each use, its spheres a jump table, so the
 second sphere needs a hook there that knows the character (the USE screen's 370h:0B44h). The new
 spells' bits at `+3Fh` have no use while the sequel has no new spells.

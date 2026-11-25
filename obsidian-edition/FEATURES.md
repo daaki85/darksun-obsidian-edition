@@ -938,8 +938,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
   specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, and the Battle
-  Dancer's dance and Wild Fighting as a fight starts. What else kits do to spells and psionic powers, gear, hit dice and the Effects screen's kit lines don't
-  yet, nor can a kit be chosen in the sequel. The weapon specs work there:
+  Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). What else kits do to spells
+  and psionic powers, gear and hit dice doesn't carry over yet, nor can a kit be chosen in the sequel. The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
   kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
