@@ -1055,8 +1055,12 @@ the sequel's palette (RESOURCE.GFF's PAL 1000) is sorted by kind
 item's own material (the obsidian, metal, stone or bone blade's greys of the
 game's icons), a gem to the cycled green, and the rest (a dart's gold point, an
 outline's black) to the nearest stable colour, each kind in its brightness order.
-A magic one burns every other pixel of its steel and gold (all of them for the
-stronger of a kind), as the Loader's own do. The great sword is three steps
+A magic one shines in every other pixel of its steel and gold (all of them for the
+stronger of a kind), in the colour the sequel's own of that item has (`icons.RAVAGER_SHINE`,
+its cycled runs 1-5 blue, 6-10 violet, 11-15 green, 16-23 fire: its Lotulis +1 green, Lotulis +2
+blue, Double Spear +1 green and +3 fire, Trikal +2 blue, Twohand Sword +3 blue, magic Darts
+green, Javelin +2 green; ones it hasn't as their kind's), the fallback drawings too; the
+clerics' Obsidian Lotulis +1 and Bone Great Sword +1 in their sphere's fire and water. The great sword is three steps
 longer than the sequel's (which draws it its long sword's size), so it stands
 bigger than the long sword. Not the javelin: the sequel's is black steel end to
 end, a black stick in the game's colours. Without the sequel the Loader's own

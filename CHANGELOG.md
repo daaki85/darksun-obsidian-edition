@@ -89,7 +89,8 @@ Releases, newest first (2.12.0 and older in the archive):
   chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
 - The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
   own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
-  material, the magic ones burning; without it, the Loader's own, the double spear, trikal and
+  material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
+  fire), not all in fire; without it, the Loader's own, the double spear, trikal and
   darts redrawn at the sequel's sizes (the user's).
 
 **Docs**

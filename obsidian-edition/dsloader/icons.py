@@ -53,6 +53,16 @@ WATER = tuple(range(11, 16))
 GREEN = tuple(range(1, 6))
 MIND = tuple(range(6, 11))
 SKY = (46,)  # white, `shining` with the water's blues: the air's (Windlash, Galefang, Skycutter)
+# The sequel's weapons' magic ones shine in the colour the sequel gives its own of that item (its
+# cycled runs: 1-5 blue, the water's here; 6-10 violet; 11-15 green; 16-23 fire): its Lotulis +1,
+# Double Spear +1 and magic Darts green, its Lotulis +2, Trikal +2 and Twohand Sword +3 blue, its
+# Double Spear +3 fire; the Loader's ones it hasn't as their kind's (the Double Spear +2 the
+# stronger's fire, the Trikal +1 and Great Sword +2 the water's). Shattered Lands' own magic weapons
+# shine in all four too (only Bloodwrath in the fire's) (the user's ask, 2026-11-25)
+RAVAGER_SHINE: Dict[str, Tuple[int, ...]] = {
+    "Lotulis +1": GREEN, "Lotulis +2": WATER, "Double Spear +1": GREEN, "Double Spear +2": FIRE,
+    "Trikal +1": WATER, "Trikal +2": WATER, "Great Sword +2": WATER, "Great Sword +3": WATER,
+    "Darts +1": GREEN, "Javelin +1": GREEN}
 
 Rows = List[List[Optional[int]]]
 
@@ -539,10 +549,11 @@ def metal_javelin_icon(rows: Rows) -> Rows:
     return recolour(javelin_icon(rows), STONE_TO_METAL)
 
 
-def burning(make: Callable[[Rows], Rows], colours, every_other: bool = True) -> Callable[[Rows], Rows]:
-    """MAKE's picture with its pixels of COLOURS in the fire colours: every other one (a +1 or a +2
-    beside its kind's +3), or all (EVERY_OTHER false: the stronger)."""
-    return lambda r: glow(make(r), lambda p, x, y: p in colours and (not every_other or (x + y) % 2 == 0), FIRE)
+def burning(make: Callable[[Rows], Rows], colours, every_other: bool = True,
+            shine: Tuple[int, ...] = FIRE) -> Callable[[Rows], Rows]:
+    """MAKE's picture with its pixels of COLOURS in the cycled SHINE (the fire's unless said): every
+    other one (a +1 or a +2 beside its kind's +3), or all (EVERY_OTHER false: the stronger)."""
+    return lambda r: glow(make(r), lambda p, x, y: p in colours and (not every_other or (x + y) % 2 == 0), shine)
 
 
 def drawn(pattern: Tuple[str, ...], colours: Dict[str, int], at: Tuple[Tuple[int, int], ...],
@@ -719,26 +730,28 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
     ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
     ("Darts", 0xFC0E, 2690, 2691, darts_icon),
-    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the fire
-    # colours, as the Loader's magic weapons shine
-    ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p in DART_POINT, FIRE)),
-    # the Javelin +1 (worldgear.JAVELIN_1, on the slave pens' weapon rack): its head in the fire colours
-    ("Javelin +1", 0xFC05, 2694, 2695, lambda r: glow(javelin_icon(r), lambda p, x, y: p in BLADE_METAL, FIRE)),
+    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the
+    # green, as the sequel's magic darts shine (RAVAGER_SHINE)
+    ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p in DART_POINT, GREEN)),
+    # the Javelin +1 (worldgear.JAVELIN_1, on the slave pens' weapon rack): its head in the green, as
+    # the sequel's Javelin +2's
+    ("Javelin +1", 0xFC05, 2694, 2695, lambda r: glow(javelin_icon(r), lambda p, x, y: p in BLADE_METAL, GREEN)),
     # their metal two-handed sword (the metal Long Sword's, longer), lotulis (the Gythka's blades
     # kept) and javelin (its head in the metal greys) (the user's, 2026-11-25)
     ("Metal Great Sword", 0xFC0A, 2696, 2697, longer_blade),
     ("Metal Lotulis", 0xFC0D, 2698, 2699, metal_lotulis_icon),
     ("Metal Javelin", 0xFC05, 2700, 2701, metal_javelin_icon),
-    # ... and their magic ones (worldgear.RAVAGER_MAGIC): the heads and blades burning, every other
-    # pixel of a +1's or of a +2 beside a +3, every pixel of the stronger
-    ("Double Spear +1", 0xFC05, 2702, 2703, burning(double_spear_icon, BLADE_METAL)),
-    ("Double Spear +2", 0xFC05, 2704, 2705, burning(double_spear_icon, BLADE_METAL, False)),
-    ("Trikal +1", 0xFC05, 2706, 2707, burning(trikal_icon, BLADE_METAL)),
-    ("Trikal +2", 0xFC05, 2708, 2709, burning(trikal_icon, BLADE_METAL, False)),
-    ("Lotulis +1", 0xFC0D, 2710, 2711, burning(lotulis_icon, tuple(GYTHKA_STONE.values()))),
-    ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False)),
-    ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
-    ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
+    # ... and their magic ones (worldgear.RAVAGER_MAGIC): the heads and blades shining, every other
+    # pixel of a +1's or of a +2 beside a +3, every pixel of the stronger, in the colour the sequel's
+    # own of that item shines in (RAVAGER_SHINE; one it hasn't, as its kind's)
+    ("Double Spear +1", 0xFC05, 2702, 2703, burning(double_spear_icon, BLADE_METAL, shine=RAVAGER_SHINE["Double Spear +1"])),
+    ("Double Spear +2", 0xFC05, 2704, 2705, burning(double_spear_icon, BLADE_METAL, False, RAVAGER_SHINE["Double Spear +2"])),
+    ("Trikal +1", 0xFC05, 2706, 2707, burning(trikal_icon, BLADE_METAL, shine=RAVAGER_SHINE["Trikal +1"])),
+    ("Trikal +2", 0xFC05, 2708, 2709, burning(trikal_icon, BLADE_METAL, False, RAVAGER_SHINE["Trikal +2"])),
+    ("Lotulis +1", 0xFC0D, 2710, 2711, burning(lotulis_icon, tuple(GYTHKA_STONE.values()), shine=RAVAGER_SHINE["Lotulis +1"])),
+    ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False, RAVAGER_SHINE["Lotulis +2"])),
+    ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL, shine=RAVAGER_SHINE["Great Sword +2"])),
+    ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False, RAVAGER_SHINE["Great Sword +3"])),
     # the obsidian lotulis (fire clerics') and the bone great sword (water clerics': the bone Long
     # Sword's, longer: cut a row higher, above its guard) (the user's, 2026-11-25), and their +1s: the lotulis' blades burning, the
     # sword's blade in the water's colours (as Hayneedle's: a water cleric prayed over it)

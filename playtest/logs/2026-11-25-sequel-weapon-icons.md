@@ -29,3 +29,15 @@ obsidian lotulis and the Bone Great Sword +1.
 ## Water
 
 No new area.
+
+## The magic ones in the sequel's colours (later the same day)
+
+The user asked whether every magic one should burn. Each now shines in the colour the sequel gives
+its own of that item (`icons.RAVAGER_SHINE`). Played again from `pens-after-arena` (not saved): the
+Double Spear +1 and +2, Trikal +1 and +2, Lotulis +1 and +2, Great Sword +3 and Darts +1 given in
+memory. Once the 3-second pass had given them their own icons (an inventory opened at once still
+drew the plain ones), they showed green, fire, the water's blue, the water's blue, green, blue,
+blue and green, and the boxes read "2 handed Stone +1 Lotulis" (20,800$) and "2 handed Metal +2
+Lotulis" (41,600$).
+
+![The backpack, the Lotulis +1's box and the Lotulis +2's box](img/2026-11-25-sequel-magic-colours.png)

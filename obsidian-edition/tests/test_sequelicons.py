@@ -153,6 +153,23 @@ class ChunkTests(unittest.TestCase):
         self.assertIn(sequelicons.GAME_GREAT_AXE_PICTURE, icons.BOX_TALL)
 
 
+class ShineTests(unittest.TestCase):
+    def test_sequel_colours(self):
+        """Each magic one the sequel has shines in its colour there (its Lotulis +1 green, Twohand
+        Sword +3 blue, Double Spear +3 fire...); the clerics' in their sphere's."""
+        want = {"Lotulis +1": icons.GREEN, "Lotulis +2": icons.WATER, "Double Spear +1": icons.GREEN,
+                "Double Spear +2": icons.FIRE, "Trikal +2": icons.WATER, "Great Sword +3": icons.WATER,
+                "Darts +1": icons.GREEN, "Obsidian Lotulis +1": icons.FIRE, "Bone Great Sword +1": icons.WATER}
+        for name, colours in want.items():
+            self.assertEqual(sequelicons.SEQUEL[name][2][0], colours, name)
+            drawn = next(make for n, _, _, _, make in icons.ICONS if n == name)
+            cycled = icons.FIRE + icons.WATER + icons.GREEN + icons.MIND
+            plain = [p for p in range(16, 240) if p not in cycled]  # (a picture of every other colour)
+            rows = drawn([plain[i:i + 20] for i in range(0, 200, 20)])
+            shone = {p for row in rows for p in row if p in cycled}
+            self.assertTrue(shone and shone <= set(colours), name)
+
+
 class DrawnTests(unittest.TestCase):
     """The Loader's own double spear, trikal and darts (without the sequel), drawn as the sequel's."""
 
@@ -166,9 +183,10 @@ class DrawnTests(unittest.TestCase):
         rows = icons.double_spear_icon()
         self.assertEqual((rows[0][0], rows[-1][-1]), (214, 214))
 
-    def test_magic_darts_burn_their_points(self):
+    def test_magic_darts_shine_their_points(self):
+        """In the green, as the sequel's magic darts."""
         plus = next(make for n, _, _, _, make in icons.ICONS if n == "Darts +1")([])
-        points = [p for row in plus for p in row if p is not None and p in icons.FIRE]
+        points = [p for row in plus for p in row if p is not None and p in icons.GREEN]
         self.assertEqual(len(points), 2 * sum(line.count("G") + line.count("g") for line in icons.DART))
 
 

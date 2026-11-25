@@ -13,9 +13,12 @@ PAL 1000). Each is brought into Shattered Lands' colours by kind of pixel, in it
   greys in the game's icons: the obsidian, metal, stone or bone long sword's, gythka's or pick's);
 - a gem (a magic item's: green, magenta) into the greens the game cycles (icons.GREEN): it shines;
 - any other (a dart's gold point, an outline's black) into the nearest colour no region changes.
-A magic one then burns as the Loader's others do (icons.glow): every other pixel of its head or
-blade (its steel, a dart's gold) in the fire colours (the water's for the Bone Great Sword +1, as Hayneedle's), or every
-pixel for the stronger of a kind (a +2 beside a +1, a +3 beside a +2)."""
+A magic one then shines as the Loader's others do (icons.glow): every other pixel of its head or
+blade (its steel, a dart's gold), or every pixel for the stronger of a kind (a +2 beside a +1, a +3
+beside a +2), in the colour the sequel's own of that item shines in (icons.RAVAGER_SHINE); the
+Obsidian Lotulis +1 (a fire cleric's) and Headsman in the fire's, the Bone Great Sword +1 (a water
+cleric's) in the water's, as Hayneedle's; the game's own Great Axe +3 its gem in the green, as in
+Shattered Lands."""
 
 import os
 import struct
@@ -52,23 +55,23 @@ SEQUEL: Dict[str, Tuple[str, str, Optional[Tuple[Tuple[int, ...], bool]]]] = {
     "Great Sword": ("great sword", "obsidian", None),
     "Metal Great Sword": ("great sword", "metal", None),
     "Bone Great Sword": ("great sword", "bone", None),
-    "Great Sword +2": ("great sword", "metal", (icons.FIRE, HALF)),
-    "Great Sword +3": ("great sword", "metal", (icons.FIRE, ALL)),
+    "Great Sword +2": ("great sword", "metal", (icons.RAVAGER_SHINE["Great Sword +2"], HALF)),
+    "Great Sword +3": ("great sword", "metal", (icons.RAVAGER_SHINE["Great Sword +3"], ALL)),
     "Bone Great Sword +1": ("great sword", "bone", (icons.WATER, HALF)),
     "Lotulis": ("lotulis", "stone", None),
     "Metal Lotulis": ("lotulis", "metal", None),
     "Obsidian Lotulis": ("lotulis", "obsidian", None),
-    "Lotulis +1": ("lotulis", "stone", (icons.FIRE, HALF)),
-    "Lotulis +2": ("lotulis", "metal", (icons.FIRE, ALL)),
+    "Lotulis +1": ("lotulis", "stone", (icons.RAVAGER_SHINE["Lotulis +1"], HALF)),
+    "Lotulis +2": ("lotulis", "metal", (icons.RAVAGER_SHINE["Lotulis +2"], ALL)),
     "Obsidian Lotulis +1": ("lotulis", "obsidian", (icons.FIRE, HALF)),
     "Double Spear": ("double spear", "flint", None),
-    "Double Spear +1": ("double spear", "flint", (icons.FIRE, HALF)),
-    "Double Spear +2": ("double spear", "flint", (icons.FIRE, ALL)),
+    "Double Spear +1": ("double spear", "flint", (icons.RAVAGER_SHINE["Double Spear +1"], HALF)),
+    "Double Spear +2": ("double spear", "flint", (icons.RAVAGER_SHINE["Double Spear +2"], ALL)),
     "Trikal": ("trikal", "flint", None),
-    "Trikal +1": ("trikal", "flint", (icons.FIRE, HALF)),
-    "Trikal +2": ("trikal", "flint", (icons.FIRE, ALL)),
+    "Trikal +1": ("trikal", "flint", (icons.RAVAGER_SHINE["Trikal +1"], HALF)),
+    "Trikal +2": ("trikal", "flint", (icons.RAVAGER_SHINE["Trikal +2"], ALL)),
     "Darts": ("darts", "flint", None),
-    "Darts +1": ("darts", "flint", (icons.FIRE, ALL)),
+    "Darts +1": ("darts", "flint", (icons.RAVAGER_SHINE["Darts +1"], ALL)),
     "Great Axe": ("great axe", "metal", None),
     "Metal Great Axe": ("great axe", "metal", None),
     "Bone Great Axe": ("great axe", "bone", None),
