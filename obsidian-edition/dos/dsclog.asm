@@ -29752,7 +29752,7 @@ extra_names:
                                         ; cahulaks +1,
         xname "Ironwhirl"               ; a metal cahulaks +2)
         xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
-        xname "Two-hand Sword"          ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
+        xname "Great Sword"             ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
         xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last six)
         xname "Double Spear"
         xname "Trikal"

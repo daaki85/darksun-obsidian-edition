@@ -656,7 +656,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Skycutter", 0xFC0E, 2596, 2597, lambda r: shining(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, SKY)),
     # Wake of the Ravager's weapon kinds (worldgear.py): on the map, the obsidian Long Sword, the Gythka,
     # the Quarterstaff and the Chatkcha
-    ("Two-hand Sword", 0xFC0B, 2680, 2681, longer_blade),
+    ("Great Sword", 0xFC0B, 2680, 2681, longer_blade),
     ("Lotulis", 0xFC0D, 2682, 2683, lotulis_icon),
     ("Double Spear", 0xFC05, 2684, 2685, double_spear_icon),
     ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
@@ -669,7 +669,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Javelin +1", 0xFC05, 2694, 2695, lambda r: glow(javelin_icon(r), lambda p, x, y: p in BLADE_METAL, FIRE)),
     # their metal two-handed sword (the metal Long Sword's, longer), lotulis (the Gythka's blades
     # kept) and javelin (its head in the metal greys) (the user's, 2026-11-25)
-    ("Metal Two-hand Sword", 0xFC0A, 2696, 2697, longer_blade),
+    ("Metal Great Sword", 0xFC0A, 2696, 2697, longer_blade),
     ("Metal Lotulis", 0xFC0D, 2698, 2699, metal_lotulis_icon),
     ("Metal Javelin", 0xFC05, 2700, 2701, metal_javelin_icon),
     # ... and their magic ones (worldgear.RAVAGER_MAGIC): the heads and blades burning, every other
@@ -680,8 +680,8 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Trikal +2", 0xFC05, 2708, 2709, burning(trikal_icon, BLADE_METAL, False)),
     ("Lotulis +1", 0xFC0D, 2710, 2711, burning(lotulis_icon, tuple(GYTHKA_STONE.values()))),
     ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False)),
-    ("Two-hand Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
-    ("Two-hand Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
+    ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
+    ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -1308,9 +1308,9 @@ PLATE_TYPES = _plate_types()
 
 def _ravager_kinds() -> Dict[int, str]:
     from . import game
-    return {game.TWOHAND_SWORD_TYPE: "Two-hand Sword", game.LOTULIS_TYPE: "Lotulis",
+    return {game.TWOHAND_SWORD_TYPE: "Great Sword", game.LOTULIS_TYPE: "Lotulis",
             game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
-            game.DARTS_TYPE: "Darts", game.METAL_TWOHAND_SWORD_TYPE: "Metal Two-hand Sword",
+            game.DARTS_TYPE: "Darts", game.METAL_TWOHAND_SWORD_TYPE: "Metal Great Sword",
             game.METAL_LOTULIS_TYPE: "Metal Lotulis", game.METAL_JAVELIN_TYPE: "Metal Javelin"}
 
 
@@ -1322,8 +1322,8 @@ def _ravager_magic() -> Dict[Tuple[int, int], str]:
     return {(game.DOUBLE_SPEAR_TYPE, 1): "Double Spear +1", (game.DOUBLE_SPEAR_TYPE, 2): "Double Spear +2",
             (game.TRIKAL_TYPE, 1): "Trikal +1", (game.TRIKAL_TYPE, 2): "Trikal +2",
             (game.LOTULIS_TYPE, 1): "Lotulis +1", (game.METAL_LOTULIS_TYPE, 2): "Lotulis +2",
-            (game.METAL_TWOHAND_SWORD_TYPE, 2): "Two-hand Sword +2",
-            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Two-hand Sword +3"}
+            (game.METAL_TWOHAND_SWORD_TYPE, 2): "Great Sword +2",
+            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Great Sword +3"}
 
 
 RAVAGER_MAGIC = _ravager_magic()  # (worldgear.RAVAGER_MAGIC's: by type and plus)

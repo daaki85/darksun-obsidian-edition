@@ -297,7 +297,7 @@ def magic_weapon(spec: Tuple[int, int, int, int], plus: int, spell: int) -> byte
 # gladiators' two) and the Bowyer (the thrown ones). Not the sequel's net (the user's call, 2026-11-23).
 TWOHAND_SWORD_NAME, LOTULIS_NAME, DOUBLE_SPEAR_NAME, TRIKAL_NAME = 0x174, 0x175, 0x176, 0x177
 JAVELIN_NAME, DARTS_NAME = 0x178, 0x179
-RAVAGER_NAMES = {TWOHAND_SWORD_NAME: b"Two-hand Sword", LOTULIS_NAME: b"Lotulis", DOUBLE_SPEAR_NAME: b"Double Spear",
+RAVAGER_NAMES = {TWOHAND_SWORD_NAME: b"Great Sword", LOTULIS_NAME: b"Lotulis", DOUBLE_SPEAR_NAME: b"Double Spear",
                  TRIKAL_NAME: b"Trikal", JAVELIN_NAME: b"Javelin", DARTS_NAME: b"Darts"}
 NAMES.update(RAVAGER_NAMES)
 TWOHAND_SWORD = (game.TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2680, 150)
@@ -455,9 +455,9 @@ DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; hi
 # the Elven Slavers' Templar's guards; the Lotulis +1 on one of the Hot Springs' Templar's eight; the
 # Javelin +1 on one of the Silt Sea Ssurans with the statue piece (theirs only if they are killed); the
 # Lotulis +2 on one of the Lower Castle's guards (a +2 weapon before the vrocks that need one); the
-# Two-hand Sword +2 on the Upper Castle's body; the Trikal +2 on one of the Ssuran Ruins' four Magera
+# Great Sword +2 on the Upper Castle's body; the Trikal +2 on one of the Ssuran Ruins' four Magera
 # at the way into Wyrm Belly; the Double Spear +2 on one of Arant's guards at the gladiators' camp; the
-# Two-hand Sword +3 in the chest of Balkazar's treasure room (by the Belt of Might; the chest's object
+# Great Sword +3 in the chest of Balkazar's treasure room (by the Belt of Might; the chest's object
 # shared with the Silt Sea's chests)
 FIELDS, SLAVERS, HOT_SPRINGS, SSURANS, LOWER_CASTLE = 0x26, 0x14, 0x23, 0x05, 0x1D
 UPPER_CASTLE, SSURAN_RUINS, GLADIATORS, WYRM_SCHOOL = 0x1C, 0x0F, 0x04, 0x0D

@@ -79,7 +79,7 @@ Releases, newest first (2.12.0 and older in the archive):
 - Metal ones of three of the sequel's weapons (a two-handed sword and a lotulis sold by Melkor in
   Gedron, a javelin on the slave pens' weapon rack in place of the obsidian one), and magic ones
   placed along the way through the game, the weaker early: Double Spear +1 and +2, Trikal +1 and
-  +2, Lotulis +1 and +2, Two-hand Sword +2 and +3, Javelin +1, each with a shining icon of its own
+  +2, Lotulis +1 and +2, Great Sword +2 and +3, Javelin +1, each with a shining icon of its own
   ([the table](obsidian-edition/ITEMS.md#weapons)). A metal lotulis strikes a second foe as any
   lotulis.
 

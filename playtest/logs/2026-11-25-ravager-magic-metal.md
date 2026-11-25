@@ -62,3 +62,13 @@ The bottom bar names the item under the pointer ("METAL TWO-HAND SWORD", "METAL 
 - Kurzak's greeting in a new game holds the pens' things back: answer it before reading them.
 
 **Water**: no new area.
+
+## 3. The two-handed sword renamed Great Sword
+
+The game puts "2 handed" before any two-handed weapon's name ("2 handed Bone Gythka"), so the
+name "Two-hand Sword" read twice ("2 handed Metal +3 Two-hand Sword"); the sequel's own,
+"Twohand Sword", would read the same. Renamed **Great Sword** (as the game's Great Axe). From
+`pens-after-arena` (loaded, both given in memory, not saved): the boxes read "2 handed Metal Great
+Sword" (500$) and "2 handed Metal +3 Great Sword" (62,400$). The other eleven read in the game's
+own order (kind of hand, material, plus, name), as its "2 handed Bone +1 Gythka", with nothing
+twice.

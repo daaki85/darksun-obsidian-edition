@@ -72,8 +72,8 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/headsman.png) | Metal | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
 | ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | carried by the **Troop Leader** |
 | ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed) | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
-| ![](docs/items/two-hand-sword-plus3.png) | Metal | ***Two-hand Sword +3*** | +3 (Wake of the Ravager's kind) | in the chest of Balkazar's treasure room in the Wyrm School, by the Belt of Might |
-| ![](docs/items/two-hand-sword-plus2.png) | Metal | ***Two-hand Sword +2*** | +2 (Wake of the Ravager's kind) | a **skeleton** in the Upper Castle (by the earth elemental), with the Bow +2 |
+| ![](docs/items/great-sword-plus3.png) | Metal | ***Great Sword +3*** | +3 (Wake of the Ravager's kind) | in the chest of Balkazar's treasure room in the Wyrm School, by the Belt of Might |
+| ![](docs/items/great-sword-plus2.png) | Metal | ***Great Sword +2*** | +2 (Wake of the Ravager's kind) | a **skeleton** in the Upper Castle (by the earth elemental), with the Bow +2 |
 | ![](docs/items/lotulis-plus2.png) | Metal | ***Lotulis +2*** | +2 (Wake of the Ravager's kind); a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) | carried by one of the **Guards** of the Lower Castle (a +2 weapon before the vrocks that need one) |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
@@ -141,7 +141,7 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Sling | Sling +2, Sling +1 |
 | Staff sling | ***Windlash*** +1 |
-| Two-handed sword | ***Two-hand Sword +3***, ***Two-hand Sword +2*** |
+| Two-handed sword | ***Great Sword +3***, ***Great Sword +2*** |
 | Lotulis | ***Lotulis +2***, ***Lotulis +1*** |
 | Double spear | ***Double Spear +2***, ***Double Spear +1*** |
 | Trikal | ***Trikal +2***, ***Trikal +1*** |
@@ -289,12 +289,12 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, a chest in the slave pens, a bag in the slave pens | — |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
-| ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | one of Scar's three henchmen in the champions' bout | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
+| ![](docs/items/great-sword.png) | two-handed sword | obsidian | Weapon Merchant | one of Scar's three henchmen in the champions' bout | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
 | ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | Drajian Guard, a Templar in the slave pens | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/double-spear.png) | double spear | wood | Jark | the arena's Gladiators (two of the three) | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/trikal.png) | trikal | wood | Jark | one of the arena's three Gladiators | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)); reaches two squares as a polearm ([polearm reach](FEATURES.md#polearm-reach)) |
 | ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | Village Hero, Elite Guard (in place of the bow) | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
-| ![](docs/items/metal-two-hand-sword.png) | two-handed sword | metal | Melkor (Gedron) | — | **new**: the two-handed sword, in metal |
+| ![](docs/items/metal-great-sword.png) | two-handed sword | metal | Melkor (Gedron) | — | **new**: the two-handed sword, in metal |
 | ![](docs/items/metal-lotulis.png) | lotulis | metal | Melkor (Gedron) | — | **new**: the lotulis, in metal |
 | ![](docs/items/metal-javelin.png) | javelin | metal | — | the slave pens' weapon rack | **new**: the javelin, in metal |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | Silt Runner (in place of the sling), the White Sand Outlaws (Slave Hunters) | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |

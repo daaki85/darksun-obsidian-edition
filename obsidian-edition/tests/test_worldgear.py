@@ -45,7 +45,7 @@ class WorldGearTests(unittest.TestCase):
         sold = [icons.which(r) for r in gift("Weapon Merchant").items]
         self.assertEqual(sold, ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Axe", "Obsidian Mace",
                                 "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger",
-                                "Metal Cahulaks", "Two-hand Sword", "Lotulis", "Javelin"])
+                                "Metal Cahulaks", "Great Sword", "Lotulis", "Javelin"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
         self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items[:1]], gift("Scar's henchman").objects),
                          (["Bone Great Axe"], (229,)))
@@ -794,9 +794,9 @@ class RavagerMagicTests(unittest.TestCase):
         R, G = game, worldgear
         want = {"Double Spear +1": (59, 0x26, (84, 2622)), "Trikal +1": (123, 0x14, (283, 2623)),
                 "Lotulis +1": (98, 0x23, (168, 2624)), "Javelin +1": (84, 0x05, (431, 2625)),
-                "Lotulis +2": (108, 0x1D, (17, 2626)), "Two-hand Sword +2": (2265, 0x1C, None),
+                "Lotulis +2": (108, 0x1D, (17, 2626)), "Great Sword +2": (2265, 0x1C, None),
                 "Trikal +2": (71, 0x0F, (49, 2627)), "Double Spear +2": (82, 0x04, (349, 2628)),
-                "Two-hand Sword +3": (1063, 0x0D, (337, 2629))}
+                "Great Sword +3": (1063, 0x0D, (337, 2629))}
         got = {icons.which(g.items[0]): (g.objects[0], g.region, g.clone) for g in G.RAVAGER_MAGIC}
         self.assertEqual(got, want)
         for g in G.RAVAGER_MAGIC:
@@ -811,6 +811,6 @@ class RavagerMagicTests(unittest.TestCase):
         melkor = next(g for g in worldgear.GIFTS if g.name == "Melkor")
         self.assertEqual((melkor.objects, melkor.items), ((233,), (worldgear.weapon(worldgear.METAL_TWOHAND_SWORD),
                                                                   worldgear.weapon(worldgear.METAL_LOTULIS))))
-        for spec, name in ((worldgear.METAL_TWOHAND_SWORD, "Metal Two-hand Sword"),
+        for spec, name in ((worldgear.METAL_TWOHAND_SWORD, "Metal Great Sword"),
                            (worldgear.METAL_LOTULIS, "Metal Lotulis"), (worldgear.METAL_JAVELIN, "Metal Javelin")):
             self.assertEqual(icons.which(worldgear.weapon(spec)), name)
