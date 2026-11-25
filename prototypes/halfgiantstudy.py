@@ -5,13 +5,13 @@ from pathlib import Path
 
 from PIL import Image
 
-from halfgiantfit import fitted_panels
+from halfgiantfit import RANGER_CLOAK, fitted_panels, stamp
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
 
 MODELS = (2072, 2074)
-ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
+ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric", "Psionicist", "Ranger")
 # Outline of the garment laid open on the pose: shoulder, waist and knee.
 # Each entry is (left x, left y, right x, right y). The final edge follows
 # the nearer knee, including the crouch, recoil and upside-down fall.
@@ -72,6 +72,7 @@ ARMS = {
 LOW_HEAD = {16: (16, 8, 5, 5), 17: (12, 12, 5, 5), 23: (21, 6, 4, 5),
             27: (7, 13, 5, 6), 28: (12, 6, 5, 5)}
 SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 151)
+TEAL = (208, 69, 69, 70, 70, 71, 71, 40, 72, 73)
 LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
 BRONZE = (88, 90, 93, 95, 98, 100, 168, 169, 170)
@@ -215,14 +216,17 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 cap[x, y] = 6-depth*1.4-.5*side
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if female else (0, ())
     rib_span = row_limits(top)
+    cloak = stamp(RANGER_CLOAK[pose])
+    cloak_span = row_limits(cloak)
     for role in ROLES[2:]:
-        skirt = {"Cleric": robe, "Fighter": jerkin, "Gladiator": wrap}[role]
+        skirt = robe if role == "Cleric" else jerkin if role == "Fighter" else wrap
         skirt_span = row_limits(skirt)
         hem = {}
         for x, y in skirt:
             hem[x] = max(hem.get(x, y), y)
         colors = LINEN if role == "Cleric" else RAMPS["hide"]
-        shoulder_piece = sleeve if role == "Cleric" else cap.keys()
+        shoulder_piece = {"Cleric": sleeve, "Fighter": cap.keys(), "Gladiator": cap.keys(),
+                          "Psionicist": set(), "Ranger": cloak}[role]
         for x, y in top | skirt | shoulder_piece:
             sx, sy = x+dx, y+dy
             if not (0 <= sy < len(body) and 0 <= sx < len(body[sy])):
@@ -239,6 +243,29 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 cx, cy, rx, ry = LOW_HEAD[pose]
                 if ((x-cx)/rx)**2+((y-cy)/ry)**2 <= 1:
                     continue
+            if role == "Ranger" and point in cloak:
+                # The front panels hang behind both arms. From the back,
+                # hair, hands and the bent bow arm cross the cloth.
+                exposed = c is None
+                if pose in REAR:
+                    exposed |= point in top or point in robe
+                elif pose in PROFILE:
+                    back_edge = rib_span.get(y, (belt[0][0],))[0]
+                    exposed |= (x <= back_edge+2 and (point in top or point in robe))
+                elif point in top:
+                    neckline = min(shoulder[1], shoulder[3]) + 3
+                    exposed |= y <= neckline or x < rib_span[y][0]+2
+                if exposed and (point not in arm or c is None):
+                    lo, hi = cloak_span[y]
+                    u = (x-lo+.5)/(hi-lo+1)
+                    depth = (y-shoulder[1])/max(1, belt[1][1]-shoulder[1])
+                    fold = 12*u + 1.4*depth + .65*math.sin(depth*2.4)
+                    grain = texture[(y-shoulder[1]) % 8][int(16*u) % 8]
+                    shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
+                    if (x,y+1) not in cloak or (x+1,y) not in cloak:
+                        shade -= 3.1
+                    pieces[role][sy][sx] = pigment(RAMPS["leaf"], shade)
+                    continue
             if role == "Cleric" and point in sleeve and c is not None:
                 flesh = body[sy][sx]
                 relief = SKIN.index(flesh) if flesh in SKIN else 2
@@ -246,7 +273,7 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 shade = 3.5 + .82*relief + .35*texture[y % 8][x % 8] - 2*underside
                 pieces[role][sy][sx] = pigment(LINEN, shade)
                 continue
-            if point in cap and role != "Cleric" and c is not None:
+            if point in cap and role in ("Gladiator", "Fighter") and c is not None:
                 pieces[role][sy][sx] = pigment(BONE if role == "Fighter" else BRONZE, cap[point])
                 continue
             if point in arm and c is not None:
@@ -282,6 +309,9 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 if role == "Fighter" and .58 < u < .79 and t > .43:
                     shade -= 3
                 color = pigment(colors, shade)
+                if role == "Psionicist":
+                    # The lower flap continues the wrap below the belt.
+                    color = pigment(TEAL, .56*shade+.45)
                 if y-edge < 1.5:
                     belt_light = 5 + 3*(y-edge < .55) - 4*shadow
                     color = pigment(RAMPS["hide"], belt_light+.65*grain)
@@ -313,6 +343,10 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture):
                 if role == "Cleric":
                     shade += 1.8*math.cos(11*u-2*t)
                 color = pigment(colors, shade)
+                if role == "Psionicist":
+                    overlap = t - (.87-.72*u+.11*u*u)
+                    turn = 2.0 if -.12 < overlap < 0 else -1.5 if 0 <= overlap < .10 else 0
+                    color = pigment(TEAL, .55*shade+turn+.5)
             pieces[role][sy][sx] = color
 
 
@@ -425,12 +459,12 @@ def render(game_dir, output):
     floor = Image.open(TERRAIN).convert("RGB").crop((45, 144, 99, 195))
     atlas.floor = floor
     frames = []
-    sheets = {model: Image.new("RGB", (3*5*108, 10*148), dwarf.PAPER) for model in MODELS}
+    sheets = {model: Image.new("RGB", (3*len(ROLES)*108, 10*148), dwarf.PAPER) for model in MODELS}
     output.mkdir(parents=True, exist_ok=True)
     for pose, name in enumerate(dwarf.NAMES):
-        page = Image.new("RGB", (678, 522), dwarf.PAPER)
+        page = Image.new("RGB", (80+119*len(ROLES), 522), dwarf.PAPER)
         label(page, (12, 7), "Half-giant outfit study", 19)
-        label(page, (666, 10), f"{pose:02}   {name}", 14, "ra")
+        label(page, (page.width-12, 10), f"{pose:02}   {name}", 14, "ra")
         for j, role in enumerate(ROLES):
             label(page, (80+j*119, 42), role, 14)
         for i, model in enumerate(MODELS):
@@ -443,7 +477,7 @@ def render(game_dir, output):
                 page.paste(tile, (80+j*119, y))
                 page.paste(native, (106+j*119, y+104))
                 sheet = sheets[model]
-                px = (pose % 3*5+j)*108
+                px = (pose % 3*len(ROLES)+j)*108
                 py = pose//3*148
                 sheet.paste(tile, (px, py+44))
                 if j == 0:
@@ -463,6 +497,11 @@ def render(game_dir, output):
         tile = atlas.tile(300, pose, "Gladiator", "Class colors", 1)
         page.paste(tile, (422, 459-tile.height))
         label(page, (448, 466), "Human Gladiator", 13, "ma")
+        for j, role in enumerate(("Psionicist", "Ranger")):
+            reference = atlas.tile(300, pose, role, "Class colors", 1)
+            x = 555+142*j
+            page.paste(reference, (x, 459-reference.height))
+            label(page, (x+27, 466), "Human "+role, 13, "ma")
         label(page, (10, 499), "Each half-giant appears at 2× and at game size. References are at game size.", 12)
         frames.append(page)
     loop(frames, output/"half-giant-study.gif")

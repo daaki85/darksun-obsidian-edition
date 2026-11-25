@@ -1,12 +1,17 @@
 # Half-giant outfit study
 
-Follow either row across the animation to see the original half-giant, the cleaned body, and the first three costume proposals. The man is above the woman. Each figure appears at 2× with its game-size copy below. The retail Warrior and Priest and the approved human Gladiator share the same ground line in the reference row. The two retail NPCs return to idle for hit and fallen, which their picture sets omit.
+Follow either row across the animation to see the original half-giant, the cleaned body, and all five single-class outfits. The man is above the woman. Each figure appears at 2× with its game-size copy below. The retail Warrior and Priest and the approved human Gladiator, Psionicist and Ranger share the same ground line in the reference row. The two retail NPCs return to idle for hit and fallen, which their picture sets omit.
 
 ![Half-giant man and woman in all 29 poses on arena sand](half-giant-study.gif)
 
 [All 29 male poses](half-giant-man-poses.png) · [All 29 female poses](half-giant-woman-poses.png)
 
-## Garment fit
+## Psionicist and Ranger
+
+- **Psionicist.** The sleeveless teal wrap crosses the ribs and tucks into a leather belt. In rear walk steps 1–4 (07–10), the diagonal overlap turns with the shoulders. In profile the near arm passes across it.
+- **Ranger.** The leaf-green cloak fastens over a hide jerkin. In profile walk steps 1–4 (11–14), follow the hem behind the hips as the stride opens and closes. Rear idle (01) shows the full folds below the hair. Side bow (24) shows the leading arm and bow in front.
+
+## Gladiator, Fighter and Cleric fit
 
 Compare each prior outfit at `34220d3` with its revised fit in the same pose. The upper copy is 2× on arena sand, the lower copy is game size on stone. The reference row shows the human Gladiator, Warrior and Priest alongside the retail Warrior and Priest. [Inspect profile step 2](half-giant-fitting.png) · [Watch the fitting comparison through all 29 poses](half-giant-fitting.gif)
 
@@ -16,7 +21,7 @@ Compare each prior outfit at `34220d3` with its revised fit in the same pose. Th
 
 The fitting review covered both cleaned bodies and 174 dressed poses, including the bow, recoil and fall. Both body bases match the preceding revision pixel for pixel. The study preserves the native bow and the corrected lower hair in the woman’s profile walk. These are study renders with empty equipment slots.
 
-The cleaned bodies have bare feet. Each of the three outfits adds an open leather sandal with a dark sole and ankle tie. Follow the lifted heel and the planted toes across the profile walk. [Compare the earlier materials pass beside the retail Warrior, retail Priest, and approved human outfits](half-giant-materials.png)
+The cleaned bodies have bare feet. Each outfit adds an open leather sandal with a dark sole and ankle tie. Follow the lifted heel and the planted toes across the profile walk. [Compare the earlier materials pass beside the retail Warrior, retail Priest, and approved human outfits](half-giant-materials.png)
 
 In the woman’s third profile step, two charcoal pixels join the lower lock to the hair above her shoulder. The base and each garment retain the retail hair through profile idle and all four steps. [Inspect the shoulder and hair at 4×](half-giant-profile-hair.png)
 
@@ -24,4 +29,4 @@ The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman
 
 ## Remaining artwork
 
-The next singles are Psionicist and Ranger. The five legal pairs are Cleric/Fighter, Cleric/Psionicist, Cleric/Ranger, Fighter/Psionicist, and Psionicist/Ranger. Half-giants have no three-class combinations. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)
+Five legal pairs remain for the next studies. They are Cleric/Fighter, Cleric/Psionicist, Cleric/Ranger, Fighter/Psionicist, and Psionicist/Ranger. Half-giants have no three-class combinations. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)
