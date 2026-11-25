@@ -720,6 +720,9 @@ game's data: it is one player's account.
 
 ## Inventory, looting, selling and shops
 
+- **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
+  backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
+  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back).
 - **The inventory screen's places** (from hovering: the name shows in the bar at the bottom; the
   ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest (173,70), left
   hand (173,92), legs (173,128); **the feet** (174,147) (logs/2026-11-09-silent-labels.md; a
@@ -820,7 +823,8 @@ game's data: it is one player's account.
   chest, `pointer.py walk` then `look` again. The chest itself: [Pehtucl's
   chest](ROUTE.md#pehtucls-chest).
 - **The pens' weapon rack** (logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
-  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no
+  2599), what's in it and where any Thornwall is. In a new game answer Kurzak's greeting first: until then
+  it finds no thing of the rack (logs/2026-11-25-ravager-magic-metal.md). A rack the party emptied has contents 9999 (no
   list). Where it is: [the slave pens](ROUTE.md#the-way-west-the-stalker-pen-and-the-grate).
 
 ## Fights
