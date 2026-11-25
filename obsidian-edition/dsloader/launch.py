@@ -21,7 +21,7 @@ import subprocess
 import tempfile
 import threading
 import time
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
 from . import champions, dosboxx, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
 
@@ -1323,11 +1323,14 @@ RAVAGER_NO_LOG = ("Wake of the Ravager has the bug fixes ported so far, the dice
 
 def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
     """Wake of the Ravager with the mod: its patched copy and data in the dos folder (dsloader.ravager),
-    in its own GOG DOSBox with its own GOG config and ours after it, its helper DSCLOG2 loaded high.
+    its helper DSCLOG2 loaded high; in DOSBox-X when it is the engine (dosboxx.engine: chosen, or
+    found), else in its own GOG DOSBox with its own GOG config and ours after it.
     What isn't ported yet the caller tells (RAVAGER_NO_LOG); a copy that can't be made raises."""
     global STARTED
     from . import ravager
     STARTED = None
+    if dosboxx.engine(settings) == dosboxx.DOSBOX_X:
+        return _launch_wotr_dosbox_x(game_dir, settings)
     dosbox_dir = _find_file(game_dir, "DOSBOX")
     settings_conf = _find_file(game_dir, "dosbox_darksun2.conf") or _find_file(
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun2.conf")
@@ -1354,17 +1357,57 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
 MEMORY_FILE: Optional[str] = None
 
 
+def _launch_wotr_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
+    """Wake of the Ravager in DOSBox-X: its copies made as for GOG's DOSBox, then DOSBox-X's whole
+    configuration (dosboxx.conf_lines with the sequel's autoexec: its CD, game.ins, as F:) and the
+    start as for Shattered Lands (_start_dosbox_x). GOG's DOSBOX folder isn't needed."""
+    from . import ravager
+    wrong = dosboxx.problem(settings)
+    if wrong:
+        raise LaunchError(wrong)
+    if not _find_file(game_dir, "DSUN.EXE"):
+        raise LaunchError(f"{game_dir} does not look like the GOG install of Wake of the Ravager")
+    problem = ravager.prepare(game_dir, DOS_DIR, settings)
+    if problem:
+        raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
+    try:  # (the roster's and the saves' sheets the copy's: ravager.widen_files)
+        ravager.widen_files(game_dir)
+    except OSError as e:
+        raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    os.makedirs(DBX_DIR, exist_ok=True)
+    cd = ravager.cd_sheet(game_dir, os.path.join(DBX_DIR, "ravager-cd.cue"))  # (else game.ins as it is)
+    sequel = ravager.conf_lines(game_dir, DOS_DIR, cd, umb_plus=UMB_PLUS_COM, game_end=GAME_END_COM)
+    sequel = sequel[sequel.index("[autoexec]"):]
+
+    def conf(memory: str) -> str:
+        os.makedirs(DBX_DIR, exist_ok=True)
+        lines = dosboxx.conf_lines(game_dir, DOS_DIR, memory, settings, True, picture(settings),
+                                   sequel=sequel)
+        return _write_conf_file(DBX_CONF, lines, "DOSBox-X")
+    proc, _ = _start_dosbox_x(settings, conf)
+    return proc, None
+
+
 def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
     """The game started in the player's DOSBox-X (dosboxx.py): its configuration written whole,
     its memory file named (an earlier game's taken away first), what it prints kept in DBX_LOG."""
-    global STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE
     wrong = dosboxx.problem(settings)
     if wrong:
         raise LaunchError(wrong)
     if not _find_file(game_dir, "DSUN.EXE"):
         raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the game's folder")
-    program = os.path.abspath(dosboxx.program(settings))  # (problem() said None: it is there)
     problem = prepare_patched_game(game_dir, settings)
+    proc, _ = _start_dosbox_x(settings, lambda memory: write_conf(
+        game_dir, dice_log=problem is None, settings=settings, memory_file=memory))
+    return proc, problem
+
+
+def _start_dosbox_x(settings: dict, write: Callable[[str], str]) -> Tuple[subprocess.Popen, str]:
+    """DOSBox-X started (either game): the last game's end files and memory file taken away, the
+    configuration written (WRITE, given the memory file's path, returns the file's), DOSBox-X run in
+    DBX_DIR, what it prints kept in DBX_LOG; returns the process and its memory file."""
+    global STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE
+    program = os.path.abspath(dosboxx.program(settings))  # (problem() said None: it is there)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)
@@ -1374,7 +1417,7 @@ def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, O
     if not dosboxx.remove_memory_file(memory):  # (Windows: still open somewhere; DOSBox-X couldn't cut it)
         raise LaunchError(f"The memory file of an earlier game is still in use ({memory}): close the "
                           "DOSBox-X or the Loader that holds it, then start the game again.")
-    conf = write_conf(game_dir, dice_log=problem is None, settings=settings, memory_file=memory)
+    conf = write(memory)
     try:
         log = open(DBX_LOG, "wb")
     except OSError:
@@ -1388,7 +1431,7 @@ def _launch_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, O
         if log is not None:
             log.close()  # (DOSBox-X has its own handle on it)
     STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE = None, dosboxx.DOSBOX_X, program, memory
-    return proc, problem
+    return proc, memory
 
 
 def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:

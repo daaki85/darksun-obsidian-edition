@@ -1275,6 +1275,35 @@ def cd_image(game_dir: str) -> Optional[str]:
     return _find_file(game_dir, "game.ins")
 
 
+def cd_sheet(game_dir: str, path: str) -> Optional[str]:
+    """The CD's sheet (game.ins) written again at PATH with each FILE's full path as the folder has
+    it, or None if game.ins or a file it names isn't there. GOG's sheet names its tracks as Windows
+    reads them, "music\\Track02.ogg", where the folder is MUSIC: DOSBox-X reads the sheet itself
+    and on Linux and macOS found no such file, so the CD wasn't mounted and the game quit."""
+    sheet = cd_image(game_dir)
+    if sheet is None:
+        return None
+    out = []
+    try:
+        with open(sheet, encoding="latin-1") as f:
+            for line in f.read().splitlines():
+                head, _, rest = line.strip().partition(" ")
+                if head.upper() == "FILE" and rest.startswith('"') and rest.count('"') >= 2:
+                    name, after = rest[1:].split('"', 1)
+                    found = game_dir
+                    for part in name.replace("\\", "/").split("/"):
+                        found = found and _find_file(found, part)
+                    if not found:
+                        return None
+                    line = f'FILE "{os.path.abspath(found)}"{after}'
+                out.append(line)
+        with open(path, "w", encoding="latin-1", newline="\r\n") as f:
+            f.write("\n".join(out) + "\n")
+    except (OSError, UnicodeEncodeError):
+        return None
+    return path
+
+
 def conf_lines(game_dir: str, dos_dir: str, cd: Optional[str] = None, umb_plus: str = "UMBPLUS.COM",
                game_end: Optional[str] = None) -> List[str]:
     """The [dos] section and the autoexec that start the patched sequel: EMS off (its memory layer
