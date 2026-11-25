@@ -1002,9 +1002,11 @@ STARTED: Optional[str] = None
 def started_line(game_dir: str) -> str:
     """The log's line for the game started from GAME_DIR: in DOSBox, or as Dark Sun Recompiled
     (which program), so a player sees which one runs."""
+    from . import ravager
     if STARTED:
         return f"Starting Shattered Lands from {game_dir} as Dark Sun Recompiled ({STARTED})."
-    return f"Starting Shattered Lands from {game_dir} in DOSBox."
+    name = "Wake of the Ravager" if ravager.is_wotr_dir(game_dir) else "Shattered Lands"
+    return f"Starting {name} from {game_dir} in DOSBox."
 
 
 def closed_line(code: int) -> str:

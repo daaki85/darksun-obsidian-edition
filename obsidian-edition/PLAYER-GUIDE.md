@@ -2243,7 +2243,7 @@ once.")
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures: [Requirements](README.md#requirements) |
+| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures and for **Play Wake of the Ravager** ([starting the sequel](README.md#other-ways-to-start)): [Requirements](README.md#requirements) |
 | Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save window, and F9 opens the load window there (in Wake of the Ravager too, where F5 is otherwise the sound effects' key) | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Autosave: on coming into another area and after a fight, on the QUICK page of the save window | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
@@ -2260,7 +2260,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Readable layout** | above the dice log | on | remembered (`settings.json`) |
 | **Show details (the sums behind each roll)** | above the dice log | on | for this session |
 | **Show unlabelled rolls** | above the dice log | off | for this session |
-| **The game folder** | asked for at the first **Start the game** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
+| **The game folder** | asked for at the first **Play Shattered Lands** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
 | **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |

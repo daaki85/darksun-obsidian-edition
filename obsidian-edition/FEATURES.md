@@ -1055,6 +1055,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   taken across before takes its old place again; the others take free places. With too few free, the
   Loader says so: delete characters in the sequel first.
 
+The sequel itself starts from the Loader too: **Play Wake of the Ravager**, beside **Play Shattered Lands**
+at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that folder in its own
+DOSBox, with everything above. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
+([starting it](README.md#other-ways-to-start)).
+
 ## Saves
 
 The Options tab's **Saves** section (quick save and autosave, and the named saves), and the room the Loader makes for more saves and characters
