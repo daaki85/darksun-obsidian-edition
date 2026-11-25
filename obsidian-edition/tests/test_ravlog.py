@@ -700,3 +700,66 @@ class StealthPortTests(unittest.TestCase):
         self.assertIn("Lex's turn", log._after_rolls(False, 1.0))
         log.game = ravlog.RavGameData(log.guest, self.DS, rules=0)
         self.assertNotIn("Lex's turn", log._after_rolls(False, 2.0))
+
+
+class ChargeLabelTests(unittest.TestCase):
+    """Names over figures' charges ("Armor: 3 left", labels.py) in the sequel: SL's charges pass (DiceLog.
+    count_charges) on the sequel's effect records (load + 3E71h:24Dh) and event queues (DS:2A63h, 2A6Bh),
+    so the charge routine's 2d4 is known behind the overlay manager's INT 3Fh stub too."""
+    DS = 0x4982
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_queue_places(self):
+        ravlog.apply_layout()
+        self.assertEqual((game.EVENT_QUEUE, game.EVENT_COUNT, game.EVENT_SIZE), (0x2A63, 0x2A6B, 0x11))
+
+    def test_armor_charge_floats_over_its_owner(self):
+        from unittest import mock
+        from dsloader import labels
+        from test_dicelog import entry, raw_for, words
+        g = FakeGuest()
+        seg, hdr, off = 0xC91B, 0x20, 0x2000
+        base = seg * 16 + hdr
+        struct.pack_into("<H", g.mem, base + dicelog.TSR_HDR_OFF, hdr)
+        struct.pack_into("<HHH", g.mem, base + labels.TSR_TAIL_SEG, seg, 0, off)
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = base
+        load = self.DS - ravager.DGROUP
+        ravlog.rebind("SPELLS_SEG", (ravlog.SPELLS_AT + 0x10 - game.SPELLS_OFF) // 16 - load)  # (as attach)
+        ravlog.rebind("EFFECT_NAMES", {5: "Armor"})  # (... the sequel's names, from its program)
+        armor, owner, eid = 5, 2, 5  # (the sequel's Armor effect, 5; its spell's record lasting by charges)
+        table = bytearray(ravlog.SPELL_COUNT * 32)
+        struct.pack_into("<h", table, armor * 32 + 7, -1)
+        log.guest.spells = bytes(table)
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=0)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2100, 1)  # (EFFECT_COUNT: one effect)
+        struct.pack_into("<hhhBBB", g.mem, (load + 0x3E71) * 16 + 0x24D, owner, owner, armor, eid, 0, 3)
+        trap = dicelog.OVERLAY_TRAP + bytes(8)  # (the charge routine's return made a stub: in the sequel's overlays)
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, owner, eid), parent_code=trap)
+             for f in (3, 1, 2, 4)]
+        shown = []
+        log._labels_font_tried = True
+        with mock.patch.object(ravlog.RavGameData, "spell_names", [""] * armor + ["Armor"]), \
+                mock.patch.object(log._labels, "show", lambda guest, hdr, thing, text, *a: shown.append((thing, text))):
+            log.count_charges(e)
+            lines = [line for x in e for line in log.describe(x)]
+        self.assertEqual(lines, ["    Armor on {}: one charge used, 4 left".format(log._name(owner)),
+                                 "    Armor on {}: one charge used, 3 left".format(log._name(owner))])
+        self.assertEqual(shown, [(owner, "Armor: 4 left"), (owner, "Armor: 3 left")])
+        self.assertEqual(log.guest.dropped, 0)
+
+    def test_effect_ends_from_the_queue(self):
+        """An effect's end in the sequel's event queue, found by its owner and handle."""
+        g = FakeGuest()
+        ravlog.apply_layout()
+        load = self.DS - ravager.DGROUP
+        data = ravlog.RavGameData(ravlog.ReadOnlyGuest(g), self.DS)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2100, 1)
+        struct.pack_into("<hhhBBB", g.mem, (load + 0x3E71) * 16 + 0x24D, 1, 1, 300, 9, 7, 15)
+        queue = 0x6F100
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x2A63, queue & 0xF, queue >> 4)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2A6B, 1)
+        struct.pack_into("<iBhB", g.mem, queue, 5000, 7, 1, 7)
+        self.assertEqual(data.effect_deadlines(), {(1, 7): 5000})

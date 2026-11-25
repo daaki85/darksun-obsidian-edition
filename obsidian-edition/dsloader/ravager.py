@@ -557,6 +557,9 @@ PATCHES: Tuple[Patch, ...] = (
     # or dx,dx / jge +2 / xor dx,dx"), -2 in the right hand and -4 in the left; OFF_HAND where the attack
     # stores its attacks a round (5CEE8h, SL's 58892h: "mov ah,0 / mov [bp-0Ah],ax"), one in the off hand.
     Patch("two_weapons", 0x5DE7C, bytes.fromhex("f7d88bd00bd27d0233d2"), gamepatch._interrupt(VEC_TWO, 10)),
+    # ... and a ranger's ease only in light armour (SL's RG_TWO): DSCLOG2's site 78 at the routine's test for
+    # a ranger (5DE67h, SL's 5961Fh: "test word es:[bx+10h],200h"), on to PROBE_TWO's penalty in armour not light
+    Patch("ranger_two", 0x5DE67, bytes.fromhex("26f747100002"), _site(78, 6)),
     Patch("off_hand", 0x5CEE8, bytes.fromhex("b4008946f6"), gamepatch._interrupt(VEC_OFF_HAND, 5)),
     # Weapon specialization (SL's PROBE_ATTACKS and PROBE_SPEC_DAMAGE, game.RULE_SPECIALIZE, always on;
     # the transferred party's specs at the sheet's +42h..+44h): OFF_HAND above makes the attacks a round

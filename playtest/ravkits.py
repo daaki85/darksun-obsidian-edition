@@ -3,10 +3,13 @@
   python3 ravkits.py set MEMBER BYTE [RACE [CLASS...]]  a test edit (never save after it): the kit byte (two
                                                bits a class place, as kitpages.kit_byte; 0 none), and the race
                                                and the classes (1-17, up to 3; the rest 0) if given
-  python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...) and its
+  python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...; the two
+                                               weapons' two_count, off_count, rg_heavy too) and its
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
+  python3 ravkits.py flags MEMBER [WORD]       the sheet's flags word (+10h, SL's +12h: 200h a ranger, as the two-weapon
+                                               routine's test reads it), and with WORD a test edit setting it (+WORD: those bits added)
   python3 ravkits.py levels MEMBER L1 [L2 L3]  a test edit: the class levels (+1Eh..+20h; the rest 0)
   python3 ravkits.py sphere MEMBER N           a test edit: an Elementalist's second sphere (+3Fh's low three bits:
                                                0 none, 1 air, 2 earth, 3 fire, 4 water), the bits above kept
@@ -25,7 +28,7 @@ DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
-            'spec_damages', 'spec_rates')
+            'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy')
 
 
 def helper():
@@ -61,7 +64,7 @@ if cmd == 'show':
     for m in range(4):
         s = g.read(base + m * ravager.SHEET_SIZE, ravager.SHEET_SIZE)
         print(m, 'race', s[0x12], 'classes', list(s[0x1B:0x1E]), 'levels', list(s[0x1E:0x21]),
-              'kit byte %#04x' % s[0x3D], 'sphere byte %#04x' % s[0x3F], 'base AC', struct.unpack('b', s[0x21:0x22])[0], 'specs', s[0x42:0x45].hex())
+              'kit byte %#04x' % s[0x3D], 'sphere byte %#04x' % s[0x3F], 'base AC', struct.unpack('b', s[0x21:0x22])[0], 'flags %#06x' % struct.unpack_from('<H', s, 0x10), 'specs', s[0x42:0x45].hex())
 elif cmd in ('set', 'match'):
     m, byte = int(sys.argv[2]) if cmd == 'set' else None, int(sys.argv[3], 0)
     if m is None:
@@ -78,6 +81,14 @@ elif cmd in ('set', 'match'):
     if len(sys.argv) > 5:
         g.write(at + 0x1B, bytes(([int(c) for c in sys.argv[5:8]] + [0, 0, 0])[:3]))
     print('member', m, 'kit byte %#04x' % g.read(at + 0x3D, 1)[0], 'race', g.read(at + 0x12, 1)[0])
+elif cmd == 'flags':
+    m, at = int(sys.argv[2]), sheets_at() + int(sys.argv[2]) * ravager.SHEET_SIZE + 0x10
+    if len(sys.argv) > 3:
+        old, = struct.unpack('<H', g.read(at, 2))
+        word = old | int(sys.argv[3][1:], 0) if sys.argv[3].startswith('+') else int(sys.argv[3], 0)
+        g.write(at, struct.pack('<H', word))
+        print(m, 'was %#06x' % old)
+    print(m, 'flags %#06x' % struct.unpack('<H', g.read(at, 2)), '(200h a ranger)')
 elif cmd == 'levels':
     at = sheets_at() + int(sys.argv[2]) * ravager.SHEET_SIZE
     g.write(at + 0x1E, bytes(([int(n) for n in sys.argv[3:6]] + [0, 0, 0])[:3]))
