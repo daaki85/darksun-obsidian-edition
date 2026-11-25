@@ -68,8 +68,10 @@ class WorldGearTests(unittest.TestCase):
         specs = (worldgear.TWOHAND_SWORD, worldgear.LOTULIS, worldgear.DOUBLE_SPEAR, worldgear.TRIKAL,
                  worldgear.JAVELIN, worldgear.DARTS)
         self.assertEqual([s[0] for s in specs], list(range(game.GAME_TYPES + 33, game.GAME_TYPES + 39)))
-        self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs])
-        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 100, 101])
+        metal = (game.METAL_TWOHAND_SWORD_TYPE, game.METAL_LOTULIS_TYPE, game.METAL_JAVELIN_TYPE)
+        self.assertEqual(metal, tuple(range(game.GAME_TYPES + 39, game.GAME_TYPES + 42)))
+        self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs] + list(metal))
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 59, 61, 61, 100, 101, 101])
         for spec in specs:
             self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
             self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])
@@ -88,7 +90,9 @@ class WorldGearTests(unittest.TestCase):
         from dsloader import specialize
         for spec, kind in ((worldgear.METAL_DAGGER, "dagger"), (worldgear.METAL_MACE, "mace"),
                            (worldgear.METAL_GREAT_AXE, "great axe"), (worldgear.METAL_PICK, "pick"),
-                           (worldgear.METAL_POLEARM, "polearm"), (worldgear.METAL_SHORT_SWORD, "short sword")):
+                           (worldgear.METAL_POLEARM, "polearm"), (worldgear.METAL_SHORT_SWORD, "short sword"),
+                           (worldgear.METAL_TWOHAND_SWORD, "two-handed sword"), (worldgear.METAL_LOTULIS, "lotulis"),
+                           (worldgear.METAL_JAVELIN, "javelin")):
             self.assertEqual(specialize.KINDS[specialize.KIND_OF_TYPE[spec[0]]], kind)
             self.assertEqual(npcitems.TYPES[spec[0] - game.GAME_TYPES][8], 4)
 
@@ -263,7 +267,7 @@ class WorldGearTests(unittest.TestCase):
             self.assertEqual((g.name, g.objects, g.region), (holder, objects, region))
         rack = next(g for g in worldgear.MAGIC if g.name == "Weapon Rack")
         self.assertEqual((rack.clone, rack.instead, rack.items),
-                         ((131, worldgear.PENS_RACK_OBJECT), None, (worldgear.weapon(worldgear.JAVELIN),)))
+                         ((131, worldgear.PENS_RACK_OBJECT), None, (worldgear.weapon(worldgear.METAL_JAVELIN),)))
         self.assertEqual(gift("Magera").clone, (122, 2562))
         # (the plain axes still the plain ones)
         self.assertEqual(icons.which(worldgear.weapon(worldgear.BONE_AXE)), "Bone Axe")
@@ -450,7 +454,8 @@ class DataTests(unittest.TestCase):
             self.assertGreater(n, 2551)
             self.assertNotIn(n, pictures)
         self.assertEqual(len(set(clones)), len(clones))
-        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x06, 0x08, 0x1C, 0x1E, 0x28, 0x29])
+        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC),
+                         [0x04, 0x05, 0x06, 0x08, 0x0D, 0x0F, 0x14, 0x1C, 0x1D, 0x1E, 0x23, 0x26, 0x28, 0x29])
 
     def test_records_fit(self):
         """No object gets more records than the game's object routine takes (gamepatch
@@ -496,7 +501,7 @@ class DataTests(unittest.TestCase):
         # (Thornwall comes later, once Semyon has told of it: semyon.ship)
         items = d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])
         self.assertEqual(items[:3], [polearm, staff, polearm])
-        self.assertEqual([struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items[3:]], [game.JAVELIN_TYPE])
+        self.assertEqual([struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items[3:]], [game.METAL_JAVELIN_TYPE])
         self.assertEqual(len(recs), len(d.records(self.chunks[("RDFF", 1647)])[0]) + 3)  # (the javelin's three)
         # (none to replace: unchanged)
         self.assertEqual(d.with_item_replaced(self.chunks[("RDFF", 26)], lambda r: True, polearm), self.chunks[("RDFF", 26)])
@@ -644,7 +649,11 @@ class FightersTests(unittest.TestCase):
         for obj in (214, 213, 195):  # (the Drajian Guards)
             self.assertEqual(types(obj), [6, 1, L, 62])
         self.assertEqual(types(321), [4, 12, 13, 14, L])  # (the pens' Templar)
-        self.assertEqual(types(worldgear.PENS_RACK_OBJECT)[-1], J)  # (the pens' weapon rack)
+        rack = dataitems.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])[-1]  # (the pens' weapon rack: a metal javelin)
+        self.assertEqual((struct.unpack_from("<H", rack, game.ITEM_TYPE)[0], rack[game.ITEM_PLUS]),
+                         (game.METAL_JAVELIN_TYPE, 0))
+        from dsloader import icons
+        self.assertEqual(icons.which(rack), "Metal Javelin")
         self.assertEqual(sorted(g.clone[0] for g in worldgear.GIFTS if g.clone and g.region == worldgear.PENS),
                          [worldgear.ARENA_GLADIATOR_TRIKAL, worldgear.HENCHMAN_SWORD])
 
@@ -775,3 +784,33 @@ class ScarTests(unittest.TestCase):
                                 (worldgear.LEATHER_LEGS_ITEM, 8)):
             self.assertEqual(dataitems.placed(item), dataitems.placed(champions.game_item(chunks, game_type)))
         self.assertEqual(worldgear.LEATHER_HELM_ITEM, champions.HELM)  # (the champions' helm)
+
+
+class RavagerMagicTests(unittest.TestCase):
+    """Wake of the Ravager's magic weapons (the user's, 2026-11-25): each in its place, on one of a
+    group (an object of its own) or in its body or chest; the metal ones sold."""
+
+    def test_places(self):
+        R, G = game, worldgear
+        want = {"Double Spear +1": (59, 0x26, (84, 2622)), "Trikal +1": (123, 0x14, (283, 2623)),
+                "Lotulis +1": (98, 0x23, (168, 2624)), "Javelin +1": (84, 0x05, (431, 2625)),
+                "Lotulis +2": (108, 0x1D, (17, 2626)), "Two-hand Sword +2": (2265, 0x1C, None),
+                "Trikal +2": (71, 0x0F, (49, 2627)), "Double Spear +2": (82, 0x04, (349, 2628)),
+                "Two-hand Sword +3": (1063, 0x0D, (337, 2629))}
+        got = {icons.which(g.items[0]): (g.objects[0], g.region, g.clone) for g in G.RAVAGER_MAGIC}
+        self.assertEqual(got, want)
+        for g in G.RAVAGER_MAGIC:
+            self.assertIn(g, G.MAGIC)
+        news = [g.clone[1] for g in G.GIFTS + G.MAGIC if g.clone]
+        self.assertEqual(len(news), len(set(news)))  # (each clone's object its own)
+        sword = G.weapon(*G.TWOHAND_SWORD_3)
+        self.assertEqual((struct.unpack_from("<H", sword, R.ITEM_TYPE)[0], sword[R.ITEM_PLUS]),
+                         (R.METAL_TWOHAND_SWORD_TYPE, 3))
+
+    def test_metal_sold(self):
+        melkor = next(g for g in worldgear.GIFTS if g.name == "Melkor")
+        self.assertEqual((melkor.objects, melkor.items), ((233,), (worldgear.weapon(worldgear.METAL_TWOHAND_SWORD),
+                                                                  worldgear.weapon(worldgear.METAL_LOTULIS))))
+        for spec, name in ((worldgear.METAL_TWOHAND_SWORD, "Metal Two-hand Sword"),
+                           (worldgear.METAL_LOTULIS, "Metal Lotulis"), (worldgear.METAL_JAVELIN, "Metal Javelin")):
+            self.assertEqual(icons.which(worldgear.weapon(spec)), name)

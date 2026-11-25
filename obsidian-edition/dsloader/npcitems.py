@@ -103,6 +103,10 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     bytes.fromhex("010018005000fa00800501010a0100" "4040100001"),
     bytes.fromhex("120020001400fa00830c0602060100" "007e120000"),
     bytes.fromhex("120020000500fa00800c0404030100" "00f31f0000"),
+    # ... and metal ones (+8: 4) of the two-handed sword, the lotulis and the javelin
+    bytes.fromhex("010010009600fa00040501010a0100" "406e160002"),
+    bytes.fromhex("010038006400fa00040501010a0100" "407a160002"),
+    bytes.fromhex("120020001400fa00040c0602060100" "007e120000"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214
 

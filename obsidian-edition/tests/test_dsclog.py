@@ -2878,10 +2878,12 @@ class KindsAllowedTests(unittest.TestCase):
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
                game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
                game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F),
-               # (Wake of the Ravager's kinds, npcitems.TYPES' last six: the double spear and trikal gladiators')
+               # (Wake of the Ravager's kinds, npcitems.TYPES' 34th to 42nd, three metal: the double spear and trikal gladiators')
                game.TWOHAND_SWORD_TYPE: (1, 3, 0x166E), game.LOTULIS_TYPE: (1, 2, 0x167A),
                game.DOUBLE_SPEAR_TYPE: (1, 0x80, 0x1040), game.TRIKAL_TYPE: (1, 0x80, 0x1040),
-               game.JAVELIN_TYPE: (0x12, 0x83, 0x127E), game.DARTS_TYPE: (0x12, 0x80, 0x1FF3)}
+               game.JAVELIN_TYPE: (0x12, 0x83, 0x127E), game.DARTS_TYPE: (0x12, 0x80, 0x1FF3),
+               game.METAL_TWOHAND_SWORD_TYPE: (1, 4, 0x166E), game.METAL_LOTULIS_TYPE: (1, 4, 0x167A),
+               game.METAL_JAVELIN_TYPE: (0x12, 4, 0x127E)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):

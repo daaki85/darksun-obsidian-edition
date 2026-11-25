@@ -141,6 +141,7 @@ WEAPON_SHAPES: Dict[int, str] = {
     # staff's, the trikal a polearm, the thrown ones a chatkcha
     game.TWOHAND_SWORD_TYPE: SWORD, game.LOTULIS_TYPE: GYTHKA, game.DOUBLE_SPEAR_TYPE: STAFF,
     game.TRIKAL_TYPE: POLEARM, game.JAVELIN_TYPE: CHATKCHA, game.DARTS_TYPE: CHATKCHA,
+    game.METAL_TWOHAND_SWORD_TYPE: SWORD, game.METAL_LOTULIS_TYPE: GYTHKA, game.METAL_JAVELIN_TYPE: CHATKCHA,
 }
 FLAME_BLADE = 29
 

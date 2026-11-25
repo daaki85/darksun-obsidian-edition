@@ -145,11 +145,13 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
 # pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
 # (2679), and Wake of the Ravager's two-handed sword (2681, 18), lotulis (2683, 22), double spear,
-# trikal and javelin (2685, 2687, 2689, 18), ICONS'.
+# trikal and javelin (2685, 2687, 2689, 18), and their Javelin +1 (2695), metal ones (2697, 2699, 2701)
+# and magic ones (2703-2717), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
             2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679,
-            2681, 2683, 2685, 2687, 2689)
+            2681, 2683, 2685, 2687, 2689, 2695, 2697, 2699, 2701, 2703, 2705, 2707, 2709, 2711,
+            2713, 2715, 2717)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -217,6 +219,7 @@ SHIELD_METAL = {129: 210, 128: 211, 134: 212, 179: 211, 135: 212, 136: 213, 137:
 GREAT_AXE_TYPE = 2
 MAGIC_KINDS = {18: "Gutterknot", 112: "Deepbiter", 0: "Windlash"}  # (the game's types: none has a plus)
 BLADE = range(0xD1, 0xDA)
+BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
 # the Axe's metal head, shade for shade (by brightness), in the bone long sword's whites
 AXE_BONE = {208: 129, 209: 132, 210: 132, 211: 200, 212: 146, 213: 146, 214: 148, 215: 152}
 # ... and in the obsidian long sword's darker greys (it has 208-213, mostly 208-211)
@@ -438,6 +441,16 @@ def lotulis_icon(rows: Rows) -> Rows:
     return put(padded(recolour(rows, GYTHKA_STONE)), LOTULIS_HOOKS)
 
 
+# the metal lotulis: the Gythka's own metal blades kept, the hooks in its greys
+LOTULIS_METAL_HOOKS = tuple((x, y, {50: 213, 49: 212, 48: 161}[p]) for x, y, p in LOTULIS_HOOKS)
+LOTULIS_METAL = (161, 210, 211, 212, 213, 214, 216, 217)  # (its blades' and hooks' greys)
+SWORD_METAL = (160, 161) + tuple(range(209, 218))  # (the metal Long Sword's blade)
+
+
+def metal_lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(rows), LOTULIS_METAL_HOOKS)
+
+
 # a flint head along the diagonal, its point at (0, 0): (x, y, colour)
 FLINT_HEAD = ((0, 0, 214), (1, 0, 212), (0, 1, 212), (1, 1, 213), (2, 1, 210), (1, 2, 210), (2, 2, 211),
               (3, 2, 209), (2, 3, 209), (3, 3, 208))
@@ -472,6 +485,17 @@ def javelin_icon(rows: Rows) -> Rows:
         if xs and xs[len(xs) // 2] + y >= 4:
             out[y][xs[len(xs) // 2]] = max(row[x] for x in xs)
     return put(out, FLINT_HEAD[:8] + ((3, 2, 208), (2, 3, 208)))
+
+
+def metal_javelin_icon(rows: Rows) -> Rows:
+    """The javelin's, its flint head in the metal long sword's greys."""
+    return recolour(javelin_icon(rows), STONE_TO_METAL)
+
+
+def burning(make: Callable[[Rows], Rows], colours, every_other: bool = True) -> Callable[[Rows], Rows]:
+    """MAKE's picture with its pixels of COLOURS in the fire colours: every other one (a +1 or a +2
+    beside its kind's +3), or all (EVERY_OTHER false: the stronger)."""
+    return lambda r: glow(make(r), lambda p, x, y: p in colours and (not every_other or (x + y) % 2 == 0), FIRE)
 
 
 def drawn(pattern: Tuple[str, ...], colours: Dict[str, int], at: Tuple[Tuple[int, int], ...],
@@ -641,6 +665,23 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the fire
     # colours, as the Loader's magic weapons shine
     ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p == 213, FIRE)),
+    # the Javelin +1 (worldgear.JAVELIN_1, on the slave pens' weapon rack): its head in the fire colours
+    ("Javelin +1", 0xFC05, 2694, 2695, lambda r: glow(javelin_icon(r), lambda p, x, y: p in BLADE_METAL, FIRE)),
+    # their metal two-handed sword (the metal Long Sword's, longer), lotulis (the Gythka's blades
+    # kept) and javelin (its head in the metal greys) (the user's, 2026-11-25)
+    ("Metal Two-hand Sword", 0xFC0A, 2696, 2697, longer_blade),
+    ("Metal Lotulis", 0xFC0D, 2698, 2699, metal_lotulis_icon),
+    ("Metal Javelin", 0xFC05, 2700, 2701, metal_javelin_icon),
+    # ... and their magic ones (worldgear.RAVAGER_MAGIC): the heads and blades burning, every other
+    # pixel of a +1's or of a +2 beside a +3, every pixel of the stronger
+    ("Double Spear +1", 0xFC05, 2702, 2703, burning(double_spear_icon, BLADE_METAL)),
+    ("Double Spear +2", 0xFC05, 2704, 2705, burning(double_spear_icon, BLADE_METAL, False)),
+    ("Trikal +1", 0xFC05, 2706, 2707, burning(trikal_icon, BLADE_METAL)),
+    ("Trikal +2", 0xFC05, 2708, 2709, burning(trikal_icon, BLADE_METAL, False)),
+    ("Lotulis +1", 0xFC0D, 2710, 2711, burning(lotulis_icon, tuple(GYTHKA_STONE.values()))),
+    ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False)),
+    ("Two-hand Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
+    ("Two-hand Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -655,7 +696,6 @@ PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in 
 # piece is object 2004 (its item names picture -2004; the Wyrm Temple's script 161 makes it with
 # the arm and leg pieces, 1362 and 1363), its icon 2248 its own.
 LEAF_GREEN = (53, 54, 55, 56, 55, 54)  # (the Silk Armor's and the Living Cloak's greens, which no region changes)
-BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
 TANELYV_CHEST = 2004
 SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
     ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER), None),
@@ -1270,10 +1310,23 @@ def _ravager_kinds() -> Dict[int, str]:
     from . import game
     return {game.TWOHAND_SWORD_TYPE: "Two-hand Sword", game.LOTULIS_TYPE: "Lotulis",
             game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
-            game.DARTS_TYPE: "Darts"}
+            game.DARTS_TYPE: "Darts", game.METAL_TWOHAND_SWORD_TYPE: "Metal Two-hand Sword",
+            game.METAL_LOTULIS_TYPE: "Metal Lotulis", game.METAL_JAVELIN_TYPE: "Metal Javelin"}
 
 
-RAVAGER_KINDS = _ravager_kinds()  # (any plus: one picture each kind)
+RAVAGER_KINDS = _ravager_kinds()  # (any plus but RAVAGER_MAGIC's: one picture each kind)
+
+
+def _ravager_magic() -> Dict[Tuple[int, int], str]:
+    from . import game
+    return {(game.DOUBLE_SPEAR_TYPE, 1): "Double Spear +1", (game.DOUBLE_SPEAR_TYPE, 2): "Double Spear +2",
+            (game.TRIKAL_TYPE, 1): "Trikal +1", (game.TRIKAL_TYPE, 2): "Trikal +2",
+            (game.LOTULIS_TYPE, 1): "Lotulis +1", (game.METAL_LOTULIS_TYPE, 2): "Lotulis +2",
+            (game.METAL_TWOHAND_SWORD_TYPE, 2): "Two-hand Sword +2",
+            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Two-hand Sword +3"}
+
+
+RAVAGER_MAGIC = _ravager_magic()  # (worldgear.RAVAGER_MAGIC's: by type and plus)
 OBSIDIAN_LONG_SWORD, SEARING_BLADE_NAME = 45, 0x156  # (the Searing Blade, worldgear.py: its name; an obsidian
 # long sword, the Flame Blade, up to 2.18.0, which a saved game's keeps until worldgear.mend_searing_blade)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
@@ -1371,6 +1424,10 @@ def which(rec: bytes) -> Optional[str]:
         return METAL_TYPES[kind]
     if kind == game.DARTS_TYPE and plus == 1:
         return "Darts +1"
+    if kind == game.JAVELIN_TYPE and plus == 1:
+        return "Javelin +1"
+    if (kind, plus) in RAVAGER_MAGIC:
+        return RAVAGER_MAGIC[kind, plus]
     if kind in RAVAGER_KINDS:
         return RAVAGER_KINDS[kind]
     if plus == 1 and kind in MAGIC_KINDS:

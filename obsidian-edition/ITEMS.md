@@ -72,6 +72,9 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/headsman.png) | Metal | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
 | ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's ([polearm reach](FEATURES.md#polearm-reach)) | carried by the **Troop Leader** |
 | ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed) | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
+| ![](docs/items/two-hand-sword-plus3.png) | Metal | ***Two-hand Sword +3*** | +3 (Wake of the Ravager's kind) | in the chest of Balkazar's treasure room in the Wyrm School, by the Belt of Might |
+| ![](docs/items/two-hand-sword-plus2.png) | Metal | ***Two-hand Sword +2*** | +2 (Wake of the Ravager's kind) | a **skeleton** in the Upper Castle (by the earth elemental), with the Bow +2 |
+| ![](docs/items/lotulis-plus2.png) | Metal | ***Lotulis +2*** | +2 (Wake of the Ravager's kind); a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) | carried by one of the **Guards** of the Lower Castle (a +2 weapon before the vrocks that need one) |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
 | ![](docs/items/terror-blade.png) | Obsidian | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
@@ -82,10 +85,15 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/glasshewer.png) | Obsidian | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
 | ![](docs/items/emberlash.png) | Obsidian | ***Emberlash*** | an obsidian cahulaks +1 (two-handed): an earth, fire or air cleric can wield it | wielded by **Uzoma**, leader of the Drajian patrol met west of the Hot Springs once its templar is gone (fought if the party turns on his patrol) |
 | ![](docs/items/deepbiter.png) | Stone | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
+| ![](docs/items/lotulis-plus1.png) | Stone | ***Lotulis +1*** | +1 (Wake of the Ravager's kind); a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) | carried by one of the eight **Guards** of the Hot Springs' Templar |
 | ![](docs/items/gutterknot.png) | Wooden | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | Quarterstaff +2 | +2 | Maris |
 | ![](docs/items/balks-staff.png) | Wooden | Balk's Staff | +1, Slow | Balkazar |
 | ![](docs/items/parting-staff.png) | Wooden | Parting Staff | +1 | hidden in a sewer hole in the Tari's warrens, the high warren elders' treasure (the Skull Elder objects if he sees it taken) |
+| ![](docs/items/double-spear-plus2.png) | Wooden | ***Double Spear +2*** | +2 (Wake of the Ravager's kind; gladiators only) | carried by one of **Arant's Guards** at the captured gladiators' camp |
+| ![](docs/items/double-spear-plus1.png) | Wooden | ***Double Spear +1*** | +1 (Wake of the Ravager's kind; gladiators only) | carried by one of the six **Guards** at the Fields' gate |
+| ![](docs/items/trikal-plus2.png) | Wooden | ***Trikal +2*** | +2 (Wake of the Ravager's kind; gladiators only); a specialist's hit trips ([trikal](FEATURES.md#trikal)); reaches two squares | carried by one of the four **Magera** guarding the way from the Ssuran Ruins into the Wyrm Belly |
+| ![](docs/items/trikal-plus1.png) | Wooden | ***Trikal +1*** | +1 (Wake of the Ravager's kind; gladiators only); a specialist's hit trips; reaches two squares | carried by one of the elven slavers' **Slaver Guards** (the Templar's men) |
 
 ### Missile weapons and ammunition
 
@@ -95,6 +103,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/sling-plus1.png) | Leather | Sling +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl, with the Storm Ring |
 | ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's ([stinkpots](FEATURES.md#staff-sling-stinkpots)) | sold by the **Bowyer** |
 | ![](docs/items/skycutter.png) | Obsidian | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
+| ![](docs/items/javelin-plus1.png) | Obsidian | ***Javelin +1*** | +1 (Wake of the Ravager's kind) | carried by one of the four **Ssurrans** of the Silt Sea Ssurans with the statue piece (theirs if they are killed, not paid) |
 | ![](docs/items/darts-plus1.png) | Wooden | Darts +1 | +1 (Wake of the Ravager's) | carried by the **defiler** among the arena's champions, who throws them |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | Bow +2 | +2 | a skeleton in the Upper Castle |
@@ -132,6 +141,11 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Sling | Sling +2, Sling +1 |
 | Staff sling | ***Windlash*** +1 |
+| Two-handed sword | ***Two-hand Sword +3***, ***Two-hand Sword +2*** |
+| Lotulis | ***Lotulis +2***, ***Lotulis +1*** |
+| Double spear | ***Double Spear +2***, ***Double Spear +1*** |
+| Trikal | ***Trikal +2***, ***Trikal +1*** |
+| Javelin | ***Javelin +1*** |
 | Darts | Darts +1 |
 
 ### Body armour
@@ -279,7 +293,10 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | Drajian Guard, a Templar in the slave pens | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/double-spear.png) | double spear | wood | Jark | the arena's Gladiators (two of the three) | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
 | ![](docs/items/trikal.png) | trikal | wood | Jark | one of the arena's three Gladiators | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)); reaches two squares as a polearm ([polearm reach](FEATURES.md#polearm-reach)) |
-| ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | Village Hero, Elite Guard (in place of the bow), the slave pens' weapon rack | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
+| ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | Village Hero, Elite Guard (in place of the bow) | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
+| ![](docs/items/metal-two-hand-sword.png) | two-handed sword | metal | Melkor (Gedron) | — | **new**: the two-handed sword, in metal |
+| ![](docs/items/metal-lotulis.png) | lotulis | metal | Melkor (Gedron) | — | **new**: the lotulis, in metal |
+| ![](docs/items/metal-javelin.png) | javelin | metal | — | the slave pens' weapon rack | **new**: the javelin, in metal |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | Silt Runner (in place of the sling), the White Sand Outlaws (Slave Hunters) | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 
 ## Every mundane armour piece
@@ -334,9 +351,9 @@ dearest, the Wand of Missiles, is 65,000):
 | Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000, the Searing Blade, +2 with one, 42,800; the game's Bow +2 is 50,800) |
 | Cahulaks +1 (Legcrusher's) | 11,600 (the game's Cahulaks +1's) |
 | Cahulaks +2 | 32,400 (the Cahulaks +1's, and 20,800 for the plus more) |
-| Windlash, Darts +1 | 2,800 (as the game's Sling +1; the sequel's Darts +1 2,000) |
+| Windlash, Javelin +1, Darts +1 | 2,800 (as the game's Sling +1; the sequel's Darts +1 2,000) |
 | Skycutter | 3,500 (as the game's Sling +2) |
-| Plain metal weapons | 50 to 300 (metal cahulaks 200) |
+| Plain metal weapons | 50 to 500 (metal cahulaks 200, metal two-handed sword 500, lotulis and javelin 150) |
 | Plain obsidian cahulaks | 15 (bone 10, as the other obsidian weapons dearer than bone) |
 | Bracers of Defense | 5,000 a point of AC |
 | Ring of Protection +1 | 15,000 |

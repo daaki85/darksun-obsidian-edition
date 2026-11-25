@@ -334,8 +334,13 @@ class CahulaksTests(tg.SiteTests):
             self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 4, 2))[0], want)
         self.where("ammo_turn", (), eax=3)
         self.assertEqual(struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x494A, 2))[0], 20)
-        # none of these: the first target kept
-        for change in (dict(index=0), dict(swings=1, index=0), dict(kind=81), dict(kind=self.TRIKAL)):
+        # the metal lotulis (by its kind): as the lotulis
+        self.assertEqual(self.swing_at(game.METAL_LOTULIS_TYPE), (2, 3))
+        self.assertEqual(self.entry(), (14, 14, 2, 6, 20, 0))
+        self.where("ammo_turn", (), eax=2)
+        # none of these: the first target kept (a type past the kinds' table too)
+        for change in (dict(index=0), dict(swings=1, index=0), dict(kind=81), dict(kind=self.TRIKAL),
+                       dict(kind=game.METAL_TWOHAND_SWORD_TYPE), dict(kind=200)):
             self.assertEqual(self.swing_at(**dict(dict(kind=self.LOTULIS), **change)), (20, 5), change)
         self.specialist(1 + specialize.KINDS.index("trikal"))
         self.assertEqual(self.swing_at(self.LOTULIS), (20, 5))  # (not its specialist)
