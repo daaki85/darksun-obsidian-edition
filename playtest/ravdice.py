@@ -13,6 +13,9 @@
 # RAV_FOES_SL=1: Tab's list by Shattered Lands' rule (another side than the leader's, not side 4), not the sequel's
 # foes (rings.HOSTILE_SIDES: the sides 7-11): a control. With RAV_PREDICT, each change of the list is printed ("Tab
 # list: N: Draxan#26 (side 7), ...").
+# RAV_NO_SAVES=1: no quick saves (F5, F9) and no autosaves (for a run with memory edits). RAV_NO_SQUARES=1: the
+# squares in reach off (R does nothing: the Options tab's switch), RAV_NO_MOVEBACK=1: F10 after the last step left
+# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off): controls.
 # RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
 # the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
 # kept from its last attack (ac_gap) and the game's last AC for it, the effects on it, each swing's THAC0 and AC.
@@ -93,6 +96,18 @@ if os.environ.get('RAV_PREDICT'):  # (what each Tab line's chance was made of: h
         return out
     out_file, _last = out, [None]
     log._swings = _detail
+if os.environ.get('RAV_NO_SAVES'):
+    log.quicksave.keys = log.quicksave.auto = False
+    print('quick saves and autosaves off', flush=True)
+if os.environ.get('RAV_NO_SQUARES'):
+    log.show_squares = False
+    print('squares in reach off', flush=True)
+if os.environ.get('RAV_NO_MOVEBACK'):
+    log.move_back = False
+    print('F10 after the last step: the game\'s', flush=True)
+if os.environ.get('RAV_NO_USABLE'):
+    log.show_usable = False
+    print('Alt marks nothing', flush=True)
 if os.environ.get('RAV_CHARGES_OFF'):
     log.count_charges = lambda entries: None
     print('charges pass off', flush=True)

@@ -375,9 +375,11 @@ The game stops every class at 9th level. With the rule a class goes up while its
 more than **749,999 XP**, shared between a character's classes: the most that keeps a druid from
 13th and a preserver from 12th, where it would cast 6th-level spells. Everything past 9th (hit
 points, THAC0, saves, spell slots, thief skills) is the game's own, which the cap kept out of reach.
+XP stops at the cap too: the Loader holds a character's XP at its share, so none is banked past its
+highest level (the dice log says what wasn't counted; *without the mod* it counts on to 2,000,000,000).
 
-**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP left over at
-the top](PLAYER-GUIDE.md#xp-left-over-at-the-top). How it works:
+**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP stops at
+the cap](PLAYER-GUIDE.md#xp-stops-at-the-cap). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 ### Weapons and armour
@@ -944,7 +946,7 @@ any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*.
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
 of Thorns their pictures, from your copy of Dark Sun: Wake of the Ravager (GOG sells it with
-Shattered Lands), when the Loader finds it; without it they have icons of their own (the game's,
+Shattered Lands), when the Loader finds it, and so do its weapons and the great axes their inventory icons (in the game's colours, each head in its material); without it they have icons of their own (the game's,
 recoloured) and the walls are the game's fire wall in grey or dark brown. Fire Seeds bursts as a
 fireball either way, a picture Shattered Lands has too. The Options tab's **Wake of the Ravager (optional)** section says where
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
@@ -1050,6 +1052,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   scrolled into view, so Enter reaches it. (Without the Loader,
   Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Squares in reach](#squares-in-reach), [F10](#f10-takes-a-whole-move-back) and
+  [Alt](#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
+  small crosses mark the squares they can still walk to, and R hides or shows them. After the last
+  step the sequel opens its own **END MOVE** menu (GUARD, WAIT, END TURN), and F10 does nothing
+  while it is up: Escape closes it, and F10 then puts the member back where the turn began, with the
+  move to walk again (`F10: Lex's move taken back (can walk again)`). Without the Loader the sequel
+  gives the points back but not the walk, so a click goes nowhere. A member held where they stand
+  (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
+  and names it: things to take, doors, bodies to search, people to talk to.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three

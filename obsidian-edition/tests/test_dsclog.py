@@ -3494,6 +3494,35 @@ class RuleTests(RingTests):
                 self.assertEqual(self.level(12, (druid,), race=1, view=view), at)
         self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 0))
 
+    def test_level_room_is_the_xp_share(self):
+        """The Loader's twin of LEVEL_ROOM's share (game.xp_share, where tracker.py holds a party
+        member's XP): a class rises exactly while its next level needs no more than the share, for
+        one class, several and a human who changed class; so XP held at the share is at, or just
+        short of, the top level."""
+        from dsloader import game, tables
+        self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 8))  # (RULES_HI: AD&D's tables)
+        self.rules(128)
+        try:
+            for race, classes, levels in ((2, (9,), (1,)), (3, (17,), (1,)), (2, (1, 9), (1, 1)),
+                                          (3, (5, 11, 17), (1, 1, 1)), (6, (10, 12), (1, 1)),
+                                          (1, (13,), (1,)), (1, (1, 9), (1, 7)), (1, (12, 10), (1, 9)),
+                                          (1, (11, 17, 9), (1, 9, 5))):
+                sheet = bytearray(game.SHEET_SIZE)
+                sheet[game.SHEET_RACE] = race
+                sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + len(classes)] = bytes(classes)
+                sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + len(levels)] = bytes(levels)
+                share = game.xp_share(bytes(sheet))
+                slots = (0,) if race == game.HUMAN else range(len(classes))
+                for slot in slots:
+                    row = tables.CLASS_ROWS[classes[slot]]
+                    for n in range(6, 14):
+                        with self.subTest(race=race, classes=classes, slot=slot, level=n):
+                            below = tables.xp_needed(row, n) <= share
+                            self.assertEqual(self.level(n, classes, levels, race=race, slot=slot),
+                                             (below, not below))
+        finally:
+            self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 0))
+
     def hit_dice(self, cls, levels=9):
         """INT VEC_HD_ROLL with ES:BX a hit point group whose dice go up to LEVELS and the
         game's [BP+8] the class: the levels that roll dice, in AL."""

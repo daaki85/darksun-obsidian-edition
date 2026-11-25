@@ -52,6 +52,8 @@ class SpecializeTests(unittest.TestCase):
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
         cls.sheets = [(c, l, race, kinds, wotr_sheet(c, l, race, kinds))
                       for c, l, race in CHARACTERS for kinds in SPECS]
+        cls.sequel_kinds = {t: (specialize.KIND_OF_TYPE[t], ravager.sequel_weapon_type(t))
+                            for kind in specialize.KINDS[16:] for t in specialize._TYPES[kind]}
         cls.fighters = {kind: wotr_sheet((9,), (3,), 2, [K(kind)]) for kind in specialize.KINDS}
 
     def setUp(self):
@@ -150,6 +152,15 @@ class SpecializeTests(unittest.TestCase):
                 self.assertEqual(got, specialize.SPECIAL, (kind, t))
                 got = self.run_routine("spec_of_sheet", folded, esi=t, edx=0xFF)["edx"] & 0xFF
                 self.assertEqual(got, specialize.PLAIN, (kind, t))
+
+    def test_transfer_keeps_kind(self):
+        """Each of SL's types of the six kinds (148-158: the plain, metal, obsidian and bone ones) goes across as
+        a sequel type (ravager.sequel_weapon_type) of the same kind in DSCLOG2's kind_of_type."""
+        table = self.image[self.sym["kind_of_type"]:self.sym["kind_of_type"] + ravager.GAME_TYPES]
+        self.assertEqual(len(self.sequel_kinds), 11)  # (148-158)
+        for sl_type, (kind, sequel) in self.sequel_kinds.items():
+            self.assertIsNotNone(sequel, sl_type)
+            self.assertEqual(table[sequel] - 1, kind, sl_type)
 
     def test_effects_names(self):
         """EF_LINES_OF's names (ef_kinds) are specialize.KINDS', all 22."""

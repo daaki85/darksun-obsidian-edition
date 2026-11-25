@@ -438,8 +438,11 @@ How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidi
 
 Each of the mod's magic items has an icon of its own (in the [tables above](#every-magic-item)), made
 from the plain item's the way the game makes its magic items' (a few pixels in
-the colours it cycles, which shimmer: fire for a magic weapon, as the game's own,
-unless its story says otherwise: the water's blue for Stillwater and Hayneedle,
+the colours it cycles, which shimmer: fire for a magic weapon unless its story says
+otherwise (the game's own shine in all four: green, the water's blue, violet, and only
+Bloodwrath in fire), and Wake of the Ravager's weapons' in the colour the sequel gives its own of
+that item (the Lotulis +1, Double Spear +1, Darts +1 and Javelin +1 green; the Lotulis +2, the
+Trikals and the Great Swords the water's blue; the Double Spear +2 fire); the water's blue for Stillwater and Hayneedle,
 the air's white and blue for Windlash, Galefang and Skycutter, violet for
 Mindshard, green for Greenbright, the water's blue in every pixel of the Cahulaks +2's
 blades, night steel's dark blue-greys for Shadowseeker's blade; the Cahulaks +1's and Emberlash's

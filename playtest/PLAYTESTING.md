@@ -266,7 +266,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
     `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
-    game's: in a copy, change the display in `env.sh` and `paths.py` only.
+    game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
+    in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the
+    save there and the copy's `start.sh` starts DOSBox from it. **A control run with the old
+    Loader**: the kit's `obsidian-edition` a link to a detached `git worktree` of
+    `origin/obsidian-edition` (its own patched files and `settings.json`), then the same steps;
+    remove the worktree after (logs/2026-11-25-xp-held-at-cap.md: `:56`, `dbxp`).
   - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
     arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
     rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The
@@ -297,6 +302,15 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
+
+- **The stock game** (no Loader, no dice log: OpenDS's darkfix betas, or the original's behaviour):
+  `darkfix_apply.py inst/GPLDATA.GFF darkfix-inst/GPLDATA.GFF FIXES` into a copy of `inst` in the work
+  folder (it reads their fix files, never runs them), then `start_stock.sh` (GOG's
+  `dosbox_darksun.conf` first: with our conf alone DSUN.EXE went straight back to DOS). The intro
+  plays (Escape), then the main menu and loadsave.sh's clicks; the Loader's saves load in it, and
+  `click.py`, `walkto.py`, `pointer.py`, `state.py` work (they read memory). No dice log: read the
+  screen. **A reload replays the same rolls** (a load doesn't reseed): wait a different time before a
+  roll to see the other outcome ([the grate's QA](logs/2026-11-24-darkfix-beta-qa.md)).
 
 ## Reading the game
 
@@ -778,6 +792,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   213,134). **To give an item to another member**: click it, click the other's portrait (22,160 for
   the fourth), click the place. The screen can draw the backpack one change behind: close the
   inventory and open it again (Escape, I) before believing a cell is empty.
+- **Wake of the Ravager's weapon icons** (`sequelicons.py`) are put in the Loader's copy only when
+  it finds the sequel (`$WORK/rav`, from `setup_ravager.sh`); without it the game shows the
+  Loader's own drawings. Check which a play has before judging an icon
+  (logs/2026-11-25-sequel-weapon-icons.md).
 - **AC in the inventory**: the AC line is the game's own, worked out afresh from what is worn, but
   drawn one change behind: switch to another member's portrait and back (20,62 then 20,20) before
   reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the THAC0 line
@@ -996,6 +1014,15 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
 9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
+10. **R, F10 and Alt in Wake of the Ravager** (logs/2026-11-25-ravager-fight-keys.md): after a
+   member's last step the sequel opens its own **END <name>'s MOVE** menu (GUARD, WAIT, END TURN)
+   and F10 does nothing while it is up: press Escape first (the menu is a screen up, so it's safe),
+   then F10. `ravkeys.py` shows the squares, F10's counts (moves taken back, refused), the points,
+   the flags (bit 0 clear: no walk) and the turn's start; `ravkeys.py effect OWNER 66` (Cannot
+   Move) or `69` (Paralyzed) holds a member for the pin's test and `del` takes it off (never save
+   after). The crosses on Tyr's grey street are dark (no light for stone). Alt's rings come only out
+   of a fight; in one RING_TAB stays empty. Put the four on Computer Control (the small icons beside
+   USE) to end the ambush quickly: they win it in a few minutes with HP 250.
 
 ### Foes in a test fight
 

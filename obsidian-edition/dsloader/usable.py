@@ -49,6 +49,9 @@ DOOR_TYPES = (0x17, 0x72)
 BODIES = (1101, 2666)  # the Dead Body's objects (a thri-kreen's the second)
 STATUS_DYING, STATUS_DEAD = 4, 5
 SIDE_NEUTRAL = 4
+# Wake of the Ravager's foes: those whose side's bit (1 << side) is in this mask (rings.HOSTILE_SIDES's, the game's
+# own 0F80h); None: Shattered Lands' rule (another side than the leader's, not the neutral one). ravlog sets it.
+HOSTILE_SIDES: Optional[int] = None
 PERSON, FOE, DOOR, CONTAINER, BODY, ITEM, USED = "person", "foe", "door", "container", "body", "item", "use"
 RING = 1  # (DSCLOG's ring kind: two pixels thick, tinted twice)
 NAMED = labels.SLOTS
@@ -115,7 +118,10 @@ def creature_kind(rec: bytes, index: int, leader: bytes, talk: Set[int]) -> Opti
         return None
     if struct.unpack_from("<h", rec, CREATURE_ID)[0] in talk:
         return PERSON
-    if len(leader) >= game.CREATURE_SIZE and rec[game.CREATURE_SIDE] not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL):
+    side = rec[game.CREATURE_SIDE]
+    if HOSTILE_SIDES is not None:
+        return FOE if side < 16 and HOSTILE_SIDES >> side & 1 else None
+    if len(leader) >= game.CREATURE_SIZE and side not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL):
         return FOE
     return None
 

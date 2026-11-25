@@ -99,6 +99,11 @@ Releases, newest first (2.12.0 and older in the archive):
 - An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
   sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
   chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
+- The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
+  own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
+  material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
+  fire), not all in fire; without it, the Loader's own, the double spear, trikal and
+  darts redrawn at the sequel's sizes (the user's).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
@@ -111,13 +116,20 @@ Releases, newest first (2.12.0 and older in the archive):
   the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
   through the install's vector table; `test_framecode` runs the shared routines. A play log:
   [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
-- The seventh memory pass: 1,296 bytes of upper memory back for DSCLOG (2,224 free now) and 240 of
+- The seventh memory pass: 1,296 bytes of upper memory back for DSCLOG (2,208 free now) and 240 of
   its segment. The Loader's item types and names, and the mends to the game's own types, are in the
   item chunks of its copy of GPLDATA.GFF (`itemtables.py`) instead of DSCLOG's tables; DSCLOG only
   notes where the game put them. A new item now costs no resident memory. Nothing the player sees
   changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md).
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
+
+**Changed**
+
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
