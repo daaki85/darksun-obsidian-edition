@@ -24,7 +24,7 @@ REGISTER = ((1, 1), (0, 0), (0, 0), (1, 1), (0, 1), (1, 1), (0, 1), (0, 0), (0, 
 
 # Per-row limits on the bald scalp, ear and jaw. Origins move separately
 # from the shoulder in the backswing, recoil and bow poses.
-FRONT = ((2, 4), (1, 5), (0, 6), (0, 6), (0, 6), (1, 6), (2, 5))
+FRONT = ((2, 4), (1, 5), (0, 6), (0, 6), (0, 6), (0, 6), (1, 6), (2, 5))
 BACK = ((1, 3), (0, 4), (0, 5), (0, 5), (0, 5), (0, 4), (1, 4))
 SIDE = ((2, 4), (1, 5), (0, 5), (0, 6), (1, 6), (2, 5))
 HEADS = (
@@ -62,6 +62,37 @@ def head_pixels(pose, w, h):
     # These corners lie on the harness or the raised wrist, outside the jaw.
     outside = {8: {(5, 5), (9, 6)}, 10: {(7, 6)}, 23: {(13, 5)}, 26: {(5, 7)}}
     return pixels - outside.get(pose, set())
+
+
+# The neck opening is wider than the face itself. Each row gives the
+# height and span of the exposed clavicles, then the tip of the opening.
+# Traces are in native cel coordinates (feet down for the fallen cel).
+# In profile the throat moves forward of the shoulder; on recoil it lies
+# behind the projected chin. The nape needs a shallower opening.
+NECKLINES = (
+    (5, 6, 16, 11, 11), (5, 8, 16, 11, 9), (3, 4, 12, 7, 9),
+    (5, 5, 15, 10, 11), (5, 4, 14, 9, 11), (4, 5, 15, 10, 10),
+    (5, 5, 15, 10, 11), (5, 3, 11, 7, 9), (5, 3, 12, 7, 9),
+    (5, 4, 12, 8, 9), (5, 4, 12, 8, 9), (3, 6, 14, 9, 9),
+    (3, 8, 17, 11, 9), (3, 5, 13, 8, 9), (3, 7, 16, 10, 9),
+    (6, 5, 13, 9, 12), (5, 7, 17, 12, 10), (7, 3, 12, 8, 14),
+    (5, 3, 11, 6, 9), (5, 1, 9, 6, 9), (5, 3, 11, 8, 9),
+    (4, 5, 13, 9, 10), (3, 9, 18, 13, 9), (3, 9, 18, 13, 10),
+    (4, 4, 14, 8, 11), (8, 5, 13, 9, 13), (7, 3, 12, 8, 13),
+    (7, 0, 10, 7, 13), (5, 5, 16, 10, 11),
+)
+
+
+def neckline_pixels(pose, width, height):
+    top, left, right, tip_x, bottom = NECKLINES[pose]
+    pixels = set()
+    for y in range(top, bottom + 1):
+        depth = (y-top) / (bottom-top)
+        start = round(left + depth*(tip_x-left))
+        end = round(right + depth*(tip_x-right))
+        for x in range(start, end + 1):
+            pixels.add((width-1-x, height-1-y) if pose == 28 else (x, y))
+    return pixels
 
 
 @lru_cache(maxsize=2)
@@ -133,6 +164,11 @@ MUL_LINEN = (208, 204, 207, 205, 194, 206, 120, 61, 123, 199, 125, 62, 155, 63)
 def cleric_robe(game, pose, body, protected, arm):
     shoulder, ribs, waist, hem, lift = ROBE_CUTS[pose]
     height, width = len(body), len(body[0]) - 2*PAD
+    # A crossing arm hides the last sliver of sleeve in these poses.
+    # Expose the skin there so an isolated linen fleck cannot sit at the jaw.
+    sleeve_tips = {12: ((5, 9),), 19: ((3, 8),), 24: ((5, 7), (5, 8)),
+                   25: ((12, 13),), 26: ((4, 9),)}
+    protected = protected.union(sleeve_tips.get(pose, ()))
     result = [row[:] for row in body]
     grain = linen_grain(game)
     side = pose in (2, 11, 12, 13, 14, 15, 22, 23, 24)
@@ -226,6 +262,9 @@ def fitted_rows(game, pose):
                        if 0 <= v+j < len(bare) and 0 <= u+i < len(bare[0]) and bare[v+j][u+i] in SKIN]
             edge = x == w-1 or row[x+1] is None or y == h-1 or native[y+1][x] is None
             body[y][x+PAD] = 129 if edge else SKIN[samples[0]] if samples else 135
+    # Restore the dressed figure’s open neckline from the cleaned skin.
+    # Extending the retail head mask here would bring back harness pixels.
+    keep.update(neckline_pixels(pose, w, h))
     # The near hand crosses the hip at side step two, and the draw hand
     # overlaps the tunic in the front bow. Keep those knuckles on top.
     for hx, hy in parts.hands.values():
@@ -301,12 +340,39 @@ def fitted_rows(game, pose):
     return out
 
 
-def cleric_comparison(game, pose, rows, sand, previous_sheet):
-    # Sample the lossless 2x proof at 61f043d so its pixels and registration
-    # survive even after the old generator is changed.
-    x = 8 + (pose % 2)*558 + ROLES.index("Cleric")*110
+def sheet_tile(sheet, pose, role):
+    x = 8 + (pose % 2)*558 + ROLES.index(role)*110
     y = 76 + (pose//2)*137
-    before = previous_sheet.crop((x, y, x+108, y+102)).resize((54, 51), Image.Resampling.NEAREST)
+    return sheet.crop((x, y, x+108, y+102)).resize((54, 51), Image.Resampling.NEAREST)
+
+
+def neckline_comparison(game, previous, current):
+    poses = (0, 12, 16, 17, 24, 26)
+    page = Image.new("RGB", (790, 80 + 104*len(poses)), dwarf.PAPER)
+    label(page, (12, 8), "Mul Cleric   /   face and neckline", 21)
+    columns = ((current, "Original", "Retail Mul"), (current, "Body base", "Cleaned body"),
+               (previous, "Cleric", "Previous collar"), (current, "Cleric", "Open collar"))
+    for j, (_, _, caption) in enumerate(columns):
+        label(page, (156 + 166*j, 45), caption, 16)
+    for i, pose in enumerate(poses):
+        native = game.fr(MODEL + pose//15, pose % 15)
+        left, top, _ = HEADS[pose]
+        x = (54-len(native[0]))//2 + left - 4
+        y = 51-2-len(native) + top - 1
+        row = 75 + 104*i
+        label(page, (12, row+24), f"{pose:02}", 13)
+        label(page, (12, row+43), dwarf.NAMES[pose], 13)
+        for j, (sheet, role, _) in enumerate(columns):
+            tile = sheet_tile(sheet, pose, role)
+            close = tile.crop((x, y, x+17, y+15))
+            col = 123 + j*166
+            page.paste(close.resize((102, 90), Image.Resampling.NEAREST), (col, row))
+            page.paste(tile, (col+104, row+39))
+    return page
+
+
+def cleric_comparison(game, pose, rows, sand, previous_sheet):
+    before = sheet_tile(previous_sheet, pose, "Cleric")
     cb, f = divmod(pose, 15)
     npc = 1563 + cb
     caption = "Retail Priest"
@@ -329,7 +395,7 @@ def cleric_comparison(game, pose, rows, sand, previous_sheet):
     return page
 
 
-def render(game_dir, output, previous_sheet=None):
+def render(game_dir, output, previous_sheet=None, previous_neckline=None):
     atlas = Atlas(game_dir)
     game = atlas.game
     sand = Image.open(TERRAIN).convert("RGB").crop((39, 130, 93, 181))
@@ -387,6 +453,9 @@ def render(game_dir, output, previous_sheet=None):
     output.mkdir(parents=True, exist_ok=True)
     loop(frames, output/"mul-study.gif")
     sheet.save(output/"mul-poses.png")
+    if previous_neckline:
+        with Image.open(previous_neckline) as old:
+            neckline_comparison(game, old, sheet).save(output/"mul-neckline.png")
     if comparisons:
         loop(comparisons, output/"mul-cleric-fitting.gif")
 
@@ -396,5 +465,6 @@ if __name__ == "__main__":
     parser.add_argument("game_dir", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--previous-sheet", type=Path, help="mul-poses.png from 61f043d for the fitting comparison")
+    parser.add_argument("--previous-neckline", type=Path, help="mul-poses.png from cab055c for the collar close-up")
     args = parser.parse_args()
-    render(args.game_dir, args.output, args.previous_sheet)
+    render(args.game_dir, args.output, args.previous_sheet, args.previous_neckline)
