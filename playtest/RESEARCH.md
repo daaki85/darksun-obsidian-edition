@@ -739,6 +739,25 @@ level's slots shows "ZERO LEVEL 9 SPELLS TO CAST": write the slots again and pre
 
 **The sequel's screens: DAM lines, Effects, the Look box's close** (2026-11-25, logs/2026-11-25-ravager-screens.md): the inventory's DAM line routine is SL's at 7AF9Eh (its item DI, type SI, the creature far at `[BP-6]`, 0 in an item box): the melee branch reads the sheet's +24h at 7B19Eh, the missile branch the type's +7 at 7B124h, each then "mov ah,0" and the push for the line's routine (7B1D9h); the bonus, sides and count are pushed under it. View Character's line is at 6CA43h on (`[BP-6]` the attacks, `[BP-2]`/`[BP-4]` the dice, `[BP-0Ah]` the item, the bonus stored at 6CAC9h); it took Ester's left-hand weapon. The likeness search missed both (the sheet's and types' sizes differ): search for the sheet read (`26 8A 47 24`) instead. **The Effects screen**: the cells' routine 8AC6Fh (ends 8AFA9h, `[BP-4]` the cells used), the handler 8AB13h (its redraw "call 140:60Dh" at 8AC62h, way out 8AC6Ah); USE, then EFFECTS (122,171), the portraits at (70,56), (117,56), (70,127), (117,127), the lower panel's lines from (150,108). **The dialogue window**: its stub 476Ch (SL's 42CAh, entries 25h the input and 34h the wait), found by its callers' likeness (SL's 42CA:2Ah calls at 1BC2Ch/1BE74h, the sequel's 476C:2Ah at 1F063h/1F2D6h). **To see the Look box's description** a monster needs more than HP, AC and THAC0 to say: Draxans have no defences, so set their resistance class (the creature's +0Fh) to 2 in memory for a test (never saved). **A spec edit for a test** must write the packed SPEC_V2 form (the kinds base 17 in the low 17 bits of +42h..+44h): the Loader's age pass rewrites plain bytes there. The Effects screen's kit line needs RULE_HI_KITS (1) in DSCLOG2's rules_hi (header +270), which the Loader doesn't set until the kits' rules are ported. **The opening talk** of a new game with the transferred party runs into the Draxans' fight after three Continues (100,171); the screens open in the fight: the top-left icon (22,17), then VIEW INVENTORY (74,171); on the inventory its bar's first icon (170,187) is VIEW CHARACTER; on View Character and Effects the bar is (47,171) VIEW CHARACTER, (74,171) the inventory, (122,171) EFFECTS; the inventory's portraits at (25,25), (25,69), (25,117), (25,165).
 
+**The sequel's first spells and powers** (2026-11-25, logs/2026-11-25-ravager-first-spells.md): the creation
+screen's DONE (6E0B9h, 5C0:57h; SI the member) calls 6E6D8h, the powers (6E906h, 5C0:2Ah), a preserver's spells
+(6EA10h, 5C0:2Fh), 6ED7Dh, then 98:0Fh, all from DONE only (no START GAME path as in SL). The wizard spells known
+are a bitset (selector 320h, the load + 3D62h: 39Ch + 15 a member, bit n spell n; SPELL_STARTS at DS:0656h: 1st
+level 0-11, 2nd 12-24, 3rd 25-38, 4th 39-55); the powers a byte each (selector 370h, the load + 3E71h: 9CDh + 22h a
+member, bits 1-7 the number, 580:39h gives one as 2), the disciplines' bits A55h + the member; the pop-up's
+discipline shown DS:9D7Bh + the member, its picks left DS:43ECh (CHOOSE A SPELL's page level too), its list DS:9C20h
+(words, 0 the end). Selector 360h holds the screen's snapshot (+0 the preserver level at an EDIT's opening, the
+spells given again only when it differs) and the powers' table (+6 three rows of 5, +15h the psionicist's 20). The
+level up's windows take a member and run until closed: CHOOSE A SPELL 688:66h (93160h; one spell a call), the
+psionicists' pop-up 688:61h (93B62h; its count from the psionicist level, closed at none); module 40's stub segment is
+DS - 30h, module 15's DS - 103h. The overlay layout (modules, stubs, entries) from Dark Sun Recompiled's
+`tools/build_image.py DSUN.EXE --out DIR` (its layout.json: a module's `record` x 8 is its selector). **SITE's way
+back** is the byte after the site's number: for a 4-byte site the NOP, so a site that stands for a jump adds the
+target less that address (one byte late, PSI_LIST jumped into an instruction: "Illegal Op (gpl=49)" on a click).
+`ravfirst.py` reads it all. In the creation screen the pop-up's discipline button is (115,140), EXIT (202,140), its
+icons from (121,62) 19 apart; CHOOSE A SPELL's icons five a row from (124,74), 19 by 17 apart, LEVEL (107,147), EXIT
+(205,147); "YOU HAVEN'T CHOSEN"/"YOU HAVE MORE"'s EXIT (112,92).
+
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
 at 5C6EEh each attack), the sheet in `[BP-12h]`, the weapon type in `[BP-4]`, the target-is-an-object

@@ -15505,6 +15505,8 @@ cr_spells:
         jc .fill
         dec word [cs:cr_left]
         inc word [cs:cr_picked]
+        movzx di, cl
+        dec byte [cs:cr_due + di - 1]   ; (CR_DUE: those still due at each level, for CR_FILL)
         dec ch
         jmp .one
 .up:    inc cl
@@ -15539,10 +15541,34 @@ cr_one:
         stc
         ret
 
-; CR_FILL: member SI given CR_LEFT more of CR_DEFS, in their order, less any known. Registers changed.
+; CR_FILL: member SI given CR_LEFT more of CR_DEFS, less any known: first those of a level with picks
+; still due there (CR_DUE), in their order; then any still left, in their order. Registers changed.
 cr_fill:
         call known_bits
         xor di, di
+.level: cmp word [cs:cr_left], 0
+        je .ret
+        cmp di, [cs:cr_n]
+        jae .rest
+        mov al, [cs:cr_defs + di]
+        inc di
+        call bit_known
+        jnz .level
+        call wiz_level
+        movzx dx, dl
+        push bx
+        mov bx, dx
+        cmp byte [cs:cr_due + bx - 1], 0
+        je .later
+        dec byte [cs:cr_due + bx - 1]
+        pop bx
+        call bit_set
+        dec word [cs:cr_left]
+        inc word [cs:cr_filled]
+        jmp .level
+.later: pop bx
+        jmp .level
+.rest:  xor di, di
 .each:  cmp word [cs:cr_left], 0
         je .ret
         cmp di, [cs:cr_n]
@@ -15799,6 +15825,8 @@ psi_snap:
         popa
         ret
 
+; (SITE's way back is the byte after the site's number: the NOP of a 4-byte site, so a jump's target is counted
+; from there.)
 ; PSI_COUNT (site 95): "or dx,dx / jz" (93B95h; 4 bytes) in the pop-up's opening (DX the psionicist's
 ; level, 0 none: the window not opened): in PSI_MODE the picks left (DS:43ECh) PSI_DUE's, the window opened.
 psi_count:
@@ -15813,7 +15841,7 @@ psi_count:
         jnz .out
         push bp
         mov bp, sp
-        add word [bp + 2], 0x93BD3 - 0x93B99
+        add word [bp + 2], 0x93BD3 - 0x93B98
         pop bp
 .out:   iret
 
@@ -15826,9 +15854,9 @@ psi_list:
         jz .list
         cmp byte [cs:psi_mode], 0
         je .out
-        add word [bp + 2], 0x93E4A - 0x93E1F
+        add word [bp + 2], 0x93E4A - 0x93E1E
         jmp .out
-.list:  add word [bp + 2], 0x93E41 - 0x93E1F
+.list:  add word [bp + 2], 0x93E41 - 0x93E1E
 .out:   pop bp
         iret
 
@@ -15851,9 +15879,9 @@ psi_click:
         jz .give
         cmp byte [cs:psi_mode], 0
         je .out
-        add word [bp + 2], 0x94389 - 0x94249
+        add word [bp + 2], 0x94389 - 0x94248
         jmp .out
-.give:  add word [bp + 2], 0x94269 - 0x94249
+.give:  add word [bp + 2], 0x94269 - 0x94248
 .out:   pop bp
         iret
 

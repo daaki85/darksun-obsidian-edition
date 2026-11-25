@@ -5,7 +5,8 @@ first spells' and powers' counts (the running sequel, $WORK/rav.pid; read only).
                                     n) by level and name, the powers known (selector 370h, the load + 3E71h: 9CDh +
                                     22h a member, bits 1-7 the power's number) and the disciplines' bits (A55h +
                                     the member); then DSCLOG2's CR_PICKS/PSI_GRANT counts (cr_members, cr_windows,
-                                    cr_picked, cr_filled, psi_asks, psi_filled, psi_kept) and its psi_due, cr_cap
+                                    cr_picked, cr_filled, psi_asks, psi_filled, psi_kept), its psi_due and cr_cap,
+                                    the game's spells and powers it took back (cr_defs, cr_due, psi_defs)
 Run from playtest/."""
 import argparse, os, struct, subprocess, sys, tempfile
 PT = os.path.dirname(os.path.abspath(__file__))
@@ -61,3 +62,9 @@ at, sym = helper()
 words = ('cr_members', 'cr_windows', 'cr_picked', 'cr_filled', 'psi_asks', 'psi_filled', 'psi_kept')
 print('DSCLOG2:', ' '.join(f"{w}={struct.unpack('<H', g.read(at + sym[w], 2))[0]}" for w in words),
       f"psi_due={g.read(at + sym['psi_due'], 1)[0]} cr_cap={g.read(at + sym['cr_cap'], 1)[0]}")
+n = struct.unpack('<H', g.read(at + sym['cr_n'], 2))[0]
+print('  the game\'s spells taken back (cr_defs):', ', '.join(names[b] for b in g.read(at + sym['cr_defs'], n)),
+      '| still due by level (cr_due):', list(g.read(at + sym['cr_due'], 10)))
+pn = struct.unpack('<H', g.read(at + sym['psi_n'], 2))[0]
+print('  the game\'s powers made picks (psi_defs):', ', '.join(names[0xEB + b] for b in g.read(at + sym['psi_defs'], pn)))
+
