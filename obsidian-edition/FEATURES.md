@@ -376,9 +376,11 @@ The game stops every class at 9th level. With the rule a class goes up while its
 more than **749,999 XP**, shared between a character's classes: the most that keeps a druid from
 13th and a preserver from 12th, where it would cast 6th-level spells. Everything past 9th (hit
 points, THAC0, saves, spell slots, thief skills) is the game's own, which the cap kept out of reach.
+XP stops at the cap too: the Loader holds a character's XP at its share, so none is banked past its
+highest level (the dice log says what wasn't counted; *without the mod* it counts on to 2,000,000,000).
 
-**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP left over at
-the top](PLAYER-GUIDE.md#xp-left-over-at-the-top). How it works:
+**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP stops at
+the cap](PLAYER-GUIDE.md#xp-stops-at-the-cap). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 ### Weapons and armour

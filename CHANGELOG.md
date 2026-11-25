@@ -62,7 +62,7 @@ Releases, newest first (2.12.0 and older in the archive):
 (The test branch `claude/combined-playtest` holds every open pull request together, #146 to #179;
 each pull request's own entry is below, grouped.)
 
-**New: Shattered Lands** (#149, #154, #157)
+**New: Shattered Lands** (#149, #154, #157, #187)
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
   double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
   name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
@@ -95,6 +95,10 @@ each pull request's own entry is below, grouped.)
   material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
   fire), not all in fire; without it, the Loader's own, the double spear, trikal and
   darts redrawn at the sequel's sizes (the user's).
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
 
 **New: Wake of the Ravager** (#148, #151, #152, #155, #156, #158, #160 to #177)
 - The mod's bug fixes, rules and displays ported to the sequel (#148): hit dice, helms, held
