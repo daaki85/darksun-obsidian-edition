@@ -942,6 +942,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
   bought back. A shopkeeper's own discount in the sequel (Tasarla's for the Veiled Alliance) comes on top.
+- **[Two weapons](#two-weapons)** as in Shattered Lands: -2 in the main hand and -4 in the off hand, DEX's
+  adjustment, one attack a round with the off hand; a ranger has none of it only in light armour (leather, or
+  armour of no material), as in Shattered Lands, where the sequel let a ranger off in any armour. And over the
+  figures, a spell's charge used floats its count as in Shattered Lands (`Armor: 7 left`).
 - **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
   SPELL](#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the

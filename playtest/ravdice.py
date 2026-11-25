@@ -5,6 +5,8 @@
 # tell apart foes of one name (as ravitems.py and ravfight.py number them). RAV_RULES_OFF=MASK (game.RULE_* bits, as 0x1000000): those rules off
 # after the attach, in the Loader and DSCLOG2's header alike (a control run of a rule the Loader keeps).
 # RAV_TAB_OFF=1: the red ring under the enemy chosen with Tab and the chances to hit (its line's, the pointer's) off.
+# RAV_CHARGES_OFF=1: the charges' pass off (DiceLog.count_charges, as before its port: the charge routine's 2d4 behind the
+# overlay manager's stub not known, its label "Armor: 7 left" with it), a control.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
 import sys, os, time, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
@@ -32,6 +34,9 @@ if os.environ.get('RAV_TAB_OFF'):  # (a control: no ring, no chance to hit on th
     print('Tab: ring and chances off', flush=True)
 if os.environ.get('RAV_STEALTH_ROLL'):
     log.stealth_roll = lambda n=int(os.environ['RAV_STEALTH_ROLL']): n
+if os.environ.get('RAV_CHARGES_OFF'):
+    log.count_charges = lambda entries: None
+    print('charges pass off', flush=True)
 end = time.time() + secs
 while time.time() < end:
     for line in log.lines(show_all):

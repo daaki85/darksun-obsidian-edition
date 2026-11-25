@@ -1443,6 +1443,32 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   panel's windows by id (19504/19505 the game's, 3022/3023 the KITS ones, 3026 on a kit page) and
   DSCLOG2's counters (kit_pages_shown, kit_rows_taken; dual_asks, dual_kits for DUAL).
 
+**A ranger's two weapons, the charges' labels and the music** (2026-11-25, logs/2026-11-25-ravager-small-ports.md):
+- **The sequel's two-weapon routine** (5DE34h) is SL's (595ECh) on the sequel's records: its test for a ranger
+  is "test word es:[bx+10h],200h" at 5DE67h (the sheet's flags +10h, SL's +12h; DSCLOG2's site 78 RG_TWO now),
+  then "jnz" to no penalty. A party member's flags: `ravkits.py flags MEMBER [+WORD]` (`show` lists them too).
+- **Armor for a test**: `ravknow.py 0` teaches the transferred party's member 0 (Lex) Armor too (the bitset at
+  3F3DCh is member 0's whoever it is); on his turn C, the first icon (game 175,58), then a portrait on USE (Jenna's
+  120,117) casts it on that member: 10 charges at caster level 2.
+- **A creature's DEX** is its record's +1Ah (`CREATURE_ABILITIES` +1 in ravlog's layout). An edit holds through
+  a fight's turns but not a spell cast on the creature: Armor cast on Jenna read her DEX from her sheet again.
+- **An item's worn slot** (+13h): trading two items' slots (the chest's leather and an armour from the pack) puts
+  a member into other armour at once, for the game's routines and DSCLOG2's ARMOUR_WORN alike (no screen needed).
+- **The event queues** (timed effects' ends) are two far pointers at DS:2A63h and two counts at DS:2A6Bh, 11h
+  bytes an event (SL's 2FBEh, 2FC6h: `ravds.py --fuzzy`; the queue routines from 2C4FCh). The charges pass
+  (DiceLog.count_charges) reads them; `RAV_CHARGES_OFF=1` for `ravdice.py` takes the pass out for a control.
+- **A label on screen**: DSCLOG2 puts a slot's label up only as the game draws the map, so a charge used during
+  a foe's blow shows once its picture is done, and one written and gone within a blow's animation (two charges in
+  one turn) isn't seen at all. To catch labels: grab the window every 0.3 s and watch the slots (number, width,
+  thing at the tail's LBL_SLOTS) with the time; the label's ink is one palette colour (#9AE3FF for the charges'
+  blue in Tyr's street), so `convert FRAME -format %c histogram:info:` finds the frames with it.
+- **The sequel's music** is its CD's audio (README.TXT: "no MIDI music (just off the CD)"; SOUND.INI
+  `[MidiNotEnabled]`; GOG's SOUND.CFG the SB Pro II's FM and digital drivers; 40 .ogg tracks): the Loader's
+  music device is Shattered Lands' alone.
+- **Tyr's thieves from `ravager-after-ambush`**: the arrow keys (Up 8, Right 40, 150 ms apart) left the leader
+  at world (2112, 1632) in one try, not the alley; the transferred party's ambush (the Tab log's run script) is
+  the surer fight.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
