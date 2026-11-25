@@ -1225,7 +1225,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     exe = dosbox_dir and _find_file(dosbox_dir, "DOSBox.exe")
     if not exe or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Wake of the Ravager")
-    problem = ravager.prepare(game_dir, DOS_DIR, settings)
+    problem = ravager.prepare(game_dir, DOS_DIR, settings, find_game_dir())  # (Shattered Lands': the new items' pictures)
     if problem:
         raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
     try:  # (the roster's and the saves' sheets the copy's 48h: ravager.widen_files)
