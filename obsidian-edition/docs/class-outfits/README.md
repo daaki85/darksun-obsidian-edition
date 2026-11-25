@@ -42,6 +42,8 @@ The Thief's slate hood has a raised crown and an open rim. From behind, the nape
 
 ## Male human
 
+The Gladiator’s bronze shoulder guard sits on the upper arm. A diagonal leather strap crosses the ribs and meets the waistband at the opposite hip. In rear walk and side strike, follow the overlapping kilt flap against the advancing thigh. The loop shows the cleaned body, the outfit at `638663e`, and the revised fit in all 29 poses at 4× and game size. [Watch the male Gladiator comparison](human-gladiator-fit.gif)
+
 The male Psionicist wears a sleeveless teal wrap. The diagonal fold turns with his ribs and tucks under the leather belt. [Compare the six reported poses before and after the redraw](human-psionicist-wrap.png) · [See the wrap through all four profile steps alongside an equipped cloak](human-psionicist-fit.gif) · [Inspect all 29 Psionicist frames](human-psionicist-all-frames.png) · [Watch the full comparison](human-psionicist-all-frames.gif)
 
 In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The earlier profile repair loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](human-priest-profile.gif)
