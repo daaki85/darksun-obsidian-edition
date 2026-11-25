@@ -5,7 +5,7 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (its 48h sheets: FOLDER's roster and saves widened, NAME.42H backups; `python -m dsloader.ravager narrow FOLDER` before a plain start; `RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_MENU=1` stops at the
+# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_SOUND=1` keeps DOSBox's sound on (SDL's dummy audio device: the game finds its card, nothing heard). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
@@ -16,6 +16,7 @@ printf 'FILE "game.gog" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' 
 C=$WORK/rav.conf
 grep -v "^#" "$F/__support/app/dosbox_darksun2.conf" | sed '/^\[autoexec\]/,$d' |
   sed 's/^output=.*/output=surface/; s/^fullscreen=.*/fullscreen=false/; s/^nosound=.*/nosound=true/' > "$C"
+[ -n "$RAV_SOUND" ] && sed -i 's/^nosound=.*/nosound=false/' "$C"   # (sound on, to a dummy audio device: the game's sound driver found as with a card)
 [ -n "$RAV_UMB" ] && sed -i 's/^ems=true/ems=false/' "$C"
 if [ -n "$RAV_LOADER" ]; then   # the Loader's way: its copies (dsloader.ravager) and its autoexec
   sed -i '/^\[dos\]/,$d' "$C"
@@ -59,7 +60,7 @@ fi
 [ -n "$RAV_MARK" ] && sed -i 's/^exit$/echo ended > c:\\ENDED.TXT\nexit/' "$C"   # (a file when the autoexec goes on past the game: when it ended)
 [ -n "$RAV_STDOUT" ] && sed -i 's/^\(.*dsun[a-z0-9]*\.exe -W0 -L\)$/\1 > c:\\STDOUT.TXT/I' "$C"   # (the game's own printing, a fatal error's message among it, to a file)
 pgrep -x Xvfb >/dev/null || { setsid nohup Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 & sleep 2; }
-setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
+SDL_AUDIODRIVER=${RAV_SOUND:+dummy} setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
 echo $! > "$WORK/rav.pid"; sleep 6
 W=$(timeout 5 xdotool search --pid "$(cat "$WORK/rav.pid")" | tail -1)
 [ -z "$W" ] && { echo "no DOSBox window"; exit 1; }
