@@ -158,6 +158,15 @@ CROSSING_ARMS = {
 }
 
 
+# The thick centre line misses these outer contours of the passing elbow,
+# knuckles and wrist. Keep their skin above both fitted and hanging cloth.
+ARM_EDGES = {
+    2: ((8, 13),), 12: ((5, 9),), 17: ((9, 11), (12, 9)), 19: ((3, 10),),
+    24: ((8, 11), (10, 17)), 25: ((11, 11), (13, 12), (12, 13)),
+    26: ((4, 9),),
+}
+
+
 @lru_cache(maxsize=2)
 def linen_grain(game):
     return reference_folds(game)["linen"]
@@ -361,7 +370,7 @@ def leather_outfits(game, pose, body, keep, arm):
             # between the legs and turns towards the advancing knee.
             left = round(wl + (knee-3-wl)*max(drop, 0))
             right = round(wr + (knee+3-wr)*max(drop, 0))
-            if profile and wy+1 <= y < hem-1 and wl-2 <= x < left:
+            if profile and (pose, x, y) != (15, 2, 17) and wy+1 <= y < hem-1 and wl-2 <= x < left:
                 back_edge = wl-round(2*(y-wy)/max(1, hem-wy))
                 if x >= back_edge and y <= hem-1:
                     fighter[py][u] = material_color(hide, 6.1+.9*weave+2.7*(x == back_edge+1))
@@ -397,6 +406,12 @@ def leather_outfits(game, pose, body, keep, arm):
                 fighter[py][u] = material_color(JERKIN, shade-2.7+2.0*cos(tab*1.3))
                 if abs(tab) < .85 and y <= wy+2:
                     fighter[py][u] = 199 if y == wy+1 else 205
+    # Return the two profile tabs over the thigh where their folds meet.
+    if pose in (12, 13):
+        x, y = (8, 17) if pose == 12 else (2, 18)
+        fighter[y][x+PAD] = 90
+    if pose == 24:
+        glad[18][9+PAD] = body[18][9+PAD]
     for x, y in {4: ((8, 19),), 19: ((9, 18),), 20: ((11, 18),)}.get(pose, ()):
         garment = glad if pose == 4 else fighter
         garment[y][x+PAD] = 90
@@ -472,6 +487,7 @@ def fitted_rows(game, pose):
             plane = 1.65*exp(-12*(across-.28)**2)-1.5*exp(-18*(across-.81)**2)
             body[py][px+PAD] = material_color(skin_ramp, skin_ramp.index(c)+plane)
     out = {"Original": original, "Body base": body}
+    keep.update(ARM_EDGES.get(pose, ()))
     out.update(leather_outfits(game, pose, body, keep, arm))
     out["Cleric"] = cleric_robe(game, pose, body, keep, arm)
     return out

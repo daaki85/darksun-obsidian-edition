@@ -49,66 +49,82 @@ def panel(points):
     return {(x+left, y+top) for y in range(height) for x in range(width) if mask.getpixel((x, y))}
 
 
-def cape(pose, short):
+# Druid mantle outlines traced clockwise on the native cels. The first
+# point is on the loaded shoulder. The last corners describe the free
+# return; the arm and exposed throat are composited in front separately.
+MANTLES = (
+    # Idle, front / rear / side.
+    ((5,7), (8,6), (15,6), (17,7), (17,9), (14,11), (11,12), (8,15), (6,14), (4,10)),
+    ((6,8), (10,6), (15,7), (16,9), (15,13), (13,15), (10,13), (7,13), (5,10)),
+    ((4,6), (6,6), (7,8), (7,11), (5,12), (2,14), (1,15), (-1,14), (1,9)),
+    # Front walk.
+    ((4,7), (7,6), (14,6), (16,7), (16,10), (13,11), (10,12), (7,15), (5,14), (3,10)),
+    ((4,7), (7,6), (14,6), (16,8), (14,10), (10,12), (7,14), (5,13), (4,11), (3,9)),
+    ((5,6), (8,5), (14,5), (15,7), (14,10), (11,11), (8,14), (6,13), (5,11), (5,9)),
+    ((4,7), (7,6), (13,6), (15,8), (15,10), (11,11), (8,15), (6,14), (4,11), (3,9)),
+    # Rear walk.
+    ((3,8), (6,6), (10,7), (11,9), (10,13), (9,15), (6,13), (3,13), (2,10)),
+    ((3,7), (6,5), (10,6), (12,8), (11,12), (9,15), (6,13), (3,12), (2,9)),
+    ((4,8), (7,6), (11,7), (13,9), (13,12), (11,14), (8,13), (5,14), (3,10)),
+    ((5,7), (8,5), (12,7), (13,9), (12,13), (10,14), (8,13), (5,14), (4,10)),
+    # Side walk.
+    ((6,6), (8,6), (9,8), (8,11), (6,12), (2,15), (0,15), (1,12), (3,8)),
+    ((9,5), (11,5), (12,7), (10,10), (7,12), (3,13), (-1,15), (0,12), (5,8)),
+    ((6,5), (8,5), (9,7), (8,10), (5,12), (1,14), (-2,15), (0,11), (3,7)),
+    ((8,5), (10,5), (11,7), (10,10), (7,12), (4,15), (1,16), (2,12), (4,8)),
+    # Front strikes.
+    ((6,8), (9,8), (10,10), (9,13), (6,14), (3,15), (0,16), (1,12), (3,9)),
+    ((8,7), (11,6), (15,6), (17,8), (16,10), (13,10), (9,13), (7,12), (7,9)),
+    ((12,7), (13,8), (15,10), (16,12), (15,13), (13,13), (10,13), (9,11), (10,9)),
+    # Rear strikes.
+    ((3,8), (6,7), (9,7), (10,9), (9,12), (8,15), (6,13), (3,14), (2,11)),
+    ((4,8), (6,6), (9,7), (10,9), (11,12), (12,14), (8,13), (5,14), (3,11)),
+    ((6,7), (8,5), (10,6), (11,8), (12,11), (14,14), (10,13), (7,13), (6,10)),
+    # Side strikes.
+    ((6,7), (9,6), (13,6), (14,8), (12,11), (9,12), (5,15), (3,14), (4,10)),
+    ((8,6), (12,6), (13,7), (11,10), (8,12), (4,14), (2,15), (0,15), (1,12), (4,8)),
+    ((8,6), (11,5), (13,7), (10,9), (8,11), (4,13), (2,14), (0,14), (1,11), (4,8)),
+    # Bow, front / rear / side, then hit and fallen.
+    ((5,6), (8,6), (10,8), (10,10), (8,12), (5,14), (3,15), (2,14), (3,10)),
+    ((7,10), (9,8), (11,9), (12,12), (12,15), (11,18), (8,16), (5,16), (5,13)),
+    ((5,10), (8,8), (11,9), (13,11), (11,14), (8,15), (5,18), (3,17), (3,16), (4,12)),
+    ((10,3), (11,3), (12,5), (13,6), (15,7), (16,8), (14,9), (11,10), (8,11), (7,9), (8,5)),
+    ((4,8), (7,7), (14,7), (16,9), (14,11), (11,13), (7,12), (4,13), (3,10)),
+)
+
+
+def thief_cape(pose):
     (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = fit.ROBE_CUTS[pose]
-    knee, _, mx, my, cx, cy = CUT[pose]
-    tx, ty = (mx, my) if short else (cx, cy)
+    knee, _, _, _, tx, ty = CUT[pose]
     hip = (wl+wr)//2
     if pose in SIDE_FALL:
-        # The outside edge runs behind the near shoulder. Its inner return
-        # crosses the hip before it folds back to the flying corner.
         sign = 1 if tx > hip else -1
         shoulder = sr if sign == 1 else sl
         flank = wr if sign == 1 else wl
-        root = (shoulder-sign, sy+1)
-        high = ((shoulder+tx)//2, (sy+ty)//2-1)
-        points = (root, high, (tx, ty-1), (tx, ty), (tx-sign*2, ty),
-                  (flank, wy+(1 if short else 3)), (hip, wy), (hip, ry+1))
+        points = ((shoulder-sign, sy+1), ((shoulder+tx)//2, (sy+ty)//2-1),
+                  (tx, ty-1), (tx, ty), (tx-sign*2, ty), (flank, wy+3), (hip, wy), (hip, ry+1))
     elif pose in REAR:
-        # Let the back turn in at the far armpit. The loaded hip pushes one
-        # fold outward; the other corner sits higher on the swinging leg.
-        far_x = wl-1 if short else min(wl-1, knee-1)
-        if short:
-            ty = min(ty-2, wy+1)
-        far_y = wy-1 if short else ty-3
-        points = ((sl+1, sy+1), (sr-1, sy), (rr, ry+1),
-                  (tx-1, wy+1), (tx, ty), (tx-2, ty+1),
-                  (hip, ty-1), (far_x, far_y), (rl+1, ry+1))
+        points = ((sl+1, sy+1), (sr-1, sy), (rr, ry+1), (tx-1, wy+1),
+                  (tx, ty), (tx-2, ty+1), (hip, ty-1), (min(wl-1, knee-1), ty-3), (rl+1, ry+1))
     else:
-        # Viewed from the front the fastened cloth sweeps from the far
-        # clavicle towards the near flank. It leaves the opposite hip free.
-        attach = (sl+3, sy+2)
-        chest = (wr-1, wy-2)
-        if short:
-            points = ((sl, sy+1), attach, (hip, ry+1), chest, (wl+2, wy),
-                      (tx+1, ty), (tx, ty), (rl, ry+3))
-        else:
-            points = ((sl+1, sy+1), attach, (hip, ry+1), chest, (wl+2, wy),
-                      (wl+1, ty-2), (tx, ty+1), (tx-1, ty), (rl, ry+2))
+        points = ((sl+1, sy+1), (sl+3, sy+2), (hip, ry+1), (wr-1, wy-2), (wl+2, wy),
+                  (wl+1, ty-2), (tx, ty+1), (tx-1, ty), (rl, ry+2))
     cloth = panel(points)
-    if pose in REAR and not short:
-        # The free side flares behind the advancing leg; a shorter return
-        # swings from the other scapula. Keep the elbows above the fabric.
+    if pose in REAR:
         free = min(wl-3, knee-3)
         throw = 2 if knee <= hip else 4
         cloth |= panel(((sl+1, sy+2), (rl+1, ry), (free-3, ty-3),
                         (free, ty-2), (wl+1, ty-4), (hip, ty),
                         (tx, ty+1), (tx+throw, ty-2), (rr-1, ry)))
-    elif pose not in SIDE_FALL | REAR:
-        # Draw both collar falls on a frontal torso. The shorter Druid
-        # mantle meets across the breast and opens above the ochre wrap;
-        # the Thief's opposite lapel carries on past the hip.
-        end = wy-1 if short else ty-1
+    elif pose not in SIDE_FALL:
         cloth |= panel(((sr-2, sy), (sr, sy+2), (rr-1, ry+1),
-                        (wr+1, end), (wr-1, end-1), (hip, ry+2),
-                        (sl+2, sy+2), (hip, ry)))
-    if not short and pose == 6:
-        # The far hand swings away from the cloak at the end of this step.
+                        (wr+1, ty-1), (wr-1, ty-2), (hip, ry+2), (sl+2, sy+2), (hip, ry)))
+    if pose == 6:
         cloth -= {(x, y) for x, y in cloth if x >= wr and y >= ry+2}
-    if not short:
-        # Turn the lining over the projected calf at the overlap.
-        cloth.update({4: ((5, 20),), 8: ((6, 22),), 11: ((2, 19), (1, 20)),
-                      10: ((2, 13),), 19: ((3, 13),)}.get(pose, ()))
+    if pose == 15:
+        cloth.discard((1, 12))
+    cloth.update({4: ((5, 20),), 8: ((6, 22),), 11: ((2, 19), (1, 20)),
+                  10: ((2, 13),), 19: ((3, 13),)}.get(pose, ()))
     return cloth
 
 
@@ -169,6 +185,8 @@ def thief_hood(pose):
                         shell.add((left+b+2, top+k))
     if pose == 18:
         shell.add((9, 7))
+    if pose == 24:
+        shell.discard((12, 5))
     if pose == 28:
         shell.add((15, 3))
     return shell
@@ -185,6 +203,7 @@ def draw(game, pose, swatches):
     bow = game.bow(figure, raw, parts) if pose in (24, 25, 26) else set()
     limbs = {(hx+dx, hy+dy) for hx, hy in parts.hands.values()
              for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))}
+    limbs.update(fit.ARM_EDGES.get(pose, ()))
     if pose in fit.CROSSING_ARMS:
         elbow, bend, wrist, thickness = fit.CROSSING_ARMS[pose]
         arm = Image.new("1", (w, h))
@@ -195,7 +214,7 @@ def draw(game, pose, swatches):
     sy, sl, sr = shoulder
     ry, rl, rr = ribs
     wy, wl, wr = waist
-    knee, knee_y, mx, my, cx, cy = CUT[pose]
+    knee, knee_y, _, _, cx, cy = CUT[pose]
     hip = (wl+wr)/2
     # Armholes turn inside the deltoids. Trace a separate waist and thigh
     # for the short tunic so the stride can lift one skirt flap at a time.
@@ -215,25 +234,48 @@ def draw(game, pose, swatches):
     ochre_flap = skirt | panel(((wl, wy+1), (wr-1, wy+1),
                                 (knee+1, knee_y+1), (knee-1, knee_y+1),
                                 (knee-2, knee_y-1)))
+    if pose == 24:
+        ochre_flap.discard((9, 18))
+    if pose == 5:
+        ochre_flap.difference_update(((4, 15), (4, 16)))
     if pose == 6:
         ochre_flap.add((10, 19))
-    panels = {"Druid": cape(pose, True), "Thief": cape(pose, False)}
+    mantle = panel(MANTLES[pose])
+    # The lower lip meets the kilt on these front steps. Keep the short
+    # curve continuous where the two pixel-stepped diagonals meet.
+    mantle.update({0: ((12, 12), (13, 12)), 3: ((11, 12), (12, 12)),
+                   4: ((11, 12),), 6: ((11, 12),)}.get(pose, ()))
+    scapula, shoulder_y = MANTLES[pose][0]
+    front_lapel = pose in (0, 3, 4, 5, 6, 16, 21, 28)
+    clasp = (sl+3, ry) if front_lapel else None
+    cloak = thief_cape(pose)
     yoke = panel(PROFILE_YOKE[pose]) if pose in PROFILE_YOKE else set()
-    for cloth in panels.values():
-        cloth.update(yoke)
+    cloak.update(yoke)
     # Carry the slate from the cowl onto the near shoulder in the profile
     # walk. The arm rotates in front of this facing; the hem swings behind.
     facing = set()
     if pose in PROFILE_YOKE:
         facing = panel(((sl-1, sy+1), (sl+1, sy), (sl+2, sy+2),
                         (rr-1, ry+1), (rr-2, ry+3), (rl, ry+1)))
-        panels["Thief"].update(facing)
+        cloak.update(facing)
     # The bow arm crosses the centre of the wrap. Trace the exposed ribs
     # on either side and carry the same diagonal down behind the forearm.
     bow_wrap = set()
     if pose in (24, 25, 26):
         bow_wrap = panel(((sl-1, sy+1), (sr-1, sy+2), (rr+1, ry),
                           (wr, wy), (wl, wy), (rl-1, ry+1)))
+    armhole = torso | yoke | facing
+    # Continue the lining on the far ribs in the two outward strikes,
+    # below the reaching arm, and on the back edge of the side idle.
+    lining = {
+        2: ((1, 13), (1, 14), (1, 15)),
+        19: ((11, 12),),
+        22: ((6, 10), (5, 11), (4, 12), (5, 12), (4, 13), (4, 14)),
+        23: ((6, 8), (5, 9), (6, 9), (4, 10), (4, 11), (3, 11), (3, 12)),
+        25: ((11, 17),),
+        26: ((4, 14), (5, 17), (5, 18)),
+        27: ((12, 9), (13, 9), (14, 9)),
+    }.get(pose, ())
     hood = thief_hood(pose)
     face = fit.head_pixels(pose, w, h)
     hx, hy, spans = fit.HEADS[pose]
@@ -306,46 +348,51 @@ def draw(game, pose, swatches):
                         buckle = 96 if abs(x-knee) < 1 else 90
                         for role in NEW:
                             out[role][py][i] = buckle
-                for role, cloth in panels.items():
-                    if (x, y) not in cloth:
-                        continue
-                    # The flesh outside the armhole is in front of the drape.
-                    # Below the elbow keep its free edge separate from the arm.
-                    shoulder_cloth = (x, y) in yoke or role == "Thief" and (x, y) in facing
-                    if skin is not None and y <= wy and (x, y) not in torso and not shoulder_cloth:
-                        if y > ry or not sl <= x <= sr:
-                            continue
-                    tx, ty = (mx, my) if role == "Druid" else (cx, cy)
-                    along = min(1, max(0, (y-sy)/(ty-sy)))
-                    ridge = (sl+sr)*.5 + (tx+1-(sl+sr)*.5)*along
-                    dist = x-ridge
-                    fold_width = max(3, abs(wr-wl)*.64)
-                    fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .045*grain
-                    if role == "Thief" and pose in REAR:
-                        seam = dist+2.2-.6*cos(along*4)
-                        fall += .20*max(0, 1-abs(seam+1.3)) - .32*max(0, 1-abs(seam)/1.4)
-                    if role == "Thief":
-                        # The cloth turns under at the lining, with a broken
-                        # ridge on its lit side like the retail Thief's folds.
+                if (x, y) in mantle and (skin is not None or y > shoulder_y):
+                    # The gathered upper cloth follows the Mul's shoulder
+                    # light. Below the shoulder a curved crease opens out
+                    # towards the swinging hip and casts a shadow on the kilt.
+                    fall = max(0, y-shoulder_y)
+                    fold = x-scapula-(hip-scapula)*min(1, fall/max(1, wy-shoulder_y))
+                    ridge = cos(1.18*fold+.35*cos(fall*.5))
+                    level = 4.6+1.20*ridge+.33*grain
+                    level += .80*light*max(0, 1-fall/6)
+                    if (x, y+1) not in mantle:
+                        level -= 2.5
+                    elif (x-1, y) not in mantle:
+                        level += .65
+                    elif (x+1, y) not in mantle:
+                        level -= 1.35
+                    if front_lapel:
+                        # Turn one lapel over the other. Its fastening rests
+                        # on the chest and the lower leaf crosses the belt.
+                        clasp_x, clasp_y = clasp
+                        seam = x-clasp_x+.40*(y-clasp_y)
+                        if y >= clasp_y:
+                            level += 1.45*max(0, 1-abs(seam+1)) - 1.9*max(0, 1-abs(seam))
+                    out["Druid"][py][i] = 168 if (x, y) == clasp and skin is not None else shade(MOSS, level)
+                if (x, y) in cloak:
+                    # The front of the armhole eclipses the trailing cloak.
+                    # Along the far back the lining continues over the ribs.
+                    behind_arm = skin is not None and y <= wy and (x, y) not in armhole
+                    if not behind_arm or (y <= ry and sl <= x <= sr) or (x, y) in lining:
+                        along = min(1, max(0, (y-sy)/(cy-sy)))
+                        ridge = (sl+sr)*.5 + (cx+1-(sl+sr)*.5)*along
+                        dist = x-ridge
+                        fold_width = max(3, abs(wr-wl)*.64)
+                        fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .045*grain
+                        if pose in REAR:
+                            seam = dist+2.2-.6*cos(along*4)
+                            fall += .20*max(0, 1-abs(seam+1.3)) - .32*max(0, 1-abs(seam)/1.4)
+                            if y < wy:
+                                fall += .06*(1-abs(offset)/(wr-wl+1))
                         fold = dist*.95 + .85*cos(along*3.4)
                         fall += .13*cos(fold) - .08 + .021*grain
-                    else:
-                        # The rolled edge of the mantle casts a shadow over
-                        # the kilt; the upper fold catches the shoulder light.
-                        fall += .15*cos(dist*1.25-along*2.4) + .023*grain
-                    if pose in REAR and y < wy:
-                        fall += .06*(1-abs(offset)/(wr-wl+1))
-                    if y < ry+1 and skin is not None:
-                        fall += .06*light
-                    if (x+1, y) not in cloth or (x, y+1) not in cloth:
-                        fall -= .20
-                    ramp = MOSS if role == "Druid" else SLATE
-                    color = shade(ramp, fall*(len(ramp)-1))
-                    if role == "Druid" and (x, y+1) not in cloth and (x, y-1) in cloth:
-                        color = shade(MOSS, 1.7+.4*grain)
-                    if role == "Druid" and pose not in REAR | SIDE_FALL and (x, y) == (wr-1, wy-2):
-                        color = 169
-                    out[role][py][i] = color
+                        if y < ry+1 and skin is not None:
+                            fall += .06*light
+                        if (x+1, y) not in cloak or (x, y+1) not in cloak:
+                            fall -= .20
+                        out["Thief"][py][i] = shade(SLATE, fall*(len(SLATE)-1))
             if (x, y) in hood:
                 # Leave the eye, ear, cheek and jaw exactly as drawn on the
                 # clean head, including the low face on the second strike.

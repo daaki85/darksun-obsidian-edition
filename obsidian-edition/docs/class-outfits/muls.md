@@ -2,6 +2,16 @@
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
+## Mantle attachment and clipping
+
+Side strike 2 (22) shows the Druid issue most clearly. In the previous fitting a copper strip split the mantle into two green patches on his back. Follow the revised fold from the shoulder blade to its short free tip. The extended arm passes in front. Front idle (00) shows the overlapping lapel meeting the waist. Side strike 3 (23) and hit (27) show how the mantle gathers when he ducks. The close-up uses the previous fitting at `bf80eb5`.
+
+![Mul Druid in side strike two, beside his body, previous fitting, the human Druid and the retail Thief](mul-druid-side-strike.png)
+
+[Watch the Druid comparison through all 29 poses](mul-druid-contact.gif) · [Watch all six Mul outfits](mul-fitting-review.gif)
+
+The frame review compared the outfit pixels against the cleaned body in all 174 dressed poses. That exposed leather, linen and teal flecks above the passing wrist, two skin pixels inside the Fighter’s profile tabs (12 and 13), and interruptions in the Thief’s side-strike lining. The corrected poses retain the visible cheek, bow and bare hand. The skin inside the Thief’s hood opening and the forearm crossing his profile cloak are visible in the full-pose sheet. A second render with more room on each side reproduced every sprite pixel within the study canvas.
+
 ## Six-single fitting review
 
 The large figures share one patch of arena sand. Each small figure stands on paving at game size, except for the previous Mul, which comes from the sand sheet at `6363eea`. Read across from the retail Mul and cleaned body to the two fittings, the finished human and the retail figure used to compare material. The retail Warrior supplies leather, the Priest supplies linen, the Thief supplies cape folds and the Mage supplies wrapped cloth.
