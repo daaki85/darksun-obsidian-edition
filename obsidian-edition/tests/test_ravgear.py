@@ -5,13 +5,21 @@ Made-up records here; with DSUN_WOTR (the player's Wake of the Ravager folder) a
 Lands'), the whole set is built from their files."""
 
 import os
+import shutil
 import struct
 import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import dataitems, gff, ravager, ravgear, ravitems  # noqa: E402
+from dsloader import dataitems, game, gff, ravager, ravgear, ravitems  # noqa: E402
+
+try:
+    from unicorn import Uc, UC_ARCH_X86, UC_MODE_16
+    from unicorn import x86_const as r
+except ImportError:
+    Uc = None
 
 WOTR, SL = os.environ.get("DSUN_WOTR"), os.environ.get("DSUN_SL")
 END = dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0)
@@ -135,6 +143,43 @@ class FilesTests(unittest.TestCase):
         for obj, keys in ravgear.WHERE.items():
             chain = pack_chain(out[("RDFF", obj)])
             self.assertEqual(chain[-len(keys):], [ravgear.picture_object(k) for k in keys], obj)
+
+
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class BoneHelmTests(unittest.TestCase):
+    """DSCLOG2's PROBE_HELM_AC and PROBE_BOX_AC give the mod's Bone Helm (its type 104, AC 0 in its record)
+    AC 1 with RULE_HELMS, whatever its name; another type keeps its record's AC."""
+
+    @classmethod
+    def setUpClass(cls):
+        from test_dsclog_drawing import build
+        exe, cls.sym = build(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog2.asm"))
+        cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
+
+    def ac(self, probe, kind, rules, type_ac=0):
+        tsr, types, ss = 0x1000, 0x6000, 0x4000
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(tsr * 16, self.image)
+        mu.mem_write(tsr * 16 + self.sym["rules"], struct.pack("<H", rules))
+        mu.mem_write(tsr * 16 + 0xFFF0, b"\xf4")
+        mu.mem_write(types * 16 + 0x0E, bytes([type_ac]))
+        mu.mem_write(ss * 16 + 0x7FA, struct.pack("<HHH", 0xFFF0, tsr, 0x202))
+        regs = dict(cs=tsr, ds=0x5000, es=types, ss=ss, esp=0x7FA, ebp=0x600, ebx=0, eax=0x7777)
+        regs["ecx" if probe == "probe_helm_ac" else "esi"] = kind
+        for name, value in regs.items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(tsr * 16 + self.sym[probe], tsr * 16 + 0xFFF0)
+        return mu.reg_read(r.UC_X86_REG_AX)
+
+    def test_bone_helm(self):
+        for probe in ("probe_helm_ac", "probe_box_ac"):
+            self.assertEqual(self.ac(probe, ravager.BONE_HELM_TYPE, game.RULE_HELMS), 1, probe)
+            self.assertEqual(self.ac(probe, ravager.BONE_HELM_TYPE, 0), 0, probe)
+            self.assertEqual(self.ac(probe, 60, game.RULE_HELMS, 3), 3, probe)
+
+    def test_the_gears_helm_is_that_type(self):
+        self.assertEqual(ravgear.GEAR["bone helm"].type, ravager.BONE_HELM_TYPE)
 
 
 if __name__ == "__main__":

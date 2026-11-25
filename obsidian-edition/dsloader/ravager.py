@@ -101,6 +101,9 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
+# and the mod's Bone Helm (its type the Loader's for SL's 117, which only it has: AC 1 with RULE_HELMS too,
+# DSCLOG2's BONE_HELM_TYPE; Shattered Lands' DSCLOG HELM_BONE)
+BONE_HELM_TYPE = 104  # (mod_type(117): GAME_TYPES + 117 - 115)
 # the XP table's reads (its "imul eax,eax,64h": XP_NEED's sites, 3 bytes on)
 XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)

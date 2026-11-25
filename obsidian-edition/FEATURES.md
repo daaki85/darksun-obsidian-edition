@@ -1165,8 +1165,8 @@ few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
 | Staff Sling +2 | Sureshot, in the forest |
 
 The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. Only a
-new game has them: a saved game keeps the people and things it has made. The Bone Helm gives no AC in
-the sequel yet. Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
+new game has them: a saved game keeps the people and things it has made. The Bone Helm gives AC 1
+with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
 
 ### Improved thieving
 

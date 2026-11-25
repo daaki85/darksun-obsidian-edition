@@ -47,7 +47,22 @@ dagger (Dhukkar), metal pick (Arslan), metal polearm (a Draxan).
 
 The weaponer's 13 plain weapons, the armourers' Bone Helm, the carriers outside Tyr and the containers (built and
 checked by `tests/test_ravgear.py` with the game's files: every object's pack ends with its new items), buying one,
-and fighting with one. The Bone Helm gives no AC in the sequel (DSCLOG2's helm probe knows type 55 only).
+and fighting with one. The Bone Helm gave no AC in the sequel (DSCLOG2's helm probe knew type 55 only): **fixed**
+after the play, PROBE_HELM_AC and PROBE_BOX_AC count its type, 104, as 1 with RULE_HELMS (tests/test_ravgear.py
+runs both probes).
+
+## After the fix (the old save, test edits, nothing saved)
+
+`ravload.sh ravager-after-ambush` with the rebuilt DSCLOG2 and the dice log:
+
+- **How the name shows**: Thy'rokh's +1 gythka (item 9) made the Short Sword +1 in memory (entity -19900, type 109,
+  name 258): the pointer's line "METAL SHORT SWORD"; its item box "Metal / **+1 Short Sword** / 1D6+1", 20800; the
+  panel's line "+1 Short Sword" ([picture](img/2026-11-25-ravager-short-sword-box.png)). The sequel identifies
+  nothing: every magic item shows its plus so (the game's own "+1 Gythka" beside it), as Shattered Lands' plain
+  magic weapons ("+1 Short Sword") do.
+- **The Bone Helm's AC**: Terrannus' worn item 6 put on his head (slot 7, the head: `game.EQUIP_SLOTS`) as type 55
+  named as a hat: **AC 3**; as type 104 (the Bone Helm's): **AC 2**; as type 55 named Helm: **AC 2**. The Bone
+  Helm counts AC 1 as the game's Helm does.
 
 ## Water
 
