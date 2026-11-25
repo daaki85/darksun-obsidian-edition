@@ -752,6 +752,7 @@ def wotr_folder(given: Optional[str]) -> Optional[str]:
 
 
 KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from the header's +350 (DSCLOG's)
+DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
@@ -1161,11 +1162,21 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _sell_pass(self) -> List[str]:
         """Shattered Lands' (S on a shop's screen: the member's plain gear sold once the shop is shut,
-        sell.py), on DSCLOG2's SELL_KEY and SHOP_LOOP (its header's +1852 to +1859, DSCLOG's)."""
+        sell.py), on DSCLOG2's SELL_KEY and SHOP_LOOP (its header's +1852 to +1859, DSCLOG's). Then
+        SELL_DONE (+1884, DSCLOG2's own) given the S seen to (sold, or nothing to sell): SHOP_LOOP holds
+        the shop's way back to its merchant's talk till then, as the script there reads the money to
+        tell a sale from none (Notaku's "Thank you, your business is appreciated.")."""
         if self.tsr_hdr is None or self.game is None:
             return []
-        with self._items_writable():
-            return super()._sell_pass()
+        with self._items_writable((DSCLOG2_SELL_DONE,)):
+            try:
+                return super()._sell_pass()
+            finally:
+                seen = self._sell_seen
+                if seen is not None and seen[0] == self.tsr_hdr:
+                    done = struct.pack("<H", seen[1])
+                    if self.guest.read(self.tsr_hdr + DSCLOG2_SELL_DONE, 2) != done:
+                        self.guest.write(self.tsr_hdr + DSCLOG2_SELL_DONE, done)
 
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)
     _hastes: Optional[set] = None  # (the Hasted effects' records the last steady look found)

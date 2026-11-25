@@ -1556,6 +1556,17 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
 - **Notaku** (Tyr, south of Shadow Square; arrow keys y 1224, x 296, y 936 from `ravager-after-ambush`; the
   eye on him, talk 3, 1, 3, 2) sells. After a sale his "Show me your goods" is gone from the talk.
   `ravloot.py` shows all of the above.
+- **A merchant's script tells a sale from none by the money**: Notaku's (GPL 153) keeps the party's money
+  (variable 85h 0, the dword at 2E8h:357h) in 89h 42 before the shop (3EFh), and tests it again as the shop
+  returns (400h): changed, "Thank you, your business is appreciated."; not, "Sometimes the wisest purchase is
+  none at all, yes?". Other sequel scripts test 85h 0 too (28, 91, 129, 140, 157-159, 165, 174, 322, 325;
+  SL's 2, 24, 65, 88, 135, 149, 152, 206). So the Loader's S must pay before the shop returns to the
+  script. DSCLOG2's SHOP_LOOP holds the loop's way out after S until the Loader's SELL_DONE (+1884) is
+  SELL_SEQ, at most 3 s (logs/2026-11-25-ravager-loot-keys.md). A memory diff around a sale didn't find this,
+  but the script's decode did (`dec.py` with `GPLDATA` the sequel's, from 0 to the line).
+- **The pointer's mode before a click on someone**: right-clicks cycle 1 arrow, 4 sword, 2 eye (DS:1440h).
+  After the inventory is closed the mode isn't always the arrow, so read it: a sword's click on Notaku
+  started a fight.
 
 ### The sequel's spells in a fight (2026-11-21)
 
