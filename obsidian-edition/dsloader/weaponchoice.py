@@ -83,6 +83,10 @@ OTHERS = {
     # the Loader's obsidian cahulaks (an earth or fire cleric's start; the game's are bone, water's, and
     # an air cleric, who may use either, starts with them)
     specialize.KINDS.index("cahulaks"): ((game.OBSIDIAN_CAHULAKS_TYPE, 0x14, 0x10000 - 2674, 15),),
+    # the Loader's bone two-handed sword (a water cleric's) and obsidian lotulis (a fire cleric's;
+    # worldgear.py sells them; the user's, 2026-11-25)
+    specialize.KINDS.index("two-handed sword"): ((game.BONE_GREAT_SWORD_TYPE, 0x174, 0x10000 - 2720, 100),),
+    specialize.KINDS.index("lotulis"): ((game.OBSIDIAN_LOTULIS_TYPE, 0x175, 0x10000 - 2718, 30),),
 }
 MISSILE_KINDS = frozenset(specialize.KINDS.index(k) for k in ("bow", "sling", "staff sling", "javelin", "darts"))
 BOW = specialize.KINDS.index("bow")

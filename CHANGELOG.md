@@ -76,6 +76,22 @@ Releases, newest first (2.12.0 and older in the archive):
   Elite Guards, and the pens' weapon rack.
 - The sequel's Darts +1, with a shining icon of its own, thrown by the defiler among the arena's
   champions.
+- Metal ones of three of the sequel's weapons (a two-handed sword and a lotulis sold by Melkor in
+  Gedron, a javelin on the slave pens' weapon rack in place of the obsidian one), and magic ones
+  placed along the way through the game, the weaker early: Double Spear +1 and +2, Trikal +1 and
+  +2, Lotulis +1 and +2, Great Sword +2 and +3, Javelin +1, each with a shining icon of its own
+  ([the table](obsidian-edition/ITEMS.md#weapons)). A metal lotulis strikes a second foe as any
+  lotulis.
+- Air clerics may use the javelins (a thrown weapon) and water clerics the darts (wood), as their
+  spheres allow (the user's).
+- An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
+  sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
+  chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
+- The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
+  own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
+  material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
+  fire), not all in fire; without it, the Loader's own, the double spear, trikal and
+  darts redrawn at the sequel's sizes (the user's).
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the

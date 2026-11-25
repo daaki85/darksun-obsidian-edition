@@ -46,11 +46,11 @@ _TYPES = {
     "bow": (1, 69),  # Bow, Seeker; Phrain's Bow
     "sling": (64,),
     "staff sling": (0,),
-    "two-handed sword": (game.TWOHAND_SWORD_TYPE,),
-    "lotulis": (game.LOTULIS_TYPE,),
+    "two-handed sword": (game.TWOHAND_SWORD_TYPE, game.METAL_TWOHAND_SWORD_TYPE, game.BONE_GREAT_SWORD_TYPE),
+    "lotulis": (game.LOTULIS_TYPE, game.METAL_LOTULIS_TYPE, game.OBSIDIAN_LOTULIS_TYPE),
     "double spear": (game.DOUBLE_SPEAR_TYPE,),
     "trikal": (game.TRIKAL_TYPE,),
-    "javelin": (game.JAVELIN_TYPE,),
+    "javelin": (game.JAVELIN_TYPE, game.METAL_JAVELIN_TYPE),
     "darts": (game.DARTS_TYPE,),
 }
 KIND_OF_TYPE: Dict[int, int] = {t: KINDS.index(kind) for kind, types in _TYPES.items() for t in types}

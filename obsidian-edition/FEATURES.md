@@ -826,7 +826,17 @@ chests; and six of Wake of the Ravager's weapons the game has none of (a two-han
 lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
 caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
 the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
-table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own: three of them in metal too (a two-handed
+sword and a lotulis at Melkor's in Gedron, a javelin on the slave pens' weapon rack), an obsidian
+lotulis for fire clerics and a bone great sword for water clerics (at Melkor's too), and magic ones
+along the way through the game, the weaker early (Darts +1 on the arena's defiler champion; a Double
+Spear +1 at the Fields' gate, a Trikal +1 with the elven slavers, a Lotulis +1 at the Hot Springs, a
+Javelin +1 with the Silt Sea's ssurans, a Lotulis +2 in the Lower Castle, a Great Sword +2 in the
+Upper Castle, a Trikal +2 at the way into the Wyrm Belly, a Double Spear +2 at the gladiators' camp,
+a Great Sword +3 in Balkazar's treasure room; an Obsidian Lotulis +1 on Dagger, the White Sand
+Outlaws' chief, and a Bone Great Sword +1 on Dakaren at the Silt Sea). Those carried by one of a group are given to one
+person there, an object of their own in the Loader's copy of the region, so they show only in a
+region the party hasn't yet entered in that game. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,
@@ -931,7 +941,7 @@ any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*.
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
 of Thorns their pictures, from your copy of Dark Sun: Wake of the Ravager (GOG sells it with
-Shattered Lands), when the Loader finds it; without it they have icons of their own (the game's,
+Shattered Lands), when the Loader finds it, and so do its weapons and the great axes their inventory icons (in the game's colours, each head in its material); without it they have icons of their own (the game's,
 recoloured) and the walls are the game's fire wall in grey or dark brown. Fire Seeds bursts as a
 fireball either way, a picture Shattered Lands has too. The Options tab's **Wake of the Ravager (optional)** section says where
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:

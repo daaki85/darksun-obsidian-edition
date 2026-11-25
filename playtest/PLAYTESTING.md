@@ -720,6 +720,12 @@ game's data: it is one player's account.
 
 ## Inventory, looting, selling and shops
 
+- **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
+  backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
+  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click
+  with `click.py X Y right` at game pixels (the backpack's first column x 195, y 27, 45, 63, 81
+  opened the four boxes; 250,33 closes one): an `xdotool click --window` never reaches the game,
+  whose pointer DOSBox holds (logs/2026-11-25-obsidian-lotulis-bone-great-sword.md).
 - **The inventory screen's places** (from hovering: the name shows in the bar at the bottom; the
   ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest (173,70), left
   hand (173,92), legs (173,128); **the feet** (174,147) (logs/2026-11-09-silent-labels.md; a
@@ -731,6 +737,10 @@ game's data: it is one player's account.
   213,134). **To give an item to another member**: click it, click the other's portrait (22,160 for
   the fourth), click the place. The screen can draw the backpack one change behind: close the
   inventory and open it again (Escape, I) before believing a cell is empty.
+- **Wake of the Ravager's weapon icons** (`sequelicons.py`) are put in the Loader's copy only when
+  it finds the sequel (`$WORK/rav`, from `setup_ravager.sh`); without it the game shows the
+  Loader's own drawings. Check which a play has before judging an icon
+  (logs/2026-11-25-sequel-weapon-icons.md).
 - **AC in the inventory**: the AC line is the game's own, worked out afresh from what is worn, but
   drawn one change behind: switch to another member's portrait and back (20,62 then 20,20) before
   reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the THAC0 line
@@ -820,7 +830,8 @@ game's data: it is one player's account.
   chest, `pointer.py walk` then `look` again. The chest itself: [Pehtucl's
   chest](ROUTE.md#pehtucls-chest).
 - **The pens' weapon rack** (logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
-  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no
+  2599), what's in it and where any Thornwall is. In a new game answer Kurzak's greeting first: until then
+  it finds no thing of the rack (logs/2026-11-25-ravager-magic-metal.md). A rack the party emptied has contents 9999 (no
   list). Where it is: [the slave pens](ROUTE.md#the-way-west-the-stalker-pen-and-the-grate).
 
 ## Fights

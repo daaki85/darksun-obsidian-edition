@@ -237,6 +237,7 @@ ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 
 # Encyclopedia Magica prices them and as the game's Serpent Boots. Carried by Dagger, the White Sand
 # Outlaws' chief (202; script 133's second band: met whatever came of Hototo's, and fought for the slave)
 BOOTS_OF_SPEED, DAGGER = 0x170, 202
+DAKAREN = 20  # (who comes for the party once Jasmine is freed and the Silt Horrors are dead)
 NAMES[BOOTS_OF_SPEED] = b"Boots of Speed"
 SPEED_BOOTS = armour(game.SPEED_BOOTS_TYPE, BOOTS_OF_SPEED, 0x10000 - 2668, 20000, plus=0)
 # the magic cahulaks of the Loader's types (the game has only bone ones): Emberlash, an obsidian
@@ -297,7 +298,7 @@ def magic_weapon(spec: Tuple[int, int, int, int], plus: int, spell: int) -> byte
 # gladiators' two) and the Bowyer (the thrown ones). Not the sequel's net (the user's call, 2026-11-23).
 TWOHAND_SWORD_NAME, LOTULIS_NAME, DOUBLE_SPEAR_NAME, TRIKAL_NAME = 0x174, 0x175, 0x176, 0x177
 JAVELIN_NAME, DARTS_NAME = 0x178, 0x179
-RAVAGER_NAMES = {TWOHAND_SWORD_NAME: b"Two-hand Sword", LOTULIS_NAME: b"Lotulis", DOUBLE_SPEAR_NAME: b"Double Spear",
+RAVAGER_NAMES = {TWOHAND_SWORD_NAME: b"Great Sword", LOTULIS_NAME: b"Lotulis", DOUBLE_SPEAR_NAME: b"Double Spear",
                  TRIKAL_NAME: b"Trikal", JAVELIN_NAME: b"Javelin", DARTS_NAME: b"Darts"}
 NAMES.update(RAVAGER_NAMES)
 TWOHAND_SWORD = (game.TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2680, 150)
@@ -306,6 +307,28 @@ DOUBLE_SPEAR = (game.DOUBLE_SPEAR_TYPE, DOUBLE_SPEAR_NAME, 0x10000 - 2684, 25)
 TRIKAL = (game.TRIKAL_TYPE, TRIKAL_NAME, 0x10000 - 2686, 24)
 JAVELIN = (game.JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2688, 50)
 DARTS = (game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2690, 20)
+# ... in metal (the user's, 2026-11-25): the two-handed sword and lotulis at Melkor's (GIFTS), the javelin on the slave pens' weapon rack (MAGIC, with the rack's own object)
+METAL_TWOHAND_SWORD = (game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2696, 500)
+METAL_LOTULIS = (game.METAL_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2698, 150)
+METAL_JAVELIN = (game.METAL_JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2700, 150)
+# ... an obsidian lotulis for fire clerics and a bone great sword for water clerics (the user's,
+# 2026-11-25), at Melkor's too
+OBSIDIAN_LOTULIS = weaponchoice.OTHERS[KIND("lotulis")][0]
+BONE_GREAT_SWORD = weaponchoice.OTHERS[KIND("two-handed sword")][0]
+# ... and magic (the user's, 2026-11-25; RAVAGER_MAGIC places them): each its kind's plain name, the plus
+# shown by the game, valued as the game's magic weapons (PLUS_VALUE a plus); the two-handed sword's
+# and the lotulis' +2 and +3 of metal, the rest of their kind's own material
+JAVELIN_1 = ((game.JAVELIN_TYPE, JAVELIN_NAME, 0x10000 - 2694, SLING_VALUE), 1)
+DOUBLE_SPEAR_1 = ((game.DOUBLE_SPEAR_TYPE, DOUBLE_SPEAR_NAME, 0x10000 - 2702, PLUS_VALUE), 1)
+DOUBLE_SPEAR_2 = ((game.DOUBLE_SPEAR_TYPE, DOUBLE_SPEAR_NAME, 0x10000 - 2704, 2 * PLUS_VALUE), 2)
+TRIKAL_1 = ((game.TRIKAL_TYPE, TRIKAL_NAME, 0x10000 - 2706, PLUS_VALUE), 1)
+TRIKAL_2 = ((game.TRIKAL_TYPE, TRIKAL_NAME, 0x10000 - 2708, 2 * PLUS_VALUE), 2)
+LOTULIS_1 = ((game.LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2710, PLUS_VALUE), 1)
+LOTULIS_2 = ((game.METAL_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2712, 2 * PLUS_VALUE), 2)
+TWOHAND_SWORD_2 = ((game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2714, 2 * PLUS_VALUE), 2)
+TWOHAND_SWORD_3 = ((game.METAL_TWOHAND_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2716, 3 * PLUS_VALUE), 3)
+OBSIDIAN_LOTULIS_1 = ((game.OBSIDIAN_LOTULIS_TYPE, LOTULIS_NAME, 0x10000 - 2722, PLUS_VALUE), 1)
+BONE_GREAT_SWORD_1 = ((game.BONE_GREAT_SWORD_TYPE, TWOHAND_SWORD_NAME, 0x10000 - 2724, PLUS_VALUE), 1)
 DARTS_1 = ((game.DARTS_TYPE, DARTS_NAME, 0x10000 - 2692, SLING_VALUE), 1)  # (the sequel's Darts +1: the defiler champion's; as Windlash)
 
 
@@ -375,6 +398,10 @@ GIFTS: Tuple[Gift, ...] = (
                                            DOUBLE_SPEAR, TRIKAL)),
          (106,), 0x1A),
     Gift("Bowyer", (weapon(JAVELIN), weapon(DARTS)), (283,), 0x0B),
+    # the metal two-handed sword and lotulis at Melkor's, Gedron's merchant (who sold nothing of use):
+    # the Weapon Merchant's and Jark's lists are full (DataTests: the shop's 34, the object's records)
+    Gift("Melkor", tuple(weapon(w) for w in (METAL_TWOHAND_SWORD, METAL_LOTULIS, OBSIDIAN_LOTULIS, BONE_GREAT_SWORD)),
+         (233,), 0x03),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
@@ -429,6 +456,36 @@ NOT_AN_OBJECT = 2563
 PENS_RACK_OBJECT = 2599
 RACK_TYPE = 0x6C  # (the weapon racks' item type)
 DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; his double is 27)
+# Wake of the Ravager's magic weapons (the user's, 2026-11-25), placed by the walkthrough's way through the
+# game, the weaker early: each on one of a group (an object of its own, CLONE: its region's entity
+# pointed at it), but the body in the Upper Castle (object 2265, by the earth elemental, with the Bow
+# +2), its own. The Double Spear +1 on a guard at the Fields' gate (one of six); the Trikal +1 on one of
+# the Elven Slavers' Templar's guards; the Lotulis +1 on one of the Hot Springs' Templar's eight; the
+# Javelin +1 on one of the Silt Sea Ssurans with the statue piece (theirs only if they are killed); the
+# Lotulis +2 on one of the Lower Castle's guards (a +2 weapon before the vrocks that need one); the
+# Great Sword +2 on the Upper Castle's body; the Trikal +2 on one of the Ssuran Ruins' four Magera
+# at the way into Wyrm Belly; the Double Spear +2 on one of Arant's guards at the gladiators' camp; the
+# Great Sword +3 in the chest of Balkazar's treasure room (by the Belt of Might; the chest's object
+# shared with the Silt Sea's chests)
+FIELDS, SLAVERS, HOT_SPRINGS, SSURANS, LOWER_CASTLE = 0x26, 0x14, 0x23, 0x05, 0x1D
+UPPER_CASTLE, SSURAN_RUINS, GLADIATORS, WYRM_SCHOOL = 0x1C, 0x0F, 0x04, 0x0D
+UPPER_CASTLE_BODY, TREASURE_CHEST = 2265, 1063
+RAVAGER_MAGIC: Tuple[Gift, ...] = (
+    Gift("Guard", (weapon(*DOUBLE_SPEAR_1),), (59,), FIELDS, clone=(84, 2622)),
+    Gift("Slaver Guard", (weapon(*TRIKAL_1),), (123,), SLAVERS, clone=(283, 2623)),
+    Gift("Guard", (weapon(*LOTULIS_1),), (98,), HOT_SPRINGS, clone=(168, 2624)),
+    Gift("Ssurran", (weapon(*JAVELIN_1),), (84,), SSURANS, clone=(431, 2625)),
+    Gift("Guard", (weapon(*LOTULIS_2),), (108,), LOWER_CASTLE, clone=(17, 2626)),
+    Gift("Body", (weapon(*TWOHAND_SWORD_2),), (UPPER_CASTLE_BODY,), UPPER_CASTLE),
+    Gift("Magera", (weapon(*TRIKAL_2),), (71,), SSURAN_RUINS, clone=(49, 2627)),
+    Gift("Arant's Guard", (weapon(*DOUBLE_SPEAR_2),), (82,), GLADIATORS, clone=(349, 2628)),
+    Gift("Treasure chest", (weapon(*TWOHAND_SWORD_3),), (TREASURE_CHEST,), WYRM_SCHOOL, clone=(337, 2629)),
+    # the obsidian lotulis +1 and the bone great sword +1 (the user's, 2026-11-25): each on a foe
+    # of his own object (RGNFF's people, no clone): Dakaren, Jasmine's captor at the Silt Sea (with
+    # his Shimmer Armor), and Dagger, the White Sand Outlaws' chief (with the Boots of Speed, MAGIC)
+    Gift("Dakaren", (weapon(*BONE_GREAT_SWORD_1),), (DAKAREN,)),
+    Gift("Dagger", (weapon(*OBSIDIAN_LOTULIS_1),), (DAGGER,)),
+)
 MAGIC: Tuple[Gift, ...] = (
     Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
     Gift("Undermt Folk", (weapon(*PICK_1),), (51,), 0x1E, clone=(169, 2561)),  # (one of the four miners)
@@ -468,13 +525,14 @@ MAGIC: Tuple[Gift, ...] = (
     # scrolls), Stillwater in the chest Chaya gives as her apology (its object made by her script,
     # with the Sling +2, the Grapes of Bless and the obelisk's gem), Linebreaker on the Troop
     # Leader; the slave pens' weapon rack an object of its own (the Lower Castle's rack is the same
-    # object), with its two bone polearms: Thornwall comes onto it only once Semyon has told of the
-    # shipment (semyon.ship), so the data gives it nothing (a save from 2.13.4 or earlier has it there)
+    # object), with its two bone polearms and a metal javelin (the user's, 2026-11-25): Thornwall comes
+    # onto it only once Semyon has told of the shipment (semyon.ship), so the data gives it nothing of
+    # that (a save from 2.13.4 or earlier has it there)
     Gift("Rogue Shaman", (weapon(*AIR_DAGGER_2),), (77,), 0x0F),
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),
     Gift("Troop Leader", (weapon(*POLEARM_2), BACK_GIRDLE_ITEM), (TROOP_LEADER,), 0x21),
-    Gift("Weapon Rack", (weapon(JAVELIN),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT)),
+    Gift("Weapon Rack", (weapon(METAL_JAVELIN),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT)),
     # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on
     # the Guardian of Balkazar's fortress
     Gift("Skeleton", (WOODEN_SHIELD_1,), (SKELETON,), WARRENS, clone=(WARRENS_SKELETON, 2585)),
@@ -488,7 +546,7 @@ MAGIC: Tuple[Gift, ...] = (
     # Temple's weapon rack (with the game's Mace +2 and metal axe)
     Gift("Uzoma", (weapon(*OBSIDIAN_CAHULAKS_1),), (UZOMA,)),
     Gift("Weapon rack", (weapon(*METAL_CAHULAKS_2),), (TEMPLE_RACK,), TEMPLE),
-)
+) + RAVAGER_MAGIC
 HAYNEEDLE_ITEM = weapon(*BONE_DAGGER_1)  # (Merzol's hay stash's: haystash.py)
 
 
@@ -534,6 +592,8 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               # (3), the Polearm (19) and the Chatkcha (48)
               game.TWOHAND_SWORD_TYPE: 45, game.LOTULIS_TYPE: 44, game.DOUBLE_SPEAR_TYPE: 3,
               game.TRIKAL_TYPE: 19, game.JAVELIN_TYPE: 48, game.DARTS_TYPE: 48,
+              game.METAL_TWOHAND_SWORD_TYPE: 45, game.METAL_LOTULIS_TYPE: 44, game.METAL_JAVELIN_TYPE: 48,
+              game.OBSIDIAN_LOTULIS_TYPE: 44, game.BONE_GREAT_SWORD_TYPE: 45,
               # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
               # Speed: the Boots (68), as npcitems.TYPES makes their types
               game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,

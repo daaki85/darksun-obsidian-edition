@@ -12247,7 +12247,7 @@ conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)
-KIND_TYPES equ 154
+KIND_TYPES equ 159
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
               db 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 5, 1, 13, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
               db 15, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
@@ -12256,6 +12256,8 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
               db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
               db 17, 18, 19, 20, 21, 22       ; (148-153: Wake of the Ravager's kinds)
+              db 17, 18, 21                   ; (154-156: their metal two-handed sword, lotulis and javelin)
+              db 18, 17                       ; (157, 158: the obsidian lotulis and the bone great sword)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -16736,6 +16738,11 @@ box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 11
                                         ;   the last three the obsidian and magic cahulaks')
          dw 2681, 2683, 2685, 2687, 2689 ; (Wake of the Ravager's two-handed sword, lotulis, double
                                         ;   spear, trikal and javelin)
+         dw 2695, 2697, 2699, 2701       ; (their Javelin +1, metal two-handed sword, lotulis, javelin)
+         dw 2703, 2705, 2707, 2709, 2711, 2713, 2715, 2717 ; (their magic ones: icons.RAVAGER_MAGIC)
+         dw 2719, 2721, 2723, 2725       ; (the obsidian lotulis, the bone great sword and their +1s)
+         dw 2691, 2693, 2727, 2493, 2509, 2575, 2577, 2559 ; (drawn as the sequel's: the darts; the
+                                        ;   great axes, the game's +3 first: icons.BOX_TALL)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -17000,9 +17007,10 @@ MN_TRIP      equ 13             ; (as MN_TANGLE's frame: the trikal's trip)
 MN_SECOND    equ 14             ; (+6 the second foe, +8 the attacker, +0Ah the first, +0Ch 1 the double spear's -1)
 TANGLE_SAVE  equ 0x39           ; (the sheet's save against petrification/polymorph)
 TRIP_SAVE    equ 0x37           ; (... against paralysis/poison/death)
-TRIKAL       equ 115 + 36       ; (EXTRA_TYPES' 37th: Wake of the Ravager's trikal; the next two, the
-LOTULIS      equ 115 + 34       ;   lotulis and the double spear)
-DOUBLE_SPEAR equ 115 + 35
+TRIKAL       equ 115 + 36       ; (EXTRA_TYPES' 37th: Wake of the Ravager's trikal)
+LOTULIS_KIND equ 18             ; (kind_of_type's lotulis, any material, its kind + 1; the double
+                                ;   spear's the next)
+DOUBLE_SPEAR equ 115 + 35       ; (the double spear: wood alone)
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
 cah_more:                           ; AX the attacks a round (halves) with item BX: 2 more for
         push ax                     ;   the cahulaks. Others kept.
@@ -17206,9 +17214,15 @@ DISTANCE_SEG equ 0x1A0A
 SIDE_BITS    equ 7
 sf_swing:                           ; (CAH_SWING's: an item, in melee)
         mov ax, [bp + 0x14]
-        sub ax, LOTULIS
-        cmp ax, DOUBLE_SPEAR - LOTULIS
+        cmp ax, KIND_TYPES
+        jae .ret
+        xchg ax, bx
+        mov bl, [cs:bx + kind_of_type]
+        xchg ax, bx
+        sub al, LOTULIS_KIND
+        cmp al, 1
         ja .ret                     ; AX 0 the lotulis, 1 the double spear
+        cbw
         pushad
         push es
         mov cx, [bp - 8]
@@ -19488,8 +19502,9 @@ THIEF_LEVELS equ 13
 ; PROBE_DOS_OPEN: the DOS services (INT 21h), hooked. Opening a file (AH=3Dh) whose name ends in
 ; one of COPIES' (SEGOBJEX.GFF, the game's objects and their pictures; RESOURCE.GFF, its screens'
 ; pictures and texts; GPLDATA.GFF, its scripts; RGN29.GFF, the slave pens; RGN1C.GFF, RGN1E.GFF,
-; RGN08.GFF and RGN28.GFF, the Upper Castle, the Undermountain, the Gemfields and the warrens, a
-; person or thing there with an object of its own for a new item) opens the Loader's
+; RGN08.GFF, RGN28.GFF and RGN06.GFF, the Upper Castle, the Undermountain, the Wagon Train, the warrens
+; and the Gemfields, and the regions of Wake of the Ravager's magic weapons, a person or thing there
+; with an object of its own for a new item) opens the Loader's
 ; copy instead (D:\..., which the launcher writes with
 ; the Loader's icons added; the game folder is never changed), and notes that it has; with no
 ; copy there, the game's own. Everything else goes on to DOS.
@@ -19884,6 +19899,14 @@ copies:
         COPY 'RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
         COPY 'RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
         COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
+        COPY 'RGN26.GFF', others_on   ; (Wake of the Ravager's magic weapons, each on one of a group:
+        COPY 'RGN14.GFF', others_on   ;   worldgear.RAVAGER_MAGIC; the Fields, the Elven Slavers, the
+        COPY 'RGN23.GFF', others_on   ;   Hot Springs, the Silt Sea Ssurans, the Lower Castle, the
+        COPY 'RGN05.GFF', others_on   ;   Ssuran Ruins, the Captured Gladiators, the Wyrm School)
+        COPY 'RGN1D.GFF', others_on
+        COPY 'RGN0F.GFF', others_on
+        COPY 'RGN04.GFF', others_on
+        COPY 'RGN0D.GFF', others_on
         db 0
 
 ; NEW SPELLS (RULE_NEW_SPELLS): sixteen spells past the game's 196 (0-68 wizard, 69-137 priest,
@@ -23305,7 +23328,7 @@ probe_names_fill:
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 39
+TYPES_EXTRA equ 44
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -29648,13 +29671,24 @@ extra_types:
         xtype 0x01, 0x00, 0x18, 0x00, 0x50, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
         ; a javelin: thrown from the missile slot as the chatkcha (+0: 12h; +9: 0Ch; never used
         ; up), obsidian spared its penalty (+8: 83h, as the chatkcha), range 6 (+0Ah), one a round
-        ; (+0Bh: 2 halves), 1d6 piercing, 2 lb, for the obsidian weapons' classes but thieves (+10h:
-        ; 127Eh)
-        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7E, 0x12, 0x00, 0x00
+        ; (+0Bh: 2 halves), 1d6 piercing, 2 lb, for the obsidian weapons' classes but thieves, and air
+        ; clerics too, a thrown weapon (+10h: 127Fh; the user's, 2026-11-25)
+        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7F, 0x12, 0x00, 0x00
         ; darts (a set): thrown as the javelin, wood spared its penalty, range 4, two a round (+0Bh:
-        ; 4 halves), 1d3 piercing, half a pound, for the dagger's classes (+10h: 1FF3h; preservers
-        ; and psionicists too)
-        xtype 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04, 0x03, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; 4 halves), 1d3 piercing, half a pound, for the dagger's classes and water clerics (wood)
+        ; (+10h: 1FFBh; preservers and psionicists too; water clerics the user's, 2026-11-25)
+        xtype 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04, 0x03, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
+        ; metal ones of three (the user's, 2026-11-25): the two-handed sword, the lotulis and the
+        ; javelin as above, of metal (+8: 4)
+        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
+        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x04, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7F, 0x12, 0x00, 0x00
+        ; an obsidian lotulis, for fire clerics (the user's, 2026-11-25): the lotulis of obsidian (+8:
+        ; 3), the fire cleric's bit added (+10h: 167Eh)
+        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7E, 0x16, 0x00, 0x02
+        ; a bone great sword, for water clerics (the user's, 2026-11-25): the two-handed sword of
+        ; bone (+8: 1), its classes (water clerics among them)
+        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
 extra_types_end:
         times -(XT_N != TYPES_EXTRA) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
@@ -29728,7 +29762,7 @@ extra_names:
                                         ; cahulaks +1,
         xname "Ironwhirl"               ; a metal cahulaks +2)
         xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
-        xname "Two-hand Sword"          ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
+        xname "Great Sword"             ; (Wake of the Ravager's weapon kinds: dsloader/worldgear.py's
         xname "Lotulis"                 ; RAVAGER_NAMES, the types EXTRA_TYPES' last six)
         xname "Double Spear"
         xname "Trikal"
