@@ -777,7 +777,11 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button). **DUAL**: the roster's inventory (75,171), a right
+  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
+  (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
+  starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
+  AIR (240,106), FIRE (240,122). The roster's slot 4 NEW at (162,117). **DUAL**: the roster's inventory (75,171), a right
   click on the member's portrait (30,69 / 30,114 / ...) gives EDIT / DROP / DUAL, DUAL just under
   (the menu's third row: 70,98 for the top member, 100,147 for the third); in the DUAL window the
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then

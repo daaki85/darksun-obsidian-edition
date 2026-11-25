@@ -24,7 +24,7 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, itemgate, journal, kitpages, kits, labels, loot, monsters, \
+from . import aging, combatlog, dicelog, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, labels, loot, monsters, \
     psiblast, quicksave, ravager, ring, rings, sizes, stealth, targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
@@ -257,13 +257,61 @@ RED_FIRST, RED_LAST = 32, 255
 RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
 
 
+# Fuller starting gear (startgear.py, on DSCLOG2's GEAR_DONE: site 85) from the sequel's own plain items:
+# OBJEX.GFF's item records (17h bytes: the picture, the value at +6, the type at +0Ah, the name at +14h; in no
+# list, no slot), by weapon kind (specialize.KINDS) in the order tried, each a material the classes may use
+# (restrict.usable): club (type 29, wood), mace (67, bone), dagger (72, obsidian), quarterstaff (85),
+# chatkcha (25, obsidian), sling (93), and for a weapon spec long sword (73, obsidian), axe (48, obsidian),
+# great axe (51), pick (79, stone), polearm (80), gythka (52), cahulaks (24); no short sword (the sequel has
+# none of its own) and no bow (a Battle Dancer has a sling: no arrows made). Its leather ("Armor", of leather:
+# type 32 for the chest, 3 the arms, 64 the legs; its armour types come in fives, 1-5 worn on the arms, 30-34
+# on the chest, 62-66 on the legs, as a new fighter wears them), and a cloak (type 28, object 1615) for the kits
+# that hide. An item's name number is its line in RESOURCE.GFF's TEXT 1000 counted from 1.
+def _rav_item(hexed: str) -> bytes:
+    return bytes.fromhex(hexed)
+
+
+RAV_PLAIN: Dict[int, Tuple[Tuple[int, bytes], ...]] = {
+    1: ((29, _rav_item("9ffd00000f2701000f271d0000000000000004ff210000")),),   # club (object 609)
+    4: ((67, _rav_item("9efd00000f2718000f27430000000000000004ff1c0000")),),   # mace (610)
+    2: ((72, _rav_item("9cfd00000f270a000f27480000000000000004ff1d0000")),),   # dagger (612)
+    8: ((85, _rav_item("a3fd00000f2701000f27550000000000000004ff320000")),),   # quarterstaff (605)
+    12: ((25, _rav_item("40fd00000f2701000f27190000000000000004ff170000")),),  # chatkcha (704)
+    14: ((93, _rav_item("3ffd00000f2701000f275d0000000000000004ff350000")),),  # sling (705)
+    0: ((73, _rav_item("9afd00000f274b000f27490000000000000004ff1a0000")),),   # long sword (614)
+    5: ((48, _rav_item("8bfd00000f270f000f27300000000000000005ff1f0000")),),   # axe (629)
+    6: ((51, _rav_item("a0fd00000f27f4010f27330000000000000005ff200000")),),   # great axe (608)
+    7: ((79, _rav_item("8cfd00000f2732000f274f0000000000000006ff220000")),),   # pick (628)
+    9: ((80, _rav_item("a2fd00000f2707000f27500000000000000004ff190000")),),   # polearm (606)
+    10: ((52, _rav_item("99fd00000f2706000f27340000000000000004ff160000")),),  # gythka (615)
+    11: ((24, _rav_item("9dfd00000f2701000f27180000000000000004ff310000")),),  # cahulaks (611)
+}
+RAV_LEATHER = ((game.EQUIP_SLOTS.index("chest"), _rav_item("d6fc00000f2718000f27200000000000000004ff450000")),
+               (game.EQUIP_SLOTS.index("arm"), _rav_item("d1fc00000f2714000f27030000000000000004ff450000")),
+               (game.EQUIP_SLOTS.index("legs"), _rav_item("ccfc00000f2714000f27400000000000000004ff450000")))
+RAV_CLOAK = _rav_item("b1f900000f2701000f271c0000000000000004ff260000")
+
+
+def rav_weapon(gd, sheet: bytes, kind: int, read):
+    """startgear._weapon's for the sequel: a plain weapon of KIND the character can use (RAV_PLAIN), as
+    (record, (type, ...)); None if there is none."""
+    from . import startgear
+    for type_, rec in RAV_PLAIN.get(kind, ()):
+        if startgear.can_use(gd, sheet, type_, read(type_)):
+            return rec, (type_, 0, 0, 0)
+    return None
+
+
 def rav_items() -> Dict[object, Dict[str, object]]:
-    """The modules' names rebound for looting and selling in the sequel (apply_layout)."""
-    from . import icons, itemgate, loot, ring
+    """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
+    starting gear (startgear's items: the sequel's)."""
+    from . import icons, itemgate, loot, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
-            icons: {"fit": lambda gd, item: None}}
+            icons: {"fit": lambda gd, item: None},
+            startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
+                        "HANDS": game.WEAPON_HANDS}}
 
 
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
@@ -1159,7 +1207,8 @@ class RavDiceLog(dicelog.DiceLog):
         (_creation_pass), the combat log's panel (_panel_pass), and the dialogue and message boxes for the
         Dialogue and Journal tabs and the "Message:" lines (_take_text, DSCLOG2's TEXT; the journal its own
         chain: _journal_sync): the rest reads and writes what isn't ported yet."""
-        out = self._step(lambda: self.hp_changes(now))
+        out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
+        out += self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
         self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
@@ -1217,6 +1266,44 @@ class RavDiceLog(dicelog.DiceLog):
             yield
         finally:
             self.guest.writable = before
+
+    def _gear_pass(self) -> List[str]:
+        """Fuller starting gear (startgear.fill, the sequel's items: rav_items), on DSCLOG2's GEAR_DONE: the
+        Loader's heartbeat (LOADER_BEAT, its header's +1865) written every pass, and with GEAR_DUE (+1830) set
+        the new character DONE has just made (GEAR_WHO, +1867: game.being_new's GD.making) given its gear
+        while DONE waits; then the members whose items changed (GEAR_GIVEN, +1831) and GEAR_DUE cleared. The
+        item moves writable while it runs (_items_writable); the game's item lists moving: the next pass."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        hdr = self.tsr_hdr
+        want = [(hdr + dicelog.TSR_GEAR_DUE, 2), (hdr + dicelog.TSR_LOADER_BEAT, 2), (hdr + dicelog.TSR_GEAR_WHO, 1)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.write(hdr + dicelog.TSR_LOADER_BEAT, self.guest.read(dicelog.BIOS_TIMER, 2))
+        if not self.guest.read(hdr + dicelog.TSR_GEAR_DUE, 1)[0]:
+            return []
+        out: List[str] = []
+        if self.starting_gear:
+            if not self._items_still():
+                return []
+            def items() -> Dict[int, frozenset]:
+                mine: Dict[int, set] = {}
+                for i in self.game.party_items():
+                    mine.setdefault(i.member, set()).add((i.index, i.record))
+                return {m: frozenset(v) for m, v in mine.items()}
+            before = items()
+            who = self.guest.read(hdr + dicelog.TSR_GEAR_WHO, 1)[0]
+            self.game.making = None if who == 0xFF else who
+            try:
+                with self._items_writable():
+                    out += startgear.fill(self.game)
+            finally:
+                self.game.making = None
+                itemgate.release(self.game)
+            after = items()
+            given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
+            self.guest.write(hdr + dicelog.TSR_GEAR_GIVEN, bytes((given,)))
+        self.guest.write(hdr + dicelog.TSR_GEAR_DUE, b"\0")
+        return out
 
     def _loot_pass(self) -> List[str]:
         """Shattered Lands' (T or Shift+T with a container's window open: what is in it into the party's

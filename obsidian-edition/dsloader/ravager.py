@@ -532,6 +532,13 @@ PATCHES: Tuple[Patch, ...] = (
     # ability's roll's "add ax,[42DAh]" (6C585h, SL's "add ax,[499Ah]" at 6498Bh), into its header's RL_TRIES
     Patch("rl_try", 0x6C585, bytes.fromhex("0306da42"), _site(81, 4)),
     Patch("rl_sum_box", DS_FILE + 0x11F8, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
+    # STORE and RECALL (SL's roll_store, PROBE_RS_CLICK; rollstore.rav_chunks puts the buttons in the window):
+    # the click routine's "mov cx,16h" as it looks the button up (6DE85h, SL's 6625Dh), DSCLOG2's RS_CLICK
+    Patch("roll_store", 0x6DE85, bytes.fromhex("b91600"), _site(83, 3)),
+    # Fuller starting gear (SL's GEAR_DUE and GEAR_HOLD at its cr_weapons' place): DONE's "pop cx / push si /
+    # nop" between the game's gear for the new character and its roster write (6E2F2h, SL's 666DFh),
+    # DSCLOG2's GEAR_DONE, which waits there for the Loader's gear (startgear.py)
+    Patch("gear_done", 0x6E2F2, bytes.fromhex("595690"), _site(85, 3)),
     # AD&D's class tables (SL's xp_level_up, xp_view, priest_thac0, adnd_slots; game.RULE_ADND_TABLES,
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
     # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
@@ -958,12 +965,13 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
+ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 
 
 def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
-    """RESOURCE.GFF's bytes with the spell fixes (spell_fixed) and the creation panel's kit pages
-    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) unless in SKIP; the names
-    of those applied."""
+    """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) and the creation screen's STORE
+    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) unless in SKIP; the names of those applied."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
     if KIT_PAGES not in skip:
@@ -974,6 +982,15 @@ def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
         if added:
             out = icons.with_chunks(out, added)
             done.append(KIT_PAGES)
+    if ROLL_BUTTONS not in skip:  # (STORE and RECALL: DSCLOG2's RS_CLICK, site 83)
+        from . import rollstore
+        try:
+            added = rollstore.rav_chunks(gff.read_gff(out))
+        except (KeyError, ValueError, IndexError, struct.error):
+            added = {}  # (no such buttons to copy: the screen as the game has it)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ROLL_BUTTONS)
     return out, done
 
 
