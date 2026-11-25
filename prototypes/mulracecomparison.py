@@ -52,6 +52,8 @@ def render(game_dir, output):
             halfelf = halfelfstudy.FIGURES[1-sex]
             for role, races in RACES.items():
                 for race in races:
+                    if race == "Mul" and sex == 1:
+                        continue
                     if race in ("Human", "Dwarf", "Elf"):
                         obj = {"Human": 300, "Dwarf": 302, "Elf": 304}[race]+sex
                         tile = atlas.tile(obj, pose, role, "Class colors", 1)
@@ -68,12 +70,13 @@ def render(game_dir, output):
             label(page, (width-12, 8), f"{pose:02}   {name}", 16, "ra")
             for j, race in enumerate(races):
                 x = 67+j*166
-                label(page, (x+81, 38), "Mul (shared)" if race == "Mul" else race, 14, "ma")
+                label(page, (x+81, 38), race, 14, "ma")
                 for sex in (0, 1):
                     y = 58+211*sex
                     if j == 0:
                         label(page, (7, y+90), ("Male", "Female")[sex], 14)
-                    paint_sample(page, x, y, tiles[role, race, sex])
+                    if (role, race, sex) in tiles:
+                        paint_sample(page, x, y, tiles[role, race, sex])
             loops[role].append(page)
         for row, (role, chosen, others) in enumerate(STILLS):
             if pose != chosen:

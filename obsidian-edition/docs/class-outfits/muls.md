@@ -1,10 +1,10 @@
 # Mul outfit study
 
-Shattered Lands uses one map figure for male and female Muls. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the shared body and all six outfits in every pose](mul-singles-poses.png)
+The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
 ## Same-class comparison across races
 
-Each figure uses its own frame for the named action. The floor, ground line and pixel scale are shared. The small copies show game size. In the animations the male figures are above the female figures, with the shared Mul repeated at the left of both rows. Humans, dwarves and elves come from the Loader renderer. Half-elves, halflings, half-giants and the Mul come from their art studies. Each loop includes the available same-class fittings.
+Each figure uses its own frame for the named action. The floor, ground line and pixel scale are shared. The small copies show game size. In the animations the male figures are above the female figures, with the Mul at the left of the male row. Humans, dwarves and elves come from the Loader renderer. Half-elves, halflings, half-giants and the Mul come from their art studies. Each loop includes the available same-class fittings.
 
 ![Druid cape and kilt, Psionicist bow, and Thief rear and profile stride beside the corresponding outfits on other races](mul-race-comparison.png)
 
