@@ -6,6 +6,14 @@ The first fitting covers the Gladiator, Fighter and Cleric on both halflings. Ea
 
 [Compare leather and linen beside retail art in idle and profile walk](halfling-materials.png) · [Male pose sheet](halfling-man-poses.png) · [Female pose sheet](halfling-woman-poses.png)
 
+## Face and neckline
+
+In front idle, look at the strip of skin between the man’s jaw and the cream collar. In the second side strike, the Fighter’s bone guard sits farther back on his shoulder, leaving the profile clear. The woman’s front strike shows why the jaw needs its own outline as she ducks under her raised arm. Both figures keep the fringe and eye shadow drawn into their retail heads.
+
+![Retail, previous and revised faces in four representative poses, enlarged and at game size](halfling-face-fit.png)
+
+The gallery checks the palette index of each pixel in the traced head against the retail picture for the body, Gladiator, Fighter and Cleric in all 29 poses on both figures.
+
 ## Fit and material
 
 At game size the Cleric is the easiest to identify on both floors. The long hem and the shadow running into it carry through the profile walk, even though the retail Priest has room for more folds. The two leather outfits read closest in profile step 2 (12), especially under the woman’s hair. Look below the raised forearm for the Fighter’s longer hip flaps, and above the Gladiator’s wrap for exposed skin.

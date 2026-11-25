@@ -54,10 +54,45 @@ BANDS = {43, 249, 250}
 # Centres of the close-fitting guard on the visible upper arm. In the
 # low front strike and recoil the arm turns across the face.
 SHOULDER = (
-    (6, 5), (14, 6), (5, 7), (5, 5), (5, 5), (4, 5), (6, 5), (10, 6), (10, 6), (11, 6),
-    (11, 6), (3, 6), (8, 6), (4, 6), (7, 5), (5, 8), (8, 5), (12, 7), (8, 6), (8, 7),
-    (10, 7), (6, 5), (14, 5), (9, 5), (5, 6), (6, 10), (5, 8), (10, 7), (10, 8),
+    (5, 6), (14, 6), (4, 7), (4, 6), (4, 6), (3, 6), (5, 6), (10, 6), (10, 6), (11, 6),
+    (11, 6), (3, 6), (8, 6), (4, 6), (7, 6), (4, 8), (8, 6), (13, 9), (8, 6), (8, 7),
+    (10, 7), (5, 6), (10, 5), (9, 5), (5, 6), (6, 10), (5, 8), (10, 7), (10, 8),
 )
+# Scanlines of the native head, including the last skin pixel at the jaw.
+# Origins follow the head, independently of the shoulder and the raised hand.
+# The retail walk reuses three heads. Crossed arms and tilted combat heads
+# have their own contours. The fallen cel is traced in the same feet-down
+# orientation as CUT. Each span includes both endpoints.
+FRONT_HEAD = ((3, 7), (1, 8), (1, 9), (0, 10), (1, 8), (2, 7), (3, 7))
+REAR_HEAD = ((2, 6), (1, 7), (0, 7), (1, 8), (0, 8), (2, 6))
+SIDE_HEAD = ((3, 7), (2, 8), (1, 7), (1, 8), (0, 8), (4, 7))
+HEADS = (
+    (5, 0, FRONT_HEAD), (6, 0, REAR_HEAD), (3, 0, SIDE_HEAD),
+    (4, 0, FRONT_HEAD), (4, 0, FRONT_HEAD), (4, 0, FRONT_HEAD), (5, 0, FRONT_HEAD),
+    (2, 0, REAR_HEAD), (2, 0, REAR_HEAD), (3, 0, REAR_HEAD), (3, 0, REAR_HEAD),
+    (2, 0, SIDE_HEAD), (7, 0, SIDE_HEAD), (3, 0, SIDE_HEAD), (6, 0, SIDE_HEAD),
+    (3, 2, ((3, 6), (1, 6), (1, 6), (0, 6), (0, 6), (2, 6))),
+    (6, 0, (*FRONT_HEAD[:5], (4, 8), (5, 7))),
+    (3, 4, ((2, 6), (1, 7), (0, 7), (0, 8), (1, 8), (2, 7), (3, 5))),
+    (2, 0, REAR_HEAD),
+    (1, 0, ((2, 6), (1, 7), (0, 7), (1, 7), (1, 7), (2, 7))),
+    (2, 0, REAR_HEAD),
+    (4, 0, ((1, 6), (0, 7), (1, 7), (0, 7), (0, 6), (3, 5))),
+    (10, 0, ((2, 6), (1, 7), (0, 6), (1, 7), (5, 6))),
+    (9, 0, ((2, 6), (1, 7), (1, 6), (1, 7), (4, 6))),
+    (4, 0, ((3, 6), (1, 7), (1, 8), (0, 8), (2, 6), (2, 6))),
+    (1, 3, ((2, 6), (1, 7), (0, 7), (0, 8), (0, 8), (2, 7))),
+    (4, 3, ((1, 6), (0, 7), (0, 7), (3, 6), (3, 6))),
+    (0, 3, ((3, 5), (2, 6), (1, 6), (0, 7), (0, 7), (0, 7), (1, 7))),
+    (4, 0, ((2, 5), (1, 7), (1, 8), (0, 8), (0, 8), (1, 7), (2, 6))),
+)
+
+
+def head_pixels(pose):
+    left, top, spans = HEADS[pose]
+    return {(left+x, top+y) for y, (lo, hi) in enumerate(spans) for x in range(lo, hi+1)}
+
+
 # Radii of the actual bow are only a pixel or two. Gold also paints
 # the man's hide top, so identify the shaft by its path through the cel.
 BOW_ARCS = {
@@ -192,6 +227,15 @@ def rows_for(game, model, pose, swatch):
         jerkin.add((11, 17))
     if pose == 22:
         jerkin.add((8, 13))
+    head = head_pixels(pose)
+    # Leave a sliver of cleaned neck beneath the jaw. It follows the
+    # underside of the head, even when the striking torso bends sideways.
+    neckline = {(x, y+1) for x, y in head} - head
+    # The stock hide rises above the usual torso cut in these frames.
+    # Clean its upper edge before exposing the neck under the new collar.
+    if pose in (2, 3, 4, 5, 11, 16, 22):
+        top.update((x, y) for x, y in neckline
+                   if 0 <= y < len(ref) and 0 <= x < len(ref[y]) and ref[y][x] in OCHRE)
     head_hair = set()
     if model == 2070:
         for x in range(w):
@@ -207,7 +251,7 @@ def rows_for(game, model, pose, swatch):
             x = nx-dx
             point = x, y
             c = native[ny][nx] if 0 <= nx < w else None
-            if point in head_hair or (nx, ny) in bow:
+            if point in head or point in head_hair or (nx, ny) in bow:
                 continue
             trunk = point in top
             thigh = point in legs
@@ -236,7 +280,7 @@ def rows_for(game, model, pose, swatch):
             for role in ROLES[1:]:
                 rows[role][ny][nx+4] = body
             grip = any(abs(nx-gx) <= 1 and abs(ny-gy) <= 1 for gx, gy in hands)
-            if wrist or (grip and c is not None and not (trunk or thigh)):
+            if point in neckline or wrist or (grip and c is not None and not (trunk or thigh)):
                 continue
             behind = c is None or trunk or thigh or y >= hy+2 and abs(x-hx) <= half+1
             grain = swatch[(y-hy) % 8][(x-hx) % 8]
@@ -297,6 +341,20 @@ def rows_for(game, model, pose, swatch):
     return {role: flip(r) if pose == 28 else r for role, r in rows.items()}
 
 
+def check_uncovered_head(game, model, pose, outfits):
+    cb, frame = divmod(pose, 15)
+    native = game.fr(model+cb, frame)
+    dx, dy = CUT[pose][-1] if model == 2070 else (0, 0)
+    for x, y in head_pixels(pose):
+        x, y = x+dx, y+dy
+        if pose == 28:
+            x, y = len(native[0])-1-x, len(native)-1-y
+        expected = native[y][x]
+        for role in ("Body base", "Gladiator", "Fighter", "Cleric"):
+            if outfits[role][y][x+4] != expected:
+                raise ValueError(f"{model} {role}, pose {pose}: changed head pixel at {(x, y)}")
+
+
 def material_sheet(game, swatch, sand):
     """Match the retail garment and both proposals on one ground line per row."""
     result = Image.new("RGB", (900, 660), dwarf.PAPER)
@@ -341,6 +399,7 @@ def render(game_dir, output):
         label(page, (632, 9), f"{pose:02}   {name}", 14, "ra")
         for i, model in enumerate(MODELS):
             rows = rows_for(game, model, pose, swatch)
+            check_uncovered_head(game, model, pose, rows)
             y = 61+i*141
             label(page, (10, y+35), ("Man", "Woman")[i], 13)
             for j, role in enumerate(ROLES):
