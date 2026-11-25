@@ -168,6 +168,12 @@ def rear_single_rows(fitted, model, pose, swatches):
                 # into a wider crease below the belt.
                 fold = math.cos(distance*(1.05 if i < 6 else 1.45)+.75*math.sin(i*.65))
                 shade = .56+.17*fold+.062*grain
+                if role == "Thief":
+                    # The deep pleat and its turned lip share a seam. Follow
+                    # the moving hip, then let the free end swing at the hem.
+                    seam = distance - .65*math.sin(i*.46)
+                    shade -= .09*max(0, distance)/max(1, hi-pivot)
+                    shade += .20*max(0, 1-abs(seam+1.2)) - .31*max(0, 1-abs(seam))
                 if i < 3:
                     shade += .08 if x < shoulder else -.07
                 if x == hi or (i > 5 and x == lo):
@@ -198,7 +204,7 @@ def rear_single_rows(fitted, model, pose, swatches):
                         continue
                     color = fit.dye(ramp, (shade-.13)*(len(ramp)-1))
                 if role == "Thief" and i < 3 and abs(x-shoulder) <= 3-i:
-                    color = fit.dye(ramp, 4.8+.5*grain-.4*i)
+                    color = fit.dye(ramp, 2.8+.55*grain+.9*abs(distance)-.4*i)
                 out[role][v][u] = color
     return out
 
@@ -217,6 +223,16 @@ def draw(game, model, pose, swatches):
     shell, opening, head = hood(pose)
     neck = {(x, y+1) for x, y in head} - head
     long, short = cloak_outline(pose, False), cloak_outline(pose, True)
+    thief_cloak = long
+    thief_shoulder = set()
+    if pose in (2, 11, 12, 13, 14):
+        # A second thickness of cloth shows behind the passing elbow.
+        # Start at the scapula and return the lining into the existing hem.
+        tx, ty = TRAIL[pose]
+        thief_shoulder = fit.pixels(((sx-1, sy-1), (sx-3, sy-1), (sx-5, sy+1),
+                                     (sx-5, sy+3), (sx-3, sy+2), (sx-1, sy)))
+        thief_cloak = long | thief_shoulder | fit.pixels((
+            (sx-3, sy), (sx-5, sy), (tx, ty-2), (tx, ty), (tx+3, ty-1), (sx-3, sy+4)))
     bow = {(x, y) for y, lo, hi in fit.BOW_ARCS.get(pose, ()) for x in range(lo, hi+1)}
     if model == 2070 and pose == 24:
         bow.add((6-dx, 16-dy))
@@ -251,7 +267,7 @@ def draw(game, model, pose, swatches):
                     out[role][v][u] = fit.dye(ramp, shade+lift+(2 if y < hy else 0))
             if not rear_walk and pt not in face_and_neck and (skin is None or pt not in grip):
                 for role, panel, ramp in (("Druid", short, MOSS), ("Ranger", long, RAMPS["leaf"]),
-                                          ("Thief", long, RAMPS["slate"])):
+                                          ("Thief", thief_cloak, RAMPS["slate"])):
                     if pt not in panel:
                         continue
                     # At the front, separate the two falls of cloth to expose
@@ -262,8 +278,13 @@ def draw(game, model, pose, swatches):
                         # The short cape pins over the breastbone and parts
                         # below it, with the near shoulder carrying the fold.
                         gap = max(0, 2.3*depth-.65)
+                    if role == "Thief" and pose not in TRAIL and pose not in fit.REAR:
+                        # One folded lapel crosses the jerkin just under the
+                        # collar. The opening widens again below the breast.
+                        gap = min(gap, max(.6, (y-sy)*.48))
                     near_side = rim < .6 if pose in (17, 27) else rim > -.6
-                    if pose not in fit.REAR and skin is not None and (
+                    on_shoulder = role == "Thief" and pt in thief_shoulder
+                    if pose not in fit.REAR and skin is not None and not on_shoulder and (
                             not tailored or (pose in TRAIL and near_side) or
                             (pose not in TRAIL and abs(rim) < gap)):
                         continue
@@ -276,13 +297,37 @@ def draw(game, model, pose, swatches):
                         swing = -2.8
                     fold = math.cos(1.42*(x-axis+swing*depth)+.4*depth*depth)
                     light = .48+.20*fold+.038*grain-.16*edge-.055*min(depth, 2)
+                    if role == "Thief":
+                        # The outer fold trails from the shoulder, bending
+                        # away from the leg as the cloak swings in profile.
+                        seam = x-axis+swing*depth+.55*depth*depth+1
+                        light += .24*max(0, 1-abs(seam+1)) - .30*max(0, 1-abs(seam))
+                        light += .09*fold - .10*edge
+                        if pose not in TRAIL and pose not in fit.REAR:
+                            # The front falls part over the leather. Their
+                            # turned inner edges catch light beside the opening.
+                            light += .17*max(0, 1-abs(abs(rim)-gap-.25))
+                        if on_shoulder:
+                            light += .19 if (x, y-1) not in thief_shoulder else -.09
+                        elif pt not in long:
+                            light += .16 if (x-1, y) in panel else -.14
                     out[role][v][u] = fit.dye(ramp, light*(len(ramp)-1))
             if pt in shell and (pt not in grip or pt in head):
                 i = y-head_y
                 lo, hi = spans[min(max(i, 0), len(spans)-1)]
                 across = (x-head_x-lo)/max(1, hi-lo)
                 rim = any((x+i, y+j) in opening for i, j in ((0, 1), (1, 0)))
-                light = 8.8-5*abs(across-.3)-.50*i+.43*grain-3.5*rim
+                # The crown catches light above the ear. Its lower panel
+                # folds back over the nape with one lit lip and a dark return.
+                height = i / max(1, len(spans)-1)
+                crease = i - (len(spans)-2-.32*(x-head_x-lo))
+                light = 11.2-8*abs(across-.27)-3.8*height+.55*grain
+                light += 2.4*max(0, 1-abs(crease+1)) - 4.2*max(0, 1-abs(crease))
+                light -= 4.2*rim + 2.0*(height >= 1)
+                if pose in fit.REAR:
+                    # Read as a rounded hood even at a single map pixel per
+                    # texel: carry light over one temple into a shadowed nape.
+                    light -= 2.6*max(0, across-.42) + 1.5*height
                 out["Thief"][v][u] = fit.dye(RAMPS["slate"], light)
     if model == 2070:
         twin = draw(game, 2068, pose, swatches)

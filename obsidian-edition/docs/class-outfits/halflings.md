@@ -2,6 +2,14 @@
 
 All seven single classes, twelve pairs and two triples are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
 
+## Thief detail at game size
+
+The sheet pairs each halfling with the same pose from `aa9f774`. The dwarf Thief and retail Thief (picture 630) share the floor and scale. In rear walk step two (08), look for the shadow under the hood and the lighter lip of the fold bending over the hip. In side walk step two (12), a narrow second fold trails from the shoulder behind the passing elbow. The front opening still shows the cheek and leather jerkin.
+
+![Both halfling Thieves before and after, beside the dwarf and retail Thieves in five matching poses, at four times and native size](halfling-thief-detail.png)
+
+All seven halfling singles were compared across the 29 poses on both figures. The detail edits are confined to the Thief and the seven combinations that include Thief. Cleric/Thief, Druid/Thief and Ranger/Thief take the revised slate hood over their own cloth. Fighter/Thief, Psionicist/Thief and Fighter/Psionicist/Thief also carry the revised slate cloak. Psionicist/Ranger/Thief retains its green cloak and teal sash. [Compare all the races’ Thieves in motion](mul-race-thief.gif)
+
 ## Multiclass animations
 
 Each large figure wears the combination named above it. For a pair, read the three small figures beneath it from left to right for the first class, the pair and the second class. Both small rows are game size, on sand and paving. The triple gallery labels the three parent pairs individually. Retail figures and the approved human Psionicist appear along the bottom.

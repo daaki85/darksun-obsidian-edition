@@ -68,7 +68,9 @@ def cape(pose, short):
         # Let the back turn in at the far armpit. The loaded hip pushes one
         # fold outward; the other corner sits higher on the swinging leg.
         far_x = wl-1 if short else min(wl-1, knee-1)
-        far_y = wy if short else ty-3
+        if short:
+            ty = min(ty-2, wy+1)
+        far_y = wy-1 if short else ty-3
         points = ((sl+1, sy+1), (sr-1, sy), (rr, ry+1),
                   (tx-1, wy+1), (tx, ty), (tx-2, ty+1),
                   (hip, ty-1), (far_x, far_y), (rl+1, ry+1))
@@ -180,6 +182,19 @@ def draw(game, pose, swatches):
     yoke = panel(PROFILE_YOKE[pose]) if pose in PROFILE_YOKE else set()
     for cloth in panels.values():
         cloth.update(yoke)
+    # Carry the slate from the cowl onto the near shoulder in the profile
+    # walk. The arm rotates in front of this facing; the hem swings behind.
+    facing = set()
+    if pose in PROFILE_YOKE:
+        facing = panel(((sl-1, sy+1), (sl+1, sy), (sl+2, sy+2),
+                        (rr-1, ry+1), (rr-2, ry+3), (rl, ry+1)))
+        panels["Thief"].update(facing)
+    # The bow arm crosses the centre of the wrap. Trace the exposed ribs
+    # on either side and carry the same diagonal down behind the forearm.
+    bow_wrap = set()
+    if pose in (24, 25, 26):
+        bow_wrap = panel(((sl-1, sy+1), (sr-1, sy+2), (rr+1, ry),
+                          (wr, wy), (wl, wy), (rl-1, ry+1)))
     hood = thief_hood(pose)
     face = fit.head_pixels(pose, w, h)
     hx, hy, spans = fit.HEADS[pose]
@@ -200,15 +215,23 @@ def draw(game, pose, swatches):
             # into close-fitting cloth. Free cloth has its own fold shading.
             light = 0 if skin is None else (game.palette[skin][0]-149)/56
             if point not in protected:
+                # Front bow is almost edge-on. The far seam is visible just
+                # outside the bent elbow for three rows before it meets the hip.
+                if pose == 24 and x == 4 and 9 <= y <= 11:
+                    out["Psionicist"][py][i] = shade(TEAL, 2.6+.28*grain)
                 if (x, y) in skirt and y >= wy-1:
                     # Lapped hide spans the space between the thighs.
                     # Turn the free edge up over the advancing leg.
                     across_hip = (x-hip)/max(2, (wr-wl)/2)
                     lap = x-knee-.45*(knee_y-y)
                     light_hide = 6.2+.47*grain-.73*abs(across_hip)-2.3*(0 <= lap < 1.4)
+                    light_hide += 2.4*(-1.35 <= lap < 0)
                     if (x, y+1) not in skirt:
                         light_hide -= 1.8
                     out["Druid"][py][i] = shade(RAMPS["ochre"], light_hide)
+                if skin is not None and (x, y) in bow_wrap and (x, y) not in torso:
+                    turn = (x-axis)/max(2, (rr-rl)/2)
+                    out["Psionicist"][py][i] = shade(TEAL, 3.6+.74*light+.32*grain-.7*abs(turn))
                 if skin is not None and ((x, y) in torso or (x, y) in skirt):
                     u = offset/max(2, (wr-wl)/2)
                     belt = wy - round(.7*u) - int(.55 < abs(u) < 1.2)
@@ -228,6 +251,8 @@ def draw(game, pose, swatches):
                         edge = sy+1+round((1+across)*.20*(wy-sy))
                     if y > wy:
                         teal -= .40 + .19*abs(x-knee)
+                    if (x, y) in bow_wrap:
+                        edge = min(edge, sy+2)
                     if y >= edge:
                         if y == edge:
                             teal += .7
@@ -241,7 +266,8 @@ def draw(game, pose, swatches):
                         continue
                     # The flesh outside the armhole is in front of the drape.
                     # Below the elbow keep its free edge separate from the arm.
-                    if skin is not None and y <= wy and (x, y) not in torso and (x, y) not in yoke:
+                    shoulder_cloth = (x, y) in yoke or role == "Thief" and (x, y) in facing
+                    if skin is not None and y <= wy and (x, y) not in torso and not shoulder_cloth:
                         if y > ry or not sl <= x <= sr:
                             continue
                     tx, ty = (mx, my) if role == "Druid" else (cx, cy)
@@ -250,6 +276,9 @@ def draw(game, pose, swatches):
                     dist = x-ridge
                     fold_width = max(3, abs(wr-wl)*.64)
                     fall = .53 + .19*cos(3.4*dist/fold_width-.75*along) + .045*grain
+                    if role == "Thief" and pose in REAR:
+                        seam = dist+2.2-.6*cos(along*4)
+                        fall += .20*max(0, 1-abs(seam+1.3)) - .32*max(0, 1-abs(seam)/1.4)
                     if pose in REAR and y < wy:
                         fall += .06*(1-abs(offset)/(wr-wl+1))
                     if y < ry+1 and skin is not None:
@@ -275,7 +304,10 @@ def draw(game, pose, swatches):
                     # width. Shade the roll locally where it meets the cape.
                     light = 6.9 + .65*grain + 1.15*((x-1, y) not in hood)
                     if pose in REAR:
-                        light += .9*(x <= hx+2)
+                        # Turn the hanging cowl over the upper back. The
+                        # shadow and adjacent lit seam travel with its tip.
+                        turn = y - (sy+2.5-.42*abs(x-hx-3))
+                        light += 2.1*max(0, 1-abs(turn+1)) - 4.5*max(0, 1-abs(turn)/1.6)
                 if (x, y+1) not in hood or (x+1, y) not in hood:
                     light -= 1.8
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)

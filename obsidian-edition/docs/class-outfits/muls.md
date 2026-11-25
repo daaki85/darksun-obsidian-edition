@@ -10,9 +10,9 @@ Each figure uses its own frame for the named action. The floor, ground line and 
 
 | Outfit | What reads differently at game size |
 |---|---|
-| [Druid · all 29 poses](mul-race-druid.gif) | In rear walk step two (08), the human man has a clear waist between the short green mantle and the lit ochre kilt. The Mul’s green falls almost to the bottom of the wrap, and the brown-gold beneath blends into the copper thigh. The profile swing is visible on both. |
-| [Psionicist · all 29 poses](mul-race-psionicist.gif) | In front idle (00), the bare shoulder gives the Mul a distinct diagonal wrap. In front bow (24), most of the teal is reduced to a strip near the hip. The human and elf keep a continuous field of teal on the torso behind the bow arm. |
-| [Thief · all 29 poses](mul-race-thief.gif) | In rear step two (08), the Mul has a broad light area from the nape to the hem. On the human and dwarf, a dark fold beneath the hood separates it from the shoulders and breaks up the cloak. In profile step two (12), the Mul’s cloak trails behind the leg, but its brown upper chest makes the connection between the hood and the trailing cloth harder to see. |
+| [Druid · all 29 poses](mul-race-druid.gif) | In rear walk step two (08), the green mantle lifts over the hip. The lighter turned edge on the ochre flap separates the kilt from the copper thigh. Compare the waist with the human Druid’s, then follow the shorter cape through the other three steps. |
+| [Psionicist · all 29 poses](mul-race-psionicist.gif) | In front bow (24), a narrow strip of teal shows along the ribs behind the bent arm and meets the wrap at the hip. The Mul turns farther sideways than the human. Rear bow (25) and side bow (26) show more of the same fabric. |
+| [Thief · all 29 poses](mul-race-thief.gif) | In rear walk step two (08), follow the shadow beneath the hood to the light lip of the back fold. In profile step two (12), the slate shoulder panel emerges from behind the neck, passes under the arm and joins the trailing cloak. Compare the shoulder attachment with the dwarf’s and the longer fall with the human’s. |
 
 ## Druid, Psionicist and Thief
 
