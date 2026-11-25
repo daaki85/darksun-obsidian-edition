@@ -38,7 +38,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `figwatch.py SECONDS [EVERY] [TAG]` | passive watch for the party's figures (no writes). |
 | `fillcache.py MEMBER SLOT UNTIL` | fills the game's picture slots (cachelist.py) the way a change of gear does, fast. |
 | `foepos.py` | each combatant past the party: its name, HP and figure on screen (feet x, y - 10) |
-| `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
+| `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [name=S] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
 | `follow.py OBJECT [ROUNDS]` | keep the party within a few squares of a map object that walks (an escort). |
 | `framerate.py SECONDS [X1 X2 Y]` | walks the party back and forth between screen points (X1,Y) and (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. |
 | `gamekeys.py [dis START [LEN]]` | the keys the game itself acts on with the map up, read from DSUN.EXE ($DS_GAME): the root's table at 1BC5Bh (26 keys, then their handlers), the map overlay's at 71C1Bh (overlay 4272h: 33 keys) and that overlay's jump... |
@@ -127,6 +127,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `slotcheck.py [LABEL]` | every map thing with a picture slot (+0Fh) finds its own picture's number in that slot (+18h, the walking picture, or +18h + 1 for its fighting one), and every wall's slot is taken. |
 | `slotcount.py [LABEL]` | one line: the leader's place, the game's picture slots taken (of 300), the store's end (of 741,376), how many are in memory and STALE, and with DSCLOG's PIC_REUSE how many slots it has reused. |
 | `soundmatch.py RAW START END WAV...` | in DOSBox's recorded output (RAW: 16-bit stereo at 44100 Hz, from start.sh with PT_AUDIO set; |
+| `specset.py MEMBER KIND...` | party member MEMBER's weapon specs made KIND... |
 | `spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]` | teaches each MEMBER the spells, fills its slots and sets its casting classes to LEVEL, in memory (never save after). |
 | `squarecost.py LEGS COL1 ROW COL2 [POINTS]` | what a walk costs in a fight, for the squares in reach: on a party member's turn it walks the member along row ROW between columns COL1 and COL2, LEGS times, its points set to POINTS (250) before each leg (a test's... |
 | `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |

@@ -9,7 +9,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import cahulaks, game, gamepatch  # noqa: E402
+from dsloader import cahulaks, game, gamepatch, specialize  # noqa: E402
 
 import test_dsclog as td  # noqa: E402
 import test_group4 as tg  # noqa: E402
@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
     r = None
 
 GAME_DS, SS, CALLER, TSR, BP, IF = td.GAME_DS, td.SS, td.CALLER, td.TSR, td.BP, td.IF
-CREATURES = tg.CREATURES
+CREATURES, SHEETS = tg.CREATURES, tg.SHEETS
 CAH = 21                    # the cahulaks' item type
 ITEMS = 0xC000              # (the items here: group 4's sheets are where RingTests' items are)
 RULE = 8192                 # RULES_HI's RULE_HI_CAHULAKS
@@ -235,6 +235,116 @@ class CahulaksTests(tg.SiteTests):
         self.big(28, False)
         self.assertTrue(self.hit(2))
         self.assertTrue(self.swept(28))
+
+    # ---- the Wake of the Ravager weapons' traits (DSCLOG's TRIKAL AND THE TWO-HEADED WEAPONS) ----
+
+    TRIKAL, LOTULIS, DOUBLE_SPEAR = game.TRIKAL_TYPE, game.LOTULIS_TYPE, game.DOUBLE_SPEAR_TYPE
+    SHEET = 3  # (the attacker's sheet: [BP+10h])
+
+    def specialist(self, *kinds):
+        """The attacker's sheet: a 3rd-level gladiator specialized in KINDS (kind + 1 each)."""
+        sheet = SHEETS * 16 + self.SHEET * 0x47
+        self.mu.mem_write(sheet, bytes(0x47))
+        self.mu.mem_write(sheet + 0x12, struct.pack("<H", 0x40))
+        self.mu.mem_write(sheet + 0x14, game.packed_specs(kinds, 9, 3))
+        self.mu.mem_write(sheet + 0x18, bytes((1,)))
+        self.mu.mem_write(sheet + 0x21, bytes((game.GLADIATOR_CLASS, 0, 0, 3, 0, 0)))
+
+    def test_trip(self):
+        """CAH_HIT: a trikal specialist's hit that did damage trips the target as the cahulaks tangle
+        it, but its save is against paralysis (the sheet's +37h): recorded (kind 14, 13: target,
+        attacker, d20, needed), a failure SWEPT; not without the trikal spec, nor with another weapon."""
+        self.manual(False)
+        trikal = 1 + specialize.KINDS.index("trikal")
+        self.specialist(trikal)
+        self.frame(p10=self.SHEET, p12=0)
+        for thing, pp, d20, tripped in ((20, 12, 11, True), (21, 12, 12, False), (22, 21, 20, False)):
+            self.target(thing=thing, pp=3)
+            self.mu.mem_write(tg.SHEETS * 16 + 9 * 0x47 + 0x37, bytes((pp,)))
+            self.assertTrue(self.hit(d20, kind=self.TRIKAL))
+            self.assertEqual(self.entry(), (14, 13, thing, 6, d20, pp))
+            self.assertEqual(self.swept(thing), tripped, thing)
+        self.specialist(1 + specialize.KINDS.index("lotulis"))  # (not the trikal's specialist)
+        self.target(thing=23, pp=3)
+        self.mu.mem_write(tg.SHEETS * 16 + 9 * 0x47 + 0x37, bytes((12,)))
+        self.assertFalse(self.hit(2, kind=self.TRIKAL))
+        self.assertFalse(self.swept(23))
+        self.specialist(trikal)
+        self.target(thing=24, pp=3)
+        self.assertFalse(self.hit(2, kind=self.TRIKAL, reach=2))  # (a missile: none)
+        self.assertFalse(self.swept(24))
+
+    def foe(self, thing, creature, side, hp=8, status=1):
+        self.combatant(thing, creature)
+        rec = CREATURES * 16 + creature * 0x3A
+        self.mu.mem_write(rec, struct.pack("<h", hp))
+        self.mu.mem_write(rec + 0x1C, bytes((status, side)))
+
+    def distance_stub(self, *near):
+        """The game's distance routine (1A0A:2BA5h): 1 from the attacker to each of NEAR, else 4 (a
+        table the stub reads: its code written once, as Unicorn keeps code it has run)."""
+        seg = (GAME_DS - (0x4356 - 0x1A0A)) & 0xFFFF
+        at = seg * 16 + 0x2BA5
+        # push bp / mov bp,sp / push bx / mov bx,[bp+8] / movzx ax,byte [cs:bx+2BC5h] / pop bx / pop bp / retf
+        self.mu.mem_write(at, bytes.fromhex("5589e5538b5e08") + bytes.fromhex("2e0fb687") + struct.pack("<H", 0x2BA5 + 0x20)
+                          + bytes.fromhex("5b5dcb"))
+        self.mu.mem_write(at + 0x20, bytes(1 if thing in near else 4 for thing in range(64)))
+
+    def swing_at(self, kind, index=1, swings=2, ac=5):
+        self.frame(m4=99, m14=index, m8=swings, p14=kind, p16=1, p12=0, pE=6, p10=self.SHEET, pC=ac, pA=12, p18=6)
+        self.assertEqual(self.where("cahulaks_swing", ()), "end")
+        target, = struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x494A, 2))
+        ac, = struct.unpack("<h", self.mu.mem_read(SS * 16 + BP + 0x0C, 2))
+        return target, ac
+
+    def test_second_foe(self):
+        """CAH_SWING: a lotulis or double spear specialist's last swing of two or more turns on a second
+        foe: the first combatant, other than the target, on the target's side, standing and Okay, the
+        game's distance 1 from the attacker; TARGET that foe and [BP+0Ch] its AC (THORNS_AC's: a party
+        member's as last seen), recorded (kind 14, 14: foe, attacker, first target, 1 the double spear);
+        AMMO_TURN's site puts both back. The double spear's swing at it does 1 less (STAB_ROLL: [BP-4],
+        at least 1). Any other swing, weapon, spec or no foe beside: as it was."""
+        self.rules_hi(RULE)
+        self.manual(False)
+        self.mu.mem_write(TSR * 16 + self.sym["ac_seen"] + 2, bytes((3,)))
+        self.target(thing=20, creature=9)
+        self.mu.mem_write(CREATURES * 16 + 9 * 0x3A + 0x1C, bytes((1, 1)))
+        self.foe(1, 10, side=0)              # (beside, but the attacker's own side)
+        self.foe(2, 11, side=1)              # (beside, on the target's: the second foe)
+        self.foe(30, 12, side=1)             # (on its side, not beside)
+        self.distance_stub(1, 2, 20)
+        lotulis, spear = 1 + specialize.KINDS.index("lotulis"), 1 + specialize.KINDS.index("double spear")
+        self.specialist(lotulis, spear)
+        self.assertEqual(self.swing_at(self.LOTULIS), (2, 3))
+        self.assertEqual(self.entry(), (14, 14, 2, 6, 20, 0))
+        self.assertEqual(self.word("sf_target"), 20)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", 5))
+        self.assertEqual(self.where("stab_roll", ()), "end")
+        self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 4, 2))[0], 5)  # (the lotulis: all of it)
+        self.where("ammo_turn", (), eax=2)
+        self.assertEqual(struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x494A, 2))[0], 20)
+        self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP + 0x0C, 2))[0], 5)
+        self.assertEqual(self.word("sf_target"), -1)
+        # the double spear: the same foe, and 1 less (at least 1)
+        self.assertEqual(self.swing_at(self.DOUBLE_SPEAR, index=2, swings=3), (2, 3))
+        self.assertEqual(self.entry(), (14, 14, 2, 6, 20, 1))
+        for rolled, want in ((5, 4), (1, 1)):
+            self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", rolled))
+            self.assertEqual(self.where("stab_roll", ()), "end")
+            self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 4, 2))[0], want)
+        self.where("ammo_turn", (), eax=3)
+        self.assertEqual(struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x494A, 2))[0], 20)
+        # none of these: the first target kept
+        for change in (dict(index=0), dict(swings=1, index=0), dict(kind=81), dict(kind=self.TRIKAL)):
+            self.assertEqual(self.swing_at(**dict(dict(kind=self.LOTULIS), **change)), (20, 5), change)
+        self.specialist(1 + specialize.KINDS.index("trikal"))
+        self.assertEqual(self.swing_at(self.LOTULIS), (20, 5))  # (not its specialist)
+        self.specialist(lotulis)
+        self.distance_stub(1, 20)
+        self.assertEqual(self.swing_at(self.LOTULIS), (20, 5))  # (no foe beside)
+        self.foe(2, 11, side=1, status=2)
+        self.distance_stub(1, 2, 20)
+        self.assertEqual(self.swing_at(self.LOTULIS), (20, 5))  # (the one beside not Okay)
 
     def test_off_head_attacks(self):
         """CAH_MORE (OFF_HAND_HALVES's first): 2 more halves (one attack a round) for the cahulaks (the

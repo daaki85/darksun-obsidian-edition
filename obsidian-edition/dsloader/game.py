@@ -115,6 +115,13 @@ METAL_CAHULAKS_TYPE = GAME_TYPES + 31
 # cahulaks): the game's Cahulaks (21),
 # of obsidian, the fire cleric's bit added (DSCLOG's OBSIDIAN_CAHULAKS)
 OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
+# Wake of the Ravager's weapon kinds the game has none of (DSCLOG's EXTRA_TYPES' last six): a two-handed
+# sword, a lotulis, a double spear, a trikal, a javelin and darts (not the net: the user's call, 2026-11-23)
+TWOHAND_SWORD_TYPE, LOTULIS_TYPE, DOUBLE_SPEAR_TYPE = GAME_TYPES + 33, GAME_TYPES + 34, GAME_TYPES + 35
+TRIKAL_TYPE, JAVELIN_TYPE, DARTS_TYPE = GAME_TYPES + 36, GAME_TYPES + 37, GAME_TYPES + 38
+# ... and the sequel's own type each is (its OBJEX's), for a party carried across: one to one
+RAVAGER_TYPES = {TWOHAND_SWORD_TYPE: 101, LOTULIS_TYPE: 61, DOUBLE_SPEAR_TYPE: 39, TRIKAL_TYPE: 100,
+                 JAVELIN_TYPE: 59, DARTS_TYPE: 38}
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
@@ -218,9 +225,55 @@ SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # plus 1; 0 not yet given; aging.py); now (SPEC_V2 too) the four a number base 17 in bits 0-16 (17
 # values each: four in 17 bits, not 20), the starting age's roll in bits 17-21 (Table 7's dice less
 # their count; ROLL_UNKNOWN: none kept, a character from before), +17h the age. A sheet keeps its
-# layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET).
+# layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET). With 22
+# kinds (23 values: four base 23 take 19 bits, and the roll 5 more of the 22 there are) a sheet written
+# now is V3: bits 0-16 V3_BASE (17^4, past every V2 number) and then the first spec (0 to 22: the one
+# picked first, which a Battle Mage's kit and the starting weapon go by) times REST_SETS, plus the
+# rank of the others as a set (spec_rank: up to three of the 22, no kind twice, 1,794 sets); the roll
+# and age as V2's. Its specs read back the first, the others ascending, then the empty slots.
 SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
 SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
+KIND_COUNT, V3_BASE = 22, 17 ** 4
+REST_OFFSETS = (0, 1, 1 + 22, 1 + 22 + 231)  # (the sets of 0, 1, 2 and 3 of the 22 kinds before each size)
+REST_SETS = 1 + 22 + 231 + 1540
+
+
+def spec_order(kinds: Sequence[int]) -> List[int]:
+    """KINDS (+ 1 each, 0 none) as a V3 sheet keeps them: the first picked, the others ascending, a
+    kind twice once, none and no such kind left out (DSCLOG's SPEC_REPACK)."""
+    seen: List[int] = []
+    for k in list(kinds)[:SPEC_COUNT]:
+        if 0 < k <= KIND_COUNT and k not in seen:
+            seen.append(k)
+    return seen[:1] + sorted(seen[1:])
+
+
+def spec_rank(kinds: Sequence[int]) -> int:
+    """V3's number for KINDS (less V3_BASE): the first times REST_SETS, plus the others' rank as a set
+    (the sets of fewer first; within a size the combinatorial number of the kinds, less 1, ascending)."""
+    from math import comb
+    order = spec_order(kinds)
+    if not order:
+        return 0
+    rest = [k - 1 for k in order[1:]]
+    return order[0] * REST_SETS + REST_OFFSETS[len(rest)] + sum(comb(c, i + 1) for i, c in enumerate(rest))
+
+
+def spec_unrank(rank: int) -> bytes:
+    """The four specs of V3's RANK: the first, the others ascending, then the empty slots (SPEC_UNPACK)."""
+    from math import comb
+    first, rest_rank = divmod(rank, REST_SETS)
+    size = max(n for n, offset in enumerate(REST_OFFSETS) if rest_rank >= offset)
+    rest_rank -= REST_OFFSETS[size]
+    rest = []
+    for i in range(size - 1, -1, -1):
+        c = KIND_COUNT - 1
+        while comb(c, i + 1) > rest_rank:
+            c -= 1
+        rest_rank -= comb(c, i + 1)
+        rest.append(c + 1)
+    kinds = ([first] if first else []) + rest[::-1]
+    return bytes(kinds + [0] * (SPEC_COUNT - len(kinds)))
 
 
 def spec_packed(sheet: bytes) -> bool:
@@ -241,6 +294,8 @@ def spec_kinds(sheet: bytes) -> bytes:
     value = int.from_bytes(raw[:3], "little")
     if spec_v2(sheet):
         value &= SPEC_KINDS_MASK
+        if value >= V3_BASE:
+            return spec_unrank(value - V3_BASE)
         return bytes(value // 17 ** i % 17 for i in range(SPEC_COUNT))
     return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
 
@@ -259,10 +314,9 @@ def sheet_roll(sheet: bytes) -> Optional[int]:
 
 
 def packed_specs(kinds: Sequence[int], age: int = 0, roll: Optional[int] = None) -> bytes:
-    """+14h to +17h in the SPEC_V2 layout: KINDS (kind + 1 each, up to four, 0 to 16), AGE (the
-    +17h byte) and ROLL (None: not known)."""
-    kinds = list(kinds) + [0] * (SPEC_COUNT - len(kinds))
-    value = sum(min(max(k, 0), 16) * 17 ** i for i, k in enumerate(kinds[:SPEC_COUNT]))
+    """+14h to +17h in the V3 layout: KINDS (kind + 1 each, up to four, 0 to KIND_COUNT; a kind twice
+    counted once; the first kept first), AGE (the +17h byte) and ROLL (None: not known)."""
+    value = V3_BASE + spec_rank(kinds)
     value |= (ROLL_UNKNOWN if roll is None else roll & 0x1F) << ROLL_SHIFT | (SPEC_PACKED | SPEC_V2) << 16
     return value.to_bytes(3, "little") + bytes([age & 0xFF])
 

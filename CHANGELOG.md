@@ -57,6 +57,27 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**New**
+- Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
+  double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
+  name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
+- Six weapon specs for them: the weapon window grows to four rows of six, the
+  title under them, and the specs are stored in a new layout (v3) that keeps the first pick first;
+  older saves read as before.
+- Their traits, for a specialist: the lotulis' and double spear's last swing of a round goes to a
+  second foe beside the wielder (the double spear's for 1 less), and a trikal hit trips a man-sized
+  foe that fails a save against paralysis, which loses its next turn.
+
+**Docs**
+- The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
+  features page, the player's guide, Items and the dice log page have the new weapons and traits.
+
+**Dev**
+- A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
+  control runs; `specset.py` sets a member's weapon specs in memory.
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.

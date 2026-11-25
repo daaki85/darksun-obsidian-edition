@@ -59,6 +59,13 @@ PLAIN: Tuple[Tuple[int, int, int, int], ...] = (
     (1, 0x02, 0xFC07, 30),     # bow
     (64, 0x00, 0xFC09, 1),     # sling
     (0, 0x01, 0xFC08, 2),      # staff sling
+    # Wake of the Ravager's kinds (DSCLOG's types, worldgear.py's names and prices)
+    (game.TWOHAND_SWORD_TYPE, 0x174, 0x10000 - 2680, 150),  # two-handed sword (obsidian)
+    (game.LOTULIS_TYPE, 0x175, 0x10000 - 2682, 20),  # lotulis (stone)
+    (game.DOUBLE_SPEAR_TYPE, 0x176, 0x10000 - 2684, 25),  # double spear (a gladiator's)
+    (game.TRIKAL_TYPE, 0x177, 0x10000 - 2686, 24),  # trikal (a gladiator's)
+    (game.JAVELIN_TYPE, 0x178, 0x10000 - 2688, 50),  # javelin (obsidian)
+    (game.DARTS_TYPE, 0x179, 0x10000 - 2690, 20),  # darts
 )
 # Other plain weapons of a kind in the game, for a character who can't use PLAIN's (a fire cleric's
 # long sword obsidian, an earth cleric's metal or obsidian; SEGOBJEX's templates)
@@ -77,7 +84,7 @@ OTHERS = {
     # an air cleric, who may use either, starts with them)
     specialize.KINDS.index("cahulaks"): ((game.OBSIDIAN_CAHULAKS_TYPE, 0x14, 0x10000 - 2674, 15),),
 }
-MISSILE_KINDS = frozenset(specialize.KINDS.index(k) for k in ("bow", "sling", "staff sling"))
+MISSILE_KINDS = frozenset(specialize.KINDS.index(k) for k in ("bow", "sling", "staff sling", "javelin", "darts"))
 BOW = specialize.KINDS.index("bow")
 
 

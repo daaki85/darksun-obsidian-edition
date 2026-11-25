@@ -273,6 +273,12 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens | — |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
+| ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
+| ![](docs/items/double-spear.png) | double spear | wood | Jark | — | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
+| ![](docs/items/trikal.png) | trikal | wood | Jark | — | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)) |
+| ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | — | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
+| ![](docs/items/darts.png) | darts | wood | Bowyer | — | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 
 ## Every mundane armour piece
 

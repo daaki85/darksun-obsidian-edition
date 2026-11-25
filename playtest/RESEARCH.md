@@ -126,6 +126,14 @@ raised before stopping.
   **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the file
   has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever the
   build). `setitem.py ITEM TYPE` does it with the game's first plain record of a type.
+- **A weapon for a test of its rate or traits** (logs/2026-11-23-ravager-weapons.md): put it in
+  the right hand (`itemedit.py M 10 slot=3`): one in the left hand (slot 10) swings once a round
+  whatever the rate. A second weapon moved to slot 20 is still worn and still swings: make it
+  something else (`setitem.py N 60`). The Loader's types with no SEGOBJEX record (Wake of the
+  Ravager's, 148-153) need `rec=` (`worldgear.weapon(worldgear.LOTULIS).hex()`); `specset.py M
+  KIND...` gives the member the weapon specs. **A sheet's address moves with the build** (the
+  origin worktree's DSCLOG put Jenna's at 669FBh, the branch's at 66A3Bh): read it from
+  `sheetedit.py` at every load before writing to it.
 - **A held item changed in memory** (logs/2026-11-10-outstanding-checks.md): write it with the
   inventory **closed** (closing it writes the screen's copy back over the record), clear its +0Ch
   (the game keeps there the icon it last drew, and draws that again), and give it the item's own

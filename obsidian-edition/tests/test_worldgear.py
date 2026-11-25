@@ -45,7 +45,7 @@ class WorldGearTests(unittest.TestCase):
         sold = [icons.which(r) for r in gift("Weapon Merchant").items]
         self.assertEqual(sold, ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Axe", "Obsidian Mace",
                                 "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger",
-                                "Metal Cahulaks"])
+                                "Metal Cahulaks", "Two-hand Sword", "Lotulis", "Javelin"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
         self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items[:1]], gift("Scar's henchman").objects),
                          (["Bone Great Axe"], (229,)))
@@ -54,11 +54,34 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(defilers, [((258,), [17]), ((296,), ["Bone Dagger"])])
         self.assertEqual([icons.which(r) for r in gift("Jark").items],
                          ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Mace", "Bone Great Axe",
-                          "Obsidian Great Axe", "Bone Dagger", "Obsidian Cahulaks"])
+                          "Obsidian Great Axe", "Bone Dagger", "Obsidian Cahulaks", "Double Spear", "Trikal"])
         self.assertFalse([g.name for g in worldgear.GIFTS + worldgear.MAGIC if any(tools.is_tools(r) for r in g.items)])
         self.assertNotIn("Mirlon", {g.name for g in worldgear.GIFTS})
         self.assertFalse({"Krikor", "Uskuye", "Kwerin"} & {g.name for g in worldgear.GIFTS + worldgear.MAGIC})
         self.assertEqual([gift(n).objects for n in ("Tari", "Renegade", "Wild Mul")], [(60, 243), (289,), (290,)])
+
+    def test_ravager_kinds(self):
+        """Wake of the Ravager's weapon kinds: each its own type and name (DSCLOG's), sold (the Bowyer the
+        thrown ones; no net), and the sequel's own type noted for each."""
+        self.assertEqual([icons.which(r) for g in worldgear.GIFTS if g.name == "Bowyer" for r in g.items],
+                         ["Javelin", "Darts"])
+        specs = (worldgear.TWOHAND_SWORD, worldgear.LOTULIS, worldgear.DOUBLE_SPEAR, worldgear.TRIKAL,
+                 worldgear.JAVELIN, worldgear.DARTS)
+        self.assertEqual([s[0] for s in specs], list(range(game.GAME_TYPES + 33, game.GAME_TYPES + 39)))
+        self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs])
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 100, 101])
+        for spec in specs:
+            self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
+            self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])
+            typ = npcitems.TYPES[spec[0] - game.GAME_TYPES]
+            self.assertTrue(typ[0] & 3, spec)  # (a weapon: melee or missile)
+        for spec in specs[4:]:  # (thrown from the missile slot, never used up: no ammunition bit)
+            typ = npcitems.TYPES[spec[0] - game.GAME_TYPES]
+            self.assertEqual((typ[0], typ[9]), (0x12, 0x0C))
+        for spec in specs[:4]:  # (two-handed)
+            self.assertTrue(npcitems.TYPES[spec[0] - game.GAME_TYPES][0x0F] & 0x40)
+        for spec in (worldgear.DOUBLE_SPEAR, worldgear.TRIKAL):  # (gladiators')
+            self.assertEqual(npcitems.TYPES[spec[0] - game.GAME_TYPES][0x10] & 0x7FF, 0x40)
 
     def test_metal_kinds(self):
         """Each metal weapon is of its kind and of metal (an earth cleric's, not a fire cleric's)."""

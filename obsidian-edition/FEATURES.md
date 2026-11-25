@@ -405,7 +405,8 @@ light weapon in the other*. Rules: [races](PLAYER-GUIDE.md#races). How it works:
 #### Weapon traits
 
 The mod gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
-heads and their tangle, the staff sling its stinkpots, the polearm its reach.
+heads and their tangle, the staff sling its stinkpots, the polearm its reach; and Wake of the
+Ravager's lotulis, double spear and trikal what the sequel's weapons guide gives them.
 
 **Always on** (no switch).
 
@@ -426,6 +427,35 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 
 Rules: [cahulaks](PLAYER-GUIDE.md#cahulaks). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#cahulaks).
+
+##### Lotulis and double spear
+
+Two-headed weapons, a blade or a point at each end: a specialist (its weapon spec chosen, mastery
+too) fighting with one turns the round's last swing on **a second foe** beside it, one on the first
+target's side and next to the wielder, when the round has two swings or more. The double spear's
+second head does 1 less damage (no less than 1). With no other foe beside it, the swing stays on
+the first.
+
+```
+  Jenna hits Arena Guard for 14: 1d8 = [4] +2 specialized +8 STR 20
+    Jenna turns the double spear's last swing from Arena Guard to Arena Guard, beside it (a specialist's second foe, 1 less damage)
+Jenna attacks Arena Guard with Wooden Double Spear (1d8): d20 = 6, needs 10+ (55%), hits AC 8, target AC 4 -> HIT
+```
+
+##### Trikal
+
+A three-bladed polearm with a hooked haft: a specialist's hit that does damage **trips** a
+man-sized or smaller foe unless it saves against paralysis: it loses its next turn. Who is too big,
+or has nothing to trip, is the [cahulaks](#cahulaks)' list.
+
+```
+  Jenna hits Arena Guard for 15: 1d10 = [5] +2 specialized +8 STR 20
+    Jenna's trikal trips Arena Guard? Save against paralysis: d20 = 12, needs 13+ -> tripped: loses its next turn
+```
+
+Rules: [two-headed weapons and the trikal](PLAYER-GUIDE.md#lotulis-double-spear-and-trikal). How
+it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#lotulis-double-spear-and-trikal).
 
 ##### Staff sling stinkpots
 
@@ -791,7 +821,9 @@ bone and obsidian axes and great axes, metal and obsidian cahulaks...), twenty-t
 (Shadowseeker, Kreenfang, Thornwall, Emberlash, Ironwhirl...), the rest of the bone scale set with a
 Bone Helm, rings and a cloak of protection, bracers of defense, two robes, the Warden's Plate, the
 Boots of Speed, the Cloak and Boots of Elvenkind and more, on the game's people, in its shops and
-chests. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+chests; and six of Wake of the Ravager's weapons the game has none of (a two-handed sword, the
+lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
+caravan, each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,

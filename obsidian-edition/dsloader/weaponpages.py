@@ -19,7 +19,7 @@ from .art import decode_frame
 DISCIPLINES, SPHERES = 3012, 3013  # the game's windows
 PICKER = 3021  # the level-up window (like the psionicists', 17501)
 PSIONIC_PICKER = 17501
-PICK_FIRST = 0x860  # its slots, 0x860 + kind
+PICK_FIRST = 0x8C0  # its slots, 0x8C0 + kind (past the kit pages' rows and STORE and RECALL)
 PICK_COUNT_BUTTON, PICK_EXIT = 0x2C37, 0x4396  # (the psionicists' window's: picks left, EXIT)
 # The level-up window: each kind a slot with a weapon's picture (the game's inventory picture of
 # one of that kind: PICTURES, objects in SEGOBJEX.GFF), six to a row, the window bigger than
@@ -27,13 +27,15 @@ PICK_COUNT_BUTTON, PICK_EXIT = 0x2C37, 0x4396  # (the psionicists' window's: pic
 # (DSCLOG's PROBE_PK_TITLE: PICK_TITLE_Y). A slot is three pictures: as it is, lit (its edge
 # near-white, the pointer on it), and out of use (the weapon a grey shape).
 PICK_SLOT, PICK_PITCH, PICK_COLUMNS, PICK_TOP = 32, 34, 6, 7
-PICK_WIDTH, PICK_HEIGHT = 214, 156
+PICK_ROWS = 4  # (22 kinds: four rows of six, the last with two to spare)
+PICK_WIDTH, PICK_HEIGHT = 214, 182
 PICK_COUNT_GAP = 28  # (the picks left, a number centred in its 42-wide button, this far before EXIT)
-PICK_TITLE_Y = PICK_TOP + 3 * PICK_PITCH + 3
+PICK_TITLE_Y = PICK_TOP + PICK_ROWS * PICK_PITCH + 3
 PICK_BACKGROUND, PSIONIC_BACKGROUND = 3022, 17001  # (BMP chunks)
 WIND_WIDTH, WIND_HEIGHT, WIND_BACKGROUND = 0xBE, 0xC0, 0xC2
 BUTN_SIZE = 0x28  # a button's width and height
-PICTURES = (1014, 1185, 2504, 2427, 2506, 1183, 2508, 2510, 1019, 2512, 1011, 1188, 1010, 1017, 1015, 1016)
+PICTURES = (1014, 1185, 2504, 2427, 2506, 1183, 2508, 2510, 1019, 2512, 1011, 1188, 1010, 1017, 1015, 1016,
+            2680, 2682, 2684, 2686, 2688, 2690)  # (the last six Wake of the Ravager's: icons.ICONS')
 POLEARM, POLEARM_SIZE = 9, 26  # (its picture, 36 pixels square, made smaller)
 POLEARM_FIT = 22  # (drawn so: the picture the Loader gave it till 2026-11-09, when the game's own
                   # came back for the inventory and the ground, the item box having its own copy)

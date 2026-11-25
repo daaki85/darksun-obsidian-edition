@@ -658,9 +658,11 @@ game's data: it is one player's account.
   fighter/preserver 2/2: four at INT 16-17, two at INT 15), and a click past the last pick lands in
   the weapon window. LEVEL 1 turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks.
 - **The weapon window** (after CHOOSE A SPELL, at DONE; PICK A WEAPON SPECIALTY, or OF EXPERTISE for
-  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46),
-  three rows; the cahulaks are the second row's last (245,78), the bow the third row's second
-  (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
+  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart, **four rows
+  of six since Wake of the Ravager's kinds** (logs/2026-11-23-ravager-weapons.md), the window taller
+  and the rows higher: row four is y 134 (the double spear 75,134, the trikal 109,134), so row one
+  about 35 (the long sword about 72,35). The title is under row four. Before 2026-11-23: three rows
+  from (72,46), the cahulaks (245,78), the bow (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
   obsidian cahulaks ... in place of the bone long sword"). A Battle Dancer's has only the long
   sword (72,46) and the bow in use, a Spellarcher's the bow alone.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after the weapon window PICK A
@@ -929,7 +931,10 @@ game's data: it is one player's account.
    Effects screen comes up; Escape closes it). `panel.sh hide` first (2026-11-20).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
-   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
+   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. So does
+   a member with no Move left at its turn's start (seen after memory edits that moved foes):
+   `untilturn.sh` then presses Tab for ever; click the figure and E, or use `passuntil.sh`
+   (logs/2026-11-23-ravager-weapons.md). A turn
    passed can come straight back (the round's last but one, then first in the next): check the round
    order in the dice log. `stepfight.sh` from the arena gate clicks south until the fight is on. The
    incidents behind these notes are in [HISTORY.md](HISTORY.md).
@@ -941,7 +946,8 @@ game's data: it is one player's account.
 
 - **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
   apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
-  all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
+  all "Champion"; `foeset.py C name=S` writes it, logs/2026-11-23-ravager-weapons.md: a tripped
+  foe's lost turn seen that way), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
   combatant number `foeset.py` lists), then `KEEP_HP=1 HEAL=1 sh fightout.sh` (the foes' HP kept,
   the party healed each pass): the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
@@ -1269,7 +1275,7 @@ tools, and where each is described:
 | Subject | Tools |
 |---|---|
 | [The party and the map's people](RESEARCH.md#the-party-and-the-maps-people) | `itemlists.py`, `party.py`, `sheetedit.py`, `thief.py`, `award.py`, `kitset.py`, `scrolltest.py`, `npcgear.py`, `thingsfree.py`, `arenatrip.sh` |
-| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
+| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `specset.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
 | [Fights and foes](RESEARCH.md#fights-and-foes-in-memory) | `foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, `restfixmem.py`, `setmem.py`, `turnwatch.py` |
 | [Spells and powers](RESEARCH.md#spells-and-powers-in-memory) | `spellsetup.py`, `turnsetup.py`, `powers.py`, `setmem.py power=` |
 | [Creation and levels](RESEARCH.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |
