@@ -13906,10 +13906,6 @@ lit_sum    dw 0
 best_d     dd 0
 best_c     db 0
 
-resident_end:
-align 16
-RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
-
 ; ---- TARGETING and RINGS: choosing an enemy with Tab, Enter attacking it, a red ring under it ----
 ; DSCLOG's (dsclog.asm: TARGETING, PROBE_HIT, RINGS), on the sequel. While the Loader has TARGET_ON (a
 ; party member's turn in a fight), INT16 takes Tab and Shift+Tab from the game and counts them; the
@@ -14289,6 +14285,10 @@ r_fx       dw 0
 r_fy       dw 0
 r_qx       dw 0
 r_qy       dw 0
+
+resident_end:
+align 16
+RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
 
 ; ---- the far block (FAR_INIT): the ring ----
 FAR_RING   equ 0x10
