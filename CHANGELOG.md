@@ -57,6 +57,15 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Changed**
+
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.
