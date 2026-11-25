@@ -3398,7 +3398,7 @@ class DiceLog:
         weapon = g.weapon(item, item_type)
         # a party thri-kreen with nothing in hand: a claw or its bite, by the set of natural attacks
         # the melee routine is on (its [BP-22h])
-        natural = g.natural_attack(attacker, e.parent_local(-0x22),
+        natural = g.natural_attack(attacker, e.parent_local(game.SETUP_NATURAL_LOCAL),
                                    [x.id for x in g.effects() if x.owner == attacker_combatant]) \
             if not weapon and item == -1 and mode is not None and mode <= 1 else None
         self._last_natural = (attacker, natural[0]) if natural else None
@@ -3418,6 +3418,7 @@ class DiceLog:
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
         kit_parts = [(kit_name, kit_hit)] if kit_hit else []
+        kit_parts += self._after_setup(attacker_combatant)
         if weapon and g.is_fine_bow(item):  # (the Spellarcher's Fine Bow: DSCLOG's FINE_HIT, with the kits')
             kit_parts.append(("fine", game.FINE_TO_HIT))
         breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
@@ -3444,8 +3445,9 @@ class DiceLog:
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
         g = self.game
         base = struct.unpack("b", g.creature(attacker)[CREATURE_THAC0:CREATURE_THAC0 + 1])[0]  # (signed)
-        after_f1, hit_bonus = e.parent_local(-0x20), e.parent_local(-8)
-        rear, backstab = e.parent_local(-0x1A), e.parent_local(-0x24)
+        after_f1, hit_bonus = e.parent_local(game.SETUP_THAC0_LOCAL), e.parent_local(game.SETUP_BONUS_LOCAL)
+        rear, backstab = (None if v is None else v & game.SETUP_FLAG_MASK
+                          for v in (e.parent_local(game.SETUP_REAR_LOCAL), e.parent_local(game.SETUP_BACKSTAB_LOCAL)))
         parts: List[Tuple[str, int]] = []
         # the cahulaks' rule (DSCLOG's CAHULAKS): each swing the main head's penalty, in the setup's
         # bonus; the off head's swing (the round's last) its more added to [BP+0Ah] after it
@@ -3466,40 +3468,16 @@ class DiceLog:
         if backstab:
             parts.append(("backstab", 2))
         situational = base - after_f1 - rear_hit * bool(rear) - 2 * bool(backstab)
-        # the spell effects the game checks here (from its code)
         effects = g.effects()
         on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)
-        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):  # (Fogbolt's below, with Blur)
-            if on(attacker_combatant, eid):
-                parts.append((EFFECT_NAMES[eid], value))
-                situational -= value
-        if on(target_combatant, 55):
-            parts.append(("target's Blur", -2))
-            situational += 2
-        if mode is not None and mode <= 1 and specialize.kind_of(item_type) in worldgear.SWORD_KINDS \
-                and g.wears_type(g.combatant_creature(target_combatant), game.URNST_GIRDLE_TYPE, WAIST_SLOT):
-            parts.append(("target's Girdle of Urnst", -worldgear.URNST_AC))  # (DSCLOG's ITEM_REAR)
-            situational += worldgear.URNST_AC
-        if on(attacker_combatant, game.FOG_EFFECT):  # (the new spells' Fogbolt: DSCLOG's NS_HIT)
-            parts.append(("Fogbolt", -3))
-            situational += 3
-        if on(target_combatant, game.FOG_EFFECT):
-            parts.append(("target's Fogbolt", 2))
-            situational -= 2
-        if on(attacker_combatant, game.STINK_EFFECT):  # (a stinkpot's Nauseated: DSCLOG's NS_HIT)
-            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT_MOD))
-            situational -= game.STINK_TO_HIT_MOD
-        prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
-        if prayer:
-            caster = g.combatant_creature(prayer.caster)
-            same = caster is not None and g.creature(caster)[CREATURE_SIDE] == g.creature(attacker)[CREATURE_SIDE]
-            parts.append(("Prayer", 1 if same else -1))
-            situational -= 1 if same else -1
+        for name, value in self._hit_effects(attacker, attacker_combatant, target_combatant, mode, item_type, e):
+            parts.append((name, value))
+            situational -= value
         if situational:
             parts.append(("STR" if mode is not None and mode <= 1 else "DEX", situational))
         rest = hit_bonus
         if weapon:
-            if weapon.plus:
+            if weapon.plus and self._plus_counts(target_combatant, on):
                 parts.append(("weapon", weapon.plus))
                 rest -= weapon.plus
             if not weapon.plus and not weapon.nonmagical_flag and weapon.material in MATERIAL_TO_HIT:
@@ -3507,14 +3485,14 @@ class DiceLog:
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
         elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT) \
-                and not e.parent_local(-0x22):  # (the first set's alone: not a thri-kreen's bite)
+                and not e.parent_local(game.SETUP_NATURAL_LOCAL):  # (the first set's alone: not a thri-kreen's bite)
             parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
             rest -= 1
         # With two weapons ready the game adjusts every melee attack by the DEX table it
         # also uses for initiative, sign flipped and never below 0 (rangers excepted): a
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
         # unless the Loader's rule puts AD&D's in (GameData.two_weapons).
-        weapons_ready = e.parent_local(-0x16)
+        weapons_ready = e.parent_local(game.SETUP_READY_LOCAL)
         if heads:
             why, value = heads[1] if off_head else heads[0]
             if value:
@@ -3542,6 +3520,54 @@ class DiceLog:
         parts += kit
         text = ", ".join(f"{signed(v)} {name}" for name, v in parts if v)
         return f"THAC0 {base}" + (f", {text}" if text else "") + f" = {thac0}"
+
+    def _hit_effects(self, attacker: int, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                     item_type: Optional[int], e: Entry) -> List[Tuple[str, int]]:
+        """What the attack set-up's to-hit routine (5B8h:EDh) gives besides STR or DEX, as [(name, to hit)]:
+        the spell effects it checks (from its code), Prayer, and the mod's (the Girdle of Urnst, Fogbolt, a
+        stinkpot's Nauseated)."""
+        g = self.game
+        effects = g.effects()
+        on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)
+        parts: List[Tuple[str, int]] = []
+        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):  # (Fogbolt's below, with Blur)
+            if on(attacker_combatant, eid):
+                parts.append((EFFECT_NAMES[eid], value))
+        if on(target_combatant, 55):
+            parts.append(("target's Blur", -2))
+        parts += self._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
+        prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
+        if prayer:
+            caster = g.combatant_creature(prayer.caster)
+            same = caster is not None and g.creature(caster)[CREATURE_SIDE] == g.creature(attacker)[CREATURE_SIDE]
+            parts.append(("Prayer", 1 if same else -1))
+        return parts
+
+    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
+        """To-hit changes the helper makes to THAC0 after the set-up, as (name, to hit) (none here: Shattered
+        Lands' are in the set-up's locals, the kits' and the Fine Bow's aside)."""
+        return []
+
+    def _plus_counts(self, target_combatant: int, on) -> bool:
+        """Whether the weapon's plus is in the set-up's bonus (always in Shattered Lands)."""
+        return True
+
+    def _mod_hit_effects(self, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                         item_type: Optional[int], on) -> List[Tuple[str, int]]:
+        """The mod's to-hit changes in the set-up's: the target's Girdle of Urnst (DSCLOG's ITEM_REAR),
+        Fogbolt and a stinkpot's Nauseated (NS_HIT)."""
+        g = self.game
+        parts: List[Tuple[str, int]] = []
+        if mode is not None and mode <= 1 and specialize.kind_of(item_type) in worldgear.SWORD_KINDS \
+                and g.wears_type(g.combatant_creature(target_combatant), game.URNST_GIRDLE_TYPE, WAIST_SLOT):
+            parts.append(("target's Girdle of Urnst", -worldgear.URNST_AC))
+        if on(attacker_combatant, game.FOG_EFFECT):
+            parts.append(("Fogbolt", -3))
+        if on(target_combatant, game.FOG_EFFECT):
+            parts.append(("target's Fogbolt", 2))
+        if on(attacker_combatant, game.STINK_EFFECT):
+            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT_MOD))
+        return parts
 
     def _dice_roll(self, e: Entry, show_all: bool, now: float) -> List[str]:
         weapon = e.parent_code.startswith(WEAPON_DAMAGE_RETURN)
