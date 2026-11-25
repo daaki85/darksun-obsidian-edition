@@ -265,7 +265,9 @@ dark_builds  dw 0               ; +1876 times DARK was made
 attack_clicks dw 0              ; +1878 Enter's clicks given on the chosen enemy (TARGETING, counted)
 hit_answers  dw 0               ; +1880 the finder's answers made the chosen enemy (PROBE_HIT, counted)
 ring_draws   dw 0               ; +1882 rings drawn into the floor (RINGS, counted)
-        times 1904 - ($ - hdr) db 0 ; (+1884 to +1903: none yet, zero. DSCLOG's quick save fields are at
+sell_done    dw 0               ; +1884 the Loader's: SELL_SEQ as it last saw to it (sold, or nothing to
+                                ;      sell): SHOP_LOOP holds the shut shop's way back to its talk till then
+        times 1904 - ($ - hdr) db 0 ; (+1886 to +1903: none yet, zero. DSCLOG's quick save fields are at
                                 ;   +1878 to +1889 there, where this header has others: here they follow)
 qs_keys    dw 0xFFFF, 0xFFFF    ; +1904 the Loader's: the quick save key and the quick load key, as INT 16h
                                 ;      gives them (FFFFh: none), taken on the map (QS_KEY) ...
@@ -15360,6 +15362,7 @@ sell_key:
         mov ax, [SELL_WHO_OFF]
         mov [cs:sell_member], ax
         inc word [cs:sell_seq]
+        mov byte [cs:sell_wait], 1      ; (SHOP_LOOP waits for the Loader's sale as the shop shuts)
         mov word [cs:shop_at], 0        ; (shut: the next S is a key of the game's)
 .esc:   pop ax
         mov ax, KEY_ESCAPE
@@ -15372,12 +15375,41 @@ sell_key:
 ; SHOP_LOOP (site 82, "shop_loop"): "cmp byte [143Dh],1" (88D99h; 5 bytes: the site's INT, its number and
 ; 2 NOPs), the test of the shop's own loop (88D52h, run while a merchant's shop is open): the BIOS tick
 ; kept in SHOP_AT while it is open (SELL_KEY), and the test made, its flags given back. DS the game's.
+; The shop shut by S (SELL_WAIT): held here till the Loader has sold (SELL_DONE is SELL_SEQ) or SELL_HOLD
+; ticks have passed. The merchant's script reads the party's money as the shop returns to it, against
+; what it was before (Notaku's, GPL 153 at 3EFh-400h: "Thank you, your business is appreciated." when
+; it moved, "Sometimes the wisest purchase is none at all, yes?" when not), so the Loader's pay must
+; be in by then, as the game's own SELL's is.
+SELL_HOLD equ 55                ; BIOS ticks (3 seconds) at most
 shop_loop:
         push bp
         mov bp, sp
         push ax
         cmp byte [SHOP_SCREEN], 1
-        jne .test
+        je .open
+        cmp byte [cs:sell_wait], 0
+        je .test
+        mov byte [cs:sell_wait], 0
+        push es
+        push bx
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the hold's start)
+        sti                             ; (the BIOS clock and the Loader's passes go on meanwhile)
+.hold:  mov ax, [cs:sell_done]
+        cmp ax, [cs:sell_seq]
+        je .held
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, SELL_HOLD
+        jae .held
+        hlt
+        jmp .hold
+.held:  cli
+        pop bx
+        pop es
+        jmp .test
+.open:
         push es
         xor ax, ax
         mov es, ax
@@ -15392,6 +15424,7 @@ shop_loop:
         pop bp
         iret
 shop_passes dw 0                ; (the shop's loop's passes, for a look in play)
+sell_wait db 0                  ; (1 from S's count (SELL_KEY) till the shop's loop has held its way out)
 
 ; MAP_KEY: (DSCLOG's) M on the map (its main loop run within the last tick or two, the map the screen on
 ; show) made O, the game's key for its overhead map; U and I there left as they are, the game's keys for
