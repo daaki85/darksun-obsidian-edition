@@ -63,6 +63,14 @@ THING_ITEM = 1
 CREATURE_ITEM_LISTS = (0x08, 0x0A, 0x0C)  # (+0Ch: where the game puts items handed to a character)
 ITEM_NEXT, ITEM_SLOT, ITEM_TYPE, ITEM_NAME, ITEM_PLUS = 0x04, 0x11, 0x0A, 0x12, 0x14
 ITEM_POWER = 0x0F  # an item's magical power (0: none; the game's weapon breaking and acid read it)
+POWER_BYTES = 1  # ... its size (the sequel's a word: its spells and powers past 255; ravlog's layout)
+
+
+def item_power(rec: bytes) -> int:
+    """An item record's magical power (0: none), the byte or the sequel's word (POWER_BYTES)."""
+    return int.from_bytes(rec[ITEM_POWER:ITEM_POWER + POWER_BYTES], "little")
+
+
 NO_ITEM = 9999
 # (as the inventory screen shows them: a ring on each hand, 4 and 11; the cloak 12, the feet 13)
 EQUIP_SLOTS = ("arm", "ammo", "missile", "right hand", "finger", "waist", "legs", "head", "neck", "chest",

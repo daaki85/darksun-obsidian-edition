@@ -21,10 +21,11 @@ Lands' (dicelog.DiceLog), run with:
 
 import struct
 import sys
-from typing import Dict, List, Optional, Tuple
+from contextlib import contextmanager
+from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, journal, kitpages, kits, labels, monsters, psiblast, quicksave, \
-    ravager, rings, sizes, stealth, targeting, textlog, usable
+from . import aging, combatlog, dicelog, game, hitchance, hover, itemgate, journal, kitpages, kits, labels, loot, monsters, \
+    psiblast, quicksave, ravager, ring, rings, sizes, stealth, targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -101,6 +102,16 @@ ADDRESSES: Dict[str, object] = {
     # their code: "cmp byte [13FAh],0"; RavGameData reads the byte), and the fight's state at 3C10h:19h
     # (the main loop's "mov ax,3C10h / mov es,ax / cmp word es:[19h],0", SL's 377Eh)
     "IN_COMBAT": 0x13FA, "FIGHT_STATE_FROM_DS": ravager.DGROUP - 0x3C10,
+    # a creature's status (+14h) by name: the sequel's names, in its own order (the far pointers at
+    # DS:1463h to "New" ... "Gone", 2026-11-25): Animated and Petrified before Dead (SL's Dead 5, Animated 6,
+    # Petrified 7); the dice log's and psiblast's words for one
+    "STATUS_NAMES": {0: "New", 1: "Okay", 2: "Stunned", 3: "Out Cold", 4: "Dying", 5: "Animated",
+                     6: "Petrified", 7: "Dead", 8: "Gone"},
+    # the party's money, a dword at selector 2E8h:357h (the shop's pay, 91021h; SL's 3781h:357h), selector
+    # 2E8h the load segment + 3C13h (the sequel's segment table, the load + 45E8h:selector)
+    "MONEY_SEG": 0x3C13,
+    # an item's power a word (item_field: SL's byte at 0Fh, the sequel's word at 10h; game.item_power)
+    "POWER_BYTES": 2,
     # the game's clock: its scale (a byte) and a far pointer to the dword (ravds: SL's 9B70h, 9B72h + 9Ah;
     # read in play: scale 1, 406 s into a new game's first fight)
     "GAME_TIME_SCALE": 0x9C0A, "GAME_TIME_PTR": 0x9C0C,
@@ -235,6 +246,26 @@ RAV_TARGETING = {
 # greys up to 255 (WALL SHADOWS' WS_FIRST, WS_LAST)
 RED_FIRST, RED_LAST = 32, 255
 
+# Looting with T and selling with S (loot.py, sell.py; DSCLOG2's LOOT_KEY, SELL_KEY), their item moves made
+# by the Loader as in Shattered Lands (pickpocket's, ring's; the item gate held, itemgate.py), on the
+# sequel's words: the free list of things DS:56EFh and the count of them out DS:55C6h (SL's 4D72h, 4C48h:
+# the allocator's "push 56EFh / inc word [55C6h]", 23234h, 23252h, as SL's 1FC73h, 1FC91h), the free item
+# records DS:5AF3h (SL's 4D76h: 23483h, 2349Ch), the container whose window is open DS:05D6h (SL's 05E6h:
+# 607E8h "mov word [5D6h],270Fh", SL's 5BBC0h), dying and dead 4 and 7. Its item table, as SL's, 400 records
+# (the allocation of 23F0h bytes, 72FF7h); its things 0-519, the backpack's cells 14-25 (DSCLOG2's
+# THING_COUNT, PACK_FIRST). No icons of the Loader's own (icons.fit: Shattered Lands' pictures).
+RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
+
+
+def rav_items() -> Dict[object, Dict[str, object]]:
+    """The modules' names rebound for looting and selling in the sequel (apply_layout)."""
+    from . import icons, itemgate, loot, ring
+    words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
+    return {ring: dict(words), itemgate: dict(words),
+            loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
+            icons: {"fit": lambda gd, item: None}}
+
+
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
@@ -279,6 +310,10 @@ def apply_layout() -> int:
             setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
+    for module, names in rav_items().items():  # (looting with T, selling with S: the item lists' words)
+        for name, value in names.items():
+            _SAVED.append((module, name, getattr(module, name)))
+            setattr(module, name, value)
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -348,6 +383,7 @@ class ReadOnlyGuest:
         self.spells: bytes = b""  # the sequel's spell records in SL's table layout (spell_table), served
         self.spells_at = SPELLS_AT  #   from SPELLS_AT, where the game has nothing the dice log reads
         self.writable: List[Tuple[int, int]] = []  # (address, size): the helper's buffers a ported feature writes
+        self.item_gate = None  # (the item gate, as GuestMemory's: a write to the item lists waits for it, itemgate.py)
 
     def _types(self) -> Optional[int]:
         if self.ds is None:
@@ -373,13 +409,13 @@ class ReadOnlyGuest:
 
     def write(self, addr: int, data: bytes) -> None:
         if any(start <= addr and addr + len(data) <= start + size for start, size in self.writable):
+            if self.item_gate is not None and self.item_gate.covers(addr, len(data)):
+                self.item_gate.open()  # (ItemsBusy: the game is changing its lists; nothing written)
             self.guest.write(addr, data)
         else:
             self.dropped += 1
 
     def __getattr__(self, name):  # (snapshot, the base address... the guest's own, but writes)
-        if name in ("item_gate",):
-            raise AttributeError(name)
         return getattr(self.guest, name)
 
 
@@ -687,16 +723,39 @@ def region_name(region: Optional[int]) -> str:
     return REGIONS.get(region) or f"Area {region:02X}h"
 
 
+# ... and shorter, for an autosave's name in the sequel's narrower rows (QUICK_LAYOUT.name_most: "Auto Day 1,
+# 09:05 Mines 1"; its LOAD window showed "Auto - Day 1, 00:06 - after a" of the name, 2026-11-25)
+REGIONS_SHORT = {0x01: "Forest", 0x32: "Tyr", 0x33: "Alliance", 0x34: "Pyramid", 0x36: "Yuan-ti", 0x37: "Temple",
+                 0x38: "Mines 1", 0x39: "Mines 2", 0x3A: "Mines 3", 0x3B: "Jann", 0x3C: "Mosaic",
+                 0x3D: "Volcano 2", 0x3E: "Volcano 1", 0x3F: "Volcano 3", 0x41: "Giants", 0x42: "Cloud",
+                 0x43: "Crypt", 0x44: "Cosmos", 0x45: "Under Tyr", 0xFF: "Limbo"}
+
+
+def region_short(region: Optional[int]) -> str:
+    if region is None:
+        return ""
+    return REGIONS_SHORT.get(region) or f"Area {region:02X}h"
+
+
 # Quick save, quick load and autosave (quicksave.py) on DSCLOG2's QUICK SAVES: its header's fields past
 # DSCLOG's (+1904 on: DSCLOG's +1878 to +1889 are others there), its MAIN_TICKS at DSCLOG's +260, and the
 # sequel's addresses: the map's screen word (DS:0DABh, SL's 0BC9h), the save path (44F2h, SL's 4B81h, the
 # Loader's "path" patch), the page letter in "SAVE??.SAV" and "SAVE%.2d.SAV" (DS:2085h + 3, 20B6h + 3), the
 # save window's chosen row (its data 2F8h, the load + 3C4Ch: the word at 0; SL's 388h:4E4h). The sequel has
 # no camp the F9 key breaks (its rests are at fire rings and inns, the party not on the map), and one page.
+# An autosave's name at most 28 letters ("Auto Day 1, 00:06 fight"; the sequel's LOAD window cut "Auto - Day 1,
+# 00:06 - after a fight" at 29 in its name field, and the row ran past its edge at 32)
+# The page goes back to the game's E by DSCLOG2 itself (SAVE_TICK), not by the Loader (page_back False): the
+# sequel's LOAD window runs passes of the map's main loop while it is open, so the Loader's test (the loop
+# running, the game on the map, no answer waited for after ANSWER_WAIT) took the QUICK page off under F9's
+# open window (seen in play, 2026-11-25), and a load from it would have read the game's own page's file.
+RAV_NAME_MOST = 28
 QUICK_LAYOUT = quicksave.Layout(keys=1904, seq=1908, req=1912, save_off=1914, tail_seg=1834, main_ticks=260,
                                 greq=1916, screen_is=0x0DAB, save_path=0x44F2, name_find=0x2085 + 3,
                                 name_save=0x20B6 + 3, window_from_ds=ravager.DGROUP - 0x3C4C, chosen=0,
-                                camp=None, kept_pages=(b"E",), region_name=region_name)
+                                camp=None, kept_pages=(b"E",), region_name=region_short,
+                                name_most=RAV_NAME_MOST, name_join=" ", after_fight="fight",
+                                page_back=False)
 QUICK_GREQ_SAVES, QUICK_GREQ_LOADS = 1918, 1920  # (DSCLOG2's counts of the GREQ chunks written and read)
 
 
@@ -1117,6 +1176,8 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
         if self.text is not None:  # (dialogue and message boxes: DSCLOG2's TEXT, +126)
             out += self._step(lambda: self._take_text(now))
+        out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
+        out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
         if self.game is not None and self.game.rules & game.RULE_STEALTH:
             out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
         if now >= self._next_slots:
@@ -1133,6 +1194,46 @@ class RavDiceLog(dicelog.DiceLog):
             if not loading:
                 self._step(self._journal_sync)  # (the Journal tab: the sequel's own chain)
         return out
+
+    @contextmanager
+    def _items_writable(self, header: Tuple[int, ...] = ()) -> Iterator[None]:
+        """The bytes looting and selling write (loot.py, sell.py: pickpocket's and ring's item moves) made
+        writable while they run, then read only again: the item table, the things, the free lists' words,
+        the party's three item lists' heads, the party's money, and the helper's header words HEADER (their
+        offsets). The item gate (itemgate.py) holds the game still for the writes, as in Shattered Lands."""
+        gd, before = self.game, self.guest.writable
+        ds = gd.ds * 16
+        creatures = game.table_pointer(self.guest, gd.ds, game.CREATURES_PTR)
+        want = [(game.far_pointer(self.guest, gd.ds, game.ITEMS_PTR), itemgate.ITEM_RECORDS * game.ITEM_SIZE),
+                ((gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF,
+                 (itemgate.THING_COUNT + itemgate.THINGS_PAST) * 3),
+                (ds + ring.FREE_THINGS, 2), (ds + ring.THINGS_USED, 2), (ds + ring.FREE_ITEMS, 2),
+                ((gd.load_seg + game.MONEY_SEG) * 16 + game.MONEY, 4)]
+        want += [(creatures + c * game.CREATURE_SIZE + game.CREATURE_ITEM_LISTS[0], 6) for c in range(game.PARTY_SIZE)]
+        want += [(self.tsr_hdr + at, 2) for at in header]
+        self.guest.writable = before + [r for r in want if r not in before]
+        try:
+            yield
+        finally:
+            self.guest.writable = before
+
+    def _loot_pass(self) -> List[str]:
+        """Shattered Lands' (T or Shift+T with a container's window open: what is in it into the party's
+        backpacks once the window is shut, loot.py), on DSCLOG2's LOOT_KEY (its header's +1846 to +1851,
+        DSCLOG's), the item moves writable while it runs (_items_writable). No purse's sound: DSCLOG2 has
+        no SOUND_REQ (its +1822 written to nothing)."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        with self._items_writable((loot.TSR_LOOT_THING,)):
+            return super()._loot_pass()
+
+    def _sell_pass(self) -> List[str]:
+        """Shattered Lands' (S on a shop's screen: the member's plain gear sold once the shop is shut,
+        sell.py), on DSCLOG2's SELL_KEY and SHOP_LOOP (its header's +1852 to +1859, DSCLOG's)."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        with self._items_writable():
+            return super()._sell_pass()
 
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)
     _hastes: Optional[set] = None  # (the Hasted effects' records the last steady look found)

@@ -242,7 +242,18 @@ lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's 
 big_off  dw 0                   ; +1840 (DSCLOG's BIG, the cahulaks' too-big list: none here, the Loader's LARGE_BITS serve)
 large_off dw large_bits         ; +1842 offset of LARGE_BITS there: the Loader's, a bit per combatant large or bigger
                                 ;      (sizes.Large, by name and race: the creature size rule, IS_LARGE)
-        times 1862 - ($ - hdr) db 0 ; (DSCLOG's fields +1844 to +1861: none of them here yet, zero)
+        times 1846 - ($ - hdr) db 0 ; (DSCLOG's +1844, LOCK_BARRED's offset: none here, zero)
+loot_seq   dw 0                 ; +1846 T or Shift+T read with a container's window open, counted (LOOT_KEY,
+                                ;      DSCLOG's): the Loader takes what is in it (loot.py)
+loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05D6h then); FFFFh again
+                                ;      once the Loader has taken it (none pending)
+loot_mode  dw 0                 ; +1850 ... 0 T: everything; 1 Shift+T: all but plain weapons
+sell_seq   dw 0                 ; +1852 S read on a shop's screen, counted (SELL_KEY, DSCLOG's): the Loader
+                                ;      sells the plain gear in the backpack of ...
+sell_member dw 0                ; +1854 ... the party member on show then (selector 370h:0B44h) ...
+sell_merchant dw 0              ; +1856 ... to the shop's merchant (DS:1A30h)
+shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last pass (SHOP_LOOP)
+        times 1862 - ($ - hdr) db 0 ; (DSCLOG's fields +1860 to +1861: none of them here yet, zero)
 bad_luck db 0                   ; +1862 a Swashbuckler's bad luck as KIT_SKILL last rolled it (0-25) ...
 bad_luck_who dw 0               ; +1863 ... and whose (the creature), for the dice log (kits.TSR_BAD_LUCK)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
@@ -3899,7 +3910,7 @@ site_table:
         dw blast_loss                       ; 79 SITE_BLAST_LOSS (6662Dh: Psionic Blast's loss: BLAST_HP for a party member)
         dw blast_ko                         ; 80 SITE_BLAST_KO (5CC51h: the death test: knocked out while BLAST_HP is owed)
         dw rl_try                           ; 81 SITE_RL_TRY (6C585h: an ability's 4d4 on the creation screen, for the dice log)
-        dw site_none                        ; 82 (none here)
+        dw shop_loop                        ; 82 SITE_SHOP_LOOP (88D99h: the shop's loop's test: SHOP_AT for S, SELL_KEY)
         dw site_none                        ; 83 (none here)
         dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
         dw site_none                        ; 85 (none here)
@@ -13041,6 +13052,7 @@ panel_tick:
         mov es, ax
         mov ax, [es:0x46C]
         mov [cs:map_tick], ax
+        mov byte [cs:overhead], 0       ; (the map's main loop ran: no screen of MAP_KEY's up)
         cmp word [cs:panel_seg], 0
         je .ret
         call on_map
@@ -13694,6 +13706,8 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        mov byte [cs:mk_read], 0
+        call map_key
         call our_key
         jc .took
         add sp, 2
@@ -13720,12 +13734,16 @@ int16:
         push ax
         pushf
         call far [cs:old16]
+        mov byte [cs:mk_read], 1
+        call map_key
         call our_key
         jc .again
         add sp, 2
         iret
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
+        call loot_key                   ; (T and S made Escape: LOOT AND SELL KEYS)
+        call sell_key
         call qs_key                     ; (the Loader's quick save and quick load keys: QUICK SAVES)
         jnc .not_qs
         ret
@@ -14934,7 +14952,10 @@ QS_LIMITS     equ 0x14D7            ; DS: the map's limits, four words ...
 QS_LIMIT_MORE equ 0x4459            ; ... and a byte, then the byte at 4458h (the wrapper's 10 bytes, of which
 GREQ_LENGTH   equ 9                 ;   it writes 9)
 GREQ_PAGE     equ 100               ; (a quick save's GREQ number: this and its slot, the Loader's)
-QS_LETTER     equ 0x2088            ; DS: the page's letter in "SAVE??.SAV" (the window's list)
+QS_LETTER     equ 0x2088            ; DS: the page's letter in "SAVE??.SAV" (the window's list) ...
+QS_NAME_SAVE  equ 0x20B9            ; ... and in "SAVE%.2d.SAV" (the file a save writes)
+QS_PAGE_GAME  equ 'E'               ; (the game's own page's letter)
+QS_PAGE_QUICK equ 'Q'               ; (the QUICK page's: SAVQnn.SAV)
 SAVE_FILE     equ 64                ; (SAVE_TEXT: the file's bytes, then the name's, SAVE_NAME)
 SAVE_NAME     equ 48
 
@@ -14977,7 +14998,16 @@ qs_key:
 ; with interrupts on again if the game's loop had them on. PROBE_SCROLL's way back (S_IP, S_CS, S_FL, S_FAR)
 ; kept on the stack meanwhile, in case the game's routine runs a pass of its loop. AX to DI, ES changed.
 save_tick:
-        mov ax, [cs:save_req]
+        cmp word [cs:save_req], 2       ; (no quick load waiting: the page the game's own, PAGE_BACK)
+        je .req
+        cmp word [SCREEN_IS], 1         ; (nor a window up: F9's LOAD window, its own passes of the main
+        jne .req                        ;   loop coming here, has the screen word 2)
+        cmp byte [QS_LETTER], QS_PAGE_QUICK
+        jne .req
+        mov al, QS_PAGE_GAME
+        call qs_page
+        inc word [cs:pages_back]
+.req:   mov ax, [cs:save_req]
         dec ax
         cmp ax, 1
         ja .ret                         ; (none, or an answer the Loader hasn't read yet)
@@ -15026,13 +15056,28 @@ save_work:
         call greq_write
         mov ax, 3
         jmp .set
-.load:  mov ax, QS_LOAD_SEG
+.load:  mov al, QS_PAGE_QUICK            ; (the QUICK page for the window, and only for it: PAGE_BACK)
+        call qs_page
+        mov ax, QS_LOAD_SEG
         mov bx, QS_LOAD_ENTRY
         call qs_far
-        call far [cs:qs_call]
-        inc word [cs:quick_loads]
+        call far [cs:qs_call]           ; (it returns with the window up: the main loop runs it, and
+        inc word [cs:quick_loads]       ;   SAVE_TICK puts E back once it is shut and the map is the screen)
         mov ax, 3
 .set:   mov [cs:save_req], ax
+        ret
+
+; QS_PAGE: AL the page's letter put in the game's two save file names (QS_LETTER, QS_NAME_SAVE; DS the
+; game's). PAGE_BACK: the sequel's one page is the game's E; the QUICK page (Q) is only for F9's LOAD window,
+; put there by SAVE_WORK as it opens it and taken off by SAVE_TICK whenever the main loop runs on the map
+; (SCREEN_IS 1) with no quick load waiting (the Loader writes Q before asking): so F1's SAVE window (or F2's
+; LOAD) can never open on Q, where a save by hand would go to SAVQnn.SAV (its slots written over in turn).
+; The window's routine returns with the window up (seen in play: SAVE_REQ 3 0.4 s after F9, the window
+; still open) and the main loop runs it, with the screen word 2: Q is kept until it shuts. (The Loader's
+; own page-back, SL's, is off in the sequel: ravlog.QUICK_LAYOUT's page_back.)
+qs_page:
+        mov [QS_LETTER], al
+        mov [QS_NAME_SAVE], al
         ret
 
 ; QS_FAR: QS_CALL made the game's routine at AX (less the load segment):BX (DS the game's)
@@ -15118,9 +15163,212 @@ greq_load:
         inc word [cs:greq_loads]
 .r:     iret
 
+; ---- LOOT AND SELL KEYS, M, U and I: DSCLOG's LOOT_KEY, SELL_KEY, MAP_KEY and SHOP_LOOP on the sequel ----
+; (The Loader's dsloader/loot.py and sell.py do the item moves once the window or the shop is shut, as in
+; Shattered Lands, on the sequel's addresses: ravlog.RAV_ITEMS.) The header's fields are DSCLOG's, at its
+; offsets (+1846 to +1859). What differs from DSCLOG's: the game's DS is PROBE_SCROLL's (POINTER_DS), the
+; container whose window is open DS:05D6h (SL's 05E6h), the shop's merchant DS:1A30h (SL's 179Ch), the
+; party member on show at selector 370h:0B44h (SL's 3931h:25Bh), and the shop's loop "while byte [143Dh]
+; is 1" (88D52h; SL's word [11B2h], 7DDE4h).
+
+; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (LOOT_OPEN its map thing, 9999
+; none) is made Escape, which closes the window, and, when the key is read (MK_READ; a peek only looks),
+; counted in LOOT_SEQ with the container (LOOT_THING) and T's mode or Shift+T's (LOOT_MODE: Shift held,
+; from the BIOS keyboard flags, whatever Caps Lock does to the letter). Other keys, and these with no
+; window, or with no Loader passing (LOADER_FRESH: unlike DSCLOG, DSCLOG2 runs whenever the sequel does, the
+; Loader or not), as they were. AX the key (Escape now, for one of these); others kept.
+KEY_T        equ 0x1474
+KEY_SHIFT_T  equ 0x1454
+KEY_ESCAPE   equ 0x011B
+LOOT_OPEN    equ 0x05D6             ; (the game's DS) the container whose window is open
+LOOT_NONE    equ 9999
+loot_key:
+        cmp ax, KEY_T
+        je .t
+        cmp ax, KEY_SHIFT_T
+        jne .ret
+.t:     push ds
+        push bx
+        call loader_fresh               ; (no Loader to do the move: T the game's key, the window kept)
+        jne .out
+        mov bx, [cs:pointer_ds]
+        or bx, bx
+        jz .out
+        mov ds, bx
+        mov bx, [LOOT_OPEN]
+        cmp bx, LOOT_NONE
+        je .out
+        cmp word [cs:loot_thing], 0xFFFF ; (the last T not yet taken by the Loader: this one left as
+        jne .out                        ;   the game's key, the window kept open, to be pressed again)
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov [cs:loot_thing], bx
+        mov word [cs:loot_mode], 0
+        xor bx, bx
+        mov ds, bx
+        test byte [0x417], 3            ; (either Shift)
+        jz .count
+        mov word [cs:loot_mode], 1
+.count: inc word [cs:loot_seq]
+.esc:   mov ax, KEY_ESCAPE
+.out:   pop bx
+        pop ds
+.ret:   ret
+
+; SELL_KEY: (OUR_KEY's) S or Shift+S on a shop's screen (its loop, SHOP_LOOP, run within the last
+; SHOP_FRESH BIOS ticks) is made Escape, which shuts the shop, and, when the key is read (MK_READ),
+; counted in SELL_SEQ with the party member on show (SELL_MEMBER) and the shop's merchant (SELL_MERCHANT):
+; the Loader sells that member's plain gear (dsloader/sell.py) once the shop is shut (with no Loader
+; passing, LOADER_FRESH, S the game's). AX the key (Escape now, for one of these); others kept.
+KEY_S        equ 0x1F73
+KEY_SHIFT_S  equ 0x1F53
+SHOP_FRESH   equ 2
+SHOP_SCREEN  equ 0x143D             ; (the game's DS) a byte, 1 while a merchant's shop is open (7BCA6h)
+SELL_WHO_SEG equ 0x3E71 - 0x47E0    ; (selector 370h's segment less the game's DS) ...
+SELL_WHO_OFF equ 0x0B44             ; ... the character on show
+sell_key:
+        cmp ax, KEY_S
+        je .s
+        cmp ax, KEY_SHIFT_S
+        jne .ret
+.s:     push ds
+        push bx
+        push ax
+        call loader_fresh               ; (no Loader to sell: S the game's key, the shop kept)
+        jne .out
+        mov bx, [cs:pointer_ds]
+        or bx, bx
+        jz .out
+        cmp word [cs:shop_at], 0
+        je .out
+        xor ax, ax
+        mov ds, ax
+        mov ax, [0x46C]
+        sub ax, [cs:shop_at]
+        cmp ax, SHOP_FRESH
+        ja .out
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov ds, bx
+        mov ax, [SHOP_MERCHANT]
+        mov [cs:sell_merchant], ax
+        add bx, SELL_WHO_SEG
+        mov ds, bx
+        mov ax, [SELL_WHO_OFF]
+        mov [cs:sell_member], ax
+        inc word [cs:sell_seq]
+        mov word [cs:shop_at], 0        ; (shut: the next S is a key of the game's)
+.esc:   pop ax
+        mov ax, KEY_ESCAPE
+        push ax
+.out:   pop ax
+        pop bx
+        pop ds
+.ret:   ret
+
+; SHOP_LOOP (site 82, "shop_loop"): "cmp byte [143Dh],1" (88D99h; 5 bytes: the site's INT, its number and
+; 2 NOPs), the test of the shop's own loop (88D52h, run while a merchant's shop is open): the BIOS tick
+; kept in SHOP_AT while it is open (SELL_KEY), and the test made, its flags given back. DS the game's.
+shop_loop:
+        push bp
+        mov bp, sp
+        push ax
+        cmp byte [SHOP_SCREEN], 1
+        jne .test
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:shop_at], ax
+        pop es
+        inc word [cs:shop_passes]
+.test:  cmp byte [SHOP_SCREEN], 1
+        lahf
+        mov [bp + 6], ah                ; (the flags' low byte: ZF for the loop's JE)
+        pop ax
+        pop bp
+        iret
+shop_passes dw 0                ; (the shop's loop's passes, for a look in play)
+
+; MAP_KEY: (DSCLOG's) M on the map (its main loop run within the last tick or two, the map the screen on
+; show) made O, the game's key for its overhead map; U and I there left as they are, the game's keys for
+; the USE and inventory screens (each switches to the other on its own too); OVERHEAD then the key's
+; letter. The same key again with the map's loop not run since (that screen up; PANEL_TICK clears
+; OVERHEAD) made Escape, the key that closes it; U or I on the other screen of the two, left as it is,
+; moves OVERHEAD to it, and any other key there clears it (V's screen, typing...): AX the key, changed or
+; kept; others kept. (A peek and the read after it give the same: OVERHEAD changes only on the read,
+; MK_READ 1.)
+KEY_M       equ 0x326D
+KEY_SHIFT_M equ 0x324D
+KEY_U       equ 0x1675
+KEY_SHIFT_U equ 0x1655
+KEY_I       equ 0x1769
+KEY_SHIFT_I equ 0x1749
+KEY_O       equ 0x186F
+map_key:
+        push bx
+        mov bl, 'm'
+        cmp ax, KEY_M
+        je .key
+        cmp ax, KEY_SHIFT_M
+        je .key
+        mov bl, 'u'
+        cmp ax, KEY_U
+        je .key
+        cmp ax, KEY_SHIFT_U
+        je .key
+        mov bl, 'i'
+        cmp ax, KEY_I
+        je .key
+        cmp ax, KEY_SHIFT_I
+        je .key
+        cmp byte [cs:overhead], 'm'     ; another key: the overhead map's are its own
+        je .ret
+        cmp byte [cs:mk_read], 0
+        je .ret
+        mov byte [cs:overhead], 0
+        jmp .ret
+.key:   push ax
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        pop es
+        cmp ax, L_FRESH
+        pop ax
+        ja .up
+        call on_map
+        jne .ret
+        cmp byte [cs:mk_read], 0
+        je .fresh
+        mov [cs:overhead], bl
+.fresh: cmp bl, 'm'
+        jne .ret
+        mov ax, KEY_O
+        jmp .ret
+.up:    cmp [cs:overhead], bl
+        jne .other
+        mov ax, KEY_ESCAPE
+        jmp .ret
+.other: cmp bl, 'm'
+        je .ret
+        cmp byte [cs:overhead], 'u'     ; (U on the inventory, I on USE: the game switches)
+        je .move
+        cmp byte [cs:overhead], 'i'
+        jne .ret
+.move:  cmp byte [cs:mk_read], 0
+        je .ret
+        mov [cs:overhead], bl
+.ret:   pop bx
+        ret
+mk_read db 0                    ; (1 when MAP_KEY's key is being read, 0 when peeked at)
+overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0 none)
+
 qs_call     dd 0
 quick_saves dw 0                ; (saves and loads made, for a look in play)
 quick_loads dw 0
+pages_back  dw 0                ; (the QUICK page taken off by SAVE_TICK, for a look in play)
 greq_data   times 10 db 0
 save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914)
 

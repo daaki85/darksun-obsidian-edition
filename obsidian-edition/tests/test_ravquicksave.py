@@ -125,10 +125,11 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(self.gd.hdr(LAY.req), q.REQ_LOAD)
         self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1) + self.gd.guest.read(DS * 16 + LAY.name_save, 1), b"QQ")
         self.assertEqual(struct.unpack_from("<H", self.gd.guest.m, 0x3C4C * 16 - (ravager.DGROUP - DS) * 16)[0], 6)
-        self.gd.hdr(LAY.req, q.DONE)
-        self.tick()
-        self.tick()
-        self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1), b"E")  # (the one page again)
+        for _ in range(int(q.ANSWER_WAIT) + 3):  # (F9's window open, the main loop running in it: SAVE_REQ 0)
+            self.gd.hdr(LAY.req, 0)
+            self.tick()
+        self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1), b"Q")  # (left: DSCLOG2's PAGE_BACK)
+        self.assertFalse(LAY.page_back)
 
     def test_autosave_named_by_the_sequels_areas(self):
         self.tick()
@@ -136,8 +137,18 @@ class LoaderTests(unittest.TestCase):
         for _ in range(6):
             self.tick()
         name = self.gd.guest.read(TAIL_SEG * 16 + SAVE_OFF + q.SAVE_FILE, q.SAVE_NAME).split(b"\0")[0]
-        self.assertEqual(name, b"Auto - Day 1, 09:05 - The mines, level 1")
+        self.assertEqual(name, b"Auto Day 1, 09:05 Mines 1")  # (the sequel's short names: its narrow rows)
         self.assertEqual(self.gd.hdr(LAY.greq), q.GREQ_QUICK + 6)
+
+    def test_autosave_names_fit_the_sequels_rows(self):
+        """Every area's autosave name, and the fight's, at most RAV_NAME_MOST letters (its LOAD window cut
+        "Auto - Day 1, 00:06 - after a fight" at 29), on the first day and the 147th."""
+        self.assertEqual(q.auto_name(LAY.after_fight, 366, LAY.name_most, LAY.name_join), "Auto Day 1, 00:06 fight")
+        for clock in (366, 86400 * 146 + 86399):
+            for region in list(ravlog.REGIONS) + [0x77]:
+                name = q.auto_name(LAY.region_name(region), clock, LAY.name_most, LAY.name_join)
+                self.assertLessEqual(len(name), ravlog.RAV_NAME_MOST, name)
+        self.assertEqual(q.auto_name("after a fight", 366), "Auto - Day 1, 00:06 - after a fight")  # (SL's)
 
     def test_no_camp(self):
         """SL's camp byte reads 4 in the sequel's records (Game.creature): the keys stay the Loader's."""
@@ -147,6 +158,8 @@ class LoaderTests(unittest.TestCase):
     def test_region_names(self):
         self.assertEqual(ravlog.region_name(0x32), "Tyr")
         self.assertEqual(ravlog.region_name(0x77), "Area 77h")
+        self.assertEqual(ravlog.region_short(0x38), "Mines 1")
+        self.assertEqual(set(ravlog.REGIONS_SHORT), set(ravlog.REGIONS))
 
 
 def save_file(name, size=ravager.SHEET_SIZE):
@@ -239,9 +252,14 @@ class HelperTests(unittest.TestCase):
         else:
             self.calls.append((name,))
         self.during = self.word("save_req")
+        self.letters = self.letters_now()
         uc.reg_write(r.UC_X86_REG_AX, self.results.get(name, 0x7777))
         uc.reg_write(r.UC_X86_REG_BX, 0xDEAD)
         uc.reg_write(r.UC_X86_REG_ES, 0xBEEF)
+
+    def letters_now(self):
+        ds = self.GAME_DS * 16
+        return bytes(self.mu.mem_read(ds + 0x2088, 1) + self.mu.mem_read(ds + 0x20B9, 1))
 
     def word(self, name, value=None):
         at = self.TSR * 16 + self.sym[name]
@@ -307,8 +325,45 @@ class HelperTests(unittest.TestCase):
         self.assertEqual((self.calls, self.word("save_req")), ([], q.IN_FIGHT))
 
     def test_load_window(self):
+        """The QUICK page (Q) while F9's LOAD window is up (its routine returns with it up, the screen word 2,
+        the main loop running it), the game's (E) at the first pass on the map once it shuts."""
+        ds = self.GAME_DS * 16
         self.ask(q.REQ_LOAD)
         self.assertEqual((self.calls, self.during, self.word("save_req")), ([("load",)], 0, q.DONE))
+        self.assertEqual((self.letters, self.letters_now()), (b"QQ", b"QQ"))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 2))
+        self.ask(q.DONE)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"QQ", 0))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 1))
+        self.ask(q.DONE)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
+
+    def test_page_back(self):
+        """The QUICK page left (the Loader's Q written, no load asked): the game's again at the main loop's
+        next pass, so F1's SAVE window never opens on it; kept while a quick load waits for its window."""
+        ds = self.GAME_DS * 16
+        self.mu.mem_write(ds + 0x2088, b"Q")
+        self.mu.mem_write(ds + 0x20B9, b"Q")
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
+        self.mu.mem_write(ds + 0x2088, b"Q")
+        self.word("s_fl", 0x0002)
+        self.ask(q.REQ_LOAD)
+        self.assertEqual((self.letters, self.letters_now(), self.word("pages_back")), (b"QQ", b"QQ", 1))
+
+    def test_page_kept_off_the_map(self):
+        """A window up (the screen word not 1; F9's LOAD window's 2, seen in play): the QUICK page kept."""
+        ds = self.GAME_DS * 16
+        self.mu.mem_write(ds + 0x2088, b"Q")
+        self.mu.mem_write(ds + 0x20B9, b"Q")
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 2))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"QQ", 0))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 1))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
 
     def test_nothing_asked(self):
         for value in (0, q.DONE, q.FAILED, q.IN_FIGHT):
@@ -360,7 +415,7 @@ class PatchTests(unittest.TestCase):
         self.assertIn("call save_tick", scroll[:scroll.index("iret")])
         self.assertIn("inc word [cs:main_ticks]", scroll[:scroll.index("iret")])
         ours = src[src.index("\nour_key:"):]
-        self.assertIn("call qs_key", ours[:200])
+        self.assertIn("call qs_key", ours[:300])
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR (the sequel's folder) not given")
     def test_the_games_bytes(self):
