@@ -266,7 +266,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
     `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
-    game's: in a copy, change the display in `env.sh` and `paths.py` only.
+    game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
+    in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the
+    save there and the copy's `start.sh` starts DOSBox from it. **A control run with the old
+    Loader**: the kit's `obsidian-edition` a link to a detached `git worktree` of
+    `origin/obsidian-edition` (its own patched files and `settings.json`), then the same steps;
+    remove the worktree after (logs/2026-11-25-xp-held-at-cap.md: `:56`, `dbxp`).
   - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
     arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
     rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The
@@ -297,6 +302,15 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
+
+- **The stock game** (no Loader, no dice log: OpenDS's darkfix betas, or the original's behaviour):
+  `darkfix_apply.py inst/GPLDATA.GFF darkfix-inst/GPLDATA.GFF FIXES` into a copy of `inst` in the work
+  folder (it reads their fix files, never runs them), then `start_stock.sh` (GOG's
+  `dosbox_darksun.conf` first: with our conf alone DSUN.EXE went straight back to DOS). The intro
+  plays (Escape), then the main menu and loadsave.sh's clicks; the Loader's saves load in it, and
+  `click.py`, `walkto.py`, `pointer.py`, `state.py` work (they read memory). No dice log: read the
+  screen. **A reload replays the same rolls** (a load doesn't reseed): wait a different time before a
+  roll to see the other outcome ([the grate's QA](logs/2026-11-24-darkfix-beta-qa.md)).
 
 ## Reading the game
 
