@@ -57,6 +57,13 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed: the game**
+- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
+  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
+  new test scans the patched program for any other jump into a patch.
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.
