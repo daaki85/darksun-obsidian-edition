@@ -16,7 +16,9 @@ attempting this", opened by Calvin Rodo (yuan-ti) on 20 October. OpenDS verified
 yuan-ti's own finds), adopted its detour design, credited Calvin in darkfix-ds1 v0.1.4, and offered
 its DOSBox differential harness for second opinions. Calvin answered that his code is open to anyone
 ("feel free to use anything I generated"), that yuan-ti aims at a playable engine more than
-exactness, and that he expects to be busy until the spring. TimQuester's DarkSunTools adopted the
+exactness. His newest comment there (24 November) says his work has slowed but he hopes to get back
+into it, and that he has used some of the Obsidian Edition's work, talking with its author on Reddit:
+treat yuan-ti as active. TimQuester's DarkSunTools adopted the
 Apache-2.0 license after the same exchange (OpenDS issue #14). OpenDS's runtime QA packet is the
 other open door: its sites R (the Trustee) and L (Legcrusher gone) are in the slave pens our saves
 reach.
