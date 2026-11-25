@@ -446,7 +446,8 @@ Jenna attacks Arena Guard with Wooden Double Spear (1d8): d20 = 6, needs 10+ (55
 
 A three-bladed polearm with a hooked haft: a specialist's hit that does damage **trips** a
 man-sized or smaller foe unless it saves against paralysis: it loses its next turn. Who is too big,
-or has nothing to trip, is the [cahulaks](#cahulaks)' list.
+or has nothing to trip, is the [cahulaks](#cahulaks)' list. Held with no other weapon, it reaches two
+squares as a polearm does ([polearm reach](#polearm-reach)).
 
 ```
   Jenna hits Arena Guard for 15: 1d10 = [5] +2 specialized +8 STR 20
@@ -472,7 +473,7 @@ damage](WEAPON-SPECS.md#grand-masterys-damage). How it works:
 A polearm held with no other weapon (a shield or a bow in the missile slot is fine) strikes in melee
 at two squares as well as one, straight or two across and one along, over a creature in between but
 not through a wall. It holds for the party and its foes alike; every polearm has it, ***Thornwall***
-and ***Linebreaker*** too. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
+and ***Linebreaker*** too, and Wake of the Ravager's [trikal](#trikal), a polearm with three blades. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#polearm-reach).
 
 #### Creature size
@@ -823,7 +824,9 @@ Bone Helm, rings and a cloak of protection, bracers of defense, two robes, the W
 Boots of Speed, the Cloak and Boots of Elvenkind and more, on the game's people, in its shops and
 chests; and six of Wake of the Ravager's weapons the game has none of (a two-handed sword, the
 lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
-caravan, each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
+the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
+table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,

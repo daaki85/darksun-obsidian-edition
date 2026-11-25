@@ -172,6 +172,14 @@ raised before stopping.
   `weaponchoice.ITEM_COUNT` (`setarrows.py MEMBER N`), **set before the fight starts** (before the
   ambush's speech is clicked): changed in a fight the game's own readied list doesn't see it.
   `ammodump.py` prints the archers' item records.
+- **A reach test goes by the click, never Tab** (logs/2026-11-24-ravager-weapons-followups.md): a
+  foe moved in memory (`placefoe.py THING DX DY MEMBER`, DS:669Dh + 20h a thing) stays drawn where it
+  was until it moves, so a click on its new square finds nothing; Tab chooses it, but **Tab + Return
+  swings a melee weapon from two squares in a build without reach too** (the control, 2026-11-24): it
+  doesn't ask the distance routine the click does. Walk the member two squares from a held foe
+  drawn where it stands (`squarewalk.py COL ROW`), make its Move 0 (37BD:022Bh + creature x 2) and
+  click the foe's figure with the attack pointer: with reach the melee weapon swings; without, a
+  bow in the missile slot shoots (or nothing happens).
 - **Melee reach isn't the type's range byte** (logs/2026-11-10-polearm-reach.md): a polearm with its
   type's +0Ah set to 2, held alone, with Move 0, two squares from a held foe: the attack does nothing
   and the turn passes; with a bow in the missile slot the click shoots it instead.

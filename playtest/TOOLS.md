@@ -92,6 +92,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `picstart.sh PICTURE [SCALE] [OUT_DIR]` | the game started with one of the Loader's pictures (plain, scanlines, tv, sharp) in a window SCALE times the game's (default 3), NOT the kit's 320x240 start: pens-after-arena loaded by the pointer (click.py), then... |
 | `picstore.py [check\|dump SLOT\|stale]` | the game's picture store (the 741,376 bytes behind memory handle DS:4C33h) as the Loader can reach it (2026-11-09, logs/2026-11-09-picture-store.md). |
 | `pixmatch.py X Y R G B [X Y R G B ...]` | exit 0 if every named pixel of a fresh 320x240 window grab is that colour, within 3 a channel and one row up or down. |
+| `placefoe.py THING DX DY [MEMBER]` | map thing THING (a foe's combatant number) put DX, DY squares from party member MEMBER (default 1) in memory (DS:669Dh + 20h a thing, in sixteenths): a foe beside a member for a melee test, or two squares off for a... |
 | `playsound.py N` | have DSCLOG play sound N from the map's main loop (its header's SOUND_REQ, +1822): a game sound (0-130) or one of the mod's (140, 141). |
 | `pocket.sh MEMBER_X MEMBER_Y NAME [PURSE_X]` | one pocket try: U, the thief's portrait on the USE screen (its position), the purse (157,145, a slow press; |
 | `pointer.py [walk\|look\|attack [X Y]]` | the map pointer's mode (DS:11B8h: 1 walk, 2 look (the eye: also talk, use), 4 attack; |

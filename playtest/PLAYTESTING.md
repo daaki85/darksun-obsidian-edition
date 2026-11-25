@@ -647,6 +647,11 @@ game's data: it is one player's account.
   mul druid/fighter: WILD FURY; a dwarf fighter/thief: G-FIGHTER, WAYFINDER). `sheetinfo.py` lists
   each member's classes, kits and weapon specs by name; `known.py M` its spells; `canuse.py M
   TYPE...` the kit rules for item types; `carried.py NAME` what it holds.
+- **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
+  over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
+  gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
+  A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
+  click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row

@@ -21,6 +21,11 @@
 
 BITS 16
 CPU 386
+%macro game_far 2               ; a far call to the game's code: GAME_FAR (FAR_GAME, below)
+        push cs
+        call far_game
+        dw (%1) & 0xFFFF, %2
+%endmacro
 
 VEC_RAND equ 0x60     ; rand() (DSUNLOG.EXE: INT 60h at the start of rand())
 VEC_SAVE equ 0x61     ; PROBE_SAVE
@@ -1494,12 +1499,9 @@ give_xp:
         xchg ax, [cs:pick_sound]        ; (PICK_SOUND: played in the XP's place, once)
         cmp word [cs:xp_who], 0xFFFF
         je play_sound
-        mov ax, ds
-        sub ax, DGROUP_SEG - XP_SEG
-        mov [cs:xp_call + 2], ax
         push word [cs:xp_amount]
         push word [cs:xp_who]
-        call far [cs:xp_call]
+        game_far XP_SEG - DGROUP_SEG, XP_OFF
         add sp, 4
         mov word [cs:xp_who], 0xFFFF
         mov ax, QUEST_SOUND
@@ -1568,6 +1570,22 @@ play_sound:
 ; (3172:073Ah); its fight sounds have 9 and 10, so 10, not to be skipped for one: 1 till 2026-11-09)
 mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 10, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
 
+; OVR_FRAME: the start of an interrupt handler that calls the game's routines in a frame the
+; overlay manager can fix up, after its PUSHAD and PUSH ES: the interrupt's way back pushed (CS, then
+; IP: a far call's), then BP, BP = SP, and BX the SP before those (as "mov bx,sp / push word
+; [ss:bx+36] / push word [ss:bx+34] / push bp / mov bp,sp" at each site did, memory pass 6). The
+; rest of the registers and the flags kept. OVR_BACK ends such a handler.
+ovr_frame:
+        mov bx, sp              ; [ss:bx] the way back here, +36 the interrupt's IP, +38 its CS
+        push word [ss:bx + 36]  ; (IP, under where CS goes)
+        push bp
+        mov bp, sp
+        push word [ss:bx]       ; (the way back here, for the RET)
+        push word [ss:bx + 38]
+        pop word [ss:bx]        ; (CS where the way back was)
+        lea bx, [bx + 2]        ; (the SP the site had)
+        ret
+
 ; OVR_BACK: the end of an interrupt handler that called the game's routines in a frame the overlay
 ; manager can fix up (BP pushed last, the far way back below it, as a far call's): that way back,
 ; as the manager has left it, put in the interrupt's frame, then the handler's ES and registers
@@ -1583,6 +1601,70 @@ ovr_out:
         pop es
         popad
         iret
+
+; GAME_FAR (the macro: GAME_FAR distance, offset; the distance what is added to the game's DS for
+; the segment, as the stubs' equates, X_STUB, have it, or a DSUN.EXE segment less DGROUP_SEG): a
+; far call to the game's code there, in 8 bytes where setting a far pointer and calling through it
+; took 21 (memory pass 6). The macro is "push cs / call far_game" and the two words after it: what
+; is added to DS for the segment, and the offset. FAR_GAME puts the routine's far address over two
+; words of its own and RETFs to it, the way back made the words' end: the stack is then as a "call
+; far" at the site would have left it, so the callee finds its arguments, the overlay manager the
+; frame it can fix up (OVR_BACK's), and the routine returns past the words. DS the game's. All
+; registers but AX kept (AX the offset as the callee starts; a far pointer's setting left it the
+; segment); the flags as the routine leaves them. (The macro is at the file's start.)
+far_game:
+        push ax                 ; (the routine's segment, then its offset, over these two)
+        push ax
+        push bp
+        mov bp, sp              ; [bp+2] offset, [bp+4] segment, [bp+6] the words, [bp+8] CS
+        push bx
+        mov bx, [bp + 6]
+        mov ax, ds
+        add ax, [cs:bx]
+        mov [bp + 4], ax
+        mov ax, [cs:bx + 2]
+        mov [bp + 2], ax
+        add word [bp + 6], 4    ; (the way back: past the words)
+        pop bx
+        pop bp
+        retf
+
+; FRAME_UP: an interrupt's frame (IP, CS, flags at SP) a word up, over the word under it: what an
+; "add sp,2" the INT stands for would have dropped (memory pass 6). All registers and the flags kept.
+frame_up:
+        push bp
+        mov bp, sp              ; [bp+2] the way back, [bp+4] IP, [bp+6] CS, [bp+8] flags, [bp+10]
+        push ax                 ;   the word dropped
+        mov ax, [bp + 8]
+        mov [bp + 10], ax
+        mov ax, [bp + 6]
+        mov [bp + 8], ax
+        mov ax, [bp + 4]
+        mov [bp + 6], ax
+        pop ax
+        pop bp
+        ret 2                   ; (past the word IP was in)
+
+; FRAME_DOWN: an interrupt's frame (IP, CS, flags at SP as the handler was entered, or as it is
+; again) a word down, to make room under it for a word the game's code after the INT pops (its
+; flags' old word left there: each site writes the room it makes); called twice for two words
+; (memory pass 6: each site moved the three words itself). All registers and the flags kept.
+frame_down:
+        push ax                 ; (room for the way back, a word below)
+        push bp
+        mov bp, sp              ; [bp+4] the way back, [bp+6] IP, [bp+8] CS, [bp+10] flags
+        push ax
+        mov ax, [bp + 4]
+        mov [bp + 2], ax
+        mov ax, [bp + 6]
+        mov [bp + 4], ax
+        mov ax, [bp + 8]
+        mov [bp + 6], ax
+        mov ax, [bp + 10]
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        ret
 
 ; SHEET_CLASSES: EAX the classes of the character sheet at ES:BX (its three class bytes, +21h).
 sheet_classes:
@@ -1641,8 +1723,6 @@ sound_tick:
 .ret:   ret
 
 use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
-xp_call dw XP_OFF, 0
-drop_call dw DROP_OFF, 0
 sound_call dw SOUND_OFF, 0
 
 ; PROBE_USE_ITEM: INT VEC_USE_ITEM replaces "cmp si,-1 / jne +3" (5 bytes: INT + 3 NOPs) in the
@@ -1720,11 +1800,8 @@ probe_use_item:
         ; 2: the item is used up (the cooked vulture, eaten): let go of the pointer's items the
         ; way the game does once it has counted coins picked up, and hold nothing
         push bx
-        mov ax, ds
-        sub ax, DGROUP_SEG - DROP_SEG
-        mov [cs:drop_call + 2], ax
         push word [HELD_LIST]
-        call far [cs:drop_call]
+        game_far DROP_SEG - DGROUP_SEG, DROP_OFF
         add sp, 2
         mov word [HELD], -1
         mov ax, ds              ; (the drop routine's AX is its own)
@@ -2114,16 +2191,13 @@ sp_button_id:                   ; (AX the button)
         movsx eax, ax
         push eax
         push dword [es:SAVE_WIN]
-        mov ax, ds
-        add ax, BTN_SEG
-        mov [cs:sp_btn + 2], ax
-        call far [cs:sp_btn]
+        game_far BTN_SEG, BTN_OFF
         add sp, 10
         call sp_es
         pop bp
         ret 2
 
-sp_btn  dw BTN_OFF, 0           ; the game's routine for a button's state
+; the game's routine for a button's state
 sp_call dd 0
 sp_was  db 0
 sp_letters db 'EBCDQ'           ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD; SAVQ: the quick
@@ -2691,16 +2765,11 @@ arrow_level:
         pop bx
         pop ax
         pop bp
-        sub sp, 4               ; the INT's frame 4 bytes down: the level and the spell under it
+        call frame_down         ; the INT's frame 4 bytes down: the level and the spell under it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax        ; (IP)
-        mov ax, [bp + 8]
-        mov [bp + 4], ax        ; (CS)
-        mov ax, [bp + 10]
-        mov [bp + 6], ax        ; (flags)
         mov ax, [cs:arrow_lvl]
         mov [bp + 10], ax
         movzx ax, cl
@@ -2726,11 +2795,7 @@ probe_unlook:
         jne .out
         mov byte [cs:look_pending], 0
         mov word [cs:show_text], look_full
-        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        push word [ss:bx + 36]  ; the way back in a frame the overlay manager can fix up (pushed
-        push word [ss:bx + 34]  ;   as a far call's, with BP): the dialogue window may load other
-        push bp                 ;   overlays over this routine's while it waits for Continue
-        mov bp, sp
+        call ovr_frame          ; the interrupt frame at BX+34: IP, CS, flags ; the way back in a frame the overlay manager can fix up (pushed ;   as a far call's, with BP): the dialogue window may load other ;   overlays over this routine's while it waits for Continue
         call show_window
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .out:   jmp ovr_out
@@ -3777,11 +3842,14 @@ cr_own_race:
 ; ES:BX, by the warrior's level (the highest fighter, gladiator or ranger level of the classes it
 ; has now: 1-6, 7-12, 13 on): AD&D's
 ; for the sling, 3/2, 2, 5/2 a round; the bow, staff sling and chatkcha a step above AD&D's, the bow
-; 3, 4, 5, the staff sling and chatkcha 3/2, 2, 5/2; a grand master one more. A warrior's weapon of
+; 3, 4, 5, the staff sling and chatkcha 3/2, 2, 5/2; Wake of the Ravager's javelin AD&D's (its other
+; thrown weapons'), 3/2, 2, 5/2, and darts AD&D's one more a round than the weapon's, 3, 4, 5 (the
+; weapon two: MISSILE_RAV, kinds 21 and 22 kept after the staff sling's); a grand master one more. A warrior's weapon of
 ; a kind not chosen (SPEC_PLAIN), from 7th level: the specialist's rate a band lower, as in melee
 ; (a bow 3 at 7-12, a sling 3/2).
 MISSILE_KIND equ 13             ; (the chatkcha's kind + 1; then the bow, the sling, the staff sling)
-missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5
+MISSILE_RAV  equ 21             ; (the javelin's kind + 1; then the darts)
+missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5, 3, 4, 5, 6, 8, 10
 missile_rate:
         cmp dl, SPEC_PLAIN
         jb .ret
@@ -3794,7 +3862,13 @@ missile_rate:
         sub cx, MISSILE_KIND
         jb .out
         cmp cx, 3
+        jbe .kind
+        sub cx, MISSILE_RAV - MISSILE_KIND - 4  ; (the javelin 4, the darts 5)
+        cmp cx, 4
+        jb .out
+        cmp cx, 5
         ja .out
+.kind:
         xor dx, dx              ; DL the specialist's level
         xor si, si
 .class: push ax
@@ -5705,16 +5779,10 @@ WP_SHOWN_CALL  equ 0x63372          ; (118:C36h's call, and PROBE_WP_SHOWN's ret
 WP_SHOWN_RET   equ 0x6337C
 
 probe_wp_disc_win:
-        sub sp, 2               ; push the window's id: the frame down a word
+        call frame_down         ; push the window's id: the frame down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         push dx
         call wp_ids
         mov [bp + 8], ax
@@ -5754,16 +5822,10 @@ probe_wp_disc_win:
         iret
 
 probe_wp_sphere_win:
-        sub sp, 2
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         push dx
         call wp_ids
         mov [bp + 8], dx
@@ -6302,16 +6364,10 @@ probe_pk_count:
         iret
 
 probe_pk_win:
-        sub sp, 2               ; push the window's id: the frame down a word
+        call frame_down         ; push the window's id: the frame down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax
-        mov ax, [bp + 6]
-        mov [bp + 4], ax
-        mov ax, [bp + 8]
-        mov [bp + 6], ax
         mov word [bp + 8], 0x445D
         cmp byte [cs:lv_mode], 0
         je .out
@@ -6335,16 +6391,11 @@ probe_pk_left:
 .out:   iret
 
 probe_pk_title:
-        sub sp, 4               ; push a far pointer: the frame down two words
+        call frame_down         ; push a far pointer: the frame down two words
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov [bp + 10], ds
         mov word [bp + 8], 0x3026
         push ds
@@ -8371,12 +8422,8 @@ pick_spells:
 .one:   push cx                 ; (CF set if the window was left with no spell learnt)
         call pick_known
         push ax
-        mov ax, ds
-        add ax, PICK_STUB
-        mov [cs:pick_far + 2], ax
-        mov word [cs:pick_far], PICK_ENTRY
         push si
-        call far [cs:pick_far]
+        game_far PICK_STUB, PICK_ENTRY
         add sp, 2
         call pick_known
         pop cx
@@ -8390,7 +8437,6 @@ pick_spells:
 .none:  pop cx
         stc
         ret
-pick_far   dd 0
 pick_cap   db 0
 
 ; PICK_KNOWN: AX the preserver spells member SI knows (KNOWN_OFF's bytes, the low four bits set
@@ -8506,11 +8552,7 @@ probe_dual_kit:
         call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         pushad
         push es
-        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        push word [ss:bx + 36]
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; the interrupt frame at BX+34: IP, CS, flags
         mov di, [bp]            ; (the routine's frame: [DI+8] the new class)
         mov ax, [ss:di + 8]
         call dk_ask
@@ -10764,11 +10806,7 @@ probe_wp_class:
         add sp, 8
         mov [WP_DISC_MASK], ax
         mov byte [cs:kit_keep], 1
-        mov ax, ds              ; and the game opens it again (641B9h), as for the class now
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC     ; and the game opens it again (641B9h), as for the class now
         jmp .done
 .page:  mov ax, [WP_SPHERE]     ; the spheres or a kit page up: the window's id (+8)
         or ax, [WP_SPHERE + 2]
@@ -10845,11 +10883,7 @@ probe_race_panel:
         add sp, 8
         mov [WP_DISC_MASK], ax
         mov byte [cs:kit_keep], 1
-        mov ax, ds              ; the game opens it again (641B9h), as for the class now
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC     ; the game opens it again (641B9h), as for the class now
 .done:  pop es
         popad
         iret
@@ -11089,11 +11123,7 @@ wp_marked:
         push word [bp + 10]
         push word [bp + 8]
         push dword [bp + 4]
-        mov ax, ds
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_MARKED
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_MARKED
         add sp, 8
         pop bp
         ret
@@ -11151,11 +11181,7 @@ wp_page_button:
         add sp, 4
         mov dword [WP_SPHERE], 0
         mov byte [cs:kit_keep], 1
-        mov ax, ds
-        add ax, WP_STUB
-        mov [cs:wp_far + 2], ax
-        mov word [cs:wp_far], WP_TO_DISC
-        call far [cs:wp_far]
+        game_far WP_STUB, WP_TO_DISC
 .ret:   ret
 
 ; KIT_ROW: kit row AX of the kit page clicked (KIT_NONE: NO KIT), as the game's spheres: with
@@ -13972,18 +13998,14 @@ spread_tick:
         mov es, ax
         cmp word [es:0x19], 0
         jne .out
-        mov ax, ds
-        sub ax, SPREAD_FROM_DS
-        mov [cs:spread_far + 2], ax
         push word 1
-        call far [cs:spread_far]
+        game_far -SPREAD_FROM_DS, 0x3109
         add sp, 2
 .out:   pop es
         pop ds
         popa
 .ret:   ret
 spread_due db 0
-spread_far dw 0x3109, 0
 
 ; MOUSE_SET: "mov word [0A12Dh],0" (2A912h; 6 bytes) just after the game gives the mouse its
 ; ranges (the screen's 320 by 200), as its screens start. A video mode set leaves the driver's
@@ -14958,11 +14980,7 @@ TH_STUB_5B8 equ 0x42AB            ; (DSUN.EXE) the stub segments: 5B8h (EDh the 
 TH_STUB_508 equ 0x41F1            ;   508h (61h STR's to-hit, 66h DEX's missile adjustment),
 TH_STUB_4E0 equ 0x41BE            ;   4E0h (7Fh the AC)
 %macro th_far 2                   ; a far call to the game's stub segment %1, offset %2
-        mov ax, ds
-        sub ax, DGROUP_SEG - %1
-        mov [cs:th_call + 2], ax
-        mov word [cs:th_call], %2
-        call far [cs:th_call]
+        game_far %1 - DGROUP_SEG, %2
 %endmacro
 th_hit:
         mov [bp - 6], si                ; (the move replaced)
@@ -15037,11 +15055,7 @@ th_hit:
         mov ax, [TH_DIFFICULTY]
         dec ax
 .diff:  mov [cs:th_diff], ax
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way back in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way back in a frame the overlay manager can fix up)
         push word [cs:th_kind]
         push dword 0
         push word [cs:th_caster]
@@ -15128,7 +15142,6 @@ th_missiles db 18, 53, 75, 111, 180, 33          ; Acid Arrow, Turn Pebble to Bo
                                                  ;   Minute Meteors
 th_touches  db 3, 10, 39, 72, 97, 113, 119, 128  ; Chill Touch, Shocking Grasp, Vampiric Touch, Cause
 TH_SPELLS equ $ - th_missiles                    ;   Light Wounds, Cause Disease, Cause Serious, Poison, Cause Critical
-th_call   dw 0, 0
 th_armed  db 0
 th_weapon db 0
 th_miss   db 0
@@ -15172,10 +15185,7 @@ rec_frame:
 ; the game's; AX and BX changed.
 rand_die:
         push cx
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:blow_rand + 2], ax
-        call far [cs:blow_rand]
+        game_far -DGROUP_SEG, RAND_OFF
         pop cx
         mul cx
         shl ax, 1
@@ -15355,11 +15365,7 @@ tu_site:
         call rec_frame
         cmp word [cs:tu_outcome], TU_TURNED
         jne .out
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way on, in a frame the overlay manager can fix up)
         push word 0
         push word 0
         imul ax, [cs:tu_rounds], 60     ; (a round's 60)
@@ -15777,11 +15783,7 @@ rainbow_hurt:
         mov ax, MN_RAINBOW
         call mn_rec
         pop ax
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way on, in a frame the overlay manager can fix up)
         push ax
         push word [cs:mn_frame]
         th_far TU_STUB, 0x48            ; (the creature, the handle)
@@ -15905,11 +15907,7 @@ chill_undead:
         mov [cs:mn_frame + 4], ax
         mov ax, MN_CHILL
         call mn_rec
-        mov bx, sp
-        push word [ss:bx + 36]
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame
         push word 0
         push word 0
         imul ax, [cs:mn_frame + 4], ROUND_SECONDS
@@ -16053,11 +16051,7 @@ shadow_drain:
         mov [cs:mn_frame + 6], cx
         mov ax, MN_DRAIN
         call mn_rec
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way back, in a frame the overlay manager can fix up)
         push word -1                    ; (1 STR off: the ability routine, 7B80Eh, adds a Weakened's
         push word 0                     ;   amount, as Chill Touch's -1, 79855h)
         imul ax, [cs:mn_frame + 4], TURN_SECONDS
@@ -16142,11 +16136,7 @@ djinn_turn:
         mov word [cs:mn_frame + 4], DJINN_ROUNDS
         mov ax, MN_DJINN
         call mn_rec
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way back, in a frame the overlay manager can fix up)
         push word 0
         push word 0
         push word DJINN_ROUNDS * ROUND_SECONDS
@@ -16230,11 +16220,7 @@ rest_pre:
         sti
         pushad
         push es
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way back, in a frame the overlay manager can fix up)
         push word 0                     ; ([BP-2]: a cast's answer, as 809A2h's local)
         call rp_pass
         mov sp, bp
@@ -17364,11 +17350,7 @@ stink_hit:
         mov [cs:mn_frame + 2], ax
         xor eax, eax
         mov [cs:mn_frame + 4], eax
-        mov bx, sp
-        push word [ss:bx + 36]      ; (the way back, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; (the way back, in a frame the overlay manager can fix up)
         push word [cs:mn_frame]
         th_far TH_STUB_5B8, 0xA2    ; (undead: AL)
         add sp, 2
@@ -17454,7 +17436,7 @@ stink_sides:
 ; both combatants; the least square distance between their footprints, 898:000Ch's: 1 adjacent,
 ; diagonals too, 2 the square beyond, two across and one down too, two across and two down 3). It
 ; does the MOV; then with the rule, for a distance of 2 asked by one of the game's melee tests
-; (REACH_CALLER), an attacker whose hands hold a polearm and no other weapon (REACH_HANDS), and no wall
+; (REACH_CALLER), an attacker whose hands hold a polearm or a trikal and no other weapon (REACH_HANDS), and no wall
 ; on the line between the two (REACH_LINE), AX 1: the game then takes the target as adjacent. The melee tests, by their way back (each compares the
 ; distance with 1): the pointer's sword (1587:2B7Ah, 1D7EAh), the attack pointer's click (1587:0AC5h,
 ; 1B735h), the walk arrow's click on a foe (1587:04B8h, 1B128h), the walk to attack arriving
@@ -17481,6 +17463,7 @@ REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
 REACH_AI_FOUND equ 0x1229
 POLEARM_KIND equ 10               ; (kind_of_type's polearm: its kind, 9, + 1)
+TRIKAL_KIND  equ 20               ; (and the trikal's, a pole with three blades: its kind, 19, + 1)
 TYPE_WEAPON  equ 3                ; (a type's flags, +00h: 1 a melee weapon, 2 a missile weapon)
 reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REACH_1587, 0x1C36
              dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
@@ -17536,9 +17519,9 @@ reach_caller:
         cmp word [es:di + 4], 0xF646
 .ret:   ret
 
-; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) in a hand, the right
-; (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type with a melee or missile flag) in
-; either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
+; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) or a trikal
+; (TRIKAL_KIND) in a hand, the right (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type
+; with a melee or missile flag) in either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
 ; (+08h, +0Ah, +0Ch), by each item's slot (+11h). DS the game's; AX, BX, CX, DX, SI, DI, ES changed.
 reach_hands:
         call combatant_creature
@@ -17573,8 +17556,11 @@ reach_hands:
         jae .other
         push bx
         mov bx, ax
-        cmp byte [cs:bx + kind_of_type], POLEARM_KIND
-        pop bx
+        mov bl, [cs:bx + kind_of_type]
+        cmp bl, POLEARM_KIND
+        je .pole
+        cmp bl, TRIKAL_KIND
+.pole:  pop bx
         jne .other
         inc dl
         jmp .on
@@ -17626,14 +17612,10 @@ reach_line:
         mov ax, [bx + WALL_POS]
         shr ax, 4
         push ax
-        mov ax, ds
-        sub ax, DGROUP_SEG - REACH_LINE_SEG
-        mov [cs:reach_line_at + 2], ax
-        call far [cs:reach_line_at]
+        game_far REACH_LINE_SEG - DGROUP_SEG, 0xA4
         add sp, 12
         or ax, ax
         ret
-reach_line_at dw 0xA4, 0
 ; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
 ; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
 ; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
@@ -19463,13 +19445,12 @@ th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address:
 ; RESOURCE.GFF (spelltexts.py; PROBE_CHUNK_ID): here TU_INFO is done with.
 TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
 probe_spell_text:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         mov byte [cs:tu_info], 0
         iret
 
@@ -21329,10 +21310,7 @@ ns_blow:
         push dword 0
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:blow_rand + 2], ax
-        call far [cs:blow_rand]
+        game_far -DGROUP_SEG, RAND_OFF
 ..@blow_rolled:                  ; (the Loader knows the roll by the code from here)
         jmp short .rolled
         db 'IMAGE'
@@ -21352,12 +21330,9 @@ ns_blow:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG - CHARGE_STUB
-        mov [cs:blow_charge + 2], ax
         push word MIRROR_EFFECT
         push word [BLOW_TARGET]
-        call far [cs:blow_charge]
+        game_far CHARGE_STUB - DGROUP_SEG, CHARGE_OFF
         add sp, 4
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .out:   jmp ovr_out
@@ -21387,7 +21362,6 @@ BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
 ; (BOX_TEXT: AFTER_INSTALL's, over the install code)
 box_at   dw 0
 box_nudge db 0
-box_line dd 0
 box_said:
         sti
         pushad
@@ -21485,15 +21459,11 @@ box_put:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG - BOX_LINE_SEG
-        mov [cs:box_line + 2], ax
-        mov word [cs:box_line], BOX_LINE_OFF
         push cs
         push word box_text
         push word BOX_LINE_ARG
         push dword [BOX_WIN]
-        call far [cs:box_line]
+        game_far BOX_LINE_SEG - DGROUP_SEG, BOX_LINE_OFF
         add sp, 10
         pop bp
         pop ax                  ; the way back, as the overlay manager has left it
@@ -21505,28 +21475,16 @@ box_put:
 .ret:   ret
 
 ; BOX_POP4, BOX_POP6, BOX_POP10: "add sp,4" / 6 / "0Ah" (all registers as the INT had them): the INT's
-; frame moved up over the bytes under it, then IRET.
-%macro box_pop_n 1
-        push bp
-        mov bp, sp
-        push ax
-        mov ax, [bp + 6]
-        mov [bp + 6 + %1], ax
-        mov ax, [bp + 4]
-        mov [bp + 4 + %1], ax
-        mov ax, [bp + 2]
-        mov [bp + 2 + %1], ax
-        pop ax
-        pop bp
-        add sp, %1
-        iret
-%endmacro
-box_pop4:
-        box_pop_n 4
+; frame moved up over the bytes under it (FRAME_UP, a word each), then IRET.
 box_pop10:
-        box_pop_n 10
+        call frame_up
+        call frame_up
 box_pop6:
-        box_pop_n 6
+        call frame_up
+box_pop4:
+        call frame_up
+        call frame_up
+        iret
 
 ; SCROLL_USE: "test [es:bx+10h],ax" (6D3B9h; 4 bytes: the INT, the site's number and a NOP) as the
 ; inventory opens an item's box: ES:BX its type, AX the member's class mask, SI its sheet (in the
@@ -21824,8 +21782,6 @@ ns_wall:
         pop bp
         iret
 
-blow_rand dw RAND_OFF, 0
-blow_charge dw CHARGE_OFF, 0
 
 ; PICK POCKETS (PICK_BUTTON): a character with thief levels, outside a fight, has a button of
 ; their own on the USE screen where a priest's Turn Undead is: a purse (PP_ICON). Let go of, the
@@ -21933,11 +21889,8 @@ pp_show:
         cmp ax, [cs:pp_loaded]
         je .keep
         push ax                 ; another's loaded: let go of it
-        mov ax, ds
-        sub ax, DGROUP_SEG - FREE_SEG
-        mov [cs:free_call + 2], ax
         push dword [TU_CACHE]
-        call far [cs:free_call]
+        game_far FREE_SEG - DGROUP_SEG, FREE_OFF
         add sp, 4
         mov [TU_CACHE], ax
         mov [TU_CACHE + 2], dx
@@ -22145,13 +22098,10 @@ pp_list_push:                   ; pushes slot SI's button, then the window (far)
 pp_free_icon:                   ; the icon at CS:BX let go of, if loaded (the game's 1A8h:8Ch); AX, CX, DX lost
         cmp dword [cs:bx], 0
         je .ret
-        mov ax, ds
-        sub ax, DGROUP_SEG - FREE_SEG
-        mov [cs:free_call + 2], ax
         push bx                 ; (the game's far calls lose BX and ES)
         push es
         push dword [cs:bx]
-        call far [cs:free_call]
+        game_far FREE_SEG - DGROUP_SEG, FREE_OFF
         add sp, 4
         pop es
         pop bx
@@ -22215,11 +22165,7 @@ cr_weapons:
         sti
         pushad
         push es
-        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        push word [ss:bx + 36]
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
+        call ovr_frame          ; the interrupt frame at BX+34: IP, CS, flags
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
@@ -22398,16 +22344,11 @@ TU_INFO_TURN equ 1
 TU_INFO_PICK equ 2
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
 pp_text:
-        sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
+        call frame_down         ; the game's two pushes: the INT's frame moved down over them
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov word [bp + 8], TU_NAME
         mov [bp + 10], ds
         push bx
@@ -22454,16 +22395,11 @@ pp_lit:
 pp_arm:
         cmp byte [cs:pp_arming], 0
         jne .pick
-        sub sp, 4               ; the game's push: the INT's frame moved down over it
+        call frame_down         ; the game's push: the INT's frame moved down over it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax
-        mov ax, [bp + 8]
-        mov [bp + 4], ax
-        mov ax, [bp + 10]
-        mov [bp + 6], ax
         mov word [bp + 8], 0xFFFF
         mov word [bp + 10], 0x00BE
         pop ax
@@ -22712,7 +22648,6 @@ arrows_n3    db "VAMPIRIC ARROWS", 0
 pp_name  db "PICK POCKETS", 0
 pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
 pp_icons_end:
-free_call dw FREE_OFF, 0
 pp_shown  db 0                  ; 1 while the button on show is a thief's
 pp_arming db 0                  ; 1 from its letting go to PP_ARM
 pp_armed  db 0                  ; 1 while the next talk is a pick
@@ -23312,26 +23247,24 @@ NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 probe_names_size:
         add word [bp-4], NAMES_EXTRA * NAME_SIZE
         adc word [bp-2], 0
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        push dword 1
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_down                 ; (the "push dword 1", under the frame)
+        call frame_down
+        push bp
+        mov bp, sp
+        mov dword [bp + 8], 1
+        pop bp
         iret
 
 ; PROBE_NAMES_FILL: INT VEC_NAMES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the call
 ; that reads the NAME chunk into the table (AX 0: read). Does the add, then, if it was read,
 ; copies EXTRA_NAMES after the game's names and notes the table in NAMES_PTR.
 probe_names_fill:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         or ax, ax
         jnz .out
         push ax
@@ -23366,9 +23299,6 @@ probe_names_fill:
         pop cx
         pop ax
 .out:   iret
-n_ip    dw 0
-n_cs    dw 0
-n_fl    dw 0
 
 ; TYPES: the game's item types (GPLDATA's IT1R chunk, 20 bytes each, which items name by
 ; number), read in just before the names, get TYPES_EXTRA more in the same way: for the
@@ -23399,13 +23329,12 @@ AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): t
 probe_types_size:
         add word [bp-4], TYPES_EXTRA * TYPE_SIZE
         adc word [bp-2], 0
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        push dword 1
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_down                 ; (the "push dword 1", under the frame)
+        call frame_down
+        push bp
+        mov bp, sp
+        mov dword [bp + 8], 1
+        pop bp
         iret
 
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
@@ -23419,13 +23348,12 @@ probe_types_size:
 ; are daggers and missile and thrown ones); and the staff sling's dice as the stinkpots' rule has
 ; them (STINK_SIDES, again at each pass of the main loop, the rule switched or not).
 probe_types_fill:
-        pop word [cs:n_ip]
-        pop word [cs:n_cs]
-        pop word [cs:n_fl]
-        add sp, 0x0C
-        push word [cs:n_fl]
-        push word [cs:n_cs]
-        push word [cs:n_ip]
+        call frame_up                   ; (the "add sp,0Ch": the frame six words up)
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
+        call frame_up
         or ax, ax
         jnz .out
         push ax
@@ -23455,11 +23383,41 @@ probe_types_fill:
         mov cx, TYPE_SIZE
         div cx
         mov [cs:types_first], ax
-        mov ds, [cs:tail_seg]           ; (EXTRA_TYPES: the tail's)
+        mov ds, [cs:tail_seg]           ; (EXTRA_TYPES: the tail's, packed: XTYPE)
         mov si, extra_types
-        mov cx, TYPES_EXTRA * TYPE_SIZE
         cld
+        push bx
+        mov bx, di                      ; (the first of them, in the game's table)
+        mov dl, TYPES_EXTRA
+.type:  lodsb
+        mov cx, TYPE_SIZE
+        cmp al, 0xFF
+        je .bytes                       ; (FFh: its 20 bytes)
+        push si                         ; (else the earlier one it is like, copied...
+        push ds
+        push es
+        pop ds
+        mov ah, TYPE_SIZE
+        mul ah
+        add ax, bx
+        xchg si, ax
         rep movsb
+        pop ds
+        pop si
+        lodsb                           ; ... then the bytes that differ: place, value)
+        mov cl, al
+        jcxz .next
+.byte:  lodsw
+        push bx
+        movzx bx, al
+        mov [es:di + bx - TYPE_SIZE], ah
+        pop bx
+        loop .byte
+        jmp .next
+.bytes: rep movsb
+.next:  dec dl
+        jnz .type
+        pop bx
         pop es
         pop ds
         pop di
@@ -28229,16 +28187,10 @@ probe_item_box:
         add sp, 16
 .push:  pop es
         popad
-        sub sp, 2                       ; the PUSH 0: the interrupt's frame moved down a word
+        call frame_down         ; the PUSH 0: the interrupt's frame moved down a word
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 4]
-        mov [bp + 2], ax                ; IP
-        mov ax, [bp + 6]
-        mov [bp + 4], ax                ; CS
-        mov ax, [bp + 8]
-        mov [bp + 6], ax                ; flags
         mov word [bp + 8], 0            ; the word pushed
         pop ax
         pop bp
@@ -28412,16 +28364,11 @@ info_head:
         pop es
         pop bx
         pop ax
-        sub sp, 4               ; the INT's frame 4 bytes down: the pointer under it
+        call frame_down         ; the INT's frame 4 bytes down: the pointer under it
+        call frame_down
         push bp
         mov bp, sp
         push ax
-        mov ax, [bp + 6]
-        mov [bp + 2], ax        ; (IP)
-        mov ax, [bp + 8]
-        mov [bp + 4], ax        ; (CS)
-        mov ax, [bp + 10]
-        mov [bp + 6], ax        ; (flags)
         mov ax, [cs:ih_off]
         mov [bp + 8], ax
         mov ax, [cs:ih_seg]
@@ -29543,163 +29490,173 @@ kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
 ; offset here in their header field.
 section tail follows=image vstart=0 align=16
 tail_start:
+; XTYPE: one of EXTRA_TYPES, its 20 bytes, packed (memory pass 6): the earlier type of them it
+; differs least from, if in fewer than 10 bytes, then the number of bytes that differ and each's
+; place and value; otherwise FFh and the 20 bytes. PROBE_TYPES_FILL unpacks them into the game's
+; table, each after the last.
+%assign XT_N 0
+%macro xtype 20
+  %assign %%k 0
+  %rep 20
+    %assign XT_%[XT_N]_%[%%k] %1
+    %rotate 1
+    %assign %%k %%k + 1
+  %endrep
+  %assign %%best -1
+  %assign %%bestn 10
+  %assign %%j 0
+  %rep XT_N
+    %assign %%n 0
+    %assign %%k 0
+    %rep 20
+      %if XT_%[%%j]_%[%%k] != XT_%[XT_N]_%[%%k]
+        %assign %%n %%n + 1
+      %endif
+      %assign %%k %%k + 1
+    %endrep
+    %if %%n < %%bestn
+      %assign %%bestn %%n
+      %assign %%best %%j
+    %endif
+    %assign %%j %%j + 1
+  %endrep
+  %if %%best < 0
+        db 0xFF
+    %assign %%k 0
+    %rep 20
+        db XT_%[XT_N]_%[%%k]
+      %assign %%k %%k + 1
+    %endrep
+  %else
+        db %%best, %%bestn
+    %assign %%k 0
+    %rep 20
+      %if XT_%[%%best]_%[%%k] != XT_%[XT_N]_%[%%k]
+        db %%k, XT_%[XT_N]_%[%%k]
+      %endif
+      %assign %%k %%k + 1
+    %endrep
+  %endif
+  %assign XT_N XT_N + 1
+%endmacro
 ; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
-; dsloader/npcitems.py), the rest unused
+; dsloader/npcitems.py), the rest unused (XTYPE: each packed)
 extra_types:
         ; a metal short sword: the metal long sword's type (63), 1d6
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
         ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
         ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
         ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
         ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
         ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
         ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
-        db 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        xtype 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
         ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
         ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
         ; obsidian one: light enough for the off hand
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        xtype 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
         ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
         ; classes and psionicists
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
         ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        xtype 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
         ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        xtype 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
         ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
         ; arm armour's slot), their plus counting for AC; not armour to anything else here
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
         ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
         ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
         ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; the Mace's (20)
-        db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
+        xtype 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
         ; the Great Axe's (2)
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
         ; the pick's (112), its 1d6+1 the footman's pick's (Player's Option: Skills & Powers), as
         ; PROBE_TYPES_FILL makes the game's
-        db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
+        xtype 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
         ; the Polearm's (19)
-        db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
+        xtype 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
         ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
         ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
         ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
         ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
-        db 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
+        xtype 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
         ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
         ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
         ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
         ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
         ; fire and water clerics not); the type its own, as it was made when no other dagger was
         ; an air cleric's
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
         ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
         ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
-        db 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
         ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
         ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
         ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
+        xtype 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01, 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
         ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
         ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
         ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
         ; druids (+10h: 190h)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
+        xtype 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
         ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
         ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
         ; 126Fh, no thieves); the game has no metal shield
-        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
+        xtype 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
         ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
         ; no material shown (+8: 40h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
         ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
         ; the Boots of Speed (SPEED_BOOTS: dsloader/worldgear.py): the game's Boots' (68), anyone's
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        xtype 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
         ; metal cahulaks (METAL_CAHULAKS: dsloader/champions.py's mul): the game's Cahulaks' (21), of
         ; metal (+8: 4)
-        db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
+        xtype 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
         ; obsidian cahulaks (OBSIDIAN_CAHULAKS: an earth or fire cleric-warrior's start, weaponchoice.py;
         ; air clerics may use them as any cahulaks, restrict.py):
         ; the game's Cahulaks' (21), of obsidian (+8: 3), the fire cleric's bit added (+10h: 4)
-        db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
+        xtype 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
         ; Wake of the Ravager's weapon kinds the game has none of (dsloader/game.py's RAVAGER_TYPES:
         ; each the sequel's own type in a party carried across). The dice and weights are the Dark Sun
         ; weapons guide's where it has them, else AD&D's.
         ; a two-handed sword: obsidian (+8: 3), 1d10 slashing, two-handed (+0Fh: 40h), 15 lb (+4:
         ; 150), for the obsidian great axe's classes (+10h: 166Eh)
-        db 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x10, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
         ; a lotulis: stone (+8: 2), 1d10 piercing, slashing and bludgeoning (+2: 38h), two-handed,
         ; 10 lb, for the stone pick's classes but psionicists (+10h: 167Ah)
-        db 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x02, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
+        xtype 0x01, 0x00, 0x38, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x02, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x7A, 0x16, 0x00, 0x02
         ; a double spear (double-bladed): wood spared its penalty (+8: 80h, as the quarterstaff),
         ; 1d8 piercing, two-handed, 6 lb, for gladiators (+10h: 40h, as the sequel's)
-        db 0x01, 0x00, 0x20, 0x00, 0x3C, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
+        xtype 0x01, 0x00, 0x20, 0x00, 0x3C, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01, 0x08, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
         ; a trikal: wood spared its penalty, 1d10 slashing and bludgeoning (+2: 18h), two-handed,
         ; 8 lb, for gladiators
-        db 0x01, 0x00, 0x18, 0x00, 0x50, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
+        xtype 0x01, 0x00, 0x18, 0x00, 0x50, 0x00, 0xFA, 0x00, 0x80, 0x05, 0x01, 0x01, 0x0A, 0x01, 0x00, 0x40, 0x40, 0x10, 0x00, 0x01
         ; a javelin: thrown from the missile slot as the chatkcha (+0: 12h; +9: 0Ch; never used
         ; up), obsidian spared its penalty (+8: 83h, as the chatkcha), range 6 (+0Ah), one a round
         ; (+0Bh: 2 halves), 1d6 piercing, 2 lb, for the obsidian weapons' classes but thieves (+10h:
         ; 127Eh)
-        db 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02
-        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x12, 0x00, 0x00
+        xtype 0x12, 0x00, 0x20, 0x00, 0x14, 0x00, 0xFA, 0x00, 0x83, 0x0C, 0x06, 0x02, 0x06, 0x01, 0x00, 0x00, 0x7E, 0x12, 0x00, 0x00
         ; darts (a set): thrown as the javelin, wood spared its penalty, range 4, two a round (+0Bh:
         ; 4 halves), 1d3 piercing, half a pound, for the dagger's classes (+10h: 1FF3h; preservers
         ; and psionicists too)
-        db 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04
-        db 0x03, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        xtype 0x12, 0x00, 0x20, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x80, 0x0C, 0x04, 0x04, 0x03, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
 extra_types_end:
-        times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
+        times -(XT_N != TYPES_EXTRA) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
 save_text  times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1888)

@@ -638,6 +638,9 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
     ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
     ("Darts", 0xFC0E, 2690, 2691, darts_icon),
+    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the fire
+    # colours, as the Loader's magic weapons shine
+    ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p == 213, FIRE)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -1366,6 +1369,8 @@ def which(rec: bytes) -> Optional[str]:
         return "Ironwhirl"
     if kind in METAL_TYPES and plus == 0:
         return METAL_TYPES[kind]
+    if kind == game.DARTS_TYPE and plus == 1:
+        return "Darts +1"
     if kind in RAVAGER_KINDS:
         return RAVAGER_KINDS[kind]
     if plus == 1 and kind in MAGIC_KINDS:

@@ -95,6 +95,7 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/sling-plus1.png) | Leather | Sling +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl, with the Storm Ring |
 | ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's ([stinkpots](FEATURES.md#staff-sling-stinkpots)) | sold by the **Bowyer** |
 | ![](docs/items/skycutter.png) | Obsidian | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
+| ![](docs/items/darts-plus1.png) | Wooden | Darts +1 | +1 (Wake of the Ravager's) | carried by the **defiler** among the arena's champions, who throws them |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | Bow +2 | +2 | a skeleton in the Upper Castle |
 | ![](docs/items/phrains-bow.png) | Wooden | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
@@ -131,6 +132,7 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Sling | Sling +2, Sling +1 |
 | Staff sling | ***Windlash*** +1 |
+| Darts | Darts +1 |
 
 ### Body armour
 
@@ -241,8 +243,8 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 |---|---|---|---|---|---|
 | ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner, the White Sand Outlaws (Slave Hunters, Hototo, Dagger) and Arant's lazy guard (the mod's) | — |
 | ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens | — |
-| ![](docs/items/obsidian-long-sword.png) | long sword | obsidian | Jark, Weapon Merchant | Wyvern Master, Arant, Keldar, Kurzak, Guard, Chaya, Uskuye, Arena Guard, Caravan Master, Chahl, Mayor of Gedron, Merzol, Drajian Guard, Council Member, Templar, the arena's champions (the elf) | — |
-| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Gladiator, Wild Mul, Guard, a dead body in the arena, a chest in the Wyrm Belly, a weapon rack in the Subterranean Temple; "Striker", a plain club, on the ground in the Lower Castle | — |
+| ![](docs/items/obsidian-long-sword.png) | long sword | obsidian | Jark, Weapon Merchant | Wyvern Master, Arant, Keldar, Kurzak, Guard, Chaya, Uskuye, Arena Guard, Caravan Master, Chahl, Mayor of Gedron, Merzol, Council Member, the arena's champions (the elf) | — |
+| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Wild Mul, Guard, a dead body in the arena, a chest in the Wyrm Belly, a weapon rack in the Subterranean Temple; "Striker", a plain club, on the ground in the Lower Castle | — |
 | ![](docs/items/bone-dagger.png) | dagger | bone | Jark, Weapon Merchant | Defiler, the arena's champions (the defiler) | **new**: 1d4: the only dagger a water cleric can use; a water cleric's starting dagger |
 | ![](docs/items/metal-dagger.png) | dagger | metal | — | Tobrian | **new**: the game's dagger, in metal |
 | ![](docs/items/obsidian-dagger.png) | dagger | obsidian | — | Defiler, Notaku | — |
@@ -256,7 +258,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
 | ![](docs/items/metal-axe.png) | axe | metal | — | Slaver Guard, Uzoma, a weapon rack in the Lower Castle, a weapon rack in the Subterranean Temple, a weapon rack in the slave pens | — |
 | ![](docs/items/obsidian-axe.png) | axe | obsidian | Weapon Merchant | Merzol | **new**: 1d8; 30, as the bone axe |
-| ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchmen | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
+| ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchmen (two of the three) | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
 | ![](docs/items/metal-great-axe.png) | great axe | metal | Weapon Merchant | the arena's champions (the half-giant) | **new**: the game's great axe, in metal |
 | ![](docs/items/obsidian-great-axe.png) | great axe | obsidian | Jark, Weapon Merchant | — | **new**: 1d10, two-handed; a fire or earth cleric's starting great axe |
 | ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal; 1d6+1, the footman's pick (2d4 against a large target with [Creature size](FEATURES.md#creature-size)) |
@@ -269,16 +271,16 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; earth and air clerics may use them |
 | ![](docs/items/obsidian-cahulaks.png) | cahulaks | obsidian | Jark | Scar | **new**: the game's cahulaks, in obsidian: earth, fire and air clerics may use them; an earth or fire cleric-warrior's starting cahulaks |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — | — |
-| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
+| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
-| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens | — |
+| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, a chest in the slave pens, a bag in the slave pens | — |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots ([stinkpots](FEATURES.md#staff-sling-stinkpots)): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
-| ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
-| ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | — | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
-| ![](docs/items/double-spear.png) | double spear | wood | Jark | — | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
-| ![](docs/items/trikal.png) | trikal | wood | Jark | — | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)) |
-| ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | — | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
-| ![](docs/items/darts.png) | darts | wood | Bowyer | — | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
+| ![](docs/items/two-hand-sword.png) | two-handed sword | obsidian | Weapon Merchant | one of Scar's three henchmen in the champions' bout | **new**, from Wake of the Ravager: 1d10, 3d6 against a large target; two-handed |
+| ![](docs/items/lotulis.png) | lotulis | stone | Weapon Merchant | Drajian Guard, a Templar in the slave pens | **new**, from Wake of the Ravager: 1d10, 1d12 against a large target; two-handed; a specialist strikes a second foe ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
+| ![](docs/items/double-spear.png) | double spear | wood | Jark | the arena's Gladiators (two of the three) | **new**, from Wake of the Ravager: 1d8; two-handed; gladiators only, as in the sequel; a specialist strikes a second foe at 1 less damage ([two-headed weapons](FEATURES.md#lotulis-and-double-spear)) |
+| ![](docs/items/trikal.png) | trikal | wood | Jark | one of the arena's three Gladiators | **new**, from Wake of the Ravager: 1d10; two-handed; gladiators only, as in the sequel; a specialist's hit trips ([trikal](FEATURES.md#trikal)); reaches two squares as a polearm ([polearm reach](FEATURES.md#polearm-reach)) |
+| ![](docs/items/javelin.png) | javelin | obsidian | Weapon Merchant, Bowyer | Village Hero, Elite Guard (in place of the bow), the slave pens' weapon rack | **new**, from Wake of the Ravager: 1d6, thrown from the missile slot as the chatkcha |
+| ![](docs/items/darts.png) | darts | wood | Bowyer | Silt Runner (in place of the sling), the White Sand Outlaws (Slave Hunters) | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 
 ## Every mundane armour piece
 
@@ -332,7 +334,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000, the Searing Blade, +2 with one, 42,800; the game's Bow +2 is 50,800) |
 | Cahulaks +1 (Legcrusher's) | 11,600 (the game's Cahulaks +1's) |
 | Cahulaks +2 | 32,400 (the Cahulaks +1's, and 20,800 for the plus more) |
-| Windlash | 2,800 (as the game's Sling +1) |
+| Windlash, Darts +1 | 2,800 (as the game's Sling +1; the sequel's Darts +1 2,000) |
 | Skycutter | 3,500 (as the game's Sling +2) |
 | Plain metal weapons | 50 to 300 (metal cahulaks 200) |
 | Plain obsidian cahulaks | 15 (bone 10, as the other obsidian weapons dearer than bone) |

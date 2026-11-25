@@ -247,8 +247,8 @@ the one place for the sizes; the sections after them name the symbols only.
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,336
-bytes: the 32-byte header, the segment's image of 64,384 and the tail's 5,920 (`TAIL_BYTES`). The
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,320
+bytes: the 32-byte header, the segment's image of 64,608 and the tail's 5,680 (`TAIL_BYTES`). The
 always-on switches' off paths, taken out on 2026-11-19 (#115), freed 1,168 bytes of the segment ([the
 switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)); the backstab fix's `REAR_FRESH`
 (#116) took 48 back; F10 left alone for a pinned member (`F10_PIN`, 2026-11-20) 32 and two
@@ -259,16 +259,19 @@ routines' code (`SAVE_FAR`, `TINT_FAR`: [code in the tail](#dsclogs-segment)) in
 squares' map (`SQ_MAP`, 130 bytes) in DSCLOG's PSP, which costs nothing. (They were made to fit
 before the off paths went, when 48 bytes and one paragraph were left. With the room back, both
 are kept: they are tested and cost nothing, and moving the routines into the segment would only
-spend its room again.)
+spend its room again.) Ravager's six weapon kinds (#149) took nearly all that was left (32 bytes
+of upper memory, 2026-11-23); the sixth memory pass (2026-11-23) gave back 1,104 bytes of
+upper memory (69 paragraphs) and 688 of the segment: `GAME_FAR`, `FRAME_UP` and `FRAME_DOWN`,
+`OVR_FRAME` (below) and the extra item types packed (`XTYPE`, 368 bytes of the tail).
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,392 + `AFTER_INSTALL` 992) | 64,384 bytes | 65,536 | 1,152 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,616 + `AFTER_INSTALL` 992) | 64,608 bytes | 65,536 | 928 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,490 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,692 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,112 paragraphs | 8,182 (`UMB_ROOM`) | 70 (1,120 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,489 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,693 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,111 paragraphs | 8,182 (`UMB_ROOM`) | 71 (1,136 bytes): the limit for new code and data, the segment's and the tail's alike |
 | DSCLOG's PSP from 5Ch (the FCBs and the command line, of no use once it stays resident): `SQ_MAP` | 130 bytes | 164 (5Ch to FFh) | 34 bytes |
-| the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 50 names | 50 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
+| the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 56 names | 56 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -279,7 +282,8 @@ passes' steps, each verified in the game, are in the logs of [2026-11-08](https:
 [2026-11-09](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md),
 [2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md),
 [2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md)
-and [the fifth, also 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md).
+[the fifth, also 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)
+and [the sixth, 2026-11-23](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-23-memory-pass-6.md).
 
 ### DSCLOG's segment
 
@@ -337,11 +341,17 @@ leaves. The ways to free the segment:
   `fs:`);
 - **code written once**: shared by many handlers (`OVR_BACK`, the way back
   through the overlay manager's frame; `SHEET_CLASSES`; `ES_THINGS`, the things' segment in ES;
-  `SHEET_OF_AX`, a sheet by its number; `CREATURE_SHEET` / `CREATURE_SHEET_AX`, a creature's
+  `SHEET_OF_AX`, a sheet by its number; `GAME_FAR`, a far call into the game in 8 bytes (the
+  macro: `push cs / call far_game` and two words, DS's distance to the segment and the offset; use
+  it rather than a far pointer of the routine's own, unless the pointer is set elsewhere);
+  `FRAME_UP` and `FRAME_DOWN`, an interrupt's frame a word up (an "add sp,2" the INT stands for,
+  `BOX_POP4/6/10`) or down (room for a word the game's code after the INT pops); `OVR_FRAME`, a
+  handler's frame the overlay manager can fix up, after its PUSHAD and PUSH ES; `CREATURE_SHEET` / `CREATURE_SHEET_AX`, a creature's
   sheet; `NS_FLAGS_IRET`, a site's way back with AX's flags in its frame; `FINE_ITEM`, the Fine
   Bow's name look-up: use them rather than writing the instructions out again; the sites after
   `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
-  tables packed (the rings' outlines a quarter each, mirrored by
+  tables packed (the extra item types, each as the earlier one it is most like and the bytes
+  that differ, `XTYPE`, unpacked by `PROBE_TYPES_FILL`; the rings' outlines a quarter each, mirrored by
   `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names
   NUL-terminated);
 - **the Loader's files**: text the game reads from RESOURCE.GFF belongs in the

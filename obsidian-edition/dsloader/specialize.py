@@ -190,8 +190,10 @@ def attacks(halves: int, level: int, missile: bool = False) -> int:
 
 # A specialist's rate of fire (in halves) by kind, at specialist levels 1-6, 7-12 and 13 on
 # (DSCLOG's MISSILE_RATE): AD&D's for the sling; the bow, staff sling and chatkcha (AD&D's other
-# thrown weapons) a step above AD&D's
-MISSILE_RATES = {"bow": (6, 8, 10), "sling": (3, 4, 5), "staff sling": (3, 4, 5), "chatkcha": (3, 4, 5)}
+# thrown weapons) a step above AD&D's; Wake of the Ravager's javelin AD&D's (an other thrown weapon),
+# its darts AD&D's one more a round than the weapon's own (the mod's two a round: 3, 4, 5)
+MISSILE_RATES = {"bow": (6, 8, 10), "sling": (3, 4, 5), "staff sling": (3, 4, 5), "chatkcha": (3, 4, 5),
+                 "javelin": (3, 4, 5), "darts": (6, 8, 10)}
 
 
 def warrior_level(sheet: bytes) -> int:

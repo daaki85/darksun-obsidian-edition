@@ -69,12 +69,25 @@ Releases, newest first (2.12.0 and older in the archive):
 - Their traits, for a specialist: the lotulis' and double spear's last swing of a round goes to a
   second foe beside the wielder (the double spear's for 1 less), and a trikal hit trips a man-sized
   foe that fails a save against paralysis, which loses its next turn.
+- The trikal reaches two squares, as a polearm does; a specialist throws the javelin (3/2, 2, 5/2
+  a round by level) and darts (3, 4, 5) faster, as for the other missile weapons; and people of the
+  like carry the new weapons: the arena's gladiators, one of Scar's henchmen, the Drajian Guards, a
+  Templar in the pens, the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and
+  Elite Guards, and the pens' weapon rack.
+- The sequel's Darts +1, with a shining icon of its own, thrown by the defiler among the arena's
+  champions.
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
   features page, the player's guide, Items and the dice log page have the new weapons and traits.
 
 **Dev**
+- The sixth memory pass: 1,104 bytes of upper memory back for DSCLOG (32 were left with the six
+  weapons; 1,136 now) and 688 of its segment, by one far call into the game for 35 sites
+  (`GAME_FAR`), shared code moving an interrupt's frame (`FRAME_UP`, `FRAME_DOWN`, `OVR_FRAME`) and
+  the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
+  through the install's vector table; `test_framecode` runs the shared routines. A play log:
+  [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
 

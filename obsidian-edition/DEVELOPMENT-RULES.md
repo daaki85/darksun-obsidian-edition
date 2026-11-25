@@ -751,7 +751,8 @@ does the MOV, then, with the rule, makes a result of 2 a 1 when all three hold:
 - **The attacker's hands hold a polearm and no other weapon** (`REACH_HANDS`): its creature
   (`COMBATANT_CREATURE`), its three item lists (+08h, +0Ah, +0Ch), each item's slot (+11h): in the
   right hand (3) or the left (10), a type `kind_of_type` makes a polearm (10, the kind + 1: the
-  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) counts one, any other
+  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) or a trikal (`TRIKAL_KIND`,
+  20: `game.TRIKAL_TYPE`, Wake of the Ravager's, a polearm with three blades) counts one, any other
   type with a weapon flag (its +00h's 1 melee or 2 missile, `restrict.is_weapon`) one other weapon.
   Reach is one polearm and no other: a shield (flag 4) or nothing beside it. The missile slot (2) and
   the backpack aren't hands.
@@ -1368,9 +1369,10 @@ weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
 `SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name with the
 routine the powers' handler names a power with (85CC9h, which rubs out the
 lines it drew before), or the title again off the slots. A missile weapon's
-attacks a round are its item type's (+0Bh, in halves: a bow 4, the rest 2),
+attacks a round are its item type's (+0Bh, in halves: a bow and darts 4, the rest 2),
 not the character's (sheet +2Ah) as in melee; `INT D1h` raises them to a
-specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level; a
+specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level, by kind:
+the chatkcha, bow, sling and staff sling, kinds 13-16, and the javelin and darts, 21-22, `MISSILE_RAV`; a
 grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`). Every ranger's expertise with the bow is in
