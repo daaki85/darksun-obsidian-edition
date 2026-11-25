@@ -28,7 +28,7 @@ COPIES table), so the game folder is never written to."""
 
 import os
 import struct
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from . import game, gamepatch, gff
 from .gamepatch import Patch
@@ -102,6 +102,9 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
+# and the mod's Bone Helm (its type the Loader's for SL's 117, which only it has: AC 1 with RULE_HELMS too,
+# DSCLOG2's BONE_HELM_TYPE; Shattered Lands' DSCLOG HELM_BONE)
+BONE_HELM_TYPE = 104  # (mod_type(117): GAME_TYPES + 117 - 115)
 # the XP table's reads (its "imul eax,eax,64h": XP_NEED's sites, 3 bytes on)
 XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
@@ -1233,9 +1236,12 @@ def mod_types_table(types: bytes) -> bytes:
     return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
-def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None) -> Tuple[bytes, List[str]]:
+def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
+                  gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
-    and ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is."""
+    ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
+    the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
+    them) unless "new_items" is (or the mod's types are left out: they are its types)."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1249,6 +1255,10 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")
+    if gear and "new_items" not in skip and "mod_types" not in skip:
+        made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
+        new.update({k: v for k, v in made.items() if k not in new})
+        done.append("new_items")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -1351,11 +1361,14 @@ def read_added(dos_dir: str) -> gff.Chunks:
         return {}
 
 
-def write_objects(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """OBJEX.GFF's copy with the mod's item types and the party transfer's objects (beside DEST),
-    written to DEST unless already so."""
+def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[str] = None) -> List[str]:
+    """OBJEX.GFF's copy with the mod's item types, the party transfer's objects (beside DEST) and, with
+    SL_DIR (Shattered Lands' folder: their pictures are its), the mod's new items (ravgear), written to
+    DEST unless already so."""
+    from . import ravgear
     added = read_added(os.path.dirname(dest))
-    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added), skip)
+    gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
@@ -1365,23 +1378,25 @@ def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
 
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
-    (as for Shattered Lands, gamepatch.SPELLS_MANUAL) and spells kept on the Effects screen
-    (gamepatch.EFFECTS_KEPT)."""
+    (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
+    (gamepatch.EFFECTS_KEPT) and the new items (Shattered Lands' switch, "new_items": ravgear's)."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
+    items = settings.get("new_items", True) is not False
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
-        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT))
+        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"})
 
 
-def prepare(game_dir: str, dos_dir: str, settings: dict) -> Optional[str]:
-    """Write DSUNLOG2.EXE and the RESOURCE.GFF, GPLDATA.GFF and OBJEX.GFF copies into DOS_DIR. Returns why the game can't be
+def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:
+    """Write DSUNLOG2.EXE and the RESOURCE.GFF, GPLDATA.GFF and OBJEX.GFF copies into DOS_DIR (the mod's new
+    items in OBJEX.GFF's with Shattered Lands' folder SL_DIR, their pictures'). Returns why the game can't be
     patched, or None."""
     skip = skipped(settings)
     try:
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
         write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
-        write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip)
+        write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip, sl_dir)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
         return str(e)
     return None

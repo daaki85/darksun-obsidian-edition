@@ -935,6 +935,26 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   pixels are screen pixels from the camera (DS:1408h). Inside a building with its roof cut away the
   leader can be hidden behind the roof's edge. The area map (game menu) shows a marker that doesn't
   follow the party.
+- **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
+  159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
+  lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives
+  10000 experience points!" (Return x4 for the level lines). Everything from OBJEX.GFF (the Loader's new
+  items, `dsloader/ravgear.py`) shows only so: a save keeps the people and things it has made.
+  **Shadow Square from there** (`ravgo.py y 1224 x 560 y 1130 x 420 y 1000 x 300 y 900`, about 2 minutes):
+  a ranged-weapon stall blocks y 1224 at x 536 (its seller in front of it talks: 1 opens the shop: the
+  Limbo seller 323, thing 16), Notaku's stall north of the end. **The pointer** over bare ground shows
+  its barred form (an orange ring: the sword's, then the eye's); right-clicks go arrow, sword, look, so
+  take a picture of it before a click on a person: **the sword on Notaku started a fight**. With the eye on
+  him the Look box's first button (left, about game 181,66 when the box is beside him) talks.
+- **Item names 256 on** (the mod's, DSCLOG2's ITEM_NAMES) are written by the dice log as it attaches:
+  without `ravdice.py` running a mod-named item shows another word ("METAL" for the Short Sword).
+- **Objects 13000-13999 draw another picture** (a grey ring) whatever their BMP: the Loader's pictures sit
+  at 14000-29999 (`ravitems.own_object`, `ravgear.OWN_ICONS` 19900). **Palette numbers 1-15** are set by the
+  inventory and shop screens (PAL 1000's 2, a light blue, showed pure blue there): `ravitems.stable_colours`
+  leaves them out.
+- **Every item record from a map** (the far DS:19C1h, 17h each, as `ravshop.py` reads them): a scan for
+  entities -14000 to -29999 lists the Loader's items loaded in the region (Tyr in a new game: Short Sword
+  +1 and +2, Great Axe +1, the metal mace, dagger, pick and polearm).
 - **Tyr from the save**: the street runs north-south at x ~1175; its south end is the city gate ("The
   gates are locked."). Uhubito's building east of it (door on the street, y ~1340); an alley east at
   y ~1225 (entered from the street at y ~1225-1240), past Arslan's side and the beggar, along the

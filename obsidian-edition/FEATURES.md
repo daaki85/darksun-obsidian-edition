@@ -1289,6 +1289,36 @@ power) goes into the merchant's pack, offered at its price less the CHA discount
 anything else is gone. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
 
+### Magic weapons for every spec, and the mod's gear
+
+Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
+staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
+and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
+daggers, maces, axes, great axes, picks, polearms, cahulaks and the Bone Helm) in the sequel's shops,
+on its people and in its chests. Pictures are Shattered Lands', from your copy; the magic ones have a
+few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
+
+| Item | Where |
+|---|---|
+| Short Sword +1 | Notaku's stall, Tyr |
+| Short Sword +2 | a Draxan in Tyr |
+| Short Sword +3 | a body in the Crypt |
+| Pick +1 | the receptionist who sells picks |
+| Pick +2 | a crate in the third mine level |
+| Pick +3 | the silt giants' leader |
+| Great Axe +1 | a Draxan in Tyr |
+| Great Axe +2 | a Draxan in the Pyramid |
+| Cahulaks +1 | Alhena, the Jann's lands |
+| Cahulaks +2 | the Runner, the Yuan-ti tunnels |
+| Polearm +1 | a guard at the Veiled Alliance's headquarters |
+| Polearm +2 | a Draxan, the third volcano level |
+| Staff Sling +1 | the ranged-weapon stall, Tyr |
+| Staff Sling +2 | Sureshot, in the forest |
+
+The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. Only a
+new game has them: a saved game keeps the people and things it has made. The Bone Helm gives AC 1
+with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
+
 ### Improved thieving
 
 Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
