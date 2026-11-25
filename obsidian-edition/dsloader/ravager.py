@@ -97,7 +97,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
-                | game.RULE_SPECIALIZE)
+                | game.RULE_SPECIALIZE | game.RULE_KITS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -547,6 +547,10 @@ PATCHES: Tuple[Patch, ...] = (
     # and the THAC0 the skill's (DSCLOG2's SPEC_ATTACKS), and DSCLOG2's SPEC_DAMAGE (site 51) adds its
     # damage where the attack adds the strength bonus to the weapon's ("add [bp-14h],ax", 5CF6Dh, SL's 588F2h)
     Patch("spec_damage", 0x5CF6D, bytes.fromhex("0146ec"), _site(51, 3)),
+    # Kits (SL's RULE_KITS, the transferred party's kits at the sheet's +3Dh): DSCLOG2's KIT_INIT (site 60)
+    # at "add dx,14h" where a combatant's initiative for the round is made (5B7E9h, SL's PROBE_INIT site
+    # 5750Eh: SI the creature); the rest of the kits' rules at the sites above (DSCLOG2's KITS)
+    Patch("kit_initiative", 0x5B7E9, bytes.fromhex("83c214"), _site(60, 3)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

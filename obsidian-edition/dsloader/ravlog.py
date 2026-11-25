@@ -182,6 +182,13 @@ def layout() -> Dict[str, int]:
 # the panel's stone and well; 240-253 greys), the same in Tyr's street and in the Roost (2026-11-21).
 PALETTE_LAST = 253
 
+# The kits' saves in the sequel's spell numbers (DSCLOG2's KIT_CHARMS and PROT_SPELL_LAST): a Myrmidon's
+# charms (Charm Person, Charm Monster, Dominate, Mass Charm, Charm Mammal, the psionic Domination and Mass
+# Domination; RESOURCE.GFF's names) and a Sentinel's spells (the wizards' and priests', its psionic powers
+# EBh on)
+RAV_CHARMS = (2, 39, 61, 94, 131, 255, 256)
+RAV_SPELL_LAST = 0xEA
+
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
@@ -216,6 +223,10 @@ def apply_layout() -> int:
                         ("CONJURED_KINDS", ravager.rav_spec_kinds())):
         _SAVED.append((specialize, name, getattr(specialize, name)))
         setattr(specialize, name, value)
+    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh)
+    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)):
+        _SAVED.append((kits, name, getattr(kits, name)))
+        setattr(kits, name, value)
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -587,6 +598,7 @@ class RavGameData(game.GameData):
         return f"item {name_index}"
 
 
+KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from the header's +350 (DSCLOG's)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
@@ -777,6 +789,15 @@ class RavDiceLog(dicelog.DiceLog):
         if self._label_slots() is not None:
             super()._float(thing, text, colour, now, priority)
 
+    def _kit_tick(self, now: float) -> None:
+        """SL's (KIT_OUTDOORS, the dances and Wild Fighting ended with a fight), DSCLOG2's header bytes
+        for them (+350 to +355, as DSCLOG's: its KITS) made writable while the kits are on."""
+        if self.tsr_hdr is not None and self.game is not None and self.game.rules & game.RULE_KITS:
+            kit_bytes = (self.tsr_hdr + dicelog.TSR_KIT_OUTDOORS, KIT_HEADER_BYTES)
+            if kit_bytes not in self.guest.writable:
+                self.guest.writable = self.guest.writable + [kit_bytes]
+        super()._kit_tick(now)
+
     def _write_slots(self) -> None:
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
@@ -789,6 +810,7 @@ class RavDiceLog(dicelog.DiceLog):
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
         (_learn_lines) and the combat log's panel (_panel_pass): the rest reads and writes what isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
+        self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
         if self.monster_info:  # (the Look box: answered at once, the game waits for it)
             self.set_monster_info(True)
             out += self._step(self._answer_look)

@@ -203,13 +203,24 @@ panel_hy   dw 0                 ; +342   y
 panel_top  dw PANEL_Y0          ; +344 the Loader's: the panel's top on the screen and its height
 panel_rows dw PANEL_H           ; +346   (at most PANEL_H_MOST), set before PANEL_NEW
 panel_keys dw 0                 ; +348 L pressed on the map with the panel shown (or to open it), counted
-        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +350 to +1833: none of them here yet, zero)
+kit_outdoors db 0               ; +350 the Loader sets bit N while party member N stands under the open
+                                ;      sky (stealth.daylight: the Military Scout's to hit, skills and
+                                ;      initiative; KITS)
+kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance, the Loader's (dance.py):
+                                ;      +1 danced well, -1 stumbled, 0 none; to hit, damage and AC
+kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py): bit N party member N fights
+                                ;      wild (3 worse to hit, AC 3 worse), bit N + 4 its check passed too
+                                ;      (1 more attack a round in melee, 3 more damage)
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +356 to +1833: none of them here yet, zero)
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
 big_off  dw 0                   ; +1840 (DSCLOG's BIG, the cahulaks' too-big list: none here, the Loader's LARGE_BITS serve)
 large_off dw large_bits         ; +1842 offset of LARGE_BITS there: the Loader's, a bit per combatant large or bigger
                                 ;      (sizes.Large, by name and race: the creature size rule, IS_LARGE)
+        times 1862 - ($ - hdr) db 0 ; (DSCLOG's fields +1844 to +1861: none of them here yet, zero)
+bad_luck db 0                   ; +1862 a Swashbuckler's bad luck as KIT_SKILL last rolled it (0-25) ...
+bad_luck_who dw 0               ; +1863 ... and whose (the creature), for the dice log (kits.TSR_BAD_LUCK)
         times HDR_SIZE - ($ - hdr) db 0  ; (the rest of DSCLOG's header, to its last field: zero, so
                                 ;   whatever the Loader reads of it is a defined 0, never this helper's code)
 wall_shadows dw 1               ; +1872 (DSCLOG2's own, past DSCLOG's header) 1: the walls cast shadows on
@@ -420,7 +431,7 @@ probe_save:
 
 ; INT VEC_AC replaces "mov ax,[bp-4] / add ax,[bp-6]" (6 bytes) at the AC function's end (5D6E6h):
 ; the AC the attack uses recorded, kind 2 (DSCLOG's PROBE_AC without its features' changes, which
-; aren't ported yet), and left in AX as the game's code would.
+; aren't ported yet, but for the kits': KIT_AC), and left in AX as the game's code would.
 probe_ac:
         sti
         push si
@@ -429,6 +440,7 @@ probe_ac:
         mov word [cs:extra], 0
         mov ax, [bp-4]
         add ax, [bp-6]
+        call kit_ac             ; (the kits' AC: KITS)
         mov word [cs:kind], 2
         call record
         pop si
@@ -496,7 +508,8 @@ missile_rear:
         mov byte [bp - 0x19], 0
         add word [bp - 0x1E], 2
         inc word [cs:rear_taken]
-.out:   call item_rear                  ; (the girdles: ITEM_REAR)
+.out:   call kit_rear                   ; (the kits': KITS)
+        call item_rear                  ; (the girdles: ITEM_REAR)
         call thief_rear                 ; (class restrictions: no backstab in heavy armour)
         mov al, [bp - 0x19]
         iret
@@ -3026,6 +3039,8 @@ site_int:
         pop bp
         jmp [cs:site_jump]
 site_jump dw 0
+site_none:
+        iret
 site_table:
         dw stink_round                      ; 0 SITE_STINK
         dw hd_save                          ; 1 SITE_HD_SAVE
@@ -3079,6 +3094,8 @@ site_table:
         dw plain_arrow                      ; 49 SITE_PLAIN_ARROW (a spell arrow shot by a non-preserver: no spell)
         dw new_sheet                        ; 50 SITE_NEW_SHEET (a character made: its sheet's last 6 bytes cleared)
         dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
+        times 60 - ($ - site_table) / 2 dw site_none ; (52-59: none yet, another port's to take)
+        dw kit_init                         ; 60 SITE_KIT_INIT (a combatant's initiative: the kits')
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -5045,6 +5062,7 @@ cu_site:
 belt_site:
         sti
         mov ax, si
+        call kit_skill                  ; (the kits': KITS)
         test word [cs:rules], RULE_RESTRICT
         jz .pop
         push ax
@@ -6572,6 +6590,9 @@ probe_two:
         xor dx, dx
         jmp .out
 .hand:  mov [cs:two_base], dx
+        call kit_two                    ; (the kits': KITS)
+        mov dx, 0
+        jc .out
         mov al, ah
         mov bx, [bp - 2]
         call melee_in
@@ -6589,7 +6610,9 @@ probe_two:
         iret
 off_hand:
         mov ah, 0
+        call kit_attacks                ; (the kits' to hit: KITS)
         call spec_attacks               ; (weapon specialization: the skill's rate and THAC0)
+        call kit_wild_more              ; (Wild Fighting passed: one more in melee)
         call cah_more                   ; (the cahulaks: the off head's one more a round)
         test word [cs:rules], RULE_TWO_WEAPONS
         jz .store
@@ -6684,8 +6707,8 @@ off_count   dw 0                ; (off-hand attacks cut so)
 ; - SPEC_DAMAGE (site 51 at 5CF6Dh, "add [bp-14h],ax", the strength bonus added; SL's 588F2h,
 ;   PROBE_SPEC_DAMAGE): specialization +2, mastery +3, grand mastery the dice the next greater die size
 ;   (NEXT_DIE), against a large target too (SIZE_DICE: SPEC_GRAND_DIE).
-; SL's kits' parts (a Battle Mage's, Crusader's, Mind Warrior's expertise, a Justifier's, a Myrmidon's
-; second kind, a Seeker's bow) wait for the kits' rules: the sequel's helper has none yet.
+; The kits' parts (a Battle Mage's, Crusader's, Mind Warrior's expertise, a Justifier's, a Myrmidon's
+; second kind, a Seeker's bow): SPEC_OF_SHEET and EXPERT_HALVES, with the kits' rules (KITS).
 RULE_SPECIALIZE equ 4096
 SPEC_SLOTS  equ 0x42            ; (the Loader's 48h sheet: SL's +14h..+16h there, +45h spare, 0)
 SPEC_COUNT  equ 4
@@ -6710,7 +6733,10 @@ spec_attacks:                   ; AX the attacks a round (halves): made the skil
         cmp word [bp + 0x16], 1
         jg .missile
         cmp ax, 2
-        jbe .hit                ; (not a warrior: the game's)
+        ja .warrior
+        call expert_of          ; (not a warrior: the game's, or a kit's expertise, EXPERT_HALVES)
+        jmp .hit
+.warrior:
         cmp dl, SPEC_PLAIN
         jne .grand
         dec ax
@@ -6748,8 +6774,9 @@ spec_attacks:                   ; AX the attacks a round (halves): made the skil
 .three: sub word [bp + 0x0A], 3
 .done:  pop dx
 .ret:   ret
-spec_damage:                    ; (site 51) the strength bonus added, and the skill's
+spec_damage:                    ; (site 51) the strength bonus added, the kits' and the skill's
         add [bp - 0x14], ax
+        call kit_damage
         test word [cs:rules], RULE_SPECIALIZE
         jz .ret
         push dx
@@ -6823,22 +6850,43 @@ spec_of:
         ret
 
 ; SPEC_OF_SHEET: DL the skill with item type SI of the character whose sheet is at ES:BX (DSCLOG's, on
-; the sequel's sheet: the race +12h, the classes +1Bh, their levels +1Eh; no kits): SPEC_NONE (no kinds
-; chosen), SPEC_PLAIN (not this kind; a dual-classed warrior whose warrior class isn't back yet),
-; SPEC_EXPERT (a ranger's, with no fighter or gladiator class; and every ranger's with the bow, chosen
-; or not), SPEC_SPECIAL, SPEC_MASTER (a fighter's own kind, the first, from 5th level), SPEC_GRAND (9th).
-; Others kept.
+; the sequel's sheet: the race +12h, the classes +1Bh, their levels +1Eh): SPEC_NONE (no kinds chosen),
+; SPEC_PLAIN (not this kind; a dual-classed warrior whose warrior class isn't back yet), SPEC_EXPERT (a
+; ranger's, with no fighter or gladiator class; and every ranger's with the bow, chosen or not, but a
+; Seeker's), SPEC_SPECIAL, SPEC_MASTER (a fighter's own kind, the first, from 5th level; a Myrmidon's
+; second too), SPEC_GRAND (9th). With the kits (KITS): a Battle Mage's, Crusader's or Mind Warrior's
+; chosen kind SPEC_EXPERT; a Justifier's expertise SPEC_SPECIAL. Others kept.
 spec_of_sheet:
         push ax
         push cx
         push si
         mov dl, SPEC_NONE
         call spec_any
-        jz .out
+        jz .ret
+        mov al, KIT_BATTLE_MAGE ; (a Battle Mage who has changed class: its weapon spec the kit's
+        call kit_has            ; alone, nothing while it sleeps, expertise when awake)
+        jne .kinds
+        cmp word [es:bx + SH_CLASSES + 1], 0
+        je .kinds
+        call kit_is
+        mov dl, SPEC_NONE
+        jne .out
         mov dl, SPEC_PLAIN
         call spec_kind
+        push ax
+        push si
+        xor si, si
+        call spec_get
+        cmp cl, al
+        pop si
+        pop ax
+        jne .out
+        mov dl, SPEC_EXPERT
+        jmp .out
+.kinds: mov dl, SPEC_PLAIN
+        call spec_kind
         or cl, cl
-        jz .out
+        jz .ret
         xor si, si
 .slot:  call spec_get
         cmp al, cl
@@ -6846,8 +6894,11 @@ spec_of_sheet:
         inc si
         cmp si, SPEC_COUNT
         jb .slot
-        cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same)
-        jne .out
+        cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same, but a Seeker's)
+        jne .ret
+        call kit_is_b
+        db KIT_SEEKER
+        je .ret
         xor si, si
 .rbow:  mov al, [es:bx + si + SH_CLASSES]
         or si, si               ; (a human's earlier classes once the first's level has passed theirs)
@@ -6862,11 +6913,12 @@ spec_of_sheet:
         cmp al, 16
         ja .rnext
         mov dl, SPEC_EXPERT
-        jmp .out
+        jmp .out                ; (expertise, a Justifier's too: its chosen weapon spec's alone
+                                ;   becomes specialization)
 .rnext: inc si
         cmp si, 3
         jb .rbow
-        jmp .out
+        jmp .ret
 .found: mov dl, SPEC_EXPERT
         xor ax, ax              ; AH a fighter or gladiator, AL any warrior, CH the fighter level
         xor ch, ch
@@ -6902,19 +6954,38 @@ spec_of_sheet:
         or al, al
         jnz .warrior
         mov dl, SPEC_PLAIN      ; (a warrior class not back yet)
-        jmp .out
+        call kit_is_b           ; (a Battle Mage's expertise, a Crusader's, a Mind Warrior's)
+        db KIT_BATTLE_MAGE
+        je .expert
+        call war_kit_is
+        jne .ret
+.expert:
+        mov dl, SPEC_EXPERT
+        jmp .ret
 .warrior:
         or ah, ah
-        jz .out                 ; (a ranger's: expertise)
+        jz .ret                 ; (a ranger's: expertise)
         mov dl, SPEC_SPECIAL
         or si, si
-        jnz .out                ; (a fighter's first kind goes on to mastery)
+        jz .master              ; (a fighter's first kind goes on to mastery)
+        cmp si, 1               ; (a Myrmidon's second kind too)
+        jne .ret
+        call kit_is_b
+        db KIT_MYRMIDON
+        jne .ret
+.master:
         cmp ch, MASTERY
-        jb .out
+        jb .ret
         mov dl, SPEC_MASTER
         cmp ch, GRAND_MASTERY
-        jb .out
+        jb .ret
         mov dl, SPEC_GRAND
+.ret:   cmp dl, SPEC_EXPERT     ; (a Justifier's expertise with its chosen weapon spec: specialization)
+        jne .out
+        call kit_is_b
+        db KIT_JUSTIFIER
+        jne .out
+        mov dl, SPEC_SPECIAL
 .out:   pop si
         pop cx
         pop ax
@@ -7102,6 +7173,1103 @@ next_die:
         ret
 die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
 die_sizes_end:
+
+; ---- KITS: DSCLOG's RULE_KITS (rules_hi bit 0: dsloader/kits.py, kitpages.py) in the sequel ----
+; The transferred party keeps its kits (the transfer's sheet +3Dh, SL's +43h: KIT_BYTE, two bits for
+; each class place, 40h OWN_BIT, 80h Friends known). Their rules, as DSCLOG's (DEVELOPMENT-KITS.md, Where
+; each effect goes), at the sequel's sites:
+; - AC (KIT_AC, from PROBE_AC: the AC function's end, 5D6E6h, SL's 58F8Dh; its [BP+6] the combatant);
+; - to hit (KIT_ATTACKS, from OFF_HAND at the attacks' store, 5CEE8h, SL's PROBE_ATTACKS: KIT_TO_HIT,
+;   WAR_HIT, KIT_EXTRA off the THAC0 [BP+0Ah]) and the attacks a round (EXPERT_HALVES from SPEC_ATTACKS;
+;   Wild Fighting's one more, KIT_WILD_MORE); damage (KIT_DAMAGE, from SPEC_DAMAGE, site 51: SL's
+;   PROBE_SPEC_DAMAGE's KIT_ATTACK_DAMAGE, KIT_EXTRA, WILD_PASSED; the bonus the sequel's [BP-14h]);
+; - the weapon specs' kit parts (SPEC_OF_SHEET: a Battle Mage's, Crusader's, Mind Warrior's expertise,
+;   a Justifier's made specialization, a Myrmidon's second kind on to mastery, a Seeker's bow none);
+; - saves (KIT_SAVE, from PROT_SAVE, site 44: SL's PROBE_RING_SAVE's), thief skills (KIT_SKILL and a
+;   Swashbuckler's bad luck, from BELT_SITE, site 20: SL's PROBE_BELT), from behind and backstab
+;   (KIT_REAR, from MISSILE_REAR: SL's PROBE_STEALTH's), movement (KIT_MOVE, from CAH_MOVE: SL's
+;   PROBE_MOVE), the two-weapon penalty (KIT_TWO, from PROBE_TWO), initiative (KIT_INIT, site 60 at
+;   5B7E9h, SL's PROBE_INIT at 5750Eh).
+; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
+; (+355), BAD_LUCK (+1862). Not here (yet): spell slots, casting levels, PSP costs, cures, a spell's
+; damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the Effects lines.
+RULE_HI_KITS equ 1
+KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
+KIT_OPEN     equ 0xFF
+SH_BASE_AC   equ 0x21               ; (SL's +27h)
+CR_THAC0     equ 0x16               ; (a creature's THAC0: SL's +1Fh)
+CR_STATUS    equ 0x14               ; (... its status, 0 New, 1 Okay: SL's +1Ch)
+MULTI_FIRST  equ 9
+KIT_HEALER   equ 6
+KIT_CRUSADER equ 7
+KIT_GROVE_WARDEN equ 9
+KIT_WANDERER equ 11
+KIT_MYRMIDON equ 13
+KIT_SENTINEL equ 14
+KIT_RAVAGER  equ 15
+KIT_CHAMPION equ 17
+KIT_TWIN_BLADE equ 18
+KIT_BRUTE    equ 19
+KIT_BATTLE_MAGE equ 22
+KIT_MIND_WARRIOR equ 26
+KIT_STALKER  equ 29
+KIT_JUSTIFIER equ 30
+KIT_SEEKER   equ 31
+KIT_SWASHBUCKLER equ 33
+KIT_ASSASSIN equ 34
+KIT_BATTLE_DANCER equ 37
+KIT_SHADOWBLADE equ 41
+KIT_SCOUT    equ 42
+KIT_AVENGER  equ 45
+KIT_RESCUER  equ 49
+KIT_GHETTO   equ 53
+KIT_WAYFINDER equ 54
+KIT_WILD_FURY equ 77
+KT_MISSILE   equ 0x02               ; (an item type's +0: a missile weapon; +0Bh 40h two-handed, TYPE_FLAGS)
+DAGGER_KIND  equ 2
+
+; KIT_IS: ZF set if sheet ES:BX has kit AL (the creation screen's class x 4 + the kit, kitpages.kit_ids)
+; awake (KIT_AWAKE), KIT_WHERE then its class's place (KIT_LEVEL, KIT_CLASS_OF_SHEET); ZF clear if not.
+; KIT_HAS: the same, asleep too. All registers kept. (DSCLOG's, the sequel's sheet.)
+kit_is:
+        push si
+        mov si, 1
+        jmp kit_find
+kit_has:
+        push si
+        xor si, si
+kit_find:
+        push di
+        push cx
+        mov ch, al
+        call kit_place          ; (DI the oldest class's place)
+        jc .no
+.place: call kit_at
+        cmp al, ch
+        jne .next
+        or si, si
+        jz .yes
+        call kit_awake
+        jnc .yes
+.next:  dec di
+        jns .place
+.no:    mov al, ch
+        or ch, 1                ; (ZF clear)
+        jmp .out
+.yes:   mov [cs:kit_where], di
+        cmp al, al              ; (ZF set)
+.out:   pop cx
+        pop di
+        pop si
+        ret
+kit_where dw 0
+
+; KIT_AT: AL the kit of the class at place DI (0-2) of sheet ES:BX, ZF clear; 0 and ZF set for none.
+; Others kept.
+kit_at:
+        push cx
+        push di
+        xor cl, cl
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .out
+        mov cx, di
+        call kit_place
+        jc .none
+        xchg cx, di             ; (CX the oldest's place, DI the one asked for)
+        sub cx, di
+        jb .none
+        shl cl, 1
+        mov ch, [es:bx + KIT_BYTE]
+        cmp ch, KIT_OPEN
+        je .none
+        shr ch, cl
+        and ch, 3
+        jz .none
+        dec ch
+        push ax                 ; (two classes at once: their multiclass group's kit, one it has)
+        call multi_group
+        mov cl, al
+        pop ax
+        or cl, cl
+        jz .class
+        movzx di, cl
+        cmp ch, [cs:di + multi_count - MULTI_FIRST]
+        jae .none
+        jmp .kit
+.class: movzx di, byte [es:bx + di + SH_CLASSES]  ; (its class, 1-17)
+        dec di
+        cmp di, 16
+        ja .none
+        mov cl, [cs:di + kit_class_of]
+.kit:   shl cl, 2
+        add cl, ch
+        inc cl
+        jmp .out
+.none:  xor cl, cl
+.out:   mov al, cl
+        pop di
+        pop cx
+        or al, al
+        ret
+
+; KIT_PLACE: DI the place (0-2) of the class sheet ES:BX's kit was chosen with: 0 for one class; a human
+; who has changed class, its first (the last of its classes); 0 for a multiclass group's. CF set for
+; more than one class otherwise. Others kept.
+kit_place:
+        xor di, di
+        cmp word [es:bx + SH_CLASSES + 1], 0
+        je .ok
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .multi
+        inc di
+        cmp byte [es:bx + SH_CLASSES + 2], 0
+        je .ok
+        inc di
+.ok:    clc
+        ret
+.multi: push ax
+        call multi_group
+        or al, al
+        pop ax
+        jnz .ok
+        stc
+        ret
+
+; KIT_AWAKE: CF set if the kit of sheet ES:BX, its class at place DI, sleeps (a human's first class
+; until the class it has now is of a higher level). Others kept.
+kit_awake:
+        or di, di
+        jz .yes
+        push ax
+        mov al, [es:bx + di + SH_LEVELS]
+        cmp [es:bx + SH_LEVELS], al
+        pop ax
+        ja .yes
+        stc
+        ret
+.yes:   clc
+        ret
+
+; KIT_LEVEL: AL the level of the class of the kit KIT_IS last found (KIT_WHERE) on sheet ES:BX.
+kit_level:
+        push di
+        mov di, [cs:kit_where]
+        mov al, [es:bx + di + SH_LEVELS]
+        pop di
+        ret
+
+; MULTI_GROUP: AL the multiclass group (9-19, kitpages.MULTI) of sheet ES:BX: two or three classes at
+; once, not a human's, its race and classes one of MULTI_TABLE's; else 0. Others kept.
+multi_group:
+        push cx
+        push dx
+        push si
+        push di
+        xor al, al
+        xor dx, dx              ; DX the classes' bits (1 shl the creation class)
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        je .out
+        mov di, SH_CLASSES
+.class: movzx cx, byte [es:bx + di]
+        cmp di, SH_CLASSES + 2
+        jne .any
+        jcxz .classes           ; (two classes: no third)
+.any:   dec cx
+        cmp cx, 16
+        ja .out                 ; (none: one class)
+        mov si, cx
+        mov cl, [cs:si + kit_class_of]
+        bts dx, cx
+        inc di
+        cmp di, SH_CLASSES + 3
+        jb .class
+.classes:
+        mov ch, [es:bx + SH_RACE]
+        mov si, multi_table
+        mov al, MULTI_FIRST
+.find:  cmp byte [cs:si], 0
+        je .none
+        cmp [cs:si], ch
+        jne .skip
+        cmp [cs:si + 1], dx
+        je .out
+.skip:  add si, 3
+        inc al
+        jmp .find
+.none:  xor al, al
+.out:   pop di
+        pop si
+        pop dx
+        pop cx
+        ret
+; (race, the classes' bits) by group from 9 (DSCLOG's MULTI_TABLE); each group's kits, how many
+multi_table db 3
+            dw (1 << 1) | (1 << 3)      ; elf cleric/fighter: Battle Dancer
+            db 4
+            dw (1 << 3) | (1 << 8)      ; half-elf fighter/thief: Shadowblade, Military Scout
+            db 4
+            dw (1 << 2) | (1 << 3)      ; half-elf druid/fighter: Wilderness Avenger
+            db 4
+            dw (1 << 1) | (1 << 7)      ; half-elf cleric/ranger: Rescuer
+            db 2
+            dw (1 << 3) | (1 << 8)      ; dwarf fighter/thief: Ghetto Fighter, Wayfinder
+            db 4
+            dw (1 << 3) | (1 << 5)      ; half-elf fighter/preserver: Spellarcher
+            db 5
+            dw (1 << 3) | (1 << 6)      ; half-giant fighter/psionicist: Titan Mind
+            db 6
+            dw (1 << 3) | (1 << 8)      ; halfling fighter/thief: Poisoner
+            db 6
+            dw (1 << 1) | (1 << 6)      ; halfling cleric/psionicist: Spirit Caller
+            db 8
+            dw (1 << 2) | (1 << 3) | (1 << 6)   ; thri-kreen druid/fighter/psionicist: Wasteland Seer
+            db 7
+            dw (1 << 2) | (1 << 3)      ; mul druid/fighter: Wild Fury
+            db 0
+multi_count  db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
+kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the creation screen's)
+
+; KIT_SHEET: ES:BX the sheet of creature AX (its record's +4). KIT_SHEET_AX: of sheet number AX.
+; All registers but ES:BX kept.
+kit_sheet:
+        push ax
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov ax, [es:bx + 4]
+        jmp kit_sheet_n
+kit_sheet_ax:
+        push ax
+kit_sheet_n:
+        imul ax, ax, SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        pop ax
+        ret
+
+; CR_IS: "call cr_is / db KIT_X": ZF set if creature AX has kit KIT_X awake (KIT_IS); KIT_IS_B the same
+; for sheet ES:BX. All registers kept.
+cr_is:
+        push bx
+        push es
+        call kit_sheet
+        call kit_is_b
+cr_is_back:
+        pop es
+        pop bx
+        ret
+kit_is_b:
+        push bp
+        mov bp, sp
+        push si
+        push ax
+        mov si, [bp + 2]
+        cmp si, cr_is_back      ; (from CR_IS: the byte after the call to it)
+        jne .byte
+        mov si, [bp + 8]
+        inc word [bp + 8]
+        jmp .is
+.byte:  inc word [bp + 2]
+.is:    mov al, [cs:si]
+        call kit_is
+        pop ax
+        pop si
+        pop bp
+        ret
+
+; KIT_AC: AX (the AC the AC function has for combatant [BP+6]) with the creature's kits' (kits.ac): a
+; Ravager's base AC by its level (RAVAGER_AC) where better than its sheet's; a Wanderer's 1 worse; a
+; Sentinel's 2 better with a shield in a hand, an Arena Champion's 1; a Grove Warden's 1 better for every
+; 3 druid levels; a Battle Dancer's dance (KIT_DANCE); a Wild Fury fighting wild (KIT_WILD's bit N) 3
+; worse, no worse than 10. Others kept.
+WILD_TO_HIT  equ 3
+WILD_DAMAGE  equ 3
+WILD_HALVES  equ 2
+WILD_AC      equ 3
+WILD_AC_MOST equ 10
+kit_ac:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push bx
+        push cx
+        push dx
+        push es
+        push ax
+        mov cx, ax
+        mov ax, [bp + 6]
+        call fighter_creature
+        jc .out
+        cmp ax, 3               ; (fighting wild: 3 worse, no worse than 10)
+        ja .sheet
+        bt word [cs:kit_wild], ax
+        jnc .sheet
+        cmp cx, WILD_AC_MOST
+        jge .sheet
+        add cx, WILD_AC
+        cmp cx, WILD_AC_MOST
+        jle .sheet
+        mov cx, WILD_AC_MOST
+.sheet: call kit_sheet
+        call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .wanderer
+        cmp ax, 3
+        ja .wanderer
+        push si
+        mov si, ax
+        movsx si, byte [cs:si + kit_dance]
+        sub cx, si
+        pop si
+.wanderer:
+        call kit_is_b
+        db KIT_WANDERER
+        jne .ravager
+        inc cx
+.ravager:
+        call kit_is_b
+        db KIT_RAVAGER
+        jne .warden
+        call kit_level
+        movzx ax, al
+        dec ax
+        jns .some               ; (level 0 as 1)
+        xor ax, ax
+.some:  cmp ax, RAVAGER_LEVELS - 1
+        jbe .level
+        mov ax, RAVAGER_LEVELS - 1
+.level: push si
+        mov si, ax
+        movsx dx, byte [cs:si + ravager_ac]
+        pop si
+        movsx ax, byte [es:bx + SH_BASE_AC]
+        sub ax, dx              ; (the sheet's base less the table's: what the table betters it by)
+        jle .warden
+        sub cx, ax
+.warden:
+        call kit_is_b
+        db KIT_GROVE_WARDEN
+        jne .sentinel
+        call kit_level
+        movzx ax, al
+        mov dl, 3
+        div dl
+        movzx ax, al
+        sub cx, ax
+.sentinel:
+        xor dx, dx              ; (a Sentinel's 2 with a shield, an Arena Champion's 1)
+        call kit_is_b
+        db KIT_SENTINEL
+        jne .champion
+        mov dl, 2
+.champion:
+        call kit_is_b
+        db KIT_CHAMPION
+        jne .shield
+        inc dx
+.shield:
+        or dx, dx
+        jz .done
+        push si
+        mov si, [bp + 6]
+        call prot_here
+        pop si
+        jc .done
+        test byte [cs:p_flags], P_SHIELD
+        jz .done
+        sub cx, dx
+.done:  pop ax
+        cmp ax, cx
+        je .same
+        inc word [cs:kit_acs]
+.same:  mov ax, cx
+        push ax
+.out:   pop ax
+        pop es
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+ravager_ac db 7, 7, 6, 6, 5, 5, 4, 4, 3, 3   ; (by level, 1-10)
+RAVAGER_LEVELS equ $ - ravager_ac
+
+; KIT_MELEE: AX what the kits of sheet ES:BX add to hit and to damage with item type SI unless it is a
+; missile weapon's: a Ravager's 1; a Brute's 2 with a two-handed weapon; a Ghetto Fighter's 1 with a
+; dagger (kits.melee). Others kept.
+kit_melee:
+        push bx
+        push cx
+        push es
+        xor cx, cx
+        call kit_is_b
+        db KIT_RAVAGER
+        jne .ghetto
+        inc cx
+.ghetto:
+        call kit_is_b
+        db KIT_GHETTO
+        jne .brute
+        cmp si, KIND_TYPES
+        jae .brute
+        cmp byte [cs:si + kind_of_type], DAGGER_KIND + 1
+        jne .brute
+        inc cx
+.brute: call kit_is_b
+        db KIT_BRUTE
+        mov ax, 0
+        jne .type
+        mov al, 2
+.type:  push ax
+        les bx, [TYPES_PTR]
+        imul ax, si, CU_TYPE_SIZE
+        add bx, ax
+        pop ax
+        test byte [es:bx], KT_MISSILE
+        jnz .none
+        test byte [es:bx + TYPE_FLAGS], TYPE_TWO_HANDED
+        jnz .sum
+        xor ax, ax
+.sum:   add ax, cx
+        jmp .out
+.none:  xor ax, ax
+.out:   pop es
+        pop cx
+        pop bx
+        ret
+
+; KIT_ATTACKS (from OFF_HAND, before the skill's: SL's PROBE_ATTACKS' kit part): the THAC0 the d20 is
+; held against ([BP+0Ah]) less what the attacker's kits add to hit (KIT_TO_HIT, WAR_HIT, KIT_EXTRA). The
+; weapon attack routine's frame: [BP+0Eh] the attacker's creature, [BP+10h] its sheet, [BP+14h] the
+; weapon's type, [BP+16h] above 1 a missile, [BP+18h] the attacker's combatant. All registers kept.
+kit_attacks:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        call kit_to_hit
+        mov [cs:kit_hit_last], ax
+        sub [bp + 0x0A], ax
+        call war_hit
+        add [cs:kit_hit_last], ax
+        sub [bp + 0x0A], ax
+        call kit_extra
+        add [cs:kit_hit_last], ax
+        sub [bp + 0x0A], ax
+        cmp word [cs:kit_hit_last], 0
+        je .none
+        inc word [cs:kit_hits]
+.none:  pop ax
+.ret:   ret
+; KIT_WILD_MORE (from OFF_HAND, after the skill's): AX (the attacks a round, halves) one more in melee
+; for a Wild Fury whose Wild Fighting passed (WILD_PASSED). Others kept.
+kit_wild_more:
+        cmp word [bp + 0x16], 1
+        jg .ret
+        call wild_passed
+        jnc .ret
+        add ax, WILD_HALVES
+        inc word [cs:kit_rates]
+.ret:   ret
+
+; KIT_TO_HIT: AX what the attacker's kits add to hit: in melee KIT_CHAMPION's and KIT_MELEE's; a missile
+; a Military Scout's 1 with a bow, sling or staff sling under the open sky (KIT_OUTDOORS); either a
+; Ghetto Fighter's -1 with anything but a dagger; Wild Fighting's -3 (WILD_TO_HIT). Others kept.
+kit_to_hit:
+        cmp word [bp + 0x16], 1
+        jle .melee
+        push si
+        xor ax, ax
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .missile             ; (not a party member)
+        bt word [cs:kit_outdoors], si
+        jnc .missile
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .missile
+        cmp byte [cs:si + kind_of_type], BOW_KIND
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        push ax
+        mov ax, [bp + 0x0E]
+        call cr_is
+        db KIT_SCOUT
+        pop ax
+        jne .missile
+        inc ax
+.missile:
+        pop si
+        jmp .ghetto
+.melee: call kit_champion
+        push bx
+        push dx
+        push si
+        push es
+        mov dx, ax
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        mov si, [bp + 0x14]
+        call kit_melee
+        add ax, dx
+        pop es
+        pop si
+        pop dx
+        pop bx
+.ghetto:
+        push bx
+        push es
+        push ax
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        pop ax
+        call kit_is_b           ; (a Ghetto Fighter 1 worse with anything but a dagger)
+        db KIT_GHETTO
+        jne .wild
+        push si
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .worse
+        cmp byte [cs:si + kind_of_type], DAGGER_KIND + 1
+        je .dagger
+.worse: dec ax
+.dagger:
+        pop si
+.wild:  pop es
+        pop bx
+        push si                 ; (WILD_TO_HIT: a party member fighting wild, whatever its check)
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .tame
+        bt word [cs:kit_wild], si
+        jnc .tame
+        sub ax, WILD_TO_HIT
+.tame:  pop si
+        ret
+
+; WILD_PASSED: CF set if the attacker ([BP+0Eh]) is a party member whose Wild Fighting passed this fight
+; (KIT_WILD's bit N + 4). All registers kept.
+wild_passed:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .no
+        push si
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .not
+        add si, 4
+        bt word [cs:kit_wild], si
+        pop si
+        ret
+.not:   pop si
+.no:    clc
+        ret
+
+; WAR_HIT: AX what a Swashbuckler's, Crusader's, Battle Mage's or Mind Warrior's warrior THAC0 adds to
+; hit with a weapon of the kit's chosen weapon spec (one of its SPEC_SLOTS): its creature's THAC0 less
+; a warrior's (21 less the kit's class level, 1 at best) where that is better, else 0 (kits.war_to_hit).
+; Others kept.
+war_hit:
+        push bx
+        push cx
+        push si
+        push es
+        xor cx, cx
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .out
+        movzx si, byte [cs:si + kind_of_type]   ; (the kind + 1; 0 none)
+        or si, si
+        jz .out
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        call kit_is_b
+        db KIT_SWASHBUCKLER
+        je .kit
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        je .kit
+        call kit_is_b
+        db KIT_CRUSADER
+        je .kit
+        call kit_is_b
+        db KIT_MIND_WARRIOR
+        jne .out
+.kit:   mov cx, si              ; (CL the kind + 1, as the slots keep it)
+        xor si, si
+.slot:  call spec_get
+        cmp al, cl
+        je .chosen
+        inc si
+        cmp si, SPEC_COUNT
+        jb .slot
+        xor cx, cx
+        jmp .out
+.chosen:
+        call kit_level
+        movzx cx, al
+        neg cx
+        add cx, 21
+        cmp cx, 1
+        jge .warrior
+        mov cx, 1
+.warrior:                       ; (CX a warrior's THAC0; the creature's own, less it)
+        les bx, [CREATURES_PTR]
+        imul ax, [bp + 0x0E], CREATURE_SIZE
+        add bx, ax
+        movsx ax, byte [es:bx + CR_THAC0]
+        sub ax, cx
+        mov cx, ax
+        jg .out
+        xor cx, cx
+.out:   mov ax, cx
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+
+; KIT_EXTRA: AX what the attacker's kits add to hit and to damage, melee or missile (kits.extra): a
+; Battle Dancer's dance (KIT_DANCE: +1 or -1); a Wilderness Avenger's 1. Others kept.
+kit_extra:
+        push bx
+        push cx
+        push si
+        push es
+        xor cx, cx
+        mov ax, [bp + 0x0E]
+        call kit_sheet
+        call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .avenger
+        cmp ax, 3
+        ja .avenger
+        mov si, ax
+        movsx cx, byte [cs:si + kit_dance]
+.avenger:
+        call kit_is_b
+        db KIT_AVENGER
+        jne .out
+        inc cx
+.out:   mov ax, cx
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+
+; KIT_CHAMPION: AX 1 for an Arena Champion with a shield in a hand attacking in melee, -1 without one;
+; a Sentinel -1 without a shield, 0 with one; else 0 (kits.champion; [BP+18h] the attacker's combatant,
+; [BP+10h] its sheet). Others kept.
+kit_champion:
+        push bx
+        push es
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        mov byte [cs:champ_sentinel], 0
+        call kit_is_b
+        db KIT_CHAMPION
+        je .kit
+        call kit_is_b
+        db KIT_SENTINEL
+        jne .none
+        mov byte [cs:champ_sentinel], 1
+.kit:   pop es
+        pop bx
+        push si
+        mov si, [bp + 0x18]
+        mov ax, -1
+        call prot_here
+        jc .out
+        test byte [cs:p_flags], P_SHIELD
+        jz .out
+        mov ax, 1
+        cmp byte [cs:champ_sentinel], 0
+        je .out
+        xor ax, ax              ; (a Sentinel with a shield: nothing to hit)
+.out:   pop si
+        ret
+.none:  pop es
+        pop bx
+        xor ax, ax
+        ret
+champ_sentinel db 0
+
+; KIT_DAMAGE (from SPEC_DAMAGE): the weapon attack's damage bonus ([BP-14h]) with the attacker's kits'
+; (SL's PROBE_SPEC_DAMAGE's): in melee an Arena Champion's 1 with a shield, KIT_MELEE's; melee or missile
+; KIT_EXTRA's; Wild Fighting passed, 3 more. All registers kept.
+kit_damage:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push word [bp - 0x14]
+        cmp word [bp + 0x16], 1
+        jg .any
+        call kit_champion       ; (with a shield, +1 in melee)
+        cmp ax, 1
+        jne .kit
+        inc word [bp - 0x14]
+.kit:   push bx
+        push si
+        push es
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        mov si, [bp + 0x14]
+        call kit_melee
+        add [bp - 0x14], ax
+        pop es
+        pop si
+        pop bx
+.any:   call kit_extra
+        add [bp - 0x14], ax
+        call wild_passed
+        jnc .wild
+        add word [bp - 0x14], WILD_DAMAGE
+.wild:  pop ax
+        cmp ax, [bp - 0x14]
+        je .same
+        inc word [cs:kit_damages]
+.same:  pop ax
+.ret:   ret
+
+; EXPERT_OF: EXPERT_HALVES for the attack routine's attacker ([BP+10h] its sheet's number).
+expert_of:
+        push bx
+        push es
+        push ax
+        mov ax, [bp + 0x10]
+        call kit_sheet_ax
+        pop ax
+        call expert_halves
+        pop es
+        pop bx
+        ret
+; EXPERT_HALVES: AX the attacks a round (halves) of one who isn't a warrior (the game's 2), DL its skill
+; (SPEC_OF_SHEET), ES:BX its sheet: with SPEC_EXPERT (a Battle Mage's, Crusader's or Mind Warrior's
+; chosen weapon spec) 3/2 a round, 2 from the kit's class's 7th level (specialize.expert_attacks).
+; Others kept.
+expert_halves:
+        cmp dl, SPEC_EXPERT
+        jne .ret
+        cmp ax, 2
+        ja .ret
+        push ax
+        call kit_level
+        cmp al, 7
+        pop ax
+        mov ax, 3
+        jb .more
+        inc ax
+.more:  inc word [cs:kit_rates]
+.ret:   ret
+
+; WAR_KIT_IS: ZF set if sheet ES:BX is a Crusader's or a Mind Warrior's (kit awake). All kept.
+war_kit_is:
+        call kit_is_b
+        db KIT_CRUSADER
+        je .ret
+        call kit_is_b
+        db KIT_MIND_WARRIOR
+.ret:   ret
+
+; KIT_SAVE (from PROT_SAVE: SI the one saving, a combatant; DI the modifier, the higher the better;
+; [BP+14h] the spell): a Sentinel's -1 against a wizard's or priest's spell, a Myrmidon's -4 against a
+; charm (KIT_CHARMS, the sequel's numbers), a Wanderer's +3 against fire and cold (WANDER_SPELLS: the
+; sequel's spell records with +1Ah 2 or 4, as kits.save reads them). Others kept.
+kit_save:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push bx
+        push cx
+        push di
+        mov cx, [bp + 0x14]
+        mov ax, si
+        call fighter_creature
+        jc .out
+        call cr_is
+        db KIT_SENTINEL
+        jne .myrmidon
+        cmp cx, PROT_SPELL_LAST
+        ja .myrmidon
+        dec di
+.myrmidon:
+        call cr_is
+        db KIT_MYRMIDON
+        jne .wanderer
+        mov bx, kit_charms
+        call kit_word_in
+        jne .wanderer
+        sub di, 4
+.wanderer:
+        call cr_is
+        db KIT_WANDERER
+        jne .out
+        mov bx, wander_spells
+        call kit_word_in
+        jne .out
+        add di, 3
+.out:   pop ax                  ; (DI as it came in: counted if a kit changed it)
+        cmp ax, di
+        je .same
+        inc word [cs:kit_saves]
+.same:  pop cx
+        pop bx
+        pop ax
+.ret:   ret
+; KIT_WORD_IN: ZF set if CX is one of the words of the list at CS:BX (ended by -1). BX changed.
+kit_word_in:
+        cmp word [cs:bx], -1
+        je .no
+        cmp [cs:bx], cx
+        je .ret
+        add bx, 2
+        jmp kit_word_in
+.no:    or bx, bx               ; (ZF clear: BX is never 0 here)
+.ret:   ret
+; the charms (kits.CHARMS, the sequel's numbers: ravlog's layout): Charm Person, Charm Monster, Dominate,
+; Mass Charm, Charm Mammal, the psionic Domination and Mass Domination
+kit_charms dw 2, 39, 61, 94, 131, 255, 256, -1
+; the spells all fire or cold (their records' +1Ah 2 or 4, RESOURCE.GFF's: ravlog.spell_table)
+wander_spells dw 1, 3, 14, 27, 28, 33, 42, 54, 58, 83, 84, 93, 105, 109, 174, 180, 198, 207, 209, 222
+              dw 269, 270, 278, 282, 291, 296, 297, 298, 309, -1
+
+; KIT_SKILL (from BELT_SITE): AX (a thief skill's chance; DI the thief's combatant, the routine's [BP+8]
+; the skill, 0-7) with the kits' (kits.thief_skill: KIT_SKILLS' row for each; a Military Scout's 10 to
+; finding traps, moving silently, hiding and climbing under the open sky, 5 less under a roof) and a
+; Swashbuckler's bad luck (0 to BAD_LUCK off each roll, from the game's seed: BAD_LUCK, BAD_LUCK_WHO for
+; the dice log), no less than 0. Others kept.
+BAD_LUCK     equ 25
+SCOUT_SKILLS equ 0x5C           ; (bits: traps, move silently, hide, climb)
+kit_skill:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        mov dx, ax              ; DX the chance
+        mov [cs:kit_skill_in], ax
+        mov ax, di
+        call fighter_creature
+        jc .out
+        mov cx, ax              ; CX the creature
+        call kit_sheet
+        mov si, [bp + 8]
+        cmp si, 7
+        ja .out
+        push di
+        mov di, kit_skills
+.kit:   mov al, [cs:di]
+        or al, al
+        jz .scout
+        call kit_is
+        jne .next
+        push bx
+        mov bx, di
+        movsx ax, byte [cs:bx + si + 1]
+        pop bx
+        add dx, ax
+.next:  add di, 9
+        jmp .kit
+.scout: pop di
+        mov al, KIT_SCOUT
+        call kit_is
+        jne .swash
+        bt word [cs:scout_bits], si
+        jnc .swash
+        mov ax, -5
+        cmp cx, 3
+        ja .add
+        bt word [cs:kit_outdoors], cx
+        jnc .add
+        mov ax, 10
+.add:   add dx, ax
+.swash: mov al, KIT_SWASHBUCKLER
+        call kit_is
+        jne .floor
+        mov ax, BAD_LUCK + 1
+        call game_die
+        dec ax
+        mov [cs:bad_luck], al
+        mov [cs:bad_luck_who], cx
+        sub dx, ax
+.floor: or dx, dx
+        jns .out
+        xor dx, dx
+.out:   mov ax, dx
+        cmp ax, [cs:kit_skill_in]
+        je .same
+        inc word [cs:kit_skills_n]
+.same:  pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+kit_skill_in dw 0
+kit_skills db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0     ; (pick pockets, open locks, traps,
+           db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0  ;  move silently, hide, hear noise, climb,
+           db KIT_GHETTO, 5, 0, -5, 0, 5, 0, 0, 0         ;  read)
+           db KIT_WAYFINDER, -10, 0, 0, 10, 10, 0, 0, 0
+           db 0
+scout_bits dw SCOUT_SKILLS
+
+; KIT_REAR (from MISSILE_REAR, after the game's and the stealth rule's from behind and backstab; SI the
+; attacker's combatant): a Military Scout's backstab taken back ([BP-21h] cleared, its 2 off THAC0 given
+; back), a Rescuer's attack from behind 1 better to hit, not 2 (kits.backstabs, kits.REAR). All kept.
+kit_rear:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp si, 3
+        ja .ret
+        push ax
+        mov ax, si
+        call fighter_creature
+        jc .out
+        cmp byte [bp - 0x21], 0
+        je .rescuer
+        call cr_is
+        db KIT_SCOUT
+        jne .rescuer
+        mov byte [bp - 0x21], 0
+        add word [bp - 0x1E], 2
+        inc word [cs:kit_rears]
+.rescuer:
+        cmp byte [bp - 0x19], 0
+        je .out
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+        inc word [bp - 0x1E]
+        inc word [cs:kit_rears]
+.out:   pop ax
+.ret:   ret
+
+; KIT_MOVE (from CAH_MOVE: AX a creature's movement for its turn, its Move x 10; SI the creature): a
+; Stalker's or a Rescuer's 2 more. Others kept.
+kit_move:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        mov ax, si
+        call cr_is
+        db KIT_STALKER
+        je .two
+        call cr_is
+        db KIT_RESCUER
+.two:   pop ax
+        jne .ret
+        add ax, 20
+        inc word [cs:kit_moves]
+.ret:   ret
+
+; KIT_TWO (from PROBE_TWO, the attack's hand found: TWO_BASE its -2 or -4; [BP-2] the creature): a
+; Ghetto Fighter's 2 better (none in the main hand, -2 in the off hand); CF set for a Twin-blade or a
+; Battle Dancer in armour that is light or none (no penalty, as a ranger's). All registers kept.
+kit_two:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .no
+        push ax
+        mov ax, [bp - 2]
+        call cr_is
+        db KIT_GHETTO
+        jne .twin
+        add word [cs:two_base], 2
+        inc word [cs:kit_twos]
+.twin:  call cr_is
+        db KIT_TWIN_BLADE
+        je .light
+        call cr_is
+        db KIT_BATTLE_DANCER
+        jne .not
+.light: push dx
+        mov dx, ax
+        mov byte [cs:aw_heavy], 1
+        call armour_worn
+        mov byte [cs:aw_heavy], 0
+        pop dx
+        jc .not
+        inc word [cs:kit_twos]
+        pop ax
+        stc
+        ret
+.not:   pop ax
+.no:    clc
+        ret
+
+; KIT_INIT (site 60, "kit_initiative"): "add dx,14h" (5B7E9h, SL's PROBE_INIT site 5750Eh; 3 bytes) where
+; a combatant's initiative for the round is made (DX the roll and its adjustments, SI the creature): the
+; game's 20 added, then the kits' (kits.initiative): a Myrmidon's 2 less; a Wayfinder's own 2 more and,
+; while a Wayfinder of the party is up (PATH_UP), each party member's 1 more; a Military Scout's 2 under
+; the open sky (KIT_OUTDOORS). Others kept.
+WAYFINDER_INIT equ 2
+kit_init:
+        add dx, 20
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push dx
+        mov ax, si
+        call cr_is
+        db KIT_MYRMIDON
+        jne .wayfinder
+        sub dx, 2
+.wayfinder:
+        call cr_is
+        db KIT_WAYFINDER
+        jne .scout
+        add dx, WAYFINDER_INIT
+.scout: cmp si, 3
+        ja .out                 ; (not a party member)
+        call cr_is
+        db KIT_SCOUT
+        jne .path
+        bt word [cs:kit_outdoors], si
+        jnc .path
+        add dx, 2
+.path:  call path_up
+        jne .out
+        inc dx
+.out:   pop ax                  ; (the game's: counted if a kit changed it)
+        cmp ax, dx
+        je .same
+        inc word [cs:kit_inits]
+.same:  pop ax
+.ret:   iret
+; PATH_UP: ZF set if a party member up (creatures 0-3, New or Okay) is a Wayfinder (kit awake). All kept.
+path_up:
+        push ax
+        push bx
+        push es
+        xor ax, ax
+.member:
+        push ax
+        les bx, [CREATURES_PTR]
+        imul ax, ax, CREATURE_SIZE
+        add bx, ax
+        cmp byte [es:bx + CR_STATUS], 1
+        pop ax
+        ja .next
+        call cr_is
+        db KIT_WAYFINDER
+        je .out
+.next:  inc ax
+        cmp ax, 4
+        jb .member
+        or ax, ax               ; (ZF clear: none)
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+
+kit_hit_last dw 0               ; (the last attack's kits' to hit)
+kit_acs      dw 0               ; (what the kits did, counted, for a look in play: ACs changed,
+kit_hits     dw 0               ;  attacks given a kit's to hit, damage bonuses changed, attacks a
+kit_damages  dw 0               ;  round, saves, thief skills, from behind and backstabs, moves, the
+kit_rates    dw 0               ;  two-weapon penalties and initiatives)
+kit_saves    dw 0
+kit_skills_n dw 0
+kit_rears    dw 0
+kit_moves    dw 0
+kit_twos     dw 0
+kit_inits    dw 0
 
 ; PROBE_HELM_AC: INT VEC_HELM_AC replaces "mov al,es:[bx+0Eh] / cwde" (5 bytes: INT + 3 NOPs) at the
 ; two places the AC function reads a worn item's type's AC (5D663h, 5D67Bh; SL's PROBE_RING_AC's
@@ -7398,7 +8566,8 @@ prot_save:
 .one:   inc di
 .done:  pop ax
         inc word [cs:prot_saves]
-.out:   iret
+.out:   call kit_save                   ; (the kits': KITS)
+        iret
 ; PROT_HERE: PROT_SCAN for combatant SI (DS the game's); CF if it isn't a creature. All kept.
 prot_here:
         pusha
@@ -7864,6 +9033,7 @@ cah_hit:
 .out:   iret
 cah_move:
         call boots_move
+        call kit_move                   ; (the kits': KITS)
         mov [es:bx + MOVE_OFF], ax
         cmp di, TANGLE_MOST
         jae .out

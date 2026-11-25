@@ -112,7 +112,7 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
         return NONE
     kind = spec_kind_of(item_type) if item_type is not None else None
     bm = kitpages.kit_place_of(sheet, kits.BATTLE_MAGE)
-    if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[0x22]:
+    if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[game.SHEET_CLASSES + 1]:
         # (a Battle Mage who has changed class: its weapon spec the kit's alone, nothing while asleep)
         if not kitpages.kit_awake(sheet, bm):
             return NONE
