@@ -126,6 +126,14 @@ raised before stopping.
   **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the file
   has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever the
   build). `setitem.py ITEM TYPE` does it with the game's first plain record of a type.
+- **A weapon for a test of its rate or traits** (logs/2026-11-23-ravager-weapons.md): put it in
+  the right hand (`itemedit.py M 10 slot=3`): one in the left hand (slot 10) swings once a round
+  whatever the rate. A second weapon moved to slot 20 is still worn and still swings: make it
+  something else (`setitem.py N 60`). The Loader's types with no SEGOBJEX record (Wake of the
+  Ravager's, 148-153) need `rec=` (`worldgear.weapon(worldgear.LOTULIS).hex()`); `specset.py M
+  KIND...` gives the member the weapon specs. **A sheet's address moves with the build** (the
+  origin worktree's DSCLOG put Jenna's at 669FBh, the branch's at 66A3Bh): read it from
+  `sheetedit.py` at every load before writing to it.
 - **A held item changed in memory** (logs/2026-11-10-outstanding-checks.md): write it with the
   inventory **closed** (closing it writes the screen's copy back over the record), clear its +0Ch
   (the game keeps there the icon it last drew, and draws that again), and give it the item's own
@@ -164,6 +172,14 @@ raised before stopping.
   `weaponchoice.ITEM_COUNT` (`setarrows.py MEMBER N`), **set before the fight starts** (before the
   ambush's speech is clicked): changed in a fight the game's own readied list doesn't see it.
   `ammodump.py` prints the archers' item records.
+- **A reach test goes by the click, never Tab** (logs/2026-11-24-ravager-weapons-followups.md): a
+  foe moved in memory (`placefoe.py THING DX DY MEMBER`, DS:669Dh + 20h a thing) stays drawn where it
+  was until it moves, so a click on its new square finds nothing; Tab chooses it, but **Tab + Return
+  swings a melee weapon from two squares in a build without reach too** (the control, 2026-11-24): it
+  doesn't ask the distance routine the click does. Walk the member two squares from a held foe
+  drawn where it stands (`squarewalk.py COL ROW`), make its Move 0 (37BD:022Bh + creature x 2) and
+  click the foe's figure with the attack pointer: with reach the melee weapon swings; without, a
+  bow in the missile slot shoots (or nothing happens).
 - **Melee reach isn't the type's range byte** (logs/2026-11-10-polearm-reach.md): a polearm with its
   type's +0Ah set to 2, held alone, with Move 0, two squares from a held foe: the attack does nothing
   and the turn passes; with a bow in the missile slot the click shoots it instead.

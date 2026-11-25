@@ -21,6 +21,7 @@
 - [Two weapons](#two-weapons)
 - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
 - [Cahulaks](#cahulaks)
+- [Lotulis, double spear and trikal](#lotulis-double-spear-and-trikal)
 - [Creature size](#creature-size)
 - [Held targets](#held-targets)
 - [Staff sling stinkpots](#staff-sling-stinkpots)
@@ -645,6 +646,37 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
   failure marks it as Whirlwind's sweep does (`SWEPT_NOW`: yet to act this round,
   its turn taken at once; else `FAR_SWEPT`, `PROBE_MOVE` takes the next).
 
+## Lotulis, double spear and trikal
+
+([In the features page](FEATURES.md#lotulis-and-double-spear).)
+
+Where the traits come from: [the Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html)'s
+entries for Wake of the Ravager's weapons, for a specialist (`SPEC_OF` at `SPEC_SPECIAL` or above:
+its weapon spec chosen, specialized or a master). The types (148-153, DSCLOG's `EXTRA_TYPES`' last
+six, `game.RAVAGER_TYPES`) and their kinds (16-21, `KIND_OF_TYPE`) are the Loader's; the sequel's
+net is left out. Both traits ride the cahulaks' sites, with the same rule:
+
+- **The trikal** (type 151): `CAH_HIT` takes it as the cahulaks, a man-sized or smaller target not
+  felled and not in `BIG`, with `TG_HOW` its save (the sheet's +37h, paralysis: `TRIP_SAVE`) and
+  its record (`MN_TRIP`) in place of the tangle's (+39h, `MN_TANGLE`).
+- **The lotulis and double spear** (149, 150): `SF_SWING`, from `CAH_SWING`, at the round's last
+  swing of two or more ([BP-14h] = [BP-8] - 1) looks for a second foe: the first combatant in the
+  things' order on the first target's side (the creature's +1Dh, low 3 bits), standing and Okay
+  (+1Ch 1), at distance 1 from the attacker (the game's distance routine, 1A0A:2BA5h). It keeps
+  `TARGET` (494Ah) and the AC ([BP+0Ch]) in `SF_TARGET` and `SF_AC`, makes them the foe's (its AC
+  `THORNS_AC`'s: the sheet and the armour worn, not spells'), and records `MN_SECOND`. `SF_BACK`,
+  first at `AMMO_TURN`'s site (58C38h, which every swing that ends the round passes), puts them
+  back. `SF_LESS`, first at `STAB_ROLL`, takes 1 off the double spear's damage ([BP-4], at least 1)
+  while `SF_TARGET` is set.
+
+The window that picks a weapon spec has 22 slots in four rows (`PICK_FIRST` 8C0h on, past the kit
+pages' rows at 870h); the game's title lines are left empty (its `push` of the title's line is a
+signed byte, and row four's is at 146) and `PK_HOVER` draws the title under the rows. The
+weapon specs are stored as v3 ([weapon specialization](#weapon-specialization)). Tests: `test_trip`,
+`test_second_foe` (`test_cahulaks`), `test_specslots`, `test_ravager_weapon_lines`. Verified in
+play, with a control run:
+[2026-11-23](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-23-ravager-weapons.md).
+
 ## Creature size
 
 ([In the features page](FEATURES.md#creature-size).)
@@ -826,7 +858,8 @@ does the MOV, then, with the rule, makes a result of 2 a 1 when all three hold:
 - **The attacker's hands hold a polearm and no other weapon** (`REACH_HANDS`): its creature
   (`COMBATANT_CREATURE`), its three item lists (+08h, +0Ah, +0Ch), each item's slot (+11h): in the
   right hand (3) or the left (10), a type `kind_of_type` makes a polearm (10, the kind + 1: the
-  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) counts one, any other
+  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) or a trikal (`TRIKAL_KIND`,
+  20: `game.TRIKAL_TYPE`, Wake of the Ravager's, a polearm with three blades) counts one, any other
   type with a weapon flag (its +00h's 1 melee or 2 missile, `restrict.is_weapon`) one other weapon.
   Reach is one polearm and no other: a shield (flag 4) or nothing beside it. The missile slot (2) and
   the backpack aren't hands.
@@ -1494,7 +1527,12 @@ saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
 1, 0 none); 2.13.0 and 2.13.1 packed them 5 bits each in +14h to +16h,
 +16h's top bit (`SPEC_PACKED`) marking it; now (v2, +16h's bit 6 too,
 `SPEC_V2`) the dword's bits 0-16 are the four as a base-17 number (each digit
-the kind + 1, 0 none: `SPEC_KINDS_MASK`, room for 16 kinds), bits 17-21 the
+the kind + 1, 0 none: `SPEC_KINDS_MASK`, room for 16 kinds); with Wake of the Ravager's six
+kinds (22, `KIND_COUNT`) a value of `V3_BASE` (17⁴, past every base-17 number) or more is v3:
+`V3_BASE` + the first kind × `REST_SETS` (1,794, the sets of up to three of 22) + the rank of the
+set of the others (`REST_OFFSETS` for its size plus the combinatorial number system's sum:
+`game.spec_rank`, DSCLOG's `SPEC_REPACK`), the first kept first (the starting weapon's, a Battle
+Mage's), the others read back in order (`SPEC_UNPACK`), at most 124,572 in 17 bits; bits 17-21 the
 starting roll (Table 7's dice less their count, 0 to 20; 31, `ROLL_UNKNOWN`,
 none kept: `game.sheet_roll`), and +17h is the character's age (`SHEET_AGE`,
 years past its race's base starting age, plus 1: see Ages above). A sheet keeps
@@ -1556,9 +1594,10 @@ weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
 `SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name with the
 routine the powers' handler names a power with (85CC9h, which rubs out the
 lines it drew before), or the title again off the slots. A missile weapon's
-attacks a round are its item type's (+0Bh, in halves: a bow 4, the rest 2),
+attacks a round are its item type's (+0Bh, in halves: a bow and darts 4, the rest 2),
 not the character's (sheet +2Ah) as in melee; `INT D1h` raises them to a
-specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level; a
+specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level, by kind:
+the chatkcha, bow, sling and staff sling, kinds 13-16, and the javelin and darts, 21-22, `MISSILE_RAV`; a
 grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`). Every ranger's expertise with the bow is in
