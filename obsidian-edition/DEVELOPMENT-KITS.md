@@ -11,6 +11,7 @@ DSCLOG and what the Loader reads and writes. The player's page is [Kits](KITS.md
 - [Multiclass kits](#multiclass-kits)
 - [Where each effect goes](#where-each-effect-goes)
 - [Spell arrows](#spell-arrows)
+- [Kits in Wake of the Ravager](#kits-in-wake-of-the-ravager)
 - [How they're checked](#how-theyre-checked)
 
 ## The kits
@@ -719,6 +720,49 @@ they hit, its save and its STR loss as the spell's (verified: [log](https://gith
 arrows (`spellarrows.starting_gear`) and the arrows' plus are in [where each effect goes](#where-each-effect-goes). Arrows put in the
 ammunition slot by memory writes during a fight are not shot (the game keeps its own
 list of what each combatant has readied): they're made outside fights only.
+
+## Kits in Wake of the Ravager
+
+The party transfer keeps the kit byte (SL's `+43h`) at the sequel's `+3Dh` (`KIT_BYTE` in ravlog's
+layout; the sequel's sound words below it read as bytes, `sound_3c`, `sound_3e`). DSCLOG2's KITS
+section has DSCLOG's `KIT_IS`, `KIT_HAS`, `KIT_AT`, `KIT_PLACE`, `KIT_AWAKE`, `KIT_LEVEL` and
+`MULTI_GROUP` on the sequel's sheet (race `+12h`, classes `+1Bh`, levels `+1Eh`, base AC `+21h`), and
+`RULE_KITS` is in `ravager.RULES_PORTED` (its bit in DSCLOG2's `rules_hi`, so `RAV_RULES_OFF=0x10000`
+makes a control run). Each effect at the sequel's site (its attack routine's frame is SL's with the
+locals two bytes lower: the damage bonus `[BP-14h]`):
+
+| Effect | Kits | DSCLOG2 | The sequel's site (SL's) |
+|---|---|---|---|
+| AC | Ravager, Wanderer, Sentinel, Arena Champion, Grove Warden, Battle Dancer, Wild Fury | `KIT_AC` in `PROBE_AC` | the AC function's end, 5D6E6h (58F8Dh) |
+| to hit | Ravager, Brute, Ghetto Fighter, Arena Champion, Sentinel, Military Scout, Battle Dancer, Wilderness Avenger, Wild Fury; the warrior THAC0 kits' (`WAR_HIT`) | `KIT_ATTACKS` from `OFF_HAND` | the attacks' store, 5CEE8h (58892h) |
+| damage | Ravager, Brute, Ghetto Fighter, Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury | `KIT_DAMAGE` from `SPEC_DAMAGE` (site 51) | 5CF6Dh (588F2h) |
+| attacks a round | Battle Mage, Crusader, Mind Warrior (`EXPERT_HALVES`), Wild Fury (`KIT_WILD_MORE`) | `SPEC_ATTACKS`, `OFF_HAND` | 5CEE8h |
+| weapon skill | Battle Mage, Crusader, Mind Warrior, Justifier, Myrmidon, Seeker | `SPEC_OF_SHEET` | |
+| saves | Sentinel, Myrmidon (the sequel's charms, `KIT_CHARMS`: `ravlog.RAV_CHARMS`), Wanderer (`WANDER_SPELLS`: the sequel's spell records with `+1Ah` fire or cold) | `KIT_SAVE` from `PROT_SAVE` (site 44) | 8360Eh (79D47h) |
+| thief skills | Assassin, Shadowblade, Ghetto Fighter, Wayfinder, Military Scout, Swashbuckler (its bad luck, `BAD_LUCK` at the header's +1862) | `KIT_SKILL` from `BELT_SITE` (site 20) | 8C7C5h (803B2h) |
+| from behind, backstab | Military Scout, Rescuer | `KIT_REAR` from `MISSILE_REAR` | 5C99Fh |
+| movement | Stalker, Rescuer | `KIT_MOVE` from `CAH_MOVE` | 5B838h (57566h) |
+| the two-weapon penalty | Ghetto Fighter, Twin-blade, Battle Dancer | `KIT_TWO` from `PROBE_TWO` | 5DE7Ch (59634h) |
+| initiative | Myrmidon, Wayfinder, Military Scout | `KIT_INIT` (site 60, new) | `add dx,14h` at 5B7E9h (5750Eh), SI the creature |
+| casting level | Seeker (the ranger level less 5), Justifier (less 9) | `KIT_RANGER_CAST` (site 61, new); `RANGER_DROP` in `RANGER_LEVEL` | the caster level routine's `sub dx,7`, 97E00h (81B6Ah); the spell's level, 629F0h (5E3B8h) |
+
+The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
+`RavDiceLog._kit_tick` makes them writable while the kits are on and keeps them as Shattered Lands'
+dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
+`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`: `playtest/ravkits.py
+count`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
+`EXPERT_HALVES` and `KIT_MELEE` against `kitpages` and `kits` on transferred sheets, and checks the
+tables.
+
+Not in the sequel yet: what kits do to spells and powers (slots, the Shinobi's casting, a spell's level, PSP
+costs, cures' and Cause spells' dice, spells never known, casting though hit, the Elementalist's
+second sphere), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, an Assassin's backstab
+multiplier (the sequel's backstab damage isn't ported), gear a kit forbids or allows, hit dice and
+PSP at a level up, a Scholar's THAC0, the Effects screen's kit lines, and choosing a kit (the
+sequel's creation screen and DUAL). The sequel marks no priest spells known by class masks as SL's
+loops do (66F89h, 86E1Eh): it asks 62B45h (spell, class) at each use, its spheres a jump table, so the
+second sphere needs a hook there that knows the character (the USE screen's 370h:0B44h). The new
+spells' bits at `+3Fh` have no use while the sequel has no new spells.
 
 ## How they're checked
 

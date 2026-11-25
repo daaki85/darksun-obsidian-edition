@@ -161,6 +161,23 @@ class KitTests(unittest.TestCase):
                     want = (4 if level >= 7 else 3) if skill == specialize.EXPERT and halves <= 2 else halves
                     self.assertEqual(got, want, (level, skill, halves))
 
+    def test_ranger_drop(self):
+        """RANGER_DROP's CL is kits.ranger_cast_drop's: a Seeker's 5, a Justifier's 9 with the kits, else 7
+        with the rangers' casting level rule (0 without), for a ranger's class at each place of its sheet."""
+        self.mu.mem_write(GDS * 16 + 0x19C5, struct.pack("<HH", 0x500, SS))
+        for byte, kits_on, want in ((0, 1, 7), (1, 1, 7), (2, 1, 9), (3, 1, 5), (3, 0, 7)):
+            sheet = wotr_sheet((13,), (8,), 1, byte)
+            self.rules(kits_on | 2)  # (RULE_HI_RANGER on)
+            got = self.run_routine("ranger_drop", sheet, ecx=0xFF)["edx"]
+            cl = self.mu.reg_read(r.UC_X86_REG_ECX) & 0xFF
+            self.assertEqual(cl, want, (byte, kits_on))
+            if kits_on:
+                drop = max((kits.ranger_cast_drop(k) for k in kitpages.kit_ids(sheet)), default=7)
+                self.assertEqual(cl, drop)
+        self.rules(1)
+        self.assertEqual(self.run_routine("ranger_drop", wotr_sheet((13,), (8,), 1, 0)) and
+                         self.mu.reg_read(r.UC_X86_REG_ECX) & 0xFF, 0)
+
     def test_melee(self):
         """KIT_MELEE's AX is kits.melee summed over the sheet's kits, for every weapon type (the sequel's
         types' missile flag, +0, and two-handed bit, +0Bh 40h; none for a missile weapon)."""

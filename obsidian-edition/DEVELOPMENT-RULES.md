@@ -1586,8 +1586,9 @@ OFF_HAND at the attacks' store (5CEE8h, SL's PROBE_ATTACKS' site), and
 `SPEC_DAMAGE` (site 51 at the strength bonus's `add [bp-14h],ax`, 5CF6Dh) do
 what PROBE_ATTACKS and PROBE_SPEC_DAMAGE do; `SIZE_DICE` calls
 `SPEC_GRAND_DIE` after AD&D's large dice. `SPEC_OF_SHEET` and `MISSILE_RATE`
-are DSCLOG's on the sequel's sheet (race +12h, classes +1Bh, levels +1Eh)
-without the kits' parts, which wait for the kits' rules
+are DSCLOG's on the sequel's sheet (race +12h, classes +1Bh, levels +1Eh),
+the kits' parts with the kits' rules ([Kits in Wake of the
+Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager))
 (`tests/test_ravspecialize.py` runs them against `specialize.skill` and
 `missile_attacks`). The rule's bit is tested (`RULE_SPECIALIZE` in
 `ravager.RULES_PORTED`), so `RAV_RULES_OFF=0x1000` makes a control run.
@@ -1614,7 +1615,7 @@ The Net (71) and the Rock (94) have none.
 
 ## Kits
 
-([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
+([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md). In Wake of the Ravager: [Kits in Wake of the Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager).
 
 ## Preservers' first spells
 

@@ -934,7 +934,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Jann's desert, the Silt Sea islands and the clouds count as daylight.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
-  with the kits, though the kits' rules don't work in the sequel yet). The weapon specs work there:
+  with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
+  skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
+  specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
+  two-weapon penalty and initiative, the Seeker's and Justifier's casting level, and the Battle
+  Dancer's dance and Wild Fighting as a fight starts. What else kits do to spells and psionic powers, gear, hit dice and the Effects screen's kit lines don't
+  yet, nor can a kit be chosen in the sequel. The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
   kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins

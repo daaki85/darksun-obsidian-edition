@@ -2482,24 +2482,82 @@ held_hit:
 ; takes the level of a class of the caster's that casts the spell (ES:BX the sheet + the class's place:
 ; +1Bh the class, +1Eh its level). The caster level routine (SL's 81B16h) counts a ranger 7 less
 ; ("sub dx,7" at 97E00h, SL's 81B6Ah); this one took it whole. AX that level, a ranger's (classes 13-16) 7
-; less with the rule, no less than 0. (SL's Seeker and Justifier: kits, not in the sequel.)
+; less with the rule, no less than 0; with the kits a Seeker's 5 and a Justifier's 9 (RANGER_DROP).
 RULE_HI_RANGER equ 2
 RANGER_FIRST equ 13
 ranger_level:
         mov al, [es:bx + 0x1E]
         mov ah, 0
-        test word [cs:rules_hi], RULE_HI_RANGER
-        jz .out
         push cx
         mov cl, [es:bx + 0x1B]
         sub cl, RANGER_FIRST
         cmp cl, 3
-        pop cx
         ja .out                 ; (not a ranger)
-        sub al, 7
+        call ranger_drop
+        sub al, cl
         jnc .out
         xor al, al
-.out:   iret
+.out:   pop cx
+        iret
+; RANGER_DROP: CL what a ranger's level loses for its spells (ES:BX its sheet + the class's place): 7 with
+; the rule, else 0; with the kits a Seeker's 5, a Justifier's 9 (kits.ranger_cast_drop), whatever the
+; rule. DS the game's; others kept.
+ranger_drop:
+        xor cl, cl
+        test word [cs:rules_hi], RULE_HI_RANGER
+        jz .kit
+        mov cl, 7
+.kit:   test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push dx
+        push bx
+        push cx
+        mov ax, bx              ; (the sheet: BX less the place, (BX - the table's start) mod its size)
+        sub ax, [SHEETS_PTR]
+        xor dx, dx
+        mov cx, SHEET_SIZE
+        div cx
+        pop cx
+        sub bx, dx
+        call kit_is_b
+        db KIT_SEEKER
+        jne .justifier
+        mov cl, 5
+.justifier:
+        call kit_is_b
+        db KIT_JUSTIFIER
+        jne .out
+        mov cl, 9
+.out:   pop bx
+        pop dx
+        pop ax
+.ret:   ret
+; KIT_RANGER_CAST (site 61, "kit_ranger_cast"): the caster level routine's "sub dx,7" (97E00h, SL's
+; PROBE_RANGER_CAST at 81B6Ah; 3 bytes) for a ranger class (DX its level; [BP+6] the combatant): a
+; Seeker's 5, a Justifier's 9 with the kits, else the game's 7. Others kept.
+kit_ranger_cast:
+        push bx
+        mov bx, 7
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .take
+        push ax
+        mov ax, [bp + 6]
+        call fighter_creature
+        jc .game
+        call cr_is
+        db KIT_SEEKER
+        jne .justifier
+        mov bx, 5
+.justifier:
+        call cr_is
+        db KIT_JUSTIFIER
+        jne .game
+        mov bx, 9
+.game:  pop ax
+.take:  sub dx, bx
+        pop bx
+        iret
 ; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
 ; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
 ; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
@@ -3096,6 +3154,7 @@ site_table:
         dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
         times 60 - ($ - site_table) / 2 dw site_none ; (52-59: none yet, another port's to take)
         dw kit_init                         ; 60 SITE_KIT_INIT (a combatant's initiative: the kits')
+        dw kit_ranger_cast                  ; 61 SITE_KIT_RANGER_CAST (a ranger's caster level: a Seeker's, a Justifier's)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.

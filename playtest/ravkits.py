@@ -5,6 +5,9 @@
                                                and the classes (1-17, up to 3; the rest 0) if given
   python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...) and its
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
+  python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
+                                               c, d, r: any cleric, druid, ranger)
+  python3 ravkits.py hp MEMBER N               a test edit: the creature's hit points (+0) N, and its sheet's most
 MEMBER is the sheet's number (0-3: the party's order)."""
 import argparse, os, struct, subprocess, sys, tempfile
 PT = os.path.dirname(os.path.abspath(__file__))
@@ -52,15 +55,32 @@ if cmd == 'show':
         s = g.read(base + m * ravager.SHEET_SIZE, ravager.SHEET_SIZE)
         print(m, 'race', s[0x12], 'classes', list(s[0x1B:0x1E]), 'levels', list(s[0x1E:0x21]),
               'kit byte %#04x' % s[0x3D], 'base AC', struct.unpack('b', s[0x21:0x22])[0], 'specs', s[0x42:0x45].hex())
-elif cmd == 'set':
-    m, byte = int(sys.argv[2]), int(sys.argv[3], 0)
+elif cmd in ('set', 'match'):
+    m, byte = int(sys.argv[2]) if cmd == 'set' else None, int(sys.argv[3], 0)
+    if m is None:
+        groups = {'c': range(1, 5), 'd': range(5, 9), 'r': range(13, 17)}  # (any cleric, druid, ranger)
+        want = [groups.get(c, None) or (int(c),) for c in sys.argv[2].split(',')]
+
+        def fits(classes):
+            return len(classes) == len(want) and all(any(c in w for c in classes) for w in want)
+        m = next(n for n in range(4) if fits([c for c in g.read(sheets_at() + n * ravager.SHEET_SIZE + 0x1B, 3) if c]))
     at = sheets_at() + m * ravager.SHEET_SIZE
     g.write(at + 0x3D, bytes((byte,)))
-    if len(sys.argv) > 4:
+    if len(sys.argv) > 4 and sys.argv[4] != '-':  # ('-': the race kept)
         g.write(at + 0x12, bytes((int(sys.argv[4]),)))
     if len(sys.argv) > 5:
         g.write(at + 0x1B, bytes(([int(c) for c in sys.argv[5:8]] + [0, 0, 0])[:3]))
     print('member', m, 'kit byte %#04x' % g.read(at + 0x3D, 1)[0], 'race', g.read(at + 0x12, 1)[0])
+elif cmd == 'hp':
+    from dsloader import game
+    ds = game.find_data_segment(g)
+    off, seg = struct.unpack('<HH', g.read(ds * 16 + 0x19C9, 4))
+    m, n = int(sys.argv[2]), int(sys.argv[3])
+    cr = seg * 16 + off + m * 0x31
+    sheet = sheets_at() + struct.unpack('<H', g.read(cr + 4, 2))[0] * ravager.SHEET_SIZE
+    g.write(sheet + 8, struct.pack('<H', n))
+    g.write(cr, struct.pack('<H', n))
+    print('member', m, 'hp', struct.unpack('<H', g.read(cr, 2))[0])
 elif cmd == 'count':
     base, sym = helper()
     hdr = base + sym['hdr']

@@ -551,6 +551,10 @@ PATCHES: Tuple[Patch, ...] = (
     # at "add dx,14h" where a combatant's initiative for the round is made (5B7E9h, SL's PROBE_INIT site
     # 5750Eh: SI the creature); the rest of the kits' rules at the sites above (DSCLOG2's KITS)
     Patch("kit_initiative", 0x5B7E9, bytes.fromhex("83c214"), _site(60, 3)),
+    # ... and KIT_RANGER_CAST (site 61) at the caster level routine's "sub dx,7" for a ranger class (97E00h,
+    # SL's PROBE_RANGER_CAST at 81B6Ah): a Seeker's 5, a Justifier's 9 (RANGER_LEVEL has them for a spell's
+    # duration and damage)
+    Patch("kit_ranger_cast", 0x97E00, bytes.fromhex("83ea07"), _site(61, 3)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
