@@ -696,13 +696,13 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL)),
     ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False)),
     # the obsidian lotulis (fire clerics') and the bone great sword (water clerics': the bone Long
-    # Sword's, longer) (the user's, 2026-11-25), and their +1s: the lotulis' blades burning, the
+    # Sword's, longer: cut a row higher, above its guard) (the user's, 2026-11-25), and their +1s: the lotulis' blades burning, the
     # sword's blade in the water's colours (as Hayneedle's: a water cleric prayed over it)
     ("Obsidian Lotulis", 0xFC0D, 2718, 2719, obsidian_lotulis_icon),
-    ("Bone Great Sword", 0xFC0C, 2720, 2721, longer_blade),
+    ("Bone Great Sword", 0xFC0C, 2720, 2721, lambda r: longer_blade(r, cut=7)),
     ("Obsidian Lotulis +1", 0xFC0D, 2722, 2723, burning(obsidian_lotulis_icon, LOTULIS_OBSIDIAN)),
     ("Bone Great Sword +1", 0xFC0C, 2724, 2725,
-     lambda r: glow(longer_blade(r), lambda p, x, y: p in SWORD_BONE and (x + y) % 2 == 0, WATER)),
+     lambda r: glow(longer_blade(r, cut=7), lambda p, x, y: p in SWORD_BONE and (x + y) % 2 == 0, WATER)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
