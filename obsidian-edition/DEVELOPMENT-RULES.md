@@ -160,7 +160,8 @@ In Wake of the Ravager (the port, `dsloader/ravager.py`; `RULE_RESTRICT` in `RUL
 answer a byte) runs `CLASS_FORBIDS` with the sequel's offsets (a type's flags +0, material +4, armour
 +0Bh 80h, classes +0Ch; a sheet's class bits +10h, race +12h, classes +1Bh, levels +1Eh) and the sequel's
 `KIND_OF_TYPE`; `BELT_SITE` (site 20, `thief_skill_armour`: 8C7C5h, `mov ax,si / pop di`, the thief
-skill routine 8C647h's end) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
+skill routine 8C647h's end; its jump to the "pop di", 8C6C3h, sent to the same epilogue at 87443h in
+the image, `thief_skill_armour_out`) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
 `ARMOUR_WORN` reading the item lists as `MELEE_IN` does); `THIEF_REAR`, called from `MISSILE_REAR`
 (5C99Fh), takes the backstab back (the byte `[bp-21h]`, THAC0 `[bp-1Eh]`). The sequel has no kits,
 weapon specs, robes, bracers or cloak of protection, so none of their exceptions; its only weapon
@@ -1345,7 +1346,10 @@ creature and three words; dicelog's `_manual`).
   of a fight), a D\*'s more cleared by `CAST_START`
   ([played](../playtest/logs/2026-11-21-ravager-turn-undead.md); the destroy's way read, not played).
   Spells roll to hit in the sequel through site 16, `spell_hit` (84AAFh, `xor ax,ax / pop di`, the
-  immunity routine 8451Ah's only "not immune" answer): the sequel has no always-hit stub or missile
+  immunity routine 8451Ah's only "not immune" answer; its "immune" exit's jump, 84565h, which landed on
+  the site's number and quit the game with "Illegal Op (gpl=49)", is sent to the same epilogue at
+  7F2FEh in the image, `spell_hit_immune`,
+  [played](../playtest/logs/2026-11-25-ravager-illegal-op.md)): the sequel has no always-hit stub or missile
   table (SL's 78BA0h, 7A1A7h), so DSCLOG2's `TH_SITE` answers 1 ("immune") on a miss, and the damage
   and effect routine (651A0h) skips both, as SL's. `PROBE_CAST` (80585h) arms it (`TH_CAST`) unless the
   cast routine returns to the weapon's spell on a hit (5D2D1h's bytes). The spells by the sequel's
