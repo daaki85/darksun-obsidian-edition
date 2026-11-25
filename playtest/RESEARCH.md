@@ -1526,6 +1526,36 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   (a named save put back) isn't in the game's list until DOSBox restarts (the quick saves are the game's own
   writes, so they show). The sequel's save rows are narrower than SL's: an autosave's "- after a fight" runs
   past the row.
+- **F9's LOAD window runs on the main loop** (2026-11-25, logs/2026-11-25-ravager-loot-keys.md):
+  the window's routine (600:20) **returns with the window up**. SAVE_REQ was 3 0.4 s after F9 with the
+  window still open. The map's main loop then runs the window, PROBE_SCROLL with it, with SCREEN_IS
+  (DS:0DABh) 2. A page-back on "the main loop running" therefore took the QUICK page off under the open
+  window: DSCLOG2's and, after ANSWER_WAIT, the Loader's own. Now only DSCLOG2 does it, and only when
+  SCREEN_IS is 1. The sequel's autosave names are short ("Auto Day 1, 00:06 fight", `ravlog.region_short`,
+  at most 28 letters).
+
+**Looting, selling and the pointer in the sequel** (2026-11-25, logs/2026-11-25-ravager-loot-keys.md):
+- **The pointer's modes** (DS:1440h): 1 the walk arrow, 4 the sword, 2 the eye (look), 3 an item held.
+  Right-click turns 1 → 4 → 2. The eye on a body opens its container window. The eye on an item on the ground
+  picks it up onto the pointer (thing 523), and a click then puts it into the leader's pack.
+- **Containers**: DS:05D6h is the container whose window is open (SL's 05E6h), 9999 none. The things'
+  table is at (load+3F49h):0C33h, 3 bytes a thing (kind, first item).
+  - Dynamic things: the free list's head is DS:56EFh, the count out DS:55C6h. There are 200 dynamic things
+    (135 free and 65 out after the ambush).
+  - Items: 400 records of 17h bytes at the far pointer DS:19C1h. The free items' head is DS:5AF3h, linked
+    by +4. The power is a word at +10h (SL's a byte: `game.POWER_BYTES`).
+- **The shop**: the byte DS:143Dh is 1 while a merchant's shop is open (set at 7BCA6h), and its merchant
+  is DS:1A30h (SL's 179Ch). The shop's loop is at 88D52h, its test `cmp byte [143Dh],1` at 88D99h (site 82,
+  `shop_loop`).
+  - The character on show is at (load+3E71h):0B44h, selector 370h (SL's 3931h:25Bh).
+  - The party's money is a dword at (load+3C13h):357h, selector 2E8h.
+- **Status names**: far pointers at DS:1463h. 0 New, 1 Okay, 2 Stunned, 3 Out Cold, 4 Dying, 5 Animated,
+  6 Petrified, 7 Dead, 8 Gone (SL's numbering differs: `ravlog.ADDRESSES["STATUS_NAMES"]`).
+- **Keys**: O is the sequel's overhead map, so DSCLOG2's M is made O. U and I are USE and the inventory,
+  as in SL.
+- **Notaku** (Tyr, south of Shadow Square; arrow keys y 1224, x 296, y 936 from `ravager-after-ambush`; the
+  eye on him, talk 3, 1, 3, 2) sells. After a sale his "Show me your goods" is gone from the talk.
+  `ravloot.py` shows all of the above.
 
 ### The sequel's spells in a fight (2026-11-21)
 

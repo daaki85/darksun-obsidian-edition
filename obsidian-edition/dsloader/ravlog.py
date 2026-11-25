@@ -723,12 +723,17 @@ def region_short(region: Optional[int]) -> str:
 # no camp the F9 key breaks (its rests are at fire rings and inns, the party not on the map), and one page.
 # An autosave's name at most 28 letters ("Auto Day 1, 00:06 fight"; the sequel's LOAD window cut "Auto - Day 1,
 # 00:06 - after a fight" at 29 in its name field, and the row ran past its edge at 32)
+# The page goes back to the game's E by DSCLOG2 itself (SAVE_TICK), not by the Loader (page_back False): the
+# sequel's LOAD window runs passes of the map's main loop while it is open, so the Loader's test (the loop
+# running, the game on the map, no answer waited for after ANSWER_WAIT) took the QUICK page off under F9's
+# open window (seen in play, 2026-11-25), and a load from it would have read the game's own page's file.
 RAV_NAME_MOST = 28
 QUICK_LAYOUT = quicksave.Layout(keys=1904, seq=1908, req=1912, save_off=1914, tail_seg=1834, main_ticks=260,
                                 greq=1916, screen_is=0x0DAB, save_path=0x44F2, name_find=0x2085 + 3,
                                 name_save=0x20B6 + 3, window_from_ds=ravager.DGROUP - 0x3C4C, chosen=0,
                                 camp=None, kept_pages=(b"E",), region_name=region_short,
-                                name_most=RAV_NAME_MOST, name_join=" ", after_fight="fight")
+                                name_most=RAV_NAME_MOST, name_join=" ", after_fight="fight",
+                                page_back=False)
 QUICK_GREQ_SAVES, QUICK_GREQ_LOADS = 1918, 1920  # (DSCLOG2's counts of the GREQ chunks written and read)
 
 

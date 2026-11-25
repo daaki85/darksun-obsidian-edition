@@ -951,6 +951,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   the member knocks it out instead. The dice log's saving throws there show the d20 rolled (`d20 = 13 +9 other =
   22, needs 30`), with a natural 1's line that went missing before, and the creation screen's rolls each score's
   four 4d4 (`best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16`).
+- **[Looting with T and Shift+T](#looting-a-body-t-and-shiftt), [selling with S](#selling-plain-gear-s)
+  and [M, U and I](#m-u-and-i-open-a-screen-close-it-again)** work in the sequel too (started from the
+  Loader). A body's window opens with the eye (right-click twice). The items go into the backpacks and the
+  dice log names them (`Ar'Anda takes Bow, Stone Lotulis, Bone Brigandine Armor (3), Arrow`). S sells the
+  plain gear of the member on show and shuts the shop back to the talk. M is the sequel's own overhead map
+  (its O). No purse sound plays in the sequel. Without the Loader, T and S are the game's keys and leave the
+  window or the shop open.
 - **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
   SPELL](#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the
@@ -1046,7 +1053,9 @@ and the dice log says so.
 **In Wake of the Ravager** (started from the Loader) F5, F9 and the autosaves work the same way,
 in the sequel's own save and load window: F9 opens its LOAD window on the quick saves (`SAVQ01.SAV`
 to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window is back on the game's
-own ten. Each quick save keeps its own part of the map's limits, which the sequel stores beside a
+own ten (the sequel's own F1 and F2 windows never open on the quick saves). Its autosaves have shorter
+names, to fit its narrower rows (`Auto Day 1, 09:05 Mines 1`, `Auto Day 1, 00:06 fight`). Each quick save
+keeps its own part of the map's limits, which the sequel stores beside a
 save, so loading one never takes another save's. There is no camp in the sequel, so no camp
 autosave. While the switch is on and the Loader is there, F5 is the quick save, not the sequel's own
 F5 (the sound effects on and off: F4 and the game's menu still have the music, and the menu the

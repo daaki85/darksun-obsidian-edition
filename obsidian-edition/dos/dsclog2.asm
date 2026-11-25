@@ -14873,6 +14873,8 @@ qs_key:
 save_tick:
         cmp word [cs:save_req], 2       ; (no quick load waiting: the page the game's own, PAGE_BACK)
         je .req
+        cmp word [SCREEN_IS], 1         ; (nor a window up: F9's LOAD window, its own passes of the main
+        jne .req                        ;   loop coming here, has the screen word 2)
         cmp byte [QS_LETTER], QS_PAGE_QUICK
         jne .req
         mov al, QS_PAGE_GAME
@@ -14932,19 +14934,20 @@ save_work:
         mov ax, QS_LOAD_SEG
         mov bx, QS_LOAD_ENTRY
         call qs_far
-        call far [cs:qs_call]
-        mov al, QS_PAGE_GAME
-        call qs_page
-        inc word [cs:quick_loads]
+        call far [cs:qs_call]           ; (it returns with the window up: the main loop runs it, and
+        inc word [cs:quick_loads]       ;   SAVE_TICK puts E back once it is shut and the map is the screen)
         mov ax, 3
 .set:   mov [cs:save_req], ax
         ret
 
 ; QS_PAGE: AL the page's letter put in the game's two save file names (QS_LETTER, QS_NAME_SAVE; DS the
 ; game's). PAGE_BACK: the sequel's one page is the game's E; the QUICK page (Q) is only for F9's LOAD window,
-; put there by SAVE_WORK as it opens it and taken off as it shuts, and taken off by SAVE_TICK whenever the
-; main loop runs with no quick load waiting (the Loader writes Q before asking): so F1's SAVE window (or F2's
-; LOAD) can never open on Q, where a save by hand would go to SAVQnn.SAV (its slots written over in turn)
+; put there by SAVE_WORK as it opens it and taken off by SAVE_TICK whenever the main loop runs on the map
+; (SCREEN_IS 1) with no quick load waiting (the Loader writes Q before asking): so F1's SAVE window (or F2's
+; LOAD) can never open on Q, where a save by hand would go to SAVQnn.SAV (its slots written over in turn).
+; The window's routine returns with the window up (seen in play: SAVE_REQ 3 0.4 s after F9, the window
+; still open) and the main loop runs it, with the screen word 2: Q is kept until it shuts. (The Loader's
+; own page-back, SL's, is off in the sequel: ravlog.QUICK_LAYOUT's page_back.)
 qs_page:
         mov [QS_LETTER], al
         mov [QS_NAME_SAVE], al
@@ -15045,7 +15048,8 @@ greq_load:
 ; none) is made Escape, which closes the window, and, when the key is read (MK_READ; a peek only looks),
 ; counted in LOOT_SEQ with the container (LOOT_THING) and T's mode or Shift+T's (LOOT_MODE: Shift held,
 ; from the BIOS keyboard flags, whatever Caps Lock does to the letter). Other keys, and these with no
-; window, as they were. AX the key (Escape now, for one of these); others kept.
+; window, or with no Loader passing (LOADER_FRESH: unlike DSCLOG, DSCLOG2 runs whenever the sequel does, the
+; Loader or not), as they were. AX the key (Escape now, for one of these); others kept.
 KEY_T        equ 0x1474
 KEY_SHIFT_T  equ 0x1454
 KEY_ESCAPE   equ 0x011B
@@ -15058,6 +15062,8 @@ loot_key:
         jne .ret
 .t:     push ds
         push bx
+        call loader_fresh               ; (no Loader to do the move: T the game's key, the window kept)
+        jne .out
         mov bx, [cs:pointer_ds]
         or bx, bx
         jz .out
@@ -15085,8 +15091,8 @@ loot_key:
 ; SELL_KEY: (OUR_KEY's) S or Shift+S on a shop's screen (its loop, SHOP_LOOP, run within the last
 ; SHOP_FRESH BIOS ticks) is made Escape, which shuts the shop, and, when the key is read (MK_READ),
 ; counted in SELL_SEQ with the party member on show (SELL_MEMBER) and the shop's merchant (SELL_MERCHANT):
-; the Loader sells that member's plain gear (dsloader/sell.py) once the shop is shut. AX the key (Escape
-; now, for one of these); others kept.
+; the Loader sells that member's plain gear (dsloader/sell.py) once the shop is shut (with no Loader
+; passing, LOADER_FRESH, S the game's). AX the key (Escape now, for one of these); others kept.
 KEY_S        equ 0x1F73
 KEY_SHIFT_S  equ 0x1F53
 SHOP_FRESH   equ 2
@@ -15101,6 +15107,8 @@ sell_key:
 .s:     push ds
         push bx
         push ax
+        call loader_fresh               ; (no Loader to sell: S the game's key, the shop kept)
+        jne .out
         mov bx, [cs:pointer_ds]
         or bx, bx
         jz .out

@@ -102,6 +102,7 @@ class HelperTests(unittest.TestCase):
         mu.mem_write(0x46C, struct.pack("<H", 500))
         self.word("pointer_ds", self.GAME_DS)
         self.word("map_tick", 500)
+        self.word("stats_stamp", 500)  # (the Loader passing)
         self.game(0x05D6, 9999)
         self.game(0x0DAB, 1)  # (on the map)
 
@@ -148,6 +149,9 @@ class HelperTests(unittest.TestCase):
         self.word("loot_thing", 0xFFFF)
         self.mu.mem_write(0x417, bytes((2,)))  # (left Shift)
         self.assertEqual((self.key(0x1474), self.word("loot_seq"), self.word("loot_mode")), (0x011B, 2, 1))
+        self.word("loot_thing", 0xFFFF)
+        self.word("stats_stamp", 100)  # (no Loader: the game's T, the window kept)
+        self.assertEqual((self.key(0x1474), self.word("loot_seq")), (0x1474, 2))
 
     def test_shop_loop_and_sell_key(self):
         self.game(0x143D, 1, 1)
@@ -158,6 +162,9 @@ class HelperTests(unittest.TestCase):
         self.assertEqual((self.word("shop_at"), self.word("shop_passes")), (500, 1))
         flags = struct.unpack("<H", self.mu.mem_read(self.SS * 16 + 0x7F4, 2))[0]
         self.assertEqual(flags & 0x40, 0x40)  # (ZF: the loop goes on, byte [143Dh] 1)
+        self.word("stats_stamp", 100)  # (no Loader: the game's S, the shop kept)
+        self.assertEqual((self.key(0x1F73), self.word("sell_seq")), (0x1F73, 0))
+        self.word("stats_stamp", 500)
         self.assertEqual((self.key(0x1F73, read=0), self.word("sell_seq")), (0x011B, 0))
         self.assertEqual((self.key(0x1F53), self.word("sell_seq"), self.word("sell_member"), self.word("sell_merchant"),
                           self.word("shop_at")), (0x011B, 1, 2, 33, 0))

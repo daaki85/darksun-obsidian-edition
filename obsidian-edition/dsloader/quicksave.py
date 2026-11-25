@@ -89,6 +89,7 @@ class Layout(NamedTuple):
     name_most: int = NAME_MOST  # an autosave's name at most this long (the sequel's rows are narrower)
     name_join: str = " - "  # between an autosave name's parts
     after_fight: str = "after a fight"  # an autosave's after a fight, in its name
+    page_back: bool = True  # the Loader puts the page back (_page_back); False: the helper does it itself
 
 
 SL_LAYOUT = Layout()
@@ -268,7 +269,7 @@ class QuickSave:
         the page) is made the page of 1 to 4 shown last, so a save made by hand in the window
         doesn't land in a slot that is written over in turn. (F9 makes the page QUICK as it opens
         the window; the QUICK button and PgDn still show it.)"""
-        if self._asked is not None or not self._running or gd._word(self.layout.screen_is) != ON_MAP:
+        if not self.layout.page_back or self._asked is not None or not self._running or gd._word(self.layout.screen_is) != ON_MAP:
             return
         now = gd.guest.read(gd.ds * 16 + self.layout.name_find, 1)
         if now in self.layout.kept_pages:

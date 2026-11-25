@@ -125,10 +125,11 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(self.gd.hdr(LAY.req), q.REQ_LOAD)
         self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1) + self.gd.guest.read(DS * 16 + LAY.name_save, 1), b"QQ")
         self.assertEqual(struct.unpack_from("<H", self.gd.guest.m, 0x3C4C * 16 - (ravager.DGROUP - DS) * 16)[0], 6)
-        self.gd.hdr(LAY.req, q.DONE)
-        self.tick()
-        self.tick()
-        self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1), b"E")  # (the one page again)
+        for _ in range(int(q.ANSWER_WAIT) + 3):  # (F9's window open, the main loop running in it: SAVE_REQ 0)
+            self.gd.hdr(LAY.req, 0)
+            self.tick()
+        self.assertEqual(self.gd.guest.read(DS * 16 + LAY.name_find, 1), b"Q")  # (left: DSCLOG2's PAGE_BACK)
+        self.assertFalse(LAY.page_back)
 
     def test_autosave_named_by_the_sequels_areas(self):
         self.tick()
@@ -324,10 +325,18 @@ class HelperTests(unittest.TestCase):
         self.assertEqual((self.calls, self.word("save_req")), ([], q.IN_FIGHT))
 
     def test_load_window(self):
-        """The QUICK page (Q) while F9's LOAD window is open, the game's (E) once it shuts."""
+        """The QUICK page (Q) while F9's LOAD window is up (its routine returns with it up, the screen word 2,
+        the main loop running it), the game's (E) at the first pass on the map once it shuts."""
+        ds = self.GAME_DS * 16
         self.ask(q.REQ_LOAD)
         self.assertEqual((self.calls, self.during, self.word("save_req")), ([("load",)], 0, q.DONE))
-        self.assertEqual((self.letters, self.letters_now()), (b"QQ", b"EE"))
+        self.assertEqual((self.letters, self.letters_now()), (b"QQ", b"QQ"))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 2))
+        self.ask(q.DONE)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"QQ", 0))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 1))
+        self.ask(q.DONE)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
 
     def test_page_back(self):
         """The QUICK page left (the Loader's Q written, no load asked): the game's again at the main loop's
@@ -342,7 +351,19 @@ class HelperTests(unittest.TestCase):
         self.mu.mem_write(ds + 0x2088, b"Q")
         self.word("s_fl", 0x0002)
         self.ask(q.REQ_LOAD)
-        self.assertEqual((self.letters, self.letters_now(), self.word("pages_back")), (b"QQ", b"EE", 1))
+        self.assertEqual((self.letters, self.letters_now(), self.word("pages_back")), (b"QQ", b"QQ", 1))
+
+    def test_page_kept_off_the_map(self):
+        """A window up (the screen word not 1; F9's LOAD window's 2, seen in play): the QUICK page kept."""
+        ds = self.GAME_DS * 16
+        self.mu.mem_write(ds + 0x2088, b"Q")
+        self.mu.mem_write(ds + 0x20B9, b"Q")
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 2))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"QQ", 0))
+        self.mu.mem_write(ds + 0x0DAB, struct.pack("<H", 1))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back")), (b"EE", 1))
 
     def test_nothing_asked(self):
         for value in (0, q.DONE, q.FAILED, q.IN_FIGHT):
