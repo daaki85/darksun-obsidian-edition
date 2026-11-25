@@ -29,10 +29,10 @@ FRONT = {
         "  cfdc", "   cb",
     ), (
         "  685     45", " 78675    463", " 675487  5742",
-        " 56455788762", "  4534678642", "  3467865432", "   58765432",
-        "   6543xx52", "   54xyx432", "  5754323452", "  65434345642",
-        "  76432 23542", "  6532   3432", "  542     32", "  32       2",
-        "  2",
+        " 56455788762", "  4534678642", "  3467865432",
+        "   58765432", "   6543xy52", "   54yx3252",
+        "  5654323542", "  46534323542", "  35432  3452",
+        "   432    32", "   32",
     )),
     # First step. The forward hip gathers the pleat on the left.
     3: ((3, 6), (
@@ -43,10 +43,11 @@ FRONT = {
         "  dghgcbbda", "   ghfca b", "   fgfb",
         "   dec", "   cb",
     ), (
-        "  676     34", " 78674    562", " 87546   5652", " 67435787654",
-        "  6456787652", "  4578765452", "  578654342", "  67543xxy2",
-        "  653xxy432", "  575432452", "  6753235642", "  76432 4542",
-        "  6532  342", "   532   32", "   42", "   2",
+        "  676     34", " 78674    562", " 87546   5652",
+        " 67435787654", "  6456787652", "  4578765452",
+        "  578654342", "  67543xy52", "  65xyx3432",
+        "  565432452", "  6764323542", "  465432 342",
+        "   3542   32", "   242",
     )),
     # Second step. The left forearm swings across the waist. The short
     # side rides over the raised left knee while the right pleat hangs.
@@ -58,39 +59,41 @@ FRONT = {
         "   dc  bghfc", "        fgdc", "        efb",
         "        cb",
     ), (
-        "  65     34", " 5765    465", " 65767  35642", "  6456778652",
-        "  4345677652", "   34678764", "   45786543", "  3567xx452",
-        "  54xxy5432", "  6432345652", "  532 345675", "  42   45674",
-        "  2    34562", "        3542", "        242", "         2",
+        "  65     34", " 5765    465", " 65767  35642",
+        "  6456778652", "  4345677652", "   34678764",
+        "   45786543", "  3567xy452", "  54xxy5432",
+        "  6432345652", "   42 345675", "    2  35674",
+        "       24562", "        342", "         2",
     )),
     # Third step. The torso rises and the wrap swings around the right hip.
     5: ((3, 5), (
-        "  DFE", " DEGF        c", " EFGFE     dy",
-        " CDFGFD   ebc", "  CDFEFDCbb", "  BDEFGFDBb",
-        "  CEFDEbcdb", "  CEBCdefdb", "  xyxxxybba",
-        "  cdefcegfb", "  defcbefgfc", "  cfecbdfghfb",
-        "   dcb adghfc", "    b  bcgfdb", "        dgfcb",
-        "        efdb", "        dcb", "        b",
+        "   DE", "  EFG        b", " EFdFD      ec",
+        " DFGEFD   fed", "  CDFGECdefb", "  BECFGDCed",
+        "  BDFEGFBcb", "  CdBcEDGDC", "  dycecbCCB",
+        "  bdgfecbxx", "  adghegdbc", "  bcghgfedcb",
+        "   bfgefdecba", "    cbdfgfdb", "      acdec",
+        "        cb",
     ), (
-        "  567       3", " 56786     453", " 786756   5642", " 654578  6752",
-        "  4356788752", "  3467886542", "  457865432", "  56754xx42",
-        "  643xxy432", "  6523234562", "  542  456752", "  32   345675",
-        "  2     34564", "        34562", "         542", "         32", "         2",
+        "  567       3", " 56786     453", " 786756   5642",
+        " 654578  6752", "  4356788752", "  3467886542",
+        "  457865432", "   6754xy42", "   54xy5432",
+        "  654x34565", "  5532234574", "   343 457652",
+        "    2  235642", "        2452", "          32",
     )),
     # Fourth step. The other arm comes forward, the left panel opens
     # with the leading thigh, and the cloth is pulled taut near the belt.
     6: ((3, 6), (
-        "  EFD", " DEGF      c", " DFGFE    dy",
-        "  DFEFDC ebc", "  BDFGFEBCb", "   CEGFBCdb",
-        "   BEFBcedb", "  BDECdefdb", "  xyxxbyxxb",
-        "  bdefggfdb", "  cdfghgecb", "  cdfhhfcba",
-        "  dfghfc  b", "  cghgeb", "   fgec",
-        "   efb", "    b",
+        "   ED", "  EGF      bc", " DGFE     dec",
+        "  EGFDC  fed", "  DFEGFDcdb", "   BCEFGDCb",
+        "   CBDGFEb", "   cdBCFDBC", "  cdyebCCB",
+        "  cgfeccyb", "  dghgfdcb", "  beghgfedb",
+        "  acdfgecba", "  bcdefcb", "   bcdb",
     ), (
-        "  675     34", " 67865    563", " 765457  6752", "  6544678762",
-        "  5435678642", "   45787652", "   67865432", "  567543xx2",
-        "  675xxy432", "  765432452", "  687543452", "  76542 352",
-        "  6752   42", "  5642", "  452", "   32", "   2",
+        "  675     34", " 67865    563", " 765457  6752",
+        "  6544678762", "  5435678642", "   45787652",
+        "   67865432", "  567543xy2", "  675xxy432",
+        "  765432454", "  687543342", "  76542  32",
+        "   56423", "    5423", "     2",
     )),
     # The middle strike compresses the distance from the throat to the
     # leading knee. The forearm crosses above the shortened front folds.
@@ -138,12 +141,36 @@ TURNS = {
     )),
 }
 
+# Back of the front-facing cloak. On the retail Thief the free corner
+# swings behind the arm and the supporting leg stays visible in front.
+# Each painting starts at the far ribs and follows the turn of that hip.
+CLOAK_BACK = {
+    0: ((13, 9), ("  443", " 4543", " 35432", " 345342", " 235453",
+                  "  34542", "  34562", "  23453", "   3452", "    343",
+                  "     32", "      2")),
+    3: ((12, 9), ("  443", " 4543", " 34542", " 23453", "  34543",
+                  "  23542", "  34563", "  23453", "   3452", "    342", "     32")),
+    4: ((11, 9), ("  443", " 4543", " 34543", " 234542", "  34543",
+                  "  234562", "   34563", "   23454", "    34532", "      342",
+                  "        2")),
+    5: ((12, 8), ("  443", " 45432", "  35432", "  34543", "   34532",
+                  "  234543", "  234563", "   234563", "    34562",
+                  "     23453", "       342", "         2")),
+    6: ((11, 9), ("  443", " 4543", " 34542", " 23453", "  34542",
+                  "  23453", "   34542", "   23453", "    3452", "     342", "      2")),
+}
+
+# The low hands pass through the old rectangular breeches mask. Use the
+# actual outer edges of the thighs through the walk.
+THIGHS = {0: (6, 17), 3: (5, 14), 4: (5, 14), 5: (5, 14), 6: (5, 13)}
+
 # A rolled rim grips the temple and clears the entire cheek. The first
 # two rows share the scalp height; the shade at one temple turns into the
 # short collar instead of continuing down to the hem.
 COWL = (
-    "   57752  ", "  6876532 ", " 675    32", " 45     32", " 34     23",
-    " 245    43", "  356  542", "   34  32 ",
+    "    57752  ", "  46786532 ", " 5754   432", "675      32",
+    "564      23", "345      43", " 456    542", "  453   32 ",
+    "   432     ",
 )
 
 
@@ -158,6 +185,7 @@ def dress(pose, body, protected, hands, bow, hood):
     hx, hy, spans = fit.HEADS[pose]
     head = fit.head_pixels(pose, len(body[0])-2*fit.PAD, len(body))
     waist, wl, wr = fit.ROBE_CUTS[pose][2]
+    thigh_left, thigh_right = THIGHS.get(pose, (wl-3, wr+3))
     knee = fit.HIDE_POINTS[pose][3]
     (left, top), drows, trows = FRONT[pose] if pose in FRONT else TURNS[pose]
     for y, row in enumerate(body):
@@ -166,6 +194,9 @@ def dress(pose, body, protected, hands, bow, hood):
             pt = x,y
             if pt in bow or (skin is not None and pt in hands):
                 continue
+            if pose in CLOAK_BACK and skin is None:
+                (cx, cy), lining = CLOAK_BACK[pose]
+                thief[y][u] = mark(lining, x-cx, y-cy)
             if pt not in protected:
                 d = mark(drows, x-left, y-top)
                 t = mark(trows, x-left, y-top)
@@ -174,14 +205,14 @@ def dress(pose, body, protected, hands, bow, hood):
                 # The leather breeches remain visible in
                 # the opening. Keep the separate leg silhouettes and bare feet.
                 near_elbow = pose == 17 and pt == (6, 14)
-                if skin in LEATHER and waist <= y <= knee+1 and wl-3 <= x <= wr+3 and not near_elbow:
+                if skin in LEATHER and waist <= y <= knee+1 and thigh_left <= x <= thigh_right and not near_elbow:
                     # Deep leather at the knees separates them from the loose
                     # slate fold that swings over the tunic.
                     thief[y][u] = LEATHER[skin]
                 if t is not None:
                     thief[y][u] = t
             if pose in FRONT:
-                c = mark(COWL, x-hx+1, y-hy)
+                c = mark(COWL, x-hx+2, y-hy)
                 if c is None and pt in head and y-hy < 3:
                     # Carry the crown over the bald scalp to its shaded brim.
                     c = (25, 20, 17)[y-hy]

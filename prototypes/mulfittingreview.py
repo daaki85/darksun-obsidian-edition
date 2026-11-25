@@ -62,6 +62,13 @@ def front_review(atlas, folds, sand, output, previous):
     frames = {}
     strip = Image.new("RGB", (740, 494), dwarf.PAPER)
     label(strip, (12, 8), "Mul front walk", 21)
+    details = Image.new("RGB", (658, 517), dwarf.PAPER)
+    label(details, (10, 8), "Mul front walk details", 20)
+    examples = {("Druid", 5): 0, ("Druid", 6): 1, ("Thief", 5): 2}
+    for (role, pose), column in examples.items():
+        label(details, (183+188*column, 44), f"{role} · step {pose-2}", 15, "ma")
+    label(details, (10, 152), "Previous", 16)
+    label(details, (10, 380), "Revised", 16)
     for column, name in enumerate(("Idle", "Step 1", "Step 2", "Step 3", "Step 4")):
         label(strip, (180+124*column, 42), name, 15, "ma")
     atlas.floor = sand
@@ -88,6 +95,12 @@ def front_review(atlas, folds, sand, output, previous):
                 crop = tile.crop((7, 12, 47, 51))
                 page.paste(crop.resize((120, 117), Image.Resampling.NEAREST), (x, y))
                 page.paste(crop, (x+40, y+120))
+            if (role, pose) in examples:
+                column = examples[role, pose]
+                for j, tile in enumerate((old, revised)):
+                    crop = tile.crop((12, 15, 42, 51))
+                    details.paste(crop.resize((180, 216), Image.Resampling.NEAREST),
+                                  (94+188*column, 64+228*j))
             if pose in poses[:5]:
                 for row, tile in enumerate((old, revised)):
                     y = 64+index*215+row*104
@@ -97,6 +110,7 @@ def front_review(atlas, folds, sand, output, previous):
                     strip.paste(crop.resize((114, 102), Image.Resampling.NEAREST),
                                 (124+124*poses.index(pose), y))
         frames[pose] = page.quantize(256, dither=Image.Dither.NONE)
+    details.save(output/"mul-front-details.png")
     strip.save(output/"mul-front-walk.png")
     cycle = (0, 3, 4, 5, 6, 3, 4, 5, 6, 0, 15, 16, 17, 0, 24)
     frames[0].save(output/"mul-front-fit.gif", save_all=True, loop=0, disposal=1,
@@ -165,6 +179,6 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("previous", type=Path, help="mul-singles-poses.png at 6363eea")
     parser.add_argument("--previous-druid", type=Path, help="mul-singles-poses.png at bf80eb5")
-    parser.add_argument("--previous-front", type=Path, help="mul-singles-poses.png at 27911e0")
+    parser.add_argument("--previous-front", type=Path, help="mul-singles-poses.png at b8447ce")
     args = parser.parse_args()
     render(args.game_dir, args.output, args.previous, args.previous_druid, args.previous_front)

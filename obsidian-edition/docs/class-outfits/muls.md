@@ -4,11 +4,13 @@ The playable Mul in Shattered Lands is male only. All six single classes are fit
 
 ## Front walk, strikes and bow
 
-In the previous front walk the Druid’s green collar held its V while the hips shifted. The Thief’s long lapels hung on either side of his bare chest. The new front poses have individually drawn folds. On steps two and three, look at the Druid’s ochre pleat over the raised knee. On step four, follow the Thief’s cloak across his ribs and down beside the advancing thigh. The darker breeches remain visible through the split.
+Compare the Druid on front walk steps three and four. The green mantle turns with his ribs, and the ochre wrap lifts across the raised thigh before the weight changes sides. The shorter hem exposes the bend of each knee.
+
+On the Thief, follow the lit rim down the viewer’s left temple into the cowl. On step three the cloak passes behind the swinging arm. Its free corner reaches past the hip while the brown breeches follow the bent leg in front. The retail Thief in the animation shows the same overlap.
 
 ![Previous and revised Mul Druid and Thief in front idle and the four front walk steps](mul-front-walk.png)
 
-[Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous fitting at `27911e0`, revised fitting, human class outfit and retail Thief share the same sand tile. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
+[Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous fitting at `b8447ce`, revised fitting, human class outfit and retail Thief share the same sand tile. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
 
 ## Mantle attachment and clipping
 
