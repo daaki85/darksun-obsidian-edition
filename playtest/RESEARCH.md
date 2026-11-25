@@ -1364,7 +1364,12 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
 - **Giving a member a second sphere for a test**: `ravkits.py set M 0x01 - C` (a single-class cleric C:
   the Elementalist is a cleric's kit, and a multiclass character's kit is its group's), `ravkits.py
   levels M 5`, `ravkits.py sphere M S` (1 air, 2 earth, 3 fire, 4 water); `ravkits.py count`'s
-  `el_spheres` counts the game's no made yes. Never save after.
+  `el_spheres` counts the game's no made yes (thousands: USE asks at every redraw). Never save after.
+- **Playing a spell on a chosen member's turn** (the log's run script): Computer Control for the others
+  (View Character's small icons, as the kits' runs), a test base AC of -10 for the caster (a caster hit in
+  the round finds every spell crossed out, "YOU WERE HIT"), then wait for the member's name in the top-right
+  panel (a crop compared with `compare -metric AE`); the top-left icon, then the bar's third (97,171), CAST
+  SPELL. Tab then Return brought the game's menu, not an attack: a click on an adjacent foe ends a turn.
 
 ### The sequel's spells in a fight (2026-11-21)
 
