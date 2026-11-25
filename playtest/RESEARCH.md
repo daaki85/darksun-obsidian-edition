@@ -1448,6 +1448,30 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
   click the spell's icon at the box's right (`ravclick.py X Y right`; xdotool alone doesn't move the
   game's pointer). The party's items are the first item records (Ar'anda's 1-3 there).
+- **The sequel's shops** (2026-11-25, logs/2026-11-25-ravager-shops-scrolls.md): the shop is SL's at 90xxxh
+  (its list of the merchant's items, 10 bytes an entry, at the far DS:619Dh, built by C8h:2196h from the
+  merchant's thing DS:1A30h, SL's 179Ch; the thing on the pointer DS:1A32h, 523 as SL's 179Eh; its slot
+  DS:1A34h). The price is the item's +6 word as in SL; then the sequel's own markups, 370h:36h buying
+  (914A5h) and 370h:34h selling (915B8h), 0 at Notaku's. The reads: 90E2Ah the price shown, 90AA7h the
+  price charged (times the count for a stack, 2E8h:357h the money), 9036Ch the list's greying, 90F4Dh what
+  the shop offers ("I'll give you %lu$"), 91043h the free of the sold item's thing (C8h:2410h, nothing for
+  270Fh). Items in the merchant's list carry backpack cells 14+ till the shop opens and numbers 1, 2, 3...
+  after. **A shop in Tyr**: Notaku's stall in Shadow Square (map object 33 at world 312, 904; from
+  `ravager-after-ambush` the street to y 1224, west along y 1224 to x 296, north to y 936), the look
+  pointer on him, the Look box's first button talks, "Show me your goods." (fourth reply after declining
+  his job). He sells magic items, a one-use scroll of Shield at 300 among them. The shop's buttons: MORE
+  (254,164) pages the list and draws it again (twice for the first page), SELL (297,164) offers for the
+  item on the pointer, TAKE IT at (120,92) or (145,92) as the box falls. `ravshop.py` reads the shop and
+  edits CHA, INT, scrolls and known spells.
+- **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
+  opens window 2905h (5B0h:48h, kept at 300h:7), writes the text, waits `[26B7h]` x 100 ms with the game's
+  delay (0:12FAh, Borland's, on the PIT) and closes it. It was never seen: the windows are drawn only as a
+  new picture is shown (3328h:0B4Ch, from the main loop; 0B0h:2A81h with 1 marks one due and shows it), and
+  the delay was over at once (15 s asked, the inventory answered 4 s after). DSCLOG2's MSG_SHOWN does both
+  (the picture, then the time on the BIOS clock). **Overlay stubs**: a far call to a selector below 600h
+  is an overlay stub; its target is the stub block's (selector / 8 in the segment table at the FBOV
+  header's exeinfo) descriptor's payload + the area (as `build_image.py` reads them) plus the stub's entry
+  word (stub + 2, the stub at block + 20h + 5n).
 - **XP, THAC0 and slots in the sequel** (logs/2026-11-22-ravager-class-tables.md): a sheet's XP is its
   +0 dword; the class needs the XP table's entry at the index **of its level** (an 11th-level cleric
   needs entry 11, 900,000, the 12th level's), and the level up caps the XP at the entry 3 above. A

@@ -938,6 +938,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
   round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
   Lands.
+- **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
+  (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
+  (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
+  bought back. A shopkeeper's own discount in the sequel (Tasarla's for the Veiled Alliance) comes on top.
+- **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
+  SPELL](#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
+  and gone at once; now it stays for the time the game's options set (five seconds at first) while the
+  game waits, and with it [a wizard's INT](#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
+  SPELLS OF THAT LEVEL.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
@@ -1419,7 +1428,8 @@ How it works:
 Clicking a scroll's spell icon in its item box gives the result on the line under the paper doll:
 YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL TO LEARN THE SPELL, TOO MANY SPELLS OF
 THAT LEVEL, or a Shinobi's YOU CAN NOT READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game
-wrote these there too, but they never reached the screen. How it works:
+wrote these there too, but they never reached the screen. In Wake of the Ravager the same messages
+come up in the game's own message box over the inventory, for a few seconds. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-int).
 
 ### No manual check

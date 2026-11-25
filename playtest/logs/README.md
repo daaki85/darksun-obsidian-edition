@@ -156,6 +156,7 @@ schedules and diffs a log made or used.
 | [2026-11-25](2026-11-25-ravager-screens.md) | The sequel's DAM lines (inventory and View Character) with weapon specialization and the off hand, the Effects screen's weapon kinds, kit line and pages, the Look box's whole description in the dialogue window as it closes; controls with the rules off |
 | [2026-11-25](2026-11-25-ravager-thieves.md) | Thieves as in AD&D in the sequel, rule on against off: Seneca's six skills on the inventory from AD&D's table (the control the game's), a hidden backstab multiplying the dice only (13 against 14 for the whole), an Assassin's x3 against x2 with the kits off |
 | [2026-11-25](2026-11-25-ravager-port-all.md) | The Ravager port's branches together (kit choice, thieves, second sphere): the transferred party wins the Tyr ambush with every rule on, no "Illegal Op"; specialization, a Battle Dancer line, the thief table in the dice log; DSCLOG2 39248 bytes in upper memory |
+| [2026-11-25](2026-11-25-ravager-shops-scrolls.md) | Shops as in AD&D in the sequel (Notaku's, Shadow Square): the leader's CHA 22 takes 25% off (225 for 300), a sale pays 60% (180), the magical scroll sold back in Notaku's list; the control the game's prices and the scroll gone. The game's message box never seen (not drawn, its wait over at once): fixed, the scroll's four messages on screen; the control nothing |
 
 ## files/
 
