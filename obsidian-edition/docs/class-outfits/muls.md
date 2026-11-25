@@ -2,6 +2,25 @@
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
+## Six-single fitting review
+
+The large figures share one patch of arena sand. Each small figure stands on paving at game size, except for the previous Mul, which comes from the sand sheet at `6363eea`. Read across from the retail Mul and cleaned body to the two fittings, the finished human and the retail figure used to compare material. The retail Warrior supplies leather, the Priest supplies linen, the Thief supplies cape folds and the Mage supplies wrapped cloth.
+
+![Six matched Mul poses beside their previous fitting, the finished human and a retail Shattered Lands figure](mul-fitting-details.png)
+
+[Watch all six outfits through all 29 poses](mul-fitting-review.gif) · [Inspect every pose as a still](mul-singles-poses.png)
+
+| Outfit and pose | Detail to follow |
+|---|---|
+| Gladiator, rear walk 2 (08) | The bronze shoulder piece and diagonal strap turn with the bare back. Follow the strap to the opposite hip and the lit leather edge over the advancing thigh. |
+| Fighter, side walk 2 (12) | The bone scale sits above the moving elbow. Dark leather continues behind the forearm, with a short tab behind the hip. This is still the hardest view for distinguishing the two leather outfits at game size. |
+| Cleric, side walk 3 (13) | The near arm crosses the fitted sleeve. Behind it, the outer linen fold swings back from the waist and catches light above the hem. |
+| Druid, front idle (00) | Both shoulders carry the short green mantle. Its dark lower edge lifts over the longer ochre flap. Compare the bright lip with the human Druid’s waist. |
+| Psionicist, front bow (24) | Follow the continuous teal along the ribs and into the lapped hip cloth where the bent forearm crosses the wrap. The copper wrist and the bow stay visible. |
+| Thief, rear walk 2 (08) | The shade changes from hood to shoulder. The wider cloak opens over the lifted leg, and the two corners fall to different heights. Front idle shows the shorter lapel on the opposite side of the chest. |
+
+The review covers the cleaned body and 174 empty-slot outfit poses. The checks compared the face opening, foreground hand and bow with their underlying pixels, and each silhouette with the retail cel for new enclosed holes or detached pieces. The shaded torso keeps the retail copper highlights. Equipment and live play remain pending.
+
 ## Same-class comparison across races
 
 Each figure uses its own frame for the named action. The floor, ground line and pixel scale are shared. The small copies show game size. In the animations the male figures are above the female figures, with the Mul at the left of the male row. Humans, dwarves and elves come from the Loader renderer. Half-elves, halflings, half-giants and the Mul come from their art studies. Each loop includes the available same-class fittings.
@@ -32,7 +51,7 @@ The top row shows the retail Mul followed by the three new outfits. The small co
 | Psionicist | The teal wrap sits on one shoulder, crosses the ribs and tucks under the angled belt. In side bow (26), follow the copper draw hand across the folded chest and the leather tie at the waist. |
 | Thief | Compare side idle (02) with the four profile steps (11–14). The hood rim follows the brow, its back seam falls toward the shoulder, and the longer slate cloak swings behind the stride. Front strike two (16) shows the cheek and jaw inside the opening. |
 
-The frame review covered all 87 new dressed poses. It checked the visible hand and bow pixels against the underlying figure and examined the Thief’s face opening separately from its covered crown. The silhouettes were checked for new enclosed gaps and detached pixels. The approved body, Gladiator, Fighter and Cleric match the earlier pose sheet in all 29 poses.
+The frame review covered all 87 new dressed poses. It checked the visible hand and bow pixels against the underlying figure and examined the Thief’s face opening separately from its covered crown. The silhouettes were checked for new enclosed gaps and detached pixels. The six-single gallery above shows the subsequent body and leather refit alongside the revised cloth.
 
 ## Face and neckline
 
@@ -50,7 +69,7 @@ The first robe borrowed the human Priest’s sleeve and hem positions. In rear s
 
 ## Gladiator, Fighter and Cleric
 
-The Gladiator and Fighter also received small corrections where leather crossed a foreground forearm. Side idle (02), the four profile steps (11–14) and the follow-through (17) show the change on both. The frame review covered all 87 dressed poses with empty equipment slots. Face and bow pixels matched the retail source, visible hand landmarks matched the body base, and the silhouettes had no new enclosed gaps or detached pixels.
+The Gladiator’s strap, the Fighter’s armhole, and their waist and thigh pieces follow the Mul’s own shoulder and hip in each pose. Side idle (02), the four profile steps (11–14) and the follow-through (17) show the change on both. The frame review covered all 87 dressed poses with empty equipment slots. Face and bow pixels matched the retail source, visible hand landmarks matched the body base, and the silhouettes had no new enclosed gaps or detached pixels.
 
 ![Mul body and three outfits walking and fighting beside retail and human figures](mul-study.gif)
 
@@ -62,6 +81,6 @@ The Gladiator and Fighter also received small corrections where leather crossed 
 | Fighter | Compare the shoulders and upper back with the Gladiator in rear idle (01). The bone guard sits at the shoulder and the dark jerkin covers the back between the arms. |
 | Cleric | Watch the linen swing behind the calf in the profile walk (11–14). In side step two (12) the hand passes in front of the folds. The side bow (26) shows the draw hand and bow against the cream robe. |
 
-The fittings use the retail Mul’s walking and combat pictures (2093 and 2094). The cleaned body keeps the original stance, scalp, jaw and copper highlights. The skin under the harness and shorts follows the muscle shading of the corresponding human pose. The human garments supplied the leather and bone references. The revised linen follows cross-sections traced on each Mul pose, with texture sampled from the back of the retail Priest’s robe.
+The fittings use the retail Mul’s walking and combat pictures (2093 and 2094). The cleaned body keeps the original stance, scalp, jaw and copper highlights. The reconstructed ribs and hip use the registered human body for depth and the Mul’s copper tones for light and shadow. The leather and bone follow shoulder, belt and knee positions on the Mul. The revised linen follows cross-sections traced on each Mul pose, with texture sampled from the back of the retail Priest’s robe.
 
 The remaining Mul art studies are the nine legal pairs and three triples. [Playable classes and combinations](../../PLAYER-GUIDE.md)

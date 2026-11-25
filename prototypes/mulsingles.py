@@ -86,10 +86,29 @@ def cape(pose, short):
             points = ((sl+1, sy+1), attach, (hip, ry+1), chest, (wl+2, wy),
                       (wl+1, ty-2), (tx, ty+1), (tx-1, ty), (rl, ry+2))
     cloth = panel(points)
+    if pose in REAR and not short:
+        # The free side flares behind the advancing leg; a shorter return
+        # swings from the other scapula. Keep the elbows above the fabric.
+        free = min(wl-3, knee-3)
+        throw = 2 if knee <= hip else 4
+        cloth |= panel(((sl+1, sy+2), (rl+1, ry), (free-3, ty-3),
+                        (free, ty-2), (wl+1, ty-4), (hip, ty),
+                        (tx, ty+1), (tx+throw, ty-2), (rr-1, ry)))
+    elif pose not in SIDE_FALL | REAR:
+        # Draw both collar falls on a frontal torso. The shorter Druid
+        # mantle meets across the breast and opens above the ochre wrap;
+        # the Thief's opposite lapel carries on past the hip.
+        end = wy-1 if short else ty-1
+        cloth |= panel(((sr-2, sy), (sr, sy+2), (rr-1, ry+1),
+                        (wr+1, end), (wr-1, end-1), (hip, ry+2),
+                        (sl+2, sy+2), (hip, ry)))
+    if not short and pose == 6:
+        # The far hand swings away from the cloak at the end of this step.
+        cloth -= {(x, y) for x, y in cloth if x >= wr and y >= ry+2}
     if not short:
         # Turn the lining over the projected calf at the overlap.
         cloth.update({4: ((5, 20),), 8: ((6, 22),), 11: ((2, 19), (1, 20)),
-                      19: ((3, 13),)}.get(pose, ()))
+                      10: ((2, 13),), 19: ((3, 13),)}.get(pose, ()))
     return cloth
 
 
@@ -137,6 +156,17 @@ def thief_hood(pose):
                                 (sr-2, sy+3), (far, top+4)))
             else:
                 shell.add((far+1, top+3))
+    if pose not in REAR and pose != 17:
+        # The cowl sits outside the bald scalp. Trace its turned-back lip
+        # down the temple and into the shoulder. Leave the cheek opening.
+        for k, (a, b) in enumerate(spans):
+            if 1 <= k <= 5:
+                shell.add((left+a-2, top+k))
+                shell.add((left+a-1, top+k))
+                if pose not in PROFILE:
+                    shell.add((left+b+1, top+k))
+                    if 2 <= k <= 4:
+                        shell.add((left+b+2, top+k))
     if pose == 18:
         shell.add((9, 7))
     if pose == 28:
@@ -160,7 +190,7 @@ def draw(game, pose, swatches):
         arm = Image.new("1", (w, h))
         ImageDraw.Draw(arm).line((elbow, bend, wrist), fill=1, width=thickness)
         limbs.update((x, y) for y in range(h) for x in range(w) if arm.getpixel((x, y)))
-    protected = fit.head_pixels(pose, w, h) | fit.neckline_pixels(pose, w, h)
+    protected = fit.head_pixels(pose, w, h) | fit.collar_opening(pose, w, h)
     shoulder, ribs, waist, _, _ = fit.ROBE_CUTS[pose]
     sy, sl, sr = shoulder
     ry, rl, rr = ribs
@@ -178,6 +208,15 @@ def draw(game, pose, swatches):
     if pose == 6:
         skirt.discard((14, 16))
         skirt.discard((14, 17))
+    # One continuous fall across the hips. The front flap follows the
+    # weight-bearing thigh and the hem curves up over the swinging leg.
+    wrap_flap = panel(((wl, wy-1), (wr, wy), (wr, wy+2),
+                       (knee+1, knee_y), (knee-2, knee_y-1), (wl, wy+2)))
+    ochre_flap = skirt | panel(((wl, wy+1), (wr-1, wy+1),
+                                (knee+1, knee_y+1), (knee-1, knee_y+1),
+                                (knee-2, knee_y-1)))
+    if pose == 6:
+        ochre_flap.add((10, 19))
     panels = {"Druid": cape(pose, True), "Thief": cape(pose, False)}
     yoke = panel(PROFILE_YOKE[pose]) if pose in PROFILE_YOKE else set()
     for cloth in panels.values():
@@ -219,16 +258,22 @@ def draw(game, pose, swatches):
                 # outside the bent elbow for three rows before it meets the hip.
                 if pose == 24 and x == 4 and 9 <= y <= 11:
                     out["Psionicist"][py][i] = shade(TEAL, 2.6+.28*grain)
-                if (x, y) in skirt and y >= wy-1:
+                if (x, y) in ochre_flap and y >= wy-1:
                     # Lapped hide spans the space between the thighs.
                     # Turn the free edge up over the advancing leg.
                     across_hip = (x-hip)/max(2, (wr-wl)/2)
                     lap = x-knee-.45*(knee_y-y)
                     light_hide = 6.2+.47*grain-.73*abs(across_hip)-2.3*(0 <= lap < 1.4)
                     light_hide += 2.4*(-1.35 <= lap < 0)
-                    if (x, y+1) not in skirt:
+                    if (x, y+1) not in ochre_flap:
                         light_hide -= 1.8
                     out["Druid"][py][i] = shade(RAMPS["ochre"], light_hide)
+                if (x, y) in wrap_flap and y > wy:
+                    diagonal = x-knee-.42*(knee_y-y)
+                    fold = 3.9+.36*grain+1.15*cos(diagonal*1.22)
+                    if (x, y+1) not in wrap_flap:
+                        fold -= 1.5
+                    out["Psionicist"][py][i] = shade(TEAL, fold)
                 if skin is not None and (x, y) in bow_wrap and (x, y) not in torso:
                     turn = (x-axis)/max(2, (rr-rl)/2)
                     out["Psionicist"][py][i] = shade(TEAL, 3.6+.74*light+.32*grain-.7*abs(turn))
@@ -249,11 +294,11 @@ def draw(game, pose, swatches):
                     edge = sy+1+round((1+across)*.42*(wy-sy))
                     if pose in SIDE_FALL:
                         edge = sy+1+round((1+across)*.20*(wy-sy))
-                    if y > wy:
-                        teal -= .40 + .19*abs(x-knee)
                     if (x, y) in bow_wrap:
                         edge = min(edge, sy+2)
-                    if y >= edge:
+                    if y <= wy:
+                        edge -= 2
+                    if y >= edge and y <= wy:
                         if y == edge:
                             teal += .7
                         out["Psionicist"][py][i] = shade(TEAL, teal)
@@ -279,6 +324,15 @@ def draw(game, pose, swatches):
                     if role == "Thief" and pose in REAR:
                         seam = dist+2.2-.6*cos(along*4)
                         fall += .20*max(0, 1-abs(seam+1.3)) - .32*max(0, 1-abs(seam)/1.4)
+                    if role == "Thief":
+                        # The cloth turns under at the lining, with a broken
+                        # ridge on its lit side like the retail Thief's folds.
+                        fold = dist*.95 + .85*cos(along*3.4)
+                        fall += .13*cos(fold) - .08 + .021*grain
+                    else:
+                        # The rolled edge of the mantle casts a shadow over
+                        # the kilt; the upper fold catches the shoulder light.
+                        fall += .15*cos(dist*1.25-along*2.4) + .023*grain
                     if pose in REAR and y < wy:
                         fall += .06*(1-abs(offset)/(wr-wl+1))
                     if y < ry+1 and skin is not None:
@@ -287,6 +341,8 @@ def draw(game, pose, swatches):
                         fall -= .20
                     ramp = MOSS if role == "Druid" else SLATE
                     color = shade(ramp, fall*(len(ramp)-1))
+                    if role == "Druid" and (x, y+1) not in cloth and (x, y-1) in cloth:
+                        color = shade(MOSS, 1.7+.4*grain)
                     if role == "Druid" and pose not in REAR | SIDE_FALL and (x, y) == (wr-1, wy-2):
                         color = 169
                     out[role][py][i] = color
@@ -299,6 +355,10 @@ def draw(game, pose, swatches):
                 a, b = spans[k]
                 across = (x-hx-a)/max(1, b-a)
                 light = 9.8 - 7*abs(across-.33) - .38*k + .50*grain
+                if pose in REAR:
+                    # Shade the crown around the skull; break the highlight
+                    # where it rolls down into the overhanging back panel.
+                    light += 1.5*cos(5.5*across+.42*k)-2.1*across
                 if k >= 3:
                     # The cowl turns onto the shoulder outside the crown's
                     # width. Shade the roll locally where it meets the cape.

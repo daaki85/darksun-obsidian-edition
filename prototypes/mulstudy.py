@@ -1,7 +1,7 @@
-"""First Mul class fittings, using the retail figure and the human garment studies."""
+"""Fit leather, bone and linen to the retail Mul in each map pose."""
 import argparse
 from functools import lru_cache
-from math import exp, sin, pi
+from math import cos, exp, sin, pi
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -15,7 +15,6 @@ from dsloader import art, classoutfits as co
 MODEL = 2093
 PAD = 8
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
-PARENTS = {"Gladiator": "Gladiator", "Fighter": "Warrior"}
 # Position of the matching human cel in the Mul cel. Combat cels have
 # different bounding boxes when the striking hand travels above the head.
 REGISTER = ((1, 1), (0, 0), (0, 0), (1, 1), (0, 1), (1, 1), (0, 1), (0, 0), (0, 0), (0, 0),
@@ -45,13 +44,7 @@ HEADS = (
 SKIN = {254: 129, 128: 129, 129: 129, 134: 135, 133: 135, 132: 136, 131: 136, 130: 137, 144: 138,
         145: 139, 146: 140, 147: 141, 148: 142, 149: 143, 150: 143, 151: 151, 152: 152, 153: 153}
 NATIVE_LIGHT = {*range(135, 144), 149, 151, 152, 153}
-MATERIAL = set(RAMPS["hide"]+RAMPS["linen"]+RAMPS["ochre"]
-               ) | {203, 118, 119, 122, 124, 126, 214, 215, 168, 169}
 DARK = {128, 129, 254}
-# The Mul is broader through the upper arms on these frontal cels.
-# At the armhole, extend the fitted leather or sleeve across the outer
-# shoulder and keep the bare deltoid visible beneath its turned edge.
-FRONT_WALK = {0, 3, 4, 5, 6}
 
 
 def head_pixels(pose, w, h):
@@ -93,6 +86,20 @@ def neckline_pixels(pose, width, height):
         for x in range(start, end + 1):
             pixels.add((width-1-x, height-1-y) if pose == 28 else (x, y))
     return pixels
+
+
+def collar_opening(pose, w, h):
+    """Keep the chin and throat open; the broad shoulders sit beside them."""
+    left, top, spans = HEADS[pose]
+    chin = top+len(spans)-1
+    jaw = left+sum(spans[-1])/2
+    opening = set()
+    for px, py in neckline_pixels(pose, w, h):
+        x, y = (w-1-px, h-1-py) if pose == 28 else (px, py)
+        below = y-chin
+        if below <= 0 or below <= 3 and abs(x-jaw) <= 3.5-below*.65:
+            opening.add((px, py))
+    return opening
 
 
 @lru_cache(maxsize=2)
@@ -173,23 +180,39 @@ def cleric_robe(game, pose, body, protected, arm):
     grain = linen_grain(game)
     side = pose in (2, 11, 12, 13, 14, 15, 22, 23, 24)
     rear = pose in (1, 7, 8, 9, 10, 18, 19, 20, 25)
+    train = {2: 2, 11: 3, 12: 5, 13: 4, 14: 2, 22: 3, 23: 4, 24: 2}.get(pose, 0)
     cuts = (shoulder, ribs, waist, hem)
     for start, end in zip(cuts, cuts[1:]):
         for y in range(start[0], end[0] + (end == hem)):
             t = (y-start[0]) / (end[0]-start[0])
             left = round(start[1] + t*(end[1]-start[1]))
             right = round(start[2] + t*(end[2]-start[2]))
+            # Trace the free back fold independently of the trouser leg.
+            # It trails on the outward stride and gathers closer on return.
+            if train and y > ribs[0]:
+                turn = min(1, (y-ribs[0]) / max(1, hem[0]-ribs[0]-3))
+                left -= round(train*turn)
+            if y > waist[0]+1:
+                flare = (y-waist[0])/(hem[0]-waist[0])
+                left -= round(2*flare)
+                right += round(1.5*flare)
             for x in range(left, right+1):
                 u = (x-left)/(right-left)
                 # One knee pushes the corner up; two offset folds describe
                 # the volume over the thighs, including the space between them.
                 bottom = hem[0] - round(max(0, lift)*u + max(0, -lift)*(1-u)
                                         + 1.9*abs(2*u-1)**3)
+                if train:
+                    bottom += round((1-u)*1.5)
+                if pose == 5 and x < waist[1] and y >= waist[0] and y <= waist[0]+3:
+                    continue
                 if y > bottom:
                     continue
                 px, py = (width-1-x, height-1-y) if pose == 28 else (x, y)
+                if not 0 <= px+PAD < len(body[py]):
+                    continue
                 skin = body[py][px+PAD]
-                if ((px, py) in protected or (y <= waist[0] and skin is None)
+                if ((px, py) in protected or (y <= waist[0] and skin is None and not (train and y >= waist[0]-2))
                         or (skin is not None and 0 <= px < width and arm.getpixel((px, py)))):
                     continue
                 relief = grain[(y-waist[0]) % 8][(x-waist[1]) % 8]
@@ -215,12 +238,18 @@ def cleric_robe(game, pose, body, protected, arm):
                     fold = (.41 if side else .53) + (.22 if lift > 0 else -.23)*drop
                     dist = (u-fold)*(right-left)
                     shade += 3.2*exp(-.45*(dist+1.7)**2) - 4.5*exp(-.65*dist**2)
+                    # Light across the near knee, then a narrow turned
+                    # lining on the opposite side. Both follow the lifted hem.
+                    return_fold = (u-(.19+.11*drop if lift > 0 else .82-.10*drop))*(right-left)
+                    shade += 2.0*exp(-.45*(return_fold+1.2)**2)-3.2*exp(-.8*return_fold**2)
                 belt_y = waist[0] - int(u > .72)
                 if y == belt_y:
                     color = 94 if u < .55 else 90
                 else:
                     if y == bottom:
-                        shade -= 4.0
+                        shade -= 4.8
+                    elif y == bottom-1:
+                        shade += 1.7*sin(pi*u)
                     if x == right:
                         shade -= 3.8
                     if x == left:
@@ -228,6 +257,150 @@ def cleric_robe(game, pose, body, protected, arm):
                     color = MUL_LINEN[max(0, min(len(MUL_LINEN)-1, round(shade)))]
                 result[py][px+PAD] = color
     return result
+
+
+# The near shoulder cap and the free corner of the battle kilt, in the
+# native cel. The arm turns to the other side of the spine in rear views.
+# The fallen cel is authored upright, like the robe.
+HIDE_POINTS = (
+    (5, 8, 8, 21), (15, 8, 15, 20), (3, 7, 2, 20),
+    (4, 8, 6, 21), (4, 8, 10, 19), (5, 7, 12, 20), (4, 8, 7, 19),
+    (11, 8, 4, 20), (11, 7, 4, 20), (12, 8, 10, 20), (12, 7, 11, 20),
+    (5, 7, 4, 20), (8, 6, 10, 19), (4, 6, 4, 21), (7, 6, 7, 20),
+    (6, 9, 5, 20), (8, 8, 8, 16), (12, 9, 13, 16),
+    (9, 8, 7, 19), (9, 8, 10, 19), (10, 7, 13, 20),
+    (6, 7, 10, 20), (9, 7, 6, 19), (9, 7, 5, 17),
+    (5, 7, 5, 20), (10, 10, 10, 22), (5, 10, 8, 23),
+    (10, 8, 10, 15), (4, 9, 7, 17),
+)
+BONE = (88, 204, 205, 194, 206, 61, 199, 125, 62, 155)
+JERKIN = (208, 88, 204, 89, 90, 207, 91, 205, 92, 93, 94, 95, 96, 97, 98)
+BRONZE = (88, 89, 90, 94, 95, 168, 169, 170, 171)
+
+
+def material_color(ramp, level):
+    return ramp[max(0, min(len(ramp)-1, round(level)))]
+
+
+def leather_outfits(game, pose, body, keep, arm):
+    glad, fighter = ([row[:] for row in body] for _ in range(2))
+    h, w = len(body), len(body[0])-2*PAD
+    (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = ROBE_CUTS[pose]
+    gx, gy, knee, hem = HIDE_POINTS[pose]
+    profile = pose in (2, 11, 12, 13, 14, 15, 22, 23, 24)
+    # The far end of the baldric is sewn into the opposite side of the
+    # belt. The jerkin has a separate breast, side seam and overlapping tabs.
+    anchor = wl+1 if gx > (sl+sr)/2 else wr-1
+    hide = RAMPS["hide"]
+    grain = linen_grain(game)
+    for y in range(sy, hem+1):
+        if y <= ry:
+            t = (y-sy)/max(1, ry-sy)
+            lo = sl+1+(rl-sl)*t
+            hi = sr-1+(rr-sr)*t
+        else:
+            t = min(1, (y-ry)/max(1, wy-ry))
+            lo = rl+1+(wl-rl-1)*t
+            hi = rr-1+(wr-rr+1)*t
+        depth = (y-gy)/max(1, wy-gy)
+        strap = gx+(anchor-gx)*min(1, max(0, depth))
+        for x in range(min(sl, rl, wl, gx, knee)-3, max(sr, rr, wr, gx, knee)+4):
+            px, py = (w-1-x, h-1-y) if pose == 28 else (x, y)
+            if not (0 <= py < h and 0 <= px+PAD < len(body[py])) or (px, py) in keep:
+                continue
+            u = px+PAD
+            skin = body[py][u]
+            if skin is not None and 0 <= px < w and arm.getpixel((px, py)):
+                continue
+            across = (x-lo)/max(1, hi-lo)
+            weave = grain[(y-wy)%8][(x-wl)%8]
+            relief = (game.palette[skin][0]-125)/62 if skin is not None else -.8
+            tone = 6.8 + .65*weave + relief - 2.6*across
+            if y < wy and skin is not None:
+                if lo-1 <= x <= hi+1:
+                    # The shaded facing meets the side under the armhole.
+                    seam = x-(lo+.72*(hi-lo)) - .55*sin(depth*pi)
+                    shade = tone+1.7*sin(pi*across)-3.3*exp(-seam**2)
+                    # The near facing turns over the ribs, leaving a light
+                    # cut edge beside the inset seam even in the side stride.
+                    rim = x-lo
+                    shade += 3.2*exp(-.9*(rim-.6)**2) - 1.8*exp(-(rim-2)**2)
+                    fighter[py][u] = material_color(JERKIN, shade-1.6)
+                    # Two short bindings attach the pauldron to the jerkin.
+                    lacing = x - (gx+(strap-gx)*.75)
+                    if y in (gy+2, gy+4) and abs(lacing) <= 1 and y < wy-1:
+                        fighter[py][u] = 199 if lacing < .1 else 94
+                dist = x-strap
+                if abs(dist) <= (1.45 if profile else 1.85):
+                    glad[py][u] = material_color(hide, 4.8+.6*weave+relief+2.8*(dist < -.35)-2*(dist > .65))
+            # The bevel of the bone scale continues inward from the
+            # pauldron onto its leather backing. It ends at the armhole.
+            if skin is not None and gy <= y <= gy+3:
+                inward = 1 if gx < (sl+sr)/2 else -1
+                joint = (x-gx)*inward
+                ridge = 1 + (y-gy)*.65
+                if 0 <= joint <= 4 and abs(joint-ridge) <= 1.1:
+                    fighter[py][u] = material_color(BONE, 6.9+.5*weave-1.15*(y-gy)-1.3*(joint>ridge))
+            # Each upper arm rolls out from beneath a short guard. Its
+            # highlight follows the dome; a dark lower lip touches the strap.
+            cx = abs(x-gx)
+            gyoff = y-gy
+            if skin is not None and cx <= (3 if profile else 2) and -2 <= gyoff <= 1 and cx+abs(gyoff) <= (4 if profile else 3):
+                dome = 7.0 - .9*cx - 1.1*gyoff + .35*weave
+                fighter[py][u] = material_color(BONE, dome-2.7*(gyoff == 1))
+                if gyoff == 1 and x > gx-1:
+                    fighter[py][u] = 205
+                if gyoff == 0 and (x-gx) in (-2, -1):
+                    fighter[py][u] = 199
+                if cx < 2 or gyoff == 0:
+                    glad[py][u] = material_color(BRONZE, dome-2.5*(gyoff == 1))
+            if y < wy-1:
+                continue
+            drop = (y-wy)/max(1, hem-wy)
+            # The high hip is fitted. Below it the leather clears the gap
+            # between the legs and turns towards the advancing knee.
+            left = round(wl + (knee-3-wl)*max(drop, 0))
+            right = round(wr + (knee+3-wr)*max(drop, 0))
+            if profile and wy+1 <= y < hem-1 and wl-2 <= x < left:
+                back_edge = wl-round(2*(y-wy)/max(1, hem-wy))
+                if x >= back_edge and y <= hem-1:
+                    fighter[py][u] = material_color(hide, 6.1+.9*weave+2.7*(x == back_edge+1))
+            # A separate leather side tab hangs from the hip behind the
+            # leading leg. It pivots from the girdle, clear of the bare knee.
+            if not profile and pose not in (5, 6) and wy < y < hem-1:
+                far = wr if knee < (wl+wr)/2 else wl
+                sign = 1 if far == wr else -1
+                edge = far + sign*round(1.7*drop)
+                if 0 <= (edge-x)*sign <= 2 and (x != edge or y < hem-2):
+                    fighter[py][u] = material_color(hide, 5.8+.65*weave+3*(x == edge-sign))
+            if not left <= x <= right or y < wy and skin is None:
+                continue
+            lap = x-(knee+(anchor-knee)*(1-drop))
+            lower = hem-round(min(3, .34*abs(x-knee))) - int(x == left or x == right)
+            if y > lower:
+                continue
+            if y <= wy:
+                belt = 169 if x == anchor and y == wy-1 else 89 if y == wy else 92
+                glad[py][u] = belt
+                fighter[py][u] = 199 if x == anchor and y == wy-1 else belt
+                continue
+            shade = 8.0+.85*weave-3.4*exp(-lap**2)+3.7*exp(-(lap+1.2)**2)
+            shade -= 2.7*(y == lower) + 2*(x == right)
+            # The lit ridge on the flap breaks the russet-on-copper edge.
+            glad[py][u] = material_color(hide, shade+.9)
+            if -.95 <= lap < .15 and y < lower:
+                glad[py][u] = 95 if y == wy+1 else 168
+            # Short skirt tabs over the far thigh distinguish the jerkin
+            # from the Gladiator's single, longer lapped kilt.
+            tab = x-(wl+.32*(wr-wl)+.35*(knee-anchor)*drop)
+            if y < lower-1 or abs(tab) < 1.15:
+                fighter[py][u] = material_color(JERKIN, shade-2.7+2.0*cos(tab*1.3))
+                if abs(tab) < .85 and y <= wy+2:
+                    fighter[py][u] = 199 if y == wy+1 else 205
+    for x, y in {4: ((8, 19),), 19: ((9, 18),), 20: ((11, 18),)}.get(pose, ()):
+        garment = glad if pose == 4 else fighter
+        garment[y][x+PAD] = 90
+    return {"Gladiator": glad, "Fighter": fighter}
 
 
 def fitted_rows(game, pose):
@@ -264,7 +437,7 @@ def fitted_rows(game, pose):
             body[y][x+PAD] = 129 if edge else SKIN[samples[0]] if samples else 135
     # Restore the dressed figure’s open neckline from the cleaned skin.
     # Extending the retail head mask here would bring back harness pixels.
-    keep.update(neckline_pixels(pose, w, h))
+    keep.update(collar_opening(pose, w, h))
     # The near hand crosses the hip at side step two, and the draw hand
     # overlaps the tunic in the front bow. Keep those knuckles on top.
     for hx, hy in parts.hands.values():
@@ -275,67 +448,31 @@ def fitted_rows(game, pose):
     # At a crossed arm the cloth must pass behind the forearm as well as
     # behind the fingertips. The Fighter guard can still cover the upper arm.
     arm = Image.new("1", (w, h))
-    leather_keep = keep.copy()
     if pose in CROSSING_ARMS:
         elbow, bend, wrist, thickness = CROSSING_ARMS[pose]
-        draw = ImageDraw.Draw(arm)
-        draw.line((bend, wrist), fill=1, width=thickness)
-        leather_keep.update((x, y) for y, row in enumerate(native) for x, c in enumerate(row)
-                            if c is not None and arm.getpixel((x, y)))
-        draw.line((elbow, bend), fill=1, width=thickness)
+        ImageDraw.Draw(arm).line((elbow, bend, wrist), fill=1, width=thickness)
+    # Sculpt the reconstructed skin under the old harness and shorts.
+    # Stay inside the native copper silhouette; the original exposed muscles
+    # and the face supply the light direction and keep their painted pixels.
+    _, (ry, rl, rr), (wy, wl, wr), _, _ = ROBE_CUTS[pose]
+    skin_ramp = (129, 135, 136, 137, 138, 139, 140, 141, 142, 143, 151, 152, 153)
+    for py, row in enumerate(native):
+        for px, original_tone in enumerate(row):
+            x, y = (w-1-px, h-1-py) if pose == 28 else (px, py)
+            c = body[py][px+PAD]
+            if original_tone is None or original_tone in NATIVE_LIGHT or (px, py) in keep or arm.getpixel((px, py)):
+                continue
+            if c not in skin_ramp or c == 129 or not ry <= y < wy+4:
+                continue
+            t = min(1, (y-ry)/max(1, wy-ry))
+            left, right = rl+(wl-rl)*t, rr+(wr-rr)*t
+            if not left < x < right:
+                continue
+            across = (x-left)/(right-left)
+            plane = 1.65*exp(-12*(across-.28)**2)-1.5*exp(-18*(across-.81)**2)
+            body[py][px+PAD] = material_color(skin_ramp, skin_ramp.index(c)+plane)
     out = {"Original": original, "Body base": body}
-    for role, parent in PARENTS.items():
-        frame = co.frames(parent, cb)[f]
-        dressed = frame.canvas(human, PAD)
-        cloth = {}
-        for v, row in enumerate(dressed):
-            for u, c in enumerate(row):
-                if c in MATERIAL and c != bare[v][u]:
-                    cloth[u, v] = c
-        # Carry enclosed dark recesses with the material, particularly the
-        # seam below a bone guard. Other black belongs to the native body.
-        material_pixels = set(cloth)
-        for v, row in enumerate(dressed):
-            for u, c in enumerate(row):
-                if c in DARK and c != bare[v][u] and sum((u+i, v+j) in material_pixels for i, j in
-                                                         ((-1, 0), (1, 0), (0, -1), (0, 1))) >= 2:
-                    cloth[u, v] = 88
-        garment = [r[:] for r in body]
-        for (u, v), c in cloth.items():
-            x, y = u-PAD+dx, v-PAD+dy
-            if not (0 <= y < h and -PAD <= x < w+PAD) or (x, y) in leather_keep:
-                continue
-            if not (0 <= x < w and native[y][x] is not None):
-                continue
-            if role == "Gladiator" and pose < 28 and v-PAD >= co.LANDMARKS[pose][-1]:
-                # Dark leather at the turned-under hem separates the warm
-                # kilt from the copper thigh, even on the sunlit floor.
-                if c in RAMPS["hide"] and (u, v+1) not in material_pixels:
-                    c = 89 if (u+1, v) in material_pixels else 88
-            garment[y][x+PAD] = c
-        if pose in FRONT_WALK and role != "Gladiator":
-            _, _, _, _, sy, sl, sr, _ = co.LANDMARKS[pose]
-            for y in (sy+dy, sy+dy+1):
-                for x, step in ((sl+dx, -1), (sr+dx, 1)):
-                    outer = x+step
-                    if (0 <= outer < w and native[y][outer] in NATIVE_LIGHT and (outer, y) not in keep
-                            and garment[y][x+PAD] != body[y][x+PAD]
-                            and garment[y][outer+PAD] == body[y][outer+PAD]):
-                        garment[y][outer+PAD] = 91
-        if role == "Gladiator" and pose < 28:
-            # A bronze clasp peeks out of the overlapped hide at the hip.
-            # Follow the moving belt and leave it hidden behind a crossing arm.
-            _, _, _, _, _, sl, sr, waist = co.LANDMARKS[pose]
-            y = waist+dy
-            hip = round((sl+sr)/2)+dx+1
-            for x in (hip, hip-1, hip+1):
-                if (0 < x < w-1 and 0 <= y < h and (x, y) not in leather_keep and (x-1, y) not in leather_keep
-                        and garment[y][x+PAD] in RAMPS["hide"]
-                        and garment[y][x+PAD-1] in RAMPS["hide"]):
-                    garment[y][x+PAD] = 169
-                    garment[y][x+PAD-1] = 95
-                    break
-        out[role] = garment
+    out.update(leather_outfits(game, pose, body, keep, arm))
     out["Cleric"] = cleric_robe(game, pose, body, keep, arm)
     return out
 

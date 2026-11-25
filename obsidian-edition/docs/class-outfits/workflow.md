@@ -27,6 +27,8 @@ Use the exposed torso, shoulder armor and robe to check the new figure before bo
 
 Use the clean body to mark where each garment touches the shoulder, ribs and hip. Reuse those anatomical points across classes and trace each armhole, fastening and hem for the garment that owns it. Using the painted Mul Cleric robe to place three other outfits gave a tunic and two capes the same fit. Compare their silhouettes together in front idle, rear walk and profile stride before carrying those garments into multiclasses. [Mul fitting comparison](mul-singles-fit.gif)
 
+When two leather outfits blend into the same skin tone in profile, line up their previous and revised versions with the finished human and retail Warrior. Trace the near shoulder into the armhole, and the belt into the flap over the leading thigh. Check the same landmarks again on paving. On the Mul, the borrowed human leather covered too little of the turning torso even though the face and silhouette checks passed. [Six-class fitting review](mul-fitting-details.png)
+
 If the defect starts on the clean body, correct the body first. If dressing it causes the defect, correct the garment, then replay every single and multiclass that inherits it. During equipment review repeat the difficult pose with the relevant slot empty, equipped and removed.
 
 ## Human figure review checklist
