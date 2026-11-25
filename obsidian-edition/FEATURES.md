@@ -938,7 +938,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
   kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
-  as the chatkcha). The Loader's
+  as the chatkcha). The screens show them as in Shattered Lands: the inventory's and View Character's
+  DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
+  the Effects screen's lower panel each one's weapon kinds ([the Effects
+  screen](#the-effects-screen)). The Look box's whole description of a monster comes up in the
+  dialogue window as the box closes there too. The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
