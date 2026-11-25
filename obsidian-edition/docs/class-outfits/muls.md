@@ -2,6 +2,18 @@
 
 Shattered Lands uses one map figure for male and female Muls. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the shared body and all six outfits in every pose](mul-singles-poses.png)
 
+## Same-class comparison across races
+
+Each figure uses its own frame for the named action. The floor, ground line and pixel scale are shared. The small copies show game size. In the animations the male figures are above the female figures, with the shared Mul repeated at the left of both rows. Humans, dwarves and elves come from the Loader renderer. Half-elves, halflings, half-giants and the Mul come from their art studies. Each loop includes the available same-class fittings.
+
+![Druid cape and kilt, Psionicist bow, and Thief rear and profile stride beside the corresponding outfits on other races](mul-race-comparison.png)
+
+| Outfit | What reads differently at game size |
+|---|---|
+| [Druid · all 29 poses](mul-race-druid.gif) | In rear walk step two (08), the human man has a clear waist between the short green mantle and the lit ochre kilt. The Mul’s green falls almost to the bottom of the wrap, and the brown-gold beneath blends into the copper thigh. The profile swing is visible on both. |
+| [Psionicist · all 29 poses](mul-race-psionicist.gif) | In front idle (00), the bare shoulder gives the Mul a distinct diagonal wrap. In front bow (24), most of the teal is reduced to a strip near the hip. The human and elf keep a continuous field of teal on the torso behind the bow arm. |
+| [Thief · all 29 poses](mul-race-thief.gif) | In rear step two (08), the Mul has a broad light area from the nape to the hem. On the human and dwarf, a dark fold beneath the hood separates it from the shoulders and breaks up the cloak. In profile step two (12), the Mul’s cloak trails behind the leg, but its brown upper chest makes the connection between the hood and the trailing cloth harder to see. |
+
 ## Druid, Psionicist and Thief
 
 The fitting comparison shows the previous outfits from `a42a969` on the top row and the revisions below. The cleaned Mul on the left gives both rows the same shoulder, waist and foot reference. In front idle (00), follow the Druid’s mantle across the ribs, the Psionicist’s wrap from its single shoulder to the far hip, and the Thief’s cloak down one flank. In rear walk step two (08), the free corner of each cape follows the weight on the advancing leg. In profile step two (12), watch the near arm cross the cloth while the fold continues behind the shoulder.
