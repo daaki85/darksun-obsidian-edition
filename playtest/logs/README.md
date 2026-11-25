@@ -153,6 +153,7 @@ schedules and diffs a log made or used.
 | [2026-11-25](2026-11-25-ravager-kits.md) | The kits' rules in the sequel's Tyr ambush, rule on against off: the Ravager's AC (Lex -1 against 3), the Myrmidon's and Military Scout's initiative, the Scout's hiding and moving silently, the Battle Dancer's dance (+1 damage, AC 1); DSCLOG2's kit counters all 0 in the controls; `ravdice.py` now starts from the Loader's settings' rules |
 | [2026-11-25](2026-11-25-ravager-kit-choice.md) | Choosing a kit in the sequel: the creation panel's KIT pages, a kit after DUAL, no kit picked, a control with the kits rule off |
 | [2026-11-25](2026-11-25-ravager-screens.md) | The sequel's DAM lines (inventory and View Character) with weapon specialization and the off hand, the Effects screen's weapon kinds, kit line and pages, the Look box's whole description in the dialogue window as it closes; controls with the rules off |
+| [2026-11-25](2026-11-25-ravager-thieves.md) | Thieves as in AD&D in the sequel, rule on against off: Seneca's six skills on the inventory from AD&D's table (the control the game's), a hidden backstab multiplying the dice only (13 against 14 for the whole), an Assassin's x3 against x2 with the kits off |
 
 ## files/
 
@@ -166,3 +167,4 @@ schedules and diffs a log made or used.
 | [2026-11-17-show-usable-session-b.sh](files/2026-11-17-show-usable-session-b.sh), [-c.sh](files/2026-11-17-show-usable-session-c.sh), [-d.sh](files/2026-11-17-show-usable-session-d.sh) | The sessions of [showing what can be used](2026-11-17-show-usable.md): a fight beginning with Alt held, a click with Alt held, the check after the rebase |
 | [2026-11-17-show-usable-flagfoes.py](files/2026-11-17-show-usable-flagfoes.py) | Alt's flag held during every foe's turn and let go in the party's, for the same log |
 | [2026-11-25-ravager-screens-go.sh](files/2026-11-25-ravager-screens-go.sh), [-kitedit.py](files/2026-11-25-ravager-screens-kitedit.py) | [The sequel's screens](2026-11-25-ravager-screens.md): the transferred party to Tyr's ambush with the dice log; the test edit of Ester's kit, specs and RULE_HI_KITS (and back) |
+| [2026-11-25-ravager-thieves-run.sh](files/2026-11-25-ravager-thieves-run.sh), [-start.sh](files/2026-11-25-ravager-thieves-start.sh), [-series.sh](files/2026-11-25-ravager-thieves-series.sh) | [The thief table's and the Assassin's runs](2026-11-25-ravager-thieves.md): a run (start, edits, the dice log, the inventory grabbed, Computer Control, the fight to a backstab) and the series of controls |

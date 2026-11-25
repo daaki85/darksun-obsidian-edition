@@ -1066,8 +1066,8 @@ In Wake of the Ravager Enlarge is the same routine (863B2h, 628h:57h; its effect
 608h:52h) and works the same: the stock game made Gerakis's 24 a 38 (x160%, Ar'anda's 6th level).
 DSCLOG2's `ENL_ROLL` (`INT EBh` at the attack's "cmp word [bp+16h],1" after the damage roll, 5D0C8h:
 the dice's sum, the roll less `[BP-14h]`, the sequel's bonus local) and `ENL_SITE` (`INT ECh`, 863E7h,
-the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`; no backstab dice there (STAB_TIMES isn't
-ported). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
+the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`, the enlarged dice kept for a backstab (DSCLOG2's
+`STAB_TIMES`: [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
 caster level routine, 97DC5h). Played: [the test log](../playtest/logs/2026-11-21-ravager-enlarge.md).
 
 ## Spells roll to hit
@@ -2052,6 +2052,18 @@ The dice log's damage line says it: `+10 backstab (the dice 5 x3 = 15)`
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
 `test_dice_only`, `test_enlarge_before_the_backstab`.
+
+In Wake of the Ravager (DSCLOG2, `RULE_THIEF_TABLE` in `ravager.RULES_PORTED`): site 52 `THIEF_SKILL` at
+the thief skill routine's 8C716h (SL's 80307h, the same 9 bytes; DEX `[BP-2]`, its "jc" to 8C795h) does
+`PROBE_THIEF_SKILL` (`THIEF_ADND`, the tables in the resident part), `BELT_SITE` keeps the chance to 95,
+`C_THIEF` shows the same on the inventory; site 53 `STAB_TIMES` at 5D11Bh (SL's 58A80h, the same 10 bytes;
+the round's count `[BP-16h]`, the dice `ENL_ROLL`'s `ENL_DICE`, made the enlarged ones by `ENL_SITE`);
+`STAB_FIRST` from `MISSILE_REAR` (the clock's far pointer DS:9C0Ch). With the kits (`RULE_KITS`) an
+Assassin's multiplier one more there, rule or not (the attacker `[BP+0Eh]`, a party member: `kits.backstab_times`,
+`kit_stabs` counts them). The dice log
+reads the round's count at `game.ATTACKS_MADE_LOCAL` (ravlog's -16h). Tests: test_ravthief.py (with
+`DSUN_WOTR`, the sites in the game's own code too); test_dicelog's `test_rule_off`,
+`test_attacks_made_local`. Found statically (playtest/RESEARCH.md, "Thieves as in AD&D in the sequel").
 
 ## Picking pockets
 

@@ -3730,18 +3730,24 @@ class DiceLog:
         # weapon's dice, the rest added once, on the attacker's first attack of the round: x2, x3
         # from thief level 5, x4 from 9, x5 from 13 (RULE_BACKSTAB, DSCLOG's STAB_TIMES; the game
         # multiplies all of it, on the first two attacks). The attack's frame: [BP+1Eh] backstab,
-        # [BP+20h] from behind, [BP-14h] the attacks already made this round
-        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
+        # [BP+20h] from behind, [BP-14h] the attacks already made this round (game.ATTACKS_MADE_LOCAL:
+        # the sequel's [BP-16h])
+        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(game.ATTACKS_MADE_LOCAL)
         backstab, rear = (None if backstab is None else backstab & 0xFF), (None if rear is None else rear & 0xFF)  # (bytes: the sequel's)
-        if backstab and rear and made is not None and made <= 0:
+        adnd = bool(g.rules & game.RULE_BACKSTAB)
+        if backstab and rear and made is not None and made <= (0 if adnd else 1):
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
-            more = (times - 1) * dice
-            total += more
-            steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+            if adnd:
+                more = (times - 1) * dice
+                total += more
+                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+            else:  # (the game's: all of it, a rule off in the sequel, DSCLOG2's STAB_TIMES)
+                total *= times
+                steps = f"({steps}) x{times} backstab"
         # a held (Paralyzed) or Out Cold target takes the damage as it is, AD&D's (RULE_HELD, DSCLOG's
         # HELD_DAMAGE; the game doubles it: the attack routine's x2 at 58B0Dh, "shl ax,1")
         helpless = self._helpless(e)
