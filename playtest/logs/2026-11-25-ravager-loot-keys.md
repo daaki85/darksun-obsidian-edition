@@ -58,6 +58,34 @@ stamped by site 82 each pass.
 - **Control** for S: not played (the shop is a walk from the start). The emulated SELL_KEY covers it: with
   no Loader stamp, S is the game's key.
 
+## Notaku's thank-you after S (fixed)
+
+After S, Notaku said his no-sale line ("Sometimes the wisest purchase is none at all, yes?"), not "Thank you,
+your business is appreciated." as after the game's own SELL (logs/2026-11-25-ravager-loot-tabs-join.md).
+
+- **Why.** His script (GPL 153) keeps the party's money before the shop (3EFh: its 85h variable 0, the money
+  at 2E8h:357h, into 89h 42), opens it, and as the shop returns tests the money against it (400h): moved, the
+  thank-you (409h); not, the no-sale line (435h). The game's SELL pays while the shop is up. The Loader paid
+  only after the shop had shut (it waits for SHOP_AT to go stale), so the test had already run.
+- **The fix.** SELL_KEY sets SELL_WAIT as it counts S. SHOP_LOOP, at the loop's test with the shop shut (143Dh
+  not 1) and SELL_WAIT set, holds there (STI, HLT) until the Loader's new SELL_DONE (header +1884, DSCLOG2's
+  own) equals SELL_SEQ, or SELL_HOLD (55 ticks, 3 s) passes. `RavDiceLog._sell_pass` writes SELL_DONE for
+  each S it has finished: sold, nothing to sell, or failed (not while the item gate makes it wait). The money
+  is then in by the time the script tests it. An Escape out of the shop is never held.
+- **Played** (a throwaway copy, `ravager-after-ambush`; Gerakis's armour moved into his pack on the inventory
+  screen, the game's own move). DSCLOG2.EXE 43056 bytes, checked in memory against the build.
+  - S with Gerakis on show: "Gerakis sells 1 things for 14 ceramic pieces: Bone Brigandine Armor 14", money
+    5000 to 5014, then **"Thank you, your business is appreciated."**
+    [img/2026-11-25-ravager-sell-s-thanks.png](img/2026-11-25-ravager-sell-s-thanks.png)
+  - A new talk: his other armour piece sold by hand (SELL, "I'll give you 28", TAKE IT; 5014 to 5042), Escape:
+    "Thank you, your business is appreciated."
+  - A new talk: the shop opened, Escape with nothing sold: "Sometimes the wisest purchase is none at all, yes?"
+  - In an earlier start, S with nothing plain in the pack ("Gerakis has no plain gear in the backpack to sell.")
+    gave the no-sale line, as it should. The hold ended at once (SELL_DONE 1).
+- **A mistake in that earlier start**: two right-clicks after closing the inventory gave the sword, not the
+  eye, and a click on Notaku started a fight. Read the pointer's mode (DS:1440h, 2 the eye) before clicking
+  on someone.
+
 ## M, U and I
 
 U: USE. I: the inventory (the switch). I: shut. M: the overhead map (made O, the sequel's key). M: shut
