@@ -124,8 +124,9 @@ Run these in order, from `playtest/`, at the start of every test and again after
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
      memory with `dos/DSCLOG.EXE` (name others to compare them), checks every hooked vector in
      segment 0 points at its handler (two probes on one vector once made every attack's AC 255:
-     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)) and checks the tail's segment
-     and data. Compare code, not the whole image: the variables in it differ once the game runs.
+     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)), checks the tail's segment
+     and data, and checks the game's item types and names in memory are the chunks of the Loader's copy
+     of GPLDATA (`itemtables.py`, memory pass 7) with DSCLOG's notes of them (`types_first` 115). Compare code, not the whole image: the variables in it differ once the game runs.
      To do it by hand, take the offsets from [the helper's
      segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
      block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data

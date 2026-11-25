@@ -99,6 +99,11 @@ Releases, newest first (2.12.0 and older in the archive):
   the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
   through the install's vector table; `test_framecode` runs the shared routines. A play log:
   [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
+- The seventh memory pass: 1,296 bytes of upper memory back for DSCLOG (2,224 free now) and 240 of
+  its segment. The Loader's item types and names, and the mends to the game's own types, are in the
+  item chunks of its copy of GPLDATA.GFF (`itemtables.py`) instead of DSCLOG's tables; DSCLOG only
+  notes where the game put them. A new item now costs no resident memory. Nothing the player sees
+  changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md).
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for

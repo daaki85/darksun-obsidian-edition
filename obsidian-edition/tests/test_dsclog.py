@@ -17,8 +17,8 @@ from dsloader.dicelog import FILTERS, HDR_SIG, INITIATIVE_TIE, Entry
 from dsloader.textlog import TextBuffer
 from dsloader.gamepatch import (VEC_WORN, VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST, VEC_CAN_USE, VEC_VIEW_DAM, VEC_DAM_LINE, VEC_SPEC_DAMAGE, VEC_ATTACKS, VEC_XP_NEXT, VEC_SCRIPT_RAND, VEC_ITEM_ARMOUR, VEC_ITEM_SKIP, VEC_ITEM_WEAPON, VEC_AC, VEC_DOUBLE, VEC_MSG, VEC_RAND, VEC_RING_AC, VEC_USE_ITEM,
                                   VEC_RING_SAVE, VEC_SAVE, VEC_TEXT, VEC_TWO, VEC_GRACE_CAST, VEC_GRACE_EFFECT,
-                                  VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_NAMES_SIZE, VEC_STEALTH, VEC_TYPES_FILL,
-                                  VEC_TYPES_SIZE, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
+                                  VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_FILL,
+                                  VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
                                   VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_CR_SPELLS, ROUND_SITE)
 from dsloader import game, npcitems, restrict, specialize
 from dsloader import names as item_names
@@ -5262,7 +5262,8 @@ class NewSpellTests(RuleTests):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class NamesTests(unittest.TestCase):
-    """The game's name table: room for NAMES_EXTRA more names, and DSCLOG's copied in."""
+    """The game's name table: noted in NAMES_PTR once read with the Loader's names in it (its copy of
+    GPLDATA's NAME chunk, dsloader/itemtables.py: the chunk's length the dword at [BP-4])."""
     NAMES_SEG = 0x5000
 
     def setUp(self):
@@ -5270,47 +5271,41 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(b"\x81\x46\xfc" + struct.pack("<H", item_names.EXTRA * 25) + bytes.fromhex("8356fe00"))  # (item_names.EXTRA names of 25 bytes)
         fill = fill_probes(image)[0]
-        self.assertGreater(min(size, fill), 0)
-        mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
+        self.assertGreater(fill, 0)
         mu.mem_write(VEC_NAMES_FILL * 4, struct.pack("<HH", fill, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x166D, struct.pack("<HH", 4, self.NAMES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
 
-    def interrupt(self, vector, **regs):
+    def interrupt(self, vector, size=(0x142 + item_names.EXTRA) * 25, **regs):
         mu = self.mu
+        mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, vector, 0x90)))
         for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x602)
         return mu.reg_read(r.UC_X86_REG_SP)
 
-    def test_room(self):
-        """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        room = item_names.EXTRA * 25  # (names.EXTRA names of 25 bytes)
-        for size, want in ((8050, 8050 + room), (0xFF00, 0xFF00 + room)):
-            self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
-            self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
-            self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
-                                           self.mu.mem_read(SS * 16 + BP - 4, 4)), (1, want))
-
-    def test_filled(self):
-        """In place of "add sp,0Ch": with the chunk read (AX 0), DSCLOG's names after the game's."""
-        names = self.NAMES_SEG * 16 + 4 + 0x142 * 25
-        self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=0), 0x80C)
-        self.assertEqual(bytes(self.mu.mem_read(names, 50)),
-                         b"Ring/Protection".ljust(25, b"\0") + b"Thieves' Tools".ljust(25, b"\0"))
+    def test_noted(self):
+        """In place of "add sp,0Ch": with the chunk read (AX 0) and the Loader's names in it, the
+        table noted; nothing written to it; registers as they were."""
+        self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=0, edi=0xD1D1, es=0xE5E5), 0x80C)
         self.assertEqual(struct.unpack("<HH", self.mu.mem_read(self.hdr + 200, 4)), (4, self.NAMES_SEG))
-        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_BP)],
-                         [0, GAME_DS, BP])
+        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_BP,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_ES)],
+                         [0, GAME_DS, BP, 0xD1D1, 0xE5E5])
 
     def test_not_read(self):
         self.assertEqual(self.interrupt(VEC_NAMES_FILL, eax=1), 0x80C)
-        self.assertEqual(bytes(self.mu.mem_read(self.NAMES_SEG * 16 + 4 + 0x142 * 25, 4)), bytes(4))
         self.assertEqual(bytes(self.mu.mem_read(self.hdr + 200, 4)), bytes(4))
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 1)
+
+    def test_the_games_own_chunk(self):
+        """The game's own file read (322 names, no copy of the Loader's): not noted, so the Loader
+        names none of its items."""
+        self.assertEqual(self.interrupt(VEC_NAMES_FILL, size=8050, eax=0), 0x80C)
+        self.assertEqual(bytes(self.mu.mem_read(self.hdr + 200, 4)), bytes(4))
 
 
 def kits_to_level():
@@ -5572,7 +5567,8 @@ class StealthTests(unittest.TestCase):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TypesTests(unittest.TestCase):
-    """The game's item type table: room for TYPES_EXTRA more, and DSCLOG's copied in after."""
+    """The game's item type table: noted, and the Loader's types counted from the game's 115 when
+    the chunk read has them (its copy of GPLDATA's IT1R chunk, dsloader/itemtables.py)."""
     TYPES_SEG = 0x5000
 
     def setUp(self):
@@ -5580,12 +5576,9 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(b"\x81\x46\xfc" + struct.pack("<H", len(npcitems.TYPES) * 20) + bytes.fromhex("8356fe00"))  # (TYPES_EXTRA types of 20 bytes)
         names_fill, fill = fill_probes(image)
-        self.assertGreater(min(size, fill - names_fill), 0)
-        mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
+        self.assertGreater(fill - names_fill, 0)
         mu.mem_write(VEC_TYPES_FILL * 4, struct.pack("<HH", fill, TSR))
-        # (EXTRA_TYPES: the tail's, loaded with the image; load_image sets TAIL_SEG)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
@@ -5599,32 +5592,26 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 20 bytes more reserved for each of DSCLOG's, and after the read
-        DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
+        """The Loader's chunk read (the game's 115 types and its 44 more): the table noted, its types
+        numbered from 115; registers as they were."""
         from dsloader import npcitems
-        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
-        self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2300 + 20 * len(npcitems.TYPES))
-        self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
-        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
-        at = self.TYPES_SEG * 16 + 115 * 20
-        self.assertEqual(bytes(self.mu.mem_read(at, 20 * len(npcitems.TYPES))), b"".join(npcitems.TYPES))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300 + 20 * len(npcitems.TYPES)))
+        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0, edi=0xD1D1, es=0xE5E5), 0x80C)
         first, off, seg = struct.unpack("<HHH", self.mu.mem_read(self.hdr + 212, 6))
         self.assertEqual((first, off, seg), (115, 0, self.TYPES_SEG))
-        for kind in (24, 54):  # (Grey's Scale's legs and arms)
-            self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + kind * 20 + 0x12, 1)[0], 3)
-        for dagger in (17, 33, 84, 94):  # (the game's daggers: the air cleric's bit set, the rest kept)
-            self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + dagger * 20 + 0x10, 2), b"\x01\x00")
-        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
-        self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
-        # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
-        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 112 * 20 + 0x0C, 1)[0], 6)
-        # (the game's pick, Deepbiter's and the stone picks': the footman's pick's 1d6+1, Skills & Powers)
-        self.assertEqual(npcitems.TYPES[127 - 115][0x0C], 6)  # (the Loader's Metal Pick's too)
-        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
+        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS, r.UC_X86_REG_DI,
+                                                       r.UC_X86_REG_ES)], [0, GAME_DS, 0xD1D1, 0xE5E5])
+
+    def test_the_games_own_chunk(self):
+        """The game's own 115 (no copy of the Loader's): the table noted (for STINK_SIDES), but none
+        of the Loader's types counted in (TYPES_FIRST 0)."""
+        self.mu.mem_write(self.hdr + 212, struct.pack("<H", 115))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
+        self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
+        self.assertEqual(struct.unpack("<HHH", self.mu.mem_read(self.hdr + 212, 6)), (0, 0, self.TYPES_SEG))
 
     def test_not_read(self):
-        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2460))
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 3180))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=1), 0x80C)
         self.assertEqual(bytes(self.mu.mem_read(self.hdr + 212, 6)), bytes(6))
 
