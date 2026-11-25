@@ -97,7 +97,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
-                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE)
+                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -398,6 +398,22 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("scroll_learn", 0x99A2F, bytes.fromhex("0bc0"), gamepatch._interrupt(VEC_SCROLL_LEARN, 2)),
     Patch("learn_said", 0x99A7F, bytes.fromhex("1e68972e"), gamepatch._interrupt(VEC_LEARN_SAID, 4)),
     Patch("learn_refused", 0x99A86, bytes.fromhex("1e68ab2e"), gamepatch._interrupt(VEC_LEARN_REFUSED, 4)),
+    # Shops as in AD&D (SL's price_buy, price_shown, price_afford, sell_price, sell_keep; game.RULE_CHA_PRICES,
+    # always on): DSCLOG2's PRICE_CX at the price under an item (90E2Ah: "mov cx,es:[bx+6]", SL's 83BB1h),
+    # PRICE_EAX at the price charged (90AA7h, SL's 8384Bh) and the list's affordable test (9036Ch, SL's
+    # 8310Ch: "movzx eax,word es:[bx+6]"), SELL_PRICE at what the shop pays (90F4Dh, SL's 83CCAh) and
+    # SELL_KEEP where it frees the item sold (91043h: "push word [1A32h]", SL's 83D9Eh)
+    Patch("price_shown", 0x90E2A, bytes.fromhex("268b4f06"), _site(54, 4)),
+    Patch("price_afford", 0x9036C, bytes.fromhex("66260fb74706"), _site(55, 6)),
+    Patch("price_buy", 0x90AA7, bytes.fromhex("66260fb74706"), _site(55, 6)),
+    Patch("sell_price", 0x90F4D, bytes.fromhex("66260fb74706"), _site(56, 6)),
+    Patch("sell_keep", 0x91043, bytes.fromhex("ff36321a"), _site(57, 4)),
+    # The game's message box (560h:2Ah: a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT and
+    # the rest) seen (a fix of the sequel's, whatever the rules: it was never drawn, and its wait was over at
+    # once): DSCLOG2's MSG_WINDOW where its window is kept (59AD3h: "mov es:[9],dx", counted) and MSG_SHOWN
+    # as its wait starts (59B62h: "mov ax,[26B7h]": the picture shown, the options' message time waited)
+    Patch("message_window", 0x59AD3, bytes.fromhex("2689160900"), _site(59, 5)),
+    Patch("message_shown", 0x59B62, bytes.fromhex("a1b726"), _site(58, 3)),
     # ... and at a level up (SL's pick_any and pick_list): DSCLOG2's PICK_ANY where the preserver's level up
     # takes its level (9317Fh: "mov [bp-2],ax / or ax,ax", SL's 85580h) and PICK_LIST after CHOOSE A
     # SPELL's page is listed (93246h: "mov di,ax", SL's 8563Fh); and PICK_PAGE where the window takes its

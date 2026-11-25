@@ -2224,6 +2224,307 @@ unlook:
         iret
 unlook_count dw 0               ; (descriptions shown, for a look in play)
 
+; SHOPS AS IN AD&D: SL's CHA_PRICE, PROBE_PRICE, PROBE_PRICE_EAX, SELL_PRICE and SELL_KEEP
+; (RULE_HI_CHA_PRICES, the Loader's "cha_prices", always on; dsloader/prices.py), on the sequel's shop
+; (90xxxh, SL's 83xxxh). Its item records are 17h bytes (DS:19C1h), the price the word at +6 as SL's;
+; the shop's own markups (370h:36h buying, 34h selling: 914A5h, 915B8h, a shopkeeper's discount) are
+; worked out after, from the price these give. Each site does the instruction it replaces first.
+; - PRICE_CX (site 54, "price_shown"): "mov cx,[es:bx+6]" (90E2Ah; 4 bytes), the price under an item.
+; - PRICE_EAX (site 55, "price_afford", "price_buy"): "movzx eax,word [es:bx+6]" (9036Ch, the list
+;   greying what the party can't afford; 90AA7h, the price charged; 6 bytes).
+; - SELL_PRICE (site 56, "sell_price"): "movzx eax,word [es:bx+6]" (90F4Dh; 6 bytes), what the shop
+;   offers and pays: SELL_PERCENT of it (rounded down, never below 1; 9999 kept), so nothing bought at
+;   the best discount sells for more than it cost (prices.sell_price).
+; - SELL_KEEP (site 57, "sell_keep"): "push word [1A32h]" (91043h; 4 bytes) where the shop has paid and
+;   frees the item list of the thing holding the item sold (the pointer's, 523; c8:2410h, which does
+;   nothing for 270Fh). A magical item (a plus, +16h, or a power, +10h: scrolls, rings, wands...),
+;   the only one on the pointer, goes first into the last item list of the shop's merchant (the thing
+;   DS:1A30h, a creature, its lists at +08h, +0Ah, +0Ch), in a backpack cell no item of the merchant's
+;   holds (+13h: 14-25; the pack full, its own kept), where the shop lists it; the pointer's thing
+;   emptied as the game leaves it (all 0) and 270Fh pushed. Anything else is pushed and freed as the
+;   game does. All in the game's own call: no Loader (SL's needed one to move the item).
+; The leader is the member whose turn it is out of a fight (DS:426Dh), its CHA the creature's +1Eh.
+RULE_HI_CHA_PRICES equ 16
+CHA_PRICE_FIRST equ 18          ; (prices.CHA_FIRST: 5% off at CHA 18, 5% more a point ...)
+CHA_PRICE_STEPS equ 8           ; (... to 40% at CHA 25)
+SELL_PERCENT equ 60
+CREATURE_CHA  equ 0x1E
+SHOP_MERCHANT equ 0x1A30        ; DS: the shop's merchant (a thing) ...
+SOLD_THING    equ 0x1A32        ; ... and the thing holding the item sold
+ITEM_PLUS_AT  equ 0x16
+ITEM_POWER_AT equ 0x10
+ITEM_SLOT_AT  equ 0x13
+THING_ITEMS   equ 1
+THING_PERSON  equ 2
+THING_COUNT   equ 520           ; (the things past it the game's own: the pointer's 523)
+PACK_FIRST    equ 14            ; (the backpack's cells, 14-25: 0-13 worn)
+PACK_CELLS    equ 12
+SELL_ITEMS_MOST equ 200         ; (a list walked no further: a torn one)
+cha_price:
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES
+        jz .out
+        cmp cx, NO_ITEM
+        je .out
+        jcxz .out
+        push ax
+        push bx
+        push dx
+        push es
+        mov bx, [WHOSE_TURN]
+        cmp bx, 3
+        ja .done
+        les ax, [CREATURES_PTR]
+        imul bx, bx, CREATURE_SIZE
+        add bx, ax
+        mov al, [es:bx + CREATURE_CHA]
+        sub al, CHA_PRICE_FIRST - 1
+        jle .done
+        cmp al, CHA_PRICE_STEPS
+        jbe .pct
+        mov al, CHA_PRICE_STEPS
+.pct:   mov ah, 5
+        mul ah                          ; (AX the discount in %)
+        mov bx, 100
+        sub bx, ax
+        mov ax, cx
+        mul bx
+        mov bx, 100
+        div bx
+        or ax, ax
+        jnz .set
+        inc ax
+.set:   mov cx, ax
+        inc word [cs:cha_prices]
+.done:  pop es
+        pop dx
+        pop bx
+        pop ax
+.out:   ret
+price_cx:
+        mov cx, [es:bx + 6]
+        call cha_price
+        iret
+price_eax:
+        push cx
+        mov cx, [es:bx + 6]
+        call cha_price
+        movzx eax, cx
+        pop cx
+        iret
+sell_price:
+        movzx eax, word [es:bx + 6]
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES
+        jz .out
+        cmp ax, NO_ITEM
+        je .out
+        cmp ax, 1
+        jbe .out
+        push edx
+        imul eax, eax, SELL_PERCENT
+        xor edx, edx
+        push ecx
+        mov ecx, 100
+        div ecx
+        pop ecx
+        pop edx
+        or eax, eax
+        jnz .out
+        inc eax
+.out:   iret
+sell_keep:
+        push ax
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        push fs
+        mov cx, [SOLD_THING]
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES
+        jz .push
+        cmp cx, NO_ITEM
+        jae .push
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov fs, ax
+        imul si, cx, 3                  ; (FS:SI+FIGHTERS_OFF the thing sold)
+        cmp byte [fs:si + FIGHTERS_OFF], THING_ITEMS
+        jne .push
+        mov ax, [fs:si + FIGHTERS_OFF + 1]
+        cmp ax, NO_ITEM
+        jae .push
+        les bx, [ITEMS_PTR]
+        imul di, ax, ITEM_SIZE
+        add di, bx                      ; (ES:DI the item)
+        cmp word [es:di + 4], NO_ITEM   ; (the only one on the pointer)
+        jb .push
+        cmp byte [es:di + ITEM_PLUS_AT], 0
+        jg .magic
+        cmp word [es:di + ITEM_POWER_AT], 0
+        je .push
+.magic: mov bx, [SHOP_MERCHANT]
+        cmp bx, THING_COUNT
+        jae .push
+        imul bx, bx, 3
+        cmp byte [fs:bx + FIGHTERS_OFF], THING_PERSON
+        jne .push
+        push es
+        push di
+        mov dx, [fs:bx + FIGHTERS_OFF + 1]      ; (the merchant's creature)
+        imul dx, dx, CREATURE_SIZE
+        mov [cs:sk_merchant], dx
+        mov dx, NO_ITEM                 ; (DX its last list of items, a thing)
+        mov word [cs:sk_cells], 0
+        push si
+        mov si, 8
+.list:  les bx, [CREATURES_PTR]
+        add bx, [cs:sk_merchant]        ; (ES:BX the merchant)
+        mov ax, [es:bx + si]
+        cmp ax, THING_COUNT
+        jae .nextl
+        push bx
+        imul bx, ax, 3
+        cmp byte [fs:bx + FIGHTERS_OFF], THING_ITEMS
+        jne .nl
+        mov dx, ax
+        mov ax, [fs:bx + FIGHTERS_OFF + 1]
+        call sk_used                    ; (its items' backpack cells marked in SK_CELLS)
+.nl:    pop bx
+.nextl: add si, 2
+        cmp si, 0x0E
+        jb .list
+        pop si
+        pop di
+        pop es
+        cmp dx, NO_ITEM
+        je .push                        ; (no list: freed, as the game does)
+        imul bx, dx, 3                  ; (FS:BX the merchant's list)
+        mov ax, [fs:bx + FIGHTERS_OFF + 1]
+        mov [es:di + 4], ax             ; (the item first in it ...
+        mov ax, [fs:si + FIGHTERS_OFF + 1]
+        mov [fs:bx + FIGHTERS_OFF + 1], ax
+        mov ax, [cs:sk_cells]           ;  ... in a free cell of the pack)
+        xor dl, dl
+.cell:  test ax, 1
+        jz .free
+        shr ax, 1
+        inc dl
+        cmp dl, PACK_CELLS
+        jb .cell
+        jmp .empty
+.free:  add dl, PACK_FIRST
+        mov [es:di + ITEM_SLOT_AT], dl
+.empty: cmp cx, THING_COUNT             ; (the thing sold emptied: the pointer's all 0)
+        jb .one
+        mov byte [fs:si + FIGHTERS_OFF], 0
+        mov word [fs:si + FIGHTERS_OFF + 1], 0
+        jmp .kept
+.one:   mov word [fs:si + FIGHTERS_OFF + 1], NO_ITEM
+.kept:  inc word [cs:sold_kept]
+        mov cx, NO_ITEM
+.push:  mov bx, sp                      ; (SS:BX: FS, ES, DI, SI, DX, CX, BX, AX, then IP, CS, flags)
+        sub sp, 2
+        mov dx, 11
+.down:  mov ax, [ss:bx]
+        mov [ss:bx - 2], ax
+        add bx, 2
+        dec dx
+        jnz .down
+        mov [ss:bx - 2], cx             ; (the word pushed)
+        pop fs
+        pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        iret
+; SK_USED: the backpack cells of the items in the list from AX (ES the items' segment once ITEMS_PTR's)
+; marked in SK_CELLS. ES, AX, BX changed.
+sk_used:
+        push cx
+        push di
+        mov cx, SELL_ITEMS_MOST
+.item:  cmp ax, NO_ITEM
+        jae .ret
+        les di, [ITEMS_PTR]
+        imul ax, ax, ITEM_SIZE
+        add di, ax
+        mov al, [es:di + ITEM_SLOT_AT]
+        sub al, PACK_FIRST
+        jb .next
+        cmp al, PACK_CELLS
+        jae .next
+        push cx
+        mov cl, al
+        mov ax, 1
+        shl ax, cl
+        or [cs:sk_cells], ax
+        pop cx
+.next:  mov ax, [es:di + 4]
+        loop .item
+.ret:   pop di
+        pop cx
+        ret
+sk_cells   dw 0
+sk_merchant dw 0
+cha_prices dw 0                 ; (prices lowered, for a look in play)
+sold_kept  dw 0                 ; (magical items kept by a merchant, for a look in play)
+
+; MESSAGES SHOWN: the sequel's message box (560h:2Ah, 59A0Bh; SL's 4D0h:2Ah, which waits in the game's
+; event loop) opens its window (5B0h:48h, kept at 300h:7, 59AD3h), puts the text in it and then waits
+; [26B7h] x 100 ms (the options' message time, 5 seconds at first: 59B62h) with the game's delay (0:12FAh)
+; before closing it. The game draws its windows only when it shows a new picture (3328h:0B4Ch: the
+; windows drawn, 309Bh:1675h, on the screen not on show, then the two screens flipped, 0BF3h:5814h), which
+; its main loop does: so the box was never seen (the scroll's messages, I COULDN'T SELL THAT and the
+; rest of the 56 calls).
+; - MSG_WINDOW (site 59, "message_window"): "mov [es:9],dx" (59AD3h; 5 bytes), the window just opened
+;   (counted).
+; - MSG_SHOWN (site 58, "message_shown"): "mov ax,[26B7h]" (59B62h; 3 bytes), the wait about to start: a
+;   new picture shown first, as the routine's own call before the text does (0B0h:2A81h with 1: drawing
+;   allowed, the picture marked new, 3328h:0B4Ch), so the box is on screen while the game waits.
+MSG_TIME     equ 0x26B7
+MSG_DRAW_SEG equ 0x18C9 - 0x47E0   ; (selector 0B0h's segment, the root's, less DS's)
+MSG_DRAW_OFF equ 0x2A81
+msg_draw dd 0
+msg_window:
+        mov [es:9], dx
+        inc word [cs:msg_windows]
+        iret
+msg_shown:
+        inc word [cs:msg_waits]
+        pusha
+        push es
+        mov ax, ds
+        add ax, MSG_DRAW_SEG
+        mov word [cs:msg_draw], MSG_DRAW_OFF
+        mov [cs:msg_draw + 2], ax
+        push word 1
+        call far [cs:msg_draw]
+        add sp, 2
+        mov ax, [MSG_TIME]              ; (tenths of a second: in BIOS ticks, x 100 / 55)
+        mov dx, 100
+        mul dx
+        mov cx, 55
+        div cx
+        mov cx, ax
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]
+        sti
+.wait:  mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, cx
+        jb .wait
+        pop es
+        popa
+        xor ax, ax                      ; (the game's own wait: none left)
+        iret
+msg_windows dw 0                ; (message windows opened, for a look in play)
+msg_waits   dw 0                ; (waits shown)
+
 ; SHOW_WINDOW: DSCLOG's: the text at CS:SHOW_TEXT in the game's dialogue window (its stub 476Ch, SL's 42CAh:
 ; the entries 25h, the window's input, and 34h, the wait for a reply, as SL's), with "Press continue" and
 ; one reply, Continue, until it's clicked, then the window closed. DS the game's.
@@ -3404,12 +3705,12 @@ site_table:
         dw spec_damage                      ; 51 SITE_SPEC_DAMAGE (a weapon's damage bonus: weapon specialization's)
         dw thief_skill                      ; 52 SITE_THIEF_TABLE (a thief skill: AD&D's table, Dark Sun's DEX)
         dw stab_times                       ; 53 SITE_STAB (a backstab: the weapon's dice multiplied; an Assassin's one more)
-        dw site_none                        ; 54 (none here)
-        dw site_none                        ; 55 (none here)
-        dw site_none                        ; 56 (none here)
-        dw site_none                        ; 57 (none here)
-        dw site_none                        ; 58 (none here)
-        dw site_none                        ; 59 (none here)
+        dw price_cx                           ; 54 SITE_PRICE_CX (a shop's price shown: the leader's CHA)
+        dw price_eax                          ; 55 SITE_PRICE_EAX (... charged, or the list's affordable test)
+        dw sell_price                         ; 56 SITE_SELL_PRICE (what a shop pays: 60%)
+        dw sell_keep                          ; 57 SITE_SELL_KEEP (a magical item sold: into the merchant's pack)
+        dw msg_shown                          ; 58 SITE_MSG_SHOWN (a message box's wait: the window on show)
+        dw msg_window                         ; 59 SITE_MSG_WINDOW (a message box's window opened: counted)
         dw kit_init                         ; 60 SITE_KIT_INIT (a combatant's initiative: the kits')
         dw kit_ranger_cast                  ; 61 SITE_KIT_RANGER_CAST (a ranger's caster level: a Seeker's, a Justifier's)
         dw kp_disc_win                     ; 62 SITE_KP_DISC_WIN (the creation panel's disciplines opened: KITS for their button)
