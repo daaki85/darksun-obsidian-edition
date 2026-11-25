@@ -1116,6 +1116,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   scrolled into view, so Enter reaches it. (Without the Loader,
   Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Squares in reach](#squares-in-reach), [F10](#f10-takes-a-whole-move-back) and
+  [Alt](#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
+  small crosses mark the squares they can still walk to, and R hides or shows them. After the last
+  step the sequel opens its own **END MOVE** menu (GUARD, WAIT, END TURN), and F10 does nothing
+  while it is up: Escape closes it, and F10 then puts the member back where the turn began, with the
+  move to walk again (`F10: Lex's move taken back (can walk again)`). Without the Loader the sequel
+  gives the points back but not the walk, so a click goes nowhere. A member held where they stand
+  (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
+  and names it: things to take, doors, bodies to search, people to talk to.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three

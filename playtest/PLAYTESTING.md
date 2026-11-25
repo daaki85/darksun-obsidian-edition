@@ -1103,6 +1103,15 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
+10. **R, F10 and Alt in Wake of the Ravager** (logs/2026-11-25-ravager-fight-keys.md): after a
+   member's last step the sequel opens its own **END <name>'s MOVE** menu (GUARD, WAIT, END TURN)
+   and F10 does nothing while it is up: press Escape first (the menu is a screen up, so it's safe),
+   then F10. `ravkeys.py` shows the squares, F10's counts (moves taken back, refused), the points,
+   the flags (bit 0 clear: no walk) and the turn's start; `ravkeys.py effect OWNER 66` (Cannot
+   Move) or `69` (Paralyzed) holds a member for the pin's test and `del` takes it off (never save
+   after). The crosses on Tyr's grey street are dark (no light for stone). Alt's rings come only out
+   of a fight; in one RING_TAB stays empty. Put the four on Computer Control (the small icons beside
+   USE) to end the ambush quickly: they win it in a few minutes with HP 250.
 
 ### Foes in a test fight
 

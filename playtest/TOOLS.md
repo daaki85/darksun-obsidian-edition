@@ -119,6 +119,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravhold.sh [FOLDER]` | a real Hold Person in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the held-target rule (DSCLOG2's HELD_HIT, HELD_DAMAGE): ravstart.sh FOLDER (default $WORK/rav; |
 | `ravitems.py N... [--worn]` | Wake of the Ravager's combatant N's items, as its helper reads them: the item number, type, worn slot (+13h), plus (+16h), power (the word at +10h) and the type's material (+4), flags (+0) and armour byte (+0Bh). |
+| `ravkeys.py` | R, F10 and Alt in the running sequel ($WORK/rav.pid): DSCLOG2's words for them and the game's. |
 | `ravkits.py` | the kits in the running sequel ($WORK/rav.pid; |
 | `ravknow.py SPELL [LEVEL]` | a test edit (never saved): Wake of the Ravager's first party member (Ar'anda in the opening party; |
 | `ravload.sh NAME [FOLDER]` | Wake of the Ravager from the save in saves/NAME (SAVE01.SAV, CHARSAVE.GFF, DARKSAVE.GFF copied into FOLDER, default $WORK/rav, as slot 1), started as the Loader starts it (RAV_LOADER=1; |

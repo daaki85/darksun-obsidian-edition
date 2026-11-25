@@ -186,7 +186,9 @@ dac_changes dw 0                ; +240 (DSCLOG2's own) counted up when DAC_TICK 
         times 244 - ($ - hdr) db 0  ; (DSCLOG's fields +242 to +243: none of them here yet, zero)
 rings_on   dw 0                 ; +244 the Loader sets 1 to have a ring drawn under the enemy chosen with
                                 ;      Tab (RINGS: HIT_TARGET's), once RED is made
-ring_tab_off dw 0               ; +246 (DSCLOG's RING_TAB: none here, the one ring is HIT_TARGET's)
+ring_tab_off dw FAR_RING_TAB    ; +246 offset of RING_TAB in the far block: a byte a thing, the kind of
+                                ;      ring under it (1: two pixels thick, tinted twice; 0 none), the
+                                ;      Loader's (usable.py: what can be used, while Alt is held)
 red_off    dw FAR_RED           ; +248 offset of RED in the far block: each colour's reddened one (0:
                                 ;      none), the Loader's (rings.red_table)
 target_on  dw 0                 ; +250 the Loader sets 1 while Tab chooses an enemy (TARGETING)
@@ -289,6 +291,17 @@ save_greq  dw 0                 ; +1916 the Loader's, with a save's request: the
                                 ;      chunk (the map's limits, kept in the roster file: GREQ_WRITE), 0 none
 greq_saves dw 0                 ; +1918 GREQ chunks written (GREQ_WRITE, counted) ...
 greq_loads dw 0                 ; +1920 ... and a load's taken from the quick saves' (GREQ_LOAD, counted)
+view_redraw dw 0                ; +1922 the Loader sets 1 to have the view drawn again, all of it, from the map's
+                                ;      main loop (REDRAW_TICK; DSCLOG's VIEW_REDRAW, its +242)
+squares_on dw 0                 ; +1924 the Loader sets 1 to have the squares SQ_MAP marks drawn on the floor
+                                ;      (SQUARES: where the party member whose turn it is in a fight can still
+                                ;      walk, squares.py; DSCLOG's +1890). SQ_MAP is in this helper's PSP
+light_off  dw FAR_LIGHT         ; +1926 offset of LIGHT in the far block: each colour's lighter one (0: none),
+                                ;      the Loader's (dust.light_table; DSCLOG's +236)
+square_draws dw 0               ; +1928 floor passes the squares were drawn in (SQUARES, counted)
+f10_moves  dw 0                 ; +1930 F10's moves taken back (F10_PIN, counted) ...
+f10_kept   dw 0                 ; +1932 ... and those refused to a pinned member (counted)
+mark_draws dw 0                 ; +1934 rings drawn under the things RING_TAB marks (RINGS, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -3955,6 +3968,11 @@ site_table:
         dw psi_cycle                       ; 97 SITE_PSI_CYCLE (93FF1h: its discipline button: its own only for one not a psionicist)
         dw psi_click                       ; 98 SITE_PSI_CLICK (94245h: a known power clicked: nothing)
         dw pick_top                        ; 99 SITE_PICK_TOP (93831h: CHOOSE A SPELL's level button: no higher than CR_CAP)
+        dw f10_pin                          ; 100 SITE_F10_PIN (1EC36h: F10's standing-still test: a pinned member left where it is)
+        dw site_none                        ; 101 (none here)
+        dw site_none                        ; 102 (none here)
+        dw site_none                        ; 103 (none here)
+        dw site_none                        ; 104 (none here)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -12656,6 +12674,7 @@ probe_scroll:
         popf
         call label_tick
         call ring_tick
+        call redraw_tick                ; (the view again for the Loader's squares and rings)
         call pan_tick                   ; (the view to the enemy chosen with Tab: the Loader's PAN)
         call save_tick                  ; (the Loader's quick save or quick load: QUICK SAVES)
         pop es
@@ -13997,7 +14016,7 @@ floor_enter:
         popf
         cmp word [cs:wall_shadows], 0
         jne .want
-        call ring_wanted                ; (or the chosen enemy's ring: RINGS)
+        call extras_wanted              ; (or a ring or the squares: RINGS, SQUARES)
         jnc .plain
 .want:  cmp byte [cs:floor_busy], 0
         jne .plain
@@ -14218,7 +14237,8 @@ wall_pass:
         jmp .row
 .done:  call ws_flush
         call vga_restore
-.ring:  call ring_pass                  ; (the chosen enemy's ring over the shadows: RINGS)
+.ring:  call squares_pass               ; (the squares in reach over the shadows: SQUARES)
+        call ring_pass                  ; (the rings over them: RINGS)
         ret
 
 ; IS_WALL: CF set if map cell CX (column), DX (row) is a wall (GMAP's C0h bits); DS the game's.
@@ -14866,13 +14886,49 @@ ring_redraw:
 
 ; RING_PASS: (WALL_PASS's, the floor just drawn: PAGE_SETUP's page and clip, CAM_X/CAM_Y the floor
 ; routine's camera, FS the far block) the chosen enemy's ring round its feet, three rings of points
-; (DSCLOG's RING_OUTER, RING_INNER, RING_EXTRA), each pixel reddened three times through RED.
+; (DSCLOG's RING_OUTER, RING_INNER, RING_EXTRA), each pixel reddened three times through RED; then a
+; ring under each thing RING_TAB marks (DSCLOG's: kind 1 two rings of points, tinted twice through RED,
+; which the Loader makes golden for them: usable.py), with RINGS_ON and the Loader there.
 ring_pass:
-        call ring_wanted
-        jnc .ret
+        cmp word [cs:rings_on], 0
+        je .ret
+        call loader_fresh
+        jne .ret
+        call vga_save
+        mov es, [cs:v_seg]
+        mov word [cs:r_tab], FAR_RED
+        mov bx, [cs:hit_target]
+        cmp bx, MAP_COUNT - 1
+        ja .marks
+        mov word [cs:r_times], 3
+        mov al, 2
+        call ring_at
+        jnc .marks
+        inc word [cs:ring_draws]
+.marks: mov word [cs:r_times], 2
+        xor bx, bx
+.mark:  cmp byte [fs:FAR_RING_TAB + bx], 0
+        jne .one
+.mnext: inc bx
+        cmp bx, MAP_COUNT
+        jb .mark
+        call vga_restore
+.ret:   ret
+.one:   push bx
+        mov al, [fs:FAR_RING_TAB + bx]
+        call ring_at
+        jnc .unseen
+        inc word [cs:mark_draws]
+.unseen:
+        pop bx
+        jmp .mnext
+
+; RING_AT: a ring of kind AL (1: outer and inner, 2: the extra too) round thing BX's feet, unless wholly
+; outside the clip (CF clear then; set when drawn). ES the page; R_TAB and R_TIMES the tint.
+ring_at:
+        mov [cs:r_kind], al
         push ds
         mov ds, [cs:game_ds]
-        mov bx, [cs:hit_target]
         imul bx, bx, THING_SIZE
         mov ax, [bx + MAP_THINGS + THING_X]
         sub ax, [cs:cam_x]
@@ -14884,31 +14940,32 @@ ring_pass:
         mov ax, [cs:r_fx]               ; (wholly outside the clip: nothing)
         add ax, RING_W
         cmp ax, [cs:clip_x0]
-        jl .ret
+        jl .no
         sub ax, 2 * RING_W
         cmp ax, [cs:clip_x1]
-        jg .ret
+        jg .no
         mov ax, [cs:r_fy]
         add ax, RING_H
         cmp ax, [cs:clip_y0]
-        jl .ret
+        jl .no
         sub ax, 2 * RING_H
         cmp ax, [cs:clip_y1]
-        jg .ret
-        inc word [cs:ring_draws]
-        call vga_save
-        mov es, [cs:v_seg]
+        jg .no
         mov si, ring_outer
         mov cx, RING_OUTER
         call ring_points
         mov si, ring_inner
         mov cx, RING_INNER
         call ring_points
+        cmp byte [cs:r_kind], 2
+        jb .done
         mov si, ring_extra
         mov cx, RING_EXTRA
         call ring_points
-        call vga_restore
-.ret:   ret
+.done:  stc
+        ret
+.no:    clc
+        ret
 
 ring_points:                            ; CX points at CS:SI round (R_FX, R_FY): each a quarter's
 .pt:    push cx                         ;   (x << 3 | y, x and y not negative), with its mirror
@@ -14963,14 +15020,24 @@ ring_dot:                               ; the point (R_QX, R_QY) round (R_FX, R_
         out dx, ax
         shr bx, 2
         add di, bx
-        movzx bx, byte [es:di]          ; its colour, reddened three times (as far as RED goes)
-        mov cx, 3
-.again: mov al, [fs:FAR_RED + bx]
+        movzx bx, byte [es:di]          ; its colour, tinted R_TIMES times through R_TAB (as far as
+        push si                         ;   it goes: RED, or SQUARES' LIGHT)
+        mov si, [cs:r_tab]
+        mov cx, [cs:r_times]
+.again: mov al, [fs:si + bx]
         or al, al
-        jz .put
+        jz .none
         mov bl, al
         loop .again
+        jmp .put
+.none:  cmp cx, [cs:r_times]            ; no colour that way. At the first look, where LIGHT has
+        jne .put                        ;   none (a colour that isn't the ground's: stone), the
+        cmp si, FAR_LIGHT               ;   mark is darkened through the walls' shadows' DARK
+        jne .put                        ;   instead, as many times (DSCLOG's RING_PX)
+        mov si, FAR_DARK
+        jmp .again
 .put:   mov [es:di], bl
+        pop si
 .skip:  ret
 
 RING_OUTER equ 20                ; (a quarter of each ring, DSCLOG's: RING_POINTS mirrors them)
@@ -14983,6 +15050,181 @@ r_fx       dw 0
 r_fy       dw 0
 r_qx       dw 0
 r_qy       dw 0
+r_kind     db 0
+r_tab      dw FAR_RED           ; (the far block's table RING_DOT tints a colour through ...
+r_times    dw 3                 ;   ... and how many times)
+
+; EXTRAS_WANTED: CF set if the floor pass has something of the Loader's to draw: the chosen enemy's ring
+; (RING_WANTED), the rings RING_TAB marks (RINGS_ON) or the squares in reach (SQUARES_ON), the Loader
+; there. Registers kept.
+extras_wanted:
+        call ring_wanted
+        jc .ret
+        cmp word [cs:rings_on], 0
+        jne .fresh
+        cmp word [cs:squares_on], 0
+        je .no
+.fresh: call loader_fresh
+        jne .no
+        stc
+.ret:   ret
+.no:    clc
+        ret
+
+; SQUARES (SQUARES_ON): DSCLOG's, a small light cross (two pixels each way) on the floor in the middle
+; of each of the walk map's squares the Loader marks in SQ_MAP (where the party member whose turn it is
+; in a fight can still walk, squares.py), drawn in the floor pass after the walls' shadows and before
+; the rings, by the rings' routines (RING_POINTS, RING_DOT), the ground lightened four times through
+; LIGHT (the dust's table in Shattered Lands: dust.light_table, made by the Loader from the palette)
+; and what isn't ground (a stone floor) darkened four times through the walls' shadows' DARK. SQ_MAP is
+; the Loader's: the column and the row (a byte each) of the walk map's square its first bit is for, then
+; SQ_SIDE rows of SQ_SIDE bits, the leftmost square a row's bit 0. It lies in this helper's own PSP (CS -
+; 10h), in the room DOS keeps there for a program's two FCBs and its command line (5Ch to FFh): kept
+; with the helper, of no use to DOS once it has stayed resident, so the map costs no upper memory.
+SQ_SIDE    equ 32               ; SQ_MAP: its origin's column and row, then SQ_SIDE x SQ_SIDE bits
+SQ_MAP     equ 0x5C             ; ... its offset in the PSP (squares.py's SQ_MAP_PSP)
+SQ_MAP_BYTES equ 2 + SQ_SIDE * SQ_SIDE / 8
+        times -(SQ_MAP + SQ_MAP_BYTES > 0x100) db 0 ; (a negative count: past the PSP's end)
+SQ_REACH   equ 2                ; how far the cross reaches from the square's middle
+SQ_DOTS    equ 5                ; (a quarter of the cross, as the rings': RING_POINTS mirrors it)
+sq_dots    db 0 << 3 | 0, 1 << 3 | 0, 2 << 3 | 0, 0 << 3 | 1, 0 << 3 | 2
+squares_pass:
+        cmp word [cs:squares_on], 0
+        je .ret
+        call loader_fresh
+        jne .ret
+        inc word [cs:square_draws]
+        call vga_save
+        mov es, [cs:v_seg]
+        mov word [cs:r_tab], FAR_LIGHT
+        mov word [cs:r_times], 4
+        push ds
+        mov ax, cs
+        sub ax, 0x10
+        mov ds, ax                      ; (the PSP)
+        xor di, di                      ; the row
+.row:   movzx ax, byte [SQ_MAP + 1]
+        add ax, di
+        shl ax, 4
+        add ax, 8
+        sub ax, [cs:cam_y]              ; its squares' middle, on the screen
+        mov [cs:r_fy], ax
+        add ax, SQ_REACH
+        cmp ax, [cs:clip_y0]            ; (a row or a square whose cross is all outside what is
+        jl .rnext                       ;   being drawn is passed over: a walker's rectangle is
+        sub ax, 2 * SQ_REACH            ;   small, and RING_DOT would test every pixel)
+        cmp ax, [cs:clip_y1]
+        jg .rnext
+        mov bx, di
+        shl bx, 2
+        mov edx, [bx + SQ_MAP + 2]      ; the row's bits
+        movzx si, byte [SQ_MAP]
+        shl si, 4
+        add si, 8
+        sub si, [cs:cam_x]              ; the middle of the row's first square
+.col:   shr edx, 1
+        jnc .next
+        lea ax, [si + SQ_REACH]
+        cmp ax, [cs:clip_x0]
+        jl .next
+        lea ax, [si - SQ_REACH]
+        cmp ax, [cs:clip_x1]
+        jg .next
+        mov [cs:r_fx], si
+        push edx
+        push si
+        push di
+        mov si, sq_dots
+        mov cx, SQ_DOTS
+        call ring_points
+        pop di
+        pop si
+        pop edx
+.next:  add si, 16
+        or edx, edx
+        jnz .col
+.rnext: inc di
+        cmp di, SQ_SIDE
+        jb .row
+        pop ds
+        mov word [cs:r_tab], FAR_RED
+        call vga_restore
+.ret:   ret
+
+; REDRAW_TICK: (PROBE_SCROLL's, DS the game's) on the map, the view drawn again, all of it (VIEW_AGAIN),
+; when the Loader asks (VIEW_REDRAW: its squares or rings changed) or the squares or RING_TAB's rings
+; come or go by the Loader's coming or going (its LOADER_FRESH stamp), so none are left drawn; while a
+; label or a ring is being drawn it waits a pass. Keeps all.
+redraw_tick:
+        pusha
+        xor al, al
+        call loader_fresh
+        jne .state
+        cmp word [cs:squares_on], 0
+        je .rings
+        or al, 1
+.rings: cmp word [cs:rings_on], 0
+        je .state
+        or al, 2
+.state: cmp word [cs:view_redraw], 0
+        jne .go
+        cmp al, [cs:x_state]
+        je .out
+.go:    call on_map
+        jne .drop
+        cmp byte [cs:lbl_busy], 0
+        jne .out
+        cmp byte [cs:vga_busy], 0
+        jne .out
+        mov [cs:x_state], al
+        mov word [cs:view_redraw], 0
+        pushf
+        cli                             ; (drawing)
+        call view_again
+        popf
+        inc word [cs:x_redraws]
+        jmp .out
+.drop:  mov [cs:x_state], al            ; (off the map: its next drawing is whole)
+        mov word [cs:view_redraw], 0
+.out:   popa
+        ret
+x_state    db 0
+x_redraws  dw 0                 ; (the view drawn again so, counted)
+
+; F10_PIN (site 100, SITE_F10_PIN): DSCLOG's, "mov ah,0 / or ax,ax / jz 1EC3Fh" (1EC36h; 6 bytes: the
+; INT, the site's number and 3 NOPs), the F10 key's last test (1EC05h, SL's 1B83Ah, with a fight on and
+; a party member's turn): AL 1F3FCh's (SL's 1BF9Dh), 0 if the member stands still, and the jump to the
+; move taken back (the member put on the turn's first square, DS:425Ch and 425Ah, its points the turn's
+; own, DS:4258h), past the "jmp 1F08Ch" (the key's end) after it. The jump is made, back to 1EC3Fh, only
+; for AL 0 and the member on its turn (WHOSE_TURN) holding neither Paralyzed (69) nor Cannot Move (66),
+; the effects that pin (826F6h, SL's 786A9h: their landing clears the member's "can walk"): a pinned
+; member is left where it is, with its points. Else back to the NOPs and the JMP. AX (AH 0) and every
+; other register kept.
+F10_TO_MOVE equ 0x1EC3F - 0x1EC39   ; (the move, less the address after the site's number)
+F10_HELD   equ 69               ; (the sequel's Paralyzed ...
+F10_STUCK  equ 66               ;   ... and Cannot Move)
+f10_pin:
+        mov ah, 0
+        or ax, ax
+        jnz .out                        ; (walking: the game's end)
+        push bp
+        push cx
+        mov ax, [WHOSE_TURN]
+        mov cl, F10_HELD
+        call has_effect
+        je .kept
+        mov cl, F10_STUCK
+        call has_effect
+        je .kept
+        mov bp, sp                      ; ([BP+4] the INT's IP)
+        add word [bp + 4], F10_TO_MOVE
+        inc word [cs:f10_moves]
+        jmp .done
+.kept:  inc word [cs:f10_kept]
+.done:  xor ax, ax
+        pop cx
+        pop bp
+.out:   iret
 
 ; ---- Psionic Blast's imagined wounds (DSCLOG's PROBE_WORN's blast and knock-out cases, always on) ----
 ; - BLAST_LOSS (site 79, SITE_BLAST_LOSS): "mov [bp-16h],dx" (3 bytes: the site; 6662Dh) in the effect
@@ -16312,7 +16554,10 @@ FAR_WS_DAC equ FAR_SPANS + WS_SPANS_MOST * 6   ; ... the palette DARK was made f
 FAR_DARK   equ FAR_WS_DAC + 768                ; ... DARK (XLAT)
 FAR_RED    equ FAR_DARK + 256                 ; RINGS' RED (XLAT), the Loader's
 FAR_TBUF   equ FAR_RED + 256                  ; the text buffer (TEXT: PROBE_TEXT, PROBE_MSG), TSIZE bytes
-FAR_TOP    equ FAR_TBUF + TSIZE
+FAR_LIGHT  equ FAR_TBUF + TSIZE               ; SQUARES' LIGHT (XLAT), the Loader's (dust.light_table)
+FAR_RING_TAB equ FAR_LIGHT + 256               ; RINGS' RING_TAB, the Loader's: a byte a thing (THINGS)
+RING_TAB_BYTES equ 520                          ; (the Loader's table: game.THINGS; MAP_COUNT of it read)
+FAR_TOP    equ FAR_RING_TAB + RING_TAB_BYTES
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
