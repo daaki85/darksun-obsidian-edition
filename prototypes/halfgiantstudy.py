@@ -385,6 +385,20 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 visible[role].add(point)
 
 
+# Horizontal swing and drop of the free leather end from its belt loop.
+# Feet-down coordinates follow the cloth over the advancing thigh.
+BELT_TAB = (
+    (-1, 6), (1, 6), (-1, 5),
+    (-1, 5), (0, 6), (1, 6), (-1, 5),
+    (0, 5), (-1, 5), (1, 6), (2, 6),
+    (-1, 5), (-3, 6), (-2, 5), (-2, 6),
+    (-2, 6), (-1, 4), (-4, 6),
+    (-2, 5), (1, 6), (2, 5),
+    (1, 6), (-3, 5), (-2, 5),
+    (-2, 6), (1, 6), (1, 5), (3, 4), (-1, 4),
+)
+
+
 def dress_pairs(pieces, visible, model, pose, dx, dy):
     # Coordinates here are the same feet-down sewing lines used for singles.
     # Only pixels actually laid down by the parent garment can take its trim.
@@ -424,7 +438,19 @@ def dress_pairs(pieces, visible, model, pose, dx, dy):
             # The belt rides the hips; the teal wrap crosses the lower ribs.
             if accent == "Fighter":
                 distance = y-waist+.5+.9*(u-.5)
-                if not -1.2 <= distance < 1.9:
+                # The leather turns down at the hip and overlaps the linen.
+                # The existing cloth mask brings crossing hands in front.
+                if distance >= 1.9:
+                    swing, drop = BELT_TAB[pose]
+                    hip = middle[0] + (2 if pose in REAR else -2)
+                    t = (distance-1)/(drop-1)
+                    across = x - (hip + swing*t)
+                    if distance > drop+.5 or abs(across) > (1 if t > .83 else 1.5):
+                        continue
+                    shade = 6 if across < 0 else 3
+                    out[sy][sx] = pigment(RAMPS["hide"], shade + (t < .34) - (t > .83))
+                    continue
+                if distance < -1.2:
                     continue
                 light = 5.7-4*abs(u-.35)+1.4*(distance < -.2)-2*(distance > .95)
                 color = pigment(RAMPS["hide"], light)
