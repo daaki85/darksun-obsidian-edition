@@ -3277,6 +3277,7 @@ site_table:
         dw ef_rows                          ; 73 SITE_EF_ROWS (the Effects screen's cells filled: the kits and weapon kinds)
         dw ef_click                         ; 74 SITE_EF_CLICK (a click on its cells: the next page of them)
         dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
+        dw dual_kit                         ; 76 SITE_DUAL_KIT (a human's new class: its kit asked on the game's menu)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -11325,6 +11326,289 @@ wp_mark_fn dd 0
 wp_calls_end:
 wp_mark_seg dw 0
 wp_sphere_seg dw 0
+
+; DUAL_KIT (site 76): "cmp word [bp+8],0Ch" (94A57h; 4 bytes: the site and a NOP; SL's PROBE_DUAL_KIT at
+; 86D90h) in the routine that changes a human's class (9493Ch: SI the member, [BP+8] the new class, already
+; first among its classes). With kits, the game's three-choice menu (the one a new cleric's sphere is asked
+; on: its far call at 94878h, read from the code as the overlay manager has fixed it) asks for the new
+; class's kit, "KIT: NONE" its title, the class's kits its rows, a kit barred left off (DK_BANNED: an empty
+; row, which the menu leaves out); the one clicked goes in the kit byte's two bits for the new class
+; (KIT_AT). A character keeps to one kit: one with a kit already (the byte's places, its low six bits, not 0;
+; not KIT_OPEN) is asked none. The menu is overlay code of its own: the way back is put in a frame the
+; overlay manager can fix up, as DSCLOG's. Then the compare, its flags back to the JNZ (RETF 2). Not here
+; (DSCLOG's): an Elementalist's second sphere (DK_SECOND), a new warrior's weapon kinds (LV_CHECK), the DUAL
+; window greying the classes a kit bars (DUAL_BANS' other use).
+DK_MENU_CALL  equ 0x94879 - 0x94A5A     ; (the menu's far call's operand, less the address after the site)
+DK_X       equ 0x5C
+DK_Y       equ 0x47
+KIT_PLACES_BITS equ 0x3F                ; (the kit byte's two bits for each of three places)
+KIT_ELEMENTALIST equ 5
+KIT_LIFEBINDER equ 10
+KIT_SHINOBI  equ 35
+HEALER_SPHERE_CLASS equ 4               ; (the water cleric)
+dual_kit:
+        call kp_if_frame        ; (interrupts as the caller had them: RETF 2 keeps these flags)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push ds
+        lds si, [ss:bx + 34]    ; (the menu's far address, in its call, as fixed up)
+        mov eax, [si + DK_MENU_CALL]
+        pop ds
+        mov [cs:dk_far], eax
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov di, [bp]            ; (the routine's frame: [DI+8] the new class)
+        mov ax, [ss:di + 8]
+        mov si, [ss:di + 6]     ; (and [DI+6] the member)
+        call dk_ask
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        cmp word [bp + 8], 0x0C
+        retf 2
+
+; DK_ASK: member SI (DS the game's), its new class AL first on its sheet: DUAL_KIT's menu. Registers changed.
+dk_ask:
+        cmp si, 4
+        jae .ret
+        les bx, [SHEETS_PTR]
+        imul cx, si, SHEET_SIZE
+        add bx, cx
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .ret
+        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        je .none
+        test byte [es:bx + KIT_BYTE], KIT_PLACES_BITS
+        jnz .ret                ; (a kit already: one a character)
+.none:  movzx di, al
+        dec di
+        cmp di, 16
+        ja .ret
+        mov ch, [cs:di + kit_class_of]
+        shl ch, 2               ; (CH the kit numbers' base: the creation class x 4)
+        mov di, dk_opts + 8     ; the rows, the last first
+        mov cl, 3
+.opt:   mov al, ch
+        add al, cl
+        mov dx, dk_blank
+        call dk_banned
+        jc .row
+        push si
+        call dk_name
+        mov dx, si
+        pop si
+.row:   mov [cs:di], dx
+        mov [cs:di + 2], cs
+        sub di, 4
+        dec cl
+        jnz .opt
+        inc word [cs:dual_asks]
+        mov dx, dk_title
+        call dk_menu            ; (AX the row: 1-3 a kit)
+        dec ax
+        cmp ax, 2
+        ja .ret
+        mov dl, al
+        add al, ch
+        inc al
+        call dk_banned
+        jc .ret
+        push di
+        call kit_place          ; (DI the oldest class's place: the new one's bits above it)
+        mov cx, di
+        pop di
+        jc .ret
+        shl cl, 1
+        inc dl
+        movzx dx, dl
+        shl dx, cl
+        mov cl, [es:bx + KIT_BYTE]
+        cmp cl, KIT_OPEN
+        jne .set
+        xor cl, cl
+.set:   or cl, dl
+        mov [es:bx + KIT_BYTE], cl
+        inc word [cs:dual_kits]
+.ret:   ret
+
+; DK_NAME: CS:SI kit AL's name (EF_KIT_NAMES: the creation class x 4 + the kit). Others kept.
+dk_name:
+        push ax
+        push cx
+        movzx cx, al            ; (its place there, from 1: (class - 1) * 3 + kit)
+        and cl, 3
+        shr al, 2
+        dec al
+        mov ah, 3
+        mul ah
+        add cx, ax
+        mov si, ef_kit_names
+.next:  dec cx
+        jz .out
+.past:  cs lodsb
+        or al, al
+        jnz .past
+        jmp .next
+.out:   pop cx
+        pop ax
+        ret
+
+; DK_MENU: AX the row picked on the game's three-choice menu (DK_FAR), its title CS:DX, its rows DK_OPTS
+; (far). ES:BX kept; others but CX, SI changed.
+dk_menu:
+        push bx
+        push cx
+        push si
+        push es
+        mov si, dk_opts + 8
+.push:  push word [cs:si + 2]
+        push word [cs:si]
+        sub si, 4
+        cmp si, dk_opts
+        jae .push
+        push 1                  ; (as the sphere's)
+        push cs
+        push dx
+        push DK_Y
+        push DK_X
+        call far [cs:dk_far]
+        add sp, 22
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+
+; DK_BANNED: CF set if kit AL may not go with the other classes of sheet ES:BX (its places from 1) or their
+; kits (asleep too), or is a Healer for a cleric not of water (its new class, place 0): its DUAL_BANS hold one
+; of the classes (KIT_BANS), or a kit's and its are a pair KIT_PAIRS bars (kits.dual_kit_banned). All
+; registers kept.
+dk_banned:
+        pushad
+        cmp al, KIT_HEALER      ; (the Healer: a water cleric's only)
+        jne .bans
+        cmp byte [es:bx + SH_CLASSES], HEALER_SPHERE_CLASS
+        jne .no
+.bans:  mov cl, al
+        call kit_bans           ; (EDX the classes it bars)
+        call kit_place
+        jc .ok
+.place: or di, di
+        jz .ok
+        movzx eax, byte [es:bx + di + SH_CLASSES]
+        bt edx, eax
+        jc .no
+        call kit_at
+        jz .next
+        mov ah, cl
+        call kit_pair
+        jc .no
+.next:  dec di
+        jmp .place
+.ok:    popad
+        clc
+        ret
+.no:    popad
+        stc
+        ret
+
+; KIT_PAIR: CF set if kits AL and AH may not go together (KIT_PAIRS, either way round). Others kept.
+kit_pair:
+        push dx
+        push si
+        mov dx, ax
+        xchg dl, dh
+        mov si, kit_pairs
+.next:  cmp word [cs:si], 0
+        je .free
+        cmp [cs:si], ax
+        je .barred
+        cmp [cs:si], dx
+        je .barred
+        add si, 2
+        jmp .next
+.free:  clc
+        jmp .out
+.barred:
+        stc
+.out:   pop si
+        pop dx
+        ret
+; Kits barred from going together (kits.KIT_PAIRS, DSCLOG's): 0 ends it.
+kit_pairs  db KIT_CHAMPION, KIT_TWIN_BLADE,  KIT_CHAMPION, KIT_SHINOBI,  KIT_CHAMPION, KIT_RAVAGER
+           db KIT_SENTINEL, KIT_TWIN_BLADE,  KIT_SENTINEL, KIT_SHINOBI,  KIT_SENTINEL, KIT_RAVAGER
+           db KIT_TWIN_BLADE, KIT_HEALER,  KIT_BRUTE, KIT_SHINOBI,  KIT_BRUTE, KIT_LIFEBINDER
+           db KIT_RAVAGER, KIT_GROVE_WARDEN
+           db KIT_SWASHBUCKLER, KIT_CRUSADER,  KIT_SWASHBUCKLER, KIT_BATTLE_MAGE
+           db KIT_SWASHBUCKLER, KIT_MIND_WARRIOR,  KIT_CRUSADER, KIT_BATTLE_MAGE
+           db KIT_CRUSADER, KIT_MIND_WARRIOR,  KIT_BATTLE_MAGE, KIT_MIND_WARRIOR
+           dw 0
+
+; KIT_BANS: EDX the classes (bit n: class n, 1-17) kit AL bars a human from having as well (DUAL_BANS; 0 for
+; none, or no kit). Others kept.
+kit_bans:
+        push si
+        xor edx, edx
+        or al, al
+        jz .out
+        mov si, dual_bans
+.next:  cmp byte [cs:si], 0
+        je .out
+        cmp [cs:si], al
+        je .kit
+        add si, 5
+        jmp .next
+.kit:   mov edx, [cs:si + 1]
+.out:   pop si
+        ret
+; By kit, the classes (bit n: class n, 1-17) a human with it may not change to (kits.DUAL_BANS, DSCLOG's)
+DB_PRIEST   equ 0x1FE                   ; (clerics and druids, 1-8)
+DB_WARRIOR  equ 0x1E600                 ; (fighter 9, gladiator 10, rangers 13-16)
+DB_NO_SHIELD equ 0x1E0 | (1 << 11)      ; (druids 5-8, the preserver)
+DB_NOT_WATER equ 0xE0EE                 ; (clerics 1-3, druids 5-7, rangers 13-15)
+dual_bans   db KIT_SEEKER
+            dd DB_PRIEST
+            db KIT_JUSTIFIER
+            dd DB_PRIEST
+            db KIT_SHINOBI
+            dd 1 << 11
+            db KIT_SWASHBUCKLER
+            dd DB_WARRIOR
+            db KIT_CRUSADER
+            dd DB_WARRIOR
+            db KIT_BATTLE_MAGE
+            dd DB_WARRIOR
+            db KIT_MIND_WARRIOR
+            dd DB_WARRIOR
+            db KIT_CHAMPION
+            dd DB_NO_SHIELD
+            db KIT_SENTINEL
+            dd DB_NO_SHIELD
+            db KIT_BRUTE
+            dd 1 << 12 | 1 << 1
+            db KIT_STALKER
+            dd 1 << 17
+            db KIT_GROVE_WARDEN
+            dd 1 << 10
+            db KIT_HEALER
+            dd DB_NOT_WATER
+            db 0
+dk_opts    times 3 dd 0
+dk_far     dd 0
+dk_title   db 'KIT: NONE', 0
+dk_blank   db 0
+dual_asks  dw 0                 ; (for a look in play: DUAL's kit menus shown, kits taken)
+dual_kits  dw 0
 
 ; ---- a spell cast: DSCLOG's CAST_SITE, recording only ----
 ; INT VEC_CAST replaces "mov cx,[bp+6]" (80585h, 3 bytes: INT + NOP) at the start of the routine

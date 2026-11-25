@@ -1,9 +1,11 @@
 """The creation panel's KIT pages in Wake of the Ravager: the pictures' planar form (art.planar_frames,
 decode_frame), the Loader's kit windows for the sequel's RESOURCE.GFF (kitpages.rav_chunks, made from its
-own windows and letters: needs DSUN_WOTR), the patch sites (ravager.PATCHES' kp_*, DSCLOG2's sites 62-69),
+own windows and letters: needs DSUN_WOTR), the patch sites (ravager.PATCHES' kp_* and dual_kit, DSCLOG2's
+sites 62-69 and 76),
 and DSCLOG2's KIT PAGE run in an emulated CPU (KIT_CLASS and WP_IDS against kitpages.kit_class and
 panel_windows on every class and multiclass group, the rule on and off; NEW_SHEET making a kit taken back
-none). The emulated checks need nasm and unicorn, else skipped."""
+none; DK_BANNED, after DUAL, against kits.dual_kit_banned). The emulated checks need nasm and unicorn,
+else skipped."""
 
 import os
 import re
@@ -44,7 +46,7 @@ class PlanarTests(unittest.TestCase):
 
 class SiteTests(unittest.TestCase):
     SITES = {"kp_disc_win": 62, "kp_sphere_win": 63, "kp_disc_click": 64, "kp_sphere_click": 65,
-             "kp_shown": 66, "kp_class": 67, "kp_race": 68, "kp_open": 69}
+             "kp_shown": 66, "kp_class": 67, "kp_race": 68, "kp_open": 69, "dual_kit": 76}
 
     def test_sites(self):
         """Each kp_ patch is DSCLOG2's SITE with its number, that site's routine of the same name."""
@@ -71,6 +73,11 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(exe[value[name]:value[name] + 5], bytes.fromhex("9a3900c005"), name)
         self.assertEqual(exe[value["WP_MARK_SEG"]], 0xB8)  # (mov ax,360h)
         self.assertEqual(exe[value["WP_SPHERE_SEG"]], 0x68)  # (push 5B8h)
+        menu = int(re.search(r"\nDK_MENU_CALL +equ 0x([0-9A-F]+) - 0x([0-9A-F]+)", src).group(1), 16)
+        self.assertEqual(exe[menu - 1:menu + 4], bytes.fromhex("9a25006005"))  # (DUAL_KIT's menu: 560:25h)
+        dual = next(p for p in ravager.PATCHES if p.name == "dual_kit")
+        self.assertEqual(int(re.search(r"\nDK_MENU_CALL +equ 0x[0-9A-F]+ - 0x([0-9A-F]+)", src).group(1), 16),
+                         dual.offset + 3)
         for name, ret in (("kp_disc_click", "WP_DISC_RET"), ("kp_sphere_click", "WP_SPHERE_RET"), ("kp_shown", "WP_SHOWN_RET")):
             p = next(p for p in ravager.PATCHES if p.name == name)
             self.assertEqual(p.offset + 3, value[ret], name)
@@ -139,7 +146,7 @@ class EmulatedTests(unittest.TestCase):
         for reg, value in dict(dict(cs=TSR, ds=GDS, es=0, ebx=0, ss=SS, esp=0x7FC, eflags=0x2), **regs).items():
             self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
         self.mu.emu_start(TSR * 16 + self.sym[name], TSR * 16 + 0xFFF0)
-        return {reg: self.mu.reg_read(getattr(r, "UC_X86_REG_" + reg.upper())) for reg in ("eax", "edx")}
+        return {reg: self.mu.reg_read(getattr(r, "UC_X86_REG_" + reg.upper())) for reg in ("eax", "edx", "eflags")}
 
     @staticmethod
     def creation_sheet(race: int, classes) -> bytes:
@@ -174,6 +181,28 @@ class EmulatedTests(unittest.TestCase):
                     disc, sph = kitpages.panel_windows(padded, rules, race)
                     self.assertEqual((got["eax"] & 0xFFFF, got["edx"] & 0xFFFF),
                                      (game_ids.get(disc, disc), game_ids.get(sph, sph)))
+
+    def test_dual_banned(self):
+        """DK_BANNED's CF is kits.dual_kit_banned for every kit of every new class, on a human who had each
+        class before (its kit, if it had one, each of the old class's)."""
+        from dsloader import kits
+        for new in range(1, 18):
+            base = kitpages.CREATION_CLASS[new] * 4
+            for old in range(1, 18):
+                if old == new:
+                    continue
+                for old_kit in range(4):
+                    sheet = bytearray(ravager.SHEET_SIZE)
+                    sheet[SH_RACE], sheet[SH_CLASSES:SH_CLASSES + 2] = 1, bytes((new, old))
+                    sheet[0x1E:0x20] = bytes((1, 5))
+                    sheet[KIT_BYTE] = old_kit
+                    self.mu.mem_write(SS * 16 + 0x500, bytes(sheet))
+                    old_kids = [kitpages.CREATION_CLASS[old] * 4 + old_kit] if old_kit else []
+                    for k in range(1, 4):
+                        kid = base + k
+                        got = self.run_routine("dk_banned", bytes(sheet), eax=kid, es=SS, ebx=0x500)
+                        with self.subTest(new=new, old=old, old_kit=old_kit, kit=kid):
+                            self.assertEqual(bool(got["eflags"] & 1), kits.dual_kit_banned(kid, [old], old_kids, new))
 
     def test_new_sheet(self):
         """NEW_SHEET (DONE's copy of the creation sheet): a kit taken back (KIT_OPEN) is none, a kit chosen

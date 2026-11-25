@@ -8,6 +8,9 @@
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
   python3 ravkits.py hp MEMBER N               a test edit: the creature's hit points (+0) N, and its sheet's most
+  python3 ravkits.py page                      the creation screen's KIT pages (DSCLOG2's KIT PAGE): the sheet being
+                                               made (far DS:1429h: race, classes, kit byte), the panel's windows
+                                               (DS:1134h, 1138h: their ids), the pages shown and rows taken
 MEMBER is the sheet's number (0-3: the party's order)."""
 import argparse, os, struct, subprocess, sys, tempfile
 PT = os.path.dirname(os.path.abspath(__file__))
@@ -81,6 +84,22 @@ elif cmd == 'hp':
     g.write(sheet + 8, struct.pack('<H', n))
     g.write(cr, struct.pack('<H', n))
     print('member', m, 'hp', struct.unpack('<H', g.read(cr, 2))[0])
+elif cmd == 'page':
+    from dsloader import game
+    ds = game.find_data_segment(g)
+    off, seg = struct.unpack('<HH', g.read(ds * 16 + 0x1429, 4))
+    s = g.read(seg * 16 + off, 0x42)
+    print('creation sheet %04X:%04X race %d classes %s kit byte %#04x editing %d' % (
+        seg, off, s[0x12], list(s[0x1B:0x1E]), s[0x3D], struct.unpack('<h', g.read(ds * 16 + 0x112E, 2))[0]))
+    for name, at in (('disciplines', 0x1134), ('spheres/page', 0x1138)):
+        o, sg = struct.unpack('<HH', g.read(ds * 16 + at, 4))
+        print(name, 'none' if not (o or sg) else 'window %d' % struct.unpack('<H', g.read(sg * 16 + o + 8, 2))[0])
+    print('marks: disciplines %#x spheres %#x' % struct.unpack('<HH', g.read(ds * 16 + 0x42C0, 4)))
+    base, sym = helper()
+    print('rules_hi %#06x' % struct.unpack('<H', g.read(base + sym['hdr'] + 270, 2)),
+          ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('kit_pages_shown', 'kit_rows_taken')),
+          'seen %08x keep %d first %d' % (struct.unpack('<I', g.read(base + sym['wp_classes_seen'], 4))[0],
+                                          g.read(base + sym['kit_keep'], 1)[0], g.read(base + sym['kp_first'], 1)[0]))
 elif cmd == 'count':
     base, sym = helper()
     hdr = base + sym['hdr']

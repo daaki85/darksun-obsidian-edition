@@ -570,6 +570,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("kp_class", 0x6E026, bytes.fromhex("b101c41e2914"), _site(67, 6)),
     Patch("kp_race", 0x6B191, bytes.fromhex("83c406"), _site(68, 3)),
     Patch("kp_open", 0x6D891, bytes.fromhex("c606961cff"), _site(69, 5)),
+    # ... and after DUAL (SL's PROBE_DUAL_KIT at 86D90h): DSCLOG2's DUAL_KIT (site 76) at "cmp word [bp+8],0Ch"
+    # (94A57h) in the routine that changes a human's class (9493Ch), the new class's kit asked on the game's
+    # three-choice menu
+    Patch("dual_kit", 0x94A57, bytes.fromhex("837e080c"), _site(76, 4)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
