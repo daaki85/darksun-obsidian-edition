@@ -1330,9 +1330,8 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
 LAST_SETTINGS: Optional[dict] = None
 
 
-RAVAGER_NO_LOG = ("Wake of the Ravager has the bug fixes ported so far, the dice log of its fights and the "
-                  "party tabs (Characters, All fields); the window's other tabs and the in-game additions "
-                  "aren't ported to it yet")
+RAVAGER_NO_LOG = ("Wake of the Ravager runs in its own GOG DOSBox, with the mod's fixes, rules and in-game "
+                  "additions ported to it (FEATURES.md: Taking the party to Wake of the Ravager)")
 
 
 def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:

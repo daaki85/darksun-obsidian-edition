@@ -975,6 +975,9 @@ Why DOSBox-X:
   before the soundfont; with neither, DOSBox-X uses its own default, which on Linux usually means
   no music.
 
+**Wake of the Ravager always runs in GOG's DOSBox** (its own, from its folder), whichever engine
+is chosen here: the sequel's port has been played there only.
+
 What stays the same: the saves (a game saved on one engine loads on the other), every feature of
 the mod, the Loader's window, the dice log, the game window's four sizes and full screen, the four
 pictures and the three game speeds, each set to walk as it does on GOG's DOSBox. What differs:
@@ -1028,7 +1031,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   items, and the game's quest items as keepsakes (carried and sold, no use in the sequel's story).
   Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
   box outside a fight); a spell the sequel lacks makes a keepsake.
-  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind.
+  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
+  javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
+  kind, and a spec in one of them as the kind the sequel counts that weapon as ([In Wake of the
+  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
