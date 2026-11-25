@@ -17,6 +17,13 @@
   python3 ravkits.py page                      the creation screen's KIT pages (DSCLOG2's KIT PAGE): the sheet being
                                                made (far DS:1429h: race, classes, kit byte), the panel's windows
                                                (DS:1134h, 1138h: their ids), the pages shown and rows taken
+  python3 ravkits.py power MEMBER POWER [BYTE]  a test edit: the member's own byte for psionic power POWER (0-33, the
+                                               sequel's spells EBh on: 31 Psionic Blast) at selector 370h (the load +
+                                               3E71h):9CDh + member x 22h (SL's 2F0h:77h), BYTE (default 0Ah: bit 1 and
+                                               an own number of 1, bits 3-7), and its PSP (+2, and the sheet's most) 200
+  python3 ravkits.py blast                     DSCLOG2's Psionic Blast words (BLAST_HP, +1814: each member's hit points
+                                               owed), its counts (blast_seen, blast_kos) and the creation's RL_SEQ and
+                                               RL_TRIES (+280, +282), and the party's HP and status (+14h)
 MEMBER is the sheet's number (0-3: the party's order)."""
 import argparse, os, struct, subprocess, sys, tempfile
 PT = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +35,7 @@ DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
-            'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy')
+            'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos')
 
 
 def helper():
@@ -123,6 +130,29 @@ elif cmd == 'page':
           ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('kit_pages_shown', 'kit_rows_taken', 'dual_asks', 'dual_kits')),
           'seen %08x keep %d first %d' % (struct.unpack('<I', g.read(base + sym['wp_classes_seen'], 4))[0],
                                           g.read(base + sym['kit_keep'], 1)[0], g.read(base + sym['kp_first'], 1)[0]))
+elif cmd == 'power':
+    from dsloader import game
+    ds = game.find_data_segment(g)
+    member, power = int(sys.argv[2]), int(sys.argv[3])
+    value = int(sys.argv[4], 0) if len(sys.argv) > 4 else 0x0A
+    at = (ds - ravager.DGROUP + 0x3E71) * 16 + 0x9CD + member * 0x22
+    print('powers before', g.read(at, 34).hex())
+    g.write(at + power, bytes((value,)))
+    off, seg = struct.unpack('<HH', g.read(ds * 16 + ravager.CREATURES_PTR, 4))
+    g.write(seg * 16 + off + member * ravager.CREATURE_SIZE + 2, struct.pack('<h', 200))
+    print('powers after ', g.read(at, 34).hex(), 'PSP 200')
+elif cmd == 'blast':
+    from dsloader import game
+    ds = game.find_data_segment(g)
+    base, sym = helper()
+    hdr = base + sym['hdr']
+    print('BLAST_HP', struct.unpack('<4h', g.read(hdr + 1814, 8)),
+          ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('blast_seen', 'blast_kos')),
+          'RL_SEQ', struct.unpack('<H', g.read(hdr + 280, 2))[0], 'RL_TRIES', list(g.read(hdr + 282, 24)))
+    off, seg = struct.unpack('<HH', g.read(ds * 16 + ravager.CREATURES_PTR, 4))
+    for m in range(4):
+        r = g.read(seg * 16 + off + m * ravager.CREATURE_SIZE, ravager.CREATURE_SIZE)
+        print('member', m, 'HP', struct.unpack_from('<h', r, 0)[0], 'PSP', struct.unpack_from('<h', r, 2)[0], 'status', r[0x14])
 elif cmd == 'count':
     base, sym = helper()
     hdr = base + sym['hdr']

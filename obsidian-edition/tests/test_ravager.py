@@ -36,6 +36,7 @@ class TableTests(unittest.TestCase):
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
+                            "psionic_blast", "blast_knockout", "rl_try",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
                             "message_window", "message_shown",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two",

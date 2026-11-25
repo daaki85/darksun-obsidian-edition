@@ -1633,5 +1633,37 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   missile spell can't take a foe right beside the caster (the barred sign). Terrannus's priest spells
   on USE: row 1 at y 59 Bless, Curse, Cure Light Wounds, Cause Light Wounds (x 231), Entangle; the
   icons sit about 22 apart from x 175, so hover to check the name before a click.
+- **Psionic Blast in the sequel** (2026-11-25, logs/2026-11-25-ravager-blast-log.md): the effect routine's case is
+  at 6660Ah (SL's 796CBh, the same code: the loss, HP less a fifth of the most, in `[bp-16h]`, DI the target), but
+  it jumps to a tail shared with other cases (656FAh: the damage, then "or byte [bx],1"), so SL's site after the
+  damage (79707h) has no likeness: DSCLOG2's BLAST_LOSS (site 79) takes the loss at "mov [bp-16h],dx" (6662Dh).
+  The damage routine's death test is SL's at other addresses (5CC51h "add ax,0Ah", 5CC54h "cmp ax,dx / jg": the
+  Out Cold case at 5CC96h reads only DX and BX), so BLAST_KO (site 80) makes AX DX + 1 there. The sequel's dead
+  status is 7 (SL's 5).
+- **A psionic power for a test**: the sequel's powers are spells EBh-10Ch (RESOURCE.GFF's names: Psionic Blast is
+  power 31, spell 266); each member's own byte for each is at selector 370h (the load + 3E71h):9CDh + member x 22h
+  + power (SL's 2F0h:77h; ten code uses agree, "imul bx,bx,22h ... mov ax,370h ... mov al,es:[bx+9CDh]"), 02h a
+  power known: `ravkits.py power MEMBER POWER` gives one (0Ah) and 200 PSP. The USE screen (C) opens on the
+  member's magic for a caster: its class button (game 150,171) turns it to PSIONIC, the discipline button
+  (195,171) goes round Metabolic and Telepath (Telepath's second icon, 192,59, Psionic Blast). A use costs 10 PSP;
+  a failed power check 5, with no line (the power check isn't in the sequel's dice log). A member hit this round
+  has its powers crossed out too (the casting rule above).
+- **Aiming a power at a party member**: the game refuses (the figure under the pointer lights yellow, nothing
+  cast); with its side (+15h) made 7 (the Draxans') it takes it. Two members on one spot (0 and 1 start together, 2
+  and 3 together) are taken first by the first of them: make both 7 (`files/2026-11-25-ravager-blast-log-side.py`),
+  and to have the target fail its save, its sheet's five saves (+30h: the save routine's `[bp-1]`) 30
+  (`-saves.py`). The spot's members' objects at (x, y) are hit by a click at about (x + 11, y + 11).
+- **The saving throw's frame** (66D26h): the target's creature record's far pointer at `[bp-0Ah]`:`[bp-8]` (SL's
+  `[bp-1Eh]`), set before the d20 (66E33h, `push dword 140001h` to the dice routine 0B0h:391Dh); the number needed
+  `[bp-1]`, the save `[bp-6]`, the spell `[bp+0Ah]` as SL's. A natural 1 leaves before the save probe: with SL's
+  frame read the log had no line at all for it (the "save line that didn't show", 2026-11-20). The modifiers come
+  from 628h:A7h (AL) and the spell record's +1Fh bits 1-4; the dice log calls them "other" (its save_modifiers is
+  SL's routine).
+- **The map up**: DS:0DABh is 1 on the map (SL's 0BC9h, which in the sequel holds 0A2Eh): the combat log's panel is
+  drawn only while it is (DiceLog._map_up through quicksave.SCREEN_IS).
+- **The creation screen's ability roll** is at 6C504h (SL's 6490Dh): four 4d4 (`push 4 / push 4 / call 0B0h:391Dh`),
+  each + DS:42DAh (the race's adjustment + 4: the races' table at the load + 3E4Fh:120h, SL's 38D4h:14Dh, the same
+  96 bytes), the best kept, raised to DS:42D4h (the classes' least: the game's own rule, a prime requisite 17).
+  DSCLOG2's RL_TRY (site 81) at "add ax,[42DAh]" (6C585h). About 147 4d4 a press of the die as it tumbles.
 
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.

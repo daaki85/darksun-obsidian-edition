@@ -204,7 +204,10 @@ learn_int  db 0                 ; +276 ... its INT ...
 learn_chance db 0               ; +277 ... the chance to learn (%) ...
 learn_roll db 0                 ; +278 ... the d100 (LEARN_FULL: the spells of that level known) ...
 learn_result db 0               ; +279 ... and LEARN_LEARNT, LEARN_FAILED or LEARN_FULL (DSCLOG's)
-        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +280 to +325: none of them here yet, zero)
+rl_seq     dw 0                 ; +280 an ability's 4d4 rolled on the creation screen (RL_TRY), counted
+rl_tries   times 24 db 0        ; +282 the last four 4d4 of each ability, STR to CHA (DSCLOG's: the dice
+                                ;      log's, as the die tumbles faster than its ring is read)
+        times 326 - ($ - hdr) db 0  ; (DSCLOG's fields +306 to +325: none of them here yet, zero)
 panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
 panel_seg  dw 0                 ; +328 the panel's picture's segment: the far block's (PANEL_W x
                                 ;      PANEL_H_MOST, each row its planes in turn: combatlog.planar)
@@ -226,7 +229,11 @@ kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance
 kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py): bit N party member N fights
                                 ;      wild (3 worse to hit, AC 3 worse), bit N + 4 its check passed too
                                 ;      (1 more attack a round in melee, 3 more damage)
-        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +356 to +1833: none of them here yet, zero)
+        times 1814 - ($ - hdr) db 0 ; (DSCLOG's fields +356 to +1813: none of them here yet, zero)
+blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took from each party member this fight
+                                ;      (BLAST_LOSS), for the Loader to give back and clear as the fight
+                                ;      ends (psiblast.py); while one is owed, BLAST_KO knocks out
+        times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1822 to +1833: none of them here yet, zero)
 tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
 tail_paras dw 0                 ; +1836   in its resident part), set as it loads
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
@@ -3747,9 +3754,9 @@ site_table:
         dw dual_kit                         ; 76 SITE_DUAL_KIT (a human's new class: its kit asked on the game's menu)
         dw probe_hit                        ; 77 SITE_HIT (29DBDh: the finder of what is under the pointer: the chosen enemy after Enter)
         dw rg_two                           ; 78 SITE_RG_TWO (5DE67h: a ranger with two weapons: none of the penalty in light armour only)
-        dw site_none                        ; 79 (none here)
-        dw site_none                        ; 80 (none here)
-        dw site_none                        ; 81 (none here)
+        dw blast_loss                       ; 79 SITE_BLAST_LOSS (6662Dh: Psionic Blast's loss: BLAST_HP for a party member)
+        dw blast_ko                         ; 80 SITE_BLAST_KO (5CC51h: the death test: knocked out while BLAST_HP is owed)
+        dw rl_try                           ; 81 SITE_RL_TRY (6C585h: an ability's 4d4 on the creation screen, for the dice log)
         dw site_none                        ; 82 (none here)
         dw site_none                        ; 83 (none here)
         dw site_none                        ; 84 (none here)
@@ -14674,6 +14681,73 @@ r_fx       dw 0
 r_fy       dw 0
 r_qx       dw 0
 r_qy       dw 0
+
+; ---- Psionic Blast's imagined wounds (DSCLOG's PROBE_WORN's blast and knock-out cases, always on) ----
+; - BLAST_LOSS (site 79, SITE_BLAST_LOSS): "mov [bp-16h],dx" (3 bytes: the site; 6662Dh) in the effect
+;   routine's Psionic Blast case (6660Ah, SL's case 169 at 796CBh), DX the hit points a target that
+;   failed its save loses (down to a fifth of its most), DI the target (a combatant): stored, and for a
+;   party member (0-3) a loss over 0 added to BLAST_HP, for the Loader to give back as the fight ends
+;   (psiblast.py). The sequel deals the damage in a tail shared with other cases (656FAh: SL's "or byte
+;   [si],1" after it, PROBE_WORN's site, is there "or byte [bx],1", not the blast's alone), so the loss is
+;   taken here, before the damage is dealt: the same amount.
+; - BLAST_KO (site 80, SITE_BLAST_KO): "add ax,0Ah" (3 bytes: the site; 5CC51h, SL's 58608h) before the
+;   damage routine's death test "cmp ax,dx / jg" (5CC54h, SL's blast_knockout at 5860Bh), AX the
+;   creature's hit points, DX the damage, DI the combatant: while a party member has hit points of Psionic
+;   Blast's still to come back (BLAST_HP), a blow that would kill it (DX at AX + 10 or more) knocks it out
+;   instead (AX made DX + 1: the "jg" goes to the Out Cold case, which reads only DX and BX), as the
+;   blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills.
+BLAST_UNMADE equ 10000                  ; (the damage routine's Disintegrate: status 8)
+blast_loss:
+        mov [bp - 0x16], dx             ; (the game's)
+        cmp di, 3
+        ja .out
+        or dx, dx
+        jle .out
+        push bx
+        mov bx, di
+        add bx, bx
+        add [cs:bx + blast_hp], dx
+        pop bx
+        inc word [cs:blast_seen]
+.out:   iret
+blast_ko:
+        add ax, 0x0A                    ; (the game's)
+        cmp di, 3
+        ja .out
+        cmp dx, BLAST_UNMADE
+        jge .out
+        push bx
+        mov bx, di
+        add bx, bx
+        cmp word [cs:bx + blast_hp], 0
+        pop bx
+        jle .out
+        cmp ax, dx
+        jg .out
+        mov ax, dx
+        inc ax                          ; ("greater": knocked out, not killed)
+        inc word [cs:blast_kos]
+.out:   iret
+blast_seen dw 0                         ; (blasts on party members counted, for a look in play)
+blast_kos  dw 0                         ; (deaths made knock-outs, the same)
+
+; RL_TRY (site 81, SITE_RL_TRY): "add ax,[42DAh]" (4 bytes: the site and a NOP; 6C585h, SL's RL_TRY at
+; 6498Bh), where an ability's roll (6C504h, the ability at [BP+8], DI the try, 0-3) adds the race's
+; adjustment + 4 to a 4d4 (AX): the 4d4 kept in RL_TRIES, and RL_SEQ counted, for the dice log (the
+; die tumbles faster than the ring is read); whatever the rule.
+rl_try:
+        push bx
+        mov bx, [bp + 8]
+        cmp bx, 5
+        ja .add
+        cmp di, 3
+        ja .add
+        shl bx, 2
+        mov [cs:rl_tries + bx + di], al
+        inc word [cs:rl_seq]
+.add:   pop bx
+        add ax, [0x42DA]                ; (the game's)
+        iret
 
 resident_end:
 align 16

@@ -946,6 +946,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   adjustment, one attack a round with the off hand; a ranger has none of it only in light armour (leather, or
   armour of no material), as in Shattered Lands, where the sequel let a ranger off in any armour. And over the
   figures, a spell's charge used floats its count as in Shattered Lands (`Armor: 7 left`).
+- **[Psionic Blast](GAME-BUGS.md#spells-and-psionics)'s imagined wounds** come back as a fight ends in the sequel
+  too ("Seneca shakes off Psionic Blast's imagined wounds as the fight ends"), and until then a blow that would kill
+  the member knocks it out instead. The dice log's saving throws there show the d20 rolled (`d20 = 13 +9 other =
+  22, needs 30`), with a natural 1's line that went missing before, and the creation screen's rolls each score's
+  four 4d4 (`best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16`).
 - **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
   SPELL](#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the

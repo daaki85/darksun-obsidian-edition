@@ -522,6 +522,9 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("rl_roll_7", 0x6D5CC, bytes.fromhex("26884719"), _site(29, 4)),
     Patch("rl_con", 0x6B6CF, bytes.fromhex("c41e2914"), _site(30, 4)),
     Patch("rl_sum", 0x6CD98, bytes.fromhex("83c404"), _site(31, 3)),
+    # ... and every try's 4d4 for the dice log (SL's rl_try, whatever the rule): DSCLOG2's RL_TRY (site 81) at the
+    # ability's roll's "add ax,[42DAh]" (6C585h, SL's "add ax,[499Ah]" at 6498Bh), into its header's RL_TRIES
+    Patch("rl_try", 0x6C585, bytes.fromhex("0306da42"), _site(81, 4)),
     Patch("rl_sum_box", DS_FILE + 0x11F8, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
     # AD&D's class tables (SL's xp_level_up, xp_view, priest_thac0, adnd_slots; game.RULE_ADND_TABLES,
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
@@ -561,6 +564,13 @@ PATCHES: Tuple[Patch, ...] = (
     # a ranger (5DE67h, SL's 5961Fh: "test word es:[bx+10h],200h"), on to PROBE_TWO's penalty in armour not light
     Patch("ranger_two", 0x5DE67, bytes.fromhex("26f747100002"), _site(78, 6)),
     Patch("off_hand", 0x5CEE8, bytes.fromhex("b4008946f6"), gamepatch._interrupt(VEC_OFF_HAND, 5)),
+    # Psionic Blast's imagined wounds (SL's psionic_blast and blast_knockout, PROBE_WORN's; always on, a game
+    # bug fixed): DSCLOG2's BLAST_LOSS (site 79) where the effect routine's blast case keeps the loss
+    # ("mov [bp-16h],dx", 6662Dh: SL's "or byte [si],1" at 79707h has no likeness here, its tail shared), into
+    # BLAST_HP for psiblast.py to give back as the fight ends; BLAST_KO (site 80) before the damage routine's
+    # death test ("add ax,0Ah", 5CC51h: SL's "cmp ax,dx" at 5860Bh, 5CC54h here), a knock-out while it is owed
+    Patch("psionic_blast", 0x6662D, bytes.fromhex("8956ea"), _site(79, 3)),
+    Patch("blast_knockout", 0x5CC51, bytes.fromhex("050a00"), _site(80, 3)),
     # Weapon specialization (SL's PROBE_ATTACKS and PROBE_SPEC_DAMAGE, game.RULE_SPECIALIZE, always on;
     # the transferred party's specs at the sheet's +42h..+44h): OFF_HAND above makes the attacks a round
     # and the THAC0 the skill's (DSCLOG2's SPEC_ATTACKS), and DSCLOG2's SPEC_DAMAGE (site 51) adds its

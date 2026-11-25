@@ -763,3 +763,95 @@ class ChargeLabelTests(unittest.TestCase):
         struct.pack_into("<h", g.mem, self.DS * 16 + 0x2A6B, 1)
         struct.pack_into("<iBhB", g.mem, queue, 5000, 7, 1, 7)
         self.assertEqual(data.effect_deadlines(), {(1, 7): 5000})
+
+
+class BlastSaveCreationTests(unittest.TestCase):
+    """Psionic Blast's wounds given back (DSCLOG2's BLAST_HP, +1814), the sequel's saving throw's d20 (its
+    frame's [BP-0Ah] pointer) and the creation screen's tries (RL_TRY, +280/+282)."""
+    DS, CREATURES, SHEETS, HDR = 0x1000, 0x30000, 0x20000, 0xC91B0
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def make(self):
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)  # (the sequel's layout from here)
+        log.tsr_hdr = self.HDR
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.SHEETS_PTR, 0, self.SHEETS >> 4)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.CREATURES_PTR, 0, self.CREATURES >> 4)
+        fighting = [True]
+
+        class Game(ravlog.RavGameData):
+            def combatant_creature(self, combatant):
+                return combatant
+
+            def in_combat(self):
+                return fighting[0]
+
+            def game_time(self):
+                return 100
+
+        log.game = Game(log.guest, self.DS, 0)
+        c = self.CREATURES + game.CREATURE_SIZE  # (member 1: 8 of 40 HP, Okay)
+        struct.pack_into("<h", g.mem, c, 8)
+        g.mem[c + game.CREATURE_STATUS] = game.STATUS_OKAY
+        struct.pack_into("<H", g.mem, c + game.CREATURE_SHEET_INDEX, 1)
+        g.mem[c + game.CREATURE_NAME:c + game.CREATURE_NAME + 4] = b"Lex\0"
+        struct.pack_into("<h", g.mem, self.SHEETS + game.SHEET_SIZE + game.SHEET_MAX_HP, 40)
+        return g, log, fighting
+
+    def test_blast_given_back_at_the_fight_end(self):
+        from dsloader import psiblast
+        g, log, fighting = self.make()
+        self.assertEqual(psiblast.TSR_BLAST, 1814)
+        struct.pack_into("<4h", g.mem, self.HDR + psiblast.TSR_BLAST, 0, 24, 0, 0)
+        self.assertEqual(log._blast_pass(0.0), [])
+        fighting[0] = False
+        self.assertEqual(log._blast_pass(1.0), [])
+        out = log._blast_pass(1.0 + psiblast.FIGHT_OVER)
+        self.assertEqual(len(out), 1, out)
+        self.assertIn("+24 HP, now 32/40", out[0])
+        self.assertEqual(struct.unpack_from("<h", g.mem, self.CREATURES + game.CREATURE_SIZE)[0], 32)
+        self.assertEqual(struct.unpack_from("<4h", g.mem, self.HDR + psiblast.TSR_BLAST), (0, 0, 0, 0))
+        self.assertEqual(log.guest.dropped, 0)
+
+    def test_save_roll_by_the_sequels_frame(self):
+        """The d20 is the saving throw's when its frame's [BP-0Ah]:[BP-8] points at the target's record."""
+        g, log, _ = self.make()
+        at = self.CREATURES + game.CREATURE_SIZE
+        frame = {-0x0A: at & 0xF, -0x08: at >> 4, -0x1E: 0, -0x1C: 0}
+        e = types.SimpleNamespace(parent_arg=lambda off: 1 if off == 6 else None,
+                                  parent_local=lambda off: frame.get(off))
+        self.assertTrue(log._is_save_roll(e))
+        frame[-0x08] += 1
+        self.assertFalse(log._is_save_roll(e))
+
+    def test_creation_tries(self):
+        """Each ability's best of its four 4d4, +4 and the race's adjustment, from DSCLOG2's RL_TRIES once
+        RL_SEQ has moved; the scores read from the creature being made (DS:142Dh)."""
+        g, log, _ = self.make()
+        sheet, creature, load = 0x40000, 0x40100, 0x100
+        log.game.load_seg = load
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x1429, 0, sheet >> 4)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x142D, 0, creature >> 4)
+        g.mem[sheet + game.SHEET_RACE] = 1
+        g.mem[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 3] = bytes((0, 0, 0))
+        adjust = (load + 0x3E4F) * 16 + 0x120 + 6  # (race 1's: +1 DEX)
+        g.mem[adjust + 1] = 1
+        g.mem[creature + game.CREATURE_ABILITIES:creature + game.CREATURE_ABILITIES + 6] = \
+            bytes((16, 17, 14, 12, 10, 9))
+        log._creation_tries_moved(0.0)  # (the first look: the count noted)
+        g.mem[self.HDR + 282:self.HDR + 306] = bytes((12, 9, 8, 7, 12, 11, 10, 9, 10, 8, 6, 5,
+                                                       8, 6, 5, 4, 6, 6, 5, 4, 5, 5, 4, 4))
+        struct.pack_into("<H", g.mem, self.HDR + 280, 24)
+        self.assertEqual(log._creation_pass(1.0), [])  # (the die still moving)
+        out = log._creation_pass(1.0 + dicelog.CREATION_HP_WAIT)
+        self.assertEqual(out[0], "Character creation, STR 16: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16")
+        self.assertIn("DEX 17: best of four 4d4 (12, 11, 10, 9) = 12, +4, +1 ", out[1])
+        self.assertEqual(out[-1], "Character creation: the six scores add up to 78")
+        g.mem[creature + game.CREATURE_ABILITIES] = 17  # (the sequel's least for a prime requisite: raised)
+        struct.pack_into("<H", g.mem, self.HDR + 280, 48)
+        log._creation_pass(2.0)
+        out = log._creation_pass(3.0)
+        self.assertEqual(out[0], "Character creation, STR 17: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16, "
+                                 "raised to 17 (the classes' least)")

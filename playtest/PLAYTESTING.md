@@ -349,6 +349,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   `python3 -u -m dsloader dicelog >> $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup
   (or `python3 -u -m dsloader dicelog --pid ... >> $PLAYTEST_WORK/dice.txt`, naming the game's
   process).
+- **Check a dice log is really gone with `pgrep`** (logs/2026-11-25-ravager-blast-log.md): one
+  started by `setsid nohup` inside a backgrounded bash keeps running after the job shows Done, and
+  a second one then writes into the same file (every line twice, and both write the game's memory).
+  Before starting one, `pgrep -af "dsloader dicelog"` and kill the old pid.
 - **A queued series of runs** (logs/2026-11-25-ravager-kits.md): never edit a shell script while it
   runs (`sh` reads it as it goes, and an edit breaks the run in progress): write a new file. In a run
   script, keep the arguments in variables before any `set --` in a loop, which replaces them. A run on
@@ -853,7 +857,9 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
    party stuck in place). **A Tab + Return loop of your own stalls on a member with no Move left**
    (Tab keeps choosing, nothing attacks): use fightout.sh, which presses E for it. When the alarm
    sends waves, `fight_on` is 0 only a moment between them and fightout.sh stops "DONE" there: run
-   it again.
+   it again. **In Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md) a Tab + Return
+   loop must press Q and then E to end a member's turn (Q alone leaves END MOVE up), and
+   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door).
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory
@@ -1287,6 +1293,15 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   comes: [resting in the pens](ROUTE.md#resting-and-kurzaks-call). An effect given in memory before
   a rest (`addeffect.py`, `restfixmem.py`): [fights and foes in
   memory](RESEARCH.md#fights-and-foes-in-memory).
+
+**A power aimed at a party member, in Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md):
+the game refuses a member as a power's target; make the target's side byte (creature +15h) 7, a
+Draxan's, for the click, and both members' if two stand on the spot; put it back after. A failed
+power check costs 5 PSP and leaves no dice log line. `ravkits.py power MEMBER POWER` gives a member
+a power for a test (PSP 200), `ravkits.py blast` reads the blast's counters.
+
+**Hit points raised for a test, then a level-up** (same log): the level's hit points are worked
+from the edited ones and can come out negative. Raise them after a level-up, not before.
 
 ## Memory edits for a test
 

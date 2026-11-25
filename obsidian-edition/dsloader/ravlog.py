@@ -23,7 +23,7 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, ravager, \
+from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, psiblast, quicksave, ravager, \
     rings, sizes, stealth, targeting, usable
 
 HDR_SIG = b"DSCLOGR1"
@@ -145,6 +145,11 @@ ADDRESSES: Dict[str, object] = {
     # the hit point table (dice by class group, CON's bonus at +52h): SL's own bytes, at the load + 45BEh
     # (the most hit points' 4D0h:52h; SL's 40B1h)
     "LEVEL_HP_SEG": 0x45BE,
+    # the creation screen (the dice log's 4d4 of each try, DSCLOG2's RL_TRY): the sheet being made, DS:1429h
+    # (SL's 119Ch), its creature DS:142Dh (SL's 11A0h: in the sequel not straight after the sheet,
+    # RavGameData.creation_abilities), the races' adjustments at the load + 3E4Fh:120h (the sequel's
+    # selector 360h; SL's 38D4h:14Dh, the same 96 bytes found in the file)
+    "CREATION_SHEET_PTR": 0x1429, "CREATION_CREATURE_PTR": 0x142D, "CREATION_SEG": 0x3E4F, "CREATION_RACE_OFF": 0x120,
     # ages (aging.py): the age alone at the sheet's +41h, a byte the sequel's program never reads or
     # writes (no instruction with its offset on a sheet; 0 in every sheet of a new game and the saves,
     # 2026-11-22); +3Dh and +3Fh hold the kit and the second sphere (MOD_BYTES); the weapon specs and
@@ -217,6 +222,9 @@ RAV_TARGETING = {
     usable: {"POINTER": 0xA109},
     hitchance: {"EIGHT_WAYS": 0x0442},
     rings: {"STATUS_DEAD": 7, "HOSTILE_SIDES": 0xF80},
+    # the map up (SL's DS:0BC9h word; hover's ON_MAP here): the combat log's panel is drawn only while it is
+    # 1 (DiceLog._map_up), and SL's address read 0A2Eh in the sequel, so L never showed the panel
+    quicksave: {"SCREEN_IS": 0x0DAB},
 }
 # The ring's colours: the sequel cycles 1-31 (water, flame, a turn's marker) and its street's floor has
 # greys up to 255 (WALL SHADOWS' WS_FIRST, WS_LAST)
@@ -522,6 +530,13 @@ class RavGameData(game.GameData):
     @rules.setter
     def rules(self, value: int) -> None:  # (the Loader's settings name SL's rules: the sequel's ported ones)
         self._rules = value & ravager.RULES_PORTED
+
+    def creation_abilities(self) -> Optional[List[int]]:
+        """SL's, from the creature being made's own pointer (DS:142Dh, CREATION_CREATURE_PTR): the
+        sequel's isn't straight after the sheet."""
+        at = game.far_pointer(self.guest, self.ds, game.CREATION_CREATURE_PTR) + game.CREATURE_ABILITIES
+        values = list(self.guest.read(at, 6))
+        return values if len(values) == 6 and all(3 <= v <= 25 for v in values) else None
 
     def counted_ac(self, creature: int) -> Optional[int]:
         """SL's, and with RULE_HELMS a worn Helm of the sequel's type 55 counting AC 1 (DSCLOG2's
@@ -890,13 +905,71 @@ class RavDiceLog(dicelog.DiceLog):
         if self._slots_table() is not None:
             super()._write_slots()
 
+    def _is_save_roll(self, e) -> bool:
+        """SL's, with the sequel's saving throw's frame (66D26h): the target's creature record's far
+        pointer at [BP-0Ah] (SL's [BP-1Eh]), set before the d20 (66E33h)."""
+        target = e.parent_arg(6)
+        index = self.game.combatant_creature(target) if target is not None else None
+        off, seg = e.parent_local(-0x0A), e.parent_local(-0x08)
+        if index is None or off is None or seg is None:
+            return False
+        table = game.far_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+        return (seg & 0xFFFF) * 16 + (off & 0xFFFF) == table + index * game.CREATURE_SIZE
+
+    def _blast_pass(self, now: float) -> List[str]:
+        """Psionic Blast's imagined wounds given back as a fight ends (SL's psiblast.BlastWatch): DSCLOG2's
+        BLAST_HP (its header's +1814, BLAST_LOSS) and the party's hit points and status made writable."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        table = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+        want = [(self.tsr_hdr + psiblast.TSR_BLAST, 2 * game.PARTY_SIZE)]
+        for c in range(game.PARTY_SIZE):
+            at = table + c * game.CREATURE_SIZE
+            want += [(at, 2), (at + game.CREATURE_STATUS, 1)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        return self._blast.tick(self.game, self.tsr_hdr, now)
+
+    RAV_LEAST_MOST = 17  # (the sequel's least for a score: a class's prime requisite 17, the others 9 to 14)
+    _creation_shown: Optional[List[int]] = None
+
+    def creation_lines(self) -> List[str]:
+        """SL's, with the scores shown noted first for _ability_line."""
+        self._creation_shown = self.game.creation_abilities()
+        return super().creation_lines()
+
+    def _ability_line(self, ability: int, tries: List[int], sheet: bytes, classes: List[int]) -> Tuple[int, str]:
+        """SL's, with the sequel's own least: it keeps the game's rule (each class's prime requisite 17,
+        every other score one number a class, 9 to 14; SL's least_scores, the manual's table, isn't
+        ported), so a score shown above the roll and no more than 17 was raised to it."""
+        value, line = super()._ability_line(ability, tries, sheet, classes)
+        shown = self._creation_shown
+        if shown is not None and value < shown[ability] <= self.RAV_LEAST_MOST and "raised to" not in line:
+            value = shown[ability]
+            steps = line.split(": ", 1)[1]
+            line = f"Character creation, {dicelog.ABILITIES[ability]} {value}: {steps}, raised to {value} " \
+                   f"(the classes' least)"
+        return value, line
+
+    def _creation_pass(self, now: float) -> List[str]:
+        """SL's creation lines from DSCLOG2's RL_TRY (its header's +280, +282: each try's 4d4): once the
+        die has been still CREATION_HP_WAIT, each ability's best of four 4d4, +4, the race's adjustment."""
+        self._creation_tries_moved(now)
+        if (self._creation_hp or self._creation_abilities or self._tries_new) \
+                and now - self._creation_hp_at >= dicelog.CREATION_HP_WAIT:
+            return self.creation_lines()
+        return []
+
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
         fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
-        (_learn_lines) and the combat log's panel (_panel_pass): the rest reads and writes what isn't ported yet."""
+        (_learn_lines), Psionic Blast's wounds given back (_blast_pass), the creation screen's tries
+        (_creation_pass) and the combat log's panel (_panel_pass): the rest reads and writes what isn't
+        ported yet."""
         out = self._step(lambda: self.hp_changes(now))
+        out += self._step(lambda: self._blast_pass(now))
+        out += self._step(lambda: self._creation_pass(now))
         self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
         if self.monster_info:  # (the Look box: answered at once, the game waits for it)
             self.set_monster_info(True)
