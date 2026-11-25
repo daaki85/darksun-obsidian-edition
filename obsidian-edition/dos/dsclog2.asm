@@ -16301,11 +16301,27 @@ lv_clamp:
         test word [cs:rules], RULE_LEVEL_10
         jz .out
         cmp ax, RAV_LEVELS - 1
-        jbe .out
+        jbe .share
         mov ax, RAV_LEVELS - 1
         mov byte [cs:xp_top], 1
+.share: call xp_hold
 .out:   iret
 xp_top db 0                             ; (XP_NEED's next answer the most: no hold)
+; XP_HOLD (the owner's, 2026-11-25: XP stops growing at the cap): the sheet's XP (+0, a dword) no more than
+; its share (LR_SHARE), ES:BX the sheet + DI (the class's place) as the level up has them at LV_CLAMP's
+; site. The game's hold after it may take it lower. All registers kept.
+xp_hold:
+        pushad
+        sub bx, di
+        mov byte [cs:lr_classes], 1
+        call lr_share
+        cmp [es:bx], eax
+        jbe .ret
+        mov [es:bx], eax
+        inc word [cs:xp_holds]
+.ret:   popad
+        ret
+xp_holds dw 0                           ; (XP held at the share, for a look in play)
 ;
 ; LEVEL_ROOM: CF set if the class in place DX (0-2) of sheet ES:BX may go up a level under RAV_XP_CAP: its
 ; next level's XP (RAV_XP_AT at its level) no more than its share, and its level below RAV_LEVELS. AL 1: the
@@ -16316,7 +16332,28 @@ xp_top db 0                             ; (XP_NEED's next answer the most: no ho
 level_room:
         pushad
         mov [cs:lr_classes], al
-        mov edi, RAV_XP_CAP
+        call lr_share
+        mov edi, eax
+        mov si, sp
+        mov si, [ss:si + 20]            ; (the place: DX as it came, from PUSHAD's)
+        movzx cx, byte [es:bx + si + 0x1E]
+        call lr_need
+        jc .no
+        cmp eax, edi
+        ja .no
+        popad
+        stc
+        ret
+.no:    popad
+        clc
+        ret
+; LR_SHARE: EAX the XP sheet ES:BX's classes may gather under RAV_XP_CAP (LEVEL_ROOM's share; LR_CLASSES
+; as it says). Others kept.
+lr_share:
+        push ecx
+        push edx
+        push si
+        mov eax, RAV_XP_CAP
         cmp byte [es:bx + 0x12], 1
         je .human
         xor cx, cx                      ; (how many classes)
@@ -16328,18 +16365,18 @@ level_room:
         inc si
         cmp si, 3
         jb .count
-        mov eax, edi
         xor edx, edx
         movzx ecx, cx
-        jecxz .share
+        jecxz .out
         div ecx
-.share: mov edi, eax
-        jmp .mine
-.human: mov si, 1                       ; (the old classes: places 1 and 2)
+        jmp .out
+.human: push edi
+        mov edi, eax
+        mov si, 1                       ; (the old classes: places 1 and 2)
 .old:   movzx cx, byte [es:bx + si + 0x1E]
         jcxz .next_old
         dec cx                          ; (the XP its level needed: the entry before it)
-        call .need
+        call lr_need
         jc .next_old
         sub edi, eax
         jnc .next_old
@@ -16348,21 +16385,16 @@ level_room:
         inc si
         cmp si, 3
         jb .old
-.mine:  mov si, sp
-        mov si, [ss:si + 20]            ; (the place: DX as it came, from PUSHAD's)
-        movzx cx, byte [es:bx + si + 0x1E]
-        call .need
-        jc .no
-        cmp eax, edi
-        ja .no
-        popad
-        stc
+        mov eax, edi
+        pop edi
+.out:   pop si
+        pop edx
+        pop ecx
         ret
-.no:    popad
-        clc
-        ret
-; .need: EAX the XP the class in place SI needs at index CX; CF set for none (no class, past the table).
-.need:  push bx
+; LR_NEED: EAX the XP the class in place SI of sheet ES:BX needs at index CX; CF set for none (no class,
+; past the table). Others kept.
+lr_need:
+        push bx
         push dx
         push si
         movzx si, byte [es:bx + si + 0x1B]

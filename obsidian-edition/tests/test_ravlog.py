@@ -232,7 +232,9 @@ class WindowTests(unittest.TestCase):
         data.rules = game.RULE_ADND_TABLES
         self.assertEqual([data.adnd_slots(11, 16, s) for s in range(1, 10)], [5, 5, 5, 5, 5, 3, 2, 1, 0])
         self.assertEqual(data.adnd_slots(5, 12, 3), 5)
-        self.assertIsNone(data.adnd_slots(13, 12, 1))  # (a ranger's the game's)
+        self.assertEqual([data.adnd_slots(13, 12, s) for s in (1, 2, 3)], [2, 2, 1])  # (a ranger's AD&D's)
+        self.assertEqual(data.adnd_slots(5, 16, 1), 6)  # (a druid's 15th's past it)
+        self.assertIsNone(data.adnd_slots(17, 12, 1))  # (a thief has none)
         data.rules = 0
         self.assertIsNone(data.adnd_slots(11, 16, 1))
 

@@ -167,7 +167,8 @@ class LevelCapTests(unittest.TestCase):
         most (no hold); without the rule the game's level + 3."""
         for level, want, top in ((5, 8, 0), (16, 19, 0), (17, 19, 1), (20, 19, 1)):
             mu = self.machine()
-            self.call(mu, "lv_clamp", eax=level)
+            self.sheet(mu, ELF, (FIGHTER, 0, 0), (level, 0, 0))
+            self.call(mu, "lv_clamp", eax=level, es=SHEET_SEG, ebx=SHEET, edi=0)
             self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.mem_read(TSR * 16 + self.sym["xp_top"], 1)[0]),
                              (want, top), level)
         mu = self.machine(0)
@@ -180,6 +181,27 @@ class LevelCapTests(unittest.TestCase):
         self.assertEqual(mu.reg_read(r.UC_X86_REG_EAX), 0xFFFFFFFF)
         self.call(mu, "xp_need", frame=struct.pack("<HHH", 0x3E8, 2, 19), eax=30000)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_EAX), 3000000)
+
+    def test_xp_held_at_the_share(self):
+        """XP_HOLD at LV_CLAMP (the owner's, 2026-11-25: XP stops growing at the cap): the sheet's XP no more
+        than its share (ES:BX the sheet + DI), whatever the level; below it kept; without the rule kept."""
+        cases = (((ELF, (FIGHTER, 0, 0), (20, 0, 0)), 9000000, ravager.RAV_XP_CAP),
+                 ((ELF, (FIGHTER, PRESERVER, THIEF), (15, 15, 18)), 4000000, ravager.RAV_XP_CAP // 3),
+                 ((ELF, (FIGHTER, THIEF, 0), (5, 5, 0)), 100000, 100000),
+                 ((HUMAN, (FIGHTER, CLERIC, 0), (17, 20, 0)), 3100000,
+                  ravager.RAV_XP_CAP - tables.RAV_XP["cleric"][19]))
+        for (race, classes, levels), xp, want in cases:
+            self.assertEqual(min(xp, ravager.xp_share(classes, levels, race == HUMAN)), want)
+            for slot in range(sum(1 for c in classes if c)):
+                for rules in (ON, 0):
+                    mu = self.machine(rules)
+                    self.sheet(mu, race, classes, levels)
+                    mu.mem_write(SHEET_SEG * 16 + SHEET, struct.pack("<I", xp))
+                    self.call(mu, "lv_clamp", es=SHEET_SEG, ebx=SHEET + slot, edi=slot, eax=levels[slot])
+                    got = struct.unpack("<I", mu.mem_read(SHEET_SEG * 16 + SHEET, 4))[0]
+                    self.assertEqual(got, want if rules else xp, (classes, slot, rules))
+                    self.assertEqual((mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_DI)),
+                                     (SHEET + slot, slot))
 
     def test_rav_xp_at(self):
         """RAV_XP_AT: tables.RAV_XP at every row and index (XP_FIXES' among them)."""

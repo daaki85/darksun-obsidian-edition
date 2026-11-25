@@ -1024,6 +1024,63 @@ Two or three classes share the cap (374,999 or 249,999 each):
 *Without the mod:* every class stops at 9th, all
 XP past 9th's need is left over, and a human who changes class loses it.
 
+### In Wake of the Ravager
+
+Started from the Loader, the sequel has a cap of its own: **5,625,000 XP**, shared
+out the same way (one class all of it, two 2,812,500 each, three 1,875,000 each, a
+human the cap less what its old classes' levels needed). It replaces the game's
+stop at 15th, and levels go up to 20th, where the sequel's XP table ends. Most
+characters of three classes reach 15th; one or two classes go higher:
+
+| Class | One class | Two classes | Three classes | XP for 20th |
+|---|---|---|---|---|
+| Cleric | 20 | 20 | 16 | 2,700,000 |
+| Druid | 20 | 14 | 14 | 5,500,000 |
+| Fighter | 20 | 19 | 15 | 3,000,000 |
+| Gladiator | 20 | 17 | 14 | 3,600,000 |
+| Preserver | 20 | 17 | 15 | 3,750,000 |
+| Psionicist | 20 | 19 | 16 | 3,000,000 |
+| Ranger | 20 | 17 | 14 | 3,600,000 |
+| Thief | 20 | 20 | 18 | 2,200,000 |
+
+**XP stops at the cap there**: unlike Shattered Lands, nothing is left over. At
+each level up (each award) a character's XP is held at its share, so a fighter
+alone stays at 5,625,000 and a fighter/preserver/thief at 1,875,000; a human's
+share is the cap less what its old classes' levels needed. (The game also holds
+XP to three levels ahead of each class, which it can't do past 17th: there the
+share alone holds it.) A new character starts at 6th to 8th level, far below any
+share. XP a character banked past Shattered Lands' cap in an older save stays
+behind when the party goes across: it arrives with its Shattered Lands share at
+most.
+
+What the higher levels bring there:
+
+- **Saving throws** are the Player's Handbook's, by class group and level (the
+  best of a character's classes): PPD/RSW/PP/BW/SP
+
+  | Group | Level: saves |
+  |---|---|
+  | Priests (clerics, druids) | 1-3: 10/14/13/16/15; 4-6: 9/13/12/15/14; 7-9: 7/11/10/13/12; 10-12: 6/10/9/12/11; 13-15: 5/9/8/11/10; 16-18: 4/8/7/10/9; 19+: 2/6/5/8/7 |
+  | Warriors (fighters, gladiators, rangers) | 1-2: 14/16/15/17/17; 3-4: 13/15/14/16/16; 5-6: 11/13/12/13/14; 7-8: 10/12/11/12/13; 9-10: 8/10/9/9/11; 11-12: 7/9/8/8/10; 13-14: 5/7/6/5/8; 15-16: 4/6/5/4/7; 17+: 3/5/4/4/6 |
+  | Wizards (preservers) | 1-5: 14/11/13/15/12; 6-10: 13/9/11/13/10; 11-15: 11/7/9/11/8; 16-20: 10/5/7/9/6; 21+: 8/3/5/7/4 |
+  | Rogues (thieves, psionicists) | 1-4: 13/14/12/16/15; 5-8: 12/12/11/15/13; 9-12: 11/10/10/14/11; 13-16: 10/8/9/13/9; 17-20: 9/6/8/12/7; 21+: 8/4/7/11/5 |
+
+  *Without the mod:* each save improved by a step a level but never by more than
+  the table's last row, so a warrior stayed at 11/11/11/13/11 from 10th level
+  and no save went below 8.
+- **A thief rolls a d6 for hit points up to 10th level** (then +2 a level); a
+  psionicist rolls to 9th. *Without the mod:* the game counts both to 9th.
+- **Thief skills** go on to 17th ([the table](#thieves-skills-and-picking-pockets)),
+  the same past it. A ranger's hide in shadows and move silently follow them.
+- **Spell slots** go on to 20th by the Player's Handbook's tables, but a
+  druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
+  are AD&D's: one at 8th, two at 9th, 2 1 at 10th, 2 2 at 11th, 2 2 1 at 12th,
+  3 2 1 at 13th, 3 2 2 at 14th, 3 3 2 at 15th and 3 3 3 from 16th, cast at
+  its level less 7, no higher than 9th. *Without the mod:* the game gave a
+  ranger 3 2 1 at 12th, 3 2 2 at 13th and 3 3 2 at 14th.
+- **View Character** shows no next level at the cap, and for a character of two
+  or three classes it names the class the next XP is for (`(2,000,000 F)`).
+
 ### Hit points
 
 | Class | Hit die | At 10th level | Past 10th |
@@ -1315,6 +1372,19 @@ says (its 99s are 95 in play).
 | Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
 | Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
 | Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
+
+In Wake of the Ravager the table goes on to 17th, the same past it:
+
+| Thief level | 14 | 15 | 16 | 17 |
+|---|---|---|---|---|
+| Pick pockets | 99 | 99 | 99 | 99 |
+| Open locks | 87 | 92 | 97 | 99 |
+| Find/remove traps | 85 | 90 | 95 | 99 |
+| Move silently | 99 | 99 | 99 | 99 |
+| Hide in shadows | 93 | 99 | 99 | 99 |
+| Hear noise | 40 | 50 | 50 | 55 |
+| Climb walls | 99 | 99 | 99 | 99 |
+| Read languages | 70 | 75 | 80 | 80 |
 
 | Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
 |---|---|---|---|---|---|---|---|---|
