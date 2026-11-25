@@ -41,7 +41,9 @@ class TableTests(unittest.TestCase):
                             "message_window", "message_shown", "text", "message",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
-                            "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice"}
+                            "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
+                            "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
+                            "psi_click", "pick_top"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
