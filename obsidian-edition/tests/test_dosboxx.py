@@ -536,6 +536,59 @@ class LaunchTests(unittest.TestCase):
             proc.wait()
 
     @unittest.skipIf(os.name == "nt", "a shell script stands in for the program")
+    def test_wake_of_the_ravager_in_dosbox_x(self):
+        """The sequel in DOSBox-X when it is the engine: its copies made, DOSBox-X's whole
+        configuration with the sequel's autoexec (its CD as F:, DSCLOG2 high, DSUNLOG2), no GOG
+        DOSBOX folder needed; with GOG's chosen, GOG's DOSBox is looked for as before."""
+        from dsloader import ravager
+        wotr = os.path.join(self.dir.name, "wotr")
+        os.mkdir(wotr)
+        open(os.path.join(wotr, "DSUN.EXE"), "wb").close()
+        os.mkdir(os.path.join(wotr, "MUSIC"))
+        for name in ("game.gog", os.path.join("MUSIC", "Track02.ogg")):
+            open(os.path.join(wotr, name), "wb").close()
+        with open(os.path.join(wotr, "game.ins"), "w") as f:  # (as GOG's: Windows' path, the folder's case not)
+            f.write('FILE "game.gog" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n'
+                    'FILE "music\\Track02.ogg" MP3\n  TRACK 02 AUDIO\n      INDEX 01 00:00:00\n')
+        saved = ravager.prepare, ravager.widen_files
+        self.addCleanup(lambda: (setattr(ravager, "prepare", saved[0]), setattr(ravager, "widen_files", saved[1])))
+        made = []
+        ravager.prepare = lambda game_dir, dos_dir, settings=None: made.append(game_dir)
+        ravager.widen_files = lambda game_dir, size=None: []
+        program = self.program()
+        settings = self.settings(dosbox_x_path=program)
+        proc, problem = launch._launch_wotr(wotr, settings)
+        try:
+            self.assertIsNone(problem)
+            self.assertEqual(made, [wotr])
+            self.assertEqual(proc.args[:3], [program, "-conf", launch.DBX_CONF])
+            self.assertEqual((launch.STARTED_ENGINE, launch.MEMORY_FILE),
+                             (dosboxx.DOSBOX_X, dosboxx.memory_path(launch.HERE, settings)))
+            with open(launch.DBX_CONF, encoding="utf-8") as f:
+                conf = f.read().splitlines()
+            auto = conf[conf.index("[autoexec]"):]
+            sheet = os.path.join(launch.DBX_DIR, "ravager-cd.cue")  # (game.ins with the files' own paths)
+            self.assertIn(f'imgmount {ravager.CD_DRIVE} "{sheet}" -t iso', auto)
+            with open(sheet) as f:
+                self.assertEqual([line for line in f.read().splitlines() if line.startswith("FILE")],
+                                 [f'FILE "{os.path.join(wotr, "game.gog")}" BINARY',
+                                  f'FILE "{os.path.join(wotr, "MUSIC", "Track02.ogg")}" MP3'])
+            os.remove(os.path.join(wotr, "MUSIC", "Track02.ogg"))  # (a file missing: game.ins as it is)
+            self.assertIsNone(ravager.cd_sheet(wotr, sheet + "2"))
+            self.assertIn(f"lh d:\\{ravager.HELPER_EXE.lower()}", auto)
+            self.assertIn(f"d:\\{ravager.PATCHED_EXE.lower()} {ravager.ARGS}", auto)
+            self.assertNotIn("dsclog.exe", " ".join(auto).lower())  # (Shattered Lands' autoexec not added)
+            self.assertIn("umb end=FBFF", conf)
+            self.assertIn(f"memory file={launch.MEMORY_FILE}", conf)
+        finally:
+            proc.kill()
+            proc.wait()
+            launch.release_game()
+        with self.assertRaises(launch.LaunchError) as raised:  # (GOG's chosen: its DOSBOX folder wanted)
+            launch._launch_wotr(wotr, dict(settings, engine="gog"))
+        self.assertIn("GOG install of Wake of the Ravager", str(raised.exception))
+
+    @unittest.skipIf(os.name == "nt", "a shell script stands in for the program")
     def test_the_start_the_lock_files_memory_line_and_the_end(self):
         program = self.program()
         settings = self.settings(dosbox_x_path=program)

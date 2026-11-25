@@ -1728,7 +1728,14 @@ else the one in the Loader's `dosbox-x` folder (`dosboxx.bundled`: `dosbox-x.exe
 `dosbox-x` or `dosbox-x.app` elsewhere), which the release puts there for Windows (below).
 `soundfont` is a `.sf2` file. The order at a start (`launch._launch`): DOSBox-X chosen; the
 [recompiled program](README.md#dark-sun-recompiled) when it is found; DOSBox-X by default; GOG's
-DOSBox. Restore defaults removes `engine` (`SWITCH_DEFAULTS` has `None` for it). With GOG's
+DOSBox. Restore defaults removes `engine` (`SWITCH_DEFAULTS` has `None` for it). Wake of the
+Ravager follows the same engine (`launch._launch_wotr`): with DOSBox-X, `_launch_wotr_dosbox_x`
+makes its copies as for GOG's DOSBox and writes DOSBox-X's whole configuration with the sequel's
+autoexec (`dosboxx.conf_lines(sequel=...)`, from `ravager.conf_lines`), the CD as F: from
+`dosbox-x/ravager-cd.cue` (`ravager.cd_sheet`: GOG's `game.ins` with each file's full path as the
+folder has it; GOG names `music\Track02.ogg` where the folder is `MUSIC`, which DOSBox-X couldn't
+open on Linux, so the CD wasn't mounted and the game quit); both games start through
+`launch._start_dosbox_x`. With GOG's
 nothing below runs: `launch._launch`, `write_conf` and `is_game_dir` take their old path. With
 DOSBox-X (`launch._launch_dosbox_x`):
 

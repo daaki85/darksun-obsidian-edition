@@ -246,8 +246,8 @@ game at a time: a second one says which has it and leaves the game alone.
 
 **Wake of the Ravager:** the Loader's **Play Wake of the Ravager** button, beside
 **Play Shattered Lands**, or **`Play Wake of the Ravager.bat`**, starts the sequel (found
-as above, or the folder chosen on the Options tab) in its own GOG DOSBox (whichever
-engine is chosen for Shattered Lands), with the mod's fixes, rules, in-game additions
+as above, or the folder chosen on the Options tab) in the same engine as Shattered Lands
+(DOSBox-X, or its own GOG DOSBox), with the mod's fixes, rules, in-game additions
 and the Loader's tabs ported to it ([what comes
 across](FEATURES.md#taking-the-party-to-wake-of-the-ravager)). Not found,
 the button says so and points to the Options tab's **Choose its folder...**.

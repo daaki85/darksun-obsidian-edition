@@ -97,7 +97,8 @@ each pull request's own entry is below, grouped.)
   rules, resting, class restrictions, item saves, multiclass HP, rolled scores, AD&D's class tables,
   CON, dual-classing and ages; the dice log of its fights and the Loader's party tabs.
 - **Play Wake of the Ravager**, beside **Play Shattered Lands** at the top of the Loader, and
-  `Play Wake of the Ravager.bat` (#156). The sequel always runs in its own GOG DOSBox.
+  `Play Wake of the Ravager.bat` (#156). The sequel runs in the chosen engine too (DOSBox-X with its CD mounted from a cue
+  sheet the Loader writes, or its own GOG DOSBox).
 - **Take the party to Wake of the Ravager** (Options tab, #151): a Shattered Lands save's party into
   the sequel's roster with every item (the mod's own made for the sequel, with their effects), the
   spells, and 3 to 12 months of aging between the games. SL's backported Ravager weapons go back as
@@ -126,7 +127,7 @@ each pull request's own entry is below, grouped.)
   DOSBox-X's own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and
   the source archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used
   when none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
-  program goes before DOSBox-X unless DOSBox-X was chosen. Wake of the Ravager stays on GOG's DOSBox.
+  program goes before DOSBox-X unless DOSBox-X was chosen. Wake of the Ravager follows the same engine.
 - Under DOSBox-X the Loader writes a whole configuration of its own and follows the game through
   DOSBox-X's memory file, so on Linux it needs no root and no ptrace setting. Window sizes, full
   screen, the four pictures, the three speeds and the music device each have their DOSBox-X spelling;

@@ -953,7 +953,9 @@ yourself and point the Loader to its program with **Choose the DOSBox-X program.
 Options tab's **Engine** section; the tab then says which version it found. It needs **DOSBox-X
 2025.01.01 or later**; an older one is refused, with the reason, and isn't used by default. A
 DOSBox-X you choose goes before the one that comes with the mod. To play in GOG's DOSBox, choose it
-in the same section.
+in the same section. **Wake of the Ravager**, started from the Loader, runs in the same engine: in
+DOSBox-X with its CD and its music tracks mounted as in GOG's DOSBox (GOG's `DOSBOX` folder isn't
+needed then), or in its own GOG DOSBox when that is the engine.
 
 Why DOSBox-X:
 
@@ -974,9 +976,6 @@ Why DOSBox-X:
   music through it. The Loader comes with no soundfont. A **Music device** chosen there goes
   before the soundfont; with neither, DOSBox-X uses its own default, which on Linux usually means
   no music.
-
-**Wake of the Ravager always runs in GOG's DOSBox** (its own, from its folder), whichever engine
-is chosen here: the sequel's port has been played there only.
 
 What stays the same: the saves (a game saved on one engine loads on the other), every feature of
 the mod, the Loader's window, the dice log, the game window's four sizes and full screen, the four

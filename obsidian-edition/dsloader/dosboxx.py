@@ -425,12 +425,14 @@ ROM_BIOS_KB, UMB_END = 16, "FBFF"  # (conf_lines: the BIOS's size and the end of
 
 def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional[dict] = None,
                dice_log: bool = True, look: str = PLAIN, autoexec: Tuple[str, str, str] = ("", "", ""),
-               options: Optional[dict] = None) -> List[str]:
+               options: Optional[dict] = None, sequel: Optional[List[str]] = None) -> List[str]:
     """The whole configuration. GAME_DIR is mounted as C:, DOS_DIR (the Loader's dos folder) as
     D:; AUTOEXEC names the three programs run from D: (launch's UMBPLUS.COM, DSUNLOG.EXE,
     GAMEEND.COM). OPTIONS, for tests of the engine itself: `core`, `cycles`, `capture` (a folder:
     the game run under DOSBox-X's own `dx-capture /a`, its sound written there), `extra` (more
-    lines, each "section|name=value")."""
+    lines, each "section|name=value"). SEQUEL: Wake of the Ravager's autoexec (ravager.conf_lines',
+    from its "[autoexec]"), in place of Shattered Lands'; the rest is the same, the music device
+    too (the sequel plays its CD's tracks and no MIDI, so it routes nothing there)."""
     s = settings or {}
     o = dict(options or {})
     core, cycles = speed(s)
@@ -474,6 +476,8 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
     for extra in o.get("extra", ()):
         section, line = extra.split("|", 1)
         lines.insert(lines.index(f"[{section}]") + 1, line)
+    if sequel is not None:
+        return lines + list(sequel)
     lines += ["[autoexec]", "@echo off", f'mount c "{game_dir}"']
     if os.path.isdir(os.path.join(game_dir, "cloud_saves")):  # where GOG keeps the saves
         lines.append(f'mount c "{os.path.join(game_dir, "cloud_saves")}" -t overlay')
