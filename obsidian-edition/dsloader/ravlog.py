@@ -736,8 +736,9 @@ class RavDiceLog(dicelog.DiceLog):
         if not off:
             return None
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
         for r in ((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
-                  (base + off, dicelog.LOOK_SIZE)):
+                  (base + off, dicelog.LOOK_SIZE)) + (((base + full_off, dicelog.LOOK_FULL_SIZE),) if full_off else ()):
             if r not in self.guest.writable:
                 self.guest.writable = self.guest.writable + [r]
         return base + off
@@ -750,7 +751,8 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _answer_look(self) -> List[str]:
         """Shattered Lands' (DSCLOG asks about a creature looked at in a fight), with the sequel's
-        monster_lines; only the Look box's short lines (no whole description in the dialogue window)."""
+        monster_lines: the Look box's short lines, and the whole description for the dialogue window as the
+        box closes (DSCLOG2's LOOK_FULL, UNLOOK) when the helper has room for it (its header's +158)."""
         text_at = self._look_ranges()
         if text_at is None:
             return []
@@ -768,6 +770,12 @@ class RavDiceLog(dicelog.DiceLog):
             except (struct.error, IndexError, ValueError):
                 short, full = [], []
         text = "|".join(short).encode("cp437", "replace")[:dicelog.LOOK_SIZE - 1]
+        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
+        if full_off:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
+            whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:dicelog.LOOK_FULL_SIZE - 1] \
+                if len(full) > 1 else b""
+            base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
+            self.guest.write(base + full_off, whole + b"\0")
         self.guest.write(text_at, text + b"\0")
         self.guest.write(self.tsr_hdr + dicelog.TSR_LOOK_REPLY, struct.pack("<H", seq))
         return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []

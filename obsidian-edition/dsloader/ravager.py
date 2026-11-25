@@ -561,6 +561,10 @@ PATCHES: Tuple[Patch, ...] = (
     # weapon kinds in the lower panel, EF_CLICK (site 74) shows their next page on a click there.
     Patch("ef_rows", 0x8AFA9, bytes.fromhex("5f5ec9"), _site(73, 3)),
     Patch("ef_click", 0x8AB1A, bytes.fromhex("8b7608"), _site(74, 3)),
+    # The Look box's whole description (SL's PROBE_UNLOOK): where the routine that closes the box forgets whom
+    # it looked at ("mov word [08CAh],270Fh", 6378Dh, SL's 5F2AAh), DSCLOG2's UNLOOK (site 75) shows the
+    # Loader's description of the monster in the dialogue window.
+    Patch("unlook", 0x6378D, bytes.fromhex("c706ca080f27"), _site(75, 6)),
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),

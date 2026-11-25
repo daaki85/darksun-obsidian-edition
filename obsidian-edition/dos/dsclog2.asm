@@ -158,7 +158,8 @@ look_reply dw 0                 ; +152 the Loader sets this to LOOK_SEQ once LOO
 look_who   dw 0                 ; +154 the combatant looked at
 look_off   dw look_text         ; +156 offset of LOOK_TEXT: up to 3 short lines for the Look box, "|"
                                 ;      between them (a first byte 1: beside LEVEL), written by the Loader
-look_full_off dw 0              ; +158 (DSCLOG's whole description for the dialogue window: none here yet)
+look_full_off dw look_full      ; +158 offset of LOOK_FULL: the whole description, shown in the dialogue
+                                ;      window as the Look box closes (UNLOOK), written by the Loader
 look_on    dw 0                 ; +160 the Loader sets 1 to have monsters described
         times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +162 to +163: none of them here yet, zero)
 stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passed (RavDiceLog): older
@@ -2038,8 +2039,8 @@ char_count dw 0                 ; panels drawn on (for the tests)
 ; routine, as the box prints the monster's level, and moves the game's row count past them, so its own
 ; status lines follow in any row still free. The routine is SL's but for: the combatant in DI (SL's
 ; [BP+0Ah]), the status lines' count in [BP-0Ah] (SL's DI), the text routine's far address -20h from the
-; patch (SL's -22h), the box's colours F3h, AFh (SL's 1Fh, 11h). DSCLOG's whole description in the
-; dialogue window as the box closes (PROBE_UNLOOK) isn't ported.
+; patch (SL's -22h), the box's colours F3h, AFh (SL's 1Fh, 11h). If the Loader also gave the whole
+; description (LOOK_FULL), UNLOOK shows it in the dialogue window as the box closes.
 LOOK_DRAW  equ -0x20            ; (from the patch) "lcall SEG:OFF" operand: the text routine
 LOOK_ROWS  equ 4                ; the box's status rows: y = (row + 2) * 7 + 10h
 LOOK_SIDE  equ 1                ; a line starting with this goes on LEVEL's row (row -1), to its right
@@ -2060,6 +2061,7 @@ probe_look:
         jne .done
         mov [cs:look_who], di   ; the combatant
         mov byte [cs:look_text], 0
+        mov byte [cs:look_full], 0
         inc word [cs:look_seq]
         xor ax, ax
         mov es, ax
@@ -2075,7 +2077,10 @@ probe_look:
         call rtc_waited         ; (the BIOS clock can stand still: at most 2 s by the real-time clock)
         jnc .wait
         jmp .done
-.ready: mov es, [ss:si + 36]
+.ready: cmp byte [cs:look_full], 0
+        je .short
+        mov byte [cs:look_pending], 1   ; (the whole description: UNLOOK's, as the box closes)
+.short: mov es, [ss:si + 36]
         mov di, [ss:si + 34]
         sub di, 2               ; ES:DI = the patch
         mov eax, [es:di + LOOK_DRAW]
@@ -2150,6 +2155,102 @@ l_win    dd 0
 l_line   times L_LINE_SIZE db 0
 look_count dw 0                 ; boxes filled (for a look in play)
 look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
+LOOK_FULL_SIZE equ 700
+look_full times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's)
+look_pending db 0               ; 1 once LOOK_FULL has a description UNLOOK hasn't shown
+
+; UNLOOK (site 75 at 6378Dh, "mov word [08CAh],270Fh", SL's PROBE_UNLOOK at 5F2AAh): the end of the routine
+; that closes the Look box (the game forgets whom it was looking at). Does that, then shows the monster's
+; whole description (LOOK_FULL) in the dialogue window (SHOW_WINDOW), in a frame the overlay manager can fix
+; up (the window may load other overlays over this routine's while it waits for Continue).
+unlook:
+        mov word [0x8CA], 0x270F  ; the replaced instruction (DS the game's)
+        sti
+        pushad
+        push es
+        cmp byte [cs:look_pending], 0
+        je .out
+        cmp byte [cs:showing], 0
+        jne .out
+        mov byte [cs:look_pending], 0
+        inc word [cs:unlook_count]
+        mov word [cs:show_text], look_full
+        mov bx, sp              ; the frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back, pushed as a far call's, with BP
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call show_window
+        pop bp
+        pop ax                  ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
+unlook_count dw 0               ; (descriptions shown, for a look in play)
+
+; SHOW_WINDOW: DSCLOG's: the text at CS:SHOW_TEXT in the game's dialogue window (its stub 476Ch, SL's 42CAh:
+; the entries 25h, the window's input, and 34h, the wait for a reply, as SL's), with "Press continue" and
+; one reply, Continue, until it's clicked, then the window closed. DS the game's.
+DLG_STUB  equ 0x476C - 0x47E0   ; the stub's segment less DS's
+DLG_FEED  equ 0x25              ; the window's input: (kind, far text, word)
+DLG_WAIT  equ 0x34              ; wait for a reply to be clicked
+S_PRESS   equ 0x1956            ; DS: "Press continue" (SL's 15E8h)
+S_CONT    equ 0x1965            ; DS: "Continue" (15F7h)
+S_CLOSE   equ 0x25C8            ; DS: "CLOSE" (1F11h)
+show_window:
+        mov byte [cs:showing], 1
+        mov ax, ds
+        add ax, DLG_STUB
+        mov [cs:dlg + 2], ax
+        mov word [cs:dlg], DLG_FEED
+        xor bx, bx
+        push word 0             ; the emblem (portrait 0)
+        push bx
+        push bx
+        push word 1
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; the text
+        push cs
+        push word [cs:show_text]
+        push word 2
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; "Press continue": the replies' title, then the one reply
+        push ds
+        push word S_PRESS
+        push word 0
+        call far [cs:dlg]
+        add sp, 8
+        push word 0
+        push ds
+        push word S_CONT
+        push word 0
+        call far [cs:dlg]
+        add sp, 8
+        push word 0             ; show the reply
+        push dword 0
+        push word 3
+        call far [cs:dlg]
+        add sp, 8
+        mov word [cs:dlg], DLG_WAIT
+        call far [cs:dlg]       ; until it's clicked
+        mov word [cs:dlg], DLG_FEED
+        push word 0             ; and close the window
+        push ds
+        push word S_CLOSE
+        push word 2
+        call far [cs:dlg]
+        add sp, 8
+        mov byte [cs:showing], 0
+        ret
+show_text dw 0                  ; the text SHOW_WINDOW shows
+dlg     dd 0                    ; the dialogue window routine being called
+showing db 0                    ; 1 while SHOW_WINDOW has its window up
 
 ; ---- ITEM NAMES: the mod's items' names, past the game's 256 ----
 ; The game's item names are RESOURCE.GFF's TEXT 1000, a name a line, read into a table of 256 far
@@ -3104,6 +3205,7 @@ site_table:
         dw view_dam                         ; 72 SITE_VIEW_DAM (View Character's DAM line)
         dw ef_rows                          ; 73 SITE_EF_ROWS (the Effects screen's cells filled: the kits and weapon kinds)
         dw ef_click                         ; 74 SITE_EF_CLICK (a click on its cells: the next page of them)
+        dw unlook                           ; 75 SITE_UNLOOK (the Look box closed: the whole description)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
