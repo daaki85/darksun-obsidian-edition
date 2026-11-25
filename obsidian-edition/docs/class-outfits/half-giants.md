@@ -37,7 +37,7 @@ Watch the large figure in each column for the proposed pair. The three game-size
 
 | Pair | What to follow in motion |
 |---|---|
-| Cleric/Fighter | The bronze-buckled belt has a short leather tab that hangs over the linen at one hip. Follow its tip in profile walk step 2 (12) and below the reaching arm in front strike 3 (17). [See those two poses](half-giant-belt-tab.png) · [Watch the plain Cleric, previous belt and proposed tab in all poses](half-giant-cleric-comparison.gif) |
+| Cleric/Fighter | Pale bone caps cup the visible upper arms over the linen sleeves. A shaded rim separates bone from cloth. The bronze-buckled belt has a short leather tab at one hip. In profile walk step 2 (12) and front strike 3 (17), follow the near cap above the moving arm. [Compare front idle, profile and strike](half-giant-bone-caps.png) · [Watch the plain Cleric, tab alone and tab with caps in all poses](half-giant-cleric-comparison.gif) |
 | Cleric/Psionicist | A narrow teal sash turns across the lower ribs and passes behind the near arm. |
 | Cleric/Ranger | The green cloak opens onto linen in profile. A turned cream edge shows the robe's color from behind. |
 | Fighter/Psionicist | The bone shoulder and split leather jerkin frame the teal sash. Its tied end shows below the arm in front strike 3 (17). |

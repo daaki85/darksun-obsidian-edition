@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, fitted_panels, stamp
+from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, SLEEVES, fitted_panels, stamp
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
@@ -304,6 +304,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 relief = SKIN.index(flesh) if flesh in SKIN else 2
                 underside = (x, y+1) not in sleeve and (point not in top or point in arm)
                 shade = 3.5 + .82*relief + .35*texture[y % 8][x % 8] - 2*underside
+                if visible is not None:
+                    visible["sleeve"].add(point)
                 pieces[role][sy][sx] = pigment(LINEN, shade)
                 continue
             if point in cap and role in ("Gladiator", "Fighter") and c is not None:
@@ -399,6 +401,26 @@ BELT_TAB = (
 )
 
 
+def bone_caps(robe, visible_sleeve, pose, dx, dy):
+    # The sleeve patterns turn with each upper arm. A short domed plate
+    # sits inside each sleeve, with its lower rim above the linen cuff.
+    for sleeve in SLEEVES[pose]:
+        spans = row_limits(stamp(sleeve))
+        crown = min(spans)
+        for depth, width in enumerate((3, 5, 5, 3), start=1):
+            y = crown + depth
+            left, right = spans[y]
+            center = (left+right)//2
+            for x in range(center-width//2, center+width//2+1):
+                if (x, y) not in visible_sleeve:
+                    continue
+                across = x-center
+                shade = 6 - abs(across) - (across > 0) - (depth == 3)
+                if depth == 4:
+                    shade = 1 if across < 0 else 0
+                robe[y+dy][x+dx] = BONE[shade]
+
+
 def dress_pairs(pieces, visible, model, pose, dx, dy):
     # Coordinates here are the same feet-down sewing lines used for singles.
     # Only pixels actually laid down by the parent garment can take its trim.
@@ -412,6 +434,8 @@ def dress_pairs(pieces, visible, model, pose, dx, dy):
         parent, accent = pair.split("/")
         out = [row[:] for row in pieces[parent]]
         pieces[pair] = out
+        if accent == "Fighter":
+            bone_caps(out, visible["sleeve"], pose, dx, dy)
         if accent == "Ranger":
             facing = LINEN if parent == "Cleric" else TEAL
             for x, y in cloak:
@@ -569,7 +593,7 @@ def study_rows(game, model, pose, texture, *, pairs=False):
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     pieces[role][sy][sx] = body if foot is None else foot
-    visible = {name: set() for name in ("Cleric", "Fighter", "cloak")} if pairs else None
+    visible = {name: set() for name in ("Cleric", "Fighter", "cloak", "sleeve")} if pairs else None
     dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
