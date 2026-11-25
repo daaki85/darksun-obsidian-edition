@@ -31,3 +31,19 @@ MEM with no game: today's settings 144 KB upper (CC00-EFFF), with the three BIOS
 
 Not tried: sound, a long play, older DOSBox-X versions (whether 2025.01.01 has the two BIOS
 options is unchecked), Windows and macOS.
+
+## Part 2: the settings as the Loader's own (branch claude/dosbox-x-default, PR #178)
+
+The three lines are now in `dosboxx.conf_lines` itself (no `extra=`). `pens-after-arena`,
+`PT_SDL_AUDIO=disk`, `soundfont=/usr/share/sounds/sf2/TimGM6mb.sf2`:
+
+- DOSBox-X's log: "MIDI:Opened device:synth". `memaudit.py`: the same free upper block,
+  65,520 bytes at E59Ah, DSCLOG's blocks as in part 1; 96,928 bytes conventional free after the
+  game (as on 2026-11-19). `buildcheck.py` OK.
+- **Twenty minutes**: 26 passes of `framerate.py 45` (15:10 to 15:30): 20.1 to 21.2 frames a
+  second, 430 to 450 main loops a second, the BIOS clock 17.9 to 18.0 a second, 158 to 161 map
+  units a second walking, DOSBox-X at 21 to 23% of a core; nothing changed from pass to pass.
+  After it, the free upper block unchanged, `buildcheck.py` OK.
+- The sound file (DOSBox-X's own mix, 48 kHz): music and effects, 60-90 s in RMS 0.017, peak
+  0.12 (a clip in the project files, `dosbox-x/2026-11-25-dosbox-x-default-pens-music.ogg`).
+  Nobody has listened to it.
