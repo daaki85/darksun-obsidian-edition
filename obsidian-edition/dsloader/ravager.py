@@ -696,6 +696,11 @@ PATCHES: Tuple[Patch, ...] = (
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
     Patch("hit", 0x29DBD, bytes.fromhex("558bec83ec0e"), _site(77, 6)),
+    # F10 in a fight leaves a pinned member where it is (SL's F10_PIN, DSCLOG's): the F10 key's standing-still
+    # test (1EC05h, SL's 1B83Ah, from the map's key table at 1F091h), "mov ah,0 / or ax,ax / jz 1EC3Fh"
+    # (1EC36h, SL's "or ax,ax / jz" at 1B86Bh), DSCLOG2's site 100 (SITE_F10_PIN): the move taken back only
+    # for a member neither Paralyzed (69) nor Cannot Move (66), the effects whose landing clears "can walk".
+    Patch("f10_pin", 0x1EC36, bytes.fromhex("b4000bc07403"), _site(100, 6)),
     # Quick saves (DSCLOG2's QUICK SAVES, quicksave.py): the load's wrapper (7D8EEh on) reads the slot's GREQ
     # chunk (the map's limits, in the roster file) numbered by "mov ax,es:[2]" (the window's first row) + the row
     # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2

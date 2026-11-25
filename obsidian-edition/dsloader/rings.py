@@ -70,16 +70,17 @@ def red_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
 
 
 @functools.lru_cache(maxsize=8)
-def gold_table(dac: bytes) -> bytes:
-    """Each colour's golder one among the palette's (0: none clearly nearer GOLD), as red_table."""
+def gold_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
+    """Each colour's golder one among the palette's (0: none clearly nearer GOLD), as red_table (FIRST to
+    LAST the colours taken and given: the sequel's ravlog.RED_FIRST, RED_LAST)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     far = lambda p: sum((a - b) ** 2 for a, b in zip(p, GOLD)) ** 0.5
     out = bytearray(256)
-    for i in range(FIRST, LAST + 1):
+    for i in range(first, last + 1):
         c = pal[i]
         want = tuple(v + (t - v) * GOLD_TOWARD for v, t in zip(c, GOLD))
         best, score = 0, None
-        for j in range(FIRST, LAST + 1):
+        for j in range(first, last + 1):
             p = pal[j]
             if j == i or far(p) > far(c) - GOLD_NEARER:
                 continue
