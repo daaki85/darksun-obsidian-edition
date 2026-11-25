@@ -334,6 +334,14 @@ and SCMD of 2428 or 2426 replaced by the creature's from `restyle.py`/`loosen.py
 `write_ranged` on the built OBJEX): the creature then walks the Draxans' route and fights, its own
 script driving it (2026-11-22, logs/2026-11-22-restyled-creatures.md). Tyr's street is grey: a grey
 creature (the soulshard) is hard to see there.
+**The approved catalogue redraws** (2026-11-24, logs/2026-11-24-ravager-catalogue-import.md) go into
+a test build by `darksun-recompiled/tools/proto/import_catalogue.py` (the private catalogue's
+`approved.json`). Their fighters go in the Draxans' slot (2428) one per run and fight as above.
+**A still figure (no walk) put in the rug room's people (2427, 2420) stalls the ambush**: the
+Draxans walk up and stand, and the fight never starts (half the runs, every one with a still figure in
+those slots; the same fighters fought on the first try without them). Pointing an object's OJFF
+record at another picture shows nothing at the start: the opening's objects come from the save
+(DARKSAVE.GFF), so replace the picture's chunks instead.
 `sl_figures.py build-ui` does the same for the interface (`RESOURCE.GFF`: pictures and icons; put it
 in the copy beside the patched OBJEX.GFF). Its screens in a fight: **Q** the END menu (Escape closes
 it); a click on the status box (window 560,50) captures the mouse harmlessly; USE at game 22,17;
