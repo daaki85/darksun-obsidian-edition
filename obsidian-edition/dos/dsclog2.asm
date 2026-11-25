@@ -86,7 +86,7 @@ TARGET   equ 0x4206     ; DS word: the combatant the current attack is at (SL's 
 
 NENT    equ 63          ; entries in the ring (as DSCLOG's)
 ESIZE   equ 192         ; bytes per entry (DSCLOG's ENTRY LAYOUT)
-TSIZE   equ 2048        ; (the text buffer: none yet, its size kept for the header's readers)
+TSIZE   equ 2048        ; the text buffer's size (DSCLOG's: a power of two), in the far block (FAR_TBUF)
 STACK   equ 256         ; bytes of stack while installing
 HDR_SIZE equ 1872       ; DSCLOG's header to its last field (dicelog.py's TSR_ offsets end at +1867)
 
@@ -140,13 +140,13 @@ hooked   db 0                   ; +117 1 once the vectors are ours
 int_rand_off dw int_rand        ; +118 offset of INT_RAND (VEC_RAND's handler) in this segment
 gpl_hook_off dw 0               ; +120 (none yet)
 gpl_chain dd 0                  ; +122
-tpos     dw 0                   ; +126 (no text buffer yet)
-tbuf_off dw 0                   ; +128
+tpos     dw 0                   ; +126 the text buffer's write position (wrapping at TSIZE): DSCLOG's TEXT
+tbuf_off dw FAR_TBUF            ; +128 offset of the text buffer in the far block (TBUF_SEG's)
 tsize    dw TSIZE               ; +130
-probe_text_off dw 0             ; +132
-probe_msg_off dw 0              ; +134
+probe_text_off dw probe_text    ; +132 offset of PROBE_TEXT in this segment (site 93)
+probe_msg_off dw probe_msg      ; +134 offset of PROBE_MSG in this segment (site 94)
 probe_char_off dw 0             ; +136
-tbuf_seg  dw 0                  ; +138
+tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG), set as it loads
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in the far block (PANEL_BLIT)
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
@@ -2566,6 +2566,131 @@ msg_shown:
 msg_windows dw 0                ; (message windows opened, for a look in play)
 msg_waits   dw 0                ; (waits shown)
 
+; TEXT: DSCLOG's PROBE_TEXT and PROBE_MSG, what the game shows as text copied into the text buffer (the
+; far block's FAR_TBUF, TSIZE bytes, its write position TPOS: header +126 to +138, DSCLOG's) for the
+; Loader's Dialogue and Journal tabs and the dice log's "Message:" lines (textlog.py: each record FEh, the
+; kind, the far pointer, the word, the text's length and the text, at most 400 bytes). Both are SITEs on
+; the routine's "push bp / mov bp,sp" (3 bytes), done after the record as DSCLOG's do:
+; - PROBE_TEXT (site 93, "text"): the dialogue window's input (87BA0h, SL's 7CE83h; the sequel's dialogue
+;   stub 476Ch's entry 25h, SHOW_WINDOW's DLG_FEED): (kind, far text, word), the kinds as SL's (0 a reply,
+;   1 a portrait, the word its number, 2 text, 3 the replies shown). Not DSCLOG's SWAP (the arena ring's
+;   search: SL's story).
+; - PROBE_MSG (site 94, "message"): the message box (560h:2Ah, 59A0Bh; SL's 4D0h:2Ah, 5536Eh): (far text),
+;   recorded as kind 16.
+probe_text:
+        call text_enter         ; SS:BP+16 = the routine's arguments
+        inc word [cs:text_records]
+        mov cl, [bp+16]
+        lds si, [bp+18]
+        mov dx, [bp+22]
+        jmp text_leave
+
+probe_msg:
+        call text_enter
+        inc word [cs:msg_records]
+        mov cl, 16
+        lds si, [bp+16]
+        xor dx, dx
+        jmp text_leave
+
+text_enter:                     ; take the interrupt frame off, save registers, BP = SP (DSCLOG's)
+        pop word [cs:xt_ret]
+        pop word [cs:xt_ip]      ; the routine's stack is underneath the interrupt frame
+        pop word [cs:xt_cs]
+        pop word [cs:xt_fl]
+        sti
+        push ax
+        push bx
+        push cx
+        push dx
+        push si
+        push ds
+        push bp
+        mov bp, sp              ; SS:BP+14 = return address of the routine, +18 its arguments
+        add bp, 2               ; ... so that +16 is the first argument
+        jmp [cs:xt_ret]
+
+text_leave:                     ; record CL = kind, DS:SI = dword, DX = word, then return (DSCLOG's)
+        mov bx, [cs:tpos]
+        mov al, 0xFE
+        call tput
+        mov al, cl
+        call tput
+        mov ax, si
+        call tputw
+        mov ax, ds
+        call tputw
+        mov ax, dx
+        call tputw
+        xor ax, ax
+        cmp cl, 0
+        je .text
+        cmp cl, 2
+        je .text
+        cmp cl, 16
+        jne .len                ; the other kinds have no text (and no pointer)
+.text:
+        mov ax, ds
+        or ax, si
+        jz .len
+        push si
+        xor ax, ax
+.count:
+        cmp byte [si], 0
+        je .counted
+        inc si
+        inc ax
+        cmp ax, 400
+        jb .count
+.counted:
+        pop si
+.len:
+        mov cx, ax
+        call tputw
+        jcxz .done
+.copy:
+        lodsb
+        call tput
+        loop .copy
+.done:
+        mov [cs:tpos], bx       ; publish the record
+        pop bp
+        pop ds
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        push bp                 ; the replaced instructions
+        mov bp, sp
+        push word [cs:xt_fl]
+        push word [cs:xt_cs]
+        push word [cs:xt_ip]
+        iret
+
+tput:                           ; AL -> text buffer at position BX (DSCLOG's)
+        push bx
+        push es
+        and bx, TSIZE - 1
+        mov es, [cs:far_seg]
+        mov [es:FAR_TBUF + bx], al
+        pop es
+        pop bx
+        inc bx
+        ret
+
+tputw:
+        call tput
+        mov al, ah
+        jmp tput
+
+xt_ret  dw 0                   ; (TEXT's own: the other probes' T_IP, T_CS and T_FL may be in use)
+xt_ip   dw 0
+xt_cs   dw 0
+xt_fl   dw 0
+text_records dw 0               ; (the dialogue window's inputs recorded, for a look in play)
+msg_records  dw 0               ; (message boxes recorded)
+
 ; SHOW_WINDOW: DSCLOG's: the text at CS:SHOW_TEXT in the game's dialogue window (its stub 476Ch, SL's 42CAh:
 ; the entries 25h, the window's input, and 34h, the wait for a reply, as SL's), with "Press continue" and
 ; one reply, Continue, until it's clicked, then the window closed. DS the game's.
@@ -3785,6 +3910,8 @@ site_table:
         dw el_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere)
         dw el_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
         dw el_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
+        dw probe_text                       ; 93 SITE_TEXT (87BA0h: the dialogue window's input: TEXT, for the Loader's Dialogue tab)
+        dw probe_msg                        ; 94 SITE_MSG (59A0Bh: the message box: TEXT, the same)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -15010,7 +15137,8 @@ FAR_SPANS  equ FAR_PANEL + PANEL_BYTES         ; WALL SHADOWS' spans, 6 bytes ea
 FAR_WS_DAC equ FAR_SPANS + WS_SPANS_MOST * 6   ; ... the palette DARK was made from
 FAR_DARK   equ FAR_WS_DAC + 768                ; ... DARK (XLAT)
 FAR_RED    equ FAR_DARK + 256                 ; RINGS' RED (XLAT), the Loader's
-FAR_TOP    equ FAR_RED + 256
+FAR_TBUF   equ FAR_RED + 256                  ; the text buffer (TEXT: PROBE_TEXT, PROBE_MSG), TSIZE bytes
+FAR_TOP    equ FAR_TBUF + TSIZE
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
@@ -15079,6 +15207,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov [cs:ring_seg], ax
         mov [cs:tail_seg], cs   ; (the labels' slots: in this segment)
         mov [cs:panel_seg], ax  ; (the panel's picture: in the far block)
+        mov [cs:tbuf_seg], ax   ; (the text buffer: in the far block)
         mov es, [cs:psp]        ; our block cut down to the PSP and what stays, then kept
         mov bx, 0x10 + RESIDENT_PARAS
         mov ah, 4Ah

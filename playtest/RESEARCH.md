@@ -1565,6 +1565,18 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   (254,164) pages the list and draws it again (twice for the first page), SELL (297,164) offers for the
   item on the pointer, TAKE IT at (120,92) or (145,92) as the box falls. `ravshop.py` reads the shop and
   edits CHA, INT, scrolls and known spells.
+- **The sequel's dialogue window and the Loader's tabs** (2026-11-25, logs/2026-11-25-ravager-loader-tabs.md): the
+  window's input is 87BA0h (SL's 7CE83h, the same code with a check more; the dialogue stub 476Ch's entry 25h):
+  (kind, far text, word), SL's kinds (0 a reply, its number in the word; 1 a portrait; 2 text, word 115; 3 the
+  replies shown), "END" each page, "CLOSE" once the last is clicked away. The replies' copies at DS:6356h + n x 33h,
+  the row clicked DS:25BAh (FFh till then), the scroll DS:6321h (SL's 5537h, 1F0Ah, 5502h); the thing a script was
+  started on at (load + 3C13h):365h (SL's 3781h). DSCLOG2's TEXT (sites 93, 94) copies it and the message box into
+  its text buffer; `ravtext.py` prints the last records. To talk to Uhubito from `ravager-after-ambush`: a click on
+  his office's floor (game 240,140), then 220,170, the look pointer (two right-clicks) on him (210,165), the Look
+  box's first button (230,188). The Loader's window there: `python3.12 -m dsloader view --pid` on Xvfb `:56`
+  1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
+  global numbers' pointer (SL's DS:1356h) isn't found by `ravds.py --fuzzy`, and 93 of its scripts don't decode
+  with SL's decoder (those that do use numbers up to 150): the journal can't keep its head in a save there yet.
 - **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
   opens window 2905h (5B0h:48h, kept at 300h:7), writes the text, waits `[26B7h]` x 100 ms with the game's
   delay (0:12FAh, Borland's, on the PIT) and closes it. It was never seen: the windows are drawn only as a

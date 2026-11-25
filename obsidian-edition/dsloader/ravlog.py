@@ -23,8 +23,8 @@ import struct
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, kitpages, kits, labels, monsters, psiblast, quicksave, ravager, \
-    rings, sizes, stealth, targeting, usable
+from . import aging, combatlog, dicelog, game, hitchance, hover, journal, kitpages, kits, labels, monsters, psiblast, quicksave, \
+    ravager, rings, sizes, stealth, targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -104,6 +104,11 @@ ADDRESSES: Dict[str, object] = {
     # the game's clock: its scale (a byte) and a far pointer to the dword (ravds: SL's 9B70h, 9B72h + 9Ah;
     # read in play: scale 1, 406 s into a new game's first fight)
     "GAME_TIME_SCALE": 0x9C0A, "GAME_TIME_PTR": 0x9C0C,
+    # the dialogue window's replies (its input, 87BA0h: SL's 7CE83h, the same code): each copied to DS:6356h +
+    # n x 33h (SL's 5537h), the row clicked DS:25BAh (FFh till then; SL's 1F0Ah), the list's scroll DS:6321h
+    # (5502h); the thing a script was started on (who is talked to), the load + 3C13h at 365h (SL's 3781h,
+    # the same offset: "mov ax,3C13h / mov es,ax / mov es:[365h],di" at BEA4h)
+    "REPLY_CHOSEN": 0x25BA, "REPLY_SCROLL": 0x6321, "REPLY_TEXTS": 0x6356, "TALK_SEG": 0x3C13,
     # the event queues (far pointers, then their counts: SL's 2FBEh and 2FC6h; ravds), 11h bytes an event,
     # an effect's end kind 7 there with its owner and handle (the queue routines at 2C4FCh on: "imul eax,11h")
     "EVENT_QUEUE": 0x2A63, "EVENT_COUNT": 0x2A6B,
@@ -272,6 +277,8 @@ def apply_layout() -> int:
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
+    _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
+    journal.REGIONS = REGIONS
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -551,6 +558,21 @@ class RavGameData(game.GameData):
                 ac -= 1
         return ac
 
+    def party_position(self) -> Tuple[int, int]:
+        """SL's, from the sequel's map things (RAV_POSITIONS: the leader's feet, the thing 0's)."""
+        return struct.unpack("<HH", self.guest.read(self.ds * 16 + RAV_POSITIONS, 4))
+
+    def talk_target_distance(self) -> Optional[int]:
+        """SL's, on the sequel's map things (RAV_POSITIONS, RAV_POSITION_SIZE bytes each)."""
+        combatant, = struct.unpack("<h", self.guest.read((self.load_seg + game.TALK_SEG) * 16 + game.TALK_TARGET, 2))
+        if not game.PARTY_SIZE <= combatant < game.THINGS:
+            return None
+        x, y = struct.unpack("<HH", self.guest.read(self.ds * 16 + RAV_POSITIONS + combatant * RAV_POSITION_SIZE, 4))
+        lx, ly = self.party_position()
+        if x >= 0xFFF0 or y >= 0xFFF0:  # (off the map)
+            return None
+        return max(abs(x - lx), abs(y - ly))
+
     def creating(self) -> bool:
         """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen
         rolls no age, so the character being made may have one given at once (aging.give_ages)."""
@@ -697,6 +719,27 @@ DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (it
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
 
+# The sequel's dialogue portraits are its own (its PORTRAIT numbers aren't SL's faces): the Loader keeps them
+# as RAV_PORTRAITS + the number, so the names given and learned (settings.json's "speakers", "speakers_learned")
+# stay apart from Shattered Lands', and none of SL's own (game.SPEAKERS) is taken for one of them.
+RAV_PORTRAITS = 10000
+
+
+class SequelText:
+    """DSCLOG2's text buffer (textlog.TextBuffer, its TEXT: the header's +126 to +138, DSCLOG's), each
+    portrait's number made RAV_PORTRAITS + the game's (0, the emblem, kept: narration)."""
+
+    def __init__(self, inner: textlog.TextBuffer):
+        self.inner = inner
+
+    def poll(self) -> List[textlog.TextRecord]:
+        return [r._replace(value=RAV_PORTRAITS + r.value) if r.kind == textlog.KIND_PORTRAIT and r.value else r
+                for r in self.inner.poll()]
+
+    def __getattr__(self, name):
+        return getattr(self.inner, name)
+
+
 class RavDiceLog(dicelog.DiceLog):
     """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory read only,
     and only the rolls (no side features after them yet)."""
@@ -729,7 +772,25 @@ class RavDiceLog(dicelog.DiceLog):
         finally:
             dicelog.GameData = real
         self._write_item_names()
+        if self.text is not None:  # (the sequel's portraits apart from SL's: RAV_PORTRAITS)
+            self.text = SequelText(self.text)
         return result
+
+    def speaker(self, portrait: Optional[int]) -> str:
+        """SL's, for the sequel's portraits (RAV_PORTRAITS + the game's number): the names the player gave
+        and the Loader learned, never SL's own faces' (game.SPEAKERS); else "Portrait N", the game's N."""
+        if portrait is None or portrait < RAV_PORTRAITS:
+            return super().speaker(portrait)
+        return (self.speaker_names.get(portrait) or self.learned_speakers.get(portrait)
+                or f"Portrait {portrait - RAV_PORTRAITS}")
+
+    def _journal_sync(self) -> None:
+        """The journal's look (SL's DiceLog._journal_sync), but the sequel's game keeps no id of it: SL's
+        place in the game's numbers (journal.NUMBERS, at game.NUMBERS_PTR) isn't found in the sequel, nor two
+        numbers its scripts leave alone. So the sequel's game is read as one begun (0) and nothing is written
+        into it: its journal is a chain of its own from the Loader's start, not following its saves."""
+        if self.journal is not None:
+            self.journal.sync(lambda: 0, lambda head: False, self.game.game_time())
 
     def _write_item_names(self) -> None:
         """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196, +198), if it has them."""
@@ -880,6 +941,8 @@ class RavDiceLog(dicelog.DiceLog):
         if full_off:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
             whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:dicelog.LOOK_FULL_SIZE - 1] \
                 if len(full) > 1 else b""
+            if whole and whole.decode("cp437") not in self._own_text:  # (not dialogue: the Dialogue tab leaves it out)
+                self._own_text.append(whole.decode("cp437"))
             base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
             self.guest.write(base + full_off, whole + b"\0")
         self.guest.write(text_at, text + b"\0")
@@ -1033,8 +1096,9 @@ class RavDiceLog(dicelog.DiceLog):
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
         (_learn_lines), Psionic Blast's wounds given back (_blast_pass), the creation screen's tries
-        (_creation_pass) and the combat log's panel (_panel_pass): the rest reads and writes what isn't
-        ported yet."""
+        (_creation_pass), the combat log's panel (_panel_pass), and the dialogue and message boxes for the
+        Dialogue and Journal tabs and the "Message:" lines (_take_text, DSCLOG2's TEXT; the journal its own
+        chain: _journal_sync): the rest reads and writes what isn't ported yet."""
         out = self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -1051,6 +1115,8 @@ class RavDiceLog(dicelog.DiceLog):
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
             self._step(lambda: self._large.update(self.game, self.tsr_hdr))
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
+        if self.text is not None:  # (dialogue and message boxes: DSCLOG2's TEXT, +126)
+            out += self._step(lambda: self._take_text(now))
         if self.game is not None and self.game.rules & game.RULE_STEALTH:
             out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
         if now >= self._next_slots:
@@ -1064,6 +1130,8 @@ class RavDiceLog(dicelog.DiceLog):
             except Exception:  # (unknown: no save asked for this pass)
                 loading = True
             out += self._step(lambda: self._quick_pass(loading, now))  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
+            if not loading:
+                self._step(self._journal_sync)  # (the Journal tab: the sequel's own chain)
         return out
 
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)

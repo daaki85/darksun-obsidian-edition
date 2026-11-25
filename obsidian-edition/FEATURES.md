@@ -956,6 +956,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the
   game waits, and with it [a wizard's INT](#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
   SPELLS OF THAT LEVEL.
+- **The Loader's Dialogue and Journal tabs follow the sequel**: every conversation with the replies
+  offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
+  face it is (`Caravan Master`; or name it with **Name speaker...**, kept apart from Shattered Lands'
+  faces), and each message box in the journal and in the dice log (`Message: YOU ALREADY KNOW THIS
+  SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
+  sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
+  and Memory tools tabs read the sequel's spells and records.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon

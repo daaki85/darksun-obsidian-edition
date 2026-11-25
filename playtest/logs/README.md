@@ -165,6 +165,7 @@ schedules and diffs a log made or used.
 | [2026-11-25](2026-11-25-ravager-blast-log.md) | Psionic Blast's wounds, the save's d20, the creation's tries and the combat log in the sequel: DSCLOG2 sites 79-81 (BLAST_HP 152 and 200 kept, a knock-out at 1 HP, "Ester shakes off ... +39 HP"; control: Lex killed, nothing kept), "d20 = 13 +9 other = 22" save lines, each try's 4d4 (control none), the panel's L fixed (DS:0DABh) and its scrollbar dragged back to Round 1 |
 | [2026-11-25](2026-11-25-ravager-quick-saves.md) | Quick save, quick load, autosave and named saves in the sequel: F5 to SAVQ01-03 with GREQ 101-103, F9's LOAD window on them and the load through site 84, the control (the dice log stopped: SOUND EFFECTS ON), an F1 save copied to the sequel's named saves and put back widened, an autosave after a won fight (none after a lost one) |
 | [2026-11-25](2026-11-25-ravager-blast-saves-join.md) | Psionic Blast's wounds and the quick saves joined in one build of DSCLOG2 (42512 bytes): 41984 in upper memory, 113472 free after, the chain whole; F5 to SAVQ01 (SAVE 6 17 x 48h), F9 + Return loaded it, L the panel; a failed blast on Lex BLAST_HP 200, "shakes off" +44 at the fight's end, BLAST_HP 0; no Illegal Op |
+| [2026-11-25](2026-11-25-ravager-loader-tabs.md) | The Loader's Dialogue, Journal, Spells and Memory tabs on the sequel: DSCLOG2's TEXT (sites 93, 94); Uhubito's talk with its replies and the one chosen, "Caravan Master" learned, YOU ALREADY KNOW THIS SPELL as a "Message:" line and a journal entry; the control only the reply chosen |
 
 ## files/
 

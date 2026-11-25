@@ -412,6 +412,12 @@ PATCHES: Tuple[Patch, ...] = (
     # the rest) seen (a fix of the sequel's, whatever the rules: it was never drawn, and its wait was over at
     # once): DSCLOG2's MSG_WINDOW where its window is kept (59AD3h: "mov es:[9],dx", counted) and MSG_SHOWN
     # as its wait starts (59B62h: "mov ax,[26B7h]": the picture shown, the options' message time waited)
+    # What the game shows as text, for the Loader's Dialogue and Journal tabs and the dice log's "Message:" lines
+    # (SL's text and message, PROBE_TEXT and PROBE_MSG: DSCLOG2's TEXT): its "push bp / mov bp,sp" at the
+    # start of the dialogue window's input (87BA0h, SL's 7CE83h: (kind, far text, word)) and of the message
+    # box (59A0Bh, SL's 5536Eh: (far text)), each recorded into the text buffer (the header's +126 to +138)
+    Patch("text", 0x87BA0, bytes.fromhex("558bec"), _site(93, 3)),
+    Patch("message", 0x59A0B, bytes.fromhex("558bec"), _site(94, 3)),
     Patch("message_window", 0x59AD3, bytes.fromhex("2689160900"), _site(59, 5)),
     Patch("message_shown", 0x59B62, bytes.fromhex("a1b726"), _site(58, 3)),
     # ... and at a level up (SL's pick_any and pick_list): DSCLOG2's PICK_ANY where the preserver's level up

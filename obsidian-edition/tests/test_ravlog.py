@@ -354,7 +354,8 @@ class PassTests(unittest.TestCase):
 
     def test_after_rolls_runs_the_hp_watch_only(self):
         """The hit points' changes follow the rolls (each hit matched with its fall: else the round's
-        end calls every hit "takes none"); nothing else of Shattered Lands' pass."""
+        end calls every hit "takes none"); nothing else of Shattered Lands' pass (the text, with no helper
+        attached, not read either)."""
         log = ravlog.RavDiceLog(FakeGuest())
         log.hp_changes = lambda now: ["  Gerakis now 64/165 HP (-12)"]
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
