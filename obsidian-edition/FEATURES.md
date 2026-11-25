@@ -1066,9 +1066,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   figures, a spell's charge used floats its count as in Shattered Lands (`Armor: 7 left`).
 - **[Psionic Blast](GAME-BUGS.md#spells-and-psionics)'s imagined wounds** come back as a fight ends in the sequel
   too ("Seneca shakes off Psionic Blast's imagined wounds as the fight ends"), and until then a blow that would kill
-  the member knocks it out instead. The dice log's saving throws there show the d20 rolled (`d20 = 13 +9 other =
-  22, needs 30`), with a natural 1's line that went missing before, and the creation screen's rolls each score's
-  four 4d4 (`best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16`).
+  the member knocks it out instead. The dice log's saving throws there show the d20 rolled and each modifier by
+  name, as in Shattered Lands (`d20 = 13 +1 Ring of Protection -1 WIS 6 +1 CON 19 = 14, needs 13`), with a
+  natural 1's line that went missing before, and the creation screen's rolls each score's four 4d4 (`best of
+  four 4d4 (12, 9, 8, 7) = 12, +4 = 16`). Its attack lines break the THAC0 down as Shattered Lands' do (`THAC0
+  13, +3 STR, -2 stone, +2 difficulty = 10`), the cahulaks' heads named (`-2 cahulaks, main head at DEX 12`);
+  a Battle Dancer in light armour has no head penalty with the cahulaks, as in Shattered Lands.
 - **[Looting with T and Shift+T](#looting-a-body-t-and-shiftt), [selling with S](#selling-plain-gear-s)
   and [M, U and I](#m-u-and-i-open-a-screen-close-it-again)** work in the sequel too (started from the
   Loader). A body's window opens with the eye (right-click twice). The items go into the backpacks and the

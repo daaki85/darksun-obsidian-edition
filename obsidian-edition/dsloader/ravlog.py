@@ -132,6 +132,13 @@ ADDRESSES: Dict[str, object] = {
     # the attack's count of the attacker's attacks made this round: [BP-16h] (5D04Ch, SL's [BP-14h]), its
     # [BP-14h] what the damage roll adds to the dice (DSCLOG2's STAB_TIMES)
     "ATTACKS_MADE_LOCAL": -0x16,
+    # the attack set-up's locals (5C5E1h, SL's 58019h): the THAC0 [BP-1Eh] (SL's [BP-20h]), the weapon's bonus
+    # [BP-8], from behind and backstab bytes [BP-19h] and [BP-21h] (SL's words [BP-1Ah], [BP-24h]), the natural
+    # attacks' set [BP-20h] (SL's [BP-22h]), the weapons ready [BP-16h] (the dice log's THAC0 line)
+    "SETUP_THAC0_LOCAL": -0x1E, "SETUP_BONUS_LOCAL": -8, "SETUP_REAR_LOCAL": -0x19, "SETUP_BACKSTAB_LOCAL": -0x21,
+    "SETUP_NATURAL_LOCAL": -0x20, "SETUP_READY_LOCAL": -0x16, "SETUP_FLAG_MASK": 0xFF,
+    # the difficulty, a DS word (monsters' to hit: the set-up's "mov ax,[143Ah] / dec ax", 5C9C9h; SL's 11AEh)
+    "DIFFICULTY": 0x143A,
     # spell slots left: a member's 22h bytes from DS:446Ah, a wizard level L at +L-1, a priest's from
     # +0Bh (each level's byte at SLOTS_LEFT + level, as SL's); the slot rules each SL's + 0Ch (ravds)
     "SLOTS_LEFT": {"Wizard": 0x4469, "Priest": 0x4474}, "SLOTS_STRIDE": 0x22,
@@ -635,6 +642,42 @@ def monster_lines(gd, creature: int, ac: Optional[int]) -> Tuple[List[str], List
     return short, full + said
 
 
+# The sequel's saving throw modifiers (628h:A7h, 83606h; SL's 79D3Ch, otherwise built): the target's and
+# the caster's effects as bit sets (608h:25h, 7FE93h: effect N's bit N % 8 of byte N / 8), the spell's
+# record (its +11h category word, +1Ah kinds word) and the target's sheet; what the routine adds, in its
+# order (RavGameData.save_modifiers). Effects by the sequel's numbers (effect_names).
+LIFE_DRAINED, WEATHER_GUARD, WEATHER_BANE = 59, 80, 107  # (-2 a level drained; +6, -20 against WEATHER_SPELLS)
+WEATHER_SPELLS = (32, 58, 69, 93)  # Lightning Bolt, Cone of Cold, Chain Lightning, Incendiary Cloud
+ENTRANCED, ENTRANCED_SPELLS = 33, (2, 39, 94, 131, 255)  # (-3 against the charms but Dominate)
+THORNS, THORNS_SPELL = 16, 188  # Bound By Thorns, -4 against Thorns of Binding
+SAVE_EFFECTS = ((44, -2, "Heat Exhaustion"), (88, -1, "effect 88"))  # (88: an unnamed effect of the game's)
+SPIRIT_ARMOR, BARKSKIN, BLESSED, BLURRY, BRAVE, PRAYER = 94, 6, 9, 13, 18, 72
+PROT_EVIL = 75
+PROT_KINDS = ((0x80, 78, 4, "Protected vs Lightning"), (0x04, 73, 3, "Protected vs Cold"),
+              (0x02, 77, 4, "Protected vs Fire"))  # (the record's kinds bit, the effect, its bonus)
+FIRE_SHIELD = 38  # (+2 against fire and cold with the spells as the manual has them: DSCLOG2's FSHIELD_SAVE)
+BLIND, DETECT_INVISIBLE, INVISIBLE, INVISIBLE_UNDEAD = 10, 25, 53, 54
+UNSEEN_RANGE = 8  # (the can't-see +4 only for a spell whose range at level 1 is this or less: 680h:20h)
+CLOSE_TARGETS = (3, 4, 5, 7, 8)  # (a record's +0Ch target kinds 680h:20h gives range 8)
+AREAS_SEG, AREA_SIZE = 0x41F1, 0x12  # (the areas' table, selector 3D0h: +5 bits 2-3 1 doubles the range)
+UNDEAD_RACE, DRUIDS, PSIONICIST_CLASS = 9, (5, 6, 7, 8), 12
+DWARF_RACE, HALFLING_RACE = 2, 6
+# DSCLOG2's PROT_SAVE (site 44): the protection items, the sequel's types (PROT_RING the sequel's Ring, the
+# others the mod's: ravager.mod_type), their slots SL's
+PROT_RING, PROT_CLOAK, PROT_ROBE = 45, 103, 127
+RING_SLOTS, CLOAK_SLOT, CHEST_SLOT = (4, 11), 12, 9
+ARMOUR_SLOTS, HAND_SLOTS = (0, 6, 7, 9), (3, 10)
+METAL = 2  # (a type's material, its SL +8h & 4Fh)
+
+
+# The sequel's to-hit routine (628h:66h): the attacker's effects (Blessed, Cursed, Slowed, Impeded, Weapon
+# Grafted, Heat Exhaustion), Berserk's by the preserver level, Soothe's Extra Hit Points, the halfling's range
+HIT_EFFECTS_RAV = ((9, 1, "Blessed"), (22, -1, "Cursed"), (91, -4, "Slowed"), (50, -2, "Impeded"),
+                   (106, 1, "Weapon Grafted"), (44, -2, "Heat Exhaustion"))
+BERSERK, BERSERK_CLASS, EXTRA_HP, SOOTHE, HALFLING_RANGE, ANTI_MAGIC = 102, 11, 34, 187, 0x1C, 4
+STINK_TO_HIT = 2  # (DSCLOG2's, on a nauseated attacker's swing)
+
+
 class RavGameData(game.GameData):
     """game.GameData for the sequel: its item names from its own list (NAMES_START), and only the mod's
     rule changes ported to it (ravager.RULES_PORTED: the spell slots, for one, are the game's own)."""
@@ -749,6 +792,197 @@ class RavGameData(game.GameData):
                      if struct.unpack_from("<H", rec, RAV_ITEM_TYPE)[0] == robe and rec[RAV_ITEM_SLOT] == robes.CHEST_SLOT),
                     0)
         return robes.slots(plus, bit, spell_level, total)
+
+    def spell_record(self, spell: int) -> bytes:
+        """SL's, for all of the sequel's spells (SPELL_COUNT: its psionic powers and monsters' powers go past
+        255, Psionic Blast 266)."""
+        if not 0 <= spell < SPELL_COUNT:
+            return b""
+        return self.guest.read((self.load_seg + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE,
+                               game.SPELL_SIZE)
+
+    def spell_rules(self, spell: int) -> Optional[game.SpellRules]:
+        """SL's (the save modifier in the record's +1Fh bits 1-4: the saving throw's 66E99h), for all the
+        sequel's spells."""
+        rec = self.spell_record(spell)
+        if len(rec) < game.SPELL_SIZE:
+            return None
+        nibble = (rec[0x1F] >> 1) & 0x0F
+        return game.SpellRules(nibble - 16 if nibble & 8 else nibble)
+
+    def _effect_ids(self, combatant: Optional[int]) -> set:
+        """The effects COMBATANT has (608h:25h's bit set: none for a combatant past 2Fh)."""
+        if combatant is None or not 0 <= combatant < 0x30:
+            return set()
+        return {x.id for x in self.effects() if x.owner == combatant}
+
+    def _first_effect(self, combatant: int, eid: int) -> Optional[bytes]:
+        """COMBATANT's first EID effect's 10-byte record (D8h:A8h), else None."""
+        count = self._word(game.EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return None
+        data = self.guest.read((self.load_seg + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF, count * 10)
+        for i in range(count):
+            rec = data[i * 10:i * 10 + 10]
+            if struct.unpack_from("<h", rec, 0)[0] == combatant and rec[6] == eid:
+                return rec
+        return None
+
+    def _side(self, combatant: Optional[int]) -> Optional[int]:
+        creature = self.combatant_creature(combatant) if combatant is not None else None
+        rec = self.creature(creature) if creature is not None else b""
+        return rec[game.CREATURE_SIDE] if len(rec) > game.CREATURE_SIDE else None
+
+    def _ability(self, creature: int, n: int) -> int:
+        rec = self.creature(creature)
+        return rec[game.CREATURE_ABILITIES + n] if len(rec) > game.CREATURE_ABILITIES + n else 9
+
+    def spell_range(self, spell: int, level: int = 1) -> int:
+        """A spell's range at LEVEL (680h:20h, 92115h): 8 for the close target kinds (the record's +0Ch),
+        else its +9 word + its +0Bh x LEVEL, doubled for an area (+17h) of the kind 1 (the areas' +5 bits
+        2-3); 0 made 1."""
+        rec = self.spell_record(spell)
+        if len(rec) < 0x18:
+            return 0
+        if rec[0x0C] in CLOSE_TARGETS:
+            return UNSEEN_RANGE
+        reach = struct.unpack_from("<H", rec, 9)[0] + rec[0x0B] * level
+        if rec[0x17] != 0xFF:
+            kind = self.guest.read((self.load_seg + AREAS_SEG) * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
+            if kind and (kind[0] >> 2) & 3 == 1:
+                reach *= 2
+        return reach or 1
+
+    def save_protection(self, creature: int, spell: int) -> List[Tuple[int, str]]:
+        """What DSCLOG2's PROT_SAVE (site 44, first in the save modifiers) adds: the better ring of
+        protection's plus, a cloak of protection's without magical or metal armour or a shield in a hand,
+        the Veiled Robe +1, the Ashen Robe +1 against a wizard's or priest's spell (PROT_SCAN's reading)."""
+        from . import restrict
+        rings, cloak, robe, blocked = [0], 0, 0, False
+        for _, item, typ in self._worn(creature):
+            kind, slot = struct.unpack_from("<H", item, game.ITEM_TYPE)[0], item[game.ITEM_SLOT]
+            plus = struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0]
+            if kind == PROT_RING:
+                if slot in RING_SLOTS and plus > 0:
+                    rings.append(plus)
+            elif kind == PROT_CLOAK:
+                if slot == CLOAK_SLOT:
+                    cloak = plus
+            elif kind == PROT_ROBE:
+                if slot == CHEST_SLOT:
+                    robe = plus & 0xFF
+            elif len(typ) == game.ITEM_TYPE_SIZE:
+                if typ[0] & 4:
+                    blocked |= slot in HAND_SLOTS
+                elif slot in ARMOUR_SLOTS and restrict.is_armour(typ):
+                    blocked |= plus > 0 or typ[8] & 0x4F == METAL
+        out = [(max(rings), "Ring of Protection")]
+        if cloak > 0 and not blocked:
+            out.append((cloak, "Cloak of Protection"))
+        if robe >= 2 or robe == 1 and spell <= RAV_SPELL_LAST:
+            out.append((1, "Veiled Robe" if robe >= 2 else "Ashen Robe"))
+        return out
+
+    def save_modifiers(self, target: int, caster: int, spell: int, save: int) -> List[Tuple[int, str]]:
+        """What the sequel adds to a saving throw's d20 (its routine 628h:A7h, 83606h, with DSCLOG2's sites
+        in it: PROT_SAVE and the kits', Blur's and Fire Shield's as the manual has them, CON as in AD&D),
+        as [(amount, why), ...], in the routine's order. Its -100 and +100 (Chaos, Cloudkill, Scare, Color
+        Spray) and Dismissal's levels are left to the save line ("cannot save", "saves automatically",
+        "levels")."""
+        ti, ci = self.combatant_creature(target), self.combatant_creature(caster)
+        if ti is None:
+            return []
+        rec, sheet = self.spell_record(spell), self.sheet(ti)
+        if len(rec) < 0x20 or len(sheet) < game.SHEET_SIZE or len(self.creature(ti)) < game.CREATURE_SIZE:
+            return []
+        category, kinds = struct.unpack_from("<H", rec, 0x11)[0], struct.unpack_from("<H", rec, 0x1A)[0]
+        mine, theirs = self._effect_ids(target), self._effect_ids(caster)
+        caster_sheet = self.sheet(ci) if ci is not None else b""
+        out = self.save_protection(ti, spell)  # (DSCLOG2's PROT_SAVE, then its KIT_SAVE)
+        from . import kits
+        for kid in self.kit_ids(ti):
+            if kits.save(kid, spell, kinds):
+                out.append((kits.save(kid, spell, kinds), kits.name(kid)))
+        drained = self._first_effect(target, LIFE_DRAINED)
+        if drained is not None and drained[8]:
+            out.append((-2 * drained[8], f"Life Drained ({drained[8]})"))
+        if spell in WEATHER_SPELLS:
+            if WEATHER_GUARD in mine:
+                out.append((6, "Protected vs Weather"))
+            if WEATHER_BANE in mine:
+                out.append((-20, "Vulnerable to Weather"))
+        if ENTRANCED in mine and spell in ENTRANCED_SPELLS:
+            out.append((-3, "Entranced"))
+        if spell == THORNS_SPELL and THORNS in mine:
+            out.append((-4, "Bound By Thorns"))
+        out += [(amount, why) for eid, amount, why in SAVE_EFFECTS if eid in mine]
+        if SPIRIT_ARMOR in mine and save != game.PPD_SAVE:
+            out.append((3, "Spirit Armored"))
+        if BARKSKIN in mine:
+            out.append((1, "Barkskin"))
+        manual = self.spells_manual()
+        if manual and BLURRY in mine:  # (DSCLOG2's BLUR_SAVE)
+            out.append((1, "Blurry"))
+        if BLESSED in mine:
+            out.append((1, "Blessed"))
+        if PROT_EVIL in mine and len(caster_sheet) > 0x14 and caster_sheet[0x14] in game.EVIL_ALIGNMENTS:
+            out.append((2, "Protected vs Evil, an evil caster"))
+        for bit, eid, amount, why in PROT_KINDS:
+            if kinds & bit and eid in mine:
+                out.append((amount, why))
+            if bit == 0x04 and manual and kinds & 0x06 and FIRE_SHIELD in mine:  # (DSCLOG2's FSHIELD_SAVE)
+                out.append((2, "Fire Shielded"))
+        if PRAYER in mine:
+            prayer = self._first_effect(target, PRAYER)
+            same = prayer is not None and self._side(struct.unpack_from("<h", prayer, 2)[0]) == self._side(target)
+            out.append((1 if same else -1, "Prayer, " + ("its caster's side" if same else "the other side's")))
+        if caster is not None and 0 <= caster < 0x30 and self.spell_range(spell) <= UNSEEN_RANGE:
+            undead = len(caster_sheet) > 0x12 and caster_sheet[0x12] == UNDEAD_RACE
+            if BLIND in theirs:
+                out.append((4, "the caster is Blind"))
+            elif DETECT_INVISIBLE not in theirs and (INVISIBLE in mine or undead and INVISIBLE_UNDEAD in mine):
+                out.append((4, "Invisible to the caster"))
+        if category & game.FEAR_CATEGORY and BRAVE in mine:
+            out.append((4, "Cloak of Bravery"))
+        if kinds & 0x82 and any(self.class_level(ti, c) for c in DRUIDS):
+            out.append((2, "druid against fire and electricity"))
+        if category & 0x06 and self.dual_level(ti, PSIONICIST_CLASS):
+            out.append((2, "psionicist against the mind"))
+        if category & game.CATEGORY_DODGE:
+            dex = self._ability(ti, 1)
+            adjust = -struct.unpack("b", self.guest.read(self.ds * 16 + game.DEX_AC + dex, 1))[0] if dex < 26 else 0
+            if adjust:
+                out.append((adjust, f"DEX {dex} dodging"))
+        if category & game.SAVE_WIS_CATEGORY:
+            wis = self._ability(ti, 4)
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + game.SAVE_WIS + wis, 1))[0] if wis < 26 else 0
+            if adjust:
+                out.append((adjust, f"WIS {wis}"))
+        if save == game.PPD_SAVE:
+            con, race = self._ability(ti, 2), sheet[game.SHEET_RACE]
+            small = race in (DWARF_RACE, HALFLING_RACE)
+            if small:
+                out.append((con * 2 // 7, f"{'dwarf' if race == DWARF_RACE else 'halfling'} CON {con}"))
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + game.SAVE_CON + con, 1))[0] if con < 26 else 0
+            if small and self.rules & game.RULE_CON:
+                adjust = 0  # (DSCLOG2's CON_SAVE)
+            if adjust:
+                out.append((adjust, f"CON {con}"))
+        return [(amount, why) for amount, why in out if amount]
+
+    def dual_level(self, creature: int, cls: int) -> int:
+        """The level in CLS that counts (98h:C1h, 1D111h): a human's class past the first only while its
+        level is below the first's (the game's test, as it is)."""
+        sheet = self.sheet(creature)
+        if len(sheet) < game.SHEET_SIZE:
+            return 0
+        for n in range(3):
+            if sheet[game.SHEET_CLASSES + n] == cls:
+                level = sheet[game.SHEET_LEVELS + n]
+                if level and n and sheet[game.SHEET_RACE] == 1 and sheet[game.SHEET_LEVELS] <= level:
+                    return 0
+                return level
+        return 0
 
     _names: Optional[List[str]] = None
     _names_at: Optional[int] = None
@@ -1291,6 +1525,59 @@ class RavDiceLog(dicelog.DiceLog):
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
             super()._write_slots()
+
+    def _hit_effects(self, attacker: int, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                     item_type: Optional[int], e) -> List[Tuple[str, int]]:
+        """The sequel's to-hit routine (628h:66h, 8599Eh; SL's 5B8h:EDh), besides STR or DEX: the target's
+        Life Drained, the attacker's effects (HIT_EFFECTS_RAV; Berserk by its preserver level), a Soothe's
+        Extra Hit Points in melee, the target's Blurry, Prayer, a halfling's +1 with a sling or a thrown
+        weapon (a range past HALFLING_RANGE); the girdle of Urnst (DSCLOG2's ITEM_REAR)."""
+        g = self.game
+        mine, theirs = g._effect_ids(attacker_combatant), g._effect_ids(target_combatant)
+        parts: List[Tuple[str, int]] = []
+        drained = g._first_effect(target_combatant, LIFE_DRAINED)
+        if drained is not None and drained[8]:
+            parts.append((f"target's Life Drained ({drained[8]})", -2 * drained[8]))
+        parts += [(name, value) for eid, value, name in HIT_EFFECTS_RAV if eid in mine]
+        if BERSERK in mine:
+            level = g.dual_level(attacker, BERSERK_CLASS) - 1
+            parts.append(("Berserk", level - int(level / 3)))
+        if EXTRA_HP in mine and mode is not None and mode <= 1:
+            extra = g._first_effect(attacker_combatant, EXTRA_HP)
+            if extra is not None and struct.unpack_from("<H", extra, 4)[0] == SOOTHE:
+                parts.append(("Soothe", -2))
+        if BLURRY in theirs:
+            parts.append(("target's Blurry", -2))
+        if PRAYER in mine:
+            prayer = g._first_effect(attacker_combatant, PRAYER)
+            same = prayer is not None and g._side(struct.unpack_from("<h", prayer, 2)[0]) == g._side(attacker_combatant)
+            parts.append(("Prayer", 1 if same else -1))
+        sheet = g.sheet(attacker)
+        if len(sheet) > game.SHEET_RACE and sheet[game.SHEET_RACE] == HALFLING_RACE and mode is not None \
+                and mode > HALFLING_RANGE and item_type is not None and 0 <= item_type < 0x400:
+            flags = g.guest.read(game.far_pointer(g.guest, g.ds, game.ITEM_TYPES_PTR)
+                                 + item_type * game.ITEM_TYPE_SIZE, 1)
+            if flags and (flags[0] & 0x10 or flags[0] & 2 and not flags[0] & 8):
+                parts.append(("halfling", 1))
+        on = lambda combatant, eid: eid in g._effect_ids(combatant)
+        return parts + self._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
+
+    def _mod_hit_effects(self, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                         item_type: Optional[int], on) -> List[Tuple[str, int]]:
+        """SL's, the girdle of Urnst alone (DSCLOG2's ITEM_REAR): the sequel has no Fogbolt, and a stinkpot's
+        Nauseated is taken off after the set-up (_after_setup)."""
+        return [part for part in super()._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
+                if part[0] == "target's Girdle of Urnst"]
+
+    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
+        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up)."""
+        if attacker_combatant is not None and ravager.NAUSEATED in self.game._effect_ids(attacker_combatant):
+            return [("Nauseated", -STINK_TO_HIT)]
+        return []
+
+    def _plus_counts(self, target_combatant: int, on) -> bool:
+        """The weapon's plus counts unless the target has an Anti Magic Shell (the set-up's 608h:20h, 5C745h)."""
+        return not on(target_combatant, ANTI_MAGIC)
 
     def _is_save_roll(self, e) -> bool:
         """SL's, with the sequel's saving throw's frame (66D26h): the target's creature record's far

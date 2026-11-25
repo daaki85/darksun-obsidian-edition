@@ -670,6 +670,12 @@ AC_ARMOUR_LOCAL = -6
 # the attack's (5883Ah) count of the attacker's attacks already made this round, a local (its [BP-14h]: a
 # backstab only on the first, RULE_BACKSTAB; the dice log's damage line)
 ATTACKS_MADE_LOCAL = -0x14
+# the attack set-up's (58019h) locals the dice log's THAC0 line reads: the THAC0 after the situational
+# adjustments (from behind, backstab, STR or DEX and effects), the weapon's bonus taken off it (plus, material,
+# two weapons, the difficulty), the from-behind and backstab flags (words here, bytes in Wake of the Ravager's
+# set-up: SETUP_FLAG_MASK), the set of natural attacks it is on and the weapons ready
+SETUP_THAC0_LOCAL, SETUP_BONUS_LOCAL, SETUP_REAR_LOCAL, SETUP_BACKSTAB_LOCAL = -0x20, -8, -0x1A, -0x24
+SETUP_NATURAL_LOCAL, SETUP_READY_LOCAL, SETUP_FLAG_MASK = -0x22, -0x16, 0xFFFF
 SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
 SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter

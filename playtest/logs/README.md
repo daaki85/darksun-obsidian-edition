@@ -187,6 +187,7 @@ schedules and diffs a log made or used.
 | [2026-11-24](2026-11-24-darkfix-beta-qa.md) | OpenDS darkfix beta.4 in the stock game: the sewer grate |
 | [2026-11-25](2026-11-25-sequel-weapon-icons.md) | Wake of the Ravager's own icons for its weapons and the great axes, recoloured: each in the backpack and every tall one's item box (the small copy in the frame); the Great Axe +3 its own picture, Soulcrusher keeping the game's |
 | [2026-11-25](2026-11-25-memory-pass-7.md) | Memory pass 7 (the item types and names in the Loader's copy of GPLDATA): the tables in game memory after two loads, the Loader's items named and their weapons' dice in the ambush |
+| [2026-11-25](2026-11-25-ravager-save-mods.md) | The sequel's dice log with its saving throw modifiers and THAC0 line named (its save routine 628h:A7h, to-hit routine 628h:66h, the attack set-up's locals): 247 of 250 attack lines broken down against none (the old log on the same game), Lex's save "+1 Ring of Protection -1 WIS 6 +1 CON 19", the cahulaks' "-2 main head" and "-4 off head" (test edits); spells past 255 read; DSCLOG2's cahulaks now asking the kits (a Battle Dancer in light armour no head penalty: -1 against the old build's -3); DSCLOG2 45184 bytes, 110944 upper memory free |
 
 ## files/
 
