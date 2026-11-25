@@ -1066,7 +1066,7 @@ first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot
 Wake of the Ravager's saves get the same: its ten manual slots are copied into **Named saves (Wake
 of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the Ravager's** button opens that folder,
 and a sequel's save put back into a slot is made the Loader's (the bigger character sheets) as it
-goes in.
+goes in (a game already running lists it from its next start).
 
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older
 saves](README.md#compatibility-with-older-saves). How it works:
