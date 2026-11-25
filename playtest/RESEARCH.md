@@ -1225,6 +1225,19 @@ bytes in the patched program: a probe `1E 31C0 8ED8 8926F204 8C16F404 892EF604 C
 (SS:SP and BP to 0:4F2h, a flag to 0:4F0h, then a hang) at the fatal routine (file 3EFEFh), the
 illegal-op routine (2660Ch) or `exit` (55DFh), and `/tmp`'s hangwatch (a guest dump when the flag
 comes) gave the call chain by BP. The overlaid code is only in the dump, not at its file offsets.
+Two cautions (2026-11-25, logs/2026-11-25-ravager-illegal-op.md): a probe must not cover a relocated
+word (the 26 bytes at 2660Ch covered a far call's segment at +18h, which the load relocated: DOSBox's
+"Illegal GRP4"; use the 24 bytes `5031C08EC0268926F20426892EF60426C706F004EFBEEBFE`), and the fatal
+routine is no place for one: it returns at once for trap 6Ah (only 69h stops the game), and the sound
+loader reports error 0Bh, trap 6Ah, for every sound over its 25000-byte buffer (4013:B63h, 61A8h set at
+62042h; BVOC 132, 138, 147, the last two among the female hurt and death sounds, DS:2909h, one of 8 at
+random), so a probe there turned harmless warnings into "hangs". `RAV_SOUND=1` keeps DOSBox's sound on
+(SDL's dummy device). **A patch's site can be a jump's target:** "Illegal Op (gpl=49)" in the Tyr
+ambush was the spell immunity routine's "immune" exit (7F362h in the image) jumping to the `pop di` that
+`spell_hit` (84AAFh) had made its site number; the fault's CS:IP was SI:DI (0083:0001, SI the spell).
+`tests/test_ravager.py`'s `JumpIntoSiteTests` scans for such jumps; a byte scan's calls and short
+jumps were all data or mid-instruction (check against a disassembly). SL's `window` patch (2BBA9h)
+has one (from 264FCh in SL's image), not yet mended.
 
 **The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
 `python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`
