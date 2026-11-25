@@ -196,6 +196,22 @@ SHEET_STRIDES = tuple(sorted(SHEET_STRIDES_AX + SHEET_STRIDES_DX))
 GAME_SHEET_SIZE = 0x42
 
 
+# The program's constant-offset uses of a sheet (sheet 4's fields, the summoned ally's: PATCHES' sheet4_*):
+# (file offset, the ES-prefixed opcode, the field, an immediate's bytes) for "opcode es:[bx+4 x 42h + field]".
+SUMMON_SHEET = 4
+SHEET4_FIELDS = (
+    (0x866CF, 0x89, 0x0A, b""), (0x866D4, 0x89, 0x08, b""),  # (mov es:[bx+112h],ax; [bx+110h])
+    (0x866FD, 0x88, 0x1E, b""),                               # (mov es:[bx+126h],al)
+    (0x868E5, 0xC6, 0x36, b"\x04"), (0x868EB, 0xC6, 0x12, b"\x0e"),  # (mov byte es:[bx+13Eh],4; [bx+11Ah],0Eh)
+)
+
+
+def _sheet4(at: int, opcode: int, field: int, imm: bytes) -> Patch:
+    def code(size: int) -> bytes:
+        return bytes((0x26, opcode, 0x87)) + struct.pack("<H", SUMMON_SHEET * size + field) + imm
+    return Patch("sheet4_%x" % at, at, code(GAME_SHEET_SIZE), code(0x48))
+
+
 def _stride(at: int) -> Patch:
     modrm = 0xC0 if at in SHEET_STRIDES_AX else 0xD2
     return Patch("sheet_stride_%x" % at, at, bytes((0x6B, modrm, GAME_SHEET_SIZE)), bytes((0x6B, modrm, 0x48)))
@@ -619,6 +635,14 @@ PATCHES: Tuple[Patch, ...] = (
     # 69560h, whose last six bytes would be the slot's last owner's: DSCLOG2's NEW_SHEET clears them at
     # the "add sp,0Ah" after that memcpy (6957Dh in the image).
     Patch("sheet_new_tail", 0x6E77D, bytes.fromhex("83c40a"), _site(50, 3)),
+    # ... and sheet 4 by a constant offset (no stride: "les bx,[19C5h]" then es:[bx+4 x 42h + field]), the
+    # summoned ally's (creature and sheet 4, the slot after the party's four): the summoning spells'
+    # routine (81515h in the image: Conjure Elemental, Monster Summoning, Dustdevil...) gives it race 0Eh
+    # (+12h) and 4 at +36h, Mordenkainen's Sword (58h, 814A1h) its level (+1Eh), Bigby's Clenched Fist (5Ch)
+    # the caster's +08h in its +08h and +0Ah. Left 42h-based they went to sheet 3's +38h, +3Ah and +42h and
+    # sheet 4's +06h and +1Eh, and the summoned creature's turn quit the game ("Illegal Op (gpl=49)", the
+    # druid's Dustdevil in Tyr's ambush: playtest/logs/2026-11-25-ravager-summon-quit.md). Each 4 x 48h + field:
+    *(_sheet4(at, opcode, field, imm) for at, opcode, field, imm in SHEET4_FIELDS),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

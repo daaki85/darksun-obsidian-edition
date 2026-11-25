@@ -144,6 +144,21 @@ class SheetPatchShapeTests(unittest.TestCase):
         self.assertEqual(struct.unpack("<I", p.original)[0], 17 * ravager.GAME_SHEET_SIZE)
         self.assertEqual(struct.unpack("<I", p.replacement)[0], ravager.SHEETS_COUNT * ravager.SHEET_SIZE)
 
+    def test_summoned_sheet(self):
+        """Sheet 4's fields by a constant offset (the summoned ally's): each write lands on sheet 4's
+        field in the 48h table, none on the 42h table's place of it (sheet 3's or another of 4's)."""
+        self.assertEqual(len(ravager.SHEET4_FIELDS), 5)
+        for at, opcode, field, imm in ravager.SHEET4_FIELDS:
+            p = PATCHES["sheet4_%x" % at]
+            mu = run_code(p.replacement, ebx=0x40, eax=0xB1A7)
+            table = mu.mem_read(SHEET * 16 + 0x40, 17 * ravager.SHEET_SIZE)
+            want = {0x88: b"\xa7", 0x89: b"\xa7\xb1"}.get(opcode, imm)
+            at48 = ravager.SUMMON_SHEET * ravager.SHEET_SIZE + field
+            self.assertEqual(bytes(table[at48:at48 + len(want)]), want, p.name)
+            self.assertEqual(bytes(table[:at48]) + bytes(table[at48 + len(want):]), bytes(len(table) - len(want)),
+                             p.name)
+            self.assertLess(field, ravager.GAME_SHEET_SIZE)
+
     def test_same_lengths(self):
         for p in ravager.PATCHES:
             if p.name.startswith("sheet_"):
@@ -176,6 +191,31 @@ class StrideScanTests(unittest.TestCase):
         # (nor any imul of 42h at all, register or memory, byte or word immediate)
         self.assertEqual(len(re.findall(rb"\x6b[\x00-\xff]\x42", self.patched[0x5200:])) -
                          len(re.findall(rb"\x6b[\x00-\xff]\x42", self.exe[0x5200:])), -386)
+
+    @staticmethod
+    def constant_offsets(data: bytes):
+        """Every "les bx,[19C5h]" followed by ES:[BX+disp16] uses with no index added (the sheet a
+        constant): (the use's file offset, disp16)."""
+        imms = {0x88: 0, 0x89: 0, 0x8A: 0, 0x8B: 0, 0x38: 0, 0x39: 0, 0x3A: 0, 0x3B: 0, 0xFE: 0, 0xFF: 0,
+                0xC6: 1, 0xC7: 2, 0x80: 1, 0x83: 1, 0x81: 2}
+        found = []
+        for m in re.finditer(rb"\xc4\x1e\xc5\x19", data):
+            at = m.end()
+            while data[at] == 0x26 and data[at + 1] in imms and data[at + 2] & 0xC7 == 0x87:
+                found.append((at, struct.unpack_from("<H", data, at + 3)[0]))
+                at += 5 + imms[data[at + 1]]
+        return found
+
+    def test_no_constant_sheet_left(self):
+        """The program's sheet uses by a constant offset are sheet 4's five (SHEET4_FIELDS), each made
+        4 x 48h + its field; every other use after a load of the pointer is a field of sheet 0."""
+        old = [(at, d) for at, d in self.constant_offsets(self.exe) if d >= ravager.GAME_SHEET_SIZE]
+        fields = [(at, ravager.SUMMON_SHEET * ravager.GAME_SHEET_SIZE + field)
+                  for at, _, field, _ in ravager.SHEET4_FIELDS]
+        self.assertEqual(old, fields)
+        new = [(at, d) for at, d in self.constant_offsets(self.patched) if d >= ravager.GAME_SHEET_SIZE]
+        self.assertEqual(new, [(at, ravager.SUMMON_SHEET * ravager.SHEET_SIZE + field)
+                               for at, _, field, _ in ravager.SHEET4_FIELDS])
 
     def test_sizes_left(self):
         """push 42h for a memcpy: the template's three alone (69C67h's sheet a far argument); the
