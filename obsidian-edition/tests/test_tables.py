@@ -128,23 +128,31 @@ class TablesTests(unittest.TestCase):
         self.assertEqual(tables.rav_slots(14, 20, 4), 0)
 
     def test_ravager_saves(self):
-        """The Player's Handbook's Table 60 by group; DSCLOG2's SAVE_TABLE the same, a row a level 1-21."""
+        """The Player's Handbook's Table 60 by group, the psionicists' Dark Sun's Table 8; save_bands.inc
+        (DSCLOG's and DSCLOG2's SAVE_BANDS) the same bands, the psionicists' fifth."""
         self.assertEqual(tables.rav_saves(1, 9), (8, 10, 9, 9, 11))
         self.assertEqual(tables.rav_saves(1, 20), (3, 5, 4, 4, 6))
         self.assertEqual(tables.rav_saves(0, 19), (2, 6, 5, 8, 7))
         self.assertEqual(tables.rav_saves(2, 21), (8, 3, 5, 7, 4))
         self.assertEqual(tables.rav_saves(3, 13), (10, 8, 9, 13, 9))
-        for group in range(4):
+        self.assertEqual(tables.rav_saves(3, 1, psionicist=True), (13, 15, 10, 16, 15))
+        self.assertEqual(tables.rav_saves(3, 12, psionicist=True), (11, 11, 8, 13, 12))
+        self.assertEqual(tables.rav_saves(3, 30, psionicist=True), (8, 5, 5, 9, 7))
+        for group, psi in ((0, False), (1, False), (2, False), (3, False), (3, True)):
             for level in range(2, 30):
-                self.assertTrue(all(a <= b for a, b in zip(tables.rav_saves(group, level),
-                                                          tables.rav_saves(group, level - 1))))
-        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
-                                "dsclog2.asm")).read()
-        body = asm[asm.index("\nsave_table:"):]
-        rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
-                for line in body.splitlines()[2:2 + 4 * tables.RAV_SAVE_LEVELS]]
-        self.assertEqual(rows, [tables.rav_saves(g, level) for g in range(4)
-                                for level in range(1, tables.RAV_SAVE_LEVELS + 1)])
+                self.assertTrue(all(a <= b for a, b in zip(tables.rav_saves(group, level, psi),
+                                                          tables.rav_saves(group, level - 1, psi))))
+        # a character's: the best of each class's (a psionicist/thief its thief's and its psionicist's)
+        self.assertEqual(tables.class_saves([(12, 9), (17, 13)]), (10, 8, 8, 13, 9))
+        self.assertEqual(tables.class_saves([(12, 9)]), (11, 11, 8, 13, 12))
+        self.assertEqual(tables.class_saves([(9, 10), (11, 6)]), (8, 9, 9, 9, 10))
+        inc = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "save_bands.inc")).read()
+        body = inc[inc.index("\nsave_bands:"):inc.index("\nsave_bands_end:")]
+        numbers = [int(n) for line in body.splitlines()[2:]
+                   for n in line.split(";")[0].replace("db", "").split(",") if n.strip()]
+        self.assertEqual(numbers, [n for bands in tables.RAV_SAVE_BANDS for first, saves in bands
+                                   for n in (first, *saves)])
 
     def test_ravager_thief_table(self):
         """DSCLOG2's THIEF_TABLE: game.AD_D_THIEF, 17 levels (the owner's table, SL's to 13th)."""

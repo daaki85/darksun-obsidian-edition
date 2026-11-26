@@ -347,7 +347,8 @@ How each is done:
   `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh). And the Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
   the party is New or Okay, `PATH_UP`, and the Wayfinder's own 2 more, `WAYFINDER_INIT`,
   `kits.WAYFINDER_INITIATIVE`). Where: `PROBE_INIT`; `GameData.path_finder`.
-- **To hit with a missile.** Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit).
+- **To hit with a missile.** Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit: `kind_of_type`
+  14 to 16, not the javelin's or the darts' past them, which once had it too, 2026-11-26).
   Where: `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`).
 - **A hit's poison.** Poisoner (each hand's melee weapon's first hit in a fight: `POISON_USED`, the
   header's +1860, bit N party member N's main hand, N + 4 its off hand, cleared by the Loader as a

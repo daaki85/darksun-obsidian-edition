@@ -263,7 +263,7 @@ bugs](GAME-BUGS.md) that the mod mends. All are always on now, with no switch.
 | Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](#dual-classing-as-the-manual-has-it) |
 | Class restrictions | The game's item lists, one class allowing an item enough | Those lists as they are, and AD&D's limits for every class, the strictest winning | [Class restrictions](#class-restrictions) |
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
-| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
+| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level, saves that stop improving | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
 | Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand | [Two weapons](#two-weapons) |
 | Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](#weapon-specialization) |
@@ -327,11 +327,16 @@ scores](PLAYER-GUIDE.md#ability-scores). How it works:
 AD&D's tables hold where the game's differ: the XP for each level (a gladiator, ranger and thief
 need a little more for 2nd), priests' THAC0 (20, 20, 20, 18..., where the game improves a level
 early) and clerics', druids' and preservers' spell slots (3 3 1 and 4 2 1 at 5th, where the game
-gives 3 2 1). The rest were AD&D's already; kits still change these tables.
+gives 3 2 1), and the saving throws, the Player's Handbook's by class group and level and a
+psionicist's Dark Sun's own: the game took AD&D's best save as the most a save could improve by, so it
+held a warrior at 11/11/11/13/11 from 10th level and no save went below 8 (a 12th-level fighter saves at
+7/9/8/8/10, a 17th at 3/5/4/4/6), and gave a psionicist the thief's saves (a psionicist/thief has the
+better of its two classes' each). The
+rest were AD&D's already; kits still change these tables.
 
 **Always on** (no switch). Rules: [experience and
 levels](PLAYER-GUIDE.md#experience-and-levels), [THAC0 by level](PLAYER-GUIDE.md#thac0-by-level),
-[spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
+[saving throws](PLAYER-GUIDE.md#saving-throws), [spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#adds-class-tables).
 
 #### CON as in AD&D
@@ -1012,6 +1017,22 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
   round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
   Lands.
+- **[Picking pockets](#picking-pockets)** comes too: a thief's **Pick Pockets** button (the purse, where
+  a cleric's Turn Undead is on the USE screen), then a click on anyone in sight, not in a fight, with the
+  look pointer it gives: made, one small thing (a dagger, a sling, a ring; not a long sword nor anything
+  worn) goes into the thief's backpack, or coins when there is nothing else, the last try on them;
+  failed, a move silently roll to slip away, else caught, and that thief keeps from them until a thief
+  level is gained. A cleric/thief keeps Turn Undead alone (no purse beside it), a right click on the
+  purse shows no description, and there are no weapons worth XP to lift.
+- **Items weigh what they do in Shattered Lands.** SSI left most of the sequel's items weighing
+  nothing, though its program still reads weight as Shattered Lands' does. With the Loader a long sword,
+  a mace, a shield and armour weigh as they do there, so the sequel's own rules
+  ([weight and carrying](HOW-THE-GAME-WORKS.md#weight-and-carrying)) work again: two heavy weapons
+  (over 3 lb each: metal long swords, maces, axes) can't be held together, the item box says HEAVY,
+  a backstab needs a weapon of 4 lb or less (no great axe, polearm or two-handed sword), and picking
+  pockets goes by weight. The few weapons SSI made oddly light
+  weigh as Shattered Lands' copies of them do (the two-handed sword 15 lb, the lotulis 10). As in
+  Shattered Lands, no load is too heavy and nothing slows a loaded character.
 - **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
   character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
   past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
@@ -1026,8 +1047,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   a druid's stop growing at 15th, a ranger's
   priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
   **saving throws** are the Player's Handbook's by class group and level: the game held every save at
-  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8 (a bug
-  Shattered Lands has too, for later).
+  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8, and a
+  psionicist saved as a thief (Shattered Lands' bugs too, [fixed there](#adds-class-tables) the same way).
 - **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
@@ -1065,7 +1086,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   and Memory tools tabs read the sequel's spells and records.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
-  with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
+  with the kits). The [new wizard spells](#new-wizard-spells) come across too: a character who knows them
+  casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
+  or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
+  the sequel's wizards carry one ([the mod's gear](#magic-weapons-for-every-spec-and-the-mods-gear)). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
   skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
   specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
@@ -1074,20 +1098,30 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the psionicist
   kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die at a
   level up (and past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
-  Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
+  Dancer's dance and Wild Fighting as a fight starts, and the kits' gear: what a kit forbids is
+  refused when it is put on or in a hand (a Ravager's shield and bow, a Stalker's chain mail, a Battle
+  Mage's off-hand weapon), and what it allows can be held whatever its class (a Battle Mage's weapon of
+  its weapon spec and leather, a Battle Dancer's long sword and bow, an Elementalist's second sphere's
+  weapons). The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
   panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
-  game's menu right after DUAL. What else kits do to spells
-  and psionic powers and gear doesn't carry over yet (a Shinobi has its slots, but no spells to cast with
-  them), nor a new character's kit hit die or PSP on the creation screen. The creation screen has [STORE and
+  game's menu right after DUAL. A new character's starting gear is fitted to its kit from the
+  sequel's own items (a Shinobi's long sword +1 a short sword +1, an Arena Champion's second sword a
+  Shield +1, a Ravager's shield left behind and a second sword in its place). What else kits do to spells
+  and psionic powers doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them), nor a
+  new character's kit hit die or PSP on the creation screen ([which kits work
+  there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
-  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its
+  can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air
+  clerics' too, as the game's are in Shattered Lands), given before the character is first shown and written to the roster. Its
   weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
   druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
   weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
   shield in the left. A new
   fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
-  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The weapon specs work there:
+  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)), and its starting weapon becomes a +1
+  weapon of its first pick's kind (a two-handed one sends the shield to the backpack; a bow or sling goes to
+  the missile slot, a bow with +1 arrows, the missile weapon there before going to the backpack). The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
   Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
@@ -1114,6 +1148,18 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   gives the points back but not the walk, so a click goes nowhere. A member held where they stand
   (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
   and names it: things to take, doors, bodies to search, people to talk to.
+- **[Shadows](#shadows)** under the figures in the sequel too: every living creature on the map (the
+  party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
+  toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
+  its own).
+- **[Dust](#dust)** in the sequel too: whoever walks over dirt or sand raises little puffs behind them
+  (Tyr's squares and yards; its grey cobbles and the dark floors indoors take none).
+- **[Magic items' icons](#magic-items-icons)** shine in the sequel's shops too (they stood still on a
+  shop's screen), and twelve of its own magic items that never shone now do as the others: Dragonsbane,
+  the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun
+  Stone, the Necklace and the Rod.
+- **[See-through figures](#see-through-figures)** in the sequel too: a party member hidden in shadows in
+  a fight, and anyone invisible (unless the party detects invisibility), is drawn half see-through.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
@@ -1284,6 +1330,13 @@ buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep w
 Helm gives AC 1
 with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
 
+With the [new wizard spells](#new-wizard-spells) on, **Notaku** sells a spellbook of each of the six (Cat's
+Grace 6000, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends 3000 each: 3000 a level, the sequel's own
+price), on his list's second and third pages after the Short Sword +1; read from the inventory, a book teaches
+its spell (not in the shop's screen). Three of the sequel's wizards who carry a spellbook carry one more,
+Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
+Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
+
 ### Improved thieving
 
 Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
@@ -1333,7 +1386,8 @@ How it works:
 A thief's **Pick Pockets** button (a purse, where a priest's Turn Undead is on the USE screen), then
 a click on anyone in sight, not in a fight: made, one small thing goes into its backpack (or coins,
 the last try); failed, a move silently roll to slip away, else caught. The game has one pocket to
-pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift.
+pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift. In
+[Wake of the Ravager](#wake-of-the-ravager) too.
 
 **Always on** (no switch). Rules: [thieves' skills and picking
 pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
@@ -1359,6 +1413,14 @@ woman's, in a new game and in one already begun (from the next area or load).
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#elves-and-half-elves).
 
 ### What the party wears
+
+**Class outfits.** Each party member is dressed for their class before any gear goes on: humans in the
+outfit of their class (the mage in a plum mantle, the thief hooded, the psionicist in teal),
+dwarves, elves, half-elves, half-giants, halflings and the mul in an outfit for their whole class
+combination. Each half-elf has 48 outfits, including the Cleric/Preserver’s cream and plum robe.
+The thri-kreen and combinations outside the outfit roster, such as an elf with Druid among her
+classes, keep the game's own figure. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
+animated online](https://github.com/daaki85/darksun-obsidian-edition/blob/7a0b6200b0c218f7a27ccc4b0c3fece7cdf59fe4/obsidian-edition/docs/class-outfits/README.md).
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
 pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:

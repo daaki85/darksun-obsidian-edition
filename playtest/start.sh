@@ -12,8 +12,14 @@ from dsloader import launch
 s = launch.load_settings(); s['game_dir'] = '$GAME'; s['window_scale'] = 1; launch.save_settings(s)
 print('problem:', launch.prepare_patched_game('$GAME'))
 print(launch.write_conf('$GAME'))"
+# PT_AFTER_PREPARE: a command run in playtest/ once the Loader's copies are written and before
+# DOSBox opens them (outfitgame.py: test pictures put into the copy of SEGOBJEX.GFF)
+[ -n "$PT_AFTER_PREPARE" ] && (cd "$PT" && sh -c "$PT_AFTER_PREPARE")
 # PT_CYCLES: a test's own DOSBox speed (any number; the Options tab offers 20000 and 35000)
 [ -n "$PT_CYCLES" ] && sed -i "s/^cycles=fixed .*/cycles=fixed $PT_CYCLES/" "$REPO/obsidian-edition/dosbox_dicelog.conf" && grep -n "^cycles" "$REPO/obsidian-edition/dosbox_dicelog.conf"
 cd "$GAME/DOSBOX" && (SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE="${PT_AUDIO:-/dev/null}" setsid dosbox -conf ../__support/app/dosbox_darksun.conf -conf "$REPO/obsidian-edition/dosbox_dicelog.conf" >"$WORK/dosbox.log" 2>&1 < /dev/null &)
+# PT_NO_LOADER: the game without the Loader attached (no dice log, and nothing re-dressing the
+# party's figures: for pictures put into the copy by PT_AFTER_PREPARE)
+[ -n "$PT_NO_LOADER" ] && { echo "started (no Loader attached)"; exit 0; }
 sleep 4; cd "$REPO/obsidian-edition" && (setsid nohup python3 -u -m dsloader dicelog > "$WORK/dice.txt" 2>&1 < /dev/null &)
 echo started

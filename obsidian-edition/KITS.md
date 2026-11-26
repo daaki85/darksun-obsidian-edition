@@ -15,16 +15,17 @@ kit for the new class if it has none yet ([Changing class](#changing-class)).
 A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
 Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
-and Justifier's casting level, the Elementalist's second sphere's spells, and the kits' spell slots
+and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the psionicist kits' PSP
-costs (the Mind Bender's, Kineticist's, Titan Mind's and Wasteland Seer's, to use a power, keep it up or
-raise a defence) and the Mind Warrior's fifth fewer PSP at a level up, the Battle Mage's and Arcanist's
-hit die at a level up, and the Battle Mage's casting after being hit work there; what else they do to
-spells and powers and gear doesn't yet (a Shinobi has its slots there but can't cast yet), nor does a
-new character's kit hit die or PSP on the creation screen (the hit points and PSP aren't rolled again
-when the kit is chosen). How the kits go on past the levels Shattered Lands reaches is in [Past 13th
-level](#past-13th-level).
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the gear each kit
+forbids or allows, the psionicist kits' PSP costs (the Mind Bender's, Kineticist's, Titan Mind's and
+Wasteland Seer's, to use a power, keep it up or raise a defence) and the Mind Warrior's fifth fewer PSP
+at a level up, the Battle Mage's and Arcanist's hit die at a level up, and the Battle Mage's casting
+after being hit work there, and a new character takes a kit there as here; what else they do to spells
+and powers doesn't yet (a Shinobi has its slots there but can't cast yet), nor does a new character's
+kit hit die or PSP on the creation screen (the hit points and PSP aren't rolled again when the kit is
+chosen). Which kits work there, and which only in part: [In Wake of the Ravager](#in-wake-of-the-ravager).
+How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
@@ -52,6 +53,7 @@ work: [DEVELOPMENT-KITS.md](https://github.com/daaki85/darksun-obsidian-edition/
   - [Sphere weapon limits](#sphere-weapon-limits)
 - [Kits' spell slots](#kits-spell-slots)
 - [Past 13th level](#past-13th-level)
+- [In Wake of the Ravager](#in-wake-of-the-ravager)
 - [Changing class](#changing-class)
 - [Kits that rule out classes and each
   other](#kits-that-rule-out-classes-and-each-other)
@@ -615,7 +617,8 @@ its own gets a plain weapon of it ([Starting
 weapons](WEAPON-SPECS.md#starting-weapons)). The dice log says what it changed
 (`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in place
 of the Quarterstaff`). [Fuller starting gear](FEATURES.md#fuller-starting-gear)
-adds more on top.
+adds more on top. In Wake of the Ravager the same, from the sequel's items ([In Wake of the
+Ravager](#in-wake-of-the-ravager)).
 
 ## The kits in play
 
@@ -758,6 +761,67 @@ The kits go on there as AD&D 2e and the kits' own books go on (the owner's choic
 
 What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
 backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a Mind Warrior's PSP.
+
+## In Wake of the Ravager
+
+Not all of what the kits do has come to Wake of the Ravager yet. What works there now, kit by kit
+(a kit chosen there, or brought with [the party](FEATURES.md#taking-the-party-to-wake-of-the-ravager)):
+**whole** means as in Shattered Lands; **in part** names what is
+missing; **not yet** means the kit there is its class with a kit's name. Every kit's gear limits
+and gear allowed hold there (a Ravager can't take up a shield or a bow, a Battle Mage holds the
+weapon of its weapon spec and wears leather), and its AC, to hit, damage, weapon skills, saves,
+thief skills, movement and initiative.
+
+| Kit | In Wake of the Ravager |
+|---|---|
+| Myrmidon, Sentinel, Ravager | whole |
+| Arena Champion, Twin-blade, Brute | whole |
+| Stalker | whole |
+| Justifier | whole: its own slots and casting level |
+| Seeker | whole: its own slots, casting level and sphere's weapons |
+| Swashbuckler, Assassin | whole |
+| Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
+| Scholar | not yet (no extra spells learnt, no −1 to hit) |
+| Arcanist | in part: its d3 hit die at a level up (1 a level past 10th); no higher casting level |
+| Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at a level up (2 a level past 10th), casting after a hit |
+| Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
+| Healer | in part: water only, no weapon in the off hand; not its cosmos spells, stronger cures, no harming spells |
+| Crusader | in part: its THAC0, expertise and one slot fewer |
+| Grove Warden | whole |
+| Lifebinder | in part: blunt weapons only; not its stronger cures, no harming spells |
+| Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
+| Mind Bender, Kineticist, Titan Mind | whole: their PSP costs |
+| Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at a level up |
+| Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
+| Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
+| Rescuer | in part: movement, from behind, no shield; not its stronger cures |
+| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
+| Poisoner | in part: its weapon spec and gear limits; no poison |
+| Spirit Caller | not yet (no casting level by the sky) |
+| Wasteland Seer | in part: its PSP costs by the sky; no casting level by it |
+| Wild Fury | whole |
+
+**Starting gear.** A new character's gear is fitted to its kit there too, as each kit's **Starts with**
+says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' is plain):
+
+- a weapon made in place keeps its grade: a Shinobi's or Poisoner's or Ghetto Fighter's long sword +1
+  (the thief's) becomes a short sword +1 or a dagger +1, a Battle Mage's quarterstaff +1 a +1 of its
+  weapon spec; one made from a plain weapon, and one given anew (a Myrmidon's polearm), is plain;
+- an Arena Champion's second long sword +1 becomes a Shield +1; a Ravager's shield is left behind and it
+  has a second long sword +1 in the left hand, as a Battle Dancer has a second of its weapon;
+- armour a kit forbids becomes the sequel's leather (a Ravager's ring armour: a Shattered Lands fighter
+  starts in leather), or is left behind where it may wear none (a Spellarcher's);
+- a Brute's one-handed weapons are left behind (its weapon is the +1 two-handed one of its first weapon
+  spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
+
+A warrior's weapon is first made a +1 of its first weapon spec ([Starting
+weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
+the bow and arrows its class gives).
+
+The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel; a
+Spellarcher's arrows at +3 wait for its arrows there. A new character's kit hit die and PSP (a Battle
+Mage's, Arcanist's, Mind Warrior's) count from its first level up there: the creation screen doesn't roll
+them again when the kit is chosen yet.
 
 ## Changing class
 

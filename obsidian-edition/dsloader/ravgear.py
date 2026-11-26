@@ -23,16 +23,26 @@ SEGOBJEX.GFF; the magic ones a few pixels of the blade or head in the fire colou
 own), each colour the nearest of the sequel's stable ones (ravitems.picture): nothing from either game is
 in the repository. Each picture is an object of its own: the party transfer's number for the same
 Shattered Lands object (ravitems.own_object, so a transfer that brings one makes the same), or OWN_ICONS'
-for the magic ones drawn here. New games only: a saved game keeps the people and things it has made.
+for the magic ones drawn here. New games only: a saved game keeps the people and things it has made (shopstock.py tops up its sellers).
+
+BOOKS: spellbooks of the mod's six new wizard spells (ravspells, 320-325), with the new spells' switch. In
+Shattered Lands Kalzith sells Cat's Grace (kalzith.SCROLLS, 6000) and a defiler's body may hold a scroll of any
+of them (defilerscrolls, champions.SCROLL_SPELLS: Fogbolt, Spook, Reflected Image); the sequel's one seller of
+spellbooks is Notaku in Tyr (his own a 3rd-level book), so he sells all six, at the sequel's and Shattered Lands'
+price, 3000 a level, and three of the sequel's wizards who carry a spellbook carry one more (BOOK_WHERE). Each
+book is an object of its own (BOOK_OBJECT on, as a shop shows items of one object as one), a copy of the
+sequel's spellbook of its level (31002, 31010: the book's picture, BMP 1969, its OJFF's), in the numbers the
+game teaches from (31000-31199: a 313xx object is a one-use scroll, cast); its power, the spell + 1, is what it
+teaches (DSCLOG2's NS_SCROLL).
 """
 
 import struct
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import dataitems, game, gff, icons, ravitems
+from . import dataitems, game, gff, icons, ravitems, ravspells
 
 PACK, NEXT_FLAGS = 4, 2  # (the item lists' first record's header flags: the pack's; each next item's)
-ITEM_VALUE, ITEM_POWER, ITEM_PLUS = 0x06, 0x10, 0x16  # (the sequel's item record: a word, a word, a byte)
+ITEM_SPELL, ITEM_VALUE, ITEM_POWER, ITEM_PLUS = 0x02, 0x06, 0x10, 0x16  # (the sequel's item record: words, a byte)
 OWN_ICONS = 19900  # (the pictures drawn here: objects 19900 on, free: ravitems' OWN_HIGH range ends at 16003 for
 # Shattered Lands' highest, 32003; 13000 on drew another picture in the game, a grey ring)
 SHORT_SWORD_NAME = 0x144  # (the mod's "Short Sword", names.NAMES: ravager.mod_name)
@@ -186,13 +196,73 @@ WHERE: Dict[int, Tuple[str, ...]] = {
 }
 
 
+class Book(NamedTuple):
+    """A spellbook of SPELL (the sequel's number): its own OBJECT, a copy of the sequel's spellbook LIKE,
+    priced VALUE."""
+    spell: int
+    object: int
+    like: int
+    value: int
+
+
+BOOK_OBJECT = 31190  # (free in the sequel; in its taught numbers, 31000-31199: SPELLBOOKS)
+SPELLBOOKS = range(31000, 31200)
+BOOK_LIKE = {1: 31002, 2: 31010}  # (the sequel's spellbooks of 1st and 2nd level, 3000 and 6000)
+BOOK_PRICE = 3000  # (a level: the sequel's books and Shattered Lands' scrolls, kalzith.SCROLLS)
+BOOK_LEVELS = {ravspells.GRACE: 2}  # (the others 1st: DSCLOG2's NS_LEVEL)
+BOOKS: Dict[str, Book] = {
+    f"{name} book": Book(spell, BOOK_OBJECT + k, BOOK_LIKE[BOOK_LEVELS.get(spell, 1)],
+                         BOOK_PRICE * BOOK_LEVELS.get(spell, 1))
+    for k, (spell, name) in enumerate(ravspells.SPELLS.items())}
+# Notaku (Tyr's Shadow Square) sells them; three of the sequel's wizards who carry a spellbook carry one more,
+# as a defiler's body in Shattered Lands may (its arena champion's Fogbolt, Spook or Reflected Image)
+BOOK_WHERE: Dict[int, Tuple[str, ...]] = {
+    58: tuple(BOOKS),
+    160: ("Reflected Image book",),  # Fermin
+    290: ("Spook book",),            # Kalaobuta
+    496: ("Fogbolt book",),          # Raenika
+}
+
+
+def placed(books: bool = True) -> Dict[int, Tuple[str, ...]]:
+    """WHERE, with BOOK_WHERE's spellbooks after each object's gear if BOOKS."""
+    out = dict(WHERE)
+    if books:
+        for obj, keys in BOOK_WHERE.items():
+            out[obj] = out.get(obj, ()) + keys
+    return out
+
+
+def book_record(key: str, objects: gff.Chunks) -> bytes:
+    """Spellbook KEY's item record (23 bytes, in no list and no slot), made from its Book.like's."""
+    b = BOOKS[key]
+    recs, _ = dataitems.records(objects[("RDFF", b.like)])
+    item = bytearray(recs[0].data)
+    struct.pack_into("<h", item, 0, -b.object)
+    struct.pack_into("<H", item, ITEM_VALUE, b.value)
+    struct.pack_into("<H", item, ITEM_SPELL, b.spell + 1)
+    struct.pack_into("<H", item, ITEM_POWER, b.spell + 1)
+    return bytes(item)
+
+
+def book_chunks(key: str, objects: gff.Chunks) -> gff.Chunks:
+    """Spellbook KEY's object: its OJFF (its Book.like's: the same picture) and RDFF (the like's, its item
+    record book_record's)."""
+    b = BOOKS[key]
+    recs, end = dataitems.records(objects[("RDFF", b.like)])
+    recs = [r._replace(data=book_record(key, objects)) if i == 0 else r for i, r in enumerate(recs)]
+    return {("OJFF", b.object): objects[("OJFF", b.like)], ("RDFF", b.object): dataitems.chunk(recs, end)}
+
+
 def drawn() -> List[str]:
     """The keys of the items whose pictures are drawn here, in order (their objects OWN_ICONS on)."""
     return [k for k, g in GEAR.items() if g.picture.make is not None]
 
 
 def picture_object(key: str) -> int:
-    """The sequel object whose picture item KEY shows."""
+    """The sequel object whose picture item KEY shows (a spellbook's its own object)."""
+    if key in BOOKS:
+        return BOOKS[key].object
     pic = GEAR[key].picture
     if pic.make is not None:
         return OWN_ICONS + drawn().index(key)
@@ -214,7 +284,9 @@ def name_number(name, sequel_text: bytes) -> int:
 
 
 def item_record(key: str, objects: gff.Chunks, sequel_text: bytes) -> bytes:
-    """Item KEY's record (23 bytes, in no list and no slot), made from its Gear.like's."""
+    """Item KEY's record (23 bytes, in no list and no slot), made from its Gear.like's (a Book's: book_record)."""
+    if key in BOOKS:
+        return book_record(key, objects)
     g = GEAR[key]
     recs, _ = dataitems.records(objects[("RDFF", g.like)])
     item = bytearray(recs[0].data)
@@ -275,12 +347,12 @@ def picture_chunks(key: str, sl_objects: gff.Chunks, sl_palette, stable, item: b
 
 
 def chunks(objects: gff.Chunks, sl_objects: gff.Chunks, sl_palette, stable, sequel_text: bytes,
-           where: Optional[Dict[int, Tuple[str, ...]]] = None) -> gff.Chunks:
-    """OBJEX.GFF's chunks to add or replace: the items' pictures and the objects of WHERE (default WHERE)
-    with their new items. OBJECTS: the sequel's OBJEX.GFF; SL_OBJECTS: Shattered Lands' SEGOBJEX.GFF with
-    the Loader's own (icons.new_chunks); SEQUEL_TEXT: RESOURCE.GFF's TEXT 1000."""
+           where: Optional[Dict[int, Tuple[str, ...]]] = None, books: bool = True) -> gff.Chunks:
+    """OBJEX.GFF's chunks to add or replace: the items' pictures, the spellbooks' objects (with BOOKS) and the
+    objects of WHERE (default placed(BOOKS)) with their new items. OBJECTS: the sequel's OBJEX.GFF; SL_OBJECTS:
+    Shattered Lands' SEGOBJEX.GFF with the Loader's own (icons.new_chunks); SEQUEL_TEXT: RESOURCE.GFF's TEXT 1000."""
     from . import ravager
-    where = WHERE if where is None else where
+    where = placed(books) if where is None else where
     out: gff.Chunks = {}
     used = {k for keys in where.values() for k in keys}
     table = ravager.mod_types_table(objects[ravager.TYPES_CHUNK][:ravager.GAME_TYPES * ravager.TYPE_SIZE])
@@ -288,6 +360,9 @@ def chunks(objects: gff.Chunks, sl_objects: gff.Chunks, sl_palette, stable, sequ
         if key in used:
             out.update(picture_chunks(key, sl_objects, sl_palette, stable, item_record(key, objects, sequel_text),
                                       table))
+    for key in BOOKS:
+        if key in used:
+            out.update(book_chunks(key, objects))
     for obj, keys in sorted(where.items()):
         rdff = objects.get(("RDFF", obj))
         if rdff is None:
@@ -296,9 +371,9 @@ def chunks(objects: gff.Chunks, sl_objects: gff.Chunks, sl_palette, stable, sequ
     return out
 
 
-def from_files(objects: gff.Chunks, sl_dir: str, sequel_dir: str) -> gff.Chunks:
+def from_files(objects: gff.Chunks, sl_dir: str, sequel_dir: str, books: bool = True) -> gff.Chunks:
     """chunks() from the Shattered Lands in SL_DIR and the sequel in SEQUEL_DIR (its RESOURCE.GFF and region
-    palettes, for the pictures' colours and the names)."""
+    palettes, for the pictures' colours and the names), the spellbooks with BOOKS."""
     import glob
     import os
     from . import art, ravager
@@ -314,4 +389,4 @@ def from_files(objects: gff.Chunks, sl_dir: str, sequel_dir: str) -> gff.Chunks:
     regions = [v for f in sorted(glob.glob(os.path.join(sequel_dir, "RGN*.GFF")))
                for k, v in read(f).items() if k[0] == "PAL "]
     return chunks(objects, sl_objects, sl_palette, ravitems.stable_colours(resources, regions),
-                  resources[("TEXT", 1000)])
+                  resources[("TEXT", 1000)], books=books)

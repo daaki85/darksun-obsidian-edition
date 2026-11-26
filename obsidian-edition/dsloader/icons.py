@@ -1168,6 +1168,24 @@ def pick_icon(earth: Rows) -> Rows:
     return out
 
 
+# Wake of the Ravager's Pick Pockets button (DSCLOG2's PICK POCKETS: the same ICON 3048, in the Loader's
+# RESOURC2.GFF), from the sequel's own earth Turn Undead (its ICON 3045, PLNR, its palette): its glyph's
+# dark and light lines (223, 205) taken off for the tile's browns (198, 199), the purse drawn in them, the
+# coin in the sequel's golds (100 to 102: (255, 206, 0), (230, 161, 0), (206, 121, 0)).
+RAV_TURN_GLYPH, RAV_TURN_FILL, RAV_TURN_DARK, RAV_TURN_LIGHT = {223, 205}, (198, 199), 223, 205
+RAV_PURSE_COIN = {(7, 9): 100, (8, 9): 100, (7, 10): 101, (8, 10): 102, (6, 10): 102, (9, 10): 101,
+                  (7, 11): 102, (8, 11): 101}
+
+
+def rav_pick_icon(earth: Rows) -> Rows:
+    """The sequel's Pick Pockets button's icon from its earth Turn Undead's (wotrart.decode_plnr's rows)."""
+    out = glyph_icon(untiled(earth, RAV_TURN_GLYPH, RAV_TURN_FILL), set(), 0, PURSE_GLYPH, 2,
+                     RAV_TURN_DARK, RAV_TURN_LIGHT)
+    for (x, y), colour in RAV_PURSE_COIN.items():
+        out[y][x] = colour
+    return out
+
+
 def arrow_spell_icon(touch: Rows, dark: int, light: int, fills: Tuple[int, int]) -> Rows:
     """An arrows button's icon from its touch spell's: the hand (DARK, LIGHT) off, the arrow on."""
     return glyph_icon(untiled(touch, {dark, light}, fills), set(), 0, ARROW_GLYPH, 2, dark, light)

@@ -68,7 +68,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** New characters start with fuller gear: a weapon they can use, a sling, leather armour where allowed, and their kit's own weapons ([fuller starting gear](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#fuller-starting-gear)).
 - **[Fixed]** Multiclass characters gain hit points as in AD&D, CON's bonus on every hit die ([multiclass hit points](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#multiclass-hit-points)).
 - **[Changed]** Hit dice are rolled twice and the better kept, at creation and every level ([hit dice](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#hit-dice-the-better-of-two)).
-- **[Fixed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)* ([class tables](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#adds-class-tables)).
+- **[Fixed]** Experience, priests' THAC0, saving throws and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a 12th-level fighter saves at 7/9/8/8/10 *(was 11/11/11/13/11 from 10th level on)*, a psionicist by Dark Sun's own table *(was a thief's)* ([class tables](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#adds-class-tables)).
 - **[Fixed]** A ranger's spells last and hurt by its level minus 7 *(was its full level)* ([rangers' casting level](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#rangers-casting-level)).
 - **[New]** **Ages** from the Dark Sun rules' tables: age changes the scores, a character can die of old age, and magic (Haste) ages them ([ages](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#ages-and-magical-aging)).
 - **[Fixed]** CON 20 and up regenerates at AD&D's rate *(was every 5 minutes)*, and a dwarf's or halfling's poison save gets its racial bonus only ([CON](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#con-as-in-add)).
@@ -221,6 +221,11 @@ The main fixes; every bug of the original game the mod mends, with what the game
 - **[Fixed]** The **sewer grate**'s hack, a ranger's **tracking** at the Wagon Train, the **Rebel Mindhome**'s repeated award, the **messenger** and the **Draj serf** (found by yuan-ti and OpenDS).
 - **[Fixed]** Lines that depend on the speaker's **race, sex or class** read the wrong record; script bugs in **Darkhold**, the **Lava Rifts** and **Linara**'s talk.
 - **[Fixed]** Cilla, an elf, was drawn with the half-elf woman's figure.
+
+**Wake of the Ravager** (started from the Loader)
+
+- **[Fixed]** Most of the fixes above that touch the engine, from Mirror Image and Armor to the picture slots and resting while poisoned; the page of [the game's bugs](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager) says which, and which are still to come.
+- **[Fixed]** The sequel's own: a new character's **hit points** stayed one a level, its **weapon** started in the off hand, the **message box** never stayed on screen, a **worn item's spell** never ended when it came off, **saving throws** stopped at the table's last row, and the Tyr inn's room never rested.
 
 ## Your Saved Games
 
