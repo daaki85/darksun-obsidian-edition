@@ -858,6 +858,11 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   its barred form (an orange ring: the sword's, then the eye's); right-clicks go arrow, sword, look, so
   take a picture of it before a click on a person: **the sword on Notaku started a fight**. With the eye on
   him the Look box's first button (left, about game 181,66 when the box is beside him) talks.
+- **A creature's object** is its record's +6, negated (as OBJEX.GFF's kind-2 record has it: Notaku -58,
+  the weaponer -153): how `shopstock.py` knows a seller in memory. A **Limbo seller** (the stalls: 323 and
+  the like) is made afresh from OBJEX.GFF's copy when its talk starts, so it has the Loader's items even in a
+  saved game; Notaku, who lives in Tyr, keeps the save's list and is topped up by the Loader. **In a shop a
+  click on an item buys it** at once ("NOT ENOUGH MONEY" if it can't); the item goes on the pointer.
 - **Item names 256 on** (the mod's, DSCLOG2's ITEM_NAMES) are written by the dice log as it attaches:
   without `ravdice.py` running a mod-named item shows another word ("METAL" for the Short Sword).
 - **Objects 13000-13999 draw another picture** (a grey ring) whatever their BMP: the Loader's pictures sit
