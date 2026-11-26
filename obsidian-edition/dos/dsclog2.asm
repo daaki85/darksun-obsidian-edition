@@ -3502,10 +3502,11 @@ kit_bars:
 ; the healing spells a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL): Cure Light Wounds, Blood Flow,
 ; Cure Serious Wounds, Cure Critical Wounds, Heal, Waters of Life; the harming ones a Healer or Lifebinder
 ; never knows (kits.NO_HARM): Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living,
-; Harm (the sequel's numbers)
+; Harm, and the sequel's own Heartseeker, Energy Drain and Symbol of Pain (ravager.RAV_SEQUEL_HARMS: they harm
+; or kill the body as those do; the sequel's numbers)
 av_heals dw 117, 166, 170, 194, 210, 215
 AV_HEALS_COUNT equ ($ - av_heals) / 2
-av_harms dw 118, 171, 195, 149, 179, 204, 211
+av_harms dw 118, 171, 195, 149, 179, 204, 211, 212, 225, 229
 AV_HARMS_COUNT equ ($ - av_harms) / 2
 ; KIT_CAST_LEVEL (site 205, "kit_cast_level"): in the routine giving the level a spell is cast at for its
 ; duration and damage (628AFh, SL's 5E25Ch: [BP+6] the caster, [BP+8] the spell, DI the best level of its

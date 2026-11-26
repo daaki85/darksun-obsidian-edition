@@ -1105,8 +1105,16 @@ RAV_HEAL, RAV_WATERS_OF_LIFE, RAV_HARM = 210, 215, 211
 RAV_CAUSE_DISEASE, RAV_POISON, RAV_SLAY_LIVING = 149, 179, 204
 RAV_AVENGER_NO_HEAL = frozenset((RAV_CURE_LIGHT, RAV_BLOOD_FLOW, RAV_CURE_SERIOUS, RAV_CURE_CRITICAL, RAV_HEAL,
                                  RAV_WATERS_OF_LIFE))
+# The sequel's own spells that harm or kill the body as SL's list does (the cures reversed, a death touch), barred
+# to a Healer and Lifebinder too: Heartseeker (an arrow whose roots burst the vital organs, "killing
+# instantly": a Slay Living), Energy Drain (a life level drawn away by touch: Restore reversed), Symbol of Pain
+# (wracking pains). Not barred: Symbol of Hopelessness (a surrender) and of Persuasion (a charm), which harm no
+# one, as SL leaves the Healer Cause Fear and Curse; the elements' damage (Sunstroke, Heat Exhaustion, Firestorm
+# ...), as SL leaves the Healer Dehydrate and Flame Strike; Disruption (no description in the game)
+RAV_HEARTSEEKER, RAV_ENERGY_DRAIN, RAV_SYMBOL_OF_PAIN = 212, 225, 229
+RAV_SEQUEL_HARMS = frozenset((RAV_HEARTSEEKER, RAV_ENERGY_DRAIN, RAV_SYMBOL_OF_PAIN))
 RAV_NO_HARM = frozenset((RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL, RAV_CAUSE_DISEASE, RAV_POISON,
-                         RAV_SLAY_LIVING, RAV_HARM))
+                         RAV_SLAY_LIVING, RAV_HARM)) | RAV_SEQUEL_HARMS
 RAV_CURE_DICE = {RAV_CURE_LIGHT: (1, 8), RAV_CURE_SERIOUS: (2, 8), RAV_CURE_CRITICAL: (3, 8), RAV_BLOOD_FLOW: (2, 6)}
 RAV_CAUSE_DICE = {RAV_CAUSE_LIGHT: 1, RAV_CAUSE_SERIOUS: 2, RAV_CAUSE_CRITICAL: 3}
 RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIEST_SPELLS)
