@@ -11,8 +11,9 @@ chatkcha +1; a ranger's plain long sword), so here the weapon becomes a **+1 wea
   holds to the backpack (a fighter's shield, a gladiator's second long sword); a gladiator's left-hand long
   sword stays otherwise;
 - a missile pick (the bow, sling, staff sling, javelin and darts, and the chatkcha, which the sequel's own
-  thri-kreen carries in the missile slot): the missile slot's weapon made it, or one put there; a bow with
-  the sequel's +1 arrows (as its ranger starts); the weapon in hand stays as it is;
+  thri-kreen carries in the missile slot): one put in the missile slot, what was there going to the backpack
+  (a ranger's bow, a thri-kreen's chatkcha); a bow with the sequel's +1 arrows (as its ranger starts); the
+  weapon in hand stays as it is;
 - a weapon that is that already (a fighter's or gladiator's long sword +1 for a long sword pick, a
   thri-kreen's gythka or chatkcha for its own kind) stays as it is.
 
@@ -185,6 +186,11 @@ def fill_member(gd, member: int, new_items: bool = True) -> List[str]:
         return []  # (that already: a fighter's long sword +1, a thri-kreen's gythka)
     name = lambda item: gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
     given = what if kind == weaponchoice.BOW else f"{what} +1"  # (no bow +1: +1 arrows with it)
+    if held is not None and kind in MISSILE_KINDS:  # (a ranger's bow, a thri-kreen's chatkcha: to the backpack)
+        cell = pickpocket.free_cell(gd, ring.Items(gd), member)
+        if cell is not None and pickpocket.place(gd, member, held[0], cell):
+            out.append(f"    {who}'s {name(held[1])} goes into the backpack")
+            held = None
     if held is not None:
         was = name(held[1])
         gd.guest.write(items + held[0] * game.ITEM_SIZE, made_over(held[1], weapon))
@@ -195,7 +201,7 @@ def fill_member(gd, member: int, new_items: bool = True) -> List[str]:
         return [f"{who} keeps the starting weapon: no room for a {what} +1"]
     if weapon.made:
         line += " (a plain one made +1: the game has no " + what + " +1)"
-    out.append(line)
+    out.insert(0, line)
     if kind == weaponchoice.BOW:
         if at(weaponchoice.AMMO_SLOT) is None and npcitems.add_to(gd, member, ARROWS_PLUS_ONE, weaponchoice.AMMO_SLOT):
             out.append(f"    {who} has +1 arrows with it")
@@ -207,3 +213,35 @@ def fill_member(gd, member: int, new_items: bool = True) -> List[str]:
             if cell is not None and pickpocket.place(gd, member, other[0], cell):
                 out.append(f"    {who}'s {name(other[1])} goes into the backpack: the weapon takes both hands")
     return out
+
+
+def weapon_first(gd) -> None:
+    """Each New character's weapon in hand (the right hand's, else the left's) made the first of its item
+    list, the others kept in their order (their records' contents moved one place on, each keeping its place
+    in the list), as the inventory screen leaves a weapon put in a hand. The sequel's weapon lines (View
+    Character's DAM, the inventory's) take a double spear behind another item of the list (a sling given after
+    it: startgear's) for no weapon at all, the bare hand's 2x1D1 shown (2026-11-26); a lotulis there was taken.
+    Run after the gear's other items are given (startgear.fill), as they go first in the list."""
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    link = slice(game.ITEM_NEXT, game.ITEM_NEXT + 2)
+    for member in range(game.PARTY_SIZE):
+        rec = gd.creature(member)
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
+            continue
+        for hand in game.WEAPON_HANDS:
+            done = False
+            for field in game.CREATURE_ITEM_LISTS:
+                chain = [(index, item) for index, item, _ in gd._worn(member, (field,))]
+                at = next((n for n, (_, item) in enumerate(chain) if item[game.ITEM_SLOT] == hand), None)
+                if at is None:
+                    continue
+                done = True
+                if at > 0:
+                    for n in range(at + 1):  # (position n takes the record that was before it; the first the weapon's)
+                        index, item = chain[n]
+                        new = bytearray(chain[n - 1][1] if n else chain[at][1])
+                        new[link] = item[link]
+                        gd.guest.write(items + index * game.ITEM_SIZE, bytes(new))
+                break
+            if done:
+                break

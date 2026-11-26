@@ -1756,6 +1756,8 @@ class RavDiceLog(dicelog.DiceLog):
                         out += ravfirstweapon.fill(self.game, new_items)
                     if self.starting_gear:
                         out += startgear.fill(self.game)
+                    if self.first_pick_weapon:  # (the weapon in hand first in its list: the weapon lines)
+                        ravfirstweapon.weapon_first(self.game)
             finally:
                 self.game.making = None
                 itemgate.release(self.game)

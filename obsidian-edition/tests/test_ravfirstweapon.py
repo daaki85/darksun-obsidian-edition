@@ -214,6 +214,18 @@ class FillTests(FinishNewTests):
         self.assertEqual(self.item(0), (LONG_SWORD, right))  # (the sword stays)
         self.assertIn("+1 arrows", out[1])
 
+    def test_a_missile_pick_sends_the_old_one_to_the_backpack(self):
+        """A thri-kreen's sling pick: its chatkcha to the backpack, the sling +1 in the missile slot, its gythka kept."""
+        self.character((FIGHTER, 0, 0), ["sling"], race=8)
+        right, _ = game.WEAPON_HANDS
+        self.put(self.the("gythka").record, right)
+        self.put(self.the("chatkcha").record, weaponchoice.MISSILE_SLOT)
+        out = W.fill(self.gd)
+        self.assertEqual((self.item(0), self.item(1), self.item(2)),
+                         ((GYTHKA, right), (25, 30), (93, weaponchoice.MISSILE_SLOT)))
+        self.assertIn("sling +1", out[0])
+        self.assertIn("goes into the backpack", out[1])
+
     def test_a_kind_made_plus_one(self):
         right, _ = self.fighter(["two-handed sword"])
         out = W.fill(self.gd)
@@ -252,6 +264,47 @@ class FillTests(FinishNewTests):
         self.put(bytes(plain), right)
         W.fill(self.gd)
         self.assertEqual((self.item(0), self.plus(0)), ((73, right), 1))
+
+
+class WeaponFirstTests(unittest.TestCase):
+    def test_the_weapon_first_others_in_order(self):
+        """A chain sling, arrows, double spear (slot 3): the spear first, then the sling and arrows, each record
+        keeping its link."""
+        from types import SimpleNamespace
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+        mem = bytearray(0x10000)
+        DS, ITEMS = 0x100, 0x3000
+        struct.pack_into("<HH", mem, DS * 16 + game.ITEMS_PTR, ITEMS, 0)
+        chain = [(5, 93, 2), (7, 6, 1), (2, 39, 3)]  # (item, type, slot)
+        for n, (index, type_, slot) in enumerate(chain):
+            rec = bytearray(game.ITEM_SIZE)
+            struct.pack_into("<H", rec, game.ITEM_TYPE, type_)
+            struct.pack_into("<H", rec, game.ITEM_NEXT, chain[n + 1][0] if n + 1 < len(chain) else 9999)
+            rec[game.ITEM_SLOT] = slot
+            mem[ITEMS + index * game.ITEM_SIZE:ITEMS + (index + 1) * game.ITEM_SIZE] = rec
+        guest = SimpleNamespace(read=lambda a, n: bytes(mem[a:a + n]),
+                                write=lambda a, d: mem.__setitem__(slice(a, a + len(d)), d))
+
+        def worn(member, lists=game.CREATURE_ITEM_LISTS):
+            if lists != (game.CREATURE_ITEM_LISTS[1],):
+                return
+            index = chain[0][0]
+            while index != 9999:
+                rec = bytes(mem[ITEMS + index * game.ITEM_SIZE:ITEMS + (index + 1) * game.ITEM_SIZE])
+                yield index, rec, b""
+                index = struct.unpack_from("<H", rec, game.ITEM_NEXT)[0]
+
+        def creature(i):
+            rec = bytearray(game.CREATURE_SIZE)
+            if i == 0:
+                rec[game.CREATURE_NAME] = ord("S")
+                rec[game.CREATURE_STATUS] = game.STATUS_NEW
+            return bytes(rec)
+        gd = SimpleNamespace(guest=guest, ds=DS, creature=creature, _worn=worn)
+        W.weapon_first(gd)
+        got = [(i, struct.unpack_from("<H", r, game.ITEM_TYPE)[0], r[game.ITEM_SLOT]) for i, r, _ in worn(0, (game.CREATURE_ITEM_LISTS[1],))]
+        self.assertEqual(got, [(5, 39, 3), (7, 93, 2), (2, 6, 1)])
 
 
 for _name in [n for n in vars(FinishNewTests) if n.startswith("test") and n not in vars(FillTests)]:

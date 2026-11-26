@@ -186,6 +186,7 @@ schedules and diffs a log made or used.
 | [2026-11-24](2026-11-24-darkfix-beta-qa.md) | OpenDS darkfix beta.4 in the stock game: the sewer grate |
 | [2026-11-26](2026-11-26-ravager-spec-pick.md) | Picking weapon specs at creation in Wake of the Ravager: a fighter's lotulis, a gladiator's three, a thief offered none, EDIT keeping and adding picks, EXIT's defaults, the specs from the roster in the Tyr ambush (+1/+2 specialized, +3 mastery), the RAV_SKIP control |
 | [2026-11-26](2026-11-26-ravager-starting-gear.md) | A new character's weapon in the weapon hand in Wake of the Ravager: the starting gear's table (43680h) patched (`gear_hands`), a fighter's +1 long sword in the right hand and the shield in the left, a psionicist's club in the right; a long sword specialist 2 a round in the Tyr ambush with nothing moved by hand, against the control's 1 (RAV_SKIP); the first pick's starting weapon left open |
+| [2026-11-26](2026-11-26-ravager-first-pick-weapon.md) | A new warrior's starting weapon a +1 of its first pick in Wake of the Ravager (`ravfirstweapon.py`): a fighter's lotulis +1 (the shield to the backpack, 2 a round with +3 mastery in the Tyr ambush), a gladiator's double spear +1 (its weapon lines needed it first in its list; 1 a round), a bow with +1 arrows, a two-handed sword made +1; an air cleric's obsidian dagger (the sequel's daggers given the air bit), a fire and earth cleric's obsidian mace, a water cleric's bone mace; the RAV_NO_FIRST_WEAPON control |
 
 ## files/
 
