@@ -1232,6 +1232,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     global STARTED
     from . import ravager
     STARTED = None
+    del LEFT_OUT[:]  # (Shattered Lands' last start's: not this game's, so not said again after it, 2026-11-26)
     dosbox_dir = _find_file(game_dir, "DOSBOX")
     settings_conf = _find_file(game_dir, "dosbox_darksun2.conf") or _find_file(
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun2.conf")
