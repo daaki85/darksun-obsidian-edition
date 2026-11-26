@@ -6,6 +6,10 @@ This art study compares three outfits on the arena floor. Look at the half-giant
 
 [Watch all 29 walking and combat poses at game size and 3×](plate-midtone-poses.gif). The retail armored figure (1342) supplies corresponding poses through the melee strikes.
 
+## Current magical plate
+
+The right column equips all three pieces of Warden’s Plate on the same three figures. Watch the fire-colored glints while the front pose holds, then follow the chest, wrists and greaves through the walk. The center column shows ordinary full plate from the current Loader. [See front idle](current-warden-plate.png) · [Watch all 29 poses](current-warden-plate.gif)
+
 ## What the counts mean
 
 Each number counts native pixels that change when all three ordinary plate pieces are equipped on the same front-idle drawing.
