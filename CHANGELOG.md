@@ -59,6 +59,11 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: the game**
+- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
+  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
+  new test scans the patched program for any other jump into a patch.
+
 **Fixed: Wake of the Ravager's starting gear**
 - A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long sword
   (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round,

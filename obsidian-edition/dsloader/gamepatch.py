@@ -320,6 +320,13 @@ PATCHES = (
     # the end of the routine that brings a window to the front and redraws it: xor ax,ax /
     # pop si (for the USE screen's window, DSCLOG draws the spell slots again)
     Patch("window", 0x2BBA9, bytes.fromhex("33c05e"), _interrupt(VEC_WIN, 3)),
+    # ... and the same routine's failure exit (2B8FCh, "mov ax,-1 / jmp 2BBABh", a null window) jumped
+    # to that "pop si", the patch's third byte: its NOP ran, then "leave / retf" without the pop (SI
+    # not yet changed there, so no harm seen, but a jump into a patch). Sent instead to the same
+    # "pop si / leave / retf" at 2B8B7h, the routine before's end (window_fail; Wake of the Ravager's
+    # port mends the same jump the same way). The other near jumps into a patch's middle: "path"'s
+    # "jnz 60D6Eh" (60D82h), in the code that patch's own jump now steps over
+    Patch("window_fail", 0x2B8FC, bytes.fromhex("e9ac02"), bytes.fromhex("e9b8ff")),
     # the Look box (a creature in a fight), once its first status rows are drawn: mov si,ax /
     # xor di,di (DSCLOG then adds the monster's defences in the rows left, and does the moves)
     Patch("look", 0x5FCDA, bytes.fromhex("8bf033ff"), _interrupt(VEC_LOOK, 4)),

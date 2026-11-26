@@ -623,6 +623,15 @@ the level (DS:4AECh, the LEVEL button's), and prints them in the empty panel
 under the spells with the game's text routine (2B7Ah:16Dh). The PSIONIC list
 has no lines, so it shows none.
 
+The routine's failure exit (2B8FCh, "mov ax,-1 / jmp", a null window) jumped to the
+"pop si" that `window` replaces, so it ran the patch's NOP and returned without the pop
+(SI not yet changed there, so nothing seen); `window_fail` sends it to the same "pop si /
+leave / retf" at 2B8B7h, the routine before's end. `JumpIntoSiteTests` (test_gamepatch.py,
+the game's DSUN.EXE from `DSUN_EXE` or `/tmp/playtest/inst`) scans every near jump and call
+for one landing past a patch's first byte; short jumps, the switch tables and the overlays'
+entries were checked against a disassembly once (only `path`'s jnz at 60D82h, in code that
+patch steps over).
+
 The Loader writes the lines (`DiceLog.slots_lines`, `_write_slots`, only when
 they change): for each kind of magic the member casts, a heading (`SPELLS
 LEFT`, or `NO SPELLS IN ARMOUR` for a multiclass preserver's wizard spells
