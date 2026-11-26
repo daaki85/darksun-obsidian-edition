@@ -1,4 +1,4 @@
-# Test log: the level cap by XP in Wake of the Ravager (2026-11-25)
+# Test log: the level cap by XP in Wake of the Ravager (2026-11-25, levels 21-30 2026-11-26)
 
 Under test: DSCLOG2's LEVEL CAP BY XP (sites 110-117, RULE_LEVEL_10 now in ravager.RULES_PORTED) with the owner's
 cap of 5,625,000 XP shared between a character's classes; XP_HOLD (XP held at the share); a thief's d6 to 10th
@@ -55,6 +55,34 @@ screen keeps the leader's otherwise). Level-up messages come one a click of the 
 
 The watchdog (guard_start.sh) wasn't started: its pid file is shared, and starting it kills another agent's.
 
+## Levels 21-30 (2026-11-26)
+
+The owner's decision: past 20th for anyone, as far as the 5,625,000 cap allows, by their AD&D tables (XP,
+slots; the rest the game's formulas). DSCLOG2: RAV_XP to 30 levels (dwords: the druid's 10,500,000 at 30th
+won't go in a word of hundreds), XP_NEED answering RAV_XP's past the game's 20 entries (`xp_pasts`), LV_CLAMP to
+index 29, RAV_SLOTS 30 rows a table, and LV_ORDINAL (site 118, "level_ordinal": "21st" for the game's "21th").
+DSCLOG2 48,064 bytes; upper memory: its block 47,536, 108,064 bytes free (the largest 107,920). The highest
+levels (ravager.level_most, as the coordinator's but the druid): one class: cleric, fighter, thief 30,
+psionicist 27, ranger and gladiator 26, preserver 25, druid 20 (21st needs 6,000,000); two: thief 22, the
+rest as before; three: as before. (The thief's 30th is 4,400,000: 2,420,000 + 9 x 220,000.)
+
+Played in the same second game (`:58`, `dbLC`, ravLC), test edits never saved:
+
+| Run | Set | Seen |
+|---|---|---|
+| 1 | Gerakis fighter 20, Ar'Anda preserver 20 at 5,625,000, Thy'rokh psionicist 20 at 5,600,000 | each **four levels** from the one award: the game's hold (XP to 3 levels on) cut the XP to 24th's (fighter 4,000,000, preserver 5,250,000, psionicist 4,400,000); fighter 24th THAC0 -3; "Gerakis is 21th level Fighter" (the build before LV_ORDINAL) |
+| 2 | Gerakis fighter 26 at 5,600,000, Ar'Anda preserver 21 at 5,625,000, Thy'rokh psionicist 23 at 5,600,000, her 34 powers all marked known | **fighter 30th** ("Gerakis is 27th ... 30th level Fighter"), XP 5,500,000, THAC0 -9 (View Character "THAC0: -9"), saves 3/5/4/4/6, base HP +3 a level (123 to 135); **preserver 25th**, XP 5,625,000, THAC0 12, saves 8/3/5/7/4, HP +1 a level; **psionicist 27th**, XP 5,600,000, THAC0 7, saves 8/4/7/11/5, HP +2 a level; View Character no next XP for all three |
+| rest | `ravager-roost`, Ar'Anda preserver 25, Thy'rokh druid 25, Terrannus cleric 30 (dead in the save), a night at the Roost | casts left: the preserver's **5 5 5 5 5 5 5 5 5** (10th 0), the druid's 9 9 8 7 4 2 1 (6 6 6 6 4 2 1 and WIS 19's); `slot_count` 18 |
+| control | run 2's edits, RAV_SKIP the level cap's nine patches | no level up (the game's 15th); XP held by XP_NEED's past-20 answers still (fighter 5,500,000) |
+
+- **CHOOSE A SPELL from 20th opens on LEVEL 10**: the sequel has four 10th-level wizard spells (Dome of
+  Invulnerability, Magical Plague, Rift, Wall of Ash; DS:0656h's starts 111-114) and the window opens on level / 2.
+  The owner's slots leave the 10th column out, so a pick there has no slot: an open question for the owner.
+- **The psionicists' pop-up** with every power known lists them still: each pick raised power 1's number (its
+  byte 2 to 14: six picks over four levels). Nothing breaks.
+- **Messages**: a preserver's and psionicist's "gains a level" (the long message over 29 characters).
+- Screenshots: `level-30-view-gerakis.png`, `level-27-psionicist-25-preserver.png` (the project's `ravager/`).
+
 ## Gaps
 
 - An XP award from a script that doesn't run the level up (95820h) isn't held until the next level up: not
@@ -62,5 +90,5 @@ The watchdog (guard_start.sh) wasn't started: its pid file is shared, and starti
 - The game's dwarf/halfling CON bonus to saves tests the group (CX) for 1 or 4, so it goes to the warrior
   group's saves only: kept as the game's (SL's the same).
 - SL has the same saves bug (87844h): for later.
-- Not played: a druid or ranger past 15th (the slots and the casting level), the transfer's XP hold (both
-  covered by the tests).
+- Not played: a ranger past 15th (the slots and the casting level), the transfer's XP hold, "21st" in a
+  message (all covered by the tests); a cleric's slots past 20th after a rest (Terrannus was dead in the save).

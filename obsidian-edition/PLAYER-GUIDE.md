@@ -1035,26 +1035,32 @@ XP past 9th's need is left over, and a human who changes class loses it.
 Started from the Loader, the sequel has a cap of its own: **5,625,000 XP**, shared
 out the same way (one class all of it, two 2,812,500 each, three 1,875,000 each, a
 human the cap less what its old classes' levels needed). It replaces the game's
-stop at 15th, and levels go up to 20th, where the sequel's XP table ends. Most
-characters of three classes reach 15th; one or two classes go higher:
+stop at 15th, and levels go on past the sequel's XP table (20th) by AD&D's
+tables, up to 30th, as far as the share allows. Most characters of three classes
+reach 15th; one or two classes go higher:
 
-| Class | One class | Two classes | Three classes | XP for 20th |
-|---|---|---|---|---|
-| Cleric | 20 | 20 | 16 | 2,700,000 |
-| Druid | 20 | 14 | 14 | 5,500,000 |
-| Fighter | 20 | 19 | 15 | 3,000,000 |
-| Gladiator | 20 | 17 | 14 | 3,600,000 |
-| Preserver | 20 | 17 | 15 | 3,750,000 |
-| Psionicist | 20 | 19 | 16 | 3,000,000 |
-| Ranger | 20 | 17 | 14 | 3,600,000 |
-| Thief | 20 | 20 | 18 | 2,200,000 |
+| Class | One class | Two classes | Three classes | XP for 20th | XP for 21st | Then a level | XP for 30th |
+|---|---|---|---|---|---|---|---|
+| Cleric | 30 | 20 | 16 | 2,700,000 | 2,925,000 | +225,000 | 4,950,000 |
+| Druid | 20 | 14 | 14 | 5,500,000 | 6,000,000 | +500,000 | 10,500,000 |
+| Fighter | 30 | 19 | 15 | 3,000,000 | 3,250,000 | +250,000 | 5,500,000 |
+| Gladiator | 26 | 17 | 14 | 3,600,000 | 3,900,000 | +300,000 | 6,600,000 |
+| Preserver | 25 | 17 | 15 | 3,750,000 | 4,125,000 | +375,000 | 7,500,000 |
+| Psionicist | 27 | 19 | 16 | 3,000,000 | 3,300,000 | see below | 7,000,000 |
+| Ranger | 26 | 17 | 14 | 3,600,000 | 3,900,000 | +300,000 | 6,600,000 |
+| Thief | 30 | 22 | 18 | 2,200,000 | 2,420,000 | +220,000 | 4,400,000 |
+
+A psionicist needs 3,300,000, 3,600,000, 4,000,000, 4,400,000, 4,800,000,
+5,200,000, 5,600,000, 6,000,000, 6,500,000 and 7,000,000 for 21st to 30th. A
+druid's 21st is a hierophant's count on top of 20th (6,000,000), past the cap.
 
 **XP stops at the cap there**: unlike Shattered Lands, nothing is left over. At
 each level up (each award) a character's XP is held at its share, so a fighter
 alone stays at 5,625,000 and a fighter/preserver/thief at 1,875,000; a human's
 share is the cap less what its old classes' levels needed. (The game also holds
-XP to three levels ahead of each class, which it can't do past 17th: there the
-share alone holds it.) A new character starts at 6th to 8th level, far below any
+XP to three levels ahead of each class, so one award raises a class four levels at
+most: a fighter at 20th with 5,600,000 XP goes to 24th and keeps 4,000,000, and the
+next award takes it on. Past 27th only the share holds it.) A new character starts at 6th to 8th level, far below any
 share. XP a character banked past Shattered Lands' cap in an older save stays
 behind when the party goes across: it arrives with its Shattered Lands share at
 most.
@@ -1078,14 +1084,26 @@ What the higher levels bring there:
   psionicist rolls to 9th. *Without the mod:* the game counts both to 9th.
 - **Thief skills** go on to 17th ([the table](#thieves-skills-and-picking-pockets)),
   the same past it. A ranger's hide in shadows and move silently follow them.
-- **Spell slots** go on to 20th by the Player's Handbook's tables, but a
-  druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
+- **Spell slots** go on to 20th by the Player's Handbook's tables, then to 30th
+  by AD&D's high-level tables: a preserver's (1st to 9th spell level) 5 5 5 5 5
+  4 4 4 2 at 21st, 5 5 5 5 5 5 5 5 5 at 25th, 7 7 7 7 7 7 7 6 6 at 30th; a
+  cleric 9 9 9 9 8 6 2 at 21st to 9 9 9 9 9 9 8 at 30th (no true dweomers). The
+  sequel has four 10th-level wizard spells (Dome of Invulnerability, Magical Plague,
+  Rift, Wall of Ash), and from 20th a preserver's level up offers them first, but
+  there are no slots for them: choose from the lower pages (the LEVEL button). A druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
   are AD&D's: one at 8th, two at 9th, 2 1 at 10th, 2 2 at 11th, 2 2 1 at 12th,
   3 2 1 at 13th, 3 2 2 at 14th, 3 3 2 at 15th and 3 3 3 from 16th, cast at
   its level less 7, no higher than 9th. *Without the mod:* the game gave a
   ranger 3 2 1 at 12th, 3 2 2 at 13th and 3 3 2 at 14th.
+- **Hit points** past 20th keep the fixed gains (warriors +3, priests,
+  psionicists and thieves +2, preservers +1), **THAC0** goes on by the class's
+  rate (a fighter's 0 at 21st, -9 at 30th), the saves stay at their last row.
+- **Psionic powers**: a psionicist still picks one a level (two at odd levels);
+  with all 34 known, a pick raises a known power's number instead.
 - **View Character** shows no next level at the cap, and for a character of two
   or three classes it names the class the next XP is for (`(2,000,000 F)`).
+- **The level up's message** says "21st", "22nd", "23rd" past 20th. *Without
+  the mod:* the game's message ends every level past 3rd in "th".
 
 ### Hit points
 

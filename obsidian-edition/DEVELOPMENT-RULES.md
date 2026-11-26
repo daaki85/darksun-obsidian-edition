@@ -1797,14 +1797,23 @@ In Wake of the Ravager (DSCLOG2, `ravager.py`'s `level_cap_*` patches) the game 
 Character's at 6FB51h, then `JE`), each a SITE of its own (110, 111), so nothing tells them apart by
 the code after them. `LEVEL_ROOM` is SL's with `RAV_XP_CAP` (5,625,000, `ravager.RAV_XP_CAP`), the
 sheet's classes mapped to rows by its own `class_rows` (the game's 360h:9Dh) and the XP from
-`RAV_XP_AT`: `tables.RAV_XP` in hundreds with `XP_FIXES`' exact values over them (the game reads its
-table through a resource load each time, 5C8:20, so there is nothing in memory to read). The level
-up holds the sheet's XP to its table's entry 3 levels on (958C0h-95940h); from 17th that entry is past
-the table's 20, so `LV_CLAMP` (site 112, its `add ax,3`) makes the index 19 and has `XP_NEED`'s next
-answer the most, which passes the hold by. At the same site `XP_HOLD` (the owner's, 2026-11-25: XP
+`RAV_XP_AT`: `tables.RAV_XP` as dwords, levels 1-30 (`RAV_LEVELS`; the owner's AD&D tables past
+the game's 20, 2026-11-25: no stop at 20th; the game reads its table through a resource load each
+time, 5C8:20, so there is nothing in memory to read). Past the game's 20 entries its reads run on
+into the next row, so `XP_NEED` (site 32, at all eight reads) answers `RAV_XP_AT`'s for an index of
+20-29 with RULE_LEVEL_10 on, and the most from 30 (`xp_pasts` counts them). The level up holds the
+sheet's XP to its table's entry 3 levels on (958C0h-95940h), so one award raises a class four levels
+at most; from 27th that entry is past RAV_XP's 30, so `LV_CLAMP` (site 112, its `add ax,3`) makes the
+index 29 and has `XP_NEED`'s next answer the most, which passes the hold by. At the same site `XP_HOLD` (the owner's, 2026-11-25: XP
 stops growing at the cap) holds the sheet's XP at `LR_SHARE` first, so the game's hold, where it reads
 the table, can only take it lower. `XP_SUFFIX` (117) is `PROBE_XP_NEXT` at View Character's
-`push 1386h`. A thief's d6 to 10th is `PROBE_HD_ROLL` and `PROBE_HD_CON` (113, 114) and a third site
+`push 1386h`. `LV_ORDINAL` (118) is the level up's "th" (`mov ax,2B7Eh`, 959D3h, the message's
+ending for every level past 3rd): DS:2B7Eh, used nowhere else, made English's ending ("21st"). Past
+20th the rest of the game copes: THAC0 is a byte read signed (`cbw`, 5C6E9h; a fighter's -9 at
+30th), hit points the fixed gain past the rolled levels (94FF2h), the saves `SAVE_BASE`'s last row,
+the slots `RAV_SLOTS` (30 rows a table), and the psionicists' pop-up (688:61h) lists known powers
+too, a pick raising a power's number (selector 370h's 9CDh + 22h a member, bits 1-7), so 34 powers
+never run out. A thief's d6 to 10th is `PROBE_HD_ROLL` and `PROBE_HD_CON` (113, 114) and a third site
 (115) for the sequel's `mov` that keeps the levels after the compare. The saves (`SAVE_BASE`, 116,
 RULE_HI_TABLES): the save routine (954D2h) is SL's (87844h), save = the 1st level's less
 min((level - 1) x rate / 100, the table's third byte), that byte AD&D's last save, not the most a save
