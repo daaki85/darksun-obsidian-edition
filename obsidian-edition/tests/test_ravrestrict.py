@@ -70,6 +70,36 @@ class ModTypeRestrictionTests(unittest.TestCase):
                     refused += want
         self.assertGreater(refused, 50)  # (the test means something: many refused)
 
+    def test_sequel_six_kinds(self):
+        """The sequel's own weapons of SL's six kinds from it (KIND_OF_TYPE's 17-22) are refused or
+        allowed as SL's of those kinds are: SL's darts, lotulis, two-handed sword and javelin types put at
+        the sequel's Darts (38, 43), Lotulis (61), Twohand Sword (101) and Javelin (59), a psionicist
+        allowed the darts alone (PSI_KINDS' 22 bits)."""
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, self.image)
+        mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
+        mu.mem_write(GAME_DS * 16 + ravager_types_ptr(), struct.pack("<HH", 0, TYPES))
+        put = {38: game.DARTS_TYPE, 43: game.DARTS_TYPE, 61: game.LOTULIS_TYPE, 101: game.TWOHAND_SWORD_TYPE,
+               59: game.JAVELIN_TYPE, 39: game.DOUBLE_SPEAR_TYPE, 100: game.TRIKAL_TYPE}
+        table = bytearray(ravager.TYPE_SIZE * ravager.GAME_TYPES)
+        records = {}
+        for at, sl_type in put.items():
+            typ = npcitems.TYPES[sl_type - game.GAME_TYPES]
+            records[at] = bytes.fromhex(typ) if isinstance(typ, str) else typ
+            table[at * ravager.TYPE_SIZE:(at + 1) * ravager.TYPE_SIZE] = ravager.wotr_type(records[at])
+        mu.mem_write(TYPES * 16, bytes(table))
+        for classes in CLASSES:
+            sl = bytearray(test_restrict.sheet(*classes, race=2))
+            wotr = ravtransfer.sheet(bytes(sl) + bytes(ravtransfer.SL_SHEET - len(sl)))
+            for at, sl_type in put.items():
+                want = not restrict.allowed(bytes(sl), sl_type, records[at])
+                with self.subTest(classes=classes, type=at):
+                    self.assertEqual(self.run_forbids(mu, wotr, at), want)
+        psi = ravtransfer.sheet(bytes(test_restrict.sheet(12, race=2)).ljust(ravtransfer.SL_SHEET, b"\0"))
+        self.assertEqual([self.run_forbids(mu, psi, at) for at in (38, 43, 61, 101, 59)],
+                         [False, False, True, True, True])
+
     def test_armour_type(self):
         """ARMOUR_TYPE (CLASS_FORBIDS's and ARMOUR_WORN's: a multiclass preserver's casting) is
         restrict.is_armour on every one of the mod's types: its bracers, robes and Cloak of Protection

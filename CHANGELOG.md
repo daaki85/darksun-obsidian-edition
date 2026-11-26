@@ -59,8 +59,15 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #187;
+(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #192;
 each pull request's own entry is below, grouped.)
+
+**New: Wake of the Ravager has all 22 weapon specs** (#192)
+- A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
+  lotulis, double spear, trikal, javelin, darts) stays that spec in the sequel, for its own Twohand
+  Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts (before, it counted as the
+  nearest of the first sixteen). The javelin and darts have their specialist's rates of fire there,
+  the Effects screen names the six, and a psionicist may still use the sequel's darts.
 
 **New: Shattered Lands** (#149, #154, #157, #187)
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
@@ -182,7 +189,7 @@ each pull request's own entry is below, grouped.)
   the creation screen).
 - Tests put the rules back after a test that turns them on (#147).
 - This test branch: DSCLOG2 reads the V3 spec layout (SL's 22 kinds) the Loader now writes, the six
-  new kinds folded to the sequel's; the sequel's mod types kept at the first 33.
+  new kinds the sequel's own since #192 (folded before); the sequel's mod types kept at the first 33.
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
