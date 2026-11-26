@@ -785,6 +785,25 @@ free for data. The swing's `[BP+0Ah]` THAC0 holds for the call's swings (5D052h 
 when `[BP-16h]` = `[BP-0Ch]`). In play: a spell dropped on a member's portrait on USE is cast on that member, a
 drop on the list's panel brings the aim pointer up; the USE screen keeps its LEVEL between openings.
 
+**Learning the new spells in the sequel** (2026-11-26, the same log, part 3): CHOOSE A SPELL's pick sets the bitset bit
+at 936B4h (`mov es,ax / or es:[bx+39Ch],dl`, ES 370h before, the spell `[370h:7 + SI]`, the member `[370h:0B44h]`);
+the page's list is words at 370h:7 (room for 20: 370h:2Fh is a dword of the game's). A spellbook's read (from the
+item box's spell icon, outside a fight) is 999A9h on: `[BP-4]` the power - 1, objects 7918h-79DFh and 7AA8h-7B0Bh
+(31000-31199, 31400-31499) learn, any other (a one-use scroll, 313xx) goes to the cast at 9B7Dh; the bit test from
+999F8h, YOU LEARN THE SPELL at 99A5Ch (the book used up), YOU ALREADY KNOW THIS SPELL at 99A86h. An item's power is
+the spell + 1, compared with 140h at 77CF9h, 9A7D4h and 9A9C5h. **The overlay manager fixes up segment words in
+overlay code** (`mov ax,370h` at 999F8h, as `mov dx,338h` in least_scores): none of them is in the MZ relocation
+table (`gamepatch.relocated` doesn't see them), so a site whose INT number or NOPs land on one runs another INT
+(here: DS:4 and DS:4Ch written, the Borland signature broken, the Loader's `find_data_segment` then None). Put a site
+after such a `mov` (999FBh). **The hit routine's frame**: NS_SWING's BP is the hit routine's; the set-up's locals
+(the natural attacks' set `[BP-20h]`, which the dice log reads as the d20's parent) are at `[bp]`'s frame.
+**A party member with nothing in hand** (a thri-kreen too) can't attack after a slot edit in memory alone (a
+barred sword over a foe); moved to the pack on the inventory screen (pick the hand's item, click a pack square) the
+foe turns red and a thri-kreen fights with its claws and bite (the inventory's DAM "<4x1D6+8>" with Erdlu Claw). A
+spellbook for a test: `logs/files/2026-11-26-ravager-new-spells-scroll.py ITEM POWER 60` (the record of item 60, a
+spellbook, over a carried item; the box's spell icon then teaches). A level up for CHOOSE A SPELL: the log's
+`-levelup.sh`; creation's: `-create.sh` (a throwaway copy's roster).
+
 **The sequel's first spells and powers** (2026-11-25, logs/2026-11-25-ravager-first-spells.md): the creation
 screen's DONE (6E0B9h, 5C0:57h; SI the member) calls 6E6D8h, the powers (6E906h, 5C0:2Ah), a preserver's spells
 (6EA10h, 5C0:2Fh), 6ED7Dh, then 98:0Fh, all from DONE only (no START GAME path as in SL). The wizard spells known

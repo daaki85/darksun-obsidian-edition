@@ -1052,7 +1052,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The [new wizard spells](#new-wizard-spells) come across too: a character who knows them
-  casts them in the sequel as in Shattered Lands (they can't be learnt there yet). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
+  casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
+  or from a spellbook. The kits' rules for fights and play work there: AC, to hit and damage, the weapon
   skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
   specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
