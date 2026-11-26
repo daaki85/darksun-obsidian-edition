@@ -1,5 +1,7 @@
 # Worn equipment on the six party figures
 
+The sheets below record the earlier equipment fitting pass. Current armor colors follow the existing folds on each class garment. [Current armor comparison](armor-dyes.md)
+
 ![Chest plate, full plate, both robes, cloaks, boots, gloves, bracers, sword and shield, and bow on six figures beside the original artwork](worn-equipment.png)
 
 Read across a row for the same equipment and pose on the human, dwarf and elf, male then female. The last column is the retail comparison. The large pictures are 2×, the small pictures are 1×, and the ground is the same arena tile throughout. Compare the first three rows to see exactly where adding the arm and leg pieces changes the Fighter. The two robe rows use the same Psionicist, pose and lighting.

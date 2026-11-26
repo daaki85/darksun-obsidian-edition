@@ -19,6 +19,7 @@ shields (all it can use). armed() makes one frame.
 """
 
 import math
+from bisect import bisect_right
 from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
 from . import classoutfits, game, spriteparts as sp
@@ -102,20 +103,23 @@ def glow_for(icon: Rows, colours: Optional[List[Tuple[int, int, int]]] = None) -
     return best if votes[best] >= max(2.0, total / 5) else BLUE_GLOW
 
 
-def sparkle(rows: Rows, before: Rows, colours: Tuple[int, ...] = GLINT) -> None:
+def sparkle(rows: Rows, before: Rows, colours: Tuple[int, ...] = GLINT, sparse: bool = False) -> None:
     """Magic worn gear: a scatter of the pixels a piece changed (ROWS against BEFORE) in COLOURS,
     ones the game cycles, on a diagonal (sparser on a piece as large as a cloak); a small piece
     (a circlet, boots) at least every other pixel of it, so it shows."""
     changed = [(x, y) for y, row in enumerate(rows) for x, p in enumerate(row)
                if p is not None and p != before[y][x]]
-    sparkle_cells(rows, changed, colours)
+    sparkle_cells(rows, changed, colours, spacing=11 if sparse else None, sparse=sparse)
 
 
-def sparkle_cells(rows, changed, colours, spacing=None):
+def sparkle_cells(rows, changed, colours, spacing=None, sparse=False):
     """Use the game's cycled palette on the visible surface of this item."""
     step = spacing or (5 if len(changed) < 150 else 9)
     picked = [(x, y) for x, y in changed if (x + 2 * y) % step == 0]
-    if len(picked) < 2:
+    if sparse and changed and not picked:
+        # A sliver of fabric needs just one glint, on its lightest visible fold.
+        picked = [max(changed, key=lambda xy: (_LIGHT.get(rows[xy[1]][xy[0]], 0), xy))]
+    elif not sparse and len(picked) < 2:
         picked = changed[::2]
     for x, y in picked:
         rows[y][x] = colours[(x + y) % len(colours)]
@@ -860,73 +864,17 @@ class Own(NamedTuple):
     back: Optional[Callable[[int, int], int]] = None  # where a pixel (x, y) of it is across the source
 
 
-def paint_region(rows, cells, shades, pad, pattern=None, source=None):
-    """Shade the visible pixels of one equipment region in native pose coordinates."""
-    source = rows if source is None else source
+def paint_region(rows, cells, shades, pad):
+    """Shade the visible boot or glove pixels in native pose coordinates."""
     for x, y in cells:
-        p = source[y + pad][x + pad]
-        if p is None:
-            continue
-        if pattern is None:
-            colour = _by_light(p, shades)
-        else:
-            top = len(shades) - 1
-            light = _LIGHT.get(p, 0.5)
-            if pattern == PLATE:
-                # The cream and bone highlights need room above the midtone.
-                # Resolve fractional steel shades with a staggered one-pixel glint.
-                value = min(1.0, 1.55 * min(light, 0.45) + 0.55 * max(0.0, light - 0.45))
-                threshold = ((x + 2 * y + y // 3) % 4 + 0.5) / 4
-                rank = min(top, int(top * value + threshold))
-            else:
-                rank = min(top, round(light * 1.7 * top))
-            colour = shades[_pattern(pattern, x, y, rank, top)]
-        rows[y + pad][x + pad] = colour
-
-
-def paint_breastplate(rows, cells, shades, pad, source):
-    """Round the steel over the visible rib cage and turn its light with the torso."""
-    if not cells:
-        return
-    top = min(y for x, y in cells)
-    bottom = max(y for x, y in cells)
-    depth = max(1, bottom - top)
-    upper = [x for x, y in cells if (y - top) * 3 <= depth]
-    lower = [x for x, y in cells if (bottom - y) * 3 <= depth]
-    upper_x = (min(upper) + max(upper)) / 2
-    lower_x = (min(lower) + max(lower)) / 2
-    radius = max(2, (max(x for x, y in cells) - min(x for x, y in cells)) / 2)
-    for x, y in cells:
-        color = source[y + pad][x + pad]
-        if color is None:
-            continue
-        v = (y - top) / depth
-        u = (x - upper_x - (lower_x - upper_x) * v) / radius
-        crest = max(0, 1 - ((u + 0.22) / 1.05) ** 2 - ((v - 0.38) / 0.85) ** 2)
-        light = min(1, _LIGHT.get(color, 0.5) * 1.5)
-        # A short reflected edge sits on the lit shoulder. The lower rim
-        # rolls into shadow as the abdomen turns under the breastplate.
-        gleam = max(0, 1 - 2.5 * abs(u + 0.36) - 3.6 * abs(v - 0.28))
-        value = min(1, 0.055 + 0.48 * crest + 0.41 * light + 0.18 * gleam)
-        rows[y + pad][x + pad] = shades[round(value * (len(shades) - 1))]
+        colour = rows[y + pad][x + pad]
+        if colour is not None:
+            rows[y + pad][x + pad] = _by_light(colour, shades)
 
 
 # Palette from the inventory art: the Chameleon Gloves are blue-grey;
 # the Quicksilver Glove has a silvery face over a leather palm.
 GLOVE_SHADES = {37: (17, 19, 22, 24, 26, 29), 113: (204, 207, 210, 212, 214, 215)}
-VEILED_CLOTH = (17, 18, 20, 22, 23, 25, 26, 28)
-ASHEN_BINDING = (209, 210, 211, 212, 213, 214, 215, 216)
-VEILED_BINDING = (204, 205, 64, 65, 168, 45)
-
-
-def robe_binding(rows, cells, pad, source, veiled):
-    """Follow the visible fold one pixel inside the chest panel."""
-    right = {}
-    for x, y in cells:
-        right[y] = max(x, right.get(y, x))
-    trim = VEILED_BINDING if veiled else ASHEN_BINDING
-    seam = [(x, y) for x, y in cells if x == right[y] - 1]
-    paint_region(rows, seam, trim, pad, source=source)
 
 
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
@@ -1015,34 +963,34 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         for owner in (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT, classoutfits.BOW,
                                       classoutfits.FOREARM, classoutfits.ARMS):
                             protected.update(costume.regions[owner])
-                        protected.update((x, y) for x, y, _ in costume.cloak)
+                        human = own is None and model in (2095, 2099)
+                        if not human:
+                            protected.update((x, y) for x, y, _ in costume.cloak)
                         skirt = [(x, y) for x, y in costume.regions[classoutfits.LEGS]
                                  if (x, y) not in protected and base_outfit[y + pad][x + pad] is not None
-                                 and not 128 <= base_outfit[y + pad][x + pad] <= 154]
+                                 and (human or not 128 <= base_outfit[y + pad][x + pad] <= 154)]
                         cells = [*cells, *skirt]
                     # Always take the dye value from the original cloth, even where
                     # two pieces overlap or the chest underneath already glints.
-                    if own is not None:
-                        # Half-elf garments carry their folds in the authored pixels.
-                        paint_region(out, cells, shades, pad, source=base_outfit)
-                    elif piece == ARMOUR_CHEST and pattern == PLATE:
-                        if model == 2059 and not combat and frame in (2, 11, 12, 13, 14):
-                            # The stock belt begins at row 13 throughout this stride.
-                            # On the last step one tunic pixel also peeks through her hair.
-                            cells = [(x, y) for x, y in cells if 6 <= y < 13]
-                        paint_breastplate(out, cells, shades, pad, base_outfit)
-                    else:
-                        paint_region(out, cells, shades, pad, pattern, source=base_outfit)
-                    if kind == game.ROBE_TYPE and own is None:
-                        robe_binding(out, cells, pad, base_outfit, bool(item_type & VEILED_DYE))
+                    if (own is None and model == 2059 and piece == ARMOUR_CHEST and
+                            pattern == PLATE and not combat and frame in (2, 11, 12, 13, 14)):
+                        # The near arm and belt occlude this strip in the elf woman's stride.
+                        cells = [(x, y) for x, y in cells if 6 <= y < 13]
+                    trim = costume.armor_trim
+                    if kind == game.BRACERS_TYPE:
+                        # The bracers themselves wrap an exposed wrist.
+                        trim = trim.difference(costume.regions[classoutfits.FOREARM])
+                    cells = [(x, y) for x, y in cells if (x, y) not in trim
+                             and base_outfit[y + pad][x + pad] not in (None, 254)]
+                    dye_garment(out, cells, shades, pad, base_outfit)
                     if item_type & MAGIC_ARMOUR:
                         sparkle_cells(out, [(x + pad, y + pad) for x, y in cells],
                                       GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)],
-                                      spacing=11 if kind == game.ROBE_TYPE or pattern == PLATE else None)
+                                      spacing=11, sparse=True)
                 else:
                     draw_armour(out, model, parts, kind, pad, own, bool(item_type & VEILED_DYE))
                 if before is not None:
-                    sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
+                    sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)], sparse=True)
     if (parts.facing is not None or costume) and model != sp.KREEN:
         if "boots" in weapons:
             before = [list(r) for r in out]
@@ -1300,14 +1248,41 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
 # below the waist); never the head or the hair.
 ARMOUR_CHEST, ARMOUR_ARMS, ARMOUR_LEGS = "chest", "arms", "legs"
 PLAIN, RINGS, STUDS, SCALES, CHAIN, PLATE = "plain", "rings", "studs", "scales", "chain", "plate"
-# shades, dark to light (muted, from the colours no region changes)
-LEATHER_SHADES = (204, 207, 205, 194, 206)  # (faded browns)
-BONE_SHADES = (207, 194, 206, 213, 214, 215)
-METAL_SHADES = (17, 18, 20, 22, 23, 24, 25, 26, 27, 29)  # plate: blue-grey iron
-CHAIN_SHADES = (209, 210, 211, 212, 213, 214)  # mail: plain grey
-SILK_SHADES = (194, 206, 213, 214, 215, 216)
-DRAKE_SHADES = (210, 53, 54, 55, 56)
-SHIMMER_SHADES = (22, 24, 26, 28, 30, 31)
+# Material ramps use fixed retail palette entries. Class accents can still use
+# their original regional colours. Adjacent folds often differ by only one shade.
+LEATHER_SHADES = (208, 174, 204, 203, 207, 195, 134, 135, 205, 132, 196, 194, 59, 206,
+                 144, 60, 197, 168, 65, 61, 169, 198, 199, 62, 155, 63)
+BONE_SHADES = (208, 129, 204, 207, 205, 196, 194, 206, 212, 60, 213, 168, 214,
+               61, 169, 198, 215, 31, 199, 66, 62, 216, 67, 217, 63, 156)
+METAL_SHADES = (208, 17, 18, 19, 48, 20, 21, 22, 49, 23, 24, 25, 50, 26, 27,
+                213, 28, 214, 29, 30, 215, 31, 216, 52, 217, 46)
+CHAIN_SHADES = (208, 17, 209, 19, 48, 20, 210, 21, 22, 49, 211, 24, 212, 50,
+                26, 213, 28, 214, 29, 30, 215, 31, 216, 52, 217, 46)
+VEILED_CLOTH = (208, 17, 18, 19, 48, 20, 21, 22, 49, 23, 211, 24, 25, 50, 26,
+                27, 213, 28, 214, 29, 30, 215, 31, 216, 52, 217)
+SILK_SHADES = (208, 17, 18, 209, 19, 48, 20, 58, 74, 194, 59, 206, 212, 60, 213,
+               28, 214, 61, 198, 215, 199, 62, 216, 52, 217, 156)
+DRAKE_SHADES = (208, 69, 188, 209, 189, 53, 70, 210, 190, 54, 191, 211, 71, 55,
+                193, 56, 72, 214, 29, 57, 215, 73, 216, 52, 217, 46)
+SHIMMER_SHADES = (17, 18, 19, 48, 20, 21, 22, 49, 23, 24, 25, 50, 26, 27, 213,
+                  28, 214, 29, 30, 215, 31, 216, 52, 67, 217, 46)
+
+# Most cloth values lie below mid-grey. Give its close dark folds more steps,
+# while retaining distinct entries for bright linen and bone.
+GARMENT_TONE_BREAKS = (20, 27, 32, 37, 42, 47, 53, 60, 68, 74, 82, 90, 99, 109,
+                       122, 140, 159, 162, 164, 172, 183, 195, 200.15, 205, 218)
+
+
+def dye_garment(rows, cells, shades, pad, source):
+    """Transfer the original seams and highlights into the equipped material's palette."""
+    for x, y in cells:
+        colour = source[y + pad][x + pad]
+        if colour is not None and colour != 254:
+            # Charcoal is the drawn outline, even beside equally dark brown leather.
+            tone = 0 if colour == 208 else bisect_right(GARMENT_TONE_BREAKS, 255 * _LIGHT.get(colour, 0.5))
+            rows[y + pad][x + pad] = shades[round(tone * (len(shades) - 1) / len(GARMENT_TONE_BREAKS))]
+
+
 # item type: (which piece, shades, pattern)
 ARMOUR: Dict[int, Tuple[str, Tuple[int, ...], str]] = {
     6: (ARMOUR_CHEST, LEATHER_SHADES, PLAIN), 7: (ARMOUR_ARMS, LEATHER_SHADES, PLAIN), 8: (ARMOUR_LEGS, LEATHER_SHADES, PLAIN),
@@ -1377,7 +1352,7 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
                 own: Optional[Own] = None, veiled: bool = False) -> None:
     """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
     (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
-    piece, shades, pattern = ARMOUR[item_type]
+    piece, shades, _ = ARMOUR[item_type]
     if veiled and item_type == game.ROBE_TYPE:
         shades = VEILED_CLOTH
     clothes = own.clothes if own is not None and own.clothes else CLOTHES.get(model, ())
@@ -1406,4 +1381,4 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
             if part != piece:
                 continue
             shade = min(top, int(rank[p] * top + 0.5))
-            rows[y + pad][x + pad] = shades[_pattern(pattern, x, y, shade, top)]
+            rows[y + pad][x + pad] = shades[shade]

@@ -76,14 +76,19 @@ class HalfElfEquipmentTests(unittest.TestCase):
 
 
 class WornMaterialTests(unittest.TestCase):
-    def test_breastplate_highlight_moves_with_a_translated_torso(self):
+    def test_plate_follows_the_original_folds_when_the_torso_moves(self):
         shades = tuple(range(16, 26))
         cells = [(x, y) for y in range(6) for x in range(7)]
-        rows = [[64] * 17 for _ in range(12)]
+        self.addCleanup(sg.set_palette, list(sg._RGB))
+        sg.set_palette([(v, v, v) for v in range(256)])
+        rows = [[None] * 17 for _ in range(12)]
 
         def sample(dx, dy):
             canvas = [row[:] for row in rows]
-            sg.paint_breastplate(canvas, [(x + dx, y + dy) for x, y in cells], shades, 1, rows)
+            source = [row[:] for row in rows]
+            for x, y in cells:
+                source[y + dy + 1][x + dx + 1] = 180 if x == 2 else 45
+            sg.dye_garment(canvas, [(x + dx, y + dy) for x, y in cells], shades, 1, source)
             return [canvas[y + dy + 1][x + dx + 1] for x, y in cells]
 
         first = sample(0, 0)
@@ -316,7 +321,9 @@ class HumanOutfitTests(unittest.TestCase):
                     changed = {(x - 10, y - 10) for y, row in enumerate(enchanted)
                                for x, pixel in enumerate(row) if pixel != plain[y][x]}
                     self.assertLessEqual(changed, chest)
-                    self.assertEqual(bool(changed), bool(chest))
+                    visible = {(x, y) for x, y in chest - pose.armor_trim
+                               if baseline[y + 10][x + 10] not in (None, 254)}
+                    self.assertEqual(bool(changed), bool(visible))
                     for x, y in changed:
                         self.assertIn(enchanted[y + 10][x + 10], sg.GLOWS[sg.BLUE_GLOW])
 

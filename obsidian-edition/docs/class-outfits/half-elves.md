@@ -12,7 +12,9 @@ The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit 
 
 Both figures use the approved study art for all 29 poses. Read the columns across for a single pose. The upper row is Fighter, the lower row is Preserver. Each enlarged picture has a game-size copy beneath it. The retail Warrior and Mage provide the reference at the right and have no matching hit or fall cel.
 
-On the woman, compare front idle with empty slots and full plate. The Fighter changes 108 pixels across her jerkin, arm pieces and lower garment. On the Preserver, the visible plum tunic takes the armor color while the outer mantle retains its folds. In the rear walk the mantle hides most of the armor. The magic chest column shows the game’s shine palette on the exposed chest material.
+On the woman, compare front idle with empty slots and full plate. The Fighter has 108 garment pixels assigned to armor. The steel follows the creases of her jerkin and skirt, with the bone fittings and belt edge still visible. On the Preserver, the visible plum tunic takes the armor color while the outer mantle retains its folds. In the rear walk the mantle hides most of the armor. The magic chest column shows the game’s shine palette on the exposed chest material.
+
+[Compare the previous and revised leather and plate in identical poses](half-elf-armor-detail.png) · [Compare armor across races](armor-dyes.md)
 
 ![Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](half-elf-equipped-armor.gif)
 
@@ -20,7 +22,7 @@ On the man, follow the club into the outstretched hand on side strike 2 (22). Th
 
 ![Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](half-elf-equipped-weapons.gif)
 
-The equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](../../../playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
+The equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
 
 ## Male body fitting
 

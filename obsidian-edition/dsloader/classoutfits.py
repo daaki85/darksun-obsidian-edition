@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import NamedTuple
 from zipfile import ZipFile
 
-from . import art, game, halfelf, kitpages
+from . import art, dwarfarmordye, elfarmordye, game, halfelf, humanarmordye, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
 MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
@@ -190,6 +190,7 @@ class Frame(NamedTuple):
     regions: dict
     cloak: tuple = ()  # (native x, y, fold shade from 0 to 5)
     head: tuple = ()  # foreground face and locks, in native coordinates
+    armor_trim: frozenset = frozenset()  # native pixels that keep their material and class color
 
     def canvas(self, source, pad):
         """Apply authored pixels to the matching pose read from the player's install."""
@@ -265,5 +266,26 @@ def frames(role, combat, model=2095):
             head = tuple((x - left, y - top)
                          for y, row in enumerate(art.decode_frame(heads, f)[2])
                          for x, pixel in enumerate(row) if pixel is not None)
-        poses.append(Frame(image, regions, folds, head))
+        frame = Frame(image, regions, folds, head)
+        pose = f + 15 * combat
+        if model in HALF_ELF_SOURCES:
+            trim = set()
+            if role == "Fighter":
+                # Keep the bone shoulder plates and ochre fastenings. In the
+                # bent strike the cap is hidden; the jerkin still has its belt.
+                for bit in (CHEST, ARMS, LEGS):
+                    for x, y in regions[bit]:
+                        if image[y + top][x + left] in (61, 62, 63, 155, 168, 169, 199):
+                            trim.add((x, y))
+                legs = set(regions[LEGS])
+                trim.update((x, y) for x, y in regions[CHEST] if (x, y + 1) in legs)
+            # The half-elf Preserver's mantle is outside the equipment regions.
+        elif model in DWARVES:
+            trim = dwarfarmordye.protected(frame, role, pose, model)
+        elif model in ELVES:
+            trim = elfarmordye.protected(frame, role, pose, model)
+        else:
+            landmark = LANDMARKS[pose] if model == 2095 and pose < len(LANDMARKS) else None
+            trim = humanarmordye.protected(frame, role, pose, model, landmark)
+        poses.append(frame._replace(armor_trim=frozenset(trim)))
     return tuple(poses)

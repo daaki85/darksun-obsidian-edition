@@ -1,6 +1,6 @@
 # Class outfits on the map
 
-Enable **What the party wears** to see class outfits on human, dwarf, and elf party members. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. The galleries show the base colors with equipment slots empty.
+Enable **What the party wears** to see class outfits on humans, dwarves, elves and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. The galleries show the base colors with equipment slots empty.
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
@@ -61,6 +61,8 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 ![Both elf figures through all 29 poses in the seven single classes](elf-singles.gif)
 
 ## Equipment
+
+Body armor dyes the exposed panels of the equipped figure’s class outfit. The dwarf Cleric/Fighter keeps the cream linen hem and belt, the elf Cleric/Psionicist keeps the teal sash, and the half-elf Preserver keeps the plum mantle. Compare each row from empty slots through leather, plate and both named robes. [Armor colors and fold detail on all figures](armor-dyes.md)
 
 Both half-elves now wear their single-class Fighter and Preserver outfits in the Loader. The galleries compare armor colors on the woman and weapon, shield, bow and quiver placement on the man through all 29 poses. [Half-elf equipment in motion](half-elves.md#equipped-fighter-and-preserver)
 
