@@ -11,7 +11,8 @@
 # zip's dosbox-x folder with its licence (COPYING.txt, GPL 2) and SOURCE.txt, which says where its
 # source is; that source, DOSBox-X's own archive of the same tag, goes beside the zip as an asset,
 # so it is offered from the same place as the program (GPL 2, section 3). DOSBOX_X_SHA256, when
-# set, is checked against the download (each run prints what it got).
+# set, is checked against the download (each run prints what it got). The step is
+# .github/scripts/add_dosbox_x.py, which test-package.yml uses too.
 name: Release
 
 on:
@@ -24,7 +25,7 @@ permissions:
 
 env:
   DOSBOX_X_VERSION: "2026.10.01"
-  DOSBOX_X_SHA256: ""
+  DOSBOX_X_SHA256: "3c50915e63aefe35777d65ebb4391a06b4a2c2342e4c75cbee6bbda4c6916e33"
 
 jobs:
   release:
@@ -67,40 +68,7 @@ jobs:
           git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":obsidian-edition
       - name: DOSBox-X for Windows, its licence and its source
         shell: bash
-        run: |
-          base="https://github.com/joncampbell123/dosbox-x"
-          tag="dosbox-x-v$DOSBOX_X_VERSION"
-          curl -fsSL -o dbx.zip "$base/releases/download/$tag/dosbox-x-vsbuild-win64-$DOSBOX_X_VERSION-portable.zip"
-          curl -fsSL -o "dosbox-x-source-$DOSBOX_X_VERSION.tar.gz" "$base/archive/refs/tags/$tag.tar.gz"
-          got=$(sha256sum dbx.zip | cut -d' ' -f1)
-          echo "DOSBox-X $DOSBOX_X_VERSION for Windows: sha256 $got"
-          if [ -n "$DOSBOX_X_SHA256" ] && [ "$got" != "$DOSBOX_X_SHA256" ]; then
-            echo "expected $DOSBOX_X_SHA256"; exit 1
-          fi
-          python - "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION" <<'PY'
-          import os, sys, zipfile
-          top, v = sys.argv[1], os.environ["DOSBOX_X_VERSION"]
-          tag = "dosbox-x-v" + v
-          take = {"bin/x64/Release SDL2/dosbox-x.exe": "dosbox-x.exe", "COPYING": "COPYING.txt",
-                  "bin/x64/Release SDL2/README.txt": "README.txt"}
-          source = (f"DOSBox-X {v}, the 64-bit Windows build (dosbox-x.exe), as DOSBox-X's own release gives it,\r\n"
-                    f"unchanged. DOSBox-X is free software under the GNU General Public License, version 2\r\n"
-                    f"(COPYING.txt). Its source code for this version:\r\n\r\n"
-                    f"  https://github.com/joncampbell123/dosbox-x/tree/{tag}\r\n\r\n"
-                    f"and a copy of it beside this mod's download (dosbox-x-source-{v}.tar.gz on the same release\r\n"
-                    f"page). DOSBox-X's site: https://dosbox-x.com/\r\n\r\n"
-                    f"The Obsidian Edition's Loader starts it with its own configuration (obsidian.conf, written\r\n"
-                    f"here at each start). To play in GOG's DOSBox instead, choose it on the Loader's Options tab\r\n"
-                    f"(Engine).\r\n")
-          with zipfile.ZipFile("dbx.zip") as src, zipfile.ZipFile(top + ".zip", "a", zipfile.ZIP_DEFLATED) as out:
-              names = set(src.namelist())
-              for name, to in take.items():
-                  if name not in names:
-                      sys.exit(f"DOSBox-X's zip has no {name}")
-                  out.writestr(f"{top}/dosbox-x/{to}", src.read(name))
-              out.writestr(f"{top}/dosbox-x/SOURCE.txt", source)
-          PY
-          echo "DBX_SOURCE=dosbox-x-source-$DOSBOX_X_VERSION.tar.gz" >> "$GITHUB_ENV"
+        run: python .github/scripts/add_dosbox_x.py "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION"
       - name: Release
         shell: bash
         env:
