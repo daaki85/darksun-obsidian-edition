@@ -88,6 +88,18 @@ class ArmourShineTests(unittest.TestCase):
                 suited = self.changes(obj, None, pose, (88, 25, 26), (88, arms, 26))
                 self.assertEqual(alone, suited)
 
+    def test_stock_giant_charcoal_cuffs_in_front_of_the_chest_keep_their_own_material(self):
+        for obj in (308, 309):
+            with self.subTest(obj=obj):
+                chest = self.changes(obj, None, 12, (), (magic(88, sg.BLUE_GLOW),))
+                arms = self.changes(obj, None, 12, (25,), (magic(25, sg.GREEN_GLOW),))
+                self.assertTrue(arms)
+                self.assertTrue(set(arms).isdisjoint(chest))
+                # Three cells on the cuff used to take the chest dye because
+                # their original charcoal is shared with the black harness.
+                protected = {(19, 13), (8, 16), (9, 17)} if obj == 308 else {(19, 14), (8, 17), (9, 18)}
+                self.assertTrue(protected.isdisjoint(chest))
+
     def test_fitted_native_drape_face_trim_and_bow_do_not_take_plate_shine(self):
         for obj, model, role, pose in ((302, 2055, "Cleric/Fighter", 7),
                                       (305, 2059, "Preserver/Thief", 12),

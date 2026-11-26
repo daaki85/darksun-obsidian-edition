@@ -1215,7 +1215,12 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     stock_source = [r[:] for r in armor_canvas] if armour and not costume else None
     bow_keep = set()
     boot_keep = set()
+    wrist_keep = set()
     if stock_source and registered and model != sp.KREEN:
+        # The metal on a bare wrist has the same pigment as the giant's harness.
+        # Establish which surface is in front even if only the chest is equipped.
+        wrists = spritebracers.visible(rows, model, frame, combat, own, None, padded(rows, pad), pad)
+        wrist_keep.update((x, len(rows)-1-y if armor_canvas is not out else y) for x, y in wrists)
         if combat and frame in sp.BOW_FRAMES:
             layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
             role = "Warrior" if layer in (2095, 2099) else "Fighter"
@@ -1277,9 +1282,11 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                              and base_outfit[y + pad][x + pad] not in (None, 254)]
                     dye_garment(out, cells, shades, pad, base_outfit)
                 elif armor_parts.facing is not None:
+                    covered = bow_keep if piece == ARMOUR_ARMS else bow_keep | wrist_keep
+                    if piece == ARMOUR_LEGS:
+                        covered = covered | boot_keep
                     cells = draw_armour(armor_canvas, model, armor_parts, kind, pad, armor_own,
-                                        bool(item_type & VEILED_DYE), stock_source,
-                                        bow_keep | boot_keep if piece == ARMOUR_LEGS else bow_keep)
+                                        bool(item_type & VEILED_DYE), stock_source, covered)
                 else:
                     cells = []
                 if piece == ARMOUR_LEGS and registered and (costume or not cells):
@@ -1291,7 +1298,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         # The retail model has no visible lower garment in this
                         # pose. Require a continuous sliver of exposed calf above
                         # the shoes, so a lone shared skin tone cannot make a plate.
-                        skin = set(exposed) - boot_keep - bow_keep
+                        skin = set(exposed) - boot_keep - bow_keep - wrist_keep
                         exposed = sorted((x, y) for x, y in skin if any(
                             (x+dx, y+dy) in skin for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy))
                     source = base_outfit if costume else stock_source
