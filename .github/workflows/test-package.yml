@@ -1,0 +1,57 @@
+# A test download: the zip a release would give (git archive of obsidian-edition, DOSBox-X for Windows
+# in its dosbox-x folder by .github/scripts/add_dosbox_x.py), made for every pull request and on demand
+# (Actions -> Test package -> Run workflow, on any branch), so testers play what players will get. It
+# is a workflow run's artifact, not a release: open the run (the PR's Checks tab -> Test package ->
+# Summary) and download "Obsidian-Edition-test-..." under Artifacts; unzip it and run the Loader as
+# from a release. DOSBox-X's source of the same version is the run's other artifact (GPL 2, section 3).
+name: Test package
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOSBOX_X_VERSION: "2026.10.01"
+  DOSBOX_X_SHA256: "3c50915e63aefe35777d65ebb4391a06b4a2c2342e4c75cbee6bbda4c6916e33"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The name (the branch and its commit)
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          sha=$(git rev-parse --short=8 HEAD)
+          echo "TOP=Obsidian-Edition-test-$(echo "$BRANCH" | tr '/' '-')-$sha" >> "$GITHUB_ENV"
+      - name: Zip
+        shell: bash
+        run: git archive --format=zip --prefix="$TOP/" -o "$TOP.zip" HEAD:obsidian-edition -- . ':(exclude)docs/class-outfits'
+      - name: DOSBox-X for Windows, its licence and its source
+        shell: bash
+        run: python .github/scripts/add_dosbox_x.py "$TOP.zip" "$TOP"
+      - name: Unpacked (an artifact is zipped once more on download)
+        shell: bash
+        run: |
+          mkdir pkg && cd pkg && python -m zipfile -e "../$TOP.zip" .
+          test -f "$TOP/dosbox-x/dosbox-x.exe" && test -f "$TOP/dsloader/__main__.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.TOP }}
+          path: pkg/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dosbox-x-source-${{ env.DOSBOX_X_VERSION }}
+          path: ${{ env.DBX_SOURCE }}
+          retention-days: 30
