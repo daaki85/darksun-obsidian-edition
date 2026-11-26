@@ -2079,6 +2079,16 @@ SL. The STR table (weight allowance, maximum press, x10) is at SL DS:0740h, the 
 - **The control's message**: with the weights left out, two long swords give "CANNOT USE THIS ITEM", a later check,
   not "CANNOT USE TWO HEAVY WEAPONS".
 
+**The kits' starting gear** (2026-11-26, logs/2026-11-26-ravager-kit-start-gear.md): `ravkitstart.kit_gear` then
+`weaponchoice.class_gear` in ravlog's `_gear_pass` (after ravfirstweapon.fill, before startgear.fill;
+`RAV_NO_KIT_START=1` on ravdice.py a control). **The game's give routine drops what the equip test refuses into the
+backpack**: with DSCLOG2's KIT_FORBIDS at CU_SITE a new Ravager's Shield +1 and ring armour (33, 4, 65) land in cells
+14-17, not worn, so a kit's gear step must look in the pack too (a weapon there with the right hand empty, armour by its
+type's place on the body: the type's +5, 1 the chest, 3 the arms, 0Ah the legs, 5 a hand), and must run before
+class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS (232,138), NO KIT (250,106) and the
+kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
+menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

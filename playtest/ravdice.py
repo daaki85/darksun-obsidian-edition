@@ -138,6 +138,9 @@ if os.environ.get('RAV_NO_USABLE'):
 if os.environ.get('RAV_NO_FIRST_WEAPON'):
     log.first_pick_weapon = False
     print('first pick weapon off', flush=True)
+if os.environ.get('RAV_NO_KIT_START'):
+    log.kit_start_gear = False
+    print('class and kit starting gear off', flush=True)
 if os.environ.get('RAV_CHARGES_OFF'):
     log.count_charges = lambda entries: None
     print('charges pass off', flush=True)

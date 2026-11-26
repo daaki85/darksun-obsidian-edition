@@ -25,8 +25,8 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
-    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravspells, ring, rings, shadows, sizes, squares, stealth, \
-    pickpocket, targeting, textlog, usable
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
+    shadows, sizes, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -1213,6 +1213,7 @@ class RavDiceLog(dicelog.DiceLog):
         self._next_slots = 0.0
         self._next_stock = 0.0
         self.first_pick_weapon = True  # (a new warrior's weapon a +1 of its first pick: ravfirstweapon; off for a control)
+        self.kit_start_gear = True  # (a new character's gear fitted to its classes and kit: ravkitstart; off for a control)
         self._stock: Optional[Dict[int, List[bytes]]] = None  # (shopstock's: the sellers' new items, read once)
         keys, auto = self.quicksave.keys, self.quicksave.auto
         self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
@@ -1893,7 +1894,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not self.guest.read(hdr + dicelog.TSR_GEAR_DUE, 1)[0]:
             return []
         out: List[str] = []
-        if self.starting_gear or self.first_pick_weapon:
+        if self.starting_gear or self.first_pick_weapon or self.kit_start_gear:
             if not self._items_still():
                 return []
             def items() -> Dict[int, frozenset]:
@@ -1910,9 +1911,13 @@ class RavDiceLog(dicelog.DiceLog):
                 with self._items_writable():
                     if self.first_pick_weapon:  # (a warrior's weapon a +1 of its first pick: ravfirstweapon)
                         out += ravfirstweapon.fill(self.game, new_items)
+                    if self.kit_start_gear:  # (the kit's: ravkitstart, its armour made leather before the
+                        if self.game.rules & game.RULE_KITS:  # classes' step leaves it behind; then what the
+                            out += ravkitstart.kit_gear(self.game, new_items)  # classes can't use left behind)
+                        out += weaponchoice.class_gear(self.game)
                     if self.starting_gear:
                         out += startgear.fill(self.game)
-                    if self.first_pick_weapon:  # (the weapon in hand first in its list: the weapon lines)
+                    if self.first_pick_weapon or self.kit_start_gear:  # (the weapon in hand first in its list: the weapon lines)
                         ravfirstweapon.weapon_first(self.game)
             finally:
                 self.game.making = None
