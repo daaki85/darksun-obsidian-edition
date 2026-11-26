@@ -1019,6 +1019,11 @@ fireball either way, a picture Shattered Lands has too. The Options tab's **Wake
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
 [requirements](README.md#requirements).
 
+The sequel itself starts from the Loader too: **Play Wake of the Ravager**, beside **Play Shattered Lands**
+at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that folder in its own
+DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
+([starting it](README.md#other-ways-to-start)).
+
 ### Taking the party to Wake of the Ravager
 
 The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered
@@ -1178,11 +1183,6 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character
   taken across before takes its old place again; the others take free places. With too few free, the
   Loader says so: delete characters in the sequel first.
-
-The sequel itself starts from the Loader too: **Play Wake of the Ravager**, beside **Play Shattered Lands**
-at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that folder in its own
-DOSBox, with everything above. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
-([starting it](README.md#other-ways-to-start)).
 
 ## Saves
 
