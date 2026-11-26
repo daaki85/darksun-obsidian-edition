@@ -1,6 +1,7 @@
-# arenatrip.sh: from pens-after-scar (toalarm.sh: loaded, Cilla a thief in memory, to the fire room), rest till
-# Kurzak calls, answer at once (toarena.sh, Y at "Enter the arena?"), and count the game's free things
-# (thingsfree.py) in the fire room and on arriving in the arena. Never save after (Cilla raised).
+# arenatrip.sh: from pens-after-scar, rest in the fire room till Kurzak calls, answer at once, and count
+# the game's free things (thingsfree.py) there and on arriving in the arena. toalarm.sh loads the save,
+# makes Cilla a thief in memory and goes to the fire room; toarena.sh answers (Y at "Enter the arena?"). Never save after (Cilla raised);
+# PT_NO_EDIT=1 makes the whole trip with no memory edit (the autosave 4 s after arriving is then a save of a game as played).
 . "$(dirname "$0")/env.sh"; cd "$PT"
 timeout 900 sh toalarm.sh | tail -3
 timeout 20 python3 click.py 240 160 >/dev/null; sleep 4   # (into the fire room when the walk stops short)

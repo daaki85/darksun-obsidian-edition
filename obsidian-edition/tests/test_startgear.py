@@ -27,7 +27,7 @@ class FillTests(FinishNewTests):
     def setUp(self):
         super().setUp()
         rules = game.RULES_IN_FORCE
-        game.RULES_IN_FORCE = 0
+        game.RULES_IN_FORCE = game.RULES_ALWAYS
         self.addCleanup(setattr, game, "RULES_IN_FORCE", rules)
         self.type_at = lambda t: self.TYPES + t * game.ITEM_TYPE_SIZE
         for t in range(game.GAME_TYPES + 25):  # (every class may use every type, as far as the game's lists go)
@@ -150,7 +150,7 @@ class FillTests(FinishNewTests):
                 with mock.patch("dsloader.kitpages.kit_ids", lambda sheet: [kit] if kit else []):
                     startgear.fill(self.gd)
                 self.assertEqual(self.worn().get(CLOAK), SLOT("cloak") if cloak else None)
-        game.RULES_IN_FORCE = 0
+        game.RULES_IN_FORCE = game.RULES_ALWAYS
         self.items = 0
         self.character((17, 0, 0), race=game.HUMAN)
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, game.WEAPON_HANDS[0])

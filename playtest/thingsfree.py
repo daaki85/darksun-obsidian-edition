@@ -1,5 +1,5 @@
-# thingsfree.py [LABEL]: the game's dynamic things (objects 320-519, handed out from a free list):
-# how many are free (the free list walked), the game's count out (DS:4C48h), and how many item lists
+# thingsfree.py [LABEL]: the game's dynamic things (objects 320-519, handed out from a free list).
+# How many are free (the free list walked), the game's count out (DS:4C48h), and how many item lists
 # the people on the map hold (worn, held, backpack), for people.py's cost. One line.
 import os, sys, struct; HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'live.py')).read())

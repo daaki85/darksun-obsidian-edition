@@ -4,6 +4,7 @@ import argparse
 import collections
 import os
 import sys
+from contextlib import ExitStack
 from typing import Optional
 
 from . import values
@@ -163,12 +164,25 @@ def cmd_dicelog(args) -> None:
 
 
 def _follow(args) -> None:
-    """cmd_dicelog's work: the dice log printed as the game runs."""
+    """cmd_dicelog's work: the dice log printed as the game runs; DOSBox gone or unreadable
+    (ProcessError), said and waited for again, as the window does, not a bare error."""
     import time
-    from .dicelog import DiceLog
-    from .dicelog import DiceLogError
+    from .process import ProcessError
+    while True:
+        try:
+            _follow_once(args)
+            return
+        except ProcessError as e:
+            print(f"DOSBox can't be read any more ({e}). Waiting for it...", flush=True)
+            time.sleep(2)
+
+
+def _follow_once(args) -> None:
+    import time
+    from .dicelog import DiceLog, DiceLogError
     from .guestmem import GuestMemoryError
-    from .launch import add_learned_speakers, set_pickpocketed, learned_speakers, load_settings, speaker_names
+    from .launch import (SettingsUnreadable, add_learned_speakers, learned_speakers, load_settings,
+                         set_pickpocketed, speaker_names)
     while True:  # DOSBox may still be starting
         try:
             guest = connect(args)
@@ -176,58 +190,59 @@ def _follow(args) -> None:
         except (CliError, GuestMemoryError) as e:
             print(f"{e} Waiting...", flush=True)
             time.sleep(2)
-    log = DiceLog(guest, record_everything=args.raw)
-    log.answer_stats_in_background()
-    from .launch import SettingsUnreadable
-    while True:  # (read strictly: one held elsewhere isn't the defaults, every rule on, no pockets tried)
-        try:
-            settings = load_settings(strict=True)
-            break
-        except SettingsUnreadable as e:
-            print(f"{e.strerror}. Waiting...", flush=True)
-            time.sleep(1)
-    log.use_settings(settings)  # the Ring +1, the rule changes, monster descriptions
-    log.speaker_names = speaker_names()
-    log.learned_speakers = learned_speakers()
-
-    def attach() -> None:
-        waiting = False
-        while True:
+    with ExitStack() as connection:
+        connection.callback(guest.proc.close)
+        log = DiceLog(guest, record_everything=args.raw)
+        connection.callback(log.close, stats_timeout=None)
+        connection.callback(log.detach)
+        log.answer_stats_in_background()
+        while True:  # (read strictly: one held elsewhere isn't the defaults, every rule on, no pockets tried)
             try:
-                print(log.attach(), "Press Ctrl+C to stop.", flush=True)
-                return
-            except DiceLogError as e:
-                if not waiting:
-                    print(f"{e} Waiting...", flush=True)
-                    waiting = True
+                settings = load_settings(strict=True)
+                break
+            except SettingsUnreadable as e:
+                print(f"{e.strerror}. Waiting...", flush=True)
                 time.sleep(1)
+        log.use_settings(settings)  # the Ring +1, the rule changes, monster descriptions
+        log.speaker_names = speaker_names()
+        log.learned_speakers = learned_speakers()
 
-    try:
-        attach()
-        while True:
-            if not log.still_patched():
-                print("The game restarted; attaching again.", flush=True)
-                log.detach()
-                attach()
-            for line in log.lines(show_all=args.all):
-                print(line, flush=True)
-            learned, _ = log.save_learned(add_learned_speakers, set_pickpocketed)  # (one refused: next pass)
-            for portrait, name in learned.items():
-                print(f"(Portrait {portrait} is {name})", flush=True)
-            for entry in log.take_dialogue():
-                if entry.chosen:
-                    print(f"    > {entry.chosen}", flush=True)
-                    continue
-                print(f"[{log.speaker(entry.portrait)}] {entry.text}", flush=True)
-                if entry.title:
-                    print(f"    ({entry.title})", flush=True)
-                for n, reply in enumerate(entry.replies, 1):
-                    print(f"    {n}. {reply}", flush=True)
-            time.sleep(0.02)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        log.detach()
+        def attach() -> None:
+            waiting = False
+            while True:
+                try:
+                    print(log.attach(), "Press Ctrl+C to stop.", flush=True)
+                    return
+                except DiceLogError as e:
+                    if not waiting:
+                        print(f"{e} Waiting...", flush=True)
+                        waiting = True
+                    time.sleep(1)
+
+        try:
+            attach()
+            while True:
+                if not log.still_patched():
+                    print("The game restarted; attaching again.", flush=True)
+                    log.detach()
+                    attach()
+                for line in log.lines(show_all=args.all):
+                    print(line, flush=True)
+                learned, _ = log.save_learned(add_learned_speakers, set_pickpocketed)  # (one refused: next pass)
+                for portrait, name in learned.items():
+                    print(f"(Portrait {portrait} is {name})", flush=True)
+                for entry in log.take_dialogue():
+                    if entry.chosen:
+                        print(f"    > {entry.chosen}", flush=True)
+                        continue
+                    print(f"[{log.speaker(entry.portrait)}] {entry.text}", flush=True)
+                    if entry.title:
+                        print(f"    ({entry.title})", flush=True)
+                    for n, reply in enumerate(entry.replies, 1):
+                        print(f"    {n}. {reply}", flush=True)
+                time.sleep(0.02)
+        except KeyboardInterrupt:
+            pass
 
 
 def _game_dir(args) -> str:
@@ -253,7 +268,7 @@ def _game_dir(args) -> str:
             raise CliError("No game folder chosen.")
         if not launch.is_game_dir(game_dir):
             raise CliError(f"{game_dir} has no DSUN.EXE and DOSBOX folder; pick the GOG install folder.")
-    with launch.SETTINGS_LOCK:
+    with launch.SETTINGS_LOCK, launch._settings_file_lock():  # (another process's change kept)
         settings = launch.load_settings(strict=True)
         changed = dict(settings, game_dir=os.path.abspath(game_dir))
         if getattr(args, "window_scale", None):
@@ -281,7 +296,7 @@ def cmd_launch(args) -> None:
 
 
 def cmd_play(args) -> None:
-    """Start the game with the helper and the in-game additions, with no window of our own:
+    """Start the game with DSCLOG and the in-game additions, with no window of our own:
     the dice log runs in the background (for each turn's rolls and the spell slots) until
     DOSBox closes. Problems are shown in a message box and written to play.log."""
     import time
@@ -380,6 +395,9 @@ def cmd_play(args) -> None:
             tell(f"{launch.closed_line(dosbox.returncode)}\n\n{saved}")
     except (CliError, launch.LaunchError) as e:
         tell(str(e))
+    except launch.SettingsUnreadable as e:  # (as the window says it: held by a backup or a scan)
+        tell(f"{e.strerror}: it may be held by a backup or a virus scan for a moment. Start the game again "
+             "in a little while.")
     except Exception:
         tell("Something went wrong; the details are in " + log_path)
         note(traceback.format_exc())

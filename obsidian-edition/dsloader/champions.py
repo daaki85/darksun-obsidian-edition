@@ -7,10 +7,16 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   its record: the Tohr-kreen (the arena's, 292) with Kreenfang; a half-giant (the arena's Guard,
   293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
   gladiator (the Wild Mul, 290) with metal cahulaks (worldgear.METAL_CAHULAKS) and the same armour; a halfling renegade (the
-  Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
-  leather shield; an elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian
+  Renegade, 289) with a staff sling (the game's, type 0: in the missile slot, which asks nothing of
+  the hands, so the shield and sword stay; it shoots with no ammunition, as the game's slings do), a bone short sword, full leather armour, a leather helm and a
+  leather shield; an elven ranger (an elven caravan guard, 103) with a Fine Bow (the Spellarcher's:
+  a plain bow named game.FINE_BOW_NAME, +1 to hit by DSCLOG's FINE_HIT) and 24 Chill Arrows (the
+  Spellarcher's: spellarrows.arrows_item; DSCLOG casts a spell arrow's spell for anyone not in
+  the party, PROBE_ARROW's AMMO_ARCHER, so the elf's cast Chill Touch on a hit, at its highest
+  level, spellarrows.archer_level, which gives their plus too), an obsidian
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
-  defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
+  defiler (the arena's, 296) with a bone dagger, Bracers of Defense AC 6 (worldgear.bracers, worn
+  on the arms: no armour to cancel them; Mikquetzl's until 2026-11-18) and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
 - Worn and wielded: the game makes a person's items in its backpack list (+0Ch), puts them on at
   its first action in a fight (people.py does it as it comes on the map), and fights with
@@ -36,7 +42,7 @@ import random
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import dataitems, game, gpl, itemgate, kalzith, npcitems, pickpocket, ring
+from . import dataitems, game, gpl, itemgate, kalzith, npcitems, people, pickpocket, ring
 
 # Objects of the Loader's own (2563 is never one: worldgear.NOT_AN_OBJECT)
 TOHR_KREEN, HALF_GIANT, MUL, HALFLING, ELF, DEFILER = range(2660, 2666)
@@ -59,6 +65,7 @@ LEATHER_ARM, LEATHER_LEGS, LEATHER_HELM, BONE_HELM = 0x07, 0x08, 0x05, game.BONE
 HELM = npcitems._item("03fc000000000500000005000000000004ff060000")
 BOW_TYPE, ARROWS_TYPE, SLING_TYPE, LONG_SWORD_TYPE = 0x01, 0x3E, 0x40, 0x2D
 BONE_SHORT_SWORD_TYPE, BONE_DAGGER_TYPE = game.BONE_SHORT_SWORD_TYPE, game.BONE_DAGGER_TYPE
+STAFF_SLING_TYPE = game.STAFF_SLING_TYPE  # (the halfling's: the game's Staff Sling)
 
 SCROLL_SPELLS = (game.FOG_SPELL, game.SPOOK_SPELL, game.REFLECT_SPELL)
 
@@ -84,6 +91,23 @@ def game_item(chunks, kind: int) -> Optional[bytes]:
     return None
 
 
+def fine_bow(rec: Optional[bytes]) -> Optional[bytes]:
+    """A plain bow made the Fine Bow, as a Spellarcher's is (spellarrows.starting_gear): its name
+    entry game.FINE_BOW_NAME, nothing else changed (DSCLOG's FINE_HIT goes by the name alone)."""
+    if rec is None:
+        return None
+    out = bytearray(rec)
+    struct.pack_into("<H", out, game.ITEM_NAME, game.FINE_BOW_NAME)
+    return bytes(out)
+
+
+def chill_arrows() -> bytes:
+    """The elf's arrows: a Spellarcher's stack of Chill Arrows (spellarrows.STARTING of them)."""
+    from . import spellarrows
+    chill = next(a for a in spellarrows.ARROWS if a.spell_name == "Chill Touch")
+    return spellarrows.arrows_item(chill, spellarrows.STARTING)
+
+
 def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
     """Each champion's items, as (item record, the slot it is worn or held in)."""
     from . import arms, bonescale, worldgear
@@ -97,13 +121,13 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         MUL: [(worldgear.weapon(worldgear.METAL_CAHULAKS), RIGHT),
               (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
               (bonescale.HELM, HEAD)],
-        HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
+        HALFLING: [(item(STAFF_SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
                    (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
-        ELF: [(item(BOW_TYPE), MISSILE), (item(ARROWS_TYPE), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
+        ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
               (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
-        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
+        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT), (worldgear.bracers(6), ARM)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
     if missing:
@@ -118,7 +142,9 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
-DEX = {TOHR_KREEN: 18, HALF_GIANT: 15, ELF: 18, DEFILER: 18}  # (the mul and the halfling keep their kinds' 18)
+# (the mul keeps its kind's 18; the Tohr-kreen, the halfling and the elf 22, the user's: the game's
+# DEX tables run to 25, DS 7DCh missiles and initiative +4, 7F6h AC -5 at 22)
+DEX = {TOHR_KREEN: 22, HALF_GIANT: 15, HALFLING: 22, ELF: 22, DEFILER: 18}
 
 
 def _with_dex(rdff: bytes, dex: int) -> bytes:
@@ -194,11 +220,11 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
                  (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     MUL: ((game.METAL_CAHULAKS_TYPE, RIGHT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
-    HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+    HALFLING: ((STAFF_SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
           (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
-    DEFILER: ((BONE_DAGGER_TYPE, RIGHT),),
+    DEFILER: ((BONE_DAGGER_TYPE, RIGHT), (game.BRACERS_TYPE, ARM)),
 }
 
 
@@ -215,14 +241,16 @@ class Gear:
 
     def __init__(self):
         self.done: set = set()  # (creature, name, object) equipped, while in the arena
+        self.tries: Dict[tuple, int] = {}  # (those equipped and tried again for gear left unplaced)
 
     def reset(self) -> None:
         """Forget who was equipped (a game loaded: its champions are made again)."""
         self.done.clear()
+        self.tries.clear()
 
     def watch(self, gd, new_spells: bool = True, choose: Optional[Callable[[Sequence[int]], int]] = None) -> List[str]:
         if gd.region() != ARENA:
-            self.done.clear()
+            self.reset()
             return []
         choose = choose or random.choice
         table = gd.creatures(SEEN)
@@ -234,8 +262,12 @@ class Gear:
                 continue
             name = rec[game.CREATURE_NAME:game.CREATURE_NAME + 16].split(b"\0", 1)[0]
             key = (index, name, obj)
-            if key in self.done and not self._unplaced(gd, index, obj):
-                continue
+            if key in self.done:
+                # (gear still in the pack: tried again, as people.py's TRIES passes, then left as it
+                # is; with no list to be had for it every pass held the game still for nothing)
+                if self.tries.get(key, 0) >= people.TRIES or not self._unplaced(gd, index, obj):
+                    continue
+                self.tries[key] = self.tries.get(key, 0) + 1
             if struct.unpack_from("<h", rec, 0)[0] <= 0 or rec[game.CREATURE_STATUS] in DEAD_STATUS:
                 continue
             itemgate.hold(gd)

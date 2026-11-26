@@ -290,6 +290,14 @@ REPAIRS = (
            "Pehtucl's ambush: only the guards he calls hunt the party, not every guard in the pens"),
     Repair(137, 0xFB5, _FOUNTAIN_WAS, _FOUNTAIN_NOW,
            "the fountain's roar masks a guard's yell in the passage before it too"),
+    # From OpenDS's triage (docs/ds1-sweep-triage-2026-10-07.md), each site checked in the game's file:
+    # The elven slavers' leader (script 46): the first menu ("Who are you?", called from 313h) has
+    # "Join us", "hire on" and "purchase slaves", which all return to the caller (the templar's
+    # accusation, then the second menu at 58Dh); "Sorry to bother you. Goodbye." alone jumped to 898h,
+    # "Guards! Take these strangers to the slave pen!" and the consent question, skipping the
+    # accusation. Now to 583h, the menu routine's own return, as the others come back
+    Repair(46, 0x57E, bytes.fromhex("0898"), bytes.fromhex("0583"),
+           "the elven slavers' leader: Goodbye returns as the other replies do, it doesn't arrest the party"),
 )
 
 

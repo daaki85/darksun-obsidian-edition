@@ -15,7 +15,8 @@ used). The arrows are worth nothing (no merchant pays for them), last until shot
 rest), may be readied and put away as any arrows, and only a Spellarcher may carry them: DSCLOG's
 ARROWS_FORBID keeps anyone else from readying them, and as the game asks nothing of an item put in
 a backpack, those another member is found carrying go back to the party's Spellarcher
-(`return_strays`).
+(`return_strays`; with none in the party, or no room in its pack, out of the quiver into the
+member's own pack).
 
 A Spellarcher starts with a Fine Bow (a bow of fine make, +1 to hit: The Complete Fighter's
 Handbook's; DSCLOG's FINE_HIT, no one else has one) and arrows by the touch spells it picked as it
@@ -27,6 +28,12 @@ a bow's own spell; the arrow's, told by its name, takes its place), at the arche
 the game reckons it for that spell: the Spellarcher's preserver level. The target saves only as
 the spell allows ("all normal saving throw attempts", Dragon #214): against Chill Touch, which a
 save stops; Shocking Grasp and Vampiric Touch allow none.
+
+Anyone not in the party who shoots them (the arena's elf champion: champions.py) is their archer
+too: its arrows cast their spell on a hit, and it shoots them as a Spellarcher does, with its
+highest level, of whatever class, in the preserver level's place (`archer_level`: the plus,
+kits.arrow_plus, and the cast's level; DSCLOG's ARCHER_LEVEL). In the party only a Spellarcher's
+cast: anyone else's shoot as plain arrows (none should have them, `return_strays`).
 """
 
 import struct
@@ -95,6 +102,8 @@ def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
     owned = list(gd._worn(member))
     if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == game.FINE_BOW_NAME for _, item, _ in owned):
         return []
+    ring.held(gd)  # (the gate held before what is given and taken is read: ItemsBusy, a later pass)
+    owned = list(gd._worn(member))
     who, out = gd.creature_name(member), []
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     bow_kind = specialize.KINDS.index("bow")
@@ -140,6 +149,18 @@ def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
 def item_address(gd: GameData, index: int) -> int:
     """Where item INDEX's record is in the guest's memory."""
     return game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR) + index * game.ITEM_SIZE
+
+
+def archer_level(sheet: bytes, in_party: bool) -> int:
+    """The level a spell arrow's archer shoots it at (its plus, kits.arrow_plus, and the spell's
+    caster level, at least 1 for the cast; DSCLOG's ARCHER_LEVEL): a party member's (a
+    Spellarcher's) preserver level, 0 without one; anyone else's highest level, of whatever class."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    levels = sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 3]
+    if not in_party:
+        return max(levels)
+    found = [lv for cls, lv in zip(classes, levels) if cls == game.PRESERVER]
+    return found[-1] if found else 0
 
 
 def is_spellarcher(gd: GameData, member: int) -> bool:
@@ -225,14 +246,22 @@ def inventory_up(gd: GameData) -> bool:
 def return_strays(gd: GameData) -> List[str]:
     """Spell arrows a party member who isn't a Spellarcher carries (the game asks nothing of an item
     put in a backpack) go back to the party's Spellarcher: onto its stack of that spell where the two
-    come to STACK_MOST or fewer, else into its pack as they are. Out of fights, the inventory shut;
-    left where they are with no Spellarcher in the party, or no room in its pack. Lines for the log."""
+    come to STACK_MOST or fewer, else into its pack as they are. Those left with it (no Spellarcher in
+    the party, or no room in its pack) are taken out of its quiver into a backpack cell of its own, if
+    it has them readied (an old save, or a quiver filled before ARROWS_FORBID): only a Spellarcher
+    readies them. Out of fights, the inventory shut. Lines for the log."""
     if gd.in_combat() or inventory_up(gd):
         return []
     archers = [m for m in range(game.PARTY_SIZE) if is_spellarcher(gd, m)]
-    if not archers:
+
+    def strays():
+        return any(m not in archers and len(gd.creature(m)) >= game.CREATURE_SIZE
+                   and any(is_arrow(rec) and (archers or rec[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT)
+                           for _, rec, _ in gd._worn(m)) for m in range(game.PARTY_SIZE))
+    if not strays():  # (looked for without the gate: most passes, none)
         return []
-    to, out = archers[0], []
+    ring.held(gd)  # (then the gate held, and the lists read again from here on)
+    out = []
     for member in range(game.PARTY_SIZE):
         if member in archers or len(gd.creature(member)) < game.CREATURE_SIZE:
             continue
@@ -242,17 +271,32 @@ def return_strays(gd: GameData) -> List[str]:
             name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
             count = struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
             label = NAMES.get(name, b"spell arrows").decode().lower()
-            stack = next(((i, item) for i, item, _ in gd._worn(to)
-                          if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == name), None)
-            had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
-            if stack is not None and had + count <= STACK_MOST:
-                if not ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
-                    continue
-                gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
-            elif npcitems.add_to(gd, to, bytes(rec)):
-                ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True)
-            else:
-                continue
-            out.append(f"The {label} go back to {gd.creature_name(to)} from {gd.creature_name(member)}: "
-                       f"only a Spellarcher carries them ({count})")
+            if archers and _to_archer(gd, archers[0], index, rec, name, count):
+                out.append(f"The {label} go back to {gd.creature_name(archers[0])} from {gd.creature_name(member)}: "
+                           f"only a Spellarcher carries them ({count})")
+            elif rec[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT:
+                cell = pickpocket.free_cell(gd, ring.Items(gd), member)
+                if cell is not None and pickpocket.place(gd, member, index, cell):
+                    out.append(f"{gd.creature_name(member)}'s {label} are put away in the backpack: only a "
+                               f"Spellarcher readies them ({count})")
     return out
+
+
+def _to_archer(gd: GameData, to: int, index: int, rec: bytes, name: int, count: int) -> bool:
+    """Item INDEX, spell arrows (REC), onto Spellarcher TO's stack of the spell, or into its pack:
+    whether they went."""
+    stack = next(((i, item) for i, item, _ in gd._worn(to)
+                  if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == name), None)
+    had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
+    if stack is not None and had + count <= STACK_MOST:
+        if not ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
+            return False
+        gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+        return True
+    copy = ring.held(gd).word(ring.FREE_ITEMS)  # (the record add_to takes: the free list's first)
+    if npcitems.add_to(gd, to, bytes(rec)):
+        if ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
+            return True
+        # (the arrows not taken from where they were: the copy taken back, not the arrows twice)
+        ring.unlink(gd, ring.Items(gd), copy, "spell arrows' copy, the arrows not moved", empty=True)
+    return False

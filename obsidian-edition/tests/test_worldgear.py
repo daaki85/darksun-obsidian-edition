@@ -81,9 +81,11 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(worldgear.STAFF_SLING_1[0][3], 2800)
 
     def test_bracers(self):
-        """AC 6, 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Loader's icon and name."""
+        """AC 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Loader's icon and name (AC 6 the
+        champions' defiler's, test_champions; no longer Mikquetzl's)."""
         acs = {}
-        for name in ("Mikquetzl", "Wyrmias", "Balkazar", "Dagolar"):
+        self.assertFalse([g for g in worldgear.MAGIC if g.name == "Mikquetzl"])
+        for name in ("Wyrmias", "Balkazar", "Dagolar"):
             g = gift(name)
             rec = g.items[0]  # (Wyrmias has the Golden Girdle of Urnst too)
             self.assertEqual(icons.which(rec), "Bracers of Defense")
@@ -91,7 +93,7 @@ class WorldGearTests(unittest.TestCase):
             self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], worldgear.BRACERS_NAME)
             acs[name] = 10 - rec[game.ITEM_PLUS]
             self.assertEqual(struct.unpack_from("<H", rec, 6)[0], 5000 * rec[game.ITEM_PLUS])
-        self.assertEqual(acs, {"Mikquetzl": 6, "Wyrmias": 5, "Balkazar": 4, "Dagolar": 2})
+        self.assertEqual(acs, {"Wyrmias": 5, "Balkazar": 4, "Dagolar": 2})
         self.assertEqual(names.NAMES[worldgear.BRACERS_NAME], b"Bracers/Defns")
 
     def test_head_items(self):
@@ -170,18 +172,55 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(names.NAMES[worldgear.CLOAK_OF_ELVENKIND], b"Cloak/Elvenkind")
         self.assertEqual(gift("Buried chest").objects, (worldgear.CARAVAN_CHEST,))
 
-    def test_flame_blade(self):
-        """The Flame Blade: the obsidian long sword +1 (a fire cleric's to wield), Focus Heat on
-        what it hits (one past the game's number, its icon shown too), on the Hot Springs'
-        Templar with the Drake Shield."""
-        item = worldgear.FLAME_BLADE
-        self.assertEqual(struct.unpack_from("<H", item, game.ITEM_TYPE)[0], 45)
-        self.assertEqual((item[game.ITEM_PLUS], item[worldgear.ITEM_SPELL]), (1, 117))
+    def test_searing_blade(self):
+        """The Searing Blade (the Flame Blade, an obsidian long sword +1, up to 2.18.0): an obsidian
+        short sword +2, Focus Heat on what it hits (one past the game's number, its icon shown
+        too), priced as Shadowseeker (a plus and a spell) and 20,800 a plus more, on the Hot
+        Springs' Templar with the Drake Shield."""
+        item = worldgear.SEARING_BLADE
+        self.assertEqual(struct.unpack_from("<H", item, game.ITEM_TYPE)[0], game.OBSIDIAN_SHORT_SWORD_TYPE)
+        self.assertEqual((item[game.ITEM_PLUS], item[worldgear.ITEM_SPELL]), (2, 117))
         self.assertEqual(struct.unpack_from("<H", item, worldgear.ITEM_SPELL_SHOWN)[0], 117)
-        self.assertEqual(icons.which(item), "Flame Blade")
-        self.assertEqual(names.NAMES[worldgear.FLAME_BLADE_NAME], b"Flame Blade")
+        self.assertEqual(struct.unpack_from("<H", item, 6)[0], 42800)  # (Greenbright, +2 without a spell: 41,600)
+        self.assertEqual(icons.which(item), "Searing Blade")
+        self.assertEqual(names.NAMES[worldgear.SEARING_BLADE_NAME], b"Searing Blade")
         templar = next(g for g in worldgear.MAGIC if item in g.items)
         self.assertEqual((templar.region, templar.name, templar.objects), (0x23, "Templar", (34,)))
+
+    def test_mend_searing_blade(self):
+        """A saved game's Flame Blade (an obsidian long sword +1 of the name's entry) made the
+        Searing Blade wherever it is, once; any other obsidian long sword left alone."""
+        from unittest import mock
+        from dsloader import ring
+        old = bytearray(worldgear.SEARING_BLADE)
+        struct.pack_into("<H", old, game.ITEM_TYPE, worldgear.OBSIDIAN_LONG_SWORD)
+        old[game.ITEM_PLUS] = 1
+        struct.pack_into("<H", old, 6, 22000)
+        self.assertEqual(icons.which(bytes(old)), "Searing Blade")  # (its own picture all along)
+        plain = worldgear.weapon((worldgear.OBSIDIAN_LONG_SWORD, 0x15, 0x10000 - 1013, 150), 1)
+        records = [bytearray(old), bytearray(plain), bytearray(worldgear.SEARING_BLADE)]
+
+        class Guest:
+            def write(self, at, data):
+                records[at // game.ITEM_SIZE][at % game.ITEM_SIZE:at % game.ITEM_SIZE + len(data)] = data
+
+        class Items:
+            items = 0
+
+            def __init__(self, gd):
+                pass
+
+            def chain(self, thing):
+                if thing == 0:
+                    yield from ((i, bytes(r)) for i, r in enumerate(records))
+
+        class Game:
+            guest = Guest()
+        with mock.patch.object(ring, "Items", Items):
+            self.assertEqual(worldgear.mend_searing_blade(Game()), 1)
+            self.assertEqual(bytes(records[0]), worldgear.SEARING_BLADE)
+            self.assertEqual(bytes(records[1]), plain)
+            self.assertEqual(worldgear.mend_searing_blade(Game()), 0)
 
     def test_axes(self):
         """The magic axes: a bone axe +1 (Drakejaw) on one of the Magera guarding the wagon's
@@ -402,7 +441,7 @@ class DataTests(unittest.TestCase):
         self.assertLess(74 + 3 * max(added.values()), gamepatch.RECORDS_MOST)
 
     def test_regions_opened(self):
-        """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
+        r"""Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
         (named in its table of copies, its length first; the D:\ path is made from the name): else
         the game reads its own."""
         exe = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")

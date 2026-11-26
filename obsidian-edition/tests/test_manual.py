@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import guidepage, manual  # noqa: E402
+from dsloader import manual  # noqa: E402
 
 HERE = manual.HERE
 MADE = "the manual is behind its Markdown: run python -m dsloader.manual (in obsidian-edition)"
@@ -48,11 +48,20 @@ class ManualPagesTests(unittest.TestCase):
         extra = set(os.listdir(manual.MANUAL)) - {os.path.basename(p) for p in self.made}
         self.assertEqual(extra, set(), "files in manual/ the manual doesn't make")
 
+    def test_every_players_page_is_in_it(self):
+        """Every Markdown page of obsidian-edition but the developers' (DEVELOPMENT*.md, left out of
+        the release zip) is a page of the manual: one added and not listed in manual.PAGES would
+        ship as Markdown only, linked to on GitHub."""
+        sources = {source for _, source, _, _ in manual.PAGES}
+        for name in sorted(os.listdir(HERE)):
+            if name.endswith(".md") and not name.startswith("DEVELOPMENT"):
+                self.assertIn("obsidian-edition/" + name, sources, f"{name} has no page in manual.PAGES")
+
     def test_every_page(self):
-        """The ten pages, the start page first, each from its Markdown, each with the bar of all ten
-        (itself marked) and its own index; the spoiler pages marked so in the bar."""
+        """The twelve pages, the start page first, each from its Markdown, each with the bar of all
+        twelve (itself marked) and its own index; the spoiler pages marked so in the bar."""
         self.assertEqual(manual.PAGES[0][0], "index.html")
-        self.assertEqual(len(manual.PAGES), 10)
+        self.assertEqual(len(manual.PAGES), 12)
         for page, source, name, _ in manual.PAGES:
             self.assertTrue(os.path.exists(os.path.join(manual.ROOT, source)), source)
             html = self.pages[page]
@@ -64,7 +73,7 @@ class ManualPagesTests(unittest.TestCase):
                 self.assertIn('<nav class="index" id="contents"', html)
                 self.assertIn(f'<link rel="stylesheet" href="{manual.CSS}">', html)
         bar = self.pages["index.html"]
-        for page in ("items.html", "creatures.html"):
+        for page in ("items.html", "creatures.html", "people.html"):
             self.assertRegex(bar, re.escape(f'href="{page}"') + r'>[^<]+</a> <span class="spoil">\(spoilers\)')
         self.assertRegex(bar, r'href="game-bugs.html">[^<]+</a> <span class="spoil">\(some spoilers\)')
         for page in ("items.html", "game-bugs.html"):  # (the pages' own warnings, at their top)
@@ -146,11 +155,6 @@ class HelpButtonTests(unittest.TestCase):
         self.assertEqual((value.value.id, value.attr), ("manual", "START"))
         self.assertFalse(os.path.exists(os.path.join(HERE, "player-guide.html")))  # (now in manual/)
 
-    def test_old_name(self):
-        """python -m dsloader.guidepage still writes the manual."""
-        self.assertIs(guidepage.write, manual.write)
-        self.assertTrue(callable(guidepage.main))
-
 
 class MarkdownTests(unittest.TestCase):
     def test_inline(self):
@@ -217,7 +221,21 @@ class MarkdownTests(unittest.TestCase):
         notes = manual.linker("PATCH-NOTES.md")
         self.assertEqual(notes("patch-notes.html"), "changes.html")
         self.assertEqual(notes("obsidian-edition/KITS.md"), "kits.html")
-        self.assertEqual(manual.href("KITS.md#x"), manual.DOCS + "KITS.md#x")  # (outside the manual)
+        self.assertEqual(to(manual.MAIN + "PATCH-NOTES.md"), "changes.html")  # (the Markdown's own addresses)
+        self.assertEqual(to(manual.MAIN + "obsidian-edition/DEVELOPMENT.md#x"), manual.DOCS + "DEVELOPMENT.md#x")
+        self.assertEqual(to(manual.MAIN + "CHANGELOG.md"), manual.BLOB + "CHANGELOG.md")
+        # (the root's patch-notes.html, published from main, keeps main's addresses)
+        self.assertEqual(manual.href("KITS.md#x"), manual.MAIN + "obsidian-edition/KITS.md#x")
+
+    def test_github_links_at_the_release(self):
+        """The manual's GitHub links are to its release's tag (blob/v and __version__), so a zip's
+        manual links the files as they were in that version; none is to main."""
+        from dsloader import __version__
+        self.assertEqual(manual.BLOB, f"{manual.REPO}/blob/v{__version__}/")
+        self.assertEqual(manual.MAIN, f"{manual.REPO}/blob/main/")
+        for page, _, _, _ in manual.PAGES:
+            with open(os.path.join(manual.MANUAL, page), encoding="utf-8") as f:
+                self.assertNotIn("/blob/main/", f.read(), page)
 
 
 if __name__ == "__main__":

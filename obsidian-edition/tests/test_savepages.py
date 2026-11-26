@@ -1,4 +1,4 @@
-"""Tests for savepages.py: the save/load window's PAGE 1 and PAGE 2 buttons."""
+"""Tests for savepages.py: the save/load window's PAGE 1 to PAGE 4 and QUICK buttons."""
 
 import os
 import struct
@@ -50,6 +50,14 @@ class WindowTests(unittest.TestCase):
             self.assertEqual(item[:4], bytes(4))  # (the game's: the chunk's address)
             self.assertEqual(item[4:16], b"BUTN" + struct.pack("<IHH", cid, savepages.BUTTON_X, y))
         self.assertEqual(savepages.window_with_buttons(window), window)  # (once)
+
+    def test_the_quick_page_has_its_button(self):
+        """The fifth page (quicksave.py's SAVQ files): QUICK, button 819h (DSCLOG's PAGE1_ID + 4),
+        under PAGE 4."""
+        self.assertEqual(savepages.PAGES[-1], (0x819, "QUICK", 150))
+        self.assertEqual([cid for cid, _, _ in savepages.PAGES], list(range(0x815, 0x81A)))
+        ys = [y for _, _, y in savepages.PAGES]
+        self.assertEqual([b - a for a, b in zip(ys, ys[1:])], [20] * 4)
 
     def test_button_chunk(self):
         exit_button = b"BUTN" + struct.pack("<I", 110) + struct.pack("<I", savepages.EXIT) + bytes(78) \

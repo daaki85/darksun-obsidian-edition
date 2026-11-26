@@ -1,5 +1,5 @@
 # viewto.py X Y: drag the view (scroll.py, the middle button) until map point X, Y is near the
-# screen's centre, so a far spot can be clicked: the party then walks there by itself, finding its
+# screen's centre, so a far spot can be clicked. The party then walks there by itself, finding its
 # own way (it does over a whole region, if the spot is floor). Prints the camera and where the
 # point is on screen.
 import sys, os, struct, subprocess

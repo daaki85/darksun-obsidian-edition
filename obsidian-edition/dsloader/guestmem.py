@@ -37,6 +37,11 @@ class GuestMemoryError(Exception):
     pass
 
 
+class WriteRefused(GuestMemoryError):
+    """A write the guard refused (GuestMemory.guarded), noted in `refused`: raised, so that a
+    change of two writes or more isn't left half made; the dice log's steps drop it whole (_step)."""
+
+
 LOW_MEMORY = 0x600  # the interrupt vectors, the BIOS's data and DOS's own: never the Loader's to write
 
 
@@ -69,7 +74,7 @@ class GuestMemory:
             if addr < end and addr + len(data) > start:
                 self.refused.append(f"{len(data)} bytes at {addr:#x} ({name}), from {_caller()}")
                 self.refused_total += 1
-                return
+                raise WriteRefused(f"write at guest {addr:#x} refused ({name})")
         if self.item_gate is not None and self.item_gate.covers(addr, len(data)):
             self.item_gate.open()  # (ItemsBusy: the game is changing them; nothing written)
         self.proc.write(self.base + addr, data)

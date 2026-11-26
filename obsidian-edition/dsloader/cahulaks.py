@@ -74,7 +74,7 @@ class Big:
             return
         far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
         off = struct.unpack("<H", guest.read(tsr_hdr + TSR_BIG, 2))[0]
-        if not off:  # (a helper from before BIG: nothing to keep)
+        if not off:  # (a DSCLOG from before BIG: nothing to keep)
             return
         guest.write(far + off, table)
         self._table = table

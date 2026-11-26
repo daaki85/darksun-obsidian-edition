@@ -136,7 +136,7 @@ class WornTests(unittest.TestCase):
         struct.pack_into("<h", m, CREATURES + 0x0C, 401)
         m[ITEMS + 70 * game.ITEM_SIZE:ITEMS + 71 * game.ITEM_SIZE] = ring.RING
         m[ITEMS + 70 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FINGER
-        m[ITEM_TYPES + game.RING_TYPE * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL
+        m[ITEM_TYPES + game.RING_TYPE * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL_BIT
 
     def test_named(self):
         self.assertEqual(self.log.game.equipment(0), [("finger", "Ring/Protection +1")])
@@ -226,7 +226,8 @@ class FlagsTests(unittest.TestCase):
             def update(self, *args):
                 seen.append(args[-2:])
 
-        log.combat_log, log._panel, log._font_tried = True, Panel(), True
+        log._panel, log._font_tried = Panel(), True
+        log._map_up = lambda: True
         log.tsr_hdr = log.tsr_hdr or 0x100
         struct.pack_into("<I", m, DS * 16 + game.NUMBERS_PTR, 0)
         log._update_panel(0.0)

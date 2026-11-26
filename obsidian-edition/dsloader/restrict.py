@@ -1,4 +1,4 @@
-"""Class restrictions (the Options tab's rule): what a character's classes keep it from equipping,
+"""Class restrictions (a rule change, always on): what a character's classes keep it from equipping,
 on top of the game's own class lists (each item type's mask of the classes that may use it, of
 which one of the character's classes is enough). The strictest class wins. DSCLOG's
 PROBE_CAN_USE does this in the game; this is its model, for the tests and the Loader.
@@ -45,7 +45,7 @@ ARMOUR = 0x80  # (+0Fh: shields have it too)
 BRACERS_SLOT = 3  # (+9: where it is worn, as arm armour)
 CLOAK_SLOT = 8  # (+9: worn as a cloak)
 WOOD, BONE, STONE, OBSIDIAN, METAL, LEATHER = range(6)  # (the material's low nibble)
-NO_MATERIAL = 0x40  # (with a low nibble of 0)
+NO_MATERIAL_BIT = 0x40  # (with a low nibble of 0)
 
 # Class numbers (game.CLASS_NAMES): a cleric, druid and ranger for each element
 CLERICS, DRUIDS, RANGERS = range(1, 5), range(5, 9), range(13, 17)
@@ -61,7 +61,7 @@ PSIONICIST_KINDS = frozenset(specialize.KINDS.index(k) for k in
 def material(typ: bytes) -> int:
     """The material's number (WOOD..LEATHER), or -1 for none."""
     low = typ[TYPE_MATERIAL] & 0x0F
-    return -1 if typ[TYPE_MATERIAL] & NO_MATERIAL and not low else low
+    return -1 if typ[TYPE_MATERIAL] & NO_MATERIAL_BIT and not low else low
 
 
 def is_weapon(typ: bytes) -> bool:
@@ -204,7 +204,7 @@ def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     first = game.spec_kinds(sheet)[0]
     chosen = first - 1 if first else None
-    return any(kits.allows(kid, typ, kind, chosen, bool(game.RULES_IN_FORCE & game.RULE_SPECIALIZE))
+    return any(kits.allows(kid, typ, kind, chosen, True)
                for kid in kitpages.kit_ids(sheet))
 
 

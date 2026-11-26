@@ -19,14 +19,13 @@ instruction that DSCLOG.EXE answers (see dos/dsclog.asm):
 
 A last change lets the copy live outside the game folder: the game looks for
 its data files in the folder its EXE is in, and the copy looks in the current
-folder instead (the launcher runs it from the game folder).
+folder instead (the Loader runs it from the game folder).
 
 Patching the file rather than the running game means the patches are in place
 before the game runs, including in overlays each time they are loaded. The
 original DSUN.EXE is only read.
 """
 
-import os
 import struct
 from typing import NamedTuple
 
@@ -228,6 +227,11 @@ AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
 # (the attack command's tests of its target still Okay: as fallen for that member, the turn its own)
 # (with NEW_AS_OKAY's jbe/ja after them, in the same patch: those three are left out of its own)
 AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E, NS_IMAGE + 120))
+# (the item box's INFO, its USEABLE BY: heading: a Spellarcher's spell arrows SPELLARCHERS:,
+# DSCLOG's INFO_HEAD)
+INFO_HEAD_SITE = NS_IMAGE + 121
+# (F10's standing-still test: a member Paralyzed or Stuck isn't moved back, DSCLOG's F10_PIN)
+F10_PIN_SITE = NS_IMAGE + 122
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -482,9 +486,9 @@ PATCHES = (
     Patch("shots_left", 0x1D657, bytes.fromhex("2680bc8101007505"), bytes.fromhex("2680bc8101637d05")),
     # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
     # party's strength / the monster's, but its search left SI one past the slot found, so the
-    # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
-    # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
-    # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
+    # next slot's strength (the last slot's: the next record's first OJFF; after the last in regions
+    # 6, 13, 14, 27, 39, 40, 44 and 255 an empty slot's, (0, 1) in the shipped data: a wrong count,
+    # not a divide by 0). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
     # ... and the rest (8066Dh) killed the Poisoned even after the free Neutralize Poison of a druid of
     # 7th level or more: its pass 2 took each member's effects as a bitset (598:25h, 76944h, at
@@ -493,7 +497,7 @@ PATCHES = (
     # (near calls, no fixups) moved ahead of the read, their nops dropped: the loop's jump (80984h)
     # goes to the casts (80768h), which end with a jump to the read (80758h), which goes on past
     # them (80765h: "jmp 807EDh"). A disease cured at a rest gives STR back that rest too
-    # (playtest/logs/2026-11-09-rest-order.asm)
+    # (playtest/logs/files/2026-11-09-rest-order.asm)
     Patch("rest_cures_first", 0x80765, bytes.fromhex(
         "837ef0057c368a46f050ff76ea566a60900ee8280283c4088a46f050ff76ea566a67900ee8160283c4088a46f050ff76ea"
         "566a69900ee8040283c408837eee057c308a46ee5057566a60900ee8ee0183c4088a46ee5057566a67900ee8de0183c408"
@@ -960,6 +964,9 @@ PATCHES = (
     Patch("hit", 0x25B52, bytes.fromhex("558bec83ec10"), _interrupt(VEC_HIT, 6)),
     # the end of the routine filling an item's box: a cloak's or boots' bonus to hiding, moving silently
     Patch("item_box", 0x8C1A1, bytes.fromhex("6a00"), _interrupt(VEC_ITEM_BOX, 2)),
+    # the routine drawing the item box's INFO (USEABLE BY: and the members allowed), its heading's
+    # far pointer pushed: push ds / push 3493h (DSCLOG's SPELLARCHERS: for spell arrows: INFO_HEAD)
+    Patch("info_head", 0x8C1E0, bytes.fromhex("1e689334"), _site(INFO_HEAD_SITE, 4)),
     # the end of the game's thief skill routine: mov ax,si (DSCLOG adds a worn belt's bonus to
     # picking pockets and opening locks)
     Patch("belt", 0x803B2, bytes.fromhex("8bc6"), _interrupt(VEC_BELT, 2)),
@@ -972,7 +979,7 @@ PATCHES = (
     # new game)
     Patch("save_enter", 0x74E28, bytes.fromhex("0d1c"), bytes.fromhex("ffff")),
     # ... and where a click on a button it doesn't know goes to its end: jmp (DSCLOG: PAGE 1 to
-    # PAGE 4, savepages.py)
+    # PAGE 4 and QUICK, savepages.py)
     Patch("save_click", 0x74B9F, bytes.fromhex("e94302"), _interrupt(VEC_SAVE_CLICK, 3)),
     # the game's thief skill check (803B8h): its chance, "mov [bp-2],ax" at 803D3h: a lock the thief
     # failed at the thief level it has now is out of reach (DSCLOG's LOCK_SITE; the Loader's locks.py)
@@ -1187,6 +1194,9 @@ PATCHES = (
     # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
     Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
     Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
+    # F10 in a fight (1B83Ah): its standing-still test and the jump to the move taken back, "or ax,ax /
+    # jz 1B872h": made only for a member neither Paralyzed nor Stuck (DSCLOG's F10_PIN)
+    Patch("f10_pin", 0x1B86B, bytes.fromhex("0bc07403"), _site(F10_PIN_SITE, 4)),
     # the attack command's tests of its target still Okay after the attacks (cmp byte es:[bx+1Ch],1):
     # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
     *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))

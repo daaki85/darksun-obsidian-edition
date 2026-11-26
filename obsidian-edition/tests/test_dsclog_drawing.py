@@ -1,7 +1,7 @@
 """DSCLOG's drawing on the map run in a CPU emulator (needs unicorn and nasm): the floor pass
 (SHADOW_PASS: shadows, rings, dust), see-through figures (GHOST_DRAW) and the main loop's own
 (DUST_TICK, PANEL_TICK), over a scene of figures, against a VGA whose four planes are emulated
-(the map mask and read map set through the ports, as the helper sets them).
+(the map mask and read map set through the ports, as DSCLOG sets them).
 
 Each test checks the screen comes out as it did before the drawing code was made faster (the
 SHA-256 of the planes after each call, taken from the build of 2026-11-08 before those changes),
@@ -45,7 +45,7 @@ _built = {}
 
 
 def build(asm=ASM):
-    """The helper built from ASM with a symbol map: (its image, as loaded, and each symbol's offset)."""
+    """DSCLOG built from ASM with a symbol map: (its image, as loaded, and each symbol's offset)."""
     if asm not in _built:
         with tempfile.TemporaryDirectory() as tmp:
             src, out, mp = (os.path.join(tmp, n) for n in ("m.asm", "m.exe", "m.map"))
@@ -106,7 +106,7 @@ def floor(x, y):
 
 
 class Scene:
-    """The helper loaded, a page of the whole screen at A000h (page 3), and a VGA of four planes."""
+    """DSCLOG loaded, a page of the whole screen at A000h (page 3), and a VGA of four planes."""
 
     def __init__(self, asm=ASM):
         exe, self.sym = build(asm)
@@ -197,7 +197,7 @@ class Scene:
         self.mu.mem_write(GAME_DS * 16 + at, data)
 
     def run(self, at, until, sp, **regs):
-        """From the helper's AT to CALLER:UNTIL; the instructions run."""
+        """From DSCLOG's AT to CALLER:UNTIL; the instructions run."""
         mu = self.mu
         for name, value in dict(dict(cs=TSR, ds=GAME_DS, es=GAME_DS, ss=SS, esp=sp, ebp=0x1000), **regs).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
@@ -207,7 +207,7 @@ class Scene:
         return self.count
 
     def call(self, name, **regs):
-        """The helper's routine NAME, a near call; the instructions run."""
+        """DSCLOG's routine NAME, a near call; the instructions run."""
         sp = 0x7F0
         self.mu.mem_write(SS * 16 + sp, struct.pack("<H", 0xFFF0))
         for name_, value in dict(dict(cs=TSR, ds=GAME_DS, es=GAME_DS, ss=SS, esp=sp), **regs).items():
@@ -396,7 +396,7 @@ GHOST_BEFORE = [("fc41731b1d04863d", 44419), ("816d835642c05749", 34653), ("9416
 @unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
 class DrawingTests(unittest.TestCase):
     def test_built(self):
-        """The helper as built from the source is DSCLOG.EXE (the symbols these tests use are its)."""
+        """DSCLOG as built from the source is DSCLOG.EXE (the symbols these tests use are its)."""
         with open(EXE, "rb") as f:
             self.assertEqual(build()[0], f.read(), "DSCLOG.EXE not rebuilt from dsclog.asm")
 

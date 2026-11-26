@@ -1,4 +1,5 @@
-# spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]: memory only, never save after. Teaches each
+# spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]: teaches each MEMBER the spells, fills its
+# slots and sets its casting classes to LEVEL, in memory (never save after). It teaches each
 # MEMBER the spells (the known byte at segment DS-B56h, 168h + member x 8Ah + spell), fills its
 # wizard and priest slots (9 at every level, DS:4B08h / 4B11h + 1Eh x member), and sets each of its
 # casting classes (a class whose magic mask has the wizard or priest bit, in any of the sheet's three

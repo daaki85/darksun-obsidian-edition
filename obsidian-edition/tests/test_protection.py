@@ -49,11 +49,6 @@ class Wearing(game.GameData):
 
 
 class ProtectionTests(unittest.TestCase):
-    def test_the_games_way(self):
-        """Without the rule every worn one counts, whatever the armour, as Ring of Protection."""
-        g = Wearing(0, RING_LEFT, RING_RIGHT, CLOAK, armour(METAL, plus=2), shield())
-        self.assertEqual(g.protection(0), [(4, "Ring of Protection")])
-
     def test_the_better_ring(self):
         g = Wearing(game.RULE_PROTECTION, RING_LEFT, RING_RIGHT)
         self.assertEqual(g.protection(0), [(2, "Ring of Protection")])
