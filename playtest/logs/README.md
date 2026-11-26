@@ -208,6 +208,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-half-elf-import.md) | All 48 half-elf outfits on Lex with the Loader attached, plus Cromwell’s original sheet |
 | [2026-11-25](2026-11-25-sl-sell-thanks.md) | Does S miss a merchant's thank-you in SL, as in the sequel? No: no SL shop script tests the money after its shop (seven unconditional lines; scripts 25 and 185 count items, for a purchase only); from the scripts, not played (the lock busy) |
 | [2026-11-23](2026-11-23-elf-outfits-live.md) | Elf outfits redressed live: a class change and a sword off and on, each picture byte for byte the Loader's build |
+| [2026-11-26](2026-11-26-codex-break-review.md) | Codex's Ravager map controls and Whirlwind in play: the middle-button drag, the fight camera against its control, Whirlwind's funnel, damage and saves on Tyr's thieves |
 
 ## files/
 
@@ -246,3 +247,4 @@ schedules and diffs a log made or used.
 | [2026-11-26-ravager-spell-books-money.py](files/2026-11-26-ravager-spell-books-money.py) | [Spellbooks of the new spells](2026-11-26-ravager-spell-books.md): the sequel party's money read or set (a test edit, never saved) |
 | [2026-11-26-ravager-pick-pockets-try.sh](files/2026-11-26-ravager-pick-pockets-try.sh) | [Picking pockets in the sequel](2026-11-26-ravager-pick-pockets.md): USE, the purse, a click on a person, a grab, the dice log's tail, Continue |
 | [2026-11-26-ravager-pick-pockets-hdr.py](files/2026-11-26-ravager-pick-pockets-hdr.py) | [The same](2026-11-26-ravager-pick-pockets.md): DSCLOG2's PICK POCKETS header words, the pointer mode and the answer's text in the running sequel |
+| [2026-11-26-codex-review-air-cleric.py](files/2026-11-26-codex-review-air-cleric.py) | [Codex's branches in play](2026-11-26-codex-break-review.md): the second member an air cleric of 18th level with 6th-level casts (a test edit, never saved) |

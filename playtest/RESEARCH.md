@@ -740,6 +740,11 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
 
 ## Wake of the Ravager
 
+**A priest of any element and level for a test** (2026-11-26, logs/2026-11-26-codex-break-review.md): the sheet's
+class byte +1Bh 1-4 is a cleric of air, earth, fire or water (5-8 the druids), its level +1Eh, and a priest's casts
+left DS:4474h + 22h a member + the spell level; the USE screen's spell icons are clicked at their middle (game y 58
+for the first row: y 48 does nothing).
+
 For comparing (its code, data and README; nothing in the kit plays it): `sh setup_ravager.sh` puts
 the user's GOG installer (from the private repository, as the game's: the guide's [rule
 10](PLAYTESTING.md#1-the-rules), or put at `$WORK/dl/rav.exe`) into `$WORK/rav`. Its DSUN.EXE is
