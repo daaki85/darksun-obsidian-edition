@@ -51,15 +51,15 @@ class TableTests(unittest.TestCase):
         self.assertEqual((friends[1:3], friends[0x0C], friends[0x1D]), (b"\xff\xff", 7, 1))
 
     def test_sites(self):
-        """The program's patches are DSCLOG2's SITE 140-149 (each its routine in the site table), past the
-        other threads' 130-139 and short of 150; the effect records after the game's 113."""
+        """Check the spell sites against the resident dispatch table and the effect records."""
         import re
         src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog2.asm")).read()
         routine = {ravspells.NS_CMP: "ns_cmp", ravspells.NS_KNOW: "ns_know", ravspells.NS_LEVEL: "ns_level",
                    ravspells.NS_LIST: "ns_list", ravspells.NS_CAST: "ns_cast", ravspells.NS_EFFECT: "ns_effect",
                    ravspells.NS_ABILITY: "ns_ability", ravspells.NS_CLAW: "ns_claw",
-                   ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn"}
-        self.assertEqual(sorted(routine), list(range(140, 150)))
+                   ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn",
+                   ravspells.PRIEST_SPHERE: "priest_sphere"}
+        self.assertEqual(sorted(routine), [*range(140, 150), 222])
         for number, name in routine.items():
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         names = {p.name for p in ravager.PATCHES}
@@ -122,6 +122,8 @@ class GameFileTests(unittest.TestCase):
             self.assertTrue(records["SPIN", number + 1].startswith(name))
             self.assertEqual(len(sequelicons.decode(records["ICON", 21000 + number])), 16)
         self.assertEqual(records["DATA", 327][0x1C:0x1F], bytes(3))
+        self.assertEqual(records["ICON", 21326], self.game["ICON", 21205])
+        self.assertNotEqual(records["ICON", 21327], self.game["ICON", 21194])
 
     def test_program(self):
         """The patches' bytes are the sequel's DSUN.EXE's, its effect records 113-116 empty, and

@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+- With New spells enabled, a sixth-level air spell slot can offer Whirlwind and a cosmos slot can offer Restore Youth. The game checks the caster’s spheres when it builds the priest spell list.
+
 **Added: Wake of the Ravager's new wizard spells**
 - The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
   sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its

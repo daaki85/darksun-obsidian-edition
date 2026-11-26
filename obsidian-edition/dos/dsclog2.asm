@@ -3263,7 +3263,14 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         cmp cl, 3
         ja .out
         mov si, [bp + 0x0A]
-        cmp si, PRIEST_FIRST
+        cmp si, 326                      ; Whirlwind, air
+        jne .native
+        test byte [cs:rules], 32
+        jz .out
+        test cl, cl                      ; second sphere 1 before DEC
+        jz .allow
+        jmp .out
+.native:cmp si, PRIEST_FIRST
         jb .out
         cmp si, PRIEST_END
         jae .out
@@ -3274,7 +3281,7 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         shl al, cl
         test [es:si + SPHERES_OFF], al
         jz .out
-        mov byte [bp + 2], 1
+.allow: mov byte [bp + 2], 1
         inc word [cs:el_spheres]
 .out:   pop es
         pop si
@@ -4062,6 +4069,9 @@ site_table:
         dw ns_claw                          ; 147 SITE_NS_CLAW (86A45h: a natural attack's dice: Erdlu Claw's 1d6+1)
         dw ns_scroll                        ; 148 SITE_NS_SCROLL (999FBh: a wizard scroll read: a new spell taught from it)
         dw ns_learn                         ; 149 SITE_NS_LEARN (936B4h: CHOOSE A SPELL's pick: a new one's sheet bit)
+        times 222 - ($ - site_table) / 2 dw site_none
+        dw priest_sphere                    ; 222 SITE_PRIEST_SPHERE at 62BC6h
+
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -4134,6 +4144,47 @@ ns_knows:
         pop bx
         pop ax
         ret
+NS_WHIRL equ 326
+NS_YOUTH equ 327
+
+; Return carry for either granted priest spell when the new-spells option is on.
+priest_new:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .no
+        cmp ax, NS_WHIRL
+        jb .no
+        cmp ax, NS_YOUTH
+        ja .no
+        stc
+        ret
+.no:    clc
+        ret
+
+priest_sphere:
+        push ax
+        mov ax, si
+        call priest_new
+        pop ax
+        jnc .native
+        cmp si, NS_WHIRL
+        jne .cosmos
+        test cl, 1
+        jmp .flags
+.cosmos:test cl, 0x10
+        jmp .flags
+.native:test [es:si + SPHERES_OFF], cl
+.flags: push bp
+        mov bp, sp
+        push ax
+        pushf
+        pop ax
+        and word [bp + 6], ~0x08C5
+        and ax, 0x08C5
+        or [bp + 6], ax
+        pop ax
+        pop bp
+        iret
+
 ns_cmp:
         pushad
         push es
@@ -4184,7 +4235,13 @@ ns_cmp:
         test byte [cs:si + 4], NS_PLUS1
         jz .new
         dec ax                      ; (an item's power: the spell + 1)
-.new:   call ns_new
+.new:   call priest_new
+        jnc .wizard
+        pop ax
+        pop bx
+        mov ax, 130                   ; inside the priest range with either item convention
+        jmp .cmp
+.wizard:call ns_new
         pop ax
         pop bx
         jnc .cmp
@@ -4201,7 +4258,15 @@ ns_know:
         pushad
         push es
         mov ax, [bp + 8]
-        call ns_new
+        call priest_new
+        jnc .wizard
+        ; Continue at the native priest path that checks class spheres and slots.
+        mov di, sp
+        add word [ss:di + 34], 0x62662 - 0x62628
+        pop es
+        popad
+        iret
+.wizard:call ns_new
         jnc .cmp
         mov si, [bp + 6]
         call ns_knows
@@ -4221,9 +4286,14 @@ ns_level:
         pushad
         push es
         mov ax, dx
-        call ns_new
+        call priest_new
+        jnc .wizard
+        mov al, 6
+        jmp .answer
+.wizard:call ns_new
         jnc .cmp
         mov al, [cs:bx + ns_levels]
+.answer:
         mov di, sp
         mov [ss:di + 26], al        ; (the game's CL)
         add word [ss:di + 34], NS_LEVEL_OUT
@@ -4241,7 +4311,7 @@ ns_list:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .done
         test byte [bp + 0x0C], 1
-        jz .done                    ; (not the wizards')
+        jz .priests
         mov dx, [bp + 0x0E]         ; (DL the level)
         cmp dx, 1
         jl .done
@@ -4270,6 +4340,39 @@ ns_list:
 .next:  inc bx
         cmp bx, NS_COUNT
         jb .each
+.priests:
+        test byte [bp + 0x0C], 2
+        jz .done
+        cmp word [bp + 0x0E], 6
+        jne .done
+        mov ax, ds
+        sub ax, DGROUP - 0x4699
+        mov [cs:priest_known + 2], ax
+        mov bx, NS_WHIRL
+.try:   push bx
+        push cx
+        push bx
+        push word [bp + 6]
+        call far [cs:priest_known]
+        add sp, 4
+        pop cx
+        pop bx
+        test al, al
+        jz .next_priest
+        cmp cx, [bp + NS_LIST_MOST]
+        jae .done
+        cmp dword [bp + 8], 0
+        je .count_priest
+        les di, [bp + 8]
+        add di, cx
+        add di, cx
+        mov [es:di], bx
+.count_priest:
+        inc cx
+.next_priest:
+        inc bx
+        cmp bx, NS_YOUTH
+        jbe .try
 .done:  mov di, sp
         mov [ss:di + 6], cx         ; (the game's SI: the count so far)
         mov ax, [ss:di + 2]         ; (the game's DI, the level's first spell)
@@ -4277,6 +4380,8 @@ ns_list:
         pushf
         pop ax
         jmp acid_flags
+
+priest_known dw 0x7F, 0
 
 ; - NS_CAST (site 144): the spell handler's "mov ax,[bp+0Eh] / mov [bp-1Eh],ax" (656D0h), the number its
 ;   switch looks up: Cat's Grace and Friends go to Strength's case (23), as in Shattered Lands.

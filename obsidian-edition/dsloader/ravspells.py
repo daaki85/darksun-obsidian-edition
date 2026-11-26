@@ -29,7 +29,7 @@ import os
 import struct
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import art, game, gff, spelltexts
+from . import art, game, gff, spelltexts, wotrart
 from .gamepatch import Patch
 
 FIRST = 320  # (past the sequel's 320 records: DATA 0-319)
@@ -117,7 +117,6 @@ def _sl_palette(sl_dir: str) -> List[Tuple[int, int, int]]:
 
 def _icon_colours(chunks: gff.Chunks) -> List[int]:
     """The palette numbers the sequel's own spell icons use (ICON 21000-21268, PLNR): safe on its screens."""
-    from . import wotrart
     used = set()
     for (kind, number), data in chunks.items():
         if kind == "ICON" and ICON_BASE <= number < ICON_BASE + FIRST:
@@ -168,6 +167,8 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
     out: Dict[Tuple[str, int], bytes] = {("DATA", spell): record(resource, spell) for spell in SPELLS}
     out.update(icons_for(resource, sl_dir))
     out.update(texts())
+    palette = art.palette_colours(resource[wotrart.PALETTE])
+    youth_icon = art.plnr_frames([wotrart.drawn("Restore Youth", list(enumerate(palette))[1:])])
     for spell, original, template in PRIEST_TEMPLATES:
         data = bytearray(_record(resource, template))
         if spell == WHIRLWIND:
@@ -179,7 +180,8 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
         name = game.PRIEST6_SPELLS[original].upper().encode("ascii")
         data[RECORD:] = name.ljust(NAME, b"\0") + name.replace(b" ", b"")[:8].ljust(SHORT, b"\0")
         out["DATA", spell] = bytes(data)
-        out["ICON", ICON_BASE + spell] = resource["ICON", ICON_BASE + template]
+        out["ICON", ICON_BASE + spell] = (resource["ICON", wotrart.ICONS["Whirlwind"]]
+                                           if spell == WHIRLWIND else youth_icon)
         out["SPIN", spell + TEXT_BASE] = spelltexts.TEXTS[original + 1].encode("ascii") + b"\r\n"
     return out
 
@@ -188,6 +190,7 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
 VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
 NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
 NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
+PRIEST_SPHERE = 222
 NS_SCROLL, NS_LEARN = 148, 149  # (a scroll's teaching, CHOOSE A SPELL's)
 # The spells' effects: the sequel's effect records past its 113 (0-112; zeros after them, and the creature's
 # effect bits 15 bytes, 0-119), named and given their spells' icons by "ns_effects". Cat's Grace's and
@@ -283,6 +286,7 @@ def program_patches() -> List[Patch]:
         Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
         Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
         Patch("ns_level", 0x62AD0, bytes.fromhex("83fa73"), site_bytes(NS_LEVEL, 3)),
+        Patch("priest_sphere", 0x62BC6, bytes.fromhex("26848cd307"), site_bytes(PRIEST_SPHERE, 5)),
         *cmp_patches(),
         Patch("ns_cast", 0x656D0, bytes.fromhex("8b460e8946e2"), site_bytes(NS_CAST, 6)),
         Patch("ns_effect", 0x6623B, bytes.fromhex("817e0ef5007507c746ee0200eb05c746ee6200"), site_bytes(NS_EFFECT, 19)),

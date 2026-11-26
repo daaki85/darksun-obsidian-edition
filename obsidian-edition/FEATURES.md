@@ -957,6 +957,8 @@ at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that
 DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
 ([starting it](README.md#other-ways-to-start)).
 
+With New spells enabled, a sixth-level air spell slot can offer Whirlwind and a cosmos slot can offer Restore Youth. The game checks the caster’s spheres when it builds the priest spell list.
+
 ### Taking the party to Wake of the Ravager
 
 The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered
