@@ -9,6 +9,7 @@ from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, SLEEVES, fitted_panels,
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
+from shoulderscale import scale_pixels
 
 MODELS = (2072, 2074)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric", "Psionicist", "Ranger")
@@ -107,6 +108,32 @@ WOMAN_GUARD = (
     (11, 12, 1), (7, 9, -1), (18, 10, 1), (19, 9, 1), (9, 11, 1),
     (8, 16, 0), (8, 13, -1), (13, 8, 1), (20, 10, 1),
 )
+
+# Rows run from collar to arm. The ridge is short and the tip turns down
+# over the deltoid. A lifted elbow shows the long edge of the plate.
+TURNED_SCALE = ((-1, "46"), (-2, "3547"), (-1, "2345"), (1, "21"))
+PROFILE_SCALE = ((-1, "46"), (-1, "357"), (0, "34"), (1, "1"))
+RAISED_SCALE = ((-2, "3546"), (-2, "23475"), (0, "212"))
+BACK_SCALE = ((-2, "34"), (-2, "2575"), (-1, "2344"), (1, "21"))
+
+
+def fitted_scale(pose, female):
+    pin = WOMAN_GUARD[pose] if female else GUARD[pose]
+    if not pin or female and pose == 19:
+        return {}
+    outside = 1 if pose in REAR or pose in (22, 23, 27) else -1
+    if female and pin[2]:
+        outside = pin[2]
+    if pose in (16, 21, 25, 26, 27):
+        strips = RAISED_SCALE
+    elif pose in PROFILE:
+        strips = PROFILE_SCALE
+        if pose in (2, 11, 14, 24):
+            outside = 1
+    else:
+        strips = BACK_SCALE if pose in REAR else TURNED_SCALE
+    return scale_pixels(pin[:2], outside, -1, strips)
+
 
 # Midpoint of each sole on its last visible scanline, in the same upright
 # coordinates as CUTS. Trace the lifted foot separately from the planted one.
@@ -238,25 +265,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     if female:
         fit = WOMAN_GUARD[pose]
         guard = fit[:2] if fit else None
-    # A compact, sloped cap cups the upper arm. Its downturned lip is on
-    # the outer side and the inboard end hides the start of the strap.
     outside = 1 if pose in REAR or pose in (17, 22, 23) else -1
-    cap = {}
-    if female and guard:
-        gx, gy, lean = WOMAN_GUARD[pose]
-        if pose != 19:
-            # A short highlight over the deltoid, then the half-tone and
-            # narrow shadow lip. Rotate the lip as the upper arm swings.
-            for depth, strip in enumerate(("56", "4574", "234", "12")):
-                left = gx - len(strip)//2 + (lean if depth >= 2 else 0)
-                for col, shade in enumerate(strip):
-                    cap[left+col, gy+depth-1] = int(shade)
-    elif guard:
-        gx, gy = guard
-        for depth, (start, end) in enumerate(((-1, 1), (-2, 2), (-1, 2), (1, 2))):
-            for side in range(start, end+1):
-                x, y = gx+outside*side, gy+depth-1
-                cap[x, y] = 6-depth*1.4-.5*side
+    cap = fitted_scale(pose, female)
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if female else (0, ())
     rib_span = row_limits(top)
     cloak = stamp(RANGER_CLOAK[pose])
@@ -432,17 +442,13 @@ def bone_caps(robe, visible_sleeve, pose, dx, dy):
     for sleeve in SLEEVES[pose]:
         spans = row_limits(stamp(sleeve))
         crown = min(spans)
-        for depth, width in enumerate((3, 5, 5, 3), start=1):
-            y = crown + depth
-            left, right = spans[y]
-            center = (left+right)//2
-            for x in range(center-width//2, center+width//2+1):
-                if (x, y) not in visible_sleeve:
-                    continue
-                across = x-center
-                shade = 6 - abs(across) - (across > 0) - (depth == 3)
-                if depth == 4:
-                    shade = 1 if across < 0 else 0
+        top = sum(spans[crown])
+        bottom = sum(spans[crown+4])
+        outside = 1 if bottom >= top else -1
+        strips = PROFILE_SCALE if pose in PROFILE else TURNED_SCALE
+        pin = ((spans[crown+2][0]+spans[crown+2][1])//2, crown+2)
+        for (x, y), shade in scale_pixels(pin, outside, -1, strips).items():
+            if (x, y) in visible_sleeve:
                 robe[y+dy][x+dx] = BONE[shade]
 
 

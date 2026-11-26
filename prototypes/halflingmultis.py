@@ -54,11 +54,11 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
         hy -= 2
     head = fit.head_pixels(pose)
     protected = singles.hood(pose)[0] | head
-    gx, gy = fit.SHOULDER[pose]
+    scale = fit.shoulder_scale(pose)
     for v, row in enumerate(out):
         for u, c in enumerate(row):
             x, y = u-4-dx, v-dy
-            if (not wrap and (x, y) not in protected and 0 <= y-gy <= 2 and abs(x-gx) <= 2
+            if (not wrap and (x, y) not in protected and (x, y) in scale
                     and c is not None and c != rows["Body base"][v][u]
                     and rows["Fighter"][v][u] in fit.BONE):
                 # Use the Fighter's own guard where the arm emerges from the
@@ -70,7 +70,7 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
             if (wrap and base in ("Fighter", "Fighter/Thief") and c in fit.BONE
                     and c == rows["Fighter"][v][u] and c != rows["Body base"][v][u]
                     and (x, y) not in head
-                    and 0 <= y-gy <= 2 and abs(x-gx) <= (2 if y-gy == 1 else 1)):
+                    and (x, y) in scale):
                 out[v][u] = TEAL_SCALE[c]
             # Clip the fitting to visible cloth over the pelvis. The trailing
             # end of the profile cloak passes behind the hip and carries no belt.

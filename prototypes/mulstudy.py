@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import HALFTONES, RAMPS, reference_folds
 from wornreview import Atlas
+from shoulderscale import scale_pixels
 from dsloader import art, classoutfits as co
 
 MODEL = 2093
@@ -300,15 +301,28 @@ def material_color(ramp, level):
     return ramp[max(0, min(len(ramp)-1, round(level)))]
 
 
-def bone_surface(x, y, gx, gy, inward, profile):
-    """Identify the painted dome and inward bevel, in upright coordinates."""
-    dx, dy = x-gx, y-gy
-    if -2 <= dy <= 1 and abs(dx) <= (3 if profile else 2) and abs(dx)+abs(dy) <= (4 if profile else 3):
-        return "dome"
-    joint = dx*inward
-    if 0 <= dy <= 3 and 0 <= joint <= 4 and abs(joint-(1+dy*.65)) <= 1.1:
-        return "bevel"
-    return None
+def shoulder_scale(pose):
+    gx, gy, _, _ = HIDE_POINTS[pose]
+    _, left, right = ROBE_CUTS[pose][0]
+    # On the drawn bow the nock hand crosses the chest. Follow the
+    # exposed deltoid above it, leaving the baldric tied on the chest.
+    if pose == 25:
+        gx, gy = 12, 9
+    elif pose == 26:
+        gx, gy = 4, 7
+    outside = -1 if gx < (left+right)/2 else 1
+    # The leather ties meet a low, lapped scale. In profile the lit ridge
+    # narrows and the outer corner comes forward with the upper arm.
+    if pose in (16, 21, 25, 26, 27):
+        strips = ((-2, "3567"), (-2, "23485"), (0, "231"))
+    elif pose in PROFILE_HIDE:
+        strips = ((-1, "46"), (-1, "358"), (0, "45"), (0, "21"))
+        outside = -1 if pose in (12, 13, 15) else 1
+    elif pose in (1, 7, 8, 9, 10, 18, 19, 20, 28):
+        strips = ((-1, "45"), (-2, "3576"), (-1, "2345"), (1, "21"))
+    else:
+        strips = ((-1, "46"), (-2, "3586"), (-1, "2345"), (1, "21"))
+    return scale_pixels((gx, gy), outside, -1, strips)
 
 
 def leather_outfits(game, pose, body, keep, arm):
@@ -317,12 +331,13 @@ def leather_outfits(game, pose, body, keep, arm):
     (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = ROBE_CUTS[pose]
     gx, gy, knee, hem = HIDE_POINTS[pose]
     profile = pose in PROFILE_HIDE
+    scale = shoulder_scale(pose)
     # The far end of the baldric is sewn into the opposite side of the
     # belt. The jerkin has a separate breast, side seam and overlapping tabs.
     anchor = wl+1 if gx > (sl+sr)/2 else wr-1
     hide = RAMPS["hide"]
     grain = linen_grain(game)
-    for y in range(sy, hem+1):
+    for y in range(min(sy, min(y for _, y in scale)), hem+1):
         if y <= ry:
             t = (y-sy)/max(1, ry-sy)
             lo = sl+1+(rl-sl)*t
@@ -345,7 +360,7 @@ def leather_outfits(game, pose, body, keep, arm):
             weave = grain[(y-wy)%8][(x-wl)%8]
             relief = (game.palette[skin][0]-125)/62 if skin is not None else -.8
             tone = 6.8 + .65*weave + relief - 2.6*across
-            if y < wy and skin is not None:
+            if sy <= y < wy and skin is not None:
                 if lo-1 <= x <= hi+1:
                     # The shaded facing meets the side under the armhole.
                     seam = x-(lo+.72*(hi-lo)) - .55*sin(depth*pi)
@@ -364,26 +379,10 @@ def leather_outfits(game, pose, body, keep, arm):
                     glad[py][u] = material_color(hide, 5.1+.5*weave+relief+3.2*(dist < -.35)-3.2*(dist > .65))
                     if gy+2 <= y < wy-1 and -.95 <= dist < .05 and (y-gy)%4 == 2:
                         glad[py][u] = 169  # Stud in the dark edge of the baldric.
-            # The bevel of the bone scale continues inward from the
-            # pauldron onto its leather backing. It ends at the armhole.
-            inward = 1 if gx < (sl+sr)/2 else -1
-            surface = bone_surface(x, y, gx, gy, inward, profile) if skin is not None else None
-            if surface == "bevel":
-                outer = (x-gx)*inward > 1+(y-gy)*.65
-                fighter[py][u] = material_color(BONE, 6.9+.5*weave-1.15*(y-gy)-1.3*outer)
-            # Each upper arm rolls out from beneath a short guard. Its
-            # highlight follows the dome; a dark lower lip touches the strap.
-            cx = abs(x-gx)
-            gyoff = y-gy
-            if surface == "dome":
-                dome = 7.0 - .9*cx - 1.1*gyoff + .35*weave
-                fighter[py][u] = material_color(BONE, dome-2.7*(gyoff == 1))
-                if gyoff == 1 and x > gx-1:
-                    fighter[py][u] = 205
-                if gyoff == 0 and (x-gx) in (-2, -1):
-                    fighter[py][u] = 199
-                if cx < 2 or gyoff == 0:
-                    glad[py][u] = material_color(BRONZE, dome-2.5*(gyoff == 1))
+            if skin is not None and (x, y) in scale:
+                shade = scale[x, y]
+                fighter[py][u] = BONE[shade]
+                glad[py][u] = material_color(BRONZE, shade-.6)
             if y < wy-1:
                 continue
             drop = (y-wy)/max(1, hem-wy)
@@ -477,7 +476,7 @@ def fitted_rows(game, pose):
             body[y][x+PAD] = 129 if edge else SKIN[samples[0]] if samples else 135
     # Restore the dressed figure’s open neckline from the cleaned skin.
     # Extending the retail head mask here would bring back harness pixels.
-    keep.update(collar_opening(pose, w, h))
+    opening = collar_opening(pose, w, h)
     # The near hand crosses the hip at side step two, and the draw hand
     # overlaps the tunic in the front bow. Keep those knuckles on top.
     for hx, hy in parts.hands.values():
@@ -500,7 +499,7 @@ def fitted_rows(game, pose):
         for px, original_tone in enumerate(row):
             x, y = (w-1-px, h-1-py) if pose == 28 else (px, py)
             c = body[py][px+PAD]
-            if original_tone is None or original_tone in NATIVE_LIGHT or (px, py) in keep or arm.getpixel((px, py)):
+            if original_tone is None or original_tone in NATIVE_LIGHT or (px, py) in keep or (px, py) in opening or arm.getpixel((px, py)):
                 continue
             if c not in skin_ramp or c == 129 or not ry <= y < wy+4:
                 continue
@@ -513,8 +512,12 @@ def fitted_rows(game, pose):
             body[py][px+PAD] = material_color(skin_ramp, skin_ramp.index(c)+plane)
     out = {"Original": original, "Body base": body}
     keep.update(ARM_EDGES.get(pose, ()))
-    out.update(leather_outfits(game, pose, body, keep, arm))
-    out["Cleric"] = cleric_robe(game, pose, body, keep, arm)
+    # At full draw the collar cut crosses the top of the deltoid.
+    # Bone can sit on those exposed pixels while linen stays below them.
+    exposed_ridge = {25: {(11, 9), (12, 9), (11, 10)},
+                     26: {(3, 7), (4, 7), (5, 7), (4, 8)}}.get(pose, set())
+    out.update(leather_outfits(game, pose, body, keep | (opening-exposed_ridge), arm))
+    out["Cleric"] = cleric_robe(game, pose, body, keep | opening, arm)
     return out
 
 

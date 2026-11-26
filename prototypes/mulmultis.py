@@ -42,10 +42,7 @@ def draw(game, pose, swatches):
     body = rows["Body base"]
     h, w = len(body), len(body[0])-2*fit.PAD
     hood = hood_pixels(pose)
-    gx, gy, _, _ = fit.HIDE_POINTS[pose]
-    _, shoulder_left, shoulder_right = fit.ROBE_CUTS[pose][0]
-    inward = 1 if gx < (shoulder_left+shoulder_right)/2 else -1
-    profile_guard = pose in fit.PROFILE_HIDE
+    scale = fit.shoulder_scale(pose)
     wy, left, right = fit.ROBE_CUTS[pose][2]
     dx, dy = HIP_OFFSET.get(pose, (0, 0))
     hip = (left+right)/2+dx
@@ -71,25 +68,19 @@ def draw(game, pose, swatches):
         ramp = singles.TEAL if wrap else BELT
         tint_scale = wrap and base in ("Fighter", "Fighter/Thief")
         if not wrap or tint_scale:
-            left_edge = gx-4 if tint_scale else gx-3
-            for y in range(gy-2, gy+4):
-                for x in range(left_edge, gx+5):
-                    u, v = pixel(x, y)
-                    if not (0 <= v < h and 0 <= u < len(out[v])):
-                        continue
-                    bone = rows["Fighter"][v][u]
-                    # Hide and bone share shadow colours. Transfer those
-                    # shadows only within the actual shoulder scale.
-                    surface = fit.bone_surface(x, y, gx, gy, inward, profile_guard)
-                    if (bone in fit.JERKIN or tint_scale) and not surface:
-                        continue
-                    if (bone in fit.BONE and bone != body[v][u] and body[v][u] is not None
-                            and not ("Thief" in base and (x, y) in hood)):
-                        if tint_scale:
-                            if out[v][u] == bone:
-                                out[v][u] = TEAL_SCALE[bone]
-                        else:
-                            out[v][u] = DRUID_GUARD[bone] if base.startswith("Druid") else bone
+            for x, y in scale:
+                u, v = pixel(x, y)
+                if not (0 <= v < h and 0 <= u < len(out[v])):
+                    continue
+                bone = rows["Fighter"][v][u]
+                if (bone != fit.BONE[scale[x, y]] or bone == body[v][u] or body[v][u] is None
+                        or "Thief" in base and (x, y) in hood):
+                    continue
+                if tint_scale:
+                    if out[v][u] == bone:
+                        out[v][u] = TEAL_SCALE[bone]
+                else:
+                    out[v][u] = DRUID_GUARD[bone] if base.startswith("Druid") else bone
         # The band lies on visible garment pixels over the pelvis. Let the
         # parent's armhole, passing hand and free cloak corner occlude it.
         for y in range(wy-5, wy+6):

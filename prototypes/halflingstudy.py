@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
+from shoulderscale import scale_pixels
 
 MODELS = (2068, 2070)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
@@ -58,6 +59,20 @@ SHOULDER = (
     (11, 6), (3, 6), (8, 6), (4, 6), (7, 6), (4, 8), (8, 6), (13, 9), (8, 6), (8, 7),
     (10, 7), (5, 6), (10, 5), (9, 5), (5, 6), (6, 10), (5, 8), (10, 7), (10, 8),
 )
+# Only the rolled edge shows under a raised forearm. A full-sized dome
+# obscures the turn of the upper arm at this figure's native resolution.
+def shoulder_scale(pose):
+    outside = 1 if pose in REAR or pose in (17, 22, 23, 27) else -1
+    if pose in (16, 21, 25, 26, 27):
+        strips = ((-1, "354"), (-1, "212"))
+    elif pose in PROFILE:
+        strips = ((0, "4"), (-1, "253"), (0, "21"))
+        outside = -1 if pose in (12, 13, 15) else 1
+    else:
+        strips = ((-1, "34"), (-1, "253"), (0, "12"))
+    return scale_pixels(SHOULDER[pose], outside, 0, strips)
+
+
 # Scanlines of the native head, including the last skin pixel at the jaw.
 # Origins follow the head, independently of the shoulder and the raised hand.
 # The retail walk reuses three heads. Crossed arms and tilted combat heads
@@ -203,6 +218,7 @@ def rows_for(game, model, pose, swatch):
     (sx, sy), (hx, hy), left, right, offset = CUT[pose]
     dx, dy = offset if model == 2070 else (0, 0)
     guard_x, guard_y = SHOULDER[pose]
+    scale = shoulder_scale(pose)
     bow = {(x+dx, y+dy) for y, l, r in BOW_ARCS.get(pose, ()) for x in range(l, r+1)}
     if pose == 24 and model == 2070:
         bow.add((6, 16))  # Her hair trails back and the lower bow tip shifts a pixel.
@@ -323,8 +339,13 @@ def rows_for(game, model, pose, swatch):
                 # darkened lower rim and the skin of the arm.
                 cap_shade = 4.6-1.45*cap_y-.56*abs(cap_x)-.48*cap_x
                 rows['Cleric'][ny][nx+4] = dye(RAMPS['linen'], 5+1.2*cap_shade+.45*grain)
-                rows['Fighter'][ny][nx+4] = dye(BONE, cap_shade)
-                rows['Gladiator'][ny][nx+4] = dye(BRONZE, cap_shade)
+                # A little of the leather sleeve remains under the narrower scale.
+                leather = dye(RAMPS['hide'], 2.8+.8*cap_shade+.35*grain)
+                rows['Fighter'][ny][nx+4] = leather
+                rows['Gladiator'][ny][nx+4] = leather
+            if c is not None and point in scale:
+                rows['Fighter'][ny][nx+4] = BONE[scale[point]]
+                rows['Gladiator'][ny][nx+4] = BRONZE[scale[point]]
             for role, panel in (('Gladiator', wrap), ('Fighter', jerkin), ('Cleric', robe)):
                 if point not in panel or not behind:
                     continue
