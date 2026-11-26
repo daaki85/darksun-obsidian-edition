@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
-    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravspells, ring, rings, shadows, sizes, squares, stealth, \
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravspells, ring, rings, shadows, sizes, squares, stealth, \
     pickpocket, targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
@@ -310,11 +310,19 @@ RAV_LEATHER = ((game.EQUIP_SLOTS.index("chest"), _rav_item("d6fc00000f2718000f27
 RAV_CLOAK = _rav_item("b1f900000f2701000f271c0000000000000004ff260000")
 
 
+# and with the mod's new items (ravgear's, made with its picture: GD.new_items, the "new_items" setting), its
+# obsidian mace (the sequel's type 74, ravgear.PLAIN's): a fire cleric's, as in Shattered Lands
+RAV_PLAIN_NEW: Dict[int, Tuple[Tuple[int, bytes], ...]] = {
+    4: ((74, _rav_item("2aa800000f270f000f274a0000000000000004ff1c0000")),),  # obsidian mace (ravgear's)
+}
+
+
 def rav_weapon(gd, sheet: bytes, kind: int, read):
-    """startgear._weapon's for the sequel: a plain weapon of KIND the character can use (RAV_PLAIN), as
-    (record, (type, ...)); None if there is none."""
+    """startgear._weapon's for the sequel: a plain weapon of KIND the character can use (RAV_PLAIN, then
+    RAV_PLAIN_NEW's with the new items), as (record, (type, ...)); None if there is none."""
     from . import startgear
-    for type_, rec in RAV_PLAIN.get(kind, ()):
+    new = RAV_PLAIN_NEW.get(kind, ()) if getattr(gd, "new_items", True) else ()
+    for type_, rec in RAV_PLAIN.get(kind, ()) + new:
         if startgear.can_use(gd, sheet, type_, read(type_)):
             return rec, (type_, 0, 0, 0)
     return None
@@ -1203,6 +1211,7 @@ class RavDiceLog(dicelog.DiceLog):
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
         self._next_slots = 0.0
         self._next_stock = 0.0
+        self.first_pick_weapon = True  # (a new warrior's weapon a +1 of its first pick: ravfirstweapon; off for a control)
         self._stock: Optional[Dict[int, List[bytes]]] = None  # (shopstock's: the sellers' new items, read once)
         keys, auto = self.quicksave.keys, self.quicksave.auto
         self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
@@ -1882,7 +1891,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not self.guest.read(hdr + dicelog.TSR_GEAR_DUE, 1)[0]:
             return []
         out: List[str] = []
-        if self.starting_gear:
+        if self.starting_gear or self.first_pick_weapon:
             if not self._items_still():
                 return []
             def items() -> Dict[int, frozenset]:
@@ -1893,9 +1902,16 @@ class RavDiceLog(dicelog.DiceLog):
             before = items()
             who = self.guest.read(hdr + dicelog.TSR_GEAR_WHO, 1)[0]
             self.game.making = None if who == 0xFF else who
+            new_items = (getattr(self, "_settings", None) or {}).get("new_items", True) is not False
+            self.game.new_items = new_items  # (ravgear's items there: rav_weapon, ravfirstweapon)
             try:
                 with self._items_writable():
-                    out += startgear.fill(self.game)
+                    if self.first_pick_weapon:  # (a warrior's weapon a +1 of its first pick: ravfirstweapon)
+                        out += ravfirstweapon.fill(self.game, new_items)
+                    if self.starting_gear:
+                        out += startgear.fill(self.game)
+                    if self.first_pick_weapon:  # (the weapon in hand first in its list: the weapon lines)
+                        ravfirstweapon.weapon_first(self.game)
             finally:
                 self.game.making = None
                 itemgate.release(self.game)
