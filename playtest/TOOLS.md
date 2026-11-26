@@ -114,6 +114,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
+| `ravfig.py [0\|1]` | Wake of the Ravager's figure shadows (DSCLOG2's FIGURE SHADOWS) in the running game ($WORK/rav.pid): prints the header's fig_shadows (+1960), the floor passes they were drawn in (+1962), the shadows cast (+1964) and... |
 | `ravfight.py [state\|end\|wait N\|until N\|cast X Y LEVELS\|attack\|fight [S]\|tabfight [S]]` | Wake of the Ravager's fight by its memory. |
 | `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |

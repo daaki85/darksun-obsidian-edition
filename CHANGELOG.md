@@ -122,6 +122,23 @@ Releases, newest first (2.12.0 and older in the archive):
   Shinobi's and Justifier's priest slots follow the owner's tables (Table 51, Table 46) to 16th, cast
   at 11th and 7th at most; a Spellarcher's spell arrows are +3 from 13th; an Elementalist's 7th-level
   slot comes at 14th, as a cleric's. Shattered Lands' helper has the same tables.
+**New: Wake of the Ravager**
+- The figures cast shadows in the sequel as in Shattered Lands: every living creature's outline laid
+  on the floor toward the lower right, under the walls and figures (DSCLOG2's FIGURE SHADOWS, sites
+  160-162; each frame's shadow kept as the game draws it, as the sequel lets pictures go from memory;
+  the site table padded to 179 for the open ports' sites).
+- Walkers raise dust in the sequel as in Shattered Lands, on its dirt and sand (DSCLOG2's DUST, in the
+  floor pass and the main loop as the shadows; the Loader's table of lighter colours taken a step up the
+  sequel's darker dirt). With it, the squares' table of lighter colours is now read from the right
+  place in the sequel's helper (it read the squares' counter for the palette's offset).
+- The magic items shine on the sequel's shop screens (its colour cycles stood still there), and twelve of
+  its own magic items that never shone (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3,
+  three armours, the Boots, the Amulet, the Ioun Stone, the Necklace, the Rod) shine as the others
+  (DSCLOG2's SHOP_SHINE, site 163; the Loader's copy of OBJEX.GFF, `ravshine.py`).
+- See-through figures in the sequel: a party member hidden in shadows in a fight, and anyone invisible
+  (unless the party detects invisibility), is drawn half see-through, as in Shattered Lands (DSCLOG2's
+  GHOST_DRAW on the shadows' sites; its blend tables in the far block, so only 5.5 KB of upper memory;
+  the Loader's `RavGhosts`).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

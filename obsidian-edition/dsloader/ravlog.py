@@ -24,7 +24,7 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravspells, ring, rings, shadows, sizes, squares, stealth, \
     targeting, textlog, usable
 
@@ -442,10 +442,38 @@ RAV_OUTDOORS = frozenset((0x01, 0x32, 0x3B, 0x41, 0x42, 0xFF))
 # +1890, +236), LIGHT made in the sequel's colours (RED_FIRST to RED_LAST: its 1-31 cycle).
 FK_VIEW_REDRAW, FK_SQUARES_ON, FK_LIGHT = 1922, 1924, 1926
 FK_SQUARE_DRAWS, FK_F10_MOVES, FK_F10_KEPT, FK_MARK_DRAWS = 1928, 1930, 1932, 1934
+# The walkers' dust (DSCLOG2's DUST, dust.py's): its header's DUST_ON (+1972, the Loader's: 1 once LIGHT is made), the
+# puffs raised (+1974) and its signature (+1976, DUST_SIG_WORD: a helper before DUST has its code there)
+DUST_ON, DUST_PUFFS, DUST_SIG, DUST_SIG_WORD = 1972, 1974, 1976, 0x7544
+DUST_LEAST = 0.2  # (dust.is_ground's least value here: Tyr's dirt, 56,44,28 to 85,73,52, is darker than SL's sand)
+# The see-through figures (DSCLOG2's SEE-THROUGH FIGURES, ghost.py's): its header's GHOST_SEG (+1984, the block of
+# pixels in upper memory: 0 none), GHOST_ON (+1986, the Loader's), the offsets of BLEND, REP and GHOST_TAB in the far
+# block (+1988, +1990, +1992) and the figures drawn so (+1994)
+GHOST_SEG, GHOST_ON, GHOST_BLEND, GHOST_REP, GHOST_TAB, GHOST_DRAWS = 1984, 1986, 1988, 1990, 1992, 1994
+
+
+class RavGhosts(ghost.Ghosts):
+    """ghost.Ghosts on the sequel: its stable colours (32-255; it cycles 1-31), its effects (Invisible 53, Detect
+    Invisible 25) and the tables in DSCLOG2's far block."""
+    TSR_ON = GHOST_ON
+    FIRST, LAST, CYCLED = 32, 255, (range(1, 32),)
+    INVISIBLE, DETECT = 53, 25
+
+    def places(self, guest, tsr_hdr):
+        seg, = struct.unpack("<H", guest.read(tsr_hdr + GHOST_SEG, 2))
+        far, = struct.unpack("<H", guest.read(tsr_hdr + rings.TSR_FAR_SEG, 2))
+        if not seg or not far:
+            return None
+        blend, rep, tab = struct.unpack("<HHH", guest.read(tsr_hdr + GHOST_BLEND, 6))
+        return far * 16 + blend, far * 16 + rep, far * 16 + tab
+
+
+DUST_LIGHTER = 0.2  # (and less toward white than SL's 0.45, which made it near white there: a step up its ramp)
 RAV_FIGHT_KEYS = {
     squares: {"TSR_SQUARES_ON": FK_SQUARES_ON, "TSR_LIGHT": FK_LIGHT, "WALK_MAP": 0x0538, "POINTS_SEG": 0x3C4F,
               "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "POSITIONS": RAV_POSITIONS, "POSITION_SIZE": RAV_POSITION_SIZE,
-              "LIGHT_FIRST": 32, "LIGHT_LAST": 255},
+              "LIGHT_FIRST": 32, "LIGHT_LAST": 255, "LIGHT_LEAST": DUST_LEAST,
+              "LIGHT_LIGHTER": DUST_LIGHTER},
     moveback: {"POINTS_SEG": 0x3C4F, "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "ATTACKS_OFF": 0x184,
                "COMMANDS_OFF": 0x1AE, "START_POINTS": 0x4258, "START_Y": 0x425A, "START_X": 0x425C,
                "MAP_RECORD": 0x67BB, "MAP_SIZE": RAV_POSITION_SIZE, "POSITIONS": RAV_POSITIONS,
@@ -1483,6 +1511,61 @@ class RavDiceLog(dicelog.DiceLog):
 
     _next_squares = 0.0
 
+    def _dust_pass(self, now: float) -> None:
+        """SL's dust (dust.py) on DSCLOG2's DUST: LIGHT made from the palette each time DSCLOG2 counts it changed
+        (dust.light_table in the sequel's colours, RED_FIRST to RED_LAST: only sand and dirt have a lighter one), then
+        DUST_ON set; DUST_ON cleared with SHOW_DUST off (RAV_NO_DUST, a control). Nothing for a helper without DUST
+        (its DUST_SIG not there)."""
+        if now < self._next_dust or self.game is None or not self._fight_keys_helper():
+            return
+        self._next_dust = now + dicelog.EFFECT_INTERVAL
+        hdr = self.tsr_hdr
+        if self.guest.read(hdr + DUST_SIG, 2) != struct.pack("<H", DUST_SIG_WORD):
+            return
+        far = struct.unpack("<H", self.guest.read(hdr + rings.TSR_FAR_SEG, 2))[0] * 16
+        light = far + struct.unpack("<H", self.guest.read(hdr + FK_LIGHT, 2))[0]
+        changes = self._dac_changes()
+        with self._writable([(hdr + DUST_ON, 2), (light, 256)]):
+            if not self.show_dust:
+                if self._dust_light is not None or self.guest.read(hdr + DUST_ON, 2) != b"\0\0":
+                    self.guest.write(hdr + DUST_ON, struct.pack("<H", 0))
+                self._dust_light = None
+                return
+            if changes and changes != self._dust_light:
+                dac_at = far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_DAC, 2))[0]
+                dac = self.guest.read(dac_at, 768)
+                self.guest.write(light, dust.light_table(dac, RED_FIRST, RED_LAST, DUST_LEAST, DUST_LIGHTER))
+                self._dust_light = changes
+                self.guest.write(hdr + DUST_ON, struct.pack("<H", 1))
+
+    _next_dust = 0.0
+
+    def _ghost_pass(self, now: float) -> None:
+        """SL's see-through figures (ghost.py) on DSCLOG2's: BLEND and REP made from the palette each time DSCLOG2
+        counts it changed, GHOST_TAB from the effects; nothing for a helper without them (its GHOST_BLEND 0)."""
+        if now < self._next_ghost or self.game is None or not self._fight_keys_helper():
+            return
+        self._next_ghost = now + dicelog.EFFECT_INTERVAL
+        hdr = self.tsr_hdr
+        if self.guest.read(hdr + GHOST_BLEND, 2) == b"\0\0":
+            return
+        if self._rav_ghosts is None:
+            self._rav_ghosts = RavGhosts()
+        at = self._rav_ghosts.places(self.guest, hdr)
+        if at is None:
+            return
+        blend, rep, tab = at
+        with self._writable([(blend, ghost.REP_COUNT * 256), (rep, 256), (tab, 80), (hdr + GHOST_ON, 2),
+                             (hdr + FK_VIEW_REDRAW, 2)]):
+            self._rav_ghosts.update(self.game, hdr, self.show_ghosts, self._dac_changes(),
+                                lambda: shadows.redraw(self.game, hdr))
+
+    _next_ghost = 0.0
+    _rav_ghosts: Optional[RavGhosts] = None
+    show_ghosts = True  # (the see-through figures: RAV_NO_GHOST, a control, turns them off)
+    _dust_light: Optional[int] = None  # (DSCLOG2's palette count LIGHT was last made at)
+    show_dust = True  # (the walkers' dust: RAV_NO_DUST, a control, turns it off)
+
     def _squares_key(self, now: float) -> List[str]:
         """SL's (R on the map in a fight shows or hides the squares in reach, read from the BIOS keyboard
         buffer: keywatch.py; the sequel's map keys, its table at 1F091h, have no R), on DSCLOG2's SQUARES."""
@@ -1698,6 +1781,8 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(lambda: self._target_pass(now))  # (Tab, Enter and the ring: DSCLOG2's TARGETING)
         out += self._step(lambda: self._squares_key(now), quiet=True)  # (R: the squares in reach, SQUARES)
         self._step(lambda: self._squares_pass(now), quiet=True)
+        self._step(lambda: self._dust_pass(now), quiet=True)  # (the walkers' dust: DSCLOG2's DUST)
+        self._step(lambda: self._ghost_pass(now), quiet=True)  # (the hidden and invisible see-through)
         out += self._step(self._move_back_pass, quiet=True)  # (F10 after the last step: moveback.py)
         self._step(lambda: self._usable_key(now), quiet=True)  # (Alt held: what can be used ringed, usable.py)
         if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)

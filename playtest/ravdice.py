@@ -18,7 +18,7 @@
 # list: N: Draxan#26 (side 7), ...").
 # RAV_NO_SAVES=1: no quick saves (F5, F9) and no autosaves (for a run with memory edits). RAV_NO_SQUARES=1: the
 # squares in reach off (R does nothing: the Options tab's switch), RAV_NO_MOVEBACK=1: F10 after the last step left
-# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off): controls.
+# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off), RAV_NO_DUST=1: no walkers' dust (DSCLOG2's DUST_ON never set), RAV_NO_GHOST=1: no see-through figures (its GHOST_ON never set): controls.
 # RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
 # the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
 # kept from its last attack (ac_gap) and the game's last AC for it, the effects on it, each swing's THAC0 and AC.
@@ -112,6 +112,12 @@ if os.environ.get('RAV_FRAMES'):  # (each THAC0 line's set-up locals, as the bre
 if os.environ.get('RAV_NO_SAVES'):
     log.quicksave.keys = log.quicksave.auto = False
     print('quick saves and autosaves off', flush=True)
+if os.environ.get('RAV_NO_DUST'):  # (a control: DSCLOG2's DUST_ON never set, no dust raised)
+    log.show_dust = False
+    print('dust off', flush=True)
+if os.environ.get('RAV_NO_GHOST'):  # (a control: DSCLOG2's GHOST_ON never set, every figure solid)
+    log.show_ghosts = False
+    print('see-through figures off', flush=True)
 if os.environ.get('RAV_NO_SQUARES'):
     log.show_squares = False
     print('squares in reach off', flush=True)

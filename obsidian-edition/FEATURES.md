@@ -1168,6 +1168,18 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   gives the points back but not the walk, so a click goes nowhere. A member held where they stand
   (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
   and names it: things to take, doors, bodies to search, people to talk to.
+- **[Shadows](#shadows)** under the figures in the sequel too: every living creature on the map (the
+  party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
+  toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
+  its own).
+- **[Dust](#dust)** in the sequel too: whoever walks over dirt or sand raises little puffs behind them
+  (Tyr's squares and yards; its grey cobbles and the dark floors indoors take none).
+- **[Magic items' icons](#magic-items-icons)** shine in the sequel's shops too (they stood still on a
+  shop's screen), and twelve of its own magic items that never shone now do as the others: Dragonsbane,
+  the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun
+  Stone, the Necklace and the Rod.
+- **[See-through figures](#see-through-figures)** in the sequel too: a party member hidden in shadows in
+  a fight, and anyone invisible (unless the party detects invisibility), is drawn half see-through.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three

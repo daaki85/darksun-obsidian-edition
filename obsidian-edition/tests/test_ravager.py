@@ -45,7 +45,8 @@ class TableTests(unittest.TestCase):
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
                             "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
                             "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
-                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons"}
+                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
+                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -449,7 +450,10 @@ class GameFileTests(unittest.TestCase):
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
-            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK} | sheets)  # (GFFI: the index)
+            from dsloader import ravshine
+            shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
+                             {ravager.TYPES_CHUNK} | sheets | shine)  # (GFFI: the index)
             for k in sheets:
                 old, new = dataitems.records(own[k])[0], dataitems.records(objs[k])[0]
                 self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)

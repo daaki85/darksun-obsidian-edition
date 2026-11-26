@@ -120,7 +120,7 @@ class GameTests(unittest.TestCase):
             self.assertEqual(again.counterparts, sequel.counterparts)
             copy, done = ravager.objects_fixed(open(os.path.join(WOTR, "OBJEX.GFF"), "rb").read(), frozenset(),
                                                ravager.read_added(d))
-            self.assertEqual(done, ["mod_types", "transfer_items", "wide_sheets"])  # (the monsters' sheets 48h too)
+            self.assertEqual(done, ["mod_types", "transfer_items", "item_shine", "wide_sheets"])  # (the sheets 48h too)
             self.assertIn(("RDFF", 22427 if ("OJFF", 22427) in sequel.objects else 22419), gff.read_gff(copy))
 
 
