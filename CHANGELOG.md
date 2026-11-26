@@ -59,8 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #192;
+(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #195;
 each pull request's own entry is below, grouped.)
+
+**Fixed: Wake of the Ravager's starting gear** (#195)
+- A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long sword
+  (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round,
+  so a new long sword specialist showed 1 attack a round; now 2 (the Loader's copy of the program, its gear
+  table's slots).
 
 **New: Wake of the Ravager has all 22 weapon specs** (#192)
 - A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
