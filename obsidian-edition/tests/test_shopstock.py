@@ -98,7 +98,7 @@ class FilesTests(unittest.TestCase):
         objects.update(ravgear.from_files(objects, SL, WOTR))
         stock = shopstock.seller_items(objects)
         for obj in shopstock.SELLERS:
-            want = sorted(ravgear.picture_object(k) for k in ravgear.WHERE[obj])
+            want = sorted(ravgear.picture_object(k) for k in ravgear.placed()[obj])  # (the spellbooks too)
             self.assertEqual(sorted(-struct.unpack_from("<h", r, 0)[0] for r in stock[obj]), want, obj)
             recs, _ = dataitems.records(objects[("RDFF", obj)])
             name = recs[0].data[0x21:0x31]

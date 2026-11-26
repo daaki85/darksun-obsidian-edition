@@ -13,7 +13,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import dataitems, game, gff, ravager, ravgear, ravitems  # noqa: E402
+from dsloader import dataitems, game, gff, ravager, ravgear, ravitems, ravspells  # noqa: E402
 
 try:
     from unicorn import Uc, UC_ARCH_X86, UC_MODE_16
@@ -130,6 +130,61 @@ class StableColourTests(unittest.TestCase):
         self.assertNotIn(2, numbers)
 
 
+class BookTests(unittest.TestCase):
+    """The new wizard spells' spellbooks (ravgear.BOOKS)."""
+
+    def objects(self):
+        rdff = {like: dataitems.chunk([dataitems.Record(1, 0, dataitems.ITEM, 0, 0, item(like)),
+                                       dataitems.Record(3, 0, 4, 77, 5, bytes(15))], END)
+                for like in ravgear.BOOK_LIKE.values()}
+        out = {("RDFF", like): chunk for like, chunk in rdff.items()}
+        out.update({("OJFF", like): bytes([like & 0xFF]) * 16 for like in rdff})
+        return out
+
+    def test_one_of_each_spell_in_the_taught_numbers(self):
+        self.assertEqual(sorted(b.spell for b in ravgear.BOOKS.values()), sorted(ravspells.SPELLS))
+        objects = [b.object for b in ravgear.BOOKS.values()]
+        self.assertEqual(len(set(objects)), len(objects))  # (a shop shows items of one object as one)
+        for obj in objects:
+            self.assertIn(obj, ravgear.SPELLBOOKS)
+            self.assertNotIn(obj, range(31300, 31400))  # (a one-use scroll: cast, not learnt)
+
+    def test_prices_a_level(self):
+        for key, b in ravgear.BOOKS.items():
+            self.assertEqual(b.value, 6000 if b.spell == ravspells.GRACE else 3000, key)
+
+    def test_record_teaches_its_spell(self):
+        objects = self.objects()
+        for key, b in ravgear.BOOKS.items():
+            rec = ravgear.item_record(key, objects, b"")
+            self.assertEqual(struct.unpack_from("<h", rec, 0)[0], -b.object)
+            self.assertEqual(struct.unpack_from("<H", rec, ravgear.ITEM_POWER)[0], b.spell + 1)
+            self.assertEqual(struct.unpack_from("<H", rec, ravgear.ITEM_SPELL)[0], b.spell + 1)
+            self.assertEqual(struct.unpack_from("<H", rec, ravgear.ITEM_VALUE)[0], b.value)
+            chunks = ravgear.book_chunks(key, objects)
+            self.assertEqual(chunks[("OJFF", b.object)], objects[("OJFF", b.like)])  # (the book's picture)
+            recs, _ = dataitems.records(chunks[("RDFF", b.object)])
+            self.assertEqual(recs[0].data, rec)
+            self.assertEqual(ravgear.picture_object(key), b.object)
+
+    def test_notaku_sells_all_six(self):
+        self.assertEqual(ravgear.BOOK_WHERE[58], tuple(ravgear.BOOKS))
+        self.assertEqual(ravgear.placed()[58], ravgear.WHERE[58] + tuple(ravgear.BOOKS))
+        self.assertEqual(ravgear.placed(books=False), ravgear.WHERE)
+
+    def test_switch(self):
+        """The books with the new spells' switch only (ravager.write_objects: ravspells.SKIP)."""
+        from unittest import mock
+        for skip, want in ((frozenset(), True), (frozenset({ravspells.SKIP}), False)):
+            asked = []
+            with mock.patch.object(ravager, "_write_copy", lambda g, n, d, fixed, s: fixed(b"", s)), \
+                    mock.patch.object(ravager, "read_added", lambda d: {}), \
+                    mock.patch.object(ravager, "objects_fixed", lambda d, s, added, gear: (gear({}), [])), \
+                    mock.patch.object(ravgear, "from_files", lambda c, sl, g, books=True: asked.append(books) or {}):
+                ravager.write_objects("wotr", "dos/OBJEX2.GFF", skip, sl_dir="sl")
+            self.assertEqual(asked, [want], skip)
+
+
 @unittest.skipUnless(WOTR and SL, "needs DSUN_WOTR and DSUN_SL")
 class FilesTests(unittest.TestCase):
     def test_built(self):
@@ -140,9 +195,20 @@ class FilesTests(unittest.TestCase):
             obj = ravgear.picture_object(key)
             for kind in ("OJFF", "BMP ", "RDFF"):
                 self.assertIn((kind, obj), out, key)
-        for obj, keys in ravgear.WHERE.items():
+        for key, book in ravgear.BOOKS.items():
+            for kind in ("OJFF", "RDFF", "BMP "):
+                self.assertNotIn((kind, book.object), objects, key)  # (numbers free in the sequel)
+            for kind in ("OJFF", "RDFF"):
+                self.assertIn((kind, book.object), out, key)
+            recs, _ = dataitems.records(out[("RDFF", book.object)])
+            self.assertEqual(struct.unpack_from("<H", recs[0].data, ravgear.ITEM_POWER)[0], book.spell + 1)
+            like, = struct.unpack_from("<H", objects[("OJFF", book.like)], ravitems.OJFF_ICON)
+            self.assertEqual(struct.unpack_from("<H", out[("OJFF", book.object)], ravitems.OJFF_ICON)[0], like)
+        for obj, keys in ravgear.placed().items():
             chain = pack_chain(out[("RDFF", obj)])
             self.assertEqual(chain[-len(keys):], [ravgear.picture_object(k) for k in keys], obj)
+        bare = ravgear.from_files(objects, SL, WOTR, books=False)
+        self.assertFalse([k for k in bare if k[1] in ravgear.SPELLBOOKS])
 
 
 @unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
