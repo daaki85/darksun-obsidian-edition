@@ -66,6 +66,16 @@ Releases, newest first (2.12.0 and older in the archive):
   level up; a Battle Mage's d6 and an Arcanist's d3 hit die at a level up, and past 10th 2 and 1 hit
   points a level (the owner's choice); and a Battle Mage casts though hit that round. Not yet: a new
   character's kit hit die and PSP on the creation screen.
+**New: Wake of the Ravager's kit casting levels, cures and spells known**
+- A party taken to the sequel now has these as in Shattered Lands: an Arcanist's preserver spells cast a
+  level higher (their duration and damage); a Spirit Caller's and a Wasteland Seer's priest spells 2
+  levels higher under the open sky and 1 lower under a roof; a Healer's and a Rescuer's Cure Light,
+  Serious and Critical Wounds 1 more a die, a Lifebinder's a die more (Blood Flow too), and Cell
+  Adjustment likewise; a Wilderness Avenger's Cause Wounds 1 more a die.
+- A Healer's water cleric casts the sphere of the cosmos there (the spells every druid casts and no
+  cleric: in the sequel Cure Serious and Critical Wounds, Raise Dead, Heal and the rest), a Healer and a
+  Lifebinder never the harming spells, a Wilderness Avenger never the healing ones: the USE screen lists
+  only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
 
 **New**
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
@@ -103,6 +113,7 @@ Releases, newest first (2.12.0 and older in the archive):
   `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
   `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
   the creation screen).
+
 **Added: Wake of the Ravager's new wizard spells**
 - The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
   sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its

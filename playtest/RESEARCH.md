@@ -2263,6 +2263,26 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   last. A kit byte changed between turns takes at once (a control in the same fight). **Tyr's thieves**:
   `ravgo.py y 1224 x 1839` from `ravager-after-ambush`, then 2 and Space; `ravfight.py fight` there often
   gets "NO PATH FROM HERE": click the foe yourself (the walk arrow over a foe shows its to-hit, "7+ (70%)").
+- **Kit casting levels, cures and spells known in the sequel** (logs/2026-11-26-ravager-kit-casting.md): the level a
+  spell is cast at for its duration and damage is 628AFh's (SL's 5E25Ch; [BP+6] the caster, [BP+8] the spell): a loop
+  over the three class places ([BP-1]) keeping the best level in DI, ending "inc byte [bp-1] / cmp byte [bp-1],3 /
+  jge / jmp" (629FEh) and "mov ax,di" (62A0Ah); KIT_CAST_LEVEL (site 205) takes the INC, so nothing on the stack
+  moves. The spell levels a member may cast are 97DC5h's (the caster level), not this one's. **The handler for spells
+  with rules of their own** is SL's at other addresses: its switch at 656D0h (81 cases at CS:28C1h, the overlay's CS:0
+  at file 642E0h); Cure Light Wounds (117) at 6648Ah ("push 80001h", jmp 6653Dh, the dice call, then 66545h "push ax /
+  jmp 65811h"), Cure Serious Wounds (170) 2d8 + 1 at 66493h, Cure Critical Wounds (194) 3d8 + 3 at 664A5h (after
+  628h:8Eh with D5h), Blood Flow (166) at 6652Bh (healing only on the caster's own side), Cell Adjustment (248) at
+  664C5h (CELL_HEAL, site 11), all to 65811h ("push di / call 628h:43h": the heal). **The spells' damage**: 80278h
+  (spell, level, a near pointer to the most) called by the area routine at 7E7A0h (stored at 7E7A6h "mov [bp-14h],ax",
+  the most [BP-16h]; SL's 754ECh) and the one-creature routine at 7F721h (7F727h "mov [bp-6],ax", the most [BP-8];
+  SL's 761A9h). **The sequel's spells for the kits** (RESOURCE.GFF's names): wizard spells 0-72h, priest 73h-EAh;
+  Cure Light Wounds 117, Cause Light 118, Cause Disease 149, Blood Flow 166, Cure Serious 170, Cause Serious 171, Poison
+  179, Cure Critical 194, Cause Critical 195, Slay Living 204, Heal 210, Harm 211, Waters of Life 215. The sphere byte
+  20h (the druids') is the sphere of the cosmos: Abjure, Cloak of Bravery and of Fear, Cure Serious and Critical
+  Wounds and their Causes, Free Action, Neutralize Poison, Poison, Protection from Evil 10', Dispel Evil, Rainbow,
+  Raise Dead, Slay Living, Blade Barrier, Heal, Harm, Wall of Thorns, Confusion, Creeping Doom, Restore, Energy Drain,
+  the three Symbols, Rift. DSCLOG2's counters `kc_levels`, `kc_cures`, `kc_causes`, `kc_cosmos`, `kc_barred`,
+  `kc_cells` (the header's +2064 on): `ravlevel.py counts kc_levels ...`.
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py

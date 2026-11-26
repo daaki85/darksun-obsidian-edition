@@ -752,21 +752,28 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | PSP at a level up | Mind Warrior (a fifth fewer, asleep too) | `KIT_MAX_PSP` (site 198, new) | `les bx,[bp-8]` 95172h (8748Fh); SL's `PSP_SCORES` fix of WIS read from the creation record (95110h) not ported |
 | hit dice at a level up | Battle Mage (d6, 2 past 10th), Arcanist (d3, 1 past 10th) | `KIT_HIT_DIE`, `KIT_HIT_GAIN` (sites 196, 197, new; `HIT_KIT` for the kit's own class, `[BP+8]`) | the group's die `mov al,es:[bx+0]` 95014h (87308h) and its gain past the dice `mov al,es:[bx+2]` 95000h |
 | casting after a hit | Battle Mage | `HIT_ROUND` (site 199, new) | the hit's mark `mov byte es:[si+0B2h],1` 5CD76h (58733h), SI the creature |
+| casting level for duration and damage | Arcanist (wizard spells +1), Spirit Caller, Wasteland Seer and the own thri-kreen psionicist (priest spells +2 under the open sky, -1 under a roof, at least 1) | `KIT_CAST_LEVEL` (site 205, new) | `inc byte [bp-1]` at the end of 628AFh's class loop (629FEh; SL's PROBE_SPELL_LEVEL at 5E3D1h): DI the level, `[BP+6]` the caster, `[BP+8]` the spell |
+| cures | Healer, Rescuer (+1 a die), Lifebinder (a die more; Blood Flow too); Cell Adjustment (+1, +1d4) | `KIT_CURE` (site 206, new); `CELL_MORE` in `CELL_HEAL` (site 11) | `push ax / jmp 65811h` at 66545h (SL's PROBE_CURE at 79619h), the healing pushed under the INT's frame; `[BP+0Eh]` the spell, `[BP+8]` the caster |
+| Cause Wounds | Wilderness Avenger (+1 a die) | `AVENGER_AREA`, `AVENGER_ONE` (sites 207, 208, new), `AV_CAUSE` | the damage stored after 80278h: `mov [bp-14h],ax` at 7E7A6h (SL's AREA_DMG at 754ECh), `mov [bp-6],ax` at 7F727h (HARM_SITE at 761A9h); DI the spell, `CAST_WHO`/`CAST_SPELL` TH_CAST's |
+| spells known | Healer (the cosmos: a spell's sphere byte 20h, or `COSMOS_MORE` at +2060), Healer and Lifebinder (no harming spells), Wilderness Avenger (no healing ones) | `HEALER_COSMOS`, `KIT_BARS` in `EL_SPHERE` (sites 90-92) | as the Elementalist's: the game's answer of 62B45h made yes or no |
 | spell slots | Elementalist (a level behind), Crusader and Battle Mage (1 fewer), Seeker, Justifier, Shinobi (their own tables, WIS left out: `seeker_slots`, `justifier_slots`) | `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE` in `ADND_SLOTS` (site 34); `SHINOBI_MAGE` (site 190, new); `VEILED_SLOT` | the slot routine 626B7h, per class: its call to 62A10h at 62893h (5E240h), and the "add sp,4" after its "casts wizard spells" call to 62B45h (spell 8) at 627D6h, so a Shinobi's thief class is asked (SI the member) |
 
 The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
 `RavDiceLog._kit_tick` makes them writable while the kits are on and keeps them as Shattered Lands'
 dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
-`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`, `el_spheres`:
+`kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`, `el_spheres`; the casting
+levels', cures' and spells known's `kc_levels`, `kc_cures`, `kc_causes`, `kc_cosmos`, `kc_barred`, `kc_cells` at
+the header's +2064 on:
 `playtest/ravkits.py count`; the slots' `sb_count`, `kt_count`, `sh_mages`, the PSP's and hit dice's `kit_psps`, `kit_hds`, `bm_hits`:
 `playtest/ravlevel.py counts`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
 `EXPERT_HALVES`, `KIT_MELEE`, `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE`, the PSP sites, `KIT_MAX_PSP`,
 `KIT_HIT_DIE`, `KIT_HIT_GAIN` and `HIT_ROUND` against `kitpages` and `kits` on transferred sheets, and checks the
 tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
-against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets.
+against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets; `tests/test_ravkitcast.py` runs sites
+205-208, `CELL_MORE` and `EL_SPHERE`'s kit parts against `kits` and `ravager.casts` in the sequel's spell numbers
+(`ravager.RAV_*`, which `ravlog.apply_layout` puts into `kits` for the dice log's kit parts).
 
-Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting, a spell's level,
-cures' and Cause spells' dice, spells never known, a Healer's cosmos), the Poisoner's poison, the
+Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting), the Poisoner's poison, the
 Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, a kit's hit die and PSP at creation
 (`PROBE_CR_DIE`, `PROBE_CR_PSP`, `KIT_REROLL`: SL's creation hit points' die read, 65677h, has no likeness in
 the sequel), a Scholar's THAC0 and the kits' parts of the DAM lines. The USE screen's hover still shows a

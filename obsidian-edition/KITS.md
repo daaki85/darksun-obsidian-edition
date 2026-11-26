@@ -17,7 +17,11 @@ Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
 and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the gear each kit
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the casting levels (the
+Arcanist's, Spirit Caller's and Wasteland Seer's spells a level or two higher, or lower), the cures (the
+Healer's, Lifebinder's and Rescuer's, Cell Adjustment's too), the Wilderness Avenger's Cause Wounds,
+the spells a kit knows (the Healer's sphere of the cosmos, the healing or harming spells a kit never
+knows), the gear each kit
 forbids or allows, the psionicist kits' PSP costs (the Mind Bender's, Kineticist's, Titan Mind's and
 Wasteland Seer's, to use a power, keep it up or raise a defence) and the Mind Warrior's fifth fewer PSP
 at a level up, the Battle Mage's and Arcanist's hit die at a level up, and the Battle Mage's casting
@@ -311,6 +315,13 @@ psychometabolism power, if it took that discipline at creation) 1 more.
 Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm; no weapon
 in the off hand (a shield is fine). **Starts with** the cleric's gear (its club
 in hand, with fuller starting gear).
+
+**In Wake of the Ravager** the sphere of the cosmos is the same rule, the spells every druid casts and
+no cleric, so it holds more there: the sequel's clerics cast no Cure Serious or Critical Wounds, Raise
+Dead or Heal of their own, and a Healer's water cleric casts them (and the sequel's other druids' spells
+of the higher levels: Blade Barrier, Restore, Creeping Doom...), but never a harming one (Cause
+Serious and Critical Wounds, Poison, Slay Living, Harm). Restore Youth (and Whirlwind) come with it once
+they are in the sequel.
 
 It is taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit));
 after DUAL, offered to a water cleric only, and not to one who was a ranger of
@@ -782,23 +793,23 @@ thief skills, movement and initiative.
 | Swashbuckler, Assassin | whole |
 | Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
 | Scholar | not yet (no extra spells learnt, no −1 to hit) |
-| Arcanist | in part: its d3 hit die at a level up (1 a level past 10th); no higher casting level |
+| Arcanist | whole: its spells a level higher, its d3 hit die at a level up (1 a level past 10th) |
 | Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
-| Healer | in part: water only, no weapon in the off hand; not its cosmos spells, stronger cures, no harming spells |
+| Healer | whole: water only, no weapon in the off hand, the sphere of the cosmos (the sequel's druids' spells; Restore Youth once it is in the sequel), cures 1 more a die, no harming spells |
 | Crusader | in part: its THAC0, expertise and one slot fewer |
 | Grove Warden | whole |
-| Lifebinder | in part: blunt weapons only; not its stronger cures, no harming spells |
+| Lifebinder | whole: blunt weapons only, cures a die more, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
 | Mind Bender, Kineticist, Titan Mind | whole: their PSP costs |
 | Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at a level up |
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
-| Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
-| Rescuer | in part: movement, from behind, no shield; not its stronger cures |
+| Wilderness Avenger | whole: to hit, damage, hiding, its Cause Wounds stronger, no healing spells |
+| Rescuer | whole: movement, from behind, no shield, cures 1 more a die |
 | Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
 | Poisoner | in part: its weapon spec and gear limits; no poison |
-| Spirit Caller | not yet (no casting level by the sky) |
-| Wasteland Seer | in part: its PSP costs by the sky; no casting level by it |
+| Spirit Caller | whole: its cleric spells 2 levels higher under the open sky, 1 lower under a roof |
+| Wasteland Seer | whole: its druid spells' level and its powers' PSP costs by the sky |
 | Wild Fury | whole |
 
 **Starting gear.** A new character's gear is fitted to its kit there too, as each kit's **Starts with**

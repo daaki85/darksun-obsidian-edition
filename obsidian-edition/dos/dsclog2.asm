@@ -338,6 +338,16 @@ pick_off   dw pick_text         ; +2012 offset of PICK_TEXT: what came of it, NU
 pick_shown dw 0                 ; +2014 purses shown on the USE screen (PP_SHOW, counted) ...
 pick_armed dw 0                 ; +2016 ... picks readied, the pointer the one for talking (PP_ARM) ...
 pick_late  dw 0                 ; +2018 ... and picks the Loader didn't answer in time (PP_HAND: the talk)
+        times 2060 - ($ - hdr) db 0 ; (+2020 to +2059: none yet, zero)
+cosmos_more dw 0xFFFF, 0xFFFF   ; +2060 two spells more a Healer's cleric casts as the sphere of the cosmos's
+                                ;      (HEALER_COSMOS), FFFFh none: for Whirlwind and Restore Youth, their
+                                ;      sequel numbers once those spells are ported (kits.RAV_COSMOS_MORE)
+kc_levels  dw 0                 ; +2064 spells' levels a kit changed (KIT_CAST_LEVEL, counted) ...
+kc_cures   dw 0                 ; +2066 ... cures it made stronger (KIT_CURE) ...
+kc_causes  dw 0                 ; +2068 ... Cause Wounds stronger (AV_CAUSE) ...
+kc_cosmos  dw 0                 ; +2070 ... the cosmos's spells a Healer was let cast (HEALER_COSMOS) ...
+kc_barred  dw 0                 ; +2072 ... spells a kit never knows refused (KIT_BARS) ...
+kc_cells   dw 0                 ; +2074 ... Cell Adjustments it made stronger (CELL_MORE)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -3266,7 +3276,11 @@ kit_ranger_cast:
 ;   in its loop).
 ; For an Elementalist (awake, the kits' rule on), the game's 0 for its own cleric class (KIT_WHERE's)
 ; made 1 when the spell (73h-EAh, the priests') has its second sphere's bit (SPHERE2's low three bits:
-; the sphere + 1); then the call's two words taken off as the ADD did. Others kept.
+; the sphere + 1; EL_SECOND); for a Healer's own cleric class the sphere of the cosmos's (HEALER_COSMOS: the
+; druids' 20h spells, which no cleric casts in the sequel, and COSMOS_MORE's). Then a yes, the game's or
+; made, made 0 for a spell the member's kit never knows (KIT_BARS: a Wilderness Avenger's healing spells, a
+; Healer's or Lifebinder's harming ones; SL's AV_KNOW), so the USE screen never lists it and the casting
+; levels never count it. Then the call's two words taken off as the ADD did. Others kept.
 KIT_ELEMENTALIST equ 5
 SPHERE2       equ 0x3F              ; (SL's +45h: ravlog's layout, kits.SPHERE2)
 SPHERE2_MASK  equ 0x07              ; (the bits above it SL's new spells known: NEW_KNOWN)
@@ -3284,11 +3298,7 @@ el_sphere_bp:
 el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS, FLAGS, +0Ah the
         push bp                     ;   spell, +0Ch the class)
         mov bp, sp
-        cmp byte [bp + 2], 0
-        jne .back                   ; (the game's yes)
         push bx
-        push cx
-        push si
         push es
         cmp ax, 400                 ; (a combatant: its creature, as the game reads it, 388h:0C34h)
         jae .out
@@ -3298,36 +3308,22 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         mov es, ax
         mov ax, [es:bx + FIGHTERS_OFF + 1]
         call kit_sheet
-        call kit_is_b
-        db KIT_ELEMENTALIST
-        jne .out
-        mov si, [cs:kit_where]
-        movzx cx, byte [es:bx + si + SH_CLASSES]
-        cmp cx, [bp + 0x0C]
-        jne .out                    ; (not its cleric class)
-        mov cl, [es:bx + SPHERE2]
-        and cl, SPHERE2_MASK
-        jz .out
-        dec cl
-        cmp cl, 3
-        ja .out
-        mov si, [bp + 0x0A]
-        cmp si, PRIEST_FIRST
-        jb .out
-        cmp si, PRIEST_END
-        jae .out
-        mov ax, ds
-        add ax, SPHERES_SEG
-        mov es, ax
-        mov al, 1
-        shl al, cl
-        test [es:si + SPHERES_OFF], al
-        jz .out
-        mov byte [bp + 2], 1
+        cmp byte [bp + 2], 0
+        jne .bar                    ; (the game's yes: a kit may bar it)
+        call el_own_second
+        jnc .cosmos
         inc word [cs:el_spheres]
+        jmp .yes
+.cosmos:
+        call healer_cosmos
+        jnc .out
+        inc word [cs:kc_cosmos]
+.yes:   mov byte [bp + 2], 1
+.bar:   call kit_bars
+        jnc .out
+        mov byte [bp + 2], 0
+        inc word [cs:kc_barred]
 .out:   pop es
-        pop si
-        pop cx
         pop bx
 .back:  mov ax, [bp + 8]            ; (the INT's frame moved over the call's two words; AX the
         mov [bp + 0x0C], ax         ;   game's, its AL the answer, popped after)
@@ -3339,6 +3335,47 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         pop ax
         add sp, 4
         iret
+; EL_OWN_SECOND: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if class [BP+0Ch] is an Elementalist's
+; own cleric class (awake, the kits' rule on) and spell [BP+0Ah] a priest spell of its second sphere
+; (SPHERE2's low three bits: the sphere + 1). All registers kept.
+el_own_second:
+        push ax
+        push cx
+        push si
+        push es
+        call kit_is_b
+        db KIT_ELEMENTALIST
+        jne .no
+        mov si, [cs:kit_where]
+        movzx cx, byte [es:bx + si + SH_CLASSES]
+        cmp cx, [bp + 0x0C]
+        jne .no                     ; (not its cleric class)
+        mov cl, [es:bx + SPHERE2]
+        and cl, SPHERE2_MASK
+        jz .no
+        dec cl
+        cmp cl, 3
+        ja .no
+        mov si, [bp + 0x0A]
+        cmp si, PRIEST_FIRST
+        jb .no
+        cmp si, PRIEST_END
+        jae .no
+        mov ax, ds
+        add ax, SPHERES_SEG
+        mov es, ax
+        mov al, 1
+        shl al, cl
+        test [es:si + SPHERES_OFF], al
+        jz .no
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop cx
+        pop ax
+        ret
 el_spheres dw 0                     ; (the game's no made yes, counted for a look in play)
 ; SHINOBI_MAGE (site 190, "shinobi_mage"): "add sp,4" after the slot routine's (626B7h, SL's 5E0ACh) call
 ; to 62B45h (spell 8, the class: does the class cast wizard spells) at 627D6h, the "or al,al" after kept:
@@ -3380,6 +3417,330 @@ shinobi_mage:
         pop bx
 .back:  jmp el_sphere.back
 sh_mages dw 0                       ; (likewise)
+; ---- THE KITS' CASTING LEVELS, CURES AND SPELLS KNOWN (sites 205-208; EL_SPHERE's HEALER_COSMOS and
+; KIT_BARS, CELL_HEAL's CELL_MORE): SL's PROBE_SPELL_LEVEL (SKY_LEVEL, ARC_LEVEL), PROBE_CURE, AREA_DMG and
+; HARM_SITE's AV_CAUSE, PROBE_EL_GRANT's and PROBE_EL_KNOW's Healer and AV_KNOW, CELL_SITE's kits, in the
+; sequel's spell numbers (RESOURCE.GFF's names). Counted in the header (+2064 on) for a look in play.
+KIT_ARCANIST      equ 23
+KIT_SPIRIT_CALLER equ 69
+KIT_WASTE_SEER    equ 73
+COSMOS_BIT        equ 0x20          ; (a spell's sphere byte: the druids', which no cleric casts)
+; HEALER_COSMOS: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if class [BP+0Ch] is a Healer's
+; own cleric class (1-4; awake, the kits' rule on) and spell [BP+0Ah] one of the sphere of the cosmos: a
+; priest spell whose sphere byte has COSMOS_BIT (every druid casts it, no cleric: in the sequel Cure Serious
+; and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest; SL's HEALER_COSMOS, its
+; element's druid's bit), or one of COSMOS_MORE's (the header's +2060: for Whirlwind and Restore Youth once
+; they are in the sequel, FFFFh till then). All registers kept.
+healer_cosmos:
+        push ax
+        push si
+        push es
+        call kit_is_b
+        db KIT_HEALER
+        jne .no
+        mov si, [cs:kit_where]
+        movzx ax, byte [es:bx + si + SH_CLASSES]
+        cmp ax, [bp + 0x0C]
+        jne .no                     ; (not its own class)
+        dec ax
+        cmp ax, 3
+        ja .no                      ; (a cleric's, 1-4: not a ranger's after DUAL)
+        mov si, [bp + 0x0A]
+        cmp si, [cs:cosmos_more]
+        je .yes
+        cmp si, [cs:cosmos_more + 2]
+        je .yes
+        cmp si, PRIEST_FIRST
+        jb .no
+        cmp si, PRIEST_END
+        jae .no
+        mov ax, ds
+        add ax, SPHERES_SEG
+        mov es, ax
+        test byte [es:si + SPHERES_OFF], COSMOS_BIT
+        jz .no
+.yes:   stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop ax
+        ret
+; KIT_BARS: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if spell [BP+0Ah] is one the sheet's kit
+; (awake, the kits' rule on) never knows (kits.knows_heal): a Wilderness Avenger's healing ones (AV_HEALS), a
+; Healer's or Lifebinder's harming ones (AV_HARMS). All registers kept.
+kit_bars:
+        push ax
+        push cx
+        push si
+        mov ax, [bp + 0x0A]
+        call kit_is_b
+        db KIT_AVENGER
+        jne .harm
+        mov si, av_heals
+        mov cx, AV_HEALS_COUNT
+        jmp .find
+.harm:  call kit_is_b
+        db KIT_HEALER
+        je .harms
+        call kit_is_b
+        db KIT_LIFEBINDER
+        jne .no
+.harms: mov si, av_harms
+        mov cx, AV_HARMS_COUNT
+.find:  cmp ax, [cs:si]
+        je .yes
+        add si, 2
+        loop .find
+.no:    clc
+        jmp .out
+.yes:   stc
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+; the healing spells a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL): Cure Light Wounds, Blood Flow,
+; Cure Serious Wounds, Cure Critical Wounds, Heal, Waters of Life; the harming ones a Healer or Lifebinder
+; never knows (kits.NO_HARM): Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living,
+; Harm (the sequel's numbers)
+av_heals dw 117, 166, 170, 194, 210, 215
+AV_HEALS_COUNT equ ($ - av_heals) / 2
+av_harms dw 118, 171, 195, 149, 179, 204, 211
+AV_HARMS_COUNT equ ($ - av_harms) / 2
+; KIT_CAST_LEVEL (site 205, "kit_cast_level"): in the routine giving the level a spell is cast at for its
+; duration and damage (628AFh, SL's 5E25Ch: [BP+6] the caster, [BP+8] the spell, DI the best level of its
+; classes that cast it, [BP-1] the class place its loop is at; the cast's level, 625F0h, so the spell's
+; dice and rounds), "inc byte [bp-1]" (629FEh; 3 bytes) at its loop's end: done, and after the third place
+; DI with the kits' (SL's PROBE_SPELL_LEVEL's SKY_LEVEL and ARC_LEVEL; kits.arc_level, kits.sky_level), for a
+; party member (creatures 0-3) whose classes cast the spell (DI above 0): an Arcanist's wizard spell
+; (0-72h, and the new spells NS_FIRST on) 1 more (ARC_MORE); a Spirit Caller's or Wasteland Seer's priest spell (73h-EAh; or the sequel's own
+; party's thri-kreen psionicist's, OWN_RACE_B: SL's K'ratchek) 2 more under the open sky (its KIT_OUTDOORS
+; bit, the Loader's), 1 less under a roof but no less than 1. The spell levels it may cast stay the caster
+; level routine's (97DC5h), its own level's. Counted (KC_LEVELS). The flags are the game's CMP's after.
+ARC_MORE equ 1
+SKY_MORE equ 2
+kit_cast_level:
+        inc byte [bp - 1]
+        cmp byte [bp - 1], 3
+        jl .ret                     ; (not the loop's end)
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        or di, di
+        jle .ret                    ; (no class of its casts it)
+        push ax
+        push bx
+        push es
+        mov ax, [bp + 6]
+        call fighter_creature
+        jc .out
+        cmp ax, 3
+        ja .out                     ; (not a party member)
+        mov bx, [bp + 8]
+        cmp bx, PRIEST_FIRST
+        jb .wizard
+        cmp bx, NS_FIRST
+        jb .priest
+        cmp bx, NS_FIRST + NS_COUNT
+        jb .wizard                  ; (the six new spells: wizard spells, SL's ARC_LEVEL's too)
+        jmp .out
+.priest:
+        cmp bx, PRIEST_END
+        jae .out
+        call cr_is
+        db KIT_SPIRIT_CALLER
+        je .sky
+        call cr_is
+        db KIT_WASTE_SEER
+        je .sky
+        push ax
+        call kit_sheet
+        call own_race_b             ; (the own party's thri-kreen psionicist, as a Wasteland Seer)
+        cmp al, OWN_KREEN
+        jne .not_own
+        mov al, OWN_PSI
+        call own_has
+.not_own:
+        pop ax
+        jne .out
+.sky:   bt word [cs:kit_outdoors], ax
+        jnc .roof
+        add di, SKY_MORE
+        jmp .made
+.roof:  cmp di, 1
+        jle .out
+        dec di
+        jmp .made
+.wizard:
+        call cr_is
+        db KIT_ARCANIST
+        jne .out
+        add di, ARC_MORE
+.made:  inc word [cs:kc_levels]
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   iret
+; KIT_CURE (site 206, "kit_cure"): in the handler for spells with rules of their own (656D0h on, SL's
+; 7936Dh: [BP+0Eh] the spell, [BP+8] the caster, DI the target), "push ax / jmp 65811h" (66545h; 4 bytes)
+; where Cure Light Wounds' 1d8, Cure Serious Wounds' 2d8+1, Cure Critical Wounds' 3d8+3 and Blood Flow's 2d6
+; (on its caster's own side: healing) go to the routine that heals (65811h: "push di / call 628h:43h"), and
+; Cell Adjustment's from CELL_HEAL (its kit's more in already: CELL_MORE): AX with the caster's kit's (SL's
+; PROBE_CURE: kits.cure_bonus, kits.cure_die), pushed under the INT's frame and the way back made 65811h, as
+; the game's two instructions. A Healer's and a Rescuer's Cure Light, Serious and Critical Wounds 1 more a
+; die (CURE_DICE's dice: +1, +2, +3), a Lifebinder's those and Blood Flow a die more (CURE_DICE's sides).
+; Counted (KC_CURES).
+CURE_BACK  equ 0x65811 - (0x66545 + 3)
+BLOOD_FLOW equ 166
+cure_dice db 117, 1, 8,  170, 2, 8,  194, 3, 8,  BLOOD_FLOW, 2, 6    ; spell, dice, sides (kits.CURE_DICE)
+CURE_DICE_END:
+kit_cure:
+        sub sp, 2
+        push bp
+        mov bp, sp                      ; ([BP+2] the room, +4 the INT's IP, CS, FLAGS)
+        push ax
+        mov ax, [bp + 4]
+        mov [bp + 2], ax
+        mov ax, [bp + 6]
+        mov [bp + 4], ax
+        mov ax, [bp + 8]
+        mov [bp + 6], ax                ; (the INT's frame a word down: [BP+8] the game's push)
+        pop ax
+        add word [bp + 2], CURE_BACK
+        push ax
+        call cure_more
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        iret
+; CURE_MORE: (KIT_CURE's; [BP] the game's BP) AX (the healing of spell [game BP+0Eh] by combatant [+8]) with
+; the caster's kit's, the kits' rule on. Others kept.
+cure_more:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push bx
+        push cx
+        push dx
+        push si
+        mov si, [bp]
+        mov dx, [ss:si + 0x0E]
+        or dh, dh
+        jnz .out
+        mov bx, cure_dice
+.find:  cmp dl, [cs:bx]
+        je .spell
+        add bx, 3
+        cmp bx, CURE_DICE_END
+        jb .find
+        jmp .out
+.spell: mov cx, ax
+        mov ax, [ss:si + 8]
+        call fighter_creature
+        jc .done
+        call cr_is
+        db KIT_HEALER
+        je .plus
+        call cr_is
+        db KIT_RESCUER
+        je .plus
+        call cr_is
+        db KIT_LIFEBINDER
+        jne .done
+        movzx ax, byte [cs:bx + 2]
+        call game_die
+        add cx, ax
+        jmp .count
+.plus:  cmp dl, BLOOD_FLOW              ; (a Healer's and a Rescuer's: the cures alone)
+        je .done
+        movzx ax, byte [cs:bx + 1]
+        add cx, ax
+.count: inc word [cs:kc_cures]
+.done:  mov ax, cx
+.out:   pop si
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+; AVENGER_AREA (site 207, "avenger_cause_area"): "mov [bp-14h],ax" (7E7A6h; 3 bytes) where the routine dealing
+; a spell's damage to the creatures it reaches (7E6xxh, SL's 7511Bh: AREA_DMG; DI the spell; a touch spell's on
+; one too) has rolled it (AX, 80278h's), the most it could roll at [BP-16h] (what a helpless target takes):
+; AV_CAUSE's more on both. AVENGER_ONE (site 208, "avenger_cause_one"): the same at "mov [bp-6],ax" (7F727h;
+; 3 bytes) in the routine for a spell on one creature (SL's 76175h: HARM_SITE), the most at [BP-8]. Then the
+; move done.
+avenger_area:
+        push bx
+        call av_cause
+        add [bp - 0x16], bx
+        pop bx
+        mov [bp - 0x14], ax
+        iret
+avenger_one:
+        push bx
+        call av_cause
+        add [bp - 8], bx
+        pop bx
+        mov [bp - 6], ax
+        iret
+; AV_CAUSE: AX the damage spell DI has rolled: a Wilderness Avenger's Cause Light, Serious and Critical Wounds
+; 1 more a die (+1, +2, +3; kits.harm_bonus) added, BX that more (0 none), when its caster (CAST_WHO: TH_CAST's,
+; the last spell cast) cast that spell (CAST_SPELL), the kits' rule on. Counted (KC_CAUSES). Others kept.
+av_causes dw 118, 1,  171, 2,  195, 3   ; (the sequel's Cause Light, Serious, Critical Wounds; kits.CAUSE_DICE)
+AV_CAUSES_END:
+av_cause:
+        xor bx, bx
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp di, [cs:cast_spell]
+        jne .ret
+        push si
+        mov si, av_causes
+.find:  cmp di, [cs:si]
+        je .spell
+        add si, 4
+        cmp si, AV_CAUSES_END
+        jb .find
+        jmp .out
+.spell: push ax
+        mov ax, [cs:cast_who]
+        call fighter_creature
+        jc .none
+        call cr_is
+        db KIT_AVENGER
+        jne .none
+        pop ax
+        mov bx, [cs:si + 2]
+        add ax, bx
+        inc word [cs:kc_causes]
+        jmp .out
+.none:  pop ax
+.out:   pop si
+.ret:   ret
+; CELL_MORE: (CELL_HEAL's) CX what the kit of combatant AX (Cell Adjustment's user) adds to its healing (SL's
+; CELL_SITE: kits.CELL_MORE, CELL_PLUS): a Lifebinder's a d4, a Healer's or Rescuer's 1 (as their cures a die
+; and 1 a die more); 0 for anyone else. Counted (KC_CELLS). Others kept.
+CELL_MORE equ 4
+CELL_PLUS equ 1
+cell_more:
+        xor cx, cx
+        push ax
+        call fighter_creature
+        jc .out
+        call cr_is
+        db KIT_LIFEBINDER
+        jne .plus
+        mov ax, CELL_MORE
+        call game_die
+        mov cx, ax
+        jmp .count
+.plus:  call cr_is
+        db KIT_HEALER
+        je .one
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+.one:   mov cx, CELL_PLUS
+.count: inc word [cs:kc_cells]
+.out:   pop ax
+        ret
 ; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
 ; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
 ; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
@@ -4201,6 +4562,15 @@ site_table:
         dw kit_hit_gain                     ; 197 SITE_HIT_GAIN (95000h: a level's gain past the dice: a Battle Mage's 2, an Arcanist's 1)
         dw kit_max_psp                      ; 198 SITE_MAX_PSP (95172h: the level up's most PSP: a Mind Warrior's a fifth fewer)
         dw hit_round                        ; 199 SITE_HIT_ROUND (5CD76h: a hit's mark against casting: a Battle Mage none)
+        dw site_none                        ; 200 (none here: held for other work)
+        dw site_none                        ; 201 (none here: held for other work)
+        dw site_none                        ; 202 (none here: held for other work)
+        dw site_none                        ; 203 (none here: held for other work)
+        dw site_none                        ; 204 (none here: held for other work)
+        dw kit_cast_level                   ; 205 SITE_KIT_CAST_LEVEL (629FEh: a spell's level for its duration and damage: an Arcanist's, a Spirit Caller's, a Wasteland Seer's)
+        dw kit_cure                         ; 206 SITE_KIT_CURE (66545h: a cure's healing: a Healer's, Lifebinder's, Rescuer's more)
+        dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
+        dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -5146,26 +5516,37 @@ strength_dice:
 ; CELL_HEAL (site 11, "cell_adjustment_heal"): Cell Adjustment's (248) case in the handler for spells
 ; with rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 65811h" (664C5h, SL's
 ; 795A2h; 5 bytes: 2 HP): 1d4 HP, AX for the game's "push ax / jmp 65811h" (66545h, Neutralize
-; Poison's and the rest's) and the healing after it; its record's cure of disease is the game's own.
-; Recorded (MN_CELL: the target, the user, the healing; no kit's more, the sequel has no kits).
+; Poison's and the rest's: KIT_CURE's site, site 206) and the healing after it; its record's cure of disease
+; is the game's own. With the kits a Lifebinder's a d4 more, a Healer's or Rescuer's 1 more (CELL_MORE, SL's
+; CELL_SITE's). Recorded (MN_CELL: the target, the user, the healing, the kit's more in +6's high byte).
 MN_CELL   equ 3
 CELL_BACK equ 0x66545 - (0x664C5 + 3)
 cell_heal:
         push bp
         mov bp, sp
         add word [bp + 2], CELL_BACK
+        push bx
+        push cx
+        mov bx, [ss:bp]                 ; (the game's BP)
+        mov ax, [ss:bx + 8]
+        call cell_more                  ; (CX the kit's more)
         mov ax, 4
         call game_die
+        add ax, cx
         pusha
         mov [cs:mn_frame], di
-        mov bx, [ss:bp]                 ; (the game's BP)
+        mov bx, [ss:bp]
         mov bx, [ss:bx + 8]
         mov [cs:mn_frame + 2], bx
         mov [cs:mn_frame + 4], ax
-        mov word [cs:mn_frame + 6], 0
+        mov ch, cl                      ; (the low byte 0: no disease cured said here)
+        xor cl, cl
+        mov [cs:mn_frame + 6], cx
         mov ax, MN_CELL
         call mn_rec
         popa
+        pop cx
+        pop bx
         inc word [cs:manual_count]
         pop bp
         iret
@@ -10677,10 +11058,14 @@ ef_last      db 0
 ;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61);
 ; - PSP costs, a Mind Warrior's PSP, the level up's hit dice and a Battle Mage's casting after a hit (KIT PSP
 ;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199).
+; - a spell's level for its duration and damage (SL's PROBE_SPELL_LEVEL: KIT_CAST_LEVEL, site 205: the
+;   Arcanist's, Spirit Caller's, Wasteland Seer's), the cures (PROBE_CURE: KIT_CURE, site 206; CELL_HEAL's
+;   CELL_MORE), the Cause Wounds spells (AV_CAUSE: AVENGER_AREA, AVENGER_ONE, sites 207-208), the spells
+;   known (EL_SPHERE's HEALER_COSMOS and KIT_BARS: the Healer's cosmos, the spells a kit never knows).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
-; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), cures, a
-; spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the hit die and PSP at
-; creation, the Effects lines.
+; (+355), BAD_LUCK (+1862); COSMOS_MORE (+2060) and the counters after it DSCLOG2's own. Not here (yet):
+; a Shinobi's casting level and spells, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the hit die and
+; PSP at creation, the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
