@@ -99,6 +99,16 @@ if os.environ.get('RAV_PREDICT'):  # (what each Tab line's chance was made of: h
         return out
     out_file, _last = out, [None]
     log._swings = _detail
+if os.environ.get('RAV_FRAMES'):  # (each THAC0 line's set-up locals, as the breakdown read them)
+    _breakdown = log._thac0_breakdown
+    def _framed(e, thac0, attacker, ac, tc, weapon, mode, item_type=None, skill=('', 0), kit=()):
+        text = _breakdown(e, thac0, attacker, ac, tc, weapon, mode, item_type, skill, kit)
+        return text + '  [set-up: THAC0 %s, bonus %s, rear %s, backstab %s, ready %s; type %s, mode %s, skill %s, after %s]' % (
+            e.parent_local(game.SETUP_THAC0_LOCAL), e.parent_local(game.SETUP_BONUS_LOCAL),
+            (e.parent_local(game.SETUP_REAR_LOCAL) or 0) & game.SETUP_FLAG_MASK,
+            (e.parent_local(game.SETUP_BACKSTAB_LOCAL) or 0) & game.SETUP_FLAG_MASK,
+            e.parent_local(game.SETUP_READY_LOCAL), item_type, mode, skill[1], list(kit))
+    log._thac0_breakdown = _framed
 if os.environ.get('RAV_NO_SAVES'):
     log.quicksave.keys = log.quicksave.auto = False
     print('quick saves and autosaves off', flush=True)
@@ -111,16 +121,6 @@ if os.environ.get('RAV_NO_MOVEBACK'):
 if os.environ.get('RAV_NO_USABLE'):
     log.show_usable = False
     print('Alt marks nothing', flush=True)
-if os.environ.get('RAV_FRAMES'):  # (each THAC0 line's set-up locals, as the breakdown read them)
-    _breakdown = log._thac0_breakdown
-    def _framed(e, thac0, attacker, ac, tc, weapon, mode, item_type=None, skill=('', 0), kit=()):
-        text = _breakdown(e, thac0, attacker, ac, tc, weapon, mode, item_type, skill, kit)
-        return text + '  [set-up: THAC0 %s, bonus %s, rear %s, backstab %s, ready %s; type %s, mode %s, skill %s, after %s]' % (
-            e.parent_local(game.SETUP_THAC0_LOCAL), e.parent_local(game.SETUP_BONUS_LOCAL),
-            (e.parent_local(game.SETUP_REAR_LOCAL) or 0) & game.SETUP_FLAG_MASK,
-            (e.parent_local(game.SETUP_BACKSTAB_LOCAL) or 0) & game.SETUP_FLAG_MASK,
-            e.parent_local(game.SETUP_READY_LOCAL), item_type, mode, skill[1], list(kit))
-    log._thac0_breakdown = _framed
 if os.environ.get('RAV_CHARGES_OFF'):
     log.count_charges = lambda entries: None
     print('charges pass off', flush=True)

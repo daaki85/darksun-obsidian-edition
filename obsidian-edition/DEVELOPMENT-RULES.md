@@ -1766,32 +1766,6 @@ fighter/druid/psionicist at 300,000 to 8/11/9; a human preserver who had been
 a 3rd-level gladiator, at 760,000, to 11th; an elf preserver/druid/thief at
 300,000 to 9/11/11.
 
-XP stops at the share too (the user's, 2026-11-25: XP banked past the top
-level would carry over to Wake of the Ravager). That is the Loader's, so it
-costs DSCLOG no memory: the dice log's party tracker (`tracker.py`,
-`PartyTracker.hold_at_cap`) reads each party member's sheet at every look
-(four times a second, out of a load and off the creation screen) and writes
-the sheet's XP (+0, a dword) back to the share when it is above it, with a
-line in the dice log (`Hal's XP held at the cap: 749,999 (12,345 not
-counted)`; for a share below the cap, how it came about). The share is
-`game.xp_share` (`tables.xp_share`), `LEVEL_ROOM`'s twin: the classes counted
-as it counts them (any class byte), the cap divided with the remainder
-dropped, a human's old classes (slots 1-2, a level above 0) taken off at the
-XP table's entry before their level, never below 0; `test_dsclog`'s
-`test_level_room_is_the_xp_share` runs `PROBE_LEVEL` in the emulator against
-it for one class, several and humans who changed class, so XP held at the
-share is at the top level or just short of it. The hold runs before the XP
-line, so the line shows the gain that counted; the prime requisite bonus
-stops at the share too (`_prime_bonuses`). Timing: an award lands at a
-fight's end or from a script and the game may level up at once or at a rest,
-before the Loader's next look; no level comes of XP above the share, since
-`LEVEL_ROOM` caps the levels by the same share. A save made before this,
-over the share, is held at the first look after it loads. Checked in the
-game (playtest/logs/2026-11-25-xp-held-at-cap.md): a ranger and a
-fighter/preserver set near their shares held at 749,999 and 374,999 through
-the fountain ambush's kills; with the old Loader they went on to 750,690 and
-375,293.
-
 In Wake of the Ravager (DSCLOG2, `ravager.py`'s `level_cap_*` patches) the game stops a class at
 15th in the same two places (the level up's `cmp byte es:[bx+1Eh],0Fh` at 959A5h, then `JB`; View
 Character's at 6FB51h, then `JE`), each a SITE of its own (110, 111), so nothing tells them apart by
@@ -1823,6 +1797,32 @@ RULE_HI_TABLES): the save routine (954D2h) is SL's (87844h), save = the 1st leve
 min((level - 1) x rate / 100, the table's third byte), that byte AD&D's last save, not the most a save
 improves; at its `mov al,es:[bx+6Ch]` the site gives the Handbook's save plus the game's improvement,
 so the game's `sub` leaves the Handbook's less a dwarf's or halfling's CON bonus.
+
+XP stops at the share too (the user's, 2026-11-25: XP banked past the top
+level would carry over to Wake of the Ravager). That is the Loader's, so it
+costs DSCLOG no memory: the dice log's party tracker (`tracker.py`,
+`PartyTracker.hold_at_cap`) reads each party member's sheet at every look
+(four times a second, out of a load and off the creation screen) and writes
+the sheet's XP (+0, a dword) back to the share when it is above it, with a
+line in the dice log (`Hal's XP held at the cap: 749,999 (12,345 not
+counted)`; for a share below the cap, how it came about). The share is
+`game.xp_share` (`tables.xp_share`), `LEVEL_ROOM`'s twin: the classes counted
+as it counts them (any class byte), the cap divided with the remainder
+dropped, a human's old classes (slots 1-2, a level above 0) taken off at the
+XP table's entry before their level, never below 0; `test_dsclog`'s
+`test_level_room_is_the_xp_share` runs `PROBE_LEVEL` in the emulator against
+it for one class, several and humans who changed class, so XP held at the
+share is at the top level or just short of it. The hold runs before the XP
+line, so the line shows the gain that counted; the prime requisite bonus
+stops at the share too (`_prime_bonuses`). Timing: an award lands at a
+fight's end or from a script and the game may level up at once or at a rest,
+before the Loader's next look; no level comes of XP above the share, since
+`LEVEL_ROOM` caps the levels by the same share. A save made before this,
+over the share, is held at the first look after it loads. Checked in the
+game (playtest/logs/2026-11-25-xp-held-at-cap.md): a ranger and a
+fighter/preserver set near their shares held at 749,999 and 374,999 through
+the fountain ambush's kills; with the old Loader they went on to 750,690 and
+375,293.
 
 ## STORE and RECALL on the creation screen
 
