@@ -1432,9 +1432,18 @@ def _weighted_copy(record: bytes, kind: int) -> bytes:
         return record  # (a copy that isn't SSI's record, a transfer's of another table: left as it is)
 
 
-def weighted_objects(chunks: gff.Chunks) -> gff.Chunks:
+def _air_dagger(record: bytes, kind: int) -> bytes:
+    if kind not in AIR_DAGGER_TYPES or len(record) != TYPE_SIZE:
+        return record
+    out = bytearray(record)
+    out[TYPE_CLASSES] |= AIR_CLERIC_BIT
+    return bytes(out)
+
+
+def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
     """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
-    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read."""
+    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read. AIR
+    (the mod's types on: mod_types_table) gives the copies of the daggers the air cleric's bit too, as ALL 4."""
     from . import dataitems
     out: gff.Chunks = {}
     for key, chunk in chunks.items():
@@ -1444,8 +1453,10 @@ def weighted_objects(chunks: gff.Chunks) -> gff.Chunks:
             recs, end = dataitems.records(chunk)
         except (ValueError, struct.error):
             continue
-        new = [r._replace(data=_weighted_copy(r.data, r.number)) if r.kind == TYPE_KIND_RECORD
-               and r.number < GAME_TYPES else r for r in recs]
+        def fixed(r):
+            data = _weighted_copy(r.data, r.number)
+            return r._replace(data=_air_dagger(data, r.number) if air else data)
+        new = [fixed(r) if r.kind == TYPE_KIND_RECORD and r.number < GAME_TYPES else r for r in recs]
         if new != recs:
             out[key] = dataitems.chunk(new, end)
     return out
@@ -1493,7 +1504,7 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
     if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
-        new.update(weighted_objects({**chunks, **new}))
+        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip))
         done.append("weights")
     if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
         from . import ravshine
