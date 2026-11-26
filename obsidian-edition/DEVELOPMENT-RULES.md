@@ -21,6 +21,7 @@
 - [Two weapons](#two-weapons)
 - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
 - [Cahulaks](#cahulaks)
+- [Lotulis, double spear and trikal](#lotulis-double-spear-and-trikal)
 - [Creature size](#creature-size)
 - [Held targets](#held-targets)
 - [Staff sling stinkpots](#staff-sling-stinkpots)
@@ -160,7 +161,8 @@ In Wake of the Ravager (the port, `dsloader/ravager.py`; `RULE_RESTRICT` in `RUL
 answer a byte) runs `CLASS_FORBIDS` with the sequel's offsets (a type's flags +0, material +4, armour
 +0Bh 80h, classes +0Ch; a sheet's class bits +10h, race +12h, classes +1Bh, levels +1Eh) and the sequel's
 `KIND_OF_TYPE`; `BELT_SITE` (site 20, `thief_skill_armour`: 8C7C5h, `mov ax,si / pop di`, the thief
-skill routine 8C647h's end) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
+skill routine 8C647h's end; its jump to the "pop di", 8C6C3h, sent to the same epilogue at 87443h in
+the image, `thief_skill_armour_out`) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
 `ARMOUR_WORN` reading the item lists as `MELEE_IN` does); `THIEF_REAR`, called from `MISSILE_REAR`
 (5C99Fh), takes the backstab back (the byte `[bp-21h]`, THAC0 `[bp-1Eh]`). The sequel has no kits,
 weapon specs, robes, bracers or cloak of protection, so none of their exceptions; its only weapon
@@ -644,6 +646,36 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
   failure marks it as Whirlwind's sweep does (`SWEPT_NOW`: yet to act this round,
   its turn taken at once; else `FAR_SWEPT`, `PROBE_MOVE` takes the next).
 
+## Lotulis, double spear and trikal
+
+([In the features page](FEATURES.md#lotulis-and-double-spear).)
+
+Where the traits come from: [the Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html)'s
+entries for Wake of the Ravager's weapons, for a specialist (`SPEC_OF` at `SPEC_SPECIAL` or above:
+its weapon spec chosen, specialized or a master). The types (148-153, the last six of `npcitems.TYPES`, in the Loader's copy of GPLDATA, `game.RAVAGER_TYPES`) and their kinds (16-21, `KIND_OF_TYPE`) are the Loader's; the sequel's
+net is left out. Both traits ride the cahulaks' sites, with the same rule:
+
+- **The trikal** (type 151): `CAH_HIT` takes it as the cahulaks, a man-sized or smaller target not
+  felled and not in `BIG`, with `TG_HOW` its save (the sheet's +37h, paralysis: `TRIP_SAVE`) and
+  its record (`MN_TRIP`) in place of the tangle's (+39h, `MN_TANGLE`).
+- **The lotulis and double spear** (149, 150): `SF_SWING`, from `CAH_SWING`, at the round's last
+  swing of two or more ([BP-14h] = [BP-8] - 1) looks for a second foe: the first combatant in the
+  things' order on the first target's side (the creature's +1Dh, low 3 bits), standing and Okay
+  (+1Ch 1), at distance 1 from the attacker (the game's distance routine, 1A0A:2BA5h). It keeps
+  `TARGET` (494Ah) and the AC ([BP+0Ch]) in `SF_TARGET` and `SF_AC`, makes them the foe's (its AC
+  `THORNS_AC`'s: the sheet and the armour worn, not spells'), and records `MN_SECOND`. `SF_BACK`,
+  first at `AMMO_TURN`'s site (58C38h, which every swing that ends the round passes), puts them
+  back. `SF_LESS`, first at `STAB_ROLL`, takes 1 off the double spear's damage ([BP-4], at least 1)
+  while `SF_TARGET` is set.
+
+The window that picks a weapon spec has 22 slots in four rows (`PICK_FIRST` 8C0h on, past the kit
+pages' rows at 870h); the game's title lines are left empty (its `push` of the title's line is a
+signed byte, and row four's is at 146) and `PK_HOVER` draws the title under the rows. The
+weapon specs are stored as v3 ([weapon specialization](#weapon-specialization)). Tests: `test_trip`,
+`test_second_foe` (`test_cahulaks`), `test_specslots`, `test_ravager_weapon_lines`. Verified in
+play, with a control run:
+[2026-11-23](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-23-ravager-weapons.md).
+
 ## Creature size
 
 ([In the features page](FEATURES.md#creature-size).)
@@ -825,7 +857,8 @@ does the MOV, then, with the rule, makes a result of 2 a 1 when all three hold:
 - **The attacker's hands hold a polearm and no other weapon** (`REACH_HANDS`): its creature
   (`COMBATANT_CREATURE`), its three item lists (+08h, +0Ah, +0Ch), each item's slot (+11h): in the
   right hand (3) or the left (10), a type `kind_of_type` makes a polearm (10, the kind + 1: the
-  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) counts one, any other
+  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) or a trikal (`TRIKAL_KIND`,
+  20: `game.TRIKAL_TYPE`, Wake of the Ravager's, a polearm with three blades) counts one, any other
   type with a weapon flag (its +00h's 1 melee or 2 missile, `restrict.is_weapon`) one other weapon.
   Reach is one polearm and no other: a shield (flag 4) or nothing beside it. The missile slot (2) and
   the backpack aren't hands.
@@ -1065,8 +1098,8 @@ In Wake of the Ravager Enlarge is the same routine (863B2h, 628h:57h; its effect
 608h:52h) and works the same: the stock game made Gerakis's 24 a 38 (x160%, Ar'anda's 6th level).
 DSCLOG2's `ENL_ROLL` (`INT EBh` at the attack's "cmp word [bp+16h],1" after the damage roll, 5D0C8h:
 the dice's sum, the roll less `[BP-14h]`, the sequel's bonus local) and `ENL_SITE` (`INT ECh`, 863E7h,
-the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`; no backstab dice there (STAB_TIMES isn't
-ported). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
+the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`, the enlarged dice kept for a backstab (DSCLOG2's
+`STAB_TIMES`: [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
 caster level routine, 97DC5h). Played: [the test log](../playtest/logs/2026-11-21-ravager-enlarge.md).
 
 ## Spells roll to hit
@@ -1345,7 +1378,10 @@ creature and three words; dicelog's `_manual`).
   of a fight), a D\*'s more cleared by `CAST_START`
   ([played](../playtest/logs/2026-11-21-ravager-turn-undead.md); the destroy's way read, not played).
   Spells roll to hit in the sequel through site 16, `spell_hit` (84AAFh, `xor ax,ax / pop di`, the
-  immunity routine 8451Ah's only "not immune" answer): the sequel has no always-hit stub or missile
+  immunity routine 8451Ah's only "not immune" answer; its "immune" exit's jump, 84565h, which landed on
+  the site's number and quit the game with "Illegal Op (gpl=49)", is sent to the same epilogue at
+  7F2FEh in the image, `spell_hit_immune`,
+  [played](../playtest/logs/2026-11-25-ravager-illegal-op.md)): the sequel has no always-hit stub or missile
   table (SL's 78BA0h, 7A1A7h), so DSCLOG2's `TH_SITE` answers 1 ("immune") on a miss, and the damage
   and effect routine (651A0h) skips both, as SL's. `PROBE_CAST` (80585h) arms it (`TH_CAST`) unless the
   cast routine returns to the weapon's spell on a hit (5D2D1h's bytes). The spells by the sequel's
@@ -1490,7 +1526,12 @@ saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
 1, 0 none); 2.13.0 and 2.13.1 packed them 5 bits each in +14h to +16h,
 +16h's top bit (`SPEC_PACKED`) marking it; now (v2, +16h's bit 6 too,
 `SPEC_V2`) the dword's bits 0-16 are the four as a base-17 number (each digit
-the kind + 1, 0 none: `SPEC_KINDS_MASK`, room for 16 kinds), bits 17-21 the
+the kind + 1, 0 none: `SPEC_KINDS_MASK`, room for 16 kinds); with Wake of the Ravager's six
+kinds (22, `KIND_COUNT`) a value of `V3_BASE` (17⁴, past every base-17 number) or more is v3:
+`V3_BASE` + the first kind × `REST_SETS` (1,794, the sets of up to three of 22) + the rank of the
+set of the others (`REST_OFFSETS` for its size plus the combinatorial number system's sum:
+`game.spec_rank`, DSCLOG's `SPEC_REPACK`), the first kept first (the starting weapon's, a Battle
+Mage's), the others read back in order (`SPEC_UNPACK`), at most 124,572 in 17 bits; bits 17-21 the
 starting roll (Table 7's dice less their count, 0 to 20; 31, `ROLL_UNKNOWN`,
 none kept: `game.sheet_roll`), and +17h is the character's age (`SHEET_AGE`,
 years past its race's base starting age, plus 1: see Ages above). A sheet keeps
@@ -1552,9 +1593,10 @@ weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
 `SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name with the
 routine the powers' handler names a power with (85CC9h, which rubs out the
 lines it drew before), or the title again off the slots. A missile weapon's
-attacks a round are its item type's (+0Bh, in halves: a bow 4, the rest 2),
+attacks a round are its item type's (+0Bh, in halves: a bow and darts 4, the rest 2),
 not the character's (sheet +2Ah) as in melee; `INT D1h` raises them to a
-specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level; a
+specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level, by kind:
+the chatkcha, bow, sling and staff sling, kinds 13-16, and the javelin and darts, 21-22, `MISSILE_RAV`; a
 grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`). Every ranger's expertise with the bow is in
@@ -1569,9 +1611,61 @@ the same routine as the DAM line, with the weapon's own rate of fire (its type's
 does (`MISSILE_RATE`) and the bonus and sides PROBE_SPEC_DAMAGE does, for the
 creature the routine has.
 
+### Weapon specialization in Wake of the Ravager
+
+The party transfer keeps each character's specs (SL's +14h..+16h) at the
+Loader's sheet +42h..+44h (`SPEC_SLOTS` in ravlog's layout), and DSCLOG2 reads
+them with DSCLOG's `SPEC_GET` and `SPEC_ANY` (all three layouts). The sequel's
+weapon attack routine (5CE80h) is SL's 58780h with its locals two bytes lower
+(the attacks a round `[BP-0Ah]`, the dice `[BP-10h]`, the sides `[BP-12h]`, the
+bonus `[BP-14h]`; `[BP+0Ah]` the THAC0, `[BP+10h]` the sheet, `[BP+14h]` the
+type, `[BP+16h]` above 1 a missile, as SL's). `SPEC_ATTACKS`, called from
+OFF_HAND at the attacks' store (5CEE8h, SL's PROBE_ATTACKS' site), and
+`SPEC_DAMAGE` (site 51 at the strength bonus's `add [bp-14h],ax`, 5CF6Dh) do
+what PROBE_ATTACKS and PROBE_SPEC_DAMAGE do; `SIZE_DICE` calls
+`SPEC_GRAND_DIE` after AD&D's large dice. `SPEC_OF_SHEET` and `MISSILE_RATE`
+are DSCLOG's on the sequel's sheet (race +12h, classes +1Bh, levels +1Eh),
+the kits' parts with the kits' rules ([Kits in Wake of the
+Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager))
+(`tests/test_ravspecialize.py` runs them against `specialize.skill` and
+`missile_attacks`). The rule's bit is tested (`RULE_SPECIALIZE` in
+`ravager.RULES_PORTED`), so `RAV_RULES_OFF=0x1000` makes a control run.
+
+The kinds are SL's 22, DSCLOG2's `KIND_OF_TYPE` (`ravager.rav_kinds`, which
+ravlog's layout makes `specialize.KIND_OF_TYPE` while the sequel is attached),
+and `SPEC_GET` reads a V3 sheet's kinds 17-22 as themselves (2026-11-25: they
+were folded onto the nearest of the first 16 before). The sequel's own weapons
+of the six kinds SL took from it are of those kinds, by name, dice and the
+two-handed bit (its item types' +0Bh 40h): the Twohand Sword (101) and the
+Crystal sword (35, a long sword before), both two-handed 1d10, are two-handed
+swords; the Lotulis (61), Double Spear (39), Trikal (100), Javelin (59) and the
+two Darts (38, 43) their own kinds. None of the mod's types in the sequel
+(102-134, SL's first 33) is of the six: SL's types of them (148 on) go across as
+the sequel's own (`ravager.sequel_weapon_type`). With them: `MISSILE_RATE` has
+DSCLOG's `MISSILE_RAV` (the javelin's and darts' rates of fire), `LARGE_DICE`
+SL's 22 rows (the sequel's own weapons go by `RAV_LARGE` first, the Darts 38's
+1d2 kept there), the Effects screen's `EF_KINDS` the six names, `PSI_KINDS`
+DSCLOG's darts bit (a psionicist may use the Darts, as before, when they had
+no kind; tested 32 bits wide), and a Military Scout's missile bonus outdoors
+(`KIT_TO_HIT`) takes the bow, sling and staff sling alone, not the kinds past
+them. The sequel's weapons with no kind of SL's count as the nearest for
+specialization alone (DSCLOG2's `SPEC_KINDS_OWN`, `ravager.rav_spec_kinds`,
+made `specialize.CONJURED_KINDS`), as SL's spell-made weapons do, so no
+transferred warrior is left with the plain rate for want of a kind; their
+restrictions and large dice stay as they were:
+
+| The sequel's weapon (type) | Counts as | Why |
+|---|---|---|
+| Bloodletter (13) | long sword | A 1d8 blade |
+| Promere hammer (81), Jasmine (68), Spirit hammer (95) | mace | A hammer, as SL's Spiritual Hammer; a mace's 1d6+1 |
+| Shillelagh (90) | club | The spell's, as SL's |
+| Rainbow (87) | bow | The Rainbow spell's bow |
+
+The Net (71) and the Rock (94) have none.
+
 ## Kits
 
-([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
+([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md). In Wake of the Ravager: [Kits in Wake of the Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager).
 
 ## Preservers' first spells
 
@@ -1671,6 +1765,32 @@ game: a gladiator at 700,000 XP went to 10th and no further; a thri-kreen
 fighter/druid/psionicist at 300,000 to 8/11/9; a human preserver who had been
 a 3rd-level gladiator, at 760,000, to 11th; an elf preserver/druid/thief at
 300,000 to 9/11/11.
+
+XP stops at the share too (the user's, 2026-11-25: XP banked past the top
+level would carry over to Wake of the Ravager). That is the Loader's, so it
+costs DSCLOG no memory: the dice log's party tracker (`tracker.py`,
+`PartyTracker.hold_at_cap`) reads each party member's sheet at every look
+(four times a second, out of a load and off the creation screen) and writes
+the sheet's XP (+0, a dword) back to the share when it is above it, with a
+line in the dice log (`Hal's XP held at the cap: 749,999 (12,345 not
+counted)`; for a share below the cap, how it came about). The share is
+`game.xp_share` (`tables.xp_share`), `LEVEL_ROOM`'s twin: the classes counted
+as it counts them (any class byte), the cap divided with the remainder
+dropped, a human's old classes (slots 1-2, a level above 0) taken off at the
+XP table's entry before their level, never below 0; `test_dsclog`'s
+`test_level_room_is_the_xp_share` runs `PROBE_LEVEL` in the emulator against
+it for one class, several and humans who changed class, so XP held at the
+share is at the top level or just short of it. The hold runs before the XP
+line, so the line shows the gain that counted; the prime requisite bonus
+stops at the share too (`_prime_bonuses`). Timing: an award lands at a
+fight's end or from a script and the game may level up at once or at a rest,
+before the Loader's next look; no level comes of XP above the share, since
+`LEVEL_ROOM` caps the levels by the same share. A save made before this,
+over the share, is held at the first look after it loads. Checked in the
+game (playtest/logs/2026-11-25-xp-held-at-cap.md): a ranger and a
+fighter/preserver set near their shares held at 749,999 and 374,999 through
+the fountain ambush's kills; with the old Loader they went on to 750,690 and
+375,293.
 
 ## STORE and RECALL on the creation screen
 
@@ -2008,6 +2128,18 @@ The dice log's damage line says it: `+10 backstab (the dice 5 x3 = 15)`
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
 `test_dice_only`, `test_enlarge_before_the_backstab`.
+
+In Wake of the Ravager (DSCLOG2, `RULE_THIEF_TABLE` in `ravager.RULES_PORTED`): site 52 `THIEF_SKILL` at
+the thief skill routine's 8C716h (SL's 80307h, the same 9 bytes; DEX `[BP-2]`, its "jc" to 8C795h) does
+`PROBE_THIEF_SKILL` (`THIEF_ADND`, the tables in the resident part), `BELT_SITE` keeps the chance to 95,
+`C_THIEF` shows the same on the inventory; site 53 `STAB_TIMES` at 5D11Bh (SL's 58A80h, the same 10 bytes;
+the round's count `[BP-16h]`, the dice `ENL_ROLL`'s `ENL_DICE`, made the enlarged ones by `ENL_SITE`);
+`STAB_FIRST` from `MISSILE_REAR` (the clock's far pointer DS:9C0Ch). With the kits (`RULE_KITS`) an
+Assassin's multiplier one more there, rule or not (the attacker `[BP+0Eh]`, a party member: `kits.backstab_times`,
+`kit_stabs` counts them). The dice log
+reads the round's count at `game.ATTACKS_MADE_LOCAL` (ravlog's -16h). Tests: test_ravthief.py (with
+`DSUN_WOTR`, the sites in the game's own code too); test_dicelog's `test_rule_off`,
+`test_attacks_made_local`. Found statically (playtest/RESEARCH.md, "Thieves as in AD&D in the sequel").
 
 ## Picking pockets
 

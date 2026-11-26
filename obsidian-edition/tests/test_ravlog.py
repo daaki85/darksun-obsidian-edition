@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, ravager, ravlog  # noqa: E402
+from dsloader import aging, dicelog, game, kits, ravager, ravlog  # noqa: E402
 
 
 class FakeGuest:
@@ -28,6 +28,43 @@ class FakeGuest:
 class ProfileTests(unittest.TestCase):
     def tearDown(self):
         ravlog.restore_layout()
+
+    def test_mod_bytes(self):
+        """The kit byte and the second sphere / new spells byte at the sequel's +3Dh and +3Fh (SL's +43h,
+        +45h) while the layout is on, in game, kitpages and kits alike; Shattered Lands' back after."""
+        from dsloader import kitpages
+        layout = ravlog.layout()
+        self.assertEqual((layout["KIT_SHEET"], layout["KIT_BYTE"], layout["NEW_KNOWN_SHEET"], layout["SPHERE2"]),
+                         (0x3D, 0x3D, 0x3F, 0x3F))
+        self.assertEqual(layout["NEW_KNOWN"][game.FRIENDS_SPELL], (0x3D, 0x80))
+        self.assertEqual(layout["NEW_KNOWN"][game.FOG_SPELL], (0x3F, 0x40))
+        sl = (game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2, dict(game.NEW_KNOWN))
+        ravlog.apply_layout()
+        self.assertEqual((game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2), (0x3D, 0x3F, 0x3D, 0x3F))
+        ravlog.restore_layout()
+        self.assertEqual((game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2, game.NEW_KNOWN), sl)
+
+    def test_kits_read_from_a_sequel_sheet(self):
+        """A transferred sheet (SL's through ravtransfer.sheet) reads the same kits, sphere, own feature
+        and new spells under the sequel's layout as the SL sheet does under SL's."""
+        from dsloader import kitpages, ravtransfer
+        sl = bytearray(game.SHEET_SIZE)
+        sl[game.SHEET_RACE], sl[game.SHEET_CLASSES], sl[game.SHEET_LEVELS] = 3, 11, 7  # (an elf preserver)
+        sl[0x43] = kitpages.KIT_IDS["Battle Mage"] % 4  # (the class's second kit)
+        sl[0x45] = 0x40 | 3  # (Fogbolt known; a second sphere's bits, an Elementalist's only)
+        sl[0x42], sl[0x44] = 0x2A, 0x2B  # (the sounds)
+        want = (kitpages.kit_names(bytes(sl)), kits.second_sphere(kits.ELEMENTALIST, bytes(sl)),
+                game.knows_new_spell(bytes(sl), game.FOG_SPELL), kitpages.kit_level(bytes(sl), kitpages.KIT_IDS["Battle Mage"]))
+        self.assertEqual(want, (["Battle Mage"], 2, True, 7))
+        wotr = ravtransfer.sheet(bytes(sl))
+        ravlog.apply_layout()
+        try:
+            got = (kitpages.kit_names(wotr), kits.second_sphere(kits.ELEMENTALIST, wotr),
+                   game.knows_new_spell(wotr, game.FOG_SPELL), kitpages.kit_level(wotr, kitpages.KIT_IDS["Battle Mage"]))
+            self.assertEqual(got, want)
+            self.assertEqual((wotr[0x3C], wotr[0x3E]), (0x2A, 0x2B))
+        finally:
+            ravlog.restore_layout()
 
     def test_layout_maps_record_fields(self):
         layout = ravlog.layout()
@@ -48,6 +85,23 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(ravlog.apply_layout(), 0)  # (once)
         ravlog.restore_layout()
         self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0), sl)
+
+    def test_weapon_specs_in_the_loaders_bytes(self):
+        """The sequel's +14h..+17h are other fields (DEX 16 once read as a staff sling's spec, "+2
+        specialized"): the specs and the roll are read at +42h (the Loader's 48h sheet), the age at +41h,
+        and none for a sheet of the game's own (0 there); a respec writes the three bytes alone."""
+        sheet = bytearray(ravager.SHEET_SIZE); sheet[0x14:0x18] = bytes((5, 18, 16, 15))
+        self.assertEqual(game.spec_kinds(bytes(sheet)), bytes((5, 18, 16, 15)))
+        ravlog.apply_layout()
+        self.assertEqual((game.SPEC_SLOTS, game.SHEET_AGE), (0x42, 0x41))
+        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet))), (bytes(4), None))
+        sheet[0x41], sheet[0x42:0x45] = 7, game.packed_specs([4, 2], 0, 11)[:3]
+        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet)), game.sheet_age(bytes(sheet))),
+                         (bytes((4, 2, 0, 0)), 11, 7))
+        new = game.with_specs(bytes(sheet), [1])
+        self.assertEqual((len(new), new[:0x42], new[0x45:]), (ravager.SHEET_SIZE, bytes(sheet[:0x42]), bytes(3)))
+        self.assertEqual((game.spec_kinds(new), game.sheet_roll(new), new[0x41]), (bytes((1, 0, 0, 0)), 11, 7))
+        self.assertEqual(len(game.respecced(bytes(sheet), [1])), 3)
 
     def test_size_rule_takes_the_sequels_tables(self):
         from dsloader import sizes
@@ -300,7 +354,8 @@ class PassTests(unittest.TestCase):
 
     def test_after_rolls_runs_the_hp_watch_only(self):
         """The hit points' changes follow the rolls (each hit matched with its fall: else the round's
-        end calls every hit "takes none"); nothing else of Shattered Lands' pass."""
+        end calls every hit "takes none"); nothing else of Shattered Lands' pass (the text, with no helper
+        attached, not read either)."""
         log = ravlog.RavDiceLog(FakeGuest())
         log.hp_changes = lambda now: ["  Gerakis now 64/165 HP (-12)"]
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
@@ -465,6 +520,25 @@ class PassTests(unittest.TestCase):
         self.assertEqual(data.max_spell_slots(0, 1, 1), 19)
         self.assertEqual(data.robe_slots(0, 1, 1, 3), 3)
 
+    def test_veiled_robe_slots(self):
+        """The Veiled Robe (the mod's robe type in the sequel, plus 2, on the chest) gives a wizard a slot more
+        at spell levels 1-3 where there are any (DSCLOG2's VEILED_SLOT); the Ashen Robe, a robe in the pack,
+        a priest and level 4 don't."""
+        data = ravlog.RavGameData(FakeGuest(), 0x4982)
+
+        def robe(plus, slot=0x09):
+            rec = bytearray(ravager.ITEM_SIZE)
+            struct.pack_into("<H", rec, 0x0A, ravager.mod_type(game.ROBE_TYPE))
+            rec[0x13], rec[0x16] = slot, plus
+            return [(1, bytes(rec), bytes(game.ITEM_TYPE_SIZE))]
+        for worn, bit, level, total, want in ((robe(2), kits.WIZARD, 1, 3, 4), (robe(2), kits.WIZARD, 3, 2, 3),
+                                              (robe(2), kits.WIZARD, 4, 2, 2), (robe(2), kits.WIZARD, 2, 0, 0),
+                                              (robe(1), kits.WIZARD, 1, 3, 3), (robe(2, 20), kits.WIZARD, 1, 3, 3),
+                                              (robe(2), kits.PRIEST, 1, 3, 3), ([], kits.WIZARD, 1, 3, 3)):
+            data._worn = lambda c, lists=None, worn=worn: worn
+            with self.subTest(worn=worn, bit=bit, level=level):
+                self.assertEqual(data.robe_slots(0, bit, level, total), want)
+
 
 class LookTests(unittest.TestCase):
     """The sequel's damage resistance (85052h's classes) and the Look box's lines from it."""
@@ -552,3 +626,280 @@ class NameTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StealthPortTests(unittest.TestCase):
+    """SL's stealth (stealth.py) in the sequel: its positions, regions, footprint, dying and dead, the
+    Elvenkind types; the Loader's word in DSCLOG2's header (STEALTH, +204) the only write."""
+    DS = 0x4982
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_rule_ported(self):
+        self.assertEqual(ravager.RULES_PORTED & game.RULE_STEALTH, game.RULE_STEALTH)
+
+    def test_layout(self):
+        from dsloader import stealth
+        sl = (stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE, game.ELVEN_CLOAK_TYPE)
+        ravlog.apply_layout()
+        self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE), (0x67C5, 0x25))
+        self.assertEqual(stealth.STATUS_GONE, (4, 7))
+        self.assertEqual(stealth.SHEET_FOOTPRINT, ravager.sheet_field(0x3D))
+        self.assertEqual((game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE),
+                         (ravager.mod_type(134), ravager.mod_type(135)))
+        self.assertEqual((game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE), (129, 130, 131))
+        ravlog.restore_layout()
+        self.assertEqual((stealth.POSITIONS, stealth.POSITION_SIZE, stealth.OUTDOORS, stealth.STATUS_GONE,
+                          game.ELVEN_CLOAK_TYPE), sl)
+
+    def test_thief_effects_by_the_sequels_numbers(self):
+        """The effects that rule a thief skill out are SL's by name in the sequel's numbers: its 25 is Detect
+        Invisible (a thief in Tyr hid at 0 with it), Mirror Images (46) rules hiding out."""
+        ravlog.apply_layout()
+        self.assertNotIn(25, game.THIEF_BLOCKED)
+        self.assertEqual(game.THIEF_BLOCKED[46], (4,))
+        self.assertEqual(game.THIEF_CERTAIN, {26: (2,), 53: (4,)})
+
+    def test_daylight_by_region(self):
+        """Under the open sky in Tyr, the forest, the Jann's desert, the Silt Sea islands and the clouds;
+        not in the Veiled Alliance's headquarters, the mines, the volcano, Under Tyr."""
+        from dsloader import stealth
+        g = FakeGuest()
+        ravlog.apply_layout()
+        data = ravlog.RavGameData(g, self.DS)
+        for region, sun in ((0x32, True), (0x01, True), (0x3B, True), (0x41, True), (0x42, True),
+                            (0x33, False), (0x38, False), (0x3D, False), (0x45, False), (0x36, False)):
+            struct.pack_into("<H", g.mem, self.DS * 16 + 0x140C, region)
+            with self.subTest(region=hex(region)):
+                self.assertEqual(stealth.daylight(data, 0), sun)
+
+    def test_square_from_the_sequels_positions(self):
+        from dsloader import stealth
+        g = FakeGuest()
+        ravlog.apply_layout()
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x67C5 + 2 * 0x25, 0x123, 0x456)
+        self.assertEqual(stealth.square(ravlog.RavGameData(g, self.DS), 2), (0x12, 0x45))
+
+    def test_hidden_word_written(self):
+        """_set_stealth writes DSCLOG2's STEALTH alone (no sound, no see-through figure: not in DSCLOG2)."""
+        from dsloader import stealth
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = 0xC91D0
+        log._set_stealth(True, 2)
+        self.assertEqual(struct.unpack_from("<H", g.mem, log.tsr_hdr + stealth.TSR_STEALTH)[0], 4)
+        self.assertEqual(g.writes, 1)
+        log._set_stealth(False)
+        self.assertEqual(struct.unpack_from("<H", g.mem, log.tsr_hdr + stealth.TSR_STEALTH)[0], 0)
+
+    def test_turn_lines_with_the_rule(self):
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: []
+        log.turn_lines = lambda: ["Lex's turn"]
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=game.RULE_STEALTH)
+        self.assertIn("Lex's turn", log._after_rolls(False, 1.0))
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=0)
+        self.assertNotIn("Lex's turn", log._after_rolls(False, 2.0))
+
+
+class ChargeLabelTests(unittest.TestCase):
+    """Names over figures' charges ("Armor: 3 left", labels.py) in the sequel: SL's charges pass (DiceLog.
+    count_charges) on the sequel's effect records (load + 3E71h:24Dh) and event queues (DS:2A63h, 2A6Bh),
+    so the charge routine's 2d4 is known behind the overlay manager's INT 3Fh stub too."""
+    DS = 0x4982
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def test_queue_places(self):
+        ravlog.apply_layout()
+        self.assertEqual((game.EVENT_QUEUE, game.EVENT_COUNT, game.EVENT_SIZE), (0x2A63, 0x2A6B, 0x11))
+
+    def test_armor_charge_floats_over_its_owner(self):
+        from unittest import mock
+        from dsloader import labels
+        from test_dicelog import entry, raw_for, words
+        g = FakeGuest()
+        seg, hdr, off = 0xC91B, 0x20, 0x2000
+        base = seg * 16 + hdr
+        struct.pack_into("<H", g.mem, base + dicelog.TSR_HDR_OFF, hdr)
+        struct.pack_into("<HHH", g.mem, base + labels.TSR_TAIL_SEG, seg, 0, off)
+        log = ravlog.RavDiceLog(g)
+        log.tsr_hdr = base
+        load = self.DS - ravager.DGROUP
+        ravlog.rebind("SPELLS_SEG", (ravlog.SPELLS_AT + 0x10 - game.SPELLS_OFF) // 16 - load)  # (as attach)
+        ravlog.rebind("EFFECT_NAMES", {5: "Armor"})  # (... the sequel's names, from its program)
+        armor, owner, eid = 5, 2, 5  # (the sequel's Armor effect, 5; its spell's record lasting by charges)
+        table = bytearray(ravlog.SPELL_COUNT * 32)
+        struct.pack_into("<h", table, armor * 32 + 7, -1)
+        log.guest.spells = bytes(table)
+        log.game = ravlog.RavGameData(log.guest, self.DS, rules=0)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2100, 1)  # (EFFECT_COUNT: one effect)
+        struct.pack_into("<hhhBBB", g.mem, (load + 0x3E71) * 16 + 0x24D, owner, owner, armor, eid, 0, 3)
+        trap = dicelog.OVERLAY_TRAP + bytes(8)  # (the charge routine's return made a stub: in the sequel's overlays)
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, owner, eid), parent_code=trap)
+             for f in (3, 1, 2, 4)]
+        shown = []
+        log._labels_font_tried = True
+        with mock.patch.object(ravlog.RavGameData, "spell_names", [""] * armor + ["Armor"]), \
+                mock.patch.object(log._labels, "show", lambda guest, hdr, thing, text, *a: shown.append((thing, text))):
+            log.count_charges(e)
+            lines = [line for x in e for line in log.describe(x)]
+        self.assertEqual(lines, ["    Armor on {}: one charge used, 4 left".format(log._name(owner)),
+                                 "    Armor on {}: one charge used, 3 left".format(log._name(owner))])
+        self.assertEqual(shown, [(owner, "Armor: 4 left"), (owner, "Armor: 3 left")])
+        self.assertEqual(log.guest.dropped, 0)
+
+    def test_effect_ends_from_the_queue(self):
+        """An effect's end in the sequel's event queue, found by its owner and handle."""
+        g = FakeGuest()
+        ravlog.apply_layout()
+        load = self.DS - ravager.DGROUP
+        data = ravlog.RavGameData(ravlog.ReadOnlyGuest(g), self.DS)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2100, 1)
+        struct.pack_into("<hhhBBB", g.mem, (load + 0x3E71) * 16 + 0x24D, 1, 1, 300, 9, 7, 15)
+        queue = 0x6F100
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x2A63, queue & 0xF, queue >> 4)
+        struct.pack_into("<h", g.mem, self.DS * 16 + 0x2A6B, 1)
+        struct.pack_into("<iBhB", g.mem, queue, 5000, 7, 1, 7)
+        self.assertEqual(data.effect_deadlines(), {(1, 7): 5000})
+
+
+class BlastSaveCreationTests(unittest.TestCase):
+    """Psionic Blast's wounds given back (DSCLOG2's BLAST_HP, +1814), the sequel's saving throw's d20 (its
+    frame's [BP-0Ah] pointer) and the creation screen's tries (RL_TRY, +280/+282)."""
+    DS, CREATURES, SHEETS, HDR = 0x1000, 0x30000, 0x20000, 0xC91B0
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def make(self):
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)  # (the sequel's layout from here)
+        log.tsr_hdr = self.HDR
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.SHEETS_PTR, 0, self.SHEETS >> 4)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.CREATURES_PTR, 0, self.CREATURES >> 4)
+        fighting = [True]
+
+        class Game(ravlog.RavGameData):
+            def combatant_creature(self, combatant):
+                return combatant
+
+            def in_combat(self):
+                return fighting[0]
+
+            def game_time(self):
+                return 100
+
+        log.game = Game(log.guest, self.DS, 0)
+        c = self.CREATURES + game.CREATURE_SIZE  # (member 1: 8 of 40 HP, Okay)
+        struct.pack_into("<h", g.mem, c, 8)
+        g.mem[c + game.CREATURE_STATUS] = game.STATUS_OKAY
+        struct.pack_into("<H", g.mem, c + game.CREATURE_SHEET_INDEX, 1)
+        g.mem[c + game.CREATURE_NAME:c + game.CREATURE_NAME + 4] = b"Lex\0"
+        struct.pack_into("<h", g.mem, self.SHEETS + game.SHEET_SIZE + game.SHEET_MAX_HP, 40)
+        return g, log, fighting
+
+    def test_blast_given_back_at_the_fight_end(self):
+        from dsloader import psiblast
+        g, log, fighting = self.make()
+        self.assertEqual(psiblast.TSR_BLAST, 1814)
+        struct.pack_into("<4h", g.mem, self.HDR + psiblast.TSR_BLAST, 0, 24, 0, 0)
+        self.assertEqual(log._blast_pass(0.0), [])
+        fighting[0] = False
+        self.assertEqual(log._blast_pass(1.0), [])
+        out = log._blast_pass(1.0 + psiblast.FIGHT_OVER)
+        self.assertEqual(len(out), 1, out)
+        self.assertIn("+24 HP, now 32/40", out[0])
+        self.assertEqual(struct.unpack_from("<h", g.mem, self.CREATURES + game.CREATURE_SIZE)[0], 32)
+        self.assertEqual(struct.unpack_from("<4h", g.mem, self.HDR + psiblast.TSR_BLAST), (0, 0, 0, 0))
+        self.assertEqual(log.guest.dropped, 0)
+
+    def test_save_roll_by_the_sequels_frame(self):
+        """The d20 is the saving throw's when its frame's [BP-0Ah]:[BP-8] points at the target's record."""
+        g, log, _ = self.make()
+        at = self.CREATURES + game.CREATURE_SIZE
+        frame = {-0x0A: at & 0xF, -0x08: at >> 4, -0x1E: 0, -0x1C: 0}
+        e = types.SimpleNamespace(parent_arg=lambda off: 1 if off == 6 else None,
+                                  parent_local=lambda off: frame.get(off))
+        self.assertTrue(log._is_save_roll(e))
+        frame[-0x08] += 1
+        self.assertFalse(log._is_save_roll(e))
+
+    def test_creation_tries(self):
+        """Each ability's best of its four 4d4, +4 and the race's adjustment, from DSCLOG2's RL_TRIES once
+        RL_SEQ has moved; the scores read from the creature being made (DS:142Dh)."""
+        g, log, _ = self.make()
+        sheet, creature, load = 0x40000, 0x40100, 0x100
+        log.game.load_seg = load
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x1429, 0, sheet >> 4)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + 0x142D, 0, creature >> 4)
+        g.mem[sheet + game.SHEET_RACE] = 1
+        g.mem[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 3] = bytes((0, 0, 0))
+        adjust = (load + 0x3E4F) * 16 + 0x120 + 6  # (race 1's: +1 DEX)
+        g.mem[adjust + 1] = 1
+        g.mem[creature + game.CREATURE_ABILITIES:creature + game.CREATURE_ABILITIES + 6] = \
+            bytes((16, 17, 14, 12, 10, 9))
+        log._creation_tries_moved(0.0)  # (the first look: the count noted)
+        g.mem[self.HDR + 282:self.HDR + 306] = bytes((12, 9, 8, 7, 12, 11, 10, 9, 10, 8, 6, 5,
+                                                       8, 6, 5, 4, 6, 6, 5, 4, 5, 5, 4, 4))
+        struct.pack_into("<H", g.mem, self.HDR + 280, 24)
+        self.assertEqual(log._creation_pass(1.0), [])  # (the die still moving)
+        out = log._creation_pass(1.0 + dicelog.CREATION_HP_WAIT)
+        self.assertEqual(out[0], "Character creation, STR 16: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16")
+        self.assertIn("DEX 17: best of four 4d4 (12, 11, 10, 9) = 12, +4, +1 ", out[1])
+        self.assertEqual(out[-1], "Character creation: the six scores add up to 78")
+        g.mem[creature + game.CREATURE_ABILITIES] = 17  # (the sequel's least for a prime requisite: raised)
+        struct.pack_into("<H", g.mem, self.HDR + 280, 48)
+        log._creation_pass(2.0)
+        out = log._creation_pass(3.0)
+        self.assertEqual(out[0], "Character creation, STR 17: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16, "
+                                 "raised to 17 (the classes' least)")
+
+
+class StartGearTests(unittest.TestCase):
+    """The sequel's items for fuller starting gear (ravlog.RAV_PLAIN, RAV_LEATHER, RAV_CLOAK): each record its
+    type at +0Ah, a weapon of the kind it is listed under (ravager.rav_kinds), in no list and no slot; with
+    the sequel there, each the record of one of OBJEX.GFF's objects (its own picture, value and name)."""
+
+    def test_records(self):
+        from dsloader import ravager, ravlog
+        kinds = ravager.rav_kinds()
+        for kind, choices in ravlog.RAV_PLAIN.items():
+            for type_, rec in choices:
+                self.assertEqual(len(rec), ravager.ITEM_SIZE)
+                self.assertEqual(struct.unpack_from("<H", rec, 0x0A)[0], type_)
+                self.assertEqual(kinds.get(type_), kind, type_)
+                self.assertEqual((struct.unpack_from("<H", rec, 4)[0], rec[0x13], rec[0x16]), (9999, 0xFF, 0))
+        self.assertEqual([struct.unpack_from("<H", r, 0x0A)[0] for _, r in ravlog.RAV_LEATHER], [32, 3, 64])
+
+    @unittest.skipUnless(os.environ.get("DSUN_WOTR"), "DSUN_WOTR: the player's Wake of the Ravager folder")
+    def test_from_the_game(self):
+        import glob
+        from dsloader import dataitems, gff, ravlog
+        path = next(f for f in glob.glob(os.path.join(os.environ["DSUN_WOTR"], "*")) if f.lower().endswith("objex.gff"))
+        objects = gff.read_gff(open(path, "rb").read())
+        records = set()
+        for key, chunk in objects.items():
+            if key[0] == "RDFF":
+                try:
+                    recs, _ = dataitems.records(chunk)
+                except Exception:
+                    continue
+                records.update(r.data[:0x17] for r in recs[:1])
+        ours = [r for c in ravlog.RAV_PLAIN.values() for _, r in c] + [r for _, r in ravlog.RAV_LEATHER] + [ravlog.RAV_CLOAK]
+        for rec in ours:
+            self.assertIn(rec, records, rec.hex())
+
+    def test_rebound(self):
+        """While the sequel's layout is on, startgear's items are the sequel's."""
+        from dsloader import ravlog, startgear
+        sl = startgear.LEATHER
+        ravlog.apply_layout()
+        try:
+            self.assertIs(startgear.LEATHER, ravlog.RAV_LEATHER)
+            self.assertIs(startgear._weapon, ravlog.rav_weapon)
+        finally:
+            ravlog.restore_layout()
+        self.assertIs(startgear.LEATHER, sl)

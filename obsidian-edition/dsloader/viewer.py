@@ -35,6 +35,9 @@ SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
+# (the Music device's hint: the device is for Shattered Lands; launch.write_conf_wotr leaves the sequel's music, its
+# CD's audio tracks, as it is)
+RAVAGER_MUSIC = " Shattered Lands only: Wake of the Ravager's music is its CD's audio, not MIDI."
 # the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
 JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
                  ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
@@ -551,14 +554,14 @@ class Viewer:
             self.midi_device = tk.StringVar(value="" if device == midiout.DEFAULT else str(device))
             self.midi_box: tk.Widget = ttk.Entry(music, textvariable=self.midi_device, width=8)
             hint = ("Empty for the default. Else a device's number as Windows counts them, from 0 (their names "
-                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0.")
+                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0." + RAVAGER_MUSIC)
         else:
             self.midi_device = tk.StringVar(value=midiout.label(device, self.midi_names))
             self.midi_box = ttk.Combobox(music, textvariable=self.midi_device, state="readonly", width=44,
                                          values=midiout.labels(self.midi_names, device))
             self.midi_box.bind("<<ComboboxSelected>>", lambda _e: self._midi_chosen())
             hint = ("Windows' default, or one of its MIDI devices: a software synthesizer with a soundfont, or an "
-                    "MT-32 driver, that you have installed.")
+                    "MT-32 driver, that you have installed." + RAVAGER_MUSIC)
         self.midi_box.pack(side="left", padx=(6, 0))
         self.midi_box.bind("<Return>", lambda _e: self._midi_chosen())
         self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())
@@ -573,12 +576,22 @@ class Viewer:
         found.pack(anchor="w")
         ravager.bind("<Configure>", lambda e: found.configure(wraplength=max(200, e.width - 20)), add="+")
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
+        # the party into the sequel (ravtransfer.transfer): every item, the ages and the months between
+        about_party = ttk.Label(ravager, text="Take a saved party into Wake of the Ravager's roster, every item with it "
+                                "(the ones the sequel hasn't made by the Loader), its ages too, and the months "
+                                "between the games. Then start the sequel from the Loader and ADD them on CREATE "
+                                "CHARACTERS.", style="Status.TLabel", wraplength=460, justify="left")
+        about_party.pack(anchor="w", pady=(8, 0))
+        ravager.bind("<Configure>", lambda e: about_party.configure(wraplength=max(200, e.width - 20)), add="+")
+        ttk.Button(ravager, text="Take the party to Wake of the Ravager...",
+                   command=self.take_party_to_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
         # F5, F9 and the saves the game makes by itself, on the save window's QUICK page (quicksave.py)
         self.quick_save = tk.BooleanVar(value=settings.get("quick_save", True) is not False)
         ttk.Checkbutton(kept, text="Quick save and quick load: on the map, F5 saves at once on the QUICK page of the "
-                        "save window, and F9 opens the load window there", variable=self.quick_save,
+                        "save window, and F9 opens the load window there (in Wake of the Ravager too, where F5 "
+                        "is otherwise the sound effects' key)", variable=self.quick_save,
                         command=self._options_changed).pack(anchor="w")
         self.autosave = tk.BooleanVar(value=settings.get("autosave", True) is not False)
         ttk.Checkbutton(kept, text="Autosave: on coming into another area and after a fight, on the QUICK page of "
@@ -586,12 +599,15 @@ class Viewer:
                         command=self._options_changed).pack(anchor="w", pady=(4, 8))
         about = ttk.Label(kept, text="While this window is open, saves in the manual slots are copied into the Loader's \"Named "
                           "saves\" folder under their in-game names (\"Page 2 slot 05 - Before Scar's "
-                          "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
+                          "battle.SAV\"), and Wake of the Ravager's into \"Named saves (Wake of the Ravager)\".",
+                          style="Status.TLabel", wraplength=460, justify="left")
         about.pack(anchor="w")
         kept.bind("<Configure>", lambda e: about.configure(wraplength=max(200, e.width - 20)), add="+")
         buttons = ttk.Frame(kept)
         buttons.pack(anchor="w", pady=(4, 0))
         ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
+        ttk.Button(buttons, text="Wake of the Ravager's", command=lambda: self.open_named_saves(wotr=True)).pack(
+            side="left", padx=(8, 0))
         ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
         self._options_shown = self._option_values()  # (as read: only what changes from it is saved)
@@ -618,8 +634,50 @@ class Viewer:
         self._save_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " From the next start.")
 
+    def take_party_to_wotr(self) -> None:
+        """A Shattered Lands save's party into Wake of the Ravager's roster (ravtransfer.transfer),
+        after asking, and the report in a window of its own."""
+        from . import ravager, ravtransfer, wotrart
+        title = "Take the party to Wake of the Ravager"
+        sl_dir = self._saves_game_dir()
+        if sl_dir is None:
+            return
+        found = wotrart.find_resources(sl_dir)
+        wotr_dir = os.path.dirname(found) if found else None
+        if not ravager.is_wotr_dir(wotr_dir):
+            messagebox.showinfo(title, "The Loader hasn't found Wake of the Ravager (GOG's release): choose its "
+                                "folder above first.", parent=self.root)
+            return
+        start = namedsaves.NAMED if os.path.isdir(namedsaves.NAMED) else sl_dir
+        save = filedialog.askopenfilename(parent=self.root, title="Whose party? (a Shattered Lands save)",
+                                          initialdir=start, filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
+        if not save:
+            return
+        if not messagebox.askyesno(title, f"Put the party of {os.path.basename(save)} into Wake of the Ravager's "
+                                   f"roster ({wotr_dir})? The save itself isn't changed. The roster is kept "
+                                   "first as CHARSAVE.GFF.BAK (the first time); the party takes free places, or "
+                                   "its own from an earlier transfer.", parent=self.root):
+            return
+        try:
+            text = ravtransfer.transfer(save, wotr_dir, sl_dir, launch.DOS_DIR)
+        except (OSError, ravtransfer.GffError, StopIteration, KeyError) as e:
+            messagebox.showerror(title, f"The party couldn't be taken across: {e}", parent=self.root)
+            return
+        window = tk.Toplevel(self.root)
+        window.title(title)
+        box = tk.Text(window, wrap="word", height=24, width=90, font="TkTextFont")
+        bar = ttk.Scrollbar(window, command=box.yview)
+        box.configure(yscrollcommand=bar.set)
+        bar.pack(side="right", fill="y")
+        box.pack(side="left", fill="both", expand=True)
+        box.insert("1.0", text)
+        box.configure(state="disabled")
+        self.status.set("The party is in Wake of the Ravager's roster.")
+
     def _saves_game_dir(self) -> Optional[str]:
-        game_dir = self._game_dir or launch.find_game_dir()
+        """Shattered Lands' folder, for its saves (not Wake of the Ravager's: _wotr_saves_dir)."""
+        from . import ravager
+        game_dir = self._game_dir if self._game_dir and not ravager.is_wotr_dir(self._game_dir) else launch.find_game_dir()
         if game_dir is None:
             messagebox.showinfo("Saves", "The Loader hasn't found the game yet: start it once from the Loader.",
                                 parent=self.root)
@@ -639,29 +697,35 @@ class Viewer:
         self.status.set(f"The manual, opening in your browser: {HELP_PAGE}" if opened
                         else f"The manual is {HELP_PAGE}")
 
-    def open_named_saves(self) -> None:
-        game_dir = self._saves_game_dir()
-        if game_dir is None:
+    def _wotr_saves_dir(self) -> Optional[str]:
+        """Wake of the Ravager's folder for its saves (ravlog.wotr_folder), None if the Loader hasn't found it."""
+        from . import ravlog
+        return ravlog.wotr_folder(self._game_dir)
+
+    def open_named_saves(self, wotr: bool = False) -> None:
+        """The named saves' folder (WOTR: Wake of the Ravager's), brought up to date first."""
+        game_dir = self._wotr_saves_dir() if wotr else self._saves_game_dir()
+        if game_dir is None and not wotr:
             return
+        folder = namedsaves.NAMED_WOTR if wotr else namedsaves.NAMED
         try:
-            namedsaves.sync(game_dir)
-            os.makedirs(namedsaves.NAMED, exist_ok=True)
+            if game_dir is not None:
+                namedsaves.sync(game_dir, folder, wotr)
+            os.makedirs(folder, exist_ok=True)
         except OSError as err:
             self.status.set(f"Couldn't open the named saves: {err}")
             return
         try:
             if sys.platform == "win32":
-                os.startfile(namedsaves.NAMED)  # type: ignore[attr-defined]
+                os.startfile(folder)  # type: ignore[attr-defined]
             else:
-                subprocess.Popen(["xdg-open", namedsaves.NAMED])
+                subprocess.Popen(["xdg-open", folder])
         except OSError:
-            self.status.set(f"The named saves are in {namedsaves.NAMED}")
+            self.status.set(f"The named saves are in {folder}")
 
     def restore_save(self) -> None:
-        """A save file (a named copy) put in a slot of the game's list, to be loaded from there."""
-        game_dir = self._saves_game_dir()
-        if game_dir is None:
-            return
+        """A save file (a named copy) put in a slot of the game's list, to be loaded from there: Shattered
+        Lands' or, for one of its saves, Wake of the Ravager's (one page of ten)."""
         try:
             os.makedirs(namedsaves.NAMED, exist_ok=True)
         except OSError:
@@ -670,30 +734,46 @@ class Viewer:
                                           filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
         if not copy:
             return
+        wotr = namedsaves.is_wotr_save(copy)
+        game_dir = self._wotr_saves_dir() if wotr else self._saves_game_dir()
+        if game_dir is None:
+            if wotr:
+                messagebox.showinfo("Put a save in a slot", "That is a Wake of the Ravager save, and the Loader "
+                                    "hasn't found Wake of the Ravager: choose its folder above first.", parent=self.root)
+            return
         m = namedsaves.COPY.match(os.path.basename(copy))
-        where = simpledialog.askstring("Put a save in a slot", "Which page and slot of the game's list? "
-                                       "(page 1 to 4, slot 1 to 10, as 2-5)", parent=self.root,
-                                       initialvalue=f"{m.group(1)}-{int(m.group(2))}" if m else "1-1")
+        if wotr:
+            where = simpledialog.askstring("Put a save in a slot", "Which slot of Wake of the Ravager's list? "
+                                           "(1 to 10)", parent=self.root,
+                                           initialvalue=str(int(m.group(2))) if m else "1")
+            where = where and "1-" + where.strip()
+        else:
+            where = simpledialog.askstring("Put a save in a slot", "Which page and slot of the game's list? "
+                                           "(page 1 to 4, slot 1 to 10, as 2-5)", parent=self.root,
+                                           initialvalue=f"{m.group(1)}-{int(m.group(2))}" if m else "1-1")
         if not where:
             return
         try:
             page, slot = (int(n) for n in where.replace(" ", "").split("-"))
-            if not (1 <= page <= 4 and 1 <= slot <= 10):
+            if not (1 <= page <= (namedsaves.WOTR_PAGES if wotr else 4) and 1 <= slot <= 10):
                 raise ValueError
         except ValueError:
-            messagebox.showerror("Put a save in a slot", "That isn't a page and slot (such as 2-5).", parent=self.root)
+            messagebox.showerror("Put a save in a slot", "That isn't a slot (such as 5)." if wotr else
+                                 "That isn't a page and slot (such as 2-5).", parent=self.root)
             return
-        there = namedsaves.slot_name(game_dir, page, slot)
+        there = namedsaves.slot_name(game_dir, page, slot, wotr)
+        place = f"Slot {slot}" if wotr else f"Page {page} slot {slot}"
+        folder = namedsaves.NAMED_WOTR if wotr else namedsaves.NAMED
         if there is not None and not messagebox.askyesno(
-                "Put a save in a slot", f"Page {page} slot {slot} has \"{there}\". Put this save there instead? "
-                "(It is kept in the Named saves folder as \"Replaced - ...\".)", parent=self.root):
+                "Put a save in a slot", f"{place} has \"{there}\". Put this save there instead? "
+                f"(It is kept in the {os.path.basename(folder)} folder as \"Replaced - ...\".)", parent=self.root):
             return
         try:
-            name = namedsaves.restore(copy, game_dir, page, slot)
+            name = namedsaves.restore(copy, game_dir, page, slot, folder, wotr)
         except (OSError, ValueError) as e:
             messagebox.showerror("Put a save in a slot", str(e), parent=self.root)
             return
-        self.status.set(f"\"{name}\" is in page {page} slot {slot}: load it from the game's list.")
+        self.status.set(f"\"{name}\" is in {place[0].lower() + place[1:]}: load it from the game's list.")
 
     def restore_defaults(self) -> None:
         """Every switch on the Options tab back as it comes (after asking)."""
@@ -1143,14 +1223,22 @@ class Viewer:
         if now < getattr(self, "_saves_due", 0.0):
             return
         self._saves_due = now + SAVES_EVERY
+        from . import ravager
+        made = []
         game_dir = self._game_dir or launch.load_settings().get("game_dir")
-        if game_dir and os.path.isdir(game_dir):
+        if game_dir and os.path.isdir(game_dir) and not ravager.is_wotr_dir(game_dir):
             try:
-                made = namedsaves.sync(game_dir)
+                made += namedsaves.sync(game_dir)
             except OSError:
-                made = []
-            if made:
-                self.status.set("Save copied to Named saves: " + ", ".join(made))
+                pass
+        wotr_dir = self._wotr_saves_dir()  # (Wake of the Ravager's, into its own folder)
+        if wotr_dir:
+            try:
+                made += namedsaves.sync(wotr_dir, namedsaves.NAMED_WOTR, True)
+            except OSError:
+                pass
+        if made:
+            self.status.set("Save copied to Named saves: " + ", ".join(made))
 
     def _auto_locate(self) -> None:
         """For Shattered Lands, point the party slots at the game's own tables."""

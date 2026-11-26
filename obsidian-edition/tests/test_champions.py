@@ -107,7 +107,8 @@ class ObjectTests(unittest.TestCase):
             self.assertEqual(rec[at:at + 2], want[at:at + 2])
         self.assertEqual(10 - rec[game.ITEM_PLUS], 6)
         self.assertIn((game.BRACERS_TYPE, champions.ARM), champions.SLOTS[champions.DEFILER])
-        self.assertEqual({slot for _, slot in champions.SLOTS[champions.DEFILER]}, {champions.RIGHT, champions.ARM})
+        self.assertEqual({slot for _, slot in champions.SLOTS[champions.DEFILER]},
+                         {champions.RIGHT, champions.MISSILE, champions.ARM})  # (no armour; the Darts +1)
 
     def test_dex_22(self):
         """The Tohr-kreen's, the halfling's and the elf's DEX is 22, in the creature record and the
@@ -124,6 +125,18 @@ class ObjectTests(unittest.TestCase):
                  for r in dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.HALFLING)])]
         self.assertIn(game.STAFF_SLING_TYPE, kinds)
         self.assertNotIn(champions.SLING_TYPE, kinds)
+
+    def test_defiler_darts(self):
+        """The defiler's missile weapon is Wake of the Ravager's Darts +1 (the user's, 2026-11-24), its own
+        shining picture, beside its bone dagger."""
+        from dsloader import icons
+        items = dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.DEFILER)])
+        darts, = [r for r in items if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == game.DARTS_TYPE]
+        self.assertEqual(darts[game.ITEM_PLUS], 1)
+        self.assertEqual(icons.which(darts), "Darts +1")
+        self.assertEqual(struct.unpack_from("<H", darts, 0)[0], icons.PICTURES["Darts +1"])
+        self.assertIn((game.DARTS_TYPE, champions.MISSILE), champions.SLOTS[champions.DEFILER])
+        self.assertIn(game.BONE_DAGGER_TYPE, [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items])
 
     def test_elf_chill_arrows(self):
         """The elf's arrows are 24 Chill Arrows, made as a Spellarcher's (spellarrows.arrows_item)."""

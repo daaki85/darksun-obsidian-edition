@@ -126,6 +126,14 @@ raised before stopping.
   **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the file
   has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever the
   build). `setitem.py ITEM TYPE` does it with the game's first plain record of a type.
+- **A weapon for a test of its rate or traits** (logs/2026-11-23-ravager-weapons.md): put it in
+  the right hand (`itemedit.py M 10 slot=3`): one in the left hand (slot 10) swings once a round
+  whatever the rate. A second weapon moved to slot 20 is still worn and still swings: make it
+  something else (`setitem.py N 60`). The Loader's types with no SEGOBJEX record (Wake of the
+  Ravager's, 148-153) need `rec=` (`worldgear.weapon(worldgear.LOTULIS).hex()`); `specset.py M
+  KIND...` gives the member the weapon specs. **A sheet's address moves with the build** (the
+  origin worktree's DSCLOG put Jenna's at 669FBh, the branch's at 66A3Bh): read it from
+  `sheetedit.py` at every load before writing to it.
 - **A held item changed in memory** (logs/2026-11-10-outstanding-checks.md): write it with the
   inventory **closed** (closing it writes the screen's copy back over the record), clear its +0Ch
   (the game keeps there the icon it last drew, and draws that again), and give it the item's own
@@ -164,6 +172,14 @@ raised before stopping.
   `weaponchoice.ITEM_COUNT` (`setarrows.py MEMBER N`), **set before the fight starts** (before the
   ambush's speech is clicked): changed in a fight the game's own readied list doesn't see it.
   `ammodump.py` prints the archers' item records.
+- **A reach test goes by the click, never Tab** (logs/2026-11-24-ravager-weapons-followups.md): a
+  foe moved in memory (`placefoe.py THING DX DY MEMBER`, DS:669Dh + 20h a thing) stays drawn where it
+  was until it moves, so a click on its new square finds nothing; Tab chooses it, but **Tab + Return
+  swings a melee weapon from two squares in a build without reach too** (the control, 2026-11-24): it
+  doesn't ask the distance routine the click does. Walk the member two squares from a held foe
+  drawn where it stands (`squarewalk.py COL ROW`), make its Move 0 (37BD:022Bh + creature x 2) and
+  click the foe's figure with the attack pointer: with reach the melee weapon swings; without, a
+  bow in the missile slot shoots (or nothing happens).
 - **Melee reach isn't the type's range byte** (logs/2026-11-10-polearm-reach.md): a polearm with its
   type's +0Ah set to 2, held alone, with Move 0, two squares from a held foe: the attack does nothing
   and the turn passes; with a bow in the missile slot the click shoots it instead.
@@ -735,6 +751,93 @@ a foe was taken about (8, 5) off its `ravfight.py state` place. A rule-off contr
 the helper: read the dice log's plain d20 and the items gone (`ravitems.py`). Casting the last of a
 level's slots shows "ZERO LEVEL 9 SPELLS TO CAST": write the slots again and press LEVEL round.
 
+**Weapon specialization in the sequel** (2026-11-24, logs/2026-11-24-ravager-specialize.md): the weapon attack routine (5CE80h, SL's 58780h) has SL's frame with its locals two lower: the attacks a round in halves `[BP-0Ah]` (stored at 5CEE8h from the sheet's +24h in melee, the type's +7 for a missile), the damage dice `[BP-10h]` (type +9), sides `[BP-12h]` (+8), bonus `[BP-14h]` (+0Ah; the item's plus +16h added unless an Enlarge-like effect 4 is on either side, then the strength bonus, 98h:42Bh, at 5CF6Dh); `[BP+0Ah]` the THAC0 the d20 is held against (less `[BP+0Ch]`), `[BP+10h]` the sheet, `[BP+12h]` the item, `[BP+14h]` the type, `[BP+16h]` above 1 a missile. After the store the game doubles the halves for a status 4, halves them for 1, a ninth for 7 (628h:5Ch), then (the round's parity + halves) / 2, and cuts a shot's attacks to the ammunition left (5D007h-5D046h: "Out of ammo"). The sequel gives every warrior 3 halves (sheet +24h) as SL does. **A specialist's line in the dice log** reads "THAC0 19 base, +3 in bonuses, +1 specialized = 15" (the sequel's set-up frame isn't SL's, so the bonuses aren't itemized) and "1d6 = [3] +1 weapon +2 specialized +4 STR 18". DSCLOG2's `spec_hits`, `spec_damages`, `spec_rates` count what it did (scratch `spcount.py`: the symbols from `nasm`, the helper found by its `DSCLOGR1` header). **The transferred party in Tyr's ambush** under Computer Control: give the four HP 250 and base AC -10 in memory (48h sheets: `sheet * 48h + 21h`; never saved) so the fight lasts 30 rounds or more; put an archer's melee weapon in the pack (an item's +13h 14) to have the AI shoot, though it may take it up again. **"Illegal Op (gpl=49)"**: 9 of 14 of those fights (ravG48's 48h party: 5 of 9 with the rule on, 4 of 5 with it off) end with the game quitting so (`RAV_STDOUT=1` shows it, `RAV_MARK=1` writes ENDED.TXT), mostly at Ester's turn; not yet looked into. **Another agent's dice log** attached to this DOSBox (a Loader test of its own) wrote its rules word into DSCLOG2's header: a run whose `rules` (header +170) isn't the Loader's is void (`spcount.py` prints it).
+
+**The sequel's own six weapon specs** (2026-11-25, logs/2026-11-25-ravager-new-specs.md): a spec for a test made in the
+**Shattered Lands save** before the party transfer (`game.with_specs` on a copy's `SAVE 6` sheets, written back with
+`icons.with_chunks`), then `python -m dsloader.ravtransfer SAVE COPY SL_FOLDER DOS_FOLDER`: the roster's 48h sheets
+carry it (V3 at +42h..+44h). A weapon of a kind for a test: the held item's type word (+0Ah of its 17h record) made
+the sequel's type in memory (never saved; the item keeps its name, so the dice log's "Obsidian Longsword (1d10)" is
+the Twohand Sword's type), its left hand's item to the pack (+13h 14). The sequel's own types of SL's six kinds: the
+Twohand Sword 101 and Crystal sword 35 (two-handed 1d10: the type's +0Bh 40h), Lotulis 61, Double Spear 39,
+Trikal 100, Javelin 59, Darts 38 and 43 (the type's dice: count +9, sides +8). **A second sequel game** when the
+shared DOSBox is busy: a copy of the kit with `:57` in env.sh, paths.py, ravclick.py, ravfight.py and ravstart.sh's
+Xvfb line, `PLAYTEST_WORK` its own folder (rav.pid, rav.conf there) and a `dosbox` wrapper first in PATH that runs
+a copy named `dbns`; a script testing `/proc/PID/comm` must then look for `dbns`, not `dosbox`.
+
+**The sequel's screens: DAM lines, Effects, the Look box's close** (2026-11-25, logs/2026-11-25-ravager-screens.md): the inventory's DAM line routine is SL's at 7AF9Eh (its item DI, type SI, the creature far at `[BP-6]`, 0 in an item box): the melee branch reads the sheet's +24h at 7B19Eh, the missile branch the type's +7 at 7B124h, each then "mov ah,0" and the push for the line's routine (7B1D9h); the bonus, sides and count are pushed under it. View Character's line is at 6CA43h on (`[BP-6]` the attacks, `[BP-2]`/`[BP-4]` the dice, `[BP-0Ah]` the item, the bonus stored at 6CAC9h); it took Ester's left-hand weapon. The likeness search missed both (the sheet's and types' sizes differ): search for the sheet read (`26 8A 47 24`) instead. **The Effects screen**: the cells' routine 8AC6Fh (ends 8AFA9h, `[BP-4]` the cells used), the handler 8AB13h (its redraw "call 140:60Dh" at 8AC62h, way out 8AC6Ah); USE, then EFFECTS (122,171), the portraits at (70,56), (117,56), (70,127), (117,127), the lower panel's lines from (150,108). **The dialogue window**: its stub 476Ch (SL's 42CAh, entries 25h the input and 34h the wait), found by its callers' likeness (SL's 42CA:2Ah calls at 1BC2Ch/1BE74h, the sequel's 476C:2Ah at 1F063h/1F2D6h). **To see the Look box's description** a monster needs more than HP, AC and THAC0 to say: Draxans have no defences, so set their resistance class (the creature's +0Fh) to 2 in memory for a test (never saved). **A spec edit for a test** must write the packed SPEC_V2 form (the kinds base 17 in the low 17 bits of +42h..+44h): the Loader's age pass rewrites plain bytes there. The Effects screen's kit line needs RULE_HI_KITS (1) in DSCLOG2's rules_hi (header +270), which the Loader doesn't set until the kits' rules are ported. **The opening talk** of a new game with the transferred party runs into the Draxans' fight after three Continues (100,171); the screens open in the fight: the top-left icon (22,17), then VIEW INVENTORY (74,171); on the inventory its bar's first icon (170,187) is VIEW CHARACTER; on View Character and Effects the bar is (47,171) VIEW CHARACTER, (74,171) the inventory, (122,171) EFFECTS; the inventory's portraits at (25,25), (25,69), (25,117), (25,165).
+
+**The sequel's first spells and powers** (2026-11-25, logs/2026-11-25-ravager-first-spells.md): the creation
+screen's DONE (6E0B9h, 5C0:57h; SI the member) calls 6E6D8h, the powers (6E906h, 5C0:2Ah), a preserver's spells
+(6EA10h, 5C0:2Fh), 6ED7Dh, then 98:0Fh, all from DONE only (no START GAME path as in SL). The wizard spells known
+are a bitset (selector 320h, the load + 3D62h: 39Ch + 15 a member, bit n spell n; SPELL_STARTS at DS:0656h: 1st
+level 0-11, 2nd 12-24, 3rd 25-38, 4th 39-55); the powers a byte each (selector 370h, the load + 3E71h: 9CDh + 22h a
+member, bits 1-7 the number, 580:39h gives one as 2), the disciplines' bits A55h + the member; the pop-up's
+discipline shown DS:9D7Bh + the member, its picks left DS:43ECh (CHOOSE A SPELL's page level too), its list DS:9C20h
+(words, 0 the end). Selector 360h holds the screen's snapshot (+0 the preserver level at an EDIT's opening, the
+spells given again only when it differs) and the powers' table (+6 three rows of 5, +15h the psionicist's 20). The
+level up's windows take a member and run until closed: CHOOSE A SPELL 688:66h (93160h; one spell a call), the
+psionicists' pop-up 688:61h (93B62h; its count from the psionicist level, closed at none); module 40's stub segment is
+DS - 30h, module 15's DS - 103h. The overlay layout (modules, stubs, entries) from Dark Sun Recompiled's
+`tools/build_image.py DSUN.EXE --out DIR` (its layout.json: a module's `record` x 8 is its selector). **SITE's way
+back** is the byte after the site's number: for a 4-byte site the NOP, so a site that stands for a jump adds the
+target less that address (one byte late, PSI_LIST jumped into an instruction: "Illegal Op (gpl=49)" on a click).
+`ravfirst.py` reads it all. In the creation screen the pop-up's discipline button is (115,140), EXIT (202,140), its
+icons from (121,62) 19 apart; CHOOSE A SPELL's icons five a row from (124,74), 19 by 17 apart, LEVEL (107,147), EXIT
+(205,147); "YOU HAVEN'T CHOSEN"/"YOU HAVE MORE"'s EXIT (112,92).
+
+**With STORE/RECALL and the starting gear** (2026-11-25, logs/2026-11-25-ravager-join-gear-spells.md): DONE's
+windows (CHOOSE A SPELL, then the powers' pop-up, which every class gets: everyone has a discipline) all come before
+GEAR_DONE (6E2F2h), so its hold for the Loader starts only once the last window is closed, however long they stay up
+(gear_timeouts stays 0). CHOOSE A SPELL's LEVEL button does nothing while the level being picked is 1 (CR_CAP is that
+level). A stored roll outlives NEW: it is forgotten only at the first button after a change of race, sex, classes
+or kit, so a new character like the stored one could RECALL it (SL's DSCLOG the same). Making more than one: View
+Character's bar's right icon (270,171) goes back to the title menu, then CREATE CHARACTERS again; a right-click on
+slot 2 (117,56) puts its menu top right (NEW 160,57), on slot 3 (70,127) beside the slot (NEW 110,118). PSIONICIST
+on the classes' list is (265,53).
+
+**Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
+keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`
+at 5C6EEh each attack), the sheet in `[BP-12h]`, the weapon type in `[BP-4]`, the target-is-an-object
+byte `[BP-1Ah]`, from behind `[BP-19h]` and backstab `[BP-21h]` (both cleared once a call, 5C5FEh, while
+the loop back to 5C6DDh runs a round's attacks); melee is `[BP+0Eh]` 1 there and `[BP+16h]` 1 in the hit
+routine (5D1D6h). Map objects' x, y at DS:67C5h, 25h apart. Each RGNxx.GFF names itself in an `RNME`
+chunk (forest, Tyr, VA Headquarters, Pyramid, Yuan-ti Tunnels, El's Temple, Mines1-3, Jann, Mosaic,
+Volcano Level 1-3, Silt Giants, Cloud, Crypt, Cosmos, UnderTyr, Limbo). The sequel's effect numbers
+are not SL's (its 25 is Detect Invisible): map SL's tables by name (`ravlog.effect_names`).
+`ravdice.py` with `RAV_STEALTH_ROLL=1` hides every thief and ranger who can. **DOSBox dying** in the
+transferred party's Tyr fight (about half the runs): `ravstart.sh`'s `RAV_CORE=normal` (the CPU core)
+and `RAV_NOEXIT=1` (DOSBox stays up if the game quits) ruled out the dynamic core and the game's own
+exit; `strace -f -e trace=exit_group,kill,tgkill -p PID` on DOSBox to see how it ends.
+**Thieves as in AD&D in the sequel** (2026-11-24, found statically, the sites run on the game's own bytes in
+`tests/test_ravthief.py` with `DSUN_WOTR`; played 2026-11-25 on the kits branch, logs/2026-11-25-ravager-thieves.md,
+where the two sites became 52 and 53 and STAB_TIMES gives an Assassin one more): the thief skill routine is 8C647h (SL's 8023Bh),
+the same code with the sequel's frame: DEX in `[BP-2]` (SL's `[BP-0Ch]`), the skill a dword at `[BP+8]`,
+the thief level in SI (580h:61h, class 11h), the tables at the game's segment 4A0h (file 49BB0h, load +
+449Bh: the base at +skill, race R's row at 8 + 8R, the DEX limits A0h, A8h, B0h, the armour penalty B8h).
+SL's `thief_skill` bytes are at 8C716h ("mov ax,si / shl ax,2 / add dx,ax / mov si,dx", DX base + race),
+the game's DEX formula after them to 8C795h ("push di", its armour and effects): DSCLOG2's site 52
+(THIEF_SKILL, then "jc" +7Ah) does SL's PROBE_THIEF_SKILL there, and BELT_SITE (8C7C5h) keeps the chance
+to 95. The attack's hit routine (5CE80h, SL's 5883Ah) keeps the round's attacks so far in `[BP-16h]` (from
+the creature's byte at selector 308h, +184h; SL's `[BP-14h]`), the damage roll's bonus in `[BP-14h]`; the
+backstab multiply (SL's 58A80h) is 5D11Bh, the same 10 bytes, after the game's test (`[BP+1Eh]` and
+`[BP+20h]` bytes, the attacks at most 1, 5D0F8h-5D112h) and the multiplier routine 5DE0Ch (SL's 595C4h,
+the same: x2 to x5 by thief level). Enlarge (628h:57h) runs before it at 5D0D2h, so ENL_SITE's enlarged
+dice are the ones multiplied. STAB_FIRST (from MISSILE_REAR) takes back a member's second backstab at the
+same game clock (the far pointer at DS:9C0Ch, SL's 9B72h: the timer set-up at 2CB40h writes it). In a play: `ravdice.py` should show a thief's skill check as `"<name> tries to
+open locks: d100 = N, needs C or less"` with the second line `open locks C = <AD&D's> thief level L + <race>
++ <DEX>` and no "equipment" part when nothing is worn in the hands, legs or quiver (the old game sum showed a
+large "equipment" remainder), the inventory's skills the same numbers before equipment, and a backstab as
+`"+M backstab (the dice D xT = D*T)"` with the damage the dice x T plus STR once (DSCLOG2's `stabs` counts
+them). **Played** (2026-11-25): Seneca's inventory (USE, VIEW INVENTORY, her portrait at 25,69) is AD&D's
+average + the sequel's race row + Dark Sun's DEX (the control, `RAV_RULES_OFF=0x100`, the game's sum); a hidden
+backstab in the Draxans' ambush "1d4 = [4] +1 weapon +4 STR 18 +4 backstab (the dice 4 x2 = 8)", 13 HP off
+(control "(1d4 = [2] +1 weapon +4 STR 18) x2 backstab", 14); a human thief 3 made an Assassin (`ravkits.py
+set 1 2 1 17`: a halfling fighter/thief's only kit is the Poisoner) "+6 backstab (the dice 3 x3 = 9)", x2 with
+the kits off (`kit_stabs` in `ravkits.py count`). With `RAV_STEALTH_ROLL=1` the CC AI hides Seneca every turn
+but shoots her sling at range: half the runs end without a backstab. The dice log's hiding chance is the
+Loader's (stealth.py, the table always), so it doesn't follow a thief-table control.
+
 **Its fights in the Loader's dice log** (logs/2026-11-20-ravager-dicelog.md): `python3 ravdice.py SECONDS
 [OUT]` runs dsloader.ravlog.RavDiceLog (SL's dice log on the sequel's layout, its memory read only) on the
 running sequel. Addresses found for it: the combatants selector 388h at C33h (load + 3F49h), the
@@ -757,7 +860,9 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
 - **Computer Control**: the inventory screen (the top-left icon out of a fight; in a fight USE, then the
   second icon of its bottom row), the lower of the two small icons left of each character box (a small
   screen; lit orange when on; the upper one marks the character shown). All four on won the opening
-  ambush by itself (3 Draxans, a templar) with the party standing.
+  ambush by itself (3 Draxans, a templar) with the party standing. Once the inventory has been opened in a fight,
+  the top-left icon brings it back (the menu keeps its last screen) and its lower icons may miss one
+  (2026-11-25): **C** then the USE screen's lower small icons (47,53 / 98,53 / 47,112 / 98,112) is sure.
 - **Sides**: creature +15h: 0 the party, 7 the opening's Draxans, 1 the town's people.
 - **Saving**: the inventory's GAME MENU (game 267,187), the disk (136,100), SAVE (145,105), a slot
   (127,46), type the name, SAVE (252,47): SAVE01.SAV, CHARSAVE.GFF (DARKSAVE.GFF not rewritten).
@@ -979,6 +1084,15 @@ a floor; and 95CCEh, a level lost (the XP set lower, the rolls taken off). The m
 +0Ah: 95193h (SL's 874B0h), which the sequel calls only in the level-up (957E0h): creation's fix,
 logs/2026-11-21-ravager-creation-hp.md.
 
+**Its item types are OBJEX.GFF's ALL 4** (2026-11-22, logs/2026-11-22-ravager-item-types.md): 102 types,
+read into memory at the chunk's own length, so a longer chunk adds types (the Loader's OBJEX2.GFF adds the
+mod's 33 as 102-134). A test edit of an item's type (the word at item +0Ah, items from DS:19C1h) shows in
+the item box at once (material and dice).
+Its item names (RESOURCE.GFF's TEXT 1000, 255 lines; an item's +14h word) can't be added to by
+lines: 4 more broke the inventory screen (wrong items shown, AC -12), with a control: the lines
+run past the game's table of 256 far pointers (DS:56F3h). DSCLOG2's SITE_NAME at the table's 7 reads gives
+names 256-415 from its ITEM_NAMES, which the Loader writes as it attaches (logs/2026-11-22-ravager-item-names.md).
+
 **Its item types and helms** (2026-11-21, logs/2026-11-21-ravager-helms.md): the types' table at DS:19CDh,
 15 bytes a type (AC +0Eh, 80h at +0Bh counts for AC, slot +05h); the items' types and names can be listed
 from OBJEX.GFF's RDFF records (kind 1, 17h bytes, as in memory) without a save that has them. Helms: type
@@ -1051,6 +1165,48 @@ the label's ink in them (a Miss is about RGB 239,239,223, a spell's name 251,223
 A label written by a script of its own stays until cleared (its byte +0 zeroed): only the dice log
 ticks them off.
 
+**Choosing an enemy, the ring, the pointer** (2026-11-25, logs/2026-11-25-ravager-tab-target.md): the
+routine lighting the thing under the pointer is 21060h (SL's 1E126h; found by its pushes of the pointer
+DS:A109h and the view DS:140Ah/1408h before the finder's far call), keeping that thing in **DS:0DADh**
+(SL's 0BCBh; FFFFh none) beside DS:0DABh (1 on the map); the finder is 21E0:2DBD (file **29DBDh**, SL's
+25B52h: "push bp / mov bp,sp / sub sp,0Eh", DSCLOG2's site 77 there), reading a map thing's flags +0
+(10h drawn), left +3, top +5, rise +0Eh, picture +10h, width +13h and height +14h (unsigned bytes). The
+pointer's mode is **DS:1440h** (1 walk, 2 look, 4 attack; the routine setting it 2037Bh, SL's 11B8h), the
+facing byte a creature at +5Eh of the round's segment (load + 3C4Fh; SL's +5Bh), the eight directions'
+flag a byte at DS:0442h (the direction routine 1109Dh, SL's word DS:01F8h). `ravtab.py` prints DSCLOG2's
+Tab words and these; `ravtab.py feet` each combatant's feet and screen place. **Clicks** reach the game
+through the handler it sets with INT 33h 0Ch (its mouse routines at 35B9:0000 on: 35B9:0034 is INT 33h 3,
+the pointer's place for edge scrolling only; the button bits it returns aren't the clicks): to give the game
+a click, find that handler (INT 33h 14h, swapped and given back) and call it with event 2 then 4 (DSCLOG2's
+TARGET_MOUSE). **Tab** without the Loader opens the game's own menu (the save/load/options panel), with the
+Loader on a party member's turn in a fight it is the Loader's. **A DSCLOG2 routine must go above
+RESIDENT_END**: code after it is freed as the helper goes resident, and the next allocation writes over it
+(the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then).
+**The view to the chosen enemy, and a monster's gear before it fights** (2026-11-25,
+logs/2026-11-25-ravager-tab-followups.md): the sequel's centring routine 1C5F:01F3 (file 219E3h; x, y the
+view's middle, then 1 to draw) sets the view's top left to (x - 160, y - 100) rounded down to 8 and keeps it
+inside the map's limits itself (DS:14D7h, 14D9h the least, 14DBh, 14DDh the most, right and bottom edges), so
+DSCLOG2's PAN_TICK (PROBE_SCROLL's, DSCLOG's PAN_X/PAN_Y at +230/+232) only adds the Loader's pixels to the
+view and calls it; `ravtab.py` prints PAN and `pan_moves`. **To scroll the view off a fight's figures for a
+test**: `ravclick.py 319 100 none`, then `xdotool mousemove_relative -- 20 0` a few times (the game's edge
+scrolling: about 500 pixels in 3 s); `ravclick.py 160 100 none` stops it. **A monster's items are unplaced
+until it first fights**: their slot bytes (item +13h) run 14, 15, ... in list order (a Draxan's brigandine in
+14-16, its weapons in 17-19); by its first attacker's swing the game has put them on (chest 9, legs 6, arm 0,
+right hand 3, missile 2, ammo 1), and the AC routine weighs them so. The Draxans are gladiators of level 8
+(sheet flags 40h, class 10): AC 1 better in armour, which the Loader's armour_worn (by the slots) missed
+before their first fight (`game.armour_ready`). `ravdice.py` with `RAV_PREDICT=1` takes a Tab line's chance
+apart; `RAV_NO_PAN=1` is the control for the view. Enter on an enemy out of reach (in a room behind the
+doorway) gives the click and the game does nothing. **The sequel's sides** (the creature's +15h): an index into
+bit masks, not SL's "same or not": the game colours the figure under the pointer as a foe when `1 << side` is in
+**0F80h** (sides 7-11; 21112h: "shl ax,cl / test ax,0F80h", then side 1 another colour), and its combat code
+tests them too (near 5B649h "test ax,0F80h" and "test ax,0C58h"; at 5C29Dh and 8664Eh a mask of 0F80h made for
+side 0, the party's; at 5F027h 71h).
+In the Tyr ambush the party is 0, the four ambushing Draxans 7, and everyone else on the map 1 (the Caravan
+Master, Notaku, Templar, Boric, the soldiers, the pedestrians, the Giant Skeletons up the street, other
+Draxans): SL's rule (another side than the leader's, not 4) made 31 of them foes for Tab; `rings.HOSTILE_SIDES`
+(0F80h, set by ravlog) makes 4. `ravtab.py sides` lists every combatant's side through the dice log's reading
+and Tab's list both ways; `ravdice.py` with `RAV_FOES_SL=1` is the control.
+
 **Its combat log's panel** (2026-11-21, logs/2026-11-21-ravager-combat-log.md): the fight flag is a
 byte at DS:13FAh, the fight's state 3C10h:19h, the clock DS:9C0Ah (scale) and DS:9C0Ch (far pointer);
 the flip 16974h (pages segment 0BF3h, [118Eh]), the pointer routine 2D72:0942 and its DS:332Ch, A10Dh,
@@ -1076,9 +1232,493 @@ pairs of words, so every mod item) and each spell or psionic aptitude it couldn'
 The party goes into free `CHAR` slots (32-35 of the install's roster, their `CACT` set from 0 to
 the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh`), the sheet at
 `+45h`, SL's sheet less `+0Eh`-`+0Fh`, `+14h`-`+17h` (the mod's weapon specs: lost) and `+3Ch`; SL's
-`+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`, which no
-`es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
-and `rest-no-call-user`: all transferred, the kits kept.
+`+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`. **Wrong, found
+2026-11-24:** those are the high bytes of two WORDS the sequel reads whole, `+3Ch` and `+3Eh` (`mov
+dx,[es:bx+3Ch]` at 6012Ah, overlaid, and `mov ax,[es:bx+3Eh]` at 89859h, after `imul 42h` and `les
+bx,[19C5h]`): sound numbers played at a member's turn in a fight (0: the default, 62h), through
+B8:0A22h. A kit made the sound 100h or 8100h, the sound manager stopped the game ("Mel Fatal Error",
+through 39DEFh, then exit to DOS: the "crash" of the transferred party's Tyr fights, about 1 in 4, on
+the druid Ester's turn). For a while the Loader's transfer left both bytes 0; tried on the user's
+saves `selling-junk-user`, `trap-user` and `rest-no-call-user`: all transferred. **Now (2026-11-24,
+`claude/ravager-sheet-room`)** the bytes stay (as CHARTRAN copies them) and DSUNLOG2 reads the words'
+low bytes alone, in place, no helper code (`ravager.PATCHES` `sound_3c` at file 65333h, `sound_3e` at
+8EA59h: `xor ax,ax / or al,es:[bx+N]`, then the game's own move, ZF as before). Every decode of the
+whole program (each start offset, capstone) with a displacement 3Ch-3Fh on an ES base: only those
+two words and two byte reads of `+3Ch` (8ACB7h, 8ADA5h image), none of `+3Dh`/`+3Fh`; the sheet's
+42h-byte copies (CHARSAVE's load and save, 6950Bh/69C67h/6B17Ch: a GFF call of 42h) copy whole;
+DSCLOG2 reads none of them. ravlog's layout reads the kit (`KIT_SHEET`, `kitpages.KIT_BYTE`) at `+3Dh`
+and the second sphere and new spells (`NEW_KNOWN_SHEET`, `kits.SPHERE2`, `NEW_KNOWN`) at `+3Fh`;
+kitpages and kits read race, classes and levels by `game.SHEET_*`. Only verified statically: a
+transferred party with kits must play the Tyr fight with no quit and its turn sounds still heard.
+
+**The starting age's roll in the sequel** (2026-11-24; **replaced the same day** by the 48h sheet below: the roll is on the sheet again, the transfer's SPST CHARTRAN's 9 bytes, `known_roll` and `start_roll` gone): the known wizard spells are 15 bytes a member
+at selector 320h:39Ch (load + 3D62h); the game's loops and tests stop at bit 114 (`cmp ...,73h`:
+19CFAh, 5D425h, 6990Fh, 8F8A5h image; its scrolls' spells are 1-112, its priest scrolls' 236 and up
+take another branch at 947EEh, `cmp [bp-4],0EBh`), so bits 115-119 are free: the roll + 1 there
+(`ravager.known_roll`, 0 none: the install's characters' SPST are 15 zero bytes), written by the
+Loader's transfer (a 15-byte SPST; CHARTRAN's is 9). The roster's load (6A782h image, `128h:4ABh` =
+29497h, GFF read with length -1: the chunk's own) reads the chunk whole; its save (6A6B6h) writes 15;
+a save game keeps the 60-byte table (SAVE 20). Nothing writes bits 115-119, and nothing clears them:
+a character made in a slot keeps the slot's (creation clears 0-114 only), and a 9-byte SPST leaves
+bytes 9-14 as they were. `RavGameData.start_roll(member)` reads it.
+
+**Room for the weapon specs in the sequel's sheet** (2026-11-24, static, not built): the specs need 17
+bits (four base-17 digits, filled in order, repeats possible), 22 with the roll. Bytes 0 in every sheet
+of CHARSAVE.GFF and SAVE01's chunk 6: 03, 07, 09, 0B, 0D (high bytes of XP, the +4 XP cap, max HP, HP
+rolled, max PSP: all can grow there), 23, 26, 29, 2C, 2F (a third class, a second natural attack's
+fields), 37 (footprint), 3D, 3F, 40, 41. Found clean:
+- **`+36h`, 8 bits, no site at all.** It is SL's `+3Ch`, the default side SL copies into the creature's
+  `+1Dh` (SL 7340Eh, `cmp byte [es:bx+3Ch],2` at 73685h); the sequel dropped that code: no
+  instruction reads or writes the sheet's `+36h` (every decode with displacement 36h on an ES base:
+  only another record's, `[3411h]`). The sequel's scripts have no GPLX (SL's table of object field
+  offsets, loaded to DS:4D7Ah at SL 65027h: its sheet fields +18h-+46h): its GPLDATA.GFF has none, the
+  program loads none, and no table of sheet offsets is in the program; so its fields are compiled code,
+  all in the scan. The game's own sheets hold 0, 1, 4, 7 there (SSI's data, inert): a reader needs a
+  marker to tell a transferred member's bits from those.
+- **`+40h`'s high nibble, 4 bits, 2 patches.** `+40h` (SL's `+46h`) is read twice as an index 1-8 into
+  the table at 410h:3 (5A24Ah: `mov al / mov ah,0 / mov di,ax / or di,di / jg`; 82400h: `... / mov
+  [bp-6],ax / cmp word [bp-6],0 / jg`), never written; same-length rewrites `mov ax,es:[bx+40h] / and
+  ax,0Fh` then the move (flags from the AND, OF 0 for the jg) keep the game's nibble.
+That is 12. Five more clean bits are only in the mod's own bytes: `+3Fh`'s new-spell bits (08h-80h:
+Cat's Grace, Erdlu Claw, Fogbolt, Reflect, Spook, spells the sequel hasn't) and `+3Dh`'s Friends bit
+(80h) as the marker: 8 + 4 + 5 + 1 = 18, the new spells known not carried. Everything else costs
+dozens of sites (abilities, levels, saves: top bits) or can overflow (the words' high bytes).
+
+**A bigger sheet in the sequel (42h to 48h)?** (2026-11-24, static study; **built** after it, next paragraph.) What depends
+on the size: **386** `imul r,r,42h` (`6B xx 42`), every one followed within four instructions by a load
+of the sheets' pointer [19C5h]/[19C7h], so all sheets, root and overlays alike (the overlays load from
+the file, so file patches reach them); each a one-byte change of the immediate. Besides: one stride,
+`add di,42h` at 1C57Bh (a loop over the party's four); the table's allocation, `1D0h:8` with dword
+462h (6DE4Dh: 17 sheets x 42h, at [19C5h], far heap, freed at 6E0D5h), +102 bytes; the save game's
+chunk sizes, a dword table at selector 378h:0 (file 3F38h x 16 + 5200h; SAVE 6's 462h, 5th entry); the
+CHARSAVE record copies of 42h (`push 42h` to the GFF calls at 6950Bh, 69560h, 69C67h, 6B17Ch); no
+`shl 6` or word-immediate forms found near a sheet load. DSCLOG2: 23 uses of SHEET_SIZE/CU_SHEET_SIZE/42h
+(one constant); the Loader: ravager.SHEET_SIZE, ravtransfer.SHEET, ravlog's profile, the tests. So the
+program's patches are about 395, all mechanical and checkable by a scan (every `imul 42h` before a
+19C5h load patched, none left). **The cost is compatibility**: a save's SAVE 6 is read whole (length
+-1) into the table, so an old save's 17 x 42h would land misaligned, and an old CHARSAVE record (42h,
+CHARTRAN's too) read as 48h overruns; both need converting (by the Loader on the files, or a DSCLOG2
+hook after the load), and every save and roster written by the patched game is unreadable by the game
+started by itself (and by CHARTRAN's world). Monster sheets copied in at 42h would leave the 6 new
+bytes stale from the slot's last owner unless cleared. **Verdict: feasible, not recommended for 17-22
+bits**: the in-place room above (+36h, +40h's nibble, the mod's spell bits) gives 18 bits with 2
+patches and no file format change; a bigger sheet is worth it only if the mod needs many more bytes
+later. Verifying it would take a unicorn test per patch shape, a scan test for leftover 42h strides,
+and play of create, ADD, save, load (old and new saves), level up, a fight and a talk.
+
+**The 48h sheet, built** (2026-11-24, `claude/ravager-sheet-room`; played the same day, below): `ravager.SHEET_SIZE` 48h (`GAME_SHEET_SIZE` 42h). +42h..+44h hold SL's +14h..+16h as
+`game.packed_specs` packs them (specs base 17, the roll, the flag bits; ravlog's `SPEC_SLOTS` 42h,
+`sheet_field` 14h-16h -> 42h-44h), +45h..+47h spare (0); the age stays at +41h. **392 patches**
+(`ravager.PATCHES`, each checking its original bytes): the 386 strides `sheet_stride_*`
+(`SHEET_STRIDES_AX`/`_DX`, file offsets: 350 `imul ax,ax,42h`, 36 `imul dx,dx,42h`, no overlap with an
+earlier patch); `sheet_party_loop` (`add di,42h`, 1C57Bh image); `sheet_table` (6DE4Dh, 17 x 48h);
+`sheet_record_size` (6DD62h: the record-size table 6D0h:6169h + 2 x (kind - 1), sheets' 616Dh: the
+record writer 1F6BDh and the generic accessors AA46h, AB66h, AC46h, 1E259h, 1F6AEh use it);
+`sheet_record_load` (6B17Ch `push 42h`, memcpy of a sheet record's data into its slot: an ADD from the
+roster, a map's monsters from OBJEX's RDFF); `sheet_save_size` (SAVE 6's dword in the table at 378h:0,
+file 44594h); `sheet_new_tail` (site 50, below). **Kept 42h**: the creation screen's template copies
+6950Bh (template -> sheet [112Eh], an edit), 69560h (template -> new sheet) and 69C67h (sheet, a far
+argument, -> template): the template at 360h:29h is 42h bytes with the creature's at 360h:6Bh right
+after it, so an edit leaves +42h..+47h as they were; a new character's six would be the slot's last
+owner's, so DSCLOG2's `NEW_SHEET` (site 50) replaces the `add sp,0Ah` after 69560h's memcpy (6957Dh),
+clears dst+42h..+47h and does the ADD SP by moving its IRET frame and BP up 10. The other `push 42h`s
+(608A3h, 60FDAh, 7D14Ah, 80D19h...) are effect or text numbers, not sizes. DSCLOG2: `SHEET_SIZE` 48h,
+`CU_SHEET_SIZE` its alias, the one literal 42h stride (STEALTH's, line 472) by name. **Files**: kind-3
+records are always sheets (42h, level 3) in the sequel's OBJEX.GFF (352, RDFF) and CHARSAVE.GFF (19,
+CHAR); no RGN or other file has any. `objects_fixed` widens OBJEX2's (`wide_sheets`), and
+`ravager.widen_files(game_dir)` (launch's `_launch_wotr` after prepare, and `ravstart.sh` with
+RAV_LOADER) widens CHARSAVE.GFF, DARKRUN.GFF, DARKSAVE.GFF and SAVEnn.SAV: CHAR/RDFF sheet records 42h
+-> 48h, SAVE 6 462h -> 4C8h (17 sheets), each by length (idempotent; a roster with the transfer's 48h
+beside CHARTRAN's 42h is made one), the file copied first to NAME.42H. `python -m dsloader.ravager
+narrow FOLDER` does the reverse (NAME.48H backups) for the game started by itself. Not prepare: the
+tests run it on the player's own folder. Tests: `tests/test_ravsheet.py` (each patch shape run, the
+patched program scanned: no `6B /r 42` before a [19C5h]/[19C7h] load, no `push 42h` memcpy but the
+template's three, NEW_SHEET run, widen/narrow round trips on the install's roster and save). **To
+play**: create a character (its +42h..+47h 0), ADD (old and transferred), save and load (an old save
+widened, a new one), level up, a fight, a talk, the dice log reading the transferred party's specs;
+playtest tools that index sheets (ravhold.sh, ravscare.sh, ravknow.py) take 48h with RAV_LOADER.
+**Played** (2026-11-24, logs/2026-11-24-ravager-48h-sheet-play.md): all nine checks passed. Read the table
+at far DS:19C5h in steps of 48h. On CREATE CHARACTERS the creation sheet (far DS:1429h) is table slot 0 until
+NEW, then the template (360h:29h, its "+42h" the creature's bytes). Bytes put in a slot's +42h..+47h
+before NEW were 0 after it, and an EDIT kept them. The dice log reads the transferred specs, rolls and ages
+through `ravlog.apply_layout()` (`game.spec_kinds`, `game.sheet_roll`, `aging.age_of`). No spec bonus shows
+in an attack: weapon specialization isn't a ported rule (`RULE_SPECIALIZE` not in `RULES_PORTED`). The
+game writes DARKRUN.GFF as it plays, with the region's sheets in it (48h, so `narrow` changes it too).
+**The TOC the Loader writes**: SSI's GFF TOC is the type table, then a word count of free holes where its
+second dword says, then 8 bytes a hole (the TOC's length = that place + 2 + 8 x holes). `icons.with_chunks`
+(widen, narrow, the transfer's roster) left the count out with the dword at `len - 2`, on the last entry's
+length high word; the game's next roster write (a character made) put its count (1) there: CHAR 53 1E1h ->
+101E1h, the file unreadable by `gff.read_gff`. Fixed (a count of 0 written; `test_free_list_count`). Check a
+file with: second dword == type table's end, TOC length == it + 2 + 8 x count. A file the old writer made
+and the game then wrote keeps its one bad length (the last type's last entry): repair by hand.
+
+**Finding why the sequel quits** (2026-11-24): `ravstart.sh` `RAV_STDOUT=1` sends the game's own
+printing to `STDOUT.TXT` in the game folder ("Illegal Op (gpl=49)" was one message; the sound case
+prints nothing there); `RAV_MARK=1` writes `ENDED.TXT` when the program ends; `RAV_POKE=OFF=HEX` puts
+bytes in the patched program: a probe `1E 31C0 8ED8 8926F204 8C16F404 892EF604 C706F004 xxxx 1F EBFE`
+(SS:SP and BP to 0:4F2h, a flag to 0:4F0h, then a hang) at the fatal routine (file 3EFEFh), the
+illegal-op routine (2660Ch) or `exit` (55DFh), and `/tmp`'s hangwatch (a guest dump when the flag
+comes) gave the call chain by BP. The overlaid code is only in the dump, not at its file offsets.
+Two cautions (2026-11-25, logs/2026-11-25-ravager-illegal-op.md): a probe must not cover a relocated
+word (the 26 bytes at 2660Ch covered a far call's segment at +18h, which the load relocated: DOSBox's
+"Illegal GRP4"; use the 24 bytes `5031C08EC0268926F20426892EF60426C706F004EFBEEBFE`), and the fatal
+routine is no place for one: it returns at once for trap 6Ah (only 69h stops the game), and the sound
+loader reports error 0Bh, trap 6Ah, for every sound over its 25000-byte buffer (4013:B63h, 61A8h set at
+62042h; BVOC 132, 138, 147, the last two among the female hurt and death sounds, DS:2909h, one of 8 at
+random), so a probe there turned harmless warnings into "hangs". `RAV_SOUND=1` keeps DOSBox's sound on
+(SDL's dummy device). **A patch's site can be a jump's target:** "Illegal Op (gpl=49)" in the Tyr
+ambush was the spell immunity routine's "immune" exit (7F362h in the image) jumping to the `pop di` that
+`spell_hit` (84AAFh) had made its site number; the fault's CS:IP was SI:DI (0083:0001, SI the spell).
+`tests/test_ravager.py`'s `JumpIntoSiteTests` scans for such jumps; a byte scan's calls and short
+jumps were all data or mid-instruction (check against a disassembly). SL's `window` patch (2BBA9h)
+has one (from 264FCh in SL's image), not yet mended.
+
+**The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
+`python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`
+(its roster first reset from `__support/save/CHARSAVE.GFF`; with the two folders, the items the sequel
+lacks become the Loader's objects, kept in the dos folder's RAVITEMS.GFF), then `RAV_LOADER=1 RAV_MENU=1
+sh ravstart.sh COPY` and `ravdice.py` attached (it writes the names past 256). In the game, at
+`ravclick.py`'s coordinates (320x200, whatever the window's size): CREATE CHARACTERS (160,92); a slot
+right-clicked (the four: (70,56), (120,56), (70,115), (120,115)), ADD 45 right and 14 down of it; the
+ADD list's rows at y 45, 56, 67, 78... (x 130), its ADD button (252,47); the inventory icon (75,171);
+an inventory item right-clicked for its box, the box's spell icon (287,83) right-clicked for the
+spell's summary. Escape goes back to the title menu, and S there starts a new game with the party
+(the opening talk: "Lead on!" at (100,171)). A party of one loses the opening fight (back to the title).
+The sequel's scrolls: types 4Dh (wizard: One-use Scroll, 313xx, +0Eh 1; Spellbook, 310xx) and 4Eh
+(priest), the spell at +2 and +10h; SL's wizard spell n is the sequel's spell_place(n) + 1, SL's
+priest scroll word w is w + 97.
+The roster the ADD list offers is CHAR 32-39, a place listed while its CACT word isn't 0 (the
+install's 32-35 are 0; CHAR 44-46 and 60 with CACT set weren't listed); the game's DELETE writes CACT
+0 at once and keeps the CHAR.
+A control for a DSCLOG2 change: the build before is git's (`git show HEAD:obsidian-edition/dos/DSCLOG2.EXE >
+obsidian-edition/dos/DSCLOG2.EXE`, the new one kept aside and put back after; ravstart.sh's Loader way
+copies it). An equip test on the roster's inventory: a click picks an item up, a click on a pack
+square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves it on the pointer
+(logs/2026-11-23-ravager-item-wield.md).
+**The sequel's AC function and save modifiers** (2026-11-23, logs/2026-11-23-ravager-protection.md):
+- **The AC function** is at 5D520h. SI is the combatant (things at 388h:SI*3 + 0C33h, kind 2 a
+  creature). [BP-4] is the AC, starting from the creature's +21h. [BP-6] is the other total (DEX, the
+  Armor spell's call 628h:6Bh). [BP-7] is 0 when effect 4 is on, and then no plus counts.
+- **Its worn list** is at [BP-324h], 10 bytes an entry. Each worn item counts only with its type's
+  +0Bh bit 80h (the test at 5D61Ah), as its plus (+16h) plus its type's AC (+0Eh).
+- **The save modifiers** are at 83606h. [BP+6] is the one saving, DI the modifier (higher is better),
+  [BP+14h] the spell.
+- **Slots and rings.** The item slots (+13h) are SL's: fingers 4 and 11, the back 12, the feet 13.
+  The sequel's Ring is type 45, of no AC. Its own rings carry a spell power and plus 0.
+- **The inventory panel's saves** are the sheet's own: a ring's save bonus shows only in a fight.
+- **The first click.** After `RAV_MENU=1` the first click on the title menu is often lost: click
+  CREATE CHARACTERS again.
+- **A hung display** (2026-11-23, 01:00 UTC). During the Draxans' fight, a Hold Person cast left
+  DOSBox gone. The `import -window` that followed, on the dead window, never returned, and the Xvfb on
+  :55 stopped answering (`timeout 10 xdpyinfo` fails), even after that import and every DOSBox were
+  killed. Which came first is not known. Only a new Xvfb gets the display back, so take every grab
+  with `timeout`.
+  With a new Xvfb the same cast on the same build ran clean three times (00:45-01:00 UTC,
+  logs/2026-11-23-ravager-girdles-amulet.md), so the display, not the helper's new code, is the likely cause.
+- **An item's spell in the sequel** (2026-11-23, logs/2026-11-23-ravager-on-hit.md): the item's +10h word, the
+  spell + 1 (its box's icon the +2 word, the same); a weapon's is cast on the one hit at level 6 (5D2CCh), and
+  for a shot the ammunition's first (a word at 308h:[7]). To try one, write both words in memory on a held
+  weapon or on arrows (the Draxans' are type 18, items 154, 148 and 142 in ravhold.sh's fight). SL and the
+  sequel number spells apart: match them by name (`ravtransfer.spell_map`).
+- **A worn item's spell** (2026-11-23, logs/2026-11-23-ravager-worn.md): readied (77C1Ah, 5E8h:39h:
+  the creature, the item) it is cast on the wearer if the spell is the self kind; unreadied (77CDBh) it
+  ends (628h:BBh, 864EDh: the wearer's effects of that spell), which only the Loader's `worn_spell_off`
+  makes work. A roster member added on the ADD screen is readied by DSCLOG2's JOIN_READY. **To test
+  the ADD screen with a powered item**: a copy of `$WORK/rav` (`cp -al`, then the roster replaced by a
+  real file) with a roster CHAR's item records changed through `icons.with_chunks` on the original
+  file (`ravtransfer._gff_file` makes a file the ADD list reads as empty). Read effects raw at the
+  load + 3E71h:24Dh (owner, caster, spell, the effect's id at +6). `shot.sh` fails for the sequel's
+  copy; `import -window ID` (xdotool search --pid) grabs it.
+- **Using an item from its box** (2026-11-23, logs/2026-11-23-ravager-tome-scrolls.md): the box's
+  icon for the tome worked only in a fight, on the member's turn (the opener 99260h sets `[9D8Ch]`
+  from its caller, 1 only in a fight), while a spellbook is learnt outside a fight (2026-11-21, and
+  Kalzith's transferred Blur on 2026-11-24) and not in a fight nor on the roster's inventory (the book
+  kept; the gate not found); the known spells at `(load + 3D62h):39Ch` + 15 a member; the handler 995AFh goes on through 9986Fh, 999A9h and 999CDh (`[bp-4]` the
+  spell, power - 1; learning from objects 31000-31199 and 31400-31499; spells 0EBh-10Ch psionic,
+  10Dh up "CANNOT LEARN"); 99B44h uses the item up with the message at `[bp-56h]`, 99B67h shows it
+  only. DSCLOG2's TOME_READ (site 48) is the tome's case there.
+- **A shot's items and a skipped cast** (2026-11-24, logs/2026-11-24-ravager-spell-arrows.md): in the
+  sequel's items arrows are type 6 (slot 1) and a bow type 18 (slot 2); the attack's item SI is the bow,
+  and `308h:[7]` the arrows' power (first). The cast on a hit starts with 5F0h:D4h (5D285h) before its
+  pushes: skip a cast before that (the game's own test of the spell at 5D24Eh, PLAIN_ARROW's way), never
+  after it (a skipped 608h:89h crashed the game a round later). A test archer: memory edits (power at
+  +10h and +2, plus at +16h), never saved.
+- **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
+  number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
+  Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).
+
+**The kits in the sequel** (2026-11-25, logs/2026-11-25-ravager-kits.md):
+- **Giving a kit for a test**: `ravkits.py show` lists each member's race, classes (sheet +1Bh, the
+  sheet's numbering: 1-4 clerics, 5-8 druids, 9 fighter, 10 gladiator, 11 preserver, 12 psionicist,
+  13-16 rangers, 17 thief), levels and kit byte (+3Dh); `ravkits.py match C1,C2 BYTE [RACE|- [CLASS...]]`
+  edits the member with those classes (a race edit makes a multiclass group: race 2 dwarf, 3 elf, 4
+  half-elf, 5 half-giant, 6 halfling, 7 mul). Never save after. The `fountain-user` party transferred
+  already has kits: Lex 81h, the others 01h (Ester an elf Battle Dancer).
+- **The rules word**: DSCLOG2's assembled `rules`/`rules_hi` hold only the always-on rules; the Loader's
+  dice log writes the switched ones (kits are `rules_hi` bit 0). A tool that writes the header must start
+  from `game.rules_from_settings`, as `ravdice.py` now does; `ravkits.py count` shows the words.
+- **Seeing a kit work**: `ravkits.py count`'s counters count the changes each kit routine made
+  (AC, to hit, damage, rates, saves, skills, rears, moves, two weapons, initiative), so a control run
+  (`RAV_RULES_OFF=0x10000`) reads all 0. The game's AC in the dice log is DSCLOG2's (PROBE_AC), so a
+  kit's AC shows there even with the Python side's kits off; initiative's lines are the Python side's.
+- **The sites**: initiative's "add dx,14h" at 5B7E9h (SI the creature: site 60); the caster level
+  routine's "sub dx,7" for a ranger at 97E00h ([BP+6] the combatant: site 61). Priest spheres are asked
+  per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
+  Elementalist's second sphere is hooked after its callers instead (next).
+
+**The priests' spheres and the Elementalist's second sphere** (2026-11-25, logs/2026-11-25-ravager-sphere.md):
+- **The sequel keeps no spells known for a priest.** A wizard's are bits a member (selector 320h, +39Ch,
+  0Fh bytes a member); a priest's are worked out every time: the USE screen's list (62500h, a level's
+  spells from the tables DS:656h/661h) asks 6260Ah "does member SI know spell N", which for a priest spell
+  (73h-EAh) asks 62C00h (spell, member: does one of its classes cast it) and then the spell's level
+  (62AC5h) against the member's highest (97E9Ch, from the caster level of spell 73h). **62B45h (spell,
+  class)** answers by a byte a spell (selector 3D0h:7D3h, file 478E3h: 1 air, 2 earth, 4 fire, 8 water,
+  10h every priest's, 20h the druids') met by the class's mask from its jump table (CS:0ADAh, the overlay's
+  code from file 62100h): a cleric 10h + its element, a druid 30h + its element, a ranger as its element's
+  cleric, class 19 all; wizard spells (below 73h) classes 11 and 18. So a cleric never casts a 20h spell
+  (Cure Serious Wounds, Raise Dead, Heal...: the druids' alone in the sequel), which is where SL's
+  Healer's cosmos would go (its water cleric's 20h spells) with the same hook.
+- **Its callers**: four in its own overlay (62C00h at 62CABh, 628AFh at 629BBh, 626B7h's two at 627D3h and
+  62818h, the slot count's "is this class a caster" with spells 8 and 73h) and one far, 97DC5h (the
+  caster level) at 97DDCh through its stub 588h:20h (overlay far calls name the stub by a selector: the
+  segment table's word, load + 45E8h + the selector, is the stub's segment less the load's). Every
+  caller that asks for a member has it: 62C00h in DI, 628AFh and 97DC5h at [BP+6]; each call is followed
+  by "add sp,4 / or al,al". DSCLOG2's EL_SPHERE (sites 90-92) replaces the ADD: the frame's two words
+  (spell, class) under the INT's are read and dropped, AL made 1 for an Elementalist's own cleric class
+  and a spell of its second sphere. `tests/test_ravsphere.py` runs 62B45h from DSUN.EXE against
+  `ravager.class_spheres` and checks no other call to it exists.
+- **Finding an overlay routine's callers** (scratch, in the log's files): the module from
+  `ravimg/layout.json`'s `modules` (`file`, `size`, `stubs`: `entry` an offset in the module, `stub_off`,
+  `stub_seg` with the load segment 418 added), then "0E E8 rel16" inside the module and "9A stub_off
+  selector" anywhere, the selector found by its segment-table word.
+- **Giving a member a second sphere for a test**: `ravkits.py set M 0x01 - C` (a single-class cleric C:
+  the Elementalist is a cleric's kit, and a multiclass character's kit is its group's), `ravkits.py
+  levels M 5`, `ravkits.py sphere M S` (1 air, 2 earth, 3 fire, 4 water); `ravkits.py count`'s
+  `el_spheres` counts the game's no made yes (thousands: USE asks at every redraw). Never save after.
+- **Playing a spell on a chosen member's turn** (the log's run script): Computer Control for the others
+  (View Character's small icons, as the kits' runs), a test base AC of -10 for the caster (a caster hit in
+  the round finds every spell crossed out, "YOU WERE HIT"), then wait for the member's name in the top-right
+  panel (a crop compared with `compare -metric AE`); the top-left icon, then the bar's third (97,171), CAST
+  SPELL. Tab then Return brought the game's menu, not an attack: a click on an adjacent foe ends a turn.
+
+**Choosing a kit in the sequel** (2026-11-25, logs/2026-11-25-ravager-kit-choice.md):
+- **The creation overlay is SL's code at other addresses** (overlay 6AFE0h-6CE93h, its stub 46CCh,
+  the same entries as SL's 421Dh: 66h the rows marked 6BC81h, 7Ah back to the disciplines 6BF3Fh; the
+  next overlay 6D090h-6F3B0h, stub 46DDh). A stub's header (`CD 3F 00 00`, then the overlay's file
+  offset as a dword, its size, fixups, entries) gives the overlay's place: file offset = the dword +
+  57580h (the root image's end + 10h; SL's + 52EB0h). Side by side with SL's (`paste` of two
+  disassemblies) the routines line up byte for byte but the DS addresses: the panel's windows
+  DS:1134h/1138h (SL's EA2h/EA6h), their marks 42C0h/42C2h (4980h/4982h), the sheet being made
+  1429h, EDIT's member 112Eh (0E9Ch), the marks' window 11C4h (F32h) and table 360h:17Eh (338h:1ABh),
+  the title's format 109Fh (E11h), the ink 2D16h (3270h, F0h for 34h), the help line's text 4A9Dh.
+  The window ids are the sequel's own: the creation screen 19503, the disciplines 19504, the spheres
+  19505 (SL's 3011-3013; the buttons' ids are SL's). The sites: `ravager.PATCHES`' kp_* (62-69).
+- **Its labels are planar pictures**: after the width and height, FFh "PLAN", a word the planes, then
+  each plane's colour byte and its bits (MSB first, the rows run on unpadded). SL's RLE form decoded
+  them as empty; `art.decode_frame` reads both, `art.planar_frames` writes it. The letters are SL's
+  shapes, so `weaponpages.glyphs` and its CUTS work on the sequel's icons.
+- **After DUAL**: the routine that changes a human's class is 9493Ch (SI the member, [BP+8] the new
+  class; SL's 86C80h), its "cmp word [bp+8],0Ch" at 94A57h (site 76); the game's three-choice menu
+  (the new cleric's sphere's) is its call 560:25h at 94878h, read from the code at run time.
+- **Looking at it**: `ravkits.py page` shows the sheet being made (race, classes, kit byte), the
+  panel's windows by id (19504/19505 the game's, 3022/3023 the KITS ones, 3026 on a kit page) and
+  DSCLOG2's counters (kit_pages_shown, kit_rows_taken; dual_asks, dual_kits for DUAL).
+
+**STORE, RECALL and the starting gear in the sequel** (2026-11-25, logs/2026-11-25-ravager-store-gear.md):
+- **The click overlay** (6D090h-6F3B0h, stub 46DDh, SL's from 65480h) has SL's code with DS addresses moved: the
+  button lookup "mov cx,16h" at 6DE85h (its way on for another button 6DF97h), the die's routine 6D3CEh (stub entry
+  5Ch; its argument a byte [BP+6], 1 a roll, where SL's took DI) with the hit points rolled by 6D5EBh and "cmp byte
+  [bp+6],0" at 6D5F1h after; the scores' redraw is the creation overlay's (46CCh) entry **B6h** (6CD7Bh), SL's BBh
+  (the sequel's stub entries are SL's less 5 from about there: raw "call 5B8:xx" in an overlay is 46CCh's stub).
+  The new character's routine 46DDh:20h (6E6D8h: the template copied, the classes, thri-kreen's claws); DONE calls
+  the game's gear (6F197h, entry 7Fh) then the roster write (6E4D6h, entry 4Dh) at 6E2ECh-6E2FDh.
+- **The sequel's carved buttons** (SAVE 18108, LOAD 18102, ADD 18104, DROP 18106, EXIT 18109, DELETE 18110, DONE
+  19100; BUTN 18300-18303, 19304) are packed pictures: FFh "PLAN", a byte BITS, 2^BITS palette bytes, then each
+  pixel's index, BITS a pixel (`art.decode_packed`); four frames. A one-colour label's planar form is the same bytes.
+- **Its items** (OBJEX.GFF RDFF records, 17h bytes): the name number is TEXT 1000's line counted from 1 (a list read
+  from 0 is one off: type 91 the Shield, not a cloak). Armour types in fives by place: 1-5 the arms (slot 0), 30-34
+  the chest (9), 62-66 the legs (6); leather is "Armor" 32/3/64. A new fighter: bone arm/chest/legs (4, 33, 65), a +1
+  shield (91) in slot 3 and a +1 metal long sword (97) in slot 10; a thief leather chest, the long sword in slot 3,
+  an obsidian dagger, a sling; a cleric leather, the shield, a wooden club in the pack (a fire cleric's useless).
+  `ravitems.py N` lists them with slots.
+
+**A ranger's two weapons, the charges' labels and the music** (2026-11-25, logs/2026-11-25-ravager-small-ports.md):
+- **The sequel's two-weapon routine** (5DE34h) is SL's (595ECh) on the sequel's records: its test for a ranger
+  is "test word es:[bx+10h],200h" at 5DE67h (the sheet's flags +10h, SL's +12h; DSCLOG2's site 78 RG_TWO now),
+  then "jnz" to no penalty. A party member's flags: `ravkits.py flags MEMBER [+WORD]` (`show` lists them too).
+- **Armor for a test**: `ravknow.py 0` teaches the transferred party's member 0 (Lex) Armor too (the bitset at
+  3F3DCh is member 0's whoever it is); on his turn C, the first icon (game 175,58), then a portrait on USE (Jenna's
+  120,117) casts it on that member: 10 charges at caster level 2.
+- **A creature's DEX** is its record's +1Ah (`CREATURE_ABILITIES` +1 in ravlog's layout). An edit holds through
+  a fight's turns but not a spell cast on the creature: Armor cast on Jenna read her DEX from her sheet again.
+- **An item's worn slot** (+13h): trading two items' slots (the chest's leather and an armour from the pack) puts
+  a member into other armour at once, for the game's routines and DSCLOG2's ARMOUR_WORN alike (no screen needed).
+- **The event queues** (timed effects' ends) are two far pointers at DS:2A63h and two counts at DS:2A6Bh, 11h
+  bytes an event (SL's 2FBEh, 2FC6h: `ravds.py --fuzzy`; the queue routines from 2C4FCh). The charges pass
+  (DiceLog.count_charges) reads them; `RAV_CHARGES_OFF=1` for `ravdice.py` takes the pass out for a control.
+- **A label on screen**: DSCLOG2 puts a slot's label up only as the game draws the map, so a charge used during
+  a foe's blow shows once its picture is done, and one written and gone within a blow's animation (two charges in
+  one turn) isn't seen at all. To catch labels: grab the window every 0.3 s and watch the slots (number, width,
+  thing at the tail's LBL_SLOTS) with the time; the label's ink is one palette colour (#9AE3FF for the charges'
+  blue in Tyr's street), so `convert FRAME -format %c histogram:info:` finds the frames with it.
+- **The sequel's music** is its CD's audio (README.TXT: "no MIDI music (just off the CD)"; SOUND.INI
+  `[MidiNotEnabled]`; GOG's SOUND.CFG the SB Pro II's FM and digital drivers; 40 .ogg tracks): the Loader's
+  music device is Shattered Lands' alone.
+- **Tyr's thieves from `ravager-after-ambush`**: the arrow keys (Up 8, Right 40, 150 ms apart) left the leader
+  at world (2112, 1632) in one try, not the alley; the transferred party's ambush (the Tab log's run script) is
+  the surer fight.
+
+**Saves in the sequel: quick saves, GREQ, the save window and the roster** (2026-11-25, logs/2026-11-25-ravager-quick-saves.md):
+- **The save call**: the LOAD/SAVE window's wrapper saves with `lcall 5D8:84h` (file far, name far) at 7D84Ah,
+  the result in AL (SL's 4242h:89h). The selector table is at file 4B080h (8 bytes a selector; SL's 46770h):
+  5D8h→46EFh the save stub, 600h→4736h the window's stub (20h load, 25h save), 5D0h→46E9h the roster file's
+  open (52h) and close (57h), 2E0h→3C10h the fight state (+19h, F1's "CAN'T SAVE DURING COMBAT" test at 79AFDh),
+  2F8h→3C4Ch the list window's data (+0 the chosen row, +2 the first row shown).
+- **Its strings**: the save path DS:44F2h; "SAVE??.SAV" at DS:2085h (the page letter 2088h), "SAVE%.2d.SAV"
+  at DS:20B6h (20B9h); SCREEN_IS DS:0DABh. The window allocates 10 entries of 7Dh bytes and takes the number
+  from SAVEnn.
+- **GREQ**: after the save the wrapper writes into the roster file (DS:144Ah) PREF 100 and **GREQ slot**, 9
+  bytes: the map's limits DS:14D7h..14DDh (4 words, set by a script at 8C322h, 0,0,800h,620h at an area
+  change) and the byte at DS:4459h; the load reads GREQ (es:[2] = row + 1, 7DA2Bh-7DA48h) and puts them back.
+  The calls: open 46E9:52, check 27ED:64(dword [144Ah]) (nonzero: skip), delete 27FC:5C5(type, id), write
+  27FC:E8(far buffer, 9, type, id), close 46E9:57. A quick save therefore writes **GREQ 100+slot** (DSCLOG2's
+  `greq_write`), and site 84 (7DA30h, `mov ax,es:[2]`) adds 100 when the page letter is Q, so a quick load gets
+  its own limits and not those of the manual save in the same row. `ravquick.py greq FOLDER` lists them.
+- **Its keys** (the main loop's table at cs:1F44h, code base 78340h): F1 the save window, F2 the load window
+  (`lcall 600:20` at 79B74h), F3 like Esc, F4 the music, **F5 the sound effects**, F6 the animations; F9 isn't
+  taken. DSCLOG2 takes F5 and F9 only while the Loader is there (`loader_fresh`) with the quick save on; with
+  the Loader gone F5 is the game's again. No camp: rests are at fire rings and inns, so the camp autosave has no
+  sequel side.
+- **The roster holds 40 already** (28h at 58380h, 58A34h, 585C0h, 591F5h, 6E541h, 6EDFAh, 6EE05h, 6FB08h; SL
+  14h), and the roster window scrolls with 2F8:0/2 (58742h sets the first row).
+- **More save pages** would go where SL's do: SL's save_page (74901h) and save_click (74B9Fh), the switches'
+  default jumps, are the sequel's 7DABCh (`jmp 7E00Fh`) and 7DD51h (`jmp 7E008h`). But the sequel's
+  RESOURCE.GFF has no WIND 3009 and no ICON/BUTN 80Ah (SL's page buttons), so the window's own resource and
+  room for the arrows must be found first.
+- **Played** (the log): F5, F9 and the autosave after a won fight in the sequel, GREQ 101-103 and 106 written,
+  a quick load through site 84 with GREQ 102's limits; F5 with the dice log stopped the game's SOUND EFFECTS
+  ON. **DOSBox caches a mounted folder's listing**: a save written into the folder by the Loader from outside
+  (a named save put back) isn't in the game's list until DOSBox restarts (the quick saves are the game's own
+  writes, so they show). The sequel's save rows are narrower than SL's: an autosave's "- after a fight" runs
+  past the row.
+- **F9's LOAD window runs on the main loop** (2026-11-25, logs/2026-11-25-ravager-loot-keys.md):
+  the window's routine (600:20) **returns with the window up**. SAVE_REQ was 3 0.4 s after F9 with the
+  window still open. The map's main loop then runs the window, PROBE_SCROLL with it, with SCREEN_IS
+  (DS:0DABh) 2. A page-back on "the main loop running" therefore took the QUICK page off under the open
+  window: DSCLOG2's and, after ANSWER_WAIT, the Loader's own. Now only DSCLOG2 does it, and only when
+  SCREEN_IS is 1. The sequel's autosave names are short ("Auto Day 1, 00:06 fight", `ravlog.region_short`,
+  at most 28 letters).
+- **The save window's name** (2026-11-25, logs/2026-11-25-ravager-loot-tabs-join.md): a click on an empty row
+  puts the cursor in the name box at the bottom, and the letters typed go there (the mod's T, S, M/U/I, F5 and F9
+  take none of them). **SAVE (252,46) or Return with the box empty saves at once, with an empty name**, in the
+  plain sequel as with the mod. Escape in the name box doesn't close the window; EXIT (252,67) does. A save's name
+  is `namedsaves.save_name(data, wotr=True)`.
+
+**Looting, selling and the pointer in the sequel** (2026-11-25, logs/2026-11-25-ravager-loot-keys.md):
+- **The pointer's modes** (DS:1440h): 1 the walk arrow, 4 the sword, 2 the eye (look), 3 an item held.
+  Right-click turns 1 → 4 → 2. The eye on a body opens its container window. The eye on an item on the ground
+  picks it up onto the pointer (thing 523), and a click then puts it into the leader's pack.
+- **Containers**: DS:05D6h is the container whose window is open (SL's 05E6h), 9999 none. The things'
+  table is at (load+3F49h):0C33h, 3 bytes a thing (kind, first item).
+  - Dynamic things: the free list's head is DS:56EFh, the count out DS:55C6h. There are 200 dynamic things
+    (135 free and 65 out after the ambush).
+  - Items: 400 records of 17h bytes at the far pointer DS:19C1h. The free items' head is DS:5AF3h, linked
+    by +4. The power is a word at +10h (SL's a byte: `game.POWER_BYTES`).
+- **The shop**: the byte DS:143Dh is 1 while a merchant's shop is open (set at 7BCA6h), and its merchant
+  is DS:1A30h (SL's 179Ch). The shop's loop is at 88D52h, its test `cmp byte [143Dh],1` at 88D99h (site 82,
+  `shop_loop`).
+  - The character on show is at (load+3E71h):0B44h, selector 370h (SL's 3931h:25Bh).
+  - The party's money is a dword at (load+3C13h):357h, selector 2E8h.
+- **Status names**: far pointers at DS:1463h. 0 New, 1 Okay, 2 Stunned, 3 Out Cold, 4 Dying, 5 Animated,
+  6 Petrified, 7 Dead, 8 Gone (SL's numbering differs: `ravlog.ADDRESSES["STATUS_NAMES"]`).
+- **Keys**: O is the sequel's overhead map, so DSCLOG2's M is made O. U and I are USE and the inventory,
+  as in SL.
+- **Notaku** (Tyr, south of Shadow Square; arrow keys y 1224, x 296, y 936 from `ravager-after-ambush`; the
+  eye on him, talk 3, 1, 3, 2) sells. **His talk script drops "Show me your goods" for the rest of the
+  conversation after any visit to the shop**: a sale, a sale by hand, or none. It does so in the plain sequel too,
+  and a new talk offers it again (logs/2026-11-25-ravager-loot-tabs-join.md). His line after the shop tells a
+  trade from none by the money (next item); S gets the thank-you since the fix. The sequel's offer for an item is the mod's `sell_price` (28 for Bone Brigandine Armor; the
+  plain sequel offers 48). `ravloot.py` shows all of the above.
+- **The plain sequel as a control** (no Loader, no DSCLOG2, no patch): `ravstart.sh` without `RAV_LOADER`,
+  `RAV_MENU=1`, on a fresh copy of `rav` with the save's three files copied in (narrow as they come from
+  `saves/`), then `ravload.sh`'s three clicks
+  ([the script](logs/files/2026-11-25-ravager-loot-tabs-join-plain.sh)). `dosmem.py` shows no DSCLOG2 (upper
+  memory 9FFFh SC and D000h free). The view doesn't follow the leader the same way there (no `centre`), so look
+  for a figure before clicking on it.
+- **A merchant's script tells a sale from none by the money**: Notaku's (GPL 153) keeps the party's money
+  (variable 85h 0, the dword at 2E8h:357h) in 89h 42 before the shop (3EFh), and tests it again as the shop
+  returns (400h): changed, "Thank you, your business is appreciated."; not, "Sometimes the wisest purchase is
+  none at all, yes?". Other sequel scripts test 85h 0 too (28, 91, 129, 140, 157-159, 165, 174, 322, 325;
+  SL's 2, 24, 65, 88, 135, 149, 152, 206). So the Loader's S must pay before the shop returns to the
+  script. DSCLOG2's SHOP_LOOP holds the loop's way out after S until the Loader's SELL_DONE (+1884) is
+  SELL_SEQ, at most 3 s (logs/2026-11-25-ravager-loot-keys.md). A memory diff around a sale didn't find this,
+  but the script's decode did (`dec.py` with `GPLDATA` the sequel's, from 0 to the line).
+- **The pointer's mode before a click on someone**: right-clicks cycle 1 arrow, 4 sword, 2 eye (DS:1440h).
+  After the inventory is closed the mode isn't always the arrow, so read it: a sword's click on Notaku
+  started a fight.
+
+**R, F10 and Alt in the sequel** (2026-11-25, logs/2026-11-25-ravager-fight-keys.md): the Loader's
+squares.py, moveback.py and usable.py run on the sequel with `ravlog.RAV_FIGHT_KEYS` (applied by `apply_layout`):
+- **Squares**: the live walk map DS:0538h (SL's 0556h), the step costs 10/14 at DS:0551h, the movement points and
+  turn flags at (load + 3C4Fh):22Eh and :1D8h (SL's 37BDh:22Bh/:1D5h), whose turn DS:426Dh (SL's 4979h), positions
+  67C5h stride 25h. The sequel's palette has no light for stone: LIGHT (DSCLOG2 header +1926, the far block's 256
+  bytes) falls back to DARK, so the crosses are dark on Tyr's grey street. DSCLOG2's squares pass is DSCLOG's
+  TINT_FAR, its map at PSP:5Ch; the header's view_redraw (+1922) asks its `redraw_tick` (in the main loop's
+  PROBE_SCROLL) to draw the view again once nothing is drawing, as `shadows.redraw` does in SL.
+- **F10**: the handler 1EC05h (SL's 1B83Ah), the turn's start points, y, x at DS:4258h/425Ah/425Ch (SL's
+  4964h..4968h). After the last step the sequel opens **END <name>'s MOVE: GUARD / WAIT / END TURN**, and F10 does
+  nothing while it is up (Escape closes it). The game's F10 then gives the points back but leaves the flags' bit 0
+  clear, so the step routine (5D8F1h) walks nowhere: moveback.py sets it again (flags 0x3EE to 0x3EF). Its
+  standing-still test (1F3FCh, the map record 67BBh + 25h x thing, bit 20h) is where site 100 (F10_PIN, 1EC36h)
+  sits: a member under Paralyzed (69) or Cannot Move (66) stays put, anyone else goes back even after the last
+  step. The walk's next step and steps left are (load + 3F49h):374h + 1Ch x thing and :8A7h + 13h x thing; the
+  swings +184h and attack commands +1AEh (bytes) off the points' segment.
+- **Alt**: the draw list is a far pointer at DS:67B7h, its count DS:264Eh, 8 bytes an entry (x, y, two bytes,
+  thing), **873 entries for the whole map** (SL's cap of 600 misses the view's things: DRAW_MOST 2000). The map
+  record's object at +1Bh. Triggers: a far pointer at DS:40C0h, 13-byte records, the heads at (load + 3C10h)
+  offsets 0Dh..17h. Doors are items of type 41 named "Door", bodies object 2200 (a container, type 58: its ring
+  sits at the item's feet, the corpse drawn below right of it), the dead status 7, foes by the side mask 0F80h. The gold
+  rings use the Tab ring's DSCLOG2 drawing: a 520-byte RING_TAB in the far block (header +246), each mark's
+  kind a byte, the gold tints through RED while marks are up (red again on release).
+- `ravkeys.py` reads all this (the state line, `things`, `marks`) and gives or takes effects for a test
+  (`effect OWNER EFFECT`, `del OWNER EFFECT`: the sequel's effects table at (load + 3E71h):24Dh, count DS:2100h).
+  The dice log's switches `RAV_NO_SQUARES`, `RAV_NO_MOVEBACK`, `RAV_NO_USABLE` (and `RAV_NO_SAVES`) make a control.
+
+**Picking weapon specs at creation in the sequel** (2026-11-26, logs/2026-11-26-ravager-spec-pick.md): DSCLOG2's
+WEAPON PICKS (sites 120-125) shows the Loader's weapon window on the psionicists' pop-up in weapon mode, as SL's
+PROBE_PK_* do. What it needed from the sequel:
+- **DONE** (6E0B9h) runs the powers (6E906h), the spells (6EA10h, CR_PICKS at 6ED55h), frees the screen's windows,
+  then "push si / nop / push cs" (6E2ECh: CR_WEAPONS, site 120) and the call for the starting gear (6F197h; GEAR_DONE,
+  site 85, at 6E2F2h). The pick runs there, after the spells and powers (SL asks for the weapons before the powers).
+- **The pop-up** (688:61h, 93B62h): its event loop's "or ax,ax / jnz" at 93BBAh (PK_HOVER); the window routine
+  93BE4h ("push 2B0050h" the place, then "push 445Dh" the window at 93C94h: PK_WIN); the title "push ds / push
+  2ACCh" at 93D63h (PK_TITLE; the colours E7h/E3h at 93D6Bh/93D71h, width 9Fh at 93D6Fh, y "push 46h" at 93D73h);
+  the two lines routine 93930h; the powers' list fill 93DECh (PK_FILL) to its end 93F7Eh ("xor ax,ax"); a button
+  in use or not 168:71Fh (its far address at 93D09h), a button's text 168:7FFh (at 93CF4h); the click handler
+  93F8Dh, its "mov ax,[bp+8]" at 93FABh (PK_CLICK), the stay 9403Eh and the close 94047h. The window far pointer
+  DS:1431h; the pop-up writes the member's sheet and creature to DS:1429h/142Dh (put back after it).
+- **EDIT**: the creation screen's EDIT is 6E696h (5C0:48h). View Character's right-click menu offers it only while
+  the creature's status (+14h) is 0 ("New"; else EDIT NAME). The creation screen copies only 42h bytes of the sheet,
+  so the specs (+42h..+44h) and +45h survive an EDIT; DONE after an EDIT asks only for what is still due.
+- **The pictures**: the sequel's are PLNR (FFh "PLNR", BITS, a colour map, codes with the escape 0: "0 0" a pixel
+  of colour 0, "0 k" the last code k+2 more times); `art.plnr_frames` writes it. Its UI palette is PAL 1000:
+  blue-greys 233-238, the marble's bevel 247/231; the marble is BMP 17001, the powers' window WIND 17501, its
+  buttons' BUTN 7FAh. The weapons' pictures are OBJEX objects (`weaponpages.RAV_PICTURES`; no short sword: the
+  long sword's at three quarters).
+- **Testing it**: DSCLOG2's rules word is 0 until the Loader (or the dice log) writes it, so a new character made
+  with neither attached gets no window. `ravspecs.py` reads the party's specs and the pick's counters (wp_asks,
+  wp_picked, wp_filled); `ravspecs.py check` compares the routines in memory with dos/DSCLOG2.EXE. The roster
+  (CHARSAVE.GFF) keeps the picks; START GAME takes the party CREATE CHARACTERS has, empty after a restart (ADD the
+  roster's). The new characters are 7th level: a gladiator is due 3. In the Tyr ambush Borzak's right hand held a
+  type 91 (flags 4, not a weapon) and his sword was in slot 10: a test edit of that item's type to the Lotulis (61)
+  gave "+3 mastery" to hit and damage.
+- **A new fighter's attacks a round** (2026-11-26, the same log's part 9): the sequel's creation gives a 7th-level
+  fighter 4 halves (2 a round) at the sheet's +24h. Its gear puts the +1 shield (91) in slot 3, the right hand, and the
+  +1 Longsword (97) in slot 10, the left hand (one swing a round whatever the skill); party member 0 of a new game also
+  has an Obsidian Dragonsbane +4 (73) in slot 14 that Computer Control readies in the left hand. For a rate test move
+  the sword to slot 3 (the shield to 14: Computer Control puts it back in the left hand, harmless) and make any second
+  weapon a shield (type 91), all with the dice log attached and never saved. Seen: a long sword specialist (mastery) 2
+  every round, a club specialist with the long sword 2, 1, 2, 1, a fighter with no spec the game's 2.
 
 ### The sequel's spells in a fight (2026-11-21)
 
@@ -1103,6 +1743,45 @@ and `rest-no-call-user`: all transferred, the kits kept.
   +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
   click the spell's icon at the box's right (`ravclick.py X Y right`; xdotool alone doesn't move the
   game's pointer). The party's items are the first item records (Ar'anda's 1-3 there).
+- **The sequel's shops** (2026-11-25, logs/2026-11-25-ravager-shops-scrolls.md): the shop is SL's at 90xxxh
+  (its list of the merchant's items, 10 bytes an entry, at the far DS:619Dh, built by C8h:2196h from the
+  merchant's thing DS:1A30h, SL's 179Ch; the thing on the pointer DS:1A32h, 523 as SL's 179Eh; its slot
+  DS:1A34h). The price is the item's +6 word as in SL; then the sequel's own markups, 370h:36h buying
+  (914A5h) and 370h:34h selling (915B8h), 0 at Notaku's. The reads: 90E2Ah the price shown, 90AA7h the
+  price charged (times the count for a stack, 2E8h:357h the money), 9036Ch the list's greying, 90F4Dh what
+  the shop offers ("I'll give you %lu$"), 91043h the free of the sold item's thing (C8h:2410h, nothing for
+  270Fh). Items in the merchant's list carry backpack cells 14+ till the shop opens and numbers 1, 2, 3...
+  after. **A shop in Tyr**: Notaku's stall in Shadow Square (map object 33 at world 312, 904; from
+  `ravager-after-ambush` the street to y 1224, west along y 1224 to x 296, north to y 936), the look
+  pointer on him, the Look box's first button talks, "Show me your goods." (fourth reply after declining
+  his job). He sells magic items, a one-use scroll of Shield at 300 among them. The shop's buttons: MORE
+  (254,164) pages the list and draws it again (twice for the first page), SELL (297,164) offers for the
+  item on the pointer, TAKE IT at (120,92) or (145,92) as the box falls. `ravshop.py` reads the shop and
+  edits CHA, INT, scrolls and known spells.
+- **The sequel's dialogue window and the Loader's tabs** (2026-11-25, logs/2026-11-25-ravager-loader-tabs.md): the
+  window's input is 87BA0h (SL's 7CE83h, the same code with a check more; the dialogue stub 476Ch's entry 25h):
+  (kind, far text, word), SL's kinds (0 a reply, its number in the word; 1 a portrait; 2 text, word 115; 3 the
+  replies shown), "END" each page, "CLOSE" once the last is clicked away. The replies' copies at DS:6356h + n x 33h,
+  the row clicked DS:25BAh (FFh till then), the scroll DS:6321h (SL's 5537h, 1F0Ah, 5502h); the thing a script was
+  started on at (load + 3C13h):365h (SL's 3781h). DSCLOG2's TEXT (sites 93, 94) copies it and the message box into
+  its text buffer; `ravtext.py` prints the last records. To talk to Uhubito from `ravager-after-ambush`: a click on
+  his office's floor (game 240,140), then 220,170, the look pointer (two right-clicks) on him (210,165), the Look
+  box's first button (230,188). A second click at (220,170) straight after the walk-in can open his talk by
+  itself and choose a reply. That talk's "talked to" (`ravtext.py`) was thing 16, and the Dialogue tab kept
+  "Portrait 18" after CLOSE: no name learned (logs/2026-11-25-ravager-loot-tabs-join.md; the tabs log's talk,
+  through the Look box, learned "Caravan Master"). The Loader's window there: `python3.12 -m dsloader view --pid`
+  on Xvfb `:56` 1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
+  global numbers' pointer (SL's DS:1356h) isn't found by `ravds.py --fuzzy`, and 93 of its scripts don't decode
+  with SL's decoder (those that do use numbers up to 150): the journal can't keep its head in a save there yet.
+- **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
+  opens window 2905h (5B0h:48h, kept at 300h:7), writes the text, waits `[26B7h]` x 100 ms with the game's
+  delay (0:12FAh, Borland's, on the PIT) and closes it. It was never seen: the windows are drawn only as a
+  new picture is shown (3328h:0B4Ch, from the main loop; 0B0h:2A81h with 1 marks one due and shows it), and
+  the delay was over at once (15 s asked, the inventory answered 4 s after). DSCLOG2's MSG_SHOWN does both
+  (the picture, then the time on the BIOS clock). **Overlay stubs**: a far call to a selector below 600h
+  is an overlay stub; its target is the stub block's (selector / 8 in the segment table at the FBOV
+  header's exeinfo) descriptor's payload + the area (as `build_image.py` reads them) plus the stub's entry
+  word (stub + 2, the stub at block + 20h + 5n).
 - **XP, THAC0 and slots in the sequel** (logs/2026-11-22-ravager-class-tables.md): a sheet's XP is its
   +0 dword; the class needs the XP table's entry at the index **of its level** (an 11th-level cleric
   needs entry 11, 900,000, the 12th level's), and the level up caps the XP at the entry 3 above. A
@@ -1119,8 +1798,8 @@ and `rest-no-call-user`: all transferred, the kits kept.
   save (kind 1): Stinking Cloud's (spell 22, `ravknow.py 22`, USE level 2, the third icon at 213, 60), not
   Hold Person's (the spell save). A foe made a dwarf: its sheet's +12h 2 (the kind's sheet, shared).
 - **Ages in the sequel** (logs/2026-11-22-ravager-ages.md): the sheet bytes no instruction touches are
-  +3Dh, +3Fh and +41h (ndisasm of DSUN.EXE, `ndisasm -b16 -e 0x5200`, every `[es:..+NNh]`); CHARTRAN puts
-  SL's kit and second sphere in the first two, so the age is at +41h. The game clock: scale a byte at
+  +41h alone (+3Dh and +3Fh, which a byte search found free, are the high bytes of the sound words
+  +3Ch and +3Eh: see the party's sheet above), so the age is at +41h. The game clock: scale a byte at
   DS:9C0Ah, the dword through the far pointer at DS:9C0Ch (seconds x scale); it stands still during a
   turn and runs with the fight's rounds. Ar'anda's Haste: USE, LEVEL 3, the middle icon (196, 60); it
   aims on the map (an area spell); with class restrictions on she can't cast it (rules 4804h for a test).
@@ -1148,6 +1827,13 @@ and `rest-no-call-user`: all transferred, the kits kept.
   (8C6C1h, after its test at 8C802h), the rule's site never reached, and the emulator then runs on past
   the routine's return: its number for that skill is no reading (94 here). Check the trace for an INT
   F5h before trusting a skill's line.
+- **After a load, and at the edge** (2026-11-24, logs/2026-11-24-ravager-48h-sheet-play.md): after LOAD
+  (the title menu's or F2's) a picture (the dragon's orb, a progress bar under it) waits for a click
+  (`ravclick.py 160 100`). Once, after F2, `ravclick.py` found the game's pointer stuck at the LOAD
+  button and the picture stayed; an `xdotool mousemove` with a `mousemove_relative` then showed the map. The camera scrolls while the pointer rests at the window's edge (the
+  save screen then shows another part of the map behind it); H brings it back to the party. A Computer
+  Control click on USE can fail to take (a member's turn then waits for ever): look for the orange lit
+  icon by each portrait and click again.
 - **`ravload.sh` doesn't stop an older DOSBox**: two `ravload.sh` runs leave two (the tools take the
   newest). Kill the old one by pid before a second load.
 - **A level up for a test in the sequel** (logs/2026-11-21-ravager-int-levelup.md): in `ravhold.sh`'s
@@ -1189,5 +1875,88 @@ and `rest-no-call-user`: all transferred, the kits kept.
   missile spell can't take a foe right beside the caster (the barred sign). Terrannus's priest spells
   on USE: row 1 at y 59 Bless, Curse, Cure Light Wounds, Cause Light Wounds (x 231), Entangle; the
   icons sit about 22 apart from x 175, so hover to check the name before a click.
+- **Psionic Blast in the sequel** (2026-11-25, logs/2026-11-25-ravager-blast-log.md): the effect routine's case is
+  at 6660Ah (SL's 796CBh, the same code: the loss, HP less a fifth of the most, in `[bp-16h]`, DI the target), but
+  it jumps to a tail shared with other cases (656FAh: the damage, then "or byte [bx],1"), so SL's site after the
+  damage (79707h) has no likeness: DSCLOG2's BLAST_LOSS (site 79) takes the loss at "mov [bp-16h],dx" (6662Dh).
+  The damage routine's death test is SL's at other addresses (5CC51h "add ax,0Ah", 5CC54h "cmp ax,dx / jg": the
+  Out Cold case at 5CC96h reads only DX and BX), so BLAST_KO (site 80) makes AX DX + 1 there. The sequel's dead
+  status is 7 (SL's 5).
+- **A psionic power for a test**: the sequel's powers are spells EBh-10Ch (RESOURCE.GFF's names: Psionic Blast is
+  power 31, spell 266); each member's own byte for each is at selector 370h (the load + 3E71h):9CDh + member x 22h
+  + power (SL's 2F0h:77h; ten code uses agree, "imul bx,bx,22h ... mov ax,370h ... mov al,es:[bx+9CDh]"), 02h a
+  power known: `ravkits.py power MEMBER POWER` gives one (0Ah) and 200 PSP. The USE screen (C) opens on the
+  member's magic for a caster: its class button (game 150,171) turns it to PSIONIC, the discipline button
+  (195,171) goes round Metabolic and Telepath (Telepath's second icon, 192,59, Psionic Blast). A use costs 10 PSP;
+  a failed power check 5, with no line (the power check isn't in the sequel's dice log). A member hit this round
+  has its powers crossed out too (the casting rule above).
+- **Aiming a power at a party member**: the game refuses (the figure under the pointer lights yellow, nothing
+  cast); with its side (+15h) made 7 (the Draxans') it takes it. Two members on one spot (0 and 1 start together, 2
+  and 3 together) are taken first by the first of them: make both 7 (`files/2026-11-25-ravager-blast-log-side.py`),
+  and to have the target fail its save, its sheet's five saves (+30h: the save routine's `[bp-1]`) 30
+  (`-saves.py`). The spot's members' objects at (x, y) are hit by a click at about (x + 11, y + 11).
+- **The Draxans' HP for a test** (2026-11-25, logs/2026-11-25-ravager-blast-saves-join.md): the dice log's
+  numbers (Draxan#21-27) are combatant numbers, not creature indices: `ravkits.py hp 21` writes creature 21 (not a
+  Draxan) and the sheet's +8, which three Draxans share as their most. Write the HP at +0 of the creature records
+  whose +15h is 7 (indices 25, 26, 29, 31 in the ambush). **Quick saves off for a test-edit run**: `ravdice.py`
+  doesn't read settings.json's `quick_save` and `autosave`; hold `QuickSave.keys` and `.auto` False (a
+  `sitecustomize.py` on PYTHONPATH patching `dsloader.quicksave.QuickSave`) and check `ravquick.py` shows keys
+  FFFF FFFF.
+- **The saving throw's frame** (66D26h): the target's creature record's far pointer at `[bp-0Ah]`:`[bp-8]` (SL's
+  `[bp-1Eh]`), set before the d20 (66E33h, `push dword 140001h` to the dice routine 0B0h:391Dh); the number needed
+  `[bp-1]`, the save `[bp-6]`, the spell `[bp+0Ah]` as SL's. A natural 1 leaves before the save probe: with SL's
+  frame read the log had no line at all for it (the "save line that didn't show", 2026-11-20). The modifiers come
+  from 628h:A7h (AL) and the spell record's +1Fh bits 1-4; the dice log names them since 2026-11-25 (below; it
+  called them "other" while its save_modifiers was SL's routine).
+- **The map up**: DS:0DABh is 1 on the map (SL's 0BC9h, which in the sequel holds 0A2Eh): the combat log's panel is
+  drawn only while it is (DiceLog._map_up through quicksave.SCREEN_IS).
+- **The creation screen's ability roll** is at 6C504h (SL's 6490Dh): four 4d4 (`push 4 / push 4 / call 0B0h:391Dh`),
+  each + DS:42DAh (the race's adjustment + 4: the races' table at the load + 3E4Fh:120h, SL's 38D4h:14Dh, the same
+  96 bytes), the best kept, raised to DS:42D4h (the classes' least: the game's own rule, a prime requisite 17).
+  DSCLOG2's RL_TRY (site 81) at "add ax,[42DAh]" (6C585h). About 147 4d4 a press of the die as it tumbles.
+
+**The sequel's save modifiers and THAC0 line in the dice log** (2026-11-25, logs/2026-11-25-ravager-save-mods.md):
+- **The save modifiers' routine** (628h:A7h, 83606h): [bp+6] the target, [bp+8] the caster, [bp+0Ah] and [bp+0Eh]
+  their effect bit sets (608h:25h, 7FE93h: effect N at bit N%8 of byte N/8, only for combatants below 30h),
+  [bp+12h] the save, [bp+14h] the spell, [bp+16h] the level. In order: Life Drained (59) -2 x its +8 byte;
+  for spells 32/58/69/93 Protected vs Weather (80) +6, Vulnerable (107) -20; Entranced (33) -3 against spells 2,
+  39, 94, 131, 255; Bound By Thorns (16) -4 against spell 188; Heat Exhaustion (44) -2, effect 88 -1; Spirit
+  Armored (94) +3 unless the save is 1; Barkskin (6) +1, Blessed (9) +1; Protected vs Evil (75) +2 when the
+  caster's sheet +14h is 3, 6 or 9; the spell's kinds: 80h with 78 +4, 4 with 73 +3, 2 with 77 +4; Prayer (72)
+  +1 from one's own side, else -1; +4 when a caster below 30h can't see the target (Blind 10; Invisible 53
+  without Detect Invisible 25; 54 against an undead caster, race 9) and the spell's range at level 1 (680h:20h)
+  is 8 or less; Brave (18) +4 against fear (category 100h); druids (classes 5-8) +2 against kinds 82h; a
+  psionicist (98h:C1h class 12) +2 against category 6; category 40h minus the DEX AC table (DS:866h), 1Eh the
+  WIS table (DS:89Ah); save 1 a dwarf's or halfling's CON x2/7 and the CON table (DS:880h). Chaos, Cloudkill,
+  Dismissal and Scare (-100, +100, levels) are the save line's own cases. `RavGameData.save_modifiers` models it,
+  with DSCLOG2's PROT_SAVE (rings 45, cloak 103 without metal armour or a shield, robe 127), KIT_SAVE, BLUR_SAVE
+  and FSHIELD_SAVE.
+- **The spells past 255**: the sequel's spell table has 320 records (Psionic Blast 266); SL's `spell_record` stops at
+  255, so the save's +1Fh part and the category were lost for the powers until `RavGameData` read them all.
+- **The attack set-up's locals** (5C5E1h; si the attacker, di the target): [BP-1Eh] the THAC0 (SL's [BP-20h]),
+  [BP-8] the weapon's bonus (its plus, 0 under Anti Magic Shell, effect 4; the material, 98h:3B1h; two weapons,
+  5DE34h; difficulty-1 from DS:143Ah for combatants 4 and up), bytes [BP-19h] from behind and [BP-21h] backstab,
+  [BP-20h] the natural attacks, [BP-16h] weapons ready. `ravdice.py` with `RAV_FRAMES=1` prints them after each THAC0
+  line.
+- **The to-hit routine** (628h:66h, 8599Eh; [bp+6] the target, di the attacker): the target's Life Drained -2 x;
+  Blessed (9) +1, Cursed (22) -1, Slowed (91) -4, Impeded (50) -2, Weapon Grafted (106) +1, Heat Exhaustion (44) -2;
+  Berserk (102) (L-1) - (L-1)/3 at level L in class 11; Extra HP (34) from Soothe (187) -2 in melee; the target's
+  Blurry (13) -2; Prayer (72); a halfling +1 with a missile (range above 1Ch, type flags 10h, or 2 without 8); STR
+  (98h:2C0h) in melee, DEX (98h:2D9h) for missiles. DSCLOG2's STINK_SWING adds a Nauseated (12) attacker's -2 after
+  it.
+- **The cahulaks and the kits**: DSCLOG2's PROBE_TWO took the cahulaks' head penalty without asking `kit_two`, so a
+  Battle Dancer in light armour paid it (bone -1, head -2: -3); SL's DSCLOG asks. Now the cahulaks' branch sets
+  `two_base` -2 and calls `kit_two` (a Ghetto Fighter 2 better, a Twin-blade or Battle Dancer in light armour none).
+- **Cahulak users** in the sequel's data (OBJEX RDFF): 153 Weaponer, 203 a Draxan, 320 Salesperson, 438 Tantris,
+  514 and 516 Gladiators, placed in Limbo (RGN0FF) and Gladiator2 in the Pyramid (RGN034); none in the Tyr ambush.
+  For a test, make a member's weapon type 24 (`logs/files/2026-11-25-ravager-save-mods-type.py ITEM 24`) and lower
+  its DEX (`...-ability.py CREATURE 1 12`): a creature's ability edit goes back to the sheet's at the round's turn.
+- **Two dice logs on one game** (a control: the commit before checked out with `git worktree add --detach`, its
+  `ravdice.py` run beside this one) give the same rolls, but both make the Python side's hiding rolls and write the
+  stealth word, so the hide results differ between them.
+- **A psionic power with a foe beside the user**: every icon crossed, CAN'T START THAT PSIONIC. The USE panel reads
+  the PSP when it opens.
+- **What is left**: a Battle Dancer's first swing in the round she starts dancing falls back to "in bonuses" (the
+  game's THAC0 lacks the dance's +1 the log already counts).
 
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.

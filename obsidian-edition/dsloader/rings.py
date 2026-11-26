@@ -32,6 +32,11 @@ GOLD_TOWARD = 0.55
 GOLD_NEARER = 24  # how much nearer GOLD a colour's tinted one must be (clearly golder)
 STATUS_DEAD = 5
 SIDE_NEUTRAL = 4  # (the arena's Tied-up Prisoner: on no one's side)
+# Wake of the Ravager's sides are bits: the party's foes are those whose bit (1 << side) is in this mask,
+# as the game itself colours the figure under the pointer (21112h: "test ax,0F80h", sides 7-11, the
+# Draxans' 7) and picks targets; the street's other people (sides 1-6) aren't. None: Shattered Lands'
+# rule (another side than the leader's, not the neutral one). ravlog sets it.
+HOSTILE_SIDES: Optional[int] = None
 CHOSEN = 2  # (DSCLOG's ring kind: three pixels thick, reddened three times)
 OFF, ONLY_CHOSEN = "off", "chosen"  # the Options tab's choice of rings
 
@@ -43,15 +48,16 @@ def mode(settings: dict) -> str:
 
 
 @functools.lru_cache(maxsize=8)  # (the same palette, the same table: worked out once)
-def red_table(dac: bytes) -> bytes:
-    """Each colour's redder one among the palette's (0: none redder enough). DAC: 0-63 values."""
+def red_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
+    """Each colour's redder one among the palette's (0: none redder enough). DAC: 0-63 values;
+    FIRST to LAST the colours taken and given (the sequel's: ravlog.RED_FIRST, RED_LAST)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     out = bytearray(256)
-    for i in range(FIRST, LAST + 1):
+    for i in range(first, last + 1):
         c = pal[i]
         want = tuple(v + (r - v) * TOWARD for v, r in zip(c, RED))
         best, score = 0, None
-        for j in range(FIRST, LAST + 1):
+        for j in range(first, last + 1):
             p = pal[j]
             if j == i or p[0] - (p[1] + p[2]) / 2 <= c[0] - (c[1] + c[2]) / 2 + 8:
                 continue  # (redder, clearly)
@@ -64,16 +70,17 @@ def red_table(dac: bytes) -> bytes:
 
 
 @functools.lru_cache(maxsize=8)
-def gold_table(dac: bytes) -> bytes:
-    """Each colour's golder one among the palette's (0: none clearly nearer GOLD), as red_table."""
+def gold_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
+    """Each colour's golder one among the palette's (0: none clearly nearer GOLD), as red_table (FIRST to
+    LAST the colours taken and given: the sequel's ravlog.RED_FIRST, RED_LAST)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     far = lambda p: sum((a - b) ** 2 for a, b in zip(p, GOLD)) ** 0.5
     out = bytearray(256)
-    for i in range(FIRST, LAST + 1):
+    for i in range(first, last + 1):
         c = pal[i]
         want = tuple(v + (t - v) * GOLD_TOWARD for v, t in zip(c, GOLD))
         best, score = 0, None
-        for j in range(FIRST, LAST + 1):
+        for j in range(first, last + 1):
             p = pal[j]
             if j == i or far(p) > far(c) - GOLD_NEARER:
                 continue
@@ -86,7 +93,7 @@ def gold_table(dac: bytes) -> bytes:
 
 def enemies(gd) -> list:
     """The things (combatants) standing on another side than the party's leader (not a neutral
-    one's), in a fight."""
+    one's), in a fight; in the sequel those on a side in HOSTILE_SIDES."""
     if not gd.in_combat():
         return []
     leader = gd.creature(0)
@@ -101,7 +108,11 @@ def enemies(gd) -> list:
             continue
         hp = struct.unpack_from("<h", rec, 0)[0]
         side = rec[game.CREATURE_SIDE]
-        if hp > 0 and rec[game.CREATURE_STATUS] != STATUS_DEAD and side not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL):
+        if HOSTILE_SIDES is not None:
+            foe = side < 16 and bool(HOSTILE_SIDES >> side & 1)
+        else:
+            foe = side not in (leader[game.CREATURE_SIDE], SIDE_NEUTRAL)
+        if hp > 0 and rec[game.CREATURE_STATUS] != STATUS_DEAD and foe:
             out.append(combatant)
     return out
 

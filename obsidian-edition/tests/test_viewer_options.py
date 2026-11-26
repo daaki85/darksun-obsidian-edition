@@ -278,5 +278,40 @@ class OptionsTests(unittest.TestCase):
         self.assertTrue(self.viewer.start_button.instate(["disabled"]))
 
 
+    def test_take_the_party_across(self):
+        """Take the party to Wake of the Ravager (Options, Wake of the Ravager): the save picked, asked,
+        ravtransfer.transfer run with the folders, its report shown in a window of its own; nothing run
+        without the sequel's folder or when the player says no."""
+        from dsloader import ravager, ravtransfer, wotrart
+        mod = viewer
+        real = (launch.find_game_dir, wotrart.find_resources, ravager.is_wotr_dir, mod.filedialog.askopenfilename,
+                mod.messagebox.askyesno, mod.messagebox.showinfo, ravtransfer.transfer)
+
+        def put_back():
+            (launch.find_game_dir, wotrart.find_resources, ravager.is_wotr_dir, mod.filedialog.askopenfilename,
+             mod.messagebox.askyesno, mod.messagebox.showinfo, ravtransfer.transfer) = real
+        self.addCleanup(put_back)
+        calls, told = [], []
+        launch.find_game_dir = lambda: "/sl"
+        wotrart.find_resources = lambda sl, given=None: "/wotr/RESOURCE.GFF"
+        ravager.is_wotr_dir = lambda folder: folder == "/wotr"
+        mod.filedialog.askopenfilename = lambda **kw: "/sl/SAVE03.SAV"
+        mod.messagebox.showinfo = lambda *a, **kw: told.append(a)
+        mod.messagebox.askyesno = lambda *a, **kw: False
+        ravtransfer.transfer = lambda *a: calls.append(a) or "Lex: place 4 of the roster\n"
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(calls, [])  # (said no)
+        mod.messagebox.askyesno = lambda *a, **kw: True
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(calls, [("/sl/SAVE03.SAV", "/wotr", "/sl", launch.DOS_DIR)])
+        texts = [w for w in self.root.winfo_children() if isinstance(w, tk.Toplevel)]
+        self.assertTrue(any("Lex: place 4" in c.get("1.0", "end") for t in texts for c in t.winfo_children()
+                            if isinstance(c, tk.Text)))
+        ravager.is_wotr_dir = lambda folder: False
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(len(calls), 1)
+        self.assertIn("hasn't found Wake of the Ravager", told[-1][1])
+
+
 if __name__ == "__main__":
     unittest.main()

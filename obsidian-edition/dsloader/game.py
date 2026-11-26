@@ -63,6 +63,14 @@ THING_ITEM = 1
 CREATURE_ITEM_LISTS = (0x08, 0x0A, 0x0C)  # (+0Ch: where the game puts items handed to a character)
 ITEM_NEXT, ITEM_SLOT, ITEM_TYPE, ITEM_NAME, ITEM_PLUS = 0x04, 0x11, 0x0A, 0x12, 0x14
 ITEM_POWER = 0x0F  # an item's magical power (0: none; the game's weapon breaking and acid read it)
+POWER_BYTES = 1  # ... its size (the sequel's a word: its spells and powers past 255; ravlog's layout)
+
+
+def item_power(rec: bytes) -> int:
+    """An item record's magical power (0: none), the byte or the sequel's word (POWER_BYTES)."""
+    return int.from_bytes(rec[ITEM_POWER:ITEM_POWER + POWER_BYTES], "little")
+
+
 NO_ITEM = 9999
 # (as the inventory screen shows them: a ring on each hand, 4 and 11; the cloak 12, the feet 13)
 EQUIP_SLOTS = ("arm", "ammo", "missile", "right hand", "finger", "waist", "legs", "head", "neck", "chest",
@@ -115,6 +123,18 @@ METAL_CAHULAKS_TYPE = GAME_TYPES + 31
 # cahulaks): the game's Cahulaks (21),
 # of obsidian, the fire cleric's bit added (DSCLOG's OBSIDIAN_CAHULAKS)
 OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
+# Wake of the Ravager's weapon kinds the game has none of (DSCLOG's EXTRA_TYPES' 34th to 39th): a two-handed
+# sword, a lotulis, a double spear, a trikal, a javelin and darts (not the net: the user's call, 2026-11-23)
+TWOHAND_SWORD_TYPE, LOTULIS_TYPE, DOUBLE_SPEAR_TYPE = GAME_TYPES + 33, GAME_TYPES + 34, GAME_TYPES + 35
+TRIKAL_TYPE, JAVELIN_TYPE, DARTS_TYPE = GAME_TYPES + 36, GAME_TYPES + 37, GAME_TYPES + 38
+# ... metal ones of three (the user's, 2026-11-25): a two-handed sword, a lotulis and a javelin
+METAL_TWOHAND_SWORD_TYPE, METAL_LOTULIS_TYPE, METAL_JAVELIN_TYPE = GAME_TYPES + 39, GAME_TYPES + 40, GAME_TYPES + 41
+# ... an obsidian lotulis for fire clerics and a bone great sword for water clerics (the user's, 2026-11-25)
+OBSIDIAN_LOTULIS_TYPE, BONE_GREAT_SWORD_TYPE = GAME_TYPES + 42, GAME_TYPES + 43
+# ... and the sequel's own type each is (its OBJEX's), for a party carried across (a metal one as its kind's)
+RAVAGER_TYPES = {TWOHAND_SWORD_TYPE: 101, LOTULIS_TYPE: 61, DOUBLE_SPEAR_TYPE: 39, TRIKAL_TYPE: 100,
+                 JAVELIN_TYPE: 59, DARTS_TYPE: 38, METAL_TWOHAND_SWORD_TYPE: 101, METAL_LOTULIS_TYPE: 61,
+                 METAL_JAVELIN_TYPE: 59, OBSIDIAN_LOTULIS_TYPE: 61, BONE_GREAT_SWORD_TYPE: 101}
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
@@ -133,7 +153,7 @@ STINK_EFFECT, STINK_TO_HIT_MOD, STINK_SAVE_POWER = 75, -2, 176  # (_MOD signed, 
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
-XP_CAP = 749_999  # DSCLOG's XP_CAP
+XP_CAP = 749_999  # DSCLOG's XP_CAP: the XP a character may gather (xp_share), and so its levels
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments
 RULE_HALF_GIANT = 512  # half-giants wield two-handed weapons in one hand
 # AD&D's rings and cloaks of protection: of two rings only the better counts, and a ring betters
@@ -218,12 +238,60 @@ SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # plus 1; 0 not yet given; aging.py); now (SPEC_V2 too) the four a number base 17 in bits 0-16 (17
 # values each: four in 17 bits, not 20), the starting age's roll in bits 17-21 (Table 7's dice less
 # their count; ROLL_UNKNOWN: none kept, a character from before), +17h the age. A sheet keeps its
-# layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET).
+# layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET). With 22
+# kinds (23 values: four base 23 take 19 bits, and the roll 5 more of the 22 there are) a sheet written
+# now is V3: bits 0-16 V3_BASE (17^4, past every V2 number) and then the first spec (0 to 22: the one
+# picked first, which a Battle Mage's kit and the starting weapon go by) times REST_SETS, plus the
+# rank of the others as a set (spec_rank: up to three of the 22, no kind twice, 1,794 sets); the roll
+# and age as V2's. Its specs read back the first, the others ascending, then the empty slots.
 SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
 SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
 # Wake of the Ravager (ravlog's layout) keeps the age alone in a byte of its own (SHEET_AGE there: a
-# byte the sequel's program never reads or writes), no weapon specs and no roll beside it
+# byte the sequel's program never reads or writes), and the specs and the roll (+14h..+16h's three
+# bytes, as here) in the three the Loader's copy adds to its sheet (SPEC_SLOTS there, +42h: ravager's
+# SHEET_SIZE); the fourth (+17h here) is not the age there (respecced writes three)
 AGE_PLAIN = False
+KIND_COUNT, V3_BASE = 22, 17 ** 4
+REST_OFFSETS = (0, 1, 1 + 22, 1 + 22 + 231)  # (the sets of 0, 1, 2 and 3 of the 22 kinds before each size)
+REST_SETS = 1 + 22 + 231 + 1540
+
+
+def spec_order(kinds: Sequence[int]) -> List[int]:
+    """KINDS (+ 1 each, 0 none) as a V3 sheet keeps them: the first picked, the others ascending, a
+    kind twice once, none and no such kind left out (DSCLOG's SPEC_REPACK)."""
+    seen: List[int] = []
+    for k in list(kinds)[:SPEC_COUNT]:
+        if 0 < k <= KIND_COUNT and k not in seen:
+            seen.append(k)
+    return seen[:1] + sorted(seen[1:])
+
+
+def spec_rank(kinds: Sequence[int]) -> int:
+    """V3's number for KINDS (less V3_BASE): the first times REST_SETS, plus the others' rank as a set
+    (the sets of fewer first; within a size the combinatorial number of the kinds, less 1, ascending)."""
+    from math import comb
+    order = spec_order(kinds)
+    if not order:
+        return 0
+    rest = [k - 1 for k in order[1:]]
+    return order[0] * REST_SETS + REST_OFFSETS[len(rest)] + sum(comb(c, i + 1) for i, c in enumerate(rest))
+
+
+def spec_unrank(rank: int) -> bytes:
+    """The four specs of V3's RANK: the first, the others ascending, then the empty slots (SPEC_UNPACK)."""
+    from math import comb
+    first, rest_rank = divmod(rank, REST_SETS)
+    size = max(n for n, offset in enumerate(REST_OFFSETS) if rest_rank >= offset)
+    rest_rank -= REST_OFFSETS[size]
+    rest = []
+    for i in range(size - 1, -1, -1):
+        c = KIND_COUNT - 1
+        while comb(c, i + 1) > rest_rank:
+            c -= 1
+        rest_rank -= comb(c, i + 1)
+        rest.append(c + 1)
+    kinds = ([first] if first else []) + rest[::-1]
+    return bytes(kinds + [0] * (SPEC_COUNT - len(kinds)))
 
 
 def spec_packed(sheet: bytes) -> bool:
@@ -236,16 +304,30 @@ def spec_v2(sheet: bytes) -> bool:
     return spec_packed(sheet) and bool(sheet[SPEC_SLOTS + 2] & SPEC_V2)
 
 
-def spec_kinds(sheet: bytes) -> bytes:
-    """The four weapon specs chosen, kind + 1 each (0 none), from any layout."""
-    raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
-    if not spec_packed(sheet):
-        return raw
+def specs_of(raw: bytes) -> Tuple[bytes, Optional[int]]:
+    """The four weapon specs (kind + 1 each, 0 none) and the starting age's roll (None: none kept) in
+    RAW, the four bytes at SPEC_SLOTS in any of its layouts (unpacked: the specs a byte each, no roll).
+    Read by no name a layout rebinds: the party transfer reads a Shattered Lands sheet with the
+    sequel's attached."""
+    raw = bytes(raw[:SPEC_COUNT]).ljust(SPEC_COUNT, b"\0")
+    if not raw[2] & SPEC_PACKED:
+        return raw, None
     value = int.from_bytes(raw[:3], "little")
-    if spec_v2(sheet):
-        value &= SPEC_KINDS_MASK
-        return bytes(value // 17 ** i % 17 for i in range(SPEC_COUNT))
-    return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
+    if not raw[2] & SPEC_V2:
+        return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT)), None
+    roll = value >> ROLL_SHIFT & 0x1F
+    kinds = value & SPEC_KINDS_MASK
+    specs = (spec_unrank(kinds - V3_BASE) if kinds >= V3_BASE
+             else bytes(kinds // 17 ** i % 17 for i in range(SPEC_COUNT)))
+    return specs, None if roll == ROLL_UNKNOWN else roll
+
+
+def spec_kinds(sheet: bytes) -> bytes:
+    """The four weapon specs chosen, kind + 1 each (0 none), from any layout; in the sequel
+    (AGE_PLAIN) only from the packed bytes (a sheet of its own has 0 there, the Loader's widening)."""
+    if AGE_PLAIN and not spec_packed(sheet):
+        return bytes(SPEC_COUNT)
+    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[0]
 
 
 def sheet_age(sheet: bytes) -> int:
@@ -257,31 +339,29 @@ def sheet_age(sheet: bytes) -> int:
 
 
 def sheet_roll(sheet: bytes) -> Optional[int]:
-    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none (the
-    sequel keeps none: AGE_PLAIN)."""
-    if AGE_PLAIN or not spec_v2(sheet):
-        return None
-    roll = int.from_bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3], "little") >> ROLL_SHIFT & 0x1F
-    return None if roll == ROLL_UNKNOWN else roll
+    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none."""
+    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[1]
 
 
 def packed_specs(kinds: Sequence[int], age: int = 0, roll: Optional[int] = None) -> bytes:
-    """+14h to +17h in the SPEC_V2 layout: KINDS (kind + 1 each, up to four, 0 to 16), AGE (the
-    +17h byte) and ROLL (None: not known)."""
-    kinds = list(kinds) + [0] * (SPEC_COUNT - len(kinds))
-    value = sum(min(max(k, 0), 16) * 17 ** i for i, k in enumerate(kinds[:SPEC_COUNT]))
+    """+14h to +17h in the V3 layout: KINDS (kind + 1 each, up to four, 0 to KIND_COUNT; a kind twice
+    counted once; the first kept first), AGE (the +17h byte) and ROLL (None: not known)."""
+    value = V3_BASE + spec_rank(kinds)
     value |= (ROLL_UNKNOWN if roll is None else roll & 0x1F) << ROLL_SHIFT | (SPEC_PACKED | SPEC_V2) << 16
     return value.to_bytes(3, "little") + bytes([age & 0xFF])
 
 
 def with_specs(sheet: bytes, kinds: Sequence[int]) -> bytes:
     """SHEET with its weapon specs KINDS, packed, its age and roll kept."""
-    return bytes(sheet[:SPEC_SLOTS]) + respecced(sheet, kinds) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
+    new = respecced(sheet, kinds)
+    return bytes(sheet[:SPEC_SLOTS]) + new + bytes(sheet[SPEC_SLOTS + len(new):])
 
 
 def respecced(sheet: bytes, kinds: Sequence[int]) -> bytes:
-    """+14h to +17h for SHEET with weapon specs KINDS, its age and starting roll as they are."""
-    return packed_specs(kinds, sheet_age(sheet), sheet_roll(sheet))
+    """+14h to +17h for SHEET with weapon specs KINDS, its age and starting roll as they are (AGE_PLAIN:
+    the three bytes before the age alone, the age a byte elsewhere)."""
+    out = packed_specs(kinds, sheet_age(sheet), sheet_roll(sheet))
+    return out[:3] if AGE_PLAIN else out
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
 ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 5), 4: ("metal", 13),
@@ -587,6 +667,15 @@ SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
 # the AC function's local holding the AC after armour (and spells that replace armour), at its end
 # (PROBE_AC): [BP-6] here, [BP-4] in Wake of the Ravager's
 AC_ARMOUR_LOCAL = -6
+# the attack's (5883Ah) count of the attacker's attacks already made this round, a local (its [BP-14h]: a
+# backstab only on the first, RULE_BACKSTAB; the dice log's damage line)
+ATTACKS_MADE_LOCAL = -0x14
+# the attack set-up's (58019h) locals the dice log's THAC0 line reads: the THAC0 after the situational
+# adjustments (from behind, backstab, STR or DEX and effects), the weapon's bonus taken off it (plus, material,
+# two weapons, the difficulty), the from-behind and backstab flags (words here, bytes in Wake of the Ravager's
+# set-up: SETUP_FLAG_MASK), the set of natural attacks it is on and the weapons ready
+SETUP_THAC0_LOCAL, SETUP_BONUS_LOCAL, SETUP_REAR_LOCAL, SETUP_BACKSTAB_LOCAL = -0x20, -8, -0x1A, -0x24
+SETUP_NATURAL_LOCAL, SETUP_READY_LOCAL, SETUP_FLAG_MASK = -0x22, -0x16, 0xFFFF
 SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
 SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter
@@ -949,6 +1038,15 @@ def class_share(sheet: bytes) -> int:
     if sheet[SHEET_RACE] == HUMAN:
         return 1
     return max(sum(1 for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c), 1)
+
+
+def xp_share(sheet: bytes) -> int:
+    """The XP a character may gather: its share of XP_CAP (tables.xp_share, DSCLOG's LEVEL_ROOM).
+    The Loader holds a party member's XP there (tracker.py), so that none is banked past the
+    character's top level."""
+    from . import tables
+    return tables.xp_share(sheet[SHEET_CLASSES:SHEET_CLASSES + 3], sheet[SHEET_LEVELS:SHEET_LEVELS + 3],
+                           sheet[SHEET_RACE] == HUMAN, XP_CAP)
 
 
 def con_share(sheet: bytes, bonus: int, groups: Dict[int, int], last_die: Dict[int, int]) -> Optional[int]:
@@ -2428,6 +2526,21 @@ class GameData:
         return any(item[ITEM_SLOT] in ARMOUR_SLOTS and len(typ) > 0x0F and restrict.is_armour(typ)
                    for _, item, typ in self._worn(creature))
 
+    def armour_ready(self, creature: int) -> bool:
+        """armour_worn, or, for a monster none of whose items is in place yet (every item's slot byte
+        past EQUIP_SLOTS: one that hasn't fought yet, its gear as it was loaded), an armour piece
+        among them: the game puts its gear on as it first fights, before the AC routine weighs an
+        attack on it (a Draxan in Wake of the Ravager's Tyr ambush: its brigandine's three pieces in
+        slots 14-16 until then, at 9, 6 and 0 by its first attacker's swing; a gladiator's AC a fifth
+        of its level better with armour on, so the chance shown before its first fight was 1 too
+        easy, 2026-11-25)."""
+        if self.armour_worn(creature):
+            return True
+        from . import restrict
+        gear = list(self._worn(creature)) if creature >= PARTY_SIZE else []
+        return bool(gear) and all(item[ITEM_SLOT] >= len(EQUIP_SLOTS) for _, item, _ in gear) \
+            and any(len(typ) > 0x0F and restrict.is_armour(typ) for _, _, typ in gear)
+
     def heavy_armour_worn(self, creature: int) -> bool:
         """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
         a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
@@ -2674,7 +2787,7 @@ class GameData:
                 armour -= part
             else:
                 other -= part
-        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_worn(target):
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_ready(target):
             for n in range(3):
                 if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
                     level = sheet[SHEET_LEVELS + n]

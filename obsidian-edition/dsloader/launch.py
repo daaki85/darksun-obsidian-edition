@@ -19,7 +19,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -564,7 +564,12 @@ def _write_conf_file(lines: List[str], path: str) -> str:
 
 def write_conf_wotr(game_dir: str, path: str = CONF, settings: Optional[dict] = None) -> str:
     """The config that starts Wake of the Ravager with the mod (dsloader.ravager: its patched copy,
-    its CD as F:, the mod's dos folder as D:), with the window and speed of the Options tab."""
+    its CD as F:, the mod's dos folder as D:), with the window and speed of the Options tab. Not
+    the music device (midiout.conf_lines): the sequel's music is its CD's audio tracks (game.ins,
+    the .ogg files DOSBox plays), not MIDI. Its sound setup (SOUND.INI) says MidiNotEnabled, GOG's
+    SOUND.CFG picks the Sound Blaster Pro II's FM driver, not the MPU-401's, and its RESOURCE.GFF
+    holds one empty XMIDI (a tempo and the end) where Shattered Lands' holds its score: a `[midi]`
+    section would route nothing."""
     from . import ravager
     settings = load_settings() if settings is None else settings
     lines = display_lines(settings) + cpu_lines(settings) + ravager.conf_lines(
@@ -694,10 +699,21 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
         # him off, the region's own: said too, not dropped unseen)
         gifts_too = f"; with it the gifts placed in {kalzith.REGION_FILE}" if pens_clones else ""
-        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
-                        + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             _remove_override(os.path.join(DOS_DIR, name))
+        # ... but the item types and names, which the Loader's items need (itemtables.py), in a copy
+        # of their own if they can be
+        items_too = ""
+        source = _find_file(game_dir, kalzith.SCRIPTS_FILE)
+        try:
+            if not source:
+                raise OSError(f"no {kalzith.SCRIPTS_FILE}")
+            itemtables.write(source, os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
+            items_too = "; with it the new items' types and names"
+            _remove_override(os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
+                        + gifts_too + items_too)
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
     pointer = os.path.join(DOS_DIR, scenepointer.POINTER_FILE)
     if not scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE),
@@ -1225,6 +1241,10 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     problem = ravager.prepare(game_dir, DOS_DIR, settings)
     if problem:
         raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
+    try:  # (the roster's and the saves' sheets the copy's 48h: ravager.widen_files)
+        ravager.widen_files(game_dir)
+    except OSError as e:
+        raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)

@@ -27,7 +27,7 @@ lv = os.environ.get('SCARE_LEVEL')            # MEMBER=LEVEL: its first class's 
 if lv:
     m, l = map(int, lv.split('='))
     ds = game.find_data_segment(g); off, seg = struct.unpack('<HH', g.read(ds*16 + 0x19C5, 4))
-    s = seg*16 + off + m*0x42; old = g.read(s + 0x1E, 1)[0]; g.write(s + 0x1E, bytes((l,)))
+    s = seg*16 + off + m*(0x48 if os.environ.get('RAV_LOADER') else 0x42); old = g.read(s + 0x1E, 1)[0]; g.write(s + 0x1E, bytes((l,)))
     print('member %d: level %d made %d' % (m, old, l))
 PY
 for i in 1 2 3 4; do xdotool key --window "$W" 3; sleep 2; xdotool key --window "$W" Return; sleep 2; done

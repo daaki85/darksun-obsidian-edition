@@ -178,16 +178,17 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
             continue
         count = RACES[race].start_dice[0]
         if age_of(sheet) is not None:
-            if game.sheet_roll(sheet) is None and not game.AGE_PLAIN:  # (kept: its age's start, the name's roll)
+            if game.sheet_roll(sheet) is None:  # (kept: its age's start, the name's roll)
                 faces = natural_start(gd.creature_name(member), race)[1]
-                gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS,
-                               game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count))
+                specs = game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count)
+                gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs[:3] if game.AGE_PLAIN else specs)
             continue
         age, faces = roll_start(race, rng)
-        if game.AGE_PLAIN:  # (the sequel: the age's byte alone)
-            gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, age)]))
+        specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age), sum(faces) - count)
+        if game.AGE_PLAIN:  # (the sequel: the age in a byte of its own, the specs and roll before it)
+            gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs[:3])
+            gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, specs[3:])
         else:
-            specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age), sum(faces) - count)
             gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs)
         ages = RACES[race]
         roll = f": {ages.start} + {dice_text(*ages.start_dice, faces)}" if faces else ""

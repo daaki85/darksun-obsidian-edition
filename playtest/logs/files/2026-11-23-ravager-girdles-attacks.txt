@@ -1,0 +1,44 @@
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 19, needs 8+ (65%), hits AC -7, target AC 4 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 11, needs 8+ (65%), hits AC 1, target AC 4 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Ar'Anda#0 with Wooden Bow (1d8): d20 = 7, needs 9+ (60%), hits AC 6, target AC 4 -> miss     THAC0 13 base, +0 in bonuses = 13
+Draxan attacks Ar'Anda#0 with Wooden Bow (1d8): d20 = 6, needs 9+ (60%), hits AC 7, target AC 4 -> miss     THAC0 13 base, +0 in bonuses = 13
+Terrannus attacks Draxan#27 with Longsword +1 (1d8+1): d20 = 12, needs 11+ (50%), hits AC 0, target AC 1 -> HIT     THAC0 16 base, +4 in bonuses = 12
+Gerakis attacks Draxan#27 with Obsidian Dragonsbane +4 (1d8+4): d20 = 3, needs 5+ (80%), hits AC 3, target AC 1 -> miss     THAC0 14 base, +8 in bonuses = 6
+Gerakis attacks Draxan#27 with Obsidian Dragonsbane +4 (1d8+4): d20 = 3, needs 5+ (80%), hits AC 3, target AC 1 -> miss     THAC0 14 base, +8 in bonuses = 6
+Gerakis attacks Draxan#27 with Longsword +1 (1d8+1): d20 = 16, needs 10+ (55%), hits AC -5, target AC 1 -> HIT     THAC0 14 base, +3 in bonuses = 11
+Draxan attacks Thy'rokh#2 with Bone Mace (1d6+1): d20 = 17, needs 15+ (30%), hits AC -2, target AC 0 -> HIT     THAC0 14 base, -1 in bonuses = 15
+Thy'rokh attacks Draxan#21 with Bone Gythka +1 (2d4+1): d20 = 16, needs 4+ (85%), hits AC -5, target AC 7 -> HIT     THAC0 15 base, +4 in bonuses = 11
+Thy'rokh attacks Draxan#21 with a claw (1d4): d20 = 10, needs 4+ (85%), hits AC 1, target AC 7 -> HIT     THAC0 15 base, +4 in bonuses = 11
+Terrannus attacks Draxan#27 with Longsword +1 (1d8+1): d20 = 3, needs 11+ (50%), hits AC 9, target AC 1 -> miss     THAC0 16 base, +4 in bonuses = 12
+Gerakis attacks Draxan#27 with Obsidian Dragonsbane +4 (1d8+4): d20 = 1 (natural 1), needs 5+ (80%), hits AC 5, target AC 1 -> miss     THAC0 14 base, +8 in bonuses = 6
+Gerakis attacks Draxan#27 with Obsidian Dragonsbane +4 (1d8+4): d20 = 8, needs 5+ (80%), hits AC -2, target AC 1 -> HIT     THAC0 14 base, +8 in bonuses = 6
+Gerakis attacks Draxan#27 with Longsword +1 (1d8+1): d20 = 13, needs 10+ (55%), hits AC -2, target AC 1 -> HIT     THAC0 14 base, +3 in bonuses = 11
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 4, needs 8+ (65%), hits AC 8, target AC 4 -> miss     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 15, needs 8+ (65%), hits AC -3, target AC 4 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Terrannus#1 with Stone Lotulis (2d4): d20 = 20 (natural 20), needs 9+ (60%), hits AC -8, target AC 3 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Terrannus#1 with Stone Lotulis (2d4): d20 = 5, needs 9+ (60%), hits AC 7, target AC 3 -> miss     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Thy'rokh#2 with Stone Lotulis (2d4): d20 = 13, needs 12+ (45%), hits AC -1, target AC 0 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Thy'rokh#2 with Stone Lotulis (2d4): d20 = 8, needs 12+ (45%), hits AC 4, target AC 0 -> miss     THAC0 13 base, +1 in bonuses = 12
+Thy'rokh attacks Draxan#23 with Bone Gythka +1 (2d4+1): d20 = 7, needs 9+ (60%), hits AC 4, target AC 2 -> miss     THAC0 15 base, +4 in bonuses = 11
+Thy'rokh attacks Draxan#23 with Bone Gythka +1 (2d4+1): d20 = 7, needs 9+ (60%), hits AC 4, target AC 2 -> miss     THAC0 15 base, +4 in bonuses = 11
+Thy'rokh attacks Draxan#23 with a claw (1d4): d20 = 20 (natural 20), needs 9+ (60%), hits AC -9, target AC 2 -> HIT     THAC0 15 base, +4 in bonuses = 11
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 20 (natural 20), needs 8+ (65%), hits AC -8, target AC 4 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Ar'Anda#0 with Stone Lotulis (2d4): d20 = 1 (natural 1), needs 8+ (65%), hits AC 11, target AC 4 -> miss     THAC0 13 base, +1 in bonuses = 12
+Ar'Anda attacks Draxan#26 with Obsidian Dagger (1d4): d20 = 8, needs 15+ (30%), hits AC 9, target AC 2 -> miss     THAC0 17 base, +0 in bonuses = 17
+Ar'Anda attacks Draxan#26 with Longsword +1 (1d8+1): d20 = 9, needs 15+ (30%), hits AC 8, target AC 2 -> miss     THAC0 17 base, +0 in bonuses = 17
+Draxan attacks Gerakis#3 with Stone Lotulis (2d4): d20 = 14, needs 6+ (75%), hits AC -2, target AC 6 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Gerakis#3 with Stone Lotulis (2d4): d20 = 13, needs 6+ (75%), hits AC -1, target AC 6 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Terrannus attacks Draxan#27 with Longsword +1 (1d8+1): d20 = 20 (natural 20), needs 11+ (50%), hits AC -8, target AC 1 -> HIT     THAC0 16 base, +4 in bonuses = 12
+Draxan attacks Thy'rokh#2 with Bone Mace (1d6+1): d20 = 1 (natural 1), needs 15+ (30%), hits AC 14, target AC 0 -> miss     THAC0 14 base, -1 in bonuses = 15
+Gerakis attacks Draxan#26 with Obsidian Dragonsbane +4 (1d8+4): d20 = 12, needs 7+ (70%), hits AC -3, target AC 2 -> HIT     THAC0 14 base, +5 in bonuses = 9
+Gerakis attacks Draxan#26 with Obsidian Dragonsbane +4 (1d8+4): d20 = 9, needs 7+ (70%), hits AC 0, target AC 2 -> HIT     THAC0 14 base, +5 in bonuses = 9
+Gerakis attacks Draxan#26 with Longsword +1 (1d8+1): d20 = 2, needs 12+ (45%), hits AC 12, target AC 2 -> miss     THAC0 14 base, +0 in bonuses = 14
+Draxan attacks Draxan#23 with Stone Lotulis (2d4): d20 = 10, needs 10+ (55%), hits AC 2, target AC 2 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Draxan attacks Draxan#23 with Stone Lotulis (2d4): d20 = 4, needs 10+ (55%), hits AC 8, target AC 2 -> HIT     THAC0 13 base, +1 in bonuses = 12
+Ar'Anda attacks Draxan#21 with Wooden Sling (1d4): d20 = 5, needs 9+ (60%), hits AC 11, target AC 7 -> miss     THAC0 17 base, +1 in bonuses = 16
+Draxan attacks Thy'rokh#2 with Bone Mace (1d6+1): d20 = 3, needs 15+ (30%), hits AC 12, target AC 0 -> miss     THAC0 14 base, -1 in bonuses = 15
+Thy'rokh attacks Draxan#26 with Bone Gythka +1 (2d4+1): d20 = 13, needs 9+ (60%), hits AC -2, target AC 2 -> HIT     THAC0 15 base, +4 in bonuses = 11
+Thy'rokh attacks Draxan#26 with Bone Gythka +1 (2d4+1): d20 = 16, needs 9+ (60%), hits AC -5, target AC 2 -> HIT     THAC0 15 base, +4 in bonuses = 11
+Gerakis attacks Draxan#23 with Obsidian Dragonsbane +4 (1d8+4): d20 = 7, needs 7+ (70%), hits AC 2, target AC 2 -> HIT     THAC0 14 base, +5 in bonuses = 9
+Gerakis attacks Draxan#23 with Obsidian Dragonsbane +4 (1d8+4): d20 = 16, needs 7+ (70%), hits AC -7, target AC 2 -> HIT     THAC0 14 base, +5 in bonuses = 9
+Gerakis attacks Draxan#21 with Longsword +1 (1d8+1): d20 = 14, needs 4+ (85%), hits AC -3, target AC 7 -> HIT     THAC0 14 base, +3 in bonuses = 11

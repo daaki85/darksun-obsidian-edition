@@ -44,6 +44,7 @@ MAP_LEFT, MAP_TOP = 3, 5  # its picture's left and top on the map (words)
 MAP_RISE = 0x0D  # ... how far it is drawn above that (a signed byte)
 MAP_PICTURE = 0x0F  # its picture's slot (FFFFh: none loaded)
 MAP_WIDTH, MAP_HEIGHT = 0x12, 0x13  # its picture's size (signed bytes)
+MAP_SIZES = "<bb"  # (how its finder reads them: the sequel's reads bytes unsigned, ravlog's layout)
 INK = (255, 236, 170)
 AGAIN = 0.5  # seconds a prediction is kept while nothing it was made from has moved
 LINGER = 0.2  # seconds the label outlasts the last look that found its enemy under the pointer
@@ -74,7 +75,8 @@ def box(record: bytes, camera: Tuple[int, int]) -> Optional[Tuple[int, int, int,
         return None
     left, top = struct.unpack_from("<hh", record, MAP_LEFT)
     rise, = struct.unpack_from("<b", record, MAP_RISE)
-    wide, high = struct.unpack_from("<bb", record, MAP_WIDTH)
+    wide, = struct.unpack_from(MAP_SIZES[:2], record, MAP_WIDTH)
+    high, = struct.unpack_from(MAP_SIZES[:1] + MAP_SIZES[2:], record, MAP_HEIGHT)
     left, top = left - camera[0], top - camera[1] - rise
     return left, top, left + wide, top + high
 
