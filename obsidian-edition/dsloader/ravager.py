@@ -1304,10 +1304,22 @@ def mod_type(sl_type: int) -> int:
     return GAME_TYPES + sl_type - game.GAME_TYPES
 
 
+# The sequel's melee daggers (its stone 37 and obsidian 72) for air clerics too, as Shattered Lands' Loader gives
+# every dagger the air cleric's bit (itemtables.TYPE_FIXES): an air cleric's sphere allows daggers (restrict.py,
+# DSCLOG2's SPHERE_ALLOWS), but the sequel's own lists let it use no melee weapon at all, so its starting
+# obsidian dagger (startgear's, as SL's) was refused. A type's classes are its word at +0Ch, the air cleric's bit 1.
+AIR_DAGGER_TYPES, TYPE_CLASSES, AIR_CLERIC_BIT = (37, 72), 0x0C, 1
+
+
 def mod_types_table(types: bytes) -> bytes:
-    """The sequel's type table TYPES (ALL 4) with the mod's after it."""
+    """The sequel's type table TYPES (ALL 4), its daggers the air clerics' too (AIR_DAGGER_TYPES), with the
+    mod's after it."""
     from . import npcitems
-    return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
+    out = bytearray(types)
+    for t in AIR_DAGGER_TYPES:
+        if (t + 1) * TYPE_SIZE <= len(out):
+            out[t * TYPE_SIZE + TYPE_CLASSES] |= AIR_CLERIC_BIT
+    return bytes(out) + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
