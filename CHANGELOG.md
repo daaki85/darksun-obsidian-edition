@@ -72,6 +72,10 @@ Releases, newest first (2.12.0 and older in the archive):
   its own magic items that never shone (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3,
   three armours, the Boots, the Amulet, the Ioun Stone, the Necklace, the Rod) shine as the others
   (DSCLOG2's SHOP_SHINE, site 163; the Loader's copy of OBJEX.GFF, `ravshine.py`).
+- See-through figures in the sequel: a party member hidden in shadows in a fight, and anyone invisible
+  (unless the party detects invisibility), is drawn half see-through, as in Shattered Lands (DSCLOG2's
+  GHOST_DRAW on the shadows' sites; its blend tables in the far block, so only 5.5 KB of upper memory;
+  the Loader's `RavGhosts`).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

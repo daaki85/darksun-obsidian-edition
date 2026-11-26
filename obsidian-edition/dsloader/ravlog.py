@@ -24,7 +24,7 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, dust, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
     targeting, textlog, usable
 
@@ -437,6 +437,28 @@ FK_SQUARE_DRAWS, FK_F10_MOVES, FK_F10_KEPT, FK_MARK_DRAWS = 1928, 1930, 1932, 19
 # puffs raised (+1974) and its signature (+1976, DUST_SIG_WORD: a helper before DUST has its code there)
 DUST_ON, DUST_PUFFS, DUST_SIG, DUST_SIG_WORD = 1972, 1974, 1976, 0x7544
 DUST_LEAST = 0.2  # (dust.is_ground's least value here: Tyr's dirt, 56,44,28 to 85,73,52, is darker than SL's sand)
+# The see-through figures (DSCLOG2's SEE-THROUGH FIGURES, ghost.py's): its header's GHOST_SEG (+1984, the block of
+# pixels in upper memory: 0 none), GHOST_ON (+1986, the Loader's), the offsets of BLEND, REP and GHOST_TAB in the far
+# block (+1988, +1990, +1992) and the figures drawn so (+1994)
+GHOST_SEG, GHOST_ON, GHOST_BLEND, GHOST_REP, GHOST_TAB, GHOST_DRAWS = 1984, 1986, 1988, 1990, 1992, 1994
+
+
+class RavGhosts(ghost.Ghosts):
+    """ghost.Ghosts on the sequel: its stable colours (32-255; it cycles 1-31), its effects (Invisible 53, Detect
+    Invisible 25) and the tables in DSCLOG2's far block."""
+    TSR_ON = GHOST_ON
+    FIRST, LAST, CYCLED = 32, 255, (range(1, 32),)
+    INVISIBLE, DETECT = 53, 25
+
+    def places(self, guest, tsr_hdr):
+        seg, = struct.unpack("<H", guest.read(tsr_hdr + GHOST_SEG, 2))
+        far, = struct.unpack("<H", guest.read(tsr_hdr + rings.TSR_FAR_SEG, 2))
+        if not seg or not far:
+            return None
+        blend, rep, tab = struct.unpack("<HHH", guest.read(tsr_hdr + GHOST_BLEND, 6))
+        return far * 16 + blend, far * 16 + rep, far * 16 + tab
+
+
 DUST_LIGHTER = 0.2  # (and less toward white than SL's 0.45, which made it near white there: a step up its ramp)
 RAV_FIGHT_KEYS = {
     squares: {"TSR_SQUARES_ON": FK_SQUARES_ON, "TSR_LIGHT": FK_LIGHT, "WALK_MAP": 0x0538, "POINTS_SEG": 0x3C4F,
@@ -1500,6 +1522,30 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.write(hdr + DUST_ON, struct.pack("<H", 1))
 
     _next_dust = 0.0
+
+    def _ghost_pass(self, now: float) -> None:
+        """SL's see-through figures (ghost.py) on DSCLOG2's: BLEND and REP made from the palette each time DSCLOG2
+        counts it changed, GHOST_TAB from the effects; nothing for a helper without them (its GHOST_BLEND 0)."""
+        if now < self._next_ghost or self.game is None or not self._fight_keys_helper():
+            return
+        self._next_ghost = now + dicelog.EFFECT_INTERVAL
+        hdr = self.tsr_hdr
+        if self.guest.read(hdr + GHOST_BLEND, 2) == b"\0\0":
+            return
+        if self._rav_ghosts is None:
+            self._rav_ghosts = RavGhosts()
+        at = self._rav_ghosts.places(self.guest, hdr)
+        if at is None:
+            return
+        blend, rep, tab = at
+        with self._writable([(blend, ghost.REP_COUNT * 256), (rep, 256), (tab, 80), (hdr + GHOST_ON, 2),
+                             (hdr + FK_VIEW_REDRAW, 2)]):
+            self._rav_ghosts.update(self.game, hdr, self.show_ghosts, self._dac_changes(),
+                                lambda: shadows.redraw(self.game, hdr))
+
+    _next_ghost = 0.0
+    _rav_ghosts: Optional[RavGhosts] = None
+    show_ghosts = True  # (the see-through figures: RAV_NO_GHOST, a control, turns them off)
     _dust_light: Optional[int] = None  # (DSCLOG2's palette count LIGHT was last made at)
     show_dust = True  # (the walkers' dust: RAV_NO_DUST, a control, turns it off)
 
@@ -1700,6 +1746,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(lambda: self._squares_key(now), quiet=True)  # (R: the squares in reach, SQUARES)
         self._step(lambda: self._squares_pass(now), quiet=True)
         self._step(lambda: self._dust_pass(now), quiet=True)  # (the walkers' dust: DSCLOG2's DUST)
+        self._step(lambda: self._ghost_pass(now), quiet=True)  # (the hidden and invisible see-through)
         out += self._step(self._move_back_pass, quiet=True)  # (F10 after the last step: moveback.py)
         self._step(lambda: self._usable_key(now), quiet=True)  # (Alt held: what can be used ringed, usable.py)
         if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)

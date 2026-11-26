@@ -315,6 +315,12 @@ dust_sig    dw 0x7544           ; +1976 DUST's signature: the Loader writes DUST
 fig_other   dw 0                ; +1978 shadows cast from another kept frame of the picture (FIG_OF) ...
 fig_missed  dw 0                ; +1980 ... and figures that cast none, their picture out with none kept
 shine_turns dw 0                ; +1982 the colour cycles turned on a shop's screen (SHINE_TURN, counted)
+ghost_seg   dw 0                ; +1984 GHOST's block in upper memory (its pixels and spans; 0: none, no see-through)
+ghost_on    dw 0                ; +1986 the Loader sets 1 once BLEND and REP are made for the palette
+ghost_blend dw FAR_GH_BLEND     ; +1988 BLEND's offset in the far block (REP_COUNT x 256 bytes) ...
+ghost_rep   dw FAR_GH_REP       ; +1990 ... REP's (256) ...
+ghost_tab   dw FAR_GH_TAB       ; +1992 ... and GHOST_TAB's (80: a bit a thing; +79 GH_CHANGED)
+ghost_draws dw 0                ; +1994 figures drawn see-through (GHOST_DRAW, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -14685,6 +14691,7 @@ fig_wide_all:
         mov byte [cs:fig_seen], 1
         pusha
         call dust_union                 ; (the puffs' ground taken in: DUST)
+        call ghost_union                ; (a figure turned solid or see-through: the whole view)
         popa
         cmp word [cs:fig_shadows], 0
         je .push
@@ -15065,7 +15072,12 @@ fig_keep:
         pop si
         pop ds
         add word [cs:fk_ip], 2
-        call far [cs:fk_call]
+        call ghost_wanted               ; (a see-through figure: drawn here, SEE-THROUGH FIGURES)
+        jnc .game
+        call ghost_draw
+        jmp .back
+.game:  call far [cs:fk_call]
+.back:
         push word [cs:fk_fl]
         push word [cs:fk_cs]
         push word [cs:fk_ip]
@@ -17309,6 +17321,293 @@ shop_loop:
         pop bp
         iret
 shop_passes dw 0                ; (the shop's loop's passes, for a look in play)
+
+; SEE-THROUGH FIGURES (DSCLOG's GHOST, on the sequel): a party member hidden in shadows and unheard
+; (STEALTH's bit), and a creature the Loader marks in GHOST_TAB (invisible, the sequel's effect 53, while no
+; party member detects it, 25: ghost.py), are drawn half see-through, each pixel the colour halfway between
+; the figure's and what is under it. Drawn in FIG_KEEP's place of the thing drawer's picture call (site 162,
+; 2A347h: DI the thing, the call's arguments the page, x, y, mirrored, the picture and the frame, SL's).
+; **Smaller than SL's block**: the tables the Loader makes (BLEND, 8 KB: for each of the figure's REP_COUNT
+; colours a row of 256, the colour halfway between it and each of the palette's; REP; GHOST_TAB) are in the
+; far block (FAR_GH_BLEND on: the HMA in a GOG start), only the figure's pixels and spans (5,632 bytes) in
+; GHOST's block of upper memory (GHOST_SEG, made at the start if there's room).
+REP_COUNT   equ 32
+GH_PIX      equ 0                       ; (GHOST's block: the figure's pixels, as REP numbers (GHOST_DRAW) ...
+GH_PIX_MOST equ 4096
+GH_SPANS    equ GH_PIX + GH_PIX_MOST    ; ... its runs on the screen, 8 bytes each: the row's place in the
+GH_SPANS_MOST equ 192                   ;   page, first x, last x, its first pixel)
+GHOST_PARAS equ (GH_SPANS + GH_SPANS_MOST * 8 + 15) / 16
+gh_shown    dw 0                        ; (party members drawn see-through while hidden: a bit each)
+
+; GHOST_WANTED: CF if thing DI is drawn see-through (GHOST_ON, the block, and its STEALTH bit, a party
+; member's, or its GHOST_TAB bit). Registers kept.
+ghost_wanted:
+        cmp word [cs:ghost_on], 0
+        je .no
+        cmp word [cs:ghost_seg], 0
+        je .no
+        cmp word [cs:far_seg], 0
+        je .no
+        cmp di, MAP_COUNT - 1
+        ja .no
+        cmp di, 3
+        ja .tab
+        bt [cs:stealth], di
+        jnc .tab
+        bts [cs:gh_shown], di           ; (drawn see-through while hidden: GHOST_UNION)
+        stc
+        ret
+.tab:   push fs
+        mov fs, [cs:far_seg]
+        bt [fs:FAR_GH_TAB], di
+        pop fs
+        ret
+.no:    clc
+        ret
+
+; GHOST_DRAW: FIG_KEEP's call's frame drawn see-through (its arguments at [BP+4] on). The frame's runs
+; decoded into GH_PIX as REP numbers, each run within the page noted (GH_SPANS: the pixel at its first x; a
+; mirrored frame's pixels are read from the other end), then a plane at a time each pixel there made BLEND's
+; of its REP number and the colour under it. DS, SI, DI kept. (SL's, GS the block, FS the far block.)
+GD_SPANS equ -2
+GD_W     equ -4
+GD_X     equ -6
+GD_N     equ -8
+GD_STEP  equ -10
+ghost_draw:
+        push bp
+        mov bp, sp                      ; [bp+4] page, +6 x, +8 y, +10 mirrored, +12 picture, +16 frame
+        push ds
+        push si
+        push di
+        push fs
+        push gs
+        sub sp, 12
+        inc word [cs:ghost_draws]
+        mov ax, 4
+        test byte [bp + 10], 1
+        jz .step
+        neg ax
+.step:  mov [bp + GD_STEP - 12], ax
+        mov bx, [bp + 4]
+        call page_setup
+        mov fs, [cs:far_seg]
+        mov gs, [cs:ghost_seg]
+        les si, [bp + 12]               ; the picture: its frames' places from +6
+        mov ax, es
+        or ax, si
+        jz .out
+        mov bx, [bp + 16]
+        cmp bx, [es:si + 4]
+        jae .out
+        shl bx, 2
+        xor eax, eax
+        mov ax, es
+        shl eax, 4
+        movzx ecx, si
+        add eax, ecx
+        add eax, [es:si + bx + 6]
+        mov si, ax
+        and si, 0x0F
+        shr eax, 4
+        mov ds, ax                      ; DS:SI the frame: width, height, then its rows
+        cld
+        lodsw
+        mov [bp + GD_W - 12], ax
+        lodsw
+        push gs
+        pop es
+        mov di, GH_PIX
+        mov word [bp + GD_SPANS - 12], GH_SPANS
+.row:   lodsb
+        cmp al, 0xFF
+        je .flush
+        movzx dx, al
+        add dx, [bp + 8]                ; DX its row on the screen
+.run:   lodsw
+        push ax                         ; x (8000h: the row's last)
+        and ah, 0x7F
+        movzx cx, byte [si]             ; its pixels
+        mov [bp + GD_N - 12], cx
+        test byte [bp + 10], 1
+        jz .fwd
+        neg ax                          ; (mirrored: from the right)
+        sub ax, cx
+        add ax, [bp + GD_W - 12]
+.fwd:   add ax, [bp + 6]
+        mov [bp + GD_X - 12], ax
+        movzx ax, byte [si + 1]
+        add si, 2
+        add ax, si
+        push ax                         ; (past its data)
+        mov ax, di
+        add ax, cx
+        jc .full
+        cmp ax, GH_SPANS
+        ja .full                        ; (no room: what is decoded drawn)
+        push di                         ; (its first pixel)
+        jcxz .noted
+        push dx
+        mov dx, cx                      ; DX: the pixels left
+        mov bx, FAR_GH_REP              ; (FS:BX: REP, for XLAT)
+.data:  lodsb                           ; a control byte: bit 0 clear, (b >> 1) + 1 bytes to copy;
+        movzx cx, al                    ;   set, one byte (b >> 1) + 1 times (each a REP number)
+        shr cx, 1
+        inc cx
+        sub dx, cx
+        test al, 1
+        jz .copy
+        lodsb
+        fs xlatb
+        rep stosb
+        jmp .took
+.copy:  lodsb
+        fs xlatb
+        stosb
+        loop .copy
+.took:  or dx, dx
+        jg .data
+        pop dx
+.noted: pop bx                          ; BX its first pixel
+        pop si
+        cmp dx, [cs:clip_y0]            ; the run within the page: noted
+        jl .next
+        cmp dx, [cs:clip_y1]
+        jg .next
+        mov ax, [bp + GD_X - 12]        ; AX its first x, CX its last, BX the pixel there
+        mov cx, ax
+        add cx, [bp + GD_N - 12]
+        dec cx
+        test byte [bp + 10], 1
+        jz .clip
+        add bx, [bp + GD_N - 12]
+        dec bx
+.clip:  push dx
+        mov dx, [cs:clip_x0]
+        sub dx, ax
+        jle .x1
+        add ax, dx
+        cmp word [bp + GD_STEP - 12], 0
+        jg .ahead
+        neg dx
+.ahead: add bx, dx
+.x1:    pop dx
+        cmp cx, [cs:clip_x1]
+        jle .span
+        mov cx, [cs:clip_x1]
+.span:  cmp ax, cx
+        jg .next
+        cmp word [bp + GD_SPANS - 12], GH_SPANS + GH_SPANS_MOST * 8
+        jae .spans_full                 ; (no room for its span: what is noted drawn)
+        push di
+        mov di, [bp + GD_SPANS - 12]
+        mov [es:di + 2], ax
+        mov [es:di + 4], cx
+        mov [es:di + 6], bx
+        mov ax, dx                      ; the row's place in the page
+        sub ax, [cs:v_y0]
+        push dx
+        mul word [cs:v_row]
+        pop dx
+        sub ax, [cs:v_x0]
+        stosw
+        add word [bp + GD_SPANS - 12], 8
+        pop di
+.next:  pop ax
+        test ah, 0x80
+        jz .run
+        jmp .row
+.full:  pop ax
+.spans_full:
+        pop ax
+.flush: call vga_save
+        mov es, [cs:v_seg]
+        xor cx, cx                      ; the plane
+.plane: mov dx, 0x3C4                   ; write to this plane, read from it
+        mov al, 2
+        mov ah, 1
+        shl ah, cl
+        out dx, ax
+        mov dx, 0x3CE
+        mov al, 4
+        mov ah, cl
+        out dx, ax
+        mov si, GH_SPANS
+.gspan: cmp si, [bp + GD_SPANS - 12]
+        jae .nplane
+        mov ax, cx
+        sub ax, [gs:si + 2]
+        and ax, 3                       ; how far on its first pixel on this plane is
+        mov bx, [gs:si + 6]
+        cmp word [bp + GD_STEP - 12], 0
+        jg .on
+        sub bx, ax
+        sub bx, ax
+.on:    add bx, ax
+        add ax, [gs:si + 2]
+        mov dx, [gs:si + 4]
+        sub dx, ax
+        jl .nspan
+        shr dx, 2
+        inc dx                          ; DX: how many
+        shr ax, 2
+        add ax, [gs:si]
+        mov di, ax
+        push si
+        mov si, bx
+.pix:   mov bl, [es:di]                 ; what is under it, and the figure's: BLEND's
+        mov bh, [gs:si]
+        mov al, [fs:bx + FAR_GH_BLEND]
+        stosb
+        add si, [bp + GD_STEP - 12]
+        dec dx
+        jnz .pix
+        pop si
+.nspan: add si, 8
+        jmp .gspan
+.nplane:
+        inc cx
+        cmp cx, 4
+        jb .plane
+        call vga_restore
+.out:   add sp, 12
+        pop gs
+        pop fs
+        pop di
+        pop si
+        pop ds
+        pop bp
+        ret
+
+; GHOST_UNION: in FIG_WIDE_ALL, after DUST_UNION (the rectangle at [BP-0Ch] x0, [BP-0Eh] x1, [BP-10h] y0,
+; [BP-12h] y1): a party member drawn see-through while hidden (GH_SHOWN) and hidden no longer (its STEALTH
+; bit cleared) has the whole view drawn, so it is solid at the next step of anyone's; the same once the
+; Loader has written GHOST_TAB anew (GH_CHANGED). AX, ES not kept.
+ghost_union:
+        cmp word [cs:ghost_on], 0
+        je .hidden
+        cmp word [cs:far_seg], 0
+        je .hidden
+        push es
+        mov es, [cs:far_seg]
+        xor al, al
+        xchg al, [es:FAR_GH_CHANGED]    ; (read and cleared at once: a Loader write between kept)
+        pop es
+        test al, al
+        jnz .whole
+.hidden:
+        mov ax, [cs:stealth]
+        not ax
+        test ax, [cs:gh_shown]
+        jz .ret
+        not ax
+        and [cs:gh_shown], ax
+.whole: xor ax, ax
+        mov [bp - 0x0C], ax
+        mov [bp - 0x10], ax
+        mov word [bp - 0x0E], 0x13F
+        mov word [bp - 0x12], 0xC7
+.ret:   ret
 
 ; SHOP_SHINE (site 163), SHINE_TURN: a shop's magic items shine (DSCLOG's, on the sequel). The map's main
 ; loop turns the palette's colour cycles (the magic items' shine) when the timer has asked for it (1CF0Eh:
@@ -19650,7 +19949,14 @@ FAR_DUST   equ FAR_PUFFS + PUFFS * PUFF_SIZE    ; ... their thickness by age, ro
 FAR_LAST_X equ FAR_DUST + DUST_BYTES             ; ... each thing's place as last seen
 FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
 FAR_WALKED equ FAR_LAST_Y + MAP_COUNT * 2        ; ... how far each has walked since its last puff
-FAR_TOP    equ FAR_WALKED + MAP_COUNT
+FAR_GH_BLEND equ (FAR_WALKED + MAP_COUNT + 15) & ~15  ; SEE-THROUGH FIGURES' BLEND (GHOST_DRAW: REP_COUNT x 256)
+FAR_GH_REP equ FAR_GH_BLEND + REP_COUNT * 256  ; ... REP, each of the palette's colours to one of REP_COUNT
+FAR_GH_TAB equ FAR_GH_REP + 256                ; ... GHOST_TAB, a bit for each thing (the Loader's) ...
+FAR_GH_CHANGED equ FAR_GH_TAB + 79             ; ... 1 once the Loader has written it anew (GHOST_UNION)
+FAR_TOP    equ FAR_GH_TAB + 80
+%if FAR_TOP > 0x10000
+%error "the far block past the HMA's 64 KB"
+%endif
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
@@ -19724,6 +20030,13 @@ install:                        ; DS = ES = PSP, CS = the image
         mov bx, 0x10 + RESIDENT_PARAS
         mov ah, 4Ah
         int 21h
+        push bx
+        mov bx, GHOST_PARAS     ; the see-through figures' pixels and spans (GHOST_DRAW), if upper memory
+        call umb_alloc          ;   has the room (their tables are the far block's)
+        jc .no_ghost
+        mov [cs:ghost_seg], ax
+.no_ghost:
+        pop bx
         mov dx, bx
         mov ax, 3100h
         int 21h

@@ -1098,6 +1098,19 @@ its object's icon decoded with `sequelicons.decode` (PLNR, PLAN or SL's runs); m
 pixels, twelve items none or one or two (`dsloader/ravshine.py`). A picture of Shattered Lands' kind put in the
 copy of OBJEX.GFF for one of the sequel's own icons is drawn as its own.
 
+**See-through figures in the sequel** (2026-11-26, logs/2026-11-26-ravager-see-through.md): `ghost_draws` (DSCLOG2's
+header +1994) counts the figures drawn see-through, `ghost_on` (+1986) is 1 once the Loader has written the tables,
+`ghost_seg` (+1984) the upper memory block; the STEALTH word (+204) has a bit for each party member hidden. To see
+one without waiting for a thief's lucky roll, a **test edit** of STEALTH to 1 (member 0) out of a fight draws the
+leader see-through at the next redraw (a step: the map isn't drawn again while nothing moves, so a write alone
+changes nothing on the screen); write it back to 0 and never save. In the Draxans' ambush under Computer Control
+Ar'Anda tries to hide each turn (`hides in shadows` in the dice log), but in daylight her chance is halved
+(36%): one hide in the fight. **The
+leader** (DS:426Dh, whose turn) is the same after every load of a save (Thy'rokh, 2, in ravager-after-ambush:
+three loads); the number keys 1-4 on the map make member 0-3 the leader, so a talk's answer keys that land
+on the map before the talk is up change it (the shop's prices with it: CHA 18 is 5% off). The shop's portraits
+change whose inventory is shown, not the leader.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs

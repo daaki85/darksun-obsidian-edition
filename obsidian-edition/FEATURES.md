@@ -1104,7 +1104,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **[Magic items' icons](#magic-items-icons)** shine in the sequel's shops too (they stood still on a
   shop's screen), and twelve of its own magic items that never shone now do as the others: Dragonsbane,
   the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun
-  Stone, the Necklace and the Rod. See-through figures aren't ported yet.
+  Stone, the Necklace and the Rod.
+- **[See-through figures](#see-through-figures)** in the sequel too: a party member hidden in shadows in
+  a fight, and anyone invisible (unless the party detects invisibility), is drawn half see-through.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three

@@ -1725,3 +1725,22 @@ each step of anyone's), has the whole view drawn once when one of them is hidden
 the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB
 anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns
 shows at once (test `test_whole_view_when_the_table_changes`; verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-07-review-fixes.md)). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-05-fight-test.md).
+
+**In Wake of the Ravager** DSCLOG2 has the same code (`GHOST_WANTED`, `GHOST_DRAW`, `GHOST_UNION`), on the
+sites the figures' shadows already use: FIG_KEEP (site 162, the drawer's picture call at 2A347h) draws a
+see-through figure itself instead of calling the game, and `GHOST_UNION` follows `DUST_UNION` in the
+redraws widened at site 160 (the whole view: the sequel's rectangle at [bp-0Ch]..[bp-12h]). **Its tables
+live in the far block**, not in the upper memory block: `BLEND` (32 x 256, as SL's), `REP` (256) and
+`GHOST_TAB` (80 bytes, `GH_CHANGED` its last) from `FAR_GH_BLEND` (the HMA in a GOG start: 8,528 bytes of
+its last 9.3 KB), so the upper memory block (`GHOST_SEG`, header +1984, `umb_alloc` at install; none, no
+see-through figures) holds only the figure's pixels and runs (4,096 + 192 x 8 = 5,632 bytes, SL's 885
+paragraphs less the 8.5 KB of tables). The blend itself is SL's, unshrunk. Header: `ghost_on` +1986,
+the tables' offsets in the far block +1988, +1990, +1992 (the Loader writes there), `ghost_draws` +1994
+(counted). The hidden bit is the STEALTH word DSCLOG2 already has (+204). The Loader's `RavGhosts`
+(`dsloader/ravlog.py`, on `ghost.Ghosts`, its colours parameterised): the sequel cycles 1-31, so REP is
+made of 32-255; Invisible is effect 53 and Detect Invisibility 25; the dice log's `_ghost_pass` writes the
+tables after the dust's. `RAV_NO_GHOST=1` (`playtest/ravdice.py`) leaves them unwritten: the control.
+Memory: DSCLOG2.EXE 55,840 bytes, 94,512 bytes of upper memory left (the shine's build: 100,832); without
+an HMA the far block, 8.5 KB bigger, goes to upper memory too. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-see-through.md).
+Tests: `tests/test_ravghost.py`.

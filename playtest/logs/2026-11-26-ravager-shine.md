@@ -32,8 +32,10 @@ event) with SHINE_TURN in SHOP_LOOP (site 82). The Loader's way (`ravload.sh rav
 
 - `ravgo.py`'s way to Notaku from the save in the 2026-11-25 log (x 1176, y 1224, x 296) sticks at x ~520 on
   y 1224 (a stall); go down to y 1360 there first.
-- The leader differed between two loads of the same save (Thy'rokh, then Terrannus): the dialogue still opened the
-  shop with 3, 1, 3, 2.
+- The leader differed between two runs from the same save (Thy'rokh, then Terrannus): not the load (three loads
+  all gave Thy'rokh, 2026-11-26 see-through log) but the talk's keys: 1-4 on the map pick the leader, and when the
+  talk came up late the last key, 2, made Terrannus leader. His CHA 18 is 5% off, so Notaku's top price was
+  42,750, not 45,000 (the picture's crop cuts the first digit: "2750").
 
 ## Left
 
