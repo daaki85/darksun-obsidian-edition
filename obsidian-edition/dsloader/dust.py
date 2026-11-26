@@ -31,18 +31,19 @@ def _lum(c) -> float:
 
 
 @functools.lru_cache(maxsize=8)  # (the same palette, the same table: worked out once)
-def light_table(dac: bytes) -> bytes:
+def light_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
     """Each colour's lighter one (keeping its hue) for the ground's colours, 0 for the rest.
-    DAC: the palette as the VGA has it, 3 bytes of 0-63 for each colour."""
+    DAC: the palette as the VGA has it, 3 bytes of 0-63 for each colour; FIRST to LAST the colours
+    taken and given (the sequel's: ravlog.RED_FIRST, RED_LAST)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     out = bytearray(256)
-    for i in range(FIRST, LAST + 1):
+    for i in range(first, last + 1):
         c = pal[i]
         if not is_ground(c):
             continue
         want = tuple(v + (255 - v) * LIGHTER for v in c)
         best, score = 0, None
-        for j in range(FIRST, LAST + 1):
+        for j in range(first, last + 1):
             p = pal[j]
             if _lum(p) <= _lum(c) * 1.06:
                 continue

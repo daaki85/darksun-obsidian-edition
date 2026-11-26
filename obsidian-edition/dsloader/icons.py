@@ -53,6 +53,16 @@ WATER = tuple(range(11, 16))
 GREEN = tuple(range(1, 6))
 MIND = tuple(range(6, 11))
 SKY = (46,)  # white, `shining` with the water's blues: the air's (Windlash, Galefang, Skycutter)
+# The sequel's weapons' magic ones shine in the colour the sequel gives its own of that item (its
+# cycled runs: 1-5 blue, the water's here; 6-10 violet; 11-15 green; 16-23 fire): its Lotulis +1,
+# Double Spear +1 and magic Darts green, its Lotulis +2, Trikal +2 and Twohand Sword +3 blue, its
+# Double Spear +3 fire; the Loader's ones it hasn't as their kind's (the Double Spear +2 the
+# stronger's fire, the Trikal +1 and Great Sword +2 the water's). Shattered Lands' own magic weapons
+# shine in all four too (only Bloodwrath in the fire's) (the user's ask, 2026-11-25)
+RAVAGER_SHINE: Dict[str, Tuple[int, ...]] = {
+    "Lotulis +1": GREEN, "Lotulis +2": WATER, "Double Spear +1": GREEN, "Double Spear +2": FIRE,
+    "Trikal +1": WATER, "Trikal +2": WATER, "Great Sword +2": WATER, "Great Sword +3": WATER,
+    "Darts +1": GREEN, "Javelin +1": GREEN}
 
 Rows = List[List[Optional[int]]]
 
@@ -144,10 +154,18 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671),
 # the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
 # pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
-# (2679), ICONS'.
+# (2679), and Wake of the Ravager's two-handed sword (2681, 18), lotulis (2683, 22), double spear,
+# trikal and javelin (2685, 2687, 2689, 18), and their Javelin +1 (2695), metal ones (2697, 2699, 2701)
+# and magic ones (2703-2717), and the obsidian lotulis, the bone great sword and their +1s (2719,
+# 2721, 2723, 2725), ICONS'; and those drawn as the sequel's (sequelicons.py, 2026-11-25): the darts'
+# (2691, 2693: 17 wide), and the great axes' when the sequel's are put in (23): the game's Great Axe
+# +3's own (2727: the game's 2084 is Soulcrusher's too, a hand axe) and the Loader's plain, metal, bone and obsidian ones' and Headsman's (2493, 2509,
+# 2575, 2577, 2559).
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679)
+            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679,
+            2681, 2683, 2685, 2687, 2689, 2695, 2697, 2699, 2701, 2703, 2705, 2707, 2709, 2711,
+            2713, 2715, 2717, 2719, 2721, 2723, 2725, 2691, 2693, 2727, 2493, 2509, 2575, 2577, 2559)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -215,6 +233,7 @@ SHIELD_METAL = {129: 210, 128: 211, 134: 212, 179: 211, 135: 212, 136: 213, 137:
 GREAT_AXE_TYPE = 2
 MAGIC_KINDS = {18: "Gutterknot", 112: "Deepbiter", 0: "Windlash"}  # (the game's types: none has a plus)
 BLADE = range(0xD1, 0xDA)
+BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
 # the Axe's metal head, shade for shade (by brightness), in the bone long sword's whites
 AXE_BONE = {208: 129, 209: 132, 210: 132, 211: 200, 212: 146, 213: 146, 214: 148, 215: 152}
 # ... and in the obsidian long sword's darker greys (it has 208-213, mostly 208-211)
@@ -391,6 +410,186 @@ def crown_icon(_rows: Rows = None) -> Rows:
 # the plain one's)
 
 
+# Wake of the Ravager's weapon kinds (worldgear.py's RAVAGER_NAMES), made from the game's own: the
+# two-handed sword the obsidian long sword's, its blade longer; the lotulis the gythka's, its blades in
+# the stone pick's blue-greys with a hook back from each; the double spear, the trikal and the javelin
+# the quarterstaff's, a flint head on each end, three blades on its head, or thinned to a shaft with a
+# head; the darts drawn
+def longer_blade(rows: Rows, steps: int = 3, cut: int = 8) -> Rows:
+    """A sword drawn from top left to bottom right, its blade STEPS diagonal steps longer: the
+    pixels from row CUT down moved down and right STEPS, the row above CUT repeated down the gap."""
+    width = max((len(r) for r in rows), default=0)
+    if len(rows) < cut:
+        return padded(rows)
+    out: Rows = [[None] * (width + steps) for _ in range(len(rows) + steps)]
+    for y, row in enumerate(rows):
+        for x, p in enumerate(row):
+            if p is not None:
+                out[y if y < cut else y + steps][x if y < cut else x + steps] = p
+    for i in range(1, steps + 1):
+        for x, p in enumerate(rows[cut - 1]):
+            if p is not None:
+                out[cut - 1 + i][x + i] = p
+    return out
+
+
+GYTHKA_STONE = {161: 48, 210: 48, 211: 49, 212: 24, 213: 50, 214: 51, 215: 51, 216: 51, 217: 50}
+LOTULIS_HOOKS = ((3, 0, 50), (4, 0, 49), (5, 1, 48), (18, 21, 50), (17, 21, 49), (16, 20, 48))
+
+
+def padded(rows: Rows) -> Rows:
+    """ROWS as a copy, each row as wide as the widest."""
+    width = max((len(r) for r in rows), default=0)
+    return [list(r) + [None] * (width - len(r)) for r in rows]
+
+
+def put(rows: Rows, points) -> Rows:
+    """ROWS with each of POINTS (x, y, colour) drawn, those outside the picture left out."""
+    for x, y, p in points:
+        if 0 <= y < len(rows) and 0 <= x < len(rows[y]):
+            rows[y][x] = p
+    return rows
+
+
+def lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(recolour(rows, GYTHKA_STONE)), LOTULIS_HOOKS)
+
+
+# the metal lotulis: the Gythka's own metal blades kept, the hooks in its greys
+LOTULIS_METAL_HOOKS = tuple((x, y, {50: 213, 49: 212, 48: 161}[p]) for x, y, p in LOTULIS_HOOKS)
+LOTULIS_METAL = (161, 210, 211, 212, 213, 214, 216, 217)  # (its blades' and hooks' greys)
+SWORD_METAL = (160, 161) + tuple(range(209, 218))  # (the metal Long Sword's blade)
+
+
+def metal_lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(rows), LOTULIS_METAL_HOOKS)
+
+
+# the obsidian lotulis (the user's, 2026-11-25): the Gythka's metal blades in the obsidian greys (as
+# AXE_OBSIDIAN darkens the axe's), the hooks in them too
+GYTHKA_OBSIDIAN = {161: 208, 210: 208, 211: 209, 212: 210, 213: 210, 214: 211, 215: 211, 216: 212, 217: 212}
+LOTULIS_OBSIDIAN_HOOKS = tuple((x, y, {50: 210, 49: 209, 48: 208}[p]) for x, y, p in LOTULIS_HOOKS)
+LOTULIS_OBSIDIAN = tuple(range(208, 213))  # (its blades' and hooks' greys)
+SWORD_BONE = (146, 148, 152, 156)  # (the bone Long Sword's blade)
+
+
+def obsidian_lotulis_icon(rows: Rows) -> Rows:
+    return put(padded(recolour(rows, GYTHKA_OBSIDIAN)), LOTULIS_OBSIDIAN_HOOKS)
+
+
+# a flint head along the diagonal, its point at (0, 0): (x, y, colour)
+FLINT_HEAD = ((0, 0, 214), (1, 0, 212), (0, 1, 212), (1, 1, 213), (2, 1, 210), (1, 2, 210), (2, 2, 211),
+              (3, 2, 209), (2, 3, 209), (3, 3, 208))
+# The double spear's, the trikal's and the darts' icons drawn as Wake of the Ravager draws them
+# (sequelicons.py puts the sequel's own in their place where the player has it): the long staves
+# the Polearm's length (36), the darts two long ones (the user's, 2026-11-25)
+POLEARM_SIZE = 36
+SHAFT_GRAIN = (139, 140, 141, 140, 139, 138)  # (the Quarterstaff's middle pixels, down its length)
+
+
+def staff(rows: Rows, first: int, last: int) -> Rows:
+    """A staff of the Quarterstaff's three pixels across down the diagonal of ROWS, from (FIRST,
+    FIRST) to (LAST, LAST)."""
+    for i, t in enumerate(range(first, last + 1)):
+        put(rows, ((t, t, SHAFT_GRAIN[i % len(SHAFT_GRAIN)]), (t + 1, t, 135 if i % 2 else 136),
+                   (t, t + 1, 136 if i % 2 else 135)))
+    return rows
+
+
+def spear_head(tip: int, step: int) -> Tuple[Tuple[int, int, int], ...]:
+    """A leaf-shaped flint head down the diagonal from TIP (STEP 1 down and right, -1 up and left),
+    a crossbar across its base: (x, y, colour)."""
+    points = []
+    for s, wide in enumerate((0, 0, 1, 1, 1, 1, 1, 0)):
+        t = tip + step * s
+        points.append((t, t, 214 if s < 3 else 213))
+        if wide:
+            points += [(t + 1, t, 211), (t, t + 1, 210)]
+        if s in (3, 4):
+            points += [(t + 2, t, 209 if step > 0 else 212), (t, t + 2, 208 if step > 0 else 211)]
+    base = tip + step * 8
+    return tuple(points) + tuple((base + k, base - k, 212 if abs(k) < 2 else 209) for k in range(-3, 4))
+
+
+def double_spear_icon(_rows: Rows = None) -> Rows:
+    """A staff the Polearm's length, a spear head at each end."""
+    out = staff([[None] * POLEARM_SIZE for _ in range(POLEARM_SIZE)], 8, POLEARM_SIZE - 9)
+    return put(out, spear_head(0, 1) + spear_head(POLEARM_SIZE - 1, -1))
+
+
+def trikal_icon(_rows: Rows = None) -> Rows:
+    """A staff near the Polearm's length (the sequel's 31), its head a star of blades: one on along
+    the staff, one up, one to the left and two across."""
+    hub = 6
+    out = staff([[None] * 33 for _ in range(33)], hub, 31)
+    blades = [(hub - 1 - k, hub - 1 - k, 214 if k > 2 else 212) for k in range(6)]
+    blades += [(hub - k, hub - 1 - k, 210) for k in range(6)]
+    blades += [(hub + 1 - k // 3, hub - 2 - k, 213 if k > 2 else 211) for k in range(6)]
+    blades += [(hub + 2 - k // 3, hub - 2 - k, 209) for k in range(6)]
+    blades += [(hub - 2 - k, hub + 1 - k // 3, 213 if k > 2 else 211) for k in range(6)]
+    blades += [(hub - 2 - k, hub + 2 - k // 3, 208) for k in range(6)]
+    blades += [(hub + k, hub - k, 212 if k < 3 else 214) for k in range(1, 4)]
+    blades += [(hub - k, hub + k, 210 if k < 3 else 213) for k in range(1, 4)]
+    return put(out, tuple(blades) + ((hub, hub, 212), (hub - 1, hub, 211), (hub, hub - 1, 211)))
+
+
+def javelin_icon(rows: Rows) -> Rows:
+    """The staff thinned to a shaft (each row's middle pixel, in the row's brightest colour), a head on top."""
+    rows = padded(rows)
+    out: Rows = [[None] * len(r) for r in rows]
+    for y, row in enumerate(rows):
+        xs = [x for x, p in enumerate(row) if p is not None]
+        if xs and xs[len(xs) // 2] + y >= 4:
+            out[y][xs[len(xs) // 2]] = max(row[x] for x in xs)
+    return put(out, FLINT_HEAD[:8] + ((3, 2, 208), (2, 3, 208)))
+
+
+def metal_javelin_icon(rows: Rows) -> Rows:
+    """The javelin's, its flint head in the metal long sword's greys."""
+    return recolour(javelin_icon(rows), STONE_TO_METAL)
+
+
+def burning(make: Callable[[Rows], Rows], colours, every_other: bool = True,
+            shine: Tuple[int, ...] = FIRE) -> Callable[[Rows], Rows]:
+    """MAKE's picture with its pixels of COLOURS in the cycled SHINE (the fire's unless said): every
+    other one (a +1 or a +2 beside its kind's +3), or all (EVERY_OTHER false: the stronger)."""
+    return lambda r: glow(make(r), lambda p, x, y: p in colours and (not every_other or (x + y) % 2 == 0), shine)
+
+
+def drawn(pattern: Tuple[str, ...], colours: Dict[str, int], at: Tuple[Tuple[int, int], ...],
+          size: Tuple[int, int]) -> Rows:
+    """PATTERN (a letter a colour of COLOURS, "." none) drawn at each of AT on a SIZE (width, height) picture."""
+    out: Rows = [[None] * size[0] for _ in range(size[1])]
+    for left, top in at:
+        for y, line in enumerate(pattern):
+            for x, c in enumerate(line):
+                if c != ".":
+                    out[top + y][left + x] = colours[c]
+    return out
+
+
+# a dart, as the sequel draws its darts (two, the length of a dagger): G its point, g the point's
+# edge, S its shaft, R and r its flights
+DART = ("G............",
+        ".Gg..........",
+        "..Gg.........",
+        "...S.........",
+        "....S........",
+        ".....S.......",
+        "......S......",
+        ".......S.....",
+        "........S....",
+        ".........S...",
+        "..........RR.",
+        "..........rRR",
+        "...........rR")
+DART_POINT = (213, 211)  # (G, g: what a magic one's burns)
+
+
+def darts_icon(_rows: Rows = None) -> Rows:
+    return drawn(DART, {"G": 213, "g": 211, "S": 139, "R": 202, "r": 135}, ((0, 3), (4, 0)), (17, 16))
+
+
 def ironwhirl_icon(rows: Rows) -> Rows:
     """Ironwhirl (worldgear.py): the metal cahulaks', every pixel of its blades' greys in the fire
     colours, their blue edges kept (Emberlash and the Cahulaks +1 burn every other pixel)."""
@@ -523,6 +722,44 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Nightsliver", 0xFB60, 2592, 2593, lambda r: glow(r, lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
     ("Dunesong", 0xFC07, 2594, 2595, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214 and (x + y) % 2 == 0, FIRE)),
     ("Skycutter", 0xFC0E, 2596, 2597, lambda r: shining(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, SKY)),
+    # Wake of the Ravager's weapon kinds (worldgear.py): on the map, the obsidian Long Sword, the Gythka,
+    # the Quarterstaff and the Chatkcha
+    ("Great Sword", 0xFC0B, 2680, 2681, longer_blade),
+    ("Lotulis", 0xFC0D, 2682, 2683, lotulis_icon),
+    ("Double Spear", 0xFC05, 2684, 2685, double_spear_icon),
+    ("Trikal", 0xFC05, 2686, 2687, trikal_icon),
+    ("Javelin", 0xFC05, 2688, 2689, javelin_icon),
+    ("Darts", 0xFC0E, 2690, 2691, darts_icon),
+    # the sequel's Darts +1 (worldgear.DARTS_1, the arena's defiler champion's): their points in the
+    # green, as the sequel's magic darts shine (RAVAGER_SHINE)
+    ("Darts +1", 0xFC0E, 2692, 2693, lambda r: glow(darts_icon(), lambda p, x, y: p in DART_POINT, GREEN)),
+    # the Javelin +1 (worldgear.JAVELIN_1, on the slave pens' weapon rack): its head in the green, as
+    # the sequel's Javelin +2's
+    ("Javelin +1", 0xFC05, 2694, 2695, lambda r: glow(javelin_icon(r), lambda p, x, y: p in BLADE_METAL, GREEN)),
+    # their metal two-handed sword (the metal Long Sword's, longer), lotulis (the Gythka's blades
+    # kept) and javelin (its head in the metal greys) (the user's, 2026-11-25)
+    ("Metal Great Sword", 0xFC0A, 2696, 2697, longer_blade),
+    ("Metal Lotulis", 0xFC0D, 2698, 2699, metal_lotulis_icon),
+    ("Metal Javelin", 0xFC05, 2700, 2701, metal_javelin_icon),
+    # ... and their magic ones (worldgear.RAVAGER_MAGIC): the heads and blades shining, every other
+    # pixel of a +1's or of a +2 beside a +3, every pixel of the stronger, in the colour the sequel's
+    # own of that item shines in (RAVAGER_SHINE; one it hasn't, as its kind's)
+    ("Double Spear +1", 0xFC05, 2702, 2703, burning(double_spear_icon, BLADE_METAL, shine=RAVAGER_SHINE["Double Spear +1"])),
+    ("Double Spear +2", 0xFC05, 2704, 2705, burning(double_spear_icon, BLADE_METAL, False, RAVAGER_SHINE["Double Spear +2"])),
+    ("Trikal +1", 0xFC05, 2706, 2707, burning(trikal_icon, BLADE_METAL, shine=RAVAGER_SHINE["Trikal +1"])),
+    ("Trikal +2", 0xFC05, 2708, 2709, burning(trikal_icon, BLADE_METAL, False, RAVAGER_SHINE["Trikal +2"])),
+    ("Lotulis +1", 0xFC0D, 2710, 2711, burning(lotulis_icon, tuple(GYTHKA_STONE.values()), shine=RAVAGER_SHINE["Lotulis +1"])),
+    ("Lotulis +2", 0xFC0D, 2712, 2713, burning(metal_lotulis_icon, LOTULIS_METAL, False, RAVAGER_SHINE["Lotulis +2"])),
+    ("Great Sword +2", 0xFC0A, 2714, 2715, burning(longer_blade, SWORD_METAL, shine=RAVAGER_SHINE["Great Sword +2"])),
+    ("Great Sword +3", 0xFC0A, 2716, 2717, burning(longer_blade, SWORD_METAL, False, RAVAGER_SHINE["Great Sword +3"])),
+    # the obsidian lotulis (fire clerics') and the bone great sword (water clerics': the bone Long
+    # Sword's, longer: cut a row higher, above its guard) (the user's, 2026-11-25), and their +1s: the lotulis' blades burning, the
+    # sword's blade in the water's colours (as Hayneedle's: a water cleric prayed over it)
+    ("Obsidian Lotulis", 0xFC0D, 2718, 2719, obsidian_lotulis_icon),
+    ("Bone Great Sword", 0xFC0C, 2720, 2721, lambda r: longer_blade(r, cut=7)),
+    ("Obsidian Lotulis +1", 0xFC0D, 2722, 2723, burning(obsidian_lotulis_icon, LOTULIS_OBSIDIAN)),
+    ("Bone Great Sword +1", 0xFC0C, 2724, 2725,
+     lambda r: glow(longer_blade(r, cut=7), lambda p, x, y: p in SWORD_BONE and (x + y) % 2 == 0, WATER)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -537,7 +774,6 @@ PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in 
 # piece is object 2004 (its item names picture -2004; the Wyrm Temple's script 161 makes it with
 # the arm and leg pieces, 1362 and 1363), its icon 2248 its own.
 LEAF_GREEN = (53, 54, 55, 56, 55, 54)  # (the Silk Armor's and the Living Cloak's greens, which no region changes)
-BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
 TANELYV_CHEST = 2004
 SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
     ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER), None),
@@ -981,15 +1217,29 @@ def bolt_chunks(chunks: gff.Chunks) -> gff.Chunks:
 
 def objects_beside(path: str) -> Optional[gff.Chunks]:
     """The game's SEGOBJEX.GFF in PATH's folder, with the Loader's own items' objects and
-    icons (new_chunks), for their pictures (None if it can't be read)."""
+    icons (new_chunks, and the sequel's where the player has it: sequel_chunks), for their
+    pictures (None if it can't be read)."""
     folder = os.path.dirname(path) or "."
     try:
         name = next(n for n in os.listdir(folder) if n.upper() == OBJECTS_FILE)
         with open(os.path.join(folder, name), "rb") as f:
             chunks = gff.read_gff(f.read())
-        return {**chunks, **new_chunks(chunks)}
+        added = new_chunks(chunks)
+        added.update(sequel_chunks(folder, chunks, added))
+        return {**chunks, **added}
     except (OSError, StopIteration, gff.GffError, KeyError, ValueError, IndexError, struct.error):
         return None
+
+
+def sequel_chunks(folder: str, chunks: gff.Chunks, added: gff.Chunks) -> gff.Chunks:
+    """Wake of the Ravager's icons for its weapons and the great axes (sequelicons.py), for the
+    game in FOLDER (CHUNKS its SEGOBJEX.GFF's, ADDED new_chunks'): {} without the sequel or the
+    game's palette."""
+    from . import art, sequelicons, wotrart
+    gpldata = art._find(os.path.abspath(folder), "GPLDATA.GFF")
+    if not gpldata:
+        return {}
+    return sequelicons.chunks(wotrart.find_resources(os.path.abspath(folder)), chunks, added, gpldata)
 
 
 def write_resources(source: str, dest: str) -> None:
@@ -1078,6 +1328,7 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     from . import sprites
     chunks = gff.read_gff(data)
     added = new_chunks(chunks)
+    added.update(sequel_chunks(os.path.dirname(os.path.abspath(source)), chunks, added))
     room: Dict[Tuple[str, int], int] = {}
     _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
@@ -1152,6 +1403,31 @@ def _plate_types() -> Dict[int, str]:
 
 
 PLATE_TYPES = _plate_types()
+
+
+def _ravager_kinds() -> Dict[int, str]:
+    from . import game
+    return {game.TWOHAND_SWORD_TYPE: "Great Sword", game.LOTULIS_TYPE: "Lotulis",
+            game.DOUBLE_SPEAR_TYPE: "Double Spear", game.TRIKAL_TYPE: "Trikal", game.JAVELIN_TYPE: "Javelin",
+            game.DARTS_TYPE: "Darts", game.METAL_TWOHAND_SWORD_TYPE: "Metal Great Sword",
+            game.METAL_LOTULIS_TYPE: "Metal Lotulis", game.METAL_JAVELIN_TYPE: "Metal Javelin",
+            game.OBSIDIAN_LOTULIS_TYPE: "Obsidian Lotulis", game.BONE_GREAT_SWORD_TYPE: "Bone Great Sword"}
+
+
+RAVAGER_KINDS = _ravager_kinds()  # (any plus but RAVAGER_MAGIC's: one picture each kind)
+
+
+def _ravager_magic() -> Dict[Tuple[int, int], str]:
+    from . import game
+    return {(game.DOUBLE_SPEAR_TYPE, 1): "Double Spear +1", (game.DOUBLE_SPEAR_TYPE, 2): "Double Spear +2",
+            (game.TRIKAL_TYPE, 1): "Trikal +1", (game.TRIKAL_TYPE, 2): "Trikal +2",
+            (game.LOTULIS_TYPE, 1): "Lotulis +1", (game.METAL_LOTULIS_TYPE, 2): "Lotulis +2",
+            (game.METAL_TWOHAND_SWORD_TYPE, 2): "Great Sword +2",
+            (game.METAL_TWOHAND_SWORD_TYPE, 3): "Great Sword +3",
+            (game.OBSIDIAN_LOTULIS_TYPE, 1): "Obsidian Lotulis +1", (game.BONE_GREAT_SWORD_TYPE, 1): "Bone Great Sword +1"}
+
+
+RAVAGER_MAGIC = _ravager_magic()  # (worldgear.RAVAGER_MAGIC's: by type and plus)
 OBSIDIAN_LONG_SWORD, SEARING_BLADE_NAME = 45, 0x156  # (the Searing Blade, worldgear.py: its name; an obsidian
 # long sword, the Flame Blade, up to 2.18.0, which a saved game's keeps until worldgear.mend_searing_blade)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
@@ -1247,6 +1523,14 @@ def which(rec: bytes) -> Optional[str]:
         return "Ironwhirl"
     if kind in METAL_TYPES and plus == 0:
         return METAL_TYPES[kind]
+    if kind == game.DARTS_TYPE and plus == 1:
+        return "Darts +1"
+    if kind == game.JAVELIN_TYPE and plus == 1:
+        return "Javelin +1"
+    if (kind, plus) in RAVAGER_MAGIC:
+        return RAVAGER_MAGIC[kind, plus]
+    if kind in RAVAGER_KINDS:
+        return RAVAGER_KINDS[kind]
     if plus == 1 and kind in MAGIC_KINDS:
         return MAGIC_KINDS[kind]
     if kind == game.GYTHKA_TYPE and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == arms.GYTHKA_NAME:

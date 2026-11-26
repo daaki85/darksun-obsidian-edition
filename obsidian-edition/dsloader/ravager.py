@@ -700,6 +700,19 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("psi_cycle", 0x93FF1, bytes.fromhex("fe877b9d"), _site(97, 4)),
     Patch("psi_click", 0x94245, bytes.fromhex("0ac07420"), _site(98, 4)),
     Patch("pick_top", 0x93831, bytes.fromhex("3b46fe"), _site(99, 3)),
+    # ... and a warrior's weapon specs (SL's CR_WEAPONS, LV_CHECK and PROBE_PK_*; game.RULE_SPECIALIZE): DSCLOG2's
+    # WEAPON PICKS. DONE's "push si / nop / push cs" before its call for the game's gear (6E2ECh, just before SL's
+    # CR_WEAPONS' place, the screen's windows let go by then), CR_WEAPONS (site 120): the psionicists' pop-up in
+    # weapon mode for the specs the new member is due, which shows the weapon window (weaponpages.rav_chunks,
+    # RESOURC2.GFF's 3021) through PK_WIN (121, "push 445Dh", 93C94h [85FF4h]), PK_TITLE (122, "push ds / push
+    # 2ACCh", 93D63h [860C3h]), PK_FILL (123, "xor di,di / mov si,di", 93DECh [8610Fh]), PK_CLICK (124, "mov
+    # ax,[bp+8]", 93FABh [862D4h]) and PK_HOVER (125, "or ax,ax / jnz", 93BBAh [85F44h]); PSI_COUNT the picks left
+    Patch("cr_weapons", 0x6E2EC, bytes.fromhex("56900e"), _site(120, 3)),
+    Patch("pk_win", 0x93C94, bytes.fromhex("685d44"), _site(121, 3)),
+    Patch("pk_title", 0x93D63, bytes.fromhex("1e68cc2a"), _site(122, 4)),
+    Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
+    Patch("pk_click", 0x93FAB, bytes.fromhex("8b4608"), _site(124, 3)),
+    Patch("pk_hover", 0x93BBA, bytes.fromhex("0bc07515"), _site(125, 4)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -762,6 +775,11 @@ PATCHES: Tuple[Patch, ...] = (
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
     Patch("hit", 0x29DBD, bytes.fromhex("558bec83ec0e"), _site(77, 6)),
+    # F10 in a fight leaves a pinned member where it is (SL's F10_PIN, DSCLOG's): the F10 key's standing-still
+    # test (1EC05h, SL's 1B83Ah, from the map's key table at 1F091h), "mov ah,0 / or ax,ax / jz 1EC3Fh"
+    # (1EC36h, SL's "or ax,ax / jz" at 1B86Bh), DSCLOG2's site 100 (SITE_F10_PIN): the move taken back only
+    # for a member neither Paralyzed (69) nor Cannot Move (66), the effects whose landing clears "can walk".
+    Patch("f10_pin", 0x1EC36, bytes.fromhex("b4000bc07403"), _site(100, 6)),
     # Quick saves (DSCLOG2's QUICK SAVES, quicksave.py): the load's wrapper (7D8EEh on) reads the slot's GREQ
     # chunk (the map's limits, in the roster file) numbered by "mov ax,es:[2]" (the window's first row) + the row
     # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2
@@ -1050,14 +1068,26 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
+WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
 
 
-def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
-    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) and the creation screen's STORE
-    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) unless in SKIP; the names of those applied."""
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
+    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
+    pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
+    names of those applied."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
+        from . import weaponpages
+        try:
+            added = weaponpages.rav_chunks(gff.read_gff(out), gff.read_gff(objects))
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (no psionicists' window to make it from: none, the picks never asked)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(WEAPON_WINDOW)
     if KIT_PAGES not in skip:
         try:
             added = kitpages.rav_chunks(gff.read_gff(out))
@@ -1079,9 +1109,14 @@ def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 
 def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """RESOURCE.GFF's copy with the spell fixes and kit pages (resources_fixed), written to DEST unless
-    already so; the fixes applied."""
-    return _write_copy(game_dir, RESOURCE_FILE, dest, resources_fixed, skip)
+    """RESOURCE.GFF's copy with the spell fixes, kit pages and weapon window (resources_fixed, the weapons'
+    pictures from the game's OBJEX.GFF), written to DEST unless already so; the fixes applied."""
+    source = _find_file(game_dir, OBJECTS_FILE)
+    objects = None
+    if source:
+        with open(source, "rb") as f:
+            objects = f.read()
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
@@ -1166,14 +1201,18 @@ def wotr_type(sl: bytes) -> bytes:
 
 
 # The sequel's item types' weapon kinds (specialize.KINDS' numbers: DSCLOG2's KIND_OF_TYPE, less 1), from
-# OBJEX.GFF's items' names: its own (the Longswords, Crystal sword, Flameblade, Magma blade; Club, Toothed
-# Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka; Bow;
-# Sling; Staff Sling), and the mod's (mod_type: SL's 115-147, specialize.KIND_OF_TYPE's). ravlog's layout
-# makes it specialize.KIND_OF_TYPE while the sequel is attached.
+# OBJEX.GFF's items' names, dice and two-handed bit: its own (the Longswords, Flameblade, Magma blade; Club,
+# Toothed Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka;
+# Bow; Sling; Staff Sling; and SL's six kinds from the sequel: the Twohand Sword and the Crystal sword, both
+# two-handed 1d10; Lotulis; Double Spear; Trikal; Javelin; the two Darts), and the mod's (mod_type: SL's
+# 115-147, specialize.KIND_OF_TYPE's; none of the six, whose SL types are past them: sequel_weapon_type).
+# ravlog's layout makes it specialize.KIND_OF_TYPE while the sequel is attached.
 _RAV_OWN_KINDS = {
-    "long sword": (16, 35, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
+    "long sword": (16, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
     "axe": (8, 48), "great axe": (51,), "pick": (79,), "quarterstaff": (85,), "polearm": (80,),
-    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,)}
+    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,),
+    "two-handed sword": (101, 35), "lotulis": (61,), "double spear": (39,), "trikal": (100,),
+    "javelin": (59,), "darts": (38, 43)}
 
 
 def rav_kinds() -> Dict[int, int]:
@@ -1186,15 +1225,12 @@ def rav_kinds() -> Dict[int, int]:
     return out
 
 
-# The sequel's weapons with no kind of SL's, and the kind each counts as for weapon specialization alone
+# The sequel's weapons with no kind of SL's 22, and the kind each counts as for weapon specialization alone
 # (DSCLOG2's SPEC_KINDS_OWN; as SL's spell-made weapons, specialize.CONJURED_KINDS, which ravlog's
 # layout makes these): the nearest of SL's kinds, the reasoning in DEVELOPMENT-RULES.md
 _RAV_SPEC_KINDS = {
-    13: "long sword", 101: "long sword",  # Bloodletter (a 1d8 blade), Twohand Sword
-    61: "gythka",  # Lotulis (a blade at each end of a shaft)
-    39: "polearm", 100: "polearm",  # Double Spear, Trikal
+    13: "long sword",  # Bloodletter (a 1d8 blade)
     81: "mace", 68: "mace", 95: "mace",  # Promere hammer, Jasmine, Spirit hammer (the spell's)
-    38: "chatkcha", 43: "chatkcha", 59: "chatkcha",  # Darts, Darts, Javelin: SL's thrown weapon
     90: "club",  # Shillelagh (the spell's)
     87: "bow",  # Rainbow (the spell's bow)
 }
@@ -1206,6 +1242,21 @@ def rav_spec_kinds() -> Dict[int, int]:
     return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
+# Shattered Lands' types past the mod's first 33 (SL_WEAPON_TYPES' kinds: the sequel's own weapons
+# backported, their metal and magic ones): in the sequel the sequel's own type of that weapon, by its
+# kind (specialize.KINDS' two-handed sword, lotulis, double spear, trikal, javelin, darts)
+SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59, 21: 43}
+
+
+def sequel_weapon_type(sl_type: int) -> Optional[int]:
+    """The sequel's own type for SL_TYPE when it is one of the Ravager weapons backported to
+    Shattered Lands (past MOD_TYPES), else None."""
+    from . import specialize
+    if sl_type < game.GAME_TYPES + MOD_TYPES:
+        return None
+    return SEQUEL_WEAPON_OF_KIND.get(specialize.KIND_OF_TYPE.get(sl_type, -1))
+
+
 def mod_type(sl_type: int) -> int:
     """The sequel's number for the mod's Shattered Lands item type SL_TYPE (115 on)."""
     return GAME_TYPES + sl_type - game.GAME_TYPES
@@ -1214,7 +1265,7 @@ def mod_type(sl_type: int) -> int:
 def mod_types_table(types: bytes) -> bytes:
     """The sequel's type table TYPES (ALL 4) with the mod's after it."""
     from . import npcitems
-    return types + b"".join(wotr_type(t) for t in npcitems.TYPES)
+    return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None) -> Tuple[bytes, List[str]]:

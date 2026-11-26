@@ -36,6 +36,8 @@ BARRED = 0x40  # a square's bit: nothing walks into it
 POINTS_SEG, POINTS_OFF, FLAGS_OFF = 0x37BD, 0x22B, 0x1D5  # a word a creature: movement, the turn's flags
 CAN_WALK = 1  # (the flags' bit 0)
 STRAIGHT, DIAGONAL = 10, 14
+POSITIONS, POSITION_SIZE = game.POSITIONS, 32  # DS: each map thing's feet (x, y), a record each (the sequel's: ravlog)
+LIGHT_FIRST, LIGHT_LAST = dust.FIRST, dust.LAST  # the colours LIGHT takes and gives (the sequel's: ravlog)
 SIDE = 32  # the bitmap: SIDE x SIDE squares, a bit each (DSCLOG's SQ_SIDE)
 MAP_BYTES = 2 + SIDE * SIDE // 8  # its origin (column, row), then SIDE // 8 bytes a row
 STEPS = ((0, -1, STRAIGHT), (1, -1, DIAGONAL), (1, 0, STRAIGHT), (1, 1, DIAGONAL),
@@ -107,7 +109,7 @@ def mover(gd) -> Optional[Tuple[int, int, int]]:
     creature = gd.combatant_creature(turn)
     if creature is None:
         return None
-    x, y = struct.unpack("<HH", gd.guest.read(gd.ds * 16 + game.POSITIONS + turn * 32, 4))
+    x, y = struct.unpack("<HH", gd.guest.read(gd.ds * 16 + POSITIONS + turn * POSITION_SIZE, 4))
     at = (gd.load_seg + POINTS_SEG) * 16 + creature * 2
     points, = struct.unpack("<h", gd.guest.read(at + POINTS_OFF, 2))
     flags, = struct.unpack("<H", gd.guest.read(at + FLAGS_OFF, 2))
@@ -145,7 +147,7 @@ class Squares:
         if palettes != self._palettes and palettes:
             far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
             light_off, dac_off = struct.unpack("<HH", guest.read(tsr_hdr + TSR_LIGHT, 4))
-            guest.write(far + light_off, dust.light_table(guest.read(far + dac_off, 768)))
+            guest.write(far + light_off, dust.light_table(guest.read(far + dac_off, 768), LIGHT_FIRST, LIGHT_LAST))
             self._palettes = palettes
         if who != self._seen and self._on:
             self._seen = who  # (walking: the marks stay as they were until the member stands, as

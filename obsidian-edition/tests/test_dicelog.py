@@ -2029,6 +2029,33 @@ class ManualGroup3Tests(unittest.TestCase):
         self.assertEqual(rest(dicelog.REST_HEAL, 0, 38, 2, 40, 40, 16),
                          ["Dag rests 8 hours: +3, +2 (CON 16) = +5 (+2: no more than the most), now 40/40 HP"])
 
+    def test_ravager_weapon_lines(self):
+        """The trikal's trip and the lotulis' and double spear's second foe (KIND_MANUAL 13, 14)."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_TRIP, 0x29, 0, 7, 12),
+                         ["    Dag's trikal trips Mountain Stalker? Save against paralysis: d20 = 7, needs 12+ -> "
+                          "tripped: loses its next turn"])
+        self.assertTrue(say(dicelog.MANUAL_TRIP, 0x29, 0, 20, 21)[0].endswith("-> saved"))
+        self.assertEqual(say(dicelog.MANUAL_SECOND, 0x29, 0, 1, 0),
+                         ["    Dag turns the lotulis's last swing from Daaki to Mountain Stalker, beside it "
+                          "(a specialist's second foe)"])
+        self.assertTrue(say(dicelog.MANUAL_SECOND, 0x29, 0, 1, 1)[0].endswith("(a specialist's second foe, 1 less damage)"))
+
+    def test_second_head_damage(self):
+        """The double spear's hit on the second foe shows SF_LESS's 1 less; the lotulis' none, nor a hit
+        on another foe."""
+        for spear, target, want in ((1, 0x29, "for 17: 1d8 = [5] +1 weapon +12 STR 24 -1 second head"),
+                                    (0, 0x29, "for 18: 1d8 = [5] +1 weapon +12 STR 24"),
+                                    (1, 0x2A, "for 18: 1d8 = [5] +1 weapon +12 STR 24")):
+            log = self.make()
+            log.describe(entry(dicelog.MANUAL_SECOND, frame=words(0, 0, target, 0, 1, spear), kind=dicelog.KIND_MANUAL))
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, game.DOUBLE_SPEAR_TYPE, 1)
+            e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                      parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+            with self.subTest(spear=spear, target=target):
+                self.assertTrue(log.describe(e)[0].endswith(want), log.describe(e))
+
     def test_biofeedback_hit(self):
         """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
         for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),
@@ -2314,6 +2341,46 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(bonus(sheet(game.HUMAN, [17, 9], [12, 16, 10, 10, 10, 10]), 1000), (100, ["Thief, DEX 16"]))
         # no gain, no bonus
         self.assertEqual(bonus(sheet(dwarf, [9], [18, 10, 10, 10, 10, 10]), -50), (0, []))
+
+    def test_xp_held_at_the_cap(self):
+        """A party member's XP above its share of the XP cap (game.xp_share: 749,999 for one class)
+        is held there on the sheet as soon as it is seen, with a line; the XP line then shows the
+        gain that counted, and the prime requisite bonus stops at the share too."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        struct.pack_into("<I", m, SHEETS, 749_000)
+        self.assertEqual(tracker.check(1.0), [])
+        struct.pack_into("<I", m, SHEETS, 761_345)  # (an award of 12,345)
+        self.assertEqual(tracker.check(2.0), ["Dag's XP held at the cap: 749,999 (11,346 not counted)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 749_999)
+        self.assertEqual(tracker.check(3.0), ["XP: Dag +999"])
+        struct.pack_into("<I", m, SHEETS, 750_100)  # (another: all of it held)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), ["Dag's XP held at the cap: 749,999 (101 not counted)"])
+        # the prime requisite bonus: what passes the share held
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_ABILITIES] = 17
+        struct.pack_into("<I", m, SHEETS, 749_000)
+        tracker.check(6.0)
+        struct.pack_into("<I", m, SHEETS, 749_950)
+        self.assertEqual(tracker.check(8.0) + tracker.check(9.0),
+                         ["XP: Dag +999 (+49 for Fighter, STR 17, 46 of it held at the cap)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 749_999)
+        # a fighter/thief: half the cap each; a save from before, over it, held at the first look
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES:SHEETS + game.SHEET_CLASSES + 3] = bytes((9, 17, 0))
+        struct.pack_into("<I", m, SHEETS, 400_000)
+        self.assertEqual(tracker.check(1.0), ["Dag's XP held at the cap: 374,999, 749,999 shared by 2 classes "
+                                              "(25,001 not counted)"])
+        self.assertEqual(tracker.check(2.0) + tracker.check(3.0), [])
+        # a human once a 7th level fighter, now a thief: the cap less the 64,000 the fighter's levels needed
+        m[SHEETS + game.SHEET_RACE] = game.HUMAN
+        m[SHEETS + game.SHEET_CLASSES:SHEETS + game.SHEET_LEVELS + 3] = bytes((17, 9, 0, 10, 7, 0))
+        struct.pack_into("<I", m, SHEETS, 700_000)
+        self.assertEqual(tracker.check(4.0)[0], "Dag's XP held at the cap: 685,999, 749,999 less the 64,000 the old "
+                                                "class needed (14,001 not counted)")  # (then its levels, new to it)
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 685_999)
 
     def test_leaving_an_area_kills_no_one(self):
         """Going to another area the game drops the old area's people and clears or reuses their

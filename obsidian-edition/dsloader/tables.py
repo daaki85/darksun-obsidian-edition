@@ -28,12 +28,37 @@ WIZARD_SLOTS = ((1, 0, 0, 0, 0), (2, 0, 0, 0, 0), (2, 1, 0, 0, 0), (3, 2, 0, 0, 
                 (4, 4, 4, 3, 3), (4, 4, 4, 4, 4))
 PRESERVER = 11
 PRIESTS = range(1, 9)  # (the sheet's classes: clerics 1-4, druids 5-8)
+# the row of each of the sheet's classes (1-17: game.CLASS_NAMES), as the game's table at the level
+# up's segment +0CAh has them
+CLASS_ROWS = {**{c: "cleric" for c in range(1, 5)}, **{c: "druid" for c in range(5, 9)}, 9: "fighter",
+              10: "gladiator", 11: "preserver", 12: "psionicist", **{c: "ranger" for c in range(13, 17)},
+              17: "thief"}
 
 
 def xp_needed(row: str, level: int) -> Optional[int]:
     """The XP a character of class ROW and LEVEL needs for the next level (None past 13th)."""
     table = XP[row]
     return table[level] if 0 <= level < len(table) else None
+
+
+def xp_share(classes, levels, human: bool, cap: int) -> int:
+    """The XP a character may gather under the XP cap CAP (DSCLOG's LEVEL_ROOM, which no class's next
+    level may need more than): CLASSES and LEVELS the sheet's three of each. One class: all of it.
+    Several (not a human): CAP divided between them, as the game shares out XP. A human who changed
+    class: CAP less the XP each old class's level needed (slots 1 and 2: the game starts the new
+    class at 0), never below 0. An old class past the tables' 14th level counts all of CAP (none
+    gets there under it)."""
+    if not human:
+        count = sum(1 for c in classes[:3] if c)
+        return cap // count if count else cap
+    share = cap
+    for cls, level in zip(classes[1:3], levels[1:3]):
+        row = CLASS_ROWS.get(cls)
+        if not level or row is None:
+            continue
+        need = xp_needed(row, level - 1)
+        share = max(share - (cap if need is None else need), 0)
+    return share
 
 
 def slots(cls: int, level: int, spell_level: int) -> Optional[int]:
