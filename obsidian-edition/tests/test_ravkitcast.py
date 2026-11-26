@@ -36,7 +36,7 @@ SEED = 0x384A
 SITES = {"kit_cast_level": (205, 0x629FE), "kit_cure": (206, 0x66545), "avenger_cause_area": (207, 0x7E7A6),
          "avenger_cause_one": (208, 0x7F727)}
 CURE_BACK = 0x65811 - (0x66545 + 3)
-SPELLS = (0, 8, 27, 0x72, 0x73, ravager.RAV_CURE_LIGHT, ravager.RAV_CAUSE_SERIOUS, 0xD2, 0xEA, 0xEB, 0x10A)
+SPELLS = (0, 8, 27, 0x72, 0x73, ravager.RAV_CURE_LIGHT, ravager.RAV_CAUSE_SERIOUS, 0xD2, 0xEA, 0xEB, 0x10A, 320, 325, 326)
 
 
 def game_die(seed: int, sides: int):

@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -46,12 +46,15 @@ class TableTests(unittest.TestCase):
                             "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
                             "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
-                            "shinobi_mage", "kit_cast_level", "kit_cure", "avenger_cause_area",
+                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine",
+                            "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
+                            "pp_hand", "shinobi_mage", "kit_cast_level", "kit_cure", "avenger_cause_area",
                             "avenger_cause_one"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
-                         | {"item_name_%x" % at for at in ravager.NAME_READS})
+                         | {"item_name_%x" % at for at in ravager.NAME_READS}
+                         | {p.name for p in ravspells.program_patches()})  # (the new spells)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_gear_hands(self):
@@ -343,14 +346,72 @@ class ItemTypeTests(unittest.TestCase):
     def test_objects_fixed(self):
         from test_ravtransfer import _gff
         data = _gff({("ALL ", 4): bytes(range(102)) * 15, ("ALL ", 5): b"names", ("OJFF", 1): b"o" * 16})
-        out, done = ravager.objects_fixed(data)
+        out, done = ravager.objects_fixed(data, {"weights"})
         got = gff.read_gff(out)
         self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], 135, b"names"))
         self.assertEqual(got[("ALL ", 4)][102 * 15:103 * 15], ravager.wotr_type(npcitems.TYPES[0]))
-        self.assertEqual(ravager.objects_fixed(data, {"mod_types"}), (data, []))
+        self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
+        with self.assertRaises(ravager.RavagerError):  # (a table whose weights aren't SSI's)
+            ravager.objects_fixed(data)
         with self.assertRaises(ravager.RavagerError):
             ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
 
+
+    @staticmethod
+    def _ssi_table() -> bytes:
+        """A type table with SSI's weights where RAV_WEIGHTS names them (the rest of each record its number)."""
+        out = bytearray()
+        for k in range(ravager.GAME_TYPES):
+            rec = bytearray([k % 256] * ravager.TYPE_SIZE)
+            rec[ravager.TYPE_WEIGHT] = ravager.RAV_WEIGHTS[k][0] if k in ravager.RAV_WEIGHTS else 0
+            out += rec
+        return bytes(out)
+
+    def test_weights(self):
+        """The Loader's weights in ALL 4's +2 (a long sword 40, the leather chest 96, the two-handed sword 150,
+        SSI's 20 replaced), nothing else in the records changed, the types not named left; and every weight
+        fits the sequel's byte (the mod's types too, through wotr_type)."""
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        got = gff.read_gff(ravager.objects_fixed(_gff({("ALL ", 4): table}), {"mod_types"})[0])[("ALL ", 4)]
+        self.assertEqual(len(got), len(table))
+        for k in range(ravager.GAME_TYPES):
+            old, new = table[k * 15:(k + 1) * 15], got[k * 15:(k + 1) * 15]
+            self.assertEqual(old[:2] + old[3:], new[:2] + new[3:])
+            self.assertEqual(new[2], ravager.RAV_WEIGHTS[k][1] if k in ravager.RAV_WEIGHTS else old[2], k)
+        self.assertEqual([got[k * 15 + 2] for k in (97, 32, 101, 0, 41)], [40, 96, 150, 0, 0])
+        self.assertTrue(all(0 < w <= 255 for _, w in ravager.RAV_WEIGHTS.values()))
+        self.assertTrue(all(k < ravager.GAME_TYPES for k in ravager.RAV_WEIGHTS))
+        self.assertEqual(ravager.weighted_table(got), got)  # (already weighed: as it is)
+
+    def test_weights_skipped_and_guarded(self):
+        """RAV_SKIP=weights leaves SSI's bytes (the control's copy); a byte neither SSI's nor the Loader's
+        stops the copy (not the GOG release's table)."""
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        data = _gff({("ALL ", 4): table})
+        self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
+        odd = bytearray(table)
+        odd[97 * 15 + 2] = 33
+        with self.assertRaises(ravager.RavagerError):
+            ravager.objects_fixed(_gff({("ALL ", 4): bytes(odd)}))
+
+    def test_weights_in_objects(self):
+        """Each object's copy of its type (RDFF kind 4, its number the type's) weighed as ALL 4 is; another
+        record, a type past the sequel's or a copy that isn't SSI's left as it is."""
+        from dsloader import dataitems
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        recs = [dataitems.Record(1, 0, 1, 7, 0, bytes(23)),
+                dataitems.Record(3, 0, 4, 97, 5, table[97 * 15:98 * 15]),
+                dataitems.Record(3, 0, 4, 101, 5, b"\x55" * 15),
+                dataitems.Record(3, 0, 4, 110, 5, bytes(15))]
+        chunk = dataitems.chunk(recs, dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0))
+        got = gff.read_gff(ravager.objects_fixed(_gff({("ALL ", 4): table, ("RDFF", 5): chunk}), {"mod_types"})[0])
+        out, _ = dataitems.records(got[("RDFF", 5)])
+        self.assertEqual([r.data for r in out], [bytes(23), ravager.weighted(table[97 * 15:98 * 15], 97),
+                                                 b"\x55" * 15, bytes(15)])
+        self.assertEqual(out[1].data[2], 40)
 
     def test_mod_kinds_in_dsclog2(self):
         """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 33 (SL's 115-147 as
@@ -421,11 +482,16 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            from dsloader import kitpages, rollstore, weaponpages
+            from dsloader import kitpages, ravspells, rollstore, weaponpages
             objects = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
                              | set(rollstore.rav_chunks(game))  # STORE and RECALL,
-                             | set(weaponpages.rav_chunks(game, objects)))  # the weapon window)
+                             | set(weaponpages.rav_chunks(game, objects))  # the weapon window,
+                             | set(ravspells.chunks(game))  # the new spells,
+                             | {("ICON", icons.PICK_ICON)})  # the Pick Pockets button's purse)
+            from dsloader import wotrart
+            purse = wotrart.decode_plnr(res[("ICON", icons.PICK_ICON)])
+            self.assertEqual(purse, icons.rav_pick_icon(wotrart.decode_plnr(game[("ICON", icons.TURN_EARTH_ICON)])))
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE
@@ -444,14 +510,26 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], own[ravager.TYPES_CHUNK])
+            mended = bytearray(ravager.weighted_table(own[ravager.TYPES_CHUNK]))  # (weighed; the daggers the air clerics' too)
+            for t in ravager.AIR_DAGGER_TYPES:
+                mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
+            self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
             self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
-            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK} | sheets)  # (GFFI: the index)
+            from dsloader import ravshine
+            shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
+            weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
+            self.assertTrue(weighed)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
+                             {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)
+            for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
+                for r in dataitems.records(objs[k])[0]:
+                    if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
+                        self.assertEqual(r.data, types[r.number * 15:(r.number + 1) * 15], (k, r.number))
             for k in sheets:
-                old, new = dataitems.records(own[k])[0], dataitems.records(objs[k])[0]
+                old, new = dataitems.records(weighed.get(k, own[k]))[0], dataitems.records(objs[k])[0]
                 self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)
                 self.assertEqual({len(r.data) for r in new if r.kind == ravager.SHEET_KIND}, {ravager.SHEET_SIZE})
                 self.assertFalse(any(any(r.data[ravager.GAME_SHEET_SIZE:]) for r in new))

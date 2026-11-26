@@ -152,7 +152,7 @@ class SaveModifierTests(unittest.TestCase):
 
     def test_spell_record_past_255(self):
         """The sequel's records go past SL's 255 (Psionic Blast is 266): read from its table, and the
-        record's +1Fh save modifier (bits 1-4, signed) decoded; nothing past SPELL_COUNT."""
+        record's +1Fh save modifier (bits 1-4, signed) decoded; nothing past SPELLS_END (the new spells, 320-325, read too)."""
         g = FakeGuest()
         data = ravlog.RavGameData(g, DS, rules=0)
         data.load_seg = 0x1000
@@ -162,8 +162,8 @@ class SaveModifierTests(unittest.TestCase):
         g.write(at, bytes(rec))
         self.assertEqual(data.spell_record(266), bytes(rec))
         self.assertEqual(data.spell_rules(266).save_modifier, -2)
-        self.assertEqual(data.spell_record(ravlog.SPELL_COUNT), b"")
-        self.assertIsNone(data.spell_rules(ravlog.SPELL_COUNT))
+        self.assertEqual(data.spell_record(ravlog.SPELLS_END), b"")  # (past the new spells, 320-325)
+        self.assertIsNone(data.spell_rules(ravlog.SPELLS_END))
 
     def test_spell_record_layout(self):
         """The sequel's records as the dice log serves them (RESOURCE.GFF's first 32 bytes) hold the words

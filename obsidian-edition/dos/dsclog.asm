@@ -21,6 +21,7 @@
 
 BITS 16
 CPU 386
+%include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
 %macro game_far 2               ; a far call to the game's code: GAME_FAR (FAR_GAME, below)
         push cs
         call far_game
@@ -7308,7 +7309,9 @@ kit_to_hit:
         cmp si, KIND_TYPES
         jae .missile
         cmp byte [cs:si + kind_of_type], BOW_KIND
-        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15; not the javelin's
+        cmp byte [cs:si + kind_of_type], BOW_KIND + 2   ;   and the darts' past them)
+        ja .missile
         push ax
         mov ax, [bp + 0x0E]
         call cr_is
@@ -12360,6 +12363,14 @@ probe_priest_thac0:
         pop bx
 .done:  mov [bp - 2], ax
         iret
+
+; SAVE_BASE (SAVE_BASE_SITE, RULE_HI_TABLES): saving throws as in AD&D (save_bands.inc, DSCLOG2's the same).
+; The game's save routine (877EBh, at a level up) makes a group's save its 1st-level save less (level -
+; 1) x a rate / 100, but takes its table's third byte (420h:6Ch + group x 15 + save x 3), AD&D's best
+; save, as the most a save improves: a warrior stays at 11/11/11/13/11 from 10th level, no save goes
+; below 8; and it puts psionicists with thieves. The site: "mov al,es:[bx+6Ch]" (878F7h; 5 bytes) before
+; "cbw / sub ax,[bp-2]". The sheets: DS:1661h, 47h bytes, classes +21h, levels +24h.
+        SAVE_BASE_CODE 0x1661, 0x47, 0x21, 0x24
 
 ; PROBE_ADND_SLOTS: INT VEC_ADND_SLOTS replaces "nop / push cs / call 5E4C2h" (5 bytes: INT + 3
 ; NOPs; DSUN.EXE 5E240h) where the game's slot routine asks one class's slots at a spell level:
@@ -17482,6 +17493,7 @@ AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
 INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
+SAVE_BASE_SITE equ NS_IMAGE + 123 ; 878F7h: a group's 1st-level save, read at a level up (SAVE_BASE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -21070,6 +21082,7 @@ site_tab:
         site AMMO_OK3_SITE, ammo_okay
         site INFO_HEAD_SITE, info_head
         site F10_PIN_SITE, f10_pin
+        site SAVE_BASE_SITE, save_base
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -29445,6 +29458,8 @@ adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500
         dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
         ; (the ranger's, row 7: the gladiator's, row 4)
         dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
+; SAVE_BASE's tables (save_bands.inc), read through TAIL_SEG
+        SAVE_BANDS_DATA
 adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
            db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
 thief_table:

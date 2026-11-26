@@ -4,7 +4,8 @@
                                                bits a class place, as kitpages.kit_byte; 0 none), and the race
                                                and the classes (1-17, up to 3; the rest 0) if given
   python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...; the two
-                                               weapons' two_count, off_count, rg_heavy too) and its
+                                               weapons' two_count, off_count, rg_heavy too; KITS' GEAR's
+                                               kit_refused, kit_allowed, and the classes' restrict_count) and its
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
@@ -35,7 +36,8 @@ DOS = os.path.join(PT, '..', 'obsidian-edition', 'dos')
 g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read()), host_base=None))
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
-            'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos')
+            'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos',
+            'kit_refused', 'kit_allowed', 'restrict_count')
 
 
 def helper():

@@ -19,11 +19,12 @@ LIGHTER = 0.45  # how far toward white a colour is wanted
 HUE_WEIGHT = 3
 
 
-def is_ground(rgb) -> bool:
-    """Sand and dirt: warm, not too grey or too strong, neither dark nor white."""
+def is_ground(rgb, least: float = 0.4) -> bool:
+    """Sand and dirt: warm, not too grey or too strong, neither dark (LEAST: the least value, as HSV's) nor
+    white."""
     r, g, b = (v / 255 for v in rgb)
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    return 0.02 <= h <= 0.15 and 0.12 <= s <= 0.65 and 0.4 <= v <= 0.97
+    return 0.02 <= h <= 0.15 and 0.12 <= s <= 0.65 and least <= v <= 0.97
 
 
 def _lum(c) -> float:
@@ -31,17 +32,19 @@ def _lum(c) -> float:
 
 
 @functools.lru_cache(maxsize=8)  # (the same palette, the same table: worked out once)
-def light_table(dac: bytes, first: int = FIRST, last: int = LAST) -> bytes:
+def light_table(dac: bytes, first: int = FIRST, last: int = LAST, least: float = 0.4,
+                lighter: float = LIGHTER) -> bytes:
     """Each colour's lighter one (keeping its hue) for the ground's colours, 0 for the rest.
     DAC: the palette as the VGA has it, 3 bytes of 0-63 for each colour; FIRST to LAST the colours
-    taken and given (the sequel's: ravlog.RED_FIRST, RED_LAST)."""
+    taken and given (the sequel's: ravlog.RED_FIRST, RED_LAST); LEAST is_ground's (the sequel's dirt is
+    darker: ravlog.DUST_LEAST); LIGHTER how far toward white (the sequel's less: ravlog.DUST_LIGHTER)."""
     pal = [tuple(min(255, dac[i * 3 + k] * 4) for k in range(3)) for i in range(256)]
     out = bytearray(256)
     for i in range(first, last + 1):
         c = pal[i]
-        if not is_ground(c):
+        if not is_ground(c, least):
             continue
-        want = tuple(v + (255 - v) * LIGHTER for v in c)
+        want = tuple(v + (255 - v) * lighter for v in c)
         best, score = 0, None
         for j in range(first, last + 1):
             p = pal[j]

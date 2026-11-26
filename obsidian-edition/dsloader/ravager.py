@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff
+from . import game, gamepatch, gff, ravspells
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -98,7 +98,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
                 | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES
-                | game.RULE_LEVEL_10)
+                | game.RULE_LEVEL_10 | game.RULE_NEW_SPELLS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -652,7 +652,8 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("thief_hd_clamp", 0x95471, bytes.fromhex("268a870100"), _site(115, 5)),
     # ... and the saves as in AD&D (game.RULE_ADND_TABLES): the save routine's "mov al,es:[bx+6Ch]" (955DFh),
     # a group's 1st-level save, DSCLOG2's SAVE_BASE (116: the Player's Handbook's table, tables.rav_saves;
-    # the game's own held every save at its table's last, a warrior at 11/11/11/13/11 from 10th)
+    # a psionicist's Dark Sun's table; the game's own held every save at its table's last, a warrior at
+    # 11/11/11/13/11 from 10th, and a psionicist saved as a thief; dos/save_bands.inc, SL's the same)
     Patch("save_table", 0x955DF, bytes.fromhex("268a876c00"), _site(116, 5)),
     Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
     # CON as in AD&D (SL's regen_rate, con_save; game.RULE_CON): regeneration's rate (26599h, "mov dx,cx /
@@ -758,6 +759,21 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
     Patch("pk_click", 0x93FAB, bytes.fromhex("8b4608"), _site(124, 3)),
     Patch("pk_hover", 0x93BBA, bytes.fromhex("0bc07515"), _site(125, 4)),
+    # A thief's Pick Pockets button (SL's PICK POCKETS: pickpocket.py), DSCLOG2's sites 180-186: in the USE
+    # screen's routine showing the Turn Undead button (97AC8h, SL's 89959h), "cmp word [9C1Ch],0" (the
+    # element); in the button's handler (9756Eh, SL's 894E2h) "cmp byte [9D76h],0" (pressed) as it is let go
+    # of, "mov ax,[9D77h]" once the screen is closed (the menu button's icon), "push dword 132FFFFh" (Turn
+    # Undead readied), "push ds / push 2D08h" ("TURN UNDEAD" under the screen, hovered and right-clicked) and
+    # "mov ax,[9D77h]" (the right click's description box); at the start of the routine of a click on the
+    # map with the pointer for talking (630F0h, SL's 5ECD0h), "mov si,[bp+6]" (the thing clicked on)
+    Patch("pp_show", 0x97AF4, bytes.fromhex("833e1c9c00"), _site(180, 5)),
+    Patch("pp_click", 0x97623, bytes.fromhex("803e769d00"), _site(181, 5)),
+    Patch("pp_lit", 0x9767B, bytes.fromhex("a1779d"), _site(182, 3)),
+    Patch("pp_arm", 0x97699, bytes.fromhex("6668ffff3201"), _site(183, 6)),
+    Patch("pp_text_hover", 0x975CB, bytes.fromhex("1e68082d"), _site(184, 4)),
+    Patch("pp_text_info", 0x97702, bytes.fromhex("1e68082d"), _site(184, 4)),
+    Patch("pp_info", 0x97716, bytes.fromhex("a1779d"), _site(185, 3)),
+    Patch("pp_hand", 0x630F8, bytes.fromhex("8b7606"), _site(186, 3)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -834,6 +850,24 @@ PATCHES: Tuple[Patch, ...] = (
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
     Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), _site(40, 6)),
     Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), _site(41, 6)),
+    # The figures' shadows (DSCLOG2's FIGURE SHADOWS, SL's SHADOWS): drawn in the same floor pass; the two
+    # routines drawing the view again round what moved reach further right and down, as far as a shadow
+    # does: the redraw of what moved, where it starts drawing its rectangle (2868Ch, "push word [bp+8] /
+    # push di": SL's PROBE_REDRAW_ALL at 24B18h), and of a rectangle (21E0:128C, 2828Ch: "push bp / mov
+    # bp,sp / sub sp,8", SL's PROBE_REDRAW at 2475Fh), DSCLOG2's sites 160 and 161 (SITE_FIG_WIDE_ALL,
+    # SITE_FIG_WIDE). Without them (RAV_SKIP, a control) DSCLOG2 draws no figure's shadow.
+    Patch("fig_wide_all", 0x2868C, bytes.fromhex("ff760857"), _site(160, 4)),
+    Patch("fig_wide", 0x2828C, bytes.fromhex("558bec83ec08"), _site(161, 6)),
+    # ... and each figure's frame's shadow kept as the thing drawer (2A28Fh, SL's 25E0Ch) draws its picture, for the
+    # floor drawings when the sequel has let the picture go from memory (most of them): its call of the picture
+    # routine, "call far 1D40:3BEC" (2A347h, SL's 25EBEh), its first three bytes (the segment, relocated at load,
+    # kept), DSCLOG2's site 162 (SITE_FIG_KEEP), which then calls the routine itself.
+    Patch("fig_keep", 0x2A347, bytes.fromhex("9aec3b"), _site(162, 3)),
+    # A shop's magic items shine (SL's SHOP_SHINE and SHOP_LOOP): the sequel turns its colour cycles only from the
+    # map's main loop (1CF0Eh), so on a shop's screen they stood still. The game's wait for an event, its test
+    # "or di,di / jz" (2F7BEh, SL's 2AFA6h), is DSCLOG2's site 163 (SITE_SHOP_SHINE), and its SHOP_LOOP (site 82)
+    # turns them too while the shop is open.
+    Patch("shop_shine", 0x2F7BE, bytes.fromhex("0bff74b5"), _site(163, 4)),
     # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
@@ -945,6 +979,16 @@ PATCHES: Tuple[Patch, ...] = (
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
+    # The new wizard spells (ravspells: 320-325, RULE_NEW_SPELLS): DSCLOG2's NEW SPELLS. The USE screen's list
+    # of a level's spells (62500h) gets the new ones its member knows first, where it starts its count (6254Fh:
+    # "xor si,si / cmp di,[bp-2]": NS_LIST); "does member know spell" (6260Ah) answers a new one from the sheet's
+    # bits (62625h: "cmp word [bp+8],73h": NS_KNOW); a spell's level (62AC5h) a new one's own (62AD0h: "cmp
+    # dx,73h": NS_LEVEL); and the compares of a spell with its ranges' ends see a new one as a wizard's (NS_CMP).
+    # The spell handler takes Cat's Grace and Friends to Strength's case (656D0h: NS_CAST), which gives them
+    # their effects (6623Bh: NS_EFFECT; Friends 2d4); the abilities routine raises DEX and CHA by them
+    # (85351h: NS_ABILITY); a natural attack's dice are Erdlu Claw's (86A45h: NS_CLAW); "ns_effects" names
+    # the effects 113-116.
+    *ravspells.program_patches(),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -1066,6 +1110,7 @@ RAV_NO_HARM = frozenset((RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL,
 RAV_CURE_DICE = {RAV_CURE_LIGHT: (1, 8), RAV_CURE_SERIOUS: (2, 8), RAV_CURE_CRITICAL: (3, 8), RAV_BLOOD_FLOW: (2, 6)}
 RAV_CAUSE_DICE = {RAV_CAUSE_LIGHT: 1, RAV_CAUSE_SERIOUS: 2, RAV_CAUSE_CRITICAL: 3}
 RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIEST_SPELLS)
+RAV_NEW_WIZARD_SPELLS = range(320, 326)  # (the mod's six new spells, ravspells.FIRST on: wizard spells)
 # A Healer's sphere of the cosmos in the sequel: the spells every druid casts and no cleric (a sphere byte with
 # DRUIDS: Cure Serious and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest), and
 # Whirlwind and Restore Youth, which Shattered Lands' Healer casts at 6th level: they aren't in the sequel yet,
@@ -1180,16 +1225,27 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
+PICK_BUTTON_ICON = "pick_icon"  # (... for the Pick Pockets button's purse: icons.rav_pick_icon)
 
 
-def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None) -> Tuple[bytes, List[str]]:
+def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None,
+                    sl_dir: Optional[str] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
     (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
     and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
     pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
-    names of those applied."""
+    names of those applied; and the mod's six new wizard spells (ravspells: DATA 320-325, their icons
+    from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if ravspells.SKIP not in skip:
+        try:
+            added = ravspells.chunks(gff.read_gff(out), sl_dir)
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (records not as the GOG release's: no new spells)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravspells.SKIP)
     if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
         from . import weaponpages
         try:
@@ -1216,18 +1272,29 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(ROLL_BUTTONS)
+    if PICK_BUTTON_ICON not in skip:  # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186)
+        from . import art, wotrart
+        try:
+            earth = wotrart.decode_plnr(gff.read_gff(out)[("ICON", icons.TURN_EARTH_ICON)])
+            added = {("ICON", icons.PICK_ICON): art.plnr_frames([icons.rav_pick_icon(earth)])}
+        except (KeyError, ValueError, IndexError, struct.error):
+            added = {}  # (no earth Turn Undead to make it from: the button without its icon)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(PICK_BUTTON_ICON)
     return out, done
 
 
-def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
+def write_resources(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[str] = None) -> List[str]:
     """RESOURCE.GFF's copy with the spell fixes, kit pages and weapon window (resources_fixed, the weapons'
-    pictures from the game's OBJEX.GFF), written to DEST unless already so; the fixes applied."""
+    pictures from the game's OBJEX.GFF) and the new spells (their icons from Shattered Lands' SL_DIR),
+    written to DEST unless already so; the fixes applied."""
     source = _find_file(game_dir, OBJECTS_FILE)
     objects = None
     if source:
         with open(source, "rb") as f:
             objects = f.read()
-    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects), skip)
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects, sl_dir), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
@@ -1373,18 +1440,111 @@ def mod_type(sl_type: int) -> int:
     return GAME_TYPES + sl_type - game.GAME_TYPES
 
 
+# The sequel's melee daggers (its stone 37 and obsidian 72) for air clerics too, as Shattered Lands' Loader gives
+# every dagger the air cleric's bit (itemtables.TYPE_FIXES): an air cleric's sphere allows daggers (restrict.py,
+# DSCLOG2's SPHERE_ALLOWS), but the sequel's own lists let it use no melee weapon at all, so its starting
+# obsidian dagger (startgear's, as SL's) was refused. A type's classes are its word at +0Ch, the air cleric's bit 1.
+AIR_DAGGER_TYPES, TYPE_CLASSES, AIR_CLERIC_BIT = (37, 72), 0x0C, 1
+
+# The sequel's item types' weights (the type's +2: SL's word +4, tenths of a pound; one byte, so 255 at most). The
+# sequel keeps every routine of SL's that reads them ("Cannot use two heavy weapons" over 30, a backstab's weapon 40
+# or less, the item box's "HEAVY", a creature's equipping; its load check adds up a field items haven't, so never
+# refuses, as SL's doesn't), but 71 of its
+# 102 types hold 0 and some of SSI's others are oddly light (a two-handed sword 20). Each type: (SSI's byte, the
+# Loader's), from Shattered Lands' type of the same kind and material (ITEMS.BIN's pairs), the Loader's backported
+# sequel weapons (npcitems.TYPES 148-153), else the nearest item or the AD&D PHB; furniture, doors, bodies and
+# monsters' and spells' missiles left as they are. The leather chest 96 (the arm and leg pieces' 36 and 18 make
+# the PHB's 15 lb; SL's own 750 is out of line). reports/wake-of-the-ravager-item-weights.md has the table.
+TYPE_WEIGHT = 2
+TYPE_KIND_RECORD = 4  # (an object's RDFF copy of its type: kind 4, its number the type's)
+RAV_WEIGHTS = {
+    1: (0, 86), 2: (0, 50), 3: (0, 36), 4: (0, 74), 5: (0, 50), 6: (0, 10), 7: (0, 10), 8: (0, 70),
+    10: (0, 10), 12: (0, 1), 13: (0, 40), 17: (0, 1), 18: (0, 30), 21: (0, 5), 24: (0, 120), 25: (0, 5),
+    28: (0, 10), 29: (0, 30), 30: (0, 175), 31: (75, 200), 32: (0, 96), 33: (0, 150), 34: (0, 200),
+    35: (10, 150), 38: (0, 5), 39: (50, 60), 42: (0, 1), 43: (0, 5), 44: (0, 1), 46: (0, 1), 47: (0, 40),
+    48: (10, 30), 51: (0, 70), 52: (0, 120), 55: (0, 15), 56: (0, 15), 57: (0, 20), 59: (0, 20), 61: (20, 100),
+    62: (0, 86), 63: (0, 50), 64: (0, 18), 65: (0, 74), 66: (0, 74), 67: (0, 100), 68: (0, 100), 69: (0, 40),
+    70: (0, 1), 72: (0, 10), 73: (0, 30), 77: (0, 1), 78: (0, 1), 80: (0, 150), 81: (0, 100), 85: (0, 40),
+    87: (0, 30), 88: (0, 1), 89: (10, 30), 90: (0, 10), 91: (0, 50), 92: (0, 50), 93: (0, 5), 95: (0, 40),
+    96: (0, 1), 97: (0, 40), 98: (0, 20), 99: (1, 10), 100: (0, 80), 101: (20, 150)}
+
+
+def weighted(record: bytes, kind: int) -> bytes:
+    """The sequel's type record RECORD (TYPE_SIZE bytes) of type KIND with the Loader's weight (RAV_WEIGHTS),
+    as it is if KIND has none or RECORD isn't SSI's (RavagerError: SSI's byte not as expected)."""
+    if kind not in RAV_WEIGHTS or len(record) != TYPE_SIZE:
+        return record
+    ssi, ours = RAV_WEIGHTS[kind]
+    if record[TYPE_WEIGHT] == ours:
+        return record
+    if record[TYPE_WEIGHT] != ssi:
+        raise RavagerError(f"item type {kind}'s weight is {record[TYPE_WEIGHT]}, not the GOG release's {ssi}")
+    out = bytearray(record)
+    out[TYPE_WEIGHT] = ours
+    return bytes(out)
+
+
+def weighted_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4, GAME_TYPES of them) with RAV_WEIGHTS."""
+    return b"".join(weighted(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
+
+
+def _weighted_copy(record: bytes, kind: int) -> bytes:
+    try:
+        return weighted(record, kind)
+    except RavagerError:
+        return record  # (a copy that isn't SSI's record, a transfer's of another table: left as it is)
+
+
+def _air_dagger(record: bytes, kind: int) -> bytes:
+    if kind not in AIR_DAGGER_TYPES or len(record) != TYPE_SIZE:
+        return record
+    out = bytearray(record)
+    out[TYPE_CLASSES] |= AIR_CLERIC_BIT
+    return bytes(out)
+
+
+def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
+    """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
+    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read. AIR
+    (the mod's types on: mod_types_table) gives the copies of the daggers the air cleric's bit too, as ALL 4."""
+    from . import dataitems
+    out: gff.Chunks = {}
+    for key, chunk in chunks.items():
+        if key[0] != "RDFF":
+            continue
+        try:
+            recs, end = dataitems.records(chunk)
+        except (ValueError, struct.error):
+            continue
+        def fixed(r):
+            data = _weighted_copy(r.data, r.number)
+            return r._replace(data=_air_dagger(data, r.number) if air else data)
+        new = [fixed(r) if r.kind == TYPE_KIND_RECORD and r.number < GAME_TYPES else r for r in recs]
+        if new != recs:
+            out[key] = dataitems.chunk(new, end)
+    return out
+
+
 def mod_types_table(types: bytes) -> bytes:
-    """The sequel's type table TYPES (ALL 4) with the mod's after it."""
+    """The sequel's type table TYPES (ALL 4), its daggers the air clerics' too (AIR_DAGGER_TYPES), with the
+    mod's after it."""
     from . import npcitems
-    return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
+    out = bytearray(types)
+    for t in AIR_DAGGER_TYPES:
+        if (t + 1) * TYPE_SIZE <= len(out):
+            out[t * TYPE_SIZE + TYPE_CLASSES] |= AIR_CLERIC_BIT
+    return bytes(out) + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
-    """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
+    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP) and the
+    mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
-    them) unless "new_items" is (or the mod's types are left out: they are its types)."""
+    them) unless "new_items" is (or the mod's types are left out: they are its types), and the still magic
+    items' icons shining (ravshine) unless "item_shine" is."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1392,9 +1552,14 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         raise RavagerError(f"{OBJECTS_FILE}'s item types are not the GOG release's")
     new: gff.Chunks = {}
     done: List[str] = []
+    weights = "weights" not in skip
+    if weights:
+        types = weighted_table(types)
     if "mod_types" not in skip:
         new[TYPES_CHUNK] = mod_types_table(types)
         done.append("mod_types")
+    elif weights:
+        new[TYPES_CHUNK] = types
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")
@@ -1402,6 +1567,15 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
+    if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
+        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip))
+        done.append("weights")
+    if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
+        from . import ravshine
+        shine = ravshine.chunks(chunks)
+        if shine:
+            new.update(shine)
+            done.append("item_shine")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -1506,11 +1680,12 @@ def read_added(dos_dir: str) -> gff.Chunks:
 
 def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[str] = None) -> List[str]:
     """OBJEX.GFF's copy with the mod's item types, the party transfer's objects (beside DEST) and, with
-    SL_DIR (Shattered Lands' folder: their pictures are its), the mod's new items (ravgear), written to
-    DEST unless already so."""
+    SL_DIR (Shattered Lands' folder: their pictures are its), the mod's new items (ravgear; the new spells'
+    spellbooks unless ravspells.SKIP is in SKIP), written to DEST unless already so."""
     from . import ravgear
     added = read_added(os.path.dirname(dest))
-    gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
+    gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
     return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear), skip)
 
 
@@ -1522,12 +1697,15 @@ def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
-    (gamepatch.EFFECTS_KEPT) and the new items (Shattered Lands' switch, "new_items": ravgear's)."""
+    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's) and the new
+    spells ("new_spells": ravspells')."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
+    spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
-        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"})
+        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
+        | (frozenset() if spells else {ravspells.SKIP})
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:
@@ -1537,7 +1715,7 @@ def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] =
     skip = skipped(settings)
     try:
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
-        write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
+        write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip, sl_dir)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
         write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip, sl_dir)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
