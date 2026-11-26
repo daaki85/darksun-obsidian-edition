@@ -1878,6 +1878,17 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
   (254,164) pages the list and draws it again (twice for the first page), SELL (297,164) offers for the
   item on the pointer, TAKE IT at (120,92) or (145,92) as the box falls. `ravshop.py` reads the shop and
   edits CHA, INT, scrolls and known spells.
+- **The sequel's shops and its spellbooks** (2026-11-26, logs/2026-11-26-ravager-spell-books.md): GPL op 24h (36)
+  opens a shop on the merchant its argument names (`('n', -153)` the weaponer, or the talker): scripts 43, 53, 54,
+  143, 144, 148, 153 (Notaku), 155, 157, 158 (the ranged stall 323), 221 (the weaponer). Of the sellers only Notaku
+  has spellbooks (OBJEX.GFF: 31402, 31023); other wizards' books are carried (Melantha 51, Fermin 160, Kalaobuta
+  290, Solurnis 436, Raenika 496, a Crypt body 3088). The sequel's wizard spellbooks are 31002-31061 by level (3000
+  a level, all one picture: their OJFF's icon, BMP 1969; name 4, "Spellbook"); 31190-31199 are free. **A merchant
+  with more than 12 pack items** (Notaku with the books: 14): the game gives cells 14-25 and 255 to the rest, and
+  the shop lists all 14 (three pages). **A spellbook can't be read in the shop's screen** (the box's icon clicked
+  closes the box, nothing learnt): leave the shop, open the inventory. Money for a test:
+  `logs/files/2026-11-26-ravager-spell-books-money.py N` (the dword at (load + 3C13h):357h). The opening ambush's
+  Computer Control: the USE screen's first click only takes the mouse (a click on the window first).
 - **The sequel's dialogue window and the Loader's tabs** (2026-11-25, logs/2026-11-25-ravager-loader-tabs.md): the
   window's input is 87BA0h (SL's 7CE83h, the same code with a check more; the dialogue stub 476Ch's entry 25h):
   (kind, far text, word), SL's kinds (0 a reply, its number in the word; 1 a portrait; 2 text, word 115; 3 the

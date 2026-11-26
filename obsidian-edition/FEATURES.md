@@ -1053,7 +1053,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The [new wizard spells](#new-wizard-spells) come across too: a character who knows them
   casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
-  or from a spellbook. The kits' rules for fights and play work there: AC, to hit and damage, the weapon
+  or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
+  the sequel's wizards carry one ([the mod's gear](#magic-weapons-for-every-spec-and-the-mods-gear)). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
   skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
   specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
@@ -1266,6 +1267,13 @@ saved before has them in its shops too: the Loader stocks each seller once, as y
 buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep what they had. The Bone
 Helm gives AC 1
 with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
+
+With the [new wizard spells](#new-wizard-spells) on, **Notaku** sells a spellbook of each of the six (Cat's
+Grace 6000, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends 3000 each: 3000 a level, the sequel's own
+price), on his list's second and third pages after the Short Sword +1; read from the inventory, a book teaches
+its spell (not in the shop's screen). Three of the sequel's wizards who carry a spellbook carry one more,
+Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
+Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
 
 ### Improved thieving
 
