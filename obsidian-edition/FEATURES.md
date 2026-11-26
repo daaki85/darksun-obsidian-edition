@@ -1341,7 +1341,13 @@ woman's, in a new game and in one already begun (from the next area or load).
 
 ### What the party wears
 
-See the [animated female and male class outfits](docs/class-outfits/README.md) for the human poses, all twelve dwarf builds, all thirty-seven elf builds, and the equipment comparisons.
+**Class outfits.** Each party member is dressed for their class before any gear goes on: humans in the
+outfit of their class (the mage in a plum mantle, the thief hooded, the psionicist in teal),
+dwarves, elves, half-giants, halflings and the mul in an outfit for their whole class combination,
+and the half-elves as single-class Fighters and Preservers. A combination with no outfit drawn (for
+example an elf with Druid among her classes, or a half-elf with two classes) and the thri-kreen keep the game's own
+figure. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
+animated](docs/class-outfits/README.md).
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
 pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:

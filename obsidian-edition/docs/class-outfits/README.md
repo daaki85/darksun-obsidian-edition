@@ -1,6 +1,6 @@
 # Class outfits on the map
 
-Enable **What the party wears** to see class outfits on humans, dwarves, elves, half-giants, halflings, the Mul and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. Both half-giants have ten outfits each, both halflings have 21 each, and the male Mul has 18. The galleries below show the base colors with equipment slots empty.
+The Loader draws class outfits ([What the party wears](../../FEATURES.md#what-the-party-wears), always on) on humans, dwarves, elves, half-giants, halflings, the Mul and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. Both half-giants have ten outfits each, both halflings have 21 each, and the male Mul has 18. The galleries below show the base colors with equipment slots empty.
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
