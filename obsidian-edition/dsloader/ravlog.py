@@ -706,14 +706,17 @@ class RavGameData(game.GameData):
 
     def counted_ac(self, creature: int) -> Optional[int]:
         """SL's, and with RULE_HELMS a worn Helm of the sequel's type 55 counting AC 1 (DSCLOG2's
-        PROBE_HELM_AC: ravager.HELM_TYPE, HELM_NAME; its type reads AC 0, as a hat's)."""
+        PROBE_HELM_AC: ravager.HELM_TYPE, HELM_NAME; its type reads AC 0, as a hat's), and the mod's Bone
+        Helm (ravager.BONE_HELM_TYPE, whatever its name)."""
         ac = super().counted_ac(creature)
         if ac is None or not self.rules & game.RULE_HELMS:
             return ac
         for _, item, typ in self._worn(creature, game.CREATURE_ITEM_LISTS[:1]):
-            if len(item) >= ravager.ITEM_NAME + 2 and typ[0x0F] & 0x80 \
-                    and struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == ravager.HELM_TYPE \
-                    and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
+            if len(item) < ravager.ITEM_NAME + 2 or not typ[0x0F] & 0x80:
+                continue
+            kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
+            if kind == ravager.BONE_HELM_TYPE or (
+                    kind == ravager.HELM_TYPE and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME):
                 ac -= 1
         return ac
 

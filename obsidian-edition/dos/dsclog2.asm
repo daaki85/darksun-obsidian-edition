@@ -10203,13 +10203,17 @@ kit_inits    dw 0
 ; [BP-324h], 10 bytes an entry, the item at +0). PROBE_BOX_AC: INT VEC_BOX_AC replaces the same at the
 ; item box's "AC BONUS:" (9A4B7h; SL's 8C15Ah): SI the type, [BP+6] the item. AX the type's AC; with
 ; RULE_HELMS, 1 for a Helm of type 55 (HELM_TYPE: the leather helm's AC 0, which hats share: only an
-; item named Helm, HELM_NAME, counts). The sequel's other helm type (56, a Helm and the Helm of
-; Domination) has AC 1 of its own already.
+; item named Helm, HELM_NAME, counts), and for the mod's Bone Helm (BONE_HELM_TYPE: the Loader's type for
+; Shattered Lands' 117, ravager.mod_type, which only it has; SL's HELM_BONE). The sequel's other helm type
+; (56, a Helm and the Helm of Domination) has AC 1 of its own already.
 HELM_TYPE    equ 55
+BONE_HELM_TYPE equ 104
 HELM_NAME    equ 0x24           ; (an item's name, +14h: TEXT 1000's "Helm"; a hat's 27h)
 HELM_LIST    equ -0x324         ; (the AC function's worn list, from its BP)
 probe_helm_ac:
         movsx ax, byte [es:bx + 0x0E]
+        cmp cx, BONE_HELM_TYPE
+        je helm_rule_iret
         cmp cx, HELM_TYPE
         jne .done
         push di
@@ -10220,12 +10224,19 @@ probe_helm_ac:
 .done:  iret
 probe_box_ac:
         movsx ax, byte [es:bx + 0x0E]
+        cmp si, BONE_HELM_TYPE
+        je helm_rule_iret
         cmp si, HELM_TYPE
         jne .done
         push di
         mov di, [bp + 6]
         call helm_named
         pop di
+.done:  iret
+helm_rule_iret:                 ; a Bone Helm: AX 1 if RULE_HELMS is on
+        test word [cs:rules], RULE_HELMS
+        jz .done
+        mov ax, 1
 .done:  iret
 helm_named:                     ; DI an item of HELM_TYPE: AX 1 if it is a Helm and RULE_HELMS is on
         test word [cs:rules], RULE_HELMS

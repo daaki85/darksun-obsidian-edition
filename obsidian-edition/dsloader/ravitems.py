@@ -117,13 +117,18 @@ class Names:
         return ravager.KEEPSAKE_NAMES_FIRST + self.kept.index(text)
 
 
+SCREEN_OWN = range(1, 16)  # (palette numbers the sequel's screens set for themselves)
+
+
 def stable_colours(resources: gff.Chunks, region_palettes: Iterable[bytes]) -> List[Tuple[int, Tuple[int, int, int]]]:
-    """The sequel's palette numbers no region changes (PAL 1000's, as every region palette has them)."""
+    """The sequel's palette numbers no region changes (PAL 1000's, as every region palette has them), but
+    SCREEN_OWN's: the inventory and shop screens set those themselves (2026-11-25: a picture's 2, PAL
+    1000's light blue, showed pure blue there)."""
     from . import art
     base = resources[("PAL ", 1000)]
     palettes = [p for p in region_palettes if len(p) >= 768]
     colours = art.palette_colours(base)
-    return [(c, colours[c]) for c in range(1, 256) if all(p[c * 3:c * 3 + 3] == base[c * 3:c * 3 + 3] for p in palettes)]
+    return [(c, colours[c]) for c in range(SCREEN_OWN.stop, 256) if all(p[c * 3:c * 3 + 3] == base[c * 3:c * 3 + 3] for p in palettes)]
 
 
 def picture(sl_picture: bytes, sl_palette, stable) -> bytes:
