@@ -13,7 +13,6 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 
 Wake of the Ravager runs on the same engine, and the Loader's copy of it has most of these fixes too,
 and some of the sequel's own bugs mended: [In Wake of the Ravager](#in-wake-of-the-ravager) says which.
-The bugs known and not yet mended are at [the end](#known-not-yet-fixed).
 
 ## Contents
 
@@ -39,7 +38,6 @@ The bugs known and not yet mended are at [the end](#known-not-yet-fixed).
 - [In Wake of the Ravager](#in-wake-of-the-ravager)
   - [Shattered Lands' fixes in the sequel](#shattered-lands-fixes-in-the-sequel)
   - [The sequel's own bugs](#the-sequels-own-bugs)
-- [Known, not yet fixed](#known-not-yet-fixed)
 - [Saved games](#saved-games)
 
 ## Spells and psionics
@@ -216,6 +214,8 @@ to be read for it.
 | **Negative Plane Protection** | Fixed there too (the save as against paralysis, poison and death); not yet seen in play |
 | **Scare**'s save | Fixed there too |
 | **"Can't save"** | Fixed there too (played) |
+| **Saves that stop improving** | Fixed there too: the sequel held its saves at the table's last row, a bug of its own (below) |
+| **A psionicist's saves** | Fixed there too: Dark Sun's psionicists' table in both games |
 | **Cloak of Bravery** | Fixed there too |
 | **Mirror Image** | Fixed there too (played); Reflected Image comes with the sequel's new spells, still to be merged |
 | **Armor** | Fixed there too (played) |
@@ -266,15 +266,6 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | A **worn item's spell** | Never ended when the item came off: the test whether the item has a spell compared unsigned, so the spell's removal was skipped for every item | Ends as the item comes off, as in Shattered Lands |
 | **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](FEATURES.md#wake-of-the-ravager)) |
 | **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
-
-## Known, not yet fixed
-
-Bugs found and still to mend; each moves up the page once its fix is in.
-
-| Bug | Where | What happens |
-|---|---|---|
-| **Saving throws stop improving** | Shattered Lands | The game takes AD&D's best save as the most a save can improve to, so saves stall early: a warrior's stay at 11/11/11/13/11 from 9th level. The sequel's is mended (above); Shattered Lands' fix is being made |
-| A **psionicist's saving throws** | Both games | A psionicist saves as a thief, where Dark Sun gives the psionicist a table of its own (10 against petrification at 1st level, a thief's 12). The fix, in both games, is being made with Shattered Lands' saves; a psionicist/thief will take the better of the two |
 
 ## Saved games
 

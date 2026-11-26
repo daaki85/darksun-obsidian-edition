@@ -174,9 +174,9 @@ Releases, newest first (2.12.0 and older in the archive):
   row, and the Tyr inn's room that never rested ([which, fix by fix](obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager)).
 
 **Docs**
-- The game's bugs page says which fixes Wake of the Ravager has, lists the sequel's own bugs mended,
-  and the bugs known and not yet fixed (Shattered Lands' saves that stop improving, and a psionicist's
-  saves in both games); the patch notes' bug fixes have the sequel too.
+- The game's bugs page says which fixes Wake of the Ravager has (the saves of #210 too) and lists
+  the sequel's own bugs mended; the patch notes' bug fixes have the sequel too.
+
 **Fixed: the game (saving throws)**
 - Saves keep improving past 9th level: the game's save routine took AD&D's best save as the most a save
   could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and no save went below 8. With
