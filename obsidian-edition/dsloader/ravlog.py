@@ -1755,10 +1755,10 @@ class RavDiceLog(dicelog.DiceLog):
                 with self._items_writable():
                     if self.first_pick_weapon:  # (a warrior's weapon a +1 of its first pick: ravfirstweapon)
                         out += ravfirstweapon.fill(self.game, new_items)
-                    if self.kit_start_gear:  # (gear its classes can't use left behind; the kit's: ravkitstart)
+                    if self.kit_start_gear:  # (the kit's: ravkitstart, its armour made leather before the
+                        if self.game.rules & game.RULE_KITS:  # classes' step leaves it behind; then what the
+                            out += ravkitstart.kit_gear(self.game, new_items)  # classes can't use left behind)
                         out += weaponchoice.class_gear(self.game)
-                        if self.game.rules & game.RULE_KITS:
-                            out += ravkitstart.kit_gear(self.game, new_items)
                     if self.starting_gear:
                         out += startgear.fill(self.game)
                     if self.first_pick_weapon or self.kit_start_gear:  # (the weapon in hand first in its list: the weapon lines)

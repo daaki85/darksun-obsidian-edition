@@ -29,7 +29,7 @@ class KitGearTests(test_ravfirstweapon.FillTests):
         game.RULES_IN_FORCE = game.RULES_ALWAYS | game.RULE_KITS
         for armour, material in ((RING_CHEST, restrict.METAL), (LEATHER_CHEST, restrict.LEATHER)):
             at = self.TYPES + armour * game.ITEM_TYPE_SIZE
-            self.mem[at + 0x0F], self.mem[at + 8] = restrict.ARMOUR, material
+            self.mem[at + 0x0F], self.mem[at + 8], self.mem[at + 9] = restrict.ARMOUR, material, 1  # (the chest's)
         self.mem[self.TYPES + SHIELD * game.ITEM_TYPE_SIZE + 0x0F] = restrict.ARMOUR
         self.taken = []
         worn = self.gd._worn
@@ -92,6 +92,14 @@ class KitGearTests(test_ravfirstweapon.FillTests):
         self.assertIn("leather armour in place of", out[1])
         self.assertIn("second", out[2])
         self.assertEqual(K.kit_gear(self.gd), [])
+
+    def test_packed_armour_made_leather_and_worn(self):
+        """The game's give routine drops armour the kit refuses into the backpack: made leather, worn in its slot."""
+        self.kit(FIGHTER, 3)
+        self.armour(RING_CHEST, 20)
+        out = K.kit_gear(self.gd)
+        self.assertEqual(self.item(0), (LEATHER_CHEST, CHEST))
+        self.assertIn("leather armour in place of", out[0])
 
     def test_arena_champion_shield(self):
         right, left = self.kit(GLADIATOR, 1, ["long sword", "club"])
@@ -166,10 +174,11 @@ class RecordTests(unittest.TestCase):
 
 class GearPassTests(unittest.TestCase):
     def test_the_order(self):
-        """ravlog's gear pass: the first pick's weapon, the classes', the kit's, the fuller gear, the weapon first."""
+        """ravlog's gear pass: the first pick's weapon, the kit's (its armour made leather before the classes' step
+        leaves it behind), the classes', the fuller gear, the weapon first."""
         import inspect
         src = inspect.getsource(ravlog.RavDiceLog._gear_pass)
-        at = [src.index(s) for s in ("ravfirstweapon.fill", "weaponchoice.class_gear", "ravkitstart.kit_gear",
+        at = [src.index(s) for s in ("ravfirstweapon.fill", "ravkitstart.kit_gear", "weaponchoice.class_gear",
                                      "out += startgear.fill", "ravfirstweapon.weapon_first")]
         self.assertEqual(at, sorted(at))
 

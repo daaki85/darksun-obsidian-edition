@@ -6,19 +6,22 @@ table, ravager.GEAR_TABLE: mostly +1 weapons and shields), on DSCLOG2's GEAR_DON
 _gear_pass), after a warrior's first pick has made its weapon (ravfirstweapon.fill) and before the fuller
 starting gear (startgear.fill):
 
+- **the kit's** (kit_gear here), first: Shattered Lands' class step comes first there, but in the sequel it would
+  leave behind the armour a kit forbids before it could be made leather (a Ravager's ring armour, 2026-11-26);
 - **the classes'** (weaponchoice.class_gear, as it is: it reads only the rules): a weapon, armour or shield the
   character's classes can't use left behind (an earth or water cleric's club, which the sequel gives no
-  material), and armour its kit forbids too;
-- **the kit's** (kit_gear here): a weapon in hand (or in the backpack with the right hand empty: the game's give
-  routine drops there what the equip test refuses, DSCLOG2's KIT_FORBIDS) that the kit forbids becomes one it
-  allows, the nearest kind to the long sword first (weaponchoice.REPLACE_ORDER: a Shinobi's long sword a short
-  sword); a shield it forbids is left behind (a Ravager's), armour it forbids becomes the sequel's leather where
-  the kit allows that (a Ravager's ring armour: Shattered Lands' fighter starts in leather), else is left behind
-  (a Spellarcher's); a weapon it forbids in the off hand or the missile slot goes to the backpack; then each
-  kit's own, as Shattered Lands': an Arena Champion's left-hand weapon becomes a shield, a Brute's one-handed
-  weapons are left behind, a Myrmidon has a plain polearm in the backpack, a Ravager and a Battle Dancer a second
-  of the right hand's weapon in the left (weaponchoice._kit_second_weapon, as it is), a Poisoner two blades of its
-  weapon spec, a Ghetto Fighter a dagger, a Battle Mage its weapon spec's weapon.
+  material), and armour its kit forbids that kit_gear couldn't make leather.
+
+The kit's: a weapon in hand (or in the backpack with the right hand empty: the game's give
+routine drops there what the equip test refuses, DSCLOG2's KIT_FORBIDS) that the kit forbids becomes one it
+allows, the nearest kind to the long sword first (weaponchoice.REPLACE_ORDER: a Shinobi's long sword a short
+sword); a shield it forbids is left behind (a Ravager's), armour it forbids becomes the sequel's leather where
+the kit allows that (a Ravager's ring armour: Shattered Lands' fighter starts in leather), else is left behind
+(a Spellarcher's); a weapon it forbids in the off hand or the missile slot goes to the backpack; then each
+kit's own, as Shattered Lands': an Arena Champion's left-hand weapon becomes a shield, a Brute's one-handed
+weapons are left behind, a Myrmidon has a plain polearm in the backpack, a Ravager and a Battle Dancer a second
+of the right hand's weapon in the left (weaponchoice._kit_second_weapon, as it is), a Poisoner two blades of its
+weapon spec, a Ghetto Fighter a dagger, a Battle Mage its weapon spec's weapon.
 
 **What a weapon is made** (made_like): a weapon made in place keeps its grade. The sequel's gear is magic where
 Shattered Lands' is plain, so one made from a +1 weapon (a thief's long sword +1, a gladiator's) is the kind's
@@ -41,8 +44,8 @@ KIND = specialize.KINDS.index
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
 SHIELD = Weapon(91, bytes.fromhex("b8fc00000f270a000f275b0000000000000004ff250000"))  # (840: Shield)
 SHIELD_PLUS_ONE = Weapon(91, bytes.fromhex("b6fc00000f2734210f275b0000000000000005ff250001"))  # (842: the fighter's)
-# The sequel's leather ("Armor"), by slot (ravlog.RAV_LEATHER's): what armour a kit forbids becomes
-ARMOUR_SLOTS = tuple(game.EQUIP_SLOTS.index(s) for s in ("chest", "arm", "legs"))
+TYPE_WORN = 9  # (an item type's place on the body as the dice log's view serves the types, the sequel's +5: 1 the
+# chest, 3 the arms, 0Ah the legs, 5 a hand)
 
 
 def _type(item: bytes) -> int:
@@ -118,7 +121,7 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
     worn = lambda: list(gd._worn(member))
     at = lambda slot: next(((i, item) for i, item, _ in worn() if item[game.ITEM_SLOT] == slot), None)
     write = lambda i, rec_: gd.guest.write(items + i * game.ITEM_SIZE, rec_)
-    leather = dict(ravlog.RAV_LEATHER)
+    leather = ravlog.RAV_LEATHER
     out: List[str] = []
 
     for item_index, item, _ in worn():
@@ -140,10 +143,14 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
             if shield and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                 out.append(f"{who}'s {name(item)} is left behind: a {kit} fights without a shield")
                 continue
-            if armour:
-                light = leather.get(slot)
+            if armour:  # (worn, or in the backpack where the game's give routine dropped it: the leather of its
+                # type's place on the body, TYPE_WORN)
+                worn_at, light = next(((s, rec_) for s, rec_ in leather
+                                       if s == slot or read(_type(rec_))[TYPE_WORN] == typ[TYPE_WORN]), (None, None))
                 if light is not None and restrict.usable(sheet, _type(light), read(_type(light))):
                     write(item_index, ravfirstweapon.made_over(item, Weapon(_type(light), light)))
+                    if slot >= BACKPACK and at(worn_at) is None:
+                        pickpocket.place(gd, member, item_index, worn_at)
                     out.append(f"{who} starts with leather armour in place of the {name(item)}: a {kit} wears "
                                f"light armour only")
                 elif ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
