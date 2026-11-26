@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager, ravspells  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -46,7 +46,9 @@ class TableTests(unittest.TestCase):
                             "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
                             "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
-                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine"}
+                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine",
+                            "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
+                            "pp_hand"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -426,7 +428,11 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
                              | set(rollstore.rav_chunks(game))  # STORE and RECALL,
                              | set(weaponpages.rav_chunks(game, objects))  # the weapon window,
-                             | set(ravspells.chunks(game)))  # the new spells)
+                             | set(ravspells.chunks(game))  # the new spells,
+                             | {("ICON", icons.PICK_ICON)})  # the Pick Pockets button's purse)
+            from dsloader import wotrart
+            purse = wotrart.decode_plnr(res[("ICON", icons.PICK_ICON)])
+            self.assertEqual(purse, icons.rav_pick_icon(wotrart.decode_plnr(game[("ICON", icons.TURN_EARTH_ICON)])))
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE

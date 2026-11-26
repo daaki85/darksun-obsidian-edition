@@ -758,6 +758,21 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
     Patch("pk_click", 0x93FAB, bytes.fromhex("8b4608"), _site(124, 3)),
     Patch("pk_hover", 0x93BBA, bytes.fromhex("0bc07515"), _site(125, 4)),
+    # A thief's Pick Pockets button (SL's PICK POCKETS: pickpocket.py), DSCLOG2's sites 180-186: in the USE
+    # screen's routine showing the Turn Undead button (97AC8h, SL's 89959h), "cmp word [9C1Ch],0" (the
+    # element); in the button's handler (9756Eh, SL's 894E2h) "cmp byte [9D76h],0" (pressed) as it is let go
+    # of, "mov ax,[9D77h]" once the screen is closed (the menu button's icon), "push dword 132FFFFh" (Turn
+    # Undead readied), "push ds / push 2D08h" ("TURN UNDEAD" under the screen, hovered and right-clicked) and
+    # "mov ax,[9D77h]" (the right click's description box); at the start of the routine of a click on the
+    # map with the pointer for talking (630F0h, SL's 5ECD0h), "mov si,[bp+6]" (the thing clicked on)
+    Patch("pp_show", 0x97AF4, bytes.fromhex("833e1c9c00"), _site(180, 5)),
+    Patch("pp_click", 0x97623, bytes.fromhex("803e769d00"), _site(181, 5)),
+    Patch("pp_lit", 0x9767B, bytes.fromhex("a1779d"), _site(182, 3)),
+    Patch("pp_arm", 0x97699, bytes.fromhex("6668ffff3201"), _site(183, 6)),
+    Patch("pp_text_hover", 0x975CB, bytes.fromhex("1e68082d"), _site(184, 4)),
+    Patch("pp_text_info", 0x97702, bytes.fromhex("1e68082d"), _site(184, 4)),
+    Patch("pp_info", 0x97716, bytes.fromhex("a1779d"), _site(185, 3)),
+    Patch("pp_hand", 0x630F8, bytes.fromhex("8b7606"), _site(186, 3)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -1145,6 +1160,7 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
+PICK_BUTTON_ICON = "pick_icon"  # (... for the Pick Pockets button's purse: icons.rav_pick_icon)
 
 
 def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None,
@@ -1191,6 +1207,16 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(ROLL_BUTTONS)
+    if PICK_BUTTON_ICON not in skip:  # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186)
+        from . import art, wotrart
+        try:
+            earth = wotrart.decode_plnr(gff.read_gff(out)[("ICON", icons.TURN_EARTH_ICON)])
+            added = {("ICON", icons.PICK_ICON): art.plnr_frames([icons.rav_pick_icon(earth)])}
+        except (KeyError, ValueError, IndexError, struct.error):
+            added = {}  # (no earth Turn Undead to make it from: the button without its icon)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(PICK_BUTTON_ICON)
     return out, done
 
 

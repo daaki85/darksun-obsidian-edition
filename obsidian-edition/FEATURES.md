@@ -1068,6 +1068,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
   round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
   Lands.
+- **[Picking pockets](#picking-pockets)** comes too: a thief's **Pick Pockets** button (the purse, where
+  a cleric's Turn Undead is on the USE screen), then a click on anyone in sight, not in a fight, with the
+  look pointer it gives: made, one small thing (a dagger, a sling, a ring; not a long sword nor anything
+  worn) goes into the thief's backpack, or coins when there is nothing else, the last try on them;
+  failed, a move silently roll to slip away, else caught, and that thief keeps from them until a thief
+  level is gained. A cleric/thief keeps Turn Undead alone (no purse beside it), a right click on the
+  purse shows no description, and there are no weapons worth XP to lift.
 - **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
   character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
   past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
@@ -1406,7 +1413,8 @@ How it works:
 A thief's **Pick Pockets** button (a purse, where a priest's Turn Undead is on the USE screen), then
 a click on anyone in sight, not in a fight: made, one small thing goes into its backpack (or coins,
 the last try); failed, a move silently roll to slip away, else caught. The game has one pocket to
-pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift.
+pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift. In
+[Wake of the Ravager](#wake-of-the-ravager) too.
 
 **Always on** (no switch). Rules: [thieves' skills and picking
 pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
