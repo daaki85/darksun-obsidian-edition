@@ -1938,6 +1938,19 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
   y 37, 70, 100, 133); grab the screen between box clicks at (160,100), as one can land on a slot. The
   sequel's own party has no specs, so any of their level ups asks too. The Effects screen pages the spec
   lines with MORE (a click at (180,146)).
+- **Kit spell slots in the sequel** (logs/2026-11-26-ravager-kit-slots.md): the slot routine 626B7h
+  (member, kind 1 wizard / 2 priest, spell level) runs each class place 0-2, asks 62B45h whether the class
+  casts the kind (spell 8 at 627D3h for wizard, 73h at 62818h for priest: wizard classes 11 and 18 alone,
+  so a thief is never asked), then 62A10h for that class's count at 62893h (ADND_SLOTS, site 34), and sums.
+  So the kits' slots go per class there (SLOT_BEHIND, BEHIND_LEAST, KIT_TABLE), and a Shinobi's thief class
+  is let in by SHINOBI_MAGE (site 190 on 627D6h's "add sp,4"). The caster level routine 97DC5h starts its
+  best at 0 and compares signed (`cmp dx,di / jng`): a class whose level less the drop is below 0 counts
+  0, never less. A test: `ravload.sh ravager-roost` on a throwaway copy, the members edited (`ravkits.py
+  set`, `levels`; kit byte 80h for a control, so the Loader leaves the own party's features alone),
+  **Terrannus made alive** (creature +14h 7 in that save: the rest skips the dead), the Roost's rest (the
+  ring was at game (267,121) in one run and (267,110) in the next: grab the screen after Up 6), then
+  `ravlevel.py show` (the casts left) and `ravlevel.py counts kt_count sb_count sh_mages`. The USE screen
+  offers MAGE or CLERIC by class and spells known, not by slots.
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py

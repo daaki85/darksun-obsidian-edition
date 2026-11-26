@@ -9,6 +9,8 @@
                                                is a new one (its hit die, its extras)
   python3 ravlevel.py powers MEMBER [all]     the member's psionic powers known (selector 370h's +9CDh, 22h a member,
                                                bit 1 known, 34 powers); "all" marks them all known, a test edit
+  python3 ravlevel.py counts NAME...           DSCLOG2's words NAME (its counters: sb_count, kt_count, sh_mages,
+                                               veiled_count ...), from a symbol map of dsclog2.asm
   python3 ravlevel.py foes HP                  every foe's (creature +15h 7) hit points HP, a test edit
 MEMBER is the sheet's number (0-3: the party's order)."""
 import argparse, os, struct, subprocess, sys, tempfile
@@ -77,6 +79,9 @@ elif cmd == 'set':
     s = g.read(at, 0x40)
     print('member', m, 'XP', struct.unpack_from('<I', s, 0)[0], 'race', s[0x12], 'classes', list(s[0x1B:0x1E]),
           'levels', list(s[0x1E:0x21]))
+elif cmd == 'counts':
+    base, sym = helper()
+    print(', '.join('%s %d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in sys.argv[2:]))
 elif cmd == 'foes':
     n = int(sys.argv[2])
     base = far(0x19C9)

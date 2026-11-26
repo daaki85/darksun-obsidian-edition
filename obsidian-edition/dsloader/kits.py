@@ -23,9 +23,9 @@ WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits
 # 1st-level slot from 10th level
 SEEKER_SLOTS = ((1, 0, 0, 0), (2, 0, 0, 0), (2, 1, 0, 0), (2, 2, 0, 0), (2, 2, 1, 0), (3, 2, 1, 0), (3, 2, 2, 0),
                 (3, 3, 2, 1), (3, 3, 3, 1), (4, 4, 3, 1), (4, 4, 3, 2))  # (14th-16th+: the owner's Table 51,
-# 2026-11-26; DSCLOG's seeker_slots the same)
+# 2026-11-26; DSCLOG's and DSCLOG2's seeker_slots the same)
 # a Justifier's priest slots at spell levels 1 to 3, by level from 10 to 16 and up (the owner's Table 46,
-# 2026-11-26: 10th's one slot as before; DSCLOG's justifier_slots the same)
+# 2026-11-26: 10th's one slot as before; DSCLOG's and DSCLOG2's justifier_slots the same)
 JUSTIFIER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (2, 2, 2), (3, 2, 2))
 # the most a ranger's casting level reaches (AD&D's 9, a ranger's from 16th), a Seeker's (and a Shinobi's,
 # by the Seeker's table) 11 and a Justifier's 7: the owner's tables' 16th+ rows (DSCLOG2's RANGER_MOST)
