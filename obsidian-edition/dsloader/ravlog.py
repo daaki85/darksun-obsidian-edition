@@ -1139,7 +1139,7 @@ class RavDiceLog(dicelog.DiceLog):
             far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
             self.guest.write(red_at, rings.red_table(self.guest.read(far * 16 + dac_off, 768), RED_FIRST, RED_LAST))
             self._red_at = changes
-        want = int((on and self._red_at is not None) or self._gold)
+        want = int(bool((on and self._red_at is not None) or self._gold))
         if want != self._rings_on:
             self.guest.write(self.tsr_hdr + rings.TSR_RINGS_ON, struct.pack("<H", want))
             self._rings_on = want

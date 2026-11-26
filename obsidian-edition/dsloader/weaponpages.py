@@ -227,9 +227,11 @@ def weapon_picture(objects: gff.Chunks, kind: int) -> Rows:
     return rows
 
 
-def slot(weapon: Rows, state: int) -> Rows:
+def slot(weapon: Rows, state: int, colours: Optional[Dict[str, int]] = None) -> Rows:
     """A slot with WEAPON in its middle: STATE 0 as it is, 1 lit, 2 out of use (the frames of a
-    button's picture, in the game's order)."""
+    button's picture, in the game's order); COLOURS the slot's (SLOT_*'s by name, RAV_SLOT's form)."""
+    c = colours or {"face": SLOT_FACE, "dark": SLOT_DARK, "light": SLOT_LIGHT, "lit": SLOT_LIT, "out": SLOT_OUT}
+    SLOT_FACE, SLOT_DARK, SLOT_LIGHT, SLOT_LIT, SLOT_OUT = c["face"], c["dark"], c["light"], c["lit"], c["out"]
     n = PICK_SLOT
     rows: Rows = [[SLOT_FACE] * n for _ in range(n)]
     for i in range(n):
@@ -290,4 +292,85 @@ def picker(resource: gff.Chunks, objects: gff.Chunks, row_button: bytes) -> Dict
     struct.pack_into("<HHH", window, WIND_WIDTH, PICK_WIDTH, PICK_HEIGHT, PICK_BACKGROUND)
     added[("WIND", PICKER)] = bytes(window)
     added[("BMP ", PICK_BACKGROUND)] = _encode([background(resource)])
+    return added
+
+
+# Wake of the Ravager's weapon window (DSCLOG2's WEAPON PICKS, the sequel's psionicists' pop-up in weapon
+# mode): the same ids, slots and layout as PICKER, made from the sequel's own psionicists' window (17501,
+# the same buttons as Shattered Lands'), its marble (BMP 17001, PLNR) and its own weapons' inventory
+# pictures (RAV_PICTURES: objects in its OBJEX.GFF, the plain weapon of each kind; it has no short sword, so
+# that slot has its long sword's made smaller: RAV_SHORT_SCALE), in its palette (RESOURCE.GFF's PAL 1000: the interface's
+# blue-greys 233-238, the marble's bevel 247 and 231, as the marble maps Shattered Lands' to them). The
+# pictures in the PLNR form (art.plnr_frames), the sequel's own.
+RAV_PICTURES = (603, 609, 612, None, 610, 607, 608, 628, 605, 606, 615, 611, 704, 700, 705, 706,
+                604, 600, 602, 601, 702, 790)
+RAV_SHORT_SCALE = 3  # (no short sword of its own: its long sword's picture, three quarters the size)
+RAV_SLOT = {"face": 237, "dark": 238, "light": 235, "lit": 233, "out": 236}
+RAV_MARBLE_LIGHT, RAV_MARBLE_DARK = 247, 231
+
+
+def rav_weapon_picture(objects: gff.Chunks, kind: int) -> Rows:
+    """Kind KIND's weapon in the sequel's inventory picture, trimmed (none if missing)."""
+    from .icons import OJFF_ICON
+    from .sequelicons import decode
+    number = RAV_PICTURES[kind]
+    if number is None:
+        rows = rav_weapon_picture(objects, 0)
+        size = max(len(rows), len(rows[0])) * RAV_SHORT_SCALE // 4
+        return _smaller(rows, size) if rows != [[None]] and size > 1 else rows
+    ojff = objects.get(("OJFF", number))
+    if not ojff:
+        return [[None]]
+    bmp = objects.get(("BMP ", struct.unpack_from("<H", ojff, OJFF_ICON)[0]))
+    if not bmp:
+        return [[None]]
+    rows = _trim(decode(bmp))
+    if max(len(rows), len(rows[0])) > PICK_SLOT - 4:
+        rows = _smaller(rows, PICK_SLOT - 4)
+    return rows
+
+
+def rav_background(resource: gff.Chunks) -> Rows:
+    """background's, from the sequel's marble and in its bevel."""
+    from .sequelicons import decode
+    marble = [r[3:-3] for r in decode(resource[("BMP ", PSIONIC_BACKGROUND)])[3:-3]]
+    mh, mw = len(marble), len(marble[0])
+    w, h = PICK_WIDTH, PICK_HEIGHT
+    rows: Rows = [[marble[(y + 37 * (x // mw)) % mh][(x + 53 * (y // mh)) % mw] for x in range(w)]
+                  for y in range(h)]
+    for x in range(w):
+        rows[0][x] = rows[1][x] = RAV_MARBLE_LIGHT
+        rows[h - 1][x] = rows[h - 2][x] = RAV_MARBLE_DARK
+    for y in range(h):
+        rows[y][0] = rows[y][1] = RAV_MARBLE_LIGHT
+        rows[y][w - 1] = rows[y][w - 2] = RAV_MARBLE_DARK
+    return rows
+
+
+def rav_chunks(resource: gff.Chunks, objects: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+    """For Wake of the Ravager's RESOURCE.GFF (the Loader's copy, ravager.resources_fixed): the weapon
+    window (PICKER, the same ids and places as picker's), its weapons' pictures from OBJECTS (the sequel's
+    OBJEX.GFF chunks)."""
+    from .art import plnr_frames
+    added: Dict[Tuple[str, int], bytes] = {}
+    psionic = resource[("WIND", PSIONIC_PICKER)]
+    keep = {c: (x, y) for c, x, y in _items(psionic) if c in (PICK_COUNT_BUTTON, PICK_EXIT)}
+    left = (PICK_WIDTH - PICK_COLUMNS * PICK_PITCH + (PICK_PITCH - PICK_SLOT)) // 2
+    row_template = resource[("BUTN", ROW_TEMPLATE)]
+    items = []
+    for kind in range(len(specialize.KINDS)):
+        cid = PICK_FIRST + kind
+        weapon = rav_weapon_picture(objects, kind)
+        added[("ICON", cid)] = plnr_frames([slot(weapon, state, RAV_SLOT) for state in range(3)])
+        button = bytearray(_button(row_template, ROW_TEMPLATE, cid))
+        struct.pack_into("<HH", button, BUTN_SIZE, PICK_SLOT, PICK_SLOT)
+        added[("BUTN", cid)] = bytes(button)
+        items.append((cid, left + PICK_PITCH * (kind % PICK_COLUMNS), PICK_TOP + PICK_PITCH * (kind // PICK_COLUMNS)))
+    exit_x, exit_y = keep[PICK_EXIT]
+    exit_x, exit_y = exit_x + PICK_WIDTH - 159, exit_y + PICK_HEIGHT - 113
+    items += [(PICK_COUNT_BUTTON, exit_x - PICK_COUNT_GAP, exit_y), (PICK_EXIT, exit_x, exit_y)]
+    window = bytearray(_window(psionic, PICKER, items))
+    struct.pack_into("<HHH", window, WIND_WIDTH, PICK_WIDTH, PICK_HEIGHT, PICK_BACKGROUND)
+    added[("WIND", PICKER)] = bytes(window)
+    added[("BMP ", PICK_BACKGROUND)] = plnr_frames([rav_background(resource)])
     return added

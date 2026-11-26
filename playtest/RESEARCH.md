@@ -1684,6 +1684,42 @@ squares.py, moveback.py and usable.py run on the sequel with `ravlog.RAV_FIGHT_K
   (`effect OWNER EFFECT`, `del OWNER EFFECT`: the sequel's effects table at (load + 3E71h):24Dh, count DS:2100h).
   The dice log's switches `RAV_NO_SQUARES`, `RAV_NO_MOVEBACK`, `RAV_NO_USABLE` (and `RAV_NO_SAVES`) make a control.
 
+**Picking weapon specs at creation in the sequel** (2026-11-26, logs/2026-11-26-ravager-spec-pick.md): DSCLOG2's
+WEAPON PICKS (sites 120-125) shows the Loader's weapon window on the psionicists' pop-up in weapon mode, as SL's
+PROBE_PK_* do. What it needed from the sequel:
+- **DONE** (6E0B9h) runs the powers (6E906h), the spells (6EA10h, CR_PICKS at 6ED55h), frees the screen's windows,
+  then "push si / nop / push cs" (6E2ECh: CR_WEAPONS, site 120) and the call for the starting gear (6F197h; GEAR_DONE,
+  site 85, at 6E2F2h). The pick runs there, after the spells and powers (SL asks for the weapons before the powers).
+- **The pop-up** (688:61h, 93B62h): its event loop's "or ax,ax / jnz" at 93BBAh (PK_HOVER); the window routine
+  93BE4h ("push 2B0050h" the place, then "push 445Dh" the window at 93C94h: PK_WIN); the title "push ds / push
+  2ACCh" at 93D63h (PK_TITLE; the colours E7h/E3h at 93D6Bh/93D71h, width 9Fh at 93D6Fh, y "push 46h" at 93D73h);
+  the two lines routine 93930h; the powers' list fill 93DECh (PK_FILL) to its end 93F7Eh ("xor ax,ax"); a button
+  in use or not 168:71Fh (its far address at 93D09h), a button's text 168:7FFh (at 93CF4h); the click handler
+  93F8Dh, its "mov ax,[bp+8]" at 93FABh (PK_CLICK), the stay 9403Eh and the close 94047h. The window far pointer
+  DS:1431h; the pop-up writes the member's sheet and creature to DS:1429h/142Dh (put back after it).
+- **EDIT**: the creation screen's EDIT is 6E696h (5C0:48h). View Character's right-click menu offers it only while
+  the creature's status (+14h) is 0 ("New"; else EDIT NAME). The creation screen copies only 42h bytes of the sheet,
+  so the specs (+42h..+44h) and +45h survive an EDIT; DONE after an EDIT asks only for what is still due.
+- **The pictures**: the sequel's are PLNR (FFh "PLNR", BITS, a colour map, codes with the escape 0: "0 0" a pixel
+  of colour 0, "0 k" the last code k+2 more times); `art.plnr_frames` writes it. Its UI palette is PAL 1000:
+  blue-greys 233-238, the marble's bevel 247/231; the marble is BMP 17001, the powers' window WIND 17501, its
+  buttons' BUTN 7FAh. The weapons' pictures are OBJEX objects (`weaponpages.RAV_PICTURES`; no short sword: the
+  long sword's at three quarters).
+- **Testing it**: DSCLOG2's rules word is 0 until the Loader (or the dice log) writes it, so a new character made
+  with neither attached gets no window. `ravspecs.py` reads the party's specs and the pick's counters (wp_asks,
+  wp_picked, wp_filled); `ravspecs.py check` compares the routines in memory with dos/DSCLOG2.EXE. The roster
+  (CHARSAVE.GFF) keeps the picks; START GAME takes the party CREATE CHARACTERS has, empty after a restart (ADD the
+  roster's). The new characters are 7th level: a gladiator is due 3. In the Tyr ambush Borzak's right hand held a
+  type 91 (flags 4, not a weapon) and his sword was in slot 10: a test edit of that item's type to the Lotulis (61)
+  gave "+3 mastery" to hit and damage.
+- **A new fighter's attacks a round** (2026-11-26, the same log's part 9): the sequel's creation gives a 7th-level
+  fighter 4 halves (2 a round) at the sheet's +24h. Its gear puts the +1 shield (91) in slot 3, the right hand, and the
+  +1 Longsword (97) in slot 10, the left hand (one swing a round whatever the skill); party member 0 of a new game also
+  has an Obsidian Dragonsbane +4 (73) in slot 14 that Computer Control readies in the left hand. For a rate test move
+  the sword to slot 3 (the shield to 14: Computer Control puts it back in the left hand, harmless) and make any second
+  weapon a shield (type 91), all with the dice log attached and never saved. Seen: a long sword specialist (mastery) 2
+  every round, a club specialist with the long sword 2, 1, 2, 1, a fighter with no spec the game's 2.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
