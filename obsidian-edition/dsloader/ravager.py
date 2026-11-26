@@ -97,13 +97,58 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
-                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES)
+                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES
+                | game.RULE_LEVEL_10)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
 # the XP table's reads (its "imul eax,eax,64h": XP_NEED's sites, 3 bytes on)
 XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
+# The level cap by XP (game.RULE_LEVEL_10; DSCLOG2's LEVEL_ROOM): a class goes up while its next level
+# needs no more than its share of RAV_XP_CAP (the owner's, 2026-11-25: most characters of three classes
+# reach 15th, of one or two higher), past the game's cap of 15, up to the XP table's 30th level (the owner's,
+# 2026-11-25: no stop at 20th)
+RAV_XP_CAP, RAV_LEVEL_MOST = 5_625_000, 30
+# the sheet's classes (1-17) to the XP table's rows (1-8: tables.ROWS), as the game's map at 360h:9Dh
+CLASS_ROWS = (0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8)
+
+
+def xp_share(classes: Sequence[int], levels: Sequence[int], human: bool, rows: bool = False) -> int:
+    """The XP the first class of a character may gather under RAV_XP_CAP (DSCLOG2's LEVEL_ROOM): all of
+    it for one class, an equal share for several (not a human), and for a human what is left after the
+    XP its old classes' levels needed (slots 1 and 2). CLASSES the sheet's (1-17), or rows (1-8) with
+    ROWS, as View Character's copy has them."""
+    from . import tables
+    if not human:
+        n = sum(1 for c in classes if c)
+        return RAV_XP_CAP // n if n else RAV_XP_CAP
+    share = RAV_XP_CAP
+    for cls, level in zip(classes[1:3], levels[1:3]):
+        row = cls if rows else (CLASS_ROWS[cls] if 0 <= cls < len(CLASS_ROWS) else 0)
+        if row and 1 <= level <= RAV_LEVEL_MOST:
+            share = max(share - tables.RAV_XP[tables.ROWS[row - 1]][level - 1], 0)
+    return share
+
+
+def level_room(classes: Sequence[int], levels: Sequence[int], human: bool, slot: int, rows: bool = False) -> bool:
+    """Whether the class in SLOT may go up a level under the cap (LEVEL_ROOM's CF): its next level's
+    XP (tables.RAV_XP at its level) no more than its share, and below 30th."""
+    from . import tables
+    cls, level = classes[slot], levels[slot]
+    row = cls if rows else (CLASS_ROWS[cls] if 0 <= cls < len(CLASS_ROWS) else 0)
+    if not row or not 0 <= level < RAV_LEVEL_MOST:
+        return False
+    return tables.RAV_XP[tables.ROWS[row - 1]][level] <= xp_share(classes, levels, human, rows)
+
+
+def level_most(row: str, classes: int) -> int:
+    """The highest level a class of ROW reaches under the cap in a character of CLASSES classes."""
+    from . import tables
+    share, level = RAV_XP_CAP // classes, 1
+    while level < RAV_LEVEL_MOST and tables.RAV_XP[row][level] <= share:
+        level += 1
+    return level
 
 # The game's reads of an item's name (file offsets: SITE_NAME's)
 NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
@@ -579,10 +624,31 @@ PATCHES: Tuple[Patch, ...] = (
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
     # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
     # routine's call (62893h, "nop / push cs / call 2A10h", SL's 5E240h): DSCLOG2's XP_NEED, PRIEST_THAC0
-    # and ADND_SLOTS, AD&D's tables to 20th level (tables.RAV_*)
+    # and ADND_SLOTS, AD&D's tables to 20th level and the owner's to 30th (tables.RAV_*; XP_NEED answers
+    # RAV_XP's past the game's 20 entries)
     *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
+    # The level cap by XP (SL's level_up_cap, xp_view_cap, xp_next, thief_hd_*; game.RULE_LEVEL_10, always on,
+    # with RAV_XP_CAP): the level up's "cmp byte es:[bx+1Eh],0Fh" (959A5h) and View Character's (6FB51h),
+    # DSCLOG2's LV_UP and LV_VIEW (sites 110, 111: LEVEL_ROOM's share in place of the game's 15th); the level
+    # up's hold on XP ("add ax,3", 958BDh), LV_CLAMP (112: none past RAV_XP's 30 entries); View
+    # Character's ")" ("push 1386h", 6FC08h), XP_SUFFIX (117: the class the next XP is for); and a thief's
+    # d6 to 10th (the hit die's "mov al,es:[bx+1]", 94FECh, and the most hit points' "cmp al,es:[bx+1]",
+    # 95460h, and its "mov", 95471h: HD_ROLL, HD_CON, HD_CLAMP, 113-115; the psionicist's stays 9th)
+    Patch("level_cap_up", 0x959A5, bytes.fromhex("26807f1e0f"), _site(110, 5)),
+    Patch("level_cap_view", 0x6FB51, bytes.fromhex("26807f1e0f"), _site(111, 5)),
+    Patch("level_clamp", 0x958BD, bytes.fromhex("050300"), _site(112, 3)),
+    Patch("xp_suffix", 0x6FC08, bytes.fromhex("688613"), _site(117, 3)),
+    # (the level up's message's "th", "mov ax,2B7Eh" at 959D3h: LV_ORDINAL, 118, "21st" past 20th)
+    Patch("level_ordinal", 0x959D3, bytes.fromhex("b87e2b"), _site(118, 3)),
+    Patch("thief_hd_roll", 0x94FEC, bytes.fromhex("268a870100"), _site(113, 5)),
+    Patch("thief_hd_con", 0x95460, bytes.fromhex("263a870100"), _site(114, 5)),
+    Patch("thief_hd_clamp", 0x95471, bytes.fromhex("268a870100"), _site(115, 5)),
+    # ... and the saves as in AD&D (game.RULE_ADND_TABLES): the save routine's "mov al,es:[bx+6Ch]" (955DFh),
+    # a group's 1st-level save, DSCLOG2's SAVE_BASE (116: the Player's Handbook's table, tables.rav_saves;
+    # the game's own held every save at its table's last, a warrior at 11/11/11/13/11 from 10th)
+    Patch("save_table", 0x955DF, bytes.fromhex("268a876c00"), _site(116, 5)),
     Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
     # CON as in AD&D (SL's regen_rate, con_save; game.RULE_CON): regeneration's rate (26599h, "mov dx,cx /
     # imul dx,dx,31h" after its "div ebx", SL's 228BFh) and CON's save adjustment (1D36Bh, "mov bx,ax /

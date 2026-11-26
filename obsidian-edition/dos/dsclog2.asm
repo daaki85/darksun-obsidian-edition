@@ -3115,10 +3115,22 @@ ranger_level:
         ja .out                 ; (not a ranger)
         call ranger_drop
         sub al, cl
-        jnc .out
+        jnc .most
         xor al, al
+.most:  call ranger_most
 .out:   pop cx
         iret
+; RANGER_MOST: AX a ranger's casting level, no more than AD&D's 9 (RANGER_CAST_MOST: a ranger's of 16th
+; level and up) with the level cap by XP (RULE_LEVEL_10, which takes rangers past the game's 15th).
+; Others kept.
+RANGER_CAST_MOST equ 9
+ranger_most:
+        test word [cs:rules], RULE_LEVEL_10
+        jz .ret
+        cmp ax, RANGER_CAST_MOST
+        jle .ret
+        mov ax, RANGER_CAST_MOST
+.ret:   ret
 ; RANGER_DROP: CL what a ranger's level loses for its spells (ES:BX its sheet + the class's place): 7 with
 ; the rule, else 0; with the kits a Seeker's 5, a Justifier's 9 (kits.ranger_cast_drop), whatever the
 ; rule. DS the game's; others kept.
@@ -3176,6 +3188,9 @@ kit_ranger_cast:
         mov bx, 9
 .game:  pop ax
 .take:  sub dx, bx
+        xchg ax, dx
+        call ranger_most                ; (AD&D's most, 9)
+        xchg ax, dx
         pop bx
         iret
 ; EL_SPHERE (sites 90-92): the Elementalist's second sphere (SL's EL_SPHERES, PROBE_EL_GRANT,
@@ -3603,8 +3618,11 @@ pick_any:
         ja .flags
         test word [cs:rules_hi], RULE_HI_INT
         jnz .levels
-        cmp byte [cs:cr_cap], 0
-        je .flags
+        push ax
+        call pick_most
+        or al, al
+        pop ax
+        jz .flags
 .levels:
         push cx
         cmp ax, 10
@@ -3614,11 +3632,15 @@ pick_any:
         cmp ax, WIZ_LEVELS
         jbe .top
         mov ax, WIZ_LEVELS
-.top:   cmp byte [cs:cr_cap], 0     ; (CR_SPELLS's: no higher than CR_CAP)
+.top:   push ax                     ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
+        call pick_most
+        mov cl, al
+        pop ax
+        or cl, cl
         je .capped
-        cmp al, [cs:cr_cap]
+        cmp al, cl
         jbe .capped
-        movzx ax, byte [cs:cr_cap]
+        movzx ax, cl
 .capped:
         mov [bp - 2], ax
         test word [cs:rules_hi], RULE_HI_INT
@@ -3677,11 +3699,17 @@ pick_list:
 ; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
 ; one. AL the page's level, as the code goes on to show it.
 pick_page:
-        cmp byte [cs:cr_cap], 0             ; (CR_SPELLS's: no higher than CR_CAP)
-        je .rule
-        cmp al, [cs:cr_cap]
-        jbe .rule
-        mov al, [cs:cr_cap]
+        push cx                             ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
+        push ax
+        call pick_most
+        mov cl, al
+        pop ax
+        or cl, cl
+        jz .most
+        cmp al, cl
+        jbe .most
+        mov al, cl
+.most:  pop cx
 .rule:  test word [cs:rules_hi], RULE_HI_INT
         jz .set
         push cx
@@ -3978,15 +4006,15 @@ site_table:
         dw site_none                        ; 107 (none here)
         dw site_none                        ; 108 (none here)
         dw site_none                        ; 109 (none here)
-        dw site_none                        ; 110 (none here)
-        dw site_none                        ; 111 (none here)
-        dw site_none                        ; 112 (none here)
-        dw site_none                        ; 113 (none here)
-        dw site_none                        ; 114 (none here)
-        dw site_none                        ; 115 (none here)
-        dw site_none                        ; 116 (none here)
-        dw site_none                        ; 117 (none here)
-        dw site_none                        ; 118 (none here)
+        dw lv_up                            ; 110 SITE_LV_UP (959A5h: the level up's cap: RAV_XP_CAP's share, LEVEL_ROOM)
+        dw lv_view                          ; 111 SITE_LV_VIEW (6FB51h: View Character's next level: the same)
+        dw lv_clamp                         ; 112 SITE_LV_CLAMP (958BDh: the level up's hold on XP: none past the table)
+        dw hd_roll                          ; 113 SITE_HD_ROLL (94FECh: a level's hit die: a thief's d6 to 10th)
+        dw hd_con                           ; 114 SITE_HD_CON (95460h: the most hit points' dice levels: the same)
+        dw hd_clamp                         ; 115 SITE_HD_CLAMP (95471h: ... kept)
+        dw save_base                        ; 116 SITE_SAVE_BASE (955DFh: a save: the Player's Handbook's table)
+        dw xp_suffix_site                   ; 117 SITE_XP_SUFFIX (6FC08h: View Character's next XP: the class it is for)
+        dw lv_ordinal                       ; 118 SITE_LV_ORDINAL (959D3h: the level up's "21st", not "21th")
         dw site_none                        ; 119 (none here)
         dw cr_weapons                      ; 120 SITE_CR_WEAPONS (6E2ECh: DONE before the game's gear: a new member's weapon specs picked on the weapon window)
         dw pk_win                          ; 121 SITE_PK_WIN (93C94h: the psionicists' pop-up's window: the weapon window in weapon mode)
@@ -6017,7 +6045,7 @@ belt_site:
 ; - STAB_TIMES (ENLARGE DICE, below): a backstab multiplies the weapon's dice only.
 RULE_THIEF_TABLE equ 256
 THIEF_MOST  equ 95
-THIEF_LEVELS equ 13
+THIEF_LEVELS equ 17
 thief_skill:
         sti
         test word [cs:rules], RULE_THIEF_TABLE
@@ -6077,16 +6105,17 @@ thief_adnd:
         pop cx
         pop bx
         ret
-; AD&D's average thief skills, levels 1-13, a row per skill (game.AD_D_THIEF)
+; AD&D's average thief skills, levels 1-17, a row per skill (game.AD_D_THIEF: the owner's table, 2026-11-25,
+; the same as SL's to 13th; flat past 17th)
 thief_table:
-        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99     ; pick pockets
-        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82     ; open locks
-        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80     ; find/remove traps
-        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99     ; move silently
-        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85     ; hide in shadows
-        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40     ; hear noise
-        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99     ; climb walls
-        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65        ; read languages
+        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99, 99, 99, 99, 99 ; pick pockets
+        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97, 99 ; open locks
+        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99 ; find/remove traps
+        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99, 99, 99, 99, 99 ; move silently
+        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85, 93, 99, 99, 99 ; hide in shadows
+        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40, 40, 50, 50, 55 ; hear noise
+        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99, 99, 99, 99, 99 ; climb walls
+        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 80 ; read languages
 ; Dark Sun's DEX adjustments, DEX 9-22, a row per DEX: pick, open, traps, move, hide (game.DEX_ADJUST)
 dex_table:
         db -15, -10, -10, -20, -10
@@ -7124,6 +7153,10 @@ xp_need:
         push bp
         mov bp, sp                      ; +2 the way back, +4 CS, +6 flags; +8 3E8h, +0Ah the row,
         imul eax, eax, 100              ;   +0Ch the index
+        cmp byte [cs:xp_top], 0
+        jne .top
+        cmp word [bp + 0x0C], RAV_GAME_XP
+        jae .past
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .drop
         push dx
@@ -7141,6 +7174,22 @@ xp_need:
         inc word [cs:xp_count]
 .done:  pop si
         pop dx
+        jmp .drop
+.top:   mov byte [cs:xp_top], 0         ; (LV_CLAMP's: past the table, the most, so no hold)
+.most:  or eax, -1
+        jmp .drop
+.past:  test word [cs:rules], RULE_LEVEL_10     ; (past the game's 20 entries, which run on into the next
+        jz .drop                        ;   row: RAV_XP's to 30th, then the most)
+        cmp word [bp + 0x0C], RAV_LEVELS
+        jae .most
+        cmp word [bp + 0x0A], 7
+        ja .most
+        push dx
+        mov dl, [bp + 0x0A]
+        mov dh, [bp + 0x0C]
+        call rav_xp_at
+        pop dx
+        inc word [cs:xp_pasts]
 .drop:  push ax
         mov ax, [bp + 6]
         mov [bp + 0x0C], ax
@@ -7179,11 +7228,15 @@ xp_fixes:
         XP_FIX 7, 1, 1250               ; thief
         db 0xFF
 xp_count dw 0                           ; (AD&D's XP given, for a look in play)
+xp_pasts dw 0                           ; (RAV_XP's past the game's table given, likewise)
 ;
 ; PRIEST_THAC0 (site 33, "priest_thac0"): "mov [bp-2],ax" (95391h; 3 bytes, SL's 876ABh) in the THAC0
 ; routine (9534Ch), AX what a class group takes off 20 at its level ((level - 1) x the group's
 ; factor / 12; CX the group 0-3: priest, warrior, wizard, rogue; the levels the bytes at [BP-0Ah] +
-; CX x 2). With the rule a priest's AD&D's, 2 for every 3 levels.
+; CX x 2). With the rule a priest's AD&D's, 2 for every 3 levels. With RULE_LEVEL_10 (the owner's,
+; 2026-11-26: High Level Campaigns' Table 39) no more than THAC0_MOST's for the group, so past 20th THAC0
+; stops at a priest's 8, a warrior's 1, a wizard's 14 and a rogue's (a thief's or psionicist's) 11; the
+; game keeps the best group's (the most taken off), so a character of several classes has the best of them.
 priest_thac0:
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .done
@@ -7202,8 +7255,22 @@ priest_thac0:
         add ax, ax
         pop dx
         pop bx
-.done:  mov [bp - 2], ax
+.done:  test word [cs:rules], RULE_LEVEL_10
+        jz .set
+        cmp cx, 3
+        ja .set
+        push bx
+        mov bx, cx
+        movzx bx, byte [cs:bx + thac0_most]
+        cmp ax, bx
+        jle .kept
+        mov ax, bx
+        inc word [cs:thac0_cuts]
+.kept:  pop bx
+.set:   mov [bp - 2], ax
         iret
+thac0_most db 12, 19, 6, 9              ; (20 less the group's best THAC0: priest 8, warrior 1, wizard 14, rogue 11)
+thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a look in play)
 ;
 ; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
 ; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
@@ -7212,7 +7279,7 @@ priest_thac0:
 ; AD&D's for the level (RAV_SLOTS) and the game's for its WIS alone (the routine called with level
 ; 0); the others', and all without the rule, the game's.
 SLOT_CALL   equ 0x62A10 - 0x62896       ; (the routine, from the INT's way back)
-SLOT_LEVELS equ 20                      ; (class levels in RAV_SLOTS; more are the 20th's)
+SLOT_LEVELS equ 30                      ; (class levels in RAV_SLOTS; more are the 30th's)
 SLOT_SPELLS equ 9                       ; (spell levels in a row)
 adnd_slots:
         push bp
@@ -7227,11 +7294,21 @@ adnd_slots:
         movzx bx, byte [bp + 8]
         cmp bx, 11
         je .wizard
+        cmp bx, RANGER_FIRST
+        jb .priest
+        cmp bx, RANGER_LAST
+        ja .game
+        mov bx, 2 * SLOT_LEVELS * SLOT_SPELLS   ; (a ranger: the third)
+        jmp .ours
+.priest:
         cmp bx, 8
         ja .game
         or bx, bx
         jz .game
-        xor bx, bx                      ; (a priest: the first table)
+        cmp bx, DRUID_FIRST
+        mov bx, 0                       ; (a priest: the first table)
+        jb .ours
+        mov byte [cs:slot_top], DRUID_SLOT_LEVELS   ; (a druid's: no more after 15th)
         jmp .ours
 .wizard:
         mov bx, SLOT_LEVELS * SLOT_SPELLS
@@ -7240,10 +7317,11 @@ adnd_slots:
         mov [ss:si], cl
         push ax
         movzx ax, cl                    ; and AD&D's for the level
-        cmp al, SLOT_LEVELS
+        cmp al, [cs:slot_top]
         jbe .lv
-        mov al, SLOT_LEVELS
-.lv:    dec ax
+        mov al, [cs:slot_top]
+.lv:    mov byte [cs:slot_top], SLOT_LEVELS
+        dec ax
         js .none
         imul ax, ax, SLOT_SPELLS
         add bx, ax
@@ -7286,6 +7364,9 @@ adnd_slots:
         pop bx
         ret
 slot_count dw 0                         ; (AD&D's slots given, for a look in play)
+slot_top   db SLOT_LEVELS               ; (the class levels whose slots grow: a druid's DRUID_SLOT_LEVELS)
+DRUID_FIRST equ 5                       ; (the druids' classes 5-8: the owner's table, 2026-11-25, the same
+DRUID_SLOT_LEVELS equ 15                ;   as the cleric's to 15th, then 15th's, 6 6 6 6 4 2 1)
 ; VEILED_SLOT: (ADND_SLOTS's, its frame) AX the slots of class [BP+8] at spell level [BP+0Ch], the
 ; combatant at [BP-6] (the SI it pushed): the Veiled Robe (a robe of plus 2 on the chest, PROT_SCAN; SL's
 ; robes.slots) a preserver's slot more at spell levels 1 to 3 where it has any. Others kept.
@@ -7310,7 +7391,10 @@ veiled_slot:
         inc word [cs:veiled_count]
 .ret:   ret
 veiled_count dw 0
-; by class level 1-20, the slots at spell levels 1-9 (tables.RAV_PRIEST_SLOTS, RAV_WIZARD_SLOTS)
+; by class level 1-30, the slots at spell levels 1-9 (tables.RAV_PRIEST_SLOTS, RAV_WIZARD_SLOTS,
+; RAV_RANGER_SLOTS)
+
+RANGER_LAST  equ 16
 rav_slots:
         db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; priests (clerics, druids): 1
         db 2, 0, 0, 0, 0, 0, 0, 0, 0
@@ -7332,6 +7416,16 @@ rav_slots:
         db 8, 8, 8, 8, 6, 4, 2, 0, 0
         db 9, 9, 8, 8, 6, 4, 2, 0, 0
         db 9, 9, 9, 8, 7, 5, 2, 0, 0    ; 20
+        db 9, 9, 9, 9, 8, 6, 2, 0, 0
+        db 9, 9, 9, 9, 9, 6, 3, 0, 0
+        db 9, 9, 9, 9, 9, 7, 3, 0, 0
+        db 9, 9, 9, 9, 9, 8, 3, 0, 0
+        db 9, 9, 9, 9, 9, 8, 4, 0, 0    ; 25
+        db 9, 9, 9, 9, 9, 9, 4, 0, 0
+        db 9, 9, 9, 9, 9, 9, 5, 0, 0
+        db 9, 9, 9, 9, 9, 9, 6, 0, 0
+        db 9, 9, 9, 9, 9, 9, 7, 0, 0
+        db 9, 9, 9, 9, 9, 9, 8, 0, 0    ; 30
         db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; wizards (preservers): 1
         db 2, 0, 0, 0, 0, 0, 0, 0, 0
         db 2, 1, 0, 0, 0, 0, 0, 0, 0
@@ -7352,6 +7446,46 @@ rav_slots:
         db 5, 5, 5, 5, 5, 3, 3, 2, 1
         db 5, 5, 5, 5, 5, 3, 3, 3, 1
         db 5, 5, 5, 5, 5, 4, 3, 3, 2    ; 20
+        db 5, 5, 5, 5, 5, 4, 4, 4, 2
+        db 5, 5, 5, 5, 5, 5, 4, 4, 3
+        db 5, 5, 5, 5, 5, 5, 5, 5, 3
+        db 5, 5, 5, 5, 5, 5, 5, 5, 4
+        db 5, 5, 5, 5, 5, 5, 5, 5, 5    ; 25
+        db 6, 6, 6, 6, 5, 5, 5, 5, 5
+        db 6, 6, 6, 6, 6, 6, 6, 5, 5
+        db 6, 6, 6, 6, 6, 6, 6, 6, 6
+        db 7, 7, 7, 7, 6, 6, 6, 6, 6
+        db 7, 7, 7, 7, 7, 7, 7, 6, 6    ; 30
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0    ; rangers (AD&D's; the game's formula gives 3 2 1 at 12th, 3 2 2 at 13th, 3 3 2 at 14th): 1
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0    ; 5
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0, 0, 0, 0, 0
+        db 1, 0, 0, 0, 0, 0, 0, 0, 0
+        db 2, 0, 0, 0, 0, 0, 0, 0, 0
+        db 2, 1, 0, 0, 0, 0, 0, 0, 0    ; 10
+        db 2, 2, 0, 0, 0, 0, 0, 0, 0
+        db 2, 2, 1, 0, 0, 0, 0, 0, 0
+        db 3, 2, 1, 0, 0, 0, 0, 0, 0
+        db 3, 2, 2, 0, 0, 0, 0, 0, 0
+        db 3, 3, 2, 0, 0, 0, 0, 0, 0    ; 15
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0    ; 20
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0    ; 25
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0
+        db 3, 3, 3, 0, 0, 0, 0, 0, 0    ; 30
 ; CON AS IN AD&D: DSCLOG's REGEN_SITE and CON_SAVE (RULE_HI_CON, the second rules word's 1024), the
 ; sequel's routines SL's:
 ; - REGEN_SITE (site 35, "regen_rate"): "mov dx,cx / imul dx,dx,31h" (26599h; 5 bytes, SL's 228BFh)
@@ -7614,6 +7748,10 @@ probe_two:
         mov ax, [bp + 0x0A]
         call item_is_cahulaks
         jne .weapons
+        mov word [cs:two_base], -2      ; (the cahulaks: the main head's base, as SL's)
+        xor dx, dx
+        call kit_two                    ; (a Ghetto Fighter's 2 better; a Twin-blade or Battle Dancer in light
+        jc .out                         ;  armour none, as SL's PROBE_TWO has it for the cahulaks too)
         call cah_adjust                 ; (the cahulaks: the main head's here, the off head's more kept)
         jmp .counted
 .weapons:
@@ -10680,13 +10818,14 @@ cah_more:                       ; AX the attacks a round (halves) with item [BP+
         add ax, 2
         inc word [cs:cah_count]
 .ret:   ret
-cah_adjust:                     ; DX the main head's adjustment (-2 + TWO_ADJUST, no better than 0);
-        push ax                 ;   CAH_EXTRA how much worse the off head's is, for attacker CX
-        mov dx, -2
+cah_adjust:                     ; DX the main head's adjustment (TWO_BASE + TWO_ADJUST, no better than 0);
+        push ax                 ;   CAH_EXTRA how much worse the off head's is (2 more), for attacker CX
+        mov dx, [cs:two_base]
         add dx, [cs:two_adjust]
         jle .main
         xor dx, dx
-.main:  mov ax, -4
+.main:  mov ax, [cs:two_base]
+        sub ax, 2
         add ax, [cs:two_adjust]
         jle .off
         xor ax, ax
@@ -16532,15 +16671,32 @@ psi_click:
         iret
 
 ; PICK_TOP (site 99): "cmp ax,[bp-2]" (93831h; 3 bytes) where CHOOSE A SPELL's level button goes on a page
-; (AX the next, [BP-2] the highest the reader casts): no higher than CR_CAP while it is set. Its flags back.
+; (AX the next, [BP-2] the highest the reader casts): no higher than PICK_MOST. Its flags back.
+; PICK_MOST: AL the highest spell level CHOOSE A SPELL offers: CR_CAP while set (creation's picks), else
+; WIZ_PICK_MOST with RULE_LEVEL_10 (the owner's, 2026-11-26: no 10th-level wizard slots, so a preserver's
+; level up from 20th, where the game opens on level / 2, never offers the sequel's four 10th-level spells,
+; 111-114, Dome of Invulnerability, Magical Plague, Rift, Wall of Ash: monsters' only), else 0 (none).
+; Others kept.
+WIZ_PICK_MOST equ 9
+pick_most:
+        mov al, [cs:cr_cap]
+        or al, al
+        jnz .ret
+        test word [cs:rules], RULE_LEVEL_10
+        jz .ret
+        mov al, WIZ_PICK_MOST
+.ret:   ret
 pick_top:
         push cx
         mov cx, [bp - 2]
-        cmp byte [cs:cr_cap], 0
-        je .cmp
-        cmp cl, [cs:cr_cap]
-        jbe .cmp
-        movzx cx, byte [cs:cr_cap]
+        push ax
+        call pick_most
+        or al, al
+        jz .most
+        cmp cl, al
+        jbe .most
+        movzx cx, al
+.most:  pop ax
 .cmp:   push bp
         mov bp, sp              ; ([BP+2] CX, +4 IP, +6 CS, +8 the flags)
         cmp ax, cx
@@ -16579,6 +16735,539 @@ psi_asks   dw 0
 psi_filled dw 0
 psi_kept   dw 0
 
+; LEVEL CAP BY XP: DSCLOG's PROBE_LEVEL, LEVEL_ROOM, PROBE_XP_NEXT, PROBE_HD_ROLL and PROBE_HD_CON (RULE_LEVEL_10,
+; always on) with the owner's cap (2026-11-25): a class goes up a level while its next level needs no more
+; than its share of RAV_XP_CAP, 5,625,000 (the whole for one class, an equal share for several, a human's
+; what its old classes' levels left), past the game's cap of 15 to RAV_XP's 30th level (the owner's, 2026-11-25:
+; no stop at 20th). Most characters of three classes reach 15th, of one or two higher, one class 20th to 30th
+; (ravager.level_most). The sites:
+; - LV_UP (site 110, "level_cap_up"): "cmp byte es:[bx+1Eh],0Fh" (959A5h; 5 bytes) in the level up
+;   (95860h on; SI the member, DI the class's place, ES:BX the sheet + DI), then "jb" to the new level.
+; - LV_VIEW (site 111, "level_cap_view"): the same compare (6FB51h) on View Character, its copy of the sheet
+;   (classes as the XP table's rows, 1-8; SI the place), then "je" past the next level's XP: none at the cap.
+; - LV_CLAMP (site 112, "level_clamp"): "add ax,3" (958BDh; 3 bytes) where the level up holds the sheet's XP
+;   to the XP of 3 levels on (entry level + 3, then its read at 958E3h): past RAV_XP's last (29) the game
+;   would read on into the next class's row, so from 27th no hold (XP_TOP: XP_NEED's answer the most, so
+;   the game's "jae" passes the hold by); XP_HOLD holds it at the share. XP_NEED answers RAV_XP's for an
+;   index past the game's 20 entries (all eight reads: the level up's, View Character's).
+; - XP_SUFFIX (site 117, "xp_suffix"): View Character's "push 1386h", the ")" after the next level's XP: for
+;   a character of more than one class (not a human) the class whose next level it is, as SL's (" F)").
+; Levels 16-30 need no other change: hit points (the fixed gains past 9th or 10th) and THAC0 are the game's
+; formulas (a byte, read signed: a warrior's -9 at 30th), the slots RAV_SLOTS (to 30th), the saves
+; SAVE_BASE's table (its last row on), the thief skills THIEF_TABLE (to 17th, then flat), a ranger's casting
+; level RANGER_MOST (9); the game's one psionic power a level stops when none is left to learn. New characters start at 6th to 8th (6C3A4h-6C4E7h), far
+; below any share.
+RULE_LEVEL_10 equ 128
+RAV_XP_CAP    equ 5625000
+RAV_LEVELS    equ 30                    ; (RAV_XP's entries, 0-29: the next level's XP; the owner's, 2026-11-25)
+RAV_GAME_XP   equ 20                    ; (the game's table's: past it XP_NEED answers RAV_XP's)
+LV_CAP_GAME   equ 15                    ; (the game's cap)
+lv_up:
+        pushad
+        push es
+        mov di, sp
+        test word [cs:rules], RULE_LEVEL_10
+        jz lv_game
+        mov dx, [ss:di + 2]             ; (the place: the game's DI)
+        mov al, 1                       ; (the sheet's classes, 1-17)
+        jmp lv_room
+lv_view:
+        pushad
+        push es
+        mov di, sp
+        test word [cs:rules], RULE_LEVEL_10
+        jz lv_game
+        mov dx, si
+        xor al, al                      ; (the screen's copy: rows)
+lv_room:
+        sub bx, dx
+        call level_room
+        jc .below
+        inc word [cs:lv_tops]
+        cmp al, al                      ; (at the cap: "cmp 15,15")
+        jmp dual_flags
+.below: inc word [cs:lv_rooms]
+        mov al, 0
+        cmp al, 1                       ; (below it: "cmp 0,1")
+        jmp dual_flags
+lv_game:
+        cmp byte [es:bx + 0x1E], LV_CAP_GAME
+        jmp dual_flags
+lv_rooms dw 0                           ; (answers below the cap and at it, for a look in play)
+lv_tops  dw 0
+;
+; LV_CLAMP: AX the level (+ 3 here); past RAV_LEVELS - 1 that, and XP_TOP for XP_NEED's next answer.
+lv_clamp:
+        add ax, 3
+        test word [cs:rules], RULE_LEVEL_10
+        jz .out
+        cmp ax, RAV_LEVELS - 1
+        jbe .share
+        mov ax, RAV_LEVELS - 1
+        mov byte [cs:xp_top], 1
+.share: call xp_hold
+.out:   iret
+xp_top db 0                             ; (XP_NEED's next answer the most: no hold)
+; XP_HOLD (the owner's, 2026-11-25: XP stops growing at the cap): the sheet's XP (+0, a dword) no more than
+; its share (LR_SHARE), ES:BX the sheet + DI (the class's place) as the level up has them at LV_CLAMP's
+; site. The game's hold after it may take it lower. All registers kept.
+xp_hold:
+        pushad
+        sub bx, di
+        mov byte [cs:lr_classes], 1
+        call lr_share
+        cmp [es:bx], eax
+        jbe .ret
+        mov [es:bx], eax
+        inc word [cs:xp_holds]
+.ret:   popad
+        ret
+xp_holds dw 0                           ; (XP held at the share, for a look in play)
+;
+; LEVEL_ROOM: CF set if the class in place DX (0-2) of sheet ES:BX may go up a level under RAV_XP_CAP: its
+; next level's XP (RAV_XP_AT at its level) no more than its share, and its level below RAV_LEVELS. AL 1: the
+; sheet's classes (1-17, CLASS_ROWS), 0: rows (1-8, View Character's copy). One class: the whole cap.
+; Several (not a human): an equal share each, as the game shares out XP. A human (the race, +12h, 1) who
+; changed class: what is left after the XP its old classes' levels needed (places 1 and 2: the change of
+; class, 9493Ch, puts the new class first at 1st level and the sheet's XP at 0). All registers kept.
+level_room:
+        pushad
+        mov [cs:lr_classes], al
+        call lr_share
+        mov edi, eax
+        mov si, sp
+        mov si, [ss:si + 20]            ; (the place: DX as it came, from PUSHAD's)
+        movzx cx, byte [es:bx + si + 0x1E]
+        call lr_need
+        jc .no
+        cmp eax, edi
+        ja .no
+        popad
+        stc
+        ret
+.no:    popad
+        clc
+        ret
+; LR_SHARE: EAX the XP sheet ES:BX's classes may gather under RAV_XP_CAP (LEVEL_ROOM's share; LR_CLASSES
+; as it says). Others kept.
+lr_share:
+        push ecx
+        push edx
+        push si
+        mov eax, RAV_XP_CAP
+        cmp byte [es:bx + 0x12], 1
+        je .human
+        xor cx, cx                      ; (how many classes)
+        xor si, si
+.count: cmp byte [es:bx + si + 0x1B], 0
+        je .counted
+        inc cx
+.counted:
+        inc si
+        cmp si, 3
+        jb .count
+        xor edx, edx
+        movzx ecx, cx
+        jecxz .out
+        div ecx
+        jmp .out
+.human: push edi
+        mov edi, eax
+        mov si, 1                       ; (the old classes: places 1 and 2)
+.old:   movzx cx, byte [es:bx + si + 0x1E]
+        jcxz .next_old
+        dec cx                          ; (the XP its level needed: the entry before it)
+        call lr_need
+        jc .next_old
+        sub edi, eax
+        jnc .next_old
+        xor edi, edi
+.next_old:
+        inc si
+        cmp si, 3
+        jb .old
+        mov eax, edi
+        pop edi
+.out:   pop si
+        pop edx
+        pop ecx
+        ret
+; LR_NEED: EAX the XP the class in place SI of sheet ES:BX needs at index CX; CF set for none (no class,
+; past the table). Others kept.
+lr_need:
+        push bx
+        push dx
+        push si
+        movzx si, byte [es:bx + si + 0x1B]
+        cmp byte [cs:lr_classes], 0
+        je .row
+        cmp si, CLASS_ROW_LAST
+        ja .none
+        movzx si, byte [cs:si + class_rows]
+.row:   or si, si
+        jz .none
+        cmp si, 8
+        ja .none
+        cmp cx, RAV_LEVELS - 1
+        ja .none
+        mov dx, si
+        dec dx
+        mov dh, cl
+        call rav_xp_at
+        pop si
+        pop dx
+        pop bx
+        clc
+        ret
+.none:  pop si
+        pop dx
+        pop bx
+        stc
+        ret
+lr_classes db 0
+; the sheet's classes 1-17 to the XP table's rows 1-8 (the game's map at 360h:9Dh: ravager.CLASS_ROWS)
+CLASS_ROW_LAST equ 17
+class_rows db 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8
+;
+; RAV_XP_AT: EAX the XP the class of row DL (0-7) needs at index DH (0-29): RAV_XP's, tables.RAV_XP, AD&D's
+; (RULE_HI_TABLES's; XP_FIXES' among them), whatever the rules. Others kept.
+rav_xp_at:
+        push bx
+        movzx bx, dl
+        imul bx, bx, RAV_LEVELS
+        add bl, dh
+        adc bh, 0
+        shl bx, 2
+        mov eax, [cs:bx + rav_xp]
+        pop bx
+        ret
+; tables.RAV_XP, a row a class, the XP of levels 1-30 (past the game's table, 20 entries, the owner's AD&D
+; tables, 2026-11-25)
+rav_xp:
+        dd 0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000, 900000, 1125000, 1350000, 1575000, 1800000, 2025000, 2250000, 2475000, 2700000, 2925000, 3150000, 3375000, 3600000, 3825000, 4050000, 4275000, 4500000, 4725000, 4950000 ; cleric
+        dd 0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000, 300000, 750000, 1500000, 3000000, 3500000, 4000000, 4500000, 5000000, 5500000, 6000000, 6500000, 7000000, 7500000, 8000000, 8500000, 9000000, 9500000, 10000000, 10500000 ; druid
+        dd 0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000, 1000000, 1250000, 1500000, 1750000, 2000000, 2250000, 2500000, 2750000, 3000000, 3250000, 3500000, 3750000, 4000000, 4250000, 4500000, 4750000, 5000000, 5250000, 5500000 ; fighter
+        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000, 3300000, 3600000, 3900000, 4200000, 4500000, 4800000, 5100000, 5400000, 5700000, 6000000, 6300000, 6600000 ; gladiator
+        dd 0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000, 750000, 1125000, 1500000, 1875000, 2250000, 2625000, 3000000, 3375000, 3750000, 4125000, 4500000, 4875000, 5250000, 5625000, 6000000, 6375000, 6750000, 7125000, 7500000 ; preserver
+        dd 0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000, 3300000, 3600000, 4000000, 4400000, 4800000, 5200000, 5600000, 6000000, 6500000, 7000000 ; psionicist
+        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000, 3300000, 3600000, 3900000, 4200000, 4500000, 4800000, 5100000, 5400000, 5700000, 6000000, 6300000, 6600000 ; ranger
+        dd 0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000, 440000, 660000, 880000, 1100000, 1320000, 1540000, 1760000, 1980000, 2200000, 2420000, 2640000, 2860000, 3080000, 3300000, 3520000, 3740000, 3960000, 4180000, 4400000 ; thief
+;
+; LV_ORDINAL (site 118, "level_ordinal"): "mov ax,2B7Eh" (959D3h; 3 bytes) in the level up's message ("%Fs is
+; %d%s level %Fs", DS:2B68h), AX the new level when it is above 3: the game pushes "th" (DS:2B7Eh, used nowhere
+; else) for all of them, so past 20th "21th". DS:2B7Eh made English's ending for AX ("st", "nd", "rd", "th":
+; 11th to 13th "th") and AX it. Others kept.
+LV_TH equ 0x2B7E
+lv_ordinal:
+        push bx
+        push cx
+        push dx
+        xor dx, dx
+        mov cx, 100
+        div cx                          ; (DX the level's last two digits)
+        mov ax, dx
+        mov bx, 'th'
+        cmp ax, 11
+        jb .ones
+        cmp ax, 13
+        jbe .put
+.ones:  mov cl, 10
+        div cl                          ; (AH the last digit)
+        cmp ah, 1
+        jne .two
+        mov bx, 'st'
+        jmp .put
+.two:   cmp ah, 2
+        jne .three
+        mov bx, 'nd'
+        jmp .put
+.three: cmp ah, 3
+        jne .put
+        mov bx, 'rd'
+.put:   mov [LV_TH], bx
+        mov ax, LV_TH
+        pop dx
+        pop cx
+        pop bx
+        iret
+;
+; XP_SUFFIX: replaces "push 1386h" (6FC08h; 3 bytes) in View Character's "EXP:10301 (16000)", where the game
+; pushes ")" (DS:1386h) after the next level's XP: the least of its classes' ([BP-6], a dword, never 0 here),
+; the routine's character ([BP+0Ah], far) the screen's copy (classes as rows 1-8, +12h the race). For a
+; character of more than one class (not a human), DSCLOG2's text instead (the game's DS, pushed before,
+; becomes CS): the class whose next level that is, then ")": " F)", " Pr/T)" if two are due at once.
+XP_CLOSE equ 0x1386
+xp_suffix_site:
+        pop word [cs:x_ip]
+        pop word [cs:x_cs]
+        pop word [cs:x_fl]
+        pushad
+        push es
+        mov byte [cs:xp_ours], 0
+        test word [cs:rules], RULE_LEVEL_10
+        jz .out
+        les bx, [bp + 0x0A]
+        cmp byte [es:bx + 0x12], 1
+        je .out                         ; (a human: the game's ")")
+        cmp byte [es:bx + 0x1C], 0
+        je .out                         ; (one class: the game's ")")
+        mov di, xp_suffix + 1
+        xor dx, dx
+.slot:  push bx
+        add bx, dx
+        movzx si, byte [es:bx + 0x1B]   ; the class (a row)
+        movzx cx, byte [es:bx + 0x1E]   ; its level
+        pop bx
+        or si, si
+        jz .next
+        cmp si, 8
+        ja .next
+        xor al, al
+        call level_room                 ; (at the cap: none)
+        jnc .next
+        push dx
+        mov dx, si
+        dec dx
+        mov dh, cl
+        call rav_xp_at
+        pop dx
+        cmp eax, [bp - 6]
+        jne .next
+        cmp di, xp_suffix + 1
+        je .letters
+        mov byte [cs:di], '/'
+        inc di
+.letters:
+        add si, si
+        mov ax, [cs:si + class_letters]
+        mov [cs:di], al
+        inc di
+        or ah, ah
+        jz .one
+        mov [cs:di], ah
+        inc di
+.one:   mov byte [cs:xp_ours], 1
+.next:  inc dx
+        cmp dx, 3
+        jb .slot
+        mov word [cs:di], ')'           ; (and its NUL)
+.out:   pop es
+        popad
+        cmp byte [cs:xp_ours], 0
+        je .game
+        add sp, 2                       ; the game's DS
+        push cs
+        push xp_suffix
+        jmp .back
+.game:  push XP_CLOSE
+.back:  push word [cs:x_fl]
+        push word [cs:x_cs]
+        push word [cs:x_ip]
+        iret
+x_ip    dw 0
+x_cs    dw 0
+x_fl    dw 0
+xp_ours db 0
+xp_suffix db ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; by row, 1-8
+class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 0, 'T', 0
+;
+; A THIEF'S HIT DICE (SL's PROBE_HD_ROLL and PROBE_HD_CON, RULE_LEVEL_10): the game keeps one "dice up to this
+; level" for thieves and psionicists together (the rogues' group, 9: then +2 a level); AD&D's thief rolls a d6
+; to 10th, its psionicist to 9th (the owner's table, 2026-11-25). A thief's goes to 10, the psionicist's stays
+; 9, in the three places it counts:
+; - HD_ROLL (site 113, "thief_hd_roll"): "mov al,es:[bx+1]" (94FECh; 5 bytes) where a new level's hit points
+;   are a roll or the fixed gain (94F60h: ES:BX the class's group, [BP+8] the class).
+; - HD_CON (site 114, "thief_hd_con"): "cmp al,es:[bx+1]" (95460h; 5 bytes, then "jle") where the most hit
+;   points (9535Ch on) count the levels CON's bonus and the dice apply to: AL a group's level, ES:BX the
+;   group, [BP-4] the sheet (far) and CX which of its classes.
+; - HD_CLAMP (site 115, "thief_hd_clamp"): "mov al,es:[bx+1]" (95471h; 5 bytes) after it, the levels kept.
+hd_roll:
+        mov al, [es:bx + 1]
+        test word [cs:rules], RULE_LEVEL_10
+        jz .done
+        cmp al, 9
+        jne .done
+        cmp word [bp + 8], THIEF_CLASS
+        jne .done
+        inc al
+        inc word [cs:hd_tens]
+.done:  iret
+hd_con:
+        pushad
+        push es
+        mov di, sp
+        mov dl, [es:bx + 1]
+        call hd_thief
+        cmp al, dl
+        jmp dual_flags
+hd_clamp:
+        push dx
+        mov dl, [es:bx + 1]
+        call hd_thief
+        mov al, dl
+        pop dx
+        iret
+; HD_THIEF: DL a group's dice levels: 10 for 9 when the class in place CX of sheet [BP-4] is a thief.
+hd_thief:
+        test word [cs:rules], RULE_LEVEL_10
+        jz .ret
+        cmp dl, 9
+        jne .ret
+        push es
+        push bx
+        les bx, [bp - 4]
+        add bx, cx
+        cmp byte [es:bx + 0x1B], THIEF_CLASS
+        pop bx
+        pop es
+        jne .ret
+        inc dl
+.ret:   ret
+hd_tens dw 0                            ; (thieves' 10th-level dice, for a look in play)
+;
+; SAVING THROWS AS IN AD&D (RULE_HI_TABLES, AD&D's class tables): the game's saves (954D2h: for each class
+; group 0-3, priest, warrior, wizard, rogue, at the best level of its classes in it, and each of the five
+; saves) are the group's 1st-level save less (level - 1) x a rate / 100, but no more than the table's third
+; byte (4D0h:6Ch + group x 15 + save x 3: the 1st level's, the rate, AD&D's last save), which is AD&D's best
+; save and not the most a save improves: a warrior stays at 11/11/11/13/11 from 10th level (SL's 87844h
+; the same). SAVE_BASE (site 116, "save_table"): "mov al,es:[bx+6Ch]" (955DFh; 5 bytes) before "cbw /
+; sub ax,[bp-2]", [BP-2] the game's improvement plus a dwarf's or halfling's CON bonus: AL the Player's
+; Handbook's save (SAVE_TABLE, tables.rav_saves) plus the game's improvement, so the game's sum is the
+; Handbook's less the race's bonus. CX the group, SI the save, the group's level at [BP-0Ah] + CX x 2. The
+; best of a character's groups is the game's (its "jle" keeps the lowest).
+SAVE_LEVELS equ 21                      ; (rows a group: levels 1-21, more is 21st's)
+save_base:
+        mov al, [es:bx + 0x6C]
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .out
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        mov di, cx
+        add di, di
+        movsx di, byte [bp + di - 0x0A] ; (the group's level)
+        mov ax, di
+        cmp ax, SAVE_LEVELS
+        jle .most
+        mov ax, SAVE_LEVELS
+.most:  dec ax
+        jns .row
+        xor ax, ax
+.row:   imul cx, cx, SAVE_LEVELS
+        add ax, cx
+        imul ax, ax, 5
+        add si, ax
+        mov cl, [cs:save_table + si]    ; the Handbook's
+        mov ax, di                      ; and the game's improvement, which it takes off
+        dec ax
+        movsx dx, byte [es:bx + 0x6D]
+        imul dx
+        cwd
+        mov si, 100
+        idiv si
+        movsx dx, byte [es:bx + 0x6E]
+        cmp ax, dx
+        jle .imp
+        mov ax, dx
+.imp:   add al, cl
+        inc word [cs:save_count]
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+.out:   iret
+save_count dw 0                         ; (saves worked out with the table, for a look in play)
+; the Player's Handbook's saves (Table 60) by group and level 1-21, the five: paralysis, poison and death;
+; rod, staff and wand; petrification and polymorph; breath; spell (tables.RAV_SAVE_BANDS)
+save_table:
+        db 10, 14, 13, 16, 15 ; priests: 1
+        db 10, 14, 13, 16, 15
+        db 10, 14, 13, 16, 15
+        db 9, 13, 12, 15, 14
+        db 9, 13, 12, 15, 14 ; 5
+        db 9, 13, 12, 15, 14
+        db 7, 11, 10, 13, 12
+        db 7, 11, 10, 13, 12
+        db 7, 11, 10, 13, 12
+        db 6, 10, 9, 12, 11 ; 10
+        db 6, 10, 9, 12, 11
+        db 6, 10, 9, 12, 11
+        db 5, 9, 8, 11, 10
+        db 5, 9, 8, 11, 10
+        db 5, 9, 8, 11, 10 ; 15
+        db 4, 8, 7, 10, 9
+        db 4, 8, 7, 10, 9
+        db 4, 8, 7, 10, 9
+        db 2, 6, 5, 8, 7
+        db 2, 6, 5, 8, 7 ; 20
+        db 2, 6, 5, 8, 7
+        db 14, 16, 15, 17, 17 ; warriors: 1
+        db 14, 16, 15, 17, 17
+        db 13, 15, 14, 16, 16
+        db 13, 15, 14, 16, 16
+        db 11, 13, 12, 13, 14 ; 5
+        db 11, 13, 12, 13, 14
+        db 10, 12, 11, 12, 13
+        db 10, 12, 11, 12, 13
+        db 8, 10, 9, 9, 11
+        db 8, 10, 9, 9, 11 ; 10
+        db 7, 9, 8, 8, 10
+        db 7, 9, 8, 8, 10
+        db 5, 7, 6, 5, 8
+        db 5, 7, 6, 5, 8
+        db 4, 6, 5, 4, 7 ; 15
+        db 4, 6, 5, 4, 7
+        db 3, 5, 4, 4, 6
+        db 3, 5, 4, 4, 6
+        db 3, 5, 4, 4, 6
+        db 3, 5, 4, 4, 6 ; 20
+        db 3, 5, 4, 4, 6
+        db 14, 11, 13, 15, 12 ; wizards: 1
+        db 14, 11, 13, 15, 12
+        db 14, 11, 13, 15, 12
+        db 14, 11, 13, 15, 12
+        db 14, 11, 13, 15, 12 ; 5
+        db 13, 9, 11, 13, 10
+        db 13, 9, 11, 13, 10
+        db 13, 9, 11, 13, 10
+        db 13, 9, 11, 13, 10
+        db 13, 9, 11, 13, 10 ; 10
+        db 11, 7, 9, 11, 8
+        db 11, 7, 9, 11, 8
+        db 11, 7, 9, 11, 8
+        db 11, 7, 9, 11, 8
+        db 11, 7, 9, 11, 8 ; 15
+        db 10, 5, 7, 9, 6
+        db 10, 5, 7, 9, 6
+        db 10, 5, 7, 9, 6
+        db 10, 5, 7, 9, 6
+        db 10, 5, 7, 9, 6 ; 20
+        db 8, 3, 5, 7, 4
+        db 13, 14, 12, 16, 15 ; rogues and psionicists: 1
+        db 13, 14, 12, 16, 15
+        db 13, 14, 12, 16, 15
+        db 13, 14, 12, 16, 15
+        db 12, 12, 11, 15, 13 ; 5
+        db 12, 12, 11, 15, 13
+        db 12, 12, 11, 15, 13
+        db 12, 12, 11, 15, 13
+        db 11, 10, 10, 14, 11
+        db 11, 10, 10, 14, 11 ; 10
+        db 11, 10, 10, 14, 11
+        db 11, 10, 10, 14, 11
+        db 10, 8, 9, 13, 9
+        db 10, 8, 9, 13, 9
+        db 10, 8, 9, 13, 9 ; 15
+        db 10, 8, 9, 13, 9
+        db 9, 6, 8, 12, 7
+        db 9, 6, 8, 12, 7
+        db 9, 6, 8, 12, 7
+        db 9, 6, 8, 12, 7 ; 20
+        db 8, 4, 7, 11, 5
 ; ---- WEAPON PICKS: DSCLOG's CR_WEAPONS, LV_CHECK and PROBE_PK_* on the sequel's creation screen ----
 ; With weapon specialization (RULE_SPECIALIZE), a new character that is a fighter, gladiator or ranger (or a
 ; Battle Mage, Crusader, Mind Warrior or Swashbuckler: LV_DUE) picks its weapon specs after DONE, as in

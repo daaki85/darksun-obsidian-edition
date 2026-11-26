@@ -670,6 +670,12 @@ AC_ARMOUR_LOCAL = -6
 # the attack's (5883Ah) count of the attacker's attacks already made this round, a local (its [BP-14h]: a
 # backstab only on the first, RULE_BACKSTAB; the dice log's damage line)
 ATTACKS_MADE_LOCAL = -0x14
+# the attack set-up's (58019h) locals the dice log's THAC0 line reads: the THAC0 after the situational
+# adjustments (from behind, backstab, STR or DEX and effects), the weapon's bonus taken off it (plus, material,
+# two weapons, the difficulty), the from-behind and backstab flags (words here, bytes in Wake of the Ravager's
+# set-up: SETUP_FLAG_MASK), the set of natural attacks it is on and the weapons ready
+SETUP_THAC0_LOCAL, SETUP_BONUS_LOCAL, SETUP_REAR_LOCAL, SETUP_BACKSTAB_LOCAL = -0x20, -8, -0x1A, -0x24
+SETUP_NATURAL_LOCAL, SETUP_READY_LOCAL, SETUP_FLAG_MASK = -0x22, -0x16, 0xFFFF
 SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
 SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter
@@ -1140,18 +1146,20 @@ THIEF_PER_LEVEL = 4  # (the game's base, DEX and per-level parts: not read, AD&D
 THIEF_PENALTY_LIST, PENALTY_LIST_END = 0xD0, 13
 THIEF_PENALTY_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("legs", "ammo", "left hand", "right hand"))
 # RULE_THIEF_TABLE (DSCLOG's PROBE_THIEF_SKILL does the same in the game): a skill is AD&D's
-# average for the thief level (1-13, by skill) in place of the game's base + 4 a level, plus the
+# average for the thief level (1-17, by skill; past it as 17th) in place of the game's base + 4 a level, plus the
 # game's race adjustment (Dark Sun's own numbers already), plus Dark Sun's DEX adjustment (AD&D's
 # table to 19, the Dark Sun rules' past it, 9-22; none for the last three skills) in place of the
 # game's DEX formula
-AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99),  # pick pockets
-              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82),  # open locks
-              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80),  # find/remove traps
-              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99),  # move silently
-              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85),  # hide in shadows
-              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40),  # hear noise
-              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99),  # climb walls
-              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65))     # read languages
+AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99, 99, 99, 99, 99),  # pick pockets
+              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97, 99),  # open locks
+              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99),  # find/remove traps
+              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99, 99, 99, 99, 99),  # move silently
+              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85, 93, 99, 99, 99),  # hide in shadows
+              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40, 40, 50, 50, 55),  # hear noise
+              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99, 99, 99, 99, 99),  # climb walls
+              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 80))     # read languages
+# (levels 14-17 the owner's table, 2026-11-25, for the sequel's thieves past 13th: DSCLOG2's THIEF_TABLE;
+# Shattered Lands' cap stops a thief at 13th, so DSCLOG's keeps 13 rows)
 DEX_FIRST = 9
 DEX_ADJUST = ((-15, -10, -10, -20, -10), (-10, -5, -10, -15, -5), (-5, 0, -5, -10, 0), (0, 0, 0, -5, 0),  # 9-12
               (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 5, 0, 0, 0),  # 13-16
@@ -1166,7 +1174,7 @@ def dex_adjustment(dex: int, skill: int) -> int:
     return DEX_ADJUST[min(max(dex, DEX_FIRST), DEX_FIRST + len(DEX_ADJUST) - 1) - DEX_FIRST][skill]
 
 
-# AD&D's ranger: hide in shadows and move silently by ranger level (1-13), the Loader's own
+# AD&D's ranger: hide in shadows and move silently by ranger level (1-17, the owner's table), the Loader's own
 # (the game gives rangers no thief skills); race and DEX adjust them as a thief's
 RANGER_HIDE = AD_D_THIEF[4]
 RANGER_MOVE = AD_D_THIEF[3]

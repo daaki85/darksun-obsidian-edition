@@ -264,7 +264,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
     dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
     its own by their pid files. Run a tool there through a wrapper that sets `PLAYTEST_WORK` and
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
-    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
+    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart. For the sequel (logs/2026-11-25-ravager-level-cap.md): the copied
+    kit's `ravstart.sh` with `dosbox` changed to the renamed copy and its Xvfb line off, `env.sh` and
+    `paths.py` on the copy's display; ravstart's tools read `$WORK/rav.pid`, so a `PLAYTEST_WORK` of its
+    own keeps them on the copy's game.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
     game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
     in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the
@@ -368,6 +371,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   started by `setsid nohup` inside a backgrounded bash keeps running after the job shows Done, and
   a second one then writes into the same file (every line twice, and both write the game's memory).
   Before starting one, `pgrep -af "dsloader dicelog"` and kill the old pid.
+- **The old dice log beside the new one, a control on the same game** (logs/2026-11-25-ravager-save-mods.md):
+  `git worktree add --detach BASE HEAD~1`, the Loader's `dos/` copies put in BASE's (`cp -n`), and BASE's
+  `ravdice.py` attached with BASE's Loader on PYTHONPATH: the same rolls in both logs, the lines old and new. Both
+  make the Python side's own rolls (hiding), so those differ. Why an attack line didn't break down:
+  `RAV_FRAMES=1` prints the attack set-up's locals after it.
 - **A queued series of runs** (logs/2026-11-25-ravager-kits.md): never edit a shell script while it
   runs (`sh` reads it as it goes, and an edit breaks the run in progress): write a new file. In a run
   script, keep the arguments in variables before any `set --` in a loop, which replaces them. A run on
