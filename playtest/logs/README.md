@@ -133,6 +133,7 @@ schedules and diffs a log made or used.
 | [2026-11-20](2026-11-20-open-prs-checks.md) | Pull requests #136, #140 and #141 played together (all seven open ones merged locally): bulk loot fine to full packs; rounds counted right, but a long burst of skipped rounds that overran the ring was undercounted (`Rounds 232-383` for 4-383); a Haste recast reported `in place of`, with no ageing |
 | [2026-11-22](2026-11-22-elf-outfits.md) | Elf faces, all 37 builds, equipment checks, and four staged figures in DOSBox |
 | [2026-11-23](2026-11-23-dwarf-human-outfits.md) | Four equipped dwarf and human outfit renders staged in the slave pens |
+| [2026-11-25](2026-11-25-class-equipment.md) | Weapon and armor tests, including two equipped lineups staged in DOSBox |
 
 ## files/
 

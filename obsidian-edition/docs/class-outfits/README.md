@@ -62,6 +62,8 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 ## Equipment
 
+The equipment tests cover all 14 map figures and all 176 newer outfit builds. The report shows where plate and robes disappear, which weapons miss a grip, and which tips extend outside the game picture. [Weapon and armor test results](equipment-tests.md) · [Empty and equipped poses on the seven newer figures](equipment-study-comparison.png)
+
 [Compare the corrected cloak hems and boots on all six figures](cloak-hem-fixes.gif) · [Compare chest plate through all three walks](plate-stride.gif)
 
 [Compare all six equipped figures beside retail artwork](worn-equipment.md) · [See plate, mail, robes, footwear and weapon materials in the same pose](worn-materials.png)
