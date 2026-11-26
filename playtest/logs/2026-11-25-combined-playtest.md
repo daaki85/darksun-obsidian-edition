@@ -61,3 +61,13 @@ fails the same on the Ravager stack's top alone. Both helpers assemble to the co
 DOSBox-X (not installed in this container; the Windows check is the owner's), the new SL weapons'
 places (Melkor, Dagger, Dakaren) in play, the sequel's shops, Tab, loot keys and quick saves on this
 branch (each played on its own branch).
+
+## 2026-11-26: the new Ravager PRs joined (#198, #199, #200-#202, #203)
+
+DSCLOG2's site table joined as: 130-139 none, 140-149 the new spells (#200, #201), 150 LV_WEAPONS (#199),
+151-159 none, 160-163 the graphics (#203), 164-179 none (180 sites, 51 `site_none`); header +1960..+1983
+#203's. DSCLOG2.EXE 58,192 bytes. 2,774 tests pass (the start-up tests on the real files among them).
+
+Memory, `RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh` to Tyr, then `dosmem.py`: DSCLOG2's upper memory block
+57,648 bytes (plus its 5,632-byte tail), **92,304 bytes of upper memory free** (the largest piece 92,160);
+conventional memory 63,232 free after the game.
