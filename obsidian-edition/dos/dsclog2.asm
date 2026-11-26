@@ -4563,8 +4563,8 @@ site_table:
         dw kit_hit_gain                     ; 197 SITE_HIT_GAIN (95000h: a level's gain past the dice: a Battle Mage's 2, an Arcanist's 1)
         dw kit_max_psp                      ; 198 SITE_MAX_PSP (95172h: the level up's most PSP: a Mind Warrior's a fifth fewer)
         dw hit_round                        ; 199 SITE_HIT_ROUND (5CD76h: a hit's mark against casting: a Battle Mage none)
-        dw site_none                        ; 200 (none here: held for other work)
-        dw site_none                        ; 201 (none here: held for other work)
+        dw cr_die                           ; 200 SITE_CR_DIE (6D28Fh: the creation hit points' most, a level's die: a Battle Mage's d6, an Arcanist's d3)
+        dw cr_psp                           ; 201 SITE_CR_PSP (6D85Eh: the creation PSP's end: a Mind Warrior's a fifth fewer)
         dw site_none                        ; 202 (none here: held for other work)
         dw site_none                        ; 203 (none here: held for other work)
         dw site_none                        ; 204 (none here: held for other work)
@@ -11058,15 +11058,15 @@ ef_last      db 0
 ;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
 ;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61);
 ; - PSP costs, a Mind Warrior's PSP, the level up's hit dice and a Battle Mage's casting after a hit (KIT PSP
-;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199).
+;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199), and a kit's hit die and PSP at creation
+;   (sites 200, 201, and KIT_REROLL on the kit page).
 ; - a spell's level for its duration and damage (SL's PROBE_SPELL_LEVEL: KIT_CAST_LEVEL, site 205: the
 ;   Arcanist's, Spirit Caller's, Wasteland Seer's), the cures (PROBE_CURE: KIT_CURE, site 206; CELL_HEAL's
 ;   CELL_MORE), the Cause Wounds spells (AV_CAUSE: AVENGER_AREA, AVENGER_ONE, sites 207-208), the spells
 ;   known (EL_SPHERE's HEALER_COSMOS and KIT_BARS: the Healer's cosmos, the spells a kit never knows).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
 ; (+355), BAD_LUCK (+1862); COSMOS_MORE (+2060) and the counters after it DSCLOG2's own. Not here (yet):
-; a Shinobi's casting level and spells, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the hit die and
-; PSP at creation, the Effects lines.
+; a Shinobi's casting level and spells, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
@@ -12241,8 +12241,28 @@ path_up:
 ; the next round (the USE screen's refusal and a queued spell dropped: 97384h, 97A84h):
 ; - HIT_ROUND (site 199, "hit_round"): "mov byte es:[si+0B2h],1" (5CD76h; 6 bytes) where the routine taking
 ;   a hit's damage off (5CBE4h: SI the creature) marks it: a Battle Mage isn't marked (KITS.md).
-; Not here (yet): the hit die and PSP at creation (DSCLOG's PROBE_CR_DIE, PROBE_CR_PSP and KIT_REROLL on the
-; kit page).
+; At creation (the creation overlay's rolls, 5C0h's: SL's CR_STUB's; DS's numbers, SL's in brackets) the
+; game rolls the hit points and works out the PSP when a class is clicked, before a kit can be chosen: a
+; kit's own are DSCLOG's PROBE_CR_DIE, PROBE_CR_PSP and KIT_REROLL:
+; - CR_DIE (site 200, "cr_die"): "mov al,es:[bx+11Dh]" (6D28Fh; 5 bytes; SL's 65677h) where the creation hit
+;   points' routine (6D1EDh, 5C0h:66h: SL's 655D6h) takes the class's die (360h:11Dh, by the creation class
+;   BX) for the most hit points it can give, a level at a time: a Battle Mage's 6, an Arcanist's 3
+;   (kits.hit_die). First a kit left over from the classes before a click on a class (KP_CLASS takes it
+;   away only after the click) is taken away, from the party's sheet too (the routine copied the sheet
+;   there, 6E6D8h, and rolls each level there: KIT_HIT_DIE), so the rolls go by the class's own die
+;   (CR_KIT_STALE). The rolls themselves are KIT_HIT_DIE's (the level up's routine, 690h:20h).
+; - CR_PSP (site 201, "cr_psp"): the end of the creation PSP routine (6D75Dh, 5C0h:6Bh: SL's 65B39h), which
+;   has put the sheet being made's most PSP in its +0Ch: "les bx,[1429h] / add es:[bx+0Ch],ax / pop bp /
+;   retf" (6D85Eh, 10 bytes: its WIS bonus, then the end) made the site, then "xor ax,ax / jmp short" back
+;   to it (6D861h, which the WIS test's "jna" at 6D842h is made to go to: the bonus none, the site always
+;   run for a psionicist) and the end kept at 6D866h (the routine's other way out, for no psionicist):
+;   the WIS bonus added, a Mind Warrior's PSP a fifth fewer (kits.max_psp), then the routine's own end,
+;   the INT's frame dropped, its flags put back first (the INT cleared IF: SL's note).
+; - KIT_REROLL (no site of its own: KIT_ROW's, on the kit page, site 65): picking or taking back a Battle
+;   Mage, an Arcanist or a Mind Warrior has the hit points rolled again and the PSP worked out again by the
+;   game's routines, as a click on a class has them (6BBCCh: the hit points with the flag 1, kept within
+;   the least and most the routine gave, put on the creature and shown again; the PSP, 6B749h), through the
+;   far addresses of those calls in the panel's overlay (WP_CALLS).
 KIT_ARCANIST     equ 23
 KIT_MIND_BENDER  equ 25
 KIT_KINETICIST   equ 27
@@ -12514,6 +12534,211 @@ hit_round:
 .bm:    inc word [cs:bm_hits]
 .out:   pop ax
         iret
+cr_die:
+        push cx
+        mov cl, [es:bx + 0x11D]
+        call cr_kit_stale
+        call kit_made
+        cmp al, KIT_BATTLE_MAGE
+        jne .arcanist
+        mov cl, BM_HIT_DIE
+.arcanist:
+        cmp al, KIT_ARCANIST
+        jne .out
+        mov cl, ARC_HIT_DIE
+.out:   mov al, cl
+        pop cx
+        iret
+cr_psp:
+        push bp
+        mov bp, sp
+        push word [bp + 6]      ; (the flags at the INT)
+        popf
+        pop bp
+        add sp, 6
+        les bx, [WP_CREATION]
+        add [es:bx + 0x0C], ax  ; (the WIS bonus: none from the "jna")
+        push ax
+        call kit_made
+        cmp al, KIT_MIND_WARRIOR
+        jne .out
+        push cx
+        push dx
+        mov ax, [es:bx + 0x0C]
+        xor dx, dx
+        mov cx, MIND_PSP
+        div cx
+        sub [es:bx + 0x0C], ax
+        inc word [cs:cr_psps]
+        pop dx
+        pop cx
+.out:   pop ax
+        pop bp
+        retf
+; KIT_MADE: AL the kit (KIT_IS's numbers: the creation class x 4 + the kit) of the sheet being made, ZF
+; clear; 0 and ZF set if none (the rule off, a multiclass group's or no class's, none chosen, or its
+; classes changed since KP_CLASS last saw them: but before the screen's first look, an EDIT's own). DS
+; the game's; others kept.
+kit_made:
+        push bx
+        push es
+        call kit_class
+        cmp al, MULTI_FIRST
+        jae .none
+        or al, al
+        jz .out
+        les bx, [WP_CREATION]
+        call cr_classes_seen
+        jne .none
+        mov bl, [es:bx + KIT_BYTE]
+        cmp bl, KIT_OPEN
+        je .none
+        and bl, 3
+        jz .none
+        shl al, 2
+        add al, bl
+        jmp .out
+.none:  xor al, al
+.out:   pop es
+        pop bx
+        or al, al
+        ret
+; CR_CLASSES_SEEN: ZF set if the classes of the sheet at ES:BX are those KP_CLASS last saw, or it has
+; seen none yet. All registers kept.
+cr_classes_seen:
+        push eax
+        cmp dword [cs:wp_classes_seen], 0xFFFFFFFF
+        je .out
+        call sheet_classes_cr
+        cmp eax, [cs:wp_classes_seen]
+.out:   pop eax
+        ret
+; CR_KIT_STALE: (CR_DIE) a kit on the sheet being made while its classes are not those KP_CLASS last saw:
+; taken away, from the party's sheet of the member being made (USE_WHO_SEG:USE_WHO_OFF) too. DS the
+; game's; all registers kept.
+cr_kit_stale:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push bx
+        push es
+        les bx, [WP_CREATION]
+        call cr_classes_seen
+        je .out
+        cmp byte [es:bx + KIT_BYTE], 0
+        je .out
+        mov byte [es:bx + KIT_BYTE], 0
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]
+        call kit_sheet_ax
+        mov byte [es:bx + KIT_BYTE], 0
+        inc word [cs:cr_stales]
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   ret
+; KIT_ROLLS_DUE: (KIT_ROW) KIT_REROLL due if the sheet being made's kit now (KIT_MADE) is one with its own
+; hit die or PSP: a Battle Mage, an Arcanist, a Mind Warrior. All registers kept.
+kit_rolls_due:
+        push ax
+        call kit_made
+        cmp al, KIT_BATTLE_MAGE
+        je .due
+        cmp al, KIT_ARCANIST
+        je .due
+        cmp al, KIT_MIND_WARRIOR
+        jne .out
+.due:   mov byte [cs:kit_reroll_due], 1
+.out:   pop ax
+        ret
+; KIT_REROLL: (KIT_ROW, BP the kit page click's frame, the way back to the game's in it as the overlay
+; manager needs it) the sheet being made's hit points rolled again and its PSP worked out again by the
+; game's routines, as a click on a class has them (6BBCCh: the hit points' routine with the flag 1, the
+; least and most it gives, DS:42D8h and RL_HP_MAX, and the sheet's +8; then kept within them, put on the
+; creature and shown again; the PSP's routine, its +0Ch put on the creature and shown again), with its kit
+; now, which the hit points' routine would leave none once taken back (KIT_OPEN): put back. DS the game's.
+CR_HP_LEAST  equ 0x42D8             ; DS: the least hit points the classes could roll (SL's 4998h)
+CR_HP_PLACE  equ 0x1224             ; DS: the hit points' number's place, x then y (SL's F92h)
+CR_PSP_PLACE equ 0x122C             ; DS: the PSP's (SL's F9Ah)
+CR_HP_BACK   equ 0x70               ; (the backdrop's words under the hit points, 368h:70h and 84h; SL's 3F0h)
+CR_PSP_BACK  equ 0x72               ; (... under the PSP: SL's 3F2h)
+CR_HP_SHOW   equ 0x3E               ; (WP_STUB's: the hit points shown, SL's 64C6Bh)
+CR_PSP_SHOW  equ 0x43               ; (... the PSP)
+kit_reroll:
+        mov byte [cs:kit_reroll_due], 0
+        inc word [cs:kit_rerolls]
+        push word 1
+        push word RL_HP_MAX
+        push word CR_HP_LEAST
+        les bx, [WP_CREATION]
+        mov al, [es:bx + KIT_BYTE]
+        mov [cs:kr_kit], al
+        lea ax, [bx + 8]
+        push es
+        push ax
+        call far [cs:cr_hp_fn]
+        add sp, 10
+        les bx, [WP_CREATION]
+        mov al, [cs:kr_kit]     ; (the kit as chosen: the routine copies the sheet back from the party's
+        mov [es:bx + KIT_BYTE], al ;  stand-in, 6EE5Eh, whose copy, 6E6D8h, made KIT_OPEN none)
+        mov ax, [es:bx + 8]
+        cmp ax, [RL_HP_MAX]
+        jbe .not_over
+        mov ax, [RL_HP_MAX]
+.not_over:
+        cmp ax, [CR_HP_LEAST]
+        jae .not_under
+        mov ax, [CR_HP_LEAST]
+.not_under:
+        mov [es:bx + 8], ax
+        les bx, [CR_CREATURE]
+        mov [es:bx], ax
+        mov si, CR_HP_BACK
+        mov di, CR_HP_PLACE
+        mov ax, CR_HP_SHOW
+        call cr_show
+        call far [cs:cr_psp_fn]
+        les bx, [WP_CREATION]
+        mov ax, [es:bx + 0x0C]
+        les bx, [CR_CREATURE]
+        mov [es:bx + 2], ax
+        mov si, CR_PSP_BACK
+        mov di, CR_PSP_PLACE
+        mov ax, CR_PSP_SHOW
+; CR_SHOW: a number of the creation screen shown again, as the game does: its backdrop put back (the
+; root's 0C8h:3B30h, WP_BACKDROP, with the words at 368h:SI and SI+14h), then the creation overlay's entry
+; AX (WP_STUB's) with the number's place (DS:DI, x then y). DS the game's.
+cr_show:
+        push ax
+        mov es, [cs:wp_stat_seg]
+        push word [es:si]
+        push word [es:si + 0x14]
+        call far [cs:wp_backdrop]
+        add sp, 4
+        pop ax
+        mov [cs:wp_far], ax
+        mov ax, [di + 2]
+        sub ax, 2
+        push ax
+        mov ax, [di]
+        add ax, 0x15
+        push ax
+        push dword [CR_CREATURE]
+        push dword [WP_CREATION]
+        push dword [WIN_SHOWN]
+        mov ax, ds
+        add ax, WP_STUB
+        mov [cs:wp_far + 2], ax
+        call far [cs:wp_far]
+        add sp, 16
+        ret
+kit_reroll_due db 0
+kr_kit      db 0
+kit_rerolls dw 0                ; (for a look in play: the rolls again on the kit page, the stale kits
+cr_stales   dw 0                ;  taken away, the Mind Warriors' PSP cut at creation)
+cr_psps     dw 0
 kit_psps dw 0                   ; (PSP costs and most PSP a kit changed, for a look in play)
 kit_hds  dw 0                   ; (hit dice and gains a kit changed)
 bm_hits  dw 0                   ; (a Battle Mage hit and not marked)
@@ -14021,8 +14246,8 @@ spared_count dw 0               ; (Hold or Charm Person spared so)
 ;   click on the screen: other classes than last seen, no kit; the panel made the one for the classes;
 ; - KP_RACE (site 68, "add sp,6", 6B191h: PROBE_RACE_PANEL): a new race or sex, the panel the right one;
 ; - KP_OPEN (site 69, "mov byte [1C96h],0FFh", 6D891h: SL's CR_OPEN's place): the screen opening.
-; Not here (DSCLOG's, for rules the sequel hasn't yet): a kit's own hit die or PSP rolled again on its
-; choice (KIT_REROLL), the THAC0 shown again, the Elementalist's second sphere (EL_*), EDIT's kit given
+; A kit's own hit die or PSP rolled again on its choice: KIT_ROW's KIT_REROLL (KIT PSP COSTS ... AND CASTING
+; AFTER A HIT). Not here (DSCLOG's, for rules the sequel hasn't yet): the THAC0 shown again, the Elementalist's second sphere (EL_*), EDIT's kit given
 ; back after its classes are changed and changed back (ED_*), the age and weapon specs (CR_AGE,
 ; CR_WEAPONS).
 KP_DISC_ID   equ 19504              ; (the game's windows: SL's 3012, 3013)
@@ -14068,6 +14293,10 @@ WP_CALL_HELP   equ 0x6BF35
 WP_CALL_BUTTON equ 0x6BFB6
 WP_CALL_MARK   equ 0x6BD4B
 WP_MARK_SEG    equ 0x6BD39
+WP_CALL_CR_HP  equ 0x6BBDF          ; (KIT_REROLL's: the creation rolls' hit points, 5C0h:66h, and PSP, 5C0h:6Bh;
+WP_CALL_CR_PSP equ 0x6B749          ;  the backdrop put back under a number, 0C8h:3B30h; the backdrop's words'
+WP_CALL_BACKDROP equ 0x6BC38        ;  segment, "mov ax,368h")
+WP_STAT_SEG    equ 0x6BC24
 WP_SPHERE_SEG  equ 0x6BEB6
 WP_SPHERE_ENTRY equ 0x57
 WP_SPHERE_RET  equ 0x6C039
@@ -14475,6 +14704,11 @@ wp_harvest:
         add bx, [bp + 2]
         mov ax, [es:bx]
         mov [cs:wp_sphere_seg], ax
+        mov bx, (WP_STAT_SEG + 1) & 0xFFFF
+        sub bx, [cs:wp_ret_file]
+        add bx, [bp + 2]
+        mov ax, [es:bx]
+        mov [cs:wp_stat_seg], ax
         mov cx, (wp_calls_end - wp_calls) / 6
 .one:   mov bx, [cs:si]         ; a call's file offset (low word), less the return's
         sub bx, [cs:wp_ret_file]
@@ -14657,7 +14891,9 @@ wp_page_button:
 
 ; KIT_ROW: kit row AX of the kit page clicked (KIT_NONE: NO KIT), as the game's spheres: with none chosen
 ; (KIT_OPEN), the row's kit chosen; the one chosen, taken back (the rows all in use, the sheet KIT_OPEN);
-; another, nothing. A Healer only with the water sphere marked (kits.HEALER_SPHERE). DS the game's.
+; another, nothing. A Healer only with the water sphere marked (kits.HEALER_SPHERE). A Battle Mage, an
+; Arcanist or a Mind Warrior chosen or taken back: its hit points and PSP rolled again (KIT_REROLL). DS the
+; game's.
 kit_row:
         les bx, [WP_CREATION]
         xor dl, dl
@@ -14689,8 +14925,15 @@ kit_row:
         cmp dl, dh              ; another, while one is chosen: out of use (nothing)
         jne kit_marks
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
-.put:   mov [es:bx + KIT_BYTE], dl
+.put:   call kit_rolls_due      ; (a Battle Mage, an Arcanist or a Mind Warrior before or after: KIT_REROLL)
+        mov [es:bx + KIT_BYTE], dl
         inc word [cs:kit_rows_taken]
+        call kit_rolls_due
+        call kit_marks
+        cmp byte [cs:kit_reroll_due], 0
+        je .ret
+        call kit_reroll
+.ret:   ret
 ; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one or
 ; two) marked as the creation sheet's kit, the rest not, as 6BD75h marks the spheres
 kit_marks:
@@ -14806,8 +15049,15 @@ wp_help    dd 0
 wp_button_fn dd 0
            dw WP_CALL_MARK & 0xFFFF
 wp_mark_fn dd 0
+           dw WP_CALL_CR_HP & 0xFFFF
+cr_hp_fn   dd 0
+           dw WP_CALL_CR_PSP & 0xFFFF
+cr_psp_fn  dd 0
+           dw WP_CALL_BACKDROP & 0xFFFF
+wp_backdrop dd 0
 wp_calls_end:
 wp_mark_seg dw 0
+wp_stat_seg dw 0
 wp_sphere_seg dw 0
 
 ; DUAL_KIT (site 76): "cmp word [bp+8],0Ch" (94A57h; 4 bytes: the site and a NOP; SL's PROBE_DUAL_KIT at

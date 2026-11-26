@@ -50,7 +50,8 @@ class TableTests(unittest.TestCase):
                             "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
                             "pp_hand", "shinobi_mage", "psp_use", "psp_can_use", "psp_failed", "psp_defence", "psp_keep",
                             "psp_can_keep", "hit_die", "hit_gain", "max_psp", "hit_round", "kit_cast_level", "kit_cure", "avenger_cause_area",
-                            "avenger_cause_one"}
+                            "avenger_cause_one",
+                            "cr_die", "cr_psp_wis", "cr_psp"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)

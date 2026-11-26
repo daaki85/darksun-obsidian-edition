@@ -75,12 +75,75 @@ thieves' fight again, the foes' HP 1 (`ravfight.py fight` got "NO PATH FROM HERE
 `kit_hds` 2 (Gerakis's two d6 rolls), `kit_psps` 0 (no kit with a PSP part in this run). DOSBox and the dice
 log stopped by pid, nothing saved, the lock let go.
 
+### 3. The creation screen: a kit's hit points and PSP (about 21:00-21:16 UTC; PR #218's review)
+
+Under test: DSCLOG2's CR_DIE (site 200, 6D28Fh), CR_PSP (site 201, 6D85Eh with the WIS test's `jna` at 6D842h
+sent to it) and KIT_REROLL on the kit page (KIT_ROW). Set-up: a throwaway copy `/tmp/playtest/ravCG` of `rav`,
+`RAV_LOADER=1 RAV_MENU=1 RAV_STDOUT=1 sh ravstart.sh /tmp/playtest/ravCG`, the dice log `ravdice.py`
+(RAV_NO_SAVES=1, rules_hi 0xFF3F: kits on), the lock held throughout. The helper's code in memory checked
+against the build (cr_die, cr_psp, kit_reroll, kit_row, kit_made, wp_harvest: the same bytes). CREATE
+CHARACTERS, NEW, a human of 7th level; each reading is `ravkits.py page` (now with the hit points, their range,
+the PSP and the creation counters).
+
+The first run found the kit byte left none (00, not KIT_OPEN) after a kit was taken back, so another kit's row
+took no click: the hit points' routine copies the sheet back from the party's stand-in (6EE5Eh), whose copy
+made KIT_OPEN none. KIT_REROLL now puts the kit byte back after it; the run below is after that fix.
+
+**A preserver (SeanBoy; CON 18):**
+
+| Step | Kit byte | Hit points (least, most) | PSP |
+|---|---|---|---|
+| PRESERVER clicked (control) | 00 | 31 (21, **42**: 7 d4) | 27 |
+| BATTLE MAGE | 02 | **46** (21, **56**: 7 d6) | 27 |
+| taken back | FF | 38 (21, 42) | 27 |
+| ARCANIST | 03 | 30 (21, **35**: 7 d3) | 27 |
+| taken back | FF | 35 (21, 42) | 27 |
+| SCHOLAR (control: no roll again) | 01 | 35 (21, 42) | 27 |
+| Scholar back, BATTLE MAGE | 02 | 48 (21, 56) | 27 |
+| CON lowered to 15, then 14 | 02 | 41 (14, 49), 34 (7, 42) | 26 |
+
+`kit_rerolls` 5, `kit_hds` up 14 a roll (seven levels, two dice each: the better of two). Pictures:
+[the preserver's page](img/2026-11-26-ravager-creation-battle-mage-control.png) and
+[the Battle Mage's](img/2026-11-26-ravager-creation-battle-mage.png) (JohnBoy, CON 19: 38/38 and 44/44).
+DONE (no spell picked, no powers, the weapon window's defaults): member 0 **34/34**, kit 02. With CON 14 a
+preserver's most is 28: 34 is past it. **EDIT** of him: kit 02 kept, hit points 34 (7, **42**), the d6's range
+(a preserver's 28 would have cut them to 28).
+
+**A psionicist (Killer):**
+
+| Step | Kit byte | Hit points (least, most) | PSP |
+|---|---|---|---|
+| PSIONICIST clicked (control) | 00 | 32 (7, 42) | **98** |
+| MIND WARRIOR | 02 | 29 (7, 42) | **79** (98 less its fifth, 19) |
+| taken back | FF | 33 | 98 |
+| MIND BENDER (control: no roll again) | 01 | 33 | 98 |
+| Bender back, MIND WARRIOR | 02 | 28 | 79 |
+| INT lowered | 02 | 28 | 78 (the routine run again, `cr_psps` up) |
+| the die rolled | 02 | 49 (21, 56) | 78 |
+
+The screen showed 79/79 ([picture](img/2026-11-26-ravager-creation-mind-warrior.png)). DONE: member 1 49/49 HP,
+**78/78** PSP, kit 02. A second psionicist (JohnBoy, slot 3): no kit **109**, Mind Warrior **88** (109 less 21:
+[control](img/2026-11-26-ravager-creation-mind-warrior-control.png)); then left without DONE (EXIT).
+
+STDOUT.TXT empty (no "Illegal Op"). Nothing saved; DOSBox and the dice log stopped by pid, the copy deleted,
+the lock let go. Not played: a stale kit taken away on a multiclass click (CR_KIT_STALE: the tests cover it;
+a human must click a class off first, which KP_CLASS already clears). The dice log's lines for the kit page's
+rolls name the rolls of the class click only (its creation lines aren't the kit's).
+
+**Transferred and own characters**: the new sites are on the creation screen's routines only (the hit points'
+routine 6D1EDh, the PSP routine 6D75Dh, the kit page), which a party brought from Shattered Lands or the
+sequel's own party never runs: their hit points and PSP stay as they come (SL's kit rolls already in them); the
+own party has none of these kits (kits.OWN_FEATURES). An EDIT of one runs the screen's routines on a click as
+before, with its kit's range.
+
 ## Result
 
 In the sequel now, as in Shattered Lands: the Mind Bender's and Kineticist's PSP costs (a power used and a
 failed check's half), the Mind Warrior's fifth fewer PSP at a level up, the Battle Mage's d6 and Arcanist's
 d3 hit dice, the owner's 2 (Battle Mage) past 10th against a preserver's 1, and a Battle Mage casting
-though hit before her turn (a plain preserver's spells crossed out in the same fight).
+though hit before her turn (a plain preserver's spells crossed out in the same fight); and on the creation
+screen a Battle Mage's d6 and Arcanist's d3 range and roll, and a Mind Warrior's fifth fewer PSP, as the kit
+is chosen, taken back, on a score's click and on EDIT.
 
 ## What a play needs to know
 
@@ -95,6 +158,7 @@ though hit before her turn (a plain preserver's spells crossed out in the same f
 
 - Not played: the Titan Mind's and Wasteland Seer's costs, a power kept up, a defence raised (the tests
   cover them, `test_psp_cost`), an Arcanist past 10th (the same gain as a preserver's).
-- Not ported: a new character's kit hit die and PSP on the creation screen (SL's creation die read has no
-  likeness in the sequel). Shattered Lands' 11th still gives a Battle Mage the preserver's 1.
+- The creation screen's kit hit die and PSP: in since step 3 (the die read is at 6D28Fh, `mov al,es:[bx+11Dh]`:
+  ravsites' likeness search missed it for its other displacement). Shattered Lands' 11th still gives a Battle
+  Mage the preserver's 1.
 - Water: nothing new (Tyr's streets, as before).

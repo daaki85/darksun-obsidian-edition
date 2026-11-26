@@ -820,6 +820,14 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("kit_cure", 0x66545, bytes.fromhex("50e9c8f2"), _site(206, 4)),
     Patch("avenger_cause_area", 0x7E7A6, bytes.fromhex("8946ec"), _site(207, 3)),
     Patch("avenger_cause_one", 0x7F727, bytes.fromhex("8946fa"), _site(208, 3)),
+    # A kit's own hit die and PSP at creation (DSCLOG2's CR_DIE, CR_PSP; KIT_REROLL on the kit page): the
+    # creation hit points' most, a level's die (6D28Fh, SL's 65677h); the creation PSP routine's end
+    # (6D85Eh: its WIS bonus and "pop bp / retf" made the site, then "xor ax,ax / jmp short" back to it for
+    # the WIS test's "jna", made to go there, and the end kept at 6D866h for the routine's other way out)
+    Patch("cr_die", 0x6D28F, bytes.fromhex("268a871d01"), _site(200, 5)),
+    Patch("cr_psp_wis", 0x6D842, bytes.fromhex("7622"), bytes.fromhex("761d")),
+    Patch("cr_psp", 0x6D85E, bytes.fromhex("c41e2914260147 0c5dcb".replace(" ", "")),
+          _site(201, 3) + bytes.fromhex("33c0ebf9905dcb")),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage

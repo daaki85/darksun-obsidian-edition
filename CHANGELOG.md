@@ -77,6 +77,10 @@ Releases, newest first (2.12.0 and older in the archive):
   Lifebinder never the harming spells (and the sequel's own Heartseeker, Energy Drain and Symbol of Pain,
   which harm or kill the body as those do), a Wilderness Avenger never the healing ones: the USE screen lists
   only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. On the creation
+  screen a Battle Mage's, Arcanist's or Mind Warrior's hit points and PSP are rolled again as the kit is
+  chosen or taken back, as in Shattered Lands, and a click on CON or an EDIT keeps the kit's range
+  (two new DSCLOG2 sites, 200 and 201).
 
 **New**
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for

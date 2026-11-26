@@ -24,11 +24,10 @@ the spells a kit knows (the Healer's sphere of the cosmos, the healing or harmin
 knows), the gear each kit
 forbids or allows, the psionicist kits' PSP costs (the Mind Bender's, Kineticist's, Titan Mind's and
 Wasteland Seer's, to use a power, keep it up or raise a defence) and the Mind Warrior's fifth fewer PSP
-at a level up, the Battle Mage's and Arcanist's hit die at a level up, and the Battle Mage's casting
-after being hit work there, and a new character takes a kit there as here; what else they do to spells
-and powers doesn't yet (a Shinobi has its slots there but can't cast yet), nor does a new character's
-kit hit die or PSP on the creation screen (the hit points and PSP aren't rolled again when the kit is
-chosen). Which kits work there, and which only in part: [In Wake of the Ravager](#in-wake-of-the-ravager).
+at creation and at a level up, the Battle Mage's and Arcanist's hit die at creation and at a level up,
+and the Battle Mage's casting after being hit work there, and a new character takes a kit there as here
+(its hit points and PSP rolled again as the kit is chosen); what else they do to spells and powers
+doesn't yet (a Shinobi has its slots there but can't cast yet). Which kits work there, and which only in part: [In Wake of the Ravager](#in-wake-of-the-ravager).
 How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
@@ -600,10 +599,11 @@ character, as it does after another kit is chosen.
 
 **In Wake of the Ravager** (started from the Loader) the creation panel has the same KITS
 button and KIT page, in the sequel's own letters, and a human with no kit is asked for one after
-DUAL on the same menu. There a kit chosen goes with the character as it does here; what the
-sequel doesn't do yet: a Battle Mage's, Mind Warrior's or Arcanist's hit points and PSP rolled
-again as its kit is chosen, the Elementalist's second sphere, and EDIT giving a kit back after
-its classes are changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
+DUAL on the same menu. There a kit chosen goes with the character as it does here, a Battle
+Mage's, Arcanist's or Mind Warrior's hit points and PSP rolled again as its kit is chosen or taken
+back (and its range of hit points the kit's, for a click on CON and on EDIT); what the sequel
+doesn't do yet: the Elementalist's second sphere, and EDIT giving a kit back after its classes are
+changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
@@ -800,8 +800,8 @@ thief skills, movement and initiative.
 | Swashbuckler, Assassin | whole |
 | Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
 | Scholar | not yet (no extra spells learnt, no −1 to hit) |
-| Arcanist | whole: its spells a level higher, its d3 hit die at a level up (1 a level past 10th) |
-| Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at a level up (2 a level past 10th), casting after a hit |
+| Arcanist | whole: its spells a level higher, its d3 hit die at creation and a level up (1 a level past 10th) |
+| Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at creation and a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
 | Healer | whole: water only, no weapon in the off hand, the sphere of the cosmos (the sequel's druids' spells; Restore Youth once it is in the sequel), cures 1 more a die, no harming spells |
 | Crusader | in part: its THAC0, expertise and one slot fewer |
@@ -809,7 +809,7 @@ thief skills, movement and initiative.
 | Lifebinder | whole: blunt weapons only, cures a die more, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
 | Mind Bender, Kineticist, Titan Mind | whole: their PSP costs |
-| Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at a level up |
+| Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at creation and a level up |
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | whole: to hit, damage, hiding, its Cause Wounds stronger, no healing spells |
 | Rescuer | whole: movement, from behind, no shield, cures 1 more a die |
@@ -838,8 +838,9 @@ the bow and arrows its class gives).
 
 The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel; a
 Spellarcher's arrows at +3 wait for its arrows there. A new character's kit hit die and PSP (a Battle
-Mage's, Arcanist's, Mind Warrior's) count from its first level up there: the creation screen doesn't roll
-them again when the kit is chosen yet.
+Mage's, Arcanist's, Mind Warrior's) count from the creation screen there as here: the hit points and PSP
+are rolled again as the kit is chosen. Characters brought from Shattered Lands keep the hit points and PSP
+they have, and the sequel's own party none of these kits.
 
 ## Changing class
 

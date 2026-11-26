@@ -1169,8 +1169,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   levels (an Arcanist's, Spirit Caller's and Wasteland Seer's), cures (a Healer's, Lifebinder's and
   Rescuer's) and Cause Wounds (a Wilderness Avenger's), the spells a kit knows (a Healer's sphere of
   the cosmos, the healing or harming spells a kit never knows), the psionicist
-  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die at a
-  level up (and past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
+  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die (on
+  the creation screen, rolled again as the kit is chosen, and at a level up; past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
   Dancer's dance and Wild Fighting as a fight starts, and the kits' gear: what a kit forbids is
   refused when it is put on or in a hand (a Ravager's shield and bow, a Stalker's chain mail, a Battle
   Mage's off-hand weapon), and what it allows can be held whatever its class (a Battle Mage's weapon of
@@ -1180,8 +1180,7 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   game's menu right after DUAL. A new character's starting gear is fitted to its kit from the
   sequel's own items (a Shinobi's long sword +1 a short sword +1, an Arena Champion's second sword a
   Shield +1, a Ravager's shield left behind and a second sword in its place). What else kits do to spells
-  and psionic powers doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them), nor a
-  new character's kit hit die or PSP on the creation screen ([which kits work
+  and psionic powers doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them; [which kits work
   there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
