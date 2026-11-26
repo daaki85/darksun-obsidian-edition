@@ -231,23 +231,24 @@ def slot(weapon: Rows, state: int, colours: Optional[Dict[str, int]] = None) -> 
     """A slot with WEAPON in its middle: STATE 0 as it is, 1 lit, 2 out of use (the frames of a
     button's picture, in the game's order); COLOURS the slot's (SLOT_*'s by name, RAV_SLOT's form)."""
     c = colours or {"face": SLOT_FACE, "dark": SLOT_DARK, "light": SLOT_LIGHT, "lit": SLOT_LIT, "out": SLOT_OUT}
-    SLOT_FACE, SLOT_DARK, SLOT_LIGHT, SLOT_LIT, SLOT_OUT = c["face"], c["dark"], c["light"], c["lit"], c["out"]
+    face, dark, light, lit, out = c["face"], c["dark"], c["light"], c["lit"], c["out"]  # (not the SLOT_* names: a
+    # local of one of them made every read of it local, so the default crashed, 2026-11-26)
     n = PICK_SLOT
-    rows: Rows = [[SLOT_FACE] * n for _ in range(n)]
+    rows: Rows = [[face] * n for _ in range(n)]
     for i in range(n):
         for (x, y) in ((i, 0), (0, i)):
-            rows[y][x] = SLOT_DARK
+            rows[y][x] = dark
         for (x, y) in ((i, n - 1), (n - 1, i)):
-            rows[y][x] = SLOT_LIGHT
+            rows[y][x] = light
     if state == 1:
         for i in range(n):
-            rows[0][i] = rows[n - 1][i] = rows[i][0] = rows[i][n - 1] = SLOT_LIT
+            rows[0][i] = rows[n - 1][i] = rows[i][0] = rows[i][n - 1] = lit
     h, w = len(weapon), len(weapon[0])
     top, left = (n - h) // 2, (n - w) // 2
     for y, r in enumerate(weapon):
         for x, p in enumerate(r):
             if p is not None and 0 <= top + y < n and 0 <= left + x < n:
-                rows[top + y][left + x] = SLOT_OUT if state == 2 else p
+                rows[top + y][left + x] = out if state == 2 else p
     return rows
 
 

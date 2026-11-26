@@ -112,6 +112,22 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class SlotTests(unittest.TestCase):
+    def test_default_colours(self):
+        """Shattered Lands' slot (no COLOURS): its frame in SLOT_*'s colours, the weapon in the middle,
+        lit and out of use (a local named SLOT_FACE once made this an UnboundLocalError, so every
+        start crashed, 2026-11-26)."""
+        n = weaponpages.PICK_SLOT
+        weapon = [[5, None], [None, 5]]
+        plain, lit, out = (weaponpages.slot(weapon, state) for state in range(3))
+        self.assertEqual((plain[0][1], plain[n - 1][1], plain[1][1]),
+                         (weaponpages.SLOT_DARK, weaponpages.SLOT_LIGHT, weaponpages.SLOT_FACE))
+        self.assertEqual(lit[0][1], weaponpages.SLOT_LIT)
+        top, left = (n - 2) // 2, (n - 2) // 2
+        self.assertEqual((plain[top][left], out[top][left], out[top][left + 1]),
+                         (5, weaponpages.SLOT_OUT, weaponpages.SLOT_FACE))
+
+
 class DormantKitTests(unittest.TestCase):
     """A human who changes class keeps its kit asleep until the new class's level passes the old."""
 
