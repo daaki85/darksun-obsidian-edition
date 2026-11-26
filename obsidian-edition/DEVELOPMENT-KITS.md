@@ -748,6 +748,9 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | initiative | Myrmidon, Wayfinder, Military Scout | `KIT_INIT` (site 60, new) | `add dx,14h` at 5B7E9h (5750Eh), SI the creature |
 | casting level | Seeker (the ranger level less 5), Justifier (less 9) | `KIT_RANGER_CAST` (site 61, new); `RANGER_DROP` in `RANGER_LEVEL` | the caster level routine's `sub dx,7`, 97E00h (81B6Ah); the spell's level, 629F0h (5E3B8h) |
 | a second sphere's spells | Elementalist (the sheet's `+3Fh`, low three bits) | `EL_SPHERE` (sites 90-92, new) | `add sp,4` after each call to 62B45h (spell, class) that has the member: 62CAEh in 62C00h (the USE screen's spells known; DI the member), 629BEh in 628AFh (the cast's level) and 97DE1h in 97DC5h (the caster level; both `[BP+6]`) |
+| a hit's poison | Poisoner (each hand's first melee hit a fight, `POISON_USED` at the header's +2088, cleared at the first round by `ACID_ROUND`; a weapon with a spell of its own casts that, no dose used) | `POISON_HIT` (site 214, new), then `PLAIN_ARROW` (site 49) makes the hit's spell the monsters' poison, 273 (SL's 176 by its record), cast as a weapon's (`WEAPON_CAST`: level 6, no roll) | the hit's "does the weapon cast" test, `cmp word [es:bx+10h],0` at 5D20Dh (SL's 7A6DDh in the hit's special effects, which the sequel's weapon hits don't pass through) |
+| an arrow's plus | Spellarcher (its spell arrows from a bow, by name: +1 from 5th preserver level, +2 from 9th, +3 from 13th; anyone outside the party by its highest level) | `ARROW_PLUS` (site 215, new) | the ammunition routine's `mov es:[0009h],al`, 5D456h (SL's 58D27h): `308h:[9]` the plus the shot's damage adds (5D021h) and its magic takes where better than the bow's (5C7B5h) |
+| to hit with the Fine Bow | Spellarcher (its starting bow, `ravkitstart.fine_bow`; the party transfer keeps the name, `ravager.FINE_BOW_NAME`), whatever the rules | `FINE_HIT` from `OFF_HAND` | 5CEE8h |
 | spell slots | Elementalist (a level behind), Crusader and Battle Mage (1 fewer), Seeker, Justifier, Shinobi (their own tables, WIS left out: `seeker_slots`, `justifier_slots`) | `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE` in `ADND_SLOTS` (site 34); `SHINOBI_MAGE` (site 190, new); `VEILED_SLOT` | the slot routine 626B7h, per class: its call to 62A10h at 62893h (5E240h), and the "add sp,4" after its "casts wizard spells" call to 62B45h (spell 8) at 627D6h, so a Shinobi's thief class is asked (SI the member) |
 
 The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
@@ -757,11 +760,13 @@ dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`,
 `playtest/ravkits.py count`; the slots' `sb_count`, `kt_count`, `sh_mages`: `playtest/ravlevel.py counts`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
 `EXPERT_HALVES`, `KIT_MELEE`, `SLOT_BEHIND`, `BEHIND_LEAST` and `KIT_TABLE` against `kitpages` and `kits` on transferred sheets, and checks the
 tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
-against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets.
+against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets; `tests/test_ravpoison.py` runs
+`POISON_HIT`, `PLAIN_ARROW`'s poison, `ARROW_PLUS` (against `kits.arrow_plus` and `spellarrows.archer_level`) and
+`FINE_HIT`, checks the sequel's record 273 is the 10-damage poison, and the transfer keeping the Fine Bow.
 
 Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting, a spell's level, PSP
 costs, cures' and Cause spells' dice, spells never known, casting though hit, a Healer's
-cosmos), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, hit dice and
+cosmos), the Spellarcher's arrows made (the USE screen's buttons and the Loader's `SpellArrows.make`: the sequel has no spell arrow objects of its own outside a transfer), gear a kit forbids or allows, hit dice and
 PSP at a level up, a Scholar's THAC0 and the kits' parts of the DAM lines. Choosing a kit (the
 creation panel's KIT pages, sites 62-69, and `DUAL_KIT`, site 76) is DSCLOG2's KIT PAGE. The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
 KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's

@@ -790,8 +790,8 @@ thief skills, movement and initiative.
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
 | Rescuer | in part: movement, from behind, no shield; not its stronger cures |
-| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
-| Poisoner | in part: its weapon spec and gear limits; no poison |
+| Spellarcher | in part: its spell arrows brought along cast on a hit at its preserver level and are +1 to +3 by it, its Fine Bow (+1 to hit), no armour; no new arrows made yet (no USE-screen buttons), so a new one starts with plain arrows |
+| Poisoner | whole: each hand's first melee hit a fight poisons (a weapon with a spell of its own casts that instead), its weapon spec and gear limits |
 | Spirit Caller, Wasteland Seer | not yet (no casting level or PSP cost by the sky) |
 | Wild Fury | whole |
 
@@ -809,11 +809,12 @@ says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' 
   spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
 
 A warrior's weapon is first made a +1 of its first weapon spec ([Starting
-weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
-the bow and arrows its class gives).
+weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow; not there: its
+spell arrows (it keeps the arrows its weapon spec gives).
 
-The kits' spell slots past Shattered Lands' levels hold in the sequel; a Spellarcher's arrows at +3 and a
-Battle Mage's or Arcanist's hit points past 10th wait for those kits' arrows and hit dice there.
+The kits' spell slots past Shattered Lands' levels hold in the sequel, and a Spellarcher's arrows are +3 from
+its 13th preserver level there; a Battle Mage's or Arcanist's hit points past 10th wait for those kits' hit
+dice there.
 
 ## Changing class
 

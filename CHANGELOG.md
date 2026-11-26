@@ -60,6 +60,12 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **New**
+- **Wake of the Ravager: the Poisoner's poison, the Spellarcher's arrows' plus and its Fine Bow.** A
+  Poisoner's first melee hit of a fight with each hand's weapon poisons (the monsters' poison, a save or
+  10 damage: the sequel's own record of it); a Spellarcher's spell arrows from a bow are +1 to +3 by its
+  preserver level; the Fine Bow is +1 to hit there, a new Spellarcher's bow is made one and the party
+  transfer keeps it. DSCLOG2's sites 214-215 and header +2088 to +2097. Making spell arrows on the USE
+  screen is not in the sequel yet.
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
   default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
