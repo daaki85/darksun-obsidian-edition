@@ -1712,6 +1712,13 @@ PROBE_PK_* do. What it needed from the sequel:
   roster's). The new characters are 7th level: a gladiator is due 3. In the Tyr ambush Borzak's right hand held a
   type 91 (flags 4, not a weapon) and his sword was in slot 10: a test edit of that item's type to the Lotulis (61)
   gave "+3 mastery" to hit and damage.
+- **A new fighter's attacks a round** (2026-11-26, the same log's part 9): the sequel's creation gives a 7th-level
+  fighter 4 halves (2 a round) at the sheet's +24h. Its gear puts the +1 shield (91) in slot 3, the right hand, and the
+  +1 Longsword (97) in slot 10, the left hand (one swing a round whatever the skill); party member 0 of a new game also
+  has an Obsidian Dragonsbane +4 (73) in slot 14 that Computer Control readies in the left hand. For a rate test move
+  the sword to slot 3 (the shield to 14: Computer Control puts it back in the left hand, harmless) and make any second
+  weapon a shield (type 91), all with the dice log attached and never saved. Seen: a long sword specialist (mastery) 2
+  every round, a club specialist with the long sword 2, 1, 2, 1, a fighter with no spec the game's 2.
 
 ### The sequel's spells in a fight (2026-11-21)
 

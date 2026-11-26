@@ -86,3 +86,61 @@ free 88,816 (the largest 85,696). STDOUT.TXT empty throughout.
 - An EDIT that takes the warrior class away keeps the specs it had.
 - The dice log prints "Loader error in the dice log: TypeError ... (ravlog.py:1142)" at its attach in these
   sheets (it carries on); not this branch's.
+
+## 9. A new fighter's attacks a round with his one specialized weapon (later the same day)
+
+**Under test:** the same branch (tip 28c84e5, DSCLOG2.EXE rebuilt from dsclog2.asm: the same bytes). Does a fighter
+who picked his spec at creation get the specialist's attacks a round with one weapon? Borzak (above) swung once a turn
+only because his sword was in the left hand.
+
+**Set-up:** a throwaway copy `ravSP3` of `$WORK/rav` (the roster reset from __support/save), `RAV_LOADER=1 RAV_MENU=1
+RAV_STDOUT=1 RAV_CORE=normal sh ravstart.sh /tmp/playtest/ravSP3`, the DOSBox lock held throughout, the dice log
+`RAV_NO_SAVES=1 ravdice.py --numbers` (attached **before** the picks: Ulf, made first without it, got no weapon window,
+DSCLOG2's rules word 0). Three 7th-level human fighters made with NEW, the default FIGHTER, DONE (279,183), the
+powers' three picks (121,62), then the weapon window: **SeanBoy long sword** (75,32: "SPECIALIZE IN / LONG SWORD"),
+**Dag club** (109,32), **Ulf none** (made before the dice log). `ravspecs.py`: SeanBoy `434dcf` ['long sword'], Dag
+`4554c1` ['club'], Ulf `4146c1` [] (wp_asks 2, wp_picked 2). On the creation screen the human fighter shows `1/1`.
+(At the roster's right-click menu NEW is game y 57, ADD 69 on slot 1; slot 3's NEW 115,117. The roster's own four,
+Clk'whrr, Meggyn, Zontorra, Borzak, are the list's last.)
+
+**The gear a new fighter starts with** (`items.py`, scratch: each member's items and slots): bone arm, chest and legs,
+a **+1 shield (91) in slot 3, the right hand**, and the **+1 Longsword (97) in slot 10, the left hand**; party member
+0 also an Obsidian Dragonsbane +4 (73) in slot 14, which Computer Control put in his left hand in the first round (a
+second weapon: 1 more swing a turn). So **a new fighter's sword is in the off hand, one swing a round whatever his
+skill**, until the player moves it to the right hand. Test edits (never saved): each one's sword to slot 3, the shield
+to slot 14 (Computer Control put it back in the left hand: no weapon), the Dragonsbane's type made the shield's (91),
+HP 250. The sheet's attacks a round (+24h) read **4 halves (2 a round)** for all three: the game's own rate for a
+7th-level fighter (the specialist's, as SL's).
+
+**Run 1** (Ulf member 0, the Dragonsbane his second weapon) and **run 2** (DOSBox stopped by pid and started again,
+CREATE CHARACTERS, ADD SeanBoy, Dag, Ulf, START GAME from the bar, one weapon each), the Tyr ambush under Computer
+Control, both won (10,000 XP each), nothing saved (SAVE01.SAV's time unchanged). Swings a turn from the dice log's
+"X attacks Y with Longsword +1" lines, by round:
+
+| Round | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| SeanBoy, long sword spec (mastery), run 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| Dag, club spec, the long sword (not chosen), run 2 | moved | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 1 (the last foe killed) |
+| Ulf, no spec, run 2 | 2 | 2 | 2 | 2 | 2 | down | | | | | | | | |
+| SeanBoy, run 1 | moved | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | | |
+| Dag, run 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | down | | | | | | |
+| Ulf, run 1 (+ the Dragonsbane, 1 a turn) | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | | |
+
+- **SeanBoy**: every swing "THAC0 14 base, +2 in bonuses, **+3 mastery** = 9" and "1d8 = [8] +1 weapon **+3 mastery**
+  +1 STR 17" (28 swings in run 2: 14 rounds x 2). **2 a round: the specialist's rate at 7th-12th level** (WEAPON-SPECS.md's
+  table: a chosen weapon spec 3/2 at 1st-6th, 2 at 7th-12th, 5/2 at 13th; the 3/2 at 7th-12th is a warrior's with a
+  kind not chosen). The game's 4 halves kept.
+- **Dag** (a spec, not this kind: SPEC_PLAIN): "THAC0 14 base, +2 in bonuses = 12", "1d8 = [7] +1 weapon +1 STR 17",
+  no spec line; **2, 1, 2, 1: 3/2**, SPEC_ATTACKS' half an attack less.
+- **Ulf** (no spec: SPEC_NONE): no spec line, the game's **2 a round** kept (as SL's rule: a creature with no kinds
+  chosen, a monster or the sequel's own pre-made characters, keeps the game's rate).
+- DSCLOG2 at run 2's end: rules 0xFB45, spec_hits 32, spec_damages 32, spec_rates 24, two_count 0, off_count 0.
+  STDOUT.TXT empty.
+
+**So the specialization's attacks work for a new character**: the specialist keeps 2 a round, a fighter with a spec in
+another kind drops to 3/2, no special handling needed for picks made at creation (the V3 bytes the pick writes are what
+SPEC_OF_SHEET reads, as for a transferred party). What hides it in play is the starting gear: the sequel puts a new
+fighter's sword in the left hand behind a shield, and the left hand swings once a round. Not fixed here (the gear
+routine, 6F197h, is the game's; with the port plan's "the starting weapon of the first pick").
+
+No new area: no water noted. ravSP3 thrown away after.
