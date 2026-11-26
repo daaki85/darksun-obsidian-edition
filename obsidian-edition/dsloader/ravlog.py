@@ -185,6 +185,9 @@ ADDRESSES: Dict[str, object] = {
     # the starting age's roll (SL's +14h..+16h) in the three bytes the Loader's copy adds, +42h..+44h
     # (ravager.SHEET_SIZE 48h, sheet_field)
     "SHEET_AGE": 0x41, "AGE_PLAIN": True, "SPEC_SLOTS": ravager.sheet_field(game.SPEC_SLOTS),
+    # four more weapon specs past SL's levels (a gladiator's 5th to 8th, the owner's 2026-11-26): +45h..+47h,
+    # the rest of the Loader's widening (game.spec_more; DSCLOG2's SPEC_MORE)
+    "SPEC_MORE": ravager.SPEC_MORE,
     "ITEM_ATTACKS": {103: "Crystal Brittle", 275: "corroding touch", 283: "corroding touch",
                      284: "corroding touch"},
 }

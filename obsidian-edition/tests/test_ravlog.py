@@ -95,14 +95,20 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(game.spec_kinds(bytes(sheet)), bytes((5, 18, 16, 15)))
         ravlog.apply_layout()
         self.assertEqual((game.SPEC_SLOTS, game.SHEET_AGE), (0x42, 0x41))
-        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet))), (bytes(4), None))
+        self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet))), (bytes(8), None))
         sheet[0x41], sheet[0x42:0x45] = 7, game.packed_specs([4, 2], 0, 11)[:3]
         self.assertEqual((game.spec_kinds(bytes(sheet)), game.sheet_roll(bytes(sheet)), game.sheet_age(bytes(sheet))),
-                         (bytes((4, 2, 0, 0)), 11, 7))
+                         (bytes((4, 2, 0, 0, 0, 0, 0, 0)), 11, 7))
         new = game.with_specs(bytes(sheet), [1])
         self.assertEqual((len(new), new[:0x42], new[0x45:]), (ravager.SHEET_SIZE, bytes(sheet[:0x42]), bytes(3)))
-        self.assertEqual((game.spec_kinds(new), game.sheet_roll(new), new[0x41]), (bytes((1, 0, 0, 0)), 11, 7))
+        self.assertEqual((game.spec_kinds(new), game.sheet_roll(new), new[0x41]), (bytes((1, 0, 0, 0, 0, 0, 0, 0)), 11, 7))
         self.assertEqual(len(game.respecced(bytes(sheet), [1])), 3)
+        # four more past SL's levels (a gladiator's 5th to 8th: the owner's 2026-11-26), 5 bits each at +45h..+47h,
+        # as DSCLOG2's SPEC_SET_MORE writes them; the packed three and the roll untouched
+        more = game.with_spec_more(game.with_spec_more(bytes(sheet), 4, 22), 7, 9)
+        self.assertEqual((more[0x45:0x48], more[:0x45]), (bytes((0x16, 0x80, 0x04)), bytes(sheet[:0x45])))
+        self.assertEqual(game.spec_kinds(more), bytes((4, 2, 0, 0, 22, 0, 0, 9)))
+        self.assertEqual((game.sheet_roll(more), game.sheet_age(more)), (11, 7))
 
     def test_size_rule_takes_the_sequels_tables(self):
         from dsloader import sizes
