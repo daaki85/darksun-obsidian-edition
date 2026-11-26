@@ -288,7 +288,7 @@ classes ([kits](#kits)).
 
 The change starts the new class at 0 XP, and any XP past the old level's need
 is lost: change as soon as the level you want comes. How far the new class can
-then rise: [XP left over at the top](#xp-left-over-at-the-top).
+then rise: [XP stops at the cap](#xp-stops-at-the-cap).
 
 ## The classes
 
@@ -919,7 +919,8 @@ Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly
 (374,999 each), three too (249,999); and a human who changed class has the
 cap less what its old classes' levels needed (the game starts the new class
-at 0 XP). XP keeps counting past the cap. The highest levels:
+at 0 XP). XP stops at the cap too ([XP stops at the cap](#xp-stops-at-the-cap)). The
+highest levels:
 
 | Class | One class | Two classes | Three classes |
 |---|---|---|---|
@@ -965,18 +966,23 @@ AD&D's tables:
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
 
-### XP left over at the top
+### XP stops at the cap
 
-The cap stops levels, not XP: past a class's highest level the XP keeps
-counting (to the game's own limit, 2,000,000,000), but no level comes of it.
-What is left over is the cap less the XP the highest level needed. For a human
-it is also the room a new class has: dual-classing starts the new class at 0
-XP, and the new class may rise only as far as the cap less the old class's
-level's XP allows.
+A character's XP stops at its share of the cap: once it gets there, nothing
+more counts. The Loader holds it there as each award comes, and the dice log
+says what wasn't counted (`Jenna's XP held at the cap: 749,999 (30 not
+counted)`); View Character shows the XP held. So no XP is banked past the top: a character at its share is at its
+highest level, and the XP between that level's need and the share brings no
+level. *Without the mod* (or the game played without the Loader following it):
+XP counts on to the game's own limit, 2,000,000,000, and no level comes of it.
+
+The share is also, for a human, the room a new class has: dual-classing starts
+the new class at 0 XP, and the new class may rise only as far as the cap less
+the old class's level's XP allows; its XP stops there.
 
 One class, with AD&D's tables:
 
-| Class | Highest level | XP it needs | Next level needs | Left over |
+| Class | Highest level | XP it needs | Next level needs | XP past it, to the cap |
 |---|---|---|---|---|
 | Fighter | 10 | 500,000 | 750,000 | 249,999 |
 | Gladiator | 10 | 600,000 | 900,000 | 149,999 |
@@ -1023,6 +1029,85 @@ Two or three classes share the cap (374,999 or 249,999 each):
 
 *Without the mod:* every class stops at 9th, all
 XP past 9th's need is left over, and a human who changes class loses it.
+
+### In Wake of the Ravager
+
+Started from the Loader, the sequel has a cap of its own: **5,625,000 XP**, shared
+out the same way (one class all of it, two 2,812,500 each, three 1,875,000 each, a
+human the cap less what its old classes' levels needed). It replaces the game's
+stop at 15th, and levels go on past the sequel's XP table (20th) by AD&D's
+tables, up to 30th, as far as the share allows. Most characters of three classes
+reach 15th; one or two classes go higher:
+
+| Class | One class | Two classes | Three classes | XP for 20th | XP for 21st | Then a level | XP for 30th |
+|---|---|---|---|---|---|---|---|
+| Cleric | 30 | 20 | 16 | 2,700,000 | 2,925,000 | +225,000 | 4,950,000 |
+| Druid | 20 | 14 | 14 | 5,500,000 | 6,000,000 | +500,000 | 10,500,000 |
+| Fighter | 30 | 19 | 15 | 3,000,000 | 3,250,000 | +250,000 | 5,500,000 |
+| Gladiator | 26 | 17 | 14 | 3,600,000 | 3,900,000 | +300,000 | 6,600,000 |
+| Preserver | 25 | 17 | 15 | 3,750,000 | 4,125,000 | +375,000 | 7,500,000 |
+| Psionicist | 27 | 19 | 16 | 3,000,000 | 3,300,000 | see below | 7,000,000 |
+| Ranger | 26 | 17 | 14 | 3,600,000 | 3,900,000 | +300,000 | 6,600,000 |
+| Thief | 30 | 22 | 18 | 2,200,000 | 2,420,000 | +220,000 | 4,400,000 |
+
+A psionicist needs 3,300,000, 3,600,000, 4,000,000, 4,400,000, 4,800,000,
+5,200,000, 5,600,000, 6,000,000, 6,500,000 and 7,000,000 for 21st to 30th. A
+druid's 21st is a hierophant's count on top of 20th (6,000,000), past the cap.
+
+**XP stops at the cap there**: unlike Shattered Lands, nothing is left over. At
+each level up (each award) a character's XP is held at its share, so a fighter
+alone stays at 5,625,000 and a fighter/preserver/thief at 1,875,000; a human's
+share is the cap less what its old classes' levels needed. (The game also holds
+XP to three levels ahead of each class, so one award raises a class four levels at
+most: a fighter at 20th with 5,600,000 XP goes to 24th and keeps 4,000,000, and the
+next award takes it on. Past 27th only the share holds it.) A new character starts at 6th to 8th level, far below any
+share. XP a character banked past Shattered Lands' cap in an older save stays
+behind when the party goes across: it arrives with its Shattered Lands share at
+most.
+
+What the higher levels bring there:
+
+- **Saving throws** are the Player's Handbook's, by class group and level (the
+  best of a character's classes): PPD/RSW/PP/BW/SP
+
+  | Group | Level: saves |
+  |---|---|
+  | Priests (clerics, druids) | 1-3: 10/14/13/16/15; 4-6: 9/13/12/15/14; 7-9: 7/11/10/13/12; 10-12: 6/10/9/12/11; 13-15: 5/9/8/11/10; 16-18: 4/8/7/10/9; 19+: 2/6/5/8/7 |
+  | Warriors (fighters, gladiators, rangers) | 1-2: 14/16/15/17/17; 3-4: 13/15/14/16/16; 5-6: 11/13/12/13/14; 7-8: 10/12/11/12/13; 9-10: 8/10/9/9/11; 11-12: 7/9/8/8/10; 13-14: 5/7/6/5/8; 15-16: 4/6/5/4/7; 17+: 3/5/4/4/6 |
+  | Wizards (preservers) | 1-5: 14/11/13/15/12; 6-10: 13/9/11/13/10; 11-15: 11/7/9/11/8; 16-20: 10/5/7/9/6; 21+: 8/3/5/7/4 |
+  | Rogues (thieves, psionicists) | 1-4: 13/14/12/16/15; 5-8: 12/12/11/15/13; 9-12: 11/10/10/14/11; 13-16: 10/8/9/13/9; 17-20: 9/6/8/12/7; 21+: 8/4/7/11/5 |
+
+  *Without the mod:* each save improved by a step a level but never by more than
+  the table's last row, so a warrior stayed at 11/11/11/13/11 from 10th level
+  and no save went below 8.
+- **A thief rolls a d6 for hit points up to 10th level** (then +2 a level); a
+  psionicist rolls to 9th. *Without the mod:* the game counts both to 9th.
+- **Thief skills** go on to 17th ([the table](#thieves-skills-and-picking-pockets)),
+  the same past it. A ranger's hide in shadows and move silently follow them.
+- **Spell slots** go on to 20th by the Player's Handbook's tables, then to 30th
+  by AD&D's high-level tables: a preserver's (1st to 9th spell level) 5 5 5 5 5
+  4 4 4 2 at 21st, 5 5 5 5 5 5 5 5 5 at 25th, 7 7 7 7 7 7 7 6 6 at 30th; a
+  cleric 9 9 9 9 8 6 2 at 21st to 9 9 9 9 9 9 8 at 30th (no true dweomers). The
+  sequel has four 10th-level wizard spells (Dome of Invulnerability, Magical Plague,
+  Rift, Wall of Ash): they stay the monsters'. A preserver's level up offers
+  spells up to 9th level only (the window opens on 9th or lower, and LEVEL pages
+  1 to 9). *Without the mod:* from 20th the window opened on that 10th-level
+  page, with no slots to cast them. A druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
+  are AD&D's: one at 8th, two at 9th, 2 1 at 10th, 2 2 at 11th, 2 2 1 at 12th,
+  3 2 1 at 13th, 3 2 2 at 14th, 3 3 2 at 15th and 3 3 3 from 16th, cast at
+  its level less 7, no higher than 9th. *Without the mod:* the game gave a
+  ranger 3 2 1 at 12th, 3 2 2 at 13th and 3 3 2 at 14th.
+- **Hit points** past 20th keep the fixed gains (warriors +3, priests,
+  psionicists and thieves +2, preservers +1), and the saves stay at their last
+  row. **THAC0** stops at AD&D's best (High Level Campaigns): a warrior's 1
+  (reached at 20th), a priest's 8, a thief's or psionicist's 11, a preserver's 14
+  ([the table](#thac0-by-level)).
+- **Psionic powers**: a psionicist still picks one a level (two at odd levels);
+  with all 34 known, a pick raises a known power's number instead.
+- **View Character** shows no next level at the cap, and for a character of two
+  or three classes it names the class the next XP is for (`(2,000,000 F)`).
+- **The level up's message** says "21st", "22nd", "23rd" past 20th. *Without
+  the mod:* the game's message ends every level past 3rd in "th".
 
 ### Hit points
 
@@ -1073,6 +1158,19 @@ screen's THAC0 counts the weapon in hand too.
 | Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
 | Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
 | Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 | 17 | 17 | 16 |
+
+In Wake of the Ravager, where levels go past 20th, THAC0 goes on the same way
+up to each class's best and stays there:
+
+| Level | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21-30 |
+|---|---|---|---|---|---|---|---|---|
+| Fighter, gladiator, ranger | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 1 |
+| Cleric, druid | 12 | 12 | 10 | 10 | 10 | 8 | 8 | 8 |
+| Thief, psionicist | 14 | 13 | 13 | 12 | 12 | 11 | 11 | 11 |
+| Preserver | 16 | 16 | 15 | 15 | 15 | 14 | 14 | 14 |
+
+*Without the mod (the sequel past 20th):* THAC0 went on falling, a fighter's
+to −9 at 30th.
 
 *Without the mod:* clerics and druids improve by about 2/3 a level (19 at
 3rd, 17 at 6th, 15 at 9th); the rest are as above.
@@ -1315,6 +1413,19 @@ says (its 99s are 95 in play).
 | Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
 | Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
 | Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
+
+In Wake of the Ravager the table goes on to 17th, the same past it:
+
+| Thief level | 14 | 15 | 16 | 17 |
+|---|---|---|---|---|
+| Pick pockets | 99 | 99 | 99 | 99 |
+| Open locks | 87 | 92 | 97 | 99 |
+| Find/remove traps | 85 | 90 | 95 | 99 |
+| Move silently | 99 | 99 | 99 | 99 |
+| Hide in shadows | 93 | 99 | 99 | 99 |
+| Hear noise | 40 | 50 | 50 | 55 |
+| Climb walls | 99 | 99 | 99 | 99 |
+| Read languages | 70 | 75 | 80 | 80 |
 
 | Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
 |---|---|---|---|---|---|---|---|---|
@@ -1842,6 +1953,17 @@ marks each). Twin-blades fight with them as with any two weapons, with no
 penalty in light armour; Battle Dancers and Brutes can't use them.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
+### Lotulis, double spear and trikal
+
+Wake of the Ravager's weapons have their sequel's traits, for a character specialized in them (its
+weapon spec chosen; mastery too). The **lotulis** and **double spear** have a head at each end: in a
+round of two swings or more, the last goes to a second foe beside the wielder, on the first
+target's side, if there is one; the double spear's second head does 1 less damage. A **trikal**
+hit that does damage **trips** a man-sized or smaller foe unless it saves against paralysis: it
+loses its next turn (who is too big, as for the [cahulaks](#cahulaks)). A trikal also has a
+polearm's [reach](#polearm-reach), for anyone who holds it. The double spear and
+trikal are for gladiators only, as in the sequel. *Without the mod:* the game has none of them.
+
 ### Stinkpots
 
 The staff sling throws clay pots of burning sulphur: 1d3 damage
@@ -1857,7 +1979,7 @@ which only a half-giant can hold beside it, is fine; a bow in the missile slot
 too) strikes a foe two squares away as well as an adjacent one: two squares
 straight, or two across and one along, not two diagonally. The attack pointer
 shows the sword over such a foe; it reaches over a creature in between, not
-through a wall. Foes with polearms have the reach too. With a bow in the
+through a wall. The trikal, a polearm with three blades, has it too. Foes with polearms have the reach too. With a bow in the
 missile slot, a click on a foe two squares away swings the polearm; from three
 on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 
@@ -1943,6 +2065,10 @@ class](#magic-weapons-by-class).
 | Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
+| Two-handed sword | Wake of the Ravager's: obsidian, 1d10 (3d6 against a large target), two-handed |
+| Lotulis | Wake of the Ravager's: stone, 1d10 (1d12 against a large target), two-handed, two-headed ([below](#lotulis-double-spear-and-trikal)) |
+| Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([below](#lotulis-double-spear-and-trikal)) |
+| Javelin, darts | Wake of the Ravager's, thrown from the missile slot: obsidian 1d6, one a round; darts 1d3, two a round; a specialist throws either faster ([rates of fire](WEAPON-SPECS.md)) |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

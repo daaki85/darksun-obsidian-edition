@@ -97,7 +97,8 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ENLARGE | game.RULE_INT_LEARN | game.RULE_REST | game.RULE_RESTRICT
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
-                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES)
+                | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES
+                | game.RULE_LEVEL_10)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -107,6 +108,50 @@ BONE_HELM_TYPE = 104  # (mod_type(117): GAME_TYPES + 117 - 115)
 # the XP table's reads (its "imul eax,eax,64h": XP_NEED's sites, 3 bytes on)
 XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C84)
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
+# The level cap by XP (game.RULE_LEVEL_10; DSCLOG2's LEVEL_ROOM): a class goes up while its next level
+# needs no more than its share of RAV_XP_CAP (the owner's, 2026-11-25: most characters of three classes
+# reach 15th, of one or two higher), past the game's cap of 15, up to the XP table's 30th level (the owner's,
+# 2026-11-25: no stop at 20th)
+RAV_XP_CAP, RAV_LEVEL_MOST = 5_625_000, 30
+# the sheet's classes (1-17) to the XP table's rows (1-8: tables.ROWS), as the game's map at 360h:9Dh
+CLASS_ROWS = (0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8)
+
+
+def xp_share(classes: Sequence[int], levels: Sequence[int], human: bool, rows: bool = False) -> int:
+    """The XP the first class of a character may gather under RAV_XP_CAP (DSCLOG2's LEVEL_ROOM): all of
+    it for one class, an equal share for several (not a human), and for a human what is left after the
+    XP its old classes' levels needed (slots 1 and 2). CLASSES the sheet's (1-17), or rows (1-8) with
+    ROWS, as View Character's copy has them."""
+    from . import tables
+    if not human:
+        n = sum(1 for c in classes if c)
+        return RAV_XP_CAP // n if n else RAV_XP_CAP
+    share = RAV_XP_CAP
+    for cls, level in zip(classes[1:3], levels[1:3]):
+        row = cls if rows else (CLASS_ROWS[cls] if 0 <= cls < len(CLASS_ROWS) else 0)
+        if row and 1 <= level <= RAV_LEVEL_MOST:
+            share = max(share - tables.RAV_XP[tables.ROWS[row - 1]][level - 1], 0)
+    return share
+
+
+def level_room(classes: Sequence[int], levels: Sequence[int], human: bool, slot: int, rows: bool = False) -> bool:
+    """Whether the class in SLOT may go up a level under the cap (LEVEL_ROOM's CF): its next level's
+    XP (tables.RAV_XP at its level) no more than its share, and below 30th."""
+    from . import tables
+    cls, level = classes[slot], levels[slot]
+    row = cls if rows else (CLASS_ROWS[cls] if 0 <= cls < len(CLASS_ROWS) else 0)
+    if not row or not 0 <= level < RAV_LEVEL_MOST:
+        return False
+    return tables.RAV_XP[tables.ROWS[row - 1]][level] <= xp_share(classes, levels, human, rows)
+
+
+def level_most(row: str, classes: int) -> int:
+    """The highest level a class of ROW reaches under the cap in a character of CLASSES classes."""
+    from . import tables
+    share, level = RAV_XP_CAP // classes, 1
+    while level < RAV_LEVEL_MOST and tables.RAV_XP[row][level] <= share:
+        level += 1
+    return level
 
 # The game's reads of an item's name (file offsets: SITE_NAME's)
 NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
@@ -546,10 +591,31 @@ PATCHES: Tuple[Patch, ...] = (
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
     # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
     # routine's call (62893h, "nop / push cs / call 2A10h", SL's 5E240h): DSCLOG2's XP_NEED, PRIEST_THAC0
-    # and ADND_SLOTS, AD&D's tables to 20th level (tables.RAV_*)
+    # and ADND_SLOTS, AD&D's tables to 20th level and the owner's to 30th (tables.RAV_*; XP_NEED answers
+    # RAV_XP's past the game's 20 entries)
     *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
+    # The level cap by XP (SL's level_up_cap, xp_view_cap, xp_next, thief_hd_*; game.RULE_LEVEL_10, always on,
+    # with RAV_XP_CAP): the level up's "cmp byte es:[bx+1Eh],0Fh" (959A5h) and View Character's (6FB51h),
+    # DSCLOG2's LV_UP and LV_VIEW (sites 110, 111: LEVEL_ROOM's share in place of the game's 15th); the level
+    # up's hold on XP ("add ax,3", 958BDh), LV_CLAMP (112: none past RAV_XP's 30 entries); View
+    # Character's ")" ("push 1386h", 6FC08h), XP_SUFFIX (117: the class the next XP is for); and a thief's
+    # d6 to 10th (the hit die's "mov al,es:[bx+1]", 94FECh, and the most hit points' "cmp al,es:[bx+1]",
+    # 95460h, and its "mov", 95471h: HD_ROLL, HD_CON, HD_CLAMP, 113-115; the psionicist's stays 9th)
+    Patch("level_cap_up", 0x959A5, bytes.fromhex("26807f1e0f"), _site(110, 5)),
+    Patch("level_cap_view", 0x6FB51, bytes.fromhex("26807f1e0f"), _site(111, 5)),
+    Patch("level_clamp", 0x958BD, bytes.fromhex("050300"), _site(112, 3)),
+    Patch("xp_suffix", 0x6FC08, bytes.fromhex("688613"), _site(117, 3)),
+    # (the level up's message's "th", "mov ax,2B7Eh" at 959D3h: LV_ORDINAL, 118, "21st" past 20th)
+    Patch("level_ordinal", 0x959D3, bytes.fromhex("b87e2b"), _site(118, 3)),
+    Patch("thief_hd_roll", 0x94FEC, bytes.fromhex("268a870100"), _site(113, 5)),
+    Patch("thief_hd_con", 0x95460, bytes.fromhex("263a870100"), _site(114, 5)),
+    Patch("thief_hd_clamp", 0x95471, bytes.fromhex("268a870100"), _site(115, 5)),
+    # ... and the saves as in AD&D (game.RULE_ADND_TABLES): the save routine's "mov al,es:[bx+6Ch]" (955DFh),
+    # a group's 1st-level save, DSCLOG2's SAVE_BASE (116: the Player's Handbook's table, tables.rav_saves;
+    # the game's own held every save at its table's last, a warrior at 11/11/11/13/11 from 10th)
+    Patch("save_table", 0x955DF, bytes.fromhex("268a876c00"), _site(116, 5)),
     Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
     # CON as in AD&D (SL's regen_rate, con_save; game.RULE_CON): regeneration's rate (26599h, "mov dx,cx /
     # imul dx,dx,31h" after its "div ebx", SL's 228BFh) and CON's save adjustment (1D36Bh, "mov bx,ax /
@@ -637,6 +703,19 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("psi_cycle", 0x93FF1, bytes.fromhex("fe877b9d"), _site(97, 4)),
     Patch("psi_click", 0x94245, bytes.fromhex("0ac07420"), _site(98, 4)),
     Patch("pick_top", 0x93831, bytes.fromhex("3b46fe"), _site(99, 3)),
+    # ... and a warrior's weapon specs (SL's CR_WEAPONS, LV_CHECK and PROBE_PK_*; game.RULE_SPECIALIZE): DSCLOG2's
+    # WEAPON PICKS. DONE's "push si / nop / push cs" before its call for the game's gear (6E2ECh, just before SL's
+    # CR_WEAPONS' place, the screen's windows let go by then), CR_WEAPONS (site 120): the psionicists' pop-up in
+    # weapon mode for the specs the new member is due, which shows the weapon window (weaponpages.rav_chunks,
+    # RESOURC2.GFF's 3021) through PK_WIN (121, "push 445Dh", 93C94h [85FF4h]), PK_TITLE (122, "push ds / push
+    # 2ACCh", 93D63h [860C3h]), PK_FILL (123, "xor di,di / mov si,di", 93DECh [8610Fh]), PK_CLICK (124, "mov
+    # ax,[bp+8]", 93FABh [862D4h]) and PK_HOVER (125, "or ax,ax / jnz", 93BBAh [85F44h]); PSI_COUNT the picks left
+    Patch("cr_weapons", 0x6E2EC, bytes.fromhex("56900e"), _site(120, 3)),
+    Patch("pk_win", 0x93C94, bytes.fromhex("685d44"), _site(121, 3)),
+    Patch("pk_title", 0x93D63, bytes.fromhex("1e68cc2a"), _site(122, 4)),
+    Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
+    Patch("pk_click", 0x93FAB, bytes.fromhex("8b4608"), _site(124, 3)),
+    Patch("pk_hover", 0x93BBA, bytes.fromhex("0bc07515"), _site(125, 4)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -699,6 +778,11 @@ PATCHES: Tuple[Patch, ...] = (
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
     Patch("hit", 0x29DBD, bytes.fromhex("558bec83ec0e"), _site(77, 6)),
+    # F10 in a fight leaves a pinned member where it is (SL's F10_PIN, DSCLOG's): the F10 key's standing-still
+    # test (1EC05h, SL's 1B83Ah, from the map's key table at 1F091h), "mov ah,0 / or ax,ax / jz 1EC3Fh"
+    # (1EC36h, SL's "or ax,ax / jz" at 1B86Bh), DSCLOG2's site 100 (SITE_F10_PIN): the move taken back only
+    # for a member neither Paralyzed (69) nor Cannot Move (66), the effects whose landing clears "can walk".
+    Patch("f10_pin", 0x1EC36, bytes.fromhex("b4000bc07403"), _site(100, 6)),
     # Quick saves (DSCLOG2's QUICK SAVES, quicksave.py): the load's wrapper (7D8EEh on) reads the slot's GREQ
     # chunk (the map's limits, in the roster file) numbered by "mov ax,es:[2]" (the window's first row) + the row
     # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2
@@ -987,14 +1071,26 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
+WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
 
 
-def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
-    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) and the creation screen's STORE
-    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) unless in SKIP; the names of those applied."""
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
+    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
+    pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
+    names of those applied."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
+        from . import weaponpages
+        try:
+            added = weaponpages.rav_chunks(gff.read_gff(out), gff.read_gff(objects))
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (no psionicists' window to make it from: none, the picks never asked)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(WEAPON_WINDOW)
     if KIT_PAGES not in skip:
         try:
             added = kitpages.rav_chunks(gff.read_gff(out))
@@ -1016,9 +1112,14 @@ def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 
 def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """RESOURCE.GFF's copy with the spell fixes and kit pages (resources_fixed), written to DEST unless
-    already so; the fixes applied."""
-    return _write_copy(game_dir, RESOURCE_FILE, dest, resources_fixed, skip)
+    """RESOURCE.GFF's copy with the spell fixes, kit pages and weapon window (resources_fixed, the weapons'
+    pictures from the game's OBJEX.GFF), written to DEST unless already so; the fixes applied."""
+    source = _find_file(game_dir, OBJECTS_FILE)
+    objects = None
+    if source:
+        with open(source, "rb") as f:
+            objects = f.read()
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
@@ -1103,14 +1204,18 @@ def wotr_type(sl: bytes) -> bytes:
 
 
 # The sequel's item types' weapon kinds (specialize.KINDS' numbers: DSCLOG2's KIND_OF_TYPE, less 1), from
-# OBJEX.GFF's items' names: its own (the Longswords, Crystal sword, Flameblade, Magma blade; Club, Toothed
-# Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka; Bow;
-# Sling; Staff Sling), and the mod's (mod_type: SL's 115-147, specialize.KIND_OF_TYPE's). ravlog's layout
-# makes it specialize.KIND_OF_TYPE while the sequel is attached.
+# OBJEX.GFF's items' names, dice and two-handed bit: its own (the Longswords, Flameblade, Magma blade; Club,
+# Toothed Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka;
+# Bow; Sling; Staff Sling; and SL's six kinds from the sequel: the Twohand Sword and the Crystal sword, both
+# two-handed 1d10; Lotulis; Double Spear; Trikal; Javelin; the two Darts), and the mod's (mod_type: SL's
+# 115-147, specialize.KIND_OF_TYPE's; none of the six, whose SL types are past them: sequel_weapon_type).
+# ravlog's layout makes it specialize.KIND_OF_TYPE while the sequel is attached.
 _RAV_OWN_KINDS = {
-    "long sword": (16, 35, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
+    "long sword": (16, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
     "axe": (8, 48), "great axe": (51,), "pick": (79,), "quarterstaff": (85,), "polearm": (80,),
-    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,)}
+    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,),
+    "two-handed sword": (101, 35), "lotulis": (61,), "double spear": (39,), "trikal": (100,),
+    "javelin": (59,), "darts": (38, 43)}
 
 
 def rav_kinds() -> Dict[int, int]:
@@ -1123,15 +1228,12 @@ def rav_kinds() -> Dict[int, int]:
     return out
 
 
-# The sequel's weapons with no kind of SL's, and the kind each counts as for weapon specialization alone
+# The sequel's weapons with no kind of SL's 22, and the kind each counts as for weapon specialization alone
 # (DSCLOG2's SPEC_KINDS_OWN; as SL's spell-made weapons, specialize.CONJURED_KINDS, which ravlog's
 # layout makes these): the nearest of SL's kinds, the reasoning in DEVELOPMENT-RULES.md
 _RAV_SPEC_KINDS = {
-    13: "long sword", 101: "long sword",  # Bloodletter (a 1d8 blade), Twohand Sword
-    61: "gythka",  # Lotulis (a blade at each end of a shaft)
-    39: "polearm", 100: "polearm",  # Double Spear, Trikal
+    13: "long sword",  # Bloodletter (a 1d8 blade)
     81: "mace", 68: "mace", 95: "mace",  # Promere hammer, Jasmine, Spirit hammer (the spell's)
-    38: "chatkcha", 43: "chatkcha", 59: "chatkcha",  # Darts, Darts, Javelin: SL's thrown weapon
     90: "club",  # Shillelagh (the spell's)
     87: "bow",  # Rainbow (the spell's bow)
 }
@@ -1143,6 +1245,21 @@ def rav_spec_kinds() -> Dict[int, int]:
     return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
+# Shattered Lands' types past the mod's first 33 (SL_WEAPON_TYPES' kinds: the sequel's own weapons
+# backported, their metal and magic ones): in the sequel the sequel's own type of that weapon, by its
+# kind (specialize.KINDS' two-handed sword, lotulis, double spear, trikal, javelin, darts)
+SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59, 21: 43}
+
+
+def sequel_weapon_type(sl_type: int) -> Optional[int]:
+    """The sequel's own type for SL_TYPE when it is one of the Ravager weapons backported to
+    Shattered Lands (past MOD_TYPES), else None."""
+    from . import specialize
+    if sl_type < game.GAME_TYPES + MOD_TYPES:
+        return None
+    return SEQUEL_WEAPON_OF_KIND.get(specialize.KIND_OF_TYPE.get(sl_type, -1))
+
+
 def mod_type(sl_type: int) -> int:
     """The sequel's number for the mod's Shattered Lands item type SL_TYPE (115 on)."""
     return GAME_TYPES + sl_type - game.GAME_TYPES
@@ -1151,7 +1268,7 @@ def mod_type(sl_type: int) -> int:
 def mod_types_table(types: bytes) -> bytes:
     """The sequel's type table TYPES (ALL 4) with the mod's after it."""
     from . import npcitems
-    return types + b"".join(wotr_type(t) for t in npcitems.TYPES)
+    return types + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,

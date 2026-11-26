@@ -8,6 +8,11 @@ fight in the arena gives none, whoever dies).
 The game gives no bonus for high prime requisites, which the manual promises: 10% more XP for a
 class whose prime requisites are all 16 or more. The tracker adds it to each gain it sees
 (prime_bonus), whatever it came from.
+
+The Loader's XP cap (game.XP_CAP, DSCLOG's LEVEL_ROOM) caps levels; the tracker caps XP too: a party
+member's XP above its share of the cap (game.xp_share) is held there, in memory, at each look
+(hold_at_cap), with a line saying how much wasn't counted. So nothing is banked past the
+character's top level (the user's, 2026-11-25), and View Character shows what counts.
 """
 
 import struct
@@ -63,6 +68,19 @@ def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
     return gain * len(why) * PRIME_BONUS_PERCENT // (100 * len(classes)), why
 
 
+def cap_why(sheet: bytes) -> str:
+    """For the hold line: how a share of the XP cap below the cap came about ("" for all of it)."""
+    share = game.xp_share(sheet)
+    if share == game.XP_CAP:
+        return ""
+    if sheet[game.SHEET_RACE] != game.HUMAN:
+        count = sum(1 for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if c)
+        return f", {game.XP_CAP:,} shared by {count} classes"
+    old = sum(1 for c, level in zip(sheet[game.SHEET_CLASSES + 1:game.SHEET_CLASSES + 3],
+                                    sheet[game.SHEET_LEVELS + 1:game.SHEET_LEVELS + 3]) if c and level)
+    return f", {game.XP_CAP:,} less the {game.XP_CAP - share:,} the old class{'es' if old > 1 else ''} needed"
+
+
 class Member(NamedTuple):
     name: str
     xp: int
@@ -115,6 +133,7 @@ class PartyTracker:
             return []
         out = self._check_monsters(now)
         members = [self._member(i) for i in range(game.PARTY_SIZE)]
+        out += self.hold_at_cap(members)
         if self.members is None:
             self.members = members
             return out
@@ -140,6 +159,27 @@ class PartyTracker:
             out += self._xp_line(before, members)
         return out
 
+    def hold_at_cap(self, members: List[Optional[Member]]) -> List[str]:
+        """Each party member's XP above its share of the XP cap (game.xp_share) put back to it, on the
+        sheet and in MEMBERS: a line for each, with what wasn't counted. (An award is seen held as
+        it lands, before the XP line, which then shows the gain that counted.)"""
+        out = []
+        for i, member in enumerate(members):
+            if member is None:
+                continue
+            sheet = self.game.sheet(i)
+            share = game.xp_share(sheet)
+            if member.xp <= share:
+                continue
+            at = aging.sheet_address(self.game, i)
+            xp = struct.unpack("<I", self.game.guest.read(at + game.SHEET_XP, 4))[0]  # (as it is now)
+            if xp <= share:
+                continue
+            self.game.guest.write(at + game.SHEET_XP, struct.pack("<I", share))
+            members[i] = member._replace(xp=share)
+            out.append(f"{member.name}'s XP held at the cap: {share:,}{cap_why(sheet)} ({xp - share:,} not counted)")
+        return out
+
     def _prime_bonuses(self, before: List[Optional[Member]], after: List[Optional[Member]]) -> Dict[int, str]:
         """Give each member who gained XP the bonus for their prime requisites (prime_bonus), on
         their sheet, and remember their XP with it, so that it isn't taken for a gain of its own.
@@ -154,12 +194,15 @@ class PartyTracker:
                 continue
             at = aging.sheet_address(self.game, i)
             xp = struct.unpack("<I", self.game.guest.read(at + game.SHEET_XP, 4))[0]  # (as it is now)
-            given = min(xp + bonus, max(xp, XP_MOST)) - xp
+            most = min(XP_MOST, game.xp_share(self.game.sheet(i)))
+            given = min(xp + bonus, max(xp, most)) - xp
             if not given:
+                notes[i] = f"the {bonus:+d} for {'; '.join(why)} held at the cap"
                 continue
+            held = f", {bonus - given:,} of it held at the cap" if given < bonus else ""
             self.game.guest.write(at + game.SHEET_XP, struct.pack("<I", xp + given))
             after[i] = new._replace(xp=new.xp + given)
-            notes[i] = f"{given:+d} for {'; '.join(why)}"
+            notes[i] = f"{given:+d} for {'; '.join(why)}{held}"
         return notes
 
     @staticmethod
