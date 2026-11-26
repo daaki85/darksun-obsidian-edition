@@ -13,3 +13,5 @@ A 16-bit instruction check ran the assembled handler in combat and exploration f
 The camera build loaded the same save in DOSBox. DSCLOG2 occupied 50,976 bytes and the largest free upper-memory block was 104,480 bytes. The map opened at (1080,1280).
 
 The manual gather shares its final store with the two combat exits. Its call returns to 18C9:0ED6, while the combat exits return to 18C9:21C6 and 18C9:31A9 (segments relative to the game load). Only the combat exits request an automatic spread. A scripted gather during loading must preserve the pending load request. In DOSBox the after-ambush save returned to the map with formation 1, key 6 left it at 0, and key 5 restored it to 1.
+
+Completed the opening Draxan fight on the map-controls branch. To shorten the encounter, the disposable test party had 200 HP each and the four hostile Draxans had 1 HP each. No edited state was saved. Across eight combatants, 76 consecutive sample pairs showed the active figure moving inside the viewport with the camera stationary. Gerakis dealt the finishing blow to each Draxan. After combat, the native fight-state word was zero and the formation byte was 1.

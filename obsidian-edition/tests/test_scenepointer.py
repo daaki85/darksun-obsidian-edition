@@ -46,6 +46,11 @@ class PointerDataTests(unittest.TestCase):
         self.assertFalse(scenepointer.write_pointer(None, None, dest))
         self.assertFalse(os.path.exists(dest))
 
+    def test_ravager_locked_pointer(self):
+        from unittest import mock
+        with mock.patch.object(scenepointer.os, "remove", side_effect=PermissionError):
+            self.assertFalse(scenepointer.write_ravager_pointer(None, "POINTER2.BIN"))
+
     def test_unwritable(self):
         """POINTER.BIN that can't be written (held by another program, a read-only folder): False,
         not an error that would stop the game starting."""

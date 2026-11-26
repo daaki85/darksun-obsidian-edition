@@ -67,7 +67,7 @@ def write_ravager_pointer(resources: Optional[str], dest: str) -> bool:
     except (TypeError, OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
         try:
             os.remove(dest)
-        except FileNotFoundError:
+        except OSError:
             pass
         return False
     return True
