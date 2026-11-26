@@ -959,6 +959,10 @@ Lands save into the sequel's roster, for a game that goes on with the same chara
 save; the save itself is not changed. Then start Wake of the Ravager from the Loader and **ADD** them
 on its CREATE CHARACTERS screen. A window lists what came across.
 
+- **XP comes across up to Shattered Lands' cap.** A member arrives with no more than its share of
+  749,999 XP (the whole for one class, an equal share for several, a human's the cap less its old
+  classes' levels' XP), so XP banked past the cap in an older save stays behind; the report after the
+  transfer says so (`XP 749,999 (Shattered Lands' cap: 2,000,000 in the save)`).
 - **Every item comes across.** What the sequel has, it gets as the sequel's own item (as SSI's
   CHARTRAN does); the rest, which CHARTRAN turns into money bags, the Loader makes for the sequel,
   with its picture and name from your own Shattered Lands files: the mod's weapons, armour and magic
@@ -989,6 +993,22 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
   round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
   Lands.
+- **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
+  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
+  past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
+  of three classes reach 15th, of one or two higher (a fighter alone 30th, with another class 19th, with
+  two more 15th; a preserver alone 25th, a druid 20th: [the
+  table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). XP stops at the cap: each level up holds a
+  character's XP at its share, so nothing is left over at the top. View Character names the class the
+  next XP is for, and a level up past 20th says "21st", not "21th". THAC0 stops at AD&D's best
+  (a warrior's 1, a priest's 8, a thief's or psionicist's 11, a preserver's 14), and a preserver's
+  level up offers spells up to 9th level only: the sequel's four 10th-level spells stay the monsters'. A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
+  the thief skills go on by AD&D's table to 17th, spell slots to 30th (a preserver's 7 7 7 7 7 7 7 6 6),
+  a druid's stop growing at 15th, a ranger's
+  priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
+  **saving throws** are the Player's Handbook's by class group and level: the game held every save at
+  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8 (a bug
+  Shattered Lands has too, for later).
 - **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be

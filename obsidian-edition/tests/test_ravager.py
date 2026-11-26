@@ -43,7 +43,8 @@ class TableTests(unittest.TestCase):
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
-                            "psi_click", "pick_top", "f10_pin",
+                            "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
+                            "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
