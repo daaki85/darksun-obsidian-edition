@@ -4029,6 +4029,42 @@ site_table:
         times 220 - ($ - site_table) / 2 dw site_none
         dw mouse_set                        ; 220 mouse_set, after setting the driver ranges
 
+        dw party_collapsed                  ; 221 load or post-fight gather
+
+party_collapsed:
+        mov byte [0x13FA], 0                ; displaced store in both callers
+        mov byte [cs:spread_due], 1
+        iret
+
+spread_tick:
+        cmp byte [cs:spread_due], 0
+        je .ret
+        call on_map
+        jne .ret
+        mov byte [cs:spread_due], 0
+        cmp byte [0x13FA], 0
+        jne .ret
+        pushad
+        push ds
+        push es
+        mov ax, ds
+        sub ax, DGROUP - 0x3C10
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .out
+        mov ax, ds
+        sub ax, DGROUP - 0x46BD
+        mov [cs:spread_call + 2], ax
+        push word 1
+        call far [cs:spread_call]           ; overlay entry for DSUN.EXE 6A6D1h
+        add sp, 2
+.out:   pop es
+        pop ds
+        popad
+.ret:   ret
+spread_due db 0
+spread_call dw 0x2A, 0
+
 mouse_set:
         mov word [0xA103], 0
         pushad
@@ -12881,6 +12917,7 @@ probe_scroll:
         call label_tick
         call ring_tick
         call redraw_tick                ; (the view again for the Loader's squares and rings)
+        call spread_tick
         call pan_tick                   ; (the view to the enemy chosen with Tab: the Loader's PAN)
         call save_tick                  ; (the Loader's quick save or quick load: QUICK SAVES)
         pop es

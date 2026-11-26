@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+- Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party.
+
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
   spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A

@@ -672,6 +672,8 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
 
 ## Wake of the Ravager
 
+[Party formation after loading Wake of the Ravager](logs/2026-11-26-ravager-party-spread.md) records the runtime checks.
+
 For comparing (its code, data and README; nothing in the kit plays it): `sh setup_ravager.sh` puts
 the user's GOG installer (from the private repository, as the game's: the guide's [rule
 10](PLAYTESTING.md#1-the-rules), or put at `$WORK/dl/rav.exe`) into `$WORK/rav`. Its DSUN.EXE is

@@ -73,7 +73,7 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, ravager.VEC_SITE, number)), name)
             self.assertEqual(p.replacement[3:], b"\x90" * (len(p.original) - 3), name)
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (routine, number))
-        self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 131)  # sites 0-129 and the pointer reset at 220
+        self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 132)  # sites 0-129, pointer reset and party framing
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
     def test_in_the_program(self):
