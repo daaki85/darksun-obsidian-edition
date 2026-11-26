@@ -66,6 +66,30 @@ class TableTests(unittest.TestCase):
                                             skip={ravager.PICK_BUTTON_ICON})
         self.assertNotIn(("ICON", icons.PICK_ICON), gff.read_gff(out))
 
+    def test_pocket_sized(self):
+        """With the Loader's weights a sequel type goes by its weight as in SL (a metal long sword 40 and a helm 15
+        not lifted, a ring 1, a dagger 10 and arrows 10 lifted, the crystal sword 150 no more); a type still at 0
+        by its kind (a 1d10 weapon or armour not, a 1d4 weapon or a thing yes)."""
+        from dsloader import ravager
+
+        def sl(kind, weight, first=0x01, sides=4, count=1, slot=5, flags=0):
+            rec = bytearray(ravager.TYPE_SIZE)
+            rec[0], rec[ravager.TYPE_WEIGHT], rec[5], rec[8], rec[9], rec[0x0B] = first, weight, slot, sides, count, flags
+            return ravlog.sl_type(ravager.weighted(bytes(rec), kind))
+
+        # (SSI's weights as RAV_WEIGHTS has them, made the Loader's by weighted)
+        ssi = lambda k: ravager.RAV_WEIGHTS[k][0]
+        self.assertFalse(ravlog.rav_pocket_sized(sl(97, ssi(97), sides=8)))  # metal long sword
+        self.assertFalse(ravlog.rav_pocket_sized(sl(55, ssi(55), first=0, slot=6, flags=0x80)))  # helm
+        self.assertFalse(ravlog.rav_pocket_sized(sl(35, ssi(35), sides=10, flags=0x40)))  # crystal sword
+        self.assertTrue(ravlog.rav_pocket_sized(sl(45, 1, first=0, slot=9)))  # ring (SSI's 1)
+        self.assertTrue(ravlog.rav_pocket_sized(sl(72, ssi(72))))  # dagger
+        self.assertTrue(ravlog.rav_pocket_sized(sl(6, ssi(6), first=0x02, sides=6, slot=0x0B)))  # arrows
+        # (types at 0, by kind)
+        self.assertFalse(ravlog.rav_pocket_sized(sl(22, 0, sides=10)))
+        self.assertTrue(ravlog.rav_pocket_sized(sl(27, 0, sides=2)))
+        self.assertTrue(ravlog.rav_pocket_sized(sl(75, 0, first=0, slot=0)))
+
     def test_layout(self):
         """Shattered Lands' people and weapons worth XP aren't the sequel's: none while it is attached."""
         try:

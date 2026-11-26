@@ -1368,6 +1368,73 @@ def mod_type(sl_type: int) -> int:
 # DSCLOG2's SPHERE_ALLOWS), but the sequel's own lists let it use no melee weapon at all, so its starting
 # obsidian dagger (startgear's, as SL's) was refused. A type's classes are its word at +0Ch, the air cleric's bit 1.
 AIR_DAGGER_TYPES, TYPE_CLASSES, AIR_CLERIC_BIT = (37, 72), 0x0C, 1
+# The sequel's item types' weights (the type's +2: SL's word +4, tenths of a pound; one byte, so 255 at most). The
+# sequel keeps every routine of SL's that reads them ("Cannot use two heavy weapons" over 30, a backstab's weapon 40
+# or less, the item box's "HEAVY", a creature's equipping; its load check adds up a field items haven't, so never
+# refuses, as SL's doesn't), but 71 of its
+# 102 types hold 0 and some of SSI's others are oddly light (a two-handed sword 20). Each type: (SSI's byte, the
+# Loader's), from Shattered Lands' type of the same kind and material (ITEMS.BIN's pairs), the Loader's backported
+# sequel weapons (npcitems.TYPES 148-153), else the nearest item or the AD&D PHB; furniture, doors, bodies and
+# monsters' and spells' missiles left as they are. The leather chest 96 (the arm and leg pieces' 36 and 18 make
+# the PHB's 15 lb; SL's own 750 is out of line). reports/wake-of-the-ravager-item-weights.md has the table.
+TYPE_WEIGHT = 2
+TYPE_KIND_RECORD = 4  # (an object's RDFF copy of its type: kind 4, its number the type's)
+RAV_WEIGHTS = {
+    1: (0, 86), 2: (0, 50), 3: (0, 36), 4: (0, 74), 5: (0, 50), 6: (0, 10), 7: (0, 10), 8: (0, 70),
+    10: (0, 10), 12: (0, 1), 13: (0, 40), 17: (0, 1), 18: (0, 30), 21: (0, 5), 24: (0, 120), 25: (0, 5),
+    28: (0, 10), 29: (0, 30), 30: (0, 175), 31: (75, 200), 32: (0, 96), 33: (0, 150), 34: (0, 200),
+    35: (10, 150), 38: (0, 5), 39: (50, 60), 42: (0, 1), 43: (0, 5), 44: (0, 1), 46: (0, 1), 47: (0, 40),
+    48: (10, 30), 51: (0, 70), 52: (0, 120), 55: (0, 15), 56: (0, 15), 57: (0, 20), 59: (0, 20), 61: (20, 100),
+    62: (0, 86), 63: (0, 50), 64: (0, 18), 65: (0, 74), 66: (0, 74), 67: (0, 100), 68: (0, 100), 69: (0, 40),
+    70: (0, 1), 72: (0, 10), 73: (0, 30), 77: (0, 1), 78: (0, 1), 80: (0, 150), 81: (0, 100), 85: (0, 40),
+    87: (0, 30), 88: (0, 1), 89: (10, 30), 90: (0, 10), 91: (0, 50), 92: (0, 50), 93: (0, 5), 95: (0, 40),
+    96: (0, 1), 97: (0, 40), 98: (0, 20), 99: (1, 10), 100: (0, 80), 101: (20, 150)}
+
+
+def weighted(record: bytes, kind: int) -> bytes:
+    """The sequel's type record RECORD (TYPE_SIZE bytes) of type KIND with the Loader's weight (RAV_WEIGHTS),
+    as it is if KIND has none or RECORD isn't SSI's (RavagerError: SSI's byte not as expected)."""
+    if kind not in RAV_WEIGHTS or len(record) != TYPE_SIZE:
+        return record
+    ssi, ours = RAV_WEIGHTS[kind]
+    if record[TYPE_WEIGHT] == ours:
+        return record
+    if record[TYPE_WEIGHT] != ssi:
+        raise RavagerError(f"item type {kind}'s weight is {record[TYPE_WEIGHT]}, not the GOG release's {ssi}")
+    out = bytearray(record)
+    out[TYPE_WEIGHT] = ours
+    return bytes(out)
+
+
+def weighted_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4, GAME_TYPES of them) with RAV_WEIGHTS."""
+    return b"".join(weighted(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
+
+
+def _weighted_copy(record: bytes, kind: int) -> bytes:
+    try:
+        return weighted(record, kind)
+    except RavagerError:
+        return record  # (a copy that isn't SSI's record, a transfer's of another table: left as it is)
+
+
+def weighted_objects(chunks: gff.Chunks) -> gff.Chunks:
+    """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
+    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read."""
+    from . import dataitems
+    out: gff.Chunks = {}
+    for key, chunk in chunks.items():
+        if key[0] != "RDFF":
+            continue
+        try:
+            recs, end = dataitems.records(chunk)
+        except (ValueError, struct.error):
+            continue
+        new = [r._replace(data=_weighted_copy(r.data, r.number)) if r.kind == TYPE_KIND_RECORD
+               and r.number < GAME_TYPES else r for r in recs]
+        if new != recs:
+            out[key] = dataitems.chunk(new, end)
+    return out
 
 
 def mod_types_table(types: bytes) -> bytes:
@@ -1383,7 +1450,8 @@ def mod_types_table(types: bytes) -> bytes:
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
-    """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
+    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP) and the
+    mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
     them) unless "new_items" is (or the mod's types are left out: they are its types)."""
@@ -1394,9 +1462,14 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         raise RavagerError(f"{OBJECTS_FILE}'s item types are not the GOG release's")
     new: gff.Chunks = {}
     done: List[str] = []
+    weights = "weights" not in skip
+    if weights:
+        types = weighted_table(types)
     if "mod_types" not in skip:
         new[TYPES_CHUNK] = mod_types_table(types)
         done.append("mod_types")
+    elif weights:
+        new[TYPES_CHUNK] = types
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")
@@ -1404,6 +1477,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
+    if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
+        new.update(weighted_objects({**chunks, **new}))
+        done.append("weights")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)

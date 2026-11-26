@@ -347,14 +347,72 @@ class ItemTypeTests(unittest.TestCase):
     def test_objects_fixed(self):
         from test_ravtransfer import _gff
         data = _gff({("ALL ", 4): bytes(range(102)) * 15, ("ALL ", 5): b"names", ("OJFF", 1): b"o" * 16})
-        out, done = ravager.objects_fixed(data)
+        out, done = ravager.objects_fixed(data, {"weights"})
         got = gff.read_gff(out)
         self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], 135, b"names"))
         self.assertEqual(got[("ALL ", 4)][102 * 15:103 * 15], ravager.wotr_type(npcitems.TYPES[0]))
-        self.assertEqual(ravager.objects_fixed(data, {"mod_types"}), (data, []))
+        self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
+        with self.assertRaises(ravager.RavagerError):  # (a table whose weights aren't SSI's)
+            ravager.objects_fixed(data)
         with self.assertRaises(ravager.RavagerError):
             ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
 
+
+    @staticmethod
+    def _ssi_table() -> bytes:
+        """A type table with SSI's weights where RAV_WEIGHTS names them (the rest of each record its number)."""
+        out = bytearray()
+        for k in range(ravager.GAME_TYPES):
+            rec = bytearray([k % 256] * ravager.TYPE_SIZE)
+            rec[ravager.TYPE_WEIGHT] = ravager.RAV_WEIGHTS[k][0] if k in ravager.RAV_WEIGHTS else 0
+            out += rec
+        return bytes(out)
+
+    def test_weights(self):
+        """The Loader's weights in ALL 4's +2 (a long sword 40, the leather chest 96, the two-handed sword 150,
+        SSI's 20 replaced), nothing else in the records changed, the types not named left; and every weight
+        fits the sequel's byte (the mod's types too, through wotr_type)."""
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        got = gff.read_gff(ravager.objects_fixed(_gff({("ALL ", 4): table}), {"mod_types"})[0])[("ALL ", 4)]
+        self.assertEqual(len(got), len(table))
+        for k in range(ravager.GAME_TYPES):
+            old, new = table[k * 15:(k + 1) * 15], got[k * 15:(k + 1) * 15]
+            self.assertEqual(old[:2] + old[3:], new[:2] + new[3:])
+            self.assertEqual(new[2], ravager.RAV_WEIGHTS[k][1] if k in ravager.RAV_WEIGHTS else old[2], k)
+        self.assertEqual([got[k * 15 + 2] for k in (97, 32, 101, 0, 41)], [40, 96, 150, 0, 0])
+        self.assertTrue(all(0 < w <= 255 for _, w in ravager.RAV_WEIGHTS.values()))
+        self.assertTrue(all(k < ravager.GAME_TYPES for k in ravager.RAV_WEIGHTS))
+        self.assertEqual(ravager.weighted_table(got), got)  # (already weighed: as it is)
+
+    def test_weights_skipped_and_guarded(self):
+        """RAV_SKIP=weights leaves SSI's bytes (the control's copy); a byte neither SSI's nor the Loader's
+        stops the copy (not the GOG release's table)."""
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        data = _gff({("ALL ", 4): table})
+        self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
+        odd = bytearray(table)
+        odd[97 * 15 + 2] = 33
+        with self.assertRaises(ravager.RavagerError):
+            ravager.objects_fixed(_gff({("ALL ", 4): bytes(odd)}))
+
+    def test_weights_in_objects(self):
+        """Each object's copy of its type (RDFF kind 4, its number the type's) weighed as ALL 4 is; another
+        record, a type past the sequel's or a copy that isn't SSI's left as it is."""
+        from dsloader import dataitems
+        from test_ravtransfer import _gff
+        table = self._ssi_table()
+        recs = [dataitems.Record(1, 0, 1, 7, 0, bytes(23)),
+                dataitems.Record(3, 0, 4, 97, 5, table[97 * 15:98 * 15]),
+                dataitems.Record(3, 0, 4, 101, 5, b"\x55" * 15),
+                dataitems.Record(3, 0, 4, 110, 5, bytes(15))]
+        chunk = dataitems.chunk(recs, dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0))
+        got = gff.read_gff(ravager.objects_fixed(_gff({("ALL ", 4): table, ("RDFF", 5): chunk}), {"mod_types"})[0])
+        out, _ = dataitems.records(got[("RDFF", 5)])
+        self.assertEqual([r.data for r in out], [bytes(23), ravager.weighted(table[97 * 15:98 * 15], 97),
+                                                 b"\x55" * 15, bytes(15)])
+        self.assertEqual(out[1].data[2], 40)
 
     def test_mod_kinds_in_dsclog2(self):
         """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 33 (SL's 115-147 as
@@ -457,13 +515,21 @@ class GameFileTests(unittest.TestCase):
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
+            self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], ravager.weighted_table(own[ravager.TYPES_CHUNK]))
             self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
-            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"}, {ravager.TYPES_CHUNK} | sheets)  # (GFFI: the index)
+            weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
+            self.assertTrue(weighed)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
+                             {ravager.TYPES_CHUNK} | sheets | set(weighed))  # (GFFI: the index)
+            for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
+                for r in dataitems.records(objs[k])[0]:
+                    if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
+                        self.assertEqual(r.data, types[r.number * 15:(r.number + 1) * 15], (k, r.number))
             for k in sheets:
-                old, new = dataitems.records(own[k])[0], dataitems.records(objs[k])[0]
+                old, new = dataitems.records(weighed.get(k, own[k]))[0], dataitems.records(objs[k])[0]
                 self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)
                 self.assertEqual({len(r.data) for r in new if r.kind == ravager.SHEET_KIND}, {ravager.SHEET_SIZE})
                 self.assertFalse(any(any(r.data[ravager.GAME_SHEET_SIZE:]) for r in new))
