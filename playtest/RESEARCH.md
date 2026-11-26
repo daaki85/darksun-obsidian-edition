@@ -2051,6 +2051,19 @@ screen: the sphere's AIR clicked off at 240,106, then EARTH 114, FIRE 122, WATER
 (255,29) clicked off first; the weapon window's slots at x 75, 109, 143, 177, 211, 245 and y 32, 66, 100, 134 in
 specialize.KINDS' order. A ranger can't pick the bow (greyed). The roster's ADD (a right click on an empty party slot)
 lists the roster newest first, rows from y 45, 11 apart.
+**Item weights in the sequel** (2026-11-26, logs/2026-11-26-ravager-item-weights.md): the weight is a byte at +2
+of each of `OBJEX.GFF` `ALL 4`'s 102 types (15 bytes each; in memory from DS:19CDh), SSI's 0 for 71 of them; each
+object's `RDFF` record holds a copy of its type (level 3, kind 4, number the type's), all equal to `ALL 4`. The
+Loader writes SL's weights into both in `OBJEX2.GFF` (`ravager.RAV_WEIGHTS`; `RAV_SKIP=weights` for the control).
+What reads it: two heavy weapons (779CEh/779E0h, "CANNOT USE TWO HEAVY WEAPONS" DS:1C3Eh), backstab 40 or less
+(5C978h), HEAVY in the item box (9A410h), equipping a creature (1D3C9h). **The load check never refuses, in either
+game**: the sequel's (77893h) sums GPL field 59h, which only the item-type class has (class 4, offset 2; an item,
+class 1, has -1), and SL's (6F248h, field 6) came to nothing too: STR 1 took 45 lb in the sequel, a long sword in
+SL. The STR table (weight allowance, maximum press, x10) is at SL DS:0740h, the sequel's DS:07B0h, the same values.
+- **Probing it**: [`ravweights.py`](ravweights.py) prints each combatant's items with their weights, the total, STR
+  (creature +19h) and maximum press; `--str N=S` sets a STR (a test edit, never saved), `--types` all 102 weights.
+- **The control's message**: with the weights left out, two long swords give "CANNOT USE THIS ITEM", a later check,
+  not "CANNOT USE TWO HEAVY WEAPONS".
 
 ### The sequel's spells in a fight (2026-11-21)
 

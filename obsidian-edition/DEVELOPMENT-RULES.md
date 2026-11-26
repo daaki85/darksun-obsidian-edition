@@ -2258,10 +2258,33 @@ pp_hand; the show routine's element test 97AF4h, the handler 9756Eh's pressed by
 DSCLOG2's own flag (`pp_armed`), put away by a right click (`pp_disarm` in probe_pointer). The answer comes from
 `RavDiceLog._answer_pick` through its own request words (+2002 seq, +2004 reply, +2006 who, +2008 thief, +2010
 taken, +2012 the text's offset, +2018 late), not USE_ITEM, and shows in the game's message window from the overlay
-frame. The Loader's `pickpocket.attempt` runs as in SL, with `pocket_sized` bound to `ravlog.rav_pocket_sized`: the
-sequel's item types carry no weight, so pockets are judged by kind (no armour or shield, a weapon of 4 damage or
-less). Not ported: the cleric/thief's second button, the right click's description box, the sounds, XP for lifted
+frame. The Loader's `pickpocket.attempt` runs as in SL, with `pocket_sized` bound to `ravlog.rav_pocket_sized`: a type
+goes by its weight (the Loader's weights, below), and one still weighing 0 by its kind (no armour or shield, a
+weapon of 4 damage or less). Not ported: the cleric/thief's second button, the right click's description box, the sounds, XP for lifted
 weapons. Tests: test_ravpickpocket.py. Played: playtest/logs/2026-11-26-ravager-pick-pockets.md.
+
+## Item weights in Wake of the Ravager
+
+([In the features page](FEATURES.md#wake-of-the-ravager); the game's rules: [weight and
+carrying](HOW-THE-GAME-WORKS.md#weight-and-carrying); the study: `reports/wake-of-the-ravager-item-weights.md`.)
+
+The sequel's item types (OBJEX.GFF's `ALL 4`, 15 bytes) keep SL's weight as a byte at +2 (SL's word +4),
+and its program keeps every routine of SL's that reads it, at its own addresses: two heavy weapons (779CEh/779E0h, over
+30 each), the backstab (5C978h, 40 or less), the item box's HEAVY (9A410h) and a creature's equipping
+(1D3C9h). The load check (77893h: GPL field 59h added up over the member and what it holds, against
+20186h(member, 1), the STR table's maximum press at DS:07B0h; "Too heavy a load to carry") never refuses:
+field 59h is the weight of an item *type* (GPL class 4, offset 2), which an item (class 1, its offset -1)
+hasn't, so the total is 0. SL's (field 6) never refused either. Both seen 2026-11-26 with STR 1 in memory.
+SSI left 71 of its 102 types at 0. `ravager.RAV_WEIGHTS` gives 69 types the Loader's weight
+(SSI's byte checked first: a table that isn't the GOG release's stops the copy), from SL's type of the
+same kind and material (ITEMS.BIN's pairs), the Loader's backported sequel weapons (`npcitems.TYPES`
+148-153) for the ones SSI made oddly light (the Twohand Sword and Crystal sword 150, the Lotulis 100),
+else the nearest SL item or the PHB; furniture, doors, bodies and monsters' and spells' missiles keep 0.
+`objects_fixed` writes them into the Loader's `OBJEX2.GFF` (the game's own file is never changed), in
+`ALL 4` and in every object's copy of its type (RDFF kind 4, the transfer's added objects too). The
+type table is read from the file at each start and load and an item holds only its type's number, so
+saves need nothing. `RAV_SKIP=weights` (ravstart.sh) leaves it out for a control run. No DSCLOG2 code.
+Tests: test_ravager.py (ItemTypeTests, GameFileTests), test_ravitems.py, test_ravpickpocket.py.
 
 ## Sounds for hiding and picking pockets
 

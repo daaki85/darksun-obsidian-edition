@@ -22,6 +22,7 @@ the game, and checked here in the game's own code.
 - [No critical hits](#no-critical-hits)
 - [Helpless targets take double](#helpless-targets-take-double)
 - [The game's two weapons](#the-games-two-weapons)
+- [Weight and carrying](#weight-and-carrying)
 - [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
 - [The game's saving throws](#the-games-saving-throws)
 - [Monsters' defences](#monsters-defences)
@@ -216,6 +217,33 @@ in practice there is no off-hand penalty at all: both weapons hit as well as a
 single one would. It looks like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
 fighting *harder* at low DEX. The mod always uses AD&D's rule instead ([Two
 weapons](FEATURES.md#two-weapons)).
+
+## Weight and carrying
+
+From the game's code (both games: Shattered Lands and Wake of the Ravager have the same routines). An
+item type has a weight, in the game's units, which look like tenths of a pound (a dagger 10, a long
+sword 30 or 40, a mace 100). It counts in three places:
+
+- **Two heavy weapons** (over 30 each) can't be held in the two hands at once: "Cannot use two heavy
+  weapons". The item box says **HEAVY** under a one-handed weapon over 30.
+- **A backstab** needs a weapon of 40 or less (below).
+- The game equips a monster or a townsman with no two heavy weapons.
+
+**No load is too heavy.** Each time an item is put on a character the game compares what the
+character carries with the **maximum press** of AD&D's STR table (by STR: 3, 10 lb; 4-5, 25; 6-7,
+55; 8-9, 90; 10-11, 115; 12-13, 140; 14-15, 170; 16, 195; 17, 220; 18, 330; 19, 640; 20, 700; and
+on up to 25), with "Too heavy a load to carry" ready, but the total it adds up isn't the items'
+weight and comes to nothing: Cilla at STR 1 (3 lb) took Gerakis's long sword in Shattered Lands, and
+in Wake of the Ravager a STR 1 character took 45 lb (both test edits, 2026-11-26).
+
+**Nothing slows a loaded character** either. The manual says STR "determines how much a character can carry
+without becoming encumbered and slowed in combat", and Shattered Lands' program has a routine that
+cuts the Move between the STR table's weight allowance and its maximum press, but nothing calls it:
+a fight's movement is the character's Move alone. Wake of the Ravager left the routine out.
+
+**In Wake of the Ravager** the routines are all there, but SSI left 71 of its 102 item types weighing
+0, so its long swords, armour and shields weighed nothing. With the Loader they weigh as Shattered
+Lands' (FEATURES.md, [Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
 
 ## Attacks from behind and backstabs
 
