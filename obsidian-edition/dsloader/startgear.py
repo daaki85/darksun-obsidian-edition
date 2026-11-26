@@ -38,8 +38,9 @@ KIND = specialize.KINDS.index
 SLOT = game.EQUIP_SLOTS.index
 RIGHT, LEFT = game.WEAPON_HANDS
 # The hands a weapon in hand may go to, the first free one taken while no melee weapon is in either: Shattered
-# Lands' game keeps the weapon in the right hand; Wake of the Ravager's puts a new character's shield in the
-# right-hand place (3) and its weapon in the other (a fighter's), so there either (ravlog's layout: RAV_HANDS)
+# Lands' game keeps the weapon in the right hand; Wake of the Ravager's own gear put most classes' weapon in the
+# left hand (a fighter's behind its shield in the right), which the Loader's copy of the program changes
+# (ravager.GEAR_HANDS), so there either (ravlog's layout), for a game started without that change (RAV_SKIP)
 HANDS = (RIGHT,)
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
 THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour

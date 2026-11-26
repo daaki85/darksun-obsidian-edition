@@ -59,6 +59,12 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager's starting gear**
+- A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long sword
+  (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round,
+  so a new long sword specialist showed 1 attack a round; now 2 (the Loader's copy of the program, its gear
+  table's slots).
+
 **Fixed: the SL weapons and the Ravager port together**
 - The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
   item types stay the first 33, and SL's new weapon types go across in the party transfer as the

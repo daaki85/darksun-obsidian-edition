@@ -259,7 +259,11 @@ gladiator or ranger (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) g
 in the sequel's own colours and with its own weapons' pictures, and picks what it is due. The sequel's
 new characters start at 7th level, so a gladiator picks three. EXIT leaves the rest to the defaults (the
 long sword, then the club; a thri-kreen's chatkcha first), and EDIT asks only for picks still due. No
-picks come after DUAL there yet, and a kit's own weapons aren't offered first. The sequel knows all twenty-two: a lotulis specialist from Shattered
+picks come after DUAL there yet, and a kit's own weapons aren't offered first. A new fighter starts with
+its +1 long sword in the right hand and its shield in the left (the sequel's own gear had them the other
+way round, so a long sword specialist swung once a round until the player swapped them), but with the
+sequel's long sword whatever its first pick: the starting weapon isn't yet made the first pick's kind as
+in Shattered Lands. The sequel knows all twenty-two: a lotulis specialist from Shattered
 Lands is a lotulis specialist there, with the sequel's own Lotulis. Its weapons take these weapon
 specs (the six that came from the sequel by its own weapons of them; the rest by name and dice):
 
