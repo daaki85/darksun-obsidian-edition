@@ -331,6 +331,22 @@ class AgingTests(unittest.TestCase):
         self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], before + 1)
         self.assertEqual(log._aging_pass(), [])  # (the same effect: once)
 
+    def test_restore_youth_cast_returns_a_magical_year(self):
+        guest, log = self.make()
+        log._aging_pass()
+        log._aging_pass()
+        target_age = self.SHEETS + game.SHEET_SIZE + game.SHEET_AGE
+        before = guest.mem[target_age]
+        aging.age_by(log.game, 1, 1, "Haste")
+        self.assertEqual(guest.mem[target_age], before + 1)
+        record = bytearray(dicelog.Entry.SIZE)
+        struct.pack_into("<H", record, 6, ravspells.RESTORE_YOUTH)
+        struct.pack_into("<HHH", record, 20, 0, 1, ravspells.RESTORE_YOUTH)
+        struct.pack_into("<H", record, 184, dicelog.KIND_CAST)
+        lines = log.describe(dicelog.Entry.parse(bytes(record)))
+        self.assertIn("grows younger 1 year (Restore Youth)", lines[-1])
+        self.assertEqual(guest.mem[target_age], before)
+
     def test_dead_is_the_sequels_status(self):
         from dsloader import kalzith
         g, log = self.make()
