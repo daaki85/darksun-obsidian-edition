@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -49,7 +49,8 @@ class TableTests(unittest.TestCase):
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
-                         | {"item_name_%x" % at for at in ravager.NAME_READS})
+                         | {"item_name_%x" % at for at in ravager.NAME_READS}
+                         | {p.name for p in ravspells.program_patches()})  # (the new spells)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_gear_hands(self):
@@ -419,11 +420,12 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            from dsloader import kitpages, rollstore, weaponpages
+            from dsloader import kitpages, ravspells, rollstore, weaponpages
             objects = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
                              | set(rollstore.rav_chunks(game))  # STORE and RECALL,
-                             | set(weaponpages.rav_chunks(game, objects)))  # the weapon window)
+                             | set(weaponpages.rav_chunks(game, objects))  # the weapon window,
+                             | set(ravspells.chunks(game)))  # the new spells)
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE

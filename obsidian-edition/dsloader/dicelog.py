@@ -3434,7 +3434,7 @@ class DiceLog:
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
         kit_parts = [(kit_name, kit_hit)] if kit_hit else []
-        kit_parts += self._after_setup(attacker_combatant)
+        kit_parts += self._after_setup(attacker_combatant, target_combatant, e, item)
         if weapon and g.is_fine_bow(item):  # (the Spellarcher's Fine Bow: DSCLOG's FINE_HIT, with the kits')
             kit_parts.append(("fine", game.FINE_TO_HIT))
         breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
@@ -3500,7 +3500,7 @@ class DiceLog:
                 penalty = MATERIAL_TO_HIT[weapon.material]
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
-        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT) \
+        elif self.CLAW_IN_SETUP and g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT) \
                 and not e.parent_local(game.SETUP_NATURAL_LOCAL):  # (the first set's alone: not a thri-kreen's bite)
             parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
             rest -= 1
@@ -3559,7 +3559,10 @@ class DiceLog:
             parts.append(("Prayer", 1 if same else -1))
         return parts
 
-    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
+    CLAW_IN_SETUP = True  # (Erdlu Claw's +1 in the set-up's bonus: DSCLOG's NS_FIST; the sequel's after it)
+
+    def _after_setup(self, attacker_combatant: Optional[int], target_combatant: Optional[int] = None,
+                     e: Optional[Entry] = None, item: Optional[int] = None) -> List[Tuple[str, int]]:
         """To-hit changes the helper makes to THAC0 after the set-up, as (name, to hit) (none here: Shattered
         Lands' are in the set-up's locals, the kits' and the Fine Bow's aside)."""
         return []

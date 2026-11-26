@@ -699,7 +699,7 @@ npp_count dw 0                          ; times it was asked (for the tests)
 ; of 75 or less strikes an image instead: one used up through the charge spender (stub 608h:57h, as
 ; the game's spells use one: the effect ended with the last), and the attack goes on as a miss
 ; (5D0E9h), in a frame the overlay manager can fix up (the spender is overlay code). Else on as
-; before, the compare's flags into the INT's frame. (Reflected Image's 50 waits for the new spells.)
+; before, the compare's flags into the INT's frame. (Reflected Image's 50: NS_IMAGE_CHANCE.)
 MIRROR_EFFECT equ 46
 IMAGE_CHANCE  equ 75
 IMAGE_PARTY   equ 4
@@ -712,7 +712,10 @@ image_blows   dw 0
 image_spell:
         pushad
         push es
-        mov dx, IMAGE_CHANCE
+        push ax
+        mov ax, si
+        call ns_image_chance            ; (IMAGE_CHANCE, or Reflected Image's)
+        pop ax
         mov bx, [bp + 8]
         cmp bx, IMAGE_PARTY
         setb bl
@@ -809,7 +812,12 @@ image_blow:
         shl ax, 1
         rcl dx, 1                       ; (rand() x 100 / 32768: 0 to 99)
         inc dx
-        cmp dx, IMAGE_CHANCE
+        push dx
+        mov ax, [TARGET]
+        call ns_image_chance            ; (IMAGE_CHANCE, or Reflected Image's)
+        mov ax, dx
+        pop dx
+        cmp dx, ax
         ja .out
         inc word [cs:image_blows]
         mov bx, sp
@@ -3672,8 +3680,6 @@ pick_any:
 PICK_SHOWN equ 0x43EC
 pick_list:
         mov di, ax
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .ret
         push ax
         push cx
         push si
@@ -3682,6 +3688,9 @@ pick_list:
         add ax, USE_WHO_SEG
         mov es, ax
         mov si, [es:USE_WHO_OFF]
+        call ns_page_add                    ; (the new spells: NEW SPELLS)
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .out
         cmp si, 3
         ja .out
         mov cl, [PICK_SHOWN]
@@ -3755,11 +3764,15 @@ pick_room:
         mov al, [SPELL_STARTS + di - 1]     ; (the level's first spell ...
         mov dl, [SPELL_STARTS + di]         ;  ... and the next level's)
 .each:  cmp al, dl
-        jae .none
+        jae .new
         call bit_known
         jz .yes
         inc al
         jmp .each
+.new:   mov byte [cs:ns_want], 0        ; (a new spell of the level not known: NEW SPELLS)
+        call ns_level_new
+        or ax, ax
+        jz .none
 .yes:   pop es
         popa
         stc
@@ -3800,7 +3813,10 @@ pick_full:
         inc ch
 .next:  inc al
         jmp .each
-.done:  cmp ch, dh                          ; (CF while fewer)
+.done:  mov byte [cs:ns_want], 1        ; (the new spells known of the level count too, as SL's)
+        call ns_level_new
+        add ch, al
+        cmp ch, dh                          ; (CF while fewer)
         cmc
         pop es
         popa
@@ -4026,6 +4042,673 @@ site_table:
         dw site_none                        ; 127 (none here)
         dw site_none                        ; 128 (none here)
         dw site_none                        ; 129 (none here)
+        dw site_none                        ; 130 (another's)
+        dw site_none                        ; 131 (another's)
+        dw site_none                        ; 132 (another's)
+        dw site_none                        ; 133 (another's)
+        dw site_none                        ; 134 (another's)
+        dw site_none                        ; 135 (another's)
+        dw site_none                        ; 136 (another's)
+        dw site_none                        ; 137 (another's)
+        dw site_none                        ; 138 (another's)
+        dw site_none                        ; 139 (another's)
+        dw ns_cmp                           ; 140 SITE_NS_CMP (a spell's compare with a range's end: a new spell a wizard's)
+        dw ns_know                          ; 141 SITE_NS_KNOW (62625h: "does member know spell": a new one's sheet bit)
+        dw ns_level                         ; 142 SITE_NS_LEVEL (62AD0h: a spell's level: a new one's own)
+        dw ns_list                          ; 143 SITE_NS_LIST (6254Fh: the USE screen's list of a level: the new ones known)
+        dw ns_cast                          ; 144 SITE_NS_CAST (656D0h: the spell handler's case: Cat's Grace's and Friends' Strength's)
+        dw ns_effect                        ; 145 SITE_NS_EFFECT (6623Bh: Strength's case's effect: Cat's Grace's, Friends' own)
+        dw ns_ability                       ; 146 SITE_NS_ABILITY (85351h: the abilities' effects: DEX for Cat's Grace, CHA for Friends)
+        dw ns_claw                          ; 147 SITE_NS_CLAW (86A45h: a natural attack's dice: Erdlu Claw's 1d6+1)
+        dw ns_scroll                        ; 148 SITE_NS_SCROLL (999FBh: a wizard scroll read: a new spell taught from it)
+        dw ns_learn                         ; 149 SITE_NS_LEARN (936B4h: CHOOSE A SPELL's pick: a new one's sheet bit)
+; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
+; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
+; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
+; in Shattered Lands (NS_KNOWN_AT, NS_KNOWN_BIT: +3Fh, the Elementalist's second sphere's byte, and the kit
+; byte's top bit for Friends), which the party transfer carries.
+; - NS_CMP (site 140): the game's compares of a spell's number with its ranges' ends (73h the priests',
+;   EBh the psionic powers', 10Dh the monsters'), found by the way back's IP and the word there in
+;   NS_CMP_TABLE (ns_cmp_table.inc, ravspells.cmp_table_asm), each made with a new spell as wizard spell
+;   NS_AS: the compare's flags into the INT's frame.
+; - NS_KNOW (site 141): "does member know spell" (6260Ah), its "cmp word [bp+8],73h" (62625h): a new spell
+;   answered from member [BP+6]'s sheet (AL, out at 626B0h), else the compare.
+; - NS_LEVEL (site 142): a spell's level (62AC5h), its "cmp dx,73h" (62AD0h): a new spell's own (CL, out at
+;   62B19h), else the compare.
+; - NS_LIST (site 143): the USE screen's list of a level's spells (62500h; [BP+6] the member, [BP+8] the
+;   list, far, or 0 to count, [BP+0Ch] bit 0 the wizards', [BP+0Eh] the level, [BP-4] the most), its "xor
+;   si,si / cmp di,[bp-2]" (6254Fh) as it starts: the new spells of that level the member knows put first
+;   (SI their count), then the compare.
+RULE_NEW_SPELLS equ 32
+NS_FIRST     equ 320
+NS_COUNT     equ 6
+NS_AS        equ 0x72               ; (a wizard spell's number for the compares: any below 73h)
+NS_PRIESTS   equ 0x73
+NS_PLUS1     equ 0x80               ; (NS_CMP_TABLE's form: the operand is the spell + 1, an item's power)
+NS_KNOW_OUT  equ 0x626B0 - 0x62628  ; (the known test's way out, AL the answer, less the INT's way back)
+NS_LEVEL_OUT equ 0x62B19 - 0x62AD3  ; (the level's way out, CL the level, the same)
+NS_LIST_MOST equ -4                 ; ([BP-4] the list's room)
+NS_LIST_END  equ -2                 ; ([BP-2] the level's end)
+ns_known_at  db SPHERE2, SPHERE2, SPHERE2, SPHERE2, SPHERE2, KIT_BYTE
+ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80
+ns_levels    db 2, 1, 1, 1, 1, 1
+ns_cmps      dw 0                   ; (counts for a look in play: compares made a wizard's, ...
+ns_lost      dw 0                   ;   ... an NS_CMP site not in the table, ...
+ns_knows_n   dw 0                   ;   ... new spells answered known, ...
+ns_listed    dw 0                   ;   ... and put on the USE screen's lists)
+; NS_NEW: CF set if AX is a new spell and the rule is on, BX then its place (0 to NS_COUNT - 1). Others kept.
+ns_new:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .no
+        cmp ax, NS_FIRST
+        jb .no
+        cmp ax, NS_FIRST + NS_COUNT
+        jae .no
+        mov bx, ax
+        sub bx, NS_FIRST
+        stc
+        ret
+.no:    clc
+        ret
+; NS_KNOWS: ZF clear if party member SI knows new spell BX (0 to NS_COUNT - 1): its sheet's bit. DS the
+; game's; all registers kept.
+ns_knows:
+        push ax
+        push bx
+        push di
+        push es
+        mov di, bx
+        mov ax, si
+        call kit_sheet
+        movzx ax, byte [cs:di + ns_known_at]
+        add bx, ax
+        mov al, [es:bx]
+        cmp byte [cs:di + ns_known_at], KIT_BYTE
+        jne .bit
+        cmp al, KIT_OPEN
+        jne .bit
+        xor al, al                  ; (no kit chosen: no bit)
+.bit:   test al, [cs:di + ns_known_bit]
+        pop es
+        pop di
+        pop bx
+        pop ax
+        ret
+ns_cmp:
+        pushad
+        push es
+        mov di, sp
+        les bx, [ss:di + 34]        ; (the way back: its IP, and the word there)
+        mov ax, bx
+        mov dx, [es:bx]
+        mov si, ns_cmp_table
+.find:  cmp si, ns_cmp_table_end
+        jae .lost
+        cmp [cs:si], ax
+        jne .next
+        cmp [cs:si + 2], dx
+        je .found
+.next:  add si, 10
+        jmp .find
+.lost:  inc word [cs:ns_lost]
+        pop es
+        popad
+        iret
+.found: mov al, [cs:si + 4]         ; (the form; its NS_PLUS1 bit apart)
+        and al, ~NS_PLUS1
+        cmp al, 0
+        jne .bp
+        movzx bx, byte [cs:si + 5]  ; (a register: PUSHAD's, EAX at +30 down to EDI at +2)
+        shl bx, 2
+        neg bx
+        add bx, di
+        mov ax, [ss:bx + 30]
+        jmp .have
+.bp:    cmp al, 1
+        jne .mem
+        mov bx, [ss:di + 10]        ; ([BP+disp], the game's BP)
+        add bx, [cs:si + 6]
+        mov ax, [ss:bx]
+        jmp .have
+.mem:   cmp al, 2
+        jne .es_bx
+        mov bx, [cs:si + 6]         ; ([disp], DS the game's)
+        mov ax, [bx]
+        jmp .have
+.es_bx: mov es, [ss:di]             ; (ES:[BX+disp], the game's ES and BX)
+        mov bx, [ss:di + 18]
+        add bx, [cs:si + 6]
+        mov ax, [es:bx]
+.have:  push bx
+        push ax
+        test byte [cs:si + 4], NS_PLUS1
+        jz .new
+        dec ax                      ; (an item's power: the spell + 1)
+.new:   call ns_new
+        pop ax
+        pop bx
+        jnc .cmp
+        mov ax, NS_AS
+        inc word [cs:ns_cmps]
+.cmp:   cmp ax, [cs:si + 8]
+        pushf
+        pop ax
+        jmp acid_flags
+ns_cmp_table:
+%include "ns_cmp_table.inc"
+ns_cmp_table_end:
+ns_know:
+        pushad
+        push es
+        mov ax, [bp + 8]
+        call ns_new
+        jnc .cmp
+        mov si, [bp + 6]
+        call ns_knows
+        setnz al
+        mov di, sp
+        mov [ss:di + 30], al        ; (the game's AL)
+        add word [ss:di + 34], NS_KNOW_OUT
+        inc word [cs:ns_knows_n]
+        pop es
+        popad
+        iret
+.cmp:   cmp ax, NS_PRIESTS
+        pushf
+        pop ax
+        jmp acid_flags
+ns_level:
+        pushad
+        push es
+        mov ax, dx
+        call ns_new
+        jnc .cmp
+        mov al, [cs:bx + ns_levels]
+        mov di, sp
+        mov [ss:di + 26], al        ; (the game's CL)
+        add word [ss:di + 34], NS_LEVEL_OUT
+        pop es
+        popad
+        iret
+.cmp:   cmp ax, NS_PRIESTS
+        pushf
+        pop ax
+        jmp acid_flags
+ns_list:
+        pushad
+        push es
+        xor cx, cx                  ; (CX the new spells put)
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .done
+        test byte [bp + 0x0C], 1
+        jz .done                    ; (not the wizards')
+        mov dx, [bp + 0x0E]         ; (DL the level)
+        cmp dx, 1
+        jl .done
+        cmp dx, 9
+        jg .done
+        mov si, [bp + 6]
+        cmp si, 4
+        jae .done
+        xor bx, bx
+.each:  cmp [cs:bx + ns_levels], dl
+        jne .next
+        call ns_knows
+        jz .next
+        cmp cx, [bp + NS_LIST_MOST]
+        jge .done
+        cmp dword [bp + 8], 0
+        je .count
+        les di, [bp + 8]
+        mov ax, cx
+        shl ax, 1
+        add di, ax
+        lea ax, [bx + NS_FIRST]
+        mov [es:di], ax
+.count: inc cx
+        inc word [cs:ns_listed]
+.next:  inc bx
+        cmp bx, NS_COUNT
+        jb .each
+.done:  mov di, sp
+        mov [ss:di + 6], cx         ; (the game's SI: the count so far)
+        mov ax, [ss:di + 2]         ; (the game's DI, the level's first spell)
+        cmp ax, [bp + NS_LIST_END]
+        pushf
+        pop ax
+        jmp acid_flags
+
+; - NS_CAST (site 144): the spell handler's "mov ax,[bp+0Eh] / mov [bp-1Eh],ax" (656D0h), the number its
+;   switch looks up: Cat's Grace and Friends go to Strength's case (23), as in Shattered Lands.
+; - NS_EFFECT (site 145): Strength's case's choice of effect (6623Bh to 6624Eh: Adrenalin Control's 2, else
+;   Strength's 98) with Cat's Grace's (NS_GRACE_EFFECT, DEX) and Friends' (NS_FRIENDS_EFFECT, CHA), the
+;   sequel's empty effect records 113 and 116 (the Loader's "ns_effects" names them). Friends rolls 2d4:
+;   its dice pushed under the INT's frame, on past the game's "push dword 60001h" (66254h); the others on
+;   to it (6624Eh: STRENGTH_DICE's, Cat's Grace's die by class with the spells as the manual has them).
+; - NS_ABILITY (site 146): the abilities routine's effect switch, "mov [bp-0Ch],ax / mov cx,9" (85351h; AX
+;   the effect, ES:BX its active record): Cat's Grace's adds its amount (+9) to DEX ([BP-346h]), 3 to 24
+;   as Strength's to STR; Friends' to CHA ([BP-33Eh]), at most 25 (NS_FRIENDS_MOST); out at 8543Bh. The
+;   game's "[BP-9] 0: no wizard's or priest's spell's effect" kept for them.
+; - NS_CLAW (site 147): a natural attack's dice (86A45h, "or dx,dx / jnz 86A90h"; SI the thing, DX the
+;   attack, far [BP+0Eh] the count, [BP+12h] the sides, [BP+16h] the bonus): with Erdlu Claw's effect
+;   (NS_CLAW_EFFECT) the first attack 1d6+1 where that is better (SL's NS_CLAW).
+; Erdlu Claw's +1 to hit unarmed and Fogbolt's -3 and +2 are NS_SWING's (from STINK_SWING), Reflected
+; Image's 50 IMAGE_CHANCE's, Spook's save NS_SPOOK_SAVE's (from PROT_SAVE).
+NS_GRACE_EFFECT   equ 113
+NS_CLAW_EFFECT    equ 114
+NS_FOG_EFFECT     equ 115
+NS_FRIENDS_EFFECT equ 116
+NS_GRACE      equ 0
+NS_REFLECT    equ NS_FIRST + 3
+NS_SPOOK      equ NS_FIRST + 4
+NS_FRIENDS    equ 5
+NS_FRIENDS_MOST equ 25
+NS_EFFECT_ON  equ 0x6624E - 0x6623E ; (on to the dice's push, less the INT's way back)
+NS_EFFECT_ROLL equ 0x66254 - 0x6623E ; (past it: Friends' own dice)
+NS_ABILITY_OUT equ 0x8543B - 0x85354
+NS_CLAW_PAST  equ 0x86A90 - 0x86A48
+NS_SPOOK_MOST equ 6
+NS_PRESERVER  equ 11                ; (the sheet's classes that cast wizard spells: the preserver, ...
+NS_WIZARD     equ 18                ;   ... and the sequel's wizard)
+ns_casts      dw 0                  ; (counts for a look in play: cases made Strength's, ...
+ns_abilities  dw 0                  ;   ... abilities raised, ...
+ns_claws      dw 0                  ;   ... claws' dice made 1d6+1, ...
+ns_swings     dw 0                  ;   ... swings changed, ...
+ns_spooks     dw 0                  ;   ... Spook's saves made worse, ...
+ns_reflects   dw 0                  ;   ... and Reflected Image's 50s)
+ns_cast:
+        mov ax, [bp + 0x0E]
+        push bx
+        call ns_new
+        jnc .set
+        cmp bx, NS_GRACE
+        je .str
+        cmp bx, NS_FRIENDS
+        jne .set
+.str:   mov ax, STRENGTH_SPELL
+        inc word [cs:ns_casts]
+.set:   pop bx
+        mov [bp - 0x1E], ax
+        iret
+ns_effect:
+        push ax
+        push bx
+        mov word [bp - 0x12], 0x62
+        mov ax, [bp + 0x0E]
+        cmp ax, 0xF5
+        jne .new
+        mov word [bp - 0x12], 2
+        jmp .on
+.new:   call ns_new
+        jnc .on
+        cmp bx, NS_GRACE
+        jne .friends
+        mov word [bp - 0x12], NS_GRACE_EFFECT
+        jmp .on
+.friends:
+        cmp bx, NS_FRIENDS
+        jne .on
+        mov word [bp - 0x12], NS_FRIENDS_EFFECT
+        pop bx
+        pop ax
+        sub sp, 4                       ; (room for the dice, under the INT's frame)
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        add ax, NS_EFFECT_ROLL
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], 2            ; (2d4: the count, then the sides)
+        mov word [bp + 10], 4
+        pop ax
+        pop bp
+        iret
+.on:    pop bx
+        pop ax
+        push bp
+        mov bp, sp
+        add word [bp + 2], NS_EFFECT_ON
+        pop bp
+        iret
+ns_ability:
+        mov [bp - 0x0C], ax
+        mov cx, 9
+        cmp ax, NS_GRACE_EFFECT
+        je .new
+        cmp ax, NS_FRIENDS_EFFECT
+        je .new
+        iret
+.new:   test byte [cs:rules], RULE_NEW_SPELLS
+        jz .game
+        push ax
+        cmp byte [bp - 9], 0
+        je .out                         ; (as the game's for a wizard's spell)
+        movsx ax, byte [es:bx + 0x256]
+        cmp word [bp - 0x0C], NS_GRACE_EFFECT
+        jne .cha
+        add ax, [bp - 0x346]
+        cmp ax, 24
+        jle .low
+        mov ax, 24
+.low:   cmp ax, 3
+        jge .dex
+        mov ax, 3
+.dex:   mov [bp - 0x346], ax
+        jmp .done
+.cha:   add ax, [bp - 0x33E]
+        cmp ax, NS_FRIENDS_MOST
+        jle .put
+        mov ax, NS_FRIENDS_MOST
+.put:   mov [bp - 0x33E], ax
+.done:  inc word [cs:ns_abilities]
+.out:   pop ax
+        push bp
+        mov bp, sp
+        add word [bp + 2], NS_ABILITY_OUT
+        pop bp
+.game:  iret
+ns_claw:
+        pushad
+        push es
+        mov di, sp
+        or dx, dx
+        jnz .on
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .on
+        mov ax, si
+        mov cl, NS_CLAW_EFFECT
+        call has_effect
+        jne .on
+        les bx, [bp + 0x0E]             ; (its average, twice over: dice x (sides + 1) + 2 x bonus)
+        mov ax, [es:bx]
+        les bx, [bp + 0x12]
+        mov cx, [es:bx]
+        inc cx
+        imul ax, cx
+        les bx, [bp + 0x16]
+        add ax, [es:bx]
+        add ax, [es:bx]
+        cmp ax, 9                       ; (1d6+1's: 4.5)
+        jge .on
+        mov word [es:bx], 1
+        les bx, [bp + 0x0E]
+        mov word [es:bx], 1
+        les bx, [bp + 0x12]
+        mov word [es:bx], 6
+        inc word [cs:ns_claws]
+.on:    cmp word [ss:di + 22], 0        ; (the game's DX: "jnz 86A90h")
+        je .out
+        add word [ss:di + 34], NS_CLAW_PAST
+.out:   pop es
+        popad
+        iret
+; NS_SWING (from STINK_SWING, each call's first swing: [BP+18h] the attacker, [TARGET] the target, [BP+0Ah]
+; the THAC0, [BP+12h] the item): Fogbolt's 3 worse for a fogged attacker and 2 better against a fogged
+; target; Erdlu Claw's 1 better for an unarmed attack (no item) of the first set (the set-up's natural
+; attacks' set, [BP-20h], 0: a thri-kreen's claws, not its bite, as SL's). All kept.
+NS_NATURAL_SET equ -0x20
+ns_swing:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        push ax
+        mov ax, [bp - 0x16]
+        cmp ax, [bp - 0x0C]
+        jne .out                        ; (once a call: [BP+0Ah] holds for its swings)
+        push cx
+        mov ax, [bp + 0x18]
+        mov cl, NS_FOG_EFFECT
+        call has_effect
+        jne .target
+        add word [bp + 0x0A], 3
+        inc word [cs:ns_swings]
+.target:
+        mov ax, [TARGET]
+        call has_effect
+        jne .claw
+        sub word [bp + 0x0A], 2
+        inc word [cs:ns_swings]
+.claw:  cmp word [bp + 0x12], NO_ITEM
+        jb .done
+        mov ax, [bp]                    ; (the set-up's frame: the caller's BP ...
+        xchg ax, bx
+        cmp byte [ss:bx + NS_NATURAL_SET], 0
+        xchg ax, bx                     ;  ... its set of natural attacks)
+        jne .done                       ; (the first set's alone, as SL's: not a thri-kreen's bite)
+        mov ax, [bp + 0x18]
+        mov cl, NS_CLAW_EFFECT
+        call has_effect
+        jne .done
+        dec word [bp + 0x0A]
+        inc word [cs:ns_swings]
+.done:  pop cx
+.out:   pop ax
+.ret:   ret
+; NS_IMAGE_CHANCE: DX Mirror Images' chance for thing AX: IMAGE_CHANCE, or NS_REFLECT_CHANCE when its
+; effect is Reflected Image's (the effect's spell, +4). DS the game's; others kept.
+NS_REFLECT_CHANCE equ 50
+ns_image_chance:
+        mov dx, IMAGE_CHANCE
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        push bx
+        push cx
+        push es
+        mov cx, ds
+        sub cx, EFFECTS_GAP
+        mov es, cx
+        mov cx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_BASE
+        cmp cx, 400
+        ja .out
+.each:  jcxz .out
+        cmp [es:bx], ax
+        jne .on
+        cmp byte [es:bx + 6], MIRROR_EFFECT
+        jne .on
+        cmp word [es:bx + 4], NS_REFLECT
+        jne .out
+        mov dx, NS_REFLECT_CHANCE
+        inc word [cs:ns_reflects]
+        jmp .out
+.on:    add bx, 10
+        dec cx
+        jmp .each
+.out:   pop es
+        pop cx
+        pop bx
+.ret:   ret
+; NS_SPOOK_SAVE (from PROT_SAVE: [BP+8] the caster, [BP+14h] the spell, DI the modifiers): against Spook
+; 1 worse for each 2 levels of the caster's preserver or wizard class, at most NS_SPOOK_MOST. All kept.
+ns_spook_save:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        cmp word [bp + 0x14], NS_SPOOK
+        jne .ret
+        pusha
+        push es
+        mov ax, [bp + 8]
+        call fighter_creature
+        jc .out
+        call kit_sheet
+        xor dx, dx                      ; (DL the best level)
+        xor si, si
+.each:  mov al, [es:bx + si + SHEET_CLASSES]
+        cmp al, NS_PRESERVER
+        je .class
+        cmp al, NS_WIZARD
+        jne .next
+.class: mov al, [es:bx + si + SHEET_LEVELS]
+        cmp al, dl
+        jbe .next
+        mov dl, al
+.next:  inc si
+        cmp si, 3
+        jb .each
+        shr dx, 1
+        cmp dx, NS_SPOOK_MOST
+        jbe .take
+        mov dx, NS_SPOOK_MOST
+.take:  or dx, dx
+        jz .out
+        mov bx, sp
+        sub [ss:bx + 2], dx             ; (the game's DI, under ES in PUSHA's)
+        inc word [cs:ns_spooks]
+.out:   pop es
+        popa
+.ret:   ret
+
+; - NS_SCROLL (site 148): a wizard scroll's reading (99xxxh), "mov es,ax / mov bx,es:[0B44h]" (999FBh) where its
+;   power ([BP-4], the spell) has been found a wizard spell's (NS_CMP at 999EEh): a new spell known by the
+;   reader (USE_WHO's), on to YOU ALREADY KNOW THIS SPELL (99A86h); else its sheet bit set (NS_TEACH) and on
+;   to the scroll used up and YOU LEARN THE SPELL (99A5Ch). (No INT roll for them: SCROLL_LEARN's is the
+;   bitset's.) Else the two instructions. Not the "mov ax,370h" before them (999F8h): the overlay manager
+;   fixes up its segment word as it loads the code, which made a site there another INT.
+; - NS_LEARN (site 149): CHOOSE A SPELL's pick (9367Ch: the page's spell DI, [370h:7 + 2 DI], for member
+;   [370h:0B44h]), "mov es,ax / or es:[bx+39Ch],dl" (936B4h) setting its known bit: a new spell's sheet bit
+;   instead (PICK_LIST puts them on the page), else the two instructions.
+NS_SCROLL_KNOWN  equ 0x99A86 - 0x999FE    ; (from the site's frame IP, 999FBh + 3)
+NS_SCROLL_TAUGHT equ 0x99A5C - 0x999FE
+NS_PAGE      equ 7                  ; (CHOOSE A SPELL's list: words at 370h:7)
+NS_PAGE_MOST equ 20                 ; (its room: 370h:2Fh after it is the game's)
+ns_taught    dw 0                   ; (counts, for a look in play: new spells taught, from a scroll ...
+ns_scrolls_n dw 0                   ;   ... of them, and put on CHOOSE A SPELL's page)
+ns_paged     dw 0
+; NS_TEACH: party member SI knows new spell BX (0 to NS_COUNT - 1): its sheet's bit set (a KIT_OPEN kit byte
+; made 0, no kit, first, as SL's NS_SHEET_LEARN). DS the game's; all registers kept.
+ns_teach:
+        pusha
+        push es
+        mov di, bx
+        mov ax, si
+        call kit_sheet
+        movzx ax, byte [cs:di + ns_known_at]
+        add bx, ax
+        cmp byte [cs:di + ns_known_at], KIT_BYTE
+        jne .set
+        cmp byte [es:bx], KIT_OPEN
+        jne .set
+        mov byte [es:bx], 0
+.set:   mov al, [cs:di + ns_known_bit]
+        or [es:bx], al
+        inc word [cs:ns_taught]
+        pop es
+        popa
+        ret
+; NS_LEVEL_NEW: AX the new spells of level CL member SI knows (KNOWN set) or doesn't (clear), with the rule;
+; 0 without it. DS the game's; others kept.
+ns_level_new:
+        push bx
+        push dx
+        xor ax, ax
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .out
+        cmp si, 3
+        ja .out
+        xor bx, bx
+.each:  cmp [cs:bx + ns_levels], cl
+        jne .next
+        call ns_knows
+        setnz dl
+        cmp dl, [cs:ns_want]
+        jne .next
+        inc ax
+.next:  inc bx
+        cmp bx, NS_COUNT
+        jb .each
+.out:   pop dx
+        pop bx
+        ret
+ns_want db 0
+ns_scroll:
+        pushad
+        push es
+        mov di, sp
+        mov ax, [bp - 4]
+        call ns_new
+        jnc .game
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov si, [es:USE_WHO_OFF]
+        cmp si, 3
+        ja .known
+        call ns_knows
+        jnz .known
+        call ns_teach
+        inc word [cs:ns_scrolls_n]
+        add word [ss:di + 34], NS_SCROLL_TAUGHT
+        jmp .out
+.known: add word [ss:di + 34], NS_SCROLL_KNOWN
+        jmp .out
+.game:  mov ax, [ss:di + 30]           ; (the game's AX, selector 370h: its ES ...
+        mov [ss:di], ax
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]        ;  ... and BX the reader)
+        mov [ss:di + 18], ax
+.out:   pop es
+        popad
+        iret
+ns_learn:
+        push bx
+        push ax
+        mov ax, [es:si + NS_PAGE]       ; (the spell: ES 370h, SI the page's place x 2)
+        call ns_new
+        jnc .game
+        push si
+        mov si, [es:USE_WHO_OFF]
+        call ns_teach
+        pop si
+        pop ax
+        pop bx
+        mov es, ax
+        iret
+.game:  pop ax
+        pop bx
+        mov es, ax
+        or [es:bx + KNOWN_OFF], dl
+        iret
+; NS_PAGE_ADD (from PICK_LIST): the new spells of the page's level (PICK_SHOWN) member SI doesn't know put
+; after the game's DI on CHOOSE A SPELL's page (NS_PAGE_MOST at most), DI their count more. DS the game's;
+; others kept.
+ns_page_add:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        cmp si, 3
+        ja .ret
+        pusha
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov cl, [PICK_SHOWN]
+        xor bx, bx
+.each:  cmp [cs:bx + ns_levels], cl
+        jne .next
+        call ns_knows
+        jnz .next
+        cmp di, NS_PAGE_MOST
+        jae .done
+        push bx
+        lea dx, [bx + NS_FIRST]
+        mov bx, di
+        shl bx, 1
+        mov [es:bx + NS_PAGE], dx
+        pop bx
+        inc di
+        inc word [cs:ns_paged]
+.next:  inc bx
+        cmp bx, NS_COUNT
+        jb .each
+.done:  mov bx, sp
+        mov [ss:bx + 2], di             ; (the DI PUSHA saved: under ES)
+        pop es
+        popa
+.ret:   ret
+
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -4245,6 +4928,7 @@ lowres_site:
 ; 79483h; 6 bytes: 1d6; DI the target, [BP+0Eh] the spell; Adrenalin Control's, 245, the same code):
 ; Strength's (23) by the target's classes, AD&D's (warriors 1d8, priests, rogues and psionicists 1d6,
 ; wizards 1d4), a multiclass character's best; Adrenalin Control's, and a creature with no class's, 1d6.
+; Cat's Grace (a new spell, NS_FIRST, with RULE_NEW_SPELLS) by class too, as Shattered Lands' (GRACE_SIDES).
 ; The dice pushed under the INT's frame (its IP, CS and flags moved down 4 bytes). The sequel's classes
 ; SL's 1-17, then 18 (a wizard's) and 19 (a priest's); the sheet's classes at +1Bh.
 STRENGTH_SPELL equ 23
@@ -4252,6 +4936,10 @@ STR_SIDES:              ; classes 1-19: Strength's sides
         db 6, 6, 6, 6, 6, 6, 6, 6       ; (clerics, druids)
         db 8, 8, 4, 6, 8, 8, 8, 8       ; (fighter, gladiator, preserver, psionicist, rangers)
         db 6, 4, 6                      ; (thief; the sequel's 18, a wizard's, and 19, a priest's)
+GRACE_SIDES:            ; classes 1-19: Cat's Grace's (SL's: rogues 1d8, priests 1d4, the rest 1d6)
+        db 4, 4, 4, 4, 4, 4, 4, 4
+        db 6, 6, 6, 6, 6, 6, 6, 6
+        db 8, 6, 4
 strength_dice:
         sub sp, 4                       ; (room for the dice)
         push bp
@@ -4260,8 +4948,15 @@ strength_dice:
         push es
         mov cx, 6
         mov si, [bp]                    ; (the game's BP)
+        mov bp, STR_SIDES
         cmp word [ss:si + 0x0E], STRENGTH_SPELL
+        je .class
+        mov bp, GRACE_SIDES             ; (Cat's Grace, a new spell, by class too: NS_EFFECT)
+        cmp word [ss:si + 0x0E], NS_FIRST
         jne .put
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .put
+.class:
         cmp di, 400
         jae .put
         imul bx, di, 3
@@ -4284,7 +4979,7 @@ strength_dice:
         dec di
         cmp di, 19 - 1
         ja .skip
-        mov al, [cs:STR_SIDES + di]
+        mov al, [cs:bp + di]
         cmp al, dl
         jbe .skip
         mov dl, al
@@ -4295,7 +4990,9 @@ strength_dice:
         jz .put
         movzx cx, dl
         inc word [cs:manual_count]
-.put:   mov ax, [bp + 6]
+.put:   mov bp, sp                      ; (BP back: PUSHA's and ES under it)
+        add bp, 18
+        mov ax, [bp + 6]
         mov [bp + 2], ax
         mov ax, [bp + 8]
         mov [bp + 4], ax
@@ -10504,6 +11201,7 @@ prot_save:
 .done:  pop ax
         inc word [cs:prot_saves]
 .out:   call kit_save                   ; (the kits': KITS)
+        call ns_spook_save              ; (the new spells' Spook)
         iret
 ; PROT_HERE: PROT_SCAN for combatant SI (DS the game's); CF if it isn't a creature. All kept.
 prot_here:
@@ -11160,6 +11858,7 @@ stink_swing:
         inc word [cs:nausea_swings]
 .dice:  pop cx
         pop ax
+        call ns_swing                   ; (the new spells' Fogbolt and Erdlu Claw)
         test word [cs:rules_hi], RULE_HI_CAHULAKS
         jz .ret
         cmp word [bp + 0x16], 1
@@ -16389,7 +17088,17 @@ wiz_count:
         inc dx
 .next:  inc al
         jmp .each
-.out:   mov ax, dx
+.out:   push cx                 ; (and the new spells known: NEW SPELLS)
+        mov byte [cs:ns_want], 1
+        mov cl, 1
+.levels:
+        call ns_level_new
+        add dx, ax
+        inc cl
+        cmp cl, 2
+        jbe .levels
+        pop cx
+        mov ax, dx
         pop es
         pop dx
         pop bx

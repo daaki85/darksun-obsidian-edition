@@ -812,6 +812,43 @@ a copy named `dbns`; a script testing `/proc/PID/comm` must then look for `dbns`
 
 **The sequel's screens: DAM lines, Effects, the Look box's close** (2026-11-25, logs/2026-11-25-ravager-screens.md): the inventory's DAM line routine is SL's at 7AF9Eh (its item DI, type SI, the creature far at `[BP-6]`, 0 in an item box): the melee branch reads the sheet's +24h at 7B19Eh, the missile branch the type's +7 at 7B124h, each then "mov ah,0" and the push for the line's routine (7B1D9h); the bonus, sides and count are pushed under it. View Character's line is at 6CA43h on (`[BP-6]` the attacks, `[BP-2]`/`[BP-4]` the dice, `[BP-0Ah]` the item, the bonus stored at 6CAC9h); it took Ester's left-hand weapon. The likeness search missed both (the sheet's and types' sizes differ): search for the sheet read (`26 8A 47 24`) instead. **The Effects screen**: the cells' routine 8AC6Fh (ends 8AFA9h, `[BP-4]` the cells used), the handler 8AB13h (its redraw "call 140:60Dh" at 8AC62h, way out 8AC6Ah); USE, then EFFECTS (122,171), the portraits at (70,56), (117,56), (70,127), (117,127), the lower panel's lines from (150,108). **The dialogue window**: its stub 476Ch (SL's 42CAh, entries 25h the input and 34h the wait), found by its callers' likeness (SL's 42CA:2Ah calls at 1BC2Ch/1BE74h, the sequel's 476C:2Ah at 1F063h/1F2D6h). **To see the Look box's description** a monster needs more than HP, AC and THAC0 to say: Draxans have no defences, so set their resistance class (the creature's +0Fh) to 2 in memory for a test (never saved). **A spec edit for a test** must write the packed SPEC_V2 form (the kinds base 17 in the low 17 bits of +42h..+44h): the Loader's age pass rewrites plain bytes there. The Effects screen's kit line needs RULE_HI_KITS (1) in DSCLOG2's rules_hi (header +270), which the Loader doesn't set until the kits' rules are ported. **The opening talk** of a new game with the transferred party runs into the Draxans' fight after three Continues (100,171); the screens open in the fight: the top-left icon (22,17), then VIEW INVENTORY (74,171); on the inventory its bar's first icon (170,187) is VIEW CHARACTER; on View Character and Effects the bar is (47,171) VIEW CHARACTER, (74,171) the inventory, (122,171) EFFECTS; the inventory's portraits at (25,25), (25,69), (25,117), (25,165).
 
+**The new wizard spells' numbers** (2026-11-26, logs/2026-11-26-ravager-new-spells.md): DATA 0-319 are all the
+sequel's (wizard 0-114, priest 115-234, psionic 235-268, MONS269-319); the known bitset's free bits 115-119 are priest
+records' numbers. So the mod's six are 320-325 (`dsloader/ravspells.py`: DATA 320-325, ICON 21320-21325, SPIN 321-326
+in RESOURC2.GFF; the game's own ICON stop at 21268, SPIN at 269), known by the sheet's +3Fh/+3Dh bits (as SL's). The
+game never asks for them until DSCLOG2 does. The sequel's spell icons are PLNR or PLAN, and a few of its ICON and BMP
+chunks are SL's kind; `sequelicons.decode` reads all three.
+
+**Casting the new spells in the sequel** (2026-11-26, the same log, part 2): the spell handler's switch at 656D0h
+(81 cases at CS:28C1h of the module from 642E0h; Strength 23 and Adrenalin Control F5h share 6623Bh, the effect in
+`[BP-12h]`, its 1d6 pushed at 6624Eh, the adder at 65AFBh); the abilities routine 8527Bh (`[BP-9]` 0 under
+Anti-Magic 4: no wizard or priest spell's effect), its effect switch at 85351h (9 cases at module 83400h + 2386h;
+STR `[BP-348h]`, DEX `-346h` ... CHA `-33Eh`; out at 8543Bh); a natural attack's dice 86A45h (DX the attack, far
+`[BP+0Eh]`/`[BP+12h]`/`[BP+16h]` count, sides, bonus); the effect records (31 bytes at the load + 3C870h) end
+with 112, zeros after for 3169 bytes, and the creature's effect bits are 15 bytes (7FE93h: 0-119), so 113-116 are
+free for data. The swing's `[BP+0Ah]` THAC0 holds for the call's swings (5D052h is each swing's start; the first
+when `[BP-16h]` = `[BP-0Ch]`). In play: a spell dropped on a member's portrait on USE is cast on that member, a
+drop on the list's panel brings the aim pointer up; the USE screen keeps its LEVEL between openings.
+
+**Learning the new spells in the sequel** (2026-11-26, the same log, part 3): CHOOSE A SPELL's pick sets the bitset bit
+at 936B4h (`mov es,ax / or es:[bx+39Ch],dl`, ES 370h before, the spell `[370h:7 + SI]`, the member `[370h:0B44h]`);
+the page's list is words at 370h:7 (room for 20: 370h:2Fh is a dword of the game's). A spellbook's read (from the
+item box's spell icon, outside a fight) is 999A9h on: `[BP-4]` the power - 1, objects 7918h-79DFh and 7AA8h-7B0Bh
+(31000-31199, 31400-31499) learn, any other (a one-use scroll, 313xx) goes to the cast at 9B7Dh; the bit test from
+999F8h, YOU LEARN THE SPELL at 99A5Ch (the book used up), YOU ALREADY KNOW THIS SPELL at 99A86h. An item's power is
+the spell + 1, compared with 140h at 77CF9h, 9A7D4h and 9A9C5h. **The overlay manager fixes up segment words in
+overlay code** (`mov ax,370h` at 999F8h, as `mov dx,338h` in least_scores): none of them is in the MZ relocation
+table (`gamepatch.relocated` doesn't see them), so a site whose INT number or NOPs land on one runs another INT
+(here: DS:4 and DS:4Ch written, the Borland signature broken, the Loader's `find_data_segment` then None). Put a site
+after such a `mov` (999FBh). **The hit routine's frame**: NS_SWING's BP is the hit routine's; the set-up's locals
+(the natural attacks' set `[BP-20h]`, which the dice log reads as the d20's parent) are at `[bp]`'s frame.
+**A party member with nothing in hand** (a thri-kreen too) can't attack after a slot edit in memory alone (a
+barred sword over a foe); moved to the pack on the inventory screen (pick the hand's item, click a pack square) the
+foe turns red and a thri-kreen fights with its claws and bite (the inventory's DAM "<4x1D6+8>" with Erdlu Claw). A
+spellbook for a test: `logs/files/2026-11-26-ravager-new-spells-scroll.py ITEM POWER 60` (the record of item 60, a
+spellbook, over a carried item; the box's spell icon then teaches). A level up for CHOOSE A SPELL: the log's
+`-levelup.sh`; creation's: `-create.sh` (a throwaway copy's roster).
+
 **The sequel's first spells and powers** (2026-11-25, logs/2026-11-25-ravager-first-spells.md): the creation
 screen's DONE (6E0B9h, 5C0:57h; SI the member) calls 6E6D8h, the powers (6E906h, 5C0:2Ah), a preserver's spells
 (6EA10h, 5C0:2Fh), 6ED7Dh, then 98:0Fh, all from DONE only (no START GAME path as in SL). The wizard spells known
@@ -1886,6 +1923,17 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
   (254,164) pages the list and draws it again (twice for the first page), SELL (297,164) offers for the
   item on the pointer, TAKE IT at (120,92) or (145,92) as the box falls. `ravshop.py` reads the shop and
   edits CHA, INT, scrolls and known spells.
+- **The sequel's shops and its spellbooks** (2026-11-26, logs/2026-11-26-ravager-spell-books.md): GPL op 24h (36)
+  opens a shop on the merchant its argument names (`('n', -153)` the weaponer, or the talker): scripts 43, 53, 54,
+  143, 144, 148, 153 (Notaku), 155, 157, 158 (the ranged stall 323), 221 (the weaponer). Of the sellers only Notaku
+  has spellbooks (OBJEX.GFF: 31402, 31023); other wizards' books are carried (Melantha 51, Fermin 160, Kalaobuta
+  290, Solurnis 436, Raenika 496, a Crypt body 3088). The sequel's wizard spellbooks are 31002-31061 by level (3000
+  a level, all one picture: their OJFF's icon, BMP 1969; name 4, "Spellbook"); 31190-31199 are free. **A merchant
+  with more than 12 pack items** (Notaku with the books: 14): the game gives cells 14-25 and 255 to the rest, and
+  the shop lists all 14 (three pages). **A spellbook can't be read in the shop's screen** (the box's icon clicked
+  closes the box, nothing learnt): leave the shop, open the inventory. Money for a test:
+  `logs/files/2026-11-26-ravager-spell-books-money.py N` (the dword at (load + 3C13h):357h). The opening ambush's
+  Computer Control: the USE screen's first click only takes the mouse (a click on the window first).
 - **The sequel's dialogue window and the Loader's tabs** (2026-11-25, logs/2026-11-25-ravager-loader-tabs.md): the
   window's input is 87BA0h (SL's 7CE83h, the same code with a check more; the dialogue stub 476Ch's entry 25h):
   (kind, far text, word), SL's kinds (0 a reply, its number in the word; 1 a portrait; 2 text, word 115; 3 the

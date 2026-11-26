@@ -3,8 +3,8 @@
 # place (the records 25h bytes apart from DS:67BBh, map x +3, y +5; on screen x - camera x, y -
 # camera y, in game pixels; 0-3 the party; a figure's body about 12 right and 18 down of it). end: the
 # member whose turn it is ends it (Q, the manual's key). wait N: until a party member's turn, at most N s.
-# cast X Y LEVELS: USE, LEVEL pressed LEVELS times, the spell's icon at X,Y, then aimed at the nearest
-# object that isn't the party's and pressed. attack: the member whose turn it is attacks the nearest foe (side
+# cast X Y LEVELS [OBJECT]: USE, LEVEL pressed LEVELS times, the spell's icon at X,Y, then aimed at the nearest
+# object that isn't the party's (or at OBJECT, 0-3 a party member: a spell on oneself) and pressed. attack: the member whose turn it is attacks the nearest foe (side
 # FOE_SIDE, standing) with the Walk pointer, the plain arrow (the manual: in a fight it walks to the foe and
 # attacks; the sword and bow pointers start fights, they show a barred sword in one); fight [SECONDS]: that
 # on every party turn until no foe stands or the party is down; tabfight [SECONDS]: the same with the mod's
@@ -94,7 +94,9 @@ elif cmd == 'wait':
 elif cmd == 'cast':
     x, y, levels = int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
     me = turn(); mx, my = figure(me)
-    foes = sorted((abs(x2 - mx) + abs(y2 - my), i, x2, y2) for i, x2, y2 in objects() if i > 3 and 0 <= x2 < 320 and 0 <= y2 < 200)
+    aim = int(sys.argv[5]) if len(sys.argv) > 5 else None   # (cast X Y LEVELS OBJECT: at that object, 0-3 a member)
+    foes = sorted((abs(x2 - mx) + abs(y2 - my), i, x2, y2) for i, x2, y2 in objects()
+                  if (i == aim if aim is not None else i > 3) and 0 <= x2 < 320 and 0 <= y2 < 200)
     if not foes: sys.exit('no foe on screen')
     d, i, fx, fy = foes[0]
     click(22, 17); time.sleep(2)

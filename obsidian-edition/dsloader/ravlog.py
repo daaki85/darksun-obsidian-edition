@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
-    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravspells, ring, rings, shadows, sizes, squares, stealth, \
     targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
@@ -49,8 +49,13 @@ EFFECTS: Dict[str, object] = {
     # the AC's effects (game.attack_ac, the chance to hit): Armor, Bio-Feedback, Shielded, Dispel Evil, Displaced
     "EFFECT_IMPROVED_AC": 5, "EFFECT_BIOFEEDBACK": 8, "EFFECT_SHIELDED": 89, "EFFECT_DISPEL_EVIL": 28,
     "EFFECT_DISPLACEMENT": 29,
-    "EFFECT_SAVE_PENALTY": NO_EFFECT, "GRACE_EFFECT": NO_EFFECT + 1, "CLAW_EFFECT": NO_EFFECT + 2,
-    "FOG_EFFECT": NO_EFFECT + 3, "FRIENDS_EFFECT": NO_EFFECT + 4, "STINK_EFFECT": NO_EFFECT + 5,
+    "EFFECT_SAVE_PENALTY": NO_EFFECT, "STINK_EFFECT": NO_EFFECT + 5,
+    # the new spells' (ravspells: 320-325, their effects the records 113-116 the Loader fills in)
+    "GRACE_EFFECT": ravspells.GRACE_EFFECT, "CLAW_EFFECT": ravspells.CLAW_EFFECT,
+    "FOG_EFFECT": ravspells.FOG_EFFECT, "FRIENDS_EFFECT": ravspells.FRIENDS_EFFECT,
+    "GRACE_SPELL": ravspells.GRACE, "CLAW_SPELL": ravspells.CLAW, "FOG_SPELL": ravspells.FOG,
+    "REFLECT_SPELL": ravspells.REFLECT, "SPOOK_SPELL": ravspells.SPOOK, "FRIENDS_SPELL": ravspells.FRIENDS,
+    "NEW_SPELLS": dict(ravspells.SPELLS), "NEW_SPELL_LEVELS": dict(ravspells.LEVELS),
     "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
     "HALVING_EFFECTS": ((77, 0x02), (73, 0x04), (78, 0x80), (38, 0x06)),  # Prot Fire, Cold, Lightning; Fire Shield
     "HIT_EFFECTS": ((9, 1), (22, -1), (91, -4), (106, 1)),  # Blessed, Cursed, Slowed, Weapon Grafted
@@ -67,7 +72,7 @@ EFFECTS: Dict[str, object] = {
 }
 # Its effects' names: 31-byte records in the program's data at load + 3C870h (its file's 41A70h), the
 # name in the first 29 bytes, EFFECT_COUNT_ALL of them (some numbers unused: an empty name)
-EFFECT_RECORDS, EFFECT_RECORD, EFFECT_COUNT_ALL = 0x3C870, 31, 113
+EFFECT_RECORDS, EFFECT_RECORD, EFFECT_COUNT_ALL = 0x3C870, 31, ravspells.FRIENDS_EFFECT + 1  # (113 the game's, then the new spells')
 
 
 def effect_names(guest, load: int) -> Dict[int, str]:
@@ -193,7 +198,8 @@ MOD_BYTES = {"KIT_SHEET": (game, "KIT_SHEET"), "NEW_KNOWN_SHEET": (game, "NEW_KN
 
 def _new_known() -> Dict[int, Tuple[int, int]]:
     """game.NEW_KNOWN with its sheet offsets the sequel's."""
-    return {spell: (ravager.sheet_field(at), bit) for spell, (at, bit) in game.NEW_KNOWN.items()}
+    return {ravspells.FIRST + (spell - game.GRACE_SPELL): (ravager.sheet_field(at), bit)
+            for spell, (at, bit) in game.NEW_KNOWN.items()}
 
 
 OFFSET_KINDS = (("CREATURE_", ravager.creature_field), ("SHEET_", ravager.sheet_field),
@@ -531,6 +537,7 @@ SPELL_STARTS, SPELL_STARTS_ROW, SPELL_LEVELS_MOST = 0x0656, 11, 10  # (DS bytes,
 # priest: each level's first spell, 1 to 10, then the end: 0, 12, 25 ... 111, 115; 115, 127 ... 233, 235)
 SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
+SPELLS_END = ravspells.FIRST + len(ravspells.SPELLS)  # (past the new spells, 320-325, in the Loader's copy)
 
 
 def spell_table(resources: bytes) -> Tuple[bytes, List[str]]:
@@ -539,7 +546,7 @@ def spell_table(resources: bytes) -> Tuple[bytes, List[str]]:
     from . import gff
     chunks = gff.read_gff(resources)
     table, names = bytearray(), []
-    for spell in range(SPELL_COUNT):
+    for spell in range(SPELLS_END):  # (the game's, then the new spells' in the copy)
         rec = chunks.get(("DATA", spell), b"")
         table += (rec[:32] + bytes(32))[:32]
         names.append(game.title(rec[32:64].split(b"\0", 1)[0].decode("latin1").strip()) if len(rec) >= 64 else "")
@@ -654,6 +661,7 @@ THORNS, THORNS_SPELL = 16, 188  # Bound By Thorns, -4 against Thorns of Binding
 SAVE_EFFECTS = ((44, -2, "Heat Exhaustion"), (88, -1, "effect 88"))  # (88: an unnamed effect of the game's)
 SPIRIT_ARMOR, BARKSKIN, BLESSED, BLURRY, BRAVE, PRAYER = 94, 6, 9, 13, 18, 72
 PROT_EVIL = 75
+SPOOK_CLASSES = (11, 18)  # (Spook's save by the caster's preserver or wizard level: DSCLOG2's NS_SPOOK_SAVE)
 PROT_KINDS = ((0x80, 78, 4, "Protected vs Lightning"), (0x04, 73, 3, "Protected vs Cold"),
               (0x02, 77, 4, "Protected vs Fire"))  # (the record's kinds bit, the effect, its bonus)
 FIRE_SHIELD = 38  # (+2 against fire and cold with the spells as the manual has them: DSCLOG2's FSHIELD_SAVE)
@@ -800,7 +808,7 @@ class RavGameData(game.GameData):
     def spell_record(self, spell: int) -> bytes:
         """SL's, for all of the sequel's spells (SPELL_COUNT: its psionic powers and monsters' powers go past
         255, Psionic Blast 266)."""
-        if not 0 <= spell < SPELL_COUNT:
+        if not 0 <= spell < SPELLS_END:
             return b""
         return self.guest.read((self.load_seg + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE,
                                game.SPELL_SIZE)
@@ -907,6 +915,12 @@ class RavGameData(game.GameData):
         for kid in self.kit_ids(ti):
             if kits.save(kid, spell, kinds):
                 out.append((kits.save(kid, spell, kinds), kits.name(kid)))
+        if spell == ravspells.SPOOK and self.rules & game.RULE_NEW_SPELLS:  # (DSCLOG2's NS_SPOOK_SAVE)
+            levels = [caster_sheet[game.SHEET_LEVELS + p] for p in range(3) if len(caster_sheet) >= game.SHEET_SIZE
+                      and caster_sheet[game.SHEET_CLASSES + p] in SPOOK_CLASSES]
+            penalty = -min(game.SPOOK_MOST, max(levels, default=0) // 2)
+            if penalty:
+                out.append((penalty, "Spook, the caster's levels"))
         drained = self._first_effect(target, LIFE_DRAINED)
         if drained is not None and drained[8]:
             out.append((-2 * drained[8], f"Life Drained ({drained[8]})"))
@@ -1575,11 +1589,30 @@ class RavDiceLog(dicelog.DiceLog):
         return [part for part in super()._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
                 if part[0] == "target's Girdle of Urnst"]
 
-    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
-        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up)."""
-        if attacker_combatant is not None and ravager.NAUSEATED in self.game._effect_ids(attacker_combatant):
-            return [("Nauseated", -STINK_TO_HIT)]
-        return []
+    CLAW_IN_SETUP = False  # (DSCLOG2's NS_SWING, after the set-up: _after_setup)
+
+    def _after_setup(self, attacker_combatant: Optional[int], target_combatant: Optional[int] = None,
+                     e=None, item: Optional[int] = None) -> List[Tuple[str, int]]:
+        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up);
+        with the new spells (DSCLOG2's NS_SWING) a fogged attacker's -3, +2 on a fogged target, and Erdlu
+        Claw's +1 for an unarmed attack of the first set (the set-up's SETUP_NATURAL_LOCAL 0)."""
+        out: List[Tuple[str, int]] = []
+        if attacker_combatant is None:
+            return out
+        mine = self.game._effect_ids(attacker_combatant)
+        if ravager.NAUSEATED in mine:
+            out.append(("Nauseated", -STINK_TO_HIT))
+        if not self.game.rules & game.RULE_NEW_SPELLS:
+            return out
+        if ravspells.FOG_EFFECT in mine:
+            out.append(("Fogbolt", -3))
+        if target_combatant is not None and ravspells.FOG_EFFECT in self.game._effect_ids(target_combatant):
+            out.append(("target's Fogbolt", 2))
+        natural = e.parent_local(game.SETUP_NATURAL_LOCAL) if e is not None else None
+        if ravspells.CLAW_EFFECT in mine and (item is None or item < 0 or item >= game.NO_ITEM) \
+                and natural is not None and natural & game.SETUP_FLAG_MASK == 0:
+            out.append(("Erdlu Claw", 1))
+        return out
 
     def _plus_counts(self, target_combatant: int, on) -> bool:
         """The weapon's plus counts unless the target has an Anti Magic Shell (the set-up's 608h:20h, 5C745h)."""

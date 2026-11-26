@@ -95,6 +95,24 @@ Releases, newest first (2.12.0 and older in the archive):
   `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
   `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
   the creation screen).
+**Added: Wake of the Ravager's new wizard spells**
+- The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
+  sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its
+  RESOURCE.GFF: it has no six free wizard numbers below 120). The icons are Shattered Lands' drawn ones in the
+  sequel's colours. A character who knows them (the sheet's bits, which the party transfer carries) has them
+  on the USE screen and casts them as in Shattered Lands: Cat's Grace and Friends raise DEX and CHA through
+  Strength's code (Cat's Grace's die by class), Erdlu Claw's unarmed attacks, Fogbolt's -3 and +2, Reflected
+  Image's one image struck half the time, Spook's save worse with the caster's level. Their effects have names
+  and icons on the sequel's screens, and the dice log names them (Fogbolt in the to-hit line too). They are
+  learnt there as in Shattered Lands: a preserver's level up (CHOOSE A SPELL) and creation's first-spells pick
+  offer them at their levels, counted by the INT rules, and a spellbook of one teaches it. Erdlu Claw's +1 to
+  hit is on the first set of natural attacks only (a thri-kreen's claws, not its bite). The new spells' switch
+  leaves them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-149).
+- Spellbooks of the six are in the sequel: Notaku in Tyr sells one of each (Cat's Grace 6000, the others 3000),
+  and three of its wizards who carry a spellbook (Fermin, Kalaobuta, Raenika) carry Reflected Image, Spook or
+  Fogbolt. Each is an object of its own (31190-31195, copies of the sequel's spellbooks) put in by ravgear's
+  own placing (`ravgear.BOOKS`), with the new spells' switch; a saved game's Notaku is stocked with them once
+  by `shopstock.py`.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
