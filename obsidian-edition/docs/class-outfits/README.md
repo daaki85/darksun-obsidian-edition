@@ -62,6 +62,8 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 ## Equipment
 
+Both half-elves now wear their single-class Fighter and Preserver outfits in the Loader. The galleries compare armor colors on the woman and weapon, shield, bow and quiver placement on the man through all 29 poses. [Half-elf equipment in motion](half-elves.md#equipped-fighter-and-preserver)
+
 The equipment tests cover all 14 map figures and all 176 newer outfit builds. The report shows where plate and robes disappear, which weapons miss a grip, and which tips extend outside the game picture. [Weapon and armor test results](equipment-tests.md) · [Empty and equipped poses on the seven newer figures](equipment-study-comparison.png)
 
 [Compare the corrected cloak hems and boots on all six figures](cloak-hem-fixes.gif) · [Compare chest plate through all three walks](plate-stride.gif)

@@ -262,6 +262,9 @@ class Pictures:
         self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]]] = {}
 
     def supports_outfits(self, figure, model):
+        if figure in classoutfits.HALF_ELF_SOURCES:
+            return (model is not None and model == self.model(figure)
+                    and classoutfits.HALF_ELF_SOURCES[figure] in self.outfit_models)
         return model in self.outfit_models and classoutfits.MODELS.get(figure) == model
 
     def model(self, obj: int) -> Optional[int]:
@@ -313,11 +316,16 @@ class Pictures:
         ears), the hair greyed for age category STAGE (greyhair.py)."""
         model = self.model(obj) if model is None else model
         figure = obj if figure is None else figure
+        eligible = role and self.supports_outfits(figure, model)
         model, frames, owns = self.base(model, figure, combat)
         own = self.made.get((figure, combat)) is not None  # (a half-elf's own figure)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
-        costumes = classoutfits.frames(role, combat, model) if role and self.supports_outfits(figure, model) else None
+        layers = model
+        if figure in classoutfits.HALF_ELF_SOURCES:
+            eligible = eligible and own and role in classoutfits.HALF_ELF_ROLES.values()
+            layers = figure
+        costumes = classoutfits.frames(role, combat, layers) if eligible else None
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
             dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f], costumes[f] if costumes else None)
@@ -742,7 +750,8 @@ class Dresser:
             stage = greyhair.stage_of(self.gd, member) if on else 0
             role = None
             if on and self.pics.supports_outfits(figure, model):
-                role = classoutfits.for_sheet(self.gd.sheet(member), model)
+                layers = figure if figure in classoutfits.HALF_ELF_SOURCES else model
+                role = classoutfits.for_sheet(self.gd.sheet(member), layers)
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage, role)
             fresh = self.shown.get(obj) != key
             if fresh:

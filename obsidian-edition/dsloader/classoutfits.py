@@ -1,4 +1,4 @@
-"""Class outfit layers registered to the human, dwarf and elf map poses.
+"""Class outfit layers registered to the human, dwarf, elf and half-elf map poses.
 
 Each archive has walk and combat chunks per class. The woman's outfits layer
 over a shared redrawn base. In each layer a transparent edit keeps the pixel
@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import NamedTuple
 from zipfile import ZipFile
 
-from . import art, game, kitpages
+from . import art, game, halfelf, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
 MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
@@ -32,6 +32,8 @@ SOURCE = {
     2099: "92b22183387db3382e56f31747a1e40af7393af6baa8ffa07a82bd9c22cf8481",
     2100: "8f04f1e42fe2e2a9cdc301fc1590ab016a0f62fd057b0e93b63364397537e337",
 }
+HALF_ELF_SOURCES = {halfelf.MAN: 2061, halfelf.WOMAN: 2099}
+HALF_ELF_ROLES = {(3,): "Fighter", (5,): "Preserver"}
 CLASSES = ("", "Priest", "Druid", "Warrior", "Gladiator", "Mage", "Psionicist", "Ranger", "Thief")
 CHEST, ARMS, LEGS, LEFT_FOOT, RIGHT_FOOT, FOREARM, BOW = 1, 2, 4, 8, 16, 32, 64
 
@@ -119,6 +121,26 @@ ELF_MELEE_HANDS = {
 }
 
 
+# Shoulder row and visible left/right edges, traced on the half-elf torso.
+# The quiver stays on this line even when a raised wrist widens the stock pose.
+HALF_ELF_SHOULDERS = {
+    2061: ((7, 3, 13), (7, 6, 15), (8, 2, 8), (7, 2, 12), (7, 3, 12), (7, 3, 12), (7, 3, 12),
+           (7, 2, 11), (7, 1, 9), (7, 3, 12), (7, 4, 13), (8, 1, 6), (8, 5, 10),
+           (8, 3, 8), (8, 4, 11), (15, 5, 12), (8, 9, 17), (8, 12, 20), (10, 3, 11),
+           (15, 4, 11), (8, 13, 20), (14, 11, 18), (10, 7, 13), (7, 7, 12),
+           (7, 5, 11), (10, 3, 9), (10, 5, 12), (7, 3, 12)),
+    2099: ((7, 2, 13), (7, 5, 14), (8, 2, 8), (7, 2, 13), (7, 5, 14), (7, 3, 14), (7, 3, 12),
+           (7, 4, 12), (7, 5, 13), (7, 6, 14), (7, 5, 13), (8, 5, 11), (8, 6, 12),
+           (8, 9, 14), (8, 6, 12), (15, 4, 12), (9, 10, 16), (8, 12, 19), (10, 3, 9),
+           (15, 5, 12), (8, 12, 20), (14, 11, 18), (10, 10, 17), (7, 11, 17),
+           (7, 3, 10), (10, 3, 9), (9, 7, 12), (7, 4, 11)),
+}
+
+# The retail woman's cloak hid this hand. The half-elf study restores it.
+HALF_ELF_WOMAN_REAR_HAND = {1: (14, 15), 7: (13, 14), 8: (15, 14),
+                            9: (15, 12), 10: (14, 11)}
+
+
 def supports(chunks, model):
     return all(sha256(chunks.get(("BMP ", picture), b"")).hexdigest() == SOURCE[picture]
                for picture in (model, model + 1))
@@ -144,7 +166,11 @@ def for_sheet(sheet, model=None):
         return None
     race = sheet[game.SHEET_RACE]
     roles = None
-    if race == game.ELF and (model is None or model in ELVES):
+    if model in HALF_ELF_SOURCES:
+        if race != kitpages.HALF_ELF:
+            return None
+        roles = HALF_ELF_ROLES
+    elif race == game.ELF and (model is None or model in ELVES):
         roles = ELF_ROLES
     elif race == game.DWARF and (model is None or model in DWARVES):
         roles = DWARF_ROLES
@@ -184,8 +210,10 @@ class Frame(NamedTuple):
 def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
-    by_model = model in DWARVES + ELVES
-    if model in ELVES:
+    by_model = model in DWARVES + ELVES or model in HALF_ELF_SOURCES
+    if model in HALF_ELF_SOURCES:
+        filename = "halfelf_outfit_layers.zip"
+    elif model in ELVES:
         filename = "elf_outfit_layers.zip"
     elif model in DWARVES:
         filename = "dwarf_outfit_layers.zip"
@@ -219,6 +247,8 @@ def frames(role, combat, model=2095):
         top = 6
         if by_model:
             left = top = 4
+        if model in HALF_ELF_SOURCES:
+            left = top = 10
         for y, row in enumerate(mask):
             for x, bits in enumerate(row):
                 if bits:

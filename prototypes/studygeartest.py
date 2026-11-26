@@ -71,6 +71,8 @@ def roles_for(obj):
         return co.DWARF_ROLES.values()
     if obj < 306:
         return co.ELF_ROLES.values()
+    if obj in co.HALF_ELF_SOURCES:
+        return (None, *co.HALF_ELF_ROLES.values())
     return (None,)
 
 
@@ -138,7 +140,8 @@ def stock_test(atlas, obj, output):
                 side, above = sprites.room(combat)
                 empty = pics.build(obj, combat, {}, (), role=role)
                 bases = [array(art.decode_frame(empty, f)[2]) for f in range(count)]
-                fields = co.frames(role, combat, model) if role else None
+                layers = obj if obj in co.HALF_ELF_SOURCES else model
+                fields = co.frames(role, combat, layers) if role else None
                 for name in KIT[1:]:
                     gear, armour = atlas.gear[name]
                     dressed = pics.build(obj, combat, gear, armour, role=role)

@@ -1,5 +1,7 @@
 # Weapon and armor tests on all party figures
 
+The results below record the audit at `d37475e`. The half-elf Fighter and Preserver have since been fitted on both figures. [Updated armor and weapon animations](half-elves.md#equipped-fighter-and-preserver)
+
 On the six figures with class outfits in the Loader, removing equipment restored the original picture in every case. Armor stayed within its assigned garment regions, the native bow kept its pixels, and the weapon tests found no detached pieces. The seven newer class-outfit studies need equipment fitting before import. The clearest failure is the half-elf woman. Full plate and both named robes left her unchanged in every pose of all 48 builds.
 
 ![Seven Fighters side by side with their empty and equipped poses](equipment-study-comparison.png)

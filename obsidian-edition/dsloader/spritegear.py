@@ -940,6 +940,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     padded by PAD, in ARMOUR (item types, MAGIC_ARMOUR added for a magic one: under all the rest). Nothing in the hands in the bow
     frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
     out = costume.canvas(rows, pad) if costume else padded(rows, pad)
+    halfelf_bow = {}
+    if costume and own is not None and combat and frame in sp.BOW_FRAMES:
+        halfelf_bow = {(x, y): out[y + pad][x + pad] for x, y in costume.regions[classoutfits.BOW]}
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if costume and costume.head:
         parts = parts._replace(hair=costume.head)
@@ -1019,7 +1022,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         cells = [*cells, *skirt]
                     # Always take the dye value from the original cloth, even where
                     # two pieces overlap or the chest underneath already glints.
-                    if piece == ARMOUR_CHEST and pattern == PLATE:
+                    if own is not None:
+                        # Half-elf garments carry their folds in the authored pixels.
+                        paint_region(out, cells, shades, pad, source=base_outfit)
+                    elif piece == ARMOUR_CHEST and pattern == PLATE:
                         if model == 2059 and not combat and frame in (2, 11, 12, 13, 14):
                             # The stock belt begins at row 13 throughout this stride.
                             # On the last step one tunic pixel also peeks through her hair.
@@ -1027,7 +1033,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         paint_breastplate(out, cells, shades, pad, base_outfit)
                     else:
                         paint_region(out, cells, shades, pad, pattern, source=base_outfit)
-                    if kind == game.ROBE_TYPE:
+                    if kind == game.ROBE_TYPE and own is None:
                         robe_binding(out, cells, pad, base_outfit, bool(item_type & VEILED_DYE))
                     if item_type & MAGIC_ARMOUR:
                         sparkle_cells(out, [(x + pad, y + pad) for x, y in cells],
@@ -1105,6 +1111,13 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 out[y + pad][x + pad] = before[y + pad][x + pad]
         if _magic(weapons["helm"]):
             sparkle(out, before, _glow(weapons["helm"]))
+    if costume and own is not None:
+        k = frame + (sp.WALK_FRAMES if combat else 0)
+        if k < len(classoutfits.HALF_ELF_SHOULDERS[model]):
+            parts = parts._replace(shoulders=classoutfits.HALF_ELF_SHOULDERS[model][k])
+        if model == 2099 and k in classoutfits.HALF_ELF_WOMAN_REAR_HAND:
+            right = classoutfits.HALF_ELF_WOMAN_REAR_HAND[k]
+            parts = parts._replace(hands={**parts.hands, "right": right})
     body = [list(r) for r in out]
     missile = weapons.get("missile")
     if missile or "ammo" in weapons:  # (the bow, quiver, sling or chatkcha carried)
@@ -1151,6 +1164,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         elif parts.facing == sp.SIDE and "left" not in hands and "right" in hands:
             hx, hy = hands["right"]
             hands["left"] = (hx-2, hy-1)
+    # The registered grips above are on the parent cel. The half-elf maker
+    # widens or narrows individual rows; walk hands from own.parts already moved.
+    if costume and own is not None and combat and pose:
+        hands = {key: (own.at(x, y), y) for key, (x, y) in hands.items()}
     if costume:
         for hand, point in hands.items():
             item = weapons.get(hand)
@@ -1168,7 +1185,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     if combat and frame in sp.BOW_FRAMES:
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
-                out[y + pad][x + pad] = rows[y][x]
+                out[y + pad][x + pad] = halfelf_bow[x, y] if halfelf_bow else rows[y][x]
         return out  # (the game draws the bow in the hands)
     if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
         weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
@@ -1184,6 +1201,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             centre = hands.get("left") if model in classoutfits.ELVES else shields[frame]
             if centre:
                 x, y = centre
+                if own is not None and model == 2099:
+                    x = own.at(x, y)
                 if model in classoutfits.ELVES and not combat:
                     y -= 2  # hand finder reports the fist, two rows below the band
                 far = parts.facing == sp.SIDE and (not combat or frame == 7)
@@ -1226,7 +1245,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if costume and model in (2095, 2099) and combat and frame == 12 and hand == "right" and shape != SHIELD:
             g = (155, False)  # Lowered across the body, clear of the baseline.
         if costume and model in (2095, 2099) and combat and frame == 1 and hand == "left" and shape != SHIELD:
-            g = (330, False)  # The off hand extends out at hip height.
+            # Keep the off-hand head clear of the palm. The narrowed
+            # half-elf grip falls a pixel farther in on this swing.
+            g = (332 if own is not None and shape == CAHULAKS else 330, False)
         if costume and model == 2099 and combat and frame == 2 and hand == "right":
             g = (200, False)  # Keep the butt of a staff above the lower edge.
         if costume and model == 2099 and not combat and frame == 6 and hand == "left" and shape in TWO_HANDED:

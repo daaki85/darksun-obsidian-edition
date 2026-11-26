@@ -28,3 +28,9 @@ In two further sessions, wrote the equipped study pictures to the four party slo
 | Right | Halfling man Thief with sword and shield, halfling woman Fighter with full plate, Mul Fighter with full plate, retail Thri-kreen with gythka |
 
 The side-by-side floor tiles and per-pose data show details too small to identify in a map screenshot. [Equipment report and measurements](../../obsidian-edition/docs/class-outfits/equipment-tests.md)
+
+## Half-elf Fighter and Preserver
+
+Repeated the live check after registering the four half-elf builds. With the Loader's Dresser attached to a disposable DOSBox session on the slave-pens map, used one party slot for each sex and class in turn. The Dresser selected Fighter or Preserver from the sheet. Verified the empty walk picture differed from the default half-elf.
+
+For each build, equipped full plate, magical chest plate, a club, sword with shield, bow alone, ammo alone, bow with ammo, sling, and chatkcha. Read the walking and combat picture chunks back from the Loader's on-disk game copy on every change. Each equipment state matched the normal picture builder and differed from the empty set. Both chunks returned byte-for-byte to their empty state on all 36 removals. Restored the original inventory records, sheet, figure and map picture and discarded the session without saving. The animations in the gallery use the encoded Loader pictures. [Equipped half-elves](../../obsidian-edition/docs/class-outfits/half-elves.md#equipped-fighter-and-preserver)

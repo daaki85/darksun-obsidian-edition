@@ -6,6 +6,75 @@ from zipfile import ZipFile
 from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
 
 
+class HalfElfEquipmentTests(unittest.TestCase):
+    def test_outfit_selection_uses_the_figure_and_all_three_class_slots(self):
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = 4
+        for figure in (306, 307):
+            for ids, expected in [((9, 0, 0), "Fighter"), ((11, 0, 0), "Preserver"),
+                                  ((9, 11, 0), None), ((17, 0, 0), None)]:
+                sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(ids)
+                self.assertEqual(classoutfits.for_sheet(sheet, figure), expected)
+        sheet[game.SHEET_RACE] = game.HUMAN
+        sheet[game.SHEET_CLASSES] = 11
+        self.assertIsNone(classoutfits.for_sheet(sheet, 306))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
+    def test_worn_pieces_on_the_generated_half_elves(self):
+        path = Path(os.environ["DSUN_OBJECTS"])
+        self.addCleanup(sg.set_palette, list(sg._RGB))
+        dresser = sprites.Dresser.for_game(None, str(path.parent))
+        if dresser is None:
+            self.skipTest("needs the retail objects and palette in the game directory")
+        pictures = dresser.pics
+        for obj in (306, 307):
+            for role in ("Fighter", "Preserver"):
+                for combat in (False, True):
+                    side, top = sprites.room(combat)
+                    empty = pictures.build(obj, combat, {}, (), role=role)
+                    plate = pictures.build(obj, combat, {}, (88 | sg.MAGIC_ARMOUR,), role=role)
+                    armed = pictures.build(obj, combat, {"right": (18, 0), "left": (4, 0),
+                                           "missile": (1, 0), "ammo": (62, 0)}, (), role=role)
+                    self.assertEqual(pictures.build(obj, combat, {}, (), role=role), empty)
+                    for f, costume in enumerate(classoutfits.frames(role, combat, obj)):
+                        with self.subTest(obj=obj, role=role, combat=combat, f=f):
+                            bare = art.decode_frame(empty, f)[2]
+                            metal = art.decode_frame(plate, f)[2]
+                            changed = {(x-side, y-top) for y, row in enumerate(metal)
+                                       for x, c in enumerate(row) if c != bare[y][x]}
+                            self.assertTrue(changed.issubset(costume.regions[classoutfits.CHEST]))
+                            if not combat and f == 0:
+                                self.assertGreater(len(changed), 12)
+                            if role == "Preserver":
+                                self.assertFalse(changed.intersection((x, y) for x, y, _ in costume.cloak))
+                            if combat and f in (9, 10, 11):
+                                with_gear = art.decode_frame(armed, f)[2]
+                                self.assertTrue(costume.regions[classoutfits.BOW])
+                                for x, y in costume.regions[classoutfits.BOW]:
+                                    self.assertEqual(with_gear[y+top][x+side], bare[y+top][x+side])
+        empty = pictures.build(307, False, {}, (), role="Fighter")
+        quiver = pictures.build(307, False, {"ammo": (62, 0)}, (), role="Fighter")
+        for f in (11, 12):
+            bare = art.decode_frame(empty, f)[2]
+            worn = art.decode_frame(quiver, f)[2]
+            body = {(x, y) for y, row in enumerate(bare) for x, c in enumerate(row) if c is not None}
+            added = {(x, y) for y, row in enumerate(worn) for x, c in enumerate(row)
+                     if c is not None and (x, y) not in body}
+            self.assertTrue(added)
+            self.assertTrue(any((x+dx, y+dy) in body for x, y in added
+                                for dx in (-1, 0, 1) for dy in (-1, 0, 1)))
+        # The widened elf hand reaches farther right than the donor's grip at (21,11).
+        club = pictures.build(306, True, {"right": (18, 0)}, (), role="Fighter")
+        empty = pictures.build(306, True, {}, (), role="Fighter")
+        drawn = art.decode_frame(club, 7)[2]
+        bare = art.decode_frame(empty, 7)[2]
+        side, top = sprites.room(True)
+        _, _, owners = pictures.base(pictures.model(306), 306, True)
+        x, y = owners[7].at(21, 11), 11
+        self.assertIsNotNone(bare[top+y][side+x])
+        self.assertNotEqual(drawn[top+y][side+x], bare[top+y][side+x])
+
+
 class WornMaterialTests(unittest.TestCase):
     def test_breastplate_highlight_moves_with_a_translated_torso(self):
         shades = tuple(range(16, 26))

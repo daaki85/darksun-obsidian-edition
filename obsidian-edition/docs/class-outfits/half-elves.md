@@ -1,12 +1,26 @@
 # Half-elf outfit study
 
-Both half-elves now have art proposals for all eight single classes in all 29 map poses. The woman is on the top row and the man is below. Each enlarged figure has a game-size copy beneath it, with equipment slots empty. The live Loader draws the corrected half-elf faces. Class selection and equipped gameplay checks for these outfits are pending.
+Both half-elves now have art proposals for all eight single classes in all 29 map poses. The woman is on the top row and the man is below. Each enlarged figure has a game-size copy beneath it, with equipment slots empty. The live Loader draws the corrected half-elf faces. The Loader now selects the single-class Fighter and Preserver for either half-elf. The remaining six singles and all multiclasses are art studies.
 
 ![All eight single classes on both half-elves in motion](half-elf-singles.gif)
 
 [Female single-class frame sheet](half-elf-singles-female-poses.png) · [Male single-class frame sheet](half-elf-singles-male-poses.png)
 
 The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit reed edge and its brown shadow mark the overlapping pleat as he steps toward the viewer. The Ranger’s longer green cloak follows the stride past the hip. Rear idle and the second profile step show the difference most clearly. A plum highlight follows the trailing fold of each Preserver’s mantle through the profile walk. The Psionicist wears a fitted teal wrap, and the Thief’s slate hood opens around the cheek. On the woman, front strike 2 and the hit show how the crown follows the bun as the arm swings past. [Compare the cloaks beside the retail mage and thief at game size](half-elf-cloak-references.png)
+
+## Equipped Fighter and Preserver
+
+Both figures use the approved study art for all 29 poses. Read the columns across for a single pose. The upper row is Fighter, the lower row is Preserver. Each enlarged picture has a game-size copy beneath it. The retail Warrior and Mage provide the reference at the right and have no matching hit or fall cel.
+
+On the woman, compare front idle with empty slots and full plate. The Fighter changes 108 pixels across her jerkin, arm pieces and lower garment. On the Preserver, the visible plum tunic takes the armor color while the outer mantle retains its folds. In the rear walk the mantle hides most of the armor. The magic chest column shows the game’s shine palette on the exposed chest material.
+
+![Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](half-elf-equipped-armor.gif)
+
+On the man, follow the club into the outstretched hand on side strike 2 (22). The supporting forearm carries the shield. In profile the far arm can disappear behind the torso. The bow and quiver attach at the shoulder as the body turns. Bow alone and bow with arrows look alike because Obsidian Edition draws a quiver with either an equipped bow or equipped ammunition. The ammo-only column shows the quiver by itself. The game's foreground bow takes over in poses 24–26. The sling and chatkcha sit at the hip.
+
+![Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](half-elf-equipped-weapons.gif)
+
+The equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](../../../playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
 
 ## Male body fitting
 
@@ -105,4 +119,4 @@ The artist’s reference is the figure produced by the Loader. The retail party 
 | Two classes | 18 | The elf’s 14 pairs, plus Druid with Fighter, Preserver, Psionicist or Thief |
 | Three classes | 22 | The elf’s 16 triples, plus Druid with any two of Fighter, Preserver, Psionicist and Thief |
 
-The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The study covers all 48 builds. Loader outfit selection and equipped gameplay verification are next. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)
+The Gladiator is single-class only. Fighter and Ranger are mutually exclusive. The study covers all 48 builds. The single-class Fighter and Preserver have completed the first Loader equipment pass. [Player’s Guide multiclass table](../../PLAYER-GUIDE.md#more-than-one-class) · [Elf roster](elves.md) · [Art workflow](workflow.md)
