@@ -1177,6 +1177,10 @@ KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from
 # offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
 PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
 PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
+# The weapon traits' counts (DSCLOG2's THE TRIKAL AND THE TWO-HEADED WEAPONS, its header's +2020 to +2059): +2020
+# a lotulis or double spear specialist's last swings turned on a second foe, +2022 the double spear's of them
+# done 1 less, +2024 the first targets put back, +2026 a trikal specialist's hits that asked a save, +2028 trips
+SF_SWINGS, SF_LESSES, SF_BACKS, TRIP_SAVES, TRIPS = 2020, 2022, 2024, 2026, 2028
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
