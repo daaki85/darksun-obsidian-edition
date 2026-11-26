@@ -1604,11 +1604,30 @@ class RavDiceLog(dicelog.DiceLog):
         return [part for part in super()._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
                 if part[0] == "target's Girdle of Urnst"]
 
-    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
-        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up)."""
-        if attacker_combatant is not None and ravager.NAUSEATED in self.game._effect_ids(attacker_combatant):
-            return [("Nauseated", -STINK_TO_HIT)]
-        return []
+    CLAW_IN_SETUP = False  # (DSCLOG2's NS_SWING, after the set-up: _after_setup)
+
+    def _after_setup(self, attacker_combatant: Optional[int], target_combatant: Optional[int] = None,
+                     e=None, item: Optional[int] = None) -> List[Tuple[str, int]]:
+        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up);
+        with the new spells (DSCLOG2's NS_SWING) a fogged attacker's -3, +2 on a fogged target, and Erdlu
+        Claw's +1 for an unarmed attack of the first set (the set-up's SETUP_NATURAL_LOCAL 0)."""
+        out: List[Tuple[str, int]] = []
+        if attacker_combatant is None:
+            return out
+        mine = self.game._effect_ids(attacker_combatant)
+        if ravager.NAUSEATED in mine:
+            out.append(("Nauseated", -STINK_TO_HIT))
+        if not self.game.rules & game.RULE_NEW_SPELLS:
+            return out
+        if ravspells.FOG_EFFECT in mine:
+            out.append(("Fogbolt", -3))
+        if target_combatant is not None and ravspells.FOG_EFFECT in self.game._effect_ids(target_combatant):
+            out.append(("target's Fogbolt", 2))
+        natural = e.parent_local(game.SETUP_NATURAL_LOCAL) if e is not None else None
+        if ravspells.CLAW_EFFECT in mine and (item is None or item < 0 or item >= game.NO_ITEM) \
+                and natural is not None and natural & game.SETUP_FLAG_MASK == 0:
+            out.append(("Erdlu Claw", 1))
+        return out
 
     def _plus_counts(self, target_combatant: int, on) -> bool:
         """The weapon's plus counts unless the target has an Anti Magic Shell (the set-up's 608h:20h, 5C745h)."""

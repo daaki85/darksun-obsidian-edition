@@ -20,7 +20,12 @@ for line in listing.split('Section image')[1].split('---- Section')[0].splitline
 base = seg * 16
 w = lambda n: struct.unpack('<H', g.read(base + sym[n], 2))[0]
 print('rules %04X rules_hi %04X' % (w('rules'), w('rules_hi')))
-for n in ('ns_cmps', 'ns_lost', 'ns_knows_n', 'ns_listed', 'ns_casts', 'ns_abilities', 'ns_claws', 'ns_swings', 'ns_spooks', 'ns_reflects') + tuple(a for a in os.environ.get('NS_SYMS', '').split(',') if a):
+for n in ('ns_cmps', 'ns_lost', 'ns_knows_n', 'ns_listed', 'ns_casts', 'ns_abilities', 'ns_claws', 'ns_swings', 'ns_spooks', 'ns_reflects', 'ns_paged', 'ns_taught', 'ns_scrolls_n') + tuple(a for a in os.environ.get('NS_SYMS', '').split(',') if a):
     print(n, w(n))
 if len(sys.argv) > 1:
     r = w('rules') & ~int(sys.argv[1], 16); g.write(base + sym['rules'], struct.pack('<H', r)); print('rules now %04X' % w('rules'))
+ds = __import__('dsloader.game', fromlist=['game']).find_data_segment(g)
+off, sg = struct.unpack('<HH', g.read(ds * 16 + 0x19C5, 4))
+for m in range(4):
+    s = g.read(sg * 16 + off + m * 0x48, 0x48)
+    print('member %d +3Dh %02X +3Fh %02X' % (m, s[0x3D], s[0x3F]))

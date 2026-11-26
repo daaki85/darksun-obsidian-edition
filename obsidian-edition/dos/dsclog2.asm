@@ -3734,8 +3734,6 @@ pick_any:
 PICK_SHOWN equ 0x43EC
 pick_list:
         mov di, ax
-        test word [cs:rules_hi], RULE_HI_INT
-        jz .ret
         push ax
         push cx
         push si
@@ -3744,6 +3742,9 @@ pick_list:
         add ax, USE_WHO_SEG
         mov es, ax
         mov si, [es:USE_WHO_OFF]
+        call ns_page_add                    ; (the new spells: NEW SPELLS)
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .out
         cmp si, 3
         ja .out
         mov cl, [PICK_SHOWN]
@@ -3817,11 +3818,15 @@ pick_room:
         mov al, [SPELL_STARTS + di - 1]     ; (the level's first spell ...
         mov dl, [SPELL_STARTS + di]         ;  ... and the next level's)
 .each:  cmp al, dl
-        jae .none
+        jae .new
         call bit_known
         jz .yes
         inc al
         jmp .each
+.new:   mov byte [cs:ns_want], 0        ; (a new spell of the level not known: NEW SPELLS)
+        call ns_level_new
+        or ax, ax
+        jz .none
 .yes:   pop es
         popa
         stc
@@ -3862,7 +3867,10 @@ pick_full:
         inc ch
 .next:  inc al
         jmp .each
-.done:  cmp ch, dh                          ; (CF while fewer)
+.done:  mov byte [cs:ns_want], 1        ; (the new spells known of the level count too, as SL's)
+        call ns_level_new
+        add ch, al
+        cmp ch, dh                          ; (CF while fewer)
         cmc
         pop es
         popa
@@ -4167,6 +4175,8 @@ site_table:
         dw ns_effect                        ; 145 SITE_NS_EFFECT (6623Bh: Strength's case's effect: Cat's Grace's, Friends' own)
         dw ns_ability                       ; 146 SITE_NS_ABILITY (85351h: the abilities' effects: DEX for Cat's Grace, CHA for Friends)
         dw ns_claw                          ; 147 SITE_NS_CLAW (86A45h: a natural attack's dice: Erdlu Claw's 1d6+1)
+        dw ns_scroll                        ; 148 SITE_NS_SCROLL (999FBh: a wizard scroll read: a new spell taught from it)
+        dw ns_learn                         ; 149 SITE_NS_LEARN (936B4h: CHOOSE A SPELL's pick: a new one's sheet bit)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -4189,6 +4199,7 @@ NS_FIRST     equ 320
 NS_COUNT     equ 6
 NS_AS        equ 0x72               ; (a wizard spell's number for the compares: any below 73h)
 NS_PRIESTS   equ 0x73
+NS_PLUS1     equ 0x80               ; (NS_CMP_TABLE's form: the operand is the spell + 1, an item's power)
 NS_KNOW_OUT  equ 0x626B0 - 0x62628  ; (the known test's way out, AL the answer, less the INT's way back)
 NS_LEVEL_OUT equ 0x62B19 - 0x62AD3  ; (the level's way out, CL the level, the same)
 NS_LIST_MOST equ -4                 ; ([BP-4] the list's room)
@@ -4258,7 +4269,8 @@ ns_cmp:
         pop es
         popad
         iret
-.found: mov al, [cs:si + 4]         ; (the form)
+.found: mov al, [cs:si + 4]         ; (the form; its NS_PLUS1 bit apart)
+        and al, ~NS_PLUS1
         cmp al, 0
         jne .bp
         movzx bx, byte [cs:si + 5]  ; (a register: PUSHAD's, EAX at +30 down to EDI at +2)
@@ -4283,7 +4295,12 @@ ns_cmp:
         add bx, [cs:si + 6]
         mov ax, [es:bx]
 .have:  push bx
-        call ns_new
+        push ax
+        test byte [cs:si + 4], NS_PLUS1
+        jz .new
+        dec ax                      ; (an item's power: the spell + 1)
+.new:   call ns_new
+        pop ax
         pop bx
         jnc .cmp
         mov ax, NS_AS
@@ -4546,7 +4563,9 @@ ns_claw:
         iret
 ; NS_SWING (from STINK_SWING, each call's first swing: [BP+18h] the attacker, [TARGET] the target, [BP+0Ah]
 ; the THAC0, [BP+12h] the item): Fogbolt's 3 worse for a fogged attacker and 2 better against a fogged
-; target; Erdlu Claw's 1 better for an unarmed attack (no item). All kept.
+; target; Erdlu Claw's 1 better for an unarmed attack (no item) of the first set (the set-up's natural
+; attacks' set, [BP-20h], 0: a thri-kreen's claws, not its bite, as SL's). All kept.
+NS_NATURAL_SET equ -0x20
 ns_swing:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .ret
@@ -4569,6 +4588,11 @@ ns_swing:
         inc word [cs:ns_swings]
 .claw:  cmp word [bp + 0x12], NO_ITEM
         jb .done
+        mov ax, [bp]                    ; (the set-up's frame: the caller's BP ...
+        xchg ax, bx
+        cmp byte [ss:bx + NS_NATURAL_SET], 0
+        xchg ax, bx                     ;  ... its set of natural attacks)
+        jne .done                       ; (the first set's alone, as SL's: not a thri-kreen's bite)
         mov ax, [bp + 0x18]
         mov cl, NS_CLAW_EFFECT
         call has_effect
@@ -4649,6 +4673,154 @@ ns_spook_save:
         sub [ss:bx + 2], dx             ; (the game's DI, under ES in PUSHA's)
         inc word [cs:ns_spooks]
 .out:   pop es
+        popa
+.ret:   ret
+
+; - NS_SCROLL (site 148): a wizard scroll's reading (99xxxh), "mov es,ax / mov bx,es:[0B44h]" (999FBh) where its
+;   power ([BP-4], the spell) has been found a wizard spell's (NS_CMP at 999EEh): a new spell known by the
+;   reader (USE_WHO's), on to YOU ALREADY KNOW THIS SPELL (99A86h); else its sheet bit set (NS_TEACH) and on
+;   to the scroll used up and YOU LEARN THE SPELL (99A5Ch). (No INT roll for them: SCROLL_LEARN's is the
+;   bitset's.) Else the two instructions. Not the "mov ax,370h" before them (999F8h): the overlay manager
+;   fixes up its segment word as it loads the code, which made a site there another INT.
+; - NS_LEARN (site 149): CHOOSE A SPELL's pick (9367Ch: the page's spell DI, [370h:7 + 2 DI], for member
+;   [370h:0B44h]), "mov es,ax / or es:[bx+39Ch],dl" (936B4h) setting its known bit: a new spell's sheet bit
+;   instead (PICK_LIST puts them on the page), else the two instructions.
+NS_SCROLL_KNOWN  equ 0x99A86 - 0x999FE    ; (from the site's frame IP, 999FBh + 3)
+NS_SCROLL_TAUGHT equ 0x99A5C - 0x999FE
+NS_PAGE      equ 7                  ; (CHOOSE A SPELL's list: words at 370h:7)
+NS_PAGE_MOST equ 20                 ; (its room: 370h:2Fh after it is the game's)
+ns_taught    dw 0                   ; (counts, for a look in play: new spells taught, from a scroll ...
+ns_scrolls_n dw 0                   ;   ... of them, and put on CHOOSE A SPELL's page)
+ns_paged     dw 0
+; NS_TEACH: party member SI knows new spell BX (0 to NS_COUNT - 1): its sheet's bit set (a KIT_OPEN kit byte
+; made 0, no kit, first, as SL's NS_SHEET_LEARN). DS the game's; all registers kept.
+ns_teach:
+        pusha
+        push es
+        mov di, bx
+        mov ax, si
+        call kit_sheet
+        movzx ax, byte [cs:di + ns_known_at]
+        add bx, ax
+        cmp byte [cs:di + ns_known_at], KIT_BYTE
+        jne .set
+        cmp byte [es:bx], KIT_OPEN
+        jne .set
+        mov byte [es:bx], 0
+.set:   mov al, [cs:di + ns_known_bit]
+        or [es:bx], al
+        inc word [cs:ns_taught]
+        pop es
+        popa
+        ret
+; NS_LEVEL_NEW: AX the new spells of level CL member SI knows (KNOWN set) or doesn't (clear), with the rule;
+; 0 without it. DS the game's; others kept.
+ns_level_new:
+        push bx
+        push dx
+        xor ax, ax
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .out
+        cmp si, 3
+        ja .out
+        xor bx, bx
+.each:  cmp [cs:bx + ns_levels], cl
+        jne .next
+        call ns_knows
+        setnz dl
+        cmp dl, [cs:ns_want]
+        jne .next
+        inc ax
+.next:  inc bx
+        cmp bx, NS_COUNT
+        jb .each
+.out:   pop dx
+        pop bx
+        ret
+ns_want db 0
+ns_scroll:
+        pushad
+        push es
+        mov di, sp
+        mov ax, [bp - 4]
+        call ns_new
+        jnc .game
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov si, [es:USE_WHO_OFF]
+        cmp si, 3
+        ja .known
+        call ns_knows
+        jnz .known
+        call ns_teach
+        inc word [cs:ns_scrolls_n]
+        add word [ss:di + 34], NS_SCROLL_TAUGHT
+        jmp .out
+.known: add word [ss:di + 34], NS_SCROLL_KNOWN
+        jmp .out
+.game:  mov ax, [ss:di + 30]           ; (the game's AX, selector 370h: its ES ...
+        mov [ss:di], ax
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]        ;  ... and BX the reader)
+        mov [ss:di + 18], ax
+.out:   pop es
+        popad
+        iret
+ns_learn:
+        push bx
+        push ax
+        mov ax, [es:si + NS_PAGE]       ; (the spell: ES 370h, SI the page's place x 2)
+        call ns_new
+        jnc .game
+        push si
+        mov si, [es:USE_WHO_OFF]
+        call ns_teach
+        pop si
+        pop ax
+        pop bx
+        mov es, ax
+        iret
+.game:  pop ax
+        pop bx
+        mov es, ax
+        or [es:bx + KNOWN_OFF], dl
+        iret
+; NS_PAGE_ADD (from PICK_LIST): the new spells of the page's level (PICK_SHOWN) member SI doesn't know put
+; after the game's DI on CHOOSE A SPELL's page (NS_PAGE_MOST at most), DI their count more. DS the game's;
+; others kept.
+ns_page_add:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        cmp si, 3
+        ja .ret
+        pusha
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov cl, [PICK_SHOWN]
+        xor bx, bx
+.each:  cmp [cs:bx + ns_levels], cl
+        jne .next
+        call ns_knows
+        jnz .next
+        cmp di, NS_PAGE_MOST
+        jae .done
+        push bx
+        lea dx, [bx + NS_FIRST]
+        mov bx, di
+        shl bx, 1
+        mov [es:bx + NS_PAGE], dx
+        pop bx
+        inc di
+        inc word [cs:ns_paged]
+.next:  inc bx
+        cmp bx, NS_COUNT
+        jb .each
+.done:  mov bx, sp
+        mov [ss:bx + 2], di             ; (the DI PUSHA saved: under ES)
+        pop es
         popa
 .ret:   ret
 
@@ -17827,7 +17999,17 @@ wiz_count:
         inc dx
 .next:  inc al
         jmp .each
-.out:   mov ax, dx
+.out:   push cx                 ; (and the new spells known: NEW SPELLS)
+        mov byte [cs:ns_want], 1
+        mov cl, 1
+.levels:
+        call ns_level_new
+        add dx, ax
+        inc cl
+        cmp cl, 2
+        jbe .levels
+        pop cx
+        mov ax, dx
         pop es
         pop dx
         pop bx

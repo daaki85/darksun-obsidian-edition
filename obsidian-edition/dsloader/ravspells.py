@@ -10,7 +10,8 @@ icons ICON 21320-21325 (21000 + the spell, as the game's own), descriptions SPIN
 Who knows them is not in the bitset but in the sheet's bits that Shattered Lands' copy keeps and the
 party transfer already carries (game.NEW_KNOWN at the sequel's +3Fh and +3Dh: ravlog's NEW_KNOWN), so a
 transferred character's known new spells need nothing more. The game's own code never asks for a spell
-past 319: DSCLOG2's NEW SPELLS answers for these (the program's side below, sites 140-147).
+past 319: DSCLOG2's NEW SPELLS answers for these (the program's side below, sites 140-149: casting them,
+and learning them at a level up, at creation and from a spellbook).
 
 **The records** are Shattered Lands' (DSCLOG's NS_SETUP): each a template spell's record, the sequel's own
 of the same spell (Strength 23, Enlarge 5, Charm Person 2, Mirror Image 19: the same numbers in both games),
@@ -172,6 +173,7 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
 VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
 NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
 NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
+NS_SCROLL, NS_LEARN = 148, 149  # (a scroll's teaching, CHOOSE A SPELL's)
 # The spells' effects: the sequel's effect records past its 113 (0-112; zeros after them, and the creature's
 # effect bits 15 bytes, 0-119), named and given their spells' icons by "ns_effects". Cat's Grace's and
 # Friends' are put by Strength's case (DSCLOG2's NS_EFFECT) and raise DEX and CHA (NS_ABILITY), Erdlu
@@ -208,7 +210,12 @@ CMP_SITES: Tuple[Tuple[int, int, str], ...] = (
     (0x97E12, 0x95E10, "817e080d01"), (0x999EE, 0x99260, "817efceb00"), (0x99A8D, 0x99260, "817efc0d01"),
     (0x99BD7, 0x99260, "817efeeb00"), (0x99BE5, 0x99260, "817efe0d01"), (0x9A7B4, 0x99260, "81faeb00"),
     (0x9A7C1, 0x99260, "81fa0d01"), (0x9A9A6, 0x99260, "81feeb00"), (0x9A9B2, 0x99260, "81fe0d01"),
+    # an item's power (the spell + 1: PLUS1_SITES) with 140h, the first that is no spell: the item's use
+    # (77CE0h's), its box's icon twice
+    (0x77CF9, 0x749B0, "3d4001"), (0x9A7D4, 0x99260, "3d4001"), (0x9A9C5, 0x99260, "3d4001"),
 )
+PLUS1_SITES = frozenset({0x77CF9, 0x9A7D4, 0x9A9C5})  # (NS_CMP's NS_PLUS1: the operand is the spell + 1)
+FORM_PLUS1 = 0x80
 # NS_CMP's forms of the compare's operand: a register (its number, AX 0 ... DI 7), [BP+disp], [disp] (DS),
 # ES:[BX+disp]; all words
 FORM_REG, FORM_BP, FORM_MEM, FORM_ES_BX = 0, 1, 2, 3
@@ -256,7 +263,7 @@ def effect_patch() -> Patch:
 
 
 def program_patches() -> List[Patch]:
-    """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-147 and the effect records."""
+    """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-149 and the effect records."""
     return [
         Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
         Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
@@ -266,6 +273,8 @@ def program_patches() -> List[Patch]:
         Patch("ns_effect", 0x6623B, bytes.fromhex("817e0ef5007507c746ee0200eb05c746ee6200"), site_bytes(NS_EFFECT, 19)),
         Patch("ns_ability", 0x85351, bytes.fromhex("8946f4b90900"), site_bytes(NS_ABILITY, 6)),
         Patch("ns_claw", 0x86A45, bytes.fromhex("0bd27547"), site_bytes(NS_CLAW, 4)),
+        Patch("ns_scroll", 0x999FB, bytes.fromhex("8ec0268b1e440b"), site_bytes(NS_SCROLL, 7)),
+        Patch("ns_learn", 0x936B4, bytes.fromhex("8ec02608979c03"), site_bytes(NS_LEARN, 7)),
         effect_patch(),
     ]
 
@@ -276,7 +285,9 @@ def cmp_table(exe: bytes) -> List[Tuple[int, int, int, int, int, int]]:
     out = []
     for at, start, code in CMP_SITES:
         back = at + 3
-        out.append((back - start, struct.unpack_from("<H", exe, back)[0], *cmp_form(bytes.fromhex(code))))
+        form, reg, disp, imm = cmp_form(bytes.fromhex(code))
+        out.append((back - start, struct.unpack_from("<H", exe, back)[0],
+                    form | (FORM_PLUS1 if at in PLUS1_SITES else 0), reg, disp, imm))
     return out
 
 

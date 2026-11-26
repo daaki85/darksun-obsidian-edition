@@ -136,8 +136,11 @@ Releases, newest first (2.12.0 and older in the archive):
   on the USE screen and casts them as in Shattered Lands: Cat's Grace and Friends raise DEX and CHA through
   Strength's code (Cat's Grace's die by class), Erdlu Claw's unarmed attacks, Fogbolt's -3 and +2, Reflected
   Image's one image struck half the time, Spook's save worse with the caster's level. Their effects have names
-  and icons on the sequel's screens, and the dice log names them. Not yet learnable there (level up, scrolls).
-  The new spells' switch leaves them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-147).
+  and icons on the sequel's screens, and the dice log names them (Fogbolt in the to-hit line too). They are
+  learnt there as in Shattered Lands: a preserver's level up (CHOOSE A SPELL) and creation's first-spells pick
+  offer them at their levels, counted by the INT rules, and a spellbook of one teaches it. Erdlu Claw's +1 to
+  hit is on the first set of natural attacks only (a thri-kreen's claws, not its bite). The new spells' switch
+  leaves them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-149).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
