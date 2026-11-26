@@ -676,14 +676,14 @@ class Viewer:
 
     def choose_dosbox_x(self) -> None:
         """The player's DOSBox-X program: asked for, its version read, and remembered unless it
-        is too old for the memory file (then said, and not kept)."""
+        is too old for the memory file or an OS-free build (then said, and not kept)."""
         path = filedialog.askopenfilename(parent=self.root, title="Where is the DOSBox-X program (dosbox-x)?")
         if not path:
             return
         found = dosboxx.version(path)
         line = dosboxx.found_line(path, found, asked=True)
-        if found is not None and not dosboxx.new_enough(found):
-            messagebox.showerror("DOSBox-X", line, parent=self.root)
+        if (found is not None and not dosboxx.new_enough(found)) or dosboxx.os_free(path):  # (OS-free: no DOS to run
+            messagebox.showerror("DOSBox-X", line, parent=self.root)                     #   the game in)
             return
         if self._save_settings({dosboxx.PATH_SETTING: path}):
             self.dosbox_x_path = path
