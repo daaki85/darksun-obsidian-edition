@@ -13,6 +13,9 @@ seconds of the dice log attaching:
 Ar'Anda is an Elven Shadow-walker who casts in light armour.
 Terrannus specializes in the long sword.
 Terrannus is a Crusader, his cleric's spell slots a level behind (not one fewer).
+
+(The owner then asked for Terrannus at the Crusader's full cost, 2026-11-26: the line is now "Terrannus is a
+Crusader.", and the helper takes a Crusader's priest slot off at each spell level.)
 Thy'rokh specializes in the gythka.
 Thy'rokh has a Grove Warden's AC: 1 better for every 3 druid levels.
 Gerakis specializes in the long sword and the gythka and the trikal.
@@ -37,6 +40,6 @@ with no screen up brings EXIT GAME (CANCEL at ravclick.py 145 117).
 
 ## Gaps
 
-- Terrannus's slots a level behind not seen in play (they're counted at a rest; `sb_count` stayed 0 in the
+- Terrannus's slots (since a plain Crusader's one fewer) not seen in play (they're counted at a rest; `sb_count` stayed 0 in the
   fight): the emulated tests run SLOT_BEHIND and BEHIND_LEAST against kits.slot_level and kits.slots.
 - Thy'rokh's AC read only by the helper's count, not on View Character.

@@ -61,9 +61,9 @@ Releases, newest first (2.12.0 and older in the archive):
 
 **New: Wake of the Ravager's own party fitted to the rules**
 - As Shattered Lands' own party: Gerakis specializes in the long sword, gythka and trikal and fights
-  wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader with his
-  cleric's slots a level behind (an Elementalist's cost, which the sequel now has too) in place of one
-  fewer; Ar'Anda is an Elven Shadow-walker who casts in light armour. Given once by the Loader.
+  wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader at the
+  kit's full cost (one fewer priest slot at each spell level, which the sequel now applies, as it does
+  an Elementalist's slots a level behind); Ar'Anda is an Elven Shadow-walker who casts in light armour. Given once by the Loader.
 
 **New: Wake of the Ravager's kits and weapon specs past 13th level**
 - For the sequel's higher levels (the owner's choices, 2026-11-26): a gladiator picks a weapon spec

@@ -268,8 +268,8 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: b
 # with no weapon specs and no kit (RavDiceLog's _party_pass; a saved game begun before, too): each weapon
 # spec its weapons' (the level up's weapon window would ask otherwise), Terrannus a Crusader, and each a
 # feature of its own (kits.own_features): Gerakis Wild Fighting, as in Shattered Lands; Thy'rokh a Grove
-# Warden's AC by his druid level; Terrannus his cleric's slots a level behind in place of the Crusader's
-# one fewer; Ar'Anda the Elven Shadow-walker's hiding and casting in light armour.
+# Warden's AC by his druid level; Terrannus none (a Crusader at the kit's full cost, one fewer priest slot at
+# each spell level, DSCLOG2's ADND_SLOTS); Ar'Anda the Elven Shadow-walker's hiding and casting in light armour.
 RAV_PARTY: Dict[str, Member] = {
     "Gerakis": Member(5, (10, 0, 0), ("long sword", "gythka", "trikal")),  # half-giant gladiator
     "Thy'rokh": Member(8, (9, 7, 0), ("gythka",)),  # thri-kreen fighter, druid (fire)
@@ -278,7 +278,7 @@ RAV_PARTY: Dict[str, Member] = {
 }
 RAV_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
              "Thy'rokh": "Thy'rokh has a Grove Warden's AC: 1 better for every 3 druid levels.",
-             "Terrannus": "Terrannus is a Crusader, his cleric's spell slots a level behind (not one fewer).",
+             "Terrannus": "Terrannus is a Crusader.",
              "Ar'Anda": "Ar'Anda is an Elven Shadow-walker who casts in light armour."}
 
 

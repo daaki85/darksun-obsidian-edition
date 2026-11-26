@@ -261,10 +261,12 @@ class KitTests(unittest.TestCase):
 
     def test_slot_behind(self):
         """SLOT_BEHIND (ADND_SLOTS's: the sheet + DI in ES:BX) makes CL one less for an Elementalist's cleric
-        class or Terrannus's (kits.slot_level with own_behind), SB_BEHIND set; BEHIND_LEAST then puts the
-        level back and makes no slots 1 where the class's own level reaches the spell level (kits.slots)."""
+        class (kits.slot_level), SB_BEHIND set, and sets SB_FEWER for a Crusader's priest class; BEHIND_LEAST
+        then takes one slot off with SB_FEWER, and with SB_BEHIND puts the level back and makes no slots 1
+        where the class's own level reaches the spell level (kits.slots). Terrannus (OWN_BIT, a human) is a
+        plain Crusader: one fewer, not a level behind."""
         cases = [((2,), 0x40, 1), ((2,), 0x43, 1), ((2,), 0x00, 1), ((3,), 0x01, 1), ((3,), 0x03, 1), ((1, 9), 0x04, 1),
-                 ((9, 1), 0x01, 1), ((11,), 0x40, 1), ((17, 9), 0x40, 1)]
+                 ((9, 1), 0x01, 1), ((9, 1), 0x0C, 1), ((11,), 0x40, 1), ((17, 9), 0x40, 1), ((2,), 0xFF, 1)]
         for rules in (game.RULE_KITS >> 16, 0):
             self.rules(rules)
             for classes, byte, race in cases:
@@ -275,13 +277,15 @@ class KitTests(unittest.TestCase):
                         cls = sheet[0x1B + place]
                         kid = kits.ELEMENTALIST if kits.ELEMENTALIST in kitpages.kit_ids(sheet) \
                             and kitpages.kit_place_of(sheet, kits.ELEMENTALIST) == place else None
-                        behind = bool(rules) and 1 <= cls <= 4 and (kid is not None or (byte != 0xFF and byte & 0x40 and race == 1))
+                        behind = bool(rules) and 1 <= cls <= 4 and kid is not None
+                        fewer = bool(rules) and 1 <= cls <= 8 and kits.CRUSADER in kitpages.kit_ids(sheet)
                         self.frame(cls, 1)
                         got = self.run_routine("slot_behind", sheet, ecx=0x1100 | levels[place], ebp=0x600,
                                                edi=place, ebx=0x500 + place)
                         want = kits.slot_level(kits.ELEMENTALIST if behind else 0, levels[place])
                         with self.subTest(classes=classes, byte=byte, level=level, place=place, rules=rules):
                             self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_behind"], 1)[0], int(behind))
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_fewer"], 1)[0], int(fewer))
                             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1100 | want)
                             self.assertEqual(got["ebx"] & 0xFFFF, 0x500 + place)
         for adnd in (True, False):  # (RULE_HI_TABLES, 8, on and off)
@@ -291,14 +295,18 @@ class KitTests(unittest.TestCase):
                     for given in (0, 1, 3):
                         self.frame(2, spell)
                         self.mu.mem_write(SS * 16 + 0x700, bytes((max(0, level - 1), 17)))
-                        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\1")
+                        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\1\0")
                         self.mu.mem_write(TSR * 16 + self.sym["sb_level"], bytes((level,)))
                         got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
                         with self.subTest(level=level, spell=spell, given=given, adnd=adnd):
                             self.assertEqual(got, kits.slots(kits.ELEMENTALIST, kits.PRIEST, level, spell, given, adnd))
                             self.assertEqual(self.mu.mem_read(SS * 16 + 0x700, 1)[0], level)
-        self.assertEqual([kits.slots(kits.CRUSADER, kits.PRIEST, 7, 4, n, behind=True) for n in (0, 2)], [1, 2])
-        self.assertEqual(kits.slots(kits.CRUSADER, kits.PRIEST, 7, 4, 2), 1)
+        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\0\1")  # (a Crusader's: one fewer, 0 kept)
+        for given in range(5):
+            self.frame(2, 1)
+            got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+            self.assertEqual(got, kits.slots(kits.CRUSADER, kits.PRIEST, 7, 1, given))
+        self.assertEqual(kitpages.kit_ids(wotr_sheet((2,), (7,), 1, 0x43)), [kits.CRUSADER])  # (Terrannus's byte)
 
 
 if __name__ == "__main__":

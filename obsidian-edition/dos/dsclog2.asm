@@ -7343,7 +7343,7 @@ adnd_slots:
         mov si, [bp + 0x0A]
         mov cx, [ss:si]                 ; (CL the level, CH WIS)
         mov [cs:sb_level], cl
-        call slot_behind                ; (an Elementalist's, or Terrannus's, a level behind)
+        call slot_behind                ; (an Elementalist's a level behind, a Crusader's 1 fewer)
         mov [ss:si], cl
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .game
@@ -7423,23 +7423,27 @@ adnd_slots:
 slot_count dw 0                         ; (AD&D's slots given, for a look in play)
 ; SLOT_BEHIND: (ADND_SLOTS's, its frame; at the site ES:BX the sheet + DI, DI the class's place) CL one less
 ; (0 kept) when class [BP+8] is a cleric's (1-4) with its slots a level behind (kits.slot_level): an
-; Elementalist's kit class, awake, or Terrannus's (an own-party human: kits.own_behind, his Crusader's one
-; fewer not counted); SB_BEHIND 1 then, else 0. The kits' rule on. Others kept.
+; Elementalist's kit class, awake; SB_BEHIND 1 then, else 0. SB_FEWER 1 when class [BP+8] is a priest's
+; (1-8) and the sheet a Crusader's, awake (kits.slots: its priest slots 1 fewer), else 0. The kits' rule
+; on. Others kept.
 slot_behind:
-        mov byte [cs:sb_behind], 0
+        mov word [cs:sb_behind], 0      ; (and SB_FEWER)
         test word [cs:rules_hi], RULE_HI_KITS
         jz .ret
         cmp byte [bp + 8], 1
         jb .ret
-        cmp byte [bp + 8], 4
+        cmp byte [bp + 8], 8
         ja .ret
         push ax
         push bx
         push si
         sub bx, di
-        call own_race_b
-        cmp al, 1                       ; (a human)
-        je .yes
+        call kit_is_b
+        db KIT_CRUSADER
+        jne .elem
+        mov byte [cs:sb_fewer], 1
+.elem:  cmp byte [bp + 8], 4
+        ja .out
         call kit_is_b
         db KIT_ELEMENTALIST
         jne .out
@@ -7447,7 +7451,7 @@ slot_behind:
         mov al, [es:bx + si + SH_CLASSES]
         cmp al, [bp + 8]
         jne .out
-.yes:   mov byte [cs:sb_behind], 1
+        mov byte [cs:sb_behind], 1
         or cl, cl
         jz .out
         dec cl
@@ -7456,10 +7460,18 @@ slot_behind:
         pop bx
         pop ax
 .ret:   ret
-; BEHIND_LEAST: (ADND_SLOTS's, SI the level's pointer) with SB_BEHIND, the level put back (SB_LEVEL), and AX
-; (the slots) 1 where none and the class's own level reaches spell level [BP+0Ch]: 2 x it - 1, 14 for
-; the 7th (a cleric's; a 6th-level one only with AD&D's tables, RULE_HI_TABLES). Others kept.
+; BEHIND_LEAST: (ADND_SLOTS's, SI the level's pointer) with SB_FEWER, AX (the slots) 1 fewer (0 kept);
+; with SB_BEHIND, the level put back (SB_LEVEL), and AX 1 where none and the class's own level reaches
+; spell level [BP+0Ch]: 2 x it - 1, 14 for the 7th (a cleric's; a 6th-level one only with AD&D's
+; tables, RULE_HI_TABLES). Others kept.
 behind_least:
+        cmp byte [cs:sb_fewer], 0
+        je .behind
+        or ax, ax
+        jz .behind
+        dec ax
+        inc word [cs:sb_count]
+.behind:
         cmp byte [cs:sb_behind], 0
         je .ret
         push cx
@@ -7483,8 +7495,9 @@ behind_least:
 .out:   pop cx
 .ret:   ret
 sb_level  db 0
-sb_behind db 0
-sb_count  dw 0                          ; (slots counted a level behind, for a look in play)
+sb_behind db 0                          ; (a word with SB_FEWER, cleared together)
+sb_fewer  db 0
+sb_count  dw 0                          ; (slots counted a level behind or 1 fewer, for a look in play)
 slot_top   db SLOT_LEVELS               ; (the class levels whose slots grow: a druid's DRUID_SLOT_LEVELS)
 DRUID_FIRST equ 5                       ; (the druids' classes 5-8: the owner's table, 2026-11-25, the same
 DRUID_SLOT_LEVELS equ 15                ;   as the cleric's to 15th, then 15th's, 6 6 6 6 4 2 1)

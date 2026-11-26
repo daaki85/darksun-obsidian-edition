@@ -277,8 +277,8 @@ class SequelPartyTests(unittest.TestCase):
             self.assertEqual([names(m) for m in range(4)], [[], ["long sword"], ["gythka"], ["long sword", "gythka", "trikal"]])
             self.assertEqual(kitpages.kit_ids(gd.sheet(1)), [kits.CRUSADER])
             self.assertEqual([kits.own_features(gd.sheet(m)) for m in range(4)],
-                             [kits.OWN_LIGHT_CAST, kits.OWN_FEATURES[kits.HUMAN], kits.OWN_WARDEN, ("Wild Fighting",)])
-            self.assertTrue(kits.own_behind(gd.sheet(1)) and kits.own_light_cast(gd.sheet(0)))
+                             [kits.OWN_LIGHT_CAST, (), kits.OWN_WARDEN, ("Wild Fighting",)])
+            self.assertTrue(kits.own_light_cast(gd.sheet(0)))
             self.assertEqual(kits.own_warden_level(gd.sheet(2)), 7)
             self.assertEqual(dp.rav_ready(gd, game.RULE_KITS | game.RULE_SPECIALIZE), [])  # (once)
             self.assertEqual(len(dp.rav_ranges(gd)), 8)
