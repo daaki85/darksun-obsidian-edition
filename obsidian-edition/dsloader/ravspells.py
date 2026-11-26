@@ -10,17 +10,15 @@ icons ICON 21320-21325 (21000 + the spell, as the game's own), descriptions SPIN
 Who knows them is not in the bitset but in the sheet's bits that Shattered Lands' copy keeps and the
 party transfer already carries (game.NEW_KNOWN at the sequel's +3Fh and +3Dh: ravlog's NEW_KNOWN), so a
 transferred character's known new spells need nothing more. The game's own code never asks for a spell
-past 319 until DSCLOG2 answers for these (the known test, the wizard-spell compares, the effects: the
-port plan's row, not yet done), so the records are inert till then.
+past 319: DSCLOG2's NEW SPELLS answers for these (the program's side below, sites 140-147).
 
 **The records** are Shattered Lands' (DSCLOG's NS_SETUP): each a template spell's record, the sequel's own
 of the same spell (Strength 23, Enlarge 5, Charm Person 2, Mirror Image 19: the same numbers in both games),
 with NS_PATCHES' changes, its sound as it lands from the spell SL names (Haste's, Shocking Grasp's, Fog
 Cloud's) and Fogbolt's sound as it is cast Fog Cloud's, then the name (32 bytes) and the short name (9).
-The effect byte (+19h) is the template's, but Spook's: the sequel's Afraid (35). Erdlu Claw's and Fogbolt's
-own effects (SL's unused 6 and 27) and Cat's Grace's and Friends' (54 and 74, put by Strength's handler)
-have no number yet: the sequel's effects table has one empty record (88), so they wait for the helper's
-effects. Fogbolt flies as Magic Missile does (its +10h; SL's grey bolt is a later picture).
+The effect byte (+19h) is the template's, but Spook's (the sequel's Afraid, 35) and Erdlu Claw's and
+Fogbolt's: their own effects, 114 and 115, past the sequel's 113 records (EFFECTS; Cat's Grace's and
+Friends', 113 and 116, put by Strength's handler). Fogbolt flies as Magic Missile does (its +10h; SL's grey bolt is a later picture).
 
 **The icons**: Shattered Lands' (icons.py's, made from the player's SL RESOURCE.GFF) brought into the
 sequel's palette, each colour the nearest of those its own spell icons use, in its PLNR form; without
