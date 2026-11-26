@@ -59,23 +59,67 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-(The test branch `claude/combined-playtest` holds every open pull request together, #146 to #195;
-each pull request's own entry is below, grouped.)
+**New**
+- **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
+  Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
+  default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
+  its version shown, an older one refused). With it the Loader writes DOSBox-X a whole
+  configuration of its own and follows the game through DOSBox-X's memory file instead of its
+  process's memory, so on Linux it needs no root and no ptrace setting, and **Start the game**
+  works there with only the game's folder. The game window's sizes, full screen, the four
+  pictures, the three speeds (measured to walk as on 0.74: 8,000 on the normal core, 22,000 and
+  42,000 on the dynamic one) and the music device each have their DOSBox-X spelling; a new
+  **soundfont file** setting plays the music through DOSBox-X's own FluidSynth. Restore defaults
+  goes back to GOG's.
 
-**Fixed: Wake of the Ravager's starting gear** (#195)
+**Changed** (on top of the above, for when the Windows check passes)
+- **DOSBox-X is the default engine whenever one is found**: the Windows release brings DOSBox-X's
+  own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and the source
+  archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used when
+  none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
+  program goes before DOSBox-X unless DOSBox-X was chosen.
+- **48 KB more upper memory under DOSBox-X** for DSCLOG: `[dos] umb end=FBFF` with the BIOS in
+  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB).
+
+**Docs**
+- The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
+  pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
+  as written), the patch notes, and the experiment's findings carried into
+  `reports/modernisation-research-and-plan.md`.
+
+**Dev**
+- `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`, `tests/test_filememory.py`.
+- The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
+  `dosboxx_memtest.py`, a check without the game that a second program can read and write
+  DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
+  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
+  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
+  the creation screen).
+
+**Fixed: the game**
+- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
+  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
+  new test scans the patched program for any other jump into a patch.
+
+**Fixed: Wake of the Ravager's starting gear**
 - A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long sword
   (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round,
   so a new long sword specialist showed 1 attack a round; now 2 (the Loader's copy of the program, its gear
   table's slots).
 
-**New: Wake of the Ravager has all 22 weapon specs** (#192)
+**Fixed: the SL weapons and the Ravager port together**
+- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
+  item types stay the first 33, and SL's new weapon types go across in the party transfer as the
+  sequel's own weapons.
+
+**New: Wake of the Ravager has all 22 weapon specs**
 - A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
   lotulis, double spear, trikal, javelin, darts) stays that spec in the sequel, for its own Twohand
   Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts (before, it counted as the
   nearest of the first sixteen). The javelin and darts have their specialist's rates of fire there,
   the Effects screen names the six, and a psionicist may still use the sequel's darts.
 
-**New: Shattered Lands** (#149, #154, #157, #187)
+**New**
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
   double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
   name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
@@ -108,69 +152,10 @@ each pull request's own entry is below, grouped.)
   material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
   fire), not all in fire; without it, the Loader's own, the double spear, trikal and
   darts redrawn at the sequel's sizes (the user's).
-- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
-  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
-  none is banked past the top level; the dice log says what wasn't counted. The Loader's
-  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
-
-**New: Wake of the Ravager** (#148, #151, #152, #155, #156, #158, #160 to #177)
-- The mod's bug fixes, rules and displays ported to the sequel (#148): hit dice, helms, held
-  targets, two weapons, half-giants' two-handed weapons, weapon traits, creature size, the spell
-  rules, resting, class restrictions, item saves, multiclass HP, rolled scores, AD&D's class tables,
-  CON, dual-classing and ages; the dice log of its fights and the Loader's party tabs.
-- **Play Wake of the Ravager**, beside **Play Shattered Lands** at the top of the Loader, and
-  `Play Wake of the Ravager.bat` (#156). The sequel runs in the chosen engine too (DOSBox-X with its CD mounted from a cue
-  sheet the Loader writes, or its own GOG DOSBox).
-- **Take the party to Wake of the Ravager** (Options tab, #151): a Shattered Lands save's party into
-  the sequel's roster with every item (the mod's own made for the sequel, with their effects), the
-  spells, and 3 to 12 months of aging between the games. SL's backported Ravager weapons go back as
-  the sequel's own (this branch).
-- Shattered Lands' stealth in the sequel: hiding in shadows, backstab, Elvenkind (#152).
-- A 72-byte character sheet in the Loader's copy of the sequel, with SL's kits, weapon specs and
-  starting-age roll on it (#155; the roster and saves widened by the Loader, `ravager narrow` back).
-- Weapon specialization (#158), the DAM lines, the Effects screen's weapon and kit rows and the Look
-  box's full description (#160), the kits' rules (#161), Thieves as in AD&D and the Assassin's
-  backstab (#162), the Elementalist's second sphere (#163) and choosing a kit at creation and after
-  DUAL (#164).
-- Shop prices from the leader's CHA and buying magic items back; the sequel's message box (scroll
-  messages and the rest) now stays on screen (#166).
-- Tab and Enter to choose and attack an enemy, the red ring, the chance to hit, an enemy off the
-  screen scrolled to (#167, #169).
-- A ranger's two weapons only in light armour, a spell's charges floating over the figures (#170).
-- Psionic Blast's imagined wounds healed at a fight's end, the combat log panel, the creation's
-  dice and the save's d20 in the dice log (#172).
-- Quick save F5, quick load F9, autosave after a fight and saves under names (#173).
-- The Loader's Dialogue and Journal tabs follow the sequel; its message lines in the dice log (#175).
-- Looting with T and Shift+T, selling with S, and the M, U and I keys (#176).
-
-**New: the Loader and the engine** (#146, #178)
-- **DOSBox-X as the engine, the default whenever one is found.** The Options tab's new **Engine**
-  section chooses GOG's DOSBox 0.74 or DOSBox-X (2025.01.01 or later). The Windows release brings
-  DOSBox-X's own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and
-  the source archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used
-  when none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
-  program goes before DOSBox-X unless DOSBox-X was chosen. Wake of the Ravager follows the same engine.
-- Under DOSBox-X the Loader writes a whole configuration of its own and follows the game through
-  DOSBox-X's memory file, so on Linux it needs no root and no ptrace setting. Window sizes, full
-  screen, the four pictures, the three speeds and the music device each have their DOSBox-X spelling;
-  a new **soundfont file** setting plays the music through DOSBox-X's own FluidSynth.
-- **48 KB more upper memory under DOSBox-X** for DSCLOG: `[dos] umb end=FBFF` with the BIOS in
-  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB).
-
-**Fixed: the game**
-- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
-  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
-  new test scans the patched program for any other jump into a patch.
 
 **Docs**
 - The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
   features page, the player's guide, Items and the dice log page have the new weapons and traits.
-- The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
-  pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
-  as written), the patch notes, and the experiment's findings carried into
-  `reports/modernisation-research-and-plan.md`.
-- Wake of the Ravager's features in FEATURES (Taking the party to Wake of the Ravager), KITS, WEAPON-SPECS
-  and the README; `reports/community/`, notes for OpenDS and yuan-ti (#153).
 
 **Dev**
 - The sixth memory pass: 1,104 bytes of upper memory back for DSCLOG (32 were left with the six
@@ -186,16 +171,13 @@ each pull request's own entry is below, grouped.)
   changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md).
 - A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
   control runs; `specset.py` sets a member's weapon specs in memory.
-- `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`, `tests/test_filememory.py`.
-- The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
-  `dosboxx_memtest.py`, a check without the game that a second program can read and write
-  DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
-  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
-  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
-  the creation screen).
-- Tests put the rules back after a test that turns them on (#147).
-- This test branch: DSCLOG2 reads the V3 spec layout (SL's 22 kinds) the Loader now writes, the six
-  new kinds the sequel's own since #192 (folded before); the sequel's mod types kept at the first 33.
+
+**Changed**
+
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
