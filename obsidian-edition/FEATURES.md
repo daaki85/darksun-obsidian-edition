@@ -1071,11 +1071,14 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
   Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
   (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
-  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), and the Battle
+  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the kits' casting
+  levels (an Arcanist's, Spirit Caller's and Wasteland Seer's), cures (a Healer's, Lifebinder's and
+  Rescuer's) and Cause Wounds (a Wilderness Avenger's), the spells a kit knows (a Healer's sphere of
+  the cosmos, the healing or harming spells a kit never knows), and the Battle
   Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
   panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
   game's menu right after DUAL. What else kits do to spells
-  and psionic powers, gear and hit dice doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them). The creation screen has [STORE and
+  and psionic powers (PSP costs), gear and hit dice doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
   can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its

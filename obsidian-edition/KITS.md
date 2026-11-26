@@ -17,8 +17,12 @@ Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
 and Justifier's casting level, the Elementalist's second sphere's spells, and the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) work there; what else they do to
-spells and powers, gear and hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). How the kits go on past the levels Shattered
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the casting levels (the
+Arcanist's, Spirit Caller's and Wasteland Seer's spells a level or two higher, or lower), the cures (the
+Healer's, Lifebinder's and Rescuer's, Cell Adjustment's too), the Wilderness Avenger's Cause Wounds, and
+the spells a kit knows (the Healer's sphere of the cosmos, the healing or harming spells a kit never
+knows) work there; what else they do to spells and powers (PSP costs, the Shinobi's spells), gear and
+hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). How the kits go on past the levels Shattered
 Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
@@ -304,6 +308,13 @@ psychometabolism power, if it took that discipline at creation) 1 more.
 Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm; no weapon
 in the off hand (a shield is fine). **Starts with** the cleric's gear (its club
 in hand, with fuller starting gear).
+
+**In Wake of the Ravager** the sphere of the cosmos is the same rule, the spells every druid casts and
+no cleric, so it holds more there: the sequel's clerics cast no Cure Serious or Critical Wounds, Raise
+Dead or Heal of their own, and a Healer's water cleric casts them (and the sequel's other druids' spells
+of the higher levels: Blade Barrier, Restore, Creeping Doom...), but never a harming one (Cause
+Serious and Critical Wounds, Poison, Slay Living, Harm). Restore Youth (and Whirlwind) come with it once
+they are in the sequel.
 
 It is taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit));
 after DUAL, offered to a water cleric only, and not to one who was a ranger of

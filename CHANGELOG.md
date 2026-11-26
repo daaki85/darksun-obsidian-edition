@@ -59,6 +59,17 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager's kit casting levels, cures and spells known**
+- A party taken to the sequel now has these as in Shattered Lands: an Arcanist's preserver spells cast a
+  level higher (their duration and damage); a Spirit Caller's and a Wasteland Seer's priest spells 2
+  levels higher under the open sky and 1 lower under a roof; a Healer's and a Rescuer's Cure Light,
+  Serious and Critical Wounds 1 more a die, a Lifebinder's a die more (Blood Flow too), and Cell
+  Adjustment likewise; a Wilderness Avenger's Cause Wounds 1 more a die.
+- A Healer's water cleric casts the sphere of the cosmos there (the spells every druid casts and no
+  cleric: in the sequel Cure Serious and Critical Wounds, Raise Dead, Heal and the rest), a Healer and a
+  Lifebinder never the harming spells, a Wilderness Avenger never the healing ones: the USE screen lists
+  only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
+
 **New: Wake of the Ravager's kit spell slots**
 - A party taken to the sequel now has its kits' slots there as in Shattered Lands: a Battle Mage's
   wizard slots one fewer at each spell level; a Seeker's and a Justifier's priest slots their own

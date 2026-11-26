@@ -46,7 +46,8 @@ class TableTests(unittest.TestCase):
                             "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
                             "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
-                            "shinobi_mage"}
+                            "shinobi_mage", "kit_cast_level", "kit_cure", "avenger_cause_area",
+                            "avenger_cause_one"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)

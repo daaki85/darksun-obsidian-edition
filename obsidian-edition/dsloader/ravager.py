@@ -772,6 +772,19 @@ PATCHES: Tuple[Patch, ...] = (
     # ADND_SLOTS (site 34) its slots; DSCLOG2's SHINOBI_MAGE (site 190) answers yes for a Shinobi's thief
     # class at its "add sp,4" (627D6h, the member SI), the "or al,al" after kept.
     Patch("shinobi_mage", 0x627D6, bytes.fromhex("83c404"), _site(190, 3)),
+    # ... and the kits' casting levels, cures and spells known (SL's PROBE_SPELL_LEVEL, PROBE_CURE, AREA_DMG and
+    # HARM_SITE's AV_CAUSE; the spells known are EL_SPHERE's, sites 90-92, and Cell Adjustment's CELL_HEAL's,
+    # site 11): DSCLOG2's KIT_CAST_LEVEL (site 205) at the loop's "inc byte [bp-1]" in 628AFh (the level a spell
+    # is cast at for its duration and damage: an Arcanist's wizard spells 1 higher, a Spirit Caller's and
+    # Wasteland Seer's priest spells 2 higher under the open sky, 1 lower under a roof), KIT_CURE (site 206) at
+    # the cures' "push ax / jmp 65811h" (66545h: a Healer's and Rescuer's 1 more a die, a Lifebinder's a die
+    # more), AVENGER_AREA and AVENGER_ONE (sites 207, 208) where a spell's damage is stored after its roll
+    # (7E7A6h "mov [bp-14h],ax", the area's; 7F727h "mov [bp-6],ax", one creature's: a Wilderness Avenger's
+    # Cause Wounds 1 more a die)
+    Patch("kit_cast_level", 0x629FE, bytes.fromhex("fe46ff"), _site(205, 3)),
+    Patch("kit_cure", 0x66545, bytes.fromhex("50e9c8f2"), _site(206, 4)),
+    Patch("avenger_cause_area", 0x7E7A6, bytes.fromhex("8946ec"), _site(207, 3)),
+    Patch("avenger_cause_one", 0x7F727, bytes.fromhex("8946fa"), _site(208, 3)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
@@ -1036,19 +1049,64 @@ def class_spheres(cls: int) -> int:
     return 0x3F if cls == 19 else 0
 
 
-def casts(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
-    """Whether class CLS of SHEET casts priest spell SPELL (its sphere byte SPHERE): the game's answer,
-    and with the kits an Elementalist's (kits.spell_spheres): its own cleric class casts its second
-    sphere's spells too (kits.SPHERE2's low bits: the sheet's +3Fh in ravlog's layout, which SHEET is read
-    in). DSCLOG2's EL_SPHERE."""
+# The kits' spells in the sequel's numbers (RESOURCE.GFF's names; DSCLOG2's AV_HEALS, AV_HARMS, CURE_DICE,
+# AV_CAUSES): the healing spells a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL: Cure Light Wounds,
+# Blood Flow, Cure Serious and Critical Wounds, Heal, Waters of Life), the harming ones a Healer or Lifebinder
+# never knows (kits.NO_HARM: Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living,
+# Harm), the cures' dice (kits.CURE_DICE: the game's own +1 and +3 on Cure Serious and Critical Wounds are
+# its, not a die's) and the Cause Wounds spells' (kits.CAUSE_DICE)
+RAV_CURE_LIGHT, RAV_CURE_SERIOUS, RAV_CURE_CRITICAL, RAV_BLOOD_FLOW = 117, 170, 194, 166
+RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL = 118, 171, 195
+RAV_HEAL, RAV_WATERS_OF_LIFE, RAV_HARM = 210, 215, 211
+RAV_CAUSE_DISEASE, RAV_POISON, RAV_SLAY_LIVING = 149, 179, 204
+RAV_AVENGER_NO_HEAL = frozenset((RAV_CURE_LIGHT, RAV_BLOOD_FLOW, RAV_CURE_SERIOUS, RAV_CURE_CRITICAL, RAV_HEAL,
+                                 RAV_WATERS_OF_LIFE))
+RAV_NO_HARM = frozenset((RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL, RAV_CAUSE_DISEASE, RAV_POISON,
+                         RAV_SLAY_LIVING, RAV_HARM))
+RAV_CURE_DICE = {RAV_CURE_LIGHT: (1, 8), RAV_CURE_SERIOUS: (2, 8), RAV_CURE_CRITICAL: (3, 8), RAV_BLOOD_FLOW: (2, 6)}
+RAV_CAUSE_DICE = {RAV_CAUSE_LIGHT: 1, RAV_CAUSE_SERIOUS: 2, RAV_CAUSE_CRITICAL: 3}
+RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIEST_SPELLS)
+# A Healer's sphere of the cosmos in the sequel: the spells every druid casts and no cleric (a sphere byte with
+# DRUIDS: Cure Serious and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest), and
+# Whirlwind and Restore Youth, which Shattered Lands' Healer casts at 6th level: they aren't in the sequel yet,
+# and their numbers go here (and in DSCLOG2's COSMOS_MORE, the header's +2060) once they are ported.
+RAV_COSMOS_MORE = {"Whirlwind": None, "Restore Youth": None}
+
+
+def healer_cosmos(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
+    """Whether class CLS of SHEET is a Healer's own cleric class (1-4) and SPELL (its sphere byte SPHERE) one
+    of the sphere of the cosmos's (DRUIDS, or RAV_COSMOS_MORE's): DSCLOG2's HEALER_COSMOS."""
     from . import kitpages, kits
-    if sphere & class_spheres(cls):
-        return True
-    if spell not in PRIEST_SPELLS or kits.ELEMENTALIST not in kitpages.kit_ids(sheet) \
-            or kitpages.kit_class_of(sheet, kits.ELEMENTALIST) != cls:
+    if kits.HEALER not in kitpages.kit_ids(sheet) or kitpages.kit_class_of(sheet, kits.HEALER) != cls \
+            or not 1 <= cls <= 4:
         return False
-    second = sheet[kits.SPHERE2] & kits.SPHERE2_MASK
-    return 1 <= second <= 4 and bool(sphere & 1 << (second - 1))
+    if spell in {s for s in RAV_COSMOS_MORE.values() if s is not None}:
+        return True
+    return spell in PRIEST_SPELLS and bool(sphere & DRUIDS)
+
+
+def kit_barred(sheet: bytes, spell: int) -> bool:
+    """Whether SHEET's kit never knows SPELL (kits.knows_heal in the sequel's numbers): DSCLOG2's KIT_BARS."""
+    from . import kitpages, kits
+    kids = kitpages.kit_ids(sheet)
+    if kits.AVENGER in kids:
+        return spell in RAV_AVENGER_NO_HEAL
+    return bool({kits.HEALER, kits.LIFEBINDER} & set(kids)) and spell in RAV_NO_HARM
+
+
+def casts(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
+    """Whether class CLS of SHEET casts priest spell SPELL (its sphere byte SPHERE): the game's answer, and
+    with the kits an Elementalist's (kits.spell_spheres): its own cleric class casts its second sphere's
+    spells too (kits.SPHERE2's low bits: the sheet's +3Fh in ravlog's layout, which SHEET is read in); a
+    Healer's own cleric class the sphere of the cosmos's (healer_cosmos); none that its kit never knows
+    (kit_barred). DSCLOG2's EL_SPHERE."""
+    from . import kitpages, kits
+    yes = bool(sphere & class_spheres(cls)) or healer_cosmos(sheet, cls, spell, sphere)
+    if not yes and spell in PRIEST_SPELLS and kits.ELEMENTALIST in kitpages.kit_ids(sheet) \
+            and kitpages.kit_class_of(sheet, kits.ELEMENTALIST) == cls:
+        second = sheet[kits.SPHERE2] & kits.SPHERE2_MASK
+        yes = 1 <= second <= 4 and bool(sphere & 1 << (second - 1))
+    return yes and not kit_barred(sheet, spell)
 
 
 class RavagerError(Exception):

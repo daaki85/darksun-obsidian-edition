@@ -233,6 +233,27 @@ PALETTE_LAST = 253
 # EBh on)
 RAV_CHARMS = (2, 39, 61, 94, 131, 255, 256)
 RAV_SPELL_LAST = 0xEA
+# ... and the kits' spells in the sequel's numbers (ravager.RAV_*: DSCLOG2's CURE_DICE, AV_CAUSES, AV_HEALS,
+# AV_HARMS), for the dice log's kit parts of a cure's and a Cause Wounds' lines (kits.cure_bonus, cure_die,
+# harm_bonus) and kits.arc_level's and sky_level's wizard and priest spells (the sequel has no new wizard
+# spells in those numbers)
+RAV_KIT_SPELLS = (
+    ("WIZARD_LAST", ravager.RAV_WIZARD_LAST), ("NEW_WIZARD_SPELLS", range(0)),
+    ("CURE_LIGHT", ravager.RAV_CURE_LIGHT), ("CURE_SERIOUS", ravager.RAV_CURE_SERIOUS),
+    ("CURE_CRITICAL", ravager.RAV_CURE_CRITICAL), ("BLOOD_FLOW", ravager.RAV_BLOOD_FLOW),
+    ("CURE_DICE", ravager.RAV_CURE_DICE), ("AVENGER_NO_HEAL", ravager.RAV_AVENGER_NO_HEAL),
+    ("CAUSE_LIGHT", ravager.RAV_CAUSE_LIGHT), ("CAUSE_SERIOUS", ravager.RAV_CAUSE_SERIOUS),
+    ("CAUSE_CRITICAL", ravager.RAV_CAUSE_CRITICAL), ("NO_HARM", ravager.RAV_NO_HARM),
+    ("CAUSE_DICE", ravager.RAV_CAUSE_DICE))
+# The sequel's cures' dice calls, by the code after them (dicelog.SPELL_HANDLER_RETURNS: the handler's own
+# bonus), in the patched game: Cure Light Wounds' 1d8 and Blood Flow's 2d6 healing (66542h, then DSCLOG2's
+# KIT_CURE, site 206, where the game had "push ax / jmp 65811h"), Cure Serious Wounds' 2d8 + 1 (6649Eh), Cure
+# Critical Wounds' 3d8 + 3 (664BCh)
+RAV_SPELL_HANDLER_RETURNS = (
+    (bytes.fromhex("83c404cdf5ce90"), 0),
+    (bytes.fromhex("83c40440e9a000"), 1),
+    (bytes.fromhex("83c404050300e9"), 3),
+)
 
 # Choosing an enemy with Tab, the ring and the chance to hit under the pointer (targeting.py, rings.py,
 # hover.py): the sequel's map things (DS:67BBh, 25h bytes; the feet +0Ah, +0Ch; its finder, 29DBDh, reads
@@ -360,10 +381,12 @@ def apply_layout() -> int:
                         ("CONJURED_KINDS", ravager.rav_spec_kinds())):
         _SAVED.append((specialize, name, getattr(specialize, name)))
         setattr(specialize, name, value)
-    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh)
-    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)):
+    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh;
+    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)) + RAV_KIT_SPELLS:  # the cures')
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
+    _SAVED.append((dicelog, "SPELL_HANDLER_RETURNS", dicelog.SPELL_HANDLER_RETURNS))  # (the cures' lines)
+    dicelog.SPELL_HANDLER_RETURNS = RAV_SPELL_HANDLER_RETURNS
     for module, names in RAV_TARGETING.items():  # (Tab, the ring, the chance under the pointer)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
