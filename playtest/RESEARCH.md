@@ -1071,6 +1071,22 @@ frame late and the street's walkers move, so make the control a RAV_SKIP run (`f
 the same walk (`ravgo.py x 1180` from `ravager-after-ambush`). A throwaway copy of the sequel needs no 200 MB
 `game.gog` of its own: link it to the plain install's (DOSBox only reads it).
 
+**Dust, and the figures' shadows in a fight** (2026-11-26, logs/2026-11-26-ravager-dust.md): **Tyr's ground is
+darker than SL's sand**: the dirt of the squares and yards (Shadow Square, world ~600, 1226 on, west of the ambush
+street by y 1230) is colours 230, 95, 229, 228 (56,44,28 to 113,105,77 of 255), below `dust.is_ground`'s least value
+0.4, and the grey cobbles have no hue: with SL's table no floor in Tyr took dust (the puffs were raised and counted,
+none seen). The sequel's table (least 0.2, a step of 0.2 toward white, `ravlog.DUST_LEAST`, `DUST_LIGHTER`) takes the
+dirt one or two up its ramp; 0.45 gave near-white trails. The house floors (the same browns) take it too. **The squares'
+LIGHT read the palette from the wrong place** before (squares.py read LIGHT's and DAC's offsets as one pair at +1926,
+SL's +236/+238 side by side; the sequel's +1928 is `square_draws`), so LIGHT was made from whatever lay at that
+counter's value. **In a full fight** (the Draxans' ambush under Computer Control, four of the party and four foes,
+then the bodies): 2,753 shadows cast in 586 floor passes, 1,556 of them from kept frames, 79 frames kept over the
+fight (the 64 slots went round once), 2 cast from another frame of the picture and 2 none for want of one (both
+before the fight, as the first frames came): 64 slots are enough for that. On the dark floors (the street's grey,
+the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. `ravfig.py` reads both features'
+counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
+grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs

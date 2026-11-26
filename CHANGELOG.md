@@ -64,6 +64,10 @@ Releases, newest first (2.12.0 and older in the archive):
   on the floor toward the lower right, under the walls and figures (DSCLOG2's FIGURE SHADOWS, sites
   160-162; each frame's shadow kept as the game draws it, as the sequel lets pictures go from memory;
   the site table padded to 179 for the open ports' sites).
+- Walkers raise dust in the sequel as in Shattered Lands, on its dirt and sand (DSCLOG2's DUST, in the
+  floor pass and the main loop as the shadows; the Loader's table of lighter colours taken a step up the
+  sequel's darker dirt). With it, the squares' table of lighter colours is now read from the right
+  place in the sequel's helper (it read the squares' counter for the palette's offset).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

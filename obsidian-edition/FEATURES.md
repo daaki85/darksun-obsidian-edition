@@ -1098,7 +1098,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **[Shadows](#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
   toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
-  its own). Dust, see-through figures and the magic items' shine aren't ported yet.
+  its own).
+- **[Dust](#dust)** in the sequel too: whoever walks over dirt or sand raises little puffs behind them
+  (Tyr's squares and yards; its grey cobbles and the dark floors indoors take none). See-through figures
+  and the magic items' shine aren't ported yet.
 - **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
   creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
   Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three

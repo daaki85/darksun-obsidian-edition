@@ -11,7 +11,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import ravager  # noqa: E402
+from dsloader import ravager, ravlog  # noqa: E402
 
 try:
     from unicorn import Uc  # noqa: F401
@@ -24,6 +24,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASM = os.path.join(HERE, "dos", "dsclog2.asm")
 WOTR = os.environ.get("DSUN_WOTR")
 FIG_SHADOWS, FIG_PASSES, FIG_DRAWN, FIG_WIDES, FIG_KEPT, FIG_FROM_KEPT = 1960, 1962, 1964, 1966, 1968, 1970  # (the header)
+FIG_OTHER, FIG_MISSED = 1978, 1980
 LOAD = (GAME_DS - ravager.DGROUP) & 0xFFFF if Uc else 0
 THINGS = ((LOAD + 0x3F49) & 0xFFFF) * 16 + 0x0C33
 CACHE = ((GAME_DS - (0x47E0 - 0x42A2)) & 0xFFFF) * 16 + 0x0CA8
@@ -119,6 +120,7 @@ class PassTests(unittest.TestCase):
         s.mu.mem_write(CACHE + 0x0E, b"\x00")
         s.call("fig_pass", fs=FAR)
         self.assertFalse(self.dark(s))
+        self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_MISSED))[0], 1)
 
     def test_picture_out_of_memory_kept(self):
         """Out of memory: the shadow FIG_KEEP kept for the picture (its key: the slot's number and place), the same
@@ -134,6 +136,8 @@ class PassTests(unittest.TestCase):
             s.call("fig_pass", fs=FAR)
             self.assertEqual(self.dark(s), self.dark(live))
             self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_FROM_KEPT))[0], 1)
+            self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_OTHER))[0], 1 if frame else 0)
+            self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_MISSED))[0], 0)
 
     def test_kept_as_drawn(self):
         """FIG_KEEP: a living creature's frame kept as the game draws it (its key, frame, width, bottom row and the
@@ -200,13 +204,47 @@ class PassTests(unittest.TestCase):
         self.assertEqual(s.mu.reg_read(r.UC_X86_REG_BP), 0x700 + 6 - 2)
 
 
+@unittest.skipIf(Uc is None, "unicorn not installed")
+class DustTests(unittest.TestCase):
+    """DSCLOG2's DUST (SL's): a walker raises puffs (DUST_TICK, from the main loop), drawn in the floor pass through
+    LIGHT (DUST_FLOOR), only with the Loader's DUST_ON."""
+
+    scene = PassTests.scene
+
+    def walk(self, on=True, steps=4):
+        s = self.scene([1, None, None])
+        s.put("hdr", struct.pack("<H", int(on)), 1972)
+        s.put_at_far("FAR_LIGHT", bytes(42 if c == 40 else 0 for c in range(256)))
+        s.ds(0x1408, struct.pack("<HH", *CAM))
+        for n in range(steps):
+            s.mu.mem_write(LIST * 16, struct.pack("<HH", CAM[0] + 40 + 5 * n, CAM[1] + 100))
+            s.mu.mem_write(0x46C, struct.pack("<H", 1000 + n))
+            s.call("dust_tick", fs=FAR)
+        s.call("dust_floor", fs=FAR)
+        return s
+
+    def test_puffs_behind_a_walker(self):
+        s = self.walk()
+        self.assertGreaterEqual(struct.unpack("<H", s.get("hdr", 2, 1974))[0], 2)
+        light = {(i % 320, i // 320) for i, c in enumerate(s.screen()) if c == 42}
+        self.assertTrue(light)
+        self.assertTrue(all(20 <= x <= 70 and 85 <= y <= 110 for x, y in light), sorted(light)[:5])
+
+    def test_none_without_dust_on(self):
+        s = self.walk(on=False)
+        self.assertEqual(struct.unpack("<H", s.get("hdr", 2, 1974))[0], 0)
+        self.assertFalse(any(c == 42 for c in s.screen()))
+
+
 class HeaderTests(unittest.TestCase):
     @unittest.skipIf(Uc is None, "unicorn not installed")
     def test_fields_and_sites(self):
         from test_dsclog_drawing import build
         _, sym = build(ASM)
         for name, at in (("fig_shadows", FIG_SHADOWS), ("fig_passes", FIG_PASSES), ("fig_drawn", FIG_DRAWN),
-                         ("fig_wides", FIG_WIDES), ("fig_kept", FIG_KEPT), ("fig_from_kept", FIG_FROM_KEPT)):
+                         ("fig_wides", FIG_WIDES), ("fig_kept", FIG_KEPT), ("fig_from_kept", FIG_FROM_KEPT),
+                         ("dust_on", ravlog.DUST_ON), ("dust_puffs", ravlog.DUST_PUFFS), ("dust_sig", ravlog.DUST_SIG),
+                         ("fig_other", FIG_OTHER), ("fig_missed", FIG_MISSED)):
             self.assertEqual(sym[name] - sym["hdr"], at, name)
         for name in ("fig_pass", "fig_wide", "fig_wide_all", "fig_of", "fig_keep", "fig_record"):
             self.assertLess(sym[name], sym["resident_end"], name)

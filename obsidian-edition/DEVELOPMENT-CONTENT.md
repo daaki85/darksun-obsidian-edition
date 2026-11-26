@@ -1626,7 +1626,8 @@ The two redraws reach further right and down:
 the redraw of what moved at its first push (2868Ch, "push word [bp+8] / push di", its rectangle at [BP-0Ch] to
 [BP-12h]: site 160, FIG_WIDE_ALL) and the rectangle's (21E0:128C, 2828Ch: site 161, FIG_WIDE). Header (its own,
 well past the other ports' fields): `fig_shadows` +1960 (1 on), `fig_passes` +1962, `fig_drawn` +1964,
-`fig_wides` +1966, `fig_kept` +1968, `fig_from_kept` +1970 (`playtest/ravfig.py` reads them). A copy without the
+`fig_wides` +1966, `fig_kept` +1968, `fig_from_kept` +1970, `fig_other` +1978 (cast from another frame of the
+picture), `fig_missed` +1980 (none: the picture out and nothing of it kept) (`playtest/ravfig.py` reads them). A copy without the
 three sites (`RAV_SKIP=fig_wide_all,fig_wide,fig_keep`) draws none: the control. Played:
 [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-figure-shadows.md).
 Tests: `tests/test_ravshadows.py`.
@@ -1646,6 +1647,21 @@ fades, by a pattern fixed to the map, so a puff looks the same however much of
 it the game draws again. While anyone walks, the rectangle the game draws again
 round what moved is made to take the puffs in; once everyone stands, DSCLOG has
 the view drawn again a few times a second until the last puff is gone.
+
+**In Wake of the Ravager** (DSCLOG2's DUST, `dos/dsclog2.asm`): SL's code (DUST_TICK, DUST_NUDGE, DUST_UNION,
+DUST_PASS, PUFF_DRAW, DUST_BUILD) on the figures' shadows' ground: the walkers are the draw list's living creatures
+(FIG_ALIVE, no Loader table), the feet the list's entries (DS:67B7h, DS:264Eh of them); DUST_TICK runs in the main
+loop's PROBE_SCROLL, the puffs are drawn after the figures' shadows in the walls' floor pass (DUST_FLOOR), and
+DUST_UNION widens the redraw of what moved at site 160 (FIG_WIDE_ALL, its rectangle at [BP-0Ch] to [BP-12h]). The
+far block holds the puffs (`FAR_PUFFS`), the dither table (`FAR_DUST`, 2,688 bytes) and each thing's last place and
+walk (`FAR_LAST_X`, `FAR_LAST_Y`, `FAR_WALKED`). LIGHT is the squares' (header +1926), made by the Loader from the
+palette whenever DSCLOG2 reads it again (`ravlog._dust_pass`), which then sets `dust_on` (+1972; `dust_puffs`
++1974 counts the puffs, `dust_sig` +1976 marks a helper that has DUST). **The sequel's dirt is darker than SL's
+sand** (Tyr's 56,44,28 to 85,73,52 of 255): `dust.light_table` takes it with a least value of 0.2 (SL's 0.4) and a
+step of 0.2 toward white (SL's 0.45, which gave it near-white puffs), `ravlog.DUST_LEAST` and `DUST_LIGHTER`, and the
+squares' LIGHT is made the same way. `RAV_NO_DUST=1` (`playtest/ravdice.py`) clears `dust_on`: the control. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-dust.md). Tests:
+`tests/test_ravshadows.py` (DustTests), `tests/test_dust.py`.
 
 ## See-through figures
 
