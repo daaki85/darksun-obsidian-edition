@@ -6717,12 +6717,16 @@ RP_CURES_END equ $
 ; armour +0Bh 80h, the classes that may use it +0Ch; a sheet's class bits +10h, race +12h (1 human),
 ; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-134 in
 ; OBJEX2.GFF, with the party transfer) aren't armour (ARMOUR_TYPE). Not in the sequel, so not here:
-; the mod's kits, weapon specs, the Spellarcher's arrows.
+; the Spellarcher's arrows. The kits' gear limits and own gear: KITS' GEAR, below.
 ; - CU_SITE (site 19) replaces "mov [bp-1],al" (775FDh) at the end of the sequel's "may this character
 ;   equip this item" (77525h on; SL's 6EE5xh, the same tests but its answer a byte): AL 1 if the item
 ;   type's classes include one of the character's, DX the type, [BP+0Ah] the sheet (far). An item the
 ;   game allows that the classes' limits forbid (CLASS_FORBIDS) is refused, the game then saying it can't
-;   use it, as SL's.
+;   use it, as SL's. With the kits (RULE_HI_KITS), as SL's PROBE_CAN_USE: the kit's own (KIT_ALLOWS) are
+;   allowed whatever the game's lists and the classes' limits, and the kit's limits (KIT_FORBIDS) hold
+;   over everything; the slot is the equip routine's (7761Bh: [BP+8], the frame under this one's), 14
+;   the off hand. Every other "no" of the routine (no such item, a thri-kreen's, the item's own flags)
+;   leaves before this site (to 77561h), so AL 0 here is the classes' lists alone.
 ; - BELT_SITE (site 20) replaces "mov ax,si / pop di" (8C7C5h) at the end of the thief skill routine
 ;   (8C647h; SL's 803B2h): SI the chance, DI the thief's combatant. 0 for a thief in armour that isn't
 ;   light (THIEF_HEAVY).
@@ -6763,20 +6767,38 @@ LEG_SLOT    equ 6
 HEAD_SLOT   equ 7
 CHEST_SLOT  equ 9
 cu_site:
-        test word [cs:rules], RULE_RESTRICT
-        jz .out
-        or al, al
-        jz .out
         push bx
         push es
         les bx, [bp + 0x0A]
+        or al, al
+        jnz .game
+        call kit_allows                 ; (the game's lists say no: the kit's own, all the same)
+        jnc .out
+        inc al
+        inc word [cs:kit_allowed]
+.game:  push si
+        mov si, [bp]                    ; (the equip routine's frame: its [BP+8] the slot, 14 the off hand)
+        cmp word [ss:si + 8], EQUIP_OFF_HAND
+        pop si
+        sete [cs:kf_off_hand]
+        call kit_forbids
+        mov byte [cs:kf_off_hand], 0
+        jc .kit_no
+        call kit_allows                 ; (the kit's own: whatever the classes' restrictions)
+        jc .out
+        test word [cs:rules], RULE_RESTRICT
+        jz .out
         call class_forbids
-        pop es
-        pop bx
         jnc .out
         xor al, al
         inc word [cs:restrict_count]
-.out:   mov [bp - 1], al
+        jmp .out
+.kit_no:
+        xor al, al
+        inc word [cs:kit_refused]
+.out:   pop es
+        pop bx
+        mov [bp - 1], al
         iret
 belt_site:
         sti
@@ -7231,7 +7253,11 @@ class_forbids_one:
 .nexts: inc si
         cmp si, 3
         jb .sphere
-        pop si
+        call el_second                  ; (an Elementalist's second sphere's too: SL's)
+        jz .none
+        call sphere_allows
+        jnc .yes
+.none:  pop si
         stc
         ret
 .yes:   pop si
@@ -7387,6 +7413,464 @@ cu_armour  db 0
 cu_kind    db 0
 cu_dual    db 0
 cu_others  dw 0
+
+; ---- KITS' GEAR: DSCLOG's KIT_FORBIDS and KIT_ALLOWS (kits.forbids, kits.allows; restrict.kit_forbids,
+; restrict.kit_allows) in the sequel, from CU_SITE (site 19) as SL's PROBE_CAN_USE calls them. With the
+; kits' rule (RULE_HI_KITS: KIT_AT finds none without it), each kit awake holds its character to its gear
+; and lets it use its own; a kit asleep after a change of class, neither. The sequel's item type record
+; (0Fh bytes: KG_* below) for SL's (14h: its +8 here +4, its +9 +5, its +0Fh +0Bh), the sheet's as
+; CLASS_FORBIDS reads it. Its kinds are KIND_OF_TYPE's (the sequel's own weapons too: the cahulaks its
+; type 24 and the mod's two, kind 12; an item past KIND_TYPES, or of no kind, has none: as the game has it).
+; Not here: KF_SPEC (choosing a weapon spec: the sequel's weapon window doesn't ask the kits), the
+; Spellarcher's arrows (ARROWS_FORBID: the sequel makes none).
+KG_FLAGS     equ 0x00               ; (1 melee, 2 missile, 4 shield, 10h thrown)
+KG_MATERIAL  equ 0x04               ; (the low nibble; 40h with 0 none: SL's +8)
+KG_WORN      equ 0x05               ; (where it is worn: 8 a cloak; SL's +9)
+KG_KINDS     equ 0x0B               ; (80h armour, 40h two-handed: SL's +0Fh)
+KG_MELEE     equ 0x01
+KG_MISSILE   equ 0x02
+KG_SHIELD    equ 0x04
+KG_THROWN    equ 0x10
+KG_ARMOUR    equ 0x80
+KG_TWO_HANDED equ 0x40
+KG_CLOAK     equ 8
+KG_CAHULAKS  equ 12                 ; (KIND_OF_TYPE's cahulaks: the kind + 1)
+KG_BLUNT     equ 0xC112             ; bits by kind: club, mace, quarterstaff, sling, staff sling
+KG_HALF_GIANT equ 5
+EQUIP_OFF_HAND equ 14               ; (the equip routine's slot for the off hand: the worn slot 10 + 4)
+
+; KIT_FORBIDS: carry set if the kit of the character whose sheet is at ES:BX keeps it from item type DX
+; (DSCLOG's): a Ravager a shield, a missile or thrown weapon, and armour that isn't light; a Twin-blade a
+; shield, and a two-handed weapon (but a half-giant's, with RULE_HALF_GIANT; the cahulaks its own); a
+; Brute a one-handed melee weapon (the cahulaks too), and a shield (but a half-giant's, with the rule); a
+; Stalker armour that isn't light; an Assassin, Shinobi, Shadowblade or Poisoner armour that isn't light,
+; a Spellarcher any armour, helm or shield (KIT_LIGHT); a Grove Warden or a Seeker a weapon its druid's or
+; ranger's sphere doesn't allow (SPHERE_ALLOWS, the bow too); a Lifebinder a weapon of a kind not blunt; a
+; Shinobi a shield, and a weapon not of its kinds; a Battle Dancer a shield, and a weapon not of its kinds;
+; a Shadowblade, Ghetto Fighter or Rescuer a shield. A weapon of a kind it specialized in (its specs
+; counting: SPECS_AWAKE) none of these but KIT_LIGHT's. To the off hand (KF_OFF_HAND): nothing for a
+; Battle Mage, no weapon for a Healer. DS the game's; all registers kept.
+kit_forbids:
+        push ax
+        push cx
+        push di
+        call kit_place          ; (each of its kits awake: KIT_AT, KIT_AWAKE)
+        jc .ok
+.place: call kit_at
+        jz .next
+        call kit_awake
+        jc .next                ; (a kit asleep: its limits too)
+        call kit_light
+        jc .out
+        mov [cs:kit_where], di
+        call kit_forbids_one
+        jc .out
+.next:  dec di
+        jns .place
+.ok:    clc
+.out:   pop di
+        pop cx
+        pop ax
+        ret
+
+; KG_TYPE: ES:BX the record of item type DX (ITEM_TYPES_PTR's). Others kept.
+kg_type:
+        push ax
+        imul ax, dx, CU_TYPE_SIZE
+        les bx, [ITEM_TYPES_PTR]
+        add bx, ax
+        pop ax
+        ret
+
+; KG_LIGHT: carry clear if the item type at ES:BX is light (KIT_FORBIDS' "light"): not armour, a
+; shield, or of leather or no material. All kept.
+kg_light:
+        push ax
+        test byte [es:bx + KG_KINDS], KG_ARMOUR
+        jz .yes
+        test byte [es:bx + KG_FLAGS], KG_SHIELD
+        jnz .yes
+        mov al, [es:bx + KG_MATERIAL]
+        and al, 0x4F
+        cmp al, LEATHER
+        je .yes
+        cmp al, 0x40
+        je .yes
+        pop ax
+        stc
+        ret
+.yes:   pop ax
+        clc
+        ret
+
+; KG_KIND: AL the kind + 1 of item type DX (KIND_OF_TYPE's; 0 none or past it). Others kept.
+kg_kind:
+        xor al, al
+        cmp dx, KIND_TYPES
+        jae .ret
+        push si
+        mov si, dx
+        mov al, [cs:si + kind_of_type]
+        pop si
+.ret:   ret
+
+; KIT_LIGHT: carry set if kit AL keeps its character to light armour (an Assassin, Shinobi, Shadowblade
+; or Poisoner: kits.LIGHT_KITS) and item type DX is armour that isn't light; or, a Spellarcher
+; (kits.BARE_KITS), if DX is armour, a helm or a shield at all (bracers, robes and a cloak of
+; protection aren't: ARMOUR_TYPE's). All registers kept.
+kit_light:
+        push ax
+        push bx
+        push si
+        push es
+        call kg_type
+        cmp al, KIT_SPELLARCHER
+        je .bare
+        mov si, kg_light_kits
+.kit:   cmp byte [cs:si], 0
+        je .no
+        cmp [cs:si], al
+        je .type
+        inc si
+        jmp .kit
+.type:  test byte [es:bx + KG_KINDS], KG_ARMOUR
+        jz .no
+        call kg_light
+        jmp .out
+.bare:  test byte [es:bx + KG_KINDS], KG_ARMOUR
+        jz .no                  ; (not armour, a helm or a shield)
+        test byte [es:bx + KG_FLAGS], KG_SHIELD
+        jnz .yes
+        call armour_type        ; (not bracers, a robe or a cloak: its CF)
+        jmp .out
+.yes:   stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop bx
+        pop ax
+        ret
+kg_light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, 0
+
+; KIT_FORBIDS_ONE: carry set if kit AL (its class's place KIT_WHERE) of sheet ES:BX keeps it from item
+; type DX (KIT_FORBIDS' rules but KIT_LIGHT's). All registers kept.
+kit_forbids_one:
+        push ax
+        push bx
+        push cx
+        push si
+        push es
+        mov cl, al              ; CL the kit, CH 1 for a half-giant with RULE_HALF_GIANT
+        xor ch, ch
+        cmp byte [es:bx + SH_RACE], KG_HALF_GIANT
+        jne .sphere0
+        test word [cs:rules], RULE_HALF_GIANT
+        jz .sphere0
+        call kg_kind
+        cmp al, KG_CAHULAKS     ; (a blade in each hand: both hands, a half-giant's too)
+        je .sphere0
+        inc ch
+.sphere0:
+        call kit_class_of_sheet ; (the class's sphere, a Seeker's ranger's or a Grove Warden's druid's:
+        dec al                  ;   its class less 1, mod 4)
+        and al, 3
+        mov [cs:kf_sphere], al
+        mov byte [cs:kf_chosen], 0      ; (a weapon of a kind it specialized in: the kit keeps it from
+        call specs_awake                ;   none, but for the off hand's rules)
+        jc .forbids
+        call kg_kind
+        or al, al
+        jz .forbids
+        call spec_find
+        jne .forbids
+        mov byte [cs:kf_chosen], 1
+.forbids:
+        call kg_type
+        mov al, [es:bx + KG_FLAGS]      ; AL the flags, AH the kind flags
+        mov ah, [es:bx + KG_KINDS]
+        cmp byte [cs:kf_off_hand], 0    ; the off hand: nothing for a Battle Mage, no weapon for a Healer
+        je .ravager
+        cmp cl, KIT_BATTLE_MAGE
+        je .no
+        cmp cl, KIT_HEALER
+        jne .ravager
+        test al, KG_MELEE | KG_MISSILE | KG_THROWN
+        jnz .no
+.ravager:
+        cmp byte [cs:kf_chosen], 0
+        jne .ok
+        cmp cl, KIT_SHADOWBLADE ; a Shadowblade, Ghetto Fighter or Rescuer: no shield
+        je .unshielded
+        cmp cl, KIT_RESCUER
+        je .unshielded
+        cmp cl, KIT_GHETTO
+        jne .ravager_kit
+.unshielded:
+        test al, KG_SHIELD
+        jnz .no
+        jmp .ok
+.ravager_kit:
+        cmp cl, KIT_RAVAGER     ; a Ravager: no shield, no missile or thrown weapon, light armour only
+        jne .twin
+        test al, KG_SHIELD | KG_MISSILE | KG_THROWN
+        jnz .no
+        jmp .light
+.twin:  cmp cl, KIT_TWIN_BLADE
+        jne .brute
+        test al, KG_SHIELD
+        jnz .no
+        test al, KG_MELEE | KG_MISSILE
+        jz .ok
+        call .cahulaks          ; (the cahulaks: a blade in each hand, a Twin-blade's own)
+        je .ok
+        test ah, KG_TWO_HANDED
+        jz .ok
+        or ch, ch
+        jnz .ok
+        jmp .no
+.brute: cmp cl, KIT_BRUTE
+        jne .stalker
+        test al, KG_SHIELD
+        jz .melee
+        or ch, ch
+        jnz .ok
+        jmp .no
+.melee: test al, KG_MELEE       ; (a missile weapon: only a spec chosen is kept from it, KF_SPEC's)
+        jz .ok
+        call .cahulaks          ; (the cahulaks: two weapons, not one two-handed one)
+        je .no
+        test ah, KG_TWO_HANDED
+        jz .no
+        jmp .ok
+.stalker:
+        cmp cl, KIT_STALKER
+        jne .warden
+.light: call kg_light
+        jc .no
+        jmp .ok
+.warden:
+        cmp cl, KIT_GROVE_WARDEN        ; a Grove Warden: its druid sphere's weapons, as a cleric's
+        je .sphere
+        cmp cl, KIT_SEEKER      ; a Seeker: its ranger sphere's weapons (SPHERE_ALLOWS), the bow too
+        jne .blunt
+.sphere:
+        test al, KG_MELEE | KG_MISSILE
+        jz .ok
+        push ax
+        call kg_kind
+        mov ah, al
+        pop si                  ; (SI the flags in its low byte)
+        sub ah, 1
+        jc .ok                  ; (no kind: as the game has it)
+        mov [cs:cu_kind], ah
+        mov ax, si
+        mov [cs:cu_flags], al
+        mov al, [es:bx + KG_MATERIAL]   ; (the material, as CLASS_FORBIDS keeps it)
+        mov ah, al
+        and al, 0x0F
+        jnz .mat
+        test ah, 0x40
+        jz .mat
+        mov al, NO_MATERIAL
+.mat:   mov [cs:cu_mat], al
+        mov al, [cs:kf_sphere]
+        call sphere_allows
+        jc .no
+        jmp .ok
+.blunt: mov si, kg_blunt
+        cmp cl, KIT_LIFEBINDER
+        je .kind
+        mov si, kg_dancer       ; a Battle Dancer: no shield, the long sword and the bow only
+        cmp cl, KIT_BATTLE_DANCER
+        jne .shinobi
+        test al, KG_SHIELD
+        jnz .no
+        jmp .kind
+.shinobi:
+        cmp cl, KIT_SHINOBI
+        jne .ok
+        test al, KG_SHIELD      ; a Shinobi: no shield, light armour, its own weapons
+        jnz .no
+        test ah, KG_ARMOUR
+        jz .weapon
+        jmp .light
+.weapon:
+        mov si, kg_shinobi
+.kind:  call kg_kind            ; a weapon's kind in the mask at CS:SI (no kind: as the game has it)
+        movzx ax, al
+        dec ax
+        js .ok
+        bt word [cs:si], ax
+        jc .ok
+.no:    pop es
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        stc
+        ret
+.ok:    pop es
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        clc
+        ret
+.cahulaks:                      ; (ZF set: item type DX is the cahulaks)
+        push ax
+        call kg_kind
+        cmp al, KG_CAHULAKS
+        pop ax
+        ret
+
+; KIT_ALLOWS: carry set if the kit of the character whose sheet is at ES:BX lets it use item type DX
+; whatever its classes' lists and restrictions (DSCLOG's): a Battle Mage the weapons of its chosen
+; weapon spec (the first) and light armour (leather, or of no material; not a shield); a Battle Dancer
+; long swords and bows, whatever its cleric's sphere. DS the game's; all registers kept.
+kit_allows:
+        push ax
+        push bx
+        push cx
+        push si
+        push es
+        call kg_kind
+        mov ah, al              ; AH the kind + 1
+        call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .mage
+        movzx cx, ah
+        jcxz .no                ; (not a weapon of a kind)
+        dec cx
+        mov si, [cs:kg_dancer]
+        shr si, cl
+        test si, 1
+        jnz .yes
+        jmp .no
+.mage:  call kit_is_b
+        db KIT_BATTLE_MAGE
+        jne .no
+        push ax
+        xor si, si
+        call spec_get
+        mov cl, al              ; CL the chosen kind + 1
+        pop ax
+        call kg_type
+        test byte [es:bx + KG_KINDS], KG_ARMOUR
+        jz .weapon
+        test byte [es:bx + KG_FLAGS], KG_SHIELD
+        jnz .no
+        call kg_light
+        jnc .yes
+        jmp .no
+.weapon:
+        or ah, ah
+        jz .no
+        cmp ah, cl
+        jne .no
+.yes:   pop es
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        stc
+        ret
+.no:    pop es
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        clc
+        ret
+
+; SPECS_AWAKE: CF clear if the weapon specs of the character (sheet ES:BX) count (DSCLOG's): one class,
+; or not a human; a human's warrior class (fighter, gladiator, ranger) now, or before and passed by the
+; class it has now; a Battle Mage's kit awake. Set while the class or kit that gave them sleeps. All kept.
+specs_awake:
+        pusha
+        cmp byte [es:bx + SH_CLASSES + 1], 0
+        je .yes
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .yes
+        xor si, si
+.class: mov al, [es:bx + si + SH_CLASSES]
+        call warrior_al
+        jnc .next
+        or si, si
+        jz .yes
+        mov al, [es:bx + si + SH_LEVELS]
+        cmp al, [es:bx + SH_LEVELS]
+        jb .yes
+.next:  inc si
+        cmp si, 3
+        jb .class
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        je .yes
+        popa
+        stc
+        ret
+.yes:   popa
+        clc
+        ret
+
+; SPEC_FIND: ZF set when kind + 1 AL is in one of the specs (SPEC_GET's slots) of sheet ES:BX. All kept.
+spec_find:
+        push ax
+        push cx
+        push si
+        mov cl, al
+        xor si, si
+.each:  call spec_get
+        cmp al, cl
+        je .out
+        inc si
+        cmp si, SPEC_COUNT
+        jb .each
+        or si, si               ; (ZF clear)
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+
+; KIT_CLASS_OF_SHEET: AL the class (1-17) of the kit KIT_IS last found (KIT_WHERE) on sheet ES:BX.
+kit_class_of_sheet:
+        push di
+        mov di, [cs:kit_where]
+        mov al, [es:bx + di + SH_CLASSES]
+        pop di
+        ret
+
+; EL_SECOND: AL the second sphere (0-3) of the Elementalist (awake) whose sheet is at ES:BX, ZF clear; ZF
+; set if none (DSCLOG's: its weapons are allowed as well as its own sphere's, CLASS_FORBIDS_ONE). Others
+; kept.
+el_second:
+        push cx
+        mov cl, [es:bx + SPHERE2]
+        and cl, SPHERE2_MASK
+        call kit_is_b
+        db KIT_ELEMENTALIST
+        jne .none
+        mov al, cl
+        dec al
+        cmp al, 3
+        ja .none
+        or cl, 1                ; (ZF clear)
+        pop cx
+        ret
+.none:  cmp al, al
+        pop cx
+        ret
+
+kg_blunt   dd KG_BLUNT          ; (dwords: KIT_FORBIDS' BT reads 32 bits, the kinds being 22)
+kg_dancer  dd 0x2001            ; bits by kind: the long sword, the bow (a Battle Dancer's)
+kg_shinobi dd 0x20F10C          ; bits by kind: dagger, short sword, quarterstaff, chatkcha, bow, sling,
+                                ;   staff sling, darts
+kf_off_hand db 0                ; (KIT_FORBIDS: the item going to the off hand)
+kf_sphere  db 0                 ; (a ranger's or druid's sphere, 0 air to 3 water)
+kf_chosen  db 0                 ; (a weapon of a kind it specialized in)
+kit_refused dw 0                ; (items a kit kept from its character, for a look in play)
+kit_allowed dw 0                ; (items a kit let its character use that the game's lists didn't)
 ; THIEF_HEAVY: carry set if creature AX (DS the game's) has a thief class and wears armour that isn't
 ; light (HEAVY_WORN): a multiclass thief, or a human thief once a warrior, may wear it, but loses its
 ; thief skills and backstab in it (restrict.thief_heavy). All registers kept.

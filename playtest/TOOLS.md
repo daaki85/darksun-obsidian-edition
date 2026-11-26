@@ -84,7 +84,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `openshop.sh` | from the "selling junk" save (saves/selling-junk-user), Kalzith's shop: the eye on him (his figure's square found from memory: his feet less 16), Talk, 1, the box clicked through, 1, the box. |
 | `orderwatch.py SECONDS` | fight_on and whose turn, with each new dice-log line, timed every 10 ms (which came first: a blow or the fight's start). |
 | `outfitcycle.py MEMBER SLOT N [SECONDS]` | changes MEMBER's outfit N times and prints the picture store after each. |
-| `outfitgame.py OBJECT=OUTFIT[,...]` | puts a figure prototype's pictures (prototypes/outfits.py's classes, `preset:CLASS`, or `worn:LOOK` from prototypes/wornlooks.py) into the Loader's copy of SEGOBJEX.GFF, for a look with no Loader attached: run it as `PT_AFTER_PREPARE` with `PT_NO_LOADER=1` ([how](RESEARCH.md#the-figure-prototypes-in-the-game-outfitgamepy)). |
+| `outfitgame.py OBJECT=OUTFIT[,...]` | the outfit prototype's pictures (prototypes/outfits.py) put into the Loader's copy of SEGOBJEX.GFF, to look at them in the game. |
 | `pacerec.sh on\|off OUT.mkv` | a recording for docs/steady-pace.gif: pens-after-arena, steady pace on or off, the party walked east and back, recorded at 70 frames a second from the X display (the DOSBox window at 0,0, 320x240) |
 | `panel.sh hide\|show` | the combat log panel (bottom right) hidden or shown, by its frame's pixel at 140,150 in the 320x240 window grab (140,125 in the 320x200 capture; |
 | `party.py` | each party member's classes and levels, the gladiator flag, the scores the game uses now (the creature record's), and every item with its slot, +0Eh and +0Fh (ability bytes) |

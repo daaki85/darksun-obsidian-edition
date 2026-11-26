@@ -191,6 +191,12 @@ Releases, newest first (2.12.0 and older in the archive):
 **Fixed: DSCLOG (kits)**
 - The Military Scout's +1 to hit with a missile under the open sky is the bow's, sling's and staff
   sling's only again: the javelin and darts (the mod's later weapon kinds) had it too.
+**New: the kits' gear in Wake of the Ravager**
+- What a kit forbids is refused there too, and what it allows can be held whatever its class, as in
+  Shattered Lands: a Ravager's shield and bow, a Stalker's heavy armour, a Battle Mage's off-hand weapon
+  refused; a Battle Mage's weapon of its weapon spec and leather, a Battle Dancer's long sword and bow, an
+  Elementalist's second sphere's weapons allowed (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, at the sequel's
+  "may this character equip it", site 19). KITS.md says which kits work in the sequel now, and which in part.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

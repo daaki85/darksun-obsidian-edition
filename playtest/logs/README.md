@@ -209,6 +209,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-half-elf-import.md) | All 48 half-elf outfits on Lex with the Loader attached, plus Cromwell’s original sheet |
 | [2026-11-26](2026-11-26-sl-saves-scout.md) | Shattered Lands' saves past the table's last row (a fighter 10th 8/10/9/9/11 against the game's 11/11/11/13/11; cleric, thief, a halfling fighter/thief), the psionicists' Dark Sun Table 8 in both games (a psionicist/thief the best of each), the Military Scout's +1 not for a thrown javelin; each with its control (`ruleshi=-8`, `RAV_SKIP=save_table`); a second game on `:61` |
 | [2026-11-26](2026-11-26-ravager-item-weights.md) | Wake of the Ravager's item weights: the 102 types' weights in memory, "CANNOT USE TWO HEAVY WEAPONS" for two long swords (the control's "CANNOT USE THIS ITEM"), the party's own pairs fine, HEAVY shown, coins lifted and not a long sword; the load check never refuses in either game (STR 1 took 45 lb, and Cilla in SL a long sword); backstab not played |
+| [2026-11-26](2026-11-26-ravager-kit-gear.md) | The kits' gear limits in Wake of the Ravager: a Spellarcher refused leather armour, a Battle Mage holding the bow of its weapon spec and leather where a plain preserver can't, its off hand refused; a Ravager's bow kept because it is her weapon spec |
 
 ## files/
 
