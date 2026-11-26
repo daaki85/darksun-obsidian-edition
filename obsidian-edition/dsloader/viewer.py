@@ -94,7 +94,7 @@ class Viewer:
         self.ds: Optional[int] = None  # the game's data segment, once found
         self.dice: Optional[DiceLog] = None
         self.next_try = 0.0  # when to retry connecting / attaching
-        self.dosbox = dosbox  # the game, when started from here (Start the game, or `launch`)
+        self.dosbox = dosbox  # the game, when started from here (Play Shattered Lands, or `launch`)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
@@ -124,8 +124,17 @@ class Viewer:
         self.banner.pack(fill="x")
         if self.art.font:
             self.banner.use_game_font(self.art.font)
-        top = ttk.Frame(self.root, padding=(6, 6, 6, 0))
-        top.pack(fill="x")
+        row = ttk.Frame(self.root, padding=(6, 6, 6, 0))
+        row.pack(fill="x")
+        # the start buttons on the left, the rest on the right; in a window too narrow for both, the
+        # right-hand group goes on a line of its own under them (_wrap_top), so nothing is cut off
+        starts = ttk.Frame(row)
+        top = ttk.Frame(row)
+        row.columnconfigure(1, weight=1)
+        starts.grid(row=0, column=0, sticky="w")
+        top.grid(row=0, column=1, sticky="e")
+        self.top_row = (row, starts, top)
+        row.bind("<Configure>", lambda _e: self._wrap_top(), add="+")
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
@@ -135,8 +144,11 @@ class Viewer:
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
-        self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
+        self.start_button = ttk.Button(starts, text="Play Shattered Lands", command=self.start_game)
         self.start_button.pack(side="left")
+        # the sequel, from its folder (found, or chosen on Options' Wake of the Ravager section)
+        self.ravager_button = ttk.Button(starts, text="Play Wake of the Ravager", command=self.start_ravager)
+        self.ravager_button.pack(side="left", padx=(4, 0))
         # text size, also Ctrl + / Ctrl - / Ctrl 0
         ttk.Button(top, text="A+", width=3, command=lambda: self.zoom(1.15)).pack(side="right", padx=(4, 12))
         ttk.Button(top, text="A-", width=3, command=lambda: self.zoom(1 / 1.15)).pack(side="right")
@@ -845,6 +857,17 @@ class Viewer:
         self.banner.redraw()
         self._fit_party()
 
+    def _wrap_top(self) -> None:
+        """The top row's right-hand group beside the start buttons when the window is wide enough
+        for both, else on a line of its own under them."""
+        row, starts, top = self.top_row
+        room = row.winfo_width() - 12  # (the row's padding)
+        wrapped = starts.winfo_reqwidth() + top.winfo_reqwidth() > room
+        place = dict(row=1, column=0, columnspan=2, sticky="e", pady=(4, 0)) if wrapped else \
+            dict(row=0, column=1, columnspan=1, sticky="e", pady=0)
+        if int(top.grid_info().get("row", 0)) != place["row"]:
+            top.grid(**place)
+
     def _fit_party(self, divider: bool = True) -> None:
         """Columns wide enough for the text size and the longest label and value, and (DIVIDER)
         the divider moved to fit them, short of squeezing the right-hand tabs' buttons."""
@@ -950,16 +973,39 @@ class Viewer:
             if not game_dir:
                 return
             if not launch.is_game_dir(game_dir):
-                messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
+                messagebox.showerror("Play Shattered Lands", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.", parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
+        self._start(game_dir, "Play Shattered Lands")
+
+    def start_ravager(self) -> None:
+        """Start Wake of the Ravager, as `launch --ravager` does: its folder the one chosen on the
+        Options tab or found (ravager.find_dir); not found, the player is told where to choose it."""
+        if self.guest or (self.dosbox and self.dosbox.poll() is None):
+            return
+        from . import ravager
+        folder = ravager.find_dir(launch.find_game_dir())
+        if folder is None:
+            messagebox.showinfo(
+                "Play Wake of the Ravager",
+                f"Wake of the Ravager (GOG's install, DSUN.EXE {ravager.WOTR_SIZE:,} bytes) isn't found beside "
+                "the game's folder or in GOG's usual folders. If it is installed, choose its folder on the "
+                "Options tab: Wake of the Ravager (optional), Choose its folder...", parent=self.root)
+            return
+        self._start(folder, "Play Wake of the Ravager")
+        if self.dosbox is not None:
+            self._append_dice([launch.RAVAGER_NO_LOG[0].upper() + launch.RAVAGER_NO_LOG[1:] + "."])
+
+    def _start(self, game_dir: str, title: str) -> None:
+        """Start the game in GAME_DIR (Shattered Lands, or the sequel: launch._launch tells them apart);
+        a failure in a message box headed TITLE."""
         try:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
         except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
-            messagebox.showerror("Start the game", str(e), parent=self.root)
+            messagebox.showerror(title, str(e), parent=self.root)
             return
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
@@ -969,7 +1015,7 @@ class Viewer:
         left_out = launch.left_out_line()
         if left_out:  # (a copy that couldn't be made: told, not silent)
             self._append_dice([left_out])
-            messagebox.showwarning("Start the game", left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
+            messagebox.showwarning(title, left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 
@@ -1004,9 +1050,10 @@ class Viewer:
                                    "of what happened just before."])
 
     def _start_state(self) -> None:
-        """"Start the game" only while there's no game to attach to."""
+        """"Play Shattered Lands" and "Play Wake of the Ravager" only while there's no game to attach to."""
         running = self.guest is not None or (self.dosbox is not None and self.dosbox.poll() is None)
-        self.start_button.state(["disabled"] if running else ["!disabled"])
+        for button in (self.start_button, self.ravager_button):
+            button.state(["disabled"] if running else ["!disabled"])
 
     def reload_layout(self) -> None:
         try:
