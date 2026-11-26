@@ -34,7 +34,7 @@ it: the map shows her new figure from the next area or load on).
 import struct
 from typing import Dict, List, NamedTuple, Set, Tuple
 
-from . import game, restrict, ring, specialize, weaponchoice
+from . import game, kitpages, restrict, ring, specialize, weaponchoice
 from .game import GameData
 
 CILLA_OBJECT = 32003  # (her record in SEGOBJEX: the party's objects are 32000 to 32003)
@@ -46,7 +46,7 @@ KNOWN_SPELLS_PTR = 0x132A  # DS: far pointer to the party's known spells, a byte
 KNOWN_STRIDE = game.SPELL_COUNT + 1
 ARMOR = 0  # the spell
 CLUB_TYPE = 18
-KIND = {k: specialize.KINDS.index(k) for k in ("long sword", "axe", "gythka", "chatkcha")}
+KIND = {k: specialize.KINDS.index(k) for k in specialize.KINDS}
 
 
 class Member(NamedTuple):
@@ -261,4 +261,75 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: b
                 continue
             out += step(gd, member, name)
             done.add((name, key))  # (after: a step the game's busy lists put off is tried again)
+    return out
+
+
+# Wake of the Ravager's own party (the owner's choices, 2026-11-26), made ready once the Loader finds them
+# with no weapon specs and no kit (RavDiceLog's _party_pass; a saved game begun before, too): each weapon
+# spec its weapons' (the level up's weapon window would ask otherwise), Terrannus a Crusader, and each a
+# feature of its own (kits.own_features): Gerakis Wild Fighting, as in Shattered Lands; Thy'rokh a Grove
+# Warden's AC by his druid level; Terrannus his cleric's slots a level behind in place of the Crusader's
+# one fewer; Ar'Anda the Elven Shadow-walker's hiding and casting in light armour.
+RAV_PARTY: Dict[str, Member] = {
+    "Gerakis": Member(5, (10, 0, 0), ("long sword", "gythka", "trikal")),  # half-giant gladiator
+    "Thy'rokh": Member(8, (9, 7, 0), ("gythka",)),  # thri-kreen fighter, druid (fire)
+    "Terrannus": Member(1, (2, 0, 0), ("long sword",)),  # human cleric (earth): his Crusader's weapon spec
+    "Ar'Anda": Member(3, (11, 12, 17), ()),  # elf preserver, psionicist, thief
+}
+RAV_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
+             "Thy'rokh": "Thy'rokh has a Grove Warden's AC: 1 better for every 3 druid levels.",
+             "Terrannus": "Terrannus is a Crusader, his cleric's spell slots a level behind (not one fewer).",
+             "Ar'Anda": "Ar'Anda is an Elven Shadow-walker who casts in light armour."}
+
+
+def rav_who(gd: GameData, member: int) -> str:
+    """The sequel's own party's name for party member MEMBER (by name, race and classes), or ""."""
+    name = gd.creature_name(member)
+    want = next((m for n, m in RAV_PARTY.items() if n.lower() == name.lower()), None)
+    sheet = gd.sheet(member)
+    if want is None or len(sheet) <= kitpages.KIT_BYTE:
+        return ""
+    if sheet[game.SHEET_RACE] != want.race or tuple(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]) != want.classes:
+        return ""
+    return next(n for n in RAV_PARTY if n.lower() == name.lower())
+
+
+def rav_sheet_at(gd: GameData, member: int) -> int:
+    """The address of party member MEMBER's sheet."""
+    index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
+    return game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
+
+
+def rav_ready(gd: GameData, rules: int) -> List[str]:
+    """The sequel's own party made ready: for each member found (rav_who) with no weapon spec, its
+    kinds (with weapon specialization); with no kit or feature, Terrannus's Crusader and each one's
+    OWN_BIT (with kits). Lines for the log."""
+    from . import kits
+    out: List[str] = []
+    for member in range(game.PARTY_SIZE):
+        name = rav_who(gd, member)
+        if not name:
+            continue
+        want, at, sheet = RAV_PARTY[name], rav_sheet_at(gd, member), gd.sheet(member)
+        if want.kinds and rules & game.RULE_SPECIALIZE and not any(game.spec_kinds(sheet)):
+            new = game.respecced(sheet, [KIND[k] + 1 for k in want.kinds])
+            gd.guest.write(at + game.SPEC_SLOTS, new[:3])
+            out.append(f"{name} specializes in the {' and the '.join(want.kinds)}.")
+        byte = sheet[kitpages.KIT_BYTE]
+        if rules & game.RULE_KITS and byte in (0, kits.KIT_OPEN):
+            byte = 0
+            if name == "Terrannus":
+                byte = kitpages.kit_byte(sheet, 0, kitpages.KITS[1].index("Crusader") + 1)
+            gd.guest.write(at + kitpages.KIT_BYTE, bytes([byte | kits.OWN_BIT]))
+            out.append(RAV_LINES[name])
+    return out
+
+
+def rav_ranges(gd: GameData) -> List[Tuple[int, int]]:
+    """The bytes rav_ready writes: each party member's sheet's packed specs and kit byte."""
+    out = []
+    for member in range(game.PARTY_SIZE):
+        if rav_who(gd, member):
+            at = rav_sheet_at(gd, member)
+            out += [(at + game.SPEC_SLOTS, 3), (at + kitpages.KIT_BYTE, 1)]
     return out

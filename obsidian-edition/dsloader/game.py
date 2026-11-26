@@ -2711,7 +2711,7 @@ class GameData:
                 name += (f", dormant until the {CLASS_NAMES[sheet[SHEET_CLASSES]].split(' (')[0].lower()} level "
                          f"passes {sheet[SHEET_LEVELS + place]}")
             names.append(name)
-        names += kits.OWN_FEATURES.get(kits.own_race(sheet), ())  # (the game's own party's: Gerakis...)
+        names += kits.own_features(sheet)  # (the games' own parties': Gerakis...)
         return "; ".join(names) or None
 
     def specializations(self, creature: int) -> List[Tuple[str, str]]:

@@ -168,16 +168,24 @@ def extra(kid: int, dance: int = 0) -> int:
     return int(kid == AVENGER)
 
 
-# The game's own party (defaultparty.py), three of them given features of their own (not kits;
-# none is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
-# classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
-# race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her chatkcha's
-# 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
+# The games' own parties (defaultparty.py), given features of their own (not kits; none is
+# something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the classes' kits, 7 Friends
+# known), set by the Loader; which feature by the race (DSCLOG's OWN_RACE_B), and the classes where a
+# race has two. Shattered Lands': Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
+# thri-kreen with a psionicist class) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her
+# chatkcha's 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf with a
+# druid class) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py). Wake of the
+# Ravager's (the owner's choices, 2026-11-26): Gerakis Wild Fighting as before; Thy'rokh (a thri-kreen
+# with no psionicist class) a Grove Warden's AC by his druid level (OWN_WARDEN, DSCLOG2's KIT_AC);
+# Ar'Anda (an elf with no druid class) the Shadow-walker's hiding and casting in light armour
+# (OWN_LIGHT_CAST, DSCLOG2's CAST_ARMOUR); Terrannus (a human: a Crusader too) his cleric's slots a level
+# behind in place of the Crusader's one fewer (OWN_BEHIND, DSCLOG2's ADND_SLOTS).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
-HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
+HUMAN, HALF_GIANT, ELF, THRI_KREEN = 1, 5, 3, 8
 OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics",),
-                ELF: ("Elven Shadow-walker",)}
+                ELF: ("Elven Shadow-walker",), HUMAN: ("Spell slots a level behind",)}
+OWN_WARDEN = ("Grove Warden's AC",)  # (a thri-kreen with no psionicist class: Thy'rokh)
+OWN_LIGHT_CAST = ("Elven Shadow-walker", "Casting in light armour")  # (an elf with no druid class: Ar'Anda)
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
 
@@ -189,6 +197,40 @@ def own_race(sheet: bytes) -> int:
     if len(sheet) <= at or sheet[at] == KIT_OPEN or not sheet[at] & OWN_BIT:
         return 0
     return sheet[game.SHEET_RACE] if sheet[game.SHEET_RACE] in OWN_FEATURES else 0
+
+
+def _classes(sheet: bytes):
+    from . import game
+    return sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+
+
+def own_features(sheet: bytes) -> Tuple[str, ...]:
+    """The features of its own of one of the games' own party (OWN_FEATURES, by race and, for a
+    thri-kreen or an elf, classes), or ()."""
+    race = own_race(sheet)
+    if race == THRI_KREEN and 12 not in _classes(sheet):  # (no psionicist class: Thy'rokh)
+        return OWN_WARDEN
+    if race == ELF and not any(5 <= c <= 8 for c in _classes(sheet)):  # (no druid class: Ar'Anda)
+        return OWN_LIGHT_CAST
+    return OWN_FEATURES.get(race, ())
+
+
+def own_warden_level(sheet: bytes) -> int:
+    """The druid level a Grove Warden's AC goes by for Thy'rokh (OWN_WARDEN), else 0."""
+    from . import game
+    if own_features(sheet) != OWN_WARDEN:
+        return 0
+    return max((sheet[game.SHEET_LEVELS + p] for p, c in enumerate(_classes(sheet)) if 5 <= c <= 8), default=0)
+
+
+def own_light_cast(sheet: bytes) -> bool:
+    """Whether the character casts in light armour though a multiclass preserver (Ar'Anda)."""
+    return own_features(sheet) == OWN_LIGHT_CAST
+
+
+def own_behind(sheet: bytes) -> bool:
+    """Whether the character's cleric slots are a level behind, its kit's one fewer not counted (Terrannus)."""
+    return own_race(sheet) == HUMAN
 
 
 def wild_fighter(kids, race: int) -> bool:
@@ -300,18 +342,22 @@ def war_hit(sheet: bytes, kind: Optional[int], own_thac0: int, specialization: b
     return 0, 0
 
 
-def slot_level(kid: int, level: int) -> int:
+def slot_level(kid: int, level: int, behind: bool = False) -> int:
     """The class level the spell slots are counted from (PROBE_SLOT_LEVEL): an Elementalist's a
-    level behind."""
-    return max(0, level - 1) if kid == ELEMENTALIST else level
+    level behind, and with BEHIND (own_behind: Terrannus, a Crusader) a cleric's."""
+    return max(0, level - 1) if kid == ELEMENTALIST or behind else level
 
 
-def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True) -> int:
+def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True,
+          behind: bool = False) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Battle Mage's wizard slots 1 fewer, a Crusader's priest slots 1 fewer, an
     Elementalist's (slot_level: a level behind) at least 1 at a spell level its LEVEL reaches; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
-    Shinobi's wizard slots the Seeker's by its thief level."""
+    Shinobi's wizard slots the Seeker's by its thief level. With BEHIND (own_behind: Terrannus) a
+    cleric's priest slots as an Elementalist's, not a Crusader's one fewer."""
+    if behind and magic == PRIEST:
+        kid = ELEMENTALIST
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
     if kid == ELEMENTALIST and magic == PRIEST and not game_slots \

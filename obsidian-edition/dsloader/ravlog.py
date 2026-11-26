@@ -1685,6 +1685,7 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._panel_pass(now))
             if self.game is not None and self.game.rules & game.RULE_AGING:
                 out += self._step(self._aging_pass)
+            out += self._step(self._party_pass)  # (the sequel's own party's weapon specs and features, once)
             try:
                 loading = self._party_check(now)
             except Exception:  # (unknown: no save asked for this pass)
@@ -1835,6 +1836,20 @@ class RavDiceLog(dicelog.DiceLog):
                 sheet = sheets + index * game.SHEET_SIZE
                 ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1), (sheet + game.SPEC_SLOTS, 3)]
         self.guest.writable = self.guest.writable + [r for r in ranges if r not in self.guest.writable]
+
+    def _party_pass(self) -> List[str]:
+        """The sequel's own party made ready (defaultparty.rav_ready: their weapon specs, Terrannus's
+        Crusader, their features of their own), the bytes it writes made writable while it runs."""
+        from . import defaultparty
+        gd = self.game
+        if gd is None or not gd.rules & (game.RULE_SPECIALIZE | game.RULE_KITS):
+            return []
+        before = self.guest.writable
+        self.guest.writable = before + defaultparty.rav_ranges(gd)
+        try:
+            return defaultparty.rav_ready(gd, gd.rules)
+        finally:
+            self.guest.writable = before
 
     def _aging_pass(self) -> List[str]:
         """Ages (RULE_AGING, aging.py), on a steady look only (the same party as the last, the clock
