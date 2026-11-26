@@ -823,6 +823,11 @@ PATCHES: Tuple[Patch, ...] = (
     # routine, "call far 1D40:3BEC" (2A347h, SL's 25EBEh), its first three bytes (the segment, relocated at load,
     # kept), DSCLOG2's site 162 (SITE_FIG_KEEP), which then calls the routine itself.
     Patch("fig_keep", 0x2A347, bytes.fromhex("9aec3b"), _site(162, 3)),
+    # A shop's magic items shine (SL's SHOP_SHINE and SHOP_LOOP): the sequel turns its colour cycles only from the
+    # map's main loop (1CF0Eh), so on a shop's screen they stood still. The game's wait for an event, its test
+    # "or di,di / jz" (2F7BEh, SL's 2AFA6h), is DSCLOG2's site 163 (SITE_SHOP_SHINE), and its SHOP_LOOP (site 82)
+    # turns them too while the shop is open.
+    Patch("shop_shine", 0x2F7BE, bytes.fromhex("0bff74b5"), _site(163, 4)),
     # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
@@ -1328,7 +1333,8 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
-    them) unless "new_items" is (or the mod's types are left out: they are its types)."""
+    them) unless "new_items" is (or the mod's types are left out: they are its types), and the still magic
+    items' icons shining (ravshine) unless "item_shine" is."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1346,6 +1352,12 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
+    if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
+        from . import ravshine
+        shine = ravshine.chunks(chunks)
+        if shine:
+            new.update(shine)
+            done.append("item_shine")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)

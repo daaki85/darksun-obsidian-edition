@@ -1087,6 +1087,17 @@ the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. 
 counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
 grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
 
+**The magic items' shine in the sequel** (2026-11-26, logs/2026-11-26-ravager-shine.md): the sequel cycles colours
+1-31 in five runs (1-5 blue, 6-10 pink and violet, 11-15 green, 16-23 fire, 24-31 the water's blue-greys) with SL's
+cycler (2CFDCh, 2796h:047Ch), called only from the map's loop (1CF0Eh, when byte DS:1424h is set; the main loop
+clears it), so **a shop's screen stood still**, as SL's did. The shop's loop (88D52h, while byte [143Dh] is 1) and the
+game's wait (its "or di,di / jz" at 2F7BEh, the jump to 2F777h) are SL's (7DDE4h, 2AFA6h). To check an icon shines,
+burst-grab it (`ravburst.sh`) and count the frames its box changes in. A survey of OBJEX.GFF's magic items: an item
+record (+0 its picture negated, +10h a power, +16h the plus, +14h its name, `ravitems.sequel_names`) in any RDFF,
+its object's icon decoded with `sequelicons.decode` (PLNR, PLAN or SL's runs); most magic weapons have 2-8 cycled
+pixels, twelve items none or one or two (`dsloader/ravshine.py`). A picture of Shattered Lands' kind put in the
+copy of OBJEX.GFF for one of the sequel's own icons is drawn as its own.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs

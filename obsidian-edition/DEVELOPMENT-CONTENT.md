@@ -291,6 +291,21 @@ after the `ns_list_` patches):
   is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
   `shop_at` (header +1858), so S sells only on a shop's screen
   ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
+- **In Wake of the Ravager** the same: its map loop turns the cycles (1CF0Eh: "cmp byte [1424h],0 / jz /
+  call far 2796:047C / mov byte [1424h],0"; the cycler at 2CFDCh is SL's, its runs 1-5, 6-10, 11-15,
+  16-23 and 24-31), its shop's loop (88D52h, while byte [143Dh] is 1) and the game's wait (its test "or
+  di,di / jz" at 2F7BEh) don't. DSCLOG2's SHOP_LOOP (site 82, already there for S) and SHOP_SHINE (site
+  163, `shop_shine`: the jump made by moving the way back 4Ah, as the site's INT returns past its byte)
+  call SHINE_TURN; header `shine_turns` +1982 counts the turns. **Twelve of the sequel's magic items had
+  no pixel in a cycled run** (a survey of OBJEX.GFF's item records with a plus or a power): the Loader's
+  copy of OBJEX.GFF (`ravager.objects_fixed`, step `item_shine`) has their icons, each its object's own,
+  with every other pixel of their blade, metal or brightest shades in a run (`dsloader/ravshine.py`: the
+  weapons and the Amulet's gold the fire's, the Chatchka violet, the Boots green, the rest the water's
+  blue-greys), written in Shattered Lands' kind of picture, which the sequel draws as its own. Saved games
+  shine too (the icons are read from the copy). `RAV_SKIP=item_shine` (`playtest/ravstart.sh`) leaves them
+  out: the control. Played:
+  [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-shine.md).
+  Tests: `tests/test_ravshine.py`, `tests/test_ravshopshine.py`.
 
 ## Worn items, the gladiator's armour and Psionic Blast
 

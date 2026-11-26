@@ -68,6 +68,10 @@ Releases, newest first (2.12.0 and older in the archive):
   floor pass and the main loop as the shadows; the Loader's table of lighter colours taken a step up the
   sequel's darker dirt). With it, the squares' table of lighter colours is now read from the right
   place in the sequel's helper (it read the squares' counter for the palette's offset).
+- The magic items shine on the sequel's shop screens (its colour cycles stood still there), and twelve of
+  its own magic items that never shone (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3,
+  three armours, the Boots, the Amulet, the Ioun Stone, the Necklace, the Rod) shine as the others
+  (DSCLOG2's SHOP_SHINE, site 163; the Loader's copy of OBJEX.GFF, `ravshine.py`).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

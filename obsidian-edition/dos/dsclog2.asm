@@ -314,6 +314,7 @@ dust_puffs  dw 0                ; +1974 puffs of dust raised (counted)
 dust_sig    dw 0x7544           ; +1976 DUST's signature: the Loader writes DUST_ON only where it finds it
 fig_other   dw 0                ; +1978 shadows cast from another kept frame of the picture (FIG_OF) ...
 fig_missed  dw 0                ; +1980 ... and figures that cast none, their picture out with none kept
+shine_turns dw 0                ; +1982 the colour cycles turned on a shop's screen (SHINE_TURN, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4071,7 +4072,7 @@ site_table:
         dw fig_wide_all                     ; 160 SITE_FIG_WIDE_ALL (2868Ch: the redraw of what moved: wider, for the figures' shadows)
         dw fig_wide                         ; 161 SITE_FIG_WIDE (2828Ch: the redraw of a rectangle of the view: the same)
         dw fig_keep                         ; 162 SITE_FIG_KEEP (2A347h: a thing drawn: its frame's shadow kept, for when its picture is out)
-        dw site_none                        ; 163 (none here)
+        dw shop_shine                       ; 163 SITE_SHOP_SHINE (2F7BEh: the wait for an event, its test: a shop's magic items shine)
         dw site_none                        ; 164 (none here)
         dw site_none                        ; 165 (none here)
         dw site_none                        ; 166 (none here)
@@ -17298,6 +17299,9 @@ shop_loop:
         mov [cs:shop_at], ax
         pop es
         inc word [cs:shop_passes]
+        push bp
+        call shine_turn                 ; (the magic items' shine, as the map's loop turns it)
+        pop bp
 .test:  cmp byte [SHOP_SCREEN], 1
         lahf
         mov [bp + 6], ah                ; (the flags' low byte: ZF for the loop's JE)
@@ -17305,6 +17309,56 @@ shop_loop:
         pop bp
         iret
 shop_passes dw 0                ; (the shop's loop's passes, for a look in play)
+
+; SHOP_SHINE (site 163), SHINE_TURN: a shop's magic items shine (DSCLOG's, on the sequel). The map's main
+; loop turns the palette's colour cycles (the magic items' shine) when the timer has asked for it (1CF0Eh:
+; "cmp byte [1424h],0 / jz / call far 2796:047C / mov byte [1424h],0"); a shop runs its own loop (SHOP_LOOP)
+; and, as the pointer stands on some things, waits in the game's wait for an event: neither turned them,
+; so its magic items stood still. Both now do as the main loop while a shop is open.
+; SHOP_SHINE: "or di,di / jz 084Fh-like" (2F7BEh, "0B FF 74 B5"; 4 bytes: the INT, the number and a NOP),
+; the test that ends the wait (DI not 0: an event came); with DI 0 the jump made (the way back moved
+; SHINE_BACK before the NOP the INT returns to) and the cycles turned.
+SHINE_DUE    equ 0x1424             ; (the game's DS) a byte: the timer asks for the colour cycles' turn
+SHINE_CALL   equ 0x047C             ; the cycler (2CFDCh: 2796h:047Ch) ...
+CYCLER_FROM_DS equ 0x47E0 - 0x2796  ; ... its segment below the game's DS
+SHINE_BACK   equ 0x4A               ; (the jz's distance back from the NOP after the site's byte: 4Bh less 1)
+shop_shine:
+        or di, di
+        jnz .out
+        push bp
+        mov bp, sp
+        sub word [bp + 2], SHINE_BACK
+        push ds
+        push ax
+        mov ax, [cs:pointer_ds]
+        or ax, ax
+        jz .no
+        mov ds, ax
+        call shine_turn
+.no:    pop ax
+        pop ds
+        pop bp
+.out:   iret
+
+; SHINE_TURN: the colour cycles turned if the timer asked and a shop is open. DS the game's; AX, BP and
+; the flags not kept.
+shine_turn:
+        cmp byte [SHOP_SCREEN], 1
+        jne .out
+        cmp byte [SHINE_DUE], 0
+        je .out
+        mov ax, ds
+        sub ax, CYCLER_FROM_DS
+        push ax
+        push word SHINE_CALL
+        mov bp, sp
+        sti
+        call far [ss:bp]
+        cli
+        add sp, 4
+        mov byte [SHINE_DUE], 0
+        inc word [cs:shine_turns]
+.out:   ret
 sell_wait db 0                  ; (1 from S's count (SELL_KEY) till the shop's loop has held its way out)
 
 ; MAP_KEY: (DSCLOG's) M on the map (its main loop run within the last tick or two, the map the screen on

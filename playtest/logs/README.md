@@ -188,6 +188,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-ravager-starting-gear.md) | A new character's weapon in the weapon hand in Wake of the Ravager: the starting gear's table (43680h) patched (`gear_hands`), a fighter's +1 long sword in the right hand and the shield in the left, a psionicist's club in the right; a long sword specialist 2 a round in the Tyr ambush with nothing moved by hand, against the control's 1 (RAV_SKIP); the first pick's starting weapon left open |
 | [2026-11-26](2026-11-26-ravager-figure-shadows.md) | The figures' shadows in Wake of the Ravager: the sequel's pictures out of memory at most floor drawings, so each frame's shadow kept as the game draws the figure (site 162); the kreen's shadow on Tyr's street against the RAV_SKIP control; DSCLOG2's size and the memory left |
 | [2026-11-26](2026-11-26-ravager-dust.md) | Dust in Wake of the Ravager: Tyr's dirt too dark for SL's table of lighter colours, so the sequel's own (least 0.2, a step of 0.2); puffs on Shadow Square's dirt against RAV_NO_DUST=1; the figures' shadows in the Draxans' fight (64 kept frames enough); the squares' LIGHT read from the right place; DSCLOG2's size and the memory left |
+| [2026-11-26](2026-11-26-ravager-shine.md) | The magic items' shine in Wake of the Ravager: twelve still magic items found by a survey and made to shine (the Loader's OBJEX copy), against RAV_SKIP=item_shine; the shop's screen, where the sequel's colour cycles stood still, turned by DSCLOG2's SHOP_SHINE (site 163); the memory left |
 
 ## files/
 
