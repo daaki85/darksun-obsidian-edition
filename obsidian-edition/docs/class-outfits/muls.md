@@ -23,6 +23,8 @@ The male Mul has nine legal pairs and three triples. Each has 29 empty-slot pose
 | [Fighter/Psionicist, Fighter/Thief and Psionicist/Thief](mul-multiclass-leather.gif) | The Fighter/Psionicist wears a leather jerkin with a teal shoulder scale. The same shade catches the visible scale under the Thief hood. Both Thief pairs retain the slate cloak and its swinging corner. Compare where the dark belt and teal sash emerge from behind the crossing arm in profile. |
 | [Three-class outfits](mul-multiclass-triples.gif) | Compare all three parent pairs beneath each triple. The first two keep the Cleric’s cream robe or the Druid’s short green mantle under a matching hood. On Fighter/Psionicist/Thief, the teal sash sits above the sword belt. |
 
+The Mul’s approved Fighter/Psionicist scale follows the upper arm through the walk. In the bow poses, the drawing hand crosses the fastening. [Compare the previous and approved walks](shoulder-walk.gif) · [Inspect all 29 poses](shoulder-fit-by-race.gif)
+
 The large figures stand on sand. Under each, the smaller figures show the family at game size on paving. The retail Priest, Thief and Warrior are below for comparison. Front bow (24) is the least readable angle for the Fighter/Psionicist sash because the arm crosses the waist. The review checked faces, hands, bows, silhouette gaps and class details in all 348 multiclass poses. These are study renders. [Inspect every multiclass pose as a still](mul-multiclass-poses.png)
 
 ## Front walk, strikes and bow

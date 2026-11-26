@@ -21,6 +21,8 @@ Each large figure wears the combination named above it. For a pair, read the thr
 | [Five Fighter, Psionicist, Ranger and Thief pairs](halfling-multiclass-leather.gif) | Follow the Ranger/Thief beside the plain Thief through side steps 1–4. The green trailing fold carries the Ranger color and the hood turns into shadow around the cheek. |
 | [Both triples and their parent pairs](halfling-multiclass-triples.gif) | In rear idle (01), compare the leather belt and slate cloak on Fighter/Psionicist/Thief with the green cloak on Psionicist/Ranger/Thief. Both carry a teal wrap. On Fighter/Psionicist and its Thief triple the exposed shoulder scale also picks up teal. In front strike 2 (16), the raised arm leaves only six teal pixels visible on the Fighter triple. |
 
+Both halflings wear the approved teal shoulder scale on Fighter/Psionicist. Follow its lit edge as the elbow swings through the profile walk. [Compare the previous and approved walks](shoulder-walk.gif) · [Inspect all 29 poses](shoulder-fit-by-race.gif)
+
 [Man, every multiclass pose](halfling-man-multiclass.png) · [Woman, every multiclass pose](halfling-woman-multiclass.png)
 
 The frame review covered 696 pair frames and 116 triple frames. Each pair differs from both singles and each triple differs from all three parent pairs in every pose. The exposed face, visible bow and shared bare-hand pixels were checked against the underlying figures. The galleries are study renders.
