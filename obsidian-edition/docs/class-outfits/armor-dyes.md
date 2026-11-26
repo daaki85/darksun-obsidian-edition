@@ -1,12 +1,12 @@
 # Armor colors on class outfits
 
-Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The dye follows the original fold pixels as the figure turns. Magical gear adds cycling highlights to the exposed material. The three Warden’s Plate pieces can be inspected separately. [Current armor-slot comparison](fitted-armor-slots.gif) [Compare the named robes on the half-giants, Mul and human Priest](named-robes.md) · [Compare the women’s clerical plate fittings](plate-fit.md)
+Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The material follows the original fold pixels as the figure turns. Magical gear adds cycling highlights to the exposed material. The three Warden’s Plate pieces can be inspected separately. [Compare the current tints with the preceding build](subtle-armor.md) · [Current armor-slot comparison](fitted-armor-slots.gif) [Compare the named robes on the half-giants, Mul and human Priest](named-robes.md) · [Compare the women’s clerical plate fittings](plate-fit.md)
 
 ![Eight Loader class figures with armor and robes beside retail references](armor-dye-class-figures.png)
 
 ## What changed on the half-elf
 
-The previous leather dye reduced 18 garment colors to four on the female Fighter’s front idle. The old and revised columns use the same pose, lighting and floor. Look at the crease below the belt and the fastenings where the shoulder meets the jerkin. On the Preserver, the purple mantle can conceal most of the armor from behind. [Compare four poses before and after](half-elf-armor-detail.png) · [Watch the equipped Fighter and Preserver through all 29 poses](half-elves.md#equipped-fighter-and-preserver)
+In the earlier half-elf detail study, the previous leather dye reduced 18 garment colors to four on the female Fighter’s front idle. The old and revised columns use the same pose, lighting and floor. Look at the crease below the belt and the fastenings where the shoulder meets the jerkin. On the Preserver, the purple mantle can conceal most of the armor from behind. [Compare four poses before and after](half-elf-armor-detail.png) · [Watch the equipped Fighter and Preserver through all 29 poses](half-elves.md#equipped-fighter-and-preserver)
 
 ## Checks on the Loader pictures
 
@@ -27,8 +27,8 @@ The original-figure sheet shows what the Loader draws when a fitted class outfit
 
 ![Original Loader figures in classless gear beside empty slots](armor-dye-original-figures.png)
 
-## Earlier art-study measurements
+## Material previews on the art studies
 
-Both half-elves’ remaining outfits, the half-giants, the halflings and the Mul account for another 172 appearances. Six material previews through 29 poses gave 29,928 comparisons. The preview uses the approved artwork and estimates the exposed garment from its layers. The half-giant Ranger’s rear cloak and the halfling Thief’s hood can hide the underlying suit almost completely. In 259 of 4,988 study poses, full plate gives an identical picture. In 240 the estimated suit surface is hidden, and in 19 its visible pixels already match the plate shades. The half-giant, halfling and Mul outfits have since been fitted and checked in the game. The additional half-elf combinations still use study previews. [Current equipment galleries](magical-equipment.md)
+Both half-elves’ remaining outfits, the half-giants, the halflings and the Mul account for another 172 appearances. Six material previews through 29 poses gave 29,928 comparisons. The preview estimates the exposed garment from the approved layers and applies the current material tint there. Its two plain cloth swatches show fabric without enchantment. The earlier measurements remain in the linked archive. The half-giant Ranger’s rear cloak and the halfling Thief’s hood can hide the underlying suit almost completely. In 259 of 4,988 study poses, full plate gives an identical picture. In 240 the estimated suit surface is hidden, and in 19 its visible pixels already match the plate shades. The half-giant, halfling and Mul outfits have since been fitted and checked in the game. The additional half-elf combinations still use study previews. [Current equipment galleries](magical-equipment.md)
 
 ![Seven art study figures with material previews beside Shattered Lands figures](armor-dye-studies.png)

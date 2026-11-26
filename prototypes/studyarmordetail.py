@@ -19,7 +19,7 @@ from studygeartest import Atlas, NAMES, co, he, hg, hl, mul, sg, study_rows
 from dsloader import figures
 
 MATERIALS = {"Leather": sg.LEATHER_SHADES, "Mail": sg.CHAIN_SHADES, "Scale": sg.BONE_SHADES,
-             "Plate": sg.METAL_SHADES, "Ashen cloth": sg.CHAIN_SHADES, "Veiled cloth": sg.VEILED_CLOTH}
+             "Plate": sg.METAL_SHADES, "Plain ash cloth": sg.CHAIN_SHADES, "Plain veiled cloth": sg.VEILED_CLOTH}
 SAMPLES = {306: ("Druid", 12), 307: ("Cleric/Preserver", 3), 308: ("Cleric/Fighter", 0),
            309: ("Ranger", 8), 310: ("Thief", 3), 311: ("Psionicist/Ranger", 7), 312: ("Druid/Fighter", 0)}
 
@@ -152,7 +152,7 @@ def contrasts(source, dyed, cells, palette):
     return distinct, total
 
 
-REVIEW_COLUMNS = ("Class colors", "Leather", "Scale", "Plate", "Veiled cloth", "Retail reference")
+REVIEW_COLUMNS = ("Class colors", "Leather", "Scale", "Plate", "Plain veiled cloth", "Retail reference")
 RETAIL = {306: (1252, "Warrior"), 307: (724, "Mage"), 308: (1563, "Priest"), 309: (630, "Thief"),
           310: (630, "Thief"), 311: (630, "Thief"), 312: (1252, "Warrior")}
 
@@ -200,6 +200,7 @@ def compare(game_dir, output, objects):
                         dyed = [row[:] for row in outfit]
                         if shades is not None:
                             sg.dye_garment(dyed, surface, shades, 0, outfit)
+                            sg.retain_cloth_shadows(dyed, surface, 0, outfit)
                             changed = {(x, y) for y, row in enumerate(dyed) for x, color in enumerate(row)
                                        if color != outfit[y][x]}
                             assert changed <= surface and not changed & (additions | covered)

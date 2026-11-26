@@ -1434,6 +1434,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                                         bool(item_type & VEILED_DYE), stock_source, covered, paint=not enchanted_robe)
                 else:
                     cells = []
+                if cells and not enchanted_robe:
+                    retain_cloth_shadows(armor_canvas, cells, pad, base_outfit if costume else stock_source)
+                exposed = ()
                 if piece == ARMOUR_LEGS and registered and (costume or not cells):
                     surface = base_outfit if costume else padded(rows, pad)
                     exposed = spritegreaves.visible(rows, model, frame, combat, own, costume, surface, pad)
@@ -1479,7 +1482,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             out[y][x] = _RobeCloth(out[y][x])
                         robe = points, binding, colours
                     else:
-                        shine_armour(armor_canvas, cells, piece, armor_parts, pad, colours, cuffs)
+                        shine_armour(armor_canvas, cells, piece, armor_parts, pad, colours, cuffs, exposed)
     if model != sp.KREEN:
         for item in armour:
             if item & (MAGIC_ARMOUR - 1) == game.BRACERS_TYPE:
@@ -1888,6 +1891,36 @@ def dye_garment(rows, cells, shades, pad, source):
             rows[y + pad][x + pad] = garment_tone(colour, shades)
 
 
+def retain_cloth_shadows(rows, cells, pad, source):
+    """Let dyed ridges catch the light while the recessed cloth keeps its local colour."""
+    cells = {(x + pad, y + pad) for x, y in cells}
+    values = {p: _LIGHT.get(source[p[1]][p[0]], 0.5) for p in cells}
+    # Treat the sleeves, split hems and other disconnected panels separately.
+    # A turned-away cuff must still read when the opposite sleeve is well lit.
+    pending = set(cells)
+    while pending:
+        start = pending.pop()
+        panel = [start]
+        for x, y in panel:
+            for neighbour in ((x-1, y), (x+1, y), (x, y-1), (x, y+1)):
+                if neighbour in pending:
+                    pending.remove(neighbour)
+                    panel.append(neighbour)
+        dyed = [(x, y) for x, y in panel if rows[y][x] != source[y][x]]
+        keep = max(2, (len(dyed) * 2 + 4) // 5)
+        if len(dyed) <= keep:
+            continue
+
+        def light_on_fold(p):
+            x, y = p
+            tone = values[p]
+            shadow = min(values.get(q, tone) for q in ((x-1, y), (x+1, y), (x, y-1), (x, y+1)))
+            return tone + 0.5 * (tone - shadow), -y, -x
+
+        for x, y in sorted(dyed, key=light_on_fold, reverse=True)[keep:]:
+            rows[y][x] = source[y][x]
+
+
 def dye_cuirass(rows, cells, pad, source, fallen):
     """Turn the steel into shadow at the far side of the ribs and under the lower lip."""
     spans = {}
@@ -1998,7 +2031,7 @@ def finish_robe(rows, robe):
 
     # A broader hem can catch more light, but even a whole half-giant back
     # needs only a handful of lit folds. Leave the field of class cloth intact.
-    budget = min(12, max(1, (len(tones) + 7) // 15))
+    budget = min(8, max(1, (len(tones) + 10) // 21))
     midtone = (min(tones.values()) + max(tones.values())) / 2
     folds = {}
     for (x, y), tone in tones.items():
@@ -2014,7 +2047,7 @@ def finish_robe(rows, robe):
 
     stitched = set()
     count = 0
-    thread_limit = max(1, len(tones) // 4)
+    thread_limit = max(1, len(tones) // 6)
     for x, y in sorted(folds, key=priority, reverse=True):
         if any(max(abs(x - u), abs(y - v)) < 3 for u, v in stitched):
             continue
@@ -2049,7 +2082,7 @@ def finish_robe(rows, robe):
     return rows
 
 
-def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=()):
+def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=(), exposed=()):
     """Place cycling highlights on separated folds of *each* visible armour piece."""
     if not cells:
         return
@@ -2096,14 +2129,22 @@ def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=()):
         highlights(ordered[:cut], half)
         highlights(ordered[cut:], count-half)
 
+    shins = set(exposed)
     for region in groups:
         if region:
-            count = max(1, (len(region)+4)//6)
+            count = min(5, max(1, (len(region)+8)//14))
             if count == 1 and len(region) >= 4:
                 xs, ys = zip(*region)
                 if max(max(xs)-min(xs), max(ys)-min(ys)) >= 3:
                     count = 2
+            mark = len(chosen)
             highlights(region, count)
+            calf = shins.intersection(region)
+            if calf and calf.isdisjoint(chosen[mark:]):
+                # The lit skirt can occupy most of the leg slot. Keep a reflection
+                # on the real greave where it emerges from under the hem.
+                chosen.pop()
+                highlights(sorted(calf), 1)
     # Neighbouring highlights start at different points in the icon's DAC cycle,
     # so several parts of the worn piece can be read even on a stationary figure.
     phase = {ARMOUR_CHEST: 0, ARMOUR_ARMS: 2, ARMOUR_LEGS: 4}[piece]

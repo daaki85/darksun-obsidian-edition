@@ -4,7 +4,7 @@ The human woman is in front walk step one (03) and the elf woman is in front idl
 
 ![Human woman Priest and elf woman Cleric/Psionicist in the reported poses, with class colors, earlier full plate, revised chest plate and revised full plate next to the retail clothing and armor](plate-fit-clerics.png)
 
-In the Priest’s front step, the cuirass follows the chest and her long robe hides the greaves. Equipping the full set changes 36 native pixels there, compared with 96 in the earlier fit. In the elf’s front idle, all 18 pixels of her teal sash keep their original shades with full plate equipped.
+In the Priest’s front step, the cuirass follows the chest and her long robe hides the greaves. Equipping the full set changes 17 native pixels there. The earlier fit shown here changed 96. In the elf’s front idle, all 18 pixels of her teal sash keep their original shades with full plate equipped. [Compare the armor materials on other outfits](subtle-armor.md)
 
 [Watch both women through all 29 poses](plate-fit-clerics.gif). The enlarged image is 4× and the small copy is game size. Follow the upper rim and shoulder through the turn, then look below the waist to see which areas of the garment the leg pieces cover. During the bow poses, the original bow passes in front where the arms cross. The retail armor sheet ends after the melee strikes and the retail Priest sheet ends after the bow poses.
 

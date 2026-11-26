@@ -40,8 +40,9 @@ def appearances(atlas, study, swatches, materials, obj, role, pose):
     for shades, glow in materials:
         dyed = [row[:] for row in source]
         sg.dye_garment(dyed, surface, shades, 0, source)
+        sg.retain_cloth_shadows(dyed, surface, 0, source)
         enchanted = [row[:] for row in dyed]
-        sg.sparkle_cells(enchanted, surface, glow, spacing=11, sparse=True)
+        sg.shine_armour(enchanted, surface, sg.ARMOUR_CHEST, None, 0, glow)
         differences = {(x, y) for y, row in enumerate(enchanted) for x, c in enumerate(row)
                        if c != source[y][x]}
         glints = {(x, y) for y, row in enumerate(enchanted) for x, c in enumerate(row)

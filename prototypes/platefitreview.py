@@ -42,11 +42,11 @@ def capture(game_dir):
     return saved
 
 
-def former(game_dir, checkout):
+def former(game_dir, checkout, script=__file__):
     code = ("import json,runpy,sys; "
             "capture=runpy.run_path(sys.argv[1])['capture']; "
             "json.dump(capture(sys.argv[2]),sys.stdout)")
-    args = [sys.executable, "-c", code, str(Path(__file__).resolve()), str(game_dir.resolve())]
+    args = [sys.executable, "-c", code, str(Path(script).resolve()), str(game_dir.resolve())]
     return json.loads(subprocess.check_output(args, cwd=checkout/"prototypes"))
 
 

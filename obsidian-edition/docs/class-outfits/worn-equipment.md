@@ -1,6 +1,6 @@
 # Worn equipment on the six party figures
 
-The sheets below record the earlier equipment fitting pass. Current armor colors follow the existing folds on each class garment. [Current armor comparison](armor-dyes.md) [Current Ashen and Veiled robe colors](named-robes.md)
+The sheets use the Loader’s current equipment pictures. Compare leather and steel along the original folds, then watch the exposed cuffs and shins as each figure moves. [Compare the earlier and current armor dyes](subtle-armor.md) · [Inspect the Ashen and Veiled robes](named-robes.md)
 
 ![Chest plate, full plate, both robes, cloaks, boots, gloves, bracers, sword and shield, and bow on six figures beside the original artwork](worn-equipment.png)
 
@@ -46,10 +46,10 @@ The comparisons use the loader’s party picture builder and retail game art. Th
 
 | Item | What to look for on the map | Retail comparison |
 |---|---|---|
-| Chest plate and full plate | Chest plate leaves the lower jerkin or skirt in the class color. Equipping chest, arms and legs together carries steel into the registered shoulder and lower garment. The steel highlight follows the source shading. Bare arms, uncovered calves and the face stay visible. Boots and a helm are separate items. | The blue figure in picture 1342 has brighter, tighter alternating marks on its back. The party steel has a darker outline and broader, quieter planes. |
+| Chest plate and full plate | Chest plate picks out the upper garment. The full suit also marks visible arm guards and greaves. A long clerical skirt can hide the shins through an entire stride. Boots and the helm occupy their own slots. | The blue figure in picture 1342 has brighter, tighter alternating marks on its back. The party steel has a darker outline and broader, quieter planes. |
 | Warden’s Plate | The actual four-piece set adds the headpiece. Short steel highlights and sparse, icon-colored glints separate magical metal from ordinary steel. Look at the elf Preserver from behind in the materials sheet. The plum mantle stays plum over the armor. | Compare the grip, face, silhouette and shoulder highlight with 1342 in the same strike. The Warden set uses the game’s cycling colors when displayed in DOSBox. |
-| Ashen Robe | Ash gray with pale binding and ember glints. It colors the visible chest and existing lower garment. Its length follows the class outfit. A mantle can hide most of the robe from behind. | The red retail Priest (1563) has a fuller silhouette and more variation within a broad fold. The ash binding is clearest against a shadow in front. |
-| Robe of the Veiled Alliance | Night blue with a narrow gold binding and cool glints, following the inventory icon. The edge changes sides on screen as the torso turns. The class hood, skin, feet and foreground hand keep their colors. | The retail Mage (724) has a much larger area of blue cloth. On a small Psionicist the gold binding distinguishes the Veiled Robe from the Ashen Robe more readily than the shine. |
+| Ashen Robe | Ash-colored binding and ember glints follow the raised folds of the original garment. A mantle can hide most of the robe from behind. | The red retail Priest (1563) has a fuller silhouette and more variation within a broad fold. The ash binding is clearest against a shadow in front. |
+| Robe of the Veiled Alliance | Lilac binding and blue glints follow the exposed folds. The class hood, skin, feet and foreground hand keep their colors. | The retail Mage (724) has a much larger area of blue cloth. On the Psionicist, compare the cool glints against the Ashen Robe’s warmer thread on the same teal fabric. |
 | Equipped cloaks | The item dye now picks up the light and dark folds in the underlying cloth. On a Thief the back stays readable through the rear walk. A cloak can extend beyond an uncovered Fighter’s shoulders. | The green Thief (630) has more closely spaced vertical folds and a brighter ridge. The party cloak is still coarser, especially under the elves’ hair. |
 | Boots | Each exposed boot takes its own shadows and highlights. A lifted or hidden foot keeps its pose. A pair can show only one boot when the other foot is occluded. The footwear row shows plain leather, Boots of Elvenkind and Boots of Speed in the same step. | The retail human woman (2099) has strongly separated blue boots. Compare the space between her feet and the direction of the lifted toe. |
 | Gloves and bracers | Chameleon Gloves give the equipped fist blue-gray leather. The Quicksilver Glove shows a silvery face on a brown palm. One glint sits on visible glove pixels. An occluded hand can hide the entire glove. Bracers use the registered arm patch farther up the limb. | The retail Warrior (1252) uses a few contrasting pixels to separate wrist, grip and blade. At 1× the glove silhouette is the wearer’s hand and the two glove colors can be hard to tell apart. |
@@ -63,8 +63,8 @@ Each link opens all 29 native poses. Each tile is labeled with its equipment and
 
 | Figure | Detail to follow |
 |---|---|
-| [Human man](worn-human-man.gif) | Watch the steel cross the waist when leg plate goes on. The wide shoulders and dark skirt show this especially well. In the robe views the visible chest can narrow to just a few pixels. |
-| [Human woman](worn-human-woman.gif) | In full plate, lit and shaded steel now separate across the skirt. Her long hair still obscures the upper back. The sling attachment follows her waist in the side stride. |
+| [Human man](worn-human-man.gif) | Compare the Warrior’s chest plate and full suit during a walk. Follow the warmer leather at the waist and the steel at the shins. In the robe views the visible chest can narrow to just a few pixels. |
+| [Human woman](worn-human-woman.gif) | Compare the Warrior’s fitted chest and exposed lower armor as one foot passes the other. Her long hair still obscures the upper back. The sling attachment follows her waist in the side stride. |
 | [Dwarf man](worn-dwarf-man.gif) | In the shorter recoil, the long weapon turns across the body. The staff butt clears the soles on the first side step. |
 | [Dwarf woman](worn-dwarf-woman.gif) | Follow her distinct opening strike. The glove travels with the leading fist and a heavy axe stays joined to its haft through the swing. |
 | [Elf man](worn-elf-man.gif) | In profile walk steps 2 and 3, the Preserver and Ranger retain the outward swing while the last three rows of the trailing corner fold toward the knee. The class and equipped cloaks share that edge. |
@@ -87,7 +87,7 @@ The table and CSV record the earlier equipment pass at `a7912ae`, before the pro
 | Elf man | 15.7% → 0.9% | 31.2% → 7.8% |
 | Elf woman | 16.2% → 1.8% | 31.8% → 6.9% |
 
-For retail context, an 8×8 rear-idle sample across the back of the Warrior (1252) had 7.7% flat squares and ten colors. The Priest (1563) had 2.0% and fourteen colors. The Mage (724) had 0% and twelve, and the Thief (630) had 0% and ten. Those are local swatches from original figures. On the complete party render, ordinary steel averages about eight to nine colors in its visible equipment regions. Cloak dyes have six steps. Their folds are consequently subtler than the retail Thief’s even where the silhouette is similar.
+For retail context, an 8×8 rear-idle sample across the back of the Warrior (1252) had 7.7% flat squares and ten colors. The Priest (1563) had 2.0% and fourteen colors. The Mage (724) had 0% and twelve, and the Thief (630) had 0% and ten. Those are local swatches from original figures. In that pass, ordinary steel averaged about eight to nine colors in its visible equipment regions. Cloak dyes have six steps. Their folds are consequently subtler than the retail Thief’s even where the silhouette is similar.
 
 [Per-pose material measurements](worn-measurements.csv) include color counts and the proportion of pixels differing from all four orthogonal neighbors. The robe comparison measures the chest coordinates shared by the old and revised render. Poses with no sampled pixels are omitted. Magic palette entries count as individual colors.
 

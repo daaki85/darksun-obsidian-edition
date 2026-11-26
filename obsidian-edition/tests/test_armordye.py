@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from dsloader import art, classoutfits, spritegear, sprites
 
@@ -54,7 +55,24 @@ class ArmorDyeTests(unittest.TestCase):
                     self.assertGreaterEqual(sum(base[y][x] == worn[y][x] for x, y in original_tones), 3)
                     # Metal also shows on the fitted cuff beyond the Priest's sleeve.
                     surface = cloth.union(frame.regions[classoutfits.FOREARM])
-                    self.assertGreater(sum(base[y+sy][x+sx] != worn[y+sy][x+sx] for x, y in surface), 5)
+                    self.assertGreaterEqual(sum(base[y+sy][x+sx] != worn[y+sy][x+sx] for x, y in surface), 5)
+
+    def test_material_reads_in_the_folds_and_preserves_native_shadow_colours(self):
+        for obj, role in ((309, "Psionicist"), (307, "Preserver"), (308, None)):
+            for kit in ((6, 7, 8), (15, 55, 56), (88, 25, 26)):
+                def front(pieces):
+                    chunk = self.pictures.build(obj, False, {}, pieces, role=role)
+                    return art.decode_frame(chunk, 0)[2]
+                with self.subTest(obj=obj, role=role, kit=kit):
+                    base, softened = front(()), front(kit)
+                    with patch.object(spritegear, "retain_cloth_shadows"):
+                        solid = front(kit)
+                    marks = [(old, full, new) for a, b, c in zip(base, solid, softened)
+                             for old, full, new in zip(a, b, c) if full != old]
+                    self.assertTrue(all(new in (old, full) for old, full, new in marks))
+                    retained = sum(new == old for old, full, new in marks)
+                    self.assertGreater(retained, len(marks) // 5)
+                    self.assertGreater(len(marks) - retained, len(marks) // 4)
 
     def test_enchanted_robes_keep_class_fabric_and_limit_the_cycling_thread(self):
         from dsloader import game
@@ -146,7 +164,8 @@ class ArmorDyeTests(unittest.TestCase):
         from dsloader import game
 
         sx, sy = sprites.room(False)
-        cases = ((301, "Gladiator", (5, 17), game.ROBE_TYPE, 135, True),
+        cases = ((301, "Gladiator", (5, 17), game.ROBE_TYPE, 135, False),  # recessed red leather
+                 (301, "Gladiator", (6, 17), game.ROBE_TYPE, 137, True),   # lit ridge beside it
                  (300, "Ranger", (14, 1), 88, 169, False))
         for obj, role, (x, y), kind, original, should_change in cases:
             with self.subTest(role=role):

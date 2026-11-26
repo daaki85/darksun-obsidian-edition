@@ -29,12 +29,14 @@ The Warden’s Plate comparison shows the same figure with empty slots, each of 
 
 | Item in the gallery | Visible material and shine |
 |---|---|
-| Legcrusher’s Inixhide +1 | The visible chest fabric takes the leather dye. Fire-colored glints follow the material. |
-| Bone Scale Chest Armor +1 | A test copy of the retail bone chest piece has a +1 bonus. It uses the bone shades and a blue shimmer. |
+| Legcrusher’s Inixhide +1 | Warm leather shades pick out the chest fabric while the original garment color stays visible. Fire-colored glints follow the material. |
+| Bone Scale Chest Armor +1 | A test copy of the retail bone chest piece has a +1 bonus. Pale bone shades follow the existing seams, with a blue shimmer on the exposed surface. |
 | Cloak of Elvenkind | Green shine follows the visible folds as the cloak trails, settles behind the arm or covers the lower garment. |
 | Bracers of Defense AC 5 | The shine sits on visible wrist cuffs. Watch the wrist pass the shoulder in a strike. A sleeve, shield or robe can hide a cuff. |
 | Boots of Speed | Look for the red leather and fire-colored glint on each exposed foot as it lifts. Robes can hide both feet. |
 | Girdle of Back Defense | The visible waistband takes brown leather, violet stitching and a blue glint. A passing forearm or closed cloak can hide the band. |
+
+[Compare the strength of the armor tints with the preceding build](subtle-armor.md)
 
 The belt comparison follows one human Warrior through all 29 poses. The retail Belt of Might has a warm buckle and fire-colored shine. The Girdle of Back Defense and Golden Girdle of Urnst share a blue shine. Compare their leather and gold fittings between glints, then watch the waist turn in profile. [Compare all three magical belts](magic-gear-belt-comparison.gif)
 
@@ -46,6 +48,6 @@ This short DOSBox capture shows four stationary figures with the equipped sprite
 
 ## Armor dye studies
 
-These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art. The half-giant, halfling and Mul loops above use the Loader’s fitted class outfits. The two half-elf combinations below are still study previews.
+These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art and uses the same leather, bone and chest highlights as the fitted equipment. The half-giant, halfling and Mul loops above use the Loader’s fitted class outfits. The two half-elf combinations below are still study previews.
 
 [Half-elf Druid and Cleric/Preserver](magic-study-half-elves.gif) · [Half-giant Cleric/Fighter and Psionicist](magic-study-half-giants.gif) · [Halfling Cleric/Thief, halfling Fighter/Psionicist and Mul Druid/Fighter](magic-study-halflings-mul.gif)

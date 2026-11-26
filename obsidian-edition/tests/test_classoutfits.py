@@ -44,7 +44,10 @@ class HalfElfEquipmentTests(unittest.TestCase):
                                        for x, c in enumerate(row) if c != bare[y][x]}
                             self.assertTrue(changed.issubset(costume.regions[classoutfits.CHEST]))
                             if not combat and f == 0:
-                                self.assertGreater(len(changed), 12)
+                                # A Preserver's outer mantle leaves only a small patch
+                                # of chest cloth to catch the material highlights.
+                                self.assertGreaterEqual(len(changed), 8)
+                                self.assertTrue(set(costume.regions[classoutfits.CHEST]) - changed)
                             if role == "Preserver":
                                 self.assertFalse(changed.intersection((x, y) for x, y, _ in costume.cloak))
                             if combat and f in (9, 10, 11):
