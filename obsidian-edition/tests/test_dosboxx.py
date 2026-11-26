@@ -567,14 +567,17 @@ class LaunchTests(unittest.TestCase):
         saved = ravager.prepare, ravager.widen_files
         self.addCleanup(lambda: (setattr(ravager, "prepare", saved[0]), setattr(ravager, "widen_files", saved[1])))
         made = []
-        ravager.prepare = lambda game_dir, dos_dir, settings=None: made.append(game_dir)
+        ravager.prepare = lambda game_dir, dos_dir, settings=None, sl_dir=None: made.append((game_dir, sl_dir))
         ravager.widen_files = lambda game_dir, size=None: []
+        saved_find = launch.find_game_dir
+        self.addCleanup(setattr, launch, "find_game_dir", saved_find)
+        launch.find_game_dir = lambda: "/the/shattered-lands"  # (the new items' pictures come from it)
         program = self.program()
         settings = self.settings(dosbox_x_path=program)
         proc, problem = launch._launch_wotr(wotr, settings)
         try:
             self.assertIsNone(problem)
-            self.assertEqual(made, [wotr])
+            self.assertEqual(made, [(wotr, "/the/shattered-lands")])  # (as GOG's start: none given, no pictures)
             self.assertEqual(proc.args[:3], [program, "-conf", launch.DBX_CONF])
             self.assertEqual((launch.STARTED_ENGINE, launch.MEMORY_FILE),
                              (dosboxx.DOSBOX_X, dosboxx.memory_path(launch.HERE, settings)))
