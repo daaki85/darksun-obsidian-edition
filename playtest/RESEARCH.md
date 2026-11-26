@@ -1822,6 +1822,22 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
 (75,171) is the inventory, whose Computer Control icons are the lower small ones left of the portraits (6,17 /
 6,65 / 6,113 / 6,161), View Character's 47,53 / 98,53 / 47,113 / 98,113.
 
+**The starting weapon of the first pick** (2026-11-26, logs/2026-11-26-ravager-first-pick-weapon.md):
+`ravfirstweapon.fill` in ravlog's `_gear_pass` (GEAR_DONE: after CR_WEAPONS' picks and the game's gear, before the
+roster write; `RAV_NO_FIRST_WEAPON=1` on ravdice.py turns it off for a control) makes the weapon in hand over in place
+(the record's picture, count, value, type, power, +12h byte, name and plus; its ITEM_NEXT and slot kept). **The
+sequel's weapon lines and attack take a double spear that isn't first in the creature's item list (+0Ah) for no
+weapon** ("(2x1D1+1)", the bare hand; a lotulis behind a sling is taken): `weapon_first` rotates the records' contents
+so the weapon in hand is first, as the inventory's equip leaves it. A double spear specialist swings once a round even
+so (the same after a hand equip). The sequel's type records (15 bytes: flags +0, material +4, two-handed +0Bh 40h,
+classes +0Ch: air 1, earth 2, fire 4, water 8, druid 10h, fighter 20h, gladiator 40h, preserver 80h, psionicist 100h,
+ranger 200h, thief 400h): its daggers (37, 72) lacked the air cleric's bit (ravager.mod_types_table adds it), and its
+club (29) has no material (40h), so the sphere rule refuses it to earth and water clerics too (open). The creation
+screen: the sphere's AIR clicked off at 240,106, then EARTH 114, FIRE 122, WATER 130; a gladiator needs FIGHTER
+(255,29) clicked off first; the weapon window's slots at x 75, 109, 143, 177, 211, 245 and y 32, 66, 100, 134 in
+specialize.KINDS' order. A ranger can't pick the bow (greyed). The roster's ADD (a right click on an empty party slot)
+lists the roster newest first, rows from y 45, 11 apart.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

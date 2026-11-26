@@ -261,9 +261,16 @@ new characters start at 7th level, so a gladiator picks three. EXIT leaves the r
 long sword, then the club; a thri-kreen's chatkcha first), and EDIT asks only for picks still due. No
 picks come after DUAL there yet, and a kit's own weapons aren't offered first. A new fighter starts with
 its +1 long sword in the right hand and its shield in the left (the sequel's own gear had them the other
-way round, so a long sword specialist swung once a round until the player swapped them), but with the
-sequel's long sword whatever its first pick: the starting weapon isn't yet made the first pick's kind as
-in Shattered Lands. The sequel knows all twenty-two: a lotulis specialist from Shattered
+way round, so a long sword specialist swung once a round until the player swapped them). As in Shattered
+Lands, the starting weapon is made the first pick's kind, but a **+1** one, as the sequel starts its warriors
+with magic weapons: the weapon in hand becomes the pick's +1 weapon (a ranger's plain long sword too), a
+two-handed one sends the shield (or a gladiator's second sword) to the backpack, and a bow, sling, staff
+sling, javelin, darts or chatkcha pick goes to the missile slot (a bow with +1 arrows; a missile weapon already there, a ranger's bow or a
+thri-kreen's chatkcha, goes to the backpack), the weapon in hand staying. A thri-kreen whose first pick is
+its own gythka or chatkcha keeps its own. The +1 weapons are the sequel's own where it has one (long sword, dagger, mace, axe, quarterstaff,
+gythka, chatkcha, sling, lotulis, double spear, darts), else the mod's new ones (short sword, great axe,
+pick, polearm, cahulaks, staff sling); the club, two-handed sword, trikal and javelin, which have no +1 in
+either, are the sequel's plain one with a +1, and the bow is the plain bow with +1 arrows. The sequel knows all twenty-two: a lotulis specialist from Shattered
 Lands is a lotulis specialist there, with the sequel's own Lotulis. Its weapons take these weapon
 specs (the six that came from the sequel by its own weapons of them; the rest by name and dice):
 

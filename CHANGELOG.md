@@ -99,6 +99,14 @@ Releases, newest first (2.12.0 and older in the archive):
   so a new long sword specialist showed 1 attack a round; now 2 (the Loader's copy of the program, its gear
   table's slots).
 
+**New: Wake of the Ravager's starting weapon is the first pick's, +1**
+- A new fighter's, gladiator's or ranger's weapon in hand becomes a +1 weapon of its first weapon spec
+  (the sequel's own +1, else the mod's new ones, else the sequel's plain one made +1); a two-handed one
+  sends the shield or second sword to the backpack, and a missile pick goes to the missile slot (a bow
+  with +1 arrows). The control without it: the sequel's +1 long sword whatever the pick.
+- An air cleric starts with an obsidian dagger in hand (the sequel's daggers lacked the air cleric's
+  class bit), a fire cleric with the obsidian mace.
+
 **Fixed: the SL weapons and the Ravager port together**
 - The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
   item types stay the first 33, and SL's new weapon types go across in the party transfer as the

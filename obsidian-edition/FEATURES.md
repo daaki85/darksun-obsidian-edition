@@ -1067,13 +1067,16 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   and psionic powers, gear and hit dice doesn't carry over yet. The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
-  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its
+  can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air
+  clerics' too, as the game's are in Shattered Lands), given before the character is first shown and written to the roster. Its
   weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
   druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
   weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
   shield in the left. A new
   fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
-  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The weapon specs work there:
+  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)), and its starting weapon becomes a +1
+  weapon of its first pick's kind (a two-handed one sends the shield to the backpack; a bow or sling goes to
+  the missile slot, a bow with +1 arrows, the missile weapon there before going to the backpack). The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
   weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
   Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
