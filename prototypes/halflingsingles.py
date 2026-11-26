@@ -210,7 +210,8 @@ def rear_single_rows(fitted, model, pose, swatches):
 
 
 def draw(game, model, pose, swatches):
-    fitted = fit.rows_for(game, model, pose, swatches["linen"])
+    exposed_arm = set()
+    fitted = fit.rows_for(game, model, pose, swatches["linen"], exposed_arm=exposed_arm)
     fit.check_uncovered_head(game, model, pose, fitted)
     if pose == 28:
         fitted = {k: fit.flip(v) for k, v in fitted.items()}
@@ -250,7 +251,7 @@ def draw(game, model, pose, swatches):
             pt = x, y
             if pt in bow:
                 continue
-            tailored = fighter[v][u] != skin
+            tailored = fighter[v][u] != skin and pt not in exposed_arm
             grain = swatches["slate"][(y-sy)%8][(x-hx)%8]
             turn = 1.6*math.cos((x-axis)*1.24-.65*depth)
             shade = 5.2+turn+.65*grain-.36*abs(x-axis)

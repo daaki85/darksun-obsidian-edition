@@ -9,7 +9,7 @@ from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, SLEEVES, fitted_panels,
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
-from shoulderscale import scale_pixels
+from shoulderscale import jerkin_facing, shoulder_paint
 
 MODELS = (2072, 2074)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric", "Psionicist", "Ranger")
@@ -97,43 +97,15 @@ GUARD = ((8, 10), (21, 11), (8, 11), (7, 10), (7, 10), (6, 10), (6, 10), (16, 11
          (19, 12), (17, 11), (9, 11), (10, 16), (9, 12), (15, 9), (18, 11))
 
 
-# Woman's shoulder pin in the fitted pose, traced from the visible upper
-# arm. The third coordinate is the direction the lower lip rolls. Hair and
-# the raised wrist hide the plate in the second rear strike.
+# Anchor of the woman's Gladiator strap on the upper arm in each pose.
 WOMAN_GUARD = (
-    (7, 9, -1), (23, 10, 1), (8, 11, 0), (6, 9, -1), (5, 11, -1),
-    (6, 9, -1), (6, 9, -1), (18, 10, 1), (17, 10, 1), (19, 10, 1),
-    (20, 10, 1), (11, 11, 0), (13, 10, -1), (7, 11, -1), (15, 11, 1),
-    (7, 12, -1), (10, 7, -1), None, (10, 12, -1), (10, 10, 1),
-    (11, 12, 1), (7, 9, -1), (18, 10, 1), (19, 9, 1), (9, 11, 1),
-    (8, 16, 0), (8, 13, -1), (13, 8, 1), (20, 10, 1),
+    (7, 9), (23, 10), (8, 11), (6, 9), (5, 11),
+    (6, 9), (6, 9), (18, 10), (17, 10), (19, 10),
+    (20, 10), (11, 11), (13, 10), (7, 11), (15, 11),
+    (7, 12), (10, 7), None, (10, 12), (10, 10),
+    (11, 12), (7, 9), (18, 10), (19, 9), (9, 11),
+    (8, 16), (8, 13), (13, 8), (20, 10),
 )
-
-# Rows run from collar to arm. The ridge is short and the tip turns down
-# over the deltoid. A lifted elbow shows the long edge of the plate.
-TURNED_SCALE = ((-1, "46"), (-2, "3547"), (-1, "2345"), (1, "21"))
-PROFILE_SCALE = ((-1, "46"), (-1, "357"), (0, "34"), (1, "1"))
-RAISED_SCALE = ((-2, "3546"), (-2, "23475"), (0, "212"))
-BACK_SCALE = ((-2, "34"), (-2, "2575"), (-1, "2344"), (1, "21"))
-
-
-def fitted_scale(pose, female):
-    pin = WOMAN_GUARD[pose] if female else GUARD[pose]
-    if not pin or female and pose == 19:
-        return {}
-    outside = 1 if pose in REAR or pose in (22, 23, 27) else -1
-    if female and pin[2]:
-        outside = pin[2]
-    if pose in (16, 21, 25, 26, 27):
-        strips = RAISED_SCALE
-    elif pose in PROFILE:
-        strips = PROFILE_SCALE
-        if pose in (2, 11, 14, 24):
-            outside = 1
-    else:
-        strips = BACK_SCALE if pose in REAR else TURNED_SCALE
-    return scale_pixels(pin[:2], outside, -1, strips)
-
 
 # Midpoint of each sole on its last visible scanline, in the same upright
 # coordinates as CUTS. Trace the lifted foot separately from the planted one.
@@ -261,12 +233,10 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     top, wrap, jerkin, robe, arm, hair, sleeve, belt = fitted_panels(pose, female)
     body = pieces["Body base"]
     shoulder, _, _ = CUTS[pose]
-    guard = GUARD[pose]
-    if female:
-        fit = WOMAN_GUARD[pose]
-        guard = fit[:2] if fit else None
+    guard = (WOMAN_GUARD if female else GUARD)[pose]
     outside = 1 if pose in REAR or pose in (17, 22, 23) else -1
-    cap = fitted_scale(pose, female)
+    cap = shoulder_paint(model, pose)
+    facing = jerkin_facing(model, pose)
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if female else (0, ())
     rib_span = row_limits(top)
     cloak = stamp(RANGER_CLOAK[pose])
@@ -278,7 +248,7 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
         for x, y in skirt:
             hem[x] = max(hem.get(x, y), y)
         colors = LINEN if role == "Cleric" else RAMPS["hide"]
-        shoulder_piece = {"Cleric": sleeve, "Fighter": cap.keys(), "Gladiator": cap.keys(),
+        shoulder_piece = {"Cleric": sleeve, "Fighter": cap.keys() | facing.keys(), "Gladiator": cap.keys(),
                           "Psionicist": set(), "Ranger": cloak}[role]
         for x, y in top | skirt | shoulder_piece:
             sx, sy = x+dx, y+dy
@@ -294,7 +264,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
             on_guard = role in ("Gladiator", "Fighter") and point in cap and c is not None
             if on_guard and female:
                 on_guard = c in range(130, 154)
-            if (point in hair and not under_lock and not on_guard) or (sx-5, sy) in bow:
+            on_facing = role == "Fighter" and point in facing and body[sy][sx] in range(130, 154)
+            if (point in hair and not under_lock and not on_guard and not on_facing) or (sx-5, sy) in bow:
                 continue
             if 0 <= sy-locks_start < len(locks):
                 left, right = locks[sy-locks_start]
@@ -340,6 +311,9 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 if visible is not None:
                     visible["sleeve"].add(point)
                 pieces[role][sy][sx] = pigment(LINEN, shade)
+                continue
+            if on_facing:
+                pieces[role][sy][sx] = facing[point]
                 continue
             if on_guard:
                 if role == "Fighter" and visible is not None:
@@ -436,20 +410,23 @@ BELT_TAB = (
 )
 
 
-def bone_caps(robe, visible_sleeve, pose, dx, dy):
-    # The sleeve patterns turn with each upper arm. A short domed plate
-    # sits inside each sleeve, with its lower rim above the linen cuff.
+def bone_caps(robe, linen, visible_sleeve, pose, dx, dy):
     for sleeve in SLEEVES[pose]:
-        spans = row_limits(stamp(sleeve))
+        outline = stamp(sleeve)
+        spans = row_limits(outline)
         crown = min(spans)
-        top = sum(spans[crown])
-        bottom = sum(spans[crown+4])
-        outside = 1 if bottom >= top else -1
-        strips = PROFILE_SCALE if pose in PROFILE else TURNED_SCALE
-        pin = ((spans[crown+2][0]+spans[crown+2][1])//2, crown+2)
-        for (x, y), shade in scale_pixels(pin, outside, -1, strips).items():
-            if (x, y) in visible_sleeve:
-                robe[y+dy][x+dx] = BONE[shade]
+        for x, y in outline & visible_sleeve:
+            left, right = spans[y]
+            depth = y-crown
+            # Leave linen around the seam and cuff. The plate follows the
+            # widening sleeve and the light already painted on the upper arm.
+            if not 1 <= depth <= 4 or not left < x < right:
+                continue
+            if depth == 4 and (x, y+2) not in outline:
+                continue
+            cloth = linen[y+dy][x+dx]
+            shade = LINEN.index(cloth) * (len(BONE)-1) / (len(LINEN)-1)
+            robe[y+dy][x+dx] = pigment(BONE, shade + .5 - .4*(depth-1))
 
 
 def dress_pairs(pieces, visible, model, pose, dx, dy):
@@ -467,9 +444,9 @@ def dress_pairs(pieces, visible, model, pose, dx, dy):
         pieces[pair] = out
         if pair == "Fighter/Psionicist":
             for (x, y), relief in visible["guard"].items():
-                out[y+dy][x+dx] = TEAL_BONE[int(relief + .5)]
+                out[y+dy][x+dx] = TEAL_BONE[relief]
         if accent == "Fighter":
-            bone_caps(out, visible["sleeve"], pose, dx, dy)
+            bone_caps(out, pieces["Cleric"], visible["sleeve"], pose, dx, dy)
         if accent == "Ranger":
             facing = LINEN if parent == "Cleric" else TEAL
             for x, y in cloak:

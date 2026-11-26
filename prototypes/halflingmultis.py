@@ -44,7 +44,7 @@ def hooded(parent, rows, pose, dx, dy, twin):
     return out
 
 
-def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False):
+def waist_detail(game, model, pose, rows, base, accent, dx, dy, grain, above_belt=False):
     out = [row[:] for row in rows[base]]
     (hx, hy) = fit.CUT[pose][1]
     shift, drop = WAIST_SHIFT.get(pose, (0, 0))
@@ -54,7 +54,7 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
         hy -= 2
     head = fit.head_pixels(pose)
     protected = singles.hood(pose)[0] | head
-    scale = fit.shoulder_scale(pose)
+    scale = fit.shoulder_paint(model, pose)
     for v, row in enumerate(out):
         for u, c in enumerate(row):
             x, y = u-4-dx, v-dy
@@ -150,7 +150,7 @@ def draw(game, pose, swatches):
             ("Fighter/Psionicist/Thief", "Fighter/Thief", "Psionicist"),
             ("Psionicist/Ranger/Thief", "Ranger/Thief", "Psionicist"),
         ):
-            rows[name] = waist_detail(game, pose, rows, base, accent, dx, dy,
+            rows[name] = waist_detail(game, model, pose, rows, base, accent, dx, dy,
                                       swatches["slate"], above_belt=(name == "Fighter/Psionicist/Thief"))
         # Finish each hood after the near arm, hair and both waist layers.
         # Keep the donor for the woman's tucked hair in its original palette.

@@ -42,7 +42,7 @@ def draw(game, pose, swatches):
     body = rows["Body base"]
     h, w = len(body), len(body[0])-2*fit.PAD
     hood = hood_pixels(pose)
-    scale = fit.shoulder_scale(pose)
+    scale = fit.shoulder_paint(fit.MODEL, pose)
     wy, left, right = fit.ROBE_CUTS[pose][2]
     dx, dy = HIP_OFFSET.get(pose, (0, 0))
     hip = (left+right)/2+dx

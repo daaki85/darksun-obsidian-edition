@@ -14,7 +14,7 @@ Both elf Preservers and the male human Mage wear plum mantles. In the comparison
 
 Compare the borrowed Thief hoods and Fighter shoulder guards across five races at game size and 2×. The lower row shows the retail material references. [Current and previous colors](multiclass-materials.png) · [All 29 poses](multiclass-materials.gif) · [Compare Fighter/Psionicist and Fighter/Preserver across races](fighter-shoulder-colors.gif)
 
-The half-giant, halfling and Mul Fighter scales narrow in profile and flatten as the bow arm rises. The comparison shows the body base, previous cap and revised cap on each figure, with the retail Warrior at game size. [Compare profile walk step two](shoulder-fit-by-race.png) · [Watch all five figures through 29 poses](shoulder-fit-by-race.gif)
+The Fighter/Psionicist shoulder guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](shoulder-fit-by-race.gif)
 
 ## Dwarf outfits
 

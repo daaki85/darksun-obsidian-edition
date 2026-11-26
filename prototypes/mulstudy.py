@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import HALFTONES, RAMPS, reference_folds
 from wornreview import Atlas
-from shoulderscale import scale_pixels
+from shoulderscale import jerkin_facing, shoulder_paint
 from dsloader import art, classoutfits as co
 
 MODEL = 2093
@@ -301,43 +301,21 @@ def material_color(ramp, level):
     return ramp[max(0, min(len(ramp)-1, round(level)))]
 
 
-def shoulder_scale(pose):
-    gx, gy, _, _ = HIDE_POINTS[pose]
-    _, left, right = ROBE_CUTS[pose][0]
-    # On the drawn bow the nock hand crosses the chest. Follow the
-    # exposed deltoid above it, leaving the baldric tied on the chest.
-    if pose == 25:
-        gx, gy = 12, 9
-    elif pose == 26:
-        gx, gy = 4, 7
-    outside = -1 if gx < (left+right)/2 else 1
-    # The leather ties meet a low, lapped scale. In profile the lit ridge
-    # narrows and the outer corner comes forward with the upper arm.
-    if pose in (16, 21, 25, 26, 27):
-        strips = ((-2, "3567"), (-2, "23485"), (0, "231"))
-    elif pose in PROFILE_HIDE:
-        strips = ((-1, "46"), (-1, "358"), (0, "45"), (0, "21"))
-        outside = -1 if pose in (12, 13, 15) else 1
-    elif pose in (1, 7, 8, 9, 10, 18, 19, 20, 28):
-        strips = ((-1, "45"), (-2, "3576"), (-1, "2345"), (1, "21"))
-    else:
-        strips = ((-1, "46"), (-2, "3586"), (-1, "2345"), (1, "21"))
-    return scale_pixels((gx, gy), outside, -1, strips)
-
-
 def leather_outfits(game, pose, body, keep, arm):
     glad, fighter = ([row[:] for row in body] for _ in range(2))
     h, w = len(body), len(body[0])-2*PAD
     (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = ROBE_CUTS[pose]
     gx, gy, knee, hem = HIDE_POINTS[pose]
     profile = pose in PROFILE_HIDE
-    scale = shoulder_scale(pose)
+    scale = shoulder_paint(MODEL, pose)
+    facing = jerkin_facing(MODEL, pose)
     # The far end of the baldric is sewn into the opposite side of the
     # belt. The jerkin has a separate breast, side seam and overlapping tabs.
     anchor = wl+1 if gx > (sl+sr)/2 else wr-1
     hide = RAMPS["hide"]
     grain = linen_grain(game)
-    for y in range(min(sy, min(y for _, y in scale)), hem+1):
+    top = min([sy, *(y for _, y in scale)])
+    for y in range(top, hem+1):
         if y <= ry:
             t = (y-sy)/max(1, ry-sy)
             lo = sl+1+(rl-sl)*t
@@ -379,6 +357,8 @@ def leather_outfits(game, pose, body, keep, arm):
                     glad[py][u] = material_color(hide, 5.1+.5*weave+relief+3.2*(dist < -.35)-3.2*(dist > .65))
                     if gy+2 <= y < wy-1 and -.95 <= dist < .05 and (y-gy)%4 == 2:
                         glad[py][u] = 169  # Stud in the dark edge of the baldric.
+            if skin is not None and (x, y) in facing:
+                fighter[py][u] = facing[x, y]
             if skin is not None and (x, y) in scale:
                 shade = scale[x, y]
                 fighter[py][u] = BONE[shade]
