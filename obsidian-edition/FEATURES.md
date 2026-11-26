@@ -959,7 +959,7 @@ at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that
 DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
 ([starting it](README.md#other-ways-to-start)).
 
-Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party.
+Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party. In combat the view stays in place while the walking figure is on screen.
 
 ### Taking the party to Wake of the Ravager
 

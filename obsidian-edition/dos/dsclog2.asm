@@ -4031,6 +4031,40 @@ site_table:
 
         dw party_collapsed                  ; 221 load or post-fight gather
 
+        times 223 - ($ - site_table) / 2 dw site_none
+        dw camera_walk                      ; 223 camera during a walker's step
+
+; At 200B7h SI and DI hold the figure's feet. In combat the original camera
+; path first recentres at its margins, then tries a scrolling step. Bypass
+; both while the feet lie strictly inside the viewport (SL 0AC0:AC7A).
+camera_walk:
+        push bp
+        mov bp, sp
+        push ax
+        push es
+        mov ax, ds
+        sub ax, DGROUP - 0x3C10
+        mov es, ax
+        cmp word [es:0x19], 0
+        je .resume
+        mov ax, si
+        sub ax, [CAM_X]
+        dec ax
+        cmp ax, 319
+        jae .resume
+        mov ax, di
+        sub ax, [CAM_Y]
+        dec ax
+        cmp ax, 199
+        jae .resume
+        add word [bp + 2], 0x2019B - 0x200BA
+.resume:
+        pop es
+        pop ax
+        pop bp
+        mov bx, [WHOSE_TURN]                ; displaced read
+        iret
+
 party_collapsed:
         mov byte [0x13FA], 0                ; displaced store in both callers
         mov byte [cs:spread_due], 1

@@ -59,7 +59,7 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-- Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party.
+- Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party. In combat the view stays in place while the walking figure is on screen.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
