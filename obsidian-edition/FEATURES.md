@@ -1103,6 +1103,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   pockets goes by weight. The few weapons SSI made oddly light
   weigh as Shattered Lands' copies of them do (the two-handed sword 15 lb, the lotulis 10). As in
   Shattered Lands, no load is too heavy and nothing slows a loaded character.
+- **[Weapon traits](#weapon-traits)** in the sequel too: the cahulaks' two heads and tangle, the staff
+  sling's stinkpots, the polearm's reach, and on the sequel's own Lotulis, Double Spear and Trikal a
+  specialist's [second foe](#lotulis-and-double-spear) and [trip](#trikal), the trikal reaching two squares.
+  The sequel's **Double Spear** swings beside its foe: SSI gave it a range of 2 squares, which the game
+  took as a shot (once a round, DEX to hit and no STR damage; a double spear specialist under Computer
+  Control swung once a round from 2 squares); with the Loader its range is 1, as Shattered Lands' double
+  spear's, and it swings at the warrior's rate ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
   character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
   past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters

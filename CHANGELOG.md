@@ -60,6 +60,11 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **New**
+- **Wake of the Ravager: the lotulis', double spear's and trikal's traits.** On the sequel's own Lotulis,
+  Double Spear and Trikal, as in Shattered Lands: a lotulis or double spear specialist's last swing of a
+  round of two turns on a second foe beside it (the double spear's 1 less damage), a trikal specialist's
+  hit trips a man-sized foe that fails a save against paralysis, and the trikal reaches two squares as a
+  polearm (DSCLOG2's site 202 and CAH_SWING, CAH_HIT, ENL_ROLL, REACH; its header's +2020 to +2028 count them).
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
   default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
@@ -119,6 +124,13 @@ Releases, newest first (2.12.0 and older in the archive):
   tables (Table 51, Table 46), with no WIS bonus; a Shinobi's wizard slots the Seeker's table by its
   thief level (counted, though it can't cast in the sequel yet). Beside the Elementalist's and
   Crusader's, which the sequel already had.
+
+**Fixed: Wake of the Ravager's double spear**
+- **Wake of the Ravager: a double spear swung once a round.** SSI gave the sequel's Double Spear a range
+  of 2 squares, and the game takes a swing from 2 squares as a shot: the type's one attack a round in place
+  of the warrior's, DEX to hit, no STR damage, and the weapon lines a missile's. A specialist under Computer
+  Control swung once a round from 2 squares. The Loader's OBJEX copy gives it a range of 1, as Shattered
+  Lands' double spear has (`ravager.RAV_RANGES`; `RAV_SKIP=melee_range` the control).
 
 **Fixed: Wake of the Ravager's Justifier**
 - A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it

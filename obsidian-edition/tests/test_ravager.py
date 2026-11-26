@@ -509,7 +509,7 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(ravager.weighted_table(own[ravager.TYPES_CHUNK]))  # (weighed; the daggers the air clerics' too)
+            mended = bytearray(ravager.ranged_table(ravager.weighted_table(own[ravager.TYPES_CHUNK])))  # (weighed, the double spear's range 1; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
@@ -519,7 +519,7 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
             from dsloader import ravshine
             shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
-            weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
+            weighed = ravager.weighted_objects(own, ranges=True)  # (the objects' copies of their types, weighed as ALL 4)
             self.assertTrue(weighed)
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
                              {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)
