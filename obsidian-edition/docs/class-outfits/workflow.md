@@ -15,6 +15,8 @@ Use this sequence when taking a playable race from its original Shattered Lands 
 
 Publish the current sheets and loops with a short status line identifying an art proposal, a loader-rendered preview, or a verified in-game capture. Keep the pose caption visible so feedback can identify a frame precisely.
 
+For a borrowed Thief hood, carry the main garment’s dye through the lit crown, middle folds and dark face opening. On a Fighter scale, pick up the surrounding cloth color in the shadow and reserve a short worn-bone highlight for the ridge. Check the profile step with the guard edge-on. On a triple, trace the third class’s belt, lining or sash separately. Compare at 1× beside the retail Thief, Priest and Warrior. [Before and after on five races](multiclass-materials.png) · [Watch all 29 poses](multiclass-materials.gif)
+
 ## First fitting review
 
 Use the exposed torso, shoulder armor and robe to check the new figure before borrowing their shapes for other outfits. Start with front idle, a rear step, the widest profile stride, a strike with the head lowered and a drawn bow. Then run the same comparison through every native pose, including recoil and fall.

@@ -1,6 +1,7 @@
 """Hood panels in native pixels, anchored to the head in each pose."""
 
 from elfoutfits import RAMPS as ELF_FABRICS
+from multiclasscolor import hood_class
 
 # A continuous turned rim opens at the cheeks. The rear crown folds
 # into a longer panel at the nape. A dot leaves the underlying pixel alone.
@@ -114,7 +115,7 @@ def elf_profile(model, role, pose, rows, paint, folds):
     left = (len(paint[0]) - len(rows[0])) // 2
     top = len(paint) - len(rows)
     # Use the same primary garment as the original multicolored outfit.
-    ramp = next(ramp for name, ramp in ELF_FABRICS.items() if name in role.split("/"))
+    ramp = ELF_FABRICS[hood_class(role) if "/" in role else "Thief"]
     for dy, strip in enumerate(ELF_PANEL):
         y = dy - 1
         for dx, mark in enumerate(strip):

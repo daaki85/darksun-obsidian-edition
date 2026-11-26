@@ -26,7 +26,7 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 | Cleric/Psionicist | Carry a teal sash diagonally across the robe. Its short end crosses the waist and leaves the robe folds visible below. |
 | Fighter/Psionicist | Keep the leather tunic and bone caps. A narrow teal sash crosses the chest and back and ends just below the belt. |
 | Fighter/Thief | The warm brown hood and short cowl match the Fighter’s leather tunic. The cowl fits between the bone caps. |
-| Psionicist/Thief | The teal hood matches the sash across the Thief’s dark cloak. The longer rear hem distinguishes this figure from the hooded Fighter. |
+| Psionicist/Thief | The teal hood matches the sash across the Thief’s dark cloak. Its shaded crown uses the same teal family through the rear walk. The longer rear hem distinguishes this figure from the hooded Fighter. |
 
 ![Five two-class combinations, female above male, synchronized through all 29 poses](dwarf-double.gif)
 

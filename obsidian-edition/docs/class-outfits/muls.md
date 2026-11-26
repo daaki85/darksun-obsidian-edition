@@ -18,10 +18,10 @@ The male Mul has nine legal pairs and three triples. Each has 29 empty-slot pose
 
 | Watch all 29 poses | What to compare |
 |---|---|
-| [Cleric pairs](mul-multiclass-cleric.gif) | The Fighter’s small bone guard and dark sword belt sit on the linen. The Psionicist wears teal at the waist. The Thief’s slate cowl meets the shoulders of the cream robe. |
-| [Druid pairs](mul-multiclass-druid.gif) | Follow the green mantle into the ochre wrap in front walk steps three and four. Compare the Fighter’s belt, the Psionicist’s sash and the Thief’s hood against that same moving waist and shoulder. |
+| [Cleric pairs](mul-multiclass-cleric.gif) | The Fighter’s small bone guard and dark sword belt sit on the linen. The Psionicist wears teal at the waist. The Thief’s linen cowl meets the cream robe at the shoulders. A dark inner fold keeps the face opening clear. |
+| [Druid pairs](mul-multiclass-druid.gif) | Follow the green mantle into the ochre wrap in front walk steps three and four. Follow the worn bone edge above the green shadow on the Fighter’s shoulder. Compare the Fighter’s belt, the Psionicist’s sash and the leaf-green Thief hood against that same moving waist and shoulder. |
 | [Fighter/Psionicist, Fighter/Thief and Psionicist/Thief](mul-multiclass-leather.gif) | The Fighter/Psionicist wears a leather jerkin. Both Thief pairs retain the slate cloak and its swinging corner. Compare where the dark belt and teal sash emerge from behind the crossing arm in profile. |
-| [Three-class outfits](mul-multiclass-triples.gif) | Compare all three parent pairs beneath each triple. The first two keep the Cleric’s cream robe or the Druid’s short green mantle under the slate hood. On Fighter/Psionicist/Thief, the teal sash sits above the sword belt. |
+| [Three-class outfits](mul-multiclass-triples.gif) | Compare all three parent pairs beneath each triple. The first two keep the Cleric’s cream robe or the Druid’s short green mantle under a matching hood. On Fighter/Psionicist/Thief, the teal sash sits above the sword belt. |
 
 The large figures stand on sand. Under each, the smaller figures show the family at game size on paving. The retail Priest, Thief and Warrior are below for comparison. Front bow (24) is the least readable angle for the Fighter/Psionicist sash because the arm crosses the waist. The review checked faces, hands, bows, silhouette gaps and class details in all 348 multiclass poses. These are study renders. [Inspect every multiclass pose as a still](mul-multiclass-poses.png)
 

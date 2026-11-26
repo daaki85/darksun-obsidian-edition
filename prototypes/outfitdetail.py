@@ -178,6 +178,9 @@ def shade_frame(rows, paint, regions, folds, heads, base, model, role, waist, pa
         if model in co.DWARVES and pose == 0 and family == "hide" and shade == 208:
             if 11 <= x - left <= 15 and 12 <= y - top <= 15:
                 shade = 88
+        if model in co.ELVES and role == "Psionicist/Thief" and family == "teal":
+            # The outline and crown use the same teal thread as the tunic.
+            shade = TEAL_TUNIC.get(shade, shade)
         paint[y][x] = shade
         if folds[y][x] and shade != c:
             # Translate the new fold relief into the six steps used by an equipped cloak.
@@ -293,6 +296,14 @@ PLUM_MANTLE = {19: 112, 22: 58, 23: 115, 113: 174, 114: 58, 115: 74,
 
 
 def finish_class_color(model, role, paint, regions, folds, heads):
+    if model in co.DWARVES and role == "Psionicist/Thief":
+        # The approved teal crown includes the foreground head layer. Apply
+        # the four off-hue texture threads to painted pixels after dye relief.
+        for row in paint:
+            for x, color in enumerate(row):
+                if color in (53, 188, 225, 226):
+                    row[x] = TEAL_TUNIC[color]
+        return
     if role == "Psionicist":
         pigments = TEAL_TUNIC
     elif (model in co.ELVES and role == "Preserver") or (model == 2095 and role == "Mage"):

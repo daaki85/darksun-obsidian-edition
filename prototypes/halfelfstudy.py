@@ -607,8 +607,13 @@ class Study:
     @lru_cache(None)
     def rows(self, key, pose, role):
         rows, pad = self.registered.rows(key, pose, role)
+        return self.finish(key, pose, role, rows, pad)
+
+    def finish(self, key, pose, role, rows, pad):
         if role == "Original":
             return rows, pad
+        if "/" in role and "Thief" in role:
+            rows = pairs.dye_hood(self.registered, key, pose, role, rows, pad)
         return self.exposed_skin(key, pose, rows, pad)
 
     def exposed_skin(self, key, pose, rows, pad):

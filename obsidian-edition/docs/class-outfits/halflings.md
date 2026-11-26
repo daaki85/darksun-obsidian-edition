@@ -8,7 +8,7 @@ The sheet pairs each halfling with the same pose from `aa9f774`. The dwarf Thief
 
 ![Both halfling Thieves before and after, beside the dwarf and retail Thieves in five matching poses, at four times and native size](halfling-thief-detail.png)
 
-All seven halfling singles were compared across the 29 poses on both figures. The detail edits are confined to the Thief and the seven combinations that include Thief. Cleric/Thief, Druid/Thief and Ranger/Thief take the revised slate hood over their own cloth. Fighter/Thief, Psionicist/Thief and Fighter/Psionicist/Thief also carry the revised slate cloak. Psionicist/Ranger/Thief retains its green cloak and teal sash. [Compare all the races’ Thieves in motion](mul-race-thief.gif)
+All seven halfling singles were compared across the 29 poses on both figures. The detail edits are confined to the Thief and the seven combinations that include Thief. Cleric/Thief, Druid/Thief and Ranger/Thief use linen or green for the hood over their own cloth. Fighter/Thief, Psionicist/Thief and Fighter/Psionicist/Thief also carry the revised slate cloak. Psionicist/Ranger/Thief retains its green cloak and teal sash. [Compare all the races’ Thieves in motion](mul-race-thief.gif)
 
 ## Multiclass animations
 
@@ -17,8 +17,8 @@ Each large figure wears the combination named above it. For a pair, read the thr
 | Gallery | Where to look |
 |---|---|
 | [Four Cleric pairs](halfling-multiclass-cleric.gif) | In front walk step 1 (03), the Fighter’s dark sword belt and bone guard break up the cream robe. The Ranger’s cloak opens onto the same continuous linen hem. |
-| [Three Druid pairs](halfling-multiclass-druid.gif) | Rear walk step 2 (08) shows the short leaf cape above the ochre kilt. The Druid/Thief has a slate hood tucked into that cape. |
-| [Five Fighter, Psionicist, Ranger and Thief pairs](halfling-multiclass-leather.gif) | Follow the Ranger/Thief beside the plain Thief through side steps 1–4. The green trailing fold carries the Ranger color and the hood keeps its slate rim. |
+| [Three Druid pairs](halfling-multiclass-druid.gif) | Rear walk step 2 (08) shows the short leaf cape above the ochre kilt. The Druid/Thief has a green hood tucked into that cape. |
+| [Five Fighter, Psionicist, Ranger and Thief pairs](halfling-multiclass-leather.gif) | Follow the Ranger/Thief beside the plain Thief through side steps 1–4. The green trailing fold carries the Ranger color and the hood turns into shadow around the cheek. |
 | [Both triples and their parent pairs](halfling-multiclass-triples.gif) | In rear idle (01), compare the leather belt and slate cloak on Fighter/Psionicist/Thief with the green cloak on Psionicist/Ranger/Thief. Both carry a teal wrap. In front strike 2 (16), the raised arm leaves only six teal pixels visible on the Fighter triple. |
 
 [Man, every multiclass pose](halfling-man-multiclass.png) · [Woman, every multiclass pose](halfling-woman-multiclass.png)

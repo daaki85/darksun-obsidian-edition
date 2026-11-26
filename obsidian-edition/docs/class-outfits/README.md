@@ -12,6 +12,8 @@ All six single-class Psionicists use the same teal cloth palette. [Compare the u
 
 Both elf Preservers and the male human Mage wear plum mantles. In the comparison, the top row shows the colors at `9c4ef3c`. The middle and bottom rows show the approved colors enlarged and at game size. The green Ranger is the reference. [Watch all four profile steps](teal-plum-walk.gif)
 
+Compare the borrowed Thief hoods and Fighter shoulder guards across five races at game size and 2×. The lower row shows the retail material references. [Current and previous colors](multiclass-materials.png) · [All 29 poses](multiclass-materials.gif)
+
 ## Dwarf outfits
 
 The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. The five two-class and two three-class outfits combine their identifying details. The Cleric/Fighter wears pale bone caps over cream, and the Fighter/Psionicist wears a narrow teal sash over leather. Each tile below pairs the female front view with the male rear view. [See all twelve class combinations](dwarves.md)

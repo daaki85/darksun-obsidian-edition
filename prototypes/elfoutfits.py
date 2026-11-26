@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw
 
 import dwarfoutfits as dwarf
 import outfits
+from multiclasscolor import hood_class
 from elfcloak import lifted_hem
 from dsloader import classoutfits, figures, sprites
 
@@ -355,6 +356,10 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     cape = next((key for key in ("Preserver", "Ranger", "Thief") if key in members), None)
     cloak_ramp = RAMPS[base] if cape == "Thief" else RAMPS.get(cape, dwarf.HOOD)
     cx, cy = JAWS[model][pose]
+    hood_fabric = hood_class(role) if hooded and len(members) > 1 else base
+    guard_ramp = dwarf.BONE
+    if "Preserver" in members and "Fighter" in members and "Cleric" not in members:
+        guard_ramp = (112, 58, 121, 155)
     hood_center = cx
     if model == figures.ELF_WOMAN and pose in FLYING_HOODS:
         left, right = FLYING_HOODS[pose][2]
@@ -680,7 +685,7 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     and abs(u) > 0.55
                     and ("Fighter" in members or outside > 0)
                 ):
-                    ramp = dwarf.BONE if "Fighter" in members else dwarf.BRONZE
+                    ramp = guard_ramp if "Fighter" in members else dwarf.BRONZE
                     paint = ramp[3 if y == shoulder - 1 else 0 if y == shoulder + 1 else 2]
                     if low_cap:
                         paint = ramp[1 if y == cap_bottom else 2]
@@ -723,7 +728,7 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     shade = max(1, shade - 1)
                 if nape or (drop >= 4 and c in (128, 129, 179, 180)):
                     shade = max(1, shade - 1)
-                paint = RAMPS[base][shade]
+                paint = RAMPS[hood_fabric][shade]
                 cloak_shade = shade + 1
                 armour = 0
             if layers is not None:

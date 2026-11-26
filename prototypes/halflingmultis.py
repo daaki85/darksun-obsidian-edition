@@ -9,6 +9,7 @@ import halflingstudy as fit
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
+from multiclasscolor import dye_fitted_hoods
 
 GROUPS = {
     "cleric": ("Cleric/Fighter", "Cleric/Psionicist", "Cleric/Ranger", "Cleric/Thief"),
@@ -17,6 +18,7 @@ GROUPS = {
                 "Psionicist/Thief", "Ranger/Thief"),
     "triples": ("Fighter/Psionicist/Thief", "Psionicist/Ranger/Thief"),
 }
+DRUID_GUARD = dict(zip(fit.BONE, (207, 188, 53, 55, 199, 62), strict=True))
 LEAF = set(RAMPS["leaf"])
 SLATE = set(RAMPS["slate"])
 CLOTH = set().union(*RAMPS.values(), fit.BONE, singles.TEAL)
@@ -62,7 +64,8 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
                 # outer garment. Let hair and the near edge of a cloak overlap.
                 hidden = (base == "Druid" and c in singles.MOSS or base == "Thief" and c in SLATE)
                 if not hidden:
-                    out[v][u] = rows["Fighter"][v][u]
+                    bone = rows["Fighter"][v][u]
+                    out[v][u] = DRUID_GUARD[bone] if base == "Druid" else bone
             # Clip the fitting to visible cloth over the pelvis. The trailing
             # end of the profile cloak passes behind the hip and carries no belt.
             if (c not in CLOTH or c == rows["Body base"][v][u] or (x, y) in protected
@@ -143,8 +146,12 @@ def draw(game, pose, swatches):
         ):
             rows[name] = waist_detail(game, pose, rows, base, accent, dx, dy,
                                       swatches["slate"], above_belt=(name == "Fighter/Psionicist/Thief"))
-        by_model[model] = {k: fit.flip(v) for k, v in rows.items()} if pose == 28 else rows
+        # Finish each hood after the near arm, hair and both waist layers.
+        # Keep the donor for the woman's tucked hair in its original palette.
         twin = rows
+        shell, _, _ = singles.hood(pose)
+        rows = dye_fitted_hoods(rows, ((4+dx+x, dy+y) for x, y in shell))
+        by_model[model] = {k: fit.flip(v) for k, v in rows.items()} if pose == 28 else rows
     return by_model
 
 

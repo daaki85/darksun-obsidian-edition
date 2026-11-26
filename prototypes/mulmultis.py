@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from multiclasscolor import LEAF_BONE, dye_fitted_hoods
 import mulfront
 import mulsingles as singles
 import mulstudy as fit
@@ -19,6 +20,7 @@ GROUPS = {
     "leather": ("Fighter/Psionicist", "Fighter/Thief", "Psionicist/Thief"),
     "triples": ("Cleric/Fighter/Thief", "Druid/Fighter/Thief", "Fighter/Psionicist/Thief"),
 }
+DRUID_GUARD = dict(zip(fit.BONE, LEAF_BONE, strict=True))
 BELT = (88, 89, 91, 92, 94, 96, 98)
 # Centres of the hip still visible beyond the passing forearm.
 HIP_OFFSET = {2: (-1, 1), 11: (-1, 2), 12: (1, 1), 13: (0, 1), 15: (1, 1), 17: (0, 1),
@@ -80,7 +82,7 @@ def draw(game, pose, swatches):
                         continue
                     if (bone in fit.BONE and bone != body[v][u] and body[v][u] is not None
                             and not ("Thief" in base and (x, y) in hood)):
-                        out[v][u] = bone
+                        out[v][u] = DRUID_GUARD[bone] if base.startswith("Druid") else bone
         # The band lies on visible garment pixels over the pelvis. Let the
         # parent's armhole, passing hand and free cloak corner occlude it.
         for y in range(wy-5, wy+6):
@@ -130,7 +132,7 @@ def draw(game, pose, swatches):
     for base in ("Cleric", "Druid"):
         rows[base+"/Fighter/Thief"] = with_waist(base+"/Thief", "Fighter")
     rows["Fighter/Psionicist/Thief"] = with_waist("Fighter/Thief", "Psionicist", above_belt=True)
-    return rows
+    return dye_fitted_hoods(rows, (pixel(x, y) for x, y in hood))
 
 
 def render(game_dir, output):

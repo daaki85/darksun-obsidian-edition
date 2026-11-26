@@ -8,6 +8,7 @@ import outfits
 from dsloader import classoutfits as co, figures
 from outfitdetail import RAMPS, HALFTONES
 from thiefhood import OLD_SLATE
+from multiclasscolor import HOOD_DYES, hood_class
 
 # Order the gallery by the single whose silhouette carries the second detail.
 BASE_ORDER = ("Thief", "Cleric", "Druid", "Preserver", "Ranger", "Fighter")
@@ -44,18 +45,37 @@ def base_class(role):
     return next(name for name in BASE_ORDER if name in members)
 
 
+def collar_position(study, key, pose):
+    if pose == 28:
+        return 7, (7 if key == outfits.HALF_ELF_WOMAN else 9)
+    parts = study.game.fig(key).parts(*divmod(pose, 15))
+    return parts.shoulders[0], (parts.head.left + parts.head.right) // 2
+
+
+def dye_hood(study, key, pose, role, rows, pad):
+    hood, _ = study.rows(key, pose, "Thief")
+    body, _ = study.rows(key, pose, "Body base")
+    dye = HOOD_DYES[hood_class(role)]
+    shoulder, neck = collar_position(study, key, pose)
+    out = [r[:] for r in rows]
+    for y, row in enumerate(out):
+        level = len(out) - 1 - y if pose == 28 else y - pad
+        if level > shoulder + 2:
+            continue
+        for x, color in enumerate(row):
+            if level <= shoulder + 2 - min(4, abs(x - pad - neck) // 2):
+                if color in dye and color == hood[y][x] and color != body[y][x]:
+                    row[x] = dye[color]
+    return out
+
+
 def hooded_outfit(study, key, pose, garment):
     hood, pad = study.rows(key, pose, "Thief")
     fitted, _ = study.rows(key, pose, garment)
     out = [row[:] for row in fitted]
     cb, frame = divmod(pose, 15)
     fig = study.game.fig(key)
-    if pose == 28:
-        shoulder, neck = 7, (7 if key == outfits.HALF_ELF_WOMAN else 9)
-    else:
-        parts = fig.parts(cb, frame)
-        shoulder = parts.shoulders[0]
-        neck = (parts.head.left + parts.head.right) // 2
+    shoulder, neck = collar_position(study, key, pose)
 
     # Fit the tip of the hood over the registered garment at the nape.
     height = len(out) - pad
@@ -74,7 +94,7 @@ def hooded_outfit(study, key, pose, garment):
         back = figures.mover_back(fig.maker.cuts[bool(cb), frame])
         slate = RAMPS["slate"]
         leaf = (69, 69, 188, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57)
-        for y in range(shoulder + 1, parts.waist + 1):
+        for y in range(shoulder + 1, fig.parts(cb, frame).waist + 1):
             row = out[y + pad]
             edges = [x for x, c in enumerate(row) if c in (53, 54, 55, 56, 57, 188)]
             if not edges:
@@ -92,7 +112,7 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
     if hasattr(study, "registered"):
         rows, pad = draw_pair(study.registered, key, pose, role, baldric=baldric,
                               far_lining=far_lining, above_belt=above_belt)
-        return study.exposed_skin(key, pose, rows, pad)
+        return study.finish(key, pose, role, rows, pad)
     if role == "Druid/Thief":
         return hooded_outfit(study, key, pose, "Druid")
     base = base_class(role)
