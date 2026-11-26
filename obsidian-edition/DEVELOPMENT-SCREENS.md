@@ -1803,12 +1803,17 @@ below them.
 
 **DOSBox-X in the release.** `.github/workflows/release.yml` downloads DOSBox-X's own 64-bit
 Windows build of `DOSBOX_X_VERSION` (`dosbox-x-vsbuild-win64-VERSION-portable.zip` from its GitHub
-release; `DOSBOX_X_SHA256`, when set, is checked) and adds `dosbox-x.exe`, `COPYING.txt` (GPL 2),
+release; `DOSBOX_X_SHA256`, when set, is checked: it holds that zip's) and adds `dosbox-x.exe`, `COPYING.txt` (GPL 2),
 its `README.txt` and a `SOURCE.txt` of its own to the zip's `dosbox-x` folder. DOSBox-X's source
 archive of the same tag goes beside the zip as an asset of the release, so the source is offered
 from the same place as the program (GPL 2, section 3). Nothing of DOSBox-X is in this repository
 (`dosbox-x/` is in `.gitignore`: the Loader's work folder). Linux has no DOSBox-X build of its
 own (its project ships a Flatpak) and macOS's is unsigned, so neither comes with the mod.
+The step is `.github/scripts/add_dosbox_x.py`. The **Test package** workflow
+(`.github/workflows/test-package.yml`) runs it too, on every pull request and by hand on any branch, so a
+tester downloads what a release would give: the run's artifact `Obsidian-Edition-test-BRANCH-COMMIT` (the
+PR's Checks tab, Test package, Summary, Artifacts) is the unpacked zip with DOSBox-X in its `dosbox-x`
+folder, and `dosbox-x-source-VERSION` is the run's other artifact.
 
 **The Options tab's other settings on this engine.**
 
