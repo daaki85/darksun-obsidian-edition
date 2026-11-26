@@ -232,3 +232,11 @@ map position. Nothing is built for it yet.
   game has such an item (2026-11-18).
 - The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
   (2026-11-18).
+- Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the
+  table of the room to the west; not looked at (2026-11-22, logs/2026-11-22-ravager-transfer-items.md).
+- Wake of the Ravager, Tyr (2026-11-25, logs/2026-11-25-ravager-shops-scrolls.md): **Uhubito's caravan
+  office** (the street's east side, world y ~1340-1420) has clay jugs by its counter and on the shelves at
+  the back; **Shadow Square** (the city's west) has barrels, jars and sacks at the stalls south-west of
+  Notaku's (world ~150-250, 1000-1100). None looked at; Notaku sells no water.
+- Wake of the Ravager, the Draxans' ambush street in Tyr (2026-11-25, logs/2026-11-25-ravager-fight-keys.md):
+  no water, jug or waterskin among Alt's marks there (a scroll, sandals, the bodies).

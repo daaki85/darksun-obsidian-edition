@@ -21,6 +21,11 @@ failed) or 5 (a fight). For a load the Loader makes Q the page (the letter in th
 names, as DSCLOG's page buttons do), chooses the row, and sets 2: DSCLOG opens the LOAD window
 (428Ah:0020h).
 
+Wake of the Ravager has it too (ravlog.QUICK_LAYOUT: DSCLOG2's QUICK SAVES, its header's fields past
+DSCLOG's, the sequel's addresses), on its one page of ten slots: the QUICK page shows only through F9.
+Its save window also keeps the map's limits as a GREQ chunk in the roster file, numbered by the slot; a
+quick save's is numbered GREQ_QUICK and the slot (Layout.greq), and DSCLOG2 reads that one back.
+
 The save window never opens on the QUICK page by itself (_page_back): its slots are written over
 in turn, so a save made by hand belongs on pages 1 to 4.
 
@@ -33,7 +38,7 @@ DOSBox reports a fixed amount and the game's "Disk Space Low !!!" box waits for 
 import os
 import shutil
 import struct
-from typing import List, Optional, Tuple
+from typing import Callable, List, NamedTuple, Optional, Tuple
 
 from . import journal, namedsaves
 
@@ -59,6 +64,35 @@ ANSWER_WAIT = 6.0  # seconds DSCLOG has to take a request (a window opened meanw
 DISK_LEAST = 4 * 1024 * 1024  # bytes free in the saves' folder, or nothing is saved
 QUICK, AUTO = "Quick", "Auto"
 KEPT_PAGES = (b"E", b"B", b"C", b"D")  # the letters of pages 1 to 4 (DSCLOG's sp_letters)
+GREQ_QUICK = 100  # (a quick save's GREQ chunk: this and its slot, Layout.greq: DSCLOG2's GREQ_PAGE)
+
+
+class Layout(NamedTuple):
+    """Where the quick saves' words are: the helper's header fields and the game's addresses (Shattered
+    Lands' by default; the sequel's in ravlog.QUICK_LAYOUT)."""
+    keys: int = TSR_QS_KEYS  # the helper's header: the two keys, their counts, the request, SAVE_TEXT's offset
+    seq: int = TSR_QS_SEQ
+    req: int = TSR_SAVE_REQ
+    save_off: int = TSR_SAVE_OFF
+    tail_seg: int = TSR_TAIL_SEG  # (SAVE_TEXT's segment)
+    main_ticks: int = TSR_MAIN_TICKS
+    greq: Optional[int] = None  # the header's word for a save's GREQ number (None: the game keeps none)
+    screen_is: int = SCREEN_IS  # the game's DS: 1 on the map
+    save_path: int = SAVE_PATH
+    name_find: int = NAME_FIND
+    name_save: int = NAME_SAVE
+    window_from_ds: int = WINDOW_FROM_DS
+    chosen: int = CHOSEN
+    camp: Optional[Tuple[int, int]] = (CAMP_BYTE, CAMPING)  # (a creature's byte, its value while camping)
+    kept_pages: Tuple[bytes, ...] = KEPT_PAGES
+    region_name: Callable[[Optional[int]], str] = journal.region_name
+    name_most: int = NAME_MOST  # an autosave's name at most this long (the sequel's rows are narrower)
+    name_join: str = " - "  # between an autosave name's parts
+    after_fight: str = "after a fight"  # an autosave's after a fight, in its name
+    page_back: bool = True  # the Loader puts the page back (_page_back); False: the helper does it itself
+
+
+SL_LAYOUT = Layout()
 
 
 def slot_file(slot: int) -> str:
@@ -102,13 +136,14 @@ def quick_name(clock: Optional[int]) -> str:
     return " - ".join(part for part in (QUICK, journal.time_of(clock)) if part)[:NAME_MOST]
 
 
-def auto_name(what: str, clock: Optional[int]) -> str:
+def auto_name(what: str, clock: Optional[int], most: int = NAME_MOST, join: str = " - ") -> str:
     """ "Auto - Day 47, 14:20 - The slave pens": the time first (a row of the window shows about 32
-    letters, so it is the place that is cut off there), WHAT cut short if the name would be too
-    long for the game."""
+    letters, so it is the place that is cut off there), WHAT cut short if the name would be longer
+    than MOST (the game's 42; the sequel's row and name field show about 29: Layout.name_most), the
+    parts joined by JOIN."""
     when = journal.time_of(clock)
-    room = NAME_MOST - len(AUTO) - 3 - (len(when) + 3 if when else 0)
-    return " - ".join(part for part in (AUTO, when, what[:max(0, room)].rstrip()) if part)
+    room = most - len(AUTO) - len(join) - (len(when) + len(join) if when else 0)
+    return join.join(part for part in (AUTO, when, what[:max(0, room)].rstrip()) if part)
 
 
 def disk_free(game_dir: str) -> Optional[int]:
@@ -122,7 +157,8 @@ def disk_free(game_dir: str) -> Optional[int]:
 class QuickSave:
     """The dice log's part: tick() each pass gives its lines. `keys` and `auto` are the switches."""
 
-    def __init__(self):
+    def __init__(self, layout: Layout = SL_LAYOUT):
+        self.layout = layout
         self.keys = True
         self.auto = True
         self.label: Optional[str] = None  # a word to float over the leader (taken by the dice log)
@@ -138,16 +174,35 @@ class QuickSave:
         self._fight_over_at: Optional[float] = None
         self._auto_at: Optional[float] = None
         self._said_disk = False
-        self._page_was = KEPT_PAGES[0]  # the save window's page of 1 to 4 as last seen with the window shut
+        self._page_was = layout.kept_pages[0]  # the save window's page of 1 to 4 as last seen with the window shut
 
     # ---- DSCLOG's side -----------------------------------------------------------------------
 
     def _word(self, gd, field: int) -> int:
         return struct.unpack("<H", gd.guest.read(self._hdr + field, 2))[0]
 
+    def _tail(self, gd) -> int:
+        """SAVE_TEXT's address."""
+        return self._word(gd, self.layout.tail_seg) * 16 + self._word(gd, self.layout.save_off)
+
+    def ranges(self, gd, tsr_hdr: int) -> List[Tuple[int, int]]:
+        """(address, size) of every byte tick() writes: the helper's header fields and SAVE_TEXT, the page's
+        letters and the window's chosen row in the game (a read-only view's writable list: ravlog)."""
+        lay = self.layout
+        fields = [lay.keys, lay.req] + ([lay.greq] if lay.greq is not None else [])
+        out = [(tsr_hdr + f, 4 if f == lay.keys else 2) for f in fields]
+        out.append((struct.unpack("<H", gd.guest.read(tsr_hdr + lay.tail_seg, 2))[0] * 16
+                    + struct.unpack("<H", gd.guest.read(tsr_hdr + lay.save_off, 2))[0], SAVE_FILE + SAVE_NAME))
+        out += [(gd.ds * 16 + lay.name_find, 1), (gd.ds * 16 + lay.name_save, 1),
+                ((gd.ds - lay.window_from_ds) * 16 + lay.chosen, 2)]
+        return out
+
     def _camping(self, gd) -> bool:
+        if self.layout.camp is None:
+            return False
+        at, value = self.layout.camp
         try:
-            return any(gd.creature(n)[CAMP_BYTE] == CAMPING for n in range(4))
+            return any(gd.creature(n)[at] == value for n in range(4))
         except IndexError:
             return False
 
@@ -156,19 +211,20 @@ class QuickSave:
         breaks the camp, 810DCh)."""
         keys = (KEY_SAVE, KEY_LOAD) if self.keys and not self._camping(gd) else (NO_KEY, NO_KEY)
         if keys != self._keys_set:
-            gd.guest.write(self._hdr + TSR_QS_KEYS, struct.pack("<HH", *keys))
+            gd.guest.write(self._hdr + self.layout.keys, struct.pack("<HH", *keys))
             self._keys_set = keys
 
     def _ask_save(self, gd, kind: str, slot: int, name: str, now: float) -> Optional[str]:
         """The request for a save written; a line if it can't be asked."""
-        path = gd.guest.read(gd.ds * 16 + SAVE_PATH, SAVE_FILE).split(b"\0", 1)[0]
+        path = gd.guest.read(gd.ds * 16 + self.layout.save_path, SAVE_FILE).split(b"\0", 1)[0]
         file = path + slot_file(slot).encode("ascii")
         if len(file) >= SAVE_FILE:
             return f"{kind} save: not made, the game's save folder has too long a name ({len(path)} letters)"
         text = file.ljust(SAVE_FILE, b"\0") + name.encode("cp437", "replace")[:NAME_MOST].ljust(SAVE_NAME, b"\0")
-        tail = self._word(gd, TSR_TAIL_SEG) * 16 + self._word(gd, TSR_SAVE_OFF)
-        gd.guest.write(tail, text)
-        gd.guest.write(self._hdr + TSR_SAVE_REQ, struct.pack("<H", REQ_SAVE))
+        gd.guest.write(self._tail(gd), text)
+        if self.layout.greq is not None:
+            gd.guest.write(self._hdr + self.layout.greq, struct.pack("<H", GREQ_QUICK + slot))
+        gd.guest.write(self._hdr + self.layout.req, struct.pack("<H", REQ_SAVE))
         self._asked = (REQ_SAVE, now, kind, slot, name)
         return None
 
@@ -176,25 +232,25 @@ class QuickSave:
         slot = newest_slot(game_dir)
         if slot is None:
             return "Quick load: no quick save or autosave yet"
-        for at in (NAME_FIND, NAME_SAVE):
+        for at in (self.layout.name_find, self.layout.name_save):
             gd.guest.write(gd.ds * 16 + at, LETTER.encode("ascii"))
-        gd.guest.write((gd.ds - WINDOW_FROM_DS) * 16 + CHOSEN, struct.pack("<H", slot - 1))
-        gd.guest.write(self._hdr + TSR_SAVE_REQ, struct.pack("<H", REQ_LOAD))
+        gd.guest.write((gd.ds - self.layout.window_from_ds) * 16 + self.layout.chosen, struct.pack("<H", slot - 1))
+        gd.guest.write(self._hdr + self.layout.req, struct.pack("<H", REQ_LOAD))
         self._asked = (REQ_LOAD, now, "", slot, "")
         return None
 
     def _answer(self, gd, now: float) -> List[str]:
         """What came of the request, once DSCLOG says (or the wait is up)."""
         request, when, kind, slot, name = self._asked
-        got = self._word(gd, TSR_SAVE_REQ)
+        got = self._word(gd, self.layout.req)
         if got in (0, request):
             if now - when < ANSWER_WAIT:
                 return []
             if got == request:  # (never taken: a window, a screen or an enemy's turn in the way)
-                gd.guest.write(self._hdr + TSR_SAVE_REQ, struct.pack("<H", 0))
+                gd.guest.write(self._hdr + self.layout.req, struct.pack("<H", 0))
             self._asked = None
             return [f"{kind} save: not made, the game was busy"] if request == REQ_SAVE and kind == QUICK else []
-        gd.guest.write(self._hdr + TSR_SAVE_REQ, struct.pack("<H", 0))
+        gd.guest.write(self._hdr + self.layout.req, struct.pack("<H", 0))
         self._asked = None
         if request == REQ_LOAD:
             return []
@@ -213,13 +269,13 @@ class QuickSave:
         the page) is made the page of 1 to 4 shown last, so a save made by hand in the window
         doesn't land in a slot that is written over in turn. (F9 makes the page QUICK as it opens
         the window; the QUICK button and PgDn still show it.)"""
-        if self._asked is not None or not self._running or gd._word(SCREEN_IS) != ON_MAP:
+        if not self.layout.page_back or self._asked is not None or not self._running or gd._word(self.layout.screen_is) != ON_MAP:
             return
-        now = gd.guest.read(gd.ds * 16 + NAME_FIND, 1)
-        if now in KEPT_PAGES:
+        now = gd.guest.read(gd.ds * 16 + self.layout.name_find, 1)
+        if now in self.layout.kept_pages:
             self._page_was = now
         elif now == LETTER.encode("ascii"):
-            for at in (NAME_FIND, NAME_SAVE):
+            for at in (self.layout.name_find, self.layout.name_save):
                 gd.guest.write(gd.ds * 16 + at, self._page_was)
 
     # ---- the policy --------------------------------------------------------------------------
@@ -247,7 +303,7 @@ class QuickSave:
         if fighting:
             self._fought, self._fight_over_at = True, None
             return None
-        ready = self._running and gd._word(SCREEN_IS) == ON_MAP and not self._camping(gd)
+        ready = self._running and gd._word(self.layout.screen_is) == ON_MAP and not self._camping(gd)
         spaced = self._auto_at is None or now - self._auto_at >= AUTO_GAP
         if region != self._region:
             if not ready:
@@ -258,7 +314,7 @@ class QuickSave:
             if can_request and now - self._arrival[1] >= AREA_WAIT:
                 self._region, self._arrival = region, None
                 self._fought, self._fight_over_at = False, None
-                return journal.region_name(region)  # (always: coming in is worth its save)
+                return self.layout.region_name(region)  # (always: coming in is worth its save)
             return None
         if self._fought:
             if not ready:
@@ -269,7 +325,7 @@ class QuickSave:
             # A fight that comes due during the cooldown is skipped, even if a request is active.
             if now - self._fight_over_at >= FIGHT_WAIT and (can_request or not spaced):
                 self._fought, self._fight_over_at = False, None
-                return "after a fight" if spaced else None
+                return self.layout.after_fight if spaced else None
         return None
 
     def tick(self, gd, tsr_hdr: Optional[int], game_dir: Optional[str], loading: bool, now: float) -> List[str]:
@@ -281,9 +337,9 @@ class QuickSave:
             self._hdr, self._seq, self._keys_set, self._ticks, self._asked = tsr_hdr, None, None, None, None
             self._region, self._auto_at = None, None
         self._set_keys(gd)
-        ticks = self._word(gd, TSR_MAIN_TICKS)
+        ticks = self._word(gd, self.layout.main_ticks)
         self._running, self._ticks = self._ticks is not None and ticks != self._ticks, ticks
-        seq = struct.unpack("<HH", gd.guest.read(self._hdr + TSR_QS_SEQ, 4))
+        seq = struct.unpack("<HH", gd.guest.read(self._hdr + self.layout.seq, 4))
         pressed = (False, False) if self._seq is None else (seq[0] != self._seq[0], seq[1] != self._seq[1])
         self._seq = seq
         if self._asked is not None:
@@ -304,7 +360,8 @@ class QuickSave:
         elif self.keys and pressed[1]:
             line = self._ask_load(gd, game_dir, now)
         elif due is not None and self._disk_ok(game_dir, out, False):
-            line = self._ask_save(gd, AUTO, next_slot(game_dir, AUTO_SLOTS), auto_name(due, gd.game_time()), now)
+            name = auto_name(due, gd.game_time(), self.layout.name_most, self.layout.name_join)
+            line = self._ask_save(gd, AUTO, next_slot(game_dir, AUTO_SLOTS), name, now)
         if line:
             out.append(line)
         return out

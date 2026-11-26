@@ -15,10 +15,11 @@ shortened as the game shortens its own (P-KINESIS).
 
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import gff
+from . import game, gff
+from .art import planar_frames
 from . import weaponpages as wp
 
-KIT_BYTE = 0x43
+KIT_BYTE = 0x43  # (the sequel's +3Dh: ravlog's layout; the race, classes and levels by game.SHEET_*)
 # By class as the creation screen numbers them (game.CREATION_CLASS_NAMES): the kits' names
 KITS = {1: ("Elementalist", "Healer", "Crusader"),
         2: ("Grove Warden", "Lifebinder", "Wanderer"),
@@ -107,9 +108,9 @@ def multi_group(race: int, classes: Sequence[int]) -> int:
 
 def sheet_group(sheet: bytes) -> int:
     """The multiclass group of a sheet (its classes 1-17), or 0: one class, a human, or none."""
-    if len(sheet) <= KIT_BYTE or sheet[0x18] == 1 or not sheet[0x22]:
+    if len(sheet) <= KIT_BYTE or sheet[game.SHEET_RACE] == 1 or not sheet[game.SHEET_CLASSES + 1]:
         return 0
-    return multi_group(sheet[0x18], [CREATION_CLASS.get(c, 0) for c in sheet[0x21:0x24]])
+    return multi_group(sheet[game.SHEET_RACE], [CREATION_CLASS.get(c, 0) for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]])
 
 
 def kit_place(sheet: bytes) -> Optional[int]:
@@ -119,11 +120,11 @@ def kit_place(sheet: bytes) -> Optional[int]:
     classes; None for more than one class otherwise (no kits)."""
     if len(sheet) <= KIT_BYTE:
         return None
-    if not sheet[0x22] and not sheet[0x23]:
+    if not sheet[game.SHEET_CLASSES + 1] and not sheet[game.SHEET_CLASSES + 2]:
         return 0
-    if sheet[0x18] != 1:  # (a human's: game.HUMAN)
+    if sheet[game.SHEET_RACE] != 1:  # (a human's: game.HUMAN)
         return 0 if sheet_group(sheet) else None
-    return 2 if sheet[0x23] else 1
+    return 2 if sheet[game.SHEET_CLASSES + 2] else 1
 
 
 def kit_at(sheet: bytes, place: int) -> int:
@@ -133,7 +134,7 @@ def kit_at(sheet: bytes, place: int) -> int:
     oldest = kit_place(sheet)
     if oldest is None or not 0 <= place <= oldest or sheet[KIT_BYTE] == 0xFF:  # (0xFF: KIT_OPEN)
         return 0
-    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[0x21 + place])
+    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[game.SHEET_CLASSES + place])
     if cls in KITS and kit > len(KITS[cls]):
         return 0  # (a group's kit it hasn't)
     return cls * 4 + kit if cls is not None and kit else 0
@@ -143,7 +144,7 @@ def kit_awake(sheet: bytes, place: int) -> bool:
     """Whether the kit of the class at PLACE counts, as DSCLOG's KIT_AWAKE: the class a human has
     now always; a class it had before once the class it has now is of a higher level (as the game
     counts its earlier classes). Asleep till then."""
-    return place == 0 or sheet[0x24] > sheet[0x24 + place]
+    return place == 0 or sheet[game.SHEET_LEVELS] > sheet[game.SHEET_LEVELS + place]
 
 
 def kits_of(sheet: bytes) -> List[Tuple[int, int, bool]]:
@@ -168,13 +169,13 @@ def kit_level(sheet: bytes, kid: int) -> int:
     """The level of the class the sheet has kit KID for, 0 for none: DSCLOG's KIT_LEVEL (a Ravager's
     AC, a Seeker's slots, a Shinobi's casting go by it)."""
     place = kit_place_of(sheet, kid)
-    return 0 if place is None else sheet[0x24 + place]
+    return 0 if place is None else sheet[game.SHEET_LEVELS + place]
 
 
 def kit_class_of(sheet: bytes, kid: int) -> int:
     """The class (1-17) the sheet has kit KID for, 0 for none: DSCLOG's KIT_CLASS_OF_SHEET."""
     place = kit_place_of(sheet, kid)
-    return 0 if place is None else sheet[0x21 + place]
+    return 0 if place is None else sheet[game.SHEET_CLASSES + place]
 
 
 # KIT_IS's numbers, by name
@@ -219,9 +220,17 @@ def panel_windows(classes: Sequence[int], rules: int, race: int = 0) -> Tuple[in
     return wp.DISCIPLINES, wp.SPHERES
 
 
-def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+# Wake of the Ravager's creation panel: its disciplines' and spheres' windows (the same buttons as
+# Shattered Lands' 3012 and 3013, its labels planar pictures: planar_frames)
+RAV_DISCIPLINES, RAV_SPHERES = 19504, 19505
+
+
+def chunks(resource: gff.Chunks, disciplines: int = wp.DISCIPLINES, spheres_id: int = wp.SPHERES,
+           planar: bool = False) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of RESOURCE.GFF: the kit pages, the windows with KITS for their
-    button, and their rows' and buttons' pictures and buttons."""
+    button, and their rows' and buttons' pictures and buttons. DISCIPLINES and SPHERES_ID the game's
+    windows they are made from; PLANAR the pictures in the planar form (Wake of the Ravager's:
+    rav_chunks)."""
     font = wp.glyphs(resource)
     for ch, art in DRAWN.items():
         font[ch] = [[c == "#" for c in line] for line in art]
@@ -231,13 +240,18 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     added: Dict[Tuple[str, int], bytes] = {}
     rows: List[Tuple[int, str]] = [(row_id(cls, k + 1), row_text(name))
                                    for cls, names in KITS.items() for k, name in enumerate(names)]
+    def picture(text: str, pad: int, colours: List[int]) -> bytes:
+        if planar:
+            return planar_frames([wp.label(font, text, pad, c) for c in colours])
+        return wp.picture(font, text, pad, colours)
+
     for cid, text in rows + [(KIT_NONE, "NO KIT")]:
-        added[("ICON", cid)] = wp.picture(font, text, wp.ROW_PAD, row_colours)
+        added[("ICON", cid)] = picture(text, wp.ROW_PAD, row_colours)
         added[("BUTN", cid)] = wp.row_button(row_button, cid, font, text)
     for cid, text in ((KIT_VIEW, "KITS"), (KIT_BACK, "VIEW PSIONICS")):
-        added[("ICON", cid)] = wp.picture(font, text, 0, toggle_colours)
+        added[("ICON", cid)] = picture(text, 0, toggle_colours)
         added[("BUTN", cid)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, cid)
-    spheres = resource[("WIND", wp.SPHERES)]
+    spheres = resource[("WIND", spheres_id)]
     sphere_items = wp._items(spheres)  # (four rows, then the button)
     rows_at = [(x, y) for _, x, y in sphere_items[:4]]
     toggle_at = sphere_items[4][1:]
@@ -247,11 +261,18 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
         added[("WIND", KIT_WINDOW + cls - 1)] = wp._window(spheres, KIT_WINDOW + cls - 1, items)
     added[("WIND", KIT_SPHERES)] = wp._window(
         spheres, KIT_SPHERES, [(KIT_VIEW if c == wp.SPHERE_TOGGLE else c, x, y) for c, x, y in sphere_items])
-    disciplines = resource[("WIND", wp.DISCIPLINES)]
+    disciplines_window = resource[("WIND", disciplines)]
     added[("WIND", KIT_DISCIPLINES)] = wp._window(
-        disciplines, KIT_DISCIPLINES,
-        [(KIT_VIEW if c == wp.DISCIPLINE_TOGGLE else c, x, y) for c, x, y in wp._items(disciplines)])
+        disciplines_window, KIT_DISCIPLINES,
+        [(KIT_VIEW if c == wp.DISCIPLINE_TOGGLE else c, x, y) for c, x, y in wp._items(disciplines_window)])
     return added
+
+
+def rav_chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+    """chunks for Wake of the Ravager's RESOURCE.GFF (its copy, RESOURC2.GFF: ravager.write_resources):
+    the same ids, made from its own windows and letters, the pictures planar. DSCLOG2's KIT PAGE opens
+    them."""
+    return chunks(resource, RAV_DISCIPLINES, RAV_SPHERES, planar=True)
 
 
 def row_widths(resource: gff.Chunks) -> Dict[str, int]:

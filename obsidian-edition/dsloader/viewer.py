@@ -35,6 +35,9 @@ SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
+# (the Music device's hint: the device is for Shattered Lands; launch.write_conf_wotr leaves the sequel's music, its
+# CD's audio tracks, as it is)
+RAVAGER_MUSIC = " Shattered Lands only: Wake of the Ravager's music is its CD's audio, not MIDI."
 # the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
 JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
                  ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
@@ -91,7 +94,7 @@ class Viewer:
         self.ds: Optional[int] = None  # the game's data segment, once found
         self.dice: Optional[DiceLog] = None
         self.next_try = 0.0  # when to retry connecting / attaching
-        self.dosbox = dosbox  # the game, when started from here (Start the game, or `launch`)
+        self.dosbox = dosbox  # the game, when started from here (Play Shattered Lands, or `launch`)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
@@ -121,8 +124,17 @@ class Viewer:
         self.banner.pack(fill="x")
         if self.art.font:
             self.banner.use_game_font(self.art.font)
-        top = ttk.Frame(self.root, padding=(6, 6, 6, 0))
-        top.pack(fill="x")
+        row = ttk.Frame(self.root, padding=(6, 6, 6, 0))
+        row.pack(fill="x")
+        # the start buttons on the left, the rest on the right; in a window too narrow for both, the
+        # right-hand group goes on a line of its own under them (_wrap_top), so nothing is cut off
+        starts = ttk.Frame(row)
+        top = ttk.Frame(row)
+        row.columnconfigure(1, weight=1)
+        starts.grid(row=0, column=0, sticky="w")
+        top.grid(row=0, column=1, sticky="e")
+        self.top_row = (row, starts, top)
+        row.bind("<Configure>", lambda _e: self._wrap_top(), add="+")
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
@@ -132,8 +144,11 @@ class Viewer:
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
-        self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
+        self.start_button = ttk.Button(starts, text="Play Shattered Lands", command=self.start_game)
         self.start_button.pack(side="left")
+        # the sequel, from its folder (found, or chosen on Options' Wake of the Ravager section)
+        self.ravager_button = ttk.Button(starts, text="Play Wake of the Ravager", command=self.start_ravager)
+        self.ravager_button.pack(side="left", padx=(4, 0))
         # text size, also Ctrl + / Ctrl - / Ctrl 0
         ttk.Button(top, text="A+", width=3, command=lambda: self.zoom(1.15)).pack(side="right", padx=(4, 12))
         ttk.Button(top, text="A-", width=3, command=lambda: self.zoom(1 / 1.15)).pack(side="right")
@@ -539,14 +554,14 @@ class Viewer:
             self.midi_device = tk.StringVar(value="" if device == midiout.DEFAULT else str(device))
             self.midi_box: tk.Widget = ttk.Entry(music, textvariable=self.midi_device, width=8)
             hint = ("Empty for the default. Else a device's number as Windows counts them, from 0 (their names "
-                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0.")
+                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0." + RAVAGER_MUSIC)
         else:
             self.midi_device = tk.StringVar(value=midiout.label(device, self.midi_names))
             self.midi_box = ttk.Combobox(music, textvariable=self.midi_device, state="readonly", width=44,
                                          values=midiout.labels(self.midi_names, device))
             self.midi_box.bind("<<ComboboxSelected>>", lambda _e: self._midi_chosen())
             hint = ("Windows' default, or one of its MIDI devices: a software synthesizer with a soundfont, or an "
-                    "MT-32 driver, that you have installed.")
+                    "MT-32 driver, that you have installed." + RAVAGER_MUSIC)
         self.midi_box.pack(side="left", padx=(6, 0))
         self.midi_box.bind("<Return>", lambda _e: self._midi_chosen())
         self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())
@@ -561,12 +576,22 @@ class Viewer:
         found.pack(anchor="w")
         ravager.bind("<Configure>", lambda e: found.configure(wraplength=max(200, e.width - 20)), add="+")
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
+        # the party into the sequel (ravtransfer.transfer): every item, the ages and the months between
+        about_party = ttk.Label(ravager, text="Take a saved party into Wake of the Ravager's roster, every item with it "
+                                "(the ones the sequel hasn't made by the Loader), its ages too, and the months "
+                                "between the games. Then start the sequel from the Loader and ADD them on CREATE "
+                                "CHARACTERS.", style="Status.TLabel", wraplength=460, justify="left")
+        about_party.pack(anchor="w", pady=(8, 0))
+        ravager.bind("<Configure>", lambda e: about_party.configure(wraplength=max(200, e.width - 20)), add="+")
+        ttk.Button(ravager, text="Take the party to Wake of the Ravager...",
+                   command=self.take_party_to_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
         # F5, F9 and the saves the game makes by itself, on the save window's QUICK page (quicksave.py)
         self.quick_save = tk.BooleanVar(value=settings.get("quick_save", True) is not False)
         ttk.Checkbutton(kept, text="Quick save and quick load: on the map, F5 saves at once on the QUICK page of the "
-                        "save window, and F9 opens the load window there", variable=self.quick_save,
+                        "save window, and F9 opens the load window there (in Wake of the Ravager too, where F5 "
+                        "is otherwise the sound effects' key)", variable=self.quick_save,
                         command=self._options_changed).pack(anchor="w")
         self.autosave = tk.BooleanVar(value=settings.get("autosave", True) is not False)
         ttk.Checkbutton(kept, text="Autosave: on coming into another area and after a fight, on the QUICK page of "
@@ -574,12 +599,15 @@ class Viewer:
                         command=self._options_changed).pack(anchor="w", pady=(4, 8))
         about = ttk.Label(kept, text="While this window is open, saves in the manual slots are copied into the Loader's \"Named "
                           "saves\" folder under their in-game names (\"Page 2 slot 05 - Before Scar's "
-                          "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
+                          "battle.SAV\"), and Wake of the Ravager's into \"Named saves (Wake of the Ravager)\".",
+                          style="Status.TLabel", wraplength=460, justify="left")
         about.pack(anchor="w")
         kept.bind("<Configure>", lambda e: about.configure(wraplength=max(200, e.width - 20)), add="+")
         buttons = ttk.Frame(kept)
         buttons.pack(anchor="w", pady=(4, 0))
         ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
+        ttk.Button(buttons, text="Wake of the Ravager's", command=lambda: self.open_named_saves(wotr=True)).pack(
+            side="left", padx=(8, 0))
         ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
         self._options_shown = self._option_values()  # (as read: only what changes from it is saved)
@@ -606,8 +634,50 @@ class Viewer:
         self._save_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " From the next start.")
 
+    def take_party_to_wotr(self) -> None:
+        """A Shattered Lands save's party into Wake of the Ravager's roster (ravtransfer.transfer),
+        after asking, and the report in a window of its own."""
+        from . import ravager, ravtransfer, wotrart
+        title = "Take the party to Wake of the Ravager"
+        sl_dir = self._saves_game_dir()
+        if sl_dir is None:
+            return
+        found = wotrart.find_resources(sl_dir)
+        wotr_dir = os.path.dirname(found) if found else None
+        if not ravager.is_wotr_dir(wotr_dir):
+            messagebox.showinfo(title, "The Loader hasn't found Wake of the Ravager (GOG's release): choose its "
+                                "folder above first.", parent=self.root)
+            return
+        start = namedsaves.NAMED if os.path.isdir(namedsaves.NAMED) else sl_dir
+        save = filedialog.askopenfilename(parent=self.root, title="Whose party? (a Shattered Lands save)",
+                                          initialdir=start, filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
+        if not save:
+            return
+        if not messagebox.askyesno(title, f"Put the party of {os.path.basename(save)} into Wake of the Ravager's "
+                                   f"roster ({wotr_dir})? The save itself isn't changed. The roster is kept "
+                                   "first as CHARSAVE.GFF.BAK (the first time); the party takes free places, or "
+                                   "its own from an earlier transfer.", parent=self.root):
+            return
+        try:
+            text = ravtransfer.transfer(save, wotr_dir, sl_dir, launch.DOS_DIR)
+        except (OSError, ravtransfer.GffError, StopIteration, KeyError) as e:
+            messagebox.showerror(title, f"The party couldn't be taken across: {e}", parent=self.root)
+            return
+        window = tk.Toplevel(self.root)
+        window.title(title)
+        box = tk.Text(window, wrap="word", height=24, width=90, font="TkTextFont")
+        bar = ttk.Scrollbar(window, command=box.yview)
+        box.configure(yscrollcommand=bar.set)
+        bar.pack(side="right", fill="y")
+        box.pack(side="left", fill="both", expand=True)
+        box.insert("1.0", text)
+        box.configure(state="disabled")
+        self.status.set("The party is in Wake of the Ravager's roster.")
+
     def _saves_game_dir(self) -> Optional[str]:
-        game_dir = self._game_dir or launch.find_game_dir()
+        """Shattered Lands' folder, for its saves (not Wake of the Ravager's: _wotr_saves_dir)."""
+        from . import ravager
+        game_dir = self._game_dir if self._game_dir and not ravager.is_wotr_dir(self._game_dir) else launch.find_game_dir()
         if game_dir is None:
             messagebox.showinfo("Saves", "The Loader hasn't found the game yet: start it once from the Loader.",
                                 parent=self.root)
@@ -627,29 +697,35 @@ class Viewer:
         self.status.set(f"The manual, opening in your browser: {HELP_PAGE}" if opened
                         else f"The manual is {HELP_PAGE}")
 
-    def open_named_saves(self) -> None:
-        game_dir = self._saves_game_dir()
-        if game_dir is None:
+    def _wotr_saves_dir(self) -> Optional[str]:
+        """Wake of the Ravager's folder for its saves (ravlog.wotr_folder), None if the Loader hasn't found it."""
+        from . import ravlog
+        return ravlog.wotr_folder(self._game_dir)
+
+    def open_named_saves(self, wotr: bool = False) -> None:
+        """The named saves' folder (WOTR: Wake of the Ravager's), brought up to date first."""
+        game_dir = self._wotr_saves_dir() if wotr else self._saves_game_dir()
+        if game_dir is None and not wotr:
             return
+        folder = namedsaves.NAMED_WOTR if wotr else namedsaves.NAMED
         try:
-            namedsaves.sync(game_dir)
-            os.makedirs(namedsaves.NAMED, exist_ok=True)
+            if game_dir is not None:
+                namedsaves.sync(game_dir, folder, wotr)
+            os.makedirs(folder, exist_ok=True)
         except OSError as err:
             self.status.set(f"Couldn't open the named saves: {err}")
             return
         try:
             if sys.platform == "win32":
-                os.startfile(namedsaves.NAMED)  # type: ignore[attr-defined]
+                os.startfile(folder)  # type: ignore[attr-defined]
             else:
-                subprocess.Popen(["xdg-open", namedsaves.NAMED])
+                subprocess.Popen(["xdg-open", folder])
         except OSError:
-            self.status.set(f"The named saves are in {namedsaves.NAMED}")
+            self.status.set(f"The named saves are in {folder}")
 
     def restore_save(self) -> None:
-        """A save file (a named copy) put in a slot of the game's list, to be loaded from there."""
-        game_dir = self._saves_game_dir()
-        if game_dir is None:
-            return
+        """A save file (a named copy) put in a slot of the game's list, to be loaded from there: Shattered
+        Lands' or, for one of its saves, Wake of the Ravager's (one page of ten)."""
         try:
             os.makedirs(namedsaves.NAMED, exist_ok=True)
         except OSError:
@@ -658,30 +734,46 @@ class Viewer:
                                           filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
         if not copy:
             return
+        wotr = namedsaves.is_wotr_save(copy)
+        game_dir = self._wotr_saves_dir() if wotr else self._saves_game_dir()
+        if game_dir is None:
+            if wotr:
+                messagebox.showinfo("Put a save in a slot", "That is a Wake of the Ravager save, and the Loader "
+                                    "hasn't found Wake of the Ravager: choose its folder above first.", parent=self.root)
+            return
         m = namedsaves.COPY.match(os.path.basename(copy))
-        where = simpledialog.askstring("Put a save in a slot", "Which page and slot of the game's list? "
-                                       "(page 1 to 4, slot 1 to 10, as 2-5)", parent=self.root,
-                                       initialvalue=f"{m.group(1)}-{int(m.group(2))}" if m else "1-1")
+        if wotr:
+            where = simpledialog.askstring("Put a save in a slot", "Which slot of Wake of the Ravager's list? "
+                                           "(1 to 10)", parent=self.root,
+                                           initialvalue=str(int(m.group(2))) if m else "1")
+            where = where and "1-" + where.strip()
+        else:
+            where = simpledialog.askstring("Put a save in a slot", "Which page and slot of the game's list? "
+                                           "(page 1 to 4, slot 1 to 10, as 2-5)", parent=self.root,
+                                           initialvalue=f"{m.group(1)}-{int(m.group(2))}" if m else "1-1")
         if not where:
             return
         try:
             page, slot = (int(n) for n in where.replace(" ", "").split("-"))
-            if not (1 <= page <= 4 and 1 <= slot <= 10):
+            if not (1 <= page <= (namedsaves.WOTR_PAGES if wotr else 4) and 1 <= slot <= 10):
                 raise ValueError
         except ValueError:
-            messagebox.showerror("Put a save in a slot", "That isn't a page and slot (such as 2-5).", parent=self.root)
+            messagebox.showerror("Put a save in a slot", "That isn't a slot (such as 5)." if wotr else
+                                 "That isn't a page and slot (such as 2-5).", parent=self.root)
             return
-        there = namedsaves.slot_name(game_dir, page, slot)
+        there = namedsaves.slot_name(game_dir, page, slot, wotr)
+        place = f"Slot {slot}" if wotr else f"Page {page} slot {slot}"
+        folder = namedsaves.NAMED_WOTR if wotr else namedsaves.NAMED
         if there is not None and not messagebox.askyesno(
-                "Put a save in a slot", f"Page {page} slot {slot} has \"{there}\". Put this save there instead? "
-                "(It is kept in the Named saves folder as \"Replaced - ...\".)", parent=self.root):
+                "Put a save in a slot", f"{place} has \"{there}\". Put this save there instead? "
+                f"(It is kept in the {os.path.basename(folder)} folder as \"Replaced - ...\".)", parent=self.root):
             return
         try:
-            name = namedsaves.restore(copy, game_dir, page, slot)
+            name = namedsaves.restore(copy, game_dir, page, slot, folder, wotr)
         except (OSError, ValueError) as e:
             messagebox.showerror("Put a save in a slot", str(e), parent=self.root)
             return
-        self.status.set(f"\"{name}\" is in page {page} slot {slot}: load it from the game's list.")
+        self.status.set(f"\"{name}\" is in {place[0].lower() + place[1:]}: load it from the game's list.")
 
     def restore_defaults(self) -> None:
         """Every switch on the Options tab back as it comes (after asking)."""
@@ -711,6 +803,32 @@ class Viewer:
         box.pack(side="left")
         return box
 
+    def _game_data(self) -> game.GameData:
+        """The game's records for the window's tabs: Wake of the Ravager's (ravlog.RavGameData, its memory
+        read only, none of the mod's rules: the sequel's game doesn't apply them yet) while its dice log
+        is attached, else Shattered Lands'."""
+        from . import ravlog
+        if isinstance(self.dice, ravlog.RavDiceLog):
+            return ravlog.RavGameData(self.dice.guest, self.ds, 0)
+        return game.GameData(self.guest, self.ds, self._rules())
+
+    def _layout_for_game(self) -> None:
+        """The party tabs' layout for the game the dice log follows: the sequel's made from Shattered
+        Lands' (ravlog.window_layout) while its dice log is in use, Shattered Lands' back after. Only
+        the auto-locating layout is changed (a layout of the player's own is left as it is)."""
+        from . import ravlog
+        sequel = isinstance(self.dice, ravlog.RavDiceLog)
+        held = self.__dict__.get("_sl_layout")
+        if sequel and held is None and self.layout.raw.get("auto_locate"):
+            self._sl_layout = self.layout
+            self.layout = Layout(ravlog.window_layout(self.layout.raw), self.layout.path)
+            self.layout.sequel = True  # (not saved over Shattered Lands' file: save_layout)
+            self.ds = None
+            self._apply_layout()
+        elif not sequel and held is not None:
+            self.layout, self._sl_layout, self.ds = held, None, None
+            self._apply_layout()
+
     def _apply_layout(self) -> None:
         """Refresh everything that depends on the layout (after loading or reloading it)."""
         slots = [str(i + 1) for i in range(self.layout.count)]
@@ -738,6 +856,17 @@ class Viewer:
         theme.set_scale(self.root, 1.0 if factor is None else theme.scale() * factor)
         self.banner.redraw()
         self._fit_party()
+
+    def _wrap_top(self) -> None:
+        """The top row's right-hand group beside the start buttons when the window is wide enough
+        for both, else on a line of its own under them."""
+        row, starts, top = self.top_row
+        room = row.winfo_width() - 12  # (the row's padding)
+        wrapped = starts.winfo_reqwidth() + top.winfo_reqwidth() > room
+        place = dict(row=1, column=0, columnspan=2, sticky="e", pady=(4, 0)) if wrapped else \
+            dict(row=0, column=1, columnspan=1, sticky="e", pady=0)
+        if int(top.grid_info().get("row", 0)) != place["row"]:
+            top.grid(**place)
 
     def _fit_party(self, divider: bool = True) -> None:
         """Columns wide enough for the text size and the longest label and value, and (DIVIDER)
@@ -844,16 +973,39 @@ class Viewer:
             if not game_dir:
                 return
             if not launch.is_game_dir(game_dir):
-                messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
+                messagebox.showerror("Play Shattered Lands", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.", parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
+        self._start(game_dir, "Play Shattered Lands")
+
+    def start_ravager(self) -> None:
+        """Start Wake of the Ravager, as `launch --ravager` does: its folder the one chosen on the
+        Options tab or found (ravager.find_dir); not found, the player is told where to choose it."""
+        if self.guest or (self.dosbox and self.dosbox.poll() is None):
+            return
+        from . import ravager
+        folder = ravager.find_dir(launch.find_game_dir())
+        if folder is None:
+            messagebox.showinfo(
+                "Play Wake of the Ravager",
+                f"Wake of the Ravager (GOG's install, DSUN.EXE {ravager.WOTR_SIZE:,} bytes) isn't found beside "
+                "the game's folder or in GOG's usual folders. If it is installed, choose its folder on the "
+                "Options tab: Wake of the Ravager (optional), Choose its folder...", parent=self.root)
+            return
+        self._start(folder, "Play Wake of the Ravager")
+        if self.dosbox is not None:
+            self._append_dice([launch.RAVAGER_NO_LOG[0].upper() + launch.RAVAGER_NO_LOG[1:] + "."])
+
+    def _start(self, game_dir: str, title: str) -> None:
+        """Start the game in GAME_DIR (Shattered Lands, or the sequel: launch._launch tells them apart);
+        a failure in a message box headed TITLE."""
         try:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
         except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
-            messagebox.showerror("Start the game", str(e), parent=self.root)
+            messagebox.showerror(title, str(e), parent=self.root)
             return
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
@@ -863,7 +1015,7 @@ class Viewer:
         left_out = launch.left_out_line()
         if left_out:  # (a copy that couldn't be made: told, not silent)
             self._append_dice([left_out])
-            messagebox.showwarning("Start the game", left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
+            messagebox.showwarning(title, left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 
@@ -898,9 +1050,10 @@ class Viewer:
                                    "of what happened just before."])
 
     def _start_state(self) -> None:
-        """"Start the game" only while there's no game to attach to."""
+        """"Play Shattered Lands" and "Play Wake of the Ravager" only while there's no game to attach to."""
         running = self.guest is not None or (self.dosbox is not None and self.dosbox.poll() is None)
-        self.start_button.state(["disabled"] if running else ["!disabled"])
+        for button in (self.start_button, self.ravager_button):
+            button.state(["disabled"] if running else ["!disabled"])
 
     def reload_layout(self) -> None:
         try:
@@ -908,9 +1061,15 @@ class Viewer:
         except (OSError, ValueError, KeyError) as e:
             messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}", parent=self.root)
             return
+        self._sl_layout = None  # (the file's, Shattered Lands': made the sequel's again while it runs)
+        self._layout_for_game()
         self._apply_layout()
 
     def save_layout(self) -> None:
+        if getattr(self.layout, "sequel", False):
+            messagebox.showinfo("Layout", "This is Wake of the Ravager's layout, made from Shattered Lands' as "
+                                "the sequel runs: there is nothing to save.", parent=self.root)
+            return
         try:
             self.layout.save()
         except OSError as e:  # (a folder that can't be written, or the file held elsewhere: said)
@@ -1064,14 +1223,22 @@ class Viewer:
         if now < getattr(self, "_saves_due", 0.0):
             return
         self._saves_due = now + SAVES_EVERY
+        from . import ravager
+        made = []
         game_dir = self._game_dir or launch.load_settings().get("game_dir")
-        if game_dir and os.path.isdir(game_dir):
+        if game_dir and os.path.isdir(game_dir) and not ravager.is_wotr_dir(game_dir):
             try:
-                made = namedsaves.sync(game_dir)
+                made += namedsaves.sync(game_dir)
             except OSError:
-                made = []
-            if made:
-                self.status.set("Save copied to Named saves: " + ", ".join(made))
+                pass
+        wotr_dir = self._wotr_saves_dir()  # (Wake of the Ravager's, into its own folder)
+        if wotr_dir:
+            try:
+                made += namedsaves.sync(wotr_dir, namedsaves.NAMED_WOTR, True)
+            except OSError:
+                pass
+        if made:
+            self.status.set("Save copied to Named saves: " + ", ".join(made))
 
     def _auto_locate(self) -> None:
         """For Shattered Lands, point the party slots at the game's own tables."""
@@ -1136,7 +1303,9 @@ class Viewer:
                     saved, known = launch.load_settings(strict=True), True
                 except launch.SettingsUnreadable:
                     saved, known = {}, False
-                self.dice = DiceLog(self.guest)
+                from . import ravlog
+                self.dice = ravlog.make(self.guest)  # (Wake of the Ravager's when its helper is loaded)
+                self._layout_for_game()
                 self.dice.use_settings(saved, picked_known=known)  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
@@ -1168,6 +1337,10 @@ class Viewer:
                 self.dice_status.set(self.dice.attach())
             except DiceLogError as e:
                 self.dice_status.set(str(e))
+                from . import ravlog
+                if ravlog.running(self.guest) is not None and \
+                        ravlog.running(self.guest) != isinstance(self.dice, ravlog.RavDiceLog):
+                    self.dice = None  # (the other game's helper: made afresh for it at the next try)
                 self._release_game()  # (nothing followed: the lock not kept from `play` meanwhile; taken again next try)
             return
         if now >= self.next_try:  # every couple of seconds: has the game restarted?
@@ -1339,7 +1512,7 @@ class Viewer:
             self.spell_text.insert("end", "Connect to the game to read its spells.")
             return
         try:
-            spells = spellbook.all_spells(game.GameData(self.guest, self.ds, self._rules()))
+            spells = spellbook.all_spells(self._game_data())
         except (struct.error, IndexError, ValueError, OSError) as e:
             self.spell_text.insert("end", f"Couldn't read the spells: {e}")
             return
@@ -1868,7 +2041,7 @@ class Viewer:
         labels = ("  THAC0 now, each weapon", "  Saves now " + "/".join(game.SAVE_SHORT))
         if self.ds is None:
             return [(label, [""] * len(slots)) for label in labels]
-        gd = game.GameData(self.guest, self.ds, self._rules())
+        gd = self._game_data()
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
         hits, saves = [], []
         for s in slots:
@@ -1887,7 +2060,7 @@ class Viewer:
         """Each slot's spell slots (GameData.spell_slots), or [] when the game isn't running."""
         if self.ds is None:
             return [[] for _ in slots]
-        gd = game.GameData(self.guest, self.ds, self._rules())
+        gd = self._game_data()
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
         out = []
         for s in slots:
@@ -1905,7 +2078,7 @@ class Viewer:
         rows = [(f"{kind} spells left", [game.slots_text(m.get(kind, [])) for m in per_member])
                 for kind, _ in game.MAGIC_KINDS]
         if self.ds is not None:  # each thief's skills as they stand (equipment and effects)
-            gd = game.GameData(self.guest, self.ds, self._rules())
+            gd = self._game_data()
             table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR)
             cells = []
             for s in slots:
@@ -1962,7 +2135,7 @@ class Viewer:
 
     def _refresh_cards(self, slots) -> None:
         """The Characters tab: each slot's card, with its condition and current AC."""
-        gd = game.GameData(self.guest, self.ds, self._rules()) if self.ds is not None else None
+        gd = self._game_data() if self.ds is not None else None
         effects = gd.effects_left() if gd else []
         combatants = gd.combatants() if gd else {}
         table = game.far_pointer(self.guest, self.ds, game.CREATURES_PTR) if gd else None

@@ -59,7 +59,12 @@ class LaunchTests(unittest.TestCase):
         saved = launch.STARTED
         try:
             launch.STARTED = None
-            self.assertIn("in DOSBox", launch.started_line("G"))
+            self.assertEqual(launch.started_line("G"), "Starting Shattered Lands from G in DOSBox.")
+            with tempfile.TemporaryDirectory() as d:  # (the sequel's folder: its DSUN.EXE's size)
+                from dsloader import ravager
+                with open(os.path.join(d, "DSUN.EXE"), "wb") as f:
+                    f.truncate(ravager.WOTR_SIZE)
+                self.assertEqual(launch.started_line(d), f"Starting Wake of the Ravager from {d} in DOSBox.")
             self.assertEqual(launch.closed_line(0), "DOSBox closed.")
             launch.STARTED = "C:/dsr/dsun.exe"
             self.assertIn("as Dark Sun Recompiled (C:/dsr/dsun.exe)", launch.started_line("G"))
@@ -705,6 +710,27 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("midiconfig=128:0", lines)
         self.assertEqual(launch.effective_switches({"midi_device": 3})["midi_device"], 3)
         self.assertEqual(launch.effective_switches({"midi_device": -1})["midi_device"], "default")
+
+    def test_the_sequels_configuration_has_the_picture_and_speed_but_no_music_device(self):
+        """write_conf_wotr: the Options tab's picture and speed reach Wake of the Ravager, the music
+        device doesn't (its music is the CD's audio tracks, not MIDI: write_conf_wotr)."""
+        def conf(settings):
+            with tempfile.TemporaryDirectory() as d:
+                game = os.path.join(d, "Ravager")
+                os.mkdir(game)
+                open(os.path.join(game, "game.ins"), "w").close()
+                path = launch.write_conf_wotr(game, os.path.join(d, "test.conf"), settings=settings)
+                with open(path, newline="") as f:
+                    text = f.read().replace(d, "GAMES")  # (each call's own folder)
+                return text.split("\r\n")
+        usual = conf({})
+        self.assertIn(f"cycles=fixed {launch.DEFAULT_SPEED}", usual)
+        lines = conf({"picture": "scanlines", "cycles": 20000, "midi_device": 2})
+        self.assertIn("scaler=scan3x", lines)
+        self.assertIn("cycles=fixed 20000", lines)
+        self.assertNotIn("[midi]", lines)
+        self.assertFalse([line for line in lines if line.startswith("midiconfig")])
+        self.assertEqual(conf({"midi_device": "128:0"}), usual)
 
     def test_without_the_dice_log_it_runs_the_game_as_usual(self):
         with tempfile.TemporaryDirectory() as d:

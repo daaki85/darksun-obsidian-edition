@@ -23,7 +23,7 @@ Blue Slaad carry a deadly poison, and the Styr, the Djinn and the Tari get kinds
 """
 
 import struct
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from . import game
 
@@ -133,9 +133,16 @@ class Defences(NamedTuple):
     undead: bool
 
 
-def defences(rules: List[Rule], properties: int, undead: bool, kind: int = 0, manual: bool = False) -> Defences:
+def defences(rules: List[Rule], properties: int, undead: bool, kind: int = 0, manual: bool = False,
+             percent: Optional[Callable[[int], int]] = None) -> Defences:
     """What a monster's resistance rules and properties come to (KIND's own, as the monsters as the
-    manual describes them have them, with MANUAL)."""
+    manual describes them have them, with MANUAL). PERCENT, if given, works out the percent of a hit's
+    damage taken in place of RULES (the sequel's own way: dsloader.ravlog)."""
+    if percent is not None:
+        def damage_percent(_rules, kinds, _percent=percent):  # (shadows the module's)
+            return _percent(kinds)
+    else:
+        damage_percent = globals()["damage_percent"]
     # weapons: the least plus that does any damage, for each kind of weapon
     need = {}
     for bit, name in WEAPON_KINDS:

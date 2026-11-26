@@ -117,7 +117,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for [practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) (not in the release zip) |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`) ([Generated pages](#generated-pages)) |
-| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Show Save.bat` `save` on the file dropped on it |
+| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
 | `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `WEAPON-SPECS.md`, `ITEMS.md`, `PEOPLE.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
@@ -314,6 +314,7 @@ What the `.bat` files do, from a command prompt (`dsloader` is the program's int
 
 ```
 python -m dsloader launch                        # the game with the dice log, and the Loader's window
+python -m dsloader launch --ravager [FOLDER]     # Wake of the Ravager, and the Loader's window
 python -m dsloader view                          # the Loader's window only, game not started
 python -m dsloader play                          # the game with the in-game additions, no window
 python -m dsloader dicelog                       # the dice log in the command prompt
@@ -454,6 +455,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 |---|---|---|
 | `icons.py` | inventory and spell icons of the Loader's own; writes its RESOURCE.GFF copy | [CONTENT: new items](DEVELOPMENT-CONTENT.md#new-items) |
 | `wotrart.py` | Wake of the Ravager's spell icons, from the player's copy | [CONTENT: new spells](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest) |
+| `sequelicons.py` | Wake of the Ravager's weapon and great axe icons, from the player's copy | [CONTENT: new items](DEVELOPMENT-CONTENT.md#new-items) |
 | `whirlart.py` | Whirlwind's picture on the ground | [CONTENT: new spells](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest) |
 | `sprites.py` | the party's map figures with what each wears | [CONTENT: what the party wears](DEVELOPMENT-CONTENT.md#what-the-party-wears) |
 | `spriteparts.py` | where each part of a figure is, frame by frame | [CONTENT: what the party wears](DEVELOPMENT-CONTENT.md#what-the-party-wears) |

@@ -247,6 +247,24 @@ class PredictTests(unittest.TestCase):
             self.assertEqual(hitchance.squares(log.game, 0, FOE), squares, (x, y))
 
 
+class EnemiesTests(unittest.TestCase):
+    def test_the_sequels_sides(self):
+        """Shattered Lands': another side than the leader's, not the neutral 4. Wake of the Ravager's
+        (rings.HOSTILE_SIDES, ravlog's 0F80h): the sides whose bit is in the mask, 7-11 (the Draxans' 7),
+        not the street's people on 1-6."""
+        from dsloader import rings
+        log = fight()
+        log.game.in_combat = lambda: True
+        side = CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SIDE
+        struct.pack_into("<h", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE, 30)  # (its HP)
+        self.assertEqual(rings.enemies(log.game), [FOE])
+        self.addCleanup(setattr, rings, "HOSTILE_SIDES", rings.HOSTILE_SIDES)
+        rings.HOSTILE_SIDES = 0xF80
+        for value, foe in ((2, False), (1, False), (6, False), (7, True), (11, True), (12, False), (200, False)):
+            log.guest.mem[side] = value
+            self.assertEqual(rings.enemies(log.game), [FOE] if foe else [], value)
+
+
 class AttackAcTests(unittest.TestCase):
     """The game's AC routine (58DD3h, 7C557h) as GameData.attack_ac counts it."""
 
@@ -274,6 +292,29 @@ class AttackAcTests(unittest.TestCase):
         self.assertEqual(self.ac(), 4)  # (6)
         set_effects(self.log, [(FOE, FOE, game.EFFECT_SHIELDED)])
         self.assertEqual((self.ac(), self.ac(True)), (2, 7))  # (Shielded: 4, from the front only)
+
+    def test_a_gladiators_armour_before_it_has_fought(self):
+        """A gladiator in armour is a fifth of its level better (level 8: 1). A monster that hasn't fought
+        yet has its gear unplaced (every slot byte past the equip slots: a Draxan's brigandine in 14-16 in
+        Wake of the Ravager's Tyr ambush, 2026-11-25); the game puts it on before its first attacker's
+        swing, so its armour counts as worn then too (armour_ready). In a pack beside gear in place, not."""
+        m = self.log.guest.mem
+        sheet = SHEETS + STALKER * game.SHEET_SIZE
+        struct.pack_into("<H", m, sheet + game.SHEET_FLAGS, game.SHEET_FLAG_GLADIATOR)
+        m[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 3] = bytes((game.GLADIATOR_CLASS, 0, 0))
+        m[sheet + game.SHEET_LEVELS:sheet + game.SHEET_LEVELS + 3] = bytes((8, 0, 0))
+        chest = game.EQUIP_SLOTS.index("chest")
+        wear(self.log, STALKER, 60, 30, 40, chest, type_ac=3)
+        placed = self.ac()
+        self.assertEqual(placed, -2)  # (4 - 3, DEX -2, the gladiator's 1)
+        m[ITEMS + 30 * game.ITEM_SIZE + game.ITEM_SLOT] = len(game.EQUIP_SLOTS)  # (unplaced)
+        self.assertEqual(self.ac(), placed)
+        struct.pack_into("<h", m, ITEMS + 30 * game.ITEM_SIZE + game.ITEM_NEXT, 31)  # (a ring in place beside it)
+        at = ITEMS + 31 * game.ITEM_SIZE
+        struct.pack_into("<H", m, at + game.ITEM_TYPE, game.RING_TYPE)
+        struct.pack_into("<h", m, at + game.ITEM_NEXT, game.NO_ITEM)
+        m[at + game.ITEM_SLOT], m[at + game.ITEM_PLUS] = game.FINGERS[0], 0
+        self.assertEqual(self.ac(), placed + 1)
 
     def test_other_effects(self):
         """Displacement 2 better, Blind and Slowed 4 worse each, Biofeedback 1 better; the attacker

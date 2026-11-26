@@ -57,20 +57,20 @@ METAL, LEATHER, NO_MATERIAL_BIT = 4, 5, 0x40
 # a Lifebinder's weapon kinds (specialize.KINDS' numbers): club, mace, quarterstaff, sling, staff sling
 BLUNT = frozenset((1, 4, 8, 14, 15))
 # a Shinobi's: dagger, short sword, quarterstaff, chatkcha, bow, sling, staff sling
-SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15))
+SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15, 21))
 SHINOBI = KIT_IDS["Shinobi"]
 BOW = 13  # (the bow's weapon kind: every ranger's expertise but a Seeker's, whose sphere decides)
 # an Elementalist's second sphere: the low three bits of the sheet's byte SPHERE2, 0 none, else the
 # sphere (0 air, 1 earth, 2 fire, 3 water) + 1 (DSCLOG's SPHERE2; the bits above it are the new spells
 # known, game.NEW_KNOWN)
-SPHERE2, SPHERE2_MASK = 0x45, 0x07
+SPHERE2, SPHERE2_MASK = 0x45, 0x07  # (the sequel's +3Fh: ravlog's layout)
 # a Battle Mage's weapon specs to choose from (DSCLOG's KIT_BM_KINDS): the one-handed melee ones, not
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # a Crusader's and a Mind Warrior's one weapon spec of expertise (DSCLOG's SPEC_OF_SHEET): any
 # melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
 WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
-MELEE_KINDS = frozenset(range(12))
+MELEE_KINDS = frozenset(range(12)) | frozenset(range(16, 20))  # (and Wake of the Ravager's four)
 # ... and a thri-kreen Mind Warrior's the chatkcha as well (DSCLOG's KIT_KREEN_KINDS)
 KREEN_WARRIOR_KINDS = frozenset((12,))
 # a Poisoner's weapon specs to choose from (DSCLOG's KIT_POISON_KINDS): the dagger and short sword
@@ -176,9 +176,11 @@ CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw
 def own_race(sheet: bytes) -> int:
     """The race of SHEET if it is one of the game's own party given a feature of its own (OWN_BIT),
     else 0 (the kits rule is the caller's to weigh)."""
-    if len(sheet) <= 0x43 or sheet[0x43] == KIT_OPEN or not sheet[0x43] & OWN_BIT:
+    from . import game, kitpages
+    at = kitpages.KIT_BYTE
+    if len(sheet) <= at or sheet[at] == KIT_OPEN or not sheet[at] & OWN_BIT:
         return 0
-    return sheet[0x18] if sheet[0x18] in OWN_FEATURES else 0
+    return sheet[game.SHEET_RACE] if sheet[game.SHEET_RACE] in OWN_FEATURES else 0
 
 
 def wild_fighter(kids, race: int) -> bool:
@@ -285,7 +287,7 @@ def war_hit(sheet: bytes, kind: Optional[int], own_thac0: int, specialization: b
                 return kid, 0
         elif kind not in war_kinds(kid):
             return kid, 0
-        warrior = max(1, 21 - sheet[0x24 + place])
+        warrior = max(1, 21 - sheet[game.SHEET_LEVELS + place])
         return kid, max(0, own_thac0 - warrior)
     return 0, 0
 

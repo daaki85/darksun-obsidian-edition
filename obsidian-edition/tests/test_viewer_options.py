@@ -1,7 +1,7 @@
 """The Options tab's switches (viewer.Viewer._options_changed, restore_defaults) on a real Loader
 window: every switch the Loader reads (launch.CONTENT, game.RULE_SETTINGS, launch.SWITCH_DEFAULTS)
 saved when one changes, and set back by Restore defaults; the picture and the music device; and the Help button, which opens the
-player's guide. Needs tkinter and a display (else skipped:
+player's guide; and Play Wake of the Ravager, beside Play Shattered Lands. Needs tkinter and a display (else skipped:
 run under xvfb-run for it)."""
 
 import json
@@ -203,6 +203,114 @@ class OptionsTests(unittest.TestCase):
         viewer.webbrowser.open = lambda url: False
         self.viewer.open_guide()
         self.assertIn(os.path.join("manual", "index.html"), self.viewer.status.get())
+
+    def _ravager_button(self, found):
+        """Play Wake of the Ravager pressed with ravager.find_dir answering FOUND: what launch.launch
+        was given and the message boxes shown."""
+        from dsloader import ravager
+        started, shown = [], []
+
+        class Running:
+            args, pid, returncode = ["DOSBox.exe"], 1, None
+
+            def poll(self):
+                return None
+        for module, name, stand_in in (
+                (ravager, "find_dir", lambda sl_dir=None, given=None: found),
+                (launch, "launch", lambda game_dir, what="": started.append(game_dir) or (Running(), None)),
+                (viewer.messagebox, "showinfo", lambda *a, **k: shown.append(a)),
+                (viewer.messagebox, "showerror", lambda *a, **k: shown.append(a))):
+            real = getattr(module, name)
+            self.addCleanup(setattr, module, name, real)
+            setattr(module, name, stand_in)
+        def every(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from every(child)
+        buttons = [b for b in every(self.root)
+                   if isinstance(b, viewer.ttk.Button) and b.cget("text") == "Play Wake of the Ravager"]
+        self.assertEqual(len(buttons), 1)
+        self.assertFalse(buttons[0].instate(["disabled"]))
+        buttons[0].invoke()
+        return started, shown, buttons[0]
+
+    def test_top_row_wraps_when_narrow(self):
+        """The right-hand group of the top row (Game window, Text size, Freeze report...) goes under
+        the start buttons, whole, exactly when the row is too narrow for both groups, and is beside
+        them otherwise. (Measured, not by fixed widths: the fonts, and the widest window the
+        screen allows, differ from one computer to another.)"""
+        row, starts, top = self.viewer.top_row
+        self.root.deiconify()
+        need = None
+        for width in (1080, 2400):
+            self.root.geometry(f"{width}x700")
+            self.root.update()
+            self.viewer._wrap_top()
+            self.root.update()
+            need = starts.winfo_reqwidth() + top.winfo_reqwidth()
+            wrapped = need > row.winfo_width() - 12
+            self.assertEqual(int(top.grid_info()["row"]), 1 if wrapped else 0, (width, row.winfo_width(), need))
+            self.assertLessEqual(top.winfo_reqwidth(), row.winfo_width(), width)
+        # (so narrow that it must wrap, wherever it runs: below the Loader's least width)
+        self.root.minsize(1, 1)
+        self.root.geometry(f"{need // 2}x700")
+        self.root.update()
+        self.viewer._wrap_top()
+        self.assertEqual(int(top.grid_info()["row"]), 1)
+
+    def test_ravager_button_not_found(self):
+        """Without the sequel found, the button starts nothing and points to Options' Choose its folder..."""
+        started, shown, _ = self._ravager_button(None)
+        self.assertEqual(started, [])
+        self.assertEqual(len(shown), 1)
+        self.assertIn("Choose its folder...", shown[0][1])
+        self.assertIsNone(self.viewer.dosbox)
+
+    def test_ravager_button_starts_the_sequel(self):
+        """Found, the button starts the game in the sequel's folder (launch._launch runs it as Wake of
+        the Ravager), says what isn't ported yet, and both start buttons wait for the game to close."""
+        folder = os.path.join(os.sep, "games", "Dark Sun 2")
+        started, shown, button = self._ravager_button(folder)
+        self.assertEqual((started, shown), ([folder], []))
+        self.assertEqual(self.viewer._game_dir, folder)
+        self.assertIn(launch.RAVAGER_NO_LOG[1:], self.viewer.dice_text.get("1.0", "end"))
+        self.assertTrue(button.instate(["disabled"]))
+        self.assertTrue(self.viewer.start_button.instate(["disabled"]))
+
+
+    def test_take_the_party_across(self):
+        """Take the party to Wake of the Ravager (Options, Wake of the Ravager): the save picked, asked,
+        ravtransfer.transfer run with the folders, its report shown in a window of its own; nothing run
+        without the sequel's folder or when the player says no."""
+        from dsloader import ravager, ravtransfer, wotrart
+        mod = viewer
+        real = (launch.find_game_dir, wotrart.find_resources, ravager.is_wotr_dir, mod.filedialog.askopenfilename,
+                mod.messagebox.askyesno, mod.messagebox.showinfo, ravtransfer.transfer)
+
+        def put_back():
+            (launch.find_game_dir, wotrart.find_resources, ravager.is_wotr_dir, mod.filedialog.askopenfilename,
+             mod.messagebox.askyesno, mod.messagebox.showinfo, ravtransfer.transfer) = real
+        self.addCleanup(put_back)
+        calls, told = [], []
+        launch.find_game_dir = lambda: "/sl"
+        wotrart.find_resources = lambda sl, given=None: "/wotr/RESOURCE.GFF"
+        ravager.is_wotr_dir = lambda folder: folder == "/wotr"
+        mod.filedialog.askopenfilename = lambda **kw: "/sl/SAVE03.SAV"
+        mod.messagebox.showinfo = lambda *a, **kw: told.append(a)
+        mod.messagebox.askyesno = lambda *a, **kw: False
+        ravtransfer.transfer = lambda *a: calls.append(a) or "Lex: place 4 of the roster\n"
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(calls, [])  # (said no)
+        mod.messagebox.askyesno = lambda *a, **kw: True
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(calls, [("/sl/SAVE03.SAV", "/wotr", "/sl", launch.DOS_DIR)])
+        texts = [w for w in self.root.winfo_children() if isinstance(w, tk.Toplevel)]
+        self.assertTrue(any("Lex: place 4" in c.get("1.0", "end") for t in texts for c in t.winfo_children()
+                            if isinstance(c, tk.Text)))
+        ravager.is_wotr_dir = lambda folder: False
+        self.viewer.take_party_to_wotr()
+        self.assertEqual(len(calls), 1)
+        self.assertIn("hasn't found Wake of the Ravager", told[-1][1])
 
 
 if __name__ == "__main__":

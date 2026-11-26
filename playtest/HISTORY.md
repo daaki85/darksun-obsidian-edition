@@ -638,6 +638,96 @@ index](logs/README.md), by date.
   BackSpace); the Loader's gear and the roster (`gearpoll.py`); the DUAL sphere menu; `kitset.py`,
   `canuse.py`, `sheetinfo.py`'s kits; a level-up for a test (XP just short, then a kill).
 - **2026-11-16**: the main menu's 30 s after a fresh start; the roster's order (the game's five
+  first); a party made on the creation screen into a fight; CHOOSE A SPELL's picks by INT and its new
+  grid (`spellgrid.py`); a named weapon for a shot; the unchanged game for a comparison; View
+  Character's icons in play and the Effects page's MORE; `levelup.sh` on the first icon (113,71).
+
+
+## The roster and the Loader's creation gear (2026-11-15)
+
+In-game checks of the kit rebalance (logs/2026-11-15-kit-rebalance-checks.md): a Myrmidon made in
+one session had "long sword, polearm" and a polearm in the backpack; ADDed from the roster in the
+next session it had the long sword spec alone and only the game's gear. The game writes the new
+character to the roster at DONE; the Loader's changes (weapon spec defaults, kit gear, fuller
+starting gear) come after, in memory, and reach the party that is played then, never the roster.
+The Myrmidon's polearm spec went into DSCLOG (MYRM_POLEARM, written at DONE) and was seen kept after
+a restart; the Loader's creation gear for the roster took three fixes (log part 7): VIEW
+CHARACTER's GEAR_WAIT cleared the gear flag when STATS weren't fresh (never, on the creation
+screen); the Loader cleared it in a pass made while the weapon window was up, giving nothing; and
+the character being made reads Okay, not New, until after the roster write, so the Loader's gear
+steps skipped it. With DSCLOG naming the character (GEAR_WHO) and holding the roster write
+(GEAR_HOLD) for the Loader's heartbeat-checked pass, two fighters ADDed after a restart had their
+gear. Along the way: a worker restart killed Xvfb and DOSBox (restart both); clicks at the main
+menu did nothing until the mouse was captured (the guide's note); a kit row ignored its click
+because NO KIT was still marked; BackSpace in the name field does nothing (Delete does).
+
+2026-11-16 (logs/2026-11-16-roster-gear.md): a review of that fix found it only for weapon
+specialization on: with the rule off, CR_WEAPONS returned before naming the character, and kit and
+fuller starting gear still missed the roster. DSCLOG's GEAR_MARK names it there too. A Swashbuckler
+made with the rule off (Arm and Leg Armor from the Loader) and a Myrmidon with it on (the bone
+polearm in the backpack, the sling, specs long sword and polearm) were each ADDed after a restart
+with all of it. A worker restart between DONE and the ADD killed Xvfb and DOSBox again, which here
+served as the restart; the main menu took about 30 s after the title clicks.
+
+## The Brute who became an air cleric (2026-11-16)
+
+Checking the kits' DUAL bans in the game (logs/2026-11-15-kit-rebalance-checks.md part 9): a Brute
+may not change class to air cleric, and DSCLOG greyed that class, but the DUAL window has one CLERIC
+row for all four spheres, lit while any is allowed, and the game's sphere menu after it makes its
+title row, or the menu closed, the air class. Cermak, a Brute in memory, became an air cleric by
+closing the menu. DSCLOG's PROBE_SPHERE now refuses a barred class there (no change, the window
+shut). The same session: untilturn.sh stalled on a member with no Move whose END menu was at the
+screen's left (toturn.sh presses E instead), and chestuse.sh's press on Pehtucl's chest opened the
+USE screen: `pointer.py look`, the press at (163,70) and the look box's third button worked.
+
+## The level-up and DUAL checks (2026-11-16)
+
+The Arcanist's and the Scholar's level-up and DUAL were played from `fountain-user` (log part 10).
+DOSBox and Xvfb had died again while the session sat idle. Lessons: the DUAL window's scores are the
+creature record's (raising INT on the sheet did nothing); `toturn.sh`'s E with no END menu up opened
+the Effects screen once (Seneca's Tab chose a foe out of reach, so Return did nothing), and closing
+it left the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
+`passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
+
+## The test log cut short (2026-11-16)
+
+A script editing logs/2026-11-15-kit-rebalance-checks.md cut the file at the first "Not played: the
+Arcanist" it found, meaning the summary's last line, but part 9 had a line starting the same way:
+part 10 and the summary table were lost in a commit and put back in the next from the version
+before it (the rule now in the guide's "After a play").
+
+## A hang in a lasting cloud (fixed)
+
+Moved from the guide: a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's
+round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h) ran
+on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. A restart was the
+way out; DSCLOG no longer makes that call there.
+
+
+## The Spellarcher's Fine Bow and starting arrows (2026-11-16)
+
+Four half-elf fighter/preserver Spellarchers made from CREATE CHARACTERS
+(logs/2026-11-16-spellarcher-fine-bow.md). CHOOSE A SPELL came before the weapon window, so the
+Loader's kit gear (after the window) saw the picks. A third character, at INT 15, had two picks, not
+four: the third click meant for CHOOSE A SPELL took Shocking Grasp's place after the list closed up,
+and the fourth landed on the weapon window. Two of the four got a gear pass while their creation
+screen was still up (the stand-in record is New), its lines in the dice log before the picks; the
+game threw that gear away at DONE. The party of fresh characters then lost the arena's first wave
+in melee, so the Fine Bow's shot was taken from `tofight.sh` with Ester's bow renamed in memory.
+
+## CHOOSE A SPELL's grid and the unchanged game (2026-11-16)
+
+The user saw the spell icons sit right of centre. The unchanged game (its own DSUN.EXE in DOSBox,
+no DSCLOG or Loader) gives a new preserver no CHOOSE A SPELL, so its window was read from the
+game's RESOURCE.GFF instead (WIND 17500, the same as the Loader's copy then): 21 places in seven
+columns, filled middle five first, then the right-hand column. A level-up in the unchanged game
+from fountain-user (Lex's XP to 4,999, the Templar killed by Jenna) didn't come before the party,
+passing its turns, was beaten.
+
+**2026-11-21, the shared lock held by Xvfb.** A Wake of the Ravager start (`ravstart.sh`) run under
+`flock /tmp/playtest/dosbox.lock` started Xvfb itself; Xvfb kept the lock's descriptor, so the next
+flock waited until it was killed (logs/2026-11-21-ravager-creation-hp.md). Start Xvfb first.
+
   first); a party made on the creation screen into a fight; CHOOSE A SPELL's picks by INT and its
   new grid (`spellgrid.py`); a named weapon for a shot; the unchanged game for a comparison; View
   Character's icons in play and the Effects page's MORE; `levelup.sh` on the first icon (113,71);

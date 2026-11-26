@@ -25,7 +25,7 @@ sys.path.insert(0, TESTS)
 from dsloader import gamepatch, sizes, specialize  # noqa: E402
 
 # (source, what it builds: a file in dos/, or None for the least_scores patch's bytes)
-PROGRAMS = (("dsclog.asm", "DSCLOG.EXE"), ("gameend.asm", "GAMEEND.COM"), ("umbplus.asm", "UMBPLUS.COM"),
+PROGRAMS = (("dsclog.asm", "DSCLOG.EXE"), ("dsclog2.asm", "DSCLOG2.EXE"), ("gameend.asm", "GAMEEND.COM"), ("umbplus.asm", "UMBPLUS.COM"),
             ("least_scores.asm", None))
 
 
@@ -86,7 +86,7 @@ class TableTests(unittest.TestCase):
 
     def test_large_dice(self):
         """sizes.LARGE_DICE (count, sides, the bonus's change by kind, None as 0, 0, 0) is DSCLOG's
-        large_dice, all 16 kinds."""
+        large_dice, all 22 kinds."""
         self.assertEqual(len(sizes.LARGE_DICE), len(specialize.KINDS))
         want = b"".join(struct.pack("<BBb", *(dice or (0, 0, 0))) for dice in sizes.LARGE_DICE)
         self.assertEqual(self.table("large_dice"), want)

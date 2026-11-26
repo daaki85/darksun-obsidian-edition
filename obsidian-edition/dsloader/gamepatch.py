@@ -907,18 +907,13 @@ PATCHES = (
     Patch("pp_arm", 0x89610, bytes.fromhex("6668ffffbe00"), _site(PP_ARM, 6)),
     Patch("pp_hand", 0x5ECD8, bytes.fromhex("8b7606"), _site(PP_HAND, 3)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
-    # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
-    # names) ...
-    Patch("names_size_start", 0x56676, bytes.fromhex("666a01"), _interrupt(VEC_NAMES_SIZE, 3)),
-    Patch("names_size_load", 0x6A5A2, bytes.fromhex("666a01"), _interrupt(VEC_NAMES_SIZE, 3)),
-    # ... and the "add sp,0Ch" after reading it in (DSCLOG copies its names after the game's)
+    # the "add sp,0Ch" after reading it in (DSCLOG notes where it is; the Loader's names are in
+    # the chunk, itemtables.py)
     Patch("names_fill_start", 0x566AD, bytes.fromhex("83c40c"), _interrupt(VEC_NAMES_FILL, 3)),
     Patch("names_fill_load", 0x6A5D6, bytes.fromhex("83c40c"), _interrupt(VEC_NAMES_FILL, 3)),
     # where an attack is worked out from behind / a backstab: a hidden thief's is (RULE_STEALTH)
     Patch("stealth", 0x58353, bytes.fromhex("ff76e6"), _interrupt(VEC_STEALTH, 3)),
-    # the item types (IT1R), read in just before the names: room for the Loader's own
-    Patch("types_size_start", 0x56618, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
-    Patch("types_size_load", 0x6A54A, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
+    # the item types (IT1R), read in just before the names: the same
     Patch("types_fill_start", 0x56647, bytes.fromhex("83c40c"), _interrupt(VEC_TYPES_FILL, 3)),
     Patch("types_fill_load", 0x6A579, bytes.fromhex("83c40c"), _interrupt(VEC_TYPES_FILL, 3)),
     # the class level cap (9, or 10 with the rule): "cmp byte es:[bx+24h],9" where a character
@@ -1382,31 +1377,34 @@ def relocated(data: bytes) -> set:
     return out
 
 
-def patched(original: bytes, skip=frozenset()) -> bytes:
+def patched(original: bytes, skip=frozenset(), patches=None, size: int = GOG_SIZE) -> bytes:
     """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP). A patch
-    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh")."""
-    if len(original) != GOG_SIZE:
+    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh").
+    PATCHES and SIZE: another game's table and GOG size (Wake of the Ravager's: ravager.py);
+    Shattered Lands' by default."""
+    patches = PATCHES if patches is None else patches
+    if len(original) != size:
         raise PatchError(f"DSUN.EXE is {len(original)} bytes; the dice log knows the GOG release "
-                         f"({GOG_SIZE} bytes) only")
+                         f"({size} bytes) only")
     data = bytearray(original)
-    for p in PATCHES:
+    for p in patches:
         if data[p.offset:p.offset + len(p.original)] != p.original:
             raise PatchError(f"DSUN.EXE is not the version the dice log knows ({p.name} differs)")
         if p.name not in skip:
             data[p.offset:p.offset + len(p.original)] = p.replacement
     moved = relocated(original)
-    for p in PATCHES:
+    for p in patches:
         for at in range(p.offset - 1, p.offset + len(p.original)):
             if at in moved and data[at:at + 2] != original[at:at + 2]:
                 raise PatchError(f"the patch {p.name} changes a word DOS relocates (at {at:X}h)")
     return bytes(data)
 
 
-def write_patched(source: str, dest: str, skip=frozenset()) -> None:
+def write_patched(source: str, dest: str, skip=frozenset(), patches=None, size: int = GOG_SIZE) -> None:
     """Write the patched copy of `source` to `dest` (but the patches in SKIP), unless it is
-    already there."""
+    already there. PATCHES and SIZE as patched()'s."""
     with open(source, "rb") as f:
-        data = patched(f.read(), skip)
+        data = patched(f.read(), skip, patches, size)
     try:
         with open(dest, "rb") as f:
             if f.read() == data:

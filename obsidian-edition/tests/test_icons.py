@@ -146,6 +146,35 @@ class CopyTests(unittest.TestCase):
         self.assertEqual(runs[b"OJFF"], [(5, 3), (100, 1), (900, 1)])
         self.assertEqual(runs[b"BMP "], [(1, 3), (7, 1), (50, 1)])
 
+    def test_free_list_count(self):
+        """The table of contents ends as the game's own: the type table, then the free list's word
+        count (0) where the table's second dword says. A roster (types listed one by one, as the
+        sequel's CHARSAVE.GFF) whose new table lacked the count had that dword on the last entry's
+        length, and the game's next write put its holes' count there (CHAR 53 1E1h -> 101E1h)."""
+        chunks = {1: b"a" * 5, 2: b"b" * 7}
+        out = bytearray(28)
+        places = []
+        for cid, chunk in chunks.items():
+            places.append((cid, len(out), len(chunk)))
+            out += chunk
+        toc = bytearray(struct.pack("<IIH4sI", 8, 0, 1, b"CHAR", len(places)))
+        for place in places:
+            toc += struct.pack("<III", *place)
+        end = len(toc)
+        toc += struct.pack("<HII", 1, 28, 3)  # (the game's: a hole's count and the hole)
+        struct.pack_into("<I", toc, 4, end)
+        out[:20] = struct.pack("<4sIIII", b"GFFI", 0x30000, 28, len(out), len(toc))
+        data = bytes(out + toc)
+        new = icons.with_chunks(data, {("CHAR", 2): b"c" * 9})
+        toc_offset, toc_length = struct.unpack_from("<II", new, 12)
+        types_end = 10 + 8 + 12 * 2
+        self.assertEqual(struct.unpack_from("<I", new, toc_offset + 4)[0], types_end)
+        self.assertEqual(toc_length, types_end + 2)
+        self.assertEqual(struct.unpack_from("<H", new, toc_offset + types_end)[0], 0)
+        game_write = bytearray(new)  # (the game's own count written where the dword says)
+        struct.pack_into("<H", game_write, toc_offset + types_end, 1)
+        self.assertEqual(gff.read_gff(bytes(game_write)), {("CHAR", 1): b"a" * 5, ("CHAR", 2): b"c" * 9})
+
     def test_new_chunks(self):
         """Each icon's object: the plain one's with the new icon named; its map picture the plain
         one's; its icon made from the plain one's."""
