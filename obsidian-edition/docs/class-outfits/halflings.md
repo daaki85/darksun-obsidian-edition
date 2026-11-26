@@ -1,6 +1,6 @@
 # Halfling class outfits
 
-The Loader fits seven singles, twelve pairs and two triples on both halflings. The equipment animation shows the male Cleric/Thief and female Fighter/Psionicist. [Watch them with magical equipment](magic-gear-halfling.gif)
+The Loader fits seven singles, twelve pairs and two triples on both halflings. The equipment animation shows the male Cleric/Thief and female Fighter/Psionicist. [Watch them with magical equipment](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/magic-gear-halfling.gif)
 
 All seven single classes, twelve pairs and two triples are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
 
@@ -10,7 +10,7 @@ The sheet pairs each halfling with the same pose from `aa9f774`. The dwarf Thief
 
 ![Both halfling Thieves before and after, beside the dwarf and retail Thieves in five matching poses, at four times and native size](halfling-thief-detail.png)
 
-All seven halfling singles were compared across the 29 poses on both figures. The detail edits are confined to the Thief and the seven combinations that include Thief. Cleric/Thief, Druid/Thief and Ranger/Thief use linen or green for the hood over their own cloth. Fighter/Thief, Psionicist/Thief and Fighter/Psionicist/Thief also carry the revised slate cloak. Psionicist/Ranger/Thief retains its green cloak and teal sash. [Compare all the races’ Thieves in motion](mul-race-thief.gif)
+All seven halfling singles were compared across the 29 poses on both figures. The detail edits are confined to the Thief and the seven combinations that include Thief. Cleric/Thief, Druid/Thief and Ranger/Thief use linen or green for the hood over their own cloth. Fighter/Thief, Psionicist/Thief and Fighter/Psionicist/Thief also carry the revised slate cloak. Psionicist/Ranger/Thief retains its green cloak and teal sash. [Compare all the races’ Thieves in motion](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-race-thief.gif)
 
 ## Multiclass animations
 
@@ -23,7 +23,7 @@ Each large figure wears the combination named above it. For a pair, read the thr
 | [Five Fighter, Psionicist, Ranger and Thief pairs](halfling-multiclass-leather.gif) | Follow the Ranger/Thief beside the plain Thief through side steps 1–4. The green trailing fold carries the Ranger color and the hood turns into shadow around the cheek. |
 | [Both triples and their parent pairs](halfling-multiclass-triples.gif) | In rear idle (01), compare the leather belt and slate cloak on Fighter/Psionicist/Thief with the green cloak on Psionicist/Ranger/Thief. Both carry a teal wrap. On Fighter/Psionicist and its Thief triple the exposed shoulder scale also picks up teal. In front strike 2 (16), the raised arm leaves only six teal pixels visible on the Fighter triple. |
 
-Both halflings wear the approved teal shoulder scale on Fighter/Psionicist. Follow its lit edge as the elbow swings through the profile walk. [Compare the previous and approved walks](shoulder-walk.gif) · [Inspect all 29 poses](shoulder-fit-by-race.gif)
+Both halflings wear the approved teal shoulder scale on Fighter/Psionicist. Follow its lit edge as the elbow swings through the profile walk. [Compare the previous and approved walks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-walk.gif) · [Inspect all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-fit-by-race.gif)
 
 [Man, every multiclass pose](halfling-man-multiclass.png) · [Woman, every multiclass pose](halfling-woman-multiclass.png)
 
@@ -39,7 +39,7 @@ The animation pairs each new outfit with its retail halfling. Below them, the re
 
 In side walk 2 (12), compare the back corner of the Ranger’s cloak with the retail Thief’s. The cloth swings behind the leading knee. The Druid’s leaf cape ends near the belt, leaving the ochre kilt visible. The difference is easiest to see in rear walk 2 (08) and hardest to see in the woman’s side idle (02), where her hair overlaps the short cape.
 
-[Watch the previous and revised rear walk on both halflings](halfling-rear-fit.gif). The first column shows the cleaned body in the same pose. In rear step 2 (08), follow the swinging elbow past the Psionicist’s armhole and the bent leg below the Druid’s ochre kilt. The Ranger and Thief hems shift over the supporting hip as the other foot lifts. The game-size pairs below show the man on the left and the woman on the right.
+[Watch the previous and revised rear walk on both halflings](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/halfling-rear-fit.gif). The first column shows the cleaned body in the same pose. In rear step 2 (08), follow the swinging elbow past the Psionicist’s armhole and the bent leg below the Druid’s ochre kilt. The Ranger and Thief hems shift over the supporting hip as the other foot lifts. The game-size pairs below show the man on the left and the woman on the right.
 
 The Psionicist’s teal vest follows the turning ribs into a leather belt. Front walk 3 (05) shows the separation between the vest, the bare forearms and the shaded hip flap. The Thief’s slate hood has its own crown and a dark rim. Follow the visible cheek from side idle through the four steps, then look at front strike 3 (17) as the head dips under the arm. The gallery checks exposed face pixels against each original pose.
 

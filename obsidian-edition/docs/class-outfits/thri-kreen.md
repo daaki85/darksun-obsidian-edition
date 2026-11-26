@@ -8,7 +8,7 @@ This earlier comparison tested a small patch of pigment that follows the ridges 
 
 ![Retail party Thri-kreen, Cleric and Psionicist shell markings, and a retail Thri-kreen NPC in three matching poses](thri-kreen-markings.png)
 
-[Watch all 29 poses on sand and paving](thri-kreen-markings.gif) · [Inspect each pose on the frame sheet](thri-kreen-poses.png)
+[Watch all 29 poses on sand and paving](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/thri-kreen-markings.gif) · [Inspect each pose on the frame sheet](thri-kreen-poses.png)
 
 The party has one Thri-kreen map figure, object 313, using walk picture 2097 and combat picture 2098. The fourth column uses retail NPC object 215, pictures 291 and 292. Its combat sheet ends after the three bow poses, so the NPC returns to front idle for the party's hit (27) and fall (28).
 

@@ -2,7 +2,7 @@
 
 Each tile in the overview pairs the female dwarf facing forward with the male dwarf facing away. The animations below show both in the same pose. The branch loader now selects these registered outfits from the dwarf’s class slots. The [dwarf and human checklist results](checklist-review.md) include equipment comparisons, screenshots, and the remaining live inventory check. [Outfit workflow](workflow.md) · [Playable combinations](../../PLAYER-GUIDE.md#more-than-one-class)
 
-[Compare the current cloth with retail figures](cloth-detail.md) · [View the earlier garment shading comparison](contrast.md#current-garments-beside-the-previous-revision) · [Watch the final wrist, harness, and hem edits](dwarf-final-details.gif) · [Inspect each build beside the original female and male dwarves](original-dwarves.md) · [Compare dwarf outfit contrast with both humans and the original game figures](contrast.md) · [Watch the three garment contrast edits before and after](contrast.md#gladiator-fighter-and-thief-before-and-after) · [Compare the earlier Fighter revision](dwarf-fighter-review.gif) · [Watch the previous and revised Thief hood and Cleric robe side by side](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the original faces and shoulders with the previous and revised outfits](face-shoulder-review.png)
+[Compare the current cloth with retail figures](cloth-detail.md) · [View the earlier garment shading comparison](contrast.md#current-garments-beside-the-previous-revision) · [Watch the final wrist, harness, and hem edits](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-final-details.gif) · [Inspect each build beside the original female and male dwarves](original-dwarves.md) · [Compare dwarf outfit contrast with both humans and the original game figures](contrast.md) · [Watch the three garment contrast edits before and after](contrast.md#gladiator-fighter-and-thief-before-and-after) · [Compare the earlier Fighter revision](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-fighter-review.gif) · [Watch the previous and revised Thief hood and Cleric robe side by side](checklist-review.md#thief-hood-and-cleric-profile) · [Compare the original faces and shoulders with the previous and revised outfits](face-shoulder-review.png)
 
 ![All twelve playable dwarf outfits, grouped by number of classes, with front and rear views](dwarf-proposals.png)
 
@@ -16,7 +16,7 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 | Psionicist | A bright binding crosses the teal tunic below the jaw. The original brow and cheeks remain visible. |
 | Thief | A lighter slate ridge picks out the front and side folds. The hood frames the temples and leaves the chin open. The rear wrap falls past the belt, with dark shorts visible in front. |
 
-![Five single classes, female above male, synchronized through all 29 poses](dwarf-single.gif)
+[Archived animation: Five single classes, female above male, synchronized through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-single.gif)
 
 ## Two classes
 
@@ -28,7 +28,7 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 | Fighter/Thief | The warm brown hood and short cowl match the Fighter’s leather tunic. The cowl fits between the bone caps. |
 | Psionicist/Thief | The teal hood matches the sash across the Thief’s dark cloak. Its shaded crown uses the same teal family through the rear walk. The longer rear hem distinguishes this figure from the hooded Fighter. |
 
-![Five two-class combinations, female above male, synchronized through all 29 poses](dwarf-double.gif)
+[Archived animation: Five two-class combinations, female above male, synchronized through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-double.gif)
 
 ## Three classes
 
@@ -37,9 +37,9 @@ Each tile in the overview pairs the female dwarf facing forward with the male dw
 | Cleric/Fighter/Psionicist | Add the teal sash to the Cleric/Fighter. The long cream hem, pale bone shoulders, and narrow teal diagonal occupy different parts of the figure. |
 | Fighter/Psionicist/Thief | Add the teal sash to the Fighter/Thief. A narrow teal seam on the brown hood picks up the sash. The bone shoulder caps remain visible. |
 
-![Both three-class combinations, female above male, synchronized through all 29 poses](dwarf-triple.gif)
+[Archived animation: Both three-class combinations, female above male, synchronized through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-triple.gif)
 
-The profile fold runs from behind the ear into the cloak or leather tunic. The front of the hood stays open below the chin. [Watch the profile before and after](dwarf-hood-profile.gif) · [Compare all four Thief hoods through 29 poses](dwarf-thief-hoods.gif)
+The profile fold runs from behind the ear into the cloak or leather tunic. The front of the hood stays open below the chin. [Watch the profile before and after](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-hood-profile.gif) · [Compare all four Thief hoods through 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-thief-hoods.gif)
 
 To review the third class cue, compare Fighter/Thief with Fighter/Psionicist/Thief in the rear walk. Compare Cleric/Fighter with Cleric/Fighter/Psionicist in the bow and hit poses, where the forearm crosses the sash. The two dwarf figures also have different opening strikes.
 

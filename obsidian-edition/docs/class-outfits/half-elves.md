@@ -14,7 +14,7 @@ The woman’s Cleric/Preserver row reproduces the class combination tested on Le
 
 [![Both half-elves in six matched poses with empty slots, armor, robe, cloak, sword and shield, bow and arrows, and corresponding retail reference](half-elf-loader-gear.png)](half-elf-loader-gear.png)
 
-[Watch the woman through all 29 poses](half-elf-loader-woman.gif) · [Watch the man through all 29 poses](half-elf-loader-man.gif)
+[Watch the woman through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-loader-woman.gif) · [Watch the man through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-loader-man.gif)
 
 Each row compares one frame of the Loader’s actual equipment picture on the arena floor, enlarged and at game size. The Warden’s Plate column equips the chest, arms and legs. The Ashen Robe and Cloak of Elvenkind are shown separately so their edges and glints can be seen against the same class colors. During the three bow shots, follow the foreground bow across the sleeve. The retail Priest, Mage and Thief each have matching walk, strike and bow frames through pose 26.
 
@@ -24,7 +24,7 @@ In DOSBox, the attached Loader selected all 48 outfits for Lex on the fountain m
 
 ## Equipped Fighter and Preserver
 
-[Watch the magical equipment on both half-elves](magic-gear-half-elf.gif) · [Compare the earlier Druid and Cleric/Preserver study](magic-study-half-elves.gif)
+[Watch the magical equipment on both half-elves](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/magic-gear-half-elf.gif) · [Compare the earlier Druid and Cleric/Preserver study](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/magic-study-half-elves.gif)
 
 Both figures use the approved study art for all 29 poses. Read the columns across for a single pose. The upper row is Fighter, the lower row is Preserver. Each enlarged picture has a game-size copy beneath it. The retail Warrior and Mage provide the reference at the right and have no matching hit or fall cel.
 
@@ -34,11 +34,11 @@ The two bone guards turn down from her shoulders into separate leather mounts. T
 
 [Earlier armor dye comparison, before the shoulder refit](half-elf-armor-detail.png) · [Compare armor across races](armor-dyes.md)
 
-![Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](half-elf-equipped-armor.gif)
+[Archived animation: Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-equipped-armor.gif)
 
 On the man, follow the club into the outstretched hand on side strike 2 (22). The supporting forearm carries the shield. In profile the far arm can disappear behind the torso. The bow and quiver attach at the shoulder as the body turns. Equipping just the bow leaves the leather quiver empty. Adding arrows reveals their fletchings at the mouth. The ammo-only column shows the filled quiver without the stave. The game's foreground bow takes over in poses 24–26. The hand sling and chatkcha sit at the hip. The staff sling has a visible shaft and cradle. [Compare the carried weapons](weapon-motion.md#weapon-outlines-and-materials)
 
-![Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](half-elf-equipped-weapons.gif)
+[Archived animation: Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-equipped-weapons.gif)
 
 The original Fighter and Preserver equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
 
@@ -46,7 +46,7 @@ The original Fighter and Preserver equipment check compared 3,712 encoded frames
 
 In front idle (00) and the hit (27), the previous abdomen ended in a straight shelf above the thighs. In rear walk step two (08), the light on the back ran into the hip and obscured the shift onto the planted leg. The revised skin carries a short light over the shoulder blade, turns to shadow at the waist and picks up the light again on the loaded hip. In profile step two (12) the hip sits behind the passing forearm. On the Gladiator the turn is visible beside the strap. On the Druid the vest covers the ribs, and the moving knee is the easier comparison.
 
-[Before and after in four poses](half-elf-man-body.png) · [Watch all 29 poses beside the retail elf and the finished human body](half-elf-man-body.gif) · [Inspect each pose as a still](half-elf-man-body-poses.png)
+[Before and after in four poses](half-elf-man-body.png) · [Watch all 29 poses beside the retail elf and the finished human body](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-man-body.gif) · [Inspect each pose as a still](half-elf-man-body-poses.png)
 
 ## Male Druid and Preserver waist fitting
 
@@ -54,13 +54,13 @@ Front idle (00) shows two ways the outfits made the same body look broad. On the
 
 On the Preserver, two nearly parallel plum edges framed a dark rectangle across the ribs. The front panels now turn inward at the waist and part again over the moving thighs. The far panel on step 04 curls out over the lifted knee. This adjustment covers front idle, the four front steps, front strike two (16) and hit (27). Profile step two (12) shows the longer loose mantle swinging behind him. The comparisons include the previous fittings at `1ec61d3`, the clean body, the corresponding half-elf woman or elf man, and a retail figure.
 
-[Compare front idle, front step two and profile step two](half-elf-man-garment-fit.png) · [Watch both fittings through all 29 poses](half-elf-man-garment-fit.gif)
+[Compare front idle, front step two and profile step two](half-elf-man-garment-fit.png) · [Watch both fittings through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-man-garment-fit.gif)
 
 ## Male Druid fitting
 
 Front idle showed a rectangular patch of bare torso between two green cloak edges. The short cape had inherited the Ranger’s outer folds while the fitted garment between them was missing. The man now wears a leaf-green vest underneath. Follow its diagonal overlap down to the ochre waist tie in the front walk, then watch the near forearm pass across it in profile and on the strike. The same fitting carries into his four Druid pairs and six Druid triples.
 
-[Compare front idle, front and profile steps, and the front strike](half-elf-druid-fitting.png) · [Watch all 29 poses beside the previous fitting, the half-elf woman and the human man](half-elf-druid-fitting.gif)
+[Compare front idle, front and profile steps, and the front strike](half-elf-druid-fitting.png) · [Watch all 29 poses beside the previous fitting, the half-elf woman and the human man](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-druid-fitting.gif)
 
 ## Two-class outfits
 
@@ -73,7 +73,7 @@ All 18 legal pairs are shown on the arena floor with empty equipment slots. Each
 | [Mantles, cloaks and jerkins](half-elf-pairs-mantles.gif) | Fighter/Preserver, Fighter/Psionicist, Preserver/Psionicist, Preserver/Ranger and Psionicist/Ranger | [Both figures](half-elf-pairs-mantles.png) | [Woman](half-elf-pairs-mantles-female-poses.png) · [Man](half-elf-pairs-mantles-male-poses.png) |
 | [Thief hoods](half-elf-pairs-hoods.gif) | Thief with Cleric, Fighter, Preserver, Psionicist, Ranger or Druid | [Both figures](half-elf-pairs-hoods.png) | [Woman](half-elf-pairs-hoods-female-poses.png) · [Man](half-elf-pairs-hoods-male-poses.png) |
 
-In the male Druid/Fighter’s second profile step, the leather belt follows the ochre kilt while the cape swings clear behind it. Both Fighter/Psionicists pick up the sash’s teal on the fitted shoulder caps. The Fighter/Preserver wears the dark sword belt on the plum mantle. In the male Fighter/Psionicist’s third profile step, the wrist obscures the sash and its teal end shows below the arm. The male Cleric’s front bow leaves the smallest opening for the belt or sash. The Druid/Thief wears the Druid’s short leaf cape over the tied ochre kilt. The green hood overlaps the cape at the nape. In rear idle and all four rear steps the raised corner exposes the kilt, while the Ranger/Thief’s green panel hangs past the hip. The comparison follows both figures through rear, profile and front walks alongside Shattered Lands’ thief (630) and mage (724), at 2× and game size. [Watch the cape comparison](half-elf-hooded-cape-walk.gif)
+In the male Druid/Fighter’s second profile step, the leather belt follows the ochre kilt while the cape swings clear behind it. Both Fighter/Psionicists pick up the sash’s teal on the fitted shoulder caps. The Fighter/Preserver wears the dark sword belt on the plum mantle. In the male Fighter/Psionicist’s third profile step, the wrist obscures the sash and its teal end shows below the arm. The male Cleric’s front bow leaves the smallest opening for the belt or sash. The Druid/Thief wears the Druid’s short leaf cape over the tied ochre kilt. The green hood overlaps the cape at the nape. In rear idle and all four rear steps the raised corner exposes the kilt, while the Ranger/Thief’s green panel hangs past the hip. The comparison follows both figures through rear, profile and front walks alongside Shattered Lands’ thief (630) and mage (724), at 2× and game size. [Watch the cape comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-hooded-cape-walk.gif)
 
 A second frame review caught the belt and sash taking the color all the way to the free corner of a swinging cloak. In profile step 3 (13), compare the male Preserver/Psionicist and female Fighter/Preserver with their earlier versions. The corner now carries the mantle’s folds as it moves away from the waist. The male Cleric/Thief’s front walk 2 (04) shows the cream lining above his leather shorts. On the woman, side strike 1 (21) and side bow (26) show the repaired inner rim of the hood. On the male Druid, the tied edge of the kilt closes gaps in strikes 16, 21 and 22, and the leaf panel joins behind the bent arm in side bow (26). [Compare nine individual frames at 3× and game size](half-elf-pair-details.png)
 
@@ -108,9 +108,9 @@ The four rows below show all three two-class parents followed by the triple and 
 
 ## Body and first three silhouettes
 
-The initial review puts the original figure and cleaned body beside the Gladiator, Fighter and Cleric. [Watch the body comparison](half-elf-study.gif) · [Female comparison sheet](half-elf-female-poses.png) · [Male comparison sheet](half-elf-male-poses.png)
+The initial review puts the original figure and cleaned body beside the Gladiator, Fighter and Cleric. [Watch the body comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/half-elf-study.gif) · [Female comparison sheet](half-elf-female-poses.png) · [Male comparison sheet](half-elf-male-poses.png)
 
-In front idle and the four front steps, the man’s chest highlight turns into shadow below the ribs and the thigh highlight tapers toward the knee. The smaller figures in the comparison show what remains visible around the Gladiator’s strap and kilt at game size. [First front-walk revision beside the retail warrior](half-elf-skin.png) · [Current rib and hip shading through the side walk](body-profile-detail.gif) · [Watch all eight body bases](body-texture.gif)
+In front idle and the four front steps, the man’s chest highlight turns into shadow below the ribs and the thigh highlight tapers toward the knee. The smaller figures in the comparison show what remains visible around the Gladiator’s strap and kilt at game size. [First front-walk revision beside the retail warrior](half-elf-skin.png) · [Current rib and hip shading through the side walk](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/body-profile-detail.gif) · [Watch all eight body bases](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/body-texture.gif)
 
 The Loader now draws the woman’s eye, cheek, and nape separately from the deep gold shadow under her bun. The outfit study also narrows her rear Gladiator strap, adds two folds to her front Cleric collar, and breaks up the male Fighter’s jerkin shadow during the second rear strike and hit. Each pair in the comparison shows the first pass on the left and the revision on the right. [Compare the eight views](half-elf-detail-revisions.png)
 

@@ -6,15 +6,15 @@ The Loader draws class outfits ([What the party wears](../../FEATURES.md#what-th
 
 [Compare all eight body bases with the Gladiator and Fighter in every pose](body-texture.md)
 
-[Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](cloth-detail.gif)
+[Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/cloth-detail.gif)
 
-All six single-class Psionicists use the same teal cloth palette. [Compare the updated figures at game size](psionicist-teal-roster.png) · [Watch all 29 poses beside the colors at `aa2c782`](psionicist-teal-poses.gif)
+All six single-class Psionicists use the same teal cloth palette. [Compare the updated figures at game size](psionicist-teal-roster.png) · [Watch all 29 poses beside the colors at `aa2c782`](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/psionicist-teal-poses.gif)
 
-Both elf Preservers and the male human Mage wear plum mantles. In the comparison, the top row shows the colors at `9c4ef3c`. The middle and bottom rows show the approved colors enlarged and at game size. The green Ranger is the reference. [Watch all four profile steps](teal-plum-walk.gif)
+Both elf Preservers and the male human Mage wear plum mantles. In the comparison, the top row shows the colors at `9c4ef3c`. The middle and bottom rows show the approved colors enlarged and at game size. The green Ranger is the reference. [Watch all four profile steps](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/teal-plum-walk.gif)
 
-Compare the borrowed Thief hoods and Fighter shoulder guards across five races at game size and 2×. The lower row shows the retail material references. [Current and previous colors](multiclass-materials.png) · [All 29 poses](multiclass-materials.gif) · [Compare Fighter/Psionicist and Fighter/Preserver across races](fighter-shoulder-colors.gif)
+Compare the borrowed Thief hoods and Fighter shoulder guards across five races at game size and 2×. The lower row shows the retail material references. [Current and previous colors](multiclass-materials.png) · [All 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/multiclass-materials.gif) · [Compare Fighter/Psionicist and Fighter/Preserver across races](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/fighter-shoulder-colors.gif)
 
-**Approved shoulder fit (art revision `ccd86dd`).** The Fighter/Psionicist guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](shoulder-fit-by-race.gif)
+**Approved shoulder fit (art revision `ccd86dd`).** The Fighter/Psionicist guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-fit-by-race.gif)
 
 ## Dwarf outfits
 
@@ -22,7 +22,7 @@ The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. T
 
 [![Twelve playable dwarf outfits grouped by number of classes](dwarf-proposals.png)](dwarves.md)
 
-The earlier contrast study lifts the lit leather on the Fighter and Gladiator and the slate ridge on the Thief. The Cleric’s cream folds have a cooler recess, and the Psionicist’s teal tunic has a darker edge. In the still comparison, each game-size figure sits beside an enlargement of its clothing. In the animation, each trio shows the original dwarf, the previous outfit, and the current outfit in the same pose. [Compare the shading at game size](dwarf-material-contrast.png) · [Watch the shading comparison](dwarf-material-contrast.gif) · [Compare dwarves with humans and other Shattered Lands figures](contrast.md)
+The earlier contrast study lifts the lit leather on the Fighter and Gladiator and the slate ridge on the Thief. The Cleric’s cream folds have a cooler recess, and the Psionicist’s teal tunic has a darker edge. In the still comparison, each game-size figure sits beside an enlargement of its clothing. In the animation, each trio shows the original dwarf, the previous outfit, and the current outfit in the same pose. [Compare the shading at game size](dwarf-material-contrast.png) · [Watch the shading comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-material-contrast.gif) · [Compare dwarves with humans and other Shattered Lands figures](contrast.md)
 
 ### Female dwarf
 
@@ -40,23 +40,23 @@ The male gallery uses the same layout. Watch the first front strike in each gall
 
 Each human gallery shows all eight outfits in sync on game terrain. The caption identifies each of the 29 poses as the figures turn, walk, strike, draw a bow, take a hit, and fall. The walk and melee cycles repeat.
 
-The Thief's slate hood has a raised crown and an open rim. From behind, the nape panel folds onto the cloak through the walk and strike. Loose hair shows at the sides in front views, and the crown stays closed through the hit. [Compare her original hair, previous hood, revised hood, and equipped cloak in all 29 poses](human-thief-hood.gif) · [Compare all six figures beside their uncovered heads](thief-hood-comparison.gif)
+The Thief's slate hood has a raised crown and an open rim. From behind, the nape panel folds onto the cloak through the walk and strike. Loose hair shows at the sides in front views, and the crown stays closed through the hit. [Compare her original hair, previous hood, revised hood, and equipped cloak in all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/human-thief-hood.gif) · [Compare all six figures beside their uncovered heads](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/thief-hood-comparison.gif)
 
 ![Eight female human class outfits animated through all 29 map poses](human-female.gif)
 
 ## Male human
 
-The Gladiator’s bronze shoulder guard sits on the upper arm. A diagonal leather strap crosses the ribs and meets the waistband at the opposite hip. In rear walk and side strike, follow the overlapping kilt flap against the advancing thigh. The loop shows the cleaned body, the outfit at `638663e`, and the revised fit in all 29 poses at 4× and game size. [Watch the male Gladiator comparison](human-gladiator-fit.gif)
+The Gladiator’s bronze shoulder guard sits on the upper arm. A diagonal leather strap crosses the ribs and meets the waistband at the opposite hip. In rear walk and side strike, follow the overlapping kilt flap against the advancing thigh. The loop shows the cleaned body, the outfit at `638663e`, and the revised fit in all 29 poses at 4× and game size. [Watch the male Gladiator comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/human-gladiator-fit.gif)
 
-The male Psionicist wears a sleeveless teal wrap. The diagonal fold turns with his ribs and tucks under the leather belt. [Compare the six reported poses before and after the redraw](human-psionicist-wrap.png) · [See the wrap through all four profile steps alongside an equipped cloak](human-psionicist-fit.gif) · [Inspect all 29 Psionicist frames](human-psionicist-all-frames.png) · [Watch the full comparison](human-psionicist-all-frames.gif)
+The male Psionicist wears a sleeveless teal wrap. The diagonal fold turns with his ribs and tucks under the leather belt. [Compare the six reported poses before and after the redraw](human-psionicist-wrap.png) · [See the wrap through all four profile steps alongside an equipped cloak](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/human-psionicist-fit.gif) · [Inspect all 29 Psionicist frames](human-psionicist-all-frames.png) · [Watch the full comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/human-psionicist-all-frames.gif)
 
-In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The earlier profile repair loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](human-priest-profile.gif)
+In profile, the Priest’s cream robe hangs behind his swinging arm and lifts over the striding knee. The earlier profile repair loop starts at side idle, then repeats all four steps beside the original human and the previous robe. [Watch the Priest’s side walk](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/human-priest-profile.gif)
 
 ![Eight male human class outfits animated through all 29 map poses](human-male.gif)
 
 ## Elf outfits
 
-Each tile shows the female elf on the left and the male on the right, enlarged above and at game size below. Original and Body base show where the jaw, feet, and ears sit before the seven single classes are dressed. The elf gallery also has all 14 pairs and 16 triples, still sheets, and equipment comparisons. [Inspect the faces](elf-faces.gif) · [All elf outfits](elves.md)
+Each tile shows the female elf on the left and the male on the right, enlarged above and at game size below. Original and Body base show where the jaw, feet, and ears sit before the seven single classes are dressed. The elf gallery also has all 14 pairs and 16 triples, still sheets, and equipment comparisons. [Inspect the faces](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-faces.gif) · [All elf outfits](elves.md)
 
 ![Both elf figures through all 29 poses in the seven single classes](elf-singles.gif)
 
@@ -64,7 +64,7 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 [Watch the weapon grips, shield and bow on all 14 party figures](weapon-motion.md) · [Compare the hip fit through front, rear and profile walks](hip-walk.md)
 
-[Compare rear cloak fittings on the half-giant and Mul](fitted-cloak-rear.gif) · [Watch Warden’s Plate on the chest, arms and legs separately](fitted-armor-slots.gif) · [Inspect plate on the clerical robes and the half-giant’s hem](plate-fit.md)
+[Compare rear cloak fittings on the half-giant and Mul](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/fitted-cloak-rear.gif) · [Watch Warden’s Plate on the chest, arms and legs separately](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/fitted-armor-slots.gif) · [Inspect plate on the clerical robes and the half-giant’s hem](plate-fit.md)
 
 [Watch magical leather, bone armor, cloaks, bracers, boots and belts on every party figure](magical-equipment.md). The six pieces are equipped individually beside the empty figure through all 29 poses. The half-elf Fighter now has two separate bone shoulder guards. [Her shoulder fitting before and after](half-elf-fighter-shoulders.png)
 
@@ -74,14 +74,14 @@ On both half-elves, follow the cream and plum of the Cleric/Preserver, the ochre
 
 The original equipment audit covered all 14 map figures and 176 newer outfits before their equipment fittings. It records the missing armor colors, missed grips and clipped tips that led to the fitted comparisons above. [Weapon and armor test results](equipment-tests.md) · [Empty and equipped poses on the seven newer figures](equipment-study-comparison.png)
 
-[Compare the corrected cloak hems and boots on all six figures](cloak-hem-fixes.gif) · [Compare chest plate through all three walks](plate-stride.gif)
+[Compare the corrected cloak hems and boots on all six figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/cloak-hem-fixes.gif) · [Compare chest plate through all three walks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/plate-stride.gif)
 
 [Compare all six equipped figures beside retail artwork](worn-equipment.md) · [See plate, mail, robes, footwear and weapon materials in the same pose](worn-materials.png)
 
-Equipped armor recolors the parts of the outfit it covers. Magical chest plate adds shine to the chest armor. Equipped cloaks use their own colors, and boots recolor each visible foot. The equipment comparison shows the same pose with different gear and the base outfit after removal. [Watch the equipment comparison](checklist-equipment.gif) · [Read the loader and in-game checks](checklist-review.md)
+Equipped armor recolors the parts of the outfit it covers. Magical chest plate adds shine to the chest armor. Equipped cloaks use their own colors, and boots recolor each visible foot. The equipment comparison shows the same pose with different gear and the base outfit after removal. [Watch the equipment comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/checklist-equipment.gif) · [Read the loader and in-game checks](checklist-review.md)
 
 ## Artwork references
 
 - [Class outfit workflow for future races](workflow.md)
-- [Earlier Fighter revision](dwarf-fighter-review.gif) · [Hood profile revision](dwarf-hood-profile.gif) · [Four playable Thief hoods](dwarf-thief-hoods.gif)
-- [Earlier female dwarf study](dwarf-female.gif) · [Earlier male dwarf study](dwarf-male.gif). These silhouette studies include exploratory Mage, Druid, and Ranger outfits. The early labels “Priest” and “Warrior” correspond to Cleric and Fighter.
+- [Earlier Fighter revision](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-fighter-review.gif) · [Hood profile revision](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-hood-profile.gif) · [Four playable Thief hoods](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-thief-hoods.gif)
+- [Earlier female dwarf study](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-female.gif) · [Earlier male dwarf study](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-male.gif). These silhouette studies include exploratory Mage, Druid, and Ranger outfits. The early labels “Priest” and “Warrior” correspond to Cleric and Fighter.

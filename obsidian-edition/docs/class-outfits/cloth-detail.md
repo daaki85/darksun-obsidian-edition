@@ -4,9 +4,9 @@ The largest changes are on the elf Psionicists, the cream robes and the slate ho
 
 ![Previous outfit, revised outfit, and retail figure in the same pose, enlarged on neutral ground and at 1× on arena sand](cloth-detail.png)
 
-[Watch four representative outfits through the side, rear, and front walks](cloth-detail.gif) · [All human and dwarf animations](README.md) · [All elf animations](elves.md)
+[Watch four representative outfits through the side, rear, and front walks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/cloth-detail.gif) · [All human and dwarf animations](README.md) · [All elf animations](elves.md)
 
-The male elf Preserver and Ranger still had a squared-off corner in this revision. The following equipment pass tapered the hem in side walk steps two and three and carried the fold shading into equipped cloaks. [Compare the previous and revised steps](worn-elf-profile.gif) · [Equipped figures and measurements](worn-equipment.md)
+The male elf Preserver and Ranger still had a squared-off corner in this revision. The following equipment pass tapered the hem in side walk steps two and three and carried the fold shading into equipped cloaks. [Compare the previous and revised steps](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-elf-profile.gif) · [Equipped figures and measurements](worn-equipment.md)
 
 ## In the arena
 
