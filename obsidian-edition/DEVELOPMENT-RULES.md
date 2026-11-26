@@ -2251,6 +2251,18 @@ Who has caught a thief, or given up their coins, the Loader keeps in `settings.j
 party, with the time on the game's clock of the try: a game loaded from before it has the clock
 behind that time, so the try is forgotten.
 
+**In Wake of the Ravager** (DSCLOG2's PICK POCKETS, sites 180-186; header words from +2000): the same purse in Turn
+Undead's place on a thief's USE screen out of a fight, at the sequel's addresses (`ravager.PATCHES` pp_show to
+pp_hand; the show routine's element test 97AF4h, the handler 9756Eh's pressed byte, icon reads, "push dword
+132FFFFh" and name, the talk routine 630F0h's start). The sequel's look pointer is mode 2, so the armed pick is
+DSCLOG2's own flag (`pp_armed`), put away by a right click (`pp_disarm` in probe_pointer). The answer comes from
+`RavDiceLog._answer_pick` through its own request words (+2002 seq, +2004 reply, +2006 who, +2008 thief, +2010
+taken, +2012 the text's offset, +2018 late), not USE_ITEM, and shows in the game's message window from the overlay
+frame. The Loader's `pickpocket.attempt` runs as in SL, with `pocket_sized` bound to `ravlog.rav_pocket_sized`: the
+sequel's item types carry no weight, so pockets are judged by kind (no armour or shield, a weapon of 4 damage or
+less). Not ported: the cleric/thief's second button, the right click's description box, the sounds, XP for lifted
+weapons. Tests: test_ravpickpocket.py. Played: playtest/logs/2026-11-26-ravager-pick-pockets.md.
+
 ## Sounds for hiding and picking pockets
 
 ([In the features page](FEATURES.md#picking-pockets); `sounds.py`, whose docstring has the

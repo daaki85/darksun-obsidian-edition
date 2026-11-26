@@ -115,10 +115,16 @@ def _chain(it: ring.Items, thing: int) -> List[Tuple[int, bytes]]:
     return list(it.chain(thing, inside=False))
 
 
+def pocket_sized(typ: bytes) -> bool:
+    """Whether a thing of type record TYP is small enough to lift: MAX_WEIGHT or less (Wake of the
+    Ravager's types mostly have no weight: ravlog.rav_pocket_sized takes this one's place there)."""
+    return struct.unpack_from("<H", typ, TYPE_WEIGHT)[0] <= MAX_WEIGHT
+
+
 def _carried(gd: GameData, it: ring.Items, creature: int) -> List[Tuple[int, int, int]]:
     """What a thief can lift from a creature: (list, item, the item before it or -1), from any of
     its lists (people outside the party carry their gear in the backpack's, worn and held once
-    put on: people.py), so it goes by the item's type: MAX_WEIGHT or less, nothing worn ON_THE_BODY, no keys (scripts
+    put on: people.py), so it goes by the item's type: pocket_sized, nothing worn ON_THE_BODY, no keys (scripts
     may need them) and no scenery."""
     rec = gd.creature(creature)
     out = []
@@ -130,7 +136,7 @@ def _carried(gd: GameData, it: ring.Items, creature: int) -> List[Tuple[int, int
             name = gd.item_name(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
             liftable = _seen(data) is not None
             if len(typ) == game.ITEM_TYPE_SIZE and typ[TYPE_WORN] not in ON_THE_BODY \
-                    and (struct.unpack_from("<H", typ, TYPE_WEIGHT)[0] <= MAX_WEIGHT or liftable) \
+                    and (pocket_sized(typ) or liftable) \
                     and typ[0x08] & SCENERY != SCENERY and "key" not in name.lower():
                 out.append((list_no, item, before))
             before = item

@@ -146,6 +146,15 @@ Releases, newest first (2.12.0 and older in the archive):
   Fogbolt. Each is an object of its own (31190-31195, copies of the sequel's spellbooks) put in by ravgear's
   own placing (`ravgear.BOOKS`), with the new spells' switch; a saved game's Notaku is stocked with them once
   by `shopstock.py`.
+**New: picking pockets in Wake of the Ravager**
+- A thief's USE screen out of a fight shows PICK POCKETS with a purse (beside the sequel's Turn Undead's place):
+  a click arms it, and a click on a person picks their pocket with SL's rules (AD&D's skill, the dice log's
+  lines, coins or a small item, caught once a level). The purse is drawn from the sequel's own earth Turn Undead
+  icon. The sequel's items have no weight, so a pocket's things are judged by kind (no armour or shield, a
+  weapon of 4 damage or less). DSCLOG2's PICK POCKETS, sites 180-186, header +2000 to +2018.
+
+**Dev**
+- `test_ravpickpocket.py`; `ravdice.py`'s `RAV_PICK_ROLL=N` fixes the pick's d100 for a test.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
