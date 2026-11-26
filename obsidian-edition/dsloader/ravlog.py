@@ -312,11 +312,12 @@ def rav_weapon(gd, sheet: bytes, kind: int, read):
 
 
 # Picking pockets (pickpocket.pocket_sized): the sequel's item types keep Shattered Lands' weight byte (SL's
-# word +4, the sequel's +2) for few of its own (the mod's types and some of the game's: 10 a dagger, 50 a
-# polearm), 0 for the rest (its dagger, long sword, shield and armour alike, 2026-11-26: the Caravan Master's
-# Obsidian Longsword lifted). So a type with a weight goes by it (MAX_WEIGHT or less); one without, by its
-# kind: no shield nor armour, a weapon whose damage is RAV_POCKET_DAMAGE or less at most (a dagger's 1d4,
-# darts, a sling: not a long sword's 1d8), anything else (rings, amulets, potions, scrolls) small.
+# word +4, the sequel's +2). The Loader's copy of OBJEX.GFF gives every carried type its weight (ravager.RAV_WEIGHTS:
+# SSI left 71 of 102 at 0, its dagger, long sword, shield and armour alike: 2026-11-26, the Caravan Master's
+# Obsidian Longsword lifted), so a type goes by its weight (MAX_WEIGHT or less), as in SL. One still at 0 (furniture,
+# doors, a monster's weapon; or the copy made with RAV_SKIP=weights) goes by its kind: no shield nor armour, a
+# weapon whose damage is RAV_POCKET_DAMAGE or less at most (a dagger's 1d4, darts, a sling: not a long sword's
+# 1d8), anything else (rings, amulets, potions, scrolls) small.
 RAV_POCKET_DAMAGE = 4
 
 

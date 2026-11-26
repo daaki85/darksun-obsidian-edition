@@ -59,6 +59,13 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager's item weights**
+- The sequel's items weigh what they do in Shattered Lands. SSI left 71 of its 102 item types at 0, though
+  its program still checks weight as SL's does: now a character can't carry past its STR's maximum press,
+  two heavy weapons can't be held together, a heavy weapon can't backstab, and pockets go by weight. The
+  weights go into the Loader's copy of OBJEX.GFF (`ravager.RAV_WEIGHTS`; `RAV_SKIP=weights` for a control).
+  No save changes. Neither game slows a loaded character. Study: `reports/wake-of-the-ravager-item-weights.md`.
+
 **New: picking pockets in Wake of the Ravager**
 - A thief's USE screen out of a fight shows PICK POCKETS with a purse (beside the sequel's Turn Undead's place):
   a click arms it, and a click on a person picks their pocket with SL's rules (AD&D's skill, the dice log's

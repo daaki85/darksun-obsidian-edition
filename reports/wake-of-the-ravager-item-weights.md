@@ -34,8 +34,11 @@ stubs). Addresses are `DSUN.EXE` file offsets, as the docs give them.
 - **Size: small.** About a day: a weight table and one more step in the existing OBJEX copy, tests,
   a short in-game probe and play check, and the docs.
 - **Daaki's choices** (below): fill the zeros only, or also correct SSI's odd light weights (B,
-  recommended); no slowing (recommended), or a new slowing rule for both games; and a side find in
-  SL, a leather chest armour that weighs 75 lb.
+  recommended); no slowing (recommended), or a new slowing rule for both games. SL's leather chest
+  armour weighs 75 lb, but SL's armour weights don't follow the PHB closely enough to call it a slip,
+  so it is left alone (section 1).
+- **Built** (2026-11-26) with B, no slowing, always on (`RAV_SKIP=weights` for a control run): the
+  last section.
 
 ## 1. Where each game keeps an item type's weight
 
@@ -47,7 +50,7 @@ stubs). Addresses are `DSUN.EXE` file offsets, as the docs give them.
 | Other copies | none | each object's `RDFF` record holds its type's 15 bytes too (level 3, kind 4): all 1,216 equal `ALL 4` today. The weight checks read the table, so these only need to stay in step |
 
 The sequel's one-byte field fits every weight below. SL's 750 for its leather chest armour would
-not fit, but that is a slip in SL's data (the end of section 1).
+not fit (the end of section 1).
 
 The mod's own types in the sequel (102-134, SL's 115-147, `npcitems.TYPES` through
 `ravager.wotr_type`) already carry SL's weights. So do the transfer's added items
@@ -101,7 +104,7 @@ left as they are. "Material" is the type's +4 low nibble (0 wood, 1 bone, 2 ston
 | 29 | Club, Beast club | melee, hand, wood, 1d6 | 0 | 18 (30) | 30 | 30 | SL 18 club |
 | 30 | Brigandine Armor | thing, chest, bone | 0 | 12 (175); 90 (50); 89 (50) | 175 | 175 | SL 12 brigandine chest |
 | 31 | Chain Armor, Promere's Armor, Scale Armor | thing, chest, metal | 75 | 57 (200); 88 (200) | 75 | 200 | the sequel's own, kept; B: SL 57 chain chest |
-| 32 | Armor | thing, chest, leather | 0 | 4 (50); 6 (750); 35 (1) | 75 | 75 | SL 6 leather chest (SL's 750 a slip for 75; PHB leather 15 lb in all) |
+| 32 | Armor | thing, chest, leather | 0 | 4 (50); 6 (750); 35 (1) | 96 | 96 | SL 6's 750 doesn't fit the byte: 96, so that with the arm and leg pieces (36, 18) the suit weighs the PHB's 15 lb |
 | 33 | Ring Armor | thing, chest, bone | 0 | 9 (150) | 150 | 150 | SL 9 ring chest |
 | 34 | Scale Armor | thing, chest, bone | 0 | 15 (200) | 200 | 200 | SL 15 scale chest |
 | 35 | Crystal sword | melee, hand, wood, 1d10, 2-handed | 10 | - | 10 | 150 | the sequel's own, kept; B: a two-handed sword, as 101 |
@@ -185,11 +188,28 @@ another heavy weapon; over 40 can't backstab; over 10 can't be pickpocketed):
   pocket: that is so today already, since it is one of SSI's non-zero weights. The thrown
   Dagger (99) goes from 1 to 10 (still pocket-sized). The rest of B changes only the load.
 
-**A slip in SL's own data**: SL's type 6, leather chest armour, weighs 750 (75 lb), against 36 and
-18 for the leather arm and leg pieces. AD&D's leather armour is 15 lb in all, and SL's other
-chest pieces weigh 150-200. A member in SL's leather armour carries 80 lb before anything else,
-so at STR 10 only 35 lb more can be taken. Mending it to 75 is one more line in
-`itemtables.TYPE_FIXES` (a GAME-BUGS entry). The sequel's leather chest (32) is proposed at 75.
+**SL's leather chest armour** (type 6) weighs 750 (75 lb), against 36 and 18 for the leather arm and
+leg pieces. Before calling it a slip, here are SL's armour weights (GPLDATA's IT1R, the Loader's copy
+as the game's) set beside the AD&D PHB's. SL splits a suit into chest, arm and leg pieces. In
+tenths of a pound, the unit fits every whole suit:
+
+| Armour | SL's types | Chest + arms + legs | Suit | PHB | Fits? |
+|---|---|---|---:|---:|---|
+| Leather | 6, 7, 8 | 750 + 36 + 18 | 80.4 lb | 15 lb | no: five times over |
+| Ring mail | 9, 10, 11 | 150 + 74 + 74 | 29.8 lb | 30 lb | yes |
+| Brigandine | 12, 13, 14 | 175 + 86 + 86 | 34.7 lb | 35 lb | yes |
+| Scale mail | 15, 55, 56 | 200 + 50 + 50 | 30 lb | 40 lb | no: 10 lb light |
+| Chain mail | 57, 58, 59 | 200 + 50 + 50 | 30 lb | 40 lb | no: 10 lb light |
+| Studded leather, banded, plate | none in SL | | | 25, 35, 50 lb | (the Loader's plate, npcitems 131-133: 250 + 75 + 75, 40 lb) |
+| Shield | 4, 16 | 50 | 5 lb | 5 lb small, 10 medium | the small shield |
+| Drake Shield | 34 | 100 | 10 lb | | |
+| Helm | 5 | 15 | 1.5 lb | 5 lb (basinet) to 10 (great helm) | no: light |
+| Drake Armor, Shimmer Armor | 79, 82 | 75 (a chest piece alone) | 7.5 lb | | |
+
+Two suits match the PHB in that unit, but scale and chain are 10 lb light and the helm is light
+too: SSI didn't follow the PHB throughout. So leather is **left as it is in SL** (no fix, no
+GAME-BUGS row), and noted here only. In the sequel the byte can't hold 750, so its leather chest
+(32) gets 96: with the arm and leg pieces the suit comes to the PHB's 15 lb.
 
 ## 2. What reads weight, in each program
 
@@ -275,8 +295,7 @@ paragraph get rewritten, and `test_ravpickpocket` gets a case for each path.
    checked. Test log, and RESEARCH.md's Wake of the Ravager section updated.
 6. **Docs**: FEATURES (the Wake of the Ravager part), DEVELOPMENT-RULES (weights in the sequel),
    HOW-THE-GAME-WORKS (the load check and the STR table, true of SL too and not written down
-   yet), the CHANGELOG, and a row in the port plan. With choice 3, a GAME-BUGS row for SL's
-   leather.
+   yet), the CHANGELOG, and a row in the port plan.
 
 **Size**: about 60 lines of code and data, 80 of tests, the docs; a day's work with the probe
 and the play check. No DSCLOG2 code, no saves touched.
@@ -290,7 +309,7 @@ and the play check. No DSCLOG2 code, no saves touched.
 2. **Slowing a loaded character**: neither game ever did it, whatever the manuals say. **Recommended:
    no** (weights only, as SL plays). Slowing would be a new rule for both games, for later and
    with an Options switch.
-3. **SL's 75 lb leather chest armour**: mend it to 7.5 lb in SL too. **Recommended: yes**, as a
-   one-line SL fix beside this work.
+3. **SL's 75 lb leather chest armour**: left as it is (the comparison in section 1: SL's armour
+   weights aren't the PHB's throughout, so this one isn't plainly a slip).
 4. **Always on, or a switch**: **recommended: always on**, a data fix that makes the sequel's
    checks work as SL's do (with `RAV_SKIP=weights` for testing).

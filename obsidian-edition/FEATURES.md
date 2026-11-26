@@ -1005,6 +1005,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   failed, a move silently roll to slip away, else caught, and that thief keeps from them until a thief
   level is gained. A cleric/thief keeps Turn Undead alone (no purse beside it), a right click on the
   purse shows no description, and there are no weapons worth XP to lift.
+- **Items weigh what they do in Shattered Lands.** SSI left most of the sequel's items weighing
+  nothing, though its program still reads weight as Shattered Lands' does. With the Loader a long sword,
+  a mace, a shield and armour weigh as they do there, so the sequel's own rules
+  ([weight and carrying](HOW-THE-GAME-WORKS.md#weight-and-carrying)) work again: a character can't
+  take on more than its STR's maximum press ("Too heavy a load to carry"), two heavy weapons (over 3
+  lb each: metal long swords, maces, axes) can't be held together, and a backstab needs a weapon of
+  4 lb or less (no great axe, polearm or two-handed sword). The few weapons SSI made oddly light
+  weigh as Shattered Lands' copies of them do (the two-handed sword 15 lb, the lotulis 10). Nothing
+  slows a loaded character, in either game.
 - **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
   character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
   past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
