@@ -24,9 +24,9 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, keywatch, labels, \
-    loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, targeting, textlog, \
-    usable
+from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
+    targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -263,6 +263,7 @@ RED_FIRST, RED_LAST = 32, 255
 # (the allocation of 23F0h bytes, 72FF7h); its things 0-519, the backpack's cells 14-25 (DSCLOG2's
 # THING_COUNT, PACK_FIRST). No icons of the Loader's own (icons.fit: Shattered Lands' pictures).
 RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
+STOCK_INTERVAL = 1.0  # (seconds between looks for a saved game's sellers without the new items: shopstock)
 
 
 # Fuller starting gear (startgear.py, on DSCLOG2's GEAR_DONE: site 85) from the sequel's own plain items:
@@ -1125,6 +1126,8 @@ class RavDiceLog(dicelog.DiceLog):
         apply_layout()
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
         self._next_slots = 0.0
+        self._next_stock = 0.0
+        self._stock: Optional[Dict[int, List[bytes]]] = None  # (shopstock's: the sellers' new items, read once)
         keys, auto = self.quicksave.keys, self.quicksave.auto
         self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
         self.quicksave.keys, self.quicksave.auto = keys, auto
@@ -1670,6 +1673,7 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._take_text(now))
         out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
         out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
+        out += self._step(lambda: self._stock_pass(now))  # (a saved game's sellers given the new items: shopstock)
         if self.game is not None and self.game.rules & game.RULE_STEALTH:
             out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
         if now >= self._next_slots:
@@ -1745,6 +1749,41 @@ class RavDiceLog(dicelog.DiceLog):
             given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
             self.guest.write(hdr + dicelog.TSR_GEAR_GIVEN, bytes((given,)))
         self.guest.write(hdr + dicelog.TSR_GEAR_DUE, b"\0")
+        return out
+
+    def _stock_pass(self, now: float) -> List[str]:
+        """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the
+        new items are on (the "new_items" setting): the sellers loaded and not yet marked, then, with the game's
+        item lists still (_items_still), their items added and their mark set, the item moves and each one's
+        lists and mark writable while it runs (_items_writable)."""
+        if self.tsr_hdr is None or self.game is None or now < self._next_stock:
+            return []
+        self._next_stock = now + STOCK_INTERVAL
+        if (getattr(self, "_settings", None) or {}).get("new_items", True) is False:
+            return []
+        if self._stock is None:
+            self._stock = shopstock.from_file(shopstock.default_path())
+        if not self._stock:
+            return []
+        due = shopstock.due(self.game, self._stock)
+        if not due or not self._items_still():
+            return []
+        creatures = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+        out: List[str] = []
+        try:
+            with self._items_writable():
+                before = self.guest.writable
+                for c in due:
+                    at = creatures + c * game.CREATURE_SIZE
+                    want = [(at + game.CREATURE_ITEM_LISTS[0], 6), (at + shopstock.CREATURE_MARK, 1)]
+                    self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+
+                    def mark(creature: int, at: int = at) -> None:
+                        self.guest.write(at + shopstock.CREATURE_MARK, bytes((shopstock.MARKED,)))
+                    out += shopstock.top_up(self.game, c, self._stock, mark)
+                self.guest.writable = before
+        finally:
+            itemgate.release(self.game)
         return out
 
     def _loot_pass(self) -> List[str]:

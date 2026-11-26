@@ -67,3 +67,20 @@ runs both probes).
 ## Water
 
 No new area: Tyr's streets and Shadow Square only (nothing new to add).
+
+## A saved game's shops stocked (2026-11-26)
+
+`shopstock.py` (the dice log's `_stock_pass`): a seller loaded (a person whose creature's +6 is one of
+ravgear's shops, negated) and not yet marked gets the new items OBJEX2.GFF gives it, then its mark (the
+creature's +30h, the last byte of its name). `ravload.sh ravager-after-ambush`, `ravdice.py` attached:
+
+- at once, **"Notaku stocks 1 of the mod's new items"**: his list's first item now 19900 (the Short Sword
+  +1), slot 21; his creature's +30h 01.
+- Walked to him (`ravgo.py x 1176 y 1224 x 560 y 1130 x 420 y 1000 x 300 y 900`), "Show me your goods":
+  the Short Sword +1 on the first page at 20800, "METAL SHORT SWORD"
+  ([picture](img/2026-11-26-ravager-old-save-notaku.png)).
+- **Bought it** (money 50,000 by a test edit, never saved): 29,200 left, the sword in Thy'rokh's pack, gone
+  from Notaku's list; six seconds on, still gone (no second "stocks" line): the mark holds.
+- **The ranged stall** (the Limbo seller 323): the Staff Sling +1 at 2940 with no line from the Loader: the
+  game makes a Limbo seller afresh from OBJEX.GFF's copy when its talk starts, so it has the items already.
+- Clicking an item in a shop buys it at once ("NOT ENOUGH MONEY" if it can't).
