@@ -65,6 +65,8 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 26)
         # (86, 89, 101-104: none; 83 STORE and RECALL's RS_CLICK, 85 GEAR_DONE, 82 the shop loop's SHOP_LOOP, 79-80 Psionic Blast's, 81 RL_TRY, 84 the quick saves' GREQ_LOAD, 78 RG_TWO, 52-53 the thief table's, 54-59 the shops' and the message box's, 77 Tab's PROBE_HIT, 90-92 the second sphere's, 87-88 and 95-99 the first spells' and powers', 100 F10's F10_PIN; 105-109, 119 and 126-129 none, 110-118 the level cap's, 120-125 the weapon picks)
         self.assertEqual(len([n for n in re.findall(r"\n        dw site_none +; (\d+) ", src) if int(n) < 130]), 16)
+        # (86, 89, 101-104: none; 83 STORE and RECALL's RS_CLICK, 85 GEAR_DONE, 82 the shop loop's SHOP_LOOP, 79-80 Psionic Blast's, 81 RL_TRY, 84 the quick saves' GREQ_LOAD, 78 RG_TWO, 52-53 the thief table's, 54-59 the shops' and the message box's, 77 Tab's PROBE_HIT, 90-92 the second sphere's, 87-88 and 95-99 the first spells' and powers', 100 F10's F10_PIN; 105-109, 119 and 126-129 none, 110-118 the level cap's, 120-125 the weapon picks; 130-159 and 164-179 none, 160-162 the figures' shadows, 163 the shop's shine)
+        self.assertEqual(len(re.findall(r"\n        dw site_none ", src)), 62)
 
     FIRST = {"cr_picks": (87, "cr_picks"), "psi_grant": (88, "psi_grant"), "psi_grant_psionicist": (88, "psi_grant"),
              "psi_count": (95, "psi_count"), "psi_list": (96, "psi_list"), "psi_cycle": (97, "psi_cycle"),
@@ -84,6 +86,7 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 150)  # (sites 0-149)
         self.assertEqual(len([n for n in re.findall(r"\n        dw \w+ +; (\d+) ", src) if int(n) < 130]),
                          130)  # (sites 0-129; later ones are other features')
+        self.assertEqual(len(re.findall(r"\n        dw \w+ +; \d+ ", src)), 180)  # (sites 0-179)
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
     def test_in_the_program(self):

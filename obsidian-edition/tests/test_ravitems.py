@@ -129,6 +129,8 @@ class GameTests(unittest.TestCase):
                     for r in dataitems.records(chunks[key])[0]:
                         if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
                             self.assertEqual(r.data, types[r.number * 15:(r.number + 1) * 15], key)
+            self.assertEqual(done, ["mod_types", "transfer_items", "item_shine", "wide_sheets"])  # (the sheets 48h too)
+            self.assertIn(("RDFF", 22427 if ("OJFF", 22427) in sequel.objects else 22419), gff.read_gff(copy))
 
 
 if __name__ == "__main__":

@@ -837,6 +837,24 @@ PATCHES: Tuple[Patch, ...] = (
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
     Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), _site(40, 6)),
     Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), _site(41, 6)),
+    # The figures' shadows (DSCLOG2's FIGURE SHADOWS, SL's SHADOWS): drawn in the same floor pass; the two
+    # routines drawing the view again round what moved reach further right and down, as far as a shadow
+    # does: the redraw of what moved, where it starts drawing its rectangle (2868Ch, "push word [bp+8] /
+    # push di": SL's PROBE_REDRAW_ALL at 24B18h), and of a rectangle (21E0:128C, 2828Ch: "push bp / mov
+    # bp,sp / sub sp,8", SL's PROBE_REDRAW at 2475Fh), DSCLOG2's sites 160 and 161 (SITE_FIG_WIDE_ALL,
+    # SITE_FIG_WIDE). Without them (RAV_SKIP, a control) DSCLOG2 draws no figure's shadow.
+    Patch("fig_wide_all", 0x2868C, bytes.fromhex("ff760857"), _site(160, 4)),
+    Patch("fig_wide", 0x2828C, bytes.fromhex("558bec83ec08"), _site(161, 6)),
+    # ... and each figure's frame's shadow kept as the thing drawer (2A28Fh, SL's 25E0Ch) draws its picture, for the
+    # floor drawings when the sequel has let the picture go from memory (most of them): its call of the picture
+    # routine, "call far 1D40:3BEC" (2A347h, SL's 25EBEh), its first three bytes (the segment, relocated at load,
+    # kept), DSCLOG2's site 162 (SITE_FIG_KEEP), which then calls the routine itself.
+    Patch("fig_keep", 0x2A347, bytes.fromhex("9aec3b"), _site(162, 3)),
+    # A shop's magic items shine (SL's SHOP_SHINE and SHOP_LOOP): the sequel turns its colour cycles only from the
+    # map's main loop (1CF0Eh), so on a shop's screen they stood still. The game's wait for an event, its test
+    # "or di,di / jz" (2F7BEh, SL's 2AFA6h), is DSCLOG2's site 163 (SITE_SHOP_SHINE), and its SHOP_LOOP (site 82)
+    # turns them too while the shop is open.
+    Patch("shop_shine", 0x2F7BE, bytes.fromhex("0bff74b5"), _site(163, 4)),
     # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.
@@ -1454,7 +1472,8 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
-    them) unless "new_items" is (or the mod's types are left out: they are its types)."""
+    them) unless "new_items" is (or the mod's types are left out: they are its types), and the still magic
+    items' icons shining (ravshine) unless "item_shine" is."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1480,6 +1499,12 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
         new.update(weighted_objects({**chunks, **new}))
         done.append("weights")
+    if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
+        from . import ravshine
+        shine = ravshine.chunks(chunks)
+        if shine:
+            new.update(shine)
+            done.append("item_shine")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)

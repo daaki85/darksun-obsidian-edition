@@ -1113,6 +1113,60 @@ wall_shadows at +1872, the passes drawn at +1874, DARK's builds at +1876 (DSCLOG
 header; +148 to +152 were theirs before the port's fields took them): find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
 loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.
 
+**The figures' shadows at run time** (2026-11-26, logs/2026-11-26-ravager-figure-shadows.md): DSCLOG2's FIGURE
+SHADOWS draws in the walls' floor pass. **The sequel lets a picture go from memory whenever it wants room**: a picture
+cache slot (load + 42A2h:0CA8h + 16 x slot) has +0 the number, +2 the length, +6 its place in the store (XMS), +0Ah
+its memory (far) and +0Eh bit 2 "in memory", which the freeing loop (2AB90h on, each through 2AD2Ah) clears; the thing
+drawer (2A28Fh, SL's 25E0Ch: SI the slot, DI the thing) loads it again through 2A1F7h and draws it through `call far
+1D40:3BEC` (2A347h). So a floor drawing mostly finds a figure's picture out (Tyr's street: the leader's at nearly
+every one): read a picture only at the drawer's call (FIG_KEEP, site 162). The draw list's entries are SL's (8 bytes;
+flag 10h not drawn, 20h placed by the entry: x less the map thing's byte +7, y less its **word** +8 and the height;
+else the map thing's +3, +5); the map thing's picture slot +10h, frame +12h. Out of a fight only the leader is on the
+map. `ravfig.py [0|1]` reads (or switches) the header's +1960 to +1971; a same-view toggle through VIEW_REDRAW lands a
+frame late and the street's walkers move, so make the control a RAV_SKIP run (`fig_wide_all,fig_wide,fig_keep`) and
+the same walk (`ravgo.py x 1180` from `ravager-after-ambush`). A throwaway copy of the sequel needs no 200 MB
+`game.gog` of its own: link it to the plain install's (DOSBox only reads it).
+
+**Dust, and the figures' shadows in a fight** (2026-11-26, logs/2026-11-26-ravager-dust.md): **Tyr's ground is
+darker than SL's sand**: the dirt of the squares and yards (Shadow Square, world ~600, 1226 on, west of the ambush
+street by y 1230) is colours 230, 95, 229, 228 (56,44,28 to 113,105,77 of 255), below `dust.is_ground`'s least value
+0.4, and the grey cobbles have no hue: with SL's table no floor in Tyr took dust (the puffs were raised and counted,
+none seen). The sequel's table (least 0.2, a step of 0.2 toward white, `ravlog.DUST_LEAST`, `DUST_LIGHTER`) takes the
+dirt one or two up its ramp; 0.45 gave near-white trails. The house floors (the same browns) take it too. **The squares'
+LIGHT read the palette from the wrong place** before (squares.py read LIGHT's and DAC's offsets as one pair at +1926,
+SL's +236/+238 side by side; the sequel's +1928 is `square_draws`), so LIGHT was made from whatever lay at that
+counter's value. **In a full fight** (the Draxans' ambush under Computer Control, four of the party and four foes,
+then the bodies): 2,753 shadows cast in 586 floor passes, 1,556 of them from kept frames, 79 frames kept over the
+fight (the 64 slots went round once), 2 cast from another frame of the picture and 2 none for want of one (both
+before the fight, as the first frames came): 64 slots are enough for that. On the dark floors (the street's grey,
+the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. `ravfig.py` reads both features'
+counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
+grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
+
+**The magic items' shine in the sequel** (2026-11-26, logs/2026-11-26-ravager-shine.md): the sequel cycles colours
+1-31 in five runs (1-5 blue, 6-10 pink and violet, 11-15 green, 16-23 fire, 24-31 the water's blue-greys) with SL's
+cycler (2CFDCh, 2796h:047Ch), called only from the map's loop (1CF0Eh, when byte DS:1424h is set; the main loop
+clears it), so **a shop's screen stood still**, as SL's did. The shop's loop (88D52h, while byte [143Dh] is 1) and the
+game's wait (its "or di,di / jz" at 2F7BEh, the jump to 2F777h) are SL's (7DDE4h, 2AFA6h). To check an icon shines,
+burst-grab it (`ravburst.sh`) and count the frames its box changes in. A survey of OBJEX.GFF's magic items: an item
+record (+0 its picture negated, +10h a power, +16h the plus, +14h its name, `ravitems.sequel_names`) in any RDFF,
+its object's icon decoded with `sequelicons.decode` (PLNR, PLAN or SL's runs); most magic weapons have 2-8 cycled
+pixels, twelve items none or one or two (`dsloader/ravshine.py`). A picture of Shattered Lands' kind put in the
+copy of OBJEX.GFF for one of the sequel's own icons is drawn as its own.
+
+**See-through figures in the sequel** (2026-11-26, logs/2026-11-26-ravager-see-through.md): `ghost_draws` (DSCLOG2's
+header +1994) counts the figures drawn see-through, `ghost_on` (+1986) is 1 once the Loader has written the tables,
+`ghost_seg` (+1984) the upper memory block; the STEALTH word (+204) has a bit for each party member hidden. To see
+one without waiting for a thief's lucky roll, a **test edit** of STEALTH to 1 (member 0) out of a fight draws the
+leader see-through at the next redraw (a step: the map isn't drawn again while nothing moves, so a write alone
+changes nothing on the screen); write it back to 0 and never save. In the Draxans' ambush under Computer Control
+Ar'Anda tries to hide each turn (`hides in shadows` in the dice log), but in daylight her chance is halved
+(36%): one hide in the fight. **The
+leader** (DS:426Dh, whose turn) is the same after every load of a save (Thy'rokh, 2, in ravager-after-ambush:
+three loads); the number keys 1-4 on the map make member 0-3 the leader, so a talk's answer keys that land
+on the map before the talk is up change it (the shop's prices with it: CHA 18 is 5% off). The shop's portraits
+change whose inventory is shown, not the leader.
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs
@@ -1933,6 +1987,19 @@ SL. The STR table (weight allowance, maximum press, x10) is at SL DS:0740h, the 
   (creature +19h) and maximum press; `--str N=S` sets a STR (a test edit, never saved), `--types` all 102 weights.
 - **The control's message**: with the weights left out, two long swords give "CANNOT USE THIS ITEM", a later check,
   not "CANNOT USE TWO HEAVY WEAPONS".
+**Where DSCLOG2's far block goes** (2026-11-26, logs/2026-11-26-ravager-hma.md; it reaches FD00h since the
+see-through tables moved in). FAR_INIT asks XMS for the HMA (01h): GOG's DOSBox 0.74 always answers 90h (no
+HMA: its 01h/02h are stubs) though A20 and 100000h work, so the HMA is used when FAR_RING-FAR_TOP is all zero;
+91h (DOS=HIGH, DOSBox-X's default `dos=high`) goes straight to upper memory (strategy 42h: the top of it), then
+conventional memory; no room anywhere: "no memory for its ring", exit 4C01h, nothing hooked. A20 by 03h (global:
+the owner's), checked by the wrap test before any write; an HMA given but unusable is handed back (02h). Nothing
+ever releases them (a TSR). To see it: `dosmem.py` (the chains, A20) and the header's +142 (FAR_SEG: FFFFh the
+HMA). **To take the HMA for a test** in 0.74, where XMS gives it to nobody: put bytes in it before DSCLOG2
+(`logs/files/2026-11-26-hmagrab.asm`, run from a throwaway config's autoexec before `lh d:\dsclog2.exe`): the far
+block then lands at E02Fh, the game runs, shadows and the Loader's see-through tables follow FAR_SEG. The
+emulator tests: `tests/test_far_init.py` (XMS and DOS played by the test). A second launch of `dosbox` by
+`setsid nohup ... &` from a shell: `$!` is setsid's pid when setsid forks, not DOSBox's; find DOSBox with
+`pgrep -x dosbox` and its start time before writing rav.pid (two games from one config wrote the same files).
 
 ### The sequel's spells in a fight (2026-11-21)
 

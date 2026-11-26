@@ -51,6 +51,8 @@ class TableTests(unittest.TestCase):
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands",
                             "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
                             "pp_hand"}
+                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands",
+                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -528,6 +530,10 @@ class GameFileTests(unittest.TestCase):
                 for r in dataitems.records(objs[k])[0]:
                     if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
                         self.assertEqual(r.data, types[r.number * 15:(r.number + 1) * 15], (k, r.number))
+            from dsloader import ravshine
+            shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
+            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
+                             {ravager.TYPES_CHUNK} | sheets | shine)  # (GFFI: the index)
             for k in sheets:
                 old, new = dataitems.records(weighed.get(k, own[k]))[0], dataitems.records(objs[k])[0]
                 self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)

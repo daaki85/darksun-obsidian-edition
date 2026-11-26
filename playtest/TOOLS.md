@@ -111,6 +111,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
+| `ravfig.py [0\|1]` | Wake of the Ravager's figure shadows (DSCLOG2's FIGURE SHADOWS) in the running game ($WORK/rav.pid): prints the header's fig_shadows (+1960), the floor passes they were drawn in (+1962), the shadows cast (+1964) and... |
 | `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
 | `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS [OBJECT]] [PID]` | Wake of the Ravager's fight by its memory (cast OBJECT: at that object, 0-3 a member, a spell on oneself). |
 | `ravgo.py [x\|y TARGET]... [PID]` | Wake of the Ravager's leader walked with the arrow keys to each world x or y in turn (stops a leg at a wall); prints where it ends. |

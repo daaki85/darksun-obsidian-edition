@@ -47,10 +47,11 @@ MADE_KEPT = 8  # (the tables kept, by KEY: the areas lately in)
 CYCLED = (range(1, 16), range(240, 249))  # (the colours the game's cycler turns: fire, water)
 
 
-def key(dac: bytes) -> bytes:
-    """What the tables are kept by: every colour of the palette but those the game cycles (the
+def key(dac: bytes, cycled=CYCLED) -> bytes:
+    """What the tables are kept by: every colour of the palette but those the game cycles (CYCLED; the
     blend reads any colour under a figure, and 224-239 change from area to area)."""
-    return dac[:3] + dac[16 * 3:240 * 3] + dac[249 * 3:]
+    out = set(c for r in cycled for c in r)
+    return b"".join(dac[i * 3:i * 3 + 3] for i in range(256) if i not in out)
 INVISIBLE, DETECT_INVISIBILITY = 23, 15  # (the game's effect numbers)
 PARTY = range(game.PARTY_SIZE)
 
@@ -62,11 +63,12 @@ def palette_colours(dac: bytes) -> List[Colour]:
     return [tuple(dac[i * 3:i * 3 + 3]) for i in range(256)]
 
 
-def representatives(colours: Sequence[Colour], count: int = REP_COUNT) -> List[Colour]:
+def representatives(colours: Sequence[Colour], count: int = REP_COUNT, first: int = FIRST,
+                    last: int = LAST) -> List[Colour]:
     """COUNT colours standing for the palette's FIRST-LAST: its colours cut into that many boxes,
     each time the box with the widest spread of one of red, green and blue cut at its middle
     colour; each box's mean."""
-    boxes = [sorted(set(colours[FIRST:LAST + 1]))]
+    boxes = [sorted(set(colours[first:last + 1]))]
     while len(boxes) < count:
         best, axis, spread = None, 0, -1
         for i, box in enumerate(boxes):
@@ -100,11 +102,12 @@ def _nearest(colour, colours: Sequence[Colour], among: Sequence[int]) -> int:
     return found
 
 
-def tables(dac: bytes) -> Tuple[bytes, bytes]:
-    """(BLEND, REP) for a palette."""
+def tables(dac: bytes, first: int = FIRST, last: int = LAST) -> Tuple[bytes, bytes]:
+    """(BLEND, REP) for a palette, its figures' colours and the blends among FIRST to LAST (the colours the game
+    doesn't animate)."""
     colours = palette_colours(dac)
-    reps = representatives(colours)
-    among = list(range(FIRST, LAST + 1))
+    reps = representatives(colours, REP_COUNT, first, last)
+    among = list(range(first, last + 1))
     rep = bytes(min(range(REP_COUNT), key=lambda r: sum((colours[c][a] - reps[r][a]) ** 2 for a in range(3)))
                 for c in range(256))
     blend = bytearray(REP_COUNT * 256)
@@ -118,11 +121,13 @@ def tables(dac: bytes) -> Tuple[bytes, bytes]:
     return bytes(blend), rep
 
 
-def ghost_table(effects: Sequence[game.Effect]) -> bytes:
+def ghost_table(effects: Sequence[game.Effect], invisible_id: int = INVISIBLE, detect_id: int = DETECT_INVISIBILITY,
+                things: int = THINGS) -> bytes:
     """GHOST_TAB: a bit for each thing (N: byte N // 8, bit N % 8) drawn see-through for being
-    invisible: a party member always, anyone else while no party member detects invisibility."""
-    invisible = {e.owner for e in effects if e.id == INVISIBLE and 0 <= e.owner < THINGS}
-    detecting = any(e.id == DETECT_INVISIBILITY and e.owner in PARTY for e in effects)
+    invisible: a party member always, anyone else while no party member detects invisibility (the
+    sequel's: INVISIBLE_ID 53, DETECT_ID 25)."""
+    invisible = {e.owner for e in effects if e.id == invisible_id and 0 <= e.owner < things}
+    detecting = any(e.id == detect_id and e.owner in PARTY for e in effects)
     out = bytearray((THINGS + 7) // 8)
     for thing in invisible:
         if thing in PARTY or not detecting:
@@ -131,7 +136,19 @@ def ghost_table(effects: Sequence[game.Effect]) -> bytes:
 
 
 class Ghosts:
-    """Keeps DSCLOG's see-through figures' tables up (update, from the dice log's pass)."""
+    """Keeps DSCLOG's see-through figures' tables up (update, from the dice log's pass). The sequel's
+    (ravlog.RavGhosts) has its own colours, effects and places for the tables (DSCLOG2's far block)."""
+    TSR_ON = TSR_GHOST_ON
+    FIRST, LAST, CYCLED = FIRST, LAST, CYCLED
+    INVISIBLE, DETECT = INVISIBLE, DETECT_INVISIBILITY
+
+    def places(self, guest, tsr_hdr: int) -> Optional[Tuple[int, int, int]]:
+        """Where BLEND, REP and GHOST_TAB go (GH_CHANGED at GHOST_TAB + 79), None with no block."""
+        seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_GHOST_SEG, 2))
+        return (seg * 16 + GH_BLEND, seg * 16 + GH_REP, seg * 16 + GH_TAB) if seg else None
+
+    def key(self, dac: bytes) -> bytes:
+        return key(dac, self.CYCLED)
 
     def __init__(self):
         self._palettes = -1
@@ -146,33 +163,37 @@ class Ghosts:
         self._worker: Optional[threading.Thread] = None  # (the last thread started to make tables: the tests join it)
         self._failed: set = set()  # (palettes whose tables couldn't be made)
 
+    def effects(self, gd) -> Sequence[game.Effect]:
+        return gd.effects()
+
     def _make(self, dac: bytes) -> None:
         made = None
         try:
-            made = tables(dac)
+            made = tables(dac, self.FIRST, self.LAST)
         except Exception:  # (a palette read wrong: not made, and not tried again)
             pass
         finally:  # (a build that fails never leaves its mark: the palette not taken as being made for good)
             with self._lock:
                 if made is not None:
-                    self._made[key(dac)] = made
+                    self._made[self.key(dac)] = made
                     while len(self._made) > MADE_KEPT:
                         self._made.popitem(last=False)
                 else:
-                    self._failed.add(key(dac))  # (not started again and again, each pass)
-                if self._making == key(dac):  # (its own mark only: another palette's may be being made)
+                    self._failed.add(self.key(dac))  # (not started again and again, each pass)
+                if self._making == self.key(dac):  # (its own mark only: another palette's may be being made)
                     self._making = None
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, redraw) -> None:
         """ON: the see-through figures drawn (the stealth rule's or anyone's invisibility); PALETTES
         DSCLOG's count of palettes read (shadows.Shadows.palettes); REDRAW has the view drawn again."""
         guest = gd.guest
-        seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_GHOST_SEG, 2))
-        if not seg:
+        at = self.places(guest, tsr_hdr)
+        if at is None:
             return  # (no block: no upper memory to spare)
+        blend_at, rep_at, tab_at = at
         if not on:
             if self._on:
-                guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))
+                guest.write(tsr_hdr + self.TSR_ON, struct.pack("<H", 0))
                 redraw()
             self._on, self._written, self._palettes = False, None, -1
             return
@@ -183,15 +204,15 @@ class Ghosts:
             if len(dac) == 768:  # (a short read: looked at again next pass)
                 self._dac = dac
                 self._palettes = palettes
-        if self._dac is not None and key(self._dac) != self._written:
-            wanted = key(self._dac)
+        if self._dac is not None and self.key(self._dac) != self._written:
+            wanted = self.key(self._dac)
             with self._lock:
                 made = self._made.get(wanted)
                 if made is not None:
                     self._made.move_to_end(wanted)
                 start = made is None and self._making != wanted and wanted not in self._failed
             if start:
-                guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
+                guest.write(tsr_hdr + self.TSR_ON, struct.pack("<H", 0))  # (till they are made)
                 self._off = True
                 with self._lock:  # (only once the write is made: marked first, a refused write
                     self._making = wanted  # left them marked as being made, and never made)
@@ -199,18 +220,18 @@ class Ghosts:
                 self._worker.start()
             if made is not None:
                 blend, rep = made
-                guest.write(seg * 16 + GH_BLEND, blend)
-                guest.write(seg * 16 + GH_REP, rep)
-                guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 1))
+                guest.write(blend_at, blend)
+                guest.write(rep_at, rep)
+                guest.write(tsr_hdr + self.TSR_ON, struct.pack("<H", 1))
                 self._written, self._on, self._off = wanted, True, False
                 redraw()
         elif self._off and self._dac is not None:  # (the palette back to the written one before
-            guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 1))  # the other was made: on again)
+            guest.write(tsr_hdr + self.TSR_ON, struct.pack("<H", 1))  # the other was made: on again)
             self._off = False
             redraw()
-        table = ghost_table(gd.effects())
+        table = ghost_table(self.effects(gd), self.INVISIBLE, self.DETECT)
         if table != self._table:
-            guest.write(seg * 16 + GH_TAB, table)
-            guest.write(seg * 16 + GH_CHANGED, b"\x01")  # (drawn again in the enemies' turns too)
+            guest.write(tab_at, table)
+            guest.write(tab_at + (GH_CHANGED - GH_TAB), b"\x01")  # (drawn again in the enemies' turns too)
             self._table = table
             redraw()
