@@ -804,7 +804,7 @@ PATCHES: Tuple[Patch, ...] = (
     # by 262C:0D80): their "add sp,8".
     Patch("camera_still", 0x200B7, bytes.fromhex("8b1e6d42"), _site(223, 4)),
     Patch("party_spread", 0x70DA6, bytes.fromhex("c606fa1300"), _site(221, 5)),
-    Patch("party_gather", 0x6A823, bytes.fromhex("c606fa1300"), _site(221, 5)),
+    Patch("party_gather", 0x6A823, bytes.fromhex("c606fa1300"), _site(224, 5)),
     Patch("mouse_set", 0x2F110, bytes.fromhex("c70603a10000"), _site(220, 6)),
     Patch("follow_1", 0x1E3EC, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
     Patch("follow_2", 0x20193, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),

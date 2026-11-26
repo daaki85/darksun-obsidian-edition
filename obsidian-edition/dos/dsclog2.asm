@@ -4029,10 +4029,30 @@ site_table:
         times 220 - ($ - site_table) / 2 dw site_none
         dw mouse_set                        ; 220 mouse_set, after setting the driver ranges
 
-        dw party_collapsed                  ; 221 load or post-fight gather
+        dw party_collapsed                  ; 221 load with the party gathered
 
         times 223 - ($ - site_table) / 2 dw site_none
         dw camera_walk                      ; 223 camera during a walker's step
+        dw party_gather                     ; 224 native gather command
+
+; The two combat exits call gather from resident segment 18C9h. The player's
+; 6 key and scripted gathers use the same routine and must keep their result.
+party_gather:
+        mov byte [0x13FA], 0
+        push ax
+        mov ax, ds
+        sub ax, DGROUP - 0x18C9
+        cmp ax, [bp + 4]
+        pop ax
+        jne .out
+        cmp word [bp + 2], 0x21C6          ; after the far call at 20051h
+        je party_collapsed
+        cmp word [bp + 2], 0x31A9          ; after the far call at 21034h
+        je party_collapsed
+        cmp word [bp + 2], 0x0ED6          ; the player explicitly pressed 6
+        jne .out
+        mov byte [cs:spread_due], 0
+.out:   iret
 
 ; At 200B7h SI and DI hold the figure's feet. In combat the original camera
 ; path first recentres at its margins, then tries a scrolling step. Bypass

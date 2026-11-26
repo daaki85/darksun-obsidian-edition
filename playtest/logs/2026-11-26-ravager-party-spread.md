@@ -11,3 +11,5 @@ The combatant step at 0x2008A loads the current figure’s map coordinates into 
 A 16-bit instruction check ran the assembled handler in combat and exploration for eight positions, including (0,100), (1,1), (319,199), (320,100), (10,200) and a negative x. All 16 returned to the expected game instruction with the stack balanced and the displaced read intact. A live fight is still needed to check the visual result.
 
 The camera build loaded the same save in DOSBox. DSCLOG2 occupied 50,976 bytes and the largest free upper-memory block was 104,480 bytes. The map opened at (1080,1280).
+
+The manual gather shares its final store with the two combat exits. Its call returns to 18C9:0ED6, while the combat exits return to 18C9:21C6 and 18C9:31A9 (segments relative to the game load). Only the combat exits request an automatic spread. A scripted gather during loading must preserve the pending load request. In DOSBox the after-ambush save returned to the map with formation 1, key 6 left it at 0, and key 5 restored it to 1.
