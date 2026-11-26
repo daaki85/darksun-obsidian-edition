@@ -19,7 +19,7 @@ and Justifier's casting level, the Elementalist's second sphere's spells, the ki
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
 Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) and the gear each kit
 forbids or allows work there, and a new character takes a kit there as here; what else they do to
-spells and powers and to hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). Which kits work there, and which only in
+spells and powers and to hit dice doesn't yet, but for the Shinobi's own spells, which it learns and casts there as here. Which kits work there, and which only in
 part: [In Wake of the Ravager](#in-wake-of-the-ravager). How the kits go on past the levels Shattered
 Lands reaches is in [Past 13th level](#past-13th-level).
 
@@ -715,8 +715,9 @@ their class's, less the kit's one, as the rows above go on.)
 **In Wake of the Ravager** a party taken there has these slots too, given at a rest by the sequel's
 own slot routine: the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the
 Seeker's, Justifier's and Shinobi's own tables (no WIS bonus), the Veiled Robe's one more on top. A
-Shinobi's slots are counted there, but it can't cast its spells in the sequel yet (it isn't offered
-them on USE).
+Shinobi casts there too: its USE screen has a MAGE list of the wizard spells it knows, cast at its thief level
+less 5; it learns one of its own at each thief level up from 6th (a new Shinobi made there at 6th or higher
+picks one for each level from 6th), and from a scroll only its own, after the read languages roll.
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
@@ -748,7 +749,7 @@ The kits go on there as AD&D 2e and the kits' own books go on (the owner's choic
 | [Ravager](#ravager) | base AC 2 at 11th-12th, 1 at 13th-14th, 0 from 15th |
 | [Grove Warden](#grove-warden) | goes on 1 better every 3 druid levels: 5 at 15th, 6 at 18th, and on |
 | Battle Mage, Crusader, Mind Warrior | an expert's 5/2 attacks a round from the kit's class's 13th level ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)) |
-| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most (a Shinobi's slots only, for now: it can't cast in the sequel yet) |
+| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most |
 | [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
 | [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
 | [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
@@ -776,7 +777,7 @@ thief skills, movement and initiative.
 | Justifier | whole: its own slots and casting level |
 | Seeker | whole: its own slots, casting level and sphere's weapons |
 | Swashbuckler, Assassin | whole |
-| Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
+| Shinobi | whole: its gear, its wizard slots, its own spells learnt (level ups, scrolls, a new character's) and cast at its thief level less 5; not its READ LANG. line on the Effects screen |
 | Scholar, Arcanist | not yet (no extra spells learnt, no −1 to hit; no higher casting level, no d3 hit die) |
 | Battle Mage | in part: its THAC0, expertise, weapons, leather and one slot fewer; not its d6 hit die, casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |

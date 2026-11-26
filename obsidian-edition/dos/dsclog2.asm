@@ -11514,9 +11514,10 @@ ef_last      db 0
 ;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92);
 ; - spell slots (SL's PROBE_SLOTS and PROBE_SLOT_LEVEL, from ADND_SLOTS, site 34: SLOT_BEHIND, BEHIND_LEAST,
 ;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
-;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61).
+;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61); the Shinobi's wizard spells
+;   (THE SHINOBI'S SPELLS: its list, picks, scrolls and casting level, sites 90-92, 209-210).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
-; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), PSP costs,
+; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels, PSP costs,
 ; cures, a spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the
 ; Effects lines.
 RULE_HI_KITS equ 1
