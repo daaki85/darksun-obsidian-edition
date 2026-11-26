@@ -1251,6 +1251,12 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
   230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
   Hover an icon for its name in the bar at the bottom (y 182-194).
+  In Wake of the Ravager (logs/2026-11-26-ravager-kit-casting.md) the same five a row at x 175, 197, 220,
+  242, 262 and y 60, 79, 98 (game pixels); a quick hover sweep names only the first three of a row (the
+  rest show "N LEVEL N SPELLS TO CAST"): a right-click on an icon shows its description with the name, a
+  left-click closes it. A spell for a party member is picked up and dropped on the member's **portrait** in
+  the USE screen (`ravfight.py cast ... OBJECT` with a member leaves it on the pointer). To reach a member's
+  next turn in the Tyr ambush let the others attack (`ravfight.py attack`): ending every turn with Q lost it.
 - **The LEVEL button skips levels with nothing known** (or no class slot, or past the caster level's
   cap); the USE screen opens on the kind with slots (PSIONIC when a member has no wizard or priest
   slots), the kind button (CLERIC/MAGE) at 150,171: Lex at preserver 10 with only 3rd-level spells
