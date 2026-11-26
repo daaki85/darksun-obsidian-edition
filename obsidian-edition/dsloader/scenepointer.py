@@ -55,3 +55,19 @@ def write_pointer(resources: Optional[str], gpldata: Optional[str], dest: str) -
             pass
         return False
     return True
+
+
+def write_ravager_pointer(resources: Optional[str], dest: str) -> bool:
+    """Ravager keeps its 10 by 13 arrow and its base palette in RESOURCE.GFF."""
+    try:
+        with open(resources, "rb") as f:
+            chunks = gff.read_gff(f.read())
+        data = pointer_data(chunks["ICON", 19101], chunks["PAL ", 1000])
+        gff.write_atomic(dest, data)
+    except (TypeError, OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
+        try:
+            os.remove(dest)
+        except FileNotFoundError:
+            pass
+        return False
+    return True

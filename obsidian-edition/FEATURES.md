@@ -961,6 +961,8 @@ DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of 
 
 Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party. In combat the view stays in place while the walking figure is on screen.
 
+Wake of the Ravager draws its arrow during FLI movies and accepts a click to skip them. The Steady pace option controls whether delayed map redraws can be combined.
+
 ### Taking the party to Wake of the Ravager
 
 The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered

@@ -4034,6 +4034,380 @@ site_table:
         times 223 - ($ - site_table) / 2 dw site_none
         dw camera_walk                      ; 223 camera during a walker's step
         dw party_gather                     ; 224 native gather command
+        times 228 - ($ - site_table) / 2 dw site_none
+        dw cine_wait                        ; 228 FLI inter-frame wait
+        dw cine_next                        ; 229 FLI frame decoder
+        dw cine_end                         ; 230 FLI player cleanup
+        dw probe_pace_pass                  ; 231 map movement pass
+        dw probe_pace_draw                  ; 232 movement redraw
+
+; The native timer at 2A1AAh sets the step byte and increments its clock.
+; Rectangles on the sequel's movement list are 10 bytes at 42A2h:0028h.
+PACE_LIST  equ 0x28                   ; the game's list of what moved ...
+PACE_LMAX  equ 320                      ; ... and the most it holds (one for each thing)
+PACE_CLOCK equ 0x145E                   ; the game's clock: 96 ticks a second
+PACE_STEP  equ 0x265A                   ; set by the game's timer each tick: the step is due
+PACE_ALLOW equ 6                        ; steps a frame may lose, in quarter ticks (1.5 ticks)
+PACE_AHEAD equ 4 * 4 * 4                ; (the most owed: 4 frames of 4 ticks, then as the game)
+PACE_GAP   equ 24                       ; ticks since the last frame: a pause (a load, a talk), the
+                                        ;   schedule starts afresh
+PACE_HOLD  equ 2                        ; ticks what moved is kept before a frame is drawn for it alone
+PACE_KEPT  equ 64                       ; entries kept at most (more: the frame is drawn)
+
+probe_pace_pass:
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf                            ; (the caller's flags: interrupts as they were)
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx]             ; (the call's segment, as relocated)
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        mov word [cs:pace_call], 0x2BB9
+        add word [cs:pace_back], 2
+        cmp byte [PACE_STEP], 0
+        je .call
+        inc word [cs:pace_steps]        ; (a step due: it runs)
+        inc word [cs:pace_ran]
+.call:  call far [cs:pace_call]
+        cmp word [cs:pace_kept], 0
+        je .back
+        push eax
+        mov eax, [PACE_CLOCK]
+        sub eax, [cs:pace_kept_at]
+        cmp eax, PACE_HOLD
+        pop eax
+        jb .back                        ; (kept a moment: the next step draws it too)
+        push bx
+        mov bx, sp
+        mov bx, [ss:bx + 2 + 6]         ; ("something moved", a byte in the game's data)
+        mov byte [bx], 1
+        pop bx
+.back:  jmp far [cs:pace_back]
+
+; PROBE_PACE_DRAW replaces the start of the far draw call at 21AFAh, as PROBE_PACE_PASS
+; its call: the drawing of what moved, and the flip (its arguments: the view's x and y, 1, how
+; many moved, 1; AX nonzero back if drawn). At each frame here PACE_DEBT gains the steps lost since
+; the last (in quarter ticks) and loses PACE_ALLOW. While it is above 0 the frame isn't drawn (AX 1
+; back, as drawn) and the list is kept; the next frame drawn gets the list kept added after its own.
+probe_pace_draw:
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx]
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        mov word [cs:pace_call], 0x1478
+        add word [cs:pace_back], 2
+        pusha
+        push es
+        mov bp, sp                      ; ([bp + 24]: how many moved; PUSHA, ES, then x, y, 1)
+        mov eax, [PACE_CLOCK]           ; the schedule
+        mov edx, eax
+        sub eax, [cs:pace_clock]
+        mov [cs:pace_clock], edx
+        xor dx, dx
+        xchg dx, [cs:pace_steps]        ; (the steps run since the last frame)
+        cmp eax, PACE_GAP
+        jb .owed
+        mov word [cs:pace_kept], 0      ; discard rectangles from before a pause or area load
+        mov word [cs:pace_debt], 0
+        jmp short .judge
+.owed:  sub ax, dx                      ; the steps lost
+        jge .lost
+        xor ax, ax
+.lost:  add [cs:pace_lost], ax
+        shl ax, 2
+        sub ax, PACE_ALLOW
+        add ax, [cs:pace_debt]
+        cmp ax, -PACE_ALLOW
+        jge .low
+        mov ax, -PACE_ALLOW             ; (a frame's allowance in hand at most)
+.low:   cmp ax, PACE_AHEAD
+        jle .high
+        mov ax, PACE_AHEAD
+.high:  mov [cs:pace_debt], ax
+.judge: mov cx, [bp + 24]
+        jcxz .draw                      ; (nothing new: drawn for what was kept)
+        mov ax, ds
+        sub ax, DGROUP - 0x3C10
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .draw
+        cmp word [cs:pace_debt], 0
+        jle .draw
+        mov ax, [cs:pace_kept]
+        add ax, cx
+        cmp ax, PACE_KEPT
+        ja .draw
+        mov di, [cs:pace_kept]          ; left undrawn: the list kept
+        or di, di
+        jnz .more
+        mov edx, [PACE_CLOCK]
+        mov [cs:pace_kept_at], edx
+.more:  mov [cs:pace_kept], ax
+        imul di, di, 10
+        add di, pace_saved
+        push cs
+        pop es
+        push ds
+        mov ax, ds
+        sub ax, DGROUP - 0x42A2
+        mov ds, ax
+        mov si, PACE_LIST
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+        inc word [cs:pace_skipped]
+        pop es
+        popa
+        mov ax, 1
+        jmp far [cs:pace_back]
+.draw:  mov cx, [cs:pace_kept]          ; the list kept, after this frame's own
+        jcxz .go
+        mov word [cs:pace_kept], 0
+        mov bx, [bp + 24]
+        mov ax, bx
+        add ax, cx
+        cmp ax, PACE_LMAX
+        ja .go                          ; (no room: it is dropped)
+        mov [bp + 24], ax
+        imul di, bx, 10
+        add di, PACE_LIST
+        mov ax, ds
+        sub ax, DGROUP - 0x42A2
+        mov es, ax
+        push ds
+        push cs
+        pop ds
+        mov si, pace_saved
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+.go:    cmp word [bp + 24], 0
+        pop es
+        popa
+        je .none                        ; (nothing to draw at all: not the game's to see)
+        call far [cs:pace_call]
+        jmp far [cs:pace_back]
+.none:  mov ax, 1
+        jmp far [cs:pace_back]
+
+pace_back    dd 0                       ; (where the INT returns, past the call's segment)
+pace_call    dd 0                       ; (the game's routine, its segment as relocated)
+pace_clock   dd 0                       ; (the clock at the last frame)
+pace_kept_at dd 0                       ; (the clock when the list was first kept)
+pace_debt    dw 0                       ; steps lost past the allowance, in quarter ticks (signed)
+pace_steps   dw 0                       ; steps run since the last frame
+pace_ran     dw 0                       ; steps run (counted, for measuring)
+pace_lost    dw 0                       ; steps lost (counted, for measuring)
+pace_kept    dw 0                       ; entries kept (pace_saved)
+pace_skipped dw 0                       ; frames left undrawn (counted)
+
+pace_saved times PACE_KEPT * 10 db 0
+
+; The FLI player selects BIOS mode 13h (831E7h). Draw into the linear
+; framebuffer only during its inter-frame wait. Restore the background
+; before the delta decoder sees it again.
+cine_wait:
+        mov word [0x21E0], 0
+        pusha
+        push es
+        cmp byte [cs:cine_active], 0
+        jne .poll
+        mov byte [cs:cine_active], 1
+        mov ax, 7
+        xor cx, cx
+        mov dx, 319
+        int 0x33
+        mov ax, 8
+        xor cx, cx
+        mov dx, 199
+        int 0x33
+        mov ax, 4
+        mov cx, [cs:cine_x]
+        mov dx, [cs:cine_y]
+        int 0x33
+        call cine_pressed               ; discard presses from the previous screen
+        jmp .draw
+.poll:  call cine_pressed
+        jz .draw
+        inc word [cs:cine_clicks]
+        mov bp, sp
+        add word [bp + 18], 0x83374 - 0x8331F
+        jmp .out
+.draw:  call cp_colours
+        mov ax, 3
+        int 0x33
+        mov [cs:cine_x], cx
+        mov [cs:cine_y], dx
+        mov byte [cs:cine_drawn], 1
+        call cine_pixels
+.out:   pop es
+        popa
+        iret
+
+cine_pressed:
+        mov ax, 5
+        xor bx, bx
+        int 0x33
+        push bx
+        mov ax, 5
+        mov bx, 1
+        int 0x33
+        pop ax
+        or ax, bx
+        ret
+
+cine_next:
+        mov word [0x21E0], 0
+        call cine_erase
+        iret
+cine_end:
+        mov [bp - 2], ax
+        mov byte [cs:cine_active], 0
+        call cine_erase
+        iret
+cine_erase:
+        cmp byte [cs:cine_drawn], 0
+        je .out
+        pusha
+        push es
+        mov byte [cs:cine_drawn], 0
+        call cine_pixels
+        pop es
+        popa
+.out:   ret
+
+; Each row of POINTER2.BIN is a list of colour numbers terminated by zero.
+; FF is transparent. Keep a framebuffer byte for each position while drawing.
+cine_pixels:
+        mov ax, 0xA000
+        mov es, ax
+        mov si, cp_shape
+        mov di, cine_under
+        mov dx, [cs:cine_y]
+        movzx cx, byte [cs:cp_rows]
+.row:   cmp dx, 200
+        jae .out
+        mov bp, [cs:cine_x]
+        imul bx, dx, 320
+        add bx, bp
+.pixel: mov al, [cs:si]
+        inc si
+        test al, al
+        jz .next
+        cmp bp, 320
+        jae .advance
+        cmp al, 0xFF
+        je .advance
+        cmp byte [cs:cine_drawn], 0
+        je .restore
+        push bx
+        movzx bx, al
+        mov ah, [cs:cp_map + bx - 1]
+        pop bx
+        mov al, [es:bx]
+        mov [cs:di], al
+        mov [es:bx], ah
+        jmp .advance
+.restore:
+        mov al, [cs:di]
+        mov [es:bx], al
+.advance:
+        inc di
+        inc bp
+        inc bx
+        jmp .pixel
+.next:  inc dx
+        loop .row
+.out:   ret
+
+cine_x dw 160
+cine_y dw 100
+cine_drawn db 0
+cine_active db 0
+cine_clicks dw 0
+cine_under times 76 db 0
+CP_COLS equ 11
+CP_SHAPE_BYTES equ 88
+cp_best times CP_COLS db 0
+cp_map times CP_COLS db 0
+cp_data:
+cp_rows    db 11
+cp_ncols   db 2
+cp_rgb     db 0, 0, 0, 63, 63, 63
+           times (CP_COLS - 2) * 3 db 0
+cp_shape:
+        db 1, 0
+        db 1, 1, 0
+        db 1, 2, 1, 0
+        db 1, 2, 2, 1, 0
+        db 1, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 1, 1, 1, 1, 0
+        db 1, 2, 1, 1, 2, 2, 1, 0
+        db 1, 1, 0xFF, 0xFF, 1, 1, 1, 0
+           times CP_SHAPE_BYTES - 69 db 0
+CP_DATA_BYTES equ $ - cp_data
+cp_colours:                             ; CP_MAP: each of the arrow's colours as the palette's
+        xor bx, bx                      ;   nearest (the 3 parts' differences summed; of equals the
+.clear: mov byte [cs:cp_best + bx], 0xFF ;  last: a picture's colours seldom are)
+        inc bx
+        cmp bx, CP_COLS
+        jb .clear
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        xor cl, cl                      ; (CL the palette's colour, BL, BH, CH its parts)
+.each:  in al, dx
+        mov bl, al
+        in al, dx
+        mov bh, al
+        in al, dx
+        mov ch, al
+        xor si, si                      ; (SI the arrow's colour's parts, DI the colour)
+        xor di, di
+.col:   mov ax, di
+        cmp al, [cs:cp_ncols]
+        jae .next
+        mov al, bl
+        sub al, [cs:cp_rgb + si]
+        jnc .r
+        neg al
+.r:     mov ah, al
+        mov al, bh
+        sub al, [cs:cp_rgb + si + 1]
+        jnc .g
+        neg al
+.g:     add ah, al
+        mov al, ch
+        sub al, [cs:cp_rgb + si + 2]
+        jnc .b
+        neg al
+.b:     add ah, al
+        cmp ah, [cs:cp_best + di]
+        ja .far
+        mov [cs:cp_best + di], ah
+        mov [cs:cp_map + di], cl
+.far:   add si, 3
+        inc di
+        jmp .col
+.next:  inc cl
+        jnz .each
+        ret
+
 
 ; The two combat exits call gather from resident segment 18C9h. The player's
 ; 6 key and scripted gathers use the same routine and must keep their result.
@@ -4095,9 +4469,6 @@ spread_tick:
         je .ret
         call on_map
         jne .ret
-        mov byte [cs:spread_due], 0
-        cmp byte [0x13FA], 0
-        jne .ret
         pushad
         push ds
         push es
@@ -4105,6 +4476,9 @@ spread_tick:
         sub ax, DGROUP - 0x3C10
         mov es, ax
         cmp word [es:0x19], 0
+        jne .out
+        mov byte [cs:spread_due], 0
+        cmp byte [0x13FA], 0
         jne .out
         mov ax, ds
         sub ax, DGROUP - 0x46BD
@@ -4129,7 +4503,8 @@ mouse_set:
         cmp dx, 100
         jne .ratio
         mov ax, 4
-        mov cx, 160
+        mov cx, [cs:cine_x]
+        mov dx, [cs:cine_y]
         int 0x33
 .ratio: mov ax, 0x0F
         mov cx, 8
@@ -12972,6 +13347,15 @@ probe_scroll:
         call ring_tick
         call redraw_tick                ; (the view again for the Loader's squares and rings)
         call spread_tick
+        mov ax, [0xA109]
+        mov bx, [0xA10B]
+        cmp ax, 319
+        ja .pointer_kept
+        cmp bx, 199
+        ja .pointer_kept
+        mov [cs:cine_x], ax
+        mov [cs:cine_y], bx
+.pointer_kept:
         call pan_tick                   ; (the view to the enemy chosen with Tab: the Loader's PAN)
         call save_tick                  ; (the Loader's quick save or quick load: QUICK SAVES)
         pop es
@@ -18327,6 +18711,8 @@ FAR_TOP    equ FAR_RING_TAB + RING_TAB_BYTES
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
+cine_file db 'D:\POINTER2.BIN', 0
+cine_input times CP_DATA_BYTES db 0       ; transient file read, validated before installation
 install:                        ; DS = ES = PSP, CS = the image
         mov [cs:psp], es
         push cs
@@ -18349,6 +18735,54 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
 .free:
         loop .check
+        mov ax, 0x3D00
+        mov dx, cine_file
+        int 0x21
+        jc .no_arrow
+        mov bx, ax
+        mov ah, 0x3F
+        mov cx, CP_DATA_BYTES
+        mov dx, cine_input
+        int 0x21
+        pushf
+        push ax
+        mov ah, 0x3E
+        int 0x21
+        pop ax
+        popf
+        jc .no_arrow
+        cmp ax, CP_DATA_BYTES
+        jne .no_arrow
+        movzx cx, byte [cine_input]
+        jcxz .no_arrow
+        cmp cx, 16
+        ja .no_arrow
+        cmp byte [cine_input + 1], CP_COLS
+        ja .no_arrow
+        mov si, cine_input + cp_shape - cp_data
+        xor dx, dx
+.shape: cmp si, cine_input + CP_DATA_BYTES
+        jae .no_arrow
+        lodsb
+        test al, al
+        jz .row_end
+        inc dx
+        cmp dx, 76
+        ja .no_arrow
+        cmp al, 0xFF
+        je .shape
+        cmp al, [cine_input + 1]
+        jbe .shape
+        jmp .no_arrow
+.row_end:
+        loop .shape
+        push ds
+        pop es
+        mov si, cine_input
+        mov di, cp_data
+        mov cx, CP_DATA_BYTES
+        rep movsb
+.no_arrow:
         mov es, [cs:psp]
         mov es, [es:0x2C]       ; free our copy of the environment
         mov ah, 49h

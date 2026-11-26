@@ -672,6 +672,8 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
 
 ## Wake of the Ravager
 
+[The pointer in Ravager’s opening movies](logs/2026-11-26-ravager-movie-and-pace.md) records the in-game observations.
+
 [Party formation after loading Wake of the Ravager](logs/2026-11-26-ravager-party-spread.md) records the runtime checks.
 
 For comparing (its code, data and README; nothing in the kit plays it): `sh setup_ravager.sh` puts

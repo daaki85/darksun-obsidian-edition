@@ -802,6 +802,12 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("centre", 0x21A5A, bytes.fromhex("c6063f1400"), gamepatch._interrupt(VEC_CENTRE, 5)),
     # The same after the three calls drawing the view moved after a figure (262C:06C4; the view moved
     # by 262C:0D80): their "add sp,8".
+    Patch("cine_wait", 0x8331C, bytes.fromhex("c706e0210000"), _site(228, 6)),
+    Patch("cine_next", 0x83328, bytes.fromhex("c706e0210000"), _site(229, 6)),
+    Patch("cine_end", 0x8324D, bytes.fromhex("8946fe"), _site(230, 3)),
+    # Leave the relocated segment of both far calls in place for the helper.
+    Patch("pace_pass", 0x21AB6, bytes.fromhex("9ab92b"), _site(231, 3)),
+    Patch("pace_draw", 0x21AFA, bytes.fromhex("9a7814"), _site(232, 3)),
     Patch("camera_still", 0x200B7, bytes.fromhex("8b1e6d42"), _site(223, 4)),
     Patch("party_spread", 0x70DA6, bytes.fromhex("c606fa1300"), _site(221, 5)),
     Patch("party_gather", 0x6A823, bytes.fromhex("c606fa1300"), _site(224, 5)),
@@ -1461,7 +1467,8 @@ def skipped(settings: dict) -> frozenset:
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
-    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+    pace = game.setting_on(settings, "steady_pace")
+    return (frozenset() if pace else frozenset(gamepatch.STEADY_PACE)) | (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"})
 
 
@@ -1469,8 +1476,11 @@ def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] =
     """Write DSUNLOG2.EXE and the RESOURCE.GFF, GPLDATA.GFF and OBJEX.GFF copies into DOS_DIR (the mod's new
     items in OBJEX.GFF's with Shattered Lands' folder SL_DIR, their pictures'). Returns why the game can't be
     patched, or None."""
+    from . import scenepointer
     skip = skipped(settings)
     try:
+        pointer = os.path.join(dos_dir, "POINTER2.BIN")
+        scenepointer.write_ravager_pointer(_find_file(game_dir, RESOURCE_FILE), pointer)
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
         write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)

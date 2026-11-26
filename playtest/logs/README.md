@@ -222,3 +222,4 @@ schedules and diffs a log made or used.
 | [2026-11-25-ravager-level-cap-roost.sh](files/2026-11-25-ravager-level-cap-roost.sh) | [The same](2026-11-25-ravager-level-cap.md): `ravager-roost` loaded in that kit with the dice log, then (`RESTGO=1`) Reyhan's night; its corridor steps missed the doorway in the play, which went on by hand (the log's RESEARCH note has the clicks) |
 | [2026-11-25-ravager-fight-keys-run.sh](files/2026-11-25-ravager-fight-keys-run.sh) | [R, F10 and Alt in the sequel](2026-11-25-ravager-fight-keys.md): a throwaway copy (ravFK) through the Loader's start, the four added, a new game to the Tyr ambush with HP 250 (a test edit, never saved) and the dice log (DICE_ENV: RAV_NO_SQUARES=1 and the like, the control) |
 | [2026-11-26](2026-11-26-ravager-party-spread.md) | Party formation after loading Wake of the Ravager |
+| [2026-11-26](2026-11-26-ravager-movie-and-pace.md) | The pointer in Ravager’s opening movies |

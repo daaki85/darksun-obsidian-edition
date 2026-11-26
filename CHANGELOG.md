@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+- Wake of the Ravager draws its arrow during FLI movies and accepts a click to skip them. The Steady pace option controls whether delayed map redraws can be combined.
+
 - Wake of the Ravager uses its spread-party command when the map returns after loading a gathered party. In combat the view stays in place while the walking figure is on screen.
 
 **Fixed: the game**
