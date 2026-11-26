@@ -7303,7 +7303,9 @@ kit_to_hit:
         cmp si, KIND_TYPES
         jae .missile
         cmp byte [cs:si + kind_of_type], BOW_KIND
-        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15; not the javelin's
+        cmp byte [cs:si + kind_of_type], BOW_KIND + 2   ;   and the darts' past them)
+        ja .missile
         push ax
         mov ax, [bp + 0x0E]
         call cr_is
@@ -12341,6 +12343,72 @@ probe_priest_thac0:
         pop bx
 .done:  mov [bp - 2], ax
         iret
+
+; SAVE_BASE (SAVE_BASE_SITE, RULE_HI_TABLES): saving throws as in AD&D. The game's save routine
+; (877EBh, run at a level up: for each class group CX 0-3, priest, warrior, wizard, rogue (thieves and
+; psionicists), at the best level of its classes in it, [BP-0Ah] + CX x 2, and each of the five saves
+; SI) makes a save the group's 1st-level save less (level - 1) x a rate / 100, but no more than the
+; table's third byte (420h:6Ch + group x 15 + save x 3: the 1st level's, the rate, AD&D's last save),
+; which is AD&D's best save and not the most a save improves: a warrior stays at 11/11/11/13/11 from
+; 10th level, no save goes below 8. The site: "mov al,es:[bx+6Ch]" (878F7h; 5 bytes) before
+; "cbw / sub ax,[bp-2]", [BP-2] the game's improvement plus a dwarf's or halfling's CON bonus. AL the
+; Player's Handbook's save (Table 60, SAVE_BANDS, tables.rav_saves: Wake of the Ravager's DSCLOG2
+; SAVE_BASE, the same) plus the game's improvement, so the game's sum is the Handbook's less the race's
+; bonus; the best of a character's groups is the game's (its "jle" keeps the lowest). The rule off, the
+; game's byte. Others kept.
+SAVE_BAND equ 6                         ; (a band: its first level, then the five saves)
+save_base:
+        mov al, [es:bx + 0x6C]
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .out
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push ds
+        mov di, cx
+        add di, di
+        movsx di, byte [bp + di - 0x0A] ; (the group's level)
+        mov ax, di                      ; the game's improvement, which it takes off:
+        dec ax                          ;   (level - 1) x rate / 100, the third byte at most
+        movsx dx, byte [es:bx + 0x6D]
+        imul dx
+        cwd
+        push si
+        mov si, 100
+        idiv si
+        pop si
+        movsx dx, byte [es:bx + 0x6E]
+        cmp ax, dx
+        jle .imp
+        mov ax, dx
+.imp:   xchg dx, ax                     ; (DX the improvement)
+        mov ds, [cs:tail_seg]
+        mov bx, save_bands - SAVE_BAND
+        inc cx
+.group: add bx, SAVE_BAND               ; (to group CX's first band: each group's begins with level 1)
+        cmp byte [bx], 1
+        jne .group
+        loop .group
+.band:  mov cl, [bx + si + 1]           ; (this band's save: the last whose first level is the level's
+        add bx, SAVE_BAND               ;   or below)
+        cmp bx, save_bands_end
+        jae .got
+        movzx ax, byte [bx]
+        cmp ax, 1
+        je .got                         ; (the next group's)
+        cmp di, ax
+        jge .band
+.got:   mov al, cl                      ; the Handbook's, and the game's improvement
+        add al, dl
+        pop ds
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+.out:   iret
 
 ; PROBE_ADND_SLOTS: INT VEC_ADND_SLOTS replaces "nop / push cs / call 5E4C2h" (5 bytes: INT + 3
 ; NOPs; DSUN.EXE 5E240h) where the game's slot routine asks one class's slots at a spell level:
@@ -17463,6 +17531,7 @@ AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
 INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
+SAVE_BASE_SITE equ NS_IMAGE + 123 ; 878F7h: a group's 1st-level save, read at a level up (SAVE_BASE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -21051,6 +21120,7 @@ site_tab:
         site AMMO_OK3_SITE, ammo_okay
         site INFO_HEAD_SITE, info_head
         site F10_PIN_SITE, f10_pin
+        site SAVE_BASE_SITE, save_base
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -29426,6 +29496,19 @@ adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500
         dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
         ; (the ranger's, row 7: the gladiator's, row 4)
         dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
+; SAVE_BASE's: the Player's Handbook's saves (Table 60; tables.RAV_SAVE_BANDS) by class group, a band
+; each: its first level, then paralysis, poison and death; rod, staff and wand; petrification and
+; polymorph; breath; spell. Each group's begin with level 1.
+save_bands:
+        db 1, 10, 14, 13, 16, 15,  4, 9, 13, 12, 15, 14,  7, 7, 11, 10, 13, 12,  10, 6, 10, 9, 12, 11  ; priests
+        db 13, 5, 9, 8, 11, 10,  16, 4, 8, 7, 10, 9,  19, 2, 6, 5, 8, 7
+        db 1, 14, 16, 15, 17, 17,  3, 13, 15, 14, 16, 16,  5, 11, 13, 12, 13, 14,  7, 10, 12, 11, 12, 13  ; warriors
+        db 9, 8, 10, 9, 9, 11,  11, 7, 9, 8, 8, 10,  13, 5, 7, 6, 5, 8,  15, 4, 6, 5, 4, 7,  17, 3, 5, 4, 4, 6
+        db 1, 14, 11, 13, 15, 12,  6, 13, 9, 11, 13, 10,  11, 11, 7, 9, 11, 8,  16, 10, 5, 7, 9, 6  ; wizards
+        db 21, 8, 3, 5, 7, 4
+        db 1, 13, 14, 12, 16, 15,  5, 12, 12, 11, 15, 13,  9, 11, 10, 10, 14, 11,  13, 10, 8, 9, 13, 9  ; rogues
+        db 17, 9, 6, 8, 12, 7,  21, 8, 4, 7, 11, 5
+save_bands_end:
 adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
            db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
 thief_table:
