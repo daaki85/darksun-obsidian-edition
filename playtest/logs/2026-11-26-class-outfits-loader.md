@@ -33,8 +33,8 @@ figure drawn after every change, the picture slots steady at 203, nothing STALE.
 ## `fountain-user` (Pehtucl's ambush)
 
 The sheets: Jenna (human woman 301) **Ranger**, Ester (elf woman 305) **Cleric/Fighter**, Seneca
-(halfling woman 311) **Fighter/Thief**, Lex (half-elf woman 307, Cleric/Preserver) none (half-elves
-have only the single-class Fighter and Preserver).
+(halfling woman 311) **Fighter/Thief**, Lex (half-elf woman 307, Fighter/Preserver) none (at this commit half-elves
+had only the single-class Fighter and Preserver; all 48 builds came in `53e1391`).
 
 The speech clicked away (five clicks on the box), then `fightout.sh`: DONE after 15 passes. The
 outfits showed in the fight's poses and after it; `figcheck.py` found all four figures drawn. The
@@ -48,3 +48,11 @@ The dwarves and the Mul weren't in either save's party, so they were checked onl
 Codex's staged checks.
 
 No new area was reached, so there's nothing new to note about water.
+
+## The half-elves, after `53e1391`
+
+Codex's commit added all 48 half-elf builds. With the game files, 2999 tests passed and 33 were
+skipped. I loaded `fountain-user` again: Lex got **Fighter/Preserver**, and the other three got the same
+roles as before. I fought the ambush to the end with `fightout.sh` (DONE after 11 passes). After the
+fight, `figcheck.py` reported 0 changed pixels for all four figures, which means all four were drawn.
+The watchdog logged no STUCK or GONE.
