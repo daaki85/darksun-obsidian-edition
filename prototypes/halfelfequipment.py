@@ -1,13 +1,14 @@
-"""Export the fitted half-elf Fighter and Preserver layers from the approved studies.
+"""Export every half-elf single, pair and triple from its approved study drawing.
 
 python prototypes/halfelfequipment.py GAME_DIR OUTPUT_ZIP
 """
 import argparse
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
+import halfelfequipmasks
 import halfelfstudy as he
-from dsloader import classoutfits as co, figures, sprites
+from dsloader import classoutfits as co, figures
+from fittedraceequipment import write_archive
 from outfitdetail import RAMPS, HALFTONES
 
 
@@ -16,14 +17,12 @@ ARMOR = co.CHEST | co.ARMS | co.LEGS
 LIMBS = co.LEFT_FOOT | co.RIGHT_FOOT | co.FOREARM
 
 
-def layers(study, obj, pose, role):
-    key = he.FIGURES[0 if obj == 307 else 1]
-    fig = study.game.fig(key)
+def approved_masks(study, key, pose, role, outfit, pad):
+    """Keep the original Fighter and Preserver equipment registration."""
     combat, frame = divmod(pose, 15)
-    stock = fig.rows(combat, frame)
-    body, pad = study.rows(key, pose, "Body base")
-    outfit, _ = study.rows(key, pose, role)
-    parent = {"Fighter": "Warrior", "Preserver": "Mage"}[role] if obj == 307 else role
+    fig = study.game.fig(key)
+    body, _ = study.rows(key, pose, "Body base")
+    parent = {"Fighter": "Warrior", "Preserver": "Mage"}[role] if key == he.FIGURES[0] else role
     donor = co.frames(parent, combat, fig.model)[frame]
     back = figures.mover_back(fig.maker.cuts[bool(combat), frame])
     source_outfit = donor.canvas(study.game.fr(fig.model + combat, frame), pad)
@@ -36,14 +35,11 @@ def layers(study, obj, pose, role):
     hair = fig.parts(combat, frame).hair
     h = len(outfit)
     w = len(outfit[0])
-    output = {name: [[None]*w for _ in range(h)] for name in ("image", "regions", "head", "cloak")}
+    output = {name: [[None]*w for _ in range(h)] for name in ("regions", "head", "cloak")}
     waist = fig.parts(combat, frame).waist
     for v, row in enumerate(outfit):
         for u, c in enumerate(row):
             x, y = u-pad, v-pad
-            source = he.at(stock, x, y)
-            if c != source:
-                output["image"][v][u] = 255 if c is None else c
             if c is None:
                 continue
             point = back(x, y), y
@@ -71,7 +67,7 @@ def layers(study, obj, pose, role):
             if cloth and not mantle:
                 armor = bits & ARMOR
                 if not armor and role == "Fighter" and not bits & LIMBS:
-                    upper = y <= waist if waist is not None else y >= len(stock)//2
+                    upper = y <= waist if waist is not None else y >= (h-pad)//2
                     armor = co.CHEST if upper else co.LEGS
             else:
                 armor = 0
@@ -81,18 +77,35 @@ def layers(study, obj, pose, role):
     return output
 
 
+def layers(study, obj, pose, role):
+    key = he.FIGURES[0 if obj == 307 else 1]
+    fig = study.game.fig(key)
+    stock = fig.rows(*divmod(pose, 15))
+    outfit, pad = study.rows(key, pose, role)
+    if role in ("Fighter", "Preserver"):
+        masks = approved_masks(study, key, pose, role, outfit, pad)
+    else:
+        masks = halfelfequipmasks.layers(study, obj, pose, role)
+    # Erase the generated half-elf's old clothes wherever the approved
+    # drawing leaves a transparent pixel.
+    image = []
+    for y, row in enumerate(outfit):
+        paint = []
+        for x, color in enumerate(row):
+            source = he.at(stock, x - pad, y - pad)
+            edit = 255 if color is None else color
+            paint.append(None if color == source else edit)
+        image.append(paint)
+    return {"image": image, **masks}
+
+
 def export(game_dir, path):
     study = he.Study(game_dir)
-    with ZipFile(path, "w") as archive:
-        for obj in co.HALF_ELF_SOURCES:
-            for role in co.HALF_ELF_ROLES.values():
-                for start, stop, tag in ((0, 15, "walk"), (15, 29, "combat")):
-                    frames = [layers(study, obj, pose, role) for pose in range(start, stop)]
-                    for name in frames[0]:
-                        suffix = "" if name == "image" else "-"+name
-                        entry = ZipInfo(f"{obj}/{role}/{tag}{suffix}")
-                        data = sprites.encode_frames([f[name] for f in frames])
-                        archive.writestr(entry, data, compress_type=ZIP_DEFLATED)
+
+    def pose_layers(obj, pose):
+        return {role: layers(study, obj, pose, role) for role in co.HALF_ELF_ROLES.values()}
+
+    write_archive(path, co.HALF_ELF_SOURCES, pose_layers)
 
 
 if __name__ == "__main__":

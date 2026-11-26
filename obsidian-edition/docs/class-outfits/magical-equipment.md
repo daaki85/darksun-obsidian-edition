@@ -48,6 +48,6 @@ This short DOSBox capture shows four stationary figures with the equipped sprite
 
 ## Armor dye studies
 
-These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art and uses the same leather, bone and chest highlights as the fitted equipment. The half-giant, halfling and Mul loops above use the Loader’s fitted class outfits. The two half-elf combinations below are still study previews.
+These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art and uses the same leather, bone and chest highlights as the fitted equipment. The half-giant, halfling and Mul loops above use the Loader’s fitted class outfits. The links below preserve the original study previews. The fitted half-elf Druid and Cleric/Preserver can now be compared with their actual equipped pictures on both figures. [Half-elf Loader gallery](half-elves.md#equipped-clericpreserver-druid-and-thief)
 
 [Half-elf Druid and Cleric/Preserver](magic-study-half-elves.gif) · [Half-giant Cleric/Fighter and Psionicist](magic-study-half-giants.gif) · [Halfling Cleric/Thief, halfling Fighter/Psionicist and Mul Druid/Fighter](magic-study-halflings-mul.gif)

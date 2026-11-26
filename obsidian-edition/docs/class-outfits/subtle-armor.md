@@ -31,7 +31,7 @@ The half-giant Psionicist and human Priest are also shown in profile on the slav
 
 ## How much of the outfit color returns?
 
-Across the 198 fitted class outfits and 14 stock appearances, each full suit was compared with empty equipment slots in all 29 poses. The counts below include only pixels whose palette entry differs from the same unequipped figure. An exposed shin guard still contributes to the count even when the chest cloth above it keeps its original color.
+In the audit before the full half-elf import, across 198 fitted class outfits and 14 stock appearances, each full suit was compared with empty equipment slots in all 29 poses. The counts below include only pixels whose palette entry differs from the same unequipped figure. An exposed shin guard still contributes to the count even when the chest cloth above it keeps its original color.
 
 | Full suit | Earlier recolored pixels | Revised recolored pixels | Reduction |
 |---|---:|---:|---:|
@@ -41,7 +41,7 @@ Across the 198 fitted class outfits and 14 stock appearances, each full suit was
 
 Across all 18 loadouts, 88.9% of the sampled class-color pixels keep their original pigment, up from 79.4%. On the human woman Priest and the elf woman Cleric/Psionicist, a few folds reverse their light and shadow where steel meets the lighter cloth. The fitted guards on exposed wrists and shins keep their material color.
 
-The remaining half-elf outfits were checked separately in their art-study renderer, which estimates the area under each piece of armor. [Half-elf study](half-elves.md)
+That audit checked the other half-elf outfits in the study renderer, which estimated the area under each piece of armor. All 48 outfits per figure now have fitted Loader artwork. [See both half-elves in the Loader’s equipment comparison](half-elves.md#equipped-clericpreserver-druid-and-thief)
 
 To reproduce the sheets, run the following from the repository root. Supply a checkout of `b82788c` for `EARLIER_CHECKOUT`.
 

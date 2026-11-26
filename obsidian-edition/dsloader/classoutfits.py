@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import NamedTuple, Optional
 from zipfile import ZipFile
 
-from . import art, dwarfarmordye, elfarmordye, elfclericplate, game, halfelf, humanarmordye, humanpriestplate, kitpages
+from . import art, dwarfarmordye, elfarmordye, elfclericplate, game, halfelf, halfelfgarments, humanarmordye, humanpriestplate, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
 MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
@@ -49,7 +49,6 @@ SOURCE = {
     2100: "8f04f1e42fe2e2a9cdc301fc1590ab016a0f62fd057b0e93b63364397537e337",
 }
 HALF_ELF_SOURCES = {halfelf.MAN: 2061, halfelf.WOMAN: 2099}
-HALF_ELF_ROLES = {(3,): "Fighter", (5,): "Preserver"}
 CLASSES = ("", "Priest", "Druid", "Warrior", "Gladiator", "Mage", "Psionicist", "Ranger", "Thief")
 CHEST, ARMS, LEGS, LEFT_FOOT, RIGHT_FOOT, FOREARM, BOW = 1, 2, 4, 8, 16, 32, 64
 
@@ -185,6 +184,11 @@ def _roles(names):
     return {tuple(_CLASS_IDS[part] for part in name.split("/")): name for name in names.split()}
 
 
+# Half-elves share the elf combinations and have eleven additional Druid builds.
+HALF_ELF_ROLES = {**ELF_ROLES, **_roles(
+    "Druid Druid/Fighter Druid/Preserver Druid/Psionicist Druid/Thief "
+    "Druid/Fighter/Preserver Druid/Fighter/Psionicist Druid/Fighter/Thief "
+    "Druid/Preserver/Psionicist Druid/Preserver/Thief Druid/Psionicist/Thief")}
 HALF_GIANT_ROLES = _roles(
     "Cleric Fighter Gladiator Psionicist Ranger Cleric/Fighter Cleric/Psionicist Cleric/Ranger "
     "Fighter/Psionicist Psionicist/Ranger")
@@ -212,7 +216,7 @@ def for_sheet(sheet, model=None):
         if model is not None and race != FITTED_RACES[model]:
             return None
         roles = FITTED_ROLES[race]
-    elif model in HALF_ELF_SOURCES:
+    elif model in HALF_ELF_SOURCES or (model is None and race == kitpages.HALF_ELF):
         if race != kitpages.HALF_ELF:
             return None
         roles = HALF_ELF_ROLES
@@ -262,6 +266,7 @@ def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
     fitted = FITTED_ARCHIVES.get(model)
+    half_elf_layers = model in HALF_ELF_SOURCES and role not in ("Fighter", "Preserver")
     by_model = fitted is not None or model in DWARVES + ELVES or model in HALF_ELF_SOURCES
     if fitted:
         filename = f"{fitted[0]}_outfit_layers.zip"
@@ -285,13 +290,17 @@ def frames(role, combat, model=2095):
         except KeyError:
             cloaks = archive.read(f"{prefix}/{tag}-cloak")
         masks = archive.read(f"{prefix}/{tag}-regions")
-        belts = archive.read(f"{prefix}/{tag}-belt") if fitted else None
+        belts = archive.read(f"{prefix}/{tag}-belt") if fitted or half_elf_layers else None
+        trims = archive.read(f"{prefix}/{tag}-trim") if half_elf_layers else None
         cape_entry = f"{prefix}/{tag}-cape"
-        capes = archive.read(cape_entry) if fitted and cape_entry in archive.namelist() else None
+        capes = archive.read(cape_entry) if (fitted or half_elf_layers) and cape_entry in archive.namelist() else None
     # The archive also stores the drape of a separately equipped cloak for
     # bare-backed kits. Only real cloth can supply its own underlying texture.
     members = set(role.split("/"))
-    if model == 2093:
+    if half_elf_layers:
+        garment = halfelfgarments.garment(role)
+        native_cloak = garment in halfelfgarments.CLOAKED
+    elif model == 2093:
         native_cloak = role.startswith("Druid") or ("Thief" in members and "Cleric" not in members)
     elif model in (2068, 2070):
         native_cloak = bool(members & {"Druid", "Ranger"}) or ("Thief" in members and "Cleric" not in members)
@@ -344,14 +353,23 @@ def frames(role, combat, model=2095):
                          for x, pixel in enumerate(row) if pixel is not None)
         frame = Frame(image, regions, folds, head, native_cloak=native_cloak)
         pose = f + 15 * combat
-        if fitted:
+        if belts is not None:
             waist = tuple((x-left, y-top) for y, row in enumerate(art.decode_frame(belts, f)[2])
                          for x, c in enumerate(row) if c is not None)
             cape = ()
             if capes is not None:
                 cape = tuple((x-left, y-top, c) for y, row in enumerate(art.decode_frame(capes, f)[2])
                              for x, c in enumerate(row) if c is not None)
-            poses.append(frame._replace(belt=waist, equipped_cape=cape))
+            trim = (frozenset((x-left, y-top) for y, row in enumerate(art.decode_frame(trims, f)[2])
+                              for x, c in enumerate(row) if c is not None) if trims else frozenset())
+            plate = None
+            if half_elf_layers and garment == "Cleric":
+                # The long linen hangs in front of the shin guards. Only steel
+                # on the torso, sleeves and genuinely exposed calves can show.
+                plate = {bit: tuple(p for p in regions[bit] if p not in trim)
+                         for bit in (CHEST, ARMS)}
+                plate[LEGS] = ()
+            poses.append(frame._replace(belt=waist, equipped_cape=cape, armor_trim=trim, plate_regions=plate))
             continue
         if model in HALF_ELF_SOURCES:
             trim = set()

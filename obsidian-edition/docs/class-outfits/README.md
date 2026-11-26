@@ -1,6 +1,6 @@
 # Class outfits on the map
 
-The Loader draws class outfits ([What the party wears](../../FEATURES.md#what-the-party-wears), always on) on humans, dwarves, elves, half-giants, halflings, the Mul and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. Both half-giants have ten outfits each, both halflings have 21 each, and the male Mul has 18. The galleries below show the base colors with equipment slots empty.
+The Loader draws class outfits ([What the party wears](../../FEATURES.md#what-the-party-wears), always on) on humans, dwarves, elves, half-elves, half-giants, halflings and the Mul. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds, thirty-seven elf builds and forty-eight half-elf builds using all of the character’s class slots. Both half-giants have ten outfits each, both halflings have 21 each, and the male Mul has 18. The galleries below show the base colors with equipment slots empty.
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
@@ -70,9 +70,9 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 Body armor dyes the exposed panels of the equipped figure’s class outfit. The dwarf Cleric/Fighter keeps the cream linen hem and belt, the elf Cleric/Psionicist keeps the teal sash, and the half-elf Preserver keeps the plum mantle. Compare each row from empty slots through leather, plate and both named robes. [Armor colors and fold detail on all figures](armor-dyes.md) · [Earlier and revised armor in all 29 poses](subtle-armor.md) · [Ashen and Veiled robes on class outfits](named-robes.md)
 
-Both half-elves now wear their single-class Fighter and Preserver outfits in the Loader. The galleries compare armor colors on the woman and weapon, shield, bow and quiver placement on the man through all 29 poses. [Half-elf equipment in motion](half-elves.md#equipped-fighter-and-preserver)
+On both half-elves, follow the cream and plum of the Cleric/Preserver, the ochre kilt and green cape of the Druid, and the Thief’s slate hood through all 29 poses with armor, a cloak and weapons. [Half-elf equipment in motion](half-elves.md#equipped-clericpreserver-druid-and-thief)
 
-The equipment tests cover all 14 map figures and all 176 newer outfit builds. The report shows where plate and robes disappear, which weapons miss a grip, and which tips extend outside the game picture. [Weapon and armor test results](equipment-tests.md) · [Empty and equipped poses on the seven newer figures](equipment-study-comparison.png)
+The original equipment audit covered all 14 map figures and 176 newer outfits before their equipment fittings. It records the missing armor colors, missed grips and clipped tips that led to the fitted comparisons above. [Weapon and armor test results](equipment-tests.md) · [Empty and equipped poses on the seven newer figures](equipment-study-comparison.png)
 
 [Compare the corrected cloak hems and boots on all six figures](cloak-hem-fixes.gif) · [Compare chest plate through all three walks](plate-stride.gif)
 

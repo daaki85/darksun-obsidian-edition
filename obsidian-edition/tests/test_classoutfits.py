@@ -1,23 +1,123 @@
 import os
 import unittest
+from itertools import permutations, product
 from pathlib import Path
 from zipfile import ZipFile
 
-from dsloader import art, classoutfits, game, gff, spritegear as sg, sprites
+from dsloader import art, classoutfits, game, gff, kitpages, spritegear as sg, sprites
+
+
+# Legal creation builds, including the six three-class Druid combinations.
+HALF_ELF_BUILDS = (
+    "Cleric Druid Fighter Gladiator Preserver Psionicist Ranger Thief "
+    "Cleric/Fighter Cleric/Preserver Cleric/Psionicist Cleric/Ranger Cleric/Thief "
+    "Druid/Fighter Druid/Preserver Druid/Psionicist Druid/Thief "
+    "Fighter/Preserver Fighter/Psionicist Fighter/Thief Preserver/Psionicist Preserver/Ranger "
+    "Preserver/Thief Psionicist/Ranger Psionicist/Thief Ranger/Thief "
+    "Cleric/Fighter/Preserver Cleric/Fighter/Psionicist Cleric/Fighter/Thief "
+    "Cleric/Preserver/Psionicist Cleric/Preserver/Ranger Cleric/Preserver/Thief "
+    "Cleric/Psionicist/Ranger Cleric/Psionicist/Thief Cleric/Ranger/Thief "
+    "Druid/Fighter/Preserver Druid/Fighter/Psionicist Druid/Fighter/Thief "
+    "Druid/Preserver/Psionicist Druid/Preserver/Thief Druid/Psionicist/Thief "
+    "Fighter/Preserver/Psionicist Fighter/Preserver/Thief Fighter/Psionicist/Thief "
+    "Preserver/Psionicist/Ranger Preserver/Psionicist/Thief Preserver/Ranger/Thief Psionicist/Ranger/Thief"
+).split()
 
 
 class HalfElfEquipmentTests(unittest.TestCase):
-    def test_outfit_selection_uses_the_figure_and_all_three_class_slots(self):
+    def test_legal_builds_resolve_for_both_figures_in_every_slot_order(self):
+        sheet_ids = {"Cleric": range(1, 5), "Druid": range(5, 9), "Fighter": (9,),
+                     "Gladiator": (10,), "Preserver": (11,), "Psionicist": (12,),
+                     "Ranger": range(13, 17), "Thief": (17,)}
         sheet = bytearray(game.SHEET_SIZE)
-        sheet[game.SHEET_RACE] = 4
+        sheet[game.SHEET_RACE] = kitpages.HALF_ELF
+        self.assertCountEqual(classoutfits.HALF_ELF_ROLES.values(), HALF_ELF_BUILDS)
+        for role in HALF_ELF_BUILDS:
+            variants = [sheet_ids[name] for name in role.split("/")]
+            for classes in product(*variants):
+                for slots in set(permutations(classes + (0,) * (3 - len(classes)))):
+                    sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(slots)
+                    for figure in (None, 306, 307):
+                        self.assertEqual(classoutfits.for_sheet(sheet, figure), role, (figure, slots))
+
+    def test_kitted_half_elves_use_their_class_outfit(self):
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = kitpages.HALF_ELF
+        sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes((17, 11, 8))
+        for kits in (0, 1, 2, 3, 0b111001):
+            sheet[kitpages.KIT_BYTE] = kits
+            for figure in (306, 307):
+                self.assertEqual(classoutfits.for_sheet(sheet, figure), "Druid/Preserver/Thief")
+
+    def test_unsupported_or_incomplete_half_elf_sheets_have_no_class_outfit(self):
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = kitpages.HALF_ELF
+        for slots in ((0, 0, 0), (18, 0, 0), (9, 255, 0), (1, 4, 0), (1, 5, 0),
+                      (10, 17, 0), (9, 14, 0), (5, 11, 13)):
+            sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(slots)
+            for figure in (None, 306, 307):
+                self.assertIsNone(classoutfits.for_sheet(sheet, figure), (figure, slots))
+        sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes((11, 0, 0))
         for figure in (306, 307):
-            for ids, expected in [((9, 0, 0), "Fighter"), ((11, 0, 0), "Preserver"),
-                                  ((9, 11, 0), None), ((17, 0, 0), None)]:
-                sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(ids)
-                self.assertEqual(classoutfits.for_sheet(sheet, figure), expected)
+            self.assertIsNone(classoutfits.for_sheet(sheet[:game.SHEET_CLASSES+2], figure))
         sheet[game.SHEET_RACE] = game.HUMAN
-        sheet[game.SHEET_CLASSES] = 11
-        self.assertIsNone(classoutfits.for_sheet(sheet, 306))
+        for figure in (306, 307):
+            self.assertIsNone(classoutfits.for_sheet(sheet, figure))
+
+    def test_shipped_half_elf_layers_cover_every_build_and_pose(self):
+        path = Path(classoutfits.__file__).with_name("halfelf_outfit_layers.zip")
+        armor_bits = (classoutfits.CHEST, classoutfits.ARMS, classoutfits.LEGS)
+        foreground_bits = (classoutfits.BOW, classoutfits.FOREARM, classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT)
+        with ZipFile(path) as archive:
+            for figure in (306, 307):
+                for combat, tag, count in ((False, "walk", 15), (True, "combat", 14)):
+                    art_by_frame = [{} for _ in range(count)]
+                    for role in HALF_ELF_BUILDS:
+                        prefix = f"{figure}/{role}/{tag}"
+                        suffixes = ("", "-regions", "-head", "-cloak")
+                        new_layers = role not in ("Fighter", "Preserver")
+                        if new_layers:
+                            suffixes += ("-belt", "-trim", "-cape")
+                        for suffix in suffixes:
+                            with archive.open(prefix + suffix) as chunk:
+                                self.assertEqual(int.from_bytes(chunk.read(6)[4:], "little"), count, prefix + suffix)
+                        frames = classoutfits.frames(role, combat, figure)
+                        self.assertEqual(len(frames), count)
+                        for f, frame in enumerate(frames):
+                            with self.subTest(figure=figure, role=role, tag=tag, frame=f):
+                                image = frame.image
+                                self.assertTrue(any(c not in (None, 255) for row in image for c in row))
+                                pixels = tuple(tuple(row) for row in image)
+                                self.assertIsNone(art_by_frame[f].get(pixels), "another class uses the same outfit")
+                                art_by_frame[f][pixels] = role
+                                self.assertTrue(frame.head)
+                                self.assertEqual(bool(frame.regions[classoutfits.BOW]), combat and f in (9, 10, 11))
+                                self.assertFalse(set(frame.regions[classoutfits.LEFT_FOOT])
+                                                 & set(frame.regions[classoutfits.RIGHT_FOOT]))
+                                # Sparse edits marked None inherit the player's original art.
+                                # Every body surface must be in bounds and cannot point at an erase.
+                                owned = set(frame.head).union(*frame.regions.values())
+                                self.assertTrue(all(0 <= x+10 < len(image[0]) and 0 <= y+10 < len(image)
+                                                    and image[y+10][x+10] != 255 for x, y in owned))
+                                self.assertTrue(all(0 <= shade <= 5 for x, y, shade in frame.cloak))
+                                if new_layers:
+                                    self.assertIsNotNone(frame.belt)
+                                    self.assertEqual(bool(frame.equipped_cape), not frame.native_cloak)
+                                    armor = set().union(*(frame.regions[bit] for bit in armor_bits))
+                                    protected = set(frame.head).union(*(frame.regions[bit] for bit in foreground_bits))
+                                    self.assertTrue(armor.isdisjoint(protected))
+
+    def test_thief_cloak_follows_the_womans_shoulder_in_the_front_strike(self):
+        for role in ("Thief", "Fighter/Psionicist/Thief"):
+            frame = classoutfits.frames(role, True, 307)[1]
+            folds = {(x, y) for x, y, _ in frame.cloak}
+            self.assertTrue({(14, 10), (14, 11), (14, 12)} <= folds)
+            self.assertTrue(folds.isdisjoint(frame.head))
+            self.assertIn((11, 7), frame.head)  # cheek inside the hood
+
+        shoulder = classoutfits.frames("Psionicist/Ranger/Thief", True, 307)[1]
+        self.assertIn((13, 10), {(x, y) for x, y, _ in shoulder.cloak})
+        self.assertIn((11, 7), shoulder.head)
 
     @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the player's SEGOBJEX.GFF")
     def test_worn_pieces_on_the_generated_half_elves(self):

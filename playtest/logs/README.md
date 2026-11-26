@@ -191,6 +191,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-ravager-starting-gear.md) | A new character's weapon in the weapon hand in Wake of the Ravager: the starting gear's table (43680h) patched (`gear_hands`), a fighter's +1 long sword in the right hand and the shield in the left, a psionicist's club in the right; a long sword specialist 2 a round in the Tyr ambush with nothing moved by hand, against the control's 1 (RAV_SKIP); the first pick's starting weapon left open |
 | [2026-11-26](2026-11-26-soft-armor.md) | The half-giant Psionicist and human Priest in four armor materials on the DOSBox map |
 | [2026-11-26](2026-11-26-class-outfits-loader.md) | The class outfits merged onto obsidian-edition, played with the Loader attached: the half-giant Gladiator and human Mage dressed, leather, plate and chain switched live on the map, and the fountain ambush fought with the Ranger, Cleric/Fighter and Fighter/Thief outfits |
+| [2026-11-26](2026-11-26-half-elf-import.md) | All 48 half-elf outfits on Lex with the Loader attached, plus Cromwell’s original sheet |
 
 ## files/
 
