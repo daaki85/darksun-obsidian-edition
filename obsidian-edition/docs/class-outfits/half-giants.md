@@ -29,6 +29,8 @@ The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman
 
 In rear walk step 2 (08), look just below the woman’s hair and above the Gladiator strap. The cleaned nape follows the neck shadow into the shoulder. The same harness edge showed in the man’s rear views. The correction is shared by the singles and pairs. [Compare the nape and the Cleric/Fighter at game size](halfling-half-giant-fit-review.png)
 
+The woman’s Fighter and Gladiator guards follow the slope of her upper arm in each pose. In profile walk steps 2 and 3, the pin moves back with the shoulder as the elbow swings forward. In rear strike 2 her hair and raised arm cover the plate. The Fighter/Psionicist follows the same fitting in teal. [Compare the body, previous guard and revised guard through all 29 poses](half-giant-shoulder-fit.gif)
+
 ## Two-class outfits
 
 Watch the large figure in each column for the proposed pair. The three game-size figures below it show the first single class, the pair, and the second single class in the same pose. The man is in the upper row and the woman is below. The bottom row shows retail figures on the same sand.
@@ -42,7 +44,7 @@ Watch the large figure in each column for the proposed pair. The three game-size
 | Cleric/Fighter | Pale bone caps cup the visible upper arms over the linen sleeves. A shaded rim separates bone from cloth. The bronze-buckled belt has a short leather tab at one hip. In profile walk step 2 (12) and front strike 3 (17), follow the near cap above the moving arm. [Compare front idle, profile and strike](half-giant-bone-caps.png) · [Watch the plain Cleric, tab alone and tab with caps in all poses](half-giant-cleric-comparison.gif) |
 | Cleric/Psionicist | A narrow teal sash turns across the lower ribs and passes behind the near arm. |
 | Cleric/Ranger | The green cloak opens onto linen in profile. A turned cream edge shows the robe's color from behind. |
-| Fighter/Psionicist | The bone shoulder and split leather jerkin frame the teal sash. Its tied end shows below the arm in front strike 3 (17). |
+| Fighter/Psionicist | The shoulder cap takes the sash’s teal dye. A short pale ridge catches the light as the upper arm turns. Its tied end shows below the arm in front strike 3 (17). |
 | Psionicist/Ranger | The teal wrap shows through the open green cloak. A teal facing follows the lifted hem during the rear walk. |
 
 The study covers both figures, all five legal pairs, and all 29 poses with empty equipment slots. Half-giants have no three-class combinations. Equipped gameplay awaits Loader integration. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)

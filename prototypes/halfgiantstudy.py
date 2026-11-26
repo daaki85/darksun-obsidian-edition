@@ -77,6 +77,7 @@ SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 151)
 TEAL = (208, 69, 69, 70, 70, 71, 71, 40, 72, 73)
 LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
+TEAL_BONE = (208, 69, 70, 71, 40, 72, 73, 199)
 BRONZE = (88, 90, 93, 95, 98, 100, 168, 169, 170)
 STOCK = {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 48, 49, 50, 51, 52, 194,
          202, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 254}
@@ -94,6 +95,18 @@ GUARD = ((8, 10), (21, 11), (8, 11), (7, 10), (7, 10), (6, 10), (6, 10), (16, 11
          (7, 14), (10, 10), None, (12, 12), (11, 11), (14, 12), (8, 10),
          (19, 12), (17, 11), (9, 11), (10, 16), (8, 16), (15, 9), (18, 11))
 
+
+# Woman's shoulder pin in the fitted pose, traced from the visible upper
+# arm. The third coordinate is the direction the lower lip rolls. Hair and
+# the raised wrist hide the plate in the second rear strike.
+WOMAN_GUARD = (
+    (7, 9, -1), (23, 10, 1), (8, 11, 0), (6, 9, -1), (5, 11, -1),
+    (6, 9, -1), (6, 9, -1), (18, 10, 1), (17, 10, 1), (19, 10, 1),
+    (20, 10, 1), (11, 11, 0), (13, 10, -1), (7, 11, -1), (15, 11, 1),
+    (7, 12, -1), (10, 7, -1), None, (10, 12, -1), (10, 10, 1),
+    (11, 12, 1), (7, 9, -1), (18, 10, 1), (19, 9, 1), (9, 11, 1),
+    (8, 16, 0), (8, 13, -1), (13, 8, 1), (20, 10, 1),
+)
 
 # Midpoint of each sole on its last visible scanline, in the same upright
 # coordinates as CUTS. Trace the lifted foot separately from the planted one.
@@ -222,16 +235,23 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     body = pieces["Body base"]
     shoulder, _, _ = CUTS[pose]
     guard = GUARD[pose]
-    if female and guard:
-        # Her cap meets the slope of the deltoid below the hair.
-        shift = {0: (0, 1), 3: (0, 1), 4: (1, 1), 5: (0, 1), 6: (1, 1),
-                 12: (0, 1), 13: (-1, 1), 14: (0, 1), 21: (0, 1), 26: (1, 1)}.get(pose, (0, 0))
-        guard = guard[0]+shift[0], guard[1]+shift[1]
+    if female:
+        fit = WOMAN_GUARD[pose]
+        guard = fit[:2] if fit else None
     # A compact, sloped cap cups the upper arm. Its downturned lip is on
     # the outer side and the inboard end hides the start of the strap.
     outside = 1 if pose in REAR or pose in (17, 22, 23) else -1
     cap = {}
-    if guard:
+    if female and guard:
+        gx, gy, lean = WOMAN_GUARD[pose]
+        if pose != 19:
+            # A short highlight over the deltoid, then the half-tone and
+            # narrow shadow lip. Rotate the lip as the upper arm swings.
+            for depth, strip in enumerate(("56", "4574", "234", "12")):
+                left = gx - len(strip)//2 + (lean if depth >= 2 else 0)
+                for col, shade in enumerate(strip):
+                    cap[left+col, gy+depth-1] = int(shade)
+    elif guard:
         gx, gy = guard
         for depth, (start, end) in enumerate(((-1, 1), (-2, 2), (-1, 2), (1, 2))):
             for side in range(start, end+1):
@@ -261,7 +281,10 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
             under_lock = (point in hair and role == "Ranger" and pose in REAR and point in cloak
                           and body[sy][sx] in (130, 131, 132, 144, 145, 146,
                                                147, 148, 149, 150, 151))
-            if (point in hair and not under_lock) or (sx-5, sy) in bow:
+            on_guard = role in ("Gladiator", "Fighter") and point in cap and c is not None
+            if on_guard and female:
+                on_guard = c in range(130, 154)
+            if (point in hair and not under_lock and not on_guard) or (sx-5, sy) in bow:
                 continue
             if 0 <= sy-locks_start < len(locks):
                 left, right = locks[sy-locks_start]
@@ -308,7 +331,9 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                     visible["sleeve"].add(point)
                 pieces[role][sy][sx] = pigment(LINEN, shade)
                 continue
-            if point in cap and role in ("Gladiator", "Fighter") and c is not None:
+            if on_guard:
+                if role == "Fighter" and visible is not None:
+                    visible["guard"][point] = cap[point]
                 pieces[role][sy][sx] = pigment(BONE if role == "Fighter" else BRONZE, cap[point])
                 continue
             if point in arm and c is not None:
@@ -434,6 +459,9 @@ def dress_pairs(pieces, visible, model, pose, dx, dy):
         parent, accent = pair.split("/")
         out = [row[:] for row in pieces[parent]]
         pieces[pair] = out
+        if pair == "Fighter/Psionicist":
+            for (x, y), relief in visible["guard"].items():
+                out[y+dy][x+dx] = TEAL_BONE[int(relief + .5)]
         if accent == "Fighter":
             bone_caps(out, visible["sleeve"], pose, dx, dy)
         if accent == "Ranger":
@@ -617,7 +645,8 @@ def study_rows(game, model, pose, texture, *, pairs=False):
                     pieces[role][sy][sx] = body if foot is None else foot
     if pose in NAPE:
         clean_nape(pieces, model, pose, margin)
-    visible = {name: set() for name in ("Cleric", "Fighter", "cloak", "sleeve")} if pairs else None
+    visible = ({"Cleric": set(), "Fighter": set(), "cloak": set(), "sleeve": set(), "guard": {}}
+               if pairs else None)
     dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
