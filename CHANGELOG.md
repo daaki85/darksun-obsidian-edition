@@ -60,9 +60,16 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **Fixed: the SL weapons and the Ravager port together**
-- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds), a spec in one
-  of SL's six new kinds counting as the sequel's nearest kind; the sequel's mod item types stay the
-  first 33, and SL's new weapon types go across in the party transfer as the sequel's own weapons.
+- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
+  item types stay the first 33, and SL's new weapon types go across in the party transfer as the
+  sequel's own weapons.
+
+**New: Wake of the Ravager has all 22 weapon specs**
+- A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
+  lotulis, double spear, trikal, javelin, darts) stays that spec in the sequel, for its own Twohand
+  Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts (before, it counted as the
+  nearest of the first sixteen). The javelin and darts have their specialist's rates of fire there,
+  the Effects screen names the six, and a psionicist may still use the sequel's darts.
 
 **New**
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the

@@ -968,8 +968,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
   weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
   javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
-  kind, and a spec in one of them as the kind the sequel counts that weapon as ([In Wake of the
-  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
+  kind, and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
+  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
@@ -1036,9 +1036,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
   can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
-  weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
-  kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
-  as the chatkcha). The screens show them as in Shattered Lands: the inventory's and View Character's
+  weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
+  Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
+  those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
+  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
   DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
   the Effects screen's lower panel each one's weapon kinds ([the Effects
   screen](#the-effects-screen)). The Look box's whole description of a monster comes up in the

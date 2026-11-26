@@ -1105,14 +1105,18 @@ def wotr_type(sl: bytes) -> bytes:
 
 
 # The sequel's item types' weapon kinds (specialize.KINDS' numbers: DSCLOG2's KIND_OF_TYPE, less 1), from
-# OBJEX.GFF's items' names: its own (the Longswords, Crystal sword, Flameblade, Magma blade; Club, Toothed
-# Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka; Bow;
-# Sling; Staff Sling), and the mod's (mod_type: SL's 115-147, specialize.KIND_OF_TYPE's). ravlog's layout
-# makes it specialize.KIND_OF_TYPE while the sequel is attached.
+# OBJEX.GFF's items' names, dice and two-handed bit: its own (the Longswords, Flameblade, Magma blade; Club,
+# Toothed Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka;
+# Bow; Sling; Staff Sling; and SL's six kinds from the sequel: the Twohand Sword and the Crystal sword, both
+# two-handed 1d10; Lotulis; Double Spear; Trikal; Javelin; the two Darts), and the mod's (mod_type: SL's
+# 115-147, specialize.KIND_OF_TYPE's; none of the six, whose SL types are past them: sequel_weapon_type).
+# ravlog's layout makes it specialize.KIND_OF_TYPE while the sequel is attached.
 _RAV_OWN_KINDS = {
-    "long sword": (16, 35, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
+    "long sword": (16, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
     "axe": (8, 48), "great axe": (51,), "pick": (79,), "quarterstaff": (85,), "polearm": (80,),
-    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,)}
+    "gythka": (52,), "cahulaks": (24,), "chatkcha": (25,), "bow": (18,), "sling": (93,), "staff sling": (98,),
+    "two-handed sword": (101, 35), "lotulis": (61,), "double spear": (39,), "trikal": (100,),
+    "javelin": (59,), "darts": (38, 43)}
 
 
 def rav_kinds() -> Dict[int, int]:
@@ -1125,15 +1129,12 @@ def rav_kinds() -> Dict[int, int]:
     return out
 
 
-# The sequel's weapons with no kind of SL's, and the kind each counts as for weapon specialization alone
+# The sequel's weapons with no kind of SL's 22, and the kind each counts as for weapon specialization alone
 # (DSCLOG2's SPEC_KINDS_OWN; as SL's spell-made weapons, specialize.CONJURED_KINDS, which ravlog's
 # layout makes these): the nearest of SL's kinds, the reasoning in DEVELOPMENT-RULES.md
 _RAV_SPEC_KINDS = {
-    13: "long sword", 101: "long sword",  # Bloodletter (a 1d8 blade), Twohand Sword
-    61: "gythka",  # Lotulis (a blade at each end of a shaft)
-    39: "polearm", 100: "polearm",  # Double Spear, Trikal
+    13: "long sword",  # Bloodletter (a 1d8 blade)
     81: "mace", 68: "mace", 95: "mace",  # Promere hammer, Jasmine, Spirit hammer (the spell's)
-    38: "chatkcha", 43: "chatkcha", 59: "chatkcha",  # Darts, Darts, Javelin: SL's thrown weapon
     90: "club",  # Shillelagh (the spell's)
     87: "bow",  # Rainbow (the spell's bow)
 }
