@@ -3,7 +3,7 @@
 Part of the playtest guide ([PLAYTESTING.md](PLAYTESTING.md): read its startup procedure before any
 in-game test). These recipes are for writing the game's memory for a test and for finding out how
 the game works rather than for checking a change: the game's records and memory edits, its sounds,
-the see-through figures, the picture store, frame rate and cycles, the picture and the music device, its scripts, the unchanged game,
+the see-through figures, the picture store, the figure prototypes in the game, frame rate and cycles, the picture and the music device, its scripts, the unchanged game,
 the recompiled program and Wake of the Ravager. Tools: [TOOLS.md](TOOLS.md).
 
 ## Memory edits for a test
@@ -126,6 +126,12 @@ raised before stopping.
   **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the file
   has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever the
   build). `setitem.py ITEM TYPE` does it with the game's first plain record of a type.
+- **Armour changed for a look at the figure** (logs/2026-11-26-class-outfits-loader.md): the item's
+  type is the word at +0Ah of its record; written there (a party member's chest, leg and arm pieces
+  made plate, 88/26/25, or chain, 57/59/58) the attached Loader dresses the figure again within a
+  few seconds, on the map, with no inventory opened. `setitem.py` refuses those types ("no item
+  record for 88 in SEGOBJEX.GFF": the game has no plain record of them). Save the records first
+  and write them back whole after; memory only, never save.
 - **A weapon for a test of its rate or traits** (logs/2026-11-23-ravager-weapons.md): put it in
   the right hand (`itemedit.py M 10 slot=3`): one in the left hand (slot 10) swings once a round
   whatever the rate. A second weapon moved to slot 20 is still worn and still swings: make it
@@ -619,6 +625,42 @@ The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) a
   only. The list holds the whole region (415 entries in the pens), not the view.
 - **The inventory's input** (for anyone trying a click there by hand): the game takes clicks from
   its queue of events, never INT 33h's position; what was tried is in [HISTORY.md](HISTORY.md#the-inventorys-input).
+
+## The figure prototypes in the game (outfitgame.py)
+
+- The figure prototypes' pictures (`prototypes/outfits.py`, `prototypes/wornlooks.py`) are not the Loader's: to see them in the game they are put
+  into the Loader's copy of SEGOBJEX.GFF between the Loader writing it and DOSBox opening it, and
+  the game is run with no Loader attached (it would dress the figures again):
+  `PT_NO_LOADER=1 PT_AFTER_PREPARE="python3 outfitgame.py 300=Mage,305=Thief,308=Priest" sh
+  loadsave.sh pens-after-arena` (`all=Warrior` for every figure). `start.sh` runs
+  `PT_AFTER_PREPARE` in `playtest/` after `prepare_patched_game`, and with `PT_NO_LOADER` stops
+  before the dice log (so `dice.txt` is not written and nothing of the Loader's runs).
+  loadsave.sh shows only start.sh's last line: send the command's output to a file to read it.
+- **With no Loader attached the game draws a party member from the game's own picture of its
+  figure** (the human man's 2095/2096...), not from the object's own pair in the copy (2450 and
+  on, `sprites.picture_ids`): pictures put only into the pair don't show. outfitgame.py writes
+  both, so everyone of that figure wears the outfit (Kurzak, a half-giant, has a picture of his
+  own and doesn't).
+- `OBJECT=worn:LOOK` puts in a look by what's worn (`prototypes/wornlooks.py`: Robe, Leather, Bone
+  scale, Chain, Cloak and hood). The names have spaces, so quote the list inside the double quotes:
+  `PT_AFTER_PREPARE="python3 outfitgame.py '300=worn:Bone scale,308=worn:Robe'"`
+  (logs/2026-11-21-worn-looks-in-game.md).
+- **A fight with no Loader attached**: Tab's nearest-enemy pick is the Loader's, so Tab + Return
+  opens the game's menu instead of attacking (and fightout.sh's E then the Effects screen; Escape
+  closes either, a screen being up). Attack by clicking the foe. `fountain-user` starts Pehtucl's
+  ambush on loading; its party is Lex (half-elf woman, object 307), Jenna (human woman, 301), Ester
+  (elf woman, 305) and Seneca (halfling woman, 311), not pens-after-arena's: `python3 -m dsloader
+  save SAVE01.SAV` (in obsidian-edition/) lists a save's party, race and sex, before guessing who is
+  who from the screen.
+- `OBJECT=preset:CLASS` puts in `prototypes/presets.py`'s picture instead: the class as a preset of
+  the Loader's own gear drawing (clothes recoloured, boots, the fitted cloak), to compare.
+- `pens-after-arena`'s party: a human man (object 300), an elf woman (Cilla, 305), a half-giant
+  man (308) and a thri-kreen (313).
+- A picture 8 pixels wider each side and taller than the game's own draws in its place without
+  being cut (it stands on its bottom edge, its middle on the figure's): nothing under the feet.
+- A click on a wall shows the no-walk pointer and moves nobody: click the floor.
+- Grabbing a walk: `import -window $W` every quarter second from half a second after the click;
+  the party crosses the hall in about two seconds, so most grabs are of it standing.
 
 ## The unchanged game
 
