@@ -267,7 +267,8 @@ archive` (so only what is committed goes in), and publishes the zip and `../patc
 
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),
-`tests/`, `docs/viewer.png` and the developers' tool `dsloader/questdraft.py` (no module that ships
+`tests/`, `docs/viewer.png`, the class outfits' galleries (`docs/class-outfits/`, 130 MB of
+animated reviews) and the developers' tool `dsloader/questdraft.py` (no module that ships
 imports it: `test_release` checks), which stay in the repository and are linked from the manual at
 the release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
 `.gitignore`. It holds the player's pages, the manual (whose `changes.html` is the zip's copy of
