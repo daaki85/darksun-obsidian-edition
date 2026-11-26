@@ -1,0 +1,4 @@
+__pycache__/
+# the corrections by hand (outfitfixes.py) hold the game's own palette numbers at single pixels:
+# kept on the player's machine, never committed (no game files here)
+outfit_fixes.txt
