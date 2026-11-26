@@ -26,6 +26,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `creationscores.py` | the creation screen's scores, classes and race, and the least and most the game last worked out |
 | `dacwatch.py SECONDS` | DSCLOG's copy of the palette (TSR_DAC) watched: each change, hashed whole and for colours 16-223 only. |
 | `darkfix_apply.py GPLDATA_IN GPLDATA_OUT FIXES_DIR` | put OpenDS darkfix-ds1 GPL repairs (every fix .py in FIXES_DIR, a checkout of their ds1-patch/fixes) into a copy of GPLDATA.GFF, with our own code: each fix's REPAIRS list is read by AST, never imported or run, and... |
+| `dbxadopt.sh` | makes the kit's tools follow the game the Loader itself started (its window's Start the game, `launch` or `play`) rather than one of the kit's start scripts: it writes that game's pid, read from the Loader's lock... |
 | `dec.py SCRIPT LO HI` | decode GPL script SCRIPT (the game's own GPLDATA.GFF, $DS_GAME) from offset LO to HI (hex): each command's offset, number and arguments. |
 | `dismiss.sh [N]` | click away up to N (default 6) waiting messages (msgbox.sh), then print the dice log's last lines. |
 | `doorpath.py TC TR` | the shortest way from the leader to square (TC, TR) on the live grid, through closed doors too (live 192+ where the region file has a doorway); |
@@ -82,7 +83,6 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `orderwatch.py SECONDS` | fight_on and whose turn, with each new dice-log line, timed every 10 ms (which came first: a blow or the fight's start). |
 | `outfitcycle.py MEMBER SLOT N [SECONDS]` | changes MEMBER's outfit N times and prints the picture store after each. |
 | `outfitgame.py OBJECT=OUTFIT[,...]` | the outfit prototype's pictures (prototypes/outfits.py) put into the Loader's copy of SEGOBJEX.GFF, to look at them in the game. |
-| `outfitlive.py MEMBER [classes=C1,C2,C3] [slot=SLOT]` | checks the Loader's class outfit live: sets party member MEMBER's three class bytes (sheet +21h, the creation codes: 1 cleric, 6 druid, 9 fighter, 10 gladiator, 11 preserver, 12 psionicist, 13 ranger, 17 thief)... |
 | `pacerec.sh on\|off OUT.mkv` | a recording for docs/steady-pace.gif: pens-after-arena, steady pace on or off, the party walked east and back, recorded at 70 frames a second from the X display (the DOSBox window at 0,0, 320x240) |
 | `panel.sh hide\|show` | the combat log panel (bottom right) hidden or shown, by its frame's pixel at 140,150 in the 320x240 window grab (140,125 in the 320x200 capture; |
 | `party.py` | each party member's classes and levels, the gladiator flag, the scores the game uses now (the creature record's), and every item with its slot, +0Eh and +0Fh (ability bytes) |
@@ -114,9 +114,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
 | `ravfig.py [0\|1]` | Wake of the Ravager's figure shadows (DSCLOG2's FIGURE SHADOWS) in the running game ($WORK/rav.pid): prints the header's fig_shadows (+1960), the floor passes they were drawn in (+1962), the shadows cast (+1964) and... |
-| `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
-| `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS [OBJECT]] [PID]` | Wake of the Ravager's fight by its memory (cast OBJECT: at that object, 0-3 a member, a spell on oneself). |
-| `ravgo.py [x\|y TARGET]... [PID]` | Wake of the Ravager's leader walked with the arrow keys to each world x or y in turn (stops a leg at a wall); prints where it ends. |
+| `ravfight.py [state\|end\|wait N\|until N\|cast X Y LEVELS\|attack\|fight [S]\|tabfight [S]]` | Wake of the Ravager's fight by its memory. |
 | `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravgo.py [x\|y TARGET]... [PID]` | walk Wake of the Ravager's leader with the arrow keys until its world x (or y) is within 10 of each TARGET in turn (the leader: the party's map object 0-3 on screen; |

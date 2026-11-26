@@ -15,17 +15,12 @@ kit for the new class if it has none yet ([Changing class](#changing-class)).
 A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
 Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
-and Justifier's casting level, the Elementalist's second sphere's spells and the gear each kit
-forbids or allows work there, and a new character takes a kit there as here; what else they do to
-spells and powers, starting gear and hit dice doesn't yet. Which kits work there, and which only in
-part: [In Wake of the Ravager](#in-wake-of-the-ravager).
-and Justifier's casting level and the Elementalist's second sphere's spells work there; what else they do to spells and powers, gear and hit dice
-and Justifier's casting level, the Elementalist's second sphere's spells and its slots a level behind, and the Crusader's one fewer slot, work there; what else they do to spells and powers, gear and hit dice
-doesn't yet, and a kit can't be chosen in the sequel. How the kits go on past the levels Shattered
-and Justifier's casting level, the Elementalist's second sphere's spells, and the kits' spell slots
+and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) work there; what else they do to
-spells and powers, gear and hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). How the kits go on past the levels Shattered
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) and the gear each kit
+forbids or allows work there, and a new character takes a kit there as here; what else they do to
+spells and powers and to hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). Which kits work there, and which only in
+part: [In Wake of the Ravager](#in-wake-of-the-ravager). How the kits go on past the levels Shattered
 Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
@@ -53,8 +48,8 @@ work: [DEVELOPMENT-KITS.md](https://github.com/daaki85/darksun-obsidian-edition/
   - [A warrior's THAC0](#a-warriors-thac0)
   - [Sphere weapon limits](#sphere-weapon-limits)
 - [Kits' spell slots](#kits-spell-slots)
-- [In Wake of the Ravager](#in-wake-of-the-ravager)
 - [Past 13th level](#past-13th-level)
+- [In Wake of the Ravager](#in-wake-of-the-ravager)
 - [Changing class](#changing-class)
 - [Kits that rule out classes and each
   other](#kits-that-rule-out-classes-and-each-other)
@@ -742,6 +737,27 @@ them on USE).
   Protection from Normal Missiles, Hold Person; **4th** (from thief level 13,
   where its 4th-level slot comes) Improved Invisibility, Solid Fog, Confusion.
 
+## Past 13th level
+
+Shattered Lands stops a character near 10th-13th level; Wake of the Ravager's XP cap (5,625,000
+shared by a character's classes) and higher levels take a single class to 20th and on to 30th.
+The kits go on there as AD&D 2e and the kits' own books go on (the owner's choices, 2026-11-26):
+
+| Kit | Past Shattered Lands' levels |
+|---|---|
+| [Ravager](#ravager) | base AC 2 at 11th-12th, 1 at 13th-14th, 0 from 15th |
+| [Grove Warden](#grove-warden) | goes on 1 better every 3 druid levels: 5 at 15th, 6 at 18th, and on |
+| Battle Mage, Crusader, Mind Warrior | an expert's 5/2 attacks a round from the kit's class's 13th level ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)) |
+| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most (a Shinobi's slots only, for now: it can't cast in the sequel yet) |
+| [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
+| [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
+| [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
+| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
+| Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
+
+What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
+backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a Mind Warrior's PSP.
+
 ## In Wake of the Ravager
 
 Not all of what the kits do has come to Wake of the Ravager yet. What works there now, kit by kit
@@ -757,15 +773,15 @@ thief skills, movement and initiative.
 | Myrmidon, Sentinel, Ravager | whole |
 | Arena Champion, Twin-blade, Brute | whole |
 | Stalker | whole |
-| Justifier | in part: a ranger's spell slots, not its own one slot from 10th (its casting level is its own) |
-| Seeker | in part: a ranger's spell slots, not its own from 6th (its casting level and sphere's weapons are its own) |
+| Justifier | whole: its own slots and casting level |
+| Seeker | whole: its own slots, casting level and sphere's weapons |
 | Swashbuckler, Assassin | whole |
-| Shinobi | in part: its gear only; no preserver spells |
+| Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
 | Scholar, Arcanist | not yet (no extra spells learnt, no −1 to hit; no higher casting level, no d3 hit die) |
-| Battle Mage | in part: its THAC0, expertise, weapons and leather; not its d6 hit die, one slot fewer, casting after a hit |
-| Elementalist | in part: its second sphere's spells and weapons; its slots a level behind are not yet in |
+| Battle Mage | in part: its THAC0, expertise, weapons, leather and one slot fewer; not its d6 hit die, casting after a hit |
+| Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
 | Healer | in part: water only, no weapon in the off hand; not its cosmos spells, stronger cures, no harming spells |
-| Crusader | in part: its THAC0 and expertise; not one slot fewer |
+| Crusader | in part: its THAC0, expertise and one slot fewer |
 | Grove Warden | whole |
 | Lifebinder | in part: blunt weapons only; not its stronger cures, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
@@ -796,28 +812,8 @@ A warrior's weapon is first made a +1 of its first weapon spec ([Starting
 weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
 the bow and arrows its class gives).
 
-The kits' spell slots past Shattered Lands' levels, a Spellarcher's arrows at +3 and a Battle Mage's
-or Arcanist's hit points past 10th wait for those kits' slots, arrows and hit dice in the sequel.
-## Past 13th level
-
-Shattered Lands stops a character near 10th-13th level; Wake of the Ravager's XP cap (5,625,000
-shared by a character's classes) and higher levels take a single class to 20th and on to 30th.
-The kits go on there as AD&D 2e and the kits' own books go on (the owner's choices, 2026-11-26):
-
-| Kit | Past Shattered Lands' levels |
-|---|---|
-| [Ravager](#ravager) | base AC 2 at 11th-12th, 1 at 13th-14th, 0 from 15th |
-| [Grove Warden](#grove-warden) | goes on 1 better every 3 druid levels: 5 at 15th, 6 at 18th, and on |
-| Battle Mage, Crusader, Mind Warrior | an expert's 5/2 attacks a round from the kit's class's 13th level ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)) |
-| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most (a Shinobi's slots only, for now: it can't cast in the sequel yet) |
-| [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
-| [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
-| [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
-| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
-| Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
-
-What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
-backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a Mind Warrior's PSP.
+The kits' spell slots past Shattered Lands' levels hold in the sequel; a Spellarcher's arrows at +3 and a
+Battle Mage's or Arcanist's hit points past 10th wait for those kits' arrows and hit dice there.
 
 ## Changing class
 

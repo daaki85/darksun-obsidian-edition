@@ -10,8 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager, ravspells  # noqa: E402
-from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -47,12 +46,9 @@ class TableTests(unittest.TestCase):
                             "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
                             "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
-                            "shinobi_mage"}
-                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands",
+                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine",
                             "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
-                            "pp_hand"}
-                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands",
-                            "fig_wide_all", "fig_wide", "fig_keep", "shop_shine"}
+                            "pp_hand", "shinobi_mage"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -490,7 +486,7 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
                              | set(rollstore.rav_chunks(game))  # STORE and RECALL,
                              | set(weaponpages.rav_chunks(game, objects))  # the weapon window,
-                             | set(ravspells.chunks(game)))  # the new spells)
+                             | set(ravspells.chunks(game))  # the new spells,
                              | {("ICON", icons.PICK_ICON)})  # the Pick Pockets button's purse)
             from dsloader import wotrart
             purse = wotrart.decode_plnr(res[("ICON", icons.PICK_ICON)])
@@ -513,27 +509,24 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(own[ravager.TYPES_CHUNK])  # (the daggers the air clerics' too)
+            mended = bytearray(ravager.weighted_table(own[ravager.TYPES_CHUNK]))  # (weighed; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
-            self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], ravager.weighted_table(own[ravager.TYPES_CHUNK]))
             self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
+            from dsloader import ravshine
+            shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
             weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
             self.assertTrue(weighed)
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
-                             {ravager.TYPES_CHUNK} | sheets | set(weighed))  # (GFFI: the index)
+                             {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)
             for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
                 for r in dataitems.records(objs[k])[0]:
                     if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
                         self.assertEqual(r.data, types[r.number * 15:(r.number + 1) * 15], (k, r.number))
-            from dsloader import ravshine
-            shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
-            self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
-                             {ravager.TYPES_CHUNK} | sheets | shine)  # (GFFI: the index)
             for k in sheets:
                 old, new = dataitems.records(weighed.get(k, own[k]))[0], dataitems.records(objs[k])[0]
                 self.assertEqual([r._replace(data=r.data[:ravager.GAME_SHEET_SIZE]) for r in new], old)

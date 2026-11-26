@@ -920,7 +920,7 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
    sends waves, `fight_on` is 0 only a moment between them and fightout.sh stops "DONE" there: run
    it again. **In Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md) a Tab + Return
    loop must press Q and then E to end a member's turn (Q alone leaves END MOVE up), and
-   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door).
+   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door): `ravfight.py tabfight` is that loop and does.
    **`fountain-user`'s ambush needs Pehtucl's speech clicked away first** (2026-11-26): loaded, the
    speech box is up with `fight_on` 0 and fightout.sh says NO FIGHT ON; `msgbox.sh` only reports the
    box. Five clicks on it (`click.py 160 30 left`, 3 s apart) start the fight (`fight_on 1`).

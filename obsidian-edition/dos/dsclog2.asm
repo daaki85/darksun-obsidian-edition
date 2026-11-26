@@ -303,22 +303,6 @@ square_draws dw 0               ; +1928 floor passes the squares were drawn in (
 f10_moves  dw 0                 ; +1930 F10's moves taken back (F10_PIN, counted) ...
 f10_kept   dw 0                 ; +1932 ... and those refused to a pinned member (counted)
 mark_draws dw 0                 ; +1934 rings drawn under the things RING_TAB marks (RINGS, counted)
-        times 2000 - ($ - hdr) db 0 ; (+1936 to +1999: none here yet, zero)
-pick_on    dw 0                 ; +2000 the Loader sets PICK_BUTTON (2) to have a thief's Pick Pockets button on
-                                ;      the USE screen (PICK POCKETS; DSCLOG's PICK_ON, its +178)
-pick_seq   dw 0                 ; +2002 a pocket to pick: someone clicked on with the thief's pointer, counted
-                                ;      (PP_HAND; DSCLOG's USE_SEQ, its +180) ...
-pick_reply dw 0                 ; +2004 ... the Loader sets this to PICK_SEQ once it has answered (USE_REPLY)
-pick_who   dw 0                 ; +2006 ... the thing clicked on (the map's object: a creature's, the
-                                ;      combatants' 388h:0C33h kind 2) (USE_WHO)
-pick_thief dw 0                 ; +2008 ... the thief: the party member whose button it was
-pick_taken dw 0                 ; +2010 the Loader's: 1 it tried the pocket (PICK_TEXT shown, no talk), 0 the
-                                ;      talk as the game has it (USE_TAKEN)
-pick_off   dw pick_text         ; +2012 offset of PICK_TEXT: what came of it, NUL-terminated, the Loader's
-                                ;      (PICK_SIZE bytes; DSCLOG's PICK_OFF, its +176)
-pick_shown dw 0                 ; +2014 purses shown on the USE screen (PP_SHOW, counted) ...
-pick_armed dw 0                 ; +2016 ... picks readied, the pointer the one for talking (PP_ARM) ...
-pick_late  dw 0                 ; +2018 ... and picks the Loader didn't answer in time (PP_HAND: the talk)
         times 1960 - ($ - hdr) db 0 ; (+1936 to +1959: none yet, zero; kept free for the open ports' fields)
 fig_shadows dw 1                ; +1960 1: the figures cast shadows on the floor (FIGURE SHADOWS; 0 none)
 fig_passes  dw 0                ; +1962 floor passes the figures' shadows were drawn in (counted) ...
@@ -338,6 +322,22 @@ ghost_blend dw FAR_GH_BLEND     ; +1988 BLEND's offset in the far block (REP_COU
 ghost_rep   dw FAR_GH_REP       ; +1990 ... REP's (256) ...
 ghost_tab   dw FAR_GH_TAB       ; +1992 ... and GHOST_TAB's (80: a bit a thing; +79 GH_CHANGED)
 ghost_draws dw 0                ; +1994 figures drawn see-through (GHOST_DRAW, counted)
+        times 2000 - ($ - hdr) db 0 ; (+1936 to +1999: none here yet, zero)
+pick_on    dw 0                 ; +2000 the Loader sets PICK_BUTTON (2) to have a thief's Pick Pockets button on
+                                ;      the USE screen (PICK POCKETS; DSCLOG's PICK_ON, its +178)
+pick_seq   dw 0                 ; +2002 a pocket to pick: someone clicked on with the thief's pointer, counted
+                                ;      (PP_HAND; DSCLOG's USE_SEQ, its +180) ...
+pick_reply dw 0                 ; +2004 ... the Loader sets this to PICK_SEQ once it has answered (USE_REPLY)
+pick_who   dw 0                 ; +2006 ... the thing clicked on (the map's object: a creature's, the
+                                ;      combatants' 388h:0C33h kind 2) (USE_WHO)
+pick_thief dw 0                 ; +2008 ... the thief: the party member whose button it was
+pick_taken dw 0                 ; +2010 the Loader's: 1 it tried the pocket (PICK_TEXT shown, no talk), 0 the
+                                ;      talk as the game has it (USE_TAKEN)
+pick_off   dw pick_text         ; +2012 offset of PICK_TEXT: what came of it, NUL-terminated, the Loader's
+                                ;      (PICK_SIZE bytes; DSCLOG's PICK_OFF, its +176)
+pick_shown dw 0                 ; +2014 purses shown on the USE screen (PP_SHOW, counted) ...
+pick_armed dw 0                 ; +2016 ... picks readied, the pointer the one for talking (PP_ARM) ...
+pick_late  dw 0                 ; +2018 ... and picks the Loader didn't answer in time (PP_HAND: the talk)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4131,67 +4131,6 @@ site_table:
         dw site_none                        ; 127 (none here)
         dw site_none                        ; 128 (none here)
         dw site_none                        ; 129 (none here)
-        dw site_none                        ; 130 (none here: held for other work)
-        dw site_none                        ; 131 (none here: held for other work)
-        dw site_none                        ; 132 (none here: held for other work)
-        dw site_none                        ; 133 (none here: held for other work)
-        dw site_none                        ; 134 (none here: held for other work)
-        dw site_none                        ; 135 (none here: held for other work)
-        dw site_none                        ; 136 (none here: held for other work)
-        dw site_none                        ; 137 (none here: held for other work)
-        dw site_none                        ; 138 (none here: held for other work)
-        dw site_none                        ; 139 (none here: held for other work)
-        dw site_none                        ; 140 (none here: held for other work)
-        dw site_none                        ; 141 (none here: held for other work)
-        dw site_none                        ; 142 (none here: held for other work)
-        dw site_none                        ; 143 (none here: held for other work)
-        dw site_none                        ; 144 (none here: held for other work)
-        dw site_none                        ; 145 (none here: held for other work)
-        dw site_none                        ; 146 (none here: held for other work)
-        dw site_none                        ; 147 (none here: held for other work)
-        dw site_none                        ; 148 (none here: held for other work)
-        dw site_none                        ; 149 (none here: held for other work)
-        dw lv_weapons                       ; 150 SITE_LV_WEAPONS (957BEh: the level up: weapon specs due picked on the weapon window)
-        dw site_none                        ; 151 (none here: held for other work)
-        dw site_none                        ; 152 (none here: held for other work)
-        dw site_none                        ; 153 (none here: held for other work)
-        dw site_none                        ; 154 (none here: held for other work)
-        dw site_none                        ; 155 (none here: held for other work)
-        dw site_none                        ; 156 (none here: held for other work)
-        dw site_none                        ; 157 (none here: held for other work)
-        dw site_none                        ; 158 (none here: held for other work)
-        dw site_none                        ; 159 (none here: held for other work)
-        dw site_none                        ; 160 (none here: held for other work)
-        dw site_none                        ; 161 (none here: held for other work)
-        dw site_none                        ; 162 (none here: held for other work)
-        dw site_none                        ; 163 (none here: held for other work)
-        dw site_none                        ; 164 (none here: held for other work)
-        dw site_none                        ; 165 (none here: held for other work)
-        dw site_none                        ; 166 (none here: held for other work)
-        dw site_none                        ; 167 (none here: held for other work)
-        dw site_none                        ; 168 (none here: held for other work)
-        dw site_none                        ; 169 (none here: held for other work)
-        dw site_none                        ; 170 (none here: held for other work)
-        dw site_none                        ; 171 (none here: held for other work)
-        dw site_none                        ; 172 (none here: held for other work)
-        dw site_none                        ; 173 (none here: held for other work)
-        dw site_none                        ; 174 (none here: held for other work)
-        dw site_none                        ; 175 (none here: held for other work)
-        dw site_none                        ; 176 (none here: held for other work)
-        dw site_none                        ; 177 (none here: held for other work)
-        dw site_none                        ; 178 (none here: held for other work)
-        dw site_none                        ; 179 (none here: held for other work)
-        dw site_none                        ; 180 (none here: held for other work)
-        dw site_none                        ; 181 (none here: held for other work)
-        dw site_none                        ; 182 (none here: held for other work)
-        dw site_none                        ; 183 (none here: held for other work)
-        dw site_none                        ; 184 (none here: held for other work)
-        dw site_none                        ; 185 (none here: held for other work)
-        dw site_none                        ; 186 (none here: held for other work)
-        dw site_none                        ; 187 (none here: held for other work)
-        dw site_none                        ; 188 (none here: held for other work)
-        dw site_none                        ; 189 (none here: held for other work)
-        dw shinobi_mage                     ; 190 SITE_SHINOBI_MAGE (627D6h: the slot routine's "casts wizard spells": a Shinobi's thief class)
         dw site_none                        ; 130 (another's)
         dw site_none                        ; 131 (another's)
         dw site_none                        ; 132 (another's)
@@ -4212,6 +4151,47 @@ site_table:
         dw ns_claw                          ; 147 SITE_NS_CLAW (86A45h: a natural attack's dice: Erdlu Claw's 1d6+1)
         dw ns_scroll                        ; 148 SITE_NS_SCROLL (999FBh: a wizard scroll read: a new spell taught from it)
         dw ns_learn                         ; 149 SITE_NS_LEARN (936B4h: CHOOSE A SPELL's pick: a new one's sheet bit)
+        dw lv_weapons                       ; 150 SITE_LV_WEAPONS (957BEh: the level up: weapon specs due picked on the weapon window)
+        dw site_none                        ; 151 (none here)
+        dw site_none                        ; 152 (none here)
+        dw site_none                        ; 153 (none here)
+        dw site_none                        ; 154 (none here)
+        dw site_none                        ; 155 (none here)
+        dw site_none                        ; 156 (none here)
+        dw site_none                        ; 157 (none here)
+        dw site_none                        ; 158 (none here)
+        dw site_none                        ; 159 (none here)
+        dw fig_wide_all                     ; 160 SITE_FIG_WIDE_ALL (2868Ch: the redraw of what moved: wider, for the figures' shadows)
+        dw fig_wide                         ; 161 SITE_FIG_WIDE (2828Ch: the redraw of a rectangle of the view: the same)
+        dw fig_keep                         ; 162 SITE_FIG_KEEP (2A347h: a thing drawn: its frame's shadow kept, for when its picture is out)
+        dw shop_shine                       ; 163 SITE_SHOP_SHINE (2F7BEh: the wait for an event, its test: a shop's magic items shine)
+        dw site_none                        ; 164 (none here)
+        dw site_none                        ; 165 (none here)
+        dw site_none                        ; 166 (none here)
+        dw site_none                        ; 167 (none here)
+        dw site_none                        ; 168 (none here)
+        dw site_none                        ; 169 (none here)
+        dw site_none                        ; 170 (none here)
+        dw site_none                        ; 171 (none here)
+        dw site_none                        ; 172 (none here)
+        dw site_none                        ; 173 (none here)
+        dw site_none                        ; 174 (none here)
+        dw site_none                        ; 175 (none here)
+        dw site_none                        ; 176 (none here)
+        dw site_none                        ; 177 (none here)
+        dw site_none                        ; 178 (none here)
+        dw site_none                        ; 179 (none here)
+        dw pp_show                          ; 180 SITE_PP_SHOW (97AF4h: the USE screen's Turn Undead button shown: a thief's purse)
+        dw pp_click                         ; 181 SITE_PP_CLICK (97623h: ... let go of: the thief's as pressed)
+        dw pp_lit                           ; 182 SITE_PP_LIT (9767Bh: ... the screen closed: the menu button's icon as it was)
+        dw pp_arm                           ; 183 SITE_PP_ARM (97699h: ... Turn Undead readied: the thief's pick readied instead)
+        dw pp_text                          ; 184 SITE_PP_TEXT (975CBh, 97702h: ... its name under the screen: PICK POCKETS)
+        dw pp_info                          ; 185 SITE_PP_INFO (97716h: ... a right click: no spell's description for the purse)
+        dw pp_hand                          ; 186 SITE_PP_HAND (630F8h: a click on the map with the talk pointer: the pick)
+        dw site_none                        ; 187 (none here)
+        dw site_none                        ; 188 (none here)
+        dw site_none                        ; 189 (none here)
+        dw shinobi_mage                     ; 190 SITE_SHINOBI_MAGE (627D6h: the slot routine's "casts wizard spells": a Shinobi's thief class)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -4264,88 +4244,6 @@ ns_new:
 ; game's; all registers kept.
 ns_knows:
         push ax
-%rep 180 - 130
-        dw site_none                        ; 130-179 (none here: other branches' sites)
-%endrep
-        dw pp_show                          ; 180 SITE_PP_SHOW (97AF4h: the USE screen's Turn Undead button shown: a thief's purse)
-        dw pp_click                         ; 181 SITE_PP_CLICK (97623h: ... let go of: the thief's as pressed)
-        dw pp_lit                           ; 182 SITE_PP_LIT (9767Bh: ... the screen closed: the menu button's icon as it was)
-        dw pp_arm                           ; 183 SITE_PP_ARM (97699h: ... Turn Undead readied: the thief's pick readied instead)
-        dw pp_text                          ; 184 SITE_PP_TEXT (975CBh, 97702h: ... its name under the screen: PICK POCKETS)
-        dw pp_info                          ; 185 SITE_PP_INFO (97716h: ... a right click: no spell's description for the purse)
-        dw pp_hand                          ; 186 SITE_PP_HAND (630F8h: a click on the map with the talk pointer: the pick)
-        dw site_none                        ; 187 (none here)
-        dw site_none                        ; 188 (none here)
-        dw site_none                        ; 189 (none here)
-        dw site_none                        ; 130 (none here)
-        dw site_none                        ; 131 (none here)
-        dw site_none                        ; 132 (none here)
-        dw site_none                        ; 133 (none here)
-        dw site_none                        ; 134 (none here)
-        dw site_none                        ; 135 (none here)
-        dw site_none                        ; 136 (none here)
-        dw site_none                        ; 137 (none here)
-        dw site_none                        ; 138 (none here)
-        dw site_none                        ; 139 (none here)
-        dw site_none                        ; 140 (none here)
-        dw site_none                        ; 141 (none here)
-        dw site_none                        ; 142 (none here)
-        dw site_none                        ; 143 (none here)
-        dw site_none                        ; 144 (none here)
-        dw site_none                        ; 145 (none here)
-        dw site_none                        ; 146 (none here)
-        dw site_none                        ; 147 (none here)
-        dw site_none                        ; 148 (none here)
-        dw site_none                        ; 149 (none here)
-        dw site_none                        ; 150 (none here)
-        dw site_none                        ; 151 (none here)
-        dw site_none                        ; 152 (none here)
-        dw site_none                        ; 153 (none here)
-        dw site_none                        ; 154 (none here)
-        dw site_none                        ; 155 (none here)
-        dw site_none                        ; 156 (none here)
-        dw site_none                        ; 157 (none here)
-        dw site_none                        ; 158 (none here)
-        dw site_none                        ; 159 (none here)
-        dw fig_wide_all                     ; 160 SITE_FIG_WIDE_ALL (2868Ch: the redraw of what moved: wider, for the figures' shadows)
-        dw fig_wide                         ; 161 SITE_FIG_WIDE (2828Ch: the redraw of a rectangle of the view: the same)
-        dw fig_keep                         ; 162 SITE_FIG_KEEP (2A347h: a thing drawn: its frame's shadow kept, for when its picture is out)
-        dw shop_shine                       ; 163 SITE_SHOP_SHINE (2F7BEh: the wait for an event, its test: a shop's magic items shine)
-        dw site_none                        ; 164 (none here)
-        dw site_none                        ; 165 (none here)
-        dw site_none                        ; 166 (none here)
-        dw site_none                        ; 167 (none here)
-        dw site_none                        ; 168 (none here)
-        dw site_none                        ; 169 (none here)
-        dw site_none                        ; 170 (none here)
-        dw site_none                        ; 171 (none here)
-        dw site_none                        ; 172 (none here)
-        dw site_none                        ; 173 (none here)
-        dw site_none                        ; 174 (none here)
-        dw site_none                        ; 175 (none here)
-        dw site_none                        ; 176 (none here)
-        dw site_none                        ; 177 (none here)
-        dw site_none                        ; 178 (none here)
-        dw site_none                        ; 179 (none here)
-; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
-; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
-; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
-STINKING_CLOUD equ 22
-stink_round:
-        les bx, [bp - 4]
-        cmp word [bp + 6], STINKING_CLOUD
-        jne .r
-        inc eax
-        inc word [cs:manual_count]
-.r:     iret
-; HD_SAVE (site 1, "classless_save_level"): the save modifiers' "mov [bp-6],ax" (83656h), AX the target's
-; level (98h:154h), 0 for a creature with no class (the sheet's +1Bh..+1Dh all 0): its hit dice then
-; (the first level byte, +1Eh; the sheet [BP-0Eh], far). Read after by Dismissal, Cloudkill, Scare,
-; Color Spray.
-hd_save:
-        or ax, ax
-        jnz .set
-        push es
         push bx
         push di
         push es

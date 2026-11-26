@@ -469,13 +469,6 @@ raised before stopping.
   picture against its store bytes (`check`; all should match), lists the STALE cells (`stale`) or
   dumps a slot. The picture pool is 60,000 bytes; opening the inventory (I) puts every picture out
   of memory (`cachelist.py`: 0 in memory).
-- **A class outfit checked live** (logs/2026-11-23-elf-outfits-live.md): `outfitlive.py MEMBER
-  classes=C1,C2,C3 slot=SLOT` sets the member's class bytes (creation codes: 1 cleric, 6 druid, 9
-  fighter, 10 gladiator, 11 preserver, 12 psionicist, 13 ranger, 17 thief) and takes an item off and
-  on, and after each change compares the Loader's copy of SEGOBJEX.GFF with `Pictures.build` of the
-  outfit and the worn gear, byte for byte; it puts the classes back. `pens-after-arena`'s elf, Cilla
-  (member 3, object 305), is a Preserver/Druid/Thief: no elf outfit has a druid, so she needs a
-  class byte changed to be dressed. Memory edit: autosave and quick save off first.
 - **Changing outfits for a test**: `outfitcycle.py MEMBER SLOT N` changes an outfit N times
   (waiting for the Loader's copy to be written, not for the slots to grow) and prints slots, STALE,
   the store's end and whether the figure is drawn each time; `randout.py N [SEED]` puts random items
@@ -739,11 +732,6 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
   99,31) does nothing either: no fight starts from a click on a friendly figure.
 
 ## Wake of the Ravager
-
-**A priest of any element and level for a test** (2026-11-26, logs/2026-11-26-codex-break-review.md): the sheet's
-class byte +1Bh 1-4 is a cleric of air, earth, fire or water (5-8 the druids), its level +1Eh, and a priest's casts
-left DS:4474h + 22h a member + the spell level; the USE screen's spell icons are clicked at their middle (game y 58
-for the first row: y 48 does nothing).
 
 For comparing (its code, data and README; nothing in the kit plays it): `sh setup_ravager.sh` puts
 the user's GOG installer (from the private repository, as the game's: the guide's [rule
@@ -1981,31 +1969,20 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
 (75,171) is the inventory, whose Computer Control icons are the lower small ones left of the portraits (6,17 /
 6,65 / 6,113 / 6,161), View Character's 47,53 / 98,53 / 47,113 / 98,113.
 
-**The starting weapon of the first pick** (2026-11-26, logs/2026-11-26-ravager-first-pick-weapon.md):
-`ravfirstweapon.fill` in ravlog's `_gear_pass` (GEAR_DONE: after CR_WEAPONS' picks and the game's gear, before the
-roster write; `RAV_NO_FIRST_WEAPON=1` on ravdice.py turns it off for a control) makes the weapon in hand over in place
-(the record's picture, count, value, type, power, +12h byte, name and plus; its ITEM_NEXT and slot kept). **The
-sequel's weapon lines and attack take a double spear that isn't first in the creature's item list (+0Ah) for no
-weapon** ("(2x1D1+1)", the bare hand; a lotulis behind a sling is taken): `weapon_first` rotates the records' contents
-so the weapon in hand is first, as the inventory's equip leaves it. A double spear specialist swings once a round even
-so (the same after a hand equip). The sequel's type records (15 bytes: flags +0, material +4, two-handed +0Bh 40h,
-classes +0Ch: air 1, earth 2, fire 4, water 8, druid 10h, fighter 20h, gladiator 40h, preserver 80h, psionicist 100h,
-ranger 200h, thief 400h): its daggers (37, 72) lacked the air cleric's bit (ravager.mod_types_table adds it), and its
-club (29) has no material (40h), so the sphere rule refuses it to earth and water clerics too (open). The creation
-screen: the sphere's AIR clicked off at 240,106, then EARTH 114, FIRE 122, WATER 130; a gladiator needs FIGHTER
-(255,29) clicked off first; the weapon window's slots at x 75, 109, 143, 177, 211, 245 and y 32, 66, 100, 134 in
-specialize.KINDS' order. A ranger can't pick the bow (greyed). The roster's ADD (a right click on an empty party slot)
-lists the roster newest first, rows from y 45, 11 apart.
+**Where DSCLOG2's far block goes** (2026-11-26, logs/2026-11-26-ravager-hma.md; it reaches FD00h since the
+see-through tables moved in). FAR_INIT asks XMS for the HMA (01h): GOG's DOSBox 0.74 always answers 90h (no
+HMA: its 01h/02h are stubs) though A20 and 100000h work, so the HMA is used when FAR_RING-FAR_TOP is all zero;
+91h (DOS=HIGH, DOSBox-X's default `dos=high`) goes straight to upper memory (strategy 42h: the top of it), then
+conventional memory; no room anywhere: "no memory for its ring", exit 4C01h, nothing hooked. A20 by 03h (global:
+the owner's), checked by the wrap test before any write; an HMA given but unusable is handed back (02h). Nothing
+ever releases them (a TSR). To see it: `dosmem.py` (the chains, A20) and the header's +142 (FAR_SEG: FFFFh the
+HMA). **To take the HMA for a test** in 0.74, where XMS gives it to nobody: put bytes in it before DSCLOG2
+(`logs/files/2026-11-26-hmagrab.asm`, run from a throwaway config's autoexec before `lh d:\dsclog2.exe`): the far
+block then lands at E02Fh, the game runs, shadows and the Loader's see-through tables follow FAR_SEG. The
+emulator tests: `tests/test_far_init.py` (XMS and DOS played by the test). A second launch of `dosbox` by
+`setsid nohup ... &` from a shell: `$!` is setsid's pid when setsid forks, not DOSBox's; find DOSBox with
+`pgrep -x dosbox` and its start time before writing rav.pid (two games from one config wrote the same files).
 
-**The kits' starting gear** (2026-11-26, logs/2026-11-26-ravager-kit-start-gear.md): `ravkitstart.kit_gear` then
-`weaponchoice.class_gear` in ravlog's `_gear_pass` (after ravfirstweapon.fill, before startgear.fill;
-`RAV_NO_KIT_START=1` on ravdice.py a control). **The game's give routine drops what the equip test refuses into the
-backpack**: with DSCLOG2's KIT_FORBIDS at CU_SITE a new Ravager's Shield +1 and ring armour (33, 4, 65) land in cells
-14-17, not worn, so a kit's gear step must look in the pack too (a weapon there with the right hand empty, armour by its
-type's place on the body: the type's +5, 1 the chest, 3 the arms, 0Ah the legs, 5 a hand), and must run before
-class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS (232,138), NO KIT (250,106) and the
-kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
-menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
 **Picking pockets in the sequel** (2026-11-26, logs/2026-11-26-ravager-pick-pockets.md): DSCLOG2's PICK POCKETS
 (sites 180-186) puts SL's purse in the place of the sequel's Turn Undead button. What it needed from the sequel:
 - **Turn Undead's button**: the routine that shows the USE screen's buttons (97AC8h) tests the element word DS:9C1Ch
@@ -2028,6 +2005,21 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   didn't answer in time (0 in the play). The purse is ICON 3048 in the Loader's RESOURCE copy (`RAV_SKIP=pick_icon`
   leaves it out).
 
+**The starting weapon of the first pick** (2026-11-26, logs/2026-11-26-ravager-first-pick-weapon.md):
+`ravfirstweapon.fill` in ravlog's `_gear_pass` (GEAR_DONE: after CR_WEAPONS' picks and the game's gear, before the
+roster write; `RAV_NO_FIRST_WEAPON=1` on ravdice.py turns it off for a control) makes the weapon in hand over in place
+(the record's picture, count, value, type, power, +12h byte, name and plus; its ITEM_NEXT and slot kept). **The
+sequel's weapon lines and attack take a double spear that isn't first in the creature's item list (+0Ah) for no
+weapon** ("(2x1D1+1)", the bare hand; a lotulis behind a sling is taken): `weapon_first` rotates the records' contents
+so the weapon in hand is first, as the inventory's equip leaves it. A double spear specialist swings once a round even
+so (the same after a hand equip). The sequel's type records (15 bytes: flags +0, material +4, two-handed +0Bh 40h,
+classes +0Ch: air 1, earth 2, fire 4, water 8, druid 10h, fighter 20h, gladiator 40h, preserver 80h, psionicist 100h,
+ranger 200h, thief 400h): its daggers (37, 72) lacked the air cleric's bit (ravager.mod_types_table adds it), and its
+club (29) has no material (40h), so the sphere rule refuses it to earth and water clerics too (open). The creation
+screen: the sphere's AIR clicked off at 240,106, then EARTH 114, FIRE 122, WATER 130; a gladiator needs FIGHTER
+(255,29) clicked off first; the weapon window's slots at x 75, 109, 143, 177, 211, 245 and y 32, 66, 100, 134 in
+specialize.KINDS' order. A ranger can't pick the bow (greyed). The roster's ADD (a right click on an empty party slot)
+lists the roster newest first, rows from y 45, 11 apart.
 **Item weights in the sequel** (2026-11-26, logs/2026-11-26-ravager-item-weights.md): the weight is a byte at +2
 of each of `OBJEX.GFF` `ALL 4`'s 102 types (15 bytes each; in memory from DS:19CDh), SSI's 0 for 71 of them; each
 object's `RDFF` record holds a copy of its type (level 3, kind 4, number the type's), all equal to `ALL 4`. The
@@ -2041,19 +2033,16 @@ SL. The STR table (weight allowance, maximum press, x10) is at SL DS:0740h, the 
   (creature +19h) and maximum press; `--str N=S` sets a STR (a test edit, never saved), `--types` all 102 weights.
 - **The control's message**: with the weights left out, two long swords give "CANNOT USE THIS ITEM", a later check,
   not "CANNOT USE TWO HEAVY WEAPONS".
-**Where DSCLOG2's far block goes** (2026-11-26, logs/2026-11-26-ravager-hma.md; it reaches FD00h since the
-see-through tables moved in). FAR_INIT asks XMS for the HMA (01h): GOG's DOSBox 0.74 always answers 90h (no
-HMA: its 01h/02h are stubs) though A20 and 100000h work, so the HMA is used when FAR_RING-FAR_TOP is all zero;
-91h (DOS=HIGH, DOSBox-X's default `dos=high`) goes straight to upper memory (strategy 42h: the top of it), then
-conventional memory; no room anywhere: "no memory for its ring", exit 4C01h, nothing hooked. A20 by 03h (global:
-the owner's), checked by the wrap test before any write; an HMA given but unusable is handed back (02h). Nothing
-ever releases them (a TSR). To see it: `dosmem.py` (the chains, A20) and the header's +142 (FAR_SEG: FFFFh the
-HMA). **To take the HMA for a test** in 0.74, where XMS gives it to nobody: put bytes in it before DSCLOG2
-(`logs/files/2026-11-26-hmagrab.asm`, run from a throwaway config's autoexec before `lh d:\dsclog2.exe`): the far
-block then lands at E02Fh, the game runs, shadows and the Loader's see-through tables follow FAR_SEG. The
-emulator tests: `tests/test_far_init.py` (XMS and DOS played by the test). A second launch of `dosbox` by
-`setsid nohup ... &` from a shell: `$!` is setsid's pid when setsid forks, not DOSBox's; find DOSBox with
-`pgrep -x dosbox` and its start time before writing rav.pid (two games from one config wrote the same files).
+
+**The kits' starting gear** (2026-11-26, logs/2026-11-26-ravager-kit-start-gear.md): `ravkitstart.kit_gear` then
+`weaponchoice.class_gear` in ravlog's `_gear_pass` (after ravfirstweapon.fill, before startgear.fill;
+`RAV_NO_KIT_START=1` on ravdice.py a control). **The game's give routine drops what the equip test refuses into the
+backpack**: with DSCLOG2's KIT_FORBIDS at CU_SITE a new Ravager's Shield +1 and ring armour (33, 4, 65) land in cells
+14-17, not worn, so a kit's gear step must look in the pack too (a weapon there with the right hand empty, armour by its
+type's place on the body: the type's +5, 1 the chest, 3 the arms, 0Ah the legs, 5 a hand), and must run before
+class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS (232,138), NO KIT (250,106) and the
+kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
+menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
 
 ### The sequel's spells in a fight (2026-11-21)
 
