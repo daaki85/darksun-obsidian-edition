@@ -24,9 +24,9 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, keywatch, labels, \
-    loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, targeting, textlog, \
-    usable
+from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
+    targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
