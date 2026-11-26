@@ -23,9 +23,9 @@ WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits
 # 1st-level slot from 10th level
 SEEKER_SLOTS = ((1, 0, 0, 0), (2, 0, 0, 0), (2, 1, 0, 0), (2, 2, 0, 0), (2, 2, 1, 0), (3, 2, 1, 0), (3, 2, 2, 0),
                 (3, 3, 2, 1), (3, 3, 3, 1), (4, 4, 3, 1), (4, 4, 3, 2))  # (14th-16th+: the owner's Table 51,
-# 2026-11-26, past 13th only in Wake of the Ravager; DSCLOG's table keeps 13th's, SL's cap stopping it there)
+# 2026-11-26; DSCLOG's seeker_slots the same)
 # a Justifier's priest slots at spell levels 1 to 3, by level from 10 to 16 and up (the owner's Table 46,
-# 2026-11-26: 10th's one slot as before, SL's cap stopping a ranger at 10th)
+# 2026-11-26: 10th's one slot as before; DSCLOG's justifier_slots the same)
 JUSTIFIER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (2, 2, 2), (3, 2, 2))
 # the most a ranger's casting level reaches (AD&D's 9, a ranger's from 16th), a Seeker's (and a Shinobi's,
 # by the Seeker's table) 11 and a Justifier's 7: the owner's tables' 16th+ rows (DSCLOG2's RANGER_MOST)
@@ -314,10 +314,11 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, a
     Shinobi's wizard slots the Seeker's by its thief level."""
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
-    if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1 \
+    if kid == ELEMENTALIST and magic == PRIEST and not game_slots \
+            and level >= 2 * spell_level - 1 + (spell_level == 7) \
             and (spell_level < 6 or adnd):
-        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches; a 6th-level
-        # one only with AD&D's tables, ADND: the game's own give a cleric none)
+        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches, a 7th at 14th
+        # as a cleric's; a 6th-level one only with AD&D's tables, ADND: the game's own give a cleric none)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
     elif kid in (SEEKER, JUSTIFIER) and magic != PRIEST:
@@ -550,12 +551,13 @@ def ghetto_to_hit(kid: int, kind: Optional[int]) -> int:
 SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
 
 
-SPELL_ARROW_LEVELS = (5, 9)  # a Spellarcher's preserver levels for its spell arrows' +1 and +2
+SPELL_ARROW_LEVELS = (5, 9, 13)  # a Spellarcher's preserver levels for its spell arrows' +1, +2 and +3
+# (+3 for Wake of the Ravager's higher levels: the owner's 2026-11-26)
 
 
 def arrow_plus(kid: int, plus: int, spell_arrow: bool = False, preserver_level: int = 0) -> int:
     """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
-    spell arrows (SPELL_ARROW) +1 from its 5th preserver level and +2 from its 9th (a cursed one's
+    spell arrows (SPELL_ARROW) +1 from its 5th preserver level, +2 from its 9th and +3 from its 13th (a cursed one's
     minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is.
     Anyone not in the party shoots them as a Spellarcher, its highest level for PRESERVER_LEVEL
     (spellarrows.archer_level)."""
