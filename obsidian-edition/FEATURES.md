@@ -1316,8 +1316,10 @@ few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
 | Staff Sling +1 | the ranged-weapon stall, Tyr |
 | Staff Sling +2 | Sureshot, in the forest |
 
-The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. Only a
-new game has them: a saved game keeps the people and things it has made. The Bone Helm gives AC 1
+The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. A game
+saved before has them in its shops too: the Loader stocks each seller once, as you meet it, and what you
+buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep what they had. The Bone
+Helm gives AC 1
 with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
 
 ### Improved thieving
