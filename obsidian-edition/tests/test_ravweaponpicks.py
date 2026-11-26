@@ -16,7 +16,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import art, game, gff, ravager, weaponpages as wp, wotrart  # noqa: E402
+from dsloader import art, game, gff, ravager, ravlog, weaponpages as wp, wotrart  # noqa: E402
 
 try:
     from unicorn import Uc, UC_ARCH_X86, UC_MODE_16
@@ -29,20 +29,24 @@ ASM = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
 TSR, SS = 0x1000, 0x4000
 RULES_HI = 270
 SPEC_SLOTS, SH_RACE, SH_CLASSES, SH_LEVELS = 0x42, 0x12, 0x1B, 0x1E  # (the sequel's 48h sheet)
-SITES = {"cr_weapons": 120, "pk_win": 121, "pk_title": 122, "pk_fill": 123, "pk_click": 124, "pk_hover": 125}
+SITES = {"cr_weapons": 120, "pk_win": 121, "pk_title": 122, "pk_fill": 123, "pk_click": 124, "pk_hover": 125,
+         "lv_weapons": 150}
 
 
 def due(classes, levels, race) -> int:
     """The weapon specs a new character is due (WEAPON-SPECS.md): a gladiator 2, 3 from 6th level, 4 from
-    9th; a fighter or ranger 1; a human's earlier classes only once its first class's level has passed
-    theirs (no kits here)."""
+    9th, and past SL's levels one more at 13th, 17th, 21st and 25th; a fighter 1, 2 from 13th; a ranger 1
+    (the owner's 2026-11-26); a human's earlier classes only once its first class's level has passed theirs
+    (no kits here)."""
     most = 0
     for i, (c, lv) in enumerate(zip(classes, levels)):
         if i and race == 1 and lv >= levels[0]:
             continue
         if c == 10:
-            most = max(most, 2 + (lv >= 6) + (lv >= 9))
-        elif c == 9 or 13 <= c <= 16:
+            most = max(most, 2 + (lv >= 6) + (lv >= 9) + sum(lv >= n for n in (13, 17, 21, 25)))
+        elif c == 9:
+            most = max(most, 1 + (lv >= 13))
+        elif 13 <= c <= 16:
             most = max(most, 1)
     return most
 
@@ -171,9 +175,9 @@ class EmulatedTests(unittest.TestCase):
         return sheet
 
     def test_lv_due(self):
-        """LV_DUE's CX is what the rule says for every class at levels 1-12, and for two-class humans and
+        """LV_DUE's CX is what the rule says for every class at levels 1-30, and for two-class humans and
         others (a human's earlier class counting only once passed)."""
-        cases = [((c,), (lv,), 1) for c in range(1, 18) for lv in range(1, 13)]
+        cases = [((c,), (lv,), 1) for c in range(1, 18) for lv in range(1, 31)]
         cases += [((a, b), (la, lb), race) for race in (1, 3) for a in (9, 10, 11, 17) for b in (9, 10, 13, 17)
                   if a != b for la in (3, 7, 10) for lb in (5, 9)]
         for classes, levels, race in cases:
@@ -199,6 +203,25 @@ class EmulatedTests(unittest.TestCase):
                                  game.packed_specs([k + 1 for k in kinds], 0, roll)[:3])
                 self.assertEqual(sheet[SPEC_SLOTS + 3], spare)
                 self.assertEqual(game.specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + 4])[0][0], kinds[0] + 1)
+
+    def test_more_slots(self):
+        """Slots 4-7 (SPEC_MORE: +45h..+47h, 5 bits each): WP_PUT fills them after the packed four, SPEC_GET
+        reads them as game.spec_kinds, SPEC_COUNT counts all eight; the packed three and the roll kept."""
+        kinds = [5, 1, 2, 17, 22, 9, 3, 12]
+        sheet = self.new_sheet(classes=(10,), levels=(25,), raw=game.packed_specs([], 0, 6)[:3] + b"\0")
+        for kind in kinds:
+            self.run_routine("wp_put", sheet, eax=kind - 1)
+            sheet = bytearray(self.sheet())
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+        self.assertEqual(bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3]), game.packed_specs(kinds[:4], 0, 6)[:3])
+        self.assertEqual(sorted(game.spec_kinds(bytes(sheet))[4:]), sorted(kinds[4:]))
+        self.assertEqual(game.spec_kinds(bytes(sheet))[4:], bytes(kinds[4:]))
+        for slot in range(8):
+            got = self.run_routine("spec_get", sheet, esi=slot)["eax"] & 0xFFFF
+            self.assertEqual(got, game.spec_kinds(bytes(sheet))[slot], slot)
+        self.assertEqual(self.run_routine("spec_count", sheet)["edx"] & 0xFFFF, 8)
+        self.assertEqual(game.sheet_roll(bytes(sheet)), 6)
 
     def test_spec_count(self):
         """SPEC_COUNT's DX: how many specs a V3 sheet has."""

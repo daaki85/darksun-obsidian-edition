@@ -27,6 +27,7 @@ tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GU
   items, creatures, the dice log and more)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
   [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest
+- [Class outfits on the map](obsidian-edition/docs/class-outfits/README.md), with animated galleries of the female and male figures
 - [Features and rules](obsidian-edition/FEATURES.md): every switch of the Options tab and every
   change with none
 - [The patch notes](PATCH-NOTES.md): what the mod adds and changes from the original game, in one

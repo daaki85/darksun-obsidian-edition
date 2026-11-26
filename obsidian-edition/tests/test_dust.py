@@ -43,6 +43,20 @@ class DustTests(unittest.TestCase):
         self.assertEqual(table[SAND], SAND_LIGHT)
         self.assertEqual([table[c] for c in (GREY, BLUE, 0, SAND_LIGHT)], [0, 0, 0, 0])
 
+    def test_the_sequels_darker_dirt(self):
+        """The sequel's dirt (Tyr's 56,44,28 to 85,73,52 in 0-255, darker than SL's sand) takes dust only with its
+        least value (ravlog.DUST_LEAST), and its smaller step toward white (DUST_LIGHTER) takes one or two up its
+        ramp, not a pale one."""
+        from dsloader import ravlog
+        dac = bytearray(768)
+        ramp = ((14, 11, 7), (17, 14, 9), (21, 18, 13), (28, 26, 19), (39, 38, 33), (53, 53, 53))
+        for i, rgb in enumerate(ramp):
+            dac[(50 + i) * 3:(50 + i) * 3 + 3] = bytes(rgb)
+        self.assertFalse(any(dust.light_table(bytes(dac))[50:53]))
+        table = dust.light_table(bytes(dac), least=ravlog.DUST_LEAST, lighter=ravlog.DUST_LIGHTER)
+        self.assertEqual([table[c] for c in (50, 51, 52)], [52, 53, 53])
+        self.assertEqual(table[55], 0)  # (the grey: none)
+
     def test_update(self):
         """LIGHT written, and dust switched on, once DSCLOG has read the palette (and again for
         each new one); switched off when asked."""

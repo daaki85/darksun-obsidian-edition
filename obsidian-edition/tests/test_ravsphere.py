@@ -31,6 +31,7 @@ FIGHTERS_SEG, SPHERES_SEG = 0x3F49 - 0x47E0, 0x41F1 - 0x47E0  # (DSCLOG2's, less
 GAME_CS, GAME_IP = 0x5555, 0x1233  # (the site's byte there, the way back after it)
 RULES_HI = 270
 SITES = {"el_sphere_know": 90, "el_sphere_level": 91, "el_sphere_cast": 92}
+SHINOBI_SITE = {"shinobi_mage": 190}  # (the slot routine's "casts wizard spells": a Shinobi's thief class)
 
 
 def sphere_bytes() -> bytes:
@@ -82,7 +83,8 @@ class ElSphereTests(unittest.TestCase):
         mu.mem_write(SS * 16 + sp - 6, struct.pack("<HHHHH", GAME_IP + 2, GAME_CS, 0x2, spell, cls))  # (the INT's frame)
         mu.mem_write(SS * 16 + bp + 6, struct.pack("<H", member))
         regs = dict(cs=GAME_CS, ds=GDS, es=0x1234, ss=SS, esp=sp - 6, ebp=bp, eax=0xAB00 | answer, ebx=0x2222,
-                    ecx=0x3333, edx=0x4444, esi=0x5555, edi=member if number == 90 else 0x7777, eflags=0x2)
+                    ecx=0x3333, edx=0x4444, esi=member if number == 190 else 0x5555,
+                    edi=member if number == 90 else 0x7777, eflags=0x2)
         for reg, value in dict(regs, cs=TSR).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
         mu.emu_start(TSR * 16 + self.sym["site_int"], GAME_CS * 16 + GAME_IP + 3, count=2000)  # (as INT F5h)
@@ -153,14 +155,35 @@ class ElSphereTests(unittest.TestCase):
         for number in (90, 91, 92):
             self.assertEqual(self.site(number, 0, fire, 1, 0), 0)
 
+    def test_shinobi_mage(self):
+        """SHINOBI_MAGE (site 190, the member SI) answers yes to "does the class cast wizard spells" (spell 8)
+        for a Shinobi's own thief class, awake, with the kits' rule on (kits.slots then gives it the Seeker's
+        table: ADND_SLOTS's KIT_TABLE); the game's answer kept for every other class and sheet, and with
+        the rule off."""
+        made = 0
+        for n, (classes, levels, race, byte) in enumerate(characters()):
+            sheet = wotr_sheet(classes, levels, race, byte)
+            member = n % 4
+            self.mu.mem_write(SHEETS * 16 + member * ravager.SHEET_SIZE, sheet)
+            own = kitpages.kit_class_of(sheet, kits.SHINOBI) if kits.SHINOBI in kitpages.kit_ids(sheet) else 0
+            for cls in (11, 13, 17, 18):
+                for rules in (1, 0):
+                    self.rules(rules)
+                    for answer in (0, 1):
+                        want = answer or int(bool(rules) and cls == 17 and own == 17)
+                        with self.subTest(classes=classes, levels=levels, byte=byte, cls=cls, rules=rules, answer=answer):
+                            self.assertEqual(self.site(190, member, 8, cls, answer), want)
+                        made += want and not answer
+        self.assertGreater(made, 0)
+
     def test_patches(self):
-        """The three sites' patches: SITE's bytes (sites 90-92) on "add sp,4", the "or al,al" after."""
+        """The four sites' patches: SITE's bytes (sites 90-92, 190) on "add sp,4", the "or al,al" after."""
         by_name = {p.name: p for p in ravager.PATCHES}
-        for name, number in SITES.items():
+        for name, number in {**SITES, **SHINOBI_SITE}.items():
             p = by_name[name]
             self.assertEqual((p.original, p.replacement), (bytes.fromhex("83c404"), bytes((0xCD, 0xF5, number))))
             self.assertEqual(struct.unpack_from("<H", self.image, self.sym["site_table"] + 2 * number)[0],
-                             self.sym["el_sphere_di" if number == 90 else "el_sphere_bp"])
+                             self.sym["shinobi_mage" if number == 190 else "el_sphere_di" if number == 90 else "el_sphere_bp"])
 
 
 @unittest.skipIf(Uc is None, "needs unicorn")
@@ -197,15 +220,16 @@ class SequelSpheresTests(unittest.TestCase):
     def test_sites_follow_the_call(self):
         """Each site is right after a call to 62B45h: "push cs / call" in its overlay (62C00h, 628AFh) or
         the far call through its stub (97DC5h's "call 588h:20h"), and the program's only calls to it
-        besides 626B7h's two (its class-is-a-caster test with spells 8 and 73h, no member's sphere)."""
+        besides 626B7h's two (its class-is-a-caster test with spells 8 and 73h, no member's sphere): its
+        first (spell 8, 627D6h) is SHINOBI_MAGE's (site 190), the second (73h) left alone."""
         calls = set()
         for m in re.finditer(rb"\x0e\xe8", self.exe):
             at = m.start() + 1
             if at + 3 + struct.unpack_from("<h", self.exe, at + 1)[0] == self.ROUTINE:
                 calls.add(at + 3)
         calls |= {m.end() for m in re.finditer(re.escape(bytes.fromhex("9a20008805")), self.exe)}
-        sites = {p.offset for p in ravager.PATCHES if p.name in SITES}
-        self.assertEqual(calls - sites, {0x627D6, 0x6281B})
+        sites = {p.offset for p in ravager.PATCHES if p.name in SITES or p.name in SHINOBI_SITE}
+        self.assertEqual(calls - sites, {0x6281B})
         self.assertTrue(sites <= calls)
         for at in sites:
             self.assertEqual(self.exe[at:at + 5], bytes.fromhex("83c4040ac0"))

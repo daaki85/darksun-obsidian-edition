@@ -131,10 +131,11 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 After changing `dos/dsclog.asm`, rebuild DSCLOG with NASM 2.16.01:
 
 ```
-nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
+nasm -f bin -I dos/ -o dos/DSCLOG.EXE dos/dsclog.asm
+nasm -f bin -I dos/ -o dos/DSCLOG2.EXE dos/dsclog2.asm
 ```
 
-The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
+Both include `dos/save_bands.inc` (the saving throws' code and tables), hence `-I dos/`. The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
 and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGve` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.

@@ -230,5 +230,132 @@ class KitTests(unittest.TestCase):
         self.assertTrue(all("Charm" in names[s] or "Domin" in names[s] for s in kits.CHARMS))
 
 
+    OWN = [((9, 7), (6, 6), 8), ((9, 7), (6, 9), 8), ((9, 7, 12), (6, 6, 6), 8), ((11, 12, 17), (6, 6, 7), 3),
+           ((11, 6, 17), (5, 5, 5), 3), ((2,), (7,), 1), ((2,), (14,), 1), ((10,), (7,), 5), ((9,), (5,), 1)]
+
+    def test_own_party(self):
+        """The sequel's own party's features (kits.own_features): OWN_DRUID's AL is kits.own_warden_level
+        (Thy'rokh's druid level, not K'ratchek's), OWN_LIGHT sets AW_HEAVY as kits.own_light_cast (Ar'Anda,
+        not Cilla); none without OWN_BIT, with KIT_OPEN or with the kits' rule off."""
+        heavy = self.sym["aw_heavy"]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, race in self.OWN:
+                for byte in (0x40, 0x00, 0xFF, 0x41):
+                    sheet = wotr_sheet(classes, levels, race, byte)
+                    own = rules and byte != 0xFF and byte & 0x40
+                    with self.subTest(classes=classes, race=race, byte=byte, rules=rules):
+                        got = self.run_routine("own_druid", sheet, eax=0x1234)["eax"] & 0xFF
+                        self.assertEqual(got, kits.own_warden_level(sheet) if own else 0)
+                        self.mu.mem_write(TSR * 16 + heavy, b"\0")
+                        self.run_routine("own_light", sheet)
+                        self.assertEqual(self.mu.mem_read(TSR * 16 + heavy, 1)[0], int(bool(own) and kits.own_light_cast(sheet)))
+        sheet = wotr_sheet((9, 7), (6, 9), 8, 0x40)
+        self.assertEqual((kits.own_warden_level(sheet), kits.own_features(sheet)), (9, kits.OWN_WARDEN))
+        self.assertEqual(kits.own_features(wotr_sheet((9, 7, 12), (6, 6, 6), 8, 0x40)), kits.OWN_FEATURES[kits.THRI_KREEN])
+        self.assertEqual(kits.own_features(wotr_sheet((11, 6, 17), (5, 5, 5), 3, 0x40)), ("Elven Shadow-walker",))
+
+    def frame(self, cls: int, spell: int) -> None:
+        """A frame for SLOT_BEHIND and BEHIND_LEAST at SS:600h: [BP+8] the class, [BP+0Ch] the spell level."""
+        self.mu.mem_write(SS * 16 + 0x608, struct.pack("<HHH", cls, 0, spell))
+
+    def test_slot_behind(self):
+        """SLOT_BEHIND (ADND_SLOTS's: the sheet + DI in ES:BX) makes CL one less for an Elementalist's cleric
+        class (kits.slot_level), SB_BEHIND set, and sets SB_FEWER for a Crusader's priest class; BEHIND_LEAST
+        then takes one slot off with SB_FEWER, and with SB_BEHIND puts the level back and makes no slots 1
+        where the class's own level reaches the spell level (kits.slots). Terrannus (OWN_BIT, a human) is a
+        plain Crusader: one fewer, not a level behind."""
+        cases = [((2,), 0x40, 1), ((2,), 0x43, 1), ((2,), 0x00, 1), ((3,), 0x01, 1), ((3,), 0x03, 1), ((1, 9), 0x04, 1),
+                 ((9, 1), 0x01, 1), ((9, 1), 0x0C, 1), ((11,), 0x40, 1), ((17, 9), 0x40, 1), ((2,), 0xFF, 1),
+                 ((11,), 0x02, 1), ((11, 9), 0x02, 1), ((9, 11), 0x08, 1)]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte, race in cases:
+                for level in (1, 2, 7, 13, 14):
+                    for place in range(len(classes)):
+                        levels = (level,) + (3,) * (len(classes) - 1)
+                        sheet = wotr_sheet(classes, levels, race, byte)
+                        cls = sheet[0x1B + place]
+                        kid = kits.ELEMENTALIST if kits.ELEMENTALIST in kitpages.kit_ids(sheet) \
+                            and kitpages.kit_place_of(sheet, kits.ELEMENTALIST) == place else None
+                        behind = bool(rules) and 1 <= cls <= 4 and kid is not None
+                        fewer = bool(rules) and (1 <= cls <= 8 and kits.CRUSADER in kitpages.kit_ids(sheet)
+                                                 or cls == 11 and kits.BATTLE_MAGE in kitpages.kit_ids(sheet))
+                        self.frame(cls, 1)
+                        got = self.run_routine("slot_behind", sheet, ecx=0x1100 | levels[place], ebp=0x600,
+                                               edi=place, ebx=0x500 + place)
+                        want = kits.slot_level(kits.ELEMENTALIST if behind else 0, levels[place])
+                        with self.subTest(classes=classes, byte=byte, level=level, place=place, rules=rules):
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_behind"], 1)[0], int(behind))
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_fewer"], 1)[0], int(fewer))
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1100 | want)
+                            self.assertEqual(got["ebx"] & 0xFFFF, 0x500 + place)
+        for adnd in (True, False):  # (RULE_HI_TABLES, 8, on and off)
+            self.rules(game.RULE_KITS >> 16 | (8 if adnd else 0))
+            for level in range(1, 20):
+                for spell in range(1, 8):
+                    for given in (0, 1, 3):
+                        self.frame(2, spell)
+                        self.mu.mem_write(SS * 16 + 0x700, bytes((max(0, level - 1), 17)))
+                        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\1\0")
+                        self.mu.mem_write(TSR * 16 + self.sym["sb_level"], bytes((level,)))
+                        got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+                        with self.subTest(level=level, spell=spell, given=given, adnd=adnd):
+                            self.assertEqual(got, kits.slots(kits.ELEMENTALIST, kits.PRIEST, level, spell, given, adnd))
+                            self.assertEqual(self.mu.mem_read(SS * 16 + 0x700, 1)[0], level)
+        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\0\1")  # (a Crusader's: one fewer, 0 kept)
+        for given in range(5):
+            self.frame(2, 1)
+            got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+            self.assertEqual(got, kits.slots(kits.CRUSADER, kits.PRIEST, 7, 1, given))
+        self.assertEqual(kitpages.kit_ids(wotr_sheet((2,), (7,), 1, 0x43)), [kits.CRUSADER])  # (Terrannus's byte)
+
+    def test_kit_table(self):
+        """SLOT_BEHIND sets SB_TABLE for a Seeker's or Justifier's own ranger class and a Shinobi's own
+        thief class, awake, the kits' rule on (and for no other class or sheet); KIT_TABLE then gives
+        kits.slots's own tables for the class's level CL at every spell level, whatever the game gave, and
+        keeps AX with no table. A Justifier of 8th or 9th ranger level has none (the ranger's first slot
+        would cast at level 0: the caster level routine's "sub dx,9"). A Battle Mage's wizard slots are 1
+        fewer through BEHIND_LEAST (kits.slots), its other classes' kept."""
+        tables = {kits.SEEKER: 1, kits.JUSTIFIER: 2, kits.SHINOBI: 3}
+        cases = [((13,), 3), ((14,), 2), ((15,), 1), ((16,), 0), ((17,), 3), ((17,), 2), ((11,), 2), ((1,), 3),
+                 ((13, 9), 0x0C), ((9, 13), 0x03), ((9, 17), 0x03), ((17, 9), 0x0C), ((13,), 0xFF), ((13,), 0x43)]
+        seen = set()
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte in cases:
+                for level in (1, 5, 6, 8, 9, 10, 13, 14, 15, 16, 20, 30):
+                    for place in range(len(classes)):
+                        levels = tuple(level if p == place else 4 for p in range(len(classes)))
+                        sheet = wotr_sheet(classes, levels, 1, byte)
+                        cls = sheet[0x1B + place]
+                        kid = next((k for k in tables if k in kitpages.kit_ids(sheet)
+                                    and kitpages.kit_place_of(sheet, k) == place), None)
+                        if not rules or kid == kits.SHINOBI and cls != 17 or kid in (kits.SEEKER, kits.JUSTIFIER) and not 13 <= cls <= 16:
+                            kid = None
+                        self.frame(cls, 1)
+                        self.run_routine("slot_behind", sheet, ecx=0x1100 | level, ebp=0x600, edi=place, ebx=0x500 + place)
+                        with self.subTest(classes=classes, byte=byte, level=level, place=place, rules=rules):
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_table"], 1)[0], tables.get(kid, 0))
+                        magic = kits.WIZARD if cls in (11, 17) else kits.PRIEST
+                        for spell in range(1, 10):
+                            for given in (0, 1, 4):
+                                self.frame(cls, spell)
+                                got = self.run_routine("kit_table", bytes(8), eax=given, ecx=0x1100 | level, ebp=0x600)
+                                want = kits.slots(kid, magic, level, spell, given) if kid else given
+                                with self.subTest(classes=classes, byte=byte, level=level, spell=spell, given=given):
+                                    self.assertEqual(got["eax"] & 0xFFFF, want)
+                                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1100 | level)
+                                if kid and want:
+                                    seen.add(kid)
+        self.assertEqual(seen, set(tables))
+        self.assertEqual([kits.slots(kits.JUSTIFIER, kits.PRIEST, lv, 1, 1) for lv in (8, 9, 10)], [0, 0, 1])
+        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\0\1")  # (a Battle Mage's: one fewer, 0 kept)
+        for given in range(5):
+            self.frame(11, 1)
+            got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+            self.assertEqual(got, kits.slots(kits.BATTLE_MAGE, kits.WIZARD, 7, 1, given))
+
+
 if __name__ == "__main__":
     unittest.main()

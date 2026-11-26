@@ -4,7 +4,7 @@ druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Da
 The game's own: a gladiator on the fighter's XP, a ranger's and a thief's 2nd level 2,200 and 1,200
 (its table is in hundreds), priests' THAC0 2/3 a level, slot tables of its own."""
 
-from typing import Optional
+from typing import Optional, Sequence, Tuple
 
 # the game's class rows (its XP table, View Character's copy of a sheet): 1-8
 ROWS = ("cleric", "druid", "fighter", "gladiator", "preserver", "psionicist", "ranger", "thief")
@@ -154,13 +154,14 @@ def rav_slots(cls: int, level: int, spell_level: int) -> Optional[int]:
     return row[spell_level - 1] if 1 <= spell_level <= len(row) else 0
 
 
-# The sequel's saving throws (DSCLOG2's SAVE_BASE, RULE_HI_TABLES): the Player's Handbook's (2nd
-# edition, Table 60) by the game's class groups (0 priest, 1 warrior, 2 wizard, 3 rogue: thieves and
-# psionicists, as Dark Sun has them) and level, each band (first level, the five saves: paralysis,
-# poison and death; rod, staff and wand; petrification and polymorph; breath; spell). The game's own
-# (954D2h: the 1st level's save less (level - 1) x a rate / 100) took the table's last row as the most
-# a save could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and a priest's
-# paralysis save at 8 from 9th; no save of any class went below 8.
+# The saving throws in both games (DSCLOG's and DSCLOG2's SAVE_BASE, RULE_HI_TABLES): the Player's
+# Handbook's (2nd edition, Table 60) by the game's class groups (0 priest, 1 warrior, 2 wizard, 3 rogue)
+# and level, and the psionicists' own (Dark Sun's Table 8: SAVE_PSIONICIST, a fifth band set), each band
+# (first level, the five saves: paralysis, poison and death; rod, staff and wand; petrification and
+# polymorph; breath; spell). The games' own (SL's 877EBh, the sequel's 954D2h: the 1st level's save
+# less (level - 1) x a rate / 100) took the table's last row as the most a save could improve by, so a
+# warrior stayed at 11/11/11/13/11 from 10th level and no save of any class went below 8; and they put
+# psionicists with thieves (group 3, at the best level of either).
 RAV_SAVE_BANDS = (
     ((1, (10, 14, 13, 16, 15)), (4, (9, 13, 12, 15, 14)), (7, (7, 11, 10, 13, 12)), (10, (6, 10, 9, 12, 11)),
      (13, (5, 9, 8, 11, 10)), (16, (4, 8, 7, 10, 9)), (19, (2, 6, 5, 8, 7))),
@@ -171,14 +172,31 @@ RAV_SAVE_BANDS = (
      (21, (8, 3, 5, 7, 4))),
     ((1, (13, 14, 12, 16, 15)), (5, (12, 12, 11, 15, 13)), (9, (11, 10, 10, 14, 11)), (13, (10, 8, 9, 13, 9)),
      (17, (9, 6, 8, 12, 7)), (21, (8, 4, 7, 11, 5))),
+    ((1, (13, 15, 10, 16, 15)), (5, (12, 13, 9, 15, 14)), (9, (11, 11, 8, 13, 12)), (13, (10, 9, 7, 12, 11)),
+     (17, (9, 7, 6, 11, 9)), (21, (8, 5, 5, 9, 7))),
 )
-RAV_SAVE_LEVELS = 21  # (DSCLOG2's SAVE_TABLE: a row a level 1-21, more is 21st's)
+SAVE_PSIONICIST = 4  # (RAV_SAVE_BANDS' psionicists' set)
+RAV_SAVE_LEVELS = 21  # (the tables' last band starts at 21st at most: more is the last's)
 
 
-def rav_saves(group: int, level: int) -> tuple:
-    """The five saves of class group GROUP (0-3) at LEVEL (1 and up), the Player's Handbook's."""
-    out = RAV_SAVE_BANDS[group][0][1]
-    for first, saves in RAV_SAVE_BANDS[group]:
+def rav_saves(group: int, level: int, psionicist: bool = False) -> tuple:
+    """The five saves of class group GROUP (0-3) at LEVEL (1 and up), the Player's Handbook's; a
+    psionicist's (PSIONICIST, in group 3) Dark Sun's."""
+    bands = RAV_SAVE_BANDS[SAVE_PSIONICIST if psionicist else group]
+    out = bands[0][1]
+    for first, saves in bands:
         if level >= first:
             out = saves
     return out
+
+
+def class_saves(classes: Sequence[Tuple[int, int]]) -> tuple:
+    """A character's five saves from its (class, level) pairs (the game's class numbers: 1-8 priests,
+    9, 10 and 13-16 warriors, 11 the preserver, 12 the psionicist, 17 the thief): the best of each
+    class's, as SAVE_BASE makes them (the game keeps the best of its groups)."""
+    groups = {**{c: 0 for c in range(1, 9)}, 9: 1, 10: 1, 11: 2, 12: 3, **{c: 1 for c in range(13, 17)}, 17: 3}
+    rows = [rav_saves(groups[c], level, c == PSIONICIST_CLASS) for c, level in classes if c in groups and level > 0]
+    return tuple(min(row[k] for row in rows) for k in range(5))
+
+
+PSIONICIST_CLASS = 12
