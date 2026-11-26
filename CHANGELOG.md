@@ -59,6 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Added: Wake of the Ravager's new wizard spells, part 1 (their records)**
+- The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) have their
+  records, icons and descriptions in the Loader's copy of the sequel's RESOURCE.GFF, as spells 320-325
+  (DATA 320-325, ICON 21320-21325, SPIN 321-326: the sequel has no six free wizard numbers below 120). The
+  icons are Shattered Lands' drawn ones in the sequel's colours. Not castable yet: the helper's part (who
+  knows them, the wizard-spell compares, their effects) is still to come. The new spells' switch leaves
+  them out (`dsloader/ravspells.py`).
+
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
   spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
