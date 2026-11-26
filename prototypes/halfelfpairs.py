@@ -8,7 +8,7 @@ import outfits
 from dsloader import classoutfits as co, figures
 from outfitdetail import RAMPS, HALFTONES
 from thiefhood import OLD_SLATE
-from multiclasscolor import HOOD_DYES, hood_class
+from multiclasscolor import TEAL_SCALE, HOOD_DYES, hood_class
 
 # Order the gallery by the single whose silhouette carries the second detail.
 BASE_ORDER = ("Thief", "Cleric", "Druid", "Preserver", "Ranger", "Fighter")
@@ -129,6 +129,13 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
     blocked = set(fields.regions[co.FOREARM] + fields.regions[co.BOW]
                   + fields.regions[co.LEFT_FOOT] + fields.regions[co.RIGHT_FOOT])
     back = figures.mover_back(fig.maker.cuts[bool(cb), frame])
+    if base == "Fighter" and accent == "Psionicist":
+        cap = set(fields.regions[co.ARMS]) - blocked - set(fields.head)
+        for y, row in enumerate(out):
+            for x, color in enumerate(row):
+                if (color in TEAL_SCALE and color != body[y][x]
+                        and (back(x-pad, y-pad), y-pad) in cap):
+                    row[x] = TEAL_SCALE[color]
     height = len(out) - pad
     if pose == 28:
         shoulder, waist = (7, 12) if female else (7, 14)

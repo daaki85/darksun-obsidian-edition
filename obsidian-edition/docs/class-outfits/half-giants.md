@@ -29,7 +29,7 @@ The study uses retail pictures 2072/2073 for the man and 2074/2075 for the woman
 
 In rear walk step 2 (08), look just below the woman’s hair and above the Gladiator strap. The cleaned nape follows the neck shadow into the shoulder. The same harness edge showed in the man’s rear views. The correction is shared by the singles and pairs. [Compare the nape and the Cleric/Fighter at game size](halfling-half-giant-fit-review.png)
 
-The woman’s Fighter and Gladiator guards follow the slope of her upper arm in each pose. In profile walk steps 2 and 3, the pin moves back with the shoulder as the elbow swings forward. In rear strike 2 her hair and raised arm cover the plate. The Fighter/Psionicist follows the same fitting in teal. [Compare the body, previous guard and revised guard through all 29 poses](half-giant-shoulder-fit.gif)
+The woman’s Fighter and Gladiator guards follow the slope of her upper arm in each pose. In profile walk steps 2 and 3, the pin moves back with the shoulder as the elbow swings forward. In rear strike 2 her hair and raised arm cover the plate. The Fighter/Psionicist follows the same fitting in teal. On the man in bow pose 26, the pin moves up onto the drawing shoulder as the elbow rises. [Inspect the bow against the retail figure and body base](half-giant-bow-shoulder.png). [Compare the body, previous guard and revised guard through all 29 poses](half-giant-shoulder-fit.gif)
 
 ## Two-class outfits
 

@@ -44,3 +44,8 @@ def dye_fitted_hoods(outfits, points):
                     result[y][x] = dye[color]
             dressed[name] = result
     return dressed
+
+# The worn tip stays ivory. The warmer midtones of undyed bone become the
+# teal glint and cool underside shared by the Psionicist's fittings.
+TEAL_SCALE = {88: 208, 207: 208, 204: 17, 205: 69, 194: 70, 206: 71, 168: 71,
+              121: 40, 61: 40, 199: 72, 125: 73, 62: 199, 63: 199, 155: 62}

@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw
 
 import dwarfoutfits as dwarf
 import outfits
-from multiclasscolor import hood_class
+from multiclasscolor import TEAL_SCALE, hood_class
 from elfcloak import lifted_hem
 from dsloader import classoutfits, figures, sprites
 
@@ -360,6 +360,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     guard_ramp = dwarf.BONE
     if "Preserver" in members and "Fighter" in members and "Cleric" not in members:
         guard_ramp = (112, 58, 121, 155)
+    elif "Psionicist" in members and "Fighter" in members and "Cleric" not in members:
+        guard_ramp = tuple(TEAL_SCALE[c] for c in dwarf.BONE)
     hood_center = cx
     if model == figures.ELF_WOMAN and pose in FLYING_HOODS:
         left, right = FLYING_HOODS[pose][2]

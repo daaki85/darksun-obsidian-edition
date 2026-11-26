@@ -9,7 +9,7 @@ import halflingstudy as fit
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
-from multiclasscolor import dye_fitted_hoods
+from multiclasscolor import TEAL_SCALE, dye_fitted_hoods
 
 GROUPS = {
     "cleric": ("Cleric/Fighter", "Cleric/Psionicist", "Cleric/Ranger", "Cleric/Thief"),
@@ -52,7 +52,8 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
     wrap = accent == "Psionicist"
     if above_belt:
         hy -= 2
-    protected = singles.hood(pose)[0] | fit.head_pixels(pose)
+    head = fit.head_pixels(pose)
+    protected = singles.hood(pose)[0] | head
     gx, gy = fit.SHOULDER[pose]
     for v, row in enumerate(out):
         for u, c in enumerate(row):
@@ -66,6 +67,11 @@ def waist_detail(game, pose, rows, base, accent, dx, dy, grain, above_belt=False
                 if not hidden:
                     bone = rows["Fighter"][v][u]
                     out[v][u] = DRUID_GUARD[bone] if base == "Druid" else bone
+            if (wrap and base in ("Fighter", "Fighter/Thief") and c in fit.BONE
+                    and c == rows["Fighter"][v][u] and c != rows["Body base"][v][u]
+                    and (x, y) not in head
+                    and 0 <= y-gy <= 2 and abs(x-gx) <= (2 if y-gy == 1 else 1)):
+                out[v][u] = TEAL_SCALE[c]
             # Clip the fitting to visible cloth over the pelvis. The trailing
             # end of the profile cloak passes behind the hip and carries no belt.
             if (c not in CLOTH or c == rows["Body base"][v][u] or (x, y) in protected

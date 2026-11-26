@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from multiclasscolor import LEAF_BONE, dye_fitted_hoods
+from multiclasscolor import TEAL_SCALE, LEAF_BONE, dye_fitted_hoods
 import mulfront
 import mulsingles as singles
 import mulstudy as fit
@@ -69,20 +69,27 @@ def draw(game, pose, swatches):
         out = [row[:] for row in rows[base]]
         wrap = accent == "Psionicist"
         ramp = singles.TEAL if wrap else BELT
-        if not wrap:
+        tint_scale = wrap and base in ("Fighter", "Fighter/Thief")
+        if not wrap or tint_scale:
+            left_edge = gx-4 if tint_scale else gx-3
             for y in range(gy-2, gy+4):
-                for x in range(gx-3, gx+5):
+                for x in range(left_edge, gx+5):
                     u, v = pixel(x, y)
                     if not (0 <= v < h and 0 <= u < len(out[v])):
                         continue
                     bone = rows["Fighter"][v][u]
                     # Hide and bone share shadow colours. Transfer those
                     # shadows only within the actual shoulder scale.
-                    if bone in fit.JERKIN and not fit.bone_surface(x, y, gx, gy, inward, profile_guard):
+                    surface = fit.bone_surface(x, y, gx, gy, inward, profile_guard)
+                    if (bone in fit.JERKIN or tint_scale) and not surface:
                         continue
                     if (bone in fit.BONE and bone != body[v][u] and body[v][u] is not None
                             and not ("Thief" in base and (x, y) in hood)):
-                        out[v][u] = DRUID_GUARD[bone] if base.startswith("Druid") else bone
+                        if tint_scale:
+                            if out[v][u] == bone:
+                                out[v][u] = TEAL_SCALE[bone]
+                        else:
+                            out[v][u] = DRUID_GUARD[bone] if base.startswith("Druid") else bone
         # The band lies on visible garment pixels over the pelvis. Let the
         # parent's armhole, passing hand and free cloak corner occlude it.
         for y in range(wy-5, wy+6):

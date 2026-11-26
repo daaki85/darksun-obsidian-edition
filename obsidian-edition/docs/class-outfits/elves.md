@@ -64,7 +64,7 @@ Elves can combine Cleric, Fighter, Preserver, Psionicist, Ranger, and Thief in p
 | Eight triples, starting with Cleric/Fighter/Preserver | [Triple gallery A](elf-3-a.gif) | [Frame sheet](elf-3-a-frames.png) |
 | Eight triples, ending with Psionicist/Ranger/Thief | [Triple gallery B](elf-3-b.gif) | [Frame sheet](elf-3-b-frames.png) |
 
-The Psionicist/Thief hood uses teal, and the Fighter/Preserver/Thief hood follows the plum mantle. Follow the hood to spot a Thief and the teal sash for a Psionicist. A Fighter wears a dark sword belt over the cream Cleric robe or a leather strap fastened with bone on the Preserver mantle. A Ranger paired with a Preserver shows green lining along the open edge and hem.
+The Fighter/Psionicist shoulder cap picks up the teal sash. On Fighter/Preserver the cap has plum shadows and a pale ridge. The Psionicist/Thief hood uses teal, and the Fighter/Preserver/Thief hood follows the plum mantle. Follow the hood to spot a Thief and the teal sash for a Psionicist. A Fighter wears a dark sword belt over the cream Cleric robe or a leather strap fastened with bone on the Preserver mantle. A Ranger paired with a Preserver shows green lining along the open edge and hem.
 
 ## Profile walk and outfit details
 
