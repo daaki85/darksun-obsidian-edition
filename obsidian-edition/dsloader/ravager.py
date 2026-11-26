@@ -788,6 +788,14 @@ PATCHES: Tuple[Patch, ...] = (
     # ADND_SLOTS (site 34) its slots; DSCLOG2's SHINOBI_MAGE (site 190) answers yes for a Shinobi's thief
     # class at its "add sp,4" (627D6h, the member SI), the "or al,al" after kept.
     Patch("shinobi_mage", 0x627D6, bytes.fromhex("83c404"), _site(190, 3)),
+    # ... and a Shinobi's wizard spells (SL's SHINOBI_WIZARD, LV_SHINOBI, PROBE_PICK_*, SHINOBI_READ): DSCLOG2's
+    # THE SHINOBI'S SPELLS. EL_SPHERE's three sites answer yes for its thief class and a wizard spell (the USE
+    # screen's MAGE list, the cast); SHINOBI_CAST_LEVEL (site 209) at the caster level routine's "add sp,4"
+    # after its call for a class's level (97DF1h, 98h:0C1h's: SL's 81B16h's loop), its thief level less 5;
+    # SHINOBI_LEVEL_UP (site 210) at the level up's "cmp word [bp+8],0Bh" (957ABh, the preserver's spell pick,
+    # SL's PROBE_LV_PICK's place), on to CHOOSE A SPELL at a thief level up from 6th, its own spells alone
+    Patch("shinobi_cast_level", 0x97DF1, bytes.fromhex("83c404"), _site(209, 3)),
+    Patch("shinobi_level_up", 0x957AB, bytes.fromhex("837e080b"), _site(210, 4)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
