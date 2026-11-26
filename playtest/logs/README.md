@@ -186,6 +186,7 @@ schedules and diffs a log made or used.
 | [2026-11-24](2026-11-24-darkfix-beta-qa.md) | OpenDS darkfix beta.4 in the stock game: the sewer grate |
 | [2026-11-26](2026-11-26-ravager-spec-pick.md) | Picking weapon specs at creation in Wake of the Ravager: a fighter's lotulis, a gladiator's three, a thief offered none, EDIT keeping and adding picks, EXIT's defaults, the specs from the roster in the Tyr ambush (+1/+2 specialized, +3 mastery), the RAV_SKIP control |
 | [2026-11-26](2026-11-26-ravager-starting-gear.md) | A new character's weapon in the weapon hand in Wake of the Ravager: the starting gear's table (43680h) patched (`gear_hands`), a fighter's +1 long sword in the right hand and the shield in the left, a psionicist's club in the right; a long sword specialist 2 a round in the Tyr ambush with nothing moved by hand, against the control's 1 (RAV_SKIP); the first pick's starting weapon left open |
+| [2026-11-26](2026-11-26-codex-break-review.md) | Codex's Ravager map controls and Whirlwind in play: the middle-button drag, the fight camera against its control, Whirlwind's funnel, damage and saves on Tyr's thieves |
 
 ## files/
 
@@ -220,3 +221,4 @@ schedules and diffs a log made or used.
 | [2026-11-25-ravager-level-cap-step.sh](files/2026-11-25-ravager-level-cap-step.sh) | [The level cap's levels 21-30](2026-11-25-ravager-level-cap.md): the level ups clicked through in the second game's kit (`/tmp/playtest/lckit`, display `:58`): CHOOSE A SPELL's first spell, the powers' pop-up's first power, else the box, told apart by colour |
 | [2026-11-25-ravager-level-cap-roost.sh](files/2026-11-25-ravager-level-cap-roost.sh) | [The same](2026-11-25-ravager-level-cap.md): `ravager-roost` loaded in that kit with the dice log, then (`RESTGO=1`) Reyhan's night; its corridor steps missed the doorway in the play, which went on by hand (the log's RESEARCH note has the clicks) |
 | [2026-11-25-ravager-fight-keys-run.sh](files/2026-11-25-ravager-fight-keys-run.sh) | [R, F10 and Alt in the sequel](2026-11-25-ravager-fight-keys.md): a throwaway copy (ravFK) through the Loader's start, the four added, a new game to the Tyr ambush with HP 250 (a test edit, never saved) and the dice log (DICE_ENV: RAV_NO_SQUARES=1 and the like, the control) |
+| [2026-11-26-codex-review-air-cleric.py](files/2026-11-26-codex-review-air-cleric.py) | [Codex's branches in play](2026-11-26-codex-break-review.md): the second member an air cleric of 18th level with 6th-level casts (a test edit, never saved) |
