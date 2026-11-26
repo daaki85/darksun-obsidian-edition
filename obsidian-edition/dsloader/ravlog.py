@@ -26,7 +26,7 @@ from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
-    targeting, textlog, usable
+    pickpocket, targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -311,12 +311,37 @@ def rav_weapon(gd, sheet: bytes, kind: int, read):
     return None
 
 
+# Picking pockets (pickpocket.pocket_sized): the sequel's item types keep Shattered Lands' weight byte (SL's
+# word +4, the sequel's +2) for few of its own (the mod's types and some of the game's: 10 a dagger, 50 a
+# polearm), 0 for the rest (its dagger, long sword, shield and armour alike, 2026-11-26: the Caravan Master's
+# Obsidian Longsword lifted). So a type with a weight goes by it (MAX_WEIGHT or less); one without, by its
+# kind: no shield nor armour, a weapon whose damage is RAV_POCKET_DAMAGE or less at most (a dagger's 1d4,
+# darts, a sling: not a long sword's 1d8), anything else (rings, amulets, potions, scrolls) small.
+RAV_POCKET_DAMAGE = 4
+
+
+def rav_pocket_sized(typ: bytes) -> bool:
+    from . import pickpocket, restrict
+    weight, = struct.unpack_from("<H", typ, pickpocket.TYPE_WEIGHT)
+    if weight:
+        return weight <= pickpocket.MAX_WEIGHT
+    if restrict.is_shield(typ) or typ[restrict.TYPE_KIND_FLAGS] & restrict.ARMOUR:
+        return False
+    if typ[0] & pickpocket.WEAPON_KINDS:
+        return typ[0x0C] * max(1, typ[0x0D]) <= RAV_POCKET_DAMAGE
+    return True
+
+
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, loot, ring, startgear
+    from . import icons, itemgate, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
+            # (picking pockets: none of Shattered Lands' people or weapons, its type and name numbers the
+            # sequel's others)
+            pickpocket: {"LIFTABLE_TYPES": (), "LIFTABLE_NAMES": {}, "OWN_POCKETS": (),
+                         "pocket_sized": rav_pocket_sized},
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
             icons: {"fit": lambda gd, item: None},
             startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
@@ -1092,6 +1117,12 @@ def wotr_folder(given: Optional[str]) -> Optional[str]:
 
 
 KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from the header's +350 (DSCLOG's)
+# Picking pockets (pickpocket.py; DSCLOG2's PICK POCKETS, sites 180-186): its header's own words past the
+# others' (DSCLOG's are at +176 to +189 there): +2000 PICK_ON (PICK_BUTTON), +2002 PICK_SEQ, +2004 PICK_REPLY,
+# +2006 PICK_WHO (the map's thing), +2008 PICK_THIEF (the party member), +2010 PICK_TAKEN, +2012 PICK_TEXT's
+# offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
+PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
+PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -1649,6 +1680,8 @@ class RavDiceLog(dicelog.DiceLog):
         Dialogue and Journal tabs and the "Message:" lines (_take_text, DSCLOG2's TEXT; the journal its own
         chain: _journal_sync): the rest reads and writes what isn't ported yet."""
         out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
+        self._step(self._forget_undone_picks)  # (pockets tried since the save loaded: forgotten)
+        out += self._step(self._answer_pick)  # (a thief's Pick Pockets button: DSCLOG2's PICK POCKETS, PP_HAND waits)
         out += self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -1750,6 +1783,64 @@ class RavDiceLog(dicelog.DiceLog):
             self.guest.write(hdr + dicelog.TSR_GEAR_GIVEN, bytes((given,)))
         self.guest.write(hdr + dicelog.TSR_GEAR_DUE, b"\0")
         return out
+
+    def _answer_pick(self) -> List[str]:
+        """Shattered Lands' Pick Pockets button (DiceLog._answer_use's PICKED_BY: pickpocket.attempt), on
+        DSCLOG2's PICK POCKETS: PICK_ON (its header's +2000) set while the helper has it; someone clicked on
+        with the thief's pointer (PICK_SEQ, +2002, ahead of PICK_REPLY), their pocket tried by that thief
+        (PICK_THIEF), the item gate held and the request looked at again before anything is moved (one
+        DSCLOG2 gave up waiting for is dropped); what came of it into PICK_TEXT (+2012's), PICK_TAKEN set
+        and PICK_REPLY given PICK_SEQ. No XP and no purse's sound (the sequel's helper has neither)."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        hdr = self.tsr_hdr
+        text_off, = struct.unpack("<H", self.guest.read(hdr + PP_TEXT_OFF, 2))
+        if not text_off:
+            return []  # (a helper before PICK POCKETS)
+        base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        want = [(hdr + PP_ON, PP_TEXT_OFF - PP_ON), (base + text_off, dicelog.PICK_SIZE)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        if self.guest.read(hdr + PP_ON, 2) != struct.pack("<H", dicelog.PICK_BUTTON):
+            self.guest.write(hdr + PP_ON, struct.pack("<H", dicelog.PICK_BUTTON))
+        seq = self.guest.read(hdr + PP_SEQ, 2)
+        if seq == self.guest.read(hdr + PP_REPLY, 2):
+            return []
+        result = None
+        try:
+            thing, thief = struct.unpack("<HH", self.guest.read(hdr + PP_WHO, 4))
+            with self._items_writable():
+                itemgate.hold(self.game)  # (held, DOSBox paused, before anything is moved)
+                try:
+                    if self.guest.read(hdr + PP_REPLY, 2) == seq:
+                        return []  # (DSCLOG2 gave up waiting: the talk went on, nothing moved)
+                    it = ring.Items(self.game)
+                    kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
+                    if self._fighting():
+                        result = pickpocket.Attempt(pickpocket.NOT_IN_A_FIGHT, [])
+                    elif kind == 2:
+                        creatures = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+                        lists = (creatures + index * game.CREATURE_SIZE + game.CREATURE_ITEM_LISTS[0], 6)
+                        self.guest.writable = self.guest.writable + [lists]  # (the person's lists, emptied)
+                        result = pickpocket.attempt(self.game, self.picked, who=index, thief=thief & 0xFF)
+                    if result is None:
+                        result = pickpocket.Attempt("There are no pockets to pick there.", [])
+                finally:
+                    itemgate.release(self.game)
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its item lists: answered in a later pass)
+        except (struct.error, IndexError, ValueError):
+            result = None
+        text = (result.text if result else "").encode("cp437", "replace")[:dicelog.PICK_SIZE - 1]
+        self.guest.write(base + text_off, text + b"\0")
+        self.guest.write(hdr + PP_TAKEN, struct.pack("<H", int(result is not None)))
+        self.guest.write(hdr + PP_REPLY, seq)
+        if not result:
+            return []
+        if result.key:
+            self._remember_pick(result.key)
+        if result.text and result.text not in self._own_text:  # (not dialogue: the Dialogue tab leaves it out)
+            self._own_text.append(result.text)
+        return result.log or [result.text]
 
     def _stock_pass(self, now: float) -> List[str]:
         """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the

@@ -1803,6 +1803,28 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
 (75,171) is the inventory, whose Computer Control icons are the lower small ones left of the portraits (6,17 /
 6,65 / 6,113 / 6,161), View Character's 47,53 / 98,53 / 47,113 / 98,113.
 
+**Picking pockets in the sequel** (2026-11-26, logs/2026-11-26-ravager-pick-pockets.md): DSCLOG2's PICK POCKETS
+(sites 180-186) puts SL's purse in the place of the sequel's Turn Undead button. What it needed from the sequel:
+- **Turn Undead's button**: the routine that shows the USE screen's buttons (97AC8h) tests the element word DS:9C1Ch
+  at 97AF4h (pp_show: a thief out of a fight gets element 9 and icon 3048 in DS:9D77h); the handler 9756Eh (end
+  9772Bh): its pressed byte DS:9D76h tested at 97623h (pp_click), the icon read at 9767Bh (pp_lit) and 97716h
+  (pp_info, the right click's box skipped to 97726h), "push dword 132FFFFh" at 97699h (pp_arm: the purse arms the
+  pointer and leaves by 9772Bh), the name "push ds / push 2D08h" ("TURN UNDEAD") at 975CBh and 97702h (pp_text).
+  The button's cache DS:2B9Ah keeps a member's button: let go when the purse was shown, or a cleric viewed next
+  shows the purse. The sheet's far pointer for the member shown is DS:1429h; the fight word QS_FIGHT_SEG 3C10h +19h.
+- **The pointer**: the sequel's mode DS:1440h 2 is the look pointer (SL's 2 is a pick-pocket pointer of its own); a
+  click with it runs the talk routine 630F0h (SL's 5ECD0h; its end 6373Fh), patched at 630F8h (pp_hand: an armed
+  pick asks the Loader and shows its answer through the overlay frame, as unlook's window). A right click (mode 1)
+  disarms (probe_pointer's pp_disarm). The thing under the click: the combatants' kinds at 388h:C33h (2 a creature).
+- **The Loader's side**: `_answer_pick` under itemgate (the NPC's item-list head made writable), SL's
+  `pickpocket.attempt` with the sequel's layout: LIFTABLE_TYPES/NAMES and OWN_POCKETS empty, and
+  `pocket_sized = ravlog.rav_pocket_sized`, since **the sequel's item types have no weight** (the byte at raw +2, SL's
+  word +4, is 0 for its dagger, long sword, shield and armour): without it a long sword came out of a pocket.
+- **Testing it**: `RAV_PICK_ROLL=N` on `ravdice.py` fixes every pick's d100 (1 a success, 100 caught). The header's
+  words from +2000 (on, seq, reply, who, thief, taken, text offset, shown, armed, late): late counts picks the Loader
+  didn't answer in time (0 in the play). The purse is ICON 3048 in the Loader's RESOURCE copy (`RAV_SKIP=pick_icon`
+  leaves it out).
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
