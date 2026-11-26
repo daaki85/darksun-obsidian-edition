@@ -134,6 +134,7 @@ schedules and diffs a log made or used.
 | [2026-11-22](2026-11-22-elf-outfits.md) | Elf faces, all 37 builds, equipment checks, and four staged figures in DOSBox |
 | [2026-11-23](2026-11-23-dwarf-human-outfits.md) | Four equipped dwarf and human outfit renders staged in the slave pens |
 | [2026-11-25](2026-11-25-class-equipment.md) | Weapon and armor tests, including two equipped lineups staged in DOSBox |
+| [2026-11-26](2026-11-26-soft-armor.md) | The half-giant Psionicist and human Priest in four armor materials on the DOSBox map |
 
 ## files/
 
