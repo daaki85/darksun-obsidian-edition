@@ -51,6 +51,10 @@ And always:
   guide's rule 10).
 - **Never cut steps out of a bigger script with sed** (its header may restart the game): use the
   small tools.
+- **A game in DOSBox-X** (the Options tab's other engine) is always a game of its own: `PT_DISPLAY`
+  and `PLAYTEST_WORK` set, `start_dosboxx.sh /path/to/dosbox-x` (or `dbxadopt.sh` for one the
+  Loader started); the tools find it by `$PLAYTEST_WORK/dsun.pid` and read its memory file.
+  `start.sh` and `loadsave.sh` are the shared game's (they kill every process named dosbox).
 - **A second DOSBox must run under another name** (a copy of the program, as `picpattern.sh`'s
   `dbpat`): the tools attach to the newest process named dosbox and `start.sh` kills them all.
 - **Press Escape only with a screen or menu up** (with nothing open it brings EXIT: SAVE GAME?), and
