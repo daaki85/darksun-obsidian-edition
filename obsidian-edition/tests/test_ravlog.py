@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, kits, ravager, ravlog  # noqa: E402
+from dsloader import aging, dicelog, game, kits, ravager, ravlog, ravspells  # noqa: E402
 
 
 class FakeGuest:
@@ -36,8 +36,9 @@ class ProfileTests(unittest.TestCase):
         layout = ravlog.layout()
         self.assertEqual((layout["KIT_SHEET"], layout["KIT_BYTE"], layout["NEW_KNOWN_SHEET"], layout["SPHERE2"]),
                          (0x3D, 0x3D, 0x3F, 0x3F))
-        self.assertEqual(layout["NEW_KNOWN"][game.FRIENDS_SPELL], (0x3D, 0x80))
-        self.assertEqual(layout["NEW_KNOWN"][game.FOG_SPELL], (0x3F, 0x40))
+        self.assertEqual(layout["NEW_KNOWN"][ravspells.FRIENDS], (0x3D, 0x80))  # (the sequel's numbers, 320-325)
+        self.assertEqual(layout["NEW_KNOWN"][ravspells.FOG], (0x3F, 0x40))
+        self.assertEqual((layout["GRACE_SPELL"], layout["FRIENDS_EFFECT"]), (320, 116))
         sl = (game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2, dict(game.NEW_KNOWN))
         ravlog.apply_layout()
         self.assertEqual((game.KIT_SHEET, game.NEW_KNOWN_SHEET, kitpages.KIT_BYTE, kits.SPHERE2), (0x3D, 0x3F, 0x3D, 0x3F))

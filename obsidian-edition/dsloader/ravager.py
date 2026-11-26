@@ -98,7 +98,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
                 | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES
-                | game.RULE_LEVEL_10)
+                | game.RULE_LEVEL_10 | game.RULE_NEW_SPELLS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -921,6 +921,16 @@ PATCHES: Tuple[Patch, ...] = (
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
+    # The new wizard spells (ravspells: 320-325, RULE_NEW_SPELLS): DSCLOG2's NEW SPELLS. The USE screen's list
+    # of a level's spells (62500h) gets the new ones its member knows first, where it starts its count (6254Fh:
+    # "xor si,si / cmp di,[bp-2]": NS_LIST); "does member know spell" (6260Ah) answers a new one from the sheet's
+    # bits (62625h: "cmp word [bp+8],73h": NS_KNOW); a spell's level (62AC5h) a new one's own (62AD0h: "cmp
+    # dx,73h": NS_LEVEL); and the compares of a spell with its ranges' ends see a new one as a wizard's (NS_CMP).
+    # The spell handler takes Cat's Grace and Friends to Strength's case (656D0h: NS_CAST), which gives them
+    # their effects (6623Bh: NS_EFFECT; Friends 2d4); the abilities routine raises DEX and CHA by them
+    # (85351h: NS_ABILITY); a natural attack's dice are Erdlu Claw's (86A45h: NS_CLAW); "ns_effects" names
+    # the effects 113-116.
+    *ravspells.program_patches(),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

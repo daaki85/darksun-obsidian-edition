@@ -45,9 +45,36 @@ class TableTests(unittest.TestCase):
         spook = ravspells.record(chunks, ravspells.SPOOK)
         self.assertEqual((spook[4], spook[7:9], spook[0x11:0x13], spook[0x19]), (0x13, b"\x3c\0", b"\x04\x43", 35))
         fog = ravspells.record(chunks, ravspells.FOG)
-        self.assertEqual((fog[4], fog[0x11:0x13]), (0x42, b"\0\x40"))
+        self.assertEqual((fog[4], fog[0x11:0x13], fog[0x19]), (0x42, b"\0\x40", ravspells.FOG_EFFECT))
+        self.assertEqual(ravspells.record(chunks, ravspells.CLAW)[0x19], ravspells.CLAW_EFFECT)
         friends = ravspells.record(chunks, ravspells.FRIENDS)
         self.assertEqual((friends[1:3], friends[0x0C], friends[0x1D]), (b"\xff\xff", 7, 1))
+
+    def test_sites(self):
+        """The program's patches are DSCLOG2's SITE 140-147 (each its routine in the site table), past the
+        other threads' 130-139 and short of 150; the effect records after the game's 113."""
+        import re
+        src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog2.asm")).read()
+        routine = {ravspells.NS_CMP: "ns_cmp", ravspells.NS_KNOW: "ns_know", ravspells.NS_LEVEL: "ns_level",
+                   ravspells.NS_LIST: "ns_list", ravspells.NS_CAST: "ns_cast", ravspells.NS_EFFECT: "ns_effect",
+                   ravspells.NS_ABILITY: "ns_ability", ravspells.NS_CLAW: "ns_claw"}
+        self.assertEqual(sorted(routine), list(range(140, 148)))
+        for number, name in routine.items():
+            self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
+        names = {p.name for p in ravager.PATCHES}
+        for p in ravspells.program_patches():
+            self.assertIn(p.name, names)
+            if p.name != "ns_effects":
+                self.assertEqual(p.replacement[:2], bytes((0xCD, ravager.VEC_SITE)), p.name)
+                self.assertIn(p.replacement[2], routine, p.name)
+                self.assertEqual(len(p.replacement), len(p.original), p.name)
+        effects = ravspells.effect_patch().replacement
+        self.assertEqual(len(effects), 4 * 31)
+        self.assertEqual(effects[31:31 + 11], b"Erdlu Claw\0")
+        self.assertEqual(effects[29:31], (21320).to_bytes(2, "little"))
+        for name, value in (("NS_GRACE_EFFECT", 113), ("NS_CLAW_EFFECT", 114), ("NS_FOG_EFFECT", 115),
+                            ("NS_FRIENDS_EFFECT", 116), ("NS_FIRST", 320)):
+            self.assertRegex(src, r"\n%s +equ %d\b" % (name, value))
 
 
 @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
@@ -83,6 +110,23 @@ class GameFileTests(unittest.TestCase):
             if key[0] != "GFFI":
                 self.assertEqual(got[key], value, key)
         self.assertEqual(got[("DATA", ravspells.REFLECT)][:4], self.game[("DATA", 19)][:4])
+
+    def test_program(self):
+        """The patches' bytes are the sequel's DSUN.EXE's, its effect records 113-116 empty, and
+        dos/ns_cmp_table.inc NS_CMP's table from the patched program."""
+        import tempfile
+        with open(os.path.join(WOTR, "DSUN.EXE"), "rb") as f:
+            exe = f.read()
+        for p in ravspells.program_patches():
+            self.assertEqual(exe[p.offset:p.offset + len(p.original)], p.original, p.name)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "x.exe")
+            ravager.write_patched(WOTR, out)
+            with open(out, "rb") as f:
+                patched = f.read()
+        inc = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "ns_cmp_table.inc")
+        with open(inc) as f:
+            self.assertEqual(f.read(), ravspells.cmp_table_asm(patched))
 
     @unittest.skipUnless(SL, "DSUN_SL: Shattered Lands' folder, for the drawn icons")
     def test_drawn_icons(self):

@@ -59,13 +59,16 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-**Added: Wake of the Ravager's new wizard spells, part 1 (their records)**
-- The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) have their
-  records, icons and descriptions in the Loader's copy of the sequel's RESOURCE.GFF, as spells 320-325
-  (DATA 320-325, ICON 21320-21325, SPIN 321-326: the sequel has no six free wizard numbers below 120). The
-  icons are Shattered Lands' drawn ones in the sequel's colours. Not castable yet: the helper's part (who
-  knows them, the wizard-spell compares, their effects) is still to come. The new spells' switch leaves
-  them out (`dsloader/ravspells.py`).
+**Added: Wake of the Ravager's new wizard spells**
+- The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
+  sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its
+  RESOURCE.GFF: it has no six free wizard numbers below 120). The icons are Shattered Lands' drawn ones in the
+  sequel's colours. A character who knows them (the sheet's bits, which the party transfer carries) has them
+  on the USE screen and casts them as in Shattered Lands: Cat's Grace and Friends raise DEX and CHA through
+  Strength's code (Cat's Grace's die by class), Erdlu Claw's unarmed attacks, Fogbolt's -3 and +2, Reflected
+  Image's one image struck half the time, Spook's save worse with the caster's level. Their effects have names
+  and icons on the sequel's screens, and the dice log names them. Not yet learnable there (level up, scrolls).
+  The new spells' switch leaves them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-147).
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

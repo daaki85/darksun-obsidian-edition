@@ -774,6 +774,17 @@ in RESOURC2.GFF; the game's own ICON stop at 21268, SPIN at 269), known by the s
 game never asks for them until DSCLOG2 does. The sequel's spell icons are PLNR or PLAN, and a few of its ICON and BMP
 chunks are SL's kind; `sequelicons.decode` reads all three.
 
+**Casting the new spells in the sequel** (2026-11-26, the same log, part 2): the spell handler's switch at 656D0h
+(81 cases at CS:28C1h of the module from 642E0h; Strength 23 and Adrenalin Control F5h share 6623Bh, the effect in
+`[BP-12h]`, its 1d6 pushed at 6624Eh, the adder at 65AFBh); the abilities routine 8527Bh (`[BP-9]` 0 under
+Anti-Magic 4: no wizard or priest spell's effect), its effect switch at 85351h (9 cases at module 83400h + 2386h;
+STR `[BP-348h]`, DEX `-346h` ... CHA `-33Eh`; out at 8543Bh); a natural attack's dice 86A45h (DX the attack, far
+`[BP+0Eh]`/`[BP+12h]`/`[BP+16h]` count, sides, bonus); the effect records (31 bytes at the load + 3C870h) end
+with 112, zeros after for 3169 bytes, and the creature's effect bits are 15 bytes (7FE93h: 0-119), so 113-116 are
+free for data. The swing's `[BP+0Ah]` THAC0 holds for the call's swings (5D052h is each swing's start; the first
+when `[BP-16h]` = `[BP-0Ch]`). In play: a spell dropped on a member's portrait on USE is cast on that member, a
+drop on the list's panel brings the aim pointer up; the USE screen keeps its LEVEL between openings.
+
 **The sequel's first spells and powers** (2026-11-25, logs/2026-11-25-ravager-first-spells.md): the creation
 screen's DONE (6E0B9h, 5C0:57h; SI the member) calls 6E6D8h, the powers (6E906h, 5C0:2Ah), a preserver's spells
 (6EA10h, 5C0:2Fh), 6ED7Dh, then 98:0Fh, all from DONE only (no START GAME path as in SL). The wizard spells known

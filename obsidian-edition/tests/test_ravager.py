@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, launch, npcitems, ravager, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -49,7 +49,8 @@ class TableTests(unittest.TestCase):
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
-                         | {"item_name_%x" % at for at in ravager.NAME_READS})
+                         | {"item_name_%x" % at for at in ravager.NAME_READS}
+                         | {p.name for p in ravspells.program_patches()})  # (the new spells)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_gear_hands(self):

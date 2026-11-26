@@ -31,6 +31,7 @@ import struct
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from . import art, game, gff, spelltexts
+from .gamepatch import Patch
 
 FIRST = 320  # (past the sequel's 320 records: DATA 0-319)
 GRACE, CLAW, FOG, REFLECT, SPOOK, FRIENDS = range(FIRST, FIRST + 6)
@@ -80,6 +81,8 @@ def record(chunks: gff.Chunks, spell: int) -> bytes:
         out[FLIGHT] = _record(chunks, MAGIC_MISSILE)[FLIGHT]
     if spell == SPOOK:
         out[EFFECT] = AFRAID
+    if spell in (CLAW, FOG):
+        out[EFFECT] = CLAW_EFFECT if spell == CLAW else FOG_EFFECT
     for which, at, size, value in PATCHES:
         if which == spell:
             out[at:at + size] = value.to_bytes(size, "little")
@@ -165,3 +168,124 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
     out.update(icons_for(resource, sl_dir))
     out.update(texts())
     return out
+
+
+# ---- The program's side (DSCLOG2's NEW SPELLS, sites 140-149) ----
+VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
+NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
+NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
+# The spells' effects: the sequel's effect records past its 113 (0-112; zeros after them, and the creature's
+# effect bits 15 bytes, 0-119), named and given their spells' icons by "ns_effects". Cat's Grace's and
+# Friends' are put by Strength's case (DSCLOG2's NS_EFFECT) and raise DEX and CHA (NS_ABILITY), Erdlu
+# Claw's and Fogbolt's by their records (+19h) and weighed by NS_CLAW and NS_SWING.
+EFFECT_RECORDS_FILE, EFFECT_RECORD, EFFECT_NAME = 0x3C870 + 0x5200, 31, 29  # (ravager.EFFECT_RECORDS_FILE)
+GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, FRIENDS_EFFECT = 113, 114, 115, 116
+EFFECTS = {GRACE_EFFECT: (b"Cat's Grace", GRACE), CLAW_EFFECT: (b"Erdlu Claw", CLAW),
+           FOG_EFFECT: (b"Fogbolt", FOG), FRIENDS_EFFECT: (b"Friends", FRIENDS)}  # (the name, the spell's icon)
+# The game's compares of a spell's number with the ends of its ranges (73h the first priest spell, EBh the
+# first psionic power, 10Dh the first monster's power), each where the number is a spell's: DSCLOG2's NS_CMP
+# makes each with a new spell as a wizard's (NS_AS), so the code a wizard spell takes takes it (its icon
+# 21000 + the spell, its name from its record, the wizard classes that cast it, its effect a spell's...).
+# Each is (its file offset, the start of its overlay in the file, its bytes). Not here: the loops over the
+# known bits (counters, never a new spell), the psionic powers' own (an index + EBh), and those NS_KNOW and
+# NS_LEVEL answer (62625h, 62AD0h, and the ones after them that a new spell no longer reaches).
+CMP_SITES: Tuple[Tuple[int, int, str], ...] = (
+    (0x59E84, 0x59430, "81feeb00"), (0x59EBF, 0x59430, "81fe0d01"), (0x5A0BB, 0x59430, "81feeb00"),
+    (0x5A0C1, 0x59430, "83fe73"), (0x5A0D2, 0x59430, "81fe0d01"), (0x5A551, 0x59430, "81feeb00"),
+    (0x5A58C, 0x59430, "81fe0d01"), (0x62AAE, 0x62100, "3deb00"), (0x62B28, 0x62100, "3d7300"),
+    (0x62B32, 0x62100, "3d7300"), (0x62B37, 0x62100, "3deb00"), (0x62B58, 0x62100, "81feeb00"),
+    (0x62B5E, 0x62100, "83fe73"), (0x62B75, 0x62100, "83fe73"), (0x62B7A, 0x62100, "81feeb00"),
+    (0x65E00, 0x642E0, "2681bf5102eb00"), (0x754AB, 0x749B0, "813ef543eb00"), (0x754BD, 0x749B0, "813ef5430d01"),
+    (0x7A7B3, 0x78340, "813e7362eb00"), (0x7A7BB, 0x78340, "813e73620d01"), (0x7A828, 0x78340, "81faeb00"),
+    (0x7A82E, 0x78340, "81fa0d01"), (0x7FE14, 0x7E2F0, "2681bf5102eb00"), (0x800BD, 0x7E2F0, "2681bf5102eb00"),
+    (0x8059F, 0x7E2F0, "81fa0d01"), (0x805C7, 0x7E2F0, "81faeb00"), (0x805E8, 0x7E2F0, "81fa0d01"),
+    (0x8430A, 0x83400, "81feeb00"), (0x84350, 0x83400, "81feeb00"), (0x843D6, 0x83400, "83fe73"),
+    (0x846B0, 0x83400, "81feeb00"), (0x84893, 0x83400, "83fe73"), (0x84898, 0x83400, "81feeb00"),
+    (0x848CD, 0x83400, "83fe73"), (0x84BD1, 0x83400, "81ffeb00"), (0x84BD7, 0x83400, "81ff0d01"),
+    (0x84C72, 0x83400, "81ffeb00"), (0x84C7C, 0x83400, "81ffeb00"), (0x84C96, 0x83400, "81ffeb00"),
+    (0x85335, 0x83400, "2681bf5102eb00"), (0x8B088, 0x8A4A0, "2681bf5102eb00"), (0x8B098, 0x8A4A0, "2681bf51020d01"),
+    (0x91E80, 0x91890, "81ffeb00"), (0x91E92, 0x91890, "81ffeb00"), (0x91E98, 0x91890, "81ff0d01"),
+    (0x923C3, 0x91890, "81feeb00"), (0x923D5, 0x91890, "81feeb00"), (0x923DB, 0x91890, "81fe0d01"),
+    (0x96E78, 0x95E10, "813ef543eb00"), (0x96E86, 0x95E10, "813ef5430d01"), (0x97DCF, 0x95E10, "817e08eb00"),
+    (0x97E12, 0x95E10, "817e080d01"), (0x999EE, 0x99260, "817efceb00"), (0x99A8D, 0x99260, "817efc0d01"),
+    (0x99BD7, 0x99260, "817efeeb00"), (0x99BE5, 0x99260, "817efe0d01"), (0x9A7B4, 0x99260, "81faeb00"),
+    (0x9A7C1, 0x99260, "81fa0d01"), (0x9A9A6, 0x99260, "81feeb00"), (0x9A9B2, 0x99260, "81fe0d01"),
+)
+# NS_CMP's forms of the compare's operand: a register (its number, AX 0 ... DI 7), [BP+disp], [disp] (DS),
+# ES:[BX+disp]; all words
+FORM_REG, FORM_BP, FORM_MEM, FORM_ES_BX = 0, 1, 2, 3
+
+
+def cmp_form(code: bytes) -> Tuple[int, int, int, int]:
+    """(form, register, displacement, immediate) of a word compare with an immediate: CODE its bytes."""
+    if code[0] == 0x3D:  # cmp ax,imm16
+        return FORM_REG, 0, 0, struct.unpack_from("<H", code, 1)[0]
+    es = code[0] == 0x26
+    if es:
+        code = code[1:]
+    op, modrm = code[0], code[1]
+    if op not in (0x81, 0x83) or modrm >> 3 & 7 != 7:
+        raise ValueError(f"not a compare: {code.hex()}")
+    mod, rm = modrm >> 6, modrm & 7
+    imm_at = {3: 2, 1: 3, 0: 4, 2: 4}[mod]
+    imm = struct.unpack_from("<H", code, imm_at)[0] if op == 0x81 else struct.unpack_from("<b", code, imm_at)[0] & 0xFFFF
+    if mod == 3 and not es:
+        return FORM_REG, rm, 0, imm
+    if mod == 1 and rm == 6 and not es:
+        return FORM_BP, 0, struct.unpack_from("<b", code, 2)[0] & 0xFFFF, imm
+    if mod == 0 and rm == 6 and not es:
+        return FORM_MEM, 0, struct.unpack_from("<H", code, 2)[0], imm
+    if mod == 2 and rm == 7 and es:
+        return FORM_ES_BX, 0, struct.unpack_from("<H", code, 2)[0], imm
+    raise ValueError(f"a compare NS_CMP has no form for: {code.hex()}")
+
+
+def site_bytes(number: int, length: int) -> bytes:
+    """INT VEC_SITE, the site's number, NOPs to LENGTH (ravager._site's)."""
+    return bytes((0xCD, VEC_SITE, number)) + b"\x90" * (length - 3)
+
+
+def cmp_patches() -> List[Patch]:
+    return [Patch(f"ns_cmp_{at:x}", at, bytes.fromhex(code), site_bytes(NS_CMP, len(code) // 2))
+            for at, _, code in CMP_SITES]
+
+
+def effect_patch() -> Patch:
+    """"ns_effects": the effect records 113-116 (EFFECTS), each its name and its spell's icon."""
+    data = b"".join(name.ljust(EFFECT_NAME, b"\0") + struct.pack("<H", ICON_BASE + spell)
+                    for _, (name, spell) in sorted(EFFECTS.items()))
+    return Patch("ns_effects", EFFECT_RECORDS_FILE + GRACE_EFFECT * EFFECT_RECORD, bytes(len(data)), data)
+
+
+def program_patches() -> List[Patch]:
+    """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-147 and the effect records."""
+    return [
+        Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
+        Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
+        Patch("ns_level", 0x62AD0, bytes.fromhex("83fa73"), site_bytes(NS_LEVEL, 3)),
+        *cmp_patches(),
+        Patch("ns_cast", 0x656D0, bytes.fromhex("8b460e8946e2"), site_bytes(NS_CAST, 6)),
+        Patch("ns_effect", 0x6623B, bytes.fromhex("817e0ef5007507c746ee0200eb05c746ee6200"), site_bytes(NS_EFFECT, 19)),
+        Patch("ns_ability", 0x85351, bytes.fromhex("8946f4b90900"), site_bytes(NS_ABILITY, 6)),
+        Patch("ns_claw", 0x86A45, bytes.fromhex("0bd27547"), site_bytes(NS_CLAW, 4)),
+        effect_patch(),
+    ]
+
+
+def cmp_table(exe: bytes) -> List[Tuple[int, int, int, int, int, int]]:
+    """NS_CMP's table from the patched program EXE: for each site the way back (its IP in its overlay, past
+    the site's byte), the word there, then cmp_form's four."""
+    out = []
+    for at, start, code in CMP_SITES:
+        back = at + 3
+        out.append((back - start, struct.unpack_from("<H", exe, back)[0], *cmp_form(bytes.fromhex(code))))
+    return out
+
+
+def cmp_table_asm(exe: bytes) -> str:
+    """dos/ns_cmp_table.inc (DSCLOG2's NS_CMP_TABLE), from the patched program EXE."""
+    lines = ["; NS_CMP's table (made by dsloader.ravspells.cmp_table_asm from the patched DSUNLOG2.EXE: do not edit):",
+             "; the way back's IP, the word there, the form, the register, the displacement, the immediate"]
+    for ip, check, form, reg, disp, imm in cmp_table(exe):
+        lines.append(f"        dw 0x{ip:04X}, 0x{check:04X}\n        db {form}, {reg}\n        dw 0x{disp:04X}, 0x{imm:04X}")
+    return "\n".join(lines) + "\n"
