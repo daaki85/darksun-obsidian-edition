@@ -1,5 +1,5 @@
 # framerate.py SECONDS [X1 X2 Y]: walks the party back and forth between screen points (X1,Y) and
-# (X2,Y) for SECONDS and reports, a second at a time and in all: the map's main loop passes
+# (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. The map's main loop passes
 # (DSCLOG's main_ticks, header +260), the frames shown (flip_count, +1832) and those steady pace left
 # undrawn (pace_skipped: found with a symbol map of the helper as built), the BIOS
 # clock against the wall clock (18.2 a second when DOSBox keeps real time), the leader's map units
@@ -31,7 +31,7 @@ def symbols(*names):  # (their offsets from the header, from a symbol map of the
 SKIPPED, FLIPS, RAN, LOST = symbols("pace_skipped", "flip_count", "pace_ran", "pace_lost")
 hdr = None
 for at in range(0xC0000, 0xF0000, 16):
-    if g.read(at, 8) == b"DSCLOGva":
+    if g.read(at, 8) == b"DSCLOGve":
         hdr = at; break
 assert hdr, "no DSCLOG header"
 def snap():

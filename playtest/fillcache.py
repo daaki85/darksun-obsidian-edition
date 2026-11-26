@@ -1,5 +1,5 @@
 # fillcache.py MEMBER SLOT UNTIL: fills the game's picture slots (cachelist.py) the way a change of
-# gear does, fast: the slot byte (+11h) of the item MEMBER has in SLOT (itemedit.py's) set to 50
+# gear does, fast. The slot byte (+11h) of the item MEMBER has in SLOT (itemedit.py's) set to 50
 # (no place: not drawn on the figure) and back, so what it wears changes and the Loader dresses its
 # figure anew each time (sprites.py: its old pictures marked FFFEh, the new one given a new slot),
 # until UNTIL slots are taken (at most 300). Ends with the slot byte as it was. Memory edit: never

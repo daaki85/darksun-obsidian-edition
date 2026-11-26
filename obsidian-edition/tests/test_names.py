@@ -81,6 +81,31 @@ class NamesTests(unittest.TestCase):
         self.assertEqual(names.migrate(self.gd), 0)
 
 
+class RoomTests(unittest.TestCase):
+    """The name entries the Loader uses, against the room DSCLOG makes (NAMES_EXTRA, which it counts
+    from its list) and against NAMES: a number past the room would name something else of the
+    game's memory, and one of another module's the wrong item."""
+
+    def test_names_fit_the_room(self):
+        """Every name the Loader adds is within the room (a new one past it: DSCLOG's list
+        EXTRA_NAMES takes it, which makes the room, and EXTRA here goes up with it)."""
+        self.assertLess(max(names.NAMES), names.OWN + names.EXTRA,
+                        "a name past DSCLOG's room: add it to EXTRA_NAMES and raise names.EXTRA")
+        self.assertEqual(sorted(names.NAMES), list(range(names.OWN, names.OWN + len(names.NAMES))))
+
+    def test_entries_used_elsewhere_are_their_names(self):
+        """The name entries icons and pickpocket test items by are the names NAMES gives them."""
+        from dsloader import icons, pickpocket, worldgear
+        want = {icons.SEARING_BLADE_NAME: b"Searing Blade", icons.WARDENS_HELM: b"Warden's Helm",
+                icons.GUTTERWARD: b"Gutterward", icons.THORNWALL: b"Thornwall",
+                worldgear.GUTTERKNOT: b"Gutterknot", worldgear.MINDSHARD: b"Mindshard"}
+        self.assertEqual({entry: names.NAMES[entry] for entry in want}, want)
+        self.assertEqual(set(pickpocket.LIFTABLE_NAMES), {worldgear.GUTTERKNOT, worldgear.MINDSHARD})
+        self.assertEqual((icons.SEARING_BLADE_NAME, icons.WARDENS_HELM, icons.GUTTERWARD, icons.THORNWALL),
+                         (worldgear.SEARING_BLADE_NAME, worldgear.WARDENS_HELM, worldgear.GUTTERWARD,
+                          worldgear.THORNWALL))
+
+
 class HelperTests(unittest.TestCase):
     def test_dsclog_has_the_same_names(self):
         """DSCLOG copies its own list of the names into the game's table: the same as NAMES."""

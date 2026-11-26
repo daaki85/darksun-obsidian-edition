@@ -89,6 +89,37 @@ class PartyTests(unittest.TestCase):
         self.assertIn(f"Dag is {age} (a human: 15 + 1d8 = [{age - 15}]); middle-aged at 40.", lines)
         self.assertEqual(aging.give_ages(self.g), [])
 
+    def test_no_age_given_on_the_creation_screen(self):
+        """The creation screen up (its sheet with the creature record after it): the party's first
+        slot is its stand-in for the character being made, whose age is DSCLOG's (AGE, put in at
+        DONE), so none given or logged here (the dice log's age disagreed with the screen's AGE
+        after each roll of the die); the screen left, given as before."""
+        from test_dicelog import far
+        creation = 0x6C000
+        ptrs = DS * 16 + game.CREATION_SHEET_PTR
+        self.m[ptrs:ptrs + 4] = far(creation)
+        self.m[DS * 16 + game.CREATION_CREATURE_PTR:DS * 16 + game.CREATION_CREATURE_PTR + 4] = \
+            far(creation + game.SHEET_SIZE)
+        self.assertTrue(self.g.creating())
+        self.assertEqual(aging.give_ages(self.g, random.Random(5)), [])
+        self.assertIsNone(aging.age_of(self.g.sheet(0)))
+        self.m[DS * 16 + game.CREATION_CREATURE_PTR:DS * 16 + game.CREATION_CREATURE_PTR + 4] = far(CREATURES)
+        self.assertFalse(self.g.creating())  # (the screen left: the pointers stay, apart)
+        self.assertEqual(len(aging.give_ages(self.g, random.Random(5))), 1)
+
+    def test_the_made_characters_age_as_the_screen_rolled(self):
+        """DONE (gd.making, the sheet index): the age DSCLOG put in the sheet (AGE_PUT, the
+        screen's AGE) in the dice log once, its roll's total, even with the screen still up."""
+        index = struct.unpack_from("<H", self.m, CREATURES + game.CREATURE_SHEET_INDEX)[0]
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 21), 5)
+        self.assertEqual(aging.give_ages(self.g), [])  # (none made: nothing told)
+        self.g.making = index
+        line = "Dag is 21 (a human: 15 + 1d8 = 6, as the creation screen rolled); middle-aged at 40."
+        self.assertEqual(aging.give_ages(self.g), [line])
+        self.assertEqual(aging.give_ages(self.g), [])  # (once)
+        self.g.making = index + 1  # (another sheet's: not this member)
+        self.assertEqual(aging.made_age(self.g), [])
+
     def test_an_age_from_before_keeps_its_start(self):
         """A member given an age before the roll was kept (2.13's layout): its age as it is, its
         roll put in from the name's (natural_start), silently; the true age the same as before."""
@@ -242,8 +273,6 @@ class PartyTests(unittest.TestCase):
         """STATS' age bytes (DSCLOG's AGE_TEXT): the age, its category, the next and its age."""
         self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 45))
         self.assertEqual(struct.unpack_from("<HBBH", self.log.stats_entry(0), 28), (45, aging.MIDDLE, aging.OLD, 53))
-        self.log.rules &= ~game.RULE_AGING
-        self.assertEqual(self.log.stats_entry(0)[28:34], bytes(6))
         self.assertEqual(aging.describe(self.g.sheet(0)), "45, middle-aged; old at 53")
 
 
@@ -289,18 +318,13 @@ class HasteTests(unittest.TestCase):
 
     def test_in_the_dice_log(self):
         """A new Haste on Dag, once: its line, then his system shock and his year; none again for
-        the same Haste, nor with the rule off."""
+        the same Haste."""
         self.assertEqual(self.log.effect_changes(10.0), [])
         set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
         lines = self.log.effect_changes(20.0)
         self.assertTrue(lines[0].startswith("Hasted on Dag"))
         self.assertTrue(lines[1].startswith("Dag's system shock (Haste's aging): d100 = "))
         self.assertEqual(self.log.effect_changes(30.0), [])
-        set_effects(self.log, [])
-        self.log.effect_changes(40.0)
-        self.log.rules &= ~game.RULE_AGING
-        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
-        self.assertEqual(len(self.log.effect_changes(50.0)), 1)
 
 
 class RestoreYouthTests(unittest.TestCase):

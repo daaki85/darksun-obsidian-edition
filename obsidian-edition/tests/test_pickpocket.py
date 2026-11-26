@@ -19,7 +19,7 @@ CLUB, SWORD, KEY, BOOTS = 80, 81, 82, 83
 
 class PickTests(unittest.TestCase):
     def setUp(self):
-        """Dag, a 4th level thief (pick pockets 11, move silently 16 with his sword in hand),
+        """Dag, a 4th level thief (pick pockets 40, move silently 33 with his sword in hand),
         leads, talking to a Guard (creature 5) who has a bag (item 80, type 66: weight 10, worn
         nowhere), a long sword (81, type 45: weight 30, in a hand) and a key (82); then boots
         (83, type 68: weight 1, on the feet)."""
@@ -43,7 +43,7 @@ class PickTests(unittest.TestCase):
         for typ, weight, worn in ((66, 10, 0), (45, 30, 5), (68, 1, 4)):
             struct.pack_into("<H", m, ITEM_TYPES + typ * game.ITEM_TYPE_SIZE + pickpocket.TYPE_WEIGHT, weight)
             m[ITEM_TYPES + typ * game.ITEM_TYPE_SIZE + pickpocket.TYPE_WORN] = worn
-        m[ITEM_TYPES + 66 * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL
+        m[ITEM_TYPES + 66 * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL_BIT
         for entry, text in ((20, b"Bag"), (21, b"Long Sword"), (22, b"Cell Key"), (23, b"Boots")):
             at = NAMES + 3 + entry * game.ITEM_NAME_SIZE
             m[at:at + len(text)] = text
@@ -75,7 +75,7 @@ class PickTests(unittest.TestCase):
         self.assertEqual(result.text, "Dag lifts Bag from Guard unnoticed.")
         self.assertEqual(self.guard_items(), [SWORD, KEY, BOOTS])
         self.assertEqual(self.dag_items()[0], (CLUB, 14))
-        self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
+        self.assertIn("d100 = 11, needs 40 or less -> success", result.log[0])
         self.assertIsNone(result.key)
         self.assertTrue(result.lifted)  # (the purse's sound)
         money = self.log.game.money()
@@ -170,13 +170,15 @@ class PickTests(unittest.TestCase):
         self.assertEqual((result.xp_to, result.xp), (0, pickpocket.SWORD_XP))
 
     def test_caught(self):
-        result = self.attempt(12, 17)  # pick pockets 11, move silently 16
+        """Caught: the game's rules (the rules' bits clear) gate another try by the thief's level all
+        the same (Thieves as in AD&D, always on)."""
+        result = self.attempt(41, 34)  # pick pockets 40, move silently 33
         self.assertFalse(result.lifted)
-        self.assertEqual(result.text, "Guard catches Dag's hand! Guard will be too wary for Dag to try again.")
+        self.assertEqual(result.text, "Guard catches Dag's hand!")
         self.assertEqual(self.guard_items(), [CLUB, SWORD, KEY, BOOTS])
-        self.assertIn("moves silently to get away: d100 = 17, needs 16 or less -> failed", result.log[1])
+        self.assertIn("moves silently to get away: d100 = 34, needs 33 or less -> failed", result.log[1])
         self.tried.add(result.key)  # (as the dice log does)
-        self.assertEqual(self.attempt(1).text, "Guard keeps a close hand on their purse now: Dag won't get another chance.")
+        self.assertEqual(self.attempt(1).text, "Guard remembers Dag, and keeps a close hand on their purse.")
 
     def test_slips_away(self):
         """Unnoticed: he may try again."""
@@ -299,17 +301,15 @@ class ToolsTests(unittest.TestCase):
 
 class SwitchTests(unittest.TestCase):
     def test_switch(self):
-        """The helper's switch: items used on the map asked about (bit 0) either way, the Pick
-        Pockets button (bit 1) with picking pockets on."""
+        """DSCLOG's switch: items used on the map asked about (bit 0), and the Pick Pockets button
+        (bit 1) always (picking pockets' switch gone after 2.18)."""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from test_dicelog import HDR, make_game
         from dsloader import dicelog
         log = make_game()
         flags = lambda: struct.unpack("<H", log.guest.read(HDR + dicelog.TSR_PICK_ON, 2))[0]
-        log.set_pickpockets(True)
+        log.set_pickpockets()
         self.assertEqual(flags(), dicelog.USE_ASK | dicelog.PICK_BUTTON)
-        log.set_pickpockets(False)
-        self.assertEqual(flags(), dicelog.USE_ASK)
 
 
 class ListTests(unittest.TestCase):

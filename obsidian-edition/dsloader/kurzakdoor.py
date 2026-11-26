@@ -16,7 +16,6 @@ again (0, the region file's own). The game's scripts then go on as they would: i
 save Legcrusher walked through at once and said his line.
 """
 
-import struct
 from typing import Optional
 
 from . import game

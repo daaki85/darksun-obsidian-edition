@@ -1,6 +1,6 @@
 # slotcheck.py [LABEL]: every map thing with a picture slot (+0Fh) finds its own picture's number in
 # that slot (+18h, the walking picture, or +18h + 1 for its fighting one), and every wall's slot is
-# taken: the check that reusing slots (DSCLOG's PIC_REUSE) never left a thing pointing at another's
+# taken. The check that reusing slots (DSCLOG's PIC_REUSE) never left a thing pointing at another's
 # picture (2026-11-09, logs/2026-11-09-picture-slot-reuse.md).
 import os, sys, struct
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)

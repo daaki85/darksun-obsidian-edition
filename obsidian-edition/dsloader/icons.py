@@ -15,12 +15,17 @@ cycles: 240-248, fire): from the plain item's icon.
   blue-greys).
 
 Violet is 35-37 of the palette, which no region changes (232-239, violet in RESOURCE.GFF's
-palette, are each region's own: red in the slave pens). The game cycles only 11-15 (water) and
-224-255 (fire among them), so an icon tinted in colours it doesn't cycle (violet, night steel,
-ice, gold) has every other column of its tint in the water's (`shining`) to shine as a magic
-item does.
+palette, are each region's own: red in the slave pens). The game's colour cycler turns four runs
+of the palette (its table set up by each region's load, DEVELOPMENT-CONTENT's "A shop's magic
+items shine"): 1-5 a bright green (GREEN), 6-10 a vivid violet (MIND), 11-15 the water's blues and
+lavenders (WATER) and 240-248 the fire (FIRE), alike in every region's palette but for the step
+the cycle is at. An icon tinted in colours it doesn't cycle (violet 35-37, night steel, ice,
+gold) has every other column of its tint in the water's (`shining`) to shine as a magic item
+does. A named item's glow follows its story (alagorn.py): fire for a magic weapon, as the game's
+own, unless its story is of water (WATER), the air (SKY: the water's blues and white), the mind
+(MIND) or the Green Age (GREEN).
 
-The game reads object pictures from SEGOBJEX.GFF. The game folder is never changed: the launcher
+The game reads object pictures from SEGOBJEX.GFF. The game folder is never changed: the Loader
 writes a copy of that file next to the patched game (the dos folder, D: in DOSBox) with an
 object added for each of these icons, and DSCLOG has the game open the copy instead (its INT
 21h hook, PROBE_DOS_OPEN).
@@ -43,6 +48,11 @@ NIGHT_STEEL = (18, 20, 22, 24, 22, 20)  # dark blue-greys no region changes (17-
 # the water's blues and lavenders, which the game cycles (as it does the fire's) and no region
 # changes but for the step the cycle is at: the shine of a magic item whose tint isn't fire's
 WATER = tuple(range(11, 16))
+# ... and the cycler's other two runs: a bright green (Greenbright's, of the Green Age) and a vivid
+# violet (Mindshard's, a psionicist's mind in it)
+GREEN = tuple(range(1, 6))
+MIND = tuple(range(6, 11))
+SKY = (46,)  # white, `shining` with the water's blues: the air's (Windlash, Galefang, Skycutter)
 
 Rows = List[List[Optional[int]]]
 
@@ -171,11 +181,12 @@ def glow(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int,
              for x, p in enumerate(r)] for y, r in enumerate(rows)]
 
 
-def shining(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int, ...]) -> Rows:
-    """As `glow`, every other column of its pixels in the WATER colours the game cycles: COLOURS
-    (which the game doesn't cycle: violet, night steel, ice, gold) tint it, the water's make it
-    shine as a magic item's does."""
-    return [[(WATER[(x + y) % len(WATER)] if x % 2 == 0 else colours[(x + y) % len(colours)])
+def shining(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int, ...],
+            shine: Tuple[int, ...] = WATER) -> Rows:
+    """As `glow`, every other column of its pixels in the WATER colours the game cycles (or SHINE's:
+    GREEN for a green tint): COLOURS (which the game doesn't cycle: violet, night steel, ice, gold)
+    tint it, the cycled ones make it shine as a magic item's does."""
+    return [[(shine[(x + y) % len(shine)] if x % 2 == 0 else colours[(x + y) % len(colours)])
              if p is not None and which(p, x, y) else p for x, p in enumerate(r)] for y, r in enumerate(rows)]
 
 
@@ -321,7 +332,7 @@ def veiled_robe_icon(_rows: Rows = None) -> Rows:
 
 
 def elven_cloak_icon(rows: Rows) -> Rows:
-    return recolour(shining(rows, lambda p, x, y: p in (138, 139, 140) and (x + y) % 3 == 0, LEAF), LEATHER_TO_GREY)
+    return recolour(shining(rows, lambda p, x, y: p in (138, 139, 140) and (x + y) % 3 == 0, LEAF, GREEN), LEATHER_TO_GREY)
 
 
 SILVER = (210, 212, 213, 214, 215, 216, 217)  # dark to light (the metal long sword's greys)
@@ -406,11 +417,13 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Great Axe", 0xFC06, 2492, 2493, lambda r: recolour(r, {1: 58, 2: 59})),
     # the game's obsidian maces are its Blackmace alone: a plain one, the Mace's head in obsidian
     ("Obsidian Mace", 0xFB5D, 2486, 2487, lambda r: recolour(r, MACE_OBSIDIAN)),
-    # magic weapons of kinds the game has none of (worldgear.py): the game's magic look, its fire
+    # magic weapons of kinds the game has none of (worldgear.py): the game's magic look, its fire;
+    # Windlash's cords the air's (a wind spirit's blessing), Greenbright's blade the green (the
+    # Green Age's iron)
     ("Gutterknot", 0xFB5F, 2494, 2495, lambda r: glow(r, lambda p, x, y: p >= 140 and p <= 143, FIRE)),
     ("Deepbiter", 0xFB46, 2496, 2497, lambda r: glow(r, lambda p, x, y: p in PICK_HEAD and (x + y) % 2 == 0, FIRE)),
-    ("Windlash", 0xFC08, 2498, 2499, lambda r: glow(r, lambda p, x, y: p in (59, 60, 61), FIRE)),
-    ("Greenbright", 0xFC0A, 2500, 2501, lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE, FIRE)),
+    ("Windlash", 0xFC08, 2498, 2499, lambda r: shining(r, lambda p, x, y: p in (59, 60, 61), SKY)),
+    ("Greenbright", 0xFC0A, 2500, 2501, lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE or p in (160, 161), GREEN)),
     ("Bracers of Defense", 0xFC01, 2502, 2503, bracers_icon),  # (on the map: the leather Arm Armor)
     # metal versions of the plain weapons the game has none of in metal: their heads and blades
     # in the metal long sword's colours
@@ -443,11 +456,12 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # the Cloak and Boots of Elvenkind (worldgear.py): the Cloak's and the Boots'
     ("Cloak of Elvenkind", 0xFBE3, 2546, 2547, elven_cloak_icon),
     ("Boots of Elvenkind", 0xFBE5, 2548, 2549,
-     lambda r: shining(recolour(r, BOOTS_TO_ELVEN), lambda p, x, y: 53 <= p <= 56, LEAF)),
+     lambda r: shining(recolour(r, BOOTS_TO_ELVEN), lambda p, x, y: 53 <= p <= 56, LEAF, GREEN)),
     ("Boots of Speed", 0xFBE5, 2668, 2669,
      lambda r: glow(recolour(r, BOOTS_TO_SPEED), lambda p, x, y: p in (221, 78) and (x + y) % 2 == 0, FIRE)),
-    # the Flame Blade (worldgear.py): the obsidian long sword's, its blade in the fire colours
-    ("Flame Blade", 0xFC0B, 2550, 2551, lambda r: glow(r, lambda p, x, y: p in BLADE or p in (208, 209, 210), FIRE)),
+    # the Searing Blade (worldgear.py): the obsidian short sword's, its whole blade in the fire colours
+    ("Searing Blade", 0xFC0B, 2550, 2551,
+     lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE or p in (208, 209, 210), FIRE)),
     # the magic axes (worldgear.py): the bone and obsidian Axes and the metal Great Axe, every other
     # pixel of their heads in the fire colours
     ("Drakejaw", 0xFB61, 2554, 2555,
@@ -457,13 +471,15 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Headsman", 0xFC06, 2558, 2559,
      lambda r: glow(recolour(r, {1: 58, 2: 59, **TEAL_TO_METAL}), lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
     # the weapons for those who had too few (worldgear.py): the metal Dagger, the obsidian and bone
-    # Short Swords and the metal Polearm, every other pixel of their blades in the fire colours
+    # Short Swords and the metal Polearm, every other pixel of their blades in the fire colours, as
+    # their stories have it: Galefang's the air's (the air clerics' blade), Mindshard's the mind's
+    # violet, Stillwater's the water's
     ("Galefang", 0xFB5A, 2564, 2565,
-     lambda r: glow(recolour(r, STONE_TO_METAL), lambda p, x, y: p in STONE_TO_METAL.values() and (x + y) % 2 == 0, FIRE)),
+     lambda r: shining(recolour(r, STONE_TO_METAL), lambda p, x, y: p in STONE_TO_METAL.values() and (x + y) % 2 == 0, SKY)),
     ("Mindshard", 0xFC0B, 2566, 2567,
-     lambda r: glow(shorter_blade(r), lambda p, x, y: (p in BLADE or p in (208, 209, 210)) and (x + y) % 2 == 0, FIRE)),
+     lambda r: glow(shorter_blade(r), lambda p, x, y: (p in BLADE or p in (208, 209, 210)) and (x + y) % 2 == 0, MIND)),
     ("Stillwater", 0xFC0C, 2568, 2569,
-     lambda r: glow(shorter_blade(r), lambda p, x, y: p in (0x92, 0x94, 0x98, 0x9C) and (x + y) % 2 == 0, FIRE)),
+     lambda r: glow(shorter_blade(r), lambda p, x, y: p in (0x92, 0x94, 0x98, 0x9C) and (x + y) % 2 == 0, WATER)),
     ("Linebreaker", 0xFB5E, 2570, 2571,
      lambda r: glow(recolour(r, LIGHT_TO_METAL), lambda p, x, y: p in LIGHT_TO_METAL.values() and (x + y) % 2 == 0, FIRE)),
     ("Thornwall", 0xFB5E, 2572, 2573, lambda r: glow(r, lambda p, x, y: 210 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
@@ -499,12 +515,14 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Gutterward", 0xFB5B, 2586, 2587, lambda r: rim(r, 2, FIRE)),
     ("Ironbulwark", 0xFC04, 2588, 2589, lambda r: rim(recolour(r, SHIELD_METAL), 1, FIRE)),
     # the weapons for the kits with too few (worldgear.py): the bone and obsidian Daggers, every
-    # other pixel of their blades in the fire colours; the Bow, its string; the Chatkcha, its blades
+    # other pixel of their blades in the fire colours (Hayneedle's in the water's: a water cleric
+    # prayed over it); the Bow, its string; the Chatkcha, its blades (the air's: the air clerics
+    # blessed it)
     ("Hayneedle", 0xFB60, 2590, 2591,
-     lambda r: glow(recolour(r, DAGGER_BONE), lambda p, x, y: p in DAGGER_BONE.values() and (x + y) % 2 == 0, FIRE)),
+     lambda r: glow(recolour(r, DAGGER_BONE), lambda p, x, y: p in DAGGER_BONE.values() and (x + y) % 2 == 0, WATER)),
     ("Nightsliver", 0xFB60, 2592, 2593, lambda r: glow(r, lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
     ("Dunesong", 0xFC07, 2594, 2595, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214 and (x + y) % 2 == 0, FIRE)),
-    ("Skycutter", 0xFC0E, 2596, 2597, lambda r: glow(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, FIRE)),
+    ("Skycutter", 0xFC0E, 2596, 2597, lambda r: shining(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, SKY)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -515,9 +533,12 @@ PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in 
 # Ring), and the object is given a picture of its own, the shining one. Weapons shine in the fire
 # colours, as the game's own magic weapons and the Loader's do; the rest every other pixel in the
 # water's (the leather helm's and the Drake Armor's in the fire's), tinted with their own colour
-# where it is green (`shining`).
+# where it is green and shining in the green the game cycles (`shining`, GREEN). Tanelyv's chest
+# piece is object 2004 (its item names picture -2004; the Wyrm Temple's script 161 makes it with
+# the arm and leg pieces, 1362 and 1363), its icon 2248 its own.
 LEAF_GREEN = (53, 54, 55, 56, 55, 54)  # (the Silk Armor's and the Living Cloak's greens, which no region changes)
 BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
+TANELYV_CHEST = 2004
 SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
     ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER), None),
     ("Chameleon Gloves", 30020, lambda r: glow(r, lambda p, x, y: 24 <= p <= 30 and (x + y) % 2 == 0, WATER), None),
@@ -530,12 +551,13 @@ SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
     # armour and worn things: every other pixel of their brightest shades in the water's
     ("Shimmer Armor", 30014, lambda r: glow(r, lambda p, x, y: 134 <= p <= 138 and (x + y) % 2 == 0, WATER), None),
     ("Drake Armor", 30013, lambda r: glow(r, lambda p, x, y: 134 <= p <= 138 and (x + y) % 2 == 0, FIRE), None),
-    ("Silk Armor", 2008, lambda r: shining(r, lambda p, x, y: 51 <= p <= 56 and (x + y) % 2 == 0, LEAF_GREEN), None),
+    ("Silk Armor", 2008, lambda r: shining(r, lambda p, x, y: 51 <= p <= 56 and (x + y) % 2 == 0, LEAF_GREEN, GREEN), None),
+    ("Tanelyv's Chest Armor", TANELYV_CHEST, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Tanelyv's Arm Armor", 1362, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Tanelyv's Leg Armor", 1363, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Grey's Scale Arms", 2531, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Grey's Scale Legs", 2518, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
-    ("Living Cloak", 30022, lambda r: shining(r, lambda p, x, y: 69 <= p <= 73 and (x + y) % 2 == 0, LEAF_GREEN), None),
+    ("Living Cloak", 30022, lambda r: shining(r, lambda p, x, y: 69 <= p <= 73 and (x + y) % 2 == 0, LEAF_GREEN, GREEN), None),
     # jewellery and the orb: the gold or the gem
     ("Golden Torque", 30052, lambda r: glow(r, lambda p, x, y: 179 <= p <= 187 and (x + y) % 2 == 0, FIRE), None),
     ("Light of Dawn", 30008, lambda r: glow(r, lambda p, x, y: p in (58, 66, 200) and (x + y) % 2 == 0, FIRE), 2654),
@@ -964,14 +986,13 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
         return None
 
 
-def write_resources(source: str, dest: str, roll_store: bool = True, spells_manual: bool = True,
-                    creature_size: bool = True) -> None:
+def write_resources(source: str, dest: str) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and, with
-    ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST; with SPELLS_MANUAL, the
-    descriptions of the spells the manual's way (spelltexts.MANUAL_TEXTS); with CREATURE_SIZE, Hold and
-    Charm Person's saying they don't take on a large target (spelltexts.SIZE_TEXTS)."""
+    window's PAGE 1 to PAGE 4 and QUICK buttons (savepages.py), the mod's sounds (sounds.py) and the creation
+    screen's STORE and RECALL (rollstore.py), to DEST; the descriptions of the spells the manual's way
+    (spelltexts.MANUAL_TEXTS), and Hold and Charm Person's saying they don't take on a large target
+    (spelltexts.SIZE_TEXTS): their switches went after 2.18, always on."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -985,7 +1006,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
-    added.update(spelltexts.chunks(spells_manual, creature_size))
+    added.update(spelltexts.chunks())
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
     added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)
@@ -1016,8 +1037,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
         pass  # (CHOOSE A SPELL's icons where the game has them)
     from . import rollstore
     try:
-        if roll_store:
-            added.update(rollstore.chunks(chunks))
+        added.update(rollstore.chunks(chunks))
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
@@ -1055,9 +1075,8 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     room: Dict[Tuple[str, int], int] = {}
     _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
-        looks = (on or {}).get("elf_looks", True) is not False  # (elves' ears, half-elves' figures)
-        pictures = sprites.new_chunks(chunks, looks)
-        room = sprites.new_room(chunks, pictures, looks)
+        pictures = sprites.new_chunks(chunks)  # (elves' ears, half-elves' figures)
+        room = sprites.new_room(chunks, pictures)
         added.update(pictures)
     except (KeyError, ValueError, IndexError, struct.error):
         pass
@@ -1086,11 +1105,9 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
     from . import defaultparty
-    if (on or {}).get("cilla_elf", True) is not False:  # (Cilla, an elf, drawn as one)
-        added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))
+    added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))  # (Cilla, an elf, drawn as one)
     from . import monsters  # (the Styr, the Djinn and the Tari as the manual describes them)
-    if (on or {}).get("spells_manual", True) is not False:
-        added.update(monsters.object_chunks({**chunks, **added}))
+    added.update(monsters.object_chunks({**chunks, **added}))
     out = with_chunks(data, added, room)
     gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
     return True, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks)), \
@@ -1129,16 +1146,19 @@ def _plate_types() -> Dict[int, str]:
 
 
 PLATE_TYPES = _plate_types()
-OBSIDIAN_LONG_SWORD, FLAME_BLADE_NAME = 45, 0x156  # (the Flame Blade: worldgear.py)
+OBSIDIAN_LONG_SWORD, SEARING_BLADE_NAME = 45, 0x156  # (the Searing Blade, worldgear.py: its name; an obsidian
+# long sword, the Flame Blade, up to 2.18.0, which a saved game's keeps until worldgear.mend_searing_blade)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
 WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterward's name: worldgear.py)
+THORNWALL = 0x160  # (Thornwall's name, worldgear.THORNWALL: a bone polearm +1)
 
 
 def which(rec: bytes) -> Optional[str]:
     """Which of the Loader's items an item record is, if one: the Short Sword (Shadowseeker once +1) and the
-    Cloak by their types, the rings by their names and plus, Inixhide (Leather Chest Armor +1) and Kreenfang (the Gythka
-    +1) by their types and plus (the game has no gythka with a plus)."""
-    from . import game, npcitems, ring
+    Cloak by their types, the rings by their names and plus, Inixhide (Leather Chest Armor +1) by its type and plus,
+    and Kreenfang by its type, plus and name entry (arms.GYTHKA_NAME: the Elven Leader carries a plain-named Gythka
+    +1, made +2 only with world magic on)."""
+    from . import arms, game, npcitems, ring
     if len(rec) < game.ITEM_SIZE:
         return None
     kind, = struct.unpack_from("<H", rec, game.ITEM_TYPE)
@@ -1152,6 +1172,9 @@ def which(rec: bytes) -> Optional[str]:
         return "Stillwater" if plus == 1 else "Bone Short Sword"
     if kind == game.BONE_AXE_TYPE:
         return "Drakejaw" if plus == 1 else "Bone Axe"
+    if kind in (game.OBSIDIAN_SHORT_SWORD_TYPE, OBSIDIAN_LONG_SWORD) \
+            and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == SEARING_BLADE_NAME:
+        return "Searing Blade"
     if kind == game.OBSIDIAN_SHORT_SWORD_TYPE:
         return "Mindshard" if plus == 1 else "Obsidian Short Sword"
     if kind == game.AIR_DAGGER_TYPE:
@@ -1196,8 +1219,6 @@ def which(rec: bytes) -> Optional[str]:
         return "Arrowbane"
     if kind == game.CROWN_TYPE:
         return "Sunking Crown"
-    if kind == OBSIDIAN_LONG_SWORD and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == FLAME_BLADE_NAME:
-        return "Flame Blade"
     if kind == game.ELVEN_CLOAK_TYPE:
         return "Cloak of Elvenkind"
     if kind == game.ELVEN_BOOTS_TYPE:
@@ -1212,7 +1233,7 @@ def which(rec: bytes) -> Optional[str]:
         return "Headsman"
     if kind == game.METAL_POLEARM_TYPE and plus == 2:
         return "Linebreaker"
-    if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == 0x160:
+    if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == THORNWALL:
         return "Thornwall"
     if kind == game.OBSIDIAN_CAHULAKS_TYPE and plus == 1:
         return "Emberlash"
@@ -1222,8 +1243,8 @@ def which(rec: bytes) -> Optional[str]:
         return METAL_TYPES[kind]
     if plus == 1 and kind in MAGIC_KINDS:
         return MAGIC_KINDS[kind]
-    if kind == game.GYTHKA_TYPE and plus == 1:
-        return "Kreenfang"
+    if kind == game.GYTHKA_TYPE and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == arms.GYTHKA_NAME:
+        return "Kreenfang"  # (by its name too: the Elven Leader's Gythka +1, +2 only with world magic, isn't)
     if kind == game.CLOAK_TYPE:
         return "Cloak of Protection +1"
     if ring.is_ring(rec) and plus == 1:

@@ -1,8 +1,8 @@
-# cachelist.py [all]: the game's picture cache (the table at load segment + 3E60h, 16 bytes a slot:
-# +0 the picture's number, FFFEh one the Loader took out (sprites.STALE), +2 its length, +6 its place
+# cachelist.py [all]: the game's picture cache: the slots taken, the STALE ones, and with "all" every
+# slot. The table is at load segment + 3E60h, 16 bytes a slot: +0 the picture's number, FFFEh one the Loader took out (sprites.STALE), +2 its length, +6 its place
 # (negative: none), +0Ah its far pointer, +0Eh flags, 2 in memory) and how many slots are taken
 # (DS:1F84h; at most 300 (12Ch): the game's loader, 25FA6h, then gives no slot, and a thing it
-# can't give one to isn't drawn). Prints the count, the STALE ones, and with "all" every slot.
+# can't give one to isn't drawn).
 import os, sys, struct
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)
 exec(open(os.path.join(PT, 'live.py')).read())

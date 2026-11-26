@@ -8,13 +8,33 @@ the game:
 """
 
 import struct
+from typing import Tuple
 
 from . import game
-from .gff import GffError, read_gff
+from .gff import Chunks, GffError, read_gff
 from .layout import Layout
 
 CREATURE_CHUNK = ("SAVE", 5)
 SHEET_CHUNK = ("SAVE", 6)
+
+
+def party_chunks(chunks: Chunks) -> Tuple[bytes, bytes]:
+    """The party tables from a parsed save, with complete records and valid sheet links."""
+    try:
+        creatures, sheets = chunks[CREATURE_CHUNK], chunks[SHEET_CHUNK]
+    except KeyError as err:
+        kind, number = err.args[0]
+        raise GffError(f"missing {kind} {number} chunk") from None
+    if len(creatures) < game.PARTY_SIZE * game.CREATURE_SIZE or len(creatures) % game.CREATURE_SIZE:
+        raise GffError("the save's creature records are incomplete")
+    if not sheets or len(sheets) % game.SHEET_SIZE:
+        raise GffError("the save's character sheets are incomplete")
+    for at in range(0, game.PARTY_SIZE * game.CREATURE_SIZE, game.CREATURE_SIZE):
+        if creatures[at + game.CREATURE_NAME]:
+            index, = struct.unpack_from("<H", creatures, at + game.CREATURE_SHEET_INDEX)
+            if (index + 1) * game.SHEET_SIZE > len(sheets):
+                raise GffError("a party member's character sheet is missing")
+    return creatures, sheets
 
 
 class SaveMemory:
@@ -35,12 +55,11 @@ def load_party(path: str, layout: Layout) -> SaveMemory:
     """Read a save and point `layout`'s slots at the party records inside it."""
     with open(path, "rb") as f:
         chunks = read_gff(f.read())
-    missing = [c for c in (CREATURE_CHUNK, SHEET_CHUNK) if c not in chunks]
-    if missing:
-        raise GffError(f"{path} has no {' or '.join(f'{t} {i}' for t, i in missing)} chunk; "
-                       "is it a Shattered Lands save?")
-    creatures = chunks[CREATURE_CHUNK]
-    mem = SaveMemory(creatures + chunks[SHEET_CHUNK])
+    try:
+        creatures, sheets = party_chunks(chunks)
+    except GffError as err:
+        raise GffError(f"{path}: {err}") from err
+    mem = SaveMemory(creatures + sheets)
     sheet = layout.records.get("sheet")
 
     creature = layout.name_record

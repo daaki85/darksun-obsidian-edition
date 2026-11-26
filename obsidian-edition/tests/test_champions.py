@@ -48,7 +48,7 @@ class ObjectTests(unittest.TestCase):
                                    champions.SCALE_ARM, champions.SCALE_LEGS, champions.SLING_TYPE,
                                    champions.LEATHER_ARM, champions.LEATHER_LEGS, champions.LEATHER_HELM,
                                    champions.LEATHER_CHEST, champions.BOW_TYPE, champions.ARROWS_TYPE,
-                                   champions.LONG_SWORD_TYPE)]
+                                   champions.LONG_SWORD_TYPE, champions.STAFF_SLING_TYPE)]
         self.chunks = {("RDFF", 900): person(900, b"Merchant", items=stock)}
         for obj, base in champions.BASES.items():
             self.chunks[("RDFF", base)] = person(base, b"Kind %d" % base, items=[item(18)])
@@ -83,6 +83,60 @@ class ObjectTests(unittest.TestCase):
         self.assertIn(("BMP ", champions.BODY), out)
         body = out[("RDFF", champions.BODY)]
         self.assertEqual(struct.unpack_from("<h", body, dataitems.HEADER.size)[0], -champions.BODY)
+
+    def test_elf_fine_bow(self):
+        """The elf's bow is the Spellarcher's Fine Bow: a plain bow named FINE_BOW_NAME, no plus."""
+        out = champions.object_chunks(self.chunks)
+        bows = [r for r in dataitems.items_of(out[("RDFF", champions.ELF)])
+                if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == champions.BOW_TYPE]
+        self.assertEqual(len(bows), 1)
+        bow, = bows
+        self.assertEqual(struct.unpack_from("<H", bow, game.ITEM_NAME)[0], game.FINE_BOW_NAME)
+        self.assertEqual((bow[game.ITEM_PLUS], bow[game.ITEM_POWER]), (0, 0))
+        self.assertEqual(bow, champions.fine_bow(item(champions.BOW_TYPE)))
+        self.assertIsNone(champions.fine_bow(None))
+
+    def test_defiler_bracers(self):
+        """The defiler wears Bracers of Defense AC 6 on its arms (worldgear.bracers), and no armour."""
+        from dsloader import worldgear
+        items = dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.DEFILER)])
+        bracers = [r for r in items if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == game.BRACERS_TYPE]
+        self.assertEqual(len(bracers), 1)
+        rec, want = bracers[0], worldgear.bracers(6)
+        for at in (0, game.ITEM_NAME, 6):  # (its picture, name and value as worldgear's)
+            self.assertEqual(rec[at:at + 2], want[at:at + 2])
+        self.assertEqual(10 - rec[game.ITEM_PLUS], 6)
+        self.assertIn((game.BRACERS_TYPE, champions.ARM), champions.SLOTS[champions.DEFILER])
+        self.assertEqual({slot for _, slot in champions.SLOTS[champions.DEFILER]}, {champions.RIGHT, champions.ARM})
+
+    def test_dex_22(self):
+        """The Tohr-kreen's, the halfling's and the elf's DEX is 22, in the creature record and the
+        sheet (the game's tables run to 25)."""
+        out = champions.object_chunks(self.chunks)
+        for obj in (champions.TOHR_KREEN, champions.HALFLING, champions.ELF):
+            recs = dataitems.records(out[("RDFF", obj)])[0]
+            self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], 22)
+            self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], 22)
+
+    def test_halfling_staff_sling(self):
+        """The halfling's missile weapon is the game's staff sling (type 0), no plain sling."""
+        kinds = [struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
+                 for r in dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.HALFLING)])]
+        self.assertIn(game.STAFF_SLING_TYPE, kinds)
+        self.assertNotIn(champions.SLING_TYPE, kinds)
+
+    def test_elf_chill_arrows(self):
+        """The elf's arrows are 24 Chill Arrows, made as a Spellarcher's (spellarrows.arrows_item)."""
+        from dsloader import spellarrows, weaponchoice
+        out = champions.object_chunks(self.chunks)
+        arrows = [r for r in dataitems.items_of(out[("RDFF", champions.ELF)])
+                  if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == champions.ARROWS_TYPE]
+        self.assertEqual(len(arrows), 1)
+        rec, = arrows
+        self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], 0x16D)
+        self.assertEqual(struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0], 24)
+        self.assertEqual(struct.unpack_from("<H", rec, weaponchoice.ITEM_PICTURE)[0], spellarrows.PICTURES[0x16D])
+        self.assertTrue(spellarrows.is_arrow(rec))
 
     def test_numbers_taken(self):
         self.chunks[("OJFF", champions.ELF)] = b"x"
@@ -168,6 +222,18 @@ class GearTests(unittest.TestCase):
         worn, held, pack = self.lists()
         self.assertEqual((worn, held, pack), ([(champions.SCALE_CHEST, champions.CHEST)],
                                               [(game.METAL_CAHULAKS_TYPE, champions.RIGHT)], []))
+
+    def test_unplaced_tried_a_few_times(self):
+        """Gear that can't be placed (no list to be had for it): tried again people.TRIES passes,
+        then left in the pack, not tried (and the game held still for it) every pass for good."""
+        from unittest import mock
+        from dsloader import people
+        self.make(champions.MUL, [game.METAL_CAHULAKS_TYPE])
+        gear = champions.Gear()
+        with mock.patch.object(champions.Gear, "equip") as equip:
+            for _ in range(people.TRIES + 5):
+                gear.watch(self.gd)
+        self.assertEqual(equip.call_count, 1 + people.TRIES)
 
     def test_not_a_champion(self):
         self.make(champions.MUL, [game.BONE_AXE_TYPE])

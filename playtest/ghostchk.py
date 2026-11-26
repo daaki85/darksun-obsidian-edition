@@ -4,7 +4,7 @@
 import os, sys, struct; HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'live.py')).read())
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGva')
+hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGve')
 seg, on = struct.unpack('<HH', g.read(hdr + 1826, 4))
 print('ghost_seg %04X on %d' % (seg, on))
 if seg:

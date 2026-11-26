@@ -53,7 +53,7 @@ GROVE_WARDEN, LIFEBINDER = KIT_IDS["Grove Warden"], KIT_IDS["Lifebinder"]
 WANDERER, ARCANIST = KIT_IDS["Wanderer"], KIT_IDS["Arcanist"]
 # the item type's +00h flags and +0Fh kind flags, +08h material (restrict.py's)
 MELEE, MISSILE, SHIELD, THROWN, TWO_HANDED, ARMOUR = 0x01, 0x02, 0x04, 0x10, 0x40, 0x80
-METAL, LEATHER, NO_MATERIAL = 4, 5, 0x40
+METAL, LEATHER, NO_MATERIAL_BIT = 4, 5, 0x40
 # a Lifebinder's weapon kinds (specialize.KINDS' numbers): club, mace, quarterstaff, sling, staff sling
 BLUNT = frozenset((1, 4, 8, 14, 15))
 # a Shinobi's: dagger, short sword, quarterstaff, chatkcha, bow, sling, staff sling
@@ -536,7 +536,9 @@ SPELL_ARROW_LEVELS = (5, 9)  # a Spellarcher's preserver levels for its spell ar
 def arrow_plus(kid: int, plus: int, spell_arrow: bool = False, preserver_level: int = 0) -> int:
     """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
     spell arrows (SPELL_ARROW) +1 from its 5th preserver level and +2 from its 9th (a cursed one's
-    minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is."""
+    minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is.
+    Anyone not in the party shoots them as a Spellarcher, its highest level for PRESERVER_LEVEL
+    (spellarrows.archer_level)."""
     if kid != SPELLARCHER or not spell_arrow:
         return plus
     best = max(plus, 0)
@@ -553,7 +555,7 @@ TSR_POISON_USED = 1860  # DSCLOG's header: bit N member N's main hand has poison
 # a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
 # for the fight. Whatever the check, 3 worse to hit and AC 3 worse (no worse than WILD_AC_MOST);
 # passed, also 1 more attack a round in melee (2 halves) and 3 more damage; every fight.
-WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
+WILD_TO_HIT_MOD, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10  # (_MOD signed: DSCLOG's WILD_TO_HIT, 3)
 
 
 def wild_check(con: int, d20: int) -> bool:
@@ -613,7 +615,7 @@ def bad_luck(kids, rng=None) -> int:
 
 
 def thief_skill(kid: int, skill: int, outdoors: bool = False) -> int:
-    """Added to a thief skill (game.THIEF_SKILLS' numbers; the helper's KIT_SKILL): SKILLS' (an
+    """Added to a thief skill (game.THIEF_SKILLS' numbers; DSCLOG's KIT_SKILL): SKILLS' (an
     Assassin's -15 to pick pockets and open locks, a Shadowblade's, Ghetto Fighter's and
     Wayfinder's; a Swashbuckler's none here: its bad luck is rolled each time, bad_luck); a Military Scout's +10 to finding traps,
     moving silently, hiding and climbing under the open sky (OUTDOORS), -5 under a roof."""
@@ -717,7 +719,7 @@ def cosmos_spells(gd, member: int) -> List[str]:
         return []
     base = (gd.load_seg + game.SPELL_SPHERES_SEG) * 16 + game.SPELL_SPHERES_OFF
     masks = gd.guest.read(base, (PRIEST_SPELLS.stop) * game.SPELL_SPHERES_SIZE)
-    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known_at = game.table_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
     known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
     learnt = []
     for spell in PRIEST_SPELLS:
@@ -748,7 +750,7 @@ def avenger_heals(gd, member: int) -> List[str]:
     if kid is None:
         return []
     barred, what = (AVENGER_NO_HEAL, "healing") if kid == AVENGER else (NO_HARM, "harming")
-    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known_at = game.table_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
     known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
     gone = []
     for spell in sorted(s for s in barred if s < len(known)):
@@ -773,7 +775,7 @@ def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], spe
         return False
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     if kinds & ARMOUR:
-        return not flags & SHIELD and mat in (LEATHER, NO_MATERIAL)
+        return not flags & SHIELD and mat in (LEATHER, NO_MATERIAL_BIT)
     return specialize and kind is not None and kind == chosen
 
 
@@ -799,7 +801,7 @@ def light_only(kid: int, typ: bytes) -> bool:
         return bool(typ[0x0F] & ARMOUR) and not restrict.is_bracers(typ) and not restrict.is_robe(typ) \
             and typ[9] != restrict.CLOAK_SLOT
     return kid in LIGHT_KITS and bool(typ[0x0F] & ARMOUR) and not typ[0] & SHIELD \
-        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL)
+        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL_BIT)
 
 
 def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: bool = False,
@@ -820,7 +822,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     weapon = bool(flags & (MELEE | MISSILE))
     if off_hand and forbids_off_hand(kid, typ):
         return True
-    light = not kinds & ARMOUR or bool(flags & SHIELD) or mat in (LEATHER, NO_MATERIAL)
+    light = not kinds & ARMOUR or bool(flags & SHIELD) or mat in (LEATHER, NO_MATERIAL_BIT)
     if kid == RAVAGER:
         return bool(flags & (SHIELD | MISSILE | THROWN)) or not light
     if kid == TWIN_BLADE:  # (the CAHULAKS, a blade in each hand, its own)
@@ -832,7 +834,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
             return not kinds & TWO_HANDED or cahulaks
         return bool(flags & MISSILE) and spec
     if kid == STALKER:
-        return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL)
+        return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL_BIT)
     if kid == GROVE_WARDEN:
         from . import restrict
         return weapon and kind is not None and not restrict.sphere_allows(sphere, typ, kind)
@@ -845,7 +847,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         if flags & SHIELD:
             return True
         if kinds & ARMOUR:
-            return mat not in (LEATHER, NO_MATERIAL)
+            return mat not in (LEATHER, NO_MATERIAL_BIT)
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return bool(flags & SHIELD) or kind is not None and kind not in DANCER_KINDS

@@ -1,4 +1,4 @@
-# ghostclear.py [TRIALS]: in a fight, at the start of each enemy turn, Cermak marked see-through
+# ghostclear.py [TRIALS]: whether GHOST_UNION clears a see-through mark within an enemy turn. In a fight, at the start of each enemy turn, Cermak marked see-through
 # with GH_CHANGED set, then the byte and the turn read every 20 ms: whether DSCLOG's GHOST_UNION
 # cleared it (the whole view drawn) while that enemy's turn still ran. The party's turns passed
 # through the END menu (ghostturn.py's). Memory only; the table put back clear at the end.

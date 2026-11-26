@@ -232,5 +232,5 @@ class ForbiddingKitTests(unittest.TestCase):
                         self.assertEqual(kid is not None, restrict.kit_forbids(bytes(s), t, record(t)))
                         if kid is not None:
                             self.assertIn(kid, [k for k, _, _ in kitpages.kits_of(bytes(s))])
-        game.RULES_IN_FORCE = 0
+        game.RULES_IN_FORCE = game.RULES_ALWAYS
         self.assertIsNone(restrict.forbidding_kit(bytes(s), 57, record(57)))
