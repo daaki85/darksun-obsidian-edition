@@ -262,6 +262,16 @@ class TableTests(unittest.TestCase):
         finally:
             launch._launch_wotr = real
 
+    def test_start_forgets_shattered_lands_left_out(self):
+        """What Shattered Lands' last start left out isn't said again after the sequel's start (it showed
+        a SEGOBJEX warning that was Shattered Lands', 2026-11-26)."""
+        launch.LEFT_OUT[:] = ["the new items, people and icons (SEGOBJEX.GFF: Shattered Lands')"]
+        self.addCleanup(launch.LEFT_OUT.clear)
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(launch.LaunchError):  # (no GOG DOSBox in it: the start stops there)
+                launch._launch_wotr(d, {})
+        self.assertIsNone(launch.left_out_line())
+
 
 class JumpIntoSiteTests(unittest.TestCase):
     """A near jump from outside a patch must not land past a patch's first byte: there it runs the
