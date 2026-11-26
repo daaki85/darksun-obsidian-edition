@@ -1906,13 +1906,57 @@ PROBE_PK_* do. What it needed from the sequel:
   `[bp-1Eh]`), set before the d20 (66E33h, `push dword 140001h` to the dice routine 0B0h:391Dh); the number needed
   `[bp-1]`, the save `[bp-6]`, the spell `[bp+0Ah]` as SL's. A natural 1 leaves before the save probe: with SL's
   frame read the log had no line at all for it (the "save line that didn't show", 2026-11-20). The modifiers come
-  from 628h:A7h (AL) and the spell record's +1Fh bits 1-4; the dice log calls them "other" (its save_modifiers is
-  SL's routine).
+  from 628h:A7h (AL) and the spell record's +1Fh bits 1-4; the dice log names them since 2026-11-25 (below; it
+  called them "other" while its save_modifiers was SL's routine).
 - **The map up**: DS:0DABh is 1 on the map (SL's 0BC9h, which in the sequel holds 0A2Eh): the combat log's panel is
   drawn only while it is (DiceLog._map_up through quicksave.SCREEN_IS).
 - **The creation screen's ability roll** is at 6C504h (SL's 6490Dh): four 4d4 (`push 4 / push 4 / call 0B0h:391Dh`),
   each + DS:42DAh (the race's adjustment + 4: the races' table at the load + 3E4Fh:120h, SL's 38D4h:14Dh, the same
   96 bytes), the best kept, raised to DS:42D4h (the classes' least: the game's own rule, a prime requisite 17).
   DSCLOG2's RL_TRY (site 81) at "add ax,[42DAh]" (6C585h). About 147 4d4 a press of the die as it tumbles.
+
+**The sequel's save modifiers and THAC0 line in the dice log** (2026-11-25, logs/2026-11-25-ravager-save-mods.md):
+- **The save modifiers' routine** (628h:A7h, 83606h): [bp+6] the target, [bp+8] the caster, [bp+0Ah] and [bp+0Eh]
+  their effect bit sets (608h:25h, 7FE93h: effect N at bit N%8 of byte N/8, only for combatants below 30h),
+  [bp+12h] the save, [bp+14h] the spell, [bp+16h] the level. In order: Life Drained (59) -2 x its +8 byte;
+  for spells 32/58/69/93 Protected vs Weather (80) +6, Vulnerable (107) -20; Entranced (33) -3 against spells 2,
+  39, 94, 131, 255; Bound By Thorns (16) -4 against spell 188; Heat Exhaustion (44) -2, effect 88 -1; Spirit
+  Armored (94) +3 unless the save is 1; Barkskin (6) +1, Blessed (9) +1; Protected vs Evil (75) +2 when the
+  caster's sheet +14h is 3, 6 or 9; the spell's kinds: 80h with 78 +4, 4 with 73 +3, 2 with 77 +4; Prayer (72)
+  +1 from one's own side, else -1; +4 when a caster below 30h can't see the target (Blind 10; Invisible 53
+  without Detect Invisible 25; 54 against an undead caster, race 9) and the spell's range at level 1 (680h:20h)
+  is 8 or less; Brave (18) +4 against fear (category 100h); druids (classes 5-8) +2 against kinds 82h; a
+  psionicist (98h:C1h class 12) +2 against category 6; category 40h minus the DEX AC table (DS:866h), 1Eh the
+  WIS table (DS:89Ah); save 1 a dwarf's or halfling's CON x2/7 and the CON table (DS:880h). Chaos, Cloudkill,
+  Dismissal and Scare (-100, +100, levels) are the save line's own cases. `RavGameData.save_modifiers` models it,
+  with DSCLOG2's PROT_SAVE (rings 45, cloak 103 without metal armour or a shield, robe 127), KIT_SAVE, BLUR_SAVE
+  and FSHIELD_SAVE.
+- **The spells past 255**: the sequel's spell table has 320 records (Psionic Blast 266); SL's `spell_record` stops at
+  255, so the save's +1Fh part and the category were lost for the powers until `RavGameData` read them all.
+- **The attack set-up's locals** (5C5E1h; si the attacker, di the target): [BP-1Eh] the THAC0 (SL's [BP-20h]),
+  [BP-8] the weapon's bonus (its plus, 0 under Anti Magic Shell, effect 4; the material, 98h:3B1h; two weapons,
+  5DE34h; difficulty-1 from DS:143Ah for combatants 4 and up), bytes [BP-19h] from behind and [BP-21h] backstab,
+  [BP-20h] the natural attacks, [BP-16h] weapons ready. `ravdice.py` with `RAV_FRAMES=1` prints them after each THAC0
+  line.
+- **The to-hit routine** (628h:66h, 8599Eh; [bp+6] the target, di the attacker): the target's Life Drained -2 x;
+  Blessed (9) +1, Cursed (22) -1, Slowed (91) -4, Impeded (50) -2, Weapon Grafted (106) +1, Heat Exhaustion (44) -2;
+  Berserk (102) (L-1) - (L-1)/3 at level L in class 11; Extra HP (34) from Soothe (187) -2 in melee; the target's
+  Blurry (13) -2; Prayer (72); a halfling +1 with a missile (range above 1Ch, type flags 10h, or 2 without 8); STR
+  (98h:2C0h) in melee, DEX (98h:2D9h) for missiles. DSCLOG2's STINK_SWING adds a Nauseated (12) attacker's -2 after
+  it.
+- **The cahulaks and the kits**: DSCLOG2's PROBE_TWO took the cahulaks' head penalty without asking `kit_two`, so a
+  Battle Dancer in light armour paid it (bone -1, head -2: -3); SL's DSCLOG asks. Now the cahulaks' branch sets
+  `two_base` -2 and calls `kit_two` (a Ghetto Fighter 2 better, a Twin-blade or Battle Dancer in light armour none).
+- **Cahulak users** in the sequel's data (OBJEX RDFF): 153 Weaponer, 203 a Draxan, 320 Salesperson, 438 Tantris,
+  514 and 516 Gladiators, placed in Limbo (RGN0FF) and Gladiator2 in the Pyramid (RGN034); none in the Tyr ambush.
+  For a test, make a member's weapon type 24 (`logs/files/2026-11-25-ravager-save-mods-type.py ITEM 24`) and lower
+  its DEX (`...-ability.py CREATURE 1 12`): a creature's ability edit goes back to the sheet's at the round's turn.
+- **Two dice logs on one game** (a control: the commit before checked out with `git worktree add --detach`, its
+  `ravdice.py` run beside this one) give the same rolls, but both make the Python side's hiding rolls and write the
+  stealth word, so the hide results differ between them.
+- **A psionic power with a foe beside the user**: every icon crossed, CAN'T START THAT PSIONIC. The USE panel reads
+  the PSP when it opens.
+- **What is left**: a Battle Dancer's first swing in the round she starts dancing falls back to "in bonuses" (the
+  game's THAC0 lacks the dance's +1 the log already counts).
 
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
