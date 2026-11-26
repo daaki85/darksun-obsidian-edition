@@ -42,9 +42,19 @@ def fingerprint(data):
 
 def legacy(game_dir):
     atlas = Atlas(game_dir)
-    return {f"{obj}/{role}/{combat}/{name}": fingerprint(atlas.pictures.build(obj, combat, gear, armor, role=role))
-            for obj in FIGURES for role in ("Fighter", "Preserver", None) for combat in (0, 1)
-            for name, (gear, armor) in equipment(atlas).items()}
+    pictures = {}
+    kits = equipment(atlas)
+    for obj in FIGURES:
+        for role in ("Fighter", "Preserver", None):
+            for combat in (0, 1):
+                for name, (gear, armor) in kits.items():
+                    picture = atlas.pictures.build(obj, combat, gear, armor, role=role)
+                    key = f"{obj}/{role}/{combat}/{name}"
+                    if obj == 307 and role == "Fighter" and name in ("Cloak", "Magic cloak"):
+                        pictures[key] = frame_digests(picture)
+                    else:
+                        pictures[key] = fingerprint(picture)
+    return pictures
 
 
 def historical(game_dir, checkout):
@@ -122,7 +132,20 @@ def audit(game_dir, output, checkout, bounds):
     if checkout:
         previous = historical(game_dir, checkout)
         current = legacy(game_dir)
-        changes = [key for key, digest in previous.items() if current.get(key) != digest]
+        changes = []
+        revised = {}
+        for key, digest in previous.items():
+            if isinstance(digest, list):
+                # The woman's original Fighter now shares the repaired rear
+                # cape. Other angles of the old cloak must still match.
+                combat = int(key.split("/")[2])
+                poses = [combat*15+f for f, old in enumerate(digest) if old != current[key][f]]
+                revised[key] = poses
+                if set(poses) - {1, 7, 8, 9, 10, 18, 19, 20, 25}:
+                    changes.append(key)
+            elif current.get(key) != digest:
+                changes.append(key)
+        results["revised_fighter_cloak_poses"] = revised
         (output/"legacy-differences.json").write_text(json.dumps(changes, indent=2) + "\n")
         results.update(regression_pictures=len(previous), regression_errors=len(changes))
     assert len(set(ROLES)) == len(ROLES) == 48

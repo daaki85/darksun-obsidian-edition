@@ -5,6 +5,8 @@ import halfelfstudy as he
 from dsloader import classoutfits as co, figures, halfelfgarments, spritebelts
 from outfitdetail import HALFTONES, RAMPS
 
+REAR_WALK = (1, 7, 8, 9, 10)
+REAR_CAPE = (*REAR_WALK, 18, 19, 20, 25)
 ARMOR = co.CHEST | co.ARMS | co.LEGS
 FEET = co.LEFT_FOOT | co.RIGHT_FOOT
 LIMBS = FEET | co.FOREARM
@@ -104,6 +106,42 @@ def single_masks(study, obj, pose, garment):
     return regions, head, cloak, trim
 
 
+@lru_cache(maxsize=64)
+def outer_cape(study, obj, pose):
+    """The Ranger silhouette, with the folds underneath its diagonal strap restored."""
+    key = he.FIGURES[0 if obj == 307 else 1]
+    ranger, pad = study.rows(key, pose, "Ranger")
+    _, _, folds, _ = single_masks(study, obj, pose, "Ranger")
+    fabric = {(x, y): (ranger[y+pad][x+pad], rank) for (x, y), rank in folds.items()}
+    repairs = {}
+    if pose in REAR_CAPE:
+        # The fitted Thief back supplies a continuous woven panel in the same
+        # pose. Its hood, hem and outer contour belong to the Thief alone.
+        thief, _ = study.rows(key, pose, "Thief")
+        _, hood, back, _ = single_masks(study, obj, pose, "Thief")
+        parts = study.game.fig(key).parts(*divmod(pose, 15))
+        shoulder = parts.shoulders[0]
+        panel = set(back)
+        if pose in REAR_WALK:
+            panel.update(p for p in hood if shoulder <= p[1] <= shoulder + 2)
+        # These two stitches are painted cloth in both approved drawings,
+        # but both donors classified them as part of the tunic underneath.
+        if obj == 307 and pose in (9, 10):
+            panel.add((13, 11) if pose == 9 else (10, 12))
+        for x, y in panel:
+            p = x, y
+            if p in fabric or p in parts.hair or not shoulder <= y <= parts.waist:
+                continue
+            if ranger[y+pad][x+pad] is None:
+                continue
+            color = thief[y+pad][x+pad]
+            if color in CLOTH["Thief"]:
+                r, g, b = study.game.palette[color]
+                shade = 1 + min(5, round((.30*r+.59*g+.11*b)/32))
+                repairs[p] = color, shade
+    return fabric, repairs
+
+
 def layers(study, obj, pose, role):
     """Return the padded archive masks, retaining secondary material and the fitted hood."""
     key = he.FIGURES[0 if obj == 307 else 1]
@@ -168,22 +206,28 @@ def layers(study, obj, pose, role):
     for p in trim:
         store("trim", p, 1)
 
-    blocked = head | {p for p, v in regions.items() if v & (LIMBS | co.BOW)}
+    foreground = {p for p, v in regions.items() if v & (LIMBS | co.BOW)}
+    blocked = head | foreground
     if base not in halfelfgarments.CLOAKED:
         # Use the long cape actually fitted to this half-elf. Foreground
         # wrists, the native drawn bow, the head and feet retain precedence.
-        ranger, _ = study.rows(key, pose, "Ranger")
-        _, _, cape, _ = single_masks(study, obj, pose, "Ranger")
-        visible = cape.keys() - blocked
-        for p in visible:
+        fabric, repairs = outer_cape(study, obj, pose)
+        # The parent figure's long locks used to cover the middle of this
+        # panel. Only the actual hood can still hang over the repaired folds.
+        if "Thief" in role and repairs:
+            _, hood, _, _ = single_masks(study, obj, pose, "Thief")
+            foreground.update(head & hood)
+        visible = {p: fold for p, fold in fabric.items() if p not in blocked}
+        visible.update((p, fold) for p, fold in repairs.items() if p not in foreground)
+        for p, (source, shade) in visible.items():
             x, y = p
             if outfit[y+pad][x+pad] is None and not any(
                 (x+dx, y+dy) in visible or he.at(outfit, x+dx+pad, y+dy+pad) is not None
                 for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy
             ):
                 continue  # A lone Ranger fold can lose its shoulder behind the foreground arm.
-            store("cape", p, ranger[y+pad][x+pad])
-            store("cloak", p, cape[p])
+            store("cape", p, source)
+            store("cloak", p, shade)
     combat, f = divmod(pose, 15)
     for p in spritebelts.waist(obj, combat, f):
         x, y = p

@@ -107,6 +107,21 @@ class HalfElfEquipmentTests(unittest.TestCase):
                                     protected = set(frame.head).union(*(frame.regions[bit] for bit in foreground_bits))
                                     self.assertTrue(armor.isdisjoint(protected))
 
+    def test_outer_cloak_covers_the_middle_of_the_half_elf_back(self):
+        # Follow the middle fold as the torso shifts through rear idle and
+        # four walking steps. A role's diagonal strap used to cut across it.
+        for figure, centers in ((306, (9, 6, 3, 6, 9)), (307, (9, 8, 8, 9, 8))):
+            for role in ("Cleric", "Cleric/Preserver", "Cleric/Preserver/Thief", "Fighter", "Psionicist"):
+                frames = classoutfits.frames(role, False, figure)
+                for pose, center in zip((1, 7, 8, 9, 10), centers):
+                    cloth = {(x, y) for x, y, _ in frames[pose].equipped_cape}
+                    middle = {(x, y) for y in range(10, 14) for x in range(center-1, center+2)}
+                    self.assertTrue(middle <= cloth, (figure, role, pose, middle - cloth))
+
+        for pose, stitch in ((9, (13, 11)), (10, (10, 12))):
+            frame = classoutfits.frames("Cleric/Preserver", False, 307)[pose]
+            self.assertIn(stitch, {(x, y) for x, y, _ in frame.equipped_cape})
+
     def test_thief_cloak_follows_the_womans_shoulder_in_the_front_strike(self):
         for role in ("Thief", "Fighter/Psionicist/Thief"):
             frame = classoutfits.frames(role, True, 307)[1]
