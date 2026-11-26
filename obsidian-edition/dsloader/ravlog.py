@@ -55,6 +55,7 @@ EFFECTS: Dict[str, object] = {
     "FOG_EFFECT": ravspells.FOG_EFFECT, "FRIENDS_EFFECT": ravspells.FRIENDS_EFFECT,
     "GRACE_SPELL": ravspells.GRACE, "CLAW_SPELL": ravspells.CLAW, "FOG_SPELL": ravspells.FOG,
     "REFLECT_SPELL": ravspells.REFLECT, "SPOOK_SPELL": ravspells.SPOOK, "FRIENDS_SPELL": ravspells.FRIENDS,
+    "RESTORE_YOUTH_SPELL": ravspells.RESTORE_YOUTH,
     "NEW_SPELLS": dict(ravspells.SPELLS), "NEW_SPELL_LEVELS": dict(ravspells.LEVELS),
     "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
     "HALVING_EFFECTS": ((77, 0x02), (73, 0x04), (78, 0x80), (38, 0x06)),  # Prot Fire, Cold, Lightning; Fire Shield
@@ -537,7 +538,7 @@ SPELL_STARTS, SPELL_STARTS_ROW, SPELL_LEVELS_MOST = 0x0656, 11, 10  # (DS bytes,
 # priest: each level's first spell, 1 to 10, then the end: 0, 12, 25 ... 111, 115; 115, 127 ... 233, 235)
 SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
-SPELLS_END = ravspells.FIRST + len(ravspells.SPELLS)  # (past the new spells, 320-325, in the Loader's copy)
+SPELLS_END = ravspells.RESTORE_YOUTH + 1
 
 
 def spell_table(resources: bytes) -> Tuple[bytes, List[str]]:
@@ -775,6 +776,8 @@ class RavGameData(game.GameData):
         spell (wizard spells below RAV_PRIEST_FIRST: WIZARD_CLASSES; the rest PRIEST_CLASSES, spheres
         aside), a ranger's 7 less; a psionic power the psionicist's level; Enlarge's levels for the
         attack (DSCLOG2's ENL_SITE, 608h:52h) come from here. None for monsters' own powers."""
+        if spell in (ravspells.WHIRLWIND, ravspells.RESTORE_YOUTH):
+            spell = RAV_PRIEST_FIRST
         if not 0 <= spell < RAV_MONSTER_FIRST:
             return None
         if spell >= RAV_PSIONIC_FIRST:

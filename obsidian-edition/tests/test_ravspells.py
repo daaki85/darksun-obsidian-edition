@@ -112,6 +112,17 @@ class GameFileTests(unittest.TestCase):
                 self.assertEqual(got[key], value, key)
         self.assertEqual(got[("DATA", ravspells.REFLECT)][:4], self.game[("DATA", 19)][:4])
 
+    def test_priest_resources(self):
+        patched, _ = ravager.resources_fixed(self.data, frozenset(), None, SL)
+        records = gff.read_gff(patched)
+        for number, name in ((326, b"WHIRLWIND"), (327, b"RESTORE YOUTH")):
+            data = records["DATA", number]
+            self.assertEqual(len(data), ravager.SPELL_SIZE)
+            self.assertEqual(data[32:64].rstrip(b"\0"), name)
+            self.assertTrue(records["SPIN", number + 1].startswith(name))
+            self.assertEqual(len(sequelicons.decode(records["ICON", 21000 + number])), 16)
+        self.assertEqual(records["DATA", 327][0x1C:0x1F], bytes(3))
+
     def test_program(self):
         """The patches' bytes are the sequel's DSUN.EXE's, its effect records 113-116 empty, and
         dos/ns_cmp_table.inc NS_CMP's table from the patched program."""

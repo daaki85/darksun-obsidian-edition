@@ -42,6 +42,8 @@ NAMES = {GRACE: b"CAT'S GRACE", CLAW: b"ERDLU CLAW", FOG: b"FOGBOLT", REFLECT: b
          SPOOK: b"SPOOK", FRIENDS: b"FRIENDS"}
 SHORT_NAMES = {GRACE: b"CATGRACE", CLAW: b"ERDLUCLW", FOG: b"FOGBOLT", REFLECT: b"REFLIMAG",
                SPOOK: b"SPOOK", FRIENDS: b"FRIENDS"}
+WHIRLWIND, RESTORE_YOUTH = range(FIRST + 6, FIRST + 8)
+PRIEST_TEMPLATES = ((WHIRLWIND, game.WHIRLWIND_SPELL, 22), (RESTORE_YOUTH, game.RESTORE_YOUTH_SPELL, 194))
 STRENGTH, ENLARGE, CHARM, MIRROR = 23, 5, 2, 19
 TEMPLATES = {GRACE: STRENGTH, CLAW: ENLARGE, FOG: CHARM, REFLECT: MIRROR, SPOOK: CHARM, FRIENDS: STRENGTH}
 HASTE, SHOCKING_GRASP, FOG_CLOUD, MAGIC_MISSILE = 29, 10, 15, 8
@@ -166,6 +168,19 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
     out: Dict[Tuple[str, int], bytes] = {("DATA", spell): record(resource, spell) for spell in SPELLS}
     out.update(icons_for(resource, sl_dir))
     out.update(texts())
+    for spell, original, template in PRIEST_TEMPLATES:
+        data = bytearray(_record(resource, template))
+        if spell == WHIRLWIND:
+            data[4:7] = bytes((0, 1, 0))       # one round per caster level
+            data[0x1A:0x20] = bytes((8, 2, 0, 0x11, 8, 0xA1))
+        else:
+            data[0x1C:0x1F] = bytes(3)         # the touch restores years, not HP
+            data[CAST_SOUND] = _record(resource, 148)[CAST_SOUND]
+        name = game.PRIEST6_SPELLS[original].upper().encode("ascii")
+        data[RECORD:] = name.ljust(NAME, b"\0") + name.replace(b" ", b"")[:8].ljust(SHORT, b"\0")
+        out["DATA", spell] = bytes(data)
+        out["ICON", ICON_BASE + spell] = resource["ICON", ICON_BASE + template]
+        out["SPIN", spell + TEXT_BASE] = spelltexts.TEXTS[original + 1].encode("ascii") + b"\r\n"
     return out
 
 
