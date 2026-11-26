@@ -288,7 +288,7 @@ classes ([kits](#kits)).
 
 The change starts the new class at 0 XP, and any XP past the old level's need
 is lost: change as soon as the level you want comes. How far the new class can
-then rise: [XP left over at the top](#xp-left-over-at-the-top).
+then rise: [XP stops at the cap](#xp-stops-at-the-cap).
 
 ## The classes
 
@@ -919,7 +919,8 @@ Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly
 (374,999 each), three too (249,999); and a human who changed class has the
 cap less what its old classes' levels needed (the game starts the new class
-at 0 XP). XP keeps counting past the cap. The highest levels:
+at 0 XP). XP stops at the cap too ([XP stops at the cap](#xp-stops-at-the-cap)). The
+highest levels:
 
 | Class | One class | Two classes | Three classes |
 |---|---|---|---|
@@ -965,18 +966,23 @@ AD&D's tables:
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
 
-### XP left over at the top
+### XP stops at the cap
 
-The cap stops levels, not XP: past a class's highest level the XP keeps
-counting (to the game's own limit, 2,000,000,000), but no level comes of it.
-What is left over is the cap less the XP the highest level needed. For a human
-it is also the room a new class has: dual-classing starts the new class at 0
-XP, and the new class may rise only as far as the cap less the old class's
-level's XP allows.
+A character's XP stops at its share of the cap: once it gets there, nothing
+more counts. The Loader holds it there as each award comes, and the dice log
+says what wasn't counted (`Jenna's XP held at the cap: 749,999 (30 not
+counted)`); View Character shows the XP held. So no XP is banked past the top: a character at its share is at its
+highest level, and the XP between that level's need and the share brings no
+level. *Without the mod* (or the game played without the Loader following it):
+XP counts on to the game's own limit, 2,000,000,000, and no level comes of it.
+
+The share is also, for a human, the room a new class has: dual-classing starts
+the new class at 0 XP, and the new class may rise only as far as the cap less
+the old class's level's XP allows; its XP stops there.
 
 One class, with AD&D's tables:
 
-| Class | Highest level | XP it needs | Next level needs | Left over |
+| Class | Highest level | XP it needs | Next level needs | XP past it, to the cap |
 |---|---|---|---|---|
 | Fighter | 10 | 500,000 | 750,000 | 249,999 |
 | Gladiator | 10 | 600,000 | 900,000 | 149,999 |
@@ -1842,6 +1848,17 @@ marks each). Twin-blades fight with them as with any two weapons, with no
 penalty in light armour; Battle Dancers and Brutes can't use them.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
+### Lotulis, double spear and trikal
+
+Wake of the Ravager's weapons have their sequel's traits, for a character specialized in them (its
+weapon spec chosen; mastery too). The **lotulis** and **double spear** have a head at each end: in a
+round of two swings or more, the last goes to a second foe beside the wielder, on the first
+target's side, if there is one; the double spear's second head does 1 less damage. A **trikal**
+hit that does damage **trips** a man-sized or smaller foe unless it saves against paralysis: it
+loses its next turn (who is too big, as for the [cahulaks](#cahulaks)). A trikal also has a
+polearm's [reach](#polearm-reach), for anyone who holds it. The double spear and
+trikal are for gladiators only, as in the sequel. *Without the mod:* the game has none of them.
+
 ### Stinkpots
 
 The staff sling throws clay pots of burning sulphur: 1d3 damage
@@ -1857,7 +1874,7 @@ which only a half-giant can hold beside it, is fine; a bow in the missile slot
 too) strikes a foe two squares away as well as an adjacent one: two squares
 straight, or two across and one along, not two diagonally. The attack pointer
 shows the sword over such a foe; it reaches over a creature in between, not
-through a wall. Foes with polearms have the reach too. With a bow in the
+through a wall. The trikal, a polearm with three blades, has it too. Foes with polearms have the reach too. With a bow in the
 missile slot, a click on a foe two squares away swings the polearm; from three
 on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 
@@ -1943,6 +1960,10 @@ class](#magic-weapons-by-class).
 | Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
+| Two-handed sword | Wake of the Ravager's: obsidian, 1d10 (3d6 against a large target), two-handed |
+| Lotulis | Wake of the Ravager's: stone, 1d10 (1d12 against a large target), two-handed, two-headed ([below](#lotulis-double-spear-and-trikal)) |
+| Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([below](#lotulis-double-spear-and-trikal)) |
+| Javelin, darts | Wake of the Ravager's, thrown from the missile slot: obsidian 1d6, one a round; darts 1d3, two a round; a specialist throws either faster ([rates of fire](WEAPON-SPECS.md)) |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

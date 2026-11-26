@@ -38,7 +38,7 @@ def type_table() -> bytes:
     and a leather chest armour (LEATHER: the plate's, of leather)."""
     table = bytearray(ravager.TYPE_SIZE * ravager.GAME_TYPES)
     table[RING * 15:RING * 15 + 15] = bytes.fromhex("000001fa4009000000000000ff1f00")
-    table += b"".join(ravager.wotr_type(t) for t in npcitems.TYPES)
+    table += b"".join(ravager.wotr_type(t) for t in npcitems.TYPES[:ravager.MOD_TYPES])
     leather = bytearray(table[PLATE * 15:PLATE * 15 + 15])
     leather[4] = (leather[4] & 0xF0) | 5
     table += bytes((LEATHER - len(table) // 15) * 15) + leather

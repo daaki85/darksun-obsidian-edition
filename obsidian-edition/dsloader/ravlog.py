@@ -24,8 +24,9 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, labels, loot, monsters, \
-    psiblast, quicksave, ravager, ring, rings, sizes, stealth, targeting, textlog, usable
+from . import aging, combatlog, dicelog, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, keywatch, labels, \
+    loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, targeting, textlog, \
+    usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -363,6 +364,10 @@ def apply_layout() -> int:
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
+    for module, names in RAV_FIGHT_KEYS.items():  # (R's squares in reach, F10 after the last step)
+        for name, value in names.items():
+            _SAVED.append((module, name, getattr(module, name)))
+            setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
     for module, names in rav_items().items():  # (looting with T, selling with S: the item lists' words)
@@ -413,6 +418,33 @@ RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
 # underground: VA Headquarters, Pyramid, Yuan-ti Tunnels, El's Temple, Mines1-3, Mosaic, Volcano
 # Levels 1-3, Crypt, Cosmos, UnderTyr.
 RAV_OUTDOORS = frozenset((0x01, 0x32, 0x3B, 0x41, 0x42, 0xFF))
+# The squares in reach shown and hidden with R, and F10 taking a move back after its last step (squares.py,
+# moveback.py; DSCLOG2's SQUARES, VIEW_REDRAW and F10_PIN): the sequel's live walk map, DS:0538h (SL's 0556h:
+# ravds, five uses agree; the walls' cells C0h, a cell no one walks into 40h), a creature's movement points
+# and its turn's flags, words at the load + 3C4Fh (selector 308h) +22Eh and +1D8h (the step routine 5D8C9h-
+# 5D8F1h: SL's 37BDh +22Bh and +1D5h, the step 10 or 14 from DS:0551h), its swings this round and attack
+# commands this turn, bytes there at +184h and +1AEh (SL's +181h, +1ABh: their only such reads); F10's
+# turn's own points and first square, DS:4258h, 425Ah (y), 425Ch (x) (F10 at 1EC05h: SL's 4964h, 4966h,
+# 4968h), the map things' standing still (bit 20h of +0, 1F3FCh) and feet; a walk's next step and steps
+# left, the load + 3F49h (selector 388h) +374h a thing x 1Ch and +8A7h x 13h (SL's 3972h +377h, +8AAh: each
+# their commonest use); the effects that pin, Paralyzed 69 and Cannot Move 66 (826F6h, SL's 34 and 51). DSCLOG2's
+# header past the quick saves' (+1922 VIEW_REDRAW, +1924 SQUARES_ON, +1926 LIGHT's offset: DSCLOG's +242,
+# +1890, +236), LIGHT made in the sequel's colours (RED_FIRST to RED_LAST: its 1-31 cycle).
+FK_VIEW_REDRAW, FK_SQUARES_ON, FK_LIGHT = 1922, 1924, 1926
+FK_SQUARE_DRAWS, FK_F10_MOVES, FK_F10_KEPT, FK_MARK_DRAWS = 1928, 1930, 1932, 1934
+RAV_FIGHT_KEYS = {
+    squares: {"TSR_SQUARES_ON": FK_SQUARES_ON, "TSR_LIGHT": FK_LIGHT, "WALK_MAP": 0x0538, "POINTS_SEG": 0x3C4F,
+              "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "POSITIONS": RAV_POSITIONS, "POSITION_SIZE": RAV_POSITION_SIZE,
+              "LIGHT_FIRST": 32, "LIGHT_LAST": 255},
+    moveback: {"POINTS_SEG": 0x3C4F, "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "ATTACKS_OFF": 0x184,
+               "COMMANDS_OFF": 0x1AE, "START_POINTS": 0x4258, "START_Y": 0x425A, "START_X": 0x425C,
+               "MAP_RECORD": 0x67BB, "MAP_SIZE": RAV_POSITION_SIZE, "POSITIONS": RAV_POSITIONS,
+               "WALK_SEG": 0x3F49, "WALK_STEP": 0x374, "WALK_LEFT": 0x8A7, "PINNING": (69, 66)},
+    shadows: {"TSR_VIEW_REDRAW": FK_VIEW_REDRAW},
+    usable: {"DRAW_LIST": 0x67B7, "DRAW_COUNT": 0x264E, "DRAW_MOST": 2000, "MAP_OBJECT": 0x1B,
+             "TRIGGERS_PTR": 0x40C0, "HEADS_SEG": 0x3C10, "STATUS_DEAD": 7, "HOSTILE_SIDES": 0xF80,
+             "DOOR_TYPES": (41,), "BODIES": (2200,)},
+}
 TYPE_FIELDS = {0: 0, 2: 1, 4: 2, 6: 3, **{sl: sl - 4 for sl in range(8, 19)}}  # SL's offset -> the sequel's
 TYPES_SHOWN = 256  # (the types a read of the table may name: SL's layout served for this many)
 
@@ -1056,6 +1088,7 @@ def wotr_folder(given: Optional[str]) -> Optional[str]:
 
 
 KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from the header's +350 (DSCLOG's)
+DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
 
@@ -1335,19 +1368,135 @@ class RavDiceLog(dicelog.DiceLog):
                                      lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
         on = self.ring_mode != rings.OFF
         changes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))
-        if on and changes and changes != self._red_at:
+        if on and changes and changes != self._red_at and not self._gold:  # (RED gold while Alt marks: _marks)
             dac_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_DAC, 2))
             far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
             self.guest.write(red_at, rings.red_table(self.guest.read(far * 16 + dac_off, 768), RED_FIRST, RED_LAST))
             self._red_at = changes
-        want = int(on and self._red_at is not None)
+        want = int(bool((on and self._red_at is not None) or self._gold))
         if want != self._rings_on:
             self.guest.write(self.tsr_hdr + rings.TSR_RINGS_ON, struct.pack("<H", want))
             self._rings_on = want
         return out
 
     _red_at: Optional[int] = None  # (DSCLOG2's count of palette changes RED was made at)
+    _gold: Optional[int] = None  # (while Alt's rings are up: DSCLOG2's count of palette changes RED was made gold at)
+    _ring_tab: Optional[bytes] = None  # (RING_TAB as last written)
+
+    def _marks(self, now: float) -> None:
+        """SL's (Alt held on the map out of a fight: a gold ring under everything that can be used, usable.py, the
+        names of those nearest the pointer), on DSCLOG2's RING_TAB (its header's +246) and RED, which is the Tab
+        ring's red again once Alt is let go (rings.py's Rings has the table's one owner in SL; here _target_pass
+        makes RED red, and leaves it while the marks are up). Each change of the table has the view drawn again
+        (DSCLOG2's VIEW_REDRAW)."""
+        if self.game is None or not self._fight_keys_helper() or self._label_slots() is None:
+            return
+        if self.show_usable and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = dicelog._game_font(self.game_dir)
+        table = self._usable.update(self.game, self.tsr_hdr, self.show_usable, now, self._labels)
+        hdr = self.tsr_hdr
+        far = struct.unpack("<H", self.guest.read(hdr + rings.TSR_FAR_SEG, 2))[0] * 16
+        tab_at = far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_RING_TAB, 2))[0]
+        red_at = far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_RED, 2))[0]
+        changes = self._dac_changes()
+        with self._writable([(tab_at, rings.THINGS), (red_at, 256), (hdr + FK_VIEW_REDRAW, 2),
+                             (hdr + rings.TSR_RINGS_ON, 2)]):
+            want = table or bytes(rings.THINGS)
+            dac = lambda: self.guest.read(far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_DAC, 2))[0], 768)
+            if table is not None and self._gold != changes:  # (gold, made again when the palette changes)
+                self.guest.write(red_at, rings.gold_table(dac(), RED_FIRST, RED_LAST))
+                self._gold = changes
+                if not self._rings_on:
+                    self.guest.write(hdr + rings.TSR_RINGS_ON, struct.pack("<H", 1))
+                    self._rings_on = 1
+            elif table is None and self._gold is not None:  # (Alt let go: the Tab ring's red again)
+                self._gold = None
+                self.guest.write(red_at, rings.red_table(dac(), RED_FIRST, RED_LAST))
+                self._red_at = changes
+            if want != self._ring_tab:
+                self.guest.write(tab_at, want)
+                self._ring_tab = want
+                shadows.redraw(self.game, hdr)
     _rings_on: Optional[int] = None  # (RINGS_ON as last written)
+
+    @contextmanager
+    def _writable(self, ranges: List[Tuple[int, int]]) -> Iterator[None]:
+        """RANGES (address, size) writable while a pass runs, then read only again."""
+        before = self.guest.writable
+        self.guest.writable = before + [r for r in ranges if r not in before]
+        try:
+            yield
+        finally:
+            self.guest.writable = before
+
+    def _fight_keys_helper(self) -> bool:
+        """Whether DSCLOG2 has the squares, VIEW_REDRAW and RING_TAB (its header's +246, RING_TAB's offset, 0 in a
+        helper before them)."""
+        return self.tsr_hdr is not None and self.guest.read(self.tsr_hdr + rings.TSR_RING_TAB, 2) != b"\0\0"
+
+    def _squares_ranges(self) -> List[Tuple[int, int]]:
+        """What squares.Squares writes: SQUARES_ON, VIEW_REDRAW, SQ_MAP in DSCLOG2's PSP and LIGHT in its far block."""
+        hdr = self.tsr_hdr
+        far, = struct.unpack("<H", self.guest.read(hdr + rings.TSR_FAR_SEG, 2))
+        light, = struct.unpack("<H", self.guest.read(hdr + FK_LIGHT, 2))
+        return [(hdr + FK_VIEW_REDRAW, 2), (hdr + FK_SQUARES_ON, 2),
+                (hdr - squares.PSP_BYTES + squares.SQ_MAP_PSP, squares.MAP_BYTES), (far * 16 + light, 256)]
+
+    def _dac_changes(self) -> int:
+        """DSCLOG2's count of the palette's changes (DAC_TICK's): LIGHT made again when it counts (SL's
+        shadows.Shadows.palettes)."""
+        return struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))[0]
+
+    def _squares_pass(self, now: float) -> None:
+        """SL's squares in reach (squares.py, in SL's _drawn four times a second), on DSCLOG2's SQUARES, and
+        Alt's rings (_marks) as often."""
+        if now < self._next_squares or self.game is None or not self._fight_keys_helper():
+            return
+        self._next_squares = now + dicelog.EFFECT_INTERVAL
+        with self._writable(self._squares_ranges()):
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares and self.squares_shown, self._dac_changes())
+        self._marks(now)  # (Alt's rings: the view scrolled, the names nearest the pointer)
+
+    _next_squares = 0.0
+
+    def _squares_key(self, now: float) -> List[str]:
+        """SL's (R on the map in a fight shows or hides the squares in reach, read from the BIOS keyboard
+        buffer: keywatch.py; the sequel's map keys, its table at 1F091h, have no R), on DSCLOG2's SQUARES."""
+        if self.game is None:
+            return []
+        pressed = [key for key in self._keys.take(self.game.guest) if key in (keywatch.KEY_R, keywatch.KEY_SHIFT_R)]
+        if not pressed or not self.show_squares or not self._fight_keys_helper():
+            return []
+        if self.game._word(quicksave.SCREEN_IS) != quicksave.ON_MAP or not self.game.in_combat():
+            return []
+        if len(pressed) % 2 == 0:  # (pressed twice between two looks: as it was)
+            return []
+        self.squares_shown = not self.squares_shown
+        dicelog._remember({"squares_shown": self.squares_shown})
+        with self._writable(self._squares_ranges()):
+            self._squares.update(self.game, self.tsr_hdr, self.squares_shown, self._dac_changes())
+        turn = self.game.whose_turn()
+        self._float(turn if turn is not None and turn < game.PARTY_SIZE else 0,
+                    "Squares shown" if self.squares_shown else "Squares hidden", labels.SPELL_INK, now)
+        return ["Squares in reach: shown (R hides them)" if self.squares_shown
+                else "Squares in reach: hidden (R shows them)"]
+
+    def _move_back_pass(self) -> List[str]:
+        """SL's (moveback.py: F10 after the last step gives the walk back), the member's turn flags and its
+        walk's words made writable while it runs."""
+        if self.game is None or not self.game.in_combat():
+            return super()._move_back_pass()
+        turn = self.game.whose_turn()
+        creature = self.game.combatant_creature(turn) if turn is not None and turn < game.PARTY_SIZE else None
+        if creature is None:
+            return super()._move_back_pass()
+        load = self.game.load_seg
+        flags = (load + moveback.POINTS_SEG) * 16 + moveback.FLAGS_OFF + creature * 2
+        walk = (load + moveback.WALK_SEG) * 16
+        with self._writable([(flags, 2), (walk + moveback.WALK_STEP + turn * moveback.WALK_STEP_SIZE, 1),
+                             (walk + moveback.WALK_LEFT + turn * moveback.WALK_LEFT_SIZE, 2)]):
+            return super()._move_back_pass()
 
     def _quick_ranges(self) -> bool:
         """DSCLOG2's quick save words (its header's +1904 to +1917), SAVE_TEXT, and the game's page letters
@@ -1505,6 +1654,10 @@ class RavDiceLog(dicelog.DiceLog):
             self._labels.on = self.floating_names
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
         out += self._step(lambda: self._target_pass(now))  # (Tab, Enter and the ring: DSCLOG2's TARGETING)
+        out += self._step(lambda: self._squares_key(now), quiet=True)  # (R: the squares in reach, SQUARES)
+        self._step(lambda: self._squares_pass(now), quiet=True)
+        out += self._step(self._move_back_pass, quiet=True)  # (F10 after the last step: moveback.py)
+        self._step(lambda: self._usable_key(now), quiet=True)  # (Alt held: what can be used ringed, usable.py)
         if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)
             self._step(lambda: self._hover_pass(now))
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
@@ -1603,11 +1756,21 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _sell_pass(self) -> List[str]:
         """Shattered Lands' (S on a shop's screen: the member's plain gear sold once the shop is shut,
-        sell.py), on DSCLOG2's SELL_KEY and SHOP_LOOP (its header's +1852 to +1859, DSCLOG's)."""
+        sell.py), on DSCLOG2's SELL_KEY and SHOP_LOOP (its header's +1852 to +1859, DSCLOG's). Then
+        SELL_DONE (+1884, DSCLOG2's own) given the S seen to (sold, or nothing to sell): SHOP_LOOP holds
+        the shop's way back to its merchant's talk till then, as the script there reads the money to
+        tell a sale from none (Notaku's "Thank you, your business is appreciated.")."""
         if self.tsr_hdr is None or self.game is None:
             return []
-        with self._items_writable():
-            return super()._sell_pass()
+        with self._items_writable((DSCLOG2_SELL_DONE,)):
+            try:
+                return super()._sell_pass()
+            finally:
+                seen = self._sell_seen
+                if seen is not None and seen[0] == self.tsr_hdr:
+                    done = struct.pack("<H", seen[1])
+                    if self.guest.read(self.tsr_hdr + DSCLOG2_SELL_DONE, 2) != done:
+                        self.guest.write(self.tsr_hdr + DSCLOG2_SELL_DONE, done)
 
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)
     _hastes: Optional[set] = None  # (the Hasted effects' records the last steady look found)

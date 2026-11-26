@@ -277,6 +277,11 @@ MANUAL_TANGLE = 10  # (DSCLOG's CAHULAKS: +6 the target, +8 the attacker, +0Ah t
 # the stinkpot here; STINK_UNDEAD, STINK_IMMUNE none); after it +6, +8, +0Ah the d3 and +0Ch the rounds
 # Nauseated (0 and 0: saved)
 MANUAL_STINK, MANUAL_NAUSEA = 11, 12
+# ... and the Wake of the Ravager weapons' traits (DSCLOG's TRIKAL AND THE TWO-HEADED WEAPONS): a trikal
+# specialist's trip, as the tangle's frame (its save against paralysis); a lotulis or double spear
+# specialist's last swing turned on a second foe: +6 that foe, +8 the attacker, +0Ah the first target,
+# +0Ch 1 for the double spear's 1 less
+MANUAL_TRIP, MANUAL_SECOND = 13, 14
 STINK_SAVES, STINK_UNDEAD, STINK_IMMUNE = 0, 1, 2
 # DSCLOG's rest (game.RULE_REST: REST_PRE, REST_HP, RS_REC): raw = what; a cast at rest (REST_CAST): its
 # frame +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's level (0 a psionic power), +0Eh the
@@ -662,6 +667,7 @@ class DiceLog:
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._stink: Optional[Tuple[int, int, bool]] = None  # (a stinkpot's target, thrower, its save line seen)
+        self._second_head: Optional[Tuple[int, int]] = None  # (a double spear's second foe and its wielder: DSCLOG's SF_LESS)
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
@@ -3216,6 +3222,16 @@ class DiceLog:
             then = "saved" if saved else "tangled: loses its next turn"
             return [f"    {self._name(a)}'s cahulaks tangle {name}? Save against petrification: "
                     f"d20 = {b}, needs {c}+ -> {then}"]
+        if e.raw == MANUAL_TRIP:
+            saved = b == 20 or b >= (c or 0)
+            then = "saved" if saved else "tripped: loses its next turn"
+            return [f"    {self._name(a)}'s trikal trips {name}? Save against paralysis: "
+                    f"d20 = {b}, needs {c}+ -> {then}"]
+        if e.raw == MANUAL_SECOND:
+            weapon, less = ("double spear", ", 1 less damage") if c else ("lotulis", "")
+            self._second_head = (who, a) if c else None
+            return [f"    {self._name(a)} turns the {weapon}'s last swing from {self._name(b)} to {name}, "
+                    f"beside it (a specialist's second foe{less})"]
         if e.raw == MANUAL_STINK:
             if b == STINK_SAVES:  # (the game's save line next, named for it: _save_line)
                 self._stink = (who, a, False)
@@ -3784,6 +3800,13 @@ class DiceLog:
             if less:
                 total -= less
                 steps += f" -{less} Biofeedback"
+        if self._second_head is not None and e.parent_arg(0x14) == game.DOUBLE_SPEAR_TYPE:
+            # (the double spear's second head, at a specialist's second foe: 1 less, at least 1;
+            # DSCLOG's SF_LESS, its frame the MN_SECOND line's)
+            if self._second_head == (e.glob[0], attacker) and total > 1:
+                total -= 1
+                steps += " -1 second head"
+            self._second_head = None
         target = g.combatant_creature(e.glob[0])
         if target is not None:  # so the HP it takes isn't put down to a spell being cast
             self._hit(target, total, now)

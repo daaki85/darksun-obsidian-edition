@@ -19,7 +19,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -699,10 +699,21 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
         # him off, the region's own: said too, not dropped unseen)
         gifts_too = f"; with it the gifts placed in {kalzith.REGION_FILE}" if pens_clones else ""
-        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
-                        + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             _remove_override(os.path.join(DOS_DIR, name))
+        # ... but the item types and names, which the Loader's items need (itemtables.py), in a copy
+        # of their own if they can be
+        items_too = ""
+        source = _find_file(game_dir, kalzith.SCRIPTS_FILE)
+        try:
+            if not source:
+                raise OSError(f"no {kalzith.SCRIPTS_FILE}")
+            itemtables.write(source, os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
+            items_too = "; with it the new items' types and names"
+            _remove_override(os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
+                        + gifts_too + items_too)
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
     pointer = os.path.join(DOS_DIR, scenepointer.POINTER_FILE)
     if not scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE),

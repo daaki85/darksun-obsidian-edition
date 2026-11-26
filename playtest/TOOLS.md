@@ -25,6 +25,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `click.py X Y [left\|right\|none]` | move the game's pointer to game pixel X,Y (320x200) and click. |
 | `creationscores.py` | the creation screen's scores, classes and race, and the least and most the game last worked out |
 | `dacwatch.py SECONDS` | DSCLOG's copy of the palette (TSR_DAC) watched: each change, hashed whole and for colours 16-223 only. |
+| `darkfix_apply.py GPLDATA_IN GPLDATA_OUT FIXES_DIR` | put OpenDS darkfix-ds1 GPL repairs (every fix .py in FIXES_DIR, a checkout of their ds1-patch/fixes) into a copy of GPLDATA.GFF, with our own code: each fix's REPAIRS list is read by AST, never imported or run, and... |
 | `dec.py SCRIPT LO HI` | decode GPL script SCRIPT (the game's own GPLDATA.GFF, $DS_GAME) from offset LO to HI (hex): each command's offset, number and arguments. |
 | `dismiss.sh [N]` | click away up to N (default 6) waiting messages (msgbox.sh), then print the dice log's last lines. |
 | `doorpath.py TC TR` | the shortest way from the leader to square (TC, TR) on the live grid, through closed doors too (live 192+ where the region file has a doorway); |
@@ -40,7 +41,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `figwatch.py SECONDS [EVERY] [TAG]` | passive watch for the party's figures (no writes). |
 | `fillcache.py MEMBER SLOT UNTIL` | fills the game's picture slots (cachelist.py) the way a change of gear does, fast. |
 | `foepos.py` | each combatant past the party: its name, HP and figure on screen (feet x, y - 10) |
-| `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
+| `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [name=S] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
 | `follow.py OBJECT [ROUNDS]` | keep the party within a few squares of a map object that walks (an escort). |
 | `framerate.py SECONDS [X1 X2 Y]` | walks the party back and forth between screen points (X1,Y) and (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. |
 | `gamekeys.py [dis START [LEN]]` | the keys the game itself acts on with the map up, read from DSUN.EXE ($DS_GAME): the root's table at 1BC5Bh (26 keys, then their handlers), the map overlay's at 71C1Bh (overlay 4272h: 33 keys) and that overlay's jump... |
@@ -94,6 +95,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `picstart.sh PICTURE [SCALE] [OUT_DIR]` | the game started with one of the Loader's pictures (plain, scanlines, tv, sharp) in a window SCALE times the game's (default 3), NOT the kit's 320x240 start: pens-after-arena loaded by the pointer (click.py), then... |
 | `picstore.py [check\|dump SLOT\|stale]` | the game's picture store (the 741,376 bytes behind memory handle DS:4C33h) as the Loader can reach it (2026-11-09, logs/2026-11-09-picture-store.md). |
 | `pixmatch.py X Y R G B [X Y R G B ...]` | exit 0 if every named pixel of a fresh 320x240 window grab is that colour, within 3 a channel and one row up or down. |
+| `placefoe.py THING DX DY [MEMBER]` | map thing THING (a foe's combatant number) put DX, DY squares from party member MEMBER (default 1) in memory (DS:669Dh + 20h a thing, in sixteenths): a foe beside a member for a melee test, or two squares off for a... |
 | `playsound.py N` | have DSCLOG play sound N from the map's main loop (its header's SOUND_REQ, +1822): a game sound (0-130) or one of the mod's (140, 141). |
 | `pocket.sh MEMBER_X MEMBER_Y NAME [PURSE_X]` | one pocket try: U, the thief's portrait on the USE screen (its position), the purse (157,145, a slow press; |
 | `pointer.py [walk\|look\|attack [X Y]]` | the map pointer's mode (DS:11B8h: 1 walk, 2 look (the eye: also talk, use), 4 attack; |
@@ -114,6 +116,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravhold.sh [FOLDER]` | a real Hold Person in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the held-target rule (DSCLOG2's HELD_HIT, HELD_DAMAGE): ravstart.sh FOLDER (default $WORK/rav; |
 | `ravitems.py N... [--worn]` | Wake of the Ravager's combatant N's items, as its helper reads them: the item number, type, worn slot (+13h), plus (+16h), power (the word at +10h) and the type's material (+4), flags (+0) and armour byte (+0Bh). |
+| `ravkeys.py` | R, F10 and Alt in the running sequel ($WORK/rav.pid): DSCLOG2's words for them and the game's. |
 | `ravkits.py` | the kits in the running sequel ($WORK/rav.pid; |
 | `ravknow.py SPELL [LEVEL]` | a test edit (never saved): Wake of the Ravager's first party member (Ar'anda in the opening party; |
 | `ravload.sh NAME [FOLDER]` | Wake of the Ravager from the save in saves/NAME (SAVE01.SAV, CHARSAVE.GFF, DARKSAVE.GFF copied into FOLDER, default $WORK/rav, as slot 1), started as the Loader starts it (RAV_LOADER=1; |
@@ -123,6 +126,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravscare.sh [FOLDER]` | Scare in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the saving throw's fixes: ravstart.sh FOLDER (default $WORK/rav; |
 | `ravshop.py CMD ...` | Wake of the Ravager's shops and scrolls for a test (run from playtest/; |
 | `ravsites.py [NAME...]` | where Shattered Lands' patch sites (dsloader.gamepatch.PATCHES) are in Wake of the Ravager's DSUN.EXE, by likeness: SL's 64 bytes round each site (the patch's own bytes left out) scored against every place in WotR's... |
+| `ravspecs.py [MEMBER...\|check]` | the weapon specs of the running sequel's party and DSCLOG2's WEAPON PICKS' counts, read only. |
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
 | `ravstore.py [roll\|gear]` | STORE and RECALL and the fuller starting gear in the running sequel ($WORK/rav.pid). |
 | `ravtab.py` | the state of choosing an enemy with Tab in the running sequel ($WORK/rav.pid; |
@@ -157,12 +161,14 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `slotcheck.py [LABEL]` | every map thing with a picture slot (+0Fh) finds its own picture's number in that slot (+18h, the walking picture, or +18h + 1 for its fighting one), and every wall's slot is taken. |
 | `slotcount.py [LABEL]` | one line: the leader's place, the game's picture slots taken (of 300), the store's end (of 741,376), how many are in memory and STALE, and with DSCLOG's PIC_REUSE how many slots it has reused. |
 | `soundmatch.py RAW START END WAV...` | in DOSBox's recorded output (RAW: 16-bit stereo at 44100 Hz, from start.sh with PT_AUDIO set; |
+| `specset.py MEMBER KIND...` | party member MEMBER's weapon specs made KIND... |
 | `spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]` | teaches each MEMBER the spells, fills its slots and sets its casting classes to LEVEL, in memory (never save after). |
 | `squarecost.py LEGS COL1 ROW COL2 [POINTS]` | what a walk costs in a fight, for the squares in reach: on a party member's turn it walks the member along row ROW between columns COL1 and COL2, LEGS times, its points set to POINTS (250) before each leg (a test's... |
 | `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |
 | `squarewalk.py COL ROW [POINTS]` | on a party member's turn in a fight, click the middle of walk-map square COL,ROW with whatever pointer is up (pointer.py walk first) and say where the member stopped and what movement it has left. |
 | `start.sh` | Xvfb :55, the Loader's patched game in DOSBox as the Loader starts it (the repository's current code: rebuild = restart), and the Loader's dice log ($WORK/dice.txt). |
 | `start_recomp.sh` | the game on Dark Sun Recompiled ($DSUN, its build of the mod) instead of DOSBox, with the Loader's patched game prepared as start.sh does and the dice log attached. |
+| `start_stock.sh [GAMEDIR]` | the stock game (no Loader, no dice log) in plain DOSBox on :55, from GAMEDIR (default $WORK/darkfix-inst: a copy of inst with OpenDS's darkfix applied by darkfix_apply.py). |
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |
 | `stepfight.sh` | from the arena gate, clicks south until the fight is on (topartyfight.sh's last loop) |
 | `symread.py` | Read DSCLOG variables by name in the running game: `python3 symread.py NAME [NAME...]` (each's first 4 bytes, hex), from a symbol map of obsidian-edition/dos/dsclog.asm as built (the tree's DSCLOG.EXE). |

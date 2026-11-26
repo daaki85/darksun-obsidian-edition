@@ -1,11 +1,12 @@
-# foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [eff=ID[:SPELL[:AMOUNT]]] ...]:
+# foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [name=S] [eff=ID[:SPELL[:AMOUNT]]] ...]:
 # memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). With no arguments, lists every
 # combatant on the map: its creature, name, HP, sheet, race, classes, levels, magic resistance and
 # the creature record's six scores (+22h: what the game works out from the sheet's +1Bh and the
 # effects), then the table of active effects (owner, caster, spell, effect, handle, charges, amount).
 # With a COMBATANT, writes its SHEET (race +18h, classes +21h, levels +24h, magic resistance +29h:
 # creatures of one kind share a sheet, so all of them change), its creature's HP (+0) or INT score
-# (+25h), and adds effects to the game's table of active effects in owner order (the place the game
+# (+25h) or name (+28h, 15 letters at most: to tell one foe in the dice log from others of its kind),
+# and adds effects to the game's table of active effects in owner order (the place the game
 # keeps them in: 598:B1h finds an owner's first entry and reads on while the owner is the same), with
 # handles from 200 up (no timer: they last until removed, as Feeblemind's or Biofeedback's; or until
 # the game puts the same effect on again, which takes the record's place with its own time: Rainbow
@@ -45,6 +46,8 @@ if len(sys.argv) > 1:
             g.write(s + game.SHEET_MAGIC_RESISTANCE, bytes([int(value)]))
         elif key == 'hp':
             g.write(rec, struct.pack('<h', int(value)))
+        elif key == 'name':
+            g.write(rec + game.CREATURE_NAME, value.encode('cp437')[:15].ljust(16, b'\0'))
         elif key == 'int':
             g.write(rec + game.CREATURE_ABILITIES + 3, bytes([int(value)]))
         elif key == 'eff':

@@ -57,6 +57,80 @@ Releases, newest first (2.12.0 and older in the archive):
 [1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
 [1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+**Fixed: the SL weapons and the Ravager port together**
+- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
+  item types stay the first 33, and SL's new weapon types go across in the party transfer as the
+  sequel's own weapons.
+
+**New: Wake of the Ravager has all 22 weapon specs**
+- A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
+  lotulis, double spear, trikal, javelin, darts) stays that spec in the sequel, for its own Twohand
+  Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts (before, it counted as the
+  nearest of the first sixteen). The javelin and darts have their specialist's rates of fire there,
+  the Effects screen names the six, and a psionicist may still use the sequel's darts.
+
+**New**
+- Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
+  double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
+  name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
+- Six weapon specs for them: the weapon window grows to four rows of six, the
+  title under them, and the specs are stored in a new layout (v3) that keeps the first pick first;
+  older saves read as before.
+- Their traits, for a specialist: the lotulis' and double spear's last swing of a round goes to a
+  second foe beside the wielder (the double spear's for 1 less), and a trikal hit trips a man-sized
+  foe that fails a save against paralysis, which loses its next turn.
+- The trikal reaches two squares, as a polearm does; a specialist throws the javelin (3/2, 2, 5/2
+  a round by level) and darts (3, 4, 5) faster, as for the other missile weapons; and people of the
+  like carry the new weapons: the arena's gladiators, one of Scar's henchmen, the Drajian Guards, a
+  Templar in the pens, the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and
+  Elite Guards, and the pens' weapon rack.
+- The sequel's Darts +1, with a shining icon of its own, thrown by the defiler among the arena's
+  champions.
+- Metal ones of three of the sequel's weapons (a two-handed sword and a lotulis sold by Melkor in
+  Gedron, a javelin on the slave pens' weapon rack in place of the obsidian one), and magic ones
+  placed along the way through the game, the weaker early: Double Spear +1 and +2, Trikal +1 and
+  +2, Lotulis +1 and +2, Great Sword +2 and +3, Javelin +1, each with a shining icon of its own
+  ([the table](obsidian-edition/ITEMS.md#weapons)). A metal lotulis strikes a second foe as any
+  lotulis.
+- Air clerics may use the javelins (a thrown weapon) and water clerics the darts (wood), as their
+  spheres allow (the user's).
+- An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
+  sold by Melkor, and a +1 of each: the Obsidian Lotulis +1 on Dagger, the White Sand Outlaws'
+  chief, the Bone Great Sword +1 on Dakaren at the Silt Sea (the user's).
+- The sequel's weapons and the great axes (the game's Great Axe +3 too) take Wake of the Ravager's
+  own inventory icons from the player's copy, recoloured to Shattered Lands' wood and each item's
+  material; the magic ones shine in the colour the sequel gives its own (green, the water's blue or
+  fire), not all in fire; without it, the Loader's own, the double spear, trikal and
+  darts redrawn at the sequel's sizes (the user's).
+
+**Docs**
+- The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
+  features page, the player's guide, Items and the dice log page have the new weapons and traits.
+
+**Dev**
+- The sixth memory pass: 1,104 bytes of upper memory back for DSCLOG (32 were left with the six
+  weapons; 1,136 now) and 688 of its segment, by one far call into the game for 35 sites
+  (`GAME_FAR`), shared code moving an interrupt's frame (`FRAME_UP`, `FRAME_DOWN`, `OVR_FRAME`) and
+  the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
+  through the install's vector table; `test_framecode` runs the shared routines. A play log:
+  [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
+- The seventh memory pass: 1,296 bytes of upper memory back for DSCLOG (2,208 free now) and 240 of
+  its segment. The Loader's item types and names, and the mends to the game's own types, are in the
+  item chunks of its copy of GPLDATA.GFF (`itemtables.py`) instead of DSCLOG's tables; DSCLOG only
+  notes where the game put them. A new item now costs no resident memory. Nothing the player sees
+  changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md).
+- A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
+  control runs; `specset.py` sets a member's weapon specs in memory.
+
+**Changed**
+
+- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
+  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
+  none is banked past the top level; the dice log says what wasn't counted. The Loader's
+  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
+
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
 No release: these fixes come with the next one.

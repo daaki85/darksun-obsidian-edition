@@ -83,6 +83,51 @@ class GateTests(unittest.TestCase):
         self.assertEqual((gate.opened, view.guest.writes, view.dropped), (1, 2, 1))
 
 
+class SellDoneTests(unittest.TestCase):
+    """RavDiceLog._sell_pass gives DSCLOG2 SELL_DONE (+1884) for the S it has seen to, sold or not, so the
+    shop's way back to its talk is held no longer; not while the item gate made it wait (ItemsBusy)."""
+
+    def setUp(self):
+        from contextlib import contextmanager
+        from unittest import mock
+        from test_ravlog import FakeGuest
+        self.log = log = ravlog.RavDiceLog(FakeGuest())
+        log.tsr_hdr, log.game = 0x9000, object()
+
+        @contextmanager
+        def writable(header=()):  # (as the real one: the header's words HEADER writable meanwhile)
+            before = log.guest.writable
+            log.guest.writable = before + [(log.tsr_hdr + at, 2) for at in header]
+            try:
+                yield
+            finally:
+                log.guest.writable = before
+        log._items_writable = writable
+        self.seen = None
+        patch = mock.patch("dsloader.dicelog.DiceLog._sell_pass", autospec=True, side_effect=self.pass_)
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.addCleanup(ravlog.restore_layout)  # (RavDiceLog() applies the sequel's layout: SL's back for the rest)
+
+    def pass_(self, log):
+        log._sell_seen = self.seen
+        return ["sold"]
+
+    def done(self):
+        return struct.unpack("<H", self.log.guest.read(0x9000 + ravlog.DSCLOG2_SELL_DONE, 2))[0]
+
+    def test_done(self):
+        self.seen = (0x9000, 3)  # (S number 3 seen to)
+        self.assertEqual((self.log._sell_pass(), self.done()), (["sold"], 3))
+        self.log.guest.guest.write(0x9000 + ravlog.DSCLOG2_SELL_DONE, struct.pack("<H", 2))
+        self.seen = None  # (nothing seen yet: nothing given)
+        self.log._sell_pass()
+        self.assertEqual(self.done(), 2)
+        self.seen = (0x8000, 4)  # (another helper's)
+        self.log._sell_pass()
+        self.assertEqual(self.done(), 2)
+
+
 @unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
 class HelperTests(unittest.TestCase):
     """DSCLOG2's LOOT_KEY, SELL_KEY, SHOP_LOOP and MAP_KEY."""
@@ -133,10 +178,10 @@ class HelperTests(unittest.TestCase):
         for name, field in (("loot_seq", loot.TSR_LOOT_SEQ), ("loot_thing", loot.TSR_LOOT_THING),
                             ("loot_mode", loot.TSR_LOOT_MODE), ("sell_seq", sell.TSR_SELL_SEQ),
                             ("sell_member", sell.TSR_SELL_MEMBER), ("sell_merchant", sell.TSR_SELL_MERCHANT),
-                            ("shop_at", sell.TSR_SHOP_AT)):
+                            ("shop_at", sell.TSR_SHOP_AT), ("sell_done", ravlog.DSCLOG2_SELL_DONE)):
             self.assertEqual(self.sym[name] - hdr, field, name)
         self.assertEqual(struct.unpack_from("<H", self.image, hdr + loot.TSR_LOOT_THING)[0], 0xFFFF)
-        for name in ("loot_key", "sell_key", "shop_loop", "map_key", "mk_read", "overhead"):
+        for name in ("loot_key", "sell_key", "shop_loop", "map_key", "mk_read", "overhead", "sell_wait"):
             self.assertLess(self.sym[name], self.sym["resident_end"], name)
 
     def test_loot_key(self):
@@ -170,12 +215,62 @@ class HelperTests(unittest.TestCase):
                           self.word("shop_at")), (0x011B, 1, 2, 33, 0))
         self.assertEqual(self.key(0x1F73), 0x1F73)  # (shut: the next S is the game's)
         self.game(0x143D, 0, 1)
+        self.word("sell_done", 1)  # (the Loader has sold: no hold)
         self.go("shop_loop", frame=struct.pack("<HH", self.TSR, 0x0242))
         flags = struct.unpack("<H", self.mu.mem_read(self.SS * 16 + 0x7F4, 2))[0]
         self.assertEqual((flags & 0x40, self.word("shop_at")), (0, 0))  # (ZF clear: the loop ends; no stamp)
         self.mu.mem_write(0x46C, struct.pack("<H", 503))
         self.word("shop_at", 500)
         self.assertEqual(self.key(0x1F73), 0x1F73)  # (the loop not run for 3 ticks: no shop)
+
+    def hold(self, on_hlt):
+        """SHOP_LOOP run with the shop shut (143Dh 0), each HLT in the routine handed to ON_HLT(n) and
+        stepped over: the HLTs counted, and ZF of the flags given back."""
+        from unicorn import UC_HOOK_CODE
+        start, end = self.TSR * 16 + self.sym["shop_loop"], self.TSR * 16 + self.sym["shop_passes"]
+        hlts = []
+
+        def code(mu, addr, size, _):
+            if bytes(mu.mem_read(addr, 1)) == b"\xf4":
+                hlts.append(addr)
+                on_hlt(len(hlts))
+                mu.reg_write(r.UC_X86_REG_IP, addr + 1 - self.TSR * 16)
+        self.mu.hook_add(UC_HOOK_CODE, code, begin=start, end=end)
+        self.game(0x143D, 0, 1)
+        self.go("shop_loop", frame=struct.pack("<HH", self.TSR, 0x0242))
+        return len(hlts), struct.unpack("<H", self.mu.mem_read(self.SS * 16 + 0x7F4, 2))[0] & 0x40
+
+    def tick(self, n):
+        self.mu.mem_write(0x46C, struct.pack("<H", struct.unpack("<H", self.mu.mem_read(0x46C, 2))[0] + n))
+
+    def test_shop_shut_by_s_waits_for_the_loaders_sale(self):
+        """The shop shut by S: its loop's way out (back to the merchant's script, which reads the money for
+        "Thank you, your business is appreciated.") held till the Loader's SELL_DONE is SELL_SEQ."""
+        self.game(0x143D, 1, 1)
+        self.go("shop_loop", frame=struct.pack("<HH", self.TSR, 0x0202))
+        self.assertEqual(self.key(0x1F73), 0x011B)
+        self.assertEqual((self.word("sell_seq"), self.word("sell_done")), (1, 0))
+
+        def loader(n):
+            self.tick(1)
+            if n == 3:
+                self.word("sell_done", 1)  # (the Loader's pass: sold)
+        self.assertEqual(self.hold(loader), (3, 0))  # (held three ticks; ZF clear: the loop ends)
+        self.assertEqual(self.mu.mem_read(self.TSR * 16 + self.sym["sell_wait"], 1), b"\0")
+
+    def test_the_hold_ends_without_the_loader(self):
+        self.game(0x143D, 1, 1)
+        self.go("shop_loop", frame=struct.pack("<HH", self.TSR, 0x0202))
+        self.key(0x1F73)
+        self.assertEqual(self.hold(lambda n: self.tick(10)), (6, 0))  # (SELL_HOLD, 55 ticks: no more)
+        self.assertEqual(self.hold(lambda n: self.tick(10)), (0, 0))  # (once: the next way out not held)
+
+    def test_escape_is_not_held(self):
+        """The shop shut by the game's own keys (Escape after a sale by hand, or none): never held."""
+        self.game(0x143D, 1, 1)
+        self.go("shop_loop", frame=struct.pack("<HH", self.TSR, 0x0202))
+        self.assertEqual(self.key(0x011B), 0x011B)
+        self.assertEqual(self.hold(lambda n: self.tick(10)), (0, 0))
 
     def test_map_key(self):
         def mk(key, read=1):
