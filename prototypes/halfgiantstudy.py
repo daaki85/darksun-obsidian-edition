@@ -528,7 +528,7 @@ def clean_nape(pieces, model, pose, margin):
                     rows[y][x] = color
 
 
-def study_rows(game, model, pose, texture, *, pairs=False):
+def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
     native = fig.rows(combat, frame)
@@ -633,6 +633,8 @@ def study_rows(game, model, pose, texture, *, pairs=False):
     dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
+        if panels is not None:
+            panels.update(visible)
     return {"Original": original, **{role: upright(rows) if reverse else rows for role, rows in pieces.items()}}
 
 

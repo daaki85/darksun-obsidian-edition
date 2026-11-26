@@ -1,4 +1,6 @@
-# Halfling outfit study
+# Halfling class outfits
+
+The Loader fits seven singles, twelve pairs and two triples on both halflings. The equipment animation shows the male Cleric/Thief and female Fighter/Psionicist. [Watch them with magical equipment](magic-gear-halfling.gif)
 
 All seven single classes, twelve pairs and two triples are fitted on both retail halflings in all 29 poses. These are empty-slot art studies.
 

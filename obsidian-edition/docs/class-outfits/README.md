@@ -1,6 +1,6 @@
 # Class outfits on the map
 
-Enable **What the party wears** to see class outfits on humans, dwarves, elves and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. The galleries show the base colors with equipment slots empty.
+Enable **What the party wears** to see class outfits on humans, dwarves, elves, half-giants, halflings, the Mul and single-class half-elf Fighters and Preservers. Humans wear the outfit for their active class. The loader selects from twelve dwarf builds and thirty-seven elf builds using all of the character’s class slots. Both half-giants have ten outfits each, both halflings have 21 each, and the male Mul has 18. The galleries below show the base colors with equipment slots empty.
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
@@ -62,7 +62,7 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 ## Equipment
 
-[Watch magical leather, bone armor, cloaks, bracers and boots on every party figure](magical-equipment.md). The five pieces are equipped individually beside the empty figure through all 29 poses. The half-elf Fighter now has two separate bone shoulder guards. [Her shoulder fitting before and after](half-elf-fighter-shoulders.png)
+[Watch magical leather, bone armor, cloaks, bracers, boots and belts on every party figure](magical-equipment.md). The six pieces are equipped individually beside the empty figure through all 29 poses. The half-elf Fighter now has two separate bone shoulder guards. [Her shoulder fitting before and after](half-elf-fighter-shoulders.png)
 
 Body armor dyes the exposed panels of the equipped figure’s class outfit. The dwarf Cleric/Fighter keeps the cream linen hem and belt, the elf Cleric/Psionicist keeps the teal sash, and the half-elf Preserver keeps the plum mantle. Compare each row from empty slots through leather, plate and both named robes. [Armor colors and fold detail on all figures](armor-dyes.md)
 

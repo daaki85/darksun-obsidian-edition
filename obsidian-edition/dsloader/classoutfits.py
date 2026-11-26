@@ -11,14 +11,30 @@ from functools import lru_cache
 from hashlib import sha256
 from itertools import combinations
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from zipfile import ZipFile
 
 from . import art, dwarfarmordye, elfarmordye, game, halfelf, humanarmordye, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
 MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
+# The original six have separate review tools and archives. These five use
+# masks exported directly in native coordinates from their approved drawings.
+FITTED_MODELS = {308: 2072, 309: 2074, 310: 2068, 311: 2070, 312: 2093}
+MAP_OUTFITS = {**MODELS, **FITTED_MODELS}
+FITTED_ARCHIVES = {2072: ("halfgiant", 5), 2074: ("halfgiant", 5),
+                   2068: ("halfling", 4), 2070: ("halfling", 4), 2093: ("mul", 8)}
 SOURCE = {
+    2068: "6df83a97e55af63bada4e6cdb963c9e02d66eb05e919fd9faf6afb8a9a3af3a4",
+    2069: "9fc3f6a952b0a199c0388c23c0bb92e6aba92e5dc29b64e0d4340749f8002636",
+    2070: "096a612bf8b304d959c186ec226ee0318f36d8d154d59cb09a7e47b4e5b028e2",
+    2071: "dcc69499dad7283917778f7a4a1c3ae3671a10755bcf3bedba6255b18fdaa348",
+    2072: "acd78bb139e2b3acbfac3333bc2771fcce15cb78d2e79f1852f7e862782d7127",
+    2073: "777b9fae44202dbf035fd360c9137f2834a0fdd93cd51671bbf8a7b33b4cc4ce",
+    2074: "9d8066748b7d924802e77233e91772111cb22c6d01c82ded2dc93369688907bb",
+    2075: "4b8d88720e4eeb0703195d237045ad652a8ee67b7d6d56ed26a39a98e9d816de",
+    2093: "e18b818ec304b53448f04a45c547d9cb3fb3bcd2baa6e8b3c3f42c950ece341f",
+    2094: "6910363ddda1175f61c6cb6acf494c53fe4cea2a76e748a3f5f1b9a96c2189f6",
     2053: "91c133abf78323f5b0b83a9f706b8750d99e6e9efe97a54c984c40e55539efb3",
     2054: "aaadd31defbf1b021812b47bb38cd37d8b0f7c97871a760e0a5e842b3d536f6f",
     2055: "80d16c5f0bdc4b75fa5c960771731c32d9777477b7218d57a32af2027dba1bf6",
@@ -161,12 +177,42 @@ ELF_ROLES = {combo: "/".join(_ELF_CLASSES[c] for c in combo)
              if size == 1 or (4 not in combo and not {3, 7}.issubset(combo))}
 
 
+_CLASS_IDS = {"Cleric": 1, "Druid": 2, "Fighter": 3, "Gladiator": 4,
+              "Preserver": 5, "Psionicist": 6, "Ranger": 7, "Thief": 8}
+
+
+def _roles(names):
+    return {tuple(_CLASS_IDS[part] for part in name.split("/")): name for name in names.split()}
+
+
+HALF_GIANT_ROLES = _roles(
+    "Cleric Fighter Gladiator Psionicist Ranger Cleric/Fighter Cleric/Psionicist Cleric/Ranger "
+    "Fighter/Psionicist Psionicist/Ranger")
+HALFLING_ROLES = _roles(
+    "Cleric Druid Fighter Gladiator Psionicist Ranger Thief Cleric/Thief Druid/Thief Ranger/Thief "
+    "Cleric/Ranger Cleric/Fighter Cleric/Psionicist Druid/Fighter Druid/Psionicist Fighter/Psionicist "
+    "Fighter/Thief Psionicist/Ranger Psionicist/Thief Fighter/Psionicist/Thief Psionicist/Ranger/Thief")
+MUL_ROLES = _roles(
+    "Cleric Druid Fighter Gladiator Psionicist Thief Cleric/Thief Cleric/Fighter Cleric/Psionicist "
+    "Druid/Thief Druid/Fighter Druid/Psionicist Fighter/Psionicist Fighter/Thief Psionicist/Thief "
+    "Cleric/Fighter/Thief Druid/Fighter/Thief Fighter/Psionicist/Thief")
+FITTED_ROLES = {kitpages.HALF_GIANT: HALF_GIANT_ROLES, kitpages.HALFLING: HALFLING_ROLES,
+                kitpages.MUL: MUL_ROLES}
+FITTED_RACES = {2072: kitpages.HALF_GIANT, 2074: kitpages.HALF_GIANT, 2068: kitpages.HALFLING,
+                2070: kitpages.HALFLING, 2093: kitpages.MUL}
+
+
+
 def for_sheet(sheet, model=None):
     if len(sheet) <= game.SHEET_CLASSES:
         return None
     race = sheet[game.SHEET_RACE]
     roles = None
-    if model in HALF_ELF_SOURCES:
+    if model in FITTED_RACES or (model is None and race in FITTED_ROLES):
+        if model is not None and race != FITTED_RACES[model]:
+            return None
+        roles = FITTED_ROLES[race]
+    elif model in HALF_ELF_SOURCES:
         if race != kitpages.HALF_ELF:
             return None
         roles = HALF_ELF_ROLES
@@ -192,6 +238,8 @@ class Frame(NamedTuple):
     head: tuple = ()  # foreground face and locks, in native coordinates
     armor_trim: frozenset = frozenset()  # native pixels that keep their material and class color
     native_cloak: bool = False  # this outfit includes cloth for a cloak dye to follow
+    equipped_cape: tuple = ()  # native (x, y, original cloth color) on a separately donned cape
+    belt: Optional[tuple] = None  # authored native waist, empty when the garment hides it
 
     def canvas(self, source, pad):
         """Apply authored pixels to the matching pose read from the player's install."""
@@ -212,8 +260,11 @@ class Frame(NamedTuple):
 def frames(role, combat, model=2095):
     tag = "combat" if combat else "walk"
     filename = "woman_outfit_layers.zip" if model == 2099 else "human_outfit_layers.zip"
-    by_model = model in DWARVES + ELVES or model in HALF_ELF_SOURCES
-    if model in HALF_ELF_SOURCES:
+    fitted = FITTED_ARCHIVES.get(model)
+    by_model = fitted is not None or model in DWARVES + ELVES or model in HALF_ELF_SOURCES
+    if fitted:
+        filename = f"{fitted[0]}_outfit_layers.zip"
+    elif model in HALF_ELF_SOURCES:
         filename = "halfelf_outfit_layers.zip"
     elif model in ELVES:
         filename = "elf_outfit_layers.zip"
@@ -233,13 +284,23 @@ def frames(role, combat, model=2095):
         except KeyError:
             cloaks = archive.read(f"{prefix}/{tag}-cloak")
         masks = archive.read(f"{prefix}/{tag}-regions")
+        belts = archive.read(f"{prefix}/{tag}-belt") if fitted else None
+        cape_entry = f"{prefix}/{tag}-cape"
+        capes = archive.read(cape_entry) if fitted and cape_entry in archive.namelist() else None
     # The archive also stores the drape of a separately equipped cloak for
     # bare-backed kits. Only real cloth can supply its own underlying texture.
     members = set(role.split("/"))
-    if model in DWARVES:
+    if model == 2093:
+        native_cloak = role.startswith("Druid") or ("Thief" in members and "Cleric" not in members)
+    elif model in (2068, 2070):
+        native_cloak = bool(members & {"Druid", "Ranger"}) or ("Thief" in members and "Cleric" not in members)
+    elif model in DWARVES:
         native_cloak = "Cleric" in members or role in ("Thief", "Psionicist/Thief")
     else:
         native_cloak = bool(members.intersection(("Thief", "Mage", "Preserver", "Ranger", "Druid")))
+    # The man's Psionicist wears a fitted teal wrap. When he adds a cloak, use
+    # the unhooded mantle cut for the same body and pose, including its folds.
+    mantle = frames("Mage", combat, model) if model == 2095 and role == "Psionicist" else ()
     poses = []
     for f in range(14 if combat else 15):
         image = art.decode_frame(pictures, f)[2]
@@ -256,7 +317,9 @@ def frames(role, combat, model=2095):
         top = 6
         if by_model:
             left = top = 4
-        if model in HALF_ELF_SOURCES:
+        if fitted:
+            left, top = fitted[1], 0
+        elif model in HALF_ELF_SOURCES:
             left = top = 10
         for y, row in enumerate(mask):
             for x, bits in enumerate(row):
@@ -276,6 +339,15 @@ def frames(role, combat, model=2095):
                          for x, pixel in enumerate(row) if pixel is not None)
         frame = Frame(image, regions, folds, head, native_cloak=native_cloak)
         pose = f + 15 * combat
+        if fitted:
+            waist = tuple((x-left, y-top) for y, row in enumerate(art.decode_frame(belts, f)[2])
+                         for x, c in enumerate(row) if c is not None)
+            cape = ()
+            if capes is not None:
+                cape = tuple((x-left, y-top, c) for y, row in enumerate(art.decode_frame(capes, f)[2])
+                             for x, c in enumerate(row) if c is not None)
+            poses.append(frame._replace(belt=waist, equipped_cape=cape))
+            continue
         if model in HALF_ELF_SOURCES:
             trim = set()
             if role == "Fighter":
@@ -295,5 +367,18 @@ def frames(role, combat, model=2095):
         else:
             landmark = LANDMARKS[pose] if model == 2095 and pose < len(LANDMARKS) else None
             trim = humanarmordye.protected(frame, role, pose, model, landmark)
-        poses.append(frame._replace(armor_trim=frozenset(trim)))
+        cape = ()
+        if mantle:
+            donor = mantle[f]
+            # Both outfits have native coordinates, including the wider side step.
+            foreground = {point for bit in (ARMS, FOREARM, BOW, LEFT_FOOT, RIGHT_FOOT)
+                          for point in regions[bit]}
+            fabric = {(x, y): donor.image[y + top][x + left] for x, y, _ in donor.cloak
+                      if (x, y) not in foreground and donor.image[y + top][x + left] not in (None, 255)}
+            # A few isolated mantle pixels belong to the Mage's layered tunic.
+            # On the open teal wrap they would look like flecks along the calf.
+            cape = tuple((x, y, shade) for (x, y), shade in fabric.items()
+                         if any((x + dx, y + dy) in fabric for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                                if dx or dy))
+        poses.append(frame._replace(armor_trim=frozenset(trim), equipped_cape=cape))
     return tuple(poses)

@@ -1,10 +1,10 @@
 # Magical equipment in motion
 
-Read across a row to watch the same figure and pose with empty slots and five separately equipped items. The large sprite is 3×. Below it is the same sprite at game size. During the idle hold, watch the glints move while the folds, shoulder guards and feet remain still. Each loop includes the full front, rear and profile walks, every strike, all three bow poses, the hit and the fall.
+Within each figure’s panel, compare the same pose with empty slots and six separately equipped items. The large sprite is 4×. Below it is the same sprite at game size. During the idle hold, watch the glints move while the folds, shoulder guards and feet remain still. Each loop includes the full front, rear and profile walks, every strike, all three bow poses, the hit and the fall.
 
-**Half-elf Fighter.** In the older front idle, ten ivory pixels connected the guards across the woman’s chest. The guards now rise separately with the shoulders, exposing the shaded leather between them. Look at the woman in the lower row, first empty and then wearing leather or bone. [Compare the guards before and after](half-elf-fighter-shoulders.png)
+**Human man’s cloak.** Compare Empty with Magic cloak on the male Psionicist in the first panel. In rear idle (01), the cloak now falls from his shoulders past his hips. Watch the four profile steps (11–14) to see the hem swing behind his moving arm. The small figure below each enlargement shows how much cloth reads at game size.
 
-![Both half-elves through 29 poses wearing each item, with a retail reference](magic-gear-half-elf.gif)
+![Human Psionicist and Priest wearing magical equipment through all 29 poses](magic-gear-human.gif)
 
 ## All 14 party figures
 
@@ -14,10 +14,10 @@ Read across a row to watch the same figure and pose with empty slots and five se
 | [Dwarf](magic-gear-dwarf.gif) | Male Cleric/Fighter and female Fighter/Psionicist/Thief |
 | [Elf](magic-gear-elf.gif) | Male Preserver/Ranger and female Cleric/Psionicist |
 | [Half-elf](magic-gear-half-elf.gif) | Male Preserver and female Fighter |
-| [Half-giant](magic-gear-half-giant.gif) | Both original figures |
-| [Halfling](magic-gear-halfling.gif) | Both original figures |
-| [Mul](magic-gear-mul.gif) | The original male figure |
-| [Thri-kreen](magic-gear-thri-kreen.gif) | All six columns show the original shell. The game excludes these five items for this race. |
+| [Half-giant](magic-gear-half-giant.gif) | Male Cleric/Fighter and female Psionicist |
+| [Halfling](magic-gear-halfling.gif) | Male Cleric/Thief and female Fighter/Psionicist |
+| [Mul](magic-gear-mul.gif) | Male Druid/Fighter |
+| [Thri-kreen](magic-gear-thri-kreen.gif) | The original shell appears in every equipment case. These six items are unavailable to this race. |
 
 ## What to follow
 
@@ -28,15 +28,18 @@ Read across a row to watch the same figure and pose with empty slots and five se
 | Cloak of Elvenkind | Green shine follows the visible folds as the cloak trails, settles behind the arm or covers the lower garment. |
 | Bracers of Defense AC 5 | The shine sits on visible wrist cuffs. Watch the wrist pass the shoulder in a strike. A sleeve, shield or robe can hide a cuff. |
 | Boots of Speed | Look for the red leather and fire-colored glint on each exposed foot as it lifts. Robes can hide both feet. |
+| Girdle of Back Defense | The visible waistband takes brown leather, violet stitching and a blue glint. A passing forearm or closed cloak can hide the band. |
 
-On the original half-giants, follow the cloak at the shoulder through the front strike, then watch the two upturned boots in the fall. On the dwarf, compare the bracer’s position with the bone cap above it.
+The belt comparison follows one human Warrior through all 29 poses. The retail Belt of Might has a warm buckle and fire-colored shine. The Girdle of Back Defense and Golden Girdle of Urnst share a blue shine. Compare their leather and gold fittings between glints, then watch the waist turn in profile. [Compare all three magical belts](magic-gear-belt-comparison.gif)
+
+On the half-elf woman, two bone shoulder guards now move separately over her leather jerkin. On the half-giants, follow the near shoulder through the front strike. On the Mul, compare the short green class mantle with the longer equipped cloak behind it. [Compare the half-elf guards before and after](half-elf-fighter-shoulders.png)
 
 The gallery uses the Loader’s encoded walk and combat pictures. Pose holds are extended for inspection. The color runs use RGB samples and approximate timing measured on the Slave Pens map in DOSBox. Blue advanced about every 84 ms, fire and violet about every 167 ms, and green about every 209 ms.
 
-This short DOSBox capture shows four stationary figures with the equipped sprites staged in a disposable copy of the game. The female half-elf Fighter in leather is at the top of the group. The elf in the green cloak is at left, the dwarf wearing bracers and boots is at right, and the human Priest in bone armor is closest to the viewer. The attached Loader was also checked separately through equip and removal. [Original-size map capture](magic-gear-dosbox.gif) · [Live equip/remove checks](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#magical-worn-equipment)
+This short DOSBox capture shows four stationary figures with the equipped sprites staged in a disposable copy of the game. The female half-elf Fighter in leather is at the top of the group. The elf in the green cloak is at left, the dwarf wearing bracers and boots is at right, and the human Priest in bone armor is closest to the viewer. The attached Loader was also checked separately through equip and removal. [Original-size map capture](magic-gear-dosbox.gif) · [Live cloak and belt checks on the fitted figures](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#fitted-figures-cloaks-and-magical-girdles)
 
-## Class outfits awaiting equipment fitting
+## Armor dye studies
 
-These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art. The playable base-figure loops above show how the cloak, bracers and boots currently fit in the Loader.
+These three loops compare the empty outfit, plain leather, enchanted leather, plain bone and enchanted bone. The preview estimates the exposed chest fabric from the approved study art. The half-giant, halfling and Mul loops above use the Loader’s fitted class outfits. The two half-elf combinations below are still study previews.
 
 [Half-elf Druid and Cleric/Preserver](magic-study-half-elves.gif) · [Half-giant Cleric/Fighter and Psionicist](magic-study-half-giants.gif) · [Halfling Cleric/Thief, halfling Fighter/Psionicist and Mul Druid/Fighter](magic-study-halflings-mul.gif)

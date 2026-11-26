@@ -2,13 +2,14 @@
 
 The leather is Legcrusher's Inixhide +1. Bone Scale Chest Armor is a retail
 item without a bonus; the test enchants a copy of the placed chest piece +1.
-The cloak, bracers and boots use the mod's actual named item records and icons.
+The cloak, bracers, boots and belt use the mod's actual named item records and icons.
 Each case equips one item, so its material and sparks can be checked in isolation.
 """
 import struct
 
 from wornreview import game, icons, sprites, worldgear
 from dsloader import bonescale, dataitems, npcitems
+
 
 class EquippedItem:
     def __init__(self, slot, record, retail_types):
@@ -44,14 +45,29 @@ def equipped_items(atlas):
         ("Magic cloak", "cloak", worldgear.ELVEN_CLOAK),
         ("Magic bracers", "arm", worldgear.bracers(5)),
         ("Magic boots", "foot", worldgear.SPEED_BOOTS),
+        ("Magic belt", "waist", worldgear.BACK_GIRDLE_ITEM),
     ):
         yield label, EquippedItem(slot, record, atlas.game.item_types)
 
 
-def loadouts(atlas):
+def _resolve(atlas, items):
     catalog = dict(atlas.game.chunks)
     catalog.update(icons.new_chunks(atlas.game.chunks))
     cases = {"Empty": ({}, ())}
-    for label, equipped in equipped_items(atlas):
+    for label, equipped in items:
         cases[label] = sprites.worn(equipped, 0, catalog)
     return cases
+
+
+def loadouts(atlas):
+    return _resolve(atlas, equipped_items(atlas))
+
+
+def belt_loadouts(atlas):
+    """The retail Belt of Might and both Obsidian Edition girdles, each worn alone."""
+    records, _ = dataitems.records(atlas.game.chunks["RDFF", 30017])
+    might = next(r.data for r in records if r.kind == dataitems.ITEM
+                 and len(r.data) == game.ITEM_SIZE and struct.unpack_from("<H", r.data, game.ITEM_TYPE)[0] == 35)
+    belts = (("Belt of Might", might), ("Girdle of Back Defense", worldgear.BACK_GIRDLE_ITEM),
+             ("Golden Girdle of Urnst", worldgear.URNST_GIRDLE_ITEM))
+    return _resolve(atlas, ((name, EquippedItem("waist", record, atlas.game.item_types)) for name, record in belts))

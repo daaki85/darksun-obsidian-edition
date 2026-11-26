@@ -1,4 +1,6 @@
-# Mul outfit study
+# Mul class outfits
+
+The Loader fits six singles, nine pairs and three triples on the male Mul. The equipment animation follows his Druid/Fighter through all 29 poses. [Watch him with magical equipment](magic-gear-mul.gif)
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 

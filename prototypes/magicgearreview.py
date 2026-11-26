@@ -1,6 +1,7 @@
 """Render all 29 equipped Loader poses with Shattered Lands' cycling palette indices.
 
 python prototypes/magicgearreview.py GAME_DIR OUTPUT_DIR [race ...]
+Use belt-comparison for a one-row comparison of the three magical belts.
 The floor, held figure and material pixels are stationary during each hold.
 Pose holds are slowed for inspection. The palette runs follow their measured arena periods.
 """
@@ -14,16 +15,16 @@ from elfreview import CYCLE
 from wornreview import Atlas, TERRAIN, dwarf, sg, sprites
 
 
-CASES = ("Empty", "Magic leather", "Magic bone", "Magic cloak", "Magic bracers", "Magic boots")
+CASES = ("Empty", "Magic leather", "Magic bone", "Magic cloak", "Magic bracers", "Magic boots", "Magic belt")
 RACES = {
     "human": ("Humans", ((300, "Man", "Psionicist", 724), (301, "Woman", "Priest", 1563))),
     "dwarf": ("Dwarves", ((302, "Man", "Cleric/Fighter", 1563),
                           (303, "Woman", "Fighter/Psionicist/Thief", 630))),
     "elf": ("Elves", ((304, "Man", "Preserver/Ranger", 724), (305, "Woman", "Cleric/Psionicist", 1563))),
     "half-elf": ("Half-elves", ((306, "Man", "Preserver", 724), (307, "Woman", "Fighter", 1252))),
-    "half-giant": ("Half-giants", ((308, "Man", None, 1252), (309, "Woman", None, 1563))),
-    "halfling": ("Halflings", ((310, "Man", None, 1252), (311, "Woman", None, 630))),
-    "mul": ("Mul", ((312, "Mul", None, 1252),)),
+    "half-giant": ("Half-giants", ((308, "Man", "Cleric/Fighter", 1563), (309, "Woman", "Psionicist", 724))),
+    "halfling": ("Halflings", ((310, "Man", "Cleric/Thief", 1563), (311, "Woman", "Fighter/Psionicist", 1252))),
+    "mul": ("Mul", ((312, "Mul", "Druid/Fighter", 1252),)),
     "thri-kreen": ("Thri-kreen", ((313, "Thri-kreen", None, 1252),)),
 }
 NPC_NAMES = {630: "Thief", 724: "Mage", 1252: "Warrior", 1563: "Priest"}
@@ -39,7 +40,8 @@ SLAVE_PENS_GLOWS = {
     sg.VIOLET_GLOW: ((199, 77, 255), (231, 162, 255), (211, 20, 255), (174, 32, 255), (162, 0, 255)),
     sg.GREEN_GLOW: ((0, 211, 81), (0, 255, 142), (0, 211, 81), (0, 166, 40), (0, 166, 40)),
 }
-LEFT, COL, TOP = 142, 143, 64
+ZOOM = 4
+COL, TOP = 46*ZOOM + 6, 48
 
 
 def arena_palette(game_palette):
@@ -135,34 +137,39 @@ class GalleryPalette:
         board.paste(stamp, (position[0]+left, position[1]+top))
 
 
-def draw_pose(atlas, palette, title, subjects, pose):
-    row_height = palette.floor.height * 4 + 4
-    board = palette.board((LEFT + COL*(len(CASES)+1)+6, TOP + row_height*len(subjects)+6))
-    palette.text(board, (8, 6), f"{title}  /  Magical equipment", 18)
-    palette.text(board, (board.width-8, 8), f"{pose:02d}   {dwarf.NAMES[pose]}", 15, "ra")
+def draw_pose(atlas, palette, title, subjects, pose, cases=(*CASES, None), category="Magical equipment"):
+    # Four columns stay legible at GitHub's inline width. Each subject gets a
+    # panel of its own so the same held pose is visible in every comparison.
+    columns = 4
+    rows_per_subject = (len(cases) + columns - 1) // columns
+    tile_height = palette.floor.height * (ZOOM+1) + 2
+    band_height = 29 + tile_height
+    subject_height = 35 + rows_per_subject * band_height
+    width = 12 + columns * COL
+    board = palette.board((width, TOP + len(subjects)*subject_height + 5))
+    palette.text(board, (8, 7), f"{title}  /  {category}", 18)
+    palette.text(board, (width-8, 9), f"{pose:02d}   {dwarf.NAMES[pose]}", 15, "ra")
     combat, frame = divmod(pose, 15)
     side, _ = sprites.room(combat)
-    for col, label in enumerate((*CASES, "Retail reference")):
-        palette.text(board, (LEFT+col*COL+COL//2, 40), label, 13, "ma")
     for r, (obj, gender, role, ref) in enumerate(subjects):
-        y = TOP + row_height*r
-        palette.text(board, (10, y+18), gender, 16)
-        parts = role.split("/") if role else []
-        names = [role] if role and len(role) <= 16 else parts
-        for j, part in enumerate(names):
-            palette.text(board, (10, y+45+j*16), part, 12)
-        if not role:
-            palette.text(board, (10, y+45), "Base figure", 12)
-        palette.text(board, (10, y+row_height-34), "3× and game size", 11, muted=True)
-        for col, item in enumerate((*CASES, None)):
-            x = LEFT + col*COL + COL//2
+        top = TOP + subject_height*r
+        ImageDraw.Draw(board).line((8, top, width-8, top), fill=palette.text_ramp[1])
+        caption = f"{gender}  ·  {role}" if role else "Original figure"
+        palette.text(board, (8, top+7), caption, 16)
+        palette.text(board, (width-8, top+9), f"{ZOOM}× above  ·  Game size below", 12, "ra", muted=True)
+        for i, item in enumerate(cases):
+            band, col = divmod(i, columns)
+            x = 6 + col*COL + COL//2
+            y = top + 33 + band*band_height
+            label = item or f"Retail {NPC_NAMES[ref]}"
+            palette.text(board, (x, y), label, 13, "ma")
+            y += 23
             if item is None:
                 if pose >= 27:
                     palette.text(board, (x, y+56), "No matching pose", 12, "ma", muted=True)
                     continue
                 rows = atlas.game.fr(ref+combat, frame)
                 tile = palette.tile(rows, 0)
-                palette.text(board, (x-25, y+palette.floor.height*3+12), NPC_NAMES[ref], 11, "ra", muted=True)
             else:
                 rows = atlas.sequence(obj, bool(combat), role, item)[frame]
                 tile = palette.tile(rows, side)
@@ -174,26 +181,36 @@ def draw_pose(atlas, palette, title, subjects, pose):
                 if tile.crop(strip).tobytes() != palette.floor.crop(strip).tobytes():
                     raise ValueError(f"Side of review tile cuts into {obj} {pose} {item}")
             cut = tile.crop(bounds)
-            board.paste(cut.resize((cut.width*3, cut.height*3), Image.Resampling.NEAREST),
-                        (x-cut.width*3//2, y))
-            board.paste(cut, (x-cut.width//2, y+cut.height*3+2))
+            board.paste(cut.resize((cut.width*ZOOM, cut.height*ZOOM), Image.Resampling.NEAREST),
+                        (x-cut.width*ZOOM//2, y))
+            board.paste(cut, (x-cut.width//2, y+cut.height*ZOOM+2))
     return board
 
-
 def render(atlas, output, races):
-    from magicgearitems import loadouts
+    from magicgearitems import belt_loadouts, loadouts
 
     atlas.gear.update(loadouts(atlas))
     output.mkdir(parents=True, exist_ok=True)
     for race in races:
-        title, subjects = RACES[race]
+        if race == "belt-comparison":
+            belts = belt_loadouts(atlas)
+            atlas.gear.update(belts)
+            title, subjects = "Human Warrior", ((300, "Man", "Warrior", 1252),)
+            cases, category = tuple(belts), "Magical belts"
+        else:
+            title, subjects = RACES[race]
+            cases, category = (*CASES, None), "Magical equipment"
+        for obj, _, role, _ in subjects:
+            if role and all(atlas.sequence(obj, combat, role, "Empty") == atlas.sequence(obj, combat, None, "Empty")
+                            for combat in (False, True)):
+                raise ValueError(f"Loader returned the base figure for {obj} {role}")
         floor = atlas.floor
         if race == "half-giant":
             # The raised hand reaches above the ordinary 44-pixel terrain sample.
             with Image.open(TERRAIN) as arena:
                 floor = arena.convert("RGB").crop((50, 142, 102, 194))
         palette = GalleryPalette(atlas, floor)
-        poses = [draw_pose(atlas, palette, title, subjects, pose) for pose in range(29)]
+        poses = [draw_pose(atlas, palette, title, subjects, pose, cases, category) for pose in range(29)]
         tick = (palette.at_phase(poses[pose], phase) for pose, phase in timeline())
         first = next(tick)
         path = output / f"magic-gear-{race}.gif"
@@ -207,4 +224,4 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("races", nargs="*", metavar="RACE")
     args = parser.parse_args()
-    render(Atlas(args.game_dir), args.output, args.races or RACES)
+    render(Atlas(args.game_dir), args.output, args.races or (*RACES, "belt-comparison"))

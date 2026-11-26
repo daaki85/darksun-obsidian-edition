@@ -1,4 +1,4 @@
-"""Exercise equipment on all party figures and on the seven outfit studies before import.
+"""Exercise equipment on all registered party outfits and compare with the original art studies.
 
 Run: python prototypes/studygeartest.py GAME_DIR OUTPUT_DIR
 Results are per figure, outfit, item and pose. The study probe replaces only
@@ -73,6 +73,9 @@ def roles_for(obj):
         return co.ELF_ROLES.values()
     if obj in co.HALF_ELF_SOURCES:
         return (None, *co.HALF_ELF_ROLES.values())
+    if obj in co.FITTED_MODELS:
+        race = co.FITTED_RACES[co.FITTED_MODELS[obj]]
+        return (None, *co.FITTED_ROLES[race].values())
     return (None,)
 
 

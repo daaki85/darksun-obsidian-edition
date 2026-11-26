@@ -22,7 +22,7 @@ import math
 from bisect import bisect_right
 from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
-from . import classoutfits, game, halfelf, spritebracers, spriteparts as sp
+from . import classoutfits, game, halfelf, spritebelts, spritebracers, spriteparts as sp
 
 Rows = sp.Rows
 
@@ -776,7 +776,9 @@ BOOT_LEATHER = (208, 16, 129, 204, 207, 195, 205, 194, 206, 60, 61, 199)
 BOOT_RED = (208, 16, 129, 202, 195, 134, 135, 136, 132, 137, 196, 138, 76, 139,
             140, 77, 141, 78, 142, 143, 152, 79)
 BOOTS = {68: BOOT_LEATHER, game.ELVEN_BOOTS_TYPE: FOREST_CLOTH, game.SPEED_BOOTS_TYPE: BOOT_RED}
-BELTS = {42: (204, 207, 205, 206), 35: (204, 207, 205, 206)}  # Belt, Belt of Might
+BELT_LEATHER = (204, 207, 205, 194, 206, 61)
+BELTS = {42: (204, 207, 205, 206), 35: (204, 207, 205, 206), game.BACK_GIRDLE_TYPE: BELT_LEATHER,
+         game.URNST_GIRDLE_TYPE: (16, 202, 135, 136, 137, 32, 76, 77)}
 MIGHT_BELT, BUCKLE = 35, 168
 
 
@@ -913,7 +915,30 @@ def draw_boots(rows: Rows, parts: sp.Parts, item_type: int, pad: int, feet=None,
             sparkle_cells(rows, cells, magic, spacing=11, sparse=True)
 
 
-def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int, cloak: FrozenSet[int] = frozenset()) -> None:
+def paint_belt(rows, points, item_type, pad, face, glow=()):
+    """Dye the visible waistband and attach its trim and glint to that same surface."""
+    shades = BELTS.get(item_type)
+    if not shades:
+        return
+    cells = sorted((x + pad, y + pad) for x, y in points if rows[y + pad][x + pad] not in (None, 254))
+    if not cells:
+        return
+    for x, y in cells:
+        rows[y][x] = _by_light(rows[y][x], shades)
+    trim = None
+    if item_type == game.BACK_GIRDLE_TYPE and len(cells) >= 3:
+        trim = cells[len(cells) // 3]
+        rows[trim[1]][trim[0]] = 37  # violet stitching in its inventory icon
+    if item_type in (MIGHT_BELT, game.URNST_GIRDLE_TYPE) and face == sp.FRONT:
+        trim = cells[len(cells) // 2]
+        rows[trim[1]][trim[0]] = 183 if item_type == game.URNST_GIRDLE_TYPE else BUCKLE
+    if glow:
+        surface = [p for p in cells if p != trim] or cells
+        sparkle_cells(rows, surface, glow, spacing=11, sparse=True)
+
+
+def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int, cloak: FrozenSet[int] = frozenset(),
+              glow=()) -> None:
     """A belt: a row at the waist across the body (not the arms or hands, nor over the figure's own
     CLOAK's colours), a buckle at the front of the Belt of Might."""
     shades = BELTS.get(item_type)
@@ -934,10 +959,15 @@ def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int, cloak: Froz
                     or unpadded[y][x] in cloak:
                 continue
             cells.append((x, y))
-    for x, y in cells:
-        rows[y + pad][x + pad] = _by_light(unpadded[y][x], shades)
-    if item_type == MIGHT_BELT and parts.facing == sp.FRONT and cells:
-        rows[parts.waist + pad][int(round(middle)) + pad] = BUCKLE
+    if item_type in (42, MIGHT_BELT):
+        for x, y in cells:
+            rows[y + pad][x + pad] = _by_light(unpadded[y][x], shades)
+        if item_type == MIGHT_BELT and parts.facing == sp.FRONT and cells:
+            rows[parts.waist + pad][int(round(middle)) + pad] = BUCKLE
+        if glow and cells:
+            sparkle_cells(rows, [(x + pad, y + pad) for x, y in cells], glow, spacing=11, sparse=True)
+    else:
+        paint_belt(rows, cells, item_type, pad, parts.facing, glow)
 
 
 class Own(NamedTuple):
@@ -971,6 +1001,13 @@ def _outfit_cloak(out, base_outfit, costume, kind, shades, pad):
     """Dress the saved pose mask; retain the native weave where there is existing cloth."""
     fabric = set()
     soft = FOREST_CLOTH if shades is None else DUSK_CLOTH if kind == game.CLOAK_TYPE else ()
+    if costume.equipped_cape:
+        material = soft or (LEATHER_SHADES if kind == 65 else shades)
+        for x, y, source in costume.equipped_cape:
+            X, Y = x + pad, y + pad
+            out[Y][X] = garment_tone(source, material)
+            fabric.add((X, Y))
+        return fabric
     ranks = shades or (69, 188, 53, 54, 55, 56)
     limb = set(costume.regions.get(classoutfits.FOREARM, ()))
     for bit in (classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT, classoutfits.BOW):
@@ -1061,7 +1098,7 @@ def _project_cloak(out, rows, model, parts, frame, combat, kind, own, pad, cloak
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
           cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
-          own: Optional[Own] = None, costume: Optional[classoutfits.Frame] = None) -> Rows:
+          own: Optional[Own] = None, costume: Optional[classoutfits.Frame] = None, fitted_belt: bool = False) -> Rows:
     """One frame of MODEL with WEAPONS ({"right"/"left": (item type, material[, name in
     BLADE_COLOURS])}: in the hands in a
     fight, walking worn at the belt (two-handed ones carried upright);
@@ -1069,9 +1106,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     padded by PAD, in ARMOUR (item types, MAGIC_ARMOUR added for a magic one: under all the rest). Nothing in the hands in the bow
     frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
     out = costume.canvas(rows, pad) if costume else padded(rows, pad)
-    halfelf_bow = {}
-    if costume and own is not None and combat and frame in sp.BOW_FRAMES:
-        halfelf_bow = {(x, y): out[y + pad][x + pad] for x, y in costume.regions[classoutfits.BOW]}
+    outfit_bow = {}
+    if costume and (own is not None or model in classoutfits.FITTED_RACES) and combat and frame in sp.BOW_FRAMES:
+        outfit_bow = {(x, y): out[y + pad][x + pad] for x, y in costume.regions[classoutfits.BOW]}
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if costume and costume.head:
         parts = parts._replace(hair=costume.head)
@@ -1198,12 +1235,16 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             feet = None
         if feet is not None or parts.facing is not None:
             draw_boots(out, parts, item[0], pad, feet, _glow(item) if _magic(item) else ())
-    if (parts.facing is not None or costume) and model != sp.KREEN:
-        if "belt" in weapons:
-            before = [list(r) for r in out]
-            draw_belt(out, parts, weapons["belt"][0], pad, own.cloak if own is not None else frozenset())
-            if _magic(weapons["belt"]):
-                sparkle(out, before, _glow(weapons["belt"]))
+    if "belt" in weapons and model != sp.KREEN:
+        item = weapons["belt"]
+        layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own is not None else model
+        covered = own.cloak if own else CLOAK_GREENS if model == CLOAK_MODEL else ()
+        glow = _glow(item) if _magic(item) else ()
+        if costume is not None or fitted_belt:
+            belt = spritebelts.visible(layer, combat, frame, costume, rows, parts, covered)
+            paint_belt(out, belt, item[0], pad, parts.facing, glow)
+        else:
+            draw_belt(out, parts, item[0], pad, covered, glow)
     if "cloak" in weapons and model != sp.KREEN:
         item = weapons["cloak"]
         kind = item[0]
@@ -1266,7 +1307,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     else:
         grips = classoutfits.FIGHT_GRIPS
         shields = classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS
-    if costume and model not in classoutfits.ELVES and combat and grips[frame]:
+    if costume and model in (*classoutfits.DWARVES, 2095, 2099) and combat and grips[frame]:
         hands["right"] = grips[frame]
         hands["left"] = shields[frame]
     if costume and model in classoutfits.ELVES:
@@ -1300,7 +1341,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     if combat and frame in sp.BOW_FRAMES:
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
-                out[y + pad][x + pad] = halfelf_bow[x, y] if halfelf_bow else rows[y][x]
+                out[y + pad][x + pad] = outfit_bow[x, y] if outfit_bow else rows[y][x]
         return out  # (the game draws the bow in the hands)
     if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
         weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
@@ -1312,7 +1353,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         glint = _magic(weapons[hand]) or blade is not None  # (a named blade is magic too)
         shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
-        if costume and shape == SHIELD and hand == "left":
+        if costume and model not in classoutfits.FITTED_RACES and shape == SHIELD and hand == "left":
             centre = hands.get("left") if model in classoutfits.ELVES else shields[frame]
             if centre:
                 x, y = centre
@@ -1440,14 +1481,21 @@ GARMENT_TONE_BREAKS = (20, 27, 32, 37, 42, 47, 53, 60, 68, 74, 82, 90, 99, 109,
                        122, 140, 159, 162, 164, 172, 183, 195, 200.15, 205, 218)
 
 
+def garment_tone(colour, shades):
+    """Match an authored pixel's value in an equipped material's palette."""
+    if colour == 254:
+        return 254
+    # Charcoal is the drawn outline, even beside equally dark brown leather.
+    tone = 0 if colour == 208 else bisect_right(GARMENT_TONE_BREAKS, 255 * _LIGHT.get(colour, 0.5))
+    return shades[round(tone * (len(shades) - 1) / len(GARMENT_TONE_BREAKS))]
+
+
 def dye_garment(rows, cells, shades, pad, source):
     """Transfer the original seams and highlights into the equipped material's palette."""
     for x, y in cells:
         colour = source[y + pad][x + pad]
         if colour is not None and colour != 254:
-            # Charcoal is the drawn outline, even beside equally dark brown leather.
-            tone = 0 if colour == 208 else bisect_right(GARMENT_TONE_BREAKS, 255 * _LIGHT.get(colour, 0.5))
-            rows[y + pad][x + pad] = shades[round(tone * (len(shades) - 1) / len(GARMENT_TONE_BREAKS))]
+            rows[y + pad][x + pad] = garment_tone(colour, shades)
 
 
 # item type: (which piece, shades, pattern)

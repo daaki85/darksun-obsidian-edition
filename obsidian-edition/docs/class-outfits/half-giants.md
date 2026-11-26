@@ -1,4 +1,6 @@
-# Half-giant outfit study
+# Half-giant class outfits
+
+The Loader fits five singles and five pairs on both half-giants. The equipment animation shows the male Cleric/Fighter and female Psionicist. [Watch them with magical equipment](magic-gear-half-giant.gif)
 
 Follow either row across the animation to see the original half-giant, the cleaned body, and all five single-class outfits. The man is above the woman. Each figure appears at 2× with its game-size copy below. The retail Warrior and Priest and the approved human Gladiator, Psionicist and Ranger share the same ground line in the reference row. The two retail NPCs return to idle for hit and fallen, which their picture sets omit.
 
@@ -47,4 +49,4 @@ Watch the large figure in each column for the proposed pair. The three game-size
 | Fighter/Psionicist | The shoulder cap takes the sash’s teal dye. A short pale ridge catches the light as the upper arm turns. Its tied end shows below the arm in front strike 3 (17). |
 | Psionicist/Ranger | The teal wrap shows through the open green cloak. A teal facing follows the lifted hem during the rear walk. |
 
-The study covers both figures, all five legal pairs, and all 29 poses with empty equipment slots. Half-giants have no three-class combinations. Equipped gameplay awaits Loader integration. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)
+The study covers both figures, all five legal pairs, and all 29 poses with empty equipment slots. Half-giants have no three-class combinations. [Class roster](../../PLAYER-GUIDE.md#races) · [Multiclass table](../../PLAYER-GUIDE.md#more-than-one-class)

@@ -40,6 +40,33 @@ class MagicClothTests(unittest.TestCase):
                             visible.update(foot)
                     self.assertLessEqual(sparks, visible)
 
+    def test_male_psionicist_dons_a_full_cape_without_dyeing_the_teal_wrap(self):
+        teal = {40, 69, 70, 71, 72, 73}
+        for combat in (False, True):
+            sx, sy = sprites.room(combat)
+            empty = self.picture(300, combat, None, 0, role="Psionicist")
+            magic = self.picture(300, combat, "cloak", game.ELVEN_CLOAK_TYPE, sg.GREEN_GLOW, "Psionicist")
+            for f, frame in enumerate(classoutfits.frames("Psionicist", combat)):
+                pose = f + 15 * combat
+                body, worn = (art.decode_frame(p, f)[2] for p in (empty, magic))
+                cape = {(x+sx, y+sy) for x, y, color in frame.equipped_cape}
+                touched = {(x, y) for y, row in enumerate(worn) for x, shade in enumerate(row)
+                           if shade != body[y][x]}
+                protected = {(x+sx, y+sy) for slot in (classoutfits.FOREARM, classoutfits.BOW,
+                             classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT) for x, y in frame.regions[slot]}
+                self.assertTrue(touched <= cape and touched.isdisjoint(protected), pose)
+                self.assertTrue(any(worn[y][x] in sg.GLOWS[sg.GREEN_GLOW] for x, y in cape), pose)
+                self.assertTrue(any(body[y][x] is None for x, y in cape), pose)
+                native_teal = sum(c in teal and c == worn[y][x] for y, row in enumerate(body)
+                                  for x, c in enumerate(row))
+                self.assertGreaterEqual(native_teal, 8, pose)
+                self.assertTrue(all(any((x+dx, y+dy) in cape for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                                        if dx or dy) for x, y in cape), pose)
+                if pose in (1, 7, 8, 9, 10, 18, 19, 20):
+                    self.assertGreater(len(cape), 120, pose)
+                    self.assertGreaterEqual(max(y for x, y in cape) - min(y for x, y in cape), 10, pose)
+            self.assertEqual(empty, self.picture(300, combat, None, 0, role="Psionicist"))
+
     def test_rear_thief_cloak_keeps_colored_folds_and_sparse_surface_shine(self):
         obj, role, i = 301, "Thief", 8
         cloth = classoutfits.frames(role, False, self.pictures.model(obj))[i]

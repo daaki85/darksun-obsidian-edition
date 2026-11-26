@@ -53,3 +53,24 @@ Separately decoded Inixhide and bone on all 118 registered class appearances and
 
 
 For the playback timing check, a disposable Slave Pens session displayed the four indexed palette strips. Screen samples about 30 ms apart after the load fade showed color moving toward higher indices. Approximate times between steps were 84 ms for blue, 167 ms for fire and violet, and 209 ms for green. A separate unmodified-speed screen capture used staged outfit pictures for a leather-clad female half-elf Fighter, an elf Preserver/Ranger in the cloak, a dwarf Cleric/Fighter with bracers and boots, and a human Priest in bone. [Watch the idle map capture](../../obsidian-edition/docs/class-outfits/magic-gear-dosbox.gif)
+
+## Fitted figures, cloaks and magical girdles
+
+Reopened `pens-after-arena` in a disposable DOSBox install. The released Loader at `f31a449` recognized both girdles by item type and icon. Equipping either one produced exactly the empty walk and combat pictures. The five half-giant, halfling and Mul characters used their default figures with the class slots below.
+
+| Party picture | Sheet race | Sheet class slots | Revised Loader outfit |
+| --- | ---: | --- | --- |
+| 300, human man | 1 | 12 | Psionicist |
+| 301, human woman | 1 | 1 | Priest |
+| 308, half-giant man | 5 | 1, 9 | Cleric/Fighter |
+| 309, half-giant woman | 5 | 12 | Psionicist |
+| 310, halfling man | 6 | 1, 17 | Cleric/Thief |
+| 311, halfling woman | 6 | 9, 12 | Fighter/Psionicist |
+| 312, Mul | 7 | 5, 9 | Druid/Fighter |
+| 313, Thri-kreen | 8 | 9 | Original figure |
+
+With the revised Loader attached, each of the seven humanoid sheet selections produced the specified class art before equipping anything. Equipped and removed Inixhide +1, the +1 bone scale test piece, Cloak of Elvenkind, Bracers of Defense AC 5, Boots of Speed, Girdle of Back Defense and Golden Girdle of Urnst on each character. Read back the active SEGOBJEX walk and combat pictures on every transition. All 56 equipped states matched the normal builder. All 56 removals restored both empty pictures byte for byte. The seven Thri-kreen equipment states matched its original shell.
+
+The game drew both genuine waist items with the blue palette cycle. Each appeared in all 29 poses of the seven tested humanoid outfits. The human male Psionicist's equipped cloak now extends beyond his empty silhouette by 7–99 pixels depending on pose. Its 29 changesets stayed on the fitted cape, clear of the face and drawn bow. The live arena showed the green cloak behind the human, half-giant, halfling and Mul figures. The pose counts come from the encoded pictures. Restored the test party's inventory, figure, sheet and map picture without saving. [Equipped figures in motion](../../obsidian-edition/docs/class-outfits/magical-equipment.md)
+
+After the Mul's waistband was narrowed, repeated both girdle equip/remove cycles on his Druid/Fighter. Both retained a visible glint in every pose and restored his exact empty pictures. For the screenshot comparison, the test party's companions were temporarily moved aside. Each column shows the same character standing in the same place, cropped from the game window after equipping the cloak and girdle separately and after removal. [Compare the seven idle figures in DOSBox](img/2026-11-25-fitted-cloak-girdle-dosbox.png)

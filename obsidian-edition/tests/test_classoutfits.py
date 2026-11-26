@@ -219,7 +219,8 @@ class HumanOutfitTests(unittest.TestCase):
         sheet[game.SHEET_CLASSES] = 17
         self.assertEqual(classoutfits.for_sheet(sheet), "Thief")
         sheet[game.SHEET_RACE] = game.HALFLING
-        self.assertIsNone(classoutfits.for_sheet(sheet))
+        self.assertIsNone(classoutfits.for_sheet(sheet, 2095))
+        self.assertEqual(classoutfits.for_sheet(sheet), "Fighter/Thief")
         self.assertIsNone(classoutfits.for_sheet(b""))
 
     def test_both_feet_repaint_independently_of_the_clothing_palette(self):
