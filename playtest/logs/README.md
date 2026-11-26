@@ -207,6 +207,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-class-outfits-loader.md) | The class outfits merged onto obsidian-edition, played with the Loader attached: the half-giant Gladiator and human Mage dressed, leather, plate and chain switched live on the map, and the fountain ambush fought with the Ranger, Cleric/Fighter and Fighter/Thief outfits |
 | [2026-11-26](2026-11-26-half-elf-import.md) | All 48 half-elf outfits on Lex with the Loader attached, plus Cromwell’s original sheet |
 | [2026-11-25](2026-11-25-sl-sell-thanks.md) | Does S miss a merchant's thank-you in SL, as in the sequel? No: no SL shop script tests the money after its shop (seven unconditional lines; scripts 25 and 185 count items, for a purchase only); from the scripts, not played (the lock busy) |
+| [2026-11-23](2026-11-23-elf-outfits-live.md) | Elf outfits redressed live: a class change and a sword off and on, each picture byte for byte the Loader's build |
 
 ## files/
 
