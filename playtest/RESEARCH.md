@@ -2043,3 +2043,5 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
   game's THAC0 lacks the dance's +1 the log already counts).
 
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
+
+Middle-button dragging in the sequel can be checked with two reads of `python3 ravtab.py`. On the after-ambush save the camera moved opposite the pointer by the same distance. See [the play log](logs/2026-11-26-ravager-map-drag.md).

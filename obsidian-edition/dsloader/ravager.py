@@ -802,6 +802,7 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("centre", 0x21A5A, bytes.fromhex("c6063f1400"), gamepatch._interrupt(VEC_CENTRE, 5)),
     # The same after the three calls drawing the view moved after a figure (262C:06C4; the view moved
     # by 262C:0D80): their "add sp,8".
+    Patch("mouse_set", 0x2F110, bytes.fromhex("c70603a10000"), _site(220, 6)),
     Patch("follow_1", 0x1E3EC, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
     Patch("follow_2", 0x20193, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
     Patch("follow_3", 0x2143E, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),

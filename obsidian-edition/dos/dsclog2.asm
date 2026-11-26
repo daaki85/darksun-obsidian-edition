@@ -4026,6 +4026,28 @@ site_table:
         dw site_none                        ; 127 (none here)
         dw site_none                        ; 128 (none here)
         dw site_none                        ; 129 (none here)
+        times 220 - ($ - site_table) / 2 dw site_none
+        dw mouse_set                        ; 220 mouse_set, after setting the driver ranges
+
+mouse_set:
+        mov word [0xA103], 0
+        pushad
+        mov ax, 3
+        int 0x33
+        cmp cx, 318
+        jb .ratio
+        cmp dx, 100
+        jne .ratio
+        mov ax, 4
+        mov cx, 160
+        int 0x33
+.ratio: mov ax, 0x0F
+        mov cx, 8
+        mov dx, 10
+        int 0x33
+        popad
+        iret
+
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -12868,6 +12890,7 @@ probe_scroll:
         sti
 .call:  call far [cs:s_far]
         call panel_mouse                ; (AX the buttons: a press on the panel kept from the game)
+        call drag_mouse
         call target_mouse               ; (... Enter's click on the chosen enemy: TARGETING)
         push word [cs:s_fl]
         push word [cs:s_cs]
@@ -14892,12 +14915,20 @@ pan_tick:
         add [cs:pan_y_done], si
         add ax, [CAM_X]
         add si, [CAM_Y]
+        call pan_camera
+        jmp .out
+.drop:  add [cs:pan_x_done], ax
+        add [cs:pan_y_done], si
+.out:   popa
+        ret
+; Move to the requested top left (AX, SI) through the game's map centre routine.
+pan_camera:
         and ax, 0xFFF8                  ; (as the game keeps it)
         and si, 0xFFF8
         cmp ax, [CAM_X]
         jne .go
         cmp si, [CAM_Y]
-        je .out
+        je .done
 .go:    mov bx, ds
         sub bx, DGROUP - CENTRE_SEG
         mov [cs:centre + 2], bx
@@ -14912,11 +14943,46 @@ pan_tick:
         add sp, 6
         popf
         inc word [cs:pan_moves]
-        jmp .out
-.drop:  add [cs:pan_x_done], ax
-        add [cs:pan_y_done], si
-.out:   popa
+.done:  ret
+
+; PANEL_MOUSE has sampled the original map coordinates. Anchor both axes on
+; button-down so movement smaller than one eight-pixel tile accumulates.
+drag_mouse:
+        test al, 4
+        jz .release
+        call on_map
+        jne .release
+        and al, ~4
+        pusha
+        push es
+        cmp byte [cs:drag_active], 0
+        jne .follow
+        mov ax, [CAM_X]
+        add ax, [cs:panel_mx]
+        mov [cs:drag_origin_x], ax
+        mov ax, [CAM_Y]
+        add ax, [cs:panel_my]
+        mov [cs:drag_origin_y], ax
+        mov byte [cs:drag_active], 1
+.follow:
+        cmp byte [cs:lbl_busy], 0
+        jne .out
+        cmp byte [cs:vga_busy], 0
+        jne .out
+        mov ax, [cs:drag_origin_x]
+        sub ax, [cs:panel_mx]
+        mov si, [cs:drag_origin_y]
+        sub si, [cs:panel_my]
+        call pan_camera
+.out:   pop es
+        popa
         ret
+.release:
+        mov byte [cs:drag_active], 0
+        ret
+drag_active db 0
+drag_origin_x dw 0
+drag_origin_y dw 0
 pan_x_done dw 0
 pan_y_done dw 0
 pan_moves  dw 0                 ; (the view moved by PAN, counted: ravtab.py)

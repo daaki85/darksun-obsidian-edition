@@ -83,6 +83,8 @@ Releases, newest first (2.12.0 and older in the archive):
   the Effects screen names the six, and a psionicist may still use the sequel's darts.
 
 **New**
+
+- Wake of the Ravager supports dragging the map with the middle mouse button.
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
   double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
   name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)

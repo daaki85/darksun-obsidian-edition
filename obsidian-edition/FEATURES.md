@@ -944,6 +944,8 @@ any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*.
 
 ## Wake of the Ravager
 
+Hold the middle mouse button and drag to move the map in Wake of the Ravager.
+
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
 of Thorns their pictures, from your copy of Dark Sun: Wake of the Ravager (GOG sells it with
 Shattered Lands), when the Loader finds it, and so do its weapons and the great axes their inventory icons (in the game's colours, each head in its material); without it they have icons of their own (the game's,

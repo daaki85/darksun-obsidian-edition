@@ -138,6 +138,7 @@ Progress is kept in the table below as features land.
 
 | Step | State |
 |---|---|
+| Map controls | Middle-button dragging verified on the after-ambush save. Party framing, combat tracking and the cinematic pointer still need work. [Play log](../playtest/logs/2026-11-26-ravager-map-drag.md) |
 | Study, memory, the first fixes seen working | done (wake-of-the-ravager.md) |
 | 1. Scaffolding | **the Loader side done**: `dsloader/ravager.py` (the sequel recognised by its DSUN.EXE, its patch table: the data path and 6 fixes; its 23 spell records' fixes; its DOSBox config), `launch` taking a sequel folder its own way, `dsloader launch --ravager [FOLDER]`, `tests/test_ravager.py`. Played in DOSBox the Loader's way (`ravstart.sh` with `RAV_LOADER=1`): the copy runs from the mod's folder (D:) with the game as C: and its CD as F:, to Tyr. Still to do in step 1: the WotR layout for the window (with step 3). The spell records' copy (`RESOURC2.GFF`) is written but read only once the helper redirects the game's opens (step 2) |
 | 2. The helper loads under WotR | **done**: `dos/dsclog2.asm` (DSCLOG2.EXE, 1,280 bytes): rand() through it (the patch at 5A22h, the seed DS:384Ah), the ring in the HMA, DOS's opens of RESOURCE.GFF redirected to the Loader's copy (the spell fixes now read in play); loaded high (C91Bh) before the game. Played: to Tyr and into the Draxans' fight, 36 rolls in the ring, the same filters matching the sequel's code. In the build audit (`test_audit_builds`) |
