@@ -14,6 +14,8 @@ The woman’s Cleric/Preserver row reproduces the class combination tested on Le
 
 [![Both half-elves in six matched poses with empty slots, armor, robe, cloak, sword and shield, bow and arrows, and corresponding retail reference](half-elf-loader-gear.png)](half-elf-loader-gear.png)
 
+The equipped cloak now covers the middle of the back through rear idle and all four walking steps. The folds move with the shoulders, and the split at the hem still opens as the legs move. [Compare the five rear poses before and after](half-elf-elven-cloak-rear.png)
+
 [Watch the woman through all 29 poses](half-elf-loader-woman.gif) · [Watch the man through all 29 poses](half-elf-loader-man.gif)
 
 Each row compares one frame of the Loader’s actual equipment picture on the arena floor, enlarged and at game size. The Warden’s Plate column equips the chest, arms and legs. The Ashen Robe and Cloak of Elvenkind are shown separately so their edges and glints can be seen against the same class colors. During the three bow shots, follow the foreground bow across the sleeve. The retail Priest, Mage and Thief each have matching walk, strike and bow frames through pose 26.

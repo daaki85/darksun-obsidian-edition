@@ -84,6 +84,11 @@ def layers(study, obj, pose, role):
     outfit, pad = study.rows(key, pose, role)
     if role in ("Fighter", "Preserver"):
         masks = approved_masks(study, key, pose, role, outfit, pad)
+        if obj == 307 and role == "Fighter":
+            # Her older mantle also left windows between the moving folds.
+            # Other angles retain the original Preserver drape.
+            masks["cape"] = (halfelfequipmasks.layers(study, obj, pose, role)["cape"]
+                             if pose in halfelfequipmasks.REAR_CAPE else [[None]*len(row) for row in outfit])
     else:
         masks = halfelfequipmasks.layers(study, obj, pose, role)
     # Erase the generated half-elf's old clothes wherever the approved

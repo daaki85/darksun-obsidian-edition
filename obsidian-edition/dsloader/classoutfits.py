@@ -293,7 +293,7 @@ def frames(role, combat, model=2095):
         belts = archive.read(f"{prefix}/{tag}-belt") if fitted or half_elf_layers else None
         trims = archive.read(f"{prefix}/{tag}-trim") if half_elf_layers else None
         cape_entry = f"{prefix}/{tag}-cape"
-        capes = archive.read(cape_entry) if (fitted or half_elf_layers) and cape_entry in archive.namelist() else None
+        capes = archive.read(cape_entry) if (fitted or model in HALF_ELF_SOURCES) and cape_entry in archive.namelist() else None
     # The archive also stores the drape of a separately equipped cloak for
     # bare-backed kits. Only real cloth can supply its own underlying texture.
     members = set(role.split("/"))
@@ -353,13 +353,13 @@ def frames(role, combat, model=2095):
                          for x, pixel in enumerate(row) if pixel is not None)
         frame = Frame(image, regions, folds, head, native_cloak=native_cloak)
         pose = f + 15 * combat
+        cape = ()
+        if capes is not None:
+            cape = tuple((x-left, y-top, c) for y, row in enumerate(art.decode_frame(capes, f)[2])
+                         for x, c in enumerate(row) if c is not None)
         if belts is not None:
             waist = tuple((x-left, y-top) for y, row in enumerate(art.decode_frame(belts, f)[2])
-                         for x, c in enumerate(row) if c is not None)
-            cape = ()
-            if capes is not None:
-                cape = tuple((x-left, y-top, c) for y, row in enumerate(art.decode_frame(capes, f)[2])
-                             for x, c in enumerate(row) if c is not None)
+                          for x, c in enumerate(row) if c is not None)
             trim = (frozenset((x-left, y-top) for y, row in enumerate(art.decode_frame(trims, f)[2])
                               for x, c in enumerate(row) if c is not None) if trims else frozenset())
             plate = None
@@ -390,8 +390,7 @@ def frames(role, combat, model=2095):
         else:
             landmark = LANDMARKS[pose] if model == 2095 and pose < len(LANDMARKS) else None
             trim = humanarmordye.protected(frame, role, pose, model, landmark)
-        cape = ()
-        if mantle:
+        if mantle and not cape:
             donor = mantle[f]
             # Both outfits have native coordinates, including the wider side step.
             foreground = {point for bit in (ARMS, FOREARM, BOW, LEFT_FOOT, RIGHT_FOOT)
