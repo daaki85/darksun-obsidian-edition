@@ -112,7 +112,8 @@ def usable(settings: dict) -> bool:
         return False
     if key not in _USABLE:
         found = version(path)
-        _USABLE[key] = found is None or new_enough(found)  # (unknown: tried; the start says if it fails)
+        _USABLE[key] = (found is None or new_enough(found)) and not os_free(path)  # (unknown: tried; the start
+        #   says if it fails)
     return _USABLE[key]
 
 
@@ -169,6 +170,34 @@ def version(path: str) -> Optional[Version]:
     return found or version_in_file(path)
 
 
+# DOSBox-X's "OS-free" builds (a release of their own beside each version, every file of it named
+# "...-osfree...") have no DOS of their own: no MOUNT, no LH, so the Loader's configuration can't
+# start the game and DOSBox-X just closes. Their program holds this line, which the usual builds
+# don't (both 2026.10.01 Windows builds read, 2026-11-26).
+OS_FREE_MARK = b"Built-in MS-DOS emulation is not available"
+OS_FREE_HELP = ("an OS-free build of DOSBox-X (from a release page or download named \"osfree\"), which has "
+                "no DOS of its own and can't run the game. Get the usual build instead: on Windows "
+                "dosbox-x-vsbuild-win64-VERSION-portable.zip, the dosbox-x.exe in its \"bin\\x64\\Release "
+                "SDL2\" folder")
+
+
+def os_free(path: str) -> bool:
+    """True if the program at PATH is an OS-free build (OS_FREE_MARK in its file)."""
+    try:
+        with open(app_program(path), "rb") as f:
+            tail = b""
+            while True:
+                chunk = f.read(_SCAN_CHUNK)
+                if not chunk:
+                    return False
+                data = tail + chunk
+                if OS_FREE_MARK in data:
+                    return True
+                tail = data[-len(OS_FREE_MARK):]
+    except OSError:
+        return False
+
+
 def new_enough(found: Optional[Version]) -> bool:
     return found is not None and found >= MIN_VERSION
 
@@ -185,6 +214,8 @@ def found_line(path: Optional[str], found: Optional[Version] = None, asked: bool
     path = app_program(path)
     if not os.path.isfile(path):
         return f"Not found: {path} isn't there any more. Choose the program again."
+    if os_free(path):
+        return f"{path} is {OS_FREE_HELP}."
     if not asked:
         found = version(path)
     if found is None:
@@ -206,6 +237,9 @@ def problem(settings: dict) -> Optional[str]:
                     "again on the Options tab (Engine), or go back to GOG's DOSBox there.")
         return ("DOSBox-X is chosen as the engine, but no DOSBox-X program is: choose it on the Options tab "
                 "(Engine), or go back to GOG's DOSBox there.")
+    if os_free(path):
+        return (f"{path} is {OS_FREE_HELP}. Choose it on the Options tab (Engine), or go back to GOG's DOSBox "
+                "there.")
     found = version(path)
     if found is not None and not new_enough(found):
         return (f"{path} is DOSBox-X {version_text(found)}, too old for the Loader: it follows the game "

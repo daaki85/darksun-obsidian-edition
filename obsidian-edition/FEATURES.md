@@ -903,7 +903,10 @@ its licence (it is free software under the GNU GPL, version 2) and `SOURCE.txt`,
 its source is (a copy of it is beside the mod's download). **On Linux and macOS** install DOSBox-X
 yourself and point the Loader to its program with **Choose the DOSBox-X program...** on the
 Options tab's **Engine** section; the tab then says which version it found. It needs **DOSBox-X
-2025.01.01 or later**; an older one is refused, with the reason, and isn't used by default. A
+2025.01.01 or later**; an older one is refused, with the reason, and isn't used by default. So is
+an **OS-free** build (DOSBox-X's downloads with "osfree" in their name, on a release page of their
+own): it has no DOS of its own, so it can't run the game. On Windows the right one is
+`dosbox-x-vsbuild-win64-VERSION-portable.zip`, its `bin\x64\Release SDL2\dosbox-x.exe`. A
 DOSBox-X you choose goes before the one that comes with the mod. To play in GOG's DOSBox, choose it
 in the same section.
 

@@ -93,6 +93,20 @@ class EngineSettingTests(unittest.TestCase):
         self.assertEqual(dosboxx.engine({"engine": "dosbox-x"}), dosboxx.DOSBOX_X)  # (chosen: the start says why not)
         self.assertIn("too old", dosboxx.problem({"engine": "dosbox-x"}))
 
+    def test_an_os_free_build_is_no_default_and_is_named(self):
+        """DOSBox-X's OS-free builds have no DOS to run the game in (the owner's Windows test, 2026-11-26):
+        never the default, and the start and the Options tab say what it is and what to get."""
+        path = fake_program(self.bundled)
+        with open(path, "a") as f:
+            f.write("# LOG: DOSBox-X OS-Free build -- %s\n" % dosboxx.OS_FREE_MARK.decode())
+        self.assertTrue(dosboxx.os_free(path))
+        self.assertEqual(dosboxx.engine({}), dosboxx.GOG)
+        for said in (dosboxx.problem({"engine": "dosbox-x"}), dosboxx.found_line(path)):
+            self.assertIn("OS-free", said)
+            self.assertIn("vsbuild-win64-VERSION-portable.zip", said)
+        self.assertFalse(dosboxx.os_free(fake_program(tempfile.mkdtemp())))  # (the usual build)
+        self.assertFalse(dosboxx.os_free("/no/such/dosbox-x"))
+
     def test_it_is_one_of_the_switches_and_restores_to_none_chosen(self):
         self.assertIsNone(launch.SWITCH_DEFAULTS["engine"])
         self.assertEqual(launch.effective_switches({})["engine"], "gog")
