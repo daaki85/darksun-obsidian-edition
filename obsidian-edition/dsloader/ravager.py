@@ -212,6 +212,42 @@ def _sheet4(at: int, opcode: int, field: int, imm: bytes) -> Patch:
     return Patch("sheet4_%x" % at, at, code(GAME_SHEET_SIZE), code(0x48))
 
 
+# GEAR_HANDS: a new character's starting gear (the creation screen's DONE, 6F197h; its giver 6EF49h) comes from
+# a table of 3-byte entries (a word, the object in OBJEX.GFF's RDFF; a byte, the worn slot), file 43680h
+# (selector 358h in the overlay), each class a range of it by the sheet's class flags (+12h, tested in this
+# order): fighter 16h-1Ah, druid 7-8, gladiator 12h-15h, ranger 0Dh-11h, cleric 2-6, thief 1Fh-22h,
+# psionicist 1Bh-1Eh, preserver 9-0Ch, a thri-kreen 0-1. The game put most classes' weapon in the left hand
+# (slot 10), which swings once a round whatever the weapon specialization (the right hand, 3, is the one the
+# attacks a round are counted for): a fighter's +1 long sword (633) behind its +1 shield (842) in the right,
+# a cleric's club (609) behind its shield, and a druid's or psionicist's club and a preserver's +1
+# quarterstaff (632) with the right hand empty. Each weapon goes to the right hand, the shield to the left
+# (playtest/logs/2026-11-26-ravager-starting-gear.md); a gladiator's (two +1 long swords, 3 and 10), a
+# ranger's and a thief's (a long sword in 3) and a thri-kreen's (its gythka in 3) as they were.
+GEAR_TABLE_AT = 0x43680
+GEAR_TABLE = bytes.fromhex(
+    "dd0202" "760203"                                   # 0-1 a thri-kreen: chatkcha +1 (missile), gythka +1
+    "4a0303" "61020a" "2a0309" "2f0300" "340306"        # 2-6 cleric: shield +1, club, chest, arms, legs
+    "61020a" "de0202"                                   # 7-8 druid: club, sling +1
+    "de0202" "78020a" "4d0609" "5c060c"                 # 9-0Ch preserver: sling +1, quarterstaff +1, chest, cloak
+    "bc0202" "da0201" "2a0309" "2f0300" "5b0203"        # 0Dh-11h ranger: bow, arrows, chest, arms, long sword (603)
+    "790203" "79020a" "2b0309" "350306"                 # 12h-15h gladiator: two long swords +1, chest, legs
+    "4a0303" "79020a" "2c0309" "310300" "360306"        # 16h-1Ah fighter: shield +1, long sword +1, chest, arms, legs
+    "61020a" "bc0202" "da0201" "2a0309"                 # 1Bh-1Eh psionicist: club, bow, arrows, chest
+    "c10202" "790203" "2a0309" "64020e")                # 1Fh-22h thief: sling, long sword +1, chest, dagger (pack)
+GEAR_RIGHT, GEAR_LEFT = 3, 10
+# (entry, its new slot): the weapons to the right hand, the shields to the left
+GEAR_HANDS = ((2, GEAR_LEFT), (3, GEAR_RIGHT), (7, GEAR_RIGHT), (0x0A, GEAR_RIGHT),
+              (0x16, GEAR_LEFT), (0x17, GEAR_RIGHT), (0x1B, GEAR_RIGHT))
+
+
+def gear_table_fixed() -> bytes:
+    """GEAR_TABLE with GEAR_HANDS' slots."""
+    table = bytearray(GEAR_TABLE)
+    for entry, slot in GEAR_HANDS:
+        table[entry * 3 + 2] = slot
+    return bytes(table)
+
+
 def _stride(at: int) -> Patch:
     modrm = 0xC0 if at in SHEET_STRIDES_AX else 0xD2
     return Patch("sheet_stride_%x" % at, at, bytes((0x6B, modrm, GAME_SHEET_SIZE)), bytes((0x6B, modrm, 0x48)))
@@ -813,6 +849,9 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("thief_table", 0x8C716, _SL["thief_skill"].original,
           bytes((0xCD, VEC_SITE, 52, 0x72, 0x8C795 - 0x8C71B)) + b"\x90" * 4),
     Patch("backstab_dice", 0x5D11B, _SL["stab_times"].original, _site(53, 10)),
+    # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
+    # changed (data, no helper code)
+    Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

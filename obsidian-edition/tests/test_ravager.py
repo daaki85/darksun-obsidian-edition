@@ -44,12 +44,29 @@ class TableTests(unittest.TestCase):
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
                             "psi_click", "pick_top", "f10_pin",
-                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover"}
+                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
+
+    def test_gear_hands(self):
+        """A new character's starting gear (the table of GEAR_TABLE_AT) puts every weapon in the right hand
+        (3) and every shield in the left (10): the fighter's long sword and the cleric's club in front of their
+        shields, the druid's, preserver's and psionicist's weapon out of the empty left hand; only slots
+        change, and the gladiator's second long sword stays in the left hand."""
+        old, new = ravager.GEAR_TABLE, ravager.gear_table_fixed()
+        self.assertEqual(len(old), 35 * 3)
+        entries = lambda t: [(struct.unpack_from("<H", t, 3 * n)[0], t[3 * n + 2]) for n in range(35)]
+        before, after = entries(old), entries(new)
+        self.assertEqual([o for o, _ in before], [o for o, _ in after])
+        changed = {n: (before[n][1], after[n][1]) for n in range(35) if before[n] != after[n]}
+        self.assertEqual(changed, {2: (3, 10), 3: (10, 3), 7: (10, 3), 0x0A: (10, 3), 0x16: (3, 10),
+                                   0x17: (10, 3), 0x1B: (10, 3)})
+        self.assertEqual(after[0x16], (842, 10))  # (the fighter's +1 shield)
+        self.assertEqual(after[0x17], (633, 3))   # (its +1 long sword)
+        self.assertEqual(after[0x13], (633, 10))  # (the gladiator's second)
 
     def test_item_names(self):
         """The helper's header names ITEM_NAMES (+196) and its room (+198), as ravager has them; the mod's

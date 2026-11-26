@@ -1720,6 +1720,21 @@ PROBE_PK_* do. What it needed from the sequel:
   weapon a shield (type 91), all with the dice log attached and never saved. Seen: a long sword specialist (mastery) 2
   every round, a club specialist with the long sword 2, 1, 2, 1, a fighter with no spec the game's 2.
 
+**The starting gear's table and the weapon hand** (2026-11-26, logs/2026-11-26-ravager-starting-gear.md): 6F197h
+(DONE's gear call) gives a new character (creature +14h 0) its items through 6EF49h, from a table of 3-byte entries
+(word: the OBJEX object; byte: the worn slot) at file 43680h, load + 3E48h in memory (the overlay's "mov ax,358h"
+fixed up: read it from the code once the creation overlay is in, `ndisasm -b16 -e 0x6EF49 DSUN.EXE` for the
+routine), each class a range by its flags (sheet +12h, fighter tested first: the log's table). Each item is put in
+its slot by c8:288Ch, or dropped back into the pack where the class can't use it (an air cleric's club). The game
+put the fighter's +1 long sword and the cleric's club in the left hand (10) behind a shield in the right (3), and
+the druid's, preserver's and psionicist's weapon in the left with the right empty; the Loader's patch `gear_hands`
+(ravager.GEAR_HANDS: seven slot bytes) puts each weapon in the right hand and the shield in the left, so a new
+fighter needs no test edit for its attacks a round (`RAV_SKIP=gear_hands` for the game's). The OBJEX objects:
+an RDFF chunk's item record starts at +0Ah (17h bytes: the type at +0Ah, the plus at +16h). In a fight, C on a
+member's turn opens USE or View Character (whichever the menu last had); the USE screen's second bottom icon
+(75,171) is the inventory, whose Computer Control icons are the lower small ones left of the portraits (6,17 /
+6,65 / 6,113 / 6,161), View Character's 47,53 / 98,53 / 47,113 / 98,113.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

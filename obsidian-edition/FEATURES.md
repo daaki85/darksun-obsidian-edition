@@ -1034,7 +1034,11 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   and psionic powers, gear and hit dice doesn't carry over yet. The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
-  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. A new
+  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its
+  weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
+  druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
+  weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
+  shield in the left. A new
   fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
   ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
