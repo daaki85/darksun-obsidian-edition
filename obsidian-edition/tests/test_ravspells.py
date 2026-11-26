@@ -128,6 +128,25 @@ class GameFileTests(unittest.TestCase):
         self.assertEqual(records["ICON", 21326], self.game["ICON", 21205])
         self.assertNotEqual(records["ICON", 21327], self.game["ICON", 21194])
 
+    def test_funnel_with_only_ravager_installed(self):
+        import struct
+        import tempfile
+        from pathlib import Path
+        from dsloader import whirlart
+
+        with tempfile.TemporaryDirectory() as temp:
+            copy = Path(temp) / "OBJEX2.GFF"
+            for enabled in (True, False):
+                with self.subTest(enabled=enabled):
+                    skip = ravager.skipped({"new_spells": enabled, "new_items": False})
+                    ravager.write_objects(WOTR, str(copy), skip)
+                    chunks = gff.read_gff(copy.read_bytes())
+                    self.assertEqual(("OJFF", whirlart.OBJECT) in chunks, enabled)
+                    self.assertEqual(("BMP ", whirlart.OBJECT) in chunks, enabled)
+                    if enabled:
+                        frames, = struct.unpack_from("<H", chunks["BMP ", whirlart.OBJECT], 4)
+                        self.assertEqual(frames, 4)
+
     def test_area_segment_relocations(self):
         """Every MZ reference to selector 3D0h's segment is redirected before overlays load."""
         import re

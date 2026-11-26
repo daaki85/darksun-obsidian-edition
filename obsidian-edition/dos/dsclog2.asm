@@ -4268,7 +4268,7 @@ ww_draw:
         cmp word [bx + 0x1B], WW_OBJECT
         jne .plain
         test byte [es:di + 5], 0x20
-        jz .plain
+        jz .skip_original               ; native off-area placeholder for this thing
         push ax
         push cx
         call whirl_pick                 ; (CF: no copies found)
@@ -4298,6 +4298,7 @@ ww_draw:
         iret
 .skip:  pop cx
         pop ax
+.skip_original:
         push bp
         mov bp, sp
         add word [bp + 2], WD_SKIP
