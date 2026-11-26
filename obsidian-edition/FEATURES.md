@@ -264,7 +264,7 @@ bugs](GAME-BUGS.md) that the mod mends. All are always on now, with no switch.
 | Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](#dual-classing-as-the-manual-has-it) |
 | Class restrictions | The game's item lists, one class allowing an item enough | Those lists as they are, and AD&D's limits for every class, the strictest winning | [Class restrictions](#class-restrictions) |
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
-| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
+| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level, saves that stop improving | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
 | Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand | [Two weapons](#two-weapons) |
 | Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](#weapon-specialization) |
@@ -328,11 +328,16 @@ scores](PLAYER-GUIDE.md#ability-scores). How it works:
 AD&D's tables hold where the game's differ: the XP for each level (a gladiator, ranger and thief
 need a little more for 2nd), priests' THAC0 (20, 20, 20, 18..., where the game improves a level
 early) and clerics', druids' and preservers' spell slots (3 3 1 and 4 2 1 at 5th, where the game
-gives 3 2 1). The rest were AD&D's already; kits still change these tables.
+gives 3 2 1), and the saving throws, the Player's Handbook's by class group and level and a
+psionicist's Dark Sun's own: the game took AD&D's best save as the most a save could improve by, so it
+held a warrior at 11/11/11/13/11 from 10th level and no save went below 8 (a 12th-level fighter saves at
+7/9/8/8/10, a 17th at 3/5/4/4/6), and gave a psionicist the thief's saves (a psionicist/thief has the
+better of its two classes' each). The
+rest were AD&D's already; kits still change these tables.
 
 **Always on** (no switch). Rules: [experience and
 levels](PLAYER-GUIDE.md#experience-and-levels), [THAC0 by level](PLAYER-GUIDE.md#thac0-by-level),
-[spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
+[saving throws](PLAYER-GUIDE.md#saving-throws), [spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#adds-class-tables).
 
 #### CON as in AD&D
@@ -1103,8 +1108,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   a druid's stop growing at 15th, a ranger's
   priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
   **saving throws** are the Player's Handbook's by class group and level: the game held every save at
-  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8 (a bug
-  Shattered Lands has too, for later).
+  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8, and a
+  psionicist saved as a thief (Shattered Lands' bugs too, [fixed there](#adds-class-tables) the same way).
 - **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be

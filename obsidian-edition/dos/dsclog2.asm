@@ -23,6 +23,7 @@
 
 BITS 16
 CPU 386
+%include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG's too)
 
 VEC_RAND equ 0x60       ; rand() (DSUNLOG2.EXE: INT 60h at the start of rand(), 5A22h)
 VEC_SAVE equ 0x61       ; PROBE_SAVE (DSUNLOG2.EXE: INT 61h at the saving throw's end, 66EA6h)
@@ -19848,148 +19849,15 @@ hd_thief:
 .ret:   ret
 hd_tens dw 0                            ; (thieves' 10th-level dice, for a look in play)
 ;
-; SAVING THROWS AS IN AD&D (RULE_HI_TABLES, AD&D's class tables): the game's saves (954D2h: for each class
-; group 0-3, priest, warrior, wizard, rogue, at the best level of its classes in it, and each of the five
-; saves) are the group's 1st-level save less (level - 1) x a rate / 100, but no more than the table's third
-; byte (4D0h:6Ch + group x 15 + save x 3: the 1st level's, the rate, AD&D's last save), which is AD&D's best
-; save and not the most a save improves: a warrior stays at 11/11/11/13/11 from 10th level (SL's 87844h
-; the same). SAVE_BASE (site 116, "save_table"): "mov al,es:[bx+6Ch]" (955DFh; 5 bytes) before "cbw /
-; sub ax,[bp-2]", [BP-2] the game's improvement plus a dwarf's or halfling's CON bonus: AL the Player's
-; Handbook's save (SAVE_TABLE, tables.rav_saves) plus the game's improvement, so the game's sum is the
-; Handbook's less the race's bonus. CX the group, SI the save, the group's level at [BP-0Ah] + CX x 2. The
-; best of a character's groups is the game's (its "jle" keeps the lowest).
-SAVE_LEVELS equ 21                      ; (rows a group: levels 1-21, more is 21st's)
-save_base:
-        mov al, [es:bx + 0x6C]
-        test word [cs:rules_hi], RULE_HI_TABLES
-        jz .out
-        push bx
-        push cx
-        push dx
-        push si
-        push di
-        mov di, cx
-        add di, di
-        movsx di, byte [bp + di - 0x0A] ; (the group's level)
-        mov ax, di
-        cmp ax, SAVE_LEVELS
-        jle .most
-        mov ax, SAVE_LEVELS
-.most:  dec ax
-        jns .row
-        xor ax, ax
-.row:   imul cx, cx, SAVE_LEVELS
-        add ax, cx
-        imul ax, ax, 5
-        add si, ax
-        mov cl, [cs:save_table + si]    ; the Handbook's
-        mov ax, di                      ; and the game's improvement, which it takes off
-        dec ax
-        movsx dx, byte [es:bx + 0x6D]
-        imul dx
-        cwd
-        mov si, 100
-        idiv si
-        movsx dx, byte [es:bx + 0x6E]
-        cmp ax, dx
-        jle .imp
-        mov ax, dx
-.imp:   add al, cl
-        inc word [cs:save_count]
-        pop di
-        pop si
-        pop dx
-        pop cx
-        pop bx
-.out:   iret
-save_count dw 0                         ; (saves worked out with the table, for a look in play)
-; the Player's Handbook's saves (Table 60) by group and level 1-21, the five: paralysis, poison and death;
-; rod, staff and wand; petrification and polymorph; breath; spell (tables.RAV_SAVE_BANDS)
-save_table:
-        db 10, 14, 13, 16, 15 ; priests: 1
-        db 10, 14, 13, 16, 15
-        db 10, 14, 13, 16, 15
-        db 9, 13, 12, 15, 14
-        db 9, 13, 12, 15, 14 ; 5
-        db 9, 13, 12, 15, 14
-        db 7, 11, 10, 13, 12
-        db 7, 11, 10, 13, 12
-        db 7, 11, 10, 13, 12
-        db 6, 10, 9, 12, 11 ; 10
-        db 6, 10, 9, 12, 11
-        db 6, 10, 9, 12, 11
-        db 5, 9, 8, 11, 10
-        db 5, 9, 8, 11, 10
-        db 5, 9, 8, 11, 10 ; 15
-        db 4, 8, 7, 10, 9
-        db 4, 8, 7, 10, 9
-        db 4, 8, 7, 10, 9
-        db 2, 6, 5, 8, 7
-        db 2, 6, 5, 8, 7 ; 20
-        db 2, 6, 5, 8, 7
-        db 14, 16, 15, 17, 17 ; warriors: 1
-        db 14, 16, 15, 17, 17
-        db 13, 15, 14, 16, 16
-        db 13, 15, 14, 16, 16
-        db 11, 13, 12, 13, 14 ; 5
-        db 11, 13, 12, 13, 14
-        db 10, 12, 11, 12, 13
-        db 10, 12, 11, 12, 13
-        db 8, 10, 9, 9, 11
-        db 8, 10, 9, 9, 11 ; 10
-        db 7, 9, 8, 8, 10
-        db 7, 9, 8, 8, 10
-        db 5, 7, 6, 5, 8
-        db 5, 7, 6, 5, 8
-        db 4, 6, 5, 4, 7 ; 15
-        db 4, 6, 5, 4, 7
-        db 3, 5, 4, 4, 6
-        db 3, 5, 4, 4, 6
-        db 3, 5, 4, 4, 6
-        db 3, 5, 4, 4, 6 ; 20
-        db 3, 5, 4, 4, 6
-        db 14, 11, 13, 15, 12 ; wizards: 1
-        db 14, 11, 13, 15, 12
-        db 14, 11, 13, 15, 12
-        db 14, 11, 13, 15, 12
-        db 14, 11, 13, 15, 12 ; 5
-        db 13, 9, 11, 13, 10
-        db 13, 9, 11, 13, 10
-        db 13, 9, 11, 13, 10
-        db 13, 9, 11, 13, 10
-        db 13, 9, 11, 13, 10 ; 10
-        db 11, 7, 9, 11, 8
-        db 11, 7, 9, 11, 8
-        db 11, 7, 9, 11, 8
-        db 11, 7, 9, 11, 8
-        db 11, 7, 9, 11, 8 ; 15
-        db 10, 5, 7, 9, 6
-        db 10, 5, 7, 9, 6
-        db 10, 5, 7, 9, 6
-        db 10, 5, 7, 9, 6
-        db 10, 5, 7, 9, 6 ; 20
-        db 8, 3, 5, 7, 4
-        db 13, 14, 12, 16, 15 ; rogues and psionicists: 1
-        db 13, 14, 12, 16, 15
-        db 13, 14, 12, 16, 15
-        db 13, 14, 12, 16, 15
-        db 12, 12, 11, 15, 13 ; 5
-        db 12, 12, 11, 15, 13
-        db 12, 12, 11, 15, 13
-        db 12, 12, 11, 15, 13
-        db 11, 10, 10, 14, 11
-        db 11, 10, 10, 14, 11 ; 10
-        db 11, 10, 10, 14, 11
-        db 11, 10, 10, 14, 11
-        db 10, 8, 9, 13, 9
-        db 10, 8, 9, 13, 9
-        db 10, 8, 9, 13, 9 ; 15
-        db 10, 8, 9, 13, 9
-        db 9, 6, 8, 12, 7
-        db 9, 6, 8, 12, 7
-        db 9, 6, 8, 12, 7
-        db 9, 6, 8, 12, 7 ; 20
-        db 8, 4, 7, 11, 5
+; SAVING THROWS AS IN AD&D (RULE_HI_TABLES, AD&D's class tables; save_bands.inc, DSCLOG's the same): the
+; game's saves (954D2h: for each class group 0-3, priest, warrior, wizard, rogue, at the best level of its
+; classes in it, and each of the five saves) are the group's 1st-level save less (level - 1) x a rate / 100,
+; but no more than the table's third byte (4D0h:6Ch + group x 15 + save x 3), AD&D's best save and not the
+; most a save improves: a warrior stays at 11/11/11/13/11 from 10th level (SL's 877EBh the same); and
+; psionicists are thieves. SAVE_BASE (site 116, "save_table"): "mov al,es:[bx+6Ch]" (955DFh; 5 bytes)
+; before "cbw / sub ax,[bp-2]". The sheets: SHEETS_PTR, SHEET_SIZE, classes +1Bh, levels +1Eh.
+        SAVE_BASE_CODE SHEETS_PTR, SHEET_SIZE, 0x1B, 0x1E
+        SAVE_BANDS_DATA
 ; ---- WEAPON PICKS: DSCLOG's CR_WEAPONS, LV_CHECK and PROBE_PK_* on the sequel's creation screen ----
 ; With weapon specialization (RULE_SPECIALIZE), a new character that is a fighter, gladiator or ranger (or a
 ; Battle Mage, Crusader, Mind Warrior or Swashbuckler: LV_DUE) picks its weapon specs after DONE, as in

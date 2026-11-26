@@ -207,6 +207,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-soft-armor.md) | The half-giant Psionicist and human Priest in four armor materials on the DOSBox map |
 | [2026-11-26](2026-11-26-class-outfits-loader.md) | The class outfits merged onto obsidian-edition, played with the Loader attached: the half-giant Gladiator and human Mage dressed, leather, plate and chain switched live on the map, and the fountain ambush fought with the Ranger, Cleric/Fighter and Fighter/Thief outfits |
 | [2026-11-26](2026-11-26-half-elf-import.md) | All 48 half-elf outfits on Lex with the Loader attached, plus Cromwell’s original sheet |
+| [2026-11-26](2026-11-26-sl-saves-scout.md) | Shattered Lands' saves past the table's last row (a fighter 10th 8/10/9/9/11 against the game's 11/11/11/13/11; cleric, thief, a halfling fighter/thief), the psionicists' Dark Sun Table 8 in both games (a psionicist/thief the best of each), the Military Scout's +1 not for a thrown javelin; each with its control (`ruleshi=-8`, `RAV_SKIP=save_table`); a second game on `:61` |
 
 ## files/
 

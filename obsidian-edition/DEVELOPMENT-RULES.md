@@ -306,6 +306,28 @@ preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
 `ADND_SLOTS`; anyone else, the routine as it was.
 
+The saves: the game's save routine (877EBh, called only at a level up, 879B5h) finds each class
+group's best level (876C3h: [BP-0Ah] + group x 2, the groups by the class at 420h:10h + class:
+clerics and druids 0, fighters, gladiators and rangers 1, preservers 2, psionicists and thieves 3),
+then for each group with a level and each of the five saves takes the group's 1st-level save less
+(level - 1) x a rate / 100 (`[BP-2]`, plus a dwarf's or halfling's CON / 3.5 for group 1 or 4), but
+no more than the table's third byte (420h:6Ch + group x 15 + save x 3: the 1st level's, the rate,
+AD&D's last save), and keeps the lowest of the groups in the sheet's +37h..+3Bh. That third byte is
+AD&D's best save, not the most a save improves, so a warrior's stop at 11/11/11/13/11 from 10th level.
+And the game puts psionicists with thieves (group 3), at the best level of either.
+`SAVE_BASE` (site `SAVE_BASE_SITE`, NS_IMAGE + 123, gamepatch `save_table`) replaces its `mov
+al,es:[bx+6Ch]` (878F7h, 5 bytes) before `cbw / sub ax,[bp-2]`: with `RULE_HI_TABLES` AL is the
+Player's Handbook's save (Table 60) plus the game's improvement worked out again, so the game's sum is
+the Handbook's less the race's bonus; for group 3 the sheet's classes (DI the creature: DS:1661h + DI
+x 47h, classes +21h, levels +24h) give a thief level and a psionicist level, and AL is the better of the
+thief's save at the one and the psionicist's (Dark Sun's Table 8) at the other; without the rule, the
+game's byte. The code and the bands (`SAVE_BANDS`, 33 of a first level and five saves: the four
+groups', then the psionicists', `tables.RAV_SAVE_BANDS`, `class_saves`) are `dos/save_bands.inc`'s
+macros, `SAVE_BASE_CODE` and `SAVE_BANDS_DATA` (the bands in DSCLOG's tail), shared with Wake of the
+Ravager's DSCLOG2, whose routine (954D2h) is the same (its site 116; the sheets at `SHEETS_PTR`, 48h
+bytes, classes +1Bh, levels +1Eh). Levels past a set's last band (21st) use it. `test_slsaves`,
+`test_ravlevelcap`.
+
 In Wake of the Ravager (`RULE_ADND_TABLES` in `RULES_PORTED`) the table is RESOURCE.GFF's DATA 1000,
 read through 5C8:20 (the resource, the row 0-7, the index) at eight places (6C3E4h, 6C48Ah, 6C4CCh,
 6FB8Bh, 958E3h, 95931h, 9597Ah, 95C84h): the creation screen, View Character and the level up, which
@@ -1793,7 +1815,8 @@ the slots `RAV_SLOTS` (30 rows a table), and the psionicists' pop-up (688:61h) l
 too, a pick raising a power's number (selector 370h's 9CDh + 22h a member, bits 1-7), so 34 powers
 never run out. A thief's d6 to 10th is `PROBE_HD_ROLL` and `PROBE_HD_CON` (113, 114) and a third site
 (115) for the sequel's `mov` that keeps the levels after the compare. The saves (`SAVE_BASE`, 116,
-RULE_HI_TABLES): the save routine (954D2h) is SL's (87844h), save = the 1st level's less
+RULE_HI_TABLES, SL's own `SAVE_BASE` the same since 2026-11-26, `dos/save_bands.inc`, a psionicist by Dark Sun's
+table): the save routine (954D2h) is SL's (877EBh), save = the 1st level's less
 min((level - 1) x rate / 100, the table's third byte), that byte AD&D's last save, not the most a save
 improves; at its `mov al,es:[bx+6Ch]` the site gives the Handbook's save plus the game's improvement,
 so the game's `sub` leaves the Handbook's less a dwarf's or halfling's CON bonus.

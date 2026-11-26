@@ -652,7 +652,8 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("thief_hd_clamp", 0x95471, bytes.fromhex("268a870100"), _site(115, 5)),
     # ... and the saves as in AD&D (game.RULE_ADND_TABLES): the save routine's "mov al,es:[bx+6Ch]" (955DFh),
     # a group's 1st-level save, DSCLOG2's SAVE_BASE (116: the Player's Handbook's table, tables.rav_saves;
-    # the game's own held every save at its table's last, a warrior at 11/11/11/13/11 from 10th)
+    # a psionicist's Dark Sun's table; the game's own held every save at its table's last, a warrior at
+    # 11/11/11/13/11 from 10th, and a psionicist saved as a thief; dos/save_bands.inc, SL's the same)
     Patch("save_table", 0x955DF, bytes.fromhex("268a876c00"), _site(116, 5)),
     Patch("adnd_slots", 0x62893, bytes.fromhex("900ee87801"), _site(34, 5)),
     # CON as in AD&D (SL's regen_rate, con_save; game.RULE_CON): regeneration's rate (26599h, "mov dx,cx /

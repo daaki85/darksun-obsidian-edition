@@ -611,6 +611,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   creation](#the-creation-screen)); fightout.sh runs it each turn. PICK A PSIONIC POWER (a
   psionicist's level) isn't levelup.sh's: click a red power's icon (about 158, 62), then FINISHED
   (112, 139).
+- **A turn with nothing in reach stalls `toturn.sh`** (logs/2026-11-26-sl-saves-scout.md): its E for a
+  turn that stays up opened Ester's Effects screen in the slave pens' ambush and the turns stopped there;
+  close the screen (Escape, a screen being up) and end the turn by hand.
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
   panel, not the map, and a party member's figure under it can't be clicked (its END menu). Hide it
   before walking near it (the party's first step into the arena, for one, is right above it) with
