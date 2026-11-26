@@ -27,6 +27,8 @@ The gallery uses both versions of the Loader’s picture builder and the origina
 
 The half-giant Psionicist and human Priest are also shown in profile on the slave-pen floor. Each DOSBox session loaded a prepared copy of the corresponding equipped picture. [Compare the game captures](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-soft-armor-dosbox.png)
 
+[Preview stronger full plate on the two humans and the half-giant Cleric/Fighter](plate-midtone-study.md)
+
 ## How much of the outfit color returns?
 
 Across the 198 fitted class outfits and 14 stock appearances, each full suit was compared with empty equipment slots in all 29 poses. The counts below include only pixels whose palette entry differs from the same unequipped figure. An exposed shin guard still contributes to the count even when the chest cloth above it keeps its original color.
