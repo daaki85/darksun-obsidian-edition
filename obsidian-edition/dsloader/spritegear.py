@@ -22,7 +22,7 @@ import math
 from bisect import bisect_right
 from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
-from . import classoutfits, game, halfelf, spritebelts, spritebracers, spriteparts as sp
+from . import classoutfits, game, halfelf, spritebelts, spritebracers, spritegreaves, spriteparts as sp
 
 Rows = sp.Rows
 
@@ -616,6 +616,21 @@ def _cloak_shade(p: int) -> float:
     return _LIGHT.get(p, 0.5)
 
 
+# Row and span of the far shoulder in the frontal bow release. The bow tip
+# sits well above the crown in this pose and defeats the usual row scan.
+_BOW_SHOULDERS = {
+    2099: (9, 4, 13), 2095: (9, 4, 14), 2053: (8, 3, 11), 2055: (8, 3, 11),
+    2059: (9, 4, 12), 2061: (9, 4, 12), 2072: (13, 7, 23), 2074: (13, 7, 23),
+    2068: (8, 3, 12), 2070: (8, 3, 12), 2093: (9, 4, 13),
+}
+
+
+def _cloak_bow_parts(parts, model):
+    row, left, right = _BOW_SHOULDERS[model]
+    head = sp.Head(row - 6, left + 1, right - 2, row - 4)
+    return parts._replace(facing=sp.FRONT, shoulders=(row, left, right), head=head)
+
+
 def cloak_template(rows: Rows, model: int, frame: int, combat: bool) -> Optional[Tuple[sp.Parts, Dict[sp.Point, int]]]:
     """Her cloak in one of her frames: (her parts, {pixel: colour}), its dark fold lines with it."""
     if combat and frame == sp.DEAD_FRAME:
@@ -625,10 +640,23 @@ def cloak_template(rows: Rows, model: int, frame: int, combat: bool) -> Optional
         parts = sp.parts(rows, CLOAK_MODEL, 1, False)
     else:
         parts = sp.parts(rows, CLOAK_MODEL, frame, combat)
+    if combat and frame == 11:
+        parts = _cloak_bow_parts(parts, CLOAK_MODEL)
+    elif combat and frame == 9:
+        parts = parts._replace(facing=sp.SIDE)
     cloak = {}
     for y, row in enumerate(rows):
         for x, p in enumerate(row):
             if p in CLOAK_GREENS:
+                cloak[(x, y)] = p
+            elif combat and frame == 11 and 10 <= y <= 23 and x <= (4 if y < 13 else 5) and p in (250, 254):
+                # On the bow release the black lining fills the strip between
+                # the green rim and the hip. Lime highlights along this edge
+                # share a palette entry with her wristbands.
+                cloak[(x, y)] = 56 if p == 250 else p
+            elif combat and frame == 12 and 4 <= y <= 11 and x > 8 and p == 254:
+                # Her recoil tips the torso forwards. The upper-right flap
+                # turns its lining to camera, behind the raised arm.
                 cloak[(x, y)] = p
             elif p == 254:  # (a fold line or its edge: black between greens)
                 near = sum(0 <= y + dy < len(rows) and 0 <= x + dx < len(rows[y + dy]) and rows[y + dy][x + dx] in CLOAK_GREENS
@@ -671,15 +699,19 @@ def draw_cloak(rows: Rows, body: Rows, model: int, parts: sp.Parts, item_type: i
     y1 = int(parts.shoulders[0] + (max(ys) - her.shoulders[0]) * sy_) + 2
     placed: Dict[sp.Point, int] = {}
     for y in range(y0, y1):
+        # Trail the profile hem behind the hip instead of projecting it
+        # inside the thigh. Keep the fabric attached at the shoulder.
+        drop = min(1., max(0., (y - parts.shoulders[0]) / max(1, parts.waist - parts.shoulders[0])))
+        swing = round(drop * max(3, own_w * .35)) if parts.facing == sp.SIDE else 0
         for x in range(x0, x1):
             src = (int(round(hm + (x - wm) / sx_)), int(round(her.shoulders[0] + (y - parts.shoulders[0]) / sy_)))
             if src in cloak:
-                placed[(x, y)] = cloak[src]
+                placed[(x - swing, y)] = cloak[src]
     # no wider than the wearer (a pixel or two each side), and only what hangs from the body (no
     # scraps where her cloak billows past an arm)
     filled = [(x - pad, y - pad) for y, row in enumerate(body) for x, q in enumerate(row) if q is not None]
     if filled:
-        bx0, bx1 = min(x for x, _ in filled) - 2, max(x for x, _ in filled) + 2
+        bx0, bx1 = min(x for x, _ in filled) - (5 if parts.facing == sp.SIDE else 2), max(x for x, _ in filled) + 2
         placed = {k: v for k, v in placed.items() if bx0 <= k[0] <= bx1}
     # it hangs from the shoulders (from behind, draped over their tops)
     shoulder_top = parts.shoulders[0] - 2
@@ -886,6 +918,24 @@ def _woman_boot_cells(rows, own, pose):
     return feet
 
 
+def _stock_boot_surface(rows, parts, pad):
+    """Trace the two soles independently. The raised foot can clear the floor by several rows."""
+    if parts.waist is None or not parts.feet:
+        return []
+    feet = [[] for foot in parts.feet]
+    height = max(3, (parts.bottom - parts.waist) // 3)
+    for y in range(max(parts.waist + 1, min(f[0] for f in parts.feet) - height), parts.bottom + 1):
+        for X, p in enumerate(rows[y + pad]):
+            x = X - pad
+            if p is None or any(abs(x-hx) <= 2 and abs(y-hy) <= 2 for hx, hy in parts.hands.values()):
+                continue
+            distances = [(max(a - x, x - b, 0), i) for i, (sole, a, b) in enumerate(parts.feet)
+                         if 0 <= sole - y <= height and a - 2 <= x <= b + 2]
+            if distances:
+                feet[min(distances)[1]].append((x, y))
+    return feet
+
+
 def draw_boots(rows: Rows, parts: sp.Parts, item_type: int, pad: int, feet=None,
                magic=()) -> None:
     """Dye each visible boot from its own shading and attach its glint to that foot."""
@@ -893,21 +943,7 @@ def draw_boots(rows: Rows, parts: sp.Parts, item_type: int, pad: int, feet=None,
     if shades is None:
         return
     if feet is None:
-        if parts.waist is None or not parts.feet:
-            return
-        feet = [[] for foot in parts.feet]
-        height = max(3, (parts.bottom - parts.waist) // 3)
-        # Trace each foot from its own sole. The kicking foot can clear the floor
-        # by several rows while the other remains planted.
-        for y in range(max(parts.waist + 1, min(f[0] for f in parts.feet) - height), parts.bottom + 1):
-            for X, p in enumerate(rows[y + pad]):
-                x = X - pad
-                if p is None or any(abs(x-hx) <= 2 and abs(y-hy) <= 2 for hx, hy in parts.hands.values()):
-                    continue
-                distances = [(max(a - x, x - b, 0), i) for i, (sole, a, b) in enumerate(parts.feet)
-                             if 0 <= sole - y <= height and a - 2 <= x <= b + 2]
-                if distances:
-                    feet[min(distances)[1]].append((x, y))
+        feet = _stock_boot_surface(rows, parts, pad)
     for foot in feet:
         cells = [(x + pad, y + pad) for x, y in foot if rows[y + pad][x + pad] not in (None, 254)]
         dye_garment(rows, cells, shades, 0, rows)
@@ -1068,6 +1104,10 @@ def _project_cloak(out, rows, model, parts, frame, combat, kind, own, pad, cloak
     elif model in (2072, 2074) and combat and frame == 10:
         # Their raised rear bow hides both shoulders from the landmark finder.
         cloth_parts = cloth_parts._replace(shoulders=(14, 8, 17))
+    elif combat and frame == 11 and model in _BOW_SHOULDERS:
+        cloth_parts = _cloak_bow_parts(cloth_parts, model)
+    elif combat and frame == 9:
+        cloth_parts = cloth_parts._replace(facing=sp.SIDE)
     canvas = padded(source, pad)
     drawn = draw_cloak(canvas, [r[:] for r in canvas], model, cloth_parts, kind, pad, cloak)
     toes = set()
@@ -1098,7 +1138,7 @@ def _project_cloak(out, rows, model, parts, frame, combat, kind, own, pad, cloak
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
           cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
-          own: Optional[Own] = None, costume: Optional[classoutfits.Frame] = None, fitted_belt: bool = False) -> Rows:
+          own: Optional[Own] = None, costume: Optional[classoutfits.Frame] = None, registered: bool = False) -> Rows:
     """One frame of MODEL with WEAPONS ({"right"/"left": (item type, material[, name in
     BLADE_COLOURS])}: in the hands in a
     fight, walking worn at the belt (two-handed ones carried upright);
@@ -1170,19 +1210,50 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         armor_canvas = out[:pad] + list(reversed(out[pad:]))
         if own and own.worn is not None:
             armor_own = own._replace(worn=frozenset((x, len(rows)-1-y) for x, y in own.worn))
-    if (costume or armor_parts.facing is not None) and model != sp.KREEN:
+    # Slot ownership comes from the undyed drawing, including when multiple stock
+    # pieces use a tone already present in the player's picture.
+    stock_source = [r[:] for r in armor_canvas] if armour and not costume else None
+    bow_keep = set()
+    boot_keep = set()
+    if stock_source and registered and model != sp.KREEN:
+        if combat and frame in sp.BOW_FRAMES:
+            layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
+            role = "Warrior" if layer in (2095, 2099) else "Fighter"
+            bow_keep.update(classoutfits.frames(role, True, layer)[frame].regions[classoutfits.BOW])
+        if any(ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] == ARMOUR_LEGS for t in armour):
+            feet = _stock_boot_surface(stock_source, armor_parts, pad)
+            boot_keep.update(p for foot in feet for p in foot)
+            if model == CLOAK_MODEL:
+                boots = _woman_boot_cells(rows, own, frame + sp.WALK_FRAMES * combat)
+                boot_keep.update((x, y) for foot in boots for x, y in foot)
+            if model == 2095:
+                # His black high boots extend above the ordinary ankle cut. Their
+                # teal stitching is specific to the boots below the waistband.
+                clothed = [r[pad:len(r)-pad] for r in stock_source[pad:]]
+                for y, row in enumerate(clothed):
+                    if y <= (armor_parts.waist or 0) + 1:
+                        continue
+                    for x, colour in enumerate(row):
+                        if colour == 69:
+                            boot_keep.update((x+dx, y+dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+    if costume and armour:
+        trim = set(costume.armor_trim)
+        if costume.native_cloak:
+            trim.update((x, y) for x, y, _ in costume.cloak)
+    if model != sp.KREEN:
         for item_type in armour:
             kind = item_type & (MAGIC_ARMOUR - 1)
             if kind in ARMOUR and kind != game.BRACERS_TYPE:
-                before = [list(r) for r in out] if not costume and item_type & MAGIC_ARMOUR else None
+                piece, shades, pattern = ARMOUR[kind]
                 if costume:
-                    piece, shades, pattern = ARMOUR[kind]
                     bit = {ARMOUR_CHEST: classoutfits.CHEST, ARMOUR_ARMS: classoutfits.ARMS,
                            ARMOUR_LEGS: classoutfits.LEGS}[piece]
                     if item_type & VEILED_DYE and kind == game.ROBE_TYPE:
                         shades = VEILED_CLOTH
                     cells = costume.regions[bit]
-                    if kind == game.ROBE_TYPE:
+                    leg_piece = kind == game.ROBE_TYPE and any(
+                        ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] == ARMOUR_LEGS for t in armour)
+                    if kind == game.ROBE_TYPE and not leg_piece:
                         # The robe falls over existing lower garment pixels. Preserve
                         # bare legs, boots and the class mantle above it.
                         protected = set(cells)
@@ -1202,18 +1273,49 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             pattern == PLATE and not combat and frame in (2, 11, 12, 13, 14)):
                         # The near arm and belt occlude this strip in the elf woman's stride.
                         cells = [(x, y) for x, y in cells if 6 <= y < 13]
-                    trim = costume.armor_trim
                     cells = [(x, y) for x, y in cells if (x, y) not in trim
                              and base_outfit[y + pad][x + pad] not in (None, 254)]
                     dye_garment(out, cells, shades, pad, base_outfit)
-                    if item_type & MAGIC_ARMOUR:
-                        sparkle_cells(out, [(x + pad, y + pad) for x, y in cells],
-                                      GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)],
-                                      spacing=11, sparse=True)
+                elif armor_parts.facing is not None:
+                    cells = draw_armour(armor_canvas, model, armor_parts, kind, pad, armor_own,
+                                        bool(item_type & VEILED_DYE), stock_source,
+                                        bow_keep | boot_keep if piece == ARMOUR_LEGS else bow_keep)
                 else:
-                    draw_armour(armor_canvas, model, armor_parts, kind, pad, armor_own, bool(item_type & VEILED_DYE))
-                if before is not None:
-                    sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)], sparse=True)
+                    cells = []
+                if piece == ARMOUR_LEGS and registered and (costume or not cells):
+                    surface = base_outfit if costume else padded(rows, pad)
+                    exposed = spritegreaves.visible(rows, model, frame, combat, own, costume, surface, pad)
+                    if not costume:
+                        if armor_canvas is not out:
+                            exposed = [(x, len(rows)-1-y) for x, y in exposed]
+                        # The retail model has no visible lower garment in this
+                        # pose. Require a continuous sliver of exposed calf above
+                        # the shoes, so a lone shared skin tone cannot make a plate.
+                        skin = set(exposed) - boot_keep - bow_keep
+                        exposed = sorted((x, y) for x, y in skin if any(
+                            (x+dx, y+dy) in skin for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy))
+                    source = base_outfit if costume else stock_source
+                    for x, y in exposed:
+                        colour = garment_tone(source[y+pad][x+pad], shades)
+                        value = shades.index(colour)
+                        armor_canvas[y+pad][x+pad] = shades[_pattern(pattern, x, y, value, len(shades)-1)]
+                    cells.extend(exposed)
+                cuffs = []
+                if piece == ARMOUR_ARMS:
+                    surface = base_outfit if costume else padded(rows, pad)
+                    band = spritebracers.visible(rows, model, frame, combat, own, costume, surface, pad)
+                    if armor_canvas is not out:
+                        band = [(x, len(rows)-1-y) for x, y in band]
+                    blocked = trim if costume else bow_keep
+                    cuffs = spritebracers.grouped(p for p in band if p not in blocked)
+                    for cuff in cuffs:
+                        if any(abs(x-u) <= 2 and abs(y-v) <= 2 for x, y in cuff for u, v in cells):
+                            continue
+                        dye_garment(armor_canvas, cuff, shades, pad, base_outfit if costume else stock_source)
+                        cells.extend(cuff)
+                if item_type & MAGIC_ARMOUR:
+                    shine_armour(armor_canvas, cells, piece, armor_parts, pad,
+                                 GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)], cuffs)
     if model != sp.KREEN:
         for item in armour:
             if item & (MAGIC_ARMOUR - 1) == game.BRACERS_TYPE:
@@ -1240,7 +1342,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own is not None else model
         covered = own.cloak if own else CLOAK_GREENS if model == CLOAK_MODEL else ()
         glow = _glow(item) if _magic(item) else ()
-        if costume is not None or fitted_belt:
+        if costume is not None or registered:
             belt = spritebelts.visible(layer, combat, frame, costume, rows, parts, covered)
             paint_belt(out, belt, item[0], pad, parts.facing, glow)
         else:
@@ -1252,6 +1354,18 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         fabric = set()
         if costume:
             fabric = _outfit_cloak(out, base_outfit, costume, kind, shades, pad)
+            if model == CLOAK_MODEL and cloak and (not combat and frame in (0, 3, 4, 5, 6)):
+                # Her front mantle or hood owns only the upper folds. The
+                # retail cloak also peeks around the legs, below the arms.
+                # Reuse those exact side folds where the outfit leaves room.
+                material = DUSK_CLOTH if kind == game.CLOAK_TYPE else shades
+                for (x, y), source in cloak[1].items():
+                    start, stop = (own.at(x, y), own.at(x+1, y)) if own else (x, x+1)
+                    for X in range(start + pad, stop + pad):
+                        Y = y + pad
+                        if out[Y][X] is None:
+                            out[Y][X] = source if material is None else garment_tone(source, material)
+                            fabric.add((X, Y))
         elif model == CLOAK_MODEL:
             fabric = _womans_cloak(out, rows, own, shades, pad)
         elif cloak:
@@ -1563,21 +1677,87 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     return shade
 
 
+def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=()):
+    """Place cycling highlights on separated folds of *each* visible armour piece."""
+    if not cells:
+        return
+    # The sleeve nearest each hand and the cloth above each sole can be a long
+    # way apart in a strike. Give even the smaller exposed limb its own highlight.
+    anchors = []
+    if piece == ARMOUR_ARMS:
+        anchors = [(sum(x for x, y in cuff)/len(cuff), sum(y for x, y in cuff)/len(cuff)) for cuff in cuffs]
+        if len(anchors) < 2:
+            anchors = list(parts.hands.values())
+    elif piece == ARMOUR_LEGS:
+        anchors = [((left + right) / 2, y) for y, left, right in parts.feet]
+    groups = [[] for _ in anchors] or [[]]
+    for x, y in cells:
+        nearest = (min(range(len(anchors)), key=lambda i: (x-anchors[i][0])**2 + (y-anchors[i][1])**2)
+                   if len(anchors) > 1 else 0)
+        groups[nearest].append((x, y))
+
+    chosen = []
+    def highlights(points, count):
+        # Bisect along the garment's longer extent to reach its upper and lower
+        # folds, even on a narrow profile. Choose a lit material tone in each area.
+        xs, ys = zip(*points)
+        if count == 1:
+            cx, cy = sum(xs)/len(xs), sum(ys)/len(ys)
+            def score(p):
+                x, y = p
+                value = _LIGHT.get(rows[y + pad][x + pad], 0.5)
+                return value - 0.025*(abs(x-cx) + abs(y-cy)), -y, -x
+            chosen.append(max(points, key=score))
+            return
+        axis = 0 if max(xs)-min(xs) >= max(ys)-min(ys) else 1
+        ordered = sorted(points, key=lambda p: (p[axis], p[1-axis]))
+        low, high = ordered[0][axis], ordered[-1][axis]
+        if count == 2 and high-low >= 3:
+            # A diagonal strap can be only one pixel wide. Light its two
+            # ends in turn and retain the leather shadow between them.
+            margin = (high-low-3)//2
+            highlights([p for p in ordered if p[axis] <= low+margin], 1)
+            highlights([p for p in ordered if p[axis] >= high-margin], 1)
+            return
+        half = count // 2
+        cut = len(points)*half // count
+        highlights(ordered[:cut], half)
+        highlights(ordered[cut:], count-half)
+
+    for region in groups:
+        if region:
+            count = max(1, (len(region)+4)//6)
+            if count == 1 and len(region) >= 4:
+                xs, ys = zip(*region)
+                if max(max(xs)-min(xs), max(ys)-min(ys)) >= 3:
+                    count = 2
+            highlights(region, count)
+    # Neighbouring highlights start at different points in the icon's DAC cycle,
+    # so several parts of the worn piece can be read even on a stationary figure.
+    phase = {ARMOUR_CHEST: 0, ARMOUR_ARMS: 2, ARMOUR_LEGS: 4}[piece]
+    for i, (x, y) in enumerate(sorted(chosen, key=lambda p: (p[0]+2*p[1], p))):
+        rows[y+pad][x+pad] = colours[(phase + 2*i) % len(colours)]
+
+
 def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int,
-                own: Optional[Own] = None, veiled: bool = False) -> None:
+                own: Optional[Own] = None, veiled: bool = False, source: Optional[Rows] = None,
+                covered=()) -> List[sp.Point]:
     """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
     (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
     piece, shades, _ = ARMOUR[item_type]
     if veiled and item_type == game.ROBE_TYPE:
         shades = VEILED_CLOTH
     clothes = own.clothes if own is not None and own.clothes else CLOTHES.get(model, ())
-    cloak = own.cloak if own is not None else frozenset()
+    cloak = own.cloak if own is not None else CLOAK_GREENS if model == CLOAK_MODEL else frozenset()
+    cells = []
     if not clothes or parts.waist is None:
-        return
+        return cells
     rank = {c: i / max(1, len(clothes) - 1) for i, c in enumerate(clothes)}
     top = len(shades) - 1
-    unpadded = [r[pad:len(r) - pad] for r in rows[pad:]]
+    source = rows if source is None else source
+    unpadded = [r[pad:len(r) - pad] for r in source[pad:]]
     keep_out = _keep_out(unpadded, parts)
+    keep_out.update(covered)
     hands = list(parts.hands.values())
     for y, row in enumerate(unpadded):
         for x, p in enumerate(row):
@@ -1597,3 +1777,5 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
                 continue
             shade = min(top, int(rank[p] * top + 0.5))
             rows[y + pad][x + pad] = shades[shade]
+            cells.append((x, y))
+    return cells

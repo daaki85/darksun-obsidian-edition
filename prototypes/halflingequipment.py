@@ -99,6 +99,53 @@ def cloak_folds(rows, role, pose, native, blocked):
     return folds, family is not None
 
 
+def rear_equipped_cape(rows, role, pose, native, head, bow, forearm):
+    """A full outer garment covers the short mantle, belt and crossed sashes."""
+    hood = set()
+    if "Thief" in role:
+        hood = {native(p) for p in art.singles.hood(pose)[0]}
+    slate = "Thief" in role and "Ranger" not in role and not role.startswith(("Cleric", "Druid"))
+    donor = rows["Thief" if slate else "Ranger"]
+    ramp = RAMPS["slate" if slate else "leaf"]
+    body = rows["Body base"]
+    actual_head = {native(p) for p in fit.head_pixels(pose)}
+    foreground = bow | hood | actual_head | forearm
+    cape = {}
+    for y, row in enumerate(donor):
+        for u, c in enumerate(row):
+            point = u-4, y
+            if c not in ramp or c == body[y][u] or point in foreground:
+                continue
+            # The Ranger painting already places the locks, fingers and feet
+            # ahead of the cloth. A wrist or shoe mask for the *undressed*
+            # hip can otherwise punch little holes in a fully covered fold.
+            cape[point] = c
+
+    # The rear strike and raised bow pull the neckline up under the nape.
+    # Native coordinates follow the exposed back between the passing elbow
+    # and the collar. Continue the adjacent crease beneath the actual hair.
+    # A few individual holes below those shoulders expose the underlying
+    # jersey at the elbow or through a fold on the hip in the long back panel.
+    seams = {
+        18: ((4, 6, 7), (4, 7, 8), (4, 4, 10), (7, 7, 10)),
+        19: ((4, 7, 6), (5, 7, 7), (10, 10, 10), (3, 3, 14)),
+        20: ((5, 7, 6), (6, 8, 7), (11, 11, 10)),
+        25: ((4, 6, 9), (5, 7, 10)),
+        28: ((6, 7, 10),),
+    }
+    foreground.update(head)
+    for lo, hi, row in seams.get(pose, ()):
+        for col in range(lo, hi+1):
+            x, y = native((col, row))
+            if ((x, y) in cape or (x, y) in foreground
+                    or body[y][x+4] is None):
+                continue
+            for point in ((x, y+1), (x-1, y+1), (x+1, y+1), (x-1, y), (x+1, y)):
+                if point in cape:
+                    cape[x, y] = cape[point]
+                    break
+    return cape
+
 def export(game_dir, archive):
     from fittedraceequipment import make_layers, write_archive
 
@@ -154,7 +201,9 @@ def export(game_dir, archive):
             # A bare-backed class borrows its own race's swinging Ranger cloth.
             # Sample the original palette values before reducing to six fold ranks.
             cape = None if native_cloak else {(x, y): rows["Ranger"][y][x+4] for x, y in folds}
-            result[role] = make_layers(source, outfit, 4, 0, region, folds, head, belt, cape)
+            if pose in fit.REAR:
+                cape = rear_equipped_cape(rows, role, pose, native, head, bow, arm)
+            result[role] = make_layers(source, outfit, 4, 0, region, folds, head, belt, cape or {})
         return result
 
     write_archive(archive, fit.MODELS, pose_layers)

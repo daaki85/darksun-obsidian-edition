@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from studygeartest import roles_for, array
+from studygeartest import roles_for, array, visible_cuffs, visible_greaves
 from wornreview import Atlas, art, sg, sprites
 from dsloader import classoutfits as co
 
@@ -96,6 +96,9 @@ def audit(atlas, obj, frame_rows, parent_rows):
                     # The two robes own upper cloth plus exposed skirt; solver may protect
                     # more pixels inside these bounds. Measure full sets on all body slots.
                     allowed = upper if name == "Magic chest" else upper | lower if name.endswith("robe") else body
+                    if name in ("Leather", "Plate"):
+                        allowed = allowed | set(visible_cuffs(atlas.pictures, obj, combat, f, field))
+                        allowed.update(visible_greaves(atlas.pictures, obj, combat, f, field))
                     owned = mask(original.shape, allowed, pad)
                     surface = mask(original.shape, body | cloak, pad) & (original != 255)
                     diff = original != result

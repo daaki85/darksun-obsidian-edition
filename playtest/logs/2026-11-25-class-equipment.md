@@ -74,3 +74,19 @@ With the revised Loader attached, each of the seven humanoid sheet selections pr
 The game drew both genuine waist items with the blue palette cycle. Each appeared in all 29 poses of the seven tested humanoid outfits. The human male Psionicist's equipped cloak now extends beyond his empty silhouette by 7–99 pixels depending on pose. Its 29 changesets stayed on the fitted cape, clear of the face and drawn bow. The live arena showed the green cloak behind the human, half-giant, halfling and Mul figures. The pose counts come from the encoded pictures. Restored the test party's inventory, figure, sheet and map picture without saving. [Equipped figures in motion](../../obsidian-edition/docs/class-outfits/magical-equipment.md)
 
 After the Mul's waistband was narrowed, repeated both girdle equip/remove cycles on his Druid/Fighter. Both retained a visible glint in every pose and restored his exact empty pictures. For the screenshot comparison, the test party's companions were temporarily moved aside. Each column shows the same character standing in the same place, cropped from the game window after equipping the cloak and girdle separately and after removal. [Compare the seven idle figures in DOSBox](img/2026-11-25-fitted-cloak-girdle-dosbox.png)
+
+## Rear cloaks and Warden’s Plate
+
+Attached the Loader to the patched game in a disposable copy of `pens-after-arena`. Tested the Cloak of Elvenkind, Warden’s chest, arm and leg pieces individually, then equipped the three plate pieces together with the helm slot empty. Each change went through the normal worn-item reader. After each of the 15 removals, both the walking and combat pictures in the active SEGOBJEX.GFF returned byte for byte to the empty outfit. All 30 equipped pictures matched the Loader build.
+
+The table counts pixels using the item’s cycling palette in rear idle. The cloak uses green. Each Warden piece uses the fire cycle.
+
+| Party picture and outfit | Cloak | Chest | Arms | Legs | Three plate pieces |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 300 · Human man, Warrior | 12 | 5 | 4 | 10 | 19 |
+| 309 · Half-giant woman, Psionicist | 21 | 10 | 3 | 15 | 28 |
+| 312 · Mul, Druid/Fighter | 20 | 2 | 1 | 7 | 10 |
+
+The two rear cloaks cover the back from below the head through the hem on all four away steps. The game cycled through all four walking frames on the slave-pens map for both wearers. Across the 29 decoded poses of each of the three characters, leg and arm pieces each have a visible glint in every pose. The Mul’s chest piece has visible material in 24 poses. At side walk 4, front strike 3, side strike 2, side bow and hit (14, 17, 22, 26 and 27), his Druid/Fighter outfit leaves no visible chest material to recolor. Throughout these 87 poses the complete set preserves the union of all three individual pieces’ changed pixels and glints, clear of the head and drawn bow. Restored the party’s original equipment and sheet without saving.
+
+For the screen comparison, the party member walked north into rear idle before changing equipment. All 18 views show the actor on the same floor tile. Matched the rear sprite’s fixed palette colors to its map-window position, then sampled the predicted glint coordinates over 14 screenshots per view. All 53 green cloak pixels and all 114 fire pixels across the individual and combined plate views changed color on screen. The screenshots retain the game’s palette and display aspect ratio. [Watch the rear cloak and individual Warden pieces in DOSBox](img/2026-11-25-rear-cloak-plate-dosbox.gif)

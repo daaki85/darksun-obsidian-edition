@@ -1,6 +1,6 @@
 # Armor colors on class outfits
 
-Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The dye follows the original fold pixels as the figure turns. Magical gear adds a sparse shine on the exposed material.
+Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The dye follows the original fold pixels as the figure turns. Magical gear adds cycling highlights to the exposed material. The three Warden’s Plate pieces can be inspected separately. [Current armor-slot comparison](fitted-armor-slots.gif)
 
 ![Eight Loader class figures with armor and robes beside retail references](armor-dye-class-figures.png)
 
@@ -27,8 +27,8 @@ The original-figure sheet shows what the Loader draws when a fitted class outfit
 
 ![Original Loader figures in classless gear beside empty slots](armor-dye-original-figures.png)
 
-## Art studies awaiting fitted equipment slots
+## Earlier art-study measurements
 
-Both half-elves’ remaining outfits, the half-giants, the halflings and the Mul account for another 172 appearances. Six material previews through 29 poses gave 29,928 comparisons. The preview uses the approved artwork and estimates the exposed garment from its layers. The half-giant Ranger’s rear cloak and the halfling Thief’s hood can hide the underlying suit almost completely. In 259 of 4,988 study poses, full plate gives an identical picture. In 240 the estimated suit surface is hidden, and in 19 its visible pixels already match the plate shades. Fitting the actual equipment slots and checking them in play is still outstanding for these class outfits.
+Both half-elves’ remaining outfits, the half-giants, the halflings and the Mul account for another 172 appearances. Six material previews through 29 poses gave 29,928 comparisons. The preview uses the approved artwork and estimates the exposed garment from its layers. The half-giant Ranger’s rear cloak and the halfling Thief’s hood can hide the underlying suit almost completely. In 259 of 4,988 study poses, full plate gives an identical picture. In 240 the estimated suit surface is hidden, and in 19 its visible pixels already match the plate shades. The half-giant, halfling and Mul outfits have since been fitted and checked in the game. The additional half-elf combinations still use study previews. [Current equipment galleries](magical-equipment.md)
 
 ![Seven art study figures with material previews beside Shattered Lands figures](armor-dye-studies.png)

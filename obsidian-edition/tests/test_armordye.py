@@ -15,6 +15,22 @@ class ArmorDyeTests(unittest.TestCase):
             self.skipTest("needs both the retail picture archive and the game palette")
         self.pictures = dresser.pics
 
+    def test_woman_druid_exposed_green_bodice_can_take_chest_armor(self):
+        armor = (88 | spritegear.MAGIC_ARMOUR,)
+        empty = self.pictures.build(301, False, {}, (), role="Druid")
+        worn = self.pictures.build(301, False, {}, armor, role="Druid")
+        side, top = sprites.room(False)
+        for pose in (0, 1, 11, 12, 13, 14):
+            bare = art.decode_frame(empty, pose)[2]
+            dressed = art.decode_frame(worn, pose)[2]
+            changes = {(x-side, y-top) for y, row in enumerate(dressed)
+                       for x, color in enumerate(row) if color != bare[y][x]}
+            frame = classoutfits.frames("Druid", False, 2099)[pose]
+            self.assertEqual(bool(changes), pose != 1)
+            self.assertTrue(changes.issubset(frame.regions[classoutfits.CHEST]))
+            self.assertTrue(changes.isdisjoint((x, y) for x, y, _ in frame.cloak))
+            self.assertTrue(changes.isdisjoint(frame.armor_trim))
+
     def test_full_armor_leaves_original_class_color_on_visible_garments(self):
         cream = {61, 62, 63, 121, 123, 125, 126, 155, 199}
         teal = {40, 69, 70, 71, 72, 73}

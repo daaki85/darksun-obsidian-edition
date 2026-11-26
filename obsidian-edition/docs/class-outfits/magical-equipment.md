@@ -2,9 +2,15 @@
 
 Within each figure’s panel, compare the same pose with empty slots and six separately equipped items. The large sprite is 4×. Below it is the same sprite at game size. During the idle hold, watch the glints move while the folds, shoulder guards and feet remain still. Each loop includes the full front, rear and profile walks, every strike, all three bow poses, the hit and the fall.
 
-**Human man’s cloak.** Compare Empty with Magic cloak on the male Psionicist in the first panel. In rear idle (01), the cloak now falls from his shoulders past his hips. Watch the four profile steps (11–14) to see the hem swing behind his moving arm. The small figure below each enlargement shows how much cloth reads at game size.
+## Rear cloak fit
 
-![Human Psionicist and Priest wearing magical equipment through all 29 poses](magic-gear-human.gif)
+Compare the empty class outfit, the cloak at `9882a56`, and the revised cloak in the same pose. On the half-giant Psionicist, follow the upper edge beneath the hair as each shoulder rises. On the Mul Druid/Fighter, follow the middle fold from the nape across the belt and down to the hem. Front openings and space around a passing arm can still show the figure underneath. [Watch the rear cloak comparison](fitted-cloak-rear.gif)
+
+## Chest, arm and leg armor
+
+The Warden’s Plate comparison shows the same figure with empty slots, each of the three pieces alone, and all three together. On the human Warrior, watch the chest highlights change brightness at different times during the idle hold. On the half-giant Psionicist, follow the guards on her forearms. On the Mul, follow the advancing shin through the profile walk. Boots and the cloak can obscure the armor beneath them.
+
+[Watch all 29 poses with the armor slots side by side](fitted-armor-slots.gif) · [Inspect one labeled pose on each of the 14 figures](fitted-armor-slots-all.png) · [See the rear walk and armor checks in DOSBox](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#rear-cloaks-and-wardens-plate)
 
 ## All 14 party figures
 

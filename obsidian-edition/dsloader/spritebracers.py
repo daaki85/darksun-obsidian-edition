@@ -90,3 +90,19 @@ def visible(rows, model, frame, combat, own, costume, canvas, pad):
             continue
         result.append((x, y))
     return result
+
+
+def grouped(points):
+    """Separate the visible wristbands, including their one-pixel breaks in shadow."""
+    remaining = set(points)
+    groups = []
+    while remaining:
+        cuff = {remaining.pop()}
+        frontier = cuff
+        while frontier:
+            near = {(x+dx, y+dy) for x, y in frontier for dx in range(-2, 3) for dy in range(-2, 3)}
+            frontier = remaining & near
+            cuff.update(frontier)
+            remaining -= frontier
+        groups.append(sorted(cuff))
+    return groups

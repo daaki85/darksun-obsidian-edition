@@ -298,9 +298,13 @@ def frames(role, combat, model=2095):
         native_cloak = "Cleric" in members or role in ("Thief", "Psionicist/Thief")
     else:
         native_cloak = bool(members.intersection(("Thief", "Mage", "Preserver", "Ranger", "Druid")))
-    # The man's Psionicist wears a fitted teal wrap. When he adds a cloak, use
-    # the unhooded mantle cut for the same body and pose, including its folds.
-    mantle = frames("Mage", combat, model) if model == 2095 and role == "Psionicist" else ()
+    # A wrap, jerkin or short tippet has no full back panel to dye. For a
+    # separate outer cloak, take the unhooded drape cut for the same body.
+    mantle = ()
+    if (model in (2095, 2099) and role == "Psionicist") or (model == 2095 and role == "Druid"):
+        mantle = frames("Mage", combat, model)
+    elif model in HALF_ELF_SOURCES and role == "Fighter":
+        mantle = frames("Preserver", combat, model)
     poses = []
     for f in range(14 if combat else 15):
         image = art.decode_frame(pictures, f)[2]
@@ -373,6 +377,8 @@ def frames(role, combat, model=2095):
             # Both outfits have native coordinates, including the wider side step.
             foreground = {point for bit in (ARMS, FOREARM, BOW, LEFT_FOOT, RIGHT_FOOT)
                           for point in regions[bit]}
+            if model != 2095:
+                foreground.update(head)
             fabric = {(x, y): donor.image[y + top][x + left] for x, y, _ in donor.cloak
                       if (x, y) not in foreground and donor.image[y + top][x + left] not in (None, 255)}
             # A few isolated mantle pixels belong to the Mage's layered tunic.

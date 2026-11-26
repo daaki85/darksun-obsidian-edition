@@ -13,6 +13,26 @@ from dsloader import spritebracers
 LEFT = 5
 
 
+def retail_arm_guards(source, model, pose):
+    """Trace each half-giant's original metal cuff before the body cleanup."""
+    centers = spritebracers.GIANT_WRISTS[pose]
+    if model == 2074:
+        centers = spritebracers.GIANT_WOMAN.get(pose, centers)
+    # On the far arm these rear guards are mostly shadow, against the harness.
+    # Its outer end occupies only these rows; the broader band crosses the torso.
+    far = {1: ((21, 17), (22, 16), (22, 17), (23, 16), (23, 17), (24, 17)),
+           8: ((3, 13), (3, 14), (3, 15), (3, 16), (4, 15), (4, 16)),
+           10: ((18, 15), (19, 14), (19, 15), (19, 16), (20, 15)),
+           20: ((4, 11), (5, 11), (4, 12), (5, 12), (4, 13), (5, 13))}
+    guards = set(far.get(pose, ()))
+    for cx, cy in centers:
+        for y in range(max(0, cy-2), min(len(source), cy+3)):
+            for x in range(max(0, cx-2), min(len(source[y]), cx+3)):
+                if source[y][x] in spritebracers.GIANT_METAL:
+                    guards.add((x, y))
+    return guards
+
+
 def pose_layers(atlas, swatch, model, pose):
     game = atlas.game
     cb, f = divmod(pose, 15)
@@ -71,6 +91,7 @@ def pose_layers(atlas, swatch, model, pose):
         crown.update((x, sy+i) for i, (l, r) in enumerate(spans) for x in range(l, r+1))
     bow = game.bow(fig, source, parts) if 24 <= pose <= 26 else set()
     cuffs = set(spritebracers.visible(source, model, f, bool(cb), None, None, source, 0))
+    arm_guards = retail_arm_guards(source, model, pose)
     arm = points(crossing) | cuffs
     arm.update((hx+a, hy+b) for hx, hy in parts.hands.values() for a in (-1, 0, 1) for b in (-1, 0, 1))
     soles = list(hg.SOLES[pose])
@@ -100,6 +121,11 @@ def pose_layers(atlas, swatch, model, pose):
             return inside(p) and sample(outfit, p) is not None and sample(outfit, p) == sample(body, p)
         forearm = {p for p in arm-bow if skin_or_base(p)}
         head = {p for p in crown-bow-forearm if skin_or_base(p)}
+        if pose in hg.REAR:
+            # The bounding line around the hair encloses bare back between
+            # the locks. The Ranger's traced cloth already passes underneath
+            # the actual strands in this same pose. Keep that upper yoke.
+            head.difference_update(cloaked)
         foot = tuple({p for p in boot if skin_or_base(p) or (
                      sample(outfit, p) in (88, 90, 95) and sample(outfit, p) == sample(outfits["Gladiator"], p))}
                      for boot in boots)
@@ -111,7 +137,10 @@ def pose_layers(atlas, swatch, model, pose):
         arms = surface & sleeve if "Cleric" in role else set()
         if role == "Fighter":
             arms.update(p for p in guard if inside(p) and sample(outfit, p) is not None)
-        regions = {co.CHEST: chest-arms-hidden, co.ARMS: arms-hidden, co.LEGS: surface-chest-arms-hidden,
+        # A bare forearm still takes a worn arm guard. Retain its shaped,
+        # shaded skin beneath the item and let every crossing garment hide it.
+        visible_guards = {p for p in arm_guards-head-bow-foot[0]-foot[1] if skin_or_base(p)}
+        regions = {co.CHEST: chest-arms-hidden, co.ARMS: (arms-hidden) | visible_guards, co.LEGS: surface-chest-arms-hidden,
                    co.FOREARM: forearm, co.LEFT_FOOT: foot[0], co.RIGHT_FOOT: foot[1],
                    co.BOW: {p for p in bow if inside(p) and sample(outfit, p) is not None}}
         native_cloak = "Ranger" in role

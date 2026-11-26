@@ -137,10 +137,11 @@ class GalleryPalette:
         board.paste(stamp, (position[0]+left, position[1]+top))
 
 
-def draw_pose(atlas, palette, title, subjects, pose, cases=(*CASES, None), category="Magical equipment"):
+def draw_pose(atlas, palette, title, subjects, pose, cases=(*CASES, None), category="Magical equipment",
+              columns=4, sequence=None):
     # Four columns stay legible at GitHub's inline width. Each subject gets a
     # panel of its own so the same held pose is visible in every comparison.
-    columns = 4
+    sequence = sequence or atlas.sequence
     rows_per_subject = (len(cases) + columns - 1) // columns
     tile_height = palette.floor.height * (ZOOM+1) + 2
     band_height = 29 + tile_height
@@ -171,7 +172,7 @@ def draw_pose(atlas, palette, title, subjects, pose, cases=(*CASES, None), categ
                 rows = atlas.game.fr(ref+combat, frame)
                 tile = palette.tile(rows, 0)
             else:
-                rows = atlas.sequence(obj, bool(combat), role, item)[frame]
+                rows = sequence(obj, bool(combat), role, item)[frame]
                 tile = palette.tile(rows, side)
             # Keep a fixed, foot-registered crop, including the giant's hair and
             # the far edge of a rear-facing cape. Validate both horizontal edges.
@@ -185,6 +186,13 @@ def draw_pose(atlas, palette, title, subjects, pose, cases=(*CASES, None), categ
                         (x-cut.width*ZOOM//2, y))
             board.paste(cut, (x-cut.width//2, y+cut.height*ZOOM+2))
     return board
+
+
+def write_loop(palette, frames, timing, path):
+    ticks = (palette.at_phase(frames[pose], tick) for pose, tick in timing)
+    first = next(ticks)
+    first.save(path, save_all=True, append_images=ticks, duration=TICK_MS, loop=0, disposal=1, optimize=True)
+
 
 def render(atlas, output, races):
     from magicgearitems import belt_loadouts, loadouts
@@ -211,11 +219,7 @@ def render(atlas, output, races):
                 floor = arena.convert("RGB").crop((50, 142, 102, 194))
         palette = GalleryPalette(atlas, floor)
         poses = [draw_pose(atlas, palette, title, subjects, pose, cases, category) for pose in range(29)]
-        tick = (palette.at_phase(poses[pose], phase) for pose, phase in timeline())
-        first = next(tick)
-        path = output / f"magic-gear-{race}.gif"
-        first.save(path, save_all=True, append_images=tick, duration=TICK_MS, loop=0,
-                   disposal=1, optimize=True)
+        write_loop(palette, poses, timeline(), output / f"magic-gear-{race}.gif")
 
 
 if __name__ == "__main__":

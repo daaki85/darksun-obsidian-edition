@@ -3,6 +3,7 @@
 python prototypes/mulequipment.py GAME_DIR PATH_TO_ARCHIVE
 """
 import argparse
+from math import cos
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -33,6 +34,84 @@ def foot_surfaces(source, parts, pose):
     return feet
 
 
+def worn_cape(pose, rows, swatches):
+    """A complete outer cape fitted to this pose, including cloth hidden under the donor hood."""
+    thief, body = rows["Thief"], rows["Body base"]
+    width, height = len(body[0]) - 2*fit.PAD, len(body)
+
+    def native(x, y):
+        return (width-1-x, height-1-y) if pose == 28 else (x, y)
+
+    (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), _, _ = fit.ROBE_CUTS[pose]
+    *_, tip_x, tip_y = singles.CUT[pose]
+    hood = singles.thief_hood(pose)
+    head = fit.head_pixels(pose, width, height)
+    # Lift the donor's actual woven panels, preserving the deliberate front
+    # opening and the slot through which the forward arm swings in profile.
+    existing = {}
+    for py, row in enumerate(thief):
+        for u, color in enumerate(row):
+            x, y = native(u-fit.PAD, py)
+            if ((x, y) not in hood and (u-fit.PAD, py) not in head and
+                    color in singles.SLATE and color != body[py][u]):
+                existing[x, y] = color
+
+    if pose in singles.REAR:
+        # From the back this is a single panel; the donor had holes for a
+        # hanging cowl, waist strap, and short kilt. Join the two shoulder
+        # points immediately below the nape, then follow the moving hips.
+        panel = singles.thief_cape(pose)
+        left, top, spans = fit.HEADS[pose]
+        jaw = top+len(spans)-1
+        a, b = spans[-1]
+        panel |= singles.panel(((left+a, jaw), (left+b, jaw), (sr-1, sy+1),
+                                (rr, ry+1), (rl+1, ry+1), (sl+1, sy+1)))
+        for y in range(sy+1, tip_y-2):
+            line = [x for x, level in panel if level == y]
+            if line:
+                panel.update((x, y) for x in range(min(line), max(line)+1))
+    else:
+        # The profile shoulder facing also existed under the hanging cowl.
+        # Its own outline defines the collar and the armhole independently.
+        panel = singles.panel(singles.PROFILE_YOKE[pose]) if pose in singles.PROFILE_YOKE else set()
+    # Close any enclosed pinholes in the cloth. The parted front and loose
+    # hem remain open to the outer edge of the drawing.
+    points = set(existing) | panel
+    if pose in singles.REAR:
+        points.update(native(x, y) for x, y in head)
+    lo, hi = min(x for x, y in points)-1, max(x for x, y in points)+1
+    top, bottom = min(y for x, y in points)-1, max(y for x, y in points)+1
+    mask = Image.new("L", (hi-lo+1, bottom-top+1))
+    for x, y in points:
+        mask.putpixel((x-lo, y-top), 1)
+    ImageDraw.floodfill(mask, (0, 0), 2)
+    panel.update((x, y) for y in range(top+1, bottom) for x in range(lo+1, hi)
+                 if mask.getpixel((x-lo, y-top)) != 2)
+
+    shape = set(existing) | panel
+    for x, y in panel - existing.keys():
+        px, py = native(x, y)
+        if not (0 <= py < height and 0 <= px+fit.PAD < len(body[py])) or (px, py) in head:
+            continue
+        # The ridges start at the pinned shoulder and fan toward the trailing
+        # corner. Use the same retail swatch and crease line as the visible fall.
+        drop = min(1, max(0, (y-sy)/(tip_y-sy)))
+        ridge = (sl+sr)/2 + (tip_x+1-(sl+sr)/2)*drop
+        dist = x-ridge
+        width_fold = max(3, (wr-wl)*.64)
+        grain = swatches["slate"][(y-wy)%8][(x-wl)%8]
+        fold = .49+.19*cos(3.4*dist/width_fold-.75*drop)+.07*grain
+        seam = dist+2.2-.6*cos(drop*4)
+        fold += .20*max(0, 1-abs(seam+1.3))-.32*max(0, 1-abs(seam)/1.4)
+        fold += .13*cos(.95*dist+.85*cos(3.4*drop))
+        crest = dist+.31*width_fold-1.4*drop
+        fold += .35*max(0, 1-abs(crest+1.2))-.30*max(0, 1-abs(crest)/1.3)
+        if (x+1, y) not in shape or (x, y+1) not in shape:
+            fold -= .28
+        existing[x, y] = singles.shade(singles.SLATE, fold*(len(singles.SLATE)-1))
+    return {native(x, y): color for (x, y), color in existing.items()}
+
+
 def layers(game, swatches, model, pose):
     combat, frame = divmod(pose, 15)
     source = game.fr(model+combat, frame)
@@ -59,6 +138,7 @@ def layers(game, swatches, model, pose):
     feet = foot_surfaces(source, parts, pose)
     shoulder, rib, waist, _, _ = fit.ROBE_CUTS[pose]
     wy, wl, wr = waist
+    full_cape = worn_cape(pose, rows, swatches)
     output = {}
     for role, outfit in rows.items():
         if role in ("Original", "Body base"):
@@ -82,7 +162,7 @@ def layers(game, swatches, model, pose):
                             and body[y][x+fit.PAD] is not None and (x, y) not in keep}
             keep.update(regions[bit])
         cloak, belt = {}, set()
-        cape = {}
+        cape = {point: color for point, color in full_cape.items() if point not in keep}
         for py, row in enumerate(outfit):
             for u, color in enumerate(row):
                 px = u-fit.PAD
@@ -97,16 +177,6 @@ def layers(game, swatches, model, pose):
                     # an existing outer garment when that garment is dyed.
                     if base != outer or color == rows[base][py][u]:
                         cloak[point] = round(5*ramp.index(pigment)/(len(ramp)-1))
-                        cape[point] = pigment
-                if base == "Druid":
-                    # His leaf mantle ends at the ribs. A full-length worn
-                    # cloak continues behind it, following the long slate
-                    # drape on this figure in precisely the same stride.
-                    trailing = rows["Thief"][py][u]
-                    if (trailing in singles.SLATE and trailing != bare and point not in cape
-                            and point not in hood and point not in head
-                            and (bare is None or pose in singles.REAR and y > waist[0])):
-                        cape[point] = trailing
                 if color is None or color == bare or point in head:
                     continue
                 covered = base == outer and point in cloak

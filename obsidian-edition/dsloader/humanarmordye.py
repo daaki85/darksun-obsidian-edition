@@ -90,6 +90,14 @@ def protected(frame, role, pose, model, head_landmark=None):
     elif role == "Psionicist":
         wrap = {p for p in chest if colors[p] in TEAL}
         keep.update(_trim(wrap, 2, axis="bottom"))
+    elif model == 2099 and role == "Druid":
+        # The fitted bodice and the short mantle share the leaf ramp. The
+        # chest mask follows the bodice beneath the mantle. Keep its green
+        # neckline and bound side seam while allowing the body fabric to dye.
+        bodice = chest - keep
+        keep.update(_trim(bodice, 1, axis="top"))
+        keep.update(_trim(bodice, 1, axis="left"))
+        keep.update((x, y) for x, y, _ in frame.cloak)
     elif role in ("Druid", "Ranger"):
         # The green mantle and ochre kilt are separate materials. The shoulder
         # can fall within the chest slot on front views of the woman.

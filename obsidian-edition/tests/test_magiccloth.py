@@ -67,6 +67,45 @@ class MagicClothTests(unittest.TestCase):
                     self.assertGreaterEqual(max(y for x, y in cape) - min(y for x, y in cape), 10, pose)
             self.assertEqual(empty, self.picture(300, combat, None, 0, role="Psionicist"))
 
+    def test_wraps_and_jerkins_take_a_pose_fitted_outer_panel(self):
+        for obj, role in ((300, "Druid"), (301, "Psionicist"), (306, "Fighter"), (307, "Fighter")):
+            model = obj if obj in classoutfits.HALF_ELF_SOURCES else self.pictures.model(obj)
+            for combat in (False, True):
+                sx, sy = sprites.room(combat)
+                empty = self.picture(obj, combat, None, 0, role=role)
+                cloak = self.picture(obj, combat, "cloak", game.ELVEN_CLOAK_TYPE, sg.GREEN_GLOW, role)
+                for f, frame in enumerate(classoutfits.frames(role, combat, model)):
+                    pose = f + 15 * combat
+                    base, worn = (art.decode_frame(p, f)[2] for p in (empty, cloak))
+                    cells = {(x, y) for x, y, _ in frame.equipped_cape}
+                    self.assertTrue(cells, (obj, pose))
+                    protected = {point for slot in (classoutfits.FOREARM, classoutfits.BOW,
+                                 classoutfits.LEFT_FOOT, classoutfits.RIGHT_FOOT)
+                                 for point in frame.regions[slot]}
+                    self.assertTrue(cells.isdisjoint(protected))
+                    if pose in (1, 7, 8, 9, 10, 11, 12, 13, 14, 25):
+                        ys = [y for x, y in cells if base[y+sy][x+sx] != worn[y+sy][x+sx]]
+                        self.assertGreaterEqual(max(ys)-min(ys), 9, (obj, pose))
+                        self.assertGreater(len(ys), 30, (obj, pose))
+                    if obj == 301 and pose in (0, 3, 4, 5, 6):
+                        # The retail front folds emerge below the fitted shoulder piece.
+                        self.assertTrue(any(base[y][x] is None and worn[y][x] is not None
+                                            for y in range(sy+15, len(worn)) for x in range(len(worn[y]))))
+
+    def test_stock_profile_hem_and_frontal_bow_lining_remain_visible(self):
+        for obj in (300, 302, 303, 304, 305, 306, 308, 309, 310, 311, 312):
+            for combat, poses in ((False, range(11, 15)), (True, (11,))):
+                empty = self.picture(obj, combat, None, 0)
+                cloak = self.picture(obj, combat, "cloak", game.ELVEN_CLOAK_TYPE, sg.GREEN_GLOW)
+                for f in poses:
+                    plain, worn = (art.decode_frame(p, f)[2] for p in (empty, cloak))
+                    exposed = {(x, y) for y, row in enumerate(worn) for x, c in enumerate(row)
+                               if c is not None and plain[y][x] is None}
+                    self.assertTrue(exposed, (obj, f))
+                    if combat:
+                        self.assertGreater(len(exposed), 30, obj)
+                        self.assertGreater(max(y for x, y in exposed)-min(y for x, y in exposed), 10, obj)
+
     def test_rear_thief_cloak_keeps_colored_folds_and_sparse_surface_shine(self):
         obj, role, i = 301, "Thief", 8
         cloth = classoutfits.frames(role, False, self.pictures.model(obj))[i]

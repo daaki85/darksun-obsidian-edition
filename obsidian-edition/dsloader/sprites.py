@@ -333,7 +333,7 @@ class Pictures:
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
             dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f],
-                               costumes[f] if costumes else None, fitted_belt=fitted and (own or layers == model))
+                               costumes[f] if costumes else None, registered=fitted and (own or layers == model))
             if not own:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
             if model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):

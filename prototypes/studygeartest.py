@@ -18,7 +18,7 @@ import halfelfstudy as he
 import halfgiantstudy as hg
 import halflingmultis as hl
 import mulmultis as mul
-from dsloader import classoutfits as co, spritebracers
+from dsloader import classoutfits as co, spritebracers, spritegreaves
 from wornreview import Atlas, CASES, WEAPONS, art, elf, sg, sprites
 
 NAMES = {300: "Human man", 301: "Human woman", 302: "Dwarf man", 303: "Dwarf woman",
@@ -129,6 +129,20 @@ def weapon_bounds(atlas, obj, output):
                                          np.count_nonzero(diff), inside))
 
 
+def visible_cuffs(pictures, obj, combat, frame, outfit):
+    model, sources, owners = pictures.base(pictures.model(obj), obj, combat)
+    rows = sources[frame]
+    return spritebracers.visible(rows, model, frame, combat, owners[frame], outfit,
+                                 outfit.canvas(rows, sprites.PAD), sprites.PAD)
+
+
+def visible_greaves(pictures, obj, combat, frame, outfit):
+    model, sources, owners = pictures.base(pictures.model(obj), obj, combat)
+    rows = sources[frame]
+    return spritegreaves.visible(rows, model, frame, combat, owners[frame], outfit,
+                                 outfit.canvas(rows, sprites.PAD), sprites.PAD)
+
+
 def stock_test(atlas, obj, output):
     pics = atlas.pictures
     # The actual empty/equipped/removed picture builder, including compression,
@@ -166,16 +180,15 @@ def stock_test(atlas, obj, output):
                                 for item in armour:
                                     kind = item & (sg.MAGIC_ARMOUR-1)
                                     if kind == sg.game.BRACERS_TYPE:
-                                        source_model, originals, owners = pics.base(model, obj, combat)
-                                        rows = originals[f]
-                                        costume = fields[f]
-                                        allowed.update(spritebracers.visible(
-                                            rows, source_model, f, combat, owners[f], costume,
-                                            costume.canvas(rows, sprites.PAD), sprites.PAD))
+                                        allowed.update(visible_cuffs(pics, obj, combat, f, fields[f]))
                                         continue
                                     piece = sg.ARMOUR[kind][0]
                                     allowed.update(reg[{sg.ARMOUR_CHEST: co.CHEST, sg.ARMOUR_ARMS: co.ARMS,
                                                         sg.ARMOUR_LEGS: co.LEGS}[piece]])
+                                    if piece == sg.ARMOUR_ARMS:
+                                        allowed.update(visible_cuffs(pics, obj, combat, f, fields[f]))
+                                    if piece == sg.ARMOUR_LEGS:
+                                        allowed.update(visible_greaves(pics, obj, combat, f, fields[f]))
                                     if kind == sg.game.ROBE_TYPE:
                                         allowed.update(reg[co.LEGS])
                                 ys, xs = np.nonzero(mask)
