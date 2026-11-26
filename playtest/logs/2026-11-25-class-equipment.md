@@ -112,3 +112,9 @@ Across all 60 standing and walking poses with both weapons and the cloak slot em
 The tested walking pictures all fit their allocated space. The maximum was 11,740 bytes for the half-giant, with 22,826 available. [Watch the fitted sheaths on every step](../../obsidian-edition/docs/class-outfits/hip-walk.md)
 
 For the native captures, walked the test character north, south and across the floor, then changed equipment while standing still. Checked the game’s picture-cache entry and matched the visible sheath pixels to the decoded walking picture for each view. Every changed sheath pixel matched its on-screen color. The comparison also shows how much of the far dagger remains visible in profile. [Compare 25 matched DOSBox views](img/2026-11-26-hip-weapons-dosbox.png)
+
+## Human Warrior’s profile cloak
+
+Matched the earlier right-facing human man to party figure 300, walk picture 2450, idle pose 2. Captured the revised figure in the active DOSBox window on the same slave-pen tile with the same camera. The wearer was placed at the earlier screen position (208, 136) after entering the profile pose. The first two comparisons show the same cloth cloak alone and over a right-hand obsidian long sword and left-hand obsidian dagger.
+
+The near side of the body conceals the far dagger in this pose. The paired-weapon picture is identical to the sword-only picture. Previously, wearing both weapons under the cloak changed five pixels. The revised cloak exposes 12 weapon pixels, all 12 verified against the colors in the game window. The sword, dagger, paired weapons, cloak and all three cloak/weapon combinations matched the normal Loader build. Both the walking and combat pictures returned to their empty state on every removal. [Compare the earlier and revised native DOSBox close-ups](img/2026-11-26-human-profile-cloak-dosbox.png)
