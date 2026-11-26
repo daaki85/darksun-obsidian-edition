@@ -36,7 +36,7 @@ jobs:
           echo "TOP=Obsidian-Edition-test-$(echo "$BRANCH" | tr '/' '-')-$sha" >> "$GITHUB_ENV"
       - name: Zip
         shell: bash
-        run: git archive --format=zip --prefix="$TOP/" -o "$TOP.zip" HEAD:obsidian-edition
+        run: git archive --format=zip --prefix="$TOP/" -o "$TOP.zip" HEAD:obsidian-edition -- . ':(exclude)docs/class-outfits'
       - name: DOSBox-X for Windows, its licence and its source
         shell: bash
         run: python .github/scripts/add_dosbox_x.py "$TOP.zip" "$TOP"

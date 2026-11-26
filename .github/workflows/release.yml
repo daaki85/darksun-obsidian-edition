@@ -65,7 +65,7 @@ jobs:
       - name: Zip
         shell: bash
         run: |
-          git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":obsidian-edition
+          git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":obsidian-edition -- . ':(exclude)docs/class-outfits'
       - name: DOSBox-X for Windows, its licence and its source
         shell: bash
         run: python .github/scripts/add_dosbox_x.py "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION"
