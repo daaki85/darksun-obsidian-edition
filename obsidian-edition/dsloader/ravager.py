@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff
+from . import game, gamepatch, gff, ravspells
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -98,7 +98,7 @@ RULES_PORTED = (game.RULE_HP_BEST | game.RULE_HELMS | game.RULE_HELD | game.RULE
                 | game.RULE_ITEM_SAVES | game.RULE_MULTI_HP | game.RULE_ROLLED | game.RULE_ADND_TABLES
                 | game.RULE_CON | game.RULE_DUAL_CLASS | game.RULE_AGING | game.RULE_STEALTH
                 | game.RULE_SPECIALIZE | game.RULE_KITS | game.RULE_THIEF_TABLE | game.RULE_CHA_PRICES
-                | game.RULE_LEVEL_10)
+                | game.RULE_LEVEL_10 | game.RULE_NEW_SPELLS)
 # Helms: the sequel's two helm types, 55 (AC 0, hats too: only an item named Helm, its name 24h, counts
 # AC 1 with RULE_HELMS: DSCLOG2's PROBE_HELM_AC) and 56 (a Helm and the Helm of Domination: AC 1 of its own)
 HELM_TYPE, HELM_NAME, ITEM_NAME = 55, 0x24, 0x14
@@ -933,6 +933,16 @@ PATCHES: Tuple[Patch, ...] = (
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
+    # The new wizard spells (ravspells: 320-325, RULE_NEW_SPELLS): DSCLOG2's NEW SPELLS. The USE screen's list
+    # of a level's spells (62500h) gets the new ones its member knows first, where it starts its count (6254Fh:
+    # "xor si,si / cmp di,[bp-2]": NS_LIST); "does member know spell" (6260Ah) answers a new one from the sheet's
+    # bits (62625h: "cmp word [bp+8],73h": NS_KNOW); a spell's level (62AC5h) a new one's own (62AD0h: "cmp
+    # dx,73h": NS_LEVEL); and the compares of a spell with its ranges' ends see a new one as a wizard's (NS_CMP).
+    # The spell handler takes Cat's Grace and Friends to Strength's case (656D0h: NS_CAST), which gives them
+    # their effects (6623Bh: NS_EFFECT; Friends 2d4); the abilities routine raises DEX and CHA by them
+    # (85351h: NS_ABILITY); a natural attack's dice are Erdlu Claw's (86A45h: NS_CLAW); "ns_effects" names
+    # the effects 113-116.
+    *ravspells.program_patches(),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -1125,14 +1135,24 @@ ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation scree
 WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
 
 
-def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None) -> Tuple[bytes, List[str]]:
+def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None,
+                    sl_dir: Optional[str] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
     (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
     and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
     pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
-    names of those applied."""
+    names of those applied; and the mod's six new wizard spells (ravspells: DATA 320-325, their icons
+    from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if ravspells.SKIP not in skip:
+        try:
+            added = ravspells.chunks(gff.read_gff(out), sl_dir)
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (records not as the GOG release's: no new spells)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravspells.SKIP)
     if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
         from . import weaponpages
         try:
@@ -1162,15 +1182,16 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
     return out, done
 
 
-def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
+def write_resources(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[str] = None) -> List[str]:
     """RESOURCE.GFF's copy with the spell fixes, kit pages and weapon window (resources_fixed, the weapons'
-    pictures from the game's OBJEX.GFF), written to DEST unless already so; the fixes applied."""
+    pictures from the game's OBJEX.GFF) and the new spells (their icons from Shattered Lands' SL_DIR),
+    written to DEST unless already so; the fixes applied."""
     source = _find_file(game_dir, OBJECTS_FILE)
     objects = None
     if source:
         with open(source, "rb") as f:
             objects = f.read()
-    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects), skip)
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects, sl_dir), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
@@ -1477,12 +1498,15 @@ def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
-    (gamepatch.EFFECTS_KEPT) and the new items (Shattered Lands' switch, "new_items": ravgear's)."""
+    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's) and the new
+    spells ("new_spells": ravspells')."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
+    spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
-        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"})
+        | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
+        | (frozenset() if spells else {ravspells.SKIP})
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:
@@ -1492,7 +1516,7 @@ def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] =
     skip = skipped(settings)
     try:
         write_patched(game_dir, os.path.join(dos_dir, PATCHED_EXE), skip)
-        write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip)
+        write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip, sl_dir)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
         write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip, sl_dir)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:

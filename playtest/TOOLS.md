@@ -112,6 +112,8 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
 | `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
+| `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS [OBJECT]] [PID]` | Wake of the Ravager's fight by its memory (cast OBJECT: at that object, 0-3 a member, a spell on oneself). |
+| `ravgo.py [x\|y TARGET]... [PID]` | Wake of the Ravager's leader walked with the arrow keys to each world x or y in turn (stops a leg at a wall); prints where it ends. |
 | `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
 | `ravgo.py [x\|y TARGET]... [PID]` | walk Wake of the Ravager's leader with the arrow keys until its world x (or y) is within 10 of each TARGET in turn (the leader: the party's map object 0-3 on screen; |
