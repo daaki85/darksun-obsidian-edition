@@ -10,10 +10,10 @@ and the creation screen's window (WIND 3011) with the two of them under the hit 
 """
 
 import struct
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from . import gff
-from .art import decode_frame
+from .art import decode_frame, decode_packed, packed_frames
 from .weaponpages import BUTN_SIZE, ITEM_AT, ITEM_SIZE, WIND_COUNT, _button, _encode, _items
 
 CREATION = 3011  # the creation screen's window
@@ -41,6 +41,29 @@ C_SHAPE = ("..HHHHS",
            ".SMMMMS",
            "..SSSS.")
 WORDS = {SAVE: "SAVE", LOAD: "LOAD", DROP: "DROP", DELETE: "DELETE", EXIT: "EXIT"}
+
+
+class Look(NamedTuple):
+    """Where a game keeps what the buttons are made from: its creation window, its carved buttons'
+    pictures (by Shattered Lands' ids: SAVE, LOAD, DROP, DELETE), the button copied for STORE and
+    RECALL (and the picture it names), how its pictures are read and written, and the frames made."""
+    creation: int
+    icons: Dict[int, int]
+    template: int
+    template_icon: int
+    decode: Callable
+    encode: Callable
+    frames: Tuple[int, ...]
+
+
+SHATTERED = Look(CREATION, {SAVE: SAVE, LOAD: LOAD, DROP: DROP, DELETE: DELETE}, SAVE, SAVE,
+                 decode_frame, lambda frames: _encode(frames), FRAMES)
+# Wake of the Ravager's (DSCLOG2's site 83, RS_CLICK): its creation window 19503, its carved buttons the same
+# words in its packed pictures (art.decode_packed), four frames (as it is, pressed, out of use, and a fourth
+# whose face differs under the letters: ours never out of use, the fourth as the first); the button copied is
+# its SAVE's (18301, its picture 18108)
+RAVAGER = Look(19503, {SAVE: 18108, LOAD: 18102, DROP: 18106, DELETE: 18110}, 18301, 18108,
+               decode_packed, packed_frames, (0, 1, 0, 0))
 
 
 def _face(rows: Rows) -> int:
@@ -80,11 +103,11 @@ def _letters(rows: Rows, count: int = 0) -> List[Tuple[int, int]]:
     return runs
 
 
-def _glyph(resource: gff.Chunks, letter: str, frame: int) -> Tuple[Rows, int]:
+def _glyph(resource: gff.Chunks, letter: str, frame: int, look: Look = SHATTERED) -> Tuple[Rows, int]:
     """LETTER as carved on frame FRAME of a game button: its columns (the face where it has none,
     as None) and the face it was carved on."""
     if letter == "C":  # (drawn in O's carving: its highlight, middle and shadow on that frame)
-        o, face = _glyph(resource, "O", frame)
+        o, face = _glyph(resource, "O", frame, look)
         tones = {"H": o[3][2], "M": o[4][2], "S": o[3][5]}
         rows = [list(r[:1]) * len(C_SHAPE[0]) for r in o]  # (the bevel rows as O's)
         for y, line in enumerate(C_SHAPE, start=C_TOP):
@@ -94,18 +117,18 @@ def _glyph(resource: gff.Chunks, letter: str, frame: int) -> Tuple[Rows, int]:
                 rows[y] = [None] * len(C_SHAPE[0])
         return rows, face
     source, index = LETTERS[letter]
-    icon = resource[("ICON", source)]
+    icon = resource[("ICON", look.icons[source])]
     frames, = struct.unpack_from("<H", icon, 4)
-    _, _, rows = decode_frame(icon, frame if frame < frames else 0)  # (DROP has no lit frame)
+    _, _, rows = look.decode(icon, frame if frame < frames else 0)  # (DROP has no lit frame)
     face = _face(rows)
     a, b = _letters(rows, len(WORDS[source]))[index]
     return [[None if p == face else p for p in r[a:b]] for r in rows], face
 
 
-def picture(resource: gff.Chunks, text: str, width: int, frame: int) -> Rows:
+def picture(resource: gff.Chunks, text: str, width: int, frame: int, look: Look = SHATTERED) -> Rows:
     """TEXT carved on a blank button WIDTH wide (frame FRAME of the game's: the bevel and face
     of DELETE's, which is the widest, cut to WIDTH)."""
-    _, _, wide = decode_frame(resource[("ICON", DELETE)], frame)
+    _, _, wide = look.decode(resource[("ICON", look.icons[DELETE])], frame)
     face = _face(wide)
     h = len(wide)
     blank = [[face if 2 <= x < width - 2 and 2 <= y < h - 2 else None for x in range(width)] for y in range(h)]
@@ -114,7 +137,7 @@ def picture(resource: gff.Chunks, text: str, width: int, frame: int) -> Rows:
             if not (2 <= x < width - 2 and 2 <= y < h - 2):
                 src = x if x < width - 2 else len(wide[0]) - (width - x)
                 blank[y][x] = wide[y][src]
-    glyphs = [_glyph(resource, ch, frame)[0] for ch in text]
+    glyphs = [_glyph(resource, ch, frame, look)[0] for ch in text]
     gap = 1
     total = sum(len(g[0]) for g in glyphs) + gap * (len(glyphs) - 1)
     x0 = (width - total) // 2
@@ -129,19 +152,26 @@ def picture(resource: gff.Chunks, text: str, width: int, frame: int) -> Rows:
     return blank
 
 
-def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+def chunks(resource: gff.Chunks, look: Look = SHATTERED) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of RESOURCE.GFF: STORE's and RECALL's pictures and buttons, and the
-    creation screen's window with both."""
-    if any(k not in resource for k in (("WIND", CREATION), ("BUTN", SAVE), ("ICON", DELETE))):
+    creation screen's window with both (LOOK: whose game: SHATTERED, RAVAGER)."""
+    need = [("WIND", look.creation), ("BUTN", look.template)] + [("ICON", i) for i in look.icons.values()]
+    if any(k not in resource for k in need):
         return {}
     added: Dict[Tuple[str, int], bytes] = {}
     for cid, text, width in ((STORE, "STORE", STORE_WIDTH), (RECALL, "RECALL", RECALL_WIDTH)):
-        added[("ICON", cid)] = _encode([picture(resource, text, width, f) for f in FRAMES])
-        button = bytearray(_button(resource[("BUTN", SAVE)], SAVE, cid))
+        added[("ICON", cid)] = look.encode([picture(resource, text, width, f, look) for f in look.frames])
+        button = bytearray(_button(_button(resource[("BUTN", look.template)], look.template, cid),
+                                   look.template_icon, cid))
         struct.pack_into("<HH", button, BUTN_SIZE, width, 15)
         added[("BUTN", cid)] = bytes(button)
-    added[("WIND", CREATION)] = with_buttons(resource[("WIND", CREATION)])
+    added[("WIND", look.creation)] = with_buttons(resource[("WIND", look.creation)])
     return added
+
+
+def rav_chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+    """chunks for Wake of the Ravager's RESOURCE.GFF (its copy: ravager.resources_fixed)."""
+    return chunks(resource, RAVAGER)
 
 
 def with_buttons(window: bytes) -> bytes:

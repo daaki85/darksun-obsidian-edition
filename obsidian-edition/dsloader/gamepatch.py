@@ -320,6 +320,13 @@ PATCHES = (
     # the end of the routine that brings a window to the front and redraws it: xor ax,ax /
     # pop si (for the USE screen's window, DSCLOG draws the spell slots again)
     Patch("window", 0x2BBA9, bytes.fromhex("33c05e"), _interrupt(VEC_WIN, 3)),
+    # ... and the same routine's failure exit (2B8FCh, "mov ax,-1 / jmp 2BBABh", a null window) jumped
+    # to that "pop si", the patch's third byte: its NOP ran, then "leave / retf" without the pop (SI
+    # not yet changed there, so no harm seen, but a jump into a patch). Sent instead to the same
+    # "pop si / leave / retf" at 2B8B7h, the routine before's end (window_fail; Wake of the Ravager's
+    # port mends the same jump the same way). The other near jumps into a patch's middle: "path"'s
+    # "jnz 60D6Eh" (60D82h), in the code that patch's own jump now steps over
+    Patch("window_fail", 0x2B8FC, bytes.fromhex("e9ac02"), bytes.fromhex("e9b8ff")),
     # the Look box (a creature in a fight), once its first status rows are drawn: mov si,ax /
     # xor di,di (DSCLOG then adds the monster's defences in the rows left, and does the moves)
     Patch("look", 0x5FCDA, bytes.fromhex("8bf033ff"), _interrupt(VEC_LOOK, 4)),
@@ -900,18 +907,13 @@ PATCHES = (
     Patch("pp_arm", 0x89610, bytes.fromhex("6668ffffbe00"), _site(PP_ARM, 6)),
     Patch("pp_hand", 0x5ECD8, bytes.fromhex("8b7606"), _site(PP_HAND, 3)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
-    # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
-    # names) ...
-    Patch("names_size_start", 0x56676, bytes.fromhex("666a01"), _interrupt(VEC_NAMES_SIZE, 3)),
-    Patch("names_size_load", 0x6A5A2, bytes.fromhex("666a01"), _interrupt(VEC_NAMES_SIZE, 3)),
-    # ... and the "add sp,0Ch" after reading it in (DSCLOG copies its names after the game's)
+    # the "add sp,0Ch" after reading it in (DSCLOG notes where it is; the Loader's names are in
+    # the chunk, itemtables.py)
     Patch("names_fill_start", 0x566AD, bytes.fromhex("83c40c"), _interrupt(VEC_NAMES_FILL, 3)),
     Patch("names_fill_load", 0x6A5D6, bytes.fromhex("83c40c"), _interrupt(VEC_NAMES_FILL, 3)),
     # where an attack is worked out from behind / a backstab: a hidden thief's is (RULE_STEALTH)
     Patch("stealth", 0x58353, bytes.fromhex("ff76e6"), _interrupt(VEC_STEALTH, 3)),
-    # the item types (IT1R), read in just before the names: room for the Loader's own
-    Patch("types_size_start", 0x56618, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
-    Patch("types_size_load", 0x6A54A, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
+    # the item types (IT1R), read in just before the names: the same
     Patch("types_fill_start", 0x56647, bytes.fromhex("83c40c"), _interrupt(VEC_TYPES_FILL, 3)),
     Patch("types_fill_load", 0x6A579, bytes.fromhex("83c40c"), _interrupt(VEC_TYPES_FILL, 3)),
     # the class level cap (9, or 10 with the rule): "cmp byte es:[bx+24h],9" where a character

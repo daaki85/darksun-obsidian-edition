@@ -376,9 +376,11 @@ The game stops every class at 9th level. With the rule a class goes up while its
 more than **749,999 XP**, shared between a character's classes: the most that keeps a druid from
 13th and a preserver from 12th, where it would cast 6th-level spells. Everything past 9th (hit
 points, THAC0, saves, spell slots, thief skills) is the game's own, which the cap kept out of reach.
+XP stops at the cap too: the Loader holds a character's XP at its share, so none is banked past its
+highest level (the dice log says what wasn't counted; *without the mod* it counts on to 2,000,000,000).
 
-**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP left over at
-the top](PLAYER-GUIDE.md#xp-left-over-at-the-top). How it works:
+**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP stops at
+the cap](PLAYER-GUIDE.md#xp-stops-at-the-cap). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 ### Weapons and armour
@@ -406,7 +408,8 @@ light weapon in the other*. Rules: [races](PLAYER-GUIDE.md#races). How it works:
 #### Weapon traits
 
 The mod gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
-heads and their tangle, the staff sling its stinkpots, the polearm its reach.
+heads and their tangle, the staff sling its stinkpots, the polearm its reach; and Wake of the
+Ravager's lotulis, double spear and trikal what the sequel's weapons guide gives them.
 
 **Always on** (no switch).
 
@@ -428,6 +431,36 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 Rules: [cahulaks](PLAYER-GUIDE.md#cahulaks). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#cahulaks).
 
+##### Lotulis and double spear
+
+Two-headed weapons, a blade or a point at each end: a specialist (its weapon spec chosen, mastery
+too) fighting with one turns the round's last swing on **a second foe** beside it, one on the first
+target's side and next to the wielder, when the round has two swings or more. The double spear's
+second head does 1 less damage (no less than 1). With no other foe beside it, the swing stays on
+the first.
+
+```
+  Jenna hits Arena Guard for 14: 1d8 = [4] +2 specialized +8 STR 20
+    Jenna turns the double spear's last swing from Arena Guard to Arena Guard, beside it (a specialist's second foe, 1 less damage)
+Jenna attacks Arena Guard with Wooden Double Spear (1d8): d20 = 6, needs 10+ (55%), hits AC 8, target AC 4 -> HIT
+```
+
+##### Trikal
+
+A three-bladed polearm with a hooked haft: a specialist's hit that does damage **trips** a
+man-sized or smaller foe unless it saves against paralysis: it loses its next turn. Who is too big,
+or has nothing to trip, is the [cahulaks](#cahulaks)' list. Held with no other weapon, it reaches two
+squares as a polearm does ([polearm reach](#polearm-reach)).
+
+```
+  Jenna hits Arena Guard for 15: 1d10 = [5] +2 specialized +8 STR 20
+    Jenna's trikal trips Arena Guard? Save against paralysis: d20 = 12, needs 13+ -> tripped: loses its next turn
+```
+
+Rules: [two-headed weapons and the trikal](PLAYER-GUIDE.md#lotulis-double-spear-and-trikal). How
+it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#lotulis-double-spear-and-trikal).
+
 ##### Staff sling stinkpots
 
 AD&D's *Arms and Equipment Guide* gives the staff sling a clay pot of burning sulphur to throw: 1d3
@@ -443,7 +476,7 @@ damage](WEAPON-SPECS.md#grand-masterys-damage). How it works:
 A polearm held with no other weapon (a shield or a bow in the missile slot is fine) strikes in melee
 at two squares as well as one, straight or two across and one along, over a creature in between but
 not through a wall. It holds for the party and its foes alike; every polearm has it, ***Thornwall***
-and ***Linebreaker*** too. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
+and ***Linebreaker*** too, and Wake of the Ravager's [trikal](#trikal), a polearm with three blades. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#polearm-reach).
 
 #### Creature size
@@ -792,7 +825,21 @@ bone and obsidian axes and great axes, metal and obsidian cahulaks...), twenty-t
 (Shadowseeker, Kreenfang, Thornwall, Emberlash, Ironwhirl...), the rest of the bone scale set with a
 Bone Helm, rings and a cloak of protection, bracers of defense, two robes, the Warden's Plate, the
 Boots of Speed, the Cloak and Boots of Elvenkind and more, on the game's people, in its shops and
-chests. People who fought bare-handed carry what the armed of their kind do. All but the arena's
+chests; and six of Wake of the Ravager's weapons the game has none of (a two-handed sword, the
+lotulis, double spear and trikal, the javelin and darts) in the shops of Teaquetzl and Kel's
+caravan and on people of the like (the arena's gladiators, one of Scar's henchmen, the Drajian Guards,
+the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and Elite Guards: [the
+table](ITEMS.md)), each with a [weapon spec](WEAPON-SPECS.md) of its own: three of them in metal too (a two-handed
+sword and a lotulis at Melkor's in Gedron, a javelin on the slave pens' weapon rack), an obsidian
+lotulis for fire clerics and a bone great sword for water clerics (at Melkor's too), and magic ones
+along the way through the game, the weaker early (Darts +1 on the arena's defiler champion; a Double
+Spear +1 at the Fields' gate, a Trikal +1 with the elven slavers, a Lotulis +1 at the Hot Springs, a
+Javelin +1 with the Silt Sea's ssurans, a Lotulis +2 in the Lower Castle, a Great Sword +2 in the
+Upper Castle, a Trikal +2 at the way into the Wyrm Belly, a Double Spear +2 at the gladiators' camp,
+a Great Sword +3 in Balkazar's treasure room; an Obsidian Lotulis +1 on Dagger, the White Sand
+Outlaws' chief, and a Bone Great Sword +1 on Dakaren at the Silt Sea). Those carried by one of a group are given to one
+person there, an object of their own in the Loader's copy of the region, so they show only in a
+region the party hasn't yet entered in that game. People who fought bare-handed carry what the armed of their kind do. All but the arena's
 ring and Thornwall (which the Loader hands over itself, while it runs) are written into the game's
 own data each time the Loader starts it, so the game makes them with their people and chests and
 then keeps and saves them like its own. A thief can [lift](#picking-pockets) Pehtucl's ring,
@@ -969,11 +1016,16 @@ and **No soundfont**. How it works:
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
 of Thorns their pictures, from your copy of Dark Sun: Wake of the Ravager (GOG sells it with
-Shattered Lands), when the Loader finds it; without it they have icons of their own (the game's,
+Shattered Lands), when the Loader finds it, and so do its weapons and the great axes their inventory icons (in the game's colours, each head in its material); without it they have icons of their own (the game's,
 recoloured) and the walls are the game's fire wall in grey or dark brown. Fire Seeds bursts as a
 fireball either way, a picture Shattered Lands has too. The Options tab's **Wake of the Ravager (optional)** section says where
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
 [requirements](README.md#requirements).
+
+The sequel itself starts from the Loader too: **Play Wake of the Ravager**, beside **Play Shattered Lands**
+at the top of the window, or `Play Wake of the Ravager.bat`, starts it from that folder in its own
+DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
+([starting it](README.md#other-ways-to-start)).
 
 ### Taking the party to Wake of the Ravager
 
@@ -982,13 +1034,21 @@ Lands save into the sequel's roster, for a game that goes on with the same chara
 save; the save itself is not changed. Then start Wake of the Ravager from the Loader and **ADD** them
 on its CREATE CHARACTERS screen. A window lists what came across.
 
+- **XP comes across up to Shattered Lands' cap.** A member arrives with no more than its share of
+  749,999 XP (the whole for one class, an equal share for several, a human's the cap less its old
+  classes' levels' XP), so XP banked past the cap in an older save stays behind; the report after the
+  transfer says so (`XP 749,999 (Shattered Lands' cap: 2,000,000 in the save)`).
 - **Every item comes across.** What the sequel has, it gets as the sequel's own item (as SSI's
   CHARTRAN does); the rest, which CHARTRAN turns into money bags, the Loader makes for the sequel,
   with its picture and name from your own Shattered Lands files: the mod's weapons, armour and magic
   items, and the game's quest items as keepsakes (carried and sold, no use in the sequel's story).
   Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
   box outside a fight); a spell the sequel lacks makes a keepsake.
-  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind.
+  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
+  javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
+  kind, and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
+  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
@@ -1008,6 +1068,22 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
   round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
   Lands.
+- **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
+  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
+  past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
+  of three classes reach 15th, of one or two higher (a fighter alone 30th, with another class 19th, with
+  two more 15th; a preserver alone 25th, a druid 20th: [the
+  table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). XP stops at the cap: each level up holds a
+  character's XP at its share, so nothing is left over at the top. View Character names the class the
+  next XP is for, and a level up past 20th says "21st", not "21th". THAC0 stops at AD&D's best
+  (a warrior's 1, a priest's 8, a thief's or psionicist's 11, a preserver's 14), and a preserver's
+  level up offers spells up to 9th level only: the sequel's four 10th-level spells stay the monsters'. A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
+  the thief skills go on by AD&D's table to 17th, spell slots to 30th (a preserver's 7 7 7 7 7 7 7 6 6),
+  a druid's stop growing at 15th, a ranger's
+  priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
+  **saving throws** are the Player's Handbook's by class group and level: the game held every save at
+  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8 (a bug
+  Shattered Lands has too, for later).
 - **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
@@ -1018,9 +1094,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   figures, a spell's charge used floats its count as in Shattered Lands (`Armor: 7 left`).
 - **[Psionic Blast](GAME-BUGS.md#spells-and-psionics)'s imagined wounds** come back as a fight ends in the sequel
   too ("Seneca shakes off Psionic Blast's imagined wounds as the fight ends"), and until then a blow that would kill
-  the member knocks it out instead. The dice log's saving throws there show the d20 rolled (`d20 = 13 +9 other =
-  22, needs 30`), with a natural 1's line that went missing before, and the creation screen's rolls each score's
-  four 4d4 (`best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16`).
+  the member knocks it out instead. The dice log's saving throws there show the d20 rolled and each modifier by
+  name, as in Shattered Lands (`d20 = 13 +1 Ring of Protection -1 WIS 6 +1 CON 19 = 14, needs 13`), with a
+  natural 1's line that went missing before, and the creation screen's rolls each score's four 4d4 (`best of
+  four 4d4 (12, 9, 8, 7) = 12, +4 = 16`). Its attack lines break the THAC0 down as Shattered Lands' do (`THAC0
+  13, +3 STR, -2 stone, +2 difficulty = 10`), the cahulaks' heads named (`-2 cahulaks, main head at DEX 12`);
+  a Battle Dancer in light armour has no head penalty with the cahulaks, as in Shattered Lands.
 - **[Looting with T and Shift+T](#looting-a-body-t-and-shiftt), [selling with S](#selling-plain-gear-s)
   and [M, U and I](#m-u-and-i-open-a-screen-close-it-again)** work in the sequel too (started from the
   Loader). A body's window opens with the eye (right-click twice). The items go into the backpacks and the
@@ -1050,11 +1129,21 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
   panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
   game's menu right after DUAL. What else kits do to spells
-  and psionic powers, gear and hit dice doesn't carry over yet. The weapon specs work there:
+  and psionic powers, gear and hit dice doesn't carry over yet. The creation screen has [STORE and
+  RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
+  gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
+  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its
+  weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
+  druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
+  weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
+  shield in the left. A new
+  fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
+  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The weapon specs work there:
   a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
-  weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
-  kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
-  as the chatkcha). The screens show them as in Shattered Lands: the inventory's and View Character's
+  weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
+  Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
+  those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
+  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
   DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
   the Effects screen's lower panel each one's weapon kinds ([the Effects
   screen](#the-effects-screen)). The Look box's whole description of a monster comes up in the
@@ -1067,6 +1156,24 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   scrolled into view, so Enter reaches it. (Without the Loader,
   Tab opens the sequel's own menu, as it does out of fights.) The Loader's
   copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Squares in reach](#squares-in-reach), [F10](#f10-takes-a-whole-move-back) and
+  [Alt](#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
+  small crosses mark the squares they can still walk to, and R hides or shows them. After the last
+  step the sequel opens its own **END MOVE** menu (GUARD, WAIT, END TURN), and F10 does nothing
+  while it is up: Escape closes it, and F10 then puts the member back where the turn began, with the
+  move to walk again (`F10: Lex's move taken back (can walk again)`). Without the Loader the sequel
+  gives the points back but not the walk, so a click goes nowhere. A member held where they stand
+  (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
+  and names it: things to take, doors, bodies to search, people to talk to.
+- **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
+  creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
+  Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
+  of 2nd, two of 3rd, one of 4th), and a psionicist a fixed eighteen powers, anyone else four or five of its
+  discipline. With the Loader, **DONE** opens the game's **CHOOSE A SPELL** for as many as it would have
+  given, level by level from 1st (the window's pages no higher than the level being picked), then **PICK A
+  PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
+  Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
+  spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
 - **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
   folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
   them, nor shows the Loader's items (it shows money bags), and it can stop in a fight on the turn of
@@ -1195,6 +1302,38 @@ The game destroys whatever the party sells. With the mod a magical item sold (a 
 power) goes into the merchant's pack, offered at its price less the CHA discount, to be bought back;
 anything else is gone. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
+
+### Magic weapons for every spec, and the mod's gear
+
+Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
+staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
+and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
+daggers, maces, axes, great axes, picks, polearms, cahulaks and the Bone Helm) in the sequel's shops,
+on its people and in its chests. Pictures are Shattered Lands', from your copy; the magic ones have a
+few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
+
+| Item | Where |
+|---|---|
+| Short Sword +1 | Notaku's stall, Tyr |
+| Short Sword +2 | a Draxan in Tyr |
+| Short Sword +3 | a body in the Crypt |
+| Pick +1 | the receptionist who sells picks |
+| Pick +2 | a crate in the third mine level |
+| Pick +3 | the silt giants' leader |
+| Great Axe +1 | a Draxan in Tyr |
+| Great Axe +2 | a Draxan in the Pyramid |
+| Cahulaks +1 | Alhena, the Jann's lands |
+| Cahulaks +2 | the Runner, the Yuan-ti tunnels |
+| Polearm +1 | a guard at the Veiled Alliance's headquarters |
+| Polearm +2 | a Draxan, the third volcano level |
+| Staff Sling +1 | the ranged-weapon stall, Tyr |
+| Staff Sling +2 | Sureshot, in the forest |
+
+The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. A game
+saved before has them in its shops too: the Loader stocks each seller once, as you meet it, and what you
+buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep what they had. The Bone
+Helm gives AC 1
+with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
 
 ### Improved thieving
 

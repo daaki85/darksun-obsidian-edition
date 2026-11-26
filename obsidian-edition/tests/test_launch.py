@@ -59,7 +59,12 @@ class LaunchTests(unittest.TestCase):
         saved = launch.STARTED
         try:
             launch.STARTED = None
-            self.assertIn("in DOSBox", launch.started_line("G"))
+            self.assertEqual(launch.started_line("G"), "Starting Shattered Lands from G in DOSBox.")
+            with tempfile.TemporaryDirectory() as d:  # (the sequel's folder: its DSUN.EXE's size)
+                from dsloader import ravager
+                with open(os.path.join(d, "DSUN.EXE"), "wb") as f:
+                    f.truncate(ravager.WOTR_SIZE)
+                self.assertEqual(launch.started_line(d), f"Starting Wake of the Ravager from {d} in DOSBox.")
             self.assertEqual(launch.closed_line(0), "DOSBox closed.")
             launch.STARTED = "C:/dsr/dsun.exe"
             self.assertIn("as Dark Sun Recompiled (C:/dsr/dsun.exe)", launch.started_line("G"))

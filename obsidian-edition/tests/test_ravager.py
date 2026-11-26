@@ -36,17 +36,38 @@ class TableTests(unittest.TestCase):
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
-                            "psionic_blast", "blast_knockout", "rl_try",
+                            "psionic_blast", "blast_knockout", "rl_try", "roll_store", "gear_done",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
                             "message_window", "message_shown", "text", "message",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
-                            "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice"}
+                            "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
+                            "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
+                            "psi_click", "pick_top", "level_cap_up", "level_cap_view", "level_clamp", "xp_suffix", "level_ordinal",
+                            "thief_hd_roll", "thief_hd_con", "thief_hd_clamp", "save_table", "f10_pin",
+                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS})
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
+
+    def test_gear_hands(self):
+        """A new character's starting gear (the table of GEAR_TABLE_AT) puts every weapon in the right hand
+        (3) and every shield in the left (10): the fighter's long sword and the cleric's club in front of their
+        shields, the druid's, preserver's and psionicist's weapon out of the empty left hand; only slots
+        change, and the gladiator's second long sword stays in the left hand."""
+        old, new = ravager.GEAR_TABLE, ravager.gear_table_fixed()
+        self.assertEqual(len(old), 35 * 3)
+        entries = lambda t: [(struct.unpack_from("<H", t, 3 * n)[0], t[3 * n + 2]) for n in range(35)]
+        before, after = entries(old), entries(new)
+        self.assertEqual([o for o, _ in before], [o for o, _ in after])
+        changed = {n: (before[n][1], after[n][1]) for n in range(35) if before[n] != after[n]}
+        self.assertEqual(changed, {2: (3, 10), 3: (10, 3), 7: (10, 3), 0x0A: (10, 3), 0x16: (3, 10),
+                                   0x17: (10, 3), 0x1B: (10, 3)})
+        self.assertEqual(after[0x16], (842, 10))  # (the fighter's +1 shield)
+        self.assertEqual(after[0x17], (633, 3))   # (its +1 long sword)
+        self.assertEqual(after[0x13], (633, 10))  # (the gladiator's second)
 
     def test_item_names(self):
         """The helper's header names ITEM_NAMES (+196) and its room (+198), as ravager has them; the mod's
@@ -241,6 +262,16 @@ class TableTests(unittest.TestCase):
         finally:
             launch._launch_wotr = real
 
+    def test_start_forgets_shattered_lands_left_out(self):
+        """What Shattered Lands' last start left out isn't said again after the sequel's start (it showed
+        a SEGOBJEX warning that was Shattered Lands', 2026-11-26)."""
+        launch.LEFT_OUT[:] = ["the new items, people and icons (SEGOBJEX.GFF: Shattered Lands')"]
+        self.addCleanup(launch.LEFT_OUT.clear)
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(launch.LaunchError):  # (no GOG DOSBox in it: the start stops there)
+                launch._launch_wotr(d, {})
+        self.assertIsNone(launch.left_out_line())
+
 
 class JumpIntoSiteTests(unittest.TestCase):
     """A near jump from outside a patch must not land past a patch's first byte: there it runs the
@@ -388,8 +419,11 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            from dsloader import kitpages
-            self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game)))  # (the kit pages)
+            from dsloader import kitpages, rollstore, weaponpages
+            objects = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
+            self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
+                             | set(rollstore.rav_chunks(game))  # STORE and RECALL,
+                             | set(weaponpages.rav_chunks(game, objects)))  # the weapon window)
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE
@@ -409,7 +443,7 @@ class GameFileTests(unittest.TestCase):
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], own[ravager.TYPES_CHUNK])
-            self.assertEqual(len(types), (ravager.GAME_TYPES + len(npcitems.TYPES)) * ravager.TYPE_SIZE)
+            self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)

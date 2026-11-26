@@ -136,6 +136,120 @@ def planar_frames(frames: List[List[List[Optional[int]]]]) -> bytes:
     return bytes(out)
 
 
+
+# Wake of the Ravager's own pictures (its psionicists' window's marble, its icons) are mostly in the PLNR form
+# (wotrart.decode_plnr reads it): after the width and height, FFh "PLNR", a byte BITS, a colour map of 2**BITS
+# palette numbers, then codes of BITS bits, the highest first; code 0 an escape: 0 then 0 a pixel of the map's
+# colour 0, 0 then k the last code k + 2 more times. Smaller than the planar form where runs are long.
+PLNR = b"\xffPLNR"
+
+
+def plnr_frame(rows: List[List[Optional[int]]]) -> bytes:
+    """One frame in the PLNR form (wotrart.decode_plnr reads it; None a pixel of colour 0)."""
+    height, width = len(rows), len(rows[0]) if rows else 0
+    colours = [0] + sorted({p for r in rows for p in r if p})
+    bits = max(1, (len(colours) - 1).bit_length())
+    where = {c: i for i, c in enumerate(colours)}
+    pixels = [where[p or 0] for r in rows for p in r]
+    codes: List[int] = []
+    most = (1 << bits) - 1 + 2  # (a run's repeats in one escape: k up to the largest code)
+    i = 0
+    while i < len(pixels):
+        code = pixels[i]
+        if code == 0:
+            codes += [0, 0]
+            i += 1
+        else:
+            codes.append(code)
+            i += 1
+        run = 0
+        while i + run < len(pixels) and pixels[i + run] == code and run < most:
+            run += 1
+        if run >= 3:
+            codes += [0, run - 2]
+            i += run
+    data = bytearray((len(codes) * bits + 7) // 8)
+    for n, v in enumerate(codes):
+        for b in range(bits):
+            if v >> (bits - 1 - b) & 1:
+                k = n * bits + b
+                data[k >> 3] |= 0x80 >> (k & 7)
+    palette = colours + [0] * ((1 << bits) - len(colours))
+    return struct.pack("<HH", width, height) + PLNR + bytes((bits,)) + bytes(palette) + bytes(data)
+
+
+def plnr_frames(frames: List[List[List[Optional[int]]]]) -> bytes:
+    """A picture chunk of FRAMES in the PLNR form, laid out as planar_frames'."""
+    data = [plnr_frame(f) for f in frames]
+    at = 6 + 4 * len(data)
+    head = bytearray(struct.pack("<IH", 0, len(data)))
+    for d in data:
+        head += struct.pack("<I", at)
+        at += len(d)
+    out = head + b"".join(data)
+    struct.pack_into("<I", out, 0, len(out))
+    return bytes(out)
+
+# Wake of the Ravager's carved buttons (SAVE 18108, LOAD 18102, DROP 18106, EXIT 18109, DELETE 18110) have
+# the same FFh "PLAN" mark in a packed form: a byte BITS, a palette of 2**BITS colours, then each pixel's index
+# into it, BITS a pixel (MSB first, the rows run on unpadded); colour 0 is clear. A one-colour planar_frame
+# reads the same either way (bits 1, the palette 0 and its colour).
+def decode_packed(chunk: bytes, index: int = 0) -> Tuple[int, int, List[List[Optional[int]]]]:
+    """(width, height, rows) for one frame of a picture chunk in the packed form (ValueError if not)."""
+    count, = struct.unpack_from("<H", chunk, 4)
+    if not 0 <= index < count:
+        raise ValueError(f"no frame {index}")
+    offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
+    width, height = struct.unpack_from("<HH", chunk, offset)
+    pos = offset + 4
+    if chunk[pos:pos + len(PLANAR)] != PLANAR:
+        raise ValueError("not the packed form")
+    bits = chunk[pos + len(PLANAR)]
+    pos += len(PLANAR) + 1
+    palette = chunk[pos:pos + (1 << bits)]
+    pos += 1 << bits
+    rows: List[List[Optional[int]]] = []
+    for y in range(height):
+        row: List[Optional[int]] = []
+        for x in range(width):
+            i, v = (y * width + x) * bits, 0
+            for b in range(bits):
+                v = v << 1 | chunk[pos + ((i + b) >> 3)] >> (7 - ((i + b) & 7)) & 1
+            row.append(palette[v] or None)
+        rows.append(row)
+    return width, height, rows
+
+
+def packed_frame(rows: List[List[Optional[int]]]) -> bytes:
+    """One frame in the packed form (decode_packed reads it): the fewest bits for its colours and clear."""
+    height, width = len(rows), len(rows[0]) if rows else 0
+    colours = [0] + sorted({p for r in rows for p in r if p})
+    bits = max(1, (len(colours) - 1).bit_length())
+    palette = colours + [0] * ((1 << bits) - len(colours))
+    where = {c: i for i, c in enumerate(colours)}
+    data = bytearray((width * height * bits + 7) // 8)
+    for n, p in enumerate(p for r in rows for p in r):
+        v = where[p or 0]
+        for b in range(bits):
+            if v >> (bits - 1 - b) & 1:
+                i = n * bits + b
+                data[i >> 3] |= 0x80 >> (i & 7)
+    return struct.pack("<HH", width, height) + PLANAR + bytes((bits,)) + bytes(palette) + bytes(data)
+
+
+def packed_frames(frames: List[List[List[Optional[int]]]]) -> bytes:
+    """A picture chunk of FRAMES in the packed form, laid out as planar_frames'."""
+    data = [packed_frame(f) for f in frames]
+    at = 6 + 4 * len(data)
+    head = bytearray(struct.pack("<IH", 0, len(data)))
+    for d in data:
+        head += struct.pack("<I", at)
+        at += len(d)
+    out = head + b"".join(data)
+    struct.pack_into("<I", out, 0, len(out))
+    return bytes(out)
+
+
 def palette_colours(chunk: bytes) -> List[Tuple[int, int, int]]:
     """A VGA palette chunk (6 bits a channel) as 256 RGB colours."""
     scale = lambda v: (v & 0x3F) * 255 // 63

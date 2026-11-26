@@ -24,8 +24,9 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, game, hitchance, hover, itemgate, journal, kitpages, kits, labels, loot, monsters, \
-    psiblast, quicksave, ravager, ring, rings, sizes, stealth, targeting, textlog, usable
+from . import aging, combatlog, dicelog, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ring, rings, shadows, sizes, squares, stealth, \
+    targeting, textlog, usable
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -131,6 +132,13 @@ ADDRESSES: Dict[str, object] = {
     # the attack's count of the attacker's attacks made this round: [BP-16h] (5D04Ch, SL's [BP-14h]), its
     # [BP-14h] what the damage roll adds to the dice (DSCLOG2's STAB_TIMES)
     "ATTACKS_MADE_LOCAL": -0x16,
+    # the attack set-up's locals (5C5E1h, SL's 58019h): the THAC0 [BP-1Eh] (SL's [BP-20h]), the weapon's bonus
+    # [BP-8], from behind and backstab bytes [BP-19h] and [BP-21h] (SL's words [BP-1Ah], [BP-24h]), the natural
+    # attacks' set [BP-20h] (SL's [BP-22h]), the weapons ready [BP-16h] (the dice log's THAC0 line)
+    "SETUP_THAC0_LOCAL": -0x1E, "SETUP_BONUS_LOCAL": -8, "SETUP_REAR_LOCAL": -0x19, "SETUP_BACKSTAB_LOCAL": -0x21,
+    "SETUP_NATURAL_LOCAL": -0x20, "SETUP_READY_LOCAL": -0x16, "SETUP_FLAG_MASK": 0xFF,
+    # the difficulty, a DS word (monsters' to hit: the set-up's "mov ax,[143Ah] / dec ax", 5C9C9h; SL's 11AEh)
+    "DIFFICULTY": 0x143A,
     # spell slots left: a member's 22h bytes from DS:446Ah, a wizard level L at +L-1, a priest's from
     # +0Bh (each level's byte at SLOTS_LEFT + level, as SL's); the slot rules each SL's + 0Ch (ravds)
     "SLOTS_LEFT": {"Wizard": 0x4469, "Priest": 0x4474}, "SLOTS_STRIDE": 0x22,
@@ -255,15 +263,64 @@ RED_FIRST, RED_LAST = 32, 255
 # (the allocation of 23F0h bytes, 72FF7h); its things 0-519, the backpack's cells 14-25 (DSCLOG2's
 # THING_COUNT, PACK_FIRST). No icons of the Loader's own (icons.fit: Shattered Lands' pictures).
 RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
+STOCK_INTERVAL = 1.0  # (seconds between looks for a saved game's sellers without the new items: shopstock)
+
+
+# Fuller starting gear (startgear.py, on DSCLOG2's GEAR_DONE: site 85) from the sequel's own plain items:
+# OBJEX.GFF's item records (17h bytes: the picture, the value at +6, the type at +0Ah, the name at +14h; in no
+# list, no slot), by weapon kind (specialize.KINDS) in the order tried, each a material the classes may use
+# (restrict.usable): club (type 29, wood), mace (67, bone), dagger (72, obsidian), quarterstaff (85),
+# chatkcha (25, obsidian), sling (93), and for a weapon spec long sword (73, obsidian), axe (48, obsidian),
+# great axe (51), pick (79, stone), polearm (80), gythka (52), cahulaks (24); no short sword (the sequel has
+# none of its own) and no bow (a Battle Dancer has a sling: no arrows made). Its leather ("Armor", of leather:
+# type 32 for the chest, 3 the arms, 64 the legs; its armour types come in fives, 1-5 worn on the arms, 30-34
+# on the chest, 62-66 on the legs, as a new fighter wears them), and a cloak (type 28, object 1615) for the kits
+# that hide. An item's name number is its line in RESOURCE.GFF's TEXT 1000 counted from 1.
+def _rav_item(hexed: str) -> bytes:
+    return bytes.fromhex(hexed)
+
+
+RAV_PLAIN: Dict[int, Tuple[Tuple[int, bytes], ...]] = {
+    1: ((29, _rav_item("9ffd00000f2701000f271d0000000000000004ff210000")),),   # club (object 609)
+    4: ((67, _rav_item("9efd00000f2718000f27430000000000000004ff1c0000")),),   # mace (610)
+    2: ((72, _rav_item("9cfd00000f270a000f27480000000000000004ff1d0000")),),   # dagger (612)
+    8: ((85, _rav_item("a3fd00000f2701000f27550000000000000004ff320000")),),   # quarterstaff (605)
+    12: ((25, _rav_item("40fd00000f2701000f27190000000000000004ff170000")),),  # chatkcha (704)
+    14: ((93, _rav_item("3ffd00000f2701000f275d0000000000000004ff350000")),),  # sling (705)
+    0: ((73, _rav_item("9afd00000f274b000f27490000000000000004ff1a0000")),),   # long sword (614)
+    5: ((48, _rav_item("8bfd00000f270f000f27300000000000000005ff1f0000")),),   # axe (629)
+    6: ((51, _rav_item("a0fd00000f27f4010f27330000000000000005ff200000")),),   # great axe (608)
+    7: ((79, _rav_item("8cfd00000f2732000f274f0000000000000006ff220000")),),   # pick (628)
+    9: ((80, _rav_item("a2fd00000f2707000f27500000000000000004ff190000")),),   # polearm (606)
+    10: ((52, _rav_item("99fd00000f2706000f27340000000000000004ff160000")),),  # gythka (615)
+    11: ((24, _rav_item("9dfd00000f2701000f27180000000000000004ff310000")),),  # cahulaks (611)
+}
+RAV_LEATHER = ((game.EQUIP_SLOTS.index("chest"), _rav_item("d6fc00000f2718000f27200000000000000004ff450000")),
+               (game.EQUIP_SLOTS.index("arm"), _rav_item("d1fc00000f2714000f27030000000000000004ff450000")),
+               (game.EQUIP_SLOTS.index("legs"), _rav_item("ccfc00000f2714000f27400000000000000004ff450000")))
+RAV_CLOAK = _rav_item("b1f900000f2701000f271c0000000000000004ff260000")
+
+
+def rav_weapon(gd, sheet: bytes, kind: int, read):
+    """startgear._weapon's for the sequel: a plain weapon of KIND the character can use (RAV_PLAIN), as
+    (record, (type, ...)); None if there is none."""
+    from . import startgear
+    for type_, rec in RAV_PLAIN.get(kind, ()):
+        if startgear.can_use(gd, sheet, type_, read(type_)):
+            return rec, (type_, 0, 0, 0)
+    return None
 
 
 def rav_items() -> Dict[object, Dict[str, object]]:
-    """The modules' names rebound for looting and selling in the sequel (apply_layout)."""
-    from . import icons, itemgate, loot, ring
+    """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
+    starting gear (startgear's items: the sequel's)."""
+    from . import icons, itemgate, loot, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
-            icons: {"fit": lambda gd, item: None}}
+            icons: {"fit": lambda gd, item: None},
+            startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
+                        "HANDS": game.WEAPON_HANDS}}
 
 
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
@@ -305,6 +362,10 @@ def apply_layout() -> int:
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
     for module, names in RAV_TARGETING.items():  # (Tab, the ring, the chance under the pointer)
+        for name, value in names.items():
+            _SAVED.append((module, name, getattr(module, name)))
+            setattr(module, name, value)
+    for module, names in RAV_FIGHT_KEYS.items():  # (R's squares in reach, F10 after the last step)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
@@ -358,6 +419,33 @@ RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
 # underground: VA Headquarters, Pyramid, Yuan-ti Tunnels, El's Temple, Mines1-3, Mosaic, Volcano
 # Levels 1-3, Crypt, Cosmos, UnderTyr.
 RAV_OUTDOORS = frozenset((0x01, 0x32, 0x3B, 0x41, 0x42, 0xFF))
+# The squares in reach shown and hidden with R, and F10 taking a move back after its last step (squares.py,
+# moveback.py; DSCLOG2's SQUARES, VIEW_REDRAW and F10_PIN): the sequel's live walk map, DS:0538h (SL's 0556h:
+# ravds, five uses agree; the walls' cells C0h, a cell no one walks into 40h), a creature's movement points
+# and its turn's flags, words at the load + 3C4Fh (selector 308h) +22Eh and +1D8h (the step routine 5D8C9h-
+# 5D8F1h: SL's 37BDh +22Bh and +1D5h, the step 10 or 14 from DS:0551h), its swings this round and attack
+# commands this turn, bytes there at +184h and +1AEh (SL's +181h, +1ABh: their only such reads); F10's
+# turn's own points and first square, DS:4258h, 425Ah (y), 425Ch (x) (F10 at 1EC05h: SL's 4964h, 4966h,
+# 4968h), the map things' standing still (bit 20h of +0, 1F3FCh) and feet; a walk's next step and steps
+# left, the load + 3F49h (selector 388h) +374h a thing x 1Ch and +8A7h x 13h (SL's 3972h +377h, +8AAh: each
+# their commonest use); the effects that pin, Paralyzed 69 and Cannot Move 66 (826F6h, SL's 34 and 51). DSCLOG2's
+# header past the quick saves' (+1922 VIEW_REDRAW, +1924 SQUARES_ON, +1926 LIGHT's offset: DSCLOG's +242,
+# +1890, +236), LIGHT made in the sequel's colours (RED_FIRST to RED_LAST: its 1-31 cycle).
+FK_VIEW_REDRAW, FK_SQUARES_ON, FK_LIGHT = 1922, 1924, 1926
+FK_SQUARE_DRAWS, FK_F10_MOVES, FK_F10_KEPT, FK_MARK_DRAWS = 1928, 1930, 1932, 1934
+RAV_FIGHT_KEYS = {
+    squares: {"TSR_SQUARES_ON": FK_SQUARES_ON, "TSR_LIGHT": FK_LIGHT, "WALK_MAP": 0x0538, "POINTS_SEG": 0x3C4F,
+              "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "POSITIONS": RAV_POSITIONS, "POSITION_SIZE": RAV_POSITION_SIZE,
+              "LIGHT_FIRST": 32, "LIGHT_LAST": 255},
+    moveback: {"POINTS_SEG": 0x3C4F, "POINTS_OFF": 0x22E, "FLAGS_OFF": 0x1D8, "ATTACKS_OFF": 0x184,
+               "COMMANDS_OFF": 0x1AE, "START_POINTS": 0x4258, "START_Y": 0x425A, "START_X": 0x425C,
+               "MAP_RECORD": 0x67BB, "MAP_SIZE": RAV_POSITION_SIZE, "POSITIONS": RAV_POSITIONS,
+               "WALK_SEG": 0x3F49, "WALK_STEP": 0x374, "WALK_LEFT": 0x8A7, "PINNING": (69, 66)},
+    shadows: {"TSR_VIEW_REDRAW": FK_VIEW_REDRAW},
+    usable: {"DRAW_LIST": 0x67B7, "DRAW_COUNT": 0x264E, "DRAW_MOST": 2000, "MAP_OBJECT": 0x1B,
+             "TRIGGERS_PTR": 0x40C0, "HEADS_SEG": 0x3C10, "STATUS_DEAD": 7, "HOSTILE_SIDES": 0xF80,
+             "DOOR_TYPES": (41,), "BODIES": (2200,)},
+}
 TYPE_FIELDS = {0: 0, 2: 1, 4: 2, 6: 3, **{sl: sl - 4 for sl in range(8, 19)}}  # SL's offset -> the sequel's
 TYPES_SHOWN = 256  # (the types a read of the table may name: SL's layout served for this many)
 
@@ -555,6 +643,42 @@ def monster_lines(gd, creature: int, ac: Optional[int]) -> Tuple[List[str], List
     return short, full + said
 
 
+# The sequel's saving throw modifiers (628h:A7h, 83606h; SL's 79D3Ch, otherwise built): the target's and
+# the caster's effects as bit sets (608h:25h, 7FE93h: effect N's bit N % 8 of byte N / 8), the spell's
+# record (its +11h category word, +1Ah kinds word) and the target's sheet; what the routine adds, in its
+# order (RavGameData.save_modifiers). Effects by the sequel's numbers (effect_names).
+LIFE_DRAINED, WEATHER_GUARD, WEATHER_BANE = 59, 80, 107  # (-2 a level drained; +6, -20 against WEATHER_SPELLS)
+WEATHER_SPELLS = (32, 58, 69, 93)  # Lightning Bolt, Cone of Cold, Chain Lightning, Incendiary Cloud
+ENTRANCED, ENTRANCED_SPELLS = 33, (2, 39, 94, 131, 255)  # (-3 against the charms but Dominate)
+THORNS, THORNS_SPELL = 16, 188  # Bound By Thorns, -4 against Thorns of Binding
+SAVE_EFFECTS = ((44, -2, "Heat Exhaustion"), (88, -1, "effect 88"))  # (88: an unnamed effect of the game's)
+SPIRIT_ARMOR, BARKSKIN, BLESSED, BLURRY, BRAVE, PRAYER = 94, 6, 9, 13, 18, 72
+PROT_EVIL = 75
+PROT_KINDS = ((0x80, 78, 4, "Protected vs Lightning"), (0x04, 73, 3, "Protected vs Cold"),
+              (0x02, 77, 4, "Protected vs Fire"))  # (the record's kinds bit, the effect, its bonus)
+FIRE_SHIELD = 38  # (+2 against fire and cold with the spells as the manual has them: DSCLOG2's FSHIELD_SAVE)
+BLIND, DETECT_INVISIBLE, INVISIBLE, INVISIBLE_UNDEAD = 10, 25, 53, 54
+UNSEEN_RANGE = 8  # (the can't-see +4 only for a spell whose range at level 1 is this or less: 680h:20h)
+CLOSE_TARGETS = (3, 4, 5, 7, 8)  # (a record's +0Ch target kinds 680h:20h gives range 8)
+AREAS_SEG, AREA_SIZE = 0x41F1, 0x12  # (the areas' table, selector 3D0h: +5 bits 2-3 1 doubles the range)
+UNDEAD_RACE, DRUIDS, PSIONICIST_CLASS = 9, (5, 6, 7, 8), 12
+DWARF_RACE, HALFLING_RACE = 2, 6
+# DSCLOG2's PROT_SAVE (site 44): the protection items, the sequel's types (PROT_RING the sequel's Ring, the
+# others the mod's: ravager.mod_type), their slots SL's
+PROT_RING, PROT_CLOAK, PROT_ROBE = 45, 103, 127
+RING_SLOTS, CLOAK_SLOT, CHEST_SLOT = (4, 11), 12, 9
+ARMOUR_SLOTS, HAND_SLOTS = (0, 6, 7, 9), (3, 10)
+METAL = 2  # (a type's material, its SL +8h & 4Fh)
+
+
+# The sequel's to-hit routine (628h:66h): the attacker's effects (Blessed, Cursed, Slowed, Impeded, Weapon
+# Grafted, Heat Exhaustion), Berserk's by the preserver level, Soothe's Extra Hit Points, the halfling's range
+HIT_EFFECTS_RAV = ((9, 1, "Blessed"), (22, -1, "Cursed"), (91, -4, "Slowed"), (50, -2, "Impeded"),
+                   (106, 1, "Weapon Grafted"), (44, -2, "Heat Exhaustion"))
+BERSERK, BERSERK_CLASS, EXTRA_HP, SOOTHE, HALFLING_RANGE, ANTI_MAGIC = 102, 11, 34, 187, 0x1C, 4
+STINK_TO_HIT = 2  # (DSCLOG2's, on a nauseated attacker's swing)
+
+
 class RavGameData(game.GameData):
     """game.GameData for the sequel: its item names from its own list (NAMES_START), and only the mod's
     rule changes ported to it (ravager.RULES_PORTED: the spell slots, for one, are the game's own)."""
@@ -583,14 +707,17 @@ class RavGameData(game.GameData):
 
     def counted_ac(self, creature: int) -> Optional[int]:
         """SL's, and with RULE_HELMS a worn Helm of the sequel's type 55 counting AC 1 (DSCLOG2's
-        PROBE_HELM_AC: ravager.HELM_TYPE, HELM_NAME; its type reads AC 0, as a hat's)."""
+        PROBE_HELM_AC: ravager.HELM_TYPE, HELM_NAME; its type reads AC 0, as a hat's), and the mod's Bone
+        Helm (ravager.BONE_HELM_TYPE, whatever its name)."""
         ac = super().counted_ac(creature)
         if ac is None or not self.rules & game.RULE_HELMS:
             return ac
         for _, item, typ in self._worn(creature, game.CREATURE_ITEM_LISTS[:1]):
-            if len(item) >= ravager.ITEM_NAME + 2 and typ[0x0F] & 0x80 \
-                    and struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == ravager.HELM_TYPE \
-                    and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME:
+            if len(item) < ravager.ITEM_NAME + 2 or not typ[0x0F] & 0x80:
+                continue
+            kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
+            if kind == ravager.BONE_HELM_TYPE or (
+                    kind == ravager.HELM_TYPE and struct.unpack_from("<H", item, ravager.ITEM_NAME)[0] == ravager.HELM_NAME):
                 ac -= 1
         return ac
 
@@ -669,6 +796,197 @@ class RavGameData(game.GameData):
                      if struct.unpack_from("<H", rec, RAV_ITEM_TYPE)[0] == robe and rec[RAV_ITEM_SLOT] == robes.CHEST_SLOT),
                     0)
         return robes.slots(plus, bit, spell_level, total)
+
+    def spell_record(self, spell: int) -> bytes:
+        """SL's, for all of the sequel's spells (SPELL_COUNT: its psionic powers and monsters' powers go past
+        255, Psionic Blast 266)."""
+        if not 0 <= spell < SPELL_COUNT:
+            return b""
+        return self.guest.read((self.load_seg + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE,
+                               game.SPELL_SIZE)
+
+    def spell_rules(self, spell: int) -> Optional[game.SpellRules]:
+        """SL's (the save modifier in the record's +1Fh bits 1-4: the saving throw's 66E99h), for all the
+        sequel's spells."""
+        rec = self.spell_record(spell)
+        if len(rec) < game.SPELL_SIZE:
+            return None
+        nibble = (rec[0x1F] >> 1) & 0x0F
+        return game.SpellRules(nibble - 16 if nibble & 8 else nibble)
+
+    def _effect_ids(self, combatant: Optional[int]) -> set:
+        """The effects COMBATANT has (608h:25h's bit set: none for a combatant past 2Fh)."""
+        if combatant is None or not 0 <= combatant < 0x30:
+            return set()
+        return {x.id for x in self.effects() if x.owner == combatant}
+
+    def _first_effect(self, combatant: int, eid: int) -> Optional[bytes]:
+        """COMBATANT's first EID effect's 10-byte record (D8h:A8h), else None."""
+        count = self._word(game.EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return None
+        data = self.guest.read((self.load_seg + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF, count * 10)
+        for i in range(count):
+            rec = data[i * 10:i * 10 + 10]
+            if struct.unpack_from("<h", rec, 0)[0] == combatant and rec[6] == eid:
+                return rec
+        return None
+
+    def _side(self, combatant: Optional[int]) -> Optional[int]:
+        creature = self.combatant_creature(combatant) if combatant is not None else None
+        rec = self.creature(creature) if creature is not None else b""
+        return rec[game.CREATURE_SIDE] if len(rec) > game.CREATURE_SIDE else None
+
+    def _ability(self, creature: int, n: int) -> int:
+        rec = self.creature(creature)
+        return rec[game.CREATURE_ABILITIES + n] if len(rec) > game.CREATURE_ABILITIES + n else 9
+
+    def spell_range(self, spell: int, level: int = 1) -> int:
+        """A spell's range at LEVEL (680h:20h, 92115h): 8 for the close target kinds (the record's +0Ch),
+        else its +9 word + its +0Bh x LEVEL, doubled for an area (+17h) of the kind 1 (the areas' +5 bits
+        2-3); 0 made 1."""
+        rec = self.spell_record(spell)
+        if len(rec) < 0x18:
+            return 0
+        if rec[0x0C] in CLOSE_TARGETS:
+            return UNSEEN_RANGE
+        reach = struct.unpack_from("<H", rec, 9)[0] + rec[0x0B] * level
+        if rec[0x17] != 0xFF:
+            kind = self.guest.read((self.load_seg + AREAS_SEG) * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
+            if kind and (kind[0] >> 2) & 3 == 1:
+                reach *= 2
+        return reach or 1
+
+    def save_protection(self, creature: int, spell: int) -> List[Tuple[int, str]]:
+        """What DSCLOG2's PROT_SAVE (site 44, first in the save modifiers) adds: the better ring of
+        protection's plus, a cloak of protection's without magical or metal armour or a shield in a hand,
+        the Veiled Robe +1, the Ashen Robe +1 against a wizard's or priest's spell (PROT_SCAN's reading)."""
+        from . import restrict
+        rings, cloak, robe, blocked = [0], 0, 0, False
+        for _, item, typ in self._worn(creature):
+            kind, slot = struct.unpack_from("<H", item, game.ITEM_TYPE)[0], item[game.ITEM_SLOT]
+            plus = struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0]
+            if kind == PROT_RING:
+                if slot in RING_SLOTS and plus > 0:
+                    rings.append(plus)
+            elif kind == PROT_CLOAK:
+                if slot == CLOAK_SLOT:
+                    cloak = plus
+            elif kind == PROT_ROBE:
+                if slot == CHEST_SLOT:
+                    robe = plus & 0xFF
+            elif len(typ) == game.ITEM_TYPE_SIZE:
+                if typ[0] & 4:
+                    blocked |= slot in HAND_SLOTS
+                elif slot in ARMOUR_SLOTS and restrict.is_armour(typ):
+                    blocked |= plus > 0 or typ[8] & 0x4F == METAL
+        out = [(max(rings), "Ring of Protection")]
+        if cloak > 0 and not blocked:
+            out.append((cloak, "Cloak of Protection"))
+        if robe >= 2 or robe == 1 and spell <= RAV_SPELL_LAST:
+            out.append((1, "Veiled Robe" if robe >= 2 else "Ashen Robe"))
+        return out
+
+    def save_modifiers(self, target: int, caster: int, spell: int, save: int) -> List[Tuple[int, str]]:
+        """What the sequel adds to a saving throw's d20 (its routine 628h:A7h, 83606h, with DSCLOG2's sites
+        in it: PROT_SAVE and the kits', Blur's and Fire Shield's as the manual has them, CON as in AD&D),
+        as [(amount, why), ...], in the routine's order. Its -100 and +100 (Chaos, Cloudkill, Scare, Color
+        Spray) and Dismissal's levels are left to the save line ("cannot save", "saves automatically",
+        "levels")."""
+        ti, ci = self.combatant_creature(target), self.combatant_creature(caster)
+        if ti is None:
+            return []
+        rec, sheet = self.spell_record(spell), self.sheet(ti)
+        if len(rec) < 0x20 or len(sheet) < game.SHEET_SIZE or len(self.creature(ti)) < game.CREATURE_SIZE:
+            return []
+        category, kinds = struct.unpack_from("<H", rec, 0x11)[0], struct.unpack_from("<H", rec, 0x1A)[0]
+        mine, theirs = self._effect_ids(target), self._effect_ids(caster)
+        caster_sheet = self.sheet(ci) if ci is not None else b""
+        out = self.save_protection(ti, spell)  # (DSCLOG2's PROT_SAVE, then its KIT_SAVE)
+        from . import kits
+        for kid in self.kit_ids(ti):
+            if kits.save(kid, spell, kinds):
+                out.append((kits.save(kid, spell, kinds), kits.name(kid)))
+        drained = self._first_effect(target, LIFE_DRAINED)
+        if drained is not None and drained[8]:
+            out.append((-2 * drained[8], f"Life Drained ({drained[8]})"))
+        if spell in WEATHER_SPELLS:
+            if WEATHER_GUARD in mine:
+                out.append((6, "Protected vs Weather"))
+            if WEATHER_BANE in mine:
+                out.append((-20, "Vulnerable to Weather"))
+        if ENTRANCED in mine and spell in ENTRANCED_SPELLS:
+            out.append((-3, "Entranced"))
+        if spell == THORNS_SPELL and THORNS in mine:
+            out.append((-4, "Bound By Thorns"))
+        out += [(amount, why) for eid, amount, why in SAVE_EFFECTS if eid in mine]
+        if SPIRIT_ARMOR in mine and save != game.PPD_SAVE:
+            out.append((3, "Spirit Armored"))
+        if BARKSKIN in mine:
+            out.append((1, "Barkskin"))
+        manual = self.spells_manual()
+        if manual and BLURRY in mine:  # (DSCLOG2's BLUR_SAVE)
+            out.append((1, "Blurry"))
+        if BLESSED in mine:
+            out.append((1, "Blessed"))
+        if PROT_EVIL in mine and len(caster_sheet) > 0x14 and caster_sheet[0x14] in game.EVIL_ALIGNMENTS:
+            out.append((2, "Protected vs Evil, an evil caster"))
+        for bit, eid, amount, why in PROT_KINDS:
+            if kinds & bit and eid in mine:
+                out.append((amount, why))
+            if bit == 0x04 and manual and kinds & 0x06 and FIRE_SHIELD in mine:  # (DSCLOG2's FSHIELD_SAVE)
+                out.append((2, "Fire Shielded"))
+        if PRAYER in mine:
+            prayer = self._first_effect(target, PRAYER)
+            same = prayer is not None and self._side(struct.unpack_from("<h", prayer, 2)[0]) == self._side(target)
+            out.append((1 if same else -1, "Prayer, " + ("its caster's side" if same else "the other side's")))
+        if caster is not None and 0 <= caster < 0x30 and self.spell_range(spell) <= UNSEEN_RANGE:
+            undead = len(caster_sheet) > 0x12 and caster_sheet[0x12] == UNDEAD_RACE
+            if BLIND in theirs:
+                out.append((4, "the caster is Blind"))
+            elif DETECT_INVISIBLE not in theirs and (INVISIBLE in mine or undead and INVISIBLE_UNDEAD in mine):
+                out.append((4, "Invisible to the caster"))
+        if category & game.FEAR_CATEGORY and BRAVE in mine:
+            out.append((4, "Cloak of Bravery"))
+        if kinds & 0x82 and any(self.class_level(ti, c) for c in DRUIDS):
+            out.append((2, "druid against fire and electricity"))
+        if category & 0x06 and self.dual_level(ti, PSIONICIST_CLASS):
+            out.append((2, "psionicist against the mind"))
+        if category & game.CATEGORY_DODGE:
+            dex = self._ability(ti, 1)
+            adjust = -struct.unpack("b", self.guest.read(self.ds * 16 + game.DEX_AC + dex, 1))[0] if dex < 26 else 0
+            if adjust:
+                out.append((adjust, f"DEX {dex} dodging"))
+        if category & game.SAVE_WIS_CATEGORY:
+            wis = self._ability(ti, 4)
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + game.SAVE_WIS + wis, 1))[0] if wis < 26 else 0
+            if adjust:
+                out.append((adjust, f"WIS {wis}"))
+        if save == game.PPD_SAVE:
+            con, race = self._ability(ti, 2), sheet[game.SHEET_RACE]
+            small = race in (DWARF_RACE, HALFLING_RACE)
+            if small:
+                out.append((con * 2 // 7, f"{'dwarf' if race == DWARF_RACE else 'halfling'} CON {con}"))
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + game.SAVE_CON + con, 1))[0] if con < 26 else 0
+            if small and self.rules & game.RULE_CON:
+                adjust = 0  # (DSCLOG2's CON_SAVE)
+            if adjust:
+                out.append((adjust, f"CON {con}"))
+        return [(amount, why) for amount, why in out if amount]
+
+    def dual_level(self, creature: int, cls: int) -> int:
+        """The level in CLS that counts (98h:C1h, 1D111h): a human's class past the first only while its
+        level is below the first's (the game's test, as it is)."""
+        sheet = self.sheet(creature)
+        if len(sheet) < game.SHEET_SIZE:
+            return 0
+        for n in range(3):
+            if sheet[game.SHEET_CLASSES + n] == cls:
+                level = sheet[game.SHEET_LEVELS + n]
+                if level and n and sheet[game.SHEET_RACE] == 1 and sheet[game.SHEET_LEVELS] <= level:
+                    return 0
+                return level
+        return 0
 
     _names: Optional[List[str]] = None
     _names_at: Optional[int] = None
@@ -808,6 +1126,8 @@ class RavDiceLog(dicelog.DiceLog):
         apply_layout()
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
         self._next_slots = 0.0
+        self._next_stock = 0.0
+        self._stock: Optional[Dict[int, List[bytes]]] = None  # (shopstock's: the sellers' new items, read once)
         keys, auto = self.quicksave.keys, self.quicksave.auto
         self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
         self.quicksave.keys, self.quicksave.auto = keys, auto
@@ -1054,19 +1374,135 @@ class RavDiceLog(dicelog.DiceLog):
                                      lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
         on = self.ring_mode != rings.OFF
         changes, = struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))
-        if on and changes and changes != self._red_at:
+        if on and changes and changes != self._red_at and not self._gold:  # (RED gold while Alt marks: _marks)
             dac_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_DAC, 2))
             far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
             self.guest.write(red_at, rings.red_table(self.guest.read(far * 16 + dac_off, 768), RED_FIRST, RED_LAST))
             self._red_at = changes
-        want = int(on and self._red_at is not None)
+        want = int(bool((on and self._red_at is not None) or self._gold))
         if want != self._rings_on:
             self.guest.write(self.tsr_hdr + rings.TSR_RINGS_ON, struct.pack("<H", want))
             self._rings_on = want
         return out
 
     _red_at: Optional[int] = None  # (DSCLOG2's count of palette changes RED was made at)
+    _gold: Optional[int] = None  # (while Alt's rings are up: DSCLOG2's count of palette changes RED was made gold at)
+    _ring_tab: Optional[bytes] = None  # (RING_TAB as last written)
+
+    def _marks(self, now: float) -> None:
+        """SL's (Alt held on the map out of a fight: a gold ring under everything that can be used, usable.py, the
+        names of those nearest the pointer), on DSCLOG2's RING_TAB (its header's +246) and RED, which is the Tab
+        ring's red again once Alt is let go (rings.py's Rings has the table's one owner in SL; here _target_pass
+        makes RED red, and leaves it while the marks are up). Each change of the table has the view drawn again
+        (DSCLOG2's VIEW_REDRAW)."""
+        if self.game is None or not self._fight_keys_helper() or self._label_slots() is None:
+            return
+        if self.show_usable and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = dicelog._game_font(self.game_dir)
+        table = self._usable.update(self.game, self.tsr_hdr, self.show_usable, now, self._labels)
+        hdr = self.tsr_hdr
+        far = struct.unpack("<H", self.guest.read(hdr + rings.TSR_FAR_SEG, 2))[0] * 16
+        tab_at = far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_RING_TAB, 2))[0]
+        red_at = far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_RED, 2))[0]
+        changes = self._dac_changes()
+        with self._writable([(tab_at, rings.THINGS), (red_at, 256), (hdr + FK_VIEW_REDRAW, 2),
+                             (hdr + rings.TSR_RINGS_ON, 2)]):
+            want = table or bytes(rings.THINGS)
+            dac = lambda: self.guest.read(far + struct.unpack("<H", self.guest.read(hdr + rings.TSR_DAC, 2))[0], 768)
+            if table is not None and self._gold != changes:  # (gold, made again when the palette changes)
+                self.guest.write(red_at, rings.gold_table(dac(), RED_FIRST, RED_LAST))
+                self._gold = changes
+                if not self._rings_on:
+                    self.guest.write(hdr + rings.TSR_RINGS_ON, struct.pack("<H", 1))
+                    self._rings_on = 1
+            elif table is None and self._gold is not None:  # (Alt let go: the Tab ring's red again)
+                self._gold = None
+                self.guest.write(red_at, rings.red_table(dac(), RED_FIRST, RED_LAST))
+                self._red_at = changes
+            if want != self._ring_tab:
+                self.guest.write(tab_at, want)
+                self._ring_tab = want
+                shadows.redraw(self.game, hdr)
     _rings_on: Optional[int] = None  # (RINGS_ON as last written)
+
+    @contextmanager
+    def _writable(self, ranges: List[Tuple[int, int]]) -> Iterator[None]:
+        """RANGES (address, size) writable while a pass runs, then read only again."""
+        before = self.guest.writable
+        self.guest.writable = before + [r for r in ranges if r not in before]
+        try:
+            yield
+        finally:
+            self.guest.writable = before
+
+    def _fight_keys_helper(self) -> bool:
+        """Whether DSCLOG2 has the squares, VIEW_REDRAW and RING_TAB (its header's +246, RING_TAB's offset, 0 in a
+        helper before them)."""
+        return self.tsr_hdr is not None and self.guest.read(self.tsr_hdr + rings.TSR_RING_TAB, 2) != b"\0\0"
+
+    def _squares_ranges(self) -> List[Tuple[int, int]]:
+        """What squares.Squares writes: SQUARES_ON, VIEW_REDRAW, SQ_MAP in DSCLOG2's PSP and LIGHT in its far block."""
+        hdr = self.tsr_hdr
+        far, = struct.unpack("<H", self.guest.read(hdr + rings.TSR_FAR_SEG, 2))
+        light, = struct.unpack("<H", self.guest.read(hdr + FK_LIGHT, 2))
+        return [(hdr + FK_VIEW_REDRAW, 2), (hdr + FK_SQUARES_ON, 2),
+                (hdr - squares.PSP_BYTES + squares.SQ_MAP_PSP, squares.MAP_BYTES), (far * 16 + light, 256)]
+
+    def _dac_changes(self) -> int:
+        """DSCLOG2's count of the palette's changes (DAC_TICK's): LIGHT made again when it counts (SL's
+        shadows.Shadows.palettes)."""
+        return struct.unpack("<H", self.guest.read(self.tsr_hdr + DSCLOG2_DAC_CHANGES, 2))[0]
+
+    def _squares_pass(self, now: float) -> None:
+        """SL's squares in reach (squares.py, in SL's _drawn four times a second), on DSCLOG2's SQUARES, and
+        Alt's rings (_marks) as often."""
+        if now < self._next_squares or self.game is None or not self._fight_keys_helper():
+            return
+        self._next_squares = now + dicelog.EFFECT_INTERVAL
+        with self._writable(self._squares_ranges()):
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares and self.squares_shown, self._dac_changes())
+        self._marks(now)  # (Alt's rings: the view scrolled, the names nearest the pointer)
+
+    _next_squares = 0.0
+
+    def _squares_key(self, now: float) -> List[str]:
+        """SL's (R on the map in a fight shows or hides the squares in reach, read from the BIOS keyboard
+        buffer: keywatch.py; the sequel's map keys, its table at 1F091h, have no R), on DSCLOG2's SQUARES."""
+        if self.game is None:
+            return []
+        pressed = [key for key in self._keys.take(self.game.guest) if key in (keywatch.KEY_R, keywatch.KEY_SHIFT_R)]
+        if not pressed or not self.show_squares or not self._fight_keys_helper():
+            return []
+        if self.game._word(quicksave.SCREEN_IS) != quicksave.ON_MAP or not self.game.in_combat():
+            return []
+        if len(pressed) % 2 == 0:  # (pressed twice between two looks: as it was)
+            return []
+        self.squares_shown = not self.squares_shown
+        dicelog._remember({"squares_shown": self.squares_shown})
+        with self._writable(self._squares_ranges()):
+            self._squares.update(self.game, self.tsr_hdr, self.squares_shown, self._dac_changes())
+        turn = self.game.whose_turn()
+        self._float(turn if turn is not None and turn < game.PARTY_SIZE else 0,
+                    "Squares shown" if self.squares_shown else "Squares hidden", labels.SPELL_INK, now)
+        return ["Squares in reach: shown (R hides them)" if self.squares_shown
+                else "Squares in reach: hidden (R shows them)"]
+
+    def _move_back_pass(self) -> List[str]:
+        """SL's (moveback.py: F10 after the last step gives the walk back), the member's turn flags and its
+        walk's words made writable while it runs."""
+        if self.game is None or not self.game.in_combat():
+            return super()._move_back_pass()
+        turn = self.game.whose_turn()
+        creature = self.game.combatant_creature(turn) if turn is not None and turn < game.PARTY_SIZE else None
+        if creature is None:
+            return super()._move_back_pass()
+        load = self.game.load_seg
+        flags = (load + moveback.POINTS_SEG) * 16 + moveback.FLAGS_OFF + creature * 2
+        walk = (load + moveback.WALK_SEG) * 16
+        with self._writable([(flags, 2), (walk + moveback.WALK_STEP + turn * moveback.WALK_STEP_SIZE, 1),
+                             (walk + moveback.WALK_LEFT + turn * moveback.WALK_LEFT_SIZE, 2)]):
+            return super()._move_back_pass()
 
     def _quick_ranges(self) -> bool:
         """DSCLOG2's quick save words (its header's +1904 to +1917), SAVE_TEXT, and the game's page letters
@@ -1095,6 +1531,59 @@ class RavDiceLog(dicelog.DiceLog):
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
             super()._write_slots()
+
+    def _hit_effects(self, attacker: int, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                     item_type: Optional[int], e) -> List[Tuple[str, int]]:
+        """The sequel's to-hit routine (628h:66h, 8599Eh; SL's 5B8h:EDh), besides STR or DEX: the target's
+        Life Drained, the attacker's effects (HIT_EFFECTS_RAV; Berserk by its preserver level), a Soothe's
+        Extra Hit Points in melee, the target's Blurry, Prayer, a halfling's +1 with a sling or a thrown
+        weapon (a range past HALFLING_RANGE); the girdle of Urnst (DSCLOG2's ITEM_REAR)."""
+        g = self.game
+        mine, theirs = g._effect_ids(attacker_combatant), g._effect_ids(target_combatant)
+        parts: List[Tuple[str, int]] = []
+        drained = g._first_effect(target_combatant, LIFE_DRAINED)
+        if drained is not None and drained[8]:
+            parts.append((f"target's Life Drained ({drained[8]})", -2 * drained[8]))
+        parts += [(name, value) for eid, value, name in HIT_EFFECTS_RAV if eid in mine]
+        if BERSERK in mine:
+            level = g.dual_level(attacker, BERSERK_CLASS) - 1
+            parts.append(("Berserk", level - int(level / 3)))
+        if EXTRA_HP in mine and mode is not None and mode <= 1:
+            extra = g._first_effect(attacker_combatant, EXTRA_HP)
+            if extra is not None and struct.unpack_from("<H", extra, 4)[0] == SOOTHE:
+                parts.append(("Soothe", -2))
+        if BLURRY in theirs:
+            parts.append(("target's Blurry", -2))
+        if PRAYER in mine:
+            prayer = g._first_effect(attacker_combatant, PRAYER)
+            same = prayer is not None and g._side(struct.unpack_from("<h", prayer, 2)[0]) == g._side(attacker_combatant)
+            parts.append(("Prayer", 1 if same else -1))
+        sheet = g.sheet(attacker)
+        if len(sheet) > game.SHEET_RACE and sheet[game.SHEET_RACE] == HALFLING_RACE and mode is not None \
+                and mode > HALFLING_RANGE and item_type is not None and 0 <= item_type < 0x400:
+            flags = g.guest.read(game.far_pointer(g.guest, g.ds, game.ITEM_TYPES_PTR)
+                                 + item_type * game.ITEM_TYPE_SIZE, 1)
+            if flags and (flags[0] & 0x10 or flags[0] & 2 and not flags[0] & 8):
+                parts.append(("halfling", 1))
+        on = lambda combatant, eid: eid in g._effect_ids(combatant)
+        return parts + self._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
+
+    def _mod_hit_effects(self, attacker_combatant: int, target_combatant: int, mode: Optional[int],
+                         item_type: Optional[int], on) -> List[Tuple[str, int]]:
+        """SL's, the girdle of Urnst alone (DSCLOG2's ITEM_REAR): the sequel has no Fogbolt, and a stinkpot's
+        Nauseated is taken off after the set-up (_after_setup)."""
+        return [part for part in super()._mod_hit_effects(attacker_combatant, target_combatant, mode, item_type, on)
+                if part[0] == "target's Girdle of Urnst"]
+
+    def _after_setup(self, attacker_combatant: Optional[int]) -> List[Tuple[str, int]]:
+        """A nauseated attacker's -2 (DSCLOG2's STINK_SWING, at the hit routine's swing: after the set-up)."""
+        if attacker_combatant is not None and ravager.NAUSEATED in self.game._effect_ids(attacker_combatant):
+            return [("Nauseated", -STINK_TO_HIT)]
+        return []
+
+    def _plus_counts(self, target_combatant: int, on) -> bool:
+        """The weapon's plus counts unless the target has an Anti Magic Shell (the set-up's 608h:20h, 5C745h)."""
+        return not on(target_combatant, ANTI_MAGIC)
 
     def _is_save_roll(self, e) -> bool:
         """SL's, with the sequel's saving throw's frame (66D26h): the target's creature record's far
@@ -1159,7 +1648,8 @@ class RavDiceLog(dicelog.DiceLog):
         (_creation_pass), the combat log's panel (_panel_pass), and the dialogue and message boxes for the
         Dialogue and Journal tabs and the "Message:" lines (_take_text, DSCLOG2's TEXT; the journal its own
         chain: _journal_sync): the rest reads and writes what isn't ported yet."""
-        out = self._step(lambda: self.hp_changes(now))
+        out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
+        out += self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
         self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
@@ -1170,6 +1660,10 @@ class RavDiceLog(dicelog.DiceLog):
             self._labels.on = self.floating_names
             self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
         out += self._step(lambda: self._target_pass(now))  # (Tab, Enter and the ring: DSCLOG2's TARGETING)
+        out += self._step(lambda: self._squares_key(now), quiet=True)  # (R: the squares in reach, SQUARES)
+        self._step(lambda: self._squares_pass(now), quiet=True)
+        out += self._step(self._move_back_pass, quiet=True)  # (F10 after the last step: moveback.py)
+        self._step(lambda: self._usable_key(now), quiet=True)  # (Alt held: what can be used ringed, usable.py)
         if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)
             self._step(lambda: self._hover_pass(now))
         if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
@@ -1179,6 +1673,7 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._take_text(now))
         out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
         out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
+        out += self._step(lambda: self._stock_pass(now))  # (a saved game's sellers given the new items: shopstock)
         if self.game is not None and self.game.rules & game.RULE_STEALTH:
             out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
         if now >= self._next_slots:
@@ -1217,6 +1712,79 @@ class RavDiceLog(dicelog.DiceLog):
             yield
         finally:
             self.guest.writable = before
+
+    def _gear_pass(self) -> List[str]:
+        """Fuller starting gear (startgear.fill, the sequel's items: rav_items), on DSCLOG2's GEAR_DONE: the
+        Loader's heartbeat (LOADER_BEAT, its header's +1865) written every pass, and with GEAR_DUE (+1830) set
+        the new character DONE has just made (GEAR_WHO, +1867: game.being_new's GD.making) given its gear
+        while DONE waits; then the members whose items changed (GEAR_GIVEN, +1831) and GEAR_DUE cleared. The
+        item moves writable while it runs (_items_writable); the game's item lists moving: the next pass."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        hdr = self.tsr_hdr
+        want = [(hdr + dicelog.TSR_GEAR_DUE, 2), (hdr + dicelog.TSR_LOADER_BEAT, 2), (hdr + dicelog.TSR_GEAR_WHO, 1)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.write(hdr + dicelog.TSR_LOADER_BEAT, self.guest.read(dicelog.BIOS_TIMER, 2))
+        if not self.guest.read(hdr + dicelog.TSR_GEAR_DUE, 1)[0]:
+            return []
+        out: List[str] = []
+        if self.starting_gear:
+            if not self._items_still():
+                return []
+            def items() -> Dict[int, frozenset]:
+                mine: Dict[int, set] = {}
+                for i in self.game.party_items():
+                    mine.setdefault(i.member, set()).add((i.index, i.record))
+                return {m: frozenset(v) for m, v in mine.items()}
+            before = items()
+            who = self.guest.read(hdr + dicelog.TSR_GEAR_WHO, 1)[0]
+            self.game.making = None if who == 0xFF else who
+            try:
+                with self._items_writable():
+                    out += startgear.fill(self.game)
+            finally:
+                self.game.making = None
+                itemgate.release(self.game)
+            after = items()
+            given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
+            self.guest.write(hdr + dicelog.TSR_GEAR_GIVEN, bytes((given,)))
+        self.guest.write(hdr + dicelog.TSR_GEAR_DUE, b"\0")
+        return out
+
+    def _stock_pass(self, now: float) -> List[str]:
+        """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the
+        new items are on (the "new_items" setting): the sellers loaded and not yet marked, then, with the game's
+        item lists still (_items_still), their items added and their mark set, the item moves and each one's
+        lists and mark writable while it runs (_items_writable)."""
+        if self.tsr_hdr is None or self.game is None or now < self._next_stock:
+            return []
+        self._next_stock = now + STOCK_INTERVAL
+        if (getattr(self, "_settings", None) or {}).get("new_items", True) is False:
+            return []
+        if self._stock is None:
+            self._stock = shopstock.from_file(shopstock.default_path())
+        if not self._stock:
+            return []
+        due = shopstock.due(self.game, self._stock)
+        if not due or not self._items_still():
+            return []
+        creatures = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
+        out: List[str] = []
+        try:
+            with self._items_writable():
+                before = self.guest.writable
+                for c in due:
+                    at = creatures + c * game.CREATURE_SIZE
+                    want = [(at + game.CREATURE_ITEM_LISTS[0], 6), (at + shopstock.CREATURE_MARK, 1)]
+                    self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+
+                    def mark(creature: int, at: int = at) -> None:
+                        self.guest.write(at + shopstock.CREATURE_MARK, bytes((shopstock.MARKED,)))
+                    out += shopstock.top_up(self.game, c, self._stock, mark)
+                self.guest.writable = before
+        finally:
+            itemgate.release(self.game)
+        return out
 
     def _loot_pass(self) -> List[str]:
         """Shattered Lands' (T or Shift+T with a container's window open: what is in it into the party's

@@ -23,7 +23,8 @@ import threading
 import time
 from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
-from . import champions, dosboxx, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
+from . import (champions, dosboxx, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome,
+               worldgear)
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -731,10 +732,21 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
         # him off, the region's own: said too, not dropped unseen)
         gifts_too = f"; with it the gifts placed in {kalzith.REGION_FILE}" if pens_clones else ""
-        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
-                        + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             _remove_override(os.path.join(DOS_DIR, name))
+        # ... but the item types and names, which the Loader's items need (itemtables.py), in a copy
+        # of their own if they can be
+        items_too = ""
+        source = _find_file(game_dir, kalzith.SCRIPTS_FILE)
+        try:
+            if not source:
+                raise OSError(f"no {kalzith.SCRIPTS_FILE}")
+            itemtables.write(source, os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
+            items_too = "; with it the new items' types and names"
+            _remove_override(os.path.join(DOS_DIR, kalzith.SCRIPTS_FILE))
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
+                        + gifts_too + items_too)
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
     pointer = os.path.join(DOS_DIR, scenepointer.POINTER_FILE)
     if not scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE),
@@ -1094,11 +1106,13 @@ def engine_name() -> str:
 def started_line(game_dir: str) -> str:
     """The log's line for the game started from GAME_DIR: in DOSBox, in DOSBox-X (which program),
     or as Dark Sun Recompiled (which program), so a player sees which one runs."""
+    from . import ravager
     if STARTED:
         return f"Starting Shattered Lands from {game_dir} as Dark Sun Recompiled ({STARTED})."
+    name = "Wake of the Ravager" if ravager.is_wotr_dir(game_dir) else "Shattered Lands"
     if STARTED_ENGINE == dosboxx.DOSBOX_X:
-        return f"Starting Shattered Lands from {game_dir} in DOSBox-X ({STARTED_DOSBOX_X})."
-    return f"Starting Shattered Lands from {game_dir} in DOSBox."
+        return f"Starting {name} from {game_dir} in DOSBox-X ({STARTED_DOSBOX_X})."
+    return f"Starting {name} from {game_dir} in DOSBox."
 
 
 def closed_line(code: int) -> str:
@@ -1329,6 +1343,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     global STARTED
     from . import ravager
     STARTED = None
+    del LEFT_OUT[:]  # (Shattered Lands' last start's: not this game's, so not said again after it, 2026-11-26)
     if dosboxx.engine(settings) == dosboxx.DOSBOX_X:
         return _launch_wotr_dosbox_x(game_dir, settings)
     dosbox_dir = _find_file(game_dir, "DOSBOX")
@@ -1337,7 +1352,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     exe = dosbox_dir and _find_file(dosbox_dir, "DOSBox.exe")
     if not exe or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Wake of the Ravager")
-    problem = ravager.prepare(game_dir, DOS_DIR, settings)
+    problem = ravager.prepare(game_dir, DOS_DIR, settings, find_game_dir())  # (Shattered Lands': the new items' pictures)
     if problem:
         raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
     try:  # (the roster's and the saves' sheets the copy's 48h: ravager.widen_files)

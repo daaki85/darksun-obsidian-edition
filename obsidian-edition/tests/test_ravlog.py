@@ -232,7 +232,9 @@ class WindowTests(unittest.TestCase):
         data.rules = game.RULE_ADND_TABLES
         self.assertEqual([data.adnd_slots(11, 16, s) for s in range(1, 10)], [5, 5, 5, 5, 5, 3, 2, 1, 0])
         self.assertEqual(data.adnd_slots(5, 12, 3), 5)
-        self.assertIsNone(data.adnd_slots(13, 12, 1))  # (a ranger's the game's)
+        self.assertEqual([data.adnd_slots(13, 12, s) for s in (1, 2, 3)], [2, 2, 1])  # (a ranger's AD&D's)
+        self.assertEqual(data.adnd_slots(5, 16, 1), 6)  # (a druid's 15th's past it)
+        self.assertIsNone(data.adnd_slots(17, 12, 1))  # (a thief has none)
         data.rules = 0
         self.assertIsNone(data.adnd_slots(11, 16, 1))
 
@@ -500,11 +502,12 @@ class PassTests(unittest.TestCase):
             return bytes(rec)
         typ = bytearray(game.ITEM_TYPE_SIZE)
         typ[0x0F] = 0x80
-        worn = [(1, item(ravager.HELM_TYPE, ravager.HELM_NAME), bytes(typ)), (2, item(ravager.HELM_TYPE, 0x27), bytes(typ))]
+        worn = [(1, item(ravager.HELM_TYPE, ravager.HELM_NAME), bytes(typ)), (2, item(ravager.HELM_TYPE, 0x27), bytes(typ)),
+                (3, item(ravager.BONE_HELM_TYPE, 0x103), bytes(typ))]  # (the mod's Bone Helm counts too)
         real = game.GameData.counted_ac
         game.GameData.counted_ac = lambda self, c: 7
         try:
-            for rules, ac in ((game.RULE_HELMS, 6), (0, 7)):
+            for rules, ac in ((game.RULE_HELMS, 5), (0, 7)):
                 data = ravlog.RavGameData(FakeGuest(), 0x4982, rules=rules)
                 data._worn = lambda c, lists=None: worn
                 self.assertEqual(data.counted_ac(0), ac)
@@ -856,3 +859,50 @@ class BlastSaveCreationTests(unittest.TestCase):
         out = log._creation_pass(3.0)
         self.assertEqual(out[0], "Character creation, STR 17: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16, "
                                  "raised to 17 (the classes' least)")
+
+
+class StartGearTests(unittest.TestCase):
+    """The sequel's items for fuller starting gear (ravlog.RAV_PLAIN, RAV_LEATHER, RAV_CLOAK): each record its
+    type at +0Ah, a weapon of the kind it is listed under (ravager.rav_kinds), in no list and no slot; with
+    the sequel there, each the record of one of OBJEX.GFF's objects (its own picture, value and name)."""
+
+    def test_records(self):
+        from dsloader import ravager, ravlog
+        kinds = ravager.rav_kinds()
+        for kind, choices in ravlog.RAV_PLAIN.items():
+            for type_, rec in choices:
+                self.assertEqual(len(rec), ravager.ITEM_SIZE)
+                self.assertEqual(struct.unpack_from("<H", rec, 0x0A)[0], type_)
+                self.assertEqual(kinds.get(type_), kind, type_)
+                self.assertEqual((struct.unpack_from("<H", rec, 4)[0], rec[0x13], rec[0x16]), (9999, 0xFF, 0))
+        self.assertEqual([struct.unpack_from("<H", r, 0x0A)[0] for _, r in ravlog.RAV_LEATHER], [32, 3, 64])
+
+    @unittest.skipUnless(os.environ.get("DSUN_WOTR"), "DSUN_WOTR: the player's Wake of the Ravager folder")
+    def test_from_the_game(self):
+        import glob
+        from dsloader import dataitems, gff, ravlog
+        path = next(f for f in glob.glob(os.path.join(os.environ["DSUN_WOTR"], "*")) if f.lower().endswith("objex.gff"))
+        objects = gff.read_gff(open(path, "rb").read())
+        records = set()
+        for key, chunk in objects.items():
+            if key[0] == "RDFF":
+                try:
+                    recs, _ = dataitems.records(chunk)
+                except Exception:
+                    continue
+                records.update(r.data[:0x17] for r in recs[:1])
+        ours = [r for c in ravlog.RAV_PLAIN.values() for _, r in c] + [r for _, r in ravlog.RAV_LEATHER] + [ravlog.RAV_CLOAK]
+        for rec in ours:
+            self.assertIn(rec, records, rec.hex())
+
+    def test_rebound(self):
+        """While the sequel's layout is on, startgear's items are the sequel's."""
+        from dsloader import ravlog, startgear
+        sl = startgear.LEATHER
+        ravlog.apply_layout()
+        try:
+            self.assertIs(startgear.LEATHER, ravlog.RAV_LEATHER)
+            self.assertIs(startgear._weapon, ravlog.rav_weapon)
+        finally:
+            ravlog.restore_layout()
+        self.assertIs(startgear.LEATHER, sl)

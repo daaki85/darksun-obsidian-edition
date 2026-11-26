@@ -61,7 +61,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 
 ## Classes and Kits
 
-- **[Changed]** Levels stop at **749,999 XP**, shared out between a character's classes, instead of 9th level *(was 9th level for every class)* ([level cap](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#level-cap-by-xp)).
+- **[Changed]** Levels stop at **749,999 XP**, shared out between a character's classes, instead of 9th level, and XP stops there too *(was 9th level for every class, and XP counting on to 2,000,000,000)* ([level cap](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#level-cap-by-xp)).
 - **[Changed]** Creation keeps what the die rolls: the six scores never add up to more than it gave, and hit points stay as rolled *(was any score clicked up to its most)* ([as rolled](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#scores-and-hit-points-as-rolled)).
 - **[New]** **STORE** and **RECALL** on the creation screen, as in Baldur's Gate ([STORE and RECALL](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#store-and-recall-on-the-creation-screen)).
 - **[Fixed]** Class restrictions hold: the game's own item lists still need only one of a character's classes, and AD&D's limits on armour, shields and weapons hold for every class, the strictest winning *(was the game's lists alone)*; thieves wear light armour, a multiclass preserver can't cast in armour; an air cleric uses daggers and cahulaks ([class restrictions](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#class-restrictions)).

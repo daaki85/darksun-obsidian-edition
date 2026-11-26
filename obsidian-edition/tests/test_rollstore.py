@@ -107,3 +107,60 @@ class RollStoreTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PackedTests(unittest.TestCase):
+    """art's packed form (the sequel's carved buttons): written and read back the same."""
+
+    def test_round_trip(self):
+        from dsloader.art import decode_packed, packed_frames
+        frames = [[[None, 5, 9], [200, None, 5]], [[7, 7, 7], [None, None, 1]]]
+        chunk = packed_frames(frames)
+        for i, rows in enumerate(frames):
+            self.assertEqual(decode_packed(chunk, i), (3, 2, rows))
+
+    def test_one_colour_reads_as_planar(self):
+        """A one-colour frame: the packed form and planar_frame's are the same bytes."""
+        from dsloader.art import packed_frame, planar_frame
+        rows = [[None, 9, 9, None], [9, None, None, 9]]
+        self.assertEqual(packed_frame(rows), planar_frame(rows))
+
+
+WOTR = os.environ.get("DSUN_WOTR")
+
+
+@unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
+class RavagerTests(unittest.TestCase):
+    """The sequel's STORE and RECALL: its creation window 19503 with the two, their pictures made from its
+    own carved buttons (packed), and DSCLOG2's RS_CLICK at site 83."""
+
+    def setUp(self):
+        import glob
+        from dsloader import gff
+        path = next(f for f in glob.glob(os.path.join(WOTR, "*")) if f.lower().endswith("resource.gff"))
+        self.resource = gff.read_gff(open(path, "rb").read())
+        self.out = rs.rav_chunks(self.resource)
+
+    def test_window(self):
+        self.assertEqual(_items(self.out[("WIND", 19503)])[-2:], [(rs.STORE, *rs.STORE_AT), (rs.RECALL, *rs.RECALL_AT)])
+        self.assertLessEqual(rs.RECALL_AT[0] + rs.RECALL_WIDTH, 243)  # (clear of the sequel's DONE too)
+
+    def test_pictures(self):
+        from dsloader.art import decode_packed
+        for cid, width in ((rs.STORE, rs.STORE_WIDTH), (rs.RECALL, rs.RECALL_WIDTH)):
+            icon = self.out[("ICON", cid)]
+            self.assertEqual(struct.unpack_from("<H", icon, 4)[0], len(rs.RAVAGER.frames))
+            w, h, rows = decode_packed(icon, 0)
+            self.assertEqual((w, h), (width, 15))
+            button = self.out[("BUTN", cid)]
+            self.assertEqual(struct.unpack_from("<HH", button, BUTN_SIZE), (width, 15))
+            self.assertNotIn(struct.pack("<I", rs.RAVAGER.template_icon), button)  # (its own picture)
+
+    def test_site(self):
+        from dsloader import ravager
+        patch = next(p for p in ravager.PATCHES if p.name == "roll_store")
+        self.assertEqual(patch.replacement, ravager._site(83, 3))
+        asm = open(os.path.join(os.path.dirname(gamepatch.__file__), "..", "dos", "dsclog2.asm")).read()
+        self.assertIn("dw rs_click                         ; 83 ", asm)
+        self.assertIn(f"RS_STORE  equ 0x{rs.STORE:X}", asm)
+        self.assertIn(f"RS_RECALL equ 0x{rs.RECALL:X}", asm)

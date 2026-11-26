@@ -5,7 +5,7 @@
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
 # UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does (its 48h sheets: FOLDER's roster and saves widened, NAME.42H backups; `python -m dsloader.ravager narrow FOLDER` before a plain start; `RAV_SKIP=NAME,...` with it: those
-# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types, left out of the copy, for a test's control). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_SOUND=1` keeps DOSBox's sound on (SDL's dummy audio device: the game finds its card, nothing heard). `RAV_MENU=1` stops at the
+# patches of dsloader.ravager.PATCHES or SCRIPT_FIXES, or mod_types or new_items, left out of the copy, for a test's control; the new items' pictures from $GAME's Shattered Lands, `RAV_SL=` none). `RAV_CORE=normal` runs DOSBox's normal CPU core. `RAV_NOEXIT=1` keeps DOSBox up when the game quits; `RAV_PAUSE=1` pauses before DOSBox closes; `RAV_MARK=1` writes ENDED.TXT in the game folder when the game ends; `RAV_STDOUT=1` sends the game's printing to STDOUT.TXT there (a fatal error's message: "Illegal Op (gpl=N)"); `RAV_POKE=OFF=HEX,...` puts bytes at file offsets of the patched program (with RAV_LOADER). `RAV_SOUND=1` keeps DOSBox's sound on (SDL's dummy audio device: the game finds its card, nothing heard). `RAV_MENU=1` stops at the
 # title menu, START GAME not pressed (ravload.sh loads a save from there): dsloader.ravager's
 # copies (DSUNLOG2.EXE, RESOURC2.GFF, GPLDAT2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
@@ -20,11 +20,12 @@ grep -v "^#" "$F/__support/app/dosbox_darksun2.conf" | sed '/^\[autoexec\]/,$d' 
 [ -n "$RAV_UMB" ] && sed -i 's/^ems=true/ems=false/' "$C"
 if [ -n "$RAV_LOADER" ]; then   # the Loader's way: its copies (dsloader.ravager) and its autoexec
   sed -i '/^\[dos\]/,$d' "$C"
-  python3 - "$F" "$REPO/obsidian-edition/dos" >> "$C" <<'PY' || exit 1
+  python3 - "$F" "$REPO/obsidian-edition/dos" "${RAV_SL-$GAME}" >> "$C" <<'PY' || exit 1
 import sys, os
 sys.path.insert(0, os.path.join(sys.argv[2], '..'))
 from dsloader import ravager
-problem = ravager.prepare(sys.argv[1], sys.argv[2], {})
+sl = sys.argv[3] if len(sys.argv) > 3 and os.path.isfile(os.path.join(sys.argv[3], 'SEGOBJEX.GFF')) else None
+problem = ravager.prepare(sys.argv[1], sys.argv[2], {}, sl)   # (the new items with Shattered Lands' pictures: $GAME's, RAV_SL= none)
 if problem: sys.exit('ravager.prepare: ' + problem)
 ravager.widen_files(sys.argv[1])   # (the roster's and the saves' sheets the copy's 48h, as launch does; .42H backups)
 skip = [s for s in os.environ.get('RAV_SKIP', '').split(',') if s]   # (a control run: those fixes left out)
@@ -38,9 +39,10 @@ if skip:
     if gone:
         ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone))
         skip = [s for s in skip if s not in gone]
-    if 'mod_types' in skip:   # (the mod's item types: OBJEX2.GFF without them)
-        ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), {'mod_types'})
-        skip.remove('mod_types')
+    for part in ('mod_types', 'new_items'):   # (the mod's item types, or its new items: OBJEX2.GFF without them)
+        if part in skip:
+            ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), {part}, sl)
+            skip.remove(part)
     if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
     open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])
 for poke in [p for p in os.environ.get('RAV_POKE', '').split(',') if p]:   # (FILEOFFSET=HEX: bytes put in the copy, a test's probe)

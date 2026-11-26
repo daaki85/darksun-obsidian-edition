@@ -124,8 +124,9 @@ Run these in order, from `playtest/`, at the start of every test and again after
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
      memory with `dos/DSCLOG.EXE` (name others to compare them), checks every hooked vector in
      segment 0 points at its handler (two probes on one vector once made every attack's AC 255:
-     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)) and checks the tail's segment
-     and data. Compare code, not the whole image: the variables in it differ once the game runs.
+     [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)), checks the tail's segment
+     and data, and checks the game's item types and names in memory are the chunks of the Loader's copy
+     of GPLDATA (`itemtables.py`, memory pass 7) with DSCLOG's notes of them (`types_first` 115). Compare code, not the whole image: the variables in it differ once the game runs.
      To do it by hand, take the offsets from [the helper's
      segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
      block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data
@@ -263,9 +264,17 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
     dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
     its own by their pid files. Run a tool there through a wrapper that sets `PLAYTEST_WORK` and
     `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
-    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
+    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart. For the sequel (logs/2026-11-25-ravager-level-cap.md): the copied
+    kit's `ravstart.sh` with `dosbox` changed to the renamed copy and its Xvfb line off, `env.sh` and
+    `paths.py` on the copy's display; ravstart's tools read `$WORK/rav.pid`, so a `PLAYTEST_WORK` of its
+    own keeps them on the copy's game.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
-    game's: in a copy, change the display in `env.sh` and `paths.py` only.
+    game's: in a copy, change the display in `env.sh` and `paths.py` only. **The copy's `inst` goes
+    in its own work folder** (`$PLAYTEST_WORK/inst`, or set `DS_GAME`): `loadsave.sh` copies the
+    save there and the copy's `start.sh` starts DOSBox from it. **A control run with the old
+    Loader**: the kit's `obsidian-edition` a link to a detached `git worktree` of
+    `origin/obsidian-edition` (its own patched files and `settings.json`), then the same steps;
+    remove the worktree after (logs/2026-11-25-xp-held-at-cap.md: `:56`, `dbxp`).
   - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
     arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
     rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The
@@ -296,6 +305,15 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
+
+- **The stock game** (no Loader, no dice log: OpenDS's darkfix betas, or the original's behaviour):
+  `darkfix_apply.py inst/GPLDATA.GFF darkfix-inst/GPLDATA.GFF FIXES` into a copy of `inst` in the work
+  folder (it reads their fix files, never runs them), then `start_stock.sh` (GOG's
+  `dosbox_darksun.conf` first: with our conf alone DSUN.EXE went straight back to DOS). The intro
+  plays (Escape), then the main menu and loadsave.sh's clicks; the Loader's saves load in it, and
+  `click.py`, `walkto.py`, `pointer.py`, `state.py` work (they read memory). No dice log: read the
+  screen. **A reload replays the same rolls** (a load doesn't reseed): wait a different time before a
+  roll to see the other outcome ([the grate's QA](logs/2026-11-24-darkfix-beta-qa.md)).
 
 ## Reading the game
 
@@ -353,6 +371,11 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   started by `setsid nohup` inside a backgrounded bash keeps running after the job shows Done, and
   a second one then writes into the same file (every line twice, and both write the game's memory).
   Before starting one, `pgrep -af "dsloader dicelog"` and kill the old pid.
+- **The old dice log beside the new one, a control on the same game** (logs/2026-11-25-ravager-save-mods.md):
+  `git worktree add --detach BASE HEAD~1`, the Loader's `dos/` copies put in BASE's (`cp -n`), and BASE's
+  `ravdice.py` attached with BASE's Loader on PYTHONPATH: the same rolls in both logs, the lines old and new. Both
+  make the Python side's own rolls (hiding), so those differ. Why an attack line didn't break down:
+  `RAV_FRAMES=1` prints the attack set-up's locals after it.
 - **A queued series of runs** (logs/2026-11-25-ravager-kits.md): never edit a shell script while it
   runs (`sh` reads it as it goes, and an edit breaks the run in progress): write a new file. In a run
   script, keep the arguments in variables before any `set --` in a loop, which replaces them. A run on
@@ -767,12 +790,33 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button). **DUAL**: the roster's inventory (75,171), a right
+  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
+  (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
+  starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
+  AIR (240,106), FIRE (240,122). The roster's slot 4 NEW at (162,117). **DUAL**: the roster's inventory (75,171), a right
   click on the member's portrait (30,69 / 30,114 / ...) gives EDIT / DROP / DUAL, DUAL just under
   (the menu's third row: 70,98 for the top member, 100,147 for the third); in the DUAL window the
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
   comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
   the inventory bar. Escape on Effects goes all the way back to the main menu.
+- **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
+  over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
+  gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
+  A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
+  click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
+- **First spells and powers in Wake of the Ravager** (logs/2026-11-25-ravager-first-spells.md): DONE opens
+  CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
+  107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
+  discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
+- **Weapon specs at creation in Wake of the Ravager** (logs/2026-11-26-ravager-spec-pick.md): after the
+  powers, a fighter, gladiator or ranger gets the weapon window (four rows of six, slots 34 apart: the
+  long sword 75,32, club 109,32, the two-handed sword 211,100, lotulis 245,100, double spear 75,134;
+  EXIT 228,176, then EXIT 112,92 for the defaults). The pointer on a slot names it under them. It needs
+  the Loader or the dice log attached (DSCLOG2's rules word 0 before: no window). `ravspecs.py` reads the
+  specs and the pick's counters; EDIT (right click on a "New" member's portrait, 170,117) asks only for
+  picks still due. In CREATE CHARACTERS after a restart the party is empty: right click, ADD (the
+  menu's second line), the roster's rows from 100,45, 11 apart, ADD 253,46.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
@@ -784,9 +828,11 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   fighter/preserver 2/2: four at INT 16-17, two at INT 15), and a click past the last pick lands in
   the weapon window. LEVEL 1 turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks.
 - **The weapon window** (after CHOOSE A SPELL, at DONE; PICK A WEAPON SPECIALTY, or OF EXPERTISE for
-  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46),
-  three rows; the cahulaks are the second row's last (245,78), the bow the third row's second
-  (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
+  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart, **four rows
+  of six since Wake of the Ravager's kinds** (logs/2026-11-23-ravager-weapons.md), the window taller
+  and the rows higher: row four is y 134 (the double spear 75,134, the trikal 109,134), so row one
+  about 35 (the long sword about 72,35). The title is under row four. Before 2026-11-23: three rows
+  from (72,46), the cahulaks (245,78), the bow (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
   obsidian cahulaks ... in place of the bone long sword"). A Battle Dancer's has only the long
   sword (72,46) and the bow in use, a Spellarcher's the bow alone.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after the weapon window PICK A
@@ -839,6 +885,12 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 
 ## Inventory, looting, selling and shops
 
+- **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
+  backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
+  right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click
+  with `click.py X Y right` at game pixels (the backpack's first column x 195, y 27, 45, 63, 81
+  opened the four boxes; 250,33 closes one): an `xdotool click --window` never reaches the game,
+  whose pointer DOSBox holds (logs/2026-11-25-obsidian-lotulis-bone-great-sword.md).
 - **The inventory screen's places** (from hovering: the name shows in the bar at the bottom; the
   ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest (173,70), left
   hand (173,92), legs (173,128); **the feet** (174,147) (logs/2026-11-09-silent-labels.md; a
@@ -850,6 +902,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   213,134). **To give an item to another member**: click it, click the other's portrait (22,160 for
   the fourth), click the place. The screen can draw the backpack one change behind: close the
   inventory and open it again (Escape, I) before believing a cell is empty.
+- **Wake of the Ravager's weapon icons** (`sequelicons.py`) are put in the Loader's copy only when
+  it finds the sequel (`$WORK/rav`, from `setup_ravager.sh`); without it the game shows the
+  Loader's own drawings. Check which a play has before judging an icon
+  (logs/2026-11-25-sequel-weapon-icons.md).
 - **AC in the inventory**: the AC line is the game's own, worked out afresh from what is worn, but
   drawn one change behind: switch to another member's portrait and back (20,62 then 20,20) before
   reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the THAC0 line
@@ -939,7 +995,8 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   chest, `pointer.py walk` then `look` again. The chest itself: [Pehtucl's
   chest](ROUTE.md#pehtucls-chest).
 - **The pens' weapon rack** (logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
-  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no
+  2599), what's in it and where any Thornwall is. In a new game answer Kurzak's greeting first: until then
+  it finds no thing of the rack (logs/2026-11-25-ravager-magic-metal.md). A rack the party emptied has contents 9999 (no
   list). Where it is: [the slave pens](ROUTE.md#the-way-west-the-stalker-pen-and-the-grate).
 
 ## Fights
@@ -1057,19 +1114,32 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    Effects screen comes up; Escape closes it). `panel.sh hide` first (2026-11-20).
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
-   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
+   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. So does
+   a member with no Move left at its turn's start (seen after memory edits that moved foes):
+   `untilturn.sh` then presses Tab for ever; click the figure and E, or use `passuntil.sh`
+   (logs/2026-11-23-ravager-weapons.md). A turn
    passed can come straight back (the round's last but one, then first in the next): check the round
    order in the dice log. `stepfight.sh` from the arena gate clicks south until the fight is on. The
    incidents behind these notes are in [HISTORY.md](HISTORY.md).
 9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
+10. **R, F10 and Alt in Wake of the Ravager** (logs/2026-11-25-ravager-fight-keys.md): after a
+   member's last step the sequel opens its own **END <name>'s MOVE** menu (GUARD, WAIT, END TURN)
+   and F10 does nothing while it is up: press Escape first (the menu is a screen up, so it's safe),
+   then F10. `ravkeys.py` shows the squares, F10's counts (moves taken back, refused), the points,
+   the flags (bit 0 clear: no walk) and the turn's start; `ravkeys.py effect OWNER 66` (Cannot
+   Move) or `69` (Paralyzed) holds a member for the pin's test and `del` takes it off (never save
+   after). The crosses on Tyr's grey street are dark (no light for stone). Alt's rings come only out
+   of a fight; in one RING_TAB stays empty. Put the four on Computer Control (the small icons beside
+   USE) to end the ambush quickly: they win it in a few minutes with HP 250.
 
 ### Foes in a test fight
 
 - **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
   apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
-  all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
+  all "Champion"; `foeset.py C name=S` writes it, logs/2026-11-23-ravager-weapons.md: a tripped
+  foe's lost turn seen that way), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
   combatant number `foeset.py` lists), then `KEEP_HP=1 HEAL=1 sh fightout.sh` (the foes' HP kept,
   the party healed each pass): the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
@@ -1409,7 +1479,7 @@ tools, and where each is described:
 | Subject | Tools |
 |---|---|
 | [The party and the map's people](RESEARCH.md#the-party-and-the-maps-people) | `itemlists.py`, `party.py`, `sheetedit.py`, `thief.py`, `award.py`, `kitset.py`, `scrolltest.py`, `npcgear.py`, `thingsfree.py`, `arenatrip.sh` |
-| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
+| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `specset.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
 | [Fights and foes](RESEARCH.md#fights-and-foes-in-memory) | `foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, `restfixmem.py`, `setmem.py`, `turnwatch.py` |
 | [Spells and powers](RESEARCH.md#spells-and-powers-in-memory) | `spellsetup.py`, `turnsetup.py`, `powers.py`, `setmem.py power=` |
 | [Creation and levels](RESEARCH.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |
@@ -1480,7 +1550,7 @@ tools, and where each is described:
   hit on the second). For the picture: `xdotool windowsize` 1320x880, the panes' sash dragged from
   x 951 to 420 (mousedown, two moves, mouseup), the round cropped from the root window with **Show
   details** ticked, and again unticked (its box at 438,240), one crop above the other.
-- **The window's Start the game in the container** (the same log): it runs `prepare_patched_game`
+- **The window's Play Shattered Lands (once Start the game) in the container** (the same log): it runs `prepare_patched_game`
   (the copies rewritten, a check of `write_atomic`), then stops at GOG's `DOSBox.exe`, a Windows
   program ("[Errno 13] Permission denied", a message box: OK at 1000,470). A game it was attached
   to that is killed is seen within a few seconds since 2026-11-19 (`Disconnected (process N has

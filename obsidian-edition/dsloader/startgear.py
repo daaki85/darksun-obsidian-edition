@@ -37,6 +37,11 @@ from . import game, kits, npcitems, restrict, specialize, weaponchoice
 KIND = specialize.KINDS.index
 SLOT = game.EQUIP_SLOTS.index
 RIGHT, LEFT = game.WEAPON_HANDS
+# The hands a weapon in hand may go to, the first free one taken while no melee weapon is in either: Shattered
+# Lands' game keeps the weapon in the right hand; Wake of the Ravager's own gear put most classes' weapon in the
+# left hand (a fighter's behind its shield in the right), which the Loader's copy of the program changes
+# (ravager.GEAR_HANDS), so there either (ravlog's layout), for a game started without that change (RAV_SKIP)
+HANDS = (RIGHT,)
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
 THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour
                 #   or cloak)
@@ -133,14 +138,19 @@ def fill_member(gd, member: int) -> List[str]:
                     and ring.unlink(gd, ring.Items(gd), item_index, "starting gear", empty=True):
                 out.append(f"{who}'s {name(item)} is left behind: a multiclass preserver can't cast in armour")
 
-    # a melee weapon in the right hand
+    # a melee weapon in hand (HANDS)
     melee = lambda item: bool(read(_type(item))[0] & restrict.MELEE) and can_use(gd, sheet, _type(item), read(_type(item)))
-    both = lambda t: weaponchoice.two_handed(gd, sheet, t) and not slot_free(LEFT)
-    if slot_free(RIGHT):
+    other = lambda hand: LEFT if hand == RIGHT else RIGHT
+    hand = next((h for h in HANDS if slot_free(h)), None)
+    if hand is not None and hand != RIGHT and any(item[game.ITEM_SLOT] in (RIGHT, LEFT) and melee(item)
+                                                  for _, item, _ in mine()):
+        hand = None  # (a melee weapon in the other hand already)
+    both = lambda t: weaponchoice.two_handed(gd, sheet, t) and not slot_free(other(hand))
+    if hand is not None:
         spare = next(((i, item) for i, item, _ in mine() if item[game.ITEM_SLOT] >= BACKPACK and melee(item)
                       and not both(_type(item))), None)
         if spare is not None:
-            pickpocket.place(gd, member, spare[0], RIGHT)
+            pickpocket.place(gd, member, spare[0], hand)
             out.append(f"{who} takes the {name(spare[1])} from the backpack in hand")
         else:
             cleric = any(c in restrict.CLERICS for c in classes)
@@ -150,7 +160,7 @@ def fill_member(gd, member: int) -> List[str]:
                 new = _weapon(gd, sheet, kind, read)
                 if new is not None and read(new[1][0])[0] & (restrict.MELEE | restrict.THROWN) \
                         and not both(new[1][0]):
-                    give(new[0], RIGHT, " (in hand)")
+                    give(new[0], hand, " (in hand)")
                     break
 
     # a missile weapon (a Battle Dancer's the bow, with arrows: kits.DANCER_KINDS; a Spellarcher has its
