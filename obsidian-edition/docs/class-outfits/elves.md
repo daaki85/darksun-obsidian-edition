@@ -2,19 +2,19 @@
 
 Enable **What the party wears** for both elf figures. The loader reads the character’s class slots and selects one of 37 outfits. Each animation names the current pose and follows the elf through the game’s 15 walking and 14 combat frames.
 
-[Revised cloth beside retail figures and before-and-after measurements](cloth-detail.md) · [Watch the male Preserver and Ranger in profile](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-stock-side-walk.gif)
+[Revised cloth beside retail figures and before-and-after measurements](cloth-detail.md) · [Watch the male Preserver and Ranger in profile](elf-stock-side-walk.gif)
 
-[Female elf profile plate fit](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-woman-plate-fit.gif) · [Early cloak fold study](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-mantle-fold-study.gif)
+[Female elf profile plate fit](elf-woman-plate-fit.gif) · [Early cloak fold study](elf-mantle-fold-study.gif)
 
-[Watch the loader’s Preserver mantle beside the original Mage and Thief](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-mantle-swing.gif) · [Four steps with class and equipment colors](elf-mantle-swing.png)
+[Watch the loader’s Preserver mantle beside the original Mage and Thief](elf-mantle-swing.gif) · [Four steps with class and equipment colors](elf-mantle-swing.png)
 
 ## Face and body
 
 The original head is the first column. Compare the mouth highlight and the dark pixel under the jaw with the cleaned body, cream Cleric collar, open Thief hood, and Psionicist tunic. The first cleanup painted over the lower face on both elves. The corrected body follows each figure’s jaw through the swing, including front strike 2 where the female elf bends low. Each enlarged crop has the full figure at game size underneath. The dressed figures include the loader’s pointed ears.
 
-![Native and cleaned elf heads beside the three outfits, female above male](elf-faces.png) · [Archived animation](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-faces.gif)
+![Native and cleaned elf heads beside the three outfits, female above male](elf-faces.gif)
 
-[Original, earlier base, and corrected base in three poses](elf-face-cleanup.png) · [Front idle close-up](elf-faces.png) · [Compare the first-pass art](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-first-pass.gif)
+[Original, earlier base, and corrected base in three poses](elf-face-cleanup.png) · [Front idle close-up](elf-faces.png) · [Compare the first-pass art](elf-first-pass.gif)
 
 ## Single classes
 
@@ -38,13 +38,13 @@ Within each tile the female elf is on the left and the male on the right. The up
 
 The cream Cleric robe gathers at the belt and opens over the knee. On the Preserver, Ranger and Thief, follow the lit fold from the shoulder into the trailing panel. The brightest part ends before the hem. The Fighter’s jerkin catches a short highlight over the ribs, the Gladiator’s narrow harness has a worn edge, and a diagonal crease breaks up the Psionicist’s teal tunic.
 
-[Archived animation: All seven single-class outfits before and after the texture pass, enlarged and at game size](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-texture.gif)
+![All seven single-class outfits before and after the texture pass, enlarged and at game size](elf-texture.gif)
 
 This historical comparison shows the first texture pass after `c9000fc`. Sand and low light show the revised pair at native size. [Human outfits and retail figures on the same terrain](elf-contrast.png)
 
-The male Preserver and Ranger reach their widest point above the hem in side walk steps 2 and 3. The last three rows taper back toward the knee like the original Mage’s trailing cloak. The equipped cloak follows the new outline. [Previous and revised walk](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-elf-profile.gif) · [Equipment on all six figures](worn-equipment.md)
+The male Preserver and Ranger reach their widest point above the hem in side walk steps 2 and 3. The last three rows taper back toward the knee like the original Mage’s trailing cloak. The equipped cloak follows the new outline. [Previous and revised walk](worn-elf-profile.gif) · [Equipment on all six figures](worn-equipment.md)
 
-The female Thief’s hood keeps an angular silhouette in front strike 2, with a lit crown and darker neck folds. The Psionicist’s straight tunic edge in profile now encloses several teal shades. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-stock-side-walk.gif)
+The female Thief’s hood keeps an angular silhouette in front strike 2, with a lit crown and darker neck folds. The Psionicist’s straight tunic edge in profile now encloses several teal shades. The Cleric, Fighter and Gladiator follow the underlying limbs closely. The reference characters have their own proportions and attack choreography. [Seven outfits beside original Shattered Lands map figures](elf-stock-comparison.png) · [Watch the four side steps against the retail cloaks](elf-stock-side-walk.gif)
 
 | Checklist item | Result |
 |---|---|
@@ -70,11 +70,11 @@ The Fighter/Psionicist shoulder cap picks up the teal sash. On Fighter/Preserver
 
 Watch the arm swing through side steps 2 and 3. The old male cape almost disappears as the elbow crosses the torso. The revised cape keeps a trailing panel behind that elbow. On the female figure it also stays visible through step 3. Each pair shows the previous outfit on the left and the revision on the right. The smaller figures underneath show how much cloth is visible at game size.
 
-[Archived animation: Both elves walking in the previous and revised Preserver, Ranger and Thief cloaks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-profile-drape.gif)
+![Both elves walking in the previous and revised Preserver, Ranger and Thief cloaks](elf-profile-drape.gif)
 
-In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike and hit, a fold covers the windblown hair behind the crown and takes the equipped cloak’s dye. Her fallen pose shows a loose lock below the rim. [Compare both combat poses](elf-thief-strike-hit.png) · [Watch the front strike and hit with the previous hood and the male elf at 1× and 4×](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-thief-front-motion.gif). The Fighter’s shoulder pieces sit below her hairline. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
+In the rear idle, the Thief hood covers the rust highlights on the crown. In the female elf’s second front strike and hit, a fold covers the windblown hair behind the crown and takes the equipped cloak’s dye. Her fallen pose shows a loose lock below the rim. [Compare both combat poses](elf-thief-strike-hit.png) · [Watch the front strike and hit with the previous hood and the male elf at 1× and 4×](elf-thief-front-motion.gif). The Fighter’s shoulder pieces sit below her hairline. Warm brown breaks up the shadow on leather shorts and deep teal turns the shadow on the Psionicist’s tunic.
 
-**Hood width preview.** In front strike 2 (pose 16), the proposed fold draws the left edge of the crown inward by two native pixels at its widest row. The current outfit is on the left and the proposed cut is on the right. [Watch the strike at game size and 4×](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-thief-tucked-hood.gif) · [Inspect pose 16](elf-thief-tucked-hood.png)
+**Hood width preview.** In front strike 2 (pose 16), the proposed fold draws the left edge of the crown inward by two native pixels at its widest row. The current outfit is on the left and the proposed cut is on the right. [Watch the strike at game size and 4×](elf-thief-tucked-hood.gif) · [Inspect pose 16](elf-thief-tucked-hood.png)
 
 ![Previous and revised hood, shoulder, hip and multiclass details beside the revised figure at game size](elf-outfit-details.png)
 
@@ -107,7 +107,7 @@ The updated loader pictures retain every occupied pixel of the original silhouet
 
 ## Equipment and in-game review
 
-[Watch both Preservers with boots, cloak, shield, mundane plate, and magical plate](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-equipment.gif) · [Equipment frame sheet](elf-equipment-frames.png)
+[Watch both Preservers with boots, cloak, shield, mundane plate, and magical plate](elf-equipment.gif) · [Equipment frame sheet](elf-equipment-frames.png)
 
 The loops above use the loader’s rendered pictures. The earlier capture below shows the first texture pass in the patched game running the PENS save with four looks staged in the party’s picture slots. The two Clerics wear cream, the male Preserver wears magical plate, and the female Fighter/Psionicist/Thief wears boots. The large figure is an arena character. The staged run could display these pictures, but the read-only process-memory file prevented a fresh live inventory test.
 

@@ -8,21 +8,21 @@ The comparison opens on front idle. Look across the first two columns to compare
 
 In side idle and all four side steps, the Fighter’s jerkin has overlapping leather panels with small pale stitches. The crossing wrist still passes in front on step three. The Fighter/Psionicist again wears the narrow teal sash, visible across the chest and the back. Both triples that combine Fighter and Psionicist use this sash.
 
-[Archived animation: Previous and revised dwarf Cleric, Cleric/Fighter, Fighter and Fighter/Psionicist on both figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-fighter-review.gif)
+![Previous and revised dwarf Cleric, Cleric/Fighter, Fighter and Fighter/Psionicist on both figures](dwarf-fighter-review.gif)
 
 ## Thief hood in profile
 
 In side idle and several walking frames, a strip of skin separated the back of the hood from the garment. The revised fold follows the dwarf’s lean from behind the ear onto the shoulder. In the first side strike and the side bow, follow the fold on the far side while the hand crosses the head. The comparison opens on side idle, then shows the walk, strike and bow poses for both figures in all four Thief outfits.
 
-[Archived animation: Previous and revised Thief hoods at the shoulder on both dwarf figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-hood-profile.gif)
+![Previous and revised Thief hoods at the shoulder on both dwarf figures](dwarf-hood-profile.gif)
 
 ## Thief hood and Cleric profile
 
-The comparison below records the earlier profile pass. The following hood revision opened the front below the chin and matched each multiclass hood to its leather or teal clothing. [Watch all four current Thief hoods](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-thief-hoods.gif)
+The comparison below records the earlier profile pass. The following hood revision opened the front below the chin and matched each multiclass hood to its leather or teal clothing. [Watch all four current Thief hoods](dwarf-thief-hoods.gif)
 
 The comparison opens on side idle. Follow the Cleric’s cream fold from beneath the jaw to the belt as the wrist moves across it. The previous robe showed mainly behind the arm. On side-walk step 3 the raised arm crosses the chest. A six-pixel correction to the shared wrist mask keeps the cloth above the knuckles visible on the Cleric and the other dressed torsos. On the Thief, the slate crown extends down behind the ear while leaving the eyes and cheek visible. The loop covers all 29 poses on both dwarves.
 
-[Archived animation: Previous and revised dwarf Cleric and Thief in synchronized poses, female above male](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-hood-robe.gif)
+![Previous and revised dwarf Cleric and Thief in synchronized poses, female above male](dwarf-hood-robe.gif)
 
 The profile review covered idle, all four walking steps, all three strikes, the side bow and both oblique bow poses. The Cleric/Fighter, Cleric/Psionicist and Cleric/Fighter/Psionicist share the front fold. The three Thief multiclasses share the crown. [All twelve builds in motion](dwarves.md)
 
@@ -34,7 +34,7 @@ The first row of each comparison shows the original game pose. Read down each co
 
 The dwarf Cleric’s collar now opens below the chin. The Thief’s front hood leaves the face visible down to the jaw. Both human Psionicists and the dwarf Psionicist carry their identifying color on the garment. The Fighter’s bone caps and the Gladiator’s single bronze guard follow the visible arms in each source pose, including the female dwarf’s distinct first strike. The multiclasses use the same face openings and shoulder placements as their parent outfits.
 
-[Single classes in motion](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-single.gif) · [Two classes](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-double.gif) · [Three classes](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-triple.gif)
+[Single classes in motion](dwarf-single.gif) · [Two classes](dwarf-double.gif) · [Three classes](dwarf-triple.gif)
 
 ## Dwarves
 
@@ -47,7 +47,7 @@ The dwarf Cleric’s collar now opens below the chin. The Thief’s front hood l
 
 ![Dwarf feet, hit pose, shoulder guard and rear cloak before and after the review](checklist-dwarf-fixes.png)
 
-[Original, cleaned base, and Gladiator in motion](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/checklist-dwarf-bodies.gif) · [Female dwarf, every frame](checklist-dwarf-female.png) · [Male dwarf, every frame](checklist-dwarf-male.png) · [All dwarf builds in motion](dwarves.md)
+[Original, cleaned base, and Gladiator in motion](checklist-dwarf-bodies.gif) · [Female dwarf, every frame](checklist-dwarf-female.png) · [Male dwarf, every frame](checklist-dwarf-male.png) · [All dwarf builds in motion](dwarves.md)
 
 ## Humans
 
@@ -71,7 +71,7 @@ To rerun the full pose and equipment sweep with a local game installation, run `
 
 The comparison loop shows four representative outfits in the same pose. The shield and sword appear together here so their grips can be followed through a swing. The last column shows the empty-slot appearance after removal. The magical plate column shows the loader’s shine pixels; the DOSBox crop below shows palette cycling over time.
 
-[Compare equipment across all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/checklist-equipment.gif)
+[Compare equipment across all 29 poses](checklist-equipment.gif)
 
 ## DOSBox check
 
@@ -79,6 +79,6 @@ Before the face and shoulder revision, a disposable copy of the slave-pens save 
 
 ![Four staged outfit and equipment combinations in the slave pens](checklist-dosbox.png)
 
-[Enlarged DOSBox palette cycle](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/checklist-dosbox-cycle.gif)
+[Enlarged DOSBox palette cycle](checklist-dosbox-cycle.gif)
 
 **Pending in play:** changing inventory or toggling the display option with the loader attached. The test environment denied the loader write access to the disposable DOSBox process. The captures demonstrate the fixed equipment states in the game. The equip, remove, and option-off transitions above were exercised through the loader against a test party.

@@ -8,8 +8,8 @@ In front idle, either named robe keeps the original shade on 219 of the refitted
 
 | Robe | Animation at game size and 3× |
 |---|---|
-| Ashen Robe | [Compare the earlier and revised ember highlights](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/named-robe-ashen.gif) |
-| Robe of the Veiled Alliance | [Compare the earlier and revised cool highlights](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/named-robe-veiled.gif) |
+| Ashen Robe | [Compare the earlier and revised ember highlights](named-robe-ashen.gif) |
+| Robe of the Veiled Alliance | [Compare the earlier and revised cool highlights](named-robe-veiled.gif) |
 
 Each animation shows front, rear and profile idle, all four profile walk steps and all three profile strike frames. Watch the shoulder, belt and lower folds as the arm passes in front. During the idle holds, the cloth stays still while the exposed enchantment cycles. The original Shattered Lands Priest follows the same pose at the top right.
 

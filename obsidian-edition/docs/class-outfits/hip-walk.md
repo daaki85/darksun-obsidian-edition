@@ -6,7 +6,7 @@ The equipped cloak on the human man had a short, rounded hem that blended into t
 
 The first three columns show the Warrior with empty slots, a right-hand sword, then the sword and left-hand dagger. The next three repeat those loadouts with a cloak. The far-side dagger is hidden in this profile, so the sword and paired columns match through all four steps. Look at the cloak-only column first, then follow its trailing edge and the exposed sword fittings. The original Shattered Lands woman walks alongside him so the swing of the retail cloak is visible at the same scale.
 
-![Human Warrior walking in profile before and after the refit, with and without a cloak, beside the original woman's cloak](hip-profile-human.png) · [Archived animation](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-profile-human.gif)
+![Human Warrior walking in profile before and after the refit, with and without a cloak, beside the original woman's cloak](hip-profile-human.gif)
 
 The upper row uses `1d82ed6`. Each figure includes the original game size and a 6× detail of its waist and upper legs. [Inspect the second profile step](hip-profile-human.png) · [Compare the Warrior in DOSBox](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-human-profile-cloak-dosbox.png)
 
@@ -14,19 +14,19 @@ The upper row uses `1d82ed6`. Each figure includes the original game size and a 
 
 Read across each row from the figure with empty hands to the metal long sword, then the same sword paired with an obsidian dagger in the other hand. The earlier and fitted columns use the same pose, loadout and floor. Follow the dark leather from the opening at the belt to the fitting at the tip, then watch the rear and profile views to see where the arm or cloak passes in front.
 
-[Archived animation: Male and female human Warriors walking with one and two hip weapons, compared with the earlier fit](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-human.gif)
+![Male and female human Warriors walking with one and two hip weapons, compared with the earlier fit](hip-walk-human.gif)
 
 | Figure | Front, rear and profile walks |
 |---|---|
-| Human man and woman | [Warriors](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-human.gif) |
-| Dwarf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-dwarf.gif) |
-| Elf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-elf.gif) |
-| Half-elf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-half-elf.gif) |
-| Half-giant man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-half-giant.gif) |
-| Halfling man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-halfling.gif) |
-| Male Mul | [Fighter](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-mul.gif) |
-| Thri-kreen | [Original party figure](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-thri-kreen.gif) |
-| Class cloaks | [Human woman Thief and half-giant man Ranger](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/hip-walk-class-cloaks.gif) |
+| Human man and woman | [Warriors](hip-walk-human.gif) |
+| Dwarf man and woman | [Fighters](hip-walk-dwarf.gif) |
+| Elf man and woman | [Fighters](hip-walk-elf.gif) |
+| Half-elf man and woman | [Fighters](hip-walk-half-elf.gif) |
+| Half-giant man and woman | [Fighters](hip-walk-half-giant.gif) |
+| Halfling man and woman | [Fighters](hip-walk-halfling.gif) |
+| Male Mul | [Fighter](hip-walk-mul.gif) |
+| Thri-kreen | [Original party figure](hip-walk-thri-kreen.gif) |
+| Class cloaks | [Human woman Thief and half-giant man Ranger](hip-walk-class-cloaks.gif) |
 
 Each humanoid fighter first turns and walks with an empty cloak slot, then repeats all three directions wearing a cloak. The Thief and Ranger show the cloak already built into their class outfit. The thri-kreen retains its original shell. Under each 3× figure, the left image is game size and the right is a 5× crop of the same belt area across all five columns.
 

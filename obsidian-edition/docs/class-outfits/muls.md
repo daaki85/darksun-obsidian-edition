@@ -1,6 +1,6 @@
 # Mul class outfits
 
-The Loader fits six singles, nine pairs and three triples on the male Mul. The equipment animation follows his Druid/Fighter through all 29 poses. [Watch him with magical equipment](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/magic-gear-mul.gif)
+The Loader fits six singles, nine pairs and three triples on the male Mul. The equipment animation follows his Druid/Fighter through all 29 poses. [Watch him with magical equipment](magic-gear-mul.gif)
 
 The playable Mul in Shattered Lands is male only. All six single classes are fitted to that figure through the 29 native poses. These galleries show art-study renders with equipment slots empty. [Inspect the Mul body and all six outfits in every pose](mul-singles-poses.png)
 
@@ -25,7 +25,7 @@ The male Mul has nine legal pairs and three triples. Each has 29 empty-slot pose
 | [Fighter/Psionicist, Fighter/Thief and Psionicist/Thief](mul-multiclass-leather.gif) | The Fighter/Psionicist wears a leather jerkin with a teal shoulder scale. The same shade catches the visible scale under the Thief hood. Both Thief pairs retain the slate cloak and its swinging corner. Compare where the dark belt and teal sash emerge from behind the crossing arm in profile. |
 | [Three-class outfits](mul-multiclass-triples.gif) | Compare all three parent pairs beneath each triple. The first two keep the Cleric’s cream robe or the Druid’s short green mantle under a matching hood. On Fighter/Psionicist/Thief, the teal sash sits above the sword belt. |
 
-The Mul’s approved Fighter/Psionicist scale follows the upper arm through the walk. In the bow poses, the drawing hand crosses the fastening. [Compare the previous and approved walks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-walk.gif) · [Inspect all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/shoulder-fit-by-race.gif)
+The Mul’s approved Fighter/Psionicist scale follows the upper arm through the walk. In the bow poses, the drawing hand crosses the fastening. [Compare the previous and approved walks](shoulder-walk.gif) · [Inspect all 29 poses](shoulder-fit-by-race.gif)
 
 The large figures stand on sand. Under each, the smaller figures show the family at game size on paving. The retail Priest, Thief and Warrior are below for comparison. Front bow (24) is the least readable angle for the Fighter/Psionicist sash because the arm crosses the waist. The review checked faces, hands, bows, silhouette gaps and class details in all 348 multiclass poses. These are study renders. [Inspect every multiclass pose as a still](mul-multiclass-poses.png)
 
@@ -37,7 +37,7 @@ On the Thief, the lit rim follows the viewer’s left temple into the cowl. Unde
 
 ![Previous and revised Mul Druid and Thief in front idle and the four front walk steps](mul-front-walk.png)
 
-[Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-front-fit.gif). The cleaned Mul, previous and revised fittings, human class outfit and retail Thief share the same sand tile. The previous Druid is from `b8447ce` and the previous Thief from `d1c46a4`. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
+[Inspect Druid steps three and four and Thief step three at 6×](mul-front-details.png) · [Play the front comparison at game size and 3×](mul-front-fit.gif). The cleaned Mul, previous and revised fittings, human class outfit and retail Thief share the same sand tile. The previous Druid is from `b8447ce` and the previous Thief from `d1c46a4`. The walk plays twice before the three front strikes and the bow. The retail Thief supplies the hood and cloak reference for both rows.
 
 The Thief’s pixel review covered all 29 poses. In front idle and walk steps one and two, the dark slate seam now covers the copper fleck at the far ribs. In the rear and profile walks, the cowl meets the cloak across the nape. The copper visible lower down in profile steps two and three follows the exposed forearm. [Earlier seam correction at 8×](mul-thief-seam-details.png) · [Inspect every pose on the full sheet](mul-singles-poses.png).
 
@@ -47,7 +47,7 @@ Side strike 2 (22) shows the Druid issue most clearly. In the previous fitting a
 
 ![Mul Druid in side strike two, beside his body, previous fitting, the human Druid and the retail Thief](mul-druid-side-strike.png)
 
-[Watch the Druid comparison through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-druid-contact.gif) · [Watch all six Mul outfits](mul-fitting-review.gif)
+[Watch the Druid comparison through all 29 poses](mul-druid-contact.gif) · [Watch all six Mul outfits](mul-fitting-review.gif)
 
 The frame review compared the outfit pixels against the cleaned body in all 174 dressed poses. That exposed leather, linen and teal flecks above the passing wrist, two skin pixels inside the Fighter’s profile tabs (12 and 13), and interruptions in the Thief’s side-strike lining. The corrected poses retain the visible cheek, bow and bare hand. The skin inside the Thief’s hood opening and the forearm crossing his profile cloak are visible in the full-pose sheet. A second render with more room on each side reproduced every sprite pixel within the study canvas.
 
@@ -78,21 +78,21 @@ Each figure uses its own frame for the named action. The floor, ground line and 
 
 | Outfit | What reads differently at game size |
 |---|---|
-| [Druid · all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-race-druid.gif) | In rear walk step two (08), the green mantle lifts over the hip. The lighter turned edge on the ochre flap separates the kilt from the copper thigh. Compare the waist with the human Druid’s, then follow the shorter cape through the other three steps. |
-| [Psionicist · all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-race-psionicist.gif) | In front bow (24), a narrow strip of teal shows along the ribs behind the bent arm and meets the wrap at the hip. The Mul turns farther sideways than the human. Rear bow (25) and side bow (26) show more of the same fabric. |
-| [Thief · all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-race-thief.gif) | In rear walk step two (08), follow the shadow beneath the hood to the light lip of the back fold. In profile step two (12), the slate shoulder panel emerges from behind the neck, passes under the arm and joins the trailing cloak. Compare the shoulder attachment with the dwarf’s and the longer fall with the human’s. |
+| [Druid · all 29 poses](mul-race-druid.gif) | In rear walk step two (08), the green mantle lifts over the hip. The lighter turned edge on the ochre flap separates the kilt from the copper thigh. Compare the waist with the human Druid’s, then follow the shorter cape through the other three steps. |
+| [Psionicist · all 29 poses](mul-race-psionicist.gif) | In front bow (24), a narrow strip of teal shows along the ribs behind the bent arm and meets the wrap at the hip. The Mul turns farther sideways than the human. Rear bow (25) and side bow (26) show more of the same fabric. |
+| [Thief · all 29 poses](mul-race-thief.gif) | In rear walk step two (08), follow the shadow beneath the hood to the light lip of the back fold. In profile step two (12), the slate shoulder panel emerges from behind the neck, passes under the arm and joins the trailing cloak. Compare the shoulder attachment with the dwarf’s and the longer fall with the human’s. |
 
 ## Druid, Psionicist and Thief
 
 The fitting comparison shows the previous outfits from `a42a969` on the top row and the revisions below. The cleaned Mul on the left gives both rows the same shoulder, waist and foot reference. In front idle (00), follow the Druid’s mantle across the ribs, the Psionicist’s wrap from its single shoulder to the far hip, and the Thief’s cloak down one flank. In rear walk step two (08), the free corner of each cape follows the weight on the advancing leg. In profile step two (12), watch the near arm cross the cloth while the fold continues behind the shoulder.
 
-[Archived animation: Previous and refitted Mul Druid, Psionicist and Thief beside the same body, enlarged and at game size](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-singles-fit.gif)
+![Previous and refitted Mul Druid, Psionicist and Thief beside the same body, enlarged and at game size](mul-singles-fit.gif)
 
 ### Retail comparison
 
 The top row shows the retail Mul followed by the three new outfits. The small copies beneath each figure show game size on sand and paving. The bottom row follows the retail Warrior, Mage and Thief alongside the approved human Druid and Psionicist. A retail reference returns to idle when its picture set lacks the corresponding action.
 
-[Archived animation: Mul Druid, Psionicist and Thief through all 29 poses beside retail figures and human references](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-singles.gif)
+![Mul Druid, Psionicist and Thief through all 29 poses beside retail figures and human references](mul-singles.gif)
 
 | Outfit | Where to look |
 |---|---|
@@ -114,13 +114,13 @@ The Fighter’s neckline and the Gladiator’s strap use the same exposed skin w
 
 The first robe borrowed the human Priest’s sleeve and hem positions. In rear steps 07–10 the sleeves hung beyond the elbows. In side steps 11–14 the folds followed the human stride. The revised wrap has short sleeves, a belt at the Mul’s waist and a continuous linen skirt. Watch step 12 for the bare forearm crossing the belt and the hem lifting away from the trailing foot. Rear step 08 shows the shallow seam across the shoulder blades.
 
-[Archived animation: Mul body, previous robe, refitted robe and retail Priest through all 29 poses, enlarged and at game size](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-cleric-fitting.gif)
+![Mul body, previous robe, refitted robe and retail Priest through all 29 poses, enlarged and at game size](mul-cleric-fitting.gif)
 
 ## Gladiator, Fighter and Cleric
 
 The Gladiator’s strap, the Fighter’s armhole, and their waist and thigh pieces follow the Mul’s own shoulder and hip in each pose. Side idle (02), the four profile steps (11–14) and the follow-through (17) show the change on both. The frame review covered all 87 dressed poses with empty equipment slots. Face and bow pixels matched the retail source, visible hand landmarks matched the body base, and the silhouettes had no new enclosed gaps or detached pixels.
 
-[Archived animation: Mul body and three outfits walking and fighting beside retail and human figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/mul-study.gif)
+![Mul body and three outfits walking and fighting beside retail and human figures](mul-study.gif)
 
 [Inspect all 29 poses at your own pace](mul-poses.png)
 

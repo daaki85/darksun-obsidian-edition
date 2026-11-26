@@ -4,18 +4,18 @@ Each column shows the same party figure on the arena floor. Follow the sword fro
 
 [Compare hip weapons through the walk, with one weapon, a pair and an outer cloak](hip-walk.md)
 
-[Archived animation: Male and female human Warriors with empty slots, sword and shield, staff, and bow and quiver alongside the retail Warrior](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-human.gif)
+![Male and female human Warriors with empty slots, sword and shield, staff, and bow and quiver alongside the retail Warrior](weapon-motion-human.gif)
 
 | Figure | 29-pose animation |
 |---|---|
-| Human man and woman | [Warriors](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-human.gif) |
-| Dwarf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-dwarf.gif) |
-| Elf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-elf.gif) |
-| Half-elf man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-half-elf.gif) |
-| Half-giant man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-half-giant.gif) |
-| Halfling man and woman | [Fighters](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-halfling.gif) |
-| Male Mul | [Fighter](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-mul.gif) |
-| Thri-kreen | [Original party figure with sword and shield, gythka, bow and quiver, and chatkcha](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-thri-kreen.gif) |
+| Human man and woman | [Warriors](weapon-motion-human.gif) |
+| Dwarf man and woman | [Fighters](weapon-motion-dwarf.gif) |
+| Elf man and woman | [Fighters](weapon-motion-elf.gif) |
+| Half-elf man and woman | [Fighters](weapon-motion-half-elf.gif) |
+| Half-giant man and woman | [Fighters](weapon-motion-half-giant.gif) |
+| Halfling man and woman | [Fighters](weapon-motion-halfling.gif) |
+| Male Mul | [Fighter](weapon-motion-mul.gif) |
+| Thri-kreen | [Original party figure with sword and shield, gythka, bow and quiver, and chatkcha](weapon-motion-thri-kreen.gif) |
 
 ## Weapon outlines and materials
 
@@ -23,9 +23,9 @@ The human Warrior holds the same side strike in the first two rows. Compare the 
 
 ![Human Warrior comparing blade lengths, stone and metal picks, a polearm, slings and three different quiver loads](weapon-motion-shapes.png)
 
-In the bottom row, look just above the Warrior’s left shoulder. The bow alone has an empty case. A pair of arrow shafts and feathered tips project from the loaded case, and the spare metal short sword shows its hilt above the same opening. The 8× detail beside each game-size figure isolates those six pixels. All three columns use the same bow. [Watch the quiver through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/weapon-motion-quiver.gif)
+In the bottom row, look just above the Warrior’s left shoulder. The bow alone has an empty case. A pair of arrow shafts and feathered tips project from the loaded case, and the spare metal short sword shows its hilt above the same opening. The 8× detail beside each game-size figure isolates those six pixels. All three columns use the same bow. [Watch the quiver through all 29 poses](weapon-motion-quiver.gif)
 
-While Greenbright +2 hangs at the belt, its green glint catches the exposed fittings of the leather sheath. The drawn short blade carries the same enchantment through the strike. Deepbiter +1 has fire-colored highlights on its stone head. Each is shown alongside a mundane weapon of the same shape and material, including during the stationary hold. [Watch the enchanted weapons](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/magic-gear-weapon-comparison.gif)
+While Greenbright +2 hangs at the belt, its green glint catches the exposed fittings of the leather sheath. The drawn short blade carries the same enchantment through the strike. Deepbiter +1 has fire-colored highlights on its stone head. Each is shown alongside a mundane weapon of the same shape and material, including during the stationary hold. [Watch the enchanted weapons](magic-gear-weapon-comparison.gif)
 
 The eight race galleries show each figure at 3× and at the original game size through three idle directions, twelve walking steps, nine melee strikes, three bow views, hit and fall. Their last column shows the retail Warrior (1252) or retail thri-kreen (291) for comparison. These NPC combat sheets end after the three bow views.
 
