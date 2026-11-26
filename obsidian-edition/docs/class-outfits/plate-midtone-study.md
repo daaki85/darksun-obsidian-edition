@@ -1,5 +1,7 @@
 # Full plate on the midtones
 
+The current softened ordinary plate and Warden’s Plate are approved. The midtone trial is closed.
+
 This art study compares three outfits on the arena floor. Look at the half-giant’s chest just above the belt. In the trial, the cool gray joins up across the ribs, and the brown folds still separate the plates. On the human Psionicist the change is smaller. The teal wrap remains easy to follow across the waist. The human Priest is the tightest fit. Her steel reads chiefly on the chest in front view and becomes hard to see behind her hair when she turns.
 
 [![The three front-idle outfits in class colors, earlier full plate, current full plate and the midtone trial beside retail armored figure 1342](plate-midtone-idle.png)](plate-midtone-idle.png)

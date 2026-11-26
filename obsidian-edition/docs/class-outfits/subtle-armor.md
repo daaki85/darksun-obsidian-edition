@@ -27,7 +27,7 @@ The gallery uses both versions of the Loader’s picture builder and the origina
 
 The half-giant Psionicist and human Priest are also shown in profile on the slave-pen floor. Each DOSBox session loaded a prepared copy of the corresponding equipped picture. [Compare the game captures](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-soft-armor-dosbox.png)
 
-[Preview stronger full plate on the two humans and the half-giant Cleric/Fighter](plate-midtone-study.md)
+[Archived midtone comparison and plate approval](plate-midtone-study.md)
 
 ## How much of the outfit color returns?
 
