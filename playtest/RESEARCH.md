@@ -528,6 +528,17 @@ EXE back and `cmp` it afterwards.
 The measurements (pens-after-arena, the whole party walking, 2026-11-08), the old steady pace's
 and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
 
+**Two engines' speeds** (2026-11-19, logs/2026-11-19-dosbox-x-engine.md): the same cycles do less
+on DOSBox-X than on 0.74, and each core has its own pace, so a speed is found by walking, not by
+the number. `framerate.py` reads its own game's pid (`live.py`'s: `dsun.pid`), so it measures a
+DOSBox-X or a DOSBox under another name beside the shared one. A fresh start for every run, the
+engines in turn in one session, `framerate.py 20` from `pens-after-arena`; match the steps run
+and lost and the map units a second (within 2 between runs of one setting), then the frames.
+0.74's 35,000 on its dynamic core is DOSBox-X's 42,000 on its dynamic core, 20,000 is 22,000, and
+GOG's 7,000 (0.74's normal core) is about 8,000 on DOSBox-X's normal core; `dosboxx.SPEEDS` has
+them. DOSBox-X's own speeds for a test: `cycles=N core=normal|dynamic` after the program on
+`start_dosboxx.sh`.
+
 ## The picture and the music device (picstart.sh, picpattern.sh)
 
 The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) and **Music device**
@@ -692,6 +703,40 @@ logs/2026-11-16-spell-grid.md):
 - **A screen's layout**: read its WIND chunk in the game's RESOURCE.GFF against the Loader's copy
   in `obsidian-edition/dos/` (`dsloader.gff.read_gff`; a window's places are 30-byte items from
   +105h: the tag at +4, the id at +8, x and y at +0Ch).
+
+## DOSBox-X: what the engine is like inside
+
+For a test of the other engine ([a game in DOSBox-X](PLAYTESTING.md#a-game-in-dosbox-x) has the
+kit's side; `dsloader/dosboxx.py` the configuration and why each line is there).
+
+- **The memory file** is the guest's RAM, offset = guest address, 33,554,432 bytes (`memsize=32`),
+  sparse, mode 0600, made again at every start (cut to nothing first: a mapping held over a
+  restart would fault, so the Loader uses `pread` and `pwrite`). It stays when DOSBox-X closes;
+  the Loader removes it. Read it with any tool: `python3 -c "print(open(PATH,'rb').read()[0xFFFF5:0xFFFFD])"`
+  gives the BIOS date.
+- **Memory layout**: the game loads at 0224h (0.74: 01A2h) and has 96,928 bytes free with the
+  map open (0.74: 99,008); upper memory is CC00h-EFFFh, DSCLOG at CC4Bh with 1,168 bytes free
+  below it, the overlay buffer at DD84h, 16,496 bytes free at E592h, the see-through tables at
+  E99Bh and the music buffer at ED11h as on 0.74; the far block in the HMA. `memaudit.py` prints
+  it all.
+- **DOSBox-X's own keys**: its host key is F12 (F11 on Windows); host+F is full screen, Ctrl+F10
+  lets the mouse go (as 0.74), Ctrl+F9 quits. Bare F5, F9, F10, Tab, L, R, Alt reach the game
+  (all seen). Its menu bar is off (`-nomenu`, `showmenu=false`).
+- **Its log** (stdout: `$WORK/dosbox.log` from the kit's script, `obsidian-edition/dosbox-x/dosbox-x.log`
+  from the Loader's start) has DOS's own text ("DSCLOG loaded.") with `log console=true`, the
+  window sizes it chose ("surface consider=960x720"), "Using memory file", FluidSynth's lines.
+- **Pictures**: `normal3x` and `normal4x` on `output=surface` draw an empty grey window with
+  this game; everything else the Loader writes draws. A picture test: start with
+  `window_scale=3 picture=scanlines`, two clicks past the title, `import -window root`.
+- **A write to code** made from outside may not be acted on, on a dynamic core, on either
+  engine (`codepatch.py`); `core=normal` after the program on `start_dosboxx.sh` if a test needs
+  it acted on.
+- **Sound**: no device in the container (`SDL_AUDIODRIVER=dummy`). Since 2026-11-21 the Loader
+  writes `mididevice=synth` with the soundfont in `midiconfig`: DOSBox-X's FluidSynth playing into
+  its own mixer, so `PT_SDL_AUDIO=disk` records the music and the effects together. The other
+  device, `mididevice=fluidsynth`, plays through FluidSynth's own driver ("Failed to create
+  PulseAudio connection" here, no music; `extra='midi|fluid.driver=file'` renders it to
+  `fluidsynth.wav` instead: the experiment's way).
 
 ## The recompiled program as the target
 

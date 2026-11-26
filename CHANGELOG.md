@@ -70,6 +70,43 @@ Releases, newest first (2.12.0 and older in the archive):
   Lifebinder never the harming spells, a Wilderness Avenger never the healing ones: the USE screen lists
   only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
 
+**New**
+- **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
+  Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
+  default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
+  its version shown, an older one refused). With it the Loader writes DOSBox-X a whole
+  configuration of its own and follows the game through DOSBox-X's memory file instead of its
+  process's memory, so on Linux it needs no root and no ptrace setting, and **Start the game**
+  works there with only the game's folder. The game window's sizes, full screen, the four
+  pictures, the three speeds (measured to walk as on 0.74: 8,000 on the normal core, 22,000 and
+  42,000 on the dynamic one) and the music device each have their DOSBox-X spelling; a new
+  **soundfont file** setting plays the music through DOSBox-X's own FluidSynth. Restore defaults
+  goes back to GOG's.
+
+**Changed** (on top of the above, for when the Windows check passes)
+- **DOSBox-X is the default engine whenever one is found**: the Windows release brings DOSBox-X's
+  own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and the source
+  archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used when
+  none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
+  program goes before DOSBox-X unless DOSBox-X was chosen.
+- **48 KB more upper memory under DOSBox-X** for DSCLOG: `[dos] umb end=FBFF` with the BIOS in
+  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB).
+
+**Docs**
+- The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
+  pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
+  as written), the patch notes, and the experiment's findings carried into
+  `reports/modernisation-research-and-plan.md`.
+
+**Dev**
+- `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`, `tests/test_filememory.py`.
+- The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
+  `dosboxx_memtest.py`, a check without the game that a second program can read and write
+  DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
+  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
+  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
+  the creation screen).
+
 **Added: Wake of the Ravager's new wizard spells**
 - The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
   sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its

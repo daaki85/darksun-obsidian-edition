@@ -37,7 +37,7 @@ Then every turn ended with Q (`ravfight.py until 0`) to reach her next turn: the
 
 four times; `kc_levels 0`.
 
-Terrannus (earth cleric 7, the party's Crusader, kit byte 43h) made a **Healer** (`ravkits.py set 1 0x42`:
+Terrannus (earth cleric 7, the party's Crusader, kit byte 43h) made a **Healer** (`ravkits.py set 1 0x42`, a test edit: the Healer is a water cleric's kit, but KITS reads only the kit byte;
 kitpages.kit_ids 6). His USE screen (C), against the Crusader (43h) at once:
 
 | LEVEL | Healer | Crusader (control) |
