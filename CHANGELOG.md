@@ -64,7 +64,11 @@ Releases, newest first (2.12.0 and older in the archive):
   could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and no save went below 8. With
   AD&D's class tables (always on) a level up now gives the Player's Handbook's saves by class group and
   level (DSCLOG's `SAVE_BASE`, site NS_IMAGE + 123 at 878F7h; the sequel's fix ported, one table for
-  both). DSCLOG: the segment's spare 928 to 800 bytes, upper memory's 138 to 119 paragraphs.
+  both). DSCLOG: the segment's spare 928 to 672 bytes, upper memory's 138 to 109 paragraphs.
+- Psionicists save by Dark Sun's own table (Table 8), not the thief's, in both games: the game's group
+  of thieves and psionicists is split by the sheet's classes, a psionicist/thief the better of each
+  save (`save_bands.inc`, DSCLOG's and DSCLOG2's `SAVE_BASE` the same code and bands; DSCLOG2 75
+  bytes smaller for the bands).
 
 **Fixed: DSCLOG (kits)**
 - The Military Scout's +1 to hit with a missile under the open sky is the bow's, sling's and staff

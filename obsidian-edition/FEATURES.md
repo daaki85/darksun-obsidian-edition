@@ -327,9 +327,11 @@ scores](PLAYER-GUIDE.md#ability-scores). How it works:
 AD&D's tables hold where the game's differ: the XP for each level (a gladiator, ranger and thief
 need a little more for 2nd), priests' THAC0 (20, 20, 20, 18..., where the game improves a level
 early) and clerics', druids' and preservers' spell slots (3 3 1 and 4 2 1 at 5th, where the game
-gives 3 2 1), and the saving throws, the Player's Handbook's by class group and level: the game took
-AD&D's best save as the most a save could improve by, so it held a warrior at 11/11/11/13/11 from 10th
-level and no save went below 8 (a 12th-level fighter saves at 7/9/8/8/10, a 17th at 3/5/4/4/6). The
+gives 3 2 1), and the saving throws, the Player's Handbook's by class group and level and a
+psionicist's Dark Sun's own: the game took AD&D's best save as the most a save could improve by, so it
+held a warrior at 11/11/11/13/11 from 10th level and no save went below 8 (a 12th-level fighter saves at
+7/9/8/8/10, a 17th at 3/5/4/4/6), and gave a psionicist the thief's saves (a psionicist/thief has the
+better of its two classes' each). The
 rest were AD&D's already; kits still change these tables.
 
 **Always on** (no switch). Rules: [experience and
@@ -1015,8 +1017,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   a druid's stop growing at 15th, a ranger's
   priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
   **saving throws** are the Player's Handbook's by class group and level: the game held every save at
-  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8 (Shattered
-  Lands' bug too, [fixed there](#adds-class-tables) the same way).
+  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8, and a
+  psionicist saved as a thief (Shattered Lands' bugs too, [fixed there](#adds-class-tables) the same way).
 - **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be

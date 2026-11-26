@@ -3,7 +3,9 @@ the game's save routine (DSUN.EXE 877EBh, at a level up) makes a class group's s
 (level - 1) x a rate / 100, but takes its table's third byte (AD&D's last save) as the most a save improves,
 so a warrior stays at 11/11/11/13/11 from 10th level. The site, over its "mov al,es:[bx+6Ch]" (878F7h), gives
 the Player's Handbook's save (Table 60, tables.rav_saves: Wake of the Ravager's DSCLOG2 SAVE_BASE has the same)
-plus the game's improvement, so the game's "sub" leaves the Handbook's, less a dwarf's or halfling's CON bonus.
+plus the game's improvement, so the game's "sub" leaves the Handbook's, less a dwarf's or halfling's CON bonus;
+for the rogues (the game's thieves and psionicists together) the better of the thief's save at its thief level
+and the psionicist's (Dark Sun's Table 8) at its psionicist level, read from the sheet.
 Run in an emulated CPU; needs nasm and unicorn, else skipped."""
 
 import os
@@ -26,7 +28,8 @@ except ImportError:
     Uc = None
 
 DOS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos")
-TSR, GAME_DS, SS, GROUPS = 0x1000, 0x5000, 0x4000, 0x6000
+TSR, GAME_DS, SS, GROUPS, SHEET_SEG = 0x1000, 0x5000, 0x4000, 0x6000, 0x7000
+SHEETS, SHEET_SIZE, CREATURE = 0x1661, 0x47, 3  # (DS:1661h the sheets' far pointer; the creature, DI)
 BP = 0x600
 TABLES = 8  # (DSCLOG's RULE_HI_TABLES)
 # the game's table (420h:6Ch): by group (priest, warrior, wizard, rogue) and save, the 1st level's save,
@@ -99,14 +102,16 @@ class SaveBaseTests(unittest.TestCase):
         cls.image, cls.sym, cls.tail, cls.tail_at = build()
 
     def test_band_table(self):
-        """SAVE_BANDS, in the tail, is tables.RAV_SAVE_BANDS (the sequel's: one Table 60 for both games)."""
+        """SAVE_BANDS, in the tail, is tables.RAV_SAVE_BANDS (the sequel's too: save_bands.inc), the
+        psionicists' set fifth."""
         bands = bytes(self.image[self.tail_at + self.tail["save_bands"]:self.tail_at + self.tail["save_bands_end"]])
         want = bytes(b for group in tables.RAV_SAVE_BANDS for first, saves in group for b in (first, *saves))
         self.assertEqual(bands, want)
         self.assertEqual(self.tail_at % 16, 0)
 
-    def save(self, rules_hi, group, level, save, race_bonus=0):
-        """SAVE_BASE and the game's sum after it (AL - [BP-2], [BP-2] the game's improvement + the race's)."""
+    def save(self, rules_hi, group, level, save, race_bonus=0, classes=()):
+        """SAVE_BASE and the game's sum after it (AL - [BP-2], [BP-2] the game's improvement + the race's);
+        CLASSES the sheet's (class, level) pairs."""
         mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, self.image)
@@ -115,9 +120,13 @@ class SaveBaseTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + self.sym["tail_seg"], struct.pack("<H", TSR + self.tail_at // 16))
         mu.mem_write(GROUPS * 16 + 0x6C, bytes(b for row in GAME_TABLE for b in row))
         mu.mem_write(SS * 16 + BP - 0x0A + 2 * group, bytes((level,)))
+        mu.mem_write(GAME_DS * 16 + SHEETS, struct.pack("<HH", 0x100, SHEET_SEG))
+        pairs = list(classes) + [(0, 0)] * (3 - len(classes))
+        sheet = SHEET_SEG * 16 + 0x100 + CREATURE * SHEET_SIZE
+        mu.mem_write(sheet + 0x21, bytes(c for c, _ in pairs) + bytes(lv for _, lv in pairs))
         mu.mem_write(SS * 16 + 0x7F0, struct.pack("<HHH", 0xFFF0, TSR, 0x2))
         regs = dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7F0, ebp=BP, eflags=0x2, es=GROUPS,
-                    ebx=group * 15 + save * 3, ecx=group, esi=save, edx=0x1234, edi=0x5678)
+                    ebx=group * 15 + save * 3, ecx=group, esi=save, edx=0x1234, edi=CREATURE)
         for name, value in regs.items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(TSR * 16 + self.sym["save_base"], TSR * 16 + 0xFFF0, count=20000)
@@ -163,6 +172,28 @@ class SaveBaseTests(unittest.TestCase):
             got = [min(self.save(TABLES, g, lv, s) for g, lv in zip(groups, levels)) for s in range(5)]
             want = [min(tables.rav_saves(g, lv)[s] for g, lv in zip(groups, levels)) for s in range(5)]
             self.assertEqual(got, want, (groups, levels))
+
+    def test_psionicists(self):
+        """A psionicist saves by Dark Sun's table at its psionicist level; a thief by the Handbook's at its
+        thief level; a psionicist/thief the better of each save (the game's group level the best of the
+        two: its improvement given back as it takes it off). A sheet with neither (no class read) is a
+        thief at the group's level."""
+        for level in range(1, 26):
+            with self.subTest(level=level):
+                self.assertEqual([self.save(TABLES, 3, level, s, classes=((12, level),)) for s in range(5)],
+                                 list(tables.rav_saves(3, level, psionicist=True)))
+                self.assertEqual([self.save(TABLES, 3, level, s, classes=((17, level),)) for s in range(5)],
+                                 list(tables.rav_saves(3, level)))
+        for psi, thief in ((9, 13), (13, 9), (5, 20), (21, 1)):
+            with self.subTest(psi=psi, thief=thief):
+                got = [self.save(TABLES, 3, max(psi, thief), s, classes=((12, psi), (17, thief))) for s in range(5)]
+                self.assertEqual(got, list(tables.class_saves([(12, psi), (17, thief)])))
+        # (a half-giant fighter/psionicist: the rogues' its psionicist level, the warriors' as before)
+        self.assertEqual([self.save(TABLES, 3, 7, s, classes=((9, 8), (12, 7))) for s in range(5)],
+                         list(tables.rav_saves(3, 7, psionicist=True)))
+        self.assertEqual([self.save(TABLES, 3, 10, s) for s in range(5)], list(tables.rav_saves(3, 10)))
+        # (the rule off: the game's, a psionicist as a thief)
+        self.assertEqual([self.save(0, 3, 12, s, classes=((12, 12),)) for s in range(5)], [11, 10, 10, 14, 10])
 
 
 if __name__ == "__main__":
