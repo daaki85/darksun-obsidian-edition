@@ -10,7 +10,7 @@ Compare the empty class outfit, the cloak at `9882a56`, and the revised cloak in
 
 The Warden’s Plate comparison shows the same figure with empty slots, each of the three pieces alone, and all three together. On the human Warrior, watch the chest highlights change brightness at different times during the idle hold. On the half-giant Psionicist, follow the guards on her forearms. On the Mul, follow the advancing shin through the profile walk. Boots and the cloak can obscure the armor beneath them.
 
-[Watch all 29 poses with the armor slots side by side](fitted-armor-slots.gif) · [Inspect one labeled pose on each of the 14 figures](fitted-armor-slots-all.png) · [See the rear walk and armor checks in DOSBox](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#rear-cloaks-and-wardens-plate)
+[Watch all 29 poses with the armor slots side by side](fitted-armor-slots.gif) · [See the Psionicist’s raised knee and hem at 6×](plate-fit-half-giant-hem.png) · [Inspect one labeled pose on each of the 14 figures](fitted-armor-slots-all.png) · [See the rear walk and armor checks in DOSBox](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#rear-cloaks-and-wardens-plate)
 
 ## All 14 party figures
 

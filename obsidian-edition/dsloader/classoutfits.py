@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import NamedTuple, Optional
 from zipfile import ZipFile
 
-from . import art, dwarfarmordye, elfarmordye, game, halfelf, humanarmordye, kitpages
+from . import art, dwarfarmordye, elfarmordye, elfclericplate, game, halfelf, humanarmordye, humanpriestplate, kitpages
 
 # A figure is eligible only when both pose sheets match the hand-registered artwork.
 MODELS = {300: 2095, 301: 2099, 302: 2055, 303: 2053, 304: 2061, 305: 2059}
@@ -240,6 +240,7 @@ class Frame(NamedTuple):
     native_cloak: bool = False  # this outfit includes cloth for a cloak dye to follow
     equipped_cape: tuple = ()  # native (x, y, original cloth color) on a separately donned cape
     belt: Optional[tuple] = None  # authored native waist, empty when the garment hides it
+    plate_regions: Optional[dict] = None  # fitted steel visible over long clerical robes
 
     def canvas(self, source, pad):
         """Apply authored pixels to the matching pose read from the player's install."""
@@ -386,5 +387,19 @@ def frames(role, combat, model=2095):
             cape = tuple((x, y, shade) for (x, y), shade in fabric.items()
                          if any((x + dx, y + dy) in fabric for dx in (-1, 0, 1) for dy in (-1, 0, 1)
                                 if dx or dy))
-        poses.append(frame._replace(armor_trim=frozenset(trim), equipped_cape=cape))
+        plate = None
+        if model == 2099 and role == "Priest":
+            plate = {bit: humanpriestplate.cells(frame, pose, bit) for bit in (CHEST, ARMS, LEGS)}
+        elif model == 2059 and "Cleric" in members:
+            plate = {bit: elfclericplate.cells(frame, pose, bit) for bit in (CHEST, ARMS, LEGS)}
+        if plate is not None:
+            # The Priest's fitted cuirass and wristbands are traced under the
+            # collar and hair. Her broader cloth-dye trim also includes metal.
+            foreground = set(frame.head) | set(regions[BOW])
+            if native_cloak:
+                foreground.update((x, y) for x, y, _ in folds)
+            for bit, cells in plate.items():
+                keep = foreground if model == 2099 else foreground | trim
+                plate[bit] = tuple(point for point in cells if point not in keep)
+        poses.append(frame._replace(armor_trim=frozenset(trim), equipped_cape=cape, plate_regions=plate))
     return tuple(poses)

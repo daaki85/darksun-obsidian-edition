@@ -52,7 +52,9 @@ class ArmorDyeTests(unittest.TestCase):
                     worn = art.decode_frame(self.pictures.build(obj, False, {}, kit, role=role), pose)[2]
                     original_tones = {(x+sx, y+sy) for x, y in cloth if base[y+sy][x+sx] in pigments}
                     self.assertGreaterEqual(sum(base[y][x] == worn[y][x] for x, y in original_tones), 3)
-                    self.assertGreater(sum(base[y+sy][x+sx] != worn[y+sy][x+sx] for x, y in cloth), 5)
+                    # Metal also shows on the fitted cuff beyond the Priest's sleeve.
+                    surface = cloth.union(frame.regions[classoutfits.FOREARM])
+                    self.assertGreater(sum(base[y+sy][x+sx] != worn[y+sy][x+sx] for x, y in surface), 5)
 
     def test_enchanted_robes_keep_class_fabric_and_limit_the_cycling_thread(self):
         from dsloader import game
@@ -107,6 +109,38 @@ class ArmorDyeTests(unittest.TestCase):
                 self.assertTrue(changes)
                 self.assertTrue(all(c == 254 for c, _ in changes))
                 self.assertTrue(any(mark in spritegear.GLINT for _, mark in changes))
+
+    def test_full_plate_preserves_hanging_linen_and_reaches_exposed_limbs(self):
+        from dsloader import game
+
+        cases = ((301, "Priest", 3), (305, "Cleric/Psionicist", 0))
+        side, top = sprites.room(False)
+        for obj, role, pose in cases:
+            model = self.pictures.model(obj)
+            fit = classoutfits.frames(role, False, model)[pose]
+            def picture(slots):
+                chunk = self.pictures.build(obj, False, {}, slots, role=role)
+                return art.decode_frame(chunk, pose)[2]
+            base = picture(())
+            for slots in ((88, 25, 26), (game.PLATE_CHEST_TYPE, game.PLATE_ARMS_TYPE, game.PLATE_LEGS_TYPE)):
+                with self.subTest(obj=obj, slots=slots):
+                    full, arms, greaves = (picture(parts) for parts in (slots, slots[1:2], slots[2:]))
+                    self.assertNotEqual(full, base)
+                    self.assertNotEqual(arms, base)
+                    self.assertEqual(greaves == base, obj == 301)
+                    self.assertTrue(all(full[y+top][x+side] == base[y+top][x+side]
+                                        for x, y in fit.regions[classoutfits.LEGS]))
+
+    def test_half_giant_psionicist_wrap_covers_the_thigh_beneath_chest_armor(self):
+        side, top = sprites.room(False)
+        for role in ("Psionicist", "Psionicist/Ranger"):
+            base, chest = (art.decode_frame(self.pictures.build(309, False, {}, kit, role=role), 0)[2]
+                           for kit in ((), (88,)))
+            for x, y in ((7, 25), (18, 29), (19, 29)):
+                with self.subTest(role=role, x=x, y=y):
+                    self.assertNotIn(base[y+top][x+side], range(128, 154))
+                    self.assertIsNotNone(base[y+top][x+side])
+                    self.assertEqual(base[y+top][x+side], chest[y+top][x+side])
 
     def test_robe_dyes_red_leather_and_plate_leaves_the_ranger_feather(self):
         from dsloader import game

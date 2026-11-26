@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, SLEEVES, fitted_panels, stamp
+from halfgiantfit import RANGER_CLOAK, REAR_FOLD_GUIDES, SLEEVES, WOMAN_TEAL_HEM, fitted_panels, stamp
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
@@ -243,6 +243,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     cloak_span = row_limits(cloak)
     for role in ROLES[2:]:
         skirt = robe if role == "Cleric" else jerkin if role == "Fighter" else wrap
+        if role == "Psionicist" and female and pose in WOMAN_TEAL_HEM:
+            skirt = wrap | stamp((*belt, *reversed(WOMAN_TEAL_HEM[pose])))
         skirt_span = row_limits(skirt)
         hem = {}
         for x, y in skirt:

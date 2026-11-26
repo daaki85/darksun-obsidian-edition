@@ -64,7 +64,7 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 [Watch the weapon grips, shield and bow on all 14 party figures](weapon-motion.md) · [Compare the hip fit through front, rear and profile walks](hip-walk.md)
 
-[Compare rear cloak fittings on the half-giant and Mul](fitted-cloak-rear.gif) · [Watch Warden’s Plate on the chest, arms and legs separately](fitted-armor-slots.gif)
+[Compare rear cloak fittings on the half-giant and Mul](fitted-cloak-rear.gif) · [Watch Warden’s Plate on the chest, arms and legs separately](fitted-armor-slots.gif) · [Inspect plate on the clerical robes and the half-giant’s hem](plate-fit.md)
 
 [Watch magical leather, bone armor, cloaks, bracers, boots and belts on every party figure](magical-equipment.md). The six pieces are equipped individually beside the empty figure through all 29 poses. The half-elf Fighter now has two separate bone shoulder guards. [Her shoulder fitting before and after](half-elf-fighter-shoulders.png)
 

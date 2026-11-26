@@ -4,7 +4,7 @@ Compare the half-giant man’s cream Cleric robe with the half-giant woman’s t
 
 ![The class outfit, earlier Ashen, revised Ashen, earlier Veiled and revised Veiled in the same front idle on four figures](named-robe-class-colors.png)
 
-In front idle, the female half-giant has 190 pixels in the Psionicist’s teal palette. Either revised robe keeps the original shade on 177 of those pixels, up from 35. On the male half-giant Cleric, the number of cycling highlights falls from 36 to 12, leaving the cream folds visible between them.
+In front idle, either named robe keeps the original shade on 216 of the refitted Psionicist’s 230 teal pixels. The earlier treatment kept 35 of the 190 teal pixels in the earlier outfit. On the male half-giant Cleric, the number of cycling highlights falls from 36 to 12, leaving the cream folds visible between them. [Inspect the Psionicist’s revised hem](plate-fit.md#half-giant-psionicists-hem)
 
 | Robe | Animation at game size and 3× |
 |---|---|

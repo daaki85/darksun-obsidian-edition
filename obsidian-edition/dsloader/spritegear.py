@@ -1392,7 +1392,12 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                            ARMOUR_LEGS: classoutfits.LEGS}[piece]
                     if item_type & VEILED_DYE and kind == game.ROBE_TYPE:
                         shades = VEILED_CLOTH
-                    cells = costume.regions[bit]
+                    fitted_plate = pattern == PLATE and costume.plate_regions is not None
+                    if fitted_plate:
+                        cells = costume.plate_regions[bit]
+                        shades = ROBE_PLATE_SHADES
+                    else:
+                        cells = costume.regions[bit]
                     leg_piece = kind == game.ROBE_TYPE and any(
                         ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] == ARMOUR_LEGS for t in armour)
                     if kind == game.ROBE_TYPE and not leg_piece:
@@ -1415,9 +1420,11 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             pattern == PLATE and not combat and frame in (2, 11, 12, 13, 14)):
                         # The near arm and belt occlude this strip in the elf woman's stride.
                         cells = [(x, y) for x, y in cells if 6 <= y < 13]
-                    cells = [(x, y) for x, y in cells if (x, y) not in trim
+                    cells = [(x, y) for x, y in cells if (fitted_plate or (x, y) not in trim)
                              and base_outfit[y + pad][x + pad] not in (None, 254)]
-                    if not enchanted_robe:
+                    if fitted_plate and piece == ARMOUR_CHEST:
+                        dye_cuirass(out, cells, pad, base_outfit, combat and frame == sp.DEAD_FRAME)
+                    elif not enchanted_robe:
                         dye_garment(out, cells, shades, pad, base_outfit)
                 elif armor_parts.facing is not None:
                     covered = bow_keep if piece == ARMOUR_ARMS else bow_keep | wrist_keep
@@ -1430,6 +1437,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 if piece == ARMOUR_LEGS and registered and (costume or not cells):
                     surface = base_outfit if costume else padded(rows, pad)
                     exposed = spritegreaves.visible(rows, model, frame, combat, own, costume, surface, pad)
+                    if costume and fitted_plate and model == 2099 and not combat and frame == 12:
+                        # The short-hem reference exposes a raised limb here. On
+                        # the Priest this skin pixel belongs to the passing wrist.
+                        exposed = [point for point in exposed if point != (8, 13)]
                     if not costume:
                         if armor_canvas is not out:
                             exposed = [(x, len(rows)-1-y) for x, y in exposed]
@@ -1839,6 +1850,10 @@ BONE_SHADES = (208, 129, 204, 207, 205, 196, 194, 206, 212, 60, 213, 168, 214,
                61, 169, 198, 215, 31, 199, 66, 62, 216, 67, 217, 63, 156)
 METAL_SHADES = (208, 17, 18, 19, 48, 20, 21, 22, 49, 23, 24, 25, 50, 26, 27,
                 213, 28, 214, 29, 30, 215, 31, 216, 52, 217, 46)
+# Silvered steel over pale linen. Keep the brightest plate reflection below
+# the cream collar and preserve the neighboring values in the painted folds.
+ROBE_PLATE_SHADES = (208, 17, 18, 209, 19, 48, 20, 21, 210, 22, 49, 23, 211,
+                     24, 25, 212, 50, 26, 27, 213, 28, 214, 29, 30, 215, 31)
 CHAIN_SHADES = (208, 17, 209, 19, 48, 20, 210, 21, 22, 49, 211, 24, 212, 50,
                 26, 213, 28, 214, 29, 30, 215, 31, 216, 52, 217, 46)
 VEILED_CLOTH = (208, 17, 18, 19, 48, 20, 21, 22, 49, 23, 211, 24, 25, 50, 26,
@@ -1871,6 +1886,25 @@ def dye_garment(rows, cells, shades, pad, source):
         colour = source[y + pad][x + pad]
         if colour is not None and colour != 254:
             rows[y + pad][x + pad] = garment_tone(colour, shades)
+
+
+def dye_cuirass(rows, cells, pad, source, fallen):
+    """Turn the steel into shadow at the far side of the ribs and under the lower lip."""
+    spans = {}
+    for x, y in cells:
+        left, right = spans.get(y, (x, x))
+        spans[y] = min(left, x), max(right, x)
+    panel = set(cells)
+    down = -1 if fallen else 1
+    for x, y in cells:
+        left, right = spans[y]
+        # Keep the original incised lines and highlights inside the panel.
+        shade = garment_tone(source[y + pad][x + pad], ROBE_PLATE_SHADES)
+        turn = round(4 * (x - left) / max(1, right - left)) if right - left >= 3 else 0
+        if all((x + dx, y + down) not in panel for dx in (-1, 0, 1)):
+            turn += 3
+        value = max(0, ROBE_PLATE_SHADES.index(shade) - turn)
+        rows[y + pad][x + pad] = ROBE_PLATE_SHADES[value]
 
 
 # item type: (which piece, shades, pattern)

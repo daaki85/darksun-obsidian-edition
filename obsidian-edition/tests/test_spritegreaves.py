@@ -19,7 +19,7 @@ class GreaveTests(unittest.TestCase):
         tier = game.PLATE_LEGS_TYPE
         magic = tier | sg.MAGIC_ARMOUR | (sg.BLUE_GLOW << sg.GLOW_SHIFT)
         side, top = sprites.room(False)
-        for obj, role, anchors in ((309, "Psionicist", ((7, 29), (7, 32), (6, 34))),
+        for obj, role, anchors in ((309, "Psionicist", ((7, 30), (7, 32), (6, 34))),
                                    (312, "Druid/Fighter", ((4, 22), (4, 23))),
                                    (300, "Warrior", ((4, 21), (4, 22)))):
             with self.subTest(obj=obj):
@@ -31,6 +31,10 @@ class GreaveTests(unittest.TestCase):
                     return art.decode_frame(chunk, 13)[2]
                 for gear in ({}, {"boots": (game.SPEED_BOOTS_TYPE, 5)}):
                     bare, plate, shine = (render(slot, gear) for slot in ((), (tier,), (magic,)))
+                    if obj == 309:
+                        # The teal hem now covers the pixel immediately above the shin.
+                        self.assertEqual(bare[29+top][7+side], 69)
+                        self.assertEqual(plate[29+top][7+side], bare[29+top][7+side])
                     for x, y in anchors:
                         self.assertNotEqual(bare[y+top][x+side], plate[y+top][x+side])
                         self.assertIn(plate[y+top][x+side], sg.METAL_SHADES)

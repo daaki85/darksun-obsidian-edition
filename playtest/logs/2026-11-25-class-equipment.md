@@ -129,3 +129,11 @@ Equipped each named robe separately on the male half-giant Cleric (308) and fema
 | Female Psionicist, 595 figure pixels | 13 changed, 8 cycled | 13 changed, 8 cycled |
 
 Matched each native capture to the active walking picture and sampled its glints over 16 screenshots. Every listed glint changed color on screen. The Cleric’s cream folds and the Psionicist’s teal wrap remained visible throughout. All four equipped states matched the Loader’s walking and combat pictures across all 29 poses. Removing each robe restored both class pictures byte for byte. The game session was discarded without saving. [Compare the six DOSBox captures on the same tile](img/2026-11-26-half-giant-robes-dosbox.png)
+
+## Fitted plate and the half-giant Psionicist’s hem
+
+Captured the human woman Priest, elf woman Cleric/Psionicist and half-giant woman Psionicist in front idle on the same slave-pen tile in DOSBox. Each row starts with the class outfit. The first two figures wear plain chest plate and then all three plain plate pieces. The half-giant wears Warden’s leg armor and then its chest, arm and leg pieces together. These disposable inventory fixtures exercise the visible outfits directly.
+
+The Priest’s cream robe and the elf’s teal sash are visible below the breastplate. The half-giant’s hem follows the raised thigh, and the two lower edges remain distinguishable under the Warden’s glints. The screenshots show front idle for all three. The human’s reported forward step is included in the linked animation.
+
+All six equipped states matched both pictures built by the Loader across the 29 poses. Each removal restored the original walking and combat pictures byte for byte. The session was discarded without saving. [Compare the nine native captures](img/2026-11-26-plate-fit-dosbox.png) · [See the forward step and the moving hem](../../obsidian-edition/docs/class-outfits/plate-fit.md)

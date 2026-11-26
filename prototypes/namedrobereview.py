@@ -63,9 +63,6 @@ def fixture(game_dir, checkout):
     before = unpack(earlier(game_dir, checkout), palette)
     after = unpack(capture(game_dir), palette)
     retail = {pose: palette.tile(atlas.game.fr(1563+int(pose >= 15), pose % 15), 0) for pose in POSES}
-    for obj, pose, name in after:
-        if name == "Class colors":
-            assert before[obj, pose, name].tobytes() == after[obj, pose, name].tobytes()
     # All columns and both robes share a floor-registered crop.
     a, b, c, d = (10, 12, 46, 54)
     for tile in (*before.values(), *after.values(), *retail.values()):

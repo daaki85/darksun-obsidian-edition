@@ -1,6 +1,6 @@
 # Armor colors on class outfits
 
-Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The dye follows the original fold pixels as the figure turns. Magical gear adds cycling highlights to the exposed material. The three Warden’s Plate pieces can be inspected separately. [Current armor-slot comparison](fitted-armor-slots.gif) [Compare the named robes on the half-giants, Mul and human Priest](named-robes.md)
+Read across each row to see one pose with empty slots, leather, plate and the two named robes. The human Psionicist’s teal bands, the elf Cleric/Psionicist’s sash and the half-elf Fighter’s bone fittings show where the garment keeps its class colors. The dye follows the original fold pixels as the figure turns. Magical gear adds cycling highlights to the exposed material. The three Warden’s Plate pieces can be inspected separately. [Current armor-slot comparison](fitted-armor-slots.gif) [Compare the named robes on the half-giants, Mul and human Priest](named-robes.md) · [Compare the women’s clerical plate fittings](plate-fit.md)
 
 ![Eight Loader class figures with armor and robes beside retail references](armor-dye-class-figures.png)
 
