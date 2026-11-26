@@ -253,8 +253,13 @@ whatever weapon is ready.
 A party taken to the sequel ([Taking the party to Wake of the Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager))
 keeps its weapon specs, and they work in its fights as here: the to-hit and damage, mastery and grand
 mastery, the attacks a round and the rates of fire, and the kits' parts (a Battle Mage's or
-Crusader's expertise, a Justifier's, a Myrmidon's second kind). Nobody picks new ones there (the
-sequel has no weapon window). The sequel knows all twenty-two: a lotulis specialist from Shattered
+Crusader's expertise, a Justifier's, a Myrmidon's second kind). A new character made in the sequel
+picks its weapon specs as here: after DONE (and its first spells and psionic powers) a fighter,
+gladiator or ranger (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) gets the weapon window,
+in the sequel's own colours and with its own weapons' pictures, and picks what it is due. The sequel's
+new characters start at 7th level, so a gladiator picks three. EXIT leaves the rest to the defaults (the
+long sword, then the club; a thri-kreen's chatkcha first), and EDIT asks only for picks still due. No
+picks come after DUAL there yet, and a kit's own weapons aren't offered first. The sequel knows all twenty-two: a lotulis specialist from Shattered
 Lands is a lotulis specialist there, with the sequel's own Lotulis. Its weapons take these weapon
 specs (the six that came from the sequel by its own weapons of them; the rest by name and dice):
 

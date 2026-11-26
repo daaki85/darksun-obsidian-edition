@@ -131,6 +131,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravscare.sh [FOLDER]` | Scare in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the saving throw's fixes: ravstart.sh FOLDER (default $WORK/rav; |
 | `ravshop.py CMD ...` | Wake of the Ravager's shops and scrolls for a test (run from playtest/; |
 | `ravsites.py [NAME...]` | where Shattered Lands' patch sites (dsloader.gamepatch.PATCHES) are in Wake of the Ravager's DSUN.EXE, by likeness: SL's 64 bytes round each site (the patch's own bytes left out) scored against every place in WotR's... |
+| `ravspecs.py [MEMBER...\|check]` | the weapon specs of the running sequel's party and DSCLOG2's WEAPON PICKS' counts, read only. |
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
 | `ravstore.py [roll\|gear]` | STORE and RECALL and the fuller starting gear in the running sequel ($WORK/rav.pid). |
 | `ravtab.py` | the state of choosing an enemy with Tab in the running sequel ($WORK/rav.pid; |
