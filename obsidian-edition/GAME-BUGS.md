@@ -11,6 +11,10 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
 memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#room-and-memory), and the rows' own links.
 
+Wake of the Ravager runs on the same engine, and the Loader's copy of it has most of these fixes too,
+and some of the sequel's own bugs mended: [In Wake of the Ravager](#in-wake-of-the-ravager) says which.
+The bugs known and not yet mended are at [the end](#known-not-yet-fixed).
+
 ## Contents
 
 - [Spells and psionics](#spells-and-psionics)
@@ -32,6 +36,10 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
   - [Scripts that stuck, or ran twice](#scripts-that-stuck-or-ran-twice)
   - [Who is talking: class, race and sex](#who-is-talking-class-race-and-sex)
 - [Rules it got wrong](#rules-it-got-wrong)
+- [In Wake of the Ravager](#in-wake-of-the-ravager)
+  - [Shattered Lands' fixes in the sequel](#shattered-lands-fixes-in-the-sequel)
+  - [The sequel's own bugs](#the-sequels-own-bugs)
+- [Known, not yet fixed](#known-not-yet-fixed)
 - [Saved games](#saved-games)
 
 ## Spells and psionics
@@ -180,6 +188,91 @@ Most of the mod's [rule changes](FEATURES.md#rule-changes) put right a rule the 
 are listed with the rule changes, as [rules the game got wrong](FEATURES.md#rules-the-game-got-wrong).
 Each is always on, with no switch, as are the mends of two more of its bugs: Cilla's figure, and a
 click on a spell's icon on the Effects screen ending the spell.
+
+## In Wake of the Ravager
+
+Started from the Loader (**Play Wake of the Ravager**), the sequel runs a patched copy of its
+program with the fixes below. Its own story and scripts aren't Shattered Lands', so the fixes under
+[People and quests](#people-and-quests), Alagorn's stories and the game's own items (Sling +1, Great
+Axe +3, Quicksilver Glove) are Shattered Lands' alone; those items come across mended when [the
+party is taken to the sequel](FEATURES.md#taking-the-party-to-wake-of-the-ravager). How the port is
+built, fix by fix: [the port
+plan](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/wake-of-the-ravager-port-plan.md).
+
+### Shattered Lands' fixes in the sequel
+
+**Fixed there too** means the Loader's copy of the sequel has the fix; "not yet seen in play" that
+it is in, read against Shattered Lands' code, but a game hasn't reached the case yet. **Not needed**:
+the sequel hasn't the bug. **Not yet**: still to port. **Not checked yet**: the sequel's code still
+to be read for it.
+
+| Bug | In Wake of the Ravager |
+|---|---|
+| **Cause Serious and Critical Wounds** | Fixed there too |
+| **Slay Living**'s description | Not checked yet |
+| A character's **most PSP** | Not checked yet |
+| **Negative Plane Protection** | Fixed there too (the save as against paralysis, poison and death); not yet seen in play |
+| **Scare**'s save | Fixed there too |
+| **"Can't save"** | Fixed there too (played) |
+| **Cloak of Bravery** | Fixed there too |
+| **Mirror Image** | Fixed there too (played); Reflected Image comes with the sequel's new spells, still to be merged |
+| **Armor** | Fixed there too (played) |
+| **Share Strength** | Fixed there too |
+| **Dispel Magic** | Not needed: SSI mended it in the sequel itself |
+| **Absorb Disease** | Fixed there too; not yet seen in play |
+| **Bless** and **Aid** | Fixed there too; not yet seen in play |
+| **Acid Arrow** | Fixed there too (the burns played) |
+| **Psionic Blast** on a party member | Fixed there too (played) |
+| **Walls** cast by monsters | Not checked yet |
+| A **berserk** or **confused** party member | Not checked yet |
+| **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
+| An archer whose **quiver runs dry** | Not yet: the sequel's arrows are counted by other code, still to be found |
+| A **thri-kreen's claws and bite** | Not checked yet |
+| The **fire elementals** | Not needed as such: the sequel's monsters have resistances of their own |
+| The game's **people's weapons and armour** | Not needed: the sequel puts them on as they come |
+| **Random monsters** | Fixed there too |
+| A fight's **music** | Not yet: the sequel's region levels are read by other code, still to be found (its music is the CD's) |
+| **Resting while poisoned** | Fixed there too (played) |
+| **DELETE** in the roster | Not checked yet |
+| The **creation screen's least scores** | Not yet: the sequel keeps the game's (the dice log says so) |
+| **XP for high prime requisites** | Not yet |
+| A **New** character's thief skills | Not yet (12 of the 24 tests found; it matters only before the game starts) |
+| **Thief skills**' equipment penalty | Fixed there too |
+| A thief skill rolled **for the whole party** | Fixed there too |
+| Items that raise or lower an **ability score** | Not checked yet |
+| The **gladiator's armour optimisation** | Not checked yet |
+| The **air cleric's daggers** | Not checked yet |
+| **View Character's DAM line** with a weaker material | Not yet |
+| The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
+| **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
+| An archer's **pointer** after a shot | Not checked yet |
+| A magic item's power on the **Effects screen** | Not checked yet |
+| A click on a spell's icon on the **Effects screen** ending the spell | Fixed there too (played) |
+| **CHOOSE A SPELL**'s icons with more than 15 spells | Not checked yet |
+| **Graphics disappearing in a busy area** | Fixed there too (played): SSI's note 2712 was written for this game |
+| A magic item's **glow in a shop** | Not yet: comes with the sequel's graphics, still to be merged |
+
+### The sequel's own bugs
+
+Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found first:
+
+| Bug | The game | With the Loader |
+|---|---|---|
+| A new character's **hit points** | The creation screen rolled the hit dice, but the most hit points weren't worked out again: a new 7th-level fighter had 7/7 | The most hit points are the dice rolled plus CON's bonus a level, as Shattered Lands works them out |
+| A new character's **weapon hand** | The starting gear put a fighter's +1 long sword (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the weapon specs, and a fighter's shield in the right | The weapon in the weapon hand and the shield in the left |
+| The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](FEATURES.md#wake-of-the-ravager)) |
+| A **worn item's spell** | Never ended when the item came off: the test whether the item has a spell compared unsigned, so the spell's removal was skipped for every item | Ends as the item comes off, as in Shattered Lands |
+| **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](FEATURES.md#wake-of-the-ravager)) |
+| **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
+
+## Known, not yet fixed
+
+Bugs found and still to mend; each moves up the page once its fix is in.
+
+| Bug | Where | What happens |
+|---|---|---|
+| **Saving throws stop improving** | Shattered Lands | The game takes AD&D's best save as the most a save can improve to, so saves stall early: a warrior's stay at 11/11/11/13/11 from 9th level. The sequel's is mended (above); Shattered Lands' fix is being made |
+| A **psionicist's saving throws** | Both games | A psionicist saves as a thief, where Dark Sun gives the psionicist a table of its own (10 against petrification at 1st level, a thief's 12). The fix, in both games, is being made with Shattered Lands' saves; a psionicist/thief will take the better of the two |
 
 ## Saved games
 

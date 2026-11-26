@@ -148,6 +148,21 @@ Releases, newest first (2.12.0 and older in the archive):
 
 **Dev**
 - `test_ravpickpocket.py`; `ravdice.py`'s `RAV_PICK_ROLL=N` fixes the pick's d100 for a test.
+**Fixed: the Loader**
+- Every Shattered Lands start failed before the game ran, on either engine: the weapon window's
+  `weaponpages.slot()`, changed for the sequel's weapon specs, read its colours before they were set
+  (`UnboundLocalError`). `test_start_files` now prepares the patched game from the player's own files (#196).
+
+**Fixed: Wake of the Ravager (the port, #148 to #195)**
+- The Loader's copy of the sequel has most of Shattered Lands' engine fixes, and mends some of the
+  sequel's own bugs: a new character's hit points, its weapon in the off hand, the message box that
+  never stayed on screen, a worn item's spell that never ended, saving throws held at the table's last
+  row, and the Tyr inn's room that never rested ([which, fix by fix](obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager)).
+
+**Docs**
+- The game's bugs page says which fixes Wake of the Ravager has, lists the sequel's own bugs mended,
+  and the bugs known and not yet fixed (Shattered Lands' saves that stop improving, and a psionicist's
+  saves in both games); the patch notes' bug fixes have the sequel too.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the

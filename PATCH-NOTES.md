@@ -223,6 +223,11 @@ The main fixes; every bug of the original game the mod mends, with what the game
 - **[Fixed]** Lines that depend on the speaker's **race, sex or class** read the wrong record; script bugs in **Darkhold**, the **Lava Rifts** and **Linara**'s talk.
 - **[Fixed]** Cilla, an elf, was drawn with the half-elf woman's figure.
 
+**Wake of the Ravager** (started from the Loader)
+
+- **[Fixed]** Most of the fixes above that touch the engine, from Mirror Image and Armor to the picture slots and resting while poisoned; the page of [the game's bugs](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager) says which, and which are still to come.
+- **[Fixed]** The sequel's own: a new character's **hit points** stayed one a level, its **weapon** started in the off hand, the **message box** never stayed on screen, a **worn item's spell** never ended when it came off, **saving throws** stopped at the table's last row, and the Tyr inn's room never rested.
+
 ## Your Saved Games
 
 **You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save.
