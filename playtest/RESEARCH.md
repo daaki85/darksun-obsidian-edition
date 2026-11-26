@@ -1553,6 +1553,20 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
   Elementalist's second sphere is hooked after its callers instead (next).
 
+**The kits' gear** (2026-11-26, logs/2026-11-26-ravager-kit-gear.md):
+- **The equip test**: "may this character equip it" is 77514h ([BP+6] the item, [BP+8] show the message,
+  [BP+0Ah] the sheet, far), its one caller the equip routine 7761Bh ([BP+6] the item, [BP+8] the slot,
+  DI: the worn slot + 4, so 7 the right hand, 14 the left; [BP+0Ah] show). Every other "no" of 77514h
+  (no such item, its +4 flags 10h/20h, a thri-kreen's) leaves before 775FDh (to 77561h), so CU_SITE's
+  AL 0 is the classes' lists alone and the kit's own may make it yes. The slot is read through the
+  frame under 77514h's ([BP] the equip routine's BP).
+- **Giving a kit for an equip test** on the roster's inventory: `ravkits.py set 0 BYTE RACE CLASS...`
+  and `ravkits.py flags 0 WORD` (the class bits: 80h a preserver alone makes the game's lists say no
+  to a bow, A0h fighter and preserver yes). `ravkits.py count`'s `kit_refused` and `kit_allowed` count
+  the kits' answers (several a try: the screen asks to light the slots, then on the click).
+- **A kind specialized in** is never a kit's limit (SL's): pick a test item of no kind (arrows) or a
+  character without that spec to see a Ravager's missile refused.
+
 **The priests' spheres and the Elementalist's second sphere** (2026-11-25, logs/2026-11-25-ravager-sphere.md):
 - **The sequel keeps no spells known for a priest.** A wizard's are bits a member (selector 320h, +39Ch,
   0Fh bytes a member); a priest's are worked out every time: the USE screen's list (62500h, a level's
@@ -1837,6 +1851,16 @@ screen: the sphere's AIR clicked off at 240,106, then EARTH 114, FIRE 122, WATER
 (255,29) clicked off first; the weapon window's slots at x 75, 109, 143, 177, 211, 245 and y 32, 66, 100, 134 in
 specialize.KINDS' order. A ranger can't pick the bow (greyed). The roster's ADD (a right click on an empty party slot)
 lists the roster newest first, rows from y 45, 11 apart.
+
+**The kits' starting gear** (2026-11-26, logs/2026-11-26-ravager-kit-start-gear.md): `ravkitstart.kit_gear` then
+`weaponchoice.class_gear` in ravlog's `_gear_pass` (after ravfirstweapon.fill, before startgear.fill;
+`RAV_NO_KIT_START=1` on ravdice.py a control). **The game's give routine drops what the equip test refuses into the
+backpack**: with DSCLOG2's KIT_FORBIDS at CU_SITE a new Ravager's Shield +1 and ring armour (33, 4, 65) land in cells
+14-17, not worn, so a kit's gear step must look in the pack too (a weapon there with the right hand empty, armour by its
+type's place on the body: the type's +5, 1 the chest, 3 the arms, 0Ah the legs, 5 a hand), and must run before
+class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS (232,138), NO KIT (250,106) and the
+kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
+menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
 
 ### The sequel's spells in a fight (2026-11-21)
 
