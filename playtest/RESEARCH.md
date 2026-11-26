@@ -1534,6 +1534,20 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   per use by 62B45h (spell, class) through a jump table (CL 01 air, 02 earth, 04 fire, 08 water): the
   Elementalist's second sphere is hooked after its callers instead (next).
 
+**The kits' gear** (2026-11-26, logs/2026-11-26-ravager-kit-gear.md):
+- **The equip test**: "may this character equip it" is 77514h ([BP+6] the item, [BP+8] show the message,
+  [BP+0Ah] the sheet, far), its one caller the equip routine 7761Bh ([BP+6] the item, [BP+8] the slot,
+  DI: the worn slot + 4, so 7 the right hand, 14 the left; [BP+0Ah] show). Every other "no" of 77514h
+  (no such item, its +4 flags 10h/20h, a thri-kreen's) leaves before 775FDh (to 77561h), so CU_SITE's
+  AL 0 is the classes' lists alone and the kit's own may make it yes. The slot is read through the
+  frame under 77514h's ([BP] the equip routine's BP).
+- **Giving a kit for an equip test** on the roster's inventory: `ravkits.py set 0 BYTE RACE CLASS...`
+  and `ravkits.py flags 0 WORD` (the class bits: 80h a preserver alone makes the game's lists say no
+  to a bow, A0h fighter and preserver yes). `ravkits.py count`'s `kit_refused` and `kit_allowed` count
+  the kits' answers (several a try: the screen asks to light the slots, then on the click).
+- **A kind specialized in** is never a kit's limit (SL's): pick a test item of no kind (arrows) or a
+  character without that spec to see a Ravager's missile refused.
+
 **The priests' spheres and the Elementalist's second sphere** (2026-11-25, logs/2026-11-25-ravager-sphere.md):
 - **The sequel keeps no spells known for a priest.** A wizard's are bits a member (selector 320h, +39Ch,
   0Fh bytes a member); a priest's are worked out every time: the USE screen's list (62500h, a level's
