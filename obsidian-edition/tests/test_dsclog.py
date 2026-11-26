@@ -7053,9 +7053,13 @@ class KitTests(unittest.TestCase):
             self.mu.mem_write(hdr + 350, bytes((1,)))  # (under the open sky)
             self.assertEqual((initiative(0), initiative(1), move(0)), (2, 0, 0))
             self.assertEqual([to_hit(0, t) for t in (1, 64, 0, 45, 48)], [1, 1, 1, 0, 0])  # bow, slings; not a sword, chatkcha
+            # (nor a javelin, metal javelin or darts: kinds 20 and 21, past the staff sling's 15)
+            self.assertEqual([to_hit(0, t) for t in (game.JAVELIN_TYPE, game.METAL_JAVELIN_TYPE, game.DARTS_TYPE)],
+                             [0, 0, 0])
             self.assertEqual(to_hit(1, 1), 0)
             self.assertEqual(kits.initiative(kits.SCOUT, True), 2)
-            self.assertEqual([kits.missile_to_hit(kits.SCOUT, k, True) for k in (13, 14, 15, 0, 12)], [1, 1, 1, 0, 0])
+            self.assertEqual([kits.missile_to_hit(kits.SCOUT, k, True) for k in (13, 14, 15, 0, 12, 20, 21)],
+                             [1, 1, 1, 0, 0, 0, 0])
             self.assertEqual(kits.missile_to_hit(kits.SCOUT, 13, False), 0)
             self.creature(9, 2, index=3, second=17, race=2)  # a dwarf fighter/thief Wayfinder
             # (up, New or Okay: 1 more; down, stunned to petrified, or Gone: none, no less since 2.18;

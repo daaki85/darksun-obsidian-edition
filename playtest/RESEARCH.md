@@ -189,6 +189,17 @@ raised before stopping.
   then `specialize.skill(sheet, ITEM_TYPE)` reads 5 (GRAND). `foeset.py C race=5` makes a kind large
   (a sheet is shared, so one combatant of each). With every foe held, Tab chooses the nearest foe
   even when the member can't reach it: the END menu then opens with Move 0 (E ends the turn).
+- **A mod weapon put on a member for a test** (logs/2026-11-26-sl-saves-scout.md): `setitem.py` has no
+  record for a mod type ("no item record for 152"); write the whole record instead, `setitem.py ITEM
+  rec=$(python3 -c "from dsloader import worldgear; print(worldgear.weapon(worldgear.JAVELIN).hex())")`.
+  A changed type word alone leaves it unused. The javelin was thrown only with the attack pointer on a
+  foe right beside the member; darts made so gave "NO PATH FROM HERE" on every try.
+- **A kit's open-sky rule in an indoor area** (the same log): the dice log writes KIT_OUTDOORS (DSCLOG's
+  header +350) once a second from `stealth.daylight` and `stealth.OUTDOORS`; the slave pens (region
+  29h) are indoors. For a Military Scout's or Arcane Archer's test run the dice log through a small
+  wrapper that adds 29h to `stealth.OUTDOORS` before `dsloader dicelog` starts (the initiative line then
+  shows "+2 Military Scout under the open sky"); start.sh doesn't kill a `python3 -u -c` dice log, so
+  stop it by its pid.
 
 ### Fights and foes in memory
 
@@ -338,6 +349,14 @@ raised before stopping.
   20,000), then a kill in a fight: the level comes during the next turns, and `fightout.sh` answers
   CHOOSE A SPELL with `levelup.sh` (count its "picked a spell" lines). A loop of `levelup.sh` until it
   fails counts the picks of one screen.
+- **Level-ups by XP written in memory** (logs/2026-11-26-sl-saves-scout.md): the dice log's tracker
+  takes the edit for an award and adds the prime requisites' 10%, and the Loader holds a multiclass's
+  XP at the cap's share (749,999 over the classes, a class) at once: write a few XP short of the level.
+  The saves after a level up are the sheet's +37h (PPD, RSW, PP, BW, SP); with RULE_HI_TABLES off
+  (`setmem.py ruleshi=-8`) they are the game's own (its table 420h:6Ch), the control. A psionicist's
+  level brings PICK A PSIONIC POWER: a red power's icon (158,62 or 177,62), FINISHED (112,139) turns
+  the discipline page. In the sequel (`ravlevel.py set`, `foes 1`, Computer Control, the boxes at
+  160,100) a psionicist's level up brought no pop-up, and `RAV_SKIP=save_table` is the saves' control.
 - **DUAL in memory**: the DUAL window greys a class by the creature record's scores (+22h), not the
   sheet's: raise one with `foeset.py C int=18`. `sheetscore.py M lv=N con=N ...` sets the first
   level and the creature's scores (what the window reads). A member with a kit is asked for none
