@@ -182,6 +182,7 @@ schedules and diffs a log made or used.
 | [2026-11-23](2026-11-23-memory-pass-6.md) | Memory pass 6 (GAME_FAR, FRAME_UP/DOWN, OVR_FRAME, the extra item types packed): the types in the game's table after a load byte for byte, the ambush's attacks, a backstab, Curse, Shocking Grasp's touch attack, an item box and its INFO, the creation screen's kit, sphere, discipline and weapon specialty windows |
 | [2026-11-25](2026-11-25-memory-pass-7.md) | Memory pass 7 (the item types and names in the Loader's copy of GPLDATA): the tables in game memory after two loads, the Loader's items named and their weapons' dice in the ambush |
 | [2026-11-24](2026-11-24-darkfix-beta-qa.md) | OpenDS darkfix beta.4 in the stock game: the sewer grate |
+| [2026-11-26](2026-11-26-ravager-spec-pick.md) | Picking weapon specs at creation in Wake of the Ravager: a fighter's lotulis, a gladiator's three, a thief offered none, EDIT keeping and adding picks, EXIT's defaults, the specs from the roster in the Tyr ambush (+1/+2 specialized, +3 mastery), the RAV_SKIP control |
 
 ## files/
 

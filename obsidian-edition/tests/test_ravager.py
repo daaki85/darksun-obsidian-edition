@@ -43,7 +43,8 @@ class TableTests(unittest.TestCase):
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
-                            "psi_click", "pick_top", "f10_pin"}
+                            "psi_click", "pick_top", "f10_pin",
+                            "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -390,9 +391,11 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(sum(a != b for a, b in zip(exe, orig)) <= changed, True)
             res = gff.read_gff(open(os.path.join(d, ravager.RESOURCE_COPY), "rb").read())
             game = gff.read_gff(open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read())
-            from dsloader import kitpages, rollstore
+            from dsloader import kitpages, rollstore, weaponpages
+            objects = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             self.assertEqual(set(res.keys()), set(game.keys()) | set(kitpages.rav_chunks(game))  # (the kit pages,
-                             | set(rollstore.rav_chunks(game)))  # STORE and RECALL)
+                             | set(rollstore.rav_chunks(game))  # STORE and RECALL,
+                             | set(weaponpages.rav_chunks(game, objects)))  # the weapon window)
             changed_spells = {k[1] for k in game if k[0] == "DATA" and game[k] != res[k]}  # (the index chunks grow: GFFI)
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE

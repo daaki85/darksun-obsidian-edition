@@ -634,6 +634,19 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("psi_cycle", 0x93FF1, bytes.fromhex("fe877b9d"), _site(97, 4)),
     Patch("psi_click", 0x94245, bytes.fromhex("0ac07420"), _site(98, 4)),
     Patch("pick_top", 0x93831, bytes.fromhex("3b46fe"), _site(99, 3)),
+    # ... and a warrior's weapon specs (SL's CR_WEAPONS, LV_CHECK and PROBE_PK_*; game.RULE_SPECIALIZE): DSCLOG2's
+    # WEAPON PICKS. DONE's "push si / nop / push cs" before its call for the game's gear (6E2ECh, just before SL's
+    # CR_WEAPONS' place, the screen's windows let go by then), CR_WEAPONS (site 120): the psionicists' pop-up in
+    # weapon mode for the specs the new member is due, which shows the weapon window (weaponpages.rav_chunks,
+    # RESOURC2.GFF's 3021) through PK_WIN (121, "push 445Dh", 93C94h [85FF4h]), PK_TITLE (122, "push ds / push
+    # 2ACCh", 93D63h [860C3h]), PK_FILL (123, "xor di,di / mov si,di", 93DECh [8610Fh]), PK_CLICK (124, "mov
+    # ax,[bp+8]", 93FABh [862D4h]) and PK_HOVER (125, "or ax,ax / jnz", 93BBAh [85F44h]); PSI_COUNT the picks left
+    Patch("cr_weapons", 0x6E2EC, bytes.fromhex("56900e"), _site(120, 3)),
+    Patch("pk_win", 0x93C94, bytes.fromhex("685d44"), _site(121, 3)),
+    Patch("pk_title", 0x93D63, bytes.fromhex("1e68cc2a"), _site(122, 4)),
+    Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
+    Patch("pk_click", 0x93FAB, bytes.fromhex("8b4608"), _site(124, 3)),
+    Patch("pk_hover", 0x93BBA, bytes.fromhex("0bc07515"), _site(125, 4)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -989,14 +1002,26 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
+WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
 
 
-def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
-    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES) and the creation screen's STORE
-    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) unless in SKIP; the names of those applied."""
+    (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
+    and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
+    pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
+    names of those applied."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
+        from . import weaponpages
+        try:
+            added = weaponpages.rav_chunks(gff.read_gff(out), gff.read_gff(objects))
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (no psionicists' window to make it from: none, the picks never asked)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(WEAPON_WINDOW)
     if KIT_PAGES not in skip:
         try:
             added = kitpages.rav_chunks(gff.read_gff(out))
@@ -1018,9 +1043,14 @@ def resources_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
 
 
 def write_resources(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """RESOURCE.GFF's copy with the spell fixes and kit pages (resources_fixed), written to DEST unless
-    already so; the fixes applied."""
-    return _write_copy(game_dir, RESOURCE_FILE, dest, resources_fixed, skip)
+    """RESOURCE.GFF's copy with the spell fixes, kit pages and weapon window (resources_fixed, the weapons'
+    pictures from the game's OBJEX.GFF), written to DEST unless already so; the fixes applied."""
+    source = _find_file(game_dir, OBJECTS_FILE)
+    objects = None
+    if source:
+        with open(source, "rb") as f:
+            objects = f.read()
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.

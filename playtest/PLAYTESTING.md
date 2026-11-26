@@ -707,6 +707,14 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
   107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
   discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
+- **Weapon specs at creation in Wake of the Ravager** (logs/2026-11-26-ravager-spec-pick.md): after the
+  powers, a fighter, gladiator or ranger gets the weapon window (four rows of six, slots 34 apart: the
+  long sword 75,32, club 109,32, the two-handed sword 211,100, lotulis 245,100, double spear 75,134;
+  EXIT 228,176, then EXIT 112,92 for the defaults). The pointer on a slot names it under them. It needs
+  the Loader or the dice log attached (DSCLOG2's rules word 0 before: no window). `ravspecs.py` reads the
+  specs and the pick's counters; EDIT (right click on a "New" member's portrait, 170,117) asks only for
+  picks still due. In CREATE CHARACTERS after a restart the party is empty: right click, ADD (the
+  menu's second line), the roster's rows from 100,45, 11 apart, ADD 253,46.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
