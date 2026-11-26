@@ -19,6 +19,9 @@ and Justifier's casting level, the Elementalist's second sphere's spells and the
 forbids or allows work there, and a new character takes a kit there as here; what else they do to
 spells and powers, starting gear and hit dice doesn't yet. Which kits work there, and which only in
 part: [In Wake of the Ravager](#in-wake-of-the-ravager).
+and Justifier's casting level and the Elementalist's second sphere's spells work there; what else they do to spells and powers, gear and hit dice
+doesn't yet, and a kit can't be chosen in the sequel. How the kits go on past the levels Shattered
+Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
@@ -46,6 +49,7 @@ work: [DEVELOPMENT-KITS.md](https://github.com/daaki85/darksun-obsidian-edition/
   - [Sphere weapon limits](#sphere-weapon-limits)
 - [Kits' spell slots](#kits-spell-slots)
 - [In Wake of the Ravager](#in-wake-of-the-ravager)
+- [Past 13th level](#past-13th-level)
 - [Changing class](#changing-class)
 - [Kits that rule out classes and each
   other](#kits-that-rule-out-classes-and-each-other)
@@ -84,7 +88,7 @@ druid or preserver.
 #### Ravager
 
 A base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3
-at 9th-10th**, armour bettering it as usual. Cahulaks are allowed (the game
+at 9th-10th, 2 at 11th-12th, 1 at 13th-14th and 0 from 15th**, armour bettering it as usual. Cahulaks are allowed (the game
 doesn't throw them). **Starts with** the fighter's gear, with a second of its
 weapon in place of the shield (none if the weapon takes both hands). The dice
 log shows its bonus as `+1 Ravager`.
@@ -147,18 +151,20 @@ With weapon specialization, its expertise with its chosen weapon spec becomes
 specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); the
 bow stays at every ranger's expertise unless it is the chosen weapon spec
 ([Weapon specs](WEAPON-SPECS.md#who-picks-what)). No penalty for two weapons in
-any armour (another ranger's is in light armour only). **One 1st-level priest
-spell slot from 10th level**, in place of a ranger's slots, cast at the ranger
-level less 9 (1st at 10th); WIS gives it no bonus slots. **Starts with** the
+any armour (another ranger's is in light armour only). Priest spell slots in place of a
+ranger's: **one 1st-level slot at 10th level, two at 11th, and a 2nd-level slot at 12th, two at
+13th, and a 3rd-level slot at 14th, two at 15th, and 3 2 2 from 16th** (the owner's table); cast
+at the ranger level less 9 (1st at 10th, 7th at 16th and no higher); WIS gives it no bonus slots. **Starts with** the
 ranger's gear. Can't dual to cleric.
 
 #### Seeker
 
 Priest spell slots in place of a ranger's: **one 1st-level slot at 6th level,
 two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at
-10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's:
-less 7), so 2nd-level spells from 8th and 3rd-level from 10th. WIS gives it no
-bonus slots.
+10th; then 3 2 1 at 11th, 3 2 2 at 12th, 3 3 2 1 at 13th, 3 3 3 1 at 14th, 4 4 3 1 at 15th and
+4 4 3 2 from 16th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th, 11th from 16th and
+no higher; a ranger's: less 7, 9th at most), so 2nd-level spells from 8th, 3rd-level from 10th and
+4th-level from 13th. WIS gives it no bonus slots.
 
 It keeps to its [sphere's weapon limits](#sphere-weapon-limits), as a cleric of
 that sphere does, the bow too (a fire Seeker has none), and has **no ranger's
@@ -203,9 +209,9 @@ A few preserver spells, from **a short list of its own** (21: [the
 list](#kits-spell-slots)), not every preserver spell: **one 1st-level slot at
 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level
 slot at 10th; then 3 2 1 at 11th, 3 2 2 at 12th and 3 3 2 1 at 13th, a
-4th-level slot**, as *The Complete Ranger's Handbook*'s Seeker table goes on;
-cast at the thief level less 5 (1st at 6th, 5th at 10th, 8th at 13th), in light
-armour too.
+4th-level slot**, as *The Complete Ranger's Handbook*'s Seeker table goes on (and on past 13th
+as the Seeker's); cast at the thief level less 5 (1st at 6th, 5th at 10th, 8th at 13th, 11th at
+most), in light armour too.
 
 It learns one spell at each level up from 6th, from its own 21 (a 4th-level one
 at a level up from 13th, with its slot, or sooner from a scroll, to cast from
@@ -283,7 +289,7 @@ backpack.
 The second sphere's spells are cast at its cleric level and known from the start,
 and its weapons are allowed as well as its own sphere's. Its slots are a level
 behind (a 7th-level Elementalist has a 6th-level cleric's), but at least 1 at
-each spell level a cleric of its level casts (1 at 1st level). The second sphere
+each spell level a cleric of its level casts (1 at 1st level; a 7th-level slot at 14th). The second sphere
 is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu
 after DUAL: [Choosing a kit](#choosing-a-kit)). **Starts with** the cleric's gear.
 
@@ -487,7 +493,7 @@ used). They **last until shot** (no fading at a rest), are readied and put away 
 any arrows, and are worth nothing. What an arrow hits saves as against the spell
 itself ("all normal saving throw attempts are allowed"): against Chill Touch, none
 against Shocking Grasp or Vampiric Touch. Shot from a bow, its spell arrows are
-**+1 from its 5th preserver level and +2 from its 9th**, so they hurt what only
+**+1 from its 5th preserver level, +2 from its 9th and +3 from its 13th**, so they hurt what only
 magic weapons hurt; its other arrows are as they are. Only a Spellarcher carries
 spell arrows (another party member can't ready them, and any it is given go back
 to the Spellarcher); their item box's INFO says so, its list headed SPELLARCHERS: in place
@@ -695,16 +701,23 @@ these beside: [the player's guide](PLAYER-GUIDE.md#spell-slots).
 | 8 | 3 2 2 1 | 3 3 2 1 | 2 2 2 1 | — | 2 1 | 2 1 |
 | 9 | 3 2 2 1 | 3 3 3 2 1 | 3 3 2 1 | — | 2 2 | 2 2 |
 | 10 | 3 3 2 1 1 | 4 4 3 2 1 | 3 3 2 2 1 | 1 | 2 2 1 | 2 2 1 |
-| 11 | 3 3 3 2 2 | 4 4 3 3 2 1 | 4 3 3 2 1 | n/a | n/a | 3 2 1 |
-| 12 | n/a | n/a | n/a | n/a | n/a | 3 2 2 |
-| 13 | n/a | n/a | n/a | n/a | n/a | 3 3 2 1 |
+| 11 | 3 3 3 2 2 | 4 4 3 3 2 1 | 4 3 3 2 1 | 2 | 3 2 1 | 3 2 1 |
+| 12 | n/a | n/a | n/a | 2 1 | 3 2 2 | 3 2 2 |
+| 13 | n/a | n/a | n/a | 2 2 | 3 3 2 1 | 3 3 2 1 |
+| 14 | n/a | n/a | n/a | 2 2 1 | 3 3 3 1 | 3 3 3 1 |
+| 15 | n/a | n/a | n/a | 2 2 2 | 4 4 3 1 | 4 4 3 1 |
+| 16+ | n/a | n/a | n/a | 3 2 2 | 4 4 3 2 | 4 4 3 2 |
+
+(The rows past a ranger's 10th and a cleric's or preserver's 11th are reached in Wake of the
+Ravager's higher levels: [Past 13th level](#past-13th-level). The other kits' slots there are
+their class's, less the kit's one, as the rows above go on.)
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
 - An **Elementalist**'s slots are a level behind, but never none at a spell
   level a cleric of its own level casts: 1 there (1st-level spells at 1st, 2nd
   at 3rd, 3rd at 5th, 4th at 7th, 5th at 9th, and 6th at 11th with AD&D's
-  tables, as a cleric's 6th-level slots come only with them).
+  tables, as a cleric's 6th-level slots come only with them; 7th at 14th, as a cleric's).
 - A cleric's 11th level brings a **6th-level slot**
   ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
   Crusader's one fewer leaves it none, and an Elementalist has 1 there (above). A preserver has no 6th-level spells to cast.
@@ -774,6 +787,26 @@ the bow and arrows its class gives).
 
 The kits' spell slots past Shattered Lands' levels, a Spellarcher's arrows at +3 and a Battle Mage's
 or Arcanist's hit points past 10th wait for those kits' slots, arrows and hit dice in the sequel.
+## Past 13th level
+
+Shattered Lands stops a character near 10th-13th level; Wake of the Ravager's XP cap (5,625,000
+shared by a character's classes) and higher levels take a single class to 20th and on to 30th.
+The kits go on there as AD&D 2e and the kits' own books go on (the owner's choices, 2026-11-26):
+
+| Kit | Past Shattered Lands' levels |
+|---|---|
+| [Ravager](#ravager) | base AC 2 at 11th-12th, 1 at 13th-14th, 0 from 15th |
+| [Grove Warden](#grove-warden) | goes on 1 better every 3 druid levels: 5 at 15th, 6 at 18th, and on |
+| Battle Mage, Crusader, Mind Warrior | an expert's 5/2 attacks a round from the kit's class's 13th level ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)) |
+| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most |
+| [Justifier](#justifier) | slots on to 3 2 2 from 16th; casting level 7 at most |
+| [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
+| [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
+| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
+| Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
+
+What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
+backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a Mind Warrior's PSP.
 
 ## Changing class
 

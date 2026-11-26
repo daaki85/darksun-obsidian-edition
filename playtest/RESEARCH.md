@@ -1988,6 +1988,15 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   +15h is 7 (`hpup.py`-style; the party's aren't those). **The helper's rules are 0 until the dice log
   attaches** (`ravdice.py`: RavDiceLog writes RULES_PORTED): a level up with no dice log is the game's
   own, a control.
+- **The weapon window at a level up in the sequel** (logs/2026-11-26-ravager-high-levels.md): DSCLOG2's
+  LV_WEAPONS (site 150) opens it after the level up's other windows when a member has fewer specs than
+  `lv_due` (a gladiator 2/3/4 then one more every 4 levels past 9th; a fighter a second at 13th). Set a member
+  with `ravlevel.py set` and its specs with `logs/files/2026-11-26-ravager-high-levels-specs.py MEMBER
+  KIND,...` (the packed form kept, the age roll too; specs 5-8 in +45h-+47h), then win the fight. The 640x480
+  window maps to ravclick.py's game coordinates as x / 2, y / 2.4 (the slots from (75,37), 35 apart, rows at
+  y 37, 70, 100, 133); grab the screen between box clicks at (160,100), as one can land on a slot. The
+  sequel's own party has no specs, so any of their level ups asks too. The Effects screen pages the spec
+  lines with MORE (a click at (180,146)).
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py

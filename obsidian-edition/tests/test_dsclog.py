@@ -7195,7 +7195,7 @@ class KitTests(unittest.TestCase):
             self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_ES)],
                              [0x2222, 0x3333, ammo_seg])
             return struct.unpack("b", mu.mem_read(ammo_seg * 16 + 6, 1))[0]
-        for level in (1, 4, 5, 8, 9, 12):
+        for level in (1, 4, 5, 8, 9, 12, 13, 16):
             self.creature(9, 1, index=2, second=11, race=4, level=level)  # thing 7 is creature 2: a Spellarcher
             self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 11, 4), kits.SPELLARCHER)
             for plus in (0, 1, 3, -1):
@@ -7205,7 +7205,7 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(shot(plus, 69, spell), want)  # (Phrain's Bow)
                     self.assertEqual(shot(plus, 1, plain), plus)  # (plain arrows: as they are)
                     self.assertEqual(shot(plus, 64, spell), plus)  # (a sling: as it is)
-        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, 0, True, lv) for lv in (4, 5, 8, 9)], [0, 1, 1, 2])
+        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, 0, True, lv) for lv in (4, 5, 8, 9, 12, 13)], [0, 1, 1, 2, 2, 3])
         self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p, True, 5) for p in (0, 1, 3, -1)], [1, 1, 3, 1])
         self.assertEqual(kits.arrow_plus(kits.SPELLARCHER, -1, True, 1), 0)
         self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p) for p in (0, 2, -1)], [0, 2, -1])  # (plain arrows)
@@ -7299,10 +7299,10 @@ class KitTests(unittest.TestCase):
             self.rules(rules)
             for cls, kit in self.KIT_CASES + ((17, 3),):
                 kid = self.kit_of(cls, kit, rules)
-                for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15):
+                for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18):
                     self.creature(cls, kit, level=level)
                     for magic in (kits.WIZARD, kits.PRIEST):
-                        for spell_level in (1, 2, 3, 4, 5, 6):
+                        for spell_level in (1, 2, 3, 4, 5, 6, 7):
                             for given in (0, 1, 3):
                                 with self.subTest(rules=rules, cls=cls, kit=kit, level=level, magic=magic,
                                                   spell_level=spell_level, given=given):
@@ -7320,7 +7320,11 @@ class KitTests(unittest.TestCase):
                                         r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_DX, r.UC_X86_REG_ES,
                                         r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x4444, 0x6666, 0x7FC])
         self.assertEqual([kits.slots(kits.SEEKER, kits.PRIEST, lv, sl, 9) for lv in (5, 6, 8, 10, 15) for sl in (1, 3)],
-                         [0, 0, 1, 0, 2, 0, 2, 1, 3, 2])
+                         [0, 0, 1, 0, 2, 0, 2, 1, 4, 3])  # (15th: the owner's Table 51, 4 4 3 1)
+        # a Justifier's: the owner's Table 46 (10th 1, 12th 2 1, 14th 2 2 1, 16th and on 3 2 2)
+        self.assertEqual([[kits.slots(kits.JUSTIFIER, kits.PRIEST, lv, sl, 9) for sl in (1, 2, 3, 4)] for lv in (9, 10, 12, 14, 16, 20)],
+                         [[0, 0, 0, 0], [1, 0, 0, 0], [2, 1, 0, 0], [2, 2, 1, 0], [3, 2, 2, 0], [3, 2, 2, 0]])
+        self.assertEqual([kits.slots(kits.ELEMENTALIST, kits.PRIEST, lv, 7, 0) for lv in (13, 14)], [0, 1])
         # a Shinobi's wizard slots past a ranger's 10th, to its thief's 13th: The Complete Ranger's
         # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2 1)
         self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],

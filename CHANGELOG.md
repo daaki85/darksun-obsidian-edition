@@ -101,6 +101,15 @@ Releases, newest first (2.12.0 and older in the archive):
   refused; a Battle Mage's weapon of its weapon spec and leather, a Battle Dancer's long sword and bow, an
   Elementalist's second sphere's weapons allowed (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, at the sequel's
   "may this character equip it", site 19). KITS.md says which kits work in the sequel now, and which in part.
+**New: Wake of the Ravager's kits and weapon specs past 13th level**
+- For the sequel's higher levels (the owner's choices, 2026-11-26): a gladiator picks a weapon spec
+  more every 4 levels past 9th (5th-8th at 13th, 17th, 21st, 25th, in the sheet's spare three
+  bytes), a fighter a second at 13th that goes on to mastery at 17th and grand mastery at 21st (a
+  Myrmidon a third), and the level up's weapon window is ported to the sequel to ask for them.
+- The Ravager's base AC goes on to 0 at 15th; an expert's attacks are 5/2 from 13th; a Seeker's,
+  Shinobi's and Justifier's priest slots follow the owner's tables (Table 51, Table 46) to 16th, cast
+  at 11th and 7th at most; a Spellarcher's spell arrows are +3 from 13th; an Elementalist's 7th-level
+  slot comes at 14th, as a cleric's. Shattered Lands' helper has the same tables.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
