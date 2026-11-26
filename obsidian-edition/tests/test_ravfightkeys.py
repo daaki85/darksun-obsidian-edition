@@ -205,7 +205,7 @@ class HelperTests(unittest.TestCase):
         word = lambda at: struct.unpack_from("<H", self.image, hdr + at)[0]
         self.assertEqual(word(ravlog.FK_LIGHT), self.sym["FAR_LIGHT"])
         self.assertEqual(word(rings.TSR_RING_TAB), self.sym["FAR_RING_TAB"])
-        self.assertEqual(self.sym["FAR_TOP"] - self.sym["FAR_RING_TAB"], rings.THINGS)
+        self.assertEqual(self.sym["FAR_SC"] - self.sym["FAR_RING_TAB"], rings.THINGS)
         for routine in ("f10_pin", "squares_pass", "ring_at", "redraw_tick", "extras_wanted"):
             self.assertLess(self.sym[routine], self.sym["resident_end"], routine)
 

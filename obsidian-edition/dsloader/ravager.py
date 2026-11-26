@@ -818,6 +818,11 @@ PATCHES: Tuple[Patch, ...] = (
     # SITE_FIG_WIDE). Without them (RAV_SKIP, a control) DSCLOG2 draws no figure's shadow.
     Patch("fig_wide_all", 0x2868C, bytes.fromhex("ff760857"), _site(160, 4)),
     Patch("fig_wide", 0x2828C, bytes.fromhex("558bec83ec08"), _site(161, 6)),
+    # ... and each figure's frame's shadow kept as the thing drawer (2A28Fh, SL's 25E0Ch) draws its picture, for the
+    # floor drawings when the sequel has let the picture go from memory (most of them): its call of the picture
+    # routine, "call far 1D40:3BEC" (2A347h, SL's 25EBEh), its first three bytes (the segment, relocated at load,
+    # kept), DSCLOG2's site 162 (SITE_FIG_KEEP), which then calls the routine itself.
+    Patch("fig_keep", 0x2A347, bytes.fromhex("9aec3b"), _site(162, 3)),
     # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.

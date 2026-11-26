@@ -23,7 +23,7 @@ except ImportError:
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASM = os.path.join(HERE, "dos", "dsclog2.asm")
 WOTR = os.environ.get("DSUN_WOTR")
-FIG_SHADOWS, FIG_PASSES, FIG_DRAWN, FIG_WIDES = 1960, 1962, 1964, 1966  # (DSCLOG2's header)
+FIG_SHADOWS, FIG_PASSES, FIG_DRAWN, FIG_WIDES, FIG_KEPT, FIG_FROM_KEPT = 1960, 1962, 1964, 1966, 1968, 1970  # (the header)
 LOAD = (GAME_DS - ravager.DGROUP) & 0xFFFF if Uc else 0
 THINGS = ((LOAD + 0x3F49) & 0xFFFF) * 16 + 0x0C33
 CACHE = ((GAME_DS - (0x47E0 - 0x42A2)) & 0xFFFF) * 16 + 0x0CA8
@@ -114,10 +114,47 @@ class PassTests(unittest.TestCase):
         self.assertFalse(self.dark(s))
 
     def test_picture_out_of_memory_none(self):
+        """Out of memory and never kept: none."""
         s = self.scene([1, None, None])
         s.mu.mem_write(CACHE + 0x0E, b"\x00")
         s.call("fig_pass", fs=FAR)
         self.assertFalse(self.dark(s))
+
+    def test_picture_out_of_memory_kept(self):
+        """Out of memory: the shadow FIG_KEEP kept for the picture (its key: the slot's number and place), the same
+        as from the picture; another frame's when this one wasn't kept."""
+        live = self.scene([1, None, None])
+        live.call("fig_pass", fs=FAR)
+        for frame in (0, 3):
+            s = self.scene([1, None, None])
+            s.mu.mem_write(CACHE + 0x0E, b"\x00")
+            runs = [(up, 0, 8) for up in range(0, 16, 2)]  # (the frame: every row one run of 8; rows 15 .. 0 up)
+            kept = struct.pack("<HHBBBB", 0, 0, frame, 8, 15, len(runs)) + b"".join(bytes(r) for r in runs)
+            s.mu.mem_write(FAR * 16 + s.sym["FAR_SC"], kept)
+            s.call("fig_pass", fs=FAR)
+            self.assertEqual(self.dark(s), self.dark(live))
+            self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_FROM_KEPT))[0], 1)
+
+    def test_kept_as_drawn(self):
+        """FIG_KEEP: a living creature's frame kept as the game draws it (its key, frame, width, bottom row and the
+        runs every other row up from the feet), then the game's routine called with the call's arguments, the
+        segment read from after the site, and back past it."""
+        s = self.scene([1, None, None])
+        game = 0x8000  # (the game's code: the site's way back at 8000:0010, the segment word there; its routine)
+        s.mu.mem_write(game * 16 + 0x10, struct.pack("<H", 0x8100))
+        s.mu.mem_write(0x8100 * 16 + 0x3BEC, b"\xb8\x34\x12\xcb")  # (mov ax,1234h / retf)
+        s.mu.mem_write(game * 16 + 0x12, b"\xf4")
+        sp = 0x700
+        args = struct.pack("<HHHHHHH", 1, 50, 60, 0, 0, PICTURE, 0)
+        s.mu.mem_write(SS * 16 + sp, struct.pack("<HHH", 0x10, game, 0x2) + args)
+        for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, edi=5, esi=0, eflags=0x2).items():
+            s.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        s.mu.emu_start(TSR * 16 + s.sym["fig_keep"], game * 16 + 0x12, count=100000)
+        self.assertEqual((s.mu.reg_read(r.UC_X86_REG_AX), s.mu.reg_read(r.UC_X86_REG_SP)), (0x1234, sp + 6))
+        slot = bytes(s.mu.mem_read(FAR * 16 + s.sym["FAR_SC"], 8 + 3 * 8))
+        self.assertEqual(slot[:8], struct.pack("<HHBBBB", 0, 0, 0, 8, 15, 8))
+        self.assertEqual(slot[8:], b"".join(bytes((up, 0, 8)) for up in range(14, -1, -2)))  # (the rows top down)
+        self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_KEPT))[0], 1)
 
     def site(self, name, bp, stack, words):
         """Site NAME entered as SITE_INT leaves it (the INT's IP, CS and flags on the stack, then STACK), with the
@@ -169,13 +206,14 @@ class HeaderTests(unittest.TestCase):
         from test_dsclog_drawing import build
         _, sym = build(ASM)
         for name, at in (("fig_shadows", FIG_SHADOWS), ("fig_passes", FIG_PASSES), ("fig_drawn", FIG_DRAWN),
-                         ("fig_wides", FIG_WIDES)):
+                         ("fig_wides", FIG_WIDES), ("fig_kept", FIG_KEPT), ("fig_from_kept", FIG_FROM_KEPT)):
             self.assertEqual(sym[name] - sym["hdr"], at, name)
-        for name in ("fig_pass", "fig_wide", "fig_wide_all", "fig_of"):
+        for name in ("fig_pass", "fig_wide", "fig_wide_all", "fig_of", "fig_keep", "fig_record"):
             self.assertLess(sym[name], sym["resident_end"], name)
         src = open(ASM).read()
         self.assertRegex(src, r"\n        dw fig_wide_all +; 160 SITE_FIG_WIDE_ALL")
         self.assertRegex(src, r"\n        dw fig_wide +; 161 SITE_FIG_WIDE")
+        self.assertRegex(src, r"\n        dw fig_keep +; 162 SITE_FIG_KEEP")
 
     def test_patches(self):
         by = {p.name: p for p in ravager.PATCHES}
@@ -183,6 +221,8 @@ class HeaderTests(unittest.TestCase):
                          (0x2868C, "ff760857", bytes((0xCD, ravager.VEC_SITE, 160, 0x90))))
         self.assertEqual((by["fig_wide"].offset, by["fig_wide"].original.hex(), by["fig_wide"].replacement),
                          (0x2828C, "558bec83ec08", bytes((0xCD, ravager.VEC_SITE, 161, 0x90, 0x90, 0x90))))
+        self.assertEqual((by["fig_keep"].offset, by["fig_keep"].original.hex(), by["fig_keep"].replacement),
+                         (0x2A347, "9aec3b", bytes((0xCD, ravager.VEC_SITE, 162))))
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR (the sequel's folder) not given")
     def test_the_games_bytes(self):
@@ -204,6 +244,8 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(exe[0x2A2AA:0x2A2B1], bytes.fromhex("662683bfae0c00"))  # (the slot's +6: below 0 none)
         self.assertEqual(exe[0x2A2C6:0x2A2CC], bytes.fromhex("26f687b60c02"))  # (+0Eh bit 2: in memory)
         self.assertEqual(exe[0x2A2E6:0x2A2EB], bytes.fromhex("268b87b20c"))  # (+0Ah: the picture, far)
+        self.assertEqual(exe[0x2A322:0x2A34F], bytes.fromhex(  # (the call FIG_KEEP sits on, its arguments)
+            "8a460eb400508bdec1e304b8a2428ec06626ffb7b20c8a4610b40050ff760aff7608ff76069aec3b401d83c40e"))
 
 
 if __name__ == "__main__":

@@ -307,6 +307,8 @@ fig_shadows dw 1                ; +1960 1: the figures cast shadows on the floor
 fig_passes  dw 0                ; +1962 floor passes the figures' shadows were drawn in (counted) ...
 fig_drawn   dw 0                ; +1964 ... and shadows cast in them (counted) ...
 fig_wides   dw 0                ; +1966 ... and redrawn rectangles widened for them (FIG_WIDE, FIG_WIDE_ALL)
+fig_kept    dw 0                ; +1968 frames' shadows kept as the game drew them (FIG_KEEP, site 162) ...
+fig_from_kept dw 0              ; +1970 ... and shadows cast from them, the picture out of memory (FIG_OF)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4063,7 +4065,7 @@ site_table:
         dw site_none                        ; 159 (none here)
         dw fig_wide_all                     ; 160 SITE_FIG_WIDE_ALL (2868Ch: the redraw of what moved: wider, for the figures' shadows)
         dw fig_wide                         ; 161 SITE_FIG_WIDE (2828Ch: the redraw of a rectangle of the view: the same)
-        dw site_none                        ; 162 (none here)
+        dw fig_keep                         ; 162 SITE_FIG_KEEP (2A347h: a thing drawn: its frame's shadow kept, for when its picture is out)
         dw site_none                        ; 163 (none here)
         dw site_none                        ; 164 (none here)
         dw site_none                        ; 165 (none here)
@@ -14833,6 +14835,8 @@ fig_of:
         add ax, FS_MOST + FS_DOWN
         cmp ax, [cs:clip_y0]
         jl .no
+        call fig_key                    ; (the picture's: its kept shadows' key)
+        mov [cs:fk_key], eax
         mov ax, ds                      ; its picture, if in the cache and in memory
         sub ax, CACHE_GAP
         mov es, ax
@@ -14840,7 +14844,7 @@ fig_of:
         cmp dword [es:si + CACHE_BASE + 6], 0
         jl .no
         test byte [es:si + CACHE_BASE + 0x0E], 2
-        jz .no
+        jz .kept                        ; (out of memory: the shadow kept as the game last drew it)
         les si, [es:si + CACHE_BASE + 0x0A]
         mov ax, es
         or ax, si
@@ -14921,6 +14925,248 @@ fig_of:
 .drawn: inc word [cs:fig_drawn]
         call ws_flush                   ; (its runs darkened)
 .no:    ret
+.kept:  mov al, [cs:fg_frame]           ; (FIG_KEEP's: this frame's, else another of the picture's)
+        call sc_find
+        jc .no
+        movzx ax, byte [fs:di + 5]
+        mov [cs:fg_w], ax
+        movzx ax, byte [fs:di + 6]
+        mov [cs:fg_bottom], ax
+        call fig_box
+        jc .no
+        movzx cx, byte [fs:di + 7]
+        lea si, [di + 8]
+.krun:  movzx ax, byte [fs:si]          ; a run: how far up, x, pixels
+        mov bx, ax
+        shr bx, 1
+        add bx, [cs:fg_feet]            ; (the screen row, as above)
+        cmp bx, [cs:clip_y0]
+        jl .knext
+        cmp bx, [cs:clip_y1]
+        jg .knext
+        movzx dx, byte [fs:si + 1]
+        mov [cs:fg_rx], dx
+        mov dl, [fs:si + 2]
+        mov [cs:fg_rn], dl
+        push cx
+        push si
+        call fig_cast
+        pop si
+        pop cx
+.knext: add si, 3
+        loop .krun
+        inc word [cs:fig_from_kept]
+        jmp .drawn
+
+; FIG_KEY: EAX the key of the picture in cache slot SI (DS the game's): its number (the slot's word +0)
+; and the low word of its place in the store (+6), so a slot reused for another picture has another
+; key. Keeps the rest.
+fig_key:
+        push es
+        push si
+        mov ax, ds
+        sub ax, CACHE_GAP
+        mov es, ax
+        shl si, 4
+        mov ax, [es:si + CACHE_BASE + 6]
+        shl eax, 16
+        mov ax, [es:si + CACHE_BASE]
+        pop si
+        pop es
+        ret
+
+; KEPT SHADOWS (DSCLOG's SHADOW CACHE, SC_SEG, here the far block's FAR_SC): the sequel lets go of a
+; picture from memory as soon as it wants the room (the slot's +0Eh bit 2 cleared; a figure's picture
+; was out at most floor drawings in Tyr's street), so each frame's shadow is kept as the game draws the
+; figure (FIG_KEEP, site 162, where the thing drawer calls the picture routine 1D40:3BEC with the picture
+; in memory): SC_SLOTS slots of SC_SLOT bytes, the picture's key (FIG_KEY), the frame, its width, its
+; bottom row, how many runs, then the runs that cast a shadow (how far up from the feet, x, pixels: a
+; byte each, at most SC_RUNS), filled in turn (the oldest given up). A figure whose picture is out casts
+; its frame's kept shadow, or another frame's of the same picture.
+SC_RUNS  equ 48
+SC_SLOT  equ 8 + 3 * SC_RUNS
+SC_SLOTS equ 64
+sc_next  dw 0                   ; the slot to fill next
+fk_key   dd 0                   ; the picture's key (FIG_KEY)
+
+; SC_FIND: FS:DI the slot with FK_KEY's frame AL, else one with another of its frames; CF if none
+; (FS the far block; AX, BX, CX, DX not kept)
+sc_find:
+        mov ebx, [cs:fk_key]
+        mov di, FAR_SC
+        mov dx, 0xFFFF
+        mov cx, SC_SLOTS
+.slot:  cmp byte [fs:di + 7], 0
+        je .next
+        cmp [fs:di], ebx
+        jne .next
+        cmp [fs:di + 4], al
+        je .hit
+        mov dx, di
+.next:  add di, SC_SLOT
+        loop .slot
+        cmp dx, 0xFFFF
+        je .none
+        mov di, dx
+.hit:   clc
+        ret
+.none:  stc
+        ret
+
+; FIG_KEEP (site 162): "call far 1D40:3BEC" (9Ah, ECh, 3Bh, then the segment, which the program's load
+; relocates: kept) where the thing drawer draws a thing's picture (2A347h; DI the thing, SI its cache
+; slot; the call's arguments the page, x, y, mirrored, the picture (far) and the frame): a living
+; creature's frame not kept yet is kept (FIG_RECORD); then the game's routine called as it was, and
+; back past the segment.
+fig_keep:
+        pop word [cs:fk_ip]
+        pop word [cs:fk_cs]
+        pop word [cs:fk_fl]
+        test byte [cs:fk_fl + 1], 2     ; (interrupts on again if the caller had them on: the figures are
+        jz .masked                      ;   drawn every frame, as SL's PROBE_GHOST)
+        sti
+.masked:
+        push fs
+        push es
+        pushad
+        mov bp, sp
+        call fig_record
+        popad
+        pop es
+        pop fs
+        push ds
+        push si
+        lds si, [cs:fk_ip]
+        mov si, [si]                    ; (the routine's segment, as the load relocated it)
+        mov [cs:fk_call + 2], si
+        pop si
+        pop ds
+        add word [cs:fk_ip], 2
+        call far [cs:fk_call]
+        push word [cs:fk_fl]
+        push word [cs:fk_cs]
+        push word [cs:fk_ip]
+        iret
+fk_ip   dw 0
+fk_cs   dw 0
+fk_fl   dw 0
+fk_call dw 0x3BEC, 0
+FK_ARGS equ 36                  ; (FIG_KEEP's frame: PUSHAD, ES, FS, then the call's arguments)
+
+; FIG_RECORD: (FIG_KEEP's, DS the game's, BP its frame) thing DI's frame kept in FAR_SC, if a living
+; creature's and not kept already
+fig_record:
+        cmp word [cs:fig_shadows], 0
+        je .ret
+        cmp word [cs:far_seg], 0
+        je .ret
+        cmp di, MAP_COUNT - 1
+        ja .ret
+        cmp si, CACHE_MOST
+        jae .ret
+        mov bx, di
+        call fig_alive
+        jnc .ret
+        call fig_key
+        mov [cs:fk_key], eax
+        mov fs, [cs:far_seg]
+        mov al, [bp + FK_ARGS + 12]     ; the frame
+        mov [cs:fk_frame], al
+        call sc_find
+        jc .take
+        cmp al, [fs:di + 4]
+        je .ret                         ; (kept)
+.take:  les si, [bp + FK_ARGS + 8]      ; the picture
+        mov ax, es
+        or ax, si
+        jz .ret
+        movzx bx, byte [cs:fk_frame]
+        cmp bx, [es:si + 4]
+        jae .ret
+        shl bx, 2
+        xor eax, eax                    ; (the frame's address, linear)
+        mov ax, es
+        shl eax, 4
+        movzx ecx, si
+        add eax, ecx
+        add eax, [es:si + bx + 6]
+        mov si, ax
+        and si, 0x0F
+        shr eax, 4
+        mov es, ax
+        mov ax, [es:si]
+        cmp ax, FS_MOST
+        ja .ret
+        mov [cs:fk_w], al
+        mov ax, [es:si + 2]
+        cmp ax, FS_MOST
+        ja .ret
+        dec ax
+        js .ret
+        mov [cs:fk_bottom], al
+        cmp byte [es:si + 4], 0xFF      ; (none, or planar)
+        je .ret
+        mov ax, [cs:sc_next]
+        inc word [cs:sc_next]
+        cmp word [cs:sc_next], SC_SLOTS
+        jb .slot
+        mov word [cs:sc_next], 0
+.slot:  imul di, ax, SC_SLOT
+        add di, FAR_SC
+        mov byte [fs:di + 7], 0         ; (not to be used till whole)
+        mov eax, [cs:fk_key]
+        mov [fs:di], eax
+        mov al, [cs:fk_frame]
+        mov [fs:di + 4], al
+        mov al, [cs:fk_w]
+        mov [fs:di + 5], al
+        mov al, [cs:fk_bottom]
+        mov [fs:di + 6], al
+        xor cx, cx                      ; CX: the runs kept
+        lea bx, [di + 8]
+        add si, 4
+.row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
+        inc si
+        cmp al, 0xFF
+        je .whole
+        xor ah, ah
+        movzx dx, byte [cs:fk_bottom]
+        sub dx, ax                      ; DX: how far up from the feet
+        jl .skip
+        cmp dx, FS_ROWS
+        jg .skip
+        test dl, 1
+        jnz .skip
+.run:   cmp cx, SC_RUNS
+        jae .past
+        mov [fs:bx], dl
+        mov al, [es:si]
+        mov [fs:bx + 1], al
+        mov al, [es:si + 2]
+        mov [fs:bx + 2], al
+        add bx, 3
+        inc cx
+.past:  test byte [es:si + 1], 0x80        ; (past the run: its data's bytes)
+        pushf
+        movzx ax, byte [es:si + 3]
+        add si, 4
+        add si, ax
+        popf
+        jz .run
+        jmp .row
+.skip:  mov al, [es:si + 1]             ; (a row with no shadow: past its runs)
+        movzx dx, byte [es:si + 3]
+        add si, 4
+        add si, dx
+        test al, 0x80
+        jz .skip
+        jmp .row
+.whole: mov [fs:di + 7], cl
+        inc word [cs:fig_kept]
+.ret:   ret
+fk_frame  db 0
+fk_w      db 0
+fk_bottom db 0
 
 ; FIG_BOX: CF set if none of the shadow of the frame (FG_W, FG_BOTTOM) at FG_X, FG_Y can be where the
 ; floor was drawn (the clip); FG_FEET the feet's row on the screen. Registers kept but AX.
@@ -18591,7 +18837,8 @@ FAR_TBUF   equ FAR_RED + 256                  ; the text buffer (TEXT: PROBE_TEX
 FAR_LIGHT  equ FAR_TBUF + TSIZE               ; SQUARES' LIGHT (XLAT), the Loader's (dust.light_table)
 FAR_RING_TAB equ FAR_LIGHT + 256               ; RINGS' RING_TAB, the Loader's: a byte a thing (THINGS)
 RING_TAB_BYTES equ 520                          ; (the Loader's table: game.THINGS; MAP_COUNT of it read)
-FAR_TOP    equ FAR_RING_TAB + RING_TAB_BYTES
+FAR_SC     equ FAR_RING_TAB + RING_TAB_BYTES     ; FIGURE SHADOWS' kept shadows (FIG_KEEP), SC_SLOTS x SC_SLOT
+FAR_TOP    equ FAR_SC + SC_SLOTS * SC_SLOT
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
 ; ---- install (not kept) ----
