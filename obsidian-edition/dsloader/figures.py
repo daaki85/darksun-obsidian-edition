@@ -513,6 +513,40 @@ def _behind(rows: Rows, before: Rows, skull_bottom: int, skull_x: Tuple[int, int
             rows[y][x] = c
 
 
+# Small paint masks in the half-elf woman's own frame coordinates. Only the
+# black (254) shadow inherited from the long human haircut takes this paint.
+# A dot leaves the pixel alone, including gaps between the raised arms.
+_FACE_PAINT = {"g": 179, "G": 180, "e": 129, "c": 132, "l": 146, "n": 134, "p": 174}
+_FRONT = ("..g", ".G.g", "elceg", "...cn", "...nG", "..n")
+_BACK = ("...g", "...g", "..Ggg", "..lnn", "..cnn", ".ppp", ".ppp")
+# x, y and consecutive scan lines. The same standing turn repeats in
+# the walk; the bent strike, drawn bow and fallen head each have a new angle.
+_WOMAN_FACE = (
+    (7, 1, _FRONT), (8, 2, _BACK),
+    (2, 1, (".....Gg", "....Ge", "...Gc", "...c", ".Gn", "g")),
+    (7, 1, _FRONT), (9, 1, _FRONT), (8, 1, _FRONT), (7, 1, _FRONT),
+    (7, 2, _BACK), (8, 2, _BACK), (9, 2, _BACK), (8, 2, _BACK),
+    (5, 1, (".......g", "......e", ".....c", "...Gc", ".Ggn", "..n", "G.g")),
+    (7, 1, ("........g", "......Ge", "....Gcl", "..gG.c", ".Gcnn", "Ggn", "g")),
+    (10, 1, ("......Gg", ".....Ge", "....Gc", "....c", "..Gn", ".g", "g")),
+    (6, 1, (".......g", "....gGe", "...Gcc", ".Gcn", "g", ".n")),
+    (8, 10, (".....g", "....G.e", "g..ecl", "n")),
+    (7, 5, (".......g", ".....Gg", "...elceg", "g.....c")),
+    (16, 4, (".Gg", "elcegg", ".n")),
+    (4, 5, ("......g", "....G", "...Gg", "g.Gn", "gn.n")),
+    (7, 11, (".g", ".G", "..g", "..G", ".cn")),
+    (13, 2, ("....g", "....G", "", "g")),
+    (14, 8, ("..g", "elc")),
+    (12, 3, (".......g", "......e", "...GGc", "g.Gcc", "GGcnn")),
+    (15, 2, ("...Gg", "..Ge", ".Gc", "c", "n", "n")),
+    (6, 1, (".....g", "....Gg", ".g.elc", "Gn")),
+    (4, 5, ("....Gg", "...GGg", "..Gn", "Ggnn", "nn")),
+    (7, 4, ("...g", "elce", "...c", "...n")),
+    (4, 3, ("..Gge", ".Gcn", "g..cn")),
+    (5, 12, (".....nngg", ".....nG", "....cGG", ".nngG", ".G.G", "G.Ggg")),
+)
+
+
 class HalfElfWoman:
     """The half-elf woman's pictures, made from the human woman's (WALK, FIGHT)."""
 
@@ -527,8 +561,15 @@ class HalfElfWoman:
 
     def frame(self, f: int, combat: bool) -> Rows:
         if combat:
-            return self._dead() if f == DEAD else self._fight(f)
-        return self._walk(f)
+            rows = self._dead() if f == DEAD else self._fight(f)
+        else:
+            rows = self._walk(f)
+        left, top, mask = _WOMAN_FACE[15 * combat + f]
+        for y, line in enumerate(mask, top):
+            for x, tone in enumerate(line, left):
+                if tone != "." and 0 <= y < len(rows) and 0 <= x < len(rows[y]) and rows[y][x] == 254:
+                    rows[y][x] = _FACE_PAINT[tone]
+        return rows
 
     def _plain(self, f: int, combat: bool) -> Rows:
         """Her figure in her colours, a column slimmer below the neck."""
