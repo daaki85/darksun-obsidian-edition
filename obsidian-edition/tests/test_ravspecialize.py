@@ -29,6 +29,7 @@ K = specialize.KINDS.index
 # (classes, levels, race): a fighter at each of mastery's steps, a gladiator, rangers, a multiclass
 # fighter, a non-warrior, a dual-classed human whose fighter class is or isn't back yet
 CHARACTERS = [((9,), (1,), 2), ((9,), (5,), 2), ((9,), (9,), 2), ((9,), (13,), 2), ((10,), (7,), 2),
+              ((9,), (17,), 2), ((9,), (21,), 2), ((10,), (25,), 2),  # (a fighter's second kind: the owner's 2026-11-26)
               ((16,), (3,), 1), ((13,), (8,), 2), ((9, 11), (3, 2), 4), ((17, 9), (2, 3), 6),
               ((11,), (6,), 2), ((17, 9), (3, 5), 1), ((17, 9), (6, 5), 1), ((15, 7), (12, 14), 8)]
 SPECS = ([], [K("long sword")], [K("bow"), K("short sword")], [K("polearm"), K("dagger"), K("sling")],

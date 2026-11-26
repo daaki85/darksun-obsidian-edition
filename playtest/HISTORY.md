@@ -828,6 +828,16 @@ flock waited until it was killed (logs/2026-11-21-ravager-creation-hp.md). Start
   member's Paralyzed or Stuck read at F10); a held member's turn is skipped; `f10watch.py` (logs/2026-11-20-f10-after-spell.md).
 - **2026-11-20**: DSCLOG's `F10_PIN`: the game's F10 itself leaves a Paralyzed or Stuck member where
   it is, after the last step and with movement left; the controls unchanged (logs/2026-11-20-f10-held-stays.md).
+- **2026-11-16**: the class-outfit pictures (`prototypes/outfits.py`) first put only into each
+  party object's own pair in the Loader's copy of SEGOBJEX.GFF, and the game, run without the
+  Loader so it wouldn't dress the figures again, drew the party as ever: without the Loader the game
+  draws the figure's own picture (2095...), not the pair. `outfitgame.py` writes both
+  (logs/2026-11-16-outfit-look.md).
+- **2026-11-21**: the looks by what's worn (`prototypes/wornlooks.py`) in the game, standing,
+  walking and in Pehtucl's ambush; with no Loader attached Tab + Return opened the game's menu and
+  E the Effects screen (the nearest-enemy pick is the Loader's): attack by clicking the foe. The
+  `fountain-user` party was first taken from the screen for a human man's and was four women
+  (`dsloader save` lists it) (logs/2026-11-21-worn-looks-in-game.md).
 - **2026-11-21**: DOSBox-X's unchecked items played: the start script's settings turned back for an
   autosave (the dice log restarted); Entangle's box over the party; a killed DOSBox-X's memory file
   left in /dev/shm (logs/2026-11-21-dosbox-x-unchecked.md).

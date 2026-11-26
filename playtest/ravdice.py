@@ -11,6 +11,8 @@
 # RAV_CHARGES_OFF=1: the charges' pass off (DiceLog.count_charges, as before its port: the charge routine's 2d4 behind the
 # overlay manager's stub not known, its label "Armor: 7 left" with it), a control.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
+# RAV_PICK_ROLL=N: every picking pockets d100 N, the pick's and the getaway's (pickpocket.attempt: 1 a success,
+# 100 caught).
 # RAV_NO_PAN=1: the view not scrolled to an enemy chosen with Tab off the screen (targeting.Targeting._show a no-op: the
 # Loader as it was before DSCLOG2's PAN, a control).
 # RAV_FOES_SL=1: Tab's list by Shattered Lands' rule (another side than the leader's, not side 4), not the sequel's
@@ -18,7 +20,8 @@
 # list: N: Draxan#26 (side 7), ...").
 # RAV_NO_SAVES=1: no quick saves (F5, F9) and no autosaves (for a run with memory edits). RAV_NO_SQUARES=1: the
 # squares in reach off (R does nothing: the Options tab's switch), RAV_NO_MOVEBACK=1: F10 after the last step left
-# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off): controls.
+# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off), RAV_NO_DUST=1: no walkers' dust (DSCLOG2's DUST_ON never set), RAV_NO_GHOST=1: no see-through figures (its GHOST_ON never set), RAV_NO_FIRST_WEAPON=1: a new
+# warrior keeps the game's starting weapon (ravfirstweapon.py off; the fuller gear still given): controls.
 # RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
 # the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
 # kept from its last attack (ac_gap) and the game's last AC for it, the effects on it, each swing's THAC0 and AC.
@@ -48,6 +51,11 @@ if os.environ.get('RAV_TAB_OFF'):  # (a control: no ring, no chance to hit on th
     print('Tab: ring and chances off', flush=True)
 if os.environ.get('RAV_STEALTH_ROLL'):
     log.stealth_roll = lambda n=int(os.environ['RAV_STEALTH_ROLL']): n
+if os.environ.get('RAV_PICK_ROLL'):  # (every picking pockets d100, the pick's and the getaway's, N: pickpocket.attempt)
+    from dsloader import pickpocket
+    _attempt = pickpocket.attempt
+    pickpocket.attempt = lambda *a, n=int(os.environ['RAV_PICK_ROLL']), **k: _attempt(*a, roll=lambda: n, **k)
+    print('picking pockets: every d100 %s' % os.environ['RAV_PICK_ROLL'], flush=True)
 if os.environ.get('RAV_NO_PAN'):  # (a control: DSCLOG2's PAN_X and PAN_Y never added to)
     from dsloader import targeting
     targeting.Targeting._show = staticmethod(lambda gd, tsr_hdr, thing: False)
@@ -112,6 +120,12 @@ if os.environ.get('RAV_FRAMES'):  # (each THAC0 line's set-up locals, as the bre
 if os.environ.get('RAV_NO_SAVES'):
     log.quicksave.keys = log.quicksave.auto = False
     print('quick saves and autosaves off', flush=True)
+if os.environ.get('RAV_NO_DUST'):  # (a control: DSCLOG2's DUST_ON never set, no dust raised)
+    log.show_dust = False
+    print('dust off', flush=True)
+if os.environ.get('RAV_NO_GHOST'):  # (a control: DSCLOG2's GHOST_ON never set, every figure solid)
+    log.show_ghosts = False
+    print('see-through figures off', flush=True)
 if os.environ.get('RAV_NO_SQUARES'):
     log.show_squares = False
     print('squares in reach off', flush=True)
@@ -121,6 +135,12 @@ if os.environ.get('RAV_NO_MOVEBACK'):
 if os.environ.get('RAV_NO_USABLE'):
     log.show_usable = False
     print('Alt marks nothing', flush=True)
+if os.environ.get('RAV_NO_FIRST_WEAPON'):
+    log.first_pick_weapon = False
+    print('first pick weapon off', flush=True)
+if os.environ.get('RAV_NO_KIT_START'):
+    log.kit_start_gear = False
+    print('class and kit starting gear off', flush=True)
 if os.environ.get('RAV_CHARGES_OFF'):
     log.count_charges = lambda entries: None
     print('charges pass off', flush=True)

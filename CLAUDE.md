@@ -12,6 +12,10 @@
 - **Documentation reviews**: when the user asks for a documentation / docs review or audit, use the
   project skill `/documentation-review` (`.claude/skills/documentation-review/SKILL.md`) and follow
   it in full.
+- **Before every push or merge that touches the Loader** (`dsloader/`, the patches, DSCLOG/DSCLOG2), run the
+  start-up tests on the real game files: `DSUN_SL=/tmp/playtest/inst DSUN_WOTR=/tmp/playtest/rav python3 -m
+  pytest obsidian-edition/tests/test_start_files.py` (both games' copies made with no problem; CI has no game
+  files, so it can't catch a writer that breaks on them: 2026-11-26, a Ravager change stopped every SL start).
 - `playtest/` is outside `obsidian-edition/`, so it never ships in a release zip (the zip is that
   folder alone). Keep it that way.
 

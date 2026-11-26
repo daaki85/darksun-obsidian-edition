@@ -21,6 +21,7 @@
 
 BITS 16
 CPU 386
+%include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
 %macro game_far 2               ; a far call to the game's code: GAME_FAR (FAR_GAME, below)
         push cs
         call far_game
@@ -2567,7 +2568,8 @@ pz_far  dd 0
 
 ; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the archer whose turn it
 ; is (WHOSE_TURN's combatant, a Spellarcher or anyone not in the party): the better of it (at least
-; 0) and +1 from its SPELL_ARROW_PLUS1st level (ARCHER_LEVEL's), +2 from its SPELL_ARROW_PLUS2th.
+; 0) and +1 from its SPELL_ARROW_PLUS1st level (ARCHER_LEVEL's), +2 from its SPELL_ARROW_PLUS2th, +3
+; from its SPELL_ARROW_PLUS3th (a level for Wake of the Ravager's higher levels).
 ; DS the game's; others kept.
 arrow_plus_now:
         push bx
@@ -2581,16 +2583,15 @@ arrow_plus_now:
         imul bx, [WHOSE_TURN], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call archer_level
-        cmp al, SPELL_ARROW_PLUS2
-        jae .two
-        cmp al, SPELL_ARROW_PLUS1
-        jae .one
-        mov al, cl
-        jmp .out
-.two:   mov al, 2
-        jmp .best
-.one:   mov al, 1
-.best:  cmp al, cl
+        mov ah, al
+        xor al, al
+        cmp ah, SPELL_ARROW_PLUS1       ; (each "sbb al, -1" adds 1 when AH is at least the level)
+        sbb al, -1
+        cmp ah, SPELL_ARROW_PLUS2
+        sbb al, -1
+        cmp ah, SPELL_ARROW_PLUS3
+        sbb al, -1
+        cmp al, cl
         jge .out
         mov al, cl
 .out:   pop es
@@ -2632,12 +2633,13 @@ archer_level:
 ; the better of the weapon's and the ammunition's plus for the hit's +1/+2/+3 damage kinds). For a
 ; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), or anyone not in the
 ; party (the arena's elf champion), its spell arrows (named ARROW_NAME to +3) shot from a bow are +1
-; from its 5th level and +2 from its 9th (ARCHER_LEVEL: a Spellarcher's preserver level, anyone
+; from its 5th level, +2 from its 9th and +3 from its 13th (ARCHER_LEVEL: a Spellarcher's preserver level, anyone
 ; else's highest; a cursed one's minus counted as none), so they hurt what only magic weapons hurt,
 ; and cast their spell on a hit (AMMO_ARCHER); other arrows as they are. A party member who isn't a
 ; Spellarcher shoots them as plain arrows (none should have them: ARROWS_FORBID, return_strays).
 SPELL_ARROW_PLUS1 equ 5         ; (the preserver levels: kits.SPELL_ARROW_LEVELS)
 SPELL_ARROW_PLUS2 equ 9
+SPELL_ARROW_PLUS3 equ 13
 probe_arrow:
         push bx
         push si
@@ -3942,19 +3944,23 @@ expert_of:
 ; 1 a round), DL its skill with the weapon (SPEC_OF_SHEET), ES:BX its sheet: with SPEC_EXPERT (a
 ; Battle Mage's, Crusader's or Mind Warrior's chosen weapon spec, kits.py; no warrior has fewer
 ; than 3 halves; the kit's class level, KIT_WHERE as SPEC_OF_SHEET left it) the expertise
-; rate, 3/2 a round, 2 from 7th level (specialize.expert_attacks). Others kept.
+; rate, 3/2 a round, 2 from 7th level, 5/2 from 13th (specialize.expert_attacks). Others kept.
 expert_halves:
         cmp dl, SPEC_EXPERT
         jne .ret
         cmp ax, 2
         ja .ret
-        push ax
+        push cx
         call kit_level
-        cmp al, 7
-        pop ax
+        mov cl, al
         mov ax, 3
-        jb .ret
+        cmp cl, 7
+        jb .more
         inc ax
+        cmp cl, 13
+        jb .more
+        inc ax
+.more:  pop cx
 .ret:   ret
 
 ; OFF_HAND_HALVES: AX the attacks a round (halves) with item BX, a melee weapon: AD&D's two
@@ -7166,7 +7172,7 @@ kit_ac:
         pop cx
         pop bx
 .ret:   ret
-ravager_ac db 7, 7, 6, 6, 5, 5, 4, 4, 3, 3   ; (by level, 1-10: the highest the game goes)
+ravager_ac db 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0 ; (by level, 1-15, then 0: kits.RAVAGER_AC)
 RAVAGER_LEVELS equ $ - ravager_ac
 
 ; KIT_MELEE: AX what the kit of sheet ES:BX adds to hit and to damage with item type SI unless it
@@ -7303,7 +7309,9 @@ kit_to_hit:
         cmp si, KIND_TYPES
         jae .missile
         cmp byte [cs:si + kind_of_type], BOW_KIND
-        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15; not the javelin's
+        cmp byte [cs:si + kind_of_type], BOW_KIND + 2   ;   and the darts' past them)
+        ja .missile
         push ax
         mov ax, [bp + 0x0E]
         call cr_is
@@ -7585,7 +7593,7 @@ probe_slots:
         dec cx
 .elemental:
         call kit_is_b           ; (an Elementalist: none from the level behind, but 1 at a spell
-        db KIT_ELEMENTALIST     ; level its own cleric level reaches, 2 x the spell level - 1)
+        db KIT_ELEMENTALIST     ; level its own cleric level reaches, 2 x the spell level - 1, 14 for 7th)
         jne .tables
         cmp byte [bp + 8], SLOT_PRIEST
         jne .tables
@@ -7597,6 +7605,10 @@ probe_slots:
         movzx bx, byte [bp + 0x0A]
         add bx, bx
         dec bx
+        cmp bx, 13
+        jne .seventh
+        inc bx                          ; (a 7th-level spell at 14th, as a cleric's)
+.seventh:
         cmp ax, bx
         pop bx
         jb .tables
@@ -7627,24 +7639,28 @@ probe_slots:
         dec bx
         cmp bx, 3
         ja .table_out           ; (spell levels 1 to 4 only)
+        push si
+        mov si, seeker_slots
+        mov cx, SEEKER_FIRST | (SEEKER_LAST << 8)       ; (CL the table's first level, CH its last)
         cmp dl, KIT_JUSTIFIER
-        jne .seeker_level
-        cmp ax, 10
-        jb .table_out
-        or bx, bx
-        jnz .table_out
-        inc cx                  ; (one 1st-level slot from 10th level)
-        jmp .table_out
-.seeker_level:
-        cmp ax, 6
-        jb .table_out
-        cmp ax, SEEKER_LAST
+        jne .row_of
+        mov si, justifier_slots
+        mov cx, JUSTIFIER_FIRST | (JUSTIFIER_LAST << 8)
+.row_of:
+        cmp al, cl
+        jb .no_row
+        cmp al, ch
         jbe .row
-        mov ax, SEEKER_LAST
-.row:   sub ax, 6
-        imul ax, ax, 4
+        mov al, ch
+.row:   sub al, cl
+        shl ax, 2
         add bx, ax
-        mov cl, [cs:bx + seeker_slots]
+        movzx cx, byte [cs:bx + si]
+        jmp .row_out
+.no_row:
+        xor cx, cx
+.row_out:
+        pop si
 .table_out:
         pop dx
         cmp byte [bp + 8], SLOT_WIZARD  ; the Veiled Robe (dsloader/robes.py): a wizard slot more
@@ -7664,11 +7680,17 @@ probe_slots:
         pop cx
         pop bx
         iret
-; a Seeker's priest slots at spell levels 1 to 4, by level 6 to 13 (and on: kits.SEEKER_SLOTS; The
-; Complete Ranger's Handbook's table): a ranger's to 10th, a Shinobi's (by thief level) to 13th
-SEEKER_LAST equ 13
+; a Seeker's priest slots at spell levels 1 to 4, by level 6 to 16 (and on: kits.SEEKER_SLOTS; The
+; Complete Ranger's Handbook's table, the owner's Table 51 past 13th): a ranger's, a Shinobi's (by thief
+; level); a Justifier's at spell levels 1 to 3, by level 10 to 16 (and on: kits.JUSTIFIER_SLOTS, the
+; owner's Table 46)
+SEEKER_FIRST equ 6
+SEEKER_LAST equ 16
 seeker_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0
-             db 3, 2, 1, 0,  3, 2, 2, 0,  3, 3, 2, 1
+             db 3, 2, 1, 0,  3, 2, 2, 0,  3, 3, 2, 1,  3, 3, 3, 1,  4, 4, 3, 1,  4, 4, 3, 2
+JUSTIFIER_FIRST equ 10
+JUSTIFIER_LAST equ 16
+justifier_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0,  2, 2, 2, 0,  3, 2, 2, 0
 
 ; PROBE_SLOT_LEVEL: INT VEC_SLOT_LEVEL replaces "mov al,es:[bx+24h]" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 5E1F6h) in the game's spell slot routine, where it takes a class's level (ES:BX the
@@ -12341,6 +12363,14 @@ probe_priest_thac0:
         pop bx
 .done:  mov [bp - 2], ax
         iret
+
+; SAVE_BASE (SAVE_BASE_SITE, RULE_HI_TABLES): saving throws as in AD&D (save_bands.inc, DSCLOG2's the same).
+; The game's save routine (877EBh, at a level up) makes a group's save its 1st-level save less (level -
+; 1) x a rate / 100, but takes its table's third byte (420h:6Ch + group x 15 + save x 3), AD&D's best
+; save, as the most a save improves: a warrior stays at 11/11/11/13/11 from 10th level, no save goes
+; below 8; and it puts psionicists with thieves. The site: "mov al,es:[bx+6Ch]" (878F7h; 5 bytes) before
+; "cbw / sub ax,[bp-2]". The sheets: DS:1661h, 47h bytes, classes +21h, levels +24h.
+        SAVE_BASE_CODE 0x1661, 0x47, 0x21, 0x24
 
 ; PROBE_ADND_SLOTS: INT VEC_ADND_SLOTS replaces "nop / push cs / call 5E4C2h" (5 bytes: INT + 3
 ; NOPs; DSUN.EXE 5E240h) where the game's slot routine asks one class's slots at a spell level:
@@ -17463,6 +17493,7 @@ AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
 INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
+SAVE_BASE_SITE equ NS_IMAGE + 123 ; 878F7h: a group's 1st-level save, read at a level up (SAVE_BASE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -21051,6 +21082,7 @@ site_tab:
         site AMMO_OK3_SITE, ammo_okay
         site INFO_HEAD_SITE, info_head
         site F10_PIN_SITE, f10_pin
+        site SAVE_BASE_SITE, save_base
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -29426,6 +29458,8 @@ adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500
         dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
         ; (the ranger's, row 7: the gladiator's, row 4)
         dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
+; SAVE_BASE's tables (save_bands.inc), read through TAIL_SEG
+        SAVE_BANDS_DATA
 adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
            db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
 thief_table:

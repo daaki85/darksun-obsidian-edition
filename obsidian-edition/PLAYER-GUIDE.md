@@ -1067,19 +1067,10 @@ most.
 
 What the higher levels bring there:
 
-- **Saving throws** are the Player's Handbook's, by class group and level (the
-  best of a character's classes): PPD/RSW/PP/BW/SP
-
-  | Group | Level: saves |
-  |---|---|
-  | Priests (clerics, druids) | 1-3: 10/14/13/16/15; 4-6: 9/13/12/15/14; 7-9: 7/11/10/13/12; 10-12: 6/10/9/12/11; 13-15: 5/9/8/11/10; 16-18: 4/8/7/10/9; 19+: 2/6/5/8/7 |
-  | Warriors (fighters, gladiators, rangers) | 1-2: 14/16/15/17/17; 3-4: 13/15/14/16/16; 5-6: 11/13/12/13/14; 7-8: 10/12/11/12/13; 9-10: 8/10/9/9/11; 11-12: 7/9/8/8/10; 13-14: 5/7/6/5/8; 15-16: 4/6/5/4/7; 17+: 3/5/4/4/6 |
-  | Wizards (preservers) | 1-5: 14/11/13/15/12; 6-10: 13/9/11/13/10; 11-15: 11/7/9/11/8; 16-20: 10/5/7/9/6; 21+: 8/3/5/7/4 |
-  | Rogues (thieves, psionicists) | 1-4: 13/14/12/16/15; 5-8: 12/12/11/15/13; 9-12: 11/10/10/14/11; 13-16: 10/8/9/13/9; 17-20: 9/6/8/12/7; 21+: 8/4/7/11/5 |
-
-  *Without the mod:* each save improved by a step a level but never by more than
-  the table's last row, so a warrior stayed at 11/11/11/13/11 from 10th level
-  and no save went below 8.
+- **Saving throws** are the Player's Handbook's, by class group and level, as
+  in Shattered Lands ([the table](#saving-throws)).
+  *Without the mod:* the same bugs as Shattered Lands', a warrior at 11/11/11/13/11
+  from 10th level, a psionicist saving as a thief.
 - **A thief rolls a d6 for hit points up to 10th level** (then +2 a level); a
   psionicist rolls to 9th. *Without the mod:* the game counts both to 9th.
 - **Thief skills** go on to 17th ([the table](#thieves-skills-and-picking-pockets)),
@@ -1354,6 +1345,21 @@ always fails and a 20 always saves. Everyone has five: paralysis, poison and
 death (`PPD`), rod, staff and wand (`RSW`), petrification and polymorph
 (`PP`), breath weapon (`BW`) and spell (`SP`). Each character's five numbers,
 by class and level, are on the inventory screen's panel and on View Character.
+They are the Player's Handbook's by class group and level, a psionicist's Dark
+Sun's own (a character of several classes has the best of each), set at each
+level up: PPD/RSW/PP/BW/SP
+
+| Group | Level: saves |
+|---|---|
+| Priests (clerics, druids) | 1-3: 10/14/13/16/15; 4-6: 9/13/12/15/14; 7-9: 7/11/10/13/12; 10-12: 6/10/9/12/11; 13-15: 5/9/8/11/10; 16-18: 4/8/7/10/9; 19+: 2/6/5/8/7 |
+| Warriors (fighters, gladiators, rangers) | 1-2: 14/16/15/17/17; 3-4: 13/15/14/16/16; 5-6: 11/13/12/13/14; 7-8: 10/12/11/12/13; 9-10: 8/10/9/9/11; 11-12: 7/9/8/8/10; 13-14: 5/7/6/5/8; 15-16: 4/6/5/4/7; 17+: 3/5/4/4/6 |
+| Wizards (preservers) | 1-5: 14/11/13/15/12; 6-10: 13/9/11/13/10; 11-15: 11/7/9/11/8; 16-20: 10/5/7/9/6; 21+: 8/3/5/7/4 |
+| Thieves | 1-4: 13/14/12/16/15; 5-8: 12/12/11/15/13; 9-12: 11/10/10/14/11; 13-16: 10/8/9/13/9; 17-20: 9/6/8/12/7; 21+: 8/4/7/11/5 |
+| Psionicists | 1-4: 13/15/10/16/15; 5-8: 12/13/9/15/14; 9-12: 11/11/8/13/12; 13-16: 10/9/7/12/11; 17-20: 9/7/6/11/9; 21+: 8/5/5/9/7 |
+
+*Without the mod:* each save improved by a step a level but never by more than
+the table's last row, so a warrior stayed at 11/11/11/13/11 from 10th level and
+no save went below 8; and a psionicist saved as a thief.
 
 - **Spells are saved against with the spell save**, except poisons, death
   spells and psionic attacks (paralysis, poison and death).

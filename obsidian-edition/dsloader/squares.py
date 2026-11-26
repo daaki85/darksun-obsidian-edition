@@ -38,6 +38,8 @@ CAN_WALK = 1  # (the flags' bit 0)
 STRAIGHT, DIAGONAL = 10, 14
 POSITIONS, POSITION_SIZE = game.POSITIONS, 32  # DS: each map thing's feet (x, y), a record each (the sequel's: ravlog)
 LIGHT_FIRST, LIGHT_LAST = dust.FIRST, dust.LAST  # the colours LIGHT takes and gives (the sequel's: ravlog)
+LIGHT_LEAST, LIGHT_LIGHTER = 0.4, dust.LIGHTER  # (dust.light_table's: the sequel's darker dirt, ravlog's DUST_LEAST and
+                                                #  DUST_LIGHTER)
 SIDE = 32  # the bitmap: SIDE x SIDE squares, a bit each (DSCLOG's SQ_SIDE)
 MAP_BYTES = 2 + SIDE * SIDE // 8  # its origin (column, row), then SIDE // 8 bytes a row
 STEPS = ((0, -1, STRAIGHT), (1, -1, DIAGONAL), (1, 0, STRAIGHT), (1, 1, DIAGONAL),
@@ -146,8 +148,10 @@ class Squares:
             return
         if palettes != self._palettes and palettes:
             far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
-            light_off, dac_off = struct.unpack("<HH", guest.read(tsr_hdr + TSR_LIGHT, 4))
-            guest.write(far + light_off, dust.light_table(guest.read(far + dac_off, 768), LIGHT_FIRST, LIGHT_LAST))
+            light_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_LIGHT, 2))  # (apart: the sequel's
+            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))        #  aren't side by side)
+            dac = guest.read(far + dac_off, 768)
+            guest.write(far + light_off, dust.light_table(dac, LIGHT_FIRST, LIGHT_LAST, LIGHT_LEAST, LIGHT_LIGHTER))
             self._palettes = palettes
         if who != self._seen and self._on:
             self._seen = who  # (walking: the marks stay as they were until the member stands, as

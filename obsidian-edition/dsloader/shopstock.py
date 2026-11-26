@@ -9,7 +9,8 @@ gear does: npcitems.add_to, from the game's free list of item records, into a ba
 - a seller: a person (a thing of kind 2) whose creature's object (its record's +6, negated, as OBJEX.GFF
   has it) is one of SELLERS;
 - its new items: the records of ravgear's items that OBJEX.GFF's copy gives that object (its RDFF's pack
-  items whose picture is one of ravgear's), each it doesn't hold already (by picture);
+  items whose picture is one of ravgear's, the new spells' spellbooks among them), each it doesn't hold
+  already (by picture);
 - once: the creature's MARK byte (the last of its 16-byte name, a NUL after any seller's name) set, which
   the save keeps, so what the party buys isn't put back. A seller with all its items already (a new game's)
   is only marked.
@@ -31,8 +32,8 @@ SELLERS = (153, 323, 152, 322, 155, 320, 321, 142, 58)
 
 def seller_items(objects: gff.Chunks, sellers: Sequence[int] = SELLERS) -> Dict[int, List[bytes]]:
     """Each seller's new item records (23 bytes, no slot) from OBJEX.GFF's copy OBJECTS: its RDFF's items whose
-    picture is one of ravgear's."""
-    mine = {ravgear.picture_object(k) for k in ravgear.GEAR}
+    picture is one of ravgear's (a spellbook's its object: ravgear.BOOKS)."""
+    mine = {ravgear.picture_object(k) for k in (*ravgear.GEAR, *ravgear.BOOKS)}
     out: Dict[int, List[bytes]] = {}
     for obj in sellers:
         rdff = objects.get(("RDFF", obj))

@@ -264,13 +264,16 @@ def class_and_warrior(sheet: bytes, cls: int) -> bool:
 def no_spells(sheet: bytes, worn: Iterable[bytes]) -> bool:
     """Whether a character can't cast for the armour it wears (the type records of what it has on
     its arms, legs, head and chest): a multiclass preserver, or a human who has been a preserver
-    and a warrior."""
+    and a warrior; with kits, Ar'Anda (kits.own_light_cast) only in armour that isn't light."""
+    from . import kits
     classes = [c for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if c]
     if sheet[game.SHEET_RACE] == game.HUMAN:
         if not class_and_warrior(sheet, PRESERVER):
             return False
     elif len(classes) < 2 or PRESERVER not in classes:
         return False
+    if game.RULES_IN_FORCE & game.RULE_KITS and kits.own_light_cast(sheet):
+        return any(is_armour(t) and not is_light(t) for t in worn)
     return any(is_armour(t) for t in worn)
 
 

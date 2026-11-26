@@ -119,6 +119,7 @@ Run these in order, from `playtest/`, at the start of every test and again after
    figwatch.py, ghostturn.py), which at 960x720 read the wrong pixels (before pixmatch.py sampled down,
    message boxes and CHOOSE A SPELL went unseen that way and the loops stalled: [the
    story](HISTORY.md#the-window-size-and-pixel-checks)).
+   In a detached DOSBox run, confirm the visible pointer is over LOAD SAVED GAME before clicking. The 320 × 240 window stretches the vertical coordinates of the 320 × 200 game. For the PENS save, wait until the slot list has appeared and then check the pointer over the first slot and LOAD. [Staged elf outfit test](logs/2026-11-22-elf-outfits.md)
 5. **Check the build under test is in place** (after every restart: memory edits are lost on any
    restart). The game runs `obsidian-edition/dos/` (GPLDATA.GFF, DSUN.EXE's patched copy...).
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
@@ -610,6 +611,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   creation](#the-creation-screen)); fightout.sh runs it each turn. PICK A PSIONIC POWER (a
   psionicist's level) isn't levelup.sh's: click a red power's icon (about 158, 62), then FINISHED
   (112, 139).
+- **A turn with nothing in reach stalls `toturn.sh`** (logs/2026-11-26-sl-saves-scout.md): its E for a
+  turn that stays up opened Ester's Effects screen in the slave pens' ambush and the turns stopped there;
+  close the screen (Escape, a screen being up) and end the turn by hand.
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
   panel, not the map, and a party member's figure under it can't be clicked (its END menu). Hide it
   before walking near it (the party's first step into the arena, for one, is right above it) with
@@ -1011,6 +1015,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    it again. **In Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md) a Tab + Return
    loop must press Q and then E to end a member's turn (Q alone leaves END MOVE up), and
    `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door): `ravfight.py tabfight` is that loop and does.
+   **`fountain-user`'s ambush needs Pehtucl's speech clicked away first** (2026-11-26): loaded, the
+   speech box is up with `fight_on` 0 and fightout.sh says NO FIGHT ON; `msgbox.sh` only reports the
+   box. Five clicks on it (`click.py 160 30 left`, 3 s apart) start the fight (`fight_on 1`).
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory
@@ -1485,6 +1492,8 @@ tools, and where each is described:
 | [Creation and levels](RESEARCH.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |
 
 ## Pictures for the docs
+
+For an outfit review with the loader detached, stage the walking and fighting chunks in the disposable pictures file before DOSBox starts. Record the object, figure, class combination, and worn items for each party member. A fixed-state capture can verify how the sprite and its palette cycle look in the map view. Exercise inventory changes separately with the loader attached. [Dwarf and human play log](logs/2026-11-23-dwarf-human-outfits.md)
 
 - **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
 - **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette

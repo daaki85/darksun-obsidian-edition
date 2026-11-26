@@ -24,6 +24,7 @@ How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian
 - [Changing class](#changing-class)
 - [Where it shows](#where-it-shows)
 - [In Wake of the Ravager](#in-wake-of-the-ravager)
+  - [Past 13th level](#past-13th-level)
 
 ## The twenty-two weapon specs
 
@@ -45,8 +46,8 @@ spell can hold its weapon.
 
 | Who | Picks | With a weapon of its chosen weapon spec |
 |---|---|---|
-| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die the next greater die size ([below](#grand-masterys-damage)), and one more attack a round |
-| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die the next greater die size ([below](#grand-masterys-damage)), and one more attack a round; in Wake of the Ravager a **second** from 13th ([Past 13th level](#past-13th-level)) |
+| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th (in Wake of the Ravager one more every 4 levels on: [Past 13th level](#past-13th-level)) | specialized in each: +1 to hit, +2 damage |
 | **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
 | [Seeker](KITS.md#seeker) (ranger) | 1 of its sphere's weapon specs, the bow among them where the sphere allows one; no bow otherwise | expertise, as a ranger's |
 | [Justifier](KITS.md#justifier) (ranger) | the bow and 1, as a ranger | its chosen weapon spec **specialized**: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); the bow at a ranger's expertise unless it is the chosen one |
@@ -101,6 +102,10 @@ and Mind Warrior go by their own class's level. 3/2 means one attack one round a
   instead of 1: AD&D's 2/1 for the thri-kreen's own weapon).
 - With [two weapons](PLAYER-GUIDE.md#two-weapons), the off hand attacks once a round whatever the
   rate.
+- From **13th level** (Wake of the Ravager's higher levels) each rate is a step higher again: in
+  melee 5/2 with a chosen weapon spec (the game's own warrior's rate at 13th) and 7/2 for a grand
+  master, a plain weapon 2; a bow or darts 5 (a grand master 6), a sling, staff sling, chatkcha or
+  javelin 5/2 (7/2); an expert's (a Battle Mage's, Crusader's or Mind Warrior's) 5/2.
 - In a fight **Haste** doubles all of these and **Slow** halves them, rounded down (and a slowed
   character loses every other turn); the game's DAM lines and the Characters tab show them so.
 
@@ -259,11 +264,20 @@ gladiator or ranger (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) g
 in the sequel's own colours and with its own weapons' pictures, and picks what it is due. The sequel's
 new characters start at 7th level, so a gladiator picks three. EXIT leaves the rest to the defaults (the
 long sword, then the club; a thri-kreen's chatkcha first), and EDIT asks only for picks still due. No
-picks come after DUAL there yet, and a kit's own weapons aren't offered first. A new fighter starts with
+picks come after DUAL there yet, and a kit's own weapons aren't offered first. A level up asks for
+the picks a level brings, in the same window, as in Shattered Lands (a gladiator's 6th and 9th, and
+the picks past 13th below). A new fighter starts with
 its +1 long sword in the right hand and its shield in the left (the sequel's own gear had them the other
-way round, so a long sword specialist swung once a round until the player swapped them), but with the
-sequel's long sword whatever its first pick: the starting weapon isn't yet made the first pick's kind as
-in Shattered Lands. The sequel knows all twenty-two: a lotulis specialist from Shattered
+way round, so a long sword specialist swung once a round until the player swapped them). As in Shattered
+Lands, the starting weapon is made the first pick's kind, but a **+1** one, as the sequel starts its warriors
+with magic weapons: the weapon in hand becomes the pick's +1 weapon (a ranger's plain long sword too), a
+two-handed one sends the shield (or a gladiator's second sword) to the backpack, and a bow, sling, staff
+sling, javelin, darts or chatkcha pick goes to the missile slot (a bow with +1 arrows; a missile weapon already there, a ranger's bow or a
+thri-kreen's chatkcha, goes to the backpack), the weapon in hand staying. A thri-kreen whose first pick is
+its own gythka or chatkcha keeps its own. The +1 weapons are the sequel's own where it has one (long sword, dagger, mace, axe, quarterstaff,
+gythka, chatkcha, sling, lotulis, double spear, darts), else the mod's new ones (short sword, great axe,
+pick, polearm, cahulaks, staff sling); the club, two-handed sword, trikal and javelin, which have no +1 in
+either, are the sequel's plain one with a +1, and the bow is the plain bow with +1 arrows. The sequel knows all twenty-two: a lotulis specialist from Shattered
 Lands is a lotulis specialist there, with the sequel's own Lotulis. Its weapons take these weapon
 specs (the six that came from the sequel by its own weapons of them; the rest by name and dice):
 
@@ -294,3 +308,18 @@ specialization alone:
 The Net and the Rock count as none. The lotulis's, double spear's and trikal's own traits (the second
 foe, the trip, the trikal's reach) are Shattered Lands' only, so far. The sequel's own characters have
 no specs, so they fight as the sequel has them.
+
+### Past 13th level
+
+The sequel's higher levels (a single class to 20th and on to 30th under its XP cap) bring more
+weapon specs (the owner's choices, 2026-11-26):
+
+- A **gladiator** picks one more every 4 levels past 9th: a 5th at 13th, a 6th at 17th, a 7th at
+  21st and an 8th at 25th, specialized in each as in the first four.
+- A **fighter** picks a **second** weapon spec at 13th fighter level, specialized at once, mastery
+  at 17th and grand mastery at 21st (its first goes on as before). A **Myrmidon**, whose polearm is
+  its second, picks a **third** at 13th, on the same steps.
+- The window at a level up offers them as at 6th and 9th; EXIT leaves them for the next level.
+
+The four the sheet held in Shattered Lands stay where they were; the four more go in the sequel's
+sheet's last three bytes, five bits each.

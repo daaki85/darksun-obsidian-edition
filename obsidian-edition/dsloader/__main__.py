@@ -52,7 +52,7 @@ def _the_dosbox(found, engine: str) -> int:
     that is the ENGINE's kind (DOSBox-X, or not). CliError when there is none, or no telling."""
     from .dosboxx import DOSBOX_X
     if not found:
-        raise CliError("No DOSBox process found: start the game (Start the game, top left).")
+        raise CliError("No DOSBox process found: start the game (Play Shattered Lands, top left).")
     mine = [(p, n) for p, n in found if is_dosbox_x(n) == (engine == DOSBOX_X)]
     if len(found) > 1 and len(mine) != 1:
         listing = ", ".join(f"{p} ({n})" for p, n in found)

@@ -291,6 +291,21 @@ after the `ns_list_` patches):
   is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
   `shop_at` (header +1858), so S sells only on a shop's screen
   ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
+- **In Wake of the Ravager** the same: its map loop turns the cycles (1CF0Eh: "cmp byte [1424h],0 / jz /
+  call far 2796:047C / mov byte [1424h],0"; the cycler at 2CFDCh is SL's, its runs 1-5, 6-10, 11-15,
+  16-23 and 24-31), its shop's loop (88D52h, while byte [143Dh] is 1) and the game's wait (its test "or
+  di,di / jz" at 2F7BEh) don't. DSCLOG2's SHOP_LOOP (site 82, already there for S) and SHOP_SHINE (site
+  163, `shop_shine`: the jump made by moving the way back 4Ah, as the site's INT returns past its byte)
+  call SHINE_TURN; header `shine_turns` +1982 counts the turns. **Twelve of the sequel's magic items had
+  no pixel in a cycled run** (a survey of OBJEX.GFF's item records with a plus or a power): the Loader's
+  copy of OBJEX.GFF (`ravager.objects_fixed`, step `item_shine`) has their icons, each its object's own,
+  with every other pixel of their blade, metal or brightest shades in a run (`dsloader/ravshine.py`: the
+  weapons and the Amulet's gold the fire's, the Chatchka violet, the Boots green, the rest the water's
+  blue-greys), written in Shattered Lands' kind of picture, which the sequel draws as its own. Saved games
+  shine too (the icons are read from the copy). `RAV_SKIP=item_shine` (`playtest/ravstart.sh`) leaves them
+  out: the control. Played:
+  [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-shine.md).
+  Tests: `tests/test_ravshine.py`, `tests/test_ravshopshine.py`.
 
 ## Worn items, the gladiator's armour and Psionic Blast
 
@@ -1604,6 +1619,34 @@ load the dying creature's new pictures through the game's picture loader from
 inside the floor drawing, the most likely cause of a crash seen in the arena
 as a creature died (not reproduced).
 
+**In Wake of the Ravager** (DSCLOG2's FIGURE SHADOWS, `dos/dsclog2.asm`): the same shadows, drawn in the floor
+pass the walls' shadows already hook (sites 40 and 41 at 2B81Ch and 2B97Fh, FLOOR_POST), after the walls' and
+before the squares and rings, through the walls' DARK (WS_DARKEN, WS_FLUSH). DSCLOG2 picks the casters itself, no
+table from the Loader: each draw list entry (DS:67B7h far, DS:264Eh of them, 8 bytes: SL's) whose thing is a
+creature in the things table (load + 3F49h:0C33h, 3 bytes) with a status (+14h of its 31h-byte record, DS:19C9h
+far) neither dying 4, dead 7 nor gone 8, so a creature's death takes its shadow off at the next drawing. The map
+thing is 25h bytes at DS:67BBh (its picture's slot +10h, the frame +12h, SL's +0Fh and +11h; the placed entry's y
+less a word at +8, SL's byte); the picture cache's slot is SL's (+6 the number, +0Ah the picture, +0Eh bit 2 in
+memory) at load + 42A2h:0CA8h. The sequel's figures are runs as SL's (OBJEX.GFF: every picture of 8 frames or
+more; its planar "PLNR" and "PLAN" pictures cast none). **The sequel lets a picture go from memory as soon as it
+wants the room** (the slot's +0Eh bit 2 cleared, its memory given to another; in Tyr's street the leader's
+picture was out at nearly every floor drawing), so SL's shadow cache is here from the start and filled where the
+picture is sure to be in memory: as the thing drawer (2A28Fh) calls the picture routine for it (`call far
+1D40:3BEC` at 2A347h, its first three bytes site 162, FIG_KEEP, which then makes the call itself, the segment
+word left for the load's relocation), each living creature's frame is kept: 64 slots of 152 bytes in the far
+block (`FAR_SC`, 9,728 bytes: in the HMA in a GOG start), each the picture's key (the slot's number, +0, and the
+low word of its place in the store, +6), the frame, its width and bottom row, and up to 48 casting runs (how far
+up, x, pixels). A figure whose picture is out casts its frame's kept shadow, or another frame's of the picture.
+The two redraws reach further right and down:
+the redraw of what moved at its first push (2868Ch, "push word [bp+8] / push di", its rectangle at [BP-0Ch] to
+[BP-12h]: site 160, FIG_WIDE_ALL) and the rectangle's (21E0:128C, 2828Ch: site 161, FIG_WIDE). Header (its own,
+well past the other ports' fields): `fig_shadows` +1960 (1 on), `fig_passes` +1962, `fig_drawn` +1964,
+`fig_wides` +1966, `fig_kept` +1968, `fig_from_kept` +1970, `fig_other` +1978 (cast from another frame of the
+picture), `fig_missed` +1980 (none: the picture out and nothing of it kept) (`playtest/ravfig.py` reads them). A copy without the
+three sites (`RAV_SKIP=fig_wide_all,fig_wide,fig_keep`) draws none: the control. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-figure-shadows.md).
+Tests: `tests/test_ravshadows.py`.
+
 ## Dust
 
 ([In the features page](FEATURES.md#dust).)
@@ -1619,6 +1662,21 @@ fades, by a pattern fixed to the map, so a puff looks the same however much of
 it the game draws again. While anyone walks, the rectangle the game draws again
 round what moved is made to take the puffs in; once everyone stands, DSCLOG has
 the view drawn again a few times a second until the last puff is gone.
+
+**In Wake of the Ravager** (DSCLOG2's DUST, `dos/dsclog2.asm`): SL's code (DUST_TICK, DUST_NUDGE, DUST_UNION,
+DUST_PASS, PUFF_DRAW, DUST_BUILD) on the figures' shadows' ground: the walkers are the draw list's living creatures
+(FIG_ALIVE, no Loader table), the feet the list's entries (DS:67B7h, DS:264Eh of them); DUST_TICK runs in the main
+loop's PROBE_SCROLL, the puffs are drawn after the figures' shadows in the walls' floor pass (DUST_FLOOR), and
+DUST_UNION widens the redraw of what moved at site 160 (FIG_WIDE_ALL, its rectangle at [BP-0Ch] to [BP-12h]). The
+far block holds the puffs (`FAR_PUFFS`), the dither table (`FAR_DUST`, 2,688 bytes) and each thing's last place and
+walk (`FAR_LAST_X`, `FAR_LAST_Y`, `FAR_WALKED`). LIGHT is the squares' (header +1926), made by the Loader from the
+palette whenever DSCLOG2 reads it again (`ravlog._dust_pass`), which then sets `dust_on` (+1972; `dust_puffs`
++1974 counts the puffs, `dust_sig` +1976 marks a helper that has DUST). **The sequel's dirt is darker than SL's
+sand** (Tyr's 56,44,28 to 85,73,52 of 255): `dust.light_table` takes it with a least value of 0.2 (SL's 0.4) and a
+step of 0.2 toward white (SL's 0.45, which gave it near-white puffs), `ravlog.DUST_LEAST` and `DUST_LIGHTER`, and the
+squares' LIGHT is made the same way. `RAV_NO_DUST=1` (`playtest/ravdice.py`) clears `dust_on`: the control. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-dust.md). Tests:
+`tests/test_ravshadows.py` (DustTests), `tests/test_dust.py`.
 
 ## See-through figures
 
@@ -1667,3 +1725,22 @@ each step of anyone's), has the whole view drawn once when one of them is hidden
 the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB
 anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns
 shows at once (test `test_whole_view_when_the_table_changes`; verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-07-review-fixes.md)). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-05-fight-test.md).
+
+**In Wake of the Ravager** DSCLOG2 has the same code (`GHOST_WANTED`, `GHOST_DRAW`, `GHOST_UNION`), on the
+sites the figures' shadows already use: FIG_KEEP (site 162, the drawer's picture call at 2A347h) draws a
+see-through figure itself instead of calling the game, and `GHOST_UNION` follows `DUST_UNION` in the
+redraws widened at site 160 (the whole view: the sequel's rectangle at [bp-0Ch]..[bp-12h]). **Its tables
+live in the far block**, not in the upper memory block: `BLEND` (32 x 256, as SL's), `REP` (256) and
+`GHOST_TAB` (80 bytes, `GH_CHANGED` its last) from `FAR_GH_BLEND` (the HMA in a GOG start: 8,528 bytes of
+its last 9.3 KB), so the upper memory block (`GHOST_SEG`, header +1984, `umb_alloc` at install; none, no
+see-through figures) holds only the figure's pixels and runs (4,096 + 192 x 8 = 5,632 bytes, SL's 885
+paragraphs less the 8.5 KB of tables). The blend itself is SL's, unshrunk. Header: `ghost_on` +1986,
+the tables' offsets in the far block +1988, +1990, +1992 (the Loader writes there), `ghost_draws` +1994
+(counted). The hidden bit is the STEALTH word DSCLOG2 already has (+204). The Loader's `RavGhosts`
+(`dsloader/ravlog.py`, on `ghost.Ghosts`, its colours parameterised): the sequel cycles 1-31, so REP is
+made of 32-255; Invisible is effect 53 and Detect Invisibility 25; the dice log's `_ghost_pass` writes the
+tables after the dust's. `RAV_NO_GHOST=1` (`playtest/ravdice.py`) leaves them unwritten: the control.
+Memory: DSCLOG2.EXE 55,840 bytes, 94,512 bytes of upper memory left (the shine's build: 100,832); without
+an HMA the far block, 8.5 KB bigger, goes to upper memory too. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-see-through.md).
+Tests: `tests/test_ravghost.py`.

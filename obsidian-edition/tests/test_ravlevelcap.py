@@ -52,6 +52,7 @@ class LevelCapTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
         mu.mem_write(TSR * 16 + self.sym["rules"], struct.pack("<H", rules))
         mu.mem_write(TSR * 16 + self.sym["rules_hi"], struct.pack("<H", rules_hi))
+        mu.mem_write(TSR * 16 + self.sym["tail_seg"], struct.pack("<H", TSR))  # (KEEP's: the helper's own)
         return mu
 
     def call(self, mu, site, frame=b"", **regs):
@@ -297,8 +298,9 @@ class LevelCapTests(unittest.TestCase):
             self.call(mu, "hd_clamp", es=GROUPS, ebx=12, ecx=1, eax=0x77)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_AL), want)
 
-    def save(self, rules_hi, group, level, save, race_bonus=0):
-        """SAVE_BASE and the game's sum after it (AL - [BP-2], [BP-2] the game's improvement + the race's)."""
+    def save(self, rules_hi, group, level, save, race_bonus=0, classes=()):
+        """SAVE_BASE and the game's sum after it (AL - [BP-2], [BP-2] the game's improvement + the race's);
+        CLASSES the sheet's (class, level) pairs (creature 0, DI)."""
         game_table = ((10, 45, 2), (14, 45, 6), (13, 45, 5), (16, 45, 8), (15, 45, 7),
                       (14, 69, 3), (16, 69, 5), (15, 69, 4), (17, 82, 4), (17, 69, 6),
                       (14, 30, 8), (11, 40, 3), (13, 40, 5), (15, 40, 7), (12, 40, 4),
@@ -306,9 +308,12 @@ class LevelCapTests(unittest.TestCase):
         mu = self.machine(rules_hi=rules_hi)
         mu.mem_write(GROUPS * 16 + 0x6C, bytes(b for row in game_table for b in row))
         mu.mem_write(SS * 16 + BP - 0x0A + 2 * group, bytes((level,)))
+        pairs = list(classes) + [(0, 0)] * (3 - len(classes))
+        self.sheet(mu, ELF, [c for c, _ in pairs], [lv for _, lv in pairs])
+        mu.mem_write(GAME_DS * 16 + 0x19C5, struct.pack("<HH", SHEET, SHEET_SEG))
         base, rate, last = game_table[group * 5 + save]
         improve = min((level - 1) * rate // 100, last) + race_bonus
-        self.call(mu, "save_base", es=GROUPS, ebx=group * 15 + save * 3, ecx=group, esi=save)
+        self.call(mu, "save_base", es=GROUPS, ebx=group * 15 + save * 3, ecx=group, esi=save, edi=0)
         self.assertEqual((mu.reg_read(r.UC_X86_REG_CX), mu.reg_read(r.UC_X86_REG_SI)), (group, save))
         return struct.unpack("b", bytes((mu.reg_read(r.UC_X86_REG_AL),)))[0] - improve
 
@@ -322,6 +327,18 @@ class LevelCapTests(unittest.TestCase):
                         self.assertEqual(self.save(8, group, level, save), tables.rav_saves(group, level)[save])
         self.assertEqual(self.save(8, 1, 12, 0, race_bonus=5), tables.rav_saves(1, 12)[0] - 5)
         self.assertEqual([self.save(0, 1, 12, s) for s in range(5)], [11, 11, 11, 13, 11])
+
+    def test_psionicist_saves(self):
+        """A psionicist's saves Dark Sun's (Table 8) at its psionicist level, to 30th; a psionicist/thief the
+        better of each save of its two classes; the rule off, the game's (a psionicist as a thief)."""
+        for level in range(1, 31):
+            with self.subTest(level=level):
+                self.assertEqual([self.save(8, 3, level, s, classes=((PSIONICIST, level),)) for s in range(5)],
+                                 list(tables.rav_saves(3, level, psionicist=True)))
+        for psi, thief in ((9, 13), (13, 9), (25, 2)):
+            got = [self.save(8, 3, max(psi, thief), s, classes=((PSIONICIST, psi), (THIEF, thief))) for s in range(5)]
+            self.assertEqual(got, list(tables.class_saves([(PSIONICIST, psi), (THIEF, thief)])), (psi, thief))
+        self.assertEqual([self.save(0, 3, 12, s, classes=((PSIONICIST, 12),)) for s in range(5)], [11, 10, 10, 14, 10])
 
     def test_xp_suffix(self):
         """XP_SUFFIX: for two classes whose next XP is the fighter's, " F)" (CS:xp_suffix pushed for the

@@ -81,6 +81,8 @@ NONE, PLAIN, EXPERT, SPECIAL, MASTER, GRAND = range(6)
 SKILL_NAMES = {SPECIAL: "specialized", MASTER: "mastery", GRAND: "grand mastery"}
 FIGHTER, GLADIATOR = 9, 10
 MASTERY, GRAND_MASTERY = 5, 9
+SECOND_FROM = 13  # (a fighter's second weapon spec, past SL's levels: mastery 4 levels on, grand mastery 8)
+MYRMIDON_POLEARM = 9  # (the polearm's kind: kits.POLEARM, a Myrmidon's own)
 
 
 RANGERS = range(13, 17)
@@ -140,9 +142,16 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     if not {FIGHTER, GLADIATOR} & classes:
         return EXPERT
     first = chosen.index(kind + 1)
-    if first > 1 or first == 1 and not myrmidon(sheet):
-        return SPECIAL  # (a fighter's first kind goes on to mastery, a Myrmidon's second too)
     fighter = next((level for c, level in active if c == FIGHTER), 0)
+    if game.SPEC_MORE:  # (the sequel, DSCLOG2's SPEC_OF_SHEET: a Myrmidon's polearm by its kind, wherever its
+        # V3 sheet keeps it; a fighter's other kind, its pick at 13th, by its fighter level less 12: mastery
+        # at 17th and grand mastery at 21st, the owner's 2026-11-26)
+        if first and fighter and not (myrmidon(sheet) and kind == MYRMIDON_POLEARM):
+            fighter = max(0, fighter - SECOND_FROM + 1)
+        elif first and not fighter:
+            return SPECIAL
+    elif first > 1 or first == 1 and not myrmidon(sheet):
+        return SPECIAL  # (a fighter's first kind goes on to mastery, a Myrmidon's second too)
     return GRAND if fighter >= GRAND_MASTERY else MASTER if fighter >= MASTERY else SPECIAL
 
 
@@ -171,12 +180,14 @@ def expert_attacks(halves: int, level: int, sheet: bytes) -> int:
     """The melee attacks a round (in halves) of a character who isn't a warrior (HALVES the game's,
     2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's, Crusader's or Mind
     Warrior's chosen weapon spec (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level (of the
-    kit's class); else HALVES."""
+    kit's class), 5/2 from 13th (a specialist's, as Combat & Tactics' expertise; only Wake of the
+    Ravager's cap reaches it, the owner's 2026-11-26); else HALVES."""
     from . import kitpages, kits
     if level != EXPERT or halves > 2:
         return halves
     kid = kits.BATTLE_MAGE if battle_mage(sheet) else war_kit(sheet)
-    return 4 if kid is not None and kitpages.kit_level(sheet, kid) >= 7 else 3
+    level = kitpages.kit_level(sheet, kid) if kid is not None else 0
+    return 5 if level >= 13 else 4 if level >= 7 else 3
 
 
 def attacks(halves: int, level: int, missile: bool = False) -> int:
