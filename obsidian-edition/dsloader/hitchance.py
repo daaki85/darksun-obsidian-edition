@@ -39,7 +39,8 @@ BLUR, BACKSTAB = 55, 2
 # signs of the squares' difference (x, y): 0 north, then clockwise; a target faces its attacker,
 # and one in the opposite direction is behind it
 WAYS = {(0, -1): 0, (1, -1): 1, (1, 0): 2, (1, 1): 3, (0, 1): 4, (-1, 1): 5, (-1, 0): 6, (-1, -1): 7, (0, 0): 0}
-EIGHT_WAYS = 0x1F8  # DS word: 1 for the eight directions (as the game starts with), else only four
+EIGHT_WAYS = 0x1F8  # DS: 1 for the eight directions (as the game starts with), else only four (its low byte
+#   read: the sequel's is a byte, at DS:0442h)
 
 
 class Swing(NamedTuple):
@@ -81,7 +82,7 @@ def way(gd, target: int, attacker: int) -> int:
     (EIGHT_WAYS not 1) the nearer of north, east, south and west."""
     (tx, ty), (ax, ay) = stealth.square(gd, target), stealth.square(gd, attacker)
     dx, dy = ax - tx, ay - ty
-    if struct.unpack("<H", gd.guest.read(gd.ds * 16 + EIGHT_WAYS, 2))[0] != 1:
+    if gd.guest.read(gd.ds * 16 + EIGHT_WAYS, 1)[0] != 1:
         return (2 if dx >= 0 else 6) if abs(dx) >= abs(dy) else (4 if dy > 0 else 0)
     return WAYS[((dx > 0) - (dx < 0), (dy > 0) - (dy < 0))]
 

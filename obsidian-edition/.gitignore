@@ -10,6 +10,9 @@ settings.json.bad
 settings.json.bad-*
 dosbox_dicelog.conf
 DSUNLOG.EXE
+DSUNLOG2.EXE
+RESOURC2.GFF
+RESOURC2.GFF.tmp
 play.log
 SEGOBJEX.GFF
 SEGOBJEX.GFF.tmp
@@ -26,4 +29,10 @@ POINTER.BIN
 crash-logs/
 Named saves/
 *.SAV
+GPLDAT2.GFF
+GPLDAT2.GFF.tmp
+OBJEX2.GFF
+OBJEX2.GFF.tmp
+RAVITEMS.GFF
+RAVITEMS.GFF.tmp
 Journal/

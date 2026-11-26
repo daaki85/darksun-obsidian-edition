@@ -1370,31 +1370,34 @@ def relocated(data: bytes) -> set:
     return out
 
 
-def patched(original: bytes, skip=frozenset()) -> bytes:
+def patched(original: bytes, skip=frozenset(), patches=None, size: int = GOG_SIZE) -> bytes:
     """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP). A patch
-    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh")."""
-    if len(original) != GOG_SIZE:
+    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh").
+    PATCHES and SIZE: another game's table and GOG size (Wake of the Ravager's: ravager.py);
+    Shattered Lands' by default."""
+    patches = PATCHES if patches is None else patches
+    if len(original) != size:
         raise PatchError(f"DSUN.EXE is {len(original)} bytes; the dice log knows the GOG release "
-                         f"({GOG_SIZE} bytes) only")
+                         f"({size} bytes) only")
     data = bytearray(original)
-    for p in PATCHES:
+    for p in patches:
         if data[p.offset:p.offset + len(p.original)] != p.original:
             raise PatchError(f"DSUN.EXE is not the version the dice log knows ({p.name} differs)")
         if p.name not in skip:
             data[p.offset:p.offset + len(p.original)] = p.replacement
     moved = relocated(original)
-    for p in PATCHES:
+    for p in patches:
         for at in range(p.offset - 1, p.offset + len(p.original)):
             if at in moved and data[at:at + 2] != original[at:at + 2]:
                 raise PatchError(f"the patch {p.name} changes a word DOS relocates (at {at:X}h)")
     return bytes(data)
 
 
-def write_patched(source: str, dest: str, skip=frozenset()) -> None:
+def write_patched(source: str, dest: str, skip=frozenset(), patches=None, size: int = GOG_SIZE) -> None:
     """Write the patched copy of `source` to `dest` (but the patches in SKIP), unless it is
-    already there."""
+    already there. PATCHES and SIZE as patched()'s."""
     with open(source, "rb") as f:
-        data = patched(f.read(), skip)
+        data = patched(f.read(), skip, patches, size)
     try:
         with open(dest, "rb") as f:
             if f.read() == data:

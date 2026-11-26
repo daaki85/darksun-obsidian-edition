@@ -44,7 +44,7 @@ def plain_weapon(gd: GameData, rec: bytes) -> bool:
         return False
     typ = gd.item_type_record(rec)
     plus = struct.unpack_from("b", rec, game.ITEM_PLUS)[0]
-    return bool(typ) and bool(typ[0] & pickpocket.WEAPON_KINDS) and plus == 0 and rec[game.ITEM_POWER] == 0
+    return bool(typ) and bool(typ[0] & pickpocket.WEAPON_KINDS) and plus == 0 and game.item_power(rec) == 0
 
 
 def _contents(gd: GameData, it: ring.Items, thing: int) -> Optional[Tuple[int, int]]:

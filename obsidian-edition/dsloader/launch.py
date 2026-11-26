@@ -543,6 +543,11 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     # message on screen until a key is pressed, rather than DOSBox closing over it, and saved for
     # the crash report (GAMEEND.COM: the screen's text, or a return code other than 0)
     lines += ["d:\\" + GAME_END_COM.lower(), "exit", ""]
+    return _write_conf_file(lines, path)
+
+
+def _write_conf_file(lines: List[str], path: str) -> str:
+    """LINES written to PATH as DOSBox reads a config (Windows' code page, CR LF)."""
     encoding = conf_encoding()
     try:
         data = "\n".join(lines).replace("\n", "\r\n").encode(encoding)
@@ -555,6 +560,21 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     with open(path, "wb") as f:
         f.write(data)
     return path
+
+
+def write_conf_wotr(game_dir: str, path: str = CONF, settings: Optional[dict] = None) -> str:
+    """The config that starts Wake of the Ravager with the mod (dsloader.ravager: its patched copy,
+    its CD as F:, the mod's dos folder as D:), with the window and speed of the Options tab. Not
+    the music device (midiout.conf_lines): the sequel's music is its CD's audio tracks (game.ins,
+    the .ogg files DOSBox plays), not MIDI. Its sound setup (SOUND.INI) says MidiNotEnabled, GOG's
+    SOUND.CFG picks the Sound Blaster Pro II's FM driver, not the MPU-401's, and its RESOURCE.GFF
+    holds one empty XMIDI (a tempo and the end) where Shattered Lands' holds its score: a `[midi]`
+    section would route nothing."""
+    from . import ravager
+    settings = load_settings() if settings is None else settings
+    lines = display_lines(settings) + cpu_lines(settings) + ravager.conf_lines(
+        game_dir, DOS_DIR, umb_plus=UMB_PLUS_COM, game_end=GAME_END_COM)
+    return _write_conf_file(lines, path)
 
 
 def conf_encoding() -> str:
@@ -1198,8 +1218,45 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
 LAST_SETTINGS: Optional[dict] = None
 
 
+RAVAGER_NO_LOG = ("Wake of the Ravager has the bug fixes ported so far, the dice log of its fights and the "
+                  "party tabs (Characters, All fields); the window's other tabs and the in-game additions "
+                  "aren't ported to it yet")
+
+
+def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
+    """Wake of the Ravager with the mod: its patched copy and data in the dos folder (dsloader.ravager),
+    in its own GOG DOSBox with its own GOG config and ours after it, its helper DSCLOG2 loaded high.
+    What isn't ported yet the caller tells (RAVAGER_NO_LOG); a copy that can't be made raises."""
+    global STARTED
+    from . import ravager
+    STARTED = None
+    dosbox_dir = _find_file(game_dir, "DOSBOX")
+    settings_conf = _find_file(game_dir, "dosbox_darksun2.conf") or _find_file(
+        os.path.join(game_dir, "__support", "app"), "dosbox_darksun2.conf")
+    exe = dosbox_dir and _find_file(dosbox_dir, "DOSBox.exe")
+    if not exe or not settings_conf:
+        raise LaunchError(f"{game_dir} does not look like the GOG install of Wake of the Ravager")
+    problem = ravager.prepare(game_dir, DOS_DIR, settings)
+    if problem:
+        raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
+    try:  # (the roster's and the saves' sheets the copy's 48h: ravager.widen_files)
+        ravager.widen_files(game_dir)
+    except OSError as e:
+        raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
+        try:
+            os.remove(old)
+        except OSError:
+            pass
+    conf = write_conf_wotr(game_dir, settings=settings)
+    return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
+
+
 def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
     global STARTED
+    from . import ravager
+    if ravager.is_wotr_dir(game_dir):
+        return _launch_wotr(game_dir, settings)
     program = recompiled_program(settings)
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):

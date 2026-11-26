@@ -5,6 +5,8 @@ are the mod's guesses, for checking. The creature size rule goes by them (below)
 
 from typing import Dict, Optional
 
+from . import game
+
 SIZE_NAMES = {"T": "tiny", "S": "small", "M": "man-sized", "L": "large", "H": "huge", "G": "gargantuan"}
 
 # people (the sheet's race, game.RACE_NAMES): Athasian elves are 6.5 to 7.5 feet, half-giants 10 to 12
@@ -49,11 +51,36 @@ UNSURE = frozenset((
 ))
 
 
+# Wake of the Ravager's monsters (OBJEX.GFF's creatures whose race isn't a people's), by name: its own
+# table (its "Guard" and "Slave" are people, not Shattered Lands' tusked figures). The sequel's dice log
+# puts it in force while attached (ravlog.apply_layout: TABLE). Its Draxans and the regions' other
+# monsters aren't in OBJEX: they stay man-sized until named here.
+RAV_NAMES: Dict[str, str] = {
+    "Air Drake": "G", "Earth Drake": "G", "Fire Drake": "G", "Tarrasque": "G",
+    "Air Elemental": "L", "Earth Elemental": "L", "Fire Elemental": "L", "Water Elemental": "L",
+    "Gr. Fire Elem": "H", "Grt Air Elem": "H", "Grt Earth Elem": "H", "Grt Fire Elem": "H", "Grtr Water Elem": "H",
+    "Beasthead Giant": "H", "Umber Hulk": "L", "Shambling Mound": "L", "Magma Golem": "L", "Obsidian Golem": "L",
+    "Giant Skeleton": "L", "Giant Snake": "L", "Great Feyr": "L", "Greater Feyr": "L", "Psurlon": "L",
+    "Female Hlfgnt": "L", "Int. Devourer": "T", "Int.Devourer": "T", "Aurumvorax": "S",
+}
+RAV_UNSURE = frozenset(("Air Drake", "Earth Drake", "Fire Drake", "Gr. Fire Elem", "Grt Air Elem", "Grt Earth Elem",
+                        "Grt Fire Elem", "Grtr Water Elem", "Beasthead Giant", "Giant Snake", "Great Feyr",
+                        "Greater Feyr"))
+RAV_SPELLS = {2: "Charm Person", 30: "Hold Person", 136: "Hold Person"}  # (the sequel's numbers: no Charm Person or Mammal)
+RAV_SHILLELAGH_TYPE, RAV_HAMMER_TYPE = 90, 95  # (the sequel's item types: Shillelagh, Spirit hammer)
+TABLE = NAMES  # (the names' table in force: RAV_NAMES while the sequel's dice log is attached)
+
+
 def size(name: str, race: int) -> str:
     """A creature's size letter: its name's, else its race's (a people's), else "M"."""
-    if not 1 <= race <= 8 and name in NAMES:
-        return NAMES[name]
-    return RACES.get(race, NAMES.get(name, "M"))
+    if not 1 <= race <= 8 and name in TABLE:
+        return TABLE[name]
+    return RACES.get(race, TABLE.get(name, "M"))
+
+
+def _race(sheet: bytes) -> int:
+    """The sheet's race (game.SHEET_RACE: the sequel's +12h while its layout is in force), 0 if short."""
+    return sheet[game.SHEET_RACE] if len(sheet) > game.SHEET_RACE else 0
 
 
 # ---------------------------------------------------------------------------------------------
@@ -100,7 +127,7 @@ def large_table(gd) -> bytes:
         if not 0 <= combatant < MAP_COUNT:
             continue
         sheet = gd.sheet(creature)
-        race = sheet[0x18] if len(sheet) > 0x18 else 0
+        race = _race(sheet)
         if large_by_table(gd.creature_name(creature), race):
             out[combatant // 8] |= 1 << (combatant % 8)
     return bytes(out)
@@ -133,7 +160,7 @@ def is_large(gd, combatant: int) -> bool:
     if creature is None:
         return False
     sheet = gd.sheet(creature)
-    race = sheet[0x18] if len(sheet) > 0x18 else 0
+    race = _race(sheet)
     return race == 5 or large_by_table(gd.creature_name(creature), race)
 
 
@@ -144,6 +171,6 @@ def spared(gd, spell: int, target: int) -> bool:
     if spell in PERSON_ONLY:
         creature = gd.combatant_creature(target)
         sheet = gd.sheet(creature) if creature is not None else b""
-        if not (len(sheet) > 0x18 and 1 <= sheet[0x18] <= 8):
+        if not 1 <= _race(sheet) <= 8:
             return False
     return is_large(gd, target)

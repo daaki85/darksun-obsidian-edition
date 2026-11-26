@@ -931,7 +931,10 @@ the device (on an MT-32 that is the wrong set of instruments; the game's own MT-
 in its sound setup, which the Loader leaves alone), and sound effects and speech don't go to this
 device. Where the Loader can't read Windows' list (it runs on Linux, say, with the game's DOSBox
 under Wine), there is a field for the device's number in place of the list, 0 the first; a Linux
-DOSBox takes an ALSA port there, such as `128:0`. Empty is the default.
+DOSBox takes an ALSA port there, such as `128:0`. Empty is the default. The device is for
+Shattered Lands only: [Wake of the Ravager](#wake-of-the-ravager)'s music is its CD's audio tracks,
+which DOSBox plays itself, so the Loader starts it with the picture and speed chosen here but leaves
+its music as it is.
 
 **Switches** (Picture and music, from the next start): *Plain: every pixel of the game as a block
 (the default)*, *Scanlines: a black line under each row of the picture, as on an old monitor*, *TV: a
@@ -948,6 +951,136 @@ recoloured) and the walls are the game's fire wall in grey or dark brown. Fire S
 fireball either way, a picture Shattered Lands has too. The Options tab's **Wake of the Ravager (optional)** section says where
 it was found, and **Choose its folder...** points the Loader to it (from the next start). Rules:
 [requirements](README.md#requirements).
+
+### Taking the party to Wake of the Ravager
+
+The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered
+Lands save into the sequel's roster, for a game that goes on with the same characters. Choose the
+save; the save itself is not changed. Then start Wake of the Ravager from the Loader and **ADD** them
+on its CREATE CHARACTERS screen. A window lists what came across.
+
+- **Every item comes across.** What the sequel has, it gets as the sequel's own item (as SSI's
+  CHARTRAN does); the rest, which CHARTRAN turns into money bags, the Loader makes for the sequel,
+  with its picture and name from your own Shattered Lands files: the mod's weapons, armour and magic
+  items, and the game's quest items as keepsakes (carried and sold, no use in the sequel's story).
+  Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
+  box outside a fight); a spell the sequel lacks makes a keepsake.
+  Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
+  javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
+  kind, and a spec in one of them as the kind the sequel counts that weapon as ([In Wake of the
+  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
+- **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
+  their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
+  the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
+  the Tome of Understanding (+1 WIS). The sequel's own rules hold where they differ: Focus Heat burns
+  for 2d6+6. The spell arrows (Chill, Shocking and Vampiric Arrows) cast their spell at the archer's
+  preserver level, as in Shattered Lands; shot by a member with no preserver class they are plain
+  arrows. The tome is read from its box (right-click it in the pack, then its icon) in a fight, on its
+  reader's turn: outside a fight its icon does nothing.
+- **Hiding in shadows** comes too, as in Shattered Lands: in a fight a thief or a ranger with no enemy
+  beside them may hide and move silently, and then their next attack is from behind (a thief's, in
+  melee with a light weapon, a backstab). The Cloak and Boots of Elvenkind work as they did: hidden
+  95% of the time under the open sky (90% under a roof), silent 95%. Tyr's streets, the forest, the
+  Jann's desert, the Silt Sea islands and the clouds count as daylight.
+- **[Thieves as in AD&D](#thief-skills-from-adds-table)** hold in the sequel too: a thief's skills are
+  the Player's Handbook's average for the thief level plus the race's and Dark Sun's DEX adjustment
+  (no more than 95 after armour), the inventory shows those numbers, and a backstab multiplies the
+  weapon's dice only (Enlarge's enlarged dice), STR's bonus and the weapon's plus added once, on the
+  round's first attack; an Assassin's backstab multiplies them once more (x3 to x6), as in Shattered
+  Lands.
+- **[Shops as in AD&D](#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
+  (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
+  (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
+  bought back. A shopkeeper's own discount in the sequel (Tasarla's for the Veiled Alliance) comes on top.
+- **[Two weapons](#two-weapons)** as in Shattered Lands: -2 in the main hand and -4 in the off hand, DEX's
+  adjustment, one attack a round with the off hand; a ranger has none of it only in light armour (leather, or
+  armour of no material), as in Shattered Lands, where the sequel let a ranger off in any armour. And over the
+  figures, a spell's charge used floats its count as in Shattered Lands (`Armor: 7 left`).
+- **[Psionic Blast](GAME-BUGS.md#spells-and-psionics)'s imagined wounds** come back as a fight ends in the sequel
+  too ("Seneca shakes off Psionic Blast's imagined wounds as the fight ends"), and until then a blow that would kill
+  the member knocks it out instead. The dice log's saving throws there show the d20 rolled (`d20 = 13 +9 other =
+  22, needs 30`), with a natural 1's line that went missing before, and the creation screen's rolls each score's
+  four 4d4 (`best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16`).
+- **[Looting with T and Shift+T](#looting-a-body-t-and-shiftt), [selling with S](#selling-plain-gear-s)
+  and [M, U and I](#m-u-and-i-open-a-screen-close-it-again)** work in the sequel too (started from the
+  Loader). A body's window opens with the eye (right-click twice). The items go into the backpacks and the
+  dice log names them (`Ar'Anda takes Bow, Stone Lotulis, Bone Brigandine Armor (3), Arrow`). S sells the
+  plain gear of the member on show and shuts the shop back to the talk. M is the sequel's own overhead map
+  (its O). No purse sound plays in the sequel. Without the Loader, T and S are the game's keys and leave the
+  window or the shop open.
+- **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
+  SPELL](#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
+  and gone at once; now it stays for the time the game's options set (five seconds at first) while the
+  game waits, and with it [a wizard's INT](#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
+  SPELLS OF THAT LEVEL.
+- **The Loader's Dialogue and Journal tabs follow the sequel**: every conversation with the replies
+  offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
+  face it is (`Caravan Master`; or name it with **Name speaker...**, kept apart from Shattered Lands'
+  faces), and each message box in the journal and in the dice log (`Message: YOU ALREADY KNOW THIS
+  SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
+  sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
+  and Memory tools tabs read the sequel's spells and records.
+- **Kits, weapon specs, spells and the starting age** come across with each character, on its
+  character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
+  with the kits). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
+  skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
+  specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
+  two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
+  Elementalist's second sphere's spells (known, cast and at its cleric level), and the Battle
+  Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
+  panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
+  game's menu right after DUAL. What else kits do to spells
+  and psionic powers, gear and hit dice doesn't carry over yet. The creation screen has [STORE and
+  RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
+  gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
+  can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. The weapon specs work there:
+  a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
+  weapon not chosen and a specialist's rate of fire, the sequel's own weapons counted as the nearest
+  kind (the Twohand Sword a long sword, the Lotulis a gythka, the Trikal a polearm, darts and javelins
+  as the chatkcha). The screens show them as in Shattered Lands: the inventory's and View Character's
+  DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
+  the Effects screen's lower panel each one's weapon kinds ([the Effects
+  screen](#the-effects-screen)). The Look box's whole description of a monster comes up in the
+  dialogue window as the box closes there too. [Choosing an
+  enemy](#choosing-an-enemy-tab-enter-and-the-rings) works there as well: in a fight, on a party
+  member's turn, Tab chooses the nearest enemy (then the next; Shift+Tab goes back), a red ring on
+  the ground marks it, the dice log names it with [the chance to hit](#the-chance-to-hit-before-the-swing)
+  (`Chosen with Tab: Draxan (12 HP), needs 14+ (35%) - Enter attacks it`), and Enter attacks it;
+  the chance to hit floats over the enemy under the pointer too. An enemy chosen off the screen is
+  scrolled into view, so Enter reaches it. (Without the Loader,
+  Tab opens the sequel's own menu, as it does out of fights.) The Loader's
+  copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Squares in reach](#squares-in-reach), [F10](#f10-takes-a-whole-move-back) and
+  [Alt](#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
+  small crosses mark the squares they can still walk to, and R hides or shows them. After the last
+  step the sequel opens its own **END MOVE** menu (GUARD, WAIT, END TURN), and F10 does nothing
+  while it is up: Escape closes it, and F10 then puts the member back where the turn began, with the
+  move to walk again (`F10: Lex's move taken back (can walk again)`). Without the Loader the sequel
+  gives the points back but not the walk, so a click goes nowhere. A member held where they stand
+  (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
+  and names it: things to take, doors, bodies to search, people to talk to.
+- **[Preservers' first spells](#preservers-first-spells) and [psionic powers at
+  creation](#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
+  Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
+  of 2nd, two of 3rd, one of 4th), and a psionicist a fixed eighteen powers, anyone else four or five of its
+  discipline. With the Loader, **DONE** opens the game's **CHOOSE A SPELL** for as many as it would have
+  given, level by level from 1st (the window's pages no higher than the level being picked), then **PICK A
+  PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
+  Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
+  spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
+- **Start the sequel from the Loader.** Each start makes the roster and the saves in the sequel's
+  folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
+  them, nor shows the Loader's items (it shows money bags), and it can stop in a fight on the turn of
+  a member with a kit. To play the sequel by itself again, run `python -m dsloader.ravager narrow
+  FOLDER` (FOLDER: the sequel's) from the Loader's folder: the roster and the saves become the game's
+  again, the weapon specs dropped (each kept first as NAME.48H); the Loader makes them its own again
+  at its next start.
+- **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
+  chance of the months in twelve, with the [age rule](#ages-and-magical-aging)'s usual effects.
+- **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character
+  taken across before takes its old place again; the others take free places. With too few free, the
+  Loader says so: delete characters in the sequel first.
 
 ## Saves
 
@@ -996,6 +1129,17 @@ windows never open on the QUICK page by themselves: once the window is shut it i
 of 1 to 4 it showed last. With less than 4 MB free on the disk no quick save or autosave is made,
 and the dice log says so.
 
+**In Wake of the Ravager** (started from the Loader) F5, F9 and the autosaves work the same way,
+in the sequel's own save and load window: F9 opens its LOAD window on the quick saves (`SAVQ01.SAV`
+to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window is back on the game's
+own ten (the sequel's own F1 and F2 windows never open on the quick saves). Its autosaves have shorter
+names, to fit its narrower rows (`Auto Day 1, 09:05 Mines 1`, `Auto Day 1, 00:06 fight`). Each quick save
+keeps its own part of the map's limits, which the sequel stores beside a
+save, so loading one never takes another save's. There is no camp in the sequel, so no camp
+autosave. While the switch is on and the Loader is there, F5 is the quick save, not the sequel's own
+F5 (the sound effects on and off: F4 and the game's menu still have the music, and the menu the
+sound effects); with the switch off or without the Loader, F5 is the game's again.
+
 **Switches:** *Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save
 window, and F9 opens the load window there* (off, F5 and F9 are the game's own: F5 draws the view
 again, F9 breaks the camp of the game's rest, where the Loader leaves both to the game anyway) and
@@ -1011,6 +1155,11 @@ name you typed for it, into its own **Named saves** folder (`Page 2 slot 05 - Be
 battle.SAV`); saving over a slot replaces that slot's copy. **Open the folder** opens it, and **Put
 a save in a slot...** copies a named save (or another Shattered Lands save) into the page and slot you give, asking
 first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot 05 - NAME.SAV`.
+
+Wake of the Ravager's saves get the same: its ten manual slots are copied into **Named saves (Wake
+of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the Ravager's** button opens that folder,
+and a sequel's save put back into a slot is made the Loader's (the bigger character sheets) as it
+goes in (a game already running lists it from its next start).
 
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older
 saves](README.md#compatibility-with-older-saves). How it works:
@@ -1397,7 +1546,8 @@ How it works:
 Clicking a scroll's spell icon in its item box gives the result on the line under the paper doll:
 YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL TO LEARN THE SPELL, TOO MANY SPELLS OF
 THAT LEVEL, or a Shinobi's YOU CAN NOT READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game
-wrote these there too, but they never reached the screen. How it works:
+wrote these there too, but they never reached the screen. In Wake of the Ravager the same messages
+come up in the game's own message box over the inventory, for a few seconds. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-int).
 
 ### No manual check

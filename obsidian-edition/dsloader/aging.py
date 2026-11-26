@@ -180,12 +180,16 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
         if age_of(sheet) is not None:
             if game.sheet_roll(sheet) is None:  # (kept: its age's start, the name's roll)
                 faces = natural_start(gd.creature_name(member), race)[1]
-                gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS,
-                               game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count))
+                specs = game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count)
+                gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs[:3] if game.AGE_PLAIN else specs)
             continue
         age, faces = roll_start(race, rng)
         specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age), sum(faces) - count)
-        gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs)
+        if game.AGE_PLAIN:  # (the sequel: the age in a byte of its own, the specs and roll before it)
+            gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs[:3])
+            gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, specs[3:])
+        else:
+            gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs)
         ages = RACES[race]
         roll = f": {ages.start} + {dice_text(*ages.start_dice, faces)}" if faces else ""
         nxt = next_category(race, age)
@@ -318,7 +322,8 @@ def natural_tick(gd: "game.GameData", years: int) -> List[str]:
         sheet = gd.sheet(member)
         rec = gd.creature(member)
         before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
-        if before is None or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
+        if before is None or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS \
+                or not rec[game.CREATURE_NAME]:  # (an empty slot: its sheet index may be another's)
             continue
         race = sheet[game.SHEET_RACE]
         after = min(before + years, RACES[race].start + 254)

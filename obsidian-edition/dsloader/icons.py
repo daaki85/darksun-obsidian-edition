@@ -861,7 +861,7 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
             pos += 12 * n
             types.append([kind, False, entries])
     out = bytearray(data)
-    gffi = next(info for kind, ranged, info in types if kind == b"GFFI" and not ranged)
+    gffi = next((info for kind, ranged, info in types if kind == b"GFFI" and not ranged), [])  # (none in a roster)
     for kind, ranged, info in types:
         ids = sorted(cid for (k, cid) in added if k.encode("latin1") == kind)
         if not ids:
@@ -912,7 +912,13 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
             toc += struct.pack("<4sI", kind, len(info))
             for cid, offset, length in info:
                 toc += struct.pack("<III", cid, offset, length)
-    struct.pack_into("<I", toc, 4, len(toc) - 2)  # (as the game's own: the length less 2)
+    # the game's own table ends with its free list, a word count where the table's second dword says,
+    # then 8 bytes a hole: an empty one (count 0, the holes before not carried over). Without the count
+    # that dword pointed at the last entry's length, and the game's next write of the file (the sequel's
+    # roster: a character made) put its holes' count in that length's high word (101E1h: logs/
+    # 2026-11-24-ravager-48h-sheet-play.md)
+    toc += bytes(2)
+    struct.pack_into("<I", toc, 4, len(toc) - 2)  # (as the game's own: the length less 2, the count)
     new_toc = len(out)
     out += toc
     struct.pack_into("<II", out, 12, new_toc, len(toc))

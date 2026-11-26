@@ -120,7 +120,7 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
         return NONE
     kind = spec_kind_of(item_type) if item_type is not None else None
     bm = kitpages.kit_place_of(sheet, kits.BATTLE_MAGE)
-    if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[0x22]:
+    if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[game.SHEET_CLASSES + 1]:
         # (a Battle Mage who has changed class: its weapon spec the kit's alone, nothing while asleep)
         if not kitpages.kit_awake(sheet, bm):
             return NONE
@@ -204,9 +204,10 @@ def warrior_level(sheet: bytes) -> int:
 
 def missile_attacks(halves: int, level: int, item_type: Optional[int], sheet: bytes) -> int:
     """A missile weapon's attacks a round (in halves): the weapon type's (HALVES, its +0Bh, as the
-    game has it), or a specialist's rate of fire (LEVEL EXPERT or above: a ranger's too) when greater;
+    game has it), or a specialist's rate of fire (LEVEL EXPERT or above: a ranger's too) when greater,
+    by the kind it counts as (spec_kind_of: the sequel's darts and javelins the chatkcha's);
     a warrior's of a kind not chosen (PLAIN), from 7th level, the specialist's a band lower, as in melee."""
-    kind = kind_of(item_type) if item_type is not None else None
+    kind = spec_kind_of(item_type) if item_type is not None else None
     rates = MISSILE_RATES.get(KINDS[kind]) if kind is not None else None
     if level < PLAIN or not rates:
         return halves

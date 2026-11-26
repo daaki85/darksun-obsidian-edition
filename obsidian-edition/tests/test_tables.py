@@ -1,6 +1,7 @@
 """AD&D's class tables (tables.py), as the Player's Handbook and Dark Sun have them."""
 
 import os
+import re
 import sys
 import unittest
 
@@ -54,6 +55,41 @@ class TablesTests(unittest.TestCase):
     def test_priest_thac0(self):
         self.assertEqual([tables.priest_thac0(level) for level in range(1, 11)],
                          [20, 20, 20, 18, 18, 18, 16, 16, 16, 14])
+
+    def test_ravager_xp(self):
+        """The sequel's: SL's to 14th, then each level a step more; DSCLOG2's XP_FIXES AD&D's."""
+        for row in tables.ROWS:
+            xp = tables.RAV_XP[row]
+            self.assertEqual(len(xp), 20)
+            self.assertEqual(xp[:14], tables.XP[row])
+            self.assertEqual(list(xp), sorted(xp))
+        self.assertEqual(tables.RAV_XP["druid"][19], 5500000)
+        self.assertEqual(tables.RAV_XP["psionicist"][17], 2400000)
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        fixes = re.findall(r"^\s+XP_FIX (\d+), (\d+), (\d+)", asm, re.M)
+        self.assertEqual(len(fixes), 20)
+        for row, index, xp in fixes:
+            self.assertEqual(tables.RAV_XP[tables.ROWS[int(row)]][int(index)], int(xp))
+
+    def test_ravager_slots(self):
+        """The Player's Handbook's to 20th level; DSCLOG2's RAV_SLOTS the same."""
+        self.assertEqual([tables.rav_slots(11, 20, s) for s in range(1, 10)], [5, 5, 5, 5, 5, 4, 3, 3, 2])
+        self.assertEqual([tables.rav_slots(1, 20, s) for s in range(1, 10)], [9, 9, 9, 8, 7, 5, 2, 0, 0])
+        self.assertEqual(tables.rav_slots(5, 25, 1), 9)
+        self.assertEqual(tables.rav_slots(1, 0, 1), 0)
+        self.assertIsNone(tables.rav_slots(13, 9, 1))
+        for level in range(1, 13):  # (SL's to 12th)
+            for spell in range(1, 6):
+                self.assertEqual(tables.rav_slots(1, level, spell), tables.slots(1, level, spell))
+                self.assertEqual(tables.rav_slots(11, level, spell), tables.slots(11, level, spell))
+        asm = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                "dsclog2.asm")).read()
+        body = asm[asm.index("\nrav_slots:"):]
+        rows = [tuple(int(n) for n in line.split(";")[0].replace("db", "").split(","))
+                for line in body.splitlines()[2:42]]
+        want = [(r + (0,) * 9)[:9] for r in tables.RAV_PRIEST_SLOTS + tables.RAV_WIZARD_SLOTS]
+        self.assertEqual(rows, want)
 
 
 if __name__ == "__main__":

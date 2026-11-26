@@ -59,6 +59,11 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: the SL weapons and the Ravager port together**
+- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds), a spec in one
+  of SL's six new kinds counting as the sequel's nearest kind; the sequel's mod item types stay the
+  first 33, and SL's new weapon types go across in the party transfer as the sequel's own weapons.
+
 **New**
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
   double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a

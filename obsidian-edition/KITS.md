@@ -12,6 +12,12 @@ own party gets features of its own ([The game's own
 party](FEATURES.md#the-games-own-party)). A human who changes class may take a
 kit for the new class if it has none yet ([Changing class](#changing-class)).
 
+A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
+Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
+skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
+and Justifier's casting level and the Elementalist's second sphere's spells work there; what else they do to spells and powers, gear and hit dice
+doesn't yet, and a kit can't be chosen in the sequel.
+
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
 ([Starting gear](#starting-gear)) and what else to know ([Kits that rule out
@@ -560,6 +566,13 @@ kit, and while its classes and kit stay the same, DONE keeps its weapon specs
 without asking again (a new name, a new roll of the die); choosing another
 class takes the kit back, and DONE then asks for the weapon specs as for a new
 character, as it does after another kit is chosen.
+
+**In Wake of the Ravager** (started from the Loader) the creation panel has the same KITS
+button and KIT page, in the sequel's own letters, and a human with no kit is asked for one after
+DUAL on the same menu. There a kit chosen goes with the character as it does here; what the
+sequel doesn't do yet: a Battle Mage's, Mind Warrior's or Arcanist's hit points and PSP rolled
+again as its kit is chosen, the Elementalist's second sphere, and EDIT giving a kit back after
+its classes are changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER

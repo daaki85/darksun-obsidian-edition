@@ -57,7 +57,7 @@ def plain_gear(gd: GameData, rec: bytes) -> bool:
     plus = struct.unpack_from("b", rec, game.ITEM_PLUS)[0]
     value = struct.unpack_from("<H", rec, VALUE)[0]
     name = gd.item_name(struct.unpack_from("<H", rec, game.ITEM_NAME)[0]).lower()
-    return bool(gear) and plus == 0 and rec[game.ITEM_POWER] == 0 and 0 < value < NOT_FOR_SALE \
+    return bool(gear) and plus == 0 and game.item_power(rec) == 0 and 0 < value < NOT_FOR_SALE \
         and "key" not in name
 
 

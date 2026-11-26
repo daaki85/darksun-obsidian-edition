@@ -139,7 +139,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 # the effect; while it lasts the game adds it to STR, keeping STR between 3 and 24
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
-MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
+MIND_BAR_RESISTANCE = 75  # (Mind Bar and Low Resistance: game.MIND_BAR_EFFECT, LOW_RESISTANCE_EFFECT)
 LOWER_RESISTANCE_SPELL = 64
 WAIST_SLOT, NECK_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
@@ -216,6 +216,11 @@ SPELL_HANDLER_RETURNS = (
 # ... and a name picked at random from the game's lists (the code after the dice call)
 RANDOM_NAME_RETURNS = (bytes.fromhex("83c40448eb11"), bytes.fromhex("83c4040563008b"),
                        bytes.fromhex("83c40405c700eb"))
+# Wake of the Ravager's combat sounds (its routine at 8FE00h-90048h: none in Shattered Lands): a fighter's
+# sound picked by its kind and sex, 1d12 or 1d8 from the tables at DS:2911h and 2909h, 1d5 + 99h or
+# 1d4 + 8Ch (the attacker's cry as an attack begins)
+SOUND_PICK_RETURNS = (bytes.fromhex("83c4048bd88a971129"), bytes.fromhex("83c4048bd88a970929"),
+                      bytes.fromhex("83c4040499eb"), bytes.fromhex("83c404048c8ad0"))
 
 KIND_ROLL, KIND_SAVE, KIND_AC = 0, 1, 2
 KIND_ITEM = 4  # DSCLOG's item save against acid (PROBE_ITEM_*): raw = d20 | needed << 8
@@ -3203,7 +3208,7 @@ class DiceLog:
         if e.raw == MANUAL_FEEBLE:
             return [f"Heal cures {name}'s Feeblemind: INT and WIS as they were"]
         if e.raw == MANUAL_PSIONIC:
-            power = self.game.spell_name(game.PSIONIC_FIRST + a) if a is not None else "a power"
+            power = self.game.spell_name(self.game.psionic_first + a) if a is not None else "a power"
             return [f"{name} is feebleminded: {power} can't be used (no psionics)"]
         if e.raw == MANUAL_DRAIN:
             return [f"{self._name(a)} drains 1 STR from {name}: Weakened for 2d4 = {b} turns (no save)"]
@@ -3419,7 +3424,9 @@ class DiceLog:
         # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind (a missile only as a
         # hidden archer's shot, DSCLOG's MISSILE_REAR: unseen)
         rear = "unseen" if mode is not None and mode > 1 else "from behind"
-        how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else f" {rear}" if e.arg(0x20) else ""
+        # (bytes: Wake of the Ravager's routine tests the low byte only, its high byte left as it was)
+        backstab, behind = (e.arg(0x1E) or 0) & 0xFF, (e.arg(0x20) or 0) & 0xFF
+        how = " BACKSTAB" if backstab and behind else f" {rear}" if behind else ""
         chance = hit_chance(need)
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
         head = (f"{g.creature_name(attacker)} attacks {target}{how}{with_what}: d20 = {d20}{note}, "
@@ -3438,8 +3445,9 @@ class DiceLog:
         return out
 
     def weapon_skill(self, attacker: Optional[int], item_type: Optional[int]) -> int:
-        """A creature's weapon specialization skill with a weapon (specialize.skill)."""
-        if attacker is None:
+        """A creature's weapon specialization skill with a weapon (specialize.skill), with the rule in
+        force (always in Shattered Lands; Wake of the Ravager's control runs turn it off)."""
+        if attacker is None or not game.RULES_IN_FORCE & game.RULE_SPECIALIZE:
             return specialize.NONE
         sheet = self.game.sheet(attacker)
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
@@ -3464,7 +3472,8 @@ class DiceLog:
         off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \
             and thac0 == expected + heads[0][1] - heads[1][1]
         if expected is None or thac0 != expected and not off_head:
-            return f"THAC0 {base} base, {signed(base - thac0)} in bonuses = {thac0}"
+            named = f", {signed(skill[1])} {skill[0]}" if skill[1] else ""  # (DSCLOG's, taken off last)
+            return f"THAC0 {base} base, {signed(base - thac0 - skill[1])} in bonuses{named} = {thac0}"
         rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
             if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
         if rear:
@@ -3574,6 +3583,8 @@ class DiceLog:
                 return self._creation_ability(e, sum(faces), now)
             if count == 1 and e.parent_code.startswith(LEVEL_HP_RETURNS) and e.parent_arg(2) == CREATION_HP_CALLER:
                 return self._creation_hp_roll(e, sides, faces[0], now)
+            if count == 1 and any(e.parent_code.startswith(c) for c in SOUND_PICK_RETURNS):
+                return [f"    A fighter's sound picked at random: 1d{sides} = {faces[0]}"] if show_all else []
             if count == 1 and any(e.parent_code.startswith(c) for c in RANDOM_NAME_RETURNS):
                 return [f"Character creation: a name picked at random, 1d{sides} = {faces[0]}"]
             if count == 1:
@@ -3698,6 +3709,9 @@ class DiceLog:
         own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
         if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
             steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
+        elif own_dice and (count, sides) != own_dice and e.parent_arg(0x14) == game.STAFF_SLING_TYPE \
+                and (count, sides) == game.STINK_DICE and mode is not None and mode > 1:
+            steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: a stinkpot)"  # (DSCLOG2's STINK_SWING)
         elif own_dice and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
             steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \
@@ -3732,17 +3746,24 @@ class DiceLog:
         # weapon's dice, the rest added once, on the attacker's first attack of the round: x2, x3
         # from thief level 5, x4 from 9, x5 from 13 (RULE_BACKSTAB, DSCLOG's STAB_TIMES; the game
         # multiplies all of it, on the first two attacks). The attack's frame: [BP+1Eh] backstab,
-        # [BP+20h] from behind, [BP-14h] the attacks already made this round
-        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
-        if backstab and rear and made is not None and made <= 0:
+        # [BP+20h] from behind, [BP-14h] the attacks already made this round (game.ATTACKS_MADE_LOCAL:
+        # the sequel's [BP-16h])
+        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(game.ATTACKS_MADE_LOCAL)
+        backstab, rear = (None if backstab is None else backstab & 0xFF), (None if rear is None else rear & 0xFF)  # (bytes: the sequel's)
+        adnd = bool(g.rules & game.RULE_BACKSTAB)
+        if backstab and rear and made is not None and made <= (0 if adnd else 1):
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
-            more = (times - 1) * dice
-            total += more
-            steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+            if adnd:
+                more = (times - 1) * dice
+                total += more
+                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+            else:  # (the game's: all of it, a rule off in the sequel, DSCLOG2's STAB_TIMES)
+                total *= times
+                steps = f"({steps}) x{times} backstab"
         # a held (Paralyzed) or Out Cold target takes the damage as it is, AD&D's (RULE_HELD, DSCLOG's
         # HELD_DAMAGE; the game doubles it: the attack routine's x2 at 58B0Dh, "shl ax,1")
         helpless = self._helpless(e)
@@ -4389,7 +4410,7 @@ class DiceLog:
             return []
         score = struct.unpack("<b", e.parent_locals[0x28 - 2:0x28 - 1])[0]
         works = roll != 20 and (roll <= score or roll == 1)
-        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        name = self.game.spell_name(self.game.psionic_first + power)
         head = f"{self._name(who)} uses {name}: power check d20 = {roll}, needs {score} or less"
         if roll in (1, 20):
             head += f" (a {roll} always {'works' if roll == 1 else 'fails'})"
@@ -4438,7 +4459,7 @@ class DiceLog:
         if first is None or who is None or power is None or None in (keeper, against, holds):
             return []
         disrupted = first > holds or (second <= against and second >= first)
-        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        name = self.game.spell_name(self.game.psionic_first + power)
         return [f"{self._name(who)} uses {name} within {self._name(keeper)}'s Synaptic Static: "
                 f"d20 = {first} against {holds}, {self._name(keeper)}'s d20 = {second} against {against} "
                 f"(and at least {first}) -> {'disrupted by the static' if disrupted else 'not disrupted: the power check follows'}"]
@@ -4648,14 +4669,14 @@ class DiceLog:
         # the game's rules (its routine at 7A4A1h): Mind Bar +75 against mind-affecting spells,
         # then Lower Resistance halves it
         on = {x.id for x in g.effects() if x.owner == target}
-        if MIND_BAR in on and g.mind_affecting(spell):
+        if game.MIND_BAR_EFFECT in on and g.mind_affecting(spell):
             resistance += MIND_BAR_RESISTANCE
             how.append(f"+{MIND_BAR_RESISTANCE} Mind Bar")
         cast = (level or 0) & 0xFF
         if g.spells_manual():  # (DSCLOG's LOWRES_SITE: 30 + the level off, the effect's or this cast's)
             taken = []
-            if LOW_RESISTANCE in on and resistance:
-                amount = g.effect_amount(target, LOW_RESISTANCE) or 0
+            if game.LOW_RESISTANCE_EFFECT in on and resistance:
+                amount = g.effect_amount(target, game.LOW_RESISTANCE_EFFECT) or 0
                 taken.append((game.LOWER_RESISTANCE_BASE + amount, f"Lower Resistance on it, level {amount}"))
             if spell == LOWER_RESISTANCE_SPELL and resistance:
                 taken.append((game.LOWER_RESISTANCE_BASE + cast, f"this Lower Resistance, level {cast}"))
@@ -4664,7 +4685,7 @@ class DiceLog:
                 resistance = max(resistance - most, 0)
                 how.append(f"-{most} {why}")
         else:
-            if LOW_RESISTANCE in on and resistance:
+            if game.LOW_RESISTANCE_EFFECT in on and resistance:
                 resistance //= 2
                 how.append("halved by Lower Resistance")
             if spell == LOWER_RESISTANCE_SPELL and resistance:  # (the game's own, 7A518h)
@@ -4771,6 +4792,7 @@ class DiceLog:
         replace armour, such as Spirit Armor); SI adds DEX, when not attacked from behind,
         and spells."""
         target, rear = e.arg(6), e.arg(0x0A)
+        rear = rear & 0xFF if rear is not None else None  # (Wake of the Ravager passes it as a byte)
         index = self.game.combatant_creature(target) if target is not None else None
         ac = e.raw if e.raw < 0x8000 else e.raw - 0x10000
         if index is not None:
@@ -4781,7 +4803,7 @@ class DiceLog:
             if counted is not None:  # (what DSCLOG added to the game's: hitchance.py)
                 self.ac_gap[index] = ac - counted
             sheet, rec = self.game.sheet(index), self.game.creature(index)
-            armour = e.local(-6)
+            armour = e.local(game.AC_ARMOUR_LOCAL)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:
                 base = struct.unpack("b", sheet[game.SHEET_BASE_AC:game.SHEET_BASE_AC + 1])[0]
                 dex = self.game.dex_ac(rec[CREATURE_ABILITIES + 1]) if not rear else 0

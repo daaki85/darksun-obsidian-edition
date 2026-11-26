@@ -71,7 +71,7 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 11. **A DOSBox shared with another agent**: run every play step under `flock
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
-    removing HELDFILE releases it. **Everything `start.sh` starts inside the lock inherits it** (Xvfb,
+    removing HELDFILE releases it. **Everything `start.sh` (or `ravstart.sh`) starts inside the lock inherits it** (Xvfb,
     DOSBox, the dice log: [an Xvfb left from a finished session held it for an
     hour](HISTORY.md#the-shell); `lslocks` and `ls -l /proc/PID/fd` show who): start Xvfb before
     taking the lock, and end a session by killing its DOSBox and dice log by pid. Stop only what
@@ -85,7 +85,11 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     loop. **With that holder running, don't take the lock again in a step** (`flock
     /tmp/playtest/dosbox.lock -c ...`): it is another open of the file, so it waits for the holder,
     this session's own, until its `timeout` (200 s lost, 2026-11-19); the holder already keeps other
-    agents out, so the steps run without it.
+    agents out, so the steps run without it. **A dice log is not under the lock**: another agent's Loader
+    test once attached its dice log to a DOSBox it didn't start (2026-11-24) and wrote its own rules
+    into the sequel's helper, voiding that run: check the helper's rules word (header +170) is the one
+    your run set before trusting a rule's run ([the sequel's
+    specialization](RESEARCH.md#wake-of-the-ravager)).
 
 ## 2. The checklist
 
@@ -201,6 +205,11 @@ push. Do it at each stop, not only at the end: a pause can lose the container.
 -n -i caravan`): where things are, who sells what, quest steps and talk choices ("2-4-2"), region
 by region. Someone else's work: never commit it ([rule 10](#1-the-rules)). Weigh it with the
 game's data: it is one player's account.
+
+Wake of the Ravager's walkthrough (the user's copy, already text) comes the same way, from the
+private repository's `guide/wake-of-the-ravager-walkthrough.txt` to `$WORK/guide/ravager.txt`. The
+sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private repository, or put at
+`$WORK/dl/rav.exe`), into `$WORK/rav`; it plays in DOSBox by [its recipe](RESEARCH.md#wake-of-the-ravager).
 
 ## Loading and saving
 
@@ -355,6 +364,15 @@ game's data: it is one player's account.
   `python3 -u -m dsloader dicelog >> $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup
   (or `python3 -u -m dsloader dicelog --pid ... >> $PLAYTEST_WORK/dice.txt`, naming the game's
   process).
+- **Check a dice log is really gone with `pgrep`** (logs/2026-11-25-ravager-blast-log.md): one
+  started by `setsid nohup` inside a backgrounded bash keeps running after the job shows Done, and
+  a second one then writes into the same file (every line twice, and both write the game's memory).
+  Before starting one, `pgrep -af "dsloader dicelog"` and kill the old pid.
+- **A queued series of runs** (logs/2026-11-25-ravager-kits.md): never edit a shell script while it
+  runs (`sh` reads it as it goes, and an edit breaks the run in progress): write a new file. In a run
+  script, keep the arguments in variables before any `set --` in a loop, which replaces them. A run on
+  a merged build can use a second worktree (`git worktree add DIR HEAD --detach`): the tools use the
+  Loader beside them (`env.sh`'s REPO).
 - **A scratch copy of the mod for a Loader change**: `git archive HEAD | tar -x -C DIR`, the game
   copied to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the
   Loader from the kit's parent folder); restart the dice log as above, from `DIR/obsidian-edition`.
@@ -662,11 +680,33 @@ game's data: it is one player's account.
   mul druid/fighter: WILD FURY; a dwarf fighter/thief: G-FIGHTER, WAYFINDER). `sheetinfo.py` lists
   each member's classes, kits and weapon specs by name; `known.py M` its spells; `canuse.py M
   TYPE...` the kit rules for item types; `carried.py NAME` what it holds.
+- **A kit in Wake of the Ravager** (logs/2026-11-25-ravager-kit-choice.md; `ravclick.py`, its
+  coordinates the same 320x200 game pixels): from the main menu CREATE CHARACTERS (160,92); the
+  roster's slots are 2 by 2 (portraits at 70,56, 120,56, 70,112): a right click on an empty one
+  brings NEW / ADD / CANCEL, NEW just under the click (slot 1 110,57, slot 2 160,57, slot 3
+  140,117). The class list is at x 255 from fighter's y 29 (the same order and spacing as SL's), a
+  class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
+  130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
+  being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
+  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
+  (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
+  starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
+  AIR (240,106), FIRE (240,122). The roster's slot 4 NEW at (162,117). **DUAL**: the roster's inventory (75,171), a right
+  click on the member's portrait (30,69 / 30,114 / ...) gives EDIT / DROP / DUAL, DUAL just under
+  (the menu's third row: 70,98 for the top member, 100,147 for the third); in the DUAL window the
+  classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
+  comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
+  the inventory bar. Escape on Effects goes all the way back to the main menu.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
   over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
   gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
   A PSIONIC POWER: its icons in a row at y 62 from x 124, the row closing up after each pick, so
   click 124,62 again for each of the picks; after the last, VIEW CHARACTER with the new member.
+- **First spells and powers in Wake of the Ravager** (logs/2026-11-25-ravager-first-spells.md): DONE opens
+  CHOOSE A SPELL for a new preserver once a spell (icons five a row from 124,74, 19 by 17 apart; LEVEL
+  107,147; EXIT 205,147, then EXIT 112,92), then PICK A PSIONIC POWER (icons from 121,62, 19 apart; the
+  discipline button 115,140; EXIT 202,140, then EXIT 112,92). `ravfirst.py M` reads what came of it.
 - **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
   goes in front of the old name), type it, Return.
 - **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
@@ -858,7 +898,9 @@ game's data: it is one player's account.
    party stuck in place). **A Tab + Return loop of your own stalls on a member with no Move left**
    (Tab keeps choosing, nothing attacks): use fightout.sh, which presses E for it. When the alarm
    sends waves, `fight_on` is 0 only a moment between them and fightout.sh stops "DONE" there: run
-   it again.
+   it again. **In Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md) a Tab + Return
+   loop must press Q and then E to end a member's turn (Q alone leaves END MOVE up), and
+   `ravfight.py fight` doesn't reach foes inside a building (the walk to them stops at the door).
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory
@@ -972,6 +1014,15 @@ game's data: it is one player's account.
 9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
+10. **R, F10 and Alt in Wake of the Ravager** (logs/2026-11-25-ravager-fight-keys.md): after a
+   member's last step the sequel opens its own **END <name>'s MOVE** menu (GUARD, WAIT, END TURN)
+   and F10 does nothing while it is up: press Escape first (the menu is a screen up, so it's safe),
+   then F10. `ravkeys.py` shows the squares, F10's counts (moves taken back, refused), the points,
+   the flags (bit 0 clear: no walk) and the turn's start; `ravkeys.py effect OWNER 66` (Cannot
+   Move) or `69` (Paralyzed) holds a member for the pin's test and `del` takes it off (never save
+   after). The crosses on Tyr's grey street are dark (no light for stone). Alt's rings come only out
+   of a fight; in one RING_TAB stays empty. Put the four on Computer Control (the small icons beside
+   USE) to end the ambush quickly: they win it in a few minutes with HP 250.
 
 ### Foes in a test fight
 
@@ -1296,6 +1347,15 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   comes: [resting in the pens](ROUTE.md#resting-and-kurzaks-call). An effect given in memory before
   a rest (`addeffect.py`, `restfixmem.py`): [fights and foes in
   memory](RESEARCH.md#fights-and-foes-in-memory).
+
+**A power aimed at a party member, in Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md):
+the game refuses a member as a power's target; make the target's side byte (creature +15h) 7, a
+Draxan's, for the click, and both members' if two stand on the spot; put it back after. A failed
+power check costs 5 PSP and leaves no dice log line. `ravkits.py power MEMBER POWER` gives a member
+a power for a test (PSP 200), `ravkits.py blast` reads the blast's counters.
+
+**Hit points raised for a test, then a level-up** (same log): the level's hit points are worked
+from the edited ones and can come out negative. Raise them after a level-up, not before.
 
 ## Memory edits for a test
 

@@ -156,6 +156,24 @@ or ranger, cleric, thief, psionicist, preserver and druid: seen in play, every
 two-class combination as a half-elf) and puts what it can't wear in the
 backpack.
 
+In Wake of the Ravager (the port, `dsloader/ravager.py`; `RULE_RESTRICT` in `RULES_PORTED`): DSCLOG2's
+`CU_SITE` (site 19, `class_can_use`: 775FDh, `mov [bp-1],al`, the end of the sequel's equip test, its
+answer a byte) runs `CLASS_FORBIDS` with the sequel's offsets (a type's flags +0, material +4, armour
++0Bh 80h, classes +0Ch; a sheet's class bits +10h, race +12h, classes +1Bh, levels +1Eh) and the sequel's
+`KIND_OF_TYPE`; `BELT_SITE` (site 20, `thief_skill_armour`: 8C7C5h, `mov ax,si / pop di`, the thief
+skill routine 8C647h's end; its jump to the "pop di", 8C6C3h, sent to the same epilogue at 87443h in
+the image, `thief_skill_armour_out`) gives 0 for a thief in armour that isn't light (`THIEF_HEAVY`, its
+`ARMOUR_WORN` reading the item lists as `MELEE_IN` does); `THIEF_REAR`, called from `MISSILE_REAR`
+(5C99Fh), takes the backstab back (the byte `[bp-21h]`, THAC0 `[bp-1Eh]`). The sequel has no kits,
+weapon specs, robes, bracers or cloak of protection, so none of their exceptions; its only weapon
+exception is the ranger's bow (`RANGER_BOW`). `CAST_ARMOUR` (site 21, `cast_armour`: 84F6Eh, `mov
+ax,1`, the "yes" of the casting case, 84EE7h, of the sequel's "can this creature do it", 84E94h, which
+reads the effect bits through 608h:25h: Can't Cast 68 is `test byte [bp-8],10h` there, never asked by
+number) is `PROBE_NO_CAST`: a multiclass preserver in armour, a helm too, or a human preserver and
+warrior, can't cast; the dice log's `no_spells` follows it. Not ported: a new character's starting
+gear ([played](../playtest/logs/2026-11-22-ravager-class-restrictions.md): the equip test, the thief
+skills, casting in armour and the backstab in a fight).
+
 ## Multiclass hit points
 
 ([In the features page](FEATURES.md#multiclass-hit-points).)
@@ -175,6 +193,12 @@ total / classes, the dice each class's levels up to its group's last that
 rolls one (the game's table, `+group × 4 + 1`), the bonus the table's
 warrior bonus (`+52h` + CON) if a class is in the warrior group, else at most
 +2. One class, or a human: the game's own.
+
+In Wake of the Ravager the routines are SL's (the most 95193h, CON's 95261h, the reverse 954A5h), the
+sheet 42h bytes (levels +1Eh, before any were lost +39h), CON the creature's +1Bh, the hit point table
+SL's own bytes at the load + 45BEh. DSCLOG2's MC_CON (site 25 at 95208h) and MC_UNCON (site 26 at
+954BDh) put in the same CON_SHARE, with the rule (RULE_MULTI_HP). The sequel works the most out only
+at a level up (957E2h) and when a character is made from a script (6E8CEh, the reverse).
 
 ## Hit dice: the better of two
 
@@ -249,6 +273,13 @@ ring's missed rolls while it moves.
 Verified in play (no log kept). DONE on a preserver still opened CHOOSE A
 SPELL (`PROBE_CR_SPELLS`).
 
+In Wake of the Ravager the creation screen is SL's code 7D89h on (the data 6C0h back: the least and
+most score DS:42D4h, 42D2h, the most hit points DS:42D6h; the creature being made DS:142Dh, its scores
+from +19h; the sheet DS:1429h). DSCLOG2's RL_SCORE, RL_HP, RL_ROLL, RL_CON and RL_SUM (sites 27-31
+at 6D1DDh, 6B7D2h, the three loops' 6D55Ah, 6D593h, 6D5CCh, 6B6CFh and 6CD98h) do what DSCLOG's do;
+the die's loops read the roll flag from `[BP+6]` (SL's DI). The scores' box (DS:11F4h) is made a line
+taller and wider as SL's. RL_TRY (the dice log's 4d4) is not ported.
+
 ## AD&D's class tables
 
 ([In the features page](FEATURES.md#adds-class-tables); `tables.py`.)
@@ -275,6 +306,20 @@ preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
 `ADND_SLOTS`; anyone else, the routine as it was.
 
+In Wake of the Ravager (`RULE_ADND_TABLES` in `RULES_PORTED`) the table is RESOURCE.GFF's DATA 1000,
+read through 5C8:20 (the resource, the row 0-7, the index) at eight places (6C3E4h, 6C48Ah, 6C4CCh,
+6FB8Bh, 958E3h, 95931h, 9597Ah, 95C84h): the creation screen, View Character and the level up, which
+also caps the XP at the level 3 above's. It runs to 20 levels and is AD&D's but for the thief's,
+gladiator's and ranger's 2nd levels, the druid's from 11th (the cleric's copied), the gladiator's 16th
+and up (the fighter's) and the psionicist's 18th and 19th (1,400,000 and 1,700,000). DSCLOG2's
+`XP_NEED` (site 32, `xp_need_*`) replaces `add sp,6 / imul eax,eax,64h` at each: the game's x 100 but
+for those (`XP_FIXES`, tables.RAV_XP), the arguments taken off as the ADD did. The THAC0 routine
+(9534Ch, run only at a level up, its answer the creature's +16h) and the slot routine (62A10h, asked
+from 62893h at a rest) are SL's: `PRIEST_THAC0` (site 33 at 95391h) and `ADND_SLOTS` (site 34 at
+62893h) do what DSCLOG's do, the slots AD&D's to 20th level at spell levels 1-9 (the Player's
+Handbook's tables, `tables.RAV_PRIEST_SLOTS`, `RAV_WIZARD_SLOTS`; the class byte is the low byte of
+the pushed word). The dice log's slot counts follow (`RavGameData.adnd_slots`).
+
 ## CON as in AD&D
 
 ([In the features page](FEATURES.md#con-as-in-add).)
@@ -297,6 +342,13 @@ counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
 same. Verified in play (no log kept). The saves
 are checked by the emulator (`test_dwarves_poison_saves`): the party has no
 dwarf or halfling.
+
+In Wake of the Ravager (`RULE_CON` in `RULES_PORTED`) both routines are SL's: regeneration at 264BFh
+(the last time DS:19B8h, the creatures' +1Bh CON, 31h bytes a creature) and CON's save adjustment at
+1D35Bh (DS:880h by CON), added with a dwarf's or halfling's CON x 2 / 7 by the save modifiers (83A81h)
+and a poison check (8E092h). DSCLOG2's `REGEN_SITE` (site 35, `regen_rate`, 26599h) and `CON_SAVE`
+(site 36, `con_save`, 1D36Bh; the race the sheet's +12h through the creature's +4) do what DSCLOG's do,
+each with the rule. The dice log's save modifiers drop the CON adjustment only with the rule.
 
 ## Dual-classing as the manual has it
 
@@ -324,6 +376,14 @@ first class's level and primes, the game's way). Checked by the emulator
 (`test_group4`'s `test_dual_level`, `test_dual_primes`). The classes a kit bars, and the sphere
 menu after CLERIC, DRUID or RANGER, are the kits' ([Where each effect goes](DEVELOPMENT-KITS.md#where-each-effect-goes):
 `PROBE_DUAL_BAN`, `DUAL_SPHERES`, `PROBE_SPHERE` and its `SPHERE_BARRED`).
+
+In Wake of the Ravager (`RULE_DUAL_CLASS` in `RULES_PORTED`) the code is SL's with the sequel's records
+and unsigned jumps: the two portrait menus' test (7926Ch, 7948Bh) and the DUAL window's (94BCCh) are
+`cmp byte [es:bx+1Eh],2`, the primes `cmp byte [es:bx+19h],0Fh` and `...,11h` (94B70h, 94BA5h; the
+creature's scores from +19h, the class map 360h:9Dh). DSCLOG2's `DUAL_LEVEL` (site 37) and
+`DUAL_PRIMES` (sites 38 and 39) do what DSCLOG's do with the rule, the game's compare without;
+`DUAL_PRIMES_OF` gives the sequel's classes 18 and 19 a wizard's INT and a priest's WIS. The kits'
+parts aren't ported (the sequel has no kits).
 
 ## Ages and magical aging
 
@@ -468,6 +528,25 @@ half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the
 elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
 its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
 thri-kreen's antennae greyed were tried and left out). Verified in play (no log kept).
+
+### Ages in Wake of the Ravager
+
+In Wake of the Ravager (`RULE_AGING` in `RULES_PORTED`) the Loader's `RavDiceLog._aging_pass` does it
+all, four times a second on a steady look (the same party, the clock on by no more than
+`NATURAL_JUMP`): `give_ages`, a year for each year the clock passes from the last look
+(`natural_tick`), and Haste's aging for each Hasted effect (42) not there at the last look (`hasted`).
+The age is kept alone in the sheet's +41h (`SHEET_AGE` there, `AGE_PLAIN`: no roll and no weapon specs
+beside it), a byte no instruction of the sequel's touches; the only other such bytes, +3Dh and +3Fh,
+hold CHARTRAN's kit and second sphere. The sequel's flags have no place for SL's count of the years,
+so only the years the clock passes while the Loader watches are counted: a year crossed with the
+Loader not running, or inside one jump of the clock of more than `NATURAL_JUMP` (2 days), is lost.
+None is counted twice: the age is saved with the sheet (seen: saved and loaded again, the four ages
+came back the same, and the dice log gave none again), and a load's first look only records. Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
+by `apply_layout`). DSCLOG2's `PROBE_CHAR` writes `AGE: 23` between SP and STR (`AGE_Y` 2Dh) from the
+sheet and the races' bases (`age_bases`), with RULE_HI_AGING. Not ported: Restore Youth (the mod's own
+spell, not in the sequel), the creation screen's roll (a new character gets its age when it joins), the Characters
+tab's other numbers from STATS. A character brought over by CHARTRAN gets a new age (its SL age was
+beside the weapon specs, which the transfer leaves behind).
 
 ## Two weapons
 
@@ -642,6 +721,34 @@ Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
   click to switch them (tried 2026-11-10) found no way to have the game redraw the
   panel cleanly (playtest/logs/2026-11-10-creature-size.md).
 
+### Wake of the Ravager's weapons
+
+The sequel's helper, DSCLOG2, uses the same `LARGE_DICE` by weapon kind (`KIND_OF_TYPE`, the sequel's
+item types from OBJEX.GFF's names). Twelve of the sequel's weapons don't fit that, either because SL
+has no such weapon or because the game gives them other small dice than SL's weapon of the kind. They
+are in DSCLOG2's `RAV_LARGE` instead (checked first). Each is the AD&D 2nd Edition *Player's Handbook*
+weapon whose small and man-sized dice are the game's (the dice below are the game's, read from its
+item types in play, 2026-11-21):
+
+| Weapon (type) | The game's dice | Against a large target | Why |
+|---|---|---|---|
+| Twohand Sword (101) | 1d10, two-handed | 3d6 | The two-handed sword's 1d10/3d6 |
+| Crystal sword (35) | 1d10, two-handed | 3d6 | Two-handed with the two-handed sword's small die, not a long sword's |
+| Trikal (100) | 1d10 | 2d6 | A bladed polearm. The halberd is the PHB weapon with a 1d10 small die (1d10/2d6) |
+| Promere hammer (81) | 1d10, two-handed | 2d6 | A heavy two-handed weapon with a 1d10 small die: the halberd's large die too |
+| Lotulis (61) | 2d4, two-handed | 2d6 | The bardiche's 2d4/2d6. Dark Sun's own lotulis also does more to the large than to the small |
+| Double Spear (39) | 1d6, two-handed | 1d8 | The spear's 1d6/1d8 |
+| Toothed Club (89) | 1d8+2 | 1d6+3 | A spiked club: the morning star's large 1d6+1, the game's +2 kept. SL's club kind would have made it 1d3+2 |
+| Axe (48) | 1d6 | 1d4 | The hand axe's 1d6/1d4. The other Axe (8) is 1d8, the battle axe, and keeps the axe kind's 1d10 |
+| Pick (79) | 1d4+1, two-handed | 1d4 | The horseman's pick's 1d4+1/1d4. SL's pick kind assumes the mod's 1d6+1 footman's pick |
+| Darts (43) | 1d4 | 1d3 | One die down, as the dart's 1d3/1d2. The 1d2 Darts (38) keep 1d2 |
+| Javelin (59) | 1d4 | the same | The javelin's dice are the same on any size (1d6/1d6) |
+| Flameblade (47) | 1d4+4 | the same | Flame Blade's damage is the spell's, 1d4+4, whatever the size |
+
+The Net (71) has no damage. In play (logs/2026-11-21-ravager-size.md): Terrannus's Twohand Sword hit a
+large Draxan for "3d6 = [2 + 6 + 1] +1 weapon (3d6 for 1d10: a large target)", and Gerakis's Polearm
+for "2d6 ... (2d6 for 1d10: a large target)".
+
 ## Held targets
 
 ([In the features page](FEATURES.md#held-targets).)
@@ -813,6 +920,13 @@ How: where the game works out the number a weapon's d20 must reach
 (`INT D5h`) and where it works out armour's number (`INT D4h`), DSCLOG
 gives the easier of the two and records the check for the dice log.
 
+In Wake of the Ravager the same two checks are the same code (its 7CEC0h and 7D02Ah), an item's
+power a word at +10h and its plus at +16h. Its power handler sends three powers there: Crystal
+Brittle (103, the weapon, then the armour if the weapon came through), and monster powers 275 and
+283 (the armour) and 284 (the weapon). DSCLOG2's ITEM_WEAPON, ITEM_SKIP and ITEM_ARMOUR (sites 22, 23
+and 24 at 7CF22h, 7D0AAh and 7D0BEh) do what DSCLOG's do. So Crystal Brittle, which the sequel runs
+through the acid check, now gives each item the acid save for its material too.
+
 ## Rangers' casting level
 
 ([In the features page](FEATURES.md#rangers-casting-level).)
@@ -835,6 +949,13 @@ Seeker's 5 and a Justifier's 9 come off there whatever the rule
 (`kits.spell_class_level`).
 
 Verified in play (no log kept).
+
+In Wake of the Ravager the two routines are the same: the caster level routine counts a ranger 7 less
+("sub dx,7" at 97E00h), the duration and damage level routine (628AFh) takes it whole. DSCLOG2's
+`RANGER_LEVEL` (`INT EAh` in place of "mov al,es:[bx+1Eh] / mov ah,0", 629F0h: the sheet's class at
++1Bh, its level at +1Eh) takes the 7 off with `RULE_HI_RANGER` (`ravager.RULES_PORTED` has
+`RULE_RANGER_CAST`). No kits there, so no Seeker or Justifier. Played:
+[the test log](../playtest/logs/2026-11-21-ravager-ranger.md).
 
 ## Preservers' INT
 
@@ -905,6 +1026,28 @@ still. As the game's own messages there, it stays till the pointer is on
 something else. Not redrawing the window (118h:618h) afterwards matters: that
 draws it blank.
 
+In Wake of the Ravager the scroll's routine is rewritten (around 999C0h): a scroll is an item whose
+entity (+0) is 7918h-79DFh (wizard) or 7AA8h-7B0Bh, its spell the power (+10h) less 1; the reader's
+known wizard spells are a bitset, 15 bytes a member at selector 320h:39Ch (bit n spell n), the reader
+at 370h:0B44h; known, YOU ALREADY KNOW THIS SPELL (99A86h); else the bit set, the scroll used up
+(5F8h:43h) and YOU LEARN THE SPELL (99A7Fh). A spell's level: the game's table at DS:0656h, the first
+spell of each level, a row of 11 for wizard spells then priest (`ravlog.SPELL_STARTS`; SL's 7-byte
+table isn't there). DSCLOG2's `SCROLL_LEARN` (`INT EDh` for the "or ax,ax" at 99A2Fh), `LEARN_SAID`
+(`INT EEh`, 99A7Fh) and `LEARN_REFUSED` (`INT EFh`, 99A86h) do SL's for a wizard (class 11 or the
+sequel's 18) with `RULE_HI_INT`, the d100 from the game's seed, the try told at +272 as DSCLOG's.
+
+At a level up the sequel's preserver (class 11 alone: 957ABh calls 688h:66h, 93160h, only for a level
+never reached before, the sheet's +39h) asks its list routine (94C7Ch: the unknown spells of one level,
+at 370h:7) at each level from its class level down, and opens CHOOSE A SPELL (93378h), which shows one
+spell level a page (DS:43ECh, LEVEL pages through them) from the highest it casts (698h:39h). DSCLOG2's
+`PICK_ANY` (`INT F0h`, "mov [bp-2],ax / or ax,ax" at 9317Fh, SL's 85580h) gives the highest level it
+casts with room (a spell not known and fewer known than INT's most), or 0 and no window; `PICK_PAGE`
+(`INT F2h`, "mov [43ECh],al" at 93487h, the sequel's own need) opens the window on that level;
+`PICK_LIST` (`INT F1h`, "mov di,ax" at 93246h, SL's 8563Fh) empties a page whose level is full. (The
+game's own count from the class level past spell level 10 reads the priest rows: with the rule it
+stops at the highest spell level.) Played: [scrolls](../playtest/logs/2026-11-21-ravager-int.md), [the
+level up](../playtest/logs/2026-11-21-ravager-int-levelup.md).
+
 ## Spells saved against with the spell save
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
@@ -928,6 +1071,12 @@ own "can be dodged" flag (bit 40h of the spell's category word), which no spell
 has, so the game's save routine adds the DEX defensive adjustment from its own
 table.
 
+In Wake of the Ravager (always on too): the Loader's patch `no_double` makes the save's `shl al,1`
+(66E63h) two NOPs, and its copy of RESOURCE.GFF (`ravager.spell_fixed`, the fix `dodge`) sets the
+same bit in every spell record whose flags word (+1Ah) has 86h (32 records, the monsters' fire and
+cold powers among them); the sequel's modifiers routine (83606h) has SL's DEX test as it is. Its
+spell save needs nothing: the sequel takes a spell's kind as the save itself, kind 5 the spell save.
+
 ## Enlarge multiplies the weapon's dice only
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
@@ -944,6 +1093,14 @@ dice the enlarged ones, so a backstab with its rule multiplies those. Without
 the rule, or with no dice kept, it does the game's sum. The dice log's hit
 line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
 rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Verified in play (no log kept).
+
+In Wake of the Ravager Enlarge is the same routine (863B2h, 628h:57h; its effect 32, its levels
+608h:52h) and works the same: the stock game made Gerakis's 24 a 38 (x160%, Ar'anda's 6th level).
+DSCLOG2's `ENL_ROLL` (`INT EBh` at the attack's "cmp word [bp+16h],1" after the damage roll, 5D0C8h:
+the dice's sum, the roll less `[BP-14h]`, the sequel's bonus local) and `ENL_SITE` (`INT ECh`, 863E7h,
+the 32 bytes as SL's) do SL's with `RULE_HI_ENLARGE`, the enlarged dice kept for a backstab (DSCLOG2's
+`STAB_TIMES`: [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)). The dice log's Enlarge levels come from `RavGameData.effect_caster_level` (the sequel's
+caster level routine, 97DC5h). Played: [the test log](../playtest/logs/2026-11-21-ravager-enlarge.md).
 
 ## Spells roll to hit
 
@@ -1179,6 +1336,74 @@ creature and three words; dicelog's `_manual`).
 - `fire_shield_save` (79E03h, 20 bytes: Protection from Cold's test,
   `fshield_save`): its +3 and Fire Shield's (20) +2 when the spell's damage kinds
   (`[bp-4]`, the record's +1Ah) have fire (2) or cold (4).
+  In Wake of the Ravager the save modifiers are 83606h (DI the modifier; the effects
+  numbered otherwise: Barkskin 6, Blurry 13, Fire Shielded 38, Protected vs Cold 73):
+  DSCLOG2's `BLUR_SAVE` (`INT F3h` at Barkskin's test, 8373Ah, 10 bytes) and
+  `FSHIELD_SAVE` (`INT F4h` at Protection from Cold's, 837F7h, 20 bytes) do the same
+  ([played](../playtest/logs/2026-11-21-ravager-blur-fire-shield.md)).
+  The rest of the tail is SL's with DI for SI, so DSCLOG2's SITE (`INT F5h` and the site's
+  number, its `SITE_TABLE`) does `stinking_cloud_round` (80249h), `classless_save_level`
+  (83656h; the sheet's first level byte, +1Eh, the hit dice), `chaos_int` (83E83h; INT the
+  creature's +1Ch), `color_spray_level` (83E86h), `cloudkill_save` (83E98h) and
+  `cloudkill_kills` (651C5h); the sequel's Cloudkill record allows no save, as its manual
+  ([played](../playtest/logs/2026-11-21-ravager-manual-saves.md)).
+  Sites 6 and 7 do `flame_arrow_count` (the cast's tail, 7E8E0h, `[bp+0Ah]` the spell,
+  `[bp+0Ch]` the level) and `biofeedback_least` (8348Bh; the sequel's Biofeedback is effect 8)
+  ([played](../playtest/logs/2026-11-21-ravager-flame-biofeedback.md)).
+  Sites 8 and 9 do Lower Resistance: `cast_level_kept` (7E338h, the cast's tail's start) keeps
+  the cast's level for `ACID_ROUNDS` to put into Low Magic Res.'s (61) amount, and
+  `lower_resistance_manual` (84B2Eh, the same 33 bytes as SL's) takes the 30 + the level off
+  ([played](../playtest/logs/2026-11-21-ravager-lower-resistance.md)).
+  Site 10 does `strength_dice` (6624Eh; the sheet's classes at +1Bh, the sequel's 18 a wizard's
+  and 19 a priest's) ([played](../playtest/logs/2026-11-21-ravager-strength.md)).
+  Site 11 does `cell_adjustment_heal` (664C5h, back to Neutralize Poison's "push ax" at 66545h)
+  ([played](../playtest/logs/2026-11-21-ravager-cell-adjustment.md)).
+  Site 12 does `feeblemind_psionics` (61D47h; the sequel's Feebleminded is effect 37)
+  ([played](../playtest/logs/2026-11-21-ravager-feeblemind.md)).
+  Site 13 does `rainbow_pattern_damage` (5CBECh; the hold ended through 608h:48h, 7FB63h, the
+  entry's +7 its handle) ([played](../playtest/logs/2026-11-21-ravager-rainbow.md)).
+  SL's `free_action_*` and the paralysis words have nothing to do in the sequel: its handler for
+  spells with rules of their own (the cases at 66BA3h, their addresses at 66C43h) sends Protection
+  from Paralysis (20), Remove Paralysis (159) and Free Action (175) to one start (661A0h) that takes
+  off Slowed, Paralyzed (unless Poisoned), Petrified, No Attacks, Cannot Move (Web's), Cannot Use
+  Psionics and Can't Cast.
+  Site 14 does `hold_undead_level` at the sequel's own immunity routine's common way out (84A65h;
+  the undead the sheet's race 9) ([played](../playtest/logs/2026-11-21-ravager-hold-undead.md)).
+  Site 15 does `turn_undead_manual` (97C9Ch, `mov al,[es:bx+1Eh]`, the sequel's turning of one
+  undead at 97C50h, SL's 7ADB7h with the same frame; called from the case 310, Turn Undead's, of the
+  handler for spells with rules of their own): DSCLOG2's `TU_SITE`, SL's `tu_site` with the
+  sequel's places (the destroy 97CFCh, the failure 97D12h, the end 97D1Bh), Afraid its 35 through
+  608h:3Eh (7F9E6h) for spell 310, the d20 and the 3d4 from `GAME_DIE`, the failures a byte a target
+  in the helper (`TU_FAILED`, cleared with the tangles at a fight's first round and by a turning out
+  of a fight), a D\*'s more cleared by `CAST_START`
+  ([played](../playtest/logs/2026-11-21-ravager-turn-undead.md); the destroy's way read, not played).
+  Spells roll to hit in the sequel through site 16, `spell_hit` (84AAFh, `xor ax,ax / pop di`, the
+  immunity routine 8451Ah's only "not immune" answer; its "immune" exit's jump, 84565h, which landed on
+  the site's number and quit the game with "Illegal Op (gpl=49)", is sent to the same epilogue at
+  7F2FEh in the image, `spell_hit_immune`,
+  [played](../playtest/logs/2026-11-25-ravager-illegal-op.md)): the sequel has no always-hit stub or missile
+  table (SL's 78BA0h, 7A1A7h), so DSCLOG2's `TH_SITE` answers 1 ("immune") on a miss, and the damage
+  and effect routine (651A0h) skips both, as SL's. `PROBE_CAST` (80585h) arms it (`TH_CAST`) unless the
+  cast routine returns to the weapon's spell on a hit (5D2D1h's bytes). The spells by the sequel's
+  numbers (Magic Stone 121, Condense 169, Vampiric Touch 38, the Cause spells 118, 149, 171, 195,
+  Poison 179; no record for SL's spines); THAC0 creature +16h, side +15h; the adjustments 628h:66h,
+  STR's and DEX's part 98h:2C0h and 2D9h, the AC 4671h:7Ah (5D520h), the difficulty DS:143Ah; the
+  computer's look-ahead calls (`[bp-4]` 1, 5F2D2h's) never roll
+  ([played](../playtest/logs/2026-11-22-ravager-spell-to-hit.md)).
+  Resting heals by nature in the sequel through site 17, `rest_hp` (8CF79h, `mov [es:bx],ax` in the
+  rest 8CA7Ah's pass 2, SL's 808AFh): DSCLOG2's `REST_HP` with `RULE_HI_REST` (in `RULES_PORTED`), the
+  creature's CON at +1Bh, the level hit point table at load + 45BEh (selector 4D0h; the same bytes as
+  SL's, classes 18 and 19 added: groups 2 and 0) ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
+  Site 18, `rest_spells` (8CA82h, the rest's first move), is `REST_PRE`: the priests (classes 1-8 and
+  19, the sheet's own levels) spend their slots left (DS:4474h + 22h a member + the level) through the
+  rest's own free-cure cast (4787h:25h, 8D074h: spell, target, caster, level); the sequel's numbers
+  (Neutralize Poison 178 on Poisoned 71, Cure Blindness 146 on Blind 10, Cure Disease 148 on Diseased
+  27; Cure Light 117, Serious 170, Critical 194, Heal 210), the levels from its table at DS:0656h + 11.
+  A priest knows every priest spell (the sequel has no spheres). A psionicist's Cell Adjustment (248) as
+  SL's (`RP_PSI_CAST`: on the Diseased, then on the most wounded when no cure is left): known if its
+  byte at 370h:9CDh + 22h a member + the power's place from 235 has bits 1-7 (the game's own test,
+  5C340h), its cost the powers' table's (3D0h:7E0h, 3 bytes a power, +1: 5), taken from the creature's
+  +2, cast at level 1 through the same free cast ([played](../playtest/logs/2026-11-22-ravager-rest.md)).
 - `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
   level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
   (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
@@ -1386,9 +1611,49 @@ the same routine as the DAM line, with the weapon's own rate of fire (its type's
 does (`MISSILE_RATE`) and the bonus and sides PROBE_SPEC_DAMAGE does, for the
 creature the routine has.
 
+### Weapon specialization in Wake of the Ravager
+
+The party transfer keeps each character's specs (SL's +14h..+16h) at the
+Loader's sheet +42h..+44h (`SPEC_SLOTS` in ravlog's layout), and DSCLOG2 reads
+them with DSCLOG's `SPEC_GET` and `SPEC_ANY` (all three layouts). The sequel's
+weapon attack routine (5CE80h) is SL's 58780h with its locals two bytes lower
+(the attacks a round `[BP-0Ah]`, the dice `[BP-10h]`, the sides `[BP-12h]`, the
+bonus `[BP-14h]`; `[BP+0Ah]` the THAC0, `[BP+10h]` the sheet, `[BP+14h]` the
+type, `[BP+16h]` above 1 a missile, as SL's). `SPEC_ATTACKS`, called from
+OFF_HAND at the attacks' store (5CEE8h, SL's PROBE_ATTACKS' site), and
+`SPEC_DAMAGE` (site 51 at the strength bonus's `add [bp-14h],ax`, 5CF6Dh) do
+what PROBE_ATTACKS and PROBE_SPEC_DAMAGE do; `SIZE_DICE` calls
+`SPEC_GRAND_DIE` after AD&D's large dice. `SPEC_OF_SHEET` and `MISSILE_RATE`
+are DSCLOG's on the sequel's sheet (race +12h, classes +1Bh, levels +1Eh),
+the kits' parts with the kits' rules ([Kits in Wake of the
+Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager))
+(`tests/test_ravspecialize.py` runs them against `specialize.skill` and
+`missile_attacks`). The rule's bit is tested (`RULE_SPECIALIZE` in
+`ravager.RULES_PORTED`), so `RAV_RULES_OFF=0x1000` makes a control run.
+
+The kinds are DSCLOG2's `KIND_OF_TYPE` (`ravager.rav_kinds`, which ravlog's
+layout makes `specialize.KIND_OF_TYPE` while the sequel is attached). The
+sequel's weapons with no kind of SL's count as the nearest of SL's 16 for
+specialization alone (DSCLOG2's `SPEC_KINDS_OWN`, `ravager.rav_spec_kinds`,
+made `specialize.CONJURED_KINDS`), as SL's spell-made weapons do, so no
+transferred warrior is left with the plain rate for want of a kind; their
+restrictions and large dice stay as they were:
+
+| The sequel's weapon (type) | Counts as | Why |
+|---|---|---|
+| Twohand Sword (101), Bloodletter (13) | long sword | SL's swords are one kind (the Crystal sword, 35, already is) |
+| Lotulis (61) | gythka | A shaft with a blade at each end, as the gythka |
+| Trikal (100), Double Spear (39) | polearm | A bladed polearm; a long-shafted thrusting weapon |
+| Promere hammer (81), Jasmine (68), Spirit hammer (95) | mace | A hammer, as SL's Spiritual Hammer; a mace's 1d6+1 |
+| Darts (38, 43), Javelin (59) | chatkcha | SL's thrown weapon: their specialist's rate of fire is the chatkcha's |
+| Shillelagh (90) | club | The spell's, as SL's |
+| Rainbow (87) | bow | The Rainbow spell's bow |
+
+The Net (71) and the Rock (94) have none.
+
 ## Kits
 
-([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
+([On the Kits page](KITS.md).) The kits, and their switch, are on a page of their own: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md). In Wake of the Ravager: [Kits in Wake of the Ravager](DEVELOPMENT-KITS.md#kits-in-wake-of-the-ravager).
 
 ## Preservers' first spells
 
@@ -1851,6 +2116,18 @@ The dice log's damage line says it: `+10 backstab (the dice 5 x3 = 15)`
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
 `test_dice_only`, `test_enlarge_before_the_backstab`.
+
+In Wake of the Ravager (DSCLOG2, `RULE_THIEF_TABLE` in `ravager.RULES_PORTED`): site 52 `THIEF_SKILL` at
+the thief skill routine's 8C716h (SL's 80307h, the same 9 bytes; DEX `[BP-2]`, its "jc" to 8C795h) does
+`PROBE_THIEF_SKILL` (`THIEF_ADND`, the tables in the resident part), `BELT_SITE` keeps the chance to 95,
+`C_THIEF` shows the same on the inventory; site 53 `STAB_TIMES` at 5D11Bh (SL's 58A80h, the same 10 bytes;
+the round's count `[BP-16h]`, the dice `ENL_ROLL`'s `ENL_DICE`, made the enlarged ones by `ENL_SITE`);
+`STAB_FIRST` from `MISSILE_REAR` (the clock's far pointer DS:9C0Ch). With the kits (`RULE_KITS`) an
+Assassin's multiplier one more there, rule or not (the attacker `[BP+0Eh]`, a party member: `kits.backstab_times`,
+`kit_stabs` counts them). The dice log
+reads the round's count at `game.ATTACKS_MADE_LOCAL` (ravlog's -16h). Tests: test_ravthief.py (with
+`DSUN_WOTR`, the sites in the game's own code too); test_dicelog's `test_rule_off`,
+`test_attacks_made_local`. Found statically (playtest/RESEARCH.md, "Thieves as in AD&D in the sequel").
 
 ## Picking pockets
 

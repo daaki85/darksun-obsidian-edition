@@ -521,14 +521,37 @@ class BackstabTests(unittest.TestCase):
                          ["  Dag hits Mountain Stalker for 33: 1d8 = [5] +12 STR 24 +2 Enlarge (the dice 5 x140% = 7, "
                           "level 4) +14 backstab (the dice 7 x3 = 21)"])
 
-    def backstab(self, level, made=0):
+    def backstab(self, level, made=0, rules=None, local="m14"):
         log = make_game()
+        if rules is not None:
+            log.game.rules = rules
         sheet = SHEETS + 0 * game.SHEET_SIZE
         log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=made))
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, **{local: made}))
         return log.describe(e)
+
+    def test_rule_off(self):
+        """Without RULE_BACKSTAB (the sequel's helper with the rule off: DSCLOG2's STAB_TIMES) the game's:
+        all of the damage multiplied, on the round's first two attacks."""
+        off = game.RULES_ALWAYS & ~game.RULE_BACKSTAB
+        self.assertEqual(self.backstab(6, rules=off), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, made=1, rules=off),
+                         ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, made=2, rules=off), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+
+    def test_attacks_made_local(self):
+        """The count of the round's attacks is game.ATTACKS_MADE_LOCAL (the sequel's [BP-16h], its [BP-14h]
+        the roll's bonus: ravlog's layout)."""
+        old = game.ATTACKS_MADE_LOCAL
+        try:
+            game.ATTACKS_MADE_LOCAL = -0x16
+            self.assertEqual(self.backstab(6, made=1, local="m16"), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+            self.assertEqual(self.backstab(6, made=0, local="m16"),
+                             ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)"])
+        finally:
+            game.ATTACKS_MADE_LOCAL = old
 
     def test_the_rounds_second_attack(self):
         """Only the round's first attack ([BP-14h] 0) is multiplied, as in AD&D (RULE_BACKSTAB,
@@ -1940,7 +1963,7 @@ class ManualGroup3Tests(unittest.TestCase):
             log = self.make(manual)
             struct.pack_into("<H", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SHEET_INDEX, 3)
             log.guest.mem[sheet + game.SHEET_MAGIC_RESISTANCE] = 80
-            set_effects(log, [(0x29, 0, dicelog.LOW_RESISTANCE)] if effect else [])
+            set_effects(log, [(0x29, 0, game.LOW_RESISTANCE_EFFECT)] if effect else [])
             self.amount(log, 0, 12)
             e = entry(raw_for(20, 100), dicelog.DICE_SITE, words(0, 0, 1, 100), words(0, 0, 0x29, spell, level),
                       parent_code=dicelog.RESISTANCE_ROLL_RETURN)
@@ -2970,6 +2993,14 @@ class CreationTests(unittest.TestCase):
         log = make_creation()
         e = entry(raw_for(16, 33), dicelog.DICE_SITE, words(0, 0, 1, 33), parent_code=dicelog.RANDOM_NAME_RETURNS[0])
         self.assertEqual(log.describe(e), ["Character creation: a name picked at random, 1d33 = 16"])
+
+    def test_ravager_sound_picks_named_among_all_rolls_only(self):
+        """Wake of the Ravager's combat sounds (by kind and sex: 1d12, 1d8, 1d5, 1d4): not bare "Dice:" lines."""
+        for ret, sides in zip(dicelog.SOUND_PICK_RETURNS, (12, 8, 5, 4)):
+            for show_all, want in ((False, []), (True, [f"    A fighter's sound picked at random: 1d{sides} = 2"])):
+                log = make_creation()
+                e = entry(raw_for(2, sides), dicelog.DICE_SITE, words(0, 0, 1, sides), parent_code=ret)
+                self.assertEqual(log.describe(e, show_all), want)
 
 
 if __name__ == "__main__":

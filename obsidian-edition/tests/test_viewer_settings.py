@@ -192,7 +192,8 @@ class ViewerSettingsTests(unittest.TestCase):
                 raise PermissionError(13, "in use", path)
             return real_open(path, *args, **kwargs)
         v.guest, v.next_try = object(), 0.0
-        with mock.patch.object(viewer, "DiceLog", Log), mock.patch("builtins.open", locked), mock.patch("time.sleep"):
+        from dsloader import ravlog  # (the window makes its log through ravlog.make: either game's)
+        with mock.patch.object(ravlog, "make", Log), mock.patch("builtins.open", locked), mock.patch("time.sleep"):
             v._dice_step()
         return made[0]
 
