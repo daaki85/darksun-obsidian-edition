@@ -810,6 +810,14 @@ PATCHES: Tuple[Patch, ...] = (
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
     Patch("floor_all", 0x2B81C, bytes.fromhex("558bec83ec1c"), _site(40, 6)),
     Patch("floor_rect", 0x2B97F, bytes.fromhex("558bec83ec1e"), _site(41, 6)),
+    # The figures' shadows (DSCLOG2's FIGURE SHADOWS, SL's SHADOWS): drawn in the same floor pass; the two
+    # routines drawing the view again round what moved reach further right and down, as far as a shadow
+    # does: the redraw of what moved, where it starts drawing its rectangle (2868Ch, "push word [bp+8] /
+    # push di": SL's PROBE_REDRAW_ALL at 24B18h), and of a rectangle (21E0:128C, 2828Ch: "push bp / mov
+    # bp,sp / sub sp,8", SL's PROBE_REDRAW at 2475Fh), DSCLOG2's sites 160 and 161 (SITE_FIG_WIDE_ALL,
+    # SITE_FIG_WIDE). Without them (RAV_SKIP, a control) DSCLOG2 draws no figure's shadow.
+    Patch("fig_wide_all", 0x2868C, bytes.fromhex("ff760857"), _site(160, 4)),
+    Patch("fig_wide", 0x2828C, bytes.fromhex("558bec83ec08"), _site(161, 6)),
     # Choosing an enemy with Tab, Enter attacking it (SL's PROBE_HIT, DSCLOG's TARGETING): the start of
     # the routine finding the thing under the pointer (21E0:2DBD, 29DBDh, SL's 25B52h: "push bp / mov
     # bp,sp / sub sp,0Eh"), DSCLOG2's site 77 (SITE_HIT): for a moment after Enter's click, the chosen enemy.

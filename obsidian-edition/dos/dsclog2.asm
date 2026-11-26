@@ -302,6 +302,11 @@ square_draws dw 0               ; +1928 floor passes the squares were drawn in (
 f10_moves  dw 0                 ; +1930 F10's moves taken back (F10_PIN, counted) ...
 f10_kept   dw 0                 ; +1932 ... and those refused to a pinned member (counted)
 mark_draws dw 0                 ; +1934 rings drawn under the things RING_TAB marks (RINGS, counted)
+        times 1960 - ($ - hdr) db 0 ; (+1936 to +1959: none yet, zero; kept free for the open ports' fields)
+fig_shadows dw 1                ; +1960 1: the figures cast shadows on the floor (FIGURE SHADOWS; 0 none)
+fig_passes  dw 0                ; +1962 floor passes the figures' shadows were drawn in (counted) ...
+fig_drawn   dw 0                ; +1964 ... and shadows cast in them (counted) ...
+fig_wides   dw 0                ; +1966 ... and redrawn rectangles widened for them (FIG_WIDE, FIG_WIDE_ALL)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4026,6 +4031,56 @@ site_table:
         dw site_none                        ; 127 (none here)
         dw site_none                        ; 128 (none here)
         dw site_none                        ; 129 (none here)
+        dw site_none                        ; 130 (none here)
+        dw site_none                        ; 131 (none here)
+        dw site_none                        ; 132 (none here)
+        dw site_none                        ; 133 (none here)
+        dw site_none                        ; 134 (none here)
+        dw site_none                        ; 135 (none here)
+        dw site_none                        ; 136 (none here)
+        dw site_none                        ; 137 (none here)
+        dw site_none                        ; 138 (none here)
+        dw site_none                        ; 139 (none here)
+        dw site_none                        ; 140 (none here)
+        dw site_none                        ; 141 (none here)
+        dw site_none                        ; 142 (none here)
+        dw site_none                        ; 143 (none here)
+        dw site_none                        ; 144 (none here)
+        dw site_none                        ; 145 (none here)
+        dw site_none                        ; 146 (none here)
+        dw site_none                        ; 147 (none here)
+        dw site_none                        ; 148 (none here)
+        dw site_none                        ; 149 (none here)
+        dw site_none                        ; 150 (none here)
+        dw site_none                        ; 151 (none here)
+        dw site_none                        ; 152 (none here)
+        dw site_none                        ; 153 (none here)
+        dw site_none                        ; 154 (none here)
+        dw site_none                        ; 155 (none here)
+        dw site_none                        ; 156 (none here)
+        dw site_none                        ; 157 (none here)
+        dw site_none                        ; 158 (none here)
+        dw site_none                        ; 159 (none here)
+        dw fig_wide_all                     ; 160 SITE_FIG_WIDE_ALL (2868Ch: the redraw of what moved: wider, for the figures' shadows)
+        dw fig_wide                         ; 161 SITE_FIG_WIDE (2828Ch: the redraw of a rectangle of the view: the same)
+        dw site_none                        ; 162 (none here)
+        dw site_none                        ; 163 (none here)
+        dw site_none                        ; 164 (none here)
+        dw site_none                        ; 165 (none here)
+        dw site_none                        ; 166 (none here)
+        dw site_none                        ; 167 (none here)
+        dw site_none                        ; 168 (none here)
+        dw site_none                        ; 169 (none here)
+        dw site_none                        ; 170 (none here)
+        dw site_none                        ; 171 (none here)
+        dw site_none                        ; 172 (none here)
+        dw site_none                        ; 173 (none here)
+        dw site_none                        ; 174 (none here)
+        dw site_none                        ; 175 (none here)
+        dw site_none                        ; 176 (none here)
+        dw site_none                        ; 177 (none here)
+        dw site_none                        ; 178 (none here)
+        dw site_none                        ; 179 (none here)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -14200,6 +14255,8 @@ floor_enter:
         popf
         cmp word [cs:wall_shadows], 0
         jne .want
+        call fig_wanted                 ; (or the figures' shadows: FIGURE SHADOWS)
+        jne .want
         call extras_wanted              ; (or a ring or the squares: RINGS, SQUARES)
         jnc .plain
 .want:  cmp byte [cs:floor_busy], 0
@@ -14421,7 +14478,8 @@ wall_pass:
         jmp .row
 .done:  call ws_flush
         call vga_restore
-.ring:  call squares_pass               ; (the squares in reach over the shadows: SQUARES)
+.ring:  call fig_pass                   ; (the figures' shadows: FIGURE SHADOWS)
+        call squares_pass               ; (the squares in reach over the shadows: SQUARES)
         call ring_pass                  ; (the rings over them: RINGS)
         ret
 
@@ -14560,6 +14618,373 @@ ws_flush:
         pop ds
         pop fs
 .ret:   ret
+
+; ---- FIGURE SHADOWS: DSCLOG's SHADOWS (dsclog.asm), the figures' shadows on the sequel's floor ----
+; Every living creature on the map (the party, the people, the monsters: a thing of kind 2 in the
+; things table, the load + 3F49h:0C33h, 3 bytes a thing, whose creature, DS:19C9h far, 31h bytes, has a
+; status at +14h neither dying 4, dead 7 nor gone 8) casts a see-through shadow on the floor, its
+; outline laid down toward the lower right as the walls' fall: in the floor pass (FLOOR_POST, after
+; the walls' shadows, before the squares and the rings), so the walls and the figures stand on it.
+; SL's way: the runs of each row of the frame the figure is drawn with, from the feet up FS_ROWS
+; rows, every other row (half as tall), each leaning right by 1.05 times as far as it is up,
+; darkened once through the walls' DARK (WS_DARKEN, WS_FLUSH). The sequel draws a thing from the draw
+; list (DS:67B7h far, 8 bytes an entry: x, y, height, flags, the thing; DS:264Eh of them) as SL does
+; (its 26E96h on, SL's 2492Eh): flags bit 10h not drawn, 20h placed by the entry (x less the map
+; thing's byte +7, y less its word +8 and the height: the shadow on the ground leaves the height out),
+; else at the map thing's +3, +5; 80h mirrored; the map thing (DS:67BBh, 25h bytes) its flags +0
+; (80h not drawn), its picture's slot +10h, the frame +12h. The picture is drawn only from the cache
+; (PIC_REUSE's table: the slot's +6 its number, below 0 none; +0Ah the picture in memory, far; +0Eh bit
+; 2 in memory), never loaded here (SL's lesson: in the middle of a drawing that can move a picture the
+; game is about to draw). The sequel's figures are runs, as SL's (OBJEX.GFF: every picture of 8 frames
+; or more); a planar one (FFh "PLNR" or "PLAN" after the size) casts none.
+;
+; A figure that moves is drawn again within a rectangle round where it was and where it is; its
+; shadow reaches beyond its picture, so the two routines drawing rectangles again are made to reach
+; further right and down by as far as a shadow does: the redraw of what moved (FIG_WIDE_ALL, site 160
+; at 2868Ch, SL's PROBE_REDRAW_ALL) and of a rectangle (FIG_WIDE, site 161 at 2828Ch, SL's
+; PROBE_REDRAW). The shadows are drawn only once one of them has run (FIG_SEEN): a copy of the game
+; without them (RAV_SKIP=fig_wide_all,fig_wide, a control) has none, rather than shadows left behind.
+FS_ROWS     equ 64              ; rows of a figure, up from its feet, that cast a shadow (SL's SHADOW_ROWS)
+FS_RIGHT    equ 72              ; how far right a shadow reaches past its figure (SL's SHADOW_RIGHT) ...
+FS_DOWN     equ 44              ; ... and down (SL's SHADOW_DOWN)
+FS_MOST     equ 128             ; (the widest and tallest a figure may be, for the test of whether its
+                                ;   shadow can be where the floor was drawn: SL's FIGURE_MOST)
+FS_LIST     equ 0x67B7          ; DS: the draw list, far ...
+FS_COUNT    equ 0x264E          ; ... its entries
+FS_THINGS_SEG equ 0x3F49        ; (less the load segment) the things table's segment ...
+FS_THINGS   equ 0x0C33          ; ... and offset: kind (2 a creature), its creature (a word)
+FS_CREATURES equ 0x19C9         ; DS: the creatures, far, FS_CR_SIZE bytes each
+FS_CR_SIZE  equ 0x31
+FS_CR_STATUS equ 0x14
+FS_CR_MOST  equ 512
+FS_LEAN_MOST equ FS_ROWS + (FS_ROWS + 10) / 20
+
+; FIG_WIDE_ALL (site 160): "push word [bp+8] / push di" (4 bytes) where the redraw of what moved, its
+; rectangle made (x0 [BP-0Ch], x1 [BP-0Eh], y0 [BP-10h], y1 [BP-12h]: 2863Ch on), starts drawing it
+; (the floor's rectangle, 262C:04BF): x1 and y1 further by FS_RIGHT and FS_DOWN, kept on the screen;
+; then the two pushes made.
+fig_wide_all:
+        pop word [cs:fw_ip]
+        pop word [cs:fw_cs]
+        pop word [cs:fw_fl]
+        mov byte [cs:fig_seen], 1
+        cmp word [cs:fig_shadows], 0
+        je .push
+        inc word [cs:fig_wides]
+        add word [bp - 0x0E], FS_RIGHT
+        cmp word [bp - 0x0E], 0x13F     ; (the routine draws to x1 + 1)
+        jle .x
+        mov word [bp - 0x0E], 0x13F
+.x:     add word [bp - 0x12], FS_DOWN
+        cmp word [bp - 0x12], 0xC7
+        jle .push
+        mov word [bp - 0x12], 0xC7
+.push:  push word [bp + 8]
+        push di
+        push word [cs:fw_fl]
+        push word [cs:fw_cs]
+        push word [cs:fw_ip]
+        iret
+
+; FIG_WIDE (site 161): "push bp / mov bp,sp / sub sp,8" (6 bytes) at the start of the routine drawing
+; a rectangle of the view again (21E0:128C, 2828Ch; camera x, y, page, x0, y0, x1, y1, a flag; it keeps
+; the rectangle on the screen itself): x1 and y1 further by FS_RIGHT and FS_DOWN; then the routine's
+; start made, back to it past the site.
+fig_wide:
+        mov byte [cs:fig_seen], 1
+        cmp word [cs:fig_shadows], 0
+        je .go
+        push bp
+        mov bp, sp
+        inc word [cs:fig_wides]
+        add word [bp + 0x16], FS_RIGHT  ; x1 (after BP, the INT's IP, CS and flags, the caller's
+        add word [bp + 0x18], FS_DOWN   ;   way back, camera x, y, the page, x0, y0); y1
+        pop bp
+.go:    pop word [cs:fw_ip]
+        pop word [cs:fw_cs]
+        popf
+        push bp
+        mov bp, sp
+        sub sp, 8
+        jmp far [cs:fw_ip]
+fw_ip   dw 0
+fw_cs   dw 0
+fw_fl   dw 0
+fig_seen db 0                   ; (1 once FIG_WIDE or FIG_WIDE_ALL has run: the shadows wanted)
+
+; FIG_WANTED: ZF clear if the figures' shadows are to be drawn (FIG_SHADOWS, FIG_SEEN); keeps all
+fig_wanted:
+        cmp word [cs:fig_shadows], 0
+        je .ret
+        cmp byte [cs:fig_seen], 0
+.ret:   ret
+
+; FIG_PASS: (WALL_PASS's, the floor just drawn: PAGE_SETUP's page and clip, CAM_X/CAM_Y the floor
+; routine's camera, FS the far block) the shadow of each living creature in the draw list
+fig_pass:
+        call fig_wanted
+        je .ret
+        cmp word [cs:wall_shadows], 0   ; (DARK made by the walls' pass: else here)
+        jne .made
+        call dark_check
+.made:  cmp byte [cs:dark_ready], 0
+        je .ret
+        mov ds, [cs:game_ds]
+        cmp dword [FS_LIST], 0
+        je .ret
+        inc word [cs:fig_passes]
+        call vga_save
+        les di, [FS_LIST]
+        mov cx, [FS_COUNT]
+        jcxz .done
+.thing: mov bx, [es:di + 6]
+        cmp bx, MAP_COUNT - 1           ; (below 0: a thing not made yet, unsigned above)
+        ja .next
+        test byte [es:di + 5], 0x10
+        jnz .next
+        push cx
+        push di
+        push es
+        call fig_of
+        pop es
+        pop di
+        pop cx
+.next:  add di, 8
+        loop .thing
+.done:  call vga_restore
+.ret:   ret
+
+; FIG_ALIVE: CF set if thing BX is a living creature (FIGURE SHADOWS, above). DS the game's; keeps all.
+fig_alive:
+        push ax
+        push si
+        push es
+        mov ax, ds
+        sub ax, DGROUP - FS_THINGS_SEG
+        mov es, ax
+        imul si, bx, 3
+        cmp byte [es:si + FS_THINGS], 2
+        jne .no
+        mov ax, [es:si + FS_THINGS + 1]
+        cmp ax, FS_CR_MOST
+        jae .no
+        les si, [FS_CREATURES]
+        imul ax, ax, FS_CR_SIZE
+        add si, ax
+        mov al, [es:si + FS_CR_STATUS]
+        cmp al, 4
+        je .no
+        cmp al, 7
+        je .no
+        cmp al, 8
+        je .no
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop ax
+        ret
+
+; FIG_OF: the shadow of thing BX, its draw list entry ES:DI (DS the game's, FS the far block)
+fig_of:
+        call fig_alive
+        jnc .no
+        imul bx, bx, THING_SIZE
+        add bx, MAP_THINGS
+        test byte [bx], 0x80
+        jnz .no                         ; (not drawn)
+        mov si, [bx + 0x10]             ; its picture's slot
+        cmp si, CACHE_MOST
+        jae .no
+        cmp si, [CACHE_LAST]
+        jae .no
+        mov al, [es:di + 5]
+        mov [cs:fg_mirror], al
+        test al, 0x20
+        jz .fixed
+        mov ax, [es:di]
+        movzx dx, byte [bx + 7]
+        sub ax, dx
+        sub ax, [cs:cam_x]
+        mov [cs:fg_x], ax
+        mov ax, [es:di + 2]
+        sub ax, [bx + 8]                ; (its height off the ground left out: the shadow is on it)
+        sub ax, [cs:cam_y]
+        mov [cs:fg_y], ax
+        jmp .frame
+.fixed: mov ax, [bx + 3]
+        sub ax, [cs:cam_x]
+        mov [cs:fg_x], ax
+        mov ax, [bx + 5]
+        sub ax, [cs:cam_y]
+        mov [cs:fg_y], ax
+.frame: movzx ax, byte [bx + 0x12]
+        mov [cs:fg_frame], ax
+        mov ax, [cs:fg_x]               ; (none of its shadow where the floor was drawn: nothing to do)
+        cmp ax, [cs:clip_x1]
+        jg .no
+        add ax, FS_MOST + FS_RIGHT
+        cmp ax, [cs:clip_x0]
+        jl .no
+        mov ax, [cs:fg_y]
+        cmp ax, [cs:clip_y1]
+        jg .no
+        add ax, FS_MOST + FS_DOWN
+        cmp ax, [cs:clip_y0]
+        jl .no
+        mov ax, ds                      ; its picture, if in the cache and in memory
+        sub ax, CACHE_GAP
+        mov es, ax
+        shl si, 4
+        cmp dword [es:si + CACHE_BASE + 6], 0
+        jl .no
+        test byte [es:si + CACHE_BASE + 0x0E], 2
+        jz .no
+        les si, [es:si + CACHE_BASE + 0x0A]
+        mov ax, es
+        or ax, si
+        jz .no
+        mov bx, [cs:fg_frame]
+        cmp bx, [es:si + 4]
+        jae .no
+        shl bx, 2
+        xor eax, eax                    ; (EAX: the frame's address, linear)
+        mov ax, es
+        shl eax, 4
+        movzx ecx, si
+        add eax, ecx
+        add eax, [es:si + bx + 6]
+        mov si, ax
+        and si, 0x0F
+        shr eax, 4
+        mov es, ax
+        mov ax, [es:si]                 ; the frame: width, height, then its rows
+        mov [cs:fg_w], ax
+        cmp ax, FS_MOST
+        ja .no
+        mov ax, [es:si + 2]
+        cmp ax, FS_MOST
+        ja .no
+        dec ax
+        js .no
+        mov [cs:fg_bottom], ax
+        cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN")
+        je .no
+        call fig_box
+        jc .no
+        add si, 4
+.row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
+        inc si
+        cmp al, 0xFF
+        je .drawn
+        xor ah, ah
+        mov dx, [cs:fg_bottom]
+        sub dx, ax                      ; DX: how far up from the feet
+        jl .skip
+        cmp dx, FS_ROWS
+        jg .skip
+        test dl, 1
+        jnz .skip                       ; (every other row: the shadow half as tall)
+        mov [cs:fg_up], dx
+        shr dx, 1
+        add dx, [cs:fg_feet]            ; the screen row it falls on
+        cmp dx, [cs:clip_y0]
+        jl .skip
+        cmp dx, [cs:clip_y1]
+        jg .skip
+        mov [cs:fg_row], dx
+.run:   mov ax, [es:si]                 ; a run: x (8000h: the row's last), its pixels, its bytes
+        mov [cs:fg_rx], ax
+        mov cl, [es:si + 2]
+        mov [cs:fg_rn], cl
+        movzx dx, byte [es:si + 3]
+        add si, 4
+        add si, dx
+        mov ax, [cs:fg_up]
+        mov bx, [cs:fg_row]
+        push es
+        push si
+        call fig_cast
+        pop si
+        pop es
+        test byte [cs:fg_rx + 1], 0x80
+        jz .run
+        jmp .row
+.skip:  mov al, [es:si + 1]             ; (a row with no shadow: past its runs)
+        movzx dx, byte [es:si + 3]
+        add si, 4
+        add si, dx
+        test al, 0x80
+        jz .skip
+        jmp .row
+.drawn: inc word [cs:fig_drawn]
+        call ws_flush                   ; (its runs darkened)
+.no:    ret
+
+; FIG_BOX: CF set if none of the shadow of the frame (FG_W, FG_BOTTOM) at FG_X, FG_Y can be where the
+; floor was drawn (the clip); FG_FEET the feet's row on the screen. Registers kept but AX.
+fig_box:
+        mov ax, [cs:fg_y]
+        add ax, [cs:fg_bottom]
+        mov [cs:fg_feet], ax
+        cmp ax, [cs:clip_y1]
+        jg .out
+        add ax, FS_ROWS / 2
+        cmp ax, [cs:clip_y0]
+        jl .out
+        mov ax, [cs:fg_x]
+        cmp ax, [cs:clip_x1]
+        jg .out
+        add ax, [cs:fg_w]
+        add ax, FS_LEAN_MOST - 1
+        cmp ax, [cs:clip_x0]
+        jl .out
+        clc
+        ret
+.out:   stc
+        ret
+
+; FIG_CAST: the shadow of the run FG_RX, FG_RN, AX rows up from the feet, on screen row BX: its pixels
+; leant right (SL's CAST_RUN) and noted (WS_DARKEN)
+fig_cast:
+        mov dx, [cs:fg_rx]
+        and dx, 0x7FFF
+        movzx cx, byte [cs:fg_rn]
+        test byte [cs:fg_mirror], 0x80
+        jz .lean
+        mov di, [cs:fg_w]               ; (drawn mirrored: from the other side)
+        sub di, dx
+        sub di, cx
+        mov dx, di
+.lean:  add dx, [cs:fg_x]
+        add dx, ax
+        mov di, ax
+        shr di, 1
+        movzx ax, byte [cs:fg_lean + di]
+        add dx, ax                      ; DX: its first x
+        mov di, dx
+        add di, cx
+        dec di                          ; DI: its last
+        jmp ws_darken
+
+fg_lean:                                ; (AX + 10) / 20 for AX = 0, 2, ... FS_ROWS, by AX / 2
+%assign up 0
+%rep FS_ROWS / 2 + 1
+        db (up + 10) / 20
+%assign up up + 2
+%endrep
+fg_x      dw 0
+fg_y      dw 0
+fg_w      dw 0
+fg_bottom dw 0
+fg_feet   dw 0
+fg_frame  dw 0
+fg_up     dw 0
+fg_row    dw 0
+fg_rx     dw 0
+fg_rn     db 0
+fg_mirror db 0
 
 ; (VGA_SAVE, VGA_RESTORE: the labels', above)
 
