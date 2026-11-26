@@ -321,6 +321,32 @@ class KitCastTests(unittest.TestCase):
         self.assertFalse(ravager.casts(avenger, 5, ravager.RAV_CURE_LIGHT, 0x30))
         self.assertTrue(ravager.casts(avenger, 5, ravager.RAV_CAUSE_LIGHT, 0x30))
 
+    def test_sequel_harms(self):
+        """The sequel's own harming spells (Heartseeker, Energy Drain, Symbol of Pain) barred to a Healer and a
+        Lifebinder, though their sphere has them; the Symbols of Hopelessness and Persuasion and Sunstroke kept; a
+        plain druid and the Avenger keep all of them."""
+        self.assertEqual(ravager.RAV_SEQUEL_HARMS, {212, 225, 229})
+        self.assertLessEqual(ravager.RAV_SEQUEL_HARMS, ravager.RAV_NO_HARM)
+        kept = (228, 230, 213)  # (Symbol of Hopelessness, Symbol of Persuasion, Sunstroke)
+        healer = next(wotr_sheet(*c) for c in characters() if kits.HEALER in kitpages.kit_ids(wotr_sheet(*c)))
+        cls = kitpages.kit_class_of(healer, kits.HEALER)
+        life = next(wotr_sheet(*c) for c in characters() if kits.LIFEBINDER in kitpages.kit_ids(wotr_sheet(*c)))
+        avenger = next(wotr_sheet(*c) for c in characters() if kits.AVENGER in kitpages.kit_ids(wotr_sheet(*c)))
+        plain = wotr_sheet((5,), (12,), 1, 0)
+        for spell in sorted(ravager.RAV_SEQUEL_HARMS):
+            with self.subTest(spell=spell):
+                self.assertFalse(ravager.casts(healer, cls, spell, ravager.DRUIDS))
+                self.assertFalse(ravager.casts(life, 5, spell, ravager.DRUIDS))
+                self.assertTrue(ravager.casts(avenger, 5, spell, ravager.DRUIDS))
+                self.assertTrue(ravager.casts(plain, 5, spell, ravager.DRUIDS))
+        for spell in kept:
+            with self.subTest(spell=spell):
+                self.assertTrue(ravager.casts(healer, cls, spell, ravager.DRUIDS))
+                self.assertTrue(ravager.casts(life, 5, spell, ravager.DRUIDS))
+        asm = open(os.path.join(os.path.dirname(__file__), "..", "dos", "dsclog2.asm")).read()
+        harms = next(line for line in asm.splitlines() if line.startswith("av_harms dw "))
+        self.assertEqual({int(n) for n in harms[len("av_harms dw "):].split(",")}, ravager.RAV_NO_HARM)
+
 
 @unittest.skipUnless(ravager.is_wotr_dir(WOTR), "needs the sequel (DSUN_WOTR)")
 class SequelBytesTests(unittest.TestCase):
@@ -347,7 +373,8 @@ class SequelBytesTests(unittest.TestCase):
                          ["Cure Light Wounds", "Blood Flow", "Cure Serious Wounds", "Cure Critical Wounds"])
         self.assertEqual({names[s] for s in ravager.RAV_NO_HARM},
                          {"Cause Light Wounds", "Cause Serious Wounds", "Cause Critical Wounds", "Cause Disease",
-                          "Poison", "Slay Living", "Harm"})
+                          "Poison", "Slay Living", "Harm", "Heartseeker", "Energy Drain", "Symbol of Pain"})
+        self.assertEqual({names[s] for s in ravager.RAV_SEQUEL_HARMS}, {"Heartseeker", "Energy Drain", "Symbol of Pain"})
         self.assertEqual({names[s] for s in ravager.RAV_AVENGER_NO_HEAL},
                          {"Cure Light Wounds", "Blood Flow", "Cure Serious Wounds", "Cure Critical Wounds", "Heal",
                           "Waters of Life"})

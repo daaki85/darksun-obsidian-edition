@@ -320,7 +320,13 @@ in hand, with fuller starting gear).
 no cleric, so it holds more there: the sequel's clerics cast no Cure Serious or Critical Wounds, Raise
 Dead or Heal of their own, and a Healer's water cleric casts them (and the sequel's other druids' spells
 of the higher levels: Blade Barrier, Restore, Creeping Doom...), but never a harming one (Cause
-Serious and Critical Wounds, Poison, Slay Living, Harm). Restore Youth (and Whirlwind) come with it once
+Serious and Critical Wounds, Poison, Slay Living, Harm). Nor the sequel's own spells that harm or kill
+the body the same way: **Heartseeker** (its arrow's roots burst the vital organs, killing at once, as
+Slay Living does), **Energy Drain** (a life level drawn away by touch, Restore turned round) and
+**Symbol of Pain** (wracking pains); a Lifebinder never knows those three either. The Symbols of
+Hopelessness and Persuasion are left to them (a surrender and a charm, as Shattered Lands leaves them
+Cause Fear and Curse), and so are the spells that hurt by the elements, such as Sunstroke, as Shattered
+Lands leaves them Dehydrate and Flame Strike. Restore Youth (and Whirlwind) come with it once
 they are in the sequel.
 
 It is taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit));
@@ -362,7 +368,8 @@ Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6, and Cel
 Adjustment (a psychometabolism power, if it took that discipline at creation) a
 d4; the dice log notes the extra die. Blunt weapons only (club, mace,
 quarterstaff, sling, staff sling); it **never knows the harming spells**: Cause
-Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm.
+Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm (and in
+Wake of the Ravager Heartseeker, Energy Drain and Symbol of Pain: [the Healer's](#healer)).
 **Starts with** the druid's gear.
 
 #### Wanderer

@@ -74,7 +74,8 @@ Releases, newest first (2.12.0 and older in the archive):
   Adjustment likewise; a Wilderness Avenger's Cause Wounds 1 more a die.
 - A Healer's water cleric casts the sphere of the cosmos there (the spells every druid casts and no
   cleric: in the sequel Cure Serious and Critical Wounds, Raise Dead, Heal and the rest), a Healer and a
-  Lifebinder never the harming spells, a Wilderness Avenger never the healing ones: the USE screen lists
+  Lifebinder never the harming spells (and the sequel's own Heartseeker, Energy Drain and Symbol of Pain,
+  which harm or kill the body as those do), a Wilderness Avenger never the healing ones: the USE screen lists
   only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
 
 **New**
