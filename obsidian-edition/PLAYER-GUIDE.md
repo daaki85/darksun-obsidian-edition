@@ -2260,7 +2260,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Show unlabelled rolls** | above the dice log | off | for this session |
 | **The game folder** | asked for at the first **Start the game** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
 | **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
-| **The DOSBox-X program** and **the soundfont file** | the Options tab (**Choose the DOSBox-X program...**, **Choose a soundfont file...**: [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)) | none | remembered (`settings.json`); **Restore defaults** sets the engine back to GOG's DOSBox and leaves these two |
+| **The DOSBox-X program** and **the soundfont file** | the Options tab (**Choose the DOSBox-X program...**, **Choose a soundfont file...**: [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)) | none | remembered (`settings.json`); **Restore defaults** sets the engine back to the default (DOSBox-X when there is one, else GOG's DOSBox) and leaves these two |
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
 | **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |
