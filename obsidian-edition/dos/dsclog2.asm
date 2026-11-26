@@ -3618,8 +3618,11 @@ pick_any:
         ja .flags
         test word [cs:rules_hi], RULE_HI_INT
         jnz .levels
-        cmp byte [cs:cr_cap], 0
-        je .flags
+        push ax
+        call pick_most
+        or al, al
+        pop ax
+        jz .flags
 .levels:
         push cx
         cmp ax, 10
@@ -3629,11 +3632,15 @@ pick_any:
         cmp ax, WIZ_LEVELS
         jbe .top
         mov ax, WIZ_LEVELS
-.top:   cmp byte [cs:cr_cap], 0     ; (CR_SPELLS's: no higher than CR_CAP)
+.top:   push ax                     ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
+        call pick_most
+        mov cl, al
+        pop ax
+        or cl, cl
         je .capped
-        cmp al, [cs:cr_cap]
+        cmp al, cl
         jbe .capped
-        movzx ax, byte [cs:cr_cap]
+        movzx ax, cl
 .capped:
         mov [bp - 2], ax
         test word [cs:rules_hi], RULE_HI_INT
@@ -3692,11 +3699,17 @@ pick_list:
 ; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
 ; one. AL the page's level, as the code goes on to show it.
 pick_page:
-        cmp byte [cs:cr_cap], 0             ; (CR_SPELLS's: no higher than CR_CAP)
-        je .rule
-        cmp al, [cs:cr_cap]
-        jbe .rule
-        mov al, [cs:cr_cap]
+        push cx                             ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
+        push ax
+        call pick_most
+        mov cl, al
+        pop ax
+        or cl, cl
+        jz .most
+        cmp al, cl
+        jbe .most
+        mov al, cl
+.most:  pop cx
 .rule:  test word [cs:rules_hi], RULE_HI_INT
         jz .set
         push cx
@@ -7220,7 +7233,10 @@ xp_pasts dw 0                           ; (RAV_XP's past the game's table given,
 ; PRIEST_THAC0 (site 33, "priest_thac0"): "mov [bp-2],ax" (95391h; 3 bytes, SL's 876ABh) in the THAC0
 ; routine (9534Ch), AX what a class group takes off 20 at its level ((level - 1) x the group's
 ; factor / 12; CX the group 0-3: priest, warrior, wizard, rogue; the levels the bytes at [BP-0Ah] +
-; CX x 2). With the rule a priest's AD&D's, 2 for every 3 levels.
+; CX x 2). With the rule a priest's AD&D's, 2 for every 3 levels. With RULE_LEVEL_10 (the owner's,
+; 2026-11-26: High Level Campaigns' Table 39) no more than THAC0_MOST's for the group, so past 20th THAC0
+; stops at a priest's 8, a warrior's 1, a wizard's 14 and a rogue's (a thief's or psionicist's) 11; the
+; game keeps the best group's (the most taken off), so a character of several classes has the best of them.
 priest_thac0:
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .done
@@ -7239,8 +7255,22 @@ priest_thac0:
         add ax, ax
         pop dx
         pop bx
-.done:  mov [bp - 2], ax
+.done:  test word [cs:rules], RULE_LEVEL_10
+        jz .set
+        cmp cx, 3
+        ja .set
+        push bx
+        mov bx, cx
+        movzx bx, byte [cs:bx + thac0_most]
+        cmp ax, bx
+        jle .kept
+        mov ax, bx
+        inc word [cs:thac0_cuts]
+.kept:  pop bx
+.set:   mov [bp - 2], ax
         iret
+thac0_most db 12, 19, 6, 9              ; (20 less the group's best THAC0: priest 8, warrior 1, wizard 14, rogue 11)
+thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a look in play)
 ;
 ; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
 ; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
@@ -16652,15 +16682,32 @@ psi_click:
         iret
 
 ; PICK_TOP (site 99): "cmp ax,[bp-2]" (93831h; 3 bytes) where CHOOSE A SPELL's level button goes on a page
-; (AX the next, [BP-2] the highest the reader casts): no higher than CR_CAP while it is set. Its flags back.
+; (AX the next, [BP-2] the highest the reader casts): no higher than PICK_MOST. Its flags back.
+; PICK_MOST: AL the highest spell level CHOOSE A SPELL offers: CR_CAP while set (creation's picks), else
+; WIZ_PICK_MOST with RULE_LEVEL_10 (the owner's, 2026-11-26: no 10th-level wizard slots, so a preserver's
+; level up from 20th, where the game opens on level / 2, never offers the sequel's four 10th-level spells,
+; 111-114, Dome of Invulnerability, Magical Plague, Rift, Wall of Ash: monsters' only), else 0 (none).
+; Others kept.
+WIZ_PICK_MOST equ 9
+pick_most:
+        mov al, [cs:cr_cap]
+        or al, al
+        jnz .ret
+        test word [cs:rules], RULE_LEVEL_10
+        jz .ret
+        mov al, WIZ_PICK_MOST
+.ret:   ret
 pick_top:
         push cx
         mov cx, [bp - 2]
-        cmp byte [cs:cr_cap], 0
-        je .cmp
-        cmp cl, [cs:cr_cap]
-        jbe .cmp
-        movzx cx, byte [cs:cr_cap]
+        push ax
+        call pick_most
+        or al, al
+        jz .most
+        cmp cl, al
+        jbe .most
+        movzx cx, al
+.most:  pop ax
 .cmp:   push bp
         mov bp, sp              ; ([BP+2] CX, +4 IP, +6 CS, +8 the flags)
         cmp ax, cx

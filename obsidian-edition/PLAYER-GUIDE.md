@@ -1089,15 +1089,19 @@ What the higher levels bring there:
   4 4 4 2 at 21st, 5 5 5 5 5 5 5 5 5 at 25th, 7 7 7 7 7 7 7 6 6 at 30th; a
   cleric 9 9 9 9 8 6 2 at 21st to 9 9 9 9 9 9 8 at 30th (no true dweomers). The
   sequel has four 10th-level wizard spells (Dome of Invulnerability, Magical Plague,
-  Rift, Wall of Ash), and from 20th a preserver's level up offers them first, but
-  there are no slots for them: choose from the lower pages (the LEVEL button). A druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
+  Rift, Wall of Ash): they stay the monsters'. A preserver's level up offers
+  spells up to 9th level only (the window opens on 9th or lower, and LEVEL pages
+  1 to 9). *Without the mod:* from 20th the window opened on that 10th-level
+  page, with no slots to cast them. A druid's stop growing at 15th (6 6 6 6 4 2 1), and a ranger's priest spells
   are AD&D's: one at 8th, two at 9th, 2 1 at 10th, 2 2 at 11th, 2 2 1 at 12th,
   3 2 1 at 13th, 3 2 2 at 14th, 3 3 2 at 15th and 3 3 3 from 16th, cast at
   its level less 7, no higher than 9th. *Without the mod:* the game gave a
   ranger 3 2 1 at 12th, 3 2 2 at 13th and 3 3 2 at 14th.
 - **Hit points** past 20th keep the fixed gains (warriors +3, priests,
-  psionicists and thieves +2, preservers +1), **THAC0** goes on by the class's
-  rate (a fighter's 0 at 21st, -9 at 30th), the saves stay at their last row.
+  psionicists and thieves +2, preservers +1), and the saves stay at their last
+  row. **THAC0** stops at AD&D's best (High Level Campaigns): a warrior's 1
+  (reached at 20th), a priest's 8, a thief's or psionicist's 11, a preserver's 14
+  ([the table](#thac0-by-level)).
 - **Psionic powers**: a psionicist still picks one a level (two at odd levels);
   with all 34 known, a pick raises a known power's number instead.
 - **View Character** shows no next level at the cap, and for a character of two
@@ -1154,6 +1158,19 @@ screen's THAC0 counts the weapon in hand too.
 | Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
 | Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
 | Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 | 17 | 17 | 16 |
+
+In Wake of the Ravager, where levels go past 20th, THAC0 goes on the same way
+up to each class's best and stays there:
+
+| Level | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21-30 |
+|---|---|---|---|---|---|---|---|---|
+| Fighter, gladiator, ranger | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 1 |
+| Cleric, druid | 12 | 12 | 10 | 10 | 10 | 8 | 8 | 8 |
+| Thief, psionicist | 14 | 13 | 13 | 12 | 12 | 11 | 11 | 11 |
+| Preserver | 16 | 16 | 15 | 15 | 15 | 14 | 14 | 14 |
+
+*Without the mod (the sequel past 20th):* THAC0 went on falling, a fighter's
+to −9 at 30th.
 
 *Without the mod:* clerics and druids improve by about 2/3 a level (19 at
 3rd, 17 at 6th, 15 at 9th); the rest are as above.

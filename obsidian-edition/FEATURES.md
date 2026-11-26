@@ -1067,7 +1067,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   two more 15th; a preserver alone 25th, a druid 20th: [the
   table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). XP stops at the cap: each level up holds a
   character's XP at its share, so nothing is left over at the top. View Character names the class the
-  next XP is for, and a level up past 20th says "21st", not "21th". A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
+  next XP is for, and a level up past 20th says "21st", not "21th". THAC0 stops at AD&D's best
+  (a warrior's 1, a priest's 8, a thief's or psionicist's 11, a preserver's 14), and a preserver's
+  level up offers spells up to 9th level only: the sequel's four 10th-level spells stay the monsters'. A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
   the thief skills go on by AD&D's table to 17th, spell slots to 30th (a preserver's 7 7 7 7 7 7 7 6 6),
   a druid's stop growing at 15th, a ranger's
   priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the

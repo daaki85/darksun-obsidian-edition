@@ -879,7 +879,10 @@ level, root code at 1D111h) lists known powers too: a pick adds 2 to the power's
 number), so it never runs out. The slots left are set only by a rest (the Roost: `ravload.sh
 ravager-roost`, Reyhan "1 3 4", the corridor, the second doorway's steps at game (262,93), Up 6, the look
 pointer on the ring at (265,113); the pointer mode DS:1440h, 1 the arrow, 4 the sword, 2 the look). The
-level up's hold (3 levels on) raises a class four levels an award at most.
+level up's hold (3 levels on) raises a class four levels an award at most. Without PICK_ANY the game's own CHOOSE A SPELL counts from the class level (a 22nd-level preserver's
+window opened on "LEVEL 11", the priest spells' empty page, and no pick closed it); with it the page is
+level / 2, now 9 at most (PICK_MOST). The THAC0 routine (9534Ch) runs PRIEST_THAC0's site for every
+class group (CX 0-3), so a group's limit goes there.
 
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`

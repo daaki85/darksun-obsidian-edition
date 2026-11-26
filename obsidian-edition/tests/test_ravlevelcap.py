@@ -246,6 +246,40 @@ class LevelCapTests(unittest.TestCase):
             self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
                                                        r.UC_X86_REG_DX)], [0x2B7E, 0x1111, 0x2222, 0x3333])
 
+    def test_thac0_most(self):
+        """PRIEST_THAC0 with the rule (the owner's, 2026-11-26: Table 39's limits): what a group takes off 20
+        no more than 12 (a priest's 8), 19 (a warrior's 1), 6 (a wizard's 14), 9 (a rogue's 11); below, and
+        without the rule, as given. With RULE_HI_TABLES a priest's at 30th, 2 x 29 // 3 = 18, held at 12."""
+        for group, most in enumerate((12, 19, 6, 9)):
+            for taken in (0, most - 1, most, most + 1, 29):
+                for rules in (ON, 0):
+                    mu = self.machine(rules)
+                    self.call(mu, "priest_thac0", eax=taken, ecx=group)
+                    got = struct.unpack("<h", mu.mem_read(SS * 16 + BP - 2, 2))[0]
+                    self.assertEqual(got, min(taken, most) if rules else taken, (group, taken, rules))
+        mu = self.machine(ON, rules_hi=8)
+        mu.mem_write(SS * 16 + BP - 0x0A, bytes((30,)))
+        self.call(mu, "priest_thac0", eax=0, ecx=0)
+        self.assertEqual(struct.unpack("<h", mu.mem_read(SS * 16 + BP - 2, 2))[0], 12)
+
+    def test_spell_pick_most(self):
+        """PICK_MOST (the owner's, 2026-11-26: no 10th-level wizard slots): a preserver's CHOOSE A SPELL at a
+        level up stops at 9th with the rule: PICK_ANY's level, PICK_PAGE's first page, PICK_TOP's last; without
+        it the game's 10th (level / 2 from 20th)."""
+        for rules, most in ((ON, 9), (0, 10)):
+            mu = self.machine(rules)
+            self.call(mu, "pick_any", eax=21, esi=0)
+            self.assertEqual(struct.unpack("<h", mu.mem_read(SS * 16 + BP - 2, 2))[0], 9 if rules else 21)
+            mu = self.machine(rules)
+            self.call(mu, "pick_page", eax=10)
+            self.assertEqual(mu.mem_read(GAME_DS * 16 + 0x43EC, 1)[0], most)
+            for nxt in (9, 10):
+                mu = self.machine(rules)
+                mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", 10))
+                flags = self.call(mu, "pick_top", eax=nxt)
+                self.assertEqual(bool(flags & CF) or bool(flags & ZF), nxt <= most, (rules, nxt))
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), nxt)
+
     def test_thief_hit_dice(self):
         """A thief's group (the rogues', 9 levels of dice) counts 10 for a thief, 9 for a psionicist, at the
         hit die (HD_ROLL, [BP+8] the class) and the most hit points (HD_CON's compare, HD_CLAMP)."""

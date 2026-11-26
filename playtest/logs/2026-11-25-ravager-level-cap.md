@@ -77,11 +77,28 @@ Played in the same second game (`:58`, `dbLC`, ravLC), test edits never saved:
 
 - **CHOOSE A SPELL from 20th opens on LEVEL 10**: the sequel has four 10th-level wizard spells (Dome of
   Invulnerability, Magical Plague, Rift, Wall of Ash; DS:0656h's starts 111-114) and the window opens on level / 2.
-  The owner's slots leave the 10th column out, so a pick there has no slot: an open question for the owner.
+  The owner's slots leave the 10th column out: settled below (the window stops at 9th).
 - **The psionicists' pop-up** with every power known lists them still: each pick raised power 1's number (its
   byte 2 to 14: six picks over four levels). Nothing breaks.
 - **Messages**: a preserver's and psionicist's "gains a level" (the long message over 29 characters).
 - Screenshots: `level-30-view-gerakis.png`, `level-27-psionicist-25-preserver.png` (the project's `ravager/`).
+
+## The spell window at 9th and THAC0's limits (2026-11-26)
+
+The owner's decisions: no 10th-level wizard slots, so a preserver's level up never offers the 10th-level
+spells (PICK_MOST: PICK_ANY, PICK_PAGE and PICK_TOP stop at 9 outside creation, as at creation's CR_CAP);
+and past 20th THAC0 stops at High Level Campaigns' Table 39 (PRIEST_THAC0, site 33, run for each class
+group: what it takes off 20 at most 12, 19, 6, 9; a priest's 8, a warrior's 1, a wizard's 14, a rogue's 11).
+DSCLOG2 48,112 bytes. `files/2026-11-25-ravager-level-cap-pick.sh` (the second game's kit): Ar'Anda
+preserver 21 at 4,861,000 (the fight makes 23rd: two windows), the first window grabbed and LEVEL pressed 11
+times; THAC=1 also Gerakis fighter 26, Thy'rokh psionicist 23, Terrannus (human) cleric 26 at 4,700,000.
+
+| Run | Seen |
+|---|---|
+| the rules | the window opens on **LEVEL 9**; LEVEL pages 1, 2 ... 9, then 1 again; THAC0: fighter 30th **1**, psionicist 27th **11**, cleric 28th **8**, preserver 23rd **14** |
+| control (RAV_SKIP pick_any, pick_page, pick_top, priest_thac0) | the window opens on **LEVEL 11** (the game counts from the class level: an empty page of priest spells), pages to 10 and 11; it can't be closed by a pick (the run stopped there, the others' level ups after it not reached); the preserver's 22nd THAC0 13 (the rules' 14). Before the clamp (run 2 above): fighter -9, psionicist 7 |
+
+Screenshots: `level-up-spell-window-stops-at-9.png` (the pages), `level-up-spell-window-control.png`.
 
 ## Gaps
 

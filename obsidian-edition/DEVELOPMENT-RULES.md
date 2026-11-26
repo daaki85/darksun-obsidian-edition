@@ -1809,8 +1809,12 @@ stops growing at the cap) holds the sheet's XP at `LR_SHARE` first, so the game'
 the table, can only take it lower. `XP_SUFFIX` (117) is `PROBE_XP_NEXT` at View Character's
 `push 1386h`. `LV_ORDINAL` (118) is the level up's "th" (`mov ax,2B7Eh`, 959D3h, the message's
 ending for every level past 3rd): DS:2B7Eh, used nowhere else, made English's ending ("21st"). Past
-20th the rest of the game copes: THAC0 is a byte read signed (`cbw`, 5C6E9h; a fighter's -9 at
-30th), hit points the fixed gain past the rolled levels (94FF2h), the saves `SAVE_BASE`'s last row,
+20th the rest of the game copes: THAC0 is a byte read signed (`cbw`, 5C6E9h), but stops at High Level
+Campaigns' Table 39 (the owner's, 2026-11-26): `PRIEST_THAC0` (site 33, run for every class group at the
+THAC0 routine's "mov [bp-2],ax") holds what a group takes off 20 at `THAC0_MOST` (12, 19, 6, 9: a
+priest's 8, a warrior's 1, a wizard's 14, a rogue's 11), and the routine keeps the best group's; a
+preserver's CHOOSE A SPELL stops at 9th (`PICK_MOST`: `PICK_ANY`, `PICK_PAGE` and `PICK_TOP` heed it as
+creation's `CR_CAP`) so the sequel's 10th-level spells (111-114) stay the monsters'; hit points the fixed gain past the rolled levels (94FF2h), the saves `SAVE_BASE`'s last row,
 the slots `RAV_SLOTS` (30 rows a table), and the psionicists' pop-up (688:61h) lists known powers
 too, a pick raising a power's number (selector 370h's 9CDh + 22h a member, bits 1-7), so 34 powers
 never run out. A thief's d6 to 10th is `PROBE_HD_ROLL` and `PROBE_HD_CON` (113, 114) and a third site
