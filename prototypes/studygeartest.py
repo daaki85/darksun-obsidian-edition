@@ -79,8 +79,25 @@ def roles_for(obj):
     return (None,)
 
 
-def weapon_bounds(atlas, obj, output):
-    """Repeat the regular builder with extra room, including below the floor line."""
+def dual_weapons(obj):
+    pairs = {
+        "Two long swords": ("Sword", "Sword"), "Long sword and short sword": ("Sword", "Short sword"),
+        "Axe and dagger": ("Axe", "Dagger"), "Sword and mace": ("Sword", "Mace"),
+        "Sword and pick": ("Sword", "Pick"),
+    }
+    if obj in (308, 309):
+        # RULE_HALF_GIANT lets a character use a two-handed type in the off hand.
+        pairs.update({"Sword and great axe": ("Sword", "Great axe"), "Sword and polearm": ("Sword", "Polearm"),
+                      "Sword and staff": ("Sword", "Staff"), "Sword and gythka": ("Sword", "Gythka"),
+                      "Two staffs": ("Staff", "Staff")})
+    cases = {name: ({"right": WEAPONS[right], "left": WEAPONS[left]}, ()) for name, (right, left) in pairs.items()}
+    # Cahulaks are one inventory item: the drawing supplies its second head.
+    cases["Paired cahulaks"] = ({"right": WEAPONS["Cahulaks"]}, ())
+    return cases
+
+
+def weapon_bounds(atlas, obj, output, dual=False):
+    """Compare the emitted picture to a larger render and check the native bow and grip."""
     pad = 32
     below = 16
     plain_pad = sg.padded
@@ -105,28 +122,55 @@ def weapon_bounds(atlas, obj, output):
             chunk = atlas.pictures.build(obj, combat, gear, (), role=role)
         return kept, chunk
 
-    with (output/f"bounds-{obj}.csv").open("w", newline="") as stream:
+    atlas.gear["Arrows alone"] = ({"ammo": (62, 0)}, ())
+    cases = dual_weapons(obj) if dual else {
+        name: atlas.gear[name] for name in (*WEAPONS, "Bow and quiver", "Sword and shield", "Arrows alone")}
+    prefix = "dual-bounds" if dual else "bounds"
+    with (output/f"{prefix}-{obj}.csv").open("w", newline="") as stream:
         writer = csv.writer(stream)
-        writer.writerow(("outfit", "pose", "item", "outside_pixels", "inside_difference"))
-        for role in roles_for(obj):
+        writer.writerow(("outfit", "pose", "item", "outside_pixels", "inside_difference",
+                         "detached_pixels", "bow_pixels_changed", "changed_pixels"))
+        for role in dict.fromkeys((None, *roles_for(obj))):
             for combat in (False, True):
                 base, _ = wider(role, combat, {})
                 side, top = sprites.room(combat)
                 dx, dy = pad-side, pad-top
-                for name in (*WEAPONS, "Bow and quiver", "Sword and shield"):
-                    gear, _ = atlas.gear[name]
+                normal_empty = atlas.pictures.build(obj, combat, {}, (), role=role)
+                normal_base = [array(art.decode_frame(normal_empty, f)[2]) for f in range(len(base))]
+                model, source, owners = atlas.pictures.base(atlas.pictures.model(obj), obj, combat)
+                layer = obj if obj in co.HALF_ELF_SOURCES else model
+                fitted = co.frames(role, combat, layer) if role and combat else ()
+                fig = atlas.game.fig(model)
+                bows = {}
+                if combat:
+                    for f in sg.sp.BOW_FRAMES:
+                        own = owners[f]
+                        if fitted:
+                            bow = fitted[f].regions[co.BOW]
+                        else:
+                            bow = atlas.game.bow(fig, own.source if own else source[f], fig.parts(combat, f))
+                            if own:
+                                bow = {(u,y) for x,y in bow for u in range(own.at(x,y), own.at(x+1,y))}
+                        bows[f] = [(y+top,x+side) for x,y in bow if normal_base[f][y+top,x+side] != 255]
+                for name, (gear, _) in cases.items():
                     rendered, cropped = wider(role, combat, gear)
                     original = atlas.pictures.build(obj, combat, gear, (), role=role)
                     for f, (frame, naked) in enumerate(zip(rendered, base)):
                         diff = frame != naked
                         diff[dy:-below, dx:-dx] = False
-                        inside = 0
+                        actual = frame[dy:-below, dx:-dx]
+                        normal = actual
                         if original != cropped:
                             normal = array(art.decode_frame(original, f)[2])
-                            actual = array(art.decode_frame(cropped, f)[2])
-                            inside = np.count_nonzero(normal != actual)
+                        base_pixels = normal_base[f]
+                        changed = normal != base_pixels
+                        components, count = label(normal != 255, ADJACENT)
+                        touching = set(components[base_pixels != 255])
+                        detached = sum(np.count_nonzero(components == k) for k in range(1, count+1)
+                                       if k not in touching)
                         writer.writerow((role or "Retail", f+15*combat, name,
-                                         np.count_nonzero(diff), inside))
+                                         np.count_nonzero(diff), np.count_nonzero(normal != actual), detached,
+                                         sum(changed[y,x] for y,x in bows.get(f, ())), np.count_nonzero(changed)))
 
 
 def visible_cuffs(pictures, obj, combat, frame, outfit):
@@ -277,9 +321,13 @@ SAMPLES = ((0, "Chest plate"), (0, "Full plate"), (12, "Warden's Plate"),
            (23, "Polearm"), (26, "Bow and quiver"))
 
 
-def run(game_dir, output, objects, loader_only=False, bounds_only=False):
+def run(game_dir, output, objects, loader_only=False, bounds_only=False, dual=False):
     output.mkdir(parents=True, exist_ok=True)
     atlas = Atlas(game_dir)
+    if dual:
+        for obj in objects:
+            weapon_bounds(atlas, obj, output, dual=True)
+        return
     atlas.gear.update(EXTRA)
     atlas.floor = Image.open(hg.TERRAIN).convert("RGB").crop((30, 125, 110, 195))
     study = he.Study(game_dir)
@@ -307,5 +355,7 @@ if __name__ == "__main__":
     parser.add_argument("objects", type=int, nargs="*", default=list(NAMES))
     parser.add_argument("--loader-only", action="store_true")
     parser.add_argument("--bounds-only", action="store_true")
+    parser.add_argument("--dual-bounds", action="store_true",
+                        help="audit paired weapons, including half-giant off-hand longarms, by themselves")
     args = parser.parse_args()
-    run(args.game_dir, args.output, args.objects, args.loader_only, args.bounds_only)
+    run(args.game_dir, args.output, args.objects, args.loader_only, args.bounds_only, args.dual_bounds)

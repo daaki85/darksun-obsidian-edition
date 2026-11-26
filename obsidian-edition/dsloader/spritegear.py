@@ -20,11 +20,16 @@ shields (all it can use). armed() makes one frame.
 
 import math
 from bisect import bisect_right
+from functools import lru_cache
 from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
-from . import classoutfits, game, halfelf, spritebelts, spritebracers, spritegreaves, spriteparts as sp
+from . import classoutfits, game, halfelf, spritebelts, spritebracers, spritegreaves, spritegiantgrips, spritegrips, spritemissiles, spriteparts as sp
 
 Rows = sp.Rows
+
+# Clearance the encoded picture retains, relative to its native cel.
+COMBAT_MARGIN = 10
+WALK_SIDE, WALK_TOP = 6, 2
 
 # Materials (the item type's +8h, low nibble, as game.MATERIALS): (outline, body, light)
 MATERIAL_COLOURS = {
@@ -128,25 +133,26 @@ def sparkle_cells(rows, changed, colours, spacing=None, sparse=False):
 DAGGER, SWORD, CLUB, MACE, AXE, GREAT_AXE, POLEARM, GYTHKA, CAHULAKS, STAFF, SHIELD, SLING, BOW, \
     CHATKCHA = ("dagger", "sword", "club", "mace", "axe", "great axe", "polearm", "gythka", "cahulaks",
                 "staff", "shield", "sling", "bow", "chatkcha")
+SHORT_SWORD, PICK = "short sword", "pick"
 WEAPON_SHAPES: Dict[int, str] = {
-    17: DAGGER, 33: DAGGER, 84: DAGGER, 94: DAGGER, 97: DAGGER,
-    game.SHORT_SWORD_TYPE: SWORD, 45: SWORD, 63: SWORD, 81: SWORD, 85: SWORD, 98: SWORD, 41: SWORD, 50: SWORD, 29: SWORD,
+    17: DAGGER, 33: DAGGER, 84: DAGGER, 94: DAGGER,
+    game.SHORT_SWORD_TYPE: SHORT_SWORD, 97: SWORD, 45: SWORD, 63: SWORD, 81: SWORD, 85: SWORD, 98: SWORD, 41: SWORD, 50: SWORD, 29: SWORD,
     18: CLUB, 28: CLUB,
     20: MACE, 46: MACE, 30: MACE,
     22: AXE, 2: GREAT_AXE,
-    19: POLEARM, 111: POLEARM, 112: POLEARM,
+    19: POLEARM, 111: POLEARM, 112: PICK,
     44: GYTHKA, 21: CAHULAKS, game.METAL_CAHULAKS_TYPE: CAHULAKS, game.OBSIDIAN_CAHULAKS_TYPE: CAHULAKS,
     3: STAFF, 80: STAFF,
     4: SHIELD, 16: SHIELD, 34: SHIELD, 83: SHIELD, game.METAL_SHIELD_TYPE: SHIELD,  # (the last worldgear.py's Ironbulwark)
     0: SLING, 64: SLING, 1: BOW, 69: BOW, 48: CHATKCHA,
     47: SWORD,  # (Dragonsbane, El's Drinker)
     # the Loader's own weapons (game.py): a new warrior's (weaponchoice.py) and the world's
-    game.BONE_SHORT_SWORD_TYPE: SWORD, game.OBSIDIAN_SHORT_SWORD_TYPE: SWORD, game.METAL_SHORT_SWORD_TYPE: SWORD,
+    game.BONE_SHORT_SWORD_TYPE: SHORT_SWORD, game.OBSIDIAN_SHORT_SWORD_TYPE: SHORT_SWORD, game.METAL_SHORT_SWORD_TYPE: SHORT_SWORD,
     game.BONE_AXE_TYPE: AXE, game.OBSIDIAN_AXE_TYPE: AXE,
     game.METAL_DAGGER_TYPE: DAGGER, game.AIR_DAGGER_TYPE: DAGGER, game.BONE_DAGGER_TYPE: DAGGER,
     game.METAL_MACE_TYPE: MACE,
     game.METAL_GREAT_AXE_TYPE: GREAT_AXE, game.BONE_GREAT_AXE_TYPE: GREAT_AXE, game.OBSIDIAN_GREAT_AXE_TYPE: GREAT_AXE,
-    game.METAL_PICK_TYPE: POLEARM, game.METAL_POLEARM_TYPE: POLEARM,
+    game.METAL_PICK_TYPE: PICK, game.METAL_POLEARM_TYPE: POLEARM,
 }
 FLAME_BLADE = 29
 
@@ -156,7 +162,7 @@ def _whole(glow: int) -> Tuple[int, int, int]:
     shine = GLOWS[glow]
     return FLAME if shine == GLINT else (shine[0], shine[len(shine) // 2], shine[-1])
 # Which steps of a shape (_shape) are its blade
-BLADE_STEPS = {GYTHKA: lambda step: abs(step) >= 6, SWORD: lambda step: step >= 1, DAGGER: lambda step: step >= 1}
+BLADE_STEPS = {GYTHKA: lambda step: abs(step) >= 6, SWORD: lambda step: step >= 1, SHORT_SWORD: lambda step: step >= 1, DAGGER: lambda step: step >= 1}
 TWO_HANDED = frozenset((GREAT_AXE, POLEARM, GYTHKA, STAFF, BOW))
 
 # Each pose's grip, by hand: the angle the weapon points (degrees, 0 to the right of the picture,
@@ -183,6 +189,7 @@ SHEATHED_SCALE = 0.8  # (clear of the ground)
 # Two-handed weapons (staffs, polearms, the gythka, the great axe) are carried upright in the right
 # hand, the butt by the feet: their angle, by facing, in place of the hand's own
 UPRIGHT: Dict[Optional[str], Grip] = {sp.FRONT: (262, False), sp.BACK: (278, False), sp.SIDE: (285, False)}
+GIANT_OFF_HAND = {sp.FRONT: (278, False), sp.BACK: (262, False), sp.SIDE: (245, True)}
 # The combat poses (the same for every model): which hand swings (the highest, lowest, leftmost or
 # rightmost of the hands found) and at what angle, then the other hand's angle (a shield or a
 # second weapon). Three frames each way: the wind-up, the strike, the follow-through; then the
@@ -225,16 +232,18 @@ def padded(rows: Rows, pad: int) -> Rows:
     return [[None] * (width + 2 * pad) for _ in range(pad)] + [[None] * pad + list(r) + [None] * pad for r in rows]
 
 
-def _put(rows: Rows, x: float, y: float, colour: int, behind: bool, body: Rows) -> None:
+def _put(rows: Rows, x: float, y: float, colour: int, behind: bool, body: Rows) -> Optional[sp.Point]:
     x, y = int(round(x)), int(round(y))
     if 0 <= y < len(rows) and 0 <= x < len(rows[y]):
         if behind and body[y][x] is not None:
             return  # (the body is in front)
         rows[y][x] = colour
+        return (x, y)
+    return None
 
 
 # Where a headed weapon's head starts (steps from the hand): drawn larger, only its haft is longer
-HEADS = {AXE: 4, GREAT_AXE: 5, MACE: 4}
+HEADS = {PICK: 4, AXE: 4, GREAT_AXE: 5, MACE: 4}
 
 # Each shape along its line: (from, to) steps from the hand, and the half-width at each step, with
 # which colour, as a list of (step, offsets across, colour index: 0 outline, 1 body, 2 light; WOOD +
@@ -243,9 +252,10 @@ WOOD = 3
 def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     if shape == DAGGER:
         return [(0, [(-1, 0), (0, 0), (1, 0)])] + [(s, [(0, 2), (1, 0)]) for s in range(1, 4)] + [(4, [(0, 1)])]
-    if shape == SWORD:
-        return [(0, [(-1, 0), (0, 0), (1, 0), (2, 0)])] + [(s, [(0, 2), (1, 1)]) for s in range(1, 7)] \
-            + [(7, [(0, 1), (1, 0)]), (8, [(0, 0)])]
+    if shape in (SWORD, SHORT_SWORD):
+        tip = 6 if shape == SHORT_SWORD else 8
+        return [(0, [(-1, 0), (0, 0), (1, 0), (2, 0)])] + [(s, [(0, 2), (1, 1)]) for s in range(1, tip-1)] \
+            + [(tip-1, [(0, 1), (1, 0)]), (tip, [(0, 0)])]
     if shape == CLUB:
         return [(s, [(0, 1), (1, 0)]) for s in range(-1, 3)] + [(s, [(-1, 0), (0, 2), (1, 1), (2, 0)]) for s in range(3, 6)] \
             + [(6, [(0, 0), (1, 0)])]
@@ -253,6 +263,12 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
         return [(s, [(0, WOOD + 1)]) for s in range(-1, 4)] + [
             (4, [(-1, 0), (0, 1), (1, 0)]), (5, [(-2, 0), (-1, 1), (0, 2), (1, 1), (2, 0)]),
             (6, [(-2, 0), (-1, 1), (0, 1), (1, 1), (2, 0)]), (7, [(-1, 0), (0, 0), (1, 0)])]
+    if shape == PICK:
+        # The retail stone pick has a short handle and a tapered beak across
+        # its end. The wooden grip remains visible on the metal variant too.
+        return [(s, [(0, WOOD + 1)]) for s in range(-1, 4)] + [
+            (4, [(-2, 0), (-1, 1), (0, 1), (1, 1), (2, 0), (3, 0)]),
+            (5, [(-1, 0), (0, 2), (1, 2), (2, 1)])]
     if shape == AXE:  # (a wooden haft, the head a solid wedge on one side, as the game's own axemen's)
         return [(s, [(0, WOOD + 1)]) for s in range(-1, 5)] + [
             (4, [(-1, 0), (1, 0), (2, 0)]), (5, [(-1, 0), (0, 1), (1, 2), (2, 2), (3, 0)]),
@@ -276,6 +292,66 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     return []
 
 
+def _visible_glint(rows, surface, shine):
+    """Retain one highlight when foreshortening merges the lit edge into a darker texel."""
+    if not surface or any(rows[y][x] in shine for x, y in surface):
+        return
+    x, y = max(surface, key=lambda p: (surface[p], -p[1], -p[0]))
+    rows[y][x] = shine[(x + y) % len(shine)]
+
+
+@lru_cache(maxsize=1024)
+def _weapon_pixels(shape, angle, scale):
+    """Integer ink positions relative to the grip, with palette and blade ownership."""
+    theta = math.radians(angle)
+    dx, dy = math.cos(theta), math.sin(theta)
+    head = HEADS.get(shape)
+    pixels = []
+    for step, cells in sorted(_shape(shape), key=lambda entry: entry[0]):
+        if head is not None and step >= head:
+            # The full-size head begins exactly where the scaled shaft ends.
+            # Rounding here, before rotating, can break their join by a pixel.
+            distances = (head * scale + step - head,)
+        elif scale > 1:
+            distances = (step * scale, (step + 0.5) * scale)
+        else:
+            distances = (step * scale,)
+        for offset, colour in cells:
+            for distance in distances:
+                # A half-pixel lands on the same side at each successive step.
+                # Ties-to-even would skip alternate rows along a straight edge.
+                x = math.floor(dx * distance - dy * offset + 0.5)
+                y = math.floor(dy * distance + dx * offset + 0.5)
+                pixels.append((x, y, step, offset, colour))
+    return tuple(pixels)
+
+
+def _hilt_pixels(angle):
+    theta = math.radians(angle)
+    return [(round(-math.cos(theta)*s), round(-math.sin(theta)*s)) for s in range(1, HILT+1)]
+
+
+@lru_cache(maxsize=4096)
+def fit_weapon_angle(hand, angle, shape, scale, size, combat, sheathed=False):
+    """Keep the complete weapon in the emitted cel, pivoting only when an edge clips."""
+    hx, hy = hand
+    side, top = (COMBAT_MARGIN, COMBAT_MARGIN) if combat else (WALK_SIDE, WALK_TOP)
+    width, height = size
+    def fits(direction):
+        ink = _weapon_pixels(shape, direction, scale)
+        if not all(-side <= hx+x < width+side and -top <= hy+y < height for x,y,*_ in ink):
+            return False
+        return not sheathed or all(-side <= hx+x < width+side and -top <= hy+y < height
+                                   for x,y in _hilt_pixels(direction))
+    if fits(angle):
+        return angle
+    for turn in range(5, 181, 5):
+        for direction in ((angle-turn) % 360, (angle+turn) % 360):
+            if fits(direction):
+                return direction
+    return angle
+
+
 def draw_weapon(rows: Rows, body: Rows, hand: sp.Point, angle: float, shape: str, colours: Tuple[int, int, int],
                 behind: bool, scale: float = 1.0, blade: Optional[Tuple[int, int, int]] = None,
                 glint: bool = False, shine: Tuple[int, ...] = GLINT) -> None:
@@ -284,34 +360,28 @@ def draw_weapon(rows: Rows, body: Rows, hand: sp.Point, angle: float, shape: str
     GLINT (a magic weapon) its lightest cells in the fire colours the game cycles (a shape with
     none, the staff, every third cell along it)."""
     on_blade = BLADE_STEPS.get(shape, lambda step: False)
-    light = 2 if any(c == 2 for _, cells in _shape(shape) for _, c in cells) else None
-    dx, dy = math.cos(math.radians(angle)) * scale, math.sin(math.radians(angle)) * scale
-    across = (-dy, dx)
+    pixels = _weapon_pixels(shape, angle, scale)
+    light = 2 if any(c == 2 for _, _, _, _, c in pixels) else None
     hx, hy = hand
-    across = (across[0] / scale, across[1] / scale)  # (only the length scales)
-    steps = sorted(_shape(shape), key=lambda c: c[0])
-    head = HEADS.get(shape)
-    for step, cells in steps:
-        for offset, colour in cells:
-            if head is not None and step >= head:  # (a head keeps its size: only the haft is longer)
-                spots = (step / scale + round(head * (scale - 1)) / scale,)
+    surface = {}
+    for x, y, step, offset, colour in pixels:
+        ramp = MATERIAL_COLOURS[0] if colour >= WOOD else blade if blade and on_blade(step) else colours
+        highlight = colour == light or light is None and colour == 1 and step % 3 == 0
+        tint = shine[(step + offset) % len(shine)] if glint and colour < WOOD and highlight else ramp[colour % WOOD]
+        point = _put(rows, hx + x, hy + y, tint, behind, body)
+        if glint and point is not None:
+            head_visible = (shape != GYTHKA or abs(step) >= 6) and (shape != POLEARM or step >= 9)
+            if colour < WOOD and head_visible:
+                surface[point] = colour
             else:
-                spots = tuple(step + sub for sub in ((0.0, 0.5) if scale > 1 else (0.0,)))  # (no gaps in a longer one)
-            for at in spots:
-                x = hx + dx * at + across[0] * offset
-                y = hy + dy * at + across[1] * offset
-                ramp = MATERIAL_COLOURS[0] if colour >= WOOD else blade if blade and on_blade(step) else colours
-                if glint and colour < WOOD and (colour == light or light is None and colour == 1 and step % 3 == 0):
-                    _put(rows, x, y, shine[(step + offset) % len(shine)], behind, body)
-                else:
-                    _put(rows, x, y, ramp[colour % WOOD], behind, body)
+                surface.pop(point, None)
+    _visible_glint(rows, surface, shine)
 
 
 def draw_hilt(rows: Rows, body: Rows, at: sp.Point, angle: float, colours: Tuple[int, int, int], behind: bool) -> None:
     """A sheathed weapon's grip above AT, opposite the way it hangs (ANGLE): dark, its end lighter."""
-    dx, dy = math.cos(math.radians(angle)), math.sin(math.radians(angle))
-    for step in range(1, HILT + 1):
-        _put(rows, at[0] - dx * step, at[1] - dy * step, colours[0] if step < HILT else colours[1], behind, body)
+    for step, (x, y) in enumerate(_hilt_pixels(angle), 1):
+        _put(rows, at[0]+x, at[1]+y, colours[0] if step < HILT else colours[1], behind, body)
 
 
 def _hip(rows: Rows, parts: sp.Parts, hx: int, pad: int) -> sp.Point:
@@ -425,6 +495,7 @@ def draw_shield(rows: Rows, body: Rows, hand: sp.Point, facing: Optional[str], c
         rx = 1.2 * scale
     elif facing == SIDE_FAR:
         rx = 3.0 * scale
+    surface = {}
     for dy in range(-int(ry) - 1, int(ry) + 2):
         for dx in range(-int(rx) - 1, int(rx) + 2):
             d = (dx / rx) ** 2 + (dy / ry) ** 2
@@ -445,7 +516,10 @@ def draw_shield(rows: Rows, body: Rows, hand: sp.Point, facing: Optional[str], c
                 c = fill
             if glint and (c == light or c == outline and edge and (dx + dy) % 3 == 0):
                 c = shine[(dx + dy) % len(shine)]
-            _put(rows, cx + dx, cy + dy, c, behind, body)
+            point = _put(rows, cx + dx, cy + dy, c, behind, body)
+            if glint and point is not None:
+                surface[point] = d
+    _visible_glint(rows, surface, shine)
 
 
 # On the back: the bow's stave and string, the quiver's leather and the arrows' fletching
@@ -459,54 +533,102 @@ def _line(a: Tuple[float, float], b: Tuple[float, float]) -> List[Tuple[float, f
 
 
 def draw_back_gear(rows: Rows, body: Rows, parts: sp.Parts, pad: int, bow: bool, quiver: bool,
-                   at_hip: Optional[Tuple[int, int, int]] = None, missile_shape: Optional[str] = None) -> None:
-    """A bow and a quiver on the back (across it from behind; their tops past the shoulders and a
-    strap across the chest from the front; hanging behind the back from the side), and a sling or
-    chatkcha at the hip (AT_HIP: its colours)."""
+                   at_hip=None, missile_shape=None, *, cargo=None, staff=False, scale=1.0,
+                   missile_glow=(), ammo_glow=(), stones=False, belt_points=()) -> None:
+    """Fit the stave and leather case between the moving shoulders and belt."""
     if not parts.shoulders or parts.waist is None:
         return
     sy, sa, sb = parts.shoulders
     sy, sa, sb, waist = sy + pad, sa + pad, sb + pad, parts.waist + pad
-    behind = parts.facing != sp.BACK
-    if parts.facing == sp.SIDE:  # (facing right: the back is on the left)
-        bow_line = _line((sa + 1, sy - 4), (sa - 1, waist + 4))
-        quiver_at = (sa, sy - 3)
+    rear = parts.facing == sp.BACK
+    profile = parts.facing == sp.SIDE
+    behind = not rear
+    rise = max(3, round(4*scale))
+    if profile:
+        start, end = (sa, sy-rise), (sa-2, waist+round(3*scale))
+        mouth, base = (sa-1, sy-1), (sa+2, waist)
+        lean = -1
     else:
-        bow_line = _line((sb - 1, sy - 4), (sa + 1, waist + 4)) if parts.facing == sp.BACK else             _line((sa + 1, sy - 4), (sb - 1, waist + 4))
-        quiver_at = (sa + 2, sy - 3) if parts.facing == sp.BACK else (sb - 2, sy - 3)
-    if bow:
-        n = len(bow_line)
-        for i, (x, y) in enumerate(bow_line):  # the stave bowed out, the string straight
-            bulge = math.sin(math.pi * i / max(1, n - 1)) * 1.5
-            _put(rows, x - bulge, y - bulge * 0.5, STAVE[i % 2], behind, body)
-            _put(rows, x + 1, y, STRING, behind, body)
+        start, end = ((sb-1, sy-rise), (sa+1, waist+round(3*scale))) if rear else (
+                     (sa+1, sy-rise), (sb-1, waist+round(3*scale)))
+        mouth = (sa+1, sy-1) if rear else (sb-1, sy-1)
+        base = ((sb+sa)//2, waist+1)
+        lean = -1 if rear else 1
+
+    def mark(x, y, color, under=behind):
+        _put(rows, x, y, color, under, body)
+
+    if bow or staff:
+        line = _line(start, end)
+        for i, (x, y) in enumerate(line):
+            if bow:
+                t = i/max(1,len(line)-1)
+                bulge = math.sin(math.pi*t)*2*scale
+                mark(x-bulge, y-bulge*.4, STAVE[i%2] if not missile_glow or i%6 else missile_glow[i%len(missile_glow)])
+                mark(x, y, STRING)
+            else:
+                mark(x, y, STAVE[i%2] if not missile_glow or i%7 else missile_glow[i%len(missile_glow)])
+        if staff:
+            # A staff sling has a leather cradle slung from the pole's fork.
+            x, y = start
+            for dx, dy, color in ((-1,0,207),(-2,1,205),(-2,2,194),(-1,3,205),(0,4,207)):
+                mark(x+dx,y+dy,color)
     if quiver:
-        qx, qy = quiver_at
-        for dy in range(0, 8):
-            _put(rows, qx, qy + dy, QUIVER[0], behind, body)
-            _put(rows, qx + 1, qy + dy, QUIVER[1 if dy % 3 else 2], behind, body)
-        for dx in (0, 1):  # the fletching standing out of it
-            _put(rows, qx + dx, qy - 1, FLETCHING[dx], behind, body)
-            _put(rows, qx + dx, qy - 2, FLETCHING[0], behind, body)
-    if (bow or quiver) and parts.facing == sp.FRONT:  # the strap across the chest
-        for x, y in _line((sb - 1, sy), (sa + 1, waist)):
-            _put(rows, x, y, QUIVER[0], False, body)
-    if at_hip:
-        side = sa if parts.facing != sp.BACK else sb
-        # Fasten the pouch or throwing blade to the visible waist rather
-        # than projecting the shoulder width down to belt height.
-        belt = [x for x, p in enumerate(body[waist]) if p is not None]
+        qx, qy = mouth
+        for i, (x,y) in enumerate(_line(mouth,base)):
+            # Closed seam, lit mouth, and the shaded leather taper at the tip.
+            mark(x,y,QUIVER[0])
+            if (round(x),round(y)) != base:
+                mark(x+1,y,QUIVER[2 if i in (0,3) else 1])
+        if cargo == "arrows":
+            for i, length in enumerate((round(3*scale),round(2*scale))):
+                for n in range(1,length+1):
+                    x = qx + i + lean*round(n*.45)
+                    tint = FLETCHING[i] if n == length else STAVE[i]
+                    if ammo_glow and n == length:
+                        tint = ammo_glow[(i*2)%len(ammo_glow)]
+                    mark(x,qy-n,tint)
+        elif cargo:
+            for n in range(1,4):
+                tint = ammo_glow[-1] if ammo_glow else cargo[2]
+                mark(qx+lean*(n//2),qy-n,tint if n==3 else cargo[0])
+            mark(qx-1,qy-1,cargo[1])
+            mark(qx+1,qy-1,cargo[1])
+    if (bow or staff or quiver) and parts.facing == sp.FRONT:
+        for x,y in _line((sb-1,sy),(sa+1,waist)):
+            X,Y = round(x),round(y)
+            if 0 <= Y < len(body) and 0 <= X < len(body[Y]) and body[Y][X] is not None:
+                mark(X,Y,QUIVER[0],False)
+    if stones or at_hip:
+        belt = sorted((x+pad, y+pad) for x,y in belt_points
+                      if 0 <= y+pad < len(body) and 0 <= x+pad < len(body[y+pad])
+                      and body[y+pad][x+pad] is not None)
+        if not belt:
+            # The shoulder can project past the waist in a lunge. Follow
+            # the nearest connected run at belt height rather than a forearm.
+            runs = sp._runs(body[waist])
+            center = (sa+sb)/2
+            if runs:
+                a,b = min(runs, key=lambda run: (max(run[0]-center,center-run[1],0), run[0]-run[1]))
+                belt = [(a,waist),(b,waist)]
         if belt:
-            side = min(belt, key=lambda x: abs(x - side))
-        hip_pixels = ((0, 0, 0), (0, 1, 1), (0, 2, 1), (-1, 2, 0), (1, 2, 0), (0, 3, 0))
-        if missile_shape == CHATKCHA:
-            hip_pixels = ((0, 0, 0), (0, 1, 1), (-1, 2, 2), (0, 2, 1), (1, 2, 0), (-2, 3, 0))
-        for dx, dy, c in hip_pixels:
-            _put(rows, side + dx, waist + dy, at_hip[c], False, body)
-    # long hair falls over what is on the back
+            side, waist = belt[-1] if rear else belt[0]
+            if stones:
+                # The stone pouch hangs at the opposite hip when a sling or
+                # throwing blade already occupies the near end of the belt.
+                pouch, level = (belt[0] if rear else belt[-1]) if at_hip else (side, waist)
+                for dx,dy,col in ((0,0,207),(0,1,194),(1,1,205),(-1,2,207),(0,2,205),(1,2,207),(0,3,207)):
+                    mark(pouch+dx,level+dy,col,False)
+            if at_hip:
+                hip = ((0,0,0),(-1,1,0),(1,1,1),(-1,2,0),(1,2,1),(0,3,2))
+                if missile_shape == CHATKCHA:
+                    hip = ((0,0,0),(0,1,1),(-1,2,2),(0,2,1),(1,2,0),(-2,3,0))
+                for dx,dy,c in hip:
+                    tint = missile_glow[-1] if missile_glow and c == 2 else at_hip[c]
+                    mark(side+dx,waist+dy,tint,False)
     for x, y in parts.hair:
-        if 0 <= y + pad < len(rows) and 0 <= x + pad < len(rows[y + pad]):
-            rows[y + pad][x + pad] = body[y + pad][x + pad]
+        if 0 <= y+pad < len(rows) and 0 <= x+pad < len(rows[y+pad]):
+            rows[y+pad][x+pad] = body[y+pad][x+pad]
 
 
 # Helms, worn as circlets and headdresses (the hair and face showing): a band round the head at
@@ -1397,11 +1519,48 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             parts = parts._replace(hands={**parts.hands, "right": right})
     body = [list(r) for r in out]
     missile = weapons.get("missile")
-    if missile or "ammo" in weapons:  # (the bow, quiver, sling or chatkcha carried)
+    ammo = weapons.get("ammo")
+    if missile or ammo:
         shape = WEAPON_SHAPES.get(missile[0]) if missile else None
-        bow = shape == BOW and not (combat and frame in sp.BOW_FRAMES)
-        hip = MATERIAL_COLOURS.get(missile[1], MATERIAL_COLOURS[5]) if shape in (SLING, CHATKCHA) else None
-        draw_back_gear(out, body, parts, pad, bow, "ammo" in weapons or shape == BOW, hip, shape)
+        firing = combat and frame in sp.BOW_FRAMES
+        staff = bool(missile and missile[0] == game.STAFF_SLING_TYPE)
+        hip = (MATERIAL_COLOURS.get(missile[1], MATERIAL_COLOURS[5])
+               if shape in (SLING, CHATKCHA) and not staff else None)
+        cargo = None
+        if ammo:
+            if ammo[0] == 62:  # retail arrows, including a Spellarcher's stacks
+                cargo = "arrows"
+            elif WEAPON_SHAPES.get(ammo[0]) in (SWORD, SHORT_SWORD, DAGGER, AXE, PICK, POLEARM, STAFF):
+                cargo = MATERIAL_COLOURS.get(ammo[1], MATERIAL_COLOURS[5])
+        fitted_missile = registered or model == sp.KREEN
+        carrier = spritemissiles.shot(parts, model, frame, own) if fitted_missile and firing else parts
+        if costume and model == CLOAK_MODEL and not own and not combat and frame in spritemissiles.WOMAN_PROFILE:
+            carrier = carrier._replace(shoulders=spritemissiles.WOMAN_PROFILE[frame])
+        belt_points = ()
+        if registered and (hip or (ammo and not cargo)):
+            layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
+            belt_points = spritebelts.waist(layer, combat, frame)
+        canvas, under = out, body
+        if fitted_missile and combat and frame == sp.DEAD_FRAME:
+            # The native fallen cel has the feet at the top. Work upright
+            # inside that cel and retain the same registration at the floor.
+            sy, sa, sb, waist = spritemissiles.FALLEN[model]
+            if own:
+                sa, sb = own.at(sa,sy), own.at(sb,sy)
+            height = len(rows)
+            belt_points = tuple((x,height-1-y) for x,y in belt_points)
+            canvas = [[None]*len(out[0]) for _ in range(pad)] + list(reversed(out[pad:pad+height]))
+            under = [[None]*len(body[0]) for _ in range(pad)] + list(reversed(body[pad:pad+height]))
+            carrier = parts._replace(facing=sp.BACK, shoulders=(height-1-sy,sa,sb), waist=height-1-waist,
+                                     hair={(x,height-1-y) for x,y in parts.hair})
+        draw_back_gear(canvas, under, carrier, pad, shape == BOW and not firing, shape == BOW or bool(cargo),
+                       hip, shape, cargo=cargo, staff=staff, scale=MODEL_SCALE.get(model,1),
+                       stones=bool(ammo and not cargo), missile_glow=_glow(missile) if missile and _magic(missile) else (),
+                       ammo_glow=_glow(ammo) if ammo and _magic(ammo) else (), belt_points=belt_points)
+        if fitted_missile and firing and not costume:
+            for x, y in spritemissiles.native_bow(rows, model, frame, own):
+                if 0 <= y < len(rows) and 0 <= x < len(rows[y]):
+                    out[y+pad][x+pad] = body[y+pad][x+pad]
     if costume and (missile or "ammo" in weapons):
         for x, y in costume.regions.get(classoutfits.FOREARM, ()):
             out[y + pad][x + pad] = body[y + pad][x + pad]
@@ -1417,36 +1576,27 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if len(points) > 1:
             hands["left"] = points[1]
     if model in classoutfits.DWARVES:
-        grips = classoutfits.DWARF_FIGHT_GRIPS
         shields = classoutfits.DWARF_FIGHT_SHIELDS if combat else classoutfits.DWARF_WALK_SHIELDS
         if model == 2053 and combat and frame == 0:
-            grips = ((1, 11),) + grips[1:]
             shields = (classoutfits.DWARF_WALK_SHIELDS[0],) + shields[1:]
     elif model == 2099:
-        grips = classoutfits.WOMAN_FIGHT_GRIPS
         shields = classoutfits.WOMAN_FIGHT_SHIELDS if combat else classoutfits.WOMAN_WALK_SHIELDS
     else:
-        grips = classoutfits.FIGHT_GRIPS
         shields = classoutfits.FIGHT_SHIELDS if combat else classoutfits.WALK_SHIELDS
-    if costume and model in (*classoutfits.DWARVES, 2095, 2099) and combat and grips[frame]:
-        hands["right"] = grips[frame]
-        hands["left"] = shields[frame]
-    if costume and model in classoutfits.ELVES:
-        # Wristbands disappear behind the torso or share a cluster in these poses.
-        # Coordinates follow each native picture, including the woman's raised off hand.
-        if combat:
-            corrections = classoutfits.ELF_MELEE_HANDS[model].get(frame)
-            if corrections:
-                hands["right"], hands["left"] = corrections
-        elif parts.facing == sp.SIDE and "left" not in hands and "right" in hands:
-            hx, hy = hands["right"]
-            hands["left"] = (hx-2, hy-1)
-    # The registered grips above are on the parent cel. The half-elf maker
-    # widens or narrows individual rows; walk hands from own.parts already moved.
-    if costume and own is not None and combat and pose:
-        hands = {key: (own.at(x, y), y) for key, (x, y) in hands.items()}
-    if costume:
-        for hand, point in hands.items():
+    if costume and any(weapons.get(hand, (None,))[0] in GLOVE_SHADES for hand in ("left", "right")):
+        # Gloves dye the authored forearm around its wrist, while a handheld
+        # weapon sits farther along the limb, inside the fingers.
+        wrists = dict(hands)
+        if combat and model in (*classoutfits.DWARVES, *classoutfits.ELVES, 2095, 2099):
+            pair = spritegrips.combat_hands(model, frame)
+            if pair:
+                wrists = {"right": pair[0], "left": pair[1] if model in classoutfits.ELVES else shields[frame]}
+        elif model in classoutfits.ELVES and parts.facing == sp.SIDE and "left" not in wrists and "right" in wrists:
+            hx, hy = wrists["right"]
+            wrists["left"] = (hx-2, hy-1)
+        if own and combat and pose:
+            wrists = {hand: (own.at(x, y), y) for hand, (x, y) in wrists.items()}
+        for hand, point in wrists.items():
             item = weapons.get(hand)
             if item and item[0] in GLOVE_SHADES and point:
                 hx, hy = point
@@ -1464,6 +1614,11 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             for x, y in costume.regions[classoutfits.BOW]:
                 out[y + pad][x + pad] = outfit_bow[x, y] if outfit_bow else rows[y][x]
         return out  # (the game draws the bow in the hands)
+    if "left" not in weapons and "right" not in weapons:
+        return out
+    fitted_hands = costume is not None or registered or model == sp.KREEN
+    if fitted_hands:
+        hands = spritegrips.positioned(rows, model, frame, combat, own, hands)
     if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
         weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
     for hand in ("left", "right"):  # (the right drawn last, over the left)
@@ -1474,8 +1629,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         glint = _magic(weapons[hand]) or blade is not None  # (a named blade is magic too)
         shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
-        if costume and model not in classoutfits.FITTED_RACES and shape == SHIELD and hand == "left":
+        if fitted_hands and model in (*classoutfits.DWARVES, *classoutfits.ELVES, 2095, 2099) and shape == SHIELD and hand == "left":
             centre = hands.get("left") if model in classoutfits.ELVES else shields[frame]
+            if centre is None and model in classoutfits.ELVES and not combat and parts.facing == sp.SIDE:
+                centre = side_shield(rows, parts)
             if centre:
                 x, y = centre
                 if own is not None and model == 2099:
@@ -1492,7 +1649,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             far or facing == sp.BACK, glint=glint, shine=shine)
             continue
         side = shape == SHIELD and not combat and parts.facing == sp.SIDE  # (placed by side_shield)
-        if hand not in hands and not (shape == SHIELD and pose and hand == "left") and not side:
+        hip_carry = not combat and shape in (SWORD, SHORT_SWORD, DAGGER, CLUB, MACE, PICK, AXE, CAHULAKS)
+        # A walking belt can remain visible while the far palm is behind the body.
+        at_waist = hip_carry and parts.waist is not None and parts.shoulders is not None and parts.head is not None
+        if hand not in hands and not at_waist and not (shape == SHIELD and pose and hand == "left") and not side:
             continue
         g = grip(model, frame, combat, hand)
         if g is None and pose:
@@ -1535,7 +1695,14 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             else MATERIAL_COLOURS.get(material, MATERIAL_COLOURS[4])
         hx, hy = hands.get(hand, (0, 0))
         scale = MODEL_SCALE.get(model, 1.0)
-        if shape in TWO_HANDED and not combat and hand == "right":
+        sheathed = False
+        if shape in TWO_HANDED and not combat and model in spritegiantgrips.WALK:
+            # The half-giant hands rule permits a long weapon in either hand.
+            # Carry the two shafts upright and clear of one another in profile.
+            positions = UPRIGHT if hand == "right" else GIANT_OFF_HAND
+            angle, behind = positions.get(parts.facing, g)
+            g = angle, behind or (fitted_hands and hand == spritegiantgrips.HIDDEN.get(frame))
+        elif shape in TWO_HANDED and not combat and hand == "right":
             g = UPRIGHT.get(parts.facing, g)
             if costume and model in classoutfits.DWARVES and frame == 11 and shape in (STAFF, GYTHKA):
                 g = (315, False)
@@ -1543,18 +1710,38 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = SHEATHED[parts.facing][hand]
             if costume and model in classoutfits.DWARVES and frame == 11 and shape == MACE:
                 g = (130, g[1])
-            hx, hy = _hip(out, parts, hx, pad)
-            draw_hilt(out, body, (hx + pad, hy + pad), g[0], colours, g[1])
+            if at_waist and (hand == "left" or "left" in weapons) and parts.facing != sp.SIDE:
+                # Anatomical hips stay on their own sides when the arms cross.
+                low = (hand == "right") == (parts.facing == sp.FRONT)
+                hx = parts.shoulders[1 if low else 2]
+            hx, hy = _hip(body, parts, hx, pad)
+            if hand == "left" and parts.facing == sp.SIDE and body[hy+pad-1][hx+pad-1] is not None:
+                hx, hy = hx-1, hy-1  # far belt loop, behind the near scabbard
+            sheathed = True
             scale = SHEATHED_SCALE * MODEL_SCALE.get(model, 1.0)
             blade = None  # (in its scabbard)
         if shape == SHIELD and not combat and parts.facing == sp.SIDE:
             spot = side_shield(rows, parts)
+            if model == sp.KREEN and hand in hands:
+                wx, wy = spritegrips.supporting_wrist(rows, hands[hand], model)
+                spot = (wx, wy + 2)
+            if spot is None and fitted_hands:
+                spot = hands.get(hand)
             if spot is not None:
                 draw_shield(out, body, (spot[0] + pad, spot[1] + pad), SIDE_FAR, colours, True, MODEL_SCALE.get(model, 1.0), glint, shine)
         elif shape == SHIELD:
             behind = g[1] or parts.facing == sp.BACK  # (from behind: held in front of the body)
             if pose and hand == "left":
-                if own is not None:  # (by the game's frame's wristbands)
+                if fitted_hands and hand in hands:
+                    # The shield is strapped to the arm opposite the swing.
+                    # A found knee or a kreen's spare arm cannot own it.
+                    wx, wy = spritegrips.supporting_wrist(rows, hands[hand], model)
+                    if model == sp.KREEN and frame == 2:
+                        # The low claw swings to the last rows of this cel.
+                        # Seat the boss one pixel up the sloping forearm.
+                        wx, wy = wx - 1, wy - 1
+                    spot = (wx, wy + round(2 * scale), False)
+                elif own is not None:  # (by the game's frame's wristbands)
                     spot = fight_shield(own.source, model, frame, own.source_parts, hands.get("right"))
                     spot = spot and (own.at(spot[0], spot[1]), spot[1], spot[2])
                 else:
@@ -1565,8 +1752,17 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 behind = behind or hidden
             draw_shield(out, body, (hx + pad, hy + pad), parts.facing, colours, behind, MODEL_SCALE.get(model, 1.0), glint, shine)
         else:
-            draw_weapon(out, body, (hx + pad, hy + pad), g[0], shape, colours, g[1], scale, blade,
+            X, Y = hx + pad, hy + pad
+            angle = fit_weapon_angle((hx, hy), g[0], shape, scale, (len(rows[0]), len(rows)), combat, sheathed)
+            if sheathed:
+                draw_hilt(out, body, (X, Y), angle, colours, g[1])
+            draw_weapon(out, body, (X, Y), angle, shape, colours, g[1], scale, blade,
                         glint and blade != FLAME and colours != FLAME and item_type not in SPELL_WEAPONS, shine)
+            if (fitted_hands and (combat or shape in TWO_HANDED) and
+                    0 <= Y < len(body) and 0 <= X < len(body[Y]) and body[Y][X] is not None):
+                # The fingers wrap around the handle. Retain the painted grip
+                # between the parts of the shaft visible beyond the fist.
+                out[Y][X] = body[Y][X]
     return out
 
 

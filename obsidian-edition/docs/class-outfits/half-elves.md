@@ -22,7 +22,7 @@ The two bone guards turn down from her shoulders into separate leather mounts. T
 
 ![Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](half-elf-equipped-armor.gif)
 
-On the man, follow the club into the outstretched hand on side strike 2 (22). The supporting forearm carries the shield. In profile the far arm can disappear behind the torso. The bow and quiver attach at the shoulder as the body turns. Bow alone and bow with arrows look alike because Obsidian Edition draws a quiver with either an equipped bow or equipped ammunition. The ammo-only column shows the quiver by itself. The game's foreground bow takes over in poses 24–26. The sling and chatkcha sit at the hip.
+On the man, follow the club into the outstretched hand on side strike 2 (22). The supporting forearm carries the shield. In profile the far arm can disappear behind the torso. The bow and quiver attach at the shoulder as the body turns. Equipping just the bow leaves the leather quiver empty. Adding arrows reveals their fletchings at the mouth. The ammo-only column shows the filled quiver without the stave. The game's foreground bow takes over in poses 24–26. The hand sling and chatkcha sit at the hip. The staff sling has a visible shaft and cradle. [Compare the carried weapons](weapon-motion.md#weapon-outlines-and-materials)
 
 ![Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](half-elf-equipped-weapons.gif)
 

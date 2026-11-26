@@ -51,12 +51,12 @@ MAP_FLAGS, MAP_CHANGED = 0x00, 0x01  # (+0: bit 0 marks it changed, for the game
 NO_SLOT = 0xFFFF
 OJFF_PICTURE = 0x0C
 CREATURE_FIGURE = 0x18
-PAD = 10  # (room round the game's own picture that gear is drawn in)
+PAD = sg.COMBAT_MARGIN  # (room round the game's own picture that gear is drawn in)
 # ... of which a walking picture keeps WALK_SIDE on each side and WALK_TOP above: as much as
 # anything worn reaches out walking (gear in a fight reaches further: a fight picture keeps it
 # all). The game draws a walking figure's whole picture again at each step, so room it doesn't
 # need slows walking (four figures with ten all round: a third slower)
-WALK_SIDE, WALK_TOP = 6, 2
+WALK_SIDE, WALK_TOP = sg.WALK_SIDE, sg.WALK_TOP
 ROOM = 2  # the room in the file for a picture, of its plain size (the bulkiest outfit: 1.38)
 # The game's table of the pictures it has loaded (DSUN.EXE: segment 3E60h of its image), how many
 # it has (DS:1F84h, at most 300), and the number a picture is given to take it out of the table
@@ -448,6 +448,10 @@ def worn(gd: GameData, member: int, chunks=None) -> Tuple[Dict[str, Tuple[int, .
             continue
         name = game.EQUIP_SLOTS[slot]
         kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
+        if name == "ammo" and kind == 62:
+            from .quiver import count
+            if not count(item):
+                continue
         material = typ[0x08] & 0x0F if len(typ) == game.ITEM_TYPE_SIZE else 4
         magic = _magic(item) or kind in sg.SPELL_WEAPONS  # (Shillelagh's no plus, but a spell's)
         glow = item_glow(chunks, item) if magic and chunks is not None else sg.FIRE_GLOW

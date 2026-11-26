@@ -1,7 +1,7 @@
 """Render all 29 equipped Loader poses with Shattered Lands' cycling palette indices.
 
 python prototypes/magicgearreview.py GAME_DIR OUTPUT_DIR [race ...]
-Use belt-comparison for a one-row comparison of the three magical belts.
+Use belt-comparison for magical belts or weapon-comparison for enchanted blades and picks.
 The floor, held figure and material pixels are stationary during each hold.
 Pose holds are slowed for inspection. The palette runs follow their measured arena periods.
 """
@@ -195,7 +195,7 @@ def write_loop(palette, frames, timing, path):
 
 
 def render(atlas, output, races):
-    from magicgearitems import belt_loadouts, loadouts
+    from magicgearitems import belt_loadouts, loadouts, weapon_loadouts
 
     atlas.gear.update(loadouts(atlas))
     output.mkdir(parents=True, exist_ok=True)
@@ -205,6 +205,11 @@ def render(atlas, output, races):
             atlas.gear.update(belts)
             title, subjects = "Human Warrior", ((300, "Man", "Warrior", 1252),)
             cases, category = tuple(belts), "Magical belts"
+        elif race == "weapon-comparison":
+            weapons = weapon_loadouts(atlas)
+            atlas.gear.update(weapons)
+            title, subjects = "Human Warrior", ((300, "Man", "Warrior", 1252),)
+            cases, category = tuple(name for name in weapons if name != "Empty"), "Magical weapons"
         else:
             title, subjects = RACES[race]
             cases, category = (*CASES, None), "Magical equipment"
@@ -228,4 +233,4 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("races", nargs="*", metavar="RACE")
     args = parser.parse_args()
-    render(Atlas(args.game_dir), args.output, args.races or (*RACES, "belt-comparison"))
+    render(Atlas(args.game_dir), args.output, args.races or (*RACES, "belt-comparison", "weapon-comparison"))

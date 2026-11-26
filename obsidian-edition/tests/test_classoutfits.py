@@ -72,7 +72,9 @@ class HalfElfEquipmentTests(unittest.TestCase):
         _, _, owners = pictures.base(pictures.model(306), 306, True)
         x, y = owners[7].at(21, 11), 11
         self.assertIsNotNone(bare[top+y][side+x])
-        self.assertNotEqual(drawn[top+y][side+x], bare[top+y][side+x])
+        self.assertEqual(drawn[top+y][side+x], bare[top+y][side+x])  # painted fingers cross the grip
+        for xx in (x-1, x+1):
+            self.assertNotEqual(drawn[top+y][side+xx], bare[top+y][side+xx])  # handle seen on both sides
 
 
 class WornMaterialTests(unittest.TestCase):

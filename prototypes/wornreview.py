@@ -29,10 +29,13 @@ CASES = {
     "Sword and shield": ("Fighter", 1252, 16),
     "Bow and quiver": ("Fighter", 1252, 24),
 }
-WEAPONS = {"Dagger": (17, 3), "Sword": (45, 4), "Club": (18, 0), "Mace": (20, 2),
-           "Axe": (22, 1), "Great axe": (2, 4), "Polearm": (19, 4), "Gythka": (44, 1),
-           "Cahulaks": (21, 1), "Staff": (3, 0), "Shield": (4, 5), "Sling": (0, 5),
-           "Bow": (1, 0), "Chatkcha": (48, 1)}
+WEAPONS = {
+    "Dagger": (17, 3), "Short sword": (game.METAL_SHORT_SWORD_TYPE, 4), "Sword": (63, 4),
+    "Club": (18, 0), "Mace": (20, 1), "Pick": (112, 2), "Axe": (22, 4),
+    "Great axe": (game.METAL_GREAT_AXE_TYPE, 4), "Polearm": (game.METAL_POLEARM_TYPE, 4),
+    "Gythka": (44, 1), "Cahulaks": (21, 1), "Staff": (3, 0), "Shield": (4, 5),
+    "Sling": (64, 5), "Staff sling": (0, 5), "Bow": (1, 0), "Chatkcha": (48, 3),
+}
 
 
 class Loadout:
@@ -75,14 +78,12 @@ class Atlas:
         self.gear.update({
             "Class colors": ({}, ()), "Chest plate": ({}, (88,)), "Full plate": ({}, (88, 25, 26)),
             "Cloak": ({"cloak": (65, 5)}, ()), "Bracers": ({}, (game.BRACERS_TYPE | sg.MAGIC_ARMOUR,)),
-            "Sword and shield": ({"right": (45, 4), "left": (4, 5)}, ()),
+            "Sword and shield": ({"right": (63, 4), "left": (4, 5)}, ()),
             "Bow and quiver": ({"missile": (1, 0), "ammo": (62, 0)}, ()),
         })
         for name, item in WEAPONS.items():
-            slot = "left" if name == "Shield" else "missile" if name in ("Bow", "Chatkcha", "Sling") else "right"
+            slot = "left" if name == "Shield" else "missile" if name in ("Bow", "Chatkcha", "Sling", "Staff sling") else "right"
             gear = {slot: item}
-            if name == "Bow":
-                gear["ammo"] = (62, 0)
             self.gear[name] = gear, ()
 
     @lru_cache(maxsize=360)
@@ -157,7 +158,7 @@ class Atlas:
         cols = 5
         images = []
         for pose, caption in enumerate(dwarf.NAMES):
-            canvas = Image.new("RGB", (cols * 130, 34 + 151 * 3), dwarf.PAPER)
+            canvas = Image.new("RGB", (cols * 130, 34 + 151 * ((len(names) + cols - 1) // cols)), dwarf.PAPER)
             label(canvas, (8, 5), FIGURES[obj - 300] + (" · weapon families" if weapons else " · equipment"), 17)
             label(canvas, (640, 8), caption, 13, "ra")
             for i, name in enumerate(names):

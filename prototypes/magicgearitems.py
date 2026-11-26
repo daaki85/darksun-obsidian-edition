@@ -71,3 +71,15 @@ def belt_loadouts(atlas):
     belts = (("Belt of Might", might), ("Girdle of Back Defense", worldgear.BACK_GIRDLE_ITEM),
              ("Golden Girdle of Urnst", worldgear.URNST_GIRDLE_ITEM))
     return _resolve(atlas, ((name, EquippedItem("waist", record, atlas.game.item_types)) for name, record in belts))
+
+
+def weapon_loadouts(atlas):
+    """Compare named magic weapons with mundane weapons of the same type and material."""
+    from dsloader import specialize, weaponchoice
+    stone_pick = weaponchoice.PLAIN[specialize.KINDS.index("pick")]
+    items = (("Metal short sword", worldgear.weapon(worldgear.METAL_SHORT_SWORD)),
+             ("Greenbright +2", worldgear.weapon(*worldgear.SHORT_SWORD_2)),
+             ("Stone pick", worldgear.weapon(stone_pick)),
+             ("Deepbiter +1", worldgear.weapon(*worldgear.PICK_1)))
+    return _resolve(atlas, ((name, EquippedItem("right hand", record, atlas.game.item_types))
+                            for name, record in items))

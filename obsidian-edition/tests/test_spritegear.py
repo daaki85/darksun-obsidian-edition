@@ -24,6 +24,30 @@ def drawn(before, after):
 
 
 class WeaponTests(unittest.TestCase):
+    def test_polearm_turns_at_the_hand_to_keep_its_point_in_the_picture(self):
+        hand = (18, 1)
+        size = (26, 33)
+        shape, scale, raised = sg.POLEARM, 1.35, 275
+        fitted = sg.fit_weapon_angle(hand, raised, shape, scale, size, True)
+        self.assertNotEqual(fitted, raised)
+        pixels = {(hand[0] + x, hand[1] + y) for x, y, *_ in sg._weapon_pixels(shape, fitted, scale)}
+        self.assertIn(hand, pixels)
+        self.assertTrue(all(-sg.COMBAT_MARGIN <= x < size[0] + sg.COMBAT_MARGIN
+                            and -sg.COMBAT_MARGIN <= y < size[1] for x, y in pixels))
+        self.assertEqual(sg.fit_weapon_angle(hand, fitted, shape, scale, size, True), fitted)
+
+    def test_the_dwarf_axe_head_meets_its_haft_after_rotation(self):
+        for shape, angle in ((sg.AXE, 115), (sg.GREAT_AXE, 285), (sg.GREAT_AXE, 0)):
+            ink = {(x, y) for x, y, *_ in sg._weapon_pixels(shape, angle, 0.9)}
+            reached = {(0, 0)}
+            pending = list(reached)
+            for x, y in pending:
+                adjacent = {(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+                joined = (adjacent & ink) - reached
+                reached.update(joined)
+                pending.extend(joined)
+            self.assertEqual(ink, reached, (shape, angle))
+
     def test_every_weapon_has_a_shape(self):
         """Every weapon type (the game's and the Loader's, as specialization sorts them) is drawn
         in the hand: a new warrior's bone short sword was drawn as nothing."""
@@ -34,6 +58,39 @@ class WeaponTests(unittest.TestCase):
         from dsloader import game
         new = drawn(before, sg.armed(before, 2095, 0, True, {"right": (game.BONE_SHORT_SWORD_TYPE, METAL)}, PAD))
         self.assertTrue(new)
+
+    def test_blade_lengths_and_pick_follow_the_equipped_kind(self):
+        from dsloader import game
+        body = rows()
+        def right_hand(kind, material=METAL):
+            return drawn(body, sg.armed(body, 2095, 0, True, {"right": (kind, material)}, PAD))
+        dagger, short, long = (right_hand(k) for k in (game.METAL_DAGGER_TYPE, game.METAL_SHORT_SWORD_TYPE, SWORD))
+        self.assertLess(len(dagger), len(short))
+        self.assertLess(len(short), len(long))
+        self.assertEqual(right_hand(97), long)  # Hornblade is a long sword.
+        stone = right_hand(112, 2)
+        metal = right_hand(game.METAL_PICK_TYPE)
+        self.assertEqual(set(stone), set(metal))
+        self.assertNotEqual(stone, metal)
+        self.assertNotEqual(set(metal), set(right_hand(POLEARM)))
+        self.assertTrue(set(metal.values()) & set(sg.MATERIAL_COLOURS[WOOD]))
+
+    def test_magic_on_a_partly_hidden_mace_stays_on_the_visible_head(self):
+        # A foreground figure covers the lit face. One dark tip and the wooden
+        # grip remain. Moving the figure over the tip should hide the last glint.
+        body = [[0] * 12 for _ in range(7)]
+        for x in range(1, 6):
+            body[3][x] = None
+        body[3][9] = None
+        for visible in (True, False):
+            with self.subTest(visible=visible):
+                body[3][9] = None if visible else 0
+                canvas = [r[:] for r in body]
+                sg.draw_weapon(canvas, body, (2, 3), 0, sg.MACE, sg.MATERIAL_COLOURS[METAL],
+                               True, glint=True, shine=sg.GLOWS[sg.BLUE_GLOW])
+                glints = {(x, y) for y, row in enumerate(canvas) for x, value in enumerate(row)
+                          if value in sg.GLOWS[sg.BLUE_GLOW]}
+                self.assertEqual(glints, {(9, 3)} if visible else set())
 
     def test_sword_in_the_right_hand(self):
         """In a fight, facing the viewer: from the hand, in metal."""
