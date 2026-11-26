@@ -171,12 +171,14 @@ def expert_attacks(halves: int, level: int, sheet: bytes) -> int:
     """The melee attacks a round (in halves) of a character who isn't a warrior (HALVES the game's,
     2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's, Crusader's or Mind
     Warrior's chosen weapon spec (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level (of the
-    kit's class); else HALVES."""
+    kit's class), 5/2 from 13th (a specialist's, as Combat & Tactics' expertise; only Wake of the
+    Ravager's cap reaches it, the owner's 2026-11-26); else HALVES."""
     from . import kitpages, kits
     if level != EXPERT or halves > 2:
         return halves
     kid = kits.BATTLE_MAGE if battle_mage(sheet) else war_kit(sheet)
-    return 4 if kid is not None and kitpages.kit_level(sheet, kid) >= 7 else 3
+    level = kitpages.kit_level(sheet, kid) if kid is not None else 0
+    return 5 if level >= 13 else 4 if level >= 7 else 3
 
 
 def attacks(halves: int, level: int, missile: bool = False) -> int:

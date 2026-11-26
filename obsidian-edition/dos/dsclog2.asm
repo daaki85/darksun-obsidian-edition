@@ -3120,16 +3120,26 @@ ranger_level:
 .most:  call ranger_most
 .out:   pop cx
         iret
-; RANGER_MOST: AX a ranger's casting level, no more than AD&D's 9 (RANGER_CAST_MOST: a ranger's of 16th
-; level and up) with the level cap by XP (RULE_LEVEL_10, which takes rangers past the game's 15th).
-; Others kept.
+; RANGER_MOST: AX a ranger's casting level, CL what its level loses (RANGER_DROP), no more than AD&D's 9
+; (RANGER_CAST_MOST: a ranger's of 16th level and up) with the level cap by XP (RULE_LEVEL_10, which takes
+; rangers past the game's 15th); a Seeker's (CL 5) no more than 11 and a Justifier's (CL 9) 7, the owner's
+; tables' last rows (16th+: kits.ranger_cast_most). Others kept.
 RANGER_CAST_MOST equ 9
 ranger_most:
         test word [cs:rules], RULE_LEVEL_10
         jz .ret
-        cmp ax, RANGER_CAST_MOST
-        jle .ret
-        mov ax, RANGER_CAST_MOST
+        push dx
+        mov dx, RANGER_CAST_MOST
+        cmp cl, 5
+        jne .just
+        mov dx, RANGER_CAST_MOST + 2
+.just:  cmp cl, 9
+        jne .cap
+        mov dx, RANGER_CAST_MOST - 2
+.cap:   cmp ax, dx
+        jle .out
+        mov ax, dx
+.out:   pop dx
 .ret:   ret
 ; RANGER_DROP: CL what a ranger's level loses for its spells (ES:BX its sheet + the class's place): 7 with
 ; the rule, else 0; with the kits a Seeker's 5, a Justifier's 9 (kits.ranger_cast_drop), whatever the
@@ -3189,7 +3199,10 @@ kit_ranger_cast:
 .game:  pop ax
 .take:  sub dx, bx
         xchg ax, dx
-        call ranger_most                ; (AD&D's most, 9)
+        push cx
+        mov cl, bl
+        call ranger_most                ; (AD&D's most, 9; a Seeker's 11, a Justifier's 7)
+        pop cx
         xchg ax, dx
         pop bx
         iret
@@ -9513,7 +9526,7 @@ kit_ac:
         pop cx
         pop bx
 .ret:   ret
-ravager_ac db 7, 7, 6, 6, 5, 5, 4, 4, 3, 3   ; (by level, 1-10)
+ravager_ac db 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0   ; (by level, 1-15, then 0: the owner's 2026-11-26)
 RAVAGER_LEVELS equ $ - ravager_ac
 
 ; KIT_MELEE: AX what the kits of sheet ES:BX add to hit and to damage with item type SI unless it is a
@@ -9867,21 +9880,25 @@ expert_of:
         ret
 ; EXPERT_HALVES: AX the attacks a round (halves) of one who isn't a warrior (the game's 2), DL its skill
 ; (SPEC_OF_SHEET), ES:BX its sheet: with SPEC_EXPERT (a Battle Mage's, Crusader's or Mind Warrior's
-; chosen weapon spec) 3/2 a round, 2 from the kit's class's 7th level (specialize.expert_attacks).
-; Others kept.
+; chosen weapon spec) 3/2 a round, 2 from the kit's class's 7th level, 5/2 from its 13th (a specialist's
+; rate, as Combat & Tactics' expertise: the owner's 2026-11-26; specialize.expert_attacks). Others kept.
 expert_halves:
         cmp dl, SPEC_EXPERT
         jne .ret
         cmp ax, 2
         ja .ret
-        push ax
+        push cx
         call kit_level
-        cmp al, 7
-        pop ax
+        mov cl, al
         mov ax, 3
+        cmp cl, 7
         jb .more
         inc ax
-.more:  inc word [cs:kit_rates]
+        cmp cl, 13
+        jb .more
+        inc ax
+.more:  pop cx
+        inc word [cs:kit_rates]
 .ret:   ret
 
 ; WAR_KIT_IS: ZF set if sheet ES:BX is a Crusader's or a Mind Warrior's (kit awake). All kept.

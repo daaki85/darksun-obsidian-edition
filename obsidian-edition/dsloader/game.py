@@ -2028,11 +2028,15 @@ class GameData:
             for kid in kids:
                 spheres = kits.spell_spheres(kid, kitpages.kit_class_of(sheet, kid), kits.second_sphere(kid, sheet),
                                              spheres)
-        drop = kits.ranger_cast_drop(next((k for k in kids if k in (kits.SEEKER, kits.JUSTIFIER)), 0))  # (the game's 7)
+        ranger_kit = next((k for k in kids if k in (kits.SEEKER, kits.JUSTIFIER)), 0)
+        drop = kits.ranger_cast_drop(ranger_kit)  # (the game's 7)
         best = 0
         for cls in range(1, 20):
             if struct.unpack_from("<I", classes, cls * 4)[0] & spheres:
-                level = self.class_level(creature, cls) - (drop if cls in RANGER_CLASSES else 0)
+                level = self.class_level(creature, cls)
+                if cls in RANGER_CLASSES:  # (no more than AD&D's 9, a Seeker's 11, a Justifier's 7: past
+                    # SL's levels, DSCLOG2's RANGER_MOST)
+                    level = min(kits.ranger_cast_most(ranger_kit), level - drop)
                 best = max(best, level)
         for kid in kids:
             best = kits.cast_level(kid, spell, best, self.class_level(creature, THIEF))

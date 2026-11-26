@@ -22,7 +22,14 @@ WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits
 # slots (by thief level) to 13th, its 4th-level slot at 13th (SHINOBI_FOURTH); a Justifier's one
 # 1st-level slot from 10th level
 SEEKER_SLOTS = ((1, 0, 0, 0), (2, 0, 0, 0), (2, 1, 0, 0), (2, 2, 0, 0), (2, 2, 1, 0), (3, 2, 1, 0), (3, 2, 2, 0),
-                (3, 3, 2, 1))
+                (3, 3, 2, 1), (3, 3, 3, 1), (4, 4, 3, 1), (4, 4, 3, 2))  # (14th-16th+: the owner's Table 51,
+# 2026-11-26, past 13th only in Wake of the Ravager; DSCLOG's table keeps 13th's, SL's cap stopping it there)
+# a Justifier's priest slots at spell levels 1 to 3, by level from 10 to 16 and up (the owner's Table 46,
+# 2026-11-26: 10th's one slot as before, SL's cap stopping a ranger at 10th)
+JUSTIFIER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (2, 2, 2), (3, 2, 2))
+# the most a ranger's casting level reaches (AD&D's 9, a ranger's from 16th), a Seeker's (and a Shinobi's,
+# by the Seeker's table) 11 and a Justifier's 7: the owner's tables' 16th+ rows (DSCLOG2's RANGER_MOST)
+RANGER_CAST_MOST, SEEKER_CAST_MOST, JUSTIFIER_CAST_MOST = 9, 11, 7
 SHINOBI_FOURTH = 13
 SEEKER_FIRST, JUSTIFIER_FIRST = 6, 10
 MIND_BENDER, KINETICIST = KIT_IDS["Mind Bender"], KIT_IDS["Kineticist"]
@@ -93,8 +100,9 @@ CHARMS = (2, 40, 61, 82, 158, 159)
 SPELL_LAST = 137  # (the wizards' and priests' spells: 0 to this; psionic powers and monsters' after)
 FIRE, COLD = 0x02, 0x04  # (a spell record's +1Ah: what it is, as the game's Resist Fire and Resist Cold read it)
 WANDERER_GUARDS = FIRE | COLD  # (a Wanderer halves a spell all fire or cold: DSCLOG's WANDER_DMG)
-# a Ravager's base AC by level, 1-10, the highest the game goes (DSCLOG's RAVAGER_AC)
-RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3)
+# a Ravager's base AC by level (DSCLOG's and DSCLOG2's RAVAGER_AC)
+RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0)  # (to 15th, then 0: past 10th only Wake of the
+# Ravager reaches, the owner's 2026-11-26; SL's DSCLOG keeps the first ten, its cap stopping a fighter at 10th)
 # the multiclass kits (kitpages.MULTI)
 BATTLE_DANCER, SHADOWBLADE, SCOUT = KIT_IDS["Battle Dancer"], KIT_IDS["Shadowblade"], KIT_IDS["Military Scout"]
 AVENGER, RESCUER = KIT_IDS["Wilderness Avenger"], KIT_IDS["Rescuer"]
@@ -318,7 +326,9 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, a
         if not 1 <= spell_level <= 4:
             return 0
         if kid == JUSTIFIER:
-            return int(level >= JUSTIFIER_FIRST and spell_level == 1)
+            if level < JUSTIFIER_FIRST or spell_level > 3:
+                return 0
+            return JUSTIFIER_SLOTS[min(level - JUSTIFIER_FIRST, len(JUSTIFIER_SLOTS) - 1)][spell_level - 1]
         if level < SEEKER_FIRST:
             return 0
         return SEEKER_SLOTS[min(level, SEEKER_FIRST + len(SEEKER_SLOTS) - 1) - SEEKER_FIRST][spell_level - 1]
@@ -380,10 +390,16 @@ def ranger_cast_drop(kid: int) -> int:
     return {SEEKER: 5, JUSTIFIER: 9}.get(kid, 7)
 
 
+def ranger_cast_most(kid: int) -> int:
+    """The most a ranger's casting level reaches (DSCLOG2's RANGER_MOST): AD&D's 9, a Seeker's 11, a
+    Justifier's 7 (the owner's tables' last rows)."""
+    return {SEEKER: SEEKER_CAST_MOST, JUSTIFIER: JUSTIFIER_CAST_MOST}.get(kid, RANGER_CAST_MOST)
+
+
 def shinobi_cast(level: int) -> int:
     """The level a Shinobi of thief level LEVEL casts its wizard spells at (DSCLOG's SHINOBI_CAST):
-    5 less, 1st at 6th level."""
-    return max(0, level - (SHINOBI_FIRST - 1))
+    5 less, 1st at 6th level, no more than the Seeker's table's 11 (SEEKER_CAST_MOST: 16th and up)."""
+    return min(SEEKER_CAST_MOST, max(0, level - (SHINOBI_FIRST - 1)))
 
 
 def spook_penalty(preserver_level: int, shinobi_thief_level: int = 0) -> int:
@@ -434,11 +450,13 @@ def spell_class_level(kid: int, cls: int, level: int, ranger_rule: bool) -> int:
     """The level of class CLS (LEVEL) that a spell's duration and damage count (the game's routine
     at 5E25Ch, which takes the best of the caster's classes that cast the spell), with
     PROBE_RANGER_LEVEL's: a ranger's whole in the game, 7 less with the rule (RANGER_RULE), a
-    Seeker's 5 less and a Justifier's 9 (ranger_cast_drop) whatever the rule; no less than 0."""
+    Seeker's 5 less and a Justifier's 9 (ranger_cast_drop) whatever the rule; no less than 0, no more
+    than ranger_cast_most (only Wake of the Ravager's levels reach it)."""
     if cls not in RANGER_CLASSES:
         return level
-    drop = ranger_cast_drop(kid) if kid in (SEEKER, JUSTIFIER) or ranger_rule else 0
-    return max(0, level - drop)
+    if kid not in (SEEKER, JUSTIFIER) and not ranger_rule:
+        return level
+    return min(ranger_cast_most(kid), max(0, level - ranger_cast_drop(kid)))
 
 
 def hit_die(kid: int, sides: int) -> int:
