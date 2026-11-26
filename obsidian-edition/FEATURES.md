@@ -1086,6 +1086,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shield +1, a Ravager's shield left behind and a second sword in its place). What else kits do to spells
   and psionic powers, and hit dice, doesn't carry over yet ([which kits work
   there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
+  Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
+  (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
+  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), and the Battle
+  Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
+  panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
+  game's menu right after DUAL. What else kits do to spells
+  and psionic powers, gear and hit dice doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
   can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air

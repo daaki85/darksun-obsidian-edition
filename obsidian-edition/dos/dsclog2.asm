@@ -3297,6 +3297,46 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         add sp, 4
         iret
 el_spheres dw 0                     ; (the game's no made yes, counted for a look in play)
+; SHINOBI_MAGE (site 190, "shinobi_mage"): "add sp,4" after the slot routine's (626B7h, SL's 5E0ACh) call
+; to 62B45h (spell 8, the class: does the class cast wizard spells) at 627D6h, the "or al,al" after kept:
+; the member SI, the call's two words under the INT's frame as at EL_SPHERE. The game's no made yes for a
+; Shinobi's own thief class (17), awake, the kits' rule on, so that ADND_SLOTS is asked its slots (KIT_TABLE:
+; the Seeker's table by thief level, SL's PROBE_SLOTS). Then the call's two words taken off as the ADD did.
+shinobi_mage:
+        push ax
+        push bp
+        mov bp, sp                  ; ([BP+2] the game's AX, +4 the INT's IP, CS, FLAGS, +0Ah the
+        cmp byte [bp + 2], 0        ;   spell, +0Ch the class)
+        jne .back
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .back
+        cmp word [bp + 0x0C], THIEF_CLASS
+        jne .back
+        push bx
+        push si
+        push es
+        mov ax, si
+        cmp ax, 400                 ; (a combatant: its creature, as the game reads it, 388h:0C34h)
+        jae .out
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        call kit_sheet
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .out
+        mov si, [cs:kit_where]
+        cmp byte [es:bx + si + SH_CLASSES], THIEF_CLASS
+        jne .out
+        mov byte [bp + 2], 1
+        inc word [cs:sh_mages]
+.out:   pop es
+        pop si
+        pop bx
+.back:  jmp el_sphere.back
+sh_mages dw 0                       ; (likewise)
 ; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
 ; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
 ; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
@@ -4061,6 +4101,46 @@ site_table:
         dw site_none                        ; 148 (none here: held for other work)
         dw site_none                        ; 149 (none here: held for other work)
         dw lv_weapons                       ; 150 SITE_LV_WEAPONS (957BEh: the level up: weapon specs due picked on the weapon window)
+        dw site_none                        ; 151 (none here: held for other work)
+        dw site_none                        ; 152 (none here: held for other work)
+        dw site_none                        ; 153 (none here: held for other work)
+        dw site_none                        ; 154 (none here: held for other work)
+        dw site_none                        ; 155 (none here: held for other work)
+        dw site_none                        ; 156 (none here: held for other work)
+        dw site_none                        ; 157 (none here: held for other work)
+        dw site_none                        ; 158 (none here: held for other work)
+        dw site_none                        ; 159 (none here: held for other work)
+        dw site_none                        ; 160 (none here: held for other work)
+        dw site_none                        ; 161 (none here: held for other work)
+        dw site_none                        ; 162 (none here: held for other work)
+        dw site_none                        ; 163 (none here: held for other work)
+        dw site_none                        ; 164 (none here: held for other work)
+        dw site_none                        ; 165 (none here: held for other work)
+        dw site_none                        ; 166 (none here: held for other work)
+        dw site_none                        ; 167 (none here: held for other work)
+        dw site_none                        ; 168 (none here: held for other work)
+        dw site_none                        ; 169 (none here: held for other work)
+        dw site_none                        ; 170 (none here: held for other work)
+        dw site_none                        ; 171 (none here: held for other work)
+        dw site_none                        ; 172 (none here: held for other work)
+        dw site_none                        ; 173 (none here: held for other work)
+        dw site_none                        ; 174 (none here: held for other work)
+        dw site_none                        ; 175 (none here: held for other work)
+        dw site_none                        ; 176 (none here: held for other work)
+        dw site_none                        ; 177 (none here: held for other work)
+        dw site_none                        ; 178 (none here: held for other work)
+        dw site_none                        ; 179 (none here: held for other work)
+        dw site_none                        ; 180 (none here: held for other work)
+        dw site_none                        ; 181 (none here: held for other work)
+        dw site_none                        ; 182 (none here: held for other work)
+        dw site_none                        ; 183 (none here: held for other work)
+        dw site_none                        ; 184 (none here: held for other work)
+        dw site_none                        ; 185 (none here: held for other work)
+        dw site_none                        ; 186 (none here: held for other work)
+        dw site_none                        ; 187 (none here: held for other work)
+        dw site_none                        ; 188 (none here: held for other work)
+        dw site_none                        ; 189 (none here: held for other work)
+        dw shinobi_mage                     ; 190 SITE_SHINOBI_MAGE (627D6h: the slot routine's "casts wizard spells": a Shinobi's thief class)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -7815,7 +7895,10 @@ thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a l
 ; (the class in the low byte, a near pointer in SS to its level and WIS, the spell level), AX the
 ; count from both (the level's rule and WIS's). With the rule, a cleric's, druid's or preserver's:
 ; AD&D's for the level (RAV_SLOTS) and the game's for its WIS alone (the routine called with level
-; 0); the others', and all without the rule, the game's.
+; 0); the others', and all without the rule, the game's. Then the kits' (kits.slots, SL's PROBE_SLOTS,
+; whatever the tables' rule): an Elementalist's a level behind, a Crusader's priest and a Battle Mage's
+; wizard slots 1 fewer (SLOT_BEHIND, BEHIND_LEAST); a Seeker's, Justifier's and Shinobi's their own
+; tables' (KIT_TABLE); then the Veiled Robe's (VEILED_SLOT).
 SLOT_CALL   equ 0x62A10 - 0x62896       ; (the routine, from the INT's way back)
 SLOT_LEVELS equ 30                      ; (class levels in RAV_SLOTS; more are the 30th's)
 SLOT_SPELLS equ 9                       ; (spell levels in a row)
@@ -7881,6 +7964,7 @@ adnd_slots:
         jmp .out
 .game:  call .call
 .out:   call behind_least
+        call kit_table                  ; (a Seeker's, Justifier's or Shinobi's own table)
         call veiled_slot
         pop si
         pop cx
@@ -7909,24 +7993,66 @@ slot_count dw 0                         ; (AD&D's slots given, for a look in pla
 ; SLOT_BEHIND: (ADND_SLOTS's, its frame; at the site ES:BX the sheet + DI, DI the class's place) CL one less
 ; (0 kept) when class [BP+8] is a cleric's (1-4) with its slots a level behind (kits.slot_level): an
 ; Elementalist's kit class, awake; SB_BEHIND 1 then, else 0. SB_FEWER 1 when class [BP+8] is a priest's
-; (1-8) and the sheet a Crusader's, awake (kits.slots: its priest slots 1 fewer), else 0. The kits' rule
-; on. Others kept.
+; (1-8) and the sheet a Crusader's, awake, or the preserver's (11) and the sheet a Battle Mage's (kits.slots:
+; its priest or wizard slots 1 fewer), else 0. SB_TABLE the kit's own slot table (KIT_TABLE) for the kit's
+; own class: a Seeker's or Justifier's ranger class (13-16), a Shinobi's thief class (17), else 0. The kits'
+; rule on. Others kept.
+SBT_SEEKER    equ 1
+SBT_JUSTIFIER equ 2
+SBT_SHINOBI   equ 3
 slot_behind:
         mov word [cs:sb_behind], 0      ; (and SB_FEWER)
+        mov byte [cs:sb_table], 0
         test word [cs:rules_hi], RULE_HI_KITS
         jz .ret
-        cmp byte [bp + 8], 1
-        jb .ret
-        cmp byte [bp + 8], 8
-        ja .ret
         push ax
         push bx
         push si
         sub bx, di
+        mov al, [bp + 8]
+        cmp al, WIZARD_CLASS
+        je .battle
+        cmp al, THIEF_CLASS
+        je .shinobi
+        cmp al, RANGER_FIRST
+        jb .priest
+        cmp al, RANGER_LAST
+        ja .out
+        call kit_is_b
+        db KIT_SEEKER
+        jne .justifier
+        mov ah, SBT_SEEKER
+        jmp .own
+.justifier:
+        call kit_is_b
+        db KIT_JUSTIFIER
+        jne .out
+        mov ah, SBT_JUSTIFIER
+        jmp .own
+.shinobi:
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .out
+        mov ah, SBT_SHINOBI
+.own:   mov si, [cs:kit_where]          ; (the kit's own class alone)
+        cmp al, [es:bx + si + SH_CLASSES]
+        jne .out
+        mov [cs:sb_table], ah
+        jmp .out
+.battle:
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        jne .out
+        jmp .fewer
+.priest:
+        cmp al, 1
+        jb .out
+        cmp al, 8
+        ja .out
         call kit_is_b
         db KIT_CRUSADER
         jne .elem
-        mov byte [cs:sb_fewer], 1
+.fewer: mov byte [cs:sb_fewer], 1
 .elem:  cmp byte [bp + 8], 4
         ja .out
         call kit_is_b
@@ -7945,6 +8071,60 @@ slot_behind:
         pop bx
         pop ax
 .ret:   ret
+; KIT_TABLE: (ADND_SLOTS's, its frame) with SB_TABLE, AX (the slots of the class's level CL at spell level
+; [BP+0Ch]) the kit's own table's, WIS's left out (kits.slots, SL's PROBE_SLOTS): a Seeker's priest slots
+; at spell levels 1-4 from 6th level (SEEKER_SLOTS, the 16th's on), a Justifier's at 1-3 from 10th
+; (JUSTIFIER_SLOTS: none at 8th and 9th, where the ranger's first slot would cast at level 0), a Shinobi's
+; wizard slots the Seeker's by its thief level; none before the table's first level or past its spell
+; levels. Others kept.
+SEEKER_FIRST    equ 6
+SEEKER_LAST     equ 16
+JUSTIFIER_FIRST equ 10
+JUSTIFIER_LAST  equ 16
+kit_table:
+        cmp byte [cs:sb_table], 0
+        je .ret
+        push bx
+        push cx
+        push si
+        xor ax, ax
+        movzx bx, byte [bp + 0x0C]
+        dec bx
+        cmp bx, 3
+        ja .out                         ; (spell levels 1 to 4 only)
+        mov si, seeker_slots
+        mov ch, SEEKER_FIRST
+        mov ah, SEEKER_LAST
+        cmp byte [cs:sb_table], SBT_JUSTIFIER
+        jne .row
+        mov si, justifier_slots
+        mov ch, JUSTIFIER_FIRST
+        mov ah, JUSTIFIER_LAST
+.row:   cmp cl, ch
+        jb .none
+        cmp cl, ah
+        jbe .at
+        mov cl, ah
+.at:    sub cl, ch
+        movzx cx, cl
+        shl cx, 2
+        add bx, cx
+        movzx ax, byte [cs:bx + si]
+        inc word [cs:kt_count]
+        jmp .out
+.none:  xor ax, ax
+.out:   pop si
+        pop cx
+        pop bx
+.ret:   ret
+kt_count dw 0                           ; (slots from a kit's table, for a look in play)
+; a Seeker's priest slots at spell levels 1 to 4, by level 6 to 16 (and on: kits.SEEKER_SLOTS, DSCLOG's
+; seeker_slots; The Complete Ranger's Handbook's table, the owner's Table 51 past 13th), a Shinobi's (by
+; thief level); a Justifier's at spell levels 1 to 3, by level 10 to 16 (and on: kits.JUSTIFIER_SLOTS, the
+; owner's Table 46)
+seeker_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0
+             db 3, 2, 1, 0,  3, 2, 2, 0,  3, 3, 2, 1,  3, 3, 3, 1,  4, 4, 3, 1,  4, 4, 3, 2
+justifier_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0,  2, 2, 2, 0,  3, 2, 2, 0
 ; BEHIND_LEAST: (ADND_SLOTS's, SI the level's pointer) with SB_FEWER, AX (the slots) 1 fewer (0 kept);
 ; with SB_BEHIND, the level put back (SB_LEVEL), and AX 1 where none and the class's own level reaches
 ; spell level [BP+0Ch]: 2 x it - 1, 14 for the 7th (a cleric's; a 6th-level one only with AD&D's
@@ -7982,20 +8162,23 @@ behind_least:
 sb_level  db 0
 sb_behind db 0                          ; (a word with SB_FEWER, cleared together)
 sb_fewer  db 0
+sb_table  db 0                          ; (SBT_*: a kit's own table, KIT_TABLE)
 sb_count  dw 0                          ; (slots counted a level behind or 1 fewer, for a look in play)
 slot_top   db SLOT_LEVELS               ; (the class levels whose slots grow: a druid's DRUID_SLOT_LEVELS)
 DRUID_FIRST equ 5                       ; (the druids' classes 5-8: the owner's table, 2026-11-25, the same
 DRUID_SLOT_LEVELS equ 15                ;   as the cleric's to 15th, then 15th's, 6 6 6 6 4 2 1)
 ; VEILED_SLOT: (ADND_SLOTS's, its frame) AX the slots of class [BP+8] at spell level [BP+0Ch], the
 ; combatant at [BP-6] (the SI it pushed): the Veiled Robe (a robe of plus 2 on the chest, PROT_SCAN; SL's
-; robes.slots) a preserver's slot more at spell levels 1 to 3 where it has any. Others kept.
+; robes.slots) a preserver's slot more at spell levels 1 to 3 where it has any, a Shinobi's too. Others kept.
 WIZARD_CLASS equ 11
 veiled_slot:
         or ax, ax
         jz .ret
         cmp byte [bp + 8], WIZARD_CLASS
+        je .robe
+        cmp byte [cs:sb_table], SBT_SHINOBI     ; (a Shinobi's wizard slots too, as SL's PROBE_SLOTS)
         jne .ret
-        cmp word [bp + 0x0C], 1
+.robe:  cmp word [bp + 0x0C], 1
         jb .ret
         cmp word [bp + 0x0C], 3
         ja .ret
@@ -9767,10 +9950,14 @@ ef_last      db 0
 ;   Swashbuckler's bad luck, from BELT_SITE, site 20: SL's PROBE_BELT), from behind and backstab
 ;   (KIT_REAR, from MISSILE_REAR: SL's PROBE_STEALTH's), movement (KIT_MOVE, from CAH_MOVE: SL's
 ;   PROBE_MOVE), the two-weapon penalty (KIT_TWO, from PROBE_TWO), initiative (KIT_INIT, site 60 at
-;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92).
+;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92);
+; - spell slots (SL's PROBE_SLOTS and PROBE_SLOT_LEVEL, from ADND_SLOTS, site 34: SLOT_BEHIND, BEHIND_LEAST,
+;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
+;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
-; (+355), BAD_LUCK (+1862). Not here (yet): spell slots, casting levels, PSP costs, cures, a spell's
-; damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the Effects lines.
+; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), PSP costs,
+; cures, a spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the
+; Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)

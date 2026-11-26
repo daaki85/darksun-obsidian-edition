@@ -748,17 +748,18 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | initiative | Myrmidon, Wayfinder, Military Scout | `KIT_INIT` (site 60, new) | `add dx,14h` at 5B7E9h (5750Eh), SI the creature |
 | casting level | Seeker (the ranger level less 5), Justifier (less 9) | `KIT_RANGER_CAST` (site 61, new); `RANGER_DROP` in `RANGER_LEVEL` | the caster level routine's `sub dx,7`, 97E00h (81B6Ah); the spell's level, 629F0h (5E3B8h) |
 | a second sphere's spells | Elementalist (the sheet's `+3Fh`, low three bits) | `EL_SPHERE` (sites 90-92, new) | `add sp,4` after each call to 62B45h (spell, class) that has the member: 62CAEh in 62C00h (the USE screen's spells known; DI the member), 629BEh in 628AFh (the cast's level) and 97DE1h in 97DC5h (the caster level; both `[BP+6]`) |
+| spell slots | Elementalist (a level behind), Crusader and Battle Mage (1 fewer), Seeker, Justifier, Shinobi (their own tables, WIS left out: `seeker_slots`, `justifier_slots`) | `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE` in `ADND_SLOTS` (site 34); `SHINOBI_MAGE` (site 190, new); `VEILED_SLOT` | the slot routine 626B7h, per class: its call to 62A10h at 62893h (5E240h), and the "add sp,4" after its "casts wizard spells" call to 62B45h (spell 8) at 627D6h, so a Shinobi's thief class is asked (SI the member) |
 
 The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` +351, `KIT_WILD` +355;
 `RavDiceLog._kit_tick` makes them writable while the kits are on and keeps them as Shattered Lands'
 dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
 `kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`, `el_spheres`:
-`playtest/ravkits.py count`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
-`EXPERT_HALVES` and `KIT_MELEE` against `kitpages` and `kits` on transferred sheets, and checks the
+`playtest/ravkits.py count`; the slots' `sb_count`, `kt_count`, `sh_mages`: `playtest/ravlevel.py counts`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
+`EXPERT_HALVES`, `KIT_MELEE`, `SLOT_BEHIND`, `BEHIND_LEAST` and `KIT_TABLE` against `kitpages` and `kits` on transferred sheets, and checks the
 tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
-against `ravager.class_spheres`.
+against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets.
 
-Not in the sequel yet: what kits do to spells and powers (slots, the Shinobi's casting, a spell's level, PSP
+Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting, a spell's level, PSP
 costs, cures' and Cause spells' dice, spells never known, casting though hit, a Healer's
 cosmos), the Poisoner's poison, the Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, hit dice and
 PSP at a level up, a Scholar's THAC0 and the kits' parts of the DAM lines. Choosing a kit (the

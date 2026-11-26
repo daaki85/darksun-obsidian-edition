@@ -101,6 +101,18 @@ Releases, newest first (2.12.0 and older in the archive):
   refused; a Battle Mage's weapon of its weapon spec and leather, a Battle Dancer's long sword and bow, an
   Elementalist's second sphere's weapons allowed (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, at the sequel's
   "may this character equip it", site 19). KITS.md says which kits work in the sequel now, and which in part.
+**New: Wake of the Ravager's kit spell slots**
+- A party taken to the sequel now has its kits' slots there as in Shattered Lands: a Battle Mage's
+  wizard slots one fewer at each spell level; a Seeker's and a Justifier's priest slots their own
+  tables (Table 51, Table 46), with no WIS bonus; a Shinobi's wizard slots the Seeker's table by its
+  thief level (counted, though it can't cast in the sequel yet). Beside the Elementalist's and
+  Crusader's, which the sequel already had.
+
+**Fixed: Wake of the Ravager's Justifier**
+- A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it
+  at caster level 0 (his ranger level less 9, held at 0). Now he has none before 10th, as in Shattered
+  Lands.
+
 **New: Wake of the Ravager's own party fitted to the rules**
 - As Shattered Lands' own party: Gerakis specializes in the long sword, gythka and trikal and fights
   wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader at the

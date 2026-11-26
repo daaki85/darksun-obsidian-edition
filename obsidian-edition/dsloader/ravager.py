@@ -768,6 +768,11 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("el_sphere_know", 0x62CAE, bytes.fromhex("83c404"), _site(90, 3)),
     Patch("el_sphere_level", 0x629BE, bytes.fromhex("83c404"), _site(91, 3)),
     Patch("el_sphere_cast", 0x97DE1, bytes.fromhex("83c404"), _site(92, 3)),
+    # ... and a Shinobi's wizard slots (SL's PROBE_SLOTS: the Seeker's table by thief level): the slot
+    # routine (626B7h) asks 62B45h (spell 8, the class) whether a class casts wizard spells before it asks
+    # ADND_SLOTS (site 34) its slots; DSCLOG2's SHINOBI_MAGE (site 190) answers yes for a Shinobi's thief
+    # class at its "add sp,4" (627D6h, the member SI), the "or al,al" after kept.
+    Patch("shinobi_mage", 0x627D6, bytes.fromhex("83c404"), _site(190, 3)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
