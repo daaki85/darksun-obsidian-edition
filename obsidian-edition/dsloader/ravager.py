@@ -107,8 +107,9 @@ XP_READS = (0x6C3E4, 0x6C48A, 0x6C4CC, 0x6FB8B, 0x958E3, 0x95931, 0x9597A, 0x95C
 DS_FILE = 0x47E0 * 16 + 0x5200  # the data segment's start in DSUN.EXE (its DGROUP, past the header)
 # The level cap by XP (game.RULE_LEVEL_10; DSCLOG2's LEVEL_ROOM): a class goes up while its next level
 # needs no more than its share of RAV_XP_CAP (the owner's, 2026-11-25: most characters of three classes
-# reach 15th, of one or two higher), past the game's cap of 15, up to the XP table's 20th level
-RAV_XP_CAP, RAV_LEVEL_MOST = 5_625_000, 20
+# reach 15th, of one or two higher), past the game's cap of 15, up to the XP table's 30th level (the owner's,
+# 2026-11-25: no stop at 20th)
+RAV_XP_CAP, RAV_LEVEL_MOST = 5_625_000, 30
 # the sheet's classes (1-17) to the XP table's rows (1-8: tables.ROWS), as the game's map at 360h:9Dh
 CLASS_ROWS = (0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8)
 
@@ -132,7 +133,7 @@ def xp_share(classes: Sequence[int], levels: Sequence[int], human: bool, rows: b
 
 def level_room(classes: Sequence[int], levels: Sequence[int], human: bool, slot: int, rows: bool = False) -> bool:
     """Whether the class in SLOT may go up a level under the cap (LEVEL_ROOM's CF): its next level's
-    XP (tables.RAV_XP at its level) no more than its share, and below 20th."""
+    XP (tables.RAV_XP at its level) no more than its share, and below 30th."""
     from . import tables
     cls, level = classes[slot], levels[slot]
     row = cls if rows else (CLASS_ROWS[cls] if 0 <= cls < len(CLASS_ROWS) else 0)
@@ -587,14 +588,15 @@ PATCHES: Tuple[Patch, ...] = (
     # always on): the eight reads of the XP table ("add sp,6 / imul eax,eax,64h", SL's "imul" at 87BBBh
     # and 67D41h), the THAC0 routine's group step (95391h, "mov [bp-2],ax", SL's 876ABh) and the slot
     # routine's call (62893h, "nop / push cs / call 2A10h", SL's 5E240h): DSCLOG2's XP_NEED, PRIEST_THAC0
-    # and ADND_SLOTS, AD&D's tables to 20th level (tables.RAV_*)
+    # and ADND_SLOTS, AD&D's tables to 20th level and the owner's to 30th (tables.RAV_*; XP_NEED answers
+    # RAV_XP's past the game's 20 entries)
     *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
     # The level cap by XP (SL's level_up_cap, xp_view_cap, xp_next, thief_hd_*; game.RULE_LEVEL_10, always on,
     # with RAV_XP_CAP): the level up's "cmp byte es:[bx+1Eh],0Fh" (959A5h) and View Character's (6FB51h),
     # DSCLOG2's LV_UP and LV_VIEW (sites 110, 111: LEVEL_ROOM's share in place of the game's 15th); the level
-    # up's hold on XP ("add ax,3", 958BDh), LV_CLAMP (112: none past the XP table's 20 entries); View
+    # up's hold on XP ("add ax,3", 958BDh), LV_CLAMP (112: none past RAV_XP's 30 entries); View
     # Character's ")" ("push 1386h", 6FC08h), XP_SUFFIX (117: the class the next XP is for); and a thief's
     # d6 to 10th (the hit die's "mov al,es:[bx+1]", 94FECh, and the most hit points' "cmp al,es:[bx+1]",
     # 95460h, and its "mov", 95471h: HD_ROLL, HD_CON, HD_CLAMP, 113-115; the psionicist's stays 9th)
@@ -602,6 +604,8 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("level_cap_view", 0x6FB51, bytes.fromhex("26807f1e0f"), _site(111, 5)),
     Patch("level_clamp", 0x958BD, bytes.fromhex("050300"), _site(112, 3)),
     Patch("xp_suffix", 0x6FC08, bytes.fromhex("688613"), _site(117, 3)),
+    # (the level up's message's "th", "mov ax,2B7Eh" at 959D3h: LV_ORDINAL, 118, "21st" past 20th)
+    Patch("level_ordinal", 0x959D3, bytes.fromhex("b87e2b"), _site(118, 3)),
     Patch("thief_hd_roll", 0x94FEC, bytes.fromhex("268a870100"), _site(113, 5)),
     Patch("thief_hd_con", 0x95460, bytes.fromhex("263a870100"), _site(114, 5)),
     Patch("thief_hd_clamp", 0x95471, bytes.fromhex("268a870100"), _site(115, 5)),

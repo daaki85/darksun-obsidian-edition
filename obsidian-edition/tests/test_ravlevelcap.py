@@ -1,7 +1,7 @@
 """DSCLOG2's LEVEL CAP BY XP, A THIEF'S HIT DICE and SAVING THROWS AS IN AD&D in Wake of the Ravager (run in
 an emulated CPU): Shattered Lands' RULE_LEVEL_10 ported with the owner's cap (ravager.RAV_XP_CAP, 5,625,000,
-shared between a character's classes) in place of the game's 15th level, up to the XP table's 20th; the
-level up's hold on XP never past the table; View Character's next XP naming its class; a thief's d6 to 10th
+shared between a character's classes) in place of the game's 15th level, up to RAV_XP's 30th (the game's
+table 20 entries, XP_NEED answering past them); the level up's hold on XP never past the table; View Character's next XP naming its class; a thief's d6 to 10th
 (a psionicist's to 9th); and the Player's Handbook's saves (tables.rav_saves) where the game held them at
 its table's last row. Needs nasm and unicorn, else skipped."""
 
@@ -33,8 +33,8 @@ FIGHTER, PRESERVER, PSIONICIST, THIEF, CLERIC = 9, 11, 12, 17, 1
 
 def expected_levels():
     """The owner's (2026-11-25): the highest level of each class alone, of two and of three."""
-    return {"cleric": (20, 20, 16), "druid": (20, 14, 14), "fighter": (20, 19, 15), "gladiator": (20, 17, 14),
-            "preserver": (20, 17, 15), "psionicist": (20, 19, 16), "ranger": (20, 17, 14), "thief": (20, 20, 18)}
+    return {"cleric": (30, 20, 16), "druid": (20, 14, 14), "fighter": (30, 19, 15), "gladiator": (26, 17, 14),
+            "preserver": (25, 17, 15), "psionicist": (27, 19, 16), "ranger": (26, 17, 14), "thief": (30, 22, 18)}
 
 
 @unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
@@ -89,16 +89,17 @@ class LevelCapTests(unittest.TestCase):
         return not flags & ZF
 
     def test_site_table(self):
-        """Sites 110-117 are this port's, as ravager's patches name them; 100-109 left to other branches."""
+        """Sites 110-118 are this port's, as ravager's patches name them; 100-109 left to other branches."""
         table = self.sym["site_table"]
         names = {110: "lv_up", 111: "lv_view", 112: "lv_clamp", 113: "hd_roll", 114: "hd_con", 115: "hd_clamp",
-                 116: "save_base", 117: "xp_suffix_site"}
+                 116: "save_base", 117: "xp_suffix_site", 118: "lv_ordinal"}
         for number, name in names.items():
             self.assertEqual(struct.unpack_from("<H", self.image, table + 2 * number)[0], self.sym[name])
         sites = {p.name: p.replacement[2] for p in ravager.PATCHES if p.replacement[:2] == bytes((0xCD, 0xF5))}
         self.assertEqual([sites[n] for n in ("level_cap_up", "level_cap_view", "level_clamp", "thief_hd_roll",
-                                             "thief_hd_con", "thief_hd_clamp", "save_table", "xp_suffix")],
-                         list(range(110, 118)))
+                                             "thief_hd_con", "thief_hd_clamp", "save_table", "xp_suffix",
+                                             "level_ordinal")],
+                         list(range(110, 119)))
         self.assertTrue(game.RULE_LEVEL_10 & ravager.RULES_PORTED)
 
     def test_levels_most(self):
@@ -107,13 +108,13 @@ class LevelCapTests(unittest.TestCase):
             self.assertEqual(tuple(ravager.level_most(row, n) for n in (1, 2, 3)), most, row)
 
     def test_level_up_as_the_model(self):
-        """LV_UP answers as ravager.level_room: one class, two, three, at every level 1-20."""
+        """LV_UP answers as ravager.level_room: one class, two, three, at every level 1-30."""
         combos = [(FIGHTER, 0, 0), (THIEF, 0, 0), (FIGHTER, THIEF, 0), (5, PSIONICIST, 0),
                   (FIGHTER, PRESERVER, THIEF), (CLERIC, 13, PSIONICIST), (10, 5, 17)]
         for classes in combos:
             n = sum(1 for c in classes if c)
             for slot in range(n):
-                for level in range(1, 21):
+                for level in range(1, 31):
                     levels = [5] * 3
                     levels[slot] = level
                     levels = [lv if c else 0 for lv, c in zip(levels, classes)]
@@ -121,12 +122,14 @@ class LevelCapTests(unittest.TestCase):
                         self.assertEqual(self.level_up(ELF, classes, levels, slot),
                                          ravager.level_room(classes, levels, False, slot))
 
-    def test_single_to_twenty(self):
-        """One class goes on to 20th and no further; three stop at the owner's levels."""
-        for cls, row in ((FIGHTER, "fighter"), (THIEF, "thief"), (11, "preserver"), (5, "druid")):
-            for level in range(15, 20):
+    def test_single_past_twenty(self):
+        """One class goes on to its highest (the owner's, 2026-11-25: no stop at 20th; 30th at most); three
+        stop at the owner's levels."""
+        for cls, row, most in ((FIGHTER, "fighter", 30), (THIEF, "thief", 30), (11, "preserver", 25),
+                               (5, "druid", 20), (12, "psionicist", 27), (13, "ranger", 26)):
+            for level in range(15, most):
                 self.assertTrue(self.level_up(ELF, (cls, 0, 0), (level, 0, 0), 0), (row, level))
-            self.assertFalse(self.level_up(ELF, (cls, 0, 0), (20, 0, 0), 0), row)
+            self.assertFalse(self.level_up(ELF, (cls, 0, 0), (most, 0, 0), 0), row)
         # a fighter/preserver/thief: 15/15/18
         for slot, cls, most in ((0, FIGHTER, 15), (1, PRESERVER, 15), (2, THIEF, 18)):
             levels = [10, 10, 10]
@@ -139,12 +142,12 @@ class LevelCapTests(unittest.TestCase):
         """A human who changed class: the cap less what its old class's level needed (a cleric 7's 55,000)."""
         share = ravager.RAV_XP_CAP - tables.RAV_XP["cleric"][6]
         self.assertEqual(ravager.xp_share((FIGHTER, CLERIC, 0), (1, 7, 0), True), share)
-        for level in range(1, 21):
-            want = level < 20 and tables.RAV_XP["fighter"][level] <= share
+        for level in range(1, 31):
+            want = level < 30 and tables.RAV_XP["fighter"][level] <= share
             self.assertEqual(self.level_up(HUMAN, (FIGHTER, CLERIC, 0), (level, 7, 0), 0), want, level)
         # an old class high enough leaves the new one less: a thief 20 (2,200,000) then a preserver
         share = ravager.RAV_XP_CAP - tables.RAV_XP["thief"][19]
-        most = max(lv for lv in range(1, 21) if lv == 1 or tables.RAV_XP["preserver"][lv - 1] <= share)
+        most = max(lv for lv in range(1, 31) if lv == 1 or tables.RAV_XP["preserver"][lv - 1] <= share)
         self.assertTrue(self.level_up(HUMAN, (PRESERVER, THIEF, 0), (most - 1, 20, 0), 0))
         self.assertFalse(self.level_up(HUMAN, (PRESERVER, THIEF, 0), (most, 20, 0), 0))
 
@@ -154,18 +157,18 @@ class LevelCapTests(unittest.TestCase):
             self.assertEqual(self.level_up(ELF, (FIGHTER, 0, 0), (level, 0, 0), 0, rules=0), level < 15)
 
     def test_view(self):
-        """LV_VIEW on the copy's rows: the same answers, none at 20th or at a triple's cap."""
-        self.assertTrue(self.view(ELF, (3, 0, 0), (19, 0, 0), 0))
-        self.assertFalse(self.view(ELF, (3, 0, 0), (20, 0, 0), 0))
+        """LV_VIEW on the copy's rows: the same answers, none at 30th or at a triple's cap."""
+        self.assertTrue(self.view(ELF, (3, 0, 0), (29, 0, 0), 0))
+        self.assertFalse(self.view(ELF, (3, 0, 0), (30, 0, 0), 0))
         self.assertTrue(self.view(ELF, (3, 5, 8), (14, 10, 10), 0))
         self.assertFalse(self.view(ELF, (3, 5, 8), (15, 10, 10), 0))
         self.assertFalse(self.view(ELF, (3, 5, 8), (10, 10, 18), 2))
         self.assertTrue(self.view(HUMAN, (3, 1, 0), (12, 7, 0), 0))
 
     def test_clamp(self):
-        """LV_CLAMP: level + 3, no more than 19 (the table's last entry), and then XP_NEED's next answer the
+        """LV_CLAMP: level + 3, no more than 29 (RAV_XP's last entry), and then XP_NEED's next answer the
         most (no hold); without the rule the game's level + 3."""
-        for level, want, top in ((5, 8, 0), (16, 19, 0), (17, 19, 1), (20, 19, 1)):
+        for level, want, top in ((5, 8, 0), (16, 19, 0), (26, 29, 0), (27, 29, 1), (30, 29, 1)):
             mu = self.machine()
             self.sheet(mu, ELF, (FIGHTER, 0, 0), (level, 0, 0))
             self.call(mu, "lv_clamp", eax=level, es=SHEET_SEG, ebx=SHEET, edi=0)
@@ -185,7 +188,7 @@ class LevelCapTests(unittest.TestCase):
     def test_xp_held_at_the_share(self):
         """XP_HOLD at LV_CLAMP (the owner's, 2026-11-25: XP stops growing at the cap): the sheet's XP no more
         than its share (ES:BX the sheet + DI), whatever the level; below it kept; without the rule kept."""
-        cases = (((ELF, (FIGHTER, 0, 0), (20, 0, 0)), 9000000, ravager.RAV_XP_CAP),
+        cases = (((ELF, (FIGHTER, 0, 0), (30, 0, 0)), 9000000, ravager.RAV_XP_CAP),
                  ((ELF, (FIGHTER, PRESERVER, THIEF), (15, 15, 18)), 4000000, ravager.RAV_XP_CAP // 3),
                  ((ELF, (FIGHTER, THIEF, 0), (5, 5, 0)), 100000, 100000),
                  ((HUMAN, (FIGHTER, CLERIC, 0), (17, 20, 0)), 3100000,
@@ -204,10 +207,11 @@ class LevelCapTests(unittest.TestCase):
                                      (SHEET + slot, slot))
 
     def test_rav_xp_at(self):
-        """RAV_XP_AT: tables.RAV_XP at every row and index (XP_FIXES' among them)."""
+        """RAV_XP_AT: tables.RAV_XP at every row and index 0-29 (XP_FIXES' among them)."""
         mu = self.machine()
         for row, name in enumerate(tables.ROWS):
-            for index in range(20):
+            self.assertEqual(len(tables.RAV_XP[name]), tables.RAV_XP_LEVELS)
+            for index in range(tables.RAV_XP_LEVELS):
                 mu.reg_write(r.UC_X86_REG_EDX, row | index << 8)
                 mu.mem_write(SS * 16 + 0x7F0, struct.pack("<H", 0xFFF0))
                 mu.reg_write(r.UC_X86_REG_CS, TSR)
@@ -215,6 +219,32 @@ class LevelCapTests(unittest.TestCase):
                 mu.reg_write(r.UC_X86_REG_ESP, 0x7F0)
                 mu.emu_start(TSR * 16 + self.sym["rav_xp_at"], TSR * 16 + 0xFFF0, count=10000)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_EAX), tables.RAV_XP[name][index], (name, index))
+
+    def test_xp_need_past_the_table(self):
+        """XP_NEED past the game's 20 entries (which run on into the next row): RAV_XP's to index 29, then
+        the most; without the rule the game's word x 100; below 20 as before (AD&D's fixes off here)."""
+        for rules in (ON, 0):
+            mu = self.machine(rules)
+            for row, name in enumerate(tables.ROWS):
+                for index in range(18, 32):
+                    self.call(mu, "xp_need", frame=struct.pack("<HHH", 0x3E8, row, index), eax=7)
+                    got = mu.reg_read(r.UC_X86_REG_EAX)
+                    if not rules or index < 20:
+                        want = 700
+                    else:
+                        want = tables.RAV_XP[name][index] if index < 30 else 0xFFFFFFFF
+                    self.assertEqual(got, want, (rules, name, index))
+
+    def test_ordinal(self):
+        """LV_ORDINAL: the level up's message's ending at DS:2B7Eh, English's ("21st", "112th"), AX its place."""
+        want = {4: "th", 11: "th", 12: "th", 13: "th", 20: "th", 21: "st", 22: "nd", 23: "rd", 24: "th", 30: "th",
+                101: "st", 111: "th"}
+        for level, ending in want.items():
+            mu = self.machine()
+            self.call(mu, "lv_ordinal", eax=level, ebx=0x1111, ecx=0x2222, edx=0x3333)
+            self.assertEqual(bytes(mu.mem_read(GAME_DS * 16 + 0x2B7E, 2)).decode(), ending, level)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
+                                                       r.UC_X86_REG_DX)], [0x2B7E, 0x1111, 0x2222, 0x3333])
 
     def test_thief_hit_dice(self):
         """A thief's group (the rogues', 9 levels of dice) counts 10 for a thief, 9 for a psionicist, at the

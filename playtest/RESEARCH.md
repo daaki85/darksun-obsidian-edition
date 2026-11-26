@@ -793,7 +793,20 @@ counts, and sets a member for a test. **Played** (2026-11-25, logs/2026-11-25-ra
 past the table's end for a class at 17th or more and sets the XP to 0; the saves are the least of each group's
 (954D2h's loop); a fight's XP goes a third to each class of a triple class. On View Character a click on a
 portrait at the Effects screen's spots (70,56) (117,56) (70,127) (117,127) shows that member; level-up messages
-come one a click of the box (160,100), the dice log's "Message:" lines list them all.
+come one a click of the box (160,100), the dice log's "Message:" lines list them all. **Levels 21-30**
+(2026-11-26, the same log): the game's XP table has 20 entries a class and its reads past them run on into
+the next row; THAC0 (creature +16h) is read signed (`cbw` at 5C6E9h, 7CFF7h, 844B6h) and View Character
+shows "THAC0: -9"; hit points take the group's fixed gain past its rolled levels (94FF2h); the level up's
+message (959A5h on) pushes "th" (DS:2B7Eh) for every level past 3rd, and "%Fs gains a level" (DS:2B87h)
+when the long one passes 29 characters (a preserver's "is 22nd level Preserver"). The wizard spells run
+to a 10th level (DS:0656h's starts: 111-114 Dome of Invulnerability, Magical Plague, Rift, Wall of Ash),
+and CHOOSE A SPELL opens on level / 2 from 10th, so a preserver's level up from 20th offers those first.
+The psionicists' pop-up (688:61h; its picks 1, 2 at odd levels and at 4th, from 98:C1h's psionicist
+level, root code at 1D111h) lists known powers too: a pick adds 2 to the power's byte (bits 1-7 its
+number), so it never runs out. The slots left are set only by a rest (the Roost: `ravload.sh
+ravager-roost`, Reyhan "1 3 4", the corridor, the second doorway's steps at game (262,93), Up 6, the look
+pointer on the ring at (265,113); the pointer mode DS:1440h, 1 the arrow, 4 the sword, 2 the look). The
+level up's hold (3 levels on) raises a class four levels an award at most.
 
 **Stealth in the sequel** (2026-11-24, logs/2026-11-24-ravager-stealth.md): the attack's set-up (5C5E1h)
 keeps the attacker's creature in `[BP-0Eh]` (records 31h bytes, its THAC0 at +16h, taken into `[BP-1Eh]`

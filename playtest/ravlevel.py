@@ -1,11 +1,14 @@
 """ravlevel.py: the level cap by XP in the running sequel ($WORK/rav.pid; the Loader's 48h sheets at the far pointer DS:19C5h).
   python3 ravlevel.py show                     each member's race, classes, levels, best levels (+39h), XP (+0), hit points
                                                (+8 the most, +0Ah the base), the five saves (+31h) and the creature's THAC0
-                                               (+16h); then DSCLOG2's counters (lv_rooms, lv_tops, hd_tens, save_count,
+                                               (+16h, signed), its casts left (DS:446Ah + 22h a member: a wizard's by spell level from
+                                               +0, a priest's from +0Bh); then DSCLOG2's counters (lv_rooms, lv_tops, hd_tens, save_count, xp_pasts, xp_holds,
                                                slot_count) and its rules words
   python3 ravlevel.py set MEMBER XP RACE C1,C2,C3 L1,L2,L3   a test edit (never save after it): the XP, race, classes
                                                (1-17) and levels, the best levels (+39h) the same, so each new level
                                                is a new one (its hit die, its extras)
+  python3 ravlevel.py powers MEMBER [all]     the member's psionic powers known (selector 370h's +9CDh, 22h a member,
+                                               bit 1 known, 34 powers); "all" marks them all known, a test edit
   python3 ravlevel.py foes HP                  every foe's (creature +15h 7) hit points HP, a test edit
 MEMBER is the sheet's number (0-3: the party's order)."""
 import argparse, os, struct, subprocess, sys, tempfile
@@ -55,10 +58,11 @@ if cmd == 'show':
         cr = g.read(far(0x19C9) + m * 0x31, 0x31)
         print(m, 'race', s[0x12], 'classes', list(s[0x1B:0x1E]), 'levels', list(s[0x1E:0x21]), 'best',
               list(s[0x39:0x3C]), 'XP', struct.unpack_from('<I', s, 0)[0], 'HP most', struct.unpack_from('<h', s, 8)[0],
-              'base', struct.unpack_from('<h', s, 0x0A)[0], 'saves', list(s[0x31:0x36]), 'THAC0', cr[0x16])
+              'base', struct.unpack_from('<h', s, 0x0A)[0], 'saves', list(s[0x31:0x36]), 'THAC0',
+              struct.unpack_from('<b', cr, 0x16)[0], 'casts left', list(g.read(ds * 16 + 0x446A + m * 0x22, 0x22)))
     base, sym = helper()
     print('helper', ', '.join('%s %d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0])
-                              for n in ('lv_rooms', 'lv_tops', 'hd_tens', 'save_count', 'slot_count', 'xp_count')),
+                              for n in ('lv_rooms', 'lv_tops', 'hd_tens', 'save_count', 'slot_count', 'xp_count', 'xp_pasts', 'xp_holds')),
           'rules %#06x rules_hi %#06x' % struct.unpack('<HH', g.read(base + sym['rules'], 2) + g.read(base + sym['rules_hi'], 2)))
 elif cmd == 'set':
     m, xp, race = int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
@@ -81,3 +85,10 @@ elif cmd == 'foes':
         if g.read(cr + 0x15, 1)[0] == 7 and struct.unpack('<h', g.read(cr, 2))[0] > 0:
             g.write(cr, struct.pack('<H', n))
             print('foe', i, 'HP', n)
+elif cmd == 'powers':
+    m = int(sys.argv[2])
+    at = (ds + 0x3E71 - 0x47E0) * 16 + 0x9CD + m * 0x22   # (DSCLOG2's POW_SEG:POW_OFF, POW_SIZE a member)
+    if len(sys.argv) > 3 and sys.argv[3] == 'all':
+        g.write(at, bytes(b | 2 for b in g.read(at, 34)))
+    p = g.read(at, 34)
+    print('member', m, 'powers known', sum(1 for b in p if b & 2), 'of 34:', [i for i, b in enumerate(p) if b & 2])
