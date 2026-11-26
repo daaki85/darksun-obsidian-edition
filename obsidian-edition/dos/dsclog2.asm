@@ -20043,7 +20043,10 @@ install:                        ; DS = ES = PSP, CS = the image
 
 ; FAR_INIT: DSCLOG's: FAR_SEG set and its FAR_RING to FAR_END cleared; CF if there was no room.
 ; The HMA when it is ours (XMS's, or unused: all zero), else a block of upper memory, else of
-; conventional memory (FAR_SEG a paragraph below it).
+; conventional memory (FAR_SEG a paragraph below it). XMS 01h's 90h (no HMA, as DOSBox 0.74 says)
+; tries the HMA if all zero; 91h (in use: DOS=HIGH, DOSBox-X's DOS in the HMA) and 92h go straight
+; to a block. An HMA given but unusable (A20 refused, or still wrapping) is handed back. Kept for
+; good (a TSR): A20 and the HMA never released (tests/test_far_init.py).
 far_init:
         mov ax, 4300h
         int 2Fh
@@ -20061,10 +20064,10 @@ far_init:
         jnz .a20
         cmp bl, 90h
         jne .block
-.a20:   mov ah, 3
+.a20:   mov ah, 3               ; A20 on, for good (global: the HMA's owner's, XMS's spec)
         call far [cs:xms]
         or ax, ax
-        jz .block
+        jz .drop
         push ds
         xor ax, ax
         mov ds, ax
@@ -20077,7 +20080,7 @@ far_init:
         not word [es:0x10]
         sti
         pop ds
-        jne .block
+        jne .drop
         cmp byte [cs:hma_given], 0
         jne .hma
         mov di, FAR_RING
@@ -20088,6 +20091,11 @@ far_init:
         jne .block
 .hma:   mov word [cs:far_seg], 0xFFFF
         jmp .clear
+.drop:  cmp byte [cs:hma_given], 0  ; given but unusable (A20 won't come on): back to XMS (02h),
+        je .block               ;   for whoever asks next
+        mov byte [cs:hma_given], 0
+        mov ah, 2
+        call far [cs:xms]
 .block: mov bx, FAR_PARAS
         call umb_alloc
         jnc .got

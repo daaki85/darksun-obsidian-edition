@@ -1857,6 +1857,20 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
 (75,171) is the inventory, whose Computer Control icons are the lower small ones left of the portraits (6,17 /
 6,65 / 6,113 / 6,161), View Character's 47,53 / 98,53 / 47,113 / 98,113.
 
+**Where DSCLOG2's far block goes** (2026-11-26, logs/2026-11-26-ravager-hma.md; it reaches FD00h since the
+see-through tables moved in). FAR_INIT asks XMS for the HMA (01h): GOG's DOSBox 0.74 always answers 90h (no
+HMA: its 01h/02h are stubs) though A20 and 100000h work, so the HMA is used when FAR_RING-FAR_TOP is all zero;
+91h (DOS=HIGH, DOSBox-X's default `dos=high`) goes straight to upper memory (strategy 42h: the top of it), then
+conventional memory; no room anywhere: "no memory for its ring", exit 4C01h, nothing hooked. A20 by 03h (global:
+the owner's), checked by the wrap test before any write; an HMA given but unusable is handed back (02h). Nothing
+ever releases them (a TSR). To see it: `dosmem.py` (the chains, A20) and the header's +142 (FAR_SEG: FFFFh the
+HMA). **To take the HMA for a test** in 0.74, where XMS gives it to nobody: put bytes in it before DSCLOG2
+(`logs/files/2026-11-26-hmagrab.asm`, run from a throwaway config's autoexec before `lh d:\dsclog2.exe`): the far
+block then lands at E02Fh, the game runs, shadows and the Loader's see-through tables follow FAR_SEG. The
+emulator tests: `tests/test_far_init.py` (XMS and DOS played by the test). A second launch of `dosbox` by
+`setsid nohup ... &` from a shell: `$!` is setsid's pid when setsid forks, not DOSBox's; find DOSBox with
+`pgrep -x dosbox` and its start time before writing rav.pid (two games from one config wrote the same files).
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
