@@ -58,8 +58,9 @@ class TableTests(unittest.TestCase):
                    ravspells.NS_LIST: "ns_list", ravspells.NS_CAST: "ns_cast", ravspells.NS_EFFECT: "ns_effect",
                    ravspells.NS_ABILITY: "ns_ability", ravspells.NS_CLAW: "ns_claw",
                    ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn",
-                   ravspells.PRIEST_SPHERE: "priest_sphere"}
-        self.assertEqual(sorted(routine), [*range(140, 150), 222])
+                   ravspells.PRIEST_SPHERE: "priest_sphere", ravspells.WW_SETUP: "ww_setup",
+                   ravspells.WW_GATE: "ww_gate", ravspells.WW_DRAW: "ww_draw"}
+        self.assertEqual(sorted(routine), [*range(140, 150), 222, 225, 226, 227])
         for number, name in routine.items():
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         names = {p.name for p in ravager.PATCHES}
@@ -121,9 +122,31 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(data[32:64].rstrip(b"\0"), name)
             self.assertTrue(records["SPIN", number + 1].startswith(name))
             self.assertEqual(len(sequelicons.decode(records["ICON", 21000 + number])), 16)
+        self.assertEqual(records["DATA", 326][0x17], ravspells.WHIRL_AREA)
+        self.assertEqual(records["DATA", 326][0x19:0x20], bytes.fromhex("42 08 02 00 11 08 A1"))
         self.assertEqual(records["DATA", 327][0x1C:0x1F], bytes(3))
         self.assertEqual(records["ICON", 21326], self.game["ICON", 21205])
         self.assertNotEqual(records["ICON", 21327], self.game["ICON", 21194])
+
+    def test_area_segment_relocations(self):
+        """Every MZ reference to selector 3D0h's segment is redirected before overlays load."""
+        import re
+        import struct
+        from pathlib import Path
+        exe = (Path(WOTR) / "DSUN.EXE").read_bytes()
+        count, paragraphs = struct.unpack_from("<HH", exe, 6)
+        start, = struct.unpack_from("<H", exe, 0x18)
+        fixups = set()
+        for index in range(count):
+            off, seg = struct.unpack_from("<HH", exe, start + index * 4)
+            place = (paragraphs + seg) * 16 + off
+            if exe[place:place + 2] == bytes.fromhex("f1 41"):
+                fixups.add((seg, off))
+        helper = (Path(__file__).resolve().parents[1] / "dos" / "dsclog2.asm").read_text()
+        table = helper.split("ww_refs dw ", 1)[1].split("ww_refs_end:", 1)[0]
+        values = [int(word, 16) for word in re.findall(r"0x[0-9A-F]+", table)]
+        self.assertEqual(set(zip(values[::2], values[1::2])), fixups)
+        self.assertEqual(tuple(values[-2:]), (0x45E8, 0x3D0))
 
     def test_program(self):
         """The patches' bytes are the sequel's DSUN.EXE's, its effect records 113-116 empty, and

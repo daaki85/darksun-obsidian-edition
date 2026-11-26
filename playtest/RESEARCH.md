@@ -672,6 +672,8 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
 
 ## Wake of the Ravager
 
+[Casting Restore Youth and Whirlwind in Ravager](logs/2026-11-26-ravager-priest-casts.md) records the in-game observations.
+
 [Sixth-level priest grants in Wake of the Ravager](logs/2026-11-26-ravager-priest-grants.md) records the runtime checks.
 
 For comparing (its code, data and README; nothing in the kit plays it): `sh setup_ravager.sh` puts

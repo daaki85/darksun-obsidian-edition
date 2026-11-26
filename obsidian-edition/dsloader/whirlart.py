@@ -99,11 +99,11 @@ def encode_frames(frames: Sequence[List[List[Optional[int]]]]) -> bytes:
     return struct.pack("<IH", at, len(bodies)) + struct.pack(f"<{len(bodies)}I", *offsets) + b"".join(bodies)
 
 
-def chunks(sl_chunks: gff.Chunks, stable) -> Dict[Tuple[str, int], bytes]:
+def chunks(sl_chunks: gff.Chunks, stable, picture: int = PICTURE) -> Dict[Tuple[str, int], bytes]:
     """OBJECT and PICTURE for the copy (SL_CHUNKS the game's; STABLE its stable colours)."""
     colours = ramp(stable)
     made = [frame(colours, turn) for turn in range(FRAMES)]
     record = bytearray(sl_chunks[("OJFF", SAND_STORM)])
-    struct.pack_into("<H", record, icons.OJFF_ICON, PICTURE)
+    struct.pack_into("<H", record, icons.OJFF_ICON, picture)
     struct.pack_into("<hh", record, ANCHOR, *made[0][1])
-    return {("OJFF", OBJECT): bytes(record), ("BMP ", PICTURE): encode_frames([rows for rows, _ in made])}
+    return {("OJFF", OBJECT): bytes(record), ("BMP ", picture): encode_frames([rows for rows, _ in made])}

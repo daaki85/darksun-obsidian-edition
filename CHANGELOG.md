@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+- In Wake of the Ravager, Whirlwind uses its own ground area and dust funnel. Restore Youth removes one year of magical aging on a successful system shock roll.
+
 - With New spells enabled, a sixth-level air spell slot can offer Whirlwind and a cosmos slot can offer Restore Youth. The game checks the caster’s spheres when it builds the priest spell list.
 
 **Added: Wake of the Ravager's new wizard spells**

@@ -863,7 +863,10 @@ class RavGameData(game.GameData):
             return UNSEEN_RANGE
         reach = struct.unpack_from("<H", rec, 9)[0] + rec[0x0B] * level
         if rec[0x17] != 0xFF:
-            kind = self.guest.read((self.load_seg + AREAS_SEG) * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
+            segment = self.load_seg + AREAS_SEG
+            if rec[0x17] == ravspells.WHIRL_AREA:
+                segment, = struct.unpack("<H", self.guest.read((self.load_seg + 0x45E8) * 16 + 0x3D0, 2))
+            kind = self.guest.read(segment * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
             if kind and (kind[0] >> 2) & 3 == 1:
                 reach *= 2
         return reach or 1

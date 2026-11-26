@@ -959,6 +959,8 @@ DOSBox, with the mod's fixes and rules ported to it (below) and the dice log of 
 
 With New spells enabled, a sixth-level air spell slot can offer Whirlwind and a cosmos slot can offer Restore Youth. The game checks the caster’s spheres when it builds the priest spell list.
 
+In Wake of the Ravager, Whirlwind uses its own ground area and dust funnel. Restore Youth removes one year of magical aging on a successful system shock roll.
+
 ### Taking the party to Wake of the Ravager
 
 The Options tab's **Take the party to Wake of the Ravager...** button puts the party of a Shattered

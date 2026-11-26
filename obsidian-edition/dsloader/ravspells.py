@@ -172,6 +172,8 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
     for spell, original, template in PRIEST_TEMPLATES:
         data = bytearray(_record(resource, template))
         if spell == WHIRLWIND:
+            data[0x17] = WHIRL_AREA
+            data[0x19] = 66                 # Cannot Move, intercepted on a failed save
             data[4:7] = bytes((0, 1, 0))       # one round per caster level
             data[0x1A:0x20] = bytes((8, 2, 0, 0x11, 8, 0xA1))
         else:
@@ -191,6 +193,8 @@ VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
 NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
 NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
 PRIEST_SPHERE = 222
+WW_SETUP, WW_GATE, WW_DRAW = 225, 226, 227
+WHIRL_AREA = 125
 NS_SCROLL, NS_LEARN = 148, 149  # (a scroll's teaching, CHOOSE A SPELL's)
 # The spells' effects: the sequel's effect records past its 113 (0-112; zeros after them, and the creature's
 # effect bits 15 bytes, 0-119), named and given their spells' icons by "ns_effects". Cat's Grace's and
@@ -286,6 +290,9 @@ def program_patches() -> List[Patch]:
         Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
         Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
         Patch("ns_level", 0x62AD0, bytes.fromhex("83fa73"), site_bytes(NS_LEVEL, 3)),
+        Patch("ww_setup", 0x5203, bytes.fromhex("2e8916c402"), site_bytes(WW_SETUP, 5)),
+        Patch("ww_draw", 0x26FA8, bytes.fromhex("bea80c8b4710"), site_bytes(WW_DRAW, 6)),
+        Patch("ww_gate", 0x7F6E4, bytes.fromhex("8b7606"), site_bytes(WW_GATE, 3)),
         Patch("priest_sphere", 0x62BC6, bytes.fromhex("26848cd307"), site_bytes(PRIEST_SPHERE, 5)),
         *cmp_patches(),
         Patch("ns_cast", 0x656D0, bytes.fromhex("8b460e8946e2"), site_bytes(NS_CAST, 6)),

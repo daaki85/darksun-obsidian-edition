@@ -224,3 +224,4 @@ schedules and diffs a log made or used.
 | [2026-11-25-ravager-fight-keys-run.sh](files/2026-11-25-ravager-fight-keys-run.sh) | [R, F10 and Alt in the sequel](2026-11-25-ravager-fight-keys.md): a throwaway copy (ravFK) through the Loader's start, the four added, a new game to the Tyr ambush with HP 250 (a test edit, never saved) and the dice log (DICE_ENV: RAV_NO_SQUARES=1 and the like, the control) |
 | [2026-11-26-ravager-spell-books-money.py](files/2026-11-26-ravager-spell-books-money.py) | [Spellbooks of the new spells](2026-11-26-ravager-spell-books.md): the sequel party's money read or set (a test edit, never saved) |
 | [2026-11-26](2026-11-26-ravager-priest-grants.md) | Sixth-level priest grants in Wake of the Ravager |
+| [2026-11-26](2026-11-26-ravager-priest-casts.md) | Casting Restore Youth and Whirlwind in Ravager |

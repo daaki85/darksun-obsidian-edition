@@ -1332,7 +1332,8 @@ def mod_types_table(types: bytes) -> bytes:
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
-                  gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
+                  gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
+                  funnel: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the mod's item types after the sequel's (unless "mod_types" is in SKIP),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
@@ -1354,6 +1355,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
+    if funnel and ravspells.SKIP not in skip:
+        new.update(funnel(chunks))
+        done.append("whirlwind_art")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -1464,7 +1468,21 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
     added = read_added(os.path.dirname(dest))
     books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
     gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
-    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear), skip)
+    resource_path = _find_file(game_dir, RESOURCE_FILE)
+
+    def funnel(objects):
+        from glob import glob
+        from . import ravitems, whirlart
+        with open(resource_path, "rb") as f:
+            resources = gff.read_gff(f.read())
+        regions = []
+        for path in sorted(glob(os.path.join(game_dir, "RGN*.GFF"))):
+            with open(path, "rb") as f:
+                regions.extend(v for (kind, _), v in gff.read_gff(f.read()).items() if kind == "PAL ")
+        return whirlart.chunks(objects, ravitems.stable_colours(resources, regions), picture=whirlart.OBJECT)
+
+    art = funnel if resource_path else None
+    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear, art), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
@@ -1483,7 +1501,7 @@ def skipped(settings: dict) -> frozenset:
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
-        | (frozenset() if spells else {ravspells.SKIP})
+        | (frozenset() if spells else {ravspells.SKIP, "ww_setup", "ww_gate", "ww_draw"})
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:
