@@ -1482,11 +1482,12 @@ def read_added(dos_dir: str) -> gff.Chunks:
 
 def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[str] = None) -> List[str]:
     """OBJEX.GFF's copy with the mod's item types, the party transfer's objects (beside DEST) and, with
-    SL_DIR (Shattered Lands' folder: their pictures are its), the mod's new items (ravgear), written to
-    DEST unless already so."""
+    SL_DIR (Shattered Lands' folder: their pictures are its), the mod's new items (ravgear; the new spells'
+    spellbooks unless ravspells.SKIP is in SKIP), written to DEST unless already so."""
     from . import ravgear
     added = read_added(os.path.dirname(dest))
-    gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
+    gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
     return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear), skip)
 
 
