@@ -168,16 +168,24 @@ def extra(kid: int, dance: int = 0) -> int:
     return int(kid == AVENGER)
 
 
-# The game's own party (defaultparty.py), three of them given features of their own (not kits;
-# none is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
-# classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
-# race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her chatkcha's
-# 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
+# The games' own parties (defaultparty.py), given features of their own (not kits; none is
+# something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the classes' kits, 7 Friends
+# known), set by the Loader; which feature by the race (DSCLOG's OWN_RACE_B), and the classes where a
+# race has two. Shattered Lands': Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
+# thri-kreen with a psionicist class) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her
+# chatkcha's 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf with a
+# druid class) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py). Wake of the
+# Ravager's (the owner's choices, 2026-11-26): Gerakis Wild Fighting as before; Thy'rokh (a thri-kreen
+# with no psionicist class) a Grove Warden's AC by his druid level (OWN_WARDEN, DSCLOG2's KIT_AC);
+# Ar'Anda (an elf with no druid class) the Shadow-walker's hiding and casting in light armour
+# (OWN_LIGHT_CAST, DSCLOG2's CAST_ARMOUR); Terrannus (a human) a Crusader with the kit's full cost, so
+# no feature of his own (his kit byte has OWN_BIT all the same, the Loader's mark that it made him ready).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
 OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics",),
                 ELF: ("Elven Shadow-walker",)}
+OWN_WARDEN = ("Grove Warden's AC",)  # (a thri-kreen with no psionicist class: Thy'rokh)
+OWN_LIGHT_CAST = ("Elven Shadow-walker", "Casting in light armour")  # (an elf with no druid class: Ar'Anda)
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
 
@@ -189,6 +197,35 @@ def own_race(sheet: bytes) -> int:
     if len(sheet) <= at or sheet[at] == KIT_OPEN or not sheet[at] & OWN_BIT:
         return 0
     return sheet[game.SHEET_RACE] if sheet[game.SHEET_RACE] in OWN_FEATURES else 0
+
+
+def _classes(sheet: bytes):
+    from . import game
+    return sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+
+
+def own_features(sheet: bytes) -> Tuple[str, ...]:
+    """The features of its own of one of the games' own party (OWN_FEATURES, by race and, for a
+    thri-kreen or an elf, classes), or ()."""
+    race = own_race(sheet)
+    if race == THRI_KREEN and 12 not in _classes(sheet):  # (no psionicist class: Thy'rokh)
+        return OWN_WARDEN
+    if race == ELF and not any(5 <= c <= 8 for c in _classes(sheet)):  # (no druid class: Ar'Anda)
+        return OWN_LIGHT_CAST
+    return OWN_FEATURES.get(race, ())
+
+
+def own_warden_level(sheet: bytes) -> int:
+    """The druid level a Grove Warden's AC goes by for Thy'rokh (OWN_WARDEN), else 0."""
+    from . import game
+    if own_features(sheet) != OWN_WARDEN:
+        return 0
+    return max((sheet[game.SHEET_LEVELS + p] for p, c in enumerate(_classes(sheet)) if 5 <= c <= 8), default=0)
+
+
+def own_light_cast(sheet: bytes) -> bool:
+    """Whether the character casts in light armour though a multiclass preserver (Ar'Anda)."""
+    return own_features(sheet) == OWN_LIGHT_CAST
 
 
 def wild_fighter(kids, race: int) -> bool:

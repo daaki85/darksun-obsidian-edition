@@ -230,5 +230,84 @@ class KitTests(unittest.TestCase):
         self.assertTrue(all("Charm" in names[s] or "Domin" in names[s] for s in kits.CHARMS))
 
 
+    OWN = [((9, 7), (6, 6), 8), ((9, 7), (6, 9), 8), ((9, 7, 12), (6, 6, 6), 8), ((11, 12, 17), (6, 6, 7), 3),
+           ((11, 6, 17), (5, 5, 5), 3), ((2,), (7,), 1), ((2,), (14,), 1), ((10,), (7,), 5), ((9,), (5,), 1)]
+
+    def test_own_party(self):
+        """The sequel's own party's features (kits.own_features): OWN_DRUID's AL is kits.own_warden_level
+        (Thy'rokh's druid level, not K'ratchek's), OWN_LIGHT sets AW_HEAVY as kits.own_light_cast (Ar'Anda,
+        not Cilla); none without OWN_BIT, with KIT_OPEN or with the kits' rule off."""
+        heavy = self.sym["aw_heavy"]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, race in self.OWN:
+                for byte in (0x40, 0x00, 0xFF, 0x41):
+                    sheet = wotr_sheet(classes, levels, race, byte)
+                    own = rules and byte != 0xFF and byte & 0x40
+                    with self.subTest(classes=classes, race=race, byte=byte, rules=rules):
+                        got = self.run_routine("own_druid", sheet, eax=0x1234)["eax"] & 0xFF
+                        self.assertEqual(got, kits.own_warden_level(sheet) if own else 0)
+                        self.mu.mem_write(TSR * 16 + heavy, b"\0")
+                        self.run_routine("own_light", sheet)
+                        self.assertEqual(self.mu.mem_read(TSR * 16 + heavy, 1)[0], int(bool(own) and kits.own_light_cast(sheet)))
+        sheet = wotr_sheet((9, 7), (6, 9), 8, 0x40)
+        self.assertEqual((kits.own_warden_level(sheet), kits.own_features(sheet)), (9, kits.OWN_WARDEN))
+        self.assertEqual(kits.own_features(wotr_sheet((9, 7, 12), (6, 6, 6), 8, 0x40)), kits.OWN_FEATURES[kits.THRI_KREEN])
+        self.assertEqual(kits.own_features(wotr_sheet((11, 6, 17), (5, 5, 5), 3, 0x40)), ("Elven Shadow-walker",))
+
+    def frame(self, cls: int, spell: int) -> None:
+        """A frame for SLOT_BEHIND and BEHIND_LEAST at SS:600h: [BP+8] the class, [BP+0Ch] the spell level."""
+        self.mu.mem_write(SS * 16 + 0x608, struct.pack("<HHH", cls, 0, spell))
+
+    def test_slot_behind(self):
+        """SLOT_BEHIND (ADND_SLOTS's: the sheet + DI in ES:BX) makes CL one less for an Elementalist's cleric
+        class (kits.slot_level), SB_BEHIND set, and sets SB_FEWER for a Crusader's priest class; BEHIND_LEAST
+        then takes one slot off with SB_FEWER, and with SB_BEHIND puts the level back and makes no slots 1
+        where the class's own level reaches the spell level (kits.slots). Terrannus (OWN_BIT, a human) is a
+        plain Crusader: one fewer, not a level behind."""
+        cases = [((2,), 0x40, 1), ((2,), 0x43, 1), ((2,), 0x00, 1), ((3,), 0x01, 1), ((3,), 0x03, 1), ((1, 9), 0x04, 1),
+                 ((9, 1), 0x01, 1), ((9, 1), 0x0C, 1), ((11,), 0x40, 1), ((17, 9), 0x40, 1), ((2,), 0xFF, 1)]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte, race in cases:
+                for level in (1, 2, 7, 13, 14):
+                    for place in range(len(classes)):
+                        levels = (level,) + (3,) * (len(classes) - 1)
+                        sheet = wotr_sheet(classes, levels, race, byte)
+                        cls = sheet[0x1B + place]
+                        kid = kits.ELEMENTALIST if kits.ELEMENTALIST in kitpages.kit_ids(sheet) \
+                            and kitpages.kit_place_of(sheet, kits.ELEMENTALIST) == place else None
+                        behind = bool(rules) and 1 <= cls <= 4 and kid is not None
+                        fewer = bool(rules) and 1 <= cls <= 8 and kits.CRUSADER in kitpages.kit_ids(sheet)
+                        self.frame(cls, 1)
+                        got = self.run_routine("slot_behind", sheet, ecx=0x1100 | levels[place], ebp=0x600,
+                                               edi=place, ebx=0x500 + place)
+                        want = kits.slot_level(kits.ELEMENTALIST if behind else 0, levels[place])
+                        with self.subTest(classes=classes, byte=byte, level=level, place=place, rules=rules):
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_behind"], 1)[0], int(behind))
+                            self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["sb_fewer"], 1)[0], int(fewer))
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1100 | want)
+                            self.assertEqual(got["ebx"] & 0xFFFF, 0x500 + place)
+        for adnd in (True, False):  # (RULE_HI_TABLES, 8, on and off)
+            self.rules(game.RULE_KITS >> 16 | (8 if adnd else 0))
+            for level in range(1, 20):
+                for spell in range(1, 8):
+                    for given in (0, 1, 3):
+                        self.frame(2, spell)
+                        self.mu.mem_write(SS * 16 + 0x700, bytes((max(0, level - 1), 17)))
+                        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\1\0")
+                        self.mu.mem_write(TSR * 16 + self.sym["sb_level"], bytes((level,)))
+                        got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+                        with self.subTest(level=level, spell=spell, given=given, adnd=adnd):
+                            self.assertEqual(got, kits.slots(kits.ELEMENTALIST, kits.PRIEST, level, spell, given, adnd))
+                            self.assertEqual(self.mu.mem_read(SS * 16 + 0x700, 1)[0], level)
+        self.mu.mem_write(TSR * 16 + self.sym["sb_behind"], b"\0\1")  # (a Crusader's: one fewer, 0 kept)
+        for given in range(5):
+            self.frame(2, 1)
+            got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
+            self.assertEqual(got, kits.slots(kits.CRUSADER, kits.PRIEST, 7, 1, given))
+        self.assertEqual(kitpages.kit_ids(wotr_sheet((2,), (7,), 1, 0x43)), [kits.CRUSADER])  # (Terrannus's byte)
+
+
 if __name__ == "__main__":
     unittest.main()

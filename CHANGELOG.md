@@ -113,6 +113,12 @@ Releases, newest first (2.12.0 and older in the archive):
   Fogbolt. Each is an object of its own (31190-31195, copies of the sequel's spellbooks) put in by ravgear's
   own placing (`ravgear.BOOKS`), with the new spells' switch; a saved game's Notaku is stocked with them once
   by `shopstock.py`.
+**New: Wake of the Ravager's own party fitted to the rules**
+- As Shattered Lands' own party: Gerakis specializes in the long sword, gythka and trikal and fights
+  wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader at the
+  kit's full cost (one fewer priest slot at each spell level, which the sequel now applies, as it does
+  an Elementalist's slots a level behind); Ar'Anda is an Elven Shadow-walker who casts in light armour. Given once by the Loader.
+
 **New: Wake of the Ravager's kits and weapon specs past 13th level**
 - For the sequel's higher levels (the owner's choices, 2026-11-26): a gladiator picks a weapon spec
   more every 4 levels past 9th (5th-8th at 13th, 17th, 21st, 25th, in the sheet's spare three

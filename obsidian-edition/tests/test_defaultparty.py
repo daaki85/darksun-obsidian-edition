@@ -224,3 +224,63 @@ class SpellZeroTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SequelPartyTests(unittest.TestCase):
+    """Wake of the Ravager's own party (defaultparty.rav_ready) in the sequel's layout: their weapon specs,
+    Terrannus's Crusader, each one's OWN_BIT, once; written to their sheets in memory."""
+
+    def setUp(self):
+        from dsloader import ravlog
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+
+    def game(self, party):
+        from dsloader import kitpages, ravager
+        mem = bytearray(0x10000)
+        sheets = 0x2000
+
+        class Guest:
+            def read(self, at, n):
+                return bytes(mem[at:at + n])
+
+            def write(self, at, data):
+                mem[at:at + len(data)] = data
+
+        class Gd:
+            guest, ds = Guest(), 0
+            def creature_name(self, member):
+                return party[member][0] if member < len(party) else ""
+            def sheet(self, member):
+                return bytes(mem[sheets + member * game.SHEET_SIZE:sheets + (member + 1) * game.SHEET_SIZE])
+            def creature(self, member):
+                rec = bytearray(game.CREATURE_SIZE)
+                rec[game.CREATURE_SHEET_INDEX:game.CREATURE_SHEET_INDEX + 2] = member.to_bytes(2, "little")
+                return bytes(rec)
+        for m, (name, race, classes, byte) in enumerate(party):
+            at = sheets + m * game.SHEET_SIZE
+            mem[at + game.SHEET_RACE] = race
+            mem[at + game.SHEET_CLASSES:at + game.SHEET_CLASSES + 3] = bytes(classes)
+            mem[at + game.SHEET_LEVELS:at + game.SHEET_LEVELS + 3] = bytes(7 if c else 0 for c in classes)
+            mem[at + kitpages.KIT_BYTE] = byte
+        return Gd()
+
+    def test_ready(self):
+        from dsloader import kitpages, kits
+        party = [("Ar'Anda", 3, (11, 12, 17), 0), ("Terrannus", 1, (2, 0, 0), 0xFF), ("Thy'rokh", 8, (9, 7, 0), 0),
+                 ("Gerakis", 5, (10, 0, 0), 0)]
+        with mock.patch.object(game, "table_pointer", return_value=0x2000):
+            gd = self.game(party)
+            lines = dp.rav_ready(gd, game.RULE_KITS | game.RULE_SPECIALIZE)
+            self.assertEqual(len(lines), 7)
+            names = lambda m: [specialize.KINDS[k - 1] for k in game.spec_kinds(gd.sheet(m)) if k]
+            self.assertEqual([names(m) for m in range(4)], [[], ["long sword"], ["gythka"], ["long sword", "gythka", "trikal"]])
+            self.assertEqual(kitpages.kit_ids(gd.sheet(1)), [kits.CRUSADER])
+            self.assertEqual([kits.own_features(gd.sheet(m)) for m in range(4)],
+                             [kits.OWN_LIGHT_CAST, (), kits.OWN_WARDEN, ("Wild Fighting",)])
+            self.assertTrue(kits.own_light_cast(gd.sheet(0)))
+            self.assertEqual(kits.own_warden_level(gd.sheet(2)), 7)
+            self.assertEqual(dp.rav_ready(gd, game.RULE_KITS | game.RULE_SPECIALIZE), [])  # (once)
+            self.assertEqual(len(dp.rav_ranges(gd)), 8)
+            other = self.game([("Terrannus", 1, (11, 0, 0), 0), ("Gerakis", 1, (10, 0, 0), 0)])  # (not them)
+            self.assertEqual(dp.rav_ready(other, game.RULE_KITS | game.RULE_SPECIALIZE), [])
