@@ -29,8 +29,12 @@ The eight race galleries show each figure at 3× and at the original game size t
 
 The party sprites come directly from the Loader's picture builder. The gallery holds the attack and recovery poses for inspection. [Equipment gallery](README.md#equipment) · [Magical equipment](magical-equipment.md)
 
-## Two equipped hands
+## Weapon fit checks
 
 The Loader rendered 40,078 pose and loadout combinations with two equipped hands. The check covered six paired loadouts across the roster and five additional combinations on the half-giants, who can wield two-handed weapons in one hand. The audit found zero equipped pixels outside the saved picture, zero disconnected pieces and zero changes to the original bow pixels in the firing poses.
 
-To regenerate the images, run `python prototypes/weaponmotionreview.py GAME_DIR OUTPUT_DIR` from the repository root. To check two equipped hands against the saved picture bounds, run `python prototypes/studygeartest.py GAME_DIR OUTPUT_DIR --dual-bounds`.
+The main equipment check covered 20 loadouts on each stock figure and all 198 figure and class-outfit combinations registered in the Loader. All 122,960 images matched the same pose drawn on an oversized canvas and cropped to the game frame. Every added piece connected to the figure, and the original bow kept its pixels in all 12,720 firing-pose comparisons. The empty outfit, enchanted cloak and plate also matched the previously approved artwork in all 6,148 figure and pose combinations.
+
+In DOSBox, equipping and removing eleven loadouts on each party figure restored the original pictures in all 154 cycles. A halfling fired the last arrow in combat, kept the bow equipped and returned to the empty-quiver picture. [Read the live weapon and quiver checks](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#weapons-shields-and-quiver-contents)
+
+To regenerate the images, run `python prototypes/weaponmotionreview.py GAME_DIR OUTPUT_DIR` from the repository root. Run `python prototypes/studygeartest.py GAME_DIR OUTPUT_DIR --bounds-only` for the main equipment check. For the separate two-weapon check, run `python prototypes/studygeartest.py GAME_DIR OUTPUT_DIR --dual-bounds`.
