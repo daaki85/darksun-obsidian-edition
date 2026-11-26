@@ -54,6 +54,60 @@ class ArmorDyeTests(unittest.TestCase):
                     self.assertGreaterEqual(sum(base[y][x] == worn[y][x] for x, y in original_tones), 3)
                     self.assertGreater(sum(base[y+sy][x+sx] != worn[y+sy][x+sx] for x, y in cloth), 5)
 
+    def test_enchanted_robes_keep_class_fabric_and_limit_the_cycling_thread(self):
+        from dsloader import game
+
+        cases = ((308, "Cleric", {61, 62, 63, 155, 199}),
+                 (309, "Psionicist", {69, 70, 71, 72, 73}))
+        for obj, role, pigments in cases:
+            for combat, pose in ((False, 0), (False, 12), (True, 7)):
+                empty = self.pictures.build(obj, combat, {}, (), role=role)
+                base = art.decode_frame(empty, pose)[2]
+                cloth = {(x, y) for y, row in enumerate(base) for x, c in enumerate(row) if c in pigments}
+                self.assertTrue(cloth)
+                for dye, glow in ((0, spritegear.FIRE_GLOW), (spritegear.VEILED_DYE, spritegear.BLUE_GLOW)):
+                    kind = game.ROBE_TYPE | spritegear.MAGIC_ARMOUR | dye | (glow << spritegear.GLOW_SHIFT)
+                    with self.subTest(obj=obj, pose=pose, dye=dye):
+                        dressed = self.pictures.build(obj, combat, {}, (kind,), role=role)
+                        worn = art.decode_frame(dressed, pose)[2]
+                        retained = sum(worn[y][x] == base[y][x] for x, y in cloth)
+                        self.assertGreaterEqual(retained, 0.75 * len(cloth))
+                        glints = sum(c in spritegear.GLOWS[glow] and c != base[y][x]
+                                     for y, row in enumerate(worn) for x, c in enumerate(row))
+                        self.assertGreater(glints, 0)
+                        self.assertLessEqual(glints, 12)
+
+    def test_robe_lights_exposed_fabric_beneath_the_mul_fighters_cloak(self):
+        from dsloader import game
+
+        gear = {"cloak": (65, 5)}
+        empty = self.pictures.build(312, False, gear, (), role="Fighter")
+        worn = self.pictures.build(312, False, gear, (game.ROBE_TYPE | spritegear.MAGIC_ARMOUR,), role="Fighter")
+        side, top = sprites.room(False)
+        for pose in (0, 1, 2):
+            cloak, robed = (art.decode_frame(chunk, pose)[2] for chunk in (empty, worn))
+            cape = classoutfits.frames("Fighter", False, 2093)[pose].equipped_cape
+            with self.subTest(pose=pose):
+                self.assertTrue(cape)
+                self.assertTrue(all(cloak[y+top][x+side] == robed[y+top][x+side] for x, y, _ in cape))
+                self.assertTrue(any(c in spritegear.GLINT and c != cloak[y][x]
+                                    for y, row in enumerate(robed) for x, c in enumerate(row)))
+
+    def test_robe_stitch_survives_on_stock_muls_dark_cloth(self):
+        from dsloader import game
+
+        base = self.pictures.build(312, True, {}, ())
+        worn = self.pictures.build(312, True, {}, (game.ROBE_TYPE | spritegear.MAGIC_ARMOUR,))
+        # Only interior black fabric remains visible in the wind-up and two bow poses.
+        for pose in (0, 9, 10):
+            empty, dressed = (art.decode_frame(chunk, pose)[2] for chunk in (base, worn))
+            changes = [(c, dressed[y][x]) for y, row in enumerate(empty) for x, c in enumerate(row)
+                       if c != dressed[y][x]]
+            with self.subTest(pose=pose):
+                self.assertTrue(changes)
+                self.assertTrue(all(c == 254 for c, _ in changes))
+                self.assertTrue(any(mark in spritegear.GLINT for _, mark in changes))
+
     def test_robe_dyes_red_leather_and_plate_leaves_the_ranger_feather(self):
         from dsloader import game
 

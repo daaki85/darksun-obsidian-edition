@@ -118,3 +118,14 @@ For the native captures, walked the test character north, south and across the f
 Matched the earlier right-facing human man to party figure 300, walk picture 2450, idle pose 2. Captured the revised figure in the active DOSBox window on the same slave-pen tile with the same camera. The wearer was placed at the earlier screen position (208, 136) after entering the profile pose. The first two comparisons show the same cloth cloak alone and over a right-hand obsidian long sword and left-hand obsidian dagger.
 
 The near side of the body conceals the far dagger in this pose. The paired-weapon picture is identical to the sword-only picture. Previously, wearing both weapons under the cloak changed five pixels. The revised cloak exposes 12 weapon pixels, all 12 verified against the colors in the game window. The sword, dagger, paired weapons, cloak and all three cloak/weapon combinations matched the normal Loader build. Both the walking and combat pictures returned to their empty state on every removal. [Compare the earlier and revised native DOSBox close-ups](img/2026-11-26-human-profile-cloak-dosbox.png)
+
+## Ashen and Veiled robes on the half-giants
+
+Equipped each named robe separately on the male half-giant Cleric (308) and female half-giant Psionicist (309) in a disposable DOSBox session on the slave-pen floor. The Psionicist can wear the robes normally. The Cleric’s chest slot was staged to reproduce the art comparison despite the robes’ class restriction. Both figures stood on the same tile in front idle for the captures.
+
+| Front idle | Ashen Robe | Veiled Robe |
+| --- | --- | --- |
+| Male Cleric, 640 figure pixels | 19 changed, 12 cycled | 27 changed, 12 cycled |
+| Female Psionicist, 595 figure pixels | 13 changed, 8 cycled | 13 changed, 8 cycled |
+
+Matched each native capture to the active walking picture and sampled its glints over 16 screenshots. Every listed glint changed color on screen. The Cleric’s cream folds and the Psionicist’s teal wrap remained visible throughout. All four equipped states matched the Loader’s walking and combat pictures across all 29 poses. Removing each robe restored both class pictures byte for byte. The game session was discarded without saving. [Compare the six DOSBox captures on the same tile](img/2026-11-26-half-giant-robes-dosbox.png)

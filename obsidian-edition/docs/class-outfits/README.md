@@ -68,7 +68,7 @@ Each tile shows the female elf on the left and the male on the right, enlarged a
 
 [Watch magical leather, bone armor, cloaks, bracers, boots and belts on every party figure](magical-equipment.md). The six pieces are equipped individually beside the empty figure through all 29 poses. The half-elf Fighter now has two separate bone shoulder guards. [Her shoulder fitting before and after](half-elf-fighter-shoulders.png)
 
-Body armor dyes the exposed panels of the equipped figure’s class outfit. The dwarf Cleric/Fighter keeps the cream linen hem and belt, the elf Cleric/Psionicist keeps the teal sash, and the half-elf Preserver keeps the plum mantle. Compare each row from empty slots through leather, plate and both named robes. [Armor colors and fold detail on all figures](armor-dyes.md)
+Body armor dyes the exposed panels of the equipped figure’s class outfit. The dwarf Cleric/Fighter keeps the cream linen hem and belt, the elf Cleric/Psionicist keeps the teal sash, and the half-elf Preserver keeps the plum mantle. Compare each row from empty slots through leather, plate and both named robes. [Armor colors and fold detail on all figures](armor-dyes.md) · [Ashen and Veiled robes on class outfits](named-robes.md)
 
 Both half-elves now wear their single-class Fighter and Preserver outfits in the Loader. The galleries compare armor colors on the woman and weapon, shield, bow and quiver placement on the man through all 29 poses. [Half-elf equipment in motion](half-elves.md#equipped-fighter-and-preserver)
 

@@ -1,6 +1,6 @@
 # Worn equipment on the six party figures
 
-The sheets below record the earlier equipment fitting pass. Current armor colors follow the existing folds on each class garment. [Current armor comparison](armor-dyes.md)
+The sheets below record the earlier equipment fitting pass. Current armor colors follow the existing folds on each class garment. [Current armor comparison](armor-dyes.md) [Current Ashen and Veiled robe colors](named-robes.md)
 
 ![Chest plate, full plate, both robes, cloaks, boots, gloves, bracers, sword and shield, and bow on six figures beside the original artwork](worn-equipment.png)
 

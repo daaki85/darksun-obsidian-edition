@@ -1332,8 +1332,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 if 0 <= x < len(rows[y]) and rows[y][x] in sp.MODELS[model][2]}
         parts = parts._replace(facing=facing, head=sp.Head(crown, left, right, brow),
                                shoulders=(shoulder, sa, sb), waist=waist, hair=hair)
+    robe = None
     if costume:
         base_outfit = [r[:] for r in out] if armour or "cloak" in weapons else None
+    if costume or any(t & MAGIC_ARMOUR and (t & (MAGIC_ARMOUR - 1)) == game.ROBE_TYPE for t in armour):
         # Chest first so a separately equipped pauldron takes precedence at the shoulder.
         armour = sorted(armour, key=lambda t: ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] != ARMOUR_CHEST)
     armor_parts, armor_canvas, armor_own = parts, out, own
@@ -1384,6 +1386,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             kind = item_type & (MAGIC_ARMOUR - 1)
             if kind in ARMOUR and kind != game.BRACERS_TYPE:
                 piece, shades, pattern = ARMOUR[kind]
+                enchanted_robe = kind == game.ROBE_TYPE and bool(item_type & MAGIC_ARMOUR)
                 if costume:
                     bit = {ARMOUR_CHEST: classoutfits.CHEST, ARMOUR_ARMS: classoutfits.ARMS,
                            ARMOUR_LEGS: classoutfits.LEGS}[piece]
@@ -1414,13 +1417,14 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         cells = [(x, y) for x, y in cells if 6 <= y < 13]
                     cells = [(x, y) for x, y in cells if (x, y) not in trim
                              and base_outfit[y + pad][x + pad] not in (None, 254)]
-                    dye_garment(out, cells, shades, pad, base_outfit)
+                    if not enchanted_robe:
+                        dye_garment(out, cells, shades, pad, base_outfit)
                 elif armor_parts.facing is not None:
                     covered = bow_keep if piece == ARMOUR_ARMS else bow_keep | wrist_keep
                     if piece == ARMOUR_LEGS:
                         covered = covered | boot_keep
                     cells = draw_armour(armor_canvas, model, armor_parts, kind, pad, armor_own,
-                                        bool(item_type & VEILED_DYE), stock_source, covered)
+                                        bool(item_type & VEILED_DYE), stock_source, covered, paint=not enchanted_robe)
                 else:
                     cells = []
                 if piece == ARMOUR_LEGS and registered and (costume or not cells):
@@ -1455,8 +1459,16 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                         dye_garment(armor_canvas, cuff, shades, pad, base_outfit if costume else stock_source)
                         cells.extend(cuff)
                 if item_type & MAGIC_ARMOUR:
-                    shine_armour(armor_canvas, cells, piece, armor_parts, pad,
-                                 GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)], cuffs)
+                    colours = GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)]
+                    if enchanted_robe:
+                        binding = VEILED_BINDING if item_type & VEILED_DYE else ASHEN_BINDING
+                        points = [(x + pad, (len(rows) - 1 - y if armor_canvas is not out else y) + pad)
+                                  for x, y in cells]
+                        for x, y in points:
+                            out[y][x] = _RobeCloth(out[y][x])
+                        robe = points, binding, colours
+                    else:
+                        shine_armour(armor_canvas, cells, piece, armor_parts, pad, colours, cuffs)
     if model != sp.KREEN:
         for item in armour:
             if item & (MAGIC_ARMOUR - 1) == game.BRACERS_TYPE:
@@ -1648,9 +1660,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if costume:
             for x, y in costume.regions[classoutfits.BOW]:
                 out[y + pad][x + pad] = outfit_bow[x, y] if outfit_bow else rows[y][x]
-        return out  # (the game draws the bow in the hands)
+        return finish_robe(out, robe)  # (the game draws the bow in the hands)
     if "left" not in weapons and "right" not in weapons:
-        return out
+        return finish_robe(out, robe)
     if fitted_hands:
         hands = spritegrips.positioned(rows, model, frame, combat, own, hands)
     if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
@@ -1809,7 +1821,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                 # The fingers wrap around the handle. Retain the painted grip
                 # between the parts of the shaft visible beyond the fist.
                 out[Y][X] = body[Y][X]
-    return out
+    return finish_robe(out, robe)
 
 
 # Body armour: not drawn on, but the character's own clothing recoloured toward the armour's
@@ -1926,6 +1938,83 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     return shade
 
 
+# Thread in the two magical robes, from deep ash to warm linen, or plum to pale lilac.
+ASHEN_BINDING = (208, 207, 205, 194, 206, 60, 61, 199, 62)
+VEILED_BINDING = (208, 174, 58, 74, 48, 49, 50, 51, 52)
+
+
+class _RobeCloth(int):
+    """An unchanged palette index that still belongs to the robe beneath later equipment."""
+    __slots__ = ()
+
+
+def finish_robe(rows, robe):
+    """Work enchanted thread into the cloth still showing after the other equipment is drawn."""
+    if not robe:
+        return rows
+    points, binding, colours = robe
+    # Equal palette indices can belong to different items. A crossing blade or
+    # cloak replaces the marked pixel even when it uses exactly the same brown.
+    cloth = {(x, y): int(rows[y][x]) for x, y in points if isinstance(rows[y][x], _RobeCloth)}
+    if not cloth:
+        return rows
+    for (x, y), pigment in cloth.items():
+        rows[y][x] = pigment
+    tones = {p: _LIGHT.get(c, 0.5) for p, c in cloth.items()}
+
+    # A broader hem can catch more light, but even a whole half-giant back
+    # needs only a handful of lit folds. Leave the field of class cloth intact.
+    budget = min(12, max(1, (len(tones) + 7) // 15))
+    midtone = (min(tones.values()) + max(tones.values())) / 2
+    folds = {}
+    for (x, y), tone in tones.items():
+        neighbours = [tones[p] for p in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)) if p in tones]
+        relief = tone - min(neighbours, default=tone)
+        edge = len(neighbours) < 4
+        if tone >= midtone and (edge or relief > 0):
+            folds[x, y] = 2 * tone + relief + (0.08 if edge else 0)
+
+    def priority(point):
+        x, y = point
+        return folds[point], tones[point], -y, -x
+
+    stitched = set()
+    count = 0
+    thread_limit = max(1, len(tones) // 4)
+    for x, y in sorted(folds, key=priority, reverse=True):
+        if any(max(abs(x - u), abs(y - v)) < 3 for u, v in stitched):
+            continue
+        # Trace a short run along the best supported crease. Stop at breaks
+        # in the material or contrast instead of drawing across a dark valley.
+        runs = []
+        for dx, dy in ((0, 1), (1, 1), (-1, 1), (1, 0)):
+            run = []
+            for sign in (-1, 1):
+                for step in (1, 2):
+                    point = x + sign * step * dx, y + sign * step * dy
+                    if point not in folds or abs(tones[point] - tones[x, y]) > 0.18:
+                        break
+                    run.append(point)
+            runs.append(run)
+        run = max(runs, key=lambda r: (len(r), sum(folds[p] for p in r)))
+        run.sort(key=lambda p: (max(abs(p[0] - x), abs(p[1] - y)), -folds[p]))
+        run = run[:thread_limit - len(stitched) - 1]
+        phase = 2 * count
+        for u, v in run:
+            rows[v][u] = garment_tone(cloth[u, v], binding)
+        if len(run) >= 3 and count + 1 < budget:
+            u, v = run[0]
+            rows[v][u] = colours[(phase + 1) % len(colours)]
+            count += 1
+        rows[y][x] = colours[phase % len(colours)]
+        stitched.update(run)
+        stitched.add((x, y))
+        count += 1
+        if count == budget or len(stitched) == thread_limit:
+            break
+    return rows
+
+
 def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=()):
     """Place cycling highlights on separated folds of *each* visible armour piece."""
     if not cells:
@@ -1990,9 +2079,10 @@ def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=()):
 
 def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int,
                 own: Optional[Own] = None, veiled: bool = False, source: Optional[Rows] = None,
-                covered=()) -> List[sp.Point]:
+                covered=(), paint=True) -> List[sp.Point]:
     """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
-    (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
+    (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak).
+    With paint=False, return the same owned cells for the separate embroidered robe finish."""
     piece, shades, _ = ARMOUR[item_type]
     if veiled and item_type == game.ROBE_TYPE:
         shades = VEILED_CLOTH
@@ -2024,7 +2114,8 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
             part = ARMOUR_ARMS if by_hand else (ARMOUR_CHEST if y <= parts.waist else ARMOUR_LEGS)
             if part != piece:
                 continue
-            shade = min(top, int(rank[p] * top + 0.5))
-            rows[y + pad][x + pad] = shades[shade]
+            if paint:
+                shade = min(top, int(rank[p] * top + 0.5))
+                rows[y + pad][x + pad] = shades[shade]
             cells.append((x, y))
     return cells
