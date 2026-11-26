@@ -5987,7 +5987,7 @@ RP_CURES_END equ $
 ;   a sheet, Okay, not hit this round, and its effect bits: Can't Cast 68, Feebleminded 37 and the rest,
 ;   SL's 89B4Dh's test inside it): a multiclass preserver can't while it wears armour, a helm too
 ;   (ARMOUR_WORN; a shield doesn't count), nor a human who has been a preserver and a fighter, gladiator
-;   or ranger (CLASS_AND_WARRIOR): SL's PROBE_NO_CAST.
+;   or ranger (CLASS_AND_WARRIOR): SL's PROBE_NO_CAST. Ar'Anda (OWN_LIGHT) only in armour that isn't light.
 RULE_RESTRICT equ 8192
 CU_TYPE_SIZE equ 0x0F
 CU_FLAGS    equ 0x00
@@ -6267,7 +6267,9 @@ cast_armour:
         cmp byte [es:bx + SH_CLASSES + 2], PRESERVER_CLASS
         jne .done
 .pres:  mov dx, di
+        call own_light                  ; (Ar'Anda: only armour that isn't light keeps her from casting)
         call armour_worn
+        mov byte [cs:aw_heavy], 0
         jnc .done
         xor ax, ax
         inc word [cs:restrict_count]
@@ -6275,6 +6277,23 @@ cast_armour:
         pop dx
         pop bx
 .out:   iret
+; OWN_LIGHT: AW_HEAVY set for Ar'Anda, sheet ES:BX (an elf of the own party with no druid class:
+; kits.own_light_cast), so ARMOUR_WORN counts only armour that isn't light. All kept.
+OWN_ELF      equ 3
+own_light:
+        push ax
+        call own_race_b
+        cmp al, OWN_ELF
+        jne .out
+        mov al, 5
+.druid: call own_has
+        je .out
+        inc al
+        cmp al, 8
+        jbe .druid
+        mov byte [cs:aw_heavy], 1
+.out:   pop ax
+        ret
 ; PRESERVER_WARRIOR: carry set if the character (sheet ES:BX) has the preserver class and a warrior
 ; class among its classes (SL's CLASS_AND_WARRIOR with AL the preserver). All kept.
 preserver_warrior:
@@ -7808,6 +7827,9 @@ adnd_slots:
         push si
         mov si, [bp + 0x0A]
         mov cx, [ss:si]                 ; (CL the level, CH WIS)
+        mov [cs:sb_level], cl
+        call slot_behind                ; (an Elementalist's a level behind, a Crusader's 1 fewer)
+        mov [ss:si], cl
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .game
         movzx bx, byte [bp + 8]
@@ -7858,7 +7880,8 @@ adnd_slots:
         add ax, bx
         jmp .out
 .game:  call .call
-.out:   call veiled_slot
+.out:   call behind_least
+        call veiled_slot
         pop si
         pop cx
         pop bx
@@ -7883,6 +7906,83 @@ adnd_slots:
         pop bx
         ret
 slot_count dw 0                         ; (AD&D's slots given, for a look in play)
+; SLOT_BEHIND: (ADND_SLOTS's, its frame; at the site ES:BX the sheet + DI, DI the class's place) CL one less
+; (0 kept) when class [BP+8] is a cleric's (1-4) with its slots a level behind (kits.slot_level): an
+; Elementalist's kit class, awake; SB_BEHIND 1 then, else 0. SB_FEWER 1 when class [BP+8] is a priest's
+; (1-8) and the sheet a Crusader's, awake (kits.slots: its priest slots 1 fewer), else 0. The kits' rule
+; on. Others kept.
+slot_behind:
+        mov word [cs:sb_behind], 0      ; (and SB_FEWER)
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp byte [bp + 8], 1
+        jb .ret
+        cmp byte [bp + 8], 8
+        ja .ret
+        push ax
+        push bx
+        push si
+        sub bx, di
+        call kit_is_b
+        db KIT_CRUSADER
+        jne .elem
+        mov byte [cs:sb_fewer], 1
+.elem:  cmp byte [bp + 8], 4
+        ja .out
+        call kit_is_b
+        db KIT_ELEMENTALIST
+        jne .out
+        mov si, [cs:kit_where]
+        mov al, [es:bx + si + SH_CLASSES]
+        cmp al, [bp + 8]
+        jne .out
+        mov byte [cs:sb_behind], 1
+        or cl, cl
+        jz .out
+        dec cl
+        inc word [cs:sb_count]
+.out:   pop si
+        pop bx
+        pop ax
+.ret:   ret
+; BEHIND_LEAST: (ADND_SLOTS's, SI the level's pointer) with SB_FEWER, AX (the slots) 1 fewer (0 kept);
+; with SB_BEHIND, the level put back (SB_LEVEL), and AX 1 where none and the class's own level reaches
+; spell level [BP+0Ch]: 2 x it - 1, 14 for the 7th (a cleric's; a 6th-level one only with AD&D's
+; tables, RULE_HI_TABLES). Others kept.
+behind_least:
+        cmp byte [cs:sb_fewer], 0
+        je .behind
+        or ax, ax
+        jz .behind
+        dec ax
+        inc word [cs:sb_count]
+.behind:
+        cmp byte [cs:sb_behind], 0
+        je .ret
+        push cx
+        mov cl, [cs:sb_level]
+        mov [ss:si], cl
+        or ax, ax
+        jnz .out
+        mov ch, [bp + 0x0C]
+        cmp ch, 6
+        jb .need
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .out
+.need:  add ch, ch
+        dec ch
+        cmp ch, 13
+        jne .cmp
+        inc ch
+.cmp:   cmp cl, ch
+        jb .out
+        mov ax, 1
+.out:   pop cx
+.ret:   ret
+sb_level  db 0
+sb_behind db 0                          ; (a word with SB_FEWER, cleared together)
+sb_fewer  db 0
+sb_count  dw 0                          ; (slots counted a level behind or 1 fewer, for a look in play)
 slot_top   db SLOT_LEVELS               ; (the class levels whose slots grow: a druid's DRUID_SLOT_LEVELS)
 DRUID_FIRST equ 5                       ; (the druids' classes 5-8: the owner's table, 2026-11-25, the same
 DRUID_SLOT_LEVELS equ 15                ;   as the cleric's to 15th, then 15th's, 6 6 6 6 4 2 1)
@@ -9742,6 +9842,55 @@ kit_find:
         ret
 kit_where dw 0
 
+; OWN_RACE_B: AL the race of sheet ES:BX if the Loader marked it one of the sequel's own party (KIT_BYTE's
+; OWN_BIT, kits.own_race: Gerakis, Thy'rokh, Terrannus, Ar'Anda), the kits' rule on; else 0, ZF set. OWN_HAS:
+; ZF set if sheet ES:BX has class AL. Others kept.
+OWN_BIT      equ 0x40
+own_race_b:
+        xor al, al
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .out
+        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        je .out
+        test byte [es:bx + KIT_BYTE], OWN_BIT
+        jz .out
+        mov al, [es:bx + SHEET_RACE]
+.out:   or al, al
+        ret
+own_has:
+        cmp [es:bx + SH_CLASSES], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 1], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 2], al
+.ret:   ret
+; OWN_DRUID: AL Thy'rokh's druid level (a thri-kreen of the own party with no psionicist class: a Grove
+; Warden's AC, kits.own_warden_level), else 0 (ZF set). Sheet ES:BX; others kept.
+OWN_KREEN    equ 8
+OWN_PSI      equ 12
+own_druid:
+        push si
+        call own_race_b
+        cmp al, OWN_KREEN
+        jne .none
+        mov al, OWN_PSI
+        call own_has
+        je .none
+        xor si, si
+.each:  mov al, [es:bx + si + SH_CLASSES]
+        sub al, 5                       ; (the druids' classes 5-8)
+        cmp al, 3
+        jbe .found
+        inc si
+        cmp si, 3
+        jb .each
+.none:  xor al, al
+        jmp .out
+.found: mov al, [es:bx + si + SH_LEVELS]
+.out:   pop si
+        or al, al
+        ret
+
 ; KIT_AT: AL the kit of the class at place DI (0-2) of sheet ES:BX, ZF clear; 0 and ZF set for none.
 ; Others kept.
 kit_at:
@@ -9970,8 +10119,8 @@ kit_is_b:
 ; KIT_AC: AX (the AC the AC function has for combatant [BP+6]) with the creature's kits' (kits.ac): a
 ; Ravager's base AC by its level (RAVAGER_AC) where better than its sheet's; a Wanderer's 1 worse; a
 ; Sentinel's 2 better with a shield in a hand, an Arena Champion's 1; a Grove Warden's 1 better for every
-; 3 druid levels; a Battle Dancer's dance (KIT_DANCE); a Wild Fury fighting wild (KIT_WILD's bit N) 3
-; worse, no worse than 10. Others kept.
+; 3 druid levels, Thy'rokh's too (OWN_DRUID); a Battle Dancer's dance (KIT_DANCE); a Wild Fury fighting
+; wild (KIT_WILD's bit N) 3 worse, no worse than 10. Others kept.
 WILD_TO_HIT  equ 3
 WILD_DAMAGE  equ 3
 WILD_HALVES  equ 2
@@ -10038,8 +10187,13 @@ kit_ac:
 .warden:
         call kit_is_b
         db KIT_GROVE_WARDEN
-        jne .sentinel
+        je .warden_level
+        call own_druid                  ; (Thy'rokh: a Grove Warden's AC by his druid level)
+        jz .sentinel
+        jmp .warden_by
+.warden_level:
         call kit_level
+.warden_by:
         movzx ax, al
         mov dl, 3
         div dl

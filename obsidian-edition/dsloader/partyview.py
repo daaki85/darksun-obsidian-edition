@@ -159,7 +159,7 @@ def halves_text(halves: int) -> str:
 def kit_label(kit: str) -> str:
     """"Features" when the line is only features of the game's own party (kits.OWN_FEATURES), else
     "Kit"."""
-    own = {name for names in kits.OWN_FEATURES.values() for name in names}
+    own = {name for names in (*kits.OWN_FEATURES.values(), kits.OWN_WARDEN, kits.OWN_LIGHT_CAST) for name in names}
     return "Features" if all(part in own for part in kit.split("; ")) else "Kit"
 
 

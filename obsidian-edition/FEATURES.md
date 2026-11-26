@@ -719,6 +719,20 @@ spells. Cilla is drawn as the elf she is: [elves and half-elves](#elves-and-half
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-games-own-party).
 
+**Wake of the Ravager's own party** (a new game started with no party made) gets the same treatment,
+the owner's choices of 2026-11-26. The Loader gives it out once, when it finds them with no weapon
+specs and no kit (a game saved before, too), and says so in the dice log:
+
+| Character | Weapon specialization | With kits |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | the long sword, the gythka and the trikal | **Wild Fighting**, as in Shattered Lands |
+| **Thy'rokh**, thri-kreen fighter and fire druid | the gythka (mastery at once: he is a 6th-level fighter) | a **Grove Warden's AC**: 1 better for every 3 druid levels |
+| **Terrannus**, human earth cleric | the long sword, his kit's chosen weapon spec | a **Crusader** (a warrior's THAC0, expertise with the long sword, a warrior's extra attacks), at the kit's full cost: one fewer spell slot at each spell level |
+| **Ar'Anda**, elf preserver, psionicist and thief | | the **Elven Shadow-walker's** hiding (never halved in daylight), and she **casts in light armour** (leather, or of no material), though a multiclass preserver |
+
+Without these, the sequel's level up would ask each of them for weapon specs, as it does in
+Shattered Lands for a game begun before the rule.
+
 ## New content
 
 *Spoilers, mild: the people and scenes are told in full, with spoilers, in [People](PEOPLE.md), and

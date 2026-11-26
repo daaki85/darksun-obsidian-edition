@@ -20,6 +20,7 @@ forbids or allows work there, and a new character takes a kit there as here; wha
 spells and powers, starting gear and hit dice doesn't yet. Which kits work there, and which only in
 part: [In Wake of the Ravager](#in-wake-of-the-ravager).
 and Justifier's casting level and the Elementalist's second sphere's spells work there; what else they do to spells and powers, gear and hit dice
+and Justifier's casting level, the Elementalist's second sphere's spells and its slots a level behind, and the Crusader's one fewer slot, work there; what else they do to spells and powers, gear and hit dice
 doesn't yet, and a kit can't be chosen in the sequel. How the kits go on past the levels Shattered
 Lands reaches is in [Past 13th level](#past-13th-level).
 

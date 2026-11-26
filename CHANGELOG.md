@@ -101,6 +101,12 @@ Releases, newest first (2.12.0 and older in the archive):
   refused; a Battle Mage's weapon of its weapon spec and leather, a Battle Dancer's long sword and bow, an
   Elementalist's second sphere's weapons allowed (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, at the sequel's
   "may this character equip it", site 19). KITS.md says which kits work in the sequel now, and which in part.
+**New: Wake of the Ravager's own party fitted to the rules**
+- As Shattered Lands' own party: Gerakis specializes in the long sword, gythka and trikal and fights
+  wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader at the
+  kit's full cost (one fewer priest slot at each spell level, which the sequel now applies, as it does
+  an Elementalist's slots a level behind); Ar'Anda is an Elven Shadow-walker who casts in light armour. Given once by the Loader.
+
 **New: Wake of the Ravager's kits and weapon specs past 13th level**
 - For the sequel's higher levels (the owner's choices, 2026-11-26): a gladiator picks a weapon spec
   more every 4 levels past 9th (5th-8th at 13th, 17th, 21st, 25th, in the sheet's spare three
