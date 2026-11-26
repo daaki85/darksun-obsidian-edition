@@ -1604,6 +1604,33 @@ load the dying creature's new pictures through the game's picture loader from
 inside the floor drawing, the most likely cause of a crash seen in the arena
 as a creature died (not reproduced).
 
+**In Wake of the Ravager** (DSCLOG2's FIGURE SHADOWS, `dos/dsclog2.asm`): the same shadows, drawn in the floor
+pass the walls' shadows already hook (sites 40 and 41 at 2B81Ch and 2B97Fh, FLOOR_POST), after the walls' and
+before the squares and rings, through the walls' DARK (WS_DARKEN, WS_FLUSH). DSCLOG2 picks the casters itself, no
+table from the Loader: each draw list entry (DS:67B7h far, DS:264Eh of them, 8 bytes: SL's) whose thing is a
+creature in the things table (load + 3F49h:0C33h, 3 bytes) with a status (+14h of its 31h-byte record, DS:19C9h
+far) neither dying 4, dead 7 nor gone 8, so a creature's death takes its shadow off at the next drawing. The map
+thing is 25h bytes at DS:67BBh (its picture's slot +10h, the frame +12h, SL's +0Fh and +11h; the placed entry's y
+less a word at +8, SL's byte); the picture cache's slot is SL's (+6 the number, +0Ah the picture, +0Eh bit 2 in
+memory) at load + 42A2h:0CA8h. The sequel's figures are runs as SL's (OBJEX.GFF: every picture of 8 frames or
+more; its planar "PLNR" and "PLAN" pictures cast none). **The sequel lets a picture go from memory as soon as it
+wants the room** (the slot's +0Eh bit 2 cleared, its memory given to another; in Tyr's street the leader's
+picture was out at nearly every floor drawing), so SL's shadow cache is here from the start and filled where the
+picture is sure to be in memory: as the thing drawer (2A28Fh) calls the picture routine for it (`call far
+1D40:3BEC` at 2A347h, its first three bytes site 162, FIG_KEEP, which then makes the call itself, the segment
+word left for the load's relocation), each living creature's frame is kept: 64 slots of 152 bytes in the far
+block (`FAR_SC`, 9,728 bytes: in the HMA in a GOG start), each the picture's key (the slot's number, +0, and the
+low word of its place in the store, +6), the frame, its width and bottom row, and up to 48 casting runs (how far
+up, x, pixels). A figure whose picture is out casts its frame's kept shadow, or another frame's of the picture.
+The two redraws reach further right and down:
+the redraw of what moved at its first push (2868Ch, "push word [bp+8] / push di", its rectangle at [BP-0Ch] to
+[BP-12h]: site 160, FIG_WIDE_ALL) and the rectangle's (21E0:128C, 2828Ch: site 161, FIG_WIDE). Header (its own,
+well past the other ports' fields): `fig_shadows` +1960 (1 on), `fig_passes` +1962, `fig_drawn` +1964,
+`fig_wides` +1966, `fig_kept` +1968, `fig_from_kept` +1970 (`playtest/ravfig.py` reads them). A copy without the
+three sites (`RAV_SKIP=fig_wide_all,fig_wide,fig_keep`) draws none: the control. Played:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-26-ravager-figure-shadows.md).
+Tests: `tests/test_ravshadows.py`.
+
 ## Dust
 
 ([In the features page](FEATURES.md#dust).)

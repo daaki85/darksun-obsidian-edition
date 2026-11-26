@@ -1057,6 +1057,20 @@ wall_shadows at +1872, the passes drawn at +1874, DARK's builds at +1876 (DSCLOG
 header; +148 to +152 were theirs before the port's fields took them): find it in guest memory to check it ran. `RAV_LOADER=1 sh ravstart.sh FOLDER`
 loads it; rebuild with `nasm -f bin -o dos/DSCLOG2.EXE dos/dsclog2.asm`.
 
+**The figures' shadows at run time** (2026-11-26, logs/2026-11-26-ravager-figure-shadows.md): DSCLOG2's FIGURE
+SHADOWS draws in the walls' floor pass. **The sequel lets a picture go from memory whenever it wants room**: a picture
+cache slot (load + 42A2h:0CA8h + 16 x slot) has +0 the number, +2 the length, +6 its place in the store (XMS), +0Ah
+its memory (far) and +0Eh bit 2 "in memory", which the freeing loop (2AB90h on, each through 2AD2Ah) clears; the thing
+drawer (2A28Fh, SL's 25E0Ch: SI the slot, DI the thing) loads it again through 2A1F7h and draws it through `call far
+1D40:3BEC` (2A347h). So a floor drawing mostly finds a figure's picture out (Tyr's street: the leader's at nearly
+every one): read a picture only at the drawer's call (FIG_KEEP, site 162). The draw list's entries are SL's (8 bytes;
+flag 10h not drawn, 20h placed by the entry: x less the map thing's byte +7, y less its **word** +8 and the height;
+else the map thing's +3, +5); the map thing's picture slot +10h, frame +12h. Out of a fight only the leader is on the
+map. `ravfig.py [0|1]` reads (or switches) the header's +1960 to +1971; a same-view toggle through VIEW_REDRAW lands a
+frame late and the street's walkers move, so make the control a RAV_SKIP run (`fig_wide_all,fig_wide,fig_keep`) and
+the same walk (`ravgo.py x 1180` from `ravager-after-ambush`). A throwaway copy of the sequel needs no 200 MB
+`game.gog` of its own: link it to the plain install's (DOSBox only reads it).
+
 **The Loader's window on the sequel**: `apt-get install -y python3-tk`, Xvfb `:56` 1440x900 (`:55` is
 smaller than the window), `python3.12 -m dsloader view --pid $(cat $WORK/rav.pid)` from `obsidian-edition/`;
 stop `ravdice.py` first and the window (by pid) before running it again (the game's lock). Its party tabs

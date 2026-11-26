@@ -59,6 +59,12 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager**
+- The figures cast shadows in the sequel as in Shattered Lands: every living creature's outline laid
+  on the floor toward the lower right, under the walls and figures (DSCLOG2's FIGURE SHADOWS, sites
+  160-162; each frame's shadow kept as the game draws it, as the sequel lets pictures go from memory;
+  the site table padded to 179 for the open ports' sites).
+
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
   spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
