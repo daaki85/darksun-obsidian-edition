@@ -198,11 +198,13 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-ravager-dust.md) | Dust in Wake of the Ravager: Tyr's dirt too dark for SL's table of lighter colours, so the sequel's own (least 0.2, a step of 0.2); puffs on Shadow Square's dirt against RAV_NO_DUST=1; the figures' shadows in the Draxans' fight (64 kept frames enough); the squares' LIGHT read from the right place; DSCLOG2's size and the memory left |
 | [2026-11-26](2026-11-26-ravager-shine.md) | The magic items' shine in Wake of the Ravager: twelve still magic items found by a survey and made to shine (the Loader's OBJEX copy), against RAV_SKIP=item_shine; the shop's screen, where the sequel's colour cycles stood still, turned by DSCLOG2's SHOP_SHINE (site 163); the memory left |
 | [2026-11-26](2026-11-26-ravager-see-through.md) | See-through figures in Wake of the Ravager: SL's blend tables moved to the far block so the upper memory block is 5.5 KB (94,512 bytes left); Ar'Anda hidden in the Draxans' fight, the leader see-through against the same view solid (a STEALTH test edit); the leader after a load (the same; the number keys change it) and Notaku's prices (CHA 18's 5% off, no bug) |
+| [2026-11-26](2026-11-26-ravager-hma.md) | DSCLOG2's far block and the HMA: FAR_INIT against the XMS spec (90h, 91h, global A20), the HMA handed back when A20 fails (fixed), `tests/test_far_init.py`; GOG's DOSBox far_seg FFFFh with A20 on; the HMA taken by a test program: the far block in upper memory, shadows and the see-through tables there; DOSBox-X from its notes |
 
 ## files/
 
 | File | What it is |
 |---|---|
+| [2026-11-26-hmagrab.asm](files/2026-11-26-hmagrab.asm) | [The HMA taken](2026-11-26-ravager-hma.md): a test program that asks XMS for the HMA, turns A20 on and writes a marker at FFFF:0010, run before DSCLOG2 in a throwaway config |
 | [2026-11-08-drawing-savings-runs.sh](files/2026-11-08-drawing-savings-runs.sh) | The before-and-after `framerate.py` runs of [the faster drawing](2026-11-08-drawing-savings.md) |
 | [2026-11-08-steady-pace-runs.sh](files/2026-11-08-steady-pace-runs.sh) | The steady pace's `framerate.py` runs at each cycles setting ([HISTORY](../HISTORY.md#frame-rate-measurements)) |
 | [2026-11-08-steady-pace-schedule.txt](files/2026-11-08-steady-pace-schedule.txt) | Those runs' output, one line a setting |
