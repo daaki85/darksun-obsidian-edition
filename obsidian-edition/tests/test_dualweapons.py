@@ -53,6 +53,17 @@ class DualWeaponTests(unittest.TestCase):
             else:
                 self.assertGreater(left[0], right[0])
 
+    def test_right_loop_is_the_same_native_hip_alone_or_with_a_second_item(self):
+        # The giant's front step used to select a hand or the outer edge of
+        # the jerkin. Follow the same anatomical point through three loadouts.
+        for second in ({}, {"left": (17, 3)}, {"left": (4, 5)}):
+            with self.subTest(second=second):
+                with patch.object(sg, "draw_weapon", wraps=sg.draw_weapon) as held:
+                    self.pics.build(308, False, {"right": (63, 4), **second}, (), role="Fighter")
+                swords = [call for call in held.call_args_list if call.args[4] == sg.SWORD]
+                self.assertEqual(len(swords), 15)
+                self.assertEqual(swords[4].args[2], (sprites.PAD + 9, sprites.PAD + 21))
+
     def test_automatic_second_cahulak_and_explicit_pair_match_for_walks_and_strikes(self):
         for obj in (300, 309, 313):
             for combat in (False, True):

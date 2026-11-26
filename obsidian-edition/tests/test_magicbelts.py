@@ -81,6 +81,13 @@ class MagicBeltsTests(unittest.TestCase):
         self.assertEqual({y for x, y in self.difference(300, "Warrior", 28, gear)}, {7})
         self.assertTrue(self.difference(307, "Fighter", 28, gear))
 
+    def test_elf_woman_girdle_follows_her_front_hips_above_the_jerkin_hem(self):
+        gear = self.equipped(worldgear.BACK_GIRDLE_ITEM)
+        for pose, row in ((0, 15), (3, 15), (4, 14), (5, 14), (6, 14)):
+            changes = self.difference(305, "Fighter", pose, gear)
+            self.assertEqual({y for x, y in changes}, {row})
+            self.assertGreaterEqual(len(changes), 4)
+
     def test_all_fitted_study_models_can_equip_the_named_girdle(self):
         gear = self.equipped(worldgear.URNST_GIRDLE_ITEM)
         for obj in (308, 309, 310, 311, 312):

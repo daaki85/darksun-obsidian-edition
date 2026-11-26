@@ -99,6 +99,17 @@ class WeaponTests(unittest.TestCase):
         self.assertTrue(new)
         self.assertTrue(set(new.values()) <= set(sg.MATERIAL_COLOURS[METAL]))
 
+    def test_stowed_blade_shines_on_fittings_and_retains_the_leather_between(self):
+        body = [[None] * 16 for _ in range(8)]
+        plain, enchanted = [r[:] for r in body], [r[:] for r in body]
+        for canvas, glint in ((plain, False), (enchanted, True)):
+            sg.draw_weapon(canvas, body, (3, 3), 0, sg.SWORD, sg.MATERIAL_COLOURS[METAL],
+                           False, glint=glint, shine=sg.GLOWS[sg.GREEN_GLOW], sheath=True)
+        self.assertEqual([plain[3][5], plain[3][6]], [206, 205])
+        self.assertEqual(plain[3][5:11], enchanted[3][5:11])
+        self.assertIn(enchanted[3][4], sg.GLOWS[sg.GREEN_GLOW])
+        self.assertIn(enchanted[3][11], sg.GLOWS[sg.GREEN_GLOW])
+
     def test_sheathed_at_the_hip(self):
         """Walking, a sword is worn at the belt on its hand's side: the hilt above the waist, the
         rest hanging down, and nothing out at the hand."""

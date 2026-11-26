@@ -2,6 +2,8 @@
 
 Each column shows the same party figure on the arena floor. Follow the sword from the walking pose at the hip into the striking hand, the shield as it turns edge-on, and the staff as it swings clear of the feet. The bow and quiver ride on the back through the walk. In poses 24–26, the original attack artwork supplies the drawn bow. That bow appears even in the empty-slot column when the gallery displays those poses.
 
+[Compare hip weapons through the walk, with one weapon, a pair and an outer cloak](hip-walk.md)
+
 ![Male and female human Warriors with empty slots, sword and shield, staff, and bow and quiver alongside the retail Warrior](weapon-motion-human.gif)
 
 | Figure | 29-pose animation |
@@ -23,7 +25,7 @@ The human Warrior holds the same side strike in the first two rows. Compare the 
 
 In the bottom row, look just above the Warrior’s left shoulder. The bow alone has an empty case. A pair of arrow shafts and feathered tips project from the loaded case, and the spare metal short sword shows its hilt above the same opening. The 8× detail beside each game-size figure isolates those six pixels. All three columns use the same bow. [Watch the quiver through all 29 poses](weapon-motion-quiver.gif)
 
-Greenbright +2 cycles green along its short blade. Deepbiter +1 has fire-colored highlights on its stone head. Each is shown alongside a mundane weapon of the same shape and material, including during the stationary hold. [Watch the enchanted weapons](magic-gear-weapon-comparison.gif)
+While Greenbright +2 hangs at the belt, its green glint catches the exposed fittings of the leather sheath. The drawn short blade carries the same enchantment through the strike. Deepbiter +1 has fire-colored highlights on its stone head. Each is shown alongside a mundane weapon of the same shape and material, including during the stationary hold. [Watch the enchanted weapons](magic-gear-weapon-comparison.gif)
 
 The eight race galleries show each figure at 3× and at the original game size through three idle directions, twelve walking steps, nine melee strikes, three bow views, hit and fall. Their last column shows the retail Warrior (1252) or retail thri-kreen (291) for comparison. These NPC combat sheets end after the three bow views.
 

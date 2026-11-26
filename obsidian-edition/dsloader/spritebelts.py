@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from . import classoutfits as co
+from . import classoutfits as co, spritehips
 
 
 @lru_cache(maxsize=1024)
@@ -12,6 +12,11 @@ def waist(layer, combat, frame):
     fit = co.frames(role, combat, layer)[frame]
     if fit.belt is not None:
         return fit.belt
+    if layer == 2059 and not combat and frame in (0, 3):
+        # Her long front jerkin extends over the upper thighs in these poses.
+        # Wrap the registered hips, keeping the width of the cloth at that row.
+        _, y = spritehips.anchor(layer, frame, "right")
+        return tuple((x, y) for x, row in fit.regions[co.CHEST] if row == y)
     legs = fit.regions[co.LEGS]
     if not legs:
         return ()
