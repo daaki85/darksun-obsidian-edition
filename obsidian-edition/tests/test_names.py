@@ -107,21 +107,14 @@ class RoomTests(unittest.TestCase):
 
 
 class HelperTests(unittest.TestCase):
-    def test_dsclog_has_the_same_names(self):
-        """DSCLOG copies its own list of the names into the game's table: the same as NAMES."""
+    def test_dsclog_counts_the_same_names(self):
+        """DSCLOG's NAMES_EXTRA (the header's +198, the size its PROBE_NAMES_FILL checks the chunk
+        for) is names.EXTRA, the names the Loader's copy of GPLDATA has (itemtables.py)."""
         image = load_image()
         hdr = image.find(HDR_SIG)
-        off, count = struct.unpack_from("<HH", image, hdr + names.TSR_NAMES_OFF)
-        off += struct.unpack_from("<H", image, hdr + 1836)[0] * 16  # (in the tail: TAIL_PARAS on)
+        count, = struct.unpack_from("<H", image, hdr + names.TSR_NAMES_COUNT)
         self.assertEqual(count, names.EXTRA)
-        listed = []
-        for _ in range(count):  # (each NUL-terminated, KEPT - 1 letters at most)
-            end = image.index(b"\0", off)
-            listed.append(image[off:end])
-            off = end + 1
-        want = [names.NAMES.get(names.OWN + i, b"") for i in range(count)]
-        self.assertEqual(listed, want)
-        self.assertTrue(all(len(name) < names.KEPT for name in listed))
+        self.assertTrue(all(len(name) < names.KEPT for name in names.NAMES.values()))
 
 
 if __name__ == "__main__":

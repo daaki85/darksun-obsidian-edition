@@ -247,15 +247,39 @@ def creature(rec: bytes, sh: bytes) -> bytes:
 def sheet(rec: bytes, loader: bool = False) -> bytes:
     """The sequel's sheet for the save's sheet REC: CHARTRAN's 42h bytes, or (LOADER) the Loader's 48h
     with the weapon specs and the starting age's roll packed at LOADER_SPECS (game.packed_specs' first
-    three; 0 for a sheet with neither)."""
+    three; 0 for a sheet with neither) and the XP no more than SL's cap's share (sl_xp_share)."""
     out = bytearray(LOADER_SHEET if loader else SHEET)
     for w, s, n in SHEET_RUNS:
         out[w:w + n] = rec[s:s + n]
     if loader:
+        # (XP past Shattered Lands' cap, banked in an older save, stays behind: the owner's, 2026-11-25)
+        xp, = struct.unpack_from("<I", out, 0)
+        out[0:4] = struct.pack("<I", min(xp, sl_xp_share(rec)))
         kinds, roll = game.specs_of(rec[SL_SPECS:SL_SPECS + game.SPEC_COUNT])
         if any(kinds) or roll is not None:
             out[LOADER_SPECS:LOADER_SPECS + 3] = game.packed_specs(kinds, 0, roll)[:3]
     return bytes(out)
+
+
+SL_SHEET_RACE, SL_SHEET_CLASSES, SL_SHEET_LEVELS, HUMAN = 0x18, 0x21, 0x24, 1  # (SL's sheet, as DSCLOG's LEVEL_ROOM reads it)
+
+
+def sl_xp_share(rec: bytes) -> int:
+    """The XP SL's sheet REC may hold under Shattered Lands' cap (game.XP_CAP, DSCLOG's LEVEL_ROOM's share): the
+    whole for one class, an equal share for several (not a human), and for a human the cap less what its old
+    classes' levels needed (places 1 and 2, AD&D's table: tables.XP)."""
+    from . import ravager, tables
+    classes = rec[SL_SHEET_CLASSES:SL_SHEET_CLASSES + 3]
+    if rec[SL_SHEET_RACE] != HUMAN:
+        n = sum(1 for c in classes if c)
+        return game.XP_CAP // n if n else game.XP_CAP
+    share = game.XP_CAP
+    for cls, level in zip(classes[1:], rec[SL_SHEET_LEVELS + 1:SL_SHEET_LEVELS + 3]):
+        row = ravager.CLASS_ROWS[cls] if 0 < cls < len(ravager.CLASS_ROWS) else 0
+        need = tables.xp_needed(tables.ROWS[row - 1], level - 1) if row and level else None
+        if need is not None:
+            share = max(share - need, 0)
+    return share
 
 
 def sl_object(rec: bytes) -> int:
@@ -346,6 +370,7 @@ class Moved(NamedTuple):
     place: int = 0  # (its roster CHAR)
     age: str = ""  # (what the months between the games did, for the report)
     named: Optional[Dict[int, int]] = None  # (each SL object's name entry, its item record's +12h)
+    xp_held: Optional[Tuple[int, int]] = None  # (the XP in the save and what came across, if held at SL's cap)
 
 
 def _chunk(save: Chunks, number: int) -> bytes:
@@ -512,7 +537,9 @@ def roster(save: Chunks, sequel: Sequel, place_of: Optional[Mapping[int, int]] =
         out[("CACT", cid)] = rec[SL_ACTIONS:SL_ACTIONS + 2]
         out[("SPST", cid)] = spells_known(spells[m * SL_SPELLS:(m + 1) * SL_SPELLS])
         out[("PSST", cid)], out[("PSIN", cid)] = powers_known(powers[m * SL_POWERS:(m + 1) * SL_POWERS])
-        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age, named))
+        was, now = struct.unpack_from("<I", sh, 0)[0], struct.unpack_from("<I", wsh, 0)[0]
+        moved.append(Moved(m, rec[SL_NAME:SL_CREATURE].split(b"\0")[0].decode("latin1"), log, cid, age, named,
+                           (was, now) if now < was else None))
     return out, moved
 
 
@@ -702,7 +729,9 @@ def player_report(moved: List[Moved], months: Optional[int], failed: List[Tuple[
     why = dict(failed)
     for m in moved:
         lines.append(f"{m.name}: place {m.place - ROSTER_PLACES[0] + 1} of the roster (CREATE CHARACTERS, ADD)"
-                     + (f"; {m.age}" if m.age else ""))
+                     + (f"; {m.age}" if m.age else "")
+                     + (f"; XP {m.xp_held[1]:,} (Shattered Lands' cap: {m.xp_held[0]:,} in the save)"
+                        if m.xp_held else ""))
         kinds: Dict[str, List[str]] = {}
         for old, new in m.items:
             name = item_name((m.named or {}).get(old, 0)) or f"object {old}"

@@ -35,7 +35,7 @@ BASE = bytes((30, 25, 20, 15, 10, 10, 85, 0))  # (the game's bases, any: the han
 
 def adnd(skill: int, level: int, race: int, dex: int) -> int:
     """What THIEF_SKILL makes of it: game.py's AD&D table and Dark Sun's DEX (game.thief_skill_parts)."""
-    return game.AD_D_THIEF[skill][min(level, 13) - 1] + race + game.dex_adjustment(dex, skill)
+    return game.AD_D_THIEF[skill][min(level, len(game.AD_D_THIEF[0])) - 1] + race + game.dex_adjustment(dex, skill)
 
 
 @unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
@@ -88,10 +88,10 @@ class ThiefTableTests(unittest.TestCase):
         self.assertEqual((sites["thief_table"], sites["backstab_dice"]), (52, 53))
 
     def test_adnd_table(self):
-        """With the rule, every skill at levels 1-15 (past 13 as 13), DEX 3-25 (9 and 22 the ends), a race's
+        """With the rule, every skill at levels 1-20 (past 17 as 17), DEX 3-25 (9 and 22 the ends), a race's
         adjustment either way: AD&D's average + race + Dark Sun's DEX, CF set (past the game's DEX formula)."""
         for skill in range(8):
-            for level in range(1, 16):
+            for level in range(1, 21):
                 for dex in (3, 9, 10, 12, 15, 16, 17, 18, 19, 20, 21, 22, 25):
                     for race in (-10, 0, 5):
                         with self.subTest(skill=skill, level=level, dex=dex, race=race):

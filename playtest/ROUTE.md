@@ -238,3 +238,5 @@ map position. Nothing is built for it yet.
   office** (the street's east side, world y ~1340-1420) has clay jugs by its counter and on the shelves at
   the back; **Shadow Square** (the city's west) has barrels, jars and sacks at the stalls south-west of
   Notaku's (world ~150-250, 1000-1100). None looked at; Notaku sells no water.
+- Wake of the Ravager, the Draxans' ambush street in Tyr (2026-11-25, logs/2026-11-25-ravager-fight-keys.md):
+  no water, jug or waterskin among Alt's marks there (a scroll, sandals, the bodies).
