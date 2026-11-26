@@ -1331,8 +1331,9 @@ def mod_type(sl_type: int) -> int:
 
 
 # The sequel's item types' weights (the type's +2: SL's word +4, tenths of a pound; one byte, so 255 at most). The
-# sequel keeps every routine of SL's that reads them (the load against STR's maximum press, "Cannot use two heavy
-# weapons" over 30, a backstab's weapon 40 or less, the item box's "HEAVY", a creature's equipping), but 71 of its
+# sequel keeps every routine of SL's that reads them ("Cannot use two heavy weapons" over 30, a backstab's weapon 40
+# or less, the item box's "HEAVY", a creature's equipping; its load check adds up a field items haven't, so never
+# refuses, as SL's doesn't), but 71 of its
 # 102 types hold 0 and some of SSI's others are oddly light (a two-handed sword 20). Each type: (SSI's byte, the
 # Loader's), from Shattered Lands' type of the same kind and material (ITEMS.BIN's pairs), the Loader's backported
 # sequel weapons (npcitems.TYPES 148-153), else the nearest item or the AD&D PHB; furniture, doors, bodies and

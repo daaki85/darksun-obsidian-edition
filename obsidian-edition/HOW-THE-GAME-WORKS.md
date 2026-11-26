@@ -222,19 +222,21 @@ weapons](FEATURES.md#two-weapons)).
 
 From the game's code (both games: Shattered Lands and Wake of the Ravager have the same routines). An
 item type has a weight, in the game's units, which look like tenths of a pound (a dagger 10, a long
-sword 30 or 40, a mace 100). It counts in four places:
+sword 30 or 40, a mace 100). It counts in three places:
 
-- **Carrying.** An item put on a character (from the ground, a chest or another character) is
-  refused with "Too heavy a load to carry" when what the character carries would come to more than
-  the **maximum press** of AD&D's STR table. The game's table, by STR: 3, 10 lb; 4-5, 25; 6-7, 55;
-  8-9, 90; 10-11, 115; 12-13, 140; 14-15, 170; 16, 195; 17, 220; 18, 330; 19, 640; 20, 700; and on
-  up to 25. Nothing already carried is dropped.
 - **Two heavy weapons** (over 30 each) can't be held in the two hands at once: "Cannot use two heavy
   weapons". The item box says **HEAVY** under a one-handed weapon over 30.
 - **A backstab** needs a weapon of 40 or less (below).
 - The game equips a monster or a townsman with no two heavy weapons.
 
-**Nothing slows a loaded character.** The manual says STR "determines how much a character can carry
+**No load is too heavy.** Each time an item is put on a character the game compares what the
+character carries with the **maximum press** of AD&D's STR table (by STR: 3, 10 lb; 4-5, 25; 6-7,
+55; 8-9, 90; 10-11, 115; 12-13, 140; 14-15, 170; 16, 195; 17, 220; 18, 330; 19, 640; 20, 700; and
+on up to 25), with "Too heavy a load to carry" ready, but the total it adds up isn't the items'
+weight and comes to nothing: Cilla at STR 1 (3 lb) took Gerakis's long sword in Shattered Lands, and
+in Wake of the Ravager a STR 1 character took 45 lb (both test edits, 2026-11-26).
+
+**Nothing slows a loaded character** either. The manual says STR "determines how much a character can carry
 without becoming encumbered and slowed in combat", and Shattered Lands' program has a routine that
 cuts the Move between the STR table's weight allowance and its maximum press, but nothing calls it:
 a fight's movement is the character's Move alone. Wake of the Ravager left the routine out.

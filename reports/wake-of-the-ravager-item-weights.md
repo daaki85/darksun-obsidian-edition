@@ -13,9 +13,9 @@ stubs). Addresses are `DSUN.EXE` file offsets, as the docs give them.
   types keep SL's weight field (one byte at +2 where SL has a word at +4), but 71 of its 102 types
   hold 0 there. SSI filled in the other 31, some oddly (a two-handed sword weighs 20, a crystal sword 10).
 - **What weight does in both games** (the same routines, at other addresses in each):
-  1. **"Too heavy a load to carry"**: an item put on a member is refused when the member's
-     carried total would pass the STR table's *maximum press* (AD&D's table in tenths of a pound:
-     STR 10-11 115 lb, 16 195 lb, 18 330 lb).
+  1. **"Too heavy a load to carry"**: the check is there (an item put on a member against the STR
+     table's *maximum press*, AD&D's table in tenths of a pound), but **it never refuses, in either
+     game**: the total it adds up is not the items' weight and comes to 0 (played, section 8).
   2. **"Cannot use two heavy weapons"**: two weapons over 30 (3 lb) can't be held together.
   3. **Backstab**: only with a weapon of 40 or less.
   4. **"HEAVY"** in the item box, for a one-handed weapon over 30.
@@ -37,8 +37,8 @@ stubs). Addresses are `DSUN.EXE` file offsets, as the docs give them.
   recommended); no slowing (recommended), or a new slowing rule for both games. SL's leather chest
   armour weighs 75 lb, but SL's armour weights don't follow the PHB closely enough to call it a slip,
   so it is left alone (section 1).
-- **Built** (2026-11-26) with B, no slowing, always on (`RAV_SKIP=weights` for a control run): the
-  last section.
+- **Built** (2026-11-26) with B, no slowing, always on (`RAV_SKIP=weights` for a control run):
+  section 8. One new choice came from the play: a real carry limit (choice 5).
 
 ## 1. Where each game keeps an item type's weight
 
@@ -54,7 +54,7 @@ not fit (the end of section 1).
 
 The mod's own types in the sequel (102-134, SL's 115-147, `npcitems.TYPES` through
 `ravager.wotr_type`) already carry SL's weights. So do the transfer's added items
-(`ravitems.make` copies the type record). The load and heavy-weapon checks already run for those.
+(`ravitems.make` copies the type record). The heavy-weapon check already runs for those.
 
 ### The weight table
 
@@ -186,7 +186,7 @@ another heavy weapon; over 40 can't backstab; over 10 can't be pickpocketed):
 - **B only**: the Twohand Sword (101) and the Crystal sword (35) at 150 and the Lotulis (61) at 100
   can't backstab. Under A, at 20 and 10, they can, and the Crystal sword can even be lifted from a
   pocket: that is so today already, since it is one of SSI's non-zero weights. The thrown
-  Dagger (99) goes from 1 to 10 (still pocket-sized). The rest of B changes only the load.
+  Dagger (99) goes from 1 to 10 (still pocket-sized). The rest of B changes no check (the load check never refuses: section 2).
 
 **SL's leather chest armour** (type 6) weighs 750 (75 lb), against 36 and 18 for the leather arm and
 leg pieces. Before calling it a slip, here are SL's armour weights (GPLDATA's IT1R, the Loader's copy
@@ -215,7 +215,7 @@ GAME-BUGS row), and noted here only. In the sequel the byte can't hold 750, so i
 
 | What | Shattered Lands | Wake of the Ravager | The sequel's data now |
 |---|---|---|---|
-| **Load check**, putting an item on a member (the inventory's routine, SL 6EF52h / WotR 7761Bh): the carried total vs the STR table's maximum press; refused with "Too heavy a load to carry" | 6F248h: the total of GPL field 6 over the member and what it holds (resident D9A4h), less sheet +0Eh, vs CAE7Fh(member, 1); the message DS:19B0h | 77893h: the total of field 59h (resident FF21h), with nothing taken off, vs 20186h(member, 1); the message DS:1BF3h at 778DBh | runs, fed 0 for most things |
+| **Load check**, putting an item on a member (the inventory's routine, SL 6EF52h / WotR 7761Bh): the carried total vs the STR table's maximum press; refused with "Too heavy a load to carry" | 6F248h: the total of GPL field 6 over the member and what it holds (resident D9A4h), less sheet +0Eh, vs CAE7Fh(member, 1); the message DS:19B0h | 77893h: the total of field 59h (resident FF21h), with nothing taken off, vs 20186h(member, 1); the message DS:1BF3h at 778DBh | runs, but sums a field items don't have: never refuses (section 2) |
 | **The STR table**: weight allowance and maximum press, tenths of a pound, by STR 0-25 (AD&D's, 18 taken as 185/330) | DS:0740h, read by CAE7Fh (overlay 10, file 5E9BFh) | DS:07B0h, the same values, read by 20186h (file 1D286h) | the same |
 | **Slowed by the load**: Move x (press − excess) / (press − allowance) | 5E8FBh (overlay 10): **never called** (no far call, stub call or near call to it) | **gone** | (none) |
 | **A round's movement** | 5754Ah: creature +1Bh x 10, no load in it | the same | (none) |
@@ -230,18 +230,19 @@ No screen shows a weight or a total in either game (no such string in either pro
 don't read weight. **The sequel's code is all there, fed zeros.** What wasn't kept is the slowing
 routine, and SL never called its copy.
 
-One thing is left for the probe: which GPL field the sequel's total sums. Field 59h's table is
-built at run time, so it can't be read from the file. Everything around it is SL's, compared with
-the same maximum press, so it is almost certainly the item's type weight. SL subtracts sheet +0Eh
-from its total and the sequel doesn't. Step 1 of the build settles both.
+**The probe settled the load check: it never refuses, in either game.** The sequel's total sums
+GPL field 59h, and field 59h's table (built at run time) has an entry only for the item-type class
+(class 4, offset 2: the type's own weight byte). An item is class 1, whose offset for field 59h is
+-1, so each item adds 0 and the total is 0 whatever the types weigh. SL's version sums field 6 and
+also came to nothing. Both were played with a STR 1 member (a test edit, never saved): Cilla took
+Gerakis's long sword in SL, and in the sequel a STR 1 member took 45 lb with the weights in. So
+"Too heavy a load to carry" is never seen, and the weights don't change carrying.
 
 ## 3. What weights would change in play
 
-- **Carrying**: a member is refused an item past the STR's maximum press: 10 lb at STR 3, 55 lb
-  at STR 6-7, 90 lb at 8-9, 115 lb at 10-11, 140 lb at 12-13, 170 lb at 14-15, 195 lb at 16,
-  220 lb at 17, 330 lb at 18. A full suit of the heaviest armour proposed (brigandine: 17.5 +
-  8.6 + 8.6 lb) with a polearm and a shield is about 55 lb. Only weak members with full packs will meet it,
-  as in SL. Nothing already carried is dropped: the check is on taking or moving an item only.
+- **Carrying**: nothing changes. The load check never refuses (section 2), in SL or the sequel, so
+  no member is refused an item for its weight. A real carry limit would be a new rule for both
+  games (choice 5).
 - **No slowing** in fights or on the map: neither game has it.
 - **Two weapons**: a member can no longer put two heavy weapons (over 30) in the hands, as in SL.
   Weapons already in the hands stay, and the refusal comes when one is taken out and put back.
@@ -278,10 +279,9 @@ paragraph get rewritten, and `test_ravpickpocket` gets a case for each path.
 ## 6. The build
 
 1. **Probe first** (in the game, test edits only, never saved, `ravload.sh ravager-after-ambush`):
-   write 255 into the +2 byte of the types a member carries and move an item onto that member:
-   "TOO HEAVY A LOAD TO CARRY" at their STR's maximum press shows the total reads the type byte.
-   Note whether the member's own body counts (SL's sheet +0Eh). Then two type-97 long swords:
-   "CANNOT USE TWO HEAVY WEAPONS". About an hour.
+   a member's STR set low and an item moved onto them, to see "TOO HEAVY A LOAD TO CARRY" at the
+   maximum press; then two type-97 long swords: "CANNOT USE TWO HEAVY WEAPONS". (Done: the first
+   never refuses, the second does; section 8.)
 2. **The data**: `ravager.RAV_WEIGHTS` (type: weight, the table's A or B column) written by
    `objects_fixed` into `ALL 4`'s first 102 types at +2, and into each object's `RDFF` type copy
    (level 3, kind 4) of those types. Each original byte is checked against SSI's first (as the
@@ -289,7 +289,8 @@ paragraph get rewritten, and `test_ravpickpocket` gets a case for each path.
 3. **Pick pockets**: `rav_pocket_sized`'s comment, and the test cases.
 4. **Tests**: the table applied, SSI's bytes guarded, the copies in step, every weight 255 or less,
    `test_ravpickpocket`.
-5. **Play check**: a heavy load refused at a weak member's limit and taken by a strong one; two
+5. **Play check**: a heavy load refused at a weak member's limit and taken by a strong one (moot:
+   the check never refuses); two
    metal long swords refused; a thief's backstab with a polearm refused and with a dagger made; a
    long sword not lifted from a pocket and a ring lifted; the pregenerated party's own hands
    checked. Test log, and RESEARCH.md's Wake of the Ravager section updated.
@@ -312,4 +313,32 @@ and the play check. No DSCLOG2 code, no saves touched.
 3. **SL's 75 lb leather chest armour**: left as it is (the comparison in section 1: SL's armour
    weights aren't the PHB's throughout, so this one isn't plainly a slip).
 4. **Always on, or a switch**: **recommended: always on**, a data fix that makes the sequel's
-   checks work as SL's do (with `RAV_SKIP=weights` for testing).
+   checks work as SL's do (with `RAV_SKIP=weights` for testing). Built so.
+5. **A real carry limit** (new, from the play): neither game ever refused a load, as the check
+   sums a field items don't have. Making it work would be a rule port for both games (a DSCLOG
+   site in SL's 6F248h and a DSCLOG2 one in the sequel's 77893h, summing the items' type weights
+   against the maximum press), with an Options switch. **Recommended: not now**: both games were
+   played and balanced without it, and the weights already do their other jobs.
+
+## 8. Built (2026-11-26)
+
+Option B, no slowing rule, always on, `RAV_SKIP=weights` for a control run. Code:
+`ravager.RAV_WEIGHTS`, `weighted`, `weighted_table`, `weighted_objects` (the 102 types of `ALL 4`
+at +2 and every object's `RDFF` type copy, each byte checked against SSI's first), called from
+`objects_fixed`; `ravlog.rav_pocket_sized`'s comment; tests in `test_ravager`, `test_ravitems`,
+`test_ravpickpocket`; `playtest/ravweights.py` reads the weights and a party's loads from the
+running game. The play (a throwaway copy, `ravager-after-ambush`, test edits never saved; the
+test log `playtest/logs/2026-11-26-ravager-item-weights.md`):
+
+| Check | Seen |
+|---|---|
+| The weights in memory | `ravweights.py --types`: all 102 as `RAV_WEIGHTS` |
+| Two heavy weapons | a second long sword (97, 40) into Ar'Anda's left hand: "CANNOT USE TWO HEAVY WEAPONS"; with `RAV_SKIP=weights`, "CANNOT USE THIS ITEM" (a later check, as the swords weigh 0 then) |
+| The party's own pairs | Gerakis's Dragonsbane (30) and Longsword (40), and Ar'Anda's dagger and long sword, went back into their hands |
+| "HEAVY" in the item box | shown for the long sword |
+| Pick pockets | with `RAV_PICK_ROLL=1` on the Caravan Master: 20 coins lifted, not his Obsidian Longsword (30) |
+| Heavy load | never refused, in either game (section 2), so nothing to see |
+| Backstab with a heavy weapon | **not played**: the Tyr thieves fight with Ar'Anda's weapon set to a polearm (type 8, 70) in memory went badly and she couldn't hide. Verified from the program instead: 5C978h reads the type's byte at +2, which holds 70 in memory |
+
+SL's leather chest armour is left as it is (section 1), so there is no SL change and no GAME-BUGS
+entry.
