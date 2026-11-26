@@ -71,9 +71,8 @@ Releases, newest first (2.12.0 and older in the archive):
   row, and the Tyr inn's room that never rested ([which, fix by fix](obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager)).
 
 **Docs**
-- The game's bugs page says which fixes Wake of the Ravager has, lists the sequel's own bugs mended,
-  and the bugs known and not yet fixed (Shattered Lands' saves that stop improving, and a psionicist's
-  saves in both games); the patch notes' bug fixes have the sequel too.
+- The game's bugs page says which fixes Wake of the Ravager has (the saves of #210 too) and lists
+  the sequel's own bugs mended; the patch notes' bug fixes have the sequel too.
 
 **Fixed: the game**
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
