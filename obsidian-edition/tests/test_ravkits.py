@@ -492,6 +492,84 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(self.mu.mem_read(self.POWERS * 16 + 0xB0, 4), bytes((0, 0, 0, 0 if bm else 1)))
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x4321)
 
+    # ---- a kit's own hit die and PSP at creation (sites 200, 201; KIT_REROLL's choice) ----
+    MADE = 0x200  # (the sheet being made, SS:200h, far at DS:1429h)
+    CR = [(5, 2, kits.BATTLE_MAGE), (5, 3, kits.ARCANIST), (5, 1, None), (6, 2, kits.MIND_WARRIOR),
+          (6, 1, None), (6, 3, None), (5, 0, None), (5, 0xFF, None), (5, 0x82, kits.BATTLE_MAGE), (3, 2, None)]
+
+    def made(self, classes, byte, seen) -> None:
+        """The creation screen's sheet: CLASSES (1-8, the screen's numbers), its kit byte BYTE; KP_CLASS's
+        classes seen SEEN (None: as the sheet's; -1: none yet). Party member 2 (USE_WHO) is being made,
+        its party sheet with the same kit byte."""
+        sheet = bytearray(ravager.SHEET_SIZE)
+        sheet[0x1B:0x1B + len(classes)] = bytes(classes)
+        sheet[0x3D] = byte
+        self.mu.mem_write(SS * 16 + self.MADE, bytes(sheet))
+        self.mu.mem_write(GDS * 16 + 0x1429, struct.pack("<HH", self.MADE, SS))
+        cls3 = struct.unpack("<I", bytes(sheet[0x1B:0x1E]) + b"\0")[0]
+        self.mu.mem_write(TSR * 16 + self.sym["wp_classes_seen"],
+                          struct.pack("<I", cls3 if seen is None else seen & 0xFFFFFFFF))
+        self.party([bytes(ravager.SHEET_SIZE)] * 2 + [bytes(sheet)])
+        self.mu.mem_write((GDS + 0x3E71 - 0x47E0) * 16 + 0xB44, struct.pack("<H", 2))
+
+    def test_cr_die(self):
+        """CR_DIE's AL (the class's die for the creation hit points' most, 360h:11Dh by the screen's class
+        BX) is kits.hit_die for the kit chosen: a Battle Mage's 6, an Arcanist's 3, a preserver's 4; none
+        for a kit left over from other classes (taken away, from the party's sheet too), nor with the rule
+        off; before the screen's first look (an EDIT's) the kit as it is."""
+        dice = {3: 10, 5: 4, 6: 6}
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for cls, byte, kid in self.CR:
+                for seen in (None, -1, 0x0101):
+                    self.made((cls,), byte, seen)
+                    self.mu.mem_write(self.POWERS * 16 + 0x11D + cls, bytes((dice[cls],)))
+                    got = self.run_int("cr_die", es=self.POWERS, ebx=cls, eax=0xAB00, ecx=0x1234)
+                    want_kid = kid if rules and seen != 0x0101 else None
+                    stale = rules and seen == 0x0101
+                    with self.subTest(cls=cls, byte=byte, seen=seen, rules=rules):
+                        self.assertEqual(got["eax"] & 0xFFFF, 0xAB00 | kits.hit_die(want_kid, dice[cls]))
+                        self.assertEqual((got["ecx"] & 0xFFFF, got["ebx"] & 0xFFFF), (0x1234, cls))
+                        kept = 0 if stale else byte
+                        self.assertEqual(self.mu.mem_read(SS * 16 + self.MADE + 0x3D, 1)[0], kept)
+                        party = SS * 16 + self.SHEETS + 2 * ravager.SHEET_SIZE + 0x3D
+                        self.assertEqual(self.mu.mem_read(party, 1)[0], kept)
+
+    def test_cr_psp(self):
+        """CR_PSP (the creation PSP routine's end): the WIS bonus AX added to the sheet being made's +0Ch,
+        then a Mind Warrior's a fifth fewer (kits.max_psp); then the routine's own "pop bp / retf", the
+        INT's frame dropped and its flags (IF) put back; ES:BX the sheet as the game's."""
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for cls, byte, kid in self.CR:
+                for psp, bonus in ((0, 0), (25, 0), (61, 3), (104, 0), (4, 1)):
+                    self.made((cls,), byte, None)
+                    self.mu.mem_write(SS * 16 + self.MADE + 0x0C, struct.pack("<H", psp))
+                    self.mu.mem_write(SS * 16 + 0x7F8, struct.pack("<HHHHHH", 0x4444, 0x5555, 0x202, 0x1234, 0xFFF0, TSR))
+                    for reg, value in dict(cs=TSR, ds=GDS, ss=SS, esp=0x7F8, ebp=0x600, eflags=0x2, eax=bonus).items():
+                        self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+                    self.mu.emu_start(TSR * 16 + self.sym["cr_psp"], TSR * 16 + 0xFFF0)
+                    got = struct.unpack("<H", self.mu.mem_read(SS * 16 + self.MADE + 0x0C, 2))[0]
+                    want = kits.max_psp(kid if rules and kid == kits.MIND_WARRIOR else None, psp + bonus)
+                    with self.subTest(cls=cls, byte=byte, psp=psp, bonus=bonus, rules=rules):
+                        self.assertEqual(got, want)
+                        self.assertEqual([self.mu.reg_read(getattr(r, "UC_X86_REG_" + n)) & 0xFFFF
+                                          for n in ("BP", "SP", "AX", "BX", "ES")],
+                                         [0x1234, 0x804, bonus, self.MADE, SS])
+                        self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x200)
+        self.assertEqual(kits.max_psp(kits.MIND_WARRIOR, 129), 104)
+
+    def test_kit_rolls_due(self):
+        """KIT_ROLLS_DUE: KIT_REROLL due for the sheet being made's Battle Mage, Arcanist or Mind Warrior
+        (KIT_ROW calls it with the kit before and after the click), not for another kit or none."""
+        for cls, byte, kid in self.CR:
+            self.made((cls,), byte, None)
+            self.mu.mem_write(TSR * 16 + self.sym["kit_reroll_due"], b"\0")
+            self.run_routine("kit_rolls_due", bytes(8), eax=0x1357)
+            with self.subTest(cls=cls, byte=byte):
+                self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["kit_reroll_due"], 1)[0], 1 if kid else 0)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1357)
+
 
 if __name__ == "__main__":
     unittest.main()

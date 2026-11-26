@@ -1166,8 +1166,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
   (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
   Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the psionicist
-  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die at a
-  level up (and past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
+  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die (on
+  the creation screen, rolled again as the kit is chosen, and at a level up; past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
   Dancer's dance and Wild Fighting as a fight starts, and the kits' gear: what a kit forbids is
   refused when it is put on or in a hand (a Ravager's shield and bow, a Stalker's chain mail, a Battle
   Mage's off-hand weapon), and what it allows can be held whatever its class (a Battle Mage's weapon of

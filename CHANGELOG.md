@@ -64,8 +64,10 @@ Releases, newest first (2.12.0 and older in the archive):
   less and psychokinesis 2 more, a Kineticist's the other way, a Titan Mind's, a Wasteland Seer's by the
   open sky: to use a power, keep it up and raise a defence) and a Mind Warrior's fifth fewer PSP at a
   level up; a Battle Mage's d6 and an Arcanist's d3 hit die at a level up, and past 10th 2 and 1 hit
-  points a level (the owner's choice); and a Battle Mage casts though hit that round. Not yet: a new
-  character's kit hit die and PSP on the creation screen.
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. On the creation
+  screen a Battle Mage's, Arcanist's or Mind Warrior's hit points and PSP are rolled again as the kit is
+  chosen or taken back, as in Shattered Lands, and a click on CON or an EDIT keeps the kit's range
+  (two new DSCLOG2 sites, 200 and 201).
 
 **New**
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for

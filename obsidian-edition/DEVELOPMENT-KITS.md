@@ -751,6 +751,7 @@ locals two bytes lower: the damage bonus `[BP-14h]`):
 | PSP costs | Mind Bender, Kineticist, Titan Mind, Wasteland Seer (and a thri-kreen of the games' own party with a psionicist class) | `PSP_USE`, `PSP_TABLE`, `PSP_DEFENCE`, `PSP_KEEP`, `PSP_KEEP_DX` (sites 191-195, new; `KIT_PSP`, `PSI_KIT`, `KIT_PSP_OF` as DSCLOG's, `FIGHTER_CR` the combatant's creature) | the power routines' cost in DI, 6178Eh (5CBE7h); the powers' table (3D0h:7E0h, 3 bytes a power: SL's 8) read at 6162Dh (5CAA3h), 6183Dh (5CCA2h), 619DCh (5CE49h), 616A8h (5CB02h); a defence paid, 61FA1h (5D820h) |
 | PSP at a level up | Mind Warrior (a fifth fewer, asleep too) | `KIT_MAX_PSP` (site 198, new) | `les bx,[bp-8]` 95172h (8748Fh); SL's `PSP_SCORES` fix of WIS read from the creation record (95110h) not ported |
 | hit dice at a level up | Battle Mage (d6, 2 past 10th), Arcanist (d3, 1 past 10th) | `KIT_HIT_DIE`, `KIT_HIT_GAIN` (sites 196, 197, new; `HIT_KIT` for the kit's own class, `[BP+8]`) | the group's die `mov al,es:[bx+0]` 95014h (87308h) and its gain past the dice `mov al,es:[bx+2]` 95000h |
+| hit dice and PSP at creation | Battle Mage (d6), Arcanist (d3), Mind Warrior (a fifth fewer PSP) | `CR_DIE` (site 200, new; `CR_KIT_STALE` a kit left from other classes taken away), `CR_PSP` (site 201, new); `KIT_REROLL` from `KIT_ROW` (site 65), `KIT_MADE`, `KIT_ROLLS_DUE` | the creation hit points' routine 6D1EDh (5C0h:66h; 655D6h), its die for the most `mov al,es:[bx+11Dh]` 6D28Fh (65677h), its rolls by the level up's routine (`KIT_HIT_DIE`); the creation PSP routine 6D75Dh (5C0h:6Bh; 65B39h), its WIS bonus and end 6D85Eh made the site, the WIS test's `jna` at 6D842h sent to a `xor ax,ax` before it; the reroll calls those routines through the far addresses of the panel's calls 6BBDFh and 6B749h, the backdrop's 6BC38h (`WP_CALLS`) |
 | casting after a hit | Battle Mage | `HIT_ROUND` (site 199, new) | the hit's mark `mov byte es:[si+0B2h],1` 5CD76h (58733h), SI the creature |
 | spell slots | Elementalist (a level behind), Crusader and Battle Mage (1 fewer), Seeker, Justifier, Shinobi (their own tables, WIS left out: `seeker_slots`, `justifier_slots`) | `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE` in `ADND_SLOTS` (site 34); `SHINOBI_MAGE` (site 190, new); `VEILED_SLOT` | the slot routine 626B7h, per class: its call to 62A10h at 62893h (5E240h), and the "add sp,4" after its "casts wizard spells" call to 62B45h (spell 8) at 627D6h, so a Shinobi's thief class is asked (SI the member) |
 
@@ -759,17 +760,15 @@ The Loader's header bytes are DSCLOG's places: `KIT_OUTDOORS` +350, `KIT_DANCE` 
 dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`, `kit_rates`,
 `kit_saves`, `kit_skills_n`, `kit_rears`, `kit_moves`, `kit_twos`, `kit_inits`, `kit_stabs`, `el_spheres`:
 `playtest/ravkits.py count`; the slots' `sb_count`, `kt_count`, `sh_mages`, the PSP's and hit dice's `kit_psps`, `kit_hds`, `bm_hits`:
-`playtest/ravlevel.py counts`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
+`playtest/ravlevel.py counts`; at creation `kit_rerolls`, `cr_stales`, `cr_psps`: `playtest/ravkits.py page`). `tests/test_ravkits.py` runs `KIT_IS`, `KIT_LEVEL`, `MULTI_GROUP`, `SPEC_OF_SHEET`,
 `EXPERT_HALVES`, `KIT_MELEE`, `SLOT_BEHIND`, `BEHIND_LEAST`, `KIT_TABLE`, the PSP sites, `KIT_MAX_PSP`,
-`KIT_HIT_DIE`, `KIT_HIT_GAIN` and `HIT_ROUND` against `kitpages` and `kits` on transferred sheets, and checks the
-tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
+`KIT_HIT_DIE`, `KIT_HIT_GAIN` and `HIT_ROUND` against `kitpages` and `kits` on transferred sheets, and `CR_DIE`,
+`CR_PSP` and `KIT_ROLLS_DUE` on the creation screen's sheet, and checks the tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
 against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets.
 
 Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting, a spell's level,
 cures' and Cause spells' dice, spells never known, a Healer's cosmos), the Poisoner's poison, the
-Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, a kit's hit die and PSP at creation
-(`PROBE_CR_DIE`, `PROBE_CR_PSP`, `KIT_REROLL`: SL's creation hit points' die read, 65677h, has no likeness in
-the sequel), a Scholar's THAC0 and the kits' parts of the DAM lines. The USE screen's hover still shows a
+Spellarcher's arrows and Fine Bow, gear a kit forbids or allows, a Scholar's THAC0 and the kits' parts of the DAM lines. The USE screen's hover still shows a
 power's table cost (97135h), not the kit's. Choosing a kit (the
 creation panel's KIT pages, sites 62-69, and `DUAL_KIT`, site 76) is DSCLOG2's KIT PAGE. The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
 KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's

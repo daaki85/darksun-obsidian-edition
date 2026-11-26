@@ -2263,6 +2263,19 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   last. A kit byte changed between turns takes at once (a control in the same fight). **Tyr's thieves**:
   `ravgo.py y 1224 x 1839` from `ravager-after-ambush`, then 2 and Space; `ravfight.py fight` there often
   gets "NO PATH FROM HERE": click the foe yourself (the walk arrow over a foe shows its to-hit, "7+ (70%)").
+- **A kit's hit points and PSP at creation in the sequel** (logs/2026-11-26-ravager-kit-psp-hd.md, step 4):
+  the creation rolls' overlay is stub segment 5C0h: its 66h the hit points' routine (6D1EDh; it copies the
+  sheet being made to the member's party sheet with 6E6D8h, rolls each level there by the level up's
+  routine 690h:20h, and copies it back with 6EE5Eh, which leaves a taken-back kit, KIT_OPEN, none), its
+  6Bh the PSP routine (6D75Dh, all its own code, no call to the level up's). The least and most hit points
+  are DS:42D8h and 42D6h, the numbers' places DS:1224h (hit points) and 122Ch (PSP), x then y, their
+  backdrop words at 368h:70h/84h and 72h/86h, the backdrop routine the root's 0C8h:3B30h, the numbers
+  drawn by the panel's stub 5B8h's 3Eh and 43h. A creation sheet's class is 1-8 (5 preserver, 6
+  psionicist; the copy to the party sheet makes it 1-17). `ravkits.py page` prints the hit points with
+  their range, the PSP and the creation counters. A 7th-level human preserver with CON 18 has 21 to 42
+  (a Battle Mage 21 to 56, an Arcanist 21 to 35); a click on CON moves the range (CON 15: 7 more, 14: none
+  for a preserver). The DROP and EDIT rows of a member's menu are 12 apart (EDIT at 110,57 for slot 1;
+  110,67 is DROP: CANCEL its question at 110,82).
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py
