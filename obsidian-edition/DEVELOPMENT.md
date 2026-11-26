@@ -128,7 +128,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
 | `../PATCH-NOTES.md`, `../patch-notes.html`, `../CHANGELOG.md`, `../CHANGELOG-archive.md`, `../release-notes/` | the repository's root: the patch notes and their web page, the record of every pull request (#73 and older in the archive), and each release's notes |
-| `../.github/workflows/` | `tests.yml` (the tests on Windows at every push and pull request) and `release.yml` ([Making a release](#making-a-release)) |
+| `../.github/workflows/` | `tests.yml` (the tests on Windows at every push and pull request), `release.yml` ([Making a release](#making-a-release)) and `test-package.yml` (a pull request's test download: the release's zip with DOSBox-X, as a run artifact); `../.github/scripts/add_dosbox_x.py` is the step both put DOSBox-X in with |
 | `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves, logs and [its guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md); outside this folder, so never in the zip |
 | `../reports/` | research and reviews, each with a status line; `reports/archive/` for the finished ones |
 
