@@ -17,11 +17,15 @@ Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
 and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) and the gear each kit
-forbids or allows work there, and a new character takes a kit there as here; what else they do to
-spells and powers and to hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). Which kits work there, and which only in
-part: [In Wake of the Ravager](#in-wake-of-the-ravager). How the kits go on past the levels Shattered
-Lands reaches is in [Past 13th level](#past-13th-level).
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the gear each kit
+forbids or allows, the psionicist kits' PSP costs (the Mind Bender's, Kineticist's, Titan Mind's and
+Wasteland Seer's, to use a power, keep it up or raise a defence) and the Mind Warrior's fifth fewer PSP
+at a level up, the Battle Mage's and Arcanist's hit die at a level up, and the Battle Mage's casting
+after being hit work there, and a new character takes a kit there as here; what else they do to spells
+and powers doesn't yet (a Shinobi has its slots there but can't cast yet), nor does a new character's
+kit hit die or PSP on the creation screen (the hit points and PSP aren't rolled again when the kit is
+chosen). Which kits work there, and which only in part: [In Wake of the Ravager](#in-wake-of-the-ravager).
+How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
@@ -752,7 +756,7 @@ The kits go on there as AD&D 2e and the kits' own books go on (the owner's choic
 | [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
 | [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
 | [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
-| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
+| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1, as a preserver's 1 (in Wake of the Ravager; Shattered Lands' 11th, a preserver's last there, still gives them the preserver's 1) |
 | Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
 
 What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
@@ -777,22 +781,24 @@ thief skills, movement and initiative.
 | Seeker | whole: its own slots, casting level and sphere's weapons |
 | Swashbuckler, Assassin | whole |
 | Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
-| Scholar, Arcanist | not yet (no extra spells learnt, no −1 to hit; no higher casting level, no d3 hit die) |
-| Battle Mage | in part: its THAC0, expertise, weapons, leather and one slot fewer; not its d6 hit die, casting after a hit |
+| Scholar | not yet (no extra spells learnt, no −1 to hit) |
+| Arcanist | in part: its d3 hit die at a level up (1 a level past 10th); no higher casting level |
+| Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
 | Healer | in part: water only, no weapon in the off hand; not its cosmos spells, stronger cures, no harming spells |
 | Crusader | in part: its THAC0, expertise and one slot fewer |
 | Grove Warden | whole |
 | Lifebinder | in part: blunt weapons only; not its stronger cures, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
-| Mind Bender, Kineticist, Titan Mind | not yet (no PSP costs changed) |
-| Mind Warrior | in part: its THAC0 and expertise; not a fifth fewer PSP |
+| Mind Bender, Kineticist, Titan Mind | whole: their PSP costs |
+| Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at a level up |
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
 | Rescuer | in part: movement, from behind, no shield; not its stronger cures |
 | Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
 | Poisoner | in part: its weapon spec and gear limits; no poison |
-| Spirit Caller, Wasteland Seer | not yet (no casting level or PSP cost by the sky) |
+| Spirit Caller | not yet (no casting level by the sky) |
+| Wasteland Seer | in part: its PSP costs by the sky; no casting level by it |
 | Wild Fury | whole |
 
 **Starting gear.** A new character's gear is fitted to its kit there too, as each kit's **Starts with**
@@ -812,8 +818,10 @@ A warrior's weapon is first made a +1 of its first weapon spec ([Starting
 weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
 the bow and arrows its class gives).
 
-The kits' spell slots past Shattered Lands' levels hold in the sequel; a Spellarcher's arrows at +3 and a
-Battle Mage's or Arcanist's hit points past 10th wait for those kits' arrows and hit dice there.
+The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel; a
+Spellarcher's arrows at +3 wait for its arrows there. A new character's kit hit die and PSP (a Battle
+Mage's, Arcanist's, Mind Warrior's) count from its first level up there: the creation screen doesn't roll
+them again when the kit is chosen yet.
 
 ## Changing class
 

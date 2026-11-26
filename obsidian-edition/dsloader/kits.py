@@ -503,6 +503,13 @@ def hit_die(kid: int, sides: int) -> int:
     return {BATTLE_MAGE: 6, ARCANIST: 3}.get(kid, sides)
 
 
+def hit_gain(kid: int, gain: int) -> int:
+    """A level's hit points past its class's dice (a preserver's 1 a level from 11th), GAIN the class's
+    (Wake of the Ravager's KIT_HIT_GAIN; the owner's choice, 2026-11-26): a Battle Mage's 2, an
+    Arcanist's 1. Shattered Lands' 11th, a preserver's last there, gives the preserver's 1 (not yet the kits')."""
+    return {BATTLE_MAGE: 2, ARCANIST: 1}.get(kid, gain)
+
+
 MIND_PSP = 5  # (a Mind Warrior's PSP a fifth fewer; a tenth up to 2.17)
 
 

@@ -4192,6 +4192,15 @@ site_table:
         dw site_none                        ; 188 (none here)
         dw site_none                        ; 189 (none here)
         dw shinobi_mage                     ; 190 SITE_SHINOBI_MAGE (627D6h: the slot routine's "casts wizard spells": a Shinobi's thief class)
+        dw psp_use                          ; 191 SITE_PSP_USE (6178Eh: a power's cost used: the kits', KIT_PSP)
+        dw psp_table                        ; 192 SITE_PSP_TABLE (6162Dh, 6183Dh: a power's cost checked, half taken when it fails)
+        dw psp_defence                      ; 193 SITE_PSP_DEFENCE (61FA1h: a psionic defence's cost paid)
+        dw psp_keep                         ; 194 SITE_PSP_KEEP (619DCh: a power's cost to keep it up)
+        dw psp_keep_dx                      ; 195 SITE_PSP_KEEP_DX (616A8h: ... checked, the combatant in DX)
+        dw kit_hit_die                      ; 196 SITE_HIT_DIE (95014h: a level's hit die: a Battle Mage's d6, an Arcanist's d3)
+        dw kit_hit_gain                     ; 197 SITE_HIT_GAIN (95000h: a level's gain past the dice: a Battle Mage's 2, an Arcanist's 1)
+        dw kit_max_psp                      ; 198 SITE_MAX_PSP (95172h: the level up's most PSP: a Mind Warrior's a fifth fewer)
+        dw hit_round                        ; 199 SITE_HIT_ROUND (5CD76h: a hit's mark against casting: a Battle Mage none)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -10665,11 +10674,13 @@ ef_last      db 0
 ;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92);
 ; - spell slots (SL's PROBE_SLOTS and PROBE_SLOT_LEVEL, from ADND_SLOTS, site 34: SLOT_BEHIND, BEHIND_LEAST,
 ;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
-;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61).
+;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61);
+; - PSP costs, a Mind Warrior's PSP, the level up's hit dice and a Battle Mage's casting after a hit (KIT PSP
+;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
-; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), PSP costs,
-; cures, a spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the
-; Effects lines.
+; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), cures, a
+; spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the hit die and PSP at
+; creation, the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
@@ -11807,6 +11818,320 @@ path_up:
         pop bx
         pop ax
         ret
+
+; ---- KIT PSP COSTS, PSP, HIT DICE AND CASTING AFTER A HIT: DSCLOG's KIT_PSP, PROBE_PSP_*, PROBE_HIT_DIE,
+; PROBE_MAX_PSP and PROBE_HIT_ROUND (RULE_KITS) in the sequel ----
+; The power routines (61574h on: SL's 5C9xxh on, the same code) read a power's cost to use from its row of
+; the powers' table (3D0h:7E0h, 3 bytes a power: SL's 8 at 408h:0; +1 the cost to use, +2 to keep up, 63h
+; none), BX the power x 3; the powers are SL's 34 (psychokinesis 0-5, psychometabolism 6-19, telepathy
+; 20-33), the combatants' and creatures' records as KIT_PSP has them (the combatant's creature at
+; FIGHTERS_OFF + 1). The sites (kits.psp_cost):
+; - PSP_USE (site 191, "psp_use"): "or di,di / jnl $+4 / xor di,di" (6178Eh; 6 bytes) where the routine
+;   using a power (616D6h: SI the combatant, [BP+0Ah] the power) has its cost in DI, its table's or worked
+;   out for Enhanced Strength and Domination: DI the kit's (KIT_PSP), no less than 0.
+; - PSP_TABLE (site 192, "psp_can_use", "psp_failed"): "mov al,es:[bx+7E1h]" (6162Dh, the check whether a
+;   power can be used, 6159Bh: SI the combatant; 6183Dh, half of it taken for a power that fails; 5 bytes):
+;   AL the kit's; AH as it was (the game's "mov ah,0" after).
+; - PSP_DEFENCE (site 193, "psp_defence"): "sub es:[bx+2],ax" (61FA1h; 4 bytes) where creature [BP-6]
+;   pays AX for the psionic defence it raises (all telepathy): the kit's, then taken off.
+; - PSP_KEEP (site 194, "psp_keep"): "mov al,es:[bx+7E2h]" (619DCh; 5 bytes) where a power's cost to keep it
+;   up another round is taken (SI the combatant); PSP_KEEP_DX (site 195, "psp_can_keep"): the same at
+;   616A8h, the check whether it can be kept up, the combatant in DX. AL the kit's, 63h (none) as it is.
+; The level up's hit points (94F60h: [BP+6] the sheet's number, [BP+8] the class, [BP+0Ah] its new level,
+; [BP-4] the sheet, far; the class's hit point group at 4D0h:0, 4 bytes: the die, its last level, the gain
+; after; SL's 872xxh) and its most PSP (950xxh; SL's 873B2h):
+; - KIT_HIT_DIE (site 196, "hit_die"): "mov al,es:[bx+0]" (95014h; 5 bytes), the die of a level up to the
+;   group's last: a Battle Mage's a d6, an Arcanist's a d3 (the preserver's d4: kits.hit_die), for the
+;   kit's own class (a human who has changed class rolls for the new one).
+; - KIT_HIT_GAIN (site 197, "hit_gain"): "mov al,es:[bx+2]" (95000h; 5 bytes), the fixed gain of a level
+;   past it (the preserver's 1 from 11th): a Battle Mage's 2, an Arcanist's 1 (kits.hit_gain; the owner's
+;   choice, 2026-11-26), for the kit's own class likewise.
+; - KIT_MAX_PSP (site 198, "max_psp"): "les bx,[bp-8]" (95172h; 3 bytes, an INT and a NOP) where the most PSP
+;   the level gives is in SI, put in the sheet ([BP-8], far: +0Ch) when more than it was: a Mind Warrior's
+;   SI a fifth less (kits.max_psp), its kit asleep or not (its psionicist levels are its PSP). The sequel
+;   keeps SL's slip of WIS read from the creation screen's record (95110h: DS:142Dh, SL's 11A0h), which
+;   DSCLOG's PSP_SCORES puts right and this doesn't (yet).
+; A hit's mark (the creature's byte at 308h:0B2h + it, SL's 2E0h:0AFh), which keeps it from casting until
+; the next round (the USE screen's refusal and a queued spell dropped: 97384h, 97A84h):
+; - HIT_ROUND (site 199, "hit_round"): "mov byte es:[si+0B2h],1" (5CD76h; 6 bytes) where the routine taking
+;   a hit's damage off (5CBE4h: SI the creature) marks it: a Battle Mage isn't marked (KITS.md).
+; Not here (yet): the hit die and PSP at creation (DSCLOG's PROBE_CR_DIE, PROBE_CR_PSP and KIT_REROLL on the
+; kit page).
+KIT_ARCANIST     equ 23
+KIT_MIND_BENDER  equ 25
+KIT_KINETICIST   equ 27
+KIT_TITAN_MIND   equ 61
+KIT_WASTE_SEER   equ 73
+KIT_SEER_ROOF    equ 0xFE           ; (PSI_KIT's: a Wasteland Seer under a roof)
+PSP_PK_LAST      equ 5
+PSP_TP_FIRST     equ 20
+PSP_NO_UPKEEP    equ 0x63
+MIND_PSP         equ 5              ; (a Mind Warrior's PSP a fifth fewer: kits.MIND_PSP)
+BM_HIT_DIE       equ 6              ; (kits.hit_die)
+ARC_HIT_DIE      equ 3
+BM_HIT_GAIN      equ 2              ; (kits.hit_gain)
+ARC_HIT_GAIN     equ 1
+psp_use:
+        push ax
+        push bx
+        mov ax, di
+        mov bx, [bp + 0x0A]
+        call kit_psp
+        or ax, ax
+        jge .set
+        xor ax, ax
+.set:   mov di, ax
+        pop bx
+        pop ax
+        iret
+psp_table:
+        push bx
+        push cx
+        mov ch, ah
+        movzx ax, byte [es:bx + 0x7E1]
+        call psp_power
+        call kit_psp
+        mov ah, ch
+        pop cx
+        pop bx
+        iret
+psp_defence:
+        push bx
+        push cx
+        mov cx, ax
+        mov ax, [bp - 6]
+        call psi_kit
+        xchg ax, cx             ; (CL the kit, AX the cost)
+        mov bx, PSP_TP_FIRST
+        call kit_psp_of
+        pop cx
+        pop bx
+        sub [es:bx + 2], ax
+        iret
+psp_keep_dx:
+        push si
+        mov si, dx
+        call psp_keep_of
+        pop si
+        iret
+psp_keep:
+        call psp_keep_of
+        iret
+psp_keep_of:
+        push bx
+        push cx
+        mov ch, ah
+        movzx ax, byte [es:bx + 0x7E2]
+        cmp al, PSP_NO_UPKEEP
+        je .out
+        call psp_power
+        call kit_psp
+.out:   mov ah, ch
+        pop cx
+        pop bx
+        ret
+; PSP_POWER: BX (a power's row in the table, the power x 3) the power. Others kept.
+psp_power:
+        push ax
+        push dx
+        mov ax, bx
+        xor dx, dx
+        mov bx, 3
+        div bx
+        mov bx, ax
+        pop dx
+        pop ax
+        ret
+; KIT_PSP: AX the PSP power BX (0-33) costs combatant SI to use, from the game's AX (kits.psp_cost): a Mind
+; Bender's telepathy 2 less, its psychokinesis 2 more, a Kineticist's the other way about; a Titan Mind's
+; psychometabolism 2 less, its telepathy 2 more; a Wasteland Seer's every power 2 less under the open sky,
+; 1 more under a roof; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in
+; CL (PSI_KIT's). DS the game's; others kept.
+kit_psp:
+        push cx
+        mov cx, ax
+        call fighter_cr
+        call psi_kit
+        xchg ax, cx             ; (CL the kit, AX the cost)
+        call kit_psp_of
+        pop cx
+        ret
+; FIGHTER_CR: AX the creature of combatant SI (FIGHTERS_OFF + 1, as the game reads it, 388h:0C34h).
+; Others kept.
+fighter_cr:
+        push bx
+        push es
+        imul bx, si, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        pop es
+        pop bx
+        ret
+; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
+; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's under the open sky, its KIT_OUTDOORS bit, and
+; KIT_SEER_ROOF under a roof; a thri-kreen of the games' own party with a psionicist class, SL's K'ratchek,
+; as a Wasteland Seer: kits.OWN_FEATURES), awake, or 0. DS the game's; others but AH kept.
+psi_kit:
+        call cr_is
+        db KIT_MIND_BENDER
+        je .bender
+        call cr_is
+        db KIT_TITAN_MIND
+        je .titan
+        call cr_is
+        db KIT_KINETICIST
+        je .kinetic
+        cmp ax, 3
+        ja .none                ; (a Wasteland Seer, a party member: by where it stands)
+        call cr_is
+        db KIT_WASTE_SEER
+        je .seer
+        push ax
+        push bx
+        push es
+        call kit_sheet
+        call own_race_b
+        cmp al, OWN_KREEN
+        jne .not_own
+        mov al, OWN_PSI
+        call own_has
+.not_own:
+        pop es
+        pop bx
+        pop ax
+        jne .none
+.seer:  bt word [cs:kit_outdoors], ax
+        mov al, KIT_WASTE_SEER
+        jc .ret
+        mov al, KIT_SEER_ROOF
+        ret
+.kinetic:
+        mov al, KIT_KINETICIST
+        ret
+.none:  xor al, al
+.ret:   ret
+.bender:
+        mov al, KIT_MIND_BENDER
+        ret
+.titan: mov al, KIT_TITAN_MIND
+        ret
+kit_psp_of:
+        or ax, ax
+        jle .ret
+        push dx
+        xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
+        cmp cl, KIT_TITAN_MIND
+        jne .seer
+        cmp bx, PSP_PK_LAST
+        jbe .out                ; (a Titan Mind's psychokinesis: as it was)
+        mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
+        cmp bx, PSP_TP_FIRST
+        jb .add
+        mov dx, 2
+        jmp .add
+.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
+        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
+        je .add
+        mov dx, 1
+        cmp cl, KIT_SEER_ROOF
+        je .add
+        xor dx, dx
+        cmp cl, KIT_MIND_BENDER
+        jne .kineticist
+        mov dx, -2
+        jmp .discipline
+.kineticist:
+        cmp cl, KIT_KINETICIST
+        jne .out
+        mov dx, 2
+.discipline:
+        cmp bx, PSP_TP_FIRST
+        jae .add
+        neg dx
+        cmp bx, PSP_PK_LAST
+        jbe .add
+        xor dx, dx              ; (psychometabolism: as it was)
+.add:   or dx, dx
+        jz .out
+        inc word [cs:kit_psps]
+        add ax, dx
+        cmp ax, 1
+        jge .out
+        mov ax, 1
+.out:   pop dx
+.ret:   ret
+kit_hit_die:
+        mov al, [es:bx]
+        push cx
+        mov cx, (ARC_HIT_DIE << 8) | BM_HIT_DIE
+        jmp hit_kit
+kit_hit_gain:
+        mov al, [es:bx + 2]
+        push cx
+        mov cx, (ARC_HIT_GAIN << 8) | BM_HIT_GAIN
+; HIT_KIT: (KIT_HIT_DIE's, KIT_HIT_GAIN's, CX pushed) AL CL for a Battle Mage, CH for an Arcanist, its kit
+; awake and the class levelled ([BP+8]) its own; then CX popped and the INT's way back. Others kept.
+hit_kit:
+        push bx
+        push si
+        push es
+        les bx, [bp - 4]
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        je .own
+        mov cl, ch
+        call kit_is_b
+        db KIT_ARCANIST
+        jne .out
+.own:   mov si, [cs:kit_where]
+        push ax
+        movzx ax, byte [es:bx + si + SH_CLASSES]
+        cmp ax, [bp + 8]
+        pop ax
+        jne .out
+        mov al, cl
+        inc word [cs:kit_hds]
+.out:   pop es
+        pop si
+        pop bx
+        pop cx
+        iret
+kit_max_psp:
+        les bx, [bp - 8]
+        push ax
+        mov al, KIT_MIND_WARRIOR
+        call kit_has            ; (asleep too: its psionicist levels are the PSP's)
+        jne .out
+        push cx
+        push dx
+        mov ax, si
+        xor dx, dx
+        mov cx, MIND_PSP
+        div cx
+        sub si, ax
+        inc word [cs:kit_psps]
+        pop dx
+        pop cx
+.out:   pop ax
+        iret
+hit_round:
+        mov [cs:hr_seg], es
+        push ax
+        mov ax, si
+        call cr_is
+        db KIT_BATTLE_MAGE
+        je .bm
+        mov byte [es:si + 0xB2], 1
+        jmp .out
+.bm:    inc word [cs:bm_hits]
+.out:   pop ax
+        iret
+kit_psps dw 0                   ; (PSP costs and most PSP a kit changed, for a look in play)
+kit_hds  dw 0                   ; (hit dice and gains a kit changed)
+bm_hits  dw 0                   ; (a Battle Mage hit and not marked)
+hr_seg   dw 0                   ; (the marks' segment, the last hit's: for a look in play)
 
 kit_hit_last dw 0               ; (the last attack's kits' to hit)
 kit_acs      dw 0               ; (what the kits did, counted, for a look in play: ACs changed,

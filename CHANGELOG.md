@@ -59,6 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager's kit PSP costs, hit dice and the Battle Mage's casting after a hit**
+- A party taken to the sequel now has there its psionicist kits' PSP costs (a Mind Bender's telepathy 2
+  less and psychokinesis 2 more, a Kineticist's the other way, a Titan Mind's, a Wasteland Seer's by the
+  open sky: to use a power, keep it up and raise a defence) and a Mind Warrior's fifth fewer PSP at a
+  level up; a Battle Mage's d6 and an Arcanist's d3 hit die at a level up, and past 10th 2 and 1 hit
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. Not yet: a new
+  character's kit hit die and PSP on the creation screen.
+
 **New**
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
