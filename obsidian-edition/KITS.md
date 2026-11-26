@@ -607,7 +607,8 @@ its own gets a plain weapon of it ([Starting
 weapons](WEAPON-SPECS.md#starting-weapons)). The dice log says what it changed
 (`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in place
 of the Quarterstaff`). [Fuller starting gear](FEATURES.md#fuller-starting-gear)
-adds more on top.
+adds more on top. In Wake of the Ravager the same, from the sequel's items ([In Wake of the
+Ravager](#in-wake-of-the-ravager)).
 
 ## The kits in play
 
@@ -721,8 +722,7 @@ these beside: [the player's guide](PLAYER-GUIDE.md#spell-slots).
 
 Not all of what the kits do has come to Wake of the Ravager yet. What works there now, kit by kit
 (a kit chosen there, or brought with [the party](FEATURES.md#taking-the-party-to-wake-of-the-ravager)):
-**whole** means as in Shattered Lands but for the starting gear ([Starting gear](#starting-gear): the
-sequel gives a new character its class's gear, not fitted to the kit); **in part** names what is
+**whole** means as in Shattered Lands; **in part** names what is
 missing; **not yet** means the kit there is its class with a kit's name. Every kit's gear limits
 and gear allowed hold there (a Ravager can't take up a shield or a bow, a Battle Mage holds the
 weapon of its weapon spec and wears leather), and its AC, to hit, damage, weapon skills, saves,
@@ -750,10 +750,27 @@ thief skills, movement and initiative.
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
 | Rescuer | in part: movement, from behind, no shield; not its stronger cures |
-| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made |
+| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
 | Poisoner | in part: its weapon spec and gear limits; no poison |
 | Spirit Caller, Wasteland Seer | not yet (no casting level or PSP cost by the sky) |
 | Wild Fury | whole |
+
+**Starting gear.** A new character's gear is fitted to its kit there too, as each kit's **Starts with**
+says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' is plain):
+
+- a weapon made in place keeps its grade: a Shinobi's or Poisoner's or Ghetto Fighter's long sword +1
+  (the thief's) becomes a short sword +1 or a dagger +1, a Battle Mage's quarterstaff +1 a +1 of its
+  weapon spec; one made from a plain weapon, and one given anew (a Myrmidon's polearm), is plain;
+- an Arena Champion's second long sword +1 becomes a Shield +1; a Ravager's shield is left behind and it
+  has a second long sword +1 in the left hand, as a Battle Dancer has a second of its weapon;
+- armour a kit forbids becomes the sequel's leather (a Ravager's ring armour: a Shattered Lands fighter
+  starts in leather), or is left behind where it may wear none (a Spellarcher's);
+- a Brute's one-handed weapons are left behind (its weapon is the +1 two-handed one of its first weapon
+  spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
+
+A warrior's weapon is first made a +1 of its first weapon spec ([Starting
+weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
+the bow and arrows its class gives).
 
 The kits' spell slots past Shattered Lands' levels, a Spellarcher's arrows at +3 and a Battle Mage's
 or Arcanist's hit points past 10th wait for those kits' slots, arrows and hit dice in the sequel.

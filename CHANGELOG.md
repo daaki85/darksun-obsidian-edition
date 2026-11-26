@@ -59,6 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: the kits' starting gear in Wake of the Ravager**
+- A new character's gear is fitted to its classes and kit there, as in Shattered Lands, from the sequel's
+  own items: a weapon a kit forbids becomes one it allows at the same grade (a Shinobi's long sword +1 a
+  short sword +1), an Arena Champion's second sword a Shield +1, a Ravager's shield left behind for a
+  second sword and its ring armour made leather, a Myrmidon's plain polearm, a Poisoner's two blades, a
+  Ghetto Fighter's dagger, a Battle Mage's weapon of its spec, a Brute's one-handed swords left behind;
+  what the classes can't use is left behind (`dsloader/ravkitstart.py`, `weaponchoice.class_gear`).
+
 **New: the kits' gear in Wake of the Ravager**
 - What a kit forbids is refused there too, and what it allows can be held whatever its class, as in
   Shattered Lands: a Ravager's shield and bow, a Stalker's heavy armour, a Battle Mage's off-hand weapon
