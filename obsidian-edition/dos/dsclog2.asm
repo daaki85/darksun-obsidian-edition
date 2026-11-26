@@ -4039,6 +4039,27 @@ site_table:
         dw site_none                        ; 127 (none here)
         dw site_none                        ; 128 (none here)
         dw site_none                        ; 129 (none here)
+        dw site_none                        ; 130 (none here: held for other work)
+        dw site_none                        ; 131 (none here: held for other work)
+        dw site_none                        ; 132 (none here: held for other work)
+        dw site_none                        ; 133 (none here: held for other work)
+        dw site_none                        ; 134 (none here: held for other work)
+        dw site_none                        ; 135 (none here: held for other work)
+        dw site_none                        ; 136 (none here: held for other work)
+        dw site_none                        ; 137 (none here: held for other work)
+        dw site_none                        ; 138 (none here: held for other work)
+        dw site_none                        ; 139 (none here: held for other work)
+        dw site_none                        ; 140 (none here: held for other work)
+        dw site_none                        ; 141 (none here: held for other work)
+        dw site_none                        ; 142 (none here: held for other work)
+        dw site_none                        ; 143 (none here: held for other work)
+        dw site_none                        ; 144 (none here: held for other work)
+        dw site_none                        ; 145 (none here: held for other work)
+        dw site_none                        ; 146 (none here: held for other work)
+        dw site_none                        ; 147 (none here: held for other work)
+        dw site_none                        ; 148 (none here: held for other work)
+        dw site_none                        ; 149 (none here: held for other work)
+        dw lv_weapons                       ; 150 SITE_LV_WEAPONS (957BEh: the level up: weapon specs due picked on the weapon window)
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
 ; rounds: Stinking Cloud's (22; its record's dice made 1d4) a round more, AD&D's 1d4+1. [BP+6] the spell.
@@ -7932,8 +7953,10 @@ off_count   dw 0                ; (off-hand attacks cut so)
 ; The kits' parts (a Battle Mage's, Crusader's, Mind Warrior's expertise, a Justifier's, a Myrmidon's
 ; second kind, a Seeker's bow): SPEC_OF_SHEET and EXPERT_HALVES, with the kits' rules (KITS).
 RULE_SPECIALIZE equ 4096
-SPEC_SLOTS  equ 0x42            ; (the Loader's 48h sheet: SL's +14h..+16h there, +45h spare, 0)
-SPEC_COUNT  equ 4
+SPEC_SLOTS  equ 0x42            ; (the Loader's 48h sheet: SL's +14h..+16h there)
+SPEC_COUNT  equ 4               ; (the four packed at SPEC_SLOTS: SL's)
+SPEC_MORE   equ 0x45            ; slots 4-7 (SPEC_GET_MORE): +45h..+47h, 5 bits each (kind + 1), past SL's
+SPEC_ALL    equ 8               ;   levels only (a gladiator's 5th-8th, the owner's 2026-11-26)
 SPEC_PACKED equ 0x80
 SPEC_V2     equ 0x40
 SPEC_KINDS_MASK equ 0x1FFFF
@@ -8119,7 +8142,7 @@ spec_of_sheet:
         cmp al, cl
         je .found
         inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .slot
         cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same, but a Seeker's)
         jne .ret
@@ -8147,6 +8170,7 @@ spec_of_sheet:
         jb .rbow
         jmp .ret
 .found: mov dl, SPEC_EXPERT
+        mov [cs:spec_found], cl ; (the kind + 1: a Myrmidon's polearm)
         xor ax, ax              ; AH a fighter or gladiator, AL any warrior, CH the fighter level
         xor ch, ch
         push si
@@ -8195,11 +8219,15 @@ spec_of_sheet:
         mov dl, SPEC_SPECIAL
         or si, si
         jz .master              ; (a fighter's first kind goes on to mastery)
-        cmp si, 1               ; (a Myrmidon's second kind too)
-        jne .ret
-        call kit_is_b
+        or ch, ch
+        jz .ret                 ; (a gladiator's: specialization)
+        call kit_is_b           ; (a Myrmidon's polearm too, by its fighter level)
         db KIT_MYRMIDON
-        jne .ret
+        jne .later
+        cmp byte [cs:spec_found], MYRM_POLEARM + 1
+        je .master
+.later: sub ch, 12              ; (a fighter's other, its pick at 13th: mastery at 17th, grand mastery at
+        jbe .ret                ;   21st, as the first's 1st, 5th, 9th; the owner's 2026-11-26)
 .master:
         cmp ch, MASTERY
         jb .ret
@@ -8262,6 +8290,8 @@ spec_kinds_own:
 ; ES:BX, in any of its layouts (DSCLOG's: a byte each; packed 5 bits each; SPEC_V2, base 17, or V3).
 ; SPEC_ANY: ZF clear when a spec is chosen. Others kept.
 spec_get:
+        cmp si, SPEC_COUNT
+        jae spec_get_more
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
         jnz .packed
         movzx ax, byte [es:bx + si + SPEC_SLOTS]
@@ -8281,6 +8311,43 @@ spec_get:
         and al, 0x1F
         pop edx
         pop ecx
+        ret
+; SPEC_GET_MORE: AX the spec in slot SI (4-7: SPEC_ALL) of sheet ES:BX, from SPEC_MORE's three bytes, 5 bits
+; a slot (kind + 1, 0 none): a gladiator's 5th to 8th (13th, 17th, 21st, 25th level) and a fighter's second
+; (13th), past SL's levels (the owner's 2026-11-26; game.spec_more). Others kept.
+spec_get_more:
+        push ecx
+        push edx
+        mov edx, [es:bx + SPEC_MORE - 1]        ; (+44h..+47h: SPEC_MORE's three the top 24 bits)
+        shr edx, 8
+        lea cx, [si - SPEC_COUNT]
+        imul cx, cx, 5
+        shr edx, cl
+        movzx ax, dl
+        and al, 0x1F
+        pop edx
+        pop ecx
+        ret
+; SPEC_SET_MORE: AL (kind + 1) into slot SI (4-7) of sheet ES:BX (SPEC_SET's). All registers kept.
+spec_set_more:
+        push eax
+        push ecx
+        push edx
+        movzx eax, al
+        and al, 0x1F
+        lea cx, [si - SPEC_COUNT]
+        imul cx, cx, 5
+        add cx, 8
+        shl eax, cl
+        mov edx, 0x1F
+        shl edx, cl
+        not edx
+        and edx, [es:bx + SPEC_MORE - 1]
+        or edx, eax
+        mov [es:bx + SPEC_MORE - 1], edx
+        pop edx
+        pop ecx
+        pop eax
         ret
 ; SPEC_UNPACK, SPEC_CHOOSE: DSCLOG's (a SPEC_V2 or V3 sheet's four specs in SPEC_DIGITS: the Loader
 ; writes V3, game.packed_specs).
@@ -8373,6 +8440,7 @@ spec_choose:
         pop ecx
         pop eax
         ret
+spec_found db 0                 ; (SPEC_OF_SHEET's kind + 1 found among the chosen)
 spec_digits times SPEC_COUNT + 1 db 0  ; (one past: SPEC_UNPACK clears four from the second)
 
 spec_any:
@@ -8830,7 +8898,7 @@ ef_lines_of:
 .specs: test word [cs:rules], RULE_SPECIALIZE
         jz .ret
         xor di, di
-.slot:  cmp di, SPEC_COUNT
+.slot:  cmp di, SPEC_ALL
         jb .chosen
         mov si, BOW_KIND                ; (then the bow, a ranger's whether chosen or not, unless
         push di                         ;   it is among the chosen: SPEC_OF_SHEET's skill with it)
@@ -8842,7 +8910,7 @@ ef_lines_of:
         cmp al, BOW_KIND
         je .bow_had
         inc di
-        cmp di, SPEC_COUNT
+        cmp di, SPEC_ALL
         jb .bow
         pop di
         jmp .kind_of
@@ -8885,7 +8953,7 @@ ef_lines_of:
         mov si, [cs:si + ef_kinds]
         call ef_line
 .next:  inc di
-        cmp di, SPEC_COUNT
+        cmp di, SPEC_ALL
         jbe .slot
 .ret:   ret
 
@@ -9735,7 +9803,7 @@ war_hit:
         cmp al, cl
         je .chosen
         inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .slot
         xor cx, cx
         jmp .out
@@ -17408,6 +17476,38 @@ cr_weapons:
         pop bp
         iret
 
+; LV_WEAPONS (site 150): "cmp word [bp+8],0Ch" (957BEh; 4 bytes: the site and a NOP) in the routine that
+; raises a character a level in a class (its frame [BP+8] the class, SI the member; the preserver's spell
+; pick just before it, the psionicist's power pick after it: DSCLOG's PROBE_LV_PICK's place, its LV_CHECK):
+; a warrior (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) with fewer weapon specs than it is due
+; (LV_DUE: a gladiator's 3rd at 6th and 4th at 9th, and past SL's levels a gladiator's 5th to 8th at 13th, 17th,
+; 21st and 25th and a fighter's second at 13th, the owner's 2026-11-26) picks the rest on the weapon window
+; (WP_ASK, as at creation); one with them all is asked nothing. The pop-up is overlay code: the way back is put
+; in a frame the overlay manager can fix up, as CR_WEAPONS'. Then the compare, its flags back to the JNZ
+; (RETF 2), as DUAL_KIT's.
+lv_weapons:
+        call kp_if_frame        ; (interrupts as the caller had them: RETF 2 keeps these flags)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        inc word [cs:lv_weapon_calls]
+        call wp_ask             ; (SI the member, as the game has it)
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        cmp word [bp + 8], 0x0C
+        retf 2
+lv_weapon_calls dw 0            ; (for a look in play)
+
 ; WP_ASK: member SI (DS the game's) asked for the weapon specs it is due (LV_DUE) and hasn't, from those its
 ; classes and kit allow (WP_KINDS), on the pop-up in weapon mode; on EXIT the rest from WP_FILL; a
 ; Myrmidon's polearm. Registers changed.
@@ -17468,7 +17568,7 @@ spec_count:
         jz .next
         inc dx
 .next:  inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .each
         pop si
         pop ax
@@ -17487,7 +17587,7 @@ wp_less_mine:
         dec cx
         btr eax, ecx
 .next:  inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .each
         pop si
         pop cx
@@ -17548,7 +17648,7 @@ wp_put:
         pop ax
         je .put
         inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .slot
         jmp .out
 .put:   inc al
@@ -17578,8 +17678,9 @@ myrm_polearm:
         ret
 
 ; LV_DUE: CX the weapon specs the character whose sheet is ES:BX is due (DSCLOG's, the sequel's sheet): a
-; gladiator 2, 3 from 6th level, 4 from 9th; a fighter or ranger 1 (a Myrmidon too: its second, the polearm,
-; MYRM_POLEARM); a Battle Mage, Crusader, Mind Warrior or Swashbuckler 1; 0 for others. A human's earlier
+; gladiator 2, 3 from 6th level, 4 from 9th, and one more at 13th, 17th, 21st and 25th (8: the owner's
+; 2026-11-26); a fighter 1, 2 from 13th (a Myrmidon's polearm, MYRM_POLEARM, given it: 3 from 13th); a ranger
+; 1; a Battle Mage, Crusader, Mind Warrior or Swashbuckler 1; 0 for others. A human's earlier
 ; classes (dual-classed) count only once its first class's level has passed theirs. Others kept.
 lv_due:
         push ax
@@ -17603,10 +17704,26 @@ lv_due:
         cmp ah, 9
         jb .most
         inc al
+        sub ah, 9               ; (then one each 4 levels: 13th, 17th, 21st, 25th)
+        shr ah, 2
+        add al, ah
+        cmp al, SPEC_ALL
+        jbe .most
+        mov al, SPEC_ALL
         jmp .most
 .warrior:
         cmp al, CU_FIGHTER
-        je .one
+        jne .ranger
+        mov al, 1
+        cmp ah, 13
+        jb .most
+        inc al                  ; (a second at 13th)
+        call kit_is_b
+        db KIT_MYRMIDON
+        jne .most
+        inc al                  ; (a Myrmidon's polearm besides)
+        jmp .most
+.ranger:
         cmp al, 13
         jb .next
         cmp al, 16
@@ -17742,6 +17859,8 @@ spec_pack:
         pop eax
 .ret:   ret
 spec_set:
+        cmp si, SPEC_COUNT
+        jae spec_set_more
         push ax
         push si
         push di
@@ -18122,10 +18241,11 @@ pk_word:
         pop ax
         je .put
         inc si
-        cmp si, SPEC_COUNT
+        cmp si, SPEC_ALL
         jb .slot
         jmp .ret
 .put:   push dword [es:bx + SPEC_SLOTS]  ; (put back after: a kind pointed at changes nothing)
+        push dword [es:bx + SPEC_MORE - 1]
         push si
         inc al
         call spec_set
@@ -18136,6 +18256,7 @@ pk_word:
         pop dx
         mov byte [cs:spec_forced], 0
         pop si
+        pop dword [es:bx + SPEC_MORE - 1]
         pop dword [es:bx + SPEC_SLOTS]
         cmp al, SPEC_EXPERT
         jne .ret

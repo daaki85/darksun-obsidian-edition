@@ -251,6 +251,11 @@ SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
 # bytes, as here) in the three the Loader's copy adds to its sheet (SPEC_SLOTS there, +42h: ravager's
 # SHEET_SIZE); the fourth (+17h here) is not the age there (respecced writes three)
 AGE_PLAIN = False
+# ... and four more slots past SL's levels (a gladiator's 5th to 8th weapon specs, at 13th, 17th, 21st and
+# 25th level: the owner's 2026-11-26) in the sequel's +45h..+47h, 5 bits a slot, kind + 1 (SPEC_MORE there,
+# ravlog's layout; DSCLOG2's SPEC_GET_MORE); 0 here: Shattered Lands' sheet has no room and its cap stops a
+# gladiator at 10th
+SPEC_MORE, SPEC_MORE_COUNT = 0, 4
 KIND_COUNT, V3_BASE = 22, 17 ** 4
 REST_OFFSETS = (0, 1, 1 + 22, 1 + 22 + 231)  # (the sets of 0, 1, 2 and 3 of the 22 kinds before each size)
 REST_SETS = 1 + 22 + 231 + 1540
@@ -324,10 +329,28 @@ def specs_of(raw: bytes) -> Tuple[bytes, Optional[int]]:
 
 def spec_kinds(sheet: bytes) -> bytes:
     """The four weapon specs chosen, kind + 1 each (0 none), from any layout; in the sequel
-    (AGE_PLAIN) only from the packed bytes (a sheet of its own has 0 there, the Loader's widening)."""
+    (AGE_PLAIN) only from the packed bytes (a sheet of its own has 0 there, the Loader's widening),
+    and then SPEC_MORE's four after them (spec_more: eight in all)."""
     if AGE_PLAIN and not spec_packed(sheet):
-        return bytes(SPEC_COUNT)
-    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[0]
+        return bytes(SPEC_COUNT + (SPEC_MORE_COUNT if SPEC_MORE else 0))
+    return specs_of(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])[0] + spec_more(sheet)
+
+
+def spec_more(sheet: bytes) -> bytes:
+    """The sequel's four more weapon specs (SPEC_MORE: slots 4 to 7, 5 bits each, kind + 1, 0 none);
+    nothing where the layout has none (Shattered Lands')."""
+    if not SPEC_MORE:
+        return b""
+    value = int.from_bytes(bytes(sheet[SPEC_MORE:SPEC_MORE + 3]).ljust(3, b"\0"), "little")
+    return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_MORE_COUNT))
+
+
+def with_spec_more(sheet: bytes, slot: int, kind: int) -> bytes:
+    """SHEET with KIND (+ 1; 0 none) in SPEC_MORE's slot SLOT (4 to 7: DSCLOG2's SPEC_SET_MORE)."""
+    value = int.from_bytes(sheet[SPEC_MORE:SPEC_MORE + 3], "little")
+    shift = SPEC_BITS * (slot - SPEC_COUNT)
+    value = value & ~(0x1F << shift) | (kind & 0x1F) << shift
+    return sheet[:SPEC_MORE] + value.to_bytes(3, "little") + sheet[SPEC_MORE + 3:]
 
 
 def sheet_age(sheet: bytes) -> int:

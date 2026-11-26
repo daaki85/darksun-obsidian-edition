@@ -191,8 +191,9 @@ def _site(number: int, length: int) -> bytes:
 
 # The sheet made 48h bytes (SHEET_SIZE; the game's 42h, GAME_SHEET_SIZE), as Shattered Lands' 47h has
 # room for the weapon specs: +42h..+44h hold SL's +14h..+16h as game.packed_specs packs them (the specs
-# less 17, the starting age's roll, the flag bits: game.SPEC_SLOTS in ravlog's layout), +45h..+47h spare
-# (0). Every "imul r,r,42h" of the program is followed within four instructions by a load of the sheets'
+# less 17, the starting age's roll, the flag bits: game.SPEC_SLOTS in ravlog's layout), +45h..+47h four more
+# weapon specs, 5 bits each (SPEC_MORE: a gladiator's 5th to 8th, past SL's levels; game.spec_more).
+# Every "imul r,r,42h" of the program is followed within four instructions by a load of the sheets'
 # pointer [19C5h]/[19C7h] (386 of them, all "imul ax,ax,42h" or "imul dx,dx,42h", root and overlays, no
 # other form; the overlays are read from the file, so file patches reach them): each one's 42h made 48h
 # (sheet_stride_*; tests/test_ravsheet.py scans the patched program for one left). The rest that knows
@@ -242,6 +243,7 @@ SHEET_STRIDES_DX = (
 )
 SHEET_STRIDES = tuple(sorted(SHEET_STRIDES_AX + SHEET_STRIDES_DX))
 GAME_SHEET_SIZE = 0x42
+SPEC_MORE = 0x45  # (four more weapon specs: game.spec_more, DSCLOG2's SPEC_MORE)
 
 
 # The program's constant-offset uses of a sheet (sheet 4's fields, the summoned ally's: PATCHES' sheet4_*):
@@ -747,6 +749,10 @@ PATCHES: Tuple[Patch, ...] = (
     # 2ACCh", 93D63h [860C3h]), PK_FILL (123, "xor di,di / mov si,di", 93DECh [8610Fh]), PK_CLICK (124, "mov
     # ax,[bp+8]", 93FABh [862D4h]) and PK_HOVER (125, "or ax,ax / jnz", 93BBAh [85F44h]); PSI_COUNT the picks left
     Patch("cr_weapons", 0x6E2EC, bytes.fromhex("56900e"), _site(120, 3)),
+    # ... and at a level up (site 150, LV_WEAPONS: the level-up routine's "cmp word [bp+8],0Ch", 957BEh, between
+    # the preserver's spell pick and the psionicist's power pick, SL's PROBE_LV_PICK's place): the weapon specs
+    # due and not yet picked (a gladiator's 3rd to 8th, a fighter's second at 13th: the owner's 2026-11-26)
+    Patch("lv_weapons", 0x957BE, bytes.fromhex("837e080c"), _site(150, 4)),
     Patch("pk_win", 0x93C94, bytes.fromhex("685d44"), _site(121, 3)),
     Patch("pk_title", 0x93D63, bytes.fromhex("1e68cc2a"), _site(122, 4)),
     Patch("pk_fill", 0x93DEC, bytes.fromhex("33ff8bf7"), _site(123, 4)),
