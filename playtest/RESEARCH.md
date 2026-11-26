@@ -1951,6 +1951,21 @@ member's turn opens USE or View Character (whichever the menu last had); the USE
   ring was at game (267,121) in one run and (267,110) in the next: grab the screen after Up 6), then
   `ravlevel.py show` (the casts left) and `ravlevel.py counts kt_count sb_count sh_mages`. The USE screen
   offers MAGE or CLERIC by class and spells known, not by slots.
+- **Kit PSP costs, hit dice and the hit's mark in the sequel** (logs/2026-11-26-ravager-kit-psp-hd.md): the
+  power routines are SL's code at 615xxh-61Fxxh with the powers' table at 3D0h:7E0h, **3 bytes a power** (+1
+  the cost, +2 the upkeep; SL's 8), BX the power x 3; the powers are SL's 34 in SL's order (Enhanced
+  Strength 0Fh, Domination 14h/15h). The USE screen's hover ("PSIONIC BLAST 18 10") reads the table (97135h),
+  so it shows the plain cost whatever the kit. A member's PSP is the creature's +2; ravkits.py's 200 is held
+  to the sheet's most (+0Ch) at a round's start. A failed power check costs half, "Message: psionic power
+  check fails" in the dice log. The level up's hit points (94F60h: `[BP+8]` the class, `[BP-4]` the sheet)
+  read the group's die at 95014h and its gain past the dice at 95000h; to see a level up's most PSP whole,
+  make the sheet's +0Ch 1 first (the game writes it only when more). **The hit's mark** is a byte a creature
+  at 308h:0B2h (the helper's `hr_seg` holds the segment the last hit used: 3DF1h in that run), cleared at a
+  round's start; a member hit before its turn in the round has its spells (and powers) crossed out on USE.
+  To have a member hit before her turn, make her DEX 3 (creature +1Ah, sheet +16h; a test edit): she acts
+  last. A kit byte changed between turns takes at once (a control in the same fight). **Tyr's thieves**:
+  `ravgo.py y 1224 x 1839` from `ravager-after-ambush`, then 2 and Space; `ravfight.py fight` there often
+  gets "NO PATH FROM HERE": click the foe yourself (the walk arrow over a foe shows its to-hit, "7+ (70%)").
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py

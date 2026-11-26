@@ -17,9 +17,14 @@ Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit
 skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
 and Justifier's casting level, the Elementalist's second sphere's spells, and the kits' spell slots
 (the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) work there; what else they do to
-spells and powers, gear and hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). How the kits go on past the levels Shattered
-Lands reaches is in [Past 13th level](#past-13th-level).
+Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the psionicist kits' PSP
+costs (the Mind Bender's, Kineticist's, Titan Mind's and Wasteland Seer's, to use a power, keep it up or
+raise a defence) and the Mind Warrior's fifth fewer PSP at a level up, the Battle Mage's and Arcanist's
+hit die at a level up, and the Battle Mage's casting after being hit work there; what else they do to
+spells and powers and gear doesn't yet (a Shinobi has its slots there but can't cast yet), nor does a
+new character's kit hit die or PSP on the creation screen (the hit points and PSP aren't rolled again
+when the kit is chosen). How the kits go on past the levels Shattered Lands reaches is in [Past 13th
+level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
@@ -748,7 +753,7 @@ The kits go on there as AD&D 2e and the kits' own books go on (the owner's choic
 | [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
 | [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
 | [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
-| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
+| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1, as a preserver's 1 (in Wake of the Ravager; Shattered Lands' 11th, a preserver's last there, still gives them the preserver's 1) |
 | Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
 
 What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's

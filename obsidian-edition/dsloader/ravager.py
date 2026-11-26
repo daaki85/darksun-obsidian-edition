@@ -772,6 +772,25 @@ PATCHES: Tuple[Patch, ...] = (
     # ADND_SLOTS (site 34) its slots; DSCLOG2's SHINOBI_MAGE (site 190) answers yes for a Shinobi's thief
     # class at its "add sp,4" (627D6h, the member SI), the "or al,al" after kept.
     Patch("shinobi_mage", 0x627D6, bytes.fromhex("83c404"), _site(190, 3)),
+    # The kits' PSP costs (SL's psp_use, psp_can_use, psp_failed, psp_defence, psp_keep, psp_can_keep;
+    # kits.psp_cost): the power routines' cost in DI where a power is used (6178Eh), the powers' table read
+    # (3D0h:7E1h, 3 bytes a power) where one is checked (6162Dh) and half taken for one that fails (6183Dh),
+    # a defence's cost paid (61FA1h), the cost to keep one up taken (619DCh) and checked (616A8h): DSCLOG2's
+    # PSP_USE, PSP_TABLE, PSP_DEFENCE, PSP_KEEP, PSP_KEEP_DX (sites 191-195)
+    Patch("psp_use", 0x6178E, bytes.fromhex("0bff7d0233ff"), _site(191, 6)),
+    Patch("psp_can_use", 0x6162D, bytes.fromhex("268a87e107"), _site(192, 5)),
+    Patch("psp_failed", 0x6183D, bytes.fromhex("268a87e107"), _site(192, 5)),
+    Patch("psp_defence", 0x61FA1, bytes.fromhex("26294702"), _site(193, 4)),
+    Patch("psp_keep", 0x619DC, bytes.fromhex("268a87e207"), _site(194, 5)),
+    Patch("psp_can_keep", 0x616A8, bytes.fromhex("268a87e207"), _site(195, 5)),
+    # ... the kits' hit dice (SL's hit_die; kits.hit_die, kits.hit_gain) where the level up takes a level's
+    # die from the class's group (95014h) or the gain past its dice (95000h), a Mind Warrior's most PSP
+    # (SL's max_psp, kits.max_psp: 95172h), and a Battle Mage's casting after a hit (SL's hit_round: the
+    # hit's mark, 5CD76h): KIT_HIT_DIE, KIT_HIT_GAIN, KIT_MAX_PSP, HIT_ROUND (sites 196-199)
+    Patch("hit_die", 0x95014, bytes.fromhex("268a870000"), _site(196, 5)),
+    Patch("hit_gain", 0x95000, bytes.fromhex("268a870200"), _site(197, 5)),
+    Patch("max_psp", 0x95172, bytes.fromhex("c45ef8"), _site(198, 3)),
+    Patch("hit_round", 0x5CD76, bytes.fromhex("26c684b20001"), _site(199, 6)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage

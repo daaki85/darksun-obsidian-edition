@@ -59,6 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager's kit PSP costs, hit dice and the Battle Mage's casting after a hit**
+- A party taken to the sequel now has there its psionicist kits' PSP costs (a Mind Bender's telepathy 2
+  less and psychokinesis 2 more, a Kineticist's the other way, a Titan Mind's, a Wasteland Seer's by the
+  open sky: to use a power, keep it up and raise a defence) and a Mind Warrior's fifth fewer PSP at a
+  level up; a Battle Mage's d6 and an Arcanist's d3 hit die at a level up, and past 10th 2 and 1 hit
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. Not yet: a new
+  character's kit hit die and PSP on the creation screen.
+
 **New: Wake of the Ravager's kit spell slots**
 - A party taken to the sequel now has its kits' slots there as in Shattered Lands: a Battle Mage's
   wizard slots one fewer at each spell level; a Seeker's and a Justifier's priest slots their own

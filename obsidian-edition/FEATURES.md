@@ -1071,11 +1071,14 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
   Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
   (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
-  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), and the Battle
+  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the psionicist
+  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die at a
+  level up (and past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
   Dancer's dance and Wild Fighting as a fight starts. The Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
   panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
   game's menu right after DUAL. What else kits do to spells
-  and psionic powers, gear and hit dice doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them). The creation screen has [STORE and
+  and psionic powers and gear doesn't carry over yet (a Shinobi has its slots, but no spells to cast with
+  them), nor a new character's kit hit die or PSP on the creation screen. The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
   can use: a fire cleric's obsidian dagger), given before the character is first shown and written to the roster. Its
