@@ -10,11 +10,15 @@ The Druid’s short leaf cape lifts above a woven ochre kilt. On the man, a lit 
 
 ## Equipped Fighter and Preserver
 
+[Watch all five magical pieces on both half-elves](magic-gear-half-elf.gif) · [Compare the newer class studies](magic-study-half-elves.gif)
+
 Both figures use the approved study art for all 29 poses. Read the columns across for a single pose. The upper row is Fighter, the lower row is Preserver. Each enlarged picture has a game-size copy beneath it. The retail Warrior and Mage provide the reference at the right and have no matching hit or fall cel.
 
 On the woman, compare front idle with empty slots and full plate. The Fighter has 108 garment pixels assigned to armor. The steel follows the creases of her jerkin and skirt, with the bone fittings and belt edge still visible. On the Preserver, the visible plum tunic takes the armor color while the outer mantle retains its folds. In the rear walk the mantle hides most of the armor. The magic chest column shows the game’s shine palette on the exposed chest material.
 
-[Compare the previous and revised leather and plate in identical poses](half-elf-armor-detail.png) · [Compare armor across races](armor-dyes.md)
+The two bone guards turn down from her shoulders into separate leather mounts. The earlier drawing joined the two mounts with one pale row across the chest. [Compare the shoulder guards with empty slots, leather and plate](half-elf-fighter-shoulders.png)
+
+[Earlier armor dye comparison, before the shoulder refit](half-elf-armor-detail.png) · [Compare armor across races](armor-dyes.md)
 
 ![Female half-elf Fighter and Preserver through all poses with armor and robes beside retail reference figures](half-elf-equipped-armor.gif)
 

@@ -18,7 +18,7 @@ import halfelfstudy as he
 import halfgiantstudy as hg
 import halflingmultis as hl
 import mulmultis as mul
-from dsloader import classoutfits as co
+from dsloader import classoutfits as co, spritebracers
 from wornreview import Atlas, CASES, WEAPONS, art, elf, sg, sprites
 
 NAMES = {300: "Human man", 301: "Human woman", 302: "Dwarf man", 303: "Dwarf woman",
@@ -162,6 +162,14 @@ def stock_test(atlas, obj, output):
                                 allowed = set()
                                 for item in armour:
                                     kind = item & (sg.MAGIC_ARMOUR-1)
+                                    if kind == sg.game.BRACERS_TYPE:
+                                        source_model, originals, owners = pics.base(model, obj, combat)
+                                        rows = originals[f]
+                                        costume = fields[f]
+                                        allowed.update(spritebracers.visible(
+                                            rows, source_model, f, combat, owners[f], costume,
+                                            costume.canvas(rows, sprites.PAD), sprites.PAD))
+                                        continue
                                     piece = sg.ARMOUR[kind][0]
                                     allowed.update(reg[{sg.ARMOUR_CHEST: co.CHEST, sg.ARMOUR_ARMS: co.ARMS,
                                                         sg.ARMOUR_LEGS: co.LEGS}[piece]])

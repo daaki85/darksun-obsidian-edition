@@ -51,6 +51,22 @@ class ArmorDyeTests(unittest.TestCase):
                 self.assertEqual(art.decode_frame(plain, 0)[2][sy+y][sx+x], original)
                 self.assertEqual(art.decode_frame(worn, 0)[2][sy+y][sx+x] != original, should_change)
 
+    def test_fallen_stock_figures_keep_armor_over_the_exposed_torso(self):
+        for obj in range(300, 314):
+            empty = self.pictures.build(obj, True, {}, ())
+            enchanted = self.pictures.build(obj, True, {}, (15 | spritegear.MAGIC_ARMOUR,))
+            original, worn = (art.decode_frame(picture, 13)[2] for picture in (empty, enchanted))
+            changed = [(x, y) for y, row in enumerate(original) for x, color in enumerate(row)
+                       if color != worn[y][x]]
+            with self.subTest(figure=obj):
+                # The original human and half-elf women fall with the cape
+                # over the torso. The thri-kreen cannot wear body armor.
+                self.assertEqual(bool(changed), obj not in (301, 307, 313))
+                self.assertTrue(all(original[y][x] is not None for x, y in changed))
+                self.assertTrue(all(worn[y][x] is not None for x, y in changed))
+                if changed:
+                    self.assertTrue(any(worn[y][x] in spritegear.GLINT for x, y in changed))
+
     def test_leather_preserves_the_half_elf_jerkin_fold_edges(self):
         role, obj = "Fighter", 307
         frame = classoutfits.frames(role, False, obj)[0]

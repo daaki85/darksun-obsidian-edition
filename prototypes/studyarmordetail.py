@@ -121,6 +121,27 @@ def keep_binding(surface, signature, pose, cuts, height):
         surface.difference_update((x, y) for x, y in signature if y in rows)
 
 
+def study_surface(game, obj, pose, rows, role, cuts):
+    """Visible garment, suit dye area, and protected accents on one approved pose."""
+    outfit, body = rows[role], rows["Body base"]
+    # Keep the distinctive secondary layers, including a retinted
+    # hood or scale. Leave the outer fabric of the base class over
+    # the armor wherever it still shows in its original pigment.
+    base = base_garment(obj, role)
+    parent = rows[base]
+    cloth = garment(outfit, body)
+    additions = {(x, y) for x, y in cloth if outfit[y][x] != parent[y][x]}
+    outer = OUTER_FABRIC.get(base, ())
+    covered = {(x, y) for x, y in cloth if parent[y][x] in outer}
+    if obj in co.HALF_ELF_SOURCES and outer:
+        covered -= halfelf_exposed_garment(game, obj, base, pose)
+    surface = suit_surface(outfit, body, cloth, additions | covered, pose, cuts)
+    pigment = set(RAMPS[DEFAULT.get(base, "hide")]) - {208, 17, 207, 204}
+    signature = {(x, y) for x, y in cloth if outfit[y][x] in pigment}
+    keep_binding(surface, signature, pose, cuts, len(outfit))
+    return cloth, surface, additions, covered, signature
+
+
 def contrasts(source, dyed, cells, palette):
     total = distinct = 0
     for x, y in cells:
@@ -159,26 +180,12 @@ def compare(game_dir, output, objects):
         for i, obj in enumerate(objects):
             for pose in range(29):
                 rows = study_rows(obj, pose, atlas.game, study, swatches)
-                body = rows["Body base"]
                 cuts = landmarks(obj, pose, atlas.game)
                 for role, outfit in rows.items():
                     if role in ("Original", "Body base") or (obj < 308 and role in ("Fighter", "Preserver")):
                         continue
-                    # Keep the distinctive secondary layers, including a retinted
-                    # hood or scale. Leave the outer fabric of the base class over
-                    # the armor wherever it still shows in its original pigment.
-                    base = base_garment(obj, role)
-                    parent = rows[base]
-                    cloth = garment(outfit, body)
-                    additions = {(x, y) for x, y in cloth if outfit[y][x] != parent[y][x]}
-                    outer = OUTER_FABRIC.get(base, ())
-                    covered = {(x, y) for x, y in cloth if parent[y][x] in outer}
-                    if obj in co.HALF_ELF_SOURCES and outer:
-                        covered -= halfelf_exposed_garment(atlas.game, obj, base, pose)
-                    surface = suit_surface(outfit, body, cloth, additions | covered, pose, cuts)
-                    pigment = set(RAMPS[DEFAULT.get(base, "hide")]) - {208, 17, 207, 204}
-                    signature = {(x, y) for x, y in cloth if outfit[y][x] in pigment}
-                    keep_binding(surface, signature, pose, cuts, len(outfit))
+                    cloth, surface, additions, covered, signature = study_surface(
+                        atlas.game, obj, pose, rows, role, cuts)
                     sample = SAMPLES[obj] == (role, pose)
                     if sample:
                         label(board, (12, 84+i*181), NAMES[obj], 13)

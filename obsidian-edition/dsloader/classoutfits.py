@@ -191,6 +191,7 @@ class Frame(NamedTuple):
     cloak: tuple = ()  # (native x, y, fold shade from 0 to 5)
     head: tuple = ()  # foreground face and locks, in native coordinates
     armor_trim: frozenset = frozenset()  # native pixels that keep their material and class color
+    native_cloak: bool = False  # this outfit includes cloth for a cloak dye to follow
 
     def canvas(self, source, pad):
         """Apply authored pixels to the matching pose read from the player's install."""
@@ -232,6 +233,13 @@ def frames(role, combat, model=2095):
         except KeyError:
             cloaks = archive.read(f"{prefix}/{tag}-cloak")
         masks = archive.read(f"{prefix}/{tag}-regions")
+    # The archive also stores the drape of a separately equipped cloak for
+    # bare-backed kits. Only real cloth can supply its own underlying texture.
+    members = set(role.split("/"))
+    if model in DWARVES:
+        native_cloak = "Cleric" in members or role in ("Thief", "Psionicist/Thief")
+    else:
+        native_cloak = bool(members.intersection(("Thief", "Mage", "Preserver", "Ranger", "Druid")))
     poses = []
     for f in range(14 if combat else 15):
         image = art.decode_frame(pictures, f)[2]
@@ -266,7 +274,7 @@ def frames(role, combat, model=2095):
             head = tuple((x - left, y - top)
                          for y, row in enumerate(art.decode_frame(heads, f)[2])
                          for x, pixel in enumerate(row) if pixel is not None)
-        frame = Frame(image, regions, folds, head)
+        frame = Frame(image, regions, folds, head, native_cloak=native_cloak)
         pose = f + 15 * combat
         if model in HALF_ELF_SOURCES:
             trim = set()

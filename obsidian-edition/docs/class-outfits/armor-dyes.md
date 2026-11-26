@@ -10,7 +10,7 @@ The previous leather dye reduced 18 garment colors to four on the female Fighter
 
 ## Checks on the Loader pictures
 
-The comparison covers 118 class appearances on eight figures. Each appearance has 29 poses. The table counts horizontal and vertical neighbors on the garment that have different RGB colors with empty slots and still differ after equipping the item. Two palette entries with the same visible color count as one.
+The measurements at `cca2c63` cover 118 class appearances on eight figures. Each appearance has 29 poses. The table counts horizontal and vertical neighbors on the garment that have different RGB colors with empty slots and still differ after equipping the item. Two palette entries with the same visible color count as one.
 
 | Equipment | Previous dye | Revised dye |
 |---|---:|---:|

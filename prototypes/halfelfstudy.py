@@ -52,6 +52,46 @@ JERKIN_FOLDS = {
          (8, 10, 90), (11, 9, 89), (11, 10, 90)),
 }
 
+# Row under the bone crest and the visible crest positions, traced on her
+# shortened-hair Fighter. The far shoulder can pass behind the face or bow.
+WOMAN_GUARDS = {
+    0: (8, (5, 10)), 1: (9, (5, 11)), 2: (8, (3, 7)),
+    3: (8, (5, 10)), 4: (8, (6, 12)), 5: (8, (6, 11)), 6: (8, (5, 10)),
+    11: (8, (5, 11)), 12: (9, (12,)), 13: (9, (11, 15)), 14: (8, (8, 12)),
+    15: (17, (7, 12)), 16: (10, (8, 14)), 17: (9, (13, 18)),
+    18: (13, (2,)), 19: (17, (6, 10)), 20: (9, (12, 18)), 21: (15, (13, 17)),
+    22: (10, (12, 16)), 23: (9, (12,)), 24: (9, (5, 11)),
+    26: (11, (6, 13)), 27: (11, (4, 10)), 28: (9, (7, 12)),
+}
+
+def fit_fighter_guards(rows, pose, back, bow, body):
+    y, crests = WOMAN_GUARDS[pose]
+    row = rows[y + MARGIN]
+    for x in range(min(crests) - 3, max(crests) + 4):
+        px = x + MARGIN
+        if row[px] not in (61, 63, 199) or row[px] == body[y + MARGIN][px] or (back(x, y), y) in bow:
+            continue
+        crest = min(crests, key=lambda cx: abs(x - cx))
+        # Each pale crown turns down into its own shadow. In between, restore
+        # the jerkin's short russet ridges over the chest or shoulder blade.
+        row[px] = {-2: 205, -1: 199, 0: 206, 1: 194}.get(x - crest, 93 if x < crest else 90)
+
+    if pose in (0, 3, 4, 5, 6):
+        # On the front walk the lit tip is on the outward rise of the
+        # shoulder. Carry its shadow back into the jerkin, away from the neck.
+        for crest, step in zip(crests, (-1, 1)):
+            for dx, dy, shade in ((step, -2, 199), (step, -1, 194), (0, -1, 206)):
+                px, py = crest + dx + MARGIN, y + dy + MARGIN
+                cloth = rows[py][px]
+                if cloth != body[py][px] and cloth in (63, 88, 90, 91, 92, 93, 95, 96, 207, 208):
+                    rows[py][px] = shade
+        for by in (y + 1, y + 2):
+            for bx in range(crests[0] + 1, crests[1]):
+                px, py = bx + MARGIN, by + MARGIN
+                if rows[py][px] != body[py][px] and rows[py][px] in (61, 121, 123, 199):
+                    rows[py][px] = 95 if by == y + 1 else 205
+
+
 # Crest of the trailing fold, from shoulder towards hem in each profile pose.
 # The gap above the woman's third step is where her raised arm crosses the cloth.
 MANTLE_CREST = {
@@ -317,6 +357,9 @@ class RegisteredOutfits:
                         color = self.behind_locks(dressed, scalp, bow, sx, y, role)
                 line.append(color)
             out.append(line)
+        if female and role == "Fighter" and pose in WOMAN_GUARDS:
+            body, _ = self.rows(key, pose, "Body base")
+            fit_fighter_guards(out, pose, back, bow, body)
         if female and role == "Gladiator" and pose in BACK_STRAP:
             body, pad = self.rows(key, pose, "Body base")
             start, edge = BACK_STRAP[pose]

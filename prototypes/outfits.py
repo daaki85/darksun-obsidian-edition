@@ -211,7 +211,9 @@ class Game:
             with open(path, "rb") as f:
                 return gff.read_gff(f.read())
         self.chunks = load("SEGOBJEX.GFF")
-        self.palette = art.palette_colours(load("GPLDATA.GFF")[("PAL ", art.PORTRAIT_PALETTE)])
+        gpl = load("GPLDATA.GFF")
+        self.palette = art.palette_colours(gpl[("PAL ", art.PORTRAIT_PALETTE)])
+        self.item_types = gpl.get(("IT1R", 1), b"")
         sg.set_palette(self.palette)
         self._frames: Dict[Tuple[int, int], Rows] = {}
         self._align: Dict[Tuple[int, int, int, int], Tuple[int, int]] = {}
