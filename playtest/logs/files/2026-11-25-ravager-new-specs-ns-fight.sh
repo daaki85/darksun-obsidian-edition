@@ -9,9 +9,9 @@ for p in "47 53" "98 53" "47 112" "98 112"; do c $p; sleep 1.5; done
 import -window $W $W0/ns-$TAG-cc.png
 xdotool key --window $W Escape
 P=$(cat $W0/ns-$TAG.dbpid)
-for i in $(seq 1 $((SEC / 5))); do sleep 5; [ "$(cat /proc/$P/comm 2>/dev/null)" = dosbox ] || { echo "$TAG DEAD"; break; }; done
+for i in $(seq 1 $((SEC / 5))); do sleep 5; [ "$(cat /proc/$P/comm 2>/dev/null)" = dbns ] || { echo "$TAG DEAD"; break; }; done
 import -window $W $W0/ns-$TAG-last.png 2>/dev/null
 timeout 30 python3 ravkits.py count >> $W0/ns-$TAG.kits 2>&1
 D=$(cat $W0/ns-$TAG.dpid); kill $D 2>/dev/null
-[ "$(cat /proc/$P/comm 2>/dev/null)" = dosbox ] && kill $P
+[ "$(cat /proc/$P/comm 2>/dev/null)" = dbns ] && kill $P
 echo "$TAG done"
