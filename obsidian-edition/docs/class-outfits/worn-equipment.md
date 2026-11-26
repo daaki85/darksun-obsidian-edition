@@ -10,27 +10,27 @@ Read across a row for the same equipment and pose on the human, dwarf and elf, m
 
 On the human Thieves, side walk step 2 previously showed just one cloak pixel at or below the waist on each figure. The revised step shows 29 on the man and 44 on the woman. The fold starts at the shoulder, opens behind the elbow, and turns inward above the ankle. The dwarf’s shorter drape and the male elf’s tapered Preserver and Ranger hems keep their own lengths. The class cloth supplies the silhouette when worn alone. Equipping a cloak supplies the item dye, including on outfits that normally leave the back bare.
 
-[All six equipped cloaks through side idle and four steps, before and after](cloak-stride.gif) · [Both male elf class cloaks beside retail figures, step by step](elf-class-cloak-stride.png)
+[All six equipped cloaks through side idle and four steps, before and after](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/cloak-stride.gif) · [Both male elf class cloaks beside retail figures, step by step](elf-class-cloak-stride.png)
 
-On the chest plate, the broad reflection sits on the upper curve of the rib cage and the lower rim rolls into shadow. The light follows the torso through each step. Look at the two elf Fighters when the near arm crosses the chest, or compare the human woman from the front and side. Each pair shows the preceding build at left and the revision at right, enlarged with a native-size copy below. [Compare chest plate through the front, rear and profile walks](plate-stride.gif)
+On the chest plate, the broad reflection sits on the upper curve of the rib cage and the lower rim rolls into shadow. The light follows the torso through each step. Look at the two elf Fighters when the near arm crosses the chest, or compare the human woman from the front and side. Each pair shows the preceding build at left and the revision at right, enlarged with a native-size copy below. [Compare chest plate through the front, rear and profile walks](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/plate-stride.gif)
 
 ### Elf woman in profile
 
 In the previous Fighter, chest metal covered the swinging upper arm and the belt. In step 2 it picked out alternating belt pixels. In step 3 it left a single steel pixel below the crossing wrist. The revised picture keeps the original exposed upper arm in front and ends the plate above the belt. Read the still from top to bottom for empty chest slot, previous plate and revised plate. The loop shows those three states left to right. Both use the loader’s picture builder.
 
-[Watch the four-step plate comparison](elf-woman-plate-fit.gif) · [Inspect the four steps individually](elf-woman-plate-fit.png)
+[Watch the four-step plate comparison](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-woman-plate-fit.gif) · [Inspect the four steps individually](elf-woman-plate-fit.png)
 
 ### Cloak fold study
 
 The original Mage (724) gathers several bright marks across the shoulder. Farther down, one long shadow stays legible through the swing. On the original Thief (630), short ridges end at different heights above the hem. The male elf Preserver has less cloth visible below his hair. On that smaller panel the current scatter of lights makes a crease hard to follow.
 
-The early fold study explored two creases of unequal length and the same shading in an equipped cloak. [Early mantle study beside the retail Mage and Thief](elf-mantle-fold-study.gif)
+The early fold study explored two creases of unequal length and the same shading in an equipped cloak. [Early mantle study beside the retail Mage and Thief](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-mantle-fold-study.gif)
 
 ### Corrected profile walk
 
-The male elf’s loose cloak lifts clear of his bent leg in steps 2 and 3. The loader reveals the leather, skin, robe or open ground underneath each outfit. The exposed garment has its own armor regions. Watch the Preserver’s plum mantle, the Ranger’s green cape, and the shorter hooded outfit at the hip. Wearing a cloak dyes the same visible folds. [Male elf alongside the original Mage and Thief](elf-mantle-swing.gif) · [Each step with the equipped cloak](elf-mantle-swing.png)
+The male elf’s loose cloak lifts clear of his bent leg in steps 2 and 3. The loader reveals the leather, skin, robe or open ground underneath each outfit. The exposed garment has its own armor regions. Watch the Preserver’s plum mantle, the Ranger’s green cape, and the shorter hooded outfit at the hip. Wearing a cloak dyes the same visible folds. [Male elf alongside the original Mage and Thief](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/elf-mantle-swing.gif) · [Each step with the equipped cloak](elf-mantle-swing.png)
 
-[Watch the previous and corrected frames on all six figures](cloak-hem-fixes.gif) · [Inspect individual examples at game size and 3×](cloak-hem-fixes.png)
+[Watch the previous and corrected frames on all six figures](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/cloak-hem-fixes.gif) · [Inspect individual examples at game size and 3×](cloak-hem-fixes.png)
 
 | Figure | What to inspect |
 |---|---|
@@ -53,7 +53,7 @@ The comparisons use the loader’s party picture builder and retail game art. Th
 | Equipped cloaks | The item dye now picks up the light and dark folds in the underlying cloth. On a Thief the back stays readable through the rear walk. A cloak can extend beyond an uncovered Fighter’s shoulders. | The green Thief (630) has more closely spaced vertical folds and a brighter ridge. The party cloak is still coarser, especially under the elves’ hair. |
 | Boots | Each exposed boot takes its own shadows and highlights. A lifted or hidden foot keeps its pose. A pair can show only one boot when the other foot is occluded. The footwear row shows plain leather, Boots of Elvenkind and Boots of Speed in the same step. | The retail human woman (2099) has strongly separated blue boots. Compare the space between her feet and the direction of the lifted toe. |
 | Gloves and bracers | Chameleon Gloves give the equipped fist blue-gray leather. The Quicksilver Glove shows a silvery face on a brown palm. One glint sits on visible glove pixels. An occluded hand can hide the entire glove. Bracers use the registered arm patch farther up the limb. | The retail Warrior (1252) uses a few contrasting pixels to separate wrist, grip and blade. At 1× the glove silhouette is the wearer’s hand and the two glove colors can be hard to tell apart. |
-| Weapons and shield | The sword has a lit cutting edge and a darker spine. A great axe has a broader head and wooden haft. Staff and polearm read through their length. The shield shows a boss in front, straps from behind and a narrow far side in profile. The bow and quiver are carried until the game's own drawn-bow pose takes over. The sling hangs in a pouch, while the chatkcha shows an angled tip at the belt. | Compare the white edge of the retail Warrior’s weapon with the carried and drawn weapons. At this size bone, obsidian and steel are distinguished primarily by edge color. [Compare the weapon families in motion](worn-weapons.gif) |
+| Weapons and shield | The sword has a lit cutting edge and a darker spine. A great axe has a broader head and wooden haft. Staff and polearm read through their length. The shield shows a boss in front, straps from behind and a narrow far side in profile. The bow and quiver are carried until the game's own drawn-bow pose takes over. The sling hangs in a pouch, while the chatkcha shows an angled tip at the belt. | Compare the white edge of the retail Warrior’s weapon with the carried and drawn weapons. At this size bone, obsidian and steel are distinguished primarily by edge color. [Compare the weapon families in motion](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-weapons.gif) |
 
 ![Leather, studded bone, scale, chain, plate, worn robes, footwear and weapon materials on matched poses](worn-materials.png)
 
@@ -63,14 +63,14 @@ Each link opens all 29 native poses. Each tile is labeled with its equipment and
 
 | Figure | Detail to follow |
 |---|---|
-| [Human man](worn-human-man.gif) | Compare the Warrior’s chest plate and full suit during a walk. Follow the warmer leather at the waist and the steel at the shins. In the robe views the visible chest can narrow to just a few pixels. |
-| [Human woman](worn-human-woman.gif) | Compare the Warrior’s fitted chest and exposed lower armor as one foot passes the other. Her long hair still obscures the upper back. The sling attachment follows her waist in the side stride. |
-| [Dwarf man](worn-dwarf-man.gif) | In the shorter recoil, the long weapon turns across the body. The staff butt clears the soles on the first side step. |
-| [Dwarf woman](worn-dwarf-woman.gif) | Follow her distinct opening strike. The glove travels with the leading fist and a heavy axe stays joined to its haft through the swing. |
-| [Elf man](worn-elf-man.gif) | In profile walk steps 2 and 3, the Preserver and Ranger retain the outward swing while the last three rows of the trailing corner fold toward the knee. The class and equipped cloaks share that edge. |
-| [Elf woman](worn-elf-woman.gif) | The braid covers much of the rear robe. Its binding is easier to see from the front and side. The chatkcha and sling meet the belt as the hips turn beneath the shoulders. |
+| [Human man](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-human-man.gif) | Compare the Warrior’s chest plate and full suit during a walk. Follow the warmer leather at the waist and the steel at the shins. In the robe views the visible chest can narrow to just a few pixels. |
+| [Human woman](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-human-woman.gif) | Compare the Warrior’s fitted chest and exposed lower armor as one foot passes the other. Her long hair still obscures the upper back. The sling attachment follows her waist in the side stride. |
+| [Dwarf man](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-dwarf-man.gif) | In the shorter recoil, the long weapon turns across the body. The staff butt clears the soles on the first side step. |
+| [Dwarf woman](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-dwarf-woman.gif) | Follow her distinct opening strike. The glove travels with the leading fist and a heavy axe stays joined to its haft through the swing. |
+| [Elf man](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-elf-man.gif) | In profile walk steps 2 and 3, the Preserver and Ranger retain the outward swing while the last three rows of the trailing corner fold toward the knee. The class and equipped cloaks share that edge. |
+| [Elf woman](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-elf-woman.gif) | The braid covers much of the rear robe. Its binding is easier to see from the front and side. The chatkcha and sling meet the belt as the hips turn beneath the shoulders. |
 
-![Male elf Preserver and Ranger in profile before and after, with an equipped cloak and the retail figures](worn-elf-profile.gif)
+![Male elf Preserver and Ranger in profile before and after, with an equipped cloak and the retail figures](worn-elf-profile.png) · [Archived animation](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/worn-elf-profile.gif)
 
 [Inspect the second step as a still](worn-elf-profile.png). The taper changes two poses on each of 22 male elf single- and multiclass outfits. The middle of the drape still passes behind the elbow. Where the taper reveals pixels at the ankle, boots or leg armor now color the newly exposed part. The other five figures retained their unequipped artwork in this review.
 

@@ -2,7 +2,7 @@
 
 The greatest difference is in how the original artist separated small forms. A dark turn under the ribs, a break at the belt, and a bright cuff make the waist and wrist legible even when the arm crosses the body. The Fighter now carries a two-pixel leather shadow behind the crossing wrist. On the Gladiator, the harness darkens where it tucks under the belt.
 
-[Watch the final wrist, harness, and hem edits before and after at game size and 2×](dwarf-final-details.gif)
+[Watch the final wrist, harness, and hem edits before and after at game size and 2×](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-final-details.gif)
 
 ![Matching female and male originals and outfits, including close-ups of the wrists, belt, hood, and recoil hem](dwarf-original-details.png)
 

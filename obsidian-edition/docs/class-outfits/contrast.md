@@ -8,17 +8,17 @@ This earlier contrast study predates the [six-figure cloth detail pass](cloth-de
 
 The small figure is at game size on paving. Beside it, the clothing alone is enlarged 3×. In front idle, follow the lighter brown across the Fighter’s jerkin and the Gladiator’s harness and wrap. The Thief’s slate ridge is easiest to follow as the figure turns away. The Cleric’s cream fold has a deeper, cooler shadow, and the darkest edge of the Psionicist’s tunic separates more clearly from the teal beside it. The pale bone caps and narrow teal sash keep their approved shapes and colors.
 
-[Watch all 29 poses beside the original game dwarves and the previous revision](dwarf-material-contrast.gif) · [Inspect the original dwarf comparison and recoil close-ups](original-dwarves.md)
+[Watch all 29 poses beside the original game dwarves and the previous revision](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-material-contrast.gif) · [Inspect the original dwarf comparison and recoil close-ups](original-dwarves.md)
 
 ## Gladiator, Fighter, and Thief before and after
 
-![Female and male dwarf Gladiator, Fighter, and Thief side by side before and after the contrast pass, through all 29 poses](dwarf-garment-contrast.gif)
+[Archived animation: Female and male dwarf Gladiator, Fighter, and Thief side by side before and after the contrast pass, through all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-garment-contrast.gif)
 
 Each pair shows the outfits before and after the first contrast pass. The small figures are at game size and the figures above them are enlarged 2×. Look at the Gladiator’s upper shoulder rim in front idle, the Fighter’s light stitch just above the crossing wrist in side-walk step 3, and the Thief’s slate ridge as the hood turns into profile. Shared garments receive the same shading where visible on multiclasses. The Cleric/Fighter keeps its pale shoulder caps and the Fighter/Psionicist keeps its narrow teal sash.
 
 ## Dwarves, humans, and original game figures in motion
 
-![Five synchronized rows comparing female and male dwarves, female and male humans, and an original Shattered Lands figure on the same paving](dwarf-human-stock-contrast.gif)
+[Archived animation: Five synchronized rows comparing female and male dwarves, female and male humans, and an original Shattered Lands figure on the same paving](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-human-stock-contrast.gif)
 
 Each row follows one outfit through the 27 poses shared by all the comparison figures. The side walk repeats. The four party figures use the branch sprite loader with empty equipment slots. The last column uses original game art, including the stock male dwarf beside the Gladiators and the blue Mage beside the Psionicists as palette references. The original figures retain their depicted gear. All tiles use the same paving and 2× nearest-neighbor enlargement.
 
@@ -29,7 +29,7 @@ Each row follows one outfit through the 27 poses shared by all the comparison fi
 
 ## The two restored multiclasses
 
-![Dwarf Cleric and Cleric/Fighter side by side, then Fighter and Fighter/Psionicist, human Fighter, and original Warrior in matching poses](dwarf-multiclass-contrast.gif)
+[Archived animation: Dwarf Cleric and Cleric/Fighter side by side, then Fighter and Fighter/Psionicist, human Fighter, and original Warrior in matching poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/dwarf-multiclass-contrast.gif)
 
 The upper row uses female party figures and the lower row uses male party figures. The same original Warrior appears in both as a reference.
 

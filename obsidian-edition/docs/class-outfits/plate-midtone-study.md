@@ -6,11 +6,11 @@ This art study compares three outfits on the arena floor. Look at the half-giant
 
 [![The three front-idle outfits in class colors, earlier full plate, current full plate and the midtone trial beside retail armored figure 1342](plate-midtone-idle.png)](plate-midtone-idle.png)
 
-[Watch all 29 walking and combat poses at game size and 3×](plate-midtone-poses.gif). The retail armored figure (1342) supplies corresponding poses through the melee strikes.
+[Watch all 29 walking and combat poses at game size and 3×](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/plate-midtone-poses.gif). The retail armored figure (1342) supplies corresponding poses through the melee strikes.
 
 ## Current magical plate
 
-The right column equips all three pieces of Warden’s Plate on the same three figures. Watch the fire-colored glints while the front pose holds, then follow the chest, wrists and greaves through the walk. The center column shows ordinary full plate from the current Loader. [See front idle](current-warden-plate.png) · [Watch all 29 poses](current-warden-plate.gif)
+The right column equips all three pieces of Warden’s Plate on the same three figures. Watch the fire-colored glints while the front pose holds, then follow the chest, wrists and greaves through the walk. The center column shows ordinary full plate from the current Loader. [See front idle](current-warden-plate.png) · [Watch all 29 poses](https://github.com/daaki85/darksun-obsidian-edition/blob/d7f2076f5fa3bc4458c55bf5a81dd9237b0c3129/obsidian-edition/docs/class-outfits/current-warden-plate.gif)
 
 ## What the counts mean
 
