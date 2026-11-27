@@ -138,6 +138,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
 | `ravstore.py [roll\|gear]` | STORE and RECALL and the fuller starting gear in the running sequel ($WORK/rav.pid). |
 | `ravtab.py` | the state of choosing an enemy with Tab in the running sequel ($WORK/rav.pid; |
+| `ravtail.py` | DSCLOG2's parts in the running sequel ($WORK/rav.pid): its segment (the INT F5h vector's), the tail's segment the helper set at its header's +1834 (it must be the segment + TAIL_PARAS, +1836) and the tail's signature... |
 | `ravtext.py [N]` | Wake of the Ravager's text buffer (DSCLOG2's TEXT, sites 93 and 94): the last N records (default 40) the dialogue window's input and the message box left in it (kind 0 a reply, 1 a portrait and its number, 2 text, 3... |
 | `ravthief.py [MEMBER] [PID]` | Wake of the Ravager's own thief-skill routine (its DSUN.EXE 8C647h, SL's 80240h) run in an emulator (unicorn) on the running game's memory, for party member MEMBER (default 0), once with the game's list of slots that... |
 | `ravtone.py [warm\|neutral\|show] [FLAG]` | Wake of the Ravager wall shadows' tone (DSCLOG2's WS_GAIN, header + 5F8Bh) swapped in guest memory, DARK made again; |

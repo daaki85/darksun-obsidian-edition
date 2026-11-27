@@ -1448,7 +1448,17 @@ a click, find that handler (INT 33h 14h, swapped and given back) and call it wit
 TARGET_MOUSE). **Tab** without the Loader opens the game's own menu (the save/load/options panel), with the
 Loader on a party member's turn in a fight it is the Loader's. **A DSCLOG2 routine must go above
 RESIDENT_END**: code after it is freed as the helper goes resident, and the next allocation writes over it
-(the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then).
+(the upper memory chain "broken" just past DSCLOG2's block in `dosmem.py`; it ran by luck until then). **DSCLOG2's room** (2026-11-27, claude/dsclog2-segment-room): the helper is three parts, the segment
+(CS: the header and the code, to IMAGE_END, under 64 KB), the tail (TAIL_PARAS on: tables and buffers, read
+through FS = CS + TAIL_PARAS, `TAIL_FS`; the Loader at the header's +1834 x 16 + the buffer's word) and the
+install (INSTALL_PARAS on, the EXE header's CS:IP, freed). With #218-#223 joined the segment had reached
+FF1Fh and the install wrapped past FFFFh (nasm's "word data exceeds bounds"); now `test_dsclog2_room.py`
+fails on a warning or under 2 KB free, and names a tail label read through `cs:`. In memory (`dosmem.py`
+after `RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh`) the helper's block is the segment and the tail together
+(10h + KEPT_PARAS paragraphs with its PSP). To read a tail table: the header's +1836 x 16 past the image, or +1834 x 16 in the
+running game; `ravtail.py` checks the tail in play (logs/2026-11-27-dsclog2-segment-room.md: with #218-#223
+joined, 84,160 bytes of upper memory free, the helper's block 65,792 with its PSP). Details: DEVELOPMENT-INTERNALS.md, DSCLOG2's segment,
+tail and install.
 **The view to the chosen enemy, and a monster's gear before it fights** (2026-11-25,
 logs/2026-11-25-ravager-tab-followups.md): the sequel's centring routine 1C5F:01F3 (file 219E3h; x, y the
 view's middle, then 1 to draw) sets the view's top left to (x - 160, y - 100) rounded down to 8 and keeps it

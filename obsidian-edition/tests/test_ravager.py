@@ -15,6 +15,21 @@ from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, r
 WOTR = os.environ.get("DSUN_WOTR")
 
 
+def helper_parts(exe):
+    """DSCLOG2.EXE's image (past its 32-byte EXE header), its header's place there, and where its tail and
+    its install are in the image (the header's +1836, TAIL_PARAS; the EXE header's CS, INSTALL_PARAS)."""
+    image = exe[32:]
+    hdr = image.find(b"DSCLOGR1")
+    return image, hdr, struct.unpack_from("<H", image, hdr + 1836)[0] * 16, struct.unpack_from("<H", exe, 0x16)[0] * 16
+
+
+def helper_vectors(exe):
+    """The interrupts DSCLOG2 hooks: ALL_VECTORS (the header's +144, in the install), a byte each."""
+    image, hdr, _, install = helper_parts(exe)
+    table = install + struct.unpack_from("<H", image, hdr + 144)[0]
+    return {image[at] for at in range(table, len(image), 3)}
+
+
 class TableTests(unittest.TestCase):
     def test_patches_reuse_sl_bytes_but_their_own(self):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
@@ -81,11 +96,10 @@ class TableTests(unittest.TestCase):
         names land at their places (the Short Sword, SL's 144h, at 258)."""
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 "DSCLOG2.EXE"), "rb").read()
-        at = exe.index(b"DSCLOGR1")
-        off, count = struct.unpack_from("<HH", exe, at + ravager.TSR_NAMES_OFF)
-        hdr_off, = struct.unpack_from("<H", exe, at + 20)
+        image, hdr, tail, _ = helper_parts(exe)
+        off, count = struct.unpack_from("<HH", image, hdr + ravager.TSR_NAMES_OFF)
         self.assertEqual(count, ravager.NAMES_ROOM)
-        self.assertEqual(exe[at - hdr_off + off:at - hdr_off + off + count * ravager.NAME_KEPT],
+        self.assertEqual(image[tail + off:tail + off + count * ravager.NAME_KEPT],  # (in the tail)
                          bytes(count * ravager.NAME_KEPT))
         table = ravager.item_names()
         self.assertEqual(ravager.mod_name(npcitems.SHORT_SWORD), 258)
@@ -96,7 +110,7 @@ class TableTests(unittest.TestCase):
     def test_screens_sites(self):
         """The DAM lines, the Effects screen's lines and the Look box's whole description are DSCLOG2's sites
         70-75 (the kits' take 60 up, the kit pages 62-69), each a routine in its SITE_TABLE, and the
-        header's +158 points at LOOK_FULL (700 zeros inside the image)."""
+        header's +158 points at LOOK_FULL (700 zeros in the tail)."""
         from dsloader import dicelog
         sites = {"dam_line": 70, "missile_line": 71, "view_dam": 72, "ef_rows": 73, "ef_click": 74, "unlook": 75}
         for name, number in sites.items():
@@ -108,26 +122,23 @@ class TableTests(unittest.TestCase):
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
-        full = struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
-        self.assertGreater(full, hdr + 268)
+        image, hdr, tail, _ = helper_parts(exe)
+        full = tail + struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
+        self.assertGreater(full, tail + 16)
         self.assertEqual(image[full:full + dicelog.LOOK_FULL_SIZE], bytes(dicelog.LOOK_FULL_SIZE))
 
     def test_helper_has_the_use_probes(self):
         """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT
-        (zeros, four members' worth, inside the image)."""
+        (zeros, four members' worth, in the tail)."""
         from dsloader import dicelog
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
+        image, hdr, tail, _ = helper_parts(exe)
         self.assertEqual(hdr % 16, 0)
-        slots = struct.unpack_from("<H", image, hdr + dicelog.TSR_SLOTS_OFF)[0]
-        self.assertGreater(slots, hdr + 268)
+        slots = tail + struct.unpack_from("<H", image, hdr + dicelog.TSR_SLOTS_OFF)[0]
+        self.assertGreater(slots, tail + 16)
         self.assertEqual(image[slots:slots + 4 * dicelog.SLOTS_SIZE], bytes(4 * dicelog.SLOTS_SIZE))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]  # (ALL_VECTORS)
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_USE, ravager.VEC_WIN} <= vectors)
         self.assertTrue({ravager.VEC_ITEM_BOX, ravager.VEC_CHAR} <= vectors)
         for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN), ("item_box", ravager.VEC_ITEM_BOX), ("inventory", ravager.VEC_CHAR)):
@@ -137,20 +148,19 @@ class TableTests(unittest.TestCase):
     def test_helper_has_the_labels(self):
         """DSCLOG2 hooks the labels' three interrupts (the scroll's segment kept as an immediate for the
         relocation); its header has DSCLOG's DAC offset (+238) and LBL_SLOTS (+1838, zeros, in the
-        image), its +1834 the segment it sets as it loads."""
+        tail), its +1834 the tail's segment, which it sets as it loads."""
         from dsloader import combatlog, labels
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
+        image, hdr, tail, install = helper_parts(exe)
         self.assertGreater(struct.unpack_from("<H", image, hdr + combatlog.TSR_DAC)[0], 0x10)
-        seg, _, off = struct.unpack_from("<HHH", image, hdr + labels.TSR_TAIL_SEG)
-        self.assertEqual(seg, 0)
-        self.assertGreater(off, hdr + 1872)
+        seg, paras, off = struct.unpack_from("<HHH", image, hdr + labels.TSR_TAIL_SEG)
+        self.assertEqual((seg, paras * 16), (0, tail))
+        self.assertGreater(off, 0)
+        off += tail
         self.assertEqual(image[off:off + labels.SLOTS * labels.SIZE], bytes(labels.SLOTS * labels.SIZE))
-        self.assertLessEqual(off + labels.SLOTS * labels.SIZE, len(image))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        self.assertLessEqual(off + labels.SLOTS * labels.SIZE, install)
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_CAST, ravager.VEC_SCROLL, ravager.VEC_TICK} <= vectors)
         by = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(by["spell_cast"].replacement, bytes((0xCD, ravager.VEC_CAST, 0x90)))
@@ -173,8 +183,7 @@ class TableTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", image, hdr + combatlog.TSR_PANEL_SEG)[0], 0)
         self.assertEqual(struct.unpack_from("<HH", image, hdr + combatlog.TSR_PANEL_TOP),
                          (combatlog.PANEL_Y0, combatlog.PANEL_H))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_FLIP, ravager.VEC_POINTER} <= vectors)
         by = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(by["panel_flip"].replacement, bytes((0xCD, ravager.VEC_FLIP)) + b"\x90" * 6)

@@ -1194,12 +1194,16 @@ class DiceLog:
             lines += [chr(key | level) + f"{name} {left}/{most}" for level, left, most in levels]
         return "|".join(lines)
 
+    def _slots_at(self) -> int:
+        """Where DSCLOG's copy of the spell slots is (its header's +148, in its segment)."""
+        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
+        return base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SLOTS_OFF, 2))[0]
+
     def _write_slots(self) -> None:
         """Keep DSCLOG's copy of the party's spell slots current."""
         if self.tsr_hdr is None:
             return
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
-        table = base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SLOTS_OFF, 2))[0]
+        table = self._slots_at()
         data = b""
         for member in range(game.PARTY_SIZE):
             try:

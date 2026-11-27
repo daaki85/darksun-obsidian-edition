@@ -217,6 +217,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-shinobi-spells.md) | The Shinobi's wizard spells in Wake of the Ravager (the Draxans' ambush, test edits): a thief 13th Shinobi's USE had a MAGE list, levels 1-4 (1-3 at thief 10th); her Hold Person held a Draxan 16 rounds (casting level 8); the control, the kit off, PSIONIC only |
 | [2026-11-26](2026-11-26-ravager-poison-arrows.md) | Wake of the Ravager: the Poisoner's poison (DSCLOG2's POISON_HIT, site 214: the sequel's record 273, a save or 10 damage, once a hand a fight; a weapon of its own spell no dose), the Spellarcher's spell arrows +1 to +3 (ARROW_PLUS, site 215) and its Fine Bow's +1 to hit (FINE_HIT), against kits-off controls; Computer Control shoots only with a bow +15 |
 | [2026-11-26](2026-11-26-ravager-weapon-traits.md) | Wake of the Ravager: the lotulis' and double spear's second foe (4 in six rounds, the double spear's 1 less), the trikal's trip (2 of 7 saves failed) in the Tyr ambush; double spear gladiators 2 a round beside their foe with the Loader's range 1 (the first-pick play: once a round from 2 squares). controls (`RAV_SKIP=melee_range`, the traits off: once a round from 2 squares, no second foe or trip) and the trikal's reach by a click from two squares |
+| [2026-11-27](2026-11-27-dsclog2-segment-room.md) | DSCLOG2 in three parts (segment, tail, install): with #218-#223 joined, to Tyr, the tail as built, the USE screen's slots from the tail, upper memory 84,160 free |
 
 ## files/
 
