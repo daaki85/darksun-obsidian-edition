@@ -172,7 +172,7 @@ earlier draft waited on Codex's plate tint work; the user says there is none, 20
 `wp_harvest`, `c_cells`, `vga_save`, the panel's drawing, `ring_points`, `c_itoa` and `next_die`.
 Only `save_bands.inc` is shared today. Proposal: move the address-free ones into `.inc` files, as
 C6 suggests. That keeps the emitted bytes the same (the rebuild checks prove it) and stops a fix to
-one helper from missing the other. It frees no room.
+one helper from missing the other. It frees no room. **Queued (2026-11-27, the user's call): after the port's open PRs merge.**
 
 ## Cleanups
 
