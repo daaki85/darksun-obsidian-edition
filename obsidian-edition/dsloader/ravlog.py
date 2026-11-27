@@ -1287,8 +1287,12 @@ class SequelText:
 
 
 class RavDiceLog(dicelog.DiceLog):
-    """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory read only,
-    and only the rolls (no side features after them yet)."""
+    """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory behind a
+    ReadOnlyGuest, which drops every write but to the ranges a ported feature names in its `writable`
+    (the helper DSCLOG2's buffers and mailboxes, and the item lists under the item gate), each feature
+    adding its own only once the helper in memory has the field (a nonzero header offset). After the
+    rolls, the ported features' pass (_after_rolls: hit points, effects, slots, creation, spell
+    arrows, locks and the rest)."""
 
     def __init__(self, guest, *args, **kwargs):
         apply_layout()
