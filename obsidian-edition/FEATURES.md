@@ -292,7 +292,7 @@ Two more of the game's bugs are mended for good too: Cilla's figure (the game gi
 half-elf woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a spell's icon
 on the Effects screen ending it ([Spells on the Effects screen](#spells-on-the-effects-screen)).
 
-**In Wake of the Ravager:** yes, every one (the spell save is the sequel's own rule already).
+**In Wake of the Ravager:** yes, each as its entry below says (the spell save is the sequel's own rule already).
 
 ### Characters
 
