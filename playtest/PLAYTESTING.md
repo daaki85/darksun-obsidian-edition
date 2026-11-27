@@ -580,6 +580,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   pointer was [leaves the box up](HISTORY.md#message-boxes-and-yesno-questions). `dismiss.sh`
   does this for several. **Once a fight is on, boxclick.sh clicks the map**: on a member's turn its
   clicks at 160,20 walk it.
+  **In Wake of the Ravager** the grey box waits the options' message time, and a click anywhere or a
+  key closes it at once and is used up by it (2026-11-27, [the sequel's scenes, pointer and message
+  box](RESEARCH-RAVAGER.md)); its films and narrated opening show the arrow and skip on a click.
 - **YES/NO questions** ("Yell something back at the Announcer? (Answer Yes or No)") look like a
   message box, but a click doesn't answer them: press **N** (or Y). One is waiting only while the
   dice log's last line is `    2. No` (answered, `    > No` follows): a check for "2. No" in the

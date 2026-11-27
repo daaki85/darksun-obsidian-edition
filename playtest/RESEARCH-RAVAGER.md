@@ -392,3 +392,18 @@ two more such lines, 6B053h and 6DBC8h, are the creation screen's); the preloade
 7B827h (SL's 73034h), its way out with the picture at 7B89Eh. The sequel's own figures (BMP 20000-20013,
 76 by 106) are drawn over a parchment the screen draws, so Shattered Lands' 48 by 95 ones sit on it
 as in Shattered Lands. `ravinvfig.py` sets a member's figure and classes for a look.
+
+**Its scenes, pointer and message box** (2026-11-27, logs/2026-11-27-ravager-cutscene-mouse.md): the
+films (FLI) are played by 831D4h in mode 13h, chained; after each frame 1E8h:11h returns the Shift
+flags and `test ax,3` at 8335Ch decides the skip (at once if [631Bh] is set, else only after frame 240),
+so in the stock sequel only Shift held about a second skips the intro. The narrated opening after START
+GAME (and any spoken map scene) waits at 69BDDh, `lcall 230:51 / or al,al / jnz` (37B3h:51h, "the
+speech still plays"); 37B3h:3A5h stops the speech (segment 3611h with the load segment at 1A2h); its
+picture is planar with the CRTC start 0. The game's timer runs at about 1 kHz while speech plays, and
+that loop hundreds of times a second: a site in it must not redraw on each pass. The mouse: the reset's
+"or ax,ax / jnz" at 39F0Bh (SL's 356F5h), the ranges' "mov word [0A103h],0" at 2F110h (SL's 2A912h);
+the game's pointer at DS:A109h, A10Bh. The message box (560h:2Ah, through 466A:2Ah) is SL's but its
+wait was empty; the mod's MSG_SHOWN waits the options' time, now ended by a click or key.
+**A message box to order**: in the Tyr ambush, a click on game (14,188) (inside the closed room at the
+street's lower left) on a party turn says NO PATH FROM HERE. **Where a busy loop spins**: a ring in
+DSCLOG2 that the timer fills with the interrupted CS:IP (its frame's return address) found 69BDDh at once.

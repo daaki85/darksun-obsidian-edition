@@ -259,6 +259,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-no-speaker-shop.md) | Wake of the Ravager's no-speaker emblem and shop panel as Shattered Lands' |
 | [2026-11-27](2026-11-27-inventory-redraws.md) | Class portraits in the Shattered Lands inventory |
 | [2026-11-27](2026-11-27-human-inventory.md) | All eight human inventory outfits on both figures in DOSBox |
+| [2026-11-27](2026-11-27-ravager-cutscene-mouse.md) | Wake of the Ravager's mouse as Shattered Lands': the arrow and a click's skip in its films and narrated opening, the pointer's speed, middle-button scrolling, and the message box closing on a click or key |
 
 ## files/
 
@@ -320,3 +321,4 @@ schedules and diffs a log made or used.
 | [2026-11-27-ravager-defiler-finditem.py](files/2026-11-27-ravager-defiler-finditem.py) | [The same](2026-11-27-ravager-defiler-scrolls.md): ITEM: the sequel item's record and the thing whose list holds it |
 | [2026-11-27-small-party-figures-cycle.py](files/2026-11-27-small-party-figures-cycle.py) | [The same](2026-11-27-small-party-figures.md): SCRATCH MEMBER FIGURES: the member's figure, race and class set to each figure x class, the inventory reopened and grabbed into SCRATCH/cyc (a test edit, never saved) |
 | [2026-11-27-ravager-shadow-feet-probe.py](files/2026-11-27-ravager-shadow-feet-probe.py) | [The same](2026-11-27-ravager-shadow-feet.md): the party's draw list entries, map things, pictures and frames' sizes in the running sequel |
+| [2026-11-27-ravager-msgwatch.py](files/2026-11-27-ravager-msgwatch.py) | [The same](2026-11-27-ravager-cutscene-mouse.md): click\|key\|none SECONDS: waits for the sequel's message box (DSCLOG2's msg_waiting), grabs it, presses, and times its close |

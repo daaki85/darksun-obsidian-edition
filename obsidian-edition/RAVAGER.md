@@ -233,10 +233,19 @@ bigger character sheets) as it goes in (a game already running lists it from its
   plain gear of the member on show and shuts the shop back to the talk. M is the sequel's own overhead map
   (its O). No purse sound plays in the sequel. Without the Loader, T and S are the game's keys and leave the
   window or the shop open.
+- **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down, in fights too (the
+  stock sequel scrolls only at the screen's edge).
+- **[The pointer in scenes, and where it starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)**:
+  the arrow is on screen in the sequel's films and in the narrated opening after START GAME, and a click
+  skips them (the stock sequel skips its intro only with Shift held about a second, and its opening not
+  at all). The pointer starts in the middle, keeps its place between screens and moves as far up and down
+  as across, as in Shattered Lands. The arrow is Shattered Lands' (the sequel has none of its own for
+  scenes), taken from your Shattered Lands folder each start (a plain arrow without it).
 - **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
   SPELL](FEATURES.md#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the
-  game waits, and with it [a wizard's INT](FEATURES.md#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
+  game waits, or until a click or a key closes it, as in Shattered Lands (NO PATH FROM HERE or NO LINE
+  OF SIGHT need not hold up a fight), and with it [a wizard's INT](FEATURES.md#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
   SPELLS OF THAT LEVEL.
 - **The Loader's Dialogue and Journal tabs follow the sequel**: every conversation with the replies
   offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
@@ -384,10 +393,8 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   pictures are Shattered Lands', above).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
-  sequel's map scrolls only at the screen's edge, as the game has it), [the view in
-  fights](FEATURES.md#the-view-in-fights), [the pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)
-  and [the whole party in view](FEATURES.md#the-whole-party-in-view).
+- **Controls**: [the view in fights](FEATURES.md#the-view-in-fights) and [the whole party in
+  view](FEATURES.md#the-whole-party-in-view).
 - **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
   and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
 - **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
