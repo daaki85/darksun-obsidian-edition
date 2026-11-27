@@ -1243,6 +1243,11 @@ the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. 
 counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
 grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
 
+**Comparing two dice logs on the sequel** (2026-11-27, the pass as named steps): a second `ravdice.py` on
+the same running game says nothing of the stock, the own party or the ages, which the first wrote into the
+game (once a game). To compare two builds of the Loader, start the game afresh from the save for each
+(`ravload.sh`, then `ravdice.py --all 25 OUT`): only the age rolls differ between runs.
+
 **DSCLOG2's upper memory, measured for the audit's R3** (2026-11-27, claude/combined-playtest at 9c8dc0b3,
 `ravload.sh ravager-after-ambush` with and without `RAV_SOUND=1`, the same both ways; the chain walked from 9FFFh):
 upper memory is CA00h-EFFFh, 9,718 paragraphs past the first 9-paragraph scrap. DSCLOG2's block at CA0Ah is 4,151

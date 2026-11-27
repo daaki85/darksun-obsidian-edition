@@ -62,6 +62,13 @@ Releases, newest first (2.12.0 and older in the archive):
 Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
+**Dev: the dice log's pass as named steps (the code audit's S2)**
+- `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
+  `RavDiceLog.PASS` takes Shattered Lands' by name and adds its own, and `ravlog.PASS_LEFT_OUT` says
+  why it leaves each other one out. `test_ravlog.PassStepTests` fails on a new step in neither. Played
+  in both games: the same lines as before (Shattered Lands' fountain ambush: initiative, a dance, the
+  turns; the sequel: stock, its own party, ages).
+
 **Dev: one copy of the helpers' shared routines (the code audit's S5)**
 - The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
   `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches
