@@ -153,6 +153,8 @@ class GameFileTests(unittest.TestCase):
         package = ravfigures.object_chunks(stock)
         grouped = [pic for _, pictures, _ in ravfigures.ASSEMBLIES for pic in pictures]
         for pic in (*ravfigures.FURNITURE, *grouped):
+            if pic == 1140:  # Occupied shelf boards have their own test below.
+                continue
             key = ("BMP ", pic)
             percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
             states = 2 if pic in ravfigures.OPENABLE else 1
@@ -170,6 +172,24 @@ class GameFileTests(unittest.TestCase):
                     offset = (100 * distance + percent // 2) // percent
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
+
+    def test_mine_shelf_preserves_all_six_loose_orbs(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        key = ("BMP ", 1140)
+        package = ravfigures.object_chunks(stock)
+        self.assertEqual(package[key], ravfigures._lower_orb_shelf(stock[key]))
+        shelf = sequelicons.decode(package[key])
+        original = sequelicons.decode(stock[key])
+        orb = sequelicons.decode(stock[("BMP ", 1052)])
+        self.assertEqual((len(shelf), len(shelf[0])), (50, 64))
+        self.assertTrue(all(p is None for row in shelf[:8] for p in row))
+        self.assertEqual(shelf[-1], original[-1])
+        for x, y in ((6, 8), (26, 9), (45, 8), (19, 22), (11, 35), (32, 37)):
+            for dy, row in enumerate(orb):
+                for dx, colour in enumerate(row):
+                    if colour is not None:
+                        self.assertEqual(shelf[y + dy][x + dx], colour, (x, y, dx, dy))
 
     def test_split_beds_match_a_single_scaled_blanket_at_every_placement(self):
         from dsloader import sprites

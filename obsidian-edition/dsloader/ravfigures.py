@@ -246,6 +246,19 @@ def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None, scale: floa
     return sprites.encode_frames(frames)
 
 
+def _lower_orb_shelf(chunk: bytes) -> bytes:
+    """Shorten the gaps between the boards without flattening the six loose-orb drawings."""
+    from . import sequelicons, sprites
+    if struct.unpack_from("<H", chunk, 4)[0] != 1:
+        return chunk
+    rows = sequelicons.decode(chunk)
+    if (len(rows), len(rows[0])) != (50, 64):
+        return chunk
+    # Top, middle, bottom board, then the original floor-contact row.
+    tiers = rows[:14] + rows[18:31] + rows[34:48] + rows[49:]
+    return sprites.encode_frames([[[None] * 64] * (len(rows) - len(tiers)) + tiers])
+
+
 def _lower_split_bed(old: gff.Chunks, new: gff.Chunks) -> None:
     """Resample the assembled bed, then split it back across the two stock drawing areas."""
     from . import sequelicons, sprites
@@ -298,7 +311,9 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                 script = ("SCMD", number)
                 if key not in old or new.get(key) != old[key] or new.get(script) != old.get(script):
                     continue
-                if script not in old or number in OPENABLE:
+                if number == 1140 and script not in old:
+                    new[key] = _lower_orb_shelf(old[key])
+                elif script not in old or number in OPENABLE:
                     scale = FURNITURE_SCALES.get(number, 0.66)
                     new[key] = lowered_furniture(old[key], BASE_ROWS.get(number), scale)
             # Package positions only when every piece still uses this group's artwork.

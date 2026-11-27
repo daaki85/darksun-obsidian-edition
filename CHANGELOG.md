@@ -75,6 +75,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
 
 **Changed** (Wake of the Ravager)
+- The lowered orb shelf in Mines 3 keeps the six blue orbs the same shape as the ones on the laboratory floor.
 - The four upright polearm stands in the Yuan-ti tunnels, Mines 3 and Volcano 2 are 14 pixels shorter. The tallest axe heads keep their shape.
 - All five bowls are visible while the Mines 3 mind flayers eat. The Elderbrain encounter now uses the approved tank drawing, including when the glass shatters.
 - The Mines 3 loot chest now matches the height of the same chest in the Pyramid, closed and open.
