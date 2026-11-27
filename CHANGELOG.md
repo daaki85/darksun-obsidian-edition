@@ -62,6 +62,16 @@ Releases, newest first (2.12.0 and older in the archive):
 Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
+**New: the sequel's figures in Shattered Lands' style** (branch `claude/ravager-figure-import`)
+- The approved redraws of Wake of the Ravager's figures (Codex's catalogue, the owner's private
+  installation files, b447d39; 275 OBJEX pictures, 32 objects moved to their own figure, the Tarrasque,
+  its cinematic and the drakes in RESOURCE, the Mines3 dining room's placements) shipped as
+  `dsloader/ravager-figures.zip` (the owner's choice) and put into the Loader's OBJEX2.GFF, RESOURC2.GFF
+  and a new RGN03A2.GFF by `ravfigures.py`; DSCLOG2 opens RGN03A2.GFF for RGN03A.GFF (COPIED bit 8).
+  Notaku's combat drawings lose the box their copied Shattered Lands background drew. `RAV_SKIP=figures`
+  is the control. Played: Tyr's street from `ravager-after-ambush` with and without; the region copy's
+  opening seen through a scratch build. Tests: `test_ravfigures.py`, `test_ravager`'s copies.
+
 **Dev: the dice log's pass as named steps (the code audit's S2)**
 - `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
   `RavDiceLog.PASS` takes Shattered Lands' by name and adds its own, and `ravlog.PASS_LEFT_OUT` says

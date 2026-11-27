@@ -2263,6 +2263,7 @@ show the game's own behaviour beside the mod's. The names are read once, all tog
 | A script fix | any key of `ravager.SCRIPT_FIXES` | the fix | `GPLDAT2.GFF` | the game's script |
 | An object part | `mod_types`, `new_items`, `new_spells` (the spellbooks only, `ravgear.BOOKS`: the spells stay), `item_shine`, `weights`, `spell_arrows`, `melee_range` | that part of the objects, all the named parts in one write of the copy | `OBJEX2.GFF` | e.g. `weights`: the sequel's items weigh 0 again |
 | `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
+| The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no `RGN03A2.GFF` | the sequel's own figures. DSCLOG2's COPIED word (its header's +146) has bit 8 set once the game opened `RGN03A2.GFF` |
 
 Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with
 `# left out: ...` when the run went ahead. Prerequisite: `RAV_LOADER=1` (without it nothing is copied,
