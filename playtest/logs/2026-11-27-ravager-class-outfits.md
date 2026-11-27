@@ -69,8 +69,15 @@ left the stock figures), with or without the dice log (the same pixels): Ar'Anda
 outfit, Terrannus's cream Priest robe and Gerakis's Gladiator outfit. Thy'rokh's figure is unchanged.
 
 On the creation screen (`ravcreation.sh`), the small figure wears the class outfit when the screen opens and after
-a race's or a portrait's click, when the game draws it again. A class's click does not redraw it: a redraw of ours
-(the game's own calls, from the class click's probe and then from CR_HP's) quit the game with "Math Err" after
-Fighter off and Thief on, and the control without it did not, so it was dropped.
+a race's or a portrait's click, when the game draws it again, and after a class's click, when KP_CLASS draws it
+(CR_SMALL_DRAW: the backdrop put back with 0C8h:3B30h, then 5D0h:2Ah, as the race's click does).
+
+The first try at that redraw quit the game with "Math Err" after Fighter off and Thief on, from KP_CLASS and from
+CR_HP alike; the control without it did not. The cause was the moment between the two clicks, with no class: the
+key had no class bit, and no picture has that key in the GFF. SMALL_KEY now gives the stock preloaded picture
+then. Fighter off, Thief on, a class on and off, then Psionicist: each click redraws the figure (the stock one with
+no class), and the game runs on.
+
+![The creation screen after Fighter off and Thief on: the small figure hooded](img/2026-11-27-ravager-creation-thief-small.png)
 
 ![The party column: plain, then dressed](img/2026-11-27-ravager-small-figures.png)

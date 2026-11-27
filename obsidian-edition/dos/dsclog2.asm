@@ -4563,6 +4563,30 @@ cr_draw:
         call far [cs:cr_call]
         add sp, 8
         ret
+; CR_SMALL_DRAW: the small figure drawn again, as after a race's click (6B05Fh-6B07Fh): its box's backdrop put
+; back (the words at 111Ch) and the figure drawn (the overlay's 5D0h:2Ah, SMALL_FIG's outfit). Called as CR_DRAW.
+CR_SMALL_BACK equ 0x111C                ; (DS: the small figure's box's saved backdrop, two words)
+CR_SMALL_SEG equ 0x488B - 0x4982        ; (5D0h's stub segment less DS's, read in a run: 2Ah the small figure drawn)
+CR_SMALL     equ 0x2A
+cr_small_draw:
+        push word [CR_SMALL_BACK]
+        push word [CR_SMALL_BACK + 2]
+        mov ax, ds
+        add ax, CR_BACK_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_BACK_PUT
+        call far [cs:cr_call]
+        add sp, 4
+        push dword 0x160091             ; (its place: x 91h, y 16h)
+        push dword [CR_CREATURE]
+        mov ax, ds
+        add ax, CR_SMALL_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_SMALL
+        call far [cs:cr_call]
+        add sp, 8
+        ret
+small_seen dw 0xFFFF                    ; (the creation screen's small figure as KP_CLASS last drew it)
 cr_seen dd 0xFFFFFFFF
 cr_call dd 0
 
@@ -4570,9 +4594,9 @@ cr_call dd 0
 ; SMALL_FIGURE), the small figure of the creature ES:BX (the inventory's party column, the creation screen's):
 ; the Loader's frame 0 of the figure's walking picture in the outfit of its classes, BMP SMALL_BASE + INV_FIGURE's
 ; key (the figure * 256 + a bit per class group: ravdress.small_chunks, in OBJEX2.GFF), which INV_LOAD reads,
-; the preloaded picture where there is none; the creature being made has the creation sheet's classes (CR_KEY's), shown when the
-; screen opens and after a race's or a portrait's click (the game draws it again; a draw of ours after a class's
-; click quit the game with "Math Err", 2026-11-27).
+; the preloaded picture where there is none; the creature being made has the creation sheet's classes (CR_KEY's), drawn again
+; after a class's click by KP_CLASS (CR_SMALL_DRAW). With no class (a class clicked off), the preloaded picture: a
+; class-less key, absent from the GFF, quit the game with "Math Err" (2026-11-27).
 SMALL_BASE equ 0x7000
 SMALL_PRELOAD equ 0x23
 small_fig:
@@ -4629,7 +4653,12 @@ small_key:
 .skip:  inc si
         loop .next
 .done:  mov ax, dx
-        pop es
+        test al, al
+        jnz .key
+        sub ax, SMALL_BASE              ; (no class, as between a class's click off and another's on:
+        shr ax, 8                       ;   the preloaded picture, there being no outfit to read)
+        add ax, SMALL_PRELOAD
+.key:   pop es
         pop di
         pop si
         pop dx
@@ -16185,7 +16214,24 @@ kp_class:
         mov bx, sp
         mov [ss:bx + 34], ax
         mov [ss:bx + 36], dx
-.drawn: pop es
+.drawn: les bx, [CR_CREATURE]   ; (and the small figure, its outfit's: CR_SMALL_DRAW)
+        call small_key
+        cmp ax, [cs:small_seen]
+        je .small
+        mov [cs:small_seen], ax
+        mov bx, sp
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call cr_small_draw
+        pop bp
+        pop ax
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.small: pop es
         popad
         push eax
         push es
