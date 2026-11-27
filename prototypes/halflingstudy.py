@@ -503,7 +503,8 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
         u, v = registered(x, y)
         if not (0 <= v < h and 0 <= u < len(bare[v])) or bare[v][u] not in (50, 52):
             continue
-        inside = [SKIN.index(bare[v+j][u+i]) for i,j in ((-1,0),(0,1),(1,0),(0,-1))
+        inside = [SKIN.index(bare[v+j][u+i]) for i,j in ((-1,0),(0,1),(1,0),(0,-1),
+                                                        (-1,1),(1,1),(-1,-1),(1,-1))
                   if 0 <= v+j < h and 0 <= u+i < len(bare[v]) and bare[v+j][u+i] in SKIN]
         if inside:
             edits[u, v] = dye(SKIN, max(2, min(6, sum(inside)/len(inside))))
