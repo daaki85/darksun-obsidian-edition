@@ -175,7 +175,16 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
-**New: the kits on Wake of the Ravager's DAM lines and creation THAC0** (branch `claude/sequel-dam-lines`)
+**New: Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus and the level-ups** (branch `claude/sequel-xp-lines`)
+- The sequel's dice log runs Shattered Lands' tracker whole: after a kill the XP each member gained and for
+  which kills, the 10% for high prime requisites added to the sheet as in Shattered Lands (`XP: Terrannus
+  +1100 (+100 for Cleric, WIS 19) ... (for Draxan 4000)`), the level-ups with their hit points, and XP held
+  at the sequel's own cap (5,625,000: `tracker.CAP`, `SHARE`). The party's sheets' XP is made writable for
+  it: the sequel's log writes nowhere else.
+- The round's initiative line comes as the round's rolls end, as in Shattered Lands (it waited for the
+  next roll before).
+
+**New: the kits on Wake of the Ravager's DAM lines and creation THAC0** (#277)
 - The inventory's and View Character's DAM lines show the kits' part as Shattered Lands' do: a Ravager's 1 more
   damage, a Brute's 2 with a two-handed weapon, a Ghetto Fighter's 1 with a dagger, and a Battle Mage's,
   Crusader's or Mind Warrior's attacks with its chosen weapon (DSCLOG2's `DAM_KIT_MELEE`, `DAM_EXPERT`).

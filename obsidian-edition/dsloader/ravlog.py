@@ -449,6 +449,14 @@ def _layout_holders() -> Tuple[object, ...]:
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
+def rav_xp_share(sheet: bytes) -> int:
+    """A sequel sheet's share of RAV_XP_CAP (ravager.xp_share: its classes, levels and race, at the sequel's
+    offsets), for tracker.SHARE."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    levels = sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 3]
+    return ravager.xp_share(classes, levels, sheet[game.SHEET_RACE] == game.HUMAN)
+
+
 def apply_layout() -> int:
     """game.py's values, and the copies dsloader's modules imported (by the same name, the same value),
     rebound to the sequel's; dicelog's header signature too. Returns how many names were rebound."""
@@ -503,6 +511,10 @@ def apply_layout() -> int:
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
+    from . import tracker  # (the XP cap the party's XP is held at: the sequel's, DSCLOG2's LEVEL_ROOM)
+    _SAVED.append((tracker, "CAP", tracker.CAP))
+    _SAVED.append((tracker, "SHARE", tracker.SHARE))
+    tracker.CAP, tracker.SHARE = ravager.RAV_XP_CAP, rav_xp_share
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -2302,13 +2314,20 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.writable = before
             self._ef_stats_written = data
 
-    def _kills_pass(self, now: float) -> List[str]:
-        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
-        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
-        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+    def _tracker_pass(self, now: float) -> List[str]:
+        """Shattered Lands' tracker (tracker.PartyTracker.check): the monsters killed ("Draxan is killed"), which
+        the fight's tally counts; the XP each gain gave and for which kills, with the bonus for high prime
+        requisites; the level-ups; the XP held at the sequel's cap (tracker.CAP, SHARE). The party's sheets' XP
+        (+0, a dword) made writable while it runs, for the bonus and the hold (else the read-only view drops
+        them, and the next look takes the bonus back). Nothing while a game loads."""
         if self.tracker is None or self._party_check(now):
             return []
-        return self.tracker._check_monsters(now)
+        gd = self.game
+        ranges = [] if gd is None else \
+            [(aging.sheet_address(gd, i) + game.SHEET_XP, 4) for i in range(game.PARTY_SIZE)
+             if len(gd.creature(i)) >= game.CREATURE_SIZE and gd.creature(i)[game.CREATURE_NAME]]
+        with self._writable(ranges):
+            return self.tracker.check(now)
 
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
@@ -2437,7 +2456,8 @@ RavDiceLog.PASS = (
     _own("answer_arrows", lambda log, now, loading: log._answer_arrows()),  # (a Spellarcher's: SPELL ARROWS)
     _own("strays", lambda log, now, loading: log._strays_pass()),  # (spell arrows only a Spellarcher carries)
     _own("hp_changes", lambda log, now, loading: log.hp_changes(now)),
-    _own("kills", lambda log, now, loading: log._kills_pass(now)),  # (the fight's tally counts them)
+    _own("tracker", lambda log, now, loading: log._tracker_pass(now)),  # (kills, XP, level-ups)
+    _take("initiative"),  # (the round's order once its rolls are still: INITIATIVE_WAIT)
     _own("psp_abilities", lambda log, now, loading: log._psp_ability_changes(now)),
     _own("blast", lambda log, now, loading: log._blast_pass(now)),
     _own("creation", lambda log, now, loading: log._creation_pass(now)),
@@ -2481,9 +2501,8 @@ PASS_LEFT_OUT = {
     "answer_use": "the USE screen's slots are written ahead (write_slots), not answered",
     "gear_due": "the sequel's starting gear is its own step (gear)",
     "creation_figure": "the sequel has no class outfits",
-    "changes": "split into hp_changes, kills, psp_abilities and blast",
+    "changes": "split into hp_changes, psp_abilities and blast (the kills: tracker)",
     "write_stats": "not ported",
-    "tracker": "not ported",
     "item_watches": "not ported",
     "arena_ring": "Shattered Lands' arena only",
     "drawn": "Shattered Lands' story only",
@@ -2492,7 +2511,6 @@ PASS_LEFT_OUT = {
     "dress": "the sequel has no class outfits",
     "itemwatch": "not ported",
     "scroll": "not ported",
-    "initiative": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",
 }
