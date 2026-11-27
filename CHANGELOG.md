@@ -63,6 +63,13 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Docs: a readable priest spells picture, a shorter Ravager page** (branch `claude/docs-review-trims`)
+- `new-priest-spells.png` shows the ten 6th-level priest spells' description boxes at full size, not ten
+  whole USE screens shrunk to fit (1920x1600 to 592x840).
+- RAVAGER.md's "The mod in the sequel": the 45-line kits entry split into kits, weapon specs, new wizard
+  spells, the creation screen, the screens and choosing an enemy; the level cap and first spells entries
+  cut to the sequel's own facts. The detail stays on KITS, WEAPON-SPECS and PLAYER-GUIDE, linked.
+
 **Docs: Wake of the Ravager's side of the features, creatures and dice log pages** (branch `claude/ravager-docs-side`)
 - CREATURES.md covers both games: the sequel's 198 creatures from its own data, each in the figure the mod
   draws (183 redrawn, marked), its size by the sequel's table and the cahulaks' answer as the sequel decides

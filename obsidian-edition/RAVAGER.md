@@ -123,53 +123,31 @@ bigger character sheets) as it goes in (a game already running lists it from its
 
 - **[The combat log in the game](FEATURES.md#the-combat-log-in-the-game)**: L on the map shows the dice
   log's lines over the sequel's map too, as in Shattered Lands.
-- **Kits, weapon specs, spells and the starting age** come across with each character, on its
-  character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
-  with the kits). The [new wizard spells](FEATURES.md#new-wizard-spells) come across too: a character who knows them
-  casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
-  or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
-  the sequel's wizards carry one ([the mod's gear](#the-mods-gear-in-the-sequel)). The kits work there as in Shattered Lands, nearly all of them whole: their rules in a
-  fight, spell slots, casting levels, cures, the spells they know, PSP costs, hit dice, and the gear
-  each forbids or allows, refused when it is put on or in a hand (a Ravager's shield and bow). The
-  Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in
-  Shattered Lands: KITS on the creation panel opens the KIT page ([Choosing a
-  kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the game's menu right
-  after DUAL. A new character's starting gear is fitted to its kit from the sequel's own items, and a
-  Spellarcher makes spell arrows on the USE screen there as here, with the spell's sound, and they are
-  the Spellarcher's alone. Kit by kit, with the few that work
-  only in part (the Wanderer, the Spellarcher): [In Wake of the
-  Ravager](KITS.md#in-wake-of-the-ravager). The creation screen has [STORE and
-  RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
-  gear](FEATURES.md#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
-  can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air
-  clerics' too, as the game's are in Shattered Lands), given before the character is first shown and written to the roster. Its
-  weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
-  druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
-  weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
-  shield in the left. A new
-  fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
-  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)), and its starting weapon becomes a +1
-  weapon of its first pick's kind (a two-handed one sends the shield to the backpack; a bow or sling goes to
-  the missile slot, a bow with +1 arrows, the missile weapon there before going to the backpack). The weapon specs work there:
-  a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
-  weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
-  Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
-  those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
-  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
-  DAM lines the attacks a round and the damage the attack has (the off hand's one a round, and the kits'
-  damage and a Battle Mage's, Crusader's or Mind Warrior's attacks too), the creation screen's THAC0 a
-  Scholar's, and
-  the Effects screen's lower panel each one's weapon kinds, and an effect's charges in its name
-  (ARMOR (14 CHARGES)) ([the Effects screen](FEATURES.md#the-effects-screen)). The Look box's whole description of a monster comes up in the
-  dialogue window as the box closes there too. [Choosing an
-  enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) works there as well: in a fight, on a party
-  member's turn, Tab chooses the nearest enemy (then the next; Shift+Tab goes back), a red ring on
-  the ground marks it, the dice log names it with [the chance to hit](FEATURES.md#the-chance-to-hit-before-the-swing)
-  (`Chosen with Tab: Draxan (12 HP), needs 14+ (35%) - Enter attacks it`), and Enter attacks it;
-  the chance to hit floats over the enemy under the pointer too. An enemy chosen off the screen is
-  scrolled into view, so Enter reaches it. (Without the Loader,
-  Tab opens the sequel's own menu, as it does out of fights.) The Loader's
-  copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+- **[Kits](KITS.md#in-wake-of-the-ravager)** come across with each character on its character sheet
+  (with its spells and starting age), and work there nearly all whole: their fight rules, spell slots,
+  spells known, PSP costs, hit dice and the gear each forbids or allows (a Ravager's shield and bow are
+  refused). The Effects screen names each kit (`KIT: RAVAGER`). A new character takes one from KITS on
+  the creation panel, and a human with no kit is asked for one right after DUAL. The Wanderer and
+  the Spellarcher work only in part: [kit by kit](KITS.md#in-wake-of-the-ravager).
+- **[Weapon specs](WEAPON-SPECS.md#in-wake-of-the-ravager)** come across and work there, in all twenty-two
+  (the sequel's Twohand Sword and Crystal sword are two-handed swords). A new fighter, gladiator or ranger
+  picks them on the weapon window after DONE, and its starting weapon becomes a +1 weapon of its first
+  pick's kind, in the weapon hand (the sequel's own gear put it in the left hand, where it swung once a round).
+- **The [new wizard spells](FEATURES.md#new-wizard-spells)** come across, and a preserver learns them there
+  at a level up, at creation or from a spellbook: Notaku in Tyr sells one of each (Cat's Grace 6000, the
+  others 3000), and three of the sequel's wizards carry one ([the mod's gear](#the-mods-gear-in-the-sequel)).
+- **The creation screen** has [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen), and a
+  new character gets [fuller starting gear](FEATURES.md#fuller-starting-gear) fitted to its kit from the
+  sequel's own items.
+- **The screens** show it all as in Shattered Lands: the DAM lines (the kits' damage and a kit's
+  expertise too), the creation screen's THAC0 (a Scholar's), the Effects screen's weapon kinds and an
+  effect's charges in its name ([the Effects screen](FEATURES.md#the-effects-screen)), and the Look box's whole
+  description of a monster in the dialogue window.
+- **[Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)** with Tab and Enter works in
+  the sequel's fights, with the red ring and [the chance to hit](FEATURES.md#the-chance-to-hit-before-the-swing)
+  (without the Loader, Tab opens the sequel's own menu).
+- The Loader's copy of the sequel gives every character sheet six more bytes for all this, its own
+  characters' too.
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
@@ -223,21 +201,12 @@ bigger character sheets) as it goes in (a game already running lists it from its
   Control swung once a round from 2 squares); with the Loader its range is 1, as Shattered Lands' double
   spear's, and it swings at the warrior's rate ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **[A level cap by XP](FEATURES.md#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
-  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
-  past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
-  of three classes reach 15th, of one or two higher (a fighter alone 30th, with another class 19th, with
-  two more 15th; a preserver alone 25th, a druid 20th: [the
-  table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). XP stops at the cap: each level up holds a
-  character's XP at its share, so nothing is left over at the top. View Character names the class the
-  next XP is for, and a level up past 20th says "21st", not "21th". THAC0 stops at AD&D's best
-  (a warrior's 1, a priest's 8, a thief's or psionicist's 11, a preserver's 14), and a preserver's
-  level up offers spells up to 9th level only: the sequel's four 10th-level spells stay the monsters'. A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
-  the thief skills go on by AD&D's table to 17th, spell slots to 30th (a preserver's 7 7 7 7 7 7 7 6 6),
-  a druid's stop growing at 15th, a ranger's
-  priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
-  **saving throws** are the Player's Handbook's by class group and level: the game held every save at
-  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8, and a
-  psionicist saved as a thief (Shattered Lands' bugs too, [fixed there](FEATURES.md#adds-class-tables) the same way).
+  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th. Levels go past
+  the sequel's table (20th) to 30th by AD&D's tables, as far as the share allows: most characters of three
+  classes reach 15th, a fighter alone 30th ([the table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). THAC0, thief
+  skills, spell slots and **saving throws** go on by AD&D's tables too (the game held every save at its
+  table's last row, and a psionicist saved as a thief), and a preserver learns spells up to 9th level only:
+  the sequel's four 10th-level spells stay the monsters'. A level up past 20th says "21st", not "21th".
 - **[Shops as in AD&D](FEATURES.md#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
@@ -311,14 +280,11 @@ bigger character sheets) as it goes in (a game already running lists it from its
 - **[See-through figures](FEATURES.md#see-through-figures)** in the sequel too: a party member hidden in shadows in
   a fight, and anyone invisible (unless the party detects invisibility), is drawn half see-through.
 - **[Preservers' first spells](FEATURES.md#preservers-first-spells) and [psionic powers at
-  creation](FEATURES.md#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
-  Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
-  of 2nd, two of 3rd, one of 4th), and a psionicist a fixed eighteen powers, anyone else four or five of its
-  discipline. With the Loader, **DONE** opens the game's **CHOOSE A SPELL** for as many as it would have
-  given, level by level from 1st (the window's pages no higher than the level being picked), then **PICK A
-  PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
-  Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
-  spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
+  creation](FEATURES.md#psionic-powers-at-creation)** are picked in the sequel too, in place of its own
+  grants (a new 7th-level preserver's ten spells, some at random, and a psionicist's fixed eighteen powers).
+  With the Loader, **DONE** opens **CHOOSE A SPELL** for as many as the game would have given, level by
+  level, then **PICK A PSIONIC POWER**. **EXIT** leaves the rest to the game, and **EDIT** keeps the powers
+  of a member whose classes and disciplines stay.
 
 ## The mod's gear in the sequel
 
@@ -370,7 +336,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: [KITS.md](KITS.md) says which kits the sequel has.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
   sequel's map scrolls only at the screen's edge, as the game has it), [the view in
   fights](FEATURES.md#the-view-in-fights), [the pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)
