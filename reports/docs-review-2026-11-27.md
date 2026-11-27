@@ -150,3 +150,16 @@ the subsection it sat in; it has a page of its own now (3.2, #234).
 - The FEATURES gear table under the outfits (5).
 - The Scholar, Wanderer and Spellarcher rows beyond the code read; no play.
 - Windows: the Options tab picture is from Linux, with a stand-in DOSBox-X answering its version.
+
+## Follow-up after merge train #241 and #242-#254
+
+- The CHANGELOG's Unreleased section is by subject again, with every entry naming its pull request
+  (#146 to #254); #217's line and the docs PRs' lines (#224-#226, #233, #234, #252) are in. The sequel's
+  interface art (#255) has its entry under New, and RAVAGER.md its bullet.
+- The patch notes' Wake of the Ravager section links to RAVAGER.md (not FEATURES' short paragraph),
+  and has the figures (#250, #251, #253) and the Effects screen's lines (#245, #249); the Scholar's
+  −1 to hit is named with its extra spells as still to come, as KITS' table has it.
+- Still open, both need a play: the **Loader pictures with the old bar** (`dicelog.png`,
+  `dicelog-readable.png`, `dialogue.png`, `viewer.png`), the figure pictures #252 didn't retake
+  (`half-elves.png` is now captioned as the bare race figures; `fogbolt.png`, `show-usable.png`,
+  `default-party-armor.png`, `use-slots.png`), and **FEATURES' gear table** under the outfits.
