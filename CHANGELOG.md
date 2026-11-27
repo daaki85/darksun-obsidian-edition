@@ -60,6 +60,11 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **New**
+- **The creation screen's figure wears the class's outfit**: the small figure at the top shows the
+  class outfit of the class (or classes) picked, for every race, and changes with each class, race
+  or portrait click; with no class picked it is the game's own. The Loader writes the figure where
+  the game reads it, and DSCLOG waits for it and draws the figure again (`creationfigure.py`,
+  `FIG_WAIT`). Wake of the Ravager has no class outfits yet, so its screen is unchanged.
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
   default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,

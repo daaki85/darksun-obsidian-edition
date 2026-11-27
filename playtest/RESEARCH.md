@@ -348,6 +348,17 @@ raised before stopping.
   check (the creation sheet at the far pointer DS:119Ch: race +18h, classes +21h). The class
   list's numbers there (+21h) are the list's (1 cleric ... 7 ranger, 8 thief), not the game's; DONE
   turns them into the game's (a fire ranger 15). The kit is the sheet's +43h (1-3).
+- **The creation screen's figure** (logs/2026-11-27-creation-figure-outfits.md): drawn from a blob
+  the game makes at start-up of each figure's walking frame 0 (from the Loader's copy of
+  SEGOBJEX, object 300 + figure), in the paged-memory handle at DS:4C2Fh (4B000h bytes, XMS pages
+  30h-42h in DOSBox: guest 1D0000h on), entry n from the dword table DS:543Dh[n] to [n+1], the
+  figures 20h + figure, [2Eh] the end. Each entry is a one-frame picture chunk (length, 1, 10).
+  4414h:9Dh reads the entry at each drawing (stub 4239h:2Ah draws it at 91h,16h: on opening at
+  65FACh, and after a race or portrait click, its box first put back by 1A0Ah:30C3h with DS:E8Ah,
+  E8Ch), so writing an entry shows at the next drawing; a class click doesn't draw it. A new
+  character gets its class after the first drawing, at the hit points' drawing (63EDAh). Read
+  the blob with `creationfigure.Figures(gd)` (its `table()`, `read`). Changing a human's class:
+  click the class off first.
 - **Psionic powers' place**: `powers.py` reads selector 2F0h's segment, +77h + member x 22h +
   power, bits 3-7 ([psionic powers in memory](#spells-and-powers-in-memory)).
 - **A level-up for a test** (logs/2026-11-15-kit-rebalance-checks.md part 10): write the sheet's

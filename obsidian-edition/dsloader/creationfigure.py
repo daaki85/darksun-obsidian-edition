@@ -10,9 +10,12 @@ screen's figure (overlay stub 4239h:2Ah, at x 91h, y 16h) reads the figure's ent
 (4414h:9Dh, 73034h in DSUN.EXE), so a picture written there is what it draws next.
 
 The game draws the figure when the screen opens and after a click on a race or a portrait, not
-after a click on a class. So DSCLOG (PROBE_WP_CLASS, after every click on the screen) sets FIG_DUE
-when the classes or the figure have changed, waits for the Loader to clear it (FIG_HOLD, at most a
-second), and draws the figure again.
+after a click on a class; and as the screen opens for a new character it draws the figure before it
+gives the character its class (shown first at the hit points' drawing, 63EDAh). So DSCLOG
+(FIG_WAIT: from PROBE_WP_CLASS, after every click on the screen, and CR_HP) sets FIG_DUE when the
+classes or the figure have changed, waits for the Loader to clear it (at most a second), and draws
+the figure again; and before the screen's first drawing of it (FIG_OPEN) it waits for the Loader
+too, so an EDIT, whose class is there from the start, opens with the outfit drawn at once.
 
 Here the Loader writes the figure's entry in the class's outfit (or plain, for a class with none)
 over the old one, moving the entries after it to keep them one after another (the handle has room

@@ -1518,6 +1518,16 @@ game's picture table it is drawn from; for a second member of the same figure
 the Loader names their spare there and empties the slot, and the game loads
 the picture and fills it.
 
+The creation screen's figure is drawn in the outfit of the class chosen
+(`dsloader/creationfigure.py`). At start-up the game reads frame 0 of each
+creation figure's walking picture (from the Loader's copy) into a handle of
+its own (DS:4C2Fh, entries listed at DS:543Dh), and draws the figure from
+there. The Loader writes the figure's entry anew, in the class's outfit or
+plain with no class, moving the entries after it along. DSCLOG asks for it
+and draws the figure again when the class or the figure changes (`FIG_WAIT`,
+after every click on the screen), and when the screen opens: the game gives
+a new character its class only after it first draws the figure.
+
 ## Elves and half-elves
 
 ([In the features page](FEATURES.md#elves-and-half-elves).)

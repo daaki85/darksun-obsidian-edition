@@ -235,6 +235,9 @@ F10_PIN_SITE = NS_IMAGE + 122
 # (a class group's 1st-level save at a level up: the Player's Handbook's, RULE_ADND_TABLES; DSCLOG's
 # SAVE_BASE, tables.rav_saves)
 SAVE_BASE_SITE = NS_IMAGE + 123
+# (the creation screen's figure first drawn once the Loader has written it in the class's outfit:
+# DSCLOG's FIG_OPEN, creationfigure.py)
+FIG_OPEN_SITE = NS_IMAGE + 124
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1278,6 +1281,7 @@ PATCHES = (
     Patch("cr_age_con", 0x63A13, bytes.fromhex("83c410"), _site(CR_AGE_CON_SITE, 3)),
     # the creation screen opening: EDIT on a party member keeps its kit, age and weapon specs
     Patch("cr_open", 0x65C68, bytes.fromhex("c606581aff"), _site(CR_OPEN_SITE, 5)),
+    Patch("fig_open", 0x65FAC, bytes.fromhex("666891001600"), _site(FIG_OPEN_SITE, 6)),
     Patch("cr_age_name", 0x66045, bytes.fromhex("83c40e"), _site(CR_NAME_SITE, 3)),
     Patch("cr_age_figure", 0x6349F, bytes.fromhex("83c40e"), _site(CR_NAME2_SITE, 3)),
     Patch("cr_age_typed", 0x63AE8, bytes.fromhex("83c40e"), _site(CR_NAME3_SITE, 3)),
