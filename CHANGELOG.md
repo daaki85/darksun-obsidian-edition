@@ -262,6 +262,8 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 - `tests/test_dsclog_room.py`: DSCLOG's segment keeps 256 bytes free and its upper memory 32 paragraphs
   (its build failed only past the limit), as `test_dsclog2_room.py` does for DSCLOG2; and the sequel's
   modules' constants named as DSCLOG2's symbols agree with them.
+- DSCLOG2's build fails if the helper outgrows upper memory (`UMB_NEED`, `UMB_KEPT`, as DSCLOG's),
+  the room measured in the sequel: 83 KB free today.
 
 **Fixed: the code audit's bugs (2026-11-27)**
 - Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without

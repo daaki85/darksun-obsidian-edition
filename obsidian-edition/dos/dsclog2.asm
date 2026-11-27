@@ -24053,4 +24053,17 @@ KEPT_PARAS    equ TAIL_PARAS + TAIL_LEN                 ; what stays: the segmen
 INSTALL_PARAS equ KEPT_PARAS                            ; the install's paragraph, after them
 image_len equ (INSTALL_PARAS * 16) + (install_end - install)
 LOAD_EXTRA equ (STACK + 15) / 16
+
+; UPPER MEMORY (the audit's R3, measured 2026-11-27 with UMBPLUS.COM, as the Loader starts the sequel):
+; one block, CA00h-EFFFh, its first 9 paragraphs a free scrap ahead of the helper's MCB at CA0Ah; the
+; game puts nothing there (no overlay or music buffer, unlike Shattered Lands'), the far block is in
+; the HMA. The build fails if the helper outgrows the block without UMBPLUS.COM (D000h on, as
+; DSCLOG's UMB_ROOM): loaded (its PSP, the image with the install and the stack) or kept (its PSP, the
+; segment and the tail, then the see-through figures' block), each with its MCB. In 2026-11 the kept
+; helper took 4,505 of the 9,718 paragraphs there are with UMBPLUS.COM.
+UMB_ROOM equ 0xF000 - 0xD00A
+UMB_NEED equ 1 + 0x10 + (image_len + STACK + 15) / 16
+UMB_KEPT equ (1 + 0x10 + KEPT_PARAS) + (1 + GHOST_PARAS)
+        times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer loads into upper memory)
+        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the helper and the see-through block don't fit)
 file_len equ 32 + image_len
