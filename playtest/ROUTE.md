@@ -240,3 +240,5 @@ map position. Nothing is built for it yet.
   Notaku's (world ~150-250, 1000-1100). None looked at; Notaku sells no water.
 - Wake of the Ravager, the Draxans' ambush street in Tyr (2026-11-25, logs/2026-11-25-ravager-fight-keys.md):
   no water, jug or waterskin among Alt's marks there (a scroll, sandals, the bodies).
+- Wake of the Ravager, the Pyramid (RGN034, by a jump, 2026-11-27, logs/2026-11-27-ravager-defiler-scrolls.md):
+  no water, jug or waterskin on the screens seen during the Defilers' fight.

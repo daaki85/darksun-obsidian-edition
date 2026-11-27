@@ -14,9 +14,10 @@ Defilers in the Pyramid (RGN034), the Yuan-ti in RGN036 and RGN037, the Lord War
 
 **Steps and what was seen**
 
-1. **A jump to the Pyramid** (`ravjump.py 0x22 45 32`, open ground among the Defilers): DOSBox closed at once,
-   twice, with nothing in its log, as the talk ran. Not looked into further (a jump into a region whose story isn't
-   reached yet; the jump's notes list other regions that hang).
+1. **A jump to the Pyramid** (`ravjump.py 0x22 45 32`): DOSBox closed at once, twice, as the talk ran. Looked into
+   (steps 5 to 7): my mistake, not the mod's. `ravjump.py`'s REGION is the region file's hex number, and the
+   Pyramid is RGN034, so 0x34; 0x22 asks for RGN022.GFF, which the game hasn't, and it quits to DOS printing that
+   name. The stock game does the same.
 2. **A defiler made by a test edit**: Tyr's ambush (`logs/files/2026-11-26-ravager-new-spells-run.sh def2 0 0`,
    with `RAV_DEFILER_CHANCE=100`), then one of the fight's Draxans (creature 25) given the Defiler's object
    ([files/2026-11-27-ravager-defiler-crobj.py](files/2026-11-27-ravager-defiler-crobj.py) `25 369`), and the
@@ -33,13 +34,27 @@ Defilers in the Pyramid (RGN034), the Yuan-ti in RGN036 and RGN037, the Lord War
    Blink: d100 = 76, needs 85 or less (INT 18) -> learnt`, `Message: YOU LEARN THE SPELL`, and the book gone. No
    item report for it (a book used up is ordinary).
 
+## The Pyramid's real Defilers (a second run, the same day)
+
+5. **Stock**: a stock copy of the sequel (no Loader) with its Reyhan talk edited the same way: `0x22` quits to DOS
+   with "RGN022.GFF" on the screen; `0x34 45 32` arrives in the Pyramid among the Defilers. Their creature
+   records carry object -363 (placed as 369 in RGN034's ETAB), in stock and in the mod alike.
+6. **The mod, `ravjump.py 0x34 45 32`** with `RAV_DEFILER_CHANCE=100`: the five Defilers (creatures 15, 17, 21,
+   22, 23) are not defilers to the dice log until 363 is in `RAV_DEFILER_OBJECTS` (the fix: 363 added, its test
+   line too). With it, each got a new backpack list (500, 504, 502, 501, 494) holding a Spellbook (item 57: power
+   55, price 12000; item 58: power 69, 18000).
+7. **Dropped**: Computer Control. The first Defiler killed stayed at status 7 with its list 500 while the
+   Pyramid's script talk ("That slow-witted fool deserved to die...") waited for a click; clicked, his record
+   emptied (lists 9999) and the book was in thing 496 (slot FFh) with his body's things. The second likewise.
+
 **Seen, not changed**: the fight's phantom `Preserver is killed` line at its start (seen before, 2026-11-27).
 
-**Not seen in play**: a real defiler (the Pyramid jump closed DOSBox), and the body's container opened by a click.
+**Not seen in play**: the body's container opened by a click.
 
-**Result**: a defiler in a sequel fight is given a Spellbook, it drops with the body's things, and it teaches. The
+**Result**: a defiler in a sequel fight is given a Spellbook (the Pyramid's five too, once 363 was known), it drops
+with the body's things, and it teaches. The Pyramid "crash" was the jump's wrong region number, not the mod. The
 DOSBox and the dice logs of this test were closed by pid.
 
 ## Water
 
-Nothing new: Tyr's street (no new area reached; the Pyramid jump never arrived).
+The Pyramid (RGN034) reached by a jump, in a fight: no water, jugs or waterskins seen on the screens looked at.

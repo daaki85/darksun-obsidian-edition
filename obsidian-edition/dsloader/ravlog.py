@@ -429,11 +429,13 @@ RAV_BROKEN = frozenset((21,))
 
 # Defilers' scrolls in the sequel (defilerscrolls.py, rebound by rav_items): the sequel's objects whose records
 # (OBJEX.GFF's RDFF, its character sheet's classes) have the defiler's class: the Lord Warrior (3), El (6),
-# Fermin (160), the Defiler (369), the Yuan-ti (434), Solurnis (436) and Raenika (496). The scroll is the
+# Fermin (160), the Defiler (369), the Yuan-ti (434), Solurnis (436) and Raenika (496); and 363, the number the
+# running game gives the Pyramid's five Defilers (placed as 369; seen so in the stock game too, 2026-11-27, though
+# 363 has no record of its own). The scroll is the
 # sequel's kind that teaches (a 310xx object: the game teaches the spell its power names, DSCLOG2's NS_SCROLL
 # for the new ones): a spellbook of its 1st-level book object, which no defiler carries, so one object serves
 # every spell as Shattered Lands' scroll object does; 3000 a level, as its books
-RAV_DEFILER_OBJECTS = frozenset((3, 6, 160, 369, 434, 436, 496))
+RAV_DEFILER_OBJECTS = frozenset((3, 6, 160, 363, 369, 434, 436, 496))
 RAV_BOOK_OBJECT = 31002
 RAV_BOOK_TYPE, RAV_BOOK_NAME, RAV_BOOK_SIZE_BYTE = 77, 4, 5  # (its record's type, name and +12h: the game's book's)
 RAV_ITEM_SPELL, RAV_ITEM_POWER, RAV_ITEM_SIZE_BYTE = 0x02, 0x10, 0x12

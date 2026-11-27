@@ -447,6 +447,7 @@ class PassTests(unittest.TestCase):
         ravlog.apply_layout()
         try:
             self.assertEqual(defilerscrolls.DEFILER_OBJECTS, ravlog.RAV_DEFILER_OBJECTS)
+            self.assertTrue({363, 369} <= ravlog.RAV_DEFILER_OBJECTS)  # (the Pyramid's Defilers run as 363)
             rec = defilerscrolls.scroll(40, 6)
             self.assertEqual(len(rec), ravager.ITEM_SIZE)
             self.assertTrue(defilerscrolls.is_ours(rec))
