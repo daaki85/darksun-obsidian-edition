@@ -85,12 +85,14 @@ widens the roster).
 ## 2026-11-27: upper memory with #228 (DSCLOG2's room) and #223 joined
 
 The same check as above (`RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh` to Tyr, then `dosmem.py`), with #218 to #223
-and #228 joined. DSCLOG2 now takes two blocks: its 64 KB segment (65,792 bytes) and the tail (5,632 bytes,
-at the top of upper memory). Free in upper memory: **84,160 bytes** in 2 pieces, the largest 84,016 (85,376
+and #228 joined. DSCLOG2's first block (65,792 bytes) is its PSP, its code segment and the tail together (#228: only the code
+segment must fit 64 KB; the install after the tail is freed); its other block (5,632 bytes, at the top of upper
+memory) was there before #228 too. Free in upper memory: **84,160 bytes** in 2 pieces, the largest 84,016 (85,376
 before #223 and #228). Conventional memory after the game: 63,168 bytes, the far heap 47 KB free; the HMA is on.
 
 ## 2026-11-27: upper memory with #232 (the port audit's rest) joined
 
 The same check with #232 joined (sites 241-244, header +2114..+2123): to Tyr, then `dosmem.py`. DSCLOG2's first
-block is 66,384 bytes (65,792 before), the tail block 5,632 as before; free in upper memory **83,568 bytes** in
+block (PSP, code segment to E05Ch, tail) is 66,384 bytes (65,792 before: #232's 534 bytes of code and LOCK_BARRED's
+64), its other block 5,632 as before; free in upper memory **83,568 bytes** in
 2 pieces, the largest 83,424.
