@@ -6,14 +6,14 @@ levels, with the tables you need.
 
 It is **spoiler-free**: no places, people or quests past the opening arena but
 those the Loader's Options tab names (the slave pens, Kalzith, Semyon, Dinos's
-cooked vulture, Scar and the champions' bout, in the labels [at the end](#the-options-tab-at-a-glance)),
+cooked vulture, Scar and the champions' bout, in the labels of [the Options tab](README.md#the-options-tab-at-a-glance)),
 and no word of where any item is found (the mod's new items are listed by what
 they are).
 
 Everything here is the mod with its **default options**, which is how the
 Loader starts. Most of the rule changes are always on; a few, and the new content, have a switch on
-the Loader's **Options** tab: [the Options tab at a glance](#the-options-tab-at-a-glance), at the
-end, gives each switch's default and when it takes effect, and lists the changes that are always on.
+the Loader's **Options** tab: [the Options tab at a glance](README.md#the-options-tab-at-a-glance), in the
+README, gives each switch's default and when it takes effect, and lists the changes that are always on.
 Where it helps to know what the mod changes, a **Without the mod** note says what the game does
 without it.
 The [features page](FEATURES.md) has every rule in full detail, and the
@@ -67,8 +67,6 @@ weapon specialization's: the guide links to their tables.
 - [Quality of life](#quality-of-life)
 - [Worth knowing](#worth-knowing)
 - [Glossary](#glossary)
-- [The Options tab at a glance](#the-options-tab-at-a-glance)
-  - [Elsewhere in the Loader](#elsewhere-in-the-loader)
 
 ## Getting started
 
@@ -2156,49 +2154,16 @@ without).
 
 ## Quality of life
 
-**On the game's screens** the mod shows what the game kept hidden: every roll in the combat log
-(**L** on the map), names over figures (a spell cast, "Miss", "Armor: 7 left", the arrows left),
-THAC0, all five saves and thief skills on the inventory and View Character screens, spell slots on
-the USE screen, a monster's hit points and defences in the Look box, charges and to-hit in item
-boxes, and the kit, weapon specs and spells' uses left on the Effects screen. Each is in [the
-features page](FEATURES.md#always-on).
-
-**Keys** (always on):
-
-| Key | What it does |
-|---|---|
-| **S** (selling) | On a shop's screen, **S** sells the plain gear (weapons, armour, shields, clothing: no plus, no magic) in the backpack of the member on show, at the shop's prices; worn and held things, ammunition, metal, magic, keys, scrolls, food and gems stay. *Without the mod:* one thing at a time. |
-| **T** (looting) | With a body's (or a chest's) window open, **T** puts everything in it into the party's backpacks, and **Shift+T** everything but plain weapons; what doesn't fit stays. *Without the mod:* a click to take each thing and another to put it down. |
-| **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
-
-The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it, and the chance to hit it shown before the swing and under the pointer, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
-everything in view that can be used (switches in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
-view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
-quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
-
-**Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
-**PgDn**), a fifth page, **QUICK**, for the quick saves (**F5**; **F9** loads) and the autosaves
-the game makes on coming into another area and after a fight, the last five of each kept ([quick
-save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave)), and 29 characters
-in the roster ([more saves and characters](FEATURES.md#saves)).
-
-**Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
-[Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
-speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
-MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
-**The engine**: the game runs in DOSBox-X, which comes with the mod on Windows (on Linux and macOS
-choose your own on the Options tab's **Engine** section). It gives the mod more memory to work
-with, lets the whole mod work on Linux without root, and can play the music through a soundfont
-file of yours. GOG's DOSBox 0.74 is still there to choose in the same section, and is used when no
-DOSBox-X is found ([Features: the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
-**Running the game** (the game window's size, crash and freeze
-reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
-[journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your
-saves and lists your quests, open and finished, without naming one you haven't been given, every
-spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
-window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
-dice log, line by line](DICE-LOG.md) says what each of its lines means.
+The mod's screens, keys, saves, graphics and engine are described once, in [Features and
+rules](FEATURES.md): what the game's own screens show ([always on](FEATURES.md#always-on)), the keys
+**T**, **S**, **M**, **U** and **I** ([looting](FEATURES.md#looting-a-body-t-and-shiftt) and the next
+entries), Tab and Enter and the other [controls](FEATURES.md#controls), [40 saves, quick saves and 29
+characters](FEATURES.md#saves), [graphics](FEATURES.md#graphics), [game speed](FEATURES.md#game-speed),
+[picture and music](FEATURES.md#picture-and-music) and [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x).
+Running the game and the Loader's window (the dice log, the characters' sheets, the dialogue, the
+[journal](README.md#the-journal-tab) and its quests) are in the README: [running
+it](README.md#running-it-windows), [the Loader's window](README.md#the-loaders-window) and
+[reports](README.md#crash-freeze-and-item-reports).
 
 ## Worth knowing
 
@@ -2259,161 +2224,3 @@ dice log, line by line](DICE-LOG.md) says what each of its lines means.
 | **Under the open sky** | An outdoor map, or open ground outside a city's buildings. |
 | **Ceramic pieces** | Athas's money. |
 | **The Loader** | The window that starts the game with the mod and shows the dice log and the party. |
-
-## The Options tab at a glance
-
-Every switch on the Loader's **Options** tab, in the tab's order and under its
-sections, with the words the Loader gives it. They count in games started from
-the Loader or its `.bat` files. **Restore defaults**, at the bottom of the tab,
-sets every switch back to the default below; it leaves the Wake of the Ravager folder, the DOSBox-X
-program, the soundfont file and the settings [elsewhere in the Loader](#elsewhere-in-the-loader) as they are. Where a row lists
-choices (separated by /), one of them is picked.
-
-**Takes effect** says when a change counts:
-
-- **at once**: in the game running, as soon as the box is ticked or unticked;
-- **next start**: the next time the game is started (the Loader writes it into
-  the game's copy as it starts it; the label says "from the next start");
-- **new characters**: characters made from then on, while those already made
-  keep what they have;
-- **first visit**: from the next start, in an area the party hasn't visited
-  yet. A saved game keeps what it already has (people met, items given); a new
-  game has it all.
-
-Most of the mod has no switch and is always on:
-
-- **The rule changes** but three (hit dice, half-giants' two-handed weapons and helms' AC, which keep
-  their switches): [class restrictions](FEATURES.md#class-restrictions), [multiclass hit
-  points](FEATURES.md#multiclass-hit-points), [scores and hit points as
-  rolled](FEATURES.md#scores-and-hit-points-as-rolled), [AD&D's class
-  tables](FEATURES.md#adds-class-tables), [CON as in AD&D](FEATURES.md#con-as-in-add), [ages and
-  magical aging](FEATURES.md#ages-and-magical-aging), [dual-classing as the manual has
-  it](FEATURES.md#dual-classing-as-the-manual-has-it), [the level cap by XP](FEATURES.md#level-cap-by-xp),
-  AD&D's [two-weapon](#two-weapons) penalties, [weapon traits](FEATURES.md#weapon-traits),
-  [creature size](FEATURES.md#creature-size) (the footman's pick's 1d6+1 among it), [held
-  targets](FEATURES.md#held-targets), [rings and cloaks of
-  protection](FEATURES.md#rings-and-cloaks-of-protection), [items saving against
-  acid](FEATURES.md#items-saving-against-acid), and all of the magic ones: [rangers' casting
-  level](FEATURES.md#rangers-casting-level), [preservers' INT](FEATURES.md#preservers-int), [saving
-  throws against spells](FEATURES.md#spells-saved-against-with-the-spell-save),
-  [Enlarge](FEATURES.md#enlarge-multiplies-the-weapons-dice-only), [spells and psionics as the manual
-  describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), [spells rolling to
-  hit](FEATURES.md#spells-roll-to-hit) and [resting as in AD&D](FEATURES.md#resting-as-in-add).
-- [Weapon specialization](FEATURES.md#weapon-specialization) and [STORE and
-  RECALL](FEATURES.md#store-and-recall-on-the-creation-screen).
-- [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) (its level is a choice:
-  below).
-- [Shops as in AD&D](FEATURES.md#the-leaders-cha-at-shops), and all of [improved
-  thieving](FEATURES.md#improved-thieving): thief skills from AD&D's table, hiding in shadows to
-  backstab (and what a cloak, boots and belt add), picking pockets.
-- [The graphics](FEATURES.md#graphics): elves' ears and half-elves' figures, Cilla as an elf, what
-  the party wears, shadows, dust, see-through figures.
-- [The controls](FEATURES.md#controls): choosing an enemy with Tab and Enter, scrolling the map, the
-  view in fights, the pointer in scenes and where it starts, the whole party in view, spells on the
-  Effects screen; and the keys **T** and **Shift+T** (looting), **S** (selling), **M**, **U** and **I**.
-- What the game's own screens show ([always on](FEATURES.md#always-on)), the fixes to [the game's
-  own bugs](GAME-BUGS.md), the [magic items' icons](FEATURES.md#magic-items-icons) and [spells on the
-  ground](FEATURES.md#spells-on-the-ground), [40 saves and 29 characters](FEATURES.md#saves), and the
-  picks at **DONE**: [preservers' first spells](FEATURES.md#preservers-first-spells) and [psionic
-  powers](FEATURES.md#psionic-powers-at-creation).
-
-A settings file from an older Loader with one of these unticked has it on all the same.
-[Features](FEATURES.md) has them all.
-
-**In the game**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| The combat log in the game (L on the map shows and hides it): ... at the least: what came of each attack and spell / ... in short: each roll, what it needed and the damage / ... in detail, as in the log | in short | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
-| What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences; closing the box shows the rest in a window | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
-| Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
-| A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
-| The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
-| The chance to hit under the pointer: in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
-| Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to (R in a fight hides and shows them) | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
-| F10 takes a whole move back: after the last step too, the party member can walk again (the game's F10 puts it back but lets it walk no more) | on | at once | [F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back) |
-| Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
-
-**Rule changes**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| Hit dice: the better of two, each die rolled twice at creation and at every level (every character) | on | at once | [Hit dice](FEATURES.md#hit-dice-the-better-of-two) |
-| Half-giants' two-handed weapons: a half-giant wields one in one hand, a shield or a light weapon in the other | on | at once | [Half-giants' two-handed weapons](FEATURES.md#half-giants-two-handed-weapons) |
-| Helms give AC 1 (the game's helms give none) | on | at once | [Helms give AC 1](FEATURES.md#helms-give-ac-1) |
-
-**More character customization**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters, and a human's DUAL | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
-| Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |
-
-**New content** (the tab's note: "People, a quest, an arena bout and items:
-from the next start, in places not yet visited. What a saved game already has
-(people met, items given) stays in it. The new spells and defilers' scrolls: at
-once.")
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...) | on | at once | [New wizard spells](FEATURES.md#new-wizard-spells); [6th-level priest spells](FEATURES.md#6th-level-priest-spells) |
-| Kalzith, a defiler slave in the slave pens who sells arcane scrolls | on | first visit (the slave pens) | [Kalzith](FEATURES.md#kalzith) (spoilers) |
-| Semyon in the slave pens after he leaves the arena, and breaking out with Scar | on | first visit (the slave pens) | [Semyon](FEATURES.md#semyon) (spoilers) |
-| The cooked vulture: Dinos cooks it for the party (XP and a full rest) | on | next start | [The cooked vulture](FEATURES.md#the-cooked-vulture) (spoilers) |
-| Defilers' scrolls: a defiler in a fight carries a scroll of a random preserver spell one time in 20, dropped where it dies | on | at once | [Defilers' scrolls](FEATURES.md#defilers-scrolls) (spoilers) |
-| New items, magical and mundane: weapons, armour and other gear on the game's people, in its shops and chests, and the champions' arena bout after Scar's death | on | first visit (each item's area) | [New items](FEATURES.md#new-items) (spoilers); this guide's [New items](#new-items) |
-
-**Engine (from the next start)**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| DOSBox-X (the default when there is one: it comes with the mod on Windows; elsewhere choose your own below) / GOG's DOSBox 0.74, which comes with the game | DOSBox-X when there is one, else GOG's DOSBox | next start | what runs the game: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
-| Choose the DOSBox-X program... | (a button) | | where your own DOSBox-X is (2025.01.01 or later), before the one that comes with the mod on Windows; the tab then says its version: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
-
-**Game speed (from the next start)**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| GOG's own (walking can be choppy with shadows and dust) / Faster: for an older PC (fewer pictures a second with the whole party in view) / Fastest: the whole party walks at full speed, nearly every picture shown (the default) | Fastest | next start | [Game speed](FEATURES.md#game-speed) |
-| Steady pace: walking at full speed on the map whatever is drawn (a picture skipped rather than the party slowed) | on | next start | [Game speed](FEATURES.md#game-speed) |
-
-**Picture and music (from the next start)**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| Plain: every pixel of the game as a block (the default) / Scanlines: a black line under each row of the picture, as on an old monitor / TV: a dimmed line under each row of the picture, softer than scanlines / Sharp: hard-edged pixels at any size, the stretching left unsmoothed (DOSBox's OpenGL) | Plain | next start | [Picture and music](FEATURES.md#picture-and-music) |
-| Music device | Windows' default | next start | a MIDI device of Windows' to play the game's music, by name: [Picture and music](FEATURES.md#picture-and-music) |
-| Choose a soundfont file... | (a button) | | with DOSBox-X as the engine, the soundfont (a `.sf2` file of your own) its built-in synthesizer plays the music through; **No soundfont** forgets it: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
-
-**Wake of the Ravager (optional)** and **Saves**
-
-| Loader label | Default | Takes effect | Details |
-|---|---|---|---|
-| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures and for **Play Wake of the Ravager** ([starting the sequel](README.md#other-ways-to-start)): [Requirements](README.md#requirements) |
-| Shattered Lands' screens and icons in Wake of the Ravager (the USE screen, the inventory, the menus and the spell and psionic icons, from its next start) | on | next start (of the sequel) | the sequel's screens and icons drawn with Shattered Lands' own, from your Shattered Lands folder: [Wake of the Ravager](RAVAGER.md) |
-| Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save window, and F9 opens the load window there (in Wake of the Ravager too, where F5 is otherwise the sound effects' key) | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
-| Autosave: on coming into another area and after a fight, on the QUICK page of the save window | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
-| Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
-| Put a save in a slot... | (a button) | | puts a named save back in one of the game's slots: [Saves under their names](FEATURES.md#saves-under-their-names) |
-
-### Elsewhere in the Loader
-
-The Loader's other settings are outside the Options tab, and **Restore defaults** leaves them be.
-
-| Setting | Where | Default | Kept |
-|---|---|---|---|
-| **Game window**: Single (320x240), Double (640x480), Triple (960x720), Quadruple (1280x960) or Full screen | the top of the window | Triple (960x720) | remembered (`settings.json`); counts from the next start |
-| **Text size**: **A+** and **A-** (or Ctrl +, Ctrl - and Ctrl 0), up to 2.5 times | the top of the window | normal | for this session: the Loader opens at the normal size |
-| **Readable layout** | above the dice log | on | remembered (`settings.json`) |
-| **Show details (the sums behind each roll)** | above the dice log | on | for this session |
-| **Show unlabelled rolls** | above the dice log | off | for this session |
-| **The game folder** | asked for at the first **Play Shattered Lands** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
-| **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
-| **The DOSBox-X program** and **the soundfont file** | the Options tab (**Choose the DOSBox-X program...**, **Choose a soundfont file...**: [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)) | none | remembered (`settings.json`); **Restore defaults** sets the engine back to the default (DOSBox-X when there is one, else GOG's DOSBox) and leaves these two |
-| **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
-| **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
-| **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |
-| **Keep a journal** | the Journal tab | on | remembered (`settings.json`) |
-
-What each does: [the Loader's window](README.md#the-loaders-window) and [the dice
-log](README.md#the-dice-log).

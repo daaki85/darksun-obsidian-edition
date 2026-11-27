@@ -18,7 +18,7 @@ game speed is **Fastest**, the picture is **Plain** and the music device is **Wi
 "from the next start" waits until the game is started again. Untick one and the game's own way is
 back. What is always on can't be turned off: a settings file from before, with one of those
 unticked, has it on all the same. When each takes effect, switch by switch: the player's guide's [Options tab at a
-glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance). Installing, running the game and the Loader's
+glance](README.md#the-options-tab-at-a-glance). Installing, running the game and the Loader's
 window are in the [README](README.md).
 
 ## Contents
@@ -766,7 +766,7 @@ Fogbolt, Reflected Image, Spook and Friends.
 
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 
-![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
+![Fogbolt in Pehtucl's ambush at the slave pens' fountain: its name over Lex (left), in his outfit, as its grey bolt flies at a Templar (right)](docs/fogbolt.png)
 
 **Switch:** *New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook
 and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...)*. Rules: [how spells
@@ -912,8 +912,9 @@ requirements](README.md#suggested-system-requirements). How it works, with the m
 
 ## Picture and music
 
-Two choices for DOSBox (the DOSBox 0.74 that comes with GOG's game), in the Options tab's **Picture
-and music** section, both from the next start.
+Two choices for DOSBox, in the Options tab's **Picture and music** section, both from the next start.
+They hold in either [engine](#the-engine-gogs-dosbox-or-dosbox-x); where DOSBox-X draws or plays them
+differently, the engine's table says how.
 
 **Picture**: how DOSBox draws the game's 320x200 picture larger, in a [game
 window](README.md#every-time-you-play) of twice the game's size or more and in full screen. A
@@ -1176,45 +1177,6 @@ power) goes into the merchant's pack, offered at its price less the CHA discount
 anything else is gone. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
 
-### Magic weapons for every spec, and the mod's gear
-
-Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
-staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
-and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
-daggers, maces, axes, great axes, picks, polearms, cahulaks and the Bone Helm) in the sequel's shops,
-on its people and in its chests. Pictures are Shattered Lands', from your copy; the magic ones have a
-few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
-
-| Item | Where |
-|---|---|
-| Short Sword +1 | Notaku's stall, Tyr |
-| Short Sword +2 | a Draxan in Tyr |
-| Short Sword +3 | a body in the Crypt |
-| Pick +1 | the receptionist who sells picks |
-| Pick +2 | a crate in the third mine level |
-| Pick +3 | the silt giants' leader |
-| Great Axe +1 | a Draxan in Tyr |
-| Great Axe +2 | a Draxan in the Pyramid |
-| Cahulaks +1 | Alhena, the Jann's lands |
-| Cahulaks +2 | the Runner, the Yuan-ti tunnels |
-| Polearm +1 | a guard at the Veiled Alliance's headquarters |
-| Polearm +2 | a Draxan, the third volcano level |
-| Staff Sling +1 | the ranged-weapon stall, Tyr |
-| Staff Sling +2 | Sureshot, in the forest |
-
-The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. A game
-saved before has them in its shops too: the Loader stocks each seller once, as you meet it, and what you
-buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep what they had. The Bone
-Helm gives AC 1
-with [Helms give AC 1](#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
-
-With the [new wizard spells](#new-wizard-spells) on, **Notaku** sells a spellbook of each of the six (Cat's
-Grace 6000, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends 3000 each: 3000 a level, the sequel's own
-price), on his list's second and third pages after the Short Sword +1; read from the inventory, a book teaches
-its spell (not in the shop's screen). Three of the sequel's wizards who carry a spellbook carry one more,
-Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
-Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
-
 ### Improved thieving
 
 Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
@@ -1326,7 +1288,7 @@ until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pi
 is a bug mended apart). The outfits and the gear keep their colours in every area (each area's own
 palette would turn the outfits' browns grey and their plums magenta).
 
-![The ready-made party on the slave pens' tiled floor, each dressed for their class with the gear they carry: Cermak in the preserver's plum mantle, his quarterstaff upright; Gerakis, the mul gladiator, bare-chested with his armour's straps and loincloth; Cilla, an elf with Druid among her classes, and K'ratchek the thri-kreen in the game's own figures](docs/gear.png)
+![The ready-made party on the slave pens' tiled floor, each dressed for their class with the gear they carry: Cermak in the preserver's plum mantle, his quarterstaff upright; Gerakis, the half-giant gladiator, bare-chested with his armour's straps and loincloth; Cilla, an elf with Druid among her classes, and K'ratchek the thri-kreen in the game's own figures](docs/gear.png)
 
 ![Gerakis in a fight in the arena in magic gear, +2 leather pieces and the Searing Blade at his hip: sparks shimmer over the leather, and the blade's edge glints](docs/magic-glint.gif)
 

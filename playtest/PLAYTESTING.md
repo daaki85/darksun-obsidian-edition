@@ -440,6 +440,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   Reconnect path says "process N has ended"); either way no party table error. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
   `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
   a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
+- **The Loader's own start of Wake of the Ravager with GOG's DOSBox** (`play --ravager`, `launch --ravager`
+  with the GOG engine): it runs the sequel folder's `DOSBOX/DOSBox.exe`, a Windows program. On a **copy** of
+  `$WORK/rav`, replace it with a bash shim that drops `-noconsole` and execs `/usr/bin/dosbox "$@"`, and copy
+  `__support/save/*` into the folder first (as `ravstart.sh` does; without them the game stops at once with
+  `DARKSAVE.GFF to DARKRUN.GFF failed`). `play.log` in `obsidian-edition/` says when the dice log
+  attaches ([the run](logs/2026-11-27-ravager-ingame-rolls.md)).
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so
   nothing opens; the status line names the guide either way.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the
@@ -1678,7 +1684,9 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   and `spellsetup.py 3=12`, LEVEL to 6), `dust.png`, `magic-glint.gif` (`itemplus.py`) from the
   arena's waves after `topartyfight.sh`; `see-through.png`, `picture-modes.png`, `steady-pace.gif`,
   `gear.png` from `pens-after-arena`; `creation-store-recall.png` from a new character. To catch a
-  label or a spell's bolt, start the Ctrl+F5 loop before the click: Fogbolt's bolt was gone by the
-  first capture after it. `spellsetup.py` can't teach the mod's new spells (196 and up): a new
+  label or a spell's bolt, start a grab loop before the click. A Ctrl+F5 loop was too slow for
+  Fogbolt's bolt (gone by the first capture); a loop of `import -window $W` grabs (60, `sleep 0.03`
+  between, about 0.1 s apart) caught it in flight (logs/2026-11-27-docs-review-pictures.md: Lex, made to
+  know Fogbolt, on his turn in `fountain-user`'s ambush, at the Templar; the 25th grab). `spellsetup.py` can't teach the mod's new spells (196 and up): a new
   wizard spell is a bit in the sheet (`sheetbyte.py M 0x45 or0x40`, Fogbolt), a new 6th-level
   priest spell comes with the caster's sphere.

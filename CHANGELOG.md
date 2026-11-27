@@ -59,7 +59,7 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-Pull requests #146 to #254 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
+Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
@@ -84,7 +84,25 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
   DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
 
-**Fixed: the same item weighs the same in both games; the follow-up code audit** (branch `claude/followup-code-audit`)
+**Docs: the Options tab's reference in the README** (branch `claude/docs-options-home`)
+- "The Options tab at a glance" (every switch, its default and when it counts) and "Elsewhere in the
+  Loader" moved from the player's guide to the README, after the Loader's window, where a player looks
+  for the Loader; the links to it follow.
+- The list of what is always on is kept once, in the features page's "Always on": the Options reference
+  and the README's Loader paragraph link it instead of repeating it.
+
+**Docs: the full docs review** (branch `claude/docs-review-full`)
+- Fogbolt's picture retaken in play with the class outfits; the gear picture's caption names Gerakis a
+  half-giant, not a mul.
+- The README no longer says the game starts in GOG's DOSBox, and its two Linux lines (which
+  contradicted each other) are one; the Options tab's Wake of the Ravager section is described whole.
+- The sequel's magic weapons and spellbooks moved from the features page to Wake of the Ravager's page;
+  that page now mentions the combat log in the game, and lists the mouse-wheel map scrolling as not in
+  the sequel yet.
+- The player's guide's "Quality of life" (a third copy of the features page) cut to links.
+- Report: [the full docs review](reports/docs-review-full-2026-11-27.md).
+
+**Fixed: the same item weighs the same in both games; the follow-up code audit** (#260)
 - Shattered Lands' leather chest armour weighs 9.6 lb, as in Wake of the Ravager (the game's 75 lb, five
   times AD&D's whole suit), and the sequel's small things 0.1 lb, as Shattered Lands' (SSI's 1 lb). No
   rule reads either weight, so nothing plays differently. `test_item_weights.py` checks every item both
@@ -95,7 +113,16 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
-**Docs: the follow-up docs review** (branch `claude/followup-docs-audit`)
+**New: Wake of the Ravager with the in-game rolls, no Loader window; Show Save for its saves** (#264)
+- **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel
+  as `Play Dark Sun (in-game rolls).bat` does Shattered Lands: its folder found as for the Loader's button,
+  the dice log unseen with the sequel's own rules and lines, a problem in a message box and `play.log`. The
+  in-game-rolls start now makes its dice log by the helper the game loaded, as the window does.
+- **`Show Save.bat`** (`python -m dsloader save FILE`) shows a Wake of the Ravager save's party too (its
+  sheets read as the game wrote them, 42h, or as the Loader widened them, 48h).
+- The follow-up code audit's P1 (the sequel figures zip) settled by the owner: it stays in the mod.
+
+**Docs: the follow-up docs review** (#263)
 - [Wake of the Ravager's page](obsidian-edition/RAVAGER.md#not-in-the-sequel-yet) now ends with what
   Shattered Lands has from the mod and the sequel doesn't yet, each checked against the code.
 - The README says the in-game-rolls start and Show Save are Shattered Lands only; DEVELOPMENT-KITS no

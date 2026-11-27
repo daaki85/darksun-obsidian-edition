@@ -127,7 +127,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for [practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) (not in the release zip) |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`) ([Generated pages](#generated-pages)) |
-| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
+| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager (in-game rolls).bat` `play --ravager`, `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
 | `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `WEAPON-SPECS.md`, `ITEMS.md`, `PEOPLE.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
@@ -163,14 +163,14 @@ nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 
 The web pages are made from Markdown. Edit the Markdown, then run the module:
 
-- **The manual**, `manual/` (`python -m dsloader.manual`): twelve pages, each from its Markdown, which
+- **The manual**, `manual/` (`python -m dsloader.manual`): thirteen pages, each from its Markdown, which
   stays the source and reads the same on GitHub. `index.html`, the start page the Loader's
   **Help** button opens, is made from `README.md`; then `player-guide.html`, `features.html`,
-  `kits.html`, `weapon-specs.html`, `items.html`, `creatures.html`, `people.html`,
+  `kits.html`, `ravager.html`, `weapon-specs.html`, `items.html`, `creatures.html`, `people.html`,
   `game-bugs.html`, `dice-log.html`, `how-the-game-works.html` and `changes.html`
   (`../PATCH-NOTES.md`, read by `patchnotes.py`). `manual.PAGES` lists them (every player's page
   of `obsidian-edition/`, the DEVELOPMENT pages aside: `test_manual` checks). Each page has a bar
-  of all twelve (the spoiler pages marked) and an index
+  of all thirteen (the spoiler pages marked) and an index
   of its own sections; the pages share `manual/manual.css` (`pagestyle.css` and the fonts). The
   generator rewrites the links, not the Markdown: a link to another of the pages (`KITS.md#x`,
   `README.md`, `../PATCH-NOTES.md` or its GitHub address) goes to its HTML file with the same
