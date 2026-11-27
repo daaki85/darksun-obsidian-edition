@@ -333,5 +333,31 @@ class WeaponTests(unittest.TestCase):
         self.assertEqual(sorted(sg.CLOTHES), sorted(m for m in sp.MODELS if m != sp.KREEN))
 
 
+
+class OutfitFixTests(unittest.TestCase):
+    """The class outfits' hand-set placements as tables (the code audit's S4): PART_FIXES, GRIP_FIXES,
+    CARRY_FIXES. (Every outfit picture was hashed before and after the move, 88,090 of them: the same.)"""
+
+    def test_grip_fixes(self):
+        found = (10, True)
+        self.assertEqual(sg.fixed_grip(found, 2095, 3, True, "right", sg.SWORD, False), found)  # (none for it)
+        self.assertEqual(sg.fixed_grip(found, 2095, 1, True, "left", sg.CAHULAKS, False), (330, False))
+        self.assertEqual(sg.fixed_grip(found, 2095, 1, True, "left", sg.CAHULAKS, True), (332, False))
+        self.assertEqual(sg.fixed_grip(found, 2095, 1, True, "left", sg.SHIELD, False), found)
+        self.assertEqual(sg.fixed_grip(found, 2059, 12, True, "right", sg.SWORD, False), (160, True))  # (its own side)
+        self.assertIsNone(sg.fixed_grip(None, 2059, 12, True, "right", sg.SWORD, False))  # (none found: none)
+        self.assertEqual(sg.fixed_grip(None, 2053, 12, True, "right", sg.SHIELD, False), (150, False))
+        self.assertEqual(sg.fixed_grip(found, 2099, 6, False, "left", sg.STAFF, False), (52, False))
+        self.assertEqual(sg.fixed_grip(found, 2099, 6, False, "left", sg.SWORD, False), found)
+
+    def test_part_and_carry_fixes(self):
+        for (model, combat, frame), fields in sg.PART_FIXES.items():
+            self.assertTrue(set(fields) <= set(sp.Parts._fields), (model, combat, frame))
+        self.assertEqual(sg.PART_FIXES[2059, True, 11]["head"].top, 3)
+        self.assertEqual(sg.PART_FIXES[2061, True, 11]["head"].top, 4)
+        self.assertEqual(sg.carried((90, True), 2053, 11, sg.MACE), (130, True))
+        self.assertEqual(sg.carried((90, True), 2055, 11, sg.STAFF), (315, False))
+        self.assertEqual(sg.carried((90, True), 2095, 11, sg.MACE), (90, True))
+
 if __name__ == "__main__":
     unittest.main()

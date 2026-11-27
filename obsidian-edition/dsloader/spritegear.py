@@ -1325,6 +1325,98 @@ def _project_cloak(out, rows, model, parts, frame, combat, kind, own, pad, cloak
     return fabric
 
 
+# The class outfits' landmarks set by hand where the figure finder can't read them: {(model, combat,
+# frame): {Parts field: value}}, laid over the found ones on a costumed figure (armed).
+PART_FIXES: Dict[Tuple[int, bool, int], Dict[str, object]] = {
+    # An elf's raised bow reaches higher than the crown: the circlet and the quiver placed on the
+    # figure, the last bow frame turned to the camera.
+    **{(model, True, 10): dict(facing=sp.BACK, head=sp.Head(3, 3, 9, 5), shoulders=(10, 3, 10), waist=17)
+       for model in classoutfits.ELVES},
+    **{(model, True, 11): dict(facing=sp.FRONT, head=sp.Head(crown, 5, 10, crown + 1), shoulders=(10, 4, 12), waist=18)
+       for model, crown in ((2059, 3), (2061, 4))},
+    # The woman (2099): the rear idle's relaxed grip each side of the hips; the last front walk's raised
+    # wrist outside the shoulder; the thrust's arm and flying cloak spanning most of the frame (the
+    # quiver kept at the shoulder, inside it); her vertical bow and raised hand above the face.
+    (2099, False, 1): dict(hands={"left": (4, 15), "right": (15, 15)}, shoulders=(7, 5, 14)),
+    (2099, False, 6): dict(shoulders=(7, 4, 11)),
+    (2099, True, 7): dict(shoulders=(9, 11, 17), waist=15),
+    (2099, True, 10): dict(facing=sp.SIDE, head=sp.Head(3, 4, 9, 5), shoulders=(10, 3, 10), waist=16),
+    (2099, True, 11): dict(facing=sp.FRONT, head=sp.Head(3, 5, 10, 5), shoulders=(10, 5, 13), waist=16),
+}
+
+
+class GripFix(NamedTuple):
+    """A costumed figure's grip set by hand (armed): MODELS' frame FRAMES (walking or COMBAT), HAND
+    holding SHAPES (None: any but a shield; ANY_SHAPE: anything), the weapon at ANGLE; BEHIND the body
+    or not, None to keep the grip's own (the fix then wants a grip found); OWN only on a half-elf's own
+    figure."""
+    models: Tuple[int, ...]
+    combat: bool
+    frames: Tuple[int, ...]
+    hand: str
+    shapes: Optional[Tuple[str, ...]]
+    angle: int
+    behind: Optional[bool] = None
+    own: bool = False
+
+
+ANY_SHAPE = ("any",)
+# In order, a later one winning. Elves and dwarves: the picture ends at the soles, so a long point,
+# staff butt or shaft is turned away from that edge with the hand kept where it is (the shorter
+# dwarf's low recoil and follow-through most of all). The man and the woman: lowered across the body
+# on the last swing, the off-hand head clear of the palm (a half-elf's narrower grip a pixel farther
+# in), a staff's butt above the lower edge, a long weapon carried in the woman's last front walk.
+GRIP_FIXES: Tuple[GripFix, ...] = (
+    GripFix(classoutfits.ELVES, False, (6,), "left", (POLEARM,), 55),
+    GripFix(classoutfits.ELVES, False, (11,), "left", (POLEARM,), 130),
+    GripFix((2059,), True, (1,), "left", None, 70),
+    GripFix((2061,), True, (1,), "left", None, 15),
+    GripFix((2059,), True, (12,), "right", None, 160),
+    GripFix((2061,), True, (2,), "right", (STAFF, GYTHKA), 200),
+    GripFix(classoutfits.DWARVES, True, (12,), "right", ANY_SHAPE, 150, False),
+    GripFix(classoutfits.DWARVES, True, (8,), "right", (GREAT_AXE, POLEARM), 45, False),
+    GripFix(classoutfits.DWARVES, True, (0,), "right", (GREAT_AXE,), 280),
+    GripFix(classoutfits.DWARVES, True, (1,), "right", (GREAT_AXE,), 205),
+    GripFix(classoutfits.DWARVES, True, (6,), "right", (GREAT_AXE,), 245),
+    GripFix((2095, 2099), True, (12,), "right", None, 155, False),
+    GripFix((2095, 2099), True, (1,), "left", None, 330, False),
+    GripFix((2095, 2099), True, (1,), "left", (CAHULAKS,), 332, False, own=True),
+    GripFix((2099,), True, (2,), "right", ANY_SHAPE, 200, False),
+    GripFix((2099,), False, (6,), "left", tuple(TWO_HANDED), 52, False),
+)
+
+
+# A costumed figure's weapon carried walking, set by hand: {(model, frame, shape): (angle, behind, None:
+# the carry's own)}: a dwarf's last walk frame, the staff upright and the mace at the hip turned clear.
+CARRY_FIXES: Dict[Tuple[int, int, str], Tuple[int, Optional[bool]]] = {
+    **{(model, 11, shape): (315, False) for model in classoutfits.DWARVES for shape in (STAFF, GYTHKA)},
+    **{(model, 11, MACE): (130, None) for model in classoutfits.DWARVES},
+}
+
+
+def carried(g: Grip, model: int, frame: int, shape: Optional[str]) -> Grip:
+    """G, a weapon's carry walking, with CARRY_FIXES' laid over it."""
+    fix = CARRY_FIXES.get((model, frame, shape))
+    return g if fix is None else (fix[0], g[1] if fix[1] is None else fix[1])
+
+
+def outfit_layer(model: int, own: Optional["Own"]) -> int:
+    """Whose outfit layers a figure wears: a half-elf's own figure (OWN) the half-elf man's or woman's,
+    else MODEL's."""
+    return (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own is not None else model
+
+
+def fixed_grip(g: Optional[Grip], model: int, frame: int, combat: bool, hand: str, shape: Optional[str],
+               own: bool) -> Optional[Grip]:
+    """G, the grip found, with GRIP_FIXES' for a costumed figure laid over it."""
+    for fix in GRIP_FIXES:
+        if (model in fix.models and combat == fix.combat and frame in fix.frames and hand == fix.hand
+                and (fix.shapes is ANY_SHAPE or (shape != SHIELD if fix.shapes is None else shape in fix.shapes))
+                and (own or not fix.own) and (fix.behind is not None or g is not None)):
+            g = (fix.angle, g[1] if fix.behind is None else fix.behind)
+    return g
+
+
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
           cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
@@ -1351,35 +1443,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if temples:
             facing = sp.FRONT if combat and frame == 11 else parts.facing
             parts = parts._replace(head=sp.Head(top, min(temples), max(temples), brow), facing=facing)
-    if costume and model in classoutfits.ELVES and combat and frame in (10, 11):
-        # The raised bow reaches higher than the crown. Locate the circlet and
-        # quiver on the figure, including the turned-to-camera final bow frame.
-        if frame == 10:
-            parts = parts._replace(facing=sp.BACK, head=sp.Head(3, 3, 9, 5),
-                                   shoulders=(10, 3, 10), waist=17)
-        else:
-            crown = 3 if model == 2059 else 4
-            parts = parts._replace(facing=sp.FRONT, head=sp.Head(crown, 5, 10, crown+1),
-                                   shoulders=(10, 4, 12), waist=18)
-    if costume and model == 2099 and not combat and frame == 1:
-        # The rear idle has a relaxed grip on each side of the hips.
-        parts = parts._replace(hands={"left": (4, 15), "right": (15, 15)},
-                               shoulders=(7, 5, 14))
-    if costume and model == 2099 and not combat and frame == 6:
-        # The raised wrist is outside the shoulder in the last front-walk pose.
-        parts = parts._replace(shoulders=(7, 4, 11))
-    if costume and model == 2099 and combat and frame == 7:
-        # The thrusting arm and flying cloak span most of the frame. The quiver
-        # stays at the shoulder, inside that span.
-        parts = parts._replace(shoulders=(9, 11, 17), waist=15)
-    if costume and model == 2099 and combat and frame in (10, 11):
-        # Her vertical bow and raised hand both project above the face.
-        if frame == 10:
-            parts = parts._replace(facing=sp.SIDE, head=sp.Head(3, 4, 9, 5),
-                                   shoulders=(10, 3, 10), waist=16)
-        else:
-            parts = parts._replace(facing=sp.FRONT, head=sp.Head(3, 5, 10, 5),
-                                   shoulders=(10, 5, 13), waist=16)
+    if costume and (model, combat, frame) in PART_FIXES:
+        parts = parts._replace(**PART_FIXES[model, combat, frame])
     if costume and model == 2095 and parts.facing is not None and costume.cloak:
         k = frame + (sp.WALK_FRAMES if combat else 0)
         crown, left, right, brow, shoulder, sa, sb, waist = classoutfits.LANDMARKS[k]
@@ -1414,7 +1479,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         wrists = spritebracers.visible(rows, model, frame, combat, own, None, padded(rows, pad), pad)
         wrist_keep.update((x, len(rows)-1-y if armor_canvas is not out else y) for x, y in wrists)
         if combat and frame in sp.BOW_FRAMES:
-            layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
+            layer = outfit_layer(model, own)
             role = "Warrior" if layer in (2095, 2099) else "Fighter"
             bow_keep.update(classoutfits.frames(role, True, layer)[frame].regions[classoutfits.BOW])
         if any(ARMOUR.get(t & (MAGIC_ARMOUR - 1), (None,))[0] == ARMOUR_LEGS for t in armour):
@@ -1562,7 +1627,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             draw_boots(out, parts, item[0], pad, feet, _glow(item) if _magic(item) else ())
     if "belt" in weapons and model != sp.KREEN:
         item = weapons["belt"]
-        layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own is not None else model
+        layer = outfit_layer(model, own)
         covered = own.cloak if own else CLOAK_GREENS if model == CLOAK_MODEL else ()
         glow = _glow(item) if _magic(item) else ()
         if costume is not None or registered:
@@ -1654,7 +1719,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             missile_loops = tuple((loops[h][0] + pad, loops[h][1] + pad,
                                    h == "left" and parts.facing == sp.SIDE) for h in sides)
         elif registered and (hip or pouch):
-            layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
+            layer = outfit_layer(model, own)
             belt_points = spritebelts.waist(layer, combat, frame)
         canvas, under = out, body
         if fitted_missile and combat and frame == sp.DEAD_FRAME:
@@ -1780,36 +1845,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = (pose[1] if hand == "right" else pose[2], False)
         if shape == SHIELD and (pose and hand == "left" or side):
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
-        if costume and model in classoutfits.ELVES and g and shape != SHIELD:
-            # The picture ends at the soles. Turn a long point or staff butt
-            # away from that edge while keeping the grip on the registered hand.
-            if not combat and hand == "left" and shape == POLEARM and frame in (6, 11):
-                g = (55 if frame == 6 else 130, g[1])
-            elif combat and frame == 1 and hand == "left":
-                g = (70 if model == 2059 else 15, g[1])
-            elif combat and model == 2059 and frame == 12 and hand == "right":
-                g = (160, g[1])
-            elif combat and model == 2061 and frame == 2 and hand == "right" and shape in (STAFF, GYTHKA):
-                g = (200, g[1])
-        if costume and model in classoutfits.DWARVES and combat and hand == "right":
-            # The shorter figure's low recoil and follow-through expose the tip
-            # below its soles. Keep the hand fixed and turn the shaft outward.
-            if frame == 12:
-                g = (150, False)
-            elif frame == 8 and shape in (GREAT_AXE, POLEARM):
-                g = (45, False)
-            elif shape == GREAT_AXE and frame in (0, 1, 6):
-                g = ({0: 280, 1: 205, 6: 245}[frame], g[1])
-        if costume and model in (2095, 2099) and combat and frame == 12 and hand == "right" and shape != SHIELD:
-            g = (155, False)  # Lowered across the body, clear of the baseline.
-        if costume and model in (2095, 2099) and combat and frame == 1 and hand == "left" and shape != SHIELD:
-            # Keep the off-hand head clear of the palm. The narrowed
-            # half-elf grip falls a pixel farther in on this swing.
-            g = (332 if own is not None and shape == CAHULAKS else 330, False)
-        if costume and model == 2099 and combat and frame == 2 and hand == "right":
-            g = (200, False)  # Keep the butt of a staff above the lower edge.
-        if costume and model == 2099 and not combat and frame == 6 and hand == "left" and shape in TWO_HANDED:
-            g = (52, False)
+        if costume:
+            g = fixed_grip(g, model, frame, combat, hand, shape, own is not None)
         if shape is None or g is None or shape in (SLING, BOW, CHATKCHA):
             continue
         colours = FLAME if item_type == FLAME_BLADE else _whole(SPELL_WEAPONS[item_type]) if item_type in SPELL_WEAPONS \
@@ -1825,8 +1862,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = angle, behind or (fitted_hands and hand == spritegiantgrips.HIDDEN.get(frame))
         elif shape in TWO_HANDED and not combat and hand == "right":
             g = UPRIGHT.get(parts.facing, g)
-            if costume and model in classoutfits.DWARVES and frame == 11 and shape in (STAFF, GYTHKA):
-                g = (315, False)
+            if costume:
+                g = carried(g, model, frame, shape)
         elif loops and hip_carry:
             hx, hy = loops[hand]
             g = spritehips.attitude(model, frame, hand), (hand == "left" and parts.facing == sp.SIDE)
@@ -1835,8 +1872,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             blade = None
         elif not combat and shape != SHIELD and shape not in TWO_HANDED and parts.facing in SHEATHED:
             g = SHEATHED[parts.facing][hand]
-            if costume and model in classoutfits.DWARVES and frame == 11 and shape == MACE:
-                g = (130, g[1])
+            if costume:
+                g = carried(g, model, frame, shape)
             if at_waist and (hand == "left" or "left" in weapons) and parts.facing != sp.SIDE:
                 # Anatomical hips stay on their own sides when the arms cross.
                 low = (hand == "right") == (parts.facing == sp.FRONT)

@@ -69,6 +69,12 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   in both games: the same lines as before (Shattered Lands' fountain ambush: initiative, a dance, the
   turns; the sequel: stock, its own party, ages).
 
+**Dev: the class outfits' hand-set placements as tables (the code audit's S4)**
+- `spritegear.armed`'s per-figure, per-frame placements for the class outfits are three tables
+  (`PART_FIXES`, `GRIP_FIXES`, `CARRY_FIXES`) laid over what the figure finder reads, in place of 17
+  branches; `outfit_layer` replaces three copies of one expression. All 88,090 outfit pictures a
+  sweep over every figure, class mix, weapon and armour builds are the same, hash for hash.
+
 **Dev: one copy of the helpers' shared routines (the code audit's S5)**
 - The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
   `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches
