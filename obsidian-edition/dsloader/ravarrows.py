@@ -266,7 +266,6 @@ def chunks(sequel_objects: gff.Chunks, sl_objects: gff.Chunks, sl_palette, stabl
 
 def from_files(sequel_objects: gff.Chunks, sl_dir: str, sequel_dir: str) -> gff.Chunks:
     """chunks() from the Shattered Lands in SL_DIR and the sequel in SEQUEL_DIR (its palettes, as ravgear's)."""
-    import glob
     import os
     from . import art, icons, ravager, ravitems
 
@@ -278,8 +277,7 @@ def from_files(sequel_objects: gff.Chunks, sl_dir: str, sequel_dir: str) -> gff.
     gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
     sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)
     resources = read(os.path.join(sequel_dir, ravager.RESOURCE_FILE))
-    regions = [v for f in sorted(glob.glob(os.path.join(sequel_dir, "RGN*.GFF")))
-               for k, v in read(f).items() if k[0] == "PAL "]
+    regions = ravitems.region_palettes(sequel_dir)
     return chunks(sequel_objects, sl_objects, sl_palette, ravitems.stable_colours(resources, regions),
                   sequel_objects[ravager.TYPES_CHUNK])
 

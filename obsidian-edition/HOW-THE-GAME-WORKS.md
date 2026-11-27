@@ -245,6 +245,12 @@ a fight's movement is the character's Move alone. Wake of the Ravager left the r
 0, so its long swords, armour and shields weighed nothing. With the Loader they weigh as Shattered
 Lands' ([Wake of the Ravager](RAVAGER.md)).
 
+**The same item weighs the same in both games.** The Loader gives Shattered Lands' leather chest armour
+9.6 lb (the game's 75 lb, five times AD&D's whole suit of 15 lb; the sequel's one byte can't hold 75 lb),
+and the sequel's small things (keys, gems, rope) 0.1 lb, as Shattered Lands'. No rule reads an armour's
+or a small thing's weight, so nothing plays differently. The one item left apart is Dragonsbane: a metal
+long sword in Shattered Lands (4 lb), an obsidian one in the sequel (3 lb).
+
 ## Attacks from behind and backstabs
 
 From the game's code:

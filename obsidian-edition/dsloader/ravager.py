@@ -1629,11 +1629,14 @@ AIR_DAGGER_TYPES, TYPE_CLASSES, AIR_CLERIC_BIT = (37, 72), 0x0C, 1
 # Loader's), from Shattered Lands' type of the same kind and material (ITEMS.BIN's pairs), the Loader's backported
 # sequel weapons (npcitems.TYPES 148-153), else the nearest item or the AD&D PHB; furniture, doors, bodies and
 # monsters' and spells' missiles left as they are. The leather chest 96 (the arm and leg pieces' 36 and 18 make
-# the PHB's 15 lb; SL's own 750 is out of line). reports/wake-of-the-ravager-item-weights.md has the table.
+# the PHB's 15 lb; SL's own 750 is out of line, and the Loader gives SL's 96 too: itemtables.LEATHER_CHEST).
+# The small things (9: keys, gems, rope, coins, the transfer's keepsakes) 1, as SL's small things (its type
+# 60), not SSI's 10: the same item weighs the same in both games (the owner's, 2026-11-27;
+# test_item_weights checks every item both games have). reports/wake-of-the-ravager-item-weights.md has the table.
 TYPE_WEIGHT = 2
 TYPE_KIND_RECORD = 4  # (an object's RDFF copy of its type: kind 4, its number the type's)
 RAV_WEIGHTS = {
-    1: (0, 86), 2: (0, 50), 3: (0, 36), 4: (0, 74), 5: (0, 50), 6: (0, 10), 7: (0, 10), 8: (0, 70),
+    1: (0, 86), 2: (0, 50), 3: (0, 36), 4: (0, 74), 5: (0, 50), 6: (0, 10), 7: (0, 10), 8: (0, 70), 9: (10, 1),
     10: (0, 10), 12: (0, 1), 13: (0, 40), 17: (0, 1), 18: (0, 30), 21: (0, 5), 24: (0, 120), 25: (0, 5),
     28: (0, 10), 29: (0, 30), 30: (0, 175), 31: (75, 200), 32: (0, 96), 33: (0, 150), 34: (0, 200),
     35: (10, 150), 38: (0, 5), 39: (50, 60), 42: (0, 1), 43: (0, 5), 44: (0, 1), 46: (0, 1), 47: (0, 40),

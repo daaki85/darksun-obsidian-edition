@@ -23,8 +23,6 @@ Loader has already changed in the copy (the mod's own icons, the kit pages ...) 
 anything missing (no Shattered Lands folder, another release's files) leaves the sequel's own: `chunks` gives
 none. SKIP ("sl_interface") leaves it all out: the Options tab's box (SETTING, on by default) and RAV_SKIP's control."""
 
-import glob
-import os
 import struct
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -98,12 +96,9 @@ def made(sequel: gff.Chunks, sl: gff.Chunks, region_palettes: Sequence[bytes],
 
 
 def region_palettes(game_dir: str) -> List[bytes]:
-    """Every region's map palette in the sequel's folder (each RGNxxx.GFF holds one PAL)."""
-    out = []
-    for path in sorted(set(glob.glob(os.path.join(game_dir, "RGN*.GFF")) + glob.glob(os.path.join(game_dir, "rgn*.gff")))):
-        with open(path, "rb") as f:
-            out += [v for k, v in gff.read_gff(f.read()).items() if k[0] == "PAL "]
-    return out
+    """Every region's map palette in the sequel's folder (ravitems.region_palettes)."""
+    from . import ravitems
+    return ravitems.region_palettes(game_dir)
 
 
 def chunks(sequel: gff.Chunks, sl_dir: Optional[str], game_dir: Optional[str],

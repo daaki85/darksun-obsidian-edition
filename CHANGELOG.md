@@ -63,6 +63,17 @@ Pull requests #146 to #254 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Fixed: the same item weighs the same in both games; the follow-up code audit** (branch `claude/followup-code-audit`)
+- Shattered Lands' leather chest armour weighs 9.6 lb, as in Wake of the Ravager (the game's 75 lb, five
+  times AD&D's whole suit), and the sequel's small things 0.1 lb, as Shattered Lands' (SSI's 1 lb). No
+  rule reads either weight, so nothing plays differently. `test_item_weights.py` checks every item both
+  games have against their real files; Dragonsbane stays apart (a metal sword in one, obsidian in the other).
+- Report: [the follow-up code audit](reports/code-audit-followup-2026-11-27.md).
+
+**Dev**: `ravitems.region_palettes`, the sequel's region palettes read once for the four modules that read
+them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
+DOSBox-X).
+
 **New: DOSBox-X, the default engine** (#146, #178, #185)
 - The Options tab's new **Engine** section chooses DOSBox-X or GOG's DOSBox 0.74. **DOSBox-X is the
   default whenever one is found**: the Windows release brings DOSBox-X's own 64-bit build in its

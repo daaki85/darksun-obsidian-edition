@@ -1301,6 +1301,16 @@ def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str
     return path
 
 
+def _clear_end_files() -> None:
+    """The last game's end files taken away (GAME_END, GAME_MESSAGE, GAME_OK) before a start, either game,
+    either engine."""
+    for old in (GAME_END, GAME_MESSAGE, GAME_OK):
+        try:
+            os.remove(old)
+        except OSError:
+            pass
+
+
 def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, Optional[str]]:
     """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
     can't run, why. Takes the game's lock first (hold_game, WHAT naming this Loader): GameBusy if
@@ -1364,11 +1374,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
         ravager.widen_files(game_dir)
     except OSError as e:
         raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
-    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
-        try:
-            os.remove(old)
-        except OSError:
-            pass
+    _clear_end_files()
     conf = write_conf_wotr(game_dir, settings=settings)
     return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
 
@@ -1428,11 +1434,7 @@ def _start_dosbox_x(settings: dict, write: Callable[[str], str]) -> Tuple[subpro
     DBX_DIR, what it prints kept in DBX_LOG; returns the process and its memory file."""
     global STARTED, STARTED_ENGINE, STARTED_DOSBOX_X, MEMORY_FILE
     program = os.path.abspath(dosboxx.program(settings))  # (problem() said None: it is there)
-    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
-        try:
-            os.remove(old)
-        except OSError:
-            pass
+    _clear_end_files()
     memory = dosboxx.memory_path(HERE, settings)
     if not dosboxx.remove_memory_file(memory):  # (Windows: still open somewhere; DOSBox-X couldn't cut it)
         raise LaunchError(f"The memory file of an earlier game is still in use ({memory}): close the "
@@ -1471,11 +1473,7 @@ def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[s
         problem = prepare_patched_game(game_dir, settings)
         if problem:
             raise LaunchError(f"The recompiled program runs the game with the helper, which needs the patched game ({problem}).")
-        for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
-            try:
-                os.remove(old)
-            except OSError:
-                pass
+        _clear_end_files()
         proc = subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program)))
         STARTED = program
         return proc, None
@@ -1488,11 +1486,7 @@ def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[s
     if not _find_file(game_dir, "DSUN.EXE"):
         raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
     problem = prepare_patched_game(game_dir, settings)
-    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
-        try:
-            os.remove(old)
-        except OSError:
-            pass
+    _clear_end_files()
     exe = _find_file(dosbox_dir, "DOSBox.exe")
     if exe is None:
         raise LaunchError(f"No DOSBox.exe in {dosbox_dir}")
