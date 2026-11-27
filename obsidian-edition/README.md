@@ -127,7 +127,7 @@ says what the mod writes, and where).
   `python3-tk`). On macOS nothing has been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **Linux with DOSBox-X**: with [DOSBox-X as the
   engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) (the default once the Loader finds
-  one: choose its program on the Options tab), **Start the game**
+  one: choose its program on the Options tab), **Play Shattered Lands**
   works on Linux, with the dice log and everything else, and needs neither root nor
   `kernel.yama.ptrace_scope=0`. What it needs: the game's files (the folder holding `DSUN.EXE`, as
   GOG's installer unpacks them; GOG's `DOSBOX` folder isn't used), your own **DOSBox-X 2025.01.01
