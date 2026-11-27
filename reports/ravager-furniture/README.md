@@ -4,7 +4,25 @@
 
 All 20 shipped region files have been scanned. Eight passes have revised 140 pictures at 387 placements across 16 regions. The four regions with no new furniture squash are Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle, including Fletch’s movable bookcase and the mirror exit. All 20 regions still have open in-game checks. Mosaic’s other rooms still need live checks, including Ikibod’s work surface. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Mosaic’s other rooms still need live checks, including Ikibod’s work surface. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+
+## Repairing the split beds and the Alliance storeroom
+
+The whole-map comparison marks both bedrooms and the intact storeroom. The upper castle in Shattered Lands provides a reference at the same map scale.
+
+![Whole headquarters map with both bedrooms and the storeroom marked, beside the Shattered Lands upper castle](split-bed-map.png)
+
+The red bed was already in the figure redraw. Its pillow and upper blanket are picture 524. The foot and legs are 525. Scaling the two pictures separately exposed three full rows of floor through the blanket. All four placements have the same overlap. Scaling the joined 68-row image once gives a 45-row bed with a continuous blanket and the original floor line. The game still draws two objects, with their original dimensions, positions and order.
+
+![Stock, previous PR and corrected furniture in DOSBox, with a Shattered Lands bed for scale](split-bed-and-stacks.png)
+
+The paired bed appears at (55, 423) and (1079, 423) in the Alliance, (407, 95) in Tyr and (1996, 1340) in Mines 1. These coordinates identify the head piece. At each site the foot is 22 map pixels south. All four repaired beds matched the joined drawing in DOSBox.
+
+![The four repaired red beds at their actual DOSBox placements](split-bed-four-rooms.png)
+
+In the intact Alliance storeroom, the rear barrels moved seven pixels toward the foreground. The barrel supporting the sacks moved two, and the sacks moved eleven. The crate carrying the intact red vase also needed to sit on the boxes below. The crate and its vase moved another ten pixels together. The sack piles on the floor and the separate broken-crate arrangements keep their existing placements.
+
+Pictures 2591 and 2704 in the original defect report belong to the red chair and pale table nearby. The placement review covers thirteen chairs and six tables across Tyr and the Alliance. [All nineteen placements, stock and current](alliance-bed-id-review.png) · [DOSBox playtest](../../playtest/logs/2026-11-27-ravager-furniture-joins.md)
 
 ## Freestanding shelves
 
@@ -34,7 +52,7 @@ The three round Volcano 2 floor displays (3527–3529) keep their depth against 
 
 ## Furniture assembled from separate objects
 
-The third pass lowers 18 pictures at 41 placements. The Forest has eight tables and 30 associated pieces. Fourteen stools and benches move closer to their tables so that the far seats tuck under the tabletop. In the Veiled Alliance headquarters, the vase drops seven pixels to meet the newly lowered crate. The same vase drawing appears at nine other locations, which retain their original positions. In Mines 3 the throne back drops ten pixels to meet the seat. The earlier figure redraw supplies the rest of the Mines 3 dining-room layout.
+The third pass lowers 18 pictures at 41 placements. The Forest has eight tables and 30 associated pieces. Fourteen stools and benches move closer to their tables so that the far seats tuck under the tabletop. In the Veiled Alliance headquarters, the vase initially dropped seven pixels to meet the newly lowered crate. The later stack repair moved the crate and vase together onto the lower boxes. The same vase drawing appears at nine other locations, which retain their original positions. In Mines 3 the throne back drops ten pixels to meet the seat. The earlier figure redraw supplies the rest of the Mines 3 dining-room layout.
 
 The whole Forest is shown at one quarter of game-map resolution. The box marks the room enlarged in the first row of the detail sheet. Gedron is shown at the same scale. In the detail sheet, compare the space behind the far chair, the bottom edge of the vase, and the join between the two sections of the throne. The right column shows a Gedron table, an upper castle chest, and the throne in Gedron. The Ravager panels use the previous furniture pass on the left and the Loader's built object and region files on the right. These are map renders with the first stored pose of each picture.
 
@@ -170,11 +188,11 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 |---|---:|---:|---:|---|
 | 001 Forest | 252 | 0 | 56 | Check dining sets in play |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
-| 033 Veiled Alliance | 195 | 21 | 78 | Check both headquarters layouts in play, including torn beds, pillows and the pot on the broken crate |
+| 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
 | 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
 | 037 Temple | 62 | 0 | 6 | Check the six braziers in play and the transition at Tantris’s throne |
-| 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
+| 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |

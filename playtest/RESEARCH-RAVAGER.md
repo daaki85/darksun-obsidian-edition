@@ -318,6 +318,7 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   opened and closed) redraw the map there, the party left where it stands: a picture of any placement
   without walking. Pick the jump's square as the open GMAP square (0) nearest the spot. A jump into Mines 3
   near the throne (3Ah, 15, 46) lands in a fight.
+- **Checking the two-piece red bed** ([join playtest](logs/2026-11-27-ravager-furniture-joins.md)). In a private Roost travel fixture, Alliance square (6, 26), Tyr (27, 5) and Mines 1 (122, 83) show the beds. The second Alliance layout requires the destroyed-headquarters story state. For that throwaway visit, set bit 2000h of script variable 87h:55h just before travelling to (70, 26). Region script MAS 51 reads that bit to select the eastern camera bounds. Launch fresh for each fixture if the game reuses the previous talk script. Confirm the scenery against the region map. Never save the fixture state.
 - **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
   159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
   lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives

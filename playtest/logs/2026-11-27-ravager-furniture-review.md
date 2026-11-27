@@ -1,6 +1,8 @@
 # Ravager furniture (#265) in game, against the stock pictures
 
 Build: claude/ravager-all-area-furniture with obsidian-edition merged (3dbff4dc), DSCLOG2 rebuilt.
+Follow-up: the [repair and live retest](2026-11-27-ravager-furniture-joins.md) identifies the red bed as 524 + 525. The original report below records the visible defect.
+
 Save: ravager-roost, then ravjump.py to each region; the view moved onto changed placements by
 writing the camera (DS:1408h). Control: the same jump with RAV_SKIP=figures (the stock pictures).
 

@@ -70,7 +70,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   add another 26 placements. Crypt barracks furniture and Cloud pottery add 14 more. A shared barrel and sack pile now sits lower in five places,
   with both barrel lids visible over the Tyr wall. The Alliance beds, torn couch and broken crates,
   the Yuan-ti vessels and the shared weapon display add 24 placements. Six braziers around the throne
-  in El’s Temple have lower bowls with their smoke trails preserved. The
+  in El’s Temple have lower bowls with their smoke trails preserved. The two-piece red beds now have a continuous blanket in Tyr, both Alliance layouts and Mines 1. The Alliance storeroom barrels, sacks and intact vase crate sit on their supports. The
   [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
   and compares occupied furniture with the earlier figure redraws.
 
