@@ -63,6 +63,12 @@ _MOVED = {
     21263: 3028, 21264: 3029, 21265: 3030, 21268: 3033}  # (the sequel's icon: Shattered Lands' of another number)
 ICONS: Dict[int, int] = {**{i: i for a, b in _SAME for i in range(a, b + 1)}, **_MOVED}
 ICON_KEEP = (12100, 12101, 12102)  # (never matched: the MORE and scroll buttons)
+# (the inventory and shop screens' right-hand panel, Shattered Lands' smooth grey: mapped colour for colour
+# its top came out lighter and its foot darker, 16 greys onto the sequel's 7, 2026-11-27's shop comparison;
+# DITHERED's pictures mix the two kept colours either side of each of Shattered Lands' instead: `dithered`)
+DITHERED = (13004,)
+NEAR = 40  # (a mix only of colours within this of Shattered Lands' in each of red, green and blue)
+BAYER = ((0, 8, 2, 10), (12, 4, 14, 6), (3, 11, 1, 9), (15, 7, 13, 5))
 
 
 def colour_table(sl_palette: Sequence[Tuple[int, int, int]], stable: Sequence[Tuple[int, Tuple[int, int, int]]]) -> Dict[int, int]:
@@ -72,6 +78,50 @@ def colour_table(sl_palette: Sequence[Tuple[int, int, int]], stable: Sequence[Tu
         raise ValueError("no colour every region keeps")
     return {i: min(targets, key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], rgb)))[0]
             for i, rgb in enumerate(sl_palette)}
+
+
+def _mix(rgb: Tuple[int, int, int], targets: Sequence[Tuple[int, Tuple[int, int, int]]]) -> Tuple[int, int, float]:
+    """(a, b, t): RGB as a + t (b - a), a and b of TARGETS within NEAR of it (the nearest alone if none)."""
+    def far(e):
+        return sum((u - v) ** 2 for u, v in zip(e[1], rgb))
+    nearest = min(targets, key=far)
+    best = (far(nearest), nearest[0], -1, 0.0)
+    close = [e for e in targets if max(abs(u - v) for u, v in zip(e[1], rgb)) <= NEAR]
+    for a, ra in close:
+        for b, rb in close:
+            d = [y - x for x, y in zip(ra, rb)]
+            dd = sum(v * v for v in d)
+            if not dd:
+                continue
+            t = max(0.0, min(1.0, sum((p - x) * v for p, x, v in zip(rgb, ra, d)) / dd))
+            e = sum((p - (x + t * v)) ** 2 for p, x, v in zip(rgb, ra, d))
+            if e < best[0] - 1e-9:
+                best = (e, a, b, t)
+    return best[1], best[2], best[3]
+
+
+def dithered(chunk: bytes, sl_palette: Sequence[Tuple[int, int, int]],
+             stable: Sequence[Tuple[int, Tuple[int, int, int]]]) -> bytes:
+    """A one-frame Shattered Lands picture in the sequel's STABLE colours (but KEPT's), each pixel one of the
+    two either side of its colour by a 4 by 4 ordered pattern, so a smooth shade keeps its tone."""
+    from . import icons
+    targets = [(c, rgb) for c, rgb in stable if c not in KEPT]
+    if not targets:
+        raise ValueError("no colour every region keeps")
+    mixes: Dict[int, Tuple[int, int, float]] = {}
+    out = []
+    for y, row in enumerate(icons.decode(chunk)):
+        line = []
+        for x, p in enumerate(row):
+            if not p:
+                line.append(p)
+                continue
+            if p not in mixes:
+                mixes[p] = _mix(sl_palette[p], targets)
+            a, b, t = mixes[p]
+            line.append(b if b >= 0 and t * 16 > BAYER[y % 4][x % 4] + 0.5 else a)
+        out.append(line)
+    return icons.encode(out)
 
 
 def wanted() -> List[Tuple[Tuple[str, int], Tuple[str, int]]]:
@@ -86,12 +136,17 @@ def made(sequel: gff.Chunks, sl: gff.Chunks, region_palettes: Sequence[bytes],
     is still STOCK's and SL has its own."""
     from . import icons, ravitems
     stock = sequel if stock is None else stock
-    table = colour_table(art.palette_colours(sl[PALETTE]), ravitems.stable_colours(sequel, region_palettes))
+    sl_palette = art.palette_colours(sl[PALETTE])
+    stable = ravitems.stable_colours(sequel, region_palettes)
+    table = colour_table(sl_palette, stable)
     out = {}
     for ours, theirs in wanted():
         if ours[1] in ICON_KEEP or ours not in sequel or theirs not in sl or sequel[ours] != stock.get(ours):
             continue
-        out[ours] = icons.recolour_frames(sl[theirs], table)
+        if ours[0] == "BMP " and ours[1] in DITHERED and struct.unpack_from("<H", sl[theirs], 4)[0] == 1:
+            out[ours] = dithered(sl[theirs], sl_palette, stable)
+        else:
+            out[ours] = icons.recolour_frames(sl[theirs], table)
     return out
 
 
