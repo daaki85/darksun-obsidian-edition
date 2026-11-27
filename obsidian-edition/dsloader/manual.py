@@ -1,7 +1,7 @@
 """The manual: the player's pages as web pages that link to each other, in obsidian-edition/manual/,
 for the release zip. Each page is made from its Markdown, which stays the source (and reads the
 same on GitHub): README.md is the start page (index.html), then the player's guide, the features
-and rules, the kits, the weapon specs, the items, the creatures, the people, the game's bugs fixed, the dice log, how the original
+and rules, the kits, Wake of the Ravager, the weapon specs, the items, the creatures, the people, the game's bugs fixed, the dice log, how the original
 game works, and the patch notes (../PATCH-NOTES.md, as changes.html). The Loader's Help button
 opens the start page.
 
@@ -49,6 +49,7 @@ PAGES = (
     ("player-guide.html", "obsidian-edition/PLAYER-GUIDE.md", "Player's guide", ""),
     ("features.html", "obsidian-edition/FEATURES.md", "Features and rules", ""),
     ("kits.html", "obsidian-edition/KITS.md", "Kits", ""),
+    ("ravager.html", "obsidian-edition/RAVAGER.md", "Wake of the Ravager", ""),
     ("weapon-specs.html", "obsidian-edition/WEAPON-SPECS.md", "Weapon specs", ""),
     ("items.html", "obsidian-edition/ITEMS.md", "Items", "spoilers"),
     ("creatures.html", "obsidian-edition/CREATURES.md", "Creatures", "spoilers"),

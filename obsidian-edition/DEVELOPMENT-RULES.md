@@ -2265,7 +2265,7 @@ weapons. Tests: test_ravpickpocket.py. Played: playtest/logs/2026-11-26-ravager-
 
 ## Item weights in Wake of the Ravager
 
-([In the features page](FEATURES.md#wake-of-the-ravager); the game's rules: [weight and
+([The sequel's page](RAVAGER.md); the game's rules: [weight and
 carrying](HOW-THE-GAME-WORKS.md#weight-and-carrying); the study: `reports/wake-of-the-ravager-item-weights.md`.)
 
 The sequel's item types (OBJEX.GFF's `ALL 4`, 15 bytes) keep SL's weight as a byte at +2 (SL's word +4),

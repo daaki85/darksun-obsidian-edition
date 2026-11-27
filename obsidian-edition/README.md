@@ -20,6 +20,7 @@ which loads the mod with your options.
   - [features and rules](FEATURES.md): every switch of the Options tab and every change with none,
     one short entry each;
   - [kits](KITS.md): every kit's gains, costs and starting gear;
+  - [Wake of the Ravager](RAVAGER.md): the sequel from the Loader, your party taken across, and the mod there;
   - [weapon specs](WEAPON-SPECS.md): weapon specialization, who picks what, and the attacks a round;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
@@ -249,7 +250,7 @@ game at a time: a second one says which has it and leaves the game alone.
 as above, or the folder chosen on the Options tab) in the same engine as Shattered Lands
 (DOSBox-X, or its own GOG DOSBox), with the mod's fixes, rules, in-game additions
 and the Loader's tabs ported to it ([what comes
-across](FEATURES.md#taking-the-party-to-wake-of-the-ravager)). Not found,
+across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)). Not found,
 the button says so and points to the Options tab's **Choose its folder...**.
 
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the

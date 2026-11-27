@@ -13,7 +13,7 @@ party](FEATURES.md#the-games-own-party)). A human who changes class may take a
 kit for the new class if it has none yet ([Changing class](#changing-class)).
 
 A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
-Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)), and a new character takes a kit there
+Ravager](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)), and a new character takes a kit there
 as here. Nearly every kit works there as in Shattered Lands; the few that work only in part, and what
 they lack, are in [In Wake of the Ravager](#in-wake-of-the-ravager).
 How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
@@ -591,7 +591,7 @@ DUAL on the same menu. There a kit chosen goes with the character as it does her
 Mage's, Arcanist's or Mind Warrior's hit points and PSP rolled again as its kit is chosen or taken
 back (and its range of hit points the kit's, for a click on CON and on EDIT); what the sequel
 doesn't do yet: the Elementalist's second sphere, and EDIT giving a kit back after its classes are
-changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
+changed and changed back ([Wake of the Ravager](RAVAGER.md)).
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
@@ -772,7 +772,7 @@ backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a M
 ## In Wake of the Ravager
 
 Not all of what the kits do has come to Wake of the Ravager yet. What works there now, kit by kit
-(a kit chosen there, or brought with [the party](FEATURES.md#taking-the-party-to-wake-of-the-ravager)):
+(a kit chosen there, or brought with [the party](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)):
 **whole** means as in Shattered Lands; **in part** names what is
 missing; **not yet** means the kit there is its class with a kit's name. Every kit's gear limits
 and gear allowed hold there (a Ravager can't take up a shield or a bow, a Battle Mage holds the
