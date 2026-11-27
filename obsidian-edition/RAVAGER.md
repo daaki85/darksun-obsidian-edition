@@ -393,12 +393,9 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   picture). The party column's and the creation screen's small figures wear the outfits too.
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Controls**: [the view in fights](FEATURES.md#the-view-in-fights) and [the whole party in
-  view](FEATURES.md#the-whole-party-in-view).
 - **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
   and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
 - **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
-- **[Steady pace](FEATURES.md#game-speed)**: the switch does nothing for the sequel (the speeds do).
 - **[Names over figures](FEATURES.md#names-over-figures)**: the arrows left after a party archer's shot.
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the

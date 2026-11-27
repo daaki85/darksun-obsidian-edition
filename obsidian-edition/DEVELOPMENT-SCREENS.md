@@ -1280,6 +1280,12 @@ still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
 keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
 (`party_spread`, always on: [the switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)).
 
+**In Wake of the Ravager** (DSCLOG2's PARTY_LOAD, PARTY_GATHER and SPREAD_TICK, sites 231 and 232): the
+same store, `mov byte [13FAh],0`, where a load finds the party in the leader's figure (70DA6h) and in the
+gathering routine (6A823h, overlay stub 46BD:0025); its caller ([BP+2], [BP+4]) tells a fight's end
+(18C9:21C6h and 18C9:31A9h) from the 6 key (18C9:0ED6h). SPREAD_TICK calls the 5 key's routine through its
+stub, 46BD:002Ah, with the fight state's +19h (segment 3C10h) 0.
+
 ## The view in fights
 
 ([In the features page](FEATURES.md#the-view-in-fights).)
@@ -1308,6 +1314,12 @@ table), and a first version, which put other code there, ran garbled.
 opening, the party walking out through the gate: held still, the party never
 left the view and the scene never went on), so there it is as the game has it,
 as is the map's own walking.
+
+**In Wake of the Ravager** (DSCLOG2's CAMERA_WALK, site 230): the sequel's routine stepping a fight's
+figure (1FD6Bh) centres the view at once when the figure leaves the middle of the screen (64-256 across,
+64-136 down) and otherwise steps it toward the figure (262C:0D80). The site, over `mov bx,[426Dh]`
+(200B7h), sends the routine to its end (2019Bh) in a fight while the figure's feet (SI, DI) are on the
+screen. The turn's start still scrolls the view to whoever's turn it is (21341h), as the game has it.
 
 ## The pointer in scenes, and where it starts
 
@@ -1674,6 +1686,12 @@ pixels, not by a shadow's 72 and 44.
 A walker now raises a puff every 6 pixels, as meant. Before, the clock's tick
 was added in place of the distance, so it raised one nearly every pass. A
 walker off the view raises none.
+
+**In Wake of the Ravager** (DSCLOG2's PACE_PASS and PACE_DRAW, sites 233 and 234): the sequel's map frame
+(21A61h) has Shattered Lands' shape: the step for everything 21E0:2BB9 (its "something moved" a byte at
+[BP-1]), the drawing and flip 21E0:1478, the step flag DS:265Ah and the clock DS:145Eh set by the timer
+(2A1AAh), the list of what moved at 42A2h:0028h. The counters `pace_ran`, `pace_lost` and
+`pace_skipped` are in DSCLOG2's segment (offsets from `nasm -l`).
 
 ## Picture and music
 

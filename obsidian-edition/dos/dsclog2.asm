@@ -4962,6 +4962,12 @@ site_table:
         dw site_none                        ; 213 (none here: held for other work)
         dw poison_hit                       ; 214 SITE_POISON_HIT (5D20Dh: a weapon hit's "does it cast": a Poisoner's poison)
         dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
+        times 230 - ($ - site_table) / 2 dw site_none
+        dw camera_walk                      ; 230 SITE_CAMERA_WALK (200B7h: a fight's figure stepped: the view kept while it is on screen)
+        dw party_load                       ; 231 SITE_PARTY_LOAD (70DA6h: a game loaded with the party in one figure: spread out)
+        dw party_gather                     ; 232 SITE_PARTY_GATHER (6A823h: the party put in one figure: after a fight, spread out again)
+        dw pace_pass                        ; 233 SITE_PACE_PASS (21AB6h: the map's step for everything: STEADY PACE's count)
+        dw pace_draw                        ; 234 SITE_PACE_DRAW (21AFAh: the drawing of what moved and the flip: STEADY PACE)
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
@@ -7058,7 +7064,10 @@ tu_site:
         mov dx, TU_END
         call tu_bit
         jz .cell
-        test [cs:tu_failed + si], al
+        push fs
+        call tail_fs
+        test [fs:tu_failed + si], al
+        pop fs
         jnz .done
 .cell:  mov al, [cs:tu_hd]
         mov cl, [cs:tu_level]
@@ -7083,7 +7092,10 @@ tu_site:
         mov dx, TU_FAIL
         call tu_bit
         jz .done
-        or [cs:tu_failed + si], al
+        push fs
+        call tail_fs
+        or [fs:tu_failed + si], al
+        pop fs
         jmp .done
 .dstar: mov word [cs:tu_outcome], TU_DSTARRED
         mov ax, [bp - 4]
@@ -7163,8 +7175,9 @@ tu_clear:                       ; (no failed turnings). All kept.
         push cx
         push di
         push es
-        push cs
-        pop es
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov es, ax                      ; (TU_FAILED: the tail's)
         mov di, tu_failed
         mov cx, TU_MOST
         xor al, al
@@ -7211,7 +7224,9 @@ tu_more   dw 0                  ;   +14h D*: how many more of its kind this cast
 tu_caster_c dw 0                ;   +16h the priest's creature (FFFFh: not a creature)
 tu_target_c dw 0                ;   +18h the undead's
 tu_frame_end:
+section tailz
 tu_failed times TU_MOST db 0 ; (a byte a target: the priests, 0-7, who failed against it this fight)
+section image
 ; TH_SITE (site 16, "spell_hit"): spells that roll to hit, SL's SPELL_HIT (th_hit). The sequel has no
 ; always-hit stub and no table of the missile spells (SL's 7A1A7h): its routine of what spell SI does
 ; to target DI (8451Ah, SL's 7A085h; [BP-4] 1 for the computer's look ahead, 5F2D2h's, not a cast)
@@ -17015,6 +17030,284 @@ s_cs      dw 0
 s_fl      dw 0
 s_far     dw 0, 0
 
+; ---- THE VIEW IN FIGHTS, THE WHOLE PARTY IN VIEW, STEADY PACE (DSCLOG's CAMERA, SPREAD, STEADY PACE) ----
+; Ported from DSCLOG (gamepatch's camera_still, party_spread and party_gather, pace_pass and pace_draw),
+; first written for the sequel on Codex's branch codex/ravager-map-controls (2026-11-26).
+FS_SEG_GAP   equ DGROUP - 0x3C10        ; (DS less the fight state's segment: its +19h, a fight on)
+SPREAD_STUB  equ DGROUP - 0x46BD        ; (DS less the overlay stubs' segment of the 5 and 6 keys)
+GATHER_CODE  equ DGROUP - 0x18C9        ; (DS less the segment of the routine stepping a fight's figure)
+
+; CAMERA_WALK (site 230): "mov bx,[426Dh]" (200B7h; 4 bytes: the INT, the site's number and a NOP) in the
+; routine stepping a fight's figure (1FD6Bh, SL's 0AC0:C7B3), SI and DI the figure's feet on the map,
+; just before the view's own moves after it: its "would the view centred on it pass the map's edge"
+; (1C5F:01B2), the view centred at once when the figure is outside the middle of the screen (64 to 256
+; across, 64 to 136 down), else stepped toward it (262C:0D80). In a fight (the fight state's +19h) with
+; the feet on the screen the view stays: on to the routine's end (2019Bh), past both. Off the screen,
+; or out of a fight, as the game has it. The displaced read done; others kept.
+camera_walk:
+        push bp
+        mov bp, sp
+        push ax
+        push es
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        je .game                        ; (out of a fight: the game's)
+        mov ax, si
+        sub ax, [CAM_X]
+        dec ax
+        cmp ax, 319
+        jae .game                       ; (off the screen across)
+        mov ax, di
+        sub ax, [CAM_Y]
+        dec ax
+        cmp ax, 199
+        jae .game                       ; (off it up or down)
+        add word [bp + 2], 0x2019B - 0x200BA  ; (the INT's way back, 200BAh: to the routine's end)
+.game:  pop es
+        pop ax
+        pop bp
+        mov bx, [WHOSE_TURN]            ; (the displaced read)
+        iret
+
+; PARTY_LOAD (site 231): "mov byte [13FAh],0" (70DA6h; 5 bytes) where loading a game finds the party in
+; the leader's figure (SL's SPREAD_LOAD); PARTY_GATHER (site 232): the same store (6A823h) in the routine
+; putting the party in one figure (46BD:0025's), the game's 6 key's and a fight's end's (SL's
+; SPREAD_GATHER). Each does the store; a load, and a gather whose caller (the routine's own way back,
+; [BP+2], [BP+4]) is one of the two at a fight's end (18C9:21C6h after 20051h, 18C9:31A9h after 21034h),
+; set SPREAD_DUE; the 6 key's (18C9:0ED6h) clears it, so the party stays in one figure until the next
+; fight or load. SPREAD_TICK does the spreading. All registers kept.
+party_load:
+        mov byte [IN_COMBAT], 0         ; (the displaced store)
+        mov byte [cs:spread_due], 1
+        iret
+
+party_gather:
+        mov byte [IN_COMBAT], 0         ; (the displaced store)
+        push ax
+        mov ax, ds
+        sub ax, GATHER_CODE
+        cmp ax, [bp + 4]
+        pop ax
+        jne .out                        ; (another caller: a script's)
+        cmp word [bp + 2], 0x21C6       ; (a fight's end)
+        je party_load
+        cmp word [bp + 2], 0x31A9       ; (... the other)
+        je party_load
+        cmp word [bp + 2], 0x0ED6       ; (the 6 key)
+        jne .out
+        mov byte [cs:spread_due], 0
+.out:   iret
+
+; SPREAD_TICK: (PROBE_SCROLL's, DS the game's) with SPREAD_DUE set, on the map, out of a fight, and
+; the party still in one figure (IN_COMBAT 0): the game's 5 key's routine (46BD:002A, 6A6D1h, its
+; argument 1: the view drawn again) called, which spreads the members round the leader. All kept.
+spread_tick:
+        cmp byte [cs:spread_due], 0
+        je .ret
+        call on_map
+        jne .ret
+        pushad
+        push ds
+        push es
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .out                        ; (a fight: after it)
+        mov byte [cs:spread_due], 0
+        cmp byte [IN_COMBAT], 0
+        jne .out                        ; (spread already)
+        mov ax, ds
+        sub ax, SPREAD_STUB
+        mov [cs:spread_call + 2], ax
+        push word 1
+        call far [cs:spread_call]
+        add sp, 2
+.out:   pop es
+        pop ds
+        popad
+.ret:   ret
+spread_due  db 0
+spread_call dw 0x2A, 0
+
+; STEADY PACE (SL's PROBE_PACE_PASS, PROBE_PACE_DRAW; DEVELOPMENT-SCREENS.md's Game speed). The map's
+; frame (21A61h, SL's 1E8E4h) calls the step for everything (21E0:2BB9, which builds the list of what
+; moved at 42A2h:0028h, 10 bytes each, and sets the frame's byte [BP-1], "something moved") and then
+; the drawing of that list with the flip (21E0:1478). The step runs only when the timer (2A1AAh) has set
+; DS:265Ah, at each tick of the game's clock (DS:145Eh, 96 a second): a tick passed while drawing is a
+; step lost. PACE_PASS counts the steps run; PACE_DRAW, at each frame, adds the steps lost since the last
+; to a debt in quarter ticks less PACE_ALLOW, and while the debt is above 0, out of a fight, leaves the
+; drawing out and keeps the list (PACE_SAVED, PACE_KEPT entries); the next frame drawn gets it added
+; after its own. Each site replaces the far call's offset (its INT and number: 3 bytes), the call's
+; segment, as DOS relocated it, left in place and read from there.
+PACE_LIST  equ 0x28                     ; the game's list of what moved (at 42A2h:0) ...
+PACE_LSEG  equ DGROUP - 0x42A2          ; (... DS less its segment)
+PACE_LMAX  equ 320                      ; ... and the most it holds
+PACE_CLOCK equ 0x145E                   ; the game's clock: 96 ticks a second
+PACE_STEP  equ 0x265A                   ; set by the game's timer each tick: the step is due
+PACE_ALLOW equ 6                        ; steps a frame may lose, in quarter ticks (1.5 ticks)
+PACE_AHEAD equ 4 * 4 * 4                ; (the most owed: 4 frames of 4 ticks, then as the game)
+PACE_GAP   equ 24                       ; ticks since the last frame: a pause (a load, a talk), afresh
+PACE_HOLD  equ 2                        ; ticks what moved is kept before a frame is drawn for it alone
+PACE_KEPT  equ 64                       ; entries kept at most (more: the frame is drawn)
+
+pace_far:                               ; (both sites': the way back and the game's routine's segment)
+        pop word [cs:pace_ret]          ; (PACE_PASS's or PACE_DRAW's own way back)
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf                            ; (the caller's flags: interrupts as they were)
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx]                 ; (the call's segment, as relocated)
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        add word [cs:pace_back], 2      ; (past it)
+        jmp [cs:pace_ret]
+
+pace_pass:
+        call pace_far
+        mov word [cs:pace_call], 0x2BB9
+        cmp byte [PACE_STEP], 0
+        je .call
+        inc word [cs:pace_steps]        ; (a step due: it runs)
+        inc word [cs:pace_ran]
+.call:  call far [cs:pace_call]
+        cmp word [cs:pace_kept], 0
+        je .back
+        push eax
+        mov eax, [PACE_CLOCK]
+        sub eax, [cs:pace_kept_at]
+        cmp eax, PACE_HOLD
+        pop eax
+        jb .back                        ; (kept a moment: the next step draws it too)
+        push bx
+        mov bx, sp
+        mov bx, [ss:bx + 2 + 6]         ; (the frame's "something moved", a byte: the call's 4th argument)
+        mov byte [bx], 1
+        pop bx
+.back:  jmp far [cs:pace_back]
+
+pace_draw:
+        call pace_far
+        mov word [cs:pace_call], 0x1478
+        pusha
+        push es
+        mov bp, sp                      ; ([BP+24]: how many moved; PUSHA, ES, then x, y, 1)
+        mov eax, [PACE_CLOCK]           ; the schedule
+        mov edx, eax
+        sub eax, [cs:pace_clock]
+        mov [cs:pace_clock], edx
+        xor dx, dx
+        xchg dx, [cs:pace_steps]        ; (the steps run since the last frame)
+        cmp eax, PACE_GAP
+        jb .owed
+        mov word [cs:pace_kept], 0      ; (a pause: what was kept is from before it)
+        mov word [cs:pace_debt], 0
+        jmp short .judge
+.owed:  sub ax, dx                      ; the steps lost
+        jge .lost
+        xor ax, ax
+.lost:  add [cs:pace_lost], ax
+        shl ax, 2
+        sub ax, PACE_ALLOW
+        add ax, [cs:pace_debt]
+        cmp ax, -PACE_ALLOW
+        jge .low
+        mov ax, -PACE_ALLOW             ; (a frame's allowance in hand at most)
+.low:   cmp ax, PACE_AHEAD
+        jle .high
+        mov ax, PACE_AHEAD
+.high:  mov [cs:pace_debt], ax
+.judge: mov cx, [bp + 24]
+        jcxz .draw                      ; (nothing new: drawn for what was kept)
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .draw                       ; (a fight draws every frame)
+        cmp word [cs:pace_debt], 0
+        jle .draw
+        mov ax, [cs:pace_kept]
+        add ax, cx
+        cmp ax, PACE_KEPT
+        ja .draw
+        mov di, [cs:pace_kept]          ; left undrawn: the list kept
+        or di, di
+        jnz .more
+        mov edx, [PACE_CLOCK]
+        mov [cs:pace_kept_at], edx
+.more:  mov [cs:pace_kept], ax
+        imul di, di, 10
+        add di, pace_saved
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov es, ax                      ; (PACE_SAVED: the tail's)
+        push ds
+        mov ax, ds
+        sub ax, PACE_LSEG
+        mov ds, ax
+        mov si, PACE_LIST
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+        inc word [cs:pace_skipped]
+        pop es
+        popa
+        mov ax, 1                       ; (as drawn)
+        jmp far [cs:pace_back]
+.draw:  mov cx, [cs:pace_kept]          ; the list kept, after this frame's own
+        jcxz .go
+        mov word [cs:pace_kept], 0
+        mov bx, [bp + 24]
+        mov ax, bx
+        add ax, cx
+        cmp ax, PACE_LMAX
+        ja .go                          ; (no room: it is dropped)
+        mov [bp + 24], ax
+        imul di, bx, 10
+        add di, PACE_LIST
+        mov ax, ds
+        sub ax, PACE_LSEG
+        mov es, ax
+        push ds
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov ds, ax                      ; (PACE_SAVED: the tail's)
+        mov si, pace_saved
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+.go:    cmp word [bp + 24], 0
+        pop es
+        popa
+        je .none                        ; (nothing to draw at all)
+        call far [cs:pace_call]
+        jmp far [cs:pace_back]
+.none:  mov ax, 1
+        jmp far [cs:pace_back]
+
+pace_ret     dw 0                       ; (PACE_FAR's own way back)
+pace_back    dd 0                       ; (where the INT returns, past the call's segment)
+pace_call    dd 0                       ; (the game's routine, its segment as relocated)
+pace_clock   dd 0                       ; (the clock at the last frame)
+pace_kept_at dd 0                       ; (the clock when the list was first kept)
+pace_debt    dw 0                       ; steps lost past the allowance, in quarter ticks (signed)
+pace_steps   dw 0                       ; steps run since the last frame
+pace_ran     dw 0                       ; steps run (counted, for measuring)
+pace_lost    dw 0                       ; steps lost (counted, for measuring)
+pace_kept    dw 0                       ; entries kept (PACE_SAVED)
+pace_skipped dw 0                       ; frames left undrawn (counted)
+section tailz                           ; (PACE_SAVED: the tail's buffer)
+pace_saved times PACE_KEPT * 10 db 0  ; (what moved in the frames left undrawn, 10 bytes each)
+section image
+
+
 ; PROBE_SCROLL: INT VEC_SCROLL replaces the start of "call far 35B9:0034" (20230h: 9Ah 34h 00h, then
 ; the segment: A9h makes it a harmless "test ax,<segment>" the loader may relocate), the map's main
 ; loop asking where the pointer is (far pointers to x and y on the stack). The labels' pass done with
@@ -17045,6 +17338,7 @@ probe_scroll:
         call label_tick
         call ring_tick
         call redraw_tick                ; (the view again for the Loader's squares and rings)
+        call spread_tick                ; (the whole party in view: SPREAD_TICK)
         pushf
         cli                             ; (drawing: DUST_NUDGE)
         call dust_tick                  ; (the walkers' dust: DUST)
