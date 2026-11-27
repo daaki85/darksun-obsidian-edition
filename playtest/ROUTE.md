@@ -234,6 +234,7 @@ map position. Nothing is built for it yet.
   (2026-11-18).
 - Wake of the Ravager, Forest (01h): the Roost test jump and overhead-map check did not establish a water source (2026-11-27).
 - Wake of the Ravager, Veiled Alliance HQ (33h), Forest dining room and Mines 3 throne room: no water seen in the rooms looked at (2026-11-27, logs/2026-11-27-ravager-furniture-review.md).
+- Wake of the Ravager, Mosaic (3Ch), museum display room and Fletch’s bookcase. No water source identified during the [bust puzzle visit](logs/2026-11-27-ravager-mosaic-museum.md).
 - Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the
   table of the room to the west; not looked at (2026-11-22, logs/2026-11-22-ravager-transfer-items.md).
 - Wake of the Ravager, Tyr (2026-11-25, logs/2026-11-25-ravager-shops-scrolls.md): **Uhubito's caravan

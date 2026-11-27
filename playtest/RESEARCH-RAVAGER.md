@@ -307,6 +307,7 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   and closed redraws it, the rock rises as the earth drake, but a fight there hangs: the party isn't set up), 0x44 (the Tarrasque: the area 31-36, 46
   runs GPL 124, the cinematic and the fight).
   The Forest jump can leave the camera behind. The overhead map opens with O, and moving the pointer to the edge scrolls the scenery. Check the room landmarks before treating a capture as evidence for a furniture placement.
+- **Mosaic museum** ([DOSBox playtest and captures](logs/2026-11-27-ravager-mosaic-museum.md)). Use `ravjump.py 0x3C 39 24` from the Roost fixture to reach the interactive rows. Row 13 lands across the wall. Look at the head of Horace or Ellith, dismiss the name, select the green hand and press 1 to remove the bust. Look picks the detached bust up. Click the empty stand to seat Horace, or open inventory with I and click a backpack slot to store Ellith. The sword breaks Khildril. Pick up the bookcase beside Fletch and set it elsewhere, then pick up the exposed book and click Biblid.
 - **A figure's frame live** (2026-11-27, logs/2026-11-27-ravager-encounters.md): a map record (DS:67BBh + 25h n)
   holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
   script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
