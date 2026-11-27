@@ -100,6 +100,21 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   controls, more saves, steady pace, the arrows left over an archer, the cahulaks sparing only by size) are
   on RAVAGER's "Not in the sequel yet". DICE-LOG.md has a sequel section.
 
+**Changed: the sequel's no-speaker box and shop panel as Shattered Lands'** (branch `claude/portrait-empty-shop`)
+- A message with no speaker (the XP at a fight's end) shows Shattered Lands' stone dark-sun emblem in the
+  frame, where the sequel had a grey wash (its BMP 12000's frame 1, from the player's Shattered Lands, in
+  the sequel's colours; the wash without one, or with `sl_interface` off).
+- The shop's right-hand panel is Shattered Lands': the merchant's face in its frame at (252, 11), SELL
+  under it and MORE alone at the bottom (WIND 13500's two buttons moved, the face's two shop patches
+  pointed there; the item list was already at Shattered Lands' places).
+- The panel's picture (BMP 13004, Shattered Lands' since `sl_interface`) keeps its shade: its 16 greys
+  were rounded to the sequel's 7 (the top lighter, the foot darker); now each pixel takes the nearest
+  of the sequel's colours near its own plus what its neighbours missed (Floyd-Steinberg,
+  `ravui.DITHERED`), so the shade holds and the grain reads like Shattered Lands' (a 4 by 4 pattern,
+  tried first, showed as a regular checker: the owner asked for the texture too).
+- Played against Shattered Lands' own shop and the earlier build. Tests: `test_ravportraits.py`,
+  `test_ravui.py`.
+
 **Changed: the sequel's talk portraits at Shattered Lands' size** (branch `claude/ravager-portrait-size`)
 - Wake of the Ravager's faces (72 by 72, frame drawn in) made Shattered Lands' 32 by 32 in a 48 by 46
   frame by `dsloader/ravportraits.py`: the faces in GPLDAT2.GFF (each start, from the game's own, the

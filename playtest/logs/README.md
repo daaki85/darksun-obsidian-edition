@@ -249,6 +249,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-xp-lines.md) | Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus (written through the read-only view's named ranges) and the level-ups |
 | [2026-11-27](2026-11-27-ravager-item-watch.md) | Wake of the Ravager's dice log with the missing-item report: an item freed by a test edit reported; handing over, dropping, selling, buying and an area change silent |
 | [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
+| [2026-11-27](2026-11-27-ravager-no-speaker-shop.md) | Wake of the Ravager's no-speaker emblem and shop panel as Shattered Lands' |
 | [2026-11-27](2026-11-27-inventory-redraws.md) | Class portraits in the Shattered Lands inventory |
 | [2026-11-27](2026-11-27-human-inventory.md) | All eight human inventory outfits on both figures in DOSBox |
 

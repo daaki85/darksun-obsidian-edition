@@ -1474,7 +1474,8 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
             if source:
                 with open(source, "rb") as f:
                     scripts = gff.read_gff(f.read())
-            added = ravportraits.resource_chunks(gff.read_gff(out), scripts)
+            inside = None if ravui.SKIP in skip else ravportraits.emblem(sl_dir, game_dir, gff.read_gff(data))
+            added = ravportraits.resource_chunks(gff.read_gff(out), scripts, inside)
         except (OSError, gff.GffError, struct.error):
             added = {}
         if added:

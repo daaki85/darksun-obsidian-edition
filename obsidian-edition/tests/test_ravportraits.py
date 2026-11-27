@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dsloader import art, gff, ravager, ravportraits as rp, wotrart  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
+SL = os.environ.get("DSUN_SL")
 
 
 def sequel_face(face_colour=50, border=200):
@@ -79,17 +80,43 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<IHH", out, rp.ITEM_AT + rp.ITEM_SIZE + 8), (rp.TEXT_BOX, 58, 6))
         self.assertEqual(struct.unpack_from("<IHH", out, rp.ITEM_AT + 8), (12300, 0, 0))
 
+    def shop(self, sell=(277, 159), more=(235, 159)):
+        head = bytearray(rp.ITEM_AT)
+        struct.pack_into("<H", head, rp.WIND_COUNT, 3)
+        items = b""
+        for tag, n, (x, y) in ((b"BUTN", 13304, sell), (b"BUTN", 13303, more), (b"APFM", 11242, (245, 80))):
+            items += bytes(4) + tag + struct.pack("<IHH", n, x, y) + bytes(rp.ITEM_SIZE - 16)
+        return bytes(head) + items
+
+    def test_the_shop_buttons_as_shattered_lands(self):
+        out = rp.shop_window(self.shop())
+        at = rp.ITEM_AT + 8
+        self.assertEqual(struct.unpack_from("<IHH", out, at), (13304, 255, 59))  # (SELL under the face)
+        self.assertEqual(struct.unpack_from("<IHH", out, at + rp.ITEM_SIZE), (13303, 255, 159))  # (MORE alone)
+        self.assertEqual(struct.unpack_from("<IHH", out, at + 2 * rp.ITEM_SIZE), (11242, 245, 80))  # (the list kept)
+        self.assertIsNone(rp.shop_window(out))  # (already moved: left)
+        self.assertIsNone(rp.shop_window(self.shop(sell=(1, 2))))
+
+    def test_the_empty_frame_round_the_emblem(self):
+        resource = {rp.EMPTY_FRAME: art.plnr_frames([sequel_face(), sequel_face(90)])}
+        sun = [[7] * rp.FACE for _ in range(rp.FACE)]
+        empty = rp.empty_frame(resource, {("PORT", 1): art.plnr_frames([sequel_face()])}, None, sun)
+        washed = rp._frame_rows(empty, 1)
+        self.assertEqual({p for r in washed[rp.TOP:rp.TOP + rp.FACE] for p in r[rp.LEFT:rp.LEFT + rp.FACE]}, {7})
+        self.assertEqual(washed[1][1], 200)
+
     def test_the_empty_frame_has_both_pictures(self):
         clear = sequel_face()
         for y in range(7, 65):
             clear[y][8:64] = [0] * 56
         washed = sequel_face(90)
         resource = {rp.EMPTY_FRAME: art.plnr_frames([clear, washed]), ("WIND", rp.TALK_WINDOW): self.window(),
-                    rp.PALETTE: bytes(768)}
+                    rp.PALETTE: bytes(768), ("WIND", rp.SHOP_WINDOW): self.shop()}
         out = rp.resource_chunks(resource, {("PORT", 1): art.plnr_frames([sequel_face()])})
         empty = out[rp.EMPTY_FRAME]
         self.assertEqual(struct.unpack_from("<H", empty, 4)[0], 2)
         self.assertEqual((size(empty, 0), size(empty, 1)), ((48, 46), (48, 46)))
+        self.assertEqual(out[("WIND", rp.SHOP_WINDOW)], rp.shop_window(self.shop()))
         self.assertEqual(rp.resource_chunks(resource, None), {})
         self.assertEqual(rp.resource_chunks({**resource, ("WIND", rp.TALK_WINDOW): self.window(58)},
                                             {("PORT", 1): art.plnr_frames([sequel_face()])}), {})
@@ -103,7 +130,9 @@ class PatchTests(unittest.TestCase):
             self.assertEqual(len(p.original), len(p.replacement), p.name)
         at = next(p for p in rp.PATCHES if p.name == "small_portraits_at")
         self.assertEqual(at.replacement, bytes.fromhex("bf0800c646fe06"))  # (mov di,8 / mov byte [bp-2],6)
-        self.assertEqual((rp.SHOP_X, rp.SHOP_Y), (250, 19))
+        self.assertEqual((rp.SHOP_X, rp.SHOP_Y), (252, 11))  # (Shattered Lands' frame in its shop)
+        shop = next(p for p in rp.PATCHES if p.name == "small_portraits_shop")
+        self.assertEqual(shop.replacement, bytes.fromhex("bffc00c746fe0b00"))
 
 
 @unittest.skipUnless(WOTR, "DSUN_WOTR not set (the sequel's own files)")
@@ -124,6 +153,16 @@ class GameFileTests(unittest.TestCase):
             with open(resources, "rb") as f:
                 res = gff.read_gff(f.read())
             self.assertEqual(struct.unpack_from("<H", res[("WIND", rp.TALK_WINDOW)], rp.WIND_HEIGHT)[0], 58)
+            self.assertIsNone(rp.shop_window(res[("WIND", rp.SHOP_WINDOW)]))  # (SELL and MORE already moved)
+            if SL:  # (Shattered Lands' emblem in the empty frame)
+                ravager.write_resources(WOTR, resources, set(), SL)
+                with open(resources, "rb") as f:
+                    res = gff.read_gff(f.read())
+                with open(os.path.join(WOTR, "RESOURCE.GFF"), "rb") as f:
+                    sun = rp.emblem(SL, WOTR, gff.read_gff(f.read()))
+                self.assertEqual((len(sun[0]), len(sun)), (32, 32))
+                washed = rp._frame_rows(res[rp.EMPTY_FRAME], 1)
+                self.assertEqual([r[rp.LEFT:rp.LEFT + rp.FACE] for r in washed[rp.TOP:rp.TOP + rp.FACE]], sun)
             self.assertNotIn(rp.SKIP, ravager.write_scripts(WOTR, scripts, {rp.SKIP}))
             self.assertNotIn(rp.SKIP, ravager.write_resources(WOTR, resources, {rp.SKIP}))
 
