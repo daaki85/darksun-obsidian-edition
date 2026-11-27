@@ -1638,6 +1638,12 @@ fade-in is over, and now and then; the colours the game cycles, for water and
 fire, are never picked as darker ones). The rectangles the game draws again when
 a figure moves are widened by the length of a shadow, so none is left behind.
 
+**The feet.** A shadow starts at the figure's feet: the lowest row its frame draws anything on (`FEET_ROW`,
+in `dos/shared_routines.inc`, the frame's last listed row; DSCLOG runs it from its tail, `FEET_FAR`), not the
+frame's bottom edge. Wake of the Ravager's redrawn figures have clear margins round their frames (10 rows under
+the party's, up to 22 under the big creatures'), and until 2026-11-27 their shadows fell that far below them,
+the figures seeming to float as they walked. DSCLOG2's `FIG_OF` and `FIG_RECORD` do the same.
+
 **Pictures out of memory.** The shadow is traced from the figure's picture in the game's picture
 cache, and in a big fight (the arena, ten monsters) the game lets go of most pictures between
 drawings: in a save in the arena every figure but one had its picture out of memory as the floor was

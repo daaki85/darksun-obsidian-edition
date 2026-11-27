@@ -23950,6 +23950,8 @@ shadow_of:
         mov ax, [es:si + 2]
         dec ax
         mov [cs:f_bottom], ax
+        mov ax, feet_far                ; (the feet on its lowest drawn row: FEET_FAR, in the tail)
+        call tail_call
         call shadow_box
         setnc byte [cs:sh_cast]
         call sc_start
@@ -28763,6 +28765,20 @@ inventory_load_far:
         add si, 0x20            ; (the preload table's small figure)
 .out:   pop gs
         iret
+
+; FEET_FAR: (from TAIL_CALL: GS DSCLOG's segment) F_BOTTOM, the feet's row of SHADOW_OF's frame ES:SI, made its
+; lowest drawn row if that is higher: a frame may have clear rows below the feet, its bottom edge not the feet
+; (as Wake of the Ravager's redrawn figures: DSCLOG2's FIG_OF the same). Keeps all but AX.
+feet_far:
+        call feet_row
+        cmp ax, [gs:f_bottom]
+        jae .ret
+        mov [gs:f_bottom], ax
+.ret:   retf
+
+; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
+; (FFFFh: none). Keeps the rest.
+        SHARED_feet_row
 
 ; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
 tint_far:
