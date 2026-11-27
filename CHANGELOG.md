@@ -62,6 +62,12 @@ Releases, newest first (2.12.0 and older in the archive):
 Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
+**Fixed: Wake of the Ravager (kits, the code audit's KIT_OPEN)**
+- The kit byte's "no kit" marker, 0FFh, is also a legal byte on a human with three classes (kits
+  3/3/3, the own party's bit and Friends), so such a character lost its kits. 0FFh now means "no kit"
+  only on any other sheet, in the Loader (`game.kit_open`) and DSCLOG2 (`KIT_OPEN_AT`). No save
+  changes: no other sheet could hold 0FFh as kits.
+
 **New: DOSBox-X, the default engine** (#146, #178, #185)
 - The Options tab's new **Engine** section chooses DOSBox-X or GOG's DOSBox 0.74. **DOSBox-X is the
   default whenever one is found**: the Windows release brings DOSBox-X's own 64-bit build in its

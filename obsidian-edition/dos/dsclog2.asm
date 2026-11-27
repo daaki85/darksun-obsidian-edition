@@ -4768,7 +4768,9 @@ ns_knows:
         mov al, [es:bx]
         cmp byte [cs:di + ns_known_at], KIT_BYTE
         jne .bit
-        cmp al, KIT_OPEN
+        sub bx, KIT_BYTE
+        call kit_open_at
+        lea bx, [bx + KIT_BYTE]     ; (the flags kept)
         jne .bit
         xor al, al                  ; (no kit chosen: no bit)
 .bit:   test al, [cs:di + ns_known_bit]
@@ -5252,7 +5254,9 @@ ns_teach:
         add bx, ax
         cmp byte [cs:di + ns_known_at], KIT_BYTE
         jne .set
-        cmp byte [es:bx], KIT_OPEN
+        sub bx, KIT_BYTE
+        call kit_open_at
+        lea bx, [bx + KIT_BYTE]     ; (the flags kept)
         jne .set
         mov byte [es:bx], 0
 .set:   mov al, [cs:di + ns_known_bit]
@@ -12097,11 +12101,24 @@ kit_where dw 0
 ; OWN_BIT, kits.own_race: Gerakis, Thy'rokh, Terrannus, Ar'Anda), the kits' rule on; else 0, ZF set. OWN_HAS:
 ; ZF set if sheet ES:BX has class AL. Others kept.
 OWN_BIT      equ 0x40
+; KIT_OPEN_AT: ZF set if sheet ES:BX's kit byte is KIT_OPEN, a kit taken back on the creation screen: 0FFh
+; on any sheet but a human's with three classes, whose 0FFh is its kits (each class's third), OWN_BIT and
+; Friends known, which the kits can make (Terrannus could: game.kit_open, 2026-11-27's code audit). A sheet
+; being made has one class, so its 0FFh is always KIT_OPEN. All registers kept.
+kit_open_at:
+        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        jne .out
+        cmp byte [es:bx + SH_RACE], CU_HUMAN
+        jne .yes
+        cmp byte [es:bx + SH_CLASSES + 2], 0
+        jne .out                ; (ZF clear: a third class)
+.yes:   cmp al, al
+.out:   ret
 own_race_b:
         xor al, al
         test word [cs:rules_hi], RULE_HI_KITS
         jz .out
-        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        call kit_open_at
         je .out
         test byte [es:bx + KIT_BYTE], OWN_BIT
         jz .out
@@ -12157,9 +12174,9 @@ kit_at:
         sub cx, di
         jb .none
         shl cl, 1
-        mov ch, [es:bx + KIT_BYTE]
-        cmp ch, KIT_OPEN
+        call kit_open_at
         je .none
+        mov ch, [es:bx + KIT_BYTE]
         shr ch, cl
         and ch, 3
         jz .none
@@ -16414,7 +16431,7 @@ dk_ask:
         jz .ret
         cmp byte [es:bx + SH_RACE], CU_HUMAN
         jne .ret
-        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        call kit_open_at
         je .none
         test byte [es:bx + KIT_BYTE], KIT_PLACES_BITS
         jnz .ret                ; (a kit already: one a character)
@@ -16460,8 +16477,8 @@ dk_ask:
         inc dl
         movzx dx, dl
         shl dx, cl
+        call kit_open_at
         mov cl, [es:bx + KIT_BYTE]
-        cmp cl, KIT_OPEN
         jne .set
         xor cl, cl
 .set:   or cl, dl

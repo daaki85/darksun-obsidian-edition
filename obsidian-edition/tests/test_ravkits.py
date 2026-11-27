@@ -64,6 +64,9 @@ def characters():
         for levels in ((3, 7), (8, 7)):
             for byte in (0x01, 0x04, 0x05, 0x06, 0x0B, 0x40 | 0x02, 0xFF):
                 out.append(((new, old), levels, 1, byte))
+    for classes in ((9, 11, 13), (1, 9, 17)):  # (a human with three classes: 0FFh is its kits, OWN_BIT and Friends)
+        for byte in (0x3F, 0xFF):
+            out.append((classes, (5, 5, 5), 1, byte))
     return out
 
 
@@ -232,6 +235,20 @@ class KitTests(unittest.TestCase):
 
     OWN = [((9, 7), (6, 6), 8), ((9, 7), (6, 9), 8), ((9, 7, 12), (6, 6, 6), 8), ((11, 12, 17), (6, 6, 7), 3),
            ((11, 6, 17), (5, 5, 5), 3), ((2,), (7,), 1), ((2,), (14,), 1), ((10,), (7,), 5), ((9,), (5,), 1)]
+
+    def test_kit_open(self):
+        """0FFh is KIT_OPEN on every sheet but a human's with three classes, where it is a legal byte (kits
+        3/3/3, OWN_BIT and Friends): game.kit_open and the helper's KIT_OPEN_AT agree on both."""
+        for classes, levels, race, want in (((9,), (5,), 1, True), ((9, 11), (3, 7), 1, True), ((9, 11, 13), (5, 5, 5), 2, True),
+                                            ((9, 11, 13), (5, 5, 5), 1, False), ((1, 9, 17), (5, 5, 5), 1, False)):
+            sheet = wotr_sheet(classes, levels, race, 0xFF)
+            with self.subTest(classes=classes, race=race):
+                self.assertEqual(game.kit_open(sheet), want)
+                got = self.run_routine("kit_open_at", sheet)
+                self.assertEqual(bool(got["eflags"] & 0x40), want)
+                self.assertEqual(kitpages.kit_ids(sheet) == [], want)
+            if want:
+                self.assertFalse(game.kit_open(wotr_sheet(classes, levels, race, 0x3F)))
 
     def test_own_party(self):
         """The sequel's own party's features (kits.own_features): OWN_DRUID's AL is kits.own_warden_level

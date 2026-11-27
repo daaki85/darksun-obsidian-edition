@@ -527,7 +527,10 @@ How each of these is done:
   `KIT_AT` the kit of the class at a place, `KIT_AWAKE` holds a kit asleep until the level at `+24h`
   passes its class's (as the game counts earlier classes; the class it has now is always awake).
   `KIT_IS` finds a kit only while awake and `KIT_HAS` either way. The byte's 0FFh (`KIT_OPEN`, on
-  the creation panel) is no kit. The kit's own levels come from `KIT_LEVEL` (Ravager and Grove
+  the creation panel) is no kit, but not on a human with three classes (the sequel's own party): there
+  it is a legal byte, kits 3/3/3 with `OWN_BIT` and Friends, so `KIT_OPEN_AT` (`game.kit_open`)
+  reads 0FFh as open only on any other sheet. Old saves need no change: no one-class or two-class
+  sheet could hold 0FFh as kits. The kit's own levels come from `KIT_LEVEL` (Ravager and Grove
   Warden AC, the warrior THAC0, the Seeker's and Justifier's slots, the Shinobi's casting and spell
   picks, the Battle Mage's 7th-level expertise) and its class from `KIT_CLASS_OF_SHEET` (a Seeker's
   sphere, an Elementalist's cleric); `PROBE_SLOT_LEVEL` puts an Elementalist's slots behind for its
