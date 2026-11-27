@@ -194,7 +194,8 @@ class LeftoverTests(unittest.TestCase):
             return True
         with mock.patch("dsloader.npcitems.add_to", side_effect=add), \
                 mock.patch("dsloader.ring.unlink", side_effect=unlink), mock.patch("dsloader.ring.Items"), \
-                mock.patch.object(weaponchoice, "bow_ahead") as ahead:
+                mock.patch.object(weaponchoice, "bow_ahead") as ahead, \
+                mock.patch.object(ravarrows, "objects_ready", return_value=True):
             lines = ravarrows.starting_arrows(gd, 0)
             self.assertEqual(lines, ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked",
                                      "Lex starts with 24 shocking arrows in the pack: Shocking Grasp picked"])
@@ -219,7 +220,8 @@ class LeftoverTests(unittest.TestCase):
         gd._worn = lambda member: iter(list(worn))
         with mock.patch("dsloader.npcitems.add_to", return_value=False) as add, \
                 mock.patch("dsloader.ring.unlink") as unlink, mock.patch("dsloader.ring.Items"), \
-                mock.patch.object(weaponchoice, "bow_ahead") as ahead:
+                mock.patch.object(weaponchoice, "bow_ahead") as ahead, \
+                mock.patch.object(ravarrows, "objects_ready", return_value=True):
             self.assertEqual(ravarrows.starting_arrows(gd, 0), [])
             self.assertEqual(add.call_count, 2)  # (both tried)
             unlink.assert_not_called()
@@ -249,12 +251,68 @@ class LeftoverTests(unittest.TestCase):
             return True
         with mock.patch("dsloader.npcitems.add_to", side_effect=add), \
                 mock.patch("dsloader.ring.unlink", side_effect=unlink), mock.patch("dsloader.ring.Items"), \
-                mock.patch.object(weaponchoice, "bow_ahead"):
+                mock.patch.object(weaponchoice, "bow_ahead"), \
+                mock.patch.object(ravarrows, "objects_ready", return_value=True):
             lines = ravarrows.starting_arrows(gd, 0)
         self.assertEqual(lines, ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked"])
         self.assertEqual(order[:3], [("add", None), ("add", None), ("unlink", 5)])
         self.assertEqual(len(worn), 1)
         self.assertEqual(worn[0][1][game.ITEM_SLOT], weaponchoice.AMMO_SLOT)
+
+    def test_starting_arrows_no_objects(self):
+        """The arrows' objects not in the Loader's OBJEX copy (objects_ready: RAV_SKIP's spell_arrows): the +1
+        arrows kept, nothing tried (a spell arrow there would be an item of no object), and none due."""
+        gd = FakeGame()
+        plus_one = bytearray(bytes.fromhex("26fd0c000f2778000f27060000000000000005ff1e0001"))
+        plus_one[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+        gd._worn = lambda member: iter([(5, bytes(plus_one), b"")])
+        with mock.patch("dsloader.npcitems.add_to") as add, mock.patch("dsloader.ring.unlink") as unlink, \
+                mock.patch.object(ravarrows, "objects_ready", return_value=False):
+            self.assertEqual(ravarrows.starting_arrows(gd, 0), [])
+            self.assertFalse(ravarrows.arrows_due(gd, 0))
+        add.assert_not_called()
+        unlink.assert_not_called()
+        with mock.patch.object(ravarrows, "objects_ready", return_value=True):
+            self.assertTrue(ravarrows.arrows_due(gd, 0))
+            self.assertFalse(ravarrows.arrows_due(FakeGame(known=()), 0))  # (no touch spell picked)
+
+    def test_objects_ready_all_three(self):
+        """objects_ready wants every one of the arrows' three objects in the OBJEX copy: two are not enough."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, ravager.OBJECTS_COPY)
+            self.assertFalse(ravarrows.objects_ready(d))  # (no copy)
+            for rows, want in ((ravarrows.ARROWS[:2], False), (ravarrows.ARROWS, True)):
+                chunks = {("OJFF", ravarrows.own_object(a.row)): b"\0" * 16 for a in rows}
+                with open(path, "wb") as f:
+                    f.write(b"GFFI")
+                os.utime(path, (len(rows), len(rows)))  # (a new time: read again)
+                with mock.patch.object(gff, "read_gff", return_value=chunks):
+                    self.assertEqual(ravarrows.objects_ready(d), want, len(rows))
+
+    def test_fine_bow_waits_on_the_arrows(self):
+        """ravkitstart.fine_bow names the bow only once the starting arrows are in: a full pack leaves it plain
+        (tried again in a later pass, not marked done); with room, the arrows in and then the bow named, by its
+        name word alone (the arrows' moves relink the records)."""
+        from dsloader import ravkitstart, specialize
+        bow = bytearray(23)
+        struct.pack_into("<H", bow, game.ITEM_TYPE, 18)
+        gd = FakeGame()
+        gd._worn = lambda member: iter([(4, bytes(bow), b"")])
+        lines = ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked"]
+        with mock.patch.object(specialize, "kind_of", return_value=weaponchoice.BOW), \
+                mock.patch.object(game, "far_pointer", return_value=0x60000), \
+                mock.patch.object(ravarrows, "objects_ready", return_value=True), \
+                mock.patch.object(ravarrows, "starting_arrows", return_value=[]):
+            self.assertEqual(ravkitstart.fine_bow(gd, 0), [])  # (no room: due still)
+            self.assertEqual(gd.written, [])
+        with mock.patch.object(specialize, "kind_of", return_value=weaponchoice.BOW), \
+                mock.patch.object(game, "far_pointer", return_value=0x60000), \
+                mock.patch.object(ravarrows, "starting_arrows", return_value=lines):
+            out = ravkitstart.fine_bow(gd, 0)
+        self.assertEqual(out, ["Lex starts with a Fine Bow (+1 to hit): a Spellarcher's"] + lines)
+        self.assertEqual(gd.written, [(0x60000 + 4 * game.ITEM_SIZE + game.ITEM_NAME,
+                                       struct.pack("<H", ravager.FINE_BOW_NAME))])
 
     def test_strays_on_the_sequels_names(self):
         """return_strays with the sequel's names: another member's chill arrows back onto the Spellarcher's stack;

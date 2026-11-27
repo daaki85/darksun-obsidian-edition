@@ -2029,17 +2029,11 @@ class RavDiceLog(dicelog.DiceLog):
     spell_arrows = True  # (a Spellarcher's arrows buttons: ARROWS_ON; off for a control)
 
     def _arrows_ready(self) -> bool:
-        """Whether the Loader's copy of OBJEX.GFF has the spell arrows' objects (ravarrows.chunks): without
-        them an arrow made would be an item of no object, so no buttons are offered. Read once."""
+        """Whether the Loader's copy of OBJEX.GFF has all three spell arrows' objects (ravarrows.objects_ready):
+        without them an arrow made would be an item of no object, so no buttons are offered. Read once."""
         if getattr(self, "_arrows_objects", None) is None:
-            import os
-            from . import launch, ravarrows
-            try:
-                with open(os.path.join(launch.DOS_DIR, ravager.OBJECTS_COPY), "rb") as f:
-                    chunks = gff.read_gff(f.read())
-                self._arrows_objects = ("OJFF", ravarrows.own_object(ravarrows.ARROWS[0].row)) in chunks
-            except (OSError, gff.GffError, struct.error):
-                self._arrows_objects = False
+            from . import ravarrows
+            self._arrows_objects = ravarrows.objects_ready()
         return self._arrows_objects
 
     def _answer_arrows(self) -> List[str]:

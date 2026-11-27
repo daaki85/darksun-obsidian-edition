@@ -133,16 +133,54 @@ def make(gd: GameData, member: int, row: int) -> pickpocket.Attempt:
 
 STARTING = spellarrows.STARTING  # (a new Spellarcher's: a stack of each touch spell's it picked)
 
+_objects_seen: Dict[Tuple[str, float], bool] = {}  # (objects_ready's answers, by the copy's path and time)
+
+
+def objects_ready(dos_dir: Optional[str] = None) -> bool:
+    """Whether the Loader's copy of OBJEX.GFF (ravager.OBJECTS_COPY, in DOS_DIR: launch.DOS_DIR) has every one of
+    ARROWS' objects (chunks): without them a spell arrow would be an item of no object. Read once a copy."""
+    import os
+    from . import launch, ravager
+    path = os.path.join(dos_dir or launch.DOS_DIR, ravager.OBJECTS_COPY)
+    try:
+        key = (path, os.path.getmtime(path))
+    except OSError:
+        return False
+    if key not in _objects_seen:
+        try:
+            with open(path, "rb") as f:
+                chunks = gff.read_gff(f.read())
+            _objects_seen[key] = all(("OJFF", own_object(a.row)) in chunks for a in ARROWS)
+        except (OSError, gff.GffError, struct.error):
+            _objects_seen[key] = False
+    return _objects_seen[key]
+
+
+def _picks(gd: GameData, member: int) -> List[SequelArrow]:
+    """The touch spells MEMBER picked as it was made (knows), in ARROWS' order."""
+    return [a for a in ARROWS if knows(gd, member, a.spell)]
+
+
+def _has_spell_arrows(gd: GameData, member: int) -> bool:
+    return any(is_arrows_of(item, a.row) for _, item, _ in gd._worn(member) for a in ARROWS)
+
+
+def arrows_due(gd: GameData, member: int) -> bool:
+    """Whether MEMBER's starting spell arrows are still to come: it picked a touch spell, has no spell arrows, and
+    the arrows' objects are there (objects_ready). Its Fine Bow waits on them (ravkitstart.fine_bow)."""
+    return bool(_picks(gd, member)) and not _has_spell_arrows(gd, member) and objects_ready()
+
 
 def starting_arrows(gd: GameData, member: int) -> List[str]:
     """A new Spellarcher's arrows (spellarrows.starting_gear's rule on the sequel's gear), made once with its Fine
     Bow (ravkitstart.fine_bow): for each touch spell it picked as it was made (knows), STARTING of that spell's
     arrows, the first in the quiver; the plain arrows the sequel gave with the bow (ravfirstweapon's +1 arrows)
-    go once a stack of them is in (no room for any: they stay). Knowing none, it keeps those (the sequel's own +1
-    arrows, not Shattered Lands' 24 plain ones). Lines for the log."""
+    go once a stack of them is in (no room for any: they stay). Knowing none, or the arrows' objects not in the
+    Loader's OBJEX copy (objects_ready: RAV_SKIP's spell_arrows), it keeps those (the sequel's own +1 arrows,
+    not Shattered Lands' 24 plain ones). Lines for the log."""
     from . import npcitems, ring
-    picks = [a for a in ARROWS if knows(gd, member, a.spell)]
-    if not picks or any(is_arrows_of(item, a.row) for _, item, _ in gd._worn(member) for a in ARROWS):
+    picks = _picks(gd, member)
+    if not picks or _has_spell_arrows(gd, member) or not objects_ready():
         return []
     who, out = gd.creature_name(member), []
     plain_type = struct.unpack_from("<H", PLAIN_ARROWS, 0x0A)[0]
