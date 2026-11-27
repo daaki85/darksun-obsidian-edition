@@ -352,11 +352,13 @@ def cmd_launch(args) -> None:
 def cmd_play(args) -> None:
     """Start the game with DSCLOG and the in-game additions, with no window of our own:
     the dice log runs in the background (for each turn's rolls and the spell slots) until
-    DOSBox closes. Problems are shown in a message box and written to play.log."""
+    DOSBox closes. Problems are shown in a message box and written to play.log. With --ravager,
+    Wake of the Ravager's (its dice log the sequel's, ravlog.make, once its helper is loaded)."""
     import time
     import traceback
     from . import launch
-    from .dicelog import DiceLog, DiceLogError, error_key
+    from . import ravlog
+    from .dicelog import DiceLogError, error_key
     from .guestmem import GuestMemoryError
     from .process import ProcessError
     log_path = os.path.join(launch.HERE, "play.log")
@@ -372,14 +374,18 @@ def cmd_play(args) -> None:
             from tkinter import messagebox
             root = tkinter.Tk()
             root.withdraw()
-            messagebox.showwarning("Dark Sun (in-game rolls)", text)
+            messagebox.showwarning(title, text)
             root.destroy()
         except Exception:
             print(text)
 
+    title = "Dark Sun (in-game rolls)"
     try:
-        game_dir = _game_dir(args)
-        dosbox, problem = launch.launch(game_dir, "Play Dark Sun (in-game rolls)")
+        ravager_dir = _ravager_dir(args)
+        if ravager_dir:
+            title = "Wake of the Ravager (in-game rolls)"
+        game_dir = ravager_dir or _game_dir(args)
+        dosbox, problem = launch.launch(game_dir, "Play " + title)
         if problem:
             tell(f"The in-game additions can't run with this copy of the game ({problem}). "
                  "The game starts without them.")
@@ -398,11 +404,15 @@ def cmd_play(args) -> None:
                 time.sleep(1)
         if guest is None:
             return
-        log = DiceLog(guest)
-        log.answer_stats_in_background()
-        log.use_settings(settings)  # as last set on the Loader's Options tab
-        log.speaker_names = launch.speaker_names()
-        log.learned_speakers = launch.learned_speakers()
+        def new_log():
+            # (the game's own: Shattered Lands' or the sequel's, by the helper it has loaded, as the window's)
+            made = ravlog.make(guest)
+            made.answer_stats_in_background()
+            made.use_settings(settings)  # as last set on the Loader's Options tab
+            made.speaker_names = launch.speaker_names()
+            made.learned_speakers = launch.learned_speakers()
+            return made
+        log = None
         started = time.time()
         said = collections.deque(maxlen=300)  # the dice log's and dialogue's last lines, for a crash report
         talk = collections.deque(maxlen=80)
@@ -411,9 +421,18 @@ def cmd_play(args) -> None:
         while dosbox.poll() is None:
             try:
                 if not attached:
+                    loaded = ravlog.running(guest)  # (True the sequel's helper, False Shattered Lands', None neither yet)
+                    if loaded is None:
+                        time.sleep(1)
+                        continue
+                    if log is None or loaded != isinstance(log, ravlog.RavDiceLog):
+                        if log is not None:
+                            log.close()
+                        log = new_log()
                     try:
                         log.attach()
                         attached = True
+                        note("The dice log follows " + ("Wake of the Ravager" if loaded else "Shattered Lands") + ".")
                     except (DiceLogError, GuestMemoryError, ProcessError, OSError):
                         time.sleep(1)
                         continue
@@ -508,6 +527,8 @@ def main(argv=None) -> int:
                         "one unzipped into this folder, or into a darksun-recompiled folder beside it, is found by itself; "
                         "--dosbox undoes it)")
     s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
+    s.add_argument("--ravager", nargs="?", const=True, metavar="FOLDER",
+                   help="start Wake of the Ravager instead (its folder found, or FOLDER)")
     s.set_defaults(func=cmd_play)
 
     s = sub.add_parser("dicelog", parents=[common], help="print the game's dice rolls as they happen")

@@ -74,6 +74,13 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
+**New: Wake of the Ravager with the in-game rolls, no Loader window** (branch `claude/sequel-ingame-rolls`)
+- **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel
+  as `Play Dark Sun (in-game rolls).bat` does Shattered Lands: its folder found as for the Loader's button,
+  the dice log unseen with the sequel's own rules and lines, a problem in a message box and `play.log`. The
+  in-game-rolls start now makes its dice log by the helper the game loaded, as the window does.
+- The follow-up code audit's P1 (the sequel figures zip) settled by the owner: it stays in the mod.
+
 **Docs: the follow-up docs review** (branch `claude/followup-docs-audit`)
 - [Wake of the Ravager's page](obsidian-edition/RAVAGER.md#not-in-the-sequel-yet) now ends with what
   Shattered Lands has from the mod and the sequel doesn't yet, each checked against the code.
