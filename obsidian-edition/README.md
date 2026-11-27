@@ -653,9 +653,10 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   and with the mod's first additions only 53 KB were left). The Loader watches
   it, and if it gets low with the map up, the dice log says so: save and
   restart the game soon, as a fresh start has all of it back.
-- **DOSBox-X on Windows and macOS hasn't been played yet.** DOSBox-X is the
-  default engine, and on Windows it comes with the mod, but the game has only
-  been played under it on Linux so far ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
+- **DOSBox-X on Windows and macOS is still being tried.** DOSBox-X is the
+  default engine, and on Windows it comes with the mod. It has been played on
+  Linux; on Windows the game starts under it with its music, and a fuller
+  play there is under way; on macOS it hasn't been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
   If the game won't start or misbehaves there, choose **GOG's DOSBox 0.74** in
   the Options tab's **Engine** section and tell us what happened.
 

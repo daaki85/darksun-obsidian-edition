@@ -1017,8 +1017,10 @@ pictures and the three game speeds, each set to walk as it does on GOG's DOSBox.
 
 **What has and hasn't been tried.** On Linux, with DOSBox-X 2026.10.01, the mod was played
 through a fight, quick saves and autosaves, a rest, the walk from the slave pens into the arena
-and twenty minutes without a stop. **On Windows and macOS it has not been run at all**: the
-Loader's side is written for both, from DOSBox-X's source, but nobody has started it there. A
+and twenty minutes without a stop. **On Windows it has started**: with the player's own DOSBox-X
+the game loads and its music plays (2026-11-27); a fuller play there is under way. **On macOS it
+has not been run at all**: the Loader's side is written from DOSBox-X's source, but nobody has
+started it there. A
 packaged DOSBox-X that runs in a sandbox (a Flatpak, a Snap, the Steam Deck's) may not be able to
 reach the Loader's memory file; that is untried too. If it doesn't work for you, choose GOG's
 DOSBox. **Restore defaults** takes the choice away again (DOSBox-X whenever there is one) and

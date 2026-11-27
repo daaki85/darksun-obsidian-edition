@@ -21,8 +21,9 @@ found or when it is chosen. Under DOSBox-X the Loader writes it a configuration 
 and writes the game's memory through DOSBox-X's memory file, not its process; DSCLOG and the patched
 game are the same under both ([the engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
 Where these pages say "DOSBox" alone they mean 0.74, the engine the mod was built and measured on.
-DOSBox-X has been played on Linux only: on Windows and macOS its side of the Loader is written and
-unit-tested, but a play there is still to be confirmed.
+DOSBox-X has been played on Linux; on Windows the game has started under it (it loads and its music
+plays) and a fuller play is under way; on macOS its side of the Loader is written and unit-tested
+but not yet run.
 
 ## Contents
 
