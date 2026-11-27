@@ -125,7 +125,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
 ## The mod in the sequel
 
 - **[The combat log in the game](FEATURES.md#the-combat-log-in-the-game)**: L on the map shows the dice
-  log's lines over the sequel's map too, as in Shattered Lands.
+  log's lines over the sequel's map too, as in Shattered Lands: L again hides it, and its buttons, filters
+  and scrollbar take clicks without the party walking there (until 2026-11-27 a quick click went past
+  it to the game, and in DOSBox-X L could leave it up).
 - **[Kits](KITS.md#in-wake-of-the-ravager)** come across with each character on its character sheet
   (with its spells and starting age), and work there nearly all whole: their fight rules, spell slots,
   spells known, PSP costs, hit dice and the gear each forbids or allows (a Ravager's shield and bow are
