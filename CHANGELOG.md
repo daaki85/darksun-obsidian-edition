@@ -72,6 +72,11 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   in the catalogue at e33bc2e, re-packed; the Loader's clean-up kept for older packages). `RAV_SKIP=figures`
   is the control. Played: Tyr's street from `ravager-after-ambush` with and without; the region copy's
   opening seen through a scratch build. Tests: `test_ravfigures.py`, `test_ravager`'s copies.
+- Tyr's furniture lowered for Shattered Lands' steeper view, as darksun-recompiled's build had it (the
+  owner's choice of 2026-11-20: tables, chairs, beds and the other map artwork two-thirds their height
+  toward their base, walls kept): `sl_figures.py squash RGN032 0.66 furniture` on the stock files before
+  the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
+  region's placements needed no change. In the same `ravager-figures.zip`.
 
 **Dev: the dice log's pass as named steps (the code audit's S2)**
 - `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
