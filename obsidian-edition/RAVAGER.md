@@ -12,18 +12,35 @@ past Shattered Lands': [the player's guide](PLAYER-GUIDE.md#in-wake-of-the-ravag
 
 ## Starting the sequel
 
-**Play Wake of the Ravager**, beside **Play Shattered Lands**
-at the top of the window, or `Play Wake of the Ravager.bat`, starts it from its folder in the same engine as Shattered Lands
-([the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)), with the mod's fixes and rules ported to it (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points to **Choose its folder...**
-([starting it](README.md#other-ways-to-start)).
+**Play Wake of the Ravager**, beside **Play Shattered Lands** at the top of the window, or `Play Wake
+of the Ravager.bat`, starts it from its folder in the same engine as Shattered Lands ([the
+engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)), with the mod's fixes and rules ported to it
+(below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points
+to **Choose its folder...** ([starting it](README.md#other-ways-to-start)). **It converts the sequel's
+roster and saves first** ([below](#your-sequel-saves-are-converted)).
 
-**Start it from the Loader.** Each start makes the roster and the saves in the sequel's
-folder the Loader's (each file kept first as NAME.42H). Started by itself, the sequel can't read
-them, nor shows the Loader's items (it shows money bags), and it can stop in a fight on the turn of
-a member with a kit. To play the sequel by itself again, run `python -m dsloader.ravager narrow
-FOLDER` (FOLDER: the sequel's) from the Loader's folder: the roster and the saves become the game's
-again, the weapon specs dropped (each kept first as NAME.48H); the Loader makes them its own again
-at its next start.
+### Your sequel saves are converted
+
+**Each start from the Loader converts the sequel's roster and saves**, in the sequel's own folder:
+`CHARSAVE.GFF` (the roster), `DARKRUN.GFF`, `DARKSAVE.GFF`, the saves `SAVEnn.SAV` and the quick
+saves and autosaves `SAVQnn.SAV`, each made to hold the Loader's longer character sheet. Each file
+is copied first as it was, as `NAME.42H` (`CHARSAVE.GFF.42H`). A file already converted is left
+alone; one the game wrote again in its own form (the sequel played without the Loader) is converted
+again at the next start, and its `.42H` copy replaced by the newer one. [Taking the party
+across](#taking-the-party-to-wake-of-the-ravager) changes the roster too (kept first as
+`CHARSAVE.GFF.BAK`). Shattered Lands' files are never converted.
+
+Converted, they are the Loader's: **the sequel started by itself can't read them**, shows the Loader's
+items as money bags, and can stop in a fight on the turn of a member with a kit.
+
+**To play the sequel without the Loader again** (and before you delete the Loader, since this needs
+it), convert them back: in the Loader's folder run
+
+    python -m dsloader.ravager narrow FOLDER
+
+with FOLDER the sequel's. The roster and the saves become the game's again, the weapon specs dropped,
+each file copied first as `NAME.48H`. The Loader converts them again at its next start. Or put back a
+`.42H` copy by hand (rename it without `.42H`): the file as it was before that conversion.
 
 ## Taking the party to Wake of the Ravager
 
