@@ -138,23 +138,42 @@ def starting_arrows(gd: GameData, member: int) -> List[str]:
     """A new Spellarcher's arrows (spellarrows.starting_gear's rule on the sequel's gear), made once with its Fine
     Bow (ravkitstart.fine_bow): for each touch spell it picked as it was made (knows), STARTING of that spell's
     arrows, the first in the quiver; the plain arrows the sequel gave with the bow (ravfirstweapon's +1 arrows)
-    go. Knowing none, it keeps those (the sequel's own +1 arrows, not Shattered Lands' 24 plain ones). Lines
-    for the log."""
+    go once a stack of them is in (no room for any: they stay). Knowing none, it keeps those (the sequel's own +1
+    arrows, not Shattered Lands' 24 plain ones). Lines for the log."""
     from . import npcitems, ring
     picks = [a for a in ARROWS if knows(gd, member, a.spell)]
     if not picks or any(is_arrows_of(item, a.row) for _, item, _ in gd._worn(member) for a in ARROWS):
         return []
     who, out = gd.creature_name(member), []
     plain_type = struct.unpack_from("<H", PLAIN_ARROWS, 0x0A)[0]
-    for index, item, _ in list(gd._worn(member)):
-        if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == plain_type:
-            ring.unlink(gd, ring.Items(gd), index, "a Spellarcher's starting arrows", empty=True)
+    plain = [(index, item) for index, item, _ in gd._worn(member)
+             if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == plain_type]
+    # the spell arrows first (the quiver if it is free, else the pack), the plain arrows taken only once one
+    # stack is in: a full pack keeps them (the review of #229: taken first, a full pack left the archer none)
+    added = []
     for arrow in picks:
         quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
         if npcitems.add_to(gd, member, arrows_item(arrow.row, STARTING), weaponchoice.AMMO_SLOT if quiver else None):
-            sl = spellarrows.ARROWS[arrow.row]
-            out.append(f"{who} starts with {STARTING} {spellarrows.NAMES[sl.name].decode().lower()}"
-                       f"{' in the quiver' if quiver else ' in the pack'}: {sl.spell_name} picked")
+            added.append((arrow, quiver))
+    if not added:
+        return []
+    for index, _ in plain:
+        ring.unlink(gd, ring.Items(gd), index, "a Spellarcher's starting arrows", empty=True)
+    first, quiver = added[0]
+    if not quiver and not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member)):
+        # (the plain arrows held the quiver: the first stack moved there from the pack, or left there)
+        stack = next((index for index, item, _ in gd._worn(member) if is_arrows_of(item, first.row)), None)
+        rec = arrows_item(first.row, STARTING)
+        if stack is not None and ring.unlink(gd, ring.Items(gd), stack, "a Spellarcher's arrows to the quiver",
+                                             empty=True):
+            quiver = npcitems.add_to(gd, member, rec, weaponchoice.AMMO_SLOT)
+            if not quiver:
+                npcitems.add_to(gd, member, rec)
+            added[0] = (first, quiver)
+    for arrow, quiver in added:
+        sl = spellarrows.ARROWS[arrow.row]
+        out.append(f"{who} starts with {STARTING} {spellarrows.NAMES[sl.name].decode().lower()}"
+                   f"{' in the quiver' if quiver else ' in the pack'}: {sl.spell_name} picked")
     weaponchoice.bow_ahead(gd, member)
     return out
 
