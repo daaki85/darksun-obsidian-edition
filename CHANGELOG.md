@@ -162,6 +162,11 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
+**New: the Scholar kit in Wake of the Ravager** (branch `claude/sequel-scholar`)
+- A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
+  spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
+  preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).
+
 **New: Wake of the Ravager with the in-game rolls, no Loader window; Show Save for its saves** (#264)
 - **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel
   as `Play Dark Sun (in-game rolls).bat` does Shattered Lands: its folder found as for the Loader's button,
