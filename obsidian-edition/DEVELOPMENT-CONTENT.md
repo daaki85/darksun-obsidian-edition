@@ -1554,6 +1554,19 @@ and draws the figure again when the class or the figure changes (`FIG_WAIT`,
 after every click on the screen), and when the screen opens: the game gives
 a new character its class only after it first draws the figure.
 
+Each party member's small figure (the inventory's party column) is drawn by a
+routine of the game's (67964h) from the same handle's entry for the figure
+(20h + the figure), read once at start-up, so it kept the game's own clothes
+and two members of one figure showed the same. DSCLOG's `SMALL_FIGURE` hooks
+the line that picks the entry: with the creature one of the party's (0-3), it
+asks instead for the walking picture the Loader names for that member in
+`SMALL_PICS` (+1893, `Dresser.write_small`: their figure's pair, or their
+place's spare, once dressed), and `INVENTORY_LOAD` reads it from the Loader's
+SEGOBJEX copy with the game's own chunk reader; the routine draws its frame 0,
+so the small figure is the member's map figure, standing, in their class
+outfit and what they wear. A 0 there (no Loader, not dressed yet, the creation
+screen) or a failed read draws the handle's entry as before.
+
 ## Elves and half-elves
 
 ([In the features page](FEATURES.md#elves-and-half-elves).)
