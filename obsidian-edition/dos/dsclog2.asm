@@ -192,7 +192,9 @@ names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), N
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and unheard
                                 ;      (RULE_STEALTH, stealth.py): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared: MISSILE_REAR)
-        times 230 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +229: none of them here yet, zero)
+        times 228 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +227: none of them here yet, zero)
+scroll_on  dw SCROLL_MIDDLE     ; +228 as DSCLOG's: SCROLL_MIDDLE has a drag with the wheel pressed scroll
+                                ;      the map (SCROLLING; on from the start: the Loader writes nothing)
 pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to scroll the view by as many
 pan_y      dw 0                 ; +232   pixels, as DSCLOG's (to the enemy chosen with Tab: PAN_TICK)
         times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +234 to +237: none of them here yet, zero)
@@ -2648,7 +2650,9 @@ sold_kept  dw 0                 ; (magical items kept by a merchant, for a look 
 ;   (counted).
 ; - MSG_SHOWN (site 58, "message_shown"): "mov ax,[26B7h]" (59B62h; 3 bytes), the wait about to start: a
 ;   new picture shown first, as the routine's own call before the text does (0B0h:2A81h with 1: drawing
-;   allowed, the picture marked new, 3328h:0B4Ch), so the box is on screen while the game waits.
+;   allowed, the picture marked new, 3328h:0B4Ch), so the box is on screen while the game waits. A left
+;   or right click (MOUSE_EVENT) or a key (INT16) ends the wait at once and goes no further, as Shattered
+;   Lands' box (its event loop, 4D0h:2Ah) takes the click or key that closes it.
 MSG_TIME     equ 0x26B7
 MSG_DRAW_SEG equ 0x18C9 - 0x47E0   ; (selector 0B0h's segment, the root's, less DS's)
 MSG_DRAW_OFF equ 0x2A81
@@ -2677,15 +2681,22 @@ msg_shown:
         xor ax, ax
         mov es, ax
         mov bx, [es:0x46C]
+        mov byte [cs:msg_ended], 0
+        mov byte [cs:msg_waiting], 1
         sti
-.wait:  mov ax, [es:0x46C]
+.wait:  cmp byte [cs:msg_ended], 0      ; (a click or a key: the box closed, as Shattered Lands' does)
+        jne .ended
+        mov ax, [es:0x46C]
         sub ax, bx
         cmp ax, cx
         jb .wait
+.ended: mov byte [cs:msg_waiting], 0
         pop es
         popa
         xor ax, ax                      ; (the game's own wait: none left)
         iret
+msg_waiting db 0                ; (1 while MSG_SHOWN waits: a press or a key ends it, MSG_ENDED, and
+msg_ended   db 0                ;   isn't the game's: MOUSE_EVENT, INT16)
 msg_windows dw 0                ; (message windows opened, for a look in play)
 msg_waits   dw 0                ; (waits shown)
 
@@ -4793,11 +4804,11 @@ site_table:
         dw site_none                        ; 167 (none here)
         dw site_none                        ; 168 (none here)
         dw site_none                        ; 169 (none here)
-        dw site_none                        ; 170 (none here)
-        dw site_none                        ; 171 (none here)
-        dw site_none                        ; 172 (none here)
-        dw site_none                        ; 173 (none here)
-        dw site_none                        ; 174 (none here)
+        dw mouse_init                       ; 170 SITE_MOUSE_INIT (39F0Bh: the mouse driver reset at the start: as fast up and down as across)
+        dw mouse_set                        ; 171 SITE_MOUSE_SET (2F110h: the mouse given its ranges: the pointer where it was)
+        dw speech_wait                      ; 172 SITE_SPEECH_WAIT (69BE2h: the wait while a narration plays: the pointer, a click ends it)
+        dw fli_key                          ; 173 SITE_FLI_KEY (8335Ch: a FLI's frame shown, Shift tested: the pointer, a click as Shift)
+        dw fli_end                          ; 174 SITE_FLI_END (8324Dh: the FLI played or ended: the pointer wiped)
         dw site_none                        ; 175 (none here)
         dw site_none                        ; 176 (none here)
         dw site_none                        ; 177 (none here)
@@ -16916,12 +16927,520 @@ probe_scroll:
         jz .call
         sti
 .call:  call far [cs:s_far]
+        call drag_mouse                 ; (a drag with the wheel pressed: the view moved, the pointer off the edges)
         call panel_mouse                ; (AX the buttons: a press on the panel kept from the game)
         call target_mouse               ; (... Enter's click on the chosen enemy: TARGETING)
         push word [cs:s_fl]
         push word [cs:s_cs]
         push word [cs:s_ip]
         iret
+
+; SCROLLING (SCROLL_ON), DSCLOG's: pressing the mouse wheel and moving scrolls the map with the pointer,
+; as if dragging it (the game has no use for that button). The game is told of the mouse's buttons by the
+; driver calling its handler (INT 33h, 0Ch; the sequel's 35B9:00C0 sets it): INT33 puts MOUSE_EVENT in its
+; place, which keeps the middle button from the game and starts and ends the drag, and forgets the game's
+; handler when the game takes it away (0Ch with CX 0) or resets the driver (00h, 21h). The main loop's call
+; for the pointer (PROBE_SCROLL, 20230h) is then followed by DRAG_MOUSE: while dragging, the view is
+; centred where the drag puts it through the game's own routine (VIEW_AGAIN's CENTRE, as PAN_TICK), and the
+; pointer the loop is told of is kept off the screen's edges (no scrolling of the game's own meanwhile).
+; MOUSE_EVENT also keeps where the pointer was last seen (MP_X, MP_Y: MOUSE_SET), and takes a click that
+; ends a message box's wait (MSG_SHOWN) from the game.
+MIDDLE          equ 4           ; the middle button (pressing the wheel), in the buttons held
+EVENT_MID_PRESS equ 0x20        ; the driver's events: it pressed, released
+EVENT_MID_LEAVE equ 0x40
+EVENT_PRESSES   equ 0x0A        ; (the left and right buttons pressed)
+SCROLL_MIDDLE   equ 1           ; SCROLL_ON's bit: dragging with the wheel pressed
+old33        dd 0
+game_handler dd 0
+game_mask    dw 0
+drag         db 0               ; (2 while the wheel is held: dragging)
+drag_new     db 0               ; (1: the drag's start not yet taken by DRAG_MOUSE)
+drag_x       dw 0               ; (where the drag started, and the view then)
+drag_y       dw 0
+cam0_x       dw 0
+cam0_y       dw 0
+drag_moves   dw 0               ; (the view moved by a drag, counted: for a look in play)
+int33:
+        cmp ax, 0x0C
+        jne .reset
+        or cx, cx
+        jz .gone                        ; (taking the handler away)
+        mov [cs:game_handler], dx
+        mov [cs:game_handler + 2], es
+        mov [cs:game_mask], cx
+        push es
+        push dx
+        push cx
+        or cx, 0x7F                     ; (moves, and all three buttons)
+        push cs
+        pop es
+        mov dx, mouse_event
+        pushf
+        call far [cs:old33]
+        pop cx
+        pop dx
+        pop es
+        iret
+.reset: or ax, ax                       ; (the driver reset, or its software reset: no handler
+        jz .gone                        ;   now, as the driver has it)
+        cmp ax, 0x21
+        jne .chain
+.gone:  mov dword [cs:game_handler], 0
+        mov word [cs:game_mask], 0
+        mov byte [cs:drag], 0
+.chain: jmp far [cs:old33]
+
+mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
+        mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        cmp byte [cs:msg_waiting], 0    ; (a press ending a message box's wait: not the game's)
+        je .drag
+        test al, EVENT_PRESSES
+        jz .drag
+        mov byte [cs:msg_ended], 1
+        and al, ~EVENT_PRESSES
+.drag:  test byte [cs:scroll_on], SCROLL_MIDDLE
+        jz .pass
+        test al, EVENT_MID_PRESS        ; the wheel pressed: a drag at once
+        jz .mheld
+        cmp byte [cs:drag], 0
+        jne .mheld
+        mov byte [cs:drag], 2
+        mov byte [cs:drag_new], 1
+        mov [cs:drag_x], cx
+        mov [cs:drag_y], dx
+.mheld: test al, EVENT_MID_LEAVE
+        jz .mdone
+        mov byte [cs:drag], 0
+.mdone: and bx, ~MIDDLE
+        and al, ~(EVENT_MID_PRESS | EVENT_MID_LEAVE)
+.pass:  and ax, [cs:game_mask]          ; the events the game asked for, to its handler
+        jz .none
+        cmp word [cs:game_handler + 2], 0
+        je .none
+        pusha
+        push ds
+        push es
+        call far [cs:game_handler]
+        pop es
+        pop ds
+        popa
+.none:  retf
+
+; DRAG_MOUSE: after the main loop's call for the pointer (AX the buttons; the far pointers to x and y at
+; [SP+2], [SP+6] past this call's return; DS the game's): while dragging, on the map, the view centred
+; where the drag puts it (the map moves with the pointer; while a label or the ring is drawn it waits a
+; pass), and the pointer told the loop kept off the edges and the middle button left out. Keeps all but AX.
+drag_mouse:
+        cmp byte [cs:drag], 2
+        jne .ret
+        push bp
+        mov bp, sp
+        pusha
+        push es
+        les bx, [bp + 4]
+        mov cx, [es:bx]
+        les bx, [bp + 8]
+        mov dx, [es:bx]
+        call on_map
+        jne .edges
+        cmp byte [cs:drag_new], 0
+        je .follow
+        mov byte [cs:drag_new], 0
+        mov ax, [CAM_X]
+        mov [cs:cam0_x], ax
+        mov ax, [CAM_Y]
+        mov [cs:cam0_y], ax
+.follow:
+        cmp byte [cs:lbl_busy], 0
+        jne .edges
+        cmp byte [cs:vga_busy], 0
+        jne .edges
+        mov ax, [cs:cam0_x]             ; where the drag puts the view
+        sub ax, cx
+        add ax, [cs:drag_x]
+        mov si, [cs:cam0_y]
+        sub si, dx
+        add si, [cs:drag_y]
+        jns .yok
+        xor si, si
+.yok:   or ax, ax
+        jns .xok
+        xor ax, ax
+.xok:   and ax, 0xFFF8                  ; (as the game keeps it)
+        and si, 0xFFF8
+        cmp ax, [CAM_X]
+        jne .go
+        cmp si, [CAM_Y]
+        je .edges
+.go:    push cx
+        push dx
+        mov bx, ds
+        sub bx, DGROUP - CENTRE_SEG
+        mov [cs:centre + 2], bx
+        pushf
+        cli                             ; (drawing)
+        push word 1
+        add si, 100
+        push si
+        add ax, 160
+        push ax
+        call far [cs:centre]
+        add sp, 6
+        popf
+        pop dx
+        pop cx
+        inc word [cs:drag_moves]
+.edges: cmp cx, 1                       ; (off the edges: no scrolling of the game's own)
+        jge .x1
+        mov cx, 1
+.x1:    cmp cx, 0x13D
+        jle .y0
+        mov cx, 0x13D
+.y0:    cmp dx, 1
+        jge .y1
+        mov dx, 1
+.y1:    cmp dx, 0xC6
+        jle .put
+        mov dx, 0xC6
+.put:   les bx, [bp + 4]
+        mov [es:bx], cx
+        les bx, [bp + 8]
+        mov [es:bx], dx
+        pop es
+        popa
+        pop bp
+        and ax, ~MIDDLE
+.ret:   ret
+
+; MOUSE_INIT (site 170): "or ax,ax / jnz" (39F0Bh; 4 bytes, SL's 356F5h) as the game starts, just after it
+; resets the mouse driver (AX 0: none): the pointer made to move as far up and down as across
+; (MOUSE_RATIO), and the "jnz" made. DSCLOG's.
+MI_SKIP      equ 0x39F1A - (0x39F0B + 3)
+        SHARED_mouse_init
+
+; MOUSE_SET (site 171): "mov word [0A103h],0" (2F110h; 6 bytes, SL's "mov word [0A12Dh],0" at 2A912h)
+; just after the game gives the mouse its ranges (the screen's 320 by 200), as its screens start. A video
+; mode set leaves the driver's pointer in the middle of its 640 across, which these ranges put at the right
+; edge (318, 100): there it's put back where it was last seen (MP_X, MP_Y, the middle at first). The
+; pointer moves as far up and down as across (MOUSE_RATIO). DSCLOG's.
+mp_x       dw 160               ; (where the pointer was last seen, in the game's 320 by 200)
+mp_y       dw 100
+mouse_set:
+        mov word [0xA103], 0
+        call cine_hide
+        pushad
+        mov ax, 3
+        int 0x33
+        cmp cx, 318
+        jb .ratio
+        cmp dx, 100
+        jne .ratio
+        call mouse_mid
+.ratio: call mouse_ratio
+        popad
+        iret
+mouse_mid:
+        mov ax, 4
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+        cmp cx, 319                     ; (one seen on a wider screen: the middle)
+        jbe .put
+        mov cx, 160
+        mov dx, 100
+.put:   int 0x33
+        SHARED_mouse_ratio
+
+; THE POINTER IN SCENES: DSCLOG's (SL's SCENE_POINTER, CINE_STEP and CINE_END), for the sequel's two kinds
+; of scene. The game shows no pointer in them, and a click does nothing:
+; - its FLI films (the logos and the intro before the title, 1.FLI and 2.FLI; the story's films from the
+;   CD's CINE folder), played frame by frame by 831D4h in mode 13h (chained), where after each frame the
+;   Shift keys' state (1E8h:11h, the BIOS's shift flags) ends the film (at once with [631Bh] set, else
+;   after its 240th frame);
+; - a narration over a picture (the opening's, after START GAME, and a map trigger's speech): the game
+;   waits while the speech plays (69BDDh, 37B3h:51h's "still playing"), with no key or click to end it.
+; Here the arrow is drawn where the driver has the pointer at each frame or pass of the wait (CINE_CHECK),
+; and a button pressed since the last ends the film as Shift does (FLI_KEY)
+; or the narration (SPEECH_WAIT: the speech stopped, 37B3h:3A5h, as the talk's own click stops it,
+; 8850Ah). The arrow is SL's (POINTER.BIN: the game's own, from Shattered Lands' files, which the Loader
+; writes; else a plain one), drawn in chained or planar (mode X) VGA memory, whichever the scene uses.
+CP_MAX_ROWS  equ 16             ; (the room for the arrow: dsloader/scenepointer.py's)
+CP_COLS      equ 11
+CP_SHAPE_BYTES equ 88
+CP_PIXELS    equ 76
+SW_BACK      equ 0x69BE5 - 0x69BDD  ; (SPEECH_WAIT's "jnz" back to the test)
+SPEECH_SEG   equ 0x3611         ; (37B3h at a load segment of 1A2h: the speech's routines' segment)
+SPEECH_STOP  equ 0x03A5
+cine_shown db 0                 ; (1 while a scene plays: the driver's ranges the screen's)
+cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
+cp_x       dw 0                 ;   in CP_MAP's colours, CP_UNDER what was under it)
+cp_y       dw 0
+cp_page    dw 0
+cp_now     dw 0
+cp_op      db 0
+cp_chain   db 0                 ; (the sequencer's chain-4 bit: mode 13h's memory, not mode X's)
+cp_last    dw 0                 ; (the BIOS tick at the last drawing)
+cp_seq_i   db 0
+cp_mask    db 0
+cp_gc_i    db 0
+cp_gc_ix   db 1, 3, 4, 5, 8     ; (the graphics controller's registers kept: set/reset enable,
+cp_gc      times 5 db 0         ;   rotate, read plane, mode, bit mask)
+cp_map     times CP_COLS db 0   ; (each colour's nearest in the palette, and how near)
+cp_best    times CP_COLS db 0
+cp_under   times CP_PIXELS db 0
+cine_stop  dw SPEECH_STOP, 0
+cine_skips dw 0                 ; (scenes ended by a click, counted: for a look in play)
+; CP_DATA: the arrow, as POINTER.BIN has it (read over this as the helper loads): its rows, its colours,
+; their red, green and blue (6 bits), then each row's pixels from its left (a colour's number from 1, or
+; FFh for none), each row ending with 0. Without the file, a plain arrow of the helper's own.
+cp_data:
+cp_rows    db 11
+cp_ncols   db 2
+cp_rgb     db 0, 0, 0, 63, 63, 63
+           times (CP_COLS - 2) * 3 db 0
+        SHARED_cp_shape
+CP_DATA_BYTES equ $ - cp_data
+POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
+
+; SPEECH_WAIT (site 172): "or al,al / jnz 69BDDh" (69BE2h; 4 bytes) in the wait while a narration plays
+; (AL 1: still playing): the arrow drawn, and a click stops the speech and ends the wait; else the "jnz".
+speech_wait:
+        sti
+        or al, al
+        jz .done
+        mov byte [cs:cp_always], 0
+        call cine_check
+        jc .skip
+        push bp
+        mov bp, sp
+        sub word [bp + 2], SW_BACK
+        pop bp
+        iret
+.skip:  pusha
+        push es
+        inc word [cs:cine_skips]
+        mov bx, ds
+        sub bx, DGROUP - SPEECH_SEG
+        mov [cs:cine_stop + 2], bx
+        call far [cs:cine_stop]
+        pop es
+        popa
+.done:  call cine_hide
+        iret
+
+; FLI_KEY (site 173): "test ax,3" (8335Ch; 3 bytes) after a FLI's frame, AX the shift flags (bits 0 and 1
+; the Shift keys: the "jnz" after it ends the film): the arrow drawn, and a click since the last frame
+; counts as Shift; the flags as the "test" leaves them.
+fli_key:
+        mov byte [cs:cp_always], 1
+        call cine_check
+        jnc .test
+        or ax, 3
+        inc word [cs:cine_skips]
+.test:  push bp
+        mov bp, sp
+        test ax, 3
+        jz .z
+        and word [bp + 6], ~0x40        ; (ZF clear)
+        pop bp
+        iret
+.z:     or word [bp + 6], 0x40
+        pop bp
+        iret
+
+; FLI_END (site 174): "mov [bp-2],ax" (8324Dh; 3 bytes) as the FLI's frames are over, played or ended:
+; the arrow wiped, then that.
+fli_end:
+        call cine_hide
+        mov [bp - 2], ax
+        iret
+
+; CINE_CHECK: CF set if a button was pressed since the last check (a scene's first check takes the
+; driver's ranges as the screen's and forgets the presses before it); else the arrow drawn again where
+; the pointer is: with CP_ALWAYS (a film's frame, drawn over it) each time, else (a narration's wait,
+; which asks a few hundred times a second) only when the pointer has moved or every CP_AGAIN BIOS ticks
+; (a picture fading in), so the arrow is on the screen nearly all the time. Registers kept.
+CP_AGAIN     equ 4
+cp_always  db 0
+cine_check:
+        pusha
+        cmp byte [cs:cine_shown], 0
+        jne .ask
+        mov byte [cs:cine_shown], 1
+        call cine_mouse
+        call cine_presses               ; (the presses before the scene let go)
+        jmp .now
+.ask:   call cine_presses               ; (ZF: none)
+        jz .draw
+        popa
+        stc
+        ret
+.draw:  cmp byte [cs:cp_always], 0
+        jne .now
+        cmp byte [cs:cp_drawn], 0
+        je .now
+        mov ax, 3
+        int 0x33
+        cmp cx, [cs:cp_x]
+        jne .now
+        cmp dx, [cs:cp_y]
+        jne .now
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        sub ax, [cs:cp_last]
+        cmp ax, CP_AGAIN
+        jb .kept
+.now:   push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        mov [cs:cp_last], ax
+        call cp_draw
+.kept:  popa
+        clc
+        ret
+        SHARED_cine_presses
+cine_mouse:                             ; the driver's ranges the screen's, the pointer where last seen
+        pusha
+        mov ax, 7
+        xor cx, cx
+        mov dx, 319
+        int 0x33
+        mov ax, 8
+        xor cx, cx
+        mov dx, 199
+        int 0x33
+        mov ax, 4
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+        int 0x33
+        popa
+        ret
+cine_where:                             ; CX, DX: the pointer (a video mode set puts the driver
+        mov ax, 3                       ;   back to 640 across, in its middle: CINE_MOUSE again)
+        int 0x33
+        cmp cx, 319
+        jbe .ok
+        call cine_mouse
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+.ok:    cmp dx, 199
+        jbe .in
+        mov dx, 199
+.in:    mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        ret
+cine_hide:                              ; the arrow wiped, the scene over
+        mov byte [cs:cine_shown], 0
+        jmp cp_erase
+
+; CP_DRAW: the arrow wiped (CP_ERASE) and drawn again where the driver has the pointer, each colour as
+; the palette's nearest, what it covers kept. CP_ERASE puts that back only where the arrow still is (a
+; frame drawn over it since is left as it is).
+cp_draw:
+        pusha
+        call cp_colours                 ; (the palette read first: the arrow off the screen only
+        call cp_erase                   ;   while it moves)
+        call cp_put
+        popa
+        ret
+        SHARED_cp_put
+        SHARED_cp_erase
+        SHARED_cp_colours
+cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
+        mov dx, 0x3C4                   ;   CP_NOW the page shown, CP_CHAIN the memory's kind
+        in al, dx
+        mov [cs:cp_seq_i], al
+        mov al, 2
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_mask], al
+        mov al, 0x0F
+        out dx, al
+        dec dx
+        mov al, 4
+        out dx, al
+        inc dx
+        in al, dx
+        and al, 8
+        mov [cs:cp_chain], al
+        mov dx, 0x3CE
+        in al, dx
+        mov [cs:cp_gc_i], al
+        xor bx, bx
+.keep:  mov al, [cs:cp_gc_ix + bx]
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_gc + bx], al
+        dec dx
+        inc bx
+        cmp bx, 5
+        jb .keep
+        mov ax, 0x0001
+        out dx, ax
+        mov ax, 0x0003
+        out dx, ax
+        mov ah, [cs:cp_gc + 3]
+        and ah, 0x40
+        mov al, 5
+        out dx, ax
+        mov ax, 0xFF08
+        out dx, ax
+        mov dx, 0x3D4
+        in al, dx
+        mov cl, al
+        mov al, 0x0C
+        out dx, al
+        inc dx
+        in al, dx
+        mov ah, al
+        dec dx
+        mov al, 0x0D
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_now], ax
+        dec dx
+        mov al, cl
+        out dx, al
+        ret
+        SHARED_cp_vga_back
+        SHARED_cp_pass
+cp_addr:                                ; DI: pixel CX, DX's (in mode X its plane read and written)
+        push ax
+        push cx
+        push dx
+        cmp byte [cs:cp_chain], 0
+        je .planes
+        imul di, dx, 320                ; (chained: a byte a pixel, from the page's start)
+        add di, cx
+        jmp .out
+.planes:
+        imul di, dx, 80
+        mov ax, cx
+        shr ax, 2
+        add di, ax
+        add di, [cs:cp_page]
+        and cl, 3
+        mov ah, 1
+        shl ah, cl
+        mov al, 2
+        mov dx, 0x3C4
+        out dx, ax
+        mov ah, cl
+        mov al, 4
+        mov dx, 0x3CE
+        out dx, ax
+.out:   pop dx
+        pop cx
+        pop ax
+        ret
 
 ; PROBE_TICK: INT VEC_TICK replaces "inc word cs:[0004h]" (5 bytes: INT + 3 NOPs; 3DA2Ch, SL's
 ; 3925Ch), the first instruction of the game's timer handler. Does that, and every other strike puts
@@ -17976,6 +18495,8 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        cmp byte [cs:msg_waiting], 0    ; (a key ending a message box's wait: read, not the game's)
+        jne .msg
         mov byte [cs:mk_read], 0
         call map_key
         call our_key
@@ -17993,6 +18514,10 @@ int16:
         call far [cs:old16]
         pop ax
         jmp .peek
+.msg:   xor ah, ah
+        pushf
+        call far [cs:old16]
+        mov byte [cs:msg_ended], 1
 .none:  pop ax
         push bp
         mov bp, sp
@@ -24861,6 +25386,18 @@ install:                        ; DS = ES = PSP, CS = the install's
         int 21h
 .free:
         loop .check
+        mov ax, 3D00h           ; the game's own arrow for the scenes (CP_DATA), if the
+        mov dx, POINTER_FILE    ;   Loader has written it
+        int 21h
+        jc .no_pointer
+        mov bx, ax
+        mov ah, 3Fh
+        mov cx, CP_DATA_BYTES
+        mov dx, cp_data
+        int 21h
+        mov ah, 3Eh
+        int 21h
+.no_pointer:
         mov es, [cs:psp]
         mov es, [es:0x2C]       ; free our copy of the environment
         mov ah, 49h
@@ -24897,6 +25434,17 @@ install:                        ; DS = ES = PSP, CS = the install's
         mov ax, 2516h
         mov dx, int16
         int 21h
+        mov ax, 3533h           ; the mouse driver's (SCROLLING), if there is one
+        int 21h
+        mov ax, es
+        or ax, bx
+        jz .no_mouse
+        mov [old33], bx
+        mov [old33 + 2], es
+        mov ax, 2533h
+        mov dx, int33
+        int 21h
+.no_mouse:
         mov byte [hooked], 1
         mov ax, [far_seg]
         mov [ring_seg], ax

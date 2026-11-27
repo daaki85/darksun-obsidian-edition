@@ -1481,7 +1481,7 @@ one scale, built into its drawing code.
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#scrolling-the-map).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes (started from the Loader).
 
 ### The view in fights
 
@@ -1509,7 +1509,9 @@ way, and in a window as fast as your desktop's pointer, fine enough to place an 
 **Always on** (no switch), both. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes (started from the Loader): the pointer in its films (the intro and the others its film player plays)
+and in the narrated opening after START GAME, which a click now ends (the stock sequel skips its intro
+only with Shift held about a second, and its opening not at all), and the pointer's start and speed.
 
 ### The whole party in view
 
