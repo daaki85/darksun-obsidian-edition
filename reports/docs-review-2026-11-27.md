@@ -159,7 +159,12 @@ the subsection it sat in; it has a page of its own now (3.2, #234).
 - The patch notes' Wake of the Ravager section links to RAVAGER.md (not FEATURES' short paragraph),
   and has the figures (#250, #251, #253) and the Effects screen's lines (#245, #249); the Scholar's
   −1 to hit is named with its extra spells as still to come, as KITS' table has it.
-- Still open, both need a play: the **Loader pictures with the old bar** (`dicelog.png`,
-  `dicelog-readable.png`, `dialogue.png`, `viewer.png`), the figure pictures #252 didn't retake
-  (`half-elves.png` is now captioned as the bare race figures; `fogbolt.png`, `show-usable.png`,
-  `default-party-armor.png`, `use-slots.png`), and **FEATURES' gear table** under the outfits.
+- Done after #257: `dicelog.png`, `dialogue.png` and `viewer.png` retaken with the new bar (Play
+  Shattered Lands / Play Wake of the Ravager, the Journal tab); `dicelog-readable.png` needed none (a crop
+  of the log alone, no bar). `default-party-armor.png` already shows the outfits (#252); `half-elves.png`
+  is captioned as the bare race figures; `show-usable.png` and `use-slots.png` show no party figures.
+  FEATURES' gear table now says what shows on a class outfit (armour in the outfit's chest, arm and leg
+  regions, plate fitted; a cloak on the outfit's own mantle or hood, or a fitted cape) and which shape each
+  of Wake of the Ravager's weapon kinds takes, from `spritegear.py`.
+- Still open: `fogbolt.png` (the user's own party, no outfits; the bolt is gone before a capture unless a
+  Ctrl+F5 loop runs before the click, and a Wild Mul gave "no line of sight" twice in the last try).

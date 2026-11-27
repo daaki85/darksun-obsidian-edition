@@ -393,6 +393,9 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - The Player's Guide's weapon tables (damage, the clerics' spheres, mundane and magic weapons, who wields which
   magic weapon) and the backstab table in How the game works list Wake of the Ravager's weapon kinds, their
   metal, obsidian and bone ones and their 13 magic ones (#257).
+- The Loader's pictures (`dicelog.png`, `dialogue.png`, `viewer.png`) retaken with the new bar; FEATURES'
+  table of what the party wears says what shows on a class outfit and the shape of each of Wake of the
+  Ravager's weapon kinds (#259).
 
 **Dev**
 - DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
