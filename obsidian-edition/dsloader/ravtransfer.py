@@ -595,7 +595,6 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
     """SEQUEL with the Loader's objects for the party's items it lacks (ravitems), made from the
     Shattered Lands in SL_DIR and the sequel in FOLDER, and kept in DOS_DIR's ADDED_FILE with the earlier
     transfers' (their keepsakes' names too); and the items that couldn't be made, with why."""
-    import glob
     import os
     from . import art, icons, ravager, ravitems
     from .gff import read_gff, write_atomic
@@ -627,8 +626,7 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
         sl_names = next(v for k, v in sorted(gpl.items()) if k[0] == "NAME")
         sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)
         resources = read(os.path.join(folder, ravager.RESOURCE_FILE))
-        regions = [v for f in sorted(glob.glob(os.path.join(folder, "RGN*.GFF")))
-                   for k, v in read(f).items() if k[0] == "PAL "]
+        regions = ravitems.region_palettes(folder)
         names = ravitems.Names(sl_names, resources[("TEXT", 1000)],
                                [n for n in names_text.split(b"\n") if n])
         types = ravitems.type_map(sequel.counterparts, sl_objects, sequel.objects)

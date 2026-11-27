@@ -374,7 +374,6 @@ def chunks(objects: gff.Chunks, sl_objects: gff.Chunks, sl_palette, stable, sequ
 def from_files(objects: gff.Chunks, sl_dir: str, sequel_dir: str, books: bool = True) -> gff.Chunks:
     """chunks() from the Shattered Lands in SL_DIR and the sequel in SEQUEL_DIR (its RESOURCE.GFF and region
     palettes, for the pictures' colours and the names), the spellbooks with BOOKS."""
-    import glob
     import os
     from . import art, ravager
 
@@ -386,7 +385,6 @@ def from_files(objects: gff.Chunks, sl_dir: str, sequel_dir: str, books: bool = 
     gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
     sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)
     resources = read(os.path.join(sequel_dir, ravager.RESOURCE_FILE))
-    regions = [v for f in sorted(glob.glob(os.path.join(sequel_dir, "RGN*.GFF")))
-               for k, v in read(f).items() if k[0] == "PAL "]
+    regions = ravitems.region_palettes(sequel_dir)
     return chunks(objects, sl_objects, sl_palette, ravitems.stable_colours(resources, regions),
                   resources[("TEXT", 1000)], books=books)

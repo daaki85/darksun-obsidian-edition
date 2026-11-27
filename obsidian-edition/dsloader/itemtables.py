@@ -32,9 +32,16 @@ AIR_CLERIC = 1  # a type's +10h (the classes that may use it): the air cleric's 
 # footman's pick's 1d6+1 (Skills & Powers; the game's 1d4+1); the Quicksilver Glove's type (113)
 # leather (no material, which the game's to-hit and damage took for wood: the user's, 2026-11-09);
 # and the game's daggers (17, 33, 84, 94) for air clerics too (none had their bit; their sphere's
-# weapons are daggers and missile and thrown ones).
+# weapons are daggers and missile and thrown ones); the leather chest armour (6) 96 (9.6 lb, the
+# word at +4: LEATHER_CHEST_WEIGHT), not the game's 750, so that the whole suit weighs the PHB's 15 lb
+# with the arm and leg pieces' 36 and 18, as in Wake of the Ravager (ravager.RAV_WEIGHTS' 32: one
+# byte there, so 750 can't be had; the owner's "weight the same in both games", 2026-11-27). No rule
+# reads an armour's weight (the load check never refuses; HEAVY and backstab are weapons'; nothing
+# worn is picked from a pocket), so only the two games' numbers change.
+LEATHER_CHEST, LEATHER_CHEST_WEIGHT = 6, 96
 TYPE_FIXES = ((54, 0x12, 3, False), (24, 0x12, 3, False), (2, 8, METAL, False), (112, 0x0C, 6, False),
               (113, 8, LEATHER, False),
+              (LEATHER_CHEST, 4, LEATHER_CHEST_WEIGHT & 0xFF, False), (LEATHER_CHEST, 5, LEATHER_CHEST_WEIGHT >> 8, False),
               (17, 0x10, AIR_CLERIC, True), (33, 0x10, AIR_CLERIC, True), (84, 0x10, AIR_CLERIC, True),
               (94, 0x10, AIR_CLERIC, True))
 

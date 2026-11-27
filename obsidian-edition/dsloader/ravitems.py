@@ -120,6 +120,18 @@ class Names:
 SCREEN_OWN = range(1, 16)  # (palette numbers the sequel's screens set for themselves)
 
 
+def region_palettes(game_dir: str) -> List[bytes]:
+    """Every region's map palette in the sequel's folder GAME_DIR (each RGNxxx.GFF holds one PAL), the
+    files' names in either case: what stable_colours is given (ravarrows, ravgear, ravtransfer, ravui)."""
+    import glob
+    import os
+    out = []
+    for path in sorted(set(glob.glob(os.path.join(game_dir, "RGN*.GFF")) + glob.glob(os.path.join(game_dir, "rgn*.gff")))):
+        with open(path, "rb") as f:
+            out += [v for k, v in gff.read_gff(f.read()).items() if k[0] == "PAL "]
+    return out
+
+
 def stable_colours(resources: gff.Chunks, region_palettes: Iterable[bytes]) -> List[Tuple[int, Tuple[int, int, int]]]:
     """The sequel's palette numbers no region changes (PAL 1000's, as every region palette has them), but
     SCREEN_OWN's: the inventory and shop screens set those themselves (2026-11-25: a picture's 2, PAL
