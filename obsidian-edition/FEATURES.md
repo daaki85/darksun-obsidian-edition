@@ -1304,16 +1304,17 @@ classes, keep the game's own figure. The creation screen's small figure wears th
 of the class (or classes) picked, and changes as the class, race or sex does. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
 animated online](https://github.com/daaki85/darksun-obsidian-edition/blob/7a0b6200b0c218f7a27ccc4b0c3fece7cdf59fe4/obsidian-edition/docs/class-outfits/README.md).
 
-The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
-pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:
+The game draws each race and sex the same whatever they carry; the Loader keeps the outfit (or, outside
+the outfits, the artist's picture) and adds the gear, frame by frame, walking and fighting, changing as
+soon as the gear does:
 
 | Worn | Shown |
 |---|---|
-| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield) in its material's colours (wood, ivory bone, stone, obsidian, metal); worn at the belt or carried upright while walking, in the hands and swung in a fight, the shield on the arm |
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield; Wake of the Ravager's kinds as the nearest: a two-handed sword a sword, a lotulis a gythka, a double spear a staff, a trikal a polearm, a javelin or darts a chatkcha) in its material's colours (wood, ivory bone, stone, obsidian, metal); worn at the belt or carried upright while walking, in the hands and swung in a fight, the shield on the arm |
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
-| **Armour** | the character's own clothing recoloured toward its material, shade for shade: the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures drawn mostly bare (the mul, the dwarf man) only straps and loincloth, so little shows |
+| **Armour** | on a class outfit, the outfit's own chest, arm and leg regions painted in the armour's material (plate fitted to the body); outside the outfits, the character's own clothing recoloured toward its material, shade for shade: the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures drawn mostly bare (the mul, the dwarf man) only straps and loincloth, so little shows |
 | **Helms** | a circlet at the brow: a feather on leather, a dark stone on iron, low spikes on bone |
-| **Cloaks** | the human woman's cloak, fitted to the wearer, under the hair, in the cloak's colours; from the front it hangs behind |
+| **Cloaks** | on a class outfit, the outfit's own mantle or hood, or a cape fitted to it, in the cloak's colours; outside the outfits, the human woman's cloak, fitted to the wearer, under the hair; from the front it hangs behind |
 | **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
 | **Magic** | the spells' weapons whole in the game's animated colours (Flame Blade, Shillelagh, Spiritual Hammer); any other magic weapon or shield glints along its edge, and magic armour, cloaks, helms, boots and belts have a scatter of sparks, in its icon's colour |
 | **Age** | the hair greys with [age](#ages-and-magical-aging) |
