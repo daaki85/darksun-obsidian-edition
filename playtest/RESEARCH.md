@@ -1453,8 +1453,9 @@ install (INSTALL_PARAS on, the EXE header's CS:IP, freed). With #218-#223 joined
 FF1Fh and the install wrapped past FFFFh (nasm's "word data exceeds bounds"); now `test_dsclog2_room.py`
 fails on a warning or under 2 KB free, and names a tail label read through `cs:`. In memory (`dosmem.py`
 after `RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh`) the helper's block is the segment and the tail together
-(10h + KEPT_PARAS paragraphs with its PSP). To read a tail table in a scratch tool: the header's +1836 x 16
-past the image, or +1834 x 16 in the running game. Details: DEVELOPMENT-INTERNALS.md, DSCLOG2's segment,
+(10h + KEPT_PARAS paragraphs with its PSP). To read a tail table: the header's +1836 x 16 past the image, or +1834 x 16 in the
+running game; `ravtail.py` checks the tail in play (logs/2026-11-27-dsclog2-segment-room.md: with #218-#223
+joined, 84,160 bytes of upper memory free, the helper's block 65,792 with its PSP). Details: DEVELOPMENT-INTERNALS.md, DSCLOG2's segment,
 tail and install.
 **The view to the chosen enemy, and a monster's gear before it fights** (2026-11-25,
 logs/2026-11-25-ravager-tab-followups.md): the sequel's centring routine 1C5F:01F3 (file 219E3h; x, y the

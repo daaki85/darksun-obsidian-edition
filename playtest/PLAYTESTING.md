@@ -132,6 +132,10 @@ Run these in order, from `playtest/`, at the start of every test and again after
      segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
      block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data
      at the helper's segment reads stale bytes. `ghostchk.py` shows the see-through block is there.
+   - For a DSCLOG2 change (Wake of the Ravager), **`python3 ravtail.py`** with the sequel running: the
+     helper's tail where its header says (+1834 the segment + TAIL_PARAS), its tables as built, and what
+     the Loader has written in its buffers (the USE screen's lines, the item names, the labels)
+     ([DSCLOG2's segment, tail and install](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclog2s-segment-tail-and-install)).
    - For a script change, decode the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF
      python3 dec.py SCRIPT LO HI`) and check the change is there before trusting anything seen in
      play. `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
