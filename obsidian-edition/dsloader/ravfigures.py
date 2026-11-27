@@ -44,15 +44,18 @@ CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see 
 SHELVES = (1137, 1140, 1170, 1171, 1172, 1334, 2628, 2629, 2631, 2674,
            2675, 2676, 2979, 2980, 2981, 2982, 3356, 3414, 3416)
 
-# Both barrel lids in this pile must still show above the foreground wall in Tyr.
-BARRELS_AND_SACKS = 3558
+# Keep the rims on the tiny bowls and jar, and both barrel lids above the Tyr wall.
+SHALLOW_STORAGE = (3172, 3173, 3174, 3558)
+DAMAGED_CRATES = (3795, 3796, 3797, 3798)
+# The foreground wall also hides the front row of broken crates at full Tyr scale.
+FURNITURE_SCALES = dict.fromkeys(SHALLOW_STORAGE + DAMAGED_CRATES, 0.82)
 STORAGE = (532, 533, 1014, 1015, 1016, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
-           2769, 2770, 3364, BARRELS_AND_SACKS)
+           2769, 2770, 3364) + SHALLOW_STORAGE
 TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
           2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
-SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635,
-                    2590, 2591, 2704, 2789, 2790, 2824, 2840, 3246, 3276, 3442, 3443, 3627, 3628,
-                    3629, 3699, 3826, 3829, 3835, 3836, 3870)
+SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 2218,
+                    2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
+                    3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
 OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
@@ -62,17 +65,24 @@ CUSHION_SIDES = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9}
 # Each assembly uses the same floor line for the pictures and their attached pieces.
 # The four placement fields are stock object, x, y and the new y. Other placements
 # of the same object (especially vase 9606) keep their own coordinates.
-ASSEMBLIES = {
-    "RGN001.GFF": (tuple(range(567, 582)), (
+ASSEMBLIES = (
+    ("RGN001.GFF", tuple(range(567, 582)), (
         (9026, 1897, 121, 131), (9022, 1234, 177, 189), (9026, 1166, 133, 143),
         (9046, 1706, 132, 142), (9027, 1723, 148, 153), (9026, 1245, 90, 100),
         (9038, 1225, 118, 119), (9038, 1265, 118, 119), (9044, 537, 180, 187),
         (9044, 536, 195, 197), (9038, 587, 196, 197), (9026, 646, 168, 179),
         (9038, 623, 194, 196), (9038, 674, 195, 196),
     )),
-    "RGN033.GFF": ((2224,), ((9606, 599, 1261, 1268),)),
-    "RGN03A.GFF": ((2785, 2786), ((10347, 223, 737, 747),)),
-}
+    ("RGN033.GFF", (2224,), ((9606, 599, 1261, 1268),)),
+    ("RGN033.GFF", (3072,), ((9586, 1761, 1124, 1135),)),
+    ("RGN033.GFF", (3792,), ((9586, 1727, 783, 794),)),
+    ("RGN033.GFF", DAMAGED_CRATES, (
+        (9491, 1683, 244, 248), (9494, 1686, 261, 263),
+        (9495, 1629, 1284, 1294), (9491, 1639, 1313, 1317), (9637, 1625, 1254, 1269),
+    )),
+    ("RGN03A.GFF", (2785, 2786), ((10347, 223, 737, 747),)),
+    (None, (2794, 2795), ()),  # Weapons cross the join in both the Yuan-ti tunnels and Mines 3.
+)
 
 
 class FigureError(Exception):
@@ -242,17 +252,18 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                 if key not in old or new.get(key) != old[key] or new.get(script) != old.get(script):
                     continue
                 if script not in old or number in OPENABLE:
-                    scale = 0.82 if number == BARRELS_AND_SACKS else 0.66
+                    scale = FURNITURE_SCALES.get(number, 0.66)
                     new[key] = lowered_furniture(old[key], CUSHION_SIDES.get(number), scale)
             # Package positions only when every piece still uses this group's artwork.
-            for region, (pictures, moves) in ASSEMBLIES.items():
+            for region, pictures, moves in ASSEMBLIES:
                 keys = [("BMP ", pic) for pic in pictures]
                 if any(k not in old or k not in new or ("SCMD", k[1]) in new for k in keys):
                     continue
-                lowered = {k: lowered_furniture(old[k]) for k in keys}
+                lowered = {k: lowered_furniture(old[k], scale=FURNITURE_SCALES.get(k[1], 0.66)) for k in keys}
                 if all(new[k] in (old[k], lowered[k]) for k in keys):
                     new.update(lowered)
-                    placements[region] = moves
+                    if moves:
+                        placements.setdefault(region, []).extend(moves)
         for k, v in sorted(new.items()):
             if old.get(k) == v:
                 continue

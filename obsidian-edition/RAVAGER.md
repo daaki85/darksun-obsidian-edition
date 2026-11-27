@@ -263,7 +263,8 @@ bigger character sheets) as it goes in (a game already running lists it from its
   including Forest beds, the Mines 1 worktable and the volcano tables and stools. The Forest dining sets, the Veiled Alliance crate and vase, and
   the two-piece Mines 3 throne now have coordinated heights and placements. The Jann camp cushions sit lower around the Sultan,
   and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
-  use the same proportions. Jumah’s table still partly conceals the key. The barrel and sack pile shared by the mines and Tyr
+  use the same proportions. Jumah’s table still partly conceals the key. In the ruined Alliance headquarters, the loose pillows and
+  broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3. The barrel and sack pile shared by the mines and Tyr
   sits lower while both barrel lids remain visible over the Tyr wall. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little

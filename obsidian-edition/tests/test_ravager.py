@@ -592,7 +592,8 @@ class GameFileTests(unittest.TestCase):
                         self.assertEqual(new, (x, new[1], height, flags, obj))
                         changes.append((obj, x, y, new[1]))
                 self.assertEqual(len(region[key]), len(before))
-                self.assertCountEqual(changes, ravfigures.ASSEMBLIES[name][1])
+                expected = [move for region, _, moves in ravfigures.ASSEMBLIES if region == name for move in moves]
+                self.assertCountEqual(changes, expected)
             ravager.write_regions(WOTR, d, {ravfigures.SKIP})
             for copy in ravfigures.REGIONS.values():
                 self.assertFalse(os.path.exists(os.path.join(d, copy)))

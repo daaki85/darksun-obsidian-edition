@@ -74,7 +74,7 @@ The two Ravager columns use the Loader’s previous and revised object files and
 
 ## Mines 2 and Volcano 3
 
-The barrel-and-sack pile in Mines 2 also appears twice in Tyr, once in Volcano 2 and once Under Tyr. Lowering the entire pile to 66% almost hid both barrel lids behind a foreground wall in Tyr. At 82% the lids still read separately, the sacks meet the ground and the pile sits lower beside the mine crate. Both Loader builds were rendered in the same room at each of the five placements. The rebuild changed only picture 3558. This brings the project to **124 pictures at 357 placements across 15 regions**.
+The barrel-and-sack pile in Mines 2 also appears twice in Tyr, once in Volcano 2 and once Under Tyr. Lowering the entire pile to 66% almost hid both barrel lids behind a foreground wall in Tyr. At 82% the lids still read separately, the sacks meet the ground and the pile sits lower beside the mine crate. Both Loader builds were rendered in the same room at each of the five placements. The rebuild changed only picture 3558.
 
 ![Whole Mines 2 map before and after, beside Gedron in Shattered Lands](mines2-storage-map.png)
 
@@ -85,6 +85,24 @@ Two separate miners were checked against the earlier figure redraw. The first pa
 On the Mines 2 map, twelve similar fixtures (2510–2521) each have three stored states. Picture 3733 has two states and two placements. Their art and animation scripts match the preceding build. Their use during mine travel still needs an in-game check. In Volcano 3, the three flagged spires (1376–1378) repeat at 128 placements along the lava and rocky ground. The lower map shows the patch enlarged above. Keep the spires at their terrain height.
 
 ![Original and redrawn miners, a mine fixture, the lava spires, and both whole maps](mines2-volcano3-review.png)
+
+## Ruined Alliance headquarters and the Yuan-ti tunnels
+
+The seventh pass changes 14 pictures at 24 placements. Seventeen placements are in the Veiled Alliance headquarters, five in the Yuan-ti tunnels and two in Mines 3. Across all seven passes, 138 pictures have been revised at 381 placements in 15 regions. The whole maps mark the torn teal bed and the two-piece weapon display. The right column shows upper castle beds and a Gedron table at the same map scale.
+
+![Whole Alliance and Yuan-ti maps before and after beside their Shattered Lands references](alliance-yuanti-maps.png)
+
+In the Alliance rooms, look at the pillow caught on the torn teal blanket and the two loose pillows beside the green bed. Only the pillows that rested against the upper halves of the beds moved, both down 11 pixels. The floor pillows keep their positions. The sideways intact green bed, its damaged counterpart, the upright damaged bed and the torn red couch now use the Tyr scale. The earlier occupied sickbed redraw is visible in the separate review below.
+
+![The torn teal bed, the joined weapon display and the green bed beside their references](alliance-yuanti-rooms.png)
+
+The ruined storeroom uses four broken crate pictures across two piles. The standard squash opened a gap below the red pot. At 82% height, with the rear crates brought closer to the front ones and the pot lowered onto its crate, the stack still reads through the foreground wall. The Yuan-ti jar and two bowls also use 82% so that the pale rims remain visible against the liquid.
+
+The two halves of the weapon display share a floor line in both regions. In each palette the assembled result matches a single 66% reduction of the entire display, pixel for pixel across the join. Earlier art supplies the three Yuan-ti shelves and the sacks and jars elsewhere in the tunnels.
+
+![Yuan-ti vessels, the ruined storeroom trials, the occupied bed and the second weapon display in Mines 3](alliance-yuanti-review.png)
+
+The comparisons use the previous and revised Loader object and region files. All 24 placements were checked individually for a visible difference. The only placement data changes were the vertical positions of two pillows, four crates and one pot. Direct play checks of the headquarters after the attack and the display in both regions remain open.
 
 ## Earlier figure work
 
@@ -118,13 +136,13 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 |---|---:|---:|---:|---|
 | 001 Forest | 252 | 0 | 56 | Check dining sets in play |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
-| 033 Veiled Alliance | 195 | 21 | 61 | Check the lowered crate in play and review damaged beds with separate props |
+| 033 Veiled Alliance | 195 | 21 | 78 | Check both headquarters layouts in play, including torn beds, pillows and the pot on the broken crate |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
-| 036 Yuan-ti | 104 | 3 | 0 | Check surrounding vessels against the three shelves |
+| 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
 | 037 Temple | 62 | 0 | 0 | Use Pavis and Tantris as references for nearby fixtures |
 | 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 9 | Check throne, dining sequence and tank destruction in play |
+| 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Check movable bookcase and museum bust transitions in play |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
@@ -137,4 +155,4 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 045 Under Tyr | 135 | 0 | 15 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records all six furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all seven furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.

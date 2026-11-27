@@ -92,6 +92,17 @@ class FigureFileTests(unittest.TestCase):
         self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1268, 0, 32, 9606)] + records[1:])
         self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
 
+    def test_torn_beds_move_only_their_two_supported_pillows(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        records = [(1761, 1124, 0, 34, 9586), (1727, 783, 0, 2, 9586),
+                   (1729, 812, 0, 32, 9594), (1914, 1155, 0, 32, 9594)]
+        stock = {key: b"".join(placed.pack(*row) for row in records)}
+        result = ravfigures.region_chunks("RGN033.GFF", stock)
+        self.assertEqual(list(placed.iter_unpack(result[key])),
+                         [(1761, 1135, 0, 34, 9586), (1727, 794, 0, 2, 9586)] + records[2:])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
     def test_openable_furniture_keeps_both_poses(self):
         closed = [[1, 1], [2, 2], [3, 3]]
         opened = [[None, 7], [8, 8], [9, None]]
@@ -114,10 +125,10 @@ class GameFileTests(unittest.TestCase):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
         package = ravfigures.object_chunks(stock)
-        grouped = [pic for pictures, _ in ravfigures.ASSEMBLIES.values() for pic in pictures]
+        grouped = [pic for _, pictures, _ in ravfigures.ASSEMBLIES for pic in pictures]
         for pic in (*ravfigures.FURNITURE, *grouped):
             key = ("BMP ", pic)
-            percent = 82 if pic == 3558 else 66
+            percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
             states = 2 if pic in ravfigures.OPENABLE else 1
             self.assertEqual(("SCMD", pic) in stock, states == 2, pic)
             self.assertNotIn(("SCMD", pic), package)
