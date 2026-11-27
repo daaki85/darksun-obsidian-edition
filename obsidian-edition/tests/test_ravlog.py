@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, kits, ravager, ravlog, ravspells, tracker  # noqa: E402
+from dsloader import aging, dicelog, game, itemwatch, kits, ravager, ravlog, ravspells, tracker  # noqa: E402
 
 
 class FakeGuest:
@@ -421,6 +421,23 @@ class PassTests(unittest.TestCase):
         ravlog.restore_layout()
         self.assertEqual((tracker.CAP, tracker.SHARE), (None, None))
         self.assertEqual(tracker.xp_cap(), game.XP_CAP)
+
+    def test_the_sequels_item_watch(self):
+        """The missing-item report runs in the sequel (PASS's itemwatch step) with the sequel's item types
+        for the ordinary losses: an arrow (6), a scroll (77), a Shillelagh (90) or a Broken Weapon (21) gone is
+        no news there, Shattered Lands' arrow type (62) is; Shattered Lands' sets back after."""
+        self.assertIn("itemwatch", [step.name for step in ravlog.RavDiceLog.PASS])
+        ravlog.apply_layout()
+        try:
+            seen = lambda typ: game.ItemSeen(5, 0, "Thy'rokh", None, "x", typ, bytes(game.ITEM_SIZE), b"")
+            for typ in (6, 7, 9, 14, 77, 78, 47, 87, 90, 95):
+                self.assertTrue(itemwatch.ordinary_loss(seen(typ), b"", False, False), typ)
+            self.assertIsNone(itemwatch.ordinary_loss(seen(62), b"", False, False))
+            self.assertIn(21, itemwatch.BROKEN)
+        finally:
+            ravlog.restore_layout()
+        self.assertIn(62, itemwatch.USED_UP)
+        self.assertEqual(itemwatch.BROKEN, frozenset((93, 107)))
 
     def test_an_older_header_gets_no_arrows_words(self):
         """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an

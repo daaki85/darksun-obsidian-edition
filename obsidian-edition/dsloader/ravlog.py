@@ -418,10 +418,20 @@ def rav_pocket_sized(typ: bytes) -> bool:
     return True
 
 
+# The sequel's item types whose going is ordinary, for the missing-item watch (itemwatch.py: Shattered Lands'
+# USED_UP, SPELL_MADE, BROKEN), by reports/wake-of-the-ravager-item-weights.md's table: arrows (6, 7), coins,
+# keys, fruit and orbs (9), gems, berries and vouchers (14), scrolls, spellbooks and rods (77), psionic
+# powerstones (78); the spells' Flameblade (47), Rainbow (87), Shillelagh (90) and Spirit hammer (95); a
+# Broken Weapon (21)
+RAV_USED_UP = frozenset((6, 7, 9, 14, 77, 78))
+RAV_SPELL_MADE = frozenset((47, 87, 90, 95))
+RAV_BROKEN = frozenset((21,))
+
+
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, locks, loot, pickpocket, ring, startgear
+    from . import icons, itemgate, itemwatch, locks, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
@@ -434,7 +444,8 @@ def rav_items() -> Dict[object, Dict[str, object]]:
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
             icons: {"fit": lambda gd, item: None},
             startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
-                        "HANDS": game.WEAPON_HANDS}}
+                        "HANDS": game.WEAPON_HANDS},
+            itemwatch: {"USED_UP": RAV_USED_UP, "SPELL_MADE": RAV_SPELL_MADE, "BROKEN": RAV_BROKEN}}
 
 
 def _layout_holders() -> Tuple[object, ...]:
@@ -2491,6 +2502,7 @@ RavDiceLog.PASS = (
          if log.game is not None and log.game.rules & game.RULE_AGING else None, dicelog.EFFECTS),
     _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
     _take("loading"),
+    _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
     _take("journal_sync"),  # (the Journal tab: the sequel's own chain)
     _take("flush"),  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
@@ -2509,7 +2521,6 @@ PASS_LEFT_OUT = {
     "kalzith_sold_out": "Shattered Lands' story only",
     "quest_look": "Shattered Lands' quests only",
     "dress": "the sequel has no class outfits",
-    "itemwatch": "not ported",
     "scroll": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",
