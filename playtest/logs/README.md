@@ -241,7 +241,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-scholar.md) | The Scholar kit in Wake of the Ravager: THAC0 1 worse, one more spell at each level up, a new Scholar's one more for each level; THAC0 is written only at creation and level up, not on equip |
 | [2026-11-27](2026-11-27-ravager-dam-lines.md) | Wake of the Ravager's DAM lines with the kits (a Ravager's damage, a Battle Mage's expertise) and the creation screen's THAC0 with a Scholar's; the dice log must run for the rules |
 | [2026-11-27](2026-11-27-ravager-xp-lines.md) | Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus (written through the read-only view's named ranges) and the level-ups |
-| [2026-11-27](2026-11-27-ravager-item-watch.md) | Wake of the Ravager's dice log with the missing-item report: an item freed by a test edit reported, an arrow freed passing in silence |
+| [2026-11-27](2026-11-27-ravager-item-watch.md) | Wake of the Ravager's dice log with the missing-item report: an item freed by a test edit reported; handing over, dropping, selling, buying and an area change silent |
 | [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
 | [2026-11-27](2026-11-27-inventory-redraws.md) | Class portraits in the Shattered Lands inventory |
 | [2026-11-27](2026-11-27-human-inventory.md) | All eight human inventory outfits on both figures in DOSBox |
