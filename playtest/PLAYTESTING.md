@@ -440,6 +440,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   Reconnect path says "process N has ended"); either way no party table error. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
   `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
   a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
+- **The Loader's own start of Wake of the Ravager with GOG's DOSBox** (`play --ravager`, `launch --ravager`
+  with the GOG engine): it runs the sequel folder's `DOSBOX/DOSBox.exe`, a Windows program. On a **copy** of
+  `$WORK/rav`, replace it with a bash shim that drops `-noconsole` and execs `/usr/bin/dosbox "$@"`, and copy
+  `__support/save/*` into the folder first (as `ravstart.sh` does; without them the game stops at once with
+  `DARKSAVE.GFF to DARKRUN.GFF failed`). `play.log` in `obsidian-edition/` says when the dice log
+  attaches ([the run](logs/2026-11-27-ravager-ingame-rolls.md)).
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so
   nothing opens; the status line names the guide either way.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the

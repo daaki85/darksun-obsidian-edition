@@ -235,7 +235,8 @@ the Loader still shows the party, but the dice log will say the game was
 started without it.
 
 **Just the game, with the in-game additions, no Loader window:** double-click
-**`Play Dark Sun (in-game rolls).bat`** (Shattered Lands only: the sequel starts from the Loader or its own `.bat`, below). The dice log runs unseen and stops
+**`Play Dark Sun (in-game rolls).bat`**, or **`Play Wake of the Ravager (in-game rolls).bat`** for the sequel
+(its folder found as for the Loader's button, below). The dice log runs unseen and stops
 when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log's level, the Look box, the few rules with a
 switch); the new items, the new people and the cooked vulture are there too.
@@ -254,8 +255,8 @@ the sequel's roster and saves** in its folder for the mod (each file kept first 
 that they load only from the Loader until you convert them back ([your sequel saves are
 converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
-**Checking a save file:** drag a Shattered Lands save file onto **`Show Save.bat`** to see the
-party it holds (it reads Shattered Lands' saves only; the sequel's party is on the Loader's tabs): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
+**Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
+party it holds, a Shattered Lands save or a Wake of the Ravager one (from the sequel's folder): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's release keeps the saves
@@ -696,7 +697,7 @@ saves and characters:
 | `Journal` | the journal: everything said and every reward, for every game played, and the quests as last read from the game ([the Journal tab](#the-journal-tab)) |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `dosbox-x` | [DOSBox-X](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x): on Windows the program itself (`dosbox-x.exe`, with its licence `COPYING.txt` and `SOURCE.txt`, where its source is); with it as the engine, its settings for the game (`obsidian.conf`), what it printed (`dosbox-x.log`) and anything it writes itself; and, while the game runs, a 32 MB file `obsidian-edition-....mem` in `/dev/shm` or the temp folder, removed when the game ends |
-| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
+| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` or `Play Wake of the Ravager (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`, the quick saves and autosaves as `SAVQ`) and characters in `CHARSAVE.GFF` |

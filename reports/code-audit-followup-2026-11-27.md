@@ -15,7 +15,7 @@ first, at the owner's ask ("Just ensure weight is the same in both games"). Line
 | Severity | Count | Fixed here |
 |---|---|---|
 | Wrong result (the two games disagree) | 2 | 2 (W1, W2) |
-| Repository rule | 1 | 0: the owner's call (P1) |
+| Repository rule | 1 | 0: settled by the owner, no change (P1) |
 | Structural | 4 | 1 (S3); 3 proposals |
 | Risk | 2 | 1 (R2) |
 | Cleanup | 3 | 1 (C1) |
@@ -50,6 +50,9 @@ Making those two the same means another type and so another material (damage, br
 not a weight fix. Furniture, doors and scenery are left out in both (nobody carries them).
 
 ## Repository rule
+
+**Settled by the owner (2026-11-27): the zip stays in the mod as it is; only the installation files and the
+walkthroughs belong in the private repository.**
 
 **P1. `dsloader/ravager-figures.zip` (#250, 1.9 MB, in the public repository) holds the sequel's own data,
 not only redrawn art.** Of its 631 chunks, 477 are pictures (BMP, CBMP: 5 to 7 % alike with the game's, so
