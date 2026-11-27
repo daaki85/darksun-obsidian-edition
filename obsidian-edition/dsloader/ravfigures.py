@@ -44,7 +44,10 @@ CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see 
 SHELVES = (1137, 1140, 1170, 1171, 1172, 1334, 2628, 2629, 2631, 2674,
            2675, 2676, 2979, 2980, 2981, 2982, 3356, 3414, 3416)
 
-STORAGE = (532, 533, 1014, 1015, 1016, 2220, 2221, 2222, 2223, 2225, 2354, 2356, 2769, 2770, 3364)
+# Both barrel lids in this pile must still show above the foreground wall in Tyr.
+BARRELS_AND_SACKS = 3558
+STORAGE = (532, 533, 1014, 1015, 1016, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
+           2769, 2770, 3364, BARRELS_AND_SACKS)
 TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
           2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635,
@@ -194,8 +197,8 @@ def cleared_edges(chunk: bytes) -> bytes:
     return sprites.encode_frames(frames)
 
 
-def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None) -> bytes:
-    """Lower the base at Tyr's 0.66 scale. Any artwork above BASE_ROWS moves down intact."""
+def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None, scale: float = 0.66) -> bytes:
+    """Scale the base toward its floor line. Any artwork above BASE_ROWS moves down intact."""
     from . import sequelicons, sprites
     frames = []
     for index in range(struct.unpack_from("<H", chunk, 4)[0]):
@@ -205,7 +208,7 @@ def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None) -> bytes:
         depth = height if base_rows is None else min(base_rows, height)
         base = []
         for distance in range(depth):
-            offset = int(distance / 0.66 + 0.5)
+            offset = int(distance / scale + 0.5)
             if offset >= depth:
                 break
             base.append(rows[height - 1 - offset])
@@ -239,7 +242,8 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                 if key not in old or new.get(key) != old[key] or new.get(script) != old.get(script):
                     continue
                 if script not in old or number in OPENABLE:
-                    new[key] = lowered_furniture(old[key], CUSHION_SIDES.get(number))
+                    scale = 0.82 if number == BARRELS_AND_SACKS else 0.66
+                    new[key] = lowered_furniture(old[key], CUSHION_SIDES.get(number), scale)
             # Package positions only when every piece still uses this group's artwork.
             for region, (pictures, moves) in ASSEMBLIES.items():
                 keys = [("BMP ", pic) for pic in pictures]

@@ -60,9 +60,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
 1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
 1342,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
-1376,Multi-piece environment or scripted fixture,Inspect in scene,,03F:36
-1377,Multi-piece environment or scripted fixture,Inspect in scene,,03F:45
-1378,Multi-piece environment or scripted fixture,Inspect in scene,,03F:47
+1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
+1377,Lava spires,Retain full terrain height along the lava edge,,03F:45
+1378,Lava spires,Retain full terrain height along the lava edge,,03F:47
 1477,"Seats, loom and restraints",Reviewed at current scale,1477-fletch-chair.zip,03C:1
 1479,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,03C:1
 1501,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
@@ -95,6 +95,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2223,Barrels and crates,Lowered and placements reviewed,,038:1 045:1
 2224,Barrels and crates,Lowered and reviewed with vase 458,,033:1
 2225,Barrels and crates,Lowered and placements reviewed,,032:1 033:1 03D:1 045:2
+2226,Mine storage surroundings,Already revised in the baseline art. Reviewed beside the barrel and sack pile,,032:4 033:1 038:1 039:4 03D:1 045:3
 2227,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
 2228,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
 2229,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
@@ -118,8 +119,19 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2442,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,0FF:1
 2443,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
 2444,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
-2479,"Tank, platform and mine openings",Reviewed at current scale,2479-miner.zip,039:2
-2510,Multi-piece environment or scripted fixture,Inspect in scene,,039:2
+2479,Miner at opening,Retain both redrawn frames and their contact with the tunnel,2479-miner.zip,039:2
+2510,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:2
+2511,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2512,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2513,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2514,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2515,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2516,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2517,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2518,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2519,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2520,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2521,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
 2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
 2573,"Occupied beds, beds and basins",Reviewed at current scale,2573-snaggle-sickbed.zip,0FF:2
 2574,"Occupied beds, beds and basins",Reviewed at current scale,,001:1
@@ -193,6 +205,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3527,"Tables, desks and benches",Retain floor display at current depth,,03D:1
 3528,"Tables, desks and benches",Retain floor display at current depth,,03D:1
 3529,"Tables, desks and benches",Retain floor display at current depth,,03D:1
+3555,Mine storage surroundings,Already revised in the baseline art. Reviewed beside the barrel and sack pile,,032:1 036:1 039:2 03D:1 045:1
+3558,Barrels with sacks,Lowered to 82% at five placements to keep both lids visible over the wall in Tyr,,032:2 039:1 03D:1 045:1
+3613,Miner with pick,Retain both redrawn frames and pick animation,scenery-and-miner.zip,039:1
 3627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
 3628,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:5
 3629,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
@@ -204,7 +219,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3695,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
 3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
 3699,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
-3733,Multi-piece environment or scripted fixture,Inspect in scene,,039:2
+3733,Two-state mine fixture,Retain both states. Interaction in play pending,,039:2
 3777,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
 3778,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
 3779,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1

@@ -67,7 +67,8 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
   at 217 placements, including the open and closed states of three fixtures. Another 18 pictures lower the Forest
   dining sets, the Alliance vase-bearing crate and the Mines 3 throne at 41 placements. The Jann cushions and baskets and the Silt Sea Giants’ furnishings
-  add another 26 placements. Crypt barracks furniture and Cloud pottery add 14 more. The
+  add another 26 placements. Crypt barracks furniture and Cloud pottery add 14 more. A shared barrel and sack pile now sits lower in five places,
+  with both barrel lids visible over the Tyr wall. The
   [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
   and compares occupied furniture with the earlier figure redraws.
 

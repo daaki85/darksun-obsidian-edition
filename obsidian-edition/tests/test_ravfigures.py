@@ -117,6 +117,7 @@ class GameFileTests(unittest.TestCase):
         grouped = [pic for pictures, _ in ravfigures.ASSEMBLIES.values() for pic in pictures]
         for pic in (*ravfigures.FURNITURE, *grouped):
             key = ("BMP ", pic)
+            percent = 82 if pic == 3558 else 66
             states = 2 if pic in ravfigures.OPENABLE else 1
             self.assertEqual(("SCMD", pic) in stock, states == 2, pic)
             self.assertNotIn(("SCMD", pic), package)
@@ -129,7 +130,7 @@ class GameFileTests(unittest.TestCase):
                 self.assertTrue(any(p is not None for row in actual for p in row), pic)
                 for distance, row in enumerate(reversed(actual)):
                     # Nearest source row measured upwards from the unchanged base.
-                    offset = (100 * distance + 33) // 66
+                    offset = (100 * distance + percent // 2) // percent
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
 

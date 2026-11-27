@@ -56,7 +56,7 @@ The giant behind the stump stool is Gilad, object 214 at (500, 602). He also app
 
 ## Crypt, Cloud and the Temple of the Cosmos
 
-The fifth pass lowers eight Crypt pictures at eleven placements and three Cloud pictures at one placement each. The project now covers 123 pictures at 352 placements across 14 regions. On the whole maps, the gold rectangles mark the Crypt barracks, the Cloud pottery and the corresponding rooms in Gedron.
+The fifth pass lowers eight Crypt pictures at eleven placements and three Cloud pictures at one placement each. On the whole maps, the gold rectangles mark the Crypt barracks, the Cloud pottery and the corresponding rooms in Gedron.
 
 ![Whole Crypt and Cloud maps before and after, beside Gedron at the same scale](crypt-cloud-maps.png)
 
@@ -71,6 +71,20 @@ In the first row, follow the back edge of the Crypt table and the stools on eith
 The two Ravager columns use the Loader’s previous and revised object files and select a standing or stationary pose from the animation script where available. All 14 changed placements were checked individually under the surrounding artwork. Each of the six rooms below rendered identically across the two builds. In-game checks of these rooms remain open.
 
 ![Jumah’s table, Kovar, Melantha, the adjoining Cloud rug, an elemental gate capstone and the ritual statues](crypt-cloud-cosmos-review.png)
+
+## Mines 2 and Volcano 3
+
+The barrel-and-sack pile in Mines 2 also appears twice in Tyr, once in Volcano 2 and once Under Tyr. Lowering the entire pile to 66% almost hid both barrel lids behind a foreground wall in Tyr. At 82% the lids still read separately, the sacks meet the ground and the pile sits lower beside the mine crate. Both Loader builds were rendered in the same room at each of the five placements. The rebuild changed only picture 3558. This brings the project to **124 pictures at 357 placements across 15 regions**.
+
+![Whole Mines 2 map before and after, beside Gedron in Shattered Lands](mines2-storage-map.png)
+
+![Barrel and sack pile before and after beside Gedron storage jars, with the rejected and accepted heights in Tyr](mines2-storage-rooms.png)
+
+Two separate miners were checked against the earlier figure redraw. The first pair below shows the miner at the tunnel mouth (2479) on the second step of his animation. The second pair shows the miner with the pick (3613) on the first step. Each pair holds the room and animation step fixed. Both frames of each miner differ from stock in the built file.
+
+On the Mines 2 map, twelve similar fixtures (2510–2521) each have three stored states. Picture 3733 has two states and two placements. Their art and animation scripts match the preceding build. Their use during mine travel still needs an in-game check. In Volcano 3, the three flagged spires (1376–1378) repeat at 128 placements along the lava and rocky ground. The lower map shows the patch enlarged above. Keep the spires at their terrain height.
+
+![Original and redrawn miners, a mine fixture, the lava spires, and both whole maps](mines2-volcano3-review.png)
 
 ## Earlier figure work
 
@@ -103,24 +117,24 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
 | 001 Forest | 252 | 0 | 56 | Check dining sets in play |
-| 032 Tyr | 246 | 1 | 42 | Check remaining indoor storage states in play |
+| 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 61 | Check the lowered crate in play and review damaged beds with separate props |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
 | 036 Yuan-ti | 104 | 3 | 0 | Check surrounding vessels against the three shelves |
 | 037 Temple | 62 | 0 | 0 | Use Pavis and Tantris as references for nearby fixtures |
 | 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
-| 039 Mines 2 | 160 | 0 | 0 | Check mining equipment and its animated states against the two miner pictures |
+| 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 9 | Check throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Check movable bookcase and museum bust transitions in play |
-| 03D Volcano 2 | 143 | 15 | 22 | Compare room placements in-game |
+| 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
-| 03F Volcano 3 | 95 | 0 | 0 | Distinguish furnishings from formations, starting with spires 1376–1378 |
+| 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
 | 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |
 | 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |
 | 044 Cosmos | 86 | 0 | 0 | Check the elemental gates and artifact placement on the ritual statues in play |
-| 045 Under Tyr | 135 | 0 | 14 | Check loose stools and crates beside the patient cots in-game |
+| 045 Under Tyr | 135 | 0 | 15 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records all five furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all six furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
