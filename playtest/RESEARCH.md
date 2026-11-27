@@ -1076,6 +1076,15 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   pixels are screen pixels from the camera (DS:1408h). Inside a building with its roof cut away the
   leader can be hidden behind the roof's edge. The area map (game menu) shows a marker that doesn't
   follow the party.
+- **Any region for a test** (2026-11-27, logs/2026-11-27-ravager-encounters.md): `ravjump.py REGION COL ROW`
+  after `ravload.sh ravager-roost`, then the look on Reyhan (game 150,128). The script command 5Eh moves an
+  object (7FFEh the party) to a region (255 Limbo) and square; GPL 4 is the doors' shared one. A save edited
+  to another region (SAVE 18 and 45) only redraws the map under the old region's objects (SAVE 1); a map
+  record's place is its +0Ah/+0Ch, +3/+5 its picture's corner. MAS N holds region N's triggers (6Ah: an
+  area x, y, w, h, an offset, the GPL script; 65h/66h/6Fh: an object's look, talk and the like). Regions:
+  0x42 the Cloud (air drakes at once), 0x3E Volcano 1 (fire drakes at once), 0x43 (the earth drake, object
+  6541 at square 85, 13; the camera stays elsewhere after the jump), 0x44 (the Tarrasque: the area 31-36, 46
+  runs GPL 124, the cinematic and the fight).
 - **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
   159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
   lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives
