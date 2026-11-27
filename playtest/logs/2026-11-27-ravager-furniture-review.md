@@ -17,3 +17,7 @@ writing the camera (DS:1408h). Control: the same jump with RAV_SKIP=figures (the
    jump lands in a fight.
 
 Water: none seen in the three rooms looked at.
+
+**Recheck after Codex's fix** (6fb9ef77, the same jump and views): the torn beds are whole again, lowered as
+one picture, and the storeroom's barrel stacks touch as in the stock game. 3,204 tests and the start-up tests
+on both games pass. Merged.
