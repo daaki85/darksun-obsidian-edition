@@ -68,7 +68,8 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   its cinematic and the drakes in RESOURCE, the Mines3 dining room's placements) shipped as
   `dsloader/ravager-figures.zip` (the owner's choice) and put into the Loader's OBJEX2.GFF, RESOURC2.GFF
   and a new RGN03A2.GFF by `ravfigures.py`; DSCLOG2 opens RGN03A2.GFF for RGN03A.GFF (COPIED bit 8).
-  Notaku's combat drawings lose the box their copied Shattered Lands background drew. `RAV_SKIP=figures`
+  Notaku's combat drawings lose the box their copied Shattered Lands background drew (Codex's own fix
+  in the catalogue at e33bc2e, re-packed; the Loader's clean-up kept for older packages). `RAV_SKIP=figures`
   is the control. Played: Tyr's street from `ravager-after-ambush` with and without; the region copy's
   opening seen through a scratch build. Tests: `test_ravfigures.py`, `test_ravager`'s copies.
 
