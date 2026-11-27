@@ -239,7 +239,7 @@ the Loader still shows the party, but the dice log will say the game was
 started without it.
 
 **Just the game, with the in-game additions, no Loader window:** double-click
-**`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
+**`Play Dark Sun (in-game rolls).bat`** (Shattered Lands only: the sequel starts from the Loader or its own `.bat`, below). The dice log runs unseen and stops
 when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log's level, the Look box, the few rules with a
 switch); the new items, the new people and the cooked vulture are there too.
@@ -258,8 +258,8 @@ the sequel's roster and saves** in its folder for the mod (each file kept first 
 that they load only from the Loader until you convert them back ([your sequel saves are
 converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
-**Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
-party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
+**Checking a save file:** drag a Shattered Lands save file onto **`Show Save.bat`** to see the
+party it holds (it reads Shattered Lands' saves only; the sequel's party is on the Loader's tabs): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's release keeps the saves
