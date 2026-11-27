@@ -246,6 +246,17 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   caps levels by, so none is banked past the top level; the dice log says what wasn't counted. The
   Loader's (`tracker.py`, `game.xp_share`), no DSCLOG memory (#187).
 
+**Fixed: the code audit's bugs (2026-11-27)**
+- Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without
+  its new items, people and icons (and a changed GPLDATA copy): the sequel's record layout was still on
+  while Shattered Lands' copies were written. It is put back first now.
+- In the sequel, dice the dice log held to learn which spell they belonged to waited for the next roll
+  instead of being shown after a second, as in Shattered Lands.
+- A thief who failed more than four locks at one level in a region could try the latest one again: the
+  four kept were the highest thing numbers, not the four failed last.
+- `playtest/ravstart.sh`: several object parts in `RAV_SKIP` each rewrote OBJEX2.GFF from the game's
+  file, so only the last was left out; now one write leaves them all out (and `spell_arrows` RESOURC2.GFF's too).
+
 **Fixed: the game**
 - **Saves keep improving past 9th level**: the game's save routine took AD&D's best save as the
   most a save could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and no save

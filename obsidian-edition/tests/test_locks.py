@@ -55,6 +55,17 @@ class LoaderTests(unittest.TestCase):
         gd.levels[0] = 5  # (a level gained: the lock can be tried again)
         self.assertEqual(locks.barred(gd, tried)[0], [])
 
+    def test_the_latest_kept(self):
+        """More than LOCK_MAX locks failed at one level in a region: the latest LOCK_MAX by the game time
+        they were failed at (DiceLog.picked_at), not the highest thing numbers (2026-11-27's code audit:
+        a lock failed last, on a low thing number, could be tried again)."""
+        gd = FakeGame(["Cilla", "Gerakis", "K'ratchek", "Cermak"], [4, 1, 1, 1])
+        things = (300, 100, 400, 200, 50)  # (in the order failed)
+        when = {locks.key("Cilla", 0x29, t, "Cilla", 4): 1000 + i for i, t in enumerate(things)}
+        rows = locks.barred(gd, set(when), when)
+        self.assertEqual(rows[0], [(0x29, t) for t in things[-locks.LOCK_MAX:]])
+        self.assertIn((0x29, 50), rows[0])
+
     def test_a_lock_by_what_it_is(self):
         """A lock remembered by its object and place is barred under whatever thing number it has
         now (the game hands the numbers out again), and nowhere else."""

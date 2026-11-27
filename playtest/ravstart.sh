@@ -39,10 +39,15 @@ if skip:
     if gone:
         ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone))
         skip = [s for s in skip if s not in gone]
-    for part in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range'):   # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them; the spells themselves kept)
-        if part in skip:
-            ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), {part}, sl)
-            skip.remove(part)
+    # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them, the
+    # spells themselves kept; all the parts asked for in one write, since each write starts from the
+    # game's own file: one at a time, the last put back what the others left out, 2026-11-27's audit)
+    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range')}
+    if parts:
+        ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), parts, sl)
+        if 'spell_arrows' in parts:   # (the arrows' icons and names are RESOURC2.GFF's too)
+            ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), {'spell_arrows'}, sl)
+        skip = [s for s in skip if s not in parts]
     if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
     open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])
 for poke in [p for p in os.environ.get('RAV_POKE', '').split(',') if p]:   # (FILEOFFSET=HEX: bytes put in the copy, a test's probe)
