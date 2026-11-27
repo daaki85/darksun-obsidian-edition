@@ -11,7 +11,7 @@ with your options and keeps the full dice log while you play. Most of it is
 always on; the new content and a few rules have a switch on the Loader's Options
 tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
 If you have **Wake of the Ravager** too, the Loader starts the sequel with most of the mod, and
-your party can go on into it ([Wake of the Ravager](obsidian-edition/FEATURES.md#wake-of-the-ravager)).
+your party can go on into it ([Wake of the Ravager](obsidian-edition/RAVAGER.md)).
 
 ![Round 4 of Pehtucl's ambush at the slave pens' fountain, the party in its class outfits: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: Seneca's miss, the Arena Guard's hit points after a blow, Ester's two misses, and Jenna unable to hide with the guard beside her](obsidian-edition/docs/combat-log.png)
 

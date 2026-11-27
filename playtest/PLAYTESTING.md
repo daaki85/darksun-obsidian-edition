@@ -1678,7 +1678,9 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   and `spellsetup.py 3=12`, LEVEL to 6), `dust.png`, `magic-glint.gif` (`itemplus.py`) from the
   arena's waves after `topartyfight.sh`; `see-through.png`, `picture-modes.png`, `steady-pace.gif`,
   `gear.png` from `pens-after-arena`; `creation-store-recall.png` from a new character. To catch a
-  label or a spell's bolt, start the Ctrl+F5 loop before the click: Fogbolt's bolt was gone by the
-  first capture after it. `spellsetup.py` can't teach the mod's new spells (196 and up): a new
+  label or a spell's bolt, start a grab loop before the click. A Ctrl+F5 loop was too slow for
+  Fogbolt's bolt (gone by the first capture); a loop of `import -window $W` grabs (60, `sleep 0.03`
+  between, about 0.1 s apart) caught it in flight (logs/2026-11-27-docs-review-pictures.md: Lex, made to
+  know Fogbolt, on his turn in `fountain-user`'s ambush, at the Templar; the 25th grab). `spellsetup.py` can't teach the mod's new spells (196 and up): a new
   wizard spell is a bit in the sheet (`sheetbyte.py M 0x45 or0x40`, Fogbolt), a new 6th-level
   priest spell comes with the caster's sphere.
