@@ -63,6 +63,13 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Docs: the sequel's creature figures as the game draws them** (branch `claude/ravager-creature-figures`)
+- CREATURES.md's Wake of the Ravager figures are the pose each one's animation script stands in, not the
+  picture's first frame: a redraw that adds its frames after the game's (Ptar, the Beasthead Giant, the
+  village giants, Magnolia and the jann, the great elementals, the Magma Golem) showed the game's figure.
+  *Redrawn* now means the figure shown differs from the game's; the four the redrawing kept say *the game's
+  (kept)*; the Tarrasque shows its fight's figure; the colours are Tyr's map palette (no magenta).
+
 **Docs: a readable priest spells picture, a shorter Ravager page** (branch `claude/docs-review-trims`)
 - `new-priest-spells.png` shows the ten 6th-level priest spells' description boxes at full size, not ten
   whole USE screens shrunk to fit (1920x1600 to 592x840).

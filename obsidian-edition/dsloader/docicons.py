@@ -144,9 +144,10 @@ def write(game_dir: str, objects_file: str, out_dir: str) -> List[str]:
 PLAN = b"\xffPLAN"  # (the sequel's other icon form: PLNR's header and colour map, then every pixel's code, unpacked)
 
 
-def decode_plan(chunk: bytes) -> List[List[int]]:
-    """A PLAN icon's rows of palette numbers: as wotrart.decode_plnr's, its codes one a pixel (no repeats)."""
-    offset, = struct.unpack_from("<I", chunk, 6)
+def decode_plan(chunk: bytes, index: int = 0) -> List[List[int]]:
+    """A PLAN picture's frame INDEX (an icon's only one) as rows of palette numbers: as wotrart.decode_plnr's, its
+    codes one a pixel (no repeats)."""
+    offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
     width, height = struct.unpack_from("<HH", chunk, offset)
     at = offset + 4
     if chunk[at:at + 5] != PLAN:
