@@ -5,7 +5,8 @@
 # thri-kreen's natural attacks made edged (KREEN_CLAWS, +2122), Berserks put on with their side kept and ended with it
 # given back (BERSERK_ADD, +2124; BERSERK_END, +2126), the Effects screen's lines named with their charges
 # (EF_CHARGES, +2128), the spell arrows kept from a member not a Spellarcher (ARROWS_FORBID, +2130) and made with
-# their cast sound (+2132), the header's length (HDR_LEN, +30), and the region and the thing the running script was started on. Run from playtest/.
+# their cast sound (+2132), EF_STATS (the tail's, its offset at +2134: each member's Enlarge level and armour spells'
+# AC as the Loader wrote them) and the Effects screen's mod lines (EC_MOD, EC_REFLECT: +2136), the header's length (HDR_LEN, +30), and the region and the thing the running script was started on. Run from playtest/.
 import argparse, os, struct, sys
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -25,6 +26,12 @@ print('lock_off %04x lock_bars %d gl_bare %d ai_walls %d kreen_cuts %d berserk_s
       % (w(2114), w(2116), w(2118), w(2120), w(2122), w(2124), w(2126), w(30)))
 if w(30) >= 2134:
     print('ef_charge_lines %d arrows_barred %d arrows_sounds %d' % (w(2128), w(2130), w(2132)))
+if w(30) >= 2138:
+    print('ef_mod_lines %d' % w(2136))
+    if tail and w(2134):
+        rows = struct.unpack('<16b', g.read(tail * 16 + w(2134), 16))
+        print('ef_stats', ['enlarge %d AC %s' % (rows[m * 4] & 0xFF, ['-' if a == -128 else a for a in rows[m * 4 + 1:m * 4 + 4]])
+                           for m in range(4)])
 if tail and w(2114):
     rows = struct.unpack('<32H', g.read(tail * 16 + w(2114), 64))
     for m in range(4):

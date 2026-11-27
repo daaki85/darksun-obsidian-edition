@@ -257,7 +257,12 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   `ravarrows.py`) (#223, #229, this branch).
 - **The Effects screen names an effect's charges**, as in Shattered Lands: "ARMOR (14 CHARGES)", Mirror
   Image's images, an effect that runs down by uses; an item's power (Inertial Barrier's) no longer shows the
-  stray "(15 CHARGES)" Shattered Lands' fix removed (site 247, header +2128) (this branch).
+  stray "(15 CHARGES)" Shattered Lands' fix removed (site 247, header +2128) (#245).
+- **The Effects screen's other lines in Wake of the Ravager**, as in Shattered Lands: Enlarge's damage
+  ("ENLARGED (+60% DICE)"), Barkskin's, Flesh Armor's and Magical Vestments' AC ("BARKSKIN (AC 5)", from
+  the levels the Loader works out), and Reflected Image's Mirror Images named "REFLECTED IMAGE" (EF_CHARGES'
+  EC_MOD and EC_REFLECT, header +2134 and +2136). Played: a computer caster's wall at last (Wall of Fog is
+  never the computer's choice: its weight is 0; Wall of Fire is) (this branch).
 - **The dice log** says when an effect starts and ends, a member's PSP going down or back up, and an
   ability score changing, as in Shattered Lands (#232).
 - **DSCLOG2 has room again**: its tables and buffers moved to a resident tail past its 64 KB code segment,

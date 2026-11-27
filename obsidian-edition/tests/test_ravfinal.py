@@ -44,7 +44,7 @@ class EffectChargesTests(unittest.TestCase):
         exe, cls.sym = build(ASM)
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
 
-    def line(self, effect, records=(), events=(), segment=NAMES, offset=None, member=2):
+    def line(self, effect, records=(), events=(), segment=NAMES, offset=None, member=2, stats=None, hi=0, stale=False):
         """The name's far pointer the cells' handler gets for EFFECT's record (offset EFFECT x 31 in SEGMENT)
         with these active effects (thing, spell, effect, handle, charges) and timed events (kind, thing,
         handle): the text there, and the three words pushed under it."""
@@ -56,6 +56,13 @@ class EffectChargesTests(unittest.TestCase):
         mu.mem_write(NAMES * 16 + 5 * 31, b"Armor\0")
         mu.mem_write(NAMES * 16 + 13 * 31, b"Detect Invisible\0")
         mu.mem_write(NAMES * 16 + 46 * 31, b"Mirror Image\0")
+        for n, name in ((6, b"Barkskin"), (32, b"Enlarged"), (40, b"Flesh Armor"), (104, b"Magical Vestments")):
+            mu.mem_write(NAMES * 16 + n * 31, name + b"\0")
+        hdr = TSR * 16 + self.sym["hdr"]
+        mu.mem_write(hdr + test_ravkits.RULES_HI, struct.pack("<H", hi))
+        mu.mem_write(0x46C, struct.pack("<H", 500 if stale else 30))  # (the BIOS timer: the Loader's stamp 0)
+        if stats is not None:  # (EF_STATS: the Loader's rows)
+            mu.mem_write(TSR * 16 + self.sym["ef_stats"], bytes(stats))
         mu.mem_write(GDS * 16 + 0x1431, struct.pack("<HH", 0x1234, 0x5678))
         mu.mem_write(USE_WHO * 16 + 0x0B44, struct.pack("<H", member))
         mu.mem_write(GDS * 16 + 0x2100, struct.pack("<H", len(records)))
@@ -72,6 +79,7 @@ class EffectChargesTests(unittest.TestCase):
                                esi=0x5151, edi=0xD1D1, eflags=0x2).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
         mu.emu_start(TSR * 16 + self.sym["ef_charges"], CODE * 16 + WAY_BACK + 5, count=100000)
+        self.mu_last = mu
         self.assertEqual(mu.reg_read(r.UC_X86_REG_IP) & 0xFFFF, WAY_BACK + 5)  # (past the NOPs: the call)
         self.assertEqual([mu.reg_read(x) & 0xFFFF for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_AX,
                                                              r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_DI,
@@ -87,7 +95,36 @@ class EffectChargesTests(unittest.TestCase):
         self.assertEqual(self.line(5, [(2, 0, 5, 3, 3)]), ("Armor (3 charges)", False))
         self.assertEqual(self.line(5, [(2, 0, 5, 3, 1)])[0], "Armor (1 charge)")
         self.assertEqual(self.line(46, [(1, 19, 46, 1, 4), (2, 19, 46, 1, 12)])[0], "Mirror Image (12 charges)")
-        self.assertEqual(self.line(46, [(2, 323, 46, 1, 100)])[0], "Mirror Image (100 charges)")  # (Reflected Image)
+        self.assertEqual(self.line(46, [(2, 323, 46, 1, 100)])[0], "Reflected Image (100 charges)")
+
+    def test_reflected_image(self):
+        """Mirror Images from Reflected Image (spell 323) take its name, with no charges too; Mirror Image's keep theirs."""
+        self.assertEqual(self.line(46, [(2, 323, 46, 1, 0)]), ("Reflected Image", False))
+        self.assertEqual(self.line(46, [(1, 323, 46, 1, 3), (2, 19, 46, 1, 0)]), ("Mirror Image", True))
+        self.assertEqual(_word(self.mu_last, TSR * 16 + self.sym["hdr"] + 2136), 0)
+        self.line(46, [(2, 323, 46, 1, 0)])
+        self.assertEqual(_word(self.mu_last, TSR * 16 + self.sym["hdr"] + 2136), 1)
+        self.line(46, [(2, 323, 46, 1, 2)])  # (with charges: both counted)
+        self.assertEqual([_word(self.mu_last, TSR * 16 + self.sym["hdr"] + n) for n in (2128, 2136)], [1, 1])
+
+    def test_enlarge_and_the_armour_spells(self):
+        """SL's mod lines from the Loader's EF_STATS (member 2's row): Enlarge's damage ("dice" with RULE_HI_ENLARGE),
+        the armour spells' AC; nothing from a row without one, another member's, or with the Loader gone."""
+        stats = [0, 0x80, 0x80, 0x80] * 4
+        stats[8:12] = [9, 4, 0xFF, 0x80]
+        timed = [(2, 51, 32, 2, 7)]
+        self.assertEqual(self.line(32, timed, [(7, 2, 2)], stats=stats, hi=512)[0], "Enlarged (+90% dice)")
+        self.assertEqual(self.line(32, timed, [(7, 2, 2)], stats=stats)[0], "Enlarged (+90% damage)")
+        self.assertEqual(self.line(6, [(2, 82, 6, 1, 5)], stats=stats)[0], "Barkskin (AC 4)")
+        self.assertEqual(self.line(40, [(2, 133, 40, 1, 0)], stats=stats)[0], "Flesh Armor (AC -1)")
+        self.assertEqual(self.line(104, [(2, 200, 104, 1, 0)], stats=stats), ("Magical Vestments", True))
+        self.assertEqual(self.line(104, [(2, 200, 104, 1, 3)], stats=stats)[0], "Magical Vestments (3 charges)")
+        self.assertEqual(self.line(6, [(2, 82, 6, 1, 0)], stats=stats, member=1), ("Barkskin", True))
+        self.assertEqual(self.line(6, [(5, 82, 6, 1, 0)], stats=stats, member=5), ("Barkskin", True))
+        self.assertEqual(self.line(6, [(2, 82, 6, 1, 0)], stats=stats, stale=True), ("Barkskin", True))
+        stats[8] = 25
+        self.assertEqual(self.line(32, [], stats=stats, hi=512)[0], "Enlarged (+250% dice)")
+        self.assertEqual(_word(self.mu_last, TSR * 16 + self.sym["hdr"] + 2136), 1)
 
     def test_an_item_power_has_none(self):
         """Shadowseeker's Detect Invisible (spell 13, its time 60, cast for -9999 with no timer): its stray 15
@@ -103,7 +140,11 @@ class EffectChargesTests(unittest.TestCase):
         self.assertEqual(self.line(5, [(2, 0, 5, 3, 3)], segment=0x4444), ("", True))  # (another line's text)
         self.assertEqual(self.line(5, [(2, 0, 5, 3, 3)], offset=5 * 31 + 1), ("rmor", True))  # (not a record)
         self.assertEqual(self.sym["ef_charge_lines"] - self.sym["hdr"], 2128)
-        self.assertEqual(self.sym["hdr_end"] - self.sym["hdr"], 2134)
+        self.assertEqual(self.sym["ef_stats_off"] - self.sym["hdr"], 2134)
+        self.assertEqual(self.sym["ef_mod_lines"] - self.sym["hdr"], 2136)
+        self.assertEqual(self.sym["hdr_end"] - self.sym["hdr"], 2138)
+        self.assertEqual(ravlog.EF_STATS_OFF, 2134)
+        self.assertEqual(ravlog.EF_MOD_LINES, 2136)
 
     @unittest.skipUnless(WOTR, "needs the sequel's files (DSUN_WOTR)")
     def test_the_site_and_its_uses(self):
@@ -228,3 +269,27 @@ class ArrowsSoundTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EfStatsTests(unittest.TestCase):
+    def test_the_rows(self):
+        """RavDiceLog's EF_STATS: each member's Enlarge level and armour spells' AC (the sequel's effect numbers),
+        -128 without one; an empty place none at all."""
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+
+        class G:
+            def creature(self, m):
+                rec = bytearray(game.CREATURE_SIZE)
+                rec[game.CREATURE_NAME] = 0 if m == 3 else 65
+                return bytes(rec)
+
+            def enlarge_level(self, m):
+                return {0: 9, 1: 300}.get(m, 0)
+
+            def armour_spells_ac(self, m):
+                return {0: {6: 4}, 2: {40: -1, 104: 3, 6: 200}}.get(m, {})
+
+        self.assertEqual((game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS), (6, 40, 104))
+        self.assertEqual(struct.unpack("<16b", ravlog.ef_stats(G())),
+                         (9, 4, -128, -128, -1, -128, -128, -128, 0, 127, -1, 3, 0, -128, -128, -128))

@@ -2324,10 +2324,32 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   anyone (the look pointer, two right-clicks, on a person): the script runs. Put them back after.
 - **A computer caster's choice**: under Computer Control, Ar'Anda knowing Wall of Fog alone (her 15-byte bitset at
   3F3DCh, a test edit) in Tyr's thieves' fight fought with her weapons beside the thugs and cast nothing
-  (ai_walls 0, the fight over in 3 rounds): the AI casts a wall, if at all, from further off. Still to find.
+  (ai_walls 0, the fight over in 3 rounds). Why: Wall of Fog's AI weight is 0 (the next section).
 - **The USE screen out of a fight** from the map: the inventory's portraits (22,25 for the first), its bottom icons
   at y 188 (197 the inventory, 218 USE); on USE the kind button (151,171) and LEVEL (197,171), the spells' row at
   y 60 (x 175, 194, ...), the name in the bottom bar under the pointer.
+
+### The Effects screen's other lines and the computer's walls (2026-11-27, logs/2026-11-27-ravager-effects-lines.md)
+
+- **The AI's spell choice** (5EEB6h, called by the area cast 5EE00h, 570h:20h, from the computer's turn 5BEB5h): for
+  each spell of the list (588h:52h with 3) a party member's must pass 628h:7Fh or 588h:48h; its score is rand() x
+  the spell's **weight** / 8000h, the weight a signed byte a spell at selector 310h (segment 3C78h: file 5200h +
+  3C78h x 16), the best above 0 taken. **Wall of Fog (11), Wall of Force, Wall of Stone, Death Fog, Prismatic Wall,
+  Wall of Ash, Blade Barrier, Wall of Thorns... weigh 0: the computer never casts them.** Wall of Fire (54) and Wall
+  of Ice (55) weigh 20, the priests' Wall of Fire (207) 40. The turn tries a spell only with the creature's +1Ch
+  (INT) above 9, its 308h:+B2h byte 0 (set when a try finds nothing), DS:420Ch not 1, the target within 24 squares.
+  **To see a computer's wall**: [walls.py](logs/files/2026-11-27-ravager-effects-lines-walls.py) (Ar'Anda knows Wall
+  of Fire and Wall of Ice, first level 9), Tyr's thieves under Computer Control: she cast Wall of Fire on her
+  first turn, a thief beside her (ai_walls 1).
+- **One effect a spell**: a second cast of a spell already on the creature takes the slot and adds nothing; to put
+  several effects on by RESOURC2's effect byte use different spells. Armor's handler sets its effect (5) itself,
+  whatever the byte.
+- **The Effects screen's other lines** (DSCLOG2's EC_MOD, EC_REFLECT in EF_CHARGES): the Loader writes EF_STATS
+  (the tail's, offset at header +2134: a member's Enlarge level, then the AC of Barkskin, Flesh Armor, Magical
+  Vestments, -128 none) each quarter second; the sequel's AC routine (85BA7h) gives the armour spells SL's AC
+  (6 - level/4, 10 - level, 5 less 1 a 3 levels past 5). `ravaudit.py` prints EF_STATS and ef_mod_lines (+2136).
+- **The USE screen's buttons out of a fight**: MAGE (151,171) picks the kind, LEVEL (197,171) cycles the levels
+  (back to 1 after the last the character casts).
 
 ### The sequel's spells in a fight (2026-11-21)
 
