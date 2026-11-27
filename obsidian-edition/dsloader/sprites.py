@@ -347,7 +347,7 @@ class Pictures:
                     if figure == halfelf.WOMAN:  # (the game's woman in her colours: halfelf.recolour's hair)
                         hair |= halfelf._hair(rows)
                 dressed = greyhair.aged(dressed, hair, greyhair.look(model, figure), stage, PAD)
-            out.append(trimmed(dressed, combat))
+            out.append(trimmed(sg.steadied(dressed, rows, PAD), combat))
         return encode_frames(out)
 
     def room(self, obj: int, combat: bool) -> int:
