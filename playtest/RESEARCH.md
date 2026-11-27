@@ -1243,6 +1243,13 @@ the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. 
 counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
 grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
 
+**DSCLOG2's upper memory, measured for the audit's R3** (2026-11-27, claude/combined-playtest at 9c8dc0b3,
+`ravload.sh ravager-after-ambush` with and without `RAV_SOUND=1`, the same both ways; the chain walked from 9FFFh):
+upper memory is CA00h-EFFFh, 9,718 paragraphs past the first 9-paragraph scrap. DSCLOG2's block at CA0Ah is 4,151
+paragraphs (66,416 bytes, with its PSP), the see-through figures' block at EE9Fh 352 (5,632 bytes), and **5,212
+paragraphs (83,392 bytes) are free between them**. The game itself puts nothing in upper memory (no overlay or music
+buffer there, unlike SL's), so DSCLOG2's limit is the 9,718 paragraphs less its own two blocks and their MCBs.
+
 **The magic items' shine in the sequel** (2026-11-26, logs/2026-11-26-ravager-shine.md): the sequel cycles colours
 1-31 in five runs (1-5 blue, 6-10 pink and violet, 11-15 green, 16-23 fire, 24-31 the water's blue-greys) with SL's
 cycler (2CFDCh, 2796h:047Ch), called only from the map's loop (1CF0Eh, when byte DS:1424h is set; the main loop
