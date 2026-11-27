@@ -69,8 +69,8 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   on Linux and macOS the player's own DOSBox-X (2025.01.01 or later; a path the player gives, its
   version shown, an older one refused) counts. GOG's DOSBox is used when none is found or when it
   is chosen; Restore defaults removes the choice; a found recompiled program goes before DOSBox-X
-  unless DOSBox-X was chosen. **Played on Linux; on Windows and macOS the Loader's side is written
-  and tested, but a Shattered Lands play-through under DOSBox-X there has not been confirmed yet**
+  unless DOSBox-X was chosen. **Played on Linux; on Windows the game starts under it with its
+  music (2026-11-27) and a fuller play is under way; on macOS it is not yet run**
   ([known issues](obsidian-edition/README.md#known-issues)).
 - With DOSBox-X the Loader writes it a whole configuration of its own and follows the game through
   DOSBox-X's memory file instead of its process's memory, so on Linux it needs no root and no
