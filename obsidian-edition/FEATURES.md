@@ -1516,7 +1516,8 @@ A thri-kreen shows only weapons and shields; two party members of the same race 
 their own. New outfits go into room the game's picture store already has, so gear can be changed as
 often as you like in one area (without that, 30 to 60 changes filled the store and figures vanished
 until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pictures-and-memory)
-is a bug mended apart).
+is a bug mended apart). The outfits and the gear keep their colours in every area (each area's own
+palette would turn the outfits' browns grey and their plums magenta).
 
 ![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
 
