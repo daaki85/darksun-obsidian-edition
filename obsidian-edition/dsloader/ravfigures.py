@@ -7,7 +7,8 @@ OBJEX.GFF's pictures (BMP), combat pictures (CBMP) and scripts (SCMD); RESOURCE.
 cinematic and the drakes; RGN03A.GFF's dining-room table (ETAB 58: the Mines3 dining room's furniture,
 placed again for its smaller pictures). manifest.json names them, and the 32 objects (OJFF) moved to another
 picture (the greater elementals' own, and the people given a figure of their own) as "object, the game's
-picture, the new one". The rest of each file is the player's own, as the game ships it.
+picture, the new one". The empty temple throne takes the drawing offset for its lowered bowl.
+The rest of each file is the player's own, as the game ships it.
 
   * object_chunks(CHUNKS): the chunks for the Loader's OBJEX2.GFF (ravager.objects_fixed, unless SKIP is
     in its SKIP), an object moved only from the picture the game gives it;
@@ -53,7 +54,7 @@ STORAGE = (532, 533, 1014, 1015, 1016, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
            2769, 2770, 3364) + SHALLOW_STORAGE
 TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
           2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
-SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 2218,
+SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
                     2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
                     3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
 OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
@@ -154,6 +155,19 @@ def object_chunks(chunks: gff.Chunks, data: Optional[dict] = None) -> gff.Chunks
             rec = bytearray(rec)
             struct.pack_into("<H", rec, PICTURE, new)
             out[("OJFF", obj)] = bytes(rec)
+    # GPL 256 replaces seated Tantris with the empty throne from Limbo at the tile centre.
+    # His floor point is eight pixels northwest of that centre. His frame anchor is (29, 50).
+    throne = ("OJFF", 3530)
+    record = chunks.get(throne, b"")
+    picture = ("BMP ", 789)
+    if (len(record) >= PICTURE + 2 and struct.unpack_from("<H", record, PICTURE)[0] == 789
+            and struct.unpack_from("<hh", record, 2) == (0, 0)
+            and picture in chunks and picture in out
+            and ("SCMD", 789) not in chunks and ("SCMD", 789) not in out
+            and out[picture] == lowered_furniture(chunks[picture])):
+        rec = bytearray(record)
+        struct.pack_into("<hh", rec, 2, 37, 58)
+        out[throne] = bytes(rec)
     return out
 
 

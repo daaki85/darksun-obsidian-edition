@@ -204,6 +204,22 @@ class GameFileTests(unittest.TestCase):
         full_bed = sprites.encode_frames([assembled(stock)])
         self.assertEqual(assembled(built), sequelicons.decode(ravfigures.lowered_furniture(full_bed)))
 
+    def test_empty_temple_throne_keeps_the_seated_position(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        built = ravfigures.object_chunks(stock)
+        picture, obj = ("BMP ", 789), ("OJFF", 3530)
+        self.assertEqual(built[picture], ravfigures.lowered_furniture(stock[picture]))
+        # One map square is 16 px. The script places the empty seat in its centre.
+        for step in (0, 1):
+            ax, ay = struct.unpack_from("<bb", stock[("SCMD", 788)], 72 + 8 * step + 5)
+            self.assertEqual(struct.unpack_from("<hh", built[obj], 2), (ax + 8, ay + 8))
+        self.assertEqual(built[obj][:2] + built[obj][6:], stock[obj][:2] + stock[obj][6:])
+        self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: built[obj]}))
+        custom = bytearray(stock[obj])
+        struct.pack_into("<hh", custom, 2, 5, 7)
+        self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: bytes(custom)}))
+
     def test_cushions_and_braziers_keep_the_upper_art_and_floor_line(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
@@ -236,7 +252,7 @@ class GameFileTests(unittest.TestCase):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             own = gff.read_gff(f.read())
         made = ravfigures.object_chunks(own, data)
-        self.assertEqual(sum(k[0] == "OJFF" for k in made), 32)
+        self.assertEqual({i for kind, i in made if kind == "OJFF"}, {i for i, _, _ in data["objects"]} | {3530})
         merged = {**own, **made}
         bad = []
         for (kind, pic), script in merged.items():  # (every step of a script the figures bring, on a drawing there is)
