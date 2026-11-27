@@ -660,10 +660,10 @@ has the most, air and fire the fewest.
 
 | Sphere | May wield | Plain weapons |
 |---|---|---|
-| Air | missile and thrown weapons, daggers, cahulaks | daggers (any material), cahulaks, chatkcha, bow, sling, staff sling |
-| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal and obsidian cahulaks; chatkcha; bow |
-| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe, great axe and cahulaks; chatkcha |
-| Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |
+| Air | missile and thrown weapons, daggers, cahulaks | daggers (any material), cahulaks, chatkcha, bow, sling, staff sling; obsidian and metal javelins; darts |
+| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal and obsidian cahulaks; chatkcha; bow; obsidian and metal two-handed swords; stone, obsidian and metal lotulises; obsidian and metal javelins; darts |
+| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe, great axe and cahulaks; chatkcha; obsidian two-handed sword, lotulis and javelin |
+| Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow; bone two-handed sword; darts |
 
 **Kits.**
 
@@ -1925,10 +1925,16 @@ materials, the short sword among them.
 | Cahulaks (both hands) | 1d6 | 1d6 | no |
 | Gythka (two-handed) | 2d4 | 1d10 | no |
 | Polearm (two-handed) | 1d10 | 2d6 | no |
+| Two-handed sword (two-handed) | 1d10 | 3d6 | no |
+| Lotulis (two-handed) | 1d10 | 1d12 | no |
+| Double spear (two-handed; gladiators only) | 1d8 | 1d8 | no |
+| Trikal (two-handed; gladiators only) | 1d10 | 1d10 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
 | Bow (two-handed) | 1d8: the bow's own dice, whatever the arrows | the same | no |
 | Sling | 1d4: the sling's own | the same | no |
 | Staff sling (two-handed) | 1d3: a stinkpot | the same | no |
+| Javelin | 1d6 | 1d6 | no |
+| Darts | 1d3 | 1d2 | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
@@ -2006,21 +2012,23 @@ Kreenfang\* +1; polearms Linebreaker\* +2, Polearm +1, Thornwall\* +1; maces Mac
 quarterstaffs Quarterstaff +2, Balk's Staff +1, Parting Staff +1; club Gutterknot\* +1; pick
 Deepbiter\* +1; cahulaks Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\*; bows Bow +2,
 Phrain's Bow +1, Dunesong\* +1; slings Sling +2, Sling +1; staff sling Windlash\* +1; chatkchas
-Skycutter\* +2, Chatkcha +1.
+Skycutter\* +2, Chatkcha +1; and Wake of the Ravager's kinds: two-handed swords Great Sword\* +3, Great Sword\* +2,
+Bone Great Sword\* +1; lotulises Lotulis\* +2, Lotulis\* +1, Obsidian Lotulis\* +1; double spears Double Spear\* +2,
+Double Spear\* +1; trikals Trikal\* +2, Trikal\* +1; javelin Javelin\* +1; darts Darts\* +1.
 
 | Class | Magic weapons | Its kits |
 |---|---|---|
-| Fighter | every one | **Ravager:** none of the bows, slings, Windlash\*, chatkchas or Dag's Dagger (thrown) |
-| Gladiator | every one | **Twin-blade:** none of the two-handed ones (great axes, gythkas, polearms, quarterstaffs, bows, staff sling), but the cahulaks, a blade in each hand. **Brute:** in melee only Great Axe +3, Headsman\*, the gythkas, the polearms and the quarterstaffs (not the cahulaks); any missile weapon |
-| Ranger | every one | **Seeker:** only its sphere's, bows too: air, the daggers, the cahulaks, bows, slings, Windlash\*, the chatkchas; earth, the metal, obsidian, stone and wooden ones (wooden bows; no bone, no slings); fire, the obsidian ones alone (no bow); water, the bone and wooden ones. It has no ranger's expertise with the bow either, unless the bow is its weapon spec |
-| Thief | every one | **Shinobi:** only Greenbright\*, Searing Blade\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger, Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows, slings, Windlash\* and the chatkchas |
-| Preserver | Hornblade +1 (a bone long sword the game lets preservers use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1 | **Battle Mage:** also those of its chosen weapon spec |
-| Cleric of air | every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1, Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\* | **Elementalist:** its second sphere's too |
-| Cleric of earth | Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1, Greenbright\* +2, Searing Blade\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2, Soulcrusher +1, Axe +1, Great Axe +3, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1 | **Elementalist:** its second sphere's too |
-| Cleric of fire | Dark Flame +2, Bloodwrath +1, Searing Blade\* +2, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
-| Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1 (not the bone Swiftbite, Draketooth or Hornblade: the game's own lists keep them from water clerics) | **Elementalist:** its second sphere's too |
-| Druid | every one but Great Axe +3 and Headsman\* | **Grove Warden:** only those its sphere allows, as a cleric of that sphere. **Lifebinder:** only Mace +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, the slings and Windlash\* |
-| Psionicist | Searing Blade\* +2, Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a fighter, gladiator, ranger or thief class, also Greenbright\* +2, Shadowseeker\* +1, Mace +2, Blackmace +1, Sling +2 and Sling +1, its other class's lists allowing them; with a cleric class, only those its sphere allows too (the Searing Blade and Mindshard with fire or earth, Stillwater with water) | — |
+| Fighter | every one but the double spears and trikals (gladiators' alone) | **Ravager:** none of the bows, slings, Windlash\*, chatkchas, Dag's Dagger, Javelin\* +1 or Darts\* +1 (thrown) |
+| Gladiator | every one | **Twin-blade:** none of the two-handed ones (great axes, gythkas, polearms, quarterstaffs, two-handed swords, lotulises, double spears, trikals, bows, staff sling), but the cahulaks, a blade in each hand. **Brute:** in melee only Great Axe +3, Headsman\*, the gythkas, the polearms, the quarterstaffs and Wake of the Ravager's two-handed swords, lotulises, double spears and trikals (not the cahulaks); any missile weapon |
+| Ranger | every one but the double spears and trikals (gladiators' alone) | **Seeker:** only its sphere's, bows too: air, the daggers, the cahulaks, bows, slings, Windlash\*, the chatkchas, Javelin\* +1, Darts\* +1; earth, the metal, obsidian, stone and wooden ones (wooden bows; no bone, no slings); fire, the obsidian ones alone (no bow); water, the bone and wooden ones. It has no ranger's expertise with the bow either, unless the bow is its weapon spec |
+| Thief | every one but the double spears, trikals and Javelin\* +1 | **Shinobi:** only Greenbright\*, Searing Blade\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger, Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows, slings, Windlash\*, the chatkchas and Darts\* +1 |
+| Preserver | Hornblade +1 (a bone long sword the game lets preservers use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1, Darts\* +1 | **Battle Mage:** also those of its chosen weapon spec |
+| Cleric of air | every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1, Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\*, Javelin\* +1, Darts\* +1 | **Elementalist:** its second sphere's too |
+| Cleric of earth | Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1, Greenbright\* +2, Searing Blade\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2, Soulcrusher +1, Axe +1, Great Axe +3, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1, Great Sword\* +3, Great Sword\* +2, Lotulis\* +2, Lotulis\* +1, Obsidian Lotulis\* +1, Javelin\* +1, Darts\* +1 | **Elementalist:** its second sphere's too |
+| Cleric of fire | Dark Flame +2, Bloodwrath +1, Searing Blade\* +2, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1, Obsidian Lotulis\* +1, Javelin\* +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
+| Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1, Bone Great Sword\* +1, Darts\* +1 (not the bone Swiftbite, Draketooth or Hornblade: the game's own lists keep them from water clerics) | **Elementalist:** its second sphere's too |
+| Druid | every one but Great Axe +3, Headsman\*, the great swords, double spears and trikals | **Grove Warden:** only those its sphere allows, as a cleric of that sphere. **Lifebinder:** only Mace +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, the slings and Windlash\* |
+| Psionicist | Searing Blade\* +2, Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1, Darts\* +1; with a fighter, gladiator, ranger or thief class, also Greenbright\* +2, Shadowseeker\* +1, Mace +2, Blackmace +1, Sling +2 and Sling +1, its other class's lists allowing them; with a cleric class, only those its sphere allows too (the Searing Blade and Mindshard with fire or earth, Stillwater with water) | — |
 | Cleric with a fighter class | its sphere's, as a cleric of that sphere, and those the game's lists keep from that sphere's clerics alone (the Terror Blade with fire; Swiftbite, Draketooth and Hornblade with water) | **Battle Dancer** (an elf cleric/fighter): only the long swords and bows, whatever its sphere: Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Bow +2, Phrain's Bow +1, Dunesong\* +1 |
 
 ### Armour
@@ -2071,10 +2079,10 @@ class](#magic-weapons-by-class).
 | Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
-| Two-handed sword | Wake of the Ravager's: obsidian, 1d10 (3d6 against a large target), two-handed |
-| Lotulis | Wake of the Ravager's: stone, 1d10 (1d12 against a large target), two-handed, two-headed ([below](#lotulis-double-spear-and-trikal)) |
-| Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([below](#lotulis-double-spear-and-trikal)) |
-| Javelin, darts | Wake of the Ravager's, thrown from the missile slot: obsidian 1d6, one a round; darts 1d3, two a round; a specialist throws either faster ([rates of fire](WEAPON-SPECS.md)) |
+| Two-handed sword | Wake of the Ravager's: obsidian, metal or bone (the bone one a water cleric's), 1d10 (3d6 against a large target), two-handed |
+| Lotulis | Wake of the Ravager's: stone, metal or obsidian (the obsidian one a fire cleric's too), 1d10 (1d12 against a large target), two-handed, two-headed ([above](#lotulis-double-spear-and-trikal)) |
+| Double spear, trikal | Wake of the Ravager's, for gladiators only: wood, 1d8 and 1d10, two-handed ([above](#lotulis-double-spear-and-trikal)) |
+| Javelin, darts | Wake of the Ravager's, thrown from the missile slot: javelins (obsidian or metal) 1d6, one a round; darts 1d3, two a round; a specialist throws either faster ([rates of fire](WEAPON-SPECS.md)) |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.
@@ -2105,6 +2113,14 @@ chosen type, often one of these.
 | Windlash | staff sling +1 |
 | Dunesong | bow +1 |
 | Skycutter | chatkcha +2 |
+| Great Sword +3, Great Sword +2 | metal two-handed sword (Wake of the Ravager's kind), two-handed |
+| Bone Great Sword +1 | bone two-handed sword +1: a water cleric can wield it |
+| Lotulis +2, Lotulis +1 | metal lotulis +2, stone lotulis +1, two-handed, two-headed ([above](#lotulis-double-spear-and-trikal)) |
+| Obsidian Lotulis +1 | obsidian lotulis +1: a fire or earth cleric can wield it |
+| Double Spear +2, Double Spear +1 | wooden double spear, two-handed, two-headed; gladiators only |
+| Trikal +2, Trikal +1 | wooden trikal, two-handed, a specialist's hit trips, reaches two squares; gladiators only |
+| Javelin +1 | obsidian javelin +1, thrown from the missile slot |
+| Darts +1 | darts +1, thrown from the missile slot, two a round |
 
 The game's own Gythka +1 and Cahulaks +1 are a Gythka +2 and a Cahulaks +2
 with the mod (the cahulaks still cast Cause Light Wounds on a hit). The game's

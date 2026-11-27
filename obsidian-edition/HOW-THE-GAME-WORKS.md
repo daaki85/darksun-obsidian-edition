@@ -272,7 +272,7 @@ Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
 (magic ones included). Weight belongs to the weapon's type and material, in the
 game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
 mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
-(slings, bows, a thrown chatkcha) never backstab: it has to be melee.
+(slings, bows, a thrown chatkcha, the javelin (20) and darts (5)) never backstab: it has to be melee.
 
 | Weapon | Material (weight) | Damage | Backstab |
 |---|---|---|---|
@@ -290,6 +290,10 @@ mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 | Cahulaks | bone, metal (120) | 1d6 | no |
 | Gythka | bone (120) | 2d4 | no |
 | Polearm | bone, metal (150) | 1d10 | no |
+| Double spear (Wake of the Ravager's, gladiators only) | wood (60) | 1d8 | no |
+| Trikal (Wake of the Ravager's, gladiators only) | wood (80) | 1d10 | no |
+| Lotulis (Wake of the Ravager's) | stone, obsidian, metal (100) | 1d10 | no |
+| Two-handed sword (Wake of the Ravager's great sword) | bone, obsidian, metal (150) | 1d10 | no |
 
 About a dozen more weapon types are in the game's tables with no item of
 theirs in its data (monsters' own, made by scripts, or unused).
