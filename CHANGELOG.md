@@ -73,6 +73,15 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   `settings.json`'s `autosave` or `quick_save` is taken within a second, with no restart
   (`DiceLog.follow_switches`; the window's Options tab already did this). Test: `test_dicelog`.
 
+**Changed: the sequel's talk portraits at Shattered Lands' size** (branch `claude/ravager-portrait-size`)
+- Wake of the Ravager's faces (72 by 72, frame drawn in) made Shattered Lands' 32 by 32 in a 48 by 46
+  frame by `dsloader/ravportraits.py`: the faces in GPLDAT2.GFF (each start, from the game's own, the
+  frame its own cut down), the empty frame's two pictures (BMP 12000) and the talk window (WIND 12500: 58
+  high, the text at x 58, as Shattered Lands' WIND 3007) in RESOURC2.GFF, and five patches to the face's
+  routine (88E67h) putting it at (8, 6), the shop's in the middle of its old place. The owner's ask.
+  `RAV_SKIP=small_portraits` is the control. Played: Uhubito's and Notaku's talks, the opening talk,
+  Notaku's shop, the first fight's XP message, against the control. Tests: `test_ravportraits.py`.
+
 **New: the sequel's figures in Shattered Lands' style** (branch `claude/ravager-figure-import`)
 - The approved redraws of Wake of the Ravager's figures (Codex's catalogue, the owner's private
   installation files, b447d39; 275 OBJEX pictures, 32 objects moved to their own figure, the Tarrasque,

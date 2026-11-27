@@ -230,6 +230,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-effects-lines.md) | Wake of the Ravager, the Effects screen's other lines: FLESH ARMORED (AC 4), BARKSKIN (AC 5), REFLECTED IMAGE (1 CHARGE), ENLARGED (+60% DICE) (the Loader's EF_STATS); a computer-cast wall at last: the AI's spell weights (Wall of Fog's 0), Ar'Anda knowing Wall of Fire and Wall of Ice cast Wall of Fire on her first turn (ai_walls 1) |
 | [2026-11-27](2026-11-27-ravager-figures.md) | Wake of the Ravager's redrawn figures in the Loader's copies, and the region file's redirect |
 | [2026-11-27](2026-11-27-ravager-sl-interface.md) | Wake of the Ravager with Shattered Lands' screens and icons (ravui): the USE screen and the inventory, with and without |
+| [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
 
 ## files/
 

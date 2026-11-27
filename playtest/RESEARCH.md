@@ -2274,6 +2274,7 @@ show the game's own behaviour beside the mod's. The names are read once, all tog
 | `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
 | The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no `RGN03A2.GFF` | the sequel's own figures. DSCLOG2's COPIED word (its header's +146) has bit 8 set once the game opened `RGN03A2.GFF` |
 | Shattered Lands' interface | `sl_interface` | its 45 screen pictures and 221 icons (`ravui`) | `RESOURC2.GFF` | the sequel's own screens and icons: `BMP 10000` in the copy is the game's |
+| The talk portraits' size | `small_portraits` | the five `small_portraits_*` patches, the smaller faces, the talk window and the empty frame (`ravportraits`) | `DSUNLOG2.EXE`, `GPLDAT2.GFF`, `RESOURC2.GFF` | the sequel's 72 by 72 faces, the talk box 72 high, its text from x 75 |
 
 Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with
 `# left out: ...` when the run went ahead. Prerequisite: `RAV_LOADER=1` (without it nothing is copied,
@@ -2285,6 +2286,30 @@ copy (the bytes at the patch's offset, or the chunk in `OBJEX2.GFF`), not at the
 with two or more object parts named only the last was left out. No play log named two object parts in
 one run (the controls on record name patches, or one of `weights`, `item_shine` and `new_spells`), so
 their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
+### The talk portraits (2026-11-27, logs/2026-11-27-ravager-small-portraits.md)
+
+- **The face's routine** is 88E67h (Shattered Lands' 7DEDFh, the same code): it loads `PORT` n into DS:6558h
+  (88DA2h; n 0 loads BMP 12000 instead, and only while es:[4] of selector 480h, a fight, or es:[3Ch] of 3A0h,
+  the shop, is set: a talk out of a fight with no speaker draws nothing), then draws it by C8h:3BECh (1, x,
+  y, 0, the picture, the frame number). The face is frame 0 at (0, 0), the shop's at (0EEh, 6); with no
+  speaker, **BMP 12000's frame 1** (the frame round a grey wash: the XP at a fight's end). The shop (908B9h)
+  draws 12000's frame 0 (the frame with a clear middle) at (0EEh, 6) first. A picture chunk with one frame
+  where the game asks for frame 1 draws nothing (the first try of the smaller frame, 2026-11-27).
+- **The talk window** is WIND 12500 (Shattered Lands' 3007): its height at head +0C0h, its places 30 bytes
+  from +105h (BUTN 12300 the 300 by 58 click area at (0, 0), EBOX 12400 the text at (75, 6), the scroll
+  buttons 2093/2094 at x 305). WIND 12501 is the replies' window (Shattered Lands' 3008, the same), 12502 a
+  58-high box with its text at (56, 6) (Shattered Lands' 3500). Shattered Lands' talk window has its frame
+  as BUTN 2090 at (8, 6) and the face drawn at (16, 13); the sequel draws its frame inside the face.
+- **The sequel's PORT** faces are 72 by 72 in the PLNR form (one 73 by 72, PORT 24), the frame drawn in
+  (8 left and right, 7 top and bottom: the face 56 by 58 at (8, 7)); BMP 12000 is 73 by 73, two frames.
+- **The first fight won quickly for a test** (the XP message): `ravstart.sh` (a new game), the talk (3,
+  Return, four times), a click up the street (160,45), then in memory (never saved) the party's creature
+  records' HP (+0, ids 8016h-8019h, `ravcreatures.py`) 250 and the foes' (side 7 at +15h, HP above 0) 1,
+  and `ravfight.py fight`. The party misses a lot: one run took 8 minutes, another left the last Draxan
+  standing after 20 (`fight` and `tabfight` both). Computer Control then won it in under two minutes: in
+  the fight, the top-left icon (22,17) opens USE, the small lower icon by each living member's figure (98,53;
+  47,113; 98,113), Escape.
+
 ### The audit's leftovers (2026-11-27, logs/2026-11-27-ravager-audit-leftovers.md)
 
 - **The effect module** (618h, file 81770h): the add check 0AF9h (a switch of 19 effects at cs:0FB4h, its default

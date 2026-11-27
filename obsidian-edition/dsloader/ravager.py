@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravfigures, ravspells, ravui
+from . import game, gamepatch, gff, ravarrows, ravfigures, ravportraits, ravspells, ravui
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1097,6 +1097,9 @@ PATCHES: Tuple[Patch, ...] = (
     # (85351h: NS_ABILITY); a natural attack's dice are Erdlu Claw's (86A45h: NS_CLAW); "ns_effects" names
     # the effects 113-116.
     *ravspells.program_patches(),
+    # The talk portraits at Shattered Lands' size (ravportraits: its window, faces and frame in the copies):
+    # the face or the empty frame drawn at (8, 6). RAV_SKIP=small_portraits leaves them out with the rest.
+    *ravportraits.PATCHES,
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -1305,10 +1308,13 @@ def find_dir(sl_dir: Optional[str] = None, given: Optional[str] = None) -> Optio
 
 
 def write_patched(game_dir: str, dest: str, skip=frozenset()) -> None:
-    """DSUNLOG2.EXE: the sequel's DSUN.EXE with PATCHES (but those named in SKIP)."""
+    """DSUNLOG2.EXE: the sequel's DSUN.EXE with PATCHES (but those named in SKIP; ravportraits.SKIP names its
+    own)."""
     source = _find_file(game_dir, "DSUN.EXE")
     if not source:
         raise RavagerError(f"no DSUN.EXE in {game_dir}")
+    if ravportraits.SKIP in skip:
+        skip = frozenset(skip) | ravportraits.PATCH_NAMES
     gamepatch.write_patched(source, dest, skip, PATCHES, WOTR_SIZE)
 
 
@@ -1449,6 +1455,19 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(PICK_BUTTON_ICON)
+    if ravportraits.SKIP not in skip:  # (the talk window and empty frame at Shattered Lands' size: ravportraits)
+        try:
+            source = game_dir and _find_file(game_dir, SCRIPT_FILE)
+            scripts = None
+            if source:
+                with open(source, "rb") as f:
+                    scripts = gff.read_gff(f.read())
+            added = ravportraits.resource_chunks(gff.read_gff(out), scripts)
+        except (OSError, gff.GffError, struct.error):
+            added = {}
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravportraits.SKIP)
     if ravui.SKIP not in skip:  # (Shattered Lands' interface: last, so the mod's own chunks above stay)
         try:
             added = ravui.chunks(gff.read_gff(out), sl_dir, game_dir, gff.read_gff(data))
@@ -1496,9 +1515,11 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
 }
 
 
-def script_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
+def script_fixed(data: bytes, skip=frozenset(), palette=None) -> Tuple[bytes, List[str]]:
     """GPLDATA.GFF's bytes with SCRIPT_FIXES applied (but those named in SKIP), and the names of those
-    applied; anything not as a fix expects raises (a GPLDATA.GFF this module doesn't know)."""
+    applied; anything not as a fix expects raises (a GPLDATA.GFF this module doesn't know). The talk
+    portraits made Shattered Lands' size too (ravportraits, PALETTE the sequel's interface colours to make
+    them smaller in) unless ravportraits.SKIP is in SKIP."""
     places = gff.index_places(data, "GPL ")
     out, done = bytearray(data), []
     for name, (chunk, offset, original, replacement) in SCRIPT_FIXES.items():
@@ -1510,6 +1531,14 @@ def script_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
         if name not in skip:
             out[at:at + len(original)] = replacement
             done.append(name)
+    if ravportraits.SKIP not in skip:
+        from . import icons
+        try:
+            added = ravportraits.script_chunks(gff.read_gff(bytes(out)), palette)
+        except gff.GffError:
+            added = {}
+        if added:
+            return icons.with_chunks(bytes(out), added), done + [ravportraits.SKIP]
     return bytes(out), done
 
 
@@ -1921,8 +1950,18 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
-    """GPLDATA.GFF's copy with the script fixes, written to DEST unless already so; the fixes applied."""
-    return _write_copy(game_dir, SCRIPT_FILE, dest, script_fixed, skip)
+    """GPLDATA.GFF's copy with the script fixes and the smaller portraits (script_fixed, their colours from
+    the game's RESOURCE.GFF), written to DEST unless already so; the fixes applied."""
+    palette = None
+    source = _find_file(game_dir, RESOURCE_FILE)
+    if source:
+        from . import art
+        try:
+            with open(source, "rb") as f:
+                palette = art.palette_colours(gff.read_gff(f.read())[("PAL ", 1000)])
+        except (OSError, KeyError, gff.GffError, struct.error, IndexError):
+            palette = None
+    return _write_copy(game_dir, SCRIPT_FILE, dest, lambda d, s: script_fixed(d, s, palette), skip)
 
 
 def regions_fixed(name: str):

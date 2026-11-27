@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravspells  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravportraits, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -73,7 +73,8 @@ class TableTests(unittest.TestCase):
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS}
-                         | {p.name for p in ravspells.program_patches()})  # (the new spells)
+                         | {p.name for p in ravspells.program_patches()}  # (the new spells)
+                         | ravportraits.PATCH_NAMES)  # (the talk portraits at Shattered Lands' size)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_gear_hands(self):
@@ -511,16 +512,22 @@ class GameFileTests(unittest.TestCase):
                       and len(game[k]) == ravager.SPELL_SIZE
                       and struct.unpack_from("<H", game[k], ravager.SPELL_FLAGS)[0] & 0x86}
             self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()} | dodged)
-            gpl = open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read()
-            own = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-            places = gff.index_places(own, "GPL ")
-            differ = [i for i, (a, b) in enumerate(zip(gpl, own)) if a != b]
-            wanted = []
+            gpl = gff.read_gff(open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read())
+            own = gff.read_gff(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
+            fixed = {}
             for chunk, offset, original, replacement in ravager.SCRIPT_FIXES.values():
-                at = places[chunk][1] + offset
-                self.assertEqual(gpl[at:at + len(replacement)], replacement)
-                wanted += [at + i for i in range(len(original)) if original[i] != replacement[i]]
-            self.assertEqual((len(gpl), differ), (len(own), sorted(wanted)))
+                script = bytearray(fixed.get(chunk, own[("GPL ", chunk)]))
+                self.assertEqual(bytes(script[offset:offset + len(original)]), original)
+                script[offset:offset + len(original)] = replacement
+                fixed[chunk] = bytes(script)
+            faces = {k for k in own if k[0] == "PORT"}  # (made smaller: ravportraits)
+            self.assertEqual(set(gpl), set(own))
+            self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"},
+                             {("GPL ", c) for c in fixed} | faces)
+            for c, script in fixed.items():
+                self.assertEqual(gpl[("GPL ", c)], script)
+            self.assertTrue(all(struct.unpack_from("<HH", gpl[k], struct.unpack_from("<I", gpl[k], 6)[0])
+                                == (ravportraits.WIDTH, ravportraits.HEIGHT) for k in faces))
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
@@ -575,7 +582,7 @@ class GameFileTests(unittest.TestCase):
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES))
+        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {ravportraits.SKIP})
         self.assertEqual((same, done), (data, []))
 
     def test_manual_check_decodes(self):
