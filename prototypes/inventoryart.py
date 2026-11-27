@@ -168,13 +168,21 @@ def main(game_dir):
     figures = art.GameArt(game_dir)
     palette = np.asarray(figures.colours)
     atlas = Image.open(HERE / "inventory-garments.png")
+    # The human plates are painted at the native scale of each inventory pose.
+    # Columns follow the class IDs. Index zero leaves the retail figure visible.
+    humans = Image.open(HERE / "inventory-human.png")
     dest = HERE.parent / "obsidian-edition/dsloader/inventory-garments.zip"
     with ZipFile(dest, "w") as z:
         for figure, builds in enumerate(inventoryart.BUILDS):
             w, h, src = art.decode_frame(figures.figures[art.FIGURE_FIRST + figure])
             names = sorted({p for combo in builds for p in inventoryart.pieces(figure, combo)})
             for name in names:
-                if name.startswith("mark"):
+                if figure < 2:
+                    left = (int(name[4:]) - 1) * 48
+                    top = figure * 95
+                    plate = humans.crop((left, top, left + w, top + h))
+                    rows = [[pixel or None for pixel in row] for row in np.asarray(plate).tolist()]
+                elif name.startswith("mark"):
                     pts, inks = SHELL[int(name[4:])]
                     mask = Image.new("L", (w, h))
                     draw = ImageDraw.Draw(mask)

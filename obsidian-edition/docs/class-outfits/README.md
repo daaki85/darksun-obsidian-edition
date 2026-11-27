@@ -20,6 +20,16 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 The inventory dresses each full-length figure for the selected character. A human shows the active class. In a multiclass outfit, the bone shoulder guards, teal sash, green lining, plum mantle or open hood identify the other classes. Thri-kreen carry their colors on the shell. Equipment slots still show the individual items.
 
+### Human inventory fittings
+
+The male and female portraits use separately fitted artwork for all eight classes. The Gladiator’s strap crosses the chest from a single shoulder guard, while the Fighter wears a closed jerkin with paired bone caps. The Cleric’s cream panel falls to the ankles. The Preserver’s plum mantle opens over the waist and falls behind the arms. The foreground fists on the man and the woman’s hands at her waist come from their original inventory poses.
+
+The sheet shows Loader-rendered portraits at 2× on sand and at native size on a dark ground. Each map inset shows the corresponding human in front idle. [Compare the original poses and the previous and revised fittings](human-inventory-fittings.png).
+
+![All eight human outfits, with male and female inventory portraits and their map references](human-inventory.png)
+
+### All playable figures
+
 ![Fourteen inventory figures in single-class and multiclass outfits](inventory-portraits.png)
 
 ## Dwarf outfits
