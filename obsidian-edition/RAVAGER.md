@@ -242,7 +242,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,
   taken from your Shattered Lands folder each start and put in the sequel's colours. The MORE and scroll
   buttons stay the sequel's, since they sit on its own talk boxes. Without a Shattered Lands folder the
-  sequel's own are used.
+  sequel's own are used. The box "Shattered Lands' screens and icons in Wake of the Ravager", in the Options
+  tab's Wake of the Ravager section, turns it off (from the sequel's next start).
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
   toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of

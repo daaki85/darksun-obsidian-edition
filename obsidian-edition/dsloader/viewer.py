@@ -616,6 +616,11 @@ class Viewer:
         found.pack(anchor="w")
         ravager.bind("<Configure>", lambda e: found.configure(wraplength=max(200, e.width - 20)), add="+")
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
+        # Shattered Lands' screens and icons in the sequel (ravui: RESOURC2.GFF, from the sequel's next start)
+        self.sl_interface = tk.BooleanVar(value=settings.get("sl_interface", True) is not False)
+        ttk.Checkbutton(ravager, text="Shattered Lands' screens and icons in Wake of the Ravager (the USE screen, "
+                        "the inventory, the menus and the spell and psionic icons, from its next start)",
+                        variable=self.sl_interface, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # the party into the sequel (ravtransfer.transfer): every item, the ages and the months between
         about_party = ttk.Label(ravager, text="Take a saved party into Wake of the Ravager's roster, every item with it "
                                 "(the ones the sequel hasn't made by the Loader), its ages too, and the months "
@@ -883,7 +888,8 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace,
-                    self.hit_chance, self.hit_hover, self.show_squares, self.move_back, self.show_usable, self.quick_save, self.autosave):
+                    self.hit_chance, self.hit_hover, self.show_squares, self.move_back, self.show_usable, self.quick_save, self.autosave,
+                    self.sl_interface):
             var.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
@@ -1568,7 +1574,7 @@ class Viewer:
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
                   "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
                   "hit_chance": self.hit_chance.get(), "hit_hover": self.hit_hover.get(), "squares": self.show_squares.get(), "move_back": self.move_back.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
-                  "autosave": self.autosave.get(), "picture": self.picture.get(),
+                  "autosave": self.autosave.get(), "picture": self.picture.get(), "sl_interface": self.sl_interface.get(),
                   dosboxx.SETTING: self.engine.get()}
         device = self._midi_value()  # (something typed that is no device: the one remembered stays)
         values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(

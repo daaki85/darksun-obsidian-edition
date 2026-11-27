@@ -21,7 +21,7 @@ there 2026-11-20: docs/FIGURES.md, "The interface (phase 1)"; the owner's choice
 Run-length frames (Shattered Lands' kind) are drawn by the sequel among its own packed ones. A chunk the
 Loader has already changed in the copy (the mod's own icons, the kit pages ...) is left as the mod has it, and
 anything missing (no Shattered Lands folder, another release's files) leaves the sequel's own: `chunks` gives
-none. SKIP ("sl_interface") leaves it all out: RAV_SKIP's control."""
+none. SKIP ("sl_interface") leaves it all out: the Options tab's box (SETTING, on by default) and RAV_SKIP's control."""
 
 import glob
 import os
@@ -31,6 +31,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from . import art, gff
 
 SKIP = "sl_interface"  # (resources_fixed's name for it, a SKIP's to leave it out)
+SETTING = "sl_interface"  # (the Options tab's box in its Wake of the Ravager section: ravager.skipped)
 PALETTE = ("PAL ", 1000)  # (the interface's palette, in both games' RESOURCE.GFF)
 KEPT = set(range(0, 32)) | set(range(240, 249))  # (cycled and system colours: never a target)
 

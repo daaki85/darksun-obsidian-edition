@@ -41,6 +41,13 @@ class TableTests(unittest.TestCase):
             ravui.colour_table([(0, 0, 0)] * 256, [(c, (0, 0, 0)) for c in range(1, 32)])
 
 
+class SwitchTests(unittest.TestCase):
+    def test_the_options_box_leaves_it_out_only_when_unticked(self):
+        self.assertNotIn(ravui.SKIP, ravager.skipped({}))
+        self.assertNotIn(ravui.SKIP, ravager.skipped({ravui.SETTING: True}))
+        self.assertIn(ravui.SKIP, ravager.skipped({ravui.SETTING: False}))
+
+
 class MadeTests(unittest.TestCase):
     def setUp(self):
         grey = [(c // 4, c // 4, c // 4) for c in range(256)]

@@ -1960,13 +1960,15 @@ def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
-    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's) and the new
-    spells ("new_spells": ravspells')."""
+    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's), the new
+    spells ("new_spells": ravspells') and Shattered Lands' screens and icons (the Options tab's box, ravui.SETTING)."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
+    screens = settings.get(ravui.SETTING, True) is not False  # (Shattered Lands' screens and icons: ravui)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+        | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
         | (frozenset() if spells else {ravspells.SKIP})
 
