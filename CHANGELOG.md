@@ -59,7 +59,7 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
+Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
@@ -108,7 +108,17 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
   DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
 
-**Docs: the Options tab's reference in the README** (branch `claude/docs-options-home`)
+**Docs: Wake of the Ravager's items, and pictures and gaps** (branch `claude/docs-pictures-sequel-gaps`)
+- ITEMS.md has every item of Wake of the Ravager: its magic weapons, missile weapons, armour, worn and held
+  items, scrolls and the like, and its plain weapons and armour by type and material, the mod's among them,
+  each with where it is (from the sequel's data, the story's rewards from a play) and the sequel's own icon
+  (`docicons --ravager`, which reads its PLNR and PLAN pictures); and what Shattered Lands' items become.
+- Kalzith's talk and body pictures retaken with the class outfits.
+- RAVAGER.md: the seven features the full review couldn't confirm in the sequel, settled from its patches:
+  the Effects screen's click works there; more save pages, the 29-character roster, steady pace, the view
+  in fights, the pointer in scenes and the whole party in view are on "Not in the sequel yet".
+
+**Docs: the Options tab's reference in the README** (#268)
 - "The Options tab at a glance" (every switch, its default and when it counts) and "Elsewhere in the
   Loader" moved from the player's guide to the README, after the Loader's window, where a player looks
   for the Loader; the links to it follow.

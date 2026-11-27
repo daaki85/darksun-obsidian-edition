@@ -271,6 +271,7 @@ bigger character sheets) as it goes in (a game already running lists it from its
   SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
   sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
   and Memory tools tabs read the sequel's spells and records.
+- **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
   small crosses mark the squares they can still walk to, and R hides or shows them. After the last
@@ -323,6 +324,7 @@ bigger character sheets) as it goes in (a game already running lists it from its
 
 ## The mod's gear in the sequel
 
+[The item tables](ITEMS.md#wake-of-the-ravagers-items) list every item of the sequel and where it is.
 Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
 staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
 and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
@@ -379,6 +381,7 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   and [the whole party in view](FEATURES.md#the-whole-party-in-view).
 - **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
   and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
+- **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
 - **[Steady pace](FEATURES.md#game-speed)**: the switch does nothing for the sequel (the speeds do).
 - **[Names over figures](FEATURES.md#names-over-figures)**: the arrows left after a party archer's shot.
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
