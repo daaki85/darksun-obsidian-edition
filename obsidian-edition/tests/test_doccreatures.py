@@ -18,10 +18,30 @@ MONSTER = re.compile(r"^\| !\[\]\(docs/creatures/([a-z0-9-]+)\.png\) \| ([^|]+?)
                      r"\| (yes|no: [^|]+?) \|$")
 
 
-def rows():
-    """(figure, name, race, size letter, the tangle column) for each row."""
+RAVAGER = "## Wake of the Ravager"
+
+
+def page(sequel: bool = False):
+    """CREATURES.md's lines: Shattered Lands' part, or (SEQUEL) Wake of the Ravager's."""
     with open(os.path.join(ROOT, "CREATURES.md"), encoding="utf-8") as f:
-        lines = f.read().splitlines()
+        text = f.read()
+    head, _, tail = text.partition(RAVAGER + "\n")
+    return (tail if sequel else head).splitlines()
+
+
+# the sequel's rows: its figure (or "none"), name, race (people), size, the tangle column, how it's drawn
+RAV_ROW = re.compile(r"^\| (?:!\[\]\(docs/creatures/ravager/([a-z0-9-]+)\.png\)|none) \| ([^|]+?) \| (?:([a-z -]+) \| )?"
+                     r"([TSMLHG])( \?)? \| (yes|no: [^|]+?) \| (redrawn[^|]*|the game's|none) \|$")
+
+
+def rav_rows():
+    """(figure or None, name, race or None, size letter, unsure, the tangle column, drawn) for each sequel row."""
+    return [m.groups() for m in map(RAV_ROW.match, page(True)) if m]
+
+
+def rows():
+    """(figure, name, race, size letter, the tangle column) for each of Shattered Lands' rows."""
+    lines = page()
     out = []
     for line in lines:
         m = PERSON.match(line)
@@ -42,7 +62,7 @@ class CreaturesTableTests(unittest.TestCase):
         self.assertEqual(len(names), len(found))  # (a figure each)
         for figure in names:
             self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "creatures", figure + ".png")), figure)
-        unused = {f[:-4] for f in os.listdir(os.path.join(ROOT, "docs", "creatures"))} - names
+        unused = {f[:-4] for f in os.listdir(os.path.join(ROOT, "docs", "creatures")) if f.endswith(".png")} - names
         self.assertEqual(unused, set())
 
     def test_tangle_column(self):
@@ -77,6 +97,42 @@ class CreaturesTableTests(unittest.TestCase):
 
     def test_party_left_out(self):
         self.assertFalse({name for _, name, _, _, _ in rows()} & doccreatures.PARTY)
+
+
+class RavagerCreaturesTests(unittest.TestCase):
+    """The sequel's part of the page (doccreatures.write_ravager)."""
+
+    def test_rows_and_figures(self):
+        found = rav_rows()
+        self.assertGreater(len(found), 150)
+        self.assertEqual(len(found), sum(1 for line in page(True) if line.startswith("| ") and "---" not in line
+                                         and not line.startswith("| Figure")))  # (every row read)
+        figures = [f for f, *_ in found if f]
+        self.assertEqual(len(set(figures)), len(figures))
+        folder = os.path.join(ROOT, "docs", "creatures", doccreatures.RAV_FOLDER)
+        self.assertEqual({f[:-4] for f in os.listdir(folder)}, set(figures))  # (none missing, none unused)
+        self.assertFalse({name for _, name, *_ in found} & {"Terrannus", "Thy-rohk", "Gerrakis", "Ar'Anda"})
+
+    def test_size_and_tangle(self):
+        """Each row's size is the sequel's table's (sizes.RAV_NAMES by name for the rest, people by race), and
+        its tangle answer DSCLOG2's: no for a half-giant or anything large or bigger, else yes."""
+        from dsloader import sizes
+        races = {v: k for k, v in doccreatures.RAV_RACES.items() if k <= 8}
+        names = set()
+        for _, name, race, size, unsure, answer, _ in rav_rows():
+            names.add(name)
+            want = sizes.RACES[races[race]] if race else sizes.RAV_NAMES.get(name, "M")
+            self.assertEqual(size, want, name)
+            if race == "half-giant":
+                self.assertEqual(answer, "no: too big (a half-giant)", name)
+            else:
+                self.assertEqual(answer, "no: too big" if size in "LHG" else "yes", name)
+        self.assertLessEqual(set(sizes.RAV_NAMES), names)  # (no slip of a name in the sequel's table)
+
+    def test_redrawn_marked(self):
+        """The redrawn figures are marked so, and most of the sequel's figures are."""
+        drawn = [d for *_, d in rav_rows()]
+        self.assertGreater(sum(d.startswith("redrawn") for d in drawn), len(drawn) * 3 // 4)
 
 
 if __name__ == "__main__":

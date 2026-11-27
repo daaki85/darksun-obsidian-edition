@@ -1137,7 +1137,7 @@ WHOSE_TURN, CAMERA, MAP_OBJECTS = 0x426D, 0x1408, 0x67BB  # (SL's 4979h, 1178h, 
 SPELL_SLOTS, SLOTS_STRIDE, PRIEST_SLOTS = 0x446A, 0x22, 0x0B  # wizard casts left by level, a member a row
 KNOWN_BITSET = 15  # bytes of known wizard spells a member (bit n, spell n), the roster's SPST chunk
 # ... at selector 320h:39Ch (the load + 3D62h), a member's after another's (DSCLOG2's KNOWN_BITS); the
-# game's spells are bits 0-114, 115-119 unused (playtest/RESEARCH.md: the starting age's roll was kept
+# game's spells are bits 0-114, 115-119 unused (playtest/RESEARCH-RAVAGER-RECORDS.md: the starting age's roll was kept
 # there before the sheet was made 48h, SHEET_SIZE)
 AFRAID = 0x60  # a creature's +18h while Afraid
 

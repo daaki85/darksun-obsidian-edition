@@ -59,9 +59,25 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
+Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
+
+**Docs: Wake of the Ravager's side of the features, creatures and dice log pages** (branch `claude/ravager-docs-side`)
+- CREATURES.md covers both games: the sequel's 198 creatures from its own data, each in the figure the mod
+  draws (183 redrawn, marked), its size by the sequel's table and the cahulaks' answer as the sequel decides
+  it (`doccreatures.write_ravager`). Six man-sized monsters named in `sizes.RAV_NAMES` (no change in play).
+- Every FEATURES entry ends with a line saying whether the sequel has it. Its sequel-only passages (the
+  sequel's own party, its quick saves, its named saves) moved to RAVAGER.md; the gaps found (the four
+  controls, more saves, steady pace, the arrows left over an archer, the cahulaks sparing only by size) are
+  on RAVAGER's "Not in the sequel yet". DICE-LOG.md has a sequel section.
+
+**Docs: the research recipes split by subject** (branch `claude/research-guide-split`)
+- The playtest kit's research recipes (`playtest/RESEARCH.md`, 42,000 words in one page) are seven pages
+  now: memory edits for a test, sounds and pictures, the game's code and other targets, and four on Wake
+  of the Ravager (starting and driving it; its pictures and screens; its records, kits and saves; the port
+  audit's notes). The text moved as it was; `RESEARCH.md` is their index, so old links still land, and
+  every link into a moved section points at its new page.
 
 **Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
 - A party taken across lost five backported weapons' material: the metal great sword, lotulis and
@@ -84,7 +100,17 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
   DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
 
-**Docs: the Options tab's reference in the README** (branch `claude/docs-options-home`)
+**Docs: Wake of the Ravager's items, and pictures and gaps** (branch `claude/docs-pictures-sequel-gaps`)
+- ITEMS.md has every item of Wake of the Ravager: its magic weapons, missile weapons, armour, worn and held
+  items, scrolls and the like, and its plain weapons and armour by type and material, the mod's among them,
+  each with where it is (from the sequel's data, the story's rewards from a play) and the sequel's own icon
+  (`docicons --ravager`, which reads its PLNR and PLAN pictures); and what Shattered Lands' items become.
+- Kalzith's talk and body pictures retaken with the class outfits.
+- RAVAGER.md: the seven features the full review couldn't confirm in the sequel, settled from its patches:
+  the Effects screen's click works there; more save pages, the 29-character roster, steady pace, the view
+  in fights, the pointer in scenes and the whole party in view are on "Not in the sequel yet".
+
+**Docs: the Options tab's reference in the README** (#268)
 - "The Options tab at a glance" (every switch, its default and when it counts) and "Elsewhere in the
   Loader" moved from the player's guide to the README, after the Loader's window, where a player looks
   for the Loader; the links to it follow.

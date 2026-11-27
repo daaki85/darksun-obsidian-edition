@@ -73,7 +73,7 @@ SHEET_RUNS = ((0x00, 0x00, 0x0E), (0x0E, 0x10, 4), (0x12, 0x18, 0x24), (0x37, 0x
 # the sheet, at +3Dh and +3Fh (ravlog's layout reads them there): the high bytes of two words the
 # sequel reads whole, +3Ch and +3Eh, sound numbers it plays at a member's turn in a fight (0 its
 # default). The unpatched game took a kit for a sound 100h or 8100h and stopped with "Mel Fatal Error"
-# (playtest/RESEARCH.md); the Loader's copy reads the low bytes alone (ravager's sound_3c, sound_3e).
+# (playtest/RESEARCH-RAVAGER-RECORDS.md); the Loader's copy reads the low bytes alone (ravager's sound_3c, sound_3e).
 MOD_SHEET_BYTES = (0x3D, 0x3F)
 # An item: the save's links, flags, slot and plus over the new object's record
 ITEM_NAME_AT = 0x14  # (the sequel's item's name: ravager.item_field(SL_ITEM_NAME))

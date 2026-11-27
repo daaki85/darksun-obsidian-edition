@@ -38,6 +38,7 @@ creature in red, so who acts and who is hit can be followed down the log.
 - [Character creation](#character-creation)
 - [Ages](#ages)
 - [Everything else](#everything-else)
+- [In Wake of the Ravager](#in-wake-of-the-ravager)
 
 ## Fights
 
@@ -323,3 +324,31 @@ With [ages](FEATURES.md#ages-and-magical-aging) on:
 - Once, as a save is loaded: a [Healer](KITS.md#cleric-kits) made by an earlier version given its cosmos spells, a [Wilderness Avenger](KITS.md#multiclass-kits) its healing spells taken away, a Healer or Lifebinder its harming ones. Other lines of the kind: `Halton, a Wilderness Avenger, knows no healing spells: Cure Light Wounds, Blood Flow taken away`; `Tamar, a Healer, knows no harming spells: Cause Serious Wounds, Poison taken away`.
 - Only with "Show unlabelled rolls": a weapon that can't break (a club or quarterstaff), a check the log couldn't name, and the game's raw random numbers with where they were asked for. Other lines of the kind: `Check: d20 = 7`; `rand() = 12345  (at 1234:5678)`.
 - The Loader failed to read an entry, or the game rolled faster than the Loader could read: the log has a gap there. Please report the first if it repeats. Other lines of the kind: `(12 rolls came too fast to record)`.
+
+## In Wake of the Ravager
+
+[Wake of the Ravager](RAVAGER.md) started from the Loader has the dice log too, in the same window with
+the same layout and boxes, and its lines are the ones above, written the same way. The sequel's creatures
+are named as it names them ([its creatures](CREATURES.md#wake-of-the-ravager)).
+
+**The same as in Shattered Lands**: the rounds and turns, attacks with their THAC0 broken down (the
+cahulaks' heads named: `-2 cahulaks, main head at DEX 12`), damage and the HP left, saving throws with the
+d20 and each modifier by name, spells and their dice, a held or tangled target, hiding and backstabs, the
+enemy chosen with Tab and the chance to hit, F10, effects starting and ending (`Thy'rokh gives Paralyzed to
+Draxan`), PSP spent and regained, ability scores changing, the kills (`Draxan is killed`) and the fight's
+summary, Psionic Blast's wounds given back, a wizard's try at a scroll, picking pockets and the locks a thief
+failed, looting with T (`Ar'Anda takes Bow, Stone Lotulis, ...`) and selling with S, the quick saves and
+autosaves, the creation screen's tries (each score's four 4d4), a new character's starting gear and weapon
+specs, the age lines, and the game's message boxes (`Message: YOU ALREADY KNOW THIS SPELL`).
+
+**Only in the sequel**:
+
+| Line | Meaning |
+|---|---|
+| `Thy'rokh has a Grove Warden's AC: 1 better for every 3 druid levels.` | The sequel's own party made ready, once: its weapon specs (`Gerakis specializes in the long sword and the gythka and the trikal.`) and kits ([the sequel's own party](RAVAGER.md#the-sequels-own-party)). |
+| `Salesperson stocks 3 of the mod's new items` | A seller in a game saved before the mod's gear came, stocked once as the party meets them ([the mod's gear](RAVAGER.md#the-mods-gear-in-the-sequel)); "(N with no room)" when the pack is full. |
+
+**Not in the sequel yet** (on [its list](RAVAGER.md#not-in-the-sequel-yet)): the XP lines (what each kill
+gave, and the bonus for high prime requisites) and the level-ups, the line of each round's initiative
+scores, and the report when an item goes missing from the party. Shattered Lands' story lines (the arena,
+Kalzith, the cooked vulture, its quests) are that game's alone.

@@ -232,6 +232,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-encounters.md) | Wake of the Ravager's redrawn drakes and Tarrasque in their own fights, through `ravjump.py` |
 | [2026-11-27](2026-11-27-ravager-sl-interface.md) | Wake of the Ravager with Shattered Lands' screens and icons (ravui): the USE screen and the inventory, with and without |
 | [2026-11-27](2026-11-27-loader-pictures.md) | The Loader pictures retaken with the new bar |
+| [2026-11-27](2026-11-27-docs-pictures-retake.md) | Kalzith's talk and body pictures with the outfits; which pictures the outfits change; the sequel's items read for ITEMS.md |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
