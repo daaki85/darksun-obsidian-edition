@@ -17,9 +17,12 @@ their new lengths in the file's index, and has the game load them anew as Shatte
 picture cache's slots holding that number made STALE (FFFEh: the sequel's cache, load + 42A2h:0CA8h, 300 slots of
 16 bytes, SL's layout; DS:265Dh of them) and each map thing drawn with it (DS:67BBh + 25h n, its picture's number
 at +19h, its cache slot at +10h) given no slot (FFFFh), which the game fills by loading the picture again
-(28BFEh: a thing with no slot is given one, 2A388h); and frame 0 of the walking picture again as the party
-column's small figure (SMALL_BASE). Worn gear, a second member of the same figure and the creation screen's
-figure are not drawn yet (RAVAGER.md's list)."""
+(28BFEh: a thing with no slot is given one, 2A388h). Worn gear and a second member of the same figure are not
+drawn yet (RAVAGER.md's list).
+
+The small figures (the inventory's party column, the creation screen's) are made once, in the copy
+(`small_chunks`): frame 0 of each figure's walking picture in each class outfit, at the inventory pictures' keys
+(inventoryart.picture_id's, from SMALL_BASE), which DSCLOG2's SMALL_FIG names for the creature's classes."""
 
 import os
 import struct
@@ -41,10 +44,12 @@ CACHE_SEG, CACHE_OFF, CACHE_COUNT, CACHE_MOST, CACHE_ENTRY = 0x42A2, 0x0CA8, 0x2
 STALE = 0xFFFE
 THINGS, THING_SIZE, THING_SLOT, THING_PICTURE = 0x67BB, 0x25, 0x10, 0x19
 PARTY_SIZE = 4
-# The party column's small figures (the inventory's: 6F7EAh, "mov ax,[es:bx+10h] / add ax,23h", the figure's preloaded
-# picture, SL's 6797Ah): DSCLOG2's SMALL_FIG (site 254) asks for BMP SMALL_BASE + the figure instead, which INV_LOAD
-# reads from the Loader's OBJEX2.GFF (frame 0 of the figure's walking picture, written here in the outfit).
+# The small figures (6F7EAh, "mov ax,[es:bx+10h] / add ax,23h", the figure's preloaded picture, SL's 6797Ah: the
+# inventory's party column and the creation screen's): DSCLOG2's SMALL_FIG (site 254) asks for BMP SMALL_BASE +
+# figure * 256 + a bit per class group (as INV_FIGURE's keys: inventoryart.picture_id) instead, which INV_LOAD reads
+# from the Loader's OBJEX2.GFF (frame 0 of the walking picture in that outfit), the preloaded one where there is none.
 SMALL_BASE = 0x7000
+SMALL_FIGURES = 13  # (0-12: the thri-kreen, 13, has no outfits)
 
 RGB = Tuple[int, int, int]
 
@@ -177,7 +182,8 @@ class Sources:
 
 def copy_chunks(objects: gff.Chunks, sources: Sources) -> Tuple[gff.Chunks, Dict[Tuple[str, int], int]]:
     """For the Loader's OBJEX2.GFF: each party picture of OBJECTS (BMP, CBMP, SCMD) made from Shattered Lands'
-    object, plain, and the room to keep after each (the bytes free for a dressed one)."""
+    object, plain, and the room to keep after each (the bytes free for a dressed one); and the small figures
+    (small_chunks)."""
     out: gff.Chunks = {}
     room: Dict[Tuple[str, int], int] = {}
     for obj, picture in party_pictures(objects).items():
@@ -192,10 +198,36 @@ def copy_chunks(objects: gff.Chunks, sources: Sources) -> Tuple[gff.Chunks, Dict
         out[("SCMD", picture)] = wr_script(script, objects.get(("SCMD", picture), b""))
         room[("BMP ", picture)] = max(0, sources.room(obj, False) - len(walk))
         room[("CBMP", picture)] = max(0, sources.room(obj, True) - len(fight))
-        small = ("BMP ", SMALL_BASE + obj - PARTY[0])
-        out[small] = first_frame(walk)
-        room[small] = len(out[small])  # (as much again: the bulkiest outfit's frame is 1.4 times the plain one's)
+    if out:
+        out.update(small_chunks(sources))
     return out, room
+
+
+def small_chunks(sources: Sources) -> gff.Chunks:
+    """{BMP key: frame 0 of the figure's walking picture in the outfit} for every figure and every class group
+    combination with an outfit (a human's one class), keyed as INV_FIGURE's (SMALL_BASE + figure * 256 + a bit per
+    group, 1-8: inventoryart.CLASSES)."""
+    import itertools
+    from . import creationfigure, game
+    out: gff.Chunks = {}
+    for figure in range(SMALL_FIGURES):
+        obj = PARTY[0] + figure
+        if sources.model(obj) is None:
+            continue
+        race = 1 + figure // 2 if figure < 12 else 7  # (the sheet's race: human 1 ... mul 7)
+        for n in ((1,) if race == 1 else (1, 2, 3)):
+            for groups in itertools.combinations(range(1, 9), n):
+                sheet = bytearray(game.SHEET_SIZE)
+                sheet[game.SHEET_RACE] = race
+                for i, group in enumerate(groups):
+                    sheet[game.SHEET_CLASSES + i] = creationfigure.GAME_CLASS[group]
+                role = sources.role(obj, bytes(sheet))
+                if role is None:
+                    continue
+                walk = sources.pics.build(obj, False, {}, (), sources.model(obj), obj, 0, role)
+                key = SMALL_BASE + (figure << 8) + sum(1 << (g - 1) for g in groups)
+                out[("BMP ", key)] = recoloured(first_frame(walk), sources.colours)
+    return out
 
 
 class RavDresser:
@@ -299,9 +331,6 @@ class RavDresser:
             if built is None:
                 built = self._built[(obj, role)] = self.sources.pictures(obj, role)
             chunks = {("BMP ", picture): built[0], ("CBMP", picture): built[1]}
-            small = ("BMP ", SMALL_BASE + obj - PARTY[0])
-            if small in self.places:
-                chunks[small] = first_frame(built[0])
             if not self._write(chunks):
                 continue
             self.shown[obj] = role

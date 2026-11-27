@@ -57,14 +57,20 @@ The sequel's inventory draws each member's small figure with routine 6F7EAh. It 
 6797Ah: `mov ax,[es:bx+10h] / add ax,23h` names the figure's preloaded picture, and the loader at 7B827h reads it.
 Two changes make it show the outfit:
 
-- DSCLOG2's SMALL_FIG (site 254) names BMP 7000h + the figure instead.
-- INV_LOAD reads that picture from the Loader's OBJEX2.GFF, where `ravdress` keeps frame 0 of the figure's
-  walking picture in the outfit.
+- DSCLOG2's SMALL_FIG (site 254) names BMP 7000h + the figure * 256 + a bit per class group (1-8, as the
+  inventory's class pictures: a human's one class), from the member's sheet; for the creature being made, from
+  the creation sheet.
+- INV_LOAD reads that picture from the Loader's OBJEX2.GFF, where `ravdress.small_chunks` keeps frame 0 of the
+  figure's walking picture in that outfit: 290 pictures, one per figure and class combination with an outfit,
+  made at the copy. Where there is none, the stock preloaded picture.
 
-`ravload.sh ravager-after-ambush`, then I:
+`ravload.sh ravager-after-ambush`, then I: the column shows each member's outfit (right in the picture below;
+left the stock figures), with or without the dice log (the same pixels): Ar'Anda's elf Preserver/Psionicist/Thief
+outfit, Terrannus's cream Priest robe and Gerakis's Gladiator outfit. Thy'rokh's figure is unchanged.
 
-1. Before the dice log, the column shows the plain figures (left in the picture below).
-2. With the dice log attached, Escape then I again shows each member's outfit (right): Ar'Anda's purple robe,
-   Terrannus's cream Priest robe, and Gerakis's Gladiator outfit. Thy'rokh's figure is unchanged.
+On the creation screen (`ravcreation.sh`), the small figure wears the class outfit when the screen opens and after
+a race's or a portrait's click, when the game draws it again. A class's click does not redraw it: a redraw of ours
+(the game's own calls, from the class click's probe and then from CR_HP's) quit the game with "Math Err" after
+Fighter off and Thief on, and the control without it did not, so it was dropped.
 
 ![The party column: plain, then dressed](img/2026-11-27-ravager-small-figures.png)

@@ -4567,19 +4567,77 @@ cr_seen dd 0xFFFFFFFF
 cr_call dd 0
 
 ; SMALL_FIG (site 254, "small_figure"): "mov ax,[es:bx+10h] / add ax,23h" (6F7EAh, SL's 6797Ah: DSCLOG's
-; SMALL_FIGURE), the inventory party column's small figure of the creature ES:BX: SMALL_BASE + its figure, the
-; Loader's frame 0 of the figure's walking picture in its class outfit (BMP 7000h + the figure in OBJEX2.GFF:
-; ravdress.SMALL_BASE), which INV_LOAD reads; a figure past the 14 its preloaded picture.
+; SMALL_FIGURE), the small figure of the creature ES:BX (the inventory's party column, the creation screen's):
+; the Loader's frame 0 of the figure's walking picture in the outfit of its classes, BMP SMALL_BASE + INV_FIGURE's
+; key (the figure * 256 + a bit per class group: ravdress.small_chunks, in OBJEX2.GFF), which INV_LOAD reads,
+; the preloaded picture where there is none; the creature being made has the creation sheet's classes (CR_KEY's), shown when the
+; screen opens and after a race's or a portrait's click (the game draws it again; a draw of ours after a class's
+; click quit the game with "Math Err", 2026-11-27).
 SMALL_BASE equ 0x7000
 SMALL_PRELOAD equ 0x23
 small_fig:
+        call small_key
+        iret
+
+; SMALL_KEY: AX SMALL_FIG's picture for the creature ES:BX. All other registers kept.
+small_key:
         mov ax, [es:bx + 0x10]
         cmp ax, INV_ART_FIGURES
         jae .stock
-        add ax, SMALL_BASE
-        iret
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        mov dx, ax
+        shl dx, 8
+        add dx, SMALL_BASE
+        mov di, es
+        cmp di, [CR_CREATURE + 2]       ; (DS the game's: the creature being made?)
+        jne .party
+        cmp bx, [CR_CREATURE]
+        jne .party
+        mov cx, 3
+        cmp ax, 2
+        jae .cr
+        mov cx, 1                       ; (a human: its one class)
+.cr:    les bx, [WP_CREATION]
+        xor si, si
+.crnx:  movzx di, byte [es:bx + si + SH_CLASSES]
+        dec di
+        cmp di, 7                       ; (numbered 1-8, the class groups, on the creation sheet)
+        ja .crsk
+        bts dx, di
+.crsk:  inc si
+        loop .crnx
+        jmp .done
+.party: mov ax, [es:bx + 4]
+        call kit_sheet_ax               ; (ES:BX its sheet)
+        mov cx, 3
+        cmp byte [es:bx + SHEET_RACE], 1
+        jne .slots
+        mov cx, 1                       ; (a human dual class: the active class)
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + SHEET_CLASSES]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [cs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+.done:  mov ax, dx
+        pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
 .stock: add ax, SMALL_PRELOAD
-        iret
+        ret
 
 ; INV_LOAD (site 252, "inventory_load"): "mov dword [bp-4],0" (7B831h, SL's 7303Eh), the preloaded
 ; picture SI's loader starting: an INV_FIGURE or SMALL_FIG key is read from the GFF as the game reads a
@@ -4589,7 +4647,7 @@ inv_load:
         mov dword [bp - 4], 0
         cmp si, SMALL_BASE
         jb .art
-        cmp si, SMALL_BASE + INV_ART_FIGURES
+        cmp si, SMALL_BASE + INV_ART_FIGURES * 256
         jb .read
 .art:   cmp si, INV_ART_BASE
         jb .out
@@ -4624,7 +4682,9 @@ inv_load:
         mov dword [bp - 4], 0
         cmp si, SMALL_BASE
         jb .big
-        sub si, SMALL_BASE - SMALL_PRELOAD
+        sub si, SMALL_BASE
+        shr si, 8
+        add si, SMALL_PRELOAD
         jmp .out
 .big:   sub si, INV_ART_BASE
         shr si, 8

@@ -178,9 +178,11 @@ class FilesTests(unittest.TestCase):
             for kind in ("BMP ", "CBMP", "SCMD"):
                 self.assertIn((kind, n), chunks)
             self.assertGreater(room[("BMP ", n)], 0)
-        for obj in ravdress.party_pictures(objects):
-            small = chunks[("BMP ", ravdress.SMALL_BASE + obj - 300)]
-            self.assertEqual(struct.unpack_from("<H", small, 4)[0], 1)  # (frame 0 alone: the small figure)
+        small = [k for k in chunks if k[0] == "BMP " and k[1] >= ravdress.SMALL_BASE]
+        self.assertEqual(len(small), 290)  # (every outfit: 13 figures' class combinations)
+        self.assertIn(("BMP ", ravdress.SMALL_BASE + 0x04), chunks)  # (the human man fighter: group 3)
+        for key in small:
+            self.assertEqual(struct.unpack_from("<H", chunks[key], 4)[0], 1)  # (frame 0 alone)
 
 
 if __name__ == "__main__":
