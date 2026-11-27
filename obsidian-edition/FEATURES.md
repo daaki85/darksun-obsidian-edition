@@ -1486,7 +1486,8 @@ outfit of their class (the mage in a plum mantle, the thief hooded, the psionici
 dwarves, elves, half-elves, half-giants, halflings and the mul in an outfit for their whole class
 combination. Each half-elf has 48 outfits, including the Cleric/Preserver’s cream and plum robe.
 The thri-kreen and combinations outside the outfit roster, such as an elf with Druid among her
-classes, keep the game's own figure. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
+classes, keep the game's own figure. The outfits keep their colours in every area (the game's
+own palette for each area would turn their browns grey and their plums magenta). The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
 animated online](https://github.com/daaki85/darksun-obsidian-edition/blob/7a0b6200b0c218f7a27ccc4b0c3fece7cdf59fe4/obsidian-edition/docs/class-outfits/README.md).
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
