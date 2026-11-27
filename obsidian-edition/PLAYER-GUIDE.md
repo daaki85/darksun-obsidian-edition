@@ -2156,49 +2156,16 @@ without).
 
 ## Quality of life
 
-**On the game's screens** the mod shows what the game kept hidden: every roll in the combat log
-(**L** on the map), names over figures (a spell cast, "Miss", "Armor: 7 left", the arrows left),
-THAC0, all five saves and thief skills on the inventory and View Character screens, spell slots on
-the USE screen, a monster's hit points and defences in the Look box, charges and to-hit in item
-boxes, and the kit, weapon specs and spells' uses left on the Effects screen. Each is in [the
-features page](FEATURES.md#always-on).
-
-**Keys** (always on):
-
-| Key | What it does |
-|---|---|
-| **S** (selling) | On a shop's screen, **S** sells the plain gear (weapons, armour, shields, clothing: no plus, no magic) in the backpack of the member on show, at the shop's prices; worn and held things, ammunition, metal, magic, keys, scrolls, food and gems stay. *Without the mod:* one thing at a time. |
-| **T** (looting) | With a body's (or a chest's) window open, **T** puts everything in it into the party's backpacks, and **Shift+T** everything but plain weapons; what doesn't fit stays. *Without the mod:* a click to take each thing and another to put it down. |
-| **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
-
-The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it, and the chance to hit it shown before the swing and under the pointer, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
-everything in view that can be used (switches in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
-view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
-quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
-
-**Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
-**PgDn**), a fifth page, **QUICK**, for the quick saves (**F5**; **F9** loads) and the autosaves
-the game makes on coming into another area and after a fight, the last five of each kept ([quick
-save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave)), and 29 characters
-in the roster ([more saves and characters](FEATURES.md#saves)).
-
-**Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
-[Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
-speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
-MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
-**The engine**: the game runs in DOSBox-X, which comes with the mod on Windows (on Linux and macOS
-choose your own on the Options tab's **Engine** section). It gives the mod more memory to work
-with, lets the whole mod work on Linux without root, and can play the music through a soundfont
-file of yours. GOG's DOSBox 0.74 is still there to choose in the same section, and is used when no
-DOSBox-X is found ([Features: the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
-**Running the game** (the game window's size, crash and freeze
-reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
-[journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your
-saves and lists your quests, open and finished, without naming one you haven't been given, every
-spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
-window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
-dice log, line by line](DICE-LOG.md) says what each of its lines means.
+The mod's screens, keys, saves, graphics and engine are described once, in [Features and
+rules](FEATURES.md): what the game's own screens show ([always on](FEATURES.md#always-on)), the keys
+**T**, **S**, **M**, **U** and **I** ([looting](FEATURES.md#looting-a-body-t-and-shiftt) and the next
+entries), Tab and Enter and the other [controls](FEATURES.md#controls), [40 saves, quick saves and 29
+characters](FEATURES.md#saves), [graphics](FEATURES.md#graphics), [game speed](FEATURES.md#game-speed),
+[picture and music](FEATURES.md#picture-and-music) and [the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x).
+Running the game and the Loader's window (the dice log, the characters' sheets, the dialogue, the
+[journal](README.md#the-journal-tab) and its quests) are in the README: [running
+it](README.md#running-it-windows), [the Loader's window](README.md#the-loaders-window) and
+[reports](README.md#crash-freeze-and-item-reports).
 
 ## Worth knowing
 

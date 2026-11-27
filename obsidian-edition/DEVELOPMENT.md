@@ -163,14 +163,14 @@ nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 
 The web pages are made from Markdown. Edit the Markdown, then run the module:
 
-- **The manual**, `manual/` (`python -m dsloader.manual`): twelve pages, each from its Markdown, which
+- **The manual**, `manual/` (`python -m dsloader.manual`): thirteen pages, each from its Markdown, which
   stays the source and reads the same on GitHub. `index.html`, the start page the Loader's
   **Help** button opens, is made from `README.md`; then `player-guide.html`, `features.html`,
-  `kits.html`, `weapon-specs.html`, `items.html`, `creatures.html`, `people.html`,
+  `kits.html`, `ravager.html`, `weapon-specs.html`, `items.html`, `creatures.html`, `people.html`,
   `game-bugs.html`, `dice-log.html`, `how-the-game-works.html` and `changes.html`
   (`../PATCH-NOTES.md`, read by `patchnotes.py`). `manual.PAGES` lists them (every player's page
   of `obsidian-edition/`, the DEVELOPMENT pages aside: `test_manual` checks). Each page has a bar
-  of all twelve (the spoiler pages marked) and an index
+  of all thirteen (the spoiler pages marked) and an index
   of its own sections; the pages share `manual/manual.css` (`pagestyle.css` and the fonts). The
   generator rewrites the links, not the Markdown: a link to another of the pages (`KITS.md#x`,
   `README.md`, `../PATCH-NOTES.md` or its GitHub address) goes to its HTML file with the same
