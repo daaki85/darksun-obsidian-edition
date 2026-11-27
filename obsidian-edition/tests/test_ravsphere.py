@@ -177,13 +177,14 @@ class ElSphereTests(unittest.TestCase):
         self.assertGreater(made, 0)
 
     def test_patches(self):
-        """The four sites' patches: SITE's bytes (sites 90-92, 190) on "add sp,4", the "or al,al" after."""
+        """The four sites' patches: SITE's bytes (sites 90-92, 190) on "add sp,4", the "or al,al" after; sites
+        90-92 through the Shinobi's way in (SH_SPHERE_DI, SH_SPHERE_BP: test_ravshinobi), then EL_SPHERE's."""
         by_name = {p.name: p for p in ravager.PATCHES}
         for name, number in {**SITES, **SHINOBI_SITE}.items():
             p = by_name[name]
             self.assertEqual((p.original, p.replacement), (bytes.fromhex("83c404"), bytes((0xCD, 0xF5, number))))
             self.assertEqual(struct.unpack_from("<H", self.image, self.sym["site_table"] + 2 * number)[0],
-                             self.sym["shinobi_mage" if number == 190 else "el_sphere_di" if number == 90 else "el_sphere_bp"])
+                             self.sym["shinobi_mage" if number == 190 else "sh_sphere_di" if number == 90 else "sh_sphere_bp"])
 
 
 @unittest.skipIf(Uc is None, "needs unicorn")

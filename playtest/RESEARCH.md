@@ -1780,6 +1780,37 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   panel (a crop compared with `compare -metric AE`); the top-left icon, then the bar's third (97,171), CAST
   SPELL. Tab then Return brought the game's menu, not an attack: a click on an adjacent foe ends a turn.
 
+**The Shinobi's wizard spells** (2026-11-27, logs/2026-11-27-ravager-shinobi-spells.md; branch
+claude/ravager-shinobi-spells): a Shinobi is a thief kit (the sheet's kit byte +3Dh 11h, class 17) that
+casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the kit slots' entry above).
+- **Where the game asks**: the USE screen's MAGE list (DS:43E8h a list a member, the 1 = MAGE) comes when
+  62C00h finds a known wizard spell the member casts; its levels stop at 698:2Ah (97D1Fh, the highest
+  wizard level with a known spell) capped by 97E9Ch (member, 1), from the caster level 97DC5h (member,
+  spell 0) as (level+1)/2. 97DC5h's loop takes, for each class 588:20h says yes to, 98:C1h (member,
+  class) the class's level, then "add sp,4" at 97DF1h, then "sub dx,7" for classes 13-16 alone.
+  Wizard knowledge is 6260Ah's bitset (selector 320h, +39Ch, 0Fh bytes a member); the new spells
+  320-325 the sheet's bits (+3Fh 40h, 08h, 80h; 325 the kit byte's 80h).
+- **The hooks** (DSCLOG2's THE SHINOBI'S SPELLS): the "yes" for a Shinobi's class 17 and any wizard spell
+  (it learns only its list's, so it knows no other in play: a test edit's other known spells showed too)
+  rides on EL_SPHERE's three sites (90-92 now SH_SPHERE_DI/BP, then EL_SPHERE as before); the caster
+  level is site 209 at 97DF1h (SHINOBI_CAST_LEVEL: thief level less 5, 11 at most, none below 6th); the level-up's
+  "is it class 0Bh" at 957ABh is site 210 (SHINOBI_LEVEL_UP: a Shinobi's thief from 6th picks a spell
+  through 688:66h, 93160h, as a preserver does; inside it PICK_ANY, PICK_PAGE, PICK_LIST and PICK_TOP
+  keep to its list and its slot levels); creation's CR_PICKS (site 87) gives a Shinobi its first spells
+  (SH_FIRST_SPELLS: a CHOOSE A SPELL a pick); SCROLL_LEARN (99A2Fh) and NS_SCROLL (site 148) make a scroll
+  its own (THAT IS NOT A SHINOBI SPELL), roll its READ LANG. (AD&D: the thief table's skill 7 with race,
+  95 at most; else 5% a level with race) for YOU CAN NOT READ THE SCROLL and then the INT chance.
+  NS_SPOOK_SAVE counts its casting level. Header +2076..+2087 (learn_read, learn_read_chance,
+  learn_spell_hi; SH_LEVELS_N, SH_ASKS, SH_PAGED, SH_SCROLLS counters: `ravlevel.py counts`).
+- **Played** (the log): Ar'Anda made a thief 13th Shinobi on her turn in the Draxans' ambush (`ravkits.py
+  set 0 0x43 - 17`, `levels 0 13`): MAGE LEVEL 1-4, WIZ slots 3 3 2 1; at thief 10th levels 1-3 only.
+  Her Hold Person: Paralyzed (69) on the Draxan for 960 game seconds, 16 rounds at casting level 8 (read
+  with `RavGameData.effects_left()`). The control (kit byte 0x40, no kit): PSIONIC only.
+- **Tests**: `tests/test_ravshinobi.py` runs the hooks on the emulator against `kits.RAV_SHINOBI_SPELLS`
+  and `kits.rav_pick_top`; its list test reads the sequel's spell names (DSUN_WOTR).
+- **Not ported**: the Effects screen's READ LANG. line; armour and effects in read languages; a
+  preserver-thief multiclass Shinobi (its preserver class casts as a preserver's).
+
 **Choosing a kit in the sequel** (2026-11-25, logs/2026-11-25-ravager-kit-choice.md):
 - **The creation overlay is SL's code at other addresses** (overlay 6AFE0h-6CE93h, its stub 46CCh,
   the same entries as SL's 421Dh: 66h the rows marked 6BC81h, 7Ah back to the disciplines 6BF3Fh; the

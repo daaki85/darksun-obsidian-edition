@@ -436,6 +436,9 @@ def apply_layout() -> int:
             setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
+    for name, value in (("TSR_LEARN_READ", SH_LEARN_READ), ("TSR_LEARN_SPELL_HI", SH_LEARN_SPELL_HI)):
+        _SAVED.append((dicelog, name, getattr(dicelog, name)))  # (a Shinobi's scroll: DSCLOG2's own header)
+        setattr(dicelog, name, value)
     for module, names in rav_items().items():  # (looting with T, selling with S: the item lists' words)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
@@ -1199,6 +1202,11 @@ KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from
 # offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
 PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
 PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
+# A Shinobi's try at a scroll (DSCLOG2's THE SHINOBI'S SPELLS): +2076 the d100 to read it and its chance
+# (DSCLOG's +366 and +367), +2078 the spell's high byte (the new spells 320-325); +2080 to +2086 its counts
+# (casting levels made, CHOOSE A SPELL asked, pages cut, scroll tries)
+SH_LEARN_READ, SH_LEARN_SPELL_HI = 2076, 2078
+SH_LEVELS, SH_ASKS, SH_PAGED, SH_SCROLLS = 2080, 2082, 2084, 2086
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)

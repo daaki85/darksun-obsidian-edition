@@ -348,6 +348,15 @@ kc_causes  dw 0                 ; +2068 ... Cause Wounds stronger (AV_CAUSE) ...
 kc_cosmos  dw 0                 ; +2070 ... the cosmos's spells a Healer was let cast (HEALER_COSMOS) ...
 kc_barred  dw 0                 ; +2072 ... spells a kit never knows refused (KIT_BARS) ...
 kc_cells   dw 0                 ; +2074 ... Cell Adjustments it made stronger (CELL_MORE)
+        times 2076 - ($ - hdr) db 0 ; (none: +2076 follows +2075)
+learn_read db 0                 ; +2076 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
+learn_read_chance db 0          ; +2077 ... and its chance (SH_ROLLS: DSCLOG's +366 and +367)
+learn_spell_hi db 0             ; +2078 LEARN_SPELL's high byte (a new spell's, 320-325: a Shinobi's tries)
+        db 0                    ; +2079 (none)
+sh_levels_n dw 0                ; +2080 casting levels made a Shinobi's (SH_CAST_LEVEL, SH_PLACE_LEVEL) ...
+sh_asks    dw 0                 ; +2082 ... CHOOSE A SPELL asked for one (SH_PICK_ANY) ...
+sh_paged   dw 0                 ; +2084 ... its pages cut to its own spells (SH_PAGE_CUT) ...
+sh_scrolls dw 0                 ; +2086 ... and its tries at a scroll (SH_ROLLS, SH_NOT_ITS), counted
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -3166,12 +3175,14 @@ ranger_level:
         mov cl, [es:bx + 0x1B]
         sub cl, RANGER_FIRST
         cmp cl, 3
-        ja .out                 ; (not a ranger)
+        ja .thief               ; (not a ranger)
         call ranger_drop
         sub al, cl
         jnc .most
         xor al, al
 .most:  call ranger_most
+        jmp .out
+.thief: call sh_place_level     ; (a Shinobi's thief class: its casting level, THE SHINOBI'S SPELLS)
 .out:   pop cx
         iret
 ; RANGER_MOST: AX a ranger's casting level, CL what its level loses (RANGER_DROP), no more than AD&D's 9
@@ -3886,6 +3897,8 @@ learnt_tries dw 0                           ; (tries, for a look in play)
 scroll_learn:
         or ax, ax
         jnz .flags                          ; (known: the game's)
+        call sh_scroll                      ; (a Shinobi's: THE SHINOBI'S SPELLS)
+        jc .flags
         test word [cs:rules_hi], RULE_HI_INT
         jz .flags
         pushad
@@ -3936,6 +3949,9 @@ scroll_learn:
 .row:   mov ax, si
         mov [cs:learn_who], al
         mov [cs:learn_spell], dl
+        mov byte [cs:learn_spell_hi], 0
+        mov byte [cs:learn_read], 0         ; (no read roll: a Shinobi's last one isn't this try's)
+        mov byte [cs:learn_read_chance], 0
         mov al, [cs:int_chance + bx]
         mov [cs:learn_chance], al
         mov ch, [cs:int_most + bx]          ; (CH the most a level)
@@ -4016,6 +4032,8 @@ spell_level:
         ret
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
+learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
+learn_not_its_text db 'THAT IS NOT A SHINOBI SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
@@ -4023,9 +4041,13 @@ learn_said:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
+        mov word [cs:lm_text], learn_failed_text
         cmp byte [cs:learn_msg], LEARN_FAILED
+        je .back
+        mov word [cs:lm_text], learn_unread_text    ; (a Shinobi's scroll not read: THE SHINOBI'S SPELLS)
+        cmp byte [cs:learn_msg], LEARN_UNREAD
         jne .game
-        push es
+.back:  push es
         push bx
         push ax
         mov es, [cs:learn_es]
@@ -4038,7 +4060,7 @@ learn_said:
         pop es
         mov byte [cs:learn_msg], 0
         push cs
-        push learn_failed_text
+        push word [cs:lm_text]
         jmp learn_back
 .game:  push ds
         push 0x2E97
@@ -4051,15 +4073,20 @@ learn_refused:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
+        mov word [cs:lm_text], learn_full_text
         cmp byte [cs:learn_msg], LEARN_FULL
+        je .said
+        mov word [cs:lm_text], learn_not_its_text   ; (not a Shinobi's spell: THE SHINOBI'S SPELLS)
+        cmp byte [cs:learn_msg], LEARN_NOT_ITS
         jne .game
-        mov byte [cs:learn_msg], 0
+.said:  mov byte [cs:learn_msg], 0
         push cs
-        push learn_full_text
+        push word [cs:lm_text]
         jmp learn_back
 .game:  push ds
         push 0x2EAB
         jmp learn_back
+lm_text dw 0
 ; PICK_ANY: INT VEC_PICK_ANY replaces "mov [bp-2],ax / or ax,ax" (9317Fh; 5 bytes: INT + 3 NOPs) in the
 ; routine a preserver's level up calls (688h:66h, 93160h; SI the member, AX its preserver level), which
 ; goes on (the JG after) to ask the game's list (94C7Ch) for a spell to learn at each spell level from
@@ -4071,6 +4098,8 @@ learn_refused:
 ; or none. Flags as "or ax,ax".
 pick_any:
         mov [bp - 2], ax
+        call sh_pick_any                    ; (a Shinobi: its own, THE SHINOBI'S SPELLS)
+        jc .flags
         cmp ax, 0
         jle .flags
         cmp si, 3
@@ -4140,6 +4169,8 @@ pick_list:
         mov es, ax
         mov si, [es:USE_WHO_OFF]
         call ns_page_add                    ; (the new spells: NEW SPELLS)
+        call sh_page_cut                    ; (a Shinobi's: its own alone, THE SHINOBI'S SPELLS)
+        jc .out
         test word [cs:rules_hi], RULE_HI_INT
         jz .out
         cmp si, 3
@@ -4159,6 +4190,8 @@ pick_list:
 ; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
 ; one. AL the page's level, as the code goes on to show it.
 pick_page:
+        call sh_pick_page                   ; (a Shinobi's: its own, THE SHINOBI'S SPELLS)
+        jc .set
         push cx                             ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
         push ax
         call pick_most
@@ -4453,9 +4486,9 @@ site_table:
         dw cr_picks                        ; 87 SITE_CR_PICKS (6ED55h: a new member's spells and powers given: picked on the game's windows)
         dw psi_grant                       ; 88 SITE_PSI_GRANT (6E9C9h, 6E9F7h: a new member's power given: a pick, or kept on EDIT)
         dw site_none                        ; 89 (none here)
-        dw el_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere)
-        dw el_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
-        dw el_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
+        dw sh_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere, a Shinobi's wizard spells)
+        dw sh_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
+        dw sh_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
         dw probe_text                       ; 93 SITE_TEXT (87BA0h: the dialogue window's input: TEXT, for the Loader's Dialogue tab)
         dw probe_msg                        ; 94 SITE_MSG (59A0Bh: the message box: TEXT, the same)
         dw psi_count                       ; 95 SITE_PSI_COUNT (93B95h: the psionicists' pop-up opening: PSI_DUE's picks)
@@ -4572,6 +4605,8 @@ site_table:
         dw kit_cure                         ; 206 SITE_KIT_CURE (66545h: a cure's healing: a Healer's, Lifebinder's, Rescuer's more)
         dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
         dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
+        dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
+        dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -5032,7 +5067,8 @@ ns_image_chance:
         pop bx
 .ret:   ret
 ; NS_SPOOK_SAVE (from PROT_SAVE: [BP+8] the caster, [BP+14h] the spell, DI the modifiers): against Spook
-; 1 worse for each 2 levels of the caster's preserver or wizard class, at most NS_SPOOK_MOST. All kept.
+; 1 worse for each 2 levels of the caster's preserver or wizard class, or a Shinobi's casting level (SH_CAST:
+; kits.spook_penalty), the more, at most NS_SPOOK_MOST. All kept.
 ns_spook_save:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .ret
@@ -5058,7 +5094,14 @@ ns_spook_save:
 .next:  inc si
         cmp si, 3
         jb .each
-        shr dx, 1
+        call sh_sheet_is                ; (a Shinobi's casting level, where more: THE SHINOBI'S SPELLS)
+        jne .half
+        movzx ax, al
+        call sh_cast
+        cmp al, dl
+        jbe .half
+        mov dl, al
+.half:  shr dx, 1
         cmp dx, NS_SPOOK_MOST
         jbe .take
         mov dx, NS_SPOOK_MOST
@@ -5148,9 +5191,14 @@ ns_scroll:
         ja .known
         call ns_knows
         jnz .known
+        call sh_ns_scroll               ; (a Shinobi: AL 1 not its own, 2 learnt, 3 not: THE SHINOBI'S SPELLS)
+        cmp al, 1
+        je .known
+        cmp al, 3
+        je .used
         call ns_teach
         inc word [cs:ns_scrolls_n]
-        add word [ss:di + 34], NS_SCROLL_TAUGHT
+.used:  add word [ss:di + 34], NS_SCROLL_TAUGHT
         jmp .out
 .known: add word [ss:di + 34], NS_SCROLL_KNOWN
         jmp .out
@@ -5218,6 +5266,789 @@ ns_page_add:
         pop es
         popa
 .ret:   ret
+
+; ---- THE SHINOBI'S SPELLS (the sequel; sites 209-210, and EL_SPHERE's, RANGER_LEVEL's, PICK_ANY's,
+; PICK_PAGE's, PICK_LIST's, PICK_TOP's, SCROLL_LEARN's, NS_SCROLL's and CR_PICKS' Shinobi parts): SL's
+; SHINOBI_WIZARD, SHINOBI_LEVEL, LV_SHINOBI, PROBE_PICK_ANY, PROBE_PICK_LEVEL, PROBE_PICK_LIST and SHINOBI_READ
+; in the sequel's spell numbers (RESOURCE.GFF's names; kits.rav_shinobi_spells). A Shinobi (the kits' rule
+; on, its kit awake, its own class the thief's, no preserver or wizard class: SH_MEMBER) casts wizard spells
+; with its thief class: the sequel asks 62B45h (spell, class) whether a class casts a spell, wizard spells
+; classes 11 and 18 alone, so SH_YES answers yes for its thief class and a wizard spell (0-72h, and the new
+; spells while their rule is on) after the three callers that know the member (EL_SPHERE's sites 90-92: the
+; spells it knows on USE, the cast's level, the caster level; SHINOBI_MAGE has the slot routine's, site 190).
+; Its caster level is its thief level less SH_FIRST - 1 (SH_CAST: 1st at 6th, 8th at 13th, SH_CAST_MOST at
+; most), the USE screen's MAGE list and its spell levels with it (97E9Ch: half of it, rounded up), and its
+; spells' duration and damage (RANGER_LEVEL); it learns one of its own (SH_SPELLS) at each thief level up
+; from SH_FIRST, and at creation one for each thief level from SH_FIRST, on CHOOSE A SPELL with its own
+; spells alone and the levels up to SH_PICK_LEVEL's; from a scroll only one of its own, after a d100 against
+; its read languages (SH_READ_LANG) and then INT's chance (SH_ROLLS). Counted in the header (+2078 on).
+SH_FIRST      equ 6                 ; (the thief level its spells start at: SL's SHINOBI_FIRST)
+SH_FOURTH     equ 13                ; (the thief level its 4th-level spells come at: SHINOBI_FOURTH)
+SH_CAST_MOST  equ 11                ; (its casting level at most: a Seeker's, kits.SEEKER_CAST_MOST)
+SH_READ_SKILL equ 7                 ; (read languages: the thief tables' eighth skill)
+LEARN_UNREAD  equ 3                 ; (a Shinobi: the scroll not read: SL's)
+LEARN_NOT_ITS equ 4                 ; (a Shinobi: not one of its spells: SL's)
+; its spells (kits.SHINOBI_SPELLS as the sequel numbers them: kits.rav_shinobi_spells): 1st level Gaze
+; Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook, Friends (the
+; last four the new spells, with their rule); 2nd Invisibility, Mirror Image, Blur, Detect Invisible, Fog
+; Cloud; 3rd Blink, Haste, Protection from Missiles, Hold Person; 4th Improved Invisibility, Solid Fog, Confusion
+sh_spells dw 6, 2, 9, 4, 11, NS_FIRST + 2, NS_FIRST + 3, NS_FIRST + 4, NS_FIRST + 5
+          dw 17, 19, 12, 13, 15,  25, 29, 35, 30,  44, 50, 40
+SH_COUNT equ ($ - sh_spells) / 2
+sh_levels db 1, 1, 1, 1, 1, 1, 1, 1, 1,  2, 2, 2, 2, 2,  3, 3, 3, 3,  4, 4, 4
+; SH_CAST: AX the level a Shinobi of thief level AX casts at: less SH_FIRST - 1, no less than 0, no more than
+; SH_CAST_MOST (kits.shinobi_cast). Others kept.
+sh_cast:
+        sub ax, SH_FIRST - 1
+        jns .most
+        xor ax, ax
+.most:  cmp ax, SH_CAST_MOST
+        jle .ret
+        mov ax, SH_CAST_MOST
+.ret:   ret
+; SH_PICK_LEVEL: AL the highest spell level a Shinobi of thief level AL may learn: half its casting level,
+; rounded up, 3rd at most before SH_FOURTH, 4th from it (kits.shinobi_pick_level). Others kept.
+sh_pick_level:
+        push cx
+        mov cl, 3
+        cmp al, SH_FOURTH
+        jb .cast
+        inc cl
+.cast:  movzx ax, al
+        call sh_cast
+        inc ax
+        shr ax, 1
+        cmp al, cl
+        jbe .out
+        mov al, cl
+.out:   pop cx
+        ret
+; SH_SHEET_IS: ZF set if sheet ES:BX is a Shinobi's (the kits' rule on, its kit awake: KIT_IS) whose kit's
+; class is the thief's, AL then its thief level (KIT_LEVEL). Others kept.
+sh_sheet_is:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .no
+        push si
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .out
+        mov si, [cs:kit_where]
+        cmp byte [es:bx + si + SH_CLASSES], THIEF_CLASS
+        jne .out
+        call kit_level          ; (ZF still set)
+.out:   pop si
+        ret
+.no:    push ax
+        or al, 1                ; (ZF clear)
+        pop ax
+        ret
+; SH_MEMBER: CF set if party member SI (0-3) is a Shinobi (SH_SHEET_IS) with no preserver or wizard class
+; (one has a preserver's spells as a preserver), AL its thief level. DS the game's; others kept.
+sh_member:
+        cmp si, 3
+        ja .no
+        push ax
+        push bx
+        push es
+        mov ax, si
+        call kit_sheet
+        call sh_sheet_is
+        jne .not
+        push ax
+        mov al, PRESERVER_CLASS
+        call sh_has_class
+        je .pres
+        mov al, WIZARD_NEW_CLASS
+        call sh_has_class
+.pres:  pop ax
+        je .not
+        mov [cs:sh_level_of], al
+        pop es
+        pop bx
+        pop ax
+        mov al, [cs:sh_level_of]
+        stc
+        ret
+.not:   pop es
+        pop bx
+        pop ax
+.no:    clc
+        ret
+sh_level_of db 0
+; SH_HAS_CLASS: ZF set if sheet ES:BX has class AL at one of its three places. All registers kept.
+sh_has_class:
+        cmp [es:bx + SH_CLASSES], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 1], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 2], al
+.ret:   ret
+; SH_FIGHTER_IS: ZF set if combatant AX (the game's, as 62B45h's callers and the caster level routine have
+; it: its creature at 388h:0C34h, as EL_SPHERE reads it) is a Shinobi (SH_SHEET_IS), AL its thief level. DS
+; the game's; others kept.
+sh_fighter_is:
+        cmp ax, 400
+        jae .no
+        push bx
+        push es
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        call kit_sheet
+        call sh_sheet_is
+        pop es
+        pop bx
+        ret
+.no:    or al, 1
+        ret
+; SH_OWN: CF set if spell AX is one of the Shinobi's (SH_SPELLS; a new one only while its rule is on and its
+; record has room: NS_NEW), CL its level. Others kept.
+sh_own:
+        push bx
+        push di
+        xor di, di
+.each:  cmp ax, [cs:sh_spells + di]
+        je .found
+        add di, 2
+        cmp di, SH_COUNT * 2
+        jb .each
+.no:    pop di
+        pop bx
+        clc
+        ret
+.found: cmp ax, NS_FIRST
+        jb .yes
+        call ns_new             ; (BX its place: kept by the pops)
+        jnc .no
+.yes:   shr di, 1
+        mov cl, [cs:sh_levels + di]
+        pop di
+        pop bx
+        stc
+        ret
+; SH_KNOWS: ZF clear if party member SI knows spell AX: its known bit (KNOWN_BITS), or a new spell's sheet
+; bit (NS_KNOWS). DS the game's; all registers kept.
+sh_knows:
+        push bx
+        push es
+        cmp ax, NS_FIRST
+        jae .new
+        call known_bits
+        call bit_known
+        jmp .out
+.new:   mov bx, ax
+        sub bx, NS_FIRST
+        call ns_knows
+.out:   pop es
+        pop bx
+        ret
+; SH_TOP: AL the highest spell level, CL or lower, with one of the Shinobi's spells (SH_OWN) party member
+; SI doesn't know (SH_KNOWS); 0 if none. Others kept.
+sh_top:
+        push bx
+        push cx
+        push dx
+        mov dl, cl              ; (DL the most, AL the best found)
+        xor al, al
+        xor bx, bx
+.each:  push ax
+        mov ax, [cs:sh_spells + bx]
+        call sh_own
+        jnc .next_pop
+        cmp cl, dl
+        ja .next_pop
+        call sh_knows
+        jnz .next_pop
+        pop ax
+        cmp cl, al
+        jbe .next
+        mov al, cl
+        jmp .next
+.next_pop:
+        pop ax
+.next:  add bx, 2
+        cmp bx, SH_COUNT * 2
+        jb .each
+        pop dx
+        pop cx
+        pop bx
+        ret
+; SH_KNOWN_COUNT: AX how many of the Shinobi's spells party member SI knows. Others kept.
+sh_known_count:
+        push bx
+        push cx
+        push dx
+        xor dx, dx
+        xor bx, bx
+.each:  mov ax, [cs:sh_spells + bx]
+        call sh_own
+        jnc .next
+        call sh_knows
+        jz .next
+        inc dx
+.next:  add bx, 2
+        cmp bx, SH_COUNT * 2
+        jb .each
+        mov ax, dx
+        pop dx
+        pop cx
+        pop bx
+        ret
+
+; SH_YES: (from EL_SPHERE's entries, SH_SPHERE_DI and SH_SPHERE_BP: AX the member, the game's AX pushed under
+; the way back, the INT's IP, CS and FLAGS over 62B45h's two words, the spell and the class) the game's no
+; made yes for a Shinobi's thief class (SH_FIGHTER_IS) and a wizard spell (below PRIEST_FIRST, or a new one:
+; NS_NEW), so that the USE screen lists the wizard spells it knows, they are cast with its thief class
+; (RANGER_LEVEL), and its caster level counts it (SH_CAST_LEVEL). Counted (SH_MAGES). All registers kept.
+sh_yes:
+        push bp
+        mov bp, sp              ; ([BP+4] the game's AX, +6 the INT's IP, CS, FLAGS, +0Ch the spell, +0Eh
+        cmp byte [bp + 4], 0    ;   the class)
+        jne .ret
+        cmp word [bp + 0x0E], THIEF_CLASS
+        jne .ret
+        push ax
+        push bx
+        mov bx, ax
+        mov ax, [bp + 0x0C]
+        cmp ax, PRIEST_FIRST
+        jb .wizard
+        push bx
+        call ns_new
+        pop bx
+        jnc .out
+.wizard:
+        mov ax, bx
+        call sh_fighter_is
+        jne .out
+        mov byte [bp + 4], 1
+        inc word [cs:sh_mages]
+.out:   pop bx
+        pop ax
+.ret:   pop bp
+        ret
+; SH_SPHERE_DI, SH_SPHERE_BP (sites 90, 91 and 92, before EL_SPHERE's own entries): SH_YES for the member DI
+; (62C00h's) or [BP+6] (628AFh's, 97DC5h's), then EL_SPHERE.
+sh_sphere_di:
+        push ax
+        mov ax, di
+        call sh_yes
+        pop ax
+        jmp el_sphere_di
+sh_sphere_bp:
+        push ax
+        mov ax, [bp + 6]
+        call sh_yes
+        pop ax
+        jmp el_sphere_bp
+
+; SH_CAST_LEVEL (site 209, "shinobi_cast_level"): "add sp,4" (97DF1h; 3 bytes) after the caster level
+; routine's (97DC5h, SL's 81B16h: [BP+6] the combatant, [BP+8] the spell; each class SI 0-19 that casts the
+; spell asked its level, 98h:0C1h, the best kept in DI) call for a class's level: the call's two words
+; taken off as the ADD did; for the thief class (17) of a Shinobi (SH_FIGHTER_IS: SH_YES let it in), AX its
+; casting level (SH_CAST: the thief level less 5, at most SH_CAST_MOST), SL's SHINOBI_LEVEL. Counted
+; (SH_LEVELS). The caster level is the USE screen's spell levels (97E9Ch, half of it rounded up) and Dispel
+; Magic's weighing; RANGER_LEVEL has the same for the spell's duration and damage.
+sh_cast_level:
+        push bp
+        mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; +8 the call's two words)
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 0x0A], ax     ; (the INT's frame moved over the two words)
+        mov ax, [bp + 4]
+        mov [bp + 8], ax
+        mov ax, [bp + 2]
+        mov [bp + 6], ax
+        mov ax, [bp]
+        mov [bp + 4], ax
+        pop ax
+        add bp, 4
+        mov sp, bp
+        pop bp
+        cmp si, THIEF_CLASS
+        jne .ret
+        push ax
+        push bx
+        mov bx, ax              ; (BX the level)
+        mov ax, [bp + 6]        ; (BP the game's: its [BP+6] the combatant)
+        call sh_fighter_is
+        jne .out
+        mov ax, bx
+        call sh_cast
+        mov bx, ax
+        inc word [cs:sh_levels_n]
+.out:   mov ax, bx
+        pop bx
+        add sp, 2               ; (the AX pushed: AX is the answer)
+.ret:   iret
+; SH_PLACE_LEVEL: (RANGER_LEVEL's) AX the level of the class at ES:BX (a sheet + the class's place, in the
+; routine of a spell's level for its duration and damage, 628AFh) a Shinobi's casting level (SH_CAST) if
+; that class is a Shinobi's thief class (SH_SHEET_IS; SH_YES let it cast), SL's SHINOBI_WIZARD. Counted
+; (SH_LEVELS). DS the game's; others kept.
+sh_place_level:
+        cmp byte [es:bx + SH_CLASSES], THIEF_CLASS
+        jne .ret
+        push bx
+        push cx
+        push dx
+        mov cx, ax
+        mov ax, bx              ; (the sheet: BX less the place, (BX - the table's start) mod its size)
+        sub ax, [SHEETS_PTR]
+        xor dx, dx
+        push cx
+        mov cx, SHEET_SIZE
+        div cx
+        pop cx
+        sub bx, dx
+        call sh_sheet_is
+        jne .keep
+        cmp dx, [cs:kit_where]
+        jne .keep               ; (not its kit's class)
+        mov ax, cx
+        call sh_cast
+        mov cx, ax
+        inc word [cs:sh_levels_n]
+.keep:  mov ax, cx
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+
+; SH_LEVEL_UP (site 210, "shinobi_level_up"): "cmp word [bp+8],0Bh" (957ABh; 4 bytes: the site and a NOP)
+; in the routine that raises a character a level in a class ([BP+8] the class, SI the member; then "jnz" past
+; the preserver's spell pick, 688h:66h, CHOOSE A SPELL, when [BP-6] says the level is a new one), SL's
+; LV_SHINOBI: the compare's flags, but ZF set for a Shinobi's thief class (SH_MEMBER) at thief level SH_FIRST
+; or more, so that it learns one of its own (PICK_ANY's, PICK_PAGE's, PICK_LIST's and PICK_TOP's Shinobi
+; parts). Counted (SH_UPS).
+sh_level_up:
+        push bp
+        mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; [BP] the game's BP)
+        push ax
+        push bx
+        mov bx, [bp]
+        cmp word [ss:bx + 8], THIEF_CLASS
+        jne .game
+        call sh_member
+        jnc .game
+        cmp al, SH_FIRST
+        jb .game
+        inc word [cs:sh_ups]
+        cmp al, al              ; (ZF set: on to the pick)
+        jmp .flags
+.game:  cmp word [ss:bx + 8], 0x0B
+.flags: pushf
+        pop ax
+        and ax, 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
+        and word [bp + 6], ~0x08D5
+        or [bp + 6], ax
+        pop bx
+        pop ax
+        pop bp
+        iret
+
+; SH_PICK_ANY: (PICK_ANY's: SI the member, AX its preserver level, [BP-2] the level the routine 93160h looks
+; for spells to learn from, down) CF set for a Shinobi (SH_MEMBER) with no preserver level: AX and [BP-2] the
+; highest spell level up to its own (SH_PICK_LEVEL) with one of its spells it doesn't know (SH_TOP), 0 (the
+; window not opened) if none (SL's PROBE_PICK_ANY). Counted (SH_ASKS). Else CF clear, all kept.
+sh_pick_any:
+        or ax, ax
+        jg .no
+        push cx
+        call sh_member
+        jnc .not
+        call sh_pick_level
+        mov cl, al
+        call sh_top
+        movzx ax, al
+        mov [bp - 2], ax
+        inc word [cs:sh_asks]
+        pop cx
+        stc
+        ret
+.not:   pop cx
+.no:    clc
+        ret
+; SH_READER: CF set if the reader (USE_WHO's: CHOOSE A SPELL's, a scroll's) is a Shinobi (SH_MEMBER), SI it
+; and AL its thief level. DS the game's; others kept.
+sh_reader:
+        push es
+        mov si, ds
+        add si, USE_WHO_SEG
+        mov es, si
+        mov si, [es:USE_WHO_OFF]
+        pop es
+        jmp sh_member
+; SH_PICK_PAGE: (PICK_PAGE's: AL the page CHOOSE A SPELL opens on) CF set for a Shinobi reader (SH_READER):
+; AL the highest level up to its own (SH_PICK_LEVEL) with one of its spells it doesn't know (SH_TOP), its own
+; if none; else CF clear, AL kept. Others kept.
+sh_pick_page:
+        push cx
+        push si
+        push ax
+        call sh_reader
+        jnc .no
+        call sh_pick_level
+        mov cl, al
+        call sh_top
+        or al, al
+        jnz .page
+        mov al, cl
+.page:  pop cx                  ; (the game's AX: AH kept)
+        mov ah, ch
+        pop si
+        pop cx
+        stc
+        ret
+.no:    pop ax
+        pop si
+        pop cx
+        clc
+        ret
+; SH_PAGE_CUT: (PICK_LIST's: ES 370h's segment, its words at NS_PAGE the page's DI spells, SI the reader)
+; CF set for a Shinobi (SH_MEMBER): the page its own spells alone (SH_OWN), DI their count (SL's
+; PROBE_PICK_LIST). Counted (SH_PAGED). Else CF clear. Others kept.
+sh_page_cut:
+        push ax
+        call sh_member
+        pop ax
+        jnc .ret
+        push ax
+        push bx
+        push cx
+        push dx
+        xor bx, bx              ; (BX the page's place read, DX the kept)
+        xor dx, dx
+.each:  cmp bx, di
+        jae .done
+        push bx
+        shl bx, 1
+        mov ax, [es:bx + NS_PAGE]
+        pop bx
+        call sh_own
+        jnc .next
+        push bx
+        mov bx, dx
+        shl bx, 1
+        mov [es:bx + NS_PAGE], ax
+        pop bx
+        inc dx
+.next:  inc bx
+        jmp .each
+.done:  mov di, dx
+        inc word [cs:sh_paged]
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        stc
+.ret:   ret
+; SH_PAGE_TOP: (PICK_TOP's: CX the highest page CHOOSE A SPELL's level button goes to) CX no more than a
+; Shinobi reader's own (SH_READER, SH_PICK_LEVEL), SL's PROBE_PICK_LEVEL. Others kept.
+sh_page_top:
+        push ax
+        push si
+        call sh_reader
+        jnc .out
+        call sh_pick_level
+        movzx ax, al
+        cmp cx, ax
+        jle .out
+        mov cx, ax
+.out:   pop si
+        pop ax
+        ret
+
+; SH_FIRST_SPELLS: (CR_PICKS': SI the new member, the game having given it no spells) a new Shinobi
+; (SH_MEMBER) of thief level SH_FIRST or more picks one of its own on CHOOSE A SPELL (CR_ONE's way, the level
+; up's 688h:66h: PICK_ANY's Shinobi part) for each thief level from SH_FIRST, as its level ups would have
+; given them; on EXIT the rest are its first ones not known, in SH_SPELLS' order, up to its level's
+; (SH_FILL). Counted (SH_ASKS, by the windows). Registers changed.
+sh_first_spells:
+        cmp word [CR_EDITING], -1
+        jne .ret
+        call sh_member
+        jnc .ret
+        sub al, SH_FIRST - 1
+        jbe .ret
+        movzx cx, al            ; (CX the picks due)
+.one:   push cx
+        call sh_known_count
+        push ax
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:cr_windows]
+        call sh_known_count
+        pop cx
+        cmp ax, cx
+        pop cx
+        je .fill                ; (EXIT: none learnt)
+        loop .one
+.ret:   ret
+.fill:  jmp sh_fill
+; SH_FILL: CX more of the Shinobi's spells party member SI (SH_MEMBER, AL its thief level) doesn't know given
+; it (their known bits; a new one's sheet bit: NS_TEACH), the first in SH_SPELLS' order whose level is up to
+; its own (SH_PICK_LEVEL). Registers changed.
+sh_fill:
+        call sh_member
+        jnc .ret
+        call sh_pick_level
+        mov dl, al              ; (DL the most)
+        xor di, di
+.each:  jcxz .ret
+        cmp di, SH_COUNT * 2
+        jae .ret
+        mov ax, [cs:sh_spells + di]
+        add di, 2
+        push cx
+        call sh_own
+        mov dh, cl
+        pop cx
+        jnc .each
+        cmp dh, dl
+        ja .each
+        call sh_knows
+        jnz .each
+        cmp ax, NS_FIRST
+        jae .new
+        push es
+        push bx
+        call known_bits
+        call bit_set
+        pop bx
+        pop es
+        jmp .given
+.new:   push bx
+        mov bx, ax
+        sub bx, NS_FIRST
+        call ns_teach
+        pop bx
+.given: inc word [cs:sh_filled]
+        dec cx
+        jmp .each
+.ret:   ret
+
+; SH_READ_LANG: AL party member SI's chance to read languages (a Shinobi's: SH_MEMBER, AL its thief level), as
+; the thief tables have it for the inventory's skills (C_THIEF, SH_READ_SKILL): with Thieves as in AD&D
+; (RULE_THIEF_TABLE) AD&D's average for the level (THIEF_ADND) + the race's, no more than THIEF_MOST; else
+; the table's base + 4 a level + the race's; 0 to 100. DS the game's; others kept.
+sh_read_lang:
+        push bx
+        push cx
+        push si
+        push es
+        push gs
+        movzx cx, al            ; (CX the thief level)
+        mov ax, si
+        call kit_sheet
+        movzx si, byte [es:bx + SHEET_RACE]
+        shl si, 3
+        mov ax, ds
+        add ax, THIEF_TABLE
+        mov gs, ax
+        movsx bx, byte [gs:si + THIEF_RACE + SH_READ_SKILL]   ; (BX the race's)
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .game
+        push bx
+        mov bx, SH_READ_SKILL
+        mov si, cx
+        call thief_adnd
+        pop bx
+        add ax, bx
+        cmp ax, THIEF_MOST
+        jle .clip
+        mov ax, THIEF_MOST
+        jmp .clip
+.game:  movsx ax, byte [gs:SH_READ_SKILL]
+        shl cx, 2
+        add ax, cx
+        add ax, bx
+.clip:  cmp ax, 0
+        jge .high
+        xor ax, ax
+.high:  cmp ax, 100
+        jle .out
+        mov ax, 100
+.out:   pop gs
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+; SH_ROLLS: party member SI, a Shinobi (SH_MEMBER: AL its thief level), tries to learn its spell DX from a
+; scroll (SL's SHINOBI_READ): a d100 against its read languages (SH_READ_LANG; LEARN_READ, LEARN_READ_CHANCE):
+; above it LEARN_UNREAD (the scroll used up, nothing learnt); read, with RULE_HI_INT a d100 against INT's
+; chance (INT_CHANCE; no most a level: its spells are few): above it LEARN_FAILED; else LEARN_LEARNT. The try
+; told to the Loader (LEARN_SEQ...). CF set if learnt. DS the game's; others kept.
+sh_rolls:
+        push ax
+        push bx
+        push es
+        mov [cs:learn_spell], dl
+        mov [cs:learn_spell_hi], dh
+        mov bx, si
+        mov [cs:learn_who], bl
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_chance], 0
+        call sh_read_lang
+        mov [cs:learn_read_chance], al
+        push ax
+        mov ax, 100
+        call game_die
+        mov [cs:learn_read], al
+        pop bx
+        cmp al, bl
+        jbe .read
+        mov byte [cs:learn_result], LEARN_UNREAD
+        mov byte [cs:learn_msg], LEARN_UNREAD
+        jmp .no
+.read:  imul bx, si, CREATURE_SIZE
+        les ax, [CREATURES_PTR]
+        add bx, ax
+        mov al, [es:bx + CREATURE_INT]
+        mov [cs:learn_int], al
+        mov byte [cs:learn_result], LEARN_LEARNT
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .yes
+        movzx bx, al
+        sub bx, INT_FIRST
+        jge .row
+        xor bx, bx
+.row:   cmp bx, INT_ROWS - 1
+        jbe .chance
+        mov bx, INT_ROWS - 1
+.chance:
+        mov al, [cs:int_chance + bx]
+        mov [cs:learn_chance], al
+        mov ax, 100
+        call game_die
+        mov [cs:learn_roll], al
+        cmp al, [cs:learn_chance]
+        jbe .yes
+        mov byte [cs:learn_result], LEARN_FAILED
+        mov byte [cs:learn_msg], LEARN_FAILED
+.no:    inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop es
+        pop bx
+        pop ax
+        clc
+        ret
+.yes:   inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop es
+        pop bx
+        pop ax
+        stc
+        ret
+; SH_NOT_ITS: the try at scroll spell DX by party member SI, a Shinobi, refused: not one of its spells
+; (LEARN_NOT_ITS: the scroll kept, LEARN_REFUSED's text), told to the Loader. Others kept.
+sh_not_its:
+        push ax
+        mov ax, si
+        mov [cs:learn_who], al
+        mov [cs:learn_spell], dl
+        mov [cs:learn_spell_hi], dh
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_chance], 0
+        mov byte [cs:learn_read], 0
+        mov byte [cs:learn_read_chance], 0
+        mov byte [cs:learn_result], LEARN_NOT_ITS
+        mov byte [cs:learn_msg], LEARN_NOT_ITS
+        inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop ax
+        ret
+; SH_SCROLL: (SCROLL_LEARN's: the game's ES:BX the reader's byte of the known bits, [BP-4] the spell, a wizard
+; spell it doesn't know) CF set for a Shinobi reader (SH_READER): AX 1 (the game's "known" path, the scroll
+; kept, LEARN_REFUSED's text) for a spell not its own (SH_NOT_ITS); else its rolls (SH_ROLLS), AX 0 (the game
+; teaches it and uses the scroll up; LEARN_SAID takes it back after LEARN_UNREAD or LEARN_FAILED). Else CF
+; clear. Others kept.
+sh_scroll:
+        push cx
+        push si
+        push dx
+        push ax
+        call sh_reader
+        jnc .no
+        mov dx, [bp - 4]
+        push ax
+        push cx
+        mov ax, dx
+        call sh_own
+        pop cx
+        pop ax
+        jc .its
+        call sh_not_its
+        pop ax
+        mov ax, 1
+        jmp .yes
+.its:   mov [cs:learn_es], es
+        push ax
+        lea ax, [bx + KNOWN_OFF]
+        mov [cs:learn_bx], ax
+        mov cl, dl
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        mov [cs:learn_mask], al
+        pop ax
+        call sh_rolls
+        pop ax
+        xor ax, ax
+.yes:   pop dx
+        pop si
+        pop cx
+        stc
+        ret
+.no:    pop ax
+        pop dx
+        pop si
+        pop cx
+        clc
+        ret
+; SH_NS_SCROLL: (NS_SCROLL's: SI the reader, AX a new spell it doesn't know, BX its place) AL 0 if the
+; reader isn't a Shinobi (SH_MEMBER: the game's way, NS_SCROLL's); for one, AL 1 for a spell not its own
+; (SH_NOT_ITS: the scroll kept), else its rolls (SH_ROLLS): AL 2 learnt, 3 not (the scroll used up, nothing
+; taken back: LEARN_MASK 0). Others kept.
+sh_ns_scroll:
+        push dx
+        push cx
+        mov dx, ax
+        push ax
+        call sh_member
+        jnc .none
+        push ax
+        mov ax, dx
+        call sh_own
+        pop ax
+        jc .its
+        call sh_not_its
+        pop ax
+        mov al, 1
+        jmp .out
+.its:   mov [cs:learn_es], ds
+        mov word [cs:learn_bx], 0
+        mov byte [cs:learn_mask], 0     ; (no bit to take back: LEARN_SAID's AND keeps it)
+        call sh_rolls
+        pop ax
+        mov al, 2
+        jc .out
+        inc al
+        jmp .out
+.none:  pop ax
+        mov al, 0
+.out:   pop cx
+        pop dx
+        ret
+sh_filled  dw 0                     ; (spells given at creation's EXIT: SH_FILL, counted for a look in play)
+sh_ups     dw 0                     ; (level ups let on to the pick: SH_LEVEL_UP, the same)
 
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
@@ -11056,7 +11887,8 @@ ef_last      db 0
 ;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92);
 ; - spell slots (SL's PROBE_SLOTS and PROBE_SLOT_LEVEL, from ADND_SLOTS, site 34: SLOT_BEHIND, BEHIND_LEAST,
 ;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
-;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61);
+;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61); the Shinobi's wizard spells
+;   (THE SHINOBI'S SPELLS: its list, picks, scrolls and casting level, sites 90-92, 209-210);
 ; - PSP costs, a Mind Warrior's PSP, the level up's hit dice and a Battle Mage's casting after a hit (KIT PSP
 ;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199), and a kit's hit die and PSP at creation
 ;   (sites 200, 201, and KIT_REROLL on the kit page).
@@ -11066,7 +11898,7 @@ ef_last      db 0
 ;   known (EL_SPHERE's HEALER_COSMOS and KIT_BARS: the Healer's cosmos, the spells a kit never knows).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
 ; (+355), BAD_LUCK (+1862); COSMOS_MORE (+2060) and the counters after it DSCLOG2's own. Not here (yet):
-; a Shinobi's casting level and spells, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the Effects lines.
+; poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
@@ -20532,10 +21364,13 @@ cr_picks:
         cmp si, 4
         jae .back
         cmp byte [ss:di - 5], 0
-        je .psi
+        je .shinobi
         cmp word [CR_EDITING], -1
         jne .psi
         call cr_spells
+        jmp .psi
+.shinobi:
+        call sh_first_spells    ; (a new Shinobi of 6th thief level on: THE SHINOBI'S SPELLS)
 .psi:   call psi_ask
 .back:  mov byte [cs:psi_due], 0
         mov byte [cs:psi_keep], 0
@@ -21013,6 +21848,7 @@ pick_top:
         jbe .most
         movzx cx, al
 .most:  pop ax
+        call sh_page_top        ; (a Shinobi's: its own levels, THE SHINOBI'S SPELLS)
 .cmp:   push bp
         mov bp, sp              ; ([BP+2] CX, +4 IP, +6 CS, +8 the flags)
         cmp ax, cx

@@ -83,6 +83,11 @@ Releases, newest first (2.12.0 and older in the archive):
   (two new DSCLOG2 sites, 200 and 201).
 
 **New**
+- **The Shinobi casts its spells in Wake of the Ravager** (the port audit's step 7, part 1): a MAGE list
+  on USE with the wizard spells it knows, cast at its thief level less 5 (duration, damage, Spook's save
+  too); one of its own learnt at each thief level up from 6th, a new Shinobi of 6th or higher picking one
+  for each level from 6th; from a scroll only its own, after a read languages roll and INT's (THAT IS NOT
+  A SHINOBI SPELL, YOU CAN NOT READ THE SCROLL). DSCLOG2 sites 209-210, header +2076..+2087.
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
   default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
