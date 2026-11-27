@@ -23,16 +23,9 @@ BITS 16
 CPU 386
 %include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
 %include "shared_routines.inc"  ; (the routines both helpers have the same: SHARED_name)
-%macro fig_redraw 0              ; (FIG_WAIT's figure drawn again, in a handler after its PUSHAD, PUSH ES)
+%macro fig_redraw 0              ; (FIG_WAIT's figures drawn again, in a handler after its PUSHAD, PUSH ES)
         call ovr_frame          ; (the way back in a frame the overlay manager can fix up)
-        push word [FIG_BACK]
-        push word [FIG_BACK + 2]
-        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT    ; (its box's background put back, as the game does)
-        add sp, 4
-        push dword FIG_AT
-        push dword [0x11A0]
-        game_far FIG_STUB, FIG_DRAW                     ; (and the figure drawn, as after a race's click)
-        add sp, 8
+        call fig_draws
         pop bp
         pop ax                  ; (OVR_BACK's: the way back as the overlay manager left it)
         pop dx
@@ -20439,6 +20432,7 @@ site_tab:
         site NS_IMAGE + 128, inventory_figure
         site NS_IMAGE + 129, inventory_load
         site NS_IMAGE + 130, small_figure
+        site NS_IMAGE + 131, creation_portrait
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -21600,6 +21594,15 @@ inventory_figure:
         call tail_call
         iret
 
+; CREATION_PORTRAIT: (632BFh, a race or portrait clicked, and 65F9Ch, the screen opening: "mov ax,
+; es:[bx+18h] / add ax,12h", the preloaded full-length picture of the figure of the creature at ES:BX,
+; the one being made) the inventory's picture for the class being made (CREATION_PORTRAIT_FAR), which
+; INVENTORY_LOAD reads, else the game's.
+creation_portrait:
+        mov ax, creation_portrait_far
+        call tail_call
+        iret
+
 inventory_load:
         call if_frame
         push gs                 ; (INVENTORY_LOAD_FAR pops it before its IRET)
@@ -21632,6 +21635,9 @@ FIG_BACK_PUT equ 0x30C3         ;   DROP_SEG:30C3h, as the race's click does: DS
 FIG_AT     equ 0x00160091       ; (x 91h, y 16h)
 FIG_STUB   equ 0x4239 - 0x4356  ; (the overlay's stub that draws it, less DS: (far creature, x, y))
 FIG_DRAW   equ 0x2A
+PORTRAIT_BACK equ 0xE8E         ; (DS: the full-length picture's box's saved background, two words)
+PORTRAIT_STUB equ 0x4272 - 0x4356 ; (the overlay's stub that draws a preloaded picture: (number, x, y),
+PORTRAIT_DRAW equ 0x93          ;   580h:93h in the screen's overlay code)
 fig_seen   dd 0xFFFFFFFF        ; (the classes, the figure in the top byte, as last looked at)
 fig_wait:
         sti
@@ -21664,6 +21670,33 @@ fig_wait:
         ret
 .done:  or sp, sp                       ; (ZF clear)
 .ret:   ret
+
+; FIG_DRAWS: (FIG_REDRAW, in its overlay frame) the screen's two figures drawn again, each over its
+; box's background put back as the game does after a race's click: the full-length picture (the
+; inventory's for the class, CREATION_PORTRAIT_FAR) and the figure at the top. DS the game's; AX, BX
+; and ES changed.
+fig_draws:
+        push word [PORTRAIT_BACK]
+        push word [PORTRAIT_BACK + 2]
+        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT
+        add sp, 4
+        push dword 0x3C
+        push word 0x32          ; (its place, as the game pushes it)
+        les bx, [0x11A0]
+        mov ax, creation_portrait_far
+        call tail_call
+        push ax
+        game_far PORTRAIT_STUB, PORTRAIT_DRAW
+        add sp, 8
+        push word [FIG_BACK]
+        push word [FIG_BACK + 2]
+        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT
+        add sp, 4
+        push dword FIG_AT
+        push dword [0x11A0]
+        game_far FIG_STUB, FIG_DRAW
+        add sp, 8
+        ret
 
 ; FIG_OPEN: "push 160091h" (65FACh; 6 bytes: x and y for the figure's drawing, 4239h:2Ah, as the
 ; creation screen opens): first the Loader's figure in the class's outfit waited for (FIG_WAIT, the
@@ -28677,6 +28710,43 @@ inventory_figure_far:
         pop es
         retf
 .stock: add ax, 0x12
+        retf
+
+; CREATION_PORTRAIT_FAR: (TAIL_CALL: DS the game's) AX the picture for the creation screen's figure
+; (ES:BX its creature): the inventory's key (INVENTORY_FIGURE_FAR's) for the classes of the sheet being
+; made (WP_CREATION: numbered 1-8, the class groups; a human's one class), else 12h + the figure.
+; All other registers kept.
+creation_portrait_far:
+        mov ax, [es:bx + 0x18]
+        cmp ax, 14
+        jae inventory_figure_far.stock
+        push es
+        push bx
+        push cx
+        push dx
+        push si
+        mov dx, ax
+        mov cx, 3
+        cmp ax, 2
+        jae .key
+        mov cx, 1               ; (a human: its one class)
+.key:   shl dx, 8
+        add dx, INV_ART_BASE
+        les bx, [WP_CREATION]
+        xor si, si
+.next:  movzx ax, byte [es:bx + si + 0x21]
+        dec ax
+        cmp ax, 7
+        ja .skip
+        bts dx, ax
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop es
         retf
 
 ; SMALL_FIGURE_FAR: (TAIL_CALL: GS DSCLOG's segment, DS the game's) AX the picture to read for the

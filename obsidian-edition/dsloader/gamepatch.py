@@ -264,6 +264,7 @@ NS_END = 0xD4  # (past the new spells: 196-211, DSCLOG's NS_FIRST + NS_COUNT; ga
 
 INVENTORY_FIGURE_SITE, INVENTORY_LOAD_SITE = NS_IMAGE + 128, NS_IMAGE + 129
 SMALL_FIGURE_SITE = NS_IMAGE + 130
+CREATION_PORTRAIT_SITE = NS_IMAGE + 131  # (the creation screen's full-length picture: the inventory's)
 
 
 def _site(number: int, length: int) -> bytes:
@@ -895,6 +896,8 @@ PATCHES = (
     # a creature's small figure (the inventory's party column): each member's own walking picture
     # in their outfit, from the Loader's SEGOBJEX (DSCLOG's SMALL_FIGURE, sprites.small_pictures)
     Patch("small_figure", 0x6797A, bytes.fromhex("268b4718052000"), _site(SMALL_FIGURE_SITE, 7)),
+    Patch("creation_portrait", 0x632BF, bytes.fromhex("268b4718051200"), _site(CREATION_PORTRAIT_SITE, 7)),
+    Patch("creation_portrait_open", 0x65F9C, bytes.fromhex("268b4718051200"), _site(CREATION_PORTRAIT_SITE, 7)),
     Patch("panel_centre_xy", 0x1E8DC, bytes.fromhex("c706b6110000"), _site(CENTRE_XY_SITE, 6)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
