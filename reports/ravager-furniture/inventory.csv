@@ -54,8 +54,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1034,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
 1035,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
 1112,Mines 3 loot chest,Both poses lowered to match the identical Pyramid chest drawing,,03A:1
-1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
-1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
+1115,"Seats, loom and restraints",Occupied and empty rack verified through the miner’s release,1115-captive-and-rack.zip,03A:1
+1116,"Seats, loom and restraints",Occupied and empty rack verified through the miner’s release,1115-captive-and-rack.zip,0FF:1
 1137,Freestanding shelves,Lowered and placements reviewed,,03A:1
 1140,Freestanding shelves,Lowered and placements reviewed,,03A:1
 1160,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,033:1
@@ -180,8 +180,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2789,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
 2790,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
 2793,"Tables, counters and benches",Lowered and placements reviewed,,03A:1
-2794,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
-2795,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
+2794,Two-piece weapon display,Both halves joined at their common floor line in both regions in DOSBox,,036:1 03A:1
+2795,Two-piece weapon display,Both halves joined at their common floor line in both regions in DOSBox,,036:1 03A:1
+2796,Upright polearm stand,Lower 43 rows scaled with blade tips intact. All four placements checked in DOSBox,,036:1 03A:2 03D:1
 2824,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:3
 2825,Two-state storage or fixture,Both stock states lowered,,032:4 033:2
 2840,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
@@ -193,9 +194,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3073,Loose pillow against torn bedding,Both placements lowered 11 pixels to follow the bed,,033:2
 3074,Floor pillow,Reviewed beside damaged beds and retained on the floor,,033:2
 3078,Torn red couch,Lowered and compared with the intact red couch,,033:2
-3172,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3173,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3174,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
+3172,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
+3173,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
+3174,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
 3231,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:5
 3246,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:6
 3247,"Tables, counters and benches",Lowered and placements reviewed,,034:1
