@@ -20,6 +20,7 @@ class InventoryArtTests(unittest.TestCase):
             classoutfits.DWARF_ROLES, classoutfits.ELF_ROLES, classoutfits.HALF_ELF_ROLES,
             classoutfits.HALF_GIANT_ROLES, classoutfits.HALFLING_ROLES) for _ in (0, 1)]
         legal += [set(classoutfits.MUL_ROLES), set(inventoryart.THRI_KREEN)]
+        legal[5] = legal[5] | {(2, 5, 8)}  # (Cilla, the ready-made elf: Druid/Preserver/Thief)
         resources = {}
         for figure, (w, h) in enumerate(sizes):
             resources["BMP ", art.FIGURE_FIRST + figure] = icons.encode([[16] * w for _ in range(h)])
@@ -31,7 +32,7 @@ class InventoryArtTests(unittest.TestCase):
         pictures = inventoryart.chunks(resources)
         expected = {("BMP ", inventoryart.picture_id(f, c)) for f, wanted in builds.items() for c in wanted}
         self.assertEqual(set(pictures), expected)
-        self.assertEqual(len(pictures), 306)
+        self.assertEqual(len(pictures), 307)
         for f, dims in enumerate(sizes):
             for c in builds[f]:
                 w, h, rows = art.decode_frame(pictures["BMP ", inventoryart.picture_id(f, c)])
@@ -77,7 +78,7 @@ class InventoryArtTests(unittest.TestCase):
         from dsloader import gff, ravitems
         sequel = gff.read_gff(open(os.path.join(os.environ["DSUN_WOTR"], "RESOURCE.GFF"), "rb").read())
         pictures = inventoryart.rav_chunks(sequel, os.environ["DSUN_SL"], os.environ["DSUN_WOTR"])
-        self.assertEqual(len(pictures), 306)
+        self.assertEqual(len(pictures), 307)
         steady = {c for c, _ in ravitems.stable_colours(sequel, ravitems.region_palettes(os.environ["DSUN_WOTR"]))}
         for key, frame in pictures.items():
             with self.subTest(picture=key):

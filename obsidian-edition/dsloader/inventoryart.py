@@ -16,7 +16,8 @@ FIGURE is 0 (man) or 1 (woman), CLASS 1-8 (Cleric, Druid, Fighter, Gladiator, Pr
 Psionicist, Ranger, Thief). PICTURE is the whole figure at native size (48x95 for the man, 44x88
 for the woman), on a transparent background or on the colour of its top-left pixel. `import-roster`
 takes a whole roster: FOLDER's subfolders named as FIGURES, each picture named by its classes
-("cleric-fighter-thief.png"), the thri-kreen's one picture for all its builds (THRI_KREEN). `steady`
+("cleric-fighter-thief.png"), the thri-kreen's one picture for all its builds (THRI_KREEN). The elf
+woman's Druid/Preserver/Thief is Cilla's, the ready-made party's elf (no elf made new can be a druid). `steady`
 moves every layer's changing colours to fixed ones.
 """
 
