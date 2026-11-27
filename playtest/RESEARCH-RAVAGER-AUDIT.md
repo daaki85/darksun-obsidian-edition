@@ -54,6 +54,7 @@ show the game's own behaviour beside the mod's. The names are read once, all tog
 | `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
 | The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no `RGN03A2.GFF` | the sequel's own figures. DSCLOG2's COPIED word (its header's +146) has bit 8 set once the game opened `RGN03A2.GFF` |
 | Shattered Lands' interface | `sl_interface` | its 45 screen pictures and 221 icons (`ravui`) | `RESOURC2.GFF` | the sequel's own screens and icons: `BMP 10000` in the copy is the game's |
+| The talk portraits' size | `small_portraits` | the five `small_portraits_*` patches, the smaller faces, the talk window and the empty frame (`ravportraits`) | `DSUNLOG2.EXE`, `GPLDAT2.GFF`, `RESOURC2.GFF` | the sequel's 72 by 72 faces, the talk box 72 high, its text from x 75 |
 
 Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with
 `# left out: ...` when the run went ahead. Prerequisite: `RAV_LOADER=1` (without it nothing is copied,
