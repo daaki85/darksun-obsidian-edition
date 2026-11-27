@@ -227,10 +227,11 @@ says, in brackets, where each is met.
 ## Wake of the Ravager
 
 Every creature [the sequel](RAVAGER.md) defines (its OBJEX.GFF), each with its figure as the mod draws it
-standing: the **Drawn** column says *redrawn* for the ones [redrawn in Shattered Lands'
-style](RAVAGER.md#the-mod-in-the-sequel) (the Loader puts them in each start) and *the game's* for the
-rest. The sequel's own party (Terrannus, Thy'rokh, Gerakis, Ar'Anda) is left out; a creature the sequel
-gives no figure says *none*. A name in two rows is two kinds of creature, each with its own figure, and a
+standing and facing you (the pose its animation script stands in, in Tyr's colours): the **Drawn** column
+says *redrawn* for the ones [redrawn in Shattered Lands' style](RAVAGER.md#the-mod-in-the-sequel) (the
+Loader puts them in each start), *the game's (kept)* for the few the redrawing looked at and kept as they
+are, and *the game's* for the rest. The sequel's own party (Terrannus, Thy'rokh, Gerakis, Ar'Anda) is left
+out; a creature the sequel gives no figure of its own (one only its scripts name) says *none*. A name in two rows is two kinds of creature, each with its own figure, and a
 name met in both games is a different creature in each (its own figure and numbers), so it is in each
 game's tables. Names are the sequel's own, cut short as it has them ("Grt Air Elem").
 
@@ -249,7 +250,7 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 | ![](docs/creatures/ravager/arslan-dwarf.png) | Arslan | dwarf | M | yes | redrawn |
 | ![](docs/creatures/ravager/ash-halfling.png) | Ash | halfling | S | yes | redrawn |
 | ![](docs/creatures/ravager/axestopper-halfling.png) | Axestopper | halfling | S | yes | redrawn |
-| ![](docs/creatures/ravager/bit-otarrasque-human.png) | Bit o'Tarrasque | human | M | yes | the game's |
+| ![](docs/creatures/ravager/bit-otarrasque-human.png) | Bit o'Tarrasque | human | M | yes | the game's (kept) |
 | ![](docs/creatures/ravager/black-knight-human.png) | Black Knight | human | M | yes | redrawn |
 | ![](docs/creatures/ravager/blick-human.png) | Blick | human | M | yes | redrawn |
 | ![](docs/creatures/ravager/boric-human.png) | Boric | human | M | yes | redrawn |
@@ -370,7 +371,7 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 | ![](docs/creatures/ravager/brotel-monster.png) | Brotel | M ? | yes | redrawn |
 | none | Danya | M ? | yes | none |
 | ![](docs/creatures/ravager/davin-monster.png) | Davin | M ? | yes | redrawn |
-| ![](docs/creatures/ravager/dust-devil-monster.png) | Dust devil | M ? | yes | the game's |
+| ![](docs/creatures/ravager/dust-devil-monster.png) | Dust devil | M ? | yes | the game's (kept) |
 | ![](docs/creatures/ravager/earth-drake-monster.png) | Earth Drake | G ? | no: too big | redrawn |
 | ![](docs/creatures/ravager/earth-elemental-elemental.png) | Earth Elemental | L | no: too big | redrawn |
 | ![](docs/creatures/ravager/elovan-monster.png) | Elovan | M ? | yes | redrawn |
@@ -380,7 +381,7 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 | ![](docs/creatures/ravager/fire-elemental-elemental.png) | Fire Elemental | L | no: too big | redrawn |
 | ![](docs/creatures/ravager/fori-monster.png) | Fori | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/galinix-monster.png) | Galinix | M ? | yes | redrawn |
-| ![](docs/creatures/ravager/garzak-monster.png) | Garzak | M ? | yes | the game's |
+| ![](docs/creatures/ravager/garzak-monster.png) | Garzak | M ? | yes | the game's (kept) |
 | ![](docs/creatures/ravager/giant-skeleton-undead.png) | Giant Skeleton | L | no: too big | redrawn |
 | ![](docs/creatures/ravager/giant-snake-monster.png) | Giant Snake | L ? | no: too big | redrawn |
 | ![](docs/creatures/ravager/gilad-monster.png) | Gilad | M ? | yes | redrawn |
@@ -410,12 +411,12 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 | ![](docs/creatures/ravager/melantha-monster.png) | Melantha | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/mind-flayer-illithid.png) | Mind Flayer | M | yes | redrawn |
 | ![](docs/creatures/ravager/mindflayer-illithid.png) | Mindflayer | M | yes | redrawn |
-| ![](docs/creatures/ravager/mordenks-sword-monster.png) | Mordenk's Sword | M ? | yes | the game's |
+| ![](docs/creatures/ravager/mordenks-sword-monster.png) | Mordenk's Sword | M ? | yes | the game's (kept) |
 | ![](docs/creatures/ravager/nortemus-monster.png) | Nortemus | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/obsidian-golem-monster.png) | Obsidian Golem | L | no: too big | redrawn |
 | ![](docs/creatures/ravager/prim-marakian-illithid.png) | Prim. Marakian | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/prosser-monster.png) | Prosser | M ? | yes | redrawn |
-| ![](docs/creatures/ravager/psurlon-monster.png) | Psurlon | L | no: too big | the game's |
+| ![](docs/creatures/ravager/psurlon-monster.png) | Psurlon | L | no: too big | the game's (kept) |
 | ![](docs/creatures/ravager/ptar-monster.png) | Ptar | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/ptars-friend-monster.png) | Ptar's Friend | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/revenant-undead.png) | Revenant | M | yes | redrawn |
@@ -433,7 +434,7 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 | ![](docs/creatures/ravager/sundew-monster.png) | Sundew | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/talo-monster.png) | Talo | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/tantris-yuan-ti.png) | Tantris | M ? | yes | redrawn |
-| none | Tarrasque | G | no: too big | redrawn (its fight's figure; none on the map) |
+| ![](docs/creatures/ravager/tarrasque-monster.png) | Tarrasque | G | no: too big | redrawn (its fight's figure; none on the map) |
 | ![](docs/creatures/ravager/traxiss-yuan-ti.png) | Traxiss | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/treasure-guard-monster.png) | Treasure Guard | M ? | yes | redrawn |
 | ![](docs/creatures/ravager/umber-hulk-monster.png) | Umber Hulk | L | no: too big | redrawn |
