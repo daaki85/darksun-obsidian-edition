@@ -835,6 +835,15 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   a write anywhere else is dropped without a word, so a ported feature that writes memory (the tracker's
   XP bonus: logs/2026-11-27-ravager-xp-lines.md) must name its ranges. An XP edit by hand counts as an
   award (and gets the bonus): make it before the dice log attaches.
+  **To see the sequel's item report**, free a party item's record with a test edit (its +0 word 0:
+  logs/files/2026-11-27-ravager-item-watch-edit.py): two seconds on the dice log names the report in
+  `obsidian-edition/crash-logs/` (git ignores it); an item of an ordinary type (an arrow, 6) freed says nothing.
+  **The sequel's inventory and shop by clicks** (logs/2026-11-27-ravager-item-watch.md): its window is
+  640x480, so a game y is the window's / 2.4 (not / 2): Ar'Anda's left hand 173,90, missile 65,50, right
+  hand 65,91, portraits 30,21 / 30,71, backpack 196,27 / 45 / 63 / 81, DROP 206,135. In Notaku's shop SELL is
+  292,164 (an item on the pointer first), TAKE IT 145,92, the list's first place 253,88, MORE 255,164; the
+  list is drawn one change behind, so read `ravshop.py shop` before buying. A one-use scroll's spell icon
+  out of a fight gives a casting pointer that found no valid target; a right-click ends it.
   The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
   (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up

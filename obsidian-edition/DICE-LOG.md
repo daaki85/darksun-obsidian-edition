@@ -341,7 +341,10 @@ WIS 19) ... (for Draxan 4000)`), the level-ups and their hit points, the XP held
 (5,625,000, shared between a multiclass character's classes), Psionic Blast's wounds given back, a wizard's try at a scroll, picking pockets and the locks a thief
 failed, looting with T (`Ar'Anda takes Bow, Stone Lotulis, ...`) and selling with S, the quick saves and
 autosaves, the creation screen's tries (each score's four 4d4), a new character's starting gear and weapon
-specs, the age lines, and the game's message boxes (`Message: YOU ALREADY KNOW THIS SPELL`).
+specs, the age lines, the game's message boxes (`Message: YOU ALREADY KNOW THIS SPELL`), and the report when an
+item goes missing from the party (`Obsidian Dagger is gone from Ar'Anda's left hand: ... An item report is saved
+in ...`: [an item gone](README.md#crash-freeze-and-item-reports), the sequel's arrows, coins and keys, gems, scrolls and
+powerstones, the spells' weapons and a Broken Weapon passing in silence as Shattered Lands' do).
 
 **Only in the sequel**:
 
@@ -350,6 +353,4 @@ specs, the age lines, and the game's message boxes (`Message: YOU ALREADY KNOW T
 | `Thy'rokh has a Grove Warden's AC: 1 better for every 3 druid levels.` | The sequel's own party made ready, once: its weapon specs (`Gerakis specializes in the long sword and the gythka and the trikal.`) and kits ([the sequel's own party](RAVAGER.md#the-sequels-own-party)). |
 | `Salesperson stocks 3 of the mod's new items` | A seller in a game saved before the mod's gear came, stocked once as the party meets them ([the mod's gear](RAVAGER.md#the-mods-gear-in-the-sequel)); "(N with no room)" when the pack is full. |
 
-**Not in the sequel yet** (on [its list](RAVAGER.md#not-in-the-sequel-yet)): the report when an item goes
-missing from the party. Shattered Lands' story lines (the arena,
-Kalzith, the cooked vulture, its quests) are that game's alone.
+Shattered Lands' story lines (the arena, Kalzith, the cooked vulture, its quests) are that game's alone.
