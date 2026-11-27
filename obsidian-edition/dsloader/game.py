@@ -500,10 +500,19 @@ NEW_KNOWN = {GRACE_SPELL: (NEW_KNOWN_SHEET, 0x10), CLAW_SPELL: (NEW_KNOWN_SHEET,
              SPOOK_SPELL: (NEW_KNOWN_SHEET, 0x80), FRIENDS_SPELL: (KIT_SHEET, 0x80)}
 
 
+def kit_open(sheet: bytes) -> bool:
+    """Whether SHEET's kit byte is KIT_OPEN (a kit taken back on the creation screen, none chosen):
+    0FFh on any sheet but a human's with three classes, whose 0FFh is its kits (the third of each class),
+    OWN_BIT and Friends known, a byte the kits can make (the sequel's Terrannus could: 2026-11-27's code
+    audit). A sheet being made has one class, so its 0FFh is always KIT_OPEN (DSCLOG2's KIT_OPEN_AT)."""
+    return (len(sheet) > KIT_SHEET and sheet[KIT_SHEET] == KIT_OPEN_BYTE
+            and not (sheet[SHEET_RACE] == HUMAN and sheet[SHEET_CLASSES + 2]))
+
+
 def knows_new_spell(sheet: bytes, spell: int) -> bool:
     """Whether SHEET says it knows new spell SPELL (NEW_KNOWN)."""
     at, bit = NEW_KNOWN[spell]
-    if len(sheet) <= at or at == KIT_SHEET and sheet[at] == KIT_OPEN_BYTE:
+    if len(sheet) <= at or at == KIT_SHEET and kit_open(sheet):
         return False
     return bool(sheet[at] & bit)
 # The game's table of effects (DSUN.EXE 44CD0h, from the load segment 3F8Dh), 6 bytes each from

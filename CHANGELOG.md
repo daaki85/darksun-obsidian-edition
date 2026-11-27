@@ -59,6 +59,12 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager (kits, the code audit's KIT_OPEN)**
+- The kit byte's "no kit" marker, 0FFh, is also a legal byte on a human with three classes (kits
+  3/3/3, the own party's bit and Friends), so such a character lost its kits. 0FFh now means "no kit"
+  only on any other sheet, in the Loader (`game.kit_open`) and DSCLOG2 (`KIT_OPEN_AT`). No save
+  changes: no other sheet could hold 0FFh as kits.
+
 **New**
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the

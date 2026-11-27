@@ -194,7 +194,7 @@ def own_race(sheet: bytes) -> int:
     else 0 (the kits rule is the caller's to weigh)."""
     from . import game, kitpages
     at = kitpages.KIT_BYTE
-    if len(sheet) <= at or sheet[at] == KIT_OPEN or not sheet[at] & OWN_BIT:
+    if len(sheet) <= at or game.kit_open(sheet) or not sheet[at] & OWN_BIT:
         return 0
     return sheet[game.SHEET_RACE] if sheet[game.SHEET_RACE] in OWN_FEATURES else 0
 
