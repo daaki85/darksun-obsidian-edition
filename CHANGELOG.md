@@ -395,7 +395,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   metal, obsidian and bone ones and their 13 magic ones (#257).
 - The Loader's pictures (`dicelog.png`, `dialogue.png`, `viewer.png`) retaken with the new bar; FEATURES'
   table of what the party wears says what shows on a class outfit and the shape of each of Wake of the
-  Ravager's weapon kinds (#259).
+  Ravager's weapon kinds (#262).
 
 **Dev**
 - DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
