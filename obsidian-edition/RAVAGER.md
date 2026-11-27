@@ -380,8 +380,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   large ([its creatures](CREATURES.md#wake-of-the-ravager)).
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
-- **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books
-  and three of its wizards carry one), and the game's people wearing and wielding their gear as they come on
-  the map.
+- **The game's people** wearing and wielding their gear as they come on the map.
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

@@ -844,6 +844,14 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   292,164 (an item on the pointer first), TAKE IT 145,92, the list's first place 253,88, MORE 255,164; the
   list is drawn one change behind, so read `ravshop.py shop` before buying. A one-use scroll's spell icon
   out of a fight gives a casting pointer that found no valid target; a right-click ends it.
+  **A defiler for a test** (logs/2026-11-27-ravager-defiler-scrolls.md): `ravjump.py 0x34 45 32` (the Pyramid,
+  RGN034, among its five Defilers, creatures 15, 17, 21, 22 and 23, object 363 in the running game) with
+  `RAV_DEFILER_CHANCE=100`. `ravjump.py`'s REGION is the region file's hex number: 0x22 (34 decimal) asks for
+  RGN022.GFF, which the game hasn't, and it quits to DOS printing the name (DOSBox closes; stock does the same).
+  For a defiler in a smaller fight, give one of Tyr's ambush's Draxans (creatures 25, 26, 29, 31 in the fight; 5,
+  7, 8 are the street's, not in it) the Defiler's object (logs/files/...-defiler-crobj.py `25 369`) and start the
+  dice log again (a running log keeps its answer for the fight). The pointer's mode (DS:1440h: 1 walk, 4, 2 the
+  eye; 0 while a container is open, DS:05D6h its thing) tells which a right-click gave.
   The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
   (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up

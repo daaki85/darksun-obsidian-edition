@@ -1470,6 +1470,18 @@ the game: one given to Cermak, right-clicked, showed SCROLL, 3000 and Shield's
 icon, and taught Shield (`YOU LEARN THE SPELL`). The roll gives the dice log
 no line: it would tell the player what the body holds before the fight is won.
 
+**In Wake of the Ravager** the same code runs in the sequel's dice log (its `item_watches` step,
+`RavDiceLog._item_watches_pass`: the item table, the free lists and every creature's item lists' heads made
+writable while it runs), on names `ravlog.rav_items` rebinds: `DEFILER_OBJECTS` the sequel's objects whose
+OBJEX.GFF record has the class 18 on its character sheet (`+1Bh`: 3, 6, 160, 369, 434, 436 and 496), the
+spells its wizard spells (0-72h) of levels 1 to 9 and the new ones (320-325), `DEAD_STATUS` its (4, 7), and
+the scroll `ravlog.rav_book`: a spellbook of the sequel's object 31002 (its 1st-level book, which no defiler
+carries, so `is_ours` still knows it), the spell + 1 at `+02h` and in its power (`+10h`), 3000 a level. The
+sequel teaches from a 310xx object by its power (a 313xx one is cast instead), the new spells through
+DSCLOG2's `NS_SCROLL`. Checked in play (`playtest/logs/2026-11-27-ravager-defiler-scrolls.md`): a Draxan in
+Tyr's ambush made a defiler by its object (a test edit) was given a Spellbook of Blink (9,000), which lay in its
+body's container after it died, and Ar'Anda read it: `YOU LEARN THE SPELL`.
+
 ## What the party wears
 
 ([In the features page](FEATURES.md#what-the-party-wears).)

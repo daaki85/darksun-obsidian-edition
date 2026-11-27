@@ -190,7 +190,14 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
-**New: Wake of the Ravager's dice log with the missing-item report** (branch `claude/sequel-item-watch`)
+**New: Defilers' scrolls in Wake of the Ravager** (branch `claude/sequel-defiler-scrolls`)
+- A defiler in a fight carries a scroll one time in 20 in the sequel too, with the switch: its seven defiler
+  objects (`ravlog.RAV_DEFILER_OBJECTS`), any of its wizard spells of levels 1 to 9 and the new ones, and the
+  sequel's kind of scroll that teaches, a Spellbook (`ravlog.rav_book`, 3,000 a level). The dice log's
+  `item_watches` step, the defilers' part (the people's gear is still to come).
+- `ravdice.py`'s `RAV_DEFILER_CHANCE` for a test.
+
+**New: Wake of the Ravager's dice log with the missing-item report** (#281)
 - The sequel's dice log watches the party's items as Shattered Lands' does, and saves an item report when
   one is gone with nothing ordinary to show for it. The ordinary losses are the sequel's own item types
   (`ravlog.RAV_USED_UP`, `RAV_SPELL_MADE`, `RAV_BROKEN`, from the item weights report's table): arrows, coins
