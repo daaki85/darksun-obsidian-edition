@@ -79,6 +79,15 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   controls, more saves, steady pace, the arrows left over an archer, the cahulaks sparing only by size) are
   on RAVAGER's "Not in the sequel yet". DICE-LOG.md has a sequel section.
 
+**Changed: the sequel's talk portraits at Shattered Lands' size** (branch `claude/ravager-portrait-size`)
+- Wake of the Ravager's faces (72 by 72, frame drawn in) made Shattered Lands' 32 by 32 in a 48 by 46
+  frame by `dsloader/ravportraits.py`: the faces in GPLDAT2.GFF (each start, from the game's own, the
+  frame its own cut down), the empty frame's two pictures (BMP 12000) and the talk window (WIND 12500: 58
+  high, the text at x 58, as Shattered Lands' WIND 3007) in RESOURC2.GFF, and five patches to the face's
+  routine (88E67h) putting it at (8, 6), the shop's in the middle of its old place. The owner's ask.
+  `RAV_SKIP=small_portraits` is the control. Played: Uhubito's and Notaku's talks, the opening talk,
+  Notaku's shop, the first fight's XP message, against the control. Tests: `test_ravportraits.py`.
+
 **Docs: the research recipes split by subject** (branch `claude/research-guide-split`)
 - The playtest kit's research recipes (`playtest/RESEARCH.md`, 42,000 words in one page) are seven pages
   now: memory edits for a test, sounds and pictures, the game's code and other targets, and four on Wake

@@ -236,7 +236,11 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
+<<<<<<< HEAD
 | [2026-11-27](2026-11-27-dragonsbane-metal.md) | One Dragonsbane, metal in both games: the sequel's made SL's metal long sword, SL's crossing as it; both games' item boxes side by side (Dragonsbane, the Bone Great Sword +1) |
+=======
+| [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
+>>>>>>> origin/obsidian-edition
 
 ## files/
 
