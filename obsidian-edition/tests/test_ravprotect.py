@@ -27,7 +27,7 @@ FIGHTERS = GAME_DS + 0x3F49 - 0x47E0  # (DSCLOG2's FIGHTERS_SEG)
 FIGHTERS_OFF, ITEM_SIZE, CREATURE_SIZE = 0xC33, 0x17, 0x31
 RING, CLOAK, BRACERS, ROBE = 45, ravager.mod_type(game.CLOAK_TYPE), ravager.mod_type(game.BRACERS_TYPE), \
     ravager.mod_type(game.ROBE_TYPE)
-PLATE, SHIELD, LEATHER = ravager.mod_type(game.PLATE_CHEST_TYPE), ravager.mod_type(game.METAL_SHIELD_TYPE), 140
+PLATE, SHIELD, LEATHER = ravager.mod_type(game.PLATE_CHEST_TYPE), ravager.mod_type(game.METAL_SHIELD_TYPE), 150
 FINGER, FINGER2, BACK, ARMS, CHEST, RIGHT_HAND, LEFT_HAND, FOOT, WAIST, NECK = 4, 11, 12, 0, 9, 3, 10, 13, 5, 8
 BOOTS = ravager.mod_type(game.SPEED_BOOTS_TYPE)
 COMBATANT, THING, LIST = 7, 0x300, 0x301  # (the combatant attacked or saving, its creature's list)

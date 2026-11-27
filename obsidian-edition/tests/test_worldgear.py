@@ -72,7 +72,7 @@ class WorldGearTests(unittest.TestCase):
                  game.OBSIDIAN_LOTULIS_TYPE, game.BONE_GREAT_SWORD_TYPE)
         self.assertEqual(metal, tuple(range(game.GAME_TYPES + 39, game.GAME_TYPES + 44)))
         self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs] + list(metal))
-        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 59, 61, 61, 61, 100, 101, 101, 101])
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 100, 101, 141, 142, 143, 144, 145])
         for spec in specs:
             self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
             self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])
@@ -846,8 +846,9 @@ class RavagerMagicTests(unittest.TestCase):
             self.assertTrue(restrict.sphere_allows(sphere, typ, restrict.specialize.kind_of(t)))
             self.assertEqual((typ[8], restrict.specialize.KINDS[restrict.specialize.kind_of(t)]),
                              {restrict.FIRE: (3, "lotulis"), restrict.WATER: (1, "two-handed sword")}[sphere])
-            self.assertEqual(game.RAVAGER_TYPES[t], game.RAVAGER_TYPES[{restrict.FIRE: game.LOTULIS_TYPE,
-                                                                        restrict.WATER: game.TWOHAND_SWORD_TYPE}[sphere]])
+            # (in Wake of the Ravager the mod's own type, not the sequel's stone lotulis or obsidian sword,
+            # which the cleric couldn't wield: 2026-11-27)
+            self.assertEqual(game.RAVAGER_TYPES[t], 102 + t - game.GAME_TYPES)
         for t, sphere in ((game.LOTULIS_TYPE, restrict.FIRE), (game.TWOHAND_SWORD_TYPE, restrict.WATER)):
             typ = npcitems.TYPES[t - game.GAME_TYPES]
             self.assertFalse(restrict.sphere_allows(sphere, typ, restrict.specialize.kind_of(t)))

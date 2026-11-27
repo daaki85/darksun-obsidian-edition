@@ -63,6 +63,23 @@ Pull requests #146 to #254 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
+- A party taken across lost five backported weapons' material: the metal great sword, lotulis and
+  javelin, the obsidian lotulis and the bone great sword went as the sequel's one type of their kind (a
+  water cleric's Bone Great Sword +1 an obsidian sword it couldn't wield, a fire cleric's Obsidian
+  Lotulis +1 a stone one). They are now the mod's own types there (141-145, `ravager.MOD_TYPES` 44).
+- The user's wider ask (every SL weapon kind and material in the sequel too): of SL's 337 weapon
+  objects, 20 crossed with another material or kind by SSI's `ITEMS.BIN` pairs (bone Long Swords made
+  obsidian, the Great Axe +3 obsidian, the Polearm +1 a double spear, Terror Blade stone...). Those pairs
+  are dropped and the Loader makes the weapon in a sequel type of its kind and material
+  (`ravtransfer.weapon_pairs`, `ravitems.weapon_type`); the sequel had no bone long sword, so SL's is
+  added (type 146, `ravager.SL_EXTRA_TYPES`); its club, bow and sling get SL's wood and leather
+  (`ravager.RAV_MATERIALS`; SSI's had none, so earth and water priests were refused them). An earlier
+  transfer's object of the old type is made anew; saves already in the sequel are not touched.
+- The bone great sword weighs 110 (11 lb) in both games (was 150, as the obsidian one).
+- Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
+  DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
+
 **Fixed: the same item weighs the same in both games; the follow-up code audit** (branch `claude/followup-code-audit`)
 - Shattered Lands' leather chest armour weighs 9.6 lb, as in Wake of the Ravager (the game's 75 lb, five
   times AD&D's whole suit), and the sequel's small things 0.1 lb, as Shattered Lands' (SSI's 1 lb). No

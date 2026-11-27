@@ -38,7 +38,7 @@ Across all 15 saves, the items that turn into money bags are of three kinds:
 1. **The mod's item types go into the sequel's type table. Done** (2026-11-22,
    playtest/logs/2026-11-22-ravager-item-types.md). The table turned out to be data: OBJEX.GFF's chunk
    ALL 4, 102 types, read into memory at the chunk's own length. The Loader's copy (D:\OBJEX2.GFF,
-   opened by DSCLOG2 in place of OBJEX.GFF) has the mod's 33 types after them as 102-134, converted to
+   opened by DSCLOG2 in place of OBJEX.GFF) has the mod's 44 types after them as 102-145 (33 as 102-134 before 2026-11-27) and SL's bone long sword as 146, converted to
    15 bytes (`ravager.objects_fixed`). Seen in the game: an item given type 107 shows as an obsidian
    1d6 blade, and the control as the metal 1d8 longsword it was.
 2. **Each mod item gets a sequel object.** It goes in the Loader's copy of OBJEX.GFF, in the free ids

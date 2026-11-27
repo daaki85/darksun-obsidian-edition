@@ -1661,9 +1661,12 @@ of the six kinds SL took from it are of those kinds, by name, dice and the
 two-handed bit (its item types' +0Bh 40h): the Twohand Sword (101) and the
 Crystal sword (35, a long sword before), both two-handed 1d10, are two-handed
 swords; the Lotulis (61), Double Spear (39), Trikal (100), Javelin (59) and the
-two Darts (38, 43) their own kinds. None of the mod's types in the sequel
-(102-134, SL's first 33) is of the six: SL's types of them (148 on) go across as
-the sequel's own (`ravager.sequel_weapon_type`). With them: `MISSILE_RATE` has
+two Darts (38, 43) their own kinds. The mod's types in the sequel are
+102-145 (SL's 115-158, `ravager.MOD_TYPES` 44): SL's six plain ones of those
+kinds (148-153) go across as the sequel's own (`ravager.sequel_weapon_type`;
+their places 135-140 kept unused), their metal, obsidian and bone ones (154-158)
+as the mod's own (141-145), their material kept; after them SL's bone long sword
+(146, `ravager.SL_EXTRA_TYPES`), and `KIND_TYPES` is 147. With them: `MISSILE_RATE` has
 DSCLOG's `MISSILE_RAV` (the javelin's and darts' rates of fire), `LARGE_DICE`
 SL's 22 rows (the sequel's own weapons go by `RAV_LARGE` first, the Darts 38's
 1d2 kept there), the Effects screen's `EF_KINDS` the six names, `PSI_KINDS`
