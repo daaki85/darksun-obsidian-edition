@@ -338,7 +338,13 @@ pick_off   dw pick_text         ; +2012 offset of PICK_TEXT: what came of it, NU
 pick_shown dw 0                 ; +2014 purses shown on the USE screen (PP_SHOW, counted) ...
 pick_armed dw 0                 ; +2016 ... picks readied, the pointer the one for talking (PP_ARM) ...
 pick_late  dw 0                 ; +2018 ... and picks the Loader didn't answer in time (PP_HAND: the talk)
-        times 2060 - ($ - hdr) db 0 ; (+2020 to +2059: none yet, zero)
+sf_swings  dw 0                 ; +2020 lotulis or double spear specialists' last swings turned on a second
+                                ;      foe (SF_SWING, counted) ...
+sf_lesses  dw 0                 ; +2022 ... the double spear's of them done 1 less (SF_LESS, counted) ...
+sf_backs   dw 0                 ; +2024 ... and the first targets put back as the round ended (SF_BACK)
+trip_saves dw 0                 ; +2026 a trikal specialist's hits that asked a save against paralysis ...
+trips      dw 0                 ; +2028 ... and the targets tripped (CAH_HIT, counted)
+        times 2060 - ($ - hdr) db 0  ; (+2030 to +2059: this block's, free)
 cosmos_more dw 0xFFFF, 0xFFFF   ; +2060 two spells more a Healer's cleric casts as the sphere of the cosmos's
                                 ;      (HEALER_COSMOS), FFFFh none: for Whirlwind and Restore Youth, their
                                 ;      sequel numbers once those spells are ported (kits.RAV_COSMOS_MORE)
@@ -3780,6 +3786,7 @@ enl_roll:
         push ax
         sub ax, [bp - 0x14]
         mov [cs:enl_dice], ax
+        call sf_less                    ; (the double spear's swing at a second foe: 1 less)
         cmp word [bp + 0x16], 1
         pushf
         setle byte [cs:enl_known]
@@ -4598,7 +4605,7 @@ site_table:
         dw hit_round                        ; 199 SITE_HIT_ROUND (5CD76h: a hit's mark against casting: a Battle Mage none)
         dw cr_die                           ; 200 SITE_CR_DIE (6D28Fh: the creation hit points' most, a level's die: a Battle Mage's d6, an Arcanist's d3)
         dw cr_psp                           ; 201 SITE_CR_PSP (6D85Eh: the creation PSP's end: a Mind Warrior's a fifth fewer)
-        dw site_none                        ; 202 (none here: held for other work)
+        dw sf_site                          ; 202 SITE_SF_BACK (5D308h: the swing loop's "cmp ax,[bp-0Ah]": a second foe's swing over, the first target back)
         dw site_none                        ; 203 (none here: held for other work)
         dw site_none                        ; 204 (none here: held for other work)
         dw kit_cast_level                   ; 205 SITE_KIT_CAST_LEVEL (629FEh: a spell's level for its duration and damage: an Arcanist's, a Spirit Caller's, a Wasteland Seer's)
@@ -14257,6 +14264,7 @@ cah_swing:
         call stink_swing                ; (the stinkpots: a nauseated attacker's -2, the stinkpot's 1d3)
         cmp word [bp + 0x16], 1
         jg .out
+        call sf_swing                   ; (a lotulis or double spear specialist's last swing: a second foe)
         push ax
         mov ax, [bp + 0x12]
         call item_is_cahulaks
@@ -14308,12 +14316,16 @@ cah_hit:
         mov byte [bp - 0x19], 0
         cmp word [bp + 0x16], 1
         jg stink_hit                ; (a missile: the staff sling's stinkpot, STINKPOTS)
+        mov word [cs:tg_how], MN_TANGLE << 8 | SHEET_PETRIFY
         push ax
         mov ax, [bp + 0x12]
         call item_is_cahulaks
         pop ax
-        jne .out
-        sti
+        je .rule
+        call trikal_trip            ; (THE TRIKAL: a specialist's hit trips)
+        jnc .out
+        mov word [cs:tg_how], MN_TRIP << 8 | SHEET_PARALYZE
+.rule:  sti
         pushad
         push es
         mov bx, [TARGET]
@@ -14334,7 +14346,9 @@ cah_hit:
         imul si, si, SHEET_SIZE
         les di, [SHEETS_PTR]
         add di, si
-        movzx cx, byte [es:di + SHEET_PETRIFY]
+        movzx si, byte [cs:tg_how]      ; (its save against petrification, or paralysis for a trip)
+        add di, si
+        movzx cx, byte [es:di]
         mov ax, 20
         call game_die
         mov [cs:mn_frame], bx
@@ -14344,15 +14358,24 @@ cah_hit:
         mov [cs:mn_frame + 6], cx
         push ax
         push cx
-        mov ax, MN_TANGLE
-        call mn_rec
+        movzx ax, byte [cs:tg_how + 1]
+        cmp al, MN_TRIP
+        jne .rec
+        inc word [cs:trip_saves]
+.rec:   call mn_rec
         pop cx
         pop ax
         cmp ax, 20
         je .done                    ; (a natural 20 saves)
         cmp ax, cx
         jge .done                   ; (saved)
+        cmp byte [cs:tg_how + 1], MN_TRIP
+        jne .tangle
+        inc word [cs:trips]
+        jmp .lost
+.tangle:
         inc word [cs:tangles]
+.lost:
         call swept_now              ; (yet to act this round: this round's turn lost at once)
         jc .done
         mov si, bx
@@ -14508,6 +14531,241 @@ mn_frame  dw 0, 0, 0, 0
 tangled   times TANGLE_MOST / 8 db 0
 tangles   dw 0                  ; (tangles made, for a look in play)
 tangle_turns dw 0               ; (turns taken so)
+
+; THE TRIKAL AND THE TWO-HEADED WEAPONS: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits", with the
+; cahulaks' sites; the Dark Sun weapons guide's specialists), on the sequel's Lotulis (type 61), Double Spear
+; (39) and Trikal (100) and any type KIND_OF_TYPE gives their kinds:
+; - a trikal specialist's melee hit that does damage trips a man-sized or smaller target as the cahulaks
+;   tangle one (CAH_HIT, TRIKAL_TRIP: its save against paralysis, the sheet's +31h, SHEET_PARALYZE; MN_TRIP);
+;   the trikal reaches two squares as a polearm (REACH_HANDS);
+; - a lotulis or double spear specialist's last swing of a round of two or more (SF_SWING, from CAH_SWING:
+;   [BP-16h] the swing, [BP-0Ah] the round's) goes to a second foe beside it, when one is: a combatant on
+;   the first target's side (SF_SIDE: the creature's +15h, the game's groups by its masks 71h and F80h,
+;   23812h), standing and Okay (+14h 1, HP above 0), at the game's distance 1 from the attacker [BP+18h]
+;   (1D40:35EFh, a call REACH leaves at 2); the first such in the combatants' order. TARGET is that foe
+;   for the swing and the attack's AC ([BP+0Ch]) its own, from the game's AC routine (5D520h, in the
+;   combat overlay: called at the INT's way back + SF_AC_GAP, its CS; the target, the attacker and the
+;   behind flag [BP+20h], as the attack's set-up calls it at 5C9A7h); both put back as the swing ends
+;   (SF_BACK, site 202 at the swing loop's "cmp ax,[bp-0Ah]", 5D308h, which every swing passes: SL's
+;   AMMO_TURN's). The double spear's swing at it does 1 less damage, at least 1 (SF_LESS, from ENL_ROLL,
+;   after the roll: STR in it). Recorded (MN_SECOND: +6 the second foe, +8 the attacker, +0Ah the first,
+;   +0Ch 1 for the double spear).
+MN_TRIP        equ 13
+MN_SECOND      equ 14
+SHEET_PARALYZE equ 0x31             ; (the sheet's save against paralysis/poison/death)
+LOTULIS_KIND   equ 18               ; (KIND_OF_TYPE's lotulis, its kind + 1; the double spear's the next)
+TRIKAL_KIND    equ 20               ; (... the trikal's)
+DISTANCE_SEG   equ 0x1D40 - 0x47E0  ; (the distance routine's segment less DS)
+SF_AC_GAP      equ 0x5D520 - 0x5D054  ; (the AC routine from CAH_SWING's way back)
+CREATURE_SIDE  equ 0x15
+SIDE_FRIENDS   equ 0x71             ; (the game's groups of +15h, by its bit)
+SIDE_FOES      equ 0xF80
+; TRIKAL_TRIP: CF if the melee hit is a trikal specialist's ([BP+12h] an item, [BP+14h] of the trikal's
+; kind) and the rule on. All registers kept.
+trikal_trip:
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .no
+        cmp word [bp + 0x12], NO_ITEM
+        jae .no
+        push bx
+        push dx
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .pop
+        cmp byte [cs:bx + kind_of_type], TRIKAL_KIND
+        jne .pop
+        call spec_of
+        cmp dl, SPEC_SPECIAL
+        cmc                         ; (CF: specialized or better)
+        pop dx
+        pop bx
+        ret
+.pop:   pop dx
+        pop bx
+.no:    clc
+        ret
+; SF_SWING (CAH_SWING's, in melee; its INT's way back at [SP+2] here). All registers kept.
+sf_swing:
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .ret
+        pushad
+        push es
+        mov si, sp
+        mov eax, [ss:si + 36]       ; (the INT's way back: the combat overlay's CS, and its IP)
+        add ax, SF_AC_GAP
+        mov [cs:sf_ac_at], eax
+        cmp word [bp + 0x12], NO_ITEM
+        jae .done
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .done
+        movzx ax, byte [cs:bx + kind_of_type]
+        sub ax, LOTULIS_KIND
+        cmp ax, 1
+        ja .done                    ; AX 0 the lotulis, 1 the double spear
+        mov cx, [bp - 0x0A]
+        dec cx
+        jle .done                   ; (one swing)
+        cmp cx, [bp - 0x16]
+        jne .done                   ; (not the round's last)
+        push ax
+        call spec_of
+        pop ax
+        cmp dl, SPEC_SPECIAL
+        jb .done
+        mov [cs:mn_frame + 6], ax
+        mov ax, [TARGET]
+        mov [cs:mn_frame + 4], ax
+        call sf_side
+        jc .done
+        mov di, ax                  ; DI the first target's side
+        mov ax, ds
+        add ax, DISTANCE_SEG
+        mov [cs:sf_distance + 2], ax
+        xor si, si
+.each:  cmp si, [TARGET]
+        je .next
+        cmp si, [bp + 0x18]
+        je .next
+        mov ax, si
+        call sf_side
+        jc .next
+        cmp ax, di
+        jne .next
+        push di
+        push si
+        push si
+        push word [bp + 0x18]
+        call far [cs:sf_distance]
+        add sp, 4
+        pop si
+        pop di
+        cmp ax, 1
+        je .found
+.next:  inc si
+        cmp si, TANGLE_MOST
+        jb .each
+        jmp .done
+.found: mov ax, [TARGET]
+        mov [cs:sf_target], ax
+        mov [TARGET], si
+        mov [cs:mn_frame], si
+        mov ax, [bp + 0x0C]
+        mov [cs:sf_ac], ax
+        movzx ax, byte [bp + 0x20]  ; (the attack's behind flag)
+        mov dx, [bp + 0x18]
+        mov bx, sp
+        push word [ss:bx + 38]      ; (the INT's way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 36]
+        push bp
+        mov bp, sp
+        push ax
+        push dx
+        push si
+        call far [cs:sf_ac_at]      ; (the game's AC routine: the foe's AC against the attacker)
+        add sp, 6
+        mov [cs:sf_ac_got], ax
+        pop bp
+        pop ax                      ; (the way back, as the overlay manager has left it)
+        pop cx
+        mov bx, sp
+        mov [ss:bx + 36], ax
+        mov [ss:bx + 38], cx
+        mov ax, [cs:sf_ac_got]
+        mov [bp + 0x0C], ax
+        mov ax, [bp + 0x18]
+        mov [cs:mn_frame + 2], ax
+        mov ax, MN_SECOND
+        call mn_rec
+        inc word [cs:sf_swings]
+.done:  pop es
+        popad
+.ret:   ret
+; SF_SIDE: AX combatant AX's side (1 the game's friends, 2 its foes, else 100h + its own group), CF if
+; it is no creature or isn't standing and Okay. BX, ES changed.
+sf_side:
+        call fighter_creature
+        jc .ret
+        imul bx, ax, CREATURE_SIZE
+        les ax, [CREATURES_PTR]
+        add bx, ax
+        cmp word [es:bx], 0
+        jle .no
+        cmp byte [es:bx + CREATURE_STATUS], 1
+        jne .no
+        push cx
+        mov cl, [es:bx + CREATURE_SIDE]
+        mov ax, 1
+        cmp cl, 15
+        ja .own
+        shl ax, cl
+        test ax, SIDE_FRIENDS
+        jnz .friend
+        test ax, SIDE_FOES
+        mov ax, 2
+        jnz .side
+.own:   movzx ax, cl
+        or ah, 1
+        jmp .side
+.friend:
+        mov ax, 1
+.side:  pop cx
+        clc
+.ret:   ret
+.no:    stc
+        ret
+; SF_BACK: the first target and its AC put back after a swing at a second foe. All kept.
+sf_back:
+        cmp word [cs:sf_target], -1
+        je .ret
+        push ax
+        mov ax, -1
+        xchg ax, [cs:sf_target]
+        mov [TARGET], ax
+        mov ax, [cs:sf_ac]
+        mov [bp + 0x0C], ax
+        inc word [cs:sf_backs]
+        pop ax
+.ret:   ret
+; SF_SITE (site 202, "cmp ax,[bp-0Ah]" at 5D308h, the swing loop's test after each swing): SF_BACK, then
+; the compare, its flags in the INT's frame.
+sf_site:
+        call sf_back
+        push bx
+        push ax
+        cmp ax, [bp - 0x0A]
+        pushf
+        pop ax                      ; (the compare's flags)
+        mov bx, sp
+        and word [ss:bx + 8], ~0x08D5
+        and ax, 0x08D5              ; (OF SF ZF AF PF CF)
+        or [ss:bx + 8], ax
+        pop ax
+        pop bx
+        iret
+; SF_LESS (ENL_ROLL's, the hit's damage rolled, [BP-4]): the double spear's swing at a second foe 1 less,
+; at least 1. All kept.
+sf_less:
+        cmp word [cs:sf_target], -1
+        je .ret
+        push bx
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .pop
+        cmp byte [cs:bx + kind_of_type], LOTULIS_KIND + 1
+        jne .pop
+        cmp word [bp - 4], 1
+        jle .pop
+        dec word [bp - 4]
+        inc word [cs:sf_lesses]
+.pop:   pop bx
+.ret:   ret
+sf_distance dd 0x35EF
+sf_ac_at    dd 0
+sf_target   dw -1                   ; (the first target while a second foe is swung at; -1 none)
+sf_ac       dw 0
+sf_ac_got   dw 0
+tg_how      dw 0                    ; (CAH_HIT: the save's offset, and above it the record's MN_)
 
 ; STINKPOTS: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits"): the staff sling's shot is a
 ; stinkpot, a clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 against
@@ -14811,7 +15069,9 @@ reach_hands:
         push bx
         mov bx, ax
         cmp byte [cs:bx + kind_of_type], POLEARM_KIND
-        pop bx
+        je .pole
+        cmp byte [cs:bx + kind_of_type], TRIKAL_KIND   ; (the trikal: a pole too, DSCLOG's)
+.pole:  pop bx
         jne .other
         inc dl
         jmp .on

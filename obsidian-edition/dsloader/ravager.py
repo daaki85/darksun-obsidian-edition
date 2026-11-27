@@ -448,8 +448,13 @@ PATCHES: Tuple[Patch, ...] = (
     # starts (5B838h: its movement stored; SL's 57566h), a tangled one's turn taken.
     Patch("cahulaks_hit", 0x5D1FE, bytes.fromhex("c646e700"), gamepatch._interrupt(VEC_CAH_HIT, 4)),
     Patch("cahulaks_move", 0x5B838, bytes.fromhex("2689872e02"), gamepatch._interrupt(VEC_CAH_MOVE, 5)),
-    # a polearm's reach (DSCLOG2's REACH): the combatant distance routine's "mov ax,[bp-1Ch]" at its end
+    # a polearm's and the trikal's reach (DSCLOG2's REACH): the combatant distance routine's "mov ax,[bp-1Ch]"
+    # at its end
     Patch("reach", 0x25CDD, bytes.fromhex("8b46e4"), gamepatch._interrupt(VEC_REACH, 3)),
+    # The lotulis' and double spear's second foe (DSCLOG2's THE TRIKAL AND THE TWO-HEADED WEAPONS; SF_SWING is
+    # CAH_SWING's, the trikal's trip CAH_HIT's): SF_BACK (site 202) at the swing loop's "cmp ax,[bp-0Ah]"
+    # (5D308h, SL's AMMO_TURN site 58C38h), the first target and its AC put back after the swing at the second.
+    Patch("second_foe_back", 0x5D308, bytes.fromhex("3b46f6"), _site(202, 3)),
     # the stinkpots' Nauseated (DSCLOG2's STINKPOTS): the sequel's effect 12, empty (no name, icon 0), named
     # and given Stinking Cloud's icon (ICON 21000 + 22, as the effects' icons are their spells')
     Patch("nauseated_name", EFFECT_RECORDS_FILE + NAUSEATED * 31, bytes(31),
@@ -1532,6 +1537,33 @@ def weighted_table(types: bytes) -> bytes:
     return b"".join(weighted(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
 
 
+# The sequel's melee weapons' range (a type's +6, SL's +0Ah): the Double Spear's 2 made 1, as Shattered Lands'
+# double spear (npcitems.TYPES) and Dark Sun's. The attack's set-up (5C5E1h) lets a weapon swing from as far
+# as its range and takes a swing from 2 squares as a shot (5C77Dh: its distance above 1): the hit routine
+# then takes the type's shots a round (+7: the double spear's 2, one attack a round) in place of the
+# sheet's, DEX's adjustment to hit in place of STR's and no STR on the damage; and the computer's choice
+# of an attack (5BDC2h) holds the target's distance against the range, so a double spear under Computer
+# Control swung from 2 squares, once a round, and the DAM lines (7B0B4h) showed it as a missile weapon.
+# (The playtest: logs/2026-11-26-ravager-weapon-traits.md.) RAV_SKIP=melee_range is the control.
+TYPE_RANGE = 6
+RAV_RANGES = {39: (2, 1)}
+
+
+def ranged(record: bytes, kind: int) -> bytes:
+    """The sequel's type record RECORD of type KIND with the Loader's melee range (RAV_RANGES); as it is if
+    KIND has none or RECORD's byte isn't SSI's."""
+    if kind not in RAV_RANGES or len(record) != TYPE_SIZE or record[TYPE_RANGE] != RAV_RANGES[kind][0]:
+        return record
+    out = bytearray(record)
+    out[TYPE_RANGE] = RAV_RANGES[kind][1]
+    return bytes(out)
+
+
+def ranged_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4) with RAV_RANGES."""
+    return b"".join(ranged(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
+
+
 def _weighted_copy(record: bytes, kind: int) -> bytes:
     try:
         return weighted(record, kind)
@@ -1547,10 +1579,11 @@ def _air_dagger(record: bytes, kind: int) -> bytes:
     return bytes(out)
 
 
-def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
+def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True, ranges: bool = False) -> gff.Chunks:
     """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
-    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read. AIR
-    (the mod's types on: mod_types_table) gives the copies of the daggers the air cleric's bit too, as ALL 4."""
+    (with WEIGHTS) or RAV_RANGES (with RANGES) changes, with the Loader's weight and range: they are kept in
+    step with ALL 4, which the game's checks read. AIR (the mod's types on: mod_types_table) gives the
+    copies of the daggers the air cleric's bit too, as ALL 4."""
     from . import dataitems
     out: gff.Chunks = {}
     for key, chunk in chunks.items():
@@ -1561,7 +1594,8 @@ def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
         except (ValueError, struct.error):
             continue
         def fixed(r):
-            data = _weighted_copy(r.data, r.number)
+            data = _weighted_copy(r.data, r.number) if weights else r.data
+            data = ranged(data, r.number) if ranges else data
             return r._replace(data=_air_dagger(data, r.number) if air else data)
         new = [fixed(r) if r.kind == TYPE_KIND_RECORD and r.number < GAME_TYPES else r for r in recs]
         if new != recs:
@@ -1582,7 +1616,8 @@ def mod_types_table(types: bytes) -> bytes:
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
-    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP) and the
+    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
+    double spear's range 1 (RAV_RANGES, unless "melee_range" is), and the
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
@@ -1598,10 +1633,13 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     weights = "weights" not in skip
     if weights:
         types = weighted_table(types)
+    ranges = "melee_range" not in skip and ranged_table(types) != types
+    if ranges:
+        types = ranged_table(types)
     if "mod_types" not in skip:
         new[TYPES_CHUNK] = mod_types_table(types)
         done.append("mod_types")
-    elif weights:
+    elif weights or ranges:
         new[TYPES_CHUNK] = types
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
@@ -1610,9 +1648,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
-    if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
-        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip))
-        done.append("weights")
+    if weights or ranges:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
+        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip, weights=weights, ranges=ranges))
+        done += ["weights"] * weights + ["melee_range"] * ranges
     if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
         from . import ravshine
         shine = ravshine.chunks(chunks)
