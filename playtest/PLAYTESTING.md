@@ -1576,9 +1576,16 @@ For an outfit review with the loader detached, stage the walking and fighting ch
     finds the window: its title, "Dark Sun Obsidian Edition Loader ..."). The Options tab at
     (1061,132); a section's header toggles it (Rule changes at 720,260 with all closed), or
     settings.json's `options_open` (a list of the sections' keys: `in_game`, `rules`, `custom`,
-    `new_content`, `speed`, `ravager`, `saves`) opens them as the window starts; the picture is x
+    `new_content`, `engine`, `speed`, `picture`, `ravager`, `saves`) opens them as the window starts; the picture is x
     608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16; with every section open
     and the fewer switches, 706x1536 on a 1400x2400 screen, 2026-11-18), saved as a 256-colour PNG.
+  - Retaken 2026-11-27 (the docs audit), no game needed: the Loader alone, `python3.12 -m dsloader
+    view` (the container's python3 has no tkinter) from an export of the folder at a neutral path
+    (`git archive HEAD:obsidian-edition | tar -x -C /opt/obsidian-edition`: the Engine section prints
+    the program's path), with a stub `dosbox-x/dosbox-x` there that answers `-version` with
+    `DOSBox-X version 2025.12.01`, so the Engine section shows the default as a player has it, and
+    `options_open` with `engine` and `picture` too (nine sections). The Options tab was at
+    (1116,132) by then (the Journal tab came before it); the picture 706x2619, y 116 to 2735.
 - **`docs/dicelog-readable.png`** (logs/2026-11-19-final-audit-fixes.md): the Loader's window
   attached to a game the kit started, so the kit's loops still run. Xvfb `:55` at 1700x900 (start it
   by hand before `loadsave.sh`: start.sh only starts one when none runs), DOSBox at 0,0 and the
