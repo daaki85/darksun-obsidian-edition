@@ -2,9 +2,9 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. Eight passes have revised 140 pictures at 387 placements across 16 regions. The four regions with no new furniture squash are Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. A later playtest found one more picture to lower, the empty throne summoned from Limbo into El’s Temple. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Mosaic’s other rooms still need live checks, including Ikibod’s work surface. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Repairing the split beds and the Alliance storeroom
 
@@ -136,9 +136,13 @@ Six smoking braziers flank the approach to Tantris’s throne. The two pictures 
 
 ![Whole El’s Temple map before and after beside the Shattered Lands hall with six braziers](el-temple-maps.png)
 
-The enlarged views compare the throne approach with the paired braziers in Shattered Lands region 27h. The bottom row shows Pavis’s occupied and empty basins and Tantris’s second pose. All five stored figure frames decode and their pictures and animation scripts match the preceding build. Only the two brazier pictures changed in the built object file. All six placements show the change individually. The transition at the throne still needs a play check.
+The enlarged views compare the throne approach with the paired braziers in Shattered Lands region 27h. The bottom row shows Pavis’s occupied and empty basins and Tantris’s second pose. All five stored figure frames decode and their pictures and animation scripts match the preceding build. Only the two brazier pictures changed in the built object file. All six placements show the change individually. These were the checks before the throne transition was played.
 
 ![Brazier rows and individual bowls with Shattered Lands references, plus Pavis and Tantris in the built mod](el-temple-braziers.png)
+
+In DOSBox, all six lowered braziers stood on the same floor points as their stock counterparts. When Tantris rose, the game brought in a separate empty throne from Limbo. In both stock Ravager and the previous PR the seat moved 37 pixels right and 58 down, into the right-hand aisle. It also grew taller on the previous PR. Picture 789 now has a 34-row bowl, and its object has the drawing offset needed for the rim to stay where Tantris sat. The dialogue and the prisoners’ escape message still play. [Playtest and placement measurements](../../playtest/logs/2026-11-27-ravager-throne-and-workshop.md)
+
+![Tantris seated and the vacated throne in stock Ravager, the previous PR and the repaired build](el-temple-throne-transition.png)
 
 The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. Their destruction sequence remains on the Mines 3 playtest list.
 
@@ -166,6 +170,12 @@ The left screenshot shows the approved stall in Shadow Square. In the right scre
 
 ![Notaku’s assembled stall and two newly lowered chairs in DOSBox](tyr-live.png)
 
+## Ikibod’s workshop in Mosaic
+
+Picture 1479 contains Ikibod, his hands, the bottles, the tabletop and its legs. The existing redraw leaves the desk 61 pixels wide. In the same DOSBox view the tabletop sits lower, the legs meet the same floor line and the three occupied poses keep the wizard behind the bottles. The fourth, unattended frame was checked in the artwork. Keep all four at their present scale. [Playtest](../../playtest/logs/2026-11-27-ravager-throne-and-workshop.md)
+
+![Mosaic workshop on the whole map, upper castle reference and matched DOSBox views of Ikibod](ikibod-workshop.png)
+
 ## Live check in the Mosaic museum
 
 The gold rectangle marks the museum on the full Mosaic map. The lower pair shows the same southern display rows from the same DOSBox camera before and after four puzzle interactions. In the lower row, Horace leaves an empty stand at the far left, Khildril breaks into pieces, and Horace takes Ellith’s place at the far right. In the upper row, Biblid holds the book from beneath Fletch’s movable bookcase.
@@ -191,12 +201,12 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
 | 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
-| 037 Temple | 62 | 0 | 6 | Check the six braziers in play and the transition at Tantris’s throne |
+| 037 Temple | 62 | 0 | 6 | Six braziers and the vacated throne verified. Check Pavis leaving the basin |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
-| 03C Mosaic | 89 | 0 | 0 | Museum puzzle and exit verified. Check Ikibod’s work surface in play |
+| 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |

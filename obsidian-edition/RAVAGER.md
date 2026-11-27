@@ -269,7 +269,7 @@ bigger character sheets) as it goes in (a game already running lists it from its
   and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
   use the same proportions. Jumah’s table still partly conceals the key. In the ruined Alliance headquarters, the loose pillows and
   broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3.
-  In El’s Temple the bowls of the six braziers sit lower beneath their curling smoke. The barrel and sack pile shared by the mines and Tyr
+  In El’s Temple the bowls of the six braziers sit lower beneath their curling smoke. When Tantris rises, the empty throne keeps its lowered height and its place between the braziers. The barrel and sack pile shared by the mines and Tyr
   sits lower while both barrel lids remain visible over the Tyr wall. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
@@ -352,6 +352,17 @@ price), on his list's second and third pages after the Short Sword +1; read from
 its spell (not in the shop's screen). Three of the sequel's wizards who carry a spellbook carry one more,
 Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
 Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
+
+## The sequel's colours
+
+Wake of the Ravager keeps its own colours (the owner's choice, 2026-11-27). Matching them to Shattered Lands' is a
+long-term job for the [recompiled program](https://github.com/daaki85/darksun-recompiled) (its plan's Phase 10):
+a tone grade toward Shattered Lands' lighter, warmer look, applied where the picture goes to the screen, and later
+Shattered Lands' interface art drawn in its own exact colours. It depends on the sequel playing in the recompiled
+program past the start of Tyr. Why the mod doesn't do it here: the two games number their 256 colours differently, so
+Shattered Lands' palettes can't simply be used in the sequel, and no palette slot is free in every one of the sequel's
+areas (a count over every picture, the redrawn figures included). That leaves no room for Shattered Lands' interface
+greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to the sequel's nearest colours.
 
 ## Not in the sequel yet
 
