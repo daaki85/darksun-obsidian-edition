@@ -41,7 +41,11 @@ def class_mask(cls):
 for m in range(4):
     sheet = struct.unpack_from('<H', gd.creature(m), 4)[0]
     if m in members:
-        for s in spells: g.write(known + m * 0x8A + s, b'\x01')
+        for s in spells:
+            if s >= 0x8A:  # (past the member's row: the mod's new spells are known by the sheet's bits, game.NEW_KNOWN;
+                print(f'{s}: not taught (past the known row; new spells: the sheet\'s NEW_KNOWN bits, a 6th-level priest spell by its sphere)')
+                continue   #  a 6th-level priest spell by the caster's sphere: 2026-11-27, logs/2026-11-27-outfit-screenshots.md)
+            g.write(known + m * 0x8A + s, b'\x01')
         for kind in ('Wizard', 'Priest'):
             g.write(ds * 16 + game.SLOTS_LEFT[kind] + m * game.SLOTS_STRIDE + 1, bytes([9] * 9))
         sh = gd.sheet(m)

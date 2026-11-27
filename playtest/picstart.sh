@@ -3,7 +3,7 @@
 # scanlines, tv, sharp) in a window SCALE times the game's (default 3), NOT the kit's 320x240 start:
 # pens-after-arena loaded by the pointer (click.py), then the window's size, pointer checks
 # (picmove.py: the hand moved SCALE screen pixels a game pixel), a grab of the window
-# (OUT_DIR/PICTURE-SCALE.png) and DOSBox's log. It ends DOSBox and puts window_scale 1 and the plain
+# (OUT_DIR/PICTURE-SCALE.png) and DOSBox's log, with the dice log attached (it dresses the party). It ends DOSBox and puts window_scale 1 and the plain
 # picture back in settings.json, so the next start.sh is the kit's own. Run it under the DOSBox lock.
 # The screen (Xvfb :55) is 1024x768: scale 4 doesn't fit it (picpattern.sh shows that one).
 . "$(dirname "$0")/env.sh"
@@ -25,7 +25,10 @@ print(launch.write_conf('$GAME'))"
 settings 1 plain   # (back at once: the conf is written, and a run cut short leaves the kit's settings)
 sed -n '1,/autoexec/p' "$REPO/obsidian-edition/dosbox_dicelog.conf"
 cd "$GAME/DOSBOX" && (SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE=/dev/null setsid dosbox -conf ../__support/app/dosbox_darksun.conf -conf "$REPO/obsidian-edition/dosbox_dicelog.conf" >"$OUT/$MODE-$SCALE-dosbox.log" 2>&1 < /dev/null &)
-sleep 14
+# the dice log attached, as a player's game has it: the class outfits and the gear are dressed by it
+# (without it the party wears the copy's older looks, 2026-11-27)
+sleep 4; cd "$REPO/obsidian-edition" && (setsid nohup python3 -u -m dsloader dicelog > "$OUT/$MODE-$SCALE-dice.txt" 2>&1 < /dev/null &)
+sleep 10
 W=$(timeout 10 xdotool search $WINQ | head -1); echo "window $W"
 timeout 5 xdotool windowmove $W 0 0; timeout 5 xdotool mousemove $((160*SCALE)) $((120*SCALE)); sleep 0.3
 timeout 5 xdotool click 1; sleep 1; timeout 5 xdotool click 1; sleep 12
@@ -45,4 +48,5 @@ sleep 0.5
 timeout 10 import -window $W "$OUT/$MODE-$SCALE.png"; identify "$OUT/$MODE-$SCALE.png"
 echo "-- dosbox log"; cat "$OUT/$MODE-$SCALE-dosbox.log"
 pkill -9 -x dosbox
+for p in $(pgrep -f "^python3 -u -m dsloade[r]"); do kill $p; done
 echo "done: $OUT/$MODE-$SCALE.png"

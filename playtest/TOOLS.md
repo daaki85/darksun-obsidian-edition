@@ -64,6 +64,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `hp.py HP` | every combatant past the party (index 4 and up) to HP hit points, its sheet's most too. |
 | `itemedit.py MEMBER SLOT [slot=N] [e=N] [f=N]` | show (and change) the item party member MEMBER has in slot SLOT: its slot byte (+11h), +0Eh (an ability item's amount) and +0Fh (its ability byte, FAh-FFh STR-CHA, or a spell). |
 | `itemlists.py` | each party member's three item lists (+08h worn, +0Ah held weapons, +0Ch the backpack) as (item, slot byte, type). |
+| `itemplus.py ITEM PLUS` | item ITEM's (its number in the item table, carried.py's second column) plus byte (+14h) set: a plain piece made magic for a picture (docs/magic-glint.gif: Gerakis's leather pieces +2, the Loader dressing them with... |
 | `killfoes.py` | kill every foe in memory (aging.kill), not the arena's prisoners. |
 | `kinds.py [CREATURE=KIND ...]` | a creature record's monster kind (+16h: 0 people; |
 | `kitset.py MEMBER CLASS LEVEL KITBYTE` | the member made a single-class character of CLASS (the sheet's class number) at LEVEL with kit KITBYTE (0 none, 1-3 the class's kits in kitpages.KITS order). |
@@ -163,6 +164,8 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `setup_game.sh` | the game for testing, in $GAME: the GOG installer extracted with innoextract. |
 | `setup_guide.sh` | the owner's walkthroughs made searchable. |
 | `setup_ravager.sh` | Wake of the Ravager, the sequel, for comparing with Shattered Lands (its code, data and README), in $RAV (default $WORK/rav): the owner's GOG installer, extracted with innoextract. |
+| `shadowsw.py [0\|1]` | DSCLOG's figures' shadows switch (shadows_on, its header +220) read, or set: 0 for a picture without shadows (docs/shadows.png's left half), 1 back. |
+| `sheetbyte.py MEMBER OFFSET [VALUE\|orVALUE]` | party member MEMBER's character sheet byte at OFFSET read, or set (orVALUE ORs bits in), with its three classes printed. |
 | `sheetedit.py MEMBER [levelN=V] [flags\|=V] [flags=V]` | show (and change) party member MEMBER's character sheet: its three classes and levels and its class flags word (+12h; |
 | `sheetinfo.py` | each party member's name, classes, levels, race, kits and weapon specs (by name), status (0 New) |
 | `sheetscore.py MEMBER [lv=N] [str= dex= con= int= wis= cha=]` | the sheet's first level (+24h) and the creature record's scores (+22h on: what the game's DUAL window reads), then race, classes, levels, alignment and scores. |

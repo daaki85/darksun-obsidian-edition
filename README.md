@@ -13,7 +13,7 @@ tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GU
 If you have **Wake of the Ravager** too, the Loader starts the sequel with most of the mod, and
 your party can go on into it ([Wake of the Ravager](obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 
-![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
+![Round 4 of Pehtucl's ambush at the slave pens' fountain, the party in its class outfits: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: Seneca's miss, the Arena Guard's hit points after a blow, Ester's two misses, and Jenna unable to hide with the guard beside her](obsidian-edition/docs/combat-log.png)
 
 ## Getting started
 
