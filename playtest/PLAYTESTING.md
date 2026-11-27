@@ -831,6 +831,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   click at (40,162), the second without the game working the THAC0 out again
   (logs/2026-11-27-ravager-dam-lines.md). **A kit or rule test in the sequel needs the dice log running**
   (`ravdice.py`): `ravload.sh` alone leaves DSCLOG2's rules words 0 (`ravkits.py count`'s first line).
+  **The sequel's dice log writes only where a feature names the bytes** (`guest.writable`, `_writable`):
+  a write anywhere else is dropped without a word, so a ported feature that writes memory (the tracker's
+  XP bonus: logs/2026-11-27-ravager-xp-lines.md) must name its ranges. An XP edit by hand counts as an
+  award (and gets the bonus): make it before the dice log attaches.
   The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
   (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
@@ -917,6 +921,8 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   instead (logs/2026-11-16-spellarcher-fine-bow.md).
 
 ## Inventory, looting, selling and shops
+
+- **Class portraits.** From the PENS save, press I and select each party face. Cermak wears his active Preserver outfit. Compare Gerakis, K’ratchek and Cilla with their retail half-giant, thri-kreen and elf inventory pictures. The DOS helper reads the portrait from the prepared RESOURCE.GFF, so this check also works with the host dice log detached. To compare human fittings, capture the central parchment after each party selection and again after returning to the first member. In a 320 × 240 DOSBox window, horizontal pixels are native and the 200 game rows stretch to 240. Use that vertical scale when aligning a capture with the Loader’s decoded picture.
 
 - **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
   backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and

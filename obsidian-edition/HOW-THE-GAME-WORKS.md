@@ -248,8 +248,8 @@ Lands' ([Wake of the Ravager](RAVAGER.md)).
 **The same item weighs the same in both games.** The Loader gives Shattered Lands' leather chest armour
 9.6 lb (the game's 75 lb, five times AD&D's whole suit of 15 lb; the sequel's one byte can't hold 75 lb),
 and the sequel's small things (keys, gems, rope) 0.1 lb, as Shattered Lands'. No rule reads an armour's
-or a small thing's weight, so nothing plays differently. The one item left apart is Dragonsbane: a metal
-long sword in Shattered Lands (4 lb), an obsidian one in the sequel (3 lb).
+or a small thing's weight, so nothing plays differently. Dragonsbane, an obsidian long sword in SSI's
+sequel (3 lb), is Shattered Lands' metal one there too (4 lb), so it is the same sword in both games.
 
 ## Attacks from behind and backstabs
 
