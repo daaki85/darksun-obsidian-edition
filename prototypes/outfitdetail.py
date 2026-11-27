@@ -300,6 +300,20 @@ PLUM_MANTLE = {19: 112, 22: 58, 23: 115, 113: 174, 114: 58, 115: 74,
 
 
 def finish_class_color(model, role, paint, regions, folds, heads):
+    if model in co.ELVES and role == "Gladiator":
+        # Desert/arena palette stabilization sends several of the old hide
+        # midtones straight into the elf's skin ramp. Transfer the existing
+        # strap creases and kilt pleats to fixed umber and ochre values.
+        leather = {88: 204, 89: 207, 90: 203, 91: 128, 92: 179, 93: 205,
+                   94: 180, 95: 157, 96: 180, 97: 64, 98: 181, 99: 168, 100: 169}
+        margin = (len(paint[0]) - len(regions[0])) // 2
+        for y, row in enumerate(regions):
+            for x, bits in enumerate(row):
+                if bits and bits & SHELL and not bits & (BLOCKED | co.ARMS):
+                    color = paint[y][x + margin]
+                    if color in leather:
+                        paint[y][x + margin] = leather[color]
+        return
     if model in co.DWARVES and role == "Psionicist/Thief":
         # The approved teal crown includes the foreground head layer. Apply
         # the four off-hue texture threads to painted pixels after dye relief.

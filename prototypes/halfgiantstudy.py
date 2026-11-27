@@ -567,6 +567,69 @@ def clean_nape(pieces, model, pose, margin):
                     rows[y][x] = color
 
 
+# Relief painted over the fitted rib cage. Each row runs from the near
+# shoulder toward the far shoulder. Dividing at the actual waist lets the
+# blade, sternum and flank compress with the strikes. Small broken masses
+# leave a half-tone between the highlights and the occlusion shadows.
+TORSO_RELIEF = {
+    "front": (
+        "...++....-...", "..++H+.-..+..", ".+HH++.-.+H+.",
+        "..+++.-..++.-", "..--.=-..---.", "...=-+.--..--",
+        "..++H+.-..+--", "..+..--....-.", "...--..-..--.",
+        "...+H+..-....", "....++..-....",
+    ),
+    "rear": (
+        "...+H+.-.++..", "..+HH+-..+H+.", ".+HH+.-..+++.",
+        "..++..=...+--", "..+..-=..+--.", "...-=.-.+--..",
+        "..+H+.-..--..", "..++..-..+--.", "....--...++-.",
+        "...+H+..-....", "....+..--....",
+    ),
+    "profile": (
+        "..++H+..-....", "..+HH+...--..", "...++..--....",
+        "..++..--...+.", "..+..-=..++..", "...-=-..+H+..",
+        "..+++-..+--..", "..+.....--...", "..+H+..--....",
+        "...++..-.....", ".....--......",
+    ),
+}
+SKIN_RELIEF = {".": 0, "+": 2, "H": 4, "-": -2, "=": -4}
+
+
+def leg_relief(x, y, across, width, waist, soles):
+    # Each thigh and knee follows its own sole. A visible gap gives the limb
+    # its real width; when the thighs overlap, divide at the two hip centres.
+    best = None
+    for i, (toe, bottom) in enumerate(soles):
+        hip, top = section(waist, (.23, .76)[i])
+        depth = (y-top)/max(1, bottom-top)
+        if not .12 < depth < .88:
+            continue
+        center = mix(hip, toe, depth)
+        dist = abs(x-center)
+        if dist < 4.5 and (best is None or dist < best[0]):
+            best = (dist, center, depth)
+    if best is None:
+        return 0
+    _, center, depth = best
+    plane = across if width < 9 else .5 + (x-center)/7
+    if depth < .48:
+        # The quadriceps narrows toward the inside of the knee.
+        crest = .24+.30*depth
+        if abs(plane-crest) < .14:
+            return 3
+        if .59 < plane < .84:
+            return -2
+    elif depth < .67:
+        if .24 < plane < .54 and depth < .56:
+            return 3
+        if .48 < plane < .82:
+            return -3
+    elif .22 < plane < .47:
+        return 2
+    elif .61 < plane < .82:
+        return -2
+    return 0
+
+
 def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
@@ -586,6 +649,10 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     bow = game.bow(fig, native, fig.parts(combat, frame)) if 24 <= pose <= 26 else set()
     pieces = {role: [r[:] for r in source] for role in ROLES[1:]}
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if model == 2074 else (0, ())
+    skin_relief = {}
+    locks_outline = fitted_panels(pose, model == 2074)[5]
+    native_hair = fig.parts(combat, frame).hair
+    torso = TORSO_RELIEF["rear" if pose in REAR else "profile" if pose in PROFILE else "front"]
     for sy, row in enumerate(source):
         lock = locks[sy-locks_start] if 0 <= sy-locks_start < len(locks) else None
         # Each contiguous leg/arm has its own light plane; a gap keeps its
@@ -665,6 +732,17 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                         body = pigment(SKIN, tone - 2)
                     elif .20 < u < .49 and -.12 < flank < 0:
                         body = pigment(SKIN, tone + 1)
+                native_point = ((len(native[0])-1-(sx-margin), len(native)-1-sy)
+                                if reverse else (sx-margin, sy))
+                if (body in SKIN and left < sx < right and not near_arm
+                        and (x, y) not in locks_outline and native_point not in native_hair):
+                    relief = 0
+                    if in_top:
+                        relief = SKIN_RELIEF[torso[min(10, int(t*11))][min(12, int(u*13))]]
+                    elif y >= min(waist[1], waist[3]):
+                        relief = leg_relief(x, y, across, right-left+1, waist, soles)
+                    if relief:
+                        skin_relief[sx, sy] = pigment(SKIN, SKIN.index(body)+relief)
                 foot = sandal(x, y, soles, across)
                 # In these two crossing profile steps the back foot lies
                 # directly beside the planted shin. Only its toes take a sole.
@@ -679,6 +757,25 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     visible = ({"Cleric": set(), "Fighter": set(), "cloak": set(), "sleeve": set(), "guard": {}}
                if pairs else None)
     dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
+    # The clothes already carry their own approved fold lighting. Apply the
+    # anatomical relief only where a cel still exposes the underlying skin.
+    light = [(.299*r + .587*g + .114*b) for r, g, b in game.palette]
+    gladiator = pieces["Gladiator"]
+    for (sx, sy), color in skin_relief.items():
+        old_skin = pieces["Body base"][sy][sx]
+        # Preserve the small lit plane beside a dark welt when the deeper
+        # flank shadow would join its value. The same plane belongs to the
+        # undressed torso and travels with it beneath the other outfits.
+        if gladiator[sy][sx] == old_skin:
+            leather = (gladiator[yy][xx] for xx, yy in
+                       ((sx-1, sy), (sx+1, sy), (sx, sy-1), (sx, sy+1))
+                       if 0 <= yy < len(gladiator) and 0 <= xx < len(gladiator[yy]))
+            if any(p in GLADIATOR_HIDE and abs(light[color]-light[p]) <
+                   min(40, abs(light[old_skin]-light[p])) for p in leather):
+                continue
+        for rows in pieces.values():
+            if rows[sy][sx] == old_skin:
+                rows[sy][sx] = color
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
         if panels is not None:

@@ -119,6 +119,38 @@ def dye(ramp, shade):
     return ramp[max(0, min(len(ramp)-1, round(shade)))]
 
 
+# The short halfling torso has only five or six rows between the jaw and
+# the pelvis. Use the warmer native highlights on broad body planes, with
+# one short shadow where the ribs overhang the waist.
+SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 150, 151)
+
+
+def torso_tone(u, depth, rear, profile):
+    near = -.47 + .16*depth
+    if profile:
+        near = -.22 - .24*depth
+    shoulder = math.exp(-((u-near)/.61)**2 - ((depth-.20)/.30)**2)
+    rib = math.exp(-((u-near-.16)/.58)**2 - ((depth-.43-.17*u)/.24)**2)
+    waist = math.exp(-((depth-.67-.15*u)/.17)**2 - ((u+.15)/.68)**2)
+    hip = math.exp(-((u-near-.14)/.42)**2 - ((depth-.92)/.19)**2)
+    far = math.exp(-((u-.51)/.31)**2 - ((depth-.23)/.23)**2)
+    shade = 5.2 - 2.8*u - 1.8*abs(u) + 6.1*shoulder + 3.5*rib - 2.8*waist + 4.4*hip
+    if rear:
+        # The farther blade catches a smaller reflection across the spine.
+        shade += 3.6*far - 2.8*math.exp(-((u-.08)/.19)**2 - ((depth-.38)/.39)**2)
+    elif not profile:
+        shade += 2.7*far
+    return dye(SKIN, shade)
+
+
+def thigh_tone(across, depth, near):
+    # The ridge slopes toward the rising knee. A three-pixel thigh reads
+    # as one lit plane between the two darker turns of the leg.
+    ridge = .32 + .15*min(1, max(0, depth))
+    shade = 3.9 + 6.8*math.exp(-((across-ridge)/.31)**2) - 2.2*across
+    return dye(SKIN, shade + (1.4 if near else -.6) - 1.6*depth)
+
+
 def pixels(vertices):
     # Work outside the native bounding box for cloth that swings past a leg.
     im = Image.new("1", (48, 40))
@@ -286,14 +318,21 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                 body = None  # Open the small gap between her thighs under the loincloth.
             if c is not None and (trunk or thigh or wrist):
                 if wrist:
-                    body = (134, 132, 130, 145)[(x+2*y) % 4]
+                    # The bracelet has gone. Let the forearm turn toward
+                    # its inside edge, even in the two-pixel side views.
+                    span = [xx for xx in range(x-2, x+3) if (xx, y) in bands]
+                    across = (x-min(span)+.5)/(max(span)-min(span)+1)
+                    body = dye(SKIN, 4.5 + 4.4*math.exp(-((across-.31)/.27)**2) - 3.2*across)
                 elif trunk:
-                    body = elf.torso_skin(u, depth, pose in REAR, pose in PROFILE)
-                    if model == 2070 and pose not in REAR | PROFILE and .18 < depth < .58:
-                        body = 145 if abs(u) > .23 and depth < .45 else 132
+                    body = torso_tone(u, depth, pose in REAR, pose in PROFILE)
                 else:
                     side = thigh_light[point]
-                    body = elf.leg_skin(side, (y-hy)/max(1, h-dy-hy), pose in REAR)
+                    # When both thighs meet at the pelvis, give each its
+                    # own cylinder before they separate on the next row.
+                    if pose not in PROFILE and (hx-2, y) in legs and (hx+2, y) in legs:
+                        side = (x-hx+half+.5)/half if x < hx else (x-hx+.5)/half
+                    near = (x < hx) == (left[1] >= right[1])
+                    body = thigh_tone(side, (y-hy)/max(1, h-dy-hy), near)
                 if nx+1 >= w or native[ny][nx+1] is None:
                     body = 129
             for role in ROLES[1:]:

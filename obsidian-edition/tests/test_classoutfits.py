@@ -925,6 +925,27 @@ class ElfOutfitTests(unittest.TestCase):
                     self.assertIsNotNone(frame.image[14 + 4][x + 4])
                     self.assertNotIn((x, 14), frame.regions[classoutfits.CHEST])
 
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the retail figure archive")
+    def test_green_cloak_covers_the_far_shoulder_in_profile_step_four(self):
+        self.addCleanup(sg.set_palette, list(sg._RGB))
+        dresser = sprites.Dresser.for_game(None, str(Path(os.environ["DSUN_OBJECTS"]).parent))
+        if dresser is None:
+            self.skipTest("needs the retail objects and palette in the game directory")
+        pictures = dresser.pics
+        left, top = sprites.room(False)
+        seam = ((2, 7), (3, 7), (2, 8), (3, 8), (3, 9), (4, 10))
+        green = {17, 53, 54, 55, 56, 57, 69, 188, 189}
+        for figure, model, role in ((304, 2061, "Ranger"), (306, 306, "Ranger/Thief")):
+            with self.subTest(figure=figure):
+                frame = classoutfits.frames(role, False, model)[14]
+                folds = {(x, y) for x, y, _ in frame.cloak}
+                self.assertTrue(set(seam) <= folds)
+                self.assertTrue(set(seam).isdisjoint(frame.head))
+                picture = pictures.build(figure, False, {}, (), role=role)
+                rows = art.decode_frame(picture, 14)[2]
+                for x, y in seam:
+                    self.assertIn(rows[y + top][x + left], green, (x, y))
+
     def test_profile_cloak_lifts_clear_of_the_elfs_bent_leg(self):
         for role in classoutfits.ELF_ROLES.values():
             walk = classoutfits.frames(role, False, 2061)

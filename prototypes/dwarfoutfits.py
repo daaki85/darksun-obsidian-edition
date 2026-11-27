@@ -266,6 +266,96 @@ def shoulder_guard(rows, point, side, ramp, crest=2):
     return result
 
 
+# Small native-pixel studies of the trunk, from the shoulder blades or
+# pectorals to the turned hip. Dots expose the original deltoid/arm. The
+# shoulder-to-hip line below moves the marks with each actual stance.
+TRUNK_PLANES = {
+    "front": (
+        ".65.34.", "665.453", "5432542", ".33413.", ".55243.", ".34323.", "4532431", ".43232.",
+    ),
+    "back": (
+        ".65.45.", "6542553", "5552432", ".65342.", ".43252.", ".34313.", "4542532", ".43232.",
+    ),
+    "side": (
+        ".54..", "6553.", ".5432", ".4521", ".5323", ".352.", "5432.", ".432.",
+    ),
+}
+# Flesh already present on the retail forearm crosses the torso here.
+# Run bounds are inclusive, in the native upright frame.
+CROSSING_ARMS = {
+    2: ((7, 5, 8), (8, 4, 7), (9, 6, 9)),
+    11: ((7, 3, 6), (8, 4, 6)),
+    12: ((6, 6, 9), (7, 5, 9)),
+    13: ((7, 2, 5), (8, 1, 4), (10, 5, 7)),
+    14: ((7, 7, 10), (8, 8, 11)),
+    17: ((10, 8, 11), (11, 7, 12), (12, 8, 10)),
+    21: ((6, 5, 8), (7, 6, 9)),
+    22: ((6, 10, 13), (7, 11, 14)),
+    23: ((6, 9, 12), (7, 10, 13)),
+    25: ((9, 3, 6), (10, 4, 7)),
+    27: ((9, 5, 8),),
+}
+TRUNK_TONES = {1: 134, 2: 133, 3: 131, 4: 144, 5: 147, 6: 149}
+
+
+def body_planes(rows, pose, registration, toes, rear, profile):
+    """Paint a rib cage and two separate weight-bearing legs inside the retail figure."""
+    _, _, sx, sy, hx, hy = pose
+    view = "back" if rear else "side" if profile or registration in (15, 27) else "front"
+    turns = TRUNK_PLANES[view]
+    foreground = {(x, y) for y, lo, hi in CROSSING_ARMS.get(registration, ()) for x in range(lo, hi + 1)}
+    skin = {}
+    # Shoulder crests can differ by two rows as the arms swing; tilt the
+    # upper rib cage with them, letting the lower rows settle onto the hip.
+    left, right = SHOULDERS[registration]
+    tilt = max(-1, min(1, right[1] - left[1])) if left and right else 0
+    for y in range(sy + 1, hy + 2):
+        travel = min(1, (y - sy) / (hy - sy))
+        axis = round(sx * (1 - travel) + hx * travel)
+        for u in range(-3, 4):
+            x = axis + u
+            lift = tilt if u >= 2 and travel < .65 else 0
+            row = min(7, max(0, round((y - sy - 1 - lift) * 6 / max(1, hy - sy - 1))))
+            if y > hy:
+                row = 7
+            plane = turns[row]
+            col = u + len(plane) // 2
+            if 0 <= col < len(plane) and plane[col] != "." and (x, y) not in foreground:
+                skin[x, y] = TRUNK_TONES[int(plane[col])]
+
+    # The stock black breeches leave a dark cuff across the top of the thigh.
+    # Follow each planted or lifted foot through its actual occupied row;
+    # retain the stock ankles, toes and the underside of the far leg.
+    for side, toe in enumerate(toes):
+        if not toe:
+            continue
+        tx, ty = toe
+        reach = ty - hy
+        if reach < 4:
+            continue
+        near = all(other is None or ty >= other[1] for other in toes)
+        for y in range(hy + 2, ty - 1):
+            travel = (y - hy) / reach
+            aim = round((hx + (-2 if side == 0 else 2)) * (1 - travel) + tx * travel)
+            if not 0 <= aim < len(rows[y]) or rows[y][aim] is None:
+                continue
+            lo = hi = aim
+            while lo and rows[y][lo - 1] is not None:
+                lo -= 1
+            while hi + 1 < len(rows[y]) and rows[y][hi + 1] is not None:
+                hi += 1
+            if hi - lo < 1 or hi - lo > 4:
+                continue
+            lit = lo + (hi - lo >= 2)
+            # The light hooks over the knee, recedes below the joint, then
+            # catches only the front of the shin. Keep the outer silhouette.
+            rank = 5 if .40 <= travel <= .60 else 4 if travel < .72 else 3
+            skin[lit, y] = TRUNK_TONES[rank if near else rank - 1]
+            if lit + 1 < hi:
+                skin[lit + 1, y] = TRUNK_TONES[3 if near and travel < .6 else 2]
+    return skin
+
+
 def draw(game, model, k, role, design=None, layers=None):
     """Draw one registered pose. Optional layer maps use native, unpadded coordinates."""
     combat, f = divmod(k, 15)
@@ -347,6 +437,7 @@ def draw(game, model, k, role, design=None, layers=None):
     bare_rows = game.fig(2055).rows(combat, f) if model == 2053 else rows
     if dead and model == 2053:
         bare_rows = bare_rows[::-1]
+    flesh = body_planes(rows, pose, registration, toes, rear, profile)
     for y in range(height):
         t = min(1, max(0, (y - sy) / max(1, hy - sy)))
         mid = sx * (1 - t) + hx * t
@@ -401,6 +492,8 @@ def draw(game, model, k, role, design=None, layers=None):
                 ref = rows if model == 2053 and k == 15 else bare_rows
                 sample = ref[y][x] if y < len(ref) and x < len(ref[y]) else None
                 paint = sample if sample in outfits.SKINC else FLESH[min(4, int(hue[c] // 38))]
+            if body and not neck and (x, y) in flesh:
+                paint = flesh[x, y]
             skin = paint
             surface = 0
             fold_rank = None

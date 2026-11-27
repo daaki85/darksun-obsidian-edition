@@ -637,17 +637,29 @@ class Study:
         self.floor = Image.open(TERRAIN).convert("RGB").crop((50, 150, 102, 194))
 
     @lru_cache(None)
-    def skin_changes(self, key, pose):
+    def skin_and_protection(self, key, pose):
         body, pad = self.registered.rows(key, pose, "Body base")
-        if key == FIGURES[0]:
-            return halfelfbody.female_back(pose, body, pad)
         cb, f = divmod(pose, 15)
         fig = self.game.fig(key)
         source = self.game.fr(fig.model + cb, f)
-        fields = co.frames("Fighter", cb, fig.model)[f]
-        protected = set(fields.head) | set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
+        fields = co.frames("Fighter" if key == FIGURES[1] else "Warrior", cb, fig.model)[f]
+        arms = set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
         back = figures.mover_back(fig.maker.cuts[bool(cb), f])
-        return halfelfbody.paint(pose, body, pad, source, back, protected, outfits.SKINC)
+        female = key == FIGURES[0]
+        if female:
+            changes = halfelfbody.female_back(pose, body, pad)
+        else:
+            changes = halfelfbody.paint(pose, body, pad, source, back, arms | set(fields.head), outfits.SKINC)
+        parts = fig.parts(cb, f)
+        stock = fig.rows(cb, f)
+        protected = set(parts.hair)
+        for y, row in enumerate(stock):
+            for x, color in enumerate(row):
+                point = back(x, y), y
+                if point in arms or (point in fields.head and color == body[y+pad][x+pad]):
+                    protected.add((x, y))
+        changes = halfelfbody.body_planes(pose, body, pad, female, parts.facing, changes, protected)
+        return changes, protected
 
     @lru_cache(None)
     def rows(self, key, pose, role):
@@ -659,10 +671,16 @@ class Study:
             return rows, pad
         if "/" in role and "Thief" in role:
             rows = pairs.dye_hood(self.registered, key, pose, role, rows, pad)
-        return self.exposed_skin(key, pose, rows, pad)
+        rows, pad = self.exposed_skin(key, pose, rows, pad)
+        if role == "Gladiator":
+            body, _ = self.rows(key, pose, "Body base")
+            rows = [row[:] for row in rows]
+            _, protected = self.skin_and_protection(key, pose)
+            halfelfbody.leather_contact(pose, body, rows, pad, key == FIGURES[0], protected)
+        return rows, pad
 
     def exposed_skin(self, key, pose, rows, pad):
-        changes = self.skin_changes(key, pose)
+        changes, _ = self.skin_and_protection(key, pose)
         if not changes:
             return rows, pad
         # Resolve cloth overlaps, belt positions and dyes on the registered

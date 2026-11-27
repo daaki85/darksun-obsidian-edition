@@ -64,7 +64,13 @@ def single_masks(study, obj, pose, garment):
             # The fitted hood has its own crown over the bun, including flying
             # tips outside the old human or elf hair silhouette.
             collar = shoulder+2 - min(4, abs(x-neck)//2)
-            hood = garment == "Thief" and not bare and color in CLOTH["Thief"] and level <= collar
+            # In profile the pointed collar runs behind the upper arm. The
+            # parent cape records exactly where that collar becomes shoulder
+            # cloth, including the folds that cover his far arm on step four.
+            shoulder_fold = (obj == 306 and pose in (2, 11, 12, 13, 14)
+                             and y >= shoulder-1 and original in folds and original not in scalp)
+            hood = (garment == "Thief" and not bare and color in CLOTH["Thief"]
+                    and level <= collar and not shoulder_fold)
             if (bare and (original in scalp or point in parts.hair)) or hood:
                 head.add(point)
                 continue

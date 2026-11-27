@@ -1,7 +1,8 @@
 """Render the body, Gladiator and cloth comparisons from two checkouts.
 
 python prototypes/materialfoldreview.py GAME_DIR OUTPUT_DIR --previous-checkout CHECKOUT
-The published baseline is fee30cff. Both checkouts must have the retail study tools.
+Use --previous-cloth-checkout when the wider cloth study has an earlier baseline.
+Both checkouts must have the retail study tools.
 """
 import argparse
 from pathlib import Path
@@ -63,6 +64,8 @@ def capture(game_dir):
                     rows = mulstudy.fitted_rows(game, pose)
                 margin = half.co.FITTED_ARCHIVES[key][1]
                 body = tile(rows["Body base"], margin)
+            stock = game.fig(key).model
+            save(obj, "Source", pose, tile(game.fr(stock + cb, f)))
             save(obj, "Body", pose, body)
             for role in roles:
                 rows = atlas.sequence(obj, cb, role, "Class colors")[f]
@@ -114,7 +117,20 @@ def save_loop(frames, times, path):
     frames[0].save(path, save_all=True, append_images=frames[1:], duration=times, loop=0, disposal=1)
 
 
-def render(game_dir, output, previous):
+def shoulders(before, after, output):
+    frames = []
+    for step, pose in enumerate(range(11, 15), 1):
+        rows = []
+        for obj, role in ((304, "Ranger"), (306, "Ranger/Thief")):
+            key = f"{obj}/{role}/{pose}"
+            rows.append((f"{PEOPLE[obj - 300]}   ·   {role}",
+                         (before[key], after[key], after[f"630/Retail/{pose}"])))
+        frames.append(panel(f"Cloak at the shoulder · step {step}/4", ("Earlier", "Revised", "Retail Thief"), rows, 3))
+    frames[-1].save(output / "cloak-shoulder.png", optimize=True)
+    save_loop(frames, [330, 330, 330, 850], output / "cloak-shoulder.gif")
+
+
+def render(game_dir, output, previous, previous_cloth=None):
     with Image.open(TERRAIN) as image:
         sand = image.convert("RGB").crop((45, 142, 99, 194))
     with Image.open(TERRAIN.with_name("2026-11-09-figures-all-gone.png")) as image:
@@ -129,9 +145,9 @@ def render(game_dir, output, previous):
             key = f"{obj}/Body/{pose}"
             gladiator = f"{obj}/Gladiator/{pose}"
             tiles = (before[key], after[key], before[gladiator], after[gladiator],
-                     after.get(f"1252/Retail/{pose}"))
+                     after[f"{obj}/Source/{pose}"], after.get(f"1252/Retail/{pose}"))
             return f"{PEOPLE[obj - 300]}   ·   {pose:02}  {dwarf.NAMES[pose]}", tiles
-        body_labels = ("Earlier body", "Revised body", "Earlier Gladiator", "Revised Gladiator", "Retail Warrior")
+        body_labels = ("Earlier body", "Revised body", "Earlier Gladiator", "Revised Gladiator", "Retail source figure", "Retail Warrior")
         if surface == "stone":
             poses = (1, 14, 8, 8, 21, 6, 21, 9, 15, 17, 10, 10, 19)
             panel("Gladiators on paving", body_labels, [body_row(300 + i, f) for i, f in enumerate(poses)]).save(
@@ -141,6 +157,9 @@ def render(game_dir, output, previous):
             frames = [panel("Gladiators and exposed skin", body_labels,
                             [body_row(o, f) for o in range(start, end)]) for f in CYCLE]
             save_loop(frames, [850 if f < 3 or f >= 24 else 300 for f in CYCLE], output / f"gladiator-contrast-{name}.gif")
+        shoulders(before, after, output)
+        if previous_cloth:
+            before = unpack(former(game_dir, previous_cloth, __file__), floor)
         detail_poses = (0, 0, 7, 10, 14, 14, 19, 13, 7)
         rows = []
         for (obj, role, _, ref), pose in zip(MATERIALS, detail_poses):
@@ -167,5 +186,6 @@ if __name__ == "__main__":
     parser.add_argument("game_dir", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--previous-checkout", type=Path, required=True)
+    parser.add_argument("--previous-cloth-checkout", type=Path)
     args = parser.parse_args()
-    render(args.game_dir, args.output, args.previous_checkout)
+    render(args.game_dir, args.output, args.previous_checkout, args.previous_cloth_checkout)
