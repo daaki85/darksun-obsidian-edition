@@ -2089,6 +2089,30 @@ class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS
 kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
 menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
 
+### A control run: RAV_SKIP
+
+(ravstart.sh with `RAV_LOADER=1`; the contract since 2026-11-27, PR
+#235). `RAV_SKIP=NAME,NAME,...` leaves those parts of the Loader's work out of the copy, so a test can
+show the game's own behaviour beside the mod's. The names are read once, all together:
+
+| Kind | Names | What is left out | Files changed in the mod's `dos` folder | Expected |
+|---|---|---|---|---|
+| An executable patch | any `name` in `dsloader.ravager.PATCHES` | the patch's bytes put back to the game's (each checked to be the patch's first) | `DSUNLOG2.EXE` | the game's own behaviour at that site |
+| A script fix | any key of `ravager.SCRIPT_FIXES` | the fix | `GPLDAT2.GFF` | the game's script |
+| An object part | `mod_types`, `new_items`, `new_spells` (the spellbooks only, `ravgear.BOOKS`: the spells stay), `item_shine`, `weights`, `spell_arrows` | that part of the objects, all the named parts in one write of the copy | `OBJEX2.GFF` | e.g. `weights`: the sequel's items weigh 0 again |
+| `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
+
+Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with
+`# left out: ...` when the run went ahead. Prerequisite: `RAV_LOADER=1` (without it nothing is copied,
+so nothing is left out); the new items' pictures come from `$GAME`'s Shattered Lands (`RAV_SL=` for
+none, which also leaves out the new items and the spell arrows' objects). To check a run, look at the
+copy (the bytes at the patch's offset, or the chunk in `OBJEX2.GFF`), not at the printed list.
+
+**Before 2026-11-27** each object part was written in a run of its own, each from the game's file, so
+with two or more object parts named only the last was left out. No play log named two object parts in
+one run (the controls on record name patches, or one of `weights`, `item_shine` and `new_spells`), so
+their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight
@@ -2105,8 +2129,8 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
 - **The real damage, not the log's**: the dice log's "hits ... for N" is its own sum; the target's
   "now X/Y HP (-Z)" lines are the game's, so compare the two when a rule changes the damage (Enlarge
   found so: the log's line had missed it).
-- **A control run**: `RAV_SKIP=patch,patch` with `RAV_LOADER=1` leaves those patches out (ravstart.sh;
-  `$WORK/rav.conf` says "# left out").
+- **A control run**: `RAV_SKIP=NAME,...` with `RAV_LOADER=1`: [the controls, what each changes and how
+  to check it](#a-control-run-rav_skip).
 - **A scroll for a test**: copy a real scroll's item record (in the after-ambush save, item 58: entity
   -7939h, type 77, a wizard scroll) over a party member's carried item (+0 the entity, +0Ah the type,
   +14h the name), its power (+10h) the spell + 1; on the inventory screen right-click the item, then
