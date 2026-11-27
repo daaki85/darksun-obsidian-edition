@@ -233,6 +233,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
   sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
   and Memory tools tabs read the sequel's spells and records.
+- **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon
+  leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
   small crosses mark the squares they can still walk to, and R hides or shows them. After the last
@@ -333,6 +335,13 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   has.
 - **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down: the sequel's map
   scrolls only at the screen's edge, as the game has it.
+- **[More saves](FEATURES.md#more-saves)** (pages 2 to 4 of the save window) and **[more
+  characters](FEATURES.md#more-characters)** (29 in the roster): the sequel keeps its own ten saves (and the
+  QUICK saves beside them) and its own roster's limit.
+- **[Steady pace](FEATURES.md#game-speed)**: the sequel runs at the game speed chosen, without steady pace.
+- **[The view in fights](FEATURES.md#the-view-in-fights)**, **[the pointer in scenes, and where it
+  starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)** and **[the whole party in
+  view](FEATURES.md#the-whole-party-in-view)**: the sequel's view, pointer and party on the map are its own.
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books
