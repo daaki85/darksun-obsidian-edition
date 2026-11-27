@@ -22,7 +22,7 @@ Each row compares one frame of the Loader’s actual equipment picture on the ar
 
 The import was checked against the approved study for both figures, across all 2,784 outfit poses. The equipment audit used 21 loadouts, including ordinary plate, Warden’s Plate, both named robes, and bows with and without arrows. On hooded outfits the equipped cloak picks up the fold at the nape, even on the woman’s second front strike. An outer cloak can conceal a multiclass lining in individual poses.
 
-In DOSBox, the attached Loader selected all 48 outfits for Lex on the fountain map. With her original Fighter/Preserver classes restored, removing and re-equipping her right-hand item reproduced both starting pictures. [Live comparison and playtest log](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/import-class-outfits/playtest/logs/2026-11-26-half-elf-import.md)
+In DOSBox, the attached Loader selected all 48 outfits for Lex on the fountain map. With her original Fighter/Preserver classes restored, removing and re-equipping her right-hand item reproduced both starting pictures. [Live comparison and playtest log](../../../playtest/logs/2026-11-26-half-elf-import.md)
 
 ## Equipped Fighter and Preserver
 
@@ -42,7 +42,7 @@ On the man, follow the club into the outstretched hand on side strike 2 (22). Th
 
 ![Male half-elf Fighter and Preserver through all poses with weapons, shield and carried ammunition](half-elf-equipped-weapons.gif)
 
-The original Fighter and Preserver equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
+The original Fighter and Preserver equipment check compared 3,712 encoded frames across the four builds. It found zero isolated equipment pieces, changes to protected bow pixels or armor-only changes outside the assigned garment regions. The larger-canvas weapon check found zero pixels beyond the saved picture and reproduced every weapon pixel inside it, including the woman’s paired cahulaks on pose 16. All four empty-slot builds matched their approved art, pose for pose. The attached Loader also completed 36 equip/remove cycles in DOSBox. [Playtest log](../../../playtest/logs/2026-11-25-class-equipment.md#half-elf-fighter-and-preserver) · [Equipment audit before fitting](equipment-tests.md)
 
 ## Male body fitting
 

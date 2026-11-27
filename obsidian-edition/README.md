@@ -316,7 +316,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with every section open: In the game (the combat log's level, the Look box, names over figures, the red ring), Rule changes (three switches: hit dice, half-giants' two-handed weapons, helms), More character customization (kits, fuller starting gear), New content, Game speed, Wake of the Ravager and Saves](docs/options.png)
+![The Options tab with every section open: In the game (the combat log's level, the Look box, names over figures, the red ring, the chance to hit, squares in reach, F10's move back, showing what can be used), Rule changes (three switches: hit dice, half-giants' two-handed weapons, helms), More character customization (kits, fuller starting gear), New content, Engine (DOSBox-X found and chosen), Game speed, Picture and music, Wake of the Ravager and Saves (quick saves and autosaves)](docs/options.png)
 
 The **All fields** and **Memory tools** tabs are for mapping the game's memory
 ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)).
