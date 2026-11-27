@@ -13055,19 +13055,7 @@ cp_rows    db 11
 cp_ncols   db 2
 cp_rgb     db 0, 0, 0, 63, 63, 63
            times (CP_COLS - 2) * 3 db 0
-cp_shape:
-        db 1, 0
-        db 1, 1, 0
-        db 1, 2, 1, 0
-        db 1, 2, 2, 1, 0
-        db 1, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 1, 1, 1, 1, 0
-        db 1, 2, 1, 1, 2, 2, 1, 0
-        db 1, 1, 0xFF, 0xFF, 1, 1, 1, 0
-           times CP_SHAPE_BYTES - 69 db 0
+        SHARED_cp_shape
 CP_DATA_BYTES equ $ - cp_data
 cine_step:
         or dx, dx
@@ -13098,19 +13086,7 @@ cine_step:
         jne .done
         call cine_hide
 .done:  iret
-cine_presses:                           ; ZF: neither button pressed since asked last (AX, BX, CX)
-        push dx
-        mov ax, 5
-        xor bx, bx
-        int 0x33
-        push bx
-        mov ax, 5
-        mov bx, 1
-        int 0x33
-        pop ax
-        or ax, bx
-        pop dx
-        ret
+        SHARED_cine_presses
 cine_mouse:                             ; the driver's ranges the screen's, the pointer in the middle
         pusha
         mov ax, 7
@@ -13198,84 +13174,9 @@ vga_latched:
         pop ax
         out dx, al
         ret
-cp_put:
-        push es
-        call cine_where
-        mov [cs:cp_x], cx
-        mov [cs:cp_y], dx
-        mov ax, 0xA000
-        mov es, ax
-        call cp_vga
-        mov ax, [cs:cp_now]
-        mov [cs:cp_page], ax
-        mov byte [cs:cp_op], 0
-        call cp_pass
-        call cp_vga_back
-        mov byte [cs:cp_drawn], 1
-        pop es
-        ret
-cp_erase:
-        cmp byte [cs:cp_drawn], 0
-        je .out
-        mov byte [cs:cp_drawn], 0
-        pusha
-        push es
-        mov ax, 0xA000
-        mov es, ax
-        call cp_vga
-        mov byte [cs:cp_op], 1
-        call cp_pass
-        call cp_vga_back
-        pop es
-        popa
-.out:   ret
-cp_colours:                             ; CP_MAP: each of the arrow's colours as the palette's
-        xor bx, bx                      ;   nearest (the 3 parts' differences summed; of equals the
-.clear: mov byte [cs:cp_best + bx], 0xFF ;  last: a picture's colours seldom are)
-        inc bx
-        cmp bx, CP_COLS
-        jb .clear
-        mov dx, 0x3C7
-        xor al, al
-        out dx, al
-        mov dx, 0x3C9
-        xor cl, cl                      ; (CL the palette's colour, BL, BH, CH its parts)
-.each:  in al, dx
-        mov bl, al
-        in al, dx
-        mov bh, al
-        in al, dx
-        mov ch, al
-        xor si, si                      ; (SI the arrow's colour's parts, DI the colour)
-        xor di, di
-.col:   mov ax, di
-        cmp al, [cs:cp_ncols]
-        jae .next
-        mov al, bl
-        sub al, [cs:cp_rgb + si]
-        jnc .r
-        neg al
-.r:     mov ah, al
-        mov al, bh
-        sub al, [cs:cp_rgb + si + 1]
-        jnc .g
-        neg al
-.g:     add ah, al
-        mov al, ch
-        sub al, [cs:cp_rgb + si + 2]
-        jnc .b
-        neg al
-.b:     add ah, al
-        cmp ah, [cs:cp_best + di]
-        ja .far
-        mov [cs:cp_best + di], ah
-        mov [cs:cp_map + di], cl
-.far:   add si, 3
-        inc di
-        jmp .col
-.next:  inc cl
-        jnz .each
-        ret
+        SHARED_cp_put
+        SHARED_cp_erase
+        SHARED_cp_colours
 cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
         mov dx, 0x3C4                   ;   CP_NOW the page shown (the scenes' modes unchained)
         in al, dx
@@ -13328,64 +13229,8 @@ cp_vga:                                 ; the VGA's registers the drawing change
         mov al, cl
         out dx, al
         ret
-cp_vga_back:
-        mov dx, 0x3CE
-        xor bx, bx
-.back:  mov al, [cs:cp_gc_ix + bx]
-        mov ah, [cs:cp_gc + bx]
-        out dx, ax
-        inc bx
-        cmp bx, 5
-        jb .back
-        mov al, [cs:cp_gc_i]
-        out dx, al
-        mov dx, 0x3C4
-        mov al, 2
-        mov ah, [cs:cp_mask]
-        out dx, ax
-        mov al, [cs:cp_seq_i]
-        out dx, al
-        ret
-cp_pass:                                ; CP_OP 0: drawn, what's under kept; 1: put back
-        xor si, si                      ; (SI the row, BX the shape's byte, BP CP_UNDER's, CX the x)
-        mov bx, cp_shape
-        mov bp, cp_under
-.row:   mov dx, [cs:cp_y]
-        add dx, si
-        mov cx, [cs:cp_x]
-.col:   mov al, [cs:bx]
-        inc bx
-        or al, al
-        jz .end
-        cmp al, 0xFF
-        je .next
-        cmp dx, 200
-        jae .next
-        cmp cx, 320
-        jae .next
-        push bx
-        movzx bx, al
-        mov ah, [cs:cp_map + bx - 1]
-        pop bx
-        call cp_addr
-        cmp byte [cs:cp_op], 0
-        jne .back
-        mov al, [es:di]
-        mov [cs:bp], al
-        mov [es:di], ah
-        jmp .next
-.back:  cmp [es:di], ah
-        jne .next
-        mov al, [cs:bp]
-        mov [es:di], al
-.next:  inc bp
-        inc cx
-        jmp .col
-.end:   inc si
-        mov ax, si
-        cmp al, [cs:cp_rows]
-        jb .row
-        ret
+        SHARED_cp_vga_back
+        SHARED_cp_pass
 cp_addr:                                ; DI: pixel CX, DX's (its plane read and written)
         push ax
         push cx
@@ -13426,17 +13271,7 @@ cine_end:
 ; mouse driver (AX 0: none): the pointer made to move as far up and down as across (MOUSE_RATIO),
 ; through the intro too, and the "jnz" made.
 MI_SKIP      equ 0x35704 - (0x356F5 + 3)
-mouse_init:
-        or ax, ax
-        jz .none
-        push bp
-        mov bp, sp
-        add word [bp + 2], MI_SKIP
-        pop bp
-        pusha
-        call mouse_ratio
-        popa
-.none:  iret
+        SHARED_mouse_init
 
 ; SPREAD_LOAD: "mov word [1168h],0" (692CEh; 6 bytes) in the routine loading a game (69218h, from
 ; DARKRUN.GFF): there a party member in the leader's figure (its map record's +0, 80h) has the party
@@ -13514,12 +13349,7 @@ mouse_mid:
         mov cx, [cs:mp_x]
         mov dx, [cs:mp_y]
         int 0x33
-mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 10:
-        mov ax, 0x0F                    ; with the window's aspect correction a pixel is 1.2 times as
-        mov cx, 8                       ; tall as it is wide, so up and down moves as far on the
-        mov dx, 10                      ; screen as across)
-        int 0x33
-        ret
+        SHARED_mouse_ratio
 
 ; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): each funnel drawn (WT_TABLE)
 ; turns, its thing's frame (+11h, every copy's) one on each WHIRL_TICKS of the BIOS clock, and its
