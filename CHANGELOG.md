@@ -169,7 +169,7 @@ DOSBox-X).
 - The creation screen's THAC0 line has a new Scholar's 1 worse as soon as the kit is chosen or taken back
   (`CR_KIT_THAC0`); before, only after the next roll.
 
-**New: the Scholar kit in Wake of the Ravager** (branch `claude/sequel-scholar`)
+**New: the Scholar kit in Wake of the Ravager** (#270)
 - A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
   spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
   preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).
