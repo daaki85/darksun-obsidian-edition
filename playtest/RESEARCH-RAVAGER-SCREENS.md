@@ -96,6 +96,12 @@ frame late and the street's walkers move, so make the control a RAV_SKIP run (`f
 the same walk (`ravgo.py x 1180` from `ravager-after-ambush`). A throwaway copy of the sequel needs no 200 MB
 `game.gog` of its own: link it to the plain install's (DOSBox only reads it).
 
+**A shadow's feet** (2026-11-27, logs/2026-11-27-ravager-shadow-feet.md): the sequel draws a figure from its frame's
+top left (the draw list's place less the map thing's +7 and +8), so a frame with clear rows under the feet (Codex's
+redraws have a margin all round: 10 rows under Ar'Anda's 599, up to 22 under the big creatures') stands right but
+cast its shadow that far below. FEET_ROW (both helpers) takes the frame's last listed row as the feet. To see which
+picture and frame a party member is drawn with, the log's probe reads the draw list and the cache.
+
 **Dust, and the figures' shadows in a fight** (2026-11-26, logs/2026-11-26-ravager-dust.md): **Tyr's ground is
 darker than SL's sand**: the dirt of the squares and yards (Shadow Square, world ~600, 1226 on, west of the ambush
 street by y 1230) is colours 230, 95, 229, 228 (56,44,28 to 113,105,77 of 255), below `dust.is_ground`'s least value

@@ -18617,7 +18617,11 @@ fig_of:
         mov [cs:fg_bottom], ax
         cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN")
         je .no
-        call fig_box
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp ax, [cs:fg_bottom]
+        jae .feet
+        mov [cs:fg_bottom], ax
+.feet:  call fig_box
         jc .no
         add si, 4
 .row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
@@ -18860,6 +18864,11 @@ fig_record:
         mov [cs:fk_bottom], al
         cmp byte [es:si + 4], 0xFF      ; (none, or planar)
         je .ret
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp al, [cs:fk_bottom]
+        jae .feet
+        mov [cs:fk_bottom], al
+.feet:
         mov ax, [cs:sc_next]
         inc word [cs:sc_next]
         cmp word [cs:sc_next], SC_SLOTS
@@ -18921,6 +18930,12 @@ fig_record:
 fk_frame  db 0
 fk_w      db 0
 fk_bottom db 0
+
+; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
+; (FFFFh: none): the figure's feet, which FIG_OF and FIG_RECORD take when higher than the frame's bottom edge
+; (the redrawn figures' frames have a margin all round, ten rows under the party's and up to 22 under the big
+; creatures', so their shadows fell that far below them, the figures floating). Keeps the rest.
+        SHARED_feet_row
 
 ; FIG_BOX: CF set if none of the shadow of the frame (FG_W, FG_BOTTOM) at FG_X, FG_Y can be where the
 ; floor was drawn (the clip); FG_FEET the feet's row on the screen. Registers kept but AX.

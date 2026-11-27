@@ -1435,3 +1435,28 @@ wp_harvest:
         pop ax
         ret
 %endmacro
+
+%macro SHARED_feet_row 0
+feet_row:
+        push si
+        push dx
+        mov dx, -1
+        add si, 4
+.row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
+        inc si
+        cmp al, 0xFF
+        je .done
+        movzx dx, al                    ; (the rows top down: the last the lowest)
+.run:   test byte [es:si + 1], 0x80     ; (past the run: its data's bytes)
+        pushf
+        movzx ax, byte [es:si + 3]
+        add si, 4
+        add si, ax
+        popf
+        jz .run
+        jmp .row
+.done:  mov ax, dx
+        pop dx
+        pop si
+        ret
+%endmacro
