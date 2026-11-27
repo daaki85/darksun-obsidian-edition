@@ -345,6 +345,17 @@ its spell (not in the shop's screen). Three of the sequel's wizards who carry a 
 Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
 Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
 
+## The sequel's colours
+
+Wake of the Ravager keeps its own colours (the owner's choice, 2026-11-27). Matching them to Shattered Lands' is a
+long-term job for the [recompiled program](https://github.com/daaki85/darksun-recompiled) (its plan's Phase 10):
+a tone grade toward Shattered Lands' lighter, warmer look, applied where the picture goes to the screen, and later
+Shattered Lands' interface art drawn in its own exact colours. It depends on the sequel playing in the recompiled
+program past the start of Tyr. Why the mod doesn't do it here: the two games number their 256 colours differently, so
+Shattered Lands' palettes can't simply be used in the sequel, and no palette slot is free in every one of the sequel's
+areas (a count over every picture, the redrawn figures included). That leaves no room for Shattered Lands' interface
+greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to the sequel's nearest colours.
+
 ## Not in the sequel yet
 
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
