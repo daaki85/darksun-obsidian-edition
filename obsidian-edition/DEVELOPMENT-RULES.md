@@ -2194,7 +2194,7 @@ Assassin's multiplier one more there, rule or not (the attacker `[BP+0Eh]`, a pa
 `kit_stabs` counts them). The dice log
 reads the round's count at `game.ATTACKS_MADE_LOCAL` (ravlog's -16h). Tests: test_ravthief.py (with
 `DSUN_WOTR`, the sites in the game's own code too); test_dicelog's `test_rule_off`,
-`test_attacks_made_local`. Found statically (playtest/RESEARCH.md, "Thieves as in AD&D in the sequel").
+`test_attacks_made_local`. Found statically (playtest/RESEARCH-RAVAGER.md, "Thieves as in AD&D in the sequel").
 
 ## Picking pockets
 
