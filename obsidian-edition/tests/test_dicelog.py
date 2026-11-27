@@ -3406,6 +3406,30 @@ class Audit2Tests(unittest.TestCase):
         log.use_settings({"pickpocketed": ["Dag|41|7|Trader@500"]})
         self.assertEqual(log.picked, {"Dag|41|7|Trader"})
 
+    def test_the_quick_save_switches_follow_the_settings_file(self):
+        """With no Loader window, a change to settings.json (autosave turned off by hand) is taken
+        at the next look, a second at most after the last, with no restart."""
+        import json
+        import tempfile
+        from dsloader import launch
+        log = make_game()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "settings.json")
+            with open(path, "w") as f:
+                json.dump({"autosave": True}, f)
+            with mock.patch.object(launch, "SETTINGS", path):
+                log.use_settings({"autosave": True})
+                self.assertFalse(log.follow_switches(now=100.0))  # (the first look: the file as read)
+                with open(path, "w") as f:
+                    json.dump({"autosave": False, "quick_save": False}, f)
+                os.utime(path, ns=(1, os.stat(path).st_mtime_ns + 10**9))
+                self.assertFalse(log.follow_switches(now=100.5))  # (under a second since)
+                self.assertTrue(log.quicksave.auto)
+                self.assertTrue(log.follow_switches(now=101.0))
+                self.assertFalse(log.quicksave.auto)
+                self.assertFalse(log.quicksave.keys)
+                self.assertFalse(log.follow_switches(now=102.0))  # (unchanged since)
+
     def test_a_slot_written_during_the_read_is_not_taken(self):
         """DSCLOG wrote slot 0 while the ring was read: the old entry 5 the read found there may be
         torn (its seq old, its body new), so it isn't taken, nor 6 in the slot after (being

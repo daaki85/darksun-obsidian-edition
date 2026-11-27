@@ -16879,6 +16879,9 @@ INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY:
 F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
 SAVE_BASE_SITE equ NS_IMAGE + 123 ; 878F7h: a group's 1st-level save, read at a level up (SAVE_BASE)
 FIG_OPEN_SITE equ NS_IMAGE + 124  ; 65FACh: the creation screen's figure first drawn (FIG_OPEN)
+FOLLOW_SITE equ NS_IMAGE + 125    ; 1B296h, 1CA52h, 1E457h: the view moved after a figure, drawn (PANEL_FOLLOW)
+CENTRE_THING_SITE equ NS_IMAGE + 126 ; 1E869h: the view centred on a thing (PANEL_CENTRE)
+CENTRE_XY_SITE equ NS_IMAGE + 127 ; 1E8DCh: the view centred on (x, y) (PANEL_CENTRE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -18899,6 +18902,8 @@ probe_dos_open:
         push cx
         push si
         push di
+        push es
+        mov es, [cs:tail_seg]   ; (COPIES: the tail's)
         mov si, dx
         mov cx, 128
 .end:   cmp byte [si], 0
@@ -18913,7 +18918,7 @@ probe_dos_open:
         mov ax, si
         sub ax, dx              ; AX: the path's length
         mov bx, copies
-.file:  mov cl, [cs:bx]         ; this copy's name length (0: no more)
+.file:  mov cl, [es:bx]         ; this copy's name length (0: no more)
         xor ch, ch
         test cx, cx
         jz .no                  ; (no jcxz: too far)
@@ -18939,7 +18944,7 @@ probe_dos_open:
         cmp al, 'z'
         ja .upper
         sub al, 20h
-.upper: cmp al, [cs:di]
+.upper: cmp al, [es:di]
         jne .differ
         inc si
         inc di
@@ -18952,15 +18957,18 @@ probe_dos_open:
         pop ax
 .next:  add bx, COPY_SIZE
         jmp .file
-.found: mov [cs:copy_at], bx
+.found:
         lea si, [bx + 1]        ; (its path: D:\ and the name, COPY_PATH)
         mov di, copy_path + 3
         mov cx, OBJ_NAME_LEN
-.path:  mov al, [cs:si]
+.path:  mov al, [es:si]
         mov [cs:di], al
         inc si
         inc di
         loop .path
+        mov ax, [es:bx + 1 + OBJ_NAME_LEN]  ; (its flag, set to 1 once opened)
+        mov [cs:copy_at], ax
+        pop es
         pop di
         pop si
         pop cx
@@ -18980,14 +18988,14 @@ probe_dos_open:
         jc .own
         pop word [cs:obj_scratch]  ; (POP keeps the flags: CF clear, AX the handle)
         push bx
-        mov bx, [cs:copy_at]
-        mov bx, [cs:bx + 1 + OBJ_NAME_LEN]  ; (its flag: set to 1)
+        mov bx, [cs:copy_at]            ; (its flag: set to 1)
         mov word [cs:bx], 1
         pop bx
         retf 2
 .own:   pop ax
         jmp .chain
-.no:    pop di
+.no:    pop es
+        pop di
         pop si
         pop cx
         pop bx
@@ -19250,7 +19258,7 @@ seg_move:
         popa
 .ret:   ret
 obj_scratch dw 0
-copy_at     dw 0
+copy_at     dw 0                ; (the flag of the copy being opened: COPIES')
 resources_on dw 0               ; 1 once the game has opened D:\RESOURCE.GFF (PROBE_CHUNK_ID)
 scripts_on dw 0                 ; 1 once the game has opened D:\GPLDATA.GFF (Kalzith's conversation)
 region_on dw 0                  ; 1 once the game has opened D:\RGN29.GFF (Kalzith in the pens)
@@ -19266,25 +19274,7 @@ COPY_SIZE equ 1 + OBJ_NAME_LEN + 2
 %endmacro
 copy_path db 'D:\'
         times OBJ_NAME_LEN + 1 db 0     ; (the name, NUL-ended even at 12 letters)
-copies:
-        COPY 'SEGOBJEX.GFF', objects_on
-        COPY 'RESOURCE.GFF', resources_on
-        COPY 'GPLDATA.GFF', scripts_on
-        COPY 'RGN29.GFF', region_on
-        COPY 'RGN1C.GFF', others_on   ; (a Castle Guard of its own: worldgear.py)
-        COPY 'RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
-        COPY 'RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
-        COPY 'RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
-        COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
-        COPY 'RGN26.GFF', others_on   ; (Wake of the Ravager's magic weapons, each on one of a group:
-        COPY 'RGN14.GFF', others_on   ;   worldgear.RAVAGER_MAGIC; the Fields, the Elven Slavers, the
-        COPY 'RGN23.GFF', others_on   ;   Hot Springs, the Silt Sea Ssurans, the Lower Castle, the
-        COPY 'RGN05.GFF', others_on   ;   Ssuran Ruins, the Captured Gladiators, the Wyrm School)
-        COPY 'RGN1D.GFF', others_on
-        COPY 'RGN0F.GFF', others_on
-        COPY 'RGN04.GFF', others_on
-        COPY 'RGN0D.GFF', others_on
-        db 0
+; (the table, COPIES, is the tail's: read through TAIL_SEG)
 
 ; NEW SPELLS (RULE_NEW_SPELLS): sixteen spells past the game's 196 (0-68 wizard, 69-137 priest,
 ; 138-171 psionic powers, 172-195 monsters' powers), the first Cat's Grace (196, 2nd level), Erdlu
@@ -20439,6 +20429,9 @@ site_tab:
         site F10_PIN_SITE, f10_pin
         site SAVE_BASE_SITE, save_base
         site FIG_OPEN_SITE, fig_open
+        site FOLLOW_SITE, panel_follow
+        site CENTRE_THING_SITE, centre_thing
+        site CENTRE_XY_SITE, centre_xy
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -25692,6 +25685,130 @@ panel_tick:
         call panel_draw_pointer
         ret
 PANEL_TICKS equ 1               ; (BIOS ticks, 18.2 a second, between puts with nothing new)
+
+; The game's moves of the view (the sequel's PROBE_CENTRE and PROBE_FOLLOW): its drawing of a moved
+; view scrolls what is on the screen, the panel with it, and draws only what came into view, so the
+; panel's copies stood beside it (its header in a row: "Needs Needs Needs") until the main loop's
+; next pass (PANEL_TICK), in a fight each time the view went to whose turn it is, or followed a
+; figure walking. Now a move while the panel is on screen is drawn again at once (VIEW_MOVED).
+;
+; PANEL_FOLLOW: FOLLOW_SITE, "add sp,8" (3 bytes: the INT and the site's number) after the game's call
+; drawing the view moved by its following a figure (2191:0648, its "push 1" a draw; at 1B296h,
+; 1CA52h, 1E457h: three routines moving the view by 2191:0BE3, which writes CAM_X and CAM_Y). The move
+; drawn again, then the caller's 8 bytes of arguments taken off with the INT's flags (RETF; a MOV
+; follows), interrupts as the caller had them. DS the game's; keeps all.
+panel_follow:
+        push ax
+        mov al, 1
+        call view_moved
+        pop ax
+        call if_frame
+        retf 2 + 8
+
+; CENTRE_THING, CENTRE_XY: CENTRE_THING_SITE, CENTRE_XY_SITE, "mov word [11B6h],0" (6 bytes: the INT,
+; the site's number, NOPs) at the end of the game's routines centring the view on a thing (191F:01FF,
+; 1E7EFh; [BP+8] 1 to draw it) and on (x, y) (191F:0281, 1E871h; [BP+0Ah]): the replaced, and the
+; move drawn again (twice if the game's call did not draw it: the first draw scrolls). BP the
+; routine's; keeps all.
+centre_thing:
+        push ax
+        mov al, [bp + 8]
+        jmp centre_site
+centre_xy:
+        push ax
+        mov al, [bp + 0x0A]
+centre_site:
+        mov word [0x11B6], 0
+        cmp al, 1
+        mov al, 1
+        je .drawn
+        inc ax
+.drawn: call view_moved
+        pop ax
+        iret
+
+; VIEW_MOVED: if the view has moved (CAM_X, CAM_Y not PANEL_CX, PANEL_CY) while the panel is on
+; screen: with AL 1 (the game drew the move) only where its scroll copied the panel to (the panel's
+; place moved by the old view less the new) drawn again, round the panel (REDRAW_CLIPPED): one
+; rectangle, quick, where VIEW_AGAIN's whole view left the copy up for as long again (measured,
+; 2026-11-27: copies up to 49 frames in a row at a turn's centring, at most 2 after); else the
+; view drawn again AL times (VIEW_AGAIN). Then the panel put again and PANEL_CX, PANEL_CY noted,
+; so PANEL_TICK doesn't draw it all again. CENTRE_BUSY keeps the draws (through the centring
+; routine) from coming here again. DS the game's; AX not kept.
+view_moved:
+        cmp byte [cs:centre_busy], 0
+        jne .ret
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        call panel_live
+        jne .ret
+        push bx
+        mov bx, [CAM_X]
+        cmp bx, [cs:panel_cx]
+        jne .moved
+        mov bx, [CAM_Y]
+        cmp bx, [cs:panel_cy]
+        je .same
+.moved: mov byte [cs:centre_busy], 1
+        cmp al, 1
+        jne .again
+        pusha                           ; drawn by the game: only the scroll's copy of the panel
+        mov ax, PANEL_X0                ;   (its place moved by the old view less the new) drawn
+        add ax, [cs:panel_cx]           ;   again, round the panel (PROBE_REDRAW)
+        sub ax, [CAM_X]
+        mov cx, ax
+        add cx, PANEL_W - 1
+        mov bx, [cs:panel_drawn]
+        add bx, [cs:panel_cy]
+        sub bx, [CAM_Y]
+        mov dx, bx
+        add dx, [cs:panel_rows]
+        dec dx
+        call redraw_clipped
+        popa
+        jmp .noted
+.again: mov byte [cs:va_done], 0
+        call view_again
+        dec al
+        jnz .again
+.noted: mov bx, [CAM_X]                 ; (as VIEW_AGAIN left them)
+        mov [cs:panel_cx], bx
+        mov bx, [CAM_Y]
+        mov [cs:panel_cy], bx
+        call panel_draw_pointer
+        mov byte [cs:centre_busy], 0
+.same:  pop bx
+.ret:   ret
+centre_busy db 0
+
+; REDRAW_CLIPPED: REDRAW_RECT, the rectangle kept on the screen and widened to whole bytes of the
+; planes; nothing if it is all off it. AX to DX not kept.
+redraw_clipped:
+        cmp cx, 0
+        jl .out
+        cmp dx, 0
+        jl .out
+        cmp ax, 319
+        jg .out
+        cmp bx, 199
+        jg .out
+        or ax, ax
+        jge .x0
+        xor ax, ax
+.x0:    and ax, ~3
+        or bx, bx
+        jge .y0
+        xor bx, bx
+.y0:    or cx, 3
+        cmp cx, 319
+        jle .x1
+        mov cx, 319
+.x1:    cmp dx, 199
+        jle .y1
+        mov dx, 199
+.y1:    jmp redraw_rect
+.out:   ret
+
 panel_at   dw 0                 ; (the BIOS tick of the last put: PANEL_TICK)
 panel_lx   dw 0
 panel_ly   dw 0
@@ -28355,6 +28472,26 @@ ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to re
         align 16, db 0
 seg_space  times SEG_BYTES db 0
 area_space times (AREA_BYTES + 15) & ~15 db 0
+; the files with copies (PROBE_DOS_OPEN's: COPY_SIZE), read through TAIL_SEG
+copies:
+        COPY 'SEGOBJEX.GFF', objects_on
+        COPY 'RESOURCE.GFF', resources_on
+        COPY 'GPLDATA.GFF', scripts_on
+        COPY 'RGN29.GFF', region_on
+        COPY 'RGN1C.GFF', others_on   ; (a Castle Guard of its own: worldgear.py)
+        COPY 'RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
+        COPY 'RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
+        COPY 'RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
+        COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
+        COPY 'RGN26.GFF', others_on   ; (Wake of the Ravager's magic weapons, each on one of a group:
+        COPY 'RGN14.GFF', others_on   ;   worldgear.RAVAGER_MAGIC; the Fields, the Elven Slavers, the
+        COPY 'RGN23.GFF', others_on   ;   Hot Springs, the Silt Sea Ssurans, the Lower Castle, the
+        COPY 'RGN05.GFF', others_on   ;   Ssuran Ruins, the Captured Gladiators, the Wyrm School)
+        COPY 'RGN1D.GFF', others_on
+        COPY 'RGN0F.GFF', others_on
+        COPY 'RGN04.GFF', others_on
+        COPY 'RGN0D.GFF', others_on
+        db 0
 ; the kits' names (KIT_NAME_PTR, KIT_OF_SHEET, DK_ASK's rows), read through TAIL_SEG
 ; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each
 kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0

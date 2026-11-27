@@ -1520,6 +1520,13 @@ panel. **To play with it**:
 line sits at game y about 190. A copy of the panel after a scroll lasts one frame: check by frames
 (`import` every 0.4 s) for the panel's well colour left of x 134.
 
+**The panel's copies in Shattered Lands** (2026-11-27, logs/2026-11-27-panel-scroll-autosave.md): `framegrab.sh
+DIR SECONDS` in the background while `untilturn.sh` plays, then `panelcopies.py DIR` counts the frames with the
+panel's colours left of or above it and their runs. The game's moves of the view: following a figure (2191:0BE3
+writes CAM_X/CAM_Y, 2191:0648 draws, from 1B278h, 1CA32h, 1E439h) and centring (191F:01FF on a thing, 191F:0281
+on (x, y)); 2191:0648 scrolls when the view moved 40h or less. Redrawing the whole view after a move leaves the
+copy up as long as before (the top is drawn first): draw again only where the copy went.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

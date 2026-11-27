@@ -336,7 +336,15 @@ dice log running:
   into view, which left copies of the panel on the map; so when `PANEL_TICK`
   finds the view moved since its last pass (`CAM_X`, `CAM_Y` against
   `panel_cx`, `panel_cy`), it has the view drawn again whole (`VIEW_AGAIN`),
-  round the panel, and then puts the panel. The inline routine's way back
+  round the panel, and then puts the panel. That came a pass late, so the copies stood
+  for up to 49 frames grabbed at a fight's turn (the header in a row, "Needs Needs
+  Needs"): since 2026-11-27 the game's moves of the view are caught as they end, as
+  the sequel's (`PANEL_FOLLOW` at the three "add sp,8" after 2191:0648, the view
+  following a figure; `CENTRE_THING`, `CENTRE_XY` at the end of the centring routines
+  191F:01FF and 191F:0281, a turn's centring), and `VIEW_MOVED` draws again only where
+  the scroll copied the panel to (its place moved by the old view less the new: one
+  rectangle, `REDRAW_CLIPPED`), then puts the panel; a copy now shows for 2 frames at
+  most, while the game itself is still drawing. The inline routine's way back
   (`RESUME`, which the floor's and the rectangle routine's probes also use,
   and which the parts come through) is kept on the stack while the parts are
   drawn: overwritten, the game went on from the wrong place and wrote over its

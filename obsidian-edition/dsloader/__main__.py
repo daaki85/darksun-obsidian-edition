@@ -263,6 +263,9 @@ def _follow_once(args) -> None:
                 for line in log.lines(show_all=args.all):
                     print(line, flush=True)
                 learned, _ = log.save_learned(add_learned_speakers, set_pickpocketed)  # (one refused: next pass)
+                if log.follow_switches():
+                    print(f"(settings.json changed: quick save keys {'on' if log.quicksave.keys else 'off'}, "
+                          f"autosave {'on' if log.quicksave.auto else 'off'})", flush=True)
                 for portrait, name in learned.items():
                     print(f"(Portrait {portrait} is {name})", flush=True)
                 for entry in log.take_dialogue():
@@ -422,6 +425,7 @@ def cmd_play(args) -> None:
                 for entry in log.take_dialogue():
                     talk.extend(line for line in (entry.text, *entry.replies, entry.chosen and "You chose: " + entry.chosen) if line)
                 log.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)  # (one refused: next pass)
+                log.follow_switches()  # (settings.json changed by hand: the quick save switches)
             except ProcessError:
                 # (DOSBox closing, or gone: the loop's test says which; if it runs on, attached again)
                 attached = False

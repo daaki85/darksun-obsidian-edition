@@ -1102,6 +1102,11 @@ windows never open on the QUICK page by themselves: once the window is shut it i
 of 1 to 4 it showed last. With less than 4 MB free on the disk no quick save or autosave is made,
 and the dice log says so.
 
+Both are switched on the Options tab's **Saves** section, and take effect at once. With no Loader
+window (the dice log run on its own, or the game started without the window), a change to
+`autosave` or `quick_save` in `settings.json` is taken within a second, with no restart (the dice
+log on its own prints a line saying so).
+
 **In Wake of the Ravager** (started from the Loader) F5, F9 and the autosaves work the same way,
 in the sequel's own save and load window: F9 opens its LOAD window on the quick saves (`SAVQ01.SAV`
 to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window is back on the game's

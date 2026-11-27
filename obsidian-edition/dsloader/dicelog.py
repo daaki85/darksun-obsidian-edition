@@ -581,6 +581,8 @@ class DiceLog:
         self._abilities_new: Dict[int, Tuple[str, Tuple[int, ...]]] = {}
         self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
         self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
+        self._switches_at = float("-inf")  # settings.json last looked at (follow_switches), and its stamp
+        self._switches_stamp: Optional[int] = None
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
         # the last few spell damages rolled, (spell, damage), to tell which spell an HP loss came from
         # when two hurt the same creature before its HP is seen (two walls standing)
@@ -1101,6 +1103,34 @@ class DiceLog:
         self.hit_hover = settings.get("hit_hover", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
+
+    def follow_switches(self, now: Optional[float] = None) -> bool:
+        """With no Loader window (the dice log on its own, or the game started without one):
+        settings.json looked at once a second, and when it has changed (by hand, say), its quick
+        save and autosave switches taken at once, as the Options tab's are, with no restart.
+        True if they were read again."""
+        from . import launch
+        now = time.monotonic() if now is None else now
+        if now - self._switches_at < 1.0:
+            return False
+        self._switches_at = now
+        try:
+            stamp = os.stat(launch.SETTINGS).st_mtime_ns
+        except OSError:
+            return False
+        if self._switches_stamp is None or stamp == self._switches_stamp:
+            self._switches_stamp = stamp  # (the first look: as use_settings read them)
+            return False
+        settings = launch.load_settings()  # (one that can't be read now: {}, the switches kept)
+        try:  # (after the read: an older file is upgraded, saved again, as it is read)
+            self._switches_stamp = os.stat(launch.SETTINGS).st_mtime_ns
+        except OSError:
+            self._switches_stamp = stamp
+        if not settings:
+            return False
+        self.quicksave.keys = settings.get("quick_save", True) is not False
+        self.quicksave.auto = settings.get("autosave", True) is not False
+        return True
 
     def set_rules(self, rules: int) -> None:
         """Turn the rule changes on or off (game.RULE_*). DSCLOG makes most of them; the spell
