@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravfigures, ravspells
+from . import game, gamepatch, gff, ravarrows, ravfigures, ravspells, ravui
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1361,13 +1361,15 @@ PICK_BUTTON_ICON = "pick_icon"  # (... for the Pick Pockets button's purse: icon
 
 
 def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None,
-                    sl_dir: Optional[str] = None) -> Tuple[bytes, List[str]]:
+                    sl_dir: Optional[str] = None, game_dir: Optional[str] = None) -> Tuple[bytes, List[str]]:
     """RESOURCE.GFF's bytes with the spell fixes (spell_fixed), the creation panel's kit pages
     (kitpages.rav_chunks: the windows DSCLOG2's KIT PAGE opens, KIT_PAGES), the creation screen's STORE
     and RECALL (rollstore.rav_chunks, ROLL_BUTTONS) and the weapon window (weaponpages.rav_chunks, its
     pictures from OBJECTS, the game's OBJEX.GFF: WEAPON_WINDOW; none without it) unless in SKIP; the
     names of those applied; and the mod's six new wizard spells (ravspells: DATA 320-325, their icons
-    from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP."""
+    from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP; last, Shattered Lands'
+    interface pictures and icons (ravui: from SL_DIR, the regions' palettes from GAME_DIR, the sequel's folder)
+    where the copy still has the game's own, unless ravui.SKIP is in SKIP."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
     if SLAY_TEXT not in skip:  # (Slay Living's description: SL's spelltexts fix, GAME-BUGS.md)
@@ -1447,6 +1449,14 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(PICK_BUTTON_ICON)
+    if ravui.SKIP not in skip:  # (Shattered Lands' interface: last, so the mod's own chunks above stay)
+        try:
+            added = ravui.chunks(gff.read_gff(out), sl_dir, game_dir, gff.read_gff(data))
+        except gff.GffError:
+            added = {}
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravui.SKIP)
     return out, done
 
 
@@ -1459,7 +1469,7 @@ def write_resources(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional
     if source:
         with open(source, "rb") as f:
             objects = f.read()
-    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects, sl_dir), skip)
+    return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects, sl_dir, game_dir), skip)
 
 
 # The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
@@ -1950,13 +1960,15 @@ def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
-    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's) and the new
-    spells ("new_spells": ravspells')."""
+    (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's), the new
+    spells ("new_spells": ravspells') and Shattered Lands' screens and icons (the Options tab's box, ravui.SETTING)."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
+    screens = settings.get(ravui.SETTING, True) is not False  # (Shattered Lands' screens and icons: ravui)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+        | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
         | (frozenset() if spells else {ravspells.SKIP})
 
