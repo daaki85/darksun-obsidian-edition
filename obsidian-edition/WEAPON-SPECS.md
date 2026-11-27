@@ -255,7 +255,7 @@ whatever weapon is ready.
 
 ## In Wake of the Ravager
 
-A party taken to the sequel ([Taking the party to Wake of the Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager))
+A party taken to the sequel ([Taking the party to Wake of the Ravager](RAVAGER.md#taking-the-party-to-wake-of-the-ravager))
 keeps its weapon specs, and they work in its fights as here: the to-hit and damage, mastery and grand
 mastery, the attacks a round and the rates of fire, and the kits' parts (a Battle Mage's or
 Crusader's expertise, a Justifier's, a Myrmidon's second kind). A new character made in the sequel

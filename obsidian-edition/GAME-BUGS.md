@@ -195,7 +195,7 @@ Started from the Loader (**Play Wake of the Ravager**), the sequel runs a patche
 program with the fixes below. Its own story and scripts aren't Shattered Lands', so the fixes under
 [People and quests](#people-and-quests), Alagorn's stories and the game's own items (Sling +1, Great
 Axe +3, Quicksilver Glove) are Shattered Lands' alone; those items come across mended when [the
-party is taken to the sequel](FEATURES.md#taking-the-party-to-wake-of-the-ravager). How the port is
+party is taken to the sequel](RAVAGER.md#taking-the-party-to-wake-of-the-ravager). How the port is
 built, fix by fix: [the port
 plan](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/wake-of-the-ravager-port-plan.md).
 
@@ -217,7 +217,7 @@ to be read for it.
 | **Saves that stop improving** | Fixed there too: the sequel held its saves at the table's last row, a bug of its own (below) |
 | **A psionicist's saves** | Fixed there too: Dark Sun's psionicists' table in both games |
 | **Cloak of Bravery** | Fixed there too |
-| **Mirror Image** | Fixed there too (played), and Reflected Image's half the time with the sequel's [new spells](FEATURES.md#wake-of-the-ravager) |
+| **Mirror Image** | Fixed there too (played), and Reflected Image's half the time with the sequel's [new spells](RAVAGER.md) |
 | **Armor** | Fixed there too (played) |
 | **Share Strength** | Fixed there too |
 | **Dispel Magic** | Not needed: SSI mended it in the sequel itself |
@@ -262,9 +262,9 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 |---|---|---|
 | A new character's **hit points** | The creation screen rolled the hit dice, but the most hit points weren't worked out again: a new 7th-level fighter had 7/7 | The most hit points are the dice rolled plus CON's bonus a level, as Shattered Lands works them out |
 | A new character's **weapon hand** | The starting gear put a fighter's +1 long sword (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the weapon specs, and a fighter's shield in the right | The weapon in the weapon hand and the shield in the left |
-| The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](FEATURES.md#wake-of-the-ravager)) |
+| The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](RAVAGER.md)) |
 | A **worn item's spell** | Never ended when the item came off: the test whether the item has a spell compared unsigned, so the spell's removal was skipped for every item | Ends as the item comes off, as in Shattered Lands |
-| **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](FEATURES.md#wake-of-the-ravager)) |
+| **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](RAVAGER.md)) |
 | Twelve of the sequel's **magic items' icons** (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun Stone, the Necklace and the Rod) | Never shone, as its other magic items do | Shine as the others ([magic items' icons](FEATURES.md#magic-items-icons)) |
 | **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
 

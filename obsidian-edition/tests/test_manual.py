@@ -58,10 +58,10 @@ class ManualPagesTests(unittest.TestCase):
                 self.assertIn("obsidian-edition/" + name, sources, f"{name} has no page in manual.PAGES")
 
     def test_every_page(self):
-        """The twelve pages, the start page first, each from its Markdown, each with the bar of all
-        twelve (itself marked) and its own index; the spoiler pages marked so in the bar."""
+        """The thirteen pages, the start page first, each from its Markdown, each with the bar of all
+        thirteen (itself marked) and its own index; the spoiler pages marked so in the bar."""
         self.assertEqual(manual.PAGES[0][0], "index.html")
-        self.assertEqual(len(manual.PAGES), 12)
+        self.assertEqual(len(manual.PAGES), 13)
         for page, source, name, _ in manual.PAGES:
             self.assertTrue(os.path.exists(os.path.join(manual.ROOT, source)), source)
             html = self.pages[page]

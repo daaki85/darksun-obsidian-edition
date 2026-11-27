@@ -132,7 +132,7 @@ class DocLinkTests(unittest.TestCase):
                         explained[h] = f"{page}#{slug(h)}"
         explained["Kits"] = "DEVELOPMENT-KITS.md"  # (the rules' "Kits" is a stub: the kits have their own page)
         self.assertGreater(len(explained), 60)
-        missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md", "PEOPLE.md",
+        missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md", "RAVAGER.md", "PEOPLE.md",
                                         "GAME-BUGS.md", "HOW-THE-GAME-WORKS.md")
                    for heading, body in sections(os.path.join(HERE, page))
                    if heading in explained and explained[heading] not in body]
