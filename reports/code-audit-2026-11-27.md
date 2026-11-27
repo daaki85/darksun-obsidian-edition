@@ -157,7 +157,7 @@ missing by accident.
 methods on the big class. Clean splits by subject already exist as modules (`locks`, `loot`,
 `quicksave`, `squares`); what stays in `DiceLog` is each feature's glue (`_locks_pass`, `_loot_pass`
 ...). Proposal: a feature object per subject owning its pass, its ranges and its state, with
-`DiceLog` holding the list (S2's list). This is the same move as S2 and should be done with it.
+`DiceLog` holding the list (S2's list). This is the same move as S2 and should be done with it. **Queued with S2 (2026-11-27, the user's call): after the port's open PRs merge, with S1.**
 
 **S4. `spritegear.armed` is a 567-line function with 52 `model ==` and 38 `frame ==` tests.**
 The class outfits added per-model, per-frame placements (`if costume and model == 2099 and not
