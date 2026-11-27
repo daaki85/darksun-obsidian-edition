@@ -99,7 +99,7 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   after DUAL. A new character's starting gear is fitted to its kit from the sequel's own items, and a
   Spellarcher makes spell arrows on the USE screen there as here, with the spell's sound, and they are
   the Spellarcher's alone. Kit by kit, with the few that work
-  only in part (the Scholar, the Wanderer, the Spellarcher): [In Wake of the
+  only in part (the Wanderer, the Spellarcher): [In Wake of the
   Ravager](KITS.md#in-wake-of-the-ravager). The creation screen has [STORE and
   RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](FEATURES.md#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
@@ -328,8 +328,9 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
-  kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
+- **Kits**: the kits' part of the inventory's and View Character's DAM lines (the kits' damage is in the
+  attack; the line doesn't show it yet), and of the creation screen's THAC0 (the THAC0 the character gets
+  has it). [KITS.md](KITS.md) says which kits the sequel
   has.
 - **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down: the sequel's map
   scrolls only at the screen's edge, as the game has it.

@@ -648,6 +648,9 @@ PATCHES: Tuple[Patch, ...] = (
     *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
+    # A kit's THAC0 (SL's PROBE_THAC0, kits.thac0): the THAC0 routine's end, "mov ax,14h / sub ax,si" (953A1h,
+    # SL's 876BBh): DSCLOG2's SCHOLAR_THAC0 (site 248), a Scholar's 1 worse.
+    Patch("scholar_thac0", 0x953A1, bytes.fromhex("b814002bc6"), _site(248, 5)),
     # The level cap by XP (SL's level_up_cap, xp_view_cap, xp_next, thief_hd_*; game.RULE_LEVEL_10, always on,
     # with RAV_XP_CAP): the level up's "cmp byte es:[bx+1Eh],0Fh" (959A5h) and View Character's (6FB51h),
     # DSCLOG2's LV_UP and LV_VIEW (sites 110, 111: LEVEL_ROOM's share in place of the game's 15th); the level

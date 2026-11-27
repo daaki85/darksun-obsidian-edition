@@ -493,6 +493,49 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.hit_die(k, 4) for k in (kits.BATTLE_MAGE, kits.ARCANIST, None)], [6, 3, 4])
         self.assertEqual([kits.hit_gain(k, 1) for k in (kits.BATTLE_MAGE, kits.ARCANIST, None)], [2, 1, 1])
 
+    def test_scholar_thac0(self):
+        """SCHOLAR_THAC0's AX (the THAC0 routine's end: 20 less SI, the best class group's cut, of sheet [BP+6])
+        is kits.thac0's: a Scholar's 1 worse, awake, the kits' rule on; every other sheet's 20 less SI."""
+        seen = 0
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, race, byte in characters():
+                sheet = wotr_sheet(classes, levels, race, byte)
+                kid = kits.SCHOLAR if rules and kits.SCHOLAR in kitpages.kit_ids(sheet) else None
+                self.party([wotr_sheet((9,), (3,), 1, 0), sheet])
+                self.mu.mem_write(SS * 16 + 0x606, struct.pack("<H", 1))
+                for cut in (0, 4, 11):
+                    with self.subTest(classes=classes, byte=byte, rules=rules, cut=cut):
+                        got = self.run_int("scholar_thac0", esi=cut, eax=0xBEEF)
+                        self.assertEqual(got["eax"] & 0xFFFF, kits.thac0(kid, levels[0], 20 - cut))
+                        self.assertEqual(got["esi"] & 0xFFFF, cut)
+                        self.assertEqual(got["esp"] & 0xFFFF, 0x7FE)
+                    seen += kid == kits.SCHOLAR
+        self.assertTrue(seen)
+
+    def test_scholar_made(self):
+        """CR_SCHOLAR (the creation's spells, CR_SPELLS): a new member SI with the Scholar kit awake (the rule on)
+        has one more 1st-level pick for each of its preserver levels (kitpages.kit_level), in CR_DUE's first
+        byte and CR_LEFT; anyone else none. Registers kept."""
+        due, left = TSR * 16 + self.sym["cr_due"], TSR * 16 + self.sym["cr_left"]
+        seen = 0
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, race, byte in characters():
+                sheet = wotr_sheet(classes, levels, race, byte)
+                self.party([wotr_sheet((9,), (3,), 1, 0), sheet])
+                self.mu.mem_write(due, bytes((2, 0)))
+                self.mu.mem_write(left, struct.pack("<H", 2))
+                got = self.run_routine("cr_scholar", b"", esi=1, eax=0x1357, ebx=0x2468)
+                awake = bool(rules) and kits.SCHOLAR in kitpages.kit_ids(sheet)
+                more = kitpages.kit_level(sheet, kits.SCHOLAR) if awake else 0
+                with self.subTest(classes=classes, levels=levels, byte=byte, rules=rules):
+                    self.assertEqual(self.mu.mem_read(due, 2)[0], 2 + more)
+                    self.assertEqual(struct.unpack("<H", self.mu.mem_read(left, 2))[0], 2 + more)
+                    self.assertEqual((got["eax"] & 0xFFFF, got["ebx"] & 0xFFFF, got["esi"] & 0xFFFF), (0x1357, 0x2468, 1))
+                seen += bool(more)
+        self.assertTrue(seen)
+
     def test_hit_round(self):
         """HIT_ROUND marks creature SI hit this round (ES:SI+0B2h 1, the game's) unless it is a Battle Mage,
         awake, the kits' rule on."""

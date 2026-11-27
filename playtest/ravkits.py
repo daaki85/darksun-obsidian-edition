@@ -42,7 +42,7 @@ COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
             'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos',
             'kit_refused', 'kit_allowed', 'restrict_count', 'poison_used', 'poison_doses', 'poison_casts',
-            'arrow_pluses', 'fine_hits')
+            'arrow_pluses', 'fine_hits', 'scholar_thac0s')
 
 
 def helper():

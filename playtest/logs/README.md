@@ -235,6 +235,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
+| [2026-11-27](2026-11-27-ravager-scholar.md) | The Scholar kit in Wake of the Ravager: THAC0 1 worse, one more spell at each level up, a new Scholar's one more for each level; THAC0 is written only at creation and level up, not on equip |
 
 ## files/
 

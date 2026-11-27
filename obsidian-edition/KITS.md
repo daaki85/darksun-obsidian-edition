@@ -801,7 +801,7 @@ thief skills, movement and initiative.
 | Seeker | whole: its own slots, casting level and sphere's weapons |
 | Swashbuckler, Assassin | whole |
 | Shinobi | in part, all but a line on a screen: its gear, its wizard slots, its own spells learnt (level ups, scrolls, a new character's) and cast at its thief level less 5; not its READ LANG. line on the Effects screen |
-| Scholar | not yet (no extra spells learnt, no −1 to hit) |
+| Scholar | whole: one more spell at each preserver level up and, made new, one more for each preserver level; its THAC0 1 worse (the creation screen's THAC0 line leaves it out) |
 | Arcanist | whole: its spells a level higher, its d3 hit die at creation and a level up (1 a level past 10th) |
 | Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at creation and a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
