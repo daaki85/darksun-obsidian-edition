@@ -24,7 +24,7 @@ GHOST = 0x9000  # (GHOST's block, in the test)
 
 @unittest.skipIf(Scene is None, "nasm or unicorn not installed")
 class GhostTests(unittest.TestCase):
-    scene = PassTests.scene
+    scene = PassTests.scene if Scene is not None else None
 
     def keep(self, thing, stealth=0, tab=b"", on=1):
         """FIG_KEEP entered for THING with an 8 x 16 frame of colour 9 at page 3's (50, 60); the floor colour 40;
