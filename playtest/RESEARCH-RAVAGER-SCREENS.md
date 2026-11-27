@@ -414,6 +414,14 @@ copy up as long as before (the top is drawn first): draw again only where the co
   (8 left and right, 7 top and bottom: the face 56 by 58 at (8, 7)); BMP 12000 is 73 by 73, two frames.
   The Loader's copy makes them 48 by 46 (`ravportraits`); new art for the faces goes in as the game's own
   PORT chunks (72 by 72, frame drawn in), and the Loader cuts it down the same way.
+- **Shattered Lands' no-speaker picture and shop panel** (2026-11-27, logs/2026-11-27-ravager-no-speaker-shop.md):
+  its 7DEDFh draws BMP 12000's frame 1 for no speaker too, and there that is a 32 by 32 stone dark-sun
+  emblem at the face's place (16, 13), inside the window's own frame (BUTN 2090); 12000's frame 0 is the
+  48 by 47 frame, which its shop (836F1h) draws at (0FCh, 0Bh) with the face at (104h, 12h). Both games'
+  shop window is WIND 13500, the same but for SELL (BUTN 13304: Shattered Lands' (255, 59), under the face;
+  the sequel's (277, 159)) and MORE (13303: (255, 159); the sequel's (235, 159)). The panel is BMP 13004
+  (86 by 170). **To see the no-speaker picture without a fight**: `RAV_POKE=88E6F=33f690` (every face the
+  empty one) and a shop: the shop's flag loads 12000 for it, frame 1 drawn at the shop's place.
 - **The first fight won quickly for a test** (the XP message): `ravstart.sh` (a new game), the talk (3,
   Return, four times), a click up the street (160,45), then in memory (never saved) the party's creature
   records' HP (+0, ids 8016h-8019h, `ravcreatures.py`) 250 and the foes' (side 7 at +15h, HP above 0) 1,
