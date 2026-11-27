@@ -174,6 +174,13 @@ Releases, newest first (2.12.0 and older in the archive):
 
 **Dev**
 - `test_ravpickpocket.py`; `ravdice.py`'s `RAV_PICK_ROLL=N` fixes the pick's d100 for a test.
+
+**Fixed: class outfits' colours in every area**
+- The class outfits were drawn in palette entries that each area's palette changes: in the desert
+  the browns turned grey, the plum robes magenta and the teal red, in the slave pens the pinks dark
+  red. Every pixel an outfit or gear adds is now drawn in the nearest colour no area changes, so the
+  outfits look as approved everywhere.
+
 **Fixed: the Loader**
 - Every Shattered Lands start failed before the game ran, on either engine: the weapon window's
   `weaponpages.slot()`, changed for the sequel's weapon specs, read its colours before they were set

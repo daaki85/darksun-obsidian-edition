@@ -1512,7 +1512,18 @@ memory backend, Dark Sun Recompiled), each new outfit takes a new slot as
 before, under the same room check. It then has DSCLOG draw the view again (see
 [Shadows](FEATURES.md#shadows)), so the shadows show the new outfit too. A
 picture the game loads later (in a fight, in another area) comes dressed, from
-the file. The copy also has a spare pair of pictures for each party place.
+the file.
+
+Every pixel the outfits and the gear add is drawn in a palette entry no area
+changes (`spritegear.steadied`, the last step of `Pictures.build`). The class
+outfits were drawn and approved in the portraits' palette (GPLDATA's PAL 1), but
+each area's palette (PAL 1-45) has its own entries 80-127 and 223-239, and a few
+change 19, 21 and 29: drawn as they were, the outfits' browns turned grey, their
+plums magenta and their teal red in the desert, and their pinks dark red in the
+slave pens. So each such pixel becomes the nearest entry of 16-79 and 128-222
+outside those (`STEADY`) in the portraits' palette; the game's own pixels keep
+theirs (its figures use only 29 of them), and the colours the game cycles (0-15
+and 240-248, the magic glows) are left as they are. The copy also has a spare pair of pictures for each party place.
 Each thing on the map names the picture it is drawn with and the slot in the
 game's picture table it is drawn from; for a second member of the same figure
 the Loader names their spare there and empties the slot, and the game loads
