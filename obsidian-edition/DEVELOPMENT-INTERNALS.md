@@ -296,10 +296,10 @@ into the Loader's copy of GPLDATA (`dsloader/itemtables.py`), so DSCLOG lost `EX
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,872 + `AFTER_INSTALL` 992) | 64,864 bytes | 65,536 | 672 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,208 + `AFTER_INSTALL` 992) | 65,200 bytes | 65,536 | 336 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
 | upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,451 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,731 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,073 paragraphs | 8,182 (`UMB_ROOM`) | 109 (1,744 bytes): the limit for new code and data, the segment's and the tail's alike |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,096 paragraphs | 8,182 (`UMB_ROOM`) | 86 (1,376 bytes): the limit for new code and data, the segment's and the tail's alike |
 | DSCLOG's PSP from 5Ch (the FCBs and the command line, of no use once it stays resident): `SQ_MAP` | 130 bytes | 164 (5Ch to FFh) | 34 bytes |
 | the Loader's item names and types: `NAMES_EXTRA` and `TYPES_EXTRA` (`names.EXTRA` and `len(npcitems.TYPES)`, the chunks of the Loader's copy of GPLDATA, `itemtables.py`; `test_names` and `test_header_offsets` check they agree) | 56 names, 44 types | the same | 0: a new one raises both sides' count; it costs no resident memory (the game's tables are as long as the chunks) |
 
@@ -463,7 +463,8 @@ its header word as an offset at `tail_seg` x 16 (`RavDiceLog._tail_at`; the quic
 labels' already did). A buffer handed to the game as a far pointer takes the tail's segment with it
 (`NAME_PUSH`, `SAVE_TICK`, `USE_DRAW`). Moving them freed 8,309 bytes of the segment (`resident_end` 59,925 to
 51,616 on obsidian-edition, 13,920 of the 64 KB free; with #218-#223 joined, 65,311, past the room
-with the install, to 56,902, 8,624 free); the upper memory taken is the same (the parts are one
+with the install, to 56,902, 8,624 free; with every open pull request joined on 2026-11-27, 57,440,
+8,096 free); the upper memory taken is the same (the parts are one
 block: the tail's 8,512 bytes, its tables first, `section tail`, then its buffers, `section tailz`),
 and the install's 800 bytes never were kept.
 
