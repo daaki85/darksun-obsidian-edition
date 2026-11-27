@@ -164,9 +164,8 @@ The class outfits added per-model, per-frame placements (`if costume and model =
 combat and frame == 1: parts = parts._replace(hands=..., shoulders=...)`) in one flow, with magic
 coordinates inline. `spritegear.py` grew from 1,104 to 2,253 lines. The move: a data table
 `PART_FIXES[(model, combat, frame)] -> {field: value}` applied in one line, which deletes most of
-the branches. This is also how the figures' data is kept elsewhere (`classoutfits` frames). Since
-Codex is still changing the plate tint, do it after that settles. (Whether the tint is still in
-one place, as the plan asked, wasn't checked here.)
+the branches. This is also how the figures' data is kept elsewhere (`classoutfits` frames). (An
+earlier draft waited on Codex's plate tint work; the user says there is none, 2026-11-27.)
 
 **S5. DSCLOG and DSCLOG2 share 357 routine names; 44 routines are byte-for-byte the same source
 (663 lines) and 37 more over 90% the same (1,539 lines).** Among them are `dust_nudge`,
