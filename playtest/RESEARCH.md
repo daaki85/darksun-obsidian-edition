@@ -2228,6 +2228,31 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   finds one open-locks check, in GPL 9 (a grate with a trap: "finds a trap concealed in the grate!"); where that
   is in the game is not known yet, and the 93 scripts that don't decode may hold more.
 
+### The audit's leftovers (2026-11-27, logs/2026-11-27-ravager-audit-leftovers.md)
+
+- **The effect module** (618h, file 81770h): the add check 0AF9h (a switch of 19 effects at cs:0FB4h, its default
+  "jmp 0F1Eh" at 822A1h; [BP+6] the thing, [BP+0Ah] the effect, [BP+0Ch] a far pointer to the record's +9 byte,
+  where Confused 21 and Controlled 20 save the creature's side, +15h) and the end 1017h (a switch at cs:13BAh, its
+  default "jmp 12E9h" at 827D6h; DX the record's index; case 120Dh puts the side back from +9). Berserk 7 is in
+  neither; effect 102 (named Berserk too) is Tenser's Transformation, whose case 106Dh only clamps the hit points.
+  The AI's side routine 618h:000Eh rolls a d2 side for Berserk (byte 0 bit 7) and Confused: Shattered Lands' bug
+  shared. DSCLOG2's sites 245 and 246 sit on the two defaults (the handlers move the way back's IP at [SP]).
+- **Effect records** (load + 3E71h):24Dh, 10 bytes (owner +0, caster +2, spell +4, effect +6, charges +8, extra +9),
+  the count at DS:2100h; the owner is the combatant's number. Effect names: 31-byte records at file 41A70h.
+- **A test Berserk**: RESOURC2's DATA records (73 bytes, the effect at +19h) of the ten effect-20 spells (2, 39,
+  61, 82, 94, 131, 230, 239, 255, 256) and Armor (0, effect 5) made 7 in the Loader's copy (`dos/RESOURC2.GFF`,
+  rewritten by every start, so the edit goes after ravstart.sh). In the ambush Thy'rokh's Charm Mammal took on a
+  Draxan (a natural 1); Ar'Anda's Armor on Gerakis from USE gives Berserk out of a fight.
+- **An effect outside a fight** didn't run down while the party stood or walked for some minutes (Berserk with
+  1 charge, a test edit): its charges are spent by rounds or longer rests, not by a short walk.
+- **Ability scores** (0628h:0039h, file 8527Bh, module 83400h): an item power 140h-147h counts (charges under 10h
+  add, under 20h set) only when 568h:7Fh's top place is 10h (worn; the pack's is 4). Called by the ready 77C5Ah
+  and unready 77D07h (powers 140h-147h only), the effect end and remove, and spell handlers. The unready
+  recomputes while the item still counts: one taken off to the pack keeps its score until the next recompute.
+- **The combatants' table** ((load + 3F49h):C33h, 3 bytes: kind, word index; creatures [DS:19C9h], 31h bytes):
+  a killed creature leaves it at once, often before the dice log's next look saw its last fall; its record keeps
+  its name, which is how hp_changes still finds it.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

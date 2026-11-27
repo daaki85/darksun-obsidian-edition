@@ -59,6 +59,18 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager (the port audit's leftovers)**
+- A creature made **berserk** in the sequel fought for the side its turns rolled to the end of the fight:
+  Berserk's end had no case to give its side back (Shattered Lands' bug, shared). Its side is kept as
+  Berserk starts and given back as it ends (DSCLOG2's sites 245, 246).
+- The sequel's **dice log never said a monster was killed**, so every fight's summary said "0 kills", and
+  a killed creature's last blow had no HP line (it leaves the fight's list first). Both said now.
+- Not needed in the sequel: items raising an ability score from the backpack (it counts worn items only);
+  the Effects screen's charges come with the Effects screen's lines, not ported yet.
+- DSCLOG2's header says its length (+30), and the Loader writes none of its later fields to an older
+  helper; a Spellarcher's Fine Bow is named only once its starting arrows are in (a full pack: tried
+  again later), and the arrows are given only with all three arrows' objects in the copy.
+
 **Fixed: Wake of the Ravager (the port audit's rest)**
 - Shattered Lands' fixes of the game's own bugs that the sequel shares, carried over: a character's most PSP from
   its own CON, INT and WIS; the computer's walls cast across the line of fire; a party thri-kreen's claws and bite
