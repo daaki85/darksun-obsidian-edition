@@ -59,6 +59,11 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager.** The party wears its class outfits there too, on the map and in a fight:
+the Loader's copy holds each party picture as the Loader's own Shattered Lands figure with room for an outfit,
+and the dice log writes each member's outfit into it and has the game load it again (`ravdress`). Worn gear,
+a second member with the same figure, the creation preview and the small figures are still to come.
+
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
