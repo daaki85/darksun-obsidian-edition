@@ -12,11 +12,13 @@ class whose prime requisites are all 16 or more. The tracker adds it to each gai
 The Loader's XP cap (game.XP_CAP, DSCLOG's LEVEL_ROOM) caps levels; the tracker caps XP too: a party
 member's XP above its share of the cap (game.xp_share) is held there, in memory, at each look
 (hold_at_cap), with a line saying how much wasn't counted. So nothing is banked past the
-character's top level (the user's, 2026-11-25), and View Character shows what counts.
+character's top level (the user's, 2026-11-25), and View Character shows what counts. Wake of the
+Ravager's cap is its own (ravager.RAV_XP_CAP, DSCLOG2's LEVEL_ROOM): ravlog.apply_layout sets CAP and SHARE
+for it.
 """
 
 import struct
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from . import aging, game
 from .game import CLASS_NAMES, GameData, ordinal
@@ -40,6 +42,20 @@ PRIME_REQUISITES = {**{c: (4,) for c in (1, 2, 3, 4)}, **{c: (4, 5) for c in (5,
 PRIME_BONUS_SCORE, PRIME_BONUS_PERCENT = 16, 10
 ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 XP_MOST = 2_000_000_000  # (the game's own cap, in its XP routine 6B817h)
+# Another game's XP cap and a sheet's share of it (Wake of the Ravager's: ravlog.apply_layout); None for
+# Shattered Lands' (game.XP_CAP, game.xp_share)
+CAP: Optional[int] = None
+SHARE: Optional[Callable[[bytes], int]] = None
+
+
+def xp_cap() -> int:
+    """The XP cap in force: Shattered Lands' (game.XP_CAP), or the sequel's (CAP)."""
+    return game.XP_CAP if CAP is None else CAP
+
+
+def xp_share(sheet: bytes) -> int:
+    """A sheet's share of the cap in force: game.xp_share's, or the sequel's (SHARE)."""
+    return game.xp_share(sheet) if SHARE is None else SHARE(sheet)
 
 
 def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
@@ -70,15 +86,15 @@ def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
 
 def cap_why(sheet: bytes) -> str:
     """For the hold line: how a share of the XP cap below the cap came about ("" for all of it)."""
-    share = game.xp_share(sheet)
-    if share == game.XP_CAP:
+    share, cap = xp_share(sheet), xp_cap()
+    if share == cap:
         return ""
     if sheet[game.SHEET_RACE] != game.HUMAN:
         count = sum(1 for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if c)
-        return f", {game.XP_CAP:,} shared by {count} classes"
+        return f", {cap:,} shared by {count} classes"
     old = sum(1 for c, level in zip(sheet[game.SHEET_CLASSES + 1:game.SHEET_CLASSES + 3],
                                     sheet[game.SHEET_LEVELS + 1:game.SHEET_LEVELS + 3]) if c and level)
-    return f", {game.XP_CAP:,} less the {game.XP_CAP - share:,} the old class{'es' if old > 1 else ''} needed"
+    return f", {cap:,} less the {cap - share:,} the old class{'es' if old > 1 else ''} needed"
 
 
 class Member(NamedTuple):
@@ -160,7 +176,7 @@ class PartyTracker:
         return out
 
     def hold_at_cap(self, members: List[Optional[Member]]) -> List[str]:
-        """Each party member's XP above its share of the XP cap (game.xp_share) put back to it, on the
+        """Each party member's XP above its share of the XP cap (xp_share) put back to it, on the
         sheet and in MEMBERS: a line for each, with what wasn't counted. (An award is seen held as
         it lands, before the XP line, which then shows the gain that counted.)"""
         out = []
@@ -168,7 +184,7 @@ class PartyTracker:
             if member is None:
                 continue
             sheet = self.game.sheet(i)
-            share = game.xp_share(sheet)
+            share = xp_share(sheet)
             if member.xp <= share:
                 continue
             at = aging.sheet_address(self.game, i)
@@ -194,7 +210,7 @@ class PartyTracker:
                 continue
             at = aging.sheet_address(self.game, i)
             xp = struct.unpack("<I", self.game.guest.read(at + game.SHEET_XP, 4))[0]  # (as it is now)
-            most = min(XP_MOST, game.xp_share(self.game.sheet(i)))
+            most = min(XP_MOST, xp_share(self.game.sheet(i)))
             given = min(xp + bonus, max(xp, most)) - xp
             if not given:
                 notes[i] = f"the {bonus:+d} for {'; '.join(why)} held at the cap"

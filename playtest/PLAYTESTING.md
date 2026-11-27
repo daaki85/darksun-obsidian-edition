@@ -831,6 +831,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   click at (40,162), the second without the game working the THAC0 out again
   (logs/2026-11-27-ravager-dam-lines.md). **A kit or rule test in the sequel needs the dice log running**
   (`ravdice.py`): `ravload.sh` alone leaves DSCLOG2's rules words 0 (`ravkits.py count`'s first line).
+  **The sequel's dice log writes only where a feature names the bytes** (`guest.writable`, `_writable`):
+  a write anywhere else is dropped without a word, so a ported feature that writes memory (the tracker's
+  XP bonus: logs/2026-11-27-ravager-xp-lines.md) must name its ranges. An XP edit by hand counts as an
+  award (and gets the bonus): make it before the dice log attaches.
   The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
   (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
