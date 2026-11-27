@@ -120,6 +120,11 @@ Releases, newest first (2.12.0 and older in the archive):
   thief level (counted, though it can't cast in the sequel yet). Beside the Elementalist's and
   Crusader's, which the sequel already had.
 
+**Dev: the code audit's room checks (2026-11-27)**
+- `tests/test_dsclog_room.py`: DSCLOG's segment keeps 256 bytes free and its upper memory 32 paragraphs
+  (its build failed only past the limit), as `test_dsclog2_room.py` does for DSCLOG2; and the sequel's
+  modules' constants named as DSCLOG2's symbols agree with them.
+
 **Fixed: Wake of the Ravager's Justifier**
 - A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it
   at caster level 0 (his ranger level less 9, held at 0). Now he has none before 10th, as in Shattered
