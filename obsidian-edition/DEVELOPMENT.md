@@ -127,7 +127,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for [practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) (not in the release zip) |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`) ([Generated pages](#generated-pages)) |
-| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
+| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager (in-game rolls).bat` `play --ravager`, `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
 | `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `WEAPON-SPECS.md`, `ITEMS.md`, `PEOPLE.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |

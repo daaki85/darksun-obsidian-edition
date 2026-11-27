@@ -235,6 +235,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-furniture.md) | Ravager furniture in Tyr, Notaku’s stall and the northern chairs |
 | [2026-11-27](2026-11-27-ravager-grouped-furniture.md) | Forest dining sets, Alliance vase and Mines 3 throne, DOS region reads and built map comparisons |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
+| [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 
 ## files/
 
