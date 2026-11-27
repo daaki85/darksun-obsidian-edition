@@ -59,20 +59,37 @@ def wr_script(script: bytes, wr_like: bytes) -> bytes:
     return bytes(out)
 
 
+def _lab(rgb: RGB) -> Tuple[float, float, float]:
+    """RGB (0-255) in CIE Lab (D65): distances there are as the eye sees them."""
+    def lin(c):
+        c /= 255
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (lin(v) for v in rgb)
+    x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.9505
+    y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.089
+
+    def f(t):
+        return t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
+    return 116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))
+
+
 class Colours:
-    """Shattered Lands' palette numbers to the nearest of the sequel's STABLE ones ((number, RGB)), 0 kept."""
+    """Shattered Lands' palette numbers to the nearest of the sequel's STABLE ones ((number, RGB)) in Lab, 0
+    kept (nearer than weighted RGB: 10-20% less colour error over the outfits, hair and skin closer to SL's,
+    2026-11-27's comparison in project files class-figures/outfit-colour-comparison/)."""
 
     def __init__(self, sl_palette: Sequence[RGB], stable: Sequence[Tuple[int, RGB]]):
         self.sl, self.stable = sl_palette, stable
+        self._labs = [(n, _lab(c)) for n, c in stable]
         self.cache: Dict[int, int] = {}
 
     def __call__(self, p):
         if not p:
             return p
         if p not in self.cache:
-            r, g, b = self.sl[p]
-            self.cache[p] = min(self.stable, key=lambda e: 3 * (e[1][0] - r) ** 2 + 4 * (e[1][1] - g) ** 2
-                                + 2 * (e[1][2] - b) ** 2)[0]
+            want = _lab(self.sl[p])
+            self.cache[p] = min(self._labs, key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], want)))[0]
         return self.cache[p]
 
 
