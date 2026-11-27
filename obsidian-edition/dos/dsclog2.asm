@@ -4601,7 +4601,7 @@ site_table:
         dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
         dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
         dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
-        dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
+        dw scholar_level_up                 ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Scholar's one more, a Shinobi's at its thief level up)
         dw site_none                        ; 211 (none here: held for other work)
         dw site_none                        ; 212 (none here: held for other work)
         dw site_none                        ; 213 (none here: held for other work)
@@ -4616,6 +4616,7 @@ site_table:
         dw berserk_add                      ; 245 SITE_BERSERK_ADD (822A1h: an effect's add, no case of its own: Berserk keeps the side it had)
         dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
         dw ef_charges                       ; 247 SITE_EF_CHARGES (8ABBDh: the Effects screen's line under the pointer: an effect's charges)
+        dw scholar_thac0                    ; 248 SITE_SCHOLAR_THAC0 (953A1h: the THAC0 routine's end: a Scholar's 1 worse)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -5648,6 +5649,54 @@ sh_place_level:
 ; LV_SHINOBI: the compare's flags, but ZF set for a Shinobi's thief class (SH_MEMBER) at thief level SH_FIRST
 ; or more, so that it learns one of its own (PICK_ANY's, PICK_PAGE's, PICK_LIST's and PICK_TOP's Shinobi
 ; parts). Counted (SH_UPS).
+; SCHOLAR_LEVEL_UP (site 210's entry): a party member SI gone up a new level ([BP-6] not 0) as a preserver
+; ([BP+8] 0Bh) with the Scholar kit awake picks one more spell, on the game's CHOOSE A SPELL (688h:66h, CR_ONE's
+; way: the way back in a frame the overlay manager can fix up, as CR_PICKS'), before the game's own (SL's
+; LV_SCHOLAR, kits: a Scholar learns one more spell at each preserver level). Counted (SCHOLAR_PICKS). Then
+; SH_LEVEL_UP, as for anyone.
+scholar_level_up:
+        cmp word [ss:bp + 8], 0x0B
+        jne sh_level_up
+        cmp byte [ss:bp - 6], 0
+        je sh_level_up
+        cmp si, 4
+        jae sh_level_up
+        push bx
+        push es
+        push ax
+        mov ax, si
+        call kit_sheet_ax
+        pop ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        pop es
+        pop bx
+        jne sh_level_up
+        call kp_if_frame        ; (interrupts as the caller had them)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:scholar_picks]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        ; (on to SH_LEVEL_UP: the compare's flags, and the game's own pick)
 sh_level_up:
         push bp
         mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; [BP] the game's BP)
@@ -9800,6 +9849,31 @@ priest_thac0:
 thac0_most db 12, 19, 6, 9              ; (20 less the group's best THAC0: priest 8, warrior 1, wizard 14, rogue 11)
 thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a look in play)
 ;
+; SCHOLAR_THAC0 (site 248, "scholar_thac0"): "mov ax,14h / sub ax,si" (953A1h; 5 bytes, SL's 876BBh:
+; DSCLOG's PROBE_THAC0) at the end of the THAC0 routine (SI the most any of the character's class groups
+; takes off 20, PRIEST_THAC0's above; [BP+6] its sheet's number), which every write of a creature's
+; THAC0 (+1Fh) uses: AX 20 less SI, and the kit's (kits.thac0): a Scholar's 1 worse, its kit awake.
+scholar_thac0:
+        mov ax, 20
+        sub ax, si
+        push bx
+        push es
+        push ax
+        mov ax, [bp + 6]
+        call kit_sheet_ax
+        pop ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .out
+        inc ax
+        inc word [cs:scholar_thac0s]
+.out:   pop es
+        pop bx
+        iret
+scholar_thac0s dw 0                     ; (Scholars' THAC0s made worse, for a look in play)
+scholar_picks dw 0                      ; (Scholars' spells more at a level up: SCHOLAR_LEVEL_UP)
+scholar_made dw 0                       ; (... and a new Scholar's: CR_SCHOLAR)
+;
 ; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
 ; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
 ; (the class in the low byte, a near pointer in SS to its level and WIS, the spell level), AX the
@@ -11772,6 +11846,7 @@ KIT_RAVAGER  equ 15
 KIT_CHAMPION equ 17
 KIT_TWIN_BLADE equ 18
 KIT_BRUTE    equ 19
+KIT_SCHOLAR  equ 21
 KIT_BATTLE_MAGE equ 22
 KIT_MIND_WARRIOR equ 26
 KIT_STALKER  equ 29
@@ -20971,6 +21046,7 @@ cr_spells:
         mov [cs:cr_left], di
         or di, di
         jz .ret
+        call cr_scholar         ; (a new Scholar: one more for each preserver level)
         inc word [cs:cr_members]
         mov cl, 1               ; (CL the level, CH its picks)
 .level: movzx di, cl
@@ -20993,6 +21069,28 @@ cr_spells:
 .fill:  call cr_fill
 .done:  mov byte [cs:cr_cap], 0
 .ret:   ret
+
+; CR_SCHOLAR: (CR_SPELLS', the spells given counted) a new member SI with the Scholar kit awake picks one
+; more 1st-level spell for each of its preserver levels (SL's PROBE_CR_SPELLS: KIT_MADE's CL), CR_DUE's and
+; CR_LEFT's. Counted (SCHOLAR_MADE). All registers kept.
+cr_scholar:
+        push ax
+        push bx
+        push es
+        mov ax, si
+        call kit_sheet_ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .out
+        call kit_level
+        movzx ax, al
+        add [cs:cr_due], al
+        add [cs:cr_left], ax
+        add [cs:scholar_made], ax
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; CR_ONE: CHOOSE A SPELL for member SI; CF set if it was left with no spell learnt. CX kept; DS the game's.
 cr_one:

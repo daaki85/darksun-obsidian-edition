@@ -127,8 +127,8 @@ bigger character sheets) as it goes in (a game already running lists it from its
   (with its spells and starting age), and work there nearly all whole: their fight rules, spell slots,
   spells known, PSP costs, hit dice and the gear each forbids or allows (a Ravager's shield and bow are
   refused). The Effects screen names each kit (`KIT: RAVAGER`). A new character takes one from KITS on
-  the creation panel, and a human with no kit is asked for one right after DUAL. The Scholar, the
-  Wanderer and the Spellarcher work only in part: [kit by kit](KITS.md#in-wake-of-the-ravager).
+  the creation panel, and a human with no kit is asked for one right after DUAL. The Wanderer and
+  the Spellarcher work only in part: [kit by kit](KITS.md#in-wake-of-the-ravager).
 - **[Weapon specs](WEAPON-SPECS.md#in-wake-of-the-ravager)** come across and work there, in all twenty-two
   (the sequel's Twohand Sword and Crystal sword are two-handed swords). A new fighter, gladiator or ranger
   picks them on the weapon window after DONE, and its starting weapon becomes a +1 weapon of its first
@@ -351,8 +351,9 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
-  kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
+- **Kits**: the kits' part of the inventory's and View Character's DAM lines (the kits' damage is in the
+  attack; the line doesn't show it yet), and of the creation screen's THAC0 (the THAC0 the character gets
+  has it). [KITS.md](KITS.md) says which kits the sequel
   has.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
   sequel's map scrolls only at the screen's edge, as the game has it), [the view in

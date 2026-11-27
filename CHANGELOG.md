@@ -72,6 +72,13 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
   and compares occupied furniture with the earlier figure redraws.
 
+**Docs: the sequel's creature figures as the game draws them** (branch `claude/ravager-creature-figures`)
+- CREATURES.md's Wake of the Ravager figures are the pose each one's animation script stands in, not the
+  picture's first frame: a redraw that adds its frames after the game's (Ptar, the Beasthead Giant, the
+  village giants, Magnolia and the jann, the great elementals, the Magma Golem) showed the game's figure.
+  *Redrawn* now means the figure shown differs from the game's; the four the redrawing kept say *the game's
+  (kept)*; the Tarrasque shows its fight's figure; the colours are Tyr's map palette (no magenta).
+
 **Docs: a readable priest spells picture, a shorter Ravager page** (branch `claude/docs-review-trims`)
 - `new-priest-spells.png` shows the ten 6th-level priest spells' description boxes at full size, not ten
   whole USE screens shrunk to fit (1920x1600 to 592x840).
@@ -163,6 +170,11 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 **Dev**: `ravitems.region_palettes`, the sequel's region palettes read once for the four modules that read
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
+
+**New: the Scholar kit in Wake of the Ravager** (branch `claude/sequel-scholar`)
+- A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
+  spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
+  preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).
 
 **New: Wake of the Ravager with the in-game rolls, no Loader window; Show Save for its saves** (#264)
 - **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel
