@@ -763,11 +763,11 @@ dice log does. DSCLOG2 counts what it did (`kit_acs`, `kit_hits`, `kit_damages`,
 tables; `tests/test_ravsphere.py` runs `EL_SPHERE` against `ravager.casts` and the sequel's own 62B45h
 against `ravager.class_spheres`, and `SHINOBI_MAGE` on the same sheets; `tests/test_ravpoison.py` runs
 `POISON_HIT`, `PLAIN_ARROW`'s poison, `ARROW_PLUS` (against `kits.arrow_plus` and `spellarrows.archer_level`) and
-`FINE_HIT`, checks the sequel's record 273 is the 10-damage poison, and the transfer keeping the Fine Bow. `tests/test_ravarrows.py` runs SPELL ARROWS' routines (the buttons, their names and clicks, the close, the ask) and `ravarrows.make` on a fake game, and checks the copies' objects and icons with the game files.
+`FINE_HIT`, checks the sequel's record 273 is the 10-damage poison, and the transfer keeping the Fine Bow. `tests/test_ravarrows.py` runs SPELL ARROWS' routines (the buttons, their names and clicks, the close, the ask) and `ravarrows.make` on a fake game, and checks the copies' objects and icons with the game files; its `LeftoverTests` the starting arrows (`ravarrows.starting_arrows`, from `ravkitstart.fine_bow`), the strays (`ravarrows.return_strays`: `spellarrows.return_strays` on the sequel's names, the map up), the dice log's names past 255 (`RavGameData.item_name`) and the two program patches that light the button under the pointer (`arrows_lit_on`, `arrows_lit_off`: no helper code).
 
 Not in the sequel yet: what kits do to spells and powers (the Shinobi's spells and casting, a spell's level, PSP
 costs, cures' and Cause spells' dice, spells never known, casting though hit, a Healer's
-cosmos), the spell arrows a new Spellarcher starts with and the cast sound as one is made, `ARROWS_FORBID` (another member can ready them), hit dice and
+cosmos), the cast sound as one is made and `ARROWS_FORBID` (another member can ready them in a fight; out of one the Loader's `ravarrows.return_strays` sends them back: both need helper code, and DSCLOG2 is at its one-segment limit), hit dice and
 PSP at a level up, a Scholar's THAC0 and the kits' parts of the DAM lines. Choosing a kit (the
 creation panel's KIT pages, sites 62-69, and `DUAL_KIT`, site 76) is DSCLOG2's KIT PAGE. The Effects screen's kit lines are DSCLOG2's EF_ROWS (site 73), on
 KITS' KIT_PLACE and KIT_AT. The sequel marks no priest spells known by class masks as SL's

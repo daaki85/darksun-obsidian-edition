@@ -2089,6 +2089,29 @@ it needed from the sequel:
   house west of the ambush's street (world 1072, 1322): `ravgo.py` can't leave it, a click on the street (game
   250,125) can; then `ravgo.py y 1224 x 1839` and Right x4 meet Tyr's thieves.
 
+**The spell arrows' leftovers** (2026-11-27, logs/2026-11-27-ravager-arrow-leftovers.md), all on the Loader's side
+(no DSCLOG2 bytes):
+- **Starting arrows**: at DONE a new character's known wizard spells are already in selector 320h's bitset, so
+  `ravarrows.starting_arrows` (from `ravkitstart.fine_bow`) reads the picks there and swaps the plain arrows (type 6)
+  for 24 of each touch spell's arrows, the first in the quiver.
+- **Strays**: `ravarrows.return_strays` (RavDiceLog._strays_pass) uses spellarrows.return_strays on the sequel's names
+  (299-301), with the map-up word DS:0DABh (1: the map) for SL's inventory_up: nothing moves while a screen is up.
+- **The item names**: the dice log named the Loader's own names (256 on) "item N"; `RavGameData.item_name` reads
+  them from the table `_write_item_names` wrote (or ravager.item_names()).
+- **The hover light**: Turn Undead's handler (9756Eh) draws its hover cases (975AEh, 975F3h) at `push word [2B9Eh]`
+  (22h, Turn Undead's place); the press case at [bp-2], the button's own. `arrows_lit_on`/`arrows_lit_off` patch
+  FF369E2B to FF76FE90 at 975B2h and 975F7h. A control run with `RAV_SKIP=arrows_lit_on,arrows_lit_off` is still
+  to do.
+- **The cast sound**: the sequel's sound routine is selector B8h:0A22h (a byte sound number, FFh none); the spell
+  record's cast sound is +0Fh, the landing +16h. Chill Touch's and Shocking Grasp's are FFh, Vampiric Touch's 6Eh.
+  Not played on a make (it would need DSCLOG2 code).
+- **Shooting in a test**: the new Spellarcher's pack holds an Obsidian Dragonsbane +4 and its left hand a Longsword
+  +1, which Computer Control takes up: give them to another member first. With a foe beside it a member punches
+  though a bow is readied, and Tab and Enter walk up and punch even at range; Computer Control with no melee weapon
+  shoots. The game picks a shot's arrows before the round, so a stack swapped into the quiver mid-round waits. A
+  PRESS CONTINUE after a refusal shuts with a click on Continue (22,157), not Return. Tyr's thieves leave the map
+  after their fight, so a second shot test needs a new game.
+
 **The starting weapon of the first pick** (2026-11-26, logs/2026-11-26-ravager-first-pick-weapon.md):
 `ravfirstweapon.fill` in ravlog's `_gear_pass` (GEAR_DONE: after CR_WEAPONS' picks and the game's gear, before the
 roster write; `RAV_NO_FIRST_WEAPON=1` on ravdice.py turns it off for a control) makes the weapon in hand over in place

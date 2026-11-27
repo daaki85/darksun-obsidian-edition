@@ -790,7 +790,7 @@ thief skills, movement and initiative.
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
 | Rescuer | in part: movement, from behind, no shield; not its stronger cures |
-| Spellarcher | in part: its spell arrows made on the USE screen out of a fight (a button for each touch spell it knows, one arrow and one slot a press, stacked to 24) and those brought along cast on a hit at its preserver level and are +1 to +3 by it, its Fine Bow (+1 to hit), no armour; not the spell arrows it starts with (a new one starts with plain arrows and makes its own), the cast sound when one is made, or its arrows kept from the others (another can ready them) |
+| Spellarcher | in part: its spell arrows made on the USE screen out of a fight (a button for each touch spell it knows, one arrow and one slot a press, stacked to 24) and those brought along cast on a hit at its preserver level and are +1 to +3 by it, a new one's 24 of each touch spell's it picked, its Fine Bow (+1 to hit), no armour; its arrows another member carries go back to it out of a fight; not the cast sound when one is made, nor the refusal when another readies them (in a fight they stay readied) |
 | Poisoner | whole: each hand's first melee hit a fight poisons (a weapon with a spell of its own casts that instead), its weapon spec and gear limits |
 | Spirit Caller, Wasteland Seer | not yet (no casting level or PSP cost by the sky) |
 | Wild Fury | whole |
@@ -810,7 +810,8 @@ says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' 
 
 A warrior's weapon is first made a +1 of its first weapon spec ([Starting
 weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow; not there: its
-starting spell arrows (it keeps the arrows its weapon spec gives, and makes spell arrows on the USE screen).
+it starts with 24 of each touch spell's arrows it picked in place of the arrows its weapon spec gives (with none
+picked, it keeps those), as in Shattered Lands.
 
 The kits' spell slots past Shattered Lands' levels hold in the sequel, and a Spellarcher's arrows are +3 from
 its 13th preserver level there; a Battle Mage's or Arcanist's hit points past 10th wait for those kits' hit

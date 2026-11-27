@@ -65,8 +65,11 @@ Releases, newest first (2.12.0 and older in the archive):
   slot of that level for one arrow, stacked to 24, which casts the spell on a hit at its preserver level.
   The arrows' objects and the buttons' icons are made from the player's own Shattered Lands files when the
   Loader copies the sequel's. DSCLOG2's site 240 and header +2098 to +2113 (`dsloader/ravarrows.py`). A
-  transferred stack of spell arrows keeps its count (the transfer wrote over it). Not yet: the spell
-  arrows a new Spellarcher starts with, the cast sound, keeping them from the others.
+  transferred stack of spell arrows keeps its count (the transfer wrote over it). A new Spellarcher starts
+  with 24 of each touch spell's arrows it picked, as in Shattered Lands; spell arrows another member
+  carries go back to the Spellarcher out of a fight; the pointer on an arrows button lights that button,
+  not Turn Undead's place (two bytes of the program); the dice log names the Fine Bow (it said "item
+  305"). Not yet: the cast sound, and refusing another member who readies them (DSCLOG2 has no room).
 - **Wake of the Ravager: the Poisoner's poison, the Spellarcher's arrows' plus and its Fine Bow.** A
   Poisoner's first melee hit of a fight with each hand's weapon poisons (the monsters' poison, a save or
   10 damage: the sequel's own record of it); a Spellarcher's spell arrows from a bow are +1 to +3 by its

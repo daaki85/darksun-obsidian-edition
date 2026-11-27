@@ -155,6 +155,105 @@ class MakeTests(unittest.TestCase):
             self.assertEqual(add.call_count, 0)
 
 
+class LeftoverTests(unittest.TestCase):
+    """#223's leftovers: the starting arrows, the strays, the Fine Bow's name, the light on the pointer."""
+    def setUp(self):
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+
+    def test_lit_patches(self):
+        """The pointer on a button lights that button (the handler's [BP-2]), not Turn Undead's place ([2B9Eh])."""
+        for name, at in (("arrows_lit_on", 0x975B2), ("arrows_lit_off", 0x975F7)):
+            p = next(p for p in ravager.PATCHES if p.name == name)
+            self.assertEqual((p.offset, p.original, p.replacement),
+                             (at, bytes.fromhex("ff369e2b"), bytes.fromhex("ff76fe90")))
+
+    @unittest.skipUnless(WOTR, "DSUN_WOTR not set")
+    def test_lit_bytes_in_the_sequel(self):
+        exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+        self.assertEqual(exe[0x975AE:0x975B6], bytes.fromhex("6a016a04ff369e2b"))  # (on: frame 4)
+        self.assertEqual(exe[0x975F3:0x975FB], bytes.fromhex("6a016a05ff369e2b"))  # (off: frame 5)
+        self.assertEqual(exe[0x97631:0x97634], bytes.fromhex("ff76fe"))  # (the press: the button's own)
+
+    def test_starting_arrows(self):
+        """Chill Touch and Shocking Grasp picked: the bow's +1 arrows go, 24 of each in their place, the first in
+        the quiver; knowing none, the arrows kept; once (spell arrows had: none)."""
+        gd = FakeGame()
+        plus_one = bytearray(bytes.fromhex("26fd0c000f2778000f27060000000000000005ff1e0001"))
+        plus_one[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+        worn = [(5, bytes(plus_one), b"")]
+        gd._worn = lambda member: iter(list(worn))
+
+        def add(gd_, member, rec, slot=None):
+            worn.append((20 + len(worn), rec[:game.ITEM_SLOT] + bytes((slot if slot is not None else 14,))
+                         + rec[game.ITEM_SLOT + 1:], b""))
+            return True
+
+        def unlink(gd_, it, index, what, empty=False):
+            worn[:] = [w for w in worn if w[0] != index]
+            return True
+        with mock.patch("dsloader.npcitems.add_to", side_effect=add), \
+                mock.patch("dsloader.ring.unlink", side_effect=unlink), mock.patch("dsloader.ring.Items"), \
+                mock.patch.object(weaponchoice, "bow_ahead") as ahead:
+            lines = ravarrows.starting_arrows(gd, 0)
+            self.assertEqual(lines, ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked",
+                                     "Lex starts with 24 shocking arrows in the pack: Shocking Grasp picked"])
+            self.assertEqual([w[0] for w in worn], [20, 21])
+            self.assertEqual(struct.unpack_from("<H", worn[0][1], 2)[0], 24)
+            self.assertTrue(ravarrows.is_arrows_of(worn[0][1], 1) and ravarrows.is_arrows_of(worn[1][1], 2))
+            ahead.assert_called_with(gd, 0)
+            self.assertEqual(ravarrows.starting_arrows(gd, 0), [])  # (once)
+            worn[:] = [(5, bytes(plus_one), b"")]
+            self.assertEqual(ravarrows.starting_arrows(FakeGame(known=()), 0), [])
+
+    def test_strays_on_the_sequels_names(self):
+        """return_strays with the sequel's names: another member's chill arrows back onto the Spellarcher's stack;
+        nothing with a screen up (the map not on: DS:0DABh)."""
+        lists = {0: [(9, self._arrows(1, 3, weaponchoice.AMMO_SLOT))], 1: [(12, self._arrows(1, 2, 15))]}
+        gd = mock.Mock()
+        gd.ds = 0x1000
+        gd.in_combat.return_value = False
+        gd._word.return_value = 1
+        gd.creature.return_value = b"x" * game.CREATURE_SIZE
+        gd._worn = lambda m: iter([(i, rec, b"") for i, rec in lists.get(m, [])])
+        gd.creature_name = lambda m: ("Lex", "Bo")[m] if m < 2 else "?"
+        writes = []
+        gd.guest.write = lambda at, data: writes.append((at, data))
+
+        def unlink(gd_, it, index, what, empty=False):
+            for m in lists:
+                lists[m] = [x for x in lists[m] if x[0] != index]
+            return True
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: m == 0), \
+                mock.patch.object(spellarrows, "item_address", lambda gd_, index: 0x50000 + index * game.ITEM_SIZE), \
+                mock.patch("dsloader.ring.unlink", side_effect=unlink), mock.patch("dsloader.ring.held"), \
+                mock.patch("dsloader.ring.Items"):
+            gd._word.return_value = 3  # (a screen up: left be)
+            self.assertEqual(ravarrows.return_strays(gd), [])
+            gd._word.return_value = 1
+            self.assertEqual(ravarrows.return_strays(gd),
+                             ["The chill arrows go back to Lex from Bo: only a Spellarcher carries them (2)"])
+            self.assertIn((0x50000 + 9 * game.ITEM_SIZE + 2, struct.pack("<H", 5)), writes)
+            self.assertEqual(lists[1], [])
+
+    @staticmethod
+    def _arrows(row, count, slot):
+        rec = bytearray(ravarrows.arrows_item(row, count))
+        rec[game.ITEM_SLOT] = slot
+        return bytes(rec)
+
+    def test_fine_bow_named(self):
+        """The dice log names the Loader's own items (256 on: DSCLOG2's ITEM_NAMES), the Fine Bow "item 305" before."""
+        gd = ravlog.RavGameData.__new__(ravlog.RavGameData)
+        gd._name_list = lambda: ["Club"] * 255
+        self.assertEqual(gd.item_name(ravager.FINE_BOW_NAME), "Fine Bow")
+        self.assertEqual(gd.item_name(ravarrows.name_number(2)), "Shocking Arrows")
+        self.assertEqual(gd.item_name(1), "Club")
+        gd.mod_names = ravager.item_names([b"Lucky Stone"])
+        self.assertEqual(gd.item_name(ravager.KEEPSAKE_NAMES_FIRST), "Lucky Stone")
+        self.assertEqual(gd.item_name(ravager.NAMES_GAME + ravager.NAMES_ROOM - 1), f"item {ravager.NAMES_GAME + ravager.NAMES_ROOM - 1}")
+
+
 class CopyTests(unittest.TestCase):
     @unittest.skipUnless(WOTR and SL, "DSUN_WOTR and DSUN_SL not set")
     def test_objects_and_icons(self):

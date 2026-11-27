@@ -784,6 +784,13 @@ PATCHES: Tuple[Patch, ...] = (
     # with DSCLOG2's site 240 where the USE screen, closing (9654Dh, SL's 884B3h), lets go of Turn Undead's
     # icon, "cmp dword [2B9Ah],0": the arrows buttons' icons let go of too
     Patch("arrows_close", 0x9659E, bytes.fromhex("66833e9a2b00"), _site(240, 6)),
+    # ... and the pointer on a button beside it lights that button, not Turn Undead's place: the handler
+    # (9756Eh), the pointer coming on (975AEh) and going off (975F3h), draws the lit and the plain frame at
+    # "push word [2B9Eh]" (Turn Undead's place, 22h), where its press (9762Dh) draws at the button's own,
+    # [BP-2] (its id less 2BCDh: 22h for Turn Undead's, so the game's own button is lit as ever); no helper
+    # code, a NOP after the shorter push
+    Patch("arrows_lit_on", 0x975B2, bytes.fromhex("ff369e2b"), bytes.fromhex("ff76fe90")),
+    Patch("arrows_lit_off", 0x975F7, bytes.fromhex("ff369e2b"), bytes.fromhex("ff76fe90")),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
