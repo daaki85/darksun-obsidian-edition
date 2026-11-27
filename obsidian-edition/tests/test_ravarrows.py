@@ -198,13 +198,63 @@ class LeftoverTests(unittest.TestCase):
             lines = ravarrows.starting_arrows(gd, 0)
             self.assertEqual(lines, ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked",
                                      "Lex starts with 24 shocking arrows in the pack: Shocking Grasp picked"])
-            self.assertEqual([w[0] for w in worn], [20, 21])
-            self.assertEqual(struct.unpack_from("<H", worn[0][1], 2)[0], 24)
-            self.assertTrue(ravarrows.is_arrows_of(worn[0][1], 1) and ravarrows.is_arrows_of(worn[1][1], 2))
+            # (added first, chill in the pack as the +1 arrows held the quiver; those gone, chill moved there)
+            self.assertEqual(len(worn), 2)
+            chill = next(w[1] for w in worn if ravarrows.is_arrows_of(w[1], 1))
+            shock = next(w[1] for w in worn if ravarrows.is_arrows_of(w[1], 2))
+            self.assertEqual((chill[game.ITEM_SLOT], shock[game.ITEM_SLOT]), (weaponchoice.AMMO_SLOT, 14))
+            self.assertEqual(struct.unpack_from("<H", chill, 2)[0], 24)
             ahead.assert_called_with(gd, 0)
             self.assertEqual(ravarrows.starting_arrows(gd, 0), [])  # (once)
             worn[:] = [(5, bytes(plus_one), b"")]
             self.assertEqual(ravarrows.starting_arrows(FakeGame(known=()), 0), [])
+
+    def test_starting_arrows_full_pack(self):
+        """No room for any spell arrows (a full pack, the quiver the +1 arrows'): the +1 arrows kept, nothing said
+        (the review of #229: they were taken first, and the archer was left with none)."""
+        gd = FakeGame()
+        plus_one = bytearray(bytes.fromhex("26fd0c000f2778000f27060000000000000005ff1e0001"))
+        plus_one[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+        worn = [(5, bytes(plus_one), b"")]
+        gd._worn = lambda member: iter(list(worn))
+        with mock.patch("dsloader.npcitems.add_to", return_value=False) as add, \
+                mock.patch("dsloader.ring.unlink") as unlink, mock.patch("dsloader.ring.Items"), \
+                mock.patch.object(weaponchoice, "bow_ahead") as ahead:
+            self.assertEqual(ravarrows.starting_arrows(gd, 0), [])
+            self.assertEqual(add.call_count, 2)  # (both tried)
+            unlink.assert_not_called()
+            ahead.assert_not_called()
+        self.assertEqual([w[0] for w in worn], [5])
+
+    def test_starting_arrows_room_for_one(self):
+        """Room for one stack (chill, in the pack): the +1 arrows go only after it is in, then chill to the quiver."""
+        gd = FakeGame()
+        plus_one = bytearray(bytes.fromhex("26fd0c000f2778000f27060000000000000005ff1e0001"))
+        plus_one[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+        worn = [(5, bytes(plus_one), b"")]
+        gd._worn = lambda member: iter(list(worn))
+        order = []
+
+        def add(gd_, member, rec, slot=None):
+            order.append(("add", slot))
+            if len([w for w in worn if w[0] != 5]) and slot is None:
+                return False  # (the pack full after one)
+            worn.append((30 + len(order), rec[:game.ITEM_SLOT] + bytes((slot if slot is not None else 14,))
+                         + rec[game.ITEM_SLOT + 1:], b""))
+            return True
+
+        def unlink(gd_, it, index, what, empty=False):
+            order.append(("unlink", index))
+            worn[:] = [w for w in worn if w[0] != index]
+            return True
+        with mock.patch("dsloader.npcitems.add_to", side_effect=add), \
+                mock.patch("dsloader.ring.unlink", side_effect=unlink), mock.patch("dsloader.ring.Items"), \
+                mock.patch.object(weaponchoice, "bow_ahead"):
+            lines = ravarrows.starting_arrows(gd, 0)
+        self.assertEqual(lines, ["Lex starts with 24 chill arrows in the quiver: Chill Touch picked"])
+        self.assertEqual(order[:3], [("add", None), ("add", None), ("unlink", 5)])
+        self.assertEqual(len(worn), 1)
+        self.assertEqual(worn[0][1][game.ITEM_SLOT], weaponchoice.AMMO_SLOT)
 
     def test_strays_on_the_sequels_names(self):
         """return_strays with the sequel's names: another member's chill arrows back onto the Spellarcher's stack;
