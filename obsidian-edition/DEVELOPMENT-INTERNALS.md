@@ -16,6 +16,7 @@ glossary](DEVELOPMENT.md#glossary).*
   - [The limits](#the-limits)
   - [DSCLOG's segment](#dsclogs-segment)
   - [The far block](#the-far-block)
+  - [DSCLOG2's segment, tail and install](#dsclog2s-segment-tail-and-install)
   - [Upper memory moved down](#upper-memory-moved-down)
   - [EMS off](#ems-off)
   - [The game's overlay buffer](#the-games-overlay-buffer)
@@ -433,6 +434,43 @@ size from the header and drains it at each read ([step 3
 above](#how-the-dice-log-works)); at most 251 bytes came in between two reads
 in the opening show, the busiest stretch measured. The most entries put in the
 ring in 2 seconds, measured, is 43 (the opening show), 16 in a fight.
+
+### DSCLOG2's segment, tail and install
+
+Wake of the Ravager's helper (`dos/dsclog2.asm`) is built as three parts, each a section of its own
+whose labels start at 0, laid end to end in the EXE (`THE IMAGE'S PARTS` at the file's end):
+
+| Part | Where (paragraphs into the image) | Reached through | Kept |
+|---|---|---|---|
+| the segment (`section image`): the header and all the code, to `IMAGE_END` | 0 | CS (every handler) | yes |
+| the tail (`section tail`): tables and buffers read by a few routines | `TAIL_PARAS` (the header's +1836) | FS, set by `TAIL_FS` (CS + `TAIL_PARAS`) around each use; the Loader by `tail_seg` (+1834, set as it loads) | yes |
+| the install (`section install`): `INSTALL`, `FAR_INIT`, `UMB_ALLOC`, `ALL_VECTORS`, the messages, their variables | `INSTALL_PARAS` (the EXE header's CS; IP its `install`) | CS (its own); DS is the segment there | no: DOS keeps the PSP and the paragraphs before it (31h's DX, `KEPT_PARAS`) |
+
+Only the segment has to fit 64 KB: a label past FFFFh wraps (nasm says "word data exceeds bounds")
+and the helper hooks garbage. `tests/test_dsclog2_room.py` fails the build first: any nasm warning,
+the segment within 2 KB (`MARGIN`) of 64 KB, a part not where its paragraphs say, and a tail or
+install label named after `cs:` in the segment's code (or a segment label in the install's), so a port
+written before a table moved fails there, not in the game. The tail and the install each have 64 KB
+of their own.
+
+The tail holds (2026-11-27, claude/dsclog2-segment-room) the item names past 256 (`ITEM_NAMES`,
++196), the USE screen's lines (`SLOTS_TEXT`, +148, and `U_LINE`), the Look box's whole description
+(`LOOK_FULL`, +158; `SHOW_TAIL` tells `SHOW_WINDOW` its segment), the labels' slots (`LBL_SLOTS`,
++1838), `LARGE_BITS` and `LARGE_DICE`, `SAVE_TEXT` (+1914), the sites' table (`SITE_TABLE`), the new
+spells' compares (`NS_CMP_TABLE`; the entry found is copied to `NS_ENTRY`), the AD&D slots and XP
+(`RAV_SLOTS`, `RAV_XP`) and the creation screen's spell list (`CR_DEFS`). The Loader finds each by
+its header word as an offset at `tail_seg` x 16 (`RavDiceLog._tail_at`; the quick save's and the
+labels' already did). A buffer handed to the game as a far pointer takes the tail's segment with it
+(`NAME_PUSH`, `SAVE_TICK`, `USE_DRAW`). Moving them freed 8,309 bytes of the segment (59,925 to
+51,616 on obsidian-edition; with #218-#223 joined, 65,311 to 57,002, 8,534 free); the upper memory
+taken is the same (the parts are one block), the install's 800 bytes never were kept.
+
+**To make room for a port**: put a table or buffer that only a few routines read in the tail (a
+`section tail` / `section image` pair around it, in place, so the lines round it are untouched) and
+read it through FS (`push fs` / `call tail_fs` / `[fs:...]` / `pop fs`, or once for a whole routine,
+setting FS again after a call into the game). Data handed to the game, or read with `cs lodsb`
+from many places (the kits' names, the weapon kinds' names), stays in the segment. The far block
+can't take more: it is the HMA's, 768 bytes free (`FAR_TOP` FD00h).
 
 ### Upper memory moved down
 

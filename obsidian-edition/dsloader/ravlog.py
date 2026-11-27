@@ -1259,18 +1259,29 @@ class RavDiceLog(dicelog.DiceLog):
         if self.journal is not None:
             self.journal.sync(lambda: 0, lambda head: False, self.game.game_time())
 
-    def _write_item_names(self) -> None:
-        """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196, +198), if it has them."""
+    def _tail_at(self, field: int) -> Optional[int]:
+        """The address of a buffer of DSCLOG2's tail (TAIL: the tables and buffers it keeps outside its
+        64 KB segment) whose offset is the header's word at FIELD: the tail's segment (+1834, as it sets it
+        while loading) x 16 + the offset. None without the helper, or with either 0."""
         if self.tsr_hdr is None:
+            return None
+        seg, = struct.unpack("<H", self.guest.read(self.tsr_hdr + labels.TSR_TAIL_SEG, 2))
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + field, 2))
+        return seg * 16 + off if seg and off else None
+
+    def _write_item_names(self) -> None:
+        """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196 in the tail, +198), if it has
+        them."""
+        at = self._tail_at(ravager.TSR_NAMES_OFF)
+        if at is None:
             return
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        off, count = struct.unpack("<HH", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF, 4))
+        count, = struct.unpack("<H", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF + 2, 2))
         from . import launch, ravitems
         kept = ravager.read_added(launch.DOS_DIR).get(ravitems.NAMES_CHUNK, b"")
         names = ravager.item_names([n for n in kept.split(b"\n") if n])
-        if not off or count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
+        if count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
             return
-        self.guest.guest.write(base + off, names)
+        self.guest.guest.write(at, names)
 
     def set_rules(self, rules: int) -> None:
         """SL's, the rules ported to the sequel alone (ravager.RULES_PORTED), into DSCLOG2's header
@@ -1294,14 +1305,12 @@ class RavDiceLog(dicelog.DiceLog):
         self.guest.write(word[0], struct.pack("<H", 1 << member if hidden else 0))
 
     def _slots_table(self) -> Optional[int]:
-        """Where DSCLOG2's SLOTS_TEXT is (its header's +148), made writable; None without the helper."""
-        if self.tsr_hdr is None:
+        """Where DSCLOG2's SLOTS_TEXT is (its header's +148, in the tail), made writable; None without the
+        helper."""
+        at = self._tail_at(dicelog.TSR_SLOTS_OFF)
+        if at is None:  # (a helper before the spell slots: none)
             return None
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        off = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_SLOTS_OFF, 2))[0]
-        if not off:  # (a helper before the spell slots: none)
-            return None
-        table = (base + off, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
+        table = (at, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
         if table not in self.guest.writable:
             self.guest.writable = [table] + self.guest.writable
         return table[0]
@@ -1370,9 +1379,9 @@ class RavDiceLog(dicelog.DiceLog):
         if not off:
             return None
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
+        full_at = self._tail_at(dicelog.TSR_LOOK_FULL_OFF)  # (LOOK_FULL: the tail's)
         for r in ((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
-                  (base + off, dicelog.LOOK_SIZE)) + (((base + full_off, dicelog.LOOK_FULL_SIZE),) if full_off else ()):
+                  (base + off, dicelog.LOOK_SIZE)) + (((full_at, dicelog.LOOK_FULL_SIZE),) if full_at else ()):
             if r not in self.guest.writable:
                 self.guest.writable = self.guest.writable + [r]
         return base + off
@@ -1404,14 +1413,13 @@ class RavDiceLog(dicelog.DiceLog):
             except (struct.error, IndexError, ValueError):
                 short, full = [], []
         text = "|".join(short).encode("cp437", "replace")[:dicelog.LOOK_SIZE - 1]
-        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
-        if full_off:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
+        full_at = self._tail_at(dicelog.TSR_LOOK_FULL_OFF)
+        if full_at:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
             whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:dicelog.LOOK_FULL_SIZE - 1] \
                 if len(full) > 1 else b""
             if whole and whole.decode("cp437") not in self._own_text:  # (not dialogue: the Dialogue tab leaves it out)
                 self._own_text.append(whole.decode("cp437"))
-            base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-            self.guest.write(base + full_off, whole + b"\0")
+            self.guest.write(full_at, whole + b"\0")
         self.guest.write(text_at, text + b"\0")
         self.guest.write(self.tsr_hdr + dicelog.TSR_LOOK_REPLY, struct.pack("<H", seq))
         return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []
@@ -1673,6 +1681,10 @@ class RavDiceLog(dicelog.DiceLog):
         """Shattered Lands' (the lines for the USE screen), into DSCLOG2's SLOTS_TEXT."""
         if self._slots_table() is not None:
             super()._write_slots()
+
+    def _slots_at(self) -> int:
+        """(SL's _write_slots' table: DSCLOG2's is in its tail.)"""
+        return self._slots_table()
 
     def _hit_effects(self, attacker: int, attacker_combatant: int, target_combatant: int, mode: Optional[int],
                      item_type: Optional[int], e) -> List[Tuple[str, int]]:
