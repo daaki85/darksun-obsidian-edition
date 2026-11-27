@@ -94,3 +94,9 @@ and the palette and changes of its cinematic (11012-11014). Build: obsidian-edit
 14. **The fire drake** (`0x3E 36 9`) is now the stock dragon's height over the party.
     [Fire drakes](img/2026-11-27-fire-drake-resized.png) Once, grey-blue rock with magenta edges showed
     on the cave floor left of the party; not in the next run of the same build, nor in the stock control.
+15. **Step 44, the facing toward the viewer** (a sixth run, same setup, the party written below it at foot
+    1408-1424, 488-504, under its 1416, 456; test-only, never saved): it turned to face them and attacked
+    every turn with the run 44-49 (the record's +18h 2Dh-31h, then 32h): 28 swings, plus the walk and the
+    north-facing run 51-56 as it moved. In all 2796 grabs of its turns it was drawn whole (`vanish.py`: no
+    drop), so the old step-44 vanish is gone. [The swing toward the viewer](img/2026-11-27-tarrasque-front-swing.png)
+    No damage number fell in the grabbed frames of this run, so where it lands from this facing is unseen.
