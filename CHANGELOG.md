@@ -59,197 +59,39 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-**New**
-- **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
-  Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
-  default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,
-  its version shown, an older one refused). With it the Loader writes DOSBox-X a whole
-  configuration of its own and follows the game through DOSBox-X's memory file instead of its
-  process's memory, so on Linux it needs no root and no ptrace setting, and **Start the game**
-  works there with only the game's folder. The game window's sizes, full screen, the four
-  pictures, the three speeds (measured to walk as on 0.74: 8,000 on the normal core, 22,000 and
-  42,000 on the dynamic one) and the music device each have their DOSBox-X spelling; a new
-  **soundfont file** setting plays the music through DOSBox-X's own FluidSynth. Restore defaults
-  goes back to GOG's.
+Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
+pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
-**Changed** (on top of the above, for when the Windows check passes)
-- **DOSBox-X is the default engine whenever one is found**: the Windows release brings DOSBox-X's
-  own 64-bit build in its `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and the source
-  archive beside the zip; elsewhere the player's own DOSBox-X counts. GOG's DOSBox is used when
-  none is found or when it is chosen; Restore defaults removes the choice; a found recompiled
-  program goes before DOSBox-X unless DOSBox-X was chosen.
+**New: DOSBox-X, the default engine** (#146, #178, #185)
+- The Options tab's new **Engine** section chooses DOSBox-X or GOG's DOSBox 0.74. **DOSBox-X is the
+  default whenever one is found**: the Windows release brings DOSBox-X's own 64-bit build in its
+  `dosbox-x` folder, with its GPL licence and `SOURCE.txt`, and the source archive beside the zip;
+  on Linux and macOS the player's own DOSBox-X (2025.01.01 or later; a path the player gives, its
+  version shown, an older one refused) counts. GOG's DOSBox is used when none is found or when it
+  is chosen; Restore defaults removes the choice; a found recompiled program goes before DOSBox-X
+  unless DOSBox-X was chosen. **Played on Linux; on Windows and macOS the Loader's side is written
+  and tested, but a Shattered Lands play-through under DOSBox-X there has not been confirmed yet**
+  ([known issues](obsidian-edition/README.md#known-issues)).
+- With DOSBox-X the Loader writes it a whole configuration of its own and follows the game through
+  DOSBox-X's memory file instead of its process's memory, so on Linux it needs no root and no
+  ptrace setting. The game window's sizes, full screen, the four pictures, the three speeds
+  (measured to walk as on 0.74: 8,000 on the normal core, 22,000 and 42,000 on the dynamic one)
+  and the music device each have their DOSBox-X spelling; a new **soundfont file** setting plays
+  the music through DOSBox-X's own FluidSynth (#146).
 - **48 KB more upper memory under DOSBox-X** for DSCLOG: `[dos] umb end=FBFF` with the BIOS in
-  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB).
+  16 KB (`rom bios allocation max` and `rom bios minimum size`), 192 KB in all (0.74: 128 KB)
+  (#178).
+- Wake of the Ravager starts in DOSBox-X too when it is the engine (#185).
 
-**Docs**
-- The engine in FEATURES, the README's requirements (Linux), the player's guide, both DEVELOPMENT
-  pages (the configuration line by line, the memory's layout under each engine, Windows and macOS
-  as written), the patch notes, and the experiment's findings carried into
-  `reports/modernisation-research-and-plan.md`.
+**New: class outfits** (#205)
+- Each party member is dressed for their class before any gear goes on: humans in their class's
+  outfit (the mage in a plum mantle, the thief hooded, the psionicist in teal), dwarves, elves,
+  half-elves (48 outfits each), half-giants, halflings and the mul in one for their whole class
+  combination; thri-kreen and combinations outside the roster keep the game's figure ([what the
+  party wears](obsidian-edition/FEATURES.md#what-the-party-wears)). The animated galleries are in
+  `obsidian-edition/docs/class-outfits/`, left out of the release zip.
 
-**Dev**
-- `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`, `tests/test_filememory.py`.
-- The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`, `codepatch.py`, and
-  `dosboxx_memtest.py`, a check without the game that a second program can read and write
-  DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
-  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
-  `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
-  the creation screen).
-**Added: Wake of the Ravager's new wizard spells**
-- The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
-  sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its
-  RESOURCE.GFF: it has no six free wizard numbers below 120). The icons are Shattered Lands' drawn ones in the
-  sequel's colours. A character who knows them (the sheet's bits, which the party transfer carries) has them
-  on the USE screen and casts them as in Shattered Lands: Cat's Grace and Friends raise DEX and CHA through
-  Strength's code (Cat's Grace's die by class), Erdlu Claw's unarmed attacks, Fogbolt's -3 and +2, Reflected
-  Image's one image struck half the time, Spook's save worse with the caster's level. Their effects have names
-  and icons on the sequel's screens, and the dice log names them (Fogbolt in the to-hit line too). They are
-  learnt there as in Shattered Lands: a preserver's level up (CHOOSE A SPELL) and creation's first-spells pick
-  offer them at their levels, counted by the INT rules, and a spellbook of one teaches it. Erdlu Claw's +1 to
-  hit is on the first set of natural attacks only (a thri-kreen's claws, not its bite). The new spells' switch
-  leaves them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-149).
-- Spellbooks of the six are in the sequel: Notaku in Tyr sells one of each (Cat's Grace 6000, the others 3000),
-  and three of its wizards who carry a spellbook (Fermin, Kalaobuta, Raenika) carry Reflected Image, Spook or
-  Fogbolt. Each is an object of its own (31190-31195, copies of the sequel's spellbooks) put in by ravgear's
-  own placing (`ravgear.BOOKS`), with the new spells' switch; a saved game's Notaku is stocked with them once
-  by `shopstock.py`.
-**New: Wake of the Ravager's kit spell slots**
-- A party taken to the sequel now has its kits' slots there as in Shattered Lands: a Battle Mage's
-  wizard slots one fewer at each spell level; a Seeker's and a Justifier's priest slots their own
-  tables (Table 51, Table 46), with no WIS bonus; a Shinobi's wizard slots the Seeker's table by its
-  thief level (counted, though it can't cast in the sequel yet). Beside the Elementalist's and
-  Crusader's, which the sequel already had.
-
-**Fixed: Wake of the Ravager's Justifier**
-- A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it
-  at caster level 0 (his ranger level less 9, held at 0). Now he has none before 10th, as in Shattered
-  Lands.
-
-**New: Wake of the Ravager's own party fitted to the rules**
-- As Shattered Lands' own party: Gerakis specializes in the long sword, gythka and trikal and fights
-  wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus is a Crusader at the
-  kit's full cost (one fewer priest slot at each spell level, which the sequel now applies, as it does
-  an Elementalist's slots a level behind); Ar'Anda is an Elven Shadow-walker who casts in light armour. Given once by the Loader.
-
-**New: Wake of the Ravager's kits and weapon specs past 13th level**
-- For the sequel's higher levels (the owner's choices, 2026-11-26): a gladiator picks a weapon spec
-  more every 4 levels past 9th (5th-8th at 13th, 17th, 21st, 25th, in the sheet's spare three
-  bytes), a fighter a second at 13th that goes on to mastery at 17th and grand mastery at 21st (a
-  Myrmidon a third), and the level up's weapon window is ported to the sequel to ask for them.
-- The Ravager's base AC goes on to 0 at 15th; an expert's attacks are 5/2 from 13th; a Seeker's,
-  Shinobi's and Justifier's priest slots follow the owner's tables (Table 51, Table 46) to 16th, cast
-  at 11th and 7th at most; a Spellarcher's spell arrows are +3 from 13th; an Elementalist's 7th-level
-  slot comes at 14th, as a cleric's. Shattered Lands' helper has the same tables.
-**New: Wake of the Ravager**
-- The figures cast shadows in the sequel as in Shattered Lands: every living creature's outline laid
-  on the floor toward the lower right, under the walls and figures (DSCLOG2's FIGURE SHADOWS, sites
-  160-162; each frame's shadow kept as the game draws it, as the sequel lets pictures go from memory;
-  the site table padded to 179 for the open ports' sites).
-- Walkers raise dust in the sequel as in Shattered Lands, on its dirt and sand (DSCLOG2's DUST, in the
-  floor pass and the main loop as the shadows; the Loader's table of lighter colours taken a step up the
-  sequel's darker dirt). With it, the squares' table of lighter colours is now read from the right
-  place in the sequel's helper (it read the squares' counter for the palette's offset).
-- The magic items shine on the sequel's shop screens (its colour cycles stood still there), and twelve of
-  its own magic items that never shone (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3,
-  three armours, the Boots, the Amulet, the Ioun Stone, the Necklace, the Rod) shine as the others
-  (DSCLOG2's SHOP_SHINE, site 163; the Loader's copy of OBJEX.GFF, `ravshine.py`).
-- See-through figures in the sequel: a party member hidden in shadows in a fight, and anyone invisible
-  (unless the party detects invisibility), is drawn half see-through, as in Shattered Lands (DSCLOG2's
-  GHOST_DRAW on the shadows' sites; its blend tables in the far block, so only 5.5 KB of upper memory;
-  the Loader's `RavGhosts`).
-**Fixed: Wake of the Ravager's item weights**
-- The sequel's items weigh what they do in Shattered Lands. SSI left 71 of its 102 item types at 0, though
-  its program still checks weight as SL's does: now two heavy weapons can't be held together, the item box
-  says HEAVY, a heavy weapon can't backstab, and pockets go by weight. The
-  weights go into the Loader's copy of OBJEX.GFF (`ravager.RAV_WEIGHTS`; `RAV_SKIP=weights` for a control).
-  No save changes. As in SL, no load is too heavy (the game's load check adds up nothing) and nothing slows a
-  loaded character. Study: `reports/wake-of-the-ravager-item-weights.md`.
-
-**New: picking pockets in Wake of the Ravager**
-- A thief's USE screen out of a fight shows PICK POCKETS with a purse (beside the sequel's Turn Undead's place):
-  a click arms it, and a click on a person picks their pocket with SL's rules (AD&D's skill, the dice log's
-  lines, coins or a small item, caught once a level). The purse is drawn from the sequel's own earth Turn Undead
-  icon. The sequel's items have no weight, so a pocket's things are judged by kind (no armour or shield, a
-  weapon of 4 damage or less). DSCLOG2's PICK POCKETS, sites 180-186, header +2000 to +2018.
-
-**Dev**
-- `test_ravpickpocket.py`; `ravdice.py`'s `RAV_PICK_ROLL=N` fixes the pick's d100 for a test.
-**Fixed: the Loader**
-- Every Shattered Lands start failed before the game ran, on either engine: the weapon window's
-  `weaponpages.slot()`, changed for the sequel's weapon specs, read its colours before they were set
-  (`UnboundLocalError`). `test_start_files` now prepares the patched game from the player's own files (#196).
-
-**Fixed: Wake of the Ravager (the port, #148 to #195)**
-- The Loader's copy of the sequel has most of Shattered Lands' engine fixes, and mends some of the
-  sequel's own bugs: a new character's hit points, its weapon in the off hand, the message box that
-  never stayed on screen, a worn item's spell that never ended, saving throws held at the table's last
-  row, and the Tyr inn's room that never rested ([which, fix by fix](obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager)).
-
-**Docs**
-- The game's bugs page says which fixes Wake of the Ravager has (the saves of #210 too) and lists
-  the sequel's own bugs mended; the patch notes' bug fixes have the sequel too.
-
-**Fixed: the game (saving throws)**
-- Saves keep improving past 9th level: the game's save routine took AD&D's best save as the most a save
-  could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and no save went below 8. With
-  AD&D's class tables (always on) a level up now gives the Player's Handbook's saves by class group and
-  level (DSCLOG's `SAVE_BASE`, site NS_IMAGE + 123 at 878F7h; the sequel's fix ported, one table for
-  both). DSCLOG: the segment's spare 928 to 672 bytes, upper memory's 138 to 109 paragraphs.
-- Psionicists save by Dark Sun's own table (Table 8), not the thief's, in both games: the game's group
-  of thieves and psionicists is split by the sheet's classes, a psionicist/thief the better of each
-  save (`save_bands.inc`, DSCLOG's and DSCLOG2's `SAVE_BASE` the same code and bands; DSCLOG2 75
-  bytes smaller for the bands).
-
-**Fixed: DSCLOG (kits)**
-- The Military Scout's +1 to hit with a missile under the open sky is the bow's, sling's and staff
-  sling's only again: the javelin and darts (the mod's later weapon kinds) had it too.
-**New: the kits' starting gear in Wake of the Ravager**
-- A new character's gear is fitted to its classes and kit there, as in Shattered Lands, from the sequel's
-  own items: a weapon a kit forbids becomes one it allows at the same grade (a Shinobi's long sword +1 a
-  short sword +1), an Arena Champion's second sword a Shield +1, a Ravager's shield left behind for a
-  second sword and its ring armour made leather, a Myrmidon's plain polearm, a Poisoner's two blades, a
-  Ghetto Fighter's dagger, a Battle Mage's weapon of its spec, a Brute's one-handed swords left behind;
-  what the classes can't use is left behind (`dsloader/ravkitstart.py`, `weaponchoice.class_gear`).
-
-**New: the kits' gear in Wake of the Ravager**
-- What a kit forbids is refused there too, and what it allows can be held whatever its class, as in
-  Shattered Lands: a Ravager's shield and bow, a Stalker's heavy armour, a Battle Mage's off-hand weapon
-  refused; a Battle Mage's weapon of its weapon spec and leather, a Battle Dancer's long sword and bow, an
-  Elementalist's second sphere's weapons allowed (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, at the sequel's
-  "may this character equip it", site 19). KITS.md says which kits work in the sequel now, and which in part.
-
-**Fixed: the game**
-- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
-  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A
-  new test scans the patched program for any other jump into a patch.
-
-**Fixed: Wake of the Ravager's starting gear**
-- A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long sword
-  (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round,
-  so a new long sword specialist showed 1 attack a round; now 2 (the Loader's copy of the program, its gear
-  table's slots).
-
-**New: Wake of the Ravager's starting weapon is the first pick's, +1**
-- A new fighter's, gladiator's or ranger's weapon in hand becomes a +1 weapon of its first weapon spec
-  (the sequel's own +1, else the mod's new ones, else the sequel's plain one made +1); a two-handed one
-  sends the shield or second sword to the backpack, and a missile pick goes to the missile slot (a bow
-  with +1 arrows). The control without it: the sequel's +1 long sword whatever the pick.
-- An air cleric starts with an obsidian dagger in hand (the sequel's daggers lacked the air cleric's
-  class bit), a fire cleric with the obsidian mace.
-
-**Fixed: the SL weapons and the Ravager port together**
-- The sequel's helper reads the V3 spec layout the Loader now writes (SL's 22 kinds); the sequel's mod
-  item types stay the first 33, and SL's new weapon types go across in the party transfer as the
-  sequel's own weapons.
-
-**New: Wake of the Ravager has all 22 weapon specs**
-- A spec in one of the six weapon specs Shattered Lands took from the sequel (two-handed sword,
-  lotulis, double spear, trikal, javelin, darts) stays that spec in the sequel, for its own Twohand
-  Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and Darts (before, it counted as the
-  nearest of the first sixteen). The javelin and darts have their specialist's rates of fire there,
-  the Effects screen names the six, and a psionicist may still use the sequel's darts.
-
-**New**
+**New: Wake of the Ravager's weapons in Shattered Lands** (#149, #154, #157)
 - Six of Wake of the Ravager's weapons the game has none of: a two-handed sword, the lotulis, the
   double spear and trikal (gladiators only, as in the sequel), the javelin and darts, each with a
   name and an icon of its own, sold in Teaquetzl and Kel's caravan. (Not the sequel's net.)
@@ -263,7 +105,7 @@ Releases, newest first (2.12.0 and older in the archive):
   a round by level) and darts (3, 4, 5) faster, as for the other missile weapons; and people of the
   like carry the new weapons: the arena's gladiators, one of Scar's henchmen, the Drajian Guards, a
   Templar in the pens, the Silt Runners, the White Sand Outlaws, Teaquetzl's Village Heroes and
-  Elite Guards, and the pens' weapon rack.
+  Elite Guards, and the pens' weapon rack (#154).
 - The sequel's Darts +1, with a shining icon of its own, thrown by the defiler among the arena's
   champions.
 - Metal ones of three of the sequel's weapons (a two-handed sword and a lotulis sold by Melkor in
@@ -271,7 +113,7 @@ Releases, newest first (2.12.0 and older in the archive):
   placed along the way through the game, the weaker early: Double Spear +1 and +2, Trikal +1 and
   +2, Lotulis +1 and +2, Great Sword +2 and +3, Javelin +1, each with a shining icon of its own
   ([the table](obsidian-edition/ITEMS.md#weapons)). A metal lotulis strikes a second foe as any
-  lotulis.
+  lotulis (#157).
 - Air clerics may use the javelins (a thrown weapon) and water clerics the darts (wood), as their
   spheres allow (the user's).
 - An obsidian lotulis (a fire cleric's too) and a bone great sword (a water cleric's too), both
@@ -283,31 +125,160 @@ Releases, newest first (2.12.0 and older in the archive):
   fire), not all in fire; without it, the Loader's own, the double spear, trikal and
   darts redrawn at the sequel's sizes (the user's).
 
+**New: Wake of the Ravager, started from the Loader** (#148 to #195)
+- **Play Shattered Lands** and **Play Wake of the Ravager** buttons at the top of the Loader's
+  window, and `Play Wake of the Ravager.bat`, start either game with the mod (#156); a sequel start
+  no longer repeats Shattered Lands' warning about what it left out (#197).
+- **Taking the party across**: the Options tab's **Take the party to Wake of the Ravager...** puts a
+  Shattered Lands save's party in the sequel's roster with every item, its effects, their kits,
+  weapon specs and spells, and the time between the games (#151, #155; [taking the
+  party](obsidian-edition/FEATURES.md#taking-the-party-to-wake-of-the-ravager)).
+- **The mod's fixes, rules and displays ported to the sequel** (#148): the dice log, the combat log
+  panel, Psionic Blast's imagined wounds (#172); weapon specialization (#158) and the spec pick at
+  creation (#194); the kits' rules in fights and play (#161), the Elementalist's second sphere
+  (#163) and choosing a kit at creation and after DUAL (#164); thieves as in AD&D, the Assassin's
+  backstab (#162) and Shattered Lands' stealth (#152); damage lines and the Effects screen's weapon
+  and kit rows (#160); shop prices by the leader's CHA, buying back magic items and scroll messages
+  (#166); Tab, Enter, the red ring and the chance to hit (#167, #169); a ranger's two weapons in
+  heavy armour (#170); F5, F9, autosaves and saves under names (#173); the Dialogue and Journal
+  tabs (#175); T, Shift+T, S and the M, U and I keys (#176); STORE, RECALL and fuller starting gear
+  (#182); first spells and psionic powers at creation (#183); R, F10 and Alt (#186); the dice log's
+  save modifiers named and attack lines broken down (#188).
+- **A level cap by XP of its own**: 5,625,000 XP shared between a character's classes, in place of
+  the game's stop at 15th, with levels past the sequel's table (20th) to 30th by AD&D's tables; the
+  Player's Handbook's saves, the thief skills to 17th, spell slots to 30th, a druid's stopping at
+  15th (#189; [the level cap](obsidian-edition/FEATURES.md#wake-of-the-ravager)).
+- **Kits and weapon specs past 13th level** (the owner's choices, 2026-11-26): a gladiator picks a
+  weapon spec more every 4 levels past 9th (5th-8th at 13th, 17th, 21st, 25th, in the sheet's spare
+  three bytes), a fighter a second at 13th that goes on to mastery at 17th and grand mastery at 21st
+  (a Myrmidon a third), and the level up's weapon window is ported to the sequel to ask for them.
+  The Ravager's base AC goes on to 0 at 15th; an expert's attacks are 5/2 from 13th; a Seeker's,
+  Shinobi's and Justifier's priest slots follow the owner's tables (Table 51, Table 46) to 16th,
+  cast at 11th and 7th at most; a Spellarcher's spell arrows are +3 from 13th; an Elementalist's
+  7th-level slot comes at 14th, as a cleric's. Shattered Lands' helper has the same tables (#199).
+- **All 22 weapon specs**: a spec in one of the six weapon specs Shattered Lands took from the
+  sequel (two-handed sword, lotulis, double spear, trikal, javelin, darts) stays that spec in the
+  sequel, for its own Twohand Sword and Crystal sword, Lotulis, Double Spear, Trikal, Javelin and
+  Darts (before, it counted as the nearest of the first sixteen). The javelin and darts have their
+  specialist's rates of fire there, the Effects screen names the six, and a psionicist may still
+  use the sequel's darts (#192). The sequel's helper reads the V3 spec layout the Loader now writes,
+  and Shattered Lands' new weapon types go across in the party transfer as the sequel's own weapons
+  (#181).
+- Magic weapons for the specs the sequel had none for, and the mod's plain gear, placed in the
+  sequel (#191); a saved game's sellers are stocked with the new items once (#193).
+- **The six new wizard spells** (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
+  Friends), as spells 320-325 in the Loader's copy of RESOURCE.GFF, with Shattered Lands' icons in
+  the sequel's colours: cast as in Shattered Lands (#200), learnt at a preserver's level up, at
+  creation and from a spellbook (#201), and their spellbooks sold by Notaku in Tyr (Cat's Grace
+  6000, the others 3000) and carried by three of its wizards (#202). The new spells' switch leaves
+  them out (`dsloader/ravspells.py`, DSCLOG2's NEW SPELLS, sites 140-149).
+- **The kits' spell slots**: a Battle Mage's wizard slots one fewer at each spell level; a
+  Seeker's and a Justifier's priest slots their own tables (Table 51, Table 46), with no WIS bonus;
+  a Shinobi's wizard slots the Seeker's table by its thief level (counted, though it can't cast in
+  the sequel yet). Beside the Elementalist's and Crusader's, which the sequel already had (#214).
+- **The kits' gear**: what a kit forbids is refused there too, and what it allows can be held
+  whatever its class, as in Shattered Lands (DSCLOG2's KIT_FORBIDS, KIT_ALLOWS, site 19; KITS.md says
+  which kits work in the sequel now, and which in part) (#213). A new character's gear is fitted to
+  its classes and kit from the sequel's own items (`dsloader/ravkitstart.py`) (#215).
+- **The starting weapon is the first pick's, +1**: a new fighter's, gladiator's or ranger's weapon
+  in hand becomes a +1 weapon of its first weapon spec (a two-handed one sends the shield or second
+  sword to the backpack, a missile pick goes to the missile slot); an air cleric starts with an
+  obsidian dagger, a fire cleric with the obsidian mace (#209).
+- **The sequel's own party fitted to the rules**: Gerakis specializes in the long sword, gythka and
+  trikal and fights wild; Thy'rokh specializes in the gythka and has a Grove Warden's AC; Terrannus
+  is a Crusader at the kit's full cost; Ar'Anda is an Elven Shadow-walker who casts in light armour.
+  Given once by the Loader (#207).
+- **Picking pockets**: a thief's USE screen out of a fight shows PICK POCKETS with a purse, drawn
+  from the sequel's earth Turn Undead icon; a click on a person picks their pocket with Shattered
+  Lands' rules (DSCLOG2's PICK POCKETS, sites 180-186) (#204).
+- **Shadows, dust, shine and see-through figures** as in Shattered Lands: every living creature's
+  shadow on the floor, walkers' dust on dirt and sand, the magic items shining on the shop screens
+  (and twelve of the sequel's own that never shone), and the hidden and invisible drawn half
+  see-through (DSCLOG2's FIGURE SHADOWS, DUST, SHOP_SHINE, GHOST_DRAW; `ravshine.py`, `RavGhosts`)
+  (#203).
+
+**Changed**
+- **XP stops at the cap** in Shattered Lands: a character's XP is held at its share of the 749,999
+  cap (one class all of it, several divided, a human less its old classes'), the share `LEVEL_ROOM`
+  caps levels by, so none is banked past the top level; the dice log says what wasn't counted. The
+  Loader's (`tracker.py`, `game.xp_share`), no DSCLOG memory (#187).
+
+**Fixed: the game**
+- **Saves keep improving past 9th level**: the game's save routine took AD&D's best save as the
+  most a save could improve by, so a warrior stayed at 11/11/11/13/11 from 10th level and no save
+  went below 8. With AD&D's class tables (always on) a level up now gives the Player's Handbook's
+  saves by class group and level (DSCLOG's `SAVE_BASE`, site NS_IMAGE + 123 at 878F7h; the
+  sequel's fix ported, one table for both). DSCLOG: the segment's spare 928 to 672 bytes, upper
+  memory's 138 to 109 paragraphs (#210).
+- **Psionicists save by Dark Sun's own table** (Table 8), not the thief's, in both games: the
+  game's group of thieves and psionicists is split by the sheet's classes, a psionicist/thief the
+  better of each save (`save_bands.inc`, DSCLOG's and DSCLOG2's `SAVE_BASE` the same code and
+  bands) (#210).
+- The Military Scout's +1 to hit with a missile under the open sky is the bow's, sling's and staff
+  sling's only again: the javelin and darts had it too (#210).
+- The window routine's failure exit no longer jumps into the middle of the `window` patch (the
+  spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A new
+  test scans the patched program for any other jump into a patch (#159).
+
+**Fixed: Wake of the Ravager**
+- The Loader's copy of the sequel has most of Shattered Lands' engine fixes, and mends some of the
+  sequel's own bugs: a new character's hit points, its weapon in the off hand, the message box that
+  never stayed on screen, a worn item's spell that never ended, saving throws held at the table's
+  last row, and the Tyr inn's room that never rested ([which, fix by
+  fix](obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager)) (#148 to #195).
+- **Items weigh what they do in Shattered Lands**: SSI left 71 of its 102 item types at 0, though
+  its program still checks weight as Shattered Lands' does: now two heavy weapons can't be held
+  together, the item box says HEAVY, a heavy weapon can't backstab, and pockets go by weight
+  (`ravager.RAV_WEIGHTS`; `RAV_SKIP=weights` for a control). No save changes. Study:
+  `reports/wake-of-the-ravager-item-weights.md` (#211).
+- A new character's weapon starts in the weapon hand: the sequel's own gear put a fighter's +1 long
+  sword (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings
+  once a round, so a new long sword specialist showed 1 attack a round; now 2 (#195).
+- A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast
+  with it at caster level 0. Now he has none before 10th, as in Shattered Lands (#214).
+
+**Fixed: the Loader**
+- Every Shattered Lands start failed before the game ran, on either engine: the weapon window's
+  `weaponpages.slot()`, changed for the sequel's weapon specs, read its colours before they were
+  set (`UnboundLocalError`). `test_start_files` now prepares the patched game from the player's own
+  files (#196).
+
 **Docs**
-- The weapon specs page has the twenty-two kinds, who may choose them and their dice; the
-  features page, the player's guide, Items and the dice log page have the new weapons and traits.
+- The engine in FEATURES, the README's requirements, the player's guide, both DEVELOPMENT pages
+  (the configuration line by line, the memory's layout under each engine), the patch notes, and the
+  DOSBox-X experiment's findings carried into `reports/modernisation-research-and-plan.md` (#146,
+  #178).
+- The weapon specs page has the twenty-two kinds, who may choose them and their dice; the features
+  page, the player's guide, Items and the dice log page have the new weapons and traits (#149).
+- The game's bugs page says which fixes Wake of the Ravager has (the saves of #210 too), lists the
+  sequel's own bugs mended and the bugs known but not yet fixed; the patch notes' bug fixes have
+  the sequel too (#206).
+- An audit of what the Wake of the Ravager port brought across, and what it still lacks
+  (`reports/`, #208); a folder of notes for OpenDS and yuan-ti (`reports/community/`, #153).
 
 **Dev**
+- DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
+  `tests/test_filememory.py`. The playtest kit: `PT_DISPLAY`, `start_dosboxx.sh`, `dbxadopt.sh`,
+  `codepatch.py`, and `dosboxx_memtest.py`, a check without the game that a second program can read
+  and write DOSBox-X's memory file, for the owner to run on Windows and macOS. Logs:
+  `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
+  `2026-11-21-dosbox-x-unchecked.md` (#146).
 - The sixth memory pass: 1,104 bytes of upper memory back for DSCLOG (32 were left with the six
   weapons; 1,136 now) and 688 of its segment, by one far call into the game for 35 sites
   (`GAME_FAR`), shared code moving an interrupt's frame (`FRAME_UP`, `FRAME_DOWN`, `OVR_FRAME`) and
   the extra item types packed (`XTYPE`); nothing the player sees changes. Tests find those probes
   through the install's vector table; `test_framecode` runs the shared routines. A play log:
-  [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md).
+  [memory pass 6](playtest/logs/2026-11-23-memory-pass-6.md) (#150).
 - The seventh memory pass: 1,296 bytes of upper memory back for DSCLOG (2,208 free now) and 240 of
   its segment. The Loader's item types and names, and the mends to the game's own types, are in the
   item chunks of its copy of GPLDATA.GFF (`itemtables.py`) instead of DSCLOG's tables; DSCLOG only
   notes where the game put them. A new item now costs no resident memory. Nothing the player sees
-  changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md).
-- A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md), with
-  control runs; `specset.py` sets a member's weapon specs in memory.
-
-**Changed**
-
-- **XP stops at the cap:** a character's XP is held at its share of the 749,999 cap (one class all
-  of it, several divided, a human less its old classes'), the share `LEVEL_ROOM` caps levels by, so
-  none is banked past the top level; the dice log says what wasn't counted. The Loader's
-  (`tracker.py`, `game.xp_share`), no DSCLOG memory.
+  changes. A play log: [memory pass 7](playtest/logs/2026-11-25-memory-pass-7.md) (#179).
+- A start-up test for Wake of the Ravager beside Shattered Lands', and a rule to run both before a
+  push (#198); tests put the rules back after a test that turns them on (#147).
+- `test_ravpickpocket.py`; `ravdice.py`'s `RAV_PICK_ROLL=N` fixes the pick's d100 for a test
+  (#204). A play log: [Wake of the Ravager's weapons](playtest/logs/2026-11-23-ravager-weapons.md),
+  with control runs; `specset.py` sets a member's weapon specs in memory (#149).
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 
