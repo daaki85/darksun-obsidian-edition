@@ -89,6 +89,16 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
   region's placements needed no change. In the same `ravager-figures.zip`.
 
+**New: Shattered Lands' screens and icons in the sequel** (branch `claude/ravager-sl-interface`)
+- `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:
+  the sequel renumbered its spells) from the player's own Shattered Lands RESOURCE.GFF into the Loader's
+  RESOURC2.GFF, in the colours every region of the sequel keeps, as darksun-recompiled's `sl_figures.py
+  build-ui` made them on 2026-11-20 (byte for byte the same chunks on the GOG files); the icon pairs, which
+  that tool matched by look, are kept as a table. Put in last, and only where the copy still has the game's
+  own chunk; the MORE and scroll buttons stay the sequel's. A box on the Options tab (its Wake of the Ravager
+  section, `sl_interface`, on by default) turns it off; `RAV_SKIP=sl_interface` is the test control. Played:
+  the USE screen and the inventory from `ravager-after-ambush`, with and without. Tests: `test_ravui.py`.
+
 **Dev: the dice log's pass as named steps (the code audit's S2)**
 - `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
   `RavDiceLog.PASS` takes Shattered Lands' by name and adds its own, and `ravlog.PASS_LEFT_OUT` says

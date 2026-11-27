@@ -1235,7 +1235,8 @@ SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear"
                    "hit_chance": True, "hit_hover": True, "squares": True, "move_back": True, "show_usable": True, "quick_save": True, "autosave": True,
                    "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
                    dosboxx.SETTING: None,  # (none chosen: DOSBox-X when one is found, else GOG's: dosboxx.engine)
-                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
+                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True,
+                   "sl_interface": True}  # (sl_interface: the sequel drawn with Shattered Lands' screens and icons, ravui)  # (combatlog.SHORT, the panel's level unless chosen)
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:

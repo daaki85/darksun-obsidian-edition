@@ -826,7 +826,9 @@ A133h); `python3 ravclick.py X Y [left|right|none]` moves there and presses slow
 screen (the top-left icon, 22,17) acts for the leader out of a fight (a portrait click doesn't
 change who); the small top button left of a portrait is MAKE <NAME> LEADER (47,43 the first);
 hovering names a button in the bar below; VIEW CHARACTER 47,171, VIEW INVENTORY 74,171, LEVEL
-197,171. The opening party: Ar'anda (elf preserver/psionicist/thief 6/6/7), an earth cleric 7,
+197,171. Out of a fight the keys **U** (USE) and **I** (the inventory) open them straight (2026-11-27), and the top-left icon
+opens the screen last used; a click on an inventory slot takes up its item (AC changes when it is armour): click the
+same slot again to put it back (logs/2026-11-27-ravager-sl-interface.md). The opening party: Ar'anda (elf preserver/psionicist/thief 6/6/7), an earth cleric 7,
 Thy'rokh (thri-kreen fighter/druid, the leader), a half-giant gladiator 7; its sheets at the far
 pointer DS:19C5h. **Running one of its routines on the live game** (`ravthief.py`, the thief
 skills): most of its code is in overlays swapped out to XMS, so lay every overlay above A0000h from
@@ -2271,6 +2273,7 @@ show the game's own behaviour beside the mod's. The names are read once, all tog
 | An object part | `mod_types`, `new_items`, `new_spells` (the spellbooks only, `ravgear.BOOKS`: the spells stay), `item_shine`, `weights`, `spell_arrows`, `melee_range` | that part of the objects, all the named parts in one write of the copy | `OBJEX2.GFF` | e.g. `weights`: the sequel's items weigh 0 again |
 | `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
 | The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no `RGN03A2.GFF` | the sequel's own figures. DSCLOG2's COPIED word (its header's +146) has bit 8 set once the game opened `RGN03A2.GFF` |
+| Shattered Lands' interface | `sl_interface` | its 45 screen pictures and 221 icons (`ravui`) | `RESOURC2.GFF` | the sequel's own screens and icons: `BMP 10000` in the copy is the game's |
 
 Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with
 `# left out: ...` when the run went ahead. Prerequisite: `RAV_LOADER=1` (without it nothing is copied,
