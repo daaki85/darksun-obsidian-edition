@@ -246,6 +246,11 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   caps levels by, so none is banked past the top level; the dice log says what wasn't counted. The
   Loader's (`tracker.py`, `game.xp_share`), no DSCLOG memory (#187).
 
+**Dev: the code audit's room checks (2026-11-27)**
+- `tests/test_dsclog_room.py`: DSCLOG's segment keeps 256 bytes free and its upper memory 32 paragraphs
+  (its build failed only past the limit), as `test_dsclog2_room.py` does for DSCLOG2; and the sequel's
+  modules' constants named as DSCLOG2's symbols agree with them.
+
 **Fixed: the code audit's bugs (2026-11-27)**
 - Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without
   its new items, people and icons (and a changed GPLDATA copy): the sequel's record layout was still on
