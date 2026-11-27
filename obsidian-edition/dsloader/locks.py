@@ -17,7 +17,7 @@ and the dice log says why. A level gained, the pair is gone from the table and t
 """
 
 import struct
-from typing import Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 from . import game, pickpocket
 from .game import GameData
@@ -73,26 +73,29 @@ def failed_key(gd: GameData, member: int) -> Optional[str]:
                gd.creature_name(member), pickpocket.thief_level(gd, member))
 
 
-def barred(gd: GameData, tried: Iterable[str]) -> List[List[Tuple[int, int]]]:
+def barred(gd: GameData, tried: Iterable[str], when: Optional[Mapping[str, Optional[int]]] = None
+           ) -> List[List[Tuple[int, int]]]:
     """For each member 0-3, the (region, thing) of each lock in TRIED it failed at its thief level now,
-    in the region the party is in (at most LOCK_MAX: the latest kept)."""
-    tried = set(tried)
+    in the region the party is in (at most LOCK_MAX: the latest kept, by WHEN, each key's game time as
+    DiceLog.picked_at keeps it; a key with none counts as the oldest)."""
+    when = when or {}
+    tried = sorted(set(tried), key=lambda k: (when.get(k) or 0, k))
     party, region = gd.creature_name(0), gd.region()
     out: List[List[Tuple[int, int]]] = []
     for member in range(game.PARTY_SIZE):
         name, level = gd.creature_name(member), pickpocket.thief_level(gd, member)
         head = f"{party}|lock|{region}|"
         tail = f"|{name}|L{level}"
-        things = set()
+        things: Dict[int, None] = {}  # (in the order failed, the latest last)
         for k in tried:
             if not (k.startswith(head) and k.endswith(tail)):
                 continue
             lock = k[len(head):-len(tail)]
-            if lock.isdigit():  # (an older key: the thing number as it was)
-                things.add(int(lock))
-            elif lock.startswith("o"):
-                things.update(things_now(gd, lock))
-        out.append([(region, t) for t in sorted(things)][-LOCK_MAX:])
+            found = [int(lock)] if lock.isdigit() else things_now(gd, lock) if lock.startswith("o") else []
+            for t in found:  # (an older key: the thing number as it was)
+                things.pop(t, None)
+                things[t] = None
+        out.append([(region, t) for t in things][-LOCK_MAX:])
     return out
 
 

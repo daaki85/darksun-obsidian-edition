@@ -1030,7 +1030,7 @@ class DiceLog:
         Thieves as in AD&D (always on)."""
         if self.tsr_hdr is None:
             return
-        rows = locks.barred(self.game, self.picked)
+        rows = locks.barred(self.game, self.picked, self.picked_at)
         data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
         if data != self._locks_written:
             locks.write(self.game, self.tsr_hdr, data[1])
