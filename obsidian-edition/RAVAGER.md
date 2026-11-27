@@ -341,8 +341,8 @@ Grace. A game saved before gets them at Notaku's as the weapons (four of the six
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
-- **[What the party wears](FEATURES.md#what-the-party-wears)**: the class outfits, and the new character's
-  figure on the creation screen. The sequel keeps its own figures, [drawn in Shattered Lands'
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map, the creation-screen class preview,
+  and class-specific full-length human inventory pictures. The sequel keeps its own figures, [drawn in Shattered Lands'
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.

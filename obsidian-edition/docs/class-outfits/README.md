@@ -16,6 +16,20 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 **Approved shoulder fit (art revision `ccd86dd`).** The Fighter/Psionicist guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](shoulder-fit-by-race.gif)
 
+## Inventory portraits
+
+In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The twelve other figures use their retail full-length pictures. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
+
+### Human inventory fittings
+
+The male and female portraits use separately fitted artwork for all eight classes. The Gladiator’s strap crosses the chest from a single shoulder guard, while the Fighter wears a closed jerkin with paired bone caps. The Cleric’s cream panel falls to the ankles. The Preserver’s plum mantle opens over the waist and falls behind the arms. The foreground fists on the man and the woman’s hands at her waist come from their original inventory poses.
+
+The man shows his hair above the collar and wears an open hood as a Thief. The Druid wears a green folded wrap above the ochre kilt. Dark leather distinguishes the Fighter’s overlapping hip flaps and the Gladiator’s harness against exposed skin.
+
+The sheet shows Loader-rendered portraits at 2× on sand and at native size on a dark ground. Each map inset shows the corresponding human in front idle. [Compare the original poses and the previous and revised fittings](human-inventory-fittings.png).
+
+![All eight human outfits, with male and female inventory portraits and their map references](human-inventory.png)
+
 ## Dwarf outfits
 
 The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. The five two-class and two three-class outfits combine their identifying details. The Cleric/Fighter wears pale bone caps over cream, and the Fighter/Psionicist wears a narrow teal sash over leather. Each tile below pairs the female front view with the male rear view. [See all twelve class combinations](dwarves.md)
