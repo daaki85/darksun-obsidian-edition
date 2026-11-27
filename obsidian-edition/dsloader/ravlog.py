@@ -19,6 +19,7 @@ Lands' (dicelog.DiceLog), run with:
     rolls (its people, items and screens), only the rolls' lines and the fight's tally.
 """
 
+import os
 import struct
 import sys
 from contextlib import contextmanager
@@ -1793,6 +1794,32 @@ class RavDiceLog(dicelog.DiceLog):
             self._rav_ghosts.update(self.game, hdr, self.show_ghosts, self._dac_changes(),
                                 lambda: shadows.redraw(self.game, hdr))
 
+    def _dress_pass(self, now: float) -> None:
+        """The party's figures in their class outfits (ravdress.RavDresser), four times a second, once the game
+        reads the Loader's OBJEX2.GFF; nothing without Shattered Lands' folder (the pictures are made from it)."""
+        if now < self._next_dress or self.game is None:
+            return
+        self._next_dress = now + DRESS_INTERVAL
+        if self._rav_dresser is None:
+            if now < self._dresser_retry:
+                return
+            self._dresser_retry = now + 30.0
+            from . import launch, ravdress
+            copy = os.path.join(launch.DOS_DIR, ravager.OBJECTS_COPY)
+            sources = ravdress.Sources.from_files(launch.find_game_dir(),
+                                                  ravager.find_dir(launch.load_settings().get("game_dir")))
+            if sources is None or not os.path.exists(copy):
+                return
+            self._rav_dresser = ravdress.RavDresser(self.game, sources, copy)
+        try:
+            with self._writable(self._rav_dresser.writable()):
+                self._rav_dresser.update()
+        except (struct.error, IndexError, ValueError, OSError):
+            pass
+
+    _next_dress = 0.0
+    _dresser_retry = 0.0
+    _rav_dresser = None
     _next_ghost = 0.0
     _rav_ghosts: Optional[RavGhosts] = None
     show_ghosts = True  # (the see-through figures: RAV_NO_GHOST, a control, turns them off)
@@ -2508,6 +2535,7 @@ def make(guest, **kwargs) -> dicelog.DiceLog:
 # in, regeneration, spells' damage), the kills, PSP and ability scores, effects, the names over figures,
 # the USE screen's slots, a wizard's try at a scroll, Psionic Blast's wounds, the creation screen's tries,
 # the combat log's panel, the dialogue and messages (DSCLOG2's TEXT; the journal its own chain).
+DRESS_INTERVAL = 0.25  # (seconds between the class outfits' passes: SL's dressing, four times a second)
 _take, _own = dicelog.pass_step, dicelog.PassStep
 RavDiceLog.PASS = (
     _own("gear", lambda log, now, loading: log._gear_pass()),  # (a new character's fuller starting gear: DONE waits)
@@ -2529,6 +2557,7 @@ RavDiceLog.PASS = (
     _own("squares", lambda log, now, loading: log._squares_pass(now), says=False, quiet=True),
     _own("dust", lambda log, now, loading: log._dust_pass(now), says=False, quiet=True),  # (DSCLOG2's DUST)
     _own("ghost", lambda log, now, loading: log._ghost_pass(now), says=False, quiet=True),  # (the see-through)
+    _own("dress", lambda log, now, loading: log._dress_pass(now), says=False, quiet=True),  # (class outfits: ravdress)
     _take("move_back"),  # (F10 after the last step: moveback.py)
     _take("usable_key"),  # (Alt held: what can be used ringed, usable.py)
     _take("hover", run=lambda log, now, loading: log._hover_pass(now) if log._label_slots() is not None else None,
@@ -2569,7 +2598,6 @@ PASS_LEFT_OUT = {
     "drawn": "Shattered Lands' story only",
     "kalzith_sold_out": "Shattered Lands' story only",
     "quest_look": "Shattered Lands' quests only",
-    "dress": "the sequel has no class outfits",
     "scroll": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",

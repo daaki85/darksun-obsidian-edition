@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravfigures, ravportraits, ravspells, ravui
+from . import game, gamepatch, gff, ravarrows, ravdress, ravfigures, ravportraits, ravspells, ravui
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1894,7 +1894,9 @@ def mod_types_table(types: bytes) -> bytes:
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
-                  arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
+                  arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
+                  party: Optional[Callable[[gff.Chunks], Tuple[gff.Chunks, Dict[Tuple[str, int], int]]]] = None
+                  ) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
     double spear's range 1 (RAV_RANGES, unless "melee_range" is), the club's, bow's and sling's material
     SL's (RAV_MATERIALS, unless "materials" is), Dragonsbane SL's metal (RAV_OBJECT_TYPES, unless
@@ -1905,7 +1907,8 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     them) unless "new_items" is (or the mod's types are left out: they are its types), and the still magic
     items' icons shining (ravshine) unless "item_shine" is; and the Spellarcher's spell arrows' objects
     (ARROWS(the sequel's chunks): ravarrows', in a game with no party transferred too) unless
-    ravarrows.SKIP is."""
+    ravarrows.SKIP is; and the party's pictures the Loader's own Shattered Lands ones with room for their class
+    outfits (PARTY(the sequel's chunks): ravdress.copy_chunks) unless ravdress.SKIP is."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1967,11 +1970,17 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if made:
             new.update(made)
             done.append(ravfigures.SKIP)
+    room: Dict[Tuple[str, int], int] = {}
+    if party is not None and ravdress.SKIP not in skip:  # (after the figures: their moved pictures)
+        made, room = party({**chunks, **new})
+        if made:
+            new.update(made)
+            done.append(ravdress.SKIP)
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
         done.append("wide_sheets")
-    return (icons.with_chunks(data, new) if new else data), done
+    return (icons.with_chunks(data, new, room) if new else data), done
 
 
 # The game folder's files that hold sheets (the roster's CHAR records, a save's SAVE 6 table and any
@@ -2078,7 +2087,12 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
     books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
     gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
     arrows = (lambda chunks: ravarrows.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
-    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear, arrows), skip)
+
+    def party(chunks):
+        sources = ravdress.Sources.from_files(sl_dir, game_dir)
+        return ravdress.copy_chunks(chunks, sources) if sources is not None else ({}, {})
+    return _write_copy(game_dir, OBJECTS_FILE, dest,
+                       lambda d, s: objects_fixed(d, s, added, gear, arrows, party if sl_dir else None), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:

@@ -375,9 +375,10 @@ greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to th
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
-- **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map and the creation-screen
-  class preview. The sequel keeps its own figures, [drawn in Shattered Lands' style](#the-mod-in-the-sequel)
-  (its inventory's class pictures are Shattered Lands', above).
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: the party wears its class outfits on the map and in a fight
+  (2026-11-27), but not yet its worn gear over them, a second member with the same figure (they share the first's
+  picture), the creation-screen class preview, or the small figures in the party column (its inventory's class
+  pictures are Shattered Lands', above).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
