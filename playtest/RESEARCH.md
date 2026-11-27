@@ -1696,6 +1696,20 @@ ambush was the spell immunity routine's "immune" exit (7F362h in the image) jump
 jumps were all data or mid-instruction (check against a disassembly). SL's `window` patch (2BBA9h)
 has one (from 264FCh in SL's image), not yet mended.
 
+**Weapons across, kind and material** (2026-11-27, logs/2026-11-27-ravager-weapon-materials.md): to test what an SL weapon
+becomes, write it into a party member's backpack item in a copy of an SL save (SAVE 7, 15h bytes an item: +0 the object
+negated, +6 the value, +0Ah the type, +12h the name, +14h the plus; keep +4 the next item, +8 the contents and +11h the slot;
+`logs/files/2026-11-27-weapon-materials-save.py`), transfer it into a copy of the sequel with the Loader's code and with the
+control's (a `git worktree` of origin), and compare the rosters' items offline (`...-roster.py`: type, kind, material) before
+any play. **DSCLOG2's rules word is 0 until the dice log attaches** (`ravdice.py`): an equip tried before it tests nothing (no
+class or kit limit runs). Read its counters by name with `logs/files/2026-11-27-dsclog2-words.py` (the segment from `ravtail.py`).
+A kit's own weapons come before the class limits (KIT_ALLOWS, then CLASS_FORBIDS): a fire cleric Battle Dancer keeps a bone long
+sword and a bow; pick a character with no kit for a sphere test. A two-handed weapon also needs the other hand free.
+**Item names past 256 show only with the dice log attached** (it writes DSCLOG2's ITEM_NAMES): a box looked at before
+shows none. After a change to the names' places, move the dos folder's RAVITEMS.GFF away and transfer again (its
+objects keep the name numbers they were made with). In the title menu the pointer may not follow `ravclick.py` at
+first: an `xdotool mousemove 510 405 click 1` on the window (640x480 at 192,184) wakes it.
+
 **The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
 `python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`
 (its roster first reset from `__support/save/CHARSAVE.GFF`; with the two folders, the items the sequel

@@ -62,10 +62,19 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
   box outside a fight); a spell the sequel lacks makes a keepsake.
   Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
-  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
-  javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
-  kind, and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
-  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal
+  and javelin, and their magic ones of the same material) go back as the sequel's own weapon of that
+  kind (the darts, wooden, as the mod's own: the sequel's are stone or of no material), and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
+  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). **Every weapon keeps its kind and its
+  material**: the metal great sword, lotulis and javelin, the obsidian lotulis and the bone great sword
+  (a fire cleric's Obsidian Lotulis +1, a water cleric's Bone Great Sword +1) are their own types there,
+  with Shattered Lands' damage, weight and who may wield them; and where SSI's own swap gave one of
+  Shattered Lands' weapons another material or kind (a bone Long Sword the sequel's obsidian one, the
+  Great Axe +3 an obsidian axe, the Polearm +1 a double spear, Terror Blade a stone dagger, Bloodwrath a
+  metal sword) the Loader makes it in its own material and kind instead. The sequel had no bone long
+  sword: the Loader adds Shattered Lands' to it. Its club and bow are wood and its sling leather, as in
+  Shattered Lands (SSI made them of no material), so an earth or water cleric, druid or ranger may use
+  them there too.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](FEATURES.md#ages-and-magical-aging)'s usual effects.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character

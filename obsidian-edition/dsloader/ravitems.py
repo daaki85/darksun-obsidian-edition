@@ -37,6 +37,7 @@ OBJECT_KINDS = ("OJFF", "RDFF", "BMP ")
 OJFF_ICON = 0x0C
 SL_ITEM_TYPE, SL_ITEM_NAME = 0x0A, 0x12
 ITEM_TYPE, ITEM_NAME = 0x0A, 0x14
+SL_TYPE_SIZE = 20  # (an SL item type, IT1R's)
 ITEM_RECORD = bytes.fromhex("0000" "0000" "0f27" "0100" "0f27" "0000" "0000" "0000" "0000" "04ff" "0000" "00")
 TOME_LIKE = 31300  # (the sequel's One-use Scroll whose object record the tome's copies, its icon its own)
 ITEM_NUMBER_FIRST = 2000  # (the RDFF item records' numbers: the sequel's go to 1316)
@@ -69,16 +70,98 @@ def type_map(pairs: Dict[int, int], sl_objects: gff.Chunks, sequel_objects: gff.
     return {t: c.most_common(1)[0][0] for t, c in seen.items()}
 
 
-def sequel_type(sl_type: int, types: Dict[int, int]) -> int:
+def sl_kinds() -> Dict[int, int]:
+    """Shattered Lands' weapon types' kinds (specialize._TYPES: SL's whatever ravlog's layout has made
+    specialize.KIND_OF_TYPE while the sequel is attached)."""
+    from . import specialize
+    return {t: specialize.KINDS.index(k) for k, ts in specialize._TYPES.items() for t in ts}
+
+
+def sl_material(sl_table: bytes, sl_type: int) -> Optional[int]:
+    """The material (restrict.material's) of SL_TYPE in Shattered Lands' type table SL_TABLE (IT1R, 20 bytes
+    a type), None past it."""
+    from . import restrict
+    rec = sl_table[sl_type * SL_TYPE_SIZE:(sl_type + 1) * SL_TYPE_SIZE]
+    return restrict.material(rec) if len(rec) == SL_TYPE_SIZE else None
+
+
+def wotr_material(table: bytes, wotr_type: int) -> Optional[int]:
+    """The material of WOTR_TYPE in the sequel's type table TABLE (its +4: SL's +8), None past it."""
+    from . import ravager
+    at = wotr_type * ravager.TYPE_SIZE + ravager.TYPE_MATERIAL
+    if at >= len(table):
+        return None
+    low = table[at] & 0x0F
+    return -1 if table[at] & 0x40 and not low else low
+
+
+def same_weapon(sl_type: int, sl_table: bytes, wotr_type: int, wotr_table: bytes) -> bool:
+    """Whether the sequel's WOTR_TYPE is SL's weapon type SL_TYPE's kind and material, melee or missile as it
+    is (True for an SL type that isn't a weapon: nothing to keep)."""
+    from . import ravager, restrict
+    kind = sl_kinds().get(sl_type)
+    if kind is None:
+        return True
+    hands = restrict.MELEE | restrict.MISSILE  # (a melee weapon not made a thrown one: the sequel's metal
+    sl_flags = sl_table[sl_type * SL_TYPE_SIZE:sl_type * SL_TYPE_SIZE + 1]  # dagger 99 is only thrown)
+    wotr_flags = wotr_table[wotr_type * ravager.TYPE_SIZE:wotr_type * ravager.TYPE_SIZE + 1]
+    return ravager.rav_kinds().get(wotr_type) == kind and \
+        wotr_material(wotr_table, wotr_type) == sl_material(sl_table, sl_type) and \
+        len(sl_flags) == len(wotr_flags) == 1 and sl_flags[0] & hands == wotr_flags[0] & hands
+
+
+def weapon_type(sl_type: int, types: Dict[int, int], sl_table: bytes, wotr_table: bytes) -> Optional[int]:
+    """The sequel's type for Shattered Lands' own weapon type SL_TYPE (below game.GAME_TYPES) of the same kind
+    and material: TYPES' (ITEMS.BIN's pairs' most) if it is, else the first of them: the sequel's own, the
+    mod's (its metal great axe for SL's Great Axe +3), the Loader's copies of SL's types (ravager.SL_EXTRA_TYPES:
+    the bone long sword); None if SL_TYPE isn't a weapon or none is."""
+    from . import ravager
+    if sl_type not in sl_kinds():
+        return None
+    first = [types[sl_type]] if sl_type in types else []
+    for w in first + list(range(ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES))):
+        if same_weapon(sl_type, sl_table, w, wotr_table):
+            return w
+    return None
+
+
+def sequel_type(sl_type: int, types: Dict[int, int], sl_table: bytes = b"", wotr_table: bytes = b"") -> int:
+    """The sequel's type for an item of Shattered Lands' type SL_TYPE the Loader makes: five plain Ravager
+    weapons the sequel's own, the mod's types its (mod_type), SL's weapons one of their kind and material
+    (weapon_type, with SL_TABLE and WOTR_TABLE), the rest TYPES' (ITEMS.BIN's), else a keepsake."""
     from . import game, ravager, ravtransfer
     if sl_type in (ravtransfer.SL_WIZARD_SCROLL, ravtransfer.SL_PRIEST_SCROLL):
         return KEEPSAKE_TYPE  # (the scrolls made here are of spells the sequel lacks: ravtransfer.item)
-    if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:
-        return ravager.mod_type(sl_type)
-    weapon = ravager.sequel_weapon_type(sl_type)
+    weapon = ravager.sequel_weapon_type(sl_type)  # (five plain Ravager weapons: the sequel's own)
     if weapon is not None:
         return weapon
+    if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:
+        return ravager.mod_type(sl_type)
+    if sl_table and wotr_table:
+        weapon = weapon_type(sl_type, types, sl_table, wotr_table)
+        if weapon is not None:
+            return weapon
     return types.get(sl_type, KEEPSAKE_TYPE)
+
+
+def stale(kept: gff.Chunks, own: int, sl_record: bytes, sl_table: bytes = b"", wotr_table: bytes = b"") -> bool:
+    """Whether an earlier transfer's object OWN (in KEPT) has a type this Loader would no longer give the
+    save's SL_RECORD, so it is made anew: before 2026-11-27 the metal, obsidian and bone Ravager weapons (SL
+    154-158) went across as the sequel's own type of their kind, and SL's own weapons as ITEMS.BIN's pairs'
+    type, their material lost (a bone long sword an obsidian one). The mod's types are checked, and with
+    SL_TABLE and WOTR_TABLE (the two games' type tables) SL's weapons' kind and material; a save already in
+    the sequel keeps its own item records."""
+    from . import game, ravager
+    sl_type, = struct.unpack_from("<H", sl_record, SL_ITEM_TYPE)
+    rec = _first_record(kept, own)
+    if rec is None:
+        return False
+    kept_type, = struct.unpack_from("<H", rec, ITEM_TYPE)
+    if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:
+        return kept_type != sequel_type(sl_type, {})
+    if sl_table and wotr_table and weapon_type(sl_type, {}, sl_table, wotr_table) is not None:
+        return not same_weapon(sl_type, sl_table, kept_type, wotr_table)
+    return False
 
 
 def sequel_names(text: bytes) -> Dict[bytes, int]:
@@ -171,10 +254,11 @@ def item_records(obj: int, number: int, type_record: bytes, wotr_type: int, name
 
 
 def make(sl_items: Dict[int, bytes], sl_objects: gff.Chunks, sequel_objects: gff.Chunks, types: Dict[int, int],
-         names: Names, sl_palette, stable, type_table: bytes, number: int = ITEM_NUMBER_FIRST
-         ) -> Tuple[Dict[int, int], gff.Chunks, List[Tuple[int, str]]]:
+         names: Names, sl_palette, stable, type_table: bytes, number: int = ITEM_NUMBER_FIRST,
+         sl_table: bytes = b"") -> Tuple[Dict[int, int], gff.Chunks, List[Tuple[int, str]]]:
     """For each SL object in SL_ITEMS (a save's item record of it), the Loader's object: the pairs
-    (SL object -> its own), their chunks, and those that couldn't be made, with why."""
+    (SL object -> its own), their chunks, and those that couldn't be made, with why. SL_TABLE (SL's type
+    table) gives SL's weapons a sequel type of their kind and material (sequel_type)."""
     from . import ravager, ravtransfer
     pairs: Dict[int, int] = {}
     chunks: gff.Chunks = {}
@@ -190,7 +274,7 @@ def make(sl_items: Dict[int, bytes], sl_objects: gff.Chunks, sequel_objects: gff
         if pic is None:
             failed.append((sl, "no picture"))
             continue
-        wotr_type = sequel_type(struct.unpack_from("<H", rec, SL_ITEM_TYPE)[0], types)
+        wotr_type = sequel_type(struct.unpack_from("<H", rec, SL_ITEM_TYPE)[0], types, sl_table, type_table)
         tome = ravtransfer.is_tome(rec)
         if tome:  # (the Tome of Understanding: a scroll of the sequel's, read through DSCLOG2's TOME)
             wotr_type = ravtransfer.WIZARD_SCROLL

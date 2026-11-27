@@ -201,6 +201,7 @@ The sequel, started from the Loader when it is installed (GOG sells it with Shat
 - **[New]** **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the END menu and the other shared screens in Shattered Lands' pictures, and 221 spell, psionic and button icons Shattered Lands' drawings, taken from your Shattered Lands folder; a box on the Options tab turns it off ([the screens](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/RAVAGER.md#the-mod-in-the-sequel)).
 - **[New]** The Effects screen's lines as in Shattered Lands: an effect's charges ("ARMOR (14 CHARGES)"), Enlarge's damage, the armour spells' AC and Reflected Image by its name.
 - **[Fixed]** The sequel's items weigh what they do in Shattered Lands *(71 of its 102 kinds weighed nothing)*, so two heavy weapons can't be held together and pockets go by weight.
+- **[Fixed]** **Weapons keep their material and kind** when the party crosses over *(a water cleric's Bone Great Sword +1 became an obsidian sword it couldn't wield, a bone Long Sword an obsidian one, the Polearm +1 a double spear)*: every weapon of Shattered Lands' kinds and materials is in the sequel too, a bone long sword added, and the sequel's club, bow and sling are wood and leather as in Shattered Lands, so earth and water clerics may use them ([taking the party](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#taking-the-party-to-wake-of-the-ravager)).
 
 ## Bug Fixes
 
