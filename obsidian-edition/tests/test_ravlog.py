@@ -330,10 +330,10 @@ class AgingTests(unittest.TestCase):
         log._aging_pass(), log._aging_pass()
         before = g.mem[self.SHEETS + game.SHEET_AGE]
         log.game.hastes = [(1, 7), (0, 8)]
-        lines = log._aging_pass()
-        self.assertEqual(lines[0], "Ar'Anda gives Hasted to Gerakis")
-        self.assertIn("system shock (Haste's aging)", lines[1])
-        self.assertIn("survives", lines[1])  # (CON 25: 100%)
+        lines = log._aging_pass()  # (who gives Hasted to whom: effect_changes' line)
+        self.assertIn("system shock (Haste's aging)", lines[0])
+        self.assertIn("survives", lines[0])  # (CON 25: 100%)
+        self.assertEqual(log._haste_aging(0), [])  # (effect_changes ages no one in the sequel: this pass does)
         self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], before + 1)
         self.assertEqual(log._aging_pass(), [])  # (the same effect: once)
 
@@ -618,6 +618,103 @@ class EffectTests(unittest.TestCase):
                          (69, 46, 9, 35))
         self.assertGreaterEqual(game.STINK_EFFECT, ravlog.NO_EFFECT)
         self.assertEqual((game.EFFECTS_SEG, game.EFFECTS_OFF), (0x3E71, 0x24D))
+
+
+class ChangeLineTests(unittest.TestCase):
+    """Shattered Lands' effect, PSP and ability score lines in the sequel (RavDiceLog: effect_changes,
+    _psp_ability_changes), on a party in fake memory at the sequel's creature layout."""
+    DS, CREATURES = 0x1000, 0x30000
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def make(self):
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.CREATURES_PTR, 0, self.CREATURES >> 4)
+        for m, name in enumerate(("Gerakis", "Ar'Anda")):
+            c = self.CREATURES + m * game.CREATURE_SIZE
+            struct.pack_into("<hh", g.mem, c, 50, 40)  # (HP, PSP)
+            g.mem[c + game.CREATURE_STATUS] = 1
+            g.mem[c + game.CREATURE_ABILITIES:c + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 16, 13, 15, 14))
+            g.mem[c + game.CREATURE_NAME:c + game.CREATURE_NAME + len(name)] = name.encode()
+        test = self
+
+        class Game(ravlog.RavGameData):
+            effects: list = []
+
+            def game_time(self):
+                return 100
+
+            def party_signature(self):
+                return ("Gerakis", "Ar'Anda")
+
+            def effect_records(self):
+                return list(self.effects)
+
+            def effect_deadlines(self):
+                return {}
+
+            def combatant_name(self, combatant):
+                return self.creature_name(combatant)
+
+            def spells_manual(self):
+                return False
+
+        log.game = Game(log.guest, self.DS, 0)
+        log._party_changed_at = -1000.0  # (no load settling)
+        log._party = log.game.party_signature()
+        return g, log
+
+    def test_psp_spent_and_regained(self):
+        g, log = self.make()
+        self.assertEqual(game.CREATURE_PSP, 2)  # (the sequel's: SL's, below 0Eh)
+        self.assertEqual(log._psp_ability_changes(10.0), [])  # (the first look only records)
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_SIZE + game.CREATURE_PSP, 32)
+        self.assertEqual(log._psp_ability_changes(11.0), ["    Ar'Anda spends 8 PSP (40 -> 32)"])
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_SIZE + game.CREATURE_PSP, 35)
+        self.assertEqual(log._psp_ability_changes(12.0), ["    Ar'Anda regains 3 PSP (32 -> 35)"])
+
+    def test_an_ability_score_once_it_holds(self):
+        g, log = self.make()
+        self.assertEqual(game.CREATURE_ABILITIES, 0x19)  # (the sequel's: SL's 22h less 9)
+        log._psp_ability_changes(10.0)
+        g.mem[self.CREATURES + game.CREATURE_ABILITIES] = 21  # (Gerakis's STR: Strength)
+        self.assertEqual(log._psp_ability_changes(11.0), [])  # (seen once: it must hold)
+        self.assertEqual(log._psp_ability_changes(12.0), ["    Gerakis's STR 18 -> 21"])
+
+    def test_none_while_a_game_loads(self):
+        g, log = self.make()
+        log._psp_ability_changes(10.0)
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_PSP, 1)
+        log._party_changed_at = 11.0
+        self.assertEqual(log._psp_ability_changes(11.5), [])
+
+    def test_effects_start_and_end_with_the_sequels_names_and_rules(self):
+        g, log = self.make()
+        names = {9: "Blessed", 13: "Blur", 42: "Hasted", 120: "Own Effect"}
+        sl = {name: n for n, name in ravlog.SL_EFFECT_NAMES.items()}
+        rules = ravlog.effect_rules(names, ravlog.SL_EFFECT_RULES)
+        self.assertEqual(rules[9], ravlog.SL_EFFECT_RULES[sl["Blessed"]])  # (SL's 7: "+1 to hit, +1 on saves")
+        self.assertEqual(rules[42], ravlog.SL_EFFECT_RULES[sl["Hasted"]])
+        self.assertNotIn(120, rules)  # (a name only the sequel has: no rule)
+        ravlog.rebind("EFFECT_NAMES", names)
+        ravlog.rebind("EFFECT_RULES", rules)
+        self.assertEqual(log.effect_changes(10.0), [])  # (the first look only records)
+        log.game.effects = [(game.Effect(0, 1, 9), 3, 1), (game.Effect(1, 1, 42), 41, 2)]
+        lines = log.effect_changes(11.0)
+        self.assertEqual(lines, ["Ar'Anda gives Blessed to Gerakis: +1 to hit, +1 on saves",
+                                 "Hasted on Ar'Anda: double movement and attacks; ends Slow"])
+        log.game.effects = [(game.Effect(1, 1, 42), 41, 2)]
+        self.assertEqual(log.effect_changes(12.0), ["Blessed ends on Gerakis"])
+
+    def test_after_rolls_runs_them(self):
+        g, log = self.make()
+        calls = []
+        log._psp_ability_changes = lambda now: calls.append("psp") or []
+        log.effect_changes = lambda now=0.0: calls.append("effects") or []
+        log._after_rolls(False, 1.0)
+        self.assertEqual(calls, ["psp", "effects"])
 
 
 class NameTests(unittest.TestCase):

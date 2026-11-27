@@ -27,6 +27,9 @@ LOCK_MAX = 4  # (DSCLOG's) pairs a member
 NONE = 0xFFFF
 OPEN_LOCKS = 1  # (game.THIEF_SKILLS' second)
 NEVER = -2000  # (DSCLOG's LOCK_NEVER: the chance of a lock out of reach)
+# the map things' object numbers and places (DS), a record of THING_SIZE bytes each (game's: the sequel's
+# own in ravlog.rav_items: 67D6h and 67C5h, 25h bytes)
+THING_OBJECT, POSITIONS, THING_SIZE = game.THING_OBJECT, game.POSITIONS, 32
 
 
 def talk_thing(gd: GameData) -> Optional[int]:
@@ -45,19 +48,19 @@ def identity(gd: GameData, thing: int) -> Optional[str]:
     if not 0 <= thing < game.THINGS:
         return None
     base = gd.ds * 16
-    obj, = struct.unpack("<h", gd.guest.read(base + game.THING_OBJECT + thing * 32, 2))
-    x, y = struct.unpack("<HH", gd.guest.read(base + game.POSITIONS + thing * 32, 4))
+    obj, = struct.unpack("<h", gd.guest.read(base + THING_OBJECT + thing * THING_SIZE, 2))
+    x, y = struct.unpack("<HH", gd.guest.read(base + POSITIONS + thing * THING_SIZE, 4))
     return f"o{abs(obj)}@{x},{y}" if obj else None
 
 
 def things_now(gd: GameData, ident: str) -> List[int]:
     """The map things that are IDENT now (its thing number may differ from when it was failed)."""
-    data_obj = gd.guest.read(gd.ds * 16 + game.THING_OBJECT, game.THINGS * 32)
-    data_pos = gd.guest.read(gd.ds * 16 + game.POSITIONS, game.THINGS * 32)
+    data_obj = gd.guest.read(gd.ds * 16 + THING_OBJECT, game.THINGS * THING_SIZE)
+    data_pos = gd.guest.read(gd.ds * 16 + POSITIONS, game.THINGS * THING_SIZE)
     out = []
     for t in range(game.THINGS):
-        obj, = struct.unpack_from("<h", data_obj, t * 32)
-        x, y = struct.unpack_from("<HH", data_pos, t * 32)
+        obj, = struct.unpack_from("<h", data_obj, t * THING_SIZE)
+        x, y = struct.unpack_from("<HH", data_pos, t * THING_SIZE)
         if obj and f"o{abs(obj)}@{x},{y}" == ident:
             out.append(t)
     return out

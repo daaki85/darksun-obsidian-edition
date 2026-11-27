@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
-    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
+    keywatch, labels, locks, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
     gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
 HDR_SIG = b"DSCLOGR1"
@@ -86,6 +86,24 @@ def effect_names(guest, load: int) -> Dict[int, str]:
         if raw:
             out[n] = raw.decode("ascii")
     return out if out.get(5) == "Armor" else {}
+
+
+# What an effect does (game.effect_rule, the dice log's "Blur on Sadira: ..." lines: effect_changes), in the
+# sequel's numbers: Shattered Lands' rules by their effect's name (game.EFFECT_NAMES), the sequel's effect
+# of the same name taking it. A name only one game has (the sequel's own effects) gets none.
+SL_EFFECT_NAMES = dict(game.EFFECT_NAMES)
+SL_EFFECT_RULES, SL_MANUAL_RULES = dict(game.EFFECT_RULES), dict(game.MANUAL_EFFECT_RULES)
+
+
+def effect_rules(names: Dict[int, str], sl_rules: Dict[int, str]) -> Dict[int, str]:
+    """SL_RULES (by Shattered Lands' effect numbers) keyed by the sequel's NAMES' numbers instead."""
+    sl_by_name = {name.lower(): n for n, name in SL_EFFECT_NAMES.items()}
+    out = {}
+    for n, name in names.items():
+        sl = sl_by_name.get(name.lower())
+        if sl is not None and sl in sl_rules:
+            out[n] = sl_rules[sl]
+    return out
 
 
 RAV_ITEM_TYPE, RAV_ITEM_SLOT, RAV_ITEM_PLUS = 0x0A, 0x13, 0x16  # (the sequel's item fields, as DSCLOG2's)
@@ -297,6 +315,10 @@ RED_FIRST, RED_LAST = 32, 255
 # (the allocation of 23F0h bytes, 72FF7h); its things 0-519, the backpack's cells 14-25 (DSCLOG2's
 # THING_COUNT, PACK_FIRST). No icons of the Loader's own (icons.fit: Shattered Lands' pictures).
 RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
+RAV_THING_OBJECT = 0x67D6  # (each map thing's object number: the 25h-byte records' +1Bh, SL's +1Ah)
+# A lock failed (locks.py; DSCLOG2's LOCK_SITE, site 241): LOCK_BARRED's offset in the tail, the header's +2114,
+# and the checks it put out of reach, +2116
+LOCK_OFF, LOCK_BARS = 2114, 2116
 STOCK_INTERVAL = 1.0  # (seconds between looks for a saved game's sellers without the new items: shopstock)
 
 
@@ -378,9 +400,12 @@ def rav_pocket_sized(typ: bytes) -> bool:
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, loot, pickpocket, ring, startgear
+    from . import icons, itemgate, locks, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
+            # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
+            # apart: ravds' 66AEh -> 67D6h, and RAV_POSITIONS)
+            locks: {"THING_OBJECT": RAV_THING_OBJECT, "POSITIONS": RAV_POSITIONS, "THING_SIZE": RAV_POSITION_SIZE},
             # (picking pockets: none of Shattered Lands' people or weapons, its type and name numbers the
             # sequel's others)
             pickpocket: {"LIFTABLE_TYPES": (), "LIFTABLE_NAMES": {}, "OWN_POCKETS": (),
@@ -1291,6 +1316,8 @@ class RavDiceLog(dicelog.DiceLog):
             names = effect_names(self.guest.guest, load)
             if names:
                 rebind("EFFECT_NAMES", names)
+                for table, sl_rules in (("EFFECT_RULES", SL_EFFECT_RULES), ("MANUAL_EFFECT_RULES", SL_MANUAL_RULES)):
+                    rebind(table, effect_rules(names, sl_rules))  # (effect_changes' rules: by name)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
             result = super().attach()
@@ -1874,7 +1901,8 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
+        fall matched with the weapon hits it took in, regeneration, spells' damage), PSP and ability scores
+        changing (_psp_ability_changes), effects starting and ending (effect_changes), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
         (_learn_lines), Psionic Blast's wounds given back (_blast_pass), the creation screen's tries
@@ -1887,6 +1915,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
         out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
         out += self._step(lambda: self.hp_changes(now))
+        out += self._step(lambda: self._psp_ability_changes(now))  # (PSP spent, kept up, regained; abilities)
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
         self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
@@ -1910,6 +1939,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
         if self.text is not None:  # (dialogue and message boxes: DSCLOG2's TEXT, +126)
             out += self._step(lambda: self._take_text(now))
+        self._step(self._locks_pass)  # (the locks each member failed at its thief level now: LOCK_SITE)
         out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
         out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
         out += self._step(lambda: self._stock_pass(now))  # (a saved game's sellers given the new items: shopstock)
@@ -1919,6 +1949,7 @@ class RavDiceLog(dicelog.DiceLog):
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)
             out += self._step(lambda: self._panel_pass(now))
+            out += self._step(lambda: self.effect_changes(now))  # (effects starting, ending, put in again)
             if self.game is not None and self.game.rules & game.RULE_AGING:
                 out += self._step(self._aging_pass)
             out += self._step(self._party_pass)  # (the sequel's own party's weapon specs and features, once)
@@ -2237,6 +2268,39 @@ class RavDiceLog(dicelog.DiceLog):
         finally:
             self.guest.writable = before
 
+    def _locks_pass(self) -> None:
+        """SL's: LOCK_BARRED (locks.py) written where DSCLOG2 keeps it, in its tail (the header's LOCK_OFF)."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        at = self._tail_at(LOCK_OFF)
+        if at is None:  # (a helper without LOCK_SITE)
+            return
+        data = (at, locks.table(locks.barred(self.game, self.picked)))
+        if data != self._locks_written:
+            before = self.guest.writable
+            self.guest.writable = before + [(at, len(data[1]))]
+            try:
+                self.guest.write(at, data[1])
+            finally:
+                self.guest.writable = before
+            self._locks_written = data
+
+    def _psp_ability_changes(self, now: float) -> List[str]:
+        """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
+        up), said unless a game is loading (its records half-filled), as SL's _changes."""
+        if self.game is None:
+            return []
+        changes = self.psp_changes() + self.ability_changes()
+        return [] if self._party_check(now) else changes
+
+    def effect_changes(self, now: float = 0.0) -> List[str]:
+        """Shattered Lands' (effects starting, ending and put in again), once the game is attached."""
+        return super().effect_changes(now) if self.game is not None else []
+
+    def _haste_aging(self, owner: int) -> List[str]:
+        """None here: the sequel's Haste aging is _aging_pass's (RULE_AGING, a steady look only)."""
+        return []
+
     def _aging_pass(self) -> List[str]:
         """Ages (RULE_AGING, aging.py), on a steady look only (the same party as the last, the clock
         on by no more than NATURAL_JUMP: not a game being loaded): a starting age for each member
@@ -2264,7 +2328,7 @@ class RavDiceLog(dicelog.DiceLog):
             creature = gd.combatant_creature(owner)
             if creature is not None:
                 self._aging_writable([creature])
-                out += [f"{self._name(caster)} gives Hasted to {self._name(owner)}"] + aging.hasted(gd, creature)
+                out += aging.hasted(gd, creature)  # (effect_changes has said who gives Hasted to whom)
         return out
 
 

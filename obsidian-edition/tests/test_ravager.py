@@ -66,7 +66,8 @@ class TableTests(unittest.TestCase):
                             "pp_hand", "shinobi_mage", "psp_use", "psp_can_use", "psp_failed", "psp_defence", "psp_keep",
                             "psp_can_keep", "hit_die", "hit_gain", "max_psp", "hit_round", "kit_cast_level", "kit_cure", "avenger_cause_area",
                             "avenger_cause_one",
-                            "cr_die", "cr_psp_wis", "cr_psp", "shinobi_cast_level", "shinobi_level_up", "poison_hit", "arrow_plus"}
+                            "cr_die", "cr_psp_wis", "cr_psp", "shinobi_cast_level", "shinobi_level_up", "poison_hit", "arrow_plus",
+                            "lock_site", "shots_left", "roster_delete", "gladiator_armour", "ai_wall", "kreen_claws"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)

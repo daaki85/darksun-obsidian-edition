@@ -59,6 +59,20 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager (the port audit's rest)**
+- Shattered Lands' fixes of the game's own bugs that the sequel shares, carried over: a character's most PSP from
+  its own CON, INT and WIS; the computer's walls cast across the line of fire; a party thri-kreen's claws and bite
+  edged; the gladiator's armour optimisation only with armour on; an archer's pointer after a shot; the roster's
+  DELETE with the list scrolled; Slay Living's description; CHOOSE A SPELL's grid past 15 spells
+  ([GAME-BUGS](obsidian-edition/GAME-BUGS.md#shattered-lands-fixes-in-the-sequel)).
+- A lock a thief failed is out of reach there until the thief gains a level, as in Shattered Lands.
+
+**New: the dice log in Wake of the Ravager** says when an effect starts and ends, a member's PSP going down or
+back up, and an ability score changing, as in Shattered Lands.
+
+**Dev**: DSCLOG2's LOCK_SITE, GL_ARMOUR, AI_WALL, KREEN_CLAWS (sites 241-244) and PSP_SCORES; header +2114 to
++2122; `test_ravgamebugs.py`, `test_ravlocks.py`; `ravaudit.py`, `ravitems.py --bare/--dress`.
+
 **New: Wake of the Ravager's kit PSP costs, hit dice and the Battle Mage's casting after a hit**
 - A party taken to the sequel now has there its psionicist kits' PSP costs (a Mind Bender's telepathy 2
   less and psychokinesis 2 more, a Kineticist's the other way, a Titan Mind's, a Wasteland Seer's by the

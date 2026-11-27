@@ -109,6 +109,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `qsave.py SLOT [NAME] \| load \| state` | ask DSCLOG for a save by the game's own routine (SAVE_REQ, the header's +1886: dsloader/quicksave.py), as the Loader's quick save does, and say what came of it and how long it took (seconds of this machine's clock,... |
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
+| `ravaudit.py` | DSCLOG2's words of the port audit's rest in the running sequel ($WORK/rav.pid): LOCK_BARRED (the tail's, its offset at the header's +2114: the locks each member failed at its thief level now, as the Loader wrote... |
 | `ravburst.sh NAME SECONDS [X Y W H]` | a burst of window grabs of the running Wake of the Ravager ($WORK/rav.pid's DOSBox), as fast as `import` goes (about 15 a second), into $WORK/burst/NAME-NNN.png, then a sheet of up to 24 of them, evenly spaced,... |
 | `ravclick.py X Y [left\|right\|none] [PID]` | Wake of the Ravager's click.py: moves the pointer to game pixel X,Y (320x200) by relative moves until the game's own pointer (DS:A109h x, A10Bh y; |
 | `ravcreation.py [ROLLS] [RULES] [PID]` | Wake of the Ravager's creation screen checked, the die pressed ROLLS times (default 20; |
