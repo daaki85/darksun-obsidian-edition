@@ -140,8 +140,8 @@ must restore it in `tearDown` or they leak into each other (C6's point). The cod
 `self`, so `self.layout.ITEM_PLUS` in place of `game.ITEM_PLUS` turns the rebinding into a
 parameter, and SL and the sequel can run side by side in one process (the tests too). It can be done
 incrementally, one module at a time, starting with the ones apply_layout names by hand, keeping
-`apply_layout` for what is left until it's empty. **Needs the owner's go-ahead**: it touches
-nearly every Loader module and every open thread's work.
+`apply_layout` for what is left until it's empty. **Queued (2026-11-27): to start once the port's
+open PRs (#218 to #232) are merged**, since it touches nearly every module they edit.
 
 **S2. `RavDiceLog` re-lists `DiceLog`'s pass.** `RavDiceLog._after_rolls` is a hand-kept fork of
 the 55-line pass, with its own order (the sequel syncs the journal *after* the quick save, though
