@@ -63,9 +63,9 @@ Fixes went on the open PR whose subject they belong to, so they merge with it:
    are a sentence and a link.*
 2. **FEATURES' "Taking the party to Wake of the Ravager" is 230 lines in 27 bullets** and covers the
    whole port (rules, screens, kits, levels, weapon traits, the engine), not the party transfer its
-   heading names. FEATURES is 1,888 lines. *Proposed, not done (a structural change for the user):*
-   a player's page of its own, `RAVAGER.md` (starting it, the party transfer, what the mod does
-   there, what is missing), with FEATURES keeping a paragraph and a link, and the manual a page.
+   heading names. FEATURES is 1,888 lines. *Done on #234:* a player's page of its own, `RAVAGER.md`
+   (starting it, the party transfer, the mod there), with FEATURES keeping a paragraph and a link,
+   and the manual a page.
 3. **CHANGELOG.md is 2,813 lines**; PR #95 and older (2.18.0 and before) could go to the archive at
    the next release, as #73 and older did.
 
@@ -122,7 +122,7 @@ newest is from 2026-11-19.
    but they are a developer's gallery left out of the zip.
 3. **Bloat**: 3.2, 3.3 above.
 4. **Inconsistency**: macOS (1.4), the button's name (1.5), Crusader (1.2).
-5. **Clarity and reorganisation**: 3.2 (`RAVAGER.md`).
+5. **Clarity and reorganisation**: 3.2 (`RAVAGER.md`, #234).
 6. **Patch notes**: PATCH-NOTES (with #226) has every user-visible change of #146-#232 checked by
    subject (Shinobi spells, weapon traits, Poisoner, spell arrows, outfits and their colours, the
    creation figure, PSP costs, hit dice, Fine Bow, Spirit Caller, levels to 30th); `patch-notes.html`
@@ -142,8 +142,8 @@ newest is from 2026-11-19.
 lines were; they are added. Still missing: retaken figure and Loader pictures, and a CHANGELOG line for
 #217.
 
-**Are items where they logically belong?** Mostly. The sequel's material in FEATURES has outgrown
-the subsection it sits in (3.2).
+**Are items where they logically belong?** Mostly. The sequel's material in FEATURES had outgrown
+the subsection it sat in; it has a page of its own now (3.2, #234).
 
 ## Not verified
 
