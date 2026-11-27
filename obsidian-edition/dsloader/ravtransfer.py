@@ -566,6 +566,8 @@ def load_sequel(folder: str) -> Sequel:
         pairs = counterparts(f.read())
     with open(os.path.join(folder, "OBJEX.GFF"), "rb") as f:
         objects = read_gff(f.read())
+    from . import ravager
+    objects.update(ravager.retyped_objects(objects))  # (as the Loader's copy has them: Dragonsbane metal)
     return Sequel(pairs, objects)
 
 
