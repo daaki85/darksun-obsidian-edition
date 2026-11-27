@@ -1201,6 +1201,10 @@ PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
 # Turn Undead's drawn). The refusal's words go in PICK POCKETS' PICK_TEXT.
 AR_ON, AR_SEQ, AR_REPLY, AR_WHO, AR_ROW = 2098, 2100, 2102, 2104, 2106
 AR_SHOWN, AR_LATE, AR_DRAWN = 2108, 2110, 2112
+# DSCLOG2's HDR_LEN (+30, glob's fourth word, 0 in every helper before it): its header's length. The header has no
+# version and its signature is still DSCLOGR1, so a word past +2012 is written only where HDR_LEN reaches past it
+# (header_holds): an older helper may have code there.
+HDR_LEN = 30
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -2036,6 +2040,13 @@ class RavDiceLog(dicelog.DiceLog):
             self._arrows_objects = ravarrows.objects_ready()
         return self._arrows_objects
 
+    def header_holds(self, end: int) -> bool:
+        """Whether DSCLOG2's header reaches END (its HDR_LEN, +30, at END or more): the words below END are the
+        helper's header's, safe to write. An older helper's HDR_LEN is 0: nothing past +2012 is written to it."""
+        if self.tsr_hdr is None:
+            return False
+        return struct.unpack("<H", self.guest.read(self.tsr_hdr + HDR_LEN, 2))[0] >= end
+
     def _answer_arrows(self) -> List[str]:
         """Shattered Lands' spell arrows made (DiceLog._answer_use's ARROWS_BY: spellarrows.SpellArrows.make), on
         DSCLOG2's SPELL ARROWS: ARROWS_ON (its header's +2098) set while the arrows' objects are there
@@ -2047,8 +2058,8 @@ class RavDiceLog(dicelog.DiceLog):
             return []
         hdr = self.tsr_hdr
         text_off, = struct.unpack("<H", self.guest.read(hdr + PP_TEXT_OFF, 2))
-        if not text_off:
-            return []  # (a helper before PICK POCKETS)
+        if not text_off or not self.header_holds(AR_ROW + 2):
+            return []  # (a helper before PICK POCKETS, or before SPELL ARROWS: its HDR_LEN short of them)
         base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
         want = [(hdr + AR_ON, 2), (hdr + AR_REPLY, 2), (base + text_off, dicelog.PICK_SIZE)]
         self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]

@@ -134,8 +134,11 @@ ring_off dw FAR_RING            ; +16  offset of the ring in RING_SEG's segment 
 stub_off dw stub                ; +18  offset of STUB in this segment
 hdr_off  dw hdr                 ; +20  offset of this header in this segment
 seed_off dw SEED                ; +22  DS offset of the game's 32-bit rand seed
-glob     dw TARGET, 0, 0, 0     ; +24  DS offsets of 4 game words to capture (0 = none): the attack's
+glob     dw TARGET, 0, 0        ; +24  DS offsets of 3 game words to capture (0 = none): the attack's
                                 ;      target first, as the Loader's dice log has DSCLOG's (TARGET_GLOBAL)
+hdr_len  dw hdr_end - hdr       ; +30  the header's length: the Loader writes no word of it past +2012 at or
+                                ;      beyond this (an older helper has a 0 here, the fourth capture's
+                                ;      none: its code may lie where a later header's words are)
 nfilt    dw NFILT               ; +32  number of filters in use (0 = record every call)
 filt:                           ; +34  DSCLOG's filters: the calling code a roll starts with
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0x6B,0xC0, 0     ; imul eax,eax,imm8
@@ -368,6 +371,7 @@ arrows_row   dw 0               ; +2106 ... the touch spell's place in ARROW_SPE
 arrows_shown dw 0               ; +2108 arrows buttons shown on the USE screen (PP_SHOW, counted) ...
 arrows_late  dw 0               ; +2110 ... and arrows asked for the Loader didn't answer in time (ARROWS_ASK)
 extras_drawn dw 0               ; +2112 buttons drawn beside Turn Undead's (PP_EXTRA_DRAW, counted)
+hdr_end:                        ; +2114 (HDR_LEN: the header's end; new words go above this line)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -490,8 +494,10 @@ record:
         xor bx, bx
 .glob:
         push bx
-        mov bx, [cs:glob+bx]
         xor cx, cx
+        cmp bx, 6               ; (the fourth word: HDR_LEN, no game word's offset)
+        je .noglob
+        mov bx, [cs:glob+bx]
         or bx, bx
         jz .noglob
         mov cx, [bx]            ; game DS

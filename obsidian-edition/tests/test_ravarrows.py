@@ -412,6 +412,9 @@ class HelperTests(unittest.TestCase):
                          ("extras_drawn", ravlog.AR_DRAWN)):
             self.assertEqual(self.sym[name] - hdr, at, name)
         self.assertEqual(self.sym["fine_hits"] - hdr, 2096)
+        hdr_len = struct.unpack_from("<H", self.image, hdr + ravlog.HDR_LEN)[0]  # (HDR_LEN: the header's end)
+        self.assertEqual(hdr_len, self.sym["hdr_end"] - hdr)
+        self.assertGreaterEqual(hdr_len, ravlog.AR_DRAWN + 2)
         self.assertLessEqual(ravlog.AR_DRAWN + 2, 2200)  # (the header's room up to +2199)
         table = self.sym["site_table"]
         word = lambda n: struct.unpack_from("<H", self.image, table + 2 * n)[0]
