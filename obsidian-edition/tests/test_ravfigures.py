@@ -231,7 +231,7 @@ class GameFileTests(unittest.TestCase):
         struct.pack_into("<hh", custom, 2, 5, 7)
         self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: bytes(custom)}))
 
-    def test_cushions_and_braziers_keep_the_upper_art_and_floor_line(self):
+    def test_partial_squash_keeps_the_upper_art_and_floor_line(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
         package = ravfigures.object_chunks(stock)
@@ -246,6 +246,8 @@ class GameFileTests(unittest.TestCase):
                 9: (0, 2, 3, 5, 6, 8),
                 16: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15),
                 22: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21),
+                43: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24,
+                     26, 27, 29, 30, 32, 33, 35, 36, 38, 39, 41, 42),
             }[depth]
             rise = depth - len(offsets)
             self.assertEqual(actual[:rise], [[None] * width] * rise, pic)

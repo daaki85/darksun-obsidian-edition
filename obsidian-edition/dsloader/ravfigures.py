@@ -60,8 +60,8 @@ SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 
 OPENABLE = (631, 1112, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
-# Only these bottom rows take the Tyr scale. Keep the cushion faces and exposed smoke intact.
-BASE_ROWS = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22}
+# Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.
+BASE_ROWS = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
 # The four placement fields are stock object, x, y and the new y. Other placements
