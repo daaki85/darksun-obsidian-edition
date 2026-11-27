@@ -19,7 +19,7 @@ Each release also has these notes as a web page, [`patch-notes.html`](https://gi
 - **Quicker play.** Keys to choose a target, loot a body and sell plain gear, quick saves and autosaves, 40 save slots, a faster default speed, and no copy protection.
 - **Bugs fixed.** The main fixes are under [Bug Fixes](#bug-fixes); every one, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
 - **Wake of the Ravager too.** The sequel starts from the Loader with most of the mod, and your party can go on into it ([Wake of the Ravager](#wake-of-the-ravager)).
-- **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
+- **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. Shattered Lands' own files are never touched, and saves made with the original game load; Wake of the Ravager's saves are converted for the mod, a copy of each kept (see [Your Saved Games](#your-saved-games)).
 
 Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong against its own manual or AD&D: these are always on, with no switch. **[Changed]** and **[New]** are the mod's own choices. Every change is told in full in [Features and rules](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md), which the links below go to.
 
@@ -194,6 +194,9 @@ The sequel, started from the Loader when it is installed (GOG sells it with Shat
 - **[New]** The six new wizard spells, learnt and cast as in Shattered Lands, their spellbooks sold by Notaku in Tyr.
 - **[New]** Starting gear fitted to each class and kit, a warrior's weapon a +1 of its first weapon spec, and the sequel's own party fitted to the rules.
 - **[New]** Shadows, dust, see-through figures and shining magic items, as in Shattered Lands.
+- **[New]** **The kits, nearly all whole**: their spells and powers too (casting levels, cures, the spells each knows, PSP costs, hit dice), the Shinobi's own wizard spells, the Poisoner's poison on each hand's first hit, and the Spellarcher's spell arrows made on the USE screen (with Shattered Lands installed too, for their pictures); the Scholar's extra spells still to come ([which kits work there](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md#in-wake-of-the-ravager)).
+- **[New]** **Weapon traits** there too: the lotulis's and double spear's second foe, the trikal's trip and its reach of two squares; the dice log says when an effect starts and ends, PSP spent and regained, and an ability score changing; a lock a thief failed stays shut to it until it gains a level.
+- **[Changed]** **The sequel's roster and saves are converted** for the mod at each start from the Loader, each file kept first as `NAME.42H`; converted, they load only from the Loader until turned back ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 - **[Fixed]** The sequel's items weigh what they do in Shattered Lands *(71 of its 102 kinds weighed nothing)*, so two heavy weapons can't be held together and pockets go by weight.
 
 ## Bug Fixes
@@ -252,5 +255,7 @@ The main fixes; every bug of the original game the mod mends, with what the game
 **You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save.
 
 **A save isn't for an older version** where a release changed what a save holds: 2.13.0, 2.13.2, 2.14.0, 2.15.0 and 2.18.0 did, so a save made with one of them or later doesn't load in the versions before it. Older saves load in newer versions as they are.
+
+**Wake of the Ravager's saves are converted.** Each start of the sequel from the Loader makes its roster and saves hold the Loader's longer character sheet, in the sequel's folder, keeping each file first as `NAME.42H` (a later conversion of the same file replaces that copy). The sequel started by itself can't read them; to play it without the Loader, or before uninstalling, turn them back with the Loader ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. The game's people and chests have the new gear only in areas the save hasn't been to. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits. More in the README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#compatibility-with-older-saves).
