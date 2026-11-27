@@ -299,7 +299,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/metal-great-sword.png) | two-handed sword | metal | Melkor (Gedron) | — | **new**: the two-handed sword, in metal |
 | ![](docs/items/metal-lotulis.png) | lotulis | metal | Melkor (Gedron) | — | **new**: the lotulis, in metal |
 | ![](docs/items/obsidian-lotulis.png) | lotulis | obsidian | Melkor (Gedron) | — | **new**: the lotulis, in obsidian: a fire cleric's too |
-| ![](docs/items/bone-great-sword.png) | two-handed sword | bone | Melkor (Gedron) | — | **new**: the two-handed sword, in bone: a water cleric's too |
+| ![](docs/items/bone-great-sword.png) | two-handed sword | bone | Melkor (Gedron) | — | **new**: the two-handed sword, in bone: a water cleric's too; 11 lb, lighter than the obsidian and metal ones' 15, as the game's other bone weapons are (in Wake of the Ravager too) |
 | ![](docs/items/metal-javelin.png) | javelin | metal | — | the slave pens' weapon rack | **new**: the javelin, in metal |
 | ![](docs/items/darts.png) | darts | wood | Bowyer | Silt Runner (in place of the sling), the White Sand Outlaws (Slave Hunters) | **new**, from Wake of the Ravager: 1d3 (1d2 against a large target), thrown from the missile slot, two a round |
 

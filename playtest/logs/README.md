@@ -236,11 +236,15 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-grouped-furniture.md) | Forest dining sets, Alliance vase and Mines 3 throne, DOS region reads and built map comparisons |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
+| [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
 
 ## files/
 
 | File | What it is |
 |---|---|
+| [2026-11-27-weapon-materials-save.py](files/2026-11-27-weapon-materials-save.py) | [Weapon materials](2026-11-27-ravager-weapon-materials.md): an SL save with test weapons written into party backpack items (SAVE 7; the list links and slot kept), `SRC DST`; its `-items.py` walks each member's items |
+| [2026-11-27-weapon-materials-roster.py](files/2026-11-27-weapon-materials-roster.py) | [Weapon materials](2026-11-27-ravager-weapon-materials.md): a sequel roster's transferred items, each one's type, kind and material (`RAVFOLDER DOS [REPO]`: another checkout's code for a control) |
+| [2026-11-27-dsclog2-words.py](files/2026-11-27-dsclog2-words.py) | DSCLOG2's variables by name in the running sequel (`SEG NAME...`: the helper's segment from `ravtail.py`; the symbols from a build of the tree's dsclog2.asm), as `restrict_count`, `kit_refused` |
 | [2026-11-26-hmagrab.asm](files/2026-11-26-hmagrab.asm) | [The HMA taken](2026-11-26-ravager-hma.md): a test program that asks XMS for the HMA, turns A20 on and writes a marker at FFFF:0010, run before DSCLOG2 in a throwaway config |
 | [2026-11-08-drawing-savings-runs.sh](files/2026-11-08-drawing-savings-runs.sh) | The before-and-after `framerate.py` runs of [the faster drawing](2026-11-08-drawing-savings.md) |
 | [2026-11-08-steady-pace-runs.sh](files/2026-11-08-steady-pace-runs.sh) | The steady pace's `framerate.py` runs at each cycles setting ([HISTORY](../HISTORY.md#frame-rate-measurements)) |

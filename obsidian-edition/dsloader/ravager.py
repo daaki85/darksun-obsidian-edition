@@ -161,7 +161,10 @@ NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
 # names.OWN (so the mod's Short Sword, SL's 144h, is 258).
 NAMES_GAME, NAMES_ROOM, NAME_KEPT = 256, 160, 16
 TSR_NAMES_OFF, TSR_NAMES_COUNT = 196, 198
-KEEPSAKE_NAMES_FIRST = NAMES_GAME + 50  # (after the mod's, names.EXTRA of them: the party transfer's keepsakes, ravitems)
+# The party transfer's keepsakes' names (ravitems) after the mod's, names.EXTRA (56) of them: at 50 they took
+# the places of the last six, the Ravager weapons' (Great Sword, Lotulis, Double Spear, Trikal, Javelin, Darts),
+# so a Bone Great Sword +1 showed "Long Sword", the first keepsake's (2026-11-27).
+KEEPSAKE_NAMES_FIRST = NAMES_GAME + 56
 
 
 def mod_name(sl_entry: int) -> int:
@@ -1531,13 +1534,27 @@ def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
 
 # The item types: OBJEX.GFF's ALL 4, the sequel's 102 types (15 bytes each: ravlog.TYPE_FIELDS), read into
 # memory at the chunk's own length (a copy with 3 more had 105 there, the item names' block after them,
-# 2026-11-22: playtest/logs/2026-11-22-ravager-item-types.md). The copy adds the mod's 33 (Shattered Lands'
-# 115-147, npcitems.TYPES, DSCLOG's EXTRA_TYPES) after them, as MOD_TYPES on: the party transfer's items
-# of those types take 102 on (mod_type).
+# 2026-11-22: playtest/logs/2026-11-22-ravager-item-types.md). The copy adds the mod's 44 (Shattered Lands'
+# 115-158, npcitems.TYPES, DSCLOG's EXTRA_TYPES) after them, as MOD_TYPES on (102-145): the party transfer's
+# items of those types take 102 on (mod_type), but five of the plain Ravager weapons backported (SL 148-152),
+# which go back as the sequel's own (sequel_weapon_type): their places, 135-139, are kept only to number the
+# rest as SL's. SL's darts (153) keep theirs (140): the sequel's two darts are of no material (38) and of stone
+# (43), SL's of wood (2026-11-27). The metal great sword, lotulis and javelin and the obsidian lotulis and bone great sword (SL
+# 154-158, 141-145) keep their own: as the sequel's own kind they lost their material (a water cleric's Bone
+# Great Sword +1 the sequel's obsidian sword, which a water cleric can't wield; 2026-11-27).
 TYPES_CHUNK = ("ALL ", 4)
 TYPE_SIZE = 15
 GAME_TYPES = 102
-MOD_TYPES = 33  # (npcitems.TYPES)
+MOD_TYPES = 44  # (npcitems.TYPES)
+# ... and after them Shattered Lands' own weapon types of a kind and material the sequel has no type of (the
+# user's, 2026-11-27: every weapon kind and material of SL's in the sequel too), each SL's record (IT1R's, the
+# Loader's fixes made: itemtables): a party transfer's weapons of that kind and material take them
+# (ravitems.sequel_type). The sequel has bone long swords nowhere (its long swords wood, obsidian and metal):
+# SL's Long Sword (type 81: 1d8/1d12, 2 lb, bone; SL's Swiftbite, Hornblade and Draketooth of other bone
+# types take it too).
+SL_EXTRA_TYPES = (81,)
+SL_EXTRA_RECORDS = (bytes.fromhex("010030001400fa00010501010801000078160001"),)
+EXTRA_FIRST = GAME_TYPES + MOD_TYPES  # (146)
 
 
 def wotr_type(sl: bytes) -> bytes:
@@ -1558,7 +1575,7 @@ def wotr_type(sl: bytes) -> bytes:
 # Toothed Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka;
 # Bow; Sling; Staff Sling; and SL's six kinds from the sequel: the Twohand Sword and the Crystal sword, both
 # two-handed 1d10; Lotulis; Double Spear; Trikal; Javelin; the two Darts), and the mod's (mod_type: SL's
-# 115-147, specialize.KIND_OF_TYPE's; none of the six, whose SL types are past them: sequel_weapon_type).
+# 115-158, specialize.KIND_OF_TYPE's; five plain ones go back as the sequel's own: sequel_weapon_type).
 # ravlog's layout makes it specialize.KIND_OF_TYPE while the sequel is attached.
 _RAV_OWN_KINDS = {
     "long sword": (16, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
@@ -1575,6 +1592,8 @@ def rav_kinds() -> Dict[int, int]:
     for kind, types in specialize._TYPES.items():  # (SL's, whatever ravlog's layout has made KIND_OF_TYPE)
         out.update({mod_type(t): specialize.KINDS.index(kind) for t in types
                     if game.GAME_TYPES <= t < game.GAME_TYPES + MOD_TYPES})
+        out.update({EXTRA_FIRST + i: specialize.KINDS.index(kind) for i, t in enumerate(SL_EXTRA_TYPES)
+                    if t in types})
     return out
 
 
@@ -1595,17 +1614,20 @@ def rav_spec_kinds() -> Dict[int, int]:
     return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
-# Shattered Lands' types past the mod's first 33 (SL_WEAPON_TYPES' kinds: the sequel's own weapons
-# backported, their metal and magic ones): in the sequel the sequel's own type of that weapon, by its
-# kind (specialize.KINDS' two-handed sword, lotulis, double spear, trikal, javelin, darts)
-SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59, 21: 43}
+# Shattered Lands' plain Ravager weapons backported (game.TWOHAND_SWORD_TYPE to JAVELIN_TYPE, 148-152): in
+# the sequel the sequel's own type of that weapon, by its kind (specialize.KINDS' two-handed sword, lotulis,
+# double spear, trikal, javelin), of the same material. SL's darts (153, wood) are the mod's type (140), as the
+# metal, obsidian and bone ones (154-158): the sequel has no wooden darts (its 38 of no material, 43 stone),
+# so the darts kept their kind but not their material (2026-11-27).
+SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59}
+SEQUEL_OWN_WEAPONS = range(game.TWOHAND_SWORD_TYPE, game.JAVELIN_TYPE + 1)
 
 
 def sequel_weapon_type(sl_type: int) -> Optional[int]:
-    """The sequel's own type for SL_TYPE when it is one of the Ravager weapons backported to
-    Shattered Lands (past MOD_TYPES), else None."""
+    """The sequel's own type for SL_TYPE when it is one of the five plain Ravager weapons backported to
+    Shattered Lands that the sequel has of the same material (SEQUEL_OWN_WEAPONS), else None."""
     from . import specialize
-    if sl_type < game.GAME_TYPES + MOD_TYPES:
+    if sl_type not in SEQUEL_OWN_WEAPONS:
         return None
     return SEQUEL_WEAPON_OF_KIND.get(specialize.KIND_OF_TYPE.get(sl_type, -1))
 
@@ -1679,6 +1701,30 @@ TYPE_RANGE = 6
 RAV_RANGES = {39: (2, 1)}
 
 
+# The sequel's club, toothed club, bow and sling as Shattered Lands' (a type's +4, SL's +8: the material's low
+# nibble, 40h none, 80h no weaker material's to-hit): SSI's sequel made them of no material (40h), where SL's
+# club and bow are wood (80h) and its sling leather (85h). By SL's rules (DSCLOG2's SPHERE_ALLOWS) an earth or
+# water cleric, druid or ranger may use a wooden club or bow and a leather sling, but nothing of no material,
+# so in the sequel they were refused them (2026-11-27). Each: (SSI's byte, SL's).
+TYPE_MATERIAL = 4
+RAV_MATERIALS = {29: (0x40, 0x80), 89: (0xC0, 0x80), 18: (0x40, 0x80), 93: (0x40, 0x85)}
+
+
+def materialled(record: bytes, kind: int) -> bytes:
+    """The sequel's type record RECORD of type KIND with SL's material (RAV_MATERIALS); as it is if KIND has
+    none or RECORD's byte isn't SSI's."""
+    if kind not in RAV_MATERIALS or len(record) != TYPE_SIZE or record[TYPE_MATERIAL] != RAV_MATERIALS[kind][0]:
+        return record
+    out = bytearray(record)
+    out[TYPE_MATERIAL] = RAV_MATERIALS[kind][1]
+    return bytes(out)
+
+
+def materialled_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4) with RAV_MATERIALS."""
+    return b"".join(materialled(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
+
+
 def ranged(record: bytes, kind: int) -> bytes:
     """The sequel's type record RECORD of type KIND with the Loader's melee range (RAV_RANGES); as it is if
     KIND has none or RECORD's byte isn't SSI's."""
@@ -1709,9 +1755,11 @@ def _air_dagger(record: bytes, kind: int) -> bytes:
     return bytes(out)
 
 
-def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True, ranges: bool = False) -> gff.Chunks:
+def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True, ranges: bool = False,
+                     materials: bool = False) -> gff.Chunks:
     """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
-    (with WEIGHTS) or RAV_RANGES (with RANGES) changes, with the Loader's weight and range: they are kept in
+    (with WEIGHTS), RAV_RANGES (with RANGES) or RAV_MATERIALS (with MATERIALS) changes, with the Loader's
+    weight, range and material: they are kept in
     step with ALL 4, which the game's checks read. AIR (the mod's types on: mod_types_table) gives the
     copies of the daggers the air cleric's bit too, as ALL 4."""
     from . import dataitems
@@ -1726,6 +1774,7 @@ def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True,
         def fixed(r):
             data = _weighted_copy(r.data, r.number) if weights else r.data
             data = ranged(data, r.number) if ranges else data
+            data = materialled(data, r.number) if materials else data
             return r._replace(data=_air_dagger(data, r.number) if air else data)
         new = [fixed(r) if r.kind == TYPE_KIND_RECORD and r.number < GAME_TYPES else r for r in recs]
         if new != recs:
@@ -1741,14 +1790,15 @@ def mod_types_table(types: bytes) -> bytes:
     for t in AIR_DAGGER_TYPES:
         if (t + 1) * TYPE_SIZE <= len(out):
             out[t * TYPE_SIZE + TYPE_CLASSES] |= AIR_CLERIC_BIT
-    return bytes(out) + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES])
+    return bytes(out) + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES] + SL_EXTRA_RECORDS)
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
-    double spear's range 1 (RAV_RANGES, unless "melee_range" is), and the
+    double spear's range 1 (RAV_RANGES, unless "melee_range" is), the club's, bow's and sling's material
+    SL's (RAV_MATERIALS, unless "materials" is), and the
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
@@ -1769,10 +1819,13 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     ranges = "melee_range" not in skip and ranged_table(types) != types
     if ranges:
         types = ranged_table(types)
+    materials = "materials" not in skip and materialled_table(types) != types
+    if materials:
+        types = materialled_table(types)
     if "mod_types" not in skip:
         new[TYPES_CHUNK] = mod_types_table(types)
         done.append("mod_types")
-    elif weights or ranges:
+    elif weights or ranges or materials:
         new[TYPES_CHUNK] = types
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
@@ -1789,9 +1842,10 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if made:
             new.update(made)
             done.append(ravarrows.SKIP)
-    if weights or ranges:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
-        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip, weights=weights, ranges=ranges))
-        done += ["weights"] * weights + ["melee_range"] * ranges
+    if weights or ranges or materials:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
+        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip, weights=weights, ranges=ranges,
+                                    materials=materials))
+        done += ["weights"] * weights + ["melee_range"] * ranges + ["materials"] * materials
     if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
         from . import ravshine
         shine = ravshine.chunks(chunks)

@@ -361,7 +361,7 @@ class ItemTypeTests(unittest.TestCase):
         data = _gff({("ALL ", 4): bytes(range(102)) * 15, ("ALL ", 5): b"names", ("OJFF", 1): b"o" * 16})
         out, done = ravager.objects_fixed(data, {"weights"})
         got = gff.read_gff(out)
-        self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], 135, b"names"))
+        self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES), b"names"))
         self.assertEqual(got[("ALL ", 4)][102 * 15:103 * 15], ravager.wotr_type(npcitems.TYPES[0]))
         self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
         with self.assertRaises(ravager.RavagerError):  # (a table whose weights aren't SSI's)
@@ -427,7 +427,7 @@ class ItemTypeTests(unittest.TestCase):
         self.assertEqual(out[1].data[2], 40)
 
     def test_mod_kinds_in_dsclog2(self):
-        """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 33 (SL's 115-147 as
+        """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 44 (SL's 115-158 as
         mod_type numbers them), each SL's kind (specialize.KIND_OF_TYPE) + 1: its class restrictions,
         polearm reach and large dice take them in (KIND_TYPES)."""
         from dsloader import specialize
@@ -442,10 +442,34 @@ class ItemTypeTests(unittest.TestCase):
             if not code.startswith("db "):
                 break
             rows += [int(n) for n in code[3:].split(",")]
-        self.assertEqual(len(rows), ravager.GAME_TYPES + ravager.MOD_TYPES)
+        self.assertEqual(len(rows), ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES))
         self.assertIn("KIND_TYPES  equ %d" % len(rows), asm)
         for sl in range(game.GAME_TYPES, game.GAME_TYPES + ravager.MOD_TYPES):
             self.assertEqual(rows[ravager.mod_type(sl)], specialize.KIND_OF_TYPE.get(sl, -1) + 1, sl)
+        for i, sl in enumerate(ravager.SL_EXTRA_TYPES):  # (SL's own weapon types the sequel lacks)
+            self.assertEqual(rows[ravager.EXTRA_FIRST + i], specialize.KIND_OF_TYPE[sl] + 1, sl)
+        self.assertEqual(ravager.rav_kinds()[ravager.EXTRA_FIRST], specialize.KINDS.index("long sword"))
+
+    def test_materials(self):
+        """The sequel's club, toothed club, bow and sling of SL's materials (wood, wood, wood, leather, with the
+        80h that spares them a weaker material's to-hit), in ALL 4 and the objects' copies; another byte left."""
+        table = bytearray(ravager.GAME_TYPES * ravager.TYPE_SIZE)
+        for t, (ssi, _) in ravager.RAV_MATERIALS.items():
+            table[t * ravager.TYPE_SIZE + ravager.TYPE_MATERIAL] = ssi
+        table[85 * ravager.TYPE_SIZE + ravager.TYPE_MATERIAL] = 0x40
+        got = ravager.materialled_table(bytes(table))
+        self.assertEqual([got[t * 15 + 4] for t in (29, 89, 18, 93, 85)], [0x80, 0x80, 0x80, 0x85, 0x40])
+        self.assertEqual(ravager.materialled_table(got), got)
+
+    def test_extra_records_are_sls(self):
+        """SL_EXTRA_RECORDS hold SL's types SL_EXTRA_TYPES' records (the bone long sword's: bone, 2 lb, a long
+        sword of SL's kinds)."""
+        from dsloader import restrict, specialize
+        for t, rec in zip(ravager.SL_EXTRA_TYPES, ravager.SL_EXTRA_RECORDS):
+            self.assertEqual(len(rec), 20)
+            self.assertEqual(specialize.KINDS[specialize.KIND_OF_TYPE[t]], "long sword")
+            self.assertEqual(restrict.material(rec), restrict.BONE)
+            self.assertEqual(struct.unpack_from("<H", rec, 4)[0], 20)
 
 
 class LayoutTests(unittest.TestCase):
@@ -524,11 +548,13 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(ravager.ranged_table(ravager.weighted_table(own[ravager.TYPES_CHUNK])))  # (weighed, the double spear's range 1; the daggers the air clerics' too)
+            mended = bytearray(ravager.materialled_table(ravager.ranged_table(ravager.weighted_table(
+                own[ravager.TYPES_CHUNK]))))  # (weighed, the double spear's range 1, the club's, bow's and sling's
+            # material SL's; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
-            self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
+            self.assertEqual(len(types), (ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES)) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
