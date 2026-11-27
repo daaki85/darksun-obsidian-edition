@@ -779,6 +779,11 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
   rolls a new character).
+- **The full-length picture** (top left) is the inventory's painting for the classes picked
+  (logs/2026-11-27-creation-inventory-pictures.md): DSCLOG's CREATION_PORTRAIT gives the game the
+  inventory's key when it draws it (a race or portrait click, the screen opening), and FIG_DRAWS draws it
+  again after a class click; with no class picked it is the game's own. The sequel's the same (DSCLOG2's
+  CR_FIGURE, CR_DRAW from KP_CLASS and CR_HP). Crop a shot at `110x120+0+0`.
 - **The figure at the top** wears the class's outfit (logs/2026-11-27-creation-figure-outfits.md):
   crop a shot at `60x45+130+12` and scale it 400% to see it; it changes at each class, race or
   portrait click. Read the game's blob of the screen's figures with `creationfigure.Figures(gd)`
