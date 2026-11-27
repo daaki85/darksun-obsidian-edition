@@ -4,7 +4,7 @@
 
 All 20 shipped region files have been scanned. Eight passes have revised 140 pictures at 387 placements across 16 regions. The four regions with no new furniture squash are Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Tyr has a live spot check of Notaku’s stall and a chair. No region has completed every in-game check in the queue. The main remaining work is playing the changed rooms and their transitions, including the Mosaic bust puzzle, the Mines 3 tank destruction and the Cosmos ritual. Limbo objects still need tracing to the scenes that use them.
+Live checks cover Notaku’s stall and a chair in Tyr, and four busts and Fletch’s movable bookcase in Mosaic. All 20 regions still have open in-game checks. Mosaic’s remaining checks include three bust offerings and the mirror repair. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Freestanding shelves
 
@@ -52,9 +52,9 @@ The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rect
 
 - **Jann.** Around the Sultan, applying the Tyr scale to the whole cushion opened strips of sand between overlapping pillows. On the five thick cushion drawings, the embroidered tops now sit three or five pixels lower. Only the lower edge is compressed. The thin pillows and the Sultan’s own seat keep their original depth in the pile. The two baskets near Utella’s loom use the regular Tyr treatment.
 - **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s occupied rocker keeps all four poses from the figure redraw.
-- **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. The museum’s sixteen display positions form a puzzle. The data includes empty, damaged and dressed busts, plus separate bust objects in Limbo. The game asks the player to move Horace to another stand, remove Ellith and break Khildril. Keep the display heights pending a playthrough of those transitions.
+- **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. Eight active busts and eight corresponding displays share a common pedestal height. The [museum playtest](#live-check-in-the-mosaic-museum) confirms how four of the active busts change during the puzzle.
 
-The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. Direct in-game inspection of the revised rooms is still open.
+The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. The revised Jann and Giants rooms still need in-game inspection.
 
 The giant behind the stump stool is Gilad, object 214 at (500, 602). He also appears at the lower edge of the red-chair view. The earlier preview selected picture 2469’s frame 0, which the mod retains from the original game. For the same facing, the approved animation script selects frame 12. Both furniture builds match the approved picture and script byte for byte. The close-up below holds the furniture fixed to show the pose correction.
 
@@ -148,6 +148,16 @@ The left screenshot shows the approved stall in Shadow Square. In the right scre
 
 ![Notaku’s assembled stall and two newly lowered chairs in DOSBox](tyr-live.png)
 
+## Live check in the Mosaic museum
+
+The gold rectangle marks the museum on the full Mosaic map. The lower pair shows the same southern display rows from the same DOSBox camera before and after four puzzle interactions. In the lower row, Horace leaves an empty stand at the far left, Khildril breaks into pieces, and Horace takes Ellith’s place at the far right. In the upper row, Biblid holds the book from beneath Fletch’s movable bookcase.
+
+![Full Mosaic region and museum detail above matching DOSBox views of the busts before and after interaction](mosaic-museum-map.png)
+
+Keep the tested displays at their current height. The cream top shows where a bust can be placed, and the book remains visible against the front lip. Ellith’s pedestal moves down one 16-pixel map square when she comes off it. Horace then sits squarely on it in the lower position. The close-ups show both portable busts and the bookcase that already received the figure redraw. Tamind’s sheet, Finali’s hand mirror, Kaldumeir’s coins and the final mirror repair still need a playthrough. [Playtest log](../../playtest/logs/2026-11-27-ravager-mosaic-museum.md)
+
+![Horace detached, Ellith in the backpack, Khildril broken, Horace placed, the exposed book and Biblid holding it](mosaic-museum-states.png)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements, including repeats. The last column names the next review for that region.
@@ -164,7 +174,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
-| 03C Mosaic | 89 | 0 | 0 | Check movable bookcase and museum bust transitions in play |
+| 03C Mosaic | 89 | 0 | 0 | Check Tamind, Finali, Kaldumeir and the mirror repair. Four busts and the bookcase checked in play |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
@@ -173,6 +183,6 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |
 | 044 Cosmos | 86 | 0 | 0 | Check the elemental gates and artifact placement on the ritual statues in play |
 | 045 Under Tyr | 135 | 0 | 15 | Check loose stools and crates beside the patient cots in-game |
-| 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
+| 0FF Limbo | 690 | 0 | 0 | Mosaic busts traced to play. Trace other fixtures and actors including Snaggle |
 
 The [picture inventory](inventory.csv) records all eight furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.

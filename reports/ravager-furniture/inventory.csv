@@ -37,7 +37,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 634,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:2
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
-703,"Counters, stalls and attendants",Reviewed beside seated Fletch in the museum and retained at current scale,,032:1 03C:1
+703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
 785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
 787,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,scenery-and-miner.zip,037:1
 788,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,alternate-pose-continuity.zip,037:1
@@ -65,19 +65,19 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
 1377,Lava spires,Retain full terrain height along the lava edge,,03F:45
 1378,Lava spires,Retain full terrain height along the lava edge,,03F:47
-1477,"Seats, loom and restraints",Reviewed at current scale,1477-fletch-chair.zip,03C:1
+1477,"Seats, loom and restraints",Seen seated beside the movable bookcase in play. Retain figure redraw,1477-fletch-chair.zip,03C:1
 1479,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,03C:1
 1501,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
-1502,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
-1503,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
-1504,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1502,Mosaic bust and pedestal,Horace on his stand and empty stand seen in play. Retain current height,,03C:2
+1503,Mosaic bust and pedestal,Ellith on her stand and removed in play. Retain current height,,03C:1
+1504,Mosaic bust and pedestal,Biblid before the book was placed seen in play. Retain current height,,03C:1
 1506,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1507,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1508,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
 1509,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1510,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
-1511,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
-1512,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1511,Mosaic bust and pedestal,Khildril before breaking seen in play. Retain current height,,03C:1
+1512,Mosaic bust and pedestal,Khildril in pieces on his stand seen in play. Retain current height,,03C:1
 1617,"Seats, loom and restraints",Reviewed at current scale,1617-kovar.zip,043:1
 1716,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
 1717,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
@@ -117,11 +117,11 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2378,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
 2379,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
 2380,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
-2440,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
-2441,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
-2442,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,0FF:1
-2443,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
-2444,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+2440,Mosaic bust and pedestal,Book displayed on Biblid in play. Retain current height,,03C:1
+2441,Detached Mosaic bust,Ellith detached and placed in backpack in play. Retain bust scale,,0FF:1
+2442,Mosaic bust and pedestal,Horace on the destination stand in play. Script links objects 3220 and 3222. Retain current height,,0FF:1
+2443,Detached Mosaic bust,Horace detached then carried to Ellith’s stand in play. Retain bust scale,,0FF:1
+2444,Mosaic bust and pedestal,Empty stand appearance confirmed in play. Identical artwork also occurs in the empty frames of 1502 1503 and 2442,,03C:1
 2479,Miner at opening,Retain both redrawn frames and their contact with the tunnel,2479-miner.zip,039:2
 2510,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:2
 2511,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
