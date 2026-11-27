@@ -17,7 +17,8 @@ picture, the new one". The rest of each file is the player's own, as the game sh
 
 `python -m dsloader.ravfigures pack IMPORTED STOCK [SOURCE]` makes DATA from the catalogue's import
 (darksun-recompiled's tools/proto/import_catalogue.py, run on the stock files: IMPORTED its OUT_DIR, STOCK
-the game's folder). The one change from the catalogue's chunks: Notaku's combat drawings (CBMP 2409, Shattered
+the game's folder). It also lowers reviewed freestanding shelves from the stock file.
+One correction to the catalogue's chunks: Notaku's combat drawings (CBMP 2409, Shattered
 Lands' picture 385, whose background is colour 0 there) have their background, the colour round each drawing's
 edge, made clear (CLEAR_EDGE): in the sequel it was drawn, a box round him as he fought."""
 import collections
@@ -38,6 +39,10 @@ REGIONS = {"RGN03A.GFF": "RGN03A2.GFF"}  # (a region file the figures change: it
 PICTURE = 12  # (OJFF: the object's picture's number, a word)
 KINDS = ("BMP ", "CBMP", "SCMD", "ETAB")  # (the chunks DATA may hold)
 CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see above)
+
+# Stock shelves reviewed at every placement (reports/ravager-furniture/README.md).
+SHELVES = (1137, 1140, 1170, 1171, 1172, 1334, 2628, 2629, 2631, 2674,
+           2675, 2676, 2979, 2980, 2981, 2982, 3356, 3414, 3416)
 
 
 class FigureError(Exception):
@@ -143,6 +148,21 @@ def cleared_edges(chunk: bytes) -> bytes:
     return sprites.encode_frames(frames)
 
 
+def lowered_shelf(chunk: bytes) -> bytes:
+    """Lower a stock shelf toward its bottom row using the same 0.66 ratio as Tyr."""
+    from . import sequelicons, sprites
+    if struct.unpack_from("<H", chunk, 4)[0] != 1:
+        raise FigureError("Expected a single-frame shelf")
+    rows = sequelicons.decode(chunk)
+    height = len(rows)
+    clear = [None] * len(rows[0])
+    lowered = []
+    for y in range(height):
+        source = height - 1 - int((height - 1 - y) / 0.66 + 0.5)
+        lowered.append(rows[source] if source >= 0 else clear)
+    return sprites.encode_frames([lowered])
+
+
 def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
     """DATA from the catalogue's import (IMPORTED: its OUT_DIR) against the game's own files (STOCK): every
     chunk of KINDS that differs, and the objects moved. Returns the counts."""
@@ -160,6 +180,12 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         gone = [k for k in old if k not in new and k[0] in KINDS]
         if gone:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
+        if f == "OBJEX.GFF":
+            for number in SHELVES:
+                key = ("BMP ", number)
+                # A later catalogue replacement owns its art and all its poses.
+                if key in old and new.get(key) == old[key] and ("SCMD", number) not in new:
+                    new[key] = lowered_shelf(old[key])
         for k, v in sorted(new.items()):
             if old.get(k) == v:
                 continue

@@ -63,6 +63,11 @@ Pull requests #146 to #254 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Changed** (Wake of the Ravager)
+- Lowered 19 freestanding shelf pictures at 54 placements across six regions. The
+  [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
+  and compares occupied furniture with the earlier figure redraws.
+
 **Fixed: the same item weighs the same in both games; the follow-up code audit** (branch `claude/followup-code-audit`)
 - Shattered Lands' leather chest armour weighs 9.6 lb, as in Wake of the Ravager (the game's 75 lb, five
   times AD&D's whole suit), and the sequel's small things 0.1 lb, as Shattered Lands' (SSI's 1 lb). No

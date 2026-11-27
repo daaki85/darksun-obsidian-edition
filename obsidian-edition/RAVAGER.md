@@ -235,8 +235,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
   sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
   out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
-  two-thirds of their height for Shattered Lands' steeper view (the walls keep theirs). 275 pictures and
-  54 lowered; the air and fire drakes seen fighting on their own maps.
+  two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
+  freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
+  and both inhabited volcano levels. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,
