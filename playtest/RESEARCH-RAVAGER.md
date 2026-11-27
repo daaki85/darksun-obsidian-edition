@@ -311,6 +311,11 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
   script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
   stock game (`RAV_SKIP=figures`) at the same jump is the control for any redrawn figure.
+- **Looking at any spot of a region** (2026-11-27, logs/2026-11-27-ravager-furniture-review.md): after a
+  jump, write the view's top left (DS:1408h, two words) to the spot less (160, 100), then U and Escape (USE
+  opened and closed) redraw the map there, the party left where it stands: a picture of any placement
+  without walking. Pick the jump's square as the open GMAP square (0) nearest the spot. A jump into Mines 3
+  near the throne (3Ah, 15, 46) lands in a fight.
 - **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
   159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
   lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives
