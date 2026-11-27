@@ -370,6 +370,25 @@ class ItemTypeTests(unittest.TestCase):
             ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
 
 
+    END = dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0)
+
+    def test_retyped_objects(self):
+        """Dragonsbane (675) of the sequel's metal long sword (97): its item's type word and its copy of the
+        type (number and record, ALL 4's); an object not SSI's (another type) is left as it is."""
+        types = bytes(k % 256 for k in range(ravager.GAME_TYPES) for _ in range(ravager.TYPE_SIZE))
+        item = bytearray(23)
+        struct.pack_into("<hH", item, 0, -675, 0)
+        struct.pack_into("<H", item, 0x0A, 73)
+        rdff = dataitems.chunk([dataitems.Record(1, 0, 1, 366, 0, bytes(item)),
+                                dataitems.Record(3, 0, ravager.TYPE_KIND_RECORD, 73, 5, types[73 * 15:74 * 15])], self.END)
+        got = ravager.retyped_objects({ravager.TYPES_CHUNK: types, ("RDFF", 675): rdff})
+        recs, _ = dataitems.records(got[("RDFF", 675)])
+        self.assertEqual(struct.unpack_from("<H", recs[0].data, 0x0A)[0], 97)
+        self.assertEqual((recs[1].number, recs[1].data), (97, types[97 * 15:98 * 15]))
+        struct.pack_into("<H", item, 0x0A, 16)
+        other = dataitems.chunk([dataitems.Record(1, 0, 1, 366, 0, bytes(item))], self.END)
+        self.assertEqual(ravager.retyped_objects({ravager.TYPES_CHUNK: types, ("RDFF", 675): other}), {})
+
     @staticmethod
     def _ssi_table() -> bytes:
         """A type table with SSI's weights where RAV_WEIGHTS names them (the rest of each record its number)."""

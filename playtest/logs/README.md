@@ -235,11 +235,13 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
+| [2026-11-27](2026-11-27-dragonsbane-metal.md) | One Dragonsbane, metal in both games: the sequel's made SL's metal long sword, SL's crossing as it; both games' item boxes side by side (Dragonsbane, the Bone Great Sword +1) |
 
 ## files/
 
 | File | What it is |
 |---|---|
+| [2026-11-27-dragonsbane-save.py](files/2026-11-27-dragonsbane-save.py) | [One Dragonsbane](2026-11-27-dragonsbane-metal.md): an SL save with Dragonsbane in Jenna's backpack, `SRC DST` |
 | [2026-11-27-weapon-materials-save.py](files/2026-11-27-weapon-materials-save.py) | [Weapon materials](2026-11-27-ravager-weapon-materials.md): an SL save with test weapons written into party backpack items (SAVE 7; the list links and slot kept), `SRC DST`; its `-items.py` walks each member's items |
 | [2026-11-27-weapon-materials-roster.py](files/2026-11-27-weapon-materials-roster.py) | [Weapon materials](2026-11-27-ravager-weapon-materials.md): a sequel roster's transferred items, each one's type, kind and material (`RAVFOLDER DOS [REPO]`: another checkout's code for a control) |
 | [2026-11-27-dsclog2-words.py](files/2026-11-27-dsclog2-words.py) | DSCLOG2's variables by name in the running sequel (`SEG NAME...`: the helper's segment from `ravtail.py`; the symbols from a build of the tree's dsclog2.asm), as `restrict_count`, `kit_refused` |

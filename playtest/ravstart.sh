@@ -41,7 +41,7 @@ if skip:
     # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them, the
     # spells themselves kept; all the parts asked for in one write, since each write starts from the
     # game's own file: one at a time, the last put back what the others left out, 2026-11-27's audit)
-    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range', 'figures', 'sl_interface')}
+    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range', 'materials', 'object_types', 'figures', 'sl_interface')}
     if parts:
         ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), parts, sl)
         if parts & {'spell_arrows', 'figures', 'sl_interface'}:   # (the arrows' icons and names, the Tarrasque and the drakes, Shattered Lands' interface: RESOURC2.GFF's)

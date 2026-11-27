@@ -1782,6 +1782,49 @@ def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True,
     return out
 
 
+# The sequel's objects of another material than Shattered Lands' same item, each made of SL's (the user's,
+# 2026-11-27: "It is metal in Shattered Lands, then it should be metal in the sequel"): Dragonsbane (675, +4)
+# an obsidian long sword (73), SL's a metal one, now the sequel's metal long sword (97, Bloodwrath's: the same
+# record but the material and the fire cleric's bit). So SL's Dragonsbane crosses as the sequel's own (ITEMS.BIN's
+# pair, the same kind and material again: ravtransfer.weapon_pairs), one Dragonsbane, not two. Each object:
+# (SSI's type, SL's material's).
+RAV_OBJECT_TYPES = {675: (73, 97)}
+
+
+def retyped_objects(chunks: gff.Chunks) -> gff.Chunks:
+    """CHUNKS' objects of RAV_OBJECT_TYPES (RDFF chunks) of their new type: the item's type word (+0Ah) and its
+    copy of the type (TYPE_KIND_RECORD) the new type's (ALL 4's record, CHUNKS' own); none if CHUNKS has no
+    type table or the object isn't SSI's."""
+    from . import dataitems
+    types = chunks.get(TYPES_CHUNK)
+    out: gff.Chunks = {}
+    if types is None:
+        return out
+    for obj, (old, new) in RAV_OBJECT_TYPES.items():
+        rdff = chunks.get(("RDFF", obj))
+        if rdff is None or (new + 1) * TYPE_SIZE > len(types):
+            continue
+        try:
+            recs, end = dataitems.records(rdff)
+        except (ValueError, struct.error):
+            continue
+        items = [r for r in recs if r.kind == 1 and len(r.data) >= 0x0C and
+                 struct.unpack_from("<h", r.data, 0)[0] == -obj and struct.unpack_from("<H", r.data, 0x0A)[0] == old]
+        copies = [r for r in recs if r.kind == TYPE_KIND_RECORD and r.number == old]
+        if len(items) != 1 or len(copies) != 1:
+            continue
+        def fixed(r):
+            if r is items[0]:
+                data = bytearray(r.data)
+                struct.pack_into("<H", data, 0x0A, new)
+                return r._replace(data=bytes(data))
+            if r is copies[0]:
+                return r._replace(number=new, data=types[new * TYPE_SIZE:(new + 1) * TYPE_SIZE])
+            return r
+        out[("RDFF", obj)] = dataitems.chunk([fixed(r) for r in recs], end)
+    return out
+
+
 def mod_types_table(types: bytes) -> bytes:
     """The sequel's type table TYPES (ALL 4), its daggers the air clerics' too (AIR_DAGGER_TYPES), with the
     mod's after it."""
@@ -1798,7 +1841,8 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
     double spear's range 1 (RAV_RANGES, unless "melee_range" is), the club's, bow's and sling's material
-    SL's (RAV_MATERIALS, unless "materials" is), and the
+    SL's (RAV_MATERIALS, unless "materials" is), Dragonsbane SL's metal (RAV_OBJECT_TYPES, unless
+    "object_types" is), and the
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
@@ -1827,6 +1871,10 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         done.append("mod_types")
     elif weights or ranges or materials:
         new[TYPES_CHUNK] = types
+    retyped = {} if "object_types" in skip else retyped_objects({**chunks, TYPES_CHUNK: types})
+    if retyped:  # (Dragonsbane of SL's metal: RAV_OBJECT_TYPES; its copy of the type weighed below)
+        new.update(retyped)
+        done.append("object_types")
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")
