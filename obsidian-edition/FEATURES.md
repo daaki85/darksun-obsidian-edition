@@ -20,7 +20,7 @@ game speed is **Fastest**, the picture is **Plain** and the music device is **Wi
 "from the next start" waits until the game is started again. Untick one and the game's own way is
 back. What is always on can't be turned off: a settings file from before, with one of those
 unticked, has it on all the same. When each takes effect, switch by switch: the player's guide's [Options tab at a
-glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance). Installing, running the game and the Loader's
+glance](README.md#the-options-tab-at-a-glance). Installing, running the game and the Loader's
 window are in the [README](README.md).
 
 ## Contents

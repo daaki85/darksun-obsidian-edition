@@ -18,6 +18,7 @@ sys.path.insert(0, HERE)
 
 from dsloader import launch  # noqa: E402
 from dsloader import __main__ as cli  # noqa: E402
+from dsloader import ravlog  # noqa: E402,F401  (imported before a test mocks DiceLog: ravlog.PASS reads DiceLog.PASS at import)
 
 # a second process taking the lock and keeping it until its stdin closes
 HOLDER = """
@@ -359,6 +360,32 @@ class SettingsTests(unittest.TestCase):
             cli.cmd_play(argparse.Namespace())
         self.assertEqual(len(said), 1)
         self.assertIn("settings.json can't be read just now (in use): it may be held by a backup", said[0])
+
+    def test_play_starts_the_sequel(self):
+        """`play --ravager` (Play Wake of the Ravager (in-game rolls).bat): the sequel's folder started, not
+        Shattered Lands', and its dice log made by the helper the game loaded (ravlog.make) once it is there."""
+        import tempfile
+        dosbox = mock.Mock(pid=7, returncode=0)
+        dosbox.poll.side_effect = [None, None, None, 0, 0]
+        made = mock.Mock()
+        made.lines.return_value = []
+        made.take_dialogue.return_value = []
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(launch, "HERE", d), \
+                mock.patch.object(cli, "_ravager_dir", return_value="/wotr"), \
+                mock.patch.object(cli, "_game_dir", side_effect=AssertionError("Shattered Lands' folder asked")), \
+                mock.patch.object(launch, "launch", return_value=(dosbox, None)) as started, \
+                mock.patch.object(launch, "LAST_SETTINGS", {}), mock.patch.object(launch, "left_out_line", return_value=None), \
+                mock.patch.object(launch, "game_end_note", return_value=None), mock.patch.object(launch, "release_game"), \
+                mock.patch.object(cli, "connect", return_value=mock.Mock()), \
+                mock.patch.object(ravlog, "running", side_effect=[None, True]), \
+                mock.patch.object(ravlog, "make", return_value=made) as make, mock.patch("time.sleep"):
+            cli.cmd_play(argparse.Namespace(ravager=True))
+            with open(os.path.join(d, "play.log")) as f:
+                said = f.read()
+        self.assertEqual(started.call_args[0], ("/wotr", "Play Wake of the Ravager (in-game rolls)"))
+        make.assert_called_once()
+        made.attach.assert_called_once()
+        self.assertIn("The dice log follows Wake of the Ravager.", said)
 
     def test_a_second_unreadable_file_keeps_the_first(self):
         for text in ("{cut", "{also cut"):

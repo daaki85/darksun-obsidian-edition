@@ -70,7 +70,7 @@ And always:
   the route through the story (new game, arena, slave pens, Kurzak's call, back to the arena) is in
   [ROUTE.md](playtest/ROUTE.md), the research recipes (memory edits for a test, sounds, the picture
   store, frame rate, the picture and the music device, the game's scripts, the recompiled program as the target, Wake of the Ravager)
-  in [RESEARCH.md](playtest/RESEARCH.md), and every tool in [TOOLS.md](playtest/TOOLS.md).
+  in [RESEARCH.md](playtest/RESEARCH.md) (an index of their pages), and every tool in [TOOLS.md](playtest/TOOLS.md).
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition`. Work on a `claude/<task>` branch
 (Branch names, below) made from `origin/obsidian-edition`; other sessions push to
