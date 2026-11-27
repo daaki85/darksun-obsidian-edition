@@ -1083,8 +1083,13 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   record's place is its +0Ah/+0Ch, +3/+5 its picture's corner. MAS N holds region N's triggers (6Ah: an
   area x, y, w, h, an offset, the GPL script; 65h/66h/6Fh: an object's look, talk and the like). Regions:
   0x42 the Cloud (air drakes at once), 0x3E Volcano 1 (fire drakes at once), 0x43 (the earth drake, object
-  6541 at square 85, 13; the camera stays elsewhere after the jump), 0x44 (the Tarrasque: the area 31-36, 46
+  6541 at square 85, 13: after the jump the view stays the Roost's; the camera DS:1408h written and USE opened
+  and closed redraws it, the rock rises as the earth drake, but a fight there hangs: the party isn't set up), 0x44 (the Tarrasque: the area 31-36, 46
   runs GPL 124, the cinematic and the fight).
+- **A figure's frame live** (2026-11-27, logs/2026-11-27-ravager-encounters.md): a map record (DS:67BBh + 25h n)
+  holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
+  script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
+  stock game (`RAV_SKIP=figures`) at the same jump is the control for any redrawn figure.
 - **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
   159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
   lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives

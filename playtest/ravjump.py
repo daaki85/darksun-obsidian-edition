@@ -11,8 +11,12 @@
 #   the load) and a press: the region's picture, Space, and the party at square (COL, ROW): map pixel
 #   16*COL, 16*ROW, a square GMAP has 0 for (open ground).
 #
-# Squares that worked (2026-11-27): 0x42 85 15 (the Cloud: the air drakes come at once, a fight). Never save
-# after a jump: the story's flags are where Tyr left them.
+# Squares that worked (2026-11-27): 0x42 85 15 (the Cloud: the air drakes come at once, a fight), 0x3E 36 9
+# (Volcano 1: the fire drakes), 0x44 33 43 (then Down x7 onto the Tarrasque's steps). Where no fight starts at
+# once the view stays where the Roost's was: write the camera (DS:1408h) to the leader's foot less (152, 88) and
+# open and close USE (game 24,20, then Escape) to redraw it; the party is still only half there (a fight there
+# hangs: 0x43, the earth drake, logs/2026-11-27-ravager-encounters.md). Never save after a jump: the story's
+# flags are where Tyr left them.
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', 'obsidian-edition'))
