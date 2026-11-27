@@ -190,7 +190,7 @@ straight from the unzipped folder.
 Two more are made from the game's own data, so they need its folder (the one holding `DSUN.EXE`):
 
 ```
-python -m dsloader.docicons GAME_FOLDER       # docs/items/*.png, the icons in ITEMS.md
+python -m dsloader.docicons GAME_FOLDER [--ravager WOTR_FOLDER]  # docs/items/*.png, the icons in ITEMS.md
 python -m dsloader.doccreatures GAME_FOLDER   # CREATURES.md and docs/creatures/*.png
 ```
 

@@ -30,7 +30,7 @@ class DocIconsTests(unittest.TestCase):
             names = set(re.findall(r"docs/items/([a-z0-9-]+)\.png", f.read()))
         self.assertTrue(names)
         for name in names:
-            self.assertIn(name, docicons.ICONS)
+            self.assertTrue(name in docicons.ICONS or name in docicons.RAV_ICONS, name)
             self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "items", name + ".png")), name)
 
     def test_no_unused_icons(self):
@@ -41,6 +41,11 @@ class DocIconsTests(unittest.TestCase):
                 shown |= set(re.findall(r"docs/items/([a-z0-9-]+)\.png", f.read()))
         for png in os.listdir(os.path.join(ROOT, "docs", "items")):
             self.assertIn(png[:-4], shown, png)
+
+    def test_plan(self):
+        """A PLAN icon: the codes one a pixel, highest bits first, through the colour map."""
+        chunk = bytes(6) + struct.pack("<I", 10) + struct.pack("<HH", 2, 1) + docicons.PLAN + bytes((1, 7, 9, 0x40))
+        self.assertEqual(docicons.decode_plan(chunk), [[7, 9]])
 
 
 if __name__ == "__main__":
