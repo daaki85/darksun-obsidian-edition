@@ -74,6 +74,13 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
+**Docs: the follow-up docs review** (branch `claude/followup-docs-audit`)
+- [Wake of the Ravager's page](obsidian-edition/RAVAGER.md#not-in-the-sequel-yet) now ends with what
+  Shattered Lands has from the mod and the sequel doesn't yet, each checked against the code.
+- The README says the in-game-rolls start and Show Save are Shattered Lands only; DEVELOPMENT-KITS no
+  longer calls the Shinobi's casting, the arrows' cast sound and `ARROWS_FORBID` missing in the sequel.
+- Report: [the follow-up docs review](reports/docs-review-followup-2026-11-27.md).
+
 **New: DOSBox-X, the default engine** (#146, #178, #185)
 - The Options tab's new **Engine** section chooses DOSBox-X or GOG's DOSBox 0.74. **DOSBox-X is the
   default whenever one is found**: the Windows release brings DOSBox-X's own 64-bit build in its

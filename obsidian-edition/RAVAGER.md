@@ -265,3 +265,28 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
   Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
   spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
+
+## Not in the sequel yet
+
+The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
+and the sequel does not yet, each checked against the Loader's code (2026-11-27):
+
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: the class outfits, and the new character's
+  figure on the creation screen. The sequel keeps its own figures, [drawn in Shattered Lands'
+  style](#the-mod-in-the-sequel).
+- **Starting without the Loader's window**: `Play Dark Sun (in-game rolls).bat` starts Shattered Lands only,
+  and `Show Save.bat` reads Shattered Lands' saves only.
+- **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
+  Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
+- **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
+  kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
+  has.
+- **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
+  View Character.
+- **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books
+  and three of its wizards carry one), and the game's people wearing and wielding their gear as they come on
+  the map.
+- **The dice log**: the XP each kill gave and the level-ups (it names the kills), the report when an item goes
+  missing from the party, and the line of each round's initiative scores.
+- **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
+  [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).
