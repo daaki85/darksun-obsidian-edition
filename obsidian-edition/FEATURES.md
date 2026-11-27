@@ -861,7 +861,7 @@ druid gets them at 11th level, with [AD&D's class tables](#adds-class-tables) (o
 own code casts it; where they part from the books is in the player's guide. Their icons and the walls' pictures are Wake of the Ravager's, read from your copy ([Wake of
 the Ravager](#wake-of-the-ravager)); Restore Youth, which it hasn't, has the mod's own.
 
-![The ten 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds, Water of Life and Restore Youth with its fountain icon](docs/new-priest-spells.png)
+![The ten 6th-level priest spells' description boxes from the USE screen, cut from the screen so they read at full size: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds, Water of Life and Restore Youth with its fountain icon](docs/new-priest-spells.png)
 
 Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work) (each spell), [spell
 lists](PLAYER-GUIDE.md#spell-lists), [ages](PLAYER-GUIDE.md#ages) (Restore Youth). How it works:
