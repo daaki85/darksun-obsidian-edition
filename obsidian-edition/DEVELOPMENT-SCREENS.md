@@ -413,7 +413,11 @@ dice log running:
   (`art.Font`); without it the panel has no lines. A new picture is written
   only when something in it changes.
 - **Scrolling (Stage 3).** DSCLOG's mouse handler (`PANEL_MOUSE`, in
-  `MOUSE_EVENT`) notes where the pointer is (header `+332`, game pixels, as
+  `MOUSE_EVENT`; DSCLOG2's `PANEL_EVENT`, in its own `MOUSE_EVENT`, with
+  `PANEL_HERE`, the panel shown on the map, in place of `PANEL_LIVE`'s page
+  test, for L too; the sequel's first version looked for the press in the
+  main loop's call for the pointer, which missed a quick click and let the
+  game walk there) notes where the pointer is (header `+332`, game pixels, as
   the driver gives them), and a left press on the panel, while the page on
   show is the one the panel was last drawn into (not under a game window), is
   counted with where it was (`+338` on) and kept from the game with its
