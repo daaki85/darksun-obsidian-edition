@@ -63,6 +63,13 @@ Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Docs: the Options tab's reference in the README** (branch `claude/docs-options-home`)
+- "The Options tab at a glance" (every switch, its default and when it counts) and "Elsewhere in the
+  Loader" moved from the player's guide to the README, after the Loader's window, where a player looks
+  for the Loader; the links to it follow.
+- The list of what is always on is kept once, in the features page's "Always on": the Options reference
+  and the README's Loader paragraph link it instead of repeating it.
+
 **Docs: the full docs review** (branch `claude/docs-review-full`)
 - Fogbolt's picture retaken in play with the class outfits; the gear picture's caption names Gerakis a
   half-giant, not a mul.
