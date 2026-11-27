@@ -1537,6 +1537,17 @@ tools, and where each is described:
 
 For an outfit review with the loader detached, stage the walking and fighting chunks in the disposable pictures file before DOSBox starts. Record the object, figure, class combination, and worn items for each party member. A fixed-state capture can verify how the sprite and its palette cycle look in the map view. Exercise inventory changes separately with the loader attached. [Dwarf and human play log](logs/2026-11-23-dwarf-human-outfits.md)
 
+- **Which pictures the class outfits change** (logs/2026-11-27-docs-pictures-retake.md): the map
+  figures and the creation screen's figure only. The inventory, Effects and USE screens' portraits are
+  the game's own whatever the outfit, so a picture of those screens never needs a retake for outfits;
+  check a map picture's figures are the party (the Trustee, Dinos, Scar's gladiators are the game's).
+- **Kalzith's shop and body** (`docs/kalzith.png`, `kalzith-body.png`): `openshop.sh` from
+  `selling-junk-user` for the talk (that save's shop has the party's sold junk in it, so keep an
+  older shop half). The body: from `pens-after-scar` by [ROUTE.md's Kalzith](ROUTE.md#kalzith) to
+  `route.py 1560 880`, then `pointer.py attack 120 185` and a click on him at (262,126) from beside
+  him (from (1496,840) the click says NO PATH FROM HERE); then `walkto.py 1544 856`, `pointer.py look
+  120 185` and a slow press at (262,129) opens the body (a scroll, the Quarterstaff, the Cloak, the
+  Ashen Robe); `shot.sh`, 200%. In `selling-junk-user` the attack pointer finds no Kalzith to hit.
 - **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
 - **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette
   in the inventory too (1-5 green, 6-10 violet, 11-15 the water's, 240-248 fire). Move the pointer

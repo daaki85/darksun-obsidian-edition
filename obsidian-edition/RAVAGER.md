@@ -283,6 +283,7 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 
 ## The mod's gear in the sequel
 
+[The item tables](ITEMS.md#wake-of-the-ravagers-items) list every item of the sequel and where it is.
 Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
 staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
 and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,

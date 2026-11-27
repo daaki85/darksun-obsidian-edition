@@ -6,7 +6,8 @@ mod adds and who can use it, without saying where.*
 
 Every magic item, mundane weapon and mundane armour piece in a game with the mod's [new
 items](FEATURES.md#new-items), the game's and the mod's, with their icons and where each is;
-then more on the mod's own items; last, each item's chance [against acid](#items-against-acid).
+then more on the mod's own items; then [Wake of the Ravager's items](#wake-of-the-ravagers-items), the
+sequel's and the mod's in it; last, each item's chance [against acid](#items-against-acid).
 
 ## Contents
 
@@ -20,6 +21,12 @@ then more on the mod's own items; last, each item's chance [against acid](#items
 - [The mod's new items](#the-mods-new-items): [prices](#prices), [the Warden's Plate](#the-wardens-plate),
   [Bracers of Defense](#bracers-of-defense), [robes](#robes), [icons and names](#icons-and-names),
   [Alagorn's stories](#alagorns-stories), [Pehtucl's chest](#pehtucls-chest)
+- [Wake of the Ravager's items](#wake-of-the-ravagers-items): [magic weapons](#magic-weapons-in-the-sequel),
+  [missile weapons](#missile-weapons-and-ammunition-in-the-sequel), [armour and worn
+  items](#armour-and-worn-items-in-the-sequel), [held items](#held-or-used-from-the-pack-in-the-sequel),
+  [scrolls and the like](#scrolls-spellbooks-bracelets-potions-and-fruit-in-the-sequel), [plain weapons and
+  armour](#plain-weapons-and-armour-in-the-sequel), [Shattered Lands' items in the
+  sequel](#shattered-lands-items-in-the-sequel)
 - [Items against acid](#items-against-acid): [chest](#chest), [arms and legs](#arms-and-legs),
   [weapons](#weapons-held)
 
@@ -495,6 +502,202 @@ Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it s
 **New items, magical and mundane** on.
 
 How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#pehtucls-chest).
+
+## Wake of the Ravager's items
+
+Every item in [Wake of the Ravager](RAVAGER.md) with the mod: the sequel's own, read from its data
+(`OBJEX.GFF`: each item's type, material, plus and power, and the people, bodies and chests that hold it, in
+which area), and the mod's, in ***bold italics***. The data doesn't place an item the story hands out (a
+reward, a chest a quest fills, a merchant's later stock): those places are from a play of the sequel and
+are marked *(story)*. In **Where**, "—" means no person, body or chest in the data holds the item and no
+play found it; the sequel gives some magic items as random treasure. The sequel shows a magic weapon's plus
+before its name ("+1 Short Sword"), and names an item's material with it ("Metal Longsword").
+
+Each power is the spell the item casts or carries (its power less 1 in the sequel's list of spells and
+psionic powers). "A power of its own" is one past that list, which the sequel names nowhere ("Unknown" on
+the item's box). Icons are the sequel's own pictures (`python -m dsloader.docicons GAME --ravager WOTR`).
+Four of its items have none in its data: the Metal Dagger +1 and +2, Darts +1 and the Net +1.
+
+The sequel's people are kept in its **Limbo** region until a script brings them out, so for most people
+the data says who but not where; their places here are where the sequel's story puts them.
+
+### Magic weapons in the sequel
+
+| Icon | Material | Item | Bonus / power | Where |
+|---|---|---|---|---|
+| ![](docs/items/wotr-stone-dagger-plus1.png) | Stone | Dagger +1 | +1 | carried by **Magnolia**, the prisoner chained in Humbleton forest (with the Metal Dagger +2) |
+| ![](docs/items/wotr-stone-dagger-plus2.png) | Stone | Dagger +2 | +2 | sold by **Notaku** in Tyr; carried by the **Runner** in the yuan-ti tunnels (with the tunnels' map); on a body in the Mosaic (the Chandelier of Ancestry) |
+| | Metal | Dagger +1 | +1 | — |
+| | Metal | Dagger +2 | +2 | carried by **Magnolia** (above) |
+| ![](docs/items/wotr-quarterstaff-plus1.png) | Wooden | Quarterstaff +1 | +1 | sold by **Notaku** in Tyr |
+| ![](docs/items/wotr-quarterstaff-plus2.png) | Wooden | Quarterstaff +2 | +2 | carried by **Matthias** at the Veiled Alliance's headquarters, and by **Fermin**, the old man in the volcano (with the Helm of Domination) |
+| ![](docs/items/wotr-quarterstaff-plus3.png) | Wooden | Quarterstaff +3 | +3 | in the west sarcophagus of the crypt *(story)* |
+| ![](docs/items/wotr-staff-paralysis.png) | Wooden | Staff Paralysis | +2, Hold Monster | carried by **Solurnis** in El's temple |
+| ![](docs/items/wotr-metal-longsword-plus1.png) | Metal | Longsword +1 | +1 | carried by the **VA Guards** of the Veiled Alliance's headquarters (with Arrows +1), a **Guard** and **Draxans** (the volcano's third level's among them); sold by two **Salespersons** |
+| ![](docs/items/wotr-metal-longsword-plus2.png) | Metal | Longsword +2 | +2 | sold by **Notaku** from the party's second visit to Tyr *(story)* |
+| ![](docs/items/wotr-obsidian-longsword-plus2.png) | Obsidian | Longsword +2 | +2 | carried by **Surrakina** in El's temple, **Romila** at the Veiled Alliance's headquarters, **Firegazer** in Humbleton forest, **Donno** in the yuan-ti tunnels, **Draxans** in the volcano and the **Skeleton Warriors**; on a body by the fire ring in Kalak's pyramid; Promere's forge's reward in the Underdark *(story)* |
+| ![](docs/items/wotr-els-drinker.png) | Metal | El's Drinker | +2, Vampiric Touch | carried by **El** in El's temple |
+| ![](docs/items/wotr-life-stealer.png) | Metal | Life Stealer | +2, Disintegrate | carried by **Raenika** in Kalak's pyramid (with the Bracers +3) |
+| ![](docs/items/wotr-jasmine.png) | Metal | Jasmine | +3, Cloak of Bravery | Promere's forge in the Underdark, once El's Drinker is destroyed on it *(story)* |
+| ![](docs/items/wotr-mace-plus1.png) | Bone | Mace +1 | +1 | carried by **Templars** in Tyr and Kalak's pyramid; sold by a **Salesperson** |
+| ![](docs/items/wotr-mace-plus2.png) | Bone | Mace +2 | +2 | carried by a **Draxan** in the volcano's third level (with the Sling +2) |
+| ![](docs/items/wotr-axe-plus1.png) | Metal | Axe +1 | +1 | carried by the **Draxans** of the volcano's third level and the silt giants' **Leader**; in the air drakes' nest in the Clouds, with the Lyre of the Winds *(story)* |
+| ![](docs/items/wotr-axe-plus2.png) | Metal | Axe +2 | +2 | carried by the silt giants' **Leader**; **Oberhan**'s reward in Tyr *(story)* |
+| ![](docs/items/wotr-lotulis-plus1.png) | Stone | Lotulis +1 | +1 | carried by **Boric** in Tyr |
+| ![](docs/items/wotr-lotulis-plus2.png) | Stone | Lotulis +2 | +2 | carried by a **Draxan**; on a body in the crypt |
+| ![](docs/items/wotr-double-spear-plus1.png) | Wooden | Double Spear +1 | +1 | carried by a **Draxan** |
+| ![](docs/items/wotr-double-spear-plus3.png) | Wooden | Double Spear +3 | +3 | — |
+| ![](docs/items/wotr-trikal-plus2.png) | Wooden | Trikal +2 | +2 | — |
+| ![](docs/items/wotr-gythka-plus1.png) | Bone | Gythka +1 | +1 | — |
+| ![](docs/items/wotr-gythka-plus3.png) | Bone | Gythka +3 | +3 | **Matthias**'s reward in Tyr, late in the story *(story)* |
+| ![](docs/items/wotr-great-axe-plus3.png) | Obsidian | Great Axe +3 | +3 | carried by a **Miner** |
+| ![](docs/items/wotr-cahulaks-plus3.png) | Bone | Cahulaks +3 | +3 | carried by **Tantris** in El's temple |
+| ![](docs/items/wotr-twohand-sword-plus3.png) | Obsidian | Twohand Sword +3 | +3 | the Jann Sultan's treasure room, on the second visit *(story)* |
+| ![](docs/items/wotr-polearm-plus3.png) | Bone | Polearm +3 | +3 | — |
+| ![](docs/items/wotr-toothed-club.png) | — | Toothed Club | +2, Shocking Grasp | carried by **Kalaobuta** in Tyr |
+| ![](docs/items/wotr-beast-club.png) | — | Beast Club | +2, Charm Mammal | carried by **Ptar** in Humbleton forest |
+| ![](docs/items/wotr-crystal-sword.png) | — | Crystal Sword | +3, Cause Blindness | the volcano's temple *(story)* |
+| ![](docs/items/wotr-promere-hammer.png) | — | Promere Hammer | +3, Strength of One | the Underdark *(story)* |
+| ![](docs/items/wotr-bloodletter.png) | — | Bloodletter | +4 | the coffer at the north of Under Tyr, opened with the yellow key *(story)* |
+| ***[Short Sword +1](RAVAGER.md#the-mods-gear-in-the-sequel)*** to ***+3***, ***Pick +1*** to ***+3***, ***Great Axe +1*** and ***+2***, ***Cahulaks +1*** and ***+2***, ***Polearm +1*** and ***+2*** | | | +1 to +3 | the mod's: [the mod's gear in the sequel](RAVAGER.md#the-mods-gear-in-the-sequel) has each one's place |
+
+The sequel's priest spells make five more: Shillelagh (+1), the Bramble Staff (+2), the Magma Blade (+3),
+the Rainbow (a +2 bow) and the Heartseeker (an arrow); they last as long as the spell.
+
+### Missile weapons and ammunition in the sequel
+
+| Icon | Material | Item | Bonus / power | Where |
+|---|---|---|---|---|
+| ![](docs/items/wotr-chatchka-focus-heat.png) | Obsidian | Chatchka +1 | +1, Focus Heat | **Notaku**'s reward for the Feyr's teeth, Under Tyr's quest *(story)* |
+| ![](docs/items/wotr-sling-plus2.png) | — | Sling +2 | +2 | carried by a **Draxan** in the volcano's third level (with the Mace +2) |
+| | — | Darts +1 | +1 | — |
+| ![](docs/items/wotr-javelin-plus2.png) | Obsidian | Javelin +2 | +2 | — |
+| ![](docs/items/wotr-javelin-lightning.png) | Obsidian | Javelin Lightning | Lightning Bolt | — |
+| ![](docs/items/wotr-staff-sling-plus3.png) | Leather | Staff Sling +3 | +3 | **Shandel**'s reward in Under Tyr, for the captives *(story)* |
+| ![](docs/items/wotr-bow-of-accuracy.png) | — | Bow/Accuracy | +3 | sold by **Sureshot** in Humbleton forest (50,000); the Jann Sultan's treasure room *(story)* |
+| ![](docs/items/wotr-arrows-plus1.png) | — | Arrows +1 | +1 | carried by the **VA Guards**, a **Templar** and a **Draxan**; sold by the ranged weapons' stall and two **Salespersons** |
+| ![](docs/items/wotr-arrows-plus2.png) | — | Arrows +2 | +2 | sold by **Notaku** and **Sureshot**; carried by a **Draxan** |
+| ![](docs/items/wotr-arrows-plus3.png) | — | Arrows +3 | +3 | sold by **Sureshot**; on two bodies in the crypt; lying in the Jann's camp and three times in Under Tyr |
+| ![](docs/items/wotr-arrow-of-harm.png) | — | Arrow of Harm | Harm | — |
+| ![](docs/items/wotr-arrow-of-binding.png) | — | Arrow of Binding | Thorns of Binding | — |
+| | — | Net +1 | +1, Hold Person | carried by **Helmine** (two), whom the party frees from the air drakes' nest in the Clouds |
+| ***[Staff Sling +1](RAVAGER.md#the-mods-gear-in-the-sequel)*** and ***+2*** | Leather | | +1, +2 | the mod's: the ranged weapons' stall in Tyr, and **Sureshot** |
+
+### Armour and worn items in the sequel
+
+| Icon | Material | Item | Bonus / power | Where |
+|---|---|---|---|---|
+| ![](docs/items/wotr-promeres-armor.png) | Metal | Promere's Armor | +3, a power of its own (chest, arms and legs) | the chest north-east of the earth drakes in the Underdark *(story)* |
+| ![](docs/items/wotr-scale-armor-plus1.png) | Metal | Scale Armor +1 | +1, powers of its own (chest, arms and legs) | — |
+| ![](docs/items/wotr-leather-armor-plus3.png) | Leather | Armor +3 | +3 (another +3, with Free Action, and a +1 with Resist Cold) | — |
+| ![](docs/items/wotr-shield-plus1.png) | Leather | Shield +1 | +1 (another with Resist Fire) | carried by **Ptar** in Humbleton forest, a **Draxan** in the volcano's third level; on the body by the fire ring in Kalak's pyramid; the Jann Sultan's treasure room *(story)* |
+| ![](docs/items/wotr-shield-plus3.png) | Leather | Shield +3 | +3 | — |
+| ![](docs/items/wotr-helm-plus1.png) | — | Helm +1 | +1 (another with a power of its own) | carried by **Helmine** in the Clouds |
+| ![](docs/items/wotr-helm-plus3.png) | — | Helm +3 | +3 | — |
+| ![](docs/items/wotr-helm-of-domination.png) | — | Helm of Domination | Dominate | carried by **Fermin** in the volcano |
+| ![](docs/items/wotr-helm-gaze-reflection.png) | — | Helm | Gaze Reflection | — |
+| ![](docs/items/wotr-bracers-plus1.png) | Leather | Bracers +1 | +1 | carried by **Fermin** in the volcano and **Matthias** at the Veiled Alliance's headquarters |
+| ![](docs/items/wotr-bracers-plus3.png) | Leather | Bracers +3 | +3 | carried by **Raenika** in Kalak's pyramid; in the Underdark's chest past the Elder Brain, with the rod of Magic Missile *(story)* |
+| ![](docs/items/wotr-gloves-plus3.png) | — | Gloves +3 | +3 | **Elovan**'s work in the volcano's temple, from the drake claws *(story)* |
+| ![](docs/items/wotr-belt.png) | — | Belt | a power of its own | — |
+| ![](docs/items/wotr-boots.png) | — | Boots | a power of its own (more movement) | under the middle barrel in the tunnel north-east of Ptar's cave, Humbleton forest *(story)* |
+| ![](docs/items/wotr-stalker-cloak.png) | — | Stalkercloak | Invisibility | carried by **Helmine**; the reward for freeing her in the Clouds *(story)* |
+| ![](docs/items/wotr-scarab.png) | — | Amulet +1 | +1, Protection from Evil 10' | the Scarab of Protection, at the Veiled Alliance's headquarters *(story)* |
+| ![](docs/items/wotr-fire-ruby.png) | — | Fire Ruby | +1, Protection from Fire | the volcano: the story's key to its core *(story)* |
+| ![](docs/items/wotr-ioun-stone.png) | — | Ioun Stone | a power of its own (two) | — |
+| ![](docs/items/wotr-circlet-of-clarity.png) | — | Circlet of Clarity | Synaptic Static | — |
+| ![](docs/items/wotr-ring.png) | — | Ring | a power of its own | a ring of +1 STR lies in the drain of the room west of Romila's, at the Veiled Alliance's headquarters *(story)* |
+| ***[Bone Helm](RAVAGER.md#the-mods-gear-in-the-sequel)*** | Bone | | AC 1 | the mod's: sold by the armourers |
+
+### Held, or used from the pack, in the sequel
+
+| Icon | Item | Power | Where |
+|---|---|---|---|
+| ![](docs/items/wotr-rod.png) | Rod (four) | Fireball, Magic Missile, Lightning Bolt, Power Word Blind | the **Mind Flayers** of the Underdark (Fireball) and its chest past the Elder Brain (Magic Missile); **Matthias**'s reward late in the story *(story)* |
+| ![](docs/items/wotr-lyre-of-the-winds.png) | Lyre of the Winds | Charm Monster | the air drakes' nest in the Clouds *(story)* |
+| ![](docs/items/wotr-deck-of-illusions.png) | Deck of Illusions | Monster Summoning VII | **Notaku**'s reward for the air drakes' hides *(story)* |
+| ![](docs/items/wotr-gem.png) | Gem | Sunray | — |
+| ![](docs/items/wotr-powerstone.png) | Psionic Powerstone | a power of its own | **Notaku**'s last reward *(story)* |
+| | Crystal Rod | — | carried by **Melantha** and **Drisha** |
+
+### Scrolls, spellbooks, bracelets, potions and fruit in the sequel
+
+| Icon | Kind | What there is |
+|---|---|---|
+| ![](docs/items/wotr-scroll.png) | One-use scroll (a wizard spell, cast once) | 39 spells of the 1st to 9th level, from 300 (a 1st-level spell) to 1,800 (Dome of Invulnerability); a few are carried (Notaku's Magic Missile, Melantha's Spell Immunity, Solurnis' Death Spell, Raenika's Finger of Death, Fermin's Control Undead, a body's Chain Lightning in the crypt) and two Salespersons sell Stinking Cloud and Ice Storm |
+| ![](docs/items/wotr-spellbook.png) | Spellbook (teaches a wizard spell) | 30 spells of the 1st to 8th level, 3,000 a level: Notaku sells Slow (and, with the mod's [new wizard spells](FEATURES.md#new-wizard-spells), ***Cat's Grace***, ***Erdlu Claw***, ***Fogbolt***, ***Reflected Image***, ***Spook*** and ***Friends***); Kalaobuta carries Pebble to Boulder, Solurnis Cloud Kill, Raenika Mordenkainen's Sword, Fermin Feeble Mind |
+| ![](docs/items/wotr-bracelet.png) | Psionic bracelet (a psionic power) | 16 powers, 6,000 each: Notaku sells Biofeedback; Melantha carries Project Force, Raenika Graft Weapon; Inertial Barrier on a body in the crypt |
+| ![](docs/items/wotr-potion.png) | Potion | Cure Light, Serious and Critical Wounds, Heal, Invisible to Undead, Magic Vestment, Protection from Fire, Cloak of Bravery, Creeping Doom |
+| ![](docs/items/wotr-fruit.png) | Fruit (a priest spell, eaten) | Bless, the Cure spells, Remove Fear, Aid, Barkskin, Find Traps, Cure Blindness, Cure Disease, Remove Paralysis, Free Action, Neutralize Poison, Protection from Lightning, Iron Skin, and one that restores psionic strength |
+
+### Plain weapons and armour in the sequel
+
+By the sequel's type and material. **Sold by**: the **Weaponer** is Tyr's melee weapons' stall, the
+ranged weapons' stall is beside it, the **Armorers** sell armour; a **Salesperson** is one of the other
+stalls, and the **Receptionist** the mines' shop. **Carried by** names the kinds of people (many of a
+kind). ***new*** marks the mod's: [the mod's gear in the sequel](RAVAGER.md#the-mods-gear-in-the-sequel)
+has where each is.
+
+| Icon | Type | Material | Sold by | Carried by |
+|---|---|---|---|---|
+| ![](docs/items/wotr-obsidian-dagger.png) | dagger | obsidian | Weaponer | Fayina in Tyr, Thieves, Pedestrians |
+| ![](docs/items/bone-dagger.png) | dagger | bone, metal | Weaponer | ***new*** |
+| ![](docs/items/bone-short-sword.png) | short sword | bone, metal, obsidian | Weaponer, Salespersons | ***new*** (the sequel has none of its own) |
+| ![](docs/items/wotr-obsidian-longsword.png) | longsword | obsidian | Weaponer, Salespersons | Caravan Master, Thieves, Villagers, Prisoners, the halflings of Humbleton forest (Ash, Branch, Leaftop, Halla, Jumper), Irma and Greshard in El's temple, Draxans, Dhukkar, a Templar |
+| ![](docs/items/wotr-metal-longsword.png) | longsword | metal | Weaponer, Salesperson, Sureshot | Alhena and Jann, Cleave, Snaggle, Soothsurg, Dodger and Strongrip in Humbleton forest, Acar, Warriors, Draxans in the crypt, Jumah, Skeleton Warriors, a Templar |
+| ![](docs/items/wotr-club.png) | club | — | Weaponer | Thugs, Fighters and a Templar in Kalak's pyramid |
+| ![](docs/items/wotr-bone-mace.png) | mace | bone | Weaponer | Draxans, Templars |
+| ![](docs/items/metal-mace.png) | mace | metal, obsidian | Weaponer, a Salesperson | ***new*** (an obsidian mace is the sequel's own type) |
+| ![](docs/items/wotr-metal-axe.png) | axe | metal | Weaponer, Salespersons | Tyrian Soldiers, Draxans |
+| ![](docs/items/bone-axe.png) | axe | bone | Weaponer, a Salesperson | ***new*** |
+| ![](docs/items/wotr-obsidian-great-axe.png) | great axe | obsidian | Weaponer, Salespersons | Axestopper, Arslan, a Draxan, a Fighter |
+| ![](docs/items/bone-great-axe.png) | great axe | bone, metal | Weaponer, a Salesperson | ***new*** |
+| ![](docs/items/wotr-stone-pick.png) | pick | stone | Receptionist, Salespersons | Miners |
+| ![](docs/items/metal-pick.png) | pick | metal | Receptionist, Salespersons | ***new*** |
+| ![](docs/items/wotr-quarterstaff.png) | quarterstaff | wooden | Weaponer | Merchants, VA Members |
+| ![](docs/items/wotr-bone-polearm.png) | polearm | bone | Weaponer | a Draxan in Tyr |
+| ![](docs/items/metal-polearm.png) | polearm | metal | Weaponer | ***new*** |
+| ![](docs/items/wotr-gythka.png) | gythka | bone | Weaponer, Salespersons | — |
+| ![](docs/items/wotr-cahulaks.png) | cahulaks | bone | Weaponer, a Salesperson | Draxans, Gladiators |
+| ![](docs/items/metal-cahulaks.png) | cahulaks | metal, obsidian | Weaponer, Salespersons | ***new*** |
+| ![](docs/items/wotr-twohand-sword.png) | twohand sword | obsidian | Weaponer, a Salesperson | a Draxan in Kalak's pyramid |
+| ![](docs/items/wotr-lotulis.png) | lotulis | stone | Weaponer | a Draxan, a Gladiator |
+| ![](docs/items/wotr-double-spear.png) | double spear | wooden | — | a Fighter in Kalak's pyramid |
+| ![](docs/items/wotr-trikal.png) | trikal | wooden | — | a Draxan, a Gladiator |
+| ![](docs/items/chatkcha.png) | chatchka | obsidian | the ranged weapons' stall, a Salesperson | — |
+| ![](docs/items/wotr-javelin.png) | javelin | obsidian | a Salesperson | — |
+| ![](docs/items/darts.png) | darts | — | — | a body |
+| ![](docs/items/wotr-bow.png) | bow | — | the ranged weapons' stall, Sureshot | Dhukkar, Jann, VA Guards, Draxans, Templars, Gladiators |
+| ![](docs/items/wotr-arrows.png) | arrows | — | the ranged weapons' stall, Sureshot | the bows' carriers |
+| ![](docs/items/wotr-sling.png) | sling | — | the ranged weapons' stall | a Templar |
+| ![](docs/items/wotr-staff-sling.png) | staff sling | leather | the ranged weapons' stall, a Salesperson | a Templar |
+| ![](docs/items/wotr-leather-armor.png) | leather armour (chest, arms, legs) | leather | Armorer, a Salesperson | Magnolia, the halflings, Irma, Greshard, Romila, Fayina, Thieves, Villagers, Merchants, Miners, Draxans |
+| ![](docs/items/wotr-ring-armor.png) | ring armour | bone | Armorer, a Salesperson | the people of Humbleton forest, Boric, Arslan, Dhukkar, Butler, VA Guards, Miners, Draxans, Templars, Gladiators |
+| ![](docs/items/wotr-brigandine-armor.png) | brigandine armour | bone | Armorer | Tyrian Soldiers, Warriors, Draxans, Templars, Gladiators |
+| ![](docs/items/wotr-scale-armor.png) | scale armour | bone | Armorer | Tyrian Soldiers, Draxans, Kalaobuta, Templars |
+| ![](docs/items/wotr-chain-armor.png) | chain armour | metal | Salespersons | El, Surrakina and Tantris, Alhena, Glade, Ptar, Acar, Jumah, the silt giants' Leader, Draxans, Skeleton Warriors |
+| ![](docs/items/wotr-leather-shield.png) | shield | leather | Armorers | — |
+| ![](docs/items/wotr-wooden-shield.png) | shield | wooden | — | a Templar in Kalak's pyramid |
+| ![](docs/items/wotr-helm.png) | helm | — | Armorers, Receptionist | a Fighter |
+| ![](docs/items/bone-helm.png) | helm | bone | Armorers | ***new*** (AC 1, as the sequel's Helm: [helms give AC 1](FEATURES.md#helms-give-ac-1)) |
+| ![](docs/items/wotr-bracers.png) | bracers | leather | Armorer, a Salesperson | the Runner, VA Members, a Guard |
+
+### Shattered Lands' items in the sequel
+
+A party [taken to Wake of the Ravager](RAVAGER.md#taking-the-party-to-wake-of-the-ravager) keeps its gear.
+SSI's transfer gives each item the sequel's object it pairs with (its `ITEMS.BIN`), and some of those
+objects are in no person, body or chest of the sequel: they come only that way. From Shattered Lands'
+Blackmace, an Obsidian Mace +1 (Shocking Grasp); Balk's Staff, a Quarterstaff (Slow); the Cahulaks +1, a
+Bone Cahulaks (Poison); Phrain's Bow, a Bow (Acid Arrow); the Light of Dawn, a Rod (Dismissal); El's Shield,
+a Leather El's Shield +2; the Steadfast Ring, the Ring of Insight, the Wind Ring and El's Ring, four Rings;
+the Silver Necklace, a Necklace (Biofeedback); the Chameleon Gloves and Quicksilver Gauntlets, two Gloves
+(Cause Blindness, Detonate); the Living Cloak, a Cloak (Inertial Barrier).
+
+With the mod a weapon keeps its kind and material: where SSI's pair would change one (Dark Flame a Metal
+Magic Weapon, Draketooth a wooden Longsword, Dag's Dagger a stone one, Dragonsbane obsidian, the Polearm +1
+a Double Spear; Swiftbite, Terror Blade, Bloodwrath and the bone Long Sword too), the Loader makes it in the
+sequel as what it is. So does every item the sequel has no pair for (the mod's own weapons, armour and magic
+items, and Shattered Lands' quest items), which SSI's transfer made a money bag.
 
 ## Items against acid
 
