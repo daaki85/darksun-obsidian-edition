@@ -42,7 +42,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
 703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
 785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
-787,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,scenery-and-miner.zip,037:1
+787,Pavis at his writing basin,Occupied and vacated poses checked in DOSBox. Paper and rim keep their floor anchor,scenery-and-miner.zip,037:1
 788,Tantris seated in his throne,Occupied poses retained. The live transition uses 789 for the vacated throne,alternate-pose-continuity.zip,037:1
 789,Empty throne for Tantris,Lowered and aligned in play with 788 on the temple floor. GPL 256 brings it from Limbo,,0FF:1
 917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
@@ -53,6 +53,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1033,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
 1034,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
 1035,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1112,Mines 3 loot chest,Both poses lowered to match the identical Pyramid chest drawing,,03A:1
 1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
 1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
 1137,Freestanding shelves,Lowered and placements reviewed,,03A:1
@@ -200,7 +201,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3247,"Tables, counters and benches",Lowered and placements reviewed,,034:1
 3248,"Tables, counters and benches",Lowered and placements reviewed,,034:2
 3249,"Tables, counters and benches",Lowered and placements reviewed,,034:2
-3250,Two-state storage or fixture,Both stock states lowered,,034:1
+3250,Pyramid chest,Both stored poses share the artwork of Mines 3 picture 1112. Retain the Pyramid drawing offsets,,034:1
 3275,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:2
 3276,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:1
 3277,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5

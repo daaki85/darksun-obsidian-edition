@@ -57,7 +57,7 @@ TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 262
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
                     2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
                     3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
-OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
+OPENABLE = (631, 1112, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep the cushion faces and exposed smoke intact.

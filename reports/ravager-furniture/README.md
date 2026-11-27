@@ -2,7 +2,7 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. A later playtest found one more picture to lower, the empty throne summoned from Limbo into El’s Temple. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added two more pictures, the empty throne summoned from Limbo into El’s Temple and the loot chest in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
 Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
@@ -190,6 +190,18 @@ Tamind’s sheet covers his head. Finali’s hand mirror remains visible on her 
 
 ![Museum before the puzzle and after the eighth shard, with the coin response and the room beyond the mirror](mosaic-mirror-repair.png)
 
+## Pavis’s basin and the two hinged chests
+
+In El’s Temple the paper rests just inside the curved rim while Pavis works. When he stands, the paper and the basin stay in place. The earlier figure redraw already handles both poses. [Matched DOSBox views of Pavis](pavis-basin-live.png)
+
+Mines 3 has a working loot chest. Its two stock drawings are identical to the closed and open chest in the Pyramid, which already received the furniture treatment. The Mines copy now uses the same proportions and retains its own drawing offsets. The gold boxes show where to find both chests and the upper castle reference in Shattered Lands.
+
+![Whole maps of Mines 3, the Pyramid and the upper castle with the chest rooms marked](mine-chest-maps.png)
+
+The comparison uses the same scale for all four rooms. Look at the front panel when the lid is down, then at the distance between the hinge and the top of the raised lid. In the Pyramid, the foreground wall covers the lower edge. [Playtest and fixture details](../../playtest/logs/2026-11-27-ravager-basin-and-chests.md)
+
+![Both stored poses of the previous and revised Mines chest, the Pyramid chest and an upper castle chest for scale](mine-chest-poses.png)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements, including repeats. The last column names the next review for that region.
@@ -199,12 +211,12 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 001 Forest | 252 | 0 | 56 | Check dining sets in play |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
-| 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
+| 034 Pyramid | 152 | 0 | 23 | Both chest poses checked against the foreground wall in the room render. Check remaining furnishings in play |
 | 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
-| 037 Temple | 62 | 0 | 6 | Six braziers and the vacated throne verified. Check Pavis leaving the basin |
+| 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
+| 03A Mines 3 | 219 | 8 | 12 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |

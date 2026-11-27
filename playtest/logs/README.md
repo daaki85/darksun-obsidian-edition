@@ -240,6 +240,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-furniture-joins.md) | Four repaired red beds, the Alliance barrels and the vase on its stacked crate, in DOSBox |
 | [2026-11-27](2026-11-27-ravager-throne-and-workshop.md) | Tantris leaves his throne, six temple braziers, and Ikibod’s workbench in Mosaic |
 | [2026-11-27](2026-11-27-ravager-mosaic-museum.md) | Mosaic museum in DOSBox, including both portable busts, Khildril, Fletch’s movable bookcase and Biblid |
+| [2026-11-27](2026-11-27-ravager-basin-and-chests.md) | Pavis leaves his writing basin in El’s Temple, and the working chest in Mines 3 shares its artwork with the Pyramid |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
 | [2026-11-27](2026-11-27-docs-pictures-retake.md) | Kalzith's talk and body pictures with the outfits; which pictures the outfits change; the sequel's items read for ITEMS.md |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
