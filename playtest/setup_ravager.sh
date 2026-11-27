@@ -2,7 +2,7 @@
 # setup_ravager.sh: Wake of the Ravager, the sequel, for comparing with Shattered Lands (its code,
 # data and README), in $RAV (default $WORK/rav): the owner's GOG installer, extracted with
 # innoextract. Never downloaded from a public link: joined from the owner's private repository of installation
-# files ($INSTALL: env.sh), or put at $WORK/dl/rav.exe by hand (or named in $PT_RAV_INSTALLER). It plays in DOSBox by RESEARCH.md's recipe.
+# files ($INSTALL: env.sh), or put at $WORK/dl/rav.exe by hand (or named in $PT_RAV_INSTALLER). It plays in DOSBox by RESEARCH-RAVAGER.md's recipe.
 . "$(dirname "$0")/env.sh"
 RAV=${RAV:-$WORK/rav}
 [ -f "$RAV/DSUN.EXE" ] && { echo "already there: $RAV"; exit 0; }
