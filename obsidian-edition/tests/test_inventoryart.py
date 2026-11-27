@@ -72,6 +72,18 @@ class InventoryArtTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             inventoryart.layer_from_picture(picture[:2], stock, colours)
 
+    @unittest.skipUnless(os.getenv("DSUN_SL") and os.getenv("DSUN_WOTR"), "needs both games")
+    def test_sequel_pictures_in_its_steady_colours(self):
+        from dsloader import gff, ravitems
+        sequel = gff.read_gff(open(os.path.join(os.environ["DSUN_WOTR"], "RESOURCE.GFF"), "rb").read())
+        pictures = inventoryart.rav_chunks(sequel, os.environ["DSUN_SL"], os.environ["DSUN_WOTR"])
+        self.assertEqual(len(pictures), 306)
+        steady = {c for c, _ in ravitems.stable_colours(sequel, ravitems.region_palettes(os.environ["DSUN_WOTR"]))}
+        for key, frame in pictures.items():
+            with self.subTest(picture=key):
+                _, _, rows = art.decode_frame(frame)
+                self.assertLessEqual({p for row in rows for p in row if p is not None}, steady)
+
     @unittest.skipUnless(os.getenv("DSUN_SL"), "needs the Shattered Lands inventory figures")
     def test_no_detached_pixels_on_retail_figures(self):
         art_data = art.GameArt(os.environ["DSUN_SL"])

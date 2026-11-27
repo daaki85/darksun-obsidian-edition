@@ -4386,6 +4386,101 @@ fshield_save:
         inc word [cs:manual_saves]
 .out:   iret
 manual_saves dw 0                           ; (Blur's and Fire Shield's, counted for a look in play)
+; ---- THE INVENTORY'S FULL-LENGTH PICTURE: DSCLOG's inventory_figure and inventory_load ----
+; Its key in the Loader's RESOURC2.GFF matches inventoryart.py: 6000h + figure * 256 + one bit per class
+; group (inventoryart.rav_chunks: Shattered Lands' dressed figures in the sequel's steady colours). What
+; differs from DSCLOG's: the sequel's creature has the figure at +10h and its pictures are preloaded from
+; 15h (SL's +18h, 12h), its sheets are 48h bytes at DS:19C5h (race +12h, classes +1Bh), and the loader of a
+; preloaded picture is 7B827h (SL's 73034h), its way back with the picture at 7B89Eh (SL's 730ABh).
+INV_ART_BASE equ 0x6000
+INV_ART_FIGURES equ 14
+INV_PRELOAD equ 0x15
+INV_LOAD_DONE equ 0x7B89E - (0x7B831 + 3)
+; INV_FIGURE (site 251, "inventory_figure"): "mov ax,[es:bx+10h] / add ax,15h" (75DD0h, SL's 6D5A3h): the
+; picture of the selected creature ES:BX, its classes' key (a human's active class alone), or its figure's
+; preloaded one for a figure past the 14.
+inv_figure:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        mov dx, ax
+        shl dx, 8
+        add dx, INV_ART_BASE
+        mov ax, [es:bx + 4]
+        call kit_sheet_ax               ; (ES:BX its sheet)
+        mov cx, 3
+        cmp byte [es:bx + SHEET_RACE], 1
+        jne .slots
+        mov cx, 1                       ; (a human dual class: the active class)
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + SHEET_CLASSES]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [cs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        iret
+.stock: add ax, INV_PRELOAD
+        iret
+
+; INV_LOAD (site 252, "inventory_load"): "mov dword [bp-4],0" (7B831h, SL's 7303Eh), the preloaded
+; picture SI's loader starting: an INV_FIGURE key is read from the GFF as the game reads a chunk, and
+; given back by the loader's own way out; with none (a figure or class without one), the figure's own
+; preloaded picture.
+inv_load:
+        mov dword [bp - 4], 0
+        cmp si, INV_ART_BASE
+        jb .out
+        cmp si, INV_ART_BASE + INV_ART_FIGURES * 256
+        jae .out
+        call kp_if_frame                ; (it calls the game: interrupts as the caller had them)
+        pusha
+        push es
+        push ss
+        lea ax, [bp - 4]
+        push ax
+        movzx eax, si
+        push eax
+        push dword 'BMP '
+        mov ax, LOAD_SEG
+        mov dx, LOAD_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        pop es
+        test ax, ax
+        jnz .none
+        cmp dword [bp - 4], 0
+        je .none
+        popa
+        push bx
+        mov bx, sp
+        add word [ss:bx + 2], INV_LOAD_DONE
+        pop bx
+        iret
+.none:  popa
+        mov dword [bp - 4], 0
+        sub si, INV_ART_BASE
+        shr si, 8
+        add si, INV_PRELOAD
+.out:   iret
+
 ; SITE: INT VEC_SITE followed by a byte, the site's number in SITE_TABLE (gamepatch's _site, as
 ; DSCLOG's): its routine is run as if INT had called it (the way back past the byte; registers and the
 ; game's BP as they were). Saves the vectors (one for many sites).
@@ -4640,6 +4735,8 @@ site_table:
         dw scholar_thac0                    ; 248 SITE_SCHOLAR_THAC0 (953A1h: the THAC0 routine's end: a Scholar's 1 worse)
         dw size_line                        ; 249 SITE_SIZE_LINE (7B1CFh: a weapon's damage line drawn: an item box's large dice)
         dw size_pre                         ; 250 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
+        dw inv_figure                       ; 251 SITE_INV_FIGURE (75DD0h: the inventory's full-length picture: the class's)
+        dw inv_load                         ; 252 SITE_INV_LOAD (7B831h: a preloaded picture's loader: the class's from the GFF)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as

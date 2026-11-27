@@ -886,6 +886,13 @@ PATCHES: Tuple[Patch, ...] = (
     # DSCLOG2's SIZE_LINE and SIZE_PRE (sites 249, 250; the user's both-games rule, 2026-11-27).
     Patch("size_line", 0x7B1CF, bytes.fromhex("ff46fe"), _site(249, 3)),
     Patch("size_pre", 0x7B1B2, bytes.fromhex("ff7614"), _site(250, 3)),
+    # The inventory's full-length picture in the selected character's class, as Shattered Lands' (gamepatch's
+    # inventory_figure and inventory_figure_load; the user's both-games rule, 2026-11-27): the picture's number
+    # ("mov ax,[es:bx+10h] / add ax,15h", 75DD0h, SL's 6D5A3h) and the preloaded pictures' loader ("mov dword
+    # [bp-4],0", 7B831h, SL's 7303Eh): DSCLOG2's INV_FIGURE and INV_LOAD (sites 251, 252), the pictures in
+    # the Loader's RESOURC2.GFF (resources_fixed: inventoryart.rav_chunks).
+    Patch("inventory_figure", 0x75DD0, bytes.fromhex("268b4710051500"), _site(251, 7)),
+    Patch("inventory_figure_load", 0x7B831, bytes.fromhex("66c746fc00000000"), _site(252, 8)),
     # The Effects screen's lines (SL's PROBE_EF_ROWS, PROBE_EF_CLICK): the end of its routine that fills the
     # selected character's cells (8AC6Fh, SL's 7EDFAh: "pop di / pop si / leave" at 8AFA9h) and its handler for
     # them (8AB13h, SL's 7EC97h: "mov si,[bp+8]" at 8AB1Ah): DSCLOG2's EF_ROWS (site 73) lists the kits and
@@ -1376,6 +1383,7 @@ KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's t
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
 PICK_BUTTON_ICON = "pick_icon"  # (... for the Pick Pockets button's purse: icons.rav_pick_icon)
+INVENTORY_ART = "inventory_art"  # (... for the class pictures on the inventory: inventoryart.rav_chunks)
 
 
 def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = None,
@@ -1467,6 +1475,15 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(PICK_BUTTON_ICON)
+    if INVENTORY_ART not in skip:  # (DSCLOG2's INV_FIGURE and INV_LOAD read them: sites 251, 252)
+        from . import inventoryart
+        try:
+            added = inventoryart.rav_chunks(gff.read_gff(out), sl_dir, game_dir)
+        except (OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}  # (no Shattered Lands folder to dress them from: the sequel's own figures)
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(INVENTORY_ART)
     if ravportraits.SKIP not in skip:  # (the talk window and empty frame at Shattered Lands' size: ravportraits)
         try:
             source = game_dir and _find_file(game_dir, SCRIPT_FILE)
