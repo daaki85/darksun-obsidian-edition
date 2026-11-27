@@ -389,7 +389,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   sheet's map) (#237), S1's later stages deferred (#248).
 - The sequel's kits, the patch notes and the links brought in step with #218 to #254: the patch notes'
   Wake of the Ravager section links to RAVAGER.md and has the figures and the Effects screen's lines;
-  this section's entries each name their pull request (this pull request).
+  this section's entries each name their pull request (#257).
 
 **Dev**
 - DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
