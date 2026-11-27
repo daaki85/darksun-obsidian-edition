@@ -2,6 +2,8 @@
 
 These sheets cover the remaining playable Shattered Lands figures. Each outfit is painted as a complete figure and reduced to the corresponding retail inventory picture’s width and height. The comparison sheets pair the retail pose with the decoded study at 2×. The ZIP contains transparent PNGs at native size.
 
+[Compare the inventory portraits with their map outfits, including multiclasses](map-comparisons/README.md)
+
 [View all 71 portraits on one native-scale sheet](native-roster.png)
 
 ![A selection of the seven race studies](overview.png)
