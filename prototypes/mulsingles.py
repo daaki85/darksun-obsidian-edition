@@ -359,6 +359,10 @@ def draw(game, pose, swatches):
                             teal -= 1.35
                         elif y > edge+2 and round(offset + .45*(y-ry)) == -1:
                             teal += 1.1
+                        if pose == 11 and (x, y) == (3, 14):
+                            # The rolled end catches light above the hip as the
+                            # arm swings past, even in the copper skin's shadow.
+                            teal = max(teal, 4)
                         out["Psionicist"][py][i] = shade(TEAL, teal)
                     if y == belt:
                         buckle = 96 if abs(x-knee) < 1 else 90
