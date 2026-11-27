@@ -77,6 +77,10 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   (`ravager.RAV_MATERIALS`; SSI's had none, so earth and water priests were refused them). An earlier
   transfer's object of the old type is made anew; saves already in the sequel are not touched.
 - The bone great sword weighs 110 (11 lb) in both games (was 150, as the obsidian one).
+- SL's darts (wood) go across as the mod's own darts (140), not the sequel's stone ones (43); `game.RAVAGER_TYPES`
+  said 38 (of no material). Every backported Ravager weapon is now checked for kind and material on the real files.
+- The sequel's item box named a Great Sword "Long Sword": the transfer's keepsakes' names began at 306, over the
+  mod's last six (the Ravager weapons' Great Sword to Darts). They begin at 312 now (`ravager.KEEPSAKE_NAMES_FIRST`).
 - Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
   DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
 

@@ -60,9 +60,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
   box outside a fight); a spell the sequel lacks makes a keepsake.
   Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
-  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
-  javelin and darts, and their magic ones of the same material) go back as the sequel's own weapon of that
-  kind, and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal
+  and javelin, and their magic ones of the same material) go back as the sequel's own weapon of that
+  kind (the darts, wooden, as the mod's own: the sequel's are stone or of no material), and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
   the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). **Every weapon keeps its kind and its
   material**: the metal great sword, lotulis and javelin, the obsidian lotulis and the bone great sword
   (a fire cleric's Obsidian Lotulis +1, a water cleric's Bone Great Sword +1) are their own types there,

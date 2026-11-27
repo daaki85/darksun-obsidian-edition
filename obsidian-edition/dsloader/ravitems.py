@@ -126,13 +126,13 @@ def weapon_type(sl_type: int, types: Dict[int, int], sl_table: bytes, wotr_table
 
 
 def sequel_type(sl_type: int, types: Dict[int, int], sl_table: bytes = b"", wotr_table: bytes = b"") -> int:
-    """The sequel's type for an item of Shattered Lands' type SL_TYPE the Loader makes: the six plain Ravager
+    """The sequel's type for an item of Shattered Lands' type SL_TYPE the Loader makes: five plain Ravager
     weapons the sequel's own, the mod's types its (mod_type), SL's weapons one of their kind and material
     (weapon_type, with SL_TABLE and WOTR_TABLE), the rest TYPES' (ITEMS.BIN's), else a keepsake."""
     from . import game, ravager, ravtransfer
     if sl_type in (ravtransfer.SL_WIZARD_SCROLL, ravtransfer.SL_PRIEST_SCROLL):
         return KEEPSAKE_TYPE  # (the scrolls made here are of spells the sequel lacks: ravtransfer.item)
-    weapon = ravager.sequel_weapon_type(sl_type)  # (the six plain Ravager weapons: the sequel's own)
+    weapon = ravager.sequel_weapon_type(sl_type)  # (five plain Ravager weapons: the sequel's own)
     if weapon is not None:
         return weapon
     if game.GAME_TYPES <= sl_type < game.GAME_TYPES + ravager.MOD_TYPES:

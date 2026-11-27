@@ -52,7 +52,19 @@
   CLASS_FORBIDS). `restrict_count` stayed 0. DSCLOG2's class and kit limits on the new types are checked
   against SL's in the emulated tests (test_ravrestrict: type 146 for 30 class sets; test_ravkitgear: every
   mod type, 141-145 among them).
-- Not seen: the bone great sword's box shows "2 handed Bone +1" with no "Great Sword" (the mod's name in the
-  sequel); not looked into (the names are not this branch's).
+- The bone great sword's box showed "2 handed Bone +1" with no name: that look was before the dice log attached,
+  and the names past 256 are the dice log's to write (ravlog `_write_item_names`). Looked again with it attached
+  (about 19:00-19:20 UTC): "2 handed Bone +1 Long Sword", **a real bug**: the transfer's keepsakes' names began at
+  306 (`ravager.KEEPSAKE_NAMES_FIRST` NAMES_GAME + 50), on the last six of the mod's 56 names (the Ravager weapons':
+  Great Sword 306, Lotulis 307, Double Spear 308, Trikal 309, Javelin 310, Darts 311), so the first keepsake, "Long
+  Sword", showed on every Great Sword, Bloodwrath as "Double Spear", Terror Blade as "Trikal". Now from 312
+  (NAMES_GAME + names.EXTRA; `test_keepsakes_after_the_mods_names`). A fresh transfer (the dos folder's
+  RAVITEMS.GFF moved away first: an older one keeps its objects' name numbers) and the game again with the dice log:
+  the box "2 handed Bone +1 Great Sword", the status line BONE GREAT SWORD, the bone long sword in hand "Long Sword"
+  ![](img/2026-11-27-ravager-bone-great-sword-named.png). Nothing released had it (the sequel's transfer isn't in a
+  release yet).
+- Darts: `game.RAVAGER_TYPES` said the sequel's 38 (no material), the transfer gave 43 (stone); SL's are wood, so
+  neither kept the material. Now the mod's own (140, SL's record), in both (`test_darts_keep_their_type`, and the
+  real files' test checks every one of `RAVAGER_TYPES` for kind and material).
 
 DOSBox and the dice log stopped by pid, nothing saved (the test copies' rosters only).

@@ -161,7 +161,10 @@ NAME_READS = (0x5E496, 0x768A3, 0x7B036, 0x7B081, 0x98CAA, 0x9A227, 0x9A252)
 # names.OWN (so the mod's Short Sword, SL's 144h, is 258).
 NAMES_GAME, NAMES_ROOM, NAME_KEPT = 256, 160, 16
 TSR_NAMES_OFF, TSR_NAMES_COUNT = 196, 198
-KEEPSAKE_NAMES_FIRST = NAMES_GAME + 50  # (after the mod's, names.EXTRA of them: the party transfer's keepsakes, ravitems)
+# The party transfer's keepsakes' names (ravitems) after the mod's, names.EXTRA (56) of them: at 50 they took
+# the places of the last six, the Ravager weapons' (Great Sword, Lotulis, Double Spear, Trikal, Javelin, Darts),
+# so a Bone Great Sword +1 showed "Long Sword", the first keepsake's (2026-11-27).
+KEEPSAKE_NAMES_FIRST = NAMES_GAME + 56
 
 
 def mod_name(sl_entry: int) -> int:
@@ -1533,9 +1536,10 @@ def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
 # memory at the chunk's own length (a copy with 3 more had 105 there, the item names' block after them,
 # 2026-11-22: playtest/logs/2026-11-22-ravager-item-types.md). The copy adds the mod's 44 (Shattered Lands'
 # 115-158, npcitems.TYPES, DSCLOG's EXTRA_TYPES) after them, as MOD_TYPES on (102-145): the party transfer's
-# items of those types take 102 on (mod_type), but the six plain Ravager weapons backported (SL 148-153), which
-# go back as the sequel's own (sequel_weapon_type): their places, 135-140, are kept only to number the rest
-# as SL's. The metal great sword, lotulis and javelin and the obsidian lotulis and bone great sword (SL
+# items of those types take 102 on (mod_type), but five of the plain Ravager weapons backported (SL 148-152),
+# which go back as the sequel's own (sequel_weapon_type): their places, 135-139, are kept only to number the
+# rest as SL's. SL's darts (153) keep theirs (140): the sequel's two darts are of no material (38) and of stone
+# (43), SL's of wood (2026-11-27). The metal great sword, lotulis and javelin and the obsidian lotulis and bone great sword (SL
 # 154-158, 141-145) keep their own: as the sequel's own kind they lost their material (a water cleric's Bone
 # Great Sword +1 the sequel's obsidian sword, which a water cleric can't wield; 2026-11-27).
 TYPES_CHUNK = ("ALL ", 4)
@@ -1571,7 +1575,7 @@ def wotr_type(sl: bytes) -> bytes:
 # Toothed Club; the Daggers; Maces; Axes; Great Axe; Pick; Quarterstaff; Polearm; Gythka; Cahulaks; Chatchka;
 # Bow; Sling; Staff Sling; and SL's six kinds from the sequel: the Twohand Sword and the Crystal sword, both
 # two-handed 1d10; Lotulis; Double Spear; Trikal; Javelin; the two Darts), and the mod's (mod_type: SL's
-# 115-158, specialize.KIND_OF_TYPE's; the six plain ones go back as the sequel's own: sequel_weapon_type).
+# 115-158, specialize.KIND_OF_TYPE's; five plain ones go back as the sequel's own: sequel_weapon_type).
 # ravlog's layout makes it specialize.KIND_OF_TYPE while the sequel is attached.
 _RAV_OWN_KINDS = {
     "long sword": (16, 47, 69, 73, 97), "club": (29, 89), "dagger": (37, 72, 99), "mace": (67, 74),
@@ -1610,17 +1614,18 @@ def rav_spec_kinds() -> Dict[int, int]:
     return {t: specialize.KINDS.index(kind) for t, kind in _RAV_SPEC_KINDS.items()}
 
 
-# Shattered Lands' six plain Ravager weapons backported (game.TWOHAND_SWORD_TYPE to DARTS_TYPE, 148-153): in
+# Shattered Lands' plain Ravager weapons backported (game.TWOHAND_SWORD_TYPE to JAVELIN_TYPE, 148-152): in
 # the sequel the sequel's own type of that weapon, by its kind (specialize.KINDS' two-handed sword, lotulis,
-# double spear, trikal, javelin, darts). Their metal, obsidian and bone ones (154-158) are the mod's types
-# (mod_type), their material kept.
-SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59, 21: 43}
-SEQUEL_OWN_WEAPONS = range(game.TWOHAND_SWORD_TYPE, game.DARTS_TYPE + 1)
+# double spear, trikal, javelin), of the same material. SL's darts (153, wood) are the mod's type (140), as the
+# metal, obsidian and bone ones (154-158): the sequel has no wooden darts (its 38 of no material, 43 stone),
+# so the darts kept their kind but not their material (2026-11-27).
+SEQUEL_WEAPON_OF_KIND = {16: 101, 17: 61, 18: 39, 19: 100, 20: 59}
+SEQUEL_OWN_WEAPONS = range(game.TWOHAND_SWORD_TYPE, game.JAVELIN_TYPE + 1)
 
 
 def sequel_weapon_type(sl_type: int) -> Optional[int]:
-    """The sequel's own type for SL_TYPE when it is one of the six plain Ravager weapons backported to
-    Shattered Lands (SEQUEL_OWN_WEAPONS), else None."""
+    """The sequel's own type for SL_TYPE when it is one of the five plain Ravager weapons backported to
+    Shattered Lands that the sequel has of the same material (SEQUEL_OWN_WEAPONS), else None."""
     from . import specialize
     if sl_type not in SEQUEL_OWN_WEAPONS:
         return None

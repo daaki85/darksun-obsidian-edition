@@ -15138,8 +15138,8 @@ kind_of_type:
         ; (specialize.KIND_OF_TYPE): its short swords, axes, great axes, picks, polearms, cahulaks
         db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
         db 0, 0, 0, 0, 3, 7, 7, 3, 0, 0, 0, 0, 0, 0, 12, 12      ; types 119-134
-        ; the Ravager weapons backported: the six plain ones' places (SL's 148-153, which go back as the
-        ; sequel's own: ravager.sequel_weapon_type), then the metal great sword, lotulis and javelin, the
+        ; the Ravager weapons backported: five plain ones' places (SL's 148-152, which go back as the
+        ; sequel's own: ravager.sequel_weapon_type), SL's wooden darts (153), then the metal great sword, lotulis and javelin, the
         ; obsidian lotulis and the bone great sword (SL's 154-158), their material kept
         db 17, 18, 19, 20, 21, 22, 17, 18, 21, 18, 17            ; types 135-145
         ; Shattered Lands' own weapon types the sequel has none of its kind and material (ravager.SL_EXTRA_TYPES):

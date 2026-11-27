@@ -49,13 +49,21 @@ class NumbersTests(unittest.TestCase):
 
 
     def test_backported_weapons_are_the_sequels(self):
-        """SL's six plain Ravager weapons backported (148-153) become the sequel's type of that weapon, not
+        """SL's plain Ravager weapons backported (148-152) become the sequel's type of that weapon, not
         keepsakes."""
         from dsloader import game, specialize
-        want = {"two-handed sword": 101, "lotulis": 61, "double spear": 39, "trikal": 100, "javelin": 59,
-                "darts": 43}
+        want = {"two-handed sword": 101, "lotulis": 61, "double spear": 39, "trikal": 100, "javelin": 59}
         for t in ravager.SEQUEL_OWN_WEAPONS:
             self.assertEqual(ravitems.sequel_type(t, {}), want[specialize.KINDS[specialize.KIND_OF_TYPE[t]]], t)
+
+    def test_darts_keep_their_type(self):
+        """SL's darts (wood) become the mod's own darts in the sequel (140), not its stone ones (43) or its
+        ones of no material (38); game.RAVAGER_TYPES is what the transfer gives each (2026-11-27: it said 38,
+        the transfer 43)."""
+        from dsloader import game
+        self.assertEqual(ravitems.sequel_type(game.DARTS_TYPE, {}), 140)
+        for t, want in game.RAVAGER_TYPES.items():
+            self.assertEqual(ravitems.sequel_type(t, {}), want, t)
 
     def test_material_weapons_keep_their_type(self):
         """The metal great sword, lotulis and javelin, the obsidian lotulis and the bone great sword (SL
@@ -137,6 +145,17 @@ class NamesTests(unittest.TestCase):
         self.assertEqual(table[at:at + 13], b"Slavepen key\0")
         self.assertEqual(len(table), ravager.NAMES_ROOM * ravager.NAME_KEPT)
 
+    def test_keepsakes_after_the_mods_names(self):
+        """The keepsakes' names come after every one of the mod's (names.NAMES at ravager.mod_name): none of
+        the mod's is overwritten (2026-11-27: the first keepsake's "Long Sword" took the Great Sword's 306)."""
+        from dsloader import names
+        self.assertEqual(ravager.KEEPSAKE_NAMES_FIRST, ravager.NAMES_GAME + names.EXTRA)
+        self.assertLess(max(ravager.mod_name(e) for e in names.NAMES), ravager.KEEPSAKE_NAMES_FIRST)
+        table = ravager.item_names([b"Long Sword"] * ravager.NAMES_ROOM)
+        for entry, name in names.NAMES.items():
+            at = (ravager.mod_name(entry) - ravager.NAMES_GAME) * ravager.NAME_KEPT
+            self.assertEqual(table[at:at + ravager.NAME_KEPT].split(b"\0")[0], name[:ravager.NAME_KEPT - 1], hex(entry))
+
 
 class ObjectTests(unittest.TestCase):
     def test_picture_mapped(self):
@@ -217,6 +236,9 @@ class GameTests(unittest.TestCase):
             wotr = struct.unpack_from("<H", pair, 0x0A)[0] if pair else ravitems.sequel_type(sl_type, types, sl_table, table)
             self.assertTrue(ravitems.same_weapon(sl_type, sl_table, wotr, table), (key[1], sl_type, wotr))
         self.assertGreater(weapons, 300)
+        for sl_type in game.RAVAGER_TYPES:  # (the mod's Ravager weapons, which no SL object of the game has)
+            wotr = ravitems.sequel_type(sl_type, types, sl_table, table)
+            self.assertTrue(ravitems.same_weapon(sl_type, sl_table, wotr, table), (sl_type, wotr))
 
 
 if __name__ == "__main__":

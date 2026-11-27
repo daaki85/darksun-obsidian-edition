@@ -156,7 +156,7 @@ class SpecializeTests(unittest.TestCase):
 
     def test_transfer_keeps_kind(self):
         """Each of SL's types of the six kinds (148-158: the plain, metal, obsidian and bone ones) goes across as
-        a sequel type of the same kind in DSCLOG2's kind_of_type (ravitems.sequel_type: the plain six the
+        a sequel type of the same kind in DSCLOG2's kind_of_type (ravitems.sequel_type: five plain ones the
         sequel's own, the metal, obsidian and bone ones the mod's own, 141-145)."""
         table = self.image[self.sym["kind_of_type"]:self.sym["kind_of_type"] + ravager.GAME_TYPES + ravager.MOD_TYPES]
         self.assertEqual(len(self.sequel_kinds), 11)  # (148-158)

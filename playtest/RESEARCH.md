@@ -1691,6 +1691,10 @@ any play. **DSCLOG2's rules word is 0 until the dice log attaches** (`ravdice.py
 class or kit limit runs). Read its counters by name with `logs/files/2026-11-27-dsclog2-words.py` (the segment from `ravtail.py`).
 A kit's own weapons come before the class limits (KIT_ALLOWS, then CLASS_FORBIDS): a fire cleric Battle Dancer keeps a bone long
 sword and a bow; pick a character with no kit for a sphere test. A two-handed weapon also needs the other hand free.
+**Item names past 256 show only with the dice log attached** (it writes DSCLOG2's ITEM_NAMES): a box looked at before
+shows none. After a change to the names' places, move the dos folder's RAVITEMS.GFF away and transfer again (its
+objects keep the name numbers they were made with). In the title menu the pointer may not follow `ravclick.py` at
+first: an `xdotool mousemove 510 405 click 1` on the window (640x480 at 192,184) wakes it.
 
 **The Loader's transfer and the party in the sequel** (2026-11-22, logs/2026-11-22-ravager-transfer-items.md):
 `python -m dsloader.ravtransfer SAVE.SAV RAVFOLDER [SL_FOLDER DOS_FOLDER]` on a copy of `$WORK/rav`

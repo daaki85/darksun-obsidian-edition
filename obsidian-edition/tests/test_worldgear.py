@@ -72,7 +72,7 @@ class WorldGearTests(unittest.TestCase):
                  game.OBSIDIAN_LOTULIS_TYPE, game.BONE_GREAT_SWORD_TYPE)
         self.assertEqual(metal, tuple(range(game.GAME_TYPES + 39, game.GAME_TYPES + 44)))
         self.assertEqual(sorted(game.RAVAGER_TYPES), [s[0] for s in specs] + list(metal))
-        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [38, 39, 59, 61, 100, 101, 141, 142, 143, 144, 145])
+        self.assertEqual(sorted(game.RAVAGER_TYPES.values()), [39, 59, 61, 100, 101, 140, 141, 142, 143, 144, 145])
         for spec in specs:
             self.assertIn(spec[1], worldgear.RAVAGER_NAMES)
             self.assertEqual(spec[2], icons.PICTURES[worldgear.RAVAGER_NAMES[spec[1]].decode()])
