@@ -52,8 +52,10 @@ stubs). Addresses are `DSUN.EXE` file offsets, as the docs give them.
 The sequel's one-byte field fits every weight below. SL's 750 for its leather chest armour would
 not fit (the end of section 1).
 
-The mod's own types in the sequel (102-134, SL's 115-147, `npcitems.TYPES` through
-`ravager.wotr_type`) already carry SL's weights. So do the transfer's added items
+The mod's own types in the sequel (102-145, SL's 115-158, `npcitems.TYPES` through
+`ravager.wotr_type`; 2026-11-27: 102-134 before, the metal, obsidian and bone Ravager weapons going
+across as the sequel's own kinds) and SL's bone long sword after them (146, `ravager.SL_EXTRA_TYPES`)
+already carry SL's weights: the bone great sword 110 in both games (the user's, 2026-11-27). So do the transfer's added items
 (`ravitems.make` copies the type record). The heavy-weapon check already runs for those.
 
 ### The weight table

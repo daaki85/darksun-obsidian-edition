@@ -591,6 +591,25 @@ def lacking(save: Chunks, sequel: Sequel) -> Dict[int, bytes]:
     return out
 
 
+def weapon_pairs(sequel: Sequel, sl_objects: Chunks, sl_table: bytes, table: bytes) -> Dict[int, int]:
+    """SEQUEL's pairs (ITEMS.BIN's) but those of Shattered Lands' weapons whose sequel object is of another
+    kind or material (ravitems.same_weapon; SL_OBJECTS SL's objects, SL_TABLE and TABLE the two games' type
+    tables, the sequel's as the Loader's copy has it): those the Loader makes (with_added), as for an item
+    the sequel lacks, so their material comes across (the user's, 2026-11-27). SSI's pairs give SL's Long
+    Sword (bone) the sequel's obsidian Longsword, its Great Axe +3 (metal) an obsidian one, its Polearm +1
+    a Double Spear, Terror Blade (obsidian) a stone dagger, Bloodwrath (obsidian) a metal long sword..."""
+    from . import ravitems
+    out: Dict[int, int] = {}
+    for sl, wotr in sequel.counterparts.items():
+        a, b = ravitems._first_record(sl_objects, sl), ravitems._first_record(sequel.objects, wotr)
+        if a is not None and b is not None and not ravitems.same_weapon(
+                struct.unpack_from("<H", a, ravitems.SL_ITEM_TYPE)[0], sl_table,
+                struct.unpack_from("<H", b, ravitems.ITEM_TYPE)[0], table):
+            continue
+        out[sl] = wotr
+    return out
+
+
 def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: str) -> Tuple[Sequel, List[Tuple[int, str]]]:
     """SEQUEL with the Loader's objects for the party's items it lacks (ravitems), made from the
     Shattered Lands in SL_DIR and the sequel in FOLDER, and kept in DOS_DIR's ADDED_FILE with the earlier
@@ -605,24 +624,31 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
     with open(os.path.join(folder, ravager.RESOURCE_FILE), "rb") as f:
         sequel_names = ravlog.spell_table(f.read())[1]
     sequel = sequel._replace(spells=spell_map(sl_resources, sequel_names))
+
+    def read(path):
+        with open(path, "rb") as f:
+            return read_gff(f.read())
+    from . import itemtables
+    sl_objects = read(os.path.join(sl_dir, "SEGOBJEX.GFF"))
+    sl_objects.update(icons.new_chunks(sl_objects))
+    loader_copy = os.path.join(dos_dir, icons.OBJECTS_FILE)  # (the Loader's copy for Shattered Lands:
+    if os.path.exists(loader_copy):  # its own objects too, Kalzith's scrolls, the tome, the new items)
+        sl_objects.update(read(loader_copy))
+    gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
+    sl_table = itemtables.types_chunk(gpl[itemtables.TYPES_CHUNK])
+    table = ravager.mod_types_table(ravager.materialled_table(sequel.objects[ravager.TYPES_CHUNK]))
+    sequel = sequel._replace(counterparts=weapon_pairs(sequel, sl_objects, sl_table, table))
     need = lacking(save, sequel)
     kept = ravager.read_added(dos_dir)
     names_text = kept.get(ravitems.NAMES_CHUNK, b"")
-    old_pairs = {sl: ravitems.own_object(sl) for sl in need if ("OJFF", ravitems.own_object(sl) or -1) in kept}
+    old_pairs = {sl: ravitems.own_object(sl) for sl, rec in need.items()
+                 if ("OJFF", ravitems.own_object(sl) or -1) in kept
+                 and not ravitems.stale(kept, ravitems.own_object(sl), rec, sl_table, table)}  # (a stale one made anew)
     need = {sl: rec for sl, rec in need.items() if sl not in old_pairs}
     failed: List[Tuple[int, str]] = []
     pairs = dict(old_pairs)
     added = {k: v for k, v in kept.items() if k[0] in ravitems.OBJECT_KINDS}
     if need:
-        def read(path):
-            with open(path, "rb") as f:
-                return read_gff(f.read())
-        sl_objects = read(os.path.join(sl_dir, "SEGOBJEX.GFF"))
-        sl_objects.update(icons.new_chunks(sl_objects))
-        loader_copy = os.path.join(dos_dir, icons.OBJECTS_FILE)  # (the Loader's copy for Shattered Lands:
-        if os.path.exists(loader_copy):  # its own objects too, Kalzith's scrolls, the tome, the new items)
-            sl_objects.update(read(loader_copy))
-        gpl = read(os.path.join(sl_dir, "GPLDATA.GFF"))
         sl_names = next(v for k, v in sorted(gpl.items()) if k[0] == "NAME")
         sl_palette = next(art.palette_colours(v) for k, v in sorted(gpl.items()) if k[0] == "PAL " and len(v) >= 768)
         resources = read(os.path.join(folder, ravager.RESOURCE_FILE))
@@ -630,11 +656,10 @@ def with_added(save: Chunks, sequel: Sequel, sl_dir: str, folder: str, dos_dir: 
         names = ravitems.Names(sl_names, resources[("TEXT", 1000)],
                                [n for n in names_text.split(b"\n") if n])
         types = ravitems.type_map(sequel.counterparts, sl_objects, sequel.objects)
-        table = ravager.mod_types_table(sequel.objects[ravager.TYPES_CHUNK])
         numbers = [r.number for k, v in added.items() if k[0] == "RDFF" for r in dataitems.records(v)[0]]
         new_pairs, chunks, failed = ravitems.make(need, sl_objects, sequel.objects, types, names, sl_palette,
                                                   ravitems.stable_colours(resources, regions), table,
-                                                  max(numbers + [ravitems.ITEM_NUMBER_FIRST - 1]) + 1)
+                                                  max(numbers + [ravitems.ITEM_NUMBER_FIRST - 1]) + 1, sl_table)
         pairs.update(new_pairs)
         added.update(chunks)
         out = dict(added)

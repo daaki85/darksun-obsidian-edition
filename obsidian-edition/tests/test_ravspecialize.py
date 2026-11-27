@@ -14,7 +14,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import game, ravager, ravlog, ravtransfer, specialize  # noqa: E402
+from dsloader import game, ravager, ravitems, ravlog, ravtransfer, specialize  # noqa: E402
 import test_restrict  # noqa: E402
 
 try:
@@ -53,7 +53,7 @@ class SpecializeTests(unittest.TestCase):
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
         cls.sheets = [(c, l, race, kinds, wotr_sheet(c, l, race, kinds))
                       for c, l, race in CHARACTERS for kinds in SPECS]
-        cls.sequel_kinds = {t: (specialize.KIND_OF_TYPE[t], ravager.sequel_weapon_type(t))
+        cls.sequel_kinds = {t: (specialize.KIND_OF_TYPE[t], ravitems.sequel_type(t, {}))
                             for kind in specialize.KINDS[16:] for t in specialize._TYPES[kind]}
         cls.fighters = {kind: wotr_sheet((9,), (3,), 2, [K(kind)]) for kind in specialize.KINDS}
 
@@ -156,12 +156,13 @@ class SpecializeTests(unittest.TestCase):
 
     def test_transfer_keeps_kind(self):
         """Each of SL's types of the six kinds (148-158: the plain, metal, obsidian and bone ones) goes across as
-        a sequel type (ravager.sequel_weapon_type) of the same kind in DSCLOG2's kind_of_type."""
-        table = self.image[self.sym["kind_of_type"]:self.sym["kind_of_type"] + ravager.GAME_TYPES]
+        a sequel type of the same kind in DSCLOG2's kind_of_type (ravitems.sequel_type: five plain ones the
+        sequel's own, the metal, obsidian and bone ones the mod's own, 141-145)."""
+        table = self.image[self.sym["kind_of_type"]:self.sym["kind_of_type"] + ravager.GAME_TYPES + ravager.MOD_TYPES]
         self.assertEqual(len(self.sequel_kinds), 11)  # (148-158)
         for sl_type, (kind, sequel) in self.sequel_kinds.items():
-            self.assertIsNotNone(sequel, sl_type)
             self.assertEqual(table[sequel] - 1, kind, sl_type)
+            self.assertEqual(sequel < ravager.GAME_TYPES, sl_type in ravager.SEQUEL_OWN_WEAPONS, sl_type)
 
     def test_effects_names(self):
         """EF_LINES_OF's names (ef_kinds) are specialize.KINDS', all 22."""

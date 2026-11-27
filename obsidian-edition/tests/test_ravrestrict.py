@@ -1,5 +1,5 @@
 """DSCLOG2's class restrictions on the mod's item types in Wake of the Ravager (CLASS_FORBIDS, run in an
-emulated CPU): for each of the mod's 33 types (OBJEX2.GFF's 102-134, ravager.mod_type) and the classes
+emulated CPU): for each of the mod's 44 types (OBJEX2.GFF's 102-145, and SL's bone long sword at 146, ravager.mod_type) and the classes
 alone and together, the same answer as Shattered Lands' rules (restrict.allowed, its kits aside: the
 sequel has none). Its kinds come from DSCLOG2's kind_of_type, which goes on past the sequel's 102
 types (test_ravager.ItemTypeTests.test_mod_kinds_in_dsclog2). Needs nasm and unicorn, else skipped."""
@@ -52,7 +52,8 @@ class ModTypeRestrictionTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where CLASS_FORBIDS returns)
         mu.mem_write(GAME_DS * 16 + ravager_types_ptr(), struct.pack("<HH", 0, TYPES))
         table = bytes(ravager.TYPE_SIZE * ravager.GAME_TYPES) + b"".join(
-            ravager.wotr_type(bytes.fromhex(t) if isinstance(t, str) else t) for t in npcitems.TYPES[:ravager.MOD_TYPES])
+            ravager.wotr_type(bytes.fromhex(t) if isinstance(t, str) else t) for t in npcitems.TYPES[:ravager.MOD_TYPES]) + \
+            b"".join(ravager.wotr_type(t) for t in ravager.SL_EXTRA_RECORDS)
         mu.mem_write(TYPES * 16, table)
         refused = 0
         for classes in CLASSES:
@@ -68,6 +69,10 @@ class ModTypeRestrictionTests(unittest.TestCase):
                     with self.subTest(classes=classes, race=race, type=sl_type):
                         self.assertEqual(self.run_forbids(mu, wotr, ravager.mod_type(sl_type)), want)
                     refused += want
+                for i, (sl_type, record) in enumerate(zip(ravager.SL_EXTRA_TYPES, ravager.SL_EXTRA_RECORDS)):
+                    want = not restrict.allowed(bytes(sl), sl_type, record)  # (SL's bone long sword, 146)
+                    with self.subTest(classes=classes, race=race, type=sl_type, extra=True):
+                        self.assertEqual(self.run_forbids(mu, wotr, ravager.EXTRA_FIRST + i), want)
         self.assertGreater(refused, 50)  # (the test means something: many refused)
 
     def test_sequel_six_kinds(self):

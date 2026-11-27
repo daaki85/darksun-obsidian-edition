@@ -7944,7 +7944,7 @@ RP_CURES_END equ $
 ; THIEF_HEAVY; game.RULE_RESTRICT, always on in SL; dsloader/restrict.py). The sequel's records: an item
 ; type's flags +0 (4 a shield, 2 missile, 10h thrown), material +4 (its low nibble; 40h with 0 none),
 ; armour +0Bh 80h, the classes that may use it +0Ch; a sheet's class bits +10h, race +12h (1 human),
-; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-134 in
+; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-145 in
 ; OBJEX2.GFF, with the party transfer) aren't armour (ARMOUR_TYPE). Not in the sequel, so not here:
 ; the Spellarcher's arrows. The kits' gear limits and own gear: KITS' GEAR, below.
 ; - CU_SITE (site 19) replaces "mov [bp-1],al" (775FDh) at the end of the sequel's "may this character
@@ -7990,7 +7990,7 @@ SPHERE_WATER equ 0x03           ; wood, bone
 CU_BOW_KIND equ 14              ; (KIND_OF_TYPE's bow)
 CU_FIGHTER  equ 9
 CU_GLADIATOR equ 10
-KIND_TYPES  equ 135             ; (KIND_OF_TYPE's types: the sequel's 102 and the mod's 33)
+KIND_TYPES  equ 147             ; (KIND_OF_TYPE's types: the sequel's 102, the mod's 44, SL's 1: ravager.SL_EXTRA_TYPES)
 ARM_SLOT    equ 0               ; (an item's +13h while worn: arms, legs, head, chest)
 LEG_SLOT    equ 6
 HEAD_SLOT   equ 7
@@ -8585,7 +8585,7 @@ warrior_al:
 .no:    clc
         ret
 ; ARMOUR_TYPE: carry set if the item type at ES:BX is armour (restrict.is_armour): +0Bh 80h, and not a
-; shield (+0 4), nor of these the mod's types bring (OBJEX2.GFF's 102-134): bracers of defense (worn on
+; shield (+0 4), nor of these the mod's types bring (OBJEX2.GFF's 102-145): bracers of defense (worn on
 ; the arms, +5 3, of no material: +4 40h), a robe (on the chest, +5 1, +4 40h, for preservers,
 ; psionicists and druids alone: +0Ch 190h) or a cloak of protection (+5 8, as a cloak). All kept.
 CU_WORN     equ 0x05
@@ -15134,10 +15134,17 @@ kind_of_type:
         db 7, 11, 0, 0, 0, 0, 0, 0, 21, 0, 18, 0, 0, 0, 0, 0, 5   ; types 51-67
         db 0, 1, 0, 0, 3, 1, 5, 0, 0, 0, 0, 8, 10, 0, 0, 0, 0   ; types 68-84
         db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 20, 17   ; types 85-101
-        ; the mod's types (OBJEX2.GFF's 102-134, SL's 115-147: ravager.mod_type), SL's kinds
+        ; the mod's types (OBJEX2.GFF's 102-145, SL's 115-158: ravager.mod_type), SL's kinds
         ; (specialize.KIND_OF_TYPE): its short swords, axes, great axes, picks, polearms, cahulaks
         db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
         db 0, 0, 0, 0, 3, 7, 7, 3, 0, 0, 0, 0, 0, 0, 12, 12      ; types 119-134
+        ; the Ravager weapons backported: five plain ones' places (SL's 148-152, which go back as the
+        ; sequel's own: ravager.sequel_weapon_type), SL's wooden darts (153), then the metal great sword, lotulis and javelin, the
+        ; obsidian lotulis and the bone great sword (SL's 154-158), their material kept
+        db 17, 18, 19, 20, 21, 22, 17, 18, 21, 18, 17            ; types 135-145
+        ; Shattered Lands' own weapon types the sequel has none of its kind and material (ravager.SL_EXTRA_TYPES):
+        ; its bone long sword
+        db 1                                                     ; type 146
 LARGE_MOST    equ 520
 section tail                        ; (LARGE_DICE and LARGE_BITS: the tail's)
 large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, sizes.LARGE_DICE)
