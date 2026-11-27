@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravspells
+from . import game, gamepatch, gff, ravarrows, ravspells
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -785,6 +785,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("pp_text_info", 0x97702, bytes.fromhex("1e68082d"), _site(184, 4)),
     Patch("pp_info", 0x97716, bytes.fromhex("a1779d"), _site(185, 3)),
     Patch("pp_hand", 0x630F8, bytes.fromhex("8b7606"), _site(186, 3)),
+    # ... and a Spellarcher's arrows buttons beside it (SL's PP_EXTRAS: spellarrows.py), in those same sites,
+    # with DSCLOG2's site 240 where the USE screen, closing (9654Dh, SL's 884B3h), lets go of Turn Undead's
+    # icon, "cmp dword [2B9Ah],0": the arrows buttons' icons let go of too
+    Patch("arrows_close", 0x9659E, bytes.fromhex("66833e9a2b00"), _site(240, 6)),
     # ... and the Elementalist's second sphere (SL's EL_SPHERES and PROBE_EL_*): the sequel asks 62B45h
     # (spell, class) whether a class casts a priest spell each time, never with the character, so DSCLOG2's
     # EL_SPHERE (sites 90-92) answers yes for an Elementalist's cleric class and a spell of its second
@@ -1334,6 +1338,14 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(ROLL_BUTTONS)
+    if ravarrows.SKIP not in skip:  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS, site 240)
+        try:
+            added = ravarrows.resource_chunks(gff.read_gff(out), sl_dir)
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravarrows.SKIP)
     if PICK_BUTTON_ICON not in skip:  # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186)
         from . import art, wotrart
         try:
@@ -1629,14 +1641,17 @@ def mod_types_table(types: bytes) -> bytes:
 
 
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
-                  gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
+                  gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
+                  arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
     double spear's range 1 (RAV_RANGES, unless "melee_range" is), and the
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
     them) unless "new_items" is (or the mod's types are left out: they are its types), and the still magic
-    items' icons shining (ravshine) unless "item_shine" is."""
+    items' icons shining (ravshine) unless "item_shine" is; and the Spellarcher's spell arrows' objects
+    (ARROWS(the sequel's chunks): ravarrows', in a game with no party transferred too) unless
+    ravarrows.SKIP is."""
     from . import icons, ravitems
     chunks = gff.read_gff(data)
     types = chunks.get(TYPES_CHUNK)
@@ -1662,6 +1677,14 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         made = gear(chunks)  # (a transfer's picture object of the same number is the same picture: kept)
         new.update({k: v for k, v in made.items() if k not in new})
         done.append("new_items")
+    if arrows and ravarrows.SKIP not in skip:  # (the spell arrows a Spellarcher makes: DSCLOG2's SPELL ARROWS)
+        try:
+            made = arrows(chunks)
+        except (KeyError, ValueError, IndexError, StopIteration, struct.error, OSError, gff.GffError):
+            made = {}  # (Shattered Lands' pictures unreadable: none, the Loader makes no arrows)
+        if made:
+            new.update(made)
+            done.append(ravarrows.SKIP)
     if weights or ranges:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
         new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip, weights=weights, ranges=ranges))
         done += ["weights"] * weights + ["melee_range"] * ranges
@@ -1781,7 +1804,8 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
     added = read_added(os.path.dirname(dest))
     books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
     gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
-    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear), skip)
+    arrows = (lambda chunks: ravarrows.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    return _write_copy(game_dir, OBJECTS_FILE, dest, lambda d, s: objects_fixed(d, s, added, gear, arrows), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:

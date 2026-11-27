@@ -81,3 +81,10 @@ plus its 5,632-byte block at EE9F; **upper memory free 85,376 bytes** (largest p
 92,304 at 58,192 bytes (2026-11-26). Conventional memory after the game 63,168 bytes, its far heap 47 KB
 free, HMA on. Afterwards `python3 -m dsloader.ravager narrow /tmp/playtest/rav` (the Loader's start
 widens the roster).
+
+## 2026-11-27: upper memory with #228 (DSCLOG2's room) and #223 joined
+
+The same check as above (`RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh` to Tyr, then `dosmem.py`), with #218 to #223
+and #228 joined. DSCLOG2 now takes two blocks: its 64 KB segment (65,792 bytes) and the tail (5,632 bytes,
+at the top of upper memory). Free in upper memory: **84,160 bytes** in 2 pieces, the largest 84,016 (85,376
+before #223 and #228). Conventional memory after the game: 63,168 bytes, the far heap 47 KB free; the HMA is on.

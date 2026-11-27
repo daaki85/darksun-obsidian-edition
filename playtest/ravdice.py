@@ -20,7 +20,7 @@
 # list: N: Draxan#26 (side 7), ...").
 # RAV_NO_SAVES=1: no quick saves (F5, F9) and no autosaves (for a run with memory edits). RAV_NO_SQUARES=1: the
 # squares in reach off (R does nothing: the Options tab's switch), RAV_NO_MOVEBACK=1: F10 after the last step left
-# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off), RAV_NO_DUST=1: no walkers' dust (DSCLOG2's DUST_ON never set), RAV_NO_GHOST=1: no see-through figures (its GHOST_ON never set), RAV_NO_FIRST_WEAPON=1: a new
+# the game's (moveback.py off), RAV_NO_USABLE=1: Alt marks nothing (usable.py off), RAV_NO_DUST=1: no walkers' dust (DSCLOG2's DUST_ON never set), RAV_NO_GHOST=1: no see-through figures (its GHOST_ON never set), RAV_NO_ARROWS=1: no Spellarcher's arrows buttons (DSCLOG2's ARROWS_ON never set), RAV_NO_FIRST_WEAPON=1: a new
 # warrior keeps the game's starting weapon (ravfirstweapon.py off; the fuller gear still given): controls.
 # RAV_PREDICT=1: with each Tab line, what its chance to hit was made of ("  predict: ..."): the distance in squares,
 # the target's facing and the way to the attacker, its AC from the front and behind (GameData.attack_ac), the AC gap
@@ -138,6 +138,9 @@ if os.environ.get('RAV_NO_USABLE'):
 if os.environ.get('RAV_NO_FIRST_WEAPON'):
     log.first_pick_weapon = False
     print('first pick weapon off', flush=True)
+if os.environ.get('RAV_NO_ARROWS'):
+    log.spell_arrows = False
+    print('spell arrows buttons off', flush=True)
 if os.environ.get('RAV_NO_KIT_START'):
     log.kit_start_gear = False
     print('class and kit starting gear off', flush=True)

@@ -491,7 +491,10 @@ class ItemSpellTests(unittest.TestCase):
                           struct.unpack_from("<H", rec, rt.ITEM_SPELL_SHOWN)[0]), (21500, 175, 175))
         arrows = bytearray(sl_item(1500))
         struct.pack_into("<H", arrows, 0x12, 0x16D)  # (Chill Arrows, by name)
-        self.assertEqual(struct.unpack_from("<H", rt.item(bytes(arrows), sequel)[0], rt.ITEM_POWER)[0], 4)
+        struct.pack_into("<H", arrows, 0x02, 17)  # (17 of them)
+        made = rt.item(bytes(arrows), sequel)[0]
+        self.assertEqual(struct.unpack_from("<H", made, rt.ITEM_POWER)[0], 4)
+        self.assertEqual(struct.unpack_from("<H", made, 0x02)[0], 17)  # (their count kept, not the spell's icon)
         blade[rt.SL_ITEM_SPELL] = 50  # (a spell the sequel lacks: none)
         self.assertEqual(struct.unpack_from("<H", rt.item(bytes(blade), sequel)[0], rt.ITEM_POWER)[0], 0)
         # the sequel's own object keeps its spell; CHARTRAN's way (no spells) changes nothing

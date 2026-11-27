@@ -319,7 +319,9 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     elif sequel.spells is not None and is_own(new) and not is_scroll(rec):  # (a keepsake scroll: none)
         power = item_spell(rec, sequel.spells)
         struct.pack_into("<H", out, ITEM_POWER, power)
-        struct.pack_into("<H", out, ITEM_SPELL_SHOWN, power)
+        from .spellarrows import ARROW_NAMES
+        if struct.unpack_from("<H", rec, SL_ITEM_NAME)[0] not in ARROW_NAMES:  # (spell arrows keep their count there)
+            struct.pack_into("<H", out, ITEM_SPELL_SHOWN, power)
     return bytes(out), new
 
 

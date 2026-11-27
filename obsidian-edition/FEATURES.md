@@ -1189,7 +1189,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   game's menu right after DUAL. A new character's starting gear is fitted to its kit from the
   sequel's own items (a Shinobi's long sword +1 a short sword +1, an Arena Champion's second sword a
   Shield +1, a Ravager's shield left behind and a second sword in its place, a Spellarcher's bow its Fine
-  Bow). A Spellarcher makes no spell arrows there yet. What else kits do to spells
+  Bow), and a Spellarcher makes spell arrows on the USE screen there as in Shattered Lands (a button for
+  each touch spell it knows, a slot a press; not the spell arrows it starts with). What else kits do to spells
   and psionic powers doesn't carry over yet, but for the Shinobi's own spells: it has a MAGE
   list on USE, casts at its thief level less 5, and learns its own at a level up, at creation and from a
   scroll (read languages first) as in Shattered Lands ([which kits work

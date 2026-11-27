@@ -46,7 +46,7 @@ class ShinobiTests(unittest.TestCase):
         from test_dsclog_drawing import build
         exe, cls.sym = build(ASM)
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
-        assert len(cls.image) < HLT
+        assert cls.sym["tail_mid"] <= HLT
 
     def setUp(self):
         mu = self.mu = Uc(UC_ARCH_X86, UC_MODE_16)
