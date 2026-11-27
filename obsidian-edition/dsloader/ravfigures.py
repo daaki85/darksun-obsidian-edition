@@ -59,8 +59,8 @@ SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 
 OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
-# Rows in the thick lower edge. Keep the patterned faces of overlapping Jann cushions intact.
-CUSHION_SIDES = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9}
+# Only these bottom rows take the Tyr scale. Keep the cushion faces and exposed smoke intact.
+BASE_ROWS = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
 # The four placement fields are stock object, x, y and the new y. Other placements
@@ -245,7 +245,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         if gone:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
         if f == "OBJEX.GFF":
-            for number in (*FURNITURE, *CUSHION_SIDES):
+            for number in (*FURNITURE, *BASE_ROWS):
                 key = ("BMP ", number)
                 # A later catalogue replacement owns its art and all its poses.
                 script = ("SCMD", number)
@@ -253,7 +253,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                     continue
                 if script not in old or number in OPENABLE:
                     scale = FURNITURE_SCALES.get(number, 0.66)
-                    new[key] = lowered_furniture(old[key], CUSHION_SIDES.get(number), scale)
+                    new[key] = lowered_furniture(old[key], BASE_ROWS.get(number), scale)
             # Package positions only when every piece still uses this group's artwork.
             for region, pictures, moves in ASSEMBLIES:
                 keys = [("BMP ", pic) for pic in pictures]

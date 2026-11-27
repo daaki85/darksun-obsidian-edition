@@ -1,5 +1,13 @@
 # Ravager furniture at Shattered Lands scale
 
+## Project progress
+
+All 20 shipped region files have been scanned. Eight passes have revised 140 pictures at 387 placements across 16 regions. The four regions with no new furniture squash are Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+
+Tyr has a live spot check of Notaku’s stall and a chair. No region has completed every in-game check in the queue. The main remaining work is playing the changed rooms and their transitions, including the Mosaic bust puzzle, the Mines 3 tank destruction and the Cosmos ritual. Limbo objects still need tracing to the scenes that use them.
+
+## Freestanding shelves
+
 The first pass lowers 19 freestanding shelves at all 54 of their placements. Each uses the 0.66 vertical scale of the Tyr furniture pass. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
 
 ## What the first pass looks like
@@ -104,6 +112,18 @@ The two halves of the weapon display share a floor line in both regions. In each
 
 The comparisons use the previous and revised Loader object and region files. All 24 placements were checked individually for a visible difference. The only placement data changes were the vertical positions of two pillows, four crates and one pot. Direct play checks of the headquarters after the attack and the display in both regions remain open.
 
+## El’s Temple
+
+Six smoking braziers flank the approach to Tantris’s throne. The two pictures differ in the direction of the curling smoke. Lowering the entire picture shortened the smoke. Instead the bowl was reduced from 22 rows to 15, and the 14 rows of exposed smoke were moved down intact. Each bowl keeps its 26-pixel width and its floor line.
+
+![Whole El’s Temple map before and after beside the Shattered Lands hall with six braziers](el-temple-maps.png)
+
+The enlarged views compare the throne approach with the paired braziers in Shattered Lands region 27h. The bottom row shows Pavis’s occupied and empty basins and Tantris’s second pose. All five stored figure frames decode and their pictures and animation scripts match the preceding build. Only the two brazier pictures changed in the built object file. All six placements show the change individually. The transition at the throne still needs a play check.
+
+![Brazier rows and individual bowls with Shattered Lands references, plus Pavis and Tantris in the built mod](el-temple-braziers.png)
+
+The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. Their destruction sequence remains on the Mines 3 playtest list.
+
 ## Earlier figure work
 
 The figures and their furniture can share one picture. Other scenes use a separate bed, stall front, table leg or place setting. Compared 81 stored frames across 33 pictures with the originals and examined 20 scenes with the mod's object remaps and Mines 3 placement changes applied. The panels show the original Ravager scene on the left of each pair and the existing figure work on the right. These are offline renders of the first stored pose. The Tyr stall has since been checked in DOSBox. Scripted transitions and interactions in the other rooms still need a play check.
@@ -139,7 +159,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 033 Veiled Alliance | 195 | 21 | 78 | Check both headquarters layouts in play, including torn beds, pillows and the pot on the broken crate |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
 | 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
-| 037 Temple | 62 | 0 | 0 | Use Pavis and Tantris as references for nearby fixtures |
+| 037 Temple | 62 | 0 | 6 | Check the six braziers in play and the transition at Tantris’s throne |
 | 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
@@ -155,4 +175,4 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 045 Under Tyr | 135 | 0 | 15 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records all seven furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all eight furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.

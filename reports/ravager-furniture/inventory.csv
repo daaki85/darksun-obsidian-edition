@@ -38,16 +38,17 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
 703,"Counters, stalls and attendants",Reviewed beside seated Fletch in the museum and retained at current scale,,032:1 03C:1
-787,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,037:1
-788,"Occupied beds, beds and basins",Reviewed at current scale,alternate-pose-continuity.zip,037:1
+785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
+787,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,scenery-and-miner.zip,037:1
+788,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,alternate-pose-continuity.zip,037:1
 917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
 1014,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1015,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1016,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
-1032,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
-1033,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
-1034,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
-1035,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
+1032,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1033,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1034,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1035,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
 1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
 1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
 1137,Freestanding shelves,Lowered and placements reviewed,,03A:1
@@ -58,6 +59,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1171,Freestanding shelves,Lowered and placements reviewed,,033:3
 1172,Freestanding shelves,Lowered and placements reviewed,,033:2
 1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
+1251,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
 1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
 1342,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
 1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
@@ -107,13 +109,13 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2234,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
 2354,Barrels and crates,Lowered and placements reviewed,,034:1
 2356,Barrels and crates,Lowered and placements reviewed,,032:1
-2371,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
-2374,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
-2375,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
-2376,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
-2377,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
+2371,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2374,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2375,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2376,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2377,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
 2378,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
-2379,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
+2379,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
 2380,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
 2440,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 2441,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
@@ -159,9 +161,11 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2697,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
 2698,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
 2699,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:4
-2701,Multi-piece environment or scripted fixture,Inspect in scene,,03B:1
+2701,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
 2703,"Tables, counters and benches",Lowered and placements reviewed,,033:1
 2704,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:6
+2732,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:4
+2733,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:2
 2769,Camp baskets,Lowered and reviewed beside the loom,,03B:1
 2770,Camp baskets,Lowered and reviewed beside the loom,,03B:1
 2783,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
