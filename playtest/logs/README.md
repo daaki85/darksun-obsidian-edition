@@ -231,6 +231,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-figures.md) | Wake of the Ravager's redrawn figures in the Loader's copies, and the region file's redirect |
 | [2026-11-27](2026-11-27-ravager-sl-interface.md) | Wake of the Ravager with Shattered Lands' screens and icons (ravui): the USE screen and the inventory, with and without |
 | [2026-11-27](2026-11-27-loader-pictures.md) | The Loader pictures retaken with the new bar |
+| [2026-11-27](2026-11-27-ravager-furniture.md) | Ravager furniture in Tyr, Notaku’s stall and the northern chairs |
 
 ## files/
 

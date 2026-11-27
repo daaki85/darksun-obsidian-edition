@@ -1996,6 +1996,7 @@ casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the ki
   6 Petrified, 7 Dead, 8 Gone (SL's numbering differs: `ravlog.ADDRESSES["STATUS_NAMES"]`).
 - **Keys**: O is the sequel's overhead map, so DSCLOG2's M is made O. U and I are USE and the inventory,
   as in SL.
+- **Loading the after-ambush save without memory-assisted clicks.** At the title menu press L, then Return on the slot screen with AFTER AMBUSH highlighted. A 640 × 480 Ravager surface scales the 320 × 200 game by 2 horizontally and 2.4 vertically. The purple chair at Tyr (1341, 238) is visible from the street, making it possible to verify the furniture package from an ordinary screenshot. [Furniture playtest](logs/2026-11-27-ravager-furniture.md)
 - **Notaku** (Tyr, south of Shadow Square; arrow keys y 1224, x 296, y 936 from `ravager-after-ambush`; the
   eye on him, talk 3, 1, 3, 2) sells. **His talk script drops "Show me your goods" for the rest of the
   conversation after any visit to the shop**: a sale, a sale by hand, or none. It does so in the plain sequel too,

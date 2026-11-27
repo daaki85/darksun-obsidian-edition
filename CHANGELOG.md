@@ -64,7 +64,8 @@ pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the
 page](obsidian-edition/RAVAGER.md) have the detail.
 
 **Changed** (Wake of the Ravager)
-- Lowered 19 freestanding shelf pictures at 54 placements across six regions. The
+- Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
+  at 217 placements, including the open and closed states of three fixtures. The
   [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
   and compares occupied furniture with the earlier figure redraws.
 

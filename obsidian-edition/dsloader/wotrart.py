@@ -82,9 +82,9 @@ def _codes(data: bytes, bits: int) -> Iterator[int]:
             yield (acc >> n) & ((1 << bits) - 1)
 
 
-def decode_plnr(chunk: bytes) -> List[List[int]]:
+def decode_plnr(chunk: bytes, index: int = 0) -> List[List[int]]:
     """A PLNR icon's rows of palette numbers (Wake of the Ravager's palette)."""
-    offset, = struct.unpack_from("<I", chunk, 6)
+    offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
     width, height = struct.unpack_from("<HH", chunk, offset)
     at = offset + 4
     if chunk[at:at + 5] != PLNR:

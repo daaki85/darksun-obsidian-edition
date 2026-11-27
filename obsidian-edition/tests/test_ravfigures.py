@@ -82,6 +82,14 @@ class FigureFileTests(unittest.TestCase):
         self.assertEqual(ravfigures.resource_chunks({}, self.data), {})
         self.assertEqual(ravfigures.region_chunks("RGN03A.GFF", {}, self.data), {})
 
+    def test_openable_furniture_keeps_both_poses(self):
+        closed = [[1, 1], [2, 2], [3, 3]]
+        opened = [[None, 7], [8, 8], [9, None]]
+        result = ravfigures.lowered_furniture(art.plnr_frames([closed, opened]))
+        self.assertEqual(frame_count(result), 2)
+        self.assertEqual(art.decode_frame(result, 0)[2], [[None, None], [1, 1], [3, 3]])
+        self.assertEqual(art.decode_frame(result, 1)[2], [[None, None], [None, 7], [9, None]])
+
     def test_cleared_edges(self):
         from dsloader import sprites
         rows = [[5, 5, 5, 5], [5, 1, 5, 5], [5, 2, 3, 5], [5, 5, 5, 5]]
@@ -92,24 +100,27 @@ class FigureFileTests(unittest.TestCase):
 
 @unittest.skipUnless(WOTR, "DSUN_WOTR: the sequel's folder")
 class GameFileTests(unittest.TestCase):
-    def test_reviewed_shelves_match_a_single_pass_over_stock(self):
+    def test_reviewed_furniture_matches_a_single_pass_over_stock(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
         package = ravfigures.object_chunks(stock)
-        for pic in ravfigures.SHELVES:
+        for pic in ravfigures.FURNITURE:
             key = ("BMP ", pic)
-            self.assertNotIn(("SCMD", pic), stock)
-            self.assertEqual(frame_count(stock[key]), 1, pic)
-            self.assertEqual(frame_count(package[key]), 1, pic)
-            original = sequelicons.decode(stock[key])
-            w, h, actual = art.decode_frame(package[key])
-            self.assertEqual((w, h), (len(original[0]), len(original)), pic)
-            self.assertTrue(any(p is not None for row in actual for p in row), pic)
-            for distance, row in enumerate(reversed(actual)):
-                # Nearest source row measured upwards from the unchanged base.
-                offset = (100 * distance + 33) // 66
-                expected = original[h - 1 - offset] if offset < h else [None] * w
-                self.assertEqual(row, expected, (pic, distance))
+            states = 2 if pic in ravfigures.OPENABLE else 1
+            self.assertEqual(("SCMD", pic) in stock, states == 2, pic)
+            self.assertNotIn(("SCMD", pic), package)
+            self.assertEqual(frame_count(stock[key]), states, pic)
+            self.assertEqual(frame_count(package[key]), states, pic)
+            for index in range(states):
+                original = sequelicons.decode(stock[key], index)
+                w, h, actual = art.decode_frame(package[key], index)
+                self.assertEqual((w, h), (len(original[0]), len(original)), pic)
+                self.assertTrue(any(p is not None for row in actual for p in row), pic)
+                for distance, row in enumerate(reversed(actual)):
+                    # Nearest source row measured upwards from the unchanged base.
+                    offset = (100 * distance + 33) // 66
+                    expected = original[h - 1 - offset] if offset < h else [None] * w
+                    self.assertEqual(row, expected, (pic, distance))
 
     def test_every_replaced_chunk_is_the_games(self):
         data = ravfigures.load()

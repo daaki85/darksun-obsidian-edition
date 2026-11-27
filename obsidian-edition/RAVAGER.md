@@ -237,7 +237,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
   two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
   freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
-  and both inhabited volcano levels. The air and fire drakes have been seen fighting on their own maps.
+  and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,
+  including Forest beds, the Mines 1 worktable and the volcano tables and stools. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,

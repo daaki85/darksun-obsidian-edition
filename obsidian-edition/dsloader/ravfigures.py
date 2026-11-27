@@ -17,7 +17,7 @@ picture, the new one". The rest of each file is the player's own, as the game sh
 
 `python -m dsloader.ravfigures pack IMPORTED STOCK [SOURCE]` makes DATA from the catalogue's import
 (darksun-recompiled's tools/proto/import_catalogue.py, run on the stock files: IMPORTED its OUT_DIR, STOCK
-the game's folder). It also lowers reviewed freestanding shelves from the stock file.
+the game's folder). It also lowers reviewed furnishings from the stock file.
 One correction to the catalogue's chunks: Notaku's combat drawings (CBMP 2409, Shattered
 Lands' picture 385, whose background is colour 0 there) have their background, the colour round each drawing's
 edge, made clear (CLEAR_EDGE): in the sequel it was drawn, a box round him as he fought."""
@@ -43,6 +43,14 @@ CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see 
 # Stock shelves reviewed at every placement (reports/ravager-furniture/README.md).
 SHELVES = (1137, 1140, 1170, 1171, 1172, 1334, 2628, 2629, 2631, 2674,
            2675, 2676, 2979, 2980, 2981, 2982, 3356, 3414, 3416)
+
+STORAGE = (532, 533, 2220, 2221, 2222, 2223, 2225, 2354, 2356, 3364)
+TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
+          2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525)
+SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635,
+                    2590, 2591, 2704, 2789, 2790, 2824, 2840, 3246, 3276, 3627, 3628, 3629)
+OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
+FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 
 class FigureError(Exception):
@@ -148,19 +156,20 @@ def cleared_edges(chunk: bytes) -> bytes:
     return sprites.encode_frames(frames)
 
 
-def lowered_shelf(chunk: bytes) -> bytes:
-    """Lower a stock shelf toward its bottom row using the same 0.66 ratio as Tyr."""
+def lowered_furniture(chunk: bytes) -> bytes:
+    """Sample each pose upwards from its own base at Tyr's 0.66 vertical scale."""
     from . import sequelicons, sprites
-    if struct.unpack_from("<H", chunk, 4)[0] != 1:
-        raise FigureError("Expected a single-frame shelf")
-    rows = sequelicons.decode(chunk)
-    height = len(rows)
-    clear = [None] * len(rows[0])
-    lowered = []
-    for y in range(height):
-        source = height - 1 - int((height - 1 - y) / 0.66 + 0.5)
-        lowered.append(rows[source] if source >= 0 else clear)
-    return sprites.encode_frames([lowered])
+    frames = []
+    for index in range(struct.unpack_from("<H", chunk, 4)[0]):
+        rows = sequelicons.decode(chunk, index)
+        height = len(rows)
+        clear = [None] * len(rows[0])
+        lowered = []
+        for y in range(height):
+            source = height - 1 - int((height - 1 - y) / 0.66 + 0.5)
+            lowered.append(rows[source] if source >= 0 else clear)
+        frames.append(lowered)
+    return sprites.encode_frames(frames)
 
 
 def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
@@ -181,11 +190,14 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         if gone:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
         if f == "OBJEX.GFF":
-            for number in SHELVES:
+            for number in FURNITURE:
                 key = ("BMP ", number)
                 # A later catalogue replacement owns its art and all its poses.
-                if key in old and new.get(key) == old[key] and ("SCMD", number) not in new:
-                    new[key] = lowered_shelf(old[key])
+                script = ("SCMD", number)
+                if key not in old or new.get(key) != old[key] or new.get(script) != old.get(script):
+                    continue
+                if script not in old or number in OPENABLE:
+                    new[key] = lowered_furniture(old[key])
         for k, v in sorted(new.items()):
             if old.get(k) == v:
                 continue
