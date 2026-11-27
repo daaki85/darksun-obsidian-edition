@@ -217,7 +217,7 @@ to be read for it.
 | **Saves that stop improving** | Fixed there too: the sequel held its saves at the table's last row, a bug of its own (below) |
 | **A psionicist's saves** | Fixed there too: Dark Sun's psionicists' table in both games |
 | **Cloak of Bravery** | Fixed there too |
-| **Mirror Image** | Fixed there too (played); Reflected Image comes with the sequel's new spells, still to be merged |
+| **Mirror Image** | Fixed there too (played), and Reflected Image's half the time with the sequel's [new spells](FEATURES.md#wake-of-the-ravager) |
 | **Armor** | Fixed there too (played) |
 | **Share Strength** | Fixed there too |
 | **Dispel Magic** | Not needed: SSI mended it in the sequel itself |
@@ -252,7 +252,7 @@ to be read for it.
 | A click on a spell's icon on the **Effects screen** ending the spell | Fixed there too (played) |
 | **CHOOSE A SPELL**'s icons with more than 15 spells | Not checked yet |
 | **Graphics disappearing in a busy area** | Fixed there too (played): SSI's note 2712 was written for this game |
-| A magic item's **glow in a shop** | Not yet: comes with the sequel's graphics, still to be merged |
+| A magic item's **glow in a shop** | Fixed there too |
 
 ### The sequel's own bugs
 
@@ -265,6 +265,7 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](FEATURES.md#wake-of-the-ravager)) |
 | A **worn item's spell** | Never ended when the item came off: the test whether the item has a spell compared unsigned, so the spell's removal was skipped for every item | Ends as the item comes off, as in Shattered Lands |
 | **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](FEATURES.md#wake-of-the-ravager)) |
+| Twelve of the sequel's **magic items' icons** (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun Stone, the Necklace and the Rod) | Never shone, as its other magic items do | Shine as the others ([magic items' icons](FEATURES.md#magic-items-icons)) |
 | **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
 
 ## Saved games
