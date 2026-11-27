@@ -13,21 +13,9 @@ party](FEATURES.md#the-games-own-party)). A human who changes class may take a
 kit for the new class if it has none yet ([Changing class](#changing-class)).
 
 A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
-Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
-skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
-and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
-(the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)), the casting levels (the
-Arcanist's, Spirit Caller's and Wasteland Seer's spells a level or two higher, or lower), the cures (the
-Healer's, Lifebinder's and Rescuer's, Cell Adjustment's too), the Wilderness Avenger's Cause Wounds,
-the spells a kit knows (the Healer's sphere of the cosmos, the healing or harming spells a kit never
-knows), the gear each kit
-forbids or allows, the psionicist kits' PSP costs (the Mind Bender's, Kineticist's, Titan Mind's and
-Wasteland Seer's, to use a power, keep it up or raise a defence) and the Mind Warrior's fifth fewer PSP
-at creation and at a level up, the Battle Mage's and Arcanist's hit die at creation and at a level up,
-and the Battle Mage's casting after being hit work there, and a new character takes a kit there as here
-(its hit points and PSP rolled again as the kit is chosen); what else they do to spells and powers
-doesn't yet, but for the Shinobi's own spells, which it learns and casts there as here. Which kits work there, and which only in part: [In Wake of the Ravager](#in-wake-of-the-ravager).
+Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)), and a new character takes a kit there
+as here. Nearly every kit works there as in Shattered Lands; the few that work only in part, and what
+they lack, are in [In Wake of the Ravager](#in-wake-of-the-ravager).
 How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
@@ -805,7 +793,7 @@ thief skills, movement and initiative.
 | Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at creation and a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
 | Healer | whole: water only, no weapon in the off hand, the sphere of the cosmos (the sequel's druids' spells; Restore Youth once it is in the sequel), cures 1 more a die, no harming spells |
-| Crusader | in part: its THAC0, expertise and one slot fewer |
+| Crusader | whole: its THAC0, expertise and one slot fewer |
 | Grove Warden | whole |
 | Lifebinder | whole: blunt weapons only, cures a die more, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
@@ -834,7 +822,7 @@ says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' 
   spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
 
 A warrior's weapon is first made a +1 of its first weapon spec ([Starting
-weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow; not there: its
+weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow, and
 it starts with 24 of each touch spell's arrows it picked in place of the arrows its weapon spec gives (with none
 picked, it keeps those), as in Shattered Lands.
 
@@ -842,7 +830,7 @@ The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hol
 Spellarcher's arrows are +3 from its 13th preserver level there. A new character's kit hit die and PSP (a Battle
 Mage's, Arcanist's, Mind Warrior's) count from the creation screen there as here: the hit points and PSP
 are rolled again as the kit is chosen. Characters brought from Shattered Lands keep the hit points and PSP
-they have, and the sequel's own party none of these kits.
+they have (and a Spellarcher its Fine Bow, still one), and the sequel's own party none of these kits.
 
 ## Changing class
 
