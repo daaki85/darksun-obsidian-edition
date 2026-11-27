@@ -111,8 +111,9 @@ says what the mod writes, and where).
 
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
   `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the
-  original game, without the mod, and says why). The Loader runs it in the DOSBox that
-  comes with the GOG release.
+  original game, without the mod, and says why). The Loader runs it in DOSBox-X, which
+  comes with the mod (the `dosbox-x` folder), or in the DOSBox that comes with the GOG release if
+  you choose it on the Options tab ([the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
@@ -123,7 +124,7 @@ says what the mod writes, and where).
   **Play Shattered Lands** and the Python install are Windows only. The Loader's window is
   `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
   distributions package apart from Python (on Debian and Ubuntu,
-  `python3-tk`). macOS isn't supported.
+  `python3-tk`). On macOS nothing has been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **Linux with DOSBox-X**: with [DOSBox-X as the
   engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) (the default once the Loader finds
   one: choose its program on the Options tab), **Start the game**
@@ -256,8 +257,8 @@ the button says so and points to the Options tab's **Choose its folder...**.
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
-from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
-there).
+from its `cloud_saves` folder if it has one (GOG's release keeps the saves
+there, and the Loader starts either engine with them).
 
 **Without DOSBox:** see [Dark Sun Recompiled](#dark-sun-recompiled).
 

@@ -443,7 +443,7 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
 
 ## A game in DOSBox-X
 
-The Options tab's other engine (`dsloader/dosboxx.py`; logs/2026-11-18-dosbox-x.md, the
+The Options tab's DOSBox-X engine, the default (`dsloader/dosboxx.py`; logs/2026-11-18-dosbox-x.md, the
 experiment, and logs/2026-11-19-dosbox-x-engine.md, the engine as built). It is always **a game
 of its own beside the shared one**: its own display and work folder, never `:55` or
 `/tmp/playtest`. `PT_DISPLAY` names the display for every tool (`env.sh`, `paths.py`; default

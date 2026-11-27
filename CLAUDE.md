@@ -51,7 +51,7 @@ And always:
   guide's rule 10).
 - **Never cut steps out of a bigger script with sed** (its header may restart the game): use the
   small tools.
-- **A game in DOSBox-X** (the Options tab's other engine) is always a game of its own: `PT_DISPLAY`
+- **A game in DOSBox-X** (the Options tab's default engine) is always a game of its own: `PT_DISPLAY`
   and `PLAYTEST_WORK` set, `start_dosboxx.sh /path/to/dosbox-x` (or `dbxadopt.sh` for one the
   Loader started); the tools find it by `$PLAYTEST_WORK/dsun.pid` and read its memory file.
   `start.sh` and `loadsave.sh` are the shared game's (they kill every process named dosbox).
