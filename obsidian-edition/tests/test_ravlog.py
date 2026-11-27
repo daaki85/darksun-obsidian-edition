@@ -773,6 +773,32 @@ class NameTests(unittest.TestCase):
         self.assertEqual(gd.item_name(999), "item 999")
 
 
+
+class PassStepTests(unittest.TestCase):
+    """The sequel's pass is taken from Shattered Lands' named steps (dicelog.DiceLog.PASS, the code
+    audit's S2): every one of those is in the sequel's pass or left out with a reason, so a step added to
+    Shattered Lands' pass can't be missed by the sequel without a word (as its flush once was)."""
+
+    def test_every_step_taken_or_left_out(self):
+        sl = [s.name for s in dicelog.DiceLog.PASS]
+        sequel = [s.name for s in ravlog.RavDiceLog.PASS]
+        self.assertEqual(len(set(sl)), len(sl))
+        self.assertEqual(len(set(sequel)), len(sequel))
+        self.assertEqual(sorted(set(sl) - set(sequel) - set(ravlog.PASS_LEFT_OUT)), [],
+                         "Shattered Lands' new steps: take them in ravlog.RavDiceLog.PASS or say why not in PASS_LEFT_OUT")
+        self.assertEqual(sorted(set(ravlog.PASS_LEFT_OUT) & set(sequel)), [])
+        self.assertEqual(sorted(set(ravlog.PASS_LEFT_OUT) - set(sl)), [])
+        self.assertTrue(all(ravlog.PASS_LEFT_OUT.values()))
+
+    def test_phases(self):
+        for steps in (dicelog.DiceLog.PASS, ravlog.RavDiceLog.PASS):
+            phases = [s.phase for s in steps]
+            self.assertEqual(phases.count(dicelog.CHECK), 1)
+            check = phases.index(dicelog.CHECK)
+            self.assertNotIn(dicelog.EFFECTS, phases[check:])  # (effects before the loading check)
+            self.assertFalse({dicelog.LOADED, dicelog.AFTER_CHECK} & set(phases[:check]))
+            self.assertEqual(steps[-1].name, "flush")
+
 if __name__ == "__main__":
     unittest.main()
 

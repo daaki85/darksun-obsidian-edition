@@ -1302,7 +1302,6 @@ class RavDiceLog(dicelog.DiceLog):
     def __init__(self, guest, *args, **kwargs):
         apply_layout()
         super().__init__(ReadOnlyGuest(guest), *args, **kwargs)
-        self._next_slots = 0.0
         self._next_stock = 0.0
         self.first_pick_weapon = True  # (a new warrior's weapon a +1 of its first pick: ravfirstweapon; off for a control)
         self.kit_start_gear = True  # (a new character's gear fitted to its classes and kit: ravkitstart; off for a control)
@@ -1909,70 +1908,25 @@ class RavDiceLog(dicelog.DiceLog):
             return self.creation_lines()
         return []
 
-    def _after_rolls(self, show_all: bool, now: float) -> List[str]:
-        """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage), the kills (_kills_pass), PSP and ability scores
-        changing (_psp_ability_changes), effects starting and ending (effect_changes), the names over
-        figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
-        (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
-        (_learn_lines), Psionic Blast's wounds given back (_blast_pass), the creation screen's tries
-        (_creation_pass), the combat log's panel (_panel_pass), and the dialogue and message boxes for the
-        Dialogue and Journal tabs and the "Message:" lines (_take_text, DSCLOG2's TEXT; the journal its own
-        chain: _journal_sync): the rest reads and writes what isn't ported yet."""
-        out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
-        self._step(self._forget_undone_picks)  # (pockets tried since the save loaded: forgotten)
-        out += self._step(self._answer_pick)  # (a thief's Pick Pockets button: DSCLOG2's PICK POCKETS, PP_HAND waits)
-        out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
-        out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
-        out += self._step(lambda: self.hp_changes(now))
-        out += self._step(lambda: self._kills_pass(now))  # (the monsters killed: the fight's tally counts them)
-        out += self._step(lambda: self._psp_ability_changes(now))  # (PSP spent, kept up, regained; abilities)
-        out += self._step(lambda: self._blast_pass(now))
-        out += self._step(lambda: self._creation_pass(now))
-        self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
-        if self.monster_info:  # (the Look box: answered at once, the game waits for it)
-            self.set_monster_info(True)
-            out += self._step(self._answer_look)
-        if self._label_slots() is not None:  # (names over figures: those whose time is up taken off)
+    def _pass_loading(self, now: float) -> Tuple[bool, List[str]]:
+        """The sequel's loading check: unknown is loading, with nothing said (no save asked for)."""
+        try:
+            return self._party_check(now), []
+        except Exception:
+            return True, []
+
+    def _look_answered(self) -> List[str]:
+        """The Look box: answered at once (the game waits for it)."""
+        if not self.monster_info:
+            return []
+        self.set_monster_info(True)
+        return self._answer_look()
+
+    def _labels_tick(self, now: float) -> None:
+        """Names over figures: those whose time is up taken off."""
+        if self._label_slots() is not None:
             self._labels.on = self.floating_names
-            self._step(lambda: self._labels.tick(self.guest, self.tsr_hdr, now))
-        out += self._step(lambda: self._target_pass(now))  # (Tab, Enter and the ring: DSCLOG2's TARGETING)
-        out += self._step(lambda: self._squares_key(now), quiet=True)  # (R: the squares in reach, SQUARES)
-        self._step(lambda: self._squares_pass(now), quiet=True)
-        self._step(lambda: self._dust_pass(now), quiet=True)  # (the walkers' dust: DSCLOG2's DUST)
-        self._step(lambda: self._ghost_pass(now), quiet=True)  # (the hidden and invisible see-through)
-        out += self._step(self._move_back_pass, quiet=True)  # (F10 after the last step: moveback.py)
-        self._step(lambda: self._usable_key(now), quiet=True)  # (Alt held: what can be used ringed, usable.py)
-        if self._label_slots() is not None:  # (the chance to hit over the enemy under the pointer: hover.py)
-            self._step(lambda: self._hover_pass(now))
-        if self._large_bits() is not None:  # (the creature size rule: who is large, for DSCLOG2's IS_LARGE)
-            self._step(lambda: self._large.update(self.game, self.tsr_hdr))
-        out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
-        if self.text is not None:  # (dialogue and message boxes: DSCLOG2's TEXT, +126)
-            out += self._step(lambda: self._take_text(now))
-        self._step(self._locks_pass)  # (the locks each member failed at its thief level now: LOCK_SITE)
-        out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
-        out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
-        out += self._step(lambda: self._stock_pass(now))  # (a saved game's sellers given the new items: shopstock)
-        if self.game is not None and self.game.rules & game.RULE_STEALTH:
-            out += self._step(self.turn_lines)  # (whose turn, a thief's hiding: stealth.turn, DSCLOG2's STEALTH)
-        if now >= self._next_slots:
-            self._next_slots = now + dicelog.EFFECT_INTERVAL
-            self._step(self._write_slots)
-            out += self._step(lambda: self._panel_pass(now))
-            out += self._step(lambda: self.effect_changes(now))  # (effects starting, ending, put in again)
-            if self.game is not None and self.game.rules & game.RULE_AGING:
-                out += self._step(self._aging_pass)
-            out += self._step(self._party_pass)  # (the sequel's own party's weapon specs and features, once)
-            try:
-                loading = self._party_check(now)
-            except Exception:  # (unknown: no save asked for this pass)
-                loading = True
-            out += self._step(lambda: self._quick_pass(loading, now))  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
-            if not loading:
-                self._step(self._journal_sync)  # (the Journal tab: the sequel's own chain)
-        out += self._step(lambda: self.flush(now))  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
-        return out
+            self._labels.tick(self.guest, self.tsr_hdr, now)
 
     @contextmanager
     def _items_writable(self, header: Tuple[int, ...] = ()) -> Iterator[None]:
@@ -2418,3 +2372,76 @@ def make(guest, **kwargs) -> dicelog.DiceLog:
         return RavDiceLog(guest, **kwargs)
     restore_layout()
     return dicelog.DiceLog(guest, **kwargs)
+
+
+# The sequel's pass after the rolls (dicelog.DiceLog.PASS's steps it takes, by name, and its own), in its
+# order: of Shattered Lands' pass, the hit points' changes (each fall matched with the weapon hits it took
+# in, regeneration, spells' damage), the kills, PSP and ability scores, effects, the names over figures,
+# the USE screen's slots, a wizard's try at a scroll, Psionic Blast's wounds, the creation screen's tries,
+# the combat log's panel, the dialogue and messages (DSCLOG2's TEXT; the journal its own chain).
+_take, _own = dicelog.pass_step, dicelog.PassStep
+RavDiceLog.PASS = (
+    _own("gear", lambda log, now, loading: log._gear_pass()),  # (a new character's fuller starting gear: DONE waits)
+    _take("forget_undone_picks"),  # (pockets tried since the save loaded: forgotten)
+    _own("answer_pick", lambda log, now, loading: log._answer_pick()),  # (Pick Pockets: DSCLOG2's PICK POCKETS)
+    _own("answer_arrows", lambda log, now, loading: log._answer_arrows()),  # (a Spellarcher's: SPELL ARROWS)
+    _own("strays", lambda log, now, loading: log._strays_pass()),  # (spell arrows only a Spellarcher carries)
+    _own("hp_changes", lambda log, now, loading: log.hp_changes(now)),
+    _own("kills", lambda log, now, loading: log._kills_pass(now)),  # (the fight's tally counts them)
+    _own("psp_abilities", lambda log, now, loading: log._psp_ability_changes(now)),
+    _own("blast", lambda log, now, loading: log._blast_pass(now)),
+    _own("creation", lambda log, now, loading: log._creation_pass(now)),
+    _take("kit_tick"),  # (the kits: who is under the open sky, a fight's end)
+    _take("answer_look", run=lambda log, now, loading: log._look_answered()),
+    _own("labels", lambda log, now, loading: log._labels_tick(now), says=False),
+    _own("targeting", lambda log, now, loading: log._target_pass(now)),  # (Tab, Enter and the ring)
+    _take("squares_key"),  # (R: the squares in reach, SQUARES)
+    _own("squares", lambda log, now, loading: log._squares_pass(now), says=False, quiet=True),
+    _own("dust", lambda log, now, loading: log._dust_pass(now), says=False, quiet=True),  # (DSCLOG2's DUST)
+    _own("ghost", lambda log, now, loading: log._ghost_pass(now), says=False, quiet=True),  # (the see-through)
+    _take("move_back"),  # (F10 after the last step: moveback.py)
+    _take("usable_key"),  # (Alt held: what can be used ringed, usable.py)
+    _take("hover", run=lambda log, now, loading: log._hover_pass(now) if log._label_slots() is not None else None,
+          quiet=False),  # (the chance to hit over the enemy under the pointer)
+    _own("large", lambda log, now, loading: log._large.update(log.game, log.tsr_hdr)
+         if log._large_bits() is not None else None, says=False),  # (the creature size rule: DSCLOG2's IS_LARGE)
+    _take("learn_lines", phase=dicelog.EACH),  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN)
+    _take("take_text", run=lambda log, now, loading: log._take_text(now) if log.text is not None else None),
+    _take("locks"),  # (the locks each member failed at its thief level now: LOCK_SITE)
+    _take("loot"),  # (T and Shift+T: LOOT_KEY)
+    _take("sell"),  # (S: SELL_KEY)
+    _own("shop_stock", lambda log, now, loading: log._stock_pass(now)),  # (a saved game's sellers: shopstock)
+    _take("turn_lines", run=lambda log, now, loading: log.turn_lines()
+          if log.game is not None and log.game.rules & game.RULE_STEALTH else None),  # (stealth.turn)
+    _take("write_slots", phase=dicelog.EFFECTS),
+    _own("panel", lambda log, now, loading: log._panel_pass(now), dicelog.EFFECTS),  # (the combat log's panel)
+    _take("effect_changes"),  # (effects starting, ending, put in again)
+    _own("aging", lambda log, now, loading: log._aging_pass()
+         if log.game is not None and log.game.rules & game.RULE_AGING else None, dicelog.EFFECTS),
+    _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
+    _take("loading"),
+    _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
+    _take("journal_sync"),  # (the Journal tab: the sequel's own chain)
+    _take("flush"),  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
+)
+# Shattered Lands' steps the sequel leaves out, each with why: test_ravlog fails on one in neither list.
+PASS_LEFT_OUT = {
+    "answer_stats": "the inventory's THAC0 and saves come from DSCLOG2's PROBE_CHAR, not the Loader",
+    "answer_use": "the USE screen's slots are written ahead (write_slots), not answered",
+    "gear_due": "the sequel's starting gear is its own step (gear)",
+    "creation_figure": "the sequel has no class outfits",
+    "changes": "split into hp_changes, kills, psp_abilities and blast",
+    "write_stats": "not ported",
+    "tracker": "not ported",
+    "item_watches": "not ported",
+    "arena_ring": "Shattered Lands' arena only",
+    "drawn": "Shattered Lands' story only",
+    "kalzith_sold_out": "Shattered Lands' story only",
+    "quest_look": "Shattered Lands' quests only",
+    "dress": "the sequel has no class outfits",
+    "itemwatch": "not ported",
+    "scroll": "not ported",
+    "initiative": "not ported",
+    "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
+    "creation_lines": "the sequel's creation screen is its own step (creation)",
+}
