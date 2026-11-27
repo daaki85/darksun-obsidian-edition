@@ -542,7 +542,7 @@ The game keeps no sizes; the mod gives each creature the size [the creatures' ta
 lists. A **large** target (a half-giant, a large monster, anyone Enlarged) takes AD&D's dice against
 large creatures (a long sword 1d12 for 1d8), and Hold Person, Charm Person and Charm Person or
 Mammal (on a person) don't take on it (`Guard is too big for Hold Person -> unaffected`). A weapon's
-item box shows both dice (`1D8-1/1D12-1`). The pick does the
+item box shows both dice (`1D8-1/1D12-1`), in Wake of the Ravager too. The pick does the
 footman's pick's 1d6+1, where the game had the horseman's 1d4+1.
 
 ![A Bone Long Sword's item box: "Bone", "Long Sword", "1D8-1/1D12-1", "Hit -1"](docs/large-dice.png)

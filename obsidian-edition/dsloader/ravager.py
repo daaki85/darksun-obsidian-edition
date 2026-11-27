@@ -877,6 +877,12 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("dam_line", 0x7B19E, bytes.fromhex("268a4724"), _site(70, 4)),
     Patch("missile_line", 0x7B124, bytes.fromhex("268a4707"), _site(71, 4)),
     Patch("view_dam", 0x6CAC9, bytes.fromhex("8956f2"), _site(72, 3)),
+    # ... and in the same line routine, an item box's damage line against a large foe too (SL's SIZE_LINE and
+    # SIZE_PRE, gamepatch's size_line and size_pre): "1D8+4/1D12+4" as Shattered Lands' box, after the line is
+    # drawn ("inc word [bp-2]", 7B1CFh), and Shillelagh's 1D6+1 before ("push word [bp+14h]", 7B1B2h):
+    # DSCLOG2's SIZE_LINE and SIZE_PRE (sites 248, 249; the user's both-games rule, 2026-11-27).
+    Patch("size_line", 0x7B1CF, bytes.fromhex("ff46fe"), _site(248, 3)),
+    Patch("size_pre", 0x7B1B2, bytes.fromhex("ff7614"), _site(249, 3)),
     # The Effects screen's lines (SL's PROBE_EF_ROWS, PROBE_EF_CLICK): the end of its routine that fills the
     # selected character's cells (8AC6Fh, SL's 7EDFAh: "pop di / pop si / leave" at 8AFA9h) and its handler for
     # them (8AB13h, SL's 7EC97h: "mov si,[bp+8]" at 8AB1Ah): DSCLOG2's EF_ROWS (site 73) lists the kits and

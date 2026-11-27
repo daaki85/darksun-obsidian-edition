@@ -74,7 +74,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Great Axe +3 an obsidian axe, the Polearm +1 a double spear, Terror Blade a stone dagger, Bloodwrath a
   metal sword) the Loader makes it in its own material and kind instead. The sequel had no bone long
   sword: the Loader adds Shattered Lands' to it. Dragonsbane is metal in both games (SSI made the sequel's
-  obsidian), so Shattered Lands' Dragonsbane crosses as the sequel's own, and there is one of it. Its club and bow are wood and its sling leather, as in
+  obsidian), so Shattered Lands' Dragonsbane crosses as the sequel's own, and there is one of it.
+  A weapon's item box shows its damage against a large foe too, as Shattered Lands' does
+  (`1D8+4/1D12+4`; [creature size](FEATURES.md#creature-size)). Its club and bow are wood and its sling leather, as in
   Shattered Lands (SSI made them of no material), so an earth or water cleric, druid or ranger may use
   them there too.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a

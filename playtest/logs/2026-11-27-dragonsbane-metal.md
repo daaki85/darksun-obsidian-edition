@@ -24,7 +24,11 @@ sequel's metal long sword (97, Bloodwrath's type: the same record but the materi
   Dragonsbane "65000$ HEAVY, Metal +4 Dragonsbane, 1D8+4/1D12+4" ![](img/2026-11-27-sl-dragonsbane-box.png), and the
   Bone Great Sword +1 "20800$, 2 handed Bone +1 Great Sword, 1D10+1/3D6+1"
   ![](img/2026-11-27-sl-bone-great-sword-box.png): the same words as the sequel's box now (logs/2026-11-27-ravager-weapon-materials.md).
-- One difference left between the two boxes: Shattered Lands shows both damages (against man-sized / larger), the
-  sequel's box only the first. Not changed here.
+- One difference left between the two boxes then: Shattered Lands shows both damages (against man-sized / larger), the
+  sequel's box only the first. Ported (DSCLOG's SIZE_LINE and SIZE_PRE as DSCLOG2's sites 248 and 249, the
+  sequel's line routine 7AF9Eh the same as SL's 7286Ah but its arguments 2 bytes on) and played again (about
+  19:45 UTC): the Bone Great Sword +1 "1D10+1/3D6+1" ![](img/2026-11-27-ravager-box-large-bone.png), Dragonsbane
+  "1D8+4/1D12+4" ![](img/2026-11-27-ravager-box-large-dragonsbane.png), as Shattered Lands' boxes. The second
+  number fits in the box's line.
 
 DOSBox and the dice logs stopped by pid; the game folder's SAVE01.SAV put back to trap-user's.
