@@ -1,6 +1,6 @@
 # Cloth folds and Gladiator contrast
 
-The body and shoulder comparisons use `17aaacef` for the earlier art. The wider cloth comparison starts at `fee30cff`. The outfit columns show the Loader’s walking and combat pictures with empty equipment slots. The body columns show the cleaned art used to fit each garment. In the animations, the small copy is game size. Each pair shares the same ground line, pose and floor.
+The body comparisons use `c351a52f` for the earlier art. The cloak shoulder comparisons use `17aaacef`. The wider cloth comparison starts at `fee30cff`. The outfit columns show the Loader’s walking and combat pictures with empty equipment slots. The body columns show the cleaned art used to fit each garment. In the animations, the small copy is game size. Each pair shares the same ground line, pose and floor.
 
 ## Cloth on the arena floor
 
@@ -16,6 +16,10 @@ The body and shoulder comparisons use `17aaacef` for the earlier art. The wider 
 [Compare individual poses with the retail Warrior, Mage, Priest and Thief](cloth-folds.png) · [Watch the teal wraps and rear cloak](cloth-folds-wraps.gif) · [Watch the trailing cloaks, robe and hoods](cloth-folds-cloaks.gif)
 
 ## Gladiators and exposed skin
+
+Watch the elbow fold as the hand rises, then watch the light move down the near knee and calf as the foot takes weight. Both marks are easiest to see beside the far limb in the same frame. The skin beside the Gladiator’s strap and kilt shows how much of the new shading remains visible in the outfit.
+
+[Examine seven poses beside their retail sources at 4× and game size](bare-body-closeups.png)
 
 Read the body and Gladiator columns together. The same patch of exposed skin should keep its light as the strap crosses the chest or the kilt lifts past the knee. The last two columns show the corresponding retail source figure and the retail Warrior where its picture supplies that pose. The half-elves use their retail parent figures for this comparison.
 
@@ -37,4 +41,4 @@ In side-walk frame 14, six far-shoulder pixels interrupted the green panel on th
 
 [Inspect side walk 4](cloak-shoulder.png) · [Watch all four steps](cloak-shoulder.gif)
 
-Regenerate the gallery with `python prototypes/materialfoldreview.py GAME_DIR OUTPUT_DIR --previous-checkout BODY_CHECKOUT --previous-cloth-checkout CLOTH_CHECKOUT`. Use `17aaacef` for the body and shoulder baseline and `fee30cff` for the wider cloth comparison.
+Regenerate the gallery with `python prototypes/materialfoldreview.py GAME_DIR OUTPUT_DIR --previous-checkout BODY_CHECKOUT --previous-cloth-checkout CLOTH_CHECKOUT`. Use `17aaacef` and `fee30cff` respectively for the two cloak and cloth comparisons. Then run the same script with `--previous-checkout` set to `c351a52f` and `--bodies-only` to regenerate the current bare bodies and Gladiators.

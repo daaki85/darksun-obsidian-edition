@@ -70,6 +70,41 @@ ARMS = {
     24: ((9, 12), (10, 16), (14, 19)), 25: ((10, 16), (10, 19), (13, 18)),
     27: ((4, 17), (2, 19), (5, 22)),
 }
+# Shoulder, elbow and wrist in the feet-down retail cel. Follow both arms
+# when visible, so that the flexed arm can cross in front of the rib cage.
+# A profile with a wholly hidden far arm has just one contour to shade.
+ARM_CENTRES = (
+    (((8, 10), (4, 13), (2, 18)), ((24, 10), (27, 14), (28, 18))),
+    (((10, 11), (7, 12), (4, 16)), ((21, 10), (24, 13), (24, 16))),
+    (((8, 10), (10, 15), (14, 19)),),
+    (((6, 10), (3, 13), (2, 18)), ((21, 10), (24, 13), (26, 18))),
+    (((6, 10), (3, 14), (2, 19)), ((21, 9), (23, 12), (24, 16))),
+    (((5, 9), (3, 13), (2, 18)), ((21, 9), (23, 12), (24, 16))),
+    (((5, 10), (3, 12), (2, 16)), ((20, 10), (22, 14), (24, 19))),
+    (((5, 11), (3, 14), (3, 17)), ((17, 11), (18, 14), (19, 17))),
+    (((5, 10), (3, 12), (2, 15)), ((16, 11), (19, 13), (21, 18))),
+    (((6, 11), (3, 14), (2, 17)), ((18, 10), (19, 13), (19, 16))),
+    (((9, 10), (5, 14), (2, 20)), ((18, 10), (20, 12), (20, 14))),
+    (((11, 11), (12, 16), (15, 20)),),
+    (((15, 10), (13, 13), (9, 16)), ((18, 9), (20, 11), (22, 11))),
+    (((9, 11), (7, 15), (5, 18)), ((11, 10), (13, 12), (15, 14))),
+    (((14, 11), (16, 15), (20, 18)),),
+    (((7, 12), (5, 16), (4, 20)), ((13, 10), (15, 7), (18, 4))),
+    (((12, 10), (9, 7), (6, 6)), ((23, 12), (26, 17), (29, 23))),
+    (((18, 14), (15, 18), (9, 21)), ((15, 7), (11, 4), (6, 2))),
+    (((12, 11), (11, 14), (15, 15)),),
+    (((6, 10), (6, 14), (4, 18)), ((10, 8), (12, 7), (13, 5))),
+    (((13, 11), (14, 15), (13, 17)), ((8, 11), (5, 11), (2, 11))),
+    (((10, 10), (8, 6), (4, 8)), ((22, 10), (25, 14), (28, 18))),
+    (((18, 11), (22, 14), (27, 15)),),
+    (((18, 10), (19, 14), (23, 17)), ((12, 7), (10, 5), (8, 4))),
+    (((9, 12), (11, 16), (15, 19)),),
+    (((10, 15), (11, 18), (14, 18)),),
+    (((11, 15), (8, 13), (3, 14)), ((21, 13), (25, 14), (29, 14))),
+    (((4, 16), (2, 18), (3, 21)), ((13, 7), (17, 4), (22, 2))),
+    (((7, 11), (4, 12), (2, 13)), ((18, 10), (20, 11), (22, 13))),
+)
+
 # Center and radii of the face/hair in the folded poses where the jaw
 # overlaps the chest. Upright poses keep the native jaw above the neckline.
 LOW_HEAD = {16: (16, 8, 5, 5), 17: (12, 12, 5, 5), 23: (21, 6, 4, 5),
@@ -594,14 +629,42 @@ TORSO_RELIEF = {
 SKIN_RELIEF = {".": 0, "+": 2, "H": 4, "-": -2, "=": -4}
 
 
-def leg_relief(x, y, across, width, waist, soles):
+def arm_planes(pose):
+    # Cross-sections run from the underside to the key light at upper left.
+    # The short undercut ends at the elbow; the smaller forearm light narrows
+    # independently toward the wrist, including when the arm is horizontal.
+    upper = ((-1, 1, 2), (-3, 2, 4), (-3, 1, 3), (-2, -2, 1))
+    lower = ((-2, -1, 2), (-3, 2, 3), (-2, 1, 3), (-1, 0, 1))
+    cells = {}
+    distance = {}
+    for joints in ARM_CENTRES[pose]:
+        for segment, ((ax, ay), (bx, by)) in enumerate(zip(joints, joints[1:])):
+            dx, dy = bx-ax, by-ay
+            length = math.hypot(dx, dy)
+            sign = 1 if dx > dy else -1
+            for y in range(min(ay, by)-2, max(ay, by)+3):
+                for x in range(min(ax, bx)-2, max(ax, bx)+3):
+                    t = ((x-ax)*dx+(y-ay)*dy)/(length*length)
+                    if not 0 <= t < 1:
+                        continue
+                    across = sign*((x-ax)*dy-(y-ay)*dx)/length
+                    width = 1.85-.6*t if segment else 1.75+.35*math.sin(math.pi*t)
+                    if abs(across) > min(width, distance.get((x, y), width)):
+                        continue
+                    distance[x, y] = abs(across)
+                    bank = 0 if across < -.30 else 2 if across > .50 else 1
+                    cells[x, y] = (lower if segment else upper)[int(4*t)][bank]
+    return cells
+
+
+def leg_relief(x, y, across, width, waist, soles, rear):
     # Each thigh and knee follows its own sole. A visible gap gives the limb
     # its real width; when the thighs overlap, divide at the two hip centres.
     best = None
     for i, (toe, bottom) in enumerate(soles):
         hip, top = section(waist, (.23, .76)[i])
         depth = (y-top)/max(1, bottom-top)
-        if not .12 < depth < .88:
+        if not .12 < depth < .92:
             continue
         center = mix(hip, toe, depth)
         dist = abs(x-center)
@@ -618,15 +681,21 @@ def leg_relief(x, y, across, width, waist, soles):
             return 3
         if .59 < plane < .84:
             return -2
-    elif depth < .67:
-        if .24 < plane < .54 and depth < .56:
-            return 3
-        if .48 < plane < .82:
+    elif depth < .65:
+        # The knee catches a short light in front and folds into a crease
+        # behind. The outside of the joint rolls into the upper calf.
+        if .23 < plane < .55 and depth < .57:
+            return -2 if rear else 4
+        if .47 < plane < .85:
+            return -4
+    else:
+        # A fuller calf gives way to a thin shin/tendon light. End it before
+        # the sandal strap; the two feet reach this point on separate beats.
+        crest = .32 + .16*(depth-.65)/.27
+        if abs(plane-crest) < (.17 if depth < .78 else .12):
+            return 4 if depth < .78 else 3
+        if .59 < plane < .84 and depth < .86:
             return -3
-    elif .22 < plane < .47:
-        return 2
-    elif .61 < plane < .82:
-        return -2
     return 0
 
 
@@ -740,7 +809,7 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                     if in_top:
                         relief = SKIN_RELIEF[torso[min(10, int(t*11))][min(12, int(u*13))]]
                     elif y >= min(waist[1], waist[3]):
-                        relief = leg_relief(x, y, across, right-left+1, waist, soles)
+                        relief = leg_relief(x, y, across, right-left+1, waist, soles, pose in REAR)
                     if relief:
                         skin_relief[sx, sy] = pigment(SKIN, SKIN.index(body)+relief)
                 foot = sandal(x, y, soles, across)
@@ -752,6 +821,32 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     pieces[role][sy][sx] = body if foot is None else foot
+    # Raised arms and horizontal bow arms can sit above the neckline. Sample
+    # them on the completed body so the restored cuffs join the native biceps.
+    for (x, y), shift in arm_planes(pose).items():
+        sx, sy = x+dx, y+dy
+        if not (0 < sy < len(source)-1 and 0 < sx < len(source[sy])-1):
+            continue
+        old = pieces["Body base"][sy][sx]
+        if (not shift or old not in SKIN or (x, y) in locks_outline
+                or source[sy][sx-1] is None or source[sy][sx+1] is None):
+            continue
+        nx, ny = sx-margin, sy
+        if reverse:
+            nx, ny = len(native[0])-1-nx, len(native)-1-ny
+        if (nx, ny) in native_hair or (nx, ny) in bow:
+            continue
+        if pose in LOW_HEAD:
+            cx, cy, rx, ry = LOW_HEAD[pose]
+            if ((x-cx)/rx)**2+((y-cy)/ry)**2 <= 1:
+                continue
+        elif shoulder[0]+1 <= x <= shoulder[2]-1 and y <= min(shoulder[1], shoulder[3]):
+            continue
+        # The donor already lights exposed upper-arm skin. Use the stronger
+        # turn only over a removed retail cuff or a reconstructed shoulder.
+        if source[sy][sx] in SKIN and abs(shift) > 1:
+            shift += -1 if shift > 0 else 1
+        skin_relief[sx, sy] = pigment(SKIN, SKIN.index(old)+shift)
     if pose in NAPE:
         clean_nape(pieces, model, pose, margin)
     visible = ({"Cleric": set(), "Fighter": set(), "cloak": set(), "sleeve": set(), "guard": {}}

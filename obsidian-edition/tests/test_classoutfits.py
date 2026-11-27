@@ -656,6 +656,19 @@ class DwarfOutfitTests(unittest.TestCase):
             self.assertEqual(classoutfits.for_sheet(sheet, 2055), expected)
             self.assertIsNone(classoutfits.for_sheet(sheet, 2099))
 
+    def test_male_archer_keeps_the_bow_clear_of_his_wrist_and_calf(self):
+        for role in classoutfits.DWARF_ROLES.values():
+            with self.subTest(role=role):
+                front, rear = classoutfits.frames(role, True, 2055)[9:11]
+                # The front bow passes the grip and touches the raised thigh.
+                self.assertIn((12, 11), front.regions[classoutfits.BOW])
+                self.assertIn((5, 14), front.regions[classoutfits.BOW])
+                # The rear bow arcs overhead. The slate wrist and greave
+                # studs below it belonged to the original equipment.
+                self.assertIn((11, 1), rear.regions[classoutfits.BOW])
+                self.assertNotIn((8, 11), rear.regions[classoutfits.BOW])
+                self.assertNotIn((8, 18), rear.regions[classoutfits.BOW])
+
     def test_front_faces_stay_open_in_every_build(self):
         # These coordinates follow the original brow down through the cheek.
         # The woman stands upright in the opening strike while the man leans.

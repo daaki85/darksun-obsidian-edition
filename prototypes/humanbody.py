@@ -4,7 +4,8 @@ python prototypes/humanbody.py GAME_DIR PREVIOUS_HUMAN_OR_WOMAN_ZIP OUTPUT_ZIP
 
 Supply the paint from 17aaacef to reproduce this revision. The output carries
 the finished body and exposed-skin underpaint. For subsequent garment exports,
-use outfitdetail.py with --keep-cloak-dyes on that archive.
+use outfitdetail.py with --keep-cloak-dyes on that archive. For the second
+limb and torso detail pass, supply the c351a52f archive and add --limbs.
 """
 import argparse
 from pathlib import Path
@@ -14,6 +15,7 @@ from zipfile import ZipFile
 import numpy as np
 
 import outfits
+import humanlimbs
 from outfitdetail import finish_archive
 from dsloader import art, classoutfits as co, sprites
 
@@ -130,10 +132,11 @@ def compose(native, layer):
             for y, row in enumerate(native)]
 
 
-def foreground(masks, heads, model, pose):
+def foreground(masks, heads, model, pose, limbs=False):
     left = 8 if model == 2095 and pose == 13 else 6
+    blocked = co.BOW if limbs else co.BOW | co.FOREARM
     keep = {(x - left, y - 6) for y, row in enumerate(masks) for x, bits in enumerate(row)
-            if bits and bits & (co.BOW | co.FOREARM)}
+            if bits and bits & blocked}
     if heads:
         keep.update((x - left, y - 6) for y, row in enumerate(heads) for x, ink in enumerate(row) if ink is not None)
     else:
@@ -152,7 +155,7 @@ def apply(layer, native, edits, visible=None, keep=(), inherit=False):
             layer[y + top][x + left] = new
 
 
-def author(game, source, output):
+def author(game, source, output, *, limbs=False):
     with ZipFile(source) as archive:
         entries = {n: archive.read(n) for n in archive.namelist()}
     woman = "Base/walk" in entries
@@ -169,9 +172,12 @@ def author(game, source, output):
             body_layer = read(base_name)
             body = compose(native, body_layer)
             heads = read(f"Base/{tag}-head") if woman else ()
-            protected = foreground(read(f"Gladiator/{tag}-regions"), heads, model, pose)
-            facing = game.fig(model).parts(combat, f).facing
-            edits = body_edits(body, model, pose, facing, protected)
+            protected = foreground(read(f"Gladiator/{tag}-regions"), heads, model, pose, limbs)
+            parts = game.fig(model).parts(combat, f)
+            if limbs:
+                edits = humanlimbs.finish(body, model, pose, parts, protected, SOCKETS[model][pose], SKIN)
+            else:
+                edits = body_edits(body, model, pose, parts.facing, protected)
             apply(body_layer, native, edits)
             layers[base_name].append(body_layer)
             for name, frames in layers.items():
@@ -179,7 +185,7 @@ def author(game, source, output):
                     continue
                 dressed_name = name.removesuffix("-underpaint")
                 visible = compose(body if woman else native, read(dressed_name))
-                keep = foreground(read(dressed_name + "-regions"), heads, model, pose)
+                keep = foreground(read(dressed_name + "-regions"), heads, model, pose, limbs)
                 layer = read(name)
                 apply(layer, native, edits, visible, keep, inherit=woman)
                 frames.append(layer)
@@ -196,5 +202,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("game_dir", "source", "output"):
         parser.add_argument(arg, type=Path)
+    parser.add_argument("--limbs", action="store_true", help="author the second skin pass from c351a52f")
     args = parser.parse_args()
-    author(outfits.Game(args.game_dir), args.source, args.output)
+    author(outfits.Game(args.game_dir), args.source, args.output, limbs=args.limbs)

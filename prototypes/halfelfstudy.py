@@ -643,7 +643,8 @@ class Study:
         fig = self.game.fig(key)
         source = self.game.fr(fig.model + cb, f)
         fields = co.frames("Fighter" if key == FIGURES[1] else "Warrior", cb, fig.model)[f]
-        arms = set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
+        bow = set(fields.regions[co.BOW])
+        arms = set(fields.regions[co.FOREARM]) | bow
         back = figures.mover_back(fig.maker.cuts[bool(cb), f])
         female = key == FIGURES[0]
         if female:
@@ -652,13 +653,18 @@ class Study:
             changes = halfelfbody.paint(pose, body, pad, source, back, arms | set(fields.head), outfits.SKINC)
         parts = fig.parts(cb, f)
         stock = fig.rows(cb, f)
-        protected = set(parts.hair)
+        head_and_bow = set(parts.hair)
+        protected = set()
         for y, row in enumerate(stock):
             for x, color in enumerate(row):
                 point = back(x, y), y
-                if point in arms or (point in fields.head and color == body[y+pad][x+pad]):
+                if point in arms:
                     protected.add((x, y))
-        changes = halfelfbody.body_planes(pose, body, pad, female, parts.facing, changes, protected)
+                if point in bow or (point in fields.head and color == body[y+pad][x+pad]):
+                    head_and_bow.add((x, y))
+        protected.update(head_and_bow)
+        changes = halfelfbody.body_planes(pose, body, pad, female, parts.facing, changes,
+                                          protected, head_and_bow)
         return changes, protected
 
     @lru_cache(None)

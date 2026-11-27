@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 import mulfront
+from limbstrokes import exposed_skin
 import mulstudy as fit
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
@@ -202,7 +203,7 @@ def thief_hood(pose):
 
 
 def draw(game, pose, swatches):
-    rows = fit.fitted_rows(game, pose)
+    rows, skin_detail = fit.clothing_layers(game, pose)
     body = rows["Body base"]
     h, w = len(body), len(body[0])-2*fit.PAD
     cb, f = divmod(pose, 15)
@@ -449,7 +450,7 @@ def draw(game, pose, swatches):
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)
     if pose in mulfront.FRONT or pose in mulfront.TURNS:
         out.update(mulfront.dress(pose, body, protected, limbs, bow, hood))
-    return rows | out
+    return exposed_skin(rows | out, skin_detail)
 
 
 def fit_comparison(game, pose, rows, sand, previous):

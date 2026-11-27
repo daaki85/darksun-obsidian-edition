@@ -92,8 +92,9 @@ def unpack(snapshot, floor):
 
 
 def panel(title, captions, rows, zoom=2):
-    col = TILE[0] * (zoom + 1) + 7
-    row = 26 + TILE[1] * zoom + 2
+    tile_width, tile_height = rows[0][1][0].size
+    col = tile_width * (zoom + 1) + 7
+    row = 26 + tile_height * zoom + 2
     width = 10 + col * len(captions)
     im = Image.new("RGB", (width, 62 + len(rows) * row), dwarf.PAPER)
     label(im, (7, 4), title, 17)
@@ -106,7 +107,7 @@ def panel(title, captions, rows, zoom=2):
         label(im, (7, y + 3), name, 13)
         for j, t in enumerate(tiles):
             if t is not None:
-                scaled = t.resize((TILE[0] * zoom, TILE[1] * zoom), Image.Resampling.NEAREST)
+                scaled = t.resize((tile_width * zoom, tile_height * zoom), Image.Resampling.NEAREST)
                 x = 5 + col * j
                 im.paste(scaled, (x, y + 23))
                 im.paste(t, (x + scaled.width + 2, y + 23 + scaled.height - t.height))
@@ -130,7 +131,7 @@ def shoulders(before, after, output):
     save_loop(frames, [330, 330, 330, 850], output / "cloak-shoulder.gif")
 
 
-def render(game_dir, output, previous, previous_cloth=None):
+def render(game_dir, output, previous, previous_cloth=None, bodies_only=False):
     with Image.open(TERRAIN) as image:
         sand = image.convert("RGB").crop((45, 142, 99, 194))
     with Image.open(TERRAIN.with_name("2026-11-09-figures-all-gone.png")) as image:
@@ -153,10 +154,21 @@ def render(game_dir, output, previous, previous_cloth=None):
             panel("Gladiators on paving", body_labels, [body_row(300 + i, f) for i, f in enumerate(poses)]).save(
                 output / "gladiator-contrast-stone.png", optimize=True)
             continue
+        if bodies_only:
+            examples = []
+            for obj, pose in ((300, 12), (303, 5), (304, 21), (307, 13), (309, 15), (310, 6), (312, 19)):
+                body = f"{obj}/Body/{pose}"
+                pictures = (after[f"{obj}/Source/{pose}"], before[body], after[body], after[f"{obj}/Gladiator/{pose}"])
+                examples.append((f"{PEOPLE[obj - 300]}   ·   {pose:02}  {dwarf.NAMES[pose]}",
+                                 [tile.crop((11, 7, 43, 52)) for tile in pictures]))
+            panel("Light on exposed skin", ("Retail source", "Earlier body", "Revised body", "Gladiator"),
+                  examples, zoom=4).save(output / "bare-body-closeups.png", optimize=True)
         for start, end, name in ((300, 306, "original-six"), (306, 313, "later-seven")):
             frames = [panel("Gladiators and exposed skin", body_labels,
                             [body_row(o, f) for o in range(start, end)]) for f in CYCLE]
             save_loop(frames, [850 if f < 3 or f >= 24 else 300 for f in CYCLE], output / f"gladiator-contrast-{name}.gif")
+        if bodies_only:
+            continue
         shoulders(before, after, output)
         if previous_cloth:
             before = unpack(former(game_dir, previous_cloth, __file__), floor)
@@ -187,5 +199,6 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("--previous-checkout", type=Path, required=True)
     parser.add_argument("--previous-cloth-checkout", type=Path)
+    parser.add_argument("--bodies-only", action="store_true", help="write the body and Gladiator comparisons only")
     args = parser.parse_args()
-    render(args.game_dir, args.output, args.previous_checkout, args.previous_cloth_checkout)
+    render(args.game_dir, args.output, args.previous_checkout, args.previous_cloth_checkout, args.bodies_only)

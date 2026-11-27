@@ -295,11 +295,36 @@ CROSSING_ARMS = {
     25: ((9, 3, 6), (10, 4, 7)),
     27: ((9, 5, 8),),
 }
+# End of the upper arm and the bend of the leg, traced independently
+# of the hands and feet. A projected forearm can point back across its
+# shoulder, and a lifted knee can stand outside the hip-to-toe line.
+ELBOWS = (
+    ((2, 7), (17, 7)), ((2, 8), (15, 8)), ((5, 8), None),
+    ((1, 6), (17, 7)), ((2, 8), (16, 5)), ((1, 6), (15, 6)), ((3, 5), (17, 8)),
+    ((0, 7), (12, 8)), ((1, 6), (13, 9)), ((1, 8), (14, 6)), ((1, 8), (13, 6)),
+    ((3, 9), None), ((6, 8), None), ((3, 7), None), ((8, 7), None),
+    ((1, 11), None), ((5, 3), (16, 8)), (None, (14, 10)),
+    ((4, 7), None), ((5, 8), None), ((5, 7), None),
+    ((2, 5), (15, 7)), ((13, 6), None), ((5, 4), None),
+    ((5, 8), None), ((3, 10), (7, 9)), ((2, 8), (15, 9)),
+    (None, (11, 2)), ((1, 7), (12, 7)),
+)
+KNEES = (
+    ((7, 16), (14, 14)), ((5, 15), (13, 16)), ((2, 16), (8, 14)),
+    ((6, 16), (11, 15)), ((6, 13), (11, 15)), ((6, 15), (11, 16)), ((7, 15), (12, 13)),
+    ((5, 15), (9, 14)), ((4, 17), (8, 14)), ((5, 16), (9, 16)), ((5, 15), (9, 17)),
+    ((2, 15), None), ((2, 14), (9, 16)), ((4, 16), (1, 14)), ((3, 16), (9, 14)),
+    ((3, 18), (9, 17)), ((8, 14), (14, 12)), ((7, 16), (14, 14)),
+    ((2, 15), (9, 16)), ((4, 15), (12, 16)), ((5, 15), (13, 16)),
+    ((7, 16), (14, 14)), ((3, 15), (8, 14)), ((3, 14), (9, 12)),
+    ((3, 16), (9, 14)), ((3, 17), (9, 19)), ((8, 19), (14, 17)),
+    ((8, 15), (14, 13)), ((4, 14), (9, 14)),
+)
 TRUNK_TONES = {1: 134, 2: 133, 3: 131, 4: 144, 5: 147, 6: 149}
 
 
 def body_planes(rows, pose, registration, toes, rear, profile):
-    """Paint a rib cage and two separate weight-bearing legs inside the retail figure."""
+    """Model the exposed torso and limbs within the silhouette of this native pose."""
     _, _, sx, sy, hx, hy = pose
     view = "back" if rear else "side" if profile or registration in (15, 27) else "front"
     turns = TRUNK_PLANES[view]
@@ -323,36 +348,63 @@ def body_planes(rows, pose, registration, toes, rear, profile):
             if 0 <= col < len(plane) and plane[col] != "." and (x, y) not in foreground:
                 skin[x, y] = TRUNK_TONES[int(plane[col])]
 
-    # The stock black breeches leave a dark cuff across the top of the thigh.
-    # Follow each planted or lifted foot through its actual occupied row;
-    # retain the stock ankles, toes and the underside of the far leg.
-    for side, toe in enumerate(toes):
-        if not toe:
+    # Catch the rounded deltoid as it descends into the upper arm. The
+    # crease runs on the side toward the rib cage; the lit lip is shorter
+    # on the receding arm. The hand and bow are composited in front.
+    for shoulder, elbow in zip(SHOULDERS[registration], ELBOWS[registration]):
+        if not shoulder or not elbow:
             continue
+        ax, ay = shoulder
+        ex, ey = elbow
+        bx, by = round((ax + ex) / 2), round((ay + ey) / 2)
+        inward = 1 if ax < sx else -1
+        crest = (round((2 * ax + ex) / 3), round((2 * ay + ey) / 3))
+        skin[crest] = 148 if ax <= sx else 146
+        skin[bx, by] = 147 if bx <= sx else 145
+        skin[bx + inward, by + 1] = 132
+        skin[ex, ey] = 144
+        skin[ex, ey + 1] = 131
+
+    # Work along the two articulated segments separately. On the rear
+    # leg the hollow below the knee comes before the light on the calf.
+    # Draw a crossed, lifted leg first so the planted shin stays in front.
+    legs = sorted(((toe[1], side, toe, knee) for side, (toe, knee) in
+                   enumerate(zip(toes, KNEES[registration])) if toe and knee))
+    for end_y, side, toe, (kx, ky) in legs:
         tx, ty = toe
-        reach = ty - hy
-        if reach < 4:
-            continue
-        near = all(other is None or ty >= other[1] for other in toes)
+        near = end_y == legs[-1][0]
+        hip = hx + (-2 if side == 0 else 2)
         for y in range(hy + 2, ty - 1):
-            travel = (y - hy) / reach
-            aim = round((hx + (-2 if side == 0 else 2)) * (1 - travel) + tx * travel)
-            if not 0 <= aim < len(rows[y]) or rows[y][aim] is None:
+            if y <= ky:
+                travel = (y - hy) / (ky - hy)
+                center = round(hip + (kx - hip) * travel)
+            else:
+                travel = (y - ky) / (ty - ky)
+                center = round(kx + (tx - kx) * travel)
+            if not 0 <= center < len(rows[y]) or rows[y][center] is None:
                 continue
-            lo = hi = aim
-            while lo and rows[y][lo - 1] is not None:
-                lo -= 1
-            while hi + 1 < len(rows[y]) and rows[y][hi + 1] is not None:
-                hi += 1
-            if hi - lo < 1 or hi - lo > 4:
-                continue
-            lit = lo + (hi - lo >= 2)
-            # The light hooks over the knee, recedes below the joint, then
-            # catches only the front of the shin. Keep the outer silhouette.
-            rank = 5 if .40 <= travel <= .60 else 4 if travel < .72 else 3
-            skin[lit, y] = TRUNK_TONES[rank if near else rank - 1]
-            if lit + 1 < hi:
-                skin[lit + 1, y] = TRUNK_TONES[3 if near and travel < .6 else 2]
+            # The knee can project into the joined thighs; keep its short
+            # highlight there, without drawing across the opposite leg.
+            lit = center
+            if (0 < center < len(rows[y]) - 1 and rows[y][center + 1] is None
+                    and rows[y][center - 1] is not None):
+                lit -= 1
+            if y == ky:
+                tone = 132 if rear else 147
+            elif y == ky + 1:
+                tone = 146 if rear else 132
+            elif y < ky:
+                tone = 146 if near else 144
+            else:
+                tone = 144 if near else 131
+            if not near and tone == 147:
+                tone = 145
+            skin[lit, y] = tone
+            # An intermediate half-tone turns the inner thigh; leave
+            # two-pixel shins with their actual retail outline.
+            if (y < ky and 0 < lit < len(rows[y]) - 2
+                    and rows[y][lit - 1] is not None and rows[y][lit + 2] is not None):
+                skin[lit + 1, y] = 130
     return skin
 
 
@@ -411,6 +463,11 @@ def draw(game, model, k, role, design=None, layers=None):
         point, side = (left, 1) if rear or profile else (right, -1)
         guards.update(shoulder_guard(rows, point, side, BRONZE, crest=3))
     bow = game.bow(figure, rows, figure.parts(combat, f)) if k in (24, 25, 26) else set()
+    if model == 2055 and k == 25:
+        # Slate on the wrist and calf of the rear archer, respectively.
+        # These retail equipment studs share a color absent from his walk.
+        # The actual bow is above him, matching the female native frame.
+        bow = bow - {(8, 11), (8, 18)}
     palette = RAMPS[ROLES.index(role)] if role else FLESH
     cloak_ramp = slate if role == "Thief" else palette
     lower = OCHRE if role == "Druid" else LEATHER if role == "Ranger" else palette
@@ -425,7 +482,17 @@ def draw(game, model, k, role, design=None, layers=None):
         ]
     else:
         wrists = figure.bands(combat, f)
+    wrist_skin = {}
+    wrist_ramp = (134, 132, 131, 130, 144, 145, 146, 147, 148)
     for x, y in wrists:
+        # The two colors of the retail cuff describe jewelry. Carry the
+        # actual hand/forearm light through this narrow gap in the skin.
+        neighbours = [hue[rows[yy][xx]] for xx, yy in
+                      ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))
+                      if 0 <= xx < width and 0 <= yy < height and rows[yy][xx] in outfits.SKINC]
+        if neighbours:
+            value = sum(neighbours) / len(neighbours)
+            wrist_skin[x, y] = min(wrist_ramp, key=lambda index: abs(hue[index] - value))
         for yy in range(max(0, y - 2), min(height, y + 3)):
             for xx in range(max(0, x - 2), min(width, x + 3)):
                 if (x - xx) ** 2 + (y - yy) ** 2 <= 5:
@@ -685,9 +752,10 @@ def draw(game, model, k, role, design=None, layers=None):
                     surface = 0
             if hand:
                 # The stock cuff ends here. Keep the hand outline and the bow.
-                paint = (
-                    c if (x, y) in bow or c in outfits.SKINC else FLESH[min(4, int(hue[c] // 38))]
-                )
+                if (x, y) in bow or c in outfits.SKINC:
+                    paint = c
+                else:
+                    paint = wrist_skin.get((x, y), FLESH[min(4, int(hue[c] // 38))])
             if layers is not None:
                 point = (x, height - 1 - y if dead else y)
                 if head and not hand:

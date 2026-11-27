@@ -21,3 +21,9 @@ Compared the next art pass with `17aaacef`, using the same save and Gerakis’s 
 In the mirrored side idle, 30 native pixels changed. After DOSBox aspect scaling their pattern matched all 39 changed screen pixels in the comparison area. The nearer rib and shoulder catch the light above the belt. The source save files retained their original checksums.
 
 ![Gerakis with the earlier and revised body shading](img/2026-11-27-gerakis-body-shading.png)
+
+## Light on the arms and legs
+
+Repeated the attached Loader check against `c351a52f` with Gerakis’s gear held constant. Both revised picture chunks matched their builds, and turning the class display off and back on restored them byte for byte. All 29 poses changed. In his mirrored side idle, the light on the bent arm and the planted leg is visible on the map. The game reused picture slot 203. The three source save files retained their original checksums.
+
+![Gerakis with earlier and revised limb shading](img/2026-11-27-gerakis-limb-shading.png)

@@ -11,6 +11,7 @@ from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import HALFTONES, RAMPS, reference_folds
 from wornreview import Atlas
 from shoulderscale import jerkin_facing, shoulder_paint
+import limbstrokes
 from dsloader import art, classoutfits as co
 
 MODEL = 2093
@@ -440,11 +441,33 @@ def leather_outfits(game, pose, body, keep, arm):
 COPPER = (129, 135, 136, 137, 138, 139, 140, 141, 142, 143, 151, 152, 153)
 
 
+# Elbow and knee ridges, traced on the copper limbs at native resolution.
+# Both lines change direction when the strike, bow or fall folds a joint.
+LIMBS = (
+    ((19,10,1,1),(7,19,0,1)), ((3,11,-1,1),(13,19,1,1)),
+    ((7,14,1,1),(4,20,-1,1)), ((17,10,1,1),(8,18,0,1)),
+    ((3,11,0,1),(11,18,0,1)), ((16,9,1,1),(11,18,0,1)),
+    ((17,11,0,1),(8,18,-1,1)), ((13,9,1,1),(5,19,0,1)),
+    ((13,10,1,1),(5,19,0,1)), ((2,9,0,1),(10,19,0,1)),
+    ((1,10,0,1),(9,20,0,1)), ((6,13,1,1),(4,20,-1,1)),
+    ((6,11,0,1),(10,19,1,1)), ((3,12,0,1),(4,20,0,1)),
+    ((10,12,1,1),(5,19,-1,1)), ((4,13,0,1),(4,21,-1,1)),
+    ((19,12,1,1),(7,16,0,1)), ((12,10,1,1),(8,17,-1,1)),
+    ((9,8,0,1),(8,18,1,1)), ((4,12,-1,0),(11,19,1,1)),
+    ((7,11,-1,1),(12,19,1,1)), ((16,8,1,1),(10,20,0,1)),
+    ((17,11,1,0),(5,18,-1,1)), ((14,10,1,1),(5,16,-1,1)),
+    ((9,12,1,1),(5,20,-1,1)), ((6,12,0,1),(11,22,1,1)),
+    ((15,11,1,0),(8,23,0,1)), ((11,6,1,-1),(8,17,1,1)),
+    ((3,11,0,1),(5,15,-1,1)),
+)
+
+
 def model_skin(body, pose, keep, arm):
     """Turn the broad copper shoulder, ribs and advancing thigh into the light."""
     h, w = len(body), len(body[0])-2*PAD
     (sy, sl, sr), (ry, rl, rr), (wy, wl, wr), (hem, hl, hr), rise = ROBE_CUTS[pose]
     gx, gy, _, _ = HIDE_POINTS[pose]
+    edits = {}
     rear = pose in (1, 7, 8, 9, 10, 18, 19, 20, 25, 28)
     profile = pose in PROFILE_HIDE
     for py, row in enumerate(body):
@@ -460,6 +483,7 @@ def model_skin(body, pose, keep, arm):
                     or body[py+j][px+i+PAD] is None for i,j in ((-1,0),(1,0),(0,-1),(0,1))):
                 continue
             original = COPPER.index(tone)
+            detail = 0.0
             if y <= wy:
                 upper = y < ry
                 ay, al, ar = (sy, sl, sr) if upper else (ry, rl, rr)
@@ -483,6 +507,16 @@ def model_skin(body, pose, keep, arm):
                         # Shadow along the spine divides the shoulder blades.
                         plane += 4.8*exp(-((u-.70)/.18)**2-((depth-.27)/.19)**2)
                         plane -= 4.1*exp(-((u-.50)/.11)**2-((depth-.38)/.30)**2)
+                    # At the turn of the far ribs, a reflected copper edge
+                    # remains inside the shadow of the arm. Break the long
+                    # dark flank below it at the oblique, above the waist.
+                    bend = depth - (.46+.26*(u-.65))
+                    detail += 4.3*exp(-((u-.66)/.14)**2-((bend+.08)/.14)**2)
+                    detail -= 3.1*exp(-((u-.56)/.17)**2-(bend/.095)**2)
+                    detail += 3.1*exp(-((u-.58)/.15)**2-((depth-.80+.22*u)/.13)**2)
+                    detail += 3.7*exp(-((u-lit)/.19)**2-((depth-.36-.22*u)/.16)**2)
+                    detail -= 2.7*exp(-((u-.80)/.11)**2-((depth-.58)/.15)**2)
+                    detail *= .63
                     # Keep native copper variation inside every larger plane.
                     shade = .57*original + .63*plane - 1.4 + 3.8*shoulder
                 elif shoulder > .2:
@@ -513,11 +547,21 @@ def model_skin(body, pose, keep, arm):
                 crest = .31+.16*depth
                 near = (x < middle) == (rise > 0)
                 plane = 2.7 + 8.8*exp(-((across-crest)/.31)**2) - 3.6*across + 1.5*near
+                # The upper sweep of the quadriceps turns into a narrower
+                # tendon as the working knee bends.
+                detail += 2.8*exp(-((across-crest)/.21)**2-((depth-.49)/.26)**2)
+                detail -= 2.6*exp(-((across-crest-.27)/.22)**2-((depth-.63)/.29)**2)
+                detail *= .53
                 shade = .57*original + .53*plane - .8
             row[px+PAD] = material_color(COPPER, shade)
+            finished = material_color(COPPER, shade+detail)
+            if finished != row[px+PAD]:
+                edits[px+PAD, py] = finished
+    return edits
 
 
-def fitted_rows(game, pose):
+def clothing_layers(game, pose):
+    """Use the established underlying planes to shade fitted leather and wraps."""
     cb, f = divmod(pose, 15)
     native, human = game.fr(MODEL+cb, f), game.fr(2095+cb, f)
     bare = co.Frame(art.decode_frame(body_chunk(cb), f)[2], {}).canvas(human, PAD)
@@ -565,7 +609,7 @@ def fitted_rows(game, pose):
     if pose in CROSSING_ARMS:
         elbow, bend, wrist, thickness = CROSSING_ARMS[pose]
         ImageDraw.Draw(arm).line((elbow, bend, wrist), fill=1, width=thickness)
-    model_skin(body, pose, keep, arm)
+    edits = model_skin(body, pose, keep, arm)
     out = {"Original": original, "Body base": body}
     keep.update(ARM_EDGES.get(pose, ()))
     # At full draw the collar cut crosses the top of the deltoid.
@@ -574,7 +618,16 @@ def fitted_rows(game, pose):
                      26: {(3, 7), (4, 7), (5, 7), (4, 8)}}.get(pose, set())
     out.update(leather_outfits(game, pose, body, keep | (opening-exposed_ridge), arm))
     out["Cleric"] = cleric_robe(game, pose, body, keep | opening, arm)
-    return out
+    def registered(x, y):
+        return (w-1-x+PAD, h-1-y) if pose == 28 else (x+PAD, y)
+    protected = {(x+PAD, y) for x, y in head | bow}
+    limbstrokes.joint_highlights(body, LIMBS[pose], COPPER, registered, protected, edits)
+    return out, edits
+
+
+def fitted_rows(game, pose):
+    rows, edits = clothing_layers(game, pose)
+    return limbstrokes.exposed_skin(rows, edits)
 
 
 def sheet_tile(sheet, pose, role):
