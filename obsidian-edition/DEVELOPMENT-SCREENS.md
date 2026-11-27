@@ -1232,6 +1232,13 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
+**In Wake of the Ravager** DSCLOG2 does the same, always (its header's +228,
+`scroll_on`): the same `INT 33h` hook in front of the game's handler, and the
+drag in its `PROBE_SCROLL` (the sequel's main loop's pointer read, where its
+pointer box and the panel already are), centring the view with the sequel's own
+routine (1C5F:01F3, the camera at DS:1408h) while the map is up and no label or
+picture is being drawn.
+
 ## M, U and I: open a screen, close it again
 
 ([In the features page](FEATURES.md#m-u-and-i-open-a-screen-close-it-again).)
@@ -1372,6 +1379,33 @@ screen the scale depends on the monitor, and DOSBox's own is kept.
 The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze
 report's records (32 to 16, taken half as often).
+
+**In Wake of the Ravager** (DSCLOG2, always on). The sequel plays its films
+(FLI, the intro and the rest) with a player of its own (831D4h) in mode 13h,
+chained, and asks after each frame for the Shift keys only (`test ax,3` at
+8335Ch: Shift held about a second skips the intro; no other key does). Its
+narrated opening after START GAME, and any spoken map scene, waits in a loop
+for the speech to end (69BDDh: `call 230:51 / or al,al / jnz`), with a planar
+picture up, and can't be skipped at all. DSCLOG2 puts SL's arrow in both:
+`FLI_KEY` after each frame (a press makes the Shift bits, so the game's own
+skip follows; the arrow drawn each frame, as a frame overwrites it), `FLI_END`
+as the player ends (the arrow wiped), and `SPEECH_WAIT` in the speech loop (a
+press stops the speech with the game's own routine, 37B3h:3A5h, and the loop
+ends as if it had; the arrow drawn only when the pointer moves or every 4 BIOS
+ticks: the loop runs hundreds of times a second while the speech plays, with
+the game's timer at about 1 kHz, and redrawing on each pass left the arrow
+never on screen). The drawing is SL's (`cp_draw`), with each pixel's address
+by the sequencer's chain-4 bit: `y*320+x` chained, SL's plane and offset
+otherwise. The pointer's start and speed are SL's `MOUSE_SET` (2F110h, after
+the ranges) and `MOUSE_INIT` (39F0Bh, after the reset). The sequel has no ICON
+6001 or PAL 1, so the Loader writes `POINTER.BIN` from the Shattered Lands
+folder (`ravager.write_pointer`).
+
+**The message box in the sequel** (NO PATH FROM HERE, NO LINE OF SIGHT, a
+scroll's YOU LEARN THE SPELL) waits the options' message time from
+`MSG_SHOWN`; a left or right press (taken from the game's events by DSCLOG2's
+mouse handler while the box waits) or a key (taken by its INT 16h hook) ends
+the wait at once, as Shattered Lands' own box closes on a key or a click.
 
 ## Spells on the Effects screen
 

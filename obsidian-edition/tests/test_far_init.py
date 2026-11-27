@@ -156,6 +156,9 @@ class Machine:
             self.vectors_set.append(al)
         elif ah in (0x49, 0x4A):
             self.carry(False)
+        elif ah == 0x3D:  # (the scenes' arrow, POINTER.BIN: not there, the helper's own kept)
+            self.set(AX=2)
+            self.carry(True)
         elif ah == 0x09:
             at = self.reg("DS") * 16 + self.reg("DX")
             text = bytes(self.mu.mem_read(at, 200)).split(b"$")[0]

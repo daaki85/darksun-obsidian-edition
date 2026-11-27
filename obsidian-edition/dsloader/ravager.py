@@ -511,7 +511,8 @@ PATCHES: Tuple[Patch, ...] = (
     # The game's message box (560h:2Ah: a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT and
     # the rest) seen (a fix of the sequel's, whatever the rules: it was never drawn, and its wait was over at
     # once): DSCLOG2's MSG_WINDOW where its window is kept (59AD3h: "mov es:[9],dx", counted) and MSG_SHOWN
-    # as its wait starts (59B62h: "mov ax,[26B7h]": the picture shown, the options' message time waited)
+    # as its wait starts (59B62h: "mov ax,[26B7h]": the picture shown, the options' message time waited, or
+    # until a click or key, as Shattered Lands' own box closes: DSCLOG2's mouse handler and INT 16h take them)
     # What the game shows as text, for the Loader's Dialogue and Journal tabs and the dice log's "Message:" lines
     # (SL's text and message, PROBE_TEXT and PROBE_MSG: DSCLOG2's TEXT): its "push bp / mov bp,sp" at the
     # start of the dialogue window's input (87BA0h, SL's 7CE83h: (kind, far text, word)) and of the message
@@ -520,6 +521,20 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("message", 0x59A0B, bytes.fromhex("558bec"), _site(94, 3)),
     Patch("message_window", 0x59AD3, bytes.fromhex("2689160900"), _site(59, 5)),
     Patch("message_shown", 0x59B62, bytes.fromhex("a1b726"), _site(58, 3)),
+    # The mouse as Shattered Lands' (its MOUSE_START, gamepatch's mouse_init and mouse_set): DSCLOG2's
+    # MOUSE_INIT just after the game resets the mouse driver (39F0Bh: "or ax,ax / jnz", SL's 356F5h) and
+    # MOUSE_SET just after it gives the mouse its ranges (2F110h: "mov word [0A103h],0", SL's 2A912h): the
+    # pointer as fast up and down as across, and where it was left from one screen to the next
+    Patch("mouse_init", 0x39F0B, bytes.fromhex("0bc0750b"), _site(170, 4)),
+    Patch("mouse_set", 0x2F110, bytes.fromhex("c70603a10000"), _site(171, 6)),
+    # The pointer in scenes (SL's SCENE_POINTER, cine_step and cine_end): DSCLOG2's SPEECH_WAIT in the wait
+    # while a narration plays (69BE2h: "or al,al / jnz 69BDDh" after 37B3h:51h, "still playing": the
+    # opening's after START GAME, a map trigger's), FLI_KEY after each FLI frame's test of the Shift keys
+    # (8335Ch: "test ax,3", after 1E8h:11h) and FLI_END as the film's frames are over (8324Dh: "mov
+    # [bp-2],ax"): the arrow drawn, a click ending the narration (its speech stopped) or the film as Shift
+    Patch("speech_wait", 0x69BE2, bytes.fromhex("0ac075f7"), _site(172, 4)),
+    Patch("fli_key", 0x8335C, bytes.fromhex("a90300"), _site(173, 3)),
+    Patch("fli_end", 0x8324D, bytes.fromhex("8946fe"), _site(174, 3)),
     # ... and at a level up (SL's pick_any and pick_list): DSCLOG2's PICK_ANY where the preserver's level up
     # takes its level (9317Fh: "mov [bp-2],ax / or ax,ax", SL's 85580h) and PICK_LIST after CHOOSE A
     # SPELL's page is listed (93246h: "mov di,ax", SL's 8563Fh); and PICK_PAGE where the window takes its
@@ -2172,7 +2187,24 @@ def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] =
         write_regions(game_dir, dos_dir, skip)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
         return str(e)
+    write_pointer(dos_dir, sl_dir)
     return None
+
+
+def write_pointer(dos_dir: str, sl_dir: Optional[str]) -> bool:
+    """POINTER.BIN, the arrow DSCLOG2 draws in the sequel's scenes (scenepointer.py, as for Shattered
+    Lands): the sequel's files have no ICON 6001 nor PAL 1, and its pointer is Shattered Lands' arrow, so
+    it is read from SL_DIR's; without them the file is taken away (an earlier start's) and DSCLOG2 draws
+    its plain arrow."""
+    from . import scenepointer
+    dest = os.path.join(dos_dir, scenepointer.POINTER_FILE)
+    if sl_dir and scenepointer.write_pointer(_find_file(sl_dir, "RESOURCE.GFF"), _find_file(sl_dir, "GPLDATA.GFF"), dest):
+        return True
+    try:
+        os.remove(dest)
+    except OSError:
+        pass
+    return False
 
 
 def cd_image(game_dir: str) -> Optional[str]:
