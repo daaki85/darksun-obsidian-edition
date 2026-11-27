@@ -55,6 +55,11 @@ def load_party(path: str, layout: Layout) -> SaveMemory:
     """Read a save and point `layout`'s slots at the party records inside it."""
     with open(path, "rb") as f:
         chunks = read_gff(f.read())
+    return party_from_chunks(chunks, layout, path)
+
+
+def party_from_chunks(chunks: Chunks, layout: Layout, path: str = "the save") -> SaveMemory:
+    """load_party's work on a save's parsed CHUNKS (PATH for its errors)."""
     try:
         creatures, sheets = party_chunks(chunks)
     except GffError as err:

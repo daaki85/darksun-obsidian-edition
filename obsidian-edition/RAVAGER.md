@@ -276,7 +276,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **[What the party wears](FEATURES.md#what-the-party-wears)**: the class outfits, and the new character's
   figure on the creation screen. The sequel keeps its own figures, [drawn in Shattered Lands'
   style](#the-mod-in-the-sequel).
-- **Checking a save file**: `Show Save.bat` reads Shattered Lands' saves only.
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
 - **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the

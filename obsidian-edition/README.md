@@ -259,8 +259,8 @@ the sequel's roster and saves** in its folder for the mod (each file kept first 
 that they load only from the Loader until you convert them back ([your sequel saves are
 converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
-**Checking a save file:** drag a Shattered Lands save file onto **`Show Save.bat`** to see the
-party it holds (it reads Shattered Lands' saves only; the sequel's party is on the Loader's tabs): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
+**Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
+party it holds, a Shattered Lands save or a Wake of the Ravager one (from the sequel's folder): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's release keeps the saves
