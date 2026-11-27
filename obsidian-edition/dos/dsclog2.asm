@@ -167,7 +167,7 @@ tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block'
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in the far block (PANEL_BLIT)
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the install (its segment: the EXE header's CS)
-copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF, 4 its OBJEX.GFF
+copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF, 4 its OBJEX.GFF, 8 its RGN03A.GFF
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT in the tail (+1834's): 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
 look_seq   dw 0                 ; +150 monsters looked at in a fight (PROBE_LOOK counts them)
@@ -1384,7 +1384,8 @@ pf_failed  dw 0                         ; reused slots let go after a failed rea
 ; ---- DOS's file opens: DSCLOG's PROBE_DOS_OPEN, for the Loader's copies ----
 ; Opening a file (AH=3Dh) named in COPIES (the whole path, or after a \, : or /, in any case) opens the
 ; Loader's copy instead (with the same mode) and sets its bit in COPIED: RESOURCE.GFF is D:\RESOURC2.GFF
-; (bit 1), GPLDATA.GFF D:\GPLDAT2.GFF (bit 2), OBJEX.GFF D:\OBJEX2.GFF (bit 4: the mod's item types).
+; (bit 1), GPLDATA.GFF D:\GPLDAT2.GFF (bit 2), OBJEX.GFF D:\OBJEX2.GFF (bit 4: the mod's item types),
+; RGN03A.GFF D:\RGN03A2.GFF (bit 8: the Mines3 dining room for its redrawn figures, ravfigures.REGIONS).
 ; With no copy there, the game's own. Everything else goes on to DOS.
 probe_dos_open:
         cmp ah, 3Dh
@@ -1492,10 +1493,13 @@ copies  db 12, 'RESOURCE.GFF'
         dw gpl_copy, 2
         db 9, 'OBJEX.GFF'
         dw obj_copy, 4
+        db 10, 'RGN03A.GFF'
+        dw rgn_copy, 8
         db 0
 res_copy db 'D:\RESOURC2.GFF', 0
 gpl_copy db 'D:\GPLDAT2.GFF', 0
 obj_copy db 'D:\OBJEX2.GFF', 0
+rgn_copy db 'D:\RGN03A2.GFF', 0
 
 ; ---- SPELL SLOTS ON USE: DSCLOG's PROBE_USE, PROBE_WIN and USE_DRAW ----
 ; The same routines as Shattered Lands' (the USE screen's code is SL's, at other addresses): PROBE_USE

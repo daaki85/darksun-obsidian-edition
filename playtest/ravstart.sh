@@ -41,11 +41,13 @@ if skip:
     # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them, the
     # spells themselves kept; all the parts asked for in one write, since each write starts from the
     # game's own file: one at a time, the last put back what the others left out, 2026-11-27's audit)
-    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range')}
+    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range', 'figures')}
     if parts:
         ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), parts, sl)
-        if 'spell_arrows' in parts:   # (the arrows' icons and names are RESOURC2.GFF's too)
-            ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), {'spell_arrows'}, sl)
+        if parts & {'spell_arrows', 'figures'}:   # (the arrows' icons and names, the Tarrasque and the drakes: RESOURC2.GFF's too)
+            ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), parts & {'spell_arrows', 'figures'}, sl)
+        if 'figures' in parts:   # (the redrawn figures' dining room: no RGN03A2.GFF, the game's own read)
+            ravager.write_regions(sys.argv[1], sys.argv[2], {'figures'})
         skip = [s for s in skip if s not in parts]
     if skip: sys.exit('RAV_SKIP: no such patch ' + ','.join(skip))
     open(exe, 'wb').write(data); print('# left out:', os.environ['RAV_SKIP'])

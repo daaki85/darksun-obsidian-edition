@@ -536,8 +536,17 @@ class GameFileTests(unittest.TestCase):
             shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
             weighed = ravager.weighted_objects(own, ranges=True)  # (the objects' copies of their types, weighed as ALL 4)
             self.assertTrue(weighed)
+            from dsloader import ravfigures
+            figures = ravfigures.object_chunks(own)  # (the redrawn figures: their pictures and moved objects)
+            self.assertTrue(figures)
+            for k, chunk in figures.items():
+                self.assertEqual(objs[k], chunk, k)
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
-                             {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)
+                             {ravager.TYPES_CHUNK} | sheets | shine | set(weighed)
+                             | {k for k in figures if k in own})  # (GFFI: the index)
+            rgn = gff.read_gff(open(os.path.join(d, "RGN03A2.GFF"), "rb").read())  # (the dining room's copy)
+            rgn_own = gff.read_gff(open(os.path.join(WOTR, "RGN03A.GFF"), "rb").read())
+            self.assertEqual({k for k in rgn_own if rgn_own[k] != rgn[k] and k[0] != "GFFI"}, {("ETAB", 58)})
             for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
                 for r in dataitems.records(objs[k])[0]:
                     if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:

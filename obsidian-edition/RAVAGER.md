@@ -229,6 +229,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   gives the points back but not the walk, so a click goes nowhere. A member held where they stand
   (Paralyzed, or Cannot Move) stays there. Out of a fight, holding Alt rings what can be used in gold
   and names it: things to take, doors, bodies to search, people to talk to.
+- **The sequel's figures drawn in Shattered Lands' style**: its people, the party's figures, its creatures,
+  the people lying or sitting in its scenes, the Tarrasque and its three drakes, redrawn to Shattered Lands'
+  size and look (the Shattered Lands party figures, a mul or an elf of the sequel on the same body as
+  Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
+  sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
+  out again for its smaller furniture. 275 pictures; the Tarrasque's fight and cinematic and the drakes
+  aren't yet seen in a played game.
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
   toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of

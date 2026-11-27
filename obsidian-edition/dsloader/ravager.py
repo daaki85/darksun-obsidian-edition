@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravspells
+from . import game, gamepatch, gff, ravarrows, ravfigures, ravspells
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1429,6 +1429,14 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if added:
             out = icons.with_chunks(out, added)
             done.append(ravarrows.SKIP)
+    if ravfigures.SKIP not in skip:  # (the Tarrasque, its cinematic and the drakes redrawn: ravfigures)
+        try:
+            added = ravfigures.resource_chunks(gff.read_gff(out))
+        except (ravfigures.FigureError, gff.GffError, struct.error):
+            added = {}
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(ravfigures.SKIP)
     if PICK_BUTTON_ICON not in skip:  # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186)
         from . import art, wotrart
         try:
@@ -1777,6 +1785,17 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if shine:
             new.update(shine)
             done.append("item_shine")
+    if ravfigures.SKIP not in skip:  # (the figures redrawn in Shattered Lands' style: ravfigures, the catalogue's)
+        try:
+            made = ravfigures.object_chunks({**chunks, **new})
+        except ravfigures.FigureError:
+            made = {}  # (the Loader's figures file missing or unreadable: the game's own figures)
+        clash = [k for k in made if k in new and k[0] != "OJFF"]
+        if clash:
+            raise RavagerError(f"the redrawn figures and the mod's own pictures both take {clash[:3]}")
+        if made:
+            new.update(made)
+            done.append(ravfigures.SKIP)
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -1896,6 +1915,38 @@ def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
     return _write_copy(game_dir, SCRIPT_FILE, dest, script_fixed, skip)
 
 
+def regions_fixed(name: str):
+    """The region file NAME's fixer for _write_copy: its chunks with the redrawn figures' (ravfigures)
+    unless ravfigures.SKIP is in its SKIP."""
+    def fixed(data: bytes, skip) -> Tuple[bytes, List[str]]:
+        from . import icons
+        if ravfigures.SKIP in skip:
+            return data, []
+        try:
+            added = ravfigures.region_chunks(name, gff.read_gff(data))
+        except (ravfigures.FigureError, gff.GffError, struct.error):
+            added = {}
+        return (icons.with_chunks(data, added), [ravfigures.SKIP]) if added else (data, [])
+    return fixed
+
+
+def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
+    """The copies of the region files the redrawn figures change (ravfigures.REGIONS: RGN03A.GFF's
+    dining room) in DOS_DIR, which DSCLOG2 opens in their place; with ravfigures.SKIP in SKIP, or a region
+    the figures leave as it is, no copy (an older one taken away), the game's own file read."""
+    done: List[str] = []
+    for name, copy in ravfigures.REGIONS.items():
+        dest = os.path.join(dos_dir, copy)
+        made = _write_copy(game_dir, name, dest, regions_fixed(name), skip) if _find_file(game_dir, name) else []
+        if not made:
+            try:
+                os.remove(dest)
+            except OSError:
+                pass
+        done += made
+    return done
+
+
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
@@ -1920,6 +1971,7 @@ def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] =
         write_resources(game_dir, os.path.join(dos_dir, RESOURCE_COPY), skip, sl_dir)
         write_scripts(game_dir, os.path.join(dos_dir, SCRIPT_COPY), skip)
         write_objects(game_dir, os.path.join(dos_dir, OBJECTS_COPY), skip, sl_dir)
+        write_regions(game_dir, dos_dir, skip)
     except (RavagerError, gamepatch.PatchError, gff.GffError, OSError, struct.error) as e:
         return str(e)
     return None
