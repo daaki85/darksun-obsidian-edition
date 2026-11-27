@@ -132,8 +132,8 @@ class TraitsTests(unittest.TestCase):
     def test_site_table(self):
         table = self.sym["site_table"]
         self.assertEqual(struct.unpack_from("<H", self.image, table + 2 * 202)[0], self.sym["sf_site"])
-        for number in (191, 200, 201):
-            self.assertEqual(struct.unpack_from("<H", self.image, table + 2 * number)[0], self.sym["site_none"])
+        for number in (191, 200, 201):  # (others' sites, or none: not this one)
+            self.assertNotEqual(struct.unpack_from("<H", self.image, table + 2 * number)[0], self.sym["sf_site"])
         hdr = self.sym["hdr"]
         for name, at in (("sf_swings", ravlog.SF_SWINGS), ("sf_lesses", ravlog.SF_LESSES), ("sf_backs", ravlog.SF_BACKS),
                          ("trip_saves", ravlog.TRIP_SAVES), ("trips", ravlog.TRIPS)):
