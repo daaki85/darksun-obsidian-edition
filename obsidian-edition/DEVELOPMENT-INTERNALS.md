@@ -461,9 +461,11 @@ spells' compares (`NS_CMP_TABLE`; the entry found is copied to `NS_ENTRY`), the 
 (`RAV_SLOTS`, `RAV_XP`) and the creation screen's spell list (`CR_DEFS`). The Loader finds each by
 its header word as an offset at `tail_seg` x 16 (`RavDiceLog._tail_at`; the quick save's and the
 labels' already did). A buffer handed to the game as a far pointer takes the tail's segment with it
-(`NAME_PUSH`, `SAVE_TICK`, `USE_DRAW`). Moving them freed 8,309 bytes of the segment (59,925 to
-51,616 on obsidian-edition; with #218-#223 joined, 65,311 to 57,002, 8,534 free); the upper memory
-taken is the same (the parts are one block), the install's 800 bytes never were kept.
+(`NAME_PUSH`, `SAVE_TICK`, `USE_DRAW`). Moving them freed 8,309 bytes of the segment (`resident_end` 59,925 to
+51,616 on obsidian-edition, 13,920 of the 64 KB free; with #218-#223 joined, 65,311, past the room
+with the install, to 56,902, 8,624 free); the upper memory taken is the same (the parts are one
+block: the tail's 8,512 bytes, its tables first, `section tail`, then its buffers, `section tailz`),
+and the install's 800 bytes never were kept.
 
 **To make room for a port**: put a table or buffer that only a few routines read in the tail (a
 `section tail` / `section image` pair around it, in place, so the lines round it are untouched) and
