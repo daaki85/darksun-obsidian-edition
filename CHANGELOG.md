@@ -76,6 +76,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - RAVAGER.md's "The mod in the sequel": the 45-line kits entry split into kits, weapon specs, new wizard
   spells, the creation screen, the screens and choosing an enemy; the level cap and first spells entries
   cut to the sequel's own facts. The detail stays on KITS, WEAPON-SPECS and PLAYER-GUIDE, linked.
+
 **Changed: Shattered Lands inventory portraits** (branch `claude/inventory-redraws`)
 - Both human figures have a separate fitting for each of the eight active classes. The Preserver wears the open plum mantle, the Gladiator has a single guard and diagonal strap, and the Fighter wears paired bone caps. [Human portraits and their map outfits](obsidian-edition/docs/class-outfits/README.md#human-inventory-fittings)
 
