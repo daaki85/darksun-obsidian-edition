@@ -32,9 +32,10 @@ LIST, CREATURES, PICTURE = 0x2000, 0x6000, 0x7000
 CAM = (800, 400)
 
 
-def frame(w, h):
-    """A frame of runs: every row one run across the whole width (its pixels colour 9, one repeat)."""
-    out = bytearray(struct.pack("<HH", w, h))
+def frame(w, h, margin=0):
+    """A frame of runs: every row one run across the whole width (its pixels colour 9, one repeat); MARGIN clear
+    rows below them, counted in its height but not listed (as the redrawn figures' frames)."""
+    out = bytearray(struct.pack("<HH", w, h + margin))
     for y in range(h):
         out += bytes((y,)) + struct.pack("<HBB", 0x8000, w, 2) + bytes((((w - 1) << 1) | 1, 9))
     return bytes(out + b"\xff")
@@ -42,7 +43,7 @@ def frame(w, h):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class PassTests(unittest.TestCase):
-    def scene(self, statuses, seen=True):
+    def scene(self, statuses, seen=True, margin=0):
         """Things 5, 6, 7 standing in the view (creatures 0, 1, 2 with STATUSES; None: not a creature), each
         an 8 x 16 frame, their feet 20 pixels apart; the floor all colour 40, DARK 40 -> 41."""
         s = Scene(ASM)
@@ -60,7 +61,7 @@ class PassTests(unittest.TestCase):
         s.ds(0x264E, struct.pack("<H", 3))
         s.ds(0x265D, struct.pack("<H", 3))
         s.ds(0x19C9, struct.pack("<HH", 0, CREATURES))
-        pic = struct.pack("<IHI", 0, 1, 10) + frame(8, 16)
+        pic = struct.pack("<IHI", 0, 1, 10) + frame(8, 16, margin)
         s.mu.mem_write(PICTURE * 16, pic)
         for n, status in enumerate(statuses):
             thing, x, y = 5 + n, CAM[0] + 40 + 60 * n, CAM[1] + 100
@@ -97,6 +98,16 @@ class PassTests(unittest.TestCase):
         self.assertIn((36 + 14 + 1, 107), dark)  # (14 up: leant 14 + (14 + 10) // 20 = 15 right)
         self.assertFalse(any(x >= 90 for x, _ in dark))  # (the dead one's and the other thing's: none)
         self.assertEqual(hdr, s.sym["hdr"])
+
+    def test_feet_above_a_clear_margin(self):
+        """A frame with clear rows below the feet (the redrawn figures': ten under the party's) casts its shadow from
+        its lowest drawn row, as the same figure without them: not that far below it, the figure floating."""
+        plain = self.scene([1, None, None])
+        plain.call("fig_pass", fs=FAR)
+        s = self.scene([1, None, None], margin=10)
+        s.call("fig_pass", fs=FAR)
+        self.assertTrue(self.dark(plain))
+        self.assertEqual(self.dark(s), self.dark(plain))
 
     def test_dying_none(self):
         s = self.scene([4, 8, 1])
@@ -142,23 +153,26 @@ class PassTests(unittest.TestCase):
     def test_kept_as_drawn(self):
         """FIG_KEEP: a living creature's frame kept as the game draws it (its key, frame, width, bottom row and the
         runs every other row up from the feet), then the game's routine called with the call's arguments, the
-        segment read from after the site, and back past it."""
-        s = self.scene([1, None, None])
-        game = 0x8000  # (the game's code: the site's way back at 8000:0010, the segment word there; its routine)
-        s.mu.mem_write(game * 16 + 0x10, struct.pack("<H", 0x8100))
-        s.mu.mem_write(0x8100 * 16 + 0x3BEC, b"\xb8\x34\x12\xcb")  # (mov ax,1234h / retf)
-        s.mu.mem_write(game * 16 + 0x12, b"\xf4")
-        sp = 0x700
-        args = struct.pack("<HHHHHHH", 1, 50, 60, 0, 0, PICTURE, 0)
-        s.mu.mem_write(SS * 16 + sp, struct.pack("<HHH", 0x10, game, 0x2) + args)
-        for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, edi=5, esi=0, eflags=0x2).items():
-            s.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
-        s.mu.emu_start(TSR * 16 + s.sym["fig_keep"], game * 16 + 0x12, count=100000)
-        self.assertEqual((s.mu.reg_read(r.UC_X86_REG_AX), s.mu.reg_read(r.UC_X86_REG_SP)), (0x1234, sp + 6))
-        slot = bytes(s.mu.mem_read(FAR * 16 + s.sym["FAR_SC"], 8 + 3 * 8))
-        self.assertEqual(slot[:8], struct.pack("<HHBBBB", 0, 0, 0, 8, 15, 8))
-        self.assertEqual(slot[8:], b"".join(bytes((up, 0, 8)) for up in range(14, -1, -2)))  # (the rows top down)
-        self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_KEPT))[0], 1)
+        segment read from after the site, and back past it; the feet the lowest drawn row, with clear rows under
+        it or none."""
+        for margin in (0, 10):
+            with self.subTest(margin=margin):
+                s = self.scene([1, None, None], margin=margin)
+                game = 0x8000  # (the game's code: the site's way back at 8000:0010, the segment word there; its routine)
+                s.mu.mem_write(game * 16 + 0x10, struct.pack("<H", 0x8100))
+                s.mu.mem_write(0x8100 * 16 + 0x3BEC, b"\xb8\x34\x12\xcb")  # (mov ax,1234h / retf)
+                s.mu.mem_write(game * 16 + 0x12, b"\xf4")
+                sp = 0x700
+                args = struct.pack("<HHHHHHH", 1, 50, 60, 0, 0, PICTURE, 0)
+                s.mu.mem_write(SS * 16 + sp, struct.pack("<HHH", 0x10, game, 0x2) + args)
+                for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, edi=5, esi=0, eflags=0x2).items():
+                    s.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+                s.mu.emu_start(TSR * 16 + s.sym["fig_keep"], game * 16 + 0x12, count=100000)
+                self.assertEqual((s.mu.reg_read(r.UC_X86_REG_AX), s.mu.reg_read(r.UC_X86_REG_SP)), (0x1234, sp + 6))
+                slot = bytes(s.mu.mem_read(FAR * 16 + s.sym["FAR_SC"], 8 + 3 * 8))
+                self.assertEqual(slot[:8], struct.pack("<HHBBBB", 0, 0, 0, 8, 15, 8))
+                self.assertEqual(slot[8:], b"".join(bytes((up, 0, 8)) for up in range(14, -1, -2)))  # (the rows top down)
+                self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_KEPT))[0], 1)
 
     def site(self, name, bp, stack, words):
         """Site NAME entered as SITE_INT leaves it (the INT's IP, CS and flags on the stack, then STACK), with the
