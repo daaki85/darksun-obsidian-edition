@@ -773,6 +773,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
   rolls a new character).
+- **The figure at the top** wears the class's outfit (logs/2026-11-27-creation-figure-outfits.md):
+  crop a shot at `60x45+130+12` and scale it 400% to see it; it changes at each class, race or
+  portrait click. Read the game's blob of the screen's figures with `creationfigure.Figures(gd)`
+  ([RESEARCH.md](RESEARCH.md#creation-and-levels)).
 - **The classes**: click a name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver
   45, psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
   chosen.

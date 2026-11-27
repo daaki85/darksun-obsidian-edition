@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, creationfigure, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -615,6 +615,7 @@ class DiceLog:
         self._scrolling = scrolling.Scrolling()  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
+        self._cfigure: Optional[creationfigure.CreationFigure] = None  # (the creation screen's figure)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
         self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
@@ -755,6 +756,7 @@ class DiceLog:
         # (the figures' Dresser holds the last game's GameData, its picture store and a redraw
         # through the last DSCLOG header: made afresh for this game, at once)
         self._dresser, self._dresser_at = None, 0.0
+        self._cfigure = None  # (creationfigure.CreationFigure, made at the first pass)
         self._forget_destroyed()
         self._poll_fails = 0
         self._dust = dust.Dust()
@@ -1623,6 +1625,7 @@ class DiceLog:
         step(self._answer_stats)
         out += step(self._answer_use)
         out += step(self._gear_due)
+        step(lambda: self._creation_figure(now))
         out += step(self._loot_pass)
         out += step(self._sell_pass)
         step(self._locks_pass)
@@ -2217,8 +2220,23 @@ class DiceLog:
     def _dress(self, now: float) -> None:
         """The party's sprites in what they wear, once the game has the Loader's SEGOBJEX (whose
         party pictures the Loader keeps dressed); as the game's own when switched off."""
-        if not icons.ready(self.game, self.tsr_hdr):
+        if self._made_dresser(now) is not None:
+            self._dresser.update(True, now)
+
+    def _creation_figure(self, now: float) -> None:
+        """The creation screen's figure in the outfit of the class chosen (creationfigure.py): each
+        pass, as DSCLOG waits for it after a click (FIG_DUE)."""
+        if self.tsr_hdr is None:
             return
+        if getattr(self, "_cfigure", None) is None:
+            self._cfigure = creationfigure.CreationFigure(self.game)
+        dresser = self._made_dresser(now) if self.game.creating() else self._dresser
+        self._cfigure.update(dresser.pics if dresser is not None else None, self.tsr_hdr)
+
+    def _made_dresser(self, now: float) -> Optional[sprites.Dresser]:
+        """The Dresser, made once the game has the Loader's SEGOBJEX (None till then)."""
+        if not icons.ready(self.game, self.tsr_hdr):
+            return None
         if self._dresser is None and now >= self._dresser_at:
             from . import launch
             self._dresser_at = now + DRESSER_RETRY  # (tried again later if it can't be made now)
@@ -2229,8 +2247,7 @@ class DiceLog:
             if self._dresser is not None and self.tsr_hdr is not None:
                 hdr = self.tsr_hdr
                 self._dresser.request_redraw = lambda: shadows.redraw(self.game, hdr)
-        if self._dresser is not None:
-            self._dresser.update(True, now)
+        return self._dresser
 
     def _ring_search(self) -> List[str]:
         """While the arena's ring is still to be found: have DSCLOG show ring.SEARCH_TEXT instead
