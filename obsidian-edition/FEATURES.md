@@ -1045,7 +1045,9 @@ it was found, and **Choose its folder...** points the Loader to it (from the nex
 
 The sequel itself starts from the Loader too, with most of the mod, and your Shattered Lands party
 can go on into it: [Wake of the Ravager](RAVAGER.md), its own page (starting it, taking the party
-across, and the mod's rules, screens and keys there).
+across, and the mod's rules, screens and keys there). Each start there converts the sequel's roster and saves
+for the mod, a copy of each kept: [your sequel saves are
+converted](RAVAGER.md#your-sequel-saves-are-converted) says how to turn them back.
 
 ### Taking the party to Wake of the Ravager
 
