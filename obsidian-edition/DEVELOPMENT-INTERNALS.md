@@ -463,7 +463,8 @@ its header word as an offset at `tail_seg` x 16 (`RavDiceLog._tail_at`; the quic
 labels' already did). A buffer handed to the game as a far pointer takes the tail's segment with it
 (`NAME_PUSH`, `SAVE_TICK`, `USE_DRAW`). Moving them freed 8,309 bytes of the segment (`resident_end` 59,925 to
 51,616 on obsidian-edition, 13,920 of the 64 KB free; with #218-#223 joined, 65,311, past the room
-with the install, to 56,902, 8,624 free); the upper memory taken is the same (the parts are one
+with the install, to 56,902, 8,624 free; with every open pull request joined on 2026-11-27, 57,440,
+8,096 free); the upper memory taken is the same (the parts are one
 block: the tail's 8,512 bytes, its tables first, `section tail`, then its buffers, `section tailz`),
 and the install's 800 bytes never were kept.
 

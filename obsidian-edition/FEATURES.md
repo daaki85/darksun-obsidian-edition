@@ -1174,36 +1174,16 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   with the kits). The [new wizard spells](#new-wizard-spells) come across too: a character who knows them
   casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
   or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
-  the sequel's wizards carry one ([the mod's gear](#magic-weapons-for-every-spec-and-the-mods-gear)). The kits' rules for fights and play work there: AC, to hit and damage, the weapon
-  skills a kit gives (a Battle Mage's, Crusader's and Mind Warrior's expertise, a Justifier's
-  specialization, a Myrmidon's second weapon), saves, thief skills, backstabs, movement, the
-  two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
-  Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
-  (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
-  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the kits' casting
-  levels (an Arcanist's, Spirit Caller's and Wasteland Seer's), cures (a Healer's, Lifebinder's and
-  Rescuer's) and Cause Wounds (a Wilderness Avenger's), the spells a kit knows (a Healer's sphere of
-  the cosmos, the healing or harming spells a kit never knows), the psionicist
-  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die (on
-  the creation screen, rolled again as the kit is chosen, and at a level up; past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
-  Dancer's dance and Wild Fighting as a fight starts, and the kits' gear: what a kit forbids is
-  refused when it is put on or in a hand (a Ravager's shield and bow, a Stalker's chain mail, a Battle
-  Mage's off-hand weapon), and what it allows can be held whatever its class (a Battle Mage's weapon of
-  its weapon spec and leather, a Battle Dancer's long sword and bow, an Elementalist's second sphere's
-  weapons), the Poisoner's poison (each hand's first melee hit a fight), the Spellarcher's spell arrows +1
-  to +3 by its preserver level and its Fine Bow's +1 to hit (the party transfer keeps a Fine Bow one). The
-  Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in Shattered Lands: KITS on the creation
-  panel opens the KIT page ([Choosing a kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the
-  game's menu right after DUAL. A new character's starting gear is fitted to its kit from the
-  sequel's own items (a Shinobi's long sword +1 a short sword +1, an Arena Champion's second sword a
-  Shield +1, a Ravager's shield left behind and a second sword in its place, a Spellarcher's bow its Fine
-  Bow), and a Spellarcher makes spell arrows on the USE screen there as in Shattered Lands (a button for
-  each touch spell it knows, a slot a press; a new one starts with 24 of each it picked, and another member's go
-  back to it). What else kits do to spells
-  and psionic powers doesn't carry over yet, but for the Shinobi's own spells: it has a MAGE
-  list on USE, casts at its thief level less 5, and learns its own at a level up, at creation and from a
-  scroll (read languages first) as in Shattered Lands ([which kits work
-  there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
+  the sequel's wizards carry one ([the mod's gear](#magic-weapons-for-every-spec-and-the-mods-gear)). The kits work there as in Shattered Lands, nearly all of them whole: their rules in a
+  fight, spell slots, casting levels, cures, the spells they know, PSP costs, hit dice, and the gear
+  each forbids or allows, refused when it is put on or in a hand (a Ravager's shield and bow). The
+  Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in
+  Shattered Lands: KITS on the creation panel opens the KIT page ([Choosing a
+  kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the game's menu right
+  after DUAL. A new character's starting gear is fitted to its kit from the sequel's own items, and a
+  Spellarcher makes spell arrows on the USE screen there as here. Kit by kit, with the few that work
+  only in part (the Scholar, the Wanderer, the Spellarcher): [In Wake of the
+  Ravager](KITS.md#in-wake-of-the-ravager). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
   can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air

@@ -203,20 +203,25 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
 
 def fine_bow(gd, member: int) -> List[str]:
     """A Spellarcher's bow made its Fine Bow (the module's notes), once: none while it has one; with it, its
-    starting spell arrows (ravarrows.starting_arrows). Lines for the log."""
-    from . import ravager
+    starting spell arrows (ravarrows.starting_arrows), put in first: the bow is named only once they are in, or
+    none are due (ravarrows.arrows_due), so a pass that found no room for them (a full pack) is tried again
+    in a later one, the name being the mark of it done. Lines for the log."""
+    from . import ravager, ravarrows
     fine = ravager.FINE_BOW_NAME
-    bows = [(i, item) for i, item, _ in gd._worn(member) if specialize.kind_of(_type(item)) == weaponchoice.BOW]
-    if not bows or any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == fine for _, item in bows):
+
+    def bows():
+        return [(i, item) for i, item, _ in gd._worn(member) if specialize.kind_of(_type(item)) == weaponchoice.BOW]
+    if not bows() or any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == fine for _, item in bows()):
         return []
-    index, item = bows[0]
-    rec = bytearray(item)
-    struct.pack_into("<H", rec, game.ITEM_NAME, fine)
+    arrows = ravarrows.starting_arrows(gd, member)
+    if not arrows and ravarrows.arrows_due(gd, member):
+        return []  # (no room for them now: the bow left plain, so a later pass tries again)
+    held = bows()  # (looked at again: the arrows' moves may have linked the items anew, bow_ahead among them)
+    if not held:
+        return arrows
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
-    gd.guest.write(items + index * game.ITEM_SIZE, bytes(rec))
-    from . import ravarrows
-    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"] \
-        + ravarrows.starting_arrows(gd, member)
+    gd.guest.write(items + held[0][0] * game.ITEM_SIZE + game.ITEM_NAME, struct.pack("<H", fine))
+    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"] + arrows
 
 
 def _in_hand(gd, member: int, sheet: bytes, read, kind: int, new_items: bool, why: str) -> List[str]:

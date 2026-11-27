@@ -750,7 +750,8 @@ class DiceLog:
                                "Close it and start it again from the Loader (Play Shattered Lands).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
-            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            # (the seed and three captures: the fourth word, +30, is DSCLOG2's HDR_LEN, never written)
+            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<4H", SEED, TARGET_GLOBAL, 0, 0))
             self.game = GameData(self.guest, ds)
             if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
                 old = self.guest.item_gate          # for a guest that has none, so a game started

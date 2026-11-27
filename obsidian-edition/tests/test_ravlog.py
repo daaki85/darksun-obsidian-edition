@@ -383,6 +383,23 @@ class PassTests(unittest.TestCase):
         log._party_check = lambda now: True
         self.assertEqual(log._after_rolls(False, 2.0), ["  Draxan now 0/70 HP (-3)"])
 
+    def test_an_older_header_gets_no_arrows_words(self):
+        """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an
+        older DSCLOG2, its word 0 (glob's fourth capture, none), may have its code there and gets no write;
+        one whose HDR_LEN holds them has ARROWS_ON set."""
+        for hdr_len, writes in ((0, 0), (ravlog.AR_ROW, 0), (ravlog.AR_DRAWN + 2, 1)):
+            g = FakeGuest()
+            seg_base, hdr = 0xC91B0, 0x20
+            struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.PP_TEXT_OFF, 0x900)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.HDR_LEN, hdr_len)
+            log = ravlog.RavDiceLog(g)
+            log.tsr_hdr = seg_base + hdr
+            log.game = types.SimpleNamespace(guest=log.guest, rules=0)
+            log.spell_arrows, log._arrows_ready = True, lambda: True
+            self.assertEqual(log._answer_arrows(), [], hdr_len)
+            self.assertEqual(g.writes, writes, hdr_len)
+            self.assertEqual(log.header_holds(ravlog.AR_ROW + 2), bool(writes))
 
     def test_slots_written_to_the_helper(self):
         """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148, an offset in its tail,
