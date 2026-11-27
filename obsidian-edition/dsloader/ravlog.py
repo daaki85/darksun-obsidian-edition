@@ -1130,10 +1130,21 @@ class RavGameData(game.GameData):
         except (struct.error, IndexError, ValueError):
             return False
 
+    mod_names: Optional[bytes] = None  # (DSCLOG2's ITEM_NAMES as the Loader wrote them: RavDiceLog._write_item_names)
+
     def item_name(self, name_index: int) -> str:
+        """The sequel's list's name (1-255), else the Loader's own from 256 (ravager.NAMES_GAME: the mod's names,
+        the Fine Bow and the spell arrows among them, then the transfer's keepsakes; DSCLOG2's ITEM_NAMES, which
+        the game shows), else "item N"."""
         names = self._name_list()
         if 1 <= name_index <= len(names) and names[name_index - 1]:
             return names[name_index - 1]
+        if ravager.NAMES_GAME <= name_index < ravager.NAMES_GAME + ravager.NAMES_ROOM:
+            table = self.mod_names if self.mod_names is not None else ravager.item_names()
+            at = (name_index - ravager.NAMES_GAME) * ravager.NAME_KEPT
+            raw = table[at:at + ravager.NAME_KEPT].split(b"\0", 1)[0]
+            if raw and game.plain_name(raw):
+                return raw.decode("ascii")
         return f"item {name_index}"
 
 
@@ -1326,6 +1337,8 @@ class RavDiceLog(dicelog.DiceLog):
         from . import launch, ravitems
         kept = ravager.read_added(launch.DOS_DIR).get(ravitems.NAMES_CHUNK, b"")
         names = ravager.item_names([n for n in kept.split(b"\n") if n])
+        if self.game is not None:
+            self.game.mod_names = names  # (the dice log's names for them too: RavGameData.item_name)
         if count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
             return
         self.guest.guest.write(at, names)
@@ -1872,6 +1885,7 @@ class RavDiceLog(dicelog.DiceLog):
         self._step(self._forget_undone_picks)  # (pockets tried since the save loaded: forgotten)
         out += self._step(self._answer_pick)  # (a thief's Pick Pockets button: DSCLOG2's PICK POCKETS, PP_HAND waits)
         out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
+        out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
         out += self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -2111,6 +2125,21 @@ class RavDiceLog(dicelog.DiceLog):
         if result and result.text and result.text not in self._own_text:
             self._own_text.append(result.text)
         return ravarrows.lines_for(result)
+
+    def _strays_pass(self) -> List[str]:
+        """Spell arrows another party member carries given back to the Spellarcher, or taken out of its quiver
+        (ravarrows.return_strays: Shattered Lands' return_strays, with the kits; out of a fight, the map up), the
+        item moves writable while it runs; the game's item lists moving: a later pass."""
+        if self.tsr_hdr is None or self.game is None or not self.game.rules & game.RULE_KITS:
+            return []
+        from . import ravarrows
+        try:
+            with self._items_writable():
+                return ravarrows.return_strays(self.game)
+        except itemgate.ItemsBusy:
+            return []
+        finally:
+            itemgate.release(self.game)
 
     def _stock_pass(self, now: float) -> List[str]:
         """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the

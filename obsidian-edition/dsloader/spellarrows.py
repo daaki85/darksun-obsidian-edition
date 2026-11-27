@@ -243,15 +243,19 @@ def inventory_up(gd: GameData) -> bool:
     return gd.guest.read(gd.ds * 16 + INVENTORY_SLOTS, 4) != bytes(4)
 
 
-def return_strays(gd: GameData) -> List[str]:
+def return_strays(gd: GameData, names=None, screen_up=None) -> List[str]:
     """Spell arrows a party member who isn't a Spellarcher carries (the game asks nothing of an item
     put in a backpack) go back to the party's Spellarcher: onto its stack of that spell where the two
     come to STACK_MOST or fewer, else into its pack as they are. Those left with it (no Spellarcher in
     the party, or no room in its pack) are taken out of its quiver into a backpack cell of its own, if
     it has them readied (an old save, or a quiver filled before ARROWS_FORBID): only a Spellarcher
-    readies them. Out of fights, the inventory shut. Lines for the log."""
-    if gd.in_combat() or inventory_up(gd):
+    readies them. Out of fights, the inventory shut. Lines for the log. NAMES (name number -> the
+    arrows' name) and SCREEN_UP(gd) (whether a screen that writes the items back is up) are the
+    sequel's in ravarrows.return_strays; Shattered Lands' by default (NAMES, inventory_up)."""
+    names = NAMES if names is None else names
+    if gd.in_combat() or (screen_up or inventory_up)(gd):
         return []
+    is_arrow = lambda rec: len(rec) >= game.ITEM_NAME + 2 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] in names
     archers = [m for m in range(game.PARTY_SIZE) if is_spellarcher(gd, m)]
 
     def strays():
@@ -270,7 +274,7 @@ def return_strays(gd: GameData) -> List[str]:
                 continue
             name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
             count = struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
-            label = NAMES.get(name, b"spell arrows").decode().lower()
+            label = names.get(name, b"spell arrows").decode().lower()
             if archers and _to_archer(gd, archers[0], index, rec, name, count):
                 out.append(f"The {label} go back to {gd.creature_name(archers[0])} from {gd.creature_name(member)}: "
                            f"only a Spellarcher carries them ({count})")

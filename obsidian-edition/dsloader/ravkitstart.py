@@ -32,8 +32,9 @@ plain Shield (840). Each in a material the character can use (restrict.usable: t
 
 A Spellarcher's bow (ravfirstweapon's, of its weapon spec) is made its **Fine Bow** (fine_bow: named
 FINE_BOW_NAME, the sequel's mod_name of Shattered Lands', +1 to hit by DSCLOG2's FINE_HIT), its arrows the ones
-ravfirstweapon gives. Not here: its starting spell arrows (spellarrows.starting_gear): the sequel makes no spell
-arrows yet, so it keeps those arrows.
+ravfirstweapon gives, made its starting spell arrows as Shattered Lands' (spellarrows.starting_gear's rule:
+ravarrows.starting_arrows): 24 of each touch spell's it picked, in place of those arrows; knowing none, it keeps
+them.
 """
 
 import struct
@@ -201,7 +202,8 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
 
 
 def fine_bow(gd, member: int) -> List[str]:
-    """A Spellarcher's bow made its Fine Bow (the module's notes), once: none while it has one. Lines for the log."""
+    """A Spellarcher's bow made its Fine Bow (the module's notes), once: none while it has one; with it, its
+    starting spell arrows (ravarrows.starting_arrows). Lines for the log."""
     from . import ravager
     fine = ravager.FINE_BOW_NAME
     bows = [(i, item) for i, item, _ in gd._worn(member) if specialize.kind_of(_type(item)) == weaponchoice.BOW]
@@ -212,7 +214,9 @@ def fine_bow(gd, member: int) -> List[str]:
     struct.pack_into("<H", rec, game.ITEM_NAME, fine)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     gd.guest.write(items + index * game.ITEM_SIZE, bytes(rec))
-    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"]
+    from . import ravarrows
+    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"] \
+        + ravarrows.starting_arrows(gd, member)
 
 
 def _in_hand(gd, member: int, sheet: bytes, read, kind: int, new_items: bool, why: str) -> List[str]:

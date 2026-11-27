@@ -131,6 +131,53 @@ def make(gd: GameData, member: int, row: int) -> pickpocket.Attempt:
     return pickpocket.Attempt("", [log])
 
 
+STARTING = spellarrows.STARTING  # (a new Spellarcher's: a stack of each touch spell's it picked)
+
+
+def starting_arrows(gd: GameData, member: int) -> List[str]:
+    """A new Spellarcher's arrows (spellarrows.starting_gear's rule on the sequel's gear), made once with its Fine
+    Bow (ravkitstart.fine_bow): for each touch spell it picked as it was made (knows), STARTING of that spell's
+    arrows, the first in the quiver; the plain arrows the sequel gave with the bow (ravfirstweapon's +1 arrows)
+    go. Knowing none, it keeps those (the sequel's own +1 arrows, not Shattered Lands' 24 plain ones). Lines
+    for the log."""
+    from . import npcitems, ring
+    picks = [a for a in ARROWS if knows(gd, member, a.spell)]
+    if not picks or any(is_arrows_of(item, a.row) for _, item, _ in gd._worn(member) for a in ARROWS):
+        return []
+    who, out = gd.creature_name(member), []
+    plain_type = struct.unpack_from("<H", PLAIN_ARROWS, 0x0A)[0]
+    for index, item, _ in list(gd._worn(member)):
+        if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == plain_type:
+            ring.unlink(gd, ring.Items(gd), index, "a Spellarcher's starting arrows", empty=True)
+    for arrow in picks:
+        quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+        if npcitems.add_to(gd, member, arrows_item(arrow.row, STARTING), weaponchoice.AMMO_SLOT if quiver else None):
+            sl = spellarrows.ARROWS[arrow.row]
+            out.append(f"{who} starts with {STARTING} {spellarrows.NAMES[sl.name].decode().lower()}"
+                       f"{' in the quiver' if quiver else ' in the pack'}: {sl.spell_name} picked")
+    weaponchoice.bow_ahead(gd, member)
+    return out
+
+
+def arrow_names() -> Dict[int, bytes]:
+    """The sequel's spell arrows' name numbers -> their names (spellarrows.NAMES')."""
+    return {name_number(a.row): spellarrows.NAMES[spellarrows.ARROWS[a.row].name] for a in ARROWS}
+
+
+def map_screen_off(gd: GameData) -> bool:
+    """Whether the sequel's map isn't the screen up (quicksave.SCREEN_IS, DS:0DABh in ravlog's layout: 1 the
+    map): the inventory, which writes its copy of the items back as it shuts, among the rest."""
+    from . import quicksave
+    return gd._word(quicksave.SCREEN_IS) != quicksave.ON_MAP
+
+
+def return_strays(gd: GameData) -> List[str]:
+    """spellarrows.return_strays on the sequel (its names, the map up): spell arrows a party member who isn't a
+    Spellarcher carries back to the Spellarcher, or out of its quiver (Shattered Lands' ARROWS_FORBID is not
+    in DSCLOG2: the Loader's moves alone keep them from the others). Lines for the log."""
+    return spellarrows.return_strays(gd, arrow_names(), map_screen_off)
+
+
 def slots_range(gd: GameData, member: int) -> Tuple[int, int]:
     """The wizard slots left of MEMBER (each level's byte), as a writable range."""
     return gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE, game.SPELL_LEVELS + 1
