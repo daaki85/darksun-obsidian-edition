@@ -331,6 +331,23 @@ def _game_font(game_dir: Optional[str]):
 THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
+
+# The dice log's pass after the rolls is a list of named steps (DiceLog.PASS, the code audit's S2): the
+# sequel's RavDiceLog takes its own list from it by name (pass_step), so a step added here is taken or
+# left out on purpose (ravlog.PASS_LEFT_OUT, test_ravlog checks). A step's phase: EACH every pass, the
+# others every EFFECT_INTERVAL: EFFECTS, then the loading check (CHECK), AFTER_CHECK always, LOADED
+# only with no game loading.
+EACH, EFFECTS, CHECK, AFTER_CHECK, LOADED = "each", "effects", "check", "after check", "loaded"
+
+
+class PassStep(NamedTuple):
+    """One step of the pass: its NAME, RUN(log, now, loading) giving its lines, its PHASE, whether
+    its lines are SAID (kept), QUIET (a read of a half-made record not said: DiceLog._step)."""
+    name: str
+    run: Callable[..., object]
+    phase: str = EACH
+    says: bool = True
+    quiet: bool = False
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
@@ -1622,61 +1639,50 @@ class DiceLog:
         return got if isinstance(got, list) else []
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
-        """The pass's lines after the rolls: answers to the game, hit points and effects, the
-        party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
+        """The pass's lines after the rolls: its steps (PASS, in order: answers to the game, hit points
+        and effects, the party's items, initiative and turns, the creation screen), each on its own
+        (_step). EACH steps run every pass; the rest every EFFECT_INTERVAL: EFFECTS ones, then the
+        loading check (_pass_loading), then AFTER_CHECK ones always and LOADED ones only with no game
+        loading (its records half-filled). A step's lines are kept if it SAYS them."""
         out: List[str] = []
-        step = self._step
-        step(self._forget_undone_picks)
-        step(lambda: self._kit_tick(now))
-        step(self._answer_stats)
-        out += step(self._answer_use)
-        out += step(self._gear_due)
-        step(lambda: self._creation_figure(now))
-        out += step(self._loot_pass)
-        out += step(self._sell_pass)
-        step(self._locks_pass)
-        out += step(self._answer_look)
-        out += step(lambda: self._changes(now))
-        out += step(lambda: self._take_text(now))
-        if now >= self._next_effect_check:
+        due = now >= self._next_effect_check
+        if due:
             self._next_effect_check = now + EFFECT_INTERVAL
-            out += step(lambda: self.effect_changes(now))
-            step(self._write_slots)
-            step(self._write_stats)
-            try:
-                loading = self._party_check(now)
-            except ProcessError:
-                raise
-            except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
-                out += self._error_once(e)
-                loading = True
-            if not loading:
-                step(self._journal_sync)  # make the committed journal head available before asking for a save
-            out += step(lambda: self._quick_pass(loading, now))
-            if not loading:  # (not while a game is loading: its records are half-filled)
-                out += step(lambda: self.tracker.check(now))
-                out += step(self._item_watches)
-                out += step(lambda: self._arena_ring(now))
-                out += step(lambda: self._drawn(now))
-                step(self._kalzith_sold_out)
-                step(self._quest_look)
-                out += step(self._learn_lines)
-                step(lambda: self._dress_now(now))
-                out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
-        step(self._scroll)
-        step(lambda: self._usable_key(now), quiet=True)
-        step(lambda: self._hover_pass(now), quiet=True)
-        out += step(lambda: self._squares_key(now), quiet=True)
-        out += step(self._move_back_pass, quiet=True)
+        loading = False
+        for s in self.PASS:
+            if s.phase != EACH and not due:
+                continue
+            if s.phase == CHECK:
+                loading, said = self._pass_loading(now)
+                out += said
+                continue
+            if s.phase == LOADED and loading:
+                continue
+            got = self._step(lambda s=s: s.run(self, now, loading), quiet=s.quiet)
+            if s.says:
+                out += got
+        return out
+
+    def _pass_loading(self, now: float) -> Tuple[bool, List[str]]:
+        """The pass's loading check (PASS's CHECK): whether a game is loading, and any line about it.
+        Unknown: loading (the party's watches wait for a pass that can tell), the error said once."""
+        try:
+            return self._party_check(now), []
+        except ProcessError:
+            raise
+        except Exception as e:
+            return True, self._error_once(e)
+
+    def _initiative_due(self, now: float) -> List[str]:
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
-            out += step(self.initiative_lines)
-        out += step(self.turn_lines)  # after the round's order and the last turn's XP
-        step(lambda: self._creation_tries_moved(now))
+            return self.initiative_lines()
+        return []
+
+    def _creation_due(self, now: float) -> List[str]:
         if (self._creation_hp or self._creation_abilities or self._tries_new) \
                 and now - self._creation_hp_at >= CREATION_HP_WAIT:
-            out += step(self.creation_lines)
-        out += step(lambda: self.flush(now))
-        return out
+            return self.creation_lines()
+        return []
 
     def _changes(self, now: float) -> List[str]:
         """Hit points, PSP and abilities changed (always read, to keep up), said unless a game is
@@ -4905,3 +4911,51 @@ class DiceLog:
         return [f"{self.game.creature_name(e.arg(6))} {ABILITIES[ability]} check: d20 = {d20}, "
                 f"needs {base + mod} or less ({ABILITIES[ability]} {base}{mod_text}) "
                 f"-> {'success' if ok else 'failure'}"]
+
+
+DiceLog.PASS = (
+    PassStep("forget_undone_picks", lambda log, now, loading: log._forget_undone_picks(), says=False),
+    PassStep("kit_tick", lambda log, now, loading: log._kit_tick(now), says=False),
+    PassStep("answer_stats", lambda log, now, loading: log._answer_stats(), says=False),
+    PassStep("answer_use", lambda log, now, loading: log._answer_use()),
+    PassStep("gear_due", lambda log, now, loading: log._gear_due()),
+    PassStep("creation_figure", lambda log, now, loading: log._creation_figure(now), says=False),
+    PassStep("loot", lambda log, now, loading: log._loot_pass()),
+    PassStep("sell", lambda log, now, loading: log._sell_pass()),
+    PassStep("locks", lambda log, now, loading: log._locks_pass(), says=False),
+    PassStep("answer_look", lambda log, now, loading: log._answer_look()),
+    PassStep("changes", lambda log, now, loading: log._changes(now)),
+    PassStep("take_text", lambda log, now, loading: log._take_text(now)),
+    PassStep("effect_changes", lambda log, now, loading: log.effect_changes(now), EFFECTS),
+    PassStep("write_slots", lambda log, now, loading: log._write_slots(), EFFECTS, says=False),
+    PassStep("write_stats", lambda log, now, loading: log._write_stats(), EFFECTS, says=False),
+    PassStep("loading", lambda log, now, loading: None, CHECK),
+    # (the committed journal head made available before a save is asked for)
+    PassStep("journal_sync", lambda log, now, loading: log._journal_sync(), LOADED, says=False),
+    PassStep("quick_saves", lambda log, now, loading: log._quick_pass(loading, now), AFTER_CHECK),
+    PassStep("tracker", lambda log, now, loading: log.tracker.check(now), LOADED),
+    PassStep("item_watches", lambda log, now, loading: log._item_watches(), LOADED),
+    PassStep("arena_ring", lambda log, now, loading: log._arena_ring(now), LOADED),
+    PassStep("drawn", lambda log, now, loading: log._drawn(now), LOADED),
+    PassStep("kalzith_sold_out", lambda log, now, loading: log._kalzith_sold_out(), LOADED, says=False),
+    PassStep("quest_look", lambda log, now, loading: log._quest_look(), LOADED, says=False),
+    PassStep("learn_lines", lambda log, now, loading: log._learn_lines(), LOADED),
+    PassStep("dress", lambda log, now, loading: log._dress_now(now), LOADED, says=False),
+    PassStep("itemwatch", lambda log, now, loading: log.itemwatch.check(log.game, now, log._settings), LOADED),
+    PassStep("scroll", lambda log, now, loading: log._scroll(), says=False),
+    PassStep("usable_key", lambda log, now, loading: log._usable_key(now), says=False, quiet=True),
+    PassStep("hover", lambda log, now, loading: log._hover_pass(now), says=False, quiet=True),
+    PassStep("squares_key", lambda log, now, loading: log._squares_key(now), quiet=True),
+    PassStep("move_back", lambda log, now, loading: log._move_back_pass(), quiet=True),
+    PassStep("initiative", lambda log, now, loading: log._initiative_due(now)),
+    PassStep("turn_lines", lambda log, now, loading: log.turn_lines()),  # (after the round's order and the last turn's XP)
+    PassStep("creation_tries_moved", lambda log, now, loading: log._creation_tries_moved(now), says=False),
+    PassStep("creation_lines", lambda log, now, loading: log._creation_due(now)),
+    PassStep("flush", lambda log, now, loading: log.flush(now)),
+)
+
+
+def pass_step(name: str, **changed) -> PassStep:
+    """DiceLog.PASS's step NAME, for another game's pass (the sequel's), with CHANGED fields."""
+    step = next(s for s in DiceLog.PASS if s.name == name)
+    return step._replace(**changed)

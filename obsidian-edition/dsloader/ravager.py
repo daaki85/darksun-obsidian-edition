@@ -1070,6 +1070,10 @@ PATCHES: Tuple[Patch, ...] = (
     # DSCLOG2's BERSERK_ADD (site 245: the side kept) and BERSERK_END (site 246: Controlled's case, the side back)
     Patch("berserk_add", 0x822A1, bytes.fromhex("e9ea03"), _site(245, 3)),
     Patch("berserk_end", 0x827D6, bytes.fromhex("e98002"), _site(246, 3)),
+    # The Effects screen's line under the pointer named with the effect's charges (SL's EF_CHARGES, its fix with
+    # it: a spell lasting a number of uses, or a timed effect, not an item's power's stray 15): the cells' handler's
+    # "push 2C06h / push dword [1431h]" (8ABBDh, SL's 7ED47h) made DSCLOG2's EF_CHARGES (site 247)
+    Patch("ef_charges", 0x8ABBD, bytes.fromhex("68062c66ff363114"), _site(247, 8)),
     Patch("shots_left", 0x20486, bytes.fromhex("2680bc8401007504"), bytes.fromhex("2680bc8401637d04")),
     # ... and the roster's DELETE (59160h, SL's 54AC1h) took the character by the row clicked alone, where ADD
     # adds how far the list is scrolled (es:[2] of the window's segment 2F8h): with the list scrolled another

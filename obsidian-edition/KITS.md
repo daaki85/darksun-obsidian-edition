@@ -514,15 +514,15 @@ arrows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-e
 ##### Spellarcher in Wake of the Ravager
 
 The spell arrows work there as above (the same three spells, one arrow and one slot a click out
-of a fight, a stack of 24 at most, +1 to +3 by its preserver level, cast on a hit), with three
-differences:
+of a fight, a stack of 24 at most, +1 to +3 by its preserver level, cast on a hit, the touch spell's
+cast sound as one is made, and another member refused them with CANNOT USE THIS ITEM), with one
+difference:
 
 - **The Loader must find Shattered Lands too**: the arrows are drawn with its pictures. Without it the
   USE screen has no arrow buttons. Make a new Spellarcher there with Shattered Lands found as well,
   since its starting spell arrows use the same pictures.
-- **No cast sound** when an arrow is made.
-- **Another member can ready them in a fight** (Shattered Lands refuses); out of a fight they go back
-  to the Spellarcher.
+
+Arrows another member had readied before (an old save) go back to the Spellarcher out of a fight.
 
 Its weapon spec is the bow, and only the bow (the weapon window offers nothing
 else); **no armour, helm or shield at all** (bracers, robes and a cloak of
@@ -815,7 +815,7 @@ thief skills, movement and initiative.
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | whole: to hit, damage, hiding, its Cause Wounds stronger, no healing spells |
 | Rescuer | whole: movement, from behind, no shield, cures 1 more a die |
-| Spellarcher | in part ([the kit's entry](#spellarcher-in-wake-of-the-ravager)): its spell arrows made on the USE screen out of a fight (a button for each touch spell it knows, one arrow and one slot a press, stacked to 24) and those brought along cast on a hit at its preserver level and are +1 to +3 by it, a new one's 24 of each touch spell's it picked, its Fine Bow (+1 to hit), no armour; its arrows another member carries go back to it out of a fight; not the cast sound when one is made, nor the refusal when another readies them (in a fight they stay readied) |
+| Spellarcher | in part ([the kit's entry](#spellarcher-in-wake-of-the-ravager)): its spell arrows made on the USE screen out of a fight (a button for each touch spell it knows, one arrow and one slot a press, stacked to 24) and those brought along cast on a hit at its preserver level and are +1 to +3 by it, a new one's 24 of each touch spell's it picked, its Fine Bow (+1 to hit), no armour; the touch spell's cast sound as one is made; another member refused them, and any it carries go back to it out of a fight |
 | Poisoner | whole: each hand's first melee hit a fight poisons (a weapon with a spell of its own casts that instead), its weapon spec and gear limits |
 | Spirit Caller | whole: its cleric spells 2 levels higher under the open sky, 1 lower under a roof |
 | Wasteland Seer | whole: its druid spells' level and its powers' PSP costs by the sky |

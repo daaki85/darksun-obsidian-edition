@@ -1243,6 +1243,11 @@ the houses' brown) the shadow is a faint darker streak, as SL's on dark ground. 
 counters; find a dirt square with the area map (the game menu's maze icon, game 184,100: the brown ground west of the
 grey streets). DSCLOG2 with dust: 55,072 bytes, 54,544 of upper memory, 100,912 left (its largest piece).
 
+**Comparing two dice logs on the sequel** (2026-11-27, the pass as named steps): a second `ravdice.py` on
+the same running game says nothing of the stock, the own party or the ages, which the first wrote into the
+game (once a game). To compare two builds of the Loader, start the game afresh from the save for each
+(`ravload.sh`, then `ravdice.py --all 25 OUT`): only the age rolls differ between runs.
+
 **DSCLOG2's upper memory, measured for the audit's R3** (2026-11-27, claude/combined-playtest at 9c8dc0b3,
 `ravload.sh ravager-after-ambush` with and without `RAV_SOUND=1`, the same both ways; the chain walked from 9FFFh):
 upper memory is CA00h-EFFFh, 9,718 paragraphs past the first 9-paragraph scrap. DSCLOG2's block at CA0Ah is 4,151
@@ -2293,6 +2298,41 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
 - **The combatants' table** ((load + 3F49h):C33h, 3 bytes: kind, word index; creatures [DS:19C9h], 31h bytes):
   a killed creature leaves it at once, often before the dice log's next look saw its last fall; its record keeps
   its name, which is how hp_changes still finds it.
+
+### The final items (2026-11-27, logs/2026-11-27-ravager-final-items.md)
+
+- **The event queue**: a far pointer at DS:2A63h, the count at DS:2A6Bh, 11h bytes an event: +0 the time (a dword,
+  the game clock's seconds), +4 the kind (7: an effect ends), +5 the thing (a word: the combatant's number, a party
+  member 0-3 out of a fight too), +7 the effect's handle (the effect record's +7). A timed effect has one; an
+  effect that runs down by uses (Armor) or an item's power (charges byte a stray 15) has none. **Bringing an end
+  forward** (a test edit): write the event's time as the clock + a few seconds; out of a fight the clock (the far
+  pointer at DS:9C0Ch) runs at about one to two game seconds a real one.
+- **The effect records** (load + 3E71h):24Dh, 10 bytes: +0 owner, +2 caster, +4 spell, +6 effect, +7 handle,
+  +8 charges, +9 extra (Berserk's kept side); the count DS:2100h.
+- **The Effects screen's cells** (8AB13h, the event at [BP+0Ah]): each cell's name is a far push of 318h:effect x 31
+  (the 31-byte name records: name 29 bytes, the icon), the segment word fixed up by the overlay manager (8ABB9h),
+  then "push 2C06h / push dword [1431h]" at 8ABBDh and the far call 5F0h:61h. The character on show is
+  370h:0B44h. DSCLOG2's EF_CHARGES (site 247) sits on the second push and changes the name's far pointer.
+- **The sound routine** B8h:0A22h is resident (load + 1C5Fh, file 22212h), a far call with the sound byte at
+  [BP+6]; the flags DS:13F7h and 1435h say sound is on. The touch spells' cast sounds are their records' +0Fh:
+  Chill Touch and Shocking Grasp FFh (none) in the sequel, Vampiric Touch 6Eh (SL's 4Eh, 51h, 6Eh).
+- **The sequel's spell records are read from RESOURC2.GFF each cast**: an edit of the Loader's copy (an effect byte
+  at +19h of the 73-byte DATA record, `gff.index_places`) takes at once in a running game. Haste (29) made
+  Berserk 7 and cast from USE out of a fight landed on the caster (Haste's area), a timed Berserk with an event.
+- **The sequel's open-locks checks** (DO_ACTION 3 read from every byte of the 350 scripts, the 93 that don't decode
+  whole too): GPL 9 at 4378 (the Pyramid's grate under the Garden), GPL 40 at 6218 (Magnolia's chain, Humbleton
+  Forest), GPL 89 at 7826 (the mind flayers' chest; MAS 58's use trigger, place 7120, object -5102), GPL 264 at
+  1154 (the Generoe acolyte's cage, with a jammed-picks lock-out of its own). None near Tyr.
+- **A script anywhere, for a test** (never saved): the triggers are 13-byte records at far DS:40C0h (+0 the place,
+  +2 the script, +4 the object), their lists' heads at (load + 3C10h) +0Fh talk, +11h attack, +13h look, +15h use,
+  +17h use with, +0Bh in a record the next. Point every talk trigger of the region at (place, script) and talk to
+  anyone (the look pointer, two right-clicks, on a person): the script runs. Put them back after.
+- **A computer caster's choice**: under Computer Control, Ar'Anda knowing Wall of Fog alone (her 15-byte bitset at
+  3F3DCh, a test edit) in Tyr's thieves' fight fought with her weapons beside the thugs and cast nothing
+  (ai_walls 0, the fight over in 3 rounds): the AI casts a wall, if at all, from further off. Still to find.
+- **The USE screen out of a fight** from the map: the inventory's portraits (22,25 for the first), its bottom icons
+  at y 188 (197 the inventory, 218 USE); on USE the kind button (151,171) and LEVEL (197,171), the spells' row at
+  y 60 (x 175, 194, ...), the name in the bottom bar under the pointer.
 
 ### The sequel's spells in a fight (2026-11-21)
 

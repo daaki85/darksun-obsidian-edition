@@ -84,7 +84,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shattered Lands: KITS on the creation panel opens the KIT page ([Choosing a
   kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the game's menu right
   after DUAL. A new character's starting gear is fitted to its kit from the sequel's own items, and a
-  Spellarcher makes spell arrows on the USE screen there as here. Kit by kit, with the few that work
+  Spellarcher makes spell arrows on the USE screen there as here, with the spell's sound, and they are
+  the Spellarcher's alone. Kit by kit, with the few that work
   only in part (the Scholar, the Wanderer, the Spellarcher): [In Wake of the
   Ravager](KITS.md#in-wake-of-the-ravager). The creation screen has [STORE and
   RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
@@ -105,8 +106,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
   Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
   DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
-  the Effects screen's lower panel each one's weapon kinds ([the Effects
-  screen](FEATURES.md#the-effects-screen)). The Look box's whole description of a monster comes up in the
+  the Effects screen's lower panel each one's weapon kinds, and an effect's charges in its name
+  (ARMOR (14 CHARGES)) ([the Effects screen](FEATURES.md#the-effects-screen)). The Look box's whole description of a monster comes up in the
   dialogue window as the box closes there too. [Choosing an
   enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) works there as well: in a fight, on a party
   member's turn, Tab chooses the nearest enemy (then the next; Shift+Tab goes back), a red ring on

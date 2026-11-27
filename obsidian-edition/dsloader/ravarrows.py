@@ -230,8 +230,9 @@ def map_screen_off(gd: GameData) -> bool:
 
 def return_strays(gd: GameData) -> List[str]:
     """spellarrows.return_strays on the sequel (its names, the map up): spell arrows a party member who isn't a
-    Spellarcher carries back to the Spellarcher, or out of its quiver (Shattered Lands' ARROWS_FORBID is not
-    in DSCLOG2: the Loader's moves alone keep them from the others). Lines for the log."""
+    Spellarcher carries back to the Spellarcher, or out of its quiver: a backstop to DSCLOG2's ARROWS_FORBID, which
+    keeps the others from readying them, for arrows readied before it (an old save) or moved past it. Lines for
+    the log."""
     return spellarrows.return_strays(gd, arrow_names(), map_screen_off)
 
 

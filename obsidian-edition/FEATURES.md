@@ -1548,7 +1548,9 @@ The Effects screen (Current Spell Effects) shows more in its lower panel and und
   prefix, `SHADOW-WALKER`), a Shinobi's chance to read a scroll (`READ LANG. 35%`), then the weapon
   specs, a page at a time ([changing class](KITS.md#changing-class) has pictures).
 - **Charges left**, with the pointer on a spell that lasts a number of uses: IMPROVED AC (4 CHARGES)
-  for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
+  for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES). In Wake of the Ravager the
+  effect's own name carries them (ARMOR (14 CHARGES)); an item's power, which the game gives a stray
+  count, shows none there either. The sequel's Enlarge and armour spells' lines aren't there yet.
 - **Enlarge's damage**: ENLARGED (+90% DICE) from a 9th-level caster ([the
   rule](#enlarge-multiplies-the-weapons-dice-only)). The inventory's
   damage doesn't count it; each hit's dice log line does. A second Enlarge on someone enlarged adds

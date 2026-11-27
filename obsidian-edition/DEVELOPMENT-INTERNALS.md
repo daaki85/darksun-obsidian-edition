@@ -960,6 +960,19 @@ spells, a 7-byte record each from 0 (its level first, its name's DS offset at
 spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 19).
 
+### The dice log's pass: named steps
+
+After the rolls, each pass runs `DiceLog.PASS`, a list of named steps (`dicelog.PassStep`: its name,
+what it runs, its phase, whether its lines are said, whether a half-made record is kept quiet), each on
+its own (`_step`). `EACH` steps run every pass; the rest every `EFFECT_INTERVAL`: `EFFECTS` ones, then
+the loading check (`CHECK`, `_pass_loading`), then `AFTER_CHECK` ones always and `LOADED` ones only
+with no game loading. Wake of the Ravager's `RavDiceLog.PASS` is its own list in its own order, made of
+Shattered Lands' steps taken by name (`dicelog.pass_step`, a field changed where it differs) and its
+own; `ravlog.PASS_LEFT_OUT` names each of Shattered Lands' steps it doesn't take, with why.
+`test_ravlog.PassStepTests` fails on a step in neither list, so a step added to Shattered Lands' pass
+is taken by the sequel or left out on purpose (the code audit's S2, 2026-11-27: a hand-kept copy of
+the pass had lost the sequel's flush).
+
 ### The Loader's game flags
 
 The game's script flags (read with var 141, set with var 13) run to 755; the
