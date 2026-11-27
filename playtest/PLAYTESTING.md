@@ -835,6 +835,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   a write anywhere else is dropped without a word, so a ported feature that writes memory (the tracker's
   XP bonus: logs/2026-11-27-ravager-xp-lines.md) must name its ranges. An XP edit by hand counts as an
   award (and gets the bonus): make it before the dice log attaches.
+  **To see the sequel's item report**, free a party item's record with a test edit (its +0 word 0:
+  logs/files/2026-11-27-ravager-item-watch-edit.py): two seconds on the dice log names the report in
+  `obsidian-edition/crash-logs/` (git ignores it); an item of an ordinary type (an arrow, 6) freed says nothing.
   The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
   (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up

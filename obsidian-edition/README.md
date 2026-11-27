@@ -837,7 +837,8 @@ The ordinary ways for an item to go pass in silence: dropped, put in a chest,
 given, sold or stolen; used up or taken for a quest; a spell's weapon
 (Shillelagh, Flame Blade) ending; a weapon that broke; an item handed to
 another member or moved between areas. An item the game destroys (acid,
-Detonate's blast) is reported too, so the loss is on record.
+Detonate's blast) is reported too, so the loss is on record. Wake of the Ravager
+started from the Loader is watched the same way.
 
 ### Reporting a problem
 

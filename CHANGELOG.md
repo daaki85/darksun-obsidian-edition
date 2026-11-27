@@ -175,7 +175,14 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
-**New: Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus and the level-ups** (branch `claude/sequel-xp-lines`)
+**New: Wake of the Ravager's dice log with the missing-item report** (branch `claude/sequel-item-watch`)
+- The sequel's dice log watches the party's items as Shattered Lands' does, and saves an item report when
+  one is gone with nothing ordinary to show for it. The ordinary losses are the sequel's own item types
+  (`ravlog.RAV_USED_UP`, `RAV_SPELL_MADE`, `RAV_BROKEN`, from the item weights report's table): arrows, coins
+  and keys, gems and berries, scrolls and powerstones, the Flameblade, Rainbow, Shillelagh and Spirit hammer,
+  a Broken Weapon. That was the last dice log gap on the sequel's list.
+
+**New: Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus and the level-ups** (#278)
 - The sequel's dice log runs Shattered Lands' tracker whole: after a kill the XP each member gained and for
   which kills, the 10% for high prime requisites added to the sheet as in Shattered Lands (`XP: Terrannus
   +1100 (+100 for Cleric, WIS 19) ... (for Draxan 4000)`), the level-ups with their hit points, and XP held
