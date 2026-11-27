@@ -302,7 +302,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
   and the text from the same place as Shattered Lands' (five lines, as there). The empty frame at the end
   of a fight ("Each party member receives ... experience points!") and the merchant's face in a shop are
   the smaller size too. The faces are the sequel's own, made smaller each start, with the sequel's own
-  frame cut down round them.
+  frame cut down round them: each small pixel the average colour of the big pixels it covers, put back
+  to the nearest colour the face itself uses, so it is smooth shading as in Shattered Lands' faces, not
+  the big picture's dithering left as speckle ([the faces side by side](docs/ravager-portrait-resample.png)).
   ![Before and after: Uhubito's talk box and the XP message at the end of the first fight](docs/ravager-small-portraits.png)
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long

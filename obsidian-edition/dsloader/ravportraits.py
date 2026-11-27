@@ -92,21 +92,41 @@ def frame(rows: Rows) -> Rows:
 
 
 def smaller(rows: Rows, x0: int, y0: int, side: int, palette: Optional[Sequence[Tuple[int, int, int]]]) -> Rows:
-    """ROWS' square (X0, Y0, SIDE) made FACE by FACE: each pixel the one of its patch nearest the patch's mean
-    colour in PALETTE (the patch's middle one without it), so the face keeps its own colours."""
+    """ROWS' square (X0, Y0, SIDE) made FACE by FACE: each pixel its patch's colour averaged over the area it
+    covers (parts of edge pixels weighed in), then the nearest in PALETTE of the colours the square itself
+    uses, so the face keeps its own colours with no speckle (2026-11-27's comparison sheet: picking one of the
+    patch's own pixels kept the big picture's dithering as noise). Without PALETTE, the patch's middle pixel."""
+    if palette is None:
+        return [[rows[y0 + (2 * y + 1) * side // (2 * FACE)][x0 + (2 * x + 1) * side // (2 * FACE)]
+                 for x in range(FACE)] for y in range(FACE)]
+    own = sorted({rows[y][x] for y in range(y0, y0 + side) for x in range(x0, x0 + side)})
+    near = {}
+
+    def snap(colour):
+        key = tuple(round(c) for c in colour)
+        if key not in near:
+            near[key] = min(own, key=lambda p: sum((a - b) ** 2 for a, b in zip(palette[p], colour)))
+        return near[key]
+
+    def spans(i):  # (source pixel, its weight) under output pixel I, in source pixels
+        a, b = i * side / FACE, (i + 1) * side / FACE
+        return [(p, min(b, p + 1) - max(a, p)) for p in range(int(a), min(side, int(-(-b // 1))))
+                if min(b, p + 1) > max(a, p)]
+
+    cover = [spans(i) for i in range(FACE)]
     out = []
     for y in range(FACE):
-        ya, yb = y0 + y * side // FACE, y0 + max((y + 1) * side // FACE, y * side // FACE + 1)
         row = []
         for x in range(FACE):
-            xa, xb = x0 + x * side // FACE, x0 + max((x + 1) * side // FACE, x * side // FACE + 1)
-            patch = [rows[py][px] for py in range(ya, yb) for px in range(xa, xb)]
-            if palette is None or len(patch) == 1:
-                row.append(patch[len(patch) // 2])
-                continue
-            cols = [palette[p] for p in patch]
-            mean = [sum(c[i] for c in cols) / len(cols) for i in range(3)]
-            row.append(min(patch, key=lambda p: sum((a - b) ** 2 for a, b in zip(palette[p], mean))))
+            total, mean = 0.0, [0.0, 0.0, 0.0]
+            for py, wy in cover[y]:
+                for px, wx in cover[x]:
+                    w = wy * wx
+                    c = palette[rows[y0 + py][x0 + px]]
+                    total += w
+                    for i in range(3):
+                        mean[i] += w * c[i]
+            row.append(snap([m / total for m in mean]))
         out.append(row)
     return out
 
