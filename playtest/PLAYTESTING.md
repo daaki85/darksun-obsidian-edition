@@ -1589,6 +1589,14 @@ For an outfit review with the loader detached, stage the walking and fighting ch
     `DOSBox-X version 2025.12.01`, so the Engine section shows the default as a player has it, and
     `options_open` with `engine` and `picture` too (nine sections). The Options tab was at
     (1116,132) by then (the Journal tab came before it); the picture 706x2619, y 116 to 2735.
+- **The Loader window under Xvfb** (logs/2026-11-27-loader-pictures.md): a click on a tab or button
+  reaches Tk only after `xdotool windowfocus --sync $W`, and `xdotool type --window` types nothing
+  (focus, then a plain `type`); a Tk message box grabs black with `import -window`, so crop from
+  `import -window root`. A tab click leaves a focus ring on the pane's last button (the Dialogue tab's
+  Clear): click in the text before the grab. With the window at 0,0 the tabs are at y 132 (Memory
+  tools x 1017, All fields 157, Dialogue 744). The window's dice lines never hold "Step forward" (the
+  Dialogue tab has it): wait for "Fight over" when the window, not the text dice log, writes
+  `dice.txt`. A script that sources `env.sh` from outside `playtest/` sets `PT` first.
 - **`docs/dicelog-readable.png`** (logs/2026-11-19-final-audit-fixes.md): the Loader's window
   attached to a game the kit started, so the kit's loops still run. Xvfb `:55` at 1700x900 (start it
   by hand before `loadsave.sh`: start.sh only starts one when none runs), DOSBox at 0,0 and the
@@ -1670,7 +1678,9 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   and `spellsetup.py 3=12`, LEVEL to 6), `dust.png`, `magic-glint.gif` (`itemplus.py`) from the
   arena's waves after `topartyfight.sh`; `see-through.png`, `picture-modes.png`, `steady-pace.gif`,
   `gear.png` from `pens-after-arena`; `creation-store-recall.png` from a new character. To catch a
-  label or a spell's bolt, start the Ctrl+F5 loop before the click: Fogbolt's bolt was gone by the
-  first capture after it. `spellsetup.py` can't teach the mod's new spells (196 and up): a new
+  label or a spell's bolt, start a grab loop before the click. A Ctrl+F5 loop was too slow for
+  Fogbolt's bolt (gone by the first capture); a loop of `import -window $W` grabs (60, `sleep 0.03`
+  between, about 0.1 s apart) caught it in flight (logs/2026-11-27-docs-review-pictures.md: Lex, made to
+  know Fogbolt, on his turn in `fountain-user`'s ambush, at the Templar; the 25th grab). `spellsetup.py` can't teach the mod's new spells (196 and up): a new
   wizard spell is a bit in the sheet (`sheetbyte.py M 0x45 or0x40`, Fogbolt), a new 6th-level
   priest spell comes with the caster's sphere.

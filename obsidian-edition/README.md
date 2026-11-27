@@ -119,25 +119,19 @@ says what the mod writes, and where).
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
-- **Linux**: the Loader's window can show the party of a DOSBox you start
-  yourself, if you can read other processes' memory (root, or
-  `kernel.yama.ptrace_scope=0`); the dice log can't follow it (it needs DSCLOG and
-  the patched game, which only **Play Shattered Lands** prepares). The `.bat` files,
-  **Play Shattered Lands** and the Python install are Windows only. The Loader's window is
-  `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
-  distributions package apart from Python (on Debian and Ubuntu,
-  `python3-tk`). On macOS nothing has been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
-- **Linux with DOSBox-X**: with [DOSBox-X as the
-  engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) (the default once the Loader finds
-  one: choose its program on the Options tab), **Play Shattered Lands**
-  works on Linux, with the dice log and everything else, and needs neither root nor
-  `kernel.yama.ptrace_scope=0`. What it needs: the game's files (the folder holding `DSUN.EXE`, as
-  GOG's installer unpacks them; GOG's `DOSBOX` folder isn't used), your own **DOSBox-X 2025.01.01
-  or later** (many distributions' packages are older: Ubuntu 24.04's is 2024.03.01), Python 3.8+
-  with tkinter, a `/dev/shm` or temp folder your user can write to (the Loader keeps a 32 MB file
-  there while the game runs), and for music a soundfont (`.sf2`) file. Start the Loader with
-  `python3 -m dsloader view` in this folder. On Windows the mod brings DOSBox-X with it (the
-  `dosbox-x` folder) and runs the game there; GOG's DOSBox can be chosen instead.
+- **Linux**: **Play Shattered Lands** works there with [DOSBox-X as the
+  engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x), with the dice log and everything else,
+  and needs neither root nor `kernel.yama.ptrace_scope=0`. What it needs: the game's files (the
+  folder holding `DSUN.EXE`, as GOG's installer unpacks them; GOG's `DOSBOX` folder isn't used),
+  your own **DOSBox-X 2025.01.01 or later** (many distributions' packages are older: Ubuntu 24.04's
+  is 2024.03.01), chosen with **Choose the DOSBox-X program...** on the Options tab, Python 3.8+ with
+  tkinter (on Debian and Ubuntu, `python3-tk`), a `/dev/shm` or temp folder your user can write to
+  (the Loader keeps a 32 MB file there while the game runs), and for music a soundfont (`.sf2`)
+  file. Start the Loader with `python3 -m dsloader view` in this folder. The `.bat` files and the
+  Python install are Windows only. With no DOSBox-X, the Loader's window can still show the party of
+  a DOSBox you start yourself, if you can read other processes' memory (root, or
+  `kernel.yama.ptrace_scope=0`), but the dice log can't follow that game. On macOS nothing has been
+  run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from your copy as the game starts; without it they have
@@ -209,7 +203,7 @@ sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](https://githu
    the rest is always on). They're remembered for next time.
 3. Press **Play Shattered Lands** (top left).
 
-That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
+That starts Shattered Lands (in DOSBox-X, or in GOG's DOSBox if chosen on the Options tab) with the dice log helper
 loaded and your options in force, and the Loader picks it up once DOSBox is up.
 Your saves are the same ones the game normally uses. The first time, it looks
 for the game in the usual GOG folders; if it can't find it, it asks you where
@@ -239,7 +233,7 @@ the Loader still shows the party, but the dice log will say the game was
 started without it.
 
 **Just the game, with the in-game additions, no Loader window:** double-click
-**`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
+**`Play Dark Sun (in-game rolls).bat`** (Shattered Lands only: the sequel starts from the Loader or its own `.bat`, below). The dice log runs unseen and stops
 when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log's level, the Look box, the few rules with a
 switch); the new items, the new people and the cooked vulture are there too.
@@ -258,8 +252,8 @@ the sequel's roster and saves** in its folder for the mod (each file kept first 
 that they load only from the Loader until you convert them back ([your sequel saves are
 converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
-**Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
-party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
+**Checking a save file:** drag a Shattered Lands save file onto **`Show Save.bat`** to see the
+party it holds (it reads Shattered Lands' saves only; the sequel's party is on the Loader's tabs): `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's release keeps the saves
@@ -309,8 +303,9 @@ open is remembered. Everything there applies in games started from the Loader or
 a switch that says "from the next start" waits until the game is started again. [The Options tab
 at a glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance), in the player's guide, lists every
 switch with its default and when it counts, and links each to its page in
-[Features and rules](FEATURES.md); its **Wake of the Ravager (optional)** section is for the
-6th-level priest spells' icons and pictures ([Requirements](#requirements)).
+[Features and rules](FEATURES.md); its **Wake of the Ravager (optional)** section says where
+the sequel is, for **Play Wake of the Ravager** and the 6th-level priest spells' icons and pictures
+([Requirements](#requirements)), and switches Shattered Lands' screens and icons in the sequel.
 
 Every switch is on by default, and the choices start at the red ring
 under the chosen enemy, the game speed Fastest, the combat log in short, the

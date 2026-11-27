@@ -59,77 +59,38 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
-pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
+Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
+pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
+page](obsidian-edition/RAVAGER.md) have the detail.
 
-**Fixed: the combat log's panel copied across the map as the view moves; autosave switched without a restart** (branch `claude/panel-scroll-autosave`)
-- When the view moved to whose turn it is, or followed a figure walking, copies of the docked panel
-  (its header in a row, "Needs Needs Needs") stayed beside it until the main loop's next pass. DSCLOG
-  now catches the game's moves of the view as they end (`PANEL_FOLLOW`, `CENTRE_THING`, `CENTRE_XY`:
-  sites 125-127) and draws again just where the panel was copied to. Played in Pehtucl's ambush, frames
-  grabbed through two rounds: copies in runs of up to 49 frames before, 2 at most after. The files with
-  copies (`COPIES`) moved to DSCLOG's tail to make room.
-- With no Loader window (the dice log on its own, or the game started without one), a change to
-  `settings.json`'s `autosave` or `quick_save` is taken within a second, with no restart
-  (`DiceLog.follow_switches`; the window's Options tab already did this). Test: `test_dicelog`.
+**Docs: the full docs review** (branch `claude/docs-review-full`)
+- Fogbolt's picture retaken in play with the class outfits; the gear picture's caption names Gerakis a
+  half-giant, not a mul.
+- The README no longer says the game starts in GOG's DOSBox, and its two Linux lines (which
+  contradicted each other) are one; the Options tab's Wake of the Ravager section is described whole.
+- The sequel's magic weapons and spellbooks moved from the features page to Wake of the Ravager's page;
+  that page now mentions the combat log in the game, and lists the mouse-wheel map scrolling as not in
+  the sequel yet.
+- The player's guide's "Quality of life" (a third copy of the features page) cut to links.
+- Report: [the full docs review](reports/docs-review-full-2026-11-27.md).
 
-**New: the sequel's figures in Shattered Lands' style** (branch `claude/ravager-figure-import`)
-- The approved redraws of Wake of the Ravager's figures (Codex's catalogue, the owner's private
-  installation files, b447d39; 275 OBJEX pictures, 32 objects moved to their own figure, the Tarrasque,
-  its cinematic and the drakes in RESOURCE, the Mines3 dining room's placements) shipped as
-  `dsloader/ravager-figures.zip` (the owner's choice) and put into the Loader's OBJEX2.GFF, RESOURC2.GFF
-  and a new RGN03A2.GFF by `ravfigures.py`; DSCLOG2 opens RGN03A2.GFF for RGN03A.GFF (COPIED bit 8).
-  Notaku's combat drawings lose the box their copied Shattered Lands background drew (Codex's own fix
-  in the catalogue at e33bc2e, re-packed; the Loader's clean-up kept for older packages). `RAV_SKIP=figures`
-  is the control. Played: Tyr's street from `ravager-after-ambush` with and without; the region copy's
-  opening seen through a scratch build. Tests: `test_ravfigures.py`, `test_ravager`'s copies.
-- Tyr's furniture lowered for Shattered Lands' steeper view, as darksun-recompiled's build had it (the
-  owner's choice of 2026-11-20: tables, chairs, beds and the other map artwork two-thirds their height
-  toward their base, walls kept): `sl_figures.py squash RGN032 0.66 furniture` on the stock files before
-  the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
-  region's placements needed no change. In the same `ravager-figures.zip`.
+**Fixed: the same item weighs the same in both games; the follow-up code audit** (#260)
+- Shattered Lands' leather chest armour weighs 9.6 lb, as in Wake of the Ravager (the game's 75 lb, five
+  times AD&D's whole suit), and the sequel's small things 0.1 lb, as Shattered Lands' (SSI's 1 lb). No
+  rule reads either weight, so nothing plays differently. `test_item_weights.py` checks every item both
+  games have against their real files; Dragonsbane stays apart (a metal sword in one, obsidian in the other).
+- Report: [the follow-up code audit](reports/code-audit-followup-2026-11-27.md).
 
-**New: Shattered Lands' screens and icons in the sequel** (branch `claude/ravager-sl-interface`)
-- `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:
-  the sequel renumbered its spells) from the player's own Shattered Lands RESOURCE.GFF into the Loader's
-  RESOURC2.GFF, in the colours every region of the sequel keeps, as darksun-recompiled's `sl_figures.py
-  build-ui` made them on 2026-11-20 (byte for byte the same chunks on the GOG files); the icon pairs, which
-  that tool matched by look, are kept as a table. Put in last, and only where the copy still has the game's
-  own chunk; the MORE and scroll buttons stay the sequel's. A box on the Options tab (its Wake of the Ravager
-  section, `sl_interface`, on by default) turns it off; `RAV_SKIP=sl_interface` is the test control. Played:
-  the USE screen and the inventory from `ravager-after-ambush`, with and without. Tests: `test_ravui.py`.
+**Dev**: `ravitems.region_palettes`, the sequel's region palettes read once for the four modules that read
+them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
+DOSBox-X).
 
-**Dev: the dice log's pass as named steps (the code audit's S2)**
-- `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
-  `RavDiceLog.PASS` takes Shattered Lands' by name and adds its own, and `ravlog.PASS_LEFT_OUT` says
-  why it leaves each other one out. `test_ravlog.PassStepTests` fails on a new step in neither. Played
-  in both games: the same lines as before (Shattered Lands' fountain ambush: initiative, a dance, the
-  turns; the sequel: stock, its own party, ages).
-
-**Dev: the class outfits' hand-set placements as tables (the code audit's S4)**
-- `spritegear.armed`'s per-figure, per-frame placements for the class outfits are three tables
-  (`PART_FIXES`, `GRIP_FIXES`, `CARRY_FIXES`) laid over what the figure finder reads, in place of 17
-  branches; `outfit_layer` replaces three copies of one expression. All 88,090 outfit pictures a
-  sweep over every figure, class mix, weapon and armour builds are the same, hash for hash.
-
-**Dev: the sequel's values rebound only where declared (the code audit's S1, first stage)**
-- `ravlog.apply_layout` rebound a name in any module holding Shattered Lands' value under it; now only
-  in its declared holders (`_layout_holders`: game.py, the dice log's signature, the mod's sheet bytes'
-  modules). The 16 copies other modules kept (`from .game import` or a constant of their own: kits,
-  spellbook, dicelog, champions, ring, itemgate) read `game.NAME` instead. `LayoutHolderTests` fails on
-  a new copy. Played in both games: the same lines as before.
-
-**Dev: one copy of the helpers' shared routines (the code audit's S5)**
-- The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
-  `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches
-  both. Both programs build to the same bytes; `test_shared_routines.py` fails on a routine written
-  twice again.
-
-**Fixed: Wake of the Ravager (kits, the code audit's KIT_OPEN)**
-- The kit byte's "no kit" marker, 0FFh, is also a legal byte on a human with three classes (kits
-  3/3/3, the own party's bit and Friends), so such a character lost its kits. 0FFh now means "no kit"
-  only on any other sheet, in the Loader (`game.kit_open`) and DSCLOG2 (`KIT_OPEN_AT`). No save
-  changes: no other sheet could hold 0FFh as kits.
+**Docs: the follow-up docs review** (#263)
+- [Wake of the Ravager's page](obsidian-edition/RAVAGER.md#not-in-the-sequel-yet) now ends with what
+  Shattered Lands has from the mod and the sequel doesn't yet, each checked against the code.
+- The README says the in-game-rolls start and Show Save are Shattered Lands only; DEVELOPMENT-KITS no
+  longer calls the Shinobi's casting, the arrows' cast sound and `ARROWS_FORBID` missing in the sequel.
+- Report: [the follow-up docs review](reports/docs-review-followup-2026-11-27.md).
 
 **New: DOSBox-X, the default engine** (#146, #178, #185)
 - The Options tab's new **Engine** section chooses DOSBox-X or GOG's DOSBox 0.74. **DOSBox-X is the
@@ -203,7 +164,7 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   fire), not all in fire; without it, the Loader's own, the double spear, trikal and
   darts redrawn at the sequel's sizes (the user's).
 
-**New: Wake of the Ravager, started from the Loader** (#148 to #195)
+**New: Wake of the Ravager, started from the Loader** (#148 to #249)
 - **Play Shattered Lands** and **Play Wake of the Ravager** buttons at the top of the Loader's
   window, and `Play Wake of the Ravager.bat`, start either game with the mod (#156); a sequel start
   no longer repeats Shattered Lands' warning about what it left out (#197).
@@ -305,7 +266,7 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   pointer lights the button it is on; the dice log names the Fine Bow. As one is made its touch spell's
   cast sound plays, and another member can't ready them ("CANNOT USE THIS ITEM", in a fight too; the
   move back stays for arrows readied before) (site 240, header +2098..+2113 and +2130, +2132,
-  `ravarrows.py`) (#223, #229, this branch).
+  `ravarrows.py`) (#223, #229, #245).
 - **The Effects screen names an effect's charges**, as in Shattered Lands: "ARMOR (14 CHARGES)", Mirror
   Image's images, an effect that runs down by uses; an item's power (Inertial Barrier's) no longer shows the
   stray "(15 CHARGES)" Shattered Lands' fix removed (site 247, header +2128) (#245).
@@ -313,35 +274,43 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   ("ENLARGED (+60% DICE)"), Barkskin's, Flesh Armor's and Magical Vestments' AC ("BARKSKIN (AC 5)", from
   the levels the Loader works out), and Reflected Image's Mirror Images named "REFLECTED IMAGE" (EF_CHARGES'
   EC_MOD and EC_REFLECT, header +2134 and +2136). Played: a computer caster's wall at last (Wall of Fog is
-  never the computer's choice: its weight is 0; Wall of Fire is) (this branch).
+  never the computer's choice: its weight is 0; Wall of Fire is) (#249).
 - **The dice log** says when an effect starts and ends, a member's PSP going down or back up, and an
   ability score changing, as in Shattered Lands (#232).
 - **DSCLOG2 has room again**: its tables and buffers moved to a resident tail past its 64 KB code segment,
   and the install to a segment of its own that is freed, so the ports above fit (#228).
+
+**New: Wake of the Ravager's figures in Shattered Lands' style** (#250, #251, #253)
+- The approved redraws of Wake of the Ravager's figures (Codex's catalogue, the owner's private
+  installation files, b447d39; 275 OBJEX pictures, 32 objects moved to their own figure, the Tarrasque,
+  its cinematic and the drakes in RESOURCE, the Mines3 dining room's placements) shipped as
+  `dsloader/ravager-figures.zip` (the owner's choice) and put into the Loader's OBJEX2.GFF, RESOURC2.GFF
+  and a new RGN03A2.GFF by `ravfigures.py`; DSCLOG2 opens RGN03A2.GFF for RGN03A.GFF (COPIED bit 8).
+  Notaku's combat drawings lose the box their copied Shattered Lands background drew (Codex's own fix
+  in the catalogue at e33bc2e, re-packed; the Loader's clean-up kept for older packages). `RAV_SKIP=figures`
+  is the control. Played: Tyr's street from `ravager-after-ambush` with and without; the region copy's
+  opening seen through a scratch build. Tests: `test_ravfigures.py`, `test_ravager`'s copies (#250, #251).
+- Tyr's furniture lowered for Shattered Lands' steeper view, as darksun-recompiled's build had it (the
+  owner's choice of 2026-11-20: tables, chairs, beds and the other map artwork two-thirds their height
+  toward their base, walls kept): `sl_figures.py squash RGN032 0.66 furniture` on the stock files before
+  the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
+  region's placements needed no change. In the same `ravager-figures.zip` (#253).
+
+**New: Shattered Lands' screens and icons in the sequel**
+- `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:
+  the sequel renumbered its spells) from the player's own Shattered Lands RESOURCE.GFF into the Loader's
+  RESOURC2.GFF, in the colours every region of the sequel keeps, as darksun-recompiled's `sl_figures.py
+  build-ui` made them on 2026-11-20 (byte for byte the same chunks on the GOG files); the icon pairs, which
+  that tool matched by look, are kept as a table. Put in last, and only where the copy still has the game's
+  own chunk; the MORE and scroll buttons stay the sequel's. A box on the Options tab (its Wake of the Ravager
+  section, `sl_interface`, on by default) turns it off; `RAV_SKIP=sl_interface` is the test control. Played:
+  the USE screen and the inventory from `ravager-after-ambush`, with and without. Tests: `test_ravui.py` (#255).
 
 **Changed**
 - **XP stops at the cap** in Shattered Lands: a character's XP is held at its share of the 749,999
   cap (one class all of it, several divided, a human less its old classes'), the share `LEVEL_ROOM`
   caps levels by, so none is banked past the top level; the dice log says what wasn't counted. The
   Loader's (`tracker.py`, `game.xp_share`), no DSCLOG memory (#187).
-
-**Dev: the code audit's room checks (2026-11-27)**
-- `tests/test_dsclog_room.py`: DSCLOG's segment keeps 256 bytes free and its upper memory 32 paragraphs
-  (its build failed only past the limit), as `test_dsclog2_room.py` does for DSCLOG2; and the sequel's
-  modules' constants named as DSCLOG2's symbols agree with them.
-- DSCLOG2's build fails if the helper outgrows upper memory (`UMB_NEED`, `UMB_KEPT`, as DSCLOG's),
-  the room measured in the sequel: 83 KB free today.
-
-**Fixed: the code audit's bugs (2026-11-27)**
-- Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without
-  its new items, people and icons (and a changed GPLDATA copy): the sequel's record layout was still on
-  while Shattered Lands' copies were written. It is put back first now.
-- In the sequel, dice the dice log held to learn which spell they belonged to waited for the next roll
-  instead of being shown after a second, as in Shattered Lands.
-- A thief who failed more than four locks at one level in a region could try the latest one again: the
-  four kept were the highest thing numbers, not the four failed last.
-- `playtest/ravstart.sh`: several object parts in `RAV_SKIP` each rewrote OBJEX2.GFF from the game's
-  file, so only the last was left out; now one write leaves them all out (and `spell_arrows` RESOURC2.GFF's too).
 
 **Fixed: the game**
 - **Saves keep improving past 9th level**: the game's save routine took AD&D's best save as the
@@ -359,6 +328,14 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 - The window routine's failure exit no longer jumps into the middle of the `window` patch (the
   spell slots on the USE screen): it goes to an identical unpatched "pop si / leave / retf". A new
   test scans the patched program for any other jump into a patch (#159).
+- When the view moved to whose turn it is, or followed a figure walking, copies of the docked panel
+  (its header in a row, "Needs Needs Needs") stayed beside it until the main loop's next pass. DSCLOG
+  now catches the game's moves of the view as they end (`PANEL_FOLLOW`, `CENTRE_THING`, `CENTRE_XY`:
+  sites 125-127) and draws again just where the panel was copied to. Played in Pehtucl's ambush, frames
+  grabbed through two rounds: copies in runs of up to 49 frames before, 2 at most after. The files with
+  copies (`COPIES`) moved to DSCLOG's tail to make room (#254).
+- A thief who failed more than four locks at one level in a region could try the latest one again: the
+  four kept were the highest thing numbers, not the four failed last (#235).
 
 **Fixed: Wake of the Ravager**
 - The Loader's copy of the sequel has most of Shattered Lands' engine fixes, and mends some of the
@@ -392,6 +369,12 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   DSCLOG2's header says its length (+30), and the Loader writes none of its later fields to an older
   helper; a Spellarcher's starting arrows are given only with all three arrows' objects in the copy, and
   its plain arrows taken only once they are in (#240).
+- The kit byte's "no kit" marker, 0FFh, is also a legal byte on a human with three classes (kits
+  3/3/3, the own party's bit and Friends), so such a character lost its kits. 0FFh now means "no kit"
+  only on any other sheet, in the Loader (`game.kit_open`) and DSCLOG2 (`KIT_OPEN_AT`). No save
+  changes: no other sheet could hold 0FFh as kits (#239).
+- In the sequel, dice the dice log held to learn which spell they belonged to waited for the next roll
+  instead of being shown after a second, as in Shattered Lands (#235).
 
 **Fixed: the Loader**
 - Every Shattered Lands start failed before the game ran, on either engine: the weapon window's
@@ -401,6 +384,12 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 - With DOSBox-X chosen and none found, the Loader's message read "no DOSBox-X program is:", a sentence
   cut short. It now says none was found, names the mod's dosbox-x folder it looked in, and says the
   release zip brings one (a source-code download doesn't) (#227).
+- With no Loader window (the dice log on its own, or the game started without one), a change to
+  `settings.json`'s `autosave` or `quick_save` is taken within a second, with no restart
+  (`DiceLog.follow_switches`; the window's Options tab already did this). Test: `test_dicelog` (#254).
+- Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without
+  its new items, people and icons (and a changed GPLDATA copy): the sequel's record layout was still on
+  while Shattered Lands' copies were written. It is put back first now (#235).
 
 **Docs**
 - The engine in FEATURES, the README's requirements, the player's guide, both DEVELOPMENT pages
@@ -414,6 +403,28 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   the sequel too (#206).
 - An audit of what the Wake of the Ravager port brought across, and what it still lacks
   (`reports/`, #208); a folder of notes for OpenDS and yuan-ti (`reports/community/`, #153).
+- GAME-BUGS: Reflected Image and the shop glow fixed in the sequel (#217).
+- The release record caught up: this section by subject with each entry's pull request (#224); DOSBox-X
+  the default engine in the README, DEVELOPMENT and the known issues, started on Windows and untried on
+  macOS, in the credits, and the sequel on the front page (#225); the patch notes with what came after
+  2.19.2 and a Wake of the Ravager section (#226).
+- A documentation review (`reports/docs-review-2026-11-27.md`), the Options tab's picture retaken, and
+  the outfit galleries' links made relative (#233).
+- **Wake of the Ravager has a page of its own**, [RAVAGER.md](obsidian-edition/RAVAGER.md) (starting it,
+  the saves converted, the party transfer, the mod there), with FEATURES keeping a paragraph and the
+  manual a page (#234).
+- Nineteen pictures of the party retaken with the class outfits, their captions rewritten (#252).
+- The code audit of 2026-11-27 (`reports/code-audit-2026-11-27.md`: findings by severity and the 72-byte
+  sheet's map) (#237), S1's later stages deferred (#248).
+- The sequel's kits, the patch notes and the links brought in step with #218 to #254: the patch notes'
+  Wake of the Ravager section links to RAVAGER.md and has the figures and the Effects screen's lines;
+  this section's entries each name their pull request (#257).
+- The Player's Guide's weapon tables (damage, the clerics' spheres, mundane and magic weapons, who wields which
+  magic weapon) and the backstab table in How the game works list Wake of the Ravager's weapon kinds, their
+  metal, obsidian and bone ones and their 13 magic ones (#257).
+- The Loader's pictures (`dicelog.png`, `dialogue.png`, `viewer.png`) retaken with the new bar; FEATURES'
+  table of what the party wears says what shows on a class outfit and the shape of each of Wake of the
+  Ravager's weapon kinds (#262).
 
 **Dev**
 - DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
@@ -440,6 +451,33 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   with control runs; `specset.py` sets a member's weapon specs in memory (#149).
 - DSCLOG2's LOCK_SITE, GL_ARMOUR, AI_WALL, KREEN_CLAWS (sites 241-244) and PSP_SCORES, header +2114 to
   +2122; `test_ravgamebugs.py`, `test_ravlocks.py`; `ravaudit.py`, `ravitems.py --bare/--dress` (#232).
+- `DiceLog.PASS` is the pass after the rolls as a list of named steps with their phases; the sequel's
+  `RavDiceLog.PASS` takes Shattered Lands' by name and adds its own, and `ravlog.PASS_LEFT_OUT` says
+  why it leaves each other one out. `test_ravlog.PassStepTests` fails on a new step in neither. Played
+  in both games: the same lines as before (Shattered Lands' fountain ambush: initiative, a dance, the
+  turns; the sequel: stock, its own party, ages) (#246).
+- `spritegear.armed`'s per-figure, per-frame placements for the class outfits are three tables
+  (`PART_FIXES`, `GRIP_FIXES`, `CARRY_FIXES`) laid over what the figure finder reads, in place of 17
+  branches; `outfit_layer` replaces three copies of one expression. All 88,090 outfit pictures a
+  sweep over every figure, class mix, weapon and armour builds are the same, hash for hash (#244).
+- `ravlog.apply_layout` rebound a name in any module holding Shattered Lands' value under it; now only
+  in its declared holders (`_layout_holders`: game.py, the dice log's signature, the mod's sheet bytes'
+  modules). The 16 copies other modules kept (`from .game import` or a constant of their own: kits,
+  spellbook, dicelog, champions, ring, itemgate) read `game.NAME` instead. `LayoutHolderTests` fails on
+  a new copy. Played in both games: the same lines as before (#247).
+- The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
+  `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches
+  both. Both programs build to the same bytes; `test_shared_routines.py` fails on a routine written
+  twice again (#243).
+- `tests/test_dsclog_room.py`: DSCLOG's segment keeps 256 bytes free and its upper memory 32 paragraphs
+  (its build failed only past the limit), as `test_dsclog2_room.py` does for DSCLOG2; and the sequel's
+  modules' constants named as DSCLOG2's symbols agree with them (#238).
+- DSCLOG2's build fails if the helper outgrows upper memory (`UMB_NEED`, `UMB_KEPT`, as DSCLOG's),
+  the room measured in the sequel: 83 KB free today (#242).
+- `playtest/ravstart.sh`: several object parts in `RAV_SKIP` each rewrote OBJEX2.GFF from the game's
+  file, so only the last was left out; now one write leaves them all out (and `spell_arrows` RESOURC2.GFF's too) (#235).
+- `playtest/`: `RAV_SKIP`'s controls listed in one place (#236); the pictures' play kit (`picstart.sh`
+  with the dice log, `toturn.sh`, `shadowsw.py`, `sheetbyte.py`, `itemplus.py`) (#252).
 
 ## Pull request #144 ([merged 2026-11-21](https://github.com/daaki85/darksun-obsidian-edition/pull/144))
 

@@ -18,7 +18,8 @@ class ChunkTests(unittest.TestCase):
     def test_types(self):
         """The game's 115 with the Loader's 44 after them (numbered from 115), and the game's own
         mended: Grey's Scale's arms and legs AC 3, the Great Axe +3 metal, the pick 1d6+1, the
-        Quicksilver Glove leather, the daggers for air clerics too; the rest as the game's."""
+        Quicksilver Glove leather, the daggers for air clerics too, the leather chest 96 (9.6 lb, as
+        Wake of the Ravager's); the rest as the game's."""
         out = itemtables.types_chunk(OWN_TYPES)
         self.assertEqual(len(out), 20 * (game.GAME_TYPES + len(npcitems.TYPES)))
         self.assertEqual(out[20 * game.GAME_TYPES:], b"".join(npcitems.TYPES))
@@ -29,8 +30,9 @@ class ChunkTests(unittest.TestCase):
         for dagger in (17, 33, 84, 94):
             self.assertEqual(rec(dagger)[0x10], dagger & 0xFE | 1)
         changed = {k for k in range(game.GAME_TYPES) if rec(k) != OWN_TYPES[20 * k:20 * k + 20]}
-        self.assertEqual(changed, {2, 17, 24, 33, 54, 84, 94, 112, 113})
-        for kind in changed:  # (one byte each)
+        self.assertEqual(changed, {2, 6, 17, 24, 33, 54, 84, 94, 112, 113})
+        self.assertEqual(struct.unpack_from("<H", rec(6), 4)[0], 96)  # (the leather chest's weight, the sequel's)
+        for kind in changed - {6}:  # (one byte each)
             self.assertEqual(sum(a != b for a, b in zip(rec(kind), OWN_TYPES[20 * kind:20 * kind + 20])), 1)
         self.assertEqual(npcitems.TYPES[127 - 115][0x0C], 6)  # (the Loader's Metal Pick's 1d6+1 too)
 
