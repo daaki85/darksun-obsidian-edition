@@ -1054,6 +1054,15 @@ PATCHES: Tuple[Patch, ...] = (
     # "test word es:[bx+10h],40h" (5D6B3h, SL's gladiator_armour at 58F86h, [bx+12h] there) made DSCLOG2's
     # GL_ARMOUR (site 242): a gladiator only with armour on its arms, legs, head or chest
     Patch("gladiator_armour", 0x5D6B3, bytes.fromhex("26f747104000"), _site(242, 6)),
+    # ... the computer's cast gave a spell's two points both the chosen cell's middle, so its walls were a single
+    # point: the four pushes (5EE6Bh, SL's ai_wall at 5A38Ch) made DSCLOG2's AI_WALL (site 243: a wall across
+    # the line of fire)
+    Patch("ai_wall", 0x5EE6B, bytes.fromhex("8b46fcc1e004050800508b46fec1e004050800508b46fcc1e00405080050"
+                                            "8b46fec1e00405080050"), _site(243, 0x28)),
+    # ... and a thri-kreen's claws and bite were crushing, as the game makes every unarmed attack, so a creature
+    # crushing weapons can't hurt was safe from them: the melee attack's "cmp word [bp-0Ch],0" (5C86Dh, SL's
+    # ns_fist at 58226h) made DSCLOG2's KREEN_CLAWS (site 244: a party thri-kreen's natural attacks edged)
+    Patch("kreen_claws", 0x5C86D, bytes.fromhex("837ef400"), _site(244, 4)),
     Patch("shots_left", 0x20486, bytes.fromhex("2680bc8401007504"), bytes.fromhex("2680bc8401637d04")),
     # ... and the roster's DELETE (59160h, SL's 54AC1h) took the character by the row clicked alone, where ADD
     # adds how far the list is scrolled (es:[2] of the window's segment 2F8h): with the list scrolled another

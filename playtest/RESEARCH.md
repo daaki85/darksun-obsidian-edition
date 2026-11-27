@@ -2194,6 +2194,40 @@ class_gear, which leaves kit-forbidden armour behind. The creation screen's KITS
 kit rows (250,114 / 122 / 130); a class at x 255 (FIGHTER y 29, GLADIATOR 37, THIEF 69); NEW on a slot's right-click
 menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member's.
 
+### The port audit's rest (2026-11-27, logs/2026-11-27-ravager-audit-rest.md)
+
+- **DSCLOG2.EXE is checked in**: after any change to `dos/dsclog2.asm`, `nasm -f bin -I ./ -o DSCLOG2.EXE
+  dsclog2.asm` in `obsidian-edition/dos` before a play (the Loader starts the file, not the source; a stale
+  one shows its header words past the end as 9090h, 37008, in `ravaudit.py`), and `test_audit_builds` fails
+  until it is rebuilt.
+- **`ravaudit.py`** prints DSCLOG2's audit words: LOCK_BARRED's rows, lock_bars (+2116), gl_bare (+2118),
+  ai_walls (+2120), kreen_cuts (+2122), the region and the talk thing.
+- **The gladiator's armour (GL_ARMOUR)** in the ambush: `ravitems.py 3 --bare` puts Gerakis's leg and chest
+  armour (slots 6, 9) in pack cells 21, 23 (a test edit, never saved); attacked so, his AC was 9 and gl_bare
+  rose (0 to 3); `--dress` put it back, AC 8, gl_bare held. To have the foes reach him before the party ends the
+  fight, the foes' HP 300 (a scratch `foehp.py`: creature +0 for every creature combatant from 4; the region's
+  bystanders too, harmless in a throwaway copy). Gerakis is below 5th gladiator level, so the bonus itself
+  (1 a 5 levels) is 0 either way: the count is what shows the test.
+- **PSP_SCORES** at the ambush's level ups: the creation record (DS:142Dh) held WIS 18; with the fix
+  Terrannus and Thy'rokh (WIS 19) got 28 PSP more and Gerakis (WIS 15) 28, where the game gave 26, 26 and 34:
+  each member's own WIS (2 x WIS - 10), CON and INT the game's own to 22 (checked against the three gains).
+- **KREEN_CLAWS**: kreen_cuts counts 2 for each of Thy'rokh's natural attacks seen (the magic test runs twice
+  for one).
+- **The dice log's PSP and ability lines** with a test edit (Ar'Anda's creature +2 PSP -5 and +19h STR +1, put
+  back after): "spends 5 PSP (96 -> 91)", "STR 18 -> 19", then "regains" and "19 -> 18". A level up's higher
+  most shows as "regains N PSP". Effect lines: "Thy'rokh#2 gives Paralyzed to Draxan#21", "Controlled ends on
+  Draxan#26". With `--numbers` a creature gone by the fight's end was "?#21" (ravdice.py's suffix on "?"
+  defeated the log's kept name): fixed, it says the name it kept.
+- **The ambush's end is often not logged**: the last foes' blows and the kills are missing and the summary says
+  "0 kills" (seen in 3 of 3 runs; known since logs/2026-11-24-ravager-48h-sheet-play.md). Not looked into.
+- **Starting a new game from `ravstart.sh`'s title menu**: a click in the window first (the pointer is not
+  captured until then), S, then the dragon picture waits: Escape, a few seconds, Return gives the opening talk
+  (3, Return x4: the ambush). Computer Control: C, then a `ravclick.py` move to capture the pointer, then the four
+  lower icons.
+- **A lock to play the lock rule**: `gpl.checks` on the sequel's GPLDATA.GFF decodes 257 of its 350 scripts and
+  finds one open-locks check, in GPL 9 (a grate with a trap: "finds a trap concealed in the grate!"); where that
+  is in the game is not known yet, and the 93 scripts that don't decode may hold more.
+
 ### The sequel's spells in a fight (2026-11-21)
 
 - **Teaching a wizard spell**: Ar'anda's known-spells bitset, 15 bytes at 3F3DCh in the Draxans' fight

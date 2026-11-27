@@ -1094,6 +1094,14 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   failed, a move silently roll to slip away, else caught, and that thief keeps from them until a thief
   level is gained. A cleric/thief keeps Turn Undead alone (no purse beside it), a right click on the
   purse shows no description, and there are no weapons worth XP to lift.
+- **A lock a thief failed** is out of reach in the sequel too until that thief gains a level, as in
+  Shattered Lands (with [Thieves as in AD&D](#thief-skills-from-adds-table)); the dice log says why.
+- **Shattered Lands' fixes of the game's own bugs** that the sequel shares come with it: a character's
+  most PSP from its own scores, the computer's walls cast across the line of fire, a party thri-kreen's
+  claws and bite that cut, the gladiator's armour optimisation only with armour on, and the rest
+  ([which](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel)). The dice log there says when an effect starts
+  and ends (`Thy'rokh gives Paralyzed to Draxan`, `Controlled ends on Draxan`), a member's PSP spent or
+  regained, and an ability score changing, as in Shattered Lands.
 - **Items weigh what they do in Shattered Lands.** SSI left most of the sequel's items weighing
   nothing, though its program still reads weight as Shattered Lands' does. With the Loader a long sword,
   a mace, a shield and armour weigh as they do there, so the sequel's own rules

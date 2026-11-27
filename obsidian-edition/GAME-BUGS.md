@@ -209,8 +209,8 @@ to be read for it.
 | Bug | In Wake of the Ravager |
 |---|---|
 | **Cause Serious and Critical Wounds** | Fixed there too |
-| **Slay Living**'s description | Not checked yet |
-| A character's **most PSP** | Not checked yet |
+| **Slay Living**'s description | Fixed there too (the sequel's record is the same); not yet seen in play |
+| A character's **most PSP** | Fixed there too (played: at the ambush's level ups each member's own WIS counted, not the creation screen's) |
 | **Negative Plane Protection** | Fixed there too (the save as against paralysis, poison and death); not yet seen in play |
 | **Scare**'s save | Fixed there too |
 | **"Can't save"** | Fixed there too (played) |
@@ -225,32 +225,32 @@ to be read for it.
 | **Bless** and **Aid** | Fixed there too; not yet seen in play |
 | **Acid Arrow** | Fixed there too (the burns played) |
 | **Psionic Blast** on a party member | Fixed there too (played) |
-| **Walls** cast by monsters | Not checked yet |
-| A **berserk** or **confused** party member | Not checked yet |
+| **Walls** cast by monsters | Fixed there too; not yet seen in play |
+| A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: not checked yet (its end only keeps the hit points in bounds) |
 | **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
 | An archer whose **quiver runs dry** | Not yet: the sequel's arrows are counted by other code, still to be found |
-| A **thri-kreen's claws and bite** | Not checked yet |
+| A **thri-kreen's claws and bite** | Fixed there too (played: Thy'rokh's bite in the ambush) |
 | The **fire elementals** | Not needed as such: the sequel's monsters have resistances of their own |
 | The game's **people's weapons and armour** | Not needed: the sequel puts them on as they come |
 | **Random monsters** | Fixed there too |
 | A fight's **music** | Not yet: the sequel's region levels are read by other code, still to be found (its music is the CD's) |
 | **Resting while poisoned** | Fixed there too (played) |
-| **DELETE** in the roster | Not checked yet |
+| **DELETE** in the roster | Fixed there too; not yet seen in play (it needs more than 10 characters) |
 | The **creation screen's least scores** | Not yet: the sequel keeps the game's (the dice log says so) |
 | **XP for high prime requisites** | Not yet |
 | A **New** character's thief skills | Not yet (12 of the 24 tests found; it matters only before the game starts) |
 | **Thief skills**' equipment penalty | Fixed there too |
 | A thief skill rolled **for the whole party** | Fixed there too |
 | Items that raise or lower an **ability score** | Not checked yet |
-| The **gladiator's armour optimisation** | Not checked yet |
-| The **air cleric's daggers** | Not checked yet |
+| The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
+| The **air cleric's daggers** | Fixed there too |
 | **View Character's DAM line** with a weaker material | Not yet |
 | The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
-| An archer's **pointer** after a shot | Not checked yet |
+| An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
 | A magic item's power on the **Effects screen** | Not checked yet |
 | A click on a spell's icon on the **Effects screen** ending the spell | Fixed there too (played) |
-| **CHOOSE A SPELL**'s icons with more than 15 spells | Not checked yet |
+| **CHOOSE A SPELL**'s icons with more than 15 spells | Fixed there too (played: 17 icons in rows of six, centred) |
 | **Graphics disappearing in a busy area** | Fixed there too (played): SSI's note 2712 was written for this game |
 | A magic item's **glow in a shop** | Not yet: comes with the sequel's graphics, still to be merged |
 

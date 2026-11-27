@@ -397,6 +397,8 @@ lock_off     dw lock_barred     ; +2114 offset of LOCK_BARRED in the tail: the L
                                 ;      member may not try again yet (LOCK_SITE; DSCLOG's +1844, locks.py)
 lock_bars    dw 0               ; +2116 open locks checks LOCK_SITE put out of reach (counted)
 gl_bare      dw 0               ; +2118 gladiators' AC worked out with no armour on, no optimisation (GL_ARMOUR, counted)
+ai_walls     dw 0               ; +2120 walls the computer cast across the line of fire (AI_WALL, counted)
+kreen_cuts   dw 0               ; +2122 a party thri-kreen's natural attacks made edged (KREEN_CLAWS, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4700,6 +4702,8 @@ site_table:
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
         dw gl_armour                        ; 242 SITE_GL_ARMOUR (5D6B3h: the AC routine's gladiator test: armour optimisation needs armour)
+        dw ai_wall                          ; 243 SITE_AI_WALL (5EE6Bh: the computer's cast, its two points: a wall across the line of fire)
+        dw kreen_claws                      ; 244 SITE_KREEN_CLAWS (5C86Dh: a natural attack's magic tested: a party thri-kreen's claws and bite cut)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -13185,9 +13189,9 @@ path_up:
 ;   choice, 2026-11-26), for the kit's own class likewise.
 ; - KIT_MAX_PSP (site 198, "max_psp"): "les bx,[bp-8]" (95172h; 3 bytes, an INT and a NOP) where the most PSP
 ;   the level gives is in SI, put in the sheet ([BP-8], far: +0Ch) when more than it was: a Mind Warrior's
-;   SI a fifth less (kits.max_psp), its kit asleep or not (its psionicist levels are its PSP). The sequel
-;   keeps SL's slip of WIS read from the creation screen's record (95110h: DS:142Dh, SL's 11A0h), which
-;   DSCLOG's PSP_SCORES puts right and this doesn't (yet).
+;   SI a fifth less (kits.max_psp), its kit asleep or not (its psionicist levels are its PSP). First the
+;   game's CON, INT and WIS bonuses are put right (PSP_SCORES, DSCLOG's): the sequel keeps SL's slip of
+;   WIS read from the creation screen's record (95110h: DS:142Dh, SL's 11A0h) and its 8-long tables.
 ; A hit's mark (the creature's byte at 308h:0B2h + it, SL's 2E0h:0AFh), which keeps it from casting until
 ; the next round (the USE screen's refusal and a queued spell dropped: 97384h, 97A84h):
 ; - HIT_ROUND (site 199, "hit_round"): "mov byte es:[si+0B2h],1" (5CD76h; 6 bytes) where the routine taking
@@ -13456,6 +13460,7 @@ hit_kit:
         pop cx
         iret
 kit_max_psp:
+        call psp_scores
         les bx, [bp - 8]
         push ax
         mov al, KIT_MIND_WARRIOR
@@ -13473,6 +13478,80 @@ kit_max_psp:
         pop cx
 .out:   pop ax
         iret
+
+; PSP_SCORES (DSCLOG's, for KIT_MAX_PSP, its interrupt frame above the call's return): SI with the
+; game's CON, INT and WIS bonuses taken off and the member's own added. The sequel's routine (95091h)
+; is SL's (873B2h) with its own places: the creature's CON, INT, WIS at +1Bh-1Dh (SL's +24h-26h), the
+; tables a byte for each score from 15 in the segment its "mov dx,seg" at 950F7h holds (the overlay
+; manager's fix-up: read there), at CON EFh, INT F7h, WIS FFh + the score (SL's 11Ch, 124h, 12Ch: 8
+; long, so INT 22 read 0 and a score past 22 the next table's bytes), and WIS read from the creation
+; screen's record (DS:142Dh). Each is the member's own: CON and INT the score less 15, WIS twice the
+; score less 10 (the game's own to 22, carried on to 25), nothing below 15.
+PSP_SEG_BACK equ 0x95175 - 0x950F8   ; (the "mov dx,seg"'s word, back from the INT's way back)
+PSP_CREATION equ 0x142D              ; DS: far pointer to the creation screen's creature record
+PSP_CON     equ 0x1B                 ; (the creature's CON; INT, WIS the next)
+PSP_CON_TAB equ 0xEF                 ; (the tables, + the score: CON's, INT's, WIS's)
+PSP_INT_TAB equ 0xF7
+PSP_WIS_TAB equ 0xFF
+psp_scores:
+        push ax
+        push cx
+        push dx
+        push di
+        push es
+        push bx
+        mov di, sp
+        push ds
+        lds di, [ss:di + 14]            ; (the INT's way back: past the six and the call's)
+        mov cx, [di - PSP_SEG_BACK]     ; CX: the tables' segment
+        pop ds
+        les bx, [bp - 4]                ; the member's creature record
+        mov al, [es:bx + PSP_CON]       ; CON
+        mov dx, PSP_CON_TAB
+        call .term
+        mov al, [es:bx + PSP_CON + 1]   ; INT
+        mov dx, PSP_INT_TAB
+        call .term
+        mov al, [es:bx + PSP_CON + 2]   ; WIS: the game's from the creation screen's record
+        cmp al, 15
+        jb .done
+        cmp al, 25
+        jbe .wis
+        mov al, 25
+.wis:   mov ah, 0
+        add ax, ax
+        sub ax, 10
+        add si, ax
+        les bx, [PSP_CREATION]
+        movsx di, byte [es:bx + PSP_CON + 2] ; (signed, as the game takes it)
+        push ds
+        mov ds, cx
+        movsx ax, byte [di + PSP_WIS_TAB]
+        pop ds
+        sub si, ax
+.done:  pop bx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop ax
+        ret
+.term:  cmp al, 15                      ; (score AL, table DX: SI less the game's, plus the score's)
+        jb .none
+        movzx di, al
+        add di, dx
+        push ds
+        mov ds, cx
+        movsx di, byte [di]
+        pop ds
+        sub si, di
+        cmp al, 25
+        jbe .own
+        mov al, 25
+.own:   sub al, 15
+        movzx di, al
+        add si, di
+.none:  ret
 hit_round:
         mov [cs:hr_seg], es
         push ax
@@ -24588,6 +24667,138 @@ gl_armour:
         jmp short .out
 .armour: or sp, sp                      ; ZF and CF clear: the bonus
 .out:   retf 2
+
+; AI_WALL (site 243, "ai_wall"; DSCLOG's NS_WALL): the four pushes of the two points the computer's cast is
+; aimed at (5EE6Bh, 28h bytes: "mov ax,[bp-4] / shl ax,4 / add ax,8 / push ax", then [bp-2]'s, twice; [BP-2],
+; [BP-4] the cell chosen), in the AI's casting (5EE00h, SL's 5A31Fh: the caster SI, the spell DI). The game
+; gave both points the cell's middle, so a wall, as long as its points are apart, was a single point. A wall
+; (WALL_SPELLS: the sequel's records with +0Ch 2) now runs across the line from the caster (its place,
+; sixteenths of a cell, at the map thing's DS:67C5h + SI x 25h, SL's 669Dh + SI x 20h) to the cell:
+; WALL_HALF either way, along an axis, or the diagonal, whichever is nearest square to the line; anything
+; else at the middle, as before. The four words go under the INT's frame, where the pushes left them
+; (point 1 on top: x, y). The second copy of the pushes (5F6D1h) is SL's 5AA05h, which DSCLOG leaves too.
+WALL_HALF  equ 32               ; (two cells: a wall four long)
+WALL_DIAG  equ 23               ; (WALL_HALF / sqrt(2))
+WALL_POS   equ 0x67C5
+WALL_THING equ 0x25
+ai_wall:
+        sub sp, 8
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 10]       ; (the frame, 8 lower)
+        mov [bp + 2], ax
+        mov ax, [bp + 12]
+        mov [bp + 4], ax
+        mov ax, [bp + 14]
+        mov [bp + 6], ax
+        pusha
+        mov bx, wall_spells
+        mov cx, di              ; (the spell)
+        call kit_word_in
+        lahf
+        imul bx, si, WALL_THING ; (the caster)
+        mov si, [bp]            ; (the game's BP)
+        mov cx, [ss:si - 2]
+        shl cx, 4
+        add cx, 8               ; (CX, DX the middle)
+        mov dx, [ss:si - 4]
+        shl dx, 4
+        add dx, 8
+        xor si, si              ; (SI, DI the half-wall, none)
+        xor di, di
+        sahf
+        jne .put
+        inc word [cs:ai_walls]
+        mov ax, cx
+        sub ax, [bx + WALL_POS] ; (AX, BX the line: the middle less the caster's place)
+        mov bx, [bx + WALL_POS + 2]
+        neg bx
+        add bx, dx
+        push ax
+        push bx
+        or ax, ax
+        jns .xa
+        neg ax
+.xa:    or bx, bx
+        jns .ya
+        neg bx
+.ya:    mov di, bx              ; (|dy|)
+        shl di, 1
+        cmp ax, di
+        jbe .notx
+        pop bx                  ; mostly across: the wall up and down
+        pop ax
+        xor si, si
+        mov di, WALL_HALF
+        jmp short .put
+.notx:  shl ax, 1
+        shr di, 1
+        cmp di, ax
+        jbe .diag
+        pop bx                  ; mostly up or down: the wall across
+        pop ax
+        mov si, WALL_HALF
+        xor di, di
+        jmp short .put
+.diag:  pop bx                  ; slanting: the other diagonal
+        pop ax
+        mov si, WALL_DIAG
+        mov di, WALL_DIAG
+        xor ax, bx              ; (the same signs: down to the left and up to the right)
+        js .put
+        neg si
+.put:   mov ax, cx
+        add ax, si
+        mov [bp + 8], ax        ; point 1: the middle plus the half
+        mov ax, dx
+        add ax, di
+        mov [bp + 10], ax
+        mov ax, cx
+        sub ax, si
+        mov [bp + 12], ax       ; point 2: less it
+        mov ax, dx
+        sub ax, di
+        mov [bp + 14], ax
+        popa
+        pop ax
+        pop bp
+        iret
+; the wall spells (their records' +0Ch 2, a wall's target: RESOURCE.GFF's, ravlog.spell_table)
+wall_spells dw 11, 54, 55, 66, 67, 70, 75, 100, 114, 154, 161, 206, 207, 208, 214, 222, -1
+
+; KREEN_CLAWS (site 244, "kreen_claws"; the thri-kreen's part of DSCLOG's NS_FIST): "cmp word [bp-0Ch],0"
+; (5C86Dh, SL's 58226h; 4 bytes) in the melee attack routine (5C5E1h, SL's 58019h: SI the attacker; [BP-2]
+; the weapon's item, -1 for a natural attack; [BP-0Ch] its magic; [BP-12h] the attacker's sheet; [BP-14h]
+; the hit's damage kinds, the game's crushing (8) for any natural attack). A thri-kreen of the party's
+; claws and bite cut: a natural attack of one is slashing, not crushing (monsters' own as the game has
+; them), so a creature crushing weapons can't hurt is no longer safe from them. Then that compare, its
+; flags kept (RETF 2).
+DMG_CRUSHING equ 0x08
+DMG_SLASHING equ 0x10
+kreen_claws:
+        cmp word [bp - 2], -1
+        jne .test
+        cmp si, 4                       ; (the party's combatants: 0-3)
+        jae .test
+        push es
+        push bx
+        push ax
+        imul ax, [bp - 0x12], SHEET_SIZE
+        les bx, [SHEETS_PTR]
+        add bx, ax
+        cmp byte [es:bx + SH_RACE], WP_THRI_KREEN
+        pop ax
+        pop bx
+        pop es
+        jne .test
+        test word [bp - 0x14], DMG_CRUSHING
+        jz .test
+        and word [bp - 0x14], ~DMG_CRUSHING
+        or word [bp - 0x14], DMG_SLASHING
+        inc word [cs:kreen_cuts]
+.test:  cmp word [bp - 0x0C], 0
+        retf 2
 
 resident_end:
 align 16

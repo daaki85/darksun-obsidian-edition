@@ -6,7 +6,9 @@
 # every bow (the sequel's type 18) named the Fine Bow (ravager.FINE_BOW_NAME: DSCLOG2's FINE_HIT); each
 # item's name number (+14h) is shown too. --unhand (a test edit, never saved): the right hand's item (slot 3)
 # moved to backpack cell 30. --bow15 (a test edit, never saved): every bow +15, so Computer Control shoots
-# with it rather than close in (as the 2026-11-24 spell arrows' play had it). Run from playtest/.
+# with it rather than close in (as the 2026-11-24 spell arrows' play had it). --bare (a test edit, never saved):
+# the armour worn on the arms, legs, head and chest (slots 0, 6, 7, 9) moved to backpack cells 20, 21, 22, 23;
+# --dress puts it back (the gladiator's armour optimisation, DSCLOG2's GL_ARMOUR). Run from playtest/.
 import sys, os, struct, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -22,8 +24,10 @@ WORN = '--worn' in sys.argv
 FINE = '--fine' in sys.argv
 UNHAND = '--unhand' in sys.argv
 BOW15 = '--bow15' in sys.argv
+BARE, DRESS = '--bare' in sys.argv, '--dress' in sys.argv
+UNDRESS = {0: 20, 6: 21, 7: 22, 9: 23}
 from dsloader import ravager
-for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine', '--unhand', '--bow15')]:
+for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine', '--unhand', '--bow15', '--bare', '--dress')]:
     k, c = entry(int(a))
     if k != 2: print(a, 'not a creature (kind %d)' % k); continue
     rec = g.read(cr + c*0x31, 0x31)
@@ -37,6 +41,10 @@ for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine', '--unhand', '
             slot = r[0x13]
             if WORN and slot in (14, 15, 16):
                 slot = {14: 9, 15: 0, 16: 6}[slot]; g.write(it + i*0x17 + 0x13, bytes([slot]))
+            if BARE and slot in UNDRESS and tr[0x0B] & 0x80:
+                slot = UNDRESS[slot]; g.write(it + i*0x17 + 0x13, bytes([slot]))
+            elif DRESS and slot in UNDRESS.values():
+                slot = {v: k for k, v in UNDRESS.items()}[slot]; g.write(it + i*0x17 + 0x13, bytes([slot]))
             if UNHAND and slot == 3:
                 slot = 30; g.write(it + i*0x17 + 0x13, bytes([slot]))
             if BOW15 and t == 18:

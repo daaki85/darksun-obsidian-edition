@@ -39,7 +39,8 @@ log.game_dir = os.environ.get('RAV', os.path.join(WORK, 'rav'))  # (its font: th
 print(log.attach(), flush=True)
 if numbers:
     name = log.game.combatant_name
-    log.game.combatant_name = lambda n: '%s#%d' % (name(n), n)
+    # ("?" left as it is: the log keeps a name it saw for a creature gone by the fight's end)
+    log.game.combatant_name = lambda n: (lambda s: s if s == '?' else '%s#%d' % (s, n))(name(n))
 # the rules as the Loader sets them (its settings, kits and the other switches with them: DSCLOG2's
 # assembled word has only the always-on ones), then RAV_RULES_OFF's off
 log.set_rules(game.rules_from_settings(launch.load_settings()) & ~int(os.environ.get('RAV_RULES_OFF') or '0', 0))
