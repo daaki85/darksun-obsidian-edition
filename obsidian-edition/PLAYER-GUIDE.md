@@ -911,7 +911,7 @@ of several classes has one XP for them all, so each class with the bonus adds
 human counts the class it follows now. The Loader adds the bonus as each
 award comes (the dice log shows it: `+12 for Fighter, STR 17`), so it needs the
 Loader following the game; a level that the bonus alone reaches comes with the
-next award. *Without the mod:* no bonus.
+next award. In Wake of the Ravager too. *Without the mod:* no bonus.
 
 Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly

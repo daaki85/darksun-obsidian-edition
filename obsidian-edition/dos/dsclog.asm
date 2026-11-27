@@ -20432,6 +20432,8 @@ site_tab:
         site FOLLOW_SITE, panel_follow
         site CENTRE_THING_SITE, centre_thing
         site CENTRE_XY_SITE, centre_xy
+        site NS_IMAGE + 128, inventory_figure
+        site NS_IMAGE + 129, inventory_load
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -21587,6 +21589,17 @@ gear_hold:
         pop bx
         pop ax
 .ret:   ret
+
+inventory_figure:
+        mov ax, inventory_figure_far
+        call tail_call
+        iret
+
+inventory_load:
+        call if_frame
+        push word [cs:tail_seg]
+        push word inventory_load_far
+        retf                    ; keep the INT frame for the reader's way back
 
 ; FIG_WAIT: (PROBE_WP_CLASS, after every click on the creation screen; CR_HP, where the screen opening
 ; shows a new character's class; FIG_OPEN, before its first drawing) the character being made has
@@ -28600,6 +28613,84 @@ save_far:
         add ax, bx
         mov [gs:sp_call + 2], ax
         ret
+
+; The inventory's full-length picture. Its key in RESOURCE.GFF matches
+; inventoryart.py: 6000h + figure * 256 + one bit per class group.
+; ES:BX is the actual selected creature, including when two share a figure.
+INV_ART_BASE equ 0x6000
+inventory_figure_far:
+        mov ax, [es:bx + 0x18]
+        cmp ax, 14
+        jae .stock
+        push es
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        mov dx, ax
+        shl dx, 8
+        add dx, INV_ART_BASE
+        imul ax, [es:bx + 4], 0x47
+        les bx, [LV_SHEETS]
+        add bx, ax
+        mov cx, 3
+        cmp byte [es:bx + 0x18], 1
+        jne .slots
+        mov cx, 1               ; human dual classes use the active class
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + 0x21]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [gs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop es
+        retf
+.stock: add ax, 0x12
+        retf
+
+; 73034h returns a heap-owned picture. Let the game's GFF reader allocate
+; the outfit on demand. Its caller measures, centers, draws and frees it.
+inventory_load_far:
+        mov dword [bp - 4], 0
+        cmp si, INV_ART_BASE
+        jb .out
+        cmp si, INV_ART_BASE + 14 * 256
+        jae .out
+        push ss
+        lea ax, [bp - 4]
+        push ax
+        movzx eax, si
+        push eax
+        push dword 'BMP '
+        mov ax, ds
+        add ax, LOAD_SEG - DGROUP_SEG
+        mov [bp - 6], ax
+        mov word [bp - 8], LOAD_OFF
+        call far [bp - 8]       ; the reader owns these locals until it returns
+        add sp, 12
+        test ax, ax
+        jnz .fallback
+        push bx
+        mov bx, sp
+        add word [ss:bx + 2], 0x730AB - (0x7303E + 3)
+        pop bx
+        iret
+.fallback:
+        sub si, INV_ART_BASE
+        shr si, 8
+        add si, 0x12            ; read the stock picture from the preload table
+.out:   iret
 
 ; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
 tint_far:

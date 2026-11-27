@@ -418,10 +418,20 @@ def rav_pocket_sized(typ: bytes) -> bool:
     return True
 
 
+# The sequel's item types whose going is ordinary, for the missing-item watch (itemwatch.py: Shattered Lands'
+# USED_UP, SPELL_MADE, BROKEN), by reports/wake-of-the-ravager-item-weights.md's table: arrows (6, 7), coins,
+# keys, fruit and orbs (9), gems, berries and vouchers (14), scrolls, spellbooks and rods (77), psionic
+# powerstones (78); the spells' Flameblade (47), Rainbow (87), Shillelagh (90) and Spirit hammer (95); a
+# Broken Weapon (21)
+RAV_USED_UP = frozenset((6, 7, 9, 14, 77, 78))
+RAV_SPELL_MADE = frozenset((47, 87, 90, 95))
+RAV_BROKEN = frozenset((21,))
+
+
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, locks, loot, pickpocket, ring, startgear
+    from . import icons, itemgate, itemwatch, locks, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
@@ -434,7 +444,8 @@ def rav_items() -> Dict[object, Dict[str, object]]:
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
             icons: {"fit": lambda gd, item: None},
             startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
-                        "HANDS": game.WEAPON_HANDS}}
+                        "HANDS": game.WEAPON_HANDS},
+            itemwatch: {"USED_UP": RAV_USED_UP, "SPELL_MADE": RAV_SPELL_MADE, "BROKEN": RAV_BROKEN}}
 
 
 def _layout_holders() -> Tuple[object, ...]:
@@ -447,6 +458,14 @@ def _layout_holders() -> Tuple[object, ...]:
 
 
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
+
+
+def rav_xp_share(sheet: bytes) -> int:
+    """A sequel sheet's share of RAV_XP_CAP (ravager.xp_share: its classes, levels and race, at the sequel's
+    offsets), for tracker.SHARE."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    levels = sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 3]
+    return ravager.xp_share(classes, levels, sheet[game.SHEET_RACE] == game.HUMAN)
 
 
 def apply_layout() -> int:
@@ -503,6 +522,10 @@ def apply_layout() -> int:
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
+    from . import tracker  # (the XP cap the party's XP is held at: the sequel's, DSCLOG2's LEVEL_ROOM)
+    _SAVED.append((tracker, "CAP", tracker.CAP))
+    _SAVED.append((tracker, "SHARE", tracker.SHARE))
+    tracker.CAP, tracker.SHARE = ravager.RAV_XP_CAP, rav_xp_share
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -2302,13 +2325,20 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.writable = before
             self._ef_stats_written = data
 
-    def _kills_pass(self, now: float) -> List[str]:
-        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
-        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
-        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+    def _tracker_pass(self, now: float) -> List[str]:
+        """Shattered Lands' tracker (tracker.PartyTracker.check): the monsters killed ("Draxan is killed"), which
+        the fight's tally counts; the XP each gain gave and for which kills, with the bonus for high prime
+        requisites; the level-ups; the XP held at the sequel's cap (tracker.CAP, SHARE). The party's sheets' XP
+        (+0, a dword) made writable while it runs, for the bonus and the hold (else the read-only view drops
+        them, and the next look takes the bonus back). Nothing while a game loads."""
         if self.tracker is None or self._party_check(now):
             return []
-        return self.tracker._check_monsters(now)
+        gd = self.game
+        ranges = [] if gd is None else \
+            [(aging.sheet_address(gd, i) + game.SHEET_XP, 4) for i in range(game.PARTY_SIZE)
+             if len(gd.creature(i)) >= game.CREATURE_SIZE and gd.creature(i)[game.CREATURE_NAME]]
+        with self._writable(ranges):
+            return self.tracker.check(now)
 
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
@@ -2437,7 +2467,8 @@ RavDiceLog.PASS = (
     _own("answer_arrows", lambda log, now, loading: log._answer_arrows()),  # (a Spellarcher's: SPELL ARROWS)
     _own("strays", lambda log, now, loading: log._strays_pass()),  # (spell arrows only a Spellarcher carries)
     _own("hp_changes", lambda log, now, loading: log.hp_changes(now)),
-    _own("kills", lambda log, now, loading: log._kills_pass(now)),  # (the fight's tally counts them)
+    _own("tracker", lambda log, now, loading: log._tracker_pass(now)),  # (kills, XP, level-ups)
+    _take("initiative"),  # (the round's order once its rolls are still: INITIATIVE_WAIT)
     _own("psp_abilities", lambda log, now, loading: log._psp_ability_changes(now)),
     _own("blast", lambda log, now, loading: log._blast_pass(now)),
     _own("creation", lambda log, now, loading: log._creation_pass(now)),
@@ -2471,6 +2502,7 @@ RavDiceLog.PASS = (
          if log.game is not None and log.game.rules & game.RULE_AGING else None, dicelog.EFFECTS),
     _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
     _take("loading"),
+    _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
     _take("journal_sync"),  # (the Journal tab: the sequel's own chain)
     _take("flush"),  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
@@ -2481,18 +2513,15 @@ PASS_LEFT_OUT = {
     "answer_use": "the USE screen's slots are written ahead (write_slots), not answered",
     "gear_due": "the sequel's starting gear is its own step (gear)",
     "creation_figure": "the sequel has no class outfits",
-    "changes": "split into hp_changes, kills, psp_abilities and blast",
+    "changes": "split into hp_changes, psp_abilities and blast (the kills: tracker)",
     "write_stats": "not ported",
-    "tracker": "not ported",
     "item_watches": "not ported",
     "arena_ring": "Shattered Lands' arena only",
     "drawn": "Shattered Lands' story only",
     "kalzith_sold_out": "Shattered Lands' story only",
     "quest_look": "Shattered Lands' quests only",
     "dress": "the sequel has no class outfits",
-    "itemwatch": "not ported",
     "scroll": "not ported",
-    "initiative": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",
 }

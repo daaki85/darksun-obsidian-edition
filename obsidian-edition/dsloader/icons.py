@@ -1279,6 +1279,8 @@ def write_resources(source: str, dest: str) -> None:
              ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)]))),
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
+    from . import inventoryart
+    added.update(inventoryart.chunks(chunks))
     from . import spelltexts
     added.update(spelltexts.chunks())
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
