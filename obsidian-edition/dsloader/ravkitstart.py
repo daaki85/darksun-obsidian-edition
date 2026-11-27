@@ -30,8 +30,11 @@ weapons, ravlog.rav_weapon: RAV_PLAIN), as is a weapon given anew (the Myrmidon'
 An Arena Champion's shield is the sequel's Shield +1 (the fighter's, object 842) in place of a +1 weapon, else its
 plain Shield (840). Each in a material the character can use (restrict.usable: the kit's limits too).
 
-Not here: a Spellarcher's Fine Bow and spell arrows (spellarrows.starting_gear): the sequel's DSCLOG2 has no
-FINE_HIT and no spell arrows made, so a Spellarcher keeps the bow and arrows its class gives.
+A Spellarcher's bow (ravfirstweapon's, of its weapon spec) is made its **Fine Bow** (fine_bow: named
+FINE_BOW_NAME, the sequel's mod_name of Shattered Lands', +1 to hit by DSCLOG2's FINE_HIT), its arrows the ones
+ravfirstweapon gives, made its starting spell arrows as Shattered Lands' (spellarrows.starting_gear's rule:
+ravarrows.starting_arrows): 24 of each touch spell's it picked, in place of those arrows; knowing none, it keeps
+them.
 """
 
 import struct
@@ -188,12 +191,37 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
         out += weaponchoice._kit_second_weapon(gd, member, sheet, kid, chosen, worn(), read)
     if kid == kits.POISONER:
         out += _poisoner_blades(gd, member, sheet, read, chosen, new_items)
+    if kid == kits.SPELLARCHER:
+        out += fine_bow(gd, member)
     if kid == kits.GHETTO:
         out += _in_hand(gd, member, sheet, read, kits.DAGGER, new_items, "a Ghetto Fighter fights best with one")
     if kid == kits.BATTLE_MAGE and chosen \
             and not any(specialize.kind_of(_type(i)) == chosen[0] for _, i, _ in worn()):
         out += _in_hand(gd, member, sheet, read, chosen[0], new_items, "the Battle Mage's weapon spec")
     return out
+
+
+def fine_bow(gd, member: int) -> List[str]:
+    """A Spellarcher's bow made its Fine Bow (the module's notes), once: none while it has one; with it, its
+    starting spell arrows (ravarrows.starting_arrows), put in first: the bow is named only once they are in, or
+    none are due (ravarrows.arrows_due), so a pass that found no room for them (a full pack) is tried again
+    in a later one, the name being the mark of it done. Lines for the log."""
+    from . import ravager, ravarrows
+    fine = ravager.FINE_BOW_NAME
+
+    def bows():
+        return [(i, item) for i, item, _ in gd._worn(member) if specialize.kind_of(_type(item)) == weaponchoice.BOW]
+    if not bows() or any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == fine for _, item in bows()):
+        return []
+    arrows = ravarrows.starting_arrows(gd, member)
+    if not arrows and ravarrows.arrows_due(gd, member):
+        return []  # (no room for them now: the bow left plain, so a later pass tries again)
+    held = bows()  # (looked at again: the arrows' moves may have linked the items anew, bow_ahead among them)
+    if not held:
+        return arrows
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    gd.guest.write(items + held[0][0] * game.ITEM_SIZE + game.ITEM_NAME, struct.pack("<H", fine))
+    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"] + arrows
 
 
 def _in_hand(gd, member: int, sheet: bytes, read, kind: int, new_items: bool, why: str) -> List[str]:

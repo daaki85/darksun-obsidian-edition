@@ -20,6 +20,7 @@ which loads the mod with your options.
   - [features and rules](FEATURES.md): every switch of the Options tab and every change with none,
     one short entry each;
   - [kits](KITS.md): every kit's gains, costs and starting gear;
+  - [Wake of the Ravager](RAVAGER.md): the sequel from the Loader, your party taken across, and the mod there;
   - [weapon specs](WEAPON-SPECS.md): weapon specialization, who picks what, and the attacks a round;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
@@ -104,15 +105,17 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
   what they say to the scripts' broken checks, and the rules it got wrong
   ([The game's bugs, fixed](GAME-BUGS.md)).
 
-**What it changes on your computer:** the game's own files never ([Uninstalling](#uninstalling)
+**What it changes on your computer:** Shattered Lands' own files never; Wake of the Ravager's roster
+and saves are converted for the mod when you start it from the Loader, a copy of each kept ([Uninstalling](#uninstalling)
 says what the mod writes, and where).
 
 ## Requirements
 
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
   `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the
-  original game, without the mod, and says why). The Loader runs it in the DOSBox that
-  comes with the GOG release.
+  original game, without the mod, and says why). The Loader runs it in DOSBox-X, which
+  comes with the mod (the `dosbox-x` folder), or in the DOSBox that comes with the GOG release if
+  you choose it on the Options tab ([the engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
@@ -123,10 +126,10 @@ says what the mod writes, and where).
   **Play Shattered Lands** and the Python install are Windows only. The Loader's window is
   `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
   distributions package apart from Python (on Debian and Ubuntu,
-  `python3-tk`). macOS isn't supported.
+  `python3-tk`). On macOS nothing has been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **Linux with DOSBox-X**: with [DOSBox-X as the
   engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) (the default once the Loader finds
-  one: choose its program on the Options tab), **Start the game**
+  one: choose its program on the Options tab), **Play Shattered Lands**
   works on Linux, with the dice log and everything else, and needs neither root nor
   `kernel.yama.ptrace_scope=0`. What it needs: the game's files (the folder holding `DSUN.EXE`, as
   GOG's installer unpacks them; GOG's `DOSBOX` folder isn't used), your own **DOSBox-X 2025.01.01
@@ -249,15 +252,18 @@ game at a time: a second one says which has it and leaves the game alone.
 as above, or the folder chosen on the Options tab) in the same engine as Shattered Lands
 (DOSBox-X, or its own GOG DOSBox), with the mod's fixes, rules, in-game additions
 and the Loader's tabs ported to it ([what comes
-across](FEATURES.md#taking-the-party-to-wake-of-the-ravager)). Not found,
-the button says so and points to the Options tab's **Choose its folder...**.
+across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)). Not found,
+the button says so and points to the Options tab's **Choose its folder...**. **Each start converts
+the sequel's roster and saves** in its folder for the mod (each file kept first as `NAME.42H`); after
+that they load only from the Loader until you convert them back ([your sequel saves are
+converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 `SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
 `SAVQ01.SAV` on), from the game folder, or
-from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
-there).
+from its `cloud_saves` folder if it has one (GOG's release keeps the saves
+there, and the Loader starts either engine with them).
 
 **Without DOSBox:** see [Dark Sun Recompiled](#dark-sun-recompiled).
 
@@ -316,7 +322,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with every section open: In the game (the combat log's level, the Look box, names over figures, the red ring), Rule changes (three switches: hit dice, half-giants' two-handed weapons, helms), More character customization (kits, fuller starting gear), New content, Game speed, Wake of the Ravager and Saves](docs/options.png)
+![The Options tab with every section open: In the game (the combat log's level, the Look box, names over figures, the red ring, the chance to hit, squares in reach, F10's move back, showing what can be used), Rule changes (three switches: hit dice, half-giants' two-handed weapons, helms), More character customization (kits, fuller starting gear), New content, Engine (DOSBox-X found and chosen), Game speed, Picture and music, Wake of the Ravager and Saves (quick saves and autosaves)](docs/options.png)
 
 The **All fields** and **Memory tools** tabs are for mapping the game's memory
 ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)).
@@ -557,9 +563,16 @@ one: one made with 2.18.0 or later doesn't load in 2.17 or earlier (each release
 a save holds says so in [its release
 notes](https://github.com/daaki85/darksun-obsidian-edition/releases), with what follows an older save).
 
+Wake of the Ravager's saves are converted at each start from the Loader, and then load only from the
+Loader: [your sequel saves are converted](RAVAGER.md#your-sequel-saves-are-converted) says how to
+turn them back.
+
 ## Uninstalling
 
-Delete the Loader's folder. **What the mod changes on your computer:** the game's own files never;
+Delete the Loader's folder. If you played Wake of the Ravager from the Loader, **first convert its
+saves back** (it needs the Loader: [your sequel saves are
+converted](RAVAGER.md#your-sequel-saves-are-converted)), or they won't load in the sequel by itself.
+**What the mod changes on your computer:** Shattered Lands' own files never;
 the Loader runs a patched copy of the game from its own folder, and writes only there, but for your
 saves and characters:
 
@@ -575,6 +588,7 @@ saves and characters:
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`, the quick saves and autosaves as `SAVQ`) and characters in `CHARSAVE.GFF` |
+| Wake of the Ravager's folder | its roster (`CHARSAVE.GFF`), `DARKRUN.GFF`, `DARKSAVE.GFF` and saves, converted for the mod at each start from the Loader, each kept first as `NAME.42H`; `CHARSAVE.GFF.BAK` from the first party transfer ([your sequel saves are converted](RAVAGER.md#your-sequel-saves-are-converted)) |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
 the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`, `SAVQ*`)
@@ -653,6 +667,12 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   and with the mod's first additions only 53 KB were left). The Loader watches
   it, and if it gets low with the map up, the dice log says so: save and
   restart the game soon, as a fresh start has all of it back.
+- **DOSBox-X on Windows and macOS is still being tried.** DOSBox-X is the
+  default engine, and on Windows it comes with the mod. It has been played on
+  Linux; on Windows the game starts under it with its music, and a fuller
+  play there is under way; on macOS it hasn't been run yet ([what has been tried](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
+  If the game won't start or misbehaves there, choose **GOG's DOSBox 0.74** in
+  the Options tab's **Engine** section and tell us what happened.
 
 ### Crash, freeze and item reports
 

@@ -143,6 +143,20 @@ class KitGearTests(test_ravfirstweapon.FillTests):
         self.assertEqual((self.item(0), self.plus(0)), ((self.plain_of("dagger")[0x0A], right), 0))
         self.assertIn("a plain dagger", out[0])
 
+    def test_spellarcher_fine_bow(self):
+        """A half-elf fighter/preserver Spellarcher's bow is made the Fine Bow (ravager.FINE_BOW_NAME), once."""
+        from dsloader import kits, ravager, weaponchoice
+        self.character((FIGHTER, PRESERVER, 0), ["bow"], race=4)
+        self.mem[self.SHEETS + kitpages.KIT_BYTE] = 1
+        self.assertEqual(kitpages.kit_ids(bytes(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])), [kits.SPELLARCHER])
+        bow = bytearray(self.plain_of("long sword"))
+        struct.pack_into("<H", bow, game.ITEM_TYPE, 18)  # (the sequel's bow)
+        self.put(bytes(bow), weaponchoice.MISSILE_SLOT)
+        out = K.kit_gear(self.gd)
+        self.assertEqual(struct.unpack_from("<H", self.mem, self.ITEMS + game.ITEM_NAME)[0], ravager.FINE_BOW_NAME)
+        self.assertIn("Fine Bow (+1 to hit)", out[-1])
+        self.assertEqual(K.kit_gear(self.gd), [])
+
     def test_no_kit_or_kits_off_nothing(self):
         right, left = self.kit(FIGHTER, 0)
         self.put(self.the("long sword").record, right)

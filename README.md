@@ -3,12 +3,15 @@
 **[Read the Obsidian Edition manual](https://daaki85.github.io/darksun-obsidian-edition/)**
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
-party's gear drawn on the map, and every roll shown as it happens. You start
+in DOSBox (DOSBox-X, which comes with the mod on Windows, or GOG's own): rules
+closer to AD&D, kits, new spells, items and people, the party dressed for its classes and its gear
+drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
 with your options and keeps the full dice log while you play. Most of it is
 always on; the new content and a few rules have a switch on the Loader's Options
 tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
+If you have **Wake of the Ravager** too, the Loader starts the sequel with most of the mod, and
+your party can go on into it ([Wake of the Ravager](obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 
 ![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
 
@@ -86,7 +89,8 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
   half-elves' Spellarcher, Shadowblade, Military Scout, Wilderness Avenger and Rescuer),
   where the mod's rule changes and its kits come from; Baldur's Gate, for keeping a
   creation roll (STORE and RECALL) and Charisma's shop prices.
-- **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
+- **Tools:** [DOSBox](https://www.dosbox.com/) and [DOSBox-X](https://dosbox-x.com) (which comes with the mod on
+  Windows, under the GNU GPL, version 2), [NASM](https://www.nasm.us/),
   [Python](https://www.python.org/) and
   [Unicorn](https://www.unicorn-engine.org/) (the CPU emulator the helper's
   tests run in); the web pages' fonts, Marcellus SC, Alegreya Sans and IBM Plex

@@ -132,6 +132,10 @@ Run these in order, from `playtest/`, at the start of every test and again after
      segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
      block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data
      at the helper's segment reads stale bytes. `ghostchk.py` shows the see-through block is there.
+   - For a DSCLOG2 change (Wake of the Ravager), **`python3 ravtail.py`** with the sequel running: the
+     helper's tail where its header says (+1834 the segment + TAIL_PARAS), its tables as built, and what
+     the Loader has written in its buffers (the USE screen's lines, the item names, the labels)
+     ([DSCLOG2's segment, tail and install](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclog2s-segment-tail-and-install)).
    - For a script change, decode the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF
      python3 dec.py SCRIPT LO HI`) and check the change is there before trusting anything seen in
      play. `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
@@ -443,7 +447,7 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
 
 ## A game in DOSBox-X
 
-The Options tab's other engine (`dsloader/dosboxx.py`; logs/2026-11-18-dosbox-x.md, the
+The Options tab's DOSBox-X engine, the default (`dsloader/dosboxx.py`; logs/2026-11-18-dosbox-x.md, the
 experiment, and logs/2026-11-19-dosbox-x-engine.md, the engine as built). It is always **a game
 of its own beside the shared one**: its own display and work folder, never `:55` or
 `/tmp/playtest`. `PT_DISPLAY` names the display for every tool (`env.sh`, `paths.py`; default
@@ -769,6 +773,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
   rolls a new character).
+- **The figure at the top** wears the class's outfit (logs/2026-11-27-creation-figure-outfits.md):
+  crop a shot at `60x45+130+12` and scale it 400% to see it; it changes at each class, race or
+  portrait click. Read the game's blob of the screen's figures with `creationfigure.Figures(gd)`
+  ([RESEARCH.md](RESEARCH.md#creation-and-levels)).
 - **The classes**: click a name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver
   45, psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
   chosen.
@@ -794,7 +802,11 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  19504/19505 the game's own: no KITS button), and its hit points with their least and most and its PSP
+  (a Battle Mage's, Arcanist's or Mind Warrior's rolled again as the kit is chosen:
+  logs/2026-11-26-ravager-kit-psp-hd.md, step 3). A new character there is 7th level (a preserver with
+  CON 18: 21 to 42 hit points). A member's menu (a right click on its roster portrait) has EDIT at
+  (110,57) for slot 1 and DROP 10 below: a click a little low drops it (CANCEL at 110,82). **STORE and RECALL** in the sequel (2026-11-25,
   logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
   (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
   starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
@@ -1018,6 +1030,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    **`fountain-user`'s ambush needs Pehtucl's speech clicked away first** (2026-11-26): loaded, the
    speech box is up with `fight_on` 0 and fightout.sh says NO FIGHT ON; `msgbox.sh` only reports the
    box. Five clicks on it (`click.py 160 30 left`, 3 s apart) start the fight (`fight_on 1`).
+   **The sequel's ravclick.py coordinates in the 640x480 window** (2026-11-27): the game's x is the screen's / 2,
+   its y the screen's / 2.4 (USE's spell icons at y 58, the portraits at 47/98, 53/112). A killed creature
+   leaves the combatants' table at once: a watcher of that table misses its last hit points.
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory
@@ -1231,6 +1246,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 
 ### An archer's shots
 
+- **A Computer Control archer in Wake of the Ravager shoots only when the bow outclasses its melee**
+  (logs/2026-11-26-ravager-poison-arrows.md): with a short sword in hand, or with it put in the pack in
+  memory (its readied list is the fight's start's), it closes in and strikes; with its bow +15 (`ravitems.py N
+  --bow15`, a test edit, never saved) it shoots every turn. `--fine` names its bows the Fine Bow.
 - **An archer's shots and its turn** (logs/2026-11-14-quiver-turn.md): `shotinfo.py [MEMBER]` lists
   the foes on the screen with their places (click about 10 pixels above the feet in attack mode);
   `turnwatch.py MEMBER SECONDS`, started in the background just before the click, prints each
@@ -1345,6 +1364,12 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
   230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
   Hover an icon for its name in the bar at the bottom (y 182-194).
+  In Wake of the Ravager (logs/2026-11-26-ravager-kit-casting.md) the same five a row at x 175, 197, 220,
+  242, 262 and y 60, 79, 98 (game pixels); a quick hover sweep names only the first three of a row (the
+  rest show "N LEVEL N SPELLS TO CAST"): a right-click on an icon shows its description with the name, a
+  left-click closes it. A spell for a party member is picked up and dropped on the member's **portrait** in
+  the USE screen (`ravfight.py cast ... OBJECT` with a member leaves it on the pointer). To reach a member's
+  next turn in the Tyr ambush let the others attack (`ravfight.py attack`): ending every turn with Q lost it.
 - **The LEVEL button skips levels with nothing known** (or no class slot, or past the caster level's
   cap); the USE screen opens on the kind with slots (PSIONIC when a member has no wizard or priest
   slots), the kind button (CLERIC/MAGE) at 150,171: Lex at preserver 10 with only 3rd-level spells
@@ -1447,7 +1472,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   Burning Hands button); a slow press makes one arrow ("makes one of the shocking arrows in the
   pack (1 of 24 now)") and **closes the screen** (an Escape after it opens EXIT: SAVE GAME?). With
   wooden arrows in the quiver the new stack goes to the pack: swap them in the inventory (quiver
-  66,26, a backpack cell).
+  66,26, a backpack cell). **In the sequel** the same buttons and places (RESEARCH.md's spell arrows made in
+  the sequel: the party to ADD again at every start, the way out to a fight, the quiver).
 - **A spell's description box**: U, a member's portrait (Cermak 66,108), then right-click a spell's
   icon (from 177,59, about 14 apart); in a fight the same on the USE screen (Fire Shield's and Cat's
   Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or `spellsetup.py 0=10 44` first. Seven
@@ -1473,6 +1499,16 @@ the game refuses a member as a power's target; make the target's side byte (crea
 Draxan's, for the click, and both members' if two stand on the spot; put it back after. A failed
 power check costs 5 PSP and leaves no dice log line. `ravkits.py power MEMBER POWER` gives a member
 a power for a test (PSP 200), `ravkits.py blast` reads the blast's counters.
+
+**Aiming a spell in Wake of the Ravager's fight** (logs/2026-11-27-ravager-shinobi-spells.md): with the
+spell pointer up, a party member under it turns yellow, and a click there says INVALID TARGET. A foe shows
+a red edge and the pointer becomes the spell's own icon: press then. `ravfight.py state` gives the places
+(a figure's body about 12 right and 18 down of its object), but in ravhold.sh's bunched party the Draxans
+stand behind the members (one at game 164,86 there). After the cast the pointer stays up on the
+caster's turn: a right-click on bare floor drops it. In a fight USE serves only the member whose turn
+it is: another's portrait says ONLY ACTIVE CHAR CAN CAST. So close USE with **one** Escape and wait
+for that member's turn. A second Escape, with nothing open, brought EXIT, and the next keys
+(ravfight.py's Q and E) quit the game.
 
 **Hit points raised for a test, then a level-up** (same log): the level's hit points are worked
 from the edited ones and can come out negative. Raise them after a level-up, not before.
@@ -1543,9 +1579,16 @@ For an outfit review with the loader detached, stage the walking and fighting ch
     finds the window: its title, "Dark Sun Obsidian Edition Loader ..."). The Options tab at
     (1061,132); a section's header toggles it (Rule changes at 720,260 with all closed), or
     settings.json's `options_open` (a list of the sections' keys: `in_game`, `rules`, `custom`,
-    `new_content`, `speed`, `ravager`, `saves`) opens them as the window starts; the picture is x
+    `new_content`, `engine`, `speed`, `picture`, `ravager`, `saves`) opens them as the window starts; the picture is x
     608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16; with every section open
     and the fewer switches, 706x1536 on a 1400x2400 screen, 2026-11-18), saved as a 256-colour PNG.
+  - Retaken 2026-11-27 (the docs audit), no game needed: the Loader alone, `python3.12 -m dsloader
+    view` (the container's python3 has no tkinter) from an export of the folder at a neutral path
+    (`git archive HEAD:obsidian-edition | tar -x -C /opt/obsidian-edition`: the Engine section prints
+    the program's path), with a stub `dosbox-x/dosbox-x` there that answers `-version` with
+    `DOSBox-X version 2025.12.01`, so the Engine section shows the default as a player has it, and
+    `options_open` with `engine` and `picture` too (nine sections). The Options tab was at
+    (1116,132) by then (the Journal tab came before it); the picture 706x2619, y 116 to 2735.
 - **`docs/dicelog-readable.png`** (logs/2026-11-19-final-audit-fixes.md): the Loader's window
   attached to a game the kit started, so the kit's loops still run. Xvfb `:55` at 1700x900 (start it
   by hand before `loadsave.sh`: start.sh only starts one when none runs), DOSBox at 0,0 and the

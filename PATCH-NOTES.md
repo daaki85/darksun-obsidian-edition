@@ -18,7 +18,8 @@ Each release also has these notes as a web page, [`patch-notes.html`](https://gi
 - **The party as it is dressed.** The figures show the gear they wear, magic gear glows on them, and elves have pointed ears.
 - **Quicker play.** Keys to choose a target, loot a body and sell plain gear, quick saves and autosaves, 40 save slots, a faster default speed, and no copy protection.
 - **Bugs fixed.** The main fixes are under [Bug Fixes](#bug-fixes); every one, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
-- **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
+- **Wake of the Ravager too.** The sequel starts from the Loader with most of the mod, and your party can go on into it ([Wake of the Ravager](#wake-of-the-ravager)).
+- **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. Shattered Lands' own files are never touched, and saves made with the original game load; Wake of the Ravager's saves are converted for the mod, a copy of each kept (see [Your Saved Games](#your-saved-games)).
 
 Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong against its own manual or AD&D: these are always on, with no switch. **[Changed]** and **[New]** are the mod's own choices. Every change is told in full in [Features and rules](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md), which the links below go to.
 
@@ -41,6 +42,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 ## Combat
 
 - **[New]** **Weapon specialization**: a fighter specializes in one weapon spec (+1 to hit, +2 damage, 3/2 attacks), with mastery at 5th level and grand mastery at 9th; gladiators take two, then more; rangers and three kits gain expertise ([weapon specialization](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#weapon-specialization)).
+- **[New]** **Twenty-two weapon specs**: six more for the weapons taken from Wake of the Ravager (two-handed sword, lotulis, double spear, trikal, javelin, darts), on a weapon window of four rows; a specialist throws the javelin and darts faster ([the twenty-two weapon specs](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/WEAPON-SPECS.md#the-twenty-two-weapon-specs)).
 - **[Fixed]** Warriors attack at AD&D's plain rate outside their specializations *(was 3/2 with any weapon)*; specialists shoot missiles faster; the weapons spells make count as their weapon.
 - **[Changed]** Every thri-kreen throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate)*.
 - **[Fixed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)* ([spell saves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#spells-saved-against-with-the-spell-save)).
@@ -58,6 +60,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Changed]** The pick is the footman's pick, 1d6+1 (2d4 large), and the axe the battle axe, 1d10 large *(was the horseman's pick, and an axe 1d8 against any size)*.
 - **[New]** **Weapon traits**: cahulaks strike once more a round and can tangle a foe ([cahulaks](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#cahulaks)); the staff sling throws stinkpots that nauseate ([stinkpots](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#staff-sling-stinkpots)) *(was a plain 1d4 shot)*.
 - **[New]** **Polearm reach** (with Weapon traits): a polearm held alone strikes a foe two squares away, for the party and its foes alike ([polearm reach](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#polearm-reach)).
+- **[New]** **The sequel's weapon traits** (with Weapon traits): the lotulis' and double spear's last swing of a round strikes a second foe beside the wielder, and a trikal hit can trip a man-sized foe, which loses its next turn; the trikal reaches two squares as a polearm does ([lotulis and double spear](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#lotulis-and-double-spear), [trikal](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#trikal)).
 
 ## Classes and Kits
 
@@ -118,6 +121,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** Magic armour and worn items: Bracers of Defense, the Ashen and Veiled Robes, the Warden's Plate, Inixhide, rings and a cloak of protection, Elvenkind cloak and boots, Boots of Speed, Arrowbane, the Sunking Crown, two girdles, an Amulet of Magic Resistance and two shields.
 - **[New]** Other magic: a Tome of Understanding, Kalzith's six scrolls, defilers' scrolls and a Spellarcher's spell arrows ([new items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#new-items)).
 - **[New]** The plain weapons the game never had, sold by merchants: short swords, axes, great axes, daggers, maces, a metal pick and polearm, metal and obsidian cahulaks; and a Spellarcher's Fine Bow, +1 to hit but not magic.
+- **[New]** **Six of Wake of the Ravager's weapons** the game has none of: a two-handed sword, the lotulis, the double spear and trikal (gladiators only), the javelin and darts, sold in Teaquetzl and Kel's caravan and carried by people of the like; metal and obsidian ones, a bone great sword, and magic ones along the way, from the Double Spear +1 to the Great Sword +3 ([weapons](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md#weapons)). The sequel's net is left out.
 - **[Changed]** The game's bone scale armour set is complete, and its unplaced leather helm is worn by Kurzak and Scar.
 
 ## World
@@ -136,6 +140,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, walking and fighting ([what the party wears](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#what-the-party-wears)).
+- **[New]** **Class outfits**: each party member is dressed for their class before any gear goes on, the mage in a plum mantle, the thief hooded, the psionicist in teal, and every other race in an outfit for its whole class combination (thri-kreen keep the game's figure) ([class outfits](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#what-the-party-wears)).
 - **[New]** Magic gear glows on the figures, in the colour nearest the item's icon, and twenty of the game's still magic icons shimmer ([icons](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#magic-items-icons)).
 - **[New]** Elves have pointed ears, half-elves no longer look like humans, and hair greys with age ([elves and half-elves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#elves-and-half-elves)).
 - **[New]** Every figure casts a soft shadow, walkers kick up dust, and the hidden and invisible are drawn half see-through ([shadows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#shadows)).
@@ -169,6 +174,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **The Journal tab**: everything said and every reward, by day and area, kept on disk and following the save you load; and **Quests**, open and finished, read from the game's own flags ([the Journal tab](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-journal-tab)).
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F).
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, where it is installed ([other ways to start](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#dark-sun-recompiled)).
+- **[New]** **Play Shattered Lands** and **Play Wake of the Ravager** at the top of the window start either game with the mod, and **Take the party to Wake of the Ravager...** carries a save's party across ([Wake of the Ravager](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 - **[New]** **Options**: switches for the new content and a few rules (hit dice, half-giants' weapons, helms, kits, starting gear), the combat log's level and the red ring, all on by default, and **Restore defaults** sets them back; the rest of the mod is always on.
 - **[New]** **Accessibility**: text up to 2.5 times bigger, every control from the keyboard, 4.5:1 contrast, logs as text ([accessibility](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#accessibility)).
 - **[New]** **The manual in the download**, as web pages that link to each other; the Loader's **Help** button opens it.
@@ -176,6 +182,22 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Fixed]** On Linux, the Loader's window kept saying "Connected to the game" after a game it hadn't started was closed, with an error in the party table: it now says the game has ended.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
+
+## Wake of the Ravager
+
+The sequel, started from the Loader when it is installed (GOG sells it with Shattered Lands), has most of the mod too ([everything ported](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)); what it lacks is on [the kits page](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md) and [the game's bugs](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md#in-wake-of-the-ravager).
+
+- **[New]** **Your party goes on**: a Shattered Lands save's party comes across with every item and its effects, kits, weapon specs, spells and ages, after 3 to 12 months between the games ([taking the party](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#taking-the-party-to-wake-of-the-ravager)).
+- **[New]** The mod's rules, screens and keys in the sequel: the dice log and combat log, weapon specialization in all twenty-two specs, the kits, AD&D's thieves, stealth and picking pockets, two weapons, Tab and Enter, quick saves and autosaves, looting and selling keys, STORE and RECALL, and the Loader's Dialogue and Journal tabs.
+- **[Changed]** **Levels to 30th**: a level cap of **5,625,000 XP** shared between a character's classes *(was a stop at 15th)*, with AD&D's tables past the sequel's 20th; most characters of three classes reach 15th, a fighter alone 30th ([the levels](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/PLAYER-GUIDE.md#in-wake-of-the-ravager)).
+- **[New]** **Kits and weapon specs past 13th level**: a gladiator picks a weapon spec more every 4 levels past 9th, a fighter a second at 13th that goes on to grand mastery, and the kits' tables go on ([past 13th level](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/WEAPON-SPECS.md#past-13th-level)).
+- **[New]** The six new wizard spells, learnt and cast as in Shattered Lands, their spellbooks sold by Notaku in Tyr.
+- **[New]** Starting gear fitted to each class and kit, a warrior's weapon a +1 of its first weapon spec, and the sequel's own party fitted to the rules.
+- **[New]** Shadows, dust, see-through figures and shining magic items, as in Shattered Lands.
+- **[New]** **The kits, nearly all whole**: their spells and powers too (casting levels, cures, the spells each knows, PSP costs, hit dice), the Shinobi's own wizard spells, the Poisoner's poison on each hand's first hit, and the Spellarcher's spell arrows made on the USE screen (with Shattered Lands installed too, for their pictures); the Scholar's extra spells still to come ([which kits work there](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md#in-wake-of-the-ravager)).
+- **[New]** **Weapon traits** there too: the lotulis's and double spear's second foe, the trikal's trip and its reach of two squares; the dice log says when an effect starts and ends, PSP spent and regained, and an ability score changing; a lock a thief failed stays shut to it until it gains a level.
+- **[Changed]** **The sequel's roster and saves are converted** for the mod at each start from the Loader, each file kept first as `NAME.42H`; converted, they load only from the Loader until turned back ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)).
+- **[Fixed]** The sequel's items weigh what they do in Shattered Lands *(71 of its 102 kinds weighed nothing)*, so two heavy weapons can't be held together and pockets go by weight.
 
 ## Bug Fixes
 
@@ -233,5 +255,7 @@ The main fixes; every bug of the original game the mod mends, with what the game
 **You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save.
 
 **A save isn't for an older version** where a release changed what a save holds: 2.13.0, 2.13.2, 2.14.0, 2.15.0 and 2.18.0 did, so a save made with one of them or later doesn't load in the versions before it. Older saves load in newer versions as they are.
+
+**Wake of the Ravager's saves are converted.** Each start of the sequel from the Loader makes its roster and saves hold the Loader's longer character sheet, in the sequel's folder, keeping each file first as `NAME.42H` (a later conversion of the same file replaces that copy). The sequel started by itself can't read them; to play it without the Loader, or before uninstalling, turn them back with the Loader ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#wake-of-the-ravager)).
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. The game's people and chests have the new gear only in areas the save hasn't been to. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits. More in the README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#compatibility-with-older-saves).

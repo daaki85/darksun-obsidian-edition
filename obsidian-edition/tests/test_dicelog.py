@@ -633,6 +633,27 @@ class HelplessTests(unittest.TestCase):
         self.assertEqual(log.hp_changes(1.02), ["  Mountain Stalker now 21 HP (-9)"])
         self.assertEqual(log.hp_changes(1.2 + dicelog.HIT_WAIT), [])  # (no "none of the damage")
 
+    def test_a_kill_off_the_table(self):
+        """A creature killed leaves the fight's table, often before a look saw its last fall: one seen at the
+        last look, gone from the table with its record still its own (the name), is looked at once more and its
+        fall said if it died (the sequel's last blows went unlogged); not if it lives, nor a record reused."""
+        def gone_with(hp, name=None):
+            log = make_game()
+            stalker = CREATURES + STALKER * game.CREATURE_SIZE
+            struct.pack_into("<h", log.guest.mem, stalker, 30)
+            log.hp_changes(0.5)
+            struct.pack_into("<h", log.guest.mem, stalker, hp)
+            if name is not None:
+                log.guest.mem[stalker + game.CREATURE_NAME:stalker + game.CREATURE_NAME + 16] = name.ljust(16, b"\0")
+            table = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+            struct.pack_into("<Bh", log.guest.mem, table + 0x29 * 3, 0, -1)  # (off the table)
+            first = log.hp_changes(1.0)
+            return first, log.hp_changes(1.5)
+        self.assertEqual(gone_with(-3), (["  Mountain Stalker now -3 HP (-33)"], []))  # (said once)
+        self.assertEqual(gone_with(0), (["  Mountain Stalker now 0 HP (-30)"], []))
+        self.assertEqual(gone_with(12), ([], []))  # (alive: gone for another reason)
+        self.assertEqual(gone_with(-3, b"Thug"), ([], []))  # (the record another's)
+
     def test_the_hp_fall_matches(self):
         """A held target's damage, as it is, is what its HP is matched against: no "resisted" note."""
         log = make_game()

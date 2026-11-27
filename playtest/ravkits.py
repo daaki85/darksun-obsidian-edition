@@ -5,7 +5,8 @@
                                                and the classes (1-17, up to 3; the rest 0) if given
   python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...; the two
                                                weapons' two_count, off_count, rg_heavy too; KITS' GEAR's
-                                               kit_refused, kit_allowed, and the classes' restrict_count) and its
+                                               kit_refused, kit_allowed, and the classes' restrict_count; POISON AND
+                                               ARROWS' poison_used, poison_doses, poison_casts, arrow_pluses, fine_hits) and its
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
@@ -17,7 +18,10 @@
   python3 ravkits.py hp MEMBER N               a test edit: the creature's hit points (+0) N, and its sheet's most
   python3 ravkits.py page                      the creation screen's KIT pages (DSCLOG2's KIT PAGE): the sheet being
                                                made (far DS:1429h: race, classes, kit byte), the panel's windows
-                                               (DS:1134h, 1138h: their ids), the pages shown and rows taken
+                                               (DS:1134h, 1138h: their ids), the pages shown and rows taken;
+                                               its hit points (+8: the least and most, DS:42D8h, 42D6h) and PSP
+                                               (+0Ch), the creature's (DS:142Dh), and the creation's kit counters
+                                               (kit_rerolls, cr_stales, cr_psps, kit_hds)
   python3 ravkits.py power MEMBER POWER [BYTE]  a test edit: the member's own byte for psionic power POWER (0-33, the
                                                sequel's spells EBh on: 31 Psionic Blast) at selector 370h (the load +
                                                3E71h):9CDh + member x 22h (SL's 2F0h:77h), BYTE (default 0Ah: bit 1 and
@@ -37,7 +41,8 @@ g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read(
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
             'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos',
-            'kit_refused', 'kit_allowed', 'restrict_count')
+            'kit_refused', 'kit_allowed', 'restrict_count', 'poison_used', 'poison_doses', 'poison_casts',
+            'arrow_pluses', 'fine_hits')
 
 
 def helper():
@@ -127,7 +132,13 @@ elif cmd == 'page':
         o, sg = struct.unpack('<HH', g.read(ds * 16 + at, 4))
         print(name, 'none' if not (o or sg) else 'window %d' % struct.unpack('<H', g.read(sg * 16 + o + 8, 2))[0])
     print('marks: disciplines %#x spheres %#x' % struct.unpack('<HH', g.read(ds * 16 + 0x42C0, 4)))
+    co, cs = struct.unpack('<HH', g.read(ds * 16 + 0x142D, 4))
+    print('hit points %d (least %d, most %d) PSP %d; the creature %d, %d' % (
+        struct.unpack_from('<H', s, 8) + struct.unpack('<HH', g.read(ds * 16 + 0x42D8, 2) + g.read(ds * 16 + 0x42D6, 2))
+        + struct.unpack_from('<H', s, 0x0C) + struct.unpack('<hh', g.read(cs * 16 + co, 4))))
     base, sym = helper()
+    print(' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0])
+                   for n in ('kit_rerolls', 'cr_stales', 'cr_psps', 'kit_hds') if n in sym))
     print('rules_hi %#06x' % struct.unpack('<H', g.read(base + sym['hdr'] + 270, 2)),
           ' '.join('%s=%d' % (n, struct.unpack('<H', g.read(base + sym[n], 2))[0]) for n in ('kit_pages_shown', 'kit_rows_taken', 'dual_asks', 'dual_kits')),
           'seen %08x keep %d first %d' % (struct.unpack('<I', g.read(base + sym['wp_classes_seen'], 4))[0],

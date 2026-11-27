@@ -195,7 +195,7 @@ Started from the Loader (**Play Wake of the Ravager**), the sequel runs a patche
 program with the fixes below. Its own story and scripts aren't Shattered Lands', so the fixes under
 [People and quests](#people-and-quests), Alagorn's stories and the game's own items (Sling +1, Great
 Axe +3, Quicksilver Glove) are Shattered Lands' alone; those items come across mended when [the
-party is taken to the sequel](FEATURES.md#taking-the-party-to-wake-of-the-ravager). How the port is
+party is taken to the sequel](RAVAGER.md#taking-the-party-to-wake-of-the-ravager). How the port is
 built, fix by fix: [the port
 plan](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/wake-of-the-ravager-port-plan.md).
 
@@ -209,15 +209,15 @@ to be read for it.
 | Bug | In Wake of the Ravager |
 |---|---|
 | **Cause Serious and Critical Wounds** | Fixed there too |
-| **Slay Living**'s description | Not checked yet |
-| A character's **most PSP** | Not checked yet |
+| **Slay Living**'s description | Fixed there too (the sequel's record is the same); not yet seen in play |
+| A character's **most PSP** | Fixed there too (played: at the ambush's level ups each member's own WIS counted, not the creation screen's) |
 | **Negative Plane Protection** | Fixed there too (the save as against paralysis, poison and death); not yet seen in play |
 | **Scare**'s save | Fixed there too |
 | **"Can't save"** | Fixed there too (played) |
 | **Saves that stop improving** | Fixed there too: the sequel held its saves at the table's last row, a bug of its own (below) |
 | **A psionicist's saves** | Fixed there too: Dark Sun's psionicists' table in both games |
 | **Cloak of Bravery** | Fixed there too |
-| **Mirror Image** | Fixed there too (played); Reflected Image comes with the sequel's new spells, still to be merged |
+| **Mirror Image** | Fixed there too (played), and Reflected Image's half the time with the sequel's [new spells](RAVAGER.md) |
 | **Armor** | Fixed there too (played) |
 | **Share Strength** | Fixed there too |
 | **Dispel Magic** | Not needed: SSI mended it in the sequel itself |
@@ -225,34 +225,34 @@ to be read for it.
 | **Bless** and **Aid** | Fixed there too; not yet seen in play |
 | **Acid Arrow** | Fixed there too (the burns played) |
 | **Psionic Blast** on a party member | Fixed there too (played) |
-| **Walls** cast by monsters | Not checked yet |
-| A **berserk** or **confused** party member | Not checked yet |
+| **Walls** cast by monsters | Fixed there too; not yet seen in play |
+| A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: fixed there too (the sequel's end had no case for it; played: a Draxan made berserk by Charm Mammal had its own side kept and given back as it ended) |
 | **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
 | An archer whose **quiver runs dry** | Not yet: the sequel's arrows are counted by other code, still to be found |
-| A **thri-kreen's claws and bite** | Not checked yet |
+| A **thri-kreen's claws and bite** | Fixed there too (played: Thy'rokh's bite in the ambush) |
 | The **fire elementals** | Not needed as such: the sequel's monsters have resistances of their own |
 | The game's **people's weapons and armour** | Not needed: the sequel puts them on as they come |
 | **Random monsters** | Fixed there too |
 | A fight's **music** | Not yet: the sequel's region levels are read by other code, still to be found (its music is the CD's) |
 | **Resting while poisoned** | Fixed there too (played) |
-| **DELETE** in the roster | Not checked yet |
+| **DELETE** in the roster | Fixed there too; not yet seen in play (it needs more than 10 characters) |
 | The **creation screen's least scores** | Not yet: the sequel keeps the game's (the dice log says so) |
 | **XP for high prime requisites** | Not yet |
 | A **New** character's thief skills | Not yet (12 of the 24 tests found; it matters only before the game starts) |
 | **Thief skills**' equipment penalty | Fixed there too |
 | A thief skill rolled **for the whole party** | Fixed there too |
-| Items that raise or lower an **ability score** | Not checked yet |
-| The **gladiator's armour optimisation** | Not checked yet |
-| The **air cleric's daggers** | Not checked yet |
+| Items that raise or lower an **ability score** | Not needed: the sequel counts only items worn (played: a WIS item in the pack gave nothing, worn it gave +2) |
+| The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
+| The **air cleric's daggers** | Fixed there too |
 | **View Character's DAM line** with a weaker material | Not yet |
 | The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
-| An archer's **pointer** after a shot | Not checked yet |
-| A magic item's power on the **Effects screen** | Not checked yet |
+| An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
+| A magic item's power on the **Effects screen** | Not yet: the charges on the Effects screen are the mod's own lines, not yet in the sequel; the fix comes with them |
 | A click on a spell's icon on the **Effects screen** ending the spell | Fixed there too (played) |
-| **CHOOSE A SPELL**'s icons with more than 15 spells | Not checked yet |
+| **CHOOSE A SPELL**'s icons with more than 15 spells | Fixed there too (played: 17 icons in rows of six, centred) |
 | **Graphics disappearing in a busy area** | Fixed there too (played): SSI's note 2712 was written for this game |
-| A magic item's **glow in a shop** | Not yet: comes with the sequel's graphics, still to be merged |
+| A magic item's **glow in a shop** | Fixed there too |
 
 ### The sequel's own bugs
 
@@ -262,9 +262,10 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 |---|---|---|
 | A new character's **hit points** | The creation screen rolled the hit dice, but the most hit points weren't worked out again: a new 7th-level fighter had 7/7 | The most hit points are the dice rolled plus CON's bonus a level, as Shattered Lands works them out |
 | A new character's **weapon hand** | The starting gear put a fighter's +1 long sword (and a cleric's, druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the weapon specs, and a fighter's shield in the right | The weapon in the weapon hand and the shield in the left |
-| The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](FEATURES.md#wake-of-the-ravager)) |
+| The **message box** (a scroll's YOU LEARN THE SPELL, a shop's I COULDN'T SELL THAT) | Never on screen: drawn and gone at once | Stays for the time the game's options set, as in Shattered Lands ([the sequel's messages](RAVAGER.md)) |
 | A **worn item's spell** | Never ended when the item came off: the test whether the item has a spell compared unsigned, so the spell's removal was skipped for every item | Ends as the item comes off, as in Shattered Lands |
-| **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](FEATURES.md#wake-of-the-ravager)) |
+| **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](RAVAGER.md)) |
+| Twelve of the sequel's **magic items' icons** (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun Stone, the Necklace and the Rod) | Never shone, as its other magic items do | Shine as the others ([magic items' icons](FEATURES.md#magic-items-icons)) |
 | **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
 
 ## Saved games

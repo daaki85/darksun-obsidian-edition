@@ -25,7 +25,7 @@ Each loop plays all 29 poses with a 3× view and a game-size copy. Front, back a
 
 The gallery uses both versions of the Loader’s picture builder and the original game palette. The animated color bands use RGB samples and cycling intervals measured in the Slave Pens. For the full outfit audit and individual equipment slots, see [armor dye measurements](armor-dyes.md) and [the three Warden’s Plate pieces](fitted-armor-slots.gif). The [named robe comparison](named-robes.md) shows the separate stitching on the Ashen and Veiled robes.
 
-The half-giant Psionicist and human Priest are also shown in profile on the slave-pen floor. Each DOSBox session loaded a prepared copy of the corresponding equipped picture. [Compare the game captures](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-soft-armor-dosbox.png)
+The half-giant Psionicist and human Priest are also shown in profile on the slave-pen floor. Each DOSBox session loaded a prepared copy of the corresponding equipped picture. [Compare the game captures](../../../playtest/logs/img/2026-11-26-soft-armor-dosbox.png)
 
 [Archived midtone comparison and plate approval](plate-midtone-study.md)
 

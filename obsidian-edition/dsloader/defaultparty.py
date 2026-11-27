@@ -316,7 +316,7 @@ def rav_ready(gd: GameData, rules: int) -> List[str]:
             gd.guest.write(at + game.SPEC_SLOTS, new[:3])
             out.append(f"{name} specializes in the {' and the '.join(want.kinds)}.")
         byte = sheet[kitpages.KIT_BYTE]
-        if rules & game.RULE_KITS and byte in (0, kits.KIT_OPEN):
+        if rules & game.RULE_KITS and (byte == 0 or game.kit_open(sheet)):
             byte = 0
             if name == "Terrannus":
                 byte = kitpages.kit_byte(sheet, 0, kitpages.KITS[1].index("Crusader") + 1)

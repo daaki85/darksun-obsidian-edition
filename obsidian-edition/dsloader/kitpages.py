@@ -132,7 +132,7 @@ def kit_at(sheet: bytes, place: int) -> int:
     or 0, as DSCLOG's KIT_AT: KIT_BYTE has two bits for each class (0 none, 1-3), the first class's
     lowest, each class taken after (DUAL) the next two. (The rule is the caller's to weigh.)"""
     oldest = kit_place(sheet)
-    if oldest is None or not 0 <= place <= oldest or sheet[KIT_BYTE] == 0xFF:  # (0xFF: KIT_OPEN)
+    if oldest is None or not 0 <= place <= oldest or game.kit_open(sheet):
         return 0
     kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[game.SHEET_CLASSES + place])
     if cls in KITS and kit > len(KITS[cls]):
@@ -194,7 +194,7 @@ def kit_names(sheet: bytes) -> List[str]:
 def kit_byte(sheet: bytes, place: int, kit: int) -> int:
     """KIT_BYTE with the kit (0-3, of its class's three) of the class at PLACE set to KIT."""
     oldest = kit_place(sheet)
-    byte = 0 if sheet[KIT_BYTE] == 0xFF else sheet[KIT_BYTE]
+    byte = 0 if game.kit_open(sheet) else sheet[KIT_BYTE]
     shift = 2 * (oldest - place)
     return byte & ~(3 << shift) & 0xFF | kit << shift
 

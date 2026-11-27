@@ -243,7 +243,7 @@ a fight's movement is the character's Move alone. Wake of the Ravager left the r
 
 **In Wake of the Ravager** the routines are all there, but SSI left 71 of its 102 item types weighing
 0, so its long swords, armour and shields weighed nothing. With the Loader they weigh as Shattered
-Lands' (FEATURES.md, [Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
+Lands' ([Wake of the Ravager](RAVAGER.md)).
 
 ## Attacks from behind and backstabs
 

@@ -15,6 +15,21 @@ from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, r
 WOTR = os.environ.get("DSUN_WOTR")
 
 
+def helper_parts(exe):
+    """DSCLOG2.EXE's image (past its 32-byte EXE header), its header's place there, and where its tail and
+    its install are in the image (the header's +1836, TAIL_PARAS; the EXE header's CS, INSTALL_PARAS)."""
+    image = exe[32:]
+    hdr = image.find(b"DSCLOGR1")
+    return image, hdr, struct.unpack_from("<H", image, hdr + 1836)[0] * 16, struct.unpack_from("<H", exe, 0x16)[0] * 16
+
+
+def helper_vectors(exe):
+    """The interrupts DSCLOG2 hooks: ALL_VECTORS (the header's +144, in the install), a byte each."""
+    image, hdr, _, install = helper_parts(exe)
+    table = install + struct.unpack_from("<H", image, hdr + 144)[0]
+    return {image[at] for at in range(table, len(image), 3)}
+
+
 class TableTests(unittest.TestCase):
     def test_patches_reuse_sl_bytes_but_their_own(self):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
@@ -29,10 +44,10 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "arrows_close", "arrows_lit_on", "arrows_lit_off", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "second_foe_back", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
@@ -48,7 +63,12 @@ class TableTests(unittest.TestCase):
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
                             "fig_wide_all", "fig_wide", "fig_keep", "shop_shine",
                             "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
-                            "pp_hand", "shinobi_mage"}
+                            "pp_hand", "shinobi_mage", "psp_use", "psp_can_use", "psp_failed", "psp_defence", "psp_keep",
+                            "psp_can_keep", "hit_die", "hit_gain", "max_psp", "hit_round", "kit_cast_level", "kit_cure", "avenger_cause_area",
+                            "avenger_cause_one",
+                            "cr_die", "cr_psp_wis", "cr_psp", "shinobi_cast_level", "shinobi_level_up", "poison_hit", "arrow_plus",
+                            "lock_site", "shots_left", "roster_delete", "gladiator_armour", "ai_wall", "kreen_claws",
+                            "berserk_add", "berserk_end"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -78,11 +98,10 @@ class TableTests(unittest.TestCase):
         names land at their places (the Short Sword, SL's 144h, at 258)."""
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 "DSCLOG2.EXE"), "rb").read()
-        at = exe.index(b"DSCLOGR1")
-        off, count = struct.unpack_from("<HH", exe, at + ravager.TSR_NAMES_OFF)
-        hdr_off, = struct.unpack_from("<H", exe, at + 20)
+        image, hdr, tail, _ = helper_parts(exe)
+        off, count = struct.unpack_from("<HH", image, hdr + ravager.TSR_NAMES_OFF)
         self.assertEqual(count, ravager.NAMES_ROOM)
-        self.assertEqual(exe[at - hdr_off + off:at - hdr_off + off + count * ravager.NAME_KEPT],
+        self.assertEqual(image[tail + off:tail + off + count * ravager.NAME_KEPT],  # (in the tail)
                          bytes(count * ravager.NAME_KEPT))
         table = ravager.item_names()
         self.assertEqual(ravager.mod_name(npcitems.SHORT_SWORD), 258)
@@ -93,7 +112,7 @@ class TableTests(unittest.TestCase):
     def test_screens_sites(self):
         """The DAM lines, the Effects screen's lines and the Look box's whole description are DSCLOG2's sites
         70-75 (the kits' take 60 up, the kit pages 62-69), each a routine in its SITE_TABLE, and the
-        header's +158 points at LOOK_FULL (700 zeros inside the image)."""
+        header's +158 points at LOOK_FULL (700 zeros in the tail)."""
         from dsloader import dicelog
         sites = {"dam_line": 70, "missile_line": 71, "view_dam": 72, "ef_rows": 73, "ef_click": 74, "unlook": 75}
         for name, number in sites.items():
@@ -105,26 +124,23 @@ class TableTests(unittest.TestCase):
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
-        full = struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
-        self.assertGreater(full, hdr + 268)
+        image, hdr, tail, _ = helper_parts(exe)
+        full = tail + struct.unpack_from("<H", image, hdr + dicelog.TSR_LOOK_FULL_OFF)[0]
+        self.assertGreater(full, tail + 16)
         self.assertEqual(image[full:full + dicelog.LOOK_FULL_SIZE], bytes(dicelog.LOOK_FULL_SIZE))
 
     def test_helper_has_the_use_probes(self):
         """DSCLOG2 hooks the spell slots' two interrupts, and its header's +148 points at SLOTS_TEXT
-        (zeros, four members' worth, inside the image)."""
+        (zeros, four members' worth, in the tail)."""
         from dsloader import dicelog
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
+        image, hdr, tail, _ = helper_parts(exe)
         self.assertEqual(hdr % 16, 0)
-        slots = struct.unpack_from("<H", image, hdr + dicelog.TSR_SLOTS_OFF)[0]
-        self.assertGreater(slots, hdr + 268)
+        slots = tail + struct.unpack_from("<H", image, hdr + dicelog.TSR_SLOTS_OFF)[0]
+        self.assertGreater(slots, tail + 16)
         self.assertEqual(image[slots:slots + 4 * dicelog.SLOTS_SIZE], bytes(4 * dicelog.SLOTS_SIZE))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]  # (ALL_VECTORS)
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_USE, ravager.VEC_WIN} <= vectors)
         self.assertTrue({ravager.VEC_ITEM_BOX, ravager.VEC_CHAR} <= vectors)
         for name, vec in (("use", ravager.VEC_USE), ("window", ravager.VEC_WIN), ("item_box", ravager.VEC_ITEM_BOX), ("inventory", ravager.VEC_CHAR)):
@@ -134,20 +150,19 @@ class TableTests(unittest.TestCase):
     def test_helper_has_the_labels(self):
         """DSCLOG2 hooks the labels' three interrupts (the scroll's segment kept as an immediate for the
         relocation); its header has DSCLOG's DAC offset (+238) and LBL_SLOTS (+1838, zeros, in the
-        image), its +1834 the segment it sets as it loads."""
+        tail), its +1834 the tail's segment, which it sets as it loads."""
         from dsloader import combatlog, labels
         exe = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
                                 ravager.HELPER_EXE), "rb").read()
-        image = exe[32:]
-        hdr = image.find(b"DSCLOGR1")
+        image, hdr, tail, install = helper_parts(exe)
         self.assertGreater(struct.unpack_from("<H", image, hdr + combatlog.TSR_DAC)[0], 0x10)
-        seg, _, off = struct.unpack_from("<HHH", image, hdr + labels.TSR_TAIL_SEG)
-        self.assertEqual(seg, 0)
-        self.assertGreater(off, hdr + 1872)
+        seg, paras, off = struct.unpack_from("<HHH", image, hdr + labels.TSR_TAIL_SEG)
+        self.assertEqual((seg, paras * 16), (0, tail))
+        self.assertGreater(off, 0)
+        off += tail
         self.assertEqual(image[off:off + labels.SLOTS * labels.SIZE], bytes(labels.SLOTS * labels.SIZE))
-        self.assertLessEqual(off + labels.SLOTS * labels.SIZE, len(image))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        self.assertLessEqual(off + labels.SLOTS * labels.SIZE, install)
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_CAST, ravager.VEC_SCROLL, ravager.VEC_TICK} <= vectors)
         by = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(by["spell_cast"].replacement, bytes((0xCD, ravager.VEC_CAST, 0x90)))
@@ -170,8 +185,7 @@ class TableTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", image, hdr + combatlog.TSR_PANEL_SEG)[0], 0)
         self.assertEqual(struct.unpack_from("<HH", image, hdr + combatlog.TSR_PANEL_TOP),
                          (combatlog.PANEL_Y0, combatlog.PANEL_H))
-        table = struct.unpack_from("<H", image, hdr + 144)[0]
-        vectors = {image[table + 3 * n] for n in range(64) if table + 3 * n < len(image)}
+        vectors = helper_vectors(exe)
         self.assertTrue({ravager.VEC_FLIP, ravager.VEC_POINTER} <= vectors)
         by = {p.name: p for p in ravager.PATCHES}
         self.assertEqual(by["panel_flip"].replacement, bytes((0xCD, ravager.VEC_FLIP)) + b"\x90" * 6)
@@ -487,7 +501,8 @@ class GameFileTests(unittest.TestCase):
                              | set(rollstore.rav_chunks(game))  # STORE and RECALL,
                              | set(weaponpages.rav_chunks(game, objects))  # the weapon window,
                              | set(ravspells.chunks(game))  # the new spells,
-                             | {("ICON", icons.PICK_ICON)})  # the Pick Pockets button's purse)
+                             | {("ICON", icons.PICK_ICON)}  # the Pick Pockets button's purse,
+                             | {("ICON", 3050), ("ICON", 3051), ("ICON", 3052)})  # the spell arrows' buttons)
             from dsloader import wotrart
             purse = wotrart.decode_plnr(res[("ICON", icons.PICK_ICON)])
             self.assertEqual(purse, icons.rav_pick_icon(wotrart.decode_plnr(game[("ICON", icons.TURN_EARTH_ICON)])))
@@ -509,7 +524,7 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(ravager.weighted_table(own[ravager.TYPES_CHUNK]))  # (weighed; the daggers the air clerics' too)
+            mended = bytearray(ravager.ranged_table(ravager.weighted_table(own[ravager.TYPES_CHUNK])))  # (weighed, the double spear's range 1; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
@@ -519,7 +534,7 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
             from dsloader import ravshine
             shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
-            weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
+            weighed = ravager.weighted_objects(own, ranges=True)  # (the objects' copies of their types, weighed as ALL 4)
             self.assertTrue(weighed)
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
                              {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)

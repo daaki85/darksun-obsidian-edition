@@ -95,6 +95,33 @@ SLOT_FAR, SLOT_FLAGS, IN_MEMORY = 0x0A, 0x0E, 2
 CHECKED_MOST = 32  # (in-memory pictures the store's place is checked against when found)
 
 
+def handle_pages(gd: GameData, handle_at: int, expected: int) -> Optional[List[int]]:
+    """The pages of the paged memory handle at DS:HANDLE_AT (of EXPECTED size, on the XMS backend:
+    Store), or None."""
+    g, d = gd.guest, gd.ds * 16
+    handle, = struct.unpack("<I", g.read(d + handle_at, 4))
+    first, hid, size = struct.unpack("<HHI", g.read(d + HANDLES + (handle & 0xFFFF) * HANDLE_SIZE, 8))
+    if hid != handle >> 16 or size != expected:
+        return None
+    write, = struct.unpack("<I", g.read(d + BACKEND_WRITE, 4))
+    if (write >> 16, write & 0xFFFF) != (gd.load_seg + XMS_WRITE[0], XMS_WRITE[1]):
+        return None  # (not the XMS backend)
+    blocks = {}
+    for b in range(DIR_COUNT):
+        at = d + DIR_BLOCKS + b * DIR_BLOCK
+        blocks[struct.unpack("<HH", g.read(at + 2, 4))] = at + DIR_ENTRIES
+    pages, link = [], first
+    for _ in range((size + STORE_PAGE - 1) // STORE_PAGE):
+        at = blocks.get(((link >> 12) + 1, (link & 0xFFF) >> 6))
+        if at is None:
+            return None
+        desc, link = struct.unpack("<HH", g.read(at + (link & 0x3F) * 4, 4))
+        if desc >> 12:
+            return None
+        pages.append(desc & 0xFFF)
+    return pages
+
+
 class Store:
     """The game's picture store, read and written where it is (DOSBox's XMS block). Anything not
     as DOSBox has it (another backend, a page not in the cached directory, no picture in memory
@@ -108,28 +135,7 @@ class Store:
         self.pages: List[int] = []
 
     def _pages(self) -> Optional[List[int]]:
-        g, d = self.gd.guest, self.gd.ds * 16
-        handle, = struct.unpack("<I", g.read(d + STORE_HANDLE, 4))
-        first, hid, size = struct.unpack("<HHI", g.read(d + HANDLES + (handle & 0xFFFF) * HANDLE_SIZE, 8))
-        if hid != handle >> 16 or size != STORE_SIZE:
-            return None
-        write, = struct.unpack("<I", g.read(d + BACKEND_WRITE, 4))
-        if (write >> 16, write & 0xFFFF) != (self.gd.load_seg + XMS_WRITE[0], XMS_WRITE[1]):
-            return None  # (not the XMS backend)
-        blocks = {}
-        for b in range(DIR_COUNT):
-            at = d + DIR_BLOCKS + b * DIR_BLOCK
-            blocks[struct.unpack("<HH", g.read(at + 2, 4))] = at + DIR_ENTRIES
-        pages, link = [], first
-        for _ in range((size + STORE_PAGE - 1) // STORE_PAGE):
-            at = blocks.get(((link >> 12) + 1, (link & 0xFFF) >> 6))
-            if at is None:
-                return None
-            desc, link = struct.unpack("<HH", g.read(at + (link & 0x3F) * 4, 4))
-            if desc >> 12:
-                return None
-            pages.append(desc & 0xFFF)
-        return pages
+        return handle_pages(self.gd, STORE_HANDLE, STORE_SIZE)
 
     def locate(self, slots) -> bool:
         """The store's pages and the XMS block's place (found again when the handle or its pages
@@ -310,10 +316,12 @@ class Pictures:
         return model, frames, [None] * len(frames)
 
     def build(self, obj: int, combat: bool, gear: Dict[str, Tuple[int, ...]], armour: Tuple[int, ...],
-              model: Optional[int] = None, figure: Optional[int] = None, stage: int = 0, role: Optional[str] = None) -> bytes:
+              model: Optional[int] = None, figure: Optional[int] = None, stage: int = 0, role: Optional[str] = None,
+              only: Optional[int] = None) -> bytes:
         """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's, in
         FIGURE's looks: a half-elf's are their own, figures.py and halfelf.py; an elf has pointed
-        ears), the hair greyed for age category STAGE (greyhair.py)."""
+        ears), the hair greyed for age category STAGE (greyhair.py). With ONLY, that frame alone
+        (the creation screen's figure: creationfigure.py)."""
         model = self.model(obj) if model is None else model
         figure = obj if figure is None else figure
         fitted = self.supports_outfits(figure, model)
@@ -331,6 +339,8 @@ class Pictures:
             eligible = eligible and role in roles.values()
         costumes = classoutfits.frames(role, combat, layers) if eligible else None
         for f, rows in enumerate(frames):
+            if only is not None and f != only:
+                continue
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
             dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f],
                                costumes[f] if costumes else None, registered=fitted and (own or layers == model))
@@ -347,7 +357,7 @@ class Pictures:
                     if figure == halfelf.WOMAN:  # (the game's woman in her colours: halfelf.recolour's hair)
                         hair |= halfelf._hair(rows)
                 dressed = greyhair.aged(dressed, hair, greyhair.look(model, figure), stage, PAD)
-            out.append(trimmed(dressed, combat))
+            out.append(trimmed(sg.steadied(dressed, rows, PAD), combat))
         return encode_frames(out)
 
     def room(self, obj: int, combat: bool) -> int:

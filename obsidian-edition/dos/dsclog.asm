@@ -22,6 +22,24 @@
 BITS 16
 CPU 386
 %include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
+%macro fig_redraw 0              ; (FIG_WAIT's figure drawn again, in a handler after its PUSHAD, PUSH ES)
+        call ovr_frame          ; (the way back in a frame the overlay manager can fix up)
+        push word [FIG_BACK]
+        push word [FIG_BACK + 2]
+        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT    ; (its box's background put back, as the game does)
+        add sp, 4
+        push dword FIG_AT
+        push dword [0x11A0]
+        game_far FIG_STUB, FIG_DRAW                     ; (and the figure drawn, as after a race's click)
+        add sp, 8
+        pop bp
+        pop ax                  ; (OVR_BACK's: the way back as the overlay manager left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+%endmacro
+
 %macro game_far 2               ; a far call to the game's code: GAME_FAR (FAR_GAME, below)
         push cs
         call far_game
@@ -489,6 +507,9 @@ squares_on dw 0                 ; +1890 the Loader sets 1 to have the squares SQ
                                 ;      the floor (SQUARES; squares.py: where the party member
                                 ;      whose turn it is in a fight can still walk). SQ_MAP is in
                                 ;      DSCLOG's PSP (the 100h bytes before this header), at SQ_MAP
+fig_due    db 0                 ; +1892 DSCLOG sets 1 when the character being made has another class or
+                                ;      figure (FIG_WAIT), the Loader writes its figure in the class's
+                                ;      outfit (creationfigure.py) and clears it
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -9375,7 +9396,9 @@ cr_open:
         push word [cs:cr_ip]
         iret
 ; CR_HP: "add sp,10h" after the hit points are drawn again (63AC3h, a click on them; 63EDAh), their
-; box put back first: the THAC0 drawn again right of them (CR_THAC0_DRAW).
+; box put back first: the THAC0 drawn again right of them (CR_THAC0_DRAW). 63EDAh is also where a new
+; character's class is first shown as the screen opens: the figure is drawn again in the class's
+; outfit (FIG_WAIT).
 cr_hp:
         pop word [cs:cr_ip]
         pop word [cs:cr_cs]
@@ -9390,6 +9413,13 @@ cr_hp:
         push word [cs:cr_fl]
         push word [cs:cr_cs]
         push word [cs:cr_ip]
+        pushad                  ; (the screen opening: its class only now given, after the figure
+        push es                 ;   was drawn, FIG_OPEN; then drawn again in the class's outfit)
+        call fig_wait
+        jz .out
+        fig_redraw
+.out:   pop es
+        popad
         iret
 cr_age_con:
         mov byte [cs:cr_new], 0
@@ -10791,6 +10821,14 @@ probe_wp_shown:
 ; kits, goes back to the disciplines.
 probe_wp_class:
         mov cx, 1
+        pushad
+        push es
+        call fig_wait           ; (another class or figure: the figure drawn again in its outfit)
+        jz .fig_kept
+        fig_redraw
+.fig_kept:
+        pop es
+        popad
         push eax                ; (the classes changed: no kit; the routine runs after every click
         push es                 ;   on the screen)
         push bx
@@ -17494,6 +17532,7 @@ AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMM
 INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 F10_PIN_SITE equ NS_IMAGE + 122  ; 1B86Bh: F10's standing-still test, a pinned member left where it is (F10_PIN)
 SAVE_BASE_SITE equ NS_IMAGE + 123 ; 878F7h: a group's 1st-level save, read at a level up (SAVE_BASE)
+FIG_OPEN_SITE equ NS_IMAGE + 124  ; 65FACh: the creation screen's figure first drawn (FIG_OPEN)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -21083,6 +21122,7 @@ site_tab:
         site INFO_HEAD_SITE, info_head
         site F10_PIN_SITE, f10_pin
         site SAVE_BASE_SITE, save_base
+        site FIG_OPEN_SITE, fig_open
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -22274,6 +22314,71 @@ gear_hold:
         pop bx
         pop ax
 .ret:   ret
+
+; FIG_WAIT: (PROBE_WP_CLASS, after every click on the creation screen; CR_HP, where the screen opening
+; shows a new character's class; FIG_OPEN, before its first drawing) the character being made has
+; another class or figure (its creature's +18h) than when last looked at: with the Loader there (its
+; LOADER_BEAT under LOADER_FRESH old) FIG_DUE set and the Loader's pass waited for (FIG_DUE cleared:
+; the figure's picture in the class's outfit written where the game reads it, creationfigure.py), at
+; most FIG_HOLD_TICKS. ZF clear if it was, for the figure to be drawn again (the game draws it after
+; a click on a race or a portrait, not on a class). DS the game's; EAX, BX, EDX and ES changed.
+FIG_HOLD_TICKS equ 18           ; (about a second, at most: the Loader's pass takes some 50 ms)
+FIG_BACK   equ 0xE8A            ; (DS: the figure's box's saved background, two words, put back by
+FIG_BACK_PUT equ 0x30C3         ;   DROP_SEG:30C3h, as the race's click does: DSUN.EXE E0DFFh)
+FIG_AT     equ 0x00160091       ; (x 91h, y 16h)
+FIG_STUB   equ 0x4239 - 0x4356  ; (the overlay's stub that draws it, less DS: (far creature, x, y))
+FIG_DRAW   equ 0x2A
+fig_seen   dd 0xFFFFFFFF        ; (the classes, the figure in the top byte, as last looked at)
+fig_wait:
+        sti
+        les bx, [WP_CREATION]
+        call sheet_classes
+        les bx, [0x11A0]
+        movzx edx, byte [es:bx + 0x18]
+        shl edx, 24
+        or eax, edx
+        cmp eax, [cs:fig_seen]
+        je .ret                         ; (ZF set: as it was)
+        mov [cs:fig_seen], eax
+        cmp word [cs:loader_beat], 0
+        je .none                        ; (no Loader yet)
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
+        mov ax, bx
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        jae .none                       ; (no Loader: the game's figure, as ever)
+        mov byte [cs:fig_due], 1
+.wait:  cmp byte [cs:fig_due], 0
+        je .done
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, FIG_HOLD_TICKS
+        jb .wait
+.none:  cmp al, al                      ; (ZF set: not drawn again)
+        ret
+.done:  or sp, sp                       ; (ZF clear)
+.ret:   ret
+
+; FIG_OPEN: "push 160091h" (65FACh; 6 bytes: x and y for the figure's drawing, 4239h:2Ah, as the
+; creation screen opens): first the Loader's figure in the class's outfit waited for (FIG_WAIT, the
+; figure looked at anew), so the screen opens with it. DS the game's; all registers kept.
+fig_open:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        pushad
+        push es
+        mov dword [cs:fig_seen], 0xFFFFFFFF
+        call fig_wait
+        pop es
+        popad
+        push dword FIG_AT       ; the replaced instruction
+        push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
 
 ; MYRM_POLEARM: for new member SI, a Myrmidon (its kit on the sheet, LV_SHEETS), the polearm put in
 ; its second weapon spec slot (SPEC_SET slot 1, MYRM_POLEARM + 1) when that is empty and the first

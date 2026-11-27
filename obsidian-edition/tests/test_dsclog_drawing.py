@@ -45,7 +45,9 @@ _built = {}
 
 
 def build(asm=ASM):
-    """DSCLOG built from ASM with a symbol map: (its image, as loaded, and each symbol's offset)."""
+    """DSCLOG built from ASM with a symbol map: (its image, as loaded, and each symbol's offset). DSCLOG2's
+    tail and install (sections of their own, each from 0) have their labels' places in the image: the
+    part's paragraph (TAIL_PARAS, INSTALL_PARAS, in the map too) x 16 + the label's offset."""
     if asm not in _built:
         with tempfile.TemporaryDirectory() as tmp:
             src, out, mp = (os.path.join(tmp, n) for n in ("m.asm", "m.exe", "m.map"))
@@ -63,10 +65,21 @@ def build(asm=ASM):
                 parts = line.split()
                 if len(parts) == 3 and all(c in "0123456789ABCDEF" for c in parts[1]):
                     sym[parts[2]] = int(parts[1], 16)
+            equs = {}
             for line in listing.split("No Section")[1].split("---- Section")[0].splitlines():
                 parts = line.split()  # (the EQUs: the far block's offsets, FAR_*)
-                if len(parts) == 2 and parts[1].startswith("FAR_") and all(c in "0123456789ABCDEF" for c in parts[0]):
-                    sym[parts[1]] = int(parts[0], 16)
+                if len(parts) == 2 and all(c in "0123456789ABCDEF" for c in parts[0]):
+                    equs[parts[1]] = int(parts[0], 16)
+            sym.update({n: v for n, v in equs.items() if n.startswith("FAR_")})
+            for section, paras in (("tail", "TAIL_PARAS"), ("tailz", "TAIL_PARAS"), ("install", "INSTALL_PARAS")):
+                if paras not in equs or "Section %s " % section not in listing:
+                    continue  # (DSCLOG2's other parts: each label at its place in the image, as loaded)
+                sym[paras] = equs[paras]
+                block = listing.split("Section %s " % section)[1].split("---- Section")[0]
+                for line in block.splitlines():
+                    parts = line.split()
+                    if len(parts) == 3 and all(c in "0123456789ABCDEF" for c in parts[1]):
+                        sym.setdefault(parts[2], equs[paras] * 16 + int(parts[1], 16))
         _built[asm] = (exe, sym)
     return _built[asm]
 
