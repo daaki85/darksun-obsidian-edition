@@ -72,12 +72,14 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 
 ## The mod in the sequel
 
+- **[The combat log in the game](FEATURES.md#the-combat-log-in-the-game)**: L on the map shows the dice
+  log's lines over the sequel's map too, as in Shattered Lands.
 - **Kits, weapon specs, spells and the starting age** come across with each character, on its
   character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
   with the kits). The [new wizard spells](FEATURES.md#new-wizard-spells) come across too: a character who knows them
   casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
   or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
-  the sequel's wizards carry one ([the mod's gear](FEATURES.md#magic-weapons-for-every-spec-and-the-mods-gear)). The kits work there as in Shattered Lands, nearly all of them whole: their rules in a
+  the sequel's wizards carry one ([the mod's gear](#the-mods-gear-in-the-sequel)). The kits work there as in Shattered Lands, nearly all of them whole: their rules in a
   fight, spell slots, casting levels, cures, the spells they know, PSP costs, hit dice, and the gear
   each forbids or allows, refused when it is put on or in a hand (a Ravager's shield and bow). The
   Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in
@@ -266,6 +268,45 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
   spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
 
+## The mod's gear in the sequel
+
+Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
+staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
+and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
+daggers, maces, axes, great axes, picks, polearms, cahulaks and the Bone Helm) in the sequel's shops,
+on its people and in its chests. Pictures are Shattered Lands', from your copy; the magic ones have a
+few fire-coloured pixels, which don't shimmer as Shattered Lands' do.
+
+| Item | Where |
+|---|---|
+| Short Sword +1 | Notaku's stall, Tyr |
+| Short Sword +2 | a Draxan in Tyr |
+| Short Sword +3 | a body in the Crypt |
+| Pick +1 | the receptionist who sells picks |
+| Pick +2 | a crate in the third mine level |
+| Pick +3 | the silt giants' leader |
+| Great Axe +1 | a Draxan in Tyr |
+| Great Axe +2 | a Draxan in the Pyramid |
+| Cahulaks +1 | Alhena, the Jann's lands |
+| Cahulaks +2 | the Runner, the Yuan-ti tunnels |
+| Polearm +1 | a guard at the Veiled Alliance's headquarters |
+| Polearm +2 | a Draxan, the third volcano level |
+| Staff Sling +1 | the ranged-weapon stall, Tyr |
+| Staff Sling +2 | Sureshot, in the forest |
+
+The weaponer sells all 13 plain weapons; the armourers the Bone Helm; other stalls a few each. A game
+saved before has them in its shops too: the Loader stocks each seller once, as you meet it, and what you
+buy isn't put back (`dsloader/shopstock.py`); its other people and chests keep what they had. The Bone
+Helm gives AC 1
+with [Helms give AC 1](FEATURES.md#helms-give-ac-1), as in Shattered Lands (a transferred one too). Built by the Loader (`dsloader/ravgear.py`) when the Shattered Lands folder is set.
+
+With the [new wizard spells](FEATURES.md#new-wizard-spells) on, **Notaku** sells a spellbook of each of the six (Cat's
+Grace 6000, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends 3000 each: 3000 a level, the sequel's own
+price), on his list's second and third pages after the Short Sword +1; read from the inventory, a book teaches
+its spell (not in the shop's screen). Three of the sequel's wizards who carry a spellbook carry one more,
+Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
+Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
+
 ## Not in the sequel yet
 
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
@@ -281,6 +322,8 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
   kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
   has.
+- **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down: the sequel's map
+  scrolls only at the screen's edge, as the game has it.
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books
