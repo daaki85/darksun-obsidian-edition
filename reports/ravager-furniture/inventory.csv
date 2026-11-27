@@ -37,7 +37,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 634,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:2
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
-703,"Counters, stalls and attendants",Reviewed at current scale,,032:1 03C:1
+703,"Counters, stalls and attendants",Reviewed beside seated Fletch in the museum and retained at current scale,,032:1 03C:1
 787,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,037:1
 788,"Occupied beds, beds and basins",Reviewed at current scale,alternate-pose-continuity.zip,037:1
 917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
@@ -62,6 +62,17 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1378,Multi-piece environment or scripted fixture,Inspect in scene,,03F:47
 1477,"Seats, loom and restraints",Reviewed at current scale,1477-fletch-chair.zip,03C:1
 1479,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,03C:1
+1501,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
+1502,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
+1503,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1504,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1506,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1507,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1508,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:2
+1509,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1510,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1511,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+1512,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1617,"Seats, loom and restraints",Reviewed at current scale,1617-kovar.zip,043:1
 1716,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
 1717,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
@@ -72,6 +83,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1722,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
 1723,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
 2050,"Tables, counters and benches",Lowered and placements reviewed,,033:2
+2166,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:3
+2167,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
 2220,Barrels and crates,Lowered and placements reviewed,,038:2 045:2
 2221,Barrels and crates,Lowered and placements reviewed,,045:1
 2222,Barrels and crates,Lowered and placements reviewed,,038:1
@@ -88,6 +101,11 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2378,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
 2379,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
 2380,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
+2440,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
+2441,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
+2442,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,0FF:1
+2443,Detached Mosaic bust,Review detached and placed states with museum pedestals,,0FF:1
+2444,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 2479,"Tank, platform and mine openings",Reviewed at current scale,2479-miner.zip,039:2
 2510,Multi-piece environment or scripted fixture,Inspect in scene,,039:2
 2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
@@ -108,9 +126,19 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2674,Freestanding shelves,Lowered and placements reviewed,,036:1
 2675,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
 2676,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
+2692,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:2
+2693,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2694,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2695,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:4
+2696,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2697,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
+2698,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
+2699,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:4
 2701,Multi-piece environment or scripted fixture,Inspect in scene,,03B:1
 2703,"Tables, counters and benches",Lowered and placements reviewed,,033:1
 2704,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:6
+2769,Camp baskets,Lowered and reviewed beside the loom,,03B:1
+2770,Camp baskets,Lowered and reviewed beside the loom,,03B:1
 2783,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2784,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2785,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
@@ -143,8 +171,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3364,Barrels and crates,Lowered and placements reviewed,,03A:1
 3414,Freestanding shelves,Lowered and placements reviewed,,03A:2
 3416,Freestanding shelves,Lowered and placements reviewed,,03A:2
-3442,"Chairs, stools and beds",Review with giant-scale occupants and floor plan,,041:1
-3443,"Chairs, stools and beds",Review with giant-scale occupants and floor plan,,041:1
+3442,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3443,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
 3503,"Tables, counters and benches",Lowered and placements reviewed,,033:2
 3504,"Tables, counters and benches",Lowered and placements reviewed,,032:2
 3505,"Tables, counters and benches",Lowered and placements reviewed,,033:2 045:1
@@ -157,8 +185,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3628,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:5
 3629,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
 3668,"Occupied beds, beds and basins",Reviewed at current scale,3668-sickbed.zip,045:1
-3695,"Tables, desks and benches",Review with giant-scale occupants and floor plan,,041:1
-3698,"Tables, desks and benches",Review with giant-scale occupants and floor plan,,041:3
+3695,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
+3699,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
 3733,Multi-piece environment or scripted fixture,Inspect in scene,,039:2
 3777,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
 3778,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
@@ -173,4 +202,5 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3829,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:2
 3830,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
 3866,"Seats, loom and restraints",Reviewed at current scale,3866-generoe-chair.zip,041:1
-3870,"Chairs, stools and beds",Review with giant-scale occupants and floor plan,,041:2
+3870,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
+3871,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:1

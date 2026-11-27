@@ -133,6 +133,23 @@ class GameFileTests(unittest.TestCase):
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
 
+    def test_jann_cushions_keep_their_upper_faces_and_floor_line(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        for pic, depth in ravfigures.CUSHION_SIDES.items():
+            key = ("BMP ", pic)
+            original = sequelicons.decode(stock[key], 0)
+            width, height, actual = art.decode_frame(package[key], 0)
+            self.assertEqual((width, height), (len(original[0]), len(original)), pic)
+            self.assertEqual(frame_count(package[key]), frame_count(stock[key]), pic)
+            # Source rows counted upwards from the floor for each cushion edge.
+            offsets = {9: (0, 2, 3, 5, 6, 8), 16: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15)}[depth]
+            rise = depth - len(offsets)
+            self.assertEqual(actual[:rise], [[None] * width] * rise, pic)
+            self.assertEqual(actual[rise:height - depth + rise], original[:-depth], pic)
+            self.assertEqual(actual[-len(offsets):], [original[-1 - row] for row in reversed(offsets)], pic)
+
     def test_every_replaced_chunk_is_the_games(self):
         data = ravfigures.load()
         for name in ravfigures.FILES:

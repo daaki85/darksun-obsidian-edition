@@ -34,6 +34,22 @@ The whole Forest is shown at one quarter of game-map resolution. The box marks t
 
 ![Forest dining room, Alliance crate and Mines throne before and after alongside Shattered Lands furnishings](grouped-furniture.png)
 
+## Jann, Mosaic and the Silt Sea Giants
+
+The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rectangles pick out the Sultan’s room and a giant’s plank table. The Shattered Lands references show a furnished room in the upper castle and a table in Gedron at the same map scale.
+
+![Whole Jann and Silt Sea Giants maps before and after with Shattered Lands references](jann-and-giants-maps.png)
+
+![The Sultan’s cushions, a giant’s table and a red chair before and after beside Shattered Lands furnishings](jann-and-giants-rooms.png)
+
+- **Jann.** Around the Sultan, applying the Tyr scale to the whole cushion opened strips of sand between overlapping pillows. On the five thick cushion drawings, the embroidered tops now sit three or five pixels lower. Only the lower edge is compressed. The thin pillows and the Sultan’s own seat keep their original depth in the pile. The two baskets near Utella’s loom use the regular Tyr treatment.
+- **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s occupied rocker keeps all four poses from the figure redraw.
+- **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. The museum’s sixteen display positions form a puzzle. The data includes empty, damaged and dressed busts, plus separate bust objects in Limbo. The game asks the player to move Horace to another stand, remove Ellith and break Khildril. Keep the display heights pending a playthrough of those transitions.
+
+The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. The maps use each picture’s first stored pose. Direct in-game inspection of the revised rooms is still open.
+
+![Fletch, Ikibod and the Mosaic displays above Utella, the seated Sultan and Generoe](jann-mosaic-giants-figure-review.png)
+
 ## Earlier figure work
 
 The figures and their furniture can share one picture. Other scenes use a separate bed, stall front, table leg or place setting. Compared 81 stored frames across 33 pictures with the originals and examined 20 scenes with the mod's object remaps and Mines 3 placement changes applied. The panels show the original Ravager scene on the left of each pair and the existing figure work on the right. These are offline renders of the first stored pose. The Tyr stall has since been checked in DOSBox. Scripted transitions and interactions in the other rooms still need a play check.
@@ -73,16 +89,16 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
 | 039 Mines 2 | 160 | 0 | 0 | Check mining equipment and its animated states against the two miner pictures |
 | 03A Mines 3 | 219 | 8 | 9 | Check throne, dining sequence and tank destruction in play |
-| 03B Jann | 173 | 0 | 0 | Compare freestanding camp furniture against Utella and the seated Sultan |
-| 03C Mosaic | 89 | 0 | 0 | Compare stocked counter 703 with Fletch's chair and Ikibod's stall |
+| 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
+| 03C Mosaic | 89 | 0 | 0 | Check movable bookcase and museum bust transitions in play |
 | 03D Volcano 2 | 143 | 15 | 22 | Compare room placements in-game |
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
 | 03F Volcano 3 | 95 | 0 | 0 | Distinguish furnishings from formations, starting with spires 1376–1378 |
-| 041 Giants | 216 | 0 | 0 | Review seats and tables against Generoe at giant scale |
+| 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
 | 042 Cloud | 131 | 0 | 0 | Check the surrounding furnishings against Melantha's bespoke bed |
 | 043 Crypt | 175 | 0 | 0 | Inspect narrow wooden furnishings 3824–3830 and Kovar's supports |
 | 044 Cosmos | 86 | 0 | 0 | Inspect the multi-part group around 1716–1723, including its scripted states |
 | 045 Under Tyr | 135 | 0 | 14 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records all three furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all four furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
