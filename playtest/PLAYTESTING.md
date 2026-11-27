@@ -1474,6 +1474,16 @@ Draxan's, for the click, and both members' if two stand on the spot; put it back
 power check costs 5 PSP and leaves no dice log line. `ravkits.py power MEMBER POWER` gives a member
 a power for a test (PSP 200), `ravkits.py blast` reads the blast's counters.
 
+**Aiming a spell in Wake of the Ravager's fight** (logs/2026-11-27-ravager-shinobi-spells.md): with the
+spell pointer up, a party member under it turns yellow, and a click there says INVALID TARGET. A foe shows
+a red edge and the pointer becomes the spell's own icon: press then. `ravfight.py state` gives the places
+(a figure's body about 12 right and 18 down of its object), but in ravhold.sh's bunched party the Draxans
+stand behind the members (one at game 164,86 there). After the cast the pointer stays up on the
+caster's turn: a right-click on bare floor drops it. In a fight USE serves only the member whose turn
+it is: another's portrait says ONLY ACTIVE CHAR CAN CAST. So close USE with **one** Escape and wait
+for that member's turn. A second Escape, with nothing open, brought EXIT, and the next keys
+(ravfight.py's Q and E) quit the game.
+
 **Hit points raised for a test, then a level-up** (same log): the level's hit points are worked
 from the edited ones and can come out negative. Raise them after a level-up, not before.
 

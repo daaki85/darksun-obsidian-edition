@@ -211,6 +211,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-ravager-kit-gear.md) | The kits' gear limits in Wake of the Ravager: a Spellarcher refused leather armour, a Battle Mage holding the bow of its weapon spec and leather where a plain preserver can't, its off hand refused; a Ravager's bow kept because it is her weapon spec |
 | [2026-11-26](2026-11-26-ravager-kit-slots.md) | Kit spell slots in Wake of the Ravager, two rests at the Roost: a Battle Mage's wizard slots 1 fewer (3 2 2 1 0 against the plain preserver's 4 3 3 2 1), a Seeker's 3 3 3 1 at 14th and a Justifier's 2 1 at 12th (their own tables, on USE too), a Justifier's none at 9th (the plain ranger's 2: the caster level 0 found by the audit), a Shinobi's wizard slots 3 3 2 1 at thief 13th (but no MAGE list) |
 | [2026-11-26](2026-11-26-ravager-kit-start-gear.md) | The kits' starting gear in Wake of the Ravager (`ravkitstart.py`): a Shinobi's long sword +1 made a short sword +1, a Ravager's shield left behind, its ring armour made leather and a second long sword, an Arena Champion's second sword a Shield +1; the game's give routine drops what the kit refuses into the backpack (the `RAV_NO_KIT_START` control), so the kit's step runs before the classes' |
+| [2026-11-27](2026-11-27-ravager-shinobi-spells.md) | The Shinobi's wizard spells in Wake of the Ravager (the Draxans' ambush, test edits): a thief 13th Shinobi's USE had a MAGE list, levels 1-4 (1-3 at thief 10th); her Hold Person held a Draxan 16 rounds (casting level 8); the control, the kit off, PSIONIC only |
 
 ## files/
 
