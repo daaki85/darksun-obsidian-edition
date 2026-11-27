@@ -1177,7 +1177,8 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   game's menu right after DUAL. A new character's starting gear is fitted to its kit from the
   sequel's own items (a Shinobi's long sword +1 a short sword +1, an Arena Champion's second sword a
   Shield +1, a Ravager's shield left behind and a second sword in its place, a Spellarcher's bow its Fine
-  Bow). A Spellarcher makes no spell arrows there yet. What else kits do to spells
+  Bow), and a Spellarcher makes spell arrows on the USE screen there as in Shattered Lands (a button for
+  each touch spell it knows, a slot a press; not the spell arrows it starts with). What else kits do to spells
   and psionic powers, and hit dice, doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them; [which kits work
   there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting

@@ -1451,7 +1451,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   Burning Hands button); a slow press makes one arrow ("makes one of the shocking arrows in the
   pack (1 of 24 now)") and **closes the screen** (an Escape after it opens EXIT: SAVE GAME?). With
   wooden arrows in the quiver the new stack goes to the pack: swap them in the inventory (quiver
-  66,26, a backpack cell).
+  66,26, a backpack cell). **In the sequel** the same buttons and places (RESEARCH.md's spell arrows made in
+  the sequel: the party to ADD again at every start, the way out to a fight, the quiver).
 - **A spell's description box**: U, a member's portrait (Cermak 66,108), then right-click a spell's
   icon (from 177,59, about 14 apart); in a fight the same on the USE screen (Fire Shield's and Cat's
   Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or `spellsetup.py 0=10 44` first. Seven

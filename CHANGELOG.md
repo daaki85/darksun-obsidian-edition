@@ -60,12 +60,18 @@ Releases, newest first (2.12.0 and older in the archive):
 ## Unreleased (branch `obsidian-edition`)
 
 **New**
+- **Wake of the Ravager: a Spellarcher makes spell arrows.** Its USE screen has Shattered Lands' buttons out
+  of a fight (CHILL ARROWS, SHOCKING ARROWS, VAMPIRIC ARROWS for the touch spells it knows): a press uses a
+  slot of that level for one arrow, stacked to 24, which casts the spell on a hit at its preserver level.
+  The arrows' objects and the buttons' icons are made from the player's own Shattered Lands files when the
+  Loader copies the sequel's. DSCLOG2's site 240 and header +2098 to +2113 (`dsloader/ravarrows.py`). A
+  transferred stack of spell arrows keeps its count (the transfer wrote over it). Not yet: the spell
+  arrows a new Spellarcher starts with, the cast sound, keeping them from the others.
 - **Wake of the Ravager: the Poisoner's poison, the Spellarcher's arrows' plus and its Fine Bow.** A
   Poisoner's first melee hit of a fight with each hand's weapon poisons (the monsters' poison, a save or
   10 damage: the sequel's own record of it); a Spellarcher's spell arrows from a bow are +1 to +3 by its
   preserver level; the Fine Bow is +1 to hit there, a new Spellarcher's bow is made one and the party
-  transfer keeps it. DSCLOG2's sites 214-215 and header +2088 to +2097. Making spell arrows on the USE
-  screen is not in the sequel yet.
+  transfer keeps it. DSCLOG2's sites 214-215 and header +2088 to +2097.
 - **DOSBox-X as an optional engine** (experimental; played on Linux only, written but untested for
   Windows and macOS). The Options tab's new **Engine** section chooses GOG's DOSBox 0.74 (the
   default, unchanged) or the player's own DOSBox-X (2025.01.01 or later; a path the player gives,

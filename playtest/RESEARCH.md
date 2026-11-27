@@ -2059,6 +2059,36 @@ emulator tests: `tests/test_far_init.py` (XMS and DOS played by the test). A sec
   didn't answer in time (0 in the play). The purse is ICON 3048 in the Loader's RESOURCE copy (`RAV_SKIP=pick_icon`
   leaves it out).
 
+**Spell arrows made in the sequel** (2026-11-27, logs/2026-11-27-ravager-spell-arrows-made.md): DSCLOG2's SPELL
+ARROWS puts SL's arrows buttons on the sequel's USE screen through PICK POCKETS' sites (180-185) and site 240. What
+it needed from the sequel:
+- **The places beside Turn Undead's**: WIND 11500 is the same in both games; Turn Undead is APFM 2BEFh at (148,129),
+  and the spare places 2BE7h-2BEAh (index 1Ah on) right of it take the second to fourth buttons (on the screen the
+  first sits at 157,147, the second at 176,147, as in SL). The routines they call are reached through the selector
+  table at file (45E8h x 16 + 5200h) + selector, segments less the load segment: 4D8h 45C9h (the USE window), 370h
+  3E71h (the frame; USE_WHO at :0B44h), 5B0h 46BDh (the button register stub, entry 4Dh), 128h 28FFh (the chunk
+  load, :4ABh), 698h 47C1h (the USE overlay's stub: the handler entry 66h, 9756Eh; the draw entry 6Bh, 97743h), 1D0h
+  344Ch (the free, :92h). An overlay stub is `CD 3F` then 5-byte entries (`CD 3F` + offset).
+- **Closing**: site 240 at 9659Eh (`cmp word [2B9Ah],0`, the button cache's test as the screen closes) lets the
+  extra buttons' icons go.
+- **The known spells**: selector 320h (load + 3D62h):39Ch + 15 x member, bit n for spell n (Chill Touch 3, Shocking
+  Grasp 10, Vampiric Touch 38); wizard slots left at DS:4469h + 22h a member (ravlog's SLOTS_LEFT).
+- **The arrow**: a 17h-byte item of type 6, power the spell + 1, name 256 + 42 + row (ravager.mod_name 16Ch + row),
+  object 22616/22618/22620 (ravitems.own_object of SL's pictures 2616-2620), in OBJEX2.GFF with no transfer needed.
+- **Testing it**: the header's words from +2098 (on, seq, reply, who, row, shown, late, drawn;
+  [the reader](logs/files/2026-11-27-ravager-spell-arrows-hdr.py)); `RAV_NO_ARROWS=1` on `ravdice.py` turns the
+  buttons off (the control); `RAV_SKIP=spell_arrows` leaves the objects out of OBJEX2.GFF (no buttons either).
+  The arrows go to the pack when the quiver holds other arrows: [the quiver edit](logs/files/2026-11-27-ravager-spell-arrows-quiver.py)
+  swaps them in for a shot (or the inventory screen). After a shot the game says "Out of ammo" when the stack holds
+  fewer than the round's shots: its own cut, not the Loader's.
+- **A new game's party for it**: the title menu forgets the party at each start of the sequel (START GAME with
+  no one ADDed plays the ready-made four): ADD them again (the roster keeps a new character). A new 6/6
+  Spellarcher with three roster members lost the Draxans' ambush under Computer Control; with HP 250 (a test
+  edit, [the script](logs/files/2026-11-27-ravager-spell-arrows-hp250.py)) it was won. C's small icons toggle,
+  so a second round of clicks in the next fight turns Computer Control off. The leader starts that game in the
+  house west of the ambush's street (world 1072, 1322): `ravgo.py` can't leave it, a click on the street (game
+  250,125) can; then `ravgo.py y 1224 x 1839` and Right x4 meet Tyr's thieves.
+
 **The starting weapon of the first pick** (2026-11-26, logs/2026-11-26-ravager-first-pick-weapon.md):
 `ravfirstweapon.fill` in ravlog's `_gear_pass` (GEAR_DONE: after CR_WEAPONS' picks and the game's gear, before the
 roster write; `RAV_NO_FIRST_WEAPON=1` on ravdice.py turns it off for a control) makes the weapon in hand over in place
