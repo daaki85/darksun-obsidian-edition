@@ -213,7 +213,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGve'          ; +0
+sig      db 'DSCLOGvf'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -511,6 +511,10 @@ squares_on dw 0                 ; +1890 the Loader sets 1 to have the squares SQ
 fig_due    db 0                 ; +1892 DSCLOG sets 1 when the character being made has another class or
                                 ;      figure (FIG_WAIT), the Loader writes its figure in the class's
                                 ;      outfit (creationfigure.py) and clears it
+small_pics times 4 dw 0         ; +1893 the Loader's: each party member's (by creature 0-3) walking
+                                ;      picture in their outfit (sprites.Dresser.small_pictures), its
+                                ;      frame 0 drawn as their small figure (SMALL_FIGURE); 0 the
+                                ;      game's own (its preload table's)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -20434,6 +20438,7 @@ site_tab:
         site CENTRE_XY_SITE, centre_xy
         site NS_IMAGE + 128, inventory_figure
         site NS_IMAGE + 129, inventory_load
+        site NS_IMAGE + 130, small_figure
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -21597,9 +21602,22 @@ inventory_figure:
 
 inventory_load:
         call if_frame
+        push gs                 ; (INVENTORY_LOAD_FAR pops it before its IRET)
+        push cs
+        pop gs
         push word [cs:tail_seg]
         push word inventory_load_far
         retf                    ; keep the INT frame for the reader's way back
+
+; SMALL_FIGURE: (67964h, the routine that draws a creature's small figure in a box: the inventory's
+; party column, the main screen's) "mov ax,es:[bx+18h] / add ax,20h", the preload table's entry of
+; the creature's figure (ES:BX), made the walking picture the Loader names for that party member
+; (SMALL_PICS), which INVENTORY_LOAD reads from the Loader's SEGOBJEX: frame 0 in their outfit.
+small_figure:
+        mov ax, small_figure_far
+        call tail_call
+        iret
+small_fig db 0                  ; (the figure last asked for: INVENTORY_LOAD_FAR's fallback)
 
 ; FIG_WAIT: (PROBE_WP_CLASS, after every click on the creation screen; CR_HP, where the screen opening
 ; shows a new character's class; FIG_OPEN, before its first drawing) the character being made has
@@ -28659,15 +28677,62 @@ inventory_figure_far:
 .stock: add ax, 0x12
         retf
 
+; SMALL_FIGURE_FAR: (TAIL_CALL: GS DSCLOG's segment, DS the game's) AX the picture to read for the
+; small figure of the creature at ES:BX: its member's SMALL_PICS entry, else 20h + its figure. All
+; other registers kept.
+SMALL_WALK_FIRST equ 2450       ; (sprites.SPRITE_BASE: the walking pictures of objects 300-317)
+SMALL_WALK_END   equ SMALL_WALK_FIRST + 2 * 18
+small_figure_far:
+        mov ax, [es:bx + 0x18]
+        mov [gs:small_fig], al
+        cmp ax, 14
+        jae .stock
+        push dx
+        push cx
+        mov dx, es
+        cmp dx, [CREATURES + 2]         ; (one of the party's creatures, 3Ah each)
+        jne .plain
+        mov ax, bx
+        sub ax, [CREATURES]
+        jb .plain
+        xor dx, dx
+        mov cx, 0x3A
+        div cx
+        test dx, dx
+        jnz .plain
+        cmp ax, 4
+        jae .plain
+        push bx
+        mov bx, ax
+        shl bx, 1
+        mov ax, [gs:bx + small_pics]
+        pop bx
+        cmp ax, SMALL_WALK_FIRST
+        jb .plain
+        cmp ax, SMALL_WALK_END
+        jb .done
+.plain: movzx ax, byte [gs:small_fig]
+        add ax, 0x20
+.done:  pop cx
+        pop dx
+        retf
+.stock: add ax, 0x20
+        retf
+
 ; 73034h returns a heap-owned picture. Let the game's GFF reader allocate
 ; the outfit on demand. Its caller measures, centers, draws and frees it.
+; (From INVENTORY_LOAD: GS DSCLOG's segment, its own pushed above the INT frame.)
 inventory_load_far:
         mov dword [bp - 4], 0
-        cmp si, INV_ART_BASE
+        cmp si, SMALL_WALK_FIRST
+        jb .art
+        cmp si, SMALL_WALK_END
+        jb .read                ; a small figure's walking picture (SMALL_FIGURE)
+.art:   cmp si, INV_ART_BASE
         jb .out
         cmp si, INV_ART_BASE + 14 * 256
         jae .out
-        push ss
+.read:  push ss
         lea ax, [bp - 4]
         push ax
         movzx eax, si
@@ -28681,16 +28746,23 @@ inventory_load_far:
         add sp, 12
         test ax, ax
         jnz .fallback
+        pop gs
         push bx
         mov bx, sp
         add word [ss:bx + 2], 0x730AB - (0x7303E + 3)
         pop bx
         iret
 .fallback:
+        cmp si, INV_ART_BASE
+        jb .small
         sub si, INV_ART_BASE
         shr si, 8
         add si, 0x12            ; read the stock picture from the preload table
-.out:   iret
+        jmp .out
+.small: movzx si, byte [gs:small_fig]
+        add si, 0x20            ; (the preload table's small figure)
+.out:   pop gs
+        iret
 
 ; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
 tint_far:

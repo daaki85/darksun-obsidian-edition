@@ -4,7 +4,7 @@ import os; PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, P
 exec(open(__file__).read())
 from dsloader import ghost, shadows
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGve')
+hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGvf')
 far = struct.unpack('<H', g.read(hdr + ghost.TSR_FAR_SEG, 2))[0] * 16  # (DAC: the far block's, since 2026-11-08)
 seen = []
 t0 = time.time()

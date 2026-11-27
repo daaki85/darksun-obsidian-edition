@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import art, gff, ravfigures  # noqa: E402
+from dsloader import art, gff, ravfigures, sequelicons  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 COMBAT = 0x20  # (a script step's flag: a drawing of the combat picture, CBMP)
@@ -82,6 +82,50 @@ class FigureFileTests(unittest.TestCase):
         self.assertEqual(ravfigures.resource_chunks({}, self.data), {})
         self.assertEqual(ravfigures.region_chunks("RGN03A.GFF", {}, self.data), {})
 
+    def test_region_moves_only_the_selected_ground_placement_once(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        records = [(599, 1261, 0, 32, 9606), (521, 1263, 0, 32, 9606),
+                   (599, 1261, 2, 32, 9606), (599, 1261, 0, 32, -9606)]
+        stock = {key: b"".join(placed.pack(*row) for row in records)}
+        result = ravfigures.region_chunks("rgn033.gff", stock)
+        self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1278, 0, 32, 9606)] + records[1:])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
+    def test_headquarters_stacks_share_their_front_floor_line(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        # Back and front barrels, the sacks they support, the crate beneath the vase,
+        # and another placement of the same sacks on the floor.
+        rows = [(677, 1269, 9508), (677, 1290, 9646), (566, 1289, 9646),
+                (551, 1303, 9646), (567, 1310, 9646), (552, 1278, 9642),
+                (606, 1281, 9645), (599, 1261, 9606), (664, 1341, 9642)]
+        stock = {key: b"".join(placed.pack(x, y, 0, 32, obj) for x, y, obj in rows)}
+        result = ravfigures.region_chunks("RGN033.GFF", stock)
+        expected_y = [1276, 1290, 1296, 1305, 1310, 1289, 1291, 1278, 1341]
+        self.assertEqual(list(placed.iter_unpack(result[key])),
+                         [(x, ny, 0, 32, obj) for (x, _, obj), ny in zip(rows, expected_y)])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
+    def test_torn_beds_move_only_their_two_supported_pillows(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        records = [(1761, 1124, 0, 34, 9586), (1727, 783, 0, 2, 9586),
+                   (1729, 812, 0, 32, 9594), (1914, 1155, 0, 32, 9594)]
+        stock = {key: b"".join(placed.pack(*row) for row in records)}
+        result = ravfigures.region_chunks("RGN033.GFF", stock)
+        self.assertEqual(list(placed.iter_unpack(result[key])),
+                         [(1761, 1135, 0, 34, 9586), (1727, 794, 0, 2, 9586)] + records[2:])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
+    def test_openable_furniture_keeps_both_poses(self):
+        closed = [[1, 1], [2, 2], [3, 3]]
+        opened = [[None, 7], [8, 8], [9, None]]
+        result = ravfigures.lowered_furniture(art.plnr_frames([closed, opened]))
+        self.assertEqual(frame_count(result), 2)
+        self.assertEqual(art.decode_frame(result, 0)[2], [[None, None], [1, 1], [3, 3]])
+        self.assertEqual(art.decode_frame(result, 1)[2], [[None, None], [None, 7], [9, None]])
+
     def test_cleared_edges(self):
         from dsloader import sprites
         rows = [[5, 5, 5, 5], [5, 1, 5, 5], [5, 2, 3, 5], [5, 5, 5, 5]]
@@ -92,6 +136,111 @@ class FigureFileTests(unittest.TestCase):
 
 @unittest.skipUnless(WOTR, "DSUN_WOTR: the sequel's folder")
 class GameFileTests(unittest.TestCase):
+    def test_reviewed_furniture_matches_a_single_pass_over_stock(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        grouped = [pic for _, pictures, _ in ravfigures.ASSEMBLIES for pic in pictures]
+        for pic in (*ravfigures.FURNITURE, *grouped):
+            key = ("BMP ", pic)
+            percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
+            states = 2 if pic in ravfigures.OPENABLE else 1
+            self.assertEqual(("SCMD", pic) in stock, states == 2, pic)
+            self.assertNotIn(("SCMD", pic), package)
+            self.assertEqual(frame_count(stock[key]), states, pic)
+            self.assertEqual(frame_count(package[key]), states, pic)
+            for index in range(states):
+                original = sequelicons.decode(stock[key], index)
+                w, h, actual = art.decode_frame(package[key], index)
+                self.assertEqual((w, h), (len(original[0]), len(original)), pic)
+                self.assertTrue(any(p is not None for row in actual for p in row), pic)
+                for distance, row in enumerate(reversed(actual)):
+                    # Nearest source row measured upwards from the unchanged base.
+                    offset = (100 * distance + percent // 2) // percent
+                    expected = original[h - 1 - offset] if offset < h else [None] * w
+                    self.assertEqual(row, expected, (pic, distance))
+
+    def test_split_beds_match_a_single_scaled_blanket_at_every_placement(self):
+        from dsloader import sprites
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        built = {**stock, **ravfigures.object_chunks(stock)}
+        pairs = {}
+        for name in os.listdir(WOTR):
+            if not (len(name) == 10 and name.startswith("RGN") and name.endswith(".GFF")):
+                continue
+            with open(os.path.join(WOTR, name), "rb") as f:
+                region = gff.read_gff(f.read())
+            region.update(ravfigures.region_chunks(name, region))
+            for (kind, _), data in region.items():
+                if kind != "ETAB":
+                    continue
+                for x, y, height, _, obj in struct.iter_unpack("<HHBBh", data):
+                    rec = built.get(("OJFF", abs(obj)))
+                    if not rec:
+                        continue
+                    pic, = struct.unpack_from("<H", rec, ravfigures.PICTURE)
+                    if pic in (524, 525):
+                        ax, ay = struct.unpack_from("<hh", rec, 2)
+                        # Group by the head's top left, using the foot's 39-row offset.
+                        pos = (name, x - ax, y - height - ay - (39 if pic == 525 else 0))
+                        pairs.setdefault(pos, []).append(pic)
+        self.assertCountEqual([name for name, _, _ in pairs],
+                              ["RGN032.GFF", "RGN033.GFF", "RGN033.GFF", "RGN038.GFF"])
+        for parts in pairs.values():
+            self.assertCountEqual(parts, [524, 525])
+
+        def assembled(chunks):
+            canvas = [[None] * 40 for _ in range(68)]
+            for pic, offset, height in ((524, 0, 46), (525, 39, 29)):
+                rows = sequelicons.decode(chunks[("BMP ", pic)])
+                self.assertEqual((len(rows), len(rows[0])), (height, 40))
+                for y, row in enumerate(rows, offset):
+                    for x, pixel in enumerate(row):
+                        if pixel is not None:
+                            canvas[y][x] = pixel
+            return canvas
+
+        full_bed = sprites.encode_frames([assembled(stock)])
+        self.assertEqual(assembled(built), sequelicons.decode(ravfigures.lowered_furniture(full_bed)))
+
+    def test_empty_temple_throne_keeps_the_seated_position(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        built = ravfigures.object_chunks(stock)
+        picture, obj = ("BMP ", 789), ("OJFF", 3530)
+        self.assertEqual(built[picture], ravfigures.lowered_furniture(stock[picture]))
+        # One map square is 16 px. The script places the empty seat in its centre.
+        for step in (0, 1):
+            ax, ay = struct.unpack_from("<bb", stock[("SCMD", 788)], 72 + 8 * step + 5)
+            self.assertEqual(struct.unpack_from("<hh", built[obj], 2), (ax + 8, ay + 8))
+        self.assertEqual(built[obj][:2] + built[obj][6:], stock[obj][:2] + stock[obj][6:])
+        self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: built[obj]}))
+        custom = bytearray(stock[obj])
+        struct.pack_into("<hh", custom, 2, 5, 7)
+        self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: bytes(custom)}))
+
+    def test_cushions_and_braziers_keep_the_upper_art_and_floor_line(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        for pic, depth in ravfigures.BASE_ROWS.items():
+            key = ("BMP ", pic)
+            original = sequelicons.decode(stock[key], 0)
+            width, height, actual = art.decode_frame(package[key], 0)
+            self.assertEqual((width, height), (len(original[0]), len(original)), pic)
+            self.assertEqual(frame_count(package[key]), frame_count(stock[key]), pic)
+            # Nearest source rows measured upwards through the base, leaving the art above it intact.
+            offsets = {
+                9: (0, 2, 3, 5, 6, 8),
+                16: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15),
+                22: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21),
+            }[depth]
+            rise = depth - len(offsets)
+            self.assertEqual(actual[:rise], [[None] * width] * rise, pic)
+            self.assertEqual(actual[rise:height - depth + rise], original[:-depth], pic)
+            self.assertEqual(actual[-len(offsets):], [original[-1 - row] for row in reversed(offsets)], pic)
+
     def test_every_replaced_chunk_is_the_games(self):
         data = ravfigures.load()
         for name in ravfigures.FILES:
@@ -103,7 +252,7 @@ class GameFileTests(unittest.TestCase):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             own = gff.read_gff(f.read())
         made = ravfigures.object_chunks(own, data)
-        self.assertEqual(sum(k[0] == "OJFF" for k in made), 32)
+        self.assertEqual({i for kind, i in made if kind == "OJFF"}, {i for i, _, _ in data["objects"]} | {3530})
         merged = {**own, **made}
         bad = []
         for (kind, pic), script in merged.items():  # (every step of a script the figures bring, on a drawing there is)

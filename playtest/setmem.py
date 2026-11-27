@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'live.py')).read())
 from dsloader import game
 cr = game.far_pointer(g, ds, game.CREATURES_PTR); sh = game.far_pointer(g, ds, game.SHEETS_PTR)
-hdr = next(i for i in range(0xA0000, 0x100000, 16) if g.read(i, 8) == b'DSCLOGve')
+hdr = next(i for i in range(0xA0000, 0x100000, 16) if g.read(i, 8) == b'DSCLOGvf')
 def show():
     for m in range(4):
         rec = g.read(cr + m * 0x3A, 0x3A); s = g.read(sh + m * 0x47, 0x47)

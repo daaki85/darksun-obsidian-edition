@@ -63,6 +63,23 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Changed: the small party figures in their class outfits** (branch `claude/small-party-figures`)
+- The inventory's party column drew each member's small figure from the game's own picture, read once at
+  start-up, so it kept the stock clothes (and two members of one figure looked alike). DSCLOG now has the
+  game draw each member's own walking picture from the Loader's copy, standing: their class outfit and
+  what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
+
+**Changed** (Wake of the Ravager)
+- Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
+  at 217 placements, including the open and closed states of three fixtures. Another 18 pictures lower the Forest
+  dining sets, the Alliance vase-bearing crate and the Mines 3 throne at 41 placements. The Jann cushions and baskets and the Silt Sea Giants’ furnishings
+  add another 26 placements. Crypt barracks furniture and Cloud pottery add 14 more. A shared barrel and sack pile now sits lower in five places,
+  with both barrel lids visible over the Tyr wall. The Alliance beds, torn couch and broken crates,
+  the Yuan-ti vessels and the shared weapon display add 24 placements. Six braziers around the throne
+  in El’s Temple have lower bowls with their smoke trails preserved. The empty throne stays in place when Tantris rises. The two-piece red beds now have a continuous blanket in Tyr, both Alliance layouts and Mines 1. The Alliance storeroom barrels, sacks and intact vase crate sit on their supports. The
+  [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
+  and compares occupied furniture with the earlier figure redraws.
+
 **Docs: the sequel's creature figures as the game draws them** (branch `claude/ravager-creature-figures`)
 - CREATURES.md's Wake of the Ravager figures are the pose each one's animation script stands in, not the
   picture's first frame: a redraw that adds its frames after the game's (Ptar, the Beasthead Giant, the

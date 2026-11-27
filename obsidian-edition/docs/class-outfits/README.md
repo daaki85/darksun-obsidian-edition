@@ -18,7 +18,7 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 ## Inventory portraits
 
-In Shattered Lands, every race's inventory figure wears the selected character's classes. The two humans show their active class in eight outfits. The dwarf, elf, half-elf, half-giant, halfling and mul figures have a painting for each class and multiclass a character of that race can take, 270 in all, and the thri-kreen has one painting for all its builds. A figure the Loader finds no painting for, or a game with figures of other sizes, keeps the retail picture. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
+In Shattered Lands, every race's inventory figure wears the selected character's classes. The two humans show their active class in eight outfits. The dwarf, elf, half-elf, half-giant, halfling and mul figures have a painting for each class and multiclass a character of that race can take, 270 in all, and the thri-kreen has one painting for all its builds. A figure the Loader finds no painting for, or a game with figures of other sizes, keeps the retail picture. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The small figures in the party column beside the portrait are each member's own map figure, standing, so they show the class outfit and what is worn on every race that has one. The full-length redraws here belong to the inventory screen.
 
 ### Human inventory fittings
 

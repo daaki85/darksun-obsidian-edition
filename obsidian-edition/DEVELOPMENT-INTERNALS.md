@@ -199,15 +199,15 @@ with the 3 ability checks the ability check command makes).
 ## DSCLOG's header
 
 The fields the Loader and DSCLOG share are DSCLOG's header, from `hdr:` in
-`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGve`), then one field a line, each commented
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvf`), then one field a line, each commented
 with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
 The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
 it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
 `cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
-the squares in reach's `SQUARES_ON` +1890, after quick save's `QS_KEYS` +1878, `QS_SEQ` +1882,
-`SAVE_REQ` +1886 and `SAVE_OFF` +1888, which follow `A20_LOST`, +1876; the next is +1892); a
-change that both sides must make together takes the signature up (`DSCLOGve` with the squares in
-reach, `vd` with quick save, 2026-11-18: `vc` and `vd` were also the signatures of these two on
+the small figures' `SMALL_PICS` +1893, after the creation figure's `FIG_DUE` +1892 and the squares in reach's `SQUARES_ON` +1890, after quick save's `QS_KEYS` +1878, `QS_SEQ`
++1882, `SAVE_REQ` +1886 and `SAVE_OFF` +1888, which follow `A20_LOST`, +1876; the next is +1901); a
+change that both sides must make together takes the signature up (`DSCLOGvf` with the small
+figures, `ve` with the squares in reach, `vd` with quick save, 2026-11-18: `vc` and `vd` were also the signatures of these two on
 their own branch, where their fields began at +1868, the offsets `SOLD_ITEMS` and `A20_LOST` have
 here, so a Loader or a kit tool built there finds no helper of this one's). `test_header_offsets`
 builds DSCLOG with a symbol map and checks every field is at the offset its comment gives, every
