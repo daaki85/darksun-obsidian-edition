@@ -8,7 +8,8 @@ with most of the mod, and a Shattered Lands party can go on into it. This page i
 there: how to start it, how the party comes across, and the mod's rules, screens and keys in the
 sequel. Which kits work there: [In Wake of the Ravager](KITS.md#in-wake-of-the-ravager). Which of
 the game's bugs are mended there: [the game's bugs](GAME-BUGS.md#in-wake-of-the-ravager). The levels
-past Shattered Lands': [the player's guide](PLAYER-GUIDE.md#in-wake-of-the-ravager).
+past Shattered Lands': [the player's guide](PLAYER-GUIDE.md#in-wake-of-the-ravager). Its creatures, their sizes and redrawn
+figures: [Creatures](CREATURES.md#wake-of-the-ravager). Its dice log: [the dice log](DICE-LOG.md#in-wake-of-the-ravager).
 
 ## Starting the sequel
 
@@ -80,6 +81,43 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character
   taken across before takes its old place again; the others take free places. With too few free, the
   Loader says so: delete characters in the sequel first.
+
+## The sequel's own party
+
+The sequel's own four (a new game started with no party made) are fitted to the mod as [Shattered Lands' own
+party](FEATURES.md#the-games-own-party) is, the owner's choices of 2026-11-26. The Loader does so once, when
+it finds them with no weapon specs and no kit (a game saved before, too), and says so in the dice log:
+
+| Character | Weapon specialization | With kits |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | the long sword, the gythka and the trikal | **Wild Fighting**, as in Shattered Lands |
+| **Thy'rokh**, thri-kreen fighter and fire druid | the gythka (mastery at once: he is a 6th-level fighter) | a **Grove Warden's AC**: 1 better for every 3 druid levels |
+| **Terrannus**, human earth cleric | the long sword, his kit's chosen weapon spec | a **Crusader** (a warrior's THAC0, expertise with the long sword, a warrior's extra attacks), at the kit's full cost: one fewer spell slot at each spell level |
+| **Ar'Anda**, elf preserver, psionicist and thief | | the **Elven Shadow-walker's** hiding (never halved in daylight), and she **casts in light armour** (leather, or of no material), though a multiclass preserver |
+
+Without these, the sequel's level up would ask each of them for weapon specs, as it does in Shattered Lands
+for a game begun before the rule.
+
+## Saves in the sequel
+
+The sequel keeps its own save and load window: its ten saves, `SAVE01.SAV` to `SAVE10.SAV`, with no more
+pages ([more saves](FEATURES.md#more-saves) is Shattered Lands' alone so far).
+
+[Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) work in the sequel too
+(started from the Loader), with the same switches, in its own save and load window: F9 opens its LOAD window
+on the quick saves (`SAVQ01.SAV` to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window
+is back on the game's own ten (the sequel's own F1 and F2 windows never open on the quick saves). Its
+autosaves have shorter names, to fit its narrower rows (`Auto Day 1, 09:05 Mines 1`, `Auto Day 1, 00:06
+fight`). Each quick save keeps its own part of the map's limits, which the sequel stores beside a save, so
+loading one never takes another save's. There is no camp in the sequel, so no camp autosave. While the
+switch is on and the Loader is there, F5 is the quick save, not the sequel's own F5 (the sound effects on
+and off: F4 and the game's menu still have the music, and the menu the sound effects); with the switch off
+or without the Loader, F5 is the game's again.
+
+[Saves under their names](FEATURES.md#saves-under-their-names) work for the sequel too: its ten manual slots
+are copied into **Named saves (Wake of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the
+Ravager's** button opens that folder, and a sequel's save put back into a slot is made the Loader's (the
+bigger character sheets) as it goes in (a game already running lists it from its next start).
 
 ## The mod in the sequel
 
@@ -233,8 +271,7 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
   sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
   and Memory tools tabs read the sequel's spells and records.
-- **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon
-  leaves it on in the sequel too.
+- **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
   small crosses mark the squares they can still walk to, and R hides or shows them. After the last
@@ -334,15 +371,18 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
   kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
   has.
-- **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down: the sequel's map
-  scrolls only at the screen's edge, as the game has it.
-- **[More saves](FEATURES.md#more-saves)** (pages 2 to 4 of the save window) and **[more
-  characters](FEATURES.md#more-characters)** (29 in the roster): the sequel keeps its own ten saves (and the
-  QUICK saves beside them) and its own roster's limit.
-- **[Steady pace](FEATURES.md#game-speed)**: the sequel runs at the game speed chosen, without steady pace.
-- **[The view in fights](FEATURES.md#the-view-in-fights)**, **[the pointer in scenes, and where it
-  starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)** and **[the whole party in
-  view](FEATURES.md#the-whole-party-in-view)**: the sequel's view, pointer and party on the map are its own.
+- **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
+  sequel's map scrolls only at the screen's edge, as the game has it), [the view in
+  fights](FEATURES.md#the-view-in-fights), [the pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)
+  and [the whole party in view](FEATURES.md#the-whole-party-in-view).
+- **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
+  and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
+- **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
+- **[Steady pace](FEATURES.md#game-speed)**: the switch does nothing for the sequel (the speeds do).
+- **[Names over figures](FEATURES.md#names-over-figures)**: the arrows left after a party archer's shot.
+- **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
+  shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
+  large ([its creatures](CREATURES.md#wake-of-the-ravager)).
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books

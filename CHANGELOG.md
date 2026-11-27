@@ -63,6 +63,22 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Docs: Wake of the Ravager's side of the features, creatures and dice log pages** (branch `claude/ravager-docs-side`)
+- CREATURES.md covers both games: the sequel's 198 creatures from its own data, each in the figure the mod
+  draws (183 redrawn, marked), its size by the sequel's table and the cahulaks' answer as the sequel decides
+  it (`doccreatures.write_ravager`). Six man-sized monsters named in `sizes.RAV_NAMES` (no change in play).
+- Every FEATURES entry ends with a line saying whether the sequel has it. Its sequel-only passages (the
+  sequel's own party, its quick saves, its named saves) moved to RAVAGER.md; the gaps found (the four
+  controls, more saves, steady pace, the arrows left over an archer, the cahulaks sparing only by size) are
+  on RAVAGER's "Not in the sequel yet". DICE-LOG.md has a sequel section.
+
+**Docs: the research recipes split by subject** (branch `claude/research-guide-split`)
+- The playtest kit's research recipes (`playtest/RESEARCH.md`, 42,000 words in one page) are seven pages
+  now: memory edits for a test, sounds and pictures, the game's code and other targets, and four on Wake
+  of the Ravager (starting and driving it; its pictures and screens; its records, kits and saves; the port
+  audit's notes). The text moved as it was; `RESEARCH.md` is their index, so old links still land, and
+  every link into a moved section points at its new page.
+
 **Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
 - A party taken across lost five backported weapons' material: the metal great sword, lotulis and
   javelin, the obsidian lotulis and the bone great sword went as the sequel's one type of their kind (a
