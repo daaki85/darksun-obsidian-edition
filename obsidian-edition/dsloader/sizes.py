@@ -62,6 +62,8 @@ RAV_NAMES: Dict[str, str] = {
     "Beasthead Giant": "H", "Umber Hulk": "L", "Shambling Mound": "L", "Magma Golem": "L", "Obsidian Golem": "L",
     "Giant Skeleton": "L", "Giant Snake": "L", "Great Feyr": "L", "Greater Feyr": "L", "Psurlon": "L",
     "Female Hlfgnt": "L", "Int. Devourer": "T", "Int.Devourer": "T", "Aurumvorax": "S",
+    # (man-sized as the books have them, the table's default made sure: CREATURES.md marks the rest "?")
+    "Yuan-ti": "M", "Mind Flayer": "M", "Mindflayer": "M", "SkeletonWarrior": "M", "Revenant": "M", "Shadow": "M",
 }
 RAV_UNSURE = frozenset(("Air Drake", "Earth Drake", "Fire Drake", "Gr. Fire Elem", "Grt Air Elem", "Grt Earth Elem",
                         "Grt Fire Elem", "Grtr Water Elem", "Beasthead Giant", "Giant Snake", "Great Feyr",

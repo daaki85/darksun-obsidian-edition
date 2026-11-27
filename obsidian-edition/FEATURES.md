@@ -3,13 +3,15 @@
 *Part of Obsidian Edition's documentation, from the [README](README.md). The [player's
 guide](PLAYER-GUIDE.md) has the rules and tables; this page is the catalogue.*
 
-Everything the mod changes and adds in the game, one short entry each, in the order of the Loader's
+Everything the mod changes and adds in Shattered Lands, one short entry each, in the order of the Loader's
 **Options** tab and its sections, ending with **Saves**; then the sections that are always on
 (**Expanded features**, **Graphics**, **Controls**), what else is **always on**, and
 the game's bugs it mends. Each entry says what it does, names its switch with the words the tab gives
 it (or says **Always on**: most of the rule changes, the combat log, the thieving, the graphics and
 the controls have no switch), and links to the rules ("Rules:", in the player's guide and the
-reference pages) and to how it is made ("How it works:", the developer pages on GitHub).
+reference pages) and to how it is made ("How it works:", the developer pages on GitHub). Each ends
+with a line saying whether [Wake of the Ravager](RAVAGER.md) has it too; what the mod does only in the
+sequel, and what it has yet to get, is on that page.
 
 **Every switch is on by default.** The choices of more than one have defaults of their own:
 the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, the
@@ -86,6 +88,8 @@ the map hides it until it closes; expanded, it covers the game's damage numbers 
 Rules: [the dice log, line by line](DICE-LOG.md). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
 
+**In Wake of the Ravager:** yes.
+
 ### What hurts a monster (the Look box)
 
 In a fight, Look at a monster and the game's small box, under its name and level, also shows its hit
@@ -104,6 +108,8 @@ THAC0 and defences; closing the box shows the rest in a window*. Rules:
 [monsters](PLAYER-GUIDE.md#monsters), [monsters' defences](HOW-THE-GAME-WORKS.md#monsters-defences).
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#what-hurts-a-monster-the-look-box).
+
+**In Wake of the Ravager:** yes.
 
 ### Names over figures
 
@@ -124,6 +130,8 @@ walk, fight hand to hand or end it.
 missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer
 after each shot*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#names-over-figures).
+
+**In Wake of the Ravager:** yes, but not yet the arrows left after an archer's shot ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ### The chance to hit before the swing
 
@@ -150,6 +158,8 @@ the chance, in the dice log and the combat log's header*, and *The chance to hit
 in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it*. Rules: [the chance shown before the
 swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
+
+**In Wake of the Ravager:** yes.
 
 ### Squares in reach
 
@@ -182,6 +192,8 @@ on the map. With the switch off there are no crosses and R does nothing.
 it is can still walk to (R in a fight hides and shows them)*. Rules: [moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#squares-in-reach).
 
+**In Wake of the Ravager:** yes.
+
 ### F10 takes a whole move back
 
 In a fight **F10**, the game's own key, takes a party member's move back: the member stands where
@@ -201,6 +213,8 @@ such a member: it stays where it is. This one is always on, whatever the switch.
 (the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a
 fight](PLAYER-GUIDE.md#moving-in-a-fight). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#f10-takes-a-whole-move-back).
+
+**In Wake of the Ravager:** yes, once the sequel's own END MOVE menu is closed ([how](RAVAGER.md#the-mod-in-the-sequel)).
 
 
 ### Showing what can be used: Alt
@@ -228,6 +242,8 @@ left "held" by switching windows can't leave them up.
 
 **Switch:** *Showing what can be used: hold Alt on the map, out of a fight*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt).
+
+**In Wake of the Ravager:** yes.
 
 
 ## Rule changes
@@ -276,6 +292,8 @@ Two more of the game's bugs are mended for good too: Cilla's figure (the game gi
 half-elf woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a spell's icon
 on the Effects screen ending it ([Spells on the Effects screen](#spells-on-the-effects-screen)).
 
+**In Wake of the Ravager:** yes, every one (the spell save is the sequel's own rule already).
+
 ### Characters
 
 #### Class restrictions
@@ -290,6 +308,8 @@ use](PLAYER-GUIDE.md#what-each-class-may-use), the kits' own limits in [Kits](KI
 works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#class-restrictions).
 
+**In Wake of the Ravager:** yes.
+
 #### Multiclass hit points
 
 A character of several classes gets CON's bonus on every hit die it rolls (a warrior's if one of its
@@ -300,6 +320,8 @@ into the total shared by 2 classes`).
 
 **Always on** (no switch). Rules: [hit points](PLAYER-GUIDE.md#hit-points). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#multiclass-hit-points).
+
+**In Wake of the Ravager:** yes.
 
 #### Hit dice: the better of two
 
@@ -312,6 +334,8 @@ Ranger level: hit points d10 = 2 and 7, the better 7`).
 (every character)*. Rules: [hit points](PLAYER-GUIDE.md#hit-points). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#hit-dice-the-better-of-two).
 
+**In Wake of the Ravager:** yes, with the same switch.
+
 #### Scores and hit points as rolled
 
 On the creation screen the six scores add up to no more than the die gave (lower one to raise
@@ -322,6 +346,8 @@ anywhere the classes could roll.
 **Always on** (no switch). Rules: [ability
 scores](PLAYER-GUIDE.md#ability-scores). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled).
+
+**In Wake of the Ravager:** yes.
 
 #### AD&D's class tables
 
@@ -340,6 +366,8 @@ levels](PLAYER-GUIDE.md#experience-and-levels), [THAC0 by level](PLAYER-GUIDE.md
 [saving throws](PLAYER-GUIDE.md#saving-throws), [spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#adds-class-tables).
 
+**In Wake of the Ravager:** yes, on to the sequel's higher levels ([the tables](PLAYER-GUIDE.md#in-wake-of-the-ravager)).
+
 #### CON as in AD&D
 
 A party member with CON 20 or more gets hit points back at the Player's Handbook's rate, from one an
@@ -350,6 +378,8 @@ where the game added CON's adjustment on top (a dwarf with CON 19 saves at +5, n
 **Always on** (no switch). Rules: [hit
 points](PLAYER-GUIDE.md#hit-points), [saving throws](PLAYER-GUIDE.md#saving-throws). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#con-as-in-add).
+
+**In Wake of the Ravager:** yes.
 
 #### Ages and magical aging
 
@@ -363,6 +393,8 @@ map. The game keeps no ages.
 [ages](PLAYER-GUIDE.md#ages) (the tables). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#ages-and-magical-aging).
 
+**In Wake of the Ravager:** yes, and the party ages between the games ([taking the party across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)); Restore Youth not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 #### Dual-classing as the manual has it
 
 **DUAL** comes at **3rd level**, as the manual says ("You must be at least third level in your
@@ -374,6 +406,8 @@ class (WIS alone for a ranger, druid or psionicist).
 class](PLAYER-GUIDE.md#more-than-one-class), [prime requisites](PLAYER-GUIDE.md#ability-scores). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#dual-classing-as-the-manual-has-it).
+
+**In Wake of the Ravager:** yes.
 
 #### Level cap by XP
 
@@ -388,6 +422,8 @@ highest level (the dice log says what wasn't counted; *without the mod* it count
 the cap](PLAYER-GUIDE.md#xp-stops-at-the-cap). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#level-cap-by-xp).
 
+**In Wake of the Ravager:** a cap of its own, 5,625,000 XP, levels on to 30th ([the cap there](RAVAGER.md#the-mod-in-the-sequel)).
+
 ### Weapons and armour
 
 #### Two weapons
@@ -400,6 +436,8 @@ whole rate. Rules: [two weapons](PLAYER-GUIDE.md#two-weapons); the game's, [the 
 weapons](HOW-THE-GAME-WORKS.md#the-games-two-weapons). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#two-weapons).
 
+**In Wake of the Ravager:** yes.
+
 #### Half-giants' two-handed weapons
 
 Half-giants stand up to twelve feet tall: a half-giant holds a two-handed weapon in one hand, with a
@@ -410,6 +448,8 @@ still take both hands. The inventory's "2 handed" is the weapon's type, not a li
 light weapon in the other*. Rules: [races](PLAYER-GUIDE.md#races). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
 
+**In Wake of the Ravager:** yes, with the same switch.
+
 #### Weapon traits
 
 The mod gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
@@ -417,6 +457,8 @@ heads and their tangle, the staff sling its stinkpots, the polearm its reach; an
 Ravager's lotulis, double spear and trikal what the sequel's weapons guide gives them.
 
 **Always on** (no switch).
+
+**In Wake of the Ravager:** yes, each trait below.
 
 ##### Cahulaks
 
@@ -436,6 +478,8 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 Rules: [cahulaks](PLAYER-GUIDE.md#cahulaks). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#cahulaks).
 
+**In Wake of the Ravager:** yes, by size alone: a shadow or a dust devil can be tangled there ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet), [its creatures](CREATURES.md#wake-of-the-ravager)).
+
 ##### Lotulis and double spear
 
 Two-headed weapons, a blade or a point at each end: a specialist (its weapon spec chosen, mastery
@@ -449,6 +493,8 @@ the first.
     Jenna turns the double spear's last swing from Arena Guard to Arena Guard, beside it (a specialist's second foe, 1 less damage)
 Jenna attacks Arena Guard with Wooden Double Spear (1d8): d20 = 6, needs 10+ (55%), hits AC 8, target AC 4 -> HIT
 ```
+
+**In Wake of the Ravager:** yes, on the sequel's own lotulis and double spear.
 
 ##### Trikal
 
@@ -466,6 +512,8 @@ Rules: [two-headed weapons and the trikal](PLAYER-GUIDE.md#lotulis-double-spear-
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#lotulis-double-spear-and-trikal).
 
+**In Wake of the Ravager:** yes, on the sequel's own trikal.
+
 ##### Staff sling stinkpots
 
 AD&D's *Arms and Equipment Guide* gives the staff sling a clay pot of burning sulphur to throw: 1d3
@@ -476,6 +524,8 @@ Rules: [stinkpots](PLAYER-GUIDE.md#stinkpots), [grand mastery's
 damage](WEAPON-SPECS.md#grand-masterys-damage). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#staff-sling-stinkpots).
 
+**In Wake of the Ravager:** yes.
+
 ##### Polearm reach
 
 A polearm held with no other weapon (a shield or a bow in the missile slot is fine) strikes in melee
@@ -483,6 +533,8 @@ at two squares as well as one, straight or two across and one along, over a crea
 not through a wall. It holds for the party and its foes alike; every polearm has it, ***Thornwall***
 and ***Linebreaker*** too, and Wake of the Ravager's [trikal](#trikal), a polearm with three blades. Rules: [polearm reach](PLAYER-GUIDE.md#polearm-reach). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#polearm-reach).
+
+**In Wake of the Ravager:** yes.
 
 #### Creature size
 
@@ -500,6 +552,8 @@ weapon's dice), [size](PLAYER-GUIDE.md#size). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#creature-size)
 (and where the dice come from).
 
+**In Wake of the Ravager:** yes, by the sequel's own table of sizes ([its creatures](CREATURES.md#wake-of-the-ravager)).
+
 #### Held targets
 
 A Paralyzed or Out Cold creature is hit automatically by every blow, shot or throw, a natural 1 too,
@@ -512,6 +566,8 @@ blow.
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#held-targets).
 
+**In Wake of the Ravager:** yes.
+
 #### Rings and cloaks of protection
 
 The mod's two rings and cloak of protection ([new items](#new-items)), +1 to AC and saves, follow
@@ -522,6 +578,8 @@ nothing with magical or metal armour or a shield.
 [protection](PLAYER-GUIDE.md#protection). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
 
+**In Wake of the Ravager:** yes.
+
 #### Helms give AC 1
 
 The game's helms count as armour but give AC 0; with the rule every helm gives 1, the game's and the
@@ -530,6 +588,8 @@ mod's, shown on View Character, the inventory and as `AC BONUS:1` in a helm's bo
 **Switch:** *Helms give AC 1 (the game's helms give none)*. Rules: [armour](PLAYER-GUIDE.md#armour),
 the helms in [Items](ITEMS.md#head). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#helms-give-ac-1).
+
+**In Wake of the Ravager:** yes, with the same switch.
 
 #### Items saving against acid
 
@@ -542,6 +602,8 @@ and AD&D's saving throw against acid by its material, less its plus (leather arm
 [items against acid](ITEMS.md#items-against-acid). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#items-saving-against-acid).
 
+**In Wake of the Ravager:** yes.
+
 ### Magic
 
 #### Rangers' casting level
@@ -553,6 +615,8 @@ the whole ranger level. The Seeker and Justifier take off 5 and 9 instead.
 **Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#rangers-casting-level).
 
+**In Wake of the Ravager:** yes.
+
 #### Preservers' INT
 
 AD&D's table for INT holds: a chance to learn each spell from a scroll (35% at INT 9 to 100% at 24;
@@ -562,6 +626,8 @@ The game let a preserver learn any spell from any scroll, and know them all.
 **Always on** (no switch). Rules: [learning preserver
 spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-int).
+
+**In Wake of the Ravager:** yes.
 
 #### Spells saved against with the spell save
 
@@ -575,6 +641,8 @@ AD&D. The dice log and the Spells tab name the save used.
 throws](PLAYER-GUIDE.md#saving-throws). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save).
 
+**In Wake of the Ravager:** yes: the sequel's own rule already.
+
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
 The game doubles the save's d20 against these spells (and nine monsters' attacks), so most creatures
@@ -583,6 +651,8 @@ for what can be dodged: 35% to save a Fireball at DEX 12, where the doubled d20 
 DEX 21 (`+5 DEX 21 dodging`). Rules: [saving throws](PLAYER-GUIDE.md#saving-throws) (the table). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
+
+**In Wake of the Ravager:** yes.
 
 #### Enlarge multiplies the weapon's dice only
 
@@ -597,6 +667,8 @@ Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fi
 **Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#enlarge-multiplies-the-weapons-dice-only).
+
+**In Wake of the Ravager:** yes.
 
 #### Spells and psionics as the manual describes them
 
@@ -613,6 +685,8 @@ the manual describes them](HOW-THE-GAME-WORKS.md#spells-and-psionics-as-the-manu
 table](HOW-THE-GAME-WORKS.md#adds-turning-table). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
 
+**In Wake of the Ravager:** yes, for the spells and powers the two games share, and Turn Undead; the monsters' powers are Shattered Lands' monsters'.
+
 #### Spells roll to hit
 
 Missile spells (Acid Arrow as if fired by a fighter of the caster's level, Turn Pebble to Boulder,
@@ -623,6 +697,8 @@ Flame Arrow, areas, cones and psionic powers are left as they are.
 
 **Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-roll-to-hit).
+
+**In Wake of the Ravager:** yes.
 
 #### Resting as in AD&D
 
@@ -635,6 +711,8 @@ CON's bonus**: a middle way between AD&D's night and the game's full heal. Slots
 **Always on** (no switch). Rules:
 [resting](PLAYER-GUIDE.md#resting). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#resting-as-in-add).
+
+**In Wake of the Ravager:** yes.
 
 ## More character customization
 
@@ -656,6 +734,8 @@ other AD&D's plain rate. Each picks after DONE and starts with a plain weapon of
 specs](WEAPON-SPECS.md). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#weapon-specialization).
 
+**In Wake of the Ravager:** yes ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
+
 ### Kits
 
 A character may take a kit when it is made, on the creation panel's **KIT** page: three for each
@@ -669,6 +749,8 @@ human with none)*. Rules: [Kits](KITS.md), [choosing one](KITS.md#choosing-a-kit
 class](KITS.md#changing-class). How it works:
 [DEVELOPMENT-KITS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-KITS.md).
 
+**In Wake of the Ravager:** nearly all, kit by kit in [In Wake of the Ravager](KITS.md#in-wake-of-the-ravager).
+
 ### STORE and RECALL on the creation screen
 
 **STORE**, under the hit points, keeps the roll on screen (the scores, the die's total, hit points,
@@ -680,6 +762,8 @@ Baldur's Gate. Changing the race, sex, classes or kit forgets it.
 **Always on** (no switch). Rules: [ability scores](PLAYER-GUIDE.md#ability-scores). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen).
+
+**In Wake of the Ravager:** yes.
 
 ### Fuller starting gear
 
@@ -693,6 +777,8 @@ can use, a sling, and leather armour where they may wear it*. Rules: [the
 classes](PLAYER-GUIDE.md#the-classes) (each class's gear), [starting gear](KITS.md#starting-gear).
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#fuller-starting-gear).
+
+**In Wake of the Ravager:** yes, from the sequel's own items ([how](RAVAGER.md#the-mod-in-the-sequel)).
 
 ### The game's own party
 
@@ -720,19 +806,7 @@ spells. Cilla is drawn as the elf she is: [elves and half-elves](#elves-and-half
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-games-own-party).
 
-**Wake of the Ravager's own party** (a new game started with no party made) gets the same treatment,
-the owner's choices of 2026-11-26. The Loader gives it out once, when it finds them with no weapon
-specs and no kit (a game saved before, too), and says so in the dice log:
-
-| Character | Weapon specialization | With kits |
-|---|---|---|
-| **Gerakis**, half-giant gladiator | the long sword, the gythka and the trikal | **Wild Fighting**, as in Shattered Lands |
-| **Thy'rokh**, thri-kreen fighter and fire druid | the gythka (mastery at once: he is a 6th-level fighter) | a **Grove Warden's AC**: 1 better for every 3 druid levels |
-| **Terrannus**, human earth cleric | the long sword, his kit's chosen weapon spec | a **Crusader** (a warrior's THAC0, expertise with the long sword, a warrior's extra attacks), at the kit's full cost: one fewer spell slot at each spell level |
-| **Ar'Anda**, elf preserver, psionicist and thief | | the **Elven Shadow-walker's** hiding (never halved in daylight), and she **casts in light armour** (leather, or of no material), though a multiclass preserver |
-
-Without these, the sequel's level up would ask each of them for weapon specs, as it does in
-Shattered Lands for a game begun before the rule.
+**In Wake of the Ravager:** the sequel's own party gets the same: [the sequel's own party](RAVAGER.md#the-sequels-own-party).
 
 ## New content
 
@@ -774,6 +848,8 @@ work](PLAYER-GUIDE.md#how-spells-work) (each spell in full), [spell
 lists](PLAYER-GUIDE.md#spell-lists). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
+**In Wake of the Ravager:** yes, with spellbooks at Notaku's ([the mod's gear](RAVAGER.md#the-mods-gear-in-the-sequel)).
+
 ### 6th-level priest spells
 
 Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's, with the same switch: Heal,
@@ -791,6 +867,8 @@ Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work) (each spell), [spell
 lists](PLAYER-GUIDE.md#spell-lists), [ages](PLAYER-GUIDE.md#ages) (Restore Youth). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
+**In Wake of the Ravager:** the sequel's own 6th-level priest spells; Restore Youth and the mod's Whirlwind and Sunstroke not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### Kalzith
 
 A defiler slave in a pen of his own in the slave pens, there the first time the party enters them,
@@ -800,6 +878,8 @@ Kalzith](PEOPLE.md#kalzith) (spoilers).
 
 **Switch:** *Kalzith, a defiler slave in the slave pens who sells arcane scrolls*. How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#kalzith).
+
+**In Wake of the Ravager:** no: Shattered Lands' story only.
 
 ### Semyon
 
@@ -812,6 +892,8 @@ Dinos and the Trustee say](PEOPLE.md#what-dinos-and-the-trustee-say-about-them) 
 works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#semyon).
 
+**In Wake of the Ravager:** no: Shattered Lands' story only.
+
 ### The cooked vulture
 
 The arena's vulture, plucked and cooked at the pens' campfire, is no use in the game; with the
@@ -820,6 +902,8 @@ vulture](PEOPLE.md#the-cooked-vulture) (spoilers).
 
 **Switch:** *The cooked vulture: Dinos cooks it for the party (XP and a full rest)*. How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-cooked-vulture).
+
+**In Wake of the Ravager:** no: Shattered Lands' story only.
 
 ### Defilers' scrolls
 
@@ -836,6 +920,8 @@ chance, and a game saved mid-fight keeps the scroll given. The dice log doesn't 
 one time in 20, dropped where it dies*. Rules: [learning preserver
 spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#defilers-scrolls).
+
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ### New items
 
@@ -874,6 +960,8 @@ class](PLAYER-GUIDE.md#magic-weapons-by-class); where each is, its numbers and i
 chest](ITEMS.md#pehtucls-chest). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-items).
 
+**In Wake of the Ravager:** the mod's weapons and Bone Helm in its shops and on its people ([the mod's gear](RAVAGER.md#the-mods-gear-in-the-sequel)); the rest come with a party taken across.
+
 ### The champions' bout
 
 With the new items: kill Scar in the arena, and on the party's next visit six champions from a
@@ -881,6 +969,8 @@ distant arena, led by a Tohr-kreen with Kreenfang, come to try the pens' new kin
 armoured as the party is. It comes once. The bout: [People: the champions'
 bout](PEOPLE.md#the-champions-bout) (spoilers). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-champions-bout).
+
+**In Wake of the Ravager:** no: Shattered Lands' story only.
 
 ## Game speed
 
@@ -909,6 +999,8 @@ quicker.*
 What each speed asks of the computer: [suggested system
 requirements](README.md#suggested-system-requirements). How it works, with the measurements:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#game-speed).
+
+**In Wake of the Ravager:** yes, the speeds; steady pace not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ## Picture and music
 
@@ -962,6 +1054,8 @@ its music as it is.
 dimmed line under each row of the picture, softer than scanlines* or *Sharp: hard-edged pixels at
 any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#picture-and-music).
+
+**In Wake of the Ravager:** the picture, yes; the music device isn't needed (the sequel's music is its CD's audio).
 
 ## The engine: GOG's DOSBox or DOSBox-X
 
@@ -1034,6 +1128,8 @@ the game*; the button
 and **No soundfont**. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x).
 
+**In Wake of the Ravager:** yes, the same engine.
+
 ## Wake of the Ravager
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
@@ -1077,6 +1173,8 @@ Loader doesn't see.
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-saves).
 
+**In Wake of the Ravager:** not yet: the sequel's own ten saves, and the QUICK saves in its own window ([saves in the sequel](RAVAGER.md#saves-in-the-sequel), [the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### Quick save, quick load and autosave
 
 On the map, **F5** saves the game at once: no window, no name to type. The game stands still for a
@@ -1108,23 +1206,14 @@ window (the dice log run on its own, or the game started without the window), a 
 `autosave` or `quick_save` in `settings.json` is taken within a second, with no restart (the dice
 log on its own prints a line saying so).
 
-**In Wake of the Ravager** (started from the Loader) F5, F9 and the autosaves work the same way,
-in the sequel's own save and load window: F9 opens its LOAD window on the quick saves (`SAVQ01.SAV`
-to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window is back on the game's
-own ten (the sequel's own F1 and F2 windows never open on the quick saves). Its autosaves have shorter
-names, to fit its narrower rows (`Auto Day 1, 09:05 Mines 1`, `Auto Day 1, 00:06 fight`). Each quick save
-keeps its own part of the map's limits, which the sequel stores beside a
-save, so loading one never takes another save's. There is no camp in the sequel, so no camp
-autosave. While the switch is on and the Loader is there, F5 is the quick save, not the sequel's own
-F5 (the sound effects on and off: F4 and the game's menu still have the music, and the menu the
-sound effects); with the switch off or without the Loader, F5 is the game's again.
-
 **Switches:** *Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save
 window, and F9 opens the load window there* (off, F5 and F9 are the game's own: F5 draws the view
 again, F9 breaks the camp of the game's rest, where the Loader leaves both to the game anyway) and
 *Autosave: on coming into another area and after a fight, on the QUICK page of the save window*.
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#quick-save-quick-load-and-autosave).
+
+**In Wake of the Ravager:** yes, in the sequel's own save window: [saves in the sequel](RAVAGER.md#saves-in-the-sequel).
 
 ### Saves under their names
 
@@ -1135,15 +1224,12 @@ battle.SAV`); saving over a slot replaces that slot's copy. **Open the folder** 
 a save in a slot...** copies a named save (or another Shattered Lands save) into the page and slot you give, asking
 first if one is there, and keeps the save it replaces as `Replaced - Page 1 slot 05 - NAME.SAV`.
 
-Wake of the Ravager's saves get the same: its ten manual slots are copied into **Named saves (Wake
-of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the Ravager's** button opens that folder,
-and a sequel's save put back into a slot is made the Loader's (the bigger character sheets) as it
-goes in (a game already running lists it from its next start).
-
 **Buttons:** *Open the folder*, *Put a save in a slot...* Rules: [compatibility with older
 saves](README.md#compatibility-with-older-saves). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-saves)
 (saves under their names).
+
+**In Wake of the Ravager:** yes, in a folder of its own: [saves in the sequel](RAVAGER.md#saves-in-the-sequel).
 
 ### More characters
 
@@ -1155,6 +1241,8 @@ the highest free number, so the first ten after the 19th go to 20 to 29). The pa
 fixes DELETE in a scrolled roster and New characters' thief skills ([bugs
 fixed](GAME-BUGS.md#making-and-keeping-characters)). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-characters).
+
+**In Wake of the Ravager:** not needed: the sequel's own roster holds 40.
 
 ## Expanded features
 
@@ -1170,6 +1258,8 @@ full price whoever traded. [Friends](#new-wizard-spells) raises the leader's CHA
 table). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
 
+**In Wake of the Ravager:** yes, a shopkeeper's own discount on top.
+
 ### Buying back magical items
 
 The game destroys whatever the party sells. With the mod a magical item sold (a plus or a
@@ -1177,12 +1267,16 @@ power) goes into the merchant's pack, offered at its price less the CHA discount
 anything else is gone. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
 
+**In Wake of the Ravager:** yes.
+
 ### Improved thieving
 
 Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
 from behind), a cloak, boots and belt that help, and pockets to pick, all always on. Rules: [thieves' skills and picking
 pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets), [hiding in
 shadows](PLAYER-GUIDE.md#hiding-in-shadows).
+
+**In Wake of the Ravager:** yes, each part below.
 
 #### Thief skills from AD&D's table
 
@@ -1197,6 +1291,8 @@ Powers*); another thief may try at once.
 [backstabs](PLAYER-GUIDE.md#from-behind-and-backstabs); the game's, [how the game works out thief
 skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
+
+**In Wake of the Ravager:** yes.
 
 #### Hiding in shadows to backstab
 
@@ -1221,6 +1317,8 @@ shadows](PLAYER-GUIDE.md#hiding-in-shadows), the kits that hide their own way in
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
 
+**In Wake of the Ravager:** yes.
+
 #### Picking pockets
 
 A thief's **Pick Pockets** button (a purse, where a priest's Turn Undead is on the USE screen), then
@@ -1232,6 +1330,8 @@ pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP ea
 **Always on** (no switch). Rules: [thieves' skills and picking
 pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#picking-pockets).
+
+**In Wake of the Ravager:** yes ([the purse there](RAVAGER.md#the-mod-in-the-sequel)).
 
 ## Graphics
 
@@ -1254,6 +1354,8 @@ classes. The picture shows them bare, as drawn for the mod.
 
 **Always on** (no switch), both. How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#elves-and-half-elves).
+
+**In Wake of the Ravager:** the sequel's own figures, [redrawn in Shattered Lands' style](RAVAGER.md#the-mod-in-the-sequel).
 
 ### What the party wears
 
@@ -1296,6 +1398,8 @@ palette would turn the outfits' browns grey and their plums magenta).
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#what-the-party-wears)
 (and where the picture store can't be reached, on Dark Sun Recompiled).
 
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### Shadows
 
 Every living figure on the map (the party, the people, the monsters; not the dead, nor items) casts
@@ -1307,6 +1411,8 @@ own shadows fall. They are drawn on the floor first, so a shadow never covers a 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#shadows).
 
+**In Wake of the Ravager:** yes.
+
 ### Dust
 
 Anyone walking on sand or dirt raises little puffs of dust behind their feet, which spread, rise a
@@ -1316,6 +1422,8 @@ little and fade in about a second, behind the walls and figures.
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#dust).
+
+**In Wake of the Ravager:** yes.
 
 ### See-through figures
 
@@ -1331,6 +1439,8 @@ better at saving against a spell aimed at them, for whoever can't detect invisib
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#see-through-figures).
+
+**In Wake of the Ravager:** yes.
 
 ## Controls
 
@@ -1352,6 +1462,8 @@ the mouse at all.
 ring on the ground in a fight:* *... none* or *... under the enemy chosen with Tab* (the default). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
 
+**In Wake of the Ravager:** yes.
+
 ### Scrolling the map
 
 Press the mouse wheel on the map and move the mouse: the map moves with the pointer, as if dragged,
@@ -1362,6 +1474,8 @@ one scale, built into its drawing code.
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#scrolling-the-map).
 
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### The view in fights
 
 The game moved the view after a figure walking in a fight as soon as it came near the screen's edge,
@@ -1371,6 +1485,8 @@ game has it.
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-view-in-fights).
+
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ### The pointer in scenes, and where it starts
 
@@ -1386,6 +1502,8 @@ way, and in a window as fast as your desktop's pointer, fine enough to place an 
 **Always on** (no switch), both. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### The whole party in view
 
 The game shows the party on the map as one figure, the leader, until you press **5**, and gathers it
@@ -1396,6 +1514,8 @@ until the next fight or load.
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-whole-party-in-view).
 
+**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+
 ### Spells on the Effects screen
 
 On the Effects screen, a click on an effect's icon ends it in the game, so a stray click loses a
@@ -1404,6 +1524,8 @@ is stopped. What else the screen shows: [the Effects screen](#the-effects-screen
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#spells-on-the-effects-screen).
+
+**In Wake of the Ravager:** yes.
 
 ## Always on
 
@@ -1469,6 +1591,8 @@ The Characters tab shows the same THAC0 and saves; without the Loader the game's
 back. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#thac0-saves-and-thief-skills).
 
+**In Wake of the Ravager:** yes.
+
 ### The creation screen
 
 Beside the game's own scores and hit points the character creation screen shows: **THAC0** right of
@@ -1482,6 +1606,8 @@ weapon window for a warrior's weapon specs ([choosing at
 creation](WEAPON-SPECS.md#choosing-at-creation)). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-creation-screen).
 
+**In Wake of the Ravager:** yes.
+
 ### Spell slots on the USE screen
 
 The USE screen shows, at the top of the panel under the spells, how many spells of the level on show
@@ -1494,6 +1620,8 @@ after resting. A preserver in armour reads `NO SPELLS IN ARMOUR` instead.
 
 Rules: [spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#spell-slots-on-the-use-screen).
+
+**In Wake of the Ravager:** yes.
 
 ### Charges in item boxes
 
@@ -1510,6 +1638,8 @@ Bow "Hit +1".
 
 Rules: [weaker materials](PLAYER-GUIDE.md#what-each-class-may-use). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
+
+**In Wake of the Ravager:** yes.
 
 ### The Effects screen
 
@@ -1538,6 +1668,8 @@ The Effects screen (Current Spell Effects) shows more in its lower panel and und
 How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-games-spells).
 
+**In Wake of the Ravager:** yes.
+
 ### What a scroll says
 
 Clicking a scroll's spell icon in its item box gives the result on the line under the paper doll:
@@ -1547,12 +1679,16 @@ wrote these there too, but they never reached the screen. In Wake of the Ravager
 come up in the game's own message box over the inventory, for a few seconds. How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-int).
 
+**In Wake of the Ravager:** yes, and the sequel's messages stay on screen ([how](RAVAGER.md#the-mod-in-the-sequel)).
+
 ### No manual check
 
 The game's copy protection is gone: leaving the sewers the first time, the game has a dragon ask for
 a word from the manual, and three wrong answers kill the party. Started from the Loader, the dragon
 doesn't come, and the game goes on as if it had been answered. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#no-manual-check).
+
+**In Wake of the Ravager:** yes, the sequel's own check gone too.
 
 ### Preservers' first spells
 
@@ -1565,6 +1701,8 @@ being the game's own in its order; the character is already saved, so EXIT can't
 Rules: [the preserver](PLAYER-GUIDE.md#preserver), [learning preserver spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-first-spells).
 
+**In Wake of the Ravager:** yes, for the sequel's own grants ([how](RAVAGER.md#the-mod-in-the-sequel)).
+
 ### Psionic powers at creation
 
 Every new character picks its psionic powers at **DONE**, on the game's **PICK A PSIONIC POWER**
@@ -1576,6 +1714,8 @@ its powers, and the game's own party keeps the game's. Rules: [the psionicist](P
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#psionic-powers-at-creation).
 
+**In Wake of the Ravager:** yes ([how](RAVAGER.md#the-mod-in-the-sequel)).
+
 ### Looting a body: T and Shift+T
 
 With a body's (or a chest's) window open, **T** takes everything in it and **Shift+T** everything
@@ -1585,6 +1725,8 @@ take them too). The purse jingles and the dice log says who took what (`Lex take
 Grapes, Guava (4), Obsidian Bloodwrath +1`). *Without the mod:* two clicks a thing, a body at a
 time. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt).
+
+**In Wake of the Ravager:** yes.
 
 ### Selling plain gear: S
 
@@ -1597,12 +1739,16 @@ lists the sale (`Gerakis sells 9 things for 95 ceramic pieces: Wooden Club 1, Bo
 it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#selling-plain-gear-s).
 
+**In Wake of the Ravager:** yes.
+
 ### M, U and I: open a screen, close it again
 
 **M** on the map opens the overhead map, as the game's **O** does, and **M** again closes it. **U**
 and **I** open the USE and inventory screens and close them when pressed a second time; **U** on the
 inventory, or **I** on USE, switches to the other, as in the game. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#m-u-and-i-open-a-screen-close-it-again).
+
+**In Wake of the Ravager:** yes (M is the sequel's own overhead map).
 
 ### Magic items' icons
 
@@ -1617,6 +1763,8 @@ its story calls for another the game animates: water's blue (Stillwater, Hayneed
 white and blue (Windlash, Galefang, Skycutter), violet (Mindshard) or green (Greenbright). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-items).
 
+**In Wake of the Ravager:** yes, in its shops too.
+
 ### Spells on the ground
 
 With the new spells, the [6th-level priest spells](#6th-level-priest-spells) that stay on the map
@@ -1629,6 +1777,8 @@ Fire Seeds' burst, and Whirlwind's funnel of dust, which turns as you watch.
 How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
+**In Wake of the Ravager:** the sequel's own pictures for its own spells; Whirlwind's funnel not yet.
+
 ### The game's bugs, fixed
 
 The patched game also mends dozens of the game's own bugs, whatever the Options tab says: spells
@@ -1639,3 +1789,5 @@ With the game's people wearing their weapons and armour from the start (one of t
 turns up](GAME-BUGS.md#who-turns-up-and-how)), the mod also puts on what else they carry to wear: a
 cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the
 same rules as the party's.
+
+**In Wake of the Ravager:** most: [in Wake of the Ravager](GAME-BUGS.md#in-wake-of-the-ravager).
