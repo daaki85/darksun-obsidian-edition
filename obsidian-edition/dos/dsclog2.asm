@@ -16999,7 +16999,8 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
         jz .drag
         mov byte [cs:msg_ended], 1
         and al, ~EVENT_PRESSES
-.drag:  test byte [cs:scroll_on], SCROLL_MIDDLE
+.drag:  call panel_event               ; (a left press on the combat log's panel: not the game's)
+        test byte [cs:scroll_on], SCROLL_MIDDLE
         jz .pass
         test al, EVENT_MID_PRESS        ; the wheel pressed: a drag at once
         jz .mheld
@@ -18134,7 +18135,7 @@ redraw_rect:
         ret
 
 ; PANEL_LIVE: ZF set if the panel is on screen: shown, the page on show the one it was last drawn
-; into, and the game on the map
+; into, and the game on the map (for the pointer drawn over it)
         SHARED_panel_live
 
 ; PANEL_MOUSE: after the main loop's call for the pointer (AX the buttons; the far pointers to x and y
@@ -18146,42 +18147,62 @@ panel_mouse:
         mov bp, sp
         push es
         push bx
-        push cx
-        push dx
         les bx, [bp + 4]
         mov cx, [es:bx]
         les bx, [bp + 8]
         mov dx, [es:bx]
         mov [cs:panel_mx], cx
         mov [cs:panel_my], dx
-        test al, 1
-        jz .up
+        cmp word [cs:panel_held], 0     ; (a press on the panel, PANEL_EVENT's: not the game's)
+        je .out
+        and al, ~1
+.out:   pop bx
+        pop es
+        pop bp
+        ret
+
+; PANEL_EVENT: in MOUSE_EVENT (CX, DX where, AL the events, BX the buttons held), SL's PANEL_MOUSE: a left
+; press on the panel while it is on the map (PANEL_HERE) counted with where it was (PANEL_HITS, PANEL_HX,
+; PANEL_HY) and held (PANEL_HELD) till its release, both kept from the game. The main loop's call for the
+; pointer (PANEL_MOUSE, above) saw a press only if the button was still down as it ran: a quick click
+; was missed there and went to the game's own handler (the party walked to where the panel is).
+panel_event:
         cmp word [cs:panel_held], 0
-        jne .keep
-        call panel_live
-        jne .out
+        jne .held
+        test al, EVENT_LEFT_PRESS
+        jz .ret
+        call panel_here
+        jne .ret
         push cx
         push dx
         sub cx, PANEL_X0
         cmp cx, PANEL_W
-        jae .off
+        jae .out
         sub dx, [cs:panel_top]
         cmp dx, [cs:panel_rows]
-.off:   pop dx
+.out:   pop dx
         pop cx
-        jae .out
+        jae .ret
         mov word [cs:panel_held], 1
         mov [cs:panel_hx], cx
         mov [cs:panel_hy], dx
         inc word [cs:panel_hits]
-.keep:  and al, ~1
-        jmp .out
-.up:    mov word [cs:panel_held], 0
-.out:   pop dx
-        pop cx
-        pop bx
-        pop es
-        pop bp
+.held:  test al, EVENT_LEFT_LEAVE
+        jz .keep
+        mov word [cs:panel_held], 0
+.keep:  and al, ~(EVENT_LEFT_PRESS | EVENT_LEFT_LEAVE)
+        and bx, ~1
+.ret:   ret
+
+; PANEL_HERE: ZF set if the panel is on screen over the map (PANEL_SHOWN, ON_MAP), for L and a press on it.
+; Not SL's PANEL_LIVE page test (the page on show the one the panel was last drawn into): with a window
+; ON_MAP is already clear, and on the map the test could only keep L and a click from a panel on screen
+; (the owner's report in DOSBox-X: L didn't hide it, clicks went to the game). Registers kept.
+panel_here:
+        cmp byte [cs:panel_shown], 0
+        je .no
+        jmp on_map
+.no:    cmp sp, 0                       ; (ZF clear)
         ret
 
 ; PANEL_DRAW: the picture into the page on show, a plane at a time (DS the game's; registers kept)
@@ -18547,7 +18568,7 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         je .l
         cmp ax, KEY_SHIFT_L
         jne .tabs
-.l:     call panel_live
+.l:     call panel_here
         je .count
         call l_on_map
         jne .no
