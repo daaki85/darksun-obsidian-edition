@@ -8,7 +8,7 @@ The first three columns show the Warrior with empty slots, a right-hand sword, t
 
 ![Human Warrior walking in profile before and after the refit, with and without a cloak, beside the original woman's cloak](hip-profile-human.gif)
 
-The upper row uses `1d82ed6`. Each figure includes the original game size and a 6× detail of its waist and upper legs. [Inspect the second profile step](hip-profile-human.png) · [Compare the Warrior in DOSBox](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-human-profile-cloak-dosbox.png)
+The upper row uses `1d82ed6`. Each figure includes the original game size and a 6× detail of its waist and upper legs. [Inspect the second profile step](hip-profile-human.png) · [Compare the Warrior in DOSBox](../../../playtest/logs/img/2026-11-26-human-profile-cloak-dosbox.png)
 
 ## All figures
 

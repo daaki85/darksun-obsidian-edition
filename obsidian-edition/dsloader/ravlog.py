@@ -25,8 +25,8 @@ from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
-    keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
-    shadows, sizes, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
+    keywatch, labels, locks, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
+    gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -88,6 +88,24 @@ def effect_names(guest, load: int) -> Dict[int, str]:
     return out if out.get(5) == "Armor" else {}
 
 
+# What an effect does (game.effect_rule, the dice log's "Blur on Sadira: ..." lines: effect_changes), in the
+# sequel's numbers: Shattered Lands' rules by their effect's name (game.EFFECT_NAMES), the sequel's effect
+# of the same name taking it. A name only one game has (the sequel's own effects) gets none.
+SL_EFFECT_NAMES = dict(game.EFFECT_NAMES)
+SL_EFFECT_RULES, SL_MANUAL_RULES = dict(game.EFFECT_RULES), dict(game.MANUAL_EFFECT_RULES)
+
+
+def effect_rules(names: Dict[int, str], sl_rules: Dict[int, str]) -> Dict[int, str]:
+    """SL_RULES (by Shattered Lands' effect numbers) keyed by the sequel's NAMES' numbers instead."""
+    sl_by_name = {name.lower(): n for n, name in SL_EFFECT_NAMES.items()}
+    out = {}
+    for n, name in names.items():
+        sl = sl_by_name.get(name.lower())
+        if sl is not None and sl in sl_rules:
+            out[n] = sl_rules[sl]
+    return out
+
+
 RAV_ITEM_TYPE, RAV_ITEM_SLOT, RAV_ITEM_PLUS = 0x0A, 0x13, 0x16  # (the sequel's item fields, as DSCLOG2's)
 ADDRESSES: Dict[str, object] = {
     "DGROUP": ravager.DGROUP,
@@ -95,6 +113,10 @@ ADDRESSES: Dict[str, object] = {
     "ITEM_TYPES_PTR": 0x19CD,  # (ravds --fuzzy: 40 uses agree)
     "CREATURE_SIZE": ravager.CREATURE_SIZE, "SHEET_SIZE": ravager.SHEET_SIZE, "ITEM_SIZE": ravager.ITEM_SIZE,
     "WHOSE_TURN": ravager.WHOSE_TURN, "REGION": 0x140C, "EFFECT_COUNT": 0x2100,
+    "FINE_BOW_NAME": ravager.FINE_BOW_NAME,  # (the Spellarcher's Fine Bow: DSCLOG2's FINE_HIT)
+    # the monsters' poison, a Poisoner's first hits (DSCLOG2's POISON_HIT): the sequel's 273 and 274 are
+    # Shattered Lands' 176 and 177 by their records
+    "POISON_POWERS": {273: "Poison (10 damage)", 274: "Poison (30 damage)"}, "POISON_DAMAGE": {273: 10, 274: 30},
     # the fight's combatants, 3 bytes each (kind, the creature's number): the sequel's code reads them
     # as selector 388h at C34h (SL's 360h at C37h), selector 388h being the load segment + 3F49h
     "COMBATANTS_SEG": 0x3F49, "COMBATANTS_OFF": 0xC33,
@@ -239,6 +261,27 @@ PALETTE_LAST = 253
 # EBh on)
 RAV_CHARMS = (2, 39, 61, 94, 131, 255, 256)
 RAV_SPELL_LAST = 0xEA
+# ... and the kits' spells in the sequel's numbers (ravager.RAV_*: DSCLOG2's CURE_DICE, AV_CAUSES, AV_HEALS,
+# AV_HARMS), for the dice log's kit parts of a cure's and a Cause Wounds' lines (kits.cure_bonus, cure_die,
+# harm_bonus) and kits.arc_level's and sky_level's wizard and priest spells (the new spells 320-325)
+RAV_KIT_SPELLS = (
+    ("WIZARD_LAST", ravager.RAV_WIZARD_LAST), ("NEW_WIZARD_SPELLS", ravager.RAV_NEW_WIZARD_SPELLS),
+    ("CURE_LIGHT", ravager.RAV_CURE_LIGHT), ("CURE_SERIOUS", ravager.RAV_CURE_SERIOUS),
+    ("CURE_CRITICAL", ravager.RAV_CURE_CRITICAL), ("BLOOD_FLOW", ravager.RAV_BLOOD_FLOW),
+    ("CURE_DICE", ravager.RAV_CURE_DICE), ("AVENGER_NO_HEAL", ravager.RAV_AVENGER_NO_HEAL),
+    ("CAUSE_LIGHT", ravager.RAV_CAUSE_LIGHT), ("CAUSE_SERIOUS", ravager.RAV_CAUSE_SERIOUS),
+    ("CAUSE_CRITICAL", ravager.RAV_CAUSE_CRITICAL), ("NO_HARM", ravager.RAV_NO_HARM),
+    ("CAUSE_DICE", ravager.RAV_CAUSE_DICE))
+# The sequel's cures' dice calls, by the code after them (dicelog.SPELL_HANDLER_RETURNS: the handler's own
+# bonus), in the patched game: Cure Light Wounds' 1d8 and Blood Flow's 2d6 healing (66542h, then DSCLOG2's
+# KIT_CURE, site 206, where the game had "push ax / jmp 65811h"), Cure Serious Wounds' 2d8 + 1 (6649Eh), Cure
+# Critical Wounds' 3d8 + 3 (664BCh)
+RAV_SPELL_HANDLER_RETURNS = (
+    (bytes.fromhex("83c404cdf5ce90"), 0),
+    (bytes.fromhex("83c40440e9a000"), 1),
+    (bytes.fromhex("83c404050300e9"), 3),
+)
+RAV_POISON_POWER = 273  # (a Poisoner's hit's poison: DSCLOG2's RAV_POISON_POWER, kits.POISON_POWER's)
 
 # Choosing an enemy with Tab, the ring and the chance to hit under the pointer (targeting.py, rings.py,
 # hover.py): the sequel's map things (DS:67BBh, 25h bytes; the feet +0Ah, +0Ch; its finder, 29DBDh, reads
@@ -272,6 +315,10 @@ RED_FIRST, RED_LAST = 32, 255
 # (the allocation of 23F0h bytes, 72FF7h); its things 0-519, the backpack's cells 14-25 (DSCLOG2's
 # THING_COUNT, PACK_FIRST). No icons of the Loader's own (icons.fit: Shattered Lands' pictures).
 RAV_FREE_THINGS, RAV_THINGS_USED, RAV_FREE_ITEMS, RAV_LOOT_OPEN = 0x56EF, 0x55C6, 0x5AF3, 0x05D6
+RAV_THING_OBJECT = 0x67D6  # (each map thing's object number: the 25h-byte records' +1Bh, SL's +1Ah)
+# A lock failed (locks.py; DSCLOG2's LOCK_SITE, site 241): LOCK_BARRED's offset in the tail, the header's +2114,
+# and the checks it put out of reach, +2116
+LOCK_OFF, LOCK_BARS = 2114, 2116
 STOCK_INTERVAL = 1.0  # (seconds between looks for a saved game's sellers without the new items: shopstock)
 
 
@@ -353,9 +400,12 @@ def rav_pocket_sized(typ: bytes) -> bool:
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, loot, pickpocket, ring, startgear
+    from . import icons, itemgate, locks, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
+            # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
+            # apart: ravds' 66AEh -> 67D6h, and RAV_POSITIONS)
+            locks: {"THING_OBJECT": RAV_THING_OBJECT, "POSITIONS": RAV_POSITIONS, "THING_SIZE": RAV_POSITION_SIZE},
             # (picking pockets: none of Shattered Lands' people or weapons, its type and name numbers the
             # sequel's others)
             pickpocket: {"LIFTABLE_TYPES": (), "LIFTABLE_NAMES": {}, "OWN_POCKETS": (),
@@ -400,10 +450,12 @@ def apply_layout() -> int:
                         ("CONJURED_KINDS", ravager.rav_spec_kinds())):
         _SAVED.append((specialize, name, getattr(specialize, name)))
         setattr(specialize, name, value)
-    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh)
-    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)):
+    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh;
+    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST), ("POISON_POWER", RAV_POISON_POWER)) + RAV_KIT_SPELLS:  # the cures')
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
+    _SAVED.append((dicelog, "SPELL_HANDLER_RETURNS", dicelog.SPELL_HANDLER_RETURNS))  # (the cures' lines)
+    dicelog.SPELL_HANDLER_RETURNS = RAV_SPELL_HANDLER_RETURNS
     for module, names in RAV_TARGETING.items():  # (Tab, the ring, the chance under the pointer)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
@@ -414,6 +466,9 @@ def apply_layout() -> int:
             setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
+    for name, value in (("TSR_LEARN_READ", SH_LEARN_READ), ("TSR_LEARN_SPELL_HI", SH_LEARN_SPELL_HI)):
+        _SAVED.append((dicelog, name, getattr(dicelog, name)))  # (a Shinobi's scroll: DSCLOG2's own header)
+        setattr(dicelog, name, value)
     for module, names in rav_items().items():  # (looting with T, selling with S: the item lists' words)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
@@ -1085,6 +1140,8 @@ class RavGameData(game.GameData):
     spell_names: List[str] = []  # (set by RavDiceLog.attach: spell_table's)
 
     def spell_name(self, spell: int) -> str:
+        if spell in game.POISON_POWERS:  # (the monsters' poison, a Poisoner's: the records' "Mons273" and on)
+            return game.POISON_POWERS[spell]
         if 0 <= spell < len(self.spell_names) and self.spell_names[spell]:
             return self.spell_names[spell]
         return super().spell_name(spell)
@@ -1098,10 +1155,21 @@ class RavGameData(game.GameData):
         except (struct.error, IndexError, ValueError):
             return False
 
+    mod_names: Optional[bytes] = None  # (DSCLOG2's ITEM_NAMES as the Loader wrote them: RavDiceLog._write_item_names)
+
     def item_name(self, name_index: int) -> str:
+        """The sequel's list's name (1-255), else the Loader's own from 256 (ravager.NAMES_GAME: the mod's names,
+        the Fine Bow and the spell arrows among them, then the transfer's keepsakes; DSCLOG2's ITEM_NAMES, which
+        the game shows), else "item N"."""
         names = self._name_list()
         if 1 <= name_index <= len(names) and names[name_index - 1]:
             return names[name_index - 1]
+        if ravager.NAMES_GAME <= name_index < ravager.NAMES_GAME + ravager.NAMES_ROOM:
+            table = self.mod_names if self.mod_names is not None else ravager.item_names()
+            at = (name_index - ravager.NAMES_GAME) * ravager.NAME_KEPT
+            raw = table[at:at + ravager.NAME_KEPT].split(b"\0", 1)[0]
+            if raw and game.plain_name(raw):
+                return raw.decode("ascii")
         return f"item {name_index}"
 
 
@@ -1177,6 +1245,25 @@ KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from
 # offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
 PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
 PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
+# A Shinobi's try at a scroll (DSCLOG2's THE SHINOBI'S SPELLS): +2076 the d100 to read it and its chance
+# (DSCLOG's +366 and +367), +2078 the spell's high byte (the new spells 320-325); +2080 to +2086 its counts
+# (casting levels made, CHOOSE A SPELL asked, pages cut, scroll tries)
+SH_LEARN_READ, SH_LEARN_SPELL_HI = 2076, 2078
+SH_LEVELS, SH_ASKS, SH_PAGED, SH_SCROLLS = 2080, 2082, 2084, 2086
+# The weapon traits' counts (DSCLOG2's THE TRIKAL AND THE TWO-HEADED WEAPONS, its header's +2020 to +2059): +2020
+# a lotulis or double spear specialist's last swings turned on a second foe, +2022 the double spear's of them
+# done 1 less, +2024 the first targets put back, +2026 a trikal specialist's hits that asked a save, +2028 trips
+SF_SWINGS, SF_LESSES, SF_BACKS, TRIP_SAVES, TRIPS = 2020, 2022, 2024, 2026, 2028
+# A Spellarcher's spell arrows (ravarrows.py; DSCLOG2's SPELL ARROWS, site 240 and PICK POCKETS' 180-185): its
+# header's words from +2098: ARROWS_ON (the Loader's 1), ARROWS_SEQ, ARROWS_REPLY, ARROWS_WHO (the member),
+# ARROWS_ROW (spellarrows.ARROWS' place); +2108 to +2112 its counts (buttons shown, asks late, buttons beside
+# Turn Undead's drawn). The refusal's words go in PICK POCKETS' PICK_TEXT.
+AR_ON, AR_SEQ, AR_REPLY, AR_WHO, AR_ROW = 2098, 2100, 2102, 2104, 2106
+AR_SHOWN, AR_LATE, AR_DRAWN = 2108, 2110, 2112
+# DSCLOG2's HDR_LEN (+30, glob's fourth word, 0 in every helper before it): its header's length. The header has no
+# version and its signature is still DSCLOGR1, so a word past +2012 is written only where HDR_LEN reaches past it
+# (header_holds): an older helper may have code there.
+HDR_LEN = 30
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -1204,8 +1291,13 @@ class SequelText:
 
 
 class RavDiceLog(dicelog.DiceLog):
-    """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory read only,
-    and only the rolls (no side features after them yet)."""
+    """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory behind a
+    ReadOnlyGuest, which drops every write but to the ranges a ported feature names in its `writable`
+    (the helper DSCLOG2's buffers and mailboxes, and the item lists under the item gate), each feature
+    adding its own only once the helper in memory has the field (a nonzero header offset, and for a
+    field past +2012 one within DSCLOG2's HDR_LEN: header_holds). After the
+    rolls, the ported features' pass (_after_rolls: hit points, effects, slots, creation, spell
+    arrows, locks and the rest)."""
 
     def __init__(self, guest, *args, **kwargs):
         apply_layout()
@@ -1233,6 +1325,8 @@ class RavDiceLog(dicelog.DiceLog):
             names = effect_names(self.guest.guest, load)
             if names:
                 rebind("EFFECT_NAMES", names)
+                for table, sl_rules in (("EFFECT_RULES", SL_EFFECT_RULES), ("MANUAL_EFFECT_RULES", SL_MANUAL_RULES)):
+                    rebind(table, effect_rules(names, sl_rules))  # (effect_changes' rules: by name)
         real, dicelog.GameData = dicelog.GameData, RavGameData  # (the base attach makes its GameData)
         try:
             result = super().attach()
@@ -1259,18 +1353,32 @@ class RavDiceLog(dicelog.DiceLog):
         if self.journal is not None:
             self.journal.sync(lambda: 0, lambda head: False, self.game.game_time())
 
+    def _tail_at(self, field: int) -> Optional[int]:
+        """The address of a buffer of DSCLOG2's tail (TAIL: the tables and buffers it keeps outside its
+        64 KB segment) whose offset is the header's word at FIELD: the tail's segment (+1834, as it sets it
+        while loading) x 16 + the offset. None without the helper, or with either 0, or with FIELD past +2012
+        and beyond its header (header_holds: an older helper's code may lie there)."""
+        if self.tsr_hdr is None or (field > PP_TEXT_OFF and not self.header_holds(field + 2)):
+            return None
+        seg, = struct.unpack("<H", self.guest.read(self.tsr_hdr + labels.TSR_TAIL_SEG, 2))
+        off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + field, 2))
+        return seg * 16 + off if seg and off else None
+
     def _write_item_names(self) -> None:
-        """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196, +198), if it has them."""
-        if self.tsr_hdr is None:
+        """The mod's item names into DSCLOG2's ITEM_NAMES (its header's +196 in the tail, +198), if it has
+        them."""
+        at = self._tail_at(ravager.TSR_NAMES_OFF)
+        if at is None:
             return
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        off, count = struct.unpack("<HH", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF, 4))
+        count, = struct.unpack("<H", self.guest.read(self.tsr_hdr + ravager.TSR_NAMES_OFF + 2, 2))
         from . import launch, ravitems
         kept = ravager.read_added(launch.DOS_DIR).get(ravitems.NAMES_CHUNK, b"")
         names = ravager.item_names([n for n in kept.split(b"\n") if n])
-        if not off or count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
+        if self.game is not None:
+            self.game.mod_names = names  # (the dice log's names for them too: RavGameData.item_name)
+        if count * ravager.NAME_KEPT < len(names):  # (a helper before the names)
             return
-        self.guest.guest.write(base + off, names)
+        self.guest.guest.write(at, names)
 
     def set_rules(self, rules: int) -> None:
         """SL's, the rules ported to the sequel alone (ravager.RULES_PORTED), into DSCLOG2's header
@@ -1294,14 +1402,12 @@ class RavDiceLog(dicelog.DiceLog):
         self.guest.write(word[0], struct.pack("<H", 1 << member if hidden else 0))
 
     def _slots_table(self) -> Optional[int]:
-        """Where DSCLOG2's SLOTS_TEXT is (its header's +148), made writable; None without the helper."""
-        if self.tsr_hdr is None:
+        """Where DSCLOG2's SLOTS_TEXT is (its header's +148, in the tail), made writable; None without the
+        helper."""
+        at = self._tail_at(dicelog.TSR_SLOTS_OFF)
+        if at is None:  # (a helper before the spell slots: none)
             return None
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        off = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_SLOTS_OFF, 2))[0]
-        if not off:  # (a helper before the spell slots: none)
-            return None
-        table = (base + off, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
+        table = (at, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
         if table not in self.guest.writable:
             self.guest.writable = [table] + self.guest.writable
         return table[0]
@@ -1370,9 +1476,9 @@ class RavDiceLog(dicelog.DiceLog):
         if not off:
             return None
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
+        full_at = self._tail_at(dicelog.TSR_LOOK_FULL_OFF)  # (LOOK_FULL: the tail's)
         for r in ((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
-                  (base + off, dicelog.LOOK_SIZE)) + (((base + full_off, dicelog.LOOK_FULL_SIZE),) if full_off else ()):
+                  (base + off, dicelog.LOOK_SIZE)) + (((full_at, dicelog.LOOK_FULL_SIZE),) if full_at else ()):
             if r not in self.guest.writable:
                 self.guest.writable = self.guest.writable + [r]
         return base + off
@@ -1404,14 +1510,13 @@ class RavDiceLog(dicelog.DiceLog):
             except (struct.error, IndexError, ValueError):
                 short, full = [], []
         text = "|".join(short).encode("cp437", "replace")[:dicelog.LOOK_SIZE - 1]
-        full_off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_LOOK_FULL_OFF, 2))
-        if full_off:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
+        full_at = self._tail_at(dicelog.TSR_LOOK_FULL_OFF)
+        if full_at:  # (the window only when there's more to say than the box's HP, AC and THAC0, as SL's)
             whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:dicelog.LOOK_FULL_SIZE - 1] \
                 if len(full) > 1 else b""
             if whole and whole.decode("cp437") not in self._own_text:  # (not dialogue: the Dialogue tab leaves it out)
                 self._own_text.append(whole.decode("cp437"))
-            base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
-            self.guest.write(base + full_off, whole + b"\0")
+            self.guest.write(full_at, whole + b"\0")
         self.guest.write(text_at, text + b"\0")
         self.guest.write(self.tsr_hdr + dicelog.TSR_LOOK_REPLY, struct.pack("<H", seq))
         return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []
@@ -1674,6 +1779,10 @@ class RavDiceLog(dicelog.DiceLog):
         if self._slots_table() is not None:
             super()._write_slots()
 
+    def _slots_at(self) -> int:
+        """(SL's _write_slots' table: DSCLOG2's is in its tail.)"""
+        return self._slots_table()
+
     def _hit_effects(self, attacker: int, attacker_combatant: int, target_combatant: int, mode: Optional[int],
                      item_type: Optional[int], e) -> List[Tuple[str, int]]:
         """The sequel's to-hit routine (628h:66h, 8599Eh; SL's 5B8h:EDh), besides STR or DEX: the target's
@@ -1802,7 +1911,8 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage), the names over
+        fall matched with the weapon hits it took in, regeneration, spells' damage), the kills (_kills_pass), PSP and ability scores
+        changing (_psp_ability_changes), effects starting and ending (effect_changes), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
         (_learn_lines), Psionic Blast's wounds given back (_blast_pass), the creation screen's tries
@@ -1812,7 +1922,11 @@ class RavDiceLog(dicelog.DiceLog):
         out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
         self._step(self._forget_undone_picks)  # (pockets tried since the save loaded: forgotten)
         out += self._step(self._answer_pick)  # (a thief's Pick Pockets button: DSCLOG2's PICK POCKETS, PP_HAND waits)
+        out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
+        out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
         out += self._step(lambda: self.hp_changes(now))
+        out += self._step(lambda: self._kills_pass(now))  # (the monsters killed: the fight's tally counts them)
+        out += self._step(lambda: self._psp_ability_changes(now))  # (PSP spent, kept up, regained; abilities)
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
         self._step(lambda: self._kit_tick(now))  # (the kits: who is under the open sky, a fight's end)
@@ -1836,6 +1950,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._learn_lines)  # (a wizard's try at a scroll: DSCLOG2's INT_LEARN, +272)
         if self.text is not None:  # (dialogue and message boxes: DSCLOG2's TEXT, +126)
             out += self._step(lambda: self._take_text(now))
+        self._step(self._locks_pass)  # (the locks each member failed at its thief level now: LOCK_SITE)
         out += self._step(self._loot_pass)  # (T and Shift+T: a container's things to the backpacks, LOOT_KEY)
         out += self._step(self._sell_pass)  # (S: the member's plain gear sold, SELL_KEY)
         out += self._step(lambda: self._stock_pass(now))  # (a saved game's sellers given the new items: shopstock)
@@ -1845,6 +1960,7 @@ class RavDiceLog(dicelog.DiceLog):
             self._next_slots = now + dicelog.EFFECT_INTERVAL
             self._step(self._write_slots)
             out += self._step(lambda: self._panel_pass(now))
+            out += self._step(lambda: self.effect_changes(now))  # (effects starting, ending, put in again)
             if self.game is not None and self.game.rules & game.RULE_AGING:
                 out += self._step(self._aging_pass)
             out += self._step(self._party_pass)  # (the sequel's own party's weapon specs and features, once)
@@ -1855,6 +1971,7 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._quick_pass(loading, now))  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
             if not loading:
                 self._step(self._journal_sync)  # (the Journal tab: the sequel's own chain)
+        out += self._step(lambda: self.flush(now))  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
         return out
 
     @contextmanager
@@ -1986,6 +2103,88 @@ class RavDiceLog(dicelog.DiceLog):
             self._own_text.append(result.text)
         return result.log or [result.text]
 
+    spell_arrows = True  # (a Spellarcher's arrows buttons: ARROWS_ON; off for a control)
+
+    def _arrows_ready(self) -> bool:
+        """Whether the Loader's copy of OBJEX.GFF has all three spell arrows' objects (ravarrows.objects_ready):
+        without them an arrow made would be an item of no object, so no buttons are offered. Read once."""
+        if getattr(self, "_arrows_objects", None) is None:
+            from . import ravarrows
+            self._arrows_objects = ravarrows.objects_ready()
+        return self._arrows_objects
+
+    def header_holds(self, end: int) -> bool:
+        """Whether DSCLOG2's header reaches END (its HDR_LEN, +30, at END or more): the words below END are the
+        helper's header's, safe to write. An older helper's HDR_LEN is 0: nothing past +2012 is written to it."""
+        if self.tsr_hdr is None:
+            return False
+        return struct.unpack("<H", self.guest.read(self.tsr_hdr + HDR_LEN, 2))[0] >= end
+
+    def _answer_arrows(self) -> List[str]:
+        """Shattered Lands' spell arrows made (DiceLog._answer_use's ARROWS_BY: spellarrows.SpellArrows.make), on
+        DSCLOG2's SPELL ARROWS: ARROWS_ON (its header's +2098) set while the arrows' objects are there
+        (_arrows_ready); an arrows button let go of (ARROWS_SEQ, +2100, ahead of ARROWS_REPLY), ravarrows.make for
+        that member (ARROWS_WHO) and spell (ARROWS_ROW) under the item gate, the request looked at again first
+        (one DSCLOG2 gave up waiting for is dropped); a refusal's words into PICK_TEXT (PICK POCKETS' +2012's),
+        empty when made, and ARROWS_REPLY given ARROWS_SEQ."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        hdr = self.tsr_hdr
+        text_off, = struct.unpack("<H", self.guest.read(hdr + PP_TEXT_OFF, 2))
+        if not text_off or not self.header_holds(AR_ROW + 2):
+            return []  # (a helper before PICK POCKETS, or before SPELL ARROWS: its HDR_LEN short of them)
+        base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        want = [(hdr + AR_ON, 2), (hdr + AR_REPLY, 2), (base + text_off, dicelog.PICK_SIZE)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        on = struct.pack("<H", int(self.spell_arrows and self._arrows_ready()))
+        if self.guest.read(hdr + AR_ON, 2) != on:
+            self.guest.write(hdr + AR_ON, on)
+        seq = self.guest.read(hdr + AR_SEQ, 2)
+        if seq == self.guest.read(hdr + AR_REPLY, 2):
+            return []
+        from . import ravarrows
+        result = None
+        try:
+            member, row = struct.unpack("<HH", self.guest.read(hdr + AR_WHO, 4))
+            with self._items_writable():
+                if 0 <= member < game.PARTY_SIZE:
+                    self.guest.writable = self.guest.writable + [ravarrows.slots_range(self.game, member)]
+                itemgate.hold(self.game)  # (held, DOSBox paused, before anything is moved)
+                try:
+                    if self.guest.read(hdr + AR_REPLY, 2) == seq:
+                        return []  # (DSCLOG2 gave up waiting: nothing made)
+                    if self._fighting():
+                        result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
+                    else:
+                        result = ravarrows.make(self.game, member, row)
+                finally:
+                    itemgate.release(self.game)
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its item lists: answered in a later pass)
+        except (struct.error, IndexError, ValueError):
+            result = None
+        text = (result.text if result else "").encode("cp437", "replace")[:dicelog.PICK_SIZE - 1]
+        self.guest.write(base + text_off, text + b"\0")
+        self.guest.write(hdr + AR_REPLY, seq)
+        if result and result.text and result.text not in self._own_text:
+            self._own_text.append(result.text)
+        return ravarrows.lines_for(result)
+
+    def _strays_pass(self) -> List[str]:
+        """Spell arrows another party member carries given back to the Spellarcher, or taken out of its quiver
+        (ravarrows.return_strays: Shattered Lands' return_strays, with the kits; out of a fight, the map up), the
+        item moves writable while it runs; the game's item lists moving: a later pass."""
+        if self.tsr_hdr is None or self.game is None or not self.game.rules & game.RULE_KITS:
+            return []
+        from . import ravarrows
+        try:
+            with self._items_writable():
+                return ravarrows.return_strays(self.game)
+        except itemgate.ItemsBusy:
+            return []
+        finally:
+            itemgate.release(self.game)
+
     def _stock_pass(self, now: float) -> List[str]:
         """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the
         new items are on (the "new_items" setting): the sellers loaded and not yet marked, then, with the game's
@@ -2082,6 +2281,47 @@ class RavDiceLog(dicelog.DiceLog):
         finally:
             self.guest.writable = before
 
+    def _locks_pass(self) -> None:
+        """SL's: LOCK_BARRED (locks.py) written where DSCLOG2 keeps it, in its tail (the header's LOCK_OFF)."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        at = self._tail_at(LOCK_OFF)
+        if at is None:  # (a helper without LOCK_SITE)
+            return
+        data = (at, locks.table(locks.barred(self.game, self.picked, self.picked_at)))
+        if data != self._locks_written:
+            before = self.guest.writable
+            self.guest.writable = before + [(at, len(data[1]))]
+            try:
+                self.guest.write(at, data[1])
+            finally:
+                self.guest.writable = before
+            self._locks_written = data
+
+    def _kills_pass(self, now: float) -> List[str]:
+        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
+        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
+        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+        if self.tracker is None or self._party_check(now):
+            return []
+        return self.tracker._check_monsters(now)
+
+    def _psp_ability_changes(self, now: float) -> List[str]:
+        """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
+        up), said unless a game is loading (its records half-filled), as SL's _changes."""
+        if self.game is None:
+            return []
+        changes = self.psp_changes() + self.ability_changes()
+        return [] if self._party_check(now) else changes
+
+    def effect_changes(self, now: float = 0.0) -> List[str]:
+        """Shattered Lands' (effects starting, ending and put in again), once the game is attached."""
+        return super().effect_changes(now) if self.game is not None else []
+
+    def _haste_aging(self, owner: int) -> List[str]:
+        """None here: the sequel's Haste aging is _aging_pass's (RULE_AGING, a steady look only)."""
+        return []
+
     def _aging_pass(self) -> List[str]:
         """Ages (RULE_AGING, aging.py), on a steady look only (the same party as the last, the clock
         on by no more than NATURAL_JUMP: not a game being loaded): a starting age for each member
@@ -2109,7 +2349,7 @@ class RavDiceLog(dicelog.DiceLog):
             creature = gd.combatant_creature(owner)
             if creature is not None:
                 self._aging_writable([creature])
-                out += [f"{self._name(caster)} gives Hasted to {self._name(owner)}"] + aging.hasted(gd, creature)
+                out += aging.hasted(gd, creature)  # (effect_changes has said who gives Hasted to whom)
         return out
 
 

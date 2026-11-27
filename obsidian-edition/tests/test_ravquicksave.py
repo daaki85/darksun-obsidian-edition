@@ -293,8 +293,9 @@ class HelperTests(unittest.TestCase):
                             ("greq_saves", ravlog.QUICK_GREQ_SAVES), ("greq_loads", ravlog.QUICK_GREQ_LOADS)):
             self.assertEqual(self.sym[name] - hdr, field, name)
         self.assertEqual(struct.unpack_from("<HH", self.image, hdr + LAY.keys), (0xFFFF, 0xFFFF))
-        self.assertEqual(struct.unpack_from("<H", self.image, hdr + LAY.save_off)[0], self.sym["save_text"])
-        self.assertLess(self.sym["save_text"], self.sym["resident_end"])
+        tail = self.sym["TAIL_PARAS"] * 16  # (SAVE_TEXT: the tail's, kept with the segment; its offset there)
+        self.assertEqual(struct.unpack_from("<H", self.image, hdr + LAY.save_off)[0], self.sym["save_text"] - tail)
+        self.assertTrue(tail <= self.sym["save_text"] < self.sym["INSTALL_PARAS"] * 16)
         self.assertLess(self.sym["greq_load"], self.sym["resident_end"])
 
     def test_save_and_its_greq(self):

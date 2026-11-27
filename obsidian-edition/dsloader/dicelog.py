@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, creationfigure, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -68,6 +68,7 @@ TSR_GEAR_WHO = 1867  # (the sheet index of the character DONE just made, FFh non
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
+TSR_LEARN_SPELL_HI = None  # (the spell's high byte, where the helper has one: DSCLOG2's +2078, ravlog's layout)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -387,6 +388,11 @@ def error_key(err: BaseException) -> Tuple[str, str, int]:
 POISON_OFF_SLOT = 10  # (an item's slot +11h: the left hand; DSCLOG's)
 
 
+
+def _creature_name_bytes(rec: bytes) -> bytes:
+    """A creature record's name field (game.CREATURE_NAME), to tell the record is still the same creature's."""
+    return bytes(rec[game.CREATURE_NAME:game.CREATURE_NAME + 16])
+
 class DiceLogError(Exception):
     pass
 
@@ -614,6 +620,7 @@ class DiceLog:
         self._scrolling = scrolling.Scrolling()  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
+        self._cfigure: Optional[creationfigure.CreationFigure] = None  # (the creation screen's figure)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
         self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
@@ -699,6 +706,7 @@ class DiceLog:
         self._tries_new = False  # ... and whether it has moved since the lines were last given
         self._tries_at = -CREATION_TUMBLE  # ... and when it last moved
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
+        self._hp_who: Dict[int, Tuple[int, bytes]] = {}  # creature index -> (combatant, its record's name) at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
         self._charges_ahead: Dict[Tuple[int, int], float] = {}  # charges this poll still to tell of
@@ -743,7 +751,8 @@ class DiceLog:
                                "Close it and start it again from the Loader (Play Shattered Lands).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
-            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            # (the seed and three captures: the fourth word, +30, is DSCLOG2's HDR_LEN, never written)
+            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<4H", SEED, TARGET_GLOBAL, 0, 0))
             self.game = GameData(self.guest, ds)
             if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
                 old = self.guest.item_gate          # for a guest that has none, so a game started
@@ -754,6 +763,7 @@ class DiceLog:
         # (the figures' Dresser holds the last game's GameData, its picture store and a redraw
         # through the last DSCLOG header: made afresh for this game, at once)
         self._dresser, self._dresser_at = None, 0.0
+        self._cfigure = None  # (creationfigure.CreationFigure, made at the first pass)
         self._forget_destroyed()
         self._poll_fails = 0
         self._dust = dust.Dust()
@@ -1030,7 +1040,7 @@ class DiceLog:
         Thieves as in AD&D (always on)."""
         if self.tsr_hdr is None:
             return
-        rows = locks.barred(self.game, self.picked)
+        rows = locks.barred(self.game, self.picked, self.picked_at)
         data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
         if data != self._locks_written:
             locks.write(self.game, self.tsr_hdr, data[1])
@@ -1193,12 +1203,16 @@ class DiceLog:
             lines += [chr(key | level) + f"{name} {left}/{most}" for level, left, most in levels]
         return "|".join(lines)
 
+    def _slots_at(self) -> int:
+        """Where DSCLOG's copy of the spell slots is (its header's +148, in its segment)."""
+        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
+        return base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SLOTS_OFF, 2))[0]
+
     def _write_slots(self) -> None:
         """Keep DSCLOG's copy of the party's spell slots current."""
         if self.tsr_hdr is None:
             return
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
-        table = base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SLOTS_OFF, 2))[0]
+        table = self._slots_at()
         data = b""
         for member in range(game.PARTY_SIZE):
             try:
@@ -1618,6 +1632,7 @@ class DiceLog:
         step(self._answer_stats)
         out += step(self._answer_use)
         out += step(self._gear_due)
+        step(lambda: self._creation_figure(now))
         out += step(self._loot_pass)
         out += step(self._sell_pass)
         step(self._locks_pass)
@@ -2155,6 +2170,8 @@ class DiceLog:
             self._learn_seq = seq
             from . import intlearn
             read, read_rate = self.guest.read(self.tsr_hdr + TSR_LEARN_READ, 2)
+            if TSR_LEARN_SPELL_HI is not None:  # (the sequel's new spells, 320-325: a Shinobi's tries)
+                spell += self.guest.read(self.tsr_hdr + TSR_LEARN_SPELL_HI, 1)[0] << 8
             return [intlearn.line(self.game.creature_name(who), self.game.spell_name(spell), intelligence, rate,
                                   roll, result, self.game.spell_level(spell), read, read_rate)]
         except (struct.error, IndexError, ValueError):
@@ -2210,8 +2227,23 @@ class DiceLog:
     def _dress(self, now: float) -> None:
         """The party's sprites in what they wear, once the game has the Loader's SEGOBJEX (whose
         party pictures the Loader keeps dressed); as the game's own when switched off."""
-        if not icons.ready(self.game, self.tsr_hdr):
+        if self._made_dresser(now) is not None:
+            self._dresser.update(True, now)
+
+    def _creation_figure(self, now: float) -> None:
+        """The creation screen's figure in the outfit of the class chosen (creationfigure.py): each
+        pass, as DSCLOG waits for it after a click (FIG_DUE)."""
+        if self.tsr_hdr is None:
             return
+        if getattr(self, "_cfigure", None) is None:
+            self._cfigure = creationfigure.CreationFigure(self.game)
+        dresser = self._made_dresser(now) if self.game.creating() else self._dresser
+        self._cfigure.update(dresser.pics if dresser is not None else None, self.tsr_hdr)
+
+    def _made_dresser(self, now: float) -> Optional[sprites.Dresser]:
+        """The Dresser, made once the game has the Loader's SEGOBJEX (None till then)."""
+        if not icons.ready(self.game, self.tsr_hdr):
+            return None
         if self._dresser is None and now >= self._dresser_at:
             from . import launch
             self._dresser_at = now + DRESSER_RETRY  # (tried again later if it can't be made now)
@@ -2222,8 +2254,7 @@ class DiceLog:
             if self._dresser is not None and self.tsr_hdr is not None:
                 hdr = self.tsr_hdr
                 self._dresser.request_redraw = lambda: shadows.redraw(self.game, hdr)
-        if self._dresser is not None:
-            self._dresser.update(True, now)
+        return self._dresser
 
     def _ring_search(self) -> List[str]:
         """While the arena's ring is still to be found: have DSCLOG show ring.SEARCH_TEXT instead
@@ -2340,13 +2371,26 @@ class DiceLog:
                 self._forget_destroyed(index)
         if snapshot is None:
             snapshot = {combatant: (index, None) for combatant, index in g.combatants().items()}
-        for combatant, (index, rec) in sorted(snapshot.items()):
+        looks = sorted(snapshot.items())
+        # a creature killed leaves the fight's table, often before a look saw its last fall (the sequel's last
+        # blows and kills went unlogged so): one seen at the last look and gone from the table, its record
+        # still its own (the same name), is looked at once more, its fall said only if it is a death
+        seen = {index for _, (index, _) in looks}
+        seen_who = {}
+        gone = [(combatant, (index, rec)) for index, (combatant, name) in self._hp_who.items() if index not in seen
+                for rec in (g.creature(index),) if name.strip(b"\0") and _creature_name_bytes(rec) == name]
+        for combatant, (index, rec) in looks + gone:
             if rec is None:
                 rec = g.creature(index)
             if len(rec) < 2:
                 continue
             hp = struct.unpack_from("<h", rec, 0)[0]
-            current[index] = hp
+            if index not in seen:
+                if hp > 0 or self._hp.get(index, 0) <= hp:
+                    continue  # (no death: gone for another reason, an area change's)
+            else:
+                current[index] = hp
+                seen_who[index] = (combatant, _creature_name_bytes(rec))
             was_out_cold = self._out_cold.get(index, False)
             self._out_cold[index] = rec[game.CREATURE_STATUS] == game.OUT_COLD
             before = self._hp.get(index)
@@ -2393,7 +2437,7 @@ class DiceLog:
                 out.append(f"  {who} {left} (-{before - hp}{resisted})")
             else:
                 out.append(f"  {who} {left} (+{hp - before})")
-        self._hp = current
+        self._hp, self._hp_who = current, seen_who
         return out + self.unhurt(now)
 
     def _forget_destroyed(self, index: Optional[int] = None) -> None:
@@ -2780,9 +2824,7 @@ class DiceLog:
                 for owner in owners:
                     if (owner, caster) not in new_hastes:
                         continue
-                    creature = self.game.combatant_creature(owner)
-                    if creature is not None:
-                        out += aging.hasted(self.game, creature)
+                    out += self._haste_aging(owner)
         by_end: Dict[int, List[int]] = {}
         for eff in ended:
             if (eff.owner, eff.id) not in replaced:
@@ -2791,6 +2833,11 @@ class DiceLog:
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             out.append(f"{name} ends on {', '.join(self._name(o) for o in owners)}")
         return out
+
+    def _haste_aging(self, owner: int) -> List[str]:
+        """Haste's magical aging on combatant OWNER, just Hasted (effect_changes; aging.hasted)."""
+        creature = self.game.combatant_creature(owner)
+        return aging.hasted(self.game, creature) if creature is not None else []
 
     # ---- describing -----------------------------------------------------------
 

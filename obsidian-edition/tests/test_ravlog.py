@@ -330,10 +330,10 @@ class AgingTests(unittest.TestCase):
         log._aging_pass(), log._aging_pass()
         before = g.mem[self.SHEETS + game.SHEET_AGE]
         log.game.hastes = [(1, 7), (0, 8)]
-        lines = log._aging_pass()
-        self.assertEqual(lines[0], "Ar'Anda gives Hasted to Gerakis")
-        self.assertIn("system shock (Haste's aging)", lines[1])
-        self.assertIn("survives", lines[1])  # (CON 25: 100%)
+        lines = log._aging_pass()  # (who gives Hasted to whom: effect_changes' line)
+        self.assertIn("system shock (Haste's aging)", lines[0])
+        self.assertIn("survives", lines[0])  # (CON 25: 100%)
+        self.assertEqual(log._haste_aging(0), [])  # (effect_changes ages no one in the sequel: this pass does)
         self.assertEqual(g.mem[self.SHEETS + game.SHEET_AGE], before + 1)
         self.assertEqual(log._aging_pass(), [])  # (the same effect: once)
 
@@ -370,19 +370,61 @@ class PassTests(unittest.TestCase):
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
 
+    def test_the_kills_said(self):
+        """The monsters killed ("Draxan is killed", tracker.PartyTracker's look at the monsters) follow the hit
+        points, for the fight's tally: the sequel's every summary said "0 kills" without them. Its XP lines
+        and the prime requisites' bonus are not run; nothing while a game loads."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: ["  Draxan now 0/70 HP (-3)"]
+        log.tracker = types.SimpleNamespace(_check_monsters=lambda now: ["Draxan is killed"],
+                                            check=lambda now: self.fail("its XP part not ported"))
+        log._party_check = lambda now: False
+        self.assertEqual(log._after_rolls(False, 1.0), ["  Draxan now 0/70 HP (-3)", "Draxan is killed"])
+        log._party_check = lambda now: True
+        self.assertEqual(log._after_rolls(False, 2.0), ["  Draxan now 0/70 HP (-3)"])
+
+    def test_an_older_header_gets_no_arrows_words(self):
+        """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an
+        older DSCLOG2, its word 0 (glob's fourth capture, none), may have its code there and gets no write;
+        one whose HDR_LEN holds them has ARROWS_ON set."""
+        for hdr_len, writes in ((0, 0), (ravlog.AR_ROW, 0), (ravlog.AR_DRAWN + 2, 1)):
+            g = FakeGuest()
+            seg_base, hdr = 0xC91B0, 0x20
+            struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.PP_TEXT_OFF, 0x900)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.HDR_LEN, hdr_len)
+            log = ravlog.RavDiceLog(g)
+            log.tsr_hdr = seg_base + hdr
+            log.game = types.SimpleNamespace(guest=log.guest, rules=0)
+            log.spell_arrows, log._arrows_ready = True, lambda: True
+            self.assertEqual(log._answer_arrows(), [], hdr_len)
+            self.assertEqual(g.writes, writes, hdr_len)
+            self.assertEqual(log.header_holds(ravlog.AR_ROW + 2), bool(writes))
+
+    def test_after_rolls_flushes_dice_no_spell_claimed(self):
+        """Dice held to learn which spell they belong to (PendingDice) are said once PENDING_SECONDS
+        pass, as in Shattered Lands' pass, not kept until the next roll forces them out (2026-11-27's
+        code audit: the sequel's pass had no flush)."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log._pending.append(dicelog.PendingDice("2d4 = 1 + 3 = 4", 1.0))
+        self.assertNotIn("Dice: 2d4 = 1 + 3 = 4", log._after_rolls(False, 1.5))  # (still waiting)
+        self.assertIn("Dice: 2d4 = 1 + 3 = 4", log._after_rolls(False, 1.0 + dicelog.PENDING_SECONDS))
+        self.assertEqual(log._pending, [])
+
 
     def test_slots_written_to_the_helper(self):
-        """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148), a member's in each
-        SLOTS_SIZE bytes, and nowhere else."""
+        """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148, an offset in its tail,
+        whose segment is the header's +1834), a member's in each SLOTS_SIZE bytes, and nowhere else."""
         g = FakeGuest()
-        seg_base, hdr, slots = 0xC91B0, 0x20, 0x900
+        seg_base, hdr, slots, tail = 0xC91B0, 0x20, 0x900, 0xD4A0
         struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
         struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_SLOTS_OFF, slots)
+        struct.pack_into("<H", g.mem, seg_base + hdr + 1834, tail)
         log = ravlog.RavDiceLog(g)
         log.tsr_hdr = seg_base + hdr
         log.slots_lines = lambda member: "\x80SPELLS LEFT|\x81WIZ 2/4" if member == 1 else ""
         log._write_slots()
-        at = seg_base + slots + dicelog.SLOTS_SIZE
+        at = tail * 16 + slots + dicelog.SLOTS_SIZE
         self.assertEqual(bytes(g.mem[at:at + 24]), b"\x80SPELLS LEFT|\x81WIZ 2/4".ljust(24, b"\0"))
         self.assertEqual(log.guest.dropped, 0)
         writes = g.writes
@@ -617,6 +659,103 @@ class EffectTests(unittest.TestCase):
                          (69, 46, 9, 35))
         self.assertGreaterEqual(game.STINK_EFFECT, ravlog.NO_EFFECT)
         self.assertEqual((game.EFFECTS_SEG, game.EFFECTS_OFF), (0x3E71, 0x24D))
+
+
+class ChangeLineTests(unittest.TestCase):
+    """Shattered Lands' effect, PSP and ability score lines in the sequel (RavDiceLog: effect_changes,
+    _psp_ability_changes), on a party in fake memory at the sequel's creature layout."""
+    DS, CREATURES = 0x1000, 0x30000
+
+    def tearDown(self):
+        ravlog.restore_layout()
+
+    def make(self):
+        g = FakeGuest()
+        log = ravlog.RavDiceLog(g)
+        struct.pack_into("<HH", g.mem, self.DS * 16 + game.CREATURES_PTR, 0, self.CREATURES >> 4)
+        for m, name in enumerate(("Gerakis", "Ar'Anda")):
+            c = self.CREATURES + m * game.CREATURE_SIZE
+            struct.pack_into("<hh", g.mem, c, 50, 40)  # (HP, PSP)
+            g.mem[c + game.CREATURE_STATUS] = 1
+            g.mem[c + game.CREATURE_ABILITIES:c + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 16, 13, 15, 14))
+            g.mem[c + game.CREATURE_NAME:c + game.CREATURE_NAME + len(name)] = name.encode()
+        test = self
+
+        class Game(ravlog.RavGameData):
+            effects: list = []
+
+            def game_time(self):
+                return 100
+
+            def party_signature(self):
+                return ("Gerakis", "Ar'Anda")
+
+            def effect_records(self):
+                return list(self.effects)
+
+            def effect_deadlines(self):
+                return {}
+
+            def combatant_name(self, combatant):
+                return self.creature_name(combatant)
+
+            def spells_manual(self):
+                return False
+
+        log.game = Game(log.guest, self.DS, 0)
+        log._party_changed_at = -1000.0  # (no load settling)
+        log._party = log.game.party_signature()
+        return g, log
+
+    def test_psp_spent_and_regained(self):
+        g, log = self.make()
+        self.assertEqual(game.CREATURE_PSP, 2)  # (the sequel's: SL's, below 0Eh)
+        self.assertEqual(log._psp_ability_changes(10.0), [])  # (the first look only records)
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_SIZE + game.CREATURE_PSP, 32)
+        self.assertEqual(log._psp_ability_changes(11.0), ["    Ar'Anda spends 8 PSP (40 -> 32)"])
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_SIZE + game.CREATURE_PSP, 35)
+        self.assertEqual(log._psp_ability_changes(12.0), ["    Ar'Anda regains 3 PSP (32 -> 35)"])
+
+    def test_an_ability_score_once_it_holds(self):
+        g, log = self.make()
+        self.assertEqual(game.CREATURE_ABILITIES, 0x19)  # (the sequel's: SL's 22h less 9)
+        log._psp_ability_changes(10.0)
+        g.mem[self.CREATURES + game.CREATURE_ABILITIES] = 21  # (Gerakis's STR: Strength)
+        self.assertEqual(log._psp_ability_changes(11.0), [])  # (seen once: it must hold)
+        self.assertEqual(log._psp_ability_changes(12.0), ["    Gerakis's STR 18 -> 21"])
+
+    def test_none_while_a_game_loads(self):
+        g, log = self.make()
+        log._psp_ability_changes(10.0)
+        struct.pack_into("<h", g.mem, self.CREATURES + game.CREATURE_PSP, 1)
+        log._party_changed_at = 11.0
+        self.assertEqual(log._psp_ability_changes(11.5), [])
+
+    def test_effects_start_and_end_with_the_sequels_names_and_rules(self):
+        g, log = self.make()
+        names = {9: "Blessed", 13: "Blur", 42: "Hasted", 120: "Own Effect"}
+        sl = {name: n for n, name in ravlog.SL_EFFECT_NAMES.items()}
+        rules = ravlog.effect_rules(names, ravlog.SL_EFFECT_RULES)
+        self.assertEqual(rules[9], ravlog.SL_EFFECT_RULES[sl["Blessed"]])  # (SL's 7: "+1 to hit, +1 on saves")
+        self.assertEqual(rules[42], ravlog.SL_EFFECT_RULES[sl["Hasted"]])
+        self.assertNotIn(120, rules)  # (a name only the sequel has: no rule)
+        ravlog.rebind("EFFECT_NAMES", names)
+        ravlog.rebind("EFFECT_RULES", rules)
+        self.assertEqual(log.effect_changes(10.0), [])  # (the first look only records)
+        log.game.effects = [(game.Effect(0, 1, 9), 3, 1), (game.Effect(1, 1, 42), 41, 2)]
+        lines = log.effect_changes(11.0)
+        self.assertEqual(lines, ["Ar'Anda gives Blessed to Gerakis: +1 to hit, +1 on saves",
+                                 "Hasted on Ar'Anda: double movement and attacks; ends Slow"])
+        log.game.effects = [(game.Effect(1, 1, 42), 41, 2)]
+        self.assertEqual(log.effect_changes(12.0), ["Blessed ends on Gerakis"])
+
+    def test_after_rolls_runs_them(self):
+        g, log = self.make()
+        calls = []
+        log._psp_ability_changes = lambda now: calls.append("psp") or []
+        log.effect_changes = lambda now=0.0: calls.append("effects") or []
+        log._after_rolls(False, 1.0)
+        self.assertEqual(calls, ["psp", "effects"])
 
 
 class NameTests(unittest.TestCase):

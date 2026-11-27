@@ -15,11 +15,15 @@ patched game calls: it records the dice, draws the in-game additions and makes t
 count. The two talk through DSCLOG's header in the game's memory. Nothing of the game's own files
 is changed.
 
-DOSBox 0.74 is the default engine and the one these pages mean by "DOSBox". The player's own
-DOSBox-X can be chosen in its place (experimental; `dosboxx.py`): the Loader then writes it a
-configuration of its own and reads and writes the game's memory through DOSBox-X's memory file,
-not its process; DSCLOG and the patched game are the same ([the
-engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
+DOSBox-X is the default engine whenever the Loader finds one (it comes with the Windows release;
+on Linux and macOS it is the player's own; `dosboxx.py`), and GOG's DOSBox 0.74 is used when none is
+found or when it is chosen. Under DOSBox-X the Loader writes it a configuration of its own and reads
+and writes the game's memory through DOSBox-X's memory file, not its process; DSCLOG and the patched
+game are the same under both ([the engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
+Where these pages say "DOSBox" alone they mean 0.74, the engine the mod was built and measured on.
+DOSBox-X has been played on Linux; on Windows the game has started under it (it loads and its music
+plays) and a fuller play is under way; on macOS its side of the Loader is written and unit-tested
+but not yet run.
 
 ## Contents
 

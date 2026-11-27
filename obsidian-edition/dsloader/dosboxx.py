@@ -235,8 +235,10 @@ def problem(settings: dict) -> Optional[str]:
         if isinstance(named, str) and named:
             return (f"DOSBox-X is chosen as the engine, but its program isn't there any more ({named}): choose it "
                     "again on the Options tab (Engine), or go back to GOG's DOSBox there.")
-        return ("DOSBox-X is chosen as the engine, but no DOSBox-X program is: choose it on the Options tab "
-                "(Engine), or go back to GOG's DOSBox there.")
+        return (f"DOSBox-X is chosen as the engine, but no DOSBox-X program was found: the mod's own dosbox-x "
+                f"folder ({BUNDLED_DIR}) has no {BUNDLED_NAMES[0]}, and none is chosen on the Options tab. The mod's "
+                "release zip brings it (a download of the source code doesn't). Choose a DOSBox-X program on the "
+                "Options tab (Engine), or go back to GOG's DOSBox there.")
     if os_free(path):
         return (f"{path} is {OS_FREE_HELP}. Choose it on the Options tab (Engine), or go back to GOG's DOSBox "
                 "there.")

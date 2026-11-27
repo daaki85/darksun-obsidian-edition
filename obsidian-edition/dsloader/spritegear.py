@@ -668,10 +668,60 @@ _LIGHT: Dict[int, float] = {}
 _RGB: List[Tuple[int, int, int]] = []
 
 
+# The palette entries some region's palette changes (GPLDATA's PAL 1-45 compared: 80-127 and
+# 223-239 are each area's own ramps, 19, 21 and 29 a few areas' tweaks). A colour drawn from these
+# is the colour meant only in the areas whose palette is the portraits' (PAL 1): in the desert's
+# (PAL 6) 118-126 are magenta and yellow, 225-227 red, 88-100 grey. steady_colour() moves them to
+# fixed ones. (Not the colours the game cycles, 0-15 and GLINT's, which the glows use on purpose.)
+REGIONAL = frozenset((19, 21, 29, *range(80, 128), *range(223, 240)))
+# ... and the entries no region changes that gear is drawn in (the module's note: 30-79, 128-222)
+STEADY = tuple(c for c in (*range(16, 80), *range(128, 223)) if c not in REGIONAL)
+_STEADY: Dict[int, int] = {}
+
+
+def steady_colour(colour: int) -> int:
+    """COLOUR, or where an area's palette may change it the nearest of the fixed entries (STEADY)
+    in the portraits' palette (set_palette), weighed as the eye does."""
+    if colour not in REGIONAL or not _RGB:
+        return colour
+    got = _STEADY.get(colour)
+    if got is None:
+        r, g, b = _RGB[colour]
+        got = min(STEADY, key=lambda c: 3 * (_RGB[c][0] - r) ** 2 + 4 * (_RGB[c][1] - g) ** 2
+                  + 2 * (_RGB[c][2] - b) ** 2)
+        _STEADY[colour] = got
+    return got
+
+
+def steadied(rows: Rows, source: Rows, pad: int) -> Rows:
+    """ROWS (SOURCE drawn on, padded by PAD) with every pixel drawn in a regional colour
+    (REGIONAL) moved to a fixed one, where it isn't the picture's own pixel there: the game's own
+    figures keep theirs, but what the outfits and gear add stays the colour it was drawn in, in
+    every area (class outfits drawn in the portraits' palette turned magenta, green and red in the
+    desert, 2026-11-27)."""
+    height = len(source)
+    width = len(source[0]) if source else 0
+    out = []
+    for y, row in enumerate(rows):
+        sy = y - pad
+        own = source[sy] if 0 <= sy < height else None
+        new = list(row)
+        for x, p in enumerate(row):
+            if p is None or p not in REGIONAL:
+                continue
+            sx = x - pad
+            if own is not None and 0 <= sx < width and own[sx] == p:
+                continue
+            new[x] = steady_colour(p)
+        out.append(new)
+    return out
+
+
 def set_palette(colours: List[Tuple[int, int, int]]) -> None:
     """The palette (art.palette_colours): each colour's brightness, for blending a helm into the
     hair under it."""
     _LIGHT.clear()
+    _STEADY.clear()
     _RGB[:] = list(colours)
     _LIGHT.update({i: (0.3 * r + 0.59 * g + 0.11 * b) / 255 for i, (r, g, b) in enumerate(colours)})
 
@@ -1851,8 +1901,9 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
 # below the waist); never the head or the hair.
 ARMOUR_CHEST, ARMOUR_ARMS, ARMOUR_LEGS = "chest", "arms", "legs"
 PLAIN, RINGS, STUDS, SCALES, CHAIN, PLATE = "plain", "rings", "studs", "scales", "chain", "plate"
-# Material ramps use fixed retail palette entries. Class accents can still use
-# their original regional colours. Adjacent folds often differ by only one shade.
+# Material ramps use fixed retail palette entries. Class accents drawn in regional
+# colours are moved to fixed ones at the end (steadied). Adjacent folds often
+# differ by only one shade.
 LEATHER_SHADES = (208, 174, 204, 203, 207, 195, 134, 135, 205, 132, 196, 194, 59, 206,
                  144, 60, 197, 168, 65, 61, 169, 198, 199, 62, 155, 63)
 BONE_SHADES = (208, 129, 204, 207, 205, 196, 194, 206, 212, 60, 213, 168, 214,

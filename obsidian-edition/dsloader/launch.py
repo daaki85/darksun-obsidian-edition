@@ -654,7 +654,12 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     the saved settings if none given). Returns why the EXE can't be patched, or None. LEFT_OUT
     lists any additions that were skipped. Raises LaunchError if an unusable override remains."""
     del LEFT_OUT[:]
-    from . import alagorn
+    from . import alagorn, ravlog
+    # (Shattered Lands' layout back first: a sequel's game played from this Loader leaves game.py's
+    # names rebound to the sequel's until a dice log is made for Shattered Lands, after these copies,
+    # and the item records written by them took the sequel's offsets: the new items, people and icons
+    # left out, 2026-11-27's code audit)
+    ravlog.restore_layout()
     del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
     chosen = load_settings(strict=True) if settings is None else settings
     on = content(chosen)

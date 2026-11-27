@@ -179,7 +179,7 @@ class BookTests(unittest.TestCase):
             asked = []
             with mock.patch.object(ravager, "_write_copy", lambda g, n, d, fixed, s: fixed(b"", s)), \
                     mock.patch.object(ravager, "read_added", lambda d: {}), \
-                    mock.patch.object(ravager, "objects_fixed", lambda d, s, added, gear: (gear({}), [])), \
+                    mock.patch.object(ravager, "objects_fixed", lambda d, s, added, gear, arrows=None: (gear({}), [])), \
                     mock.patch.object(ravgear, "from_files", lambda c, sl, g, books=True: asked.append(books) or {}):
                 ravager.write_objects("wotr", "dos/OBJEX2.GFF", skip, sl_dir="sl")
             self.assertEqual(asked, [want], skip)

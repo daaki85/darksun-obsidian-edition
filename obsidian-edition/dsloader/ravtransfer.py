@@ -76,6 +76,7 @@ SHEET_RUNS = ((0x00, 0x00, 0x0E), (0x0E, 0x10, 4), (0x12, 0x18, 0x24), (0x37, 0x
 # (playtest/RESEARCH.md); the Loader's copy reads the low bytes alone (ravager's sound_3c, sound_3e).
 MOD_SHEET_BYTES = (0x3D, 0x3F)
 # An item: the save's links, flags, slot and plus over the new object's record
+ITEM_NAME_AT = 0x14  # (the sequel's item's name: ravager.item_field(SL_ITEM_NAME))
 ITEM_RUNS = ((0x02, 0x02, 8), (0x0E, 0x0E, 1), (0x12, 0x10, 1), (0x13, 0x11, 1), (0x16, 0x14, 1))
 
 WIZARD_SPELLS = 69  # (SL's 0-68; its priests' after them aren't kept: a priest knows its spheres')
@@ -306,6 +307,8 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     out = bytearray(sequel.record(new))
     for w, s, n in ITEM_RUNS:
         out[w:w + n] = rec[s:s + n]
+    if struct.unpack_from("<H", rec, SL_ITEM_NAME)[0] == ravager.SL_FINE_BOW_NAME:  # (the Spellarcher's Fine
+        struct.pack_into("<H", out, ITEM_NAME_AT, ravager.FINE_BOW_NAME)  # Bow: the sequel's bow, its name kept)
     if is_tome(rec) and is_own(new):
         struct.pack_into("<H", out, ITEM_POWER, WOTR_TOME_SPELL + 1)
         struct.pack_into("<H", out, ITEM_SPELL_SHOWN, WOTR_TOME_SPELL + 1)
@@ -316,7 +319,9 @@ def item(rec: bytes, sequel: Sequel) -> Tuple[bytes, int]:
     elif sequel.spells is not None and is_own(new) and not is_scroll(rec):  # (a keepsake scroll: none)
         power = item_spell(rec, sequel.spells)
         struct.pack_into("<H", out, ITEM_POWER, power)
-        struct.pack_into("<H", out, ITEM_SPELL_SHOWN, power)
+        from .spellarrows import ARROW_NAMES
+        if struct.unpack_from("<H", rec, SL_ITEM_NAME)[0] not in ARROW_NAMES:  # (spell arrows keep their count there)
+            struct.pack_into("<H", out, ITEM_SPELL_SHOWN, power)
     return bytes(out), new
 
 

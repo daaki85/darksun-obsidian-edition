@@ -14,6 +14,6 @@ Watch the raised knee on the viewer’s right in front idle. The original half-g
 
 ![Female half-giant Psionicist's hem before and after the refit, with empty slots, leg armor and all three Warden armor pieces](plate-fit-half-giant-hem.gif)
 
-The three women also wore the individual pieces in DOSBox. All six removals restored the original walking and combat pictures. [Compare their front-idle poses on the slave-pen floor](https://github.com/daaki85/darksun-obsidian-edition/blob/claude/class-outfits/playtest/logs/img/2026-11-26-plate-fit-dosbox.png)
+The three women also wore the individual pieces in DOSBox. All six removals restored the original walking and combat pictures. [Compare their front-idle poses on the slave-pen floor](../../../playtest/logs/img/2026-11-26-plate-fit-dosbox.png)
 
 The earlier columns use the Loader and outfit archives from `d748d13`. To regenerate these comparisons, run `python prototypes/platefitreview.py GAME_DIR OUTPUT_DIR --previous-checkout CHECKOUT` with that revision in a separate checkout. [All armor slots on the party figures](magical-equipment.md) · [Ashen and Veiled robe comparisons](named-robes.md)

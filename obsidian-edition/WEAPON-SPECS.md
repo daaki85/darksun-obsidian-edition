@@ -255,7 +255,7 @@ whatever weapon is ready.
 
 ## In Wake of the Ravager
 
-A party taken to the sequel ([Taking the party to Wake of the Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager))
+A party taken to the sequel ([Taking the party to Wake of the Ravager](RAVAGER.md#taking-the-party-to-wake-of-the-ravager))
 keeps its weapon specs, and they work in its fights as here: the to-hit and damage, mastery and grand
 mastery, the attacks a round and the rates of fire, and the kits' parts (a Battle Mage's or
 Crusader's expertise, a Justifier's, a Myrmidon's second kind). A new character made in the sequel
@@ -305,9 +305,20 @@ specialization alone:
 | Shillelagh | club |
 | Rainbow (the spell's bow) | bow |
 
-The Net and the Rock count as none. The lotulis's, double spear's and trikal's own traits (the second
-foe, the trip, the trikal's reach) are Shattered Lands' only, so far. The sequel's own characters have
-no specs, so they fight as the sequel has them.
+The Net and the Rock count as none. The lotulis's, double spear's and trikal's own
+[traits](FEATURES.md#lotulis-and-double-spear) come to the sequel too, on its own Lotulis, Double Spear
+and Trikal: a lotulis or double spear specialist's last swing of a round of two goes to a second foe
+beside it (the double spear's for 1 less damage), a trikal specialist's hit trips a man-sized target
+that fails a save against paralysis, and the trikal reaches two squares as a polearm does.
+
+**The double spear swings as a melee weapon.** The sequel gives its Double Spear a range of 2 squares,
+and the game takes a swing from 2 squares as a shot: one attack a round whatever the warrior's rate,
+DEX's bonus to hit in place of STR's, no STR on the damage, and the weapon lines showed it as a missile
+weapon. Under Computer Control a double spear specialist swung from 2 squares, once a round. The mod
+gives it a range of 1, as Shattered Lands' double spear has: it swings beside its foe at the warrior's
+rate, with the specialist's bonuses and its second foe.
+
+The sequel's own characters have no specs, so they fight as the sequel has them.
 
 ### Past 13th level
 

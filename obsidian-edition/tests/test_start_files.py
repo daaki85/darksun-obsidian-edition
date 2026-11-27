@@ -35,6 +35,14 @@ class ShatteredLandsStartTests(unittest.TestCase):
             self.assertIsNone(launch.left_out_line())
             self.assertTrue(os.path.isfile(os.path.join(dos, launch.PATCHED_EXE)))
 
+    def test_every_copy_made_after_the_sequel(self):
+        """The same with the sequel's layout left on, as a sequel's game played from the Loader's window
+        leaves it (2026-11-27: the new items, people and icons were left out)."""
+        from dsloader import ravlog
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+        self.test_every_copy_made()
+
 
 @unittest.skipUnless(WOTR, "needs DSUN_WOTR (Wake of the Ravager's folder)")
 class RavagerStartTests(unittest.TestCase):

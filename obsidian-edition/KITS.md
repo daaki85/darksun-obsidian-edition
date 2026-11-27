@@ -13,15 +13,10 @@ party](FEATURES.md#the-games-own-party)). A human who changes class may take a
 kit for the new class if it has none yet ([Changing class](#changing-class)).
 
 A party taken to Wake of the Ravager keeps its kits ([Taking the party to Wake of the
-Ravager](FEATURES.md#taking-the-party-to-wake-of-the-ravager)): their AC, to hit, damage, weapon
-skills, saves, thief skills, backstabs, movement, two-weapon penalties, initiative, the Seeker's
-and Justifier's casting level, the Elementalist's second sphere's spells, the kits' spell slots
-(the Elementalist's a level behind, the Crusader's and Battle Mage's one fewer, the Seeker's,
-Justifier's and Shinobi's own tables: [Kits' spell slots](#kits-spell-slots)) and the gear each kit
-forbids or allows work there, and a new character takes a kit there as here; what else they do to
-spells and powers and to hit dice doesn't yet (a Shinobi has its slots there but can't cast yet). Which kits work there, and which only in
-part: [In Wake of the Ravager](#in-wake-of-the-ravager). How the kits go on past the levels Shattered
-Lands reaches is in [Past 13th level](#past-13th-level).
+Ravager](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)), and a new character takes a kit there
+as here. Nearly every kit works there as in Shattered Lands; the few that work only in part, and what
+they lack, are in [In Wake of the Ravager](#in-wake-of-the-ravager).
+How the kits go on past the levels Shattered Lands reaches is in [Past 13th level](#past-13th-level).
 
 Each class has a table of its three kits, a line each for what it gives and
 costs, and under it each kit's rules in full: what a new character starts with
@@ -308,6 +303,19 @@ Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm; no weapon
 in the off hand (a shield is fine). **Starts with** the cleric's gear (its club
 in hand, with fuller starting gear).
 
+**In Wake of the Ravager** the sphere of the cosmos is the same rule, the spells every druid casts and
+no cleric, so it holds more there: the sequel's clerics cast no Cure Serious or Critical Wounds, Raise
+Dead or Heal of their own, and a Healer's water cleric casts them (and the sequel's other druids' spells
+of the higher levels: Blade Barrier, Restore, Creeping Doom...), but never a harming one (Cause
+Serious and Critical Wounds, Poison, Slay Living, Harm). Nor the sequel's own spells that harm or kill
+the body the same way: **Heartseeker** (its arrow's roots burst the vital organs, killing at once, as
+Slay Living does), **Energy Drain** (a life level drawn away by touch, Restore turned round) and
+**Symbol of Pain** (wracking pains); a Lifebinder never knows those three either. The Symbols of
+Hopelessness and Persuasion are left to them (a surrender and a charm, as Shattered Lands leaves them
+Cause Fear and Curse), and so are the spells that hurt by the elements, such as Sunstroke, as Shattered
+Lands leaves them Dehydrate and Flame Strike. Restore Youth (and Whirlwind) come with it once
+they are in the sequel.
+
 It is taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit));
 after DUAL, offered to a water cleric only, and not to one who was a ranger of
 air, earth or fire; a Healer who changes class to a ranger is a water one (the
@@ -347,7 +355,8 @@ Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6, and Cel
 Adjustment (a psychometabolism power, if it took that discipline at creation) a
 d4; the dice log notes the extra die. Blunt weapons only (club, mace,
 quarterstaff, sling, staff sling); it **never knows the harming spells**: Cause
-Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm.
+Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm (and in
+Wake of the Ravager Heartseeker, Energy Drain and Symbol of Pain: [the Healer's](#healer)).
 **Starts with** the druid's gear.
 
 #### Wanderer
@@ -502,6 +511,19 @@ of USEABLE BY:; with none in the party, any found readied go back in the pack. O
 in the preserver level's place. How: [Spell
 arrows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-KITS.md#spell-arrows).
 
+##### Spellarcher in Wake of the Ravager
+
+The spell arrows work there as above (the same three spells, one arrow and one slot a click out
+of a fight, a stack of 24 at most, +1 to +3 by its preserver level, cast on a hit), with three
+differences:
+
+- **The Loader must find Shattered Lands too**: the arrows are drawn with its pictures. Without it the
+  USE screen has no arrow buttons. Make a new Spellarcher there with Shattered Lands found as well,
+  since its starting spell arrows use the same pictures.
+- **No cast sound** when an arrow is made.
+- **Another member can ready them in a fight** (Shattered Lands refuses); out of a fight they go back
+  to the Spellarcher.
+
 Its weapon spec is the bow, and only the bow (the weapon window offers nothing
 else); **no armour, helm or shield at all** (bracers, robes and a cloak of
 protection are fine).
@@ -578,10 +600,11 @@ character, as it does after another kit is chosen.
 
 **In Wake of the Ravager** (started from the Loader) the creation panel has the same KITS
 button and KIT page, in the sequel's own letters, and a human with no kit is asked for one after
-DUAL on the same menu. There a kit chosen goes with the character as it does here; what the
-sequel doesn't do yet: a Battle Mage's, Mind Warrior's or Arcanist's hit points and PSP rolled
-again as its kit is chosen, the Elementalist's second sphere, and EDIT giving a kit back after
-its classes are changed and changed back ([Wake of the Ravager](FEATURES.md#wake-of-the-ravager)).
+DUAL on the same menu. There a kit chosen goes with the character as it does here, a Battle
+Mage's, Arcanist's or Mind Warrior's hit points and PSP rolled again as its kit is chosen or taken
+back (and its range of hit points the kit's, for a click on CON and on EDIT); what the sequel
+doesn't do yet: the Elementalist's second sphere, and EDIT giving a kit back after its classes are
+changed and changed back ([Wake of the Ravager](RAVAGER.md)).
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
@@ -715,8 +738,9 @@ their class's, less the kit's one, as the rows above go on.)
 **In Wake of the Ravager** a party taken there has these slots too, given at a rest by the sequel's
 own slot routine: the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the
 Seeker's, Justifier's and Shinobi's own tables (no WIS bonus), the Veiled Robe's one more on top. A
-Shinobi's slots are counted there, but it can't cast its spells in the sequel yet (it isn't offered
-them on USE).
+Shinobi casts there too: its USE screen has a MAGE list of the wizard spells it knows, cast at its thief level
+less 5; it learns one of its own at each thief level up from 6th (a new Shinobi made there at 6th or higher
+picks one for each level from 6th), and from a scroll only its own, after the read languages roll.
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
@@ -748,11 +772,11 @@ The kits go on there as AD&D 2e and the kits' own books go on (the owner's choic
 | [Ravager](#ravager) | base AC 2 at 11th-12th, 1 at 13th-14th, 0 from 15th |
 | [Grove Warden](#grove-warden) | goes on 1 better every 3 druid levels: 5 at 15th, 6 at 18th, and on |
 | Battle Mage, Crusader, Mind Warrior | an expert's 5/2 attacks a round from the kit's class's 13th level ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)) |
-| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most (a Shinobi's slots only, for now: it can't cast in the sequel yet) |
+| [Seeker](#seeker), [Shinobi](#shinobi) | slots 3 3 3 1 at 14th, 4 4 3 1 at 15th, 4 4 3 2 from 16th; casting level 11 at most |
 | [Justifier](#justifier) | slots on to 3 2 2 from 16th (none before 10th, as in Shattered Lands); casting level 7 at most |
 | [Spellarcher](#spellarcher) | spell arrows +3 from its 13th preserver level |
 | [Elementalist](#elementalist) | a 7th-level slot at 14th, as a cleric's |
-| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1 (not yet: the sequel doesn't roll a kit's hit die yet) |
+| Battle Mage, Arcanist | past 10th, the fixed hit points a level: a Battle Mage 2, an Arcanist 1, as a preserver's 1 (in Wake of the Ravager; Shattered Lands' 11th, a preserver's last there, still gives them the preserver's 1) |
 | Gladiator, fighter (and Myrmidon) | a weapon spec more every 4 gladiator levels past 9th; a fighter's second weapon spec at 13th ([Weapon specs](WEAPON-SPECS.md#past-13th-level)) |
 
 What carries on by itself: a warrior-THAC0 kit's THAC0 (a warrior's, 1 at best), the Assassin's
@@ -761,7 +785,7 @@ backstab, a thief kit's skills (the thief's table to 17th, then 95 at most), a M
 ## In Wake of the Ravager
 
 Not all of what the kits do has come to Wake of the Ravager yet. What works there now, kit by kit
-(a kit chosen there, or brought with [the party](FEATURES.md#taking-the-party-to-wake-of-the-ravager)):
+(a kit chosen there, or brought with [the party](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)):
 **whole** means as in Shattered Lands; **in part** names what is
 missing; **not yet** means the kit there is its class with a kit's name. Every kit's gear limits
 and gear allowed hold there (a Ravager can't take up a shield or a bow, a Battle Mage holds the
@@ -776,23 +800,25 @@ thief skills, movement and initiative.
 | Justifier | whole: its own slots and casting level |
 | Seeker | whole: its own slots, casting level and sphere's weapons |
 | Swashbuckler, Assassin | whole |
-| Shinobi | in part: its gear and its wizard slots; no preserver spells to cast with them yet |
-| Scholar, Arcanist | not yet (no extra spells learnt, no −1 to hit; no higher casting level, no d3 hit die) |
-| Battle Mage | in part: its THAC0, expertise, weapons, leather and one slot fewer; not its d6 hit die, casting after a hit |
+| Shinobi | in part, all but a line on a screen: its gear, its wizard slots, its own spells learnt (level ups, scrolls, a new character's) and cast at its thief level less 5; not its READ LANG. line on the Effects screen |
+| Scholar | not yet (no extra spells learnt, no −1 to hit) |
+| Arcanist | whole: its spells a level higher, its d3 hit die at creation and a level up (1 a level past 10th) |
+| Battle Mage | whole: its THAC0, expertise, weapons, leather, one slot fewer, its d6 hit die at creation and a level up (2 a level past 10th), casting after a hit |
 | Elementalist | whole: its second sphere's spells and weapons, its slots a level behind |
-| Healer | in part: water only, no weapon in the off hand; not its cosmos spells, stronger cures, no harming spells |
-| Crusader | in part: its THAC0, expertise and one slot fewer |
+| Healer | whole: water only, no weapon in the off hand, the sphere of the cosmos (the sequel's druids' spells; Restore Youth once it is in the sequel), cures 1 more a die, no harming spells |
+| Crusader | whole: its THAC0, expertise and one slot fewer |
 | Grove Warden | whole |
-| Lifebinder | in part: blunt weapons only; not its stronger cures, no harming spells |
+| Lifebinder | whole: blunt weapons only, cures a die more, no harming spells |
 | Wanderer | in part: +3 saves against fire and cold, AC 1 worse; not half damage from them |
-| Mind Bender, Kineticist, Titan Mind | not yet (no PSP costs changed) |
-| Mind Warrior | in part: its THAC0 and expertise; not a fifth fewer PSP |
+| Mind Bender, Kineticist, Titan Mind | whole: their PSP costs |
+| Mind Warrior | whole: its THAC0, expertise, and a fifth fewer PSP at creation and a level up |
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
-| Wilderness Avenger | in part: to hit, damage, hiding; not its Cause spells, no healing spells |
-| Rescuer | in part: movement, from behind, no shield; not its stronger cures |
-| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
-| Poisoner | in part: its weapon spec and gear limits; no poison |
-| Spirit Caller, Wasteland Seer | not yet (no casting level or PSP cost by the sky) |
+| Wilderness Avenger | whole: to hit, damage, hiding, its Cause Wounds stronger, no healing spells |
+| Rescuer | whole: movement, from behind, no shield, cures 1 more a die |
+| Spellarcher | in part ([the kit's entry](#spellarcher-in-wake-of-the-ravager)): its spell arrows made on the USE screen out of a fight (a button for each touch spell it knows, one arrow and one slot a press, stacked to 24) and those brought along cast on a hit at its preserver level and are +1 to +3 by it, a new one's 24 of each touch spell's it picked, its Fine Bow (+1 to hit), no armour; its arrows another member carries go back to it out of a fight; not the cast sound when one is made, nor the refusal when another readies them (in a fight they stay readied) |
+| Poisoner | whole: each hand's first melee hit a fight poisons (a weapon with a spell of its own casts that instead), its weapon spec and gear limits |
+| Spirit Caller | whole: its cleric spells 2 levels higher under the open sky, 1 lower under a roof |
+| Wasteland Seer | whole: its druid spells' level and its powers' PSP costs by the sky |
 | Wild Fury | whole |
 
 **Starting gear.** A new character's gear is fitted to its kit there too, as each kit's **Starts with**
@@ -809,11 +835,15 @@ says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' 
   spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
 
 A warrior's weapon is first made a +1 of its first weapon spec ([Starting
-weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
-the bow and arrows its class gives).
+weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow, and
+it starts with 24 of each touch spell's arrows it picked in place of the arrows its weapon spec gives (with none
+picked, it keeps those), as in Shattered Lands.
 
-The kits' spell slots past Shattered Lands' levels hold in the sequel; a Spellarcher's arrows at +3 and a
-Battle Mage's or Arcanist's hit points past 10th wait for those kits' arrows and hit dice there.
+The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel, and a
+Spellarcher's arrows are +3 from its 13th preserver level there. A new character's kit hit die and PSP (a Battle
+Mage's, Arcanist's, Mind Warrior's) count from the creation screen there as here: the hit points and PSP
+are rolled again as the kit is chosen. Characters brought from Shattered Lands keep the hit points and PSP
+they have (and a Spellarcher its Fine Bow, still one), and the sequel's own party none of these kits.
 
 ## Changing class
 
