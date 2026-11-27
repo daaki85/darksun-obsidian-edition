@@ -93,6 +93,12 @@ SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Ga
                   (25, 3), (29, 3), (36, 3), (30, 3),  # Blink, Haste, Protection from Normal Missiles, Hold Person
                   (46, 4), (51, 4), (41, 4))  # Improved Invisibility, Solid Fog, Confusion
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)
+# ... as Wake of the Ravager numbers them (DSCLOG2's SH_SPELLS: the same spells by name, ravtransfer.spell_map;
+# the new ones ravspells' 322-325), its wizard spells 0-72h, the new ones only with their rule on
+RAV_SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (322, 1), (323, 1), (324, 1), (325, 1),
+                      (17, 2), (19, 2), (12, 2), (13, 2), (15, 2), (25, 3), (29, 3), (35, 3), (30, 3),
+                      (44, 4), (50, 4), (40, 4))
+RAV_NEW_SPELLS = frozenset(range(320, 326))
 RANGER_CLASSES = range(13, 17)
 # the charms (DSCLOG's KIT_CHARMS): Charm Person, Charm Monster, Domination, Charm Person or
 # Mammal, and the psionic Domination and Mass Domination
@@ -503,6 +509,13 @@ def hit_die(kid: int, sides: int) -> int:
     return {BATTLE_MAGE: 6, ARCANIST: 3}.get(kid, sides)
 
 
+def hit_gain(kid: int, gain: int) -> int:
+    """A level's hit points past its class's dice (a preserver's 1 a level from 11th), GAIN the class's
+    (Wake of the Ravager's KIT_HIT_GAIN; the owner's choice, 2026-11-26): a Battle Mage's 2, an
+    Arcanist's 1. Shattered Lands' 11th, a preserver's last there, gives the preserver's 1 (not yet the kits')."""
+    return {BATTLE_MAGE: 2, ARCANIST: 1}.get(kid, gain)
+
+
 MIND_PSP = 5  # (a Mind Warrior's PSP a fifth fewer; a tenth up to 2.17)
 
 
@@ -521,6 +534,14 @@ def shinobi_pick_level(level: int) -> int:
     casting level rounded up, as the game's for a preserver; no 4th-level spell before its slot comes,
     at thief level SHINOBI_FOURTH (DSCLOG's SHINOBI_PICK_CAST)."""
     return min((shinobi_cast(level) + 1) // 2, 4 if level >= SHINOBI_FOURTH else 3)
+
+
+def rav_pick_top(known, most: int, new_spells: bool = True) -> int:
+    """The highest spell level, MOST or lower, with one of a Shinobi's spells it doesn't know (KNOWN(spell)
+    true) in Wake of the Ravager (RAV_SHINOBI_SPELLS; the new ones only with NEW_SPELLS), 0 if none: the
+    page CHOOSE A SPELL looks for (DSCLOG2's SH_TOP)."""
+    return max((lvl for spell, lvl in RAV_SHINOBI_SPELLS if lvl <= most and not known(spell)
+                and (new_spells or spell not in RAV_NEW_SPELLS)), default=0)
 
 
 def pick_list(kid: int, known, most: int, new_spells: bool = True):

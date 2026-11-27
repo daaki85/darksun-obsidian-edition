@@ -59,7 +59,40 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager's kit PSP costs, hit dice and the Battle Mage's casting after a hit**
+- A party taken to the sequel now has there its psionicist kits' PSP costs (a Mind Bender's telepathy 2
+  less and psychokinesis 2 more, a Kineticist's the other way, a Titan Mind's, a Wasteland Seer's by the
+  open sky: to use a power, keep it up and raise a defence) and a Mind Warrior's fifth fewer PSP at a
+  level up; a Battle Mage's d6 and an Arcanist's d3 hit die at a level up, and past 10th 2 and 1 hit
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. Not yet: a new
+  character's kit hit die and PSP on the creation screen.
+**New: Wake of the Ravager's kit casting levels, cures and spells known**
+- A party taken to the sequel now has these as in Shattered Lands: an Arcanist's preserver spells cast a
+  level higher (their duration and damage); a Spirit Caller's and a Wasteland Seer's priest spells 2
+  levels higher under the open sky and 1 lower under a roof; a Healer's and a Rescuer's Cure Light,
+  Serious and Critical Wounds 1 more a die, a Lifebinder's a die more (Blood Flow too), and Cell
+  Adjustment likewise; a Wilderness Avenger's Cause Wounds 1 more a die.
+- A Healer's water cleric casts the sphere of the cosmos there (the spells every druid casts and no
+  cleric: in the sequel Cure Serious and Critical Wounds, Raise Dead, Heal and the rest), a Healer and a
+  Lifebinder never the harming spells (and the sequel's own Heartseeker, Energy Drain and Symbol of Pain,
+  which harm or kill the body as those do), a Wilderness Avenger never the healing ones: the USE screen lists
+  only what the kit knows. The dice log names the kit's part of a cure and of a Cause Wounds.
+  points a level (the owner's choice); and a Battle Mage casts though hit that round. On the creation
+  screen a Battle Mage's, Arcanist's or Mind Warrior's hit points and PSP are rolled again as the kit is
+  chosen or taken back, as in Shattered Lands, and a click on CON or an EDIT keeps the kit's range
+  (two new DSCLOG2 sites, 200 and 201).
+
 **New**
+- **The Shinobi casts its spells in Wake of the Ravager** (the port audit's step 7, part 1): a MAGE list
+  on USE with the wizard spells it knows, cast at its thief level less 5 (duration, damage, Spook's save
+  too); one of its own learnt at each thief level up from 6th, a new Shinobi of 6th or higher picking one
+  for each level from 6th; from a scroll only its own, after a read languages roll and INT's (THAT IS NOT
+  A SHINOBI SPELL, YOU CAN NOT READ THE SCROLL). DSCLOG2 sites 209-210, header +2076..+2087.
+- **Wake of the Ravager: the lotulis', double spear's and trikal's traits.** On the sequel's own Lotulis,
+  Double Spear and Trikal, as in Shattered Lands: a lotulis or double spear specialist's last swing of a
+  round of two turns on a second foe beside it (the double spear's 1 less damage), a trikal specialist's
+  hit trips a man-sized foe that fails a save against paralysis, and the trikal reaches two squares as a
+  polearm (DSCLOG2's site 202 and CAH_SWING, CAH_HIT, ENL_ROLL, REACH; its header's +2020 to +2028 count them).
 - **Wake of the Ravager: a Spellarcher makes spell arrows.** Its USE screen has Shattered Lands' buttons out
   of a fight (CHILL ARROWS, SHOCKING ARROWS, VAMPIRIC ARROWS for the touch spells it knows): a press uses a
   slot of that level for one arrow, stacked to 24, which casts the spell on a hit at its preserver level.
@@ -110,6 +143,7 @@ Releases, newest first (2.12.0 and older in the archive):
   `2026-11-18-dosbox-x.md` (the experiment), `2026-11-19-dosbox-x-engine.md`,
   `2026-11-21-dosbox-x-unchecked.md` (spells, a won fight's autosave, F10, a shop, the inventory,
   the creation screen).
+
 **Added: Wake of the Ravager's new wizard spells**
 - The six new wizard spells (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) are in the
   sequel, as spells 320-325 (DATA 320-325, ICON 21320-21325, SPIN 321-326 in the Loader's copy of its
@@ -134,6 +168,13 @@ Releases, newest first (2.12.0 and older in the archive):
   tables (Table 51, Table 46), with no WIS bonus; a Shinobi's wizard slots the Seeker's table by its
   thief level (counted, though it can't cast in the sequel yet). Beside the Elementalist's and
   Crusader's, which the sequel already had.
+
+**Fixed: Wake of the Ravager's double spear**
+- **Wake of the Ravager: a double spear swung once a round.** SSI gave the sequel's Double Spear a range
+  of 2 squares, and the game takes a swing from 2 squares as a shot: the type's one attack a round in place
+  of the warrior's, DEX to hit, no STR damage, and the weapon lines a missile's. A specialist under Computer
+  Control swung once a round from 2 squares. The Loader's OBJEX copy gives it a range of 1, as Shattered
+  Lands' double spear has (`ravager.RAV_RANGES`; `RAV_SKIP=melee_range` the control).
 
 **Fixed: Wake of the Ravager's Justifier**
 - A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it

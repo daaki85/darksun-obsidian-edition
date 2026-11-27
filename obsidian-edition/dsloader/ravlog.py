@@ -243,6 +243,26 @@ PALETTE_LAST = 253
 # EBh on)
 RAV_CHARMS = (2, 39, 61, 94, 131, 255, 256)
 RAV_SPELL_LAST = 0xEA
+# ... and the kits' spells in the sequel's numbers (ravager.RAV_*: DSCLOG2's CURE_DICE, AV_CAUSES, AV_HEALS,
+# AV_HARMS), for the dice log's kit parts of a cure's and a Cause Wounds' lines (kits.cure_bonus, cure_die,
+# harm_bonus) and kits.arc_level's and sky_level's wizard and priest spells (the new spells 320-325)
+RAV_KIT_SPELLS = (
+    ("WIZARD_LAST", ravager.RAV_WIZARD_LAST), ("NEW_WIZARD_SPELLS", ravager.RAV_NEW_WIZARD_SPELLS),
+    ("CURE_LIGHT", ravager.RAV_CURE_LIGHT), ("CURE_SERIOUS", ravager.RAV_CURE_SERIOUS),
+    ("CURE_CRITICAL", ravager.RAV_CURE_CRITICAL), ("BLOOD_FLOW", ravager.RAV_BLOOD_FLOW),
+    ("CURE_DICE", ravager.RAV_CURE_DICE), ("AVENGER_NO_HEAL", ravager.RAV_AVENGER_NO_HEAL),
+    ("CAUSE_LIGHT", ravager.RAV_CAUSE_LIGHT), ("CAUSE_SERIOUS", ravager.RAV_CAUSE_SERIOUS),
+    ("CAUSE_CRITICAL", ravager.RAV_CAUSE_CRITICAL), ("NO_HARM", ravager.RAV_NO_HARM),
+    ("CAUSE_DICE", ravager.RAV_CAUSE_DICE))
+# The sequel's cures' dice calls, by the code after them (dicelog.SPELL_HANDLER_RETURNS: the handler's own
+# bonus), in the patched game: Cure Light Wounds' 1d8 and Blood Flow's 2d6 healing (66542h, then DSCLOG2's
+# KIT_CURE, site 206, where the game had "push ax / jmp 65811h"), Cure Serious Wounds' 2d8 + 1 (6649Eh), Cure
+# Critical Wounds' 3d8 + 3 (664BCh)
+RAV_SPELL_HANDLER_RETURNS = (
+    (bytes.fromhex("83c404cdf5ce90"), 0),
+    (bytes.fromhex("83c40440e9a000"), 1),
+    (bytes.fromhex("83c404050300e9"), 3),
+)
 RAV_POISON_POWER = 273  # (a Poisoner's hit's poison: DSCLOG2's RAV_POISON_POWER, kits.POISON_POWER's)
 
 # Choosing an enemy with Tab, the ring and the chance to hit under the pointer (targeting.py, rings.py,
@@ -405,10 +425,12 @@ def apply_layout() -> int:
                         ("CONJURED_KINDS", ravager.rav_spec_kinds())):
         _SAVED.append((specialize, name, getattr(specialize, name)))
         setattr(specialize, name, value)
-    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh)
-    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST), ("POISON_POWER", RAV_POISON_POWER)):
+    from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh;
+    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST), ("POISON_POWER", RAV_POISON_POWER)) + RAV_KIT_SPELLS:  # the cures')
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
+    _SAVED.append((dicelog, "SPELL_HANDLER_RETURNS", dicelog.SPELL_HANDLER_RETURNS))  # (the cures' lines)
+    dicelog.SPELL_HANDLER_RETURNS = RAV_SPELL_HANDLER_RETURNS
     for module, names in RAV_TARGETING.items():  # (Tab, the ring, the chance under the pointer)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
@@ -419,6 +441,9 @@ def apply_layout() -> int:
             setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
+    for name, value in (("TSR_LEARN_READ", SH_LEARN_READ), ("TSR_LEARN_SPELL_HI", SH_LEARN_SPELL_HI)):
+        _SAVED.append((dicelog, name, getattr(dicelog, name)))  # (a Shinobi's scroll: DSCLOG2's own header)
+        setattr(dicelog, name, value)
     for module, names in rav_items().items():  # (looting with T, selling with S: the item lists' words)
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
@@ -1195,6 +1220,15 @@ KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from
 # offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
 PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
 PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
+# A Shinobi's try at a scroll (DSCLOG2's THE SHINOBI'S SPELLS): +2076 the d100 to read it and its chance
+# (DSCLOG's +366 and +367), +2078 the spell's high byte (the new spells 320-325); +2080 to +2086 its counts
+# (casting levels made, CHOOSE A SPELL asked, pages cut, scroll tries)
+SH_LEARN_READ, SH_LEARN_SPELL_HI = 2076, 2078
+SH_LEVELS, SH_ASKS, SH_PAGED, SH_SCROLLS = 2080, 2082, 2084, 2086
+# The weapon traits' counts (DSCLOG2's THE TRIKAL AND THE TWO-HEADED WEAPONS, its header's +2020 to +2059): +2020
+# a lotulis or double spear specialist's last swings turned on a second foe, +2022 the double spear's of them
+# done 1 less, +2024 the first targets put back, +2026 a trikal specialist's hits that asked a save, +2028 trips
+SF_SWINGS, SF_LESSES, SF_BACKS, TRIP_SAVES, TRIPS = 2020, 2022, 2024, 2026, 2028
 # A Spellarcher's spell arrows (ravarrows.py; DSCLOG2's SPELL ARROWS, site 240 and PICK POCKETS' 180-185): its
 # header's words from +2098: ARROWS_ON (the Loader's 1), ARROWS_SEQ, ARROWS_REPLY, ARROWS_WHO (the member),
 # ARROWS_ROW (spellarrows.ARROWS' place); +2108 to +2112 its counts (buttons shown, asks late, buttons beside

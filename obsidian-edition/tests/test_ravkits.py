@@ -356,6 +356,220 @@ class KitTests(unittest.TestCase):
             got = self.run_routine("behind_least", bytes(8), eax=given, esi=0x700, ebp=0x600)["eax"] & 0xFFFF
             self.assertEqual(got, kits.slots(kits.BATTLE_MAGE, kits.WIZARD, 7, 1, given))
 
+    # ---- PSP costs and PSP, hit dice, casting after a hit (sites 191-199) ----
+    CREATURES, SHEETS, POWERS = 0x8000, 0x1000, 0x3000  # (the game's creature records, sheets, powers' table)
+
+    def party(self, sheets) -> None:
+        """Creatures 0..N-1 (DS:19C9h, 31h bytes each, +4 the sheet) on SHEETS (DS:19C5h, 48h each), each
+        combatant N its creature N (the combatants' records, FIGHTERS_OFF + 1)."""
+        self.mu.mem_write(GDS * 16 + 0x19C5, struct.pack("<HH", self.SHEETS, SS))
+        self.mu.mem_write(GDS * 16 + 0x19C9, struct.pack("<HH", self.CREATURES, GDS))
+        fighters = (GDS - 0x897) * 16 + 0x0C33
+        for n, sheet in enumerate(sheets):
+            self.mu.mem_write(SS * 16 + self.SHEETS + n * ravager.SHEET_SIZE, sheet)
+            self.mu.mem_write(GDS * 16 + self.CREATURES + n * 0x31 + 4, struct.pack("<H", n))
+            self.mu.mem_write(fighters + n * 3, struct.pack("<BH", 2, n))
+
+    def run_int(self, name: str, **regs) -> dict:
+        """Site routine NAME as the INT runs it (IP, CS, FLAGS on the stack), the game's BP at SS:600h."""
+        self.mu.mem_write(SS * 16 + 0x7F8, struct.pack("<HHH", 0xFFF0, TSR, 0x2))
+        for reg, value in dict(dict(cs=TSR, ds=GDS, ss=SS, esp=0x7F8, ebp=0x600, eflags=0x2), **regs).items():
+            self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        self.mu.emu_start(TSR * 16 + self.sym[name], TSR * 16 + 0xFFF0)
+        return {reg: self.mu.reg_read(getattr(r, "UC_X86_REG_" + reg.upper()))
+                for reg in ("eax", "edx", "esi", "edi", "ebx", "ecx", "esp")}
+
+    PSI = [((12,), 1, 1, kits.MIND_BENDER), ((12,), 1, 3, kits.KINETICIST), ((12,), 1, 2, kits.MIND_WARRIOR),
+           ((9, 12), 5, 1, kits.TITAN_MIND), ((7, 9, 12), 8, 1, kits.WASTE_SEER), ((12,), 1, 0, None),
+           ((7, 9, 12), 8, 0x40, "own"), ((9, 7), 8, 0x40, None), ((12,), 1, 0xFF, None)]
+
+    def test_psp_cost(self):
+        """PSP_TABLE's AL (the powers' table, 3 bytes a power, BX the power x 3), PSP_KEEP's and PSP_KEEP_DX's
+        (63h none kept), PSP_USE's DI (no less than 0) and PSP_DEFENCE's cost (telepathy) are kits.psp_cost
+        for each psionicist kit, every power and cost, the party member under the open sky or a roof
+        (KIT_OUTDOORS) or a foe; a thri-kreen of the games' own party with a psionicist class is a
+        Wasteland Seer (SL's K'ratchek); none with the kits' rule off."""
+        outdoors = self.sym["kit_outdoors"]
+        seen = set()
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, race, byte, kid in self.PSI:
+                sheet = wotr_sheet(classes, (6,) * len(classes), race, byte)
+                for member, sky in ((0, True), (2, False), (5, None)):
+                    self.party([sheet if n == member else wotr_sheet((9,), (3,), 1, 0) for n in range(6)])
+                    self.mu.mem_write(TSR * 16 + outdoors, bytes((1 << member if sky else 0,)))
+                    want_kid = None if not rules else kits.WASTE_SEER if kid == "own" else kid
+                    if want_kid == kits.WASTE_SEER and sky is None:
+                        want_kid = None
+                    for power in range(34):
+                        for cost in (0, 1, 2, 3, 7, 0x63):
+                            self.mu.mem_write(self.POWERS * 16 + 0x7E0 + power * 3, bytes((0, cost, cost)))
+                            want = kits.psp_cost(want_kid, power, cost, sky) if want_kid else cost
+                            with self.subTest(classes=classes, byte=byte, member=member, power=power, cost=cost, rules=rules):
+                                got = self.run_int("psp_table", es=self.POWERS, ebx=power * 3, esi=member, eax=0xAB00)
+                                self.assertEqual(got["eax"] & 0xFFFF, 0xAB00 | want)
+                                self.assertEqual(got["ebx"] & 0xFFFF, power * 3)
+                                keep = cost if cost == 0x63 else want
+                                self.assertEqual(self.run_int("psp_keep", es=self.POWERS, ebx=power * 3, esi=member)["eax"] & 0xFF, keep)
+                                self.assertEqual(self.run_int("psp_keep_dx", es=self.POWERS, ebx=power * 3, edx=member, esi=9)["eax"] & 0xFF, keep)
+                                self.mu.mem_write(SS * 16 + 0x60A, struct.pack("<H", power))
+                                got = self.run_int("psp_use", edi=cost, esi=member)
+                                self.assertEqual(got["edi"] & 0xFFFF, want)
+                            if want != cost:
+                                seen.add(want_kid)
+                    for cost in (0, 1, 3, 9):  # (a defence: creature [BP-6] pays AX, telepathy's cost)
+                        self.mu.mem_write(SS * 16 + 0x5FA, struct.pack("<H", member))
+                        self.mu.mem_write(self.POWERS * 16 + 2, struct.pack("<H", 50))
+                        self.run_int("psp_defence", es=self.POWERS, ebx=0, eax=cost)
+                        left = struct.unpack("<H", self.mu.mem_read(self.POWERS * 16 + 2, 2))[0]
+                        want = kits.psp_cost(want_kid, kits.TP_FIRST, cost, sky) if want_kid else cost
+                        self.assertEqual(left, 50 - want, (classes, byte, member, cost, rules))
+        self.assertEqual(seen, {kits.MIND_BENDER, kits.KINETICIST, kits.TITAN_MIND, kits.WASTE_SEER})
+
+    def test_max_psp(self):
+        """KIT_MAX_PSP's SI (the level up's most PSP) is kits.max_psp: a Mind Warrior's a fifth fewer, asleep
+        too (a human turned fighter); ES:BX the sheet ([BP-8]) as the game's LES; none with the rule off."""
+        cases = [((12,), (6,), 2), ((12,), (6,), 1), ((9, 12), (3, 7), 0x02), ((9, 12), (8, 7), 0x02), ((12,), (6,), 0)]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, byte in cases:
+                sheet = wotr_sheet(classes, levels, 1, byte)
+                self.mu.mem_write(SS * 16 + 0x5F8, struct.pack("<HH", 0x500, SS))
+                self.mu.mem_write(SS * 16 + 0x500, sheet)
+                kid = kits.MIND_WARRIOR if rules and kits.MIND_WARRIOR in [k for k, _, _ in kitpages.kits_of(sheet)] else None
+                for psp in (0, 4, 5, 23, 61, 120):
+                    got = self.run_int("kit_max_psp", esi=psp, es=0, ebx=0)
+                    with self.subTest(classes=classes, levels=levels, byte=byte, psp=psp, rules=rules):
+                        self.assertEqual(got["esi"] & 0xFFFF, kits.max_psp(kid, psp))
+                        self.assertEqual((got["ebx"] & 0xFFFF, self.mu.reg_read(r.UC_X86_REG_ES)), (0x500, SS))
+        self.assertEqual(kits.max_psp(kits.MIND_WARRIOR, 61), 49)
+
+    def test_hit_dice(self):
+        """KIT_HIT_DIE's AL (the class's group's die, ES:BX's +0) is kits.hit_die and KIT_HIT_GAIN's (+2, the
+        gain past the dice) kits.hit_gain for the class levelled ([BP+8]) when it is the kit's own, awake: a
+        Battle Mage's d6 and 2, an Arcanist's d3 and 1, a preserver's d4 and 1; a human Battle Mage turned
+        fighter rolls the fighter's; none with the rule off."""
+        cases = [((11,), 2, 11), ((11,), 3, 11), ((11,), 1, 11), ((11,), 0, 11), ((9, 11), 0x08, 11),
+                 ((9, 11), 0x08, 9), ((11, 9), 0x02, 11), ((11, 9), 0x02, 9), ((11,), 0xFF, 11)]
+        groups = {9: (10, 9, 3), 11: (4, 10, 1)}
+        seen = set()
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte, cls in cases:
+                for levels in ((5,) * len(classes), (12, 3)[:len(classes)], (3, 12)[:len(classes)]):
+                    sheet = wotr_sheet(classes, levels, 1, byte)
+                    self.mu.mem_write(SS * 16 + 0x500, sheet)
+                    self.mu.mem_write(SS * 16 + 0x5FC, struct.pack("<HH", 0x500, SS))
+                    self.mu.mem_write(SS * 16 + 0x608, struct.pack("<H", cls))
+                    self.mu.mem_write(self.POWERS * 16 + 0x40, bytes(groups[cls]))
+                    awake = kitpages.kit_ids(sheet)
+                    kid = next((k for k in (kits.BATTLE_MAGE, kits.ARCANIST) if k in awake
+                                and sheet[0x1B + kitpages.kit_place_of(sheet, k)] == cls), None) if rules else None
+                    die = self.run_int("kit_hit_die", es=self.POWERS, ebx=0x40, eax=0x1200)
+                    gain = self.run_int("kit_hit_gain", es=self.POWERS, ebx=0x40, eax=0x1200, ecx=0x5678)
+                    with self.subTest(classes=classes, byte=byte, cls=cls, levels=levels, rules=rules):
+                        self.assertEqual(die["eax"] & 0xFFFF, 0x1200 | kits.hit_die(kid, groups[cls][0]))
+                        self.assertEqual(gain["eax"] & 0xFFFF, 0x1200 | kits.hit_gain(kid, groups[cls][2]))
+                        self.assertEqual((gain["ecx"] & 0xFFFF, gain["ebx"] & 0xFFFF, gain["esp"]), (0x5678, 0x40, 0x7FE))
+                    seen.add(kid)
+        self.assertEqual(seen, {kits.BATTLE_MAGE, kits.ARCANIST, None})
+        self.assertEqual([kits.hit_die(k, 4) for k in (kits.BATTLE_MAGE, kits.ARCANIST, None)], [6, 3, 4])
+        self.assertEqual([kits.hit_gain(k, 1) for k in (kits.BATTLE_MAGE, kits.ARCANIST, None)], [2, 1, 1])
+
+    def test_hit_round(self):
+        """HIT_ROUND marks creature SI hit this round (ES:SI+0B2h 1, the game's) unless it is a Battle Mage,
+        awake, the kits' rule on."""
+        cases = [((11,), 2), ((11,), 1), ((11,), 3), ((9, 11), 0x08), ((9, 11), 0x02), ((9,), 0)]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte in cases:
+                sheet = wotr_sheet(classes, (5, 7)[:len(classes)] if len(classes) > 1 else (5,), 1, byte)
+                self.party([wotr_sheet((9,), (3,), 1, 0), sheet])
+                self.mu.mem_write(self.POWERS * 16 + 0xB0, bytes(8))
+                self.run_int("hit_round", es=self.POWERS, esi=1, eax=0x4321)
+                bm = bool(rules) and kits.BATTLE_MAGE in kitpages.kit_ids(sheet)
+                with self.subTest(classes=classes, byte=byte, rules=rules):
+                    self.assertEqual(self.mu.mem_read(self.POWERS * 16 + 0xB0, 4), bytes((0, 0, 0, 0 if bm else 1)))
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x4321)
+
+    # ---- a kit's own hit die and PSP at creation (sites 200, 201; KIT_REROLL's choice) ----
+    MADE = 0x200  # (the sheet being made, SS:200h, far at DS:1429h)
+    CR = [(5, 2, kits.BATTLE_MAGE), (5, 3, kits.ARCANIST), (5, 1, None), (6, 2, kits.MIND_WARRIOR),
+          (6, 1, None), (6, 3, None), (5, 0, None), (5, 0xFF, None), (5, 0x82, kits.BATTLE_MAGE), (3, 2, None)]
+
+    def made(self, classes, byte, seen) -> None:
+        """The creation screen's sheet: CLASSES (1-8, the screen's numbers), its kit byte BYTE; KP_CLASS's
+        classes seen SEEN (None: as the sheet's; -1: none yet). Party member 2 (USE_WHO) is being made,
+        its party sheet with the same kit byte."""
+        sheet = bytearray(ravager.SHEET_SIZE)
+        sheet[0x1B:0x1B + len(classes)] = bytes(classes)
+        sheet[0x3D] = byte
+        self.mu.mem_write(SS * 16 + self.MADE, bytes(sheet))
+        self.mu.mem_write(GDS * 16 + 0x1429, struct.pack("<HH", self.MADE, SS))
+        cls3 = struct.unpack("<I", bytes(sheet[0x1B:0x1E]) + b"\0")[0]
+        self.mu.mem_write(TSR * 16 + self.sym["wp_classes_seen"],
+                          struct.pack("<I", cls3 if seen is None else seen & 0xFFFFFFFF))
+        self.party([bytes(ravager.SHEET_SIZE)] * 2 + [bytes(sheet)])
+        self.mu.mem_write((GDS + 0x3E71 - 0x47E0) * 16 + 0xB44, struct.pack("<H", 2))
+
+    def test_cr_die(self):
+        """CR_DIE's AL (the class's die for the creation hit points' most, 360h:11Dh by the screen's class
+        BX) is kits.hit_die for the kit chosen: a Battle Mage's 6, an Arcanist's 3, a preserver's 4; none
+        for a kit left over from other classes (taken away, from the party's sheet too), nor with the rule
+        off; before the screen's first look (an EDIT's) the kit as it is."""
+        dice = {3: 10, 5: 4, 6: 6}
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for cls, byte, kid in self.CR:
+                for seen in (None, -1, 0x0101):
+                    self.made((cls,), byte, seen)
+                    self.mu.mem_write(self.POWERS * 16 + 0x11D + cls, bytes((dice[cls],)))
+                    got = self.run_int("cr_die", es=self.POWERS, ebx=cls, eax=0xAB00, ecx=0x1234)
+                    want_kid = kid if rules and seen != 0x0101 else None
+                    stale = rules and seen == 0x0101
+                    with self.subTest(cls=cls, byte=byte, seen=seen, rules=rules):
+                        self.assertEqual(got["eax"] & 0xFFFF, 0xAB00 | kits.hit_die(want_kid, dice[cls]))
+                        self.assertEqual((got["ecx"] & 0xFFFF, got["ebx"] & 0xFFFF), (0x1234, cls))
+                        kept = 0 if stale else byte
+                        self.assertEqual(self.mu.mem_read(SS * 16 + self.MADE + 0x3D, 1)[0], kept)
+                        party = SS * 16 + self.SHEETS + 2 * ravager.SHEET_SIZE + 0x3D
+                        self.assertEqual(self.mu.mem_read(party, 1)[0], kept)
+
+    def test_cr_psp(self):
+        """CR_PSP (the creation PSP routine's end): the WIS bonus AX added to the sheet being made's +0Ch,
+        then a Mind Warrior's a fifth fewer (kits.max_psp); then the routine's own "pop bp / retf", the
+        INT's frame dropped and its flags (IF) put back; ES:BX the sheet as the game's."""
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for cls, byte, kid in self.CR:
+                for psp, bonus in ((0, 0), (25, 0), (61, 3), (104, 0), (4, 1)):
+                    self.made((cls,), byte, None)
+                    self.mu.mem_write(SS * 16 + self.MADE + 0x0C, struct.pack("<H", psp))
+                    self.mu.mem_write(SS * 16 + 0x7F8, struct.pack("<HHHHHH", 0x4444, 0x5555, 0x202, 0x1234, 0xFFF0, TSR))
+                    for reg, value in dict(cs=TSR, ds=GDS, ss=SS, esp=0x7F8, ebp=0x600, eflags=0x2, eax=bonus).items():
+                        self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+                    self.mu.emu_start(TSR * 16 + self.sym["cr_psp"], TSR * 16 + 0xFFF0)
+                    got = struct.unpack("<H", self.mu.mem_read(SS * 16 + self.MADE + 0x0C, 2))[0]
+                    want = kits.max_psp(kid if rules and kid == kits.MIND_WARRIOR else None, psp + bonus)
+                    with self.subTest(cls=cls, byte=byte, psp=psp, bonus=bonus, rules=rules):
+                        self.assertEqual(got, want)
+                        self.assertEqual([self.mu.reg_read(getattr(r, "UC_X86_REG_" + n)) & 0xFFFF
+                                          for n in ("BP", "SP", "AX", "BX", "ES")],
+                                         [0x1234, 0x804, bonus, self.MADE, SS])
+                        self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x200)
+        self.assertEqual(kits.max_psp(kits.MIND_WARRIOR, 129), 104)
+
+    def test_kit_rolls_due(self):
+        """KIT_ROLLS_DUE: KIT_REROLL due for the sheet being made's Battle Mage, Arcanist or Mind Warrior
+        (KIT_ROW calls it with the kit before and after the click), not for another kit or none."""
+        for cls, byte, kid in self.CR:
+            self.made((cls,), byte, None)
+            self.mu.mem_write(TSR * 16 + self.sym["kit_reroll_due"], b"\0")
+            self.run_routine("kit_rolls_due", bytes(8), eax=0x1357)
+            with self.subTest(cls=cls, byte=byte):
+                self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["kit_reroll_due"], 1)[0], 1 if kid else 0)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1357)
+
 
 if __name__ == "__main__":
     unittest.main()

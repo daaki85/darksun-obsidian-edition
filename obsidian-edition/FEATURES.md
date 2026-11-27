@@ -1103,6 +1103,13 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   pockets goes by weight. The few weapons SSI made oddly light
   weigh as Shattered Lands' copies of them do (the two-handed sword 15 lb, the lotulis 10). As in
   Shattered Lands, no load is too heavy and nothing slows a loaded character.
+- **[Weapon traits](#weapon-traits)** in the sequel too: the cahulaks' two heads and tangle, the staff
+  sling's stinkpots, the polearm's reach, and on the sequel's own Lotulis, Double Spear and Trikal a
+  specialist's [second foe](#lotulis-and-double-spear) and [trip](#trikal), the trikal reaching two squares.
+  The sequel's **Double Spear** swings beside its foe: SSI gave it a range of 2 squares, which the game
+  took as a shot (once a round, DEX to hit and no STR damage; a double spear specialist under Computer
+  Control swung once a round from 2 squares); with the Loader its range is 1, as Shattered Lands' double
+  spear's, and it swings at the warrior's rate ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **[A level cap by XP](#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
   character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
   past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
@@ -1165,7 +1172,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   two-weapon penalty and initiative, the Seeker's and Justifier's casting level, the
   Elementalist's second sphere's spells (known, cast and at its cleric level), the kits' spell slots
   (the Battle Mage's and Crusader's one fewer, the Elementalist's a level behind, the Seeker's,
-  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), and the Battle
+  Justifier's and Shinobi's own tables: [Kits' spell slots](KITS.md#kits-spell-slots)), the kits' casting
+  levels (an Arcanist's, Spirit Caller's and Wasteland Seer's), cures (a Healer's, Lifebinder's and
+  Rescuer's) and Cause Wounds (a Wilderness Avenger's), the spells a kit knows (a Healer's sphere of
+  the cosmos, the healing or harming spells a kit never knows), the psionicist
+  kits' PSP costs and the Mind Warrior's fifth fewer PSP, the Battle Mage's d6 and Arcanist's d3 hit die (on
+  the creation screen, rolled again as the kit is chosen, and at a level up; past 10th 2 and 1 a level), the Battle Mage's casting after being hit, and the Battle
   Dancer's dance and Wild Fighting as a fight starts, and the kits' gear: what a kit forbids is
   refused when it is put on or in a hand (a Ravager's shield and bow, a Stalker's chain mail, a Battle
   Mage's off-hand weapon), and what it allows can be held whatever its class (a Battle Mage's weapon of
@@ -1180,7 +1192,9 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Bow), and a Spellarcher makes spell arrows on the USE screen there as in Shattered Lands (a button for
   each touch spell it knows, a slot a press; a new one starts with 24 of each it picked, and another member's go
   back to it). What else kits do to spells
-  and psionic powers, and hit dice, doesn't carry over yet (a Shinobi has its slots, but no spells to cast with them; [which kits work
+  and psionic powers doesn't carry over yet, but for the Shinobi's own spells: it has a MAGE
+  list on USE, casts at its thief level less 5, and learns its own at a level up, at creation and from a
+  scroll (read languages first) as in Shattered Lands ([which kits work
   there](KITS.md#in-wake-of-the-ravager)). The creation screen has [STORE and
   RECALL](#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
   gear](#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it

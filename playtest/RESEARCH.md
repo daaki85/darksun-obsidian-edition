@@ -859,6 +859,8 @@ level's slots shows "ZERO LEVEL 9 SPELLS TO CAST": write the slots again and pre
 
 **Weapon specialization in the sequel** (2026-11-24, logs/2026-11-24-ravager-specialize.md): the weapon attack routine (5CE80h, SL's 58780h) has SL's frame with its locals two lower: the attacks a round in halves `[BP-0Ah]` (stored at 5CEE8h from the sheet's +24h in melee, the type's +7 for a missile), the damage dice `[BP-10h]` (type +9), sides `[BP-12h]` (+8), bonus `[BP-14h]` (+0Ah; the item's plus +16h added unless an Enlarge-like effect 4 is on either side, then the strength bonus, 98h:42Bh, at 5CF6Dh); `[BP+0Ah]` the THAC0 the d20 is held against (less `[BP+0Ch]`), `[BP+10h]` the sheet, `[BP+12h]` the item, `[BP+14h]` the type, `[BP+16h]` above 1 a missile. After the store the game doubles the halves for a status 4, halves them for 1, a ninth for 7 (628h:5Ch), then (the round's parity + halves) / 2, and cuts a shot's attacks to the ammunition left (5D007h-5D046h: "Out of ammo"). The sequel gives every warrior 3 halves (sheet +24h) as SL does. **A specialist's line in the dice log** reads "THAC0 19 base, +3 in bonuses, +1 specialized = 15" (the sequel's set-up frame isn't SL's, so the bonuses aren't itemized) and "1d6 = [3] +1 weapon +2 specialized +4 STR 18". DSCLOG2's `spec_hits`, `spec_damages`, `spec_rates` count what it did (scratch `spcount.py`: the symbols from `nasm`, the helper found by its `DSCLOGR1` header). **The transferred party in Tyr's ambush** under Computer Control: give the four HP 250 and base AC -10 in memory (48h sheets: `sheet * 48h + 21h`; never saved) so the fight lasts 30 rounds or more; put an archer's melee weapon in the pack (an item's +13h 14) to have the AI shoot, though it may take it up again. **"Illegal Op (gpl=49)"**: 9 of 14 of those fights (ravG48's 48h party: 5 of 9 with the rule on, 4 of 5 with it off) end with the game quitting so (`RAV_STDOUT=1` shows it, `RAV_MARK=1` writes ENDED.TXT), mostly at Ester's turn; not yet looked into. **Another agent's dice log** attached to this DOSBox (a Loader test of its own) wrote its rules word into DSCLOG2's header: a run whose `rules` (header +170) isn't the Loader's is void (`spcount.py` prints it).
 
+**The lotulis', double spear's and trikal's traits in the sequel** (2026-11-26, logs/2026-11-26-ravager-weapon-traits.md): the attack's set-up (5C5E1h) takes `[BP+0Eh]`, its caller's distance to the target (the computer's at 5C0D7h, from the distance routine 1D40:35EFh), and passes it on as the hit routine's `[BP+16h]`: **above 1 is a shot** (5C77Dh: the set-up's missile way, the type's range +6 held against it at 5C8A9h). So a melee weapon of range 2 (the sequel's Double Spear 39, alone among the weapons; type 22's +6 is 2 too) swung from 2 squares took the type's +7 halves (the double spear's 2: one a round), DEX to hit, no STR damage, and the computer (5BDC2h: its target's distance against the weapon's range) swung it from there; the DAM lines (7B0B4h: "cmp byte es:[bx+6],1 / ja") show such a type as a missile weapon. The hit routine's frame: `[BP+0Ch]` the target's AC (the set-up's `[BP-6]`, from the AC routine 5D520h: target, attacker, the behind flag `[BP+20h]`, a far routine called "push cs / call near" at 5C9A7h), `[BP+0Eh]` the attacker's creature, `[BP+18h]` its combatant, `[BP+1Eh]`/`[BP+20h]` the backstab and behind flags. The swing loop's "cmp ax,[bp-0Ah]" (5D308h, after "inc [bp-16h]") is passed by every swing and once before the first (SL's AMMO_TURN site). A creature's +15h is its group: the game's friends by the bit mask 71h, its foes F80h (23838h); +14h 1 Okay, 3 out cold. An overlay routine called from DSCLOG2 by its address (the INT's way back's CS, its IP + the distance) needs the INT's way back in a BP frame below it, as the stinkpots' far calls do, for the overlay manager to fix up. The game keeps a combatant's hand weapons in a copy of its own: moving the off-hand weapon to a pack slot in the sheet (a test edit) left its off-hand swing in place (2026-11-27), so for a test of one weapon alone, put the other in the pack from the inventory screen before the fight.
+
 **The sequel's own six weapon specs** (2026-11-25, logs/2026-11-25-ravager-new-specs.md): a spec for a test made in the
 **Shattered Lands save** before the party transfer (`game.with_specs` on a copy's `SAVE 6` sheets, written back with
 `icons.with_chunks`), then `python -m dsloader.ravtransfer SAVE COPY SL_FOLDER DOS_FOLDER`: the roster's 48h sheets
@@ -1799,6 +1801,37 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   panel (a crop compared with `compare -metric AE`); the top-left icon, then the bar's third (97,171), CAST
   SPELL. Tab then Return brought the game's menu, not an attack: a click on an adjacent foe ends a turn.
 
+**The Shinobi's wizard spells** (2026-11-27, logs/2026-11-27-ravager-shinobi-spells.md; branch
+claude/ravager-shinobi-spells): a Shinobi is a thief kit (the sheet's kit byte +3Dh 11h, class 17) that
+casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the kit slots' entry above).
+- **Where the game asks**: the USE screen's MAGE list (DS:43E8h a list a member, the 1 = MAGE) comes when
+  62C00h finds a known wizard spell the member casts; its levels stop at 698:2Ah (97D1Fh, the highest
+  wizard level with a known spell) capped by 97E9Ch (member, 1), from the caster level 97DC5h (member,
+  spell 0) as (level+1)/2. 97DC5h's loop takes, for each class 588:20h says yes to, 98:C1h (member,
+  class) the class's level, then "add sp,4" at 97DF1h, then "sub dx,7" for classes 13-16 alone.
+  Wizard knowledge is 6260Ah's bitset (selector 320h, +39Ch, 0Fh bytes a member); the new spells
+  320-325 the sheet's bits (+3Fh 40h, 08h, 80h; 325 the kit byte's 80h).
+- **The hooks** (DSCLOG2's THE SHINOBI'S SPELLS): the "yes" for a Shinobi's class 17 and any wizard spell
+  (it learns only its list's, so it knows no other in play: a test edit's other known spells showed too)
+  rides on EL_SPHERE's three sites (90-92 now SH_SPHERE_DI/BP, then EL_SPHERE as before); the caster
+  level is site 209 at 97DF1h (SHINOBI_CAST_LEVEL: thief level less 5, 11 at most, none below 6th); the level-up's
+  "is it class 0Bh" at 957ABh is site 210 (SHINOBI_LEVEL_UP: a Shinobi's thief from 6th picks a spell
+  through 688:66h, 93160h, as a preserver does; inside it PICK_ANY, PICK_PAGE, PICK_LIST and PICK_TOP
+  keep to its list and its slot levels); creation's CR_PICKS (site 87) gives a Shinobi its first spells
+  (SH_FIRST_SPELLS: a CHOOSE A SPELL a pick); SCROLL_LEARN (99A2Fh) and NS_SCROLL (site 148) make a scroll
+  its own (THAT IS NOT A SHINOBI SPELL), roll its READ LANG. (AD&D: the thief table's skill 7 with race,
+  95 at most; else 5% a level with race) for YOU CAN NOT READ THE SCROLL and then the INT chance.
+  NS_SPOOK_SAVE counts its casting level. Header +2076..+2087 (learn_read, learn_read_chance,
+  learn_spell_hi; SH_LEVELS_N, SH_ASKS, SH_PAGED, SH_SCROLLS counters: `ravlevel.py counts`).
+- **Played** (the log): Ar'Anda made a thief 13th Shinobi on her turn in the Draxans' ambush (`ravkits.py
+  set 0 0x43 - 17`, `levels 0 13`): MAGE LEVEL 1-4, WIZ slots 3 3 2 1; at thief 10th levels 1-3 only.
+  Her Hold Person: Paralyzed (69) on the Draxan for 960 game seconds, 16 rounds at casting level 8 (read
+  with `RavGameData.effects_left()`). The control (kit byte 0x40, no kit): PSIONIC only.
+- **Tests**: `tests/test_ravshinobi.py` runs the hooks on the emulator against `kits.RAV_SHINOBI_SPELLS`
+  and `kits.rav_pick_top`; its list test reads the sequel's spell names (DSUN_WOTR).
+- **Not ported**: the Effects screen's READ LANG. line; armour and effects in read languages; a
+  preserver-thief multiclass Shinobi (its preserver class casts as a preserver's).
+
 **Choosing a kit in the sequel** (2026-11-25, logs/2026-11-25-ravager-kit-choice.md):
 - **The creation overlay is SL's code at other addresses** (overlay 6AFE0h-6CE93h, its stub 46CCh,
   the same entries as SL's 421Dh: 66h the rows marked 6BC81h, 7Ah back to the disciplines 6BF3Fh; the
@@ -2320,6 +2353,54 @@ menu 40 to the right of the click; DROP (140,129) and YES (140,117) on a member'
   ring was at game (267,121) in one run and (267,110) in the next: grab the screen after Up 6), then
   `ravlevel.py show` (the casts left) and `ravlevel.py counts kt_count sb_count sh_mages`. The USE screen
   offers MAGE or CLERIC by class and spells known, not by slots.
+- **Kit PSP costs, hit dice and the hit's mark in the sequel** (logs/2026-11-26-ravager-kit-psp-hd.md): the
+  power routines are SL's code at 615xxh-61Fxxh with the powers' table at 3D0h:7E0h, **3 bytes a power** (+1
+  the cost, +2 the upkeep; SL's 8), BX the power x 3; the powers are SL's 34 in SL's order (Enhanced
+  Strength 0Fh, Domination 14h/15h). The USE screen's hover ("PSIONIC BLAST 18 10") reads the table (97135h),
+  so it shows the plain cost whatever the kit. A member's PSP is the creature's +2; ravkits.py's 200 is held
+  to the sheet's most (+0Ch) at a round's start. A failed power check costs half, "Message: psionic power
+  check fails" in the dice log. The level up's hit points (94F60h: `[BP+8]` the class, `[BP-4]` the sheet)
+  read the group's die at 95014h and its gain past the dice at 95000h; to see a level up's most PSP whole,
+  make the sheet's +0Ch 1 first (the game writes it only when more). **The hit's mark** is a byte a creature
+  at 308h:0B2h (the helper's `hr_seg` holds the segment the last hit used: 3DF1h in that run), cleared at a
+  round's start; a member hit before its turn in the round has its spells (and powers) crossed out on USE.
+  To have a member hit before her turn, make her DEX 3 (creature +1Ah, sheet +16h; a test edit): she acts
+  last. A kit byte changed between turns takes at once (a control in the same fight). **Tyr's thieves**:
+  `ravgo.py y 1224 x 1839` from `ravager-after-ambush`, then 2 and Space; `ravfight.py fight` there often
+  gets "NO PATH FROM HERE": click the foe yourself (the walk arrow over a foe shows its to-hit, "7+ (70%)").
+- **Kit casting levels, cures and spells known in the sequel** (logs/2026-11-26-ravager-kit-casting.md): the level a
+  spell is cast at for its duration and damage is 628AFh's (SL's 5E25Ch; [BP+6] the caster, [BP+8] the spell): a loop
+  over the three class places ([BP-1]) keeping the best level in DI, ending "inc byte [bp-1] / cmp byte [bp-1],3 /
+  jge / jmp" (629FEh) and "mov ax,di" (62A0Ah); KIT_CAST_LEVEL (site 205) takes the INC, so nothing on the stack
+  moves. The spell levels a member may cast are 97DC5h's (the caster level), not this one's. **The handler for spells
+  with rules of their own** is SL's at other addresses: its switch at 656D0h (81 cases at CS:28C1h, the overlay's CS:0
+  at file 642E0h); Cure Light Wounds (117) at 6648Ah ("push 80001h", jmp 6653Dh, the dice call, then 66545h "push ax /
+  jmp 65811h"), Cure Serious Wounds (170) 2d8 + 1 at 66493h, Cure Critical Wounds (194) 3d8 + 3 at 664A5h (after
+  628h:8Eh with D5h), Blood Flow (166) at 6652Bh (healing only on the caster's own side), Cell Adjustment (248) at
+  664C5h (CELL_HEAL, site 11), all to 65811h ("push di / call 628h:43h": the heal). **The spells' damage**: 80278h
+  (spell, level, a near pointer to the most) called by the area routine at 7E7A0h (stored at 7E7A6h "mov [bp-14h],ax",
+  the most [BP-16h]; SL's 754ECh) and the one-creature routine at 7F721h (7F727h "mov [bp-6],ax", the most [BP-8];
+  SL's 761A9h). **The sequel's spells for the kits** (RESOURCE.GFF's names): wizard spells 0-72h, priest 73h-EAh;
+  Cure Light Wounds 117, Cause Light 118, Cause Disease 149, Blood Flow 166, Cure Serious 170, Cause Serious 171, Poison
+  179, Cure Critical 194, Cause Critical 195, Slay Living 204, Heal 210, Harm 211, Waters of Life 215. The sphere byte
+  20h (the druids') is the sphere of the cosmos: Abjure, Cloak of Bravery and of Fear, Cure Serious and Critical
+  Wounds and their Causes, Free Action, Neutralize Poison, Poison, Protection from Evil 10', Dispel Evil, Rainbow,
+  Raise Dead, Slay Living, Blade Barrier, Heal, Harm, Wall of Thorns, Confusion, Creeping Doom, Restore, Energy Drain,
+  the three Symbols, Rift. DSCLOG2's counters `kc_levels`, `kc_cures`, `kc_causes`, `kc_cosmos`, `kc_barred`,
+  `kc_cells` (the header's +2064 on): `ravlevel.py counts kc_levels ...`.
+- **A kit's hit points and PSP at creation in the sequel** (logs/2026-11-26-ravager-kit-psp-hd.md, step 4):
+  the creation rolls' overlay is stub segment 5C0h: its 66h the hit points' routine (6D1EDh; it copies the
+  sheet being made to the member's party sheet with 6E6D8h, rolls each level there by the level up's
+  routine 690h:20h, and copies it back with 6EE5Eh, which leaves a taken-back kit, KIT_OPEN, none), its
+  6Bh the PSP routine (6D75Dh, all its own code, no call to the level up's). The least and most hit points
+  are DS:42D8h and 42D6h, the numbers' places DS:1224h (hit points) and 122Ch (PSP), x then y, their
+  backdrop words at 368h:70h/84h and 72h/86h, the backdrop routine the root's 0C8h:3B30h, the numbers
+  drawn by the panel's stub 5B8h's 3Eh and 43h. A creation sheet's class is 1-8 (5 preserver, 6
+  psionicist; the copy to the party sheet makes it 1-17). `ravkits.py page` prints the hit points with
+  their range, the PSP and the creation counters. A 7th-level human preserver with CON 18 has 21 to 42
+  (a Battle Mage 21 to 56, an Arcanist 21 to 35); a click on CON moves the range (CON 15: 7 more, 14: none
+  for a preserver). The DROP and EDIT rows of a member's menu are 12 apart (EDIT at 110,57 for slot 1;
+  110,67 is DROP: CANCEL its question at 110,82).
 - **Abilities and a spell cast for a test in the sequel** (logs/2026-11-21-ravager-flame-biofeedback.md):
   the abilities STR DEX CON INT WIS CHA are the creature's +19h on and the sheet's +15h on (write both). A
   spell cast in `ravhold.sh`'s fight: USE (the top-left icon, `ravclick.py 22 17`), LEVEL (`ravclick.py

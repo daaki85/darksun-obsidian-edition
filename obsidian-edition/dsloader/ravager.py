@@ -454,8 +454,13 @@ PATCHES: Tuple[Patch, ...] = (
     # starts (5B838h: its movement stored; SL's 57566h), a tangled one's turn taken.
     Patch("cahulaks_hit", 0x5D1FE, bytes.fromhex("c646e700"), gamepatch._interrupt(VEC_CAH_HIT, 4)),
     Patch("cahulaks_move", 0x5B838, bytes.fromhex("2689872e02"), gamepatch._interrupt(VEC_CAH_MOVE, 5)),
-    # a polearm's reach (DSCLOG2's REACH): the combatant distance routine's "mov ax,[bp-1Ch]" at its end
+    # a polearm's and the trikal's reach (DSCLOG2's REACH): the combatant distance routine's "mov ax,[bp-1Ch]"
+    # at its end
     Patch("reach", 0x25CDD, bytes.fromhex("8b46e4"), gamepatch._interrupt(VEC_REACH, 3)),
+    # The lotulis' and double spear's second foe (DSCLOG2's THE TRIKAL AND THE TWO-HEADED WEAPONS; SF_SWING is
+    # CAH_SWING's, the trikal's trip CAH_HIT's): SF_BACK (site 202) at the swing loop's "cmp ax,[bp-0Ah]"
+    # (5D308h, SL's AMMO_TURN site 58C38h), the first target and its AC put back after the swing at the second.
+    Patch("second_foe_back", 0x5D308, bytes.fromhex("3b46f6"), _site(202, 3)),
     # the stinkpots' Nauseated (DSCLOG2's STINKPOTS): the sequel's effect 12, empty (no name, icon 0), named
     # and given Stinking Cloud's icon (ICON 21000 + 22, as the effects' icons are their spells')
     Patch("nauseated_name", EFFECT_RECORDS_FILE + NAUSEATED * 31, bytes(31),
@@ -805,6 +810,54 @@ PATCHES: Tuple[Patch, ...] = (
     # ADND_SLOTS (site 34) its slots; DSCLOG2's SHINOBI_MAGE (site 190) answers yes for a Shinobi's thief
     # class at its "add sp,4" (627D6h, the member SI), the "or al,al" after kept.
     Patch("shinobi_mage", 0x627D6, bytes.fromhex("83c404"), _site(190, 3)),
+    # The kits' PSP costs (SL's psp_use, psp_can_use, psp_failed, psp_defence, psp_keep, psp_can_keep;
+    # kits.psp_cost): the power routines' cost in DI where a power is used (6178Eh), the powers' table read
+    # (3D0h:7E1h, 3 bytes a power) where one is checked (6162Dh) and half taken for one that fails (6183Dh),
+    # a defence's cost paid (61FA1h), the cost to keep one up taken (619DCh) and checked (616A8h): DSCLOG2's
+    # PSP_USE, PSP_TABLE, PSP_DEFENCE, PSP_KEEP, PSP_KEEP_DX (sites 191-195)
+    Patch("psp_use", 0x6178E, bytes.fromhex("0bff7d0233ff"), _site(191, 6)),
+    Patch("psp_can_use", 0x6162D, bytes.fromhex("268a87e107"), _site(192, 5)),
+    Patch("psp_failed", 0x6183D, bytes.fromhex("268a87e107"), _site(192, 5)),
+    Patch("psp_defence", 0x61FA1, bytes.fromhex("26294702"), _site(193, 4)),
+    Patch("psp_keep", 0x619DC, bytes.fromhex("268a87e207"), _site(194, 5)),
+    Patch("psp_can_keep", 0x616A8, bytes.fromhex("268a87e207"), _site(195, 5)),
+    # ... the kits' hit dice (SL's hit_die; kits.hit_die, kits.hit_gain) where the level up takes a level's
+    # die from the class's group (95014h) or the gain past its dice (95000h), a Mind Warrior's most PSP
+    # (SL's max_psp, kits.max_psp: 95172h), and a Battle Mage's casting after a hit (SL's hit_round: the
+    # hit's mark, 5CD76h): KIT_HIT_DIE, KIT_HIT_GAIN, KIT_MAX_PSP, HIT_ROUND (sites 196-199)
+    Patch("hit_die", 0x95014, bytes.fromhex("268a870000"), _site(196, 5)),
+    Patch("hit_gain", 0x95000, bytes.fromhex("268a870200"), _site(197, 5)),
+    Patch("max_psp", 0x95172, bytes.fromhex("c45ef8"), _site(198, 3)),
+    Patch("hit_round", 0x5CD76, bytes.fromhex("26c684b20001"), _site(199, 6)),
+    # ... and the kits' casting levels, cures and spells known (SL's PROBE_SPELL_LEVEL, PROBE_CURE, AREA_DMG and
+    # HARM_SITE's AV_CAUSE; the spells known are EL_SPHERE's, sites 90-92, and Cell Adjustment's CELL_HEAL's,
+    # site 11): DSCLOG2's KIT_CAST_LEVEL (site 205) at the loop's "inc byte [bp-1]" in 628AFh (the level a spell
+    # is cast at for its duration and damage: an Arcanist's wizard spells 1 higher, a Spirit Caller's and
+    # Wasteland Seer's priest spells 2 higher under the open sky, 1 lower under a roof), KIT_CURE (site 206) at
+    # the cures' "push ax / jmp 65811h" (66545h: a Healer's and Rescuer's 1 more a die, a Lifebinder's a die
+    # more), AVENGER_AREA and AVENGER_ONE (sites 207, 208) where a spell's damage is stored after its roll
+    # (7E7A6h "mov [bp-14h],ax", the area's; 7F727h "mov [bp-6],ax", one creature's: a Wilderness Avenger's
+    # Cause Wounds 1 more a die)
+    Patch("kit_cast_level", 0x629FE, bytes.fromhex("fe46ff"), _site(205, 3)),
+    Patch("kit_cure", 0x66545, bytes.fromhex("50e9c8f2"), _site(206, 4)),
+    Patch("avenger_cause_area", 0x7E7A6, bytes.fromhex("8946ec"), _site(207, 3)),
+    Patch("avenger_cause_one", 0x7F727, bytes.fromhex("8946fa"), _site(208, 3)),
+    # A kit's own hit die and PSP at creation (DSCLOG2's CR_DIE, CR_PSP; KIT_REROLL on the kit page): the
+    # creation hit points' most, a level's die (6D28Fh, SL's 65677h); the creation PSP routine's end
+    # (6D85Eh: its WIS bonus and "pop bp / retf" made the site, then "xor ax,ax / jmp short" back to it for
+    # the WIS test's "jna", made to go there, and the end kept at 6D866h for the routine's other way out)
+    Patch("cr_die", 0x6D28F, bytes.fromhex("268a871d01"), _site(200, 5)),
+    Patch("cr_psp_wis", 0x6D842, bytes.fromhex("7622"), bytes.fromhex("761d")),
+    Patch("cr_psp", 0x6D85E, bytes.fromhex("c41e2914260147 0c5dcb".replace(" ", "")),
+          _site(201, 3) + bytes.fromhex("33c0ebf9905dcb")),
+    # ... and a Shinobi's wizard spells (SL's SHINOBI_WIZARD, LV_SHINOBI, PROBE_PICK_*, SHINOBI_READ): DSCLOG2's
+    # THE SHINOBI'S SPELLS. EL_SPHERE's three sites answer yes for its thief class and a wizard spell (the USE
+    # screen's MAGE list, the cast); SHINOBI_CAST_LEVEL (site 209) at the caster level routine's "add sp,4"
+    # after its call for a class's level (97DF1h, 98h:0C1h's: SL's 81B16h's loop), its thief level less 5;
+    # SHINOBI_LEVEL_UP (site 210) at the level up's "cmp word [bp+8],0Bh" (957ABh, the preserver's spell pick,
+    # SL's PROBE_LV_PICK's place), on to CHOOSE A SPELL at a thief level up from 6th, its own spells alone
+    Patch("shinobi_cast_level", 0x97DF1, bytes.fromhex("83c404"), _site(209, 3)),
+    Patch("shinobi_level_up", 0x957AB, bytes.fromhex("837e080b"), _site(210, 4)),
     # ... and the Poisoner's poison and the Spellarcher's arrows' plus (SL's PROBE_POISON, PROBE_ARROW):
     # DSCLOG2's POISON_HIT (site 214) at the weapon hit's "does the weapon cast" (5D20Dh: a Poisoner's
     # first melee hit of a fight with each hand's weapon casts the monsters' poison, 273, through
@@ -1105,19 +1158,73 @@ def class_spheres(cls: int) -> int:
     return 0x3F if cls == 19 else 0
 
 
-def casts(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
-    """Whether class CLS of SHEET casts priest spell SPELL (its sphere byte SPHERE): the game's answer,
-    and with the kits an Elementalist's (kits.spell_spheres): its own cleric class casts its second
-    sphere's spells too (kits.SPHERE2's low bits: the sheet's +3Fh in ravlog's layout, which SHEET is read
-    in). DSCLOG2's EL_SPHERE."""
+# The kits' spells in the sequel's numbers (RESOURCE.GFF's names; DSCLOG2's AV_HEALS, AV_HARMS, CURE_DICE,
+# AV_CAUSES): the healing spells a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL: Cure Light Wounds,
+# Blood Flow, Cure Serious and Critical Wounds, Heal, Waters of Life), the harming ones a Healer or Lifebinder
+# never knows (kits.NO_HARM: Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living,
+# Harm), the cures' dice (kits.CURE_DICE: the game's own +1 and +3 on Cure Serious and Critical Wounds are
+# its, not a die's) and the Cause Wounds spells' (kits.CAUSE_DICE)
+RAV_CURE_LIGHT, RAV_CURE_SERIOUS, RAV_CURE_CRITICAL, RAV_BLOOD_FLOW = 117, 170, 194, 166
+RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL = 118, 171, 195
+RAV_HEAL, RAV_WATERS_OF_LIFE, RAV_HARM = 210, 215, 211
+RAV_CAUSE_DISEASE, RAV_POISON, RAV_SLAY_LIVING = 149, 179, 204
+RAV_AVENGER_NO_HEAL = frozenset((RAV_CURE_LIGHT, RAV_BLOOD_FLOW, RAV_CURE_SERIOUS, RAV_CURE_CRITICAL, RAV_HEAL,
+                                 RAV_WATERS_OF_LIFE))
+# The sequel's own spells that harm or kill the body as SL's list does (the cures reversed, a death touch), barred
+# to a Healer and Lifebinder too: Heartseeker (an arrow whose roots burst the vital organs, "killing
+# instantly": a Slay Living), Energy Drain (a life level drawn away by touch: Restore reversed), Symbol of Pain
+# (wracking pains). Not barred: Symbol of Hopelessness (a surrender) and of Persuasion (a charm), which harm no
+# one, as SL leaves the Healer Cause Fear and Curse; the elements' damage (Sunstroke, Heat Exhaustion, Firestorm
+# ...), as SL leaves the Healer Dehydrate and Flame Strike; Disruption (no description in the game)
+RAV_HEARTSEEKER, RAV_ENERGY_DRAIN, RAV_SYMBOL_OF_PAIN = 212, 225, 229
+RAV_SEQUEL_HARMS = frozenset((RAV_HEARTSEEKER, RAV_ENERGY_DRAIN, RAV_SYMBOL_OF_PAIN))
+RAV_NO_HARM = frozenset((RAV_CAUSE_LIGHT, RAV_CAUSE_SERIOUS, RAV_CAUSE_CRITICAL, RAV_CAUSE_DISEASE, RAV_POISON,
+                         RAV_SLAY_LIVING, RAV_HARM)) | RAV_SEQUEL_HARMS
+RAV_CURE_DICE = {RAV_CURE_LIGHT: (1, 8), RAV_CURE_SERIOUS: (2, 8), RAV_CURE_CRITICAL: (3, 8), RAV_BLOOD_FLOW: (2, 6)}
+RAV_CAUSE_DICE = {RAV_CAUSE_LIGHT: 1, RAV_CAUSE_SERIOUS: 2, RAV_CAUSE_CRITICAL: 3}
+RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIEST_SPELLS)
+RAV_NEW_WIZARD_SPELLS = range(320, 326)  # (the mod's six new spells, ravspells.FIRST on: wizard spells)
+# A Healer's sphere of the cosmos in the sequel: the spells every druid casts and no cleric (a sphere byte with
+# DRUIDS: Cure Serious and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest), and
+# Whirlwind and Restore Youth, which Shattered Lands' Healer casts at 6th level: they aren't in the sequel yet,
+# and their numbers go here (and in DSCLOG2's COSMOS_MORE, the header's +2060) once they are ported.
+RAV_COSMOS_MORE = {"Whirlwind": None, "Restore Youth": None}
+
+
+def healer_cosmos(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
+    """Whether class CLS of SHEET is a Healer's own cleric class (1-4) and SPELL (its sphere byte SPHERE) one
+    of the sphere of the cosmos's (DRUIDS, or RAV_COSMOS_MORE's): DSCLOG2's HEALER_COSMOS."""
     from . import kitpages, kits
-    if sphere & class_spheres(cls):
-        return True
-    if spell not in PRIEST_SPELLS or kits.ELEMENTALIST not in kitpages.kit_ids(sheet) \
-            or kitpages.kit_class_of(sheet, kits.ELEMENTALIST) != cls:
+    if kits.HEALER not in kitpages.kit_ids(sheet) or kitpages.kit_class_of(sheet, kits.HEALER) != cls \
+            or not 1 <= cls <= 4:
         return False
-    second = sheet[kits.SPHERE2] & kits.SPHERE2_MASK
-    return 1 <= second <= 4 and bool(sphere & 1 << (second - 1))
+    if spell in {s for s in RAV_COSMOS_MORE.values() if s is not None}:
+        return True
+    return spell in PRIEST_SPELLS and bool(sphere & DRUIDS)
+
+
+def kit_barred(sheet: bytes, spell: int) -> bool:
+    """Whether SHEET's kit never knows SPELL (kits.knows_heal in the sequel's numbers): DSCLOG2's KIT_BARS."""
+    from . import kitpages, kits
+    kids = kitpages.kit_ids(sheet)
+    if kits.AVENGER in kids:
+        return spell in RAV_AVENGER_NO_HEAL
+    return bool({kits.HEALER, kits.LIFEBINDER} & set(kids)) and spell in RAV_NO_HARM
+
+
+def casts(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
+    """Whether class CLS of SHEET casts priest spell SPELL (its sphere byte SPHERE): the game's answer, and
+    with the kits an Elementalist's (kits.spell_spheres): its own cleric class casts its second sphere's
+    spells too (kits.SPHERE2's low bits: the sheet's +3Fh in ravlog's layout, which SHEET is read in); a
+    Healer's own cleric class the sphere of the cosmos's (healer_cosmos); none that its kit never knows
+    (kit_barred). DSCLOG2's EL_SPHERE."""
+    from . import kitpages, kits
+    yes = bool(sphere & class_spheres(cls)) or healer_cosmos(sheet, cls, spell, sphere)
+    if not yes and spell in PRIEST_SPELLS and kits.ELEMENTALIST in kitpages.kit_ids(sheet) \
+            and kitpages.kit_class_of(sheet, kits.ELEMENTALIST) == cls:
+        second = sheet[kits.SPHERE2] & kits.SPHERE2_MASK
+        yes = 1 <= second <= 4 and bool(sphere & 1 << (second - 1))
+    return yes and not kit_barred(sheet, spell)
 
 
 class RavagerError(Exception):
@@ -1463,6 +1570,33 @@ def weighted_table(types: bytes) -> bytes:
     return b"".join(weighted(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
 
 
+# The sequel's melee weapons' range (a type's +6, SL's +0Ah): the Double Spear's 2 made 1, as Shattered Lands'
+# double spear (npcitems.TYPES) and Dark Sun's. The attack's set-up (5C5E1h) lets a weapon swing from as far
+# as its range and takes a swing from 2 squares as a shot (5C77Dh: its distance above 1): the hit routine
+# then takes the type's shots a round (+7: the double spear's 2, one attack a round) in place of the
+# sheet's, DEX's adjustment to hit in place of STR's and no STR on the damage; and the computer's choice
+# of an attack (5BDC2h) holds the target's distance against the range, so a double spear under Computer
+# Control swung from 2 squares, once a round, and the DAM lines (7B0B4h) showed it as a missile weapon.
+# (The playtest: logs/2026-11-26-ravager-weapon-traits.md.) RAV_SKIP=melee_range is the control.
+TYPE_RANGE = 6
+RAV_RANGES = {39: (2, 1)}
+
+
+def ranged(record: bytes, kind: int) -> bytes:
+    """The sequel's type record RECORD of type KIND with the Loader's melee range (RAV_RANGES); as it is if
+    KIND has none or RECORD's byte isn't SSI's."""
+    if kind not in RAV_RANGES or len(record) != TYPE_SIZE or record[TYPE_RANGE] != RAV_RANGES[kind][0]:
+        return record
+    out = bytearray(record)
+    out[TYPE_RANGE] = RAV_RANGES[kind][1]
+    return bytes(out)
+
+
+def ranged_table(types: bytes) -> bytes:
+    """The sequel's type table TYPES (ALL 4) with RAV_RANGES."""
+    return b"".join(ranged(types[k * TYPE_SIZE:(k + 1) * TYPE_SIZE], k) for k in range(len(types) // TYPE_SIZE))
+
+
 def _weighted_copy(record: bytes, kind: int) -> bytes:
     try:
         return weighted(record, kind)
@@ -1478,10 +1612,11 @@ def _air_dagger(record: bytes, kind: int) -> bytes:
     return bytes(out)
 
 
-def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
+def weighted_objects(chunks: gff.Chunks, air: bool = True, weights: bool = True, ranges: bool = False) -> gff.Chunks:
     """CHUNKS' RDFF chunks whose copies of a type (TYPE_KIND_RECORD, the type's number its own) RAV_WEIGHTS
-    changes, with the Loader's weight: they are kept in step with ALL 4, which the game's checks read. AIR
-    (the mod's types on: mod_types_table) gives the copies of the daggers the air cleric's bit too, as ALL 4."""
+    (with WEIGHTS) or RAV_RANGES (with RANGES) changes, with the Loader's weight and range: they are kept in
+    step with ALL 4, which the game's checks read. AIR (the mod's types on: mod_types_table) gives the
+    copies of the daggers the air cleric's bit too, as ALL 4."""
     from . import dataitems
     out: gff.Chunks = {}
     for key, chunk in chunks.items():
@@ -1492,7 +1627,8 @@ def weighted_objects(chunks: gff.Chunks, air: bool = True) -> gff.Chunks:
         except (ValueError, struct.error):
             continue
         def fixed(r):
-            data = _weighted_copy(r.data, r.number)
+            data = _weighted_copy(r.data, r.number) if weights else r.data
+            data = ranged(data, r.number) if ranges else data
             return r._replace(data=_air_dagger(data, r.number) if air else data)
         new = [fixed(r) if r.kind == TYPE_KIND_RECORD and r.number < GAME_TYPES else r for r in recs]
         if new != recs:
@@ -1514,7 +1650,8 @@ def mod_types_table(types: bytes) -> bytes:
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
-    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP) and the
+    """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
+    double spear's range 1 (RAV_RANGES, unless "melee_range" is), and the
     mod's item types after them (unless "mod_types" is),
     ADDED's objects (the party transfer's: ravitems; but its names chunk) unless "transfer_items" is, and
     the mod's new items (GEAR(the sequel's chunks): ravgear's, its people's and things' objects with
@@ -1532,10 +1669,13 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     weights = "weights" not in skip
     if weights:
         types = weighted_table(types)
+    ranges = "melee_range" not in skip and ranged_table(types) != types
+    if ranges:
+        types = ranged_table(types)
     if "mod_types" not in skip:
         new[TYPES_CHUNK] = mod_types_table(types)
         done.append("mod_types")
-    elif weights:
+    elif weights or ranges:
         new[TYPES_CHUNK] = types
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
@@ -1552,9 +1692,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if made:
             new.update(made)
             done.append(ravarrows.SKIP)
-    if weights:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
-        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip))
-        done.append("weights")
+    if weights or ranges:  # (the types' copies in the objects, the game's and those added above, in step with ALL 4)
+        new.update(weighted_objects({**chunks, **new}, air="mod_types" not in skip, weights=weights, ranges=ranges))
+        done += ["weights"] * weights + ["melee_range"] * ranges
     if "item_shine" not in skip:  # (the sequel's still magic items' icons made to shine: ravshine)
         from . import ravshine
         shine = ravshine.chunks(chunks)

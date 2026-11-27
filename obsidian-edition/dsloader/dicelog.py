@@ -68,6 +68,7 @@ TSR_GEAR_WHO = 1867  # (the sheet index of the character DONE just made, FFh non
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
+TSR_LEARN_SPELL_HI = None  # (the spell's high byte, where the helper has one: DSCLOG2's +2078, ravlog's layout)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -2159,6 +2160,8 @@ class DiceLog:
             self._learn_seq = seq
             from . import intlearn
             read, read_rate = self.guest.read(self.tsr_hdr + TSR_LEARN_READ, 2)
+            if TSR_LEARN_SPELL_HI is not None:  # (the sequel's new spells, 320-325: a Shinobi's tries)
+                spell += self.guest.read(self.tsr_hdr + TSR_LEARN_SPELL_HI, 1)[0] << 8
             return [intlearn.line(self.game.creature_name(who), self.game.spell_name(spell), intelligence, rate,
                                   roll, result, self.game.spell_level(spell), read, read_rate)]
         except (struct.error, IndexError, ValueError):

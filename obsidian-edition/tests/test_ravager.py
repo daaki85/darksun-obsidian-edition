@@ -47,7 +47,7 @@ class TableTests(unittest.TestCase):
                                "pic_full", "pic_place", "pic_count", "pic_fail", "arrows_close", "arrows_lit_on", "arrows_lit_off", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "second_foe_back", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
@@ -63,7 +63,10 @@ class TableTests(unittest.TestCase):
                             "cr_weapons", "pk_win", "pk_title", "pk_fill", "pk_click", "pk_hover", "gear_hands", "lv_weapons",
                             "fig_wide_all", "fig_wide", "fig_keep", "shop_shine",
                             "pp_show", "pp_click", "pp_lit", "pp_arm", "pp_text_hover", "pp_text_info", "pp_info",
-                            "pp_hand", "shinobi_mage", "poison_hit", "arrow_plus"}
+                            "pp_hand", "shinobi_mage", "psp_use", "psp_can_use", "psp_failed", "psp_defence", "psp_keep",
+                            "psp_can_keep", "hit_die", "hit_gain", "max_psp", "hit_round", "kit_cast_level", "kit_cure", "avenger_cause_area",
+                            "avenger_cause_one",
+                            "cr_die", "cr_psp_wis", "cr_psp", "shinobi_cast_level", "shinobi_level_up", "poison_hit", "arrow_plus"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
@@ -519,7 +522,7 @@ class GameFileTests(unittest.TestCase):
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(ravager.weighted_table(own[ravager.TYPES_CHUNK]))  # (weighed; the daggers the air clerics' too)
+            mended = bytearray(ravager.ranged_table(ravager.weighted_table(own[ravager.TYPES_CHUNK])))  # (weighed, the double spear's range 1; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
@@ -529,7 +532,7 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
             from dsloader import ravshine
             shine = {("BMP ", ravshine.icon_of(own, s.obj)) for s in ravshine.SHINE}  # (the still magic items' icons)
-            weighed = ravager.weighted_objects(own)  # (the objects' copies of their types, weighed as ALL 4)
+            weighed = ravager.weighted_objects(own, ranges=True)  # (the objects' copies of their types, weighed as ALL 4)
             self.assertTrue(weighed)
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
                              {ravager.TYPES_CHUNK} | sheets | shine | set(weighed))  # (GFFI: the index)

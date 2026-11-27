@@ -798,7 +798,11 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button). **STORE and RECALL** in the sequel (2026-11-25,
+  19504/19505 the game's own: no KITS button), and its hit points with their least and most and its PSP
+  (a Battle Mage's, Arcanist's or Mind Warrior's rolled again as the kit is chosen:
+  logs/2026-11-26-ravager-kit-psp-hd.md, step 3). A new character there is 7th level (a preserver with
+  CON 18: 21 to 42 hit points). A member's menu (a right click on its roster portrait) has EDIT at
+  (110,57) for slot 1 and DROP 10 below: a click a little low drops it (CANCEL at 110,82). **STORE and RECALL** in the sequel (2026-11-25,
   logs/2026-11-25-ravager-store-gear.md) at (114,192) and (175,192), under the hit points and PSP; the die
   (145,92); `ravstore.py roll` prints the roll on screen and DSCLOG2's counts, `ravstore.py gear` the
   starting gear's flags (GEAR_DONE holds DONE for the Loader: the dice log must run). The sphere list's
@@ -1353,6 +1357,12 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
   230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
   Hover an icon for its name in the bar at the bottom (y 182-194).
+  In Wake of the Ravager (logs/2026-11-26-ravager-kit-casting.md) the same five a row at x 175, 197, 220,
+  242, 262 and y 60, 79, 98 (game pixels); a quick hover sweep names only the first three of a row (the
+  rest show "N LEVEL N SPELLS TO CAST"): a right-click on an icon shows its description with the name, a
+  left-click closes it. A spell for a party member is picked up and dropped on the member's **portrait** in
+  the USE screen (`ravfight.py cast ... OBJECT` with a member leaves it on the pointer). To reach a member's
+  next turn in the Tyr ambush let the others attack (`ravfight.py attack`): ending every turn with Q lost it.
 - **The LEVEL button skips levels with nothing known** (or no class slot, or past the caster level's
   cap); the USE screen opens on the kind with slots (PSIONIC when a member has no wizard or priest
   slots), the kind button (CLERIC/MAGE) at 150,171: Lex at preserver 10 with only 3rd-level spells
@@ -1482,6 +1492,16 @@ the game refuses a member as a power's target; make the target's side byte (crea
 Draxan's, for the click, and both members' if two stand on the spot; put it back after. A failed
 power check costs 5 PSP and leaves no dice log line. `ravkits.py power MEMBER POWER` gives a member
 a power for a test (PSP 200), `ravkits.py blast` reads the blast's counters.
+
+**Aiming a spell in Wake of the Ravager's fight** (logs/2026-11-27-ravager-shinobi-spells.md): with the
+spell pointer up, a party member under it turns yellow, and a click there says INVALID TARGET. A foe shows
+a red edge and the pointer becomes the spell's own icon: press then. `ravfight.py state` gives the places
+(a figure's body about 12 right and 18 down of its object), but in ravhold.sh's bunched party the Draxans
+stand behind the members (one at game 164,86 there). After the cast the pointer stays up on the
+caster's turn: a right-click on bare floor drops it. In a fight USE serves only the member whose turn
+it is: another's portrait says ONLY ACTIVE CHAR CAN CAST. So close USE with **one** Escape and wait
+for that member's turn. A second Escape, with nothing open, brought EXIT, and the next keys
+(ravfight.py's Q and E) quit the game.
 
 **Hit points raised for a test, then a level-up** (same log): the level's hit points are worked
 from the edited ones and can come out negative. Raise them after a level-up, not before.

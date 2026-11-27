@@ -350,7 +350,32 @@ pick_off   dw pick_text         ; +2012 offset of PICK_TEXT: what came of it, NU
 pick_shown dw 0                 ; +2014 purses shown on the USE screen (PP_SHOW, counted) ...
 pick_armed dw 0                 ; +2016 ... picks readied, the pointer the one for talking (PP_ARM) ...
 pick_late  dw 0                 ; +2018 ... and picks the Loader didn't answer in time (PP_HAND: the talk)
-        times 2088 - ($ - hdr) db 0 ; (+2020 to +2087: none here yet, zero; held for the open ports' fields)
+sf_swings  dw 0                 ; +2020 lotulis or double spear specialists' last swings turned on a second
+                                ;      foe (SF_SWING, counted) ...
+sf_lesses  dw 0                 ; +2022 ... the double spear's of them done 1 less (SF_LESS, counted) ...
+sf_backs   dw 0                 ; +2024 ... and the first targets put back as the round ended (SF_BACK)
+trip_saves dw 0                 ; +2026 a trikal specialist's hits that asked a save against paralysis ...
+trips      dw 0                 ; +2028 ... and the targets tripped (CAH_HIT, counted)
+        times 2060 - ($ - hdr) db 0  ; (+2030 to +2059: this block's, free)
+cosmos_more dw 0xFFFF, 0xFFFF   ; +2060 two spells more a Healer's cleric casts as the sphere of the cosmos's
+                                ;      (HEALER_COSMOS), FFFFh none: for Whirlwind and Restore Youth, their
+                                ;      sequel numbers once those spells are ported (kits.RAV_COSMOS_MORE)
+kc_levels  dw 0                 ; +2064 spells' levels a kit changed (KIT_CAST_LEVEL, counted) ...
+kc_cures   dw 0                 ; +2066 ... cures it made stronger (KIT_CURE) ...
+kc_causes  dw 0                 ; +2068 ... Cause Wounds stronger (AV_CAUSE) ...
+kc_cosmos  dw 0                 ; +2070 ... the cosmos's spells a Healer was let cast (HEALER_COSMOS) ...
+kc_barred  dw 0                 ; +2072 ... spells a kit never knows refused (KIT_BARS) ...
+kc_cells   dw 0                 ; +2074 ... Cell Adjustments it made stronger (CELL_MORE)
+        times 2076 - ($ - hdr) db 0 ; (none: +2076 follows +2075)
+learn_read db 0                 ; +2076 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
+learn_read_chance db 0          ; +2077 ... and its chance (SH_ROLLS: DSCLOG's +366 and +367)
+learn_spell_hi db 0             ; +2078 LEARN_SPELL's high byte (a new spell's, 320-325: a Shinobi's tries)
+        db 0                    ; +2079 (none)
+sh_levels_n dw 0                ; +2080 casting levels made a Shinobi's (SH_CAST_LEVEL, SH_PLACE_LEVEL) ...
+sh_asks    dw 0                 ; +2082 ... CHOOSE A SPELL asked for one (SH_PICK_ANY) ...
+sh_paged   dw 0                 ; +2084 ... its pages cut to its own spells (SH_PAGE_CUT) ...
+sh_scrolls dw 0                 ; +2086 ... and its tries at a scroll (SH_ROLLS, SH_NOT_ITS), counted
+        times 2088 - ($ - hdr) db 0 ; (none: +2088 follows +2087)
 poison_used  dw 0               ; +2088 a Poisoner's weapons that have poisoned this fight (POISON_HIT): bit N
                                 ;      party member N's main hand, N + 4 its off hand (DSCLOG's +1860);
                                 ;      cleared at a fight's first round (ACID_ROUND)
@@ -3225,12 +3250,14 @@ ranger_level:
         mov cl, [es:bx + 0x1B]
         sub cl, RANGER_FIRST
         cmp cl, 3
-        ja .out                 ; (not a ranger)
+        ja .thief               ; (not a ranger)
         call ranger_drop
         sub al, cl
         jnc .most
         xor al, al
 .most:  call ranger_most
+        jmp .out
+.thief: call sh_place_level     ; (a Shinobi's thief class: its casting level, THE SHINOBI'S SPELLS)
 .out:   pop cx
         iret
 ; RANGER_MOST: AX a ranger's casting level, CL what its level loses (RANGER_DROP), no more than AD&D's 9
@@ -3335,7 +3362,11 @@ kit_ranger_cast:
 ;   in its loop).
 ; For an Elementalist (awake, the kits' rule on), the game's 0 for its own cleric class (KIT_WHERE's)
 ; made 1 when the spell (73h-EAh, the priests') has its second sphere's bit (SPHERE2's low three bits:
-; the sphere + 1); then the call's two words taken off as the ADD did. Others kept.
+; the sphere + 1; EL_SECOND); for a Healer's own cleric class the sphere of the cosmos's (HEALER_COSMOS: the
+; druids' 20h spells, which no cleric casts in the sequel, and COSMOS_MORE's). Then a yes, the game's or
+; made, made 0 for a spell the member's kit never knows (KIT_BARS: a Wilderness Avenger's healing spells, a
+; Healer's or Lifebinder's harming ones; SL's AV_KNOW), so the USE screen never lists it and the casting
+; levels never count it. Then the call's two words taken off as the ADD did. Others kept.
 KIT_ELEMENTALIST equ 5
 SPHERE2       equ 0x3F              ; (SL's +45h: ravlog's layout, kits.SPHERE2)
 SPHERE2_MASK  equ 0x07              ; (the bits above it SL's new spells known: NEW_KNOWN)
@@ -3353,11 +3384,7 @@ el_sphere_bp:
 el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS, FLAGS, +0Ah the
         push bp                     ;   spell, +0Ch the class)
         mov bp, sp
-        cmp byte [bp + 2], 0
-        jne .back                   ; (the game's yes)
         push bx
-        push cx
-        push si
         push es
         cmp ax, 400                 ; (a combatant: its creature, as the game reads it, 388h:0C34h)
         jae .out
@@ -3367,36 +3394,22 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         mov es, ax
         mov ax, [es:bx + FIGHTERS_OFF + 1]
         call kit_sheet
-        call kit_is_b
-        db KIT_ELEMENTALIST
-        jne .out
-        mov si, [cs:kit_where]
-        movzx cx, byte [es:bx + si + SH_CLASSES]
-        cmp cx, [bp + 0x0C]
-        jne .out                    ; (not its cleric class)
-        mov cl, [es:bx + SPHERE2]
-        and cl, SPHERE2_MASK
-        jz .out
-        dec cl
-        cmp cl, 3
-        ja .out
-        mov si, [bp + 0x0A]
-        cmp si, PRIEST_FIRST
-        jb .out
-        cmp si, PRIEST_END
-        jae .out
-        mov ax, ds
-        add ax, SPHERES_SEG
-        mov es, ax
-        mov al, 1
-        shl al, cl
-        test [es:si + SPHERES_OFF], al
-        jz .out
-        mov byte [bp + 2], 1
+        cmp byte [bp + 2], 0
+        jne .bar                    ; (the game's yes: a kit may bar it)
+        call el_own_second
+        jnc .cosmos
         inc word [cs:el_spheres]
+        jmp .yes
+.cosmos:
+        call healer_cosmos
+        jnc .out
+        inc word [cs:kc_cosmos]
+.yes:   mov byte [bp + 2], 1
+.bar:   call kit_bars
+        jnc .out
+        mov byte [bp + 2], 0
+        inc word [cs:kc_barred]
 .out:   pop es
-        pop si
-        pop cx
         pop bx
 .back:  mov ax, [bp + 8]            ; (the INT's frame moved over the call's two words; AX the
         mov [bp + 0x0C], ax         ;   game's, its AL the answer, popped after)
@@ -3408,6 +3421,47 @@ el_sphere:                          ; ([BP+2] the game's AX, +4 the INT's IP, CS
         pop ax
         add sp, 4
         iret
+; EL_OWN_SECOND: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if class [BP+0Ch] is an Elementalist's
+; own cleric class (awake, the kits' rule on) and spell [BP+0Ah] a priest spell of its second sphere
+; (SPHERE2's low three bits: the sphere + 1). All registers kept.
+el_own_second:
+        push ax
+        push cx
+        push si
+        push es
+        call kit_is_b
+        db KIT_ELEMENTALIST
+        jne .no
+        mov si, [cs:kit_where]
+        movzx cx, byte [es:bx + si + SH_CLASSES]
+        cmp cx, [bp + 0x0C]
+        jne .no                     ; (not its cleric class)
+        mov cl, [es:bx + SPHERE2]
+        and cl, SPHERE2_MASK
+        jz .no
+        dec cl
+        cmp cl, 3
+        ja .no
+        mov si, [bp + 0x0A]
+        cmp si, PRIEST_FIRST
+        jb .no
+        cmp si, PRIEST_END
+        jae .no
+        mov ax, ds
+        add ax, SPHERES_SEG
+        mov es, ax
+        mov al, 1
+        shl al, cl
+        test [es:si + SPHERES_OFF], al
+        jz .no
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop cx
+        pop ax
+        ret
 el_spheres dw 0                     ; (the game's no made yes, counted for a look in play)
 ; SHINOBI_MAGE (site 190, "shinobi_mage"): "add sp,4" after the slot routine's (626B7h, SL's 5E0ACh) call
 ; to 62B45h (spell 8, the class: does the class cast wizard spells) at 627D6h, the "or al,al" after kept:
@@ -3449,6 +3503,331 @@ shinobi_mage:
         pop bx
 .back:  jmp el_sphere.back
 sh_mages dw 0                       ; (likewise)
+; ---- THE KITS' CASTING LEVELS, CURES AND SPELLS KNOWN (sites 205-208; EL_SPHERE's HEALER_COSMOS and
+; KIT_BARS, CELL_HEAL's CELL_MORE): SL's PROBE_SPELL_LEVEL (SKY_LEVEL, ARC_LEVEL), PROBE_CURE, AREA_DMG and
+; HARM_SITE's AV_CAUSE, PROBE_EL_GRANT's and PROBE_EL_KNOW's Healer and AV_KNOW, CELL_SITE's kits, in the
+; sequel's spell numbers (RESOURCE.GFF's names). Counted in the header (+2064 on) for a look in play.
+KIT_ARCANIST      equ 23
+KIT_SPIRIT_CALLER equ 69
+KIT_WASTE_SEER    equ 73
+COSMOS_BIT        equ 0x20          ; (a spell's sphere byte: the druids', which no cleric casts)
+; HEALER_COSMOS: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if class [BP+0Ch] is a Healer's
+; own cleric class (1-4; awake, the kits' rule on) and spell [BP+0Ah] one of the sphere of the cosmos: a
+; priest spell whose sphere byte has COSMOS_BIT (every druid casts it, no cleric: in the sequel Cure Serious
+; and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest; SL's HEALER_COSMOS, its
+; element's druid's bit), or one of COSMOS_MORE's (the header's +2060: for Whirlwind and Restore Youth once
+; they are in the sequel, FFFFh till then). All registers kept.
+healer_cosmos:
+        push ax
+        push si
+        push es
+        call kit_is_b
+        db KIT_HEALER
+        jne .no
+        mov si, [cs:kit_where]
+        movzx ax, byte [es:bx + si + SH_CLASSES]
+        cmp ax, [bp + 0x0C]
+        jne .no                     ; (not its own class)
+        dec ax
+        cmp ax, 3
+        ja .no                      ; (a cleric's, 1-4: not a ranger's after DUAL)
+        mov si, [bp + 0x0A]
+        cmp si, [cs:cosmos_more]
+        je .yes
+        cmp si, [cs:cosmos_more + 2]
+        je .yes
+        cmp si, PRIEST_FIRST
+        jb .no
+        cmp si, PRIEST_END
+        jae .no
+        mov ax, ds
+        add ax, SPHERES_SEG
+        mov es, ax
+        test byte [es:si + SPHERES_OFF], COSMOS_BIT
+        jz .no
+.yes:   stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop ax
+        ret
+; KIT_BARS: (EL_SPHERE's, its frame; ES:BX the member's sheet) CF set if spell [BP+0Ah] is one the sheet's kit
+; (awake, the kits' rule on) never knows (kits.knows_heal): a Wilderness Avenger's healing ones (AV_HEALS), a
+; Healer's or Lifebinder's harming ones (AV_HARMS). All registers kept.
+kit_bars:
+        push ax
+        push cx
+        push si
+        mov ax, [bp + 0x0A]
+        call kit_is_b
+        db KIT_AVENGER
+        jne .harm
+        mov si, av_heals
+        mov cx, AV_HEALS_COUNT
+        jmp .find
+.harm:  call kit_is_b
+        db KIT_HEALER
+        je .harms
+        call kit_is_b
+        db KIT_LIFEBINDER
+        jne .no
+.harms: mov si, av_harms
+        mov cx, AV_HARMS_COUNT
+.find:  cmp ax, [cs:si]
+        je .yes
+        add si, 2
+        loop .find
+.no:    clc
+        jmp .out
+.yes:   stc
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+; the healing spells a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL): Cure Light Wounds, Blood Flow,
+; Cure Serious Wounds, Cure Critical Wounds, Heal, Waters of Life; the harming ones a Healer or Lifebinder
+; never knows (kits.NO_HARM): Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living,
+; Harm, and the sequel's own Heartseeker, Energy Drain and Symbol of Pain (ravager.RAV_SEQUEL_HARMS: they harm
+; or kill the body as those do; the sequel's numbers)
+av_heals dw 117, 166, 170, 194, 210, 215
+AV_HEALS_COUNT equ ($ - av_heals) / 2
+av_harms dw 118, 171, 195, 149, 179, 204, 211, 212, 225, 229
+AV_HARMS_COUNT equ ($ - av_harms) / 2
+; KIT_CAST_LEVEL (site 205, "kit_cast_level"): in the routine giving the level a spell is cast at for its
+; duration and damage (628AFh, SL's 5E25Ch: [BP+6] the caster, [BP+8] the spell, DI the best level of its
+; classes that cast it, [BP-1] the class place its loop is at; the cast's level, 625F0h, so the spell's
+; dice and rounds), "inc byte [bp-1]" (629FEh; 3 bytes) at its loop's end: done, and after the third place
+; DI with the kits' (SL's PROBE_SPELL_LEVEL's SKY_LEVEL and ARC_LEVEL; kits.arc_level, kits.sky_level), for a
+; party member (creatures 0-3) whose classes cast the spell (DI above 0): an Arcanist's wizard spell
+; (0-72h, and the new spells NS_FIRST on) 1 more (ARC_MORE); a Spirit Caller's or Wasteland Seer's priest spell (73h-EAh; or the sequel's own
+; party's thri-kreen psionicist's, OWN_RACE_B: SL's K'ratchek) 2 more under the open sky (its KIT_OUTDOORS
+; bit, the Loader's), 1 less under a roof but no less than 1. The spell levels it may cast stay the caster
+; level routine's (97DC5h), its own level's. Counted (KC_LEVELS). The flags are the game's CMP's after.
+ARC_MORE equ 1
+SKY_MORE equ 2
+kit_cast_level:
+        inc byte [bp - 1]
+        cmp byte [bp - 1], 3
+        jl .ret                     ; (not the loop's end)
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        or di, di
+        jle .ret                    ; (no class of its casts it)
+        push ax
+        push bx
+        push es
+        mov ax, [bp + 6]
+        call fighter_creature
+        jc .out
+        cmp ax, 3
+        ja .out                     ; (not a party member)
+        mov bx, [bp + 8]
+        cmp bx, PRIEST_FIRST
+        jb .wizard
+        cmp bx, NS_FIRST
+        jb .priest
+        cmp bx, NS_FIRST + NS_COUNT
+        jb .wizard                  ; (the six new spells: wizard spells, SL's ARC_LEVEL's too)
+        jmp .out
+.priest:
+        cmp bx, PRIEST_END
+        jae .out
+        call cr_is
+        db KIT_SPIRIT_CALLER
+        je .sky
+        call cr_is
+        db KIT_WASTE_SEER
+        je .sky
+        push ax
+        call kit_sheet
+        call own_race_b             ; (the own party's thri-kreen psionicist, as a Wasteland Seer)
+        cmp al, OWN_KREEN
+        jne .not_own
+        mov al, OWN_PSI
+        call own_has
+.not_own:
+        pop ax
+        jne .out
+.sky:   bt word [cs:kit_outdoors], ax
+        jnc .roof
+        add di, SKY_MORE
+        jmp .made
+.roof:  cmp di, 1
+        jle .out
+        dec di
+        jmp .made
+.wizard:
+        call cr_is
+        db KIT_ARCANIST
+        jne .out
+        add di, ARC_MORE
+.made:  inc word [cs:kc_levels]
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   iret
+; KIT_CURE (site 206, "kit_cure"): in the handler for spells with rules of their own (656D0h on, SL's
+; 7936Dh: [BP+0Eh] the spell, [BP+8] the caster, DI the target), "push ax / jmp 65811h" (66545h; 4 bytes)
+; where Cure Light Wounds' 1d8, Cure Serious Wounds' 2d8+1, Cure Critical Wounds' 3d8+3 and Blood Flow's 2d6
+; (on its caster's own side: healing) go to the routine that heals (65811h: "push di / call 628h:43h"), and
+; Cell Adjustment's from CELL_HEAL (its kit's more in already: CELL_MORE): AX with the caster's kit's (SL's
+; PROBE_CURE: kits.cure_bonus, kits.cure_die), pushed under the INT's frame and the way back made 65811h, as
+; the game's two instructions. A Healer's and a Rescuer's Cure Light, Serious and Critical Wounds 1 more a
+; die (CURE_DICE's dice: +1, +2, +3), a Lifebinder's those and Blood Flow a die more (CURE_DICE's sides).
+; Counted (KC_CURES).
+CURE_BACK  equ 0x65811 - (0x66545 + 3)
+BLOOD_FLOW equ 166
+cure_dice db 117, 1, 8,  170, 2, 8,  194, 3, 8,  BLOOD_FLOW, 2, 6    ; spell, dice, sides (kits.CURE_DICE)
+CURE_DICE_END:
+kit_cure:
+        sub sp, 2
+        push bp
+        mov bp, sp                      ; ([BP+2] the room, +4 the INT's IP, CS, FLAGS)
+        push ax
+        mov ax, [bp + 4]
+        mov [bp + 2], ax
+        mov ax, [bp + 6]
+        mov [bp + 4], ax
+        mov ax, [bp + 8]
+        mov [bp + 6], ax                ; (the INT's frame a word down: [BP+8] the game's push)
+        pop ax
+        add word [bp + 2], CURE_BACK
+        push ax
+        call cure_more
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        iret
+; CURE_MORE: (KIT_CURE's; [BP] the game's BP) AX (the healing of spell [game BP+0Eh] by combatant [+8]) with
+; the caster's kit's, the kits' rule on. Others kept.
+cure_more:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push bx
+        push cx
+        push dx
+        push si
+        mov si, [bp]
+        mov dx, [ss:si + 0x0E]
+        or dh, dh
+        jnz .out
+        mov bx, cure_dice
+.find:  cmp dl, [cs:bx]
+        je .spell
+        add bx, 3
+        cmp bx, CURE_DICE_END
+        jb .find
+        jmp .out
+.spell: mov cx, ax
+        mov ax, [ss:si + 8]
+        call fighter_creature
+        jc .done
+        call cr_is
+        db KIT_HEALER
+        je .plus
+        call cr_is
+        db KIT_RESCUER
+        je .plus
+        call cr_is
+        db KIT_LIFEBINDER
+        jne .done
+        movzx ax, byte [cs:bx + 2]
+        call game_die
+        add cx, ax
+        jmp .count
+.plus:  cmp dl, BLOOD_FLOW              ; (a Healer's and a Rescuer's: the cures alone)
+        je .done
+        movzx ax, byte [cs:bx + 1]
+        add cx, ax
+.count: inc word [cs:kc_cures]
+.done:  mov ax, cx
+.out:   pop si
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+; AVENGER_AREA (site 207, "avenger_cause_area"): "mov [bp-14h],ax" (7E7A6h; 3 bytes) where the routine dealing
+; a spell's damage to the creatures it reaches (7E6xxh, SL's 7511Bh: AREA_DMG; DI the spell; a touch spell's on
+; one too) has rolled it (AX, 80278h's), the most it could roll at [BP-16h] (what a helpless target takes):
+; AV_CAUSE's more on both. AVENGER_ONE (site 208, "avenger_cause_one"): the same at "mov [bp-6],ax" (7F727h;
+; 3 bytes) in the routine for a spell on one creature (SL's 76175h: HARM_SITE), the most at [BP-8]. Then the
+; move done.
+avenger_area:
+        push bx
+        call av_cause
+        add [bp - 0x16], bx
+        pop bx
+        mov [bp - 0x14], ax
+        iret
+avenger_one:
+        push bx
+        call av_cause
+        add [bp - 8], bx
+        pop bx
+        mov [bp - 6], ax
+        iret
+; AV_CAUSE: AX the damage spell DI has rolled: a Wilderness Avenger's Cause Light, Serious and Critical Wounds
+; 1 more a die (+1, +2, +3; kits.harm_bonus) added, BX that more (0 none), when its caster (CAST_WHO: TH_CAST's,
+; the last spell cast) cast that spell (CAST_SPELL), the kits' rule on. Counted (KC_CAUSES). Others kept.
+av_causes dw 118, 1,  171, 2,  195, 3   ; (the sequel's Cause Light, Serious, Critical Wounds; kits.CAUSE_DICE)
+AV_CAUSES_END:
+av_cause:
+        xor bx, bx
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp di, [cs:cast_spell]
+        jne .ret
+        push si
+        mov si, av_causes
+.find:  cmp di, [cs:si]
+        je .spell
+        add si, 4
+        cmp si, AV_CAUSES_END
+        jb .find
+        jmp .out
+.spell: push ax
+        mov ax, [cs:cast_who]
+        call fighter_creature
+        jc .none
+        call cr_is
+        db KIT_AVENGER
+        jne .none
+        pop ax
+        mov bx, [cs:si + 2]
+        add ax, bx
+        inc word [cs:kc_causes]
+        jmp .out
+.none:  pop ax
+.out:   pop si
+.ret:   ret
+; CELL_MORE: (CELL_HEAL's) CX what the kit of combatant AX (Cell Adjustment's user) adds to its healing (SL's
+; CELL_SITE: kits.CELL_MORE, CELL_PLUS): a Lifebinder's a d4, a Healer's or Rescuer's 1 (as their cures a die
+; and 1 a die more); 0 for anyone else. Counted (KC_CELLS). Others kept.
+CELL_MORE equ 4
+CELL_PLUS equ 1
+cell_more:
+        xor cx, cx
+        push ax
+        call fighter_creature
+        jc .out
+        call cr_is
+        db KIT_LIFEBINDER
+        jne .plus
+        mov ax, CELL_MORE
+        call game_die
+        mov cx, ax
+        jmp .count
+.plus:  call cr_is
+        db KIT_HEALER
+        je .one
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+.one:   mov cx, CELL_PLUS
+.count: inc word [cs:kc_cells]
+.out:   pop ax
+        ret
 ; ENLARGE DICE: SL's (RULE_HI_ENLARGE, the Loader's "enlarge_dice", always on): the game's Enlarge
 ; (863B2h, SL's 7C211h, called by the attack for a melee hit: 628h:57h; after STR's bonus: SI the
 ; damage, AX the levels of the Enlarges on the attacker, 608h:52h) multiplies the whole of the damage
@@ -3476,6 +3855,7 @@ enl_roll:
         push ax
         sub ax, [bp - 0x14]
         mov [cs:enl_dice], ax
+        call sf_less                    ; (the double spear's swing at a second foe: 1 less)
         cmp word [bp + 0x16], 1
         pushf
         setle byte [cs:enl_known]
@@ -3593,6 +3973,8 @@ learnt_tries dw 0                           ; (tries, for a look in play)
 scroll_learn:
         or ax, ax
         jnz .flags                          ; (known: the game's)
+        call sh_scroll                      ; (a Shinobi's: THE SHINOBI'S SPELLS)
+        jc .flags
         test word [cs:rules_hi], RULE_HI_INT
         jz .flags
         pushad
@@ -3643,6 +4025,9 @@ scroll_learn:
 .row:   mov ax, si
         mov [cs:learn_who], al
         mov [cs:learn_spell], dl
+        mov byte [cs:learn_spell_hi], 0
+        mov byte [cs:learn_read], 0         ; (no read roll: a Shinobi's last one isn't this try's)
+        mov byte [cs:learn_read_chance], 0
         mov al, [cs:int_chance + bx]
         mov [cs:learn_chance], al
         mov ch, [cs:int_most + bx]          ; (CH the most a level)
@@ -3723,6 +4108,8 @@ spell_level:
         ret
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
+learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
+learn_not_its_text db 'THAT IS NOT A SHINOBI SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
@@ -3730,9 +4117,13 @@ learn_said:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
+        mov word [cs:lm_text], learn_failed_text
         cmp byte [cs:learn_msg], LEARN_FAILED
+        je .back
+        mov word [cs:lm_text], learn_unread_text    ; (a Shinobi's scroll not read: THE SHINOBI'S SPELLS)
+        cmp byte [cs:learn_msg], LEARN_UNREAD
         jne .game
-        push es
+.back:  push es
         push bx
         push ax
         mov es, [cs:learn_es]
@@ -3745,7 +4136,7 @@ learn_said:
         pop es
         mov byte [cs:learn_msg], 0
         push cs
-        push learn_failed_text
+        push word [cs:lm_text]
         jmp learn_back
 .game:  push ds
         push 0x2E97
@@ -3758,15 +4149,20 @@ learn_refused:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
+        mov word [cs:lm_text], learn_full_text
         cmp byte [cs:learn_msg], LEARN_FULL
+        je .said
+        mov word [cs:lm_text], learn_not_its_text   ; (not a Shinobi's spell: THE SHINOBI'S SPELLS)
+        cmp byte [cs:learn_msg], LEARN_NOT_ITS
         jne .game
-        mov byte [cs:learn_msg], 0
+.said:  mov byte [cs:learn_msg], 0
         push cs
-        push learn_full_text
+        push word [cs:lm_text]
         jmp learn_back
 .game:  push ds
         push 0x2EAB
         jmp learn_back
+lm_text dw 0
 ; PICK_ANY: INT VEC_PICK_ANY replaces "mov [bp-2],ax / or ax,ax" (9317Fh; 5 bytes: INT + 3 NOPs) in the
 ; routine a preserver's level up calls (688h:66h, 93160h; SI the member, AX its preserver level), which
 ; goes on (the JG after) to ask the game's list (94C7Ch) for a spell to learn at each spell level from
@@ -3778,6 +4174,8 @@ learn_refused:
 ; or none. Flags as "or ax,ax".
 pick_any:
         mov [bp - 2], ax
+        call sh_pick_any                    ; (a Shinobi: its own, THE SHINOBI'S SPELLS)
+        jc .flags
         cmp ax, 0
         jle .flags
         cmp si, 3
@@ -3847,6 +4245,8 @@ pick_list:
         mov es, ax
         mov si, [es:USE_WHO_OFF]
         call ns_page_add                    ; (the new spells: NEW SPELLS)
+        call sh_page_cut                    ; (a Shinobi's: its own alone, THE SHINOBI'S SPELLS)
+        jc .out
         test word [cs:rules_hi], RULE_HI_INT
         jz .out
         cmp si, 3
@@ -3866,6 +4266,8 @@ pick_list:
 ; the highest of them its INT has room in (PICK_ROOM; AL kept if none), so the first page isn't an empty
 ; one. AL the page's level, as the code goes on to show it.
 pick_page:
+        call sh_pick_page                   ; (a Shinobi's: its own, THE SHINOBI'S SPELLS)
+        jc .set
         push cx                             ; (CR_SPELLS's CR_CAP, or a level up's 9th: PICK_MOST)
         push ax
         call pick_most
@@ -4164,9 +4566,9 @@ site_table:
         dw cr_picks                        ; 87 SITE_CR_PICKS (6ED55h: a new member's spells and powers given: picked on the game's windows)
         dw psi_grant                       ; 88 SITE_PSI_GRANT (6E9C9h, 6E9F7h: a new member's power given: a pick, or kept on EDIT)
         dw site_none                        ; 89 (none here)
-        dw el_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere)
-        dw el_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
-        dw el_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
+        dw sh_sphere_di                     ; 90 SITE_EL_KNOW (62C00h: a class of the member casts a spell: the Elementalist's second sphere, a Shinobi's wizard spells)
+        dw sh_sphere_bp                     ; 91 SITE_EL_LEVEL (628AFh: the cast's level, the same)
+        dw sh_sphere_bp                     ; 92 SITE_EL_CAST (97DC5h: the caster level, the same)
         dw probe_text                       ; 93 SITE_TEXT (87BA0h: the dialogue window's input: TEXT, for the Loader's Dialogue tab)
         dw probe_msg                        ; 94 SITE_MSG (59A0Bh: the message box: TEXT, the same)
         dw psi_count                       ; 95 SITE_PSI_COUNT (93B95h: the psionicists' pop-up opening: PSI_DUE's picks)
@@ -4265,26 +4667,26 @@ site_table:
         dw site_none                        ; 188 (none here)
         dw site_none                        ; 189 (none here)
         dw shinobi_mage                     ; 190 SITE_SHINOBI_MAGE (627D6h: the slot routine's "casts wizard spells": a Shinobi's thief class)
-        dw site_none                        ; 191 (none here: held for other work)
-        dw site_none                        ; 192 (none here: held for other work)
-        dw site_none                        ; 193 (none here: held for other work)
-        dw site_none                        ; 194 (none here: held for other work)
-        dw site_none                        ; 195 (none here: held for other work)
-        dw site_none                        ; 196 (none here: held for other work)
-        dw site_none                        ; 197 (none here: held for other work)
-        dw site_none                        ; 198 (none here: held for other work)
-        dw site_none                        ; 199 (none here: held for other work)
-        dw site_none                        ; 200 (none here: held for other work)
-        dw site_none                        ; 201 (none here: held for other work)
-        dw site_none                        ; 202 (none here: held for other work)
+        dw psp_use                          ; 191 SITE_PSP_USE (6178Eh: a power's cost used: the kits', KIT_PSP)
+        dw psp_table                        ; 192 SITE_PSP_TABLE (6162Dh, 6183Dh: a power's cost checked, half taken when it fails)
+        dw psp_defence                      ; 193 SITE_PSP_DEFENCE (61FA1h: a psionic defence's cost paid)
+        dw psp_keep                         ; 194 SITE_PSP_KEEP (619DCh: a power's cost to keep it up)
+        dw psp_keep_dx                      ; 195 SITE_PSP_KEEP_DX (616A8h: ... checked, the combatant in DX)
+        dw kit_hit_die                      ; 196 SITE_HIT_DIE (95014h: a level's hit die: a Battle Mage's d6, an Arcanist's d3)
+        dw kit_hit_gain                     ; 197 SITE_HIT_GAIN (95000h: a level's gain past the dice: a Battle Mage's 2, an Arcanist's 1)
+        dw kit_max_psp                      ; 198 SITE_MAX_PSP (95172h: the level up's most PSP: a Mind Warrior's a fifth fewer)
+        dw hit_round                        ; 199 SITE_HIT_ROUND (5CD76h: a hit's mark against casting: a Battle Mage none)
+        dw cr_die                           ; 200 SITE_CR_DIE (6D28Fh: the creation hit points' most, a level's die: a Battle Mage's d6, an Arcanist's d3)
+        dw cr_psp                           ; 201 SITE_CR_PSP (6D85Eh: the creation PSP's end: a Mind Warrior's a fifth fewer)
+        dw sf_site                          ; 202 SITE_SF_BACK (5D308h: the swing loop's "cmp ax,[bp-0Ah]": a second foe's swing over, the first target back)
         dw site_none                        ; 203 (none here: held for other work)
         dw site_none                        ; 204 (none here: held for other work)
-        dw site_none                        ; 205 (none here: held for other work)
-        dw site_none                        ; 206 (none here: held for other work)
-        dw site_none                        ; 207 (none here: held for other work)
-        dw site_none                        ; 208 (none here: held for other work)
-        dw site_none                        ; 209 (none here: held for other work)
-        dw site_none                        ; 210 (none here: held for other work)
+        dw kit_cast_level                   ; 205 SITE_KIT_CAST_LEVEL (629FEh: a spell's level for its duration and damage: an Arcanist's, a Spirit Caller's, a Wasteland Seer's)
+        dw kit_cure                         ; 206 SITE_KIT_CURE (66545h: a cure's healing: a Healer's, Lifebinder's, Rescuer's more)
+        dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
+        dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
+        dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
+        dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
         dw site_none                        ; 211 (none here: held for other work)
         dw site_none                        ; 212 (none here: held for other work)
         dw site_none                        ; 213 (none here: held for other work)
@@ -4765,7 +5167,8 @@ ns_image_chance:
         pop bx
 .ret:   ret
 ; NS_SPOOK_SAVE (from PROT_SAVE: [BP+8] the caster, [BP+14h] the spell, DI the modifiers): against Spook
-; 1 worse for each 2 levels of the caster's preserver or wizard class, at most NS_SPOOK_MOST. All kept.
+; 1 worse for each 2 levels of the caster's preserver or wizard class, or a Shinobi's casting level (SH_CAST:
+; kits.spook_penalty), the more, at most NS_SPOOK_MOST. All kept.
 ns_spook_save:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .ret
@@ -4791,7 +5194,14 @@ ns_spook_save:
 .next:  inc si
         cmp si, 3
         jb .each
-        shr dx, 1
+        call sh_sheet_is                ; (a Shinobi's casting level, where more: THE SHINOBI'S SPELLS)
+        jne .half
+        movzx ax, al
+        call sh_cast
+        cmp al, dl
+        jbe .half
+        mov dl, al
+.half:  shr dx, 1
         cmp dx, NS_SPOOK_MOST
         jbe .take
         mov dx, NS_SPOOK_MOST
@@ -4881,9 +5291,14 @@ ns_scroll:
         ja .known
         call ns_knows
         jnz .known
+        call sh_ns_scroll               ; (a Shinobi: AL 1 not its own, 2 learnt, 3 not: THE SHINOBI'S SPELLS)
+        cmp al, 1
+        je .known
+        cmp al, 3
+        je .used
         call ns_teach
         inc word [cs:ns_scrolls_n]
-        add word [ss:di + 34], NS_SCROLL_TAUGHT
+.used:  add word [ss:di + 34], NS_SCROLL_TAUGHT
         jmp .out
 .known: add word [ss:di + 34], NS_SCROLL_KNOWN
         jmp .out
@@ -4951,6 +5366,789 @@ ns_page_add:
         pop es
         popa
 .ret:   ret
+
+; ---- THE SHINOBI'S SPELLS (the sequel; sites 209-210, and EL_SPHERE's, RANGER_LEVEL's, PICK_ANY's,
+; PICK_PAGE's, PICK_LIST's, PICK_TOP's, SCROLL_LEARN's, NS_SCROLL's and CR_PICKS' Shinobi parts): SL's
+; SHINOBI_WIZARD, SHINOBI_LEVEL, LV_SHINOBI, PROBE_PICK_ANY, PROBE_PICK_LEVEL, PROBE_PICK_LIST and SHINOBI_READ
+; in the sequel's spell numbers (RESOURCE.GFF's names; kits.rav_shinobi_spells). A Shinobi (the kits' rule
+; on, its kit awake, its own class the thief's, no preserver or wizard class: SH_MEMBER) casts wizard spells
+; with its thief class: the sequel asks 62B45h (spell, class) whether a class casts a spell, wizard spells
+; classes 11 and 18 alone, so SH_YES answers yes for its thief class and a wizard spell (0-72h, and the new
+; spells while their rule is on) after the three callers that know the member (EL_SPHERE's sites 90-92: the
+; spells it knows on USE, the cast's level, the caster level; SHINOBI_MAGE has the slot routine's, site 190).
+; Its caster level is its thief level less SH_FIRST - 1 (SH_CAST: 1st at 6th, 8th at 13th, SH_CAST_MOST at
+; most), the USE screen's MAGE list and its spell levels with it (97E9Ch: half of it, rounded up), and its
+; spells' duration and damage (RANGER_LEVEL); it learns one of its own (SH_SPELLS) at each thief level up
+; from SH_FIRST, and at creation one for each thief level from SH_FIRST, on CHOOSE A SPELL with its own
+; spells alone and the levels up to SH_PICK_LEVEL's; from a scroll only one of its own, after a d100 against
+; its read languages (SH_READ_LANG) and then INT's chance (SH_ROLLS). Counted in the header (+2078 on).
+SH_FIRST      equ 6                 ; (the thief level its spells start at: SL's SHINOBI_FIRST)
+SH_FOURTH     equ 13                ; (the thief level its 4th-level spells come at: SHINOBI_FOURTH)
+SH_CAST_MOST  equ 11                ; (its casting level at most: a Seeker's, kits.SEEKER_CAST_MOST)
+SH_READ_SKILL equ 7                 ; (read languages: the thief tables' eighth skill)
+LEARN_UNREAD  equ 3                 ; (a Shinobi: the scroll not read: SL's)
+LEARN_NOT_ITS equ 4                 ; (a Shinobi: not one of its spells: SL's)
+; its spells (kits.SHINOBI_SPELLS as the sequel numbers them: kits.rav_shinobi_spells): 1st level Gaze
+; Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook, Friends (the
+; last four the new spells, with their rule); 2nd Invisibility, Mirror Image, Blur, Detect Invisible, Fog
+; Cloud; 3rd Blink, Haste, Protection from Missiles, Hold Person; 4th Improved Invisibility, Solid Fog, Confusion
+sh_spells dw 6, 2, 9, 4, 11, NS_FIRST + 2, NS_FIRST + 3, NS_FIRST + 4, NS_FIRST + 5
+          dw 17, 19, 12, 13, 15,  25, 29, 35, 30,  44, 50, 40
+SH_COUNT equ ($ - sh_spells) / 2
+sh_levels db 1, 1, 1, 1, 1, 1, 1, 1, 1,  2, 2, 2, 2, 2,  3, 3, 3, 3,  4, 4, 4
+; SH_CAST: AX the level a Shinobi of thief level AX casts at: less SH_FIRST - 1, no less than 0, no more than
+; SH_CAST_MOST (kits.shinobi_cast). Others kept.
+sh_cast:
+        sub ax, SH_FIRST - 1
+        jns .most
+        xor ax, ax
+.most:  cmp ax, SH_CAST_MOST
+        jle .ret
+        mov ax, SH_CAST_MOST
+.ret:   ret
+; SH_PICK_LEVEL: AL the highest spell level a Shinobi of thief level AL may learn: half its casting level,
+; rounded up, 3rd at most before SH_FOURTH, 4th from it (kits.shinobi_pick_level). Others kept.
+sh_pick_level:
+        push cx
+        mov cl, 3
+        cmp al, SH_FOURTH
+        jb .cast
+        inc cl
+.cast:  movzx ax, al
+        call sh_cast
+        inc ax
+        shr ax, 1
+        cmp al, cl
+        jbe .out
+        mov al, cl
+.out:   pop cx
+        ret
+; SH_SHEET_IS: ZF set if sheet ES:BX is a Shinobi's (the kits' rule on, its kit awake: KIT_IS) whose kit's
+; class is the thief's, AL then its thief level (KIT_LEVEL). Others kept.
+sh_sheet_is:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .no
+        push si
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .out
+        mov si, [cs:kit_where]
+        cmp byte [es:bx + si + SH_CLASSES], THIEF_CLASS
+        jne .out
+        call kit_level          ; (ZF still set)
+.out:   pop si
+        ret
+.no:    push ax
+        or al, 1                ; (ZF clear)
+        pop ax
+        ret
+; SH_MEMBER: CF set if party member SI (0-3) is a Shinobi (SH_SHEET_IS) with no preserver or wizard class
+; (one has a preserver's spells as a preserver), AL its thief level. DS the game's; others kept.
+sh_member:
+        cmp si, 3
+        ja .no
+        push ax
+        push bx
+        push es
+        mov ax, si
+        call kit_sheet
+        call sh_sheet_is
+        jne .not
+        push ax
+        mov al, PRESERVER_CLASS
+        call sh_has_class
+        je .pres
+        mov al, WIZARD_NEW_CLASS
+        call sh_has_class
+.pres:  pop ax
+        je .not
+        mov [cs:sh_level_of], al
+        pop es
+        pop bx
+        pop ax
+        mov al, [cs:sh_level_of]
+        stc
+        ret
+.not:   pop es
+        pop bx
+        pop ax
+.no:    clc
+        ret
+sh_level_of db 0
+; SH_HAS_CLASS: ZF set if sheet ES:BX has class AL at one of its three places. All registers kept.
+sh_has_class:
+        cmp [es:bx + SH_CLASSES], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 1], al
+        je .ret
+        cmp [es:bx + SH_CLASSES + 2], al
+.ret:   ret
+; SH_FIGHTER_IS: ZF set if combatant AX (the game's, as 62B45h's callers and the caster level routine have
+; it: its creature at 388h:0C34h, as EL_SPHERE reads it) is a Shinobi (SH_SHEET_IS), AL its thief level. DS
+; the game's; others kept.
+sh_fighter_is:
+        cmp ax, 400
+        jae .no
+        push bx
+        push es
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        call kit_sheet
+        call sh_sheet_is
+        pop es
+        pop bx
+        ret
+.no:    or al, 1
+        ret
+; SH_OWN: CF set if spell AX is one of the Shinobi's (SH_SPELLS; a new one only while its rule is on and its
+; record has room: NS_NEW), CL its level. Others kept.
+sh_own:
+        push bx
+        push di
+        xor di, di
+.each:  cmp ax, [cs:sh_spells + di]
+        je .found
+        add di, 2
+        cmp di, SH_COUNT * 2
+        jb .each
+.no:    pop di
+        pop bx
+        clc
+        ret
+.found: cmp ax, NS_FIRST
+        jb .yes
+        call ns_new             ; (BX its place: kept by the pops)
+        jnc .no
+.yes:   shr di, 1
+        mov cl, [cs:sh_levels + di]
+        pop di
+        pop bx
+        stc
+        ret
+; SH_KNOWS: ZF clear if party member SI knows spell AX: its known bit (KNOWN_BITS), or a new spell's sheet
+; bit (NS_KNOWS). DS the game's; all registers kept.
+sh_knows:
+        push bx
+        push es
+        cmp ax, NS_FIRST
+        jae .new
+        call known_bits
+        call bit_known
+        jmp .out
+.new:   mov bx, ax
+        sub bx, NS_FIRST
+        call ns_knows
+.out:   pop es
+        pop bx
+        ret
+; SH_TOP: AL the highest spell level, CL or lower, with one of the Shinobi's spells (SH_OWN) party member
+; SI doesn't know (SH_KNOWS); 0 if none. Others kept.
+sh_top:
+        push bx
+        push cx
+        push dx
+        mov dl, cl              ; (DL the most, AL the best found)
+        xor al, al
+        xor bx, bx
+.each:  push ax
+        mov ax, [cs:sh_spells + bx]
+        call sh_own
+        jnc .next_pop
+        cmp cl, dl
+        ja .next_pop
+        call sh_knows
+        jnz .next_pop
+        pop ax
+        cmp cl, al
+        jbe .next
+        mov al, cl
+        jmp .next
+.next_pop:
+        pop ax
+.next:  add bx, 2
+        cmp bx, SH_COUNT * 2
+        jb .each
+        pop dx
+        pop cx
+        pop bx
+        ret
+; SH_KNOWN_COUNT: AX how many of the Shinobi's spells party member SI knows. Others kept.
+sh_known_count:
+        push bx
+        push cx
+        push dx
+        xor dx, dx
+        xor bx, bx
+.each:  mov ax, [cs:sh_spells + bx]
+        call sh_own
+        jnc .next
+        call sh_knows
+        jz .next
+        inc dx
+.next:  add bx, 2
+        cmp bx, SH_COUNT * 2
+        jb .each
+        mov ax, dx
+        pop dx
+        pop cx
+        pop bx
+        ret
+
+; SH_YES: (from EL_SPHERE's entries, SH_SPHERE_DI and SH_SPHERE_BP: AX the member, the game's AX pushed under
+; the way back, the INT's IP, CS and FLAGS over 62B45h's two words, the spell and the class) the game's no
+; made yes for a Shinobi's thief class (SH_FIGHTER_IS) and a wizard spell (below PRIEST_FIRST, or a new one:
+; NS_NEW), so that the USE screen lists the wizard spells it knows, they are cast with its thief class
+; (RANGER_LEVEL), and its caster level counts it (SH_CAST_LEVEL). Counted (SH_MAGES). All registers kept.
+sh_yes:
+        push bp
+        mov bp, sp              ; ([BP+4] the game's AX, +6 the INT's IP, CS, FLAGS, +0Ch the spell, +0Eh
+        cmp byte [bp + 4], 0    ;   the class)
+        jne .ret
+        cmp word [bp + 0x0E], THIEF_CLASS
+        jne .ret
+        push ax
+        push bx
+        mov bx, ax
+        mov ax, [bp + 0x0C]
+        cmp ax, PRIEST_FIRST
+        jb .wizard
+        push bx
+        call ns_new
+        pop bx
+        jnc .out
+.wizard:
+        mov ax, bx
+        call sh_fighter_is
+        jne .out
+        mov byte [bp + 4], 1
+        inc word [cs:sh_mages]
+.out:   pop bx
+        pop ax
+.ret:   pop bp
+        ret
+; SH_SPHERE_DI, SH_SPHERE_BP (sites 90, 91 and 92, before EL_SPHERE's own entries): SH_YES for the member DI
+; (62C00h's) or [BP+6] (628AFh's, 97DC5h's), then EL_SPHERE.
+sh_sphere_di:
+        push ax
+        mov ax, di
+        call sh_yes
+        pop ax
+        jmp el_sphere_di
+sh_sphere_bp:
+        push ax
+        mov ax, [bp + 6]
+        call sh_yes
+        pop ax
+        jmp el_sphere_bp
+
+; SH_CAST_LEVEL (site 209, "shinobi_cast_level"): "add sp,4" (97DF1h; 3 bytes) after the caster level
+; routine's (97DC5h, SL's 81B16h: [BP+6] the combatant, [BP+8] the spell; each class SI 0-19 that casts the
+; spell asked its level, 98h:0C1h, the best kept in DI) call for a class's level: the call's two words
+; taken off as the ADD did; for the thief class (17) of a Shinobi (SH_FIGHTER_IS: SH_YES let it in), AX its
+; casting level (SH_CAST: the thief level less 5, at most SH_CAST_MOST), SL's SHINOBI_LEVEL. Counted
+; (SH_LEVELS). The caster level is the USE screen's spell levels (97E9Ch, half of it rounded up) and Dispel
+; Magic's weighing; RANGER_LEVEL has the same for the spell's duration and damage.
+sh_cast_level:
+        push bp
+        mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; +8 the call's two words)
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 0x0A], ax     ; (the INT's frame moved over the two words)
+        mov ax, [bp + 4]
+        mov [bp + 8], ax
+        mov ax, [bp + 2]
+        mov [bp + 6], ax
+        mov ax, [bp]
+        mov [bp + 4], ax
+        pop ax
+        add bp, 4
+        mov sp, bp
+        pop bp
+        cmp si, THIEF_CLASS
+        jne .ret
+        push ax
+        push bx
+        mov bx, ax              ; (BX the level)
+        mov ax, [bp + 6]        ; (BP the game's: its [BP+6] the combatant)
+        call sh_fighter_is
+        jne .out
+        mov ax, bx
+        call sh_cast
+        mov bx, ax
+        inc word [cs:sh_levels_n]
+.out:   mov ax, bx
+        pop bx
+        add sp, 2               ; (the AX pushed: AX is the answer)
+.ret:   iret
+; SH_PLACE_LEVEL: (RANGER_LEVEL's) AX the level of the class at ES:BX (a sheet + the class's place, in the
+; routine of a spell's level for its duration and damage, 628AFh) a Shinobi's casting level (SH_CAST) if
+; that class is a Shinobi's thief class (SH_SHEET_IS; SH_YES let it cast), SL's SHINOBI_WIZARD. Counted
+; (SH_LEVELS). DS the game's; others kept.
+sh_place_level:
+        cmp byte [es:bx + SH_CLASSES], THIEF_CLASS
+        jne .ret
+        push bx
+        push cx
+        push dx
+        mov cx, ax
+        mov ax, bx              ; (the sheet: BX less the place, (BX - the table's start) mod its size)
+        sub ax, [SHEETS_PTR]
+        xor dx, dx
+        push cx
+        mov cx, SHEET_SIZE
+        div cx
+        pop cx
+        sub bx, dx
+        call sh_sheet_is
+        jne .keep
+        cmp dx, [cs:kit_where]
+        jne .keep               ; (not its kit's class)
+        mov ax, cx
+        call sh_cast
+        mov cx, ax
+        inc word [cs:sh_levels_n]
+.keep:  mov ax, cx
+        pop dx
+        pop cx
+        pop bx
+.ret:   ret
+
+; SH_LEVEL_UP (site 210, "shinobi_level_up"): "cmp word [bp+8],0Bh" (957ABh; 4 bytes: the site and a NOP)
+; in the routine that raises a character a level in a class ([BP+8] the class, SI the member; then "jnz" past
+; the preserver's spell pick, 688h:66h, CHOOSE A SPELL, when [BP-6] says the level is a new one), SL's
+; LV_SHINOBI: the compare's flags, but ZF set for a Shinobi's thief class (SH_MEMBER) at thief level SH_FIRST
+; or more, so that it learns one of its own (PICK_ANY's, PICK_PAGE's, PICK_LIST's and PICK_TOP's Shinobi
+; parts). Counted (SH_UPS).
+sh_level_up:
+        push bp
+        mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; [BP] the game's BP)
+        push ax
+        push bx
+        mov bx, [bp]
+        cmp word [ss:bx + 8], THIEF_CLASS
+        jne .game
+        call sh_member
+        jnc .game
+        cmp al, SH_FIRST
+        jb .game
+        inc word [cs:sh_ups]
+        cmp al, al              ; (ZF set: on to the pick)
+        jmp .flags
+.game:  cmp word [ss:bx + 8], 0x0B
+.flags: pushf
+        pop ax
+        and ax, 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
+        and word [bp + 6], ~0x08D5
+        or [bp + 6], ax
+        pop bx
+        pop ax
+        pop bp
+        iret
+
+; SH_PICK_ANY: (PICK_ANY's: SI the member, AX its preserver level, [BP-2] the level the routine 93160h looks
+; for spells to learn from, down) CF set for a Shinobi (SH_MEMBER) with no preserver level: AX and [BP-2] the
+; highest spell level up to its own (SH_PICK_LEVEL) with one of its spells it doesn't know (SH_TOP), 0 (the
+; window not opened) if none (SL's PROBE_PICK_ANY). Counted (SH_ASKS). Else CF clear, all kept.
+sh_pick_any:
+        or ax, ax
+        jg .no
+        push cx
+        call sh_member
+        jnc .not
+        call sh_pick_level
+        mov cl, al
+        call sh_top
+        movzx ax, al
+        mov [bp - 2], ax
+        inc word [cs:sh_asks]
+        pop cx
+        stc
+        ret
+.not:   pop cx
+.no:    clc
+        ret
+; SH_READER: CF set if the reader (USE_WHO's: CHOOSE A SPELL's, a scroll's) is a Shinobi (SH_MEMBER), SI it
+; and AL its thief level. DS the game's; others kept.
+sh_reader:
+        push es
+        mov si, ds
+        add si, USE_WHO_SEG
+        mov es, si
+        mov si, [es:USE_WHO_OFF]
+        pop es
+        jmp sh_member
+; SH_PICK_PAGE: (PICK_PAGE's: AL the page CHOOSE A SPELL opens on) CF set for a Shinobi reader (SH_READER):
+; AL the highest level up to its own (SH_PICK_LEVEL) with one of its spells it doesn't know (SH_TOP), its own
+; if none; else CF clear, AL kept. Others kept.
+sh_pick_page:
+        push cx
+        push si
+        push ax
+        call sh_reader
+        jnc .no
+        call sh_pick_level
+        mov cl, al
+        call sh_top
+        or al, al
+        jnz .page
+        mov al, cl
+.page:  pop cx                  ; (the game's AX: AH kept)
+        mov ah, ch
+        pop si
+        pop cx
+        stc
+        ret
+.no:    pop ax
+        pop si
+        pop cx
+        clc
+        ret
+; SH_PAGE_CUT: (PICK_LIST's: ES 370h's segment, its words at NS_PAGE the page's DI spells, SI the reader)
+; CF set for a Shinobi (SH_MEMBER): the page its own spells alone (SH_OWN), DI their count (SL's
+; PROBE_PICK_LIST). Counted (SH_PAGED). Else CF clear. Others kept.
+sh_page_cut:
+        push ax
+        call sh_member
+        pop ax
+        jnc .ret
+        push ax
+        push bx
+        push cx
+        push dx
+        xor bx, bx              ; (BX the page's place read, DX the kept)
+        xor dx, dx
+.each:  cmp bx, di
+        jae .done
+        push bx
+        shl bx, 1
+        mov ax, [es:bx + NS_PAGE]
+        pop bx
+        call sh_own
+        jnc .next
+        push bx
+        mov bx, dx
+        shl bx, 1
+        mov [es:bx + NS_PAGE], ax
+        pop bx
+        inc dx
+.next:  inc bx
+        jmp .each
+.done:  mov di, dx
+        inc word [cs:sh_paged]
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        stc
+.ret:   ret
+; SH_PAGE_TOP: (PICK_TOP's: CX the highest page CHOOSE A SPELL's level button goes to) CX no more than a
+; Shinobi reader's own (SH_READER, SH_PICK_LEVEL), SL's PROBE_PICK_LEVEL. Others kept.
+sh_page_top:
+        push ax
+        push si
+        call sh_reader
+        jnc .out
+        call sh_pick_level
+        movzx ax, al
+        cmp cx, ax
+        jle .out
+        mov cx, ax
+.out:   pop si
+        pop ax
+        ret
+
+; SH_FIRST_SPELLS: (CR_PICKS': SI the new member, the game having given it no spells) a new Shinobi
+; (SH_MEMBER) of thief level SH_FIRST or more picks one of its own on CHOOSE A SPELL (CR_ONE's way, the level
+; up's 688h:66h: PICK_ANY's Shinobi part) for each thief level from SH_FIRST, as its level ups would have
+; given them; on EXIT the rest are its first ones not known, in SH_SPELLS' order, up to its level's
+; (SH_FILL). Counted (SH_ASKS, by the windows). Registers changed.
+sh_first_spells:
+        cmp word [CR_EDITING], -1
+        jne .ret
+        call sh_member
+        jnc .ret
+        sub al, SH_FIRST - 1
+        jbe .ret
+        movzx cx, al            ; (CX the picks due)
+.one:   push cx
+        call sh_known_count
+        push ax
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:cr_windows]
+        call sh_known_count
+        pop cx
+        cmp ax, cx
+        pop cx
+        je .fill                ; (EXIT: none learnt)
+        loop .one
+.ret:   ret
+.fill:  jmp sh_fill
+; SH_FILL: CX more of the Shinobi's spells party member SI (SH_MEMBER, AL its thief level) doesn't know given
+; it (their known bits; a new one's sheet bit: NS_TEACH), the first in SH_SPELLS' order whose level is up to
+; its own (SH_PICK_LEVEL). Registers changed.
+sh_fill:
+        call sh_member
+        jnc .ret
+        call sh_pick_level
+        mov dl, al              ; (DL the most)
+        xor di, di
+.each:  jcxz .ret
+        cmp di, SH_COUNT * 2
+        jae .ret
+        mov ax, [cs:sh_spells + di]
+        add di, 2
+        push cx
+        call sh_own
+        mov dh, cl
+        pop cx
+        jnc .each
+        cmp dh, dl
+        ja .each
+        call sh_knows
+        jnz .each
+        cmp ax, NS_FIRST
+        jae .new
+        push es
+        push bx
+        call known_bits
+        call bit_set
+        pop bx
+        pop es
+        jmp .given
+.new:   push bx
+        mov bx, ax
+        sub bx, NS_FIRST
+        call ns_teach
+        pop bx
+.given: inc word [cs:sh_filled]
+        dec cx
+        jmp .each
+.ret:   ret
+
+; SH_READ_LANG: AL party member SI's chance to read languages (a Shinobi's: SH_MEMBER, AL its thief level), as
+; the thief tables have it for the inventory's skills (C_THIEF, SH_READ_SKILL): with Thieves as in AD&D
+; (RULE_THIEF_TABLE) AD&D's average for the level (THIEF_ADND) + the race's, no more than THIEF_MOST; else
+; the table's base + 4 a level + the race's; 0 to 100. DS the game's; others kept.
+sh_read_lang:
+        push bx
+        push cx
+        push si
+        push es
+        push gs
+        movzx cx, al            ; (CX the thief level)
+        mov ax, si
+        call kit_sheet
+        movzx si, byte [es:bx + SHEET_RACE]
+        shl si, 3
+        mov ax, ds
+        add ax, THIEF_TABLE
+        mov gs, ax
+        movsx bx, byte [gs:si + THIEF_RACE + SH_READ_SKILL]   ; (BX the race's)
+        test word [cs:rules], RULE_THIEF_TABLE
+        jz .game
+        push bx
+        mov bx, SH_READ_SKILL
+        mov si, cx
+        call thief_adnd
+        pop bx
+        add ax, bx
+        cmp ax, THIEF_MOST
+        jle .clip
+        mov ax, THIEF_MOST
+        jmp .clip
+.game:  movsx ax, byte [gs:SH_READ_SKILL]
+        shl cx, 2
+        add ax, cx
+        add ax, bx
+.clip:  cmp ax, 0
+        jge .high
+        xor ax, ax
+.high:  cmp ax, 100
+        jle .out
+        mov ax, 100
+.out:   pop gs
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+; SH_ROLLS: party member SI, a Shinobi (SH_MEMBER: AL its thief level), tries to learn its spell DX from a
+; scroll (SL's SHINOBI_READ): a d100 against its read languages (SH_READ_LANG; LEARN_READ, LEARN_READ_CHANCE):
+; above it LEARN_UNREAD (the scroll used up, nothing learnt); read, with RULE_HI_INT a d100 against INT's
+; chance (INT_CHANCE; no most a level: its spells are few): above it LEARN_FAILED; else LEARN_LEARNT. The try
+; told to the Loader (LEARN_SEQ...). CF set if learnt. DS the game's; others kept.
+sh_rolls:
+        push ax
+        push bx
+        push es
+        mov [cs:learn_spell], dl
+        mov [cs:learn_spell_hi], dh
+        mov bx, si
+        mov [cs:learn_who], bl
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_chance], 0
+        call sh_read_lang
+        mov [cs:learn_read_chance], al
+        push ax
+        mov ax, 100
+        call game_die
+        mov [cs:learn_read], al
+        pop bx
+        cmp al, bl
+        jbe .read
+        mov byte [cs:learn_result], LEARN_UNREAD
+        mov byte [cs:learn_msg], LEARN_UNREAD
+        jmp .no
+.read:  imul bx, si, CREATURE_SIZE
+        les ax, [CREATURES_PTR]
+        add bx, ax
+        mov al, [es:bx + CREATURE_INT]
+        mov [cs:learn_int], al
+        mov byte [cs:learn_result], LEARN_LEARNT
+        test word [cs:rules_hi], RULE_HI_INT
+        jz .yes
+        movzx bx, al
+        sub bx, INT_FIRST
+        jge .row
+        xor bx, bx
+.row:   cmp bx, INT_ROWS - 1
+        jbe .chance
+        mov bx, INT_ROWS - 1
+.chance:
+        mov al, [cs:int_chance + bx]
+        mov [cs:learn_chance], al
+        mov ax, 100
+        call game_die
+        mov [cs:learn_roll], al
+        cmp al, [cs:learn_chance]
+        jbe .yes
+        mov byte [cs:learn_result], LEARN_FAILED
+        mov byte [cs:learn_msg], LEARN_FAILED
+.no:    inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop es
+        pop bx
+        pop ax
+        clc
+        ret
+.yes:   inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop es
+        pop bx
+        pop ax
+        stc
+        ret
+; SH_NOT_ITS: the try at scroll spell DX by party member SI, a Shinobi, refused: not one of its spells
+; (LEARN_NOT_ITS: the scroll kept, LEARN_REFUSED's text), told to the Loader. Others kept.
+sh_not_its:
+        push ax
+        mov ax, si
+        mov [cs:learn_who], al
+        mov [cs:learn_spell], dl
+        mov [cs:learn_spell_hi], dh
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_chance], 0
+        mov byte [cs:learn_read], 0
+        mov byte [cs:learn_read_chance], 0
+        mov byte [cs:learn_result], LEARN_NOT_ITS
+        mov byte [cs:learn_msg], LEARN_NOT_ITS
+        inc word [cs:learn_seq]
+        inc word [cs:sh_scrolls]
+        pop ax
+        ret
+; SH_SCROLL: (SCROLL_LEARN's: the game's ES:BX the reader's byte of the known bits, [BP-4] the spell, a wizard
+; spell it doesn't know) CF set for a Shinobi reader (SH_READER): AX 1 (the game's "known" path, the scroll
+; kept, LEARN_REFUSED's text) for a spell not its own (SH_NOT_ITS); else its rolls (SH_ROLLS), AX 0 (the game
+; teaches it and uses the scroll up; LEARN_SAID takes it back after LEARN_UNREAD or LEARN_FAILED). Else CF
+; clear. Others kept.
+sh_scroll:
+        push cx
+        push si
+        push dx
+        push ax
+        call sh_reader
+        jnc .no
+        mov dx, [bp - 4]
+        push ax
+        push cx
+        mov ax, dx
+        call sh_own
+        pop cx
+        pop ax
+        jc .its
+        call sh_not_its
+        pop ax
+        mov ax, 1
+        jmp .yes
+.its:   mov [cs:learn_es], es
+        push ax
+        lea ax, [bx + KNOWN_OFF]
+        mov [cs:learn_bx], ax
+        mov cl, dl
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        mov [cs:learn_mask], al
+        pop ax
+        call sh_rolls
+        pop ax
+        xor ax, ax
+.yes:   pop dx
+        pop si
+        pop cx
+        stc
+        ret
+.no:    pop ax
+        pop dx
+        pop si
+        pop cx
+        clc
+        ret
+; SH_NS_SCROLL: (NS_SCROLL's: SI the reader, AX a new spell it doesn't know, BX its place) AL 0 if the
+; reader isn't a Shinobi (SH_MEMBER: the game's way, NS_SCROLL's); for one, AL 1 for a spell not its own
+; (SH_NOT_ITS: the scroll kept), else its rolls (SH_ROLLS): AL 2 learnt, 3 not (the scroll used up, nothing
+; taken back: LEARN_MASK 0). Others kept.
+sh_ns_scroll:
+        push dx
+        push cx
+        mov dx, ax
+        push ax
+        call sh_member
+        jnc .none
+        push ax
+        mov ax, dx
+        call sh_own
+        pop ax
+        jc .its
+        call sh_not_its
+        pop ax
+        mov al, 1
+        jmp .out
+.its:   mov [cs:learn_es], ds
+        mov word [cs:learn_bx], 0
+        mov byte [cs:learn_mask], 0     ; (no bit to take back: LEARN_SAID's AND keeps it)
+        call sh_rolls
+        pop ax
+        mov al, 2
+        jc .out
+        inc al
+        jmp .out
+.none:  pop ax
+        mov al, 0
+.out:   pop cx
+        pop dx
+        ret
+sh_filled  dw 0                     ; (spells given at creation's EXIT: SH_FILL, counted for a look in play)
+sh_ups     dw 0                     ; (level ups let on to the pick: SH_LEVEL_UP, the same)
 
 ; STINK_ROUND (site 0, "stinking_cloud_round"): in the routine of a spell's time from its record
 ; (80171h, SL's 76CB3h), "les bx,[bp-4]" (80249h) before the rounds are multiplied by the unit, EAX the
@@ -5250,26 +6448,37 @@ strength_dice:
 ; CELL_HEAL (site 11, "cell_adjustment_heal"): Cell Adjustment's (248) case in the handler for spells
 ; with rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 65811h" (664C5h, SL's
 ; 795A2h; 5 bytes: 2 HP): 1d4 HP, AX for the game's "push ax / jmp 65811h" (66545h, Neutralize
-; Poison's and the rest's) and the healing after it; its record's cure of disease is the game's own.
-; Recorded (MN_CELL: the target, the user, the healing; no kit's more, the sequel has no kits).
+; Poison's and the rest's: KIT_CURE's site, site 206) and the healing after it; its record's cure of disease
+; is the game's own. With the kits a Lifebinder's a d4 more, a Healer's or Rescuer's 1 more (CELL_MORE, SL's
+; CELL_SITE's). Recorded (MN_CELL: the target, the user, the healing, the kit's more in +6's high byte).
 MN_CELL   equ 3
 CELL_BACK equ 0x66545 - (0x664C5 + 3)
 cell_heal:
         push bp
         mov bp, sp
         add word [bp + 2], CELL_BACK
+        push bx
+        push cx
+        mov bx, [ss:bp]                 ; (the game's BP)
+        mov ax, [ss:bx + 8]
+        call cell_more                  ; (CX the kit's more)
         mov ax, 4
         call game_die
+        add ax, cx
         pusha
         mov [cs:mn_frame], di
-        mov bx, [ss:bp]                 ; (the game's BP)
+        mov bx, [ss:bp]
         mov bx, [ss:bx + 8]
         mov [cs:mn_frame + 2], bx
         mov [cs:mn_frame + 4], ax
-        mov word [cs:mn_frame + 6], 0
+        mov ch, cl                      ; (the low byte 0: no disease cured said here)
+        xor cl, cl
+        mov [cs:mn_frame + 6], cx
         mov ax, MN_CELL
         call mn_rec
         popa
+        pop cx
+        pop bx
         inc word [cs:manual_count]
         pop bp
         iret
@@ -10791,11 +12000,18 @@ ef_last      db 0
 ;   5B7E9h, SL's PROBE_INIT at 5750Eh); the Elementalist's second sphere (EL_SPHERE, sites 90-92);
 ; - spell slots (SL's PROBE_SLOTS and PROBE_SLOT_LEVEL, from ADND_SLOTS, site 34: SLOT_BEHIND, BEHIND_LEAST,
 ;   KIT_TABLE; a Shinobi's thief class asked its wizard slots, SHINOBI_MAGE, site 190); the Seeker's and
-;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61).
+;   Justifier's casting level (RANGER_DROP, KIT_RANGER_CAST, site 61); the Shinobi's wizard spells
+;   (THE SHINOBI'S SPELLS: its list, picks, scrolls and casting level, sites 90-92, 209-210);
+; - PSP costs, a Mind Warrior's PSP, the level up's hit dice and a Battle Mage's casting after a hit (KIT PSP
+;   COSTS, PSP, HIT DICE AND CASTING AFTER A HIT, sites 191-199), and a kit's hit die and PSP at creation
+;   (sites 200, 201, and KIT_REROLL on the kit page).
+; - a spell's level for its duration and damage (SL's PROBE_SPELL_LEVEL: KIT_CAST_LEVEL, site 205: the
+;   Arcanist's, Spirit Caller's, Wasteland Seer's), the cures (PROBE_CURE: KIT_CURE, site 206; CELL_HEAL's
+;   CELL_MORE), the Cause Wounds spells (AV_CAUSE: AVENGER_AREA, AVENGER_ONE, sites 207-208), the spells
+;   known (EL_SPHERE's HEALER_COSMOS and KIT_BARS: the Healer's cosmos, the spells a kit never knows).
 ; The Loader's header bytes for them are DSCLOG's: KIT_OUTDOORS (+350), KIT_DANCE (+351), KIT_WILD
-; (+355), BAD_LUCK (+1862). Not here (yet): other casting levels (a Shinobi's among them), PSP costs,
-; cures, a spell's damage, spells known, poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), hit dice, the
-; Effects lines.
+; (+355), BAD_LUCK (+1862); COSMOS_MORE (+2060) and the counters after it DSCLOG2's own. Not here (yet):
+; poison, arrows, gear (KIT_FORBIDS, KIT_ALLOWS), the Effects lines.
 RULE_HI_KITS equ 1
 KIT_BYTE     equ 0x3D               ; (SL's +43h: ravager.sheet_field)
 KIT_OPEN     equ 0xFF               ; (KIT_BYTE while the player has taken the kit back: none chosen)
@@ -11934,6 +13150,545 @@ path_up:
         pop ax
         ret
 
+; ---- KIT PSP COSTS, PSP, HIT DICE AND CASTING AFTER A HIT: DSCLOG's KIT_PSP, PROBE_PSP_*, PROBE_HIT_DIE,
+; PROBE_MAX_PSP and PROBE_HIT_ROUND (RULE_KITS) in the sequel ----
+; The power routines (61574h on: SL's 5C9xxh on, the same code) read a power's cost to use from its row of
+; the powers' table (3D0h:7E0h, 3 bytes a power: SL's 8 at 408h:0; +1 the cost to use, +2 to keep up, 63h
+; none), BX the power x 3; the powers are SL's 34 (psychokinesis 0-5, psychometabolism 6-19, telepathy
+; 20-33), the combatants' and creatures' records as KIT_PSP has them (the combatant's creature at
+; FIGHTERS_OFF + 1). The sites (kits.psp_cost):
+; - PSP_USE (site 191, "psp_use"): "or di,di / jnl $+4 / xor di,di" (6178Eh; 6 bytes) where the routine
+;   using a power (616D6h: SI the combatant, [BP+0Ah] the power) has its cost in DI, its table's or worked
+;   out for Enhanced Strength and Domination: DI the kit's (KIT_PSP), no less than 0.
+; - PSP_TABLE (site 192, "psp_can_use", "psp_failed"): "mov al,es:[bx+7E1h]" (6162Dh, the check whether a
+;   power can be used, 6159Bh: SI the combatant; 6183Dh, half of it taken for a power that fails; 5 bytes):
+;   AL the kit's; AH as it was (the game's "mov ah,0" after).
+; - PSP_DEFENCE (site 193, "psp_defence"): "sub es:[bx+2],ax" (61FA1h; 4 bytes) where creature [BP-6]
+;   pays AX for the psionic defence it raises (all telepathy): the kit's, then taken off.
+; - PSP_KEEP (site 194, "psp_keep"): "mov al,es:[bx+7E2h]" (619DCh; 5 bytes) where a power's cost to keep it
+;   up another round is taken (SI the combatant); PSP_KEEP_DX (site 195, "psp_can_keep"): the same at
+;   616A8h, the check whether it can be kept up, the combatant in DX. AL the kit's, 63h (none) as it is.
+; The level up's hit points (94F60h: [BP+6] the sheet's number, [BP+8] the class, [BP+0Ah] its new level,
+; [BP-4] the sheet, far; the class's hit point group at 4D0h:0, 4 bytes: the die, its last level, the gain
+; after; SL's 872xxh) and its most PSP (950xxh; SL's 873B2h):
+; - KIT_HIT_DIE (site 196, "hit_die"): "mov al,es:[bx+0]" (95014h; 5 bytes), the die of a level up to the
+;   group's last: a Battle Mage's a d6, an Arcanist's a d3 (the preserver's d4: kits.hit_die), for the
+;   kit's own class (a human who has changed class rolls for the new one).
+; - KIT_HIT_GAIN (site 197, "hit_gain"): "mov al,es:[bx+2]" (95000h; 5 bytes), the fixed gain of a level
+;   past it (the preserver's 1 from 11th): a Battle Mage's 2, an Arcanist's 1 (kits.hit_gain; the owner's
+;   choice, 2026-11-26), for the kit's own class likewise.
+; - KIT_MAX_PSP (site 198, "max_psp"): "les bx,[bp-8]" (95172h; 3 bytes, an INT and a NOP) where the most PSP
+;   the level gives is in SI, put in the sheet ([BP-8], far: +0Ch) when more than it was: a Mind Warrior's
+;   SI a fifth less (kits.max_psp), its kit asleep or not (its psionicist levels are its PSP). The sequel
+;   keeps SL's slip of WIS read from the creation screen's record (95110h: DS:142Dh, SL's 11A0h), which
+;   DSCLOG's PSP_SCORES puts right and this doesn't (yet).
+; A hit's mark (the creature's byte at 308h:0B2h + it, SL's 2E0h:0AFh), which keeps it from casting until
+; the next round (the USE screen's refusal and a queued spell dropped: 97384h, 97A84h):
+; - HIT_ROUND (site 199, "hit_round"): "mov byte es:[si+0B2h],1" (5CD76h; 6 bytes) where the routine taking
+;   a hit's damage off (5CBE4h: SI the creature) marks it: a Battle Mage isn't marked (KITS.md).
+; At creation (the creation overlay's rolls, 5C0h's: SL's CR_STUB's; DS's numbers, SL's in brackets) the
+; game rolls the hit points and works out the PSP when a class is clicked, before a kit can be chosen: a
+; kit's own are DSCLOG's PROBE_CR_DIE, PROBE_CR_PSP and KIT_REROLL:
+; - CR_DIE (site 200, "cr_die"): "mov al,es:[bx+11Dh]" (6D28Fh; 5 bytes; SL's 65677h) where the creation hit
+;   points' routine (6D1EDh, 5C0h:66h: SL's 655D6h) takes the class's die (360h:11Dh, by the creation class
+;   BX) for the most hit points it can give, a level at a time: a Battle Mage's 6, an Arcanist's 3
+;   (kits.hit_die). First a kit left over from the classes before a click on a class (KP_CLASS takes it
+;   away only after the click) is taken away, from the party's sheet too (the routine copied the sheet
+;   there, 6E6D8h, and rolls each level there: KIT_HIT_DIE), so the rolls go by the class's own die
+;   (CR_KIT_STALE). The rolls themselves are KIT_HIT_DIE's (the level up's routine, 690h:20h).
+; - CR_PSP (site 201, "cr_psp"): the end of the creation PSP routine (6D75Dh, 5C0h:6Bh: SL's 65B39h), which
+;   has put the sheet being made's most PSP in its +0Ch: "les bx,[1429h] / add es:[bx+0Ch],ax / pop bp /
+;   retf" (6D85Eh, 10 bytes: its WIS bonus, then the end) made the site, then "xor ax,ax / jmp short" back
+;   to it (6D861h, which the WIS test's "jna" at 6D842h is made to go to: the bonus none, the site always
+;   run for a psionicist) and the end kept at 6D866h (the routine's other way out, for no psionicist):
+;   the WIS bonus added, a Mind Warrior's PSP a fifth fewer (kits.max_psp), then the routine's own end,
+;   the INT's frame dropped, its flags put back first (the INT cleared IF: SL's note).
+; - KIT_REROLL (no site of its own: KIT_ROW's, on the kit page, site 65): picking or taking back a Battle
+;   Mage, an Arcanist or a Mind Warrior has the hit points rolled again and the PSP worked out again by the
+;   game's routines, as a click on a class has them (6BBCCh: the hit points with the flag 1, kept within
+;   the least and most the routine gave, put on the creature and shown again; the PSP, 6B749h), through the
+;   far addresses of those calls in the panel's overlay (WP_CALLS).
+KIT_ARCANIST     equ 23
+KIT_MIND_BENDER  equ 25
+KIT_KINETICIST   equ 27
+KIT_TITAN_MIND   equ 61
+KIT_WASTE_SEER   equ 73
+KIT_SEER_ROOF    equ 0xFE           ; (PSI_KIT's: a Wasteland Seer under a roof)
+PSP_PK_LAST      equ 5
+PSP_TP_FIRST     equ 20
+PSP_NO_UPKEEP    equ 0x63
+MIND_PSP         equ 5              ; (a Mind Warrior's PSP a fifth fewer: kits.MIND_PSP)
+BM_HIT_DIE       equ 6              ; (kits.hit_die)
+ARC_HIT_DIE      equ 3
+BM_HIT_GAIN      equ 2              ; (kits.hit_gain)
+ARC_HIT_GAIN     equ 1
+psp_use:
+        push ax
+        push bx
+        mov ax, di
+        mov bx, [bp + 0x0A]
+        call kit_psp
+        or ax, ax
+        jge .set
+        xor ax, ax
+.set:   mov di, ax
+        pop bx
+        pop ax
+        iret
+psp_table:
+        push bx
+        push cx
+        mov ch, ah
+        movzx ax, byte [es:bx + 0x7E1]
+        call psp_power
+        call kit_psp
+        mov ah, ch
+        pop cx
+        pop bx
+        iret
+psp_defence:
+        push bx
+        push cx
+        mov cx, ax
+        mov ax, [bp - 6]
+        call psi_kit
+        xchg ax, cx             ; (CL the kit, AX the cost)
+        mov bx, PSP_TP_FIRST
+        call kit_psp_of
+        pop cx
+        pop bx
+        sub [es:bx + 2], ax
+        iret
+psp_keep_dx:
+        push si
+        mov si, dx
+        call psp_keep_of
+        pop si
+        iret
+psp_keep:
+        call psp_keep_of
+        iret
+psp_keep_of:
+        push bx
+        push cx
+        mov ch, ah
+        movzx ax, byte [es:bx + 0x7E2]
+        cmp al, PSP_NO_UPKEEP
+        je .out
+        call psp_power
+        call kit_psp
+.out:   mov ah, ch
+        pop cx
+        pop bx
+        ret
+; PSP_POWER: BX (a power's row in the table, the power x 3) the power. Others kept.
+psp_power:
+        push ax
+        push dx
+        mov ax, bx
+        xor dx, dx
+        mov bx, 3
+        div bx
+        mov bx, ax
+        pop dx
+        pop ax
+        ret
+; KIT_PSP: AX the PSP power BX (0-33) costs combatant SI to use, from the game's AX (kits.psp_cost): a Mind
+; Bender's telepathy 2 less, its psychokinesis 2 more, a Kineticist's the other way about; a Titan Mind's
+; psychometabolism 2 less, its telepathy 2 more; a Wasteland Seer's every power 2 less under the open sky,
+; 1 more under a roof; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in
+; CL (PSI_KIT's). DS the game's; others kept.
+kit_psp:
+        push cx
+        mov cx, ax
+        call fighter_cr
+        call psi_kit
+        xchg ax, cx             ; (CL the kit, AX the cost)
+        call kit_psp_of
+        pop cx
+        ret
+; FIGHTER_CR: AX the creature of combatant SI (FIGHTERS_OFF + 1, as the game reads it, 388h:0C34h).
+; Others kept.
+fighter_cr:
+        push bx
+        push es
+        imul bx, si, 3
+        mov ax, ds
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        pop es
+        pop bx
+        ret
+; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
+; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's under the open sky, its KIT_OUTDOORS bit, and
+; KIT_SEER_ROOF under a roof; a thri-kreen of the games' own party with a psionicist class, SL's K'ratchek,
+; as a Wasteland Seer: kits.OWN_FEATURES), awake, or 0. DS the game's; others but AH kept.
+psi_kit:
+        call cr_is
+        db KIT_MIND_BENDER
+        je .bender
+        call cr_is
+        db KIT_TITAN_MIND
+        je .titan
+        call cr_is
+        db KIT_KINETICIST
+        je .kinetic
+        cmp ax, 3
+        ja .none                ; (a Wasteland Seer, a party member: by where it stands)
+        call cr_is
+        db KIT_WASTE_SEER
+        je .seer
+        push ax
+        push bx
+        push es
+        call kit_sheet
+        call own_race_b
+        cmp al, OWN_KREEN
+        jne .not_own
+        mov al, OWN_PSI
+        call own_has
+.not_own:
+        pop es
+        pop bx
+        pop ax
+        jne .none
+.seer:  bt word [cs:kit_outdoors], ax
+        mov al, KIT_WASTE_SEER
+        jc .ret
+        mov al, KIT_SEER_ROOF
+        ret
+.kinetic:
+        mov al, KIT_KINETICIST
+        ret
+.none:  xor al, al
+.ret:   ret
+.bender:
+        mov al, KIT_MIND_BENDER
+        ret
+.titan: mov al, KIT_TITAN_MIND
+        ret
+kit_psp_of:
+        or ax, ax
+        jle .ret
+        push dx
+        xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
+        cmp cl, KIT_TITAN_MIND
+        jne .seer
+        cmp bx, PSP_PK_LAST
+        jbe .out                ; (a Titan Mind's psychokinesis: as it was)
+        mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
+        cmp bx, PSP_TP_FIRST
+        jb .add
+        mov dx, 2
+        jmp .add
+.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
+        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
+        je .add
+        mov dx, 1
+        cmp cl, KIT_SEER_ROOF
+        je .add
+        xor dx, dx
+        cmp cl, KIT_MIND_BENDER
+        jne .kineticist
+        mov dx, -2
+        jmp .discipline
+.kineticist:
+        cmp cl, KIT_KINETICIST
+        jne .out
+        mov dx, 2
+.discipline:
+        cmp bx, PSP_TP_FIRST
+        jae .add
+        neg dx
+        cmp bx, PSP_PK_LAST
+        jbe .add
+        xor dx, dx              ; (psychometabolism: as it was)
+.add:   or dx, dx
+        jz .out
+        inc word [cs:kit_psps]
+        add ax, dx
+        cmp ax, 1
+        jge .out
+        mov ax, 1
+.out:   pop dx
+.ret:   ret
+kit_hit_die:
+        mov al, [es:bx]
+        push cx
+        mov cx, (ARC_HIT_DIE << 8) | BM_HIT_DIE
+        jmp hit_kit
+kit_hit_gain:
+        mov al, [es:bx + 2]
+        push cx
+        mov cx, (ARC_HIT_GAIN << 8) | BM_HIT_GAIN
+; HIT_KIT: (KIT_HIT_DIE's, KIT_HIT_GAIN's, CX pushed) AL CL for a Battle Mage, CH for an Arcanist, its kit
+; awake and the class levelled ([BP+8]) its own; then CX popped and the INT's way back. Others kept.
+hit_kit:
+        push bx
+        push si
+        push es
+        les bx, [bp - 4]
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        je .own
+        mov cl, ch
+        call kit_is_b
+        db KIT_ARCANIST
+        jne .out
+.own:   mov si, [cs:kit_where]
+        push ax
+        movzx ax, byte [es:bx + si + SH_CLASSES]
+        cmp ax, [bp + 8]
+        pop ax
+        jne .out
+        mov al, cl
+        inc word [cs:kit_hds]
+.out:   pop es
+        pop si
+        pop bx
+        pop cx
+        iret
+kit_max_psp:
+        les bx, [bp - 8]
+        push ax
+        mov al, KIT_MIND_WARRIOR
+        call kit_has            ; (asleep too: its psionicist levels are the PSP's)
+        jne .out
+        push cx
+        push dx
+        mov ax, si
+        xor dx, dx
+        mov cx, MIND_PSP
+        div cx
+        sub si, ax
+        inc word [cs:kit_psps]
+        pop dx
+        pop cx
+.out:   pop ax
+        iret
+hit_round:
+        mov [cs:hr_seg], es
+        push ax
+        mov ax, si
+        call cr_is
+        db KIT_BATTLE_MAGE
+        je .bm
+        mov byte [es:si + 0xB2], 1
+        jmp .out
+.bm:    inc word [cs:bm_hits]
+.out:   pop ax
+        iret
+cr_die:
+        push cx
+        mov cl, [es:bx + 0x11D]
+        call cr_kit_stale
+        call kit_made
+        cmp al, KIT_BATTLE_MAGE
+        jne .arcanist
+        mov cl, BM_HIT_DIE
+.arcanist:
+        cmp al, KIT_ARCANIST
+        jne .out
+        mov cl, ARC_HIT_DIE
+.out:   mov al, cl
+        pop cx
+        iret
+cr_psp:
+        push bp
+        mov bp, sp
+        push word [bp + 6]      ; (the flags at the INT)
+        popf
+        pop bp
+        add sp, 6
+        les bx, [WP_CREATION]
+        add [es:bx + 0x0C], ax  ; (the WIS bonus: none from the "jna")
+        push ax
+        call kit_made
+        cmp al, KIT_MIND_WARRIOR
+        jne .out
+        push cx
+        push dx
+        mov ax, [es:bx + 0x0C]
+        xor dx, dx
+        mov cx, MIND_PSP
+        div cx
+        sub [es:bx + 0x0C], ax
+        inc word [cs:cr_psps]
+        pop dx
+        pop cx
+.out:   pop ax
+        pop bp
+        retf
+; KIT_MADE: AL the kit (KIT_IS's numbers: the creation class x 4 + the kit) of the sheet being made, ZF
+; clear; 0 and ZF set if none (the rule off, a multiclass group's or no class's, none chosen, or its
+; classes changed since KP_CLASS last saw them: but before the screen's first look, an EDIT's own). DS
+; the game's; others kept.
+kit_made:
+        push bx
+        push es
+        call kit_class
+        cmp al, MULTI_FIRST
+        jae .none
+        or al, al
+        jz .out
+        les bx, [WP_CREATION]
+        call cr_classes_seen
+        jne .none
+        mov bl, [es:bx + KIT_BYTE]
+        cmp bl, KIT_OPEN
+        je .none
+        and bl, 3
+        jz .none
+        shl al, 2
+        add al, bl
+        jmp .out
+.none:  xor al, al
+.out:   pop es
+        pop bx
+        or al, al
+        ret
+; CR_CLASSES_SEEN: ZF set if the classes of the sheet at ES:BX are those KP_CLASS last saw, or it has
+; seen none yet. All registers kept.
+cr_classes_seen:
+        push eax
+        cmp dword [cs:wp_classes_seen], 0xFFFFFFFF
+        je .out
+        call sheet_classes_cr
+        cmp eax, [cs:wp_classes_seen]
+.out:   pop eax
+        ret
+; CR_KIT_STALE: (CR_DIE) a kit on the sheet being made while its classes are not those KP_CLASS last saw:
+; taken away, from the party's sheet of the member being made (USE_WHO_SEG:USE_WHO_OFF) too. DS the
+; game's; all registers kept.
+cr_kit_stale:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        push ax
+        push bx
+        push es
+        les bx, [WP_CREATION]
+        call cr_classes_seen
+        je .out
+        cmp byte [es:bx + KIT_BYTE], 0
+        je .out
+        mov byte [es:bx + KIT_BYTE], 0
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]
+        call kit_sheet_ax
+        mov byte [es:bx + KIT_BYTE], 0
+        inc word [cs:cr_stales]
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   ret
+; KIT_ROLLS_DUE: (KIT_ROW) KIT_REROLL due if the sheet being made's kit now (KIT_MADE) is one with its own
+; hit die or PSP: a Battle Mage, an Arcanist, a Mind Warrior. All registers kept.
+kit_rolls_due:
+        push ax
+        call kit_made
+        cmp al, KIT_BATTLE_MAGE
+        je .due
+        cmp al, KIT_ARCANIST
+        je .due
+        cmp al, KIT_MIND_WARRIOR
+        jne .out
+.due:   mov byte [cs:kit_reroll_due], 1
+.out:   pop ax
+        ret
+; KIT_REROLL: (KIT_ROW, BP the kit page click's frame, the way back to the game's in it as the overlay
+; manager needs it) the sheet being made's hit points rolled again and its PSP worked out again by the
+; game's routines, as a click on a class has them (6BBCCh: the hit points' routine with the flag 1, the
+; least and most it gives, DS:42D8h and RL_HP_MAX, and the sheet's +8; then kept within them, put on the
+; creature and shown again; the PSP's routine, its +0Ch put on the creature and shown again), with its kit
+; now, which the hit points' routine would leave none once taken back (KIT_OPEN): put back. DS the game's.
+CR_HP_LEAST  equ 0x42D8             ; DS: the least hit points the classes could roll (SL's 4998h)
+CR_HP_PLACE  equ 0x1224             ; DS: the hit points' number's place, x then y (SL's F92h)
+CR_PSP_PLACE equ 0x122C             ; DS: the PSP's (SL's F9Ah)
+CR_HP_BACK   equ 0x70               ; (the backdrop's words under the hit points, 368h:70h and 84h; SL's 3F0h)
+CR_PSP_BACK  equ 0x72               ; (... under the PSP: SL's 3F2h)
+CR_HP_SHOW   equ 0x3E               ; (WP_STUB's: the hit points shown, SL's 64C6Bh)
+CR_PSP_SHOW  equ 0x43               ; (... the PSP)
+kit_reroll:
+        mov byte [cs:kit_reroll_due], 0
+        inc word [cs:kit_rerolls]
+        push word 1
+        push word RL_HP_MAX
+        push word CR_HP_LEAST
+        les bx, [WP_CREATION]
+        mov al, [es:bx + KIT_BYTE]
+        mov [cs:kr_kit], al
+        lea ax, [bx + 8]
+        push es
+        push ax
+        call far [cs:cr_hp_fn]
+        add sp, 10
+        les bx, [WP_CREATION]
+        mov al, [cs:kr_kit]     ; (the kit as chosen: the routine copies the sheet back from the party's
+        mov [es:bx + KIT_BYTE], al ;  stand-in, 6EE5Eh, whose copy, 6E6D8h, made KIT_OPEN none)
+        mov ax, [es:bx + 8]
+        cmp ax, [RL_HP_MAX]
+        jbe .not_over
+        mov ax, [RL_HP_MAX]
+.not_over:
+        cmp ax, [CR_HP_LEAST]
+        jae .not_under
+        mov ax, [CR_HP_LEAST]
+.not_under:
+        mov [es:bx + 8], ax
+        les bx, [CR_CREATURE]
+        mov [es:bx], ax
+        mov si, CR_HP_BACK
+        mov di, CR_HP_PLACE
+        mov ax, CR_HP_SHOW
+        call cr_show
+        call far [cs:cr_psp_fn]
+        les bx, [WP_CREATION]
+        mov ax, [es:bx + 0x0C]
+        les bx, [CR_CREATURE]
+        mov [es:bx + 2], ax
+        mov si, CR_PSP_BACK
+        mov di, CR_PSP_PLACE
+        mov ax, CR_PSP_SHOW
+; CR_SHOW: a number of the creation screen shown again, as the game does: its backdrop put back (the
+; root's 0C8h:3B30h, WP_BACKDROP, with the words at 368h:SI and SI+14h), then the creation overlay's entry
+; AX (WP_STUB's) with the number's place (DS:DI, x then y). DS the game's.
+cr_show:
+        push ax
+        mov es, [cs:wp_stat_seg]
+        push word [es:si]
+        push word [es:si + 0x14]
+        call far [cs:wp_backdrop]
+        add sp, 4
+        pop ax
+        mov [cs:wp_far], ax
+        mov ax, [di + 2]
+        sub ax, 2
+        push ax
+        mov ax, [di]
+        add ax, 0x15
+        push ax
+        push dword [CR_CREATURE]
+        push dword [WP_CREATION]
+        push dword [WIN_SHOWN]
+        mov ax, ds
+        add ax, WP_STUB
+        mov [cs:wp_far + 2], ax
+        call far [cs:wp_far]
+        add sp, 16
+        ret
+kit_reroll_due db 0
+kr_kit      db 0
+kit_rerolls dw 0                ; (for a look in play: the rolls again on the kit page, the stale kits
+cr_stales   dw 0                ;  taken away, the Mind Warriors' PSP cut at creation)
+cr_psps     dw 0
+kit_psps dw 0                   ; (PSP costs and most PSP a kit changed, for a look in play)
+kit_hds  dw 0                   ; (hit dice and gains a kit changed)
+bm_hits  dw 0                   ; (a Battle Mage hit and not marked)
+hr_seg   dw 0                   ; (the marks' segment, the last hit's: for a look in play)
+
 kit_hit_last dw 0               ; (the last attack's kits' to hit)
 kit_acs      dw 0               ; (what the kits did, counted, for a look in play: ACs changed,
 kit_hits     dw 0               ;  attacks given a kit's to hit, damage bonuses changed, attacks a
@@ -12615,6 +14370,7 @@ cah_swing:
         call stink_swing                ; (the stinkpots: a nauseated attacker's -2, the stinkpot's 1d3)
         cmp word [bp + 0x16], 1
         jg .out
+        call sf_swing                   ; (a lotulis or double spear specialist's last swing: a second foe)
         push ax
         mov ax, [bp + 0x12]
         call item_is_cahulaks
@@ -12666,12 +14422,16 @@ cah_hit:
         mov byte [bp - 0x19], 0
         cmp word [bp + 0x16], 1
         jg stink_hit                ; (a missile: the staff sling's stinkpot, STINKPOTS)
+        mov word [cs:tg_how], MN_TANGLE << 8 | SHEET_PETRIFY
         push ax
         mov ax, [bp + 0x12]
         call item_is_cahulaks
         pop ax
-        jne .out
-        sti
+        je .rule
+        call trikal_trip            ; (THE TRIKAL: a specialist's hit trips)
+        jnc .out
+        mov word [cs:tg_how], MN_TRIP << 8 | SHEET_PARALYZE
+.rule:  sti
         pushad
         push es
         mov bx, [TARGET]
@@ -12692,7 +14452,9 @@ cah_hit:
         imul si, si, SHEET_SIZE
         les di, [SHEETS_PTR]
         add di, si
-        movzx cx, byte [es:di + SHEET_PETRIFY]
+        movzx si, byte [cs:tg_how]      ; (its save against petrification, or paralysis for a trip)
+        add di, si
+        movzx cx, byte [es:di]
         mov ax, 20
         call game_die
         mov [cs:mn_frame], bx
@@ -12702,15 +14464,24 @@ cah_hit:
         mov [cs:mn_frame + 6], cx
         push ax
         push cx
-        mov ax, MN_TANGLE
-        call mn_rec
+        movzx ax, byte [cs:tg_how + 1]
+        cmp al, MN_TRIP
+        jne .rec
+        inc word [cs:trip_saves]
+.rec:   call mn_rec
         pop cx
         pop ax
         cmp ax, 20
         je .done                    ; (a natural 20 saves)
         cmp ax, cx
         jge .done                   ; (saved)
+        cmp byte [cs:tg_how + 1], MN_TRIP
+        jne .tangle
+        inc word [cs:trips]
+        jmp .lost
+.tangle:
         inc word [cs:tangles]
+.lost:
         call swept_now              ; (yet to act this round: this round's turn lost at once)
         jc .done
         mov si, bx
@@ -12866,6 +14637,241 @@ mn_frame  dw 0, 0, 0, 0
 tangled   times TANGLE_MOST / 8 db 0
 tangles   dw 0                  ; (tangles made, for a look in play)
 tangle_turns dw 0               ; (turns taken so)
+
+; THE TRIKAL AND THE TWO-HEADED WEAPONS: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits", with the
+; cahulaks' sites; the Dark Sun weapons guide's specialists), on the sequel's Lotulis (type 61), Double Spear
+; (39) and Trikal (100) and any type KIND_OF_TYPE gives their kinds:
+; - a trikal specialist's melee hit that does damage trips a man-sized or smaller target as the cahulaks
+;   tangle one (CAH_HIT, TRIKAL_TRIP: its save against paralysis, the sheet's +31h, SHEET_PARALYZE; MN_TRIP);
+;   the trikal reaches two squares as a polearm (REACH_HANDS);
+; - a lotulis or double spear specialist's last swing of a round of two or more (SF_SWING, from CAH_SWING:
+;   [BP-16h] the swing, [BP-0Ah] the round's) goes to a second foe beside it, when one is: a combatant on
+;   the first target's side (SF_SIDE: the creature's +15h, the game's groups by its masks 71h and F80h,
+;   23812h), standing and Okay (+14h 1, HP above 0), at the game's distance 1 from the attacker [BP+18h]
+;   (1D40:35EFh, a call REACH leaves at 2); the first such in the combatants' order. TARGET is that foe
+;   for the swing and the attack's AC ([BP+0Ch]) its own, from the game's AC routine (5D520h, in the
+;   combat overlay: called at the INT's way back + SF_AC_GAP, its CS; the target, the attacker and the
+;   behind flag [BP+20h], as the attack's set-up calls it at 5C9A7h); both put back as the swing ends
+;   (SF_BACK, site 202 at the swing loop's "cmp ax,[bp-0Ah]", 5D308h, which every swing passes: SL's
+;   AMMO_TURN's). The double spear's swing at it does 1 less damage, at least 1 (SF_LESS, from ENL_ROLL,
+;   after the roll: STR in it). Recorded (MN_SECOND: +6 the second foe, +8 the attacker, +0Ah the first,
+;   +0Ch 1 for the double spear).
+MN_TRIP        equ 13
+MN_SECOND      equ 14
+SHEET_PARALYZE equ 0x31             ; (the sheet's save against paralysis/poison/death)
+LOTULIS_KIND   equ 18               ; (KIND_OF_TYPE's lotulis, its kind + 1; the double spear's the next)
+TRIKAL_KIND    equ 20               ; (... the trikal's)
+DISTANCE_SEG   equ 0x1D40 - 0x47E0  ; (the distance routine's segment less DS)
+SF_AC_GAP      equ 0x5D520 - 0x5D054  ; (the AC routine from CAH_SWING's way back)
+CREATURE_SIDE  equ 0x15
+SIDE_FRIENDS   equ 0x71             ; (the game's groups of +15h, by its bit)
+SIDE_FOES      equ 0xF80
+; TRIKAL_TRIP: CF if the melee hit is a trikal specialist's ([BP+12h] an item, [BP+14h] of the trikal's
+; kind) and the rule on. All registers kept.
+trikal_trip:
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .no
+        cmp word [bp + 0x12], NO_ITEM
+        jae .no
+        push bx
+        push dx
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .pop
+        cmp byte [cs:bx + kind_of_type], TRIKAL_KIND
+        jne .pop
+        call spec_of
+        cmp dl, SPEC_SPECIAL
+        cmc                         ; (CF: specialized or better)
+        pop dx
+        pop bx
+        ret
+.pop:   pop dx
+        pop bx
+.no:    clc
+        ret
+; SF_SWING (CAH_SWING's, in melee; its INT's way back at [SP+2] here). All registers kept.
+sf_swing:
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .ret
+        pushad
+        push es
+        mov si, sp
+        mov eax, [ss:si + 36]       ; (the INT's way back: the combat overlay's CS, and its IP)
+        add ax, SF_AC_GAP
+        mov [cs:sf_ac_at], eax
+        cmp word [bp + 0x12], NO_ITEM
+        jae .done
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .done
+        movzx ax, byte [cs:bx + kind_of_type]
+        sub ax, LOTULIS_KIND
+        cmp ax, 1
+        ja .done                    ; AX 0 the lotulis, 1 the double spear
+        mov cx, [bp - 0x0A]
+        dec cx
+        jle .done                   ; (one swing)
+        cmp cx, [bp - 0x16]
+        jne .done                   ; (not the round's last)
+        push ax
+        call spec_of
+        pop ax
+        cmp dl, SPEC_SPECIAL
+        jb .done
+        mov [cs:mn_frame + 6], ax
+        mov ax, [TARGET]
+        mov [cs:mn_frame + 4], ax
+        call sf_side
+        jc .done
+        mov di, ax                  ; DI the first target's side
+        mov ax, ds
+        add ax, DISTANCE_SEG
+        mov [cs:sf_distance + 2], ax
+        xor si, si
+.each:  cmp si, [TARGET]
+        je .next
+        cmp si, [bp + 0x18]
+        je .next
+        mov ax, si
+        call sf_side
+        jc .next
+        cmp ax, di
+        jne .next
+        push di
+        push si
+        push si
+        push word [bp + 0x18]
+        call far [cs:sf_distance]
+        add sp, 4
+        pop si
+        pop di
+        cmp ax, 1
+        je .found
+.next:  inc si
+        cmp si, TANGLE_MOST
+        jb .each
+        jmp .done
+.found: mov ax, [TARGET]
+        mov [cs:sf_target], ax
+        mov [TARGET], si
+        mov [cs:mn_frame], si
+        mov ax, [bp + 0x0C]
+        mov [cs:sf_ac], ax
+        movzx ax, byte [bp + 0x20]  ; (the attack's behind flag)
+        mov dx, [bp + 0x18]
+        mov bx, sp
+        push word [ss:bx + 38]      ; (the INT's way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 36]
+        push bp
+        mov bp, sp
+        push ax
+        push dx
+        push si
+        call far [cs:sf_ac_at]      ; (the game's AC routine: the foe's AC against the attacker)
+        add sp, 6
+        mov [cs:sf_ac_got], ax
+        pop bp
+        pop ax                      ; (the way back, as the overlay manager has left it)
+        pop cx
+        mov bx, sp
+        mov [ss:bx + 36], ax
+        mov [ss:bx + 38], cx
+        mov ax, [cs:sf_ac_got]
+        mov [bp + 0x0C], ax
+        mov ax, [bp + 0x18]
+        mov [cs:mn_frame + 2], ax
+        mov ax, MN_SECOND
+        call mn_rec
+        inc word [cs:sf_swings]
+.done:  pop es
+        popad
+.ret:   ret
+; SF_SIDE: AX combatant AX's side (1 the game's friends, 2 its foes, else 100h + its own group), CF if
+; it is no creature or isn't standing and Okay. BX, ES changed.
+sf_side:
+        call fighter_creature
+        jc .ret
+        imul bx, ax, CREATURE_SIZE
+        les ax, [CREATURES_PTR]
+        add bx, ax
+        cmp word [es:bx], 0
+        jle .no
+        cmp byte [es:bx + CREATURE_STATUS], 1
+        jne .no
+        push cx
+        mov cl, [es:bx + CREATURE_SIDE]
+        mov ax, 1
+        cmp cl, 15
+        ja .own
+        shl ax, cl
+        test ax, SIDE_FRIENDS
+        jnz .friend
+        test ax, SIDE_FOES
+        mov ax, 2
+        jnz .side
+.own:   movzx ax, cl
+        or ah, 1
+        jmp .side
+.friend:
+        mov ax, 1
+.side:  pop cx
+        clc
+.ret:   ret
+.no:    stc
+        ret
+; SF_BACK: the first target and its AC put back after a swing at a second foe. All kept.
+sf_back:
+        cmp word [cs:sf_target], -1
+        je .ret
+        push ax
+        mov ax, -1
+        xchg ax, [cs:sf_target]
+        mov [TARGET], ax
+        mov ax, [cs:sf_ac]
+        mov [bp + 0x0C], ax
+        inc word [cs:sf_backs]
+        pop ax
+.ret:   ret
+; SF_SITE (site 202, "cmp ax,[bp-0Ah]" at 5D308h, the swing loop's test after each swing): SF_BACK, then
+; the compare, its flags in the INT's frame.
+sf_site:
+        call sf_back
+        push bx
+        push ax
+        cmp ax, [bp - 0x0A]
+        pushf
+        pop ax                      ; (the compare's flags)
+        mov bx, sp
+        and word [ss:bx + 8], ~0x08D5
+        and ax, 0x08D5              ; (OF SF ZF AF PF CF)
+        or [ss:bx + 8], ax
+        pop ax
+        pop bx
+        iret
+; SF_LESS (ENL_ROLL's, the hit's damage rolled, [BP-4]): the double spear's swing at a second foe 1 less,
+; at least 1. All kept.
+sf_less:
+        cmp word [cs:sf_target], -1
+        je .ret
+        push bx
+        mov bx, [bp + 0x14]
+        cmp bx, KIND_TYPES
+        jae .pop
+        cmp byte [cs:bx + kind_of_type], LOTULIS_KIND + 1
+        jne .pop
+        cmp word [bp - 4], 1
+        jle .pop
+        dec word [bp - 4]
+        inc word [cs:sf_lesses]
+.pop:   pop bx
+.ret:   ret
+sf_distance dd 0x35EF
+sf_ac_at    dd 0
+sf_target   dw -1                   ; (the first target while a second foe is swung at; -1 none)
+sf_ac       dw 0
+sf_ac_got   dw 0
+tg_how      dw 0                    ; (CAH_HIT: the save's offset, and above it the record's MN_)
 
 ; STINKPOTS: DSCLOG's (RULE_HI_CAHULAKS, the Loader's "Weapon traits"): the staff sling's shot is a
 ; stinkpot, a clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 against
@@ -13169,7 +15175,9 @@ reach_hands:
         push bx
         mov bx, ax
         cmp byte [cs:bx + kind_of_type], POLEARM_KIND
-        pop bx
+        je .pole
+        cmp byte [cs:bx + kind_of_type], TRIKAL_KIND   ; (the trikal: a pole too, DSCLOG's)
+.pole:  pop bx
         jne .other
         inc dl
         jmp .on
@@ -13448,8 +15456,8 @@ spared_count dw 0               ; (Hold or Charm Person spared so)
 ;   click on the screen: other classes than last seen, no kit; the panel made the one for the classes;
 ; - KP_RACE (site 68, "add sp,6", 6B191h: PROBE_RACE_PANEL): a new race or sex, the panel the right one;
 ; - KP_OPEN (site 69, "mov byte [1C96h],0FFh", 6D891h: SL's CR_OPEN's place): the screen opening.
-; Not here (DSCLOG's, for rules the sequel hasn't yet): a kit's own hit die or PSP rolled again on its
-; choice (KIT_REROLL), the THAC0 shown again, the Elementalist's second sphere (EL_*), EDIT's kit given
+; A kit's own hit die or PSP rolled again on its choice: KIT_ROW's KIT_REROLL (KIT PSP COSTS ... AND CASTING
+; AFTER A HIT). Not here (DSCLOG's, for rules the sequel hasn't yet): the THAC0 shown again, the Elementalist's second sphere (EL_*), EDIT's kit given
 ; back after its classes are changed and changed back (ED_*), the age and weapon specs (CR_AGE,
 ; CR_WEAPONS).
 KP_DISC_ID   equ 19504              ; (the game's windows: SL's 3012, 3013)
@@ -13495,6 +15503,10 @@ WP_CALL_HELP   equ 0x6BF35
 WP_CALL_BUTTON equ 0x6BFB6
 WP_CALL_MARK   equ 0x6BD4B
 WP_MARK_SEG    equ 0x6BD39
+WP_CALL_CR_HP  equ 0x6BBDF          ; (KIT_REROLL's: the creation rolls' hit points, 5C0h:66h, and PSP, 5C0h:6Bh;
+WP_CALL_CR_PSP equ 0x6B749          ;  the backdrop put back under a number, 0C8h:3B30h; the backdrop's words'
+WP_CALL_BACKDROP equ 0x6BC38        ;  segment, "mov ax,368h")
+WP_STAT_SEG    equ 0x6BC24
 WP_SPHERE_SEG  equ 0x6BEB6
 WP_SPHERE_ENTRY equ 0x57
 WP_SPHERE_RET  equ 0x6C039
@@ -13902,6 +15914,11 @@ wp_harvest:
         add bx, [bp + 2]
         mov ax, [es:bx]
         mov [cs:wp_sphere_seg], ax
+        mov bx, (WP_STAT_SEG + 1) & 0xFFFF
+        sub bx, [cs:wp_ret_file]
+        add bx, [bp + 2]
+        mov ax, [es:bx]
+        mov [cs:wp_stat_seg], ax
         mov cx, (wp_calls_end - wp_calls) / 6
 .one:   mov bx, [cs:si]         ; a call's file offset (low word), less the return's
         sub bx, [cs:wp_ret_file]
@@ -14084,7 +16101,9 @@ wp_page_button:
 
 ; KIT_ROW: kit row AX of the kit page clicked (KIT_NONE: NO KIT), as the game's spheres: with none chosen
 ; (KIT_OPEN), the row's kit chosen; the one chosen, taken back (the rows all in use, the sheet KIT_OPEN);
-; another, nothing. A Healer only with the water sphere marked (kits.HEALER_SPHERE). DS the game's.
+; another, nothing. A Healer only with the water sphere marked (kits.HEALER_SPHERE). A Battle Mage, an
+; Arcanist or a Mind Warrior chosen or taken back: its hit points and PSP rolled again (KIT_REROLL). DS the
+; game's.
 kit_row:
         les bx, [WP_CREATION]
         xor dl, dl
@@ -14116,8 +16135,15 @@ kit_row:
         cmp dl, dh              ; another, while one is chosen: out of use (nothing)
         jne kit_marks
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
-.put:   mov [es:bx + KIT_BYTE], dl
+.put:   call kit_rolls_due      ; (a Battle Mage, an Arcanist or a Mind Warrior before or after: KIT_REROLL)
+        mov [es:bx + KIT_BYTE], dl
         inc word [cs:kit_rows_taken]
+        call kit_rolls_due
+        call kit_marks
+        cmp byte [cs:kit_reroll_due], 0
+        je .ret
+        call kit_reroll
+.ret:   ret
 ; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one or
 ; two) marked as the creation sheet's kit, the rest not, as 6BD75h marks the spheres
 kit_marks:
@@ -14233,8 +16259,15 @@ wp_help    dd 0
 wp_button_fn dd 0
            dw WP_CALL_MARK & 0xFFFF
 wp_mark_fn dd 0
+           dw WP_CALL_CR_HP & 0xFFFF
+cr_hp_fn   dd 0
+           dw WP_CALL_CR_PSP & 0xFFFF
+cr_psp_fn  dd 0
+           dw WP_CALL_BACKDROP & 0xFFFF
+wp_backdrop dd 0
 wp_calls_end:
 wp_mark_seg dw 0
+wp_stat_seg dw 0
 wp_sphere_seg dw 0
 
 ; DUAL_KIT (site 76): "cmp word [bp+8],0Ch" (94A57h; 4 bytes: the site and a NOP; SL's PROBE_DUAL_KIT at
@@ -19714,10 +21747,13 @@ cr_picks:
         cmp si, 4
         jae .back
         cmp byte [ss:di - 5], 0
-        je .psi
+        je .shinobi
         cmp word [CR_EDITING], -1
         jne .psi
         call cr_spells
+        jmp .psi
+.shinobi:
+        call sh_first_spells    ; (a new Shinobi of 6th thief level on: THE SHINOBI'S SPELLS)
 .psi:   call psi_ask
 .back:  mov byte [cs:psi_due], 0
         mov byte [cs:psi_keep], 0
@@ -20204,6 +22240,7 @@ pick_top:
         jbe .most
         movzx cx, al
 .most:  pop ax
+        call sh_page_top        ; (a Shinobi's: its own levels, THE SHINOBI'S SPELLS)
 .cmp:   push bp
         mov bp, sp              ; ([BP+2] CX, +4 IP, +6 CS, +8 the flags)
         cmp ax, cx
