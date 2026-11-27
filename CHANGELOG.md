@@ -62,6 +62,12 @@ Releases, newest first (2.12.0 and older in the archive):
 Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
+**Dev: one copy of the helpers' shared routines (the code audit's S5)**
+- The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
+  `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches
+  both. Both programs build to the same bytes; `test_shared_routines.py` fails on a routine written
+  twice again.
+
 **Fixed: Wake of the Ravager (kits, the code audit's KIT_OPEN)**
 - The kit byte's "no kit" marker, 0FFh, is also a legal byte on a human with three classes (kits
   3/3/3, the own party's bit and Friends), so such a character lost its kits. 0FFh now means "no kit"

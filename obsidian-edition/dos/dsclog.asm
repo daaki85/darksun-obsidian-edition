@@ -22,6 +22,7 @@
 BITS 16
 CPU 386
 %include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
+%include "shared_routines.inc"  ; (the routines both helpers have the same: SHARED_name)
 %macro fig_redraw 0              ; (FIG_WAIT's figure drawn again, in a handler after its PUSHAD, PUSH ES)
         call ovr_frame          ; (the way back in a frame the overlay manager can fix up)
         push word [FIG_BACK]
@@ -545,9 +546,7 @@ fig_due    db 0                 ; +1892 DSCLOG sets 1 when the character being m
 
 ; The patched rand() starts with INT VEC_RAND. Drop the interrupt frame (restoring
 ; the caller's flags, so interrupts are enabled again) and be rand().
-int_rand:
-        add sp, 4
-        popf
+        SHARED_int_rand
 stub:
         cld                     ; (RECORD's copies go up, whatever the caller left)
         push eax                ; rand() leaves the upper half of EAX alone; so do we
@@ -1373,45 +1372,7 @@ c_thief:
 
 ; CX cells at CS:BX: each x, y, label offset, value's x (words); the values are C_VALS in
 ; order. Keeps ES, SI, DI.
-c_cells:
-        push es
-        push si
-        push di
-        xor si, si
-.cell:  push cx
-        push bx
-        push word [cs:bx + 2]   ; y
-        push word [cs:bx]       ; x
-        push cs
-        push word [cs:bx + 4]   ; the label
-        call c_draw_line
-        pop bx
-        push bx
-        mov al, [cs:c_vals + si]
-        mov di, c_num
-        or si, si
-        jnz .unsigned
-        cmp byte [cs:c_signed], 0
-        je .unsigned
-        call c_itoa_s           ; the first cell of THAC0 and the saves
-        jmp .number
-.unsigned:
-        call c_itoa
-.number:
-        push word [cs:bx + 2]
-        push word [cs:bx + 6]   ; the value's x
-        push cs
-        push word c_num
-        call c_draw_line
-        pop bx
-        pop cx
-        add bx, 8
-        inc si
-        loop .cell
-        pop di
-        pop si
-        pop es
-        ret
+        SHARED_c_cells
 
 c_draw_line:                    ; stack: text far pointer, x, y (near return address first)
         push bp
@@ -1431,35 +1392,11 @@ c_draw_line:                    ; stack: text far pointer, x, y (near return add
         pop bp
         ret 8
 
-c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-terminated; keeps BX, CX
-        push bx
-        push cx
-        xor ah, ah
-        mov bl, 10
-        xor cx, cx
-.div:   div bl
-        push ax                 ; AH = a digit
-        inc cx
-        xor ah, ah
-        or al, al
-        jnz .div
-.put:   pop ax
-        add ah, '0'
-        mov [cs:di], ah
-        inc di
-        loop .put
-        mov byte [cs:di], 0
-        pop cx
-        pop bx
-        ret
+        SHARED_c_itoa
 
 ; cells: x, y, label, value's x (window coordinates: the stats' labels are at x 0ECh, their
 ; values at 104h, STR at y 35h, lines 7 apart)
-c_cells_top:
-        dw 0xEC, 0x0D, l_thac0, 0x111
-        dw 0xEC, 0x14, l_ppd, 0x103,  0x113, 0x14, l_rsw, 0x12A
-        dw 0xEC, 0x1B, l_pp, 0x103,   0x113, 0x1B, l_bw, 0x12A
-        dw 0xEC, 0x22, l_sp, 0x103
+        SHARED_c_cells_top
 c_cells_thief:                  ; right of the abilities (whose values end by 10Eh), in the
         dw 0x113, 0x35, l_pick, 0x12D  ; saves' second column, level with STR..CHA
         dw 0x113, 0x3C, l_lock, 0x12D
@@ -2881,36 +2818,9 @@ sync_at dw 0
 ; RTC_BEGIN, RTC_WAITED: a wait for the Loader ends after its BIOS ticks, or, as the BIOS clock
 ; stands still while the game's timer handler keeps its ticks to itself (as in some fights), once
 ; the real-time clock's second has changed twice (1 to 2 seconds): never a hang.
-rtc_begin:
-        push ax
-        call rtc_second
-        mov [cs:w_sec], al
-        mov byte [cs:w_flips], 0
-        pop ax
-        ret
-rtc_waited:                             ; CF set: the wait is over
-        push ax
-        call rtc_second
-        cmp al, [cs:w_sec]
-        je .no
-        mov [cs:w_sec], al
-        inc byte [cs:w_flips]
-        cmp byte [cs:w_flips], 2
-        jb .no
-        pop ax
-        stc
-        ret
-.no:    pop ax
-        clc
-        ret
-rtc_second:                             ; AL = the real-time clock's seconds (CMOS register 0)
-        pushf
-        cli
-        mov al, 0
-        out 0x70, al
-        in al, 0x71
-        popf
-        ret
+        SHARED_rtc_begin
+        SHARED_rtc_waited
+        SHARED_rtc_second
 w_sec   db 0
 w_flips db 0
 
@@ -2960,13 +2870,7 @@ c_load_stats:
 .own:   pop bx
         ret
 
-c_itoa_s:                       ; AL (signed) -> decimal at CS:DI, with "-" below 0; keeps BX, CX
-        test al, al
-        jns c_itoa
-        mov byte [cs:di], '-'
-        inc di
-        neg al
-        jmp c_itoa
+        SHARED_c_itoa_s
 
 ; PROBE_WEAPON: INT VEC_WEAPON replaces "add sp,10h" (3 bytes: INT + NOP) straight after the
 ; routine that lists a creature's weapons (on the inventory screen, and in the Look box) has
@@ -3466,168 +3370,11 @@ spec_get:
 
 ; SPEC_UNPACK: SPEC_DIGITS the four specs of a SPEC_V2 or V3 sheet. SPEC_REPACK: put back, V3 (each
 ; kind once; a second of one dropped). Keep all.
-spec_unpack:
-        push eax
-        push ecx
-        push edx
-        push si
-        mov eax, [es:bx + SPEC_SLOTS]
-        and eax, SPEC_KINDS_MASK
-        cmp eax, V3_BASE
-        jae .v3
-        mov ecx, 17
-        xor si, si
-.digit: xor edx, edx
-        div ecx
-        mov [cs:si + spec_digits], dl
-        inc si
-        cmp si, SPEC_COUNT
-        jb .digit
-        jmp .out
-.v3:    sub eax, V3_BASE                ; (the first, and the others' rank: SPEC_REPACK's undone)
-        xor edx, edx
-        mov ecx, REST_SETS
-        div ecx
-        mov [cs:spec_digits], al
-        mov eax, edx
-        mov si, 3                       ; (how many others: the sets of fewer come first)
-.size:  push si
-        add si, si
-        movzx ecx, word [cs:si + spec_rest_from]
-        pop si
-        cmp eax, ecx
-        jae .sized
-        dec si
-        jmp .size
-.sized: sub eax, ecx
-        mov dword [cs:spec_digits + 1], 0  ; (one past: SPEC_SORTED's room)
-        dec si
-        js .out
-.place: mov cl, KIND_COUNT - 1          ; (the greatest C(CL, SI + 1) under the rank left: the
-.try:   mov ch, cl                      ;   other in slot SI + 1 is CL + 1)
-        call spec_choose
-        cmp edx, eax
-        jbe .found
-        dec cl
-        jmp .try
-.found: sub eax, edx
-        inc cl
-        mov [cs:si + spec_digits + 1], cl
-        dec si
-        jns .place
-.out:   pop si
-        pop edx
-        pop ecx
-        pop eax
-        ret
-spec_repack:
-        push eax
-        push ecx
-        push edx
-        push si
-        push di
-        mov dword [cs:spec_sorted], 0   ; SPEC_SORTED: the kinds in order, none and a second of one
-        xor di, di                      ;   left out (DI how many)
-        xor si, si
-.copy:  mov al, [cs:si + spec_digits]
-        or al, al
-        jz .next
-        cmp al, KIND_COUNT
-        ja .next
-        mov cx, di
-        jcxz .keep
-.dup:   push si
-        mov si, cx
-        cmp al, [cs:si + spec_sorted - 1]
-        pop si
-        je .next
-        loop .dup
-.keep:  mov [cs:di + spec_sorted], al
-        inc di
-.next:  inc si
-        cmp si, SPEC_COUNT
-        jb .copy
-        xor eax, eax
-        or di, di
-        jz .put                         ; (none: V3_BASE alone)
-        mov cx, 2                       ; the others ascending (three at most: a bubble twice)
-.pass:  mov si, 1
-.swap:  lea dx, [si + 1]
-        cmp dx, di
-        jae .passed
-        mov al, [cs:si + spec_sorted]
-        mov ah, [cs:si + spec_sorted + 1]
-        cmp al, ah
-        jbe .ok
-        mov [cs:si + spec_sorted], ah
-        mov [cs:si + spec_sorted + 1], al
-.ok:    inc si
-        jmp .swap
-.passed:
-        loop .pass
-        movzx eax, byte [cs:spec_sorted] ; the first times REST_SETS, the others' rank: the sets of
-        imul eax, eax, REST_SETS        ;   fewer, and C(other - 1, I + 1) for each, I from 0
-        dec di
-        mov si, di
-        add si, si
-        movzx edx, word [cs:si + spec_rest_from]
-        add eax, edx
-        mov si, di
-        dec si
-        js .put
-.rank:  mov ch, [cs:si + spec_sorted + 1]
-        dec ch
-        call spec_choose
-        add eax, edx
-        dec si
-        jns .rank
-.put:   add eax, V3_BASE
-        mov edx, [es:bx + SPEC_SLOTS]
-        and edx, ~SPEC_KINDS_MASK
-        or edx, eax
-        mov [es:bx + SPEC_SLOTS], edx
-        pop di
-        pop si
-        pop edx
-        pop ecx
-        pop eax
-        ret
+        SHARED_spec_unpack
+        SHARED_spec_repack
 spec_rest_from dw 0, 1, 1 + 22, 1 + 22 + 231 ; (REST_SETS' sets of 0, 1, 2 and 3 before each size)
 ; SPEC_CHOOSE: EDX = C(CH, SI + 1) (the binomial: how many sets of SI + 1 of CH). Others kept.
-spec_choose:
-        push eax
-        push ecx
-        push si
-        mov eax, 1
-        movzx ecx, ch
-        inc si                          ; (K: SI + 1; the product's steps, C(N, J) * (N - J) / (J + 1))
-        xor edx, edx
-        push bx
-        xor bx, bx
-.step:  cmp bx, si
-        jae .done
-        push edx
-        mov edx, ecx
-        sub dx, bx
-        jbe .zero                       ; (N under K: none)
-        imul eax, edx
-        pop edx
-        push ecx
-        movzx ecx, bx
-        inc ecx
-        xor edx, edx
-        div ecx
-        pop ecx
-        inc bx
-        jmp .step
-.zero:  pop edx
-        xor eax, eax
-.done:  pop bx
-        mov edx, eax
-        pop si
-        pop ecx
-        pop eax
-        ret
+        SHARED_spec_choose
 spec_digits times SPEC_COUNT + 1 db 0  ; (one past: SPEC_UNPACK clears four from the second)
 spec_sorted times SPEC_COUNT db 0
 
@@ -3651,22 +3398,7 @@ spec_find:
         ret
 
 ; SPEC_ANY: ZF clear when a spec is chosen.
-spec_any:
-        push eax
-        mov eax, [es:bx + SPEC_SLOTS]
-        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
-        jz .test                        ; (the old layout: any of the four bytes)
-        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
-        jz .five
-        and eax, SPEC_KINDS_MASK
-        cmp eax, V3_BASE
-        jb .test                        ; (V2's number: none, 0; V3's from V3_BASE, none V3_BASE)
-        sub eax, V3_BASE
-        jmp .test
-.five:  and eax, 0x000FFFFF
-.test:  test eax, eax
-        pop eax
-        ret
+        SHARED_spec_any
 
 ; SPEC_PACK: the sheet in the SPEC_V2 layout (the specs as they were; 2.13's age kept, the old
 ; layout's +17h, a 4th spec, none; no roll kept: ROLL_UNKNOWN).
@@ -4011,13 +3743,7 @@ off_hand_halves:
 ; WAR_KIT_IS: ZF set if the character whose sheet is at ES:BX is a Crusader or a Mind Warrior (kit
 ; awake, KIT_WHERE that kit's for KIT_LEVEL), which has expertise in its one chosen weapon spec.
 ; All registers kept.
-war_kit_is:
-        call kit_is_b
-        db KIT_CRUSADER
-        je .ret
-        call kit_is_b
-        db KIT_MIND_WARRIOR
-.ret:   ret
+        SHARED_war_kit_is
 
 ; NOTE_SHOT: KIT_SHOT's bit for the attacker ([BP+0Eh]), a party member: set for a missile ([BP+16h]
 ; above 1: a shot or a throw), else clear; and KIT_OFF's: set for a melee attack with the weapon in
@@ -5322,50 +5048,12 @@ heavy:  cmp byte [cs:cu_armour], 0
         ret
 
 ; SHIELD_NOT_LEATHER: carry set for a shield of a material not leather
-shield_not_leather:
-        test byte [cs:cu_flags], 4
-        jz .ok
-        cmp byte [cs:cu_mat], LEATHER
-        je .ok
-        stc
-        ret
-.ok:    clc
-        ret
+        SHARED_shield_not_leather
 
 ; SPHERE_ALLOWS: carry clear if sphere AL (0 air, 1 earth, 2 fire, 3 water) allows the weapon:
 ; air, missile and thrown weapons, daggers and the cahulaks (thrown in Dark Sun, as daggers are in
 ; AD&D, though the game throws neither: the user's decision, 2026-11-10); the others by material.
-sphere_allows:
-        push cx
-        or al, al
-        jnz .mat
-        test byte [cs:cu_flags], 0x12
-        jnz .yes
-        cmp byte [cs:cu_kind], 2        ; (a dagger)
-        je .yes
-        cmp byte [cs:cu_kind], 11       ; (the cahulaks)
-        je .yes
-        jmp .no
-.mat:   mov ah, SPHERE_EARTH
-        cmp al, 1
-        je .test
-        mov ah, SPHERE_FIRE
-        cmp al, 2
-        je .test
-        mov ah, SPHERE_WATER
-.test:  mov cl, [cs:cu_mat]
-        cmp cl, 8
-        jae .no
-        mov ch, 1
-        shl ch, cl
-        test ah, ch
-        jnz .yes
-.no:    pop cx
-        stc
-        ret
-.yes:   pop cx
-        clc
-        ret
+        SHARED_sphere_allows
 
 cu_flags   db 0
 cu_mat     db 0
@@ -5909,13 +5597,8 @@ kit_class:
 ; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two or three
 ; classes at once, not a human's, its race and their classes one of MULTI_TABLE's; 0 for none.
 ; Others kept.
-multi_group:
-        push si
-        mov si, kit_class_of
-        jmp multi_find
-multi_group_cr:
-        push si
-        mov si, multi_same
+        SHARED_multi_group
+        SHARED_multi_group_cr
 multi_find:
         push cx
         push dx
@@ -6471,27 +6154,7 @@ probe_pk_fill:
 .out:   iret
 
 ; every row in use if its kind is in LV_AVAIL, out of use if not (DS the game's)
-pk_ops:
-        pusha
-        push es
-        xor si, si
-.row:   xor ax, ax
-        bt [cs:lv_avail], si
-        jc .op
-        inc ax
-.op:    push ax
-        push word 0
-        lea bx, [si + PICK_FIRST]
-        push bx
-        push dword [PK_WINDOW]
-        call far [cs:lv_op_call]
-        add sp, 10
-        inc si
-        cmp si, KIND_COUNT
-        jb .row
-        pop es
-        popa
-        ret
+        SHARED_pk_ops
 
 probe_pk_click:
         push bp
@@ -6888,37 +6551,9 @@ kit_name_ptr:
 ; KIT_CLASS_OF go by it); ZF clear if not (the rule off, more than one class but for a human, not
 ; chosen, or asleep). KIT_HAS: the same, asleep too. A human may have a kit for each of its classes
 ; (KIT_AT). All registers kept.
-kit_is:
-        push si
-        mov si, 1
-        jmp kit_find
-kit_has:
-        push si
-        xor si, si
-kit_find:
-        push di
-        push cx
-        mov ch, al
-        call kit_place          ; (DI the oldest class's place)
-        jc .no
-.place: call kit_at
-        cmp al, ch
-        jne .next
-        or si, si
-        jz .yes
-        call kit_awake
-        jnc .yes
-.next:  dec di
-        jns .place
-.no:    mov al, ch
-        or ch, 1                ; (ZF clear)
-        jmp .out
-.yes:   mov [cs:kit_where], di
-        cmp al, al              ; (ZF set)
-.out:   pop cx
-        pop di
-        pop si
-        ret
+        SHARED_kit_is
+        SHARED_kit_has
+        SHARED_kit_find
 kit_where dw 0
 
 ; KIT_AT: AL the kit (as KIT_IS numbers them) of the class at place DI (0-2) of sheet ES:BX, asleep
@@ -7064,28 +6699,8 @@ cr_is:
         push es
         call creature_sheet
         call kit_is_b
-cr_is_back:
-        pop es
-        pop bx
-        ret
-kit_is_b:
-        push bp
-        mov bp, sp
-        push si
-        push ax
-        mov si, [bp + 2]
-        cmp si, cr_is_back      ; (from CR_IS: the byte after the call to it)
-        jne .byte
-        mov si, [bp + 8]
-        inc word [bp + 8]
-        jmp .is
-.byte:  inc word [bp + 2]
-.is:    mov al, [cs:si]
-        call kit_is
-        pop ax
-        pop si
-        pop bp
-        ret
+        SHARED_cr_is_back
+        SHARED_kit_is_b
 
 ; KIT_AC: AX (the AC the game's AC routine has for its creature, whose thing is its [BP+6]) with
 ; the creature's kit's (kits.ac): a Ravager's base AC by its level (RAVAGER_AC) where it is better
@@ -8785,27 +8400,7 @@ dk_banned:
         ret
 
 ; KIT_PAIR: CF set if kits AL and AH may not go together (KIT_PAIRS, either way round). Others kept.
-kit_pair:
-        push dx
-        push si
-        mov dx, ax
-        xchg dl, dh
-        mov si, kit_pairs
-.next:  cmp word [cs:si], 0
-        je .free
-        cmp [cs:si], ax
-        je .barred
-        cmp [cs:si], dx
-        je .barred
-        add si, 2
-        jmp .next
-.free:  clc
-        jmp .out
-.barred:
-        stc
-.out:   pop si
-        pop dx
-        ret
+        SHARED_kit_pair
 ; Kits barred from going together (kits.KIT_PAIRS): one needing a shield and one forbidding it
 ; (Arena Champion, Sentinel; Twin-blade, Shinobi, Ravager); two-weapon fighting and the off hand
 ; free of weapons (Twin-blade, Healer); a two-handed weapon and weapons it can't be (Brute;
@@ -10351,11 +9946,7 @@ probe_learn_said:
         pop word [cs:lm_fl]
         push ds
         push 0x33F1
-learn_back:
-        push word [cs:lm_fl]
-        push word [cs:lm_cs]
-        push word [cs:lm_ip]
-        iret
+        SHARED_learn_back
 
 probe_learn_refused:
         pop word [cs:lm_ip]
@@ -10640,20 +10231,7 @@ ef_line:
 .out:   pop ax
         ret
 ; EF_PUT: CS:SI on the panel's next line (all registers kept: the game's text routine changes ES)
-ef_put:
-        pusha
-        push es
-        cmp word [cs:ef_y], USE_FIRST_Y + (EF_LINES - 1) * USE_STEP
-        ja .out
-        push word [cs:ef_y]
-        push word USE_X
-        push cs
-        push si
-        call c_draw_line
-.out:   add word [cs:ef_y], USE_STEP
-        pop es
-        popa
-        ret
+        SHARED_ef_put
 
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
@@ -11038,45 +10616,7 @@ wp_click:
 
 ; WP_HARVEST: the window routines' far addresses from the overlay's calls (WP_CALLS), the
 ; probe's frame at BP.
-wp_harvest:
-        push ax
-        push bx
-        push cx
-        push si
-        push es
-        mov es, [bp + 4]
-        mov si, wp_calls
-        mov bx, (WP_MARK_SEG + 1) & 0xFFFF
-        sub bx, [cs:wp_ret_file]
-        add bx, [bp + 2]
-        mov ax, [es:bx]
-        mov [cs:wp_mark_seg], ax
-        mov bx, (WP_SPHERE_SEG + 1) & 0xFFFF
-        sub bx, [cs:wp_ret_file]
-        add bx, [bp + 2]
-        mov ax, [es:bx]
-        mov [cs:wp_sphere_seg], ax
-        mov bx, (WP_STAT_SEG + 1) & 0xFFFF
-        sub bx, [cs:wp_ret_file]
-        add bx, [bp + 2]
-        mov ax, [es:bx]
-        mov [cs:wp_stat_seg], ax
-        mov cx, (wp_calls_end - wp_calls) / 6
-.one:   mov bx, [cs:si]         ; a call's file offset (low word), less the return's
-        sub bx, [cs:wp_ret_file]
-        add bx, [bp + 2]
-        mov ax, [es:bx + 1]
-        mov [cs:si + 2], ax
-        mov ax, [es:bx + 3]
-        mov [cs:si + 4], ax
-        add si, 6
-        loop .one
-        pop es
-        pop si
-        pop cx
-        pop bx
-        pop ax
-        ret
+        SHARED_wp_harvest
 
 ; WP_HELP_LINE: the panel's help line, as the game puts it under the spheres
 wp_help_line:
@@ -11088,49 +10628,11 @@ wp_help_line:
 ; KIT_OPEN: the kit page of the class being made in the panel, after closing what it shows
 ; (WP_FROM: 0 the disciplines, 1 the spheres, 2 a kit page), as 640E4h opens the spheres. DS =
 ; the game's.
-kit_open:
-        call wp_close_panel
-        call kit_class
-        movzx ax, al
-        add ax, KIT_WIN_ID - 1
-        mov si, kit_title
-        call wp_show
-        call kit_marks
-        jmp wp_help_line
+        SHARED_kit_open
 
 ; WP_CLOSE_PANEL: what the panel shows (WP_FROM) closed, the disciplines' or spheres' marks kept
 ; as the game keeps them
-wp_close_panel:
-        cmp byte [cs:wp_from], 0
-        jne .sphere
-        push word 0x7F8
-        push word 0x7F6
-        push dword [WP_DISC]
-        call wp_marked
-        add sp, 8
-        mov [WP_DISC_MASK], ax
-        push dword [WP_DISC]
-        call far [cs:wp_close]
-        add sp, 4
-        mov dword [WP_DISC], 0
-        ret
-.sphere:
-        cmp byte [cs:wp_from], 1
-        jne .page
-        push word 0x7FD
-        push word 0x7FA
-        push dword [WP_SPHERE]
-        call wp_marked
-        add sp, 8
-        mov [WP_SPHERE_MASK], ax
-.page:  mov ax, [WP_SPHERE]
-        or ax, [WP_SPHERE + 2]
-        jz .ret
-        push dword [WP_SPHERE]
-        call far [cs:wp_close]
-        add sp, 4
-        mov dword [WP_SPHERE], 0
-.ret:   ret
+        SHARED_wp_close_panel
 
 ; WP_SHOW: window AX in the panel, kept at DS:EA6h, the spheres' own routine (538h:57h) answering
 ; its buttons (PROBE_WP_SPHERE_CLICK), and its title CS:SI, as the spheres' ("%C%C%C%s" at
@@ -11181,19 +10683,7 @@ wp_marked:
 
 ; WP_BUTTON_OP: the game's 140:71Ah on button AX of the page (DS:EA6h), with the operation pushed
 ; (0 in use, 1 out of use, 2 marked, 3 not marked); takes it off the stack. AX, BX, CX kept.
-wp_button_op:
-        push bp
-        mov bp, sp
-        pusha
-        push word [bp + 4]
-        push word 0
-        push ax
-        push dword [WP_SPHERE]
-        call far [cs:wp_button_fn]
-        add sp, 10
-        popa
-        pop bp
-        ret 2
+        SHARED_wp_button_op
 
 ; WP_MARK: the mark (pushed: 1) or none (0) at the page's row 4 - CX, as 63FEEh draws it; takes
 ; the flag off the stack. AX, BX, CX kept.
@@ -11346,19 +10836,7 @@ kit_marks:
 ; (kits.HEALER_SPHERE). Registers kept.
 HEALER_SPHERE_CLASS equ 4               ; (the water cleric)
 HEALER_SPHERE_MASK  equ 0x10            ; (the spheres' marks: 80h air to 10h water)
-healer_barred:
-        push ax
-        shl al, 2
-        add al, dl
-        cmp al, KIT_HEALER
-        pop ax
-        jne .ok
-        cmp word [WP_SPHERE_MASK], HEALER_SPHERE_MASK
-        je .ok
-        stc
-        ret
-.ok:    clc
-        ret
+        SHARED_healer_barred
 
 ; KIT_ROLLS: kit AL one with its own hit die or PSP (a Battle Mage, a Mind Warrior, an Arcanist):
 ; KIT_REROLL due.
@@ -11942,21 +11420,7 @@ sphere_barred:
 
 ; KIT_BANS: EDX the classes (bit n: class n, 1-17) kit AL bars a human from having as well
 ; (DUAL_BANS; 0 for none, or no kit). Others kept.
-kit_bans:
-        push si
-        xor edx, edx
-        or al, al
-        jz .out
-        mov si, dual_bans
-.next:  cmp byte [cs:si], 0
-        je .out
-        cmp [cs:si], al
-        je .kit
-        add si, 5
-        jmp .next
-.kit:   mov edx, [cs:si + 1]
-.out:   pop si
-        ret
+        SHARED_kit_bans
 ; By kit (KIT_IS's number), the classes (bit n: class n, 1-17) a human with it may not change to
 ; (kits.DUAL_BANS): slot tables of its own that would take the new class's place (a Seeker's or
 ; Justifier's priest slots, a Shinobi's wizard ones); a warrior's THAC0 (a warrior class instead);
@@ -12118,19 +11582,7 @@ spec_of:
 
 ; NEXT_DIE: AX a die's sides; AX the next greater die size (grand mastery's, Player's Option: Combat
 ; & Tactics: d2, d3, d4, d6, d8, d10, d12, d20; a die past d20 kept). Others kept.
-next_die:
-        push si
-        mov si, die_sizes
-.next:  cmp ax, [cs:si]
-        jb .got
-        add si, 2
-        cmp si, die_sizes_end
-        jb .next
-        pop si
-        ret
-.got:   mov ax, [cs:si]
-        pop si
-        ret
+        SHARED_next_die
 die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
 die_sizes_end:
 
@@ -12757,23 +12209,7 @@ probe_rs_click:
 ; SP+2 on entry, +36 and +38) in a frame the overlay manager can fix up, as PROBE_USE_ITEM's: the
 ; call may load another overlay over the creation screen's or move it, which leaves the way back
 ; where the manager has put it (DX its segment, for RS_TAIL). Keeps BX, SI, DI.
-rs_framed:
-        push bx
-        mov bx, sp
-        push word [ss:bx + 40]
-        push word [ss:bx + 38]
-        push bp
-        mov bp, sp
-        mov dx, [ss:bx + 40]
-        call far [cs:wp_far]
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 38], ax
-        mov [ss:bx + 40], dx
-        pop bx
-        ret
+        SHARED_rs_framed
 
 ; RS_SAME: ZF set if the sheet being made (DS:[119Ch]) has the stored roll's race, sex, classes
 ; and kit (RS_BUF's first RS_KEY bytes, in RS_FIELDS' order). DS the game's; keeps all but flags.
@@ -12835,17 +12271,7 @@ rs_xfer:
         call rs_bytes
         pop es
         ret
-rs_bytes:                       ; CX bytes ES:BX <-> CS:DI (DL 0: into CS:DI)
-        mov al, [es:bx]
-        or dl, dl
-        jz .keep
-        mov al, [cs:di]
-        mov [es:bx], al
-.keep:  mov [cs:di], al
-        inc bx
-        inc di
-        loop rs_bytes
-        ret
+        SHARED_rs_bytes
 rs_fields db 0, 0x18, 1, 0, 0x19, 1, 0, 0x21, 3, 0, 0x43, 1   ; (RS_KEY: race, sex, classes, kit)
           db 0, 0x08, 6, 1, 0x00, 4, 1, 0x22, 6, 0xFF
 rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 + 2 db 0
@@ -15224,23 +14650,7 @@ th_frame_end:
 
 ; REC_FRAME: an entry recorded (kind [CS:KIND], value AX) whose frame's +6 on are the CX words
 ; from CS:SI, as a far call's arguments (no return address: 0). CX, DX, SI, DI changed.
-rec_frame:
-        pop dx                          ; (the way back)
-        mov di, sp
-        add si, cx
-        add si, cx
-.push:  sub si, 2
-        push word [cs:si]
-        loop .push
-        push dword 0
-        push bp
-        mov bp, sp
-        mov si, bp
-        sub si, 4                       ; (SS:SI+6: the frame's return address, none)
-        call record
-        pop bp
-        mov sp, di
-        jmp dx
+        SHARED_rec_frame
 
 ; RAND_DIE: DX a roll of 1 to CX from the game's rand() (BLOW_RAND: rand() x CX / 32768, + 1). DS
 ; the game's; AX and BX changed.
@@ -15460,45 +14870,7 @@ tu_bit:
 ; then D*, shifted a column a row: the row's start (AH) from the hit dice (1 or less, 2, 3-4, 5,
 ; 6 to 11 or more: AD&D's rows of hit dice; its zombies', ghasts' and specials' unused), the
 ; column from the level (1-9, 10-11, 12-13, 14 or more). BX changed.
-tu_cell:
-        mov ah, 4
-        cmp al, 1
-        jbe .row
-        mov ah, 2
-        cmp al, 2
-        je .row
-        dec ah
-        cmp al, 4
-        jbe .row
-        dec ah
-        cmp al, 5
-        je .row
-        cmp al, 11
-        jb .many
-        mov al, 11
-.many:  mov ah, 4
-        sub ah, al                      ; (6 to 11 hit dice: -2 to -7)
-.row:   mov al, cl
-        cmp al, 10
-        jb .col
-        sub al, 10
-        shr al, 1
-        cmp al, 2
-        jbe .high
-        mov al, 2
-.high:  add al, 10
-.col:   add al, ah                      ; (the run's place, from 1)
-        jle .none
-        cmp al, 12
-        jb .run
-        mov ax, TU_DSTAR
-        ret
-.run:   movzx bx, al
-        mov al, [cs:bx + tu_cells - 1]
-        mov ah, 0
-        ret
-.none:  xor ax, ax
-        ret
+        SHARED_tu_cell
 tu_cells  db 20, 19, 16, 13, 10, 7, 4, TU_T, TU_T, TU_D, TU_D
 tu_kind   dw 0                  ; (TU_MORE's kind: a sheet's number)
 tu_d20    dw 0                  ; (the d20, 0 none: the entry's value)
@@ -16621,29 +15993,7 @@ rp_worst:
 
 ; RP_CHOOSE: for a wound of AX, RP_SPELL the biggest cure (RP_CURES) of no more than it that someone
 ; can cast (RP_FIND: DI, RP_SLOT), else the smallest that someone can; CF set if none. SI kept.
-rp_choose:
-        mov [cs:rp_wound], ax
-        mov bx, RP_CURES_END - 4
-.down:  mov ax, [cs:bx + 2]
-        cmp ax, [cs:rp_wound]
-        jg .lower
-        mov ax, [cs:bx]
-        mov [cs:rp_spell], ax
-        call rp_find
-        jnc .ok
-.lower: sub bx, 4
-        cmp bx, rp_cures
-        jae .down
-        mov bx, rp_cures
-.up:    mov ax, [cs:bx]
-        mov [cs:rp_spell], ax
-        call rp_find
-        jnc .ok
-        add bx, 4
-        cmp bx, RP_CURES_END
-        jb .up
-        stc
-.ok:    ret
+        SHARED_rp_choose
 
 ; REST_HEAL_OF: AX the night's natural healing of creature ES:BX: REST_NATURAL and CON's part
 ; (REST_CON), at least 1. Others kept.
@@ -16907,11 +16257,7 @@ pic_full:
         add word [bp + 2], PF_FAIL
         pop bp
         iret
-pf_mark:                                ; BX a slot (any word): its bit in PF_USED
-        cmp bx, CACHE_MOST
-        jae .out
-        bts word [cs:pf_used], bx
-.out:   ret
+        SHARED_pf_mark
 
 ; PIC_PLACE (260CCh, "les bx,[bp-4]" before the place is worked out): a reused slot's place, the
 ; first gap of its length (ES:BX the slot, +2 the length) in the store, else the furthest end.
@@ -18067,19 +17413,7 @@ sl_bonus  dw 0
 ;   next): AX the damage, never doubled (the game doubles it).
 ; Both sides alike: a monster's blow on a held party member too. The dice log says it (dicelog.py).
 HELD_OUT_COLD equ 3                 ; (a creature's +1Ch: Out Cold)
-held_hit:
-        push ax
-        push bx
-        mov bx, sp                  ; ([BX+8] the INT's flags)
-        and word [ss:bx + 8], ~0x40
-        cmp word [bp - 6], 20
-        je .hit
-        call held_now
-        jnc .out
-.hit:   or word [ss:bx + 8], 0x40   ; (ZF: the game's JE to the hit)
-.out:   pop bx
-        pop ax
-        iret
+        SHARED_held_hit
 held_damage:                        ; (normal damage: the game's doubling gone with the switch)
         mov ax, [bp - 4]
         iret
@@ -19108,25 +18442,7 @@ probe_cr_psp:
 ; the game's roll (872FDh: the die from the class's table, then the call), so the dice log sees
 ; both rolls as the game's; the second time CX gets the better of the two.
 HP_BEST_BACK equ 0x8731B - 0x872FD
-probe_hp_best:
-        test word [cs:rules], RULE_HP_BEST
-        jz .game
-        cmp byte [cs:hp_again], 0
-        jne .second
-        mov [cs:hp_first], ax
-        mov byte [cs:hp_again], 1
-        push bp
-        mov bp, sp
-        sub word [bp + 2], HP_BEST_BACK ; (the INT's return IP)
-        pop bp
-        iret
-.second:
-        mov byte [cs:hp_again], 0
-        cmp ax, [cs:hp_first]
-        jge .game
-        mov ax, [cs:hp_first]
-.game:  mov cx, ax
-        iret
+        SHARED_probe_hp_best
 
 hp_first dw 0
 hp_again db 0
@@ -22013,34 +21329,11 @@ pp_show:
 
 ; PP_PUT: a button of kind AL wanted: in Turn Undead's place while DI is -1 (PP_SHOWN, its element
 ; and icon), else in the slot DI beside it (PP_EXTRA; none past EXTRA_MOST); DI the next. AX lost.
-pp_put:
-        cmp di, -1
-        jne .extra
-        mov [cs:pp_shown], al
-        mov word [TU_ELEMENT], PP_ELEMENT
-        movzx ax, al
-        add ax, PP_ICON - 1
-        mov [TU_ICON], ax
-        xor di, di
-        ret
-.extra: cmp di, EXTRA_MOST
-        jae .ret
-        mov [cs:di + pp_extra], al
-        inc di
-.ret:   ret
+        SHARED_pp_put
 
 ; PP_MINE: AL the kind of the button whose handler's frame is BX (its +8 the button): Turn
 ; Undead's (PP_SHOWN: 0 the game's), or one beside it (PP_EXTRA)
-pp_mine:
-        mov al, [cs:pp_shown]
-        push si
-        mov si, [ss:bx + 8]
-        sub si, SECOND_ID
-        cmp si, EXTRA_MOST
-        jae .ret
-        mov al, [cs:si + pp_extra]
-.ret:   pop si
-        ret
+        SHARED_pp_mine
 
 pp_click:
         push bx
@@ -22082,20 +21375,7 @@ LOAD_SEG     equ 0x2460         ; 100h:4A4h, a chunk loaded (its tag, its number
 LOAD_OFF     equ 0x04A4
 WIN_LIST_SEG equ 0x40BC         ; the USE screen's window, far at this segment:0
 FRAME_SEG    equ 0x3931         ; the buttons' frame picture, far at this segment:2Fh
-pp_extras:
-        xor si, si
-.slot:  mov al, [cs:si + pp_extra]
-        or al, al
-        jz .hide
-        call pp_extra_draw
-        jmp .next
-.hide:  cmp byte [cs:si + pp_extra_on], 0
-        je .next
-        call pp_extra_hide
-.next:  inc si
-        cmp si, EXTRA_MOST
-        jb .slot
-        ret
+        SHARED_pp_extras
 
 pp_extra_draw:                  ; slot SI, kind AL
         mov bx, si
@@ -22612,36 +21892,8 @@ pp_hand:
 READY_WHO   equ 0x4970
 READY_KIND  equ 0x4971
 READY_ICON  equ 0x4AF9
-pp_keep:
-        push ax
-        push bx
-        push es
-        mov al, [READY_WHO]
-        mov [cs:pp_kept_who], al
-        mov ax, [READY_ICON]
-        mov [cs:pp_kept_icon], ax
-        call pp_shown_member
-        mov ax, [bx + READY_KIND]
-        mov [cs:pp_kept_kind], ax
-        pop es
-        pop bx
-        pop ax
-        ret
-pp_restore:
-        push ax
-        push bx
-        push es
-        mov al, [cs:pp_kept_who]
-        mov [READY_WHO], al
-        mov ax, [cs:pp_kept_icon]
-        mov [READY_ICON], ax
-        call pp_shown_member
-        mov ax, [cs:pp_kept_kind]
-        mov [bx + READY_KIND], ax
-        pop es
-        pop bx
-        pop ax
-        ret
+        SHARED_pp_keep
+        SHARED_pp_restore
 pp_shown_member:                ; BX: the character on show, times 2 (ES lost)
         mov bx, ds
         add bx, USE_WHO_SEG
@@ -22663,13 +21915,7 @@ pp_fighting:
         ret
 
 ; PP_DISARM: the pick put away once the pointer is in another mode than talking
-pp_disarm:
-        cmp byte [cs:pp_armed], 0
-        je .ret
-        cmp word [POINTER_MODE], TALK_MODE
-        je .ret
-        mov byte [cs:pp_armed], 0
-.ret:   ret
+        SHARED_pp_disarm
 
 ; ARROWS_ARM: PP_ARM for a Spellarcher's arrows button (let go of, the USE screen closed): nothing
 ; readied, and ARROWS_ASK. The game's routines it calls may load overlays: the way back is put in
@@ -23994,10 +23240,7 @@ tput:                           ; AL -> text buffer at position BX
         inc bx
         ret
 
-tputw:
-        call tput
-        mov al, ah
-        jmp tput
+        SHARED_tputw
 
 t_ret   dw 0
 t_ip    dw 0
@@ -24363,13 +23606,8 @@ probe_redraw_all:
 ; (6 bytes: INT + 4 NOPs) at the start of the routines drawing the floor of the view (page, camera
 ; x, y) and of a rectangle of it (page, x0, y0, x1 + 1, y1, camera x, y). With shadows on, their
 ; way back is FLOOR_POST.
-probe_floor_all:
-        mov word [cs:floor_frame], 0x1C
-        mov byte [cs:floor_kind], 0
-        jmp floor_enter
-probe_floor_rect:
-        mov word [cs:floor_frame], 0x1E
-        mov byte [cs:floor_kind], 1
+        SHARED_probe_floor_all
+        SHARED_probe_floor_rect
 floor_enter:
         pop word [cs:resume]
         pop word [cs:resume + 2]
@@ -25370,60 +24608,9 @@ ghost_draw:
 ; struck in a shadow pass, the panel's or a see-through figure's, and the game's registers were
 ; put back as the pass had them: map mask 8, read map 3)
 vga_busy db 0
-vga_save:
-        mov byte [cs:vga_busy], 1
-        mov dx, 0x3C4
-        in al, dx
-        mov [cs:sc_index], al
-        mov al, 2
-        out dx, al
-        inc dx
-        in al, dx
-        mov [cs:sc_mask], al
-        mov dx, 0x3CE
-        in al, dx
-        mov [cs:gc_index], al
-        xor bx, bx
-.save:  mov al, [cs:gc_regs + bx]
-        out dx, al
-        inc dx
-        in al, dx
-        dec dx
-        mov [cs:gc_saved + bx], al
-        inc bx
-        cmp bx, 5
-        jb .save
-        mov ax, 0x0001                  ; no set/reset, no rotation, all bits, write mode 0
-        out dx, ax
-        mov ax, 0x0003
-        out dx, ax
-        mov ah, [cs:gc_saved + 3]
-        and ah, 0xF4
-        mov al, 5
-        out dx, ax
-        mov ax, 0xFF08
-        out dx, ax
-        ret
+        SHARED_vga_save
 
-vga_restore:
-        mov dx, 0x3CE
-        xor bx, bx
-.put:   mov al, [cs:gc_regs + bx]
-        mov ah, [cs:gc_saved + bx]
-        out dx, ax
-        inc bx
-        cmp bx, 5
-        jb .put
-        mov al, [cs:gc_index]
-        out dx, al
-        mov dx, 0x3C4
-        mov al, 2
-        mov ah, [cs:sc_mask]
-        out dx, ax
-        mov al, [cs:sc_index]
-        out dx, al
-        mov byte [cs:vga_busy], 0
-        ret
+        SHARED_vga_restore
 
 ; DARK: for each colour of the palette as it is now, the nearest to it at 3/4 strength among the
 ; colours the game doesn't animate (DARK_FIRST-DARK_LAST: 11-15 and 224-255 cycle, for fire and
@@ -25975,17 +25162,9 @@ dust_tick:                      ; DS = the game's
         pop es
         ret
 
-abs16:  or ax, ax
-        jns .pos
-        neg ax
-.pos:   ret
+        SHARED_abs16
 
-sgn16:  or ax, ax                       ; AX -> -1, 0 or 1
-        jz .z
-        mov ax, 1
-        jg .z
-        neg ax
-.z:     ret
+        SHARED_sgn16
 
 puff_raise:                             ; behind T_THING's feet at (T_X, T_Y), walking (T_DX, T_DY)
         mov ax, [cs:d_next]             ; the next in turn (the oldest, if all are in use)
@@ -26035,37 +25214,7 @@ puff_raise:                             ; behind T_THING's feet at (T_X, T_Y), w
         call puff_dirty
         ret
 
-puff_dirty:                             ; the puff at FS:SI: its ground to be drawn again (DS = the game's)
-        mov ax, [fs:si]
-        sub ax, 12
-        mov dx, [fs:si + 2]
-        sub dx, 12
-        cmp byte [cs:d_dirty], 0
-        je .first
-        cmp ax, [cs:d_x0]
-        jge .x1
-.first: mov [cs:d_x0], ax
-.x1:    add ax, 24
-        cmp byte [cs:d_dirty], 0
-        je .fx1
-        cmp ax, [cs:d_x1]
-        jle .y0
-.fx1:   mov [cs:d_x1], ax
-.y0:    cmp byte [cs:d_dirty], 0
-        je .fy0
-        cmp dx, [cs:d_y0]
-        jge .y1
-.fy0:   mov [cs:d_y0], dx
-.y1:    add dx, 19
-        cmp byte [cs:d_dirty], 0
-        je .fy1
-        cmp dx, [cs:d_y1]
-        jle .mark
-.fy1:   mov [cs:d_y1], dx
-.mark:  mov byte [cs:d_dirty], 1
-        mov ax, [fs:si + 6]
-        mov [cs:d_owner], ax
-        ret
+        SHARED_puff_dirty
 
 STILL_TICKS equ 3              ; how long no one has walked (nor the view moved) before DUST_NUDGE
 NUDGE_TICKS equ 4               ; ... and between its drawings of the view
@@ -26073,65 +25222,7 @@ NUDGE_TICKS equ 4               ; ... and between its drawings of the view
 ; DUST_NUDGE: with puffs to draw again while no one walks and the view stands still (when the
 ; game draws again round what moved anyway, DUST_UNION taking them in), their ground drawn again
 ; (D_X0 to D_Y1, as far as it is on screen: REDRAW_RECT) every NUDGE_TICKS, till they are gone
-dust_nudge:
-        mov ax, [CAM_X]                 ; (the view: when it last moved)
-        cmp ax, [cs:d_cam_x]
-        jne .cam
-        mov ax, [CAM_Y]
-        cmp ax, [cs:d_cam_y]
-        je .still
-.cam:   mov ax, [CAM_X]
-        mov [cs:d_cam_x], ax
-        mov ax, [CAM_Y]
-        mov [cs:d_cam_y], ax
-        mov ax, [cs:d_now]
-        mov [cs:d_walked_at], ax
-        ret
-.still: cmp byte [cs:d_dirty], 0
-        je .ret
-        mov ax, [cs:d_now]
-        sub ax, [cs:d_walked_at]
-        cmp ax, STILL_TICKS
-        jb .ret
-        mov ax, [cs:d_now]
-        sub ax, [cs:d_nudged]
-        cmp ax, NUDGE_TICKS
-        jb .ret
-        mov ax, [cs:d_now]
-        mov [cs:d_nudged], ax
-        mov byte [cs:d_dirty], 0
-        mov ax, [cs:d_x0]
-        sub ax, [CAM_X]
-        mov cx, [cs:d_x1]
-        sub cx, [CAM_X]
-        mov bx, [cs:d_y0]
-        sub bx, [CAM_Y]
-        mov dx, [cs:d_y1]
-        sub dx, [CAM_Y]
-        cmp cx, 0                       ; (off screen: nothing)
-        jl .ret
-        cmp ax, 0x13F
-        jg .ret
-        cmp dx, 0
-        jl .ret
-        cmp bx, 0xC7
-        jg .ret
-        or ax, ax
-        jge .x0
-        xor ax, ax
-.x0:    and ax, 0xFFFC                  ; (whole bytes of the planes, as LABEL_ERASE)
-        cmp cx, 0x13F
-        jle .x1
-        mov cx, 0x13F
-.x1:    or cx, 3
-        or bx, bx
-        jge .y1
-        xor bx, bx
-.y1:    cmp dx, 0xC7
-        jle .rect
-        mov dx, 0xC7
-.rect:  call redraw_rect
-.ret:   ret
+        SHARED_dust_nudge
 
 ; VIEW_AGAIN: the view drawn again, all of it, as the game does when the view is centred where it
 ; is (DS = the game's). The figures are never marked changed to have them drawn again: in a fight
@@ -26236,14 +25327,7 @@ label_tick:
 .ret:   ret
 
 ; LABEL_ADOPT: label FS:DI (the Loader's slot, DL its number) shown from now at AX, BX (SI its state)
-label_adopt:
-        mov [cs:si + LS_SEEN], dl
-        mov [cs:si + LS_X], ax
-        mov [cs:si + LS_Y], bx
-        mov ax, [fs:di + 1]
-        mov [cs:si + LS_W], ax          ; (and LS_H)
-        mov byte [cs:si + LS_SHOWN], 1
-        ret
+        SHARED_label_adopt
 
 ; LABEL_WHERE: CF clear and AX, BX the top left on screen of label DI (the Loader's slot) if it is
 ; to be shown: one, its size in bounds, on the map, its thing in OBJ_LIST; DS the game's; CX kept
@@ -26618,21 +25702,7 @@ panel_cy   dw 0
 ; into (not while the game shows the other screen: a window over the map, the panel not on it), and
 ; the game on the map (SCREEN_IS 1: not a full screen, USE or the inventory, drawn on that page over
 ; the map, which would else be drawn round the panel and its clicks kept from it)
-panel_live:
-        cmp byte [cs:panel_shown], 0
-        je .no
-        push es
-        push ax
-        mov es, [cs:panel_pseg]
-        mov ax, [es:SHOWN_PAGE]
-        cmp ax, [cs:panel_page]
-        pop ax
-        pop es
-        jne .ret
-        call on_map
-.ret:   ret
-.no:    cmp sp, 0                       ; (ZF clear)
-        ret
+        SHARED_panel_live
 
 ; PANEL_MOUSE: in MOUSE_EVENT (AX the events, BX the buttons held, CX, DX where): the pointer
 ; noted for the Loader; a left press on the panel, while it is shown, counted and kept from the
@@ -26773,27 +25843,7 @@ POINTER_XY   equ 0xA137         ; where it is to be drawn, top left (x, y)
 POINTER_WAS  equ 0xA13F         ; where it was last drawn (x, y)
 POINTER_KIND equ 0xA17F         ; and its kind then (-1: none)
 POINTER_MOST equ 32             ; (the widest and tallest a pointer may be)
-panel_draw_around:
-        cmp word [POINTER_HIDE], 0
-        jne .whole
-        cmp word [POINTER_KIND], -1
-        je .whole
-        push ax
-        mov ax, [POINTER_WAS]
-        sar ax, 2
-        mov [cs:pb_sx0], ax
-        add ax, POINTER_MOST / 4 + 1
-        mov [cs:pb_sx1], ax
-        mov ax, [POINTER_WAS + 2]
-        mov [cs:pb_sy0], ax
-        add ax, POINTER_MOST
-        mov [cs:pb_sy1], ax
-        pop ax
-        mov byte [cs:pb_skip], 1
-        call panel_draw
-        mov byte [cs:pb_skip], 0
-        ret
-.whole: jmp panel_draw
+        SHARED_panel_draw_around
 
 ; PROBE_POINTER: INT VEC_POINTER replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack check)
 ; in the game's routine that draws its pointer (28D1:093D). The panel is put first if the pointer
@@ -26813,23 +25863,7 @@ probe_pointer:
 
 ; POINTER_PANEL: the panel put (PANEL_DRAW) if it is on screen and the pointer about to be drawn
 ; over it, or last drawn over it; registers kept
-pointer_panel:
-        cmp byte [cs:pointer_busy], 0
-        jne .ret
-        cmp word [POINTER_HIDE], 0
-        jne .ret
-        call panel_live
-        jne .ret
-        push si
-        mov si, POINTER_XY
-        call pointer_over
-        je .draw
-        mov si, POINTER_WAS
-        call pointer_over
-        jne .out
-.draw:  call panel_draw
-.out:   pop si
-.ret:   ret
+        SHARED_pointer_panel
 
 ; POINTER_OVER: ZF set if a pointer at DS:SI (x, y: top left) is over the panel; registers kept
 pointer_over:
@@ -27049,17 +26083,7 @@ pb_clamp:
 SCREEN_IS  equ 0x0BC9
 
 ; ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
-on_map:
-        push es
-        push ax
-        mov ax, [cs:pointer_ds]
-        cmp ax, 1                       ; (not known yet: ZF clear)
-        jb .out
-        mov es, ax
-        cmp word [es:SCREEN_IS], 1
-.out:   pop ax
-        pop es
-        ret
+        SHARED_on_map
 pointer_ds  dw 0                ; the game's DS (PROBE_POINTER's)
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
@@ -27143,30 +26167,7 @@ ghost_union:
 .ret:   ret
 
 ; DUST_PASS: in SHADOW_PASS (the VGA's registers kept; the clip, camera and page known), each puff
-dust_pass:
-        cmp word [cs:dust_on], 0
-        je .ret
-        push ds
-        xor ax, ax
-        mov ds, ax
-        mov ax, [BIOS_TICKS]
-        pop ds
-        mov [cs:d_now], ax
-        cmp byte [cs:d_built], 0
-        jne .built
-        call dust_build
-.built: mov si, FAR_PUFFS
-        mov cx, PUFFS
-.puff:  cmp byte [fs:si + 10], 0
-        je .next
-        push cx
-        push si
-        call puff_draw
-        pop si
-        pop cx
-.next:  add si, PUFF_SIZE
-        loop .puff
-.ret:   ret
+        SHARED_dust_pass
 
 puff_draw:                              ; the puff at FS:SI (the far block)
         mov ax, [cs:d_now]
@@ -27377,103 +26378,7 @@ puff_draw:                              ; the puff at FS:SI (the far block)
 ; middle out (|y| from 0 to RY), the widest |x| inside and, for each |x| from 0 to RX, how thick the
 ; dust is there (0: outside the ellipse) and (high byte) whether in its core, as PUFF_DRAW had them
 ; worked out for each row it drew; D_BLOCKS: where each age's rows start
-dust_build:
-        pusha
-        push es
-        mov es, [cs:far_seg]
-        mov di, FAR_DUST
-        xor bx, bx                      ; BX: the age
-.age:   mov si, bx
-        shl si, 1
-        mov [cs:d_blocks + si], di
-        mov ax, bx                      ; across, and up and down (as PUFF_DRAW)
-        shl ax, 3
-        xor dx, dx
-        mov cx, DUST_LIFE
-        div cx
-        add ax, 3
-        mov [cs:d_rx], ax
-        imul ax, ax, 9
-        add ax, 8
-        shr ax, 4
-        mov [cs:d_ry], ax
-        mov al, [cs:dust_dens + bx]
-        xor ah, ah
-        mov [cs:d_dens], ax
-        mov al, [cs:dust_core + bx]
-        mov [cs:d_core], ax
-        push bx
-        mov cx, [cs:d_rx]               ; how far out it is across, (x / rx)^2 of 256, by |x|
-        imul cx, cx
-        xor si, si
-.tab:   mov ax, si
-        imul ax, ax
-        shl ax, 8
-        xor dx, dx
-        div cx
-        mov bx, si
-        shl bx, 1
-        mov [cs:d_extab + bx], ax
-        inc si
-        cmp si, [cs:d_rx]
-        jbe .tab
-        mov word [cs:d_yy], 0
-.row:   mov ax, [cs:d_yy]               ; how far out it is, up and down: (y / ry)^2, of 256
-        imul ax, ax
-        shl ax, 8
-        mov cx, [cs:d_ry]
-        imul cx, cx
-        xor dx, dx
-        div cx
-        mov [cs:d_ey], ax
-        mov word [cs:d_xmax], -1        ; (the widest |x| inside, on this row)
-        xor si, si
-.thr:   mov bx, si
-        shl bx, 1
-        mov ax, [cs:d_extab + bx]       ; and across
-        add ax, [cs:d_ey]
-        mov word [cs:d_thrcore + bx], 0
-        cmp ax, 256
-        ja .nthr
-        mov [cs:d_xmax], si
-        cmp ax, [cs:d_core]
-        setb byte [cs:d_thrcore + bx + 1]
-        imul ax, ax, 154                ; thinner toward the edge
-        shr ax, 8
-        neg ax
-        add ax, 256
-        mul word [cs:d_dens]
-        shr ax, 8
-        mov [cs:d_thrcore + bx], al
-.nthr:  inc si
-        cmp si, [cs:d_rx]
-        jbe .thr
-        mov ax, [cs:d_xmax]             ; the row: the widest |x|, then x from -RX to RX
-        stosw
-        mov si, [cs:d_rx]
-        neg si
-.put:   mov bx, si
-        or bx, bx
-        jns .abs
-        neg bx
-.abs:   shl bx, 1
-        mov ax, [cs:d_thrcore + bx]
-        stosw
-        inc si
-        cmp si, [cs:d_rx]
-        jle .put
-        inc word [cs:d_yy]
-        mov ax, [cs:d_yy]
-        cmp ax, [cs:d_ry]
-        jbe .row
-        pop bx
-        inc bx
-        cmp bx, DUST_LIFE
-        jb .age
-        mov byte [cs:d_built], 1
-        pop es
-        popa
-        ret
+        SHARED_dust_build
 ; (the table's size: as DUST_BUILD fills it)
 %assign dbytes 0
 %assign age 0
@@ -27613,28 +26518,7 @@ ring_pass:
         loop .thing
 .ret:   ret
 
-ring_points:                            ; CX points at CS:SI round (R_FX, R_FY): each a quarter's
-.pt:    push cx                         ;   (x << 3 | y, x and y not negative), with its mirror
-        mov al, [cs:si]                 ;   images (x and y each negated, if not 0)
-        inc si
-        movzx bx, al
-        shr bx, 3
-        and ax, 7
-        mov [cs:r_qx], bx
-        mov [cs:r_qy], ax
-        call ring_dot                   ; (x, y)
-        neg word [cs:r_qx]
-        jz .neg_y
-        call ring_dot                   ; (-x, y)
-.neg_y: neg word [cs:r_qy]
-        jz .next
-        call ring_dot                   ; (-x, -y), or (0, -y)
-        neg word [cs:r_qx]
-        jz .next
-        call ring_dot                   ; (x, -y)
-.next:  pop cx
-        loop .pt
-        ret
+        SHARED_ring_points
 
 ring_dot:                               ; the point (R_QX, R_QY) round (R_FX, R_FY) reddened, if in
         mov bx, [cs:r_qx]               ;   the clip; SI kept
@@ -27824,63 +26708,7 @@ KEY_I       equ 0x1769
 KEY_SHIFT_I equ 0x1749
 KEY_O       equ 0x186F
 KEY_ESCAPE  equ 0x011B
-map_key:
-        push bx
-        mov bl, 'm'
-        cmp ax, KEY_M
-        je .key
-        cmp ax, KEY_SHIFT_M
-        je .key
-        mov bl, 'u'
-        cmp ax, KEY_U
-        je .key
-        cmp ax, KEY_SHIFT_U
-        je .key
-        mov bl, 'i'
-        cmp ax, KEY_I
-        je .key
-        cmp ax, KEY_SHIFT_I
-        je .key
-        cmp byte [cs:overhead], 'm'     ; another key: the overhead map's are its own
-        je .ret
-        cmp byte [cs:mk_read], 0
-        je .ret
-        mov byte [cs:overhead], 0
-        jmp .ret
-.key:   push ax
-        push es
-        xor ax, ax
-        mov es, ax
-        mov ax, [es:0x46C]
-        sub ax, [cs:map_tick]
-        pop es
-        cmp ax, L_FRESH
-        pop ax
-        ja .up
-        call on_map
-        jne .ret
-        cmp byte [cs:mk_read], 0
-        je .fresh
-        mov [cs:overhead], bl
-.fresh: cmp bl, 'm'
-        jne .ret
-        mov ax, KEY_O
-        jmp .ret
-.up:    cmp [cs:overhead], bl
-        jne .other
-        mov ax, KEY_ESCAPE
-        jmp .ret
-.other: cmp bl, 'm'
-        je .ret
-        cmp byte [cs:overhead], 'u'     ; (U on the inventory, I on USE: the game switches)
-        je .move
-        cmp byte [cs:overhead], 'i'
-        jne .ret
-.move:  cmp byte [cs:mk_read], 0
-        je .ret
-        mov [cs:overhead], bl
-.ret:   pop bx
-        ret
+        SHARED_map_key
 mk_read db 0                    ; (1 when MAP_KEY's key is being read, 0 when peeked at)
 overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0 none)
 
