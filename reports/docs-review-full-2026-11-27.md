@@ -109,10 +109,14 @@ and page counts found only the lines fixed in part 4.
 - **Fixed**: RAVAGER.md's "Not in the sequel yet" lacked **scrolling the map with the mouse wheel**:
   `RavDiceLog.PASS` has no `scroll` step and `ravlog.PASS_LEFT_OUT` says "not ported"; DSCLOG2 has no wheel
   code. Now listed (a gap under the both-games rule).
-- **Unverified for the sequel** (in neither of RAVAGER's lists): more save pages (2 to 4), 29 characters in
-  the roster, game speed and steady pace, the view in fights, the pointer in scenes, the whole party in
-  view, and the Effects screen's click. Each needs a look at the sequel's patch; for the audit thread's
-  sequel-side pass.
+- **Settled for the sequel** (in neither of RAVAGER's lists at first; the follow-up PR, from the sequel's
+  patches, `ravager.PATCHES`): the Effects screen's click is there (`effects_click_low/high`), now listed;
+  more save pages (2 to 4), 29 characters in the roster, steady pace, the view in fights, the pointer in
+  scenes and the whole party in view have no patch in the sequel (Shattered Lands' `save_page`,
+  `characters_*`, `pace_pass`, `camera_still`, `cine_step`/`mouse_set`, `party_spread`), now on "Not in the
+  sequel yet". Game speed itself applies to both games (`launch.cpu_lines`).
+- **ITEMS.md had nothing of the sequel** (the user's ask, after the review): it now has every Wake of the
+  Ravager item, from the sequel's data, with its icons.
 
 ### 10. Screenshots
 
@@ -124,11 +128,12 @@ All 65 pictures in `docs/` opened. None is an orphan (each is referenced by a sh
   that the last pass's Ctrl+F5 loop missed (now in the guide's pictures recipes).
 - **Current** (checked): `show-usable.png` has no party in it; `half-elves.png` shows the bare race figures
   on purpose and its text says so; the Loader's window pictures were retaken this morning.
-- **Still before the outfits, small**: the party's 25-pixel figures on the Effects and inventory screens in
-  `new-spells-effects.png`, `effects-weapons.png`, `effects-charges.png`, `default-party-gerakis.png` and
-  `kalzith.png`, and the tiny map figures in `pens-asks.png`, `pens-asks-dead.png`, `semyon-escape.png`
-  and `kalzith-body.png`. What each shows (a spell's line, a box, a talk) is still right; the figures are
-  incidental. Retake when those screens next change; not worth a day's replay of the pens' talks now.
+- **Before the outfits, retaken** (the follow-up PR): `kalzith.png`'s talk (its shop half kept: no map
+  figures) and `kalzith-body.png`. **Corrected**: this pass first listed nine pictures; the Effects,
+  inventory and USE screens' portraits aren't dressed by the outfits (only the map figures and the creation
+  figure are), so `new-spells-effects.png`, `effects-weapons.png`, `effects-charges.png` and
+  `default-party-gerakis.png` were current, and the figures in `pens-asks*.png` and `semyon-escape.png` are
+  the Trustee, Dinos, Scar's gladiators and Semyon, not the party.
 - `new-priest-spells.png` is 1920x1600, ten USE-screen boxes too small to read on the page at its shown
   width. A table of the ten spells (the guide has one) does that job; the picture could shrink to two or
   three boxes as a sample.
@@ -157,13 +162,13 @@ aren't (part 5, owner).
 
 1. **Wrong** (fixed): README's start "through GOG's own DOSBox"; README's contradictory Linux lines;
    FEATURES' "mul" Gerakis; Picture and music tied to GOG's DOSBox; DEVELOPMENT's twelve manual pages.
-2. **Missing** (fixed): the sequel's combat log on RAVAGER.md; the mouse-wheel scrolling gap. (Open:
-   seven features unverified for the sequel, part 9.)
+2. **Missing** (fixed): the sequel's combat log on RAVAGER.md; the mouse-wheel scrolling gap; the seven
+   features unverified for the sequel (part 9: six more gaps listed); the sequel's items in ITEMS.md.
 3. **Structure**: sequel gear moved to RAVAGER.md (fixed); the guide's Quality of life cut (fixed);
    **(owner)** the Options reference to the README, the other sequel-only passages to RAVAGER.md, and one
    home for the always-on list.
 4. **Links**: the project README's sequel link (fixed). `test_doclinks` and `test_manual` pass.
-5. **Pictures**: `fogbolt.png` retaken; nine with small pre-outfit figures listed; `new-priest-spells.png`
+5. **Pictures**: `fogbolt.png`, `kalzith.png` and `kalzith-body.png` retaken; `new-priest-spells.png`
    too big to read.
 6. **Reader tasks**: none new.
 7. **Bloat**: RAVAGER's long bullets, FEATURES' New items paragraph (proposals above).
@@ -175,5 +180,5 @@ The `.bat` files; the Options labels; `manual.PAGES`; the version (2.19.2) in th
 
 ## Not verified
 
-The seven sequel features in part 9; the ITEMS, KITS, CREATURES, PEOPLE, GAME-BUGS, HOW-THE-GAME-WORKS,
+The ITEMS, KITS, CREATURES, PEOPLE, GAME-BUGS, HOW-THE-GAME-WORKS,
 WEAPON-SPECS and DICE-LOG pages beyond the searches (the follow-up review read them today).

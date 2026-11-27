@@ -1089,7 +1089,10 @@ the game's data by `python -m dsloader.docicons GAME_FOLDER`, from the Loader's
 copy of `SEGOBJEX.GFF` in `dos/` (start the game from the Loader once first) and
 the game's palette: each picture twice its size, the rest transparent.
 `docicons.ICONS` names each image's object; a new item needs its line there, and
-`tests/test_docicons.py` checks that every icon the guide shows is there.
+`tests/test_docicons.py` checks that every icon the guide shows is there. Wake of the Ravager's (ITEMS.md's
+"Wake of the Ravager's items", `wotr-*.png`) come from the sequel's own `OBJEX.GFF` and palette (RESOURCE.GFF's
+PAL 1000) with `--ravager WOTR_FOLDER`, by `docicons.RAV_ICONS`; its pictures are PLNR (`wotrart.decode_plnr`)
+or PLAN, the same header and colour map with every pixel's code unpacked (`docicons.decode_plan`).
 
 **Dunesong at the Bowyer's target.** Shooting at the target in Teaquetzl runs script 178, which
 counts the bows in hand (objects 1017, 1039 and 30007: the bow, the Bow +2 and Phrain's Bow) into
