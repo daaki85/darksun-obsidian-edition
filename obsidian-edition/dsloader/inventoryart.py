@@ -1,6 +1,6 @@
-"""Dress the two human inventory poses over the figure in the player's RESOURCE.GFF.
+"""Dress every race's inventory figure in the player's RESOURCE.GFF for the selected character's classes.
 
-Each class's picture is a layer in inventory-garments.zip (`{figure}/body{class}`) over the stock
+Each build's picture is a layer in inventory-garments.zip (`entry`: `{figure}/body{classes}`) over the stock
 figure: a painted pixel replaces the stock one, CLEAR cuts back to the parchment, and an absent
 pixel keeps the stock. A whole repainted figure is a layer too: the import command turns a picture
 painted over the whole figure into one, keeping the stock head (HEAD) pixel for pixel unless told
@@ -9,11 +9,14 @@ is drawn in the area's palette, so a colour from the changing ranges (80-127 and
 as the painter meant only in some areas: the Druid's tan kilt was grey-green in the slave pens.
 
     python -m dsloader.inventoryart import GAME_DIR FIGURE CLASS PICTURE [--repaint-head]
+    python -m dsloader.inventoryart import-roster GAME_DIR FOLDER
     python -m dsloader.inventoryart steady GAME_DIR
 
 FIGURE is 0 (man) or 1 (woman), CLASS 1-8 (Cleric, Druid, Fighter, Gladiator, Preserver,
 Psionicist, Ranger, Thief). PICTURE is the whole figure at native size (48x95 for the man, 44x88
-for the woman), on a transparent background or on the colour of its top-left pixel. `steady`
+for the woman), on a transparent background or on the colour of its top-left pixel. `import-roster`
+takes a whole roster: FOLDER's subfolders named as FIGURES, each picture named by its classes
+("cleric-fighter-thief.png"), the thri-kreen's one picture for all its builds (THRI_KREEN). `steady`
 moves every layer's changing colours to fixed ones.
 """
 
@@ -26,12 +29,14 @@ from . import art, icons
 
 FIRST = 0x6000
 CLEAR = 255  # A painted cutout exposes the parchment. An absent pixel keeps retail art.
-HUMAN = tuple((c,) for c in range(1, 9))
-GLADIATOR = ((4,),)
-# Each figure's classes with a picture, by figure (0 the human man ... 11 the halfling woman): the
-# humans in all eight, the other races' women as Gladiators (a single class: a multiclass falls back
-# to the stock picture).
-BUILDS = (HUMAN, HUMAN, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR)
+CLASSES = ("cleric", "druid", "fighter", "gladiator", "preserver", "psionicist", "ranger", "thief")  # (1-8)
+# The figures by the roster's folder names (0 the human man ... 13 the thri-kreen).
+FIGURES = ("human-male", "human-female", "dwarf-male", "dwarf-female", "elf-male", "elf-female",
+           "half-elf-male", "half-elf-female", "half-giant-male", "half-giant-female", "halfling-male",
+           "halfling-female", "mul", "thri-kreen")
+# The thri-kreen's one picture serves each of its builds (the roster's general.png).
+THRI_KREEN = ((1,), (2,), (3,), (4,), (6,), (7,), (1, 3), (1, 6), (1, 7), (2, 3), (2, 6), (3, 6), (6, 7),
+              (1, 3, 6), (1, 6, 7), (2, 3, 6))
 ARCHIVE = Path(__file__).with_name("inventory-garments.zip")
 # The stock head each human figure keeps through every class, as (top, bottom, left, right),
 # bottom and right excluded: the man's face below the stock helmet (his hair is the painter's, one
@@ -46,16 +51,30 @@ def picture_id(figure, classes):
     return FIRST + (figure << 8) + sum(1 << (c - 1) for c in classes)
 
 
+def entry(figure, classes):
+    """The layer's name in ARCHIVE: `{figure}/body{class}`, a multiclass's classes joined by "-"."""
+    return f"{figure}/body" + "-".join(str(c) for c in sorted(classes))
+
+
+def builds(names):
+    """{figure: [classes, ...]} of the layers named NAMES (`entry`'s)."""
+    out = {}
+    for name in names:
+        figure, _, body = name.partition("/body")
+        out.setdefault(int(figure), []).append(tuple(int(c) for c in body.split("-")))
+    return out
+
+
 def chunks(resources):
     result = {}
     with ZipFile(ARCHIVE) as archive:
-        for figure, builds in enumerate(BUILDS):
+        for figure, wanted in sorted(builds(archive.namelist()).items()):
             original = resources.get(("BMP ", art.FIGURE_FIRST + figure))
             if not original:
                 continue
             width, height, base = art.decode_frame(original)
-            for classes in builds:
-                w, h, paint = art.decode_frame(archive.read(f"{figure}/body{classes[0]}"))
+            for classes in wanted:
+                w, h, paint = art.decode_frame(archive.read(entry(figure, classes)))
                 if (w, h) != (width, height):
                     continue  # Another edition or custom figure with different proportions.
                 rows = [row[:] for row in base]
@@ -160,9 +179,26 @@ def main(argv: List[str]) -> int:
         _, _, stock = art.decode_frame(gameart.figures[art.FIGURE_FIRST + figure])
         head = None if "--repaint-head" in argv else HEAD.get(figure)
         layer = layer_from_picture(read_picture(path), stock, gameart.colours, head)
-        _rewrite({f"{figure}/body{cls}": icons.encode(layer)})
+        _rewrite({entry(figure, (cls,)): icons.encode(layer)})
         painted = sum(p is not None for row in layer for p in row)
         print(f"{figure}/body{cls}: {painted} pixels over the stock figure")
+        return 0
+    if len(argv) == 3 and argv[0] == "import-roster":
+        gameart = art.GameArt(argv[1])
+        entries = {}
+        for figure, folder in enumerate(FIGURES):
+            _, _, stock = art.decode_frame(gameart.figures[art.FIGURE_FIRST + figure])
+            for path in sorted((Path(argv[2]) / folder).glob("*.png")):
+                if folder == "thri-kreen":
+                    wanted = THRI_KREEN
+                else:
+                    wanted = (tuple(sorted(CLASSES.index(c) + 1 for c in path.stem.split("-"))),)
+                for classes in wanted:
+                    head = HEAD.get(figure) if 8 not in classes else None  # (a Thief's hood)
+                    layer = layer_from_picture(read_picture(path), stock, gameart.colours, head)
+                    entries[entry(figure, classes)] = icons.encode(layer)
+        _rewrite(entries)
+        print(f"{len(entries)} layers from {argv[2]}")
         return 0
     if len(argv) == 2 and argv[0] == "steady":
         colours = art.GameArt(argv[1]).colours

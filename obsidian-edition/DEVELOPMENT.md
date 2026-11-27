@@ -146,7 +146,7 @@ nasm -f bin -I dos/ -o dos/DSCLOG2.EXE dos/dsclog2.asm
 ```
 
 Both include `dos/save_bands.inc` (the saving throws' code and tables), hence `-I dos/`. The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGve` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvf` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 

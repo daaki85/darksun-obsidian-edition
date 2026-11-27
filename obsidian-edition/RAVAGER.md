@@ -261,8 +261,16 @@ bigger character sheets) as it goes in (a game already running lists it from its
   Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
   sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
   out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
-  two-thirds of their height for Shattered Lands' steeper view (the walls keep theirs). 275 pictures and
-  54 lowered; the air and fire drakes seen fighting on their own maps.
+  two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
+  freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
+  and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,
+  including Forest beds, the Mines 1 worktable and the volcano tables and stools. The Forest dining sets, the Veiled Alliance crate and vase, and
+  the two-piece Mines 3 throne now have coordinated heights and placements. The Jann camp cushions sit lower around the Sultan,
+  and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
+  use the same proportions. Jumah’s table still partly conceals the key. In the ruined Alliance headquarters, the loose pillows and
+  broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3.
+  In El’s Temple the bowls of the six braziers sit lower beneath their curling smoke. When Tantris rises, the empty throne keeps its lowered height and its place between the braziers. The barrel and sack pile shared by the mines and Tyr
+  sits lower while both barrel lids remain visible over the Tyr wall. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,
@@ -270,12 +278,12 @@ bigger character sheets) as it goes in (a game already running lists it from its
   buttons stay the sequel's, since they sit on its own talk boxes. Without a Shattered Lands folder the
   sequel's own are used. The box "Shattered Lands' screens and icons in Wake of the Ravager", in the Options
   tab's Wake of the Ravager section, turns it off (from the sequel's next start).
-- **Class pictures on the inventory**: as in Shattered Lands, a human shows a full-length picture in the
-  active class's clothes (eight classes, the man and the woman), and a dwarf, elf, half-elf, half-giant or
-  halfling woman who is a Gladiator a Gladiator's. They are Shattered Lands' figures, dressed as there,
-  taken from your Shattered Lands folder each start and put in the sequel's colours that no area changes;
-  everyone else (the other races' men, the mul, the thri-kreen, a class without a picture) keeps the
-  sequel's own full-length picture. Without a Shattered Lands folder the sequel's own are used throughout.
+- **Class pictures on the inventory**: as in Shattered Lands, the inventory shows a full-length picture
+  dressed for the character's classes: a human in the active class's clothes (eight classes, the man and
+  the woman), the dwarf, elf, half-elf, half-giant, halfling and mul in a picture for each class and
+  multiclass, and the thri-kreen in one picture for all its builds. They are Shattered Lands' figures,
+  dressed as there, taken from your Shattered Lands folder each start and put in the sequel's colours that
+  no area changes. Without a Shattered Lands folder the sequel's own pictures are used throughout.
 - **Talk portraits at Shattered Lands' size**: the sequel's faces in its talk and message boxes were 72 by
   72 in a box 72 high, the text starting a quarter of the way across. The Loader's copy draws them as
   Shattered Lands does: a 32 by 32 face in a 48-pixel stone frame at the box's top left, the box 58 high

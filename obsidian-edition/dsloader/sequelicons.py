@@ -86,17 +86,20 @@ GAME_GREAT_AXE_PICTURE = 2727
 GAME_GREAT_AXE_LOOK = ("magic great axe", "metal", None)
 
 
-def decode(chunk: bytes) -> Rows:
-    """One of the sequel's pictures as rows of its palette numbers (None: none): a PLNR or PLAN
-    picture, or one of Shattered Lands' kind."""
-    offset, = struct.unpack_from("<I", chunk, 6)
+def decode(chunk: bytes, index: int = 0) -> Rows:
+    """Read one PLNR, packed PLAN or run-length frame as rows of palette indices."""
+    count, = struct.unpack_from("<H", chunk, 4)
+    if not 0 <= index < count:
+        raise ValueError(f"no frame {index}")
+    offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
     width, height = struct.unpack_from("<HH", chunk, offset)
     at = offset + 4
     tag = chunk[at:at + 5]
     if tag == wotrart.PLNR:
-        return [[p or None for p in row] for row in wotrart.decode_plnr(chunk)]
+        return [[p or None for p in row] for row in wotrart.decode_plnr(chunk, index)]
     if tag != PLAN:
-        return icons.decode(chunk)
+        from .art import decode_frame
+        return decode_frame(chunk, index)[2]
     bits = chunk[at + 5]
     colours = chunk[at + 6:at + 6 + (1 << bits)]
     pixels: List[int] = []

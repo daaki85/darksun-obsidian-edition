@@ -11,7 +11,7 @@ P = int(sys.argv[5]) if len(sys.argv) > 5 else 250
 turn = gd.whose_turn(); cr = gd.combatant_creature(turn)
 seg = (gd.load_seg + 0x37BD) * 16
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGve')
+hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGvf')
 
 
 def pos():

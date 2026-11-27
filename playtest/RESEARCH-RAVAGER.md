@@ -306,10 +306,20 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   6541 at square 85, 13: after the jump the view stays the Roost's; the camera DS:1408h written and USE opened
   and closed redraws it, the rock rises as the earth drake, but a fight there hangs: the party isn't set up), 0x44 (the Tarrasque: the area 31-36, 46
   runs GPL 124, the cinematic and the fight).
+  The Forest jump can leave the camera behind. The overhead map opens with O, and moving the pointer to the edge scrolls the scenery. Check the room landmarks before treating a capture as evidence for a furniture placement.
+- **Mosaic museum** ([DOSBox playtest and captures](logs/2026-11-27-ravager-mosaic-museum.md)). Use `ravjump.py 0x3C 39 24` from the Roost fixture to reach the interactive rows. Row 13 lands across the wall. Look at the head of Horace or Ellith, dismiss the name, select the green hand and press 1 to remove the bust. Look picks the detached bust up. Click the empty stand to seat Horace, or open inventory with I and click a backpack slot to store Ellith. The sword breaks Khildril. Pick up the bookcase beside Fletch and set it elsewhere, then pick up the exposed book and click Biblid.
+- **Completing the museum mirror** ([playtest](logs/2026-11-27-ravager-mosaic-mirror.md)). Square (40, 34) puts the party near the cloth, hand mirror and bag. Carry them in the backpack to the stands. Drop them on clear floor so Look can pick them up again, then click the appropriate bust with the item. Once the busts match, pick up each of the eight shards and click the wall mirror. After the eighth, walk north through the repaired glass to the Veiled Alliance.
+- **Tantris’s throne and Ikibod’s workbench** ([DOSBox playtest](logs/2026-11-27-ravager-throne-and-workshop.md)). The Roost travel fixture to temple square (64, 13) frames all six braziers. Look at Tantris on the throne and advance his warning to see the seat after he leaves. Region script GPL 256 exchanges object 562 for the empty throne, 3530, stored in Limbo. In Mosaic, square (18, 37) triggers Ikibod’s greeting. End the conversation to see his counter and its bottles unobstructed.
 - **A figure's frame live** (2026-11-27, logs/2026-11-27-ravager-encounters.md): a map record (DS:67BBh + 25h n)
   holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
   script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
   stock game (`RAV_SKIP=figures`) at the same jump is the control for any redrawn figure.
+- **Looking at any spot of a region** (2026-11-27, logs/2026-11-27-ravager-furniture-review.md): after a
+  jump, write the view's top left (DS:1408h, two words) to the spot less (160, 100), then U and Escape (USE
+  opened and closed) redraw the map there, the party left where it stands: a picture of any placement
+  without walking. Pick the jump's square as the open GMAP square (0) nearest the spot. A jump into Mines 3
+  near the throne (3Ah, 15, 46) lands in a fight.
+- **Checking the two-piece red bed** ([join playtest](logs/2026-11-27-ravager-furniture-joins.md)). In a private Roost travel fixture, Alliance square (6, 26), Tyr (27, 5) and Mines 1 (122, 83) show the beds. The second Alliance layout requires the destroyed-headquarters story state. For that throwaway visit, set bit 2000h of script variable 87h:55h just before travelling to (70, 26). Region script MAS 51 reads that bit to select the eastern camera bounds. Launch fresh for each fixture if the game reuses the previous talk script. Confirm the scenery against the region map. Never save the fixture state.
 - **A new game** (2026-11-25, logs/2026-11-25-ravager-weapon-gaps.md): the title menu's START GAME (game
   159,75), the opening film about 75 s, then the opening talk (3, Return x4) and the ambush: C, the four
   lower small icons (47,53 / 98,53 / 47,112 / 98,112), Escape, about 90 s to "Each party member receives

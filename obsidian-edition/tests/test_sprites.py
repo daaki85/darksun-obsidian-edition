@@ -195,6 +195,22 @@ class SpriteTests(unittest.TestCase):
         dresser.gd = FakeGame(figures=[0, 0, 0])
         self.assertEqual(dresser.objects(), {300: (0, 300), 315: (1, 300), 316: (2, 300)})
 
+    def test_small_figures_named(self):
+        """DSCLOG's SMALL_PICS: each dressed member's walking picture (a spare's for the second of a
+        figure), 0 for one not dressed yet, all 0 on the creation screen; written only on a change."""
+        dresser = sprites.Dresser.__new__(sprites.Dresser)
+        dresser.pics = sprites.Pictures(game_chunks())
+        dresser.gd = FakeGame(figures=[0, 0, 0])
+        dresser.shown = {300: (), 316: ()}
+        walk, spare = sprites.picture_ids(300)[0], sprites.picture_ids(316)[0]
+        self.assertEqual(dresser.small_pictures(), [walk, 0, spare, 0])
+        hdr = 0x9000
+        dresser.write_small(hdr)
+        at = hdr + sprites.TSR_SMALL_PICS
+        self.assertEqual(struct.unpack("<4H", dresser.gd.guest.read(at, 8)), (walk, 0, spare, 0))
+        dresser.write_small(hdr, creating=True)
+        self.assertEqual(dresser.gd.guest.read(at, 8), bytes(8))
+
     def test_pointed_at_the_spare(self):
         """On the map: the member's picture named the spare and their slot emptied (the game loads
         it); the first member left as they were; back to their own when no longer sharing; a save's
