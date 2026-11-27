@@ -156,7 +156,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
   Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
   those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
   Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
-  DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
+  DAM lines the attacks a round and the damage the attack has (the off hand's one a round, and the kits'
+  damage and a Battle Mage's, Crusader's or Mind Warrior's attacks too), the creation screen's THAC0 a
+  Scholar's, and
   the Effects screen's lower panel each one's weapon kinds, and an effect's charges in its name
   (ARMOR (14 CHARGES)) ([the Effects screen](FEATURES.md#the-effects-screen)). The Look box's whole description of a monster comes up in the
   dialogue window as the box closes there too. [Choosing an
@@ -368,10 +370,7 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: the kits' part of the inventory's and View Character's DAM lines (the kits' damage is in the
-  attack; the line doesn't show it yet), and of the creation screen's THAC0 (the THAC0 the character gets
-  has it). [KITS.md](KITS.md) says which kits the sequel
-  has.
+- **Kits**: [KITS.md](KITS.md) says which kits the sequel has.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
   sequel's map scrolls only at the screen's edge, as the game has it), [the view in
   fights](FEATURES.md#the-view-in-fights), [the pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)
