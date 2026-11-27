@@ -1,6 +1,25 @@
 """Finish the human wrap and kilt folds in native pose coordinates."""
 from dsloader import classoutfits as co
 
+# One clasp where the diagonal strap meets the moving hip.
+CLASPS = {
+    2095: ((6, 14), (13, 14), (4, 15), (6, 13), (7, 13), (7, 13), (7, 13),
+           (8, 14), (9, 15), (10, 14), (10, 15), (5, 15), (7, 15), (4, 14), (7, 15),
+           (6, 23), (10, 12), (17, 13), (7, 18), (8, 21), (19, 14), (14, 21),
+           (7, 15), (6, 12), (6, 15), (10, 18), (7, 17), (8, 12), (7, 7)),
+    2099: ((6, 14), (12, 14), (5, 14), (5, 14), (7, 13), (7, 13), (6, 13),
+           (11, 14), (12, 14), (13, 14), (12, 14), (8, 13), (11, 14), (13, 15), (9, 14),
+           (7, 23), (9, 14), (16, 13), (8, 17), (11, 22), (19, 13), (15, 21),
+           (13, 15), (13, 13), (5, 14), (9, 16), (7, 16), (7, 15), (10, 6)),
+}
+
+# Fixed game pigments. Several ochres become skin pink on the regional palettes.
+OILED = {88: 208, 89: 129, 90: 129, 91: 204, 92: 204, 93: 207, 94: 195,
+         95: 203, 96: 205, 97: 205, 98: 194, 99: 194, 129: 208, 134: 204,
+         135: 207, 137: 195, 139: 205, 168: 205, 169: 194, 185: 195, 203: 204,
+         204: 129, 205: 207, 207: 204}
+
+
 # The near end of the gathered fold below the arm, or beside the spine
 # in a rear view. The woman's long hair hides the top of the rear folds.
 WRAP = {
@@ -56,38 +75,52 @@ def finish(rows, paint, regions, base, model, role, pose):
                 if paint[top+py][left+px] == 69:
                     paint[top+py][left+px] = 70
         return
-    # The hide flaps swing around the near thigh. Follow their painted
-    # outlines rather than assuming a fixed horizontal waistband.
-    facing = -1 if pose == 28 else 1
-    texture = {}
-    for py, row in enumerate(regions):
-        for px, bits in enumerate(row):
-            if bits and bits & co.LEGS and paint[py][px] is not None:
-                color = paint[py][px]
-                if (model == 2095 and (89 <= color <= 98 or color in (204, 207))
-                        or model == 2099 and color in (129, 134, 135, 137, 139)):
-                    texture[px, py] = color
-    if not texture:
-        return
-    hem = max(y*facing for x, y in texture)
+    leather = {}
+    for y, row in enumerate(regions):
+        for x, bits in enumerate(row):
+            if not bits or not bits & (co.CHEST | co.ARMS | co.LEGS):
+                continue
+            ink = paint[y][x]
+            # The male layers also own the skin beneath the harness.
+            if ink in OILED and (model == 2099 or ink not in (129, 134)):
+                leather[x, y] = ink
+    rise = -1 if pose == 28 else 1
 
-    def visible(x, y):
-        color = paint[y][x] if 0 <= y < len(paint) and 0 <= x < len(paint[y]) else None
-        if color is None and base is not None and 0 <= y < len(base) and 0 <= x < len(base[y]):
-            color = base[y][x]
-        if color is None and 0 <= y-top < len(rows) and 0 <= x-left < len(rows[y-top]):
-            color = rows[y-top][x-left]
-        return color not in (None, 255)
+    def touching_skin(x, y):
+        if not 0 <= x < len(paint[0]) or not 0 <= y < len(paint):
+            return False
+        if (x, y) in leather:
+            return False
+        value = paint[y][x]
+        if value is None and base is not None:
+            value = base[y][x]
+        if value is None and 0 <= y-top < len(rows) and 0 <= x-left < len(rows[y-top]):
+            value = rows[y-top][x-left]
+        return value in range(128, 154)
 
-    for (x, y), color in texture.items():
-        if y*facing < hem-4:
-            continue
-        if not visible(x+1, y) or not visible(x, y+facing):
-            paint[y][x] = 204 if color in (89, 90, 91, 129, 134, 204, 207) else 205
-        elif (x, y+facing) not in texture and (x-1, y) in texture:
-            # The underside of the hanging flap turns away from the light.
-            if color in (90, 91, 92, 93, 94, 129, 134, 135, 137):
-                paint[y][x] = 204 if color in (90, 91, 129, 134) else 205
-        elif (x-1, y) not in texture and (x+1, y) in texture and visible(x-1, y):
-            if color in (94, 95, 96, 97, 98, 137, 139):
-                paint[y][x] = 168 if color in (97, 98, 139) else 139
+    cx, cy = CLASPS[model][pose]
+    cx, cy = cx+left, cy+top
+    for (x, y), ink in leather.items():
+        tone = OILED[ink]
+        # One receding edge, with a warm fold still visible on the stepped
+        # narrow strap. Deepen the underside where the panel crosses the thigh.
+        if touching_skin(x, y+rise):
+            tone = 208 if (x, y-rise) in leather else 129
+        elif touching_skin(x+1, y) and (x-1, y) in leather:
+            tone = 129 if tone in (208, 129, 204, 207) else 204
+        # The upper-left lip of the strap remains lit above the contact shadow.
+        if regions[y][x] & co.CHEST and touching_skin(x-1, y) and (x+1, y) in leather:
+            tone = 207 if ink in (88, 89, 129, 134, 204) else 205
+        if model == 2099:
+            # On her kilt the lip rolls into a narrow oiled hide flap.
+            depth = (y-cy)*rise
+            if (regions[y][x] & co.LEGS and 1 <= depth <= 3 and abs(x-cx-(1-depth*.3)) <= .6
+                    and (x, y+rise) in leather and ink not in (88, 129, 204)):
+                tone = 205
+        paint[y][x] = tone
+    if (cx, cy) in leather:
+        x, y = cx, cy
+        # A single dull steel focal point. Its cheek is on the same fastening.
+        paint[y][x] = 214
+        if (x+1, y) in leather:
+            paint[y][x+1] = 210

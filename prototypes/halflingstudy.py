@@ -10,6 +10,7 @@ from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
 from shoulderscale import shoulder_paint
 import limbstrokes
+import gladiatorhide
 
 MODELS = (2068, 2070)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
@@ -493,6 +494,9 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
             rows["Gladiator"][y+dy][x+dx+4] = tone
     def registered(x, y):
         return x+dx+4, y+dy
+    gladiatorhide.dress(rows["Gladiator"], rows["Body base"], registered(guard_x, guard_y),
+                        registered(hx+(2 if guard_x < sx else -2), hy),
+                        (registered(hx, hy), registered(hx-2.5, hy+4)))
     protected = {registered(x, y) for x, y in head | head_hair}
     protected.update((x+4, y) for x, y in bow)
     edits = {}
@@ -509,6 +513,7 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
         if inside:
             edits[u, v] = dye(SKIN, max(2, min(6, sum(inside)/len(inside))))
     limbstrokes.joint_highlights(bare, LIMBS[pose], SKIN, registered, protected, edits)
+    limbstrokes.quiet_highlights(bare, SKIN, protected, edits)
     limbstrokes.exposed_skin(rows, edits)
     return {role: flip(r) if pose == 28 else r for role, r in rows.items()}
 

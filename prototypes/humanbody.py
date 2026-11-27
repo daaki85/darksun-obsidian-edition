@@ -6,6 +6,7 @@ Supply the paint from 17aaacef to reproduce this revision. The output carries
 the finished body and exposed-skin underpaint. For subsequent garment exports,
 use outfitdetail.py with --keep-cloak-dyes on that archive. For the second
 limb and torso detail pass, supply the c351a52f archive and add --limbs.
+For the oiled Gladiator and isolated skin lights, use 34563951 and --quiet-skin.
 """
 import argparse
 from pathlib import Path
@@ -155,7 +156,30 @@ def apply(layer, native, edits, visible=None, keep=(), inherit=False):
             layer[y + top][x + left] = new
 
 
-def author(game, source, output, *, limbs=False):
+def quiet_skin(body, protected, model, pose):
+    """Ease the isolated light cells between skin planes, retaining connected lit ridges."""
+    _, shoulder_y, _, _, _ = SOCKETS[model][pose]
+    edits = {}
+    for y, row in enumerate(body[1:-1], 1):
+        upright = len(body)-1-y if pose == 28 else y
+        if upright <= shoulder_y+1:
+            continue
+        for x, old in enumerate(row[1:-1], 1):
+            if old not in SKIN[8:] or (x, y) in protected:
+                continue
+            cross = (body[y-1][x], body[y+1][x], row[x-1], row[x+1])
+            if not all(p in SKIN for p in cross):
+                continue
+            light = SKIN.index(old)
+            nearby = [SKIN.index(body[y+j][x+i]) for i in (-1, 0, 1) for j in (-1, 0, 1)
+                      if (i or j) and body[y+j][x+i] in SKIN]
+            # A diagonal pair makes an intentional native highlight too.
+            if max(nearby) <= light-2 and sum(SKIN.index(p) for p in cross) <= 4*(light-3.5):
+                edits[x, y] = old, SKIN[light-2]
+    return edits
+
+
+def author(game, source, output, *, limbs=False, quiet=False):
     with ZipFile(source) as archive:
         entries = {n: archive.read(n) for n in archive.namelist()}
     woman = "Base/walk" in entries
@@ -174,7 +198,9 @@ def author(game, source, output, *, limbs=False):
             heads = read(f"Base/{tag}-head") if woman else ()
             protected = foreground(read(f"Gladiator/{tag}-regions"), heads, model, pose, limbs)
             parts = game.fig(model).parts(combat, f)
-            if limbs:
+            if quiet:
+                edits = quiet_skin(body, protected, model, pose)
+            elif limbs:
                 edits = humanlimbs.finish(body, model, pose, parts, protected, SOCKETS[model][pose], SKIN)
             else:
                 edits = body_edits(body, model, pose, parts.facing, protected)
@@ -202,6 +228,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("game_dir", "source", "output"):
         parser.add_argument(arg, type=Path)
-    parser.add_argument("--limbs", action="store_true", help="author the second skin pass from c351a52f")
+    stage = parser.add_mutually_exclusive_group()
+    stage.add_argument("--quiet-skin", action="store_true", help="soften isolated skin lights from 34563951")
+    stage.add_argument("--limbs", action="store_true", help="author the second skin pass from c351a52f")
     args = parser.parse_args()
-    author(outfits.Game(args.game_dir), args.source, args.output, limbs=args.limbs)
+    author(outfits.Game(args.game_dir), args.source, args.output, limbs=args.limbs, quiet=args.quiet_skin)

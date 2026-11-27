@@ -169,7 +169,8 @@ def export(game_dir, archive):
             blocked = head | bow | arm | feet[0] | feet[1]
             folds, native_cloak = cloak_folds(rows, role, pose, native, blocked)
             cloth, surface, additions, covered, _ = study_surface(
-                game, 310 + (model == 2070), pose, rows, role, cuts)
+                game, 310 + (model == 2070), pose, rows, role, cuts,
+                binding_colours=fit.gladiatorhide.BINDING if role == "Gladiator" else None)
             dye = {(u-4, v) for u, v in surface} - blocked - cap
             waist = len(source)-1-cuts[1] if pose == 28 else cuts[1]
             chest = {(x, y) for x, y in dye if (y >= waist if pose == 28 else y <= waist)}

@@ -20,6 +20,21 @@ def joint_highlights(body, strokes, ramp, registered, protected, edits):
             edits[u, v] = ramp[max(1, min(len(ramp)-1, rank+step))]
 
 
+def quiet_highlights(body, ramp, protected, edits):
+    """Soften isolated bright points while leaving adjacent muscle ridges lit."""
+    # Read the completed joint and rib accents as a single surface before
+    # adjusting anything. Neighbour order must not influence the next cel.
+    tones = {(x, y): ramp.index(colour)
+             for y, row in enumerate(body) for x, base in enumerate(row)
+             if (colour := edits.get((x, y), base)) in ramp}
+    for (x, y), rank in tones.items():
+        if rank < 8 or (x, y) in protected:
+            continue
+        adjacent = [tones[p] for p in ((x-1,y), (x+1,y), (x,y-1), (x,y+1)) if p in tones]
+        if len(adjacent) >= 3 and max(adjacent) <= rank-3:
+            edits[x, y] = ramp[rank-2]
+
+
 def exposed_skin(rows, edits):
     """Cloth keeps its authored lighting where it occludes the painted skin."""
     body = rows["Body base"]

@@ -60,7 +60,10 @@ def single_masks(study, obj, pose, garment):
                 regions[point] = co.BOW
                 continue
             base = body[py][px]
-            bare = color == base or color in he.outfits.SKINC
+            # 129 is native skin shadow as well as the oiled hide's rim.
+            # Only the actual exposed body should retain skin ownership.
+            hide_rim = garment == "Gladiator" and color == 129
+            bare = color == base or (color in he.outfits.SKINC and not hide_rim)
             # The fitted hood has its own crown over the bun, including flying
             # tips outside the old human or elf hair silhouette.
             collar = shoulder+2 - min(4, abs(x-neck)//2)
@@ -78,7 +81,8 @@ def single_masks(study, obj, pose, garment):
                 if ownership & LIMBS:
                     regions[point] = ownership & LIMBS
                 continue
-            if original in original_trim:
+            clasp = garment == "Gladiator" and color in ((210, 214) if obj == 307 else (168, 186))
+            if original in original_trim or clasp:
                 trim.add(point)
             native_fold = folds.get(original)
             if garment in CLOTH and color in CLOTH[garment]:

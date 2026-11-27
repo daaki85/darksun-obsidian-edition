@@ -107,6 +107,9 @@ def pose_layers(atlas, swatch, model, pose):
     for pt in set(boots[0]) & set(boots[1]):
         del boots[1 if boots[0][pt] <= boots[1][pt] else 0][pt]
 
+    # Register the Gladiator's fitted seams before the finish is painted.
+    # The final dark leather and the skin share umber in the retail palette.
+    fittings = {**outfits, "Gladiator": visible["gladiator_seams"]}
     ranger = outfits["Ranger"]
     fold = {p: round(5*hg.RAMPS["leaf"].index(sample(ranger, p))/(len(hg.RAMPS["leaf"])-1))
             for p in cloaked}
@@ -115,7 +118,7 @@ def pose_layers(atlas, swatch, model, pose):
     for role, outfit in outfits.items():
         if role in ("Original", "Body base"):
             continue
-        _, surface, _, _, _ = study_surface(game, obj, pose, outfits, role, cuts)
+        _, surface, _, _, _ = study_surface(game, obj, pose, fittings, role, cuts)
         surface = {(u-LEFT, y) for u, y in surface}
         def skin_or_base(p):
             return inside(p) and sample(outfit, p) is not None and sample(outfit, p) == sample(body, p)

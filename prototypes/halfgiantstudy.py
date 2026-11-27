@@ -116,6 +116,9 @@ TEAL = (208, 69, 69, 70, 70, 71, 71, 40, 72, 73)
 CLOAK_LEAF = (208, 17, 188, 189, 53, 54, 55, 56, 57)
 WRAP_TEAL = (208, 69, 70, 71, 40, 72, 73)
 GLADIATOR_HIDE = (208, 204, 203, 207, 195, 179, 205, 196, 201, 168, 169)
+OILED_HIDE = (208, 129, 204, 204, 207, 195, 207, 205, 205, 194, 194)
+GUARD_BRONZE = (208, 204, 207, 195, 179, 205, 196, 201)
+GUARD_HIGHLIGHT = 169
 LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
 TEAL_BONE = (208, 69, 70, 71, 40, 72, 73, 199)
@@ -283,6 +286,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     rib_span = row_limits(top)
     cloak = stamp(RANGER_CLOAK[pose])
     cloak_span = row_limits(cloak)
+    hide_levels = {}
+    metal = {}
     for role in ROLES[2:]:
         skirt = robe if role == "Cleric" else jerkin if role == "Fighter" else wrap
         if role == "Psionicist" and female and pose in WOMAN_TEAL_HEM:
@@ -362,6 +367,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
             if on_guard:
                 if role == "Fighter" and visible is not None:
                     visible["guard"][point] = cap[point]
+                if role == "Gladiator":
+                    metal[sx, sy] = cap[point]
                 pieces[role][sy][sx] = pigment(BONE if role == "Fighter" else BRONZE, cap[point])
                 continue
             if point in arm and c is not None:
@@ -465,9 +472,13 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                         elif 0 <= tuck < .12:
                             ridge = -1.05
                     color = pigment(WRAP_TEAL, .38*shade + .80*turn + .26*grain + ridge)
+            if role == "Gladiator":
+                hide_levels[sx, sy] = GLADIATOR_HIDE.index(color)
             pieces[role][sy][sx] = color
             if visible is not None and role in visible:
                 visible[role].add(point)
+
+    return hide_levels, metal
 
 
 # Horizontal swing and drop of the free leather end from its belt loop.
@@ -851,11 +862,24 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
         clean_nape(pieces, model, pose, margin)
     visible = ({"Cleric": set(), "Fighter": set(), "cloak": set(), "sleeve": set(), "guard": {}}
                if pairs else None)
-    dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
+    hide, metal = dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
     # The clothes already carry their own approved fold lighting. Apply the
     # anatomical relief only where a cel still exposes the underlying skin.
     light = [(.299*r + .587*g + .114*b) for r, g, b in game.palette]
     gladiator = pieces["Gladiator"]
+    # Small unsupported peaks on the rebuilt flesh can compete with a buckle
+    # at game size. Ease only the tiny bright peaks, leaving the longer
+    # joint and tendon lights that describe the bent limb intact.
+    body = pieces["Body base"]
+    before_quiet = skin_relief.copy()
+    for (sx, sy), color in before_quiet.items():
+        if color not in (148, 149, 151):
+            continue
+        support = sum(before_quiet.get((x, y), body[y][x]) in (147, 148, 149, 151)
+                      for x, y in ((sx-1, sy), (sx+1, sy), (sx, sy-1), (sx, sy+1))
+                      if 0 <= y < len(body) and 0 <= x < len(body[y]))
+        if support <= 1:
+            skin_relief[sx, sy] = pigment(SKIN, SKIN.index(color)-2)
     for (sx, sy), color in skin_relief.items():
         old_skin = pieces["Body base"][sy][sx]
         # Preserve the small lit plane beside a dark welt when the deeper
@@ -871,6 +895,40 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
         for rows in pieces.values():
             if rows[sy][sx] == old_skin:
                 rows[sy][sx] = color
+    if panels is not None:
+        # These pigments identify the registered armour surfaces, including
+        # skin beside a leather fold that uses the same deep umber.
+        panels["gladiator_seams"] = upright(gladiator) if reverse else [row[:] for row in gladiator]
+    # Finish the materials only after the fitted skin and garment have been
+    # established. The existing welt supplies the turn of the oiled leather.
+    for (sx, sy), level in hide.items():
+        lower_lip = ((sx, sy+1) not in hide and sy+1 < len(gladiator)
+                     and gladiator[sy+1][sx] in SKIN)
+        rank = min(2, level) if lower_lip and level < 7 else level
+        # The leather and the native heel share a deep brown. Keep separate
+        # materials distinct when that shade is also the flesh underneath.
+        tone = OILED_HIDE[rank]
+        # Only the lip against the skin needs contact shading. On a dark
+        # thigh the turned edge catches a little reflected brown instead.
+        touching = [light[gladiator[y][x]] for x, y in ((sx+1, sy), (sx, sy+1))
+                    if 0 <= y < len(gladiator) and 0 <= x < len(gladiator[y])
+                    and (x, y) not in hide and (x, y) not in metal and gladiator[y][x] in SKIN]
+        if touching:
+            under = sum(touching)/len(touching)
+            if abs(under-light[tone]) < 26:
+                if under >= 62:
+                    tone = 208
+                elif level >= 4:
+                    tone = 194 if level >= 8 else 205
+        gladiator[sy][sx] = 204 if tone == 129 and body[sy][sx] == 129 else tone
+    for (sx, sy), level in metal.items():
+        gladiator[sy][sx] = GUARD_BRONZE[level]
+    if metal:
+        # Pick the turn toward the light within the visible painted shell.
+        # A pin-sized glimpse under the hair takes a dull edge in shadow.
+        tip = min(metal, key=lambda point: (-metal[point], point[1], point[0]))
+        if metal[tip] >= 3 and len(metal) >= 3:
+            gladiator[tip[1]][tip[0]] = GUARD_HIGHLIGHT
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
         if panels is not None:

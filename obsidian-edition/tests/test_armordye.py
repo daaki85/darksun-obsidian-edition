@@ -160,15 +160,20 @@ class ArmorDyeTests(unittest.TestCase):
                     self.assertIsNotNone(base[y+top][x+side])
                     self.assertEqual(base[y+top][x+side], chest[y+top][x+side])
 
-    def test_robe_dyes_red_leather_and_plate_leaves_the_ranger_feather(self):
+    def test_robe_dyes_the_lit_leather_ridge_and_plate_leaves_the_ranger_feather(self):
         from dsloader import game
 
         sx, sy = sprites.room(False)
-        cases = ((301, "Gladiator", (5, 17), game.ROBE_TYPE, 135, False),  # recessed red leather
-                 (301, "Gladiator", (6, 17), game.ROBE_TYPE, 137, True),   # lit ridge beside it
+        model = self.pictures.model(301)
+        _, native, _ = self.pictures.base(model, 301, False)
+        fitted = classoutfits.frames("Gladiator", False, model)[0].canvas(native[0], sx)
+        shadow, ridge = fitted[sx + 17][sx + 5:sx + 7]
+        self.assertGreater(spritegear._LIGHT[ridge], spritegear._LIGHT[shadow])
+        cases = ((301, "Gladiator", (5, 17), game.ROBE_TYPE, shadow, False),
+                 (301, "Gladiator", (6, 17), game.ROBE_TYPE, ridge, True),
                  (300, "Ranger", (14, 1), 88, 169, False))
         for obj, role, (x, y), kind, original, should_change in cases:
-            with self.subTest(role=role):
+            with self.subTest(role=role, point=(x, y)):
                 plain = self.pictures.build(obj, False, {}, (), role=role)
                 worn = self.pictures.build(obj, False, {}, (kind,), role=role)
                 self.assertEqual(art.decode_frame(plain, 0)[2][sy+y][sx+x], original)

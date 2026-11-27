@@ -1,5 +1,23 @@
 # Cloth folds and Gladiator contrast
 
+## Oiled Gladiator leather
+
+The three rows in each view show the retail party picture, the Gladiator from `34563951`, and the revised Gladiator. All three use the same pose, palette and patch of arena sand. The stock half-elves share the game’s human pictures. The revised figures use the Loader’s fitted half-elves. The thri-kreen is included as a retail control.
+
+[Compare every figure at game size in colour](gladiator-leather-game-size.png) · [Compare the same pixels in greyscale](gladiator-leather-greyscale.png) · [Inspect the human front and profile at 3×](gladiator-leather-humans.png)
+
+The standing views and middle strikes show the contrast at rest and as the body turns. Across the human poses, the sampled kilt has a median greyscale value of 38 on a 0–255 scale. Nearby exposed skin measures 86 and the same arena sand measures 174. Follow the lower edge of the diagonal strap where it meets the ribs, then the bottom of the kilt where it crosses the near thigh. The lighter turn of the leather is wider on the half-giants. On the halflings the metal fastening takes only a single pixel when visible.
+
+The animations show all 29 distinct poses. Each cell includes an unscaled copy beside the 3× view. Watch the belt and its fastening turn with the hips through the four steps, and the forward arm cover the strap in the strikes.
+
+[Humans and dwarves](gladiator-leather-humans-dwarves.gif) · [Elves and half-elves](gladiator-leather-elves-half-elves.gif) · [Half-giants and halflings](gladiator-leather-half-giants-halflings.gif) · [Mul and thri-kreen](gladiator-leather-mul-thri-kreen.gif)
+
+[See the pens party in DOSBox with the Loader attached](../../../playtest/logs/2026-11-27-material-folds.md#oiled-gladiator-leather-in-the-pens)
+
+Regenerate these comparisons with `python prototypes/gladiatorleatherreview.py GAME_DIR OUTPUT_DIR --previous-checkout CHECKOUT`, using a checkout of `34563951`.
+
+## Earlier body and cloth studies
+
 The body comparisons use `c351a52f` for the earlier art. The cloak shoulder comparisons use `17aaacef`. The wider cloth comparison starts at `fee30cff`. The outfit columns show the Loader’s walking and combat pictures with empty equipment slots. The body columns show the cleaned art used to fit each garment. In the animations, the small copy is game size. Each pair shares the same ground line, pose and floor.
 
 ## Cloth on the arena floor

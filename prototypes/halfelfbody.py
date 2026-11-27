@@ -1,5 +1,7 @@
 """Paint the anatomical planes exposed by the half-elves’ changed builds and hair."""
 
+from limbstrokes import quiet_highlights
+
 # Spaces preserve the underpainting. The short strokes follow the near rib,
 # shoulder blade, hip and knee. Light falls from the upper left on the map.
 SKIN = dict(zip("abcdefghi", (134, 133, 132, 131, 130, 144, 145, 146, 147)))
@@ -219,11 +221,14 @@ def body_planes(pose, body, pad, female, facing, changes, protected, head_and_bo
             native = body[py][px]
             if (x, y) not in head_and_bow and native in PINKS:
                 final[px,py] = shade
+    # Painting the half-elf's own ribs and joints can leave an isolated
+    # highlight even when the parent skin was quiet. Keep continuous ridges.
+    guarded = {(x+pad, y+pad) for x,y in protected}
+    quiet_highlights(body, PINKS, guarded, final)
     return [(x,y,body[y][x],shade) for (x,y),shade in final.items() if body[y][x] != shade]
 
 
-GLADIATOR_LEATHER = {88, 89, 90, 92, 93, 94, 95, 128, 129, 135, 137, 157,
-                     168, 169, 179, 180, 181, 185, 186, 203, 204, 205, 207, 208}
+GLADIATOR_LEATHER = {129, 194, 195, 203, 204, 205, 207, 208}
 
 
 def leather_contact(pose, body, outfit, pad, female, protected):

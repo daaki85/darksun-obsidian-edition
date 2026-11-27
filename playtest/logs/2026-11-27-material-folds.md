@@ -27,3 +27,11 @@ In the mirrored side idle, 30 native pixels changed. After DOSBox aspect scaling
 Repeated the attached Loader check against `c351a52f` with Gerakis’s gear held constant. Both revised picture chunks matched their builds, and turning the class display off and back on restored them byte for byte. All 29 poses changed. In his mirrored side idle, the light on the bent arm and the planted leg is visible on the map. The game reused picture slot 203. The three source save files retained their original checksums.
 
 ![Gerakis with earlier and revised limb shading](img/2026-11-27-gerakis-limb-shading.png)
+
+## Oiled Gladiator leather in the pens
+
+The Loader was attached to a disposable DOSBox session running the pens-after-arena save. Gerakis was the half-giant Gladiator in the party with K’ratchek, Cermak and Cilla. In the two full screens below he is in profile near the middle, immediately left of the large standing arena figure.
+
+[Full pens screen with the previous leather](img/2026-11-27-pens-gladiator-leather-before.png) · [Full pens screen with the revised leather](img/2026-11-27-pens-gladiator-leather.png)
+
+Both captures use the same equipment read from his sheet. The Loader wrote the walk and combat pictures as picture resources 2466 and 2467, restored the class art after toggling the display, then applied each archive to the same party. All 29 Gerakis poses changed. On the visible figure, all 76 changed screen pixels matched the predicted mirrored profile idle at DOSBox’s vertical scaling. All three source save files retained their SHA-256 checksums.

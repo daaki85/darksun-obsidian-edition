@@ -12,6 +12,7 @@ from outfitdetail import HALFTONES, RAMPS, reference_folds
 from wornreview import Atlas
 from shoulderscale import jerkin_facing, shoulder_paint
 import limbstrokes
+import gladiatorhide
 from dsloader import art, classoutfits as co
 
 MODEL = 2093
@@ -620,8 +621,14 @@ def clothing_layers(game, pose):
     out["Cleric"] = cleric_robe(game, pose, body, keep | opening, arm)
     def registered(x, y):
         return (w-1-x+PAD, h-1-y) if pose == 28 else (x+PAD, y)
+    gx, gy, knee, hem = HIDE_POINTS[pose]
+    (_, sl, sr), _, (wy, wl, wr), _, _ = ROBE_CUTS[pose]
+    anchor = wl+1 if gx > (sl+sr)/2 else wr-1
+    gladiatorhide.dress(out["Gladiator"], body, registered(gx, gy), registered(anchor, wy),
+                        (registered(anchor, wy), registered(knee, hem)), -1 if pose == 28 else 1)
     protected = {(x+PAD, y) for x, y in head | bow}
     limbstrokes.joint_highlights(body, LIMBS[pose], COPPER, registered, protected, edits)
+    limbstrokes.quiet_highlights(body, COPPER, protected, edits)
     return out, edits
 
 

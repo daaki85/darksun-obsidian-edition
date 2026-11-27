@@ -70,7 +70,7 @@ PLUM = (17, 174, 175, 58, 119)
 LEAF = (207, 188, 54, 55, 56)
 OCHRE = (204, 95, 168, 169, 170)
 FOREST = (17, 69, 53, 54, 56)
-BRONZE = (204, 94, 168, 186)
+BRONZE = (204, 205, 168, 186)
 TEAL = (208, 69, 70, 71, 73)
 FLESH = (134, 132, 130, 145, 147)
 CLOAK_LENGTHS = {"Thief": 4, "Mage": 3, "Druid": 3, "Ranger": 4, "Priest": 5}
@@ -271,13 +271,13 @@ def shoulder_guard(rows, point, side, ramp, crest=2):
 # shoulder-to-hip line below moves the marks with each actual stance.
 TRUNK_PLANES = {
     "front": (
-        ".65.34.", "665.453", "5432542", ".33413.", ".55243.", ".34323.", "4532431", ".43232.",
+        ".65.34.", "665.453", "5432542", ".33423.", ".55243.", ".34323.", "4532431", ".43232.",
     ),
     "back": (
-        ".65.45.", "6542553", "5552432", ".65342.", ".43252.", ".34313.", "4542532", ".43232.",
+        ".65.45.", "6542553", "5552432", ".65342.", ".43252.", ".34323.", "4542532", ".43232.",
     ),
     "side": (
-        ".54..", "6553.", ".5432", ".4521", ".5323", ".352.", "5432.", ".432.",
+        ".54..", "6553.", ".5432", ".4522", ".5323", ".352.", "5432.", ".432.",
     ),
 }
 # Flesh already present on the retail forearm crosses the torso here.
@@ -408,7 +408,7 @@ def body_planes(rows, pose, registration, toes, rear, profile):
     return skin
 
 
-def draw(game, model, k, role, design=None, layers=None):
+def draw(game, model, k, role, design=None, layers=None, *, cloak_reference=False):
     """Draw one registered pose. Optional layer maps use native, unpadded coordinates."""
     combat, f = divmod(k, 15)
     figure = game.fig(model)
@@ -454,14 +454,15 @@ def draw(game, model, k, role, design=None, layers=None):
     garment_front = ROBE_FRONTS.get(k) if role == "Priest" or side_jerkin else None
     left, right = SHOULDERS[registration]
     guards = {}
+    guard_point = None
     if fighter or (design and design.shoulders):
         guards.update(shoulder_guard(rows, left, 1, BONE))
         guards.update(shoulder_guard(rows, right, -1, BONE))
     elif role == "Gladiator":
         # The same anatomical arm is on screen left in a rear view.
         # Only its leather strap is visible when the arm turns away.
-        point, side = (left, 1) if rear or profile else (right, -1)
-        guards.update(shoulder_guard(rows, point, side, BRONZE, crest=3))
+        guard_point, side = (left, 1) if rear or profile else (right, -1)
+        guards.update(shoulder_guard(rows, guard_point, side, BRONZE))
     bow = game.bow(figure, rows, figure.parts(combat, f)) if k in (24, 25, 26) else set()
     if model == 2055 and k == 25:
         # Slate on the wrist and calf of the rear archer, respectively.
@@ -505,6 +506,17 @@ def draw(game, model, k, role, design=None, layers=None):
     if dead and model == 2053:
         bare_rows = bare_rows[::-1]
     flesh = body_planes(rows, pose, registration, toes, rear, profile)
+    oiled = role == "Gladiator" and not cloak_reference
+    if oiled:
+        # The upper fastening turns to the other side of the picture when the
+        # guard is seen from behind. Follow that same shoulder in profile.
+        strap_start = guard_point[0] + 1 if (rear or profile) and guard_point else sx + 2
+        strap_end = hx + 2 if rear else hx - 2
+        # The skirt bows outward above the weight-bearing thigh, which often
+        # changes sides between steps. Keep the seam attached to the hip.
+        leading = max((i for i, toe in enumerate(toes) if toe), key=lambda i: toes[i][1])
+        knee = KNEES[registration][leading][0]
+        swing = max(-2, min(2, knee - hx))
     for y in range(height):
         t = min(1, max(0, (y - sy) / max(1, hy - sy)))
         mid = sx * (1 - t) + hx * t
@@ -570,11 +582,19 @@ def draw(game, model, k, role, design=None, layers=None):
                 surface = co.CHEST
                 paint = palette[shade]
                 if role == "Gladiator":
-                    if abs(dx - (2 - 4 * t)) > 1.1:
+                    distance = x - (strap_start * (1 - t) + strap_end * t) if oiled else dx - (2 - 4 * t)
+                    if abs(distance) > 1.1:
                         paint = skin
                         surface = 0
-                    elif d == -1:
-                        paint = LEATHER[0]  # shadow where the strap tucks under the belt
+                    elif not oiled:
+                        if d == -1:
+                            paint = LEATHER[0]
+                    elif d == -1 or distance > .35:
+                        paint = 208  # contact at the lower edge of the leather
+                    elif distance < -.25:
+                        paint = 205 if depth <= 2 or d == -3 else 195
+                    else:
+                        paint = 207
                 if fighter:
                     # Warm side shadow above the belt, with a lighter baldric
                     # crossing the jerkin from the shoulder to the far hip.
@@ -657,6 +677,19 @@ def draw(game, model, k, role, design=None, layers=None):
             if d == 0 and abs(dx) <= radius and not (rear and role in CLOAK_LENGTHS):
                 surface = co.LEGS
                 paint = 169 if abs(dx) < 0.5 else 205
+            if oiled and surface == co.LEGS:
+                pleat = swing * (.35 + .16 * d)
+                turn = dx - pleat
+                if d == 0:
+                    # A muted welt where the strap is caught under the belt;
+                    # the bronze shoulder stays the only metal fitting.
+                    paint = 205 if -.65 <= turn < .35 else 207 if turn < .35 else 129
+                elif d == 1:
+                    paint = 208 if .35 < turn < 1.7 else 195 if turn < -.6 else 204
+                elif d == 2:
+                    paint = 194 if -.6 < turn <= .4 else 205 if turn < -.6 else 129
+                else:
+                    paint = 207 if turn < -.9 else 204 if turn < .4 else 208
             if fighter and front_edge is not None and body and d < 0:
                 # The near arm can cover most of the abdomen. Let the lit
                 # edge of the overlapping leather panels show above the wrist.
@@ -758,12 +791,19 @@ def draw(game, model, k, role, design=None, layers=None):
                     paint = wrist_skin.get((x, y), FLESH[min(4, int(hue[c] // 38))])
             if layers is not None:
                 point = (x, height - 1 - y if dead else y)
+                if ("baldric" in layers and torso and d < 0 and abs(dx - (2 - 4 * t)) <= 1.1
+                        and (x, y) not in guards and not (head or hand or open_neck)):
+                    # The Fighter's baldric and Psionicist's woven band still
+                    # follow the original shoulder-to-hip line under armor.
+                    layers["baldric"][point] = 1
                 if head and not hand:
                     layers["head"][point] = 1
                 if hand or head or open_neck:
                     fold_rank = None
                     surface = co.BOW if (x, y) in bow else co.FOREARM if hand else 0
-                elif paint == skin and body:
+                # Leather and shaded skin share color 129. Keep the kilt
+                # registered to the hip when it overlaps a raised foot.
+                elif paint == skin and body and not (oiled and surface == co.LEGS):
                     for toe, foot in zip(toes, (co.LEFT_FOOT, co.RIGHT_FOOT)):
                         if toe and 0 <= toe[1] - y < 3 and abs(x - toe[0]) <= 3:
                             surface = foot
@@ -917,6 +957,36 @@ def render_proposals(game, output):
         )
 
 
+def native_layers(source, indexed, layers):
+    """Encode only authored differences to the original, on the padded archive canvas."""
+    width, height = len(source[0]), len(source)
+    frames = {
+        key: [[None] * (width + 8) for _ in range(height + 4)]
+        for key in ("image", *layers)
+    }
+    for y in range(height):
+        for x in range(-4, width + 4):
+            c = indexed.getpixel((x + 4, y + 4))
+            stock = source[y][x] if 0 <= x < width else None
+            if (None if c == 255 else c) != stock:
+                frames["image"][y + 4][x + 4] = c
+    for key, points in layers.items():
+        for (x, y), value in points.items():
+            frames[key][y + 4][x + 4] = value
+    return frames
+
+
+def gladiator_cloak_folds(game, model, pose, rows, folds, waist, palette, swatches):
+    """Recover the equipped cloak's own fold relief, independent of the visible oiled leather."""
+    from outfitdetail import shade_frame
+    layers = {key: {} for key in ("regions", "cloak", "head")}
+    indexed = draw(game, model, pose, "Gladiator", layers=layers, cloak_reference=True)
+    reference = native_layers(rows, indexed, layers)
+    shade_frame(rows, reference["image"], reference["regions"], folds, reference["head"],
+                None, model, "Gladiator", waist if waist is not None else len(rows) // 2,
+                palette, swatches, pose)
+
+
 def export_layers(game, output):
     """Pack only edits to the player's bitmap and authored equipment masks."""
     from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
@@ -926,29 +996,19 @@ def export_layers(game, output):
             for design in SINGLES + PAIRS + TRIPLES:
                 for combat, tag in ((0, "walk"), (1, "combat")):
                     streams = {key: [] for key in ("image", "regions", "head", "cloak")}
+                    if design.name == "Gladiator":
+                        streams["baldric"] = []
                     for f in range(14 if combat else 15):
                         source = game.fig(model).rows(combat, f)
-                        layers = {key: {} for key in ("regions", "cloak", "head")}
+                        layers = {key: {} for key in streams if key != "image"}
                         art = draw(game, model, f + 15 * combat, design.base, design, layers)
-                        width, height = len(source[0]), len(source)
-                        frames = {
-                            key: [[None] * (width + 8) for _ in range(height + 4)]
-                            for key in streams
-                        }
-                        for y in range(height):
-                            for x in range(-4, width + 4):
-                                c = art.getpixel((x + 4, y + 4))
-                                stock = source[y][x] if 0 <= x < width else None
-                                if (None if c == 255 else c) != stock:
-                                    frames["image"][y + 4][x + 4] = c
-                        for key, points in layers.items():
-                            for (x, y), value in points.items():
-                                frames[key][y + 4][x + 4] = value
+                        frames = native_layers(source, art, layers)
                         for key, rows in frames.items():
                             streams[key].append(rows)
                     for key, frames in streams.items():
                         suffix = "" if key == "image" else "-" + key
-                        entry = ZipInfo(f"{model}/{design.name}/{tag}{suffix}")
+                        owner = "Fighter" if key == "baldric" else design.name
+                        entry = ZipInfo(f"{model}/{owner}/{tag}{suffix}")
                         archive.writestr(entry, sprites.encode_frames(frames), ZIP_DEFLATED)
     from outfitdetail import finish_archive
     path = output / "dwarf_outfit_layers.zip"
