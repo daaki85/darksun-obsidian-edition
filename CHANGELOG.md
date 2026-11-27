@@ -251,8 +251,13 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   ARROWS for the touch spells it knows: a slot for one arrow, stacked to 24, casting on a hit at its
   preserver level); the arrows' objects and icons are made from the player's own Shattered Lands files.
   A new Spellarcher starts with 24 of each it picked; another member's go back to it out of a fight; the
-  pointer lights the button it is on; the dice log names the Fine Bow. Not yet: the cast sound, and
-  refusing another member who readies them (site 240, header +2098..+2113, `ravarrows.py`) (#223, #229).
+  pointer lights the button it is on; the dice log names the Fine Bow. As one is made its touch spell's
+  cast sound plays, and another member can't ready them ("CANNOT USE THIS ITEM", in a fight too; the
+  move back stays for arrows readied before) (site 240, header +2098..+2113 and +2130, +2132,
+  `ravarrows.py`) (#223, #229, this branch).
+- **The Effects screen names an effect's charges**, as in Shattered Lands: "ARMOR (14 CHARGES)", Mirror
+  Image's images, an effect that runs down by uses; an item's power (Inertial Barrier's) no longer shows the
+  stray "(15 CHARGES)" Shattered Lands' fix removed (site 247, header +2128) (this branch).
 - **The dice log** says when an effect starts and ends, a member's PSP going down or back up, and an
   ability score changing, as in Shattered Lands (#232).
 - **DSCLOG2 has room again**: its tables and buffers moved to a resident tail past its 64 KB code segment,

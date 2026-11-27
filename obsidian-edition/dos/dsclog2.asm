@@ -405,7 +405,11 @@ ai_walls     dw 0               ; +2120 walls the computer cast across the line 
 kreen_cuts   dw 0               ; +2122 a party thri-kreen's natural attacks made edged (KREEN_CLAWS, counted)
 berserk_sides dw 0              ; +2124 Berserks put on with the side kept in their record (BERSERK_ADD, counted) ...
 berserk_ends dw 0               ; +2126 ... and Berserks ended with that side given back (BERSERK_END, counted)
-hdr_end:                        ; +2128 (HDR_LEN: the header's end; new words go above this line)
+ef_charge_lines dw 0            ; +2128 Effects screen lines named with their charges (EF_CHARGES, counted)
+arrows_barred dw 0              ; +2130 spell arrows a party member not a Spellarcher was kept from readying
+                                ;      (ARROWS_FORBID, counted)
+arrows_sounds dw 0              ; +2132 spell arrows made with their cast sound played (ARROWS_ASK, counted)
+hdr_end:                        ; +2134 (HDR_LEN: the header's end; new words go above this line)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4595,6 +4599,7 @@ site_table:
         dw kreen_claws                      ; 244 SITE_KREEN_CLAWS (5C86Dh: a natural attack's magic tested: a party thri-kreen's claws and bite cut)
         dw berserk_add                      ; 245 SITE_BERSERK_ADD (822A1h: an effect's add, no case of its own: Berserk keeps the side it had)
         dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
+        dw ef_charges                       ; 247 SITE_EF_CHARGES (8ABBDh: the Effects screen's line under the pointer: an effect's charges)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -7991,7 +7996,9 @@ cu_site:
         jnc .out
         inc al
         inc word [cs:kit_allowed]
-.game:  push si
+.game:  call arrows_forbid                ; (a Spellarcher's arrows: only a Spellarcher readies them)
+        jc .arrows_no
+        push si
         mov si, [bp]                    ; (the equip routine's frame: its [BP+8] the slot, 14 the off hand)
         cmp word [ss:si + 8], EQUIP_OFF_HAND
         pop si
@@ -8011,10 +8018,49 @@ cu_site:
 .kit_no:
         xor al, al
         inc word [cs:kit_refused]
+        jmp .out
+.arrows_no:
+        xor al, al
+        inc word [cs:arrows_barred]
 .out:   pop es
         pop bx
         mov [bp - 1], al
         iret
+
+; ARROWS_FORBID (from CU_SITE): CF set if the item being equipped (the equip routine's [BP+6], 7761Bh: the
+; frame under the can-use routine's) is a Spellarcher's spell arrows (named AP_ARROW_NAME to +3, the Loader's
+; names) and the character whose sheet is at ES:BX isn't a Spellarcher (KIT_SPELLARCHER awake): DSCLOG's, on
+; the sequel's items. The game asks nothing of an item put in a backpack, so only readying is refused there
+; (the Loader's return_strays still takes another member's back, out of a fight). With the kits (RULE_HI_KITS)
+; only: without them no one is a Spellarcher, and the arrows are as any. DS the game's; all registers kept.
+arrows_forbid:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ok
+        push ax
+        push si
+        push es
+        push bx
+        mov si, [bp]                    ; (the equip routine's frame)
+        imul ax, [ss:si + 6], ITEM_SIZE
+        les si, [ITEMS_PTR]
+        add si, ax
+        mov ax, [es:si + ITEM_NAME_W]
+        sub ax, AP_ARROW_NAME
+        cmp ax, 4
+        pop bx
+        pop es
+        jae .not
+        call kit_is_b
+        db KIT_SPELLARCHER
+        je .not
+        pop si
+        pop ax
+        stc
+        ret
+.not:   pop si
+        pop ax
+.ok:    clc
+        ret
 belt_site:
         sti
         mov ax, si
@@ -8598,8 +8644,8 @@ cu_others  dw 0
 ; (0Fh bytes: KG_* below) for SL's (14h: its +8 here +4, its +9 +5, its +0Fh +0Bh), the sheet's as
 ; CLASS_FORBIDS reads it. Its kinds are KIND_OF_TYPE's (the sequel's own weapons too: the cahulaks its
 ; type 24 and the mod's two, kind 12; an item past KIND_TYPES, or of no kind, has none: as the game has it).
-; Not here: KF_SPEC (choosing a weapon spec: the sequel's weapon window doesn't ask the kits), the
-; Spellarcher's arrows (ARROWS_FORBID: the sequel makes none).
+; Not here: KF_SPEC (choosing a weapon spec: the sequel's weapon window doesn't ask the kits). The
+; Spellarcher's arrows are ARROWS_FORBID's, called from CU_SITE before these checks.
 KG_FLAGS     equ 0x00               ; (1 melee, 2 missile, 4 shield, 10h thrown)
 KG_MATERIAL  equ 0x04               ; (the low nibble; 40h with 0 none: SL's +8)
 KG_WORN      equ 0x05               ; (where it is worn: 8 a cloak; SL's +9)
@@ -23212,12 +23258,27 @@ arrows_ask:
         inc word [cs:arrows_late]
         ret
 .ready: cmp byte [cs:pick_text], 0
-        je .done                        ; (made: nothing to say)
+        je .made                        ; (made: nothing to say)
         cmp byte [cs:showing], 0
         jne .done
         mov word [cs:show_text], pick_text
         call show_window
 .done:  ret
+.made:  mov ax, ds                      ; (the cast sound, as SL's plays the spell's own: ARROWS_SOUND)
+        sub ax, DGROUP_GAP - SOUND_SEG
+        mov [cs:sound_far + 2], ax
+        push word ARROWS_SOUND
+        call far [cs:sound_far]
+        add sp, 2
+        inc word [cs:arrows_sounds]
+        ret
+; The game's sound routine (B8h:0A22h, resident: the load + 1C5Fh; a byte, the sound, FFh none: the turn
+; sounds' and the spells' own, [BP+6]). As an arrow is made SL plays its touch spell's cast sound (the
+; record's +0Fh: Chill Touch's 4Eh, Shocking Grasp's 51h, Vampiric Touch's 6Eh); the sequel's records have
+; one for Vampiric Touch alone (6Eh; Chill Touch's and Shocking Grasp's FFh), so that one for each.
+SOUND_SEG    equ 0x1C5F
+ARROWS_SOUND equ 0x6E
+sound_far dw 0x0A22, 0
 
 ; ARROW_KNOWS: CF set if the party member on show (USE_WHO, its sheet [TU_SHEET]) is a Spellarcher who
 ; knows ARROW_SPELLS' CXth touch spell (1-3: WC_ARROWS' CX - 1). DS the game's; all registers kept.
@@ -23727,6 +23788,205 @@ berserk_end:
         pop bp
         pop bx
         iret
+
+; ---- THE EFFECTS SCREEN'S CHARGES: DSCLOG's EF_CHARGES (its charges part), with SL's fix ----
+; The Effects screen's handler for its cells (8AB13h) names the effect under the pointer (event 2, [BP+0Ah]) on
+; the line under the cells: the effect's record (selector 318h, 31 bytes each: its name, 29, then its icon; the
+; push of 318h:effect x 31 at 8ABB9h), "push 2C06h / push dword [1431h]" (the line, the window), then the
+; name's call (5F0h:61h). SL's EF_CHARGES names it with its charges, "Armor (3 charges)", where the effect
+; has some left (the active effect's +8: Armor's hits, Mirror Image's images, Stoneskin's blows...) and they
+; mean something: a spell lasting a number of uses (its record's time negative, not -9999: EC_USES), or an
+; effect with a timer (an "effect ends" event, kind 7, for this thing and handle, in the game's queue: DS:2A63h
+; far, its count DS:2A6Bh, 11h bytes each, SL's 2FBEh and 2FC6h). Not an item's power, cast for -9999 with
+; no timer, whose +8 is a stray 15 (9999's low byte): Shadowseeker's Detect Invisible said "(15 CHARGES)" in
+; SL before its fix (GAME-BUGS.md), and so here.
+; - EF_CHARGES (site 247) replaces those two pushes (8ABBDh; 8 bytes, the INT, the site's number and 6 NOPs):
+;   it makes them, under the INT's frame (the frame moved down 6 bytes), and with charges to show puts the
+;   name's far pointer, already pushed, on EC_TEXT (the tail's), the record's name and its charges; the way
+;   back past the NOPs (8ABC5h, the call). Only for the effect's push: the segment pushed the one the code's
+;   "push 318h" has (its word as the overlay manager fixed it up, 6 bytes back from the way back), and the
+;   offset a whole record. The character on show is USE_WHO's (370h:0B44h), as EF_ROWS's.
+; Not here (SL's other parts of EF_CHARGES, from the Loader's STATS): Enlarge's damage, Barkskin's, Flesh
+; Armor's and Magical Vestments' AC; Reflected Image's own name for its Mirror Images.
+EC_PAST       equ 0x8ABC5 - 0x8ABC0     ; (the bytes replaced past the way back)
+EC_SEG_BACK   equ 0x8ABC0 - 0x8ABBA     ; ("push 318h"'s word, back from the way back)
+EC_LINE       equ 0x2C06                ; (the line's id, the game's push)
+EC_RECORD     equ 31
+EC_NAME_MOST  equ 29
+EC_EFFECTS    equ 120                   ; (the effect bits: 0-119)
+EVENT_QUEUE   equ 0x2A63                ; DS: the game's timed events (far), and their count
+EVENT_COUNT   equ 0x2A6B
+EVENT_SIZE    equ 0x11                  ; (+4 the kind, +5 the thing, +7 the effect's handle)
+EVENT_EFFECT_ENDS equ 7
+ef_charges:
+        sub sp, 6                       ; (room for the game's three pushes)
+        push bp
+        mov bp, sp                      ; [bp+8] IP, [bp+10] CS, [bp+12] FLAGS, [bp+14] the name pushed, far
+        pushad
+        push es
+        push fs
+        les si, [bp + 8]
+        mov dx, [es:si - EC_SEG_BACK]   ; (DX the effects' segment, as fixed up)
+        lea ax, [si + EC_PAST]
+        mov [bp + 2], ax                ; the frame moved down: IP past the NOPs, CS, FLAGS
+        mov ax, [bp + 10]
+        mov [bp + 4], ax
+        mov ax, [bp + 12]
+        mov [bp + 6], ax
+        mov eax, [WIN_SHOWN]            ; (the game's "push dword [1431h]", then "push 2C06h" above it)
+        mov [bp + 8], eax
+        mov word [bp + 12], EC_LINE
+        cmp [bp + 16], dx
+        jne .out                        ; (another line's text: the lower panel's, a button's)
+        mov ax, [bp + 14]
+        xor dx, dx
+        mov cx, EC_RECORD
+        div cx
+        or dx, dx
+        jnz .out
+        cmp ax, EC_EFFECTS
+        jae .out
+        mov cl, al                      ; (CL the effect)
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov ax, [es:USE_WHO_OFF]        ; (AX the character on show)
+        call ec_counted                 ; (BL its charges, or CF clear)
+        jnc .out
+        call tail_fs
+        push ds
+        lds si, [bp + 14]               ; (the record's name)
+        mov di, ec_text
+        mov cx, EC_NAME_MOST
+.name:  lodsb
+        or al, al
+        jz .named
+        mov [fs:di], al
+        inc di
+        loop .name
+.named: pop ds
+        mov word [fs:di], ' ('
+        add di, 2
+        mov al, bl
+        call ec_itoa
+        mov si, ec_word
+.word:  mov al, [cs:si]
+        mov [fs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .word
+        dec di
+        cmp bl, 1
+        je .shut
+        mov byte [fs:di], 's'
+        inc di
+.shut:  mov word [fs:di], ')'
+        mov word [bp + 14], ec_text
+        mov [bp + 16], fs
+        inc word [cs:ef_charge_lines]
+.out:   pop fs
+        pop es
+        popad
+        pop bp
+        iret
+ec_word db ' charge', 0
+
+; EC_COUNTED: CF set, BL the charges, if thing AX's effect CL has charges that mean something (EF_CHARGES).
+; DS the game's; BX, DX, SI, ES changed.
+ec_counted:
+        push cx
+        mov dx, ds
+        sub dx, EFFECTS_GAP
+        mov es, dx
+        mov si, EFFECTS_BASE
+        mov dx, [EFFECTS_COUNT]
+        cmp dx, 400
+        ja .no
+.find:  or dx, dx
+        jz .no
+        cmp [es:si], ax
+        jne .next
+        cmp [es:si + 6], cl
+        je .found
+.next:  add si, 10
+        dec dx
+        jmp .find
+.found: mov bx, [es:si + 7]             ; (BH the charges, BL the handle)
+        or bh, bh
+        jz .no
+        mov dx, [es:si + 4]             ; (the spell that made it)
+        push fs
+        call tail_fs
+        mov si, ec_uses
+.uses:  cmp word [fs:si], -1
+        je .timer
+        cmp [fs:si], dx
+        je .yes_fs
+        add si, 2
+        jmp .uses
+.timer: pop fs
+        les si, [EVENT_QUEUE]           ; (else only if timed: an item's power, cast for -9999, and a
+        mov cx, [EVENT_COUNT]           ;  permanent effect have none, and +8 a stray)
+        cmp cx, 1000
+        ja .no
+.event: jcxz .no
+        cmp byte [es:si + 4], EVENT_EFFECT_ENDS
+        jne .on
+        cmp [es:si + 5], ax
+        jne .on
+        cmp [es:si + 7], bl
+        je .yes
+.on:    add si, EVENT_SIZE
+        dec cx
+        jmp .event
+.yes_fs:
+        pop fs
+.yes:   mov bl, bh
+        pop cx
+        stc
+        ret
+.no:    pop cx
+        clc
+        ret
+
+; EC_ITOA: AL (unsigned) in decimal at FS:DI, DI past it. Others kept.
+ec_itoa:
+        push ax
+        push cx
+        xor ah, ah
+        mov cl, 100
+        div cl                          ; (AL the hundreds, AH the rest)
+        or al, al
+        jz .tens
+        add al, '0'
+        mov [fs:di], al
+        inc di
+.tens:  mov ch, al                      ; (nonzero once a digit is written)
+        mov al, ah
+        xor ah, ah
+        mov cl, 10
+        div cl
+        or ch, ch
+        jnz .ten
+        or al, al
+        jz .ones
+.ten:   add al, '0'
+        mov [fs:di], al
+        inc di
+.ones:  add ah, '0'
+        mov [fs:di], ah
+        inc di
+        pop cx
+        pop ax
+        ret
+section tail
+; the spells that last a number of uses (their records' time, +7, -1: RESOURCE.GFF's, ravlog.spell_table; and
+; Reflected Image, 323, Mirror Image's record), ended by -1
+ec_uses dw 0, 17, 19, 46, 52, 86, 104, 120, 153, 167, 168, 179, 200, 225, 285, 301, 323, -1
+section tailz
+ec_text times 48 db 0                   ; (EF_CHARGES' line: the name, then " (255 charges)" at most)
+section image
 
 resident_end:
 align 16

@@ -226,7 +226,7 @@ to be read for it.
 | **Acid Arrow** | Fixed there too (the burns played) |
 | **Psionic Blast** on a party member | Fixed there too (played) |
 | **Walls** cast by monsters | Fixed there too; not yet seen in play |
-| A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: fixed there too (the sequel's end had no case for it; played: a Draxan made berserk by Charm Mammal had its own side kept and given back as it ended) |
+| A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: fixed there too (the sequel's end had no case for it; played: a Draxan made berserk by Charm Mammal had its own side kept and given back as it ended; a party member's side, changed while she was berserk, back as her Berserk ran out) |
 | **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
 | An archer whose **quiver runs dry** | Not yet: the sequel's arrows are counted by other code, still to be found |
 | A **thri-kreen's claws and bite** | Fixed there too (played: Thy'rokh's bite in the ambush) |
@@ -248,7 +248,7 @@ to be read for it.
 | The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
 | An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
-| A magic item's power on the **Effects screen** | Not yet: the charges on the Effects screen are the mod's own lines, not yet in the sequel; the fix comes with them |
+| A magic item's power on the **Effects screen** | Fixed there too, with the charges lines (played: Armor's "(14 CHARGES)", Inertial Barrier's stray 15 not shown) |
 | A click on a spell's icon on the **Effects screen** ending the spell | Fixed there too (played) |
 | **CHOOSE A SPELL**'s icons with more than 15 spells | Fixed there too (played: 17 icons in rows of six, centred) |
 | **Graphics disappearing in a busy area** | Fixed there too (played): SSI's note 2712 was written for this game |
