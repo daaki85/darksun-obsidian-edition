@@ -96,3 +96,8 @@ The same check with #232 joined (sites 241-244, header +2114..+2123): to Tyr, th
 block (PSP, code segment to E05Ch, tail) is 66,384 bytes (65,792 before: #232's 534 bytes of code and LOCK_BARRED's
 64), its other block 5,632 as before; free in upper memory **83,568 bytes** in
 2 pieces, the largest 83,424.
+
+## 2026-11-27: upper memory with #240 (the audit's leftovers) joined
+
+To Tyr with everything joined (#217-#236, #238-#240): DSCLOG2's first block 66,560 bytes (66,384 before #240),
+its other block 5,632; free in upper memory **83,392 bytes**, the largest piece 83,248.
