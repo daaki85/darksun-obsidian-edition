@@ -41,6 +41,24 @@ class TableTests(unittest.TestCase):
             ravui.colour_table([(0, 0, 0)] * 256, [(c, (0, 0, 0)) for c in range(1, 32)])
 
 
+class DitherTests(unittest.TestCase):
+    def test_a_shade_between_two_kept_colours_is_a_mix_of_both(self):
+        sl_palette = [(0, 0, 0)] * 256
+        sl_palette[5] = (100, 100, 120)  # (half way between the sequel's two below)
+        stable = [(235, (120, 120, 140)), (236, (80, 80, 100)), (100, (200, 0, 0))]
+        rows = icons.decode(ravui.dithered(icons.encode([[5] * 8 for _ in range(8)]), sl_palette, stable))
+        used = [p for r in rows for p in r]
+        self.assertEqual(set(used), {235, 236})
+        self.assertLessEqual(abs(used.count(235) - 32), 2)  # (half and half, as the shade between)
+
+    def test_a_colour_with_none_near_is_the_nearest(self):
+        sl_palette = [(0, 0, 0)] * 256
+        sl_palette[5] = (0, 0, 250)
+        stable = [(235, (120, 120, 140)), (236, (80, 80, 100))]
+        rows = icons.decode(ravui.dithered(icons.encode([[5, 0, 5]]), sl_palette, stable))
+        self.assertEqual(rows[0], [236, 0, 236])
+
+
 class SwitchTests(unittest.TestCase):
     def test_the_options_box_leaves_it_out_only_when_unticked(self):
         self.assertNotIn(ravui.SKIP, ravager.skipped({}))
