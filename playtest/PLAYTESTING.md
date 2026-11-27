@@ -913,6 +913,8 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 
 ## Inventory, looting, selling and shops
 
+- **Class portraits.** From the PENS save, press I and select each party face. Gerakis wears the arena harness, K’ratchek carries shell markings, Cermak wears plum and Cilla has an ochre kilt, mantle and hood. The DOS helper reads the portrait from the prepared RESOURCE.GFF, so this check also works with the host dice log detached.
+
 - **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
   backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
   right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click

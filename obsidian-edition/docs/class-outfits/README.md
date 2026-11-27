@@ -16,6 +16,12 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 **Approved shoulder fit (art revision `ccd86dd`).** The Fighter/Psionicist guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](shoulder-fit-by-race.gif)
 
+## Inventory portraits
+
+The inventory dresses each full-length figure for the selected character. A human shows the active class. In a multiclass outfit, the bone shoulder guards, teal sash, green lining, plum mantle or open hood identify the other classes. Thri-kreen carry their colors on the shell. Equipment slots still show the individual items.
+
+![Fourteen inventory figures in single-class and multiclass outfits](inventory-portraits.png)
+
 ## Dwarf outfits
 
 The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. The five two-class and two three-class outfits combine their identifying details. The Cleric/Fighter wears pale bone caps over cream, and the Fighter/Psionicist wears a narrow teal sash over leather. Each tile below pairs the female front view with the male rear view. [See all twelve class combinations](dwarves.md)

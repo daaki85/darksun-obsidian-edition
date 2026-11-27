@@ -239,6 +239,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
 | [2026-11-27](2026-11-27-ravager-scholar.md) | The Scholar kit in Wake of the Ravager: THAC0 1 worse, one more spell at each level up, a new Scholar's one more for each level; THAC0 is written only at creation and level up, not on equip |
 | [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
+| [2026-11-27](2026-11-27-inventory-redraws.md) | Class portraits in the Shattered Lands inventory |
 
 ## files/
 
