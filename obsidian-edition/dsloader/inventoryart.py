@@ -27,11 +27,15 @@ from . import art, icons
 FIRST = 0x6000
 CLEAR = 255  # A painted cutout exposes the parchment. An absent pixel keeps retail art.
 HUMAN = tuple((c,) for c in range(1, 9))
-BUILDS = (HUMAN, HUMAN)
+GLADIATOR = ((4,),)
+# Each figure's classes with a picture, by figure (0 the human man ... 11 the halfling woman): the
+# humans in all eight, the other races' women as Gladiators (a single class: a multiclass falls back
+# to the stock picture).
+BUILDS = (HUMAN, HUMAN, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR, (), GLADIATOR)
 ARCHIVE = Path(__file__).with_name("inventory-garments.zip")
-# The stock head each figure keeps through every class, as (top, bottom, left, right), bottom and
-# right excluded: the man's face below the stock helmet (his hair is the painter's, one for all
-# classes), the woman's face, hair and tiara.
+# The stock head each human figure keeps through every class, as (top, bottom, left, right),
+# bottom and right excluded: the man's face below the stock helmet (his hair is the painter's, one
+# for all classes), the woman's face, hair and tiara. The other races' figures keep no box.
 HEAD = {0: (8, 15, 19, 32), 1: (0, 15, 14, 31)}
 
 Rows = List[List[Optional[int]]]
@@ -135,7 +139,7 @@ def main(argv: List[str]) -> int:
         game_dir, figure, cls, path = argv[1], int(argv[2]), int(argv[3]), argv[4]
         gameart = art.GameArt(game_dir)
         _, _, stock = art.decode_frame(gameart.figures[art.FIGURE_FIRST + figure])
-        head = None if "--repaint-head" in argv else HEAD[figure]
+        head = None if "--repaint-head" in argv else HEAD.get(figure)
         layer = layer_from_picture(read_picture(path), stock, gameart.colours, head)
         _rewrite({f"{figure}/body{cls}": icons.encode(layer)})
         painted = sum(p is not None for row in layer for p in row)

@@ -18,7 +18,7 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 ## Inventory portraits
 
-In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The twelve other figures use their retail full-length pictures. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
+In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The dwarf, elf, half-elf, half-giant and halfling women have a repainted figure as single-class Gladiators. All other cases use the retail full-length pictures, including multiclass characters of those races, their men, the mul and the thri-kreen. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
 
 ### Human inventory fittings
 

@@ -11,19 +11,23 @@ from dsloader import art, icons, inventoryart
 
 
 class InventoryArtTests(unittest.TestCase):
-    def test_human_classes_only(self):
-        human_sizes = [(48, 95), (44, 88)]
+    def test_human_classes_and_other_gladiator_women(self):
+        sizes = [(48, 95), (44, 88), (64, 70), (48, 70), (71, 92), (70, 89), (45, 93), (50, 94),
+                 (78, 88), (66, 87), (45, 69), (33, 61), (62, 106), (79, 95)]
         resources = {}
-        for figure in range(14):
-            w, h = human_sizes[figure % 2]
+        for figure, (w, h) in enumerate(sizes):
             resources["BMP ", art.FIGURE_FIRST + figure] = icons.encode([[16] * w for _ in range(h)])
+        women = (3, 5, 7, 9, 11)
         with ZipFile(Path(inventoryart.__file__).with_name("inventory-garments.zip")) as archive:
-            self.assertEqual(set(archive.namelist()), {f"{f}/body{c}" for f in (0, 1) for c in range(1, 9)})
+            self.assertEqual(set(archive.namelist()),
+                             {f"{f}/body{c}" for f in (0, 1) for c in range(1, 9)}
+                             | {f"{f}/body4" for f in women})
         pictures = inventoryart.chunks(resources)
         expected = {("BMP ", 0x6000 + 256 * f + (1 << c)) for f in (0, 1) for c in range(8)}
+        expected |= {("BMP ", 0x6000 + 256 * f + (1 << 3)) for f in women}
         self.assertEqual(set(pictures), expected)
-        self.assertEqual(len(set(pictures.values())), 16)
-        for f, dims in enumerate(human_sizes):
+        self.assertEqual(len(set(pictures.values())), 21)
+        for f, dims in enumerate(sizes[:2]):
             for c in range(1, 9):
                 w, h, rows = art.decode_frame(pictures["BMP ", inventoryart.picture_id(f, (c,))])
                 self.assertEqual((w, h), dims)
