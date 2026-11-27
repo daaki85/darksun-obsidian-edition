@@ -174,7 +174,7 @@ def audit(game_dir, output, checkout, bounds):
                         pose = 15*combat+frame
                         reference, _ = study.rows(key, pose, role)
                         canvas = starting_canvas(reference, rows, sprites.PAD)
-                        expected = array(sprites.trimmed(canvas, combat))
+                        expected = array(sprites.trimmed(sg.steadied(canvas, rows, sprites.PAD), combat))
                         results["clipped_study_pixels"] += int(np.sum(array(canvas) != 255)-np.sum(expected != 255))
                         results["clipped_cape_cells"] += sum(not (-side <= x < len(rows[0])+side and -top <= y < len(rows))
                             for x, y, _ in (field.equipped_cape or field.cloak))

@@ -9,6 +9,8 @@ from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
 from wornreview import Atlas
 from shoulderscale import shoulder_paint
+import limbstrokes
+import gladiatorhide
 
 MODELS = (2068, 2070)
 ROLES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
@@ -119,6 +121,72 @@ def dye(ramp, shade):
     return ramp[max(0, min(len(ramp)-1, round(shade)))]
 
 
+# The short halfling torso has only five or six rows between the jaw and
+# the pelvis. Use the warmer native highlights on broad body planes, with
+# one short shadow where the ribs overhang the waist.
+SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 150, 151)
+
+
+# The relief on the visible elbow and bent knee, traced in his retail
+# coordinates. Her cels use the registration in CUT. A turned forearm
+# can be horizontal in a strike and nearly vertical in the next walk.
+LIMBS = (
+    ((2,8,0,1),(7,14,0,1)), ((3,8,-1,1),(11,14,1,1)),
+    ((9,10,1,1),(3,14,0,1)), ((1,7,0,1),(7,14,0,1)),
+    ((2,8,0,1),(10,13,0,1)), ((15,8,1,1),(10,14,0,1)),
+    ((16,8,0,1),(8,13,-1,1)), ((12,7,1,1),(4,15,0,1)),
+    ((12,8,1,1),(3,15,0,1)), ((1,8,0,1),(9,14,0,1)),
+    ((1,8,0,1),(9,15,0,1)), ((5,11,1,1),(3,14,-1,1)),
+    ((5,10,0,1),(8,14,1,1)), ((3,9,0,1),(3,14,0,1)),
+    ((10,9,1,1),(4,14,-1,1)), ((2,12,0,1),(3,17,0,1)),
+    ((14,8,0,1),(7,13,0,1)), ((12,9,1,1),(8,14,-1,1)),
+    ((9,7,0,1),(7,14,1,1)), ((4,10,-1,0),(10,14,1,1)),
+    ((7,10,-1,1),(11,15,1,1)), ((14,7,1,1),(8,14,0,1)),
+    ((16,8,1,1),(4,14,-1,1)), ((13,8,1,1),(6,12,-1,1)),
+    ((8,10,1,1),(4,15,-1,1)), ((3,10,0,1),(8,18,1,1)),
+    ((14,10,1,0),(7,18,0,1)), ((9,6,1,-1),(8,14,1,1)),
+    ((2,10,0,1),(4,14,-1,1)),
+)
+
+def torso_tone(u, depth, rear, profile):
+    near = -.47 + .16*depth
+    if profile:
+        near = -.22 - .24*depth
+    shoulder = math.exp(-((u-near)/.61)**2 - ((depth-.20)/.30)**2)
+    rib = math.exp(-((u-near-.16)/.58)**2 - ((depth-.43-.17*u)/.24)**2)
+    waist = math.exp(-((depth-.67-.15*u)/.17)**2 - ((u+.15)/.68)**2)
+    hip = math.exp(-((u-near-.14)/.42)**2 - ((depth-.92)/.19)**2)
+    far = math.exp(-((u-.51)/.31)**2 - ((depth-.23)/.23)**2)
+    shade = 5.2 - 2.8*u - 1.8*abs(u) + 6.1*shoulder + 3.5*rib - 2.8*waist + 4.4*hip
+    if rear:
+        # The farther blade catches a smaller reflection across the spine.
+        shade += 3.6*far - 2.8*math.exp(-((u-.08)/.19)**2 - ((depth-.38)/.39)**2)
+    elif not profile:
+        shade += 2.7*far
+    # The rib edge casts a short curved shadow as it turns into the flank.
+    edge = depth - (.51 + .13*u)
+    shade += 2.1*math.exp(-((edge+.11)/.10)**2 - ((u-near-.23)/.38)**2)
+    shade -= 2.9*math.exp(-(edge/.12)**2 - ((u-near-.26)/.44)**2)
+    shade += 2.9*shoulder + 2.8*rib - 1.7*waist
+    # Beneath a raised shoulder the inner edge of the arm occludes the
+    # far ribs. The shade follows their changing width through a strike.
+    shade -= 2.6*math.exp(-((u-.62)/.30)**2-((depth-.50)/.23)**2)
+    return dye(SKIN, shade)
+
+
+def thigh_tone(across, depth, near):
+    # The ridge slopes toward the rising knee. A three-pixel thigh reads
+    # as one lit plane between the two darker turns of the leg.
+    ridge = .32 + .15*min(1, max(0, depth))
+    shade = 3.9 + 6.8*math.exp(-((across-ridge)/.31)**2) - 2.2*across
+    # Separate the top of the thigh from its outer tendon under the hip.
+    # The highlight narrows as the leg comes forward toward the knee.
+    fold = depth-.23-.19*(across-.4)
+    shade += 2.9*math.exp(-((across-ridge)/.24)**2 - ((fold+.08)/.22)**2)
+    shade -= 2.3*math.exp(-((across-ridge-.27)/.24)**2 - (fold/.24)**2)
+    return dye(SKIN, shade + (1.4 if near else -.6) - 1.6*depth)
+
+
 def pixels(vertices):
     # Work outside the native bounding box for cloth that swings past a leg.
     im = Image.new("1", (48, 40))
@@ -192,6 +260,13 @@ def garment_masks(ref, native, twin, pose, dx, dy, half):
 # in the native cel because the same ochres also paint hair and the bow.
 MALE_CUFF_TIPS = {1: ((1, 9), (2, 10)), 2: ((11, 11),), 3: ((18, 10),),
                   7: ((13, 8),), 10: ((0, 13),), 27: ((0, 10),)}
+
+
+# The last blue glints on the wrist edges, in his unpadded coordinates.
+# The woman's registration brings her surviving cuff tips to the same points.
+COLD_CUFF_TIPS = {0: ((19, 7),), 1: ((17, 7),), 3: ((18, 7),),
+                  4: ((17, 4),), 5: ((17, 6), (0, 7)),
+                  6: ((2, 4),), 10: ((0, 9),)}
 
 
 def rows_for(game, model, pose, swatch, *, exposed_arm=None):
@@ -286,14 +361,21 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                 body = None  # Open the small gap between her thighs under the loincloth.
             if c is not None and (trunk or thigh or wrist):
                 if wrist:
-                    body = (134, 132, 130, 145)[(x+2*y) % 4]
+                    # The bracelet has gone. Let the forearm turn toward
+                    # its inside edge, even in the two-pixel side views.
+                    span = [xx for xx in range(x-2, x+3) if (xx, y) in bands]
+                    across = (x-min(span)+.5)/(max(span)-min(span)+1)
+                    body = dye(SKIN, 4.5 + 4.4*math.exp(-((across-.31)/.27)**2) - 3.2*across)
                 elif trunk:
-                    body = elf.torso_skin(u, depth, pose in REAR, pose in PROFILE)
-                    if model == 2070 and pose not in REAR | PROFILE and .18 < depth < .58:
-                        body = 145 if abs(u) > .23 and depth < .45 else 132
+                    body = torso_tone(u, depth, pose in REAR, pose in PROFILE)
                 else:
                     side = thigh_light[point]
-                    body = elf.leg_skin(side, (y-hy)/max(1, h-dy-hy), pose in REAR)
+                    # When both thighs meet at the pelvis, give each its
+                    # own cylinder before they separate on the next row.
+                    if pose not in PROFILE and (hx-2, y) in legs and (hx+2, y) in legs:
+                        side = (x-hx+half+.5)/half if x < hx else (x-hx+.5)/half
+                    near = (x < hx) == (left[1] >= right[1])
+                    body = thigh_tone(side, (y-hy)/max(1, h-dy-hy), near)
                 if nx+1 >= w or native[ny][nx+1] is None:
                     body = 129
             for role in ROLES[1:]:
@@ -315,7 +397,9 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                 along = max(0, min(1, (y-guard_y)/max(1, hy-guard_y)))
                 strap = guard_x+(hx+(2 if guard_x < sx else -2)-guard_x)*along
                 if abs(x-strap) <= 1.05:
-                    strap_light = 8.5 if x < strap else 3.6
+                    # The far leather lip is undercut beside the skin. Light
+                    # catches the other side as the strap turns over the ribs.
+                    strap_light = 13.5 if x < strap else 1.8
                     rows['Gladiator'][ny][nx+4] = dye(RAMPS['hide'], strap_light+.45*grain)
             cap_y = y-guard_y
             cap_x = x-guard_x
@@ -375,10 +459,62 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                     # lap line runs from the belt over the forward thigh.
                     lap = x-hx+.62*(y-hy)
                     light += 2.6 if -.8 < lap < .4 else -2.2 if .4 <= lap < 1.4 else .7
+                if role == 'Cleric' and y > hy:
+                    # Linen folds over at the outside seam and beneath the
+                    # knee. A tan return separates that thin hem from sand.
+                    # Keep the raised, near-facing ridge in the linen light.
+                    if (x+1, y) not in panel:
+                        light = min(light, 3.6 + .65*grain)
+                    elif (x, y+1) not in panel:
+                        light = min(light, 4.4 + .65*grain + 1.1*(x < hx))
+                if role == 'Gladiator' and y > hy:
+                    # The hide flap overlaps the thigh. Its cut underside
+                    # follows the lifted knee through front and rear steps.
+                    if (x, y+1) not in panel or (x+1, y) not in panel:
+                        # The rear thigh under the hem is in deep shadow.
+                        # Show the turned hide edge where that shadow meets it.
+                        if body in (128, 129, 134):
+                            light = 10.0 + .6*grain
+                        else:
+                            light = min(light, 2.7 + .6*grain)
+                    elif -.8 < lap < .4:
+                        light += 1.6
                 color = dye(ramp, light)
                 if y == hy:
                     color = dye(RAMPS['hide'], 4+.55*grain)
+                    if role == 'Gladiator' and pose in REAR and x >= hx:
+                        # The folded top edge passes under the long hair and
+                        # across the far hip in the shadow of the moving arm.
+                        color = dye(RAMPS['hide'], 9.1+.8*grain-abs(x-hx)*.35)
                 rows[role][ny][nx+4] = color
+    if pose == 10:
+        # The narrow rear flap turns out above the darker calf at the end
+        # of the stride. Carry its lit seam down from the waistband.
+        for x, y, tone in ((6, 11, 95), (6, 14, 95), (5, 15, 93)):
+            rows["Gladiator"][y+dy][x+dx+4] = tone
+    def registered(x, y):
+        return x+dx+4, y+dy
+    gladiatorhide.dress(rows["Gladiator"], rows["Body base"], registered(guard_x, guard_y),
+                        registered(hx+(2 if guard_x < sx else -2), hy),
+                        (registered(hx, hy), registered(hx-2.5, hy+4)))
+    protected = {registered(x, y) for x, y in head | head_hair}
+    protected.update((x+4, y) for x, y in bow)
+    edits = {}
+    bare = rows["Body base"]
+    # Remove a rim only if the undressed wrist actually contains blue.
+    # The same palette entries occur in hidden shorts beneath the long robe.
+    for x, y in COLD_CUFF_TIPS.get(pose, ()):
+        u, v = registered(x, y)
+        if not (0 <= v < h and 0 <= u < len(bare[v])) or bare[v][u] not in (50, 52):
+            continue
+        inside = [SKIN.index(bare[v+j][u+i]) for i,j in ((-1,0),(0,1),(1,0),(0,-1),
+                                                        (-1,1),(1,1),(-1,-1),(1,-1))
+                  if 0 <= v+j < h and 0 <= u+i < len(bare[v]) and bare[v+j][u+i] in SKIN]
+        if inside:
+            edits[u, v] = dye(SKIN, max(2, min(6, sum(inside)/len(inside))))
+    limbstrokes.joint_highlights(bare, LIMBS[pose], SKIN, registered, protected, edits)
+    limbstrokes.quiet_highlights(bare, SKIN, protected, edits)
+    limbstrokes.exposed_skin(rows, edits)
     return {role: flip(r) if pose == 28 else r for role, r in rows.items()}
 
 

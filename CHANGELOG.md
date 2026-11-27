@@ -172,7 +172,14 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
 
-**New: the Scholar kit in Wake of the Ravager** (branch `claude/sequel-scholar`)
+**New: the kits on Wake of the Ravager's DAM lines and creation THAC0** (branch `claude/sequel-dam-lines`)
+- The inventory's and View Character's DAM lines show the kits' part as Shattered Lands' do: a Ravager's 1 more
+  damage, a Brute's 2 with a two-handed weapon, a Ghetto Fighter's 1 with a dagger, and a Battle Mage's,
+  Crusader's or Mind Warrior's attacks with its chosen weapon (DSCLOG2's `DAM_KIT_MELEE`, `DAM_EXPERT`).
+- The creation screen's THAC0 line has a new Scholar's 1 worse as soon as the kit is chosen or taken back
+  (`CR_KIT_THAC0`); before, only after the next roll.
+
+**New: the Scholar kit in Wake of the Ravager** (#270)
 - A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
   spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
   preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).

@@ -121,7 +121,7 @@ def keep_binding(surface, signature, pose, cuts, height):
         surface.difference_update((x, y) for x, y in signature if y in rows)
 
 
-def study_surface(game, obj, pose, rows, role, cuts):
+def study_surface(game, obj, pose, rows, role, cuts, *, binding_colours=None):
     """Visible garment, suit dye area, and protected accents on one approved pose."""
     outfit, body = rows[role], rows["Body base"]
     # Keep the distinctive secondary layers, including a retinted
@@ -136,8 +136,9 @@ def study_surface(game, obj, pose, rows, role, cuts):
     if obj in co.HALF_ELF_SOURCES and outer:
         covered -= halfelf_exposed_garment(game, obj, base, pose)
     surface = suit_surface(outfit, body, cloth, additions | covered, pose, cuts)
-    pigment = set(RAMPS[DEFAULT.get(base, "hide")]) - {208, 17, 207, 204}
-    signature = {(x, y) for x, y in cloth if outfit[y][x] in pigment}
+    if binding_colours is None:
+        binding_colours = set(RAMPS[DEFAULT.get(base, "hide")]) - {208, 17, 207, 204}
+    signature = {(x, y) for x, y in cloth if outfit[y][x] in binding_colours}
     keep_binding(surface, signature, pose, cuts, len(outfit))
     return cloth, surface, additions, covered, signature
 

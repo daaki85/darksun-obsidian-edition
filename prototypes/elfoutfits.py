@@ -18,6 +18,7 @@ from dsloader import classoutfits, figures, sprites
 MODELS = ((figures.ELF_WOMAN, "Female"), (figures.ELF_MAN, "Male"))
 STUDIES = ("Original", "Body base", "Gladiator", "Fighter", "Cleric")
 FLESH = (129, 134, 132, 130, 145, 147)
+UPPER_ARM_LIGHT = {145: 146, 146: 148, 147: 149}
 GOLD = {44, 45, 64, 65, 179, 180, 181, 182, 183, 200, 201}
 SHIRTS = {
     figures.ELF_MAN: {24, 29, 38, 39, 48, 49, 50, 158, 159, 160, 161, 162},
@@ -29,6 +30,13 @@ SIDE_HEMS = {
     figures.ELF_MAN: {2: (-1, 7), 11: (-1, 6), 12: (1, 10), 13: (0, 7), 14: (2, 11)},
 }
 PAD = 4
+
+# With the near hand swung forward, the far shoulder lies underneath the
+# trailing cloth. In steps 2–3 that arm and its fist cross the front instead.
+COVERED_SHOULDER = {
+    2: {(0, 7), (0, 8)},
+    14: {(2, 7), (3, 7), (2, 8), (3, 8), (3, 9), (4, 10)},
+}
 
 
 # Centre of the lower face (or nape from behind), in native coordinates.
@@ -246,6 +254,40 @@ HIT_THIGH = {(10, 12): 130, (11, 12): 145, (12, 12): 144,
              (14, 13): 131, (13, 14): 132, (14, 14): 133}
 
 
+# Native columns along the far ribs. The small reflected plane shifts under
+# the shoulder as the arm comes forward; a single highlight would sit still.
+RIB_TURNS = {
+    2061: {0: (6, (12, 11, 10)), 3: (6, (11, 10, 10)), 4: (5, (12, 11, 10)),
+           5: (6, (12, 12, 11, 10)), 6: (7, (11, 10, 9)), 7: (7, (10, 10, 9)),
+           9: (10, (7, 7, 6)), 19: (17, (9, 9, 10)),
+           21: (13, (19, 18, 18, 17, 17)), 27: (6, (12, 11, 10))},
+    2059: {0: (14, (10, 10, 11)), 3: (10, (10, 9, 9, 8))},
+}
+
+# Short reflected light where the side-strike torso joins the raised thigh.
+STRIKE_THIGH = {(18, 20): 132, (19, 21): 130, (20, 22): 132}
+
+# The narrowest knees turn away in profile. A lone high skin tone on the
+# kneecap looked metallic beside that leg's dark underside. Carry a softer
+# light into the adjoining thigh. Coordinates are native, feet-down.
+KNEE_TURNS = {
+    figures.ELF_MAN: {11: (3, 18), 12: (3, 18), 24: (4, 19), 25: (8, 20), 27: (4, 19)},
+    figures.ELF_WOMAN: {11: (5, 18), 12: (6, 18), 15: (3, 27), 24: (4, 19), 25: (8, 20)},
+}
+
+# Raised lip on the returning fold of the teal wrap. Follow the turn of
+# the hip in each front step and carry the same crease round the back.
+WRAP_TURNS = {
+    2061: {0: (11, (9, 8, 9, 10, 10, 11)), 3: (12, (9, 8, 8, 8)),
+           4: (10, (9, 9, 10, 10)), 5: (11, (9, 9, 10, 11)),
+           6: (10, (8, 8, 7, 7, 8, 8)), 9: (14, (6, 7, 7, 8, 8)),
+           10: (15, (9, 8, 8, 9))},
+    2059: {0: (11, (10, 9, 9, 8, 9, 9, 8)), 3: (14, (9, 8, 8, 7, 8)),
+           4: (13, (10, 10, 9, 9, 9)), 5: (13, (10, 9, 9, 8)),
+           6: (10, (8, 8, 7, 7, 7, 8)), 27: (12, (9, 9, 10, 10, 9, 10))},
+}
+
+
 def torso_skin(u, depth, rear, profile):
     """Model the light over one shoulder, ribs and iliac crest in pose coordinates."""
     # The near and far planes have unequal widths when the figure turns.
@@ -281,18 +323,82 @@ def torso_skin(u, depth, rear, profile):
     return 133 if distance < 1.08 else 134
 
 
+def elf_torso_skin(u, depth, rear, profile):
+    """Model the light over one shoulder, ribs and iliac crest in pose coordinates."""
+    # The near and far planes have unequal widths when the figure turns.
+    ridge = -0.46 + 0.24 * depth
+    if profile:
+        ridge = -0.26 - 0.18 * depth
+    distance = u - ridge
+    # Two short oblique ridges leave a recessed spine or sternum. The
+    # darker waist separates the rib cage from the light on the near hip.
+    rib = 0.24 + (0.19 if rear else 0.12) * distance
+    hip = 0.89 - 0.18 * distance
+    # The near shoulder meets the pectoral (or scapula) at an angle.
+    # Keep a smaller lit crest beside the broad warm face of that muscle.
+    shoulder = 0.12 - 0.16 * distance
+    if -0.83 < distance < -0.22 and abs(depth - shoulder) < 0.13:
+        return 150 if abs(depth - shoulder) < 0.065 else 147
+    # The far collarbone rises to the shoulder. In back view the inner
+    # shoulder blade rolls away from the spine and catches a softer light.
+    collar = 0.16 - 0.15 * distance
+    if 0.26 < distance < 0.92 and abs(depth - collar) < 0.075:
+        return 145 if rear else 147
+    if abs(depth - rib) < 0.20 and abs(distance) < 0.55:
+        crest = abs(depth - rib) + 0.42 * abs(distance)
+        if crest < 0.105:
+            return 151
+        return 148 if crest < 0.25 else 146
+    # Light on the crest of the hip ends at the crease of the bent thigh.
+    if abs(depth - hip) < 0.14 and abs(distance) < 0.55:
+        return 148 if abs(distance) < 0.21 else 145
+    flank = 0.63 - 0.24 * distance
+    if -0.45 < distance < 0.55 and abs(depth - flank) < 0.11:
+        return 147 if distance < 0.14 else 144
+    # Follow the slant of the lower ribs into a recessed abdomen. From the
+    # rear the central hollow rises higher between the shoulder blades.
+    hollow = 0.41 - (0.16 if rear else 0.06) * distance
+    if -0.06 < distance < 0.67 and abs(depth - hollow) < 0.09:
+        return 134 if rear or distance > 0.19 else 132
+    if distance < -0.54:
+        return 130 if distance > -0.92 else 134
+    if distance < 0.10:
+        return 146 if depth < 0.53 else 130
+    if distance < 0.51:
+        return 130 if depth < rib or depth > hip else 132
+    far_rib = 0.31 - 0.14 * distance
+    if 0.60 < distance < 1.10 and abs(depth - far_rib) < 0.18:
+        return 145 if abs(depth - far_rib) < 0.095 else 130
+    return 133 if distance < 1.08 else 134
+
+
 def leg_skin(across, depth, rear):
-    # Carry the broad upper-thigh light into a smaller knee highlight.
-    ridge = 0.30 + 0.20 * depth
+    """Place the broad thigh, small knee plane and narrowing calf on this leg."""
+    ridge = 0.29 + 0.20 * depth
     distance = abs(across - ridge)
-    if 0.39 < depth < 0.58:
-        if distance < 0.19:
-            return 130 if rear else 146
+    if depth < 0.41:
+        if distance < 0.18:
+            return 149 if 0.12 < depth < 0.32 else 147
+        if distance < 0.33:
+            return 145 if depth < 0.29 else 130
+    elif depth < 0.59:
+        # A short patella facing the viewer; a curved tendon and a small
+        # hollow at the back of the flexed knee instead of a second shin.
+        if distance < 0.24:
+            if rear:
+                return 130 if depth < 0.50 else 134
+            return 149 if depth < 0.53 else 146
         return 134 if across > ridge else 132
-    if distance < 0.14:
-        return 146 if 0.13 < depth < 0.38 else 145
-    if distance < 0.28:
-        return 144 if depth < 0.4 else 130
+    elif depth < 0.93:
+        # The calf starts on the outside, turns towards the ankle and
+        # ends in a narrow reflected midtone over the heel.
+        ridge = 0.27 + 0.32 * (depth - 0.59)
+        if abs(across - ridge) < 0.24:
+            if depth < 0.75:
+                return 148 if rear else 147
+            return 145 if depth < 0.84 else 130
+        if abs(across - ridge) < 0.35:
+            return 130 if depth < 0.81 else 132
     return 134 if across > ridge else 132
 
 
@@ -325,6 +431,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
         }
         if pose == 27:
             locks.add((6, 0))  # Cloth spans the notch between two raised hair tips.
+    # The native hand anchors stay with the grips even in the raised strokes.
+    hands = [point_up(p) for p in parts.hands.values()]
     # Fingers extend past the waist in the recoil and the front follow-through.
     # Register them to the green retail wristbands, independently of the tunic.
     wrists = {point_up(p) for p in fig.bands(combat, frame)}
@@ -418,9 +526,11 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     if low_cap:
         cap_top = max(shoulder + 1, cy + 2)
         cap_bottom = cap_top + 1
-    profile_walk = pose in (2, 11, 12, 13, 14)
     panel = PROFILE_PANELS.get((model, pose))
     panel_hem = waist + (3 if cape == "Thief" else 5)
+    knee = KNEE_TURNS[model].get(pose)
+    rib_y, ribs = RIB_TURNS[model].get(pose, (0, ()))
+    wrap_y, wrap = WRAP_TURNS[model].get(pose, (0, ()))
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
     for y, row in enumerate(rows):
@@ -454,6 +564,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     )
                 )
             )
+            if model == figures.ELF_MAN and cape and show_cape and point in COVERED_SHOULDER.get(pose, ()):
+                arm = False
             if c is not None and not foreground:
                 if y >= waist + 1:
                     # Shade the two limbs independently at their actual locations.
@@ -481,24 +593,53 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     paint = FLESH[tone]
                     if not arm and c not in outfits.SKINC and y >= shoulder:
                         if y <= waist:
-                            paint = torso_skin(u, t, rear, profile)
-                        elif feet and (end - start >= 2 or profile_walk and end > start):
+                            paint = elf_torso_skin(u, t, rear, profile)
+                        elif feet and end > start:
                             # The kneecap and calf turn at different heights on
                             # the two legs, especially on the lifted bow/hit leg.
                             sole = min(feet, key=lambda ft: abs(x - (ft[1] + ft[2]) / 2))[0]
                             leg = (y - waist) / max(1, sole - waist)
-                            if profile_walk and 0.59 <= leg < 0.93:
-                                # The calf bulges below the knee and the light
-                                # tapers into the ankle, even on a two-pixel shin.
-                                ridge = 0.29 + 0.25 * (leg - 0.59)
-                                if abs(pos - ridge) < 0.23:
-                                    paint = 146 if leg < 0.70 else 144 if leg < 0.80 else 130
-                                else:
-                                    paint = 134 if pos > ridge else 132
-                            elif leg < 0.78 and end - start >= 2:
+                            if leg < 0.93:
                                 paint = leg_skin(pos, leg, rear)
                         if model == figures.ELF_WOMAN and pose == 27:
                             paint = HIT_THIGH.get((x, y), paint)
+
+                # The former green cuff had a light face and a shadow face.
+                # Use the adjoining forearm's skin to continue that turn across
+                # the wrist, even when the hand rises beside the head.
+                if arm and c in (249, 250):
+                    adjacent = [
+                        rows[ny][nx]
+                        for nx, ny in ((x, y - 1), (x - 1, y), (x + 1, y), (x, y + 1))
+                        if 0 <= nx < width and 0 <= ny < height
+                        and rows[ny][nx] in outfits.SKINC and (nx, ny) not in protected
+                    ]
+                    if adjacent:
+                        if c == 250:
+                            # A thin roll of reflected light where the forearm narrows.
+                            paint = 147 if any(v >= 144 for v in adjacent) else 144
+                        else:
+                            paint = 131 if any(v <= 134 for v in adjacent) else 145
+                elif arm and c in (130, 145, 146, 147) and hands:
+                    # Preserve the fingers and the crossing palm. Lift the native
+                    # upper-arm crest where the deltoid meets a darker biceps.
+                    if min((x - hx) ** 2 + (y - hy) ** 2 for hx, hy in hands) > 9:
+                        if c in UPPER_ARM_LIGHT:
+                            paint = UPPER_ARM_LIGHT[c]
+                        elif 0 < x < width - 1 and 0 < y < height - 1:
+                            if rows[y][x - 1] in (144, 145, 146, 147) and rows[y + 1][x] in (132, 133, 134):
+                                paint = 132
+
+                if (paint in (133, 134) and not arm and 0 <= y - rib_y < len(ribs)
+                        and x == ribs[y - rib_y]):
+                    paint = 130 if y - rib_y in (1, 2) else 132
+                if knee and not arm and x == knee[0]:
+                    if y == knee[1] and paint == 149:
+                        paint = 147
+                    elif y + 1 == knee[1] and paint in (130, 132, 134):
+                        paint = 144
+                if model == 2061 and pose == 21 and paint == 134:
+                    paint = STRIKE_THIGH.get(point, paint)
 
             if role != "Body base" and not foreground and not arm:
                 torso = c is not None and shoulder - 2 <= y <= waist and abs(dx) <= radius + 1
@@ -510,11 +651,28 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                 elif rank == 3 and t > 0.78 and depth < 0:
                     rank = 2
                 if base == "Gladiator":
-                    if torso and abs(dx - (1.8 - 3.8 * t)) < 1.12:
-                        strap_edge = dx - (1.8 - 3.8 * t)
-                        paint = dwarf.HIDE[2 if strap_edge < 0 and 0.12 < t < 0.70 else 1]
+                    strap_edge = dx - (1.8 - 3.8 * t)
+                    # A cast shadow stays on the skin just below the strap as
+                    # it angles over the ribs. The upper, lit edge stays clean.
+                    if torso and 1.12 <= strap_edge < 1.85 and 0.18 < t < 0.92:
+                        if paint in (144, 145, 146, 147, 148, 149, 150, 151):
+                            paint = 130
+                        elif paint == 130:
+                            paint = 132
+                    if torso and abs(strap_edge) < 1.12:
+                        # A worn lip catches light over the near ribs. The
+                        # overlap tucks into a dark seam at the belt.
+                        paint = dwarf.HIDE[1]
+                        if strap_edge < 0 and 0.12 < t < 0.70:
+                            paint = 99 if 0.18 < t < 0.52 else dwarf.HIDE[2]
+                        elif strap_edge >= 0 and t >= 0.68:
+                            paint = 88
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
+                        if depth in (1, 2) and abs(dx + 1.25 - 0.4 * depth) < 0.52:
+                            paint = 98 if depth == 1 else 95
+                        elif depth == 3 and abs(dx) < radius - 0.5 and rank in (1, 2):
+                            paint = 88
                 elif base == "Fighter":
                     if (torso or model == figures.ELF_WOMAN and c in shirt and shoulder <= y <= waist
                         or c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
@@ -566,7 +724,10 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                         ):
                             paint = None
                 elif base in ("Preserver", "Ranger", "Thief", "Psionicist"):
-                    if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1):
+                    # A detached strip of tunic used to follow the raised
+                    # front shin four pixels beyond the split in the garment.
+                    raised_shin = model == figures.ELF_MAN and pose == 14 and x == 9 and 17 <= y <= 19
+                    if torso or (c is not None and 0 <= depth <= 4 and abs(dx) <= radius + 1 and not raised_shin):
                         tunic = RAMPS[base] if base == "Psionicist" else dwarf.LEATHER
                         if base == "Psionicist" and torso and abs(t - 0.68 - 0.22 * u) < 0.12:
                             rank = max(1, rank - 1)
@@ -576,6 +737,9 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                 shadow_turn = -1 <= depth <= 4 or base == "Psionicist" and torso and t > 0.35
                 if paint == 208 and shadow_turn and (x - 1, y + 1) in body:
                     paint = 69 if base == "Psionicist" else 88
+                if (base == "Psionicist" and paint == 69 and 0 <= y - wrap_y < len(wrap)
+                        and x == wrap[y - wrap_y]):
+                    paint = 71 if y - wrap_y in (1, 2) else 70
                 if (
                     paint is not None
                     and paint not in outfits.SKINC
@@ -608,6 +772,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                 # The folded lining joins the outer panel to the jerkin behind
                 # the wrist. It shares the equipped cloak's dye and shine mask.
                 drape = drape or (point in cape_fill and c is None)
+                if model == figures.ELF_MAN and cape and point in COVERED_SHOULDER.get(pose, ()):
+                    drape = True
                 if panel and cape and shoulder - 1 <= y <= panel_hem:
                     join, corner = panel
                     drop = (y - shoulder + 1) / (panel_hem - shoulder + 1)
@@ -642,6 +808,10 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                         shade = 4 if 0.18 < t < 0.7 or 1 <= depth <= 3 else 3
                     elif crease + 0.24 < fold < crease + 0.52:
                         shade = 3
+                    if model == figures.ELF_MAN and pose == 14 and point == (3, 18):
+                        # The inner hem curves into the hip here. Keep its
+                        # turned edge below the highlight at the exposed lip.
+                        shade = 1
                     cloak_shade = shade + 1
                     if cape:
                         paint = cloak_ramp[shade]
@@ -669,6 +839,10 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                     and "Psionicist" not in members
                 ):
                     paint = 169 if abs(dx) < 0.55 else 205
+                    if base == "Gladiator" and abs(dx) < 0.55:
+                        # Preserve the position of this moving clasp through
+                        # texturing. A rear view sees its darker keeper instead.
+                        paint = 170 if rear else 171
                 if cape == "Preserver" and "Fighter" in members and drape:
                     # A leather strap crosses the visible plum panel and ends
                     # in bone below the braid, above the Psionicist sash.

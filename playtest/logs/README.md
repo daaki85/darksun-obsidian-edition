@@ -229,6 +229,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-final-items.md) | Wake of the Ravager, the final items: the Effects screen's charges (ARMOR (14 CHARGES); Inertial Barrier's stray 15 and a timed effect plain), a spell arrow's cast sound (arrows_sounds 1, not heard), ARROWS_FORBID (Gerakis refused the quiver; the kits off a control; return_strays the backstop), the lock rule on GPL 89's chest (talk triggers pointed at it: lock_bars 1, 2), a party member's side given back as her Berserk ran out (berserk_ends 1); a computer's wall not seen (ai_walls 0) |
 | [2026-11-27](2026-11-27-ravager-effects-lines.md) | Wake of the Ravager, the Effects screen's other lines: FLESH ARMORED (AC 4), BARKSKIN (AC 5), REFLECTED IMAGE (1 CHARGE), ENLARGED (+60% DICE) (the Loader's EF_STATS); a computer-cast wall at last: the AI's spell weights (Wall of Fog's 0), Ar'Anda knowing Wall of Fire and Wall of Ice cast Wall of Fire on her first turn (ai_walls 1) |
 | [2026-11-27](2026-11-27-ravager-figures.md) | Wake of the Ravager's redrawn figures in the Loader's copies, and the region file's redirect |
+| [2026-11-27](2026-11-27-material-folds.md) | Gerakis’s revised Gladiator art with the Loader attached in the slave pens |
 | [2026-11-27](2026-11-27-ravager-encounters.md) | Wake of the Ravager's redrawn drakes and Tarrasque in their own fights, through `ravjump.py` |
 | [2026-11-27](2026-11-27-ravager-sl-interface.md) | Wake of the Ravager with Shattered Lands' screens and icons (ravui): the USE screen and the inventory, with and without |
 | [2026-11-27](2026-11-27-loader-pictures.md) | The Loader pictures retaken with the new bar |
@@ -239,6 +240,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
 | [2026-11-27](2026-11-27-ravager-weapon-materials.md) | Weapons keep their material and kind crossing into Wake of the Ravager: the transfer's roster against the control's (bone, obsidian and metal kept; the Polearm +1 no longer a double spear), the types 141-146 in play to Tyr's fight; a Battle Dancer keeps her long sword and bow by her kit |
 | [2026-11-27](2026-11-27-ravager-scholar.md) | The Scholar kit in Wake of the Ravager: THAC0 1 worse, one more spell at each level up, a new Scholar's one more for each level; THAC0 is written only at creation and level up, not on equip |
+| [2026-11-27](2026-11-27-ravager-dam-lines.md) | Wake of the Ravager's DAM lines with the kits (a Ravager's damage, a Battle Mage's expertise) and the creation screen's THAC0 with a Scholar's; the dice log must run for the rules |
 | [2026-11-27](2026-11-27-ravager-small-portraits.md) | Wake of the Ravager's talk portraits at Shattered Lands' size (ravportraits): Uhubito's and Notaku's talks, the shop, the opening talk, the first fight's XP message (its empty frame is BMP 12000's frame 1), with the control |
 
 ## files/

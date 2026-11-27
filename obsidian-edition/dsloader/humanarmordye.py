@@ -10,7 +10,6 @@ from . import art
 BONE = {61, 62, 63, 155, 194, 199, 206}
 TEAL = {17, 40, 69, 70, 71, 72, 73}
 LEAF = {53, 54, 55, 56, 57, 69, 188, 189, 225, 226, 227}
-BUCKLES = {168, 169, 170, 171, 185}
 
 
 @lru_cache(maxsize=4)
@@ -71,17 +70,10 @@ def protected(frame, role, pose, model, head_landmark=None):
             # The back arm hides both bone caps during the woman's rear bow.
             keep.update(_trim(chest - keep, 1, axis="bottom"))
     elif role == "Gladiator":
-        # Keep the leather edge of the diagonal baldric and the bronze fittings.
-        keep.update(_trim(chest - keep, 1, axis="left"))
-        keep.update(p for p, color in colors.items() if color in BUCKLES)
-        if model == 2099:
-            # The bronze waist clasp sits in a leather tab. Both stitched sides
-            # are still visible when her back and raised bow hide the baldric.
-            for x, y in legs:
-                if colors[x, y] == 169:
-                    for tab in ((x - 1, y), (x + 1, y)):
-                        if tab in legs and colors[tab] in (93, 94, 204, 205, 207):
-                            keep.add(tab)
+        # Keep the incised leather contact edge and the two faces of the
+        # steel buckle. The oiled ridge beside the seam takes the armor dye.
+        keep.update(p for p in chest if colors[p] == 208)
+        keep.update(p for p, color in colors.items() if color in (210, 214))
     elif role == "Priest":
         # A narrow strip of the original linen stays on the moving skirt,
         # with the same cream lights and brown shadows it has when unequipped.

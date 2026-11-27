@@ -21,6 +21,15 @@ MAGE_FOLD = {
     49: (115, 3), 50: (119, 4), 212: (118, 4),
 }
 
+# Path of the inner pleat, from the shoulder attachment towards the free
+# corner. The third step is still opening; the fourth folds back on itself.
+SWING_PLEAT = {
+    11: (11, (-3, -3, -4, -4, -4, -5)),
+    12: (11, (-1, -2, -2, -3, -4, -5)),
+    13: (11, (0, 0, -1, -1, -2, -2, -3, -4)),
+    14: (11, (2, 1, 1, 0, 0, -1, -1, -2, -3)),
+}
+
 HIP_DIAGONAL = {11: 15, 12: 18, 13: 16, 14: 18}
 
 
@@ -48,6 +57,7 @@ def paint_swing(game, pose, body, paint, folds, regions, family, ramp):
                 dye[py][px + extra] = None
                 if family and not regions[py][px]:
                     image[py][px + extra] = None
+    pleat_y, pleat = SWING_PLEAT[pose]
     for y, (start, end) in enumerate(SWING_EDGES[pose], 6):
         outer = next(i for i, c in enumerate(mage[y]) if c in MAGE_FOLD)
         strip = []
@@ -67,6 +77,15 @@ def paint_swing(game, pose, body, paint, folds, regions, family, ramp):
                 dye[py][px] = folds[py][src]
                 continue
             plum, rank = strip[(2 * (x - start) + 1) * len(strip) // (2 * width)]
+            along = y - pleat_y
+            if 0 <= along < len(pleat):
+                crease = pleat[along]
+                if x == crease:
+                    rank = 1 if along < len(pleat) - 1 else 2
+                    plum = 175 if along % 3 == 1 else 174
+                elif x == crease - 1 and along not in (0, len(pleat) - 1):
+                    rank = 3 if along % 3 == 2 else 4
+                    plum = 115 if rank == 3 else 239
             dye[py][px] = rank + 1
             if family:
                 image[py][px] = plum if family == "plum" else ramp[round(rank * (len(ramp) - 1) / 5)]

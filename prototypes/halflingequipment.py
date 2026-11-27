@@ -168,12 +168,9 @@ def export(game_dir, archive):
                 game, model, pose, source, rows["Body base"], outfit)
             blocked = head | bow | arm | feet[0] | feet[1]
             folds, native_cloak = cloak_folds(rows, role, pose, native, blocked)
-            if model == 2070 and pose == 20 and role == "Cleric/Thief":
-                # The borrowed corner would project beyond her raised arm
-                # after the robe and hood cover the Ranger's shoulder seam.
-                folds.pop((13, 8), None)
             cloth, surface, additions, covered, _ = study_surface(
-                game, 310 + (model == 2070), pose, rows, role, cuts)
+                game, 310 + (model == 2070), pose, rows, role, cuts,
+                binding_colours=fit.gladiatorhide.BINDING if role == "Gladiator" else None)
             dye = {(u-4, v) for u, v in surface} - blocked - cap
             waist = len(source)-1-cuts[1] if pose == 28 else cuts[1]
             chest = {(x, y) for x, y in dye if (y >= waist if pose == 28 else y <= waist)}
@@ -203,6 +200,11 @@ def export(game_dir, archive):
             cape = None if native_cloak else {(x, y): rows["Ranger"][y][x+4] for x, y in folds}
             if pose in fit.REAR:
                 cape = rear_equipped_cape(rows, role, pose, native, head, bow, arm)
+            if model == 2070 and pose == 20 and role == "Cleric/Thief":
+                # The borrowed corner would project beyond her raised arm
+                # after the robe and hood cover the Ranger's shoulder seam.
+                folds.pop((13, 8), None)
+                cape.pop((13, 8), None)
             result[role] = make_layers(source, outfit, 4, 0, region, folds, head, belt, cape or {})
         return result
 

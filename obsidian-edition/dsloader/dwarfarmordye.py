@@ -1,6 +1,10 @@
 """Native dwarf garment details left visible when the armor material is dyed."""
 
-from . import classoutfits as co
+from functools import lru_cache
+from pathlib import Path
+from zipfile import ZipFile
+
+from . import art, classoutfits as co
 
 
 # When the usual strap disappears under an arm, follow the exposed woven edge
@@ -12,6 +16,23 @@ OCCLUDED_TRIM = {
     ("Gladiator", 16): ((9, 8), (8, 10), (9, 10)),
     ("Gladiator", 21): ((8, 9), (7, 11), (8, 11)),
 }
+
+
+@lru_cache(maxsize=4)
+def _baldrics(archive_path, model, combat):
+    """Native registration of the Fighter's and Psionicist's original chest bands."""
+    tag = "combat" if combat else "walk"
+    with ZipFile(archive_path) as archive:
+        name = f"{model}/Fighter/{tag}-baldric"
+        if name not in archive.namelist():
+            return None
+        data = archive.read(name)
+    bands = []
+    for f in range(14 if combat else 15):
+        rows = art.decode_frame(data, f)[2]
+        bands.append(frozenset((x - 4, y - 4) for y, row in enumerate(rows)
+                               for x, bit in enumerate(row) if bit))
+    return tuple(bands)
 
 
 def protected(frame, role, pose, model):
@@ -28,9 +49,10 @@ def protected(frame, role, pose, model):
     keep.update((x, y) for x, y in legs if frame.image[y + 4][x + 4] == 169)
 
     if parent_role in ("Fighter", "Psionicist"):
-        # The Gladiator's authored cross-body strap traces the same shoulder-to-
-        # hip line as the Fighter baldric and single Psionicist's woven band.
-        strap = co.frames("Gladiator", combat, model)[index].regions[co.CHEST]
+        bands = _baldrics(Path(co.__file__).with_name("dwarf_outfit_layers.zip"), model, combat)
+        # Older archives used the same strap for all three classes.
+        strap = (bands[index] if bands is not None else
+                 co.frames("Gladiator", combat, model)[index].regions[co.CHEST])
         keep.update(chest.intersection(strap))
     elif parent_role == "Gladiator":
         # A leather edge stays visible where the narrow strap crosses the bare chest.

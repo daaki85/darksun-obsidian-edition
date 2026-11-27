@@ -139,7 +139,8 @@ bigger character sheets) as it goes in (a game already running lists it from its
 - **The creation screen** has [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen), and a
   new character gets [fuller starting gear](FEATURES.md#fuller-starting-gear) fitted to its kit from the
   sequel's own items.
-- **The screens** show it all as in Shattered Lands: the DAM lines, the Effects screen's weapon kinds and an
+- **The screens** show it all as in Shattered Lands: the DAM lines (the kits' damage and a kit's
+  expertise too), the creation screen's THAC0 (a Scholar's), the Effects screen's weapon kinds and an
   effect's charges in its name ([the Effects screen](FEATURES.md#the-effects-screen)), and the Look box's whole
   description of a monster in the dialogue window.
 - **[Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)** with Tab and Enter works in
@@ -352,10 +353,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: the kits' part of the inventory's and View Character's DAM lines (the kits' damage is in the
-  attack; the line doesn't show it yet), and of the creation screen's THAC0 (the THAC0 the character gets
-  has it). [KITS.md](KITS.md) says which kits the sequel
-  has.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
   sequel's map scrolls only at the screen's edge, as the game has it), [the view in
   fights](FEATURES.md#the-view-in-fights), [the pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)
