@@ -279,7 +279,7 @@ class ShipmentTests(unittest.TestCase):
         self.game_, self.ring, self.wg = game, ring, worldgear
         self.log = test_ring.arena()
         self.m, self.gd = self.log.guest.mem, self.log.game
-        struct.pack_into("<H", self.m, test_ring.DS * 16 + ring.REGION, semyon.PENS)
+        struct.pack_into("<H", self.m, test_ring.DS * 16 + game.REGION, semyon.PENS)
         struct.pack_into("<HH", self.m, test_ring.DS * 16 + game.FLAGS_PTR, 0, 0xE000)  # (the flags at E000:0)
         things, items = test_ring.THINGS, test_ring.ITEMS
         self.things, self.items = things, items
@@ -383,7 +383,7 @@ class ShipmentTests(unittest.TestCase):
     def test_elsewhere(self):
         """Out of the pens: nothing (the rack is the pens')."""
         from test_ring import DS
-        struct.pack_into("<H", self.m, DS * 16 + self.ring.REGION, 0x2A)
+        struct.pack_into("<H", self.m, DS * 16 + game.REGION, 0x2A)
         self.gd.set_flag(semyon.TOLD)
         self.assertFalse(semyon.ship(self.gd))
         self.assertEqual(self.rack_items(), [11])

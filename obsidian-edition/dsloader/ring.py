@@ -22,7 +22,6 @@ from typing import Deque, Optional, Tuple
 from . import game, itemgate
 from .game import GameData
 
-REGION = 0x117C  # DS: the region the party is in (its RGNxx.GFF)
 ARENA = 0x2A
 NOTHING = "There is nothing on the body."  # the arena script's line for his body
 SEARCH_TEXT = ("Searching the body, you find a ring sewn into his loincloth: a Ring of Protection +1 "
@@ -169,7 +168,7 @@ def name_items(gd: GameData, rules: int) -> None:
 def ring_needed(gd: GameData) -> bool:
     """In the arena, with no Ring +1 there yet (with the party or anywhere else in the region)."""
     it = Items(gd)
-    if it.word(REGION) != ARENA:
+    if it.word(game.REGION) != ARENA:
         return False
     for thing in range(THING_COUNT):
         if it.thing(thing)[0] == game.THING_ITEM and any(is_ring(rec) for _, rec in it.chain(thing)):

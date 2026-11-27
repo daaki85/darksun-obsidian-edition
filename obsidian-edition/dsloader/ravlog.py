@@ -416,6 +416,15 @@ def rav_items() -> Dict[object, Dict[str, object]]:
                         "HANDS": game.WEAPON_HANDS}}
 
 
+def _layout_holders() -> Tuple[object, ...]:
+    """The modules whose names apply_layout rebinds by the profile (layout()): game.py, the dice log's
+    header signature and the mod's sheet bytes' holders (MOD_BYTES). Every other module reads those
+    names through game (game.NAME at the time of use), never a copy of its own: a copy would keep
+    Shattered Lands' value in the sequel, or, the same name and value by chance, be rebound unasked
+    (the code audit's S1; test_ravlog.LayoutHolderTests)."""
+    return (game, dicelog) + tuple(dict.fromkeys(module for module, _ in MOD_BYTES.values() if module is not game))
+
+
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
 
 
@@ -429,7 +438,7 @@ def apply_layout() -> int:
     originals["HDR_SIG"] = dicelog.HDR_SIG
     for name, (module, sl_name) in MOD_BYTES.items():
         originals.setdefault(name, getattr(module, sl_name))
-    for module in [m for name, m in sys.modules.items() if name.startswith("dsloader.") and m is not None]:
+    for module in _layout_holders():
         for name, value in profile.items():
             if name in vars(module) and vars(module)[name] == originals.get(name):
                 _SAVED.append((module, name, vars(module)[name]))
@@ -489,7 +498,7 @@ def rebind(name: str, value: int) -> None:
     """One more of game.py's names (and its imported copies) set to VALUE while the sequel is attached,
     put back by restore_layout (SPELLS_SEG: its value depends on the game's load segment)."""
     old = getattr(game, name)
-    for module in [m for n, m in sys.modules.items() if n.startswith("dsloader.") and m is not None]:
+    for module in _layout_holders():
         if name in vars(module) and vars(module)[name] in (old, value):
             if not any(m is module and n == name for m, n, _ in _SAVED):
                 _SAVED.append((module, name, vars(module)[name]))

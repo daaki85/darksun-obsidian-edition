@@ -17,7 +17,7 @@ def arena():
     first on the free object list; Dag (creature 0) leads."""
     log = make_game()
     m = log.guest.mem
-    struct.pack_into("<H", m, DS * 16 + ring.REGION, ring.ARENA)
+    struct.pack_into("<H", m, DS * 16 + game.REGION, ring.ARENA)
     struct.pack_into("<HH", m, DS * 16 + ring.FREE_ITEMS, 60, 0)
     struct.pack_into("<h", m, ITEMS + 60 * game.ITEM_SIZE + game.ITEM_NEXT, 61)
     struct.pack_into("<H", m, DS * 16 + ring.FREE_THINGS, 505)
@@ -87,7 +87,7 @@ class SearchTests(unittest.TestCase):
 
     def test_elsewhere(self):
         log = arena()
-        struct.pack_into("<H", log.guest.mem, DS * 16 + ring.REGION, 0x2B)
+        struct.pack_into("<H", log.guest.mem, DS * 16 + game.REGION, 0x2B)
         self.assertFalse(ring.ring_needed(log.game))
 
 

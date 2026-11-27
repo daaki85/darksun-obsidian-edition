@@ -170,7 +170,7 @@ class PassTests(unittest.TestCase):
         """The area changed by the time the game is paused (after the wait): refused too."""
         proc, guest, _, gate, _ = setup()
         gate.begin()
-        proc.on_pause = lambda: proc.write(DS * 16 + itemgate.REGION, b"\x29\x00")
+        proc.on_pause = lambda: proc.write(DS * 16 + game.REGION, b"\x29\x00")
         with self.assertRaises(itemgate.ItemsBusy):
             guest.write(ITEMS, b"\x07")
         self.assertEqual(proc.paused, 0)

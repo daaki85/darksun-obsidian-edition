@@ -79,13 +79,13 @@ class ProfileTests(unittest.TestCase):
         self.assertNotIn("SHEET_FLAG_RANGER", layout)  # (a flag, not an offset)
 
     def test_apply_and_restore(self):
-        sl = (game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0)
+        sl = (game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, game.CREATURE_THAC0)
         self.assertGreater(ravlog.apply_layout(), 0)
-        self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0),
+        self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, game.CREATURE_THAC0),
                          (0x21, ravager.DGROUP, ravlog.HDR_SIG, 0x16))  # (dicelog's imported copy too)
         self.assertEqual(ravlog.apply_layout(), 0)  # (once)
         ravlog.restore_layout()
-        self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, dicelog.CREATURE_THAC0), sl)
+        self.assertEqual((game.CREATURE_NAME, game.DGROUP, dicelog.HDR_SIG, game.CREATURE_THAC0), sl)
 
     def test_weapon_specs_in_the_loaders_bytes(self):
         """The sequel's +14h..+17h are other fields (DEX 16 once read as a staff sling's spec, "+2
@@ -655,7 +655,7 @@ class EffectTests(unittest.TestCase):
 
     def test_profile_effect_numbers(self):
         ravlog.apply_layout()
-        self.assertEqual((game.PARALYZED_EFFECT, game.MIRROR_EFFECT, game.EFFECT_BLESSED, dicelog.AFRAID_EFFECT),
+        self.assertEqual((game.PARALYZED_EFFECT, game.MIRROR_EFFECT, game.EFFECT_BLESSED, game.AFRAID_EFFECT),
                          (69, 46, 9, 35))
         self.assertGreaterEqual(game.STINK_EFFECT, ravlog.NO_EFFECT)
         self.assertEqual((game.EFFECTS_SEG, game.EFFECTS_OFF), (0x3E71, 0x24D))
@@ -774,6 +774,32 @@ class NameTests(unittest.TestCase):
 
 
 
+class LayoutHolderTests(unittest.TestCase):
+    """apply_layout rebinds the sequel's values in its declared holders only (ravlog._layout_holders: the
+    code audit's S1); any other module reads them through game at the time of use. This fails on a module
+    keeping a copy of one of those names with Shattered Lands' value (from .game import NAME, or its own
+    constant equal to it): the sequel would read Shattered Lands' value, or a constant of its own that is
+    the same by chance would once have been rebound unasked."""
+
+    def test_no_copies(self):
+        import importlib
+        import pkgutil
+        import dsloader
+        for info in pkgutil.iter_modules(dsloader.__path__):
+            try:
+                importlib.import_module("dsloader." + info.name)
+            except ImportError:  # (the window's own modules, without tkinter)
+                pass
+        profile = ravlog.layout()
+        holders = ravlog._layout_holders()
+        copies = []
+        for name, module in sorted(sys.modules.items()):
+            if not name.startswith("dsloader.") or module is None or module in holders:
+                continue
+            for key in profile:
+                if key in vars(module) and hasattr(game, key) and vars(module)[key] == getattr(game, key) != profile[key]:
+                    copies.append(f"{name}.{key}")
+        self.assertEqual(copies, [], "read these through game (game.NAME), not a copy")
 class PassStepTests(unittest.TestCase):
     """The sequel's pass is taken from Shattered Lands' named steps (dicelog.DiceLog.PASS, the code
     audit's S2): every one of those is in the sequel's pass or left out with a reason, so a step added to
