@@ -40,11 +40,29 @@ C and his icon (98,113) again.
   from beside his foe; the first-pick play's build (range 2) swung once a round from 2 squares. Halton's lotulis 2 a
   round (mastery), Jaardoon's trikal 2 a round and his left hand's Longsword +1 once.
 
-## Not yet played (paused for the usage limit)
+## The controls (2026-11-27, a fresh copy, the same ambush)
 
-- The controls: `RAV_SKIP=melee_range` (the double spear once a round from 2 squares, as the first-pick play saw),
-  and the traits with RULE_HI_CAHULAKS (0x2000) cleared in DSCLOG2's rules_hi (header +270): no second foe, no trip.
-- The trikal's reach by the click (a held foe two squares off, Move 0: `placefoe.py`, the reach recipe).
+`RAV_SKIP=melee_range` and `RAV_RULES_OFF=0x20000000` (rules_hi DF3F, RULE_HI_CAHULAKS cleared), the dice log
+`wt-ctl.txt`; HP 250 for the four (a test edit), nothing saved:
+
+- View Character's DAM for the double spear: 2x1D1+1 (the fixed run: 2x1D6+4), the game reading a range-2
+  weapon as a missile one.
+- The two double spear gladiators under Computer Control swung from 2 squares: 2 swings a round between them
+  in rounds 1-4 and 1 in rounds 5-6 (each once a round), "+1 DEX" to hit and no STR damage.
+- The header's counts (+2020..+2028) all 0; no second foe or trip line in six rounds.
+
+## The trikal's reach by the click (2026-11-27)
+
+The fixed build, no skip, dice log `wt-reach.txt`. Jaardoon (Wooden Trikal +1 in the right hand; the left-hand
+Longsword +1 moved to a pack slot, his map thing moved to square (75,91), two squares from Draxan#23 at
+(73,91), his Move set to 0; test edits, nothing saved) under the player's control:
+
+- The sword pointer on Draxan#23 was valid ("10+ (55%)"), and the helper's `reaches` went 0 to 3 as it passed.
+- The click: "Jaardoon attacks Draxan#23 with Wooden Trikal +1 (1d10+1) ... +1 STR, +1 weapon, +1 specialized"
+  twice (both missed, so no trip save), the melee way; he stayed at (75,91); `reaches` 6.
+- A third swing came with the Longsword +1 from the off hand: the game keeps the hands' weapons in its own
+  copy, which moving the item in the sheet does not change. So this is a side effect of the test edit. The
+  reach test (REACH_HANDS) saw no other weapon and let the reach through.
 
 ## What was learned
 
