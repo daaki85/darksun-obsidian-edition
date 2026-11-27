@@ -77,11 +77,11 @@ expanded, 12 lines with the filters **All**, **Party**, **Damage** (hits, damage
 **Saves** (saving throws and magic resistance). Its size is remembered. A window the game opens over
 the map hides it until it closes; expanded, it covers the game's damage numbers there.
 
-![The combat log in short as Pehtucl's ambush at the slave pens' fountain is played with Tab and Enter: Jenna hidden in shadows but heard moving, an Arena Guard's miss and hit on her, Lex's miss on the Templar, the guards' hits on Seneca, her try at hiding seen, her misses and her hit with Shadowseeker, the Templar failing his save against her poison, and Ester's blow that kills him, each line as it happens](docs/combat-log-live.gif)
+![The combat log in short as Pehtucl's ambush at the slave pens' fountain is played with Tab and Enter, the party in its class outfits: Ester's dance, Lex's miss on the Templar, the Arena Guards' arrows into Lex and his hit points after them, Ester's two hits on the Templar, a guard's miss on Seneca and her try at hiding seen, each line as it happens](docs/combat-log-live.gif)
 
-![The combat log in detail, expanded, in Pehtucl's ambush: an attack's d20, the roll needed and the AC it hits, with the THAC0's make-up under it (THAC0 19, +2 STR, +1 weapon, +1 specialized = 15), the Arena Guard's hit points after a blow, and Jenna's hide in shadows: d100 = 53, needs 52 or less (52, a Stalker: not halved indoors), seen](docs/combat-log-detail.png)
+![The combat log in detail, expanded, in Pehtucl's ambush: Ester's attack with the d20, the roll needed and the AC it hits, the THAC0's make-up under it (THAC0 19, +3 STR, -1 bone, +1 specialized, -1 Battle Dancer = 17), then Jenna's turn: she can't hide in shadows with an Arena Guard right beside her](docs/combat-log-detail.png)
 
-![The combat log expanded in Pehtucl's ambush at the slave pens' fountain, in short: twelve lines in its small font, under the All, Party, Damage and Saves filters: Seneca's hit, the Arena Guard failing its save against her poison, his hit points after each blow, and Jenna's try at hiding](docs/combat-log-expanded.png)
+![The combat log expanded in Pehtucl's ambush at the slave pens' fountain, in short: twelve lines in its small font, under the All, Party, Damage and Saves filters: Seneca's miss, the Arena Guard's hit points after a blow, Ester's two misses, and Jenna's turn, when she can't hide with the guard beside her](docs/combat-log-expanded.png)
 
 Rules: [the dice log, line by line](DICE-LOG.md). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
@@ -116,9 +116,9 @@ long names are shortened ("Lesser Water Elem."), and near the top of the screen 
 the figure's feet. An archer whose quiver runs dry in the middle of its shots keeps its turn, to
 walk, fight hand to hand or end it.
 
-![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+![Two misses in Pehtucl's ambush: "Miss" over Jenna as an Arena Guard's arrow goes wide, and over the guard](docs/floating-names.png)
 
-![An arena fight with Sligs: "Armor: 8 left" in light blue as a blow uses one of Armor's charges, and "Miss" beside it](docs/floating-charges.png)
+![An arena fight with Sligs: "Armor: 9 left" in light blue over Gerakis as a Slig's blow uses one of Armor's charges, and a spell's name, Inertial Barrier, over a Screamer Beetle](docs/floating-charges.png)
 
 **Switch:** *Names over figures: a spell's name over its caster, "Miss" over whoever an attack
 missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer
@@ -143,7 +143,7 @@ shot's with the attack pointer. With the look pointer (the eye) nothing shows: a
 looks. Tab's choice is left alone: the pointer changes neither the ring nor the combat log's
 header.
 
-![Jenna's turn, the pointer on an Arena Guard at the corridor's end: "13+ (40%)" floats over the guard](docs/hit-chance-hover.png)
+![Jenna's turn, the pointer on the Arena Guard beside the party: "13+ (40%)" floats over the guard](docs/hit-chance-hover.png)
 
 **Switches:** *The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and
 the chance, in the dice log and the combat log's header*, and *The chance to hit under the pointer:
@@ -161,7 +161,7 @@ on the floor, so figures and walls stand on them, and a square a figure stands o
 has none: nobody walks through anybody. What lies on the floor covers them as well: a square under
 a rug or the arena's stone platform can be walked on but shows no cross.
 
-![Seneca's turn, half her movement spent: light crosses on the squares she can still reach, round the wall's corner too; the Templar, chosen with Tab, stands outside them in his red ring](docs/squares-in-reach.png)
+![Seneca's turn, most of her movement spent: light crosses on the squares she can still reach; an Arena Guard, chosen with Tab, stands outside them in his red ring](docs/squares-in-reach.png)
 
 A marked square is one a single click walks to. The game counts 10 for a step straight and 14 for
 a diagonal one out of ten times the Move the name box shows, and the crosses are counted the same
@@ -675,7 +675,7 @@ class](KITS.md#changing-class). How it works:
 PSP and age), and **RECALL** brings it back however many times the die has been rolled since, as in
 Baldur's Gate. Changing the race, sex, classes or kit forgets it.
 
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:102/102, 19/19 hit points with THAC0: M16 R16 beside them, 27/27 PSP under them with AGE: 17 beside it; KITS below the psionic disciplines](docs/creation-store-recall.png)
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:101/101, 32/32 hit points with THAC0: M17 R16 beside them, 27/27 PSP under them with AGE: 16 beside it; KITS below the psionic disciplines, and the small figure at the top in the fighter's outfit](docs/creation-store-recall.png)
 
 **Always on** (no switch). Rules: [ability scores](PLAYER-GUIDE.md#ability-scores). How
 it works:
@@ -713,7 +713,7 @@ The features are their own, not kits', and show where kits do. Cermak keeps his 
 leather chest and leg armour, the others nothing more. Cermak and Cilla keep the game's starting
 spells. Cilla is drawn as the elf she is: [elves and half-elves](#elves-and-half-elves).
 
-![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2, and her Pick Pockets purse under the spell counts](docs/default-party-armor.png)
+![The USE screen in the arena: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2, and the party's small figures in their outfits on the left](docs/default-party-armor.png)
 
 ![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
 
@@ -900,7 +900,7 @@ view)* (20,000) or *Fastest: the whole party walks at full speed, nearly every p
 default)* (35,000); and *Steady pace: walking at full speed on the map whatever is drawn (a picture
 skipped rather than the party slowed)*.
 
-![The whole party walking east and back in the slave pens, the same clicks on both sides, at 20,000 cycles: steady pace off on the left, on on the right](docs/steady-pace.gif)
+![The whole party, in its class outfits, walking east and back in the slave pens, the same clicks on both sides, at 20,000 cycles: steady pace off on the left, on on the right](docs/steady-pace.gif)
 
 *The same save and the same clicks at 20,000 cycles, recorded at 70 frames a second and played here
 at half speed, every frame kept: on the right, with steady pace, the party walks about a tenth
@@ -927,7 +927,7 @@ every picture.
 | **TV** | Each row fades downwards instead of ending in a black line: softer than scanlines, and darker than plain. |
 | **Sharp** | Hard-edged pixels at any size: DOSBox stretches the picture to its window (and to the whole screen in full screen) without smoothing it. Drawn with OpenGL; if your graphics driver doesn't take to that, DOSBox falls back to its plain drawing by itself. |
 
-![The party in the slave pens in a Triple window, the same spot three times: Plain on the left, every pixel a block; Scanlines in the middle, a black line under each row; TV on the right, each row fading downwards, the whole darker](docs/picture-modes.png)
+![The party in its class outfits in the slave pens in a Triple window, the same spot three times: Plain on the left, every pixel a block; Scanlines in the middle, a black line under each row; TV on the right, each row fading downwards, the whole darker](docs/picture-modes.png)
 
 *Plain, Scanlines and TV in a Triple window (a part of it, at its own size). Sharp looks like Plain
 at this size.*
@@ -1278,7 +1278,10 @@ figures use: the man built like the elf man, a little broader, fair-haired in a 
 green trousers; the woman a little slimmer than the human woman, golden hair in a bun, a purple
 cloak and red boots. Anything worn is drawn over these in its own colours. Cilla, in the game's own
 party, is an elf the game gives the half-elf woman's figure: with the mod she has the elf
-woman's, in a new game and in one already begun (from the next area or load).
+woman's, in a new game and in one already begun (from the next area or load). These are the
+figures the [class outfits](#what-the-party-wears) are drawn on: in the party they show bare only
+in a class combination outside the outfits' roster, such as Cilla's, an elf with Druid among her
+classes. The picture shows them bare, as drawn for the mod.
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
@@ -1317,9 +1320,9 @@ until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pi
 is a bug mended apart). The outfits and the gear keep their colours in every area (each area's own
 palette would turn the outfits' browns grey and their plums magenta).
 
-![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
+![The ready-made party on the slave pens' tiled floor, each dressed for their class with the gear they carry: Cermak in the preserver's plum mantle, his quarterstaff upright; Gerakis, the mul gladiator, bare-chested with his armour's straps and loincloth; Cilla, an elf with Druid among her classes, and K'ratchek the thri-kreen in the game's own figures](docs/gear.png)
 
-![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
+![Gerakis in a fight in the arena in magic gear, +2 leather pieces and the Searing Blade at his hip: sparks shimmer over the leather, and the blade's edge glints](docs/magic-glint.gif)
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#what-the-party-wears)
@@ -1331,7 +1334,7 @@ Every living figure on the map (the party, the people, the monsters; not the dea
 a soft see-through shadow on the floor, its outline laid long toward the lower right, as the walls'
 own shadows fall. They are drawn on the floor first, so a shadow never covers a figure or a wall.
 
-![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
+![The arena without shadows (left) and with them (right), the party in its outfits among the Sligs: each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#shadows).
@@ -1356,7 +1359,7 @@ party detects invisibility (the spell, or [Shadowseeker](ITEMS.md#every-magic-it
 game draws the invisible like anyone else; being unseen only makes them harder to hit (4 worse) and
 better at saving against a spell aimed at them, for whoever can't detect invisibility.
 
-![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
+![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor and his shadow show through him, the others solid beside him](docs/see-through.png)
 
 **Always on** (no switch). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#see-through-figures).
@@ -1375,7 +1378,7 @@ sight, and the log names it. **Enter** then attacks it, as clicking on it does (
 when it is out of reach), even where another figure stands in front of it: attacking without aiming
 the mouse at all.
 
-![An arena fight, the Xorn chosen with Tab and the red ring under it](docs/rings.png)
+![An arena fight, a Slig chosen with Tab and the red ring under it](docs/rings.png)
 
 **Always on** (no switch); the ring has a choice in the tab's **In the game** section: *A red
 ring on the ground in a fight:* *... none* or *... under the enemy chosen with Tab* (the default). How it works:
@@ -1653,7 +1656,7 @@ have pictures of their own: Blade Barrier's ring of circling blades and Wall of 
 (from [Wake of the Ravager](#wake-of-the-ravager); without it, the game's fire wall recoloured),
 Fire Seeds' burst, and Whirlwind's funnel of dust, which turns as you watch.
 
-![Whirlwind in the arena: a tall grey funnel of dust turning over the sligs as the party fights beside it, the damage it does each round](docs/whirlwind.gif)
+![Whirlwind in the arena: a tall grey funnel of dust turning over a Daggoran, the party beside it](docs/whirlwind.gif)
 
 How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).

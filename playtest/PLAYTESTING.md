@@ -1657,3 +1657,20 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   the two sides look alike: record at 20,000.
 - A spell's description box and the doc panels of spells: [casting
   spells](#casting-spells-for-a-test).
+- **The party wears its class outfits only with the dice log attached** (2026-11-27,
+  logs/2026-11-27-outfit-screenshots.md): the Loader dresses the figures live, so a game started
+  without it (picstart.sh before that day) shows the copy's older looks. Every picture of the party
+  comes from a game the kit started (start.sh, loadsave.sh, picstart.sh) or the window attached.
+- **The pictures retaken for the outfits** (the same log): the combat log's four and
+  `hit-chance-hover.png`, `squares-in-reach.png`, `floating-names.png` from `fountain-user` (the
+  camera put left of the panel with `camera.py`, `untilturn.sh` with Ctrl+F5 in a loop for the
+  GIF); `shadows.png` (`shadowsw.py 0`, the view scrolled a pixel and back), `rings.png`,
+  `default-party-armor.png`, `floating-charges.png` (Armor dropped on Gerakis's portrait: Cilla
+  hides and isn't struck), `whirlwind.gif` (Cilla made an air druid with `sheetbyte.py 3 0x22 5`
+  and `spellsetup.py 3=12`, LEVEL to 6), `dust.png`, `magic-glint.gif` (`itemplus.py`) from the
+  arena's waves after `topartyfight.sh`; `see-through.png`, `picture-modes.png`, `steady-pace.gif`,
+  `gear.png` from `pens-after-arena`; `creation-store-recall.png` from a new character. To catch a
+  label or a spell's bolt, start the Ctrl+F5 loop before the click: Fogbolt's bolt was gone by the
+  first capture after it. `spellsetup.py` can't teach the mod's new spells (196 and up): a new
+  wizard spell is a bit in the sheet (`sheetbyte.py M 0x45 or0x40`, Fogbolt), a new 6th-level
+  priest spell comes with the caster's sphere.
