@@ -178,7 +178,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |
 | `squarewalk.py COL ROW [POINTS]` | on a party member's turn in a fight, click the middle of walk-map square COL,ROW with whatever pointer is up (pointer.py walk first) and say where the member stopped and what movement it has left. |
 | `start.sh` | Xvfb :55, the Loader's patched game in DOSBox as the Loader starts it (the repository's current code: rebuild = restart), and the Loader's dice log ($WORK/dice.txt). |
-| `start_dosboxx.sh DOSBOX-X [name=value ...]` | the mod in DOSBox-X (the Options tab's DOSBox-X engine, the default: dsloader/dosboxx.py), a game of its own beside the shared one, for the kit's tools. |
+| `start_dosboxx.sh DOSBOX-X [name=value ...]` | the mod in DOSBox-X (the Options tab's other engine: dsloader/dosboxx.py), a game of its own beside the shared one, for the kit's tools. |
 | `start_recomp.sh` | the game on Dark Sun Recompiled ($DSUN, its build of the mod) instead of DOSBox, with the Loader's patched game prepared as start.sh does and the dice log attached. |
 | `start_stock.sh [GAMEDIR]` | the stock game (no Loader, no dice log) in plain DOSBox on :55, from GAMEDIR (default $WORK/darkfix-inst: a copy of inst with OpenDS's darkfix applied by darkfix_apply.py). |
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |
