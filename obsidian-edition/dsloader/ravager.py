@@ -1041,6 +1041,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("thief_table", 0x8C716, _SL["thief_skill"].original,
           bytes((0xCD, VEC_SITE, 52, 0x72, 0x8C795 - 0x8C71B)) + b"\x90" * 4),
     Patch("backstab_dice", 0x5D11B, _SL["stab_times"].original, _site(53, 10)),
+    # ... and a lock a thief failed out of reach till a level is gained (SL's LOCK_SITE, locks.py): the thief
+    # skill check's "mov [bp-2],ax" (8C7E6h, SL's 803D3h: the same routine, 8C7CBh) made DSCLOG2's LOCK_SITE
+    # (site 241), LOCK_BARRED the tail's (the header's +2114), written by the Loader (RavDiceLog._locks_pass)
+    Patch("lock_site", 0x8C7E6, bytes.fromhex("8946fe"), _site(241, 3)),
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),

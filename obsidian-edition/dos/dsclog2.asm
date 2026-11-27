@@ -393,6 +393,9 @@ arrows_row   dw 0               ; +2106 ... the touch spell's place in ARROW_SPE
 arrows_shown dw 0               ; +2108 arrows buttons shown on the USE screen (PP_SHOW, counted) ...
 arrows_late  dw 0               ; +2110 ... and arrows asked for the Loader didn't answer in time (ARROWS_ASK)
 extras_drawn dw 0               ; +2112 buttons drawn beside Turn Undead's (PP_EXTRA_DRAW, counted)
+lock_off     dw lock_barred     ; +2114 offset of LOCK_BARRED in the tail: the Loader's, the locks each party
+                                ;      member may not try again yet (LOCK_SITE; DSCLOG's +1844, locks.py)
+lock_bars    dw 0               ; +2116 open locks checks LOCK_SITE put out of reach (counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4694,6 +4697,7 @@ site_table:
         dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
+        dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -24504,6 +24508,57 @@ fine_hit:
         pop bx
         pop ax
         ret
+
+; LOCK_SITE (site 241, RULE_THIEF_TABLE: Thieves as in AD&D, always on; DSCLOG's LOCK_SITE on the sequel's
+; addresses): "mov [bp-2],ax" (8C7E6h; SL's 803D3h, the same routine at 8C7CBh: character [BP+6], skill [BP+8],
+; bonus [BP+0Ch], a d100 under [BP-2] succeeds) in the game's thief skill check. Does the MOV; then for open
+; locks by a party member, a lock that member failed at the thief level it has now (PO: Skills & Powers:
+; "If a thief fails to open a lock, he cannot attempt to open that lock again until advancing a level") is
+; out of reach: [BP-2] LOCK_NEVER, which no roll is under (the dice log names it). The lock is the thing the
+; running script was started on (the load + 3C13h at 365h, SL's 3781h) in the region the party is in
+; (DS:140Ch, SL's 117Ch); the Loader keeps LOCK_BARRED (the tail's, FS: dsloader/locks.py): for each member
+; 0-3, LOCK_MAX (region, thing) word pairs, FFFFh for none.
+LOCK_SKILL   equ 1                ; (open locks: game.THIEF_SKILLS' second)
+LOCK_NEVER   equ -2000
+LOCK_MAX     equ 4
+LOCK_REGION  equ 0x140C           ; DS: the region the party is in
+LOCK_TALK_GAP equ 0x47E0 - 0x3C13 ; (DS less the talk's segment) and the thing the running script
+LOCK_TALK    equ 0x365            ;   was started on there
+lock_site:
+        mov [bp - 2], ax
+        cmp word [bp + 8], LOCK_SKILL
+        jne .out
+        cmp word [bp + 6], 4
+        jae .out
+        pusha
+        push es
+        push fs
+        call tail_fs
+        mov ax, ds
+        sub ax, LOCK_TALK_GAP
+        mov es, ax
+        mov dx, [es:LOCK_TALK]
+        mov ax, [LOCK_REGION]
+        mov bx, [bp + 6]
+        shl bx, 4                       ; (LOCK_MAX x 4 bytes a member)
+        add bx, lock_barred
+        mov cx, LOCK_MAX
+.each:  cmp [fs:bx], ax
+        jne .next
+        cmp [fs:bx + 2], dx
+        jne .next
+        mov word [bp - 2], LOCK_NEVER
+        inc word [cs:lock_bars]
+        jmp .done
+.next:  add bx, 4
+        loop .each
+.done:  pop fs
+        pop es
+        popa
+.out:   iret
+section tail
+lock_barred times 4 * LOCK_MAX dw 0xFFFF, 0xFFFF
+section image
 
 resident_end:
 align 16

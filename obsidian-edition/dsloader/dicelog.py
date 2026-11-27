@@ -2787,9 +2787,7 @@ class DiceLog:
                 for owner in owners:
                     if (owner, caster) not in new_hastes:
                         continue
-                    creature = self.game.combatant_creature(owner)
-                    if creature is not None:
-                        out += aging.hasted(self.game, creature)
+                    out += self._haste_aging(owner)
         by_end: Dict[int, List[int]] = {}
         for eff in ended:
             if (eff.owner, eff.id) not in replaced:
@@ -2798,6 +2796,11 @@ class DiceLog:
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             out.append(f"{name} ends on {', '.join(self._name(o) for o in owners)}")
         return out
+
+    def _haste_aging(self, owner: int) -> List[str]:
+        """Haste's magical aging on combatant OWNER, just Hasted (effect_changes; aging.hasted)."""
+        creature = self.game.combatant_creature(owner)
+        return aging.hasted(self.game, creature) if creature is not None else []
 
     # ---- describing -----------------------------------------------------------
 
