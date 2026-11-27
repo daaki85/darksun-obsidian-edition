@@ -49,7 +49,7 @@ class DitherTests(unittest.TestCase):
         rows = icons.decode(ravui.dithered(icons.encode([[5] * 8 for _ in range(8)]), sl_palette, stable))
         used = [p for r in rows for p in r]
         self.assertEqual(set(used), {235, 236})
-        self.assertEqual(used.count(235), 32)
+        self.assertLessEqual(abs(used.count(235) - 32), 2)  # (half and half, as the shade between)
 
     def test_a_colour_with_none_near_is_the_nearest(self):
         sl_palette = [(0, 0, 0)] * 256

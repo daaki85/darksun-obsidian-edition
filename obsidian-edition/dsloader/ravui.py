@@ -63,12 +63,12 @@ _MOVED = {
     21263: 3028, 21264: 3029, 21265: 3030, 21268: 3033}  # (the sequel's icon: Shattered Lands' of another number)
 ICONS: Dict[int, int] = {**{i: i for a, b in _SAME for i in range(a, b + 1)}, **_MOVED}
 ICON_KEEP = (12100, 12101, 12102)  # (never matched: the MORE and scroll buttons)
-# (the inventory and shop screens' right-hand panel, Shattered Lands' smooth grey: mapped colour for colour
-# its top came out lighter and its foot darker, 16 greys onto the sequel's 7, 2026-11-27's shop comparison;
-# DITHERED's pictures mix the two kept colours either side of each of Shattered Lands' instead: `dithered`)
+# (the inventory and shop screens' right-hand panel, Shattered Lands' smooth grainy greys: mapped colour for
+# colour its top came out lighter and its foot darker, 16 greys onto the sequel's 7, 2026-11-27's shop
+# comparison; DITHERED's pictures spread each pixel's miss onto the next ones instead: `dithered`; one frame
+# under 256 wide, as icons.encode writes)
 DITHERED = (13004,)
-NEAR = 40  # (a mix only of colours within this of Shattered Lands' in each of red, green and blue)
-BAYER = ((0, 8, 2, 10), (12, 4, 14, 6), (3, 11, 1, 9), (15, 7, 13, 5))
+NEAR = 40  # (only colours within this of Shattered Lands' own in each of red, green and blue: no stray hues)
 
 
 def colour_table(sl_palette: Sequence[Tuple[int, int, int]], stable: Sequence[Tuple[int, Tuple[int, int, int]]]) -> Dict[int, int]:
@@ -80,46 +80,35 @@ def colour_table(sl_palette: Sequence[Tuple[int, int, int]], stable: Sequence[Tu
             for i, rgb in enumerate(sl_palette)}
 
 
-def _mix(rgb: Tuple[int, int, int], targets: Sequence[Tuple[int, Tuple[int, int, int]]]) -> Tuple[int, int, float]:
-    """(a, b, t): RGB as a + t (b - a), a and b of TARGETS within NEAR of it (the nearest alone if none)."""
-    def far(e):
-        return sum((u - v) ** 2 for u, v in zip(e[1], rgb))
-    nearest = min(targets, key=far)
-    best = (far(nearest), nearest[0], -1, 0.0)
-    close = [e for e in targets if max(abs(u - v) for u, v in zip(e[1], rgb)) <= NEAR]
-    for a, ra in close:
-        for b, rb in close:
-            d = [y - x for x, y in zip(ra, rb)]
-            dd = sum(v * v for v in d)
-            if not dd:
-                continue
-            t = max(0.0, min(1.0, sum((p - x) * v for p, x, v in zip(rgb, ra, d)) / dd))
-            e = sum((p - (x + t * v)) ** 2 for p, x, v in zip(rgb, ra, d))
-            if e < best[0] - 1e-9:
-                best = (e, a, b, t)
-    return best[1], best[2], best[3]
-
-
 def dithered(chunk: bytes, sl_palette: Sequence[Tuple[int, int, int]],
              stable: Sequence[Tuple[int, Tuple[int, int, int]]]) -> bytes:
-    """A one-frame Shattered Lands picture in the sequel's STABLE colours (but KEPT's), each pixel one of the
-    two either side of its colour by a 4 by 4 ordered pattern, so a smooth shade keeps its tone."""
+    """A one-frame Shattered Lands picture in the sequel's STABLE colours (but KEPT's), each pixel the
+    nearest to its colour plus what its neighbours missed (Floyd-Steinberg: 7/16 right, 3/16, 5/16 and 1/16
+    below), from the colours within NEAR of its own: the shade kept, its grain much as Shattered Lands'."""
     from . import icons
     targets = [(c, rgb) for c, rgb in stable if c not in KEPT]
     if not targets:
         raise ValueError("no colour every region keeps")
-    mixes: Dict[int, Tuple[int, int, float]] = {}
+    rows = icons.decode(chunk)
+    height, width = len(rows), max((len(r) for r in rows), default=0)
+    miss = [[[0.0, 0.0, 0.0] for _ in range(width)] for _ in range(height)]
+    near: Dict[int, List[Tuple[int, Tuple[int, int, int]]]] = {}
     out = []
-    for y, row in enumerate(icons.decode(chunk)):
+    for y, row in enumerate(rows):
         line = []
         for x, p in enumerate(row):
             if not p:
                 line.append(p)
                 continue
-            if p not in mixes:
-                mixes[p] = _mix(sl_palette[p], targets)
-            a, b, t = mixes[p]
-            line.append(b if b >= 0 and t * 16 > BAYER[y % 4][x % 4] + 0.5 else a)
+            if p not in near:
+                near[p] = [e for e in targets if max(abs(a - b) for a, b in zip(e[1], sl_palette[p])) <= NEAR] or targets
+            want = [sl_palette[p][k] + miss[y][x][k] for k in range(3)]
+            c, rgb = min(near[p], key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], want)))
+            line.append(c)
+            for dx, dy, part in ((1, 0, 7 / 16), (-1, 1, 3 / 16), (0, 1, 5 / 16), (1, 1, 1 / 16)):
+                if 0 <= x + dx < width and y + dy < height:
+                    for k in range(3):
+                        miss[y + dy][x + dx][k] += (want[k] - rgb[k]) * part
         out.append(line)
     return icons.encode(out)
 

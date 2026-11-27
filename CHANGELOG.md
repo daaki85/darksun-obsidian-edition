@@ -94,8 +94,10 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   under it and MORE alone at the bottom (WIND 13500's two buttons moved, the face's two shop patches
   pointed there; the item list was already at Shattered Lands' places).
 - The panel's picture (BMP 13004, Shattered Lands' since `sl_interface`) keeps its shade: its 16 greys
-  were rounded to the sequel's 7 (the top lighter, the foot darker), now each mixes the two either side
-  (`ravui.DITHERED`).
+  were rounded to the sequel's 7 (the top lighter, the foot darker); now each pixel takes the nearest
+  of the sequel's colours near its own plus what its neighbours missed (Floyd-Steinberg,
+  `ravui.DITHERED`), so the shade holds and the grain reads like Shattered Lands' (a 4 by 4 pattern,
+  tried first, showed as a regular checker: the owner asked for the texture too).
 - Played against Shattered Lands' own shop and the earlier build. Tests: `test_ravportraits.py`,
   `test_ravui.py`.
 

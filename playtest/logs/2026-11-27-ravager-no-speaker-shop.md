@@ -25,6 +25,14 @@ sequel match.
 4. **The shop now**: the face in its frame at (252, 11), SELL under it, MORE alone at the bottom (it pages
    the list), the panel's greys mixed by a 4 by 4 pattern (its tone nearer Shattered Lands'; the pattern
    shows close up). ![the shop now](img/2026-11-27-ravager-shop-panel.png)
+   The owner then asked for the shade and texture to match too: the pattern traded for error diffusion
+   (Floyd-Steinberg over the kept colours within 40 of each grey). Measured against Shattered Lands' panel,
+   the mean colour (94.7, 94.7, 119.7): rounded (96.9, 96.8, 114.9), the pattern (96.3, 96.3, 116.0), the
+   diffusion (95.6, 95.4, 118.2); the miss over 4 by 4 blocks 6.0, 2.9, 2.7. In game its grain reads as
+   Shattered Lands' does. ![shop panels: SL, pattern, diffusion](img/2026-11-27-ravager-panel-texture.png)
+   No palette slot is free for Shattered Lands' own greys: PAL 1000's 32-95 are magenta placeholders
+   that every region palette fills, 1-31 are cycled, and the 101 colours every region keeps hold 7
+   blue-greys (233-239) and the system greys.
 5. **The no-speaker picture**: `RAV_POKE=88E6F=33f690` (every face the empty one) and Notaku's shop: the
    frame with Shattered Lands' emblem in it, drawn by the game (frame 1 of the copy's BMP 12000). The talk
    box draws the same frame 1 at (8, 6) (the XP message, played in the earlier log).

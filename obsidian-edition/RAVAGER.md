@@ -282,7 +282,7 @@ bigger character sheets) as it goes in (a game already running lists it from its
   right-hand panel is laid out as Shattered Lands': the merchant's face at the top, SELL under it, MORE
   alone at the bottom.
   ![The no-speaker frame: Shattered Lands' and the sequel's now](docs/ravager-no-speaker.png)
-  ![The shop's right-hand panel: Shattered Lands', the sequel's before, the sequel's now](docs/ravager-shop-panel.png)
+  ![The shop's right-hand panel: Shattered Lands', the sequel's with a first pattern, the sequel's now](docs/ravager-shop-panel.png)
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
   toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
