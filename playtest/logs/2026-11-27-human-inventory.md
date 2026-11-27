@@ -11,3 +11,7 @@ Pressed I, selected each party member and returned to the first. Compared every 
 All sixteen decoded poses have a single connected silhouette, counting horizontal and vertical neighbors. The two Druid hems have a continuous edge, and the male Fighter’s flaps now overlap across the center. The approved Cleric, Preserver, Psionicist, Ranger and Thief costumes match the reviewed build below the head on both figures.
 
 The open plum mantle leaves the Preserver’s knees visible beside the Cleric’s long linen panel. The woman’s bent arms remain visible across the Fighter’s jerkin and the Ranger’s cloak. The review sheet places both inventory poses beside the corresponding front-idle map outfits. [Human fittings](../../obsidian-edition/docs/class-outfits/README.md#human-inventory-fittings)
+
+A fifth run used the original PENS party. Cermak drew the revised human Preserver. Gerakis, K’ratchek and Cilla matched their retail half-giant, thri-kreen and elf pictures. The prepared RESOURCE.GFF contained exactly sixteen inventory outfit keys, and all fourteen stock figure records matched the installation byte for byte.
+
+![Original PENS party, with three stock figures and the dressed human Preserver](img/2026-11-27-inventory-fallback.png)
