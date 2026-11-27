@@ -65,7 +65,6 @@ LEATHER_ARM, LEATHER_LEGS, LEATHER_HELM, BONE_HELM = 0x07, 0x08, 0x05, game.BONE
 HELM = npcitems._item("03fc000000000500000005000000000004ff060000")
 BOW_TYPE, ARROWS_TYPE, SLING_TYPE, LONG_SWORD_TYPE = 0x01, 0x3E, 0x40, 0x2D
 BONE_SHORT_SWORD_TYPE, BONE_DAGGER_TYPE = game.BONE_SHORT_SWORD_TYPE, game.BONE_DAGGER_TYPE
-STAFF_SLING_TYPE = game.STAFF_SLING_TYPE  # (the halfling's: the game's Staff Sling)
 
 SCROLL_SPELLS = (game.FOG_SPELL, game.SPOOK_SPELL, game.REFLECT_SPELL)
 
@@ -121,7 +120,7 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         MUL: [(worldgear.weapon(worldgear.METAL_CAHULAKS), RIGHT),
               (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
               (bonescale.HELM, HEAD)],
-        HALFLING: [(item(STAFF_SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
+        HALFLING: [(item(game.STAFF_SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
                    (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
@@ -221,7 +220,7 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
                  (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     MUL: ((game.METAL_CAHULAKS_TYPE, RIGHT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
-    HALFLING: ((STAFF_SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+    HALFLING: ((game.STAFF_SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
           (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),

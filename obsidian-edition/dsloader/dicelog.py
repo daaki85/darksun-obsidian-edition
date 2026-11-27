@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
 from . import aging, creationfigure, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
-from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
+from .game import (CONVENTIONAL_AND_UPPER, EFFECT_NAMES,
                    MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
 from .process import ProcessError
@@ -257,7 +257,6 @@ MINUTE_METEORS_SPELL, METEORS_TO_HIT = 33, 2  # (its own +2 to hit, in the frame
 # "---", 1-20 the number, TURN_T, TURN_D, TURN_DSTAR), +0Ch the priest level, +0Eh the undead's hit
 # dice, +10h the outcome (TURN_*), +12h the rounds a turned one flees, +14h D*'s more of its kind left
 KIND_TURN = 13
-AFRAID_EFFECT = 17  # (TURN_SITE puts it on a turned undead, past the game's fear immunity)
 TURN_T, TURN_D, TURN_DSTAR = 21, 22, 23
 TURN_NOT, TURN_TURNED, TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE, TURN_AGAIN, TURN_NONE = range(7)
 TURN_CELLS = (20, 19, 16, 13, 10, 7, 4, TURN_T, TURN_T, TURN_D, TURN_D)  # (AD&D's run, a row a column on)
@@ -332,6 +331,23 @@ def _game_font(game_dir: Optional[str]):
 THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
+
+# The dice log's pass after the rolls is a list of named steps (DiceLog.PASS, the code audit's S2): the
+# sequel's RavDiceLog takes its own list from it by name (pass_step), so a step added here is taken or
+# left out on purpose (ravlog.PASS_LEFT_OUT, test_ravlog checks). A step's phase: EACH every pass, the
+# others every EFFECT_INTERVAL: EFFECTS, then the loading check (CHECK), AFTER_CHECK always, LOADED
+# only with no game loading.
+EACH, EFFECTS, CHECK, AFTER_CHECK, LOADED = "each", "effects", "check", "after check", "loaded"
+
+
+class PassStep(NamedTuple):
+    """One step of the pass: its NAME, RUN(log, now, loading) giving its lines, its PHASE, whether
+    its lines are SAID (kept), QUIET (a read of a half-made record not said: DiceLog._step)."""
+    name: str
+    run: Callable[..., object]
+    phase: str = EACH
+    says: bool = True
+    quiet: bool = False
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
@@ -1623,61 +1639,50 @@ class DiceLog:
         return got if isinstance(got, list) else []
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
-        """The pass's lines after the rolls: answers to the game, hit points and effects, the
-        party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
+        """The pass's lines after the rolls: its steps (PASS, in order: answers to the game, hit points
+        and effects, the party's items, initiative and turns, the creation screen), each on its own
+        (_step). EACH steps run every pass; the rest every EFFECT_INTERVAL: EFFECTS ones, then the
+        loading check (_pass_loading), then AFTER_CHECK ones always and LOADED ones only with no game
+        loading (its records half-filled). A step's lines are kept if it SAYS them."""
         out: List[str] = []
-        step = self._step
-        step(self._forget_undone_picks)
-        step(lambda: self._kit_tick(now))
-        step(self._answer_stats)
-        out += step(self._answer_use)
-        out += step(self._gear_due)
-        step(lambda: self._creation_figure(now))
-        out += step(self._loot_pass)
-        out += step(self._sell_pass)
-        step(self._locks_pass)
-        out += step(self._answer_look)
-        out += step(lambda: self._changes(now))
-        out += step(lambda: self._take_text(now))
-        if now >= self._next_effect_check:
+        due = now >= self._next_effect_check
+        if due:
             self._next_effect_check = now + EFFECT_INTERVAL
-            out += step(lambda: self.effect_changes(now))
-            step(self._write_slots)
-            step(self._write_stats)
-            try:
-                loading = self._party_check(now)
-            except ProcessError:
-                raise
-            except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
-                out += self._error_once(e)
-                loading = True
-            if not loading:
-                step(self._journal_sync)  # make the committed journal head available before asking for a save
-            out += step(lambda: self._quick_pass(loading, now))
-            if not loading:  # (not while a game is loading: its records are half-filled)
-                out += step(lambda: self.tracker.check(now))
-                out += step(self._item_watches)
-                out += step(lambda: self._arena_ring(now))
-                out += step(lambda: self._drawn(now))
-                step(self._kalzith_sold_out)
-                step(self._quest_look)
-                out += step(self._learn_lines)
-                step(lambda: self._dress_now(now))
-                out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
-        step(self._scroll)
-        step(lambda: self._usable_key(now), quiet=True)
-        step(lambda: self._hover_pass(now), quiet=True)
-        out += step(lambda: self._squares_key(now), quiet=True)
-        out += step(self._move_back_pass, quiet=True)
+        loading = False
+        for s in self.PASS:
+            if s.phase != EACH and not due:
+                continue
+            if s.phase == CHECK:
+                loading, said = self._pass_loading(now)
+                out += said
+                continue
+            if s.phase == LOADED and loading:
+                continue
+            got = self._step(lambda s=s: s.run(self, now, loading), quiet=s.quiet)
+            if s.says:
+                out += got
+        return out
+
+    def _pass_loading(self, now: float) -> Tuple[bool, List[str]]:
+        """The pass's loading check (PASS's CHECK): whether a game is loading, and any line about it.
+        Unknown: loading (the party's watches wait for a pass that can tell), the error said once."""
+        try:
+            return self._party_check(now), []
+        except ProcessError:
+            raise
+        except Exception as e:
+            return True, self._error_once(e)
+
+    def _initiative_due(self, now: float) -> List[str]:
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
-            out += step(self.initiative_lines)
-        out += step(self.turn_lines)  # after the round's order and the last turn's XP
-        step(lambda: self._creation_tries_moved(now))
+            return self.initiative_lines()
+        return []
+
+    def _creation_due(self, now: float) -> List[str]:
         if (self._creation_hp or self._creation_abilities or self._tries_new) \
                 and now - self._creation_hp_at >= CREATION_HP_WAIT:
-            out += step(self.creation_lines)
-        out += step(lambda: self.flush(now))
-        return out
+            return self.creation_lines()
+        return []
 
     def _changes(self, now: float) -> List[str]:
         """Hit points, PSP and abilities changed (always read, to keep up), said unless a game is
@@ -2316,10 +2321,10 @@ class DiceLog:
         out = []
         for index in range(game.PARTY_SIZE):
             rec = self.game.creature(index)
-            if len(rec) < CREATURE_ABILITIES + len(ABILITIES) or not rec[game.CREATURE_NAME]:
+            if len(rec) < game.CREATURE_ABILITIES + len(ABILITIES) or not rec[game.CREATURE_NAME]:
                 self._abilities.pop(index, None)
                 continue
-            seen = (self.game.creature_name(index), tuple(rec[CREATURE_ABILITIES:CREATURE_ABILITIES + len(ABILITIES)]))
+            seen = (self.game.creature_name(index), tuple(rec[game.CREATURE_ABILITIES:game.CREATURE_ABILITIES + len(ABILITIES)]))
             before = self._abilities.get(index)
             if before is None or before[0] != seen[0] or not all(1 <= v <= 25 for v in before[1]):
                 self._abilities[index] = seen  # (a new member, or a record being loaded)
@@ -2812,7 +2817,7 @@ class DiceLog:
             targets = ", ".join(self._name(o) for o in owners)
             rule = game.effect_rule(eid, self.game.spells_manual())
             rule = f": {rule}" if rule else ""
-            if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
+            if eid == game.AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
                 rule = ": it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's turning, CHILL_UNDEAD's Chill Touch)
             if instead:  # (the one it had is gone: this one, with its own time, holds from now)
                 rule = f", in place of the {'ones they' if len(owners) > 1 else 'one it'} had{rule}"
@@ -3045,7 +3050,7 @@ class DiceLog:
                 continue
             used.add(index)
             parts = []
-            dex = g.dex_initiative(g.creature(index)[CREATURE_ABILITIES + 1])
+            dex = g.dex_initiative(g.creature(index)[game.CREATURE_ABILITIES + 1])
             if dex:
                 parts.append((dex, "DEX"))
             ids = {x.id for x in effects if x.owner == combatant and x.id in game.INITIATIVE_EFFECTS}
@@ -3507,7 +3512,7 @@ class DiceLog:
         """'THAC0 16, +6 STR, +1 Blessed, ... = 9', from the attack setup's locals and the game's rules
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
         g = self.game
-        base = struct.unpack("b", g.creature(attacker)[CREATURE_THAC0:CREATURE_THAC0 + 1])[0]  # (signed)
+        base = struct.unpack("b", g.creature(attacker)[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]  # (signed)
         after_f1, hit_bonus = e.parent_local(game.SETUP_THAC0_LOCAL), e.parent_local(game.SETUP_BONUS_LOCAL)
         rear, backstab = (None if v is None else v & game.SETUP_FLAG_MASK
                           for v in (e.parent_local(game.SETUP_REAR_LOCAL), e.parent_local(game.SETUP_BACKSTAB_LOCAL)))
@@ -3602,7 +3607,7 @@ class DiceLog:
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
-            same = caster is not None and g.creature(caster)[CREATURE_SIDE] == g.creature(attacker)[CREATURE_SIDE]
+            same = caster is not None and g.creature(caster)[game.CREATURE_SIDE] == g.creature(attacker)[game.CREATURE_SIDE]
             parts.append(("Prayer", 1 if same else -1))
         return parts
 
@@ -3799,7 +3804,7 @@ class DiceLog:
             steps += " (raised to the minimum of 1)"
         dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)
         if mode is not None and mode <= 1:  # melee: the game adds the attacker's STR bonus
-            strength = g.creature(attacker)[CREATURE_ABILITIES]
+            strength = g.creature(attacker)[game.CREATURE_ABILITIES]
             str_bonus = g.str_damage(strength)
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
@@ -4064,7 +4069,7 @@ class DiceLog:
         target = nearest(bowyer.TARGET)
         if target is None:
             return []
-        dex = self.game.creature(index)[CREATURE_ABILITIES + 1]
+        dex = self.game.creature(index)[game.CREATURE_ABILITIES + 1]
         return bowyer.describe(roll, dex, target, nearest(bowyer.BOWYER), self.game.flag(bowyer.REWARD_FLAG),
                                self.game.creature_name(index))
 
@@ -4079,7 +4084,7 @@ class DiceLog:
         index = self.game.combatant_creature(turn) if turn is not None else None
         if index is None:
             return []
-        score = self.game.creature(index)[CREATURE_ABILITIES + check.ability]
+        score = self.game.creature(index)[game.CREATURE_ABILITIES + check.ability]
         return scriptchecks.describe(check, result, score, self.game.creature_name(index))
 
     def _request(self, e: Entry, show_all: bool) -> List[str]:
@@ -4408,7 +4413,7 @@ class DiceLog:
         classes = game.class_share(sheet)
         multi = classes > 1
         con = self._creation_con if self._creation_con is not None \
-            else g.creature(index)[CREATURE_ABILITIES + 2]
+            else g.creature(index)[game.CREATURE_ABILITIES + 2]
         levels = {}
         for _, cls, _, _, _ in rolls:
             levels[cls] = levels.get(cls, 0) + 1
@@ -4882,7 +4887,7 @@ class DiceLog:
             armour = e.local(game.AC_ARMOUR_LOCAL)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:
                 base = struct.unpack("b", sheet[game.SHEET_BASE_AC:game.SHEET_BASE_AC + 1])[0]
-                dex = self.game.dex_ac(rec[CREATURE_ABILITIES + 1]) if not rear else 0
+                dex = self.game.dex_ac(rec[game.CREATURE_ABILITIES + 1]) if not rear else 0
                 self.ac_detail[index] = AcDetail(base, armour - base, dex, ac - armour - dex, ac)
         if show_all:
             d = self.ac_detail.get(index) if index is not None else None
@@ -4898,7 +4903,7 @@ class DiceLog:
         ability = e.arg(0x0A)
         if not 0 <= ability < 6:
             return [f"Check: d20 = {d20}"] if show_all else []
-        base = self.game.creature(e.arg(6))[CREATURE_ABILITIES + ability]
+        base = self.game.creature(e.arg(6))[game.CREATURE_ABILITIES + ability]
         seg, off = CHECK_MODS
         mod = struct.unpack("<b", self.guest.read((self.load_seg + seg) * 16 + off + e.arg(8), 1))[0]
         ok = d20 != 20 and d20 <= base + mod
@@ -4906,3 +4911,51 @@ class DiceLog:
         return [f"{self.game.creature_name(e.arg(6))} {ABILITIES[ability]} check: d20 = {d20}, "
                 f"needs {base + mod} or less ({ABILITIES[ability]} {base}{mod_text}) "
                 f"-> {'success' if ok else 'failure'}"]
+
+
+DiceLog.PASS = (
+    PassStep("forget_undone_picks", lambda log, now, loading: log._forget_undone_picks(), says=False),
+    PassStep("kit_tick", lambda log, now, loading: log._kit_tick(now), says=False),
+    PassStep("answer_stats", lambda log, now, loading: log._answer_stats(), says=False),
+    PassStep("answer_use", lambda log, now, loading: log._answer_use()),
+    PassStep("gear_due", lambda log, now, loading: log._gear_due()),
+    PassStep("creation_figure", lambda log, now, loading: log._creation_figure(now), says=False),
+    PassStep("loot", lambda log, now, loading: log._loot_pass()),
+    PassStep("sell", lambda log, now, loading: log._sell_pass()),
+    PassStep("locks", lambda log, now, loading: log._locks_pass(), says=False),
+    PassStep("answer_look", lambda log, now, loading: log._answer_look()),
+    PassStep("changes", lambda log, now, loading: log._changes(now)),
+    PassStep("take_text", lambda log, now, loading: log._take_text(now)),
+    PassStep("effect_changes", lambda log, now, loading: log.effect_changes(now), EFFECTS),
+    PassStep("write_slots", lambda log, now, loading: log._write_slots(), EFFECTS, says=False),
+    PassStep("write_stats", lambda log, now, loading: log._write_stats(), EFFECTS, says=False),
+    PassStep("loading", lambda log, now, loading: None, CHECK),
+    # (the committed journal head made available before a save is asked for)
+    PassStep("journal_sync", lambda log, now, loading: log._journal_sync(), LOADED, says=False),
+    PassStep("quick_saves", lambda log, now, loading: log._quick_pass(loading, now), AFTER_CHECK),
+    PassStep("tracker", lambda log, now, loading: log.tracker.check(now), LOADED),
+    PassStep("item_watches", lambda log, now, loading: log._item_watches(), LOADED),
+    PassStep("arena_ring", lambda log, now, loading: log._arena_ring(now), LOADED),
+    PassStep("drawn", lambda log, now, loading: log._drawn(now), LOADED),
+    PassStep("kalzith_sold_out", lambda log, now, loading: log._kalzith_sold_out(), LOADED, says=False),
+    PassStep("quest_look", lambda log, now, loading: log._quest_look(), LOADED, says=False),
+    PassStep("learn_lines", lambda log, now, loading: log._learn_lines(), LOADED),
+    PassStep("dress", lambda log, now, loading: log._dress_now(now), LOADED, says=False),
+    PassStep("itemwatch", lambda log, now, loading: log.itemwatch.check(log.game, now, log._settings), LOADED),
+    PassStep("scroll", lambda log, now, loading: log._scroll(), says=False),
+    PassStep("usable_key", lambda log, now, loading: log._usable_key(now), says=False, quiet=True),
+    PassStep("hover", lambda log, now, loading: log._hover_pass(now), says=False, quiet=True),
+    PassStep("squares_key", lambda log, now, loading: log._squares_key(now), quiet=True),
+    PassStep("move_back", lambda log, now, loading: log._move_back_pass(), quiet=True),
+    PassStep("initiative", lambda log, now, loading: log._initiative_due(now)),
+    PassStep("turn_lines", lambda log, now, loading: log.turn_lines()),  # (after the round's order and the last turn's XP)
+    PassStep("creation_tries_moved", lambda log, now, loading: log._creation_tries_moved(now), says=False),
+    PassStep("creation_lines", lambda log, now, loading: log._creation_due(now)),
+    PassStep("flush", lambda log, now, loading: log.flush(now)),
+)
+
+
+def pass_step(name: str, **changed) -> PassStep:
+    """DiceLog.PASS's step NAME, for another game's pass (the sequel's), with CHANGED fields."""
+    step = next(s for s in DiceLog.PASS if s.name == name)
+    return step._replace(**changed)

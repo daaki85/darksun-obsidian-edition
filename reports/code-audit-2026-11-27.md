@@ -21,8 +21,12 @@ audit is [code-memory-audit-final.md](code-memory-audit-final.md) (2026-11-19).*
 (merge train #241). **R4** is fixed in #239 (merged): 0FFh means "no kit" only off a human with
 three classes, so no save needed changing. **R3** is #242: DSCLOG2's build checks upper memory,
 measured in the game at 83,392 bytes free. The owner's calls on the structural findings: **S4**
-(the outfit placements as tables) goes ahead now; **S1**, **S2/S3** and **S5** go ahead now that
-the port's PRs are merged (#241). C1, C2 and C4 are with the port thread.
+(the outfit placements as tables) goes ahead now; **S2** is #246 and **S5** #243
+(merged). **S1** stage 1 is #247 (merged): `apply_layout` rebinds only the modules
+`ravlog._layout_holders()` names, and the others read `game.NAME`. S1's later stages, the per-game
+layout object for `game.py`'s 169 names and the 114 module values, are **deferred** (2026-11-27):
+stage 1 removed the copies that caused B1, and the rest is a large change with no bug behind it
+now. C1, C2 and C4 are with the port thread.
 
 The worst finding is **B1**. After a game of Wake of the Ravager played from the Loader's window,
 starting Shattered Lands from the same window wrote SL's copies with the sequel's record offsets,
@@ -147,8 +151,8 @@ must restore it in `tearDown` or they leak into each other (C6's point). The cod
 `self`, so `self.layout.ITEM_PLUS` in place of `game.ITEM_PLUS` turns the rebinding into a
 parameter, and SL and the sequel can run side by side in one process (the tests too). It can be done
 incrementally, one module at a time, starting with the ones apply_layout names by hand, keeping
-`apply_layout` for what is left until it's empty. **Queued (2026-11-27): to start once the port's
-open PRs (#218 to #232) are merged**, since it touches nearly every module they edit.
+`apply_layout` for what is left until it's empty. **Stage 1 done (#247); the per-game layout object
+is deferred (2026-11-27)**, see "Where it stands".
 
 **S2. `RavDiceLog` re-lists `DiceLog`'s pass.** `RavDiceLog._after_rolls` is a hand-kept fork of
 the 55-line pass, with its own order (the sequel syncs the journal *after* the quick save, though

@@ -48,7 +48,7 @@ class ObjectTests(unittest.TestCase):
                                    champions.SCALE_ARM, champions.SCALE_LEGS, champions.SLING_TYPE,
                                    champions.LEATHER_ARM, champions.LEATHER_LEGS, champions.LEATHER_HELM,
                                    champions.LEATHER_CHEST, champions.BOW_TYPE, champions.ARROWS_TYPE,
-                                   champions.LONG_SWORD_TYPE, champions.STAFF_SLING_TYPE)]
+                                   champions.LONG_SWORD_TYPE, game.STAFF_SLING_TYPE)]
         self.chunks = {("RDFF", 900): person(900, b"Merchant", items=stock)}
         for obj, base in champions.BASES.items():
             self.chunks[("RDFF", base)] = person(base, b"Kind %d" % base, items=[item(18)])
@@ -172,7 +172,7 @@ class GearTests(unittest.TestCase):
         self.ring = ring
         self.log = test_ring.arena()
         self.m, self.gd = self.log.guest.mem, self.log.game
-        struct.pack_into("<H", self.m, test_ring.DS * 16 + ring.REGION, champions.ARENA)
+        struct.pack_into("<H", self.m, test_ring.DS * 16 + game.REGION, champions.ARENA)
         self.creature = 5
         base = game.far_pointer(self.gd.guest, self.gd.ds, game.CREATURES_PTR) + self.creature * game.CREATURE_SIZE
         self.base = base
@@ -257,7 +257,7 @@ class GearTests(unittest.TestCase):
     def test_elsewhere(self):
         import test_ring
         self.make(champions.MUL, [game.BONE_AXE_TYPE])
-        struct.pack_into("<H", self.m, test_ring.DS * 16 + self.ring.REGION, 0x29)
+        struct.pack_into("<H", self.m, test_ring.DS * 16 + game.REGION, 0x29)
         champions.Gear().watch(self.gd)
         self.assertEqual(self.lists()[2], [(game.BONE_AXE_TYPE, 14)])
 

@@ -27,7 +27,6 @@ ITEM_RECORDS = 400  # the game's item table: records 0-399
 THING_COUNT = 0x208  # (ring.THING_COUNT: objects 0-519, 3 bytes each)
 THINGS_PAST = 4  # (... and the few past them: the pointer's, 523, that a sale empties: buyback.py)
 FREE_THINGS, THINGS_USED, FREE_ITEMS = 0x4D72, 0x4C48, 0x4D76  # (ring.py's)
-REGION = 0x117C  # (ring.REGION)
 MAX_CREATURES = 512  # (buyback.MAX_CREATURES)
 
 
@@ -50,7 +49,7 @@ class ItemGate:
     def _read_heads(self) -> bytes:
         guest, ds = self.gd.guest, self.gd.ds * 16
         return b"".join(guest.read(ds + at, size) for at, size in
-                        ((FREE_ITEMS, 2), (FREE_THINGS, 2), (THINGS_USED, 2), (REGION, 2),
+                        ((FREE_ITEMS, 2), (FREE_THINGS, 2), (THINGS_USED, 2), (game.REGION, 2),
                          (game.ITEMS_PTR, 4), (game.CREATURES_PTR, 4)))
 
     def covers(self, addr: int, size: int) -> bool:
