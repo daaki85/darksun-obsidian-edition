@@ -41,6 +41,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 787,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,037:1
 788,"Occupied beds, beds and basins",Reviewed at current scale,alternate-pose-continuity.zip,037:1
 917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
+1014,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
+1015,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
+1016,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1032,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
 1033,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
 1034,"Tank, platform and mine openings",Inspect in scene,3511-elderbrain.zip,
@@ -74,14 +77,15 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1511,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1512,Mosaic bust and pedestal,Retain display height pending museum puzzle playthrough,,03C:1
 1617,"Seats, loom and restraints",Reviewed at current scale,1617-kovar.zip,043:1
-1716,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1717,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1718,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1719,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1720,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1721,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1722,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
-1723,Multi-piece environment or scripted fixture,Inspect in scene,,044:2
+1716,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1717,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1718,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1719,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1720,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1721,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1722,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1723,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+2016,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
 2050,"Tables, counters and benches",Lowered and placements reviewed,,033:2
 2166,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:3
 2167,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
@@ -91,6 +95,14 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2223,Barrels and crates,Lowered and placements reviewed,,038:1 045:1
 2224,Barrels and crates,Lowered and reviewed with vase 458,,033:1
 2225,Barrels and crates,Lowered and placements reviewed,,032:1 033:1 03D:1 045:2
+2227,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2228,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2229,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2230,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2231,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2232,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2233,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2234,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
 2354,Barrels and crates,Lowered and placements reviewed,,034:1
 2356,Barrels and crates,Lowered and placements reviewed,,032:1
 2371,"Counters, stalls and attendants",Inspect in scene,2409-notaku-stall-66.zip,032:1
@@ -184,6 +196,10 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
 3628,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:5
 3629,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
+3633,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3634,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3635,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3636,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
 3668,"Occupied beds, beds and basins",Reviewed at current scale,3668-sickbed.zip,045:1
 3695,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
 3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
@@ -195,12 +211,16 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3795,"Chairs, stools and beds",Review as a damaged furniture scene with debris,,033:2
 3796,"Chairs, stools and beds",Review as a damaged furniture scene with debris,,033:1
 3797,"Chairs, stools and beds",Review as a damaged furniture scene with debris,,033:2
-3824,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
-3825,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
-3826,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
-3828,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
-3829,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:2
-3830,"Tables, desks and benches",Review dark crypt furnishings as a set,,043:1
+3824,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3825,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3826,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3828,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3829,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:2
+3830,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3831,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
+3832,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
+3835,Crypt beds,Lowered and reviewed at all four placements,,043:2
+3836,Crypt beds,Lowered and reviewed at all four placements,,043:2
 3866,"Seats, loom and restraints",Reviewed at current scale,3866-generoe-chair.zip,041:1
 3870,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
 3871,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:1

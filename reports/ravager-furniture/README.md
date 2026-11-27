@@ -54,6 +54,24 @@ The giant behind the stump stool is Gilad, object 214 at (500, 602). He also app
 
 ![Fletch, Ikibod and the Mosaic displays above Utella, the seated Sultan and Generoe](jann-mosaic-giants-figure-review.png)
 
+## Crypt, Cloud and the Temple of the Cosmos
+
+The fifth pass lowers eight Crypt pictures at eleven placements and three Cloud pictures at one placement each. The project now covers 123 pictures at 352 placements across 14 regions. On the whole maps, the gold rectangles mark the Crypt barracks, the Cloud pottery and the corresponding rooms in Gedron.
+
+![Whole Crypt and Cloud maps before and after, beside Gedron at the same scale](crypt-cloud-maps.png)
+
+In the first row, follow the back edge of the Crypt table and the stools on either side. In the second, the blankets and pillow move down toward the foot of the bed. The third shows a squat clay jar with its lid resting against the side. Its width and contact with the ground match the previous build. The Shattered Lands column shows Gedron’s dining room, upper castle beds and Gedron pottery.
+
+![Crypt tables and beds and Cloud pottery before and after, beside Shattered Lands references](crypt-cloud-rooms.png)
+
+- **Crypt.** The barracks tables, benches, stools and four beds take the Tyr scale. Jumah’s green table partly conceals a key. In a trial render, lowering that table and seat increased the visible key from 48 to 56 pixels. The shipped version keeps the original overlap. Kovar’s shackles were reviewed with his approved figure poses.
+- **Cloud.** The open jar, loose lid and jar with a leaning lid take the same scale. Melantha’s bed and her figure share an earlier redraw with its own bed proportions. The table and stool beside her are painted into three adjoining pieces of rug. Those pieces still meet across the floor.
+- **Temple of the Cosmos.** The four elemental gate capstones meet the surrounding stonework. The four central statues receive the ritual artifacts. All eight pictures occur in both versions of the temple. Both stored frames of each picture were checked against the previous build. Keep their dimensions and check the ritual in play.
+
+The two Ravager columns use the Loader’s previous and revised object files and select a standing or stationary pose from the animation script where available. All 14 changed placements were checked individually under the surrounding artwork. Each of the six rooms below rendered identically across the two builds. In-game checks of these rooms remain open.
+
+![Jumah’s table, Kovar, Melantha, the adjoining Cloud rug, an elemental gate capstone and the ritual statues](crypt-cloud-cosmos-review.png)
+
 ## Earlier figure work
 
 The figures and their furniture can share one picture. Other scenes use a separate bed, stall front, table leg or place setting. Compared 81 stored frames across 33 pictures with the originals and examined 20 scenes with the mod's object remaps and Mines 3 placement changes applied. The panels show the original Ravager scene on the left of each pair and the existing figure work on the right. These are offline renders of the first stored pose. The Tyr stall has since been checked in DOSBox. Scripted transitions and interactions in the other rooms still need a play check.
@@ -99,10 +117,10 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
 | 03F Volcano 3 | 95 | 0 | 0 | Distinguish furnishings from formations, starting with spires 1376–1378 |
 | 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
-| 042 Cloud | 131 | 0 | 0 | Check the surrounding furnishings against Melantha's bespoke bed |
-| 043 Crypt | 175 | 0 | 0 | Inspect narrow wooden furnishings 3824–3830 and Kovar's supports |
-| 044 Cosmos | 86 | 0 | 0 | Inspect the multi-part group around 1716–1723, including its scripted states |
+| 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |
+| 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |
+| 044 Cosmos | 86 | 0 | 0 | Check the elemental gates and artifact placement on the ritual statues in play |
 | 045 Under Tyr | 135 | 0 | 14 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records all four furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all five furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.

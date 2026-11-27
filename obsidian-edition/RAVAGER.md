@@ -292,7 +292,8 @@ bigger character sheets) as it goes in (a game already running lists it from its
   and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,
   including Forest beds, the Mines 1 worktable and the volcano tables and stools. The Forest dining sets, the Veiled Alliance crate and vase, and
   the two-piece Mines 3 throne now have coordinated heights and placements. The Jann camp cushions sit lower around the Sultan,
-  and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The air and fire drakes have been seen fighting on their own maps.
+  and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
+  use the same proportions. Jumah’s table still partly conceals the key. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,
