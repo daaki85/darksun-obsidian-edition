@@ -35,6 +35,15 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(ravdress.wr_script(sl, _script([0], [[1, 0, 0, 0, 0, 0, 0, 0]]))[72:], sl[72:])
 
 
+class SmallTests(unittest.TestCase):
+    def test_first_frame(self):
+        from dsloader import art, sprites
+        pic = sprites.encode_frames([[[1, None], [2, 3]], [[4]]])
+        one = ravdress.first_frame(pic)
+        self.assertEqual(struct.unpack_from("<H", one, 4)[0], 1)
+        self.assertEqual(art.decode_frame(one, 0)[2], [[1, None], [2, 3]])
+
+
 class ColourTests(unittest.TestCase):
     def test_nearest_stable(self):
         palette = [(0, 0, 0)] * 256
@@ -169,6 +178,9 @@ class FilesTests(unittest.TestCase):
             for kind in ("BMP ", "CBMP", "SCMD"):
                 self.assertIn((kind, n), chunks)
             self.assertGreater(room[("BMP ", n)], 0)
+        for obj in ravdress.party_pictures(objects):
+            small = chunks[("BMP ", ravdress.SMALL_BASE + obj - 300)]
+            self.assertEqual(struct.unpack_from("<H", small, 4)[0], 1)  # (frame 0 alone: the small figure)
 
 
 if __name__ == "__main__":

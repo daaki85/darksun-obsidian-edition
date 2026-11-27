@@ -59,6 +59,10 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager.** The inventory's party column shows each member's small figure in their class outfit,
+as Shattered Lands' does: DSCLOG2's SMALL_FIG (site 254) asks for the Loader's frame (BMP 7000h + the figure in
+OBJEX2.GFF), which INV_LOAD reads and the dice log keeps in the outfit (`ravdress`).
+
 **New: Wake of the Ravager.** The party wears its class outfits there too, on the map and in a fight:
 the Loader's copy holds each party picture as the Loader's own Shattered Lands figure with room for an outfit,
 and the dice log writes each member's outfit into it and has the game load it again (`ravdress`). Worn gear,

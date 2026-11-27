@@ -17,8 +17,9 @@ their new lengths in the file's index, and has the game load them anew as Shatte
 picture cache's slots holding that number made STALE (FFFEh: the sequel's cache, load + 42A2h:0CA8h, 300 slots of
 16 bytes, SL's layout; DS:265Dh of them) and each map thing drawn with it (DS:67BBh + 25h n, its picture's number
 at +19h, its cache slot at +10h) given no slot (FFFFh), which the game fills by loading the picture again
-(28BFEh: a thing with no slot is given one, 2A388h). Worn gear, a second member of the same figure, the
-creation screen's figure and the small figures are not drawn yet (RAVAGER.md's list)."""
+(28BFEh: a thing with no slot is given one, 2A388h); and frame 0 of the walking picture again as the party
+column's small figure (SMALL_BASE). Worn gear, a second member of the same figure and the creation screen's
+figure are not drawn yet (RAVAGER.md's list)."""
 
 import os
 import struct
@@ -40,6 +41,10 @@ CACHE_SEG, CACHE_OFF, CACHE_COUNT, CACHE_MOST, CACHE_ENTRY = 0x42A2, 0x0CA8, 0x2
 STALE = 0xFFFE
 THINGS, THING_SIZE, THING_SLOT, THING_PICTURE = 0x67BB, 0x25, 0x10, 0x19
 PARTY_SIZE = 4
+# The party column's small figures (the inventory's: 6F7EAh, "mov ax,[es:bx+10h] / add ax,23h", the figure's preloaded
+# picture, SL's 6797Ah): DSCLOG2's SMALL_FIG (site 254) asks for BMP SMALL_BASE + the figure instead, which INV_LOAD
+# reads from the Loader's OBJEX2.GFF (frame 0 of the figure's walking picture, written here in the outfit).
+SMALL_BASE = 0x7000
 
 RGB = Tuple[int, int, int]
 
@@ -99,6 +104,12 @@ def recoloured(picture: bytes, colours: Colours) -> bytes:
     n, = struct.unpack_from("<H", picture, 4)
     frames = [art.decode_frame(picture, f)[2] for f in range(n)]
     return encode_frames([[[colours(p) for p in row] for row in rows] for rows in frames])
+
+
+def first_frame(picture: bytes) -> bytes:
+    """PICTURE's frame 0 alone, a one-frame picture (the small figure)."""
+    from .sprites import encode_frames
+    return encode_frames([art.decode_frame(picture, 0)[2]])
 
 
 def party_pictures(objects: gff.Chunks) -> Dict[int, int]:
@@ -181,6 +192,9 @@ def copy_chunks(objects: gff.Chunks, sources: Sources) -> Tuple[gff.Chunks, Dict
         out[("SCMD", picture)] = wr_script(script, objects.get(("SCMD", picture), b""))
         room[("BMP ", picture)] = max(0, sources.room(obj, False) - len(walk))
         room[("CBMP", picture)] = max(0, sources.room(obj, True) - len(fight))
+        small = ("BMP ", SMALL_BASE + obj - PARTY[0])
+        out[small] = first_frame(walk)
+        room[small] = len(out[small])  # (as much again: the bulkiest outfit's frame is 1.4 times the plain one's)
     return out, room
 
 
@@ -285,6 +299,9 @@ class RavDresser:
             if built is None:
                 built = self._built[(obj, role)] = self.sources.pictures(obj, role)
             chunks = {("BMP ", picture): built[0], ("CBMP", picture): built[1]}
+            small = ("BMP ", SMALL_BASE + obj - PARTY[0])
+            if small in self.places:
+                chunks[small] = first_frame(built[0])
             if not self._write(chunks):
                 continue
             self.shown[obj] = role

@@ -4566,17 +4566,36 @@ cr_draw:
 cr_seen dd 0xFFFFFFFF
 cr_call dd 0
 
+; SMALL_FIG (site 254, "small_figure"): "mov ax,[es:bx+10h] / add ax,23h" (6F7EAh, SL's 6797Ah: DSCLOG's
+; SMALL_FIGURE), the inventory party column's small figure of the creature ES:BX: SMALL_BASE + its figure, the
+; Loader's frame 0 of the figure's walking picture in its class outfit (BMP 7000h + the figure in OBJEX2.GFF:
+; ravdress.SMALL_BASE), which INV_LOAD reads; a figure past the 14 its preloaded picture.
+SMALL_BASE equ 0x7000
+SMALL_PRELOAD equ 0x23
+small_fig:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        add ax, SMALL_BASE
+        iret
+.stock: add ax, SMALL_PRELOAD
+        iret
+
 ; INV_LOAD (site 252, "inventory_load"): "mov dword [bp-4],0" (7B831h, SL's 7303Eh), the preloaded
-; picture SI's loader starting: an INV_FIGURE key is read from the GFF as the game reads a chunk, and
-; given back by the loader's own way out; with none (a figure or class without one), the figure's own
-; preloaded picture.
+; picture SI's loader starting: an INV_FIGURE or SMALL_FIG key is read from the GFF as the game reads a
+; chunk, and given back by the loader's own way out; with none (a figure or class without one), the
+; figure's own preloaded picture.
 inv_load:
         mov dword [bp - 4], 0
-        cmp si, INV_ART_BASE
+        cmp si, SMALL_BASE
+        jb .art
+        cmp si, SMALL_BASE + INV_ART_FIGURES
+        jb .read
+.art:   cmp si, INV_ART_BASE
         jb .out
         cmp si, INV_ART_BASE + INV_ART_FIGURES * 256
         jae .out
-        call kp_if_frame                ; (it calls the game: interrupts as the caller had them)
+.read:  call kp_if_frame                ; (it calls the game: interrupts as the caller had them)
         pusha
         push es
         push ss
@@ -4603,7 +4622,11 @@ inv_load:
         iret
 .none:  popa
         mov dword [bp - 4], 0
-        sub si, INV_ART_BASE
+        cmp si, SMALL_BASE
+        jb .big
+        sub si, SMALL_BASE - SMALL_PRELOAD
+        jmp .out
+.big:   sub si, INV_ART_BASE
         shr si, 8
         add si, INV_PRELOAD
 .out:   iret
@@ -4865,6 +4888,7 @@ site_table:
         dw inv_figure                       ; 251 SITE_INV_FIGURE (75DD0h: the inventory's full-length picture: the class's)
         dw inv_load                         ; 252 SITE_INV_LOAD (7B831h: a preloaded picture's loader: the class's from the GFF)
         dw cr_figure                        ; 253 SITE_CR_FIGURE (6B04Fh, 6DBC4h: the creation screen's full-length picture: the class's)
+        dw small_fig                        ; 254 SITE_SMALL_FIG (6F7EAh: the party column's small figure: the outfit's)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as

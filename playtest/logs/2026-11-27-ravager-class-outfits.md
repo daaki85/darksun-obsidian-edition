@@ -50,3 +50,21 @@ The figures stand where they did in the control run (`RAV_SKIP=class_outfits`), 
 shadows at their feet.
 
 ![The ambush again, with the Lab match](img/2026-11-27-ravager-outfits-fight-lab.png)
+
+## Later: the party column's small figures (branch `claude/ravager-small-figures`)
+
+The sequel's inventory draws each member's small figure with routine 6F7EAh. It works like Shattered Lands'
+6797Ah: `mov ax,[es:bx+10h] / add ax,23h` names the figure's preloaded picture, and the loader at 7B827h reads it.
+Two changes make it show the outfit:
+
+- DSCLOG2's SMALL_FIG (site 254) names BMP 7000h + the figure instead.
+- INV_LOAD reads that picture from the Loader's OBJEX2.GFF, where `ravdress` keeps frame 0 of the figure's
+  walking picture in the outfit.
+
+`ravload.sh ravager-after-ambush`, then I:
+
+1. Before the dice log, the column shows the plain figures (left in the picture below).
+2. With the dice log attached, Escape then I again shows each member's outfit (right): Ar'Anda's purple robe,
+   Terrannus's cream Priest robe, and Gerakis's Gladiator outfit. Thy'rokh's figure is unchanged.
+
+![The party column: plain, then dressed](img/2026-11-27-ravager-small-figures.png)

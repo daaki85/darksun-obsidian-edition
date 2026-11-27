@@ -70,7 +70,7 @@ class TableTests(unittest.TestCase):
                             "lock_site", "shots_left", "roster_delete", "gladiator_armour", "ai_wall", "kreen_claws",
                             "berserk_add", "berserk_end", "ef_charges", "size_line", "size_pre",
                             "inventory_figure", "inventory_figure_load",
-                            "creation_portrait", "creation_portrait_open"}
+                            "creation_portrait", "creation_portrait_open", "small_figure"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
