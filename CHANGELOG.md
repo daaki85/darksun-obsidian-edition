@@ -102,6 +102,16 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   audit's notes). The text moved as it was; `RESEARCH.md` is their index, so old links still land, and
   every link into a moved section points at its new page.
 
+**Fixed: one Dragonsbane, metal in both games; the sequel's item box shows the damage against large foes** (branch `claude/dragonsbane-metal`)
+- SSI made the sequel's Dragonsbane (object 675, +4) an obsidian long sword; Shattered Lands' is metal. The
+  user's call: "It is metal in Shattered Lands, then it should be metal in the sequel". The Loader's copy makes
+  it the sequel's metal long sword (type 97; `ravager.RAV_OBJECT_TYPES`, `RAV_SKIP=object_types` the control),
+  4 lb as in Shattered Lands, so SL's Dragonsbane crosses as the sequel's own again (one sword, not a second
+  Loader-made one). `test_item_weights.py` has no Dragonsbane exception left. Played: logs/2026-11-27-dragonsbane-metal.md.
+- The sequel's item box shows a weapon's damage against a large foe too, as Shattered Lands' (`1D8+4/1D12+4`):
+  DSCLOG's SIZE_LINE and SIZE_PRE ported (DSCLOG2 sites 249, 250 in the line routine 7AF9Eh; Shillelagh's line
+  1D6+1/2D4 as SL's). Tests: `test_ravsizeline.py` (emulated).
+
 **Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
 - A party taken across lost five backported weapons' material: the metal great sword, lotulis and
   javelin, the obsidian lotulis and the bone great sword went as the sequel's one type of their kind (a

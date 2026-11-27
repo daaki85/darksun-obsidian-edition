@@ -4631,6 +4631,8 @@ site_table:
         dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
         dw ef_charges                       ; 247 SITE_EF_CHARGES (8ABBDh: the Effects screen's line under the pointer: an effect's charges)
         dw scholar_thac0                    ; 248 SITE_SCHOLAR_THAC0 (953A1h: the THAC0 routine's end: a Scholar's 1 worse)
+        dw size_line                        ; 249 SITE_SIZE_LINE (7B1CFh: a weapon's damage line drawn: an item box's large dice)
+        dw size_pre                         ; 250 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -15249,6 +15251,259 @@ size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold
         mov byte [bp - 2], 101
         inc word [cs:spared_count]
 .ret:   ret
+; SIZE_LINE (site 249 at 7B1CFh, "inc word [bp-2]", 3 bytes; DSCLOG's SIZE_LINE, SL's 72AA7h) in the
+; routine writing a weapon's lines (7AF9Eh: an item box's, [BP-6] its creature 0; the inventory screen's and
+; the Look box's, its creature's), its damage line just drawn from SS:[BP-2Eh] ("1D8+4"; SI the item type):
+; an item box's line drawn again with the dice against a large target after it ("1D8+4/1D12+4", as
+; Shattered Lands' box), when they differ (SZ_CHANGE: RAV_LARGE, then LARGE_DICE by KIND_OF_TYPE, as
+; SIZE_DICE's; Shillelagh's 2D4, its line 1D6+1 by SIZE_PRE). Always, as SL's (the rule's on in both). The
+; text routine's far address is the game's call's, before the site; the line's x, y and colours the
+; call's ([BP+0Ch], [BP+10h], [BP+12h], [BP+14h]: the sequel's arguments 2 bytes on from SL's).
+SZ_DRAW  equ 0x7B1C8 - 0x7B1D2      ; (the text routine's far address in that call, less the way back)
+SZ_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
+size_line:
+        inc word [bp - 2]
+        cmp dword [bp - 6], 0
+        jne .ret                    ; (an item box's only)
+        sti                         ; (interrupts on while the game's text routine draws: the INT
+        pushad                      ;   turned them off; IRET puts the caller's back)
+        push es
+        mov ax, 0x0402              ; (Shillelagh: 2D4, its line 1D6+1)
+        mov dl, -1
+        cmp si, SHILLELAGH_TYPE
+        je .parse
+        call sz_change
+        jc .out
+.parse: call sz_parse
+        jc .out
+        mov si, sp
+        les bx, [ss:si + 34]        ; the way back (after ES and the PUSHAD)
+        mov ecx, [es:bx + SZ_DRAW]
+        mov [cs:sz_draw], ecx
+        push ss                     ; "/1D12+4" after the line
+        pop es
+        lea di, [bp - SZ_TEXT]
+.end:   cmp byte [es:di], 0
+        je .slash
+        inc di
+        jmp .end
+.slash: mov byte [es:di], '/'
+        inc di
+        call sz_write
+        push word [bp + 0x14]
+        push word [bp + 0x12]
+        push word [bp + 0x10]
+        push word [bp + 0x0C]
+        push ss
+        lea cx, [bp - SZ_TEXT]
+        push cx
+        push dword [bp + 6]         ; the window
+        call far [cs:sz_draw]
+        add sp, 16
+        inc word [cs:sz_count]
+.out:   pop es
+        popad
+.ret:   iret
+
+; SZ_CHANGE: for item type SI, AL the count and AH the sides of its dice against a large target (0: its
+; own) and DL its bonus's change (signed); CF if they are its own. As SIZE_DICE: the Spiritual Hammer 1 off
+; its bonus; the sequel's own weapons by RAV_LARGE first (a count 0 there: the same on any size), else by
+; kind (KIND_OF_TYPE, LARGE_DICE); not Shillelagh: its callers'. Others kept.
+sz_change:
+        push bx
+        push cx
+        xor ax, ax
+        mov dl, -1
+        cmp si, HAMMER_TYPE
+        je .ok
+        mov bx, rav_large
+        mov cx, si
+        or ch, ch
+        jnz .table
+.own:   cmp byte [cs:bx], 0
+        je .table
+        cmp cl, [cs:bx]
+        je .found
+        add bx, 4
+        jmp .own
+.found: mov al, [cs:bx + 1]
+        or al, al
+        jz .none                    ; (its dice the same on any size)
+        mov ah, [cs:bx + 2]
+        mov dl, [cs:bx + 3]
+        jmp .ok
+.table: cmp si, KIND_TYPES
+        jae .none
+        movzx bx, byte [cs:si + kind_of_type]
+        or bx, bx
+        jz .none
+        dec bx
+        imul bx, bx, 3
+        push fs
+        call tail_fs                ; (LARGE_DICE: the tail's)
+        mov ax, [fs:bx + large_dice]
+        mov dl, [fs:bx + large_dice + 2]
+        pop fs
+        or al, al
+        jz .none
+.ok:    pop cx
+        pop bx
+        clc
+        ret
+.none:  pop cx
+        pop bx
+        stc
+        ret
+
+; SZ_PARSE: SZ_DICE and SZ_BONUS from the line at SS:[BP-2Eh] ("1.5x1D8+7"): AL the count and AH the
+; sides for its (0: the line's), its bonus DL (signed) more; DI the count's first digit. CF if the line
+; has no D. BX, CX, DX lost. (DSCLOG's SL_PARSE.)
+sz_parse:
+        lea bx, [bp - SZ_TEXT]
+        mov di, bx
+.d:     mov cl, [ss:di]             ; the D
+        or cl, cl
+        jz .none
+        cmp cl, 'D'
+        je .back
+        inc di
+        jmp .d
+.none:  stc
+        ret
+.back:  cmp di, bx                  ; the count's digits before it
+        je .count
+        mov cl, [ss:di - 1]
+        sub cl, '0'
+        cmp cl, 9
+        ja .count
+        dec di
+        jmp .back
+.count: mov bx, di
+        push ax
+        call sz_number
+        pop ax
+        or al, al
+        jnz .c
+        mov al, cl
+.c:     inc bx                      ; (past the D)
+        push ax
+        call sz_number
+        pop ax
+        or ah, ah
+        jnz .s
+        mov ah, cl
+.s:     movsx dx, dl
+        mov cl, [ss:bx]
+        inc bx
+        cmp cl, '+'
+        je .plus
+        cmp cl, '-'
+        jne .sum
+        call sz_number
+        sub dx, cx
+        jmp .sum
+.plus:  call sz_number
+        add dx, cx
+.sum:   mov [cs:sz_dice], ax
+        mov [cs:sz_bonus], dx
+        clc
+        ret
+
+; SIZE_PRE (site 250 at 7B1B2h, "push word [bp+14h]", 3 bytes; DSCLOG's SIZE_PRE, SL's 72A8Ah) in the same
+; routine, its damage line made at SS:[BP-2Eh] and about to be drawn (SI the item type): Shillelagh's (the
+; game's 2D4, AD&D's against a large target) made 1D6+1, AD&D's against a smaller one (SIZE_DICE's), the
+; rate kept, in the item box, the inventory and the Look box; the box's then gets its "/2D4" (SIZE_LINE).
+; Then the push, the interrupt's frame moved down a word for it.
+size_pre:
+        pushad
+        push es
+        cmp si, SHILLELAGH_TYPE
+        jne .push
+        mov ax, 0x0601              ; 1D6, its bonus 1 more
+        mov dl, 1
+        call sz_parse
+        jc .push
+        push ss
+        pop es
+        call sz_write               ; (over the count on: "1.5x1D6+1")
+.push:  pop es
+        popad
+        sub sp, 2
+        push bp
+        push ax
+        mov bp, sp
+        mov ax, [bp + 6]
+        mov [bp + 4], ax            ; IP
+        mov ax, [bp + 8]
+        mov [bp + 6], ax            ; CS
+        mov ax, [bp + 10]
+        mov [bp + 8], ax            ; flags
+        mov bp, [bp + 2]            ; (the game's BP)
+        mov ax, [bp + 0x14]
+        mov bp, sp
+        mov [bp + 10], ax           ; the word pushed
+        pop ax
+        pop bp
+        iret
+
+; SZ_NUMBER: CX the number at SS:BX (its digits; 0 if none), BX past them. Others kept.
+sz_number:
+        push ax
+        xor cx, cx
+.next:  mov al, [ss:bx]
+        sub al, '0'
+        cmp al, 9
+        ja .out
+        imul cx, cx, 10
+        movzx ax, al
+        add cx, ax
+        inc bx
+        jmp .next
+.out:   pop ax
+        ret
+
+; SZ_WRITE: SZ_DICE and SZ_BONUS ("1D12+7"; no bonus at 0) at ES:DI, a NUL after. Others kept.
+sz_write:
+        pusha
+        movzx ax, byte [cs:sz_dice]
+        call sz_digits
+        mov byte [es:di], 'D'
+        inc di
+        movzx ax, byte [cs:sz_dice + 1]
+        call sz_digits
+        mov ax, [cs:sz_bonus]
+        or ax, ax
+        jz .end
+        mov byte [es:di], '+'
+        jg .sign
+        mov byte [es:di], '-'
+        neg ax
+.sign:  inc di
+        call sz_digits
+.end:   mov byte [es:di], 0
+        popa
+        ret
+
+; SZ_DIGITS: AX (0-999) in decimal at ES:DI, DI past it. AX, BX, CX, DX lost.
+sz_digits:
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop dx
+        add dl, '0'
+        mov [es:di], dl
+        inc di
+        loop .put
+        ret
+sz_draw   dd 0
+sz_dice   dw 0                      ; (the large dice: the count, then the sides)
+sz_bonus  dw 0
+sz_count  dw 0                      ; (the box lines drawn again, for a look in play)
 ; KIND_OF_TYPE: the sequel's item types' weapon kinds, as specialize.KINDS + 1 (0 none): long sword 1,
 ; club 2, dagger 3, short sword 4, mace 5, axe 6, great axe 7, pick 8, quarterstaff 9, polearm 10, gythka
 ; 11, cahulaks 12, chatkcha 13, bow 14, sling 15, staff sling 16, two-handed sword 17, lotulis 18, double
