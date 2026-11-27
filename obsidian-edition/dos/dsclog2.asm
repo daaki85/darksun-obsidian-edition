@@ -396,6 +396,7 @@ extras_drawn dw 0               ; +2112 buttons drawn beside Turn Undead's (PP_E
 lock_off     dw lock_barred     ; +2114 offset of LOCK_BARRED in the tail: the Loader's, the locks each party
                                 ;      member may not try again yet (LOCK_SITE; DSCLOG's +1844, locks.py)
 lock_bars    dw 0               ; +2116 open locks checks LOCK_SITE put out of reach (counted)
+gl_bare      dw 0               ; +2118 gladiators' AC worked out with no armour on, no optimisation (GL_ARMOUR, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4698,6 +4699,7 @@ site_table:
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
+        dw gl_armour                        ; 242 SITE_GL_ARMOUR (5D6B3h: the AC routine's gladiator test: armour optimisation needs armour)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -24559,6 +24561,33 @@ lock_site:
 section tail
 lock_barred times 4 * LOCK_MAX dw 0xFFFF, 0xFFFF
 section image
+
+; GL_ARMOUR (site 242, always on: SL's PROBE_WORN at its AC test, a fix of the game's own): the AC routine's
+; "test word es:[bx+10h],40h" (5D6B3h, SL's 58F86h; ES:BX the sheet of thing SI, the sequel's 40h a gladiator)
+; gave the gladiator's armour optimisation (1 a 5 levels) with no armour on, where Dark Sun gives it to armour
+; worn. ZF clear only for a gladiator who wears armour on its arms, legs, head or chest (ARMOUR_WORN: not a
+; shield, bracers or a robe); RETF 2 keeps the flags for the game's "jz".
+gl_armour:
+        test word [es:bx + 0x10], 0x40
+        jz .out                         ; not a gladiator (ZF set)
+        push es
+        push bx
+        push dx
+        mov dx, ds
+        add dx, FIGHTERS_SEG
+        mov es, dx
+        imul bx, si, 3
+        mov dx, [es:bx + FIGHTERS_OFF + 1] ; its creature (a thing of kind 2 here)
+        call armour_worn
+        pop dx
+        pop bx
+        pop es
+        jc .armour
+        inc word [cs:gl_bare]
+        cmp al, al                      ; none: ZF set, no bonus
+        jmp short .out
+.armour: or sp, sp                      ; ZF and CF clear: the bonus
+.out:   retf 2
 
 resident_end:
 align 16

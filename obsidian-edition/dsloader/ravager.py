@@ -1045,6 +1045,25 @@ PATCHES: Tuple[Patch, ...] = (
     # skill check's "mov [bp-2],ax" (8C7E6h, SL's 803D3h: the same routine, 8C7CBh) made DSCLOG2's LOCK_SITE
     # (site 241), LOCK_BARRED the tail's (the header's +2114), written by the Loader (RavDiceLog._locks_pass)
     Patch("lock_site", 0x8C7E6, bytes.fromhex("8946fe"), _site(241, 3)),
+    # Two of Shattered Lands' fixes of the game's own bugs, the sequel's code the same (GAME-BUGS.md; no helper
+    # code). An archer's pointer showed "can't shoot" once any shot of the round was made: the pointer's missile
+    # test (20486h, SL's 1D657h) refused any count but 0 of the round's attacks (selector 308h +184h, SL's
+    # +181h), which the attack makes 63h once all are made (5D33Ch) and lets another go under (5CAA4h): "cmp
+    # byte es:[si+184h],0 / jnz" made "cmp ...,63h / jnl" (SL's shots_left)
+    # ... the gladiator's armour optimisation (AC 1 better a 5 levels) given with no armour on: the AC routine's
+    # "test word es:[bx+10h],40h" (5D6B3h, SL's gladiator_armour at 58F86h, [bx+12h] there) made DSCLOG2's
+    # GL_ARMOUR (site 242): a gladiator only with armour on its arms, legs, head or chest
+    Patch("gladiator_armour", 0x5D6B3, bytes.fromhex("26f747104000"), _site(242, 6)),
+    Patch("shots_left", 0x20486, bytes.fromhex("2680bc8401007504"), bytes.fromhex("2680bc8401637d04")),
+    # ... and the roster's DELETE (59160h, SL's 54AC1h) took the character by the row clicked alone, where ADD
+    # adds how far the list is scrolled (es:[2] of the window's segment 2F8h): with the list scrolled another
+    # was deleted. SL's roster_delete on the sequel's words (the window 2F8h, the list DS:40C8h, the creatures
+    # DS:19C9h 31h apart, "cmp byte [44Bh],0"), both "mov ax,2F8h" where they were (fixed up on loading)
+    Patch("roster_delete", 0x5917B,
+          bytes.fromhex("803e4b04007417b8f8028ec026a100006bc033c41ec84003d8268b07eb26b8f8028ec026a1"
+                        "00006bc033c41ec84003d8268b47028946fe6bc031c41ec91903d8268b4706"),
+          bytes.fromhex("90909090909090" "b8f8028ec0" "26a100002603060200" "6bc033c41ec84001c3" "b8f802"
+                        "803e4b04007405" "268b07eb17" "268b47028946fe6bc031c41ec91901c3268b4706" "909090")),
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
@@ -1299,6 +1318,22 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
     return bytes(out), done
 
 
+# Slay Living's description (SPIN its number + 1: the sequel's spell 204), which says 3 to 17 for a target that
+# saves, as Shattered Lands' did: the sequel's record has Shattered Lands' damage bytes (+0Ch-0Eh: 04 4C 1F, the
+# game's half of 4d8), so Shattered Lands' words put right (spelltexts.TEXTS[137]) are the sequel's too
+RAV_SLAY_LIVING = 204
+SLAY_TEXT = "slay_text"  # (resources_fixed's name for it, a SKIP's to leave it out)
+# CHOOSE A SPELL's window (WIND 17500) is Shattered Lands' to the byte: its 16th to 18th spells (the 4th level's
+# 16, the 1st's 18 with the new spells) in a seventh column right of the grid, as there; spellgrid's fix
+SPELL_GRID = "spell_grid"
+SLAY_TEXT_OLD = b"SLAY LIVING:  Kills one target. If the target makes its save it suffers 3 to 17 pts of damage.\r\n"
+
+
+def slay_text() -> bytes:
+    from . import spelltexts
+    return spelltexts.TEXTS[137].encode("ascii") + b"\r\n"
+
+
 KIT_PAGES = "kit_pages"  # (resources_fixed's name for the kit pages, a SKIP's to leave them out)
 ROLL_BUTTONS = "roll_buttons"  # (... for STORE and RECALL on the creation screen: rollstore.rav_chunks)
 WEAPON_WINDOW = "weapon_window"  # (... for the weapon window: weaponpages.rav_chunks)
@@ -1315,6 +1350,23 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
     from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP."""
     from . import icons, kitpages
     out, done = spell_fixed(data, skip)
+    if SLAY_TEXT not in skip:  # (Slay Living's description: SL's spelltexts fix, GAME-BUGS.md)
+        try:
+            said = gff.read_gff(out).get(("SPIN", RAV_SLAY_LIVING + 1), b"")
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            said = b""
+        if said == SLAY_TEXT_OLD:  # (only the GOG release's own words put right)
+            out = icons.with_chunks(out, {("SPIN", RAV_SLAY_LIVING + 1): slay_text()})
+            done.append(SLAY_TEXT)
+    if SPELL_GRID not in skip:  # (CHOOSE A SPELL's icons six to a row: SL's spellgrid, the same window)
+        from . import spellgrid
+        try:
+            added = spellgrid.chunks(gff.read_gff(out))
+        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            added = {}
+        if added:
+            out = icons.with_chunks(out, added)
+            done.append(SPELL_GRID)
     if ravspells.SKIP not in skip:
         try:
             added = ravspells.chunks(gff.read_gff(out), sl_dir)

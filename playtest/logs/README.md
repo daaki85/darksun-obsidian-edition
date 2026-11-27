@@ -220,6 +220,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-spell-arrows-made.md) | Wake of the Ravager: a new Spellarcher makes spell arrows on the USE screen (DSCLOG2's SPELL ARROWS, site 240; `ravarrows.make`): CHILL ARROWS and SHOCKING ARROWS buttons, a slot a press, the stack (2 of 24), both shot casting Chill Touch at caster level 6 (the preserver level), no buttons in a fight or with `RAV_NO_ARROWS=1` (the control) |
 | [2026-11-27](2026-11-27-ravager-arrow-leftovers.md) | Wake of the Ravager: the spell arrows' leftovers: a new Spellarcher starts with 24 of each touch spell's arrows it picked, another member's arrows go back to it as the inventory shuts, the pointer lights the button it is on (not Turn Undead's place), a full stack refused, a Vampiric Arrow made, Shocking Arrows shot (Shocking Grasp at caster level 6) from the "Wooden Fine Bow" (no longer "item 305"); the Vampiric Arrow not shot |
 | [2026-11-27](2026-11-27-dsclog2-segment-room.md) | DSCLOG2 in three parts (segment, tail, install): with #218-#223 joined, to Tyr, the tail as built, the USE screen's slots from the tail, upper memory 84,160 free |
+| [2026-11-27](2026-11-27-ravager-audit-rest.md) | Wake of the Ravager, the port audit's rest (WIP): CHOOSE A SPELL's 1st level in rows of six, centred (spellgrid in the sequel); the dice log's effect, PSP and ability lines, LOCK_SITE, GL_ARMOUR and the data fixes not played yet |
 
 ## files/
 
