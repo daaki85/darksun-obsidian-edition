@@ -89,7 +89,22 @@ class FigureFileTests(unittest.TestCase):
                    (599, 1261, 2, 32, 9606), (599, 1261, 0, 32, -9606)]
         stock = {key: b"".join(placed.pack(*row) for row in records)}
         result = ravfigures.region_chunks("rgn033.gff", stock)
-        self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1268, 0, 32, 9606)] + records[1:])
+        self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1278, 0, 32, 9606)] + records[1:])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
+    def test_headquarters_stacks_share_their_front_floor_line(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        # Back and front barrels, the sacks they support, the crate beneath the vase,
+        # and another placement of the same sacks on the floor.
+        rows = [(677, 1269, 9508), (677, 1290, 9646), (566, 1289, 9646),
+                (551, 1303, 9646), (567, 1310, 9646), (552, 1278, 9642),
+                (606, 1281, 9645), (599, 1261, 9606), (664, 1341, 9642)]
+        stock = {key: b"".join(placed.pack(x, y, 0, 32, obj) for x, y, obj in rows)}
+        result = ravfigures.region_chunks("RGN033.GFF", stock)
+        expected_y = [1276, 1290, 1296, 1305, 1310, 1289, 1291, 1278, 1341]
+        self.assertEqual(list(placed.iter_unpack(result[key])),
+                         [(x, ny, 0, 32, obj) for (x, _, obj), ny in zip(rows, expected_y)])
         self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
 
     def test_torn_beds_move_only_their_two_supported_pillows(self):
@@ -144,6 +159,50 @@ class GameFileTests(unittest.TestCase):
                     offset = (100 * distance + percent // 2) // percent
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
+
+    def test_split_beds_match_a_single_scaled_blanket_at_every_placement(self):
+        from dsloader import sprites
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        built = {**stock, **ravfigures.object_chunks(stock)}
+        pairs = {}
+        for name in os.listdir(WOTR):
+            if not (len(name) == 10 and name.startswith("RGN") and name.endswith(".GFF")):
+                continue
+            with open(os.path.join(WOTR, name), "rb") as f:
+                region = gff.read_gff(f.read())
+            region.update(ravfigures.region_chunks(name, region))
+            for (kind, _), data in region.items():
+                if kind != "ETAB":
+                    continue
+                for x, y, height, _, obj in struct.iter_unpack("<HHBBh", data):
+                    rec = built.get(("OJFF", abs(obj)))
+                    if not rec:
+                        continue
+                    pic, = struct.unpack_from("<H", rec, ravfigures.PICTURE)
+                    if pic in (524, 525):
+                        ax, ay = struct.unpack_from("<hh", rec, 2)
+                        # Group by the head's top left, using the foot's 39-row offset.
+                        pos = (name, x - ax, y - height - ay - (39 if pic == 525 else 0))
+                        pairs.setdefault(pos, []).append(pic)
+        self.assertCountEqual([name for name, _, _ in pairs],
+                              ["RGN032.GFF", "RGN033.GFF", "RGN033.GFF", "RGN038.GFF"])
+        for parts in pairs.values():
+            self.assertCountEqual(parts, [524, 525])
+
+        def assembled(chunks):
+            canvas = [[None] * 40 for _ in range(68)]
+            for pic, offset, height in ((524, 0, 46), (525, 39, 29)):
+                rows = sequelicons.decode(chunks[("BMP ", pic)])
+                self.assertEqual((len(rows), len(rows[0])), (height, 40))
+                for y, row in enumerate(rows, offset):
+                    for x, pixel in enumerate(row):
+                        if pixel is not None:
+                            canvas[y][x] = pixel
+            return canvas
+
+        full_bed = sprites.encode_frames([assembled(stock)])
+        self.assertEqual(assembled(built), sequelicons.decode(ravfigures.lowered_furniture(full_bed)))
 
     def test_cushions_and_braziers_keep_the_upper_art_and_floor_line(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:

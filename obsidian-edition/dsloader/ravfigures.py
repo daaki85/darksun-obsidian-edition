@@ -73,7 +73,13 @@ ASSEMBLIES = (
         (9044, 536, 195, 197), (9038, 587, 196, 197), (9026, 646, 168, 179),
         (9038, 623, 194, 196), (9038, 674, 195, 196),
     )),
-    ("RGN033.GFF", (2224,), ((9606, 599, 1261, 1268),)),
+    ("RGN033.GFF", (532, 533, 455), (
+        (9508, 677, 1269, 1276), (9646, 566, 1289, 1296),
+        (9646, 551, 1303, 1305), (9642, 552, 1278, 1289),
+    )),
+    ("RGN033.GFF", (2224, 2226), (
+        (9645, 606, 1281, 1291), (9606, 599, 1261, 1278),
+    )),
     ("RGN033.GFF", (3072,), ((9586, 1761, 1124, 1135),)),
     ("RGN033.GFF", (3792,), ((9586, 1727, 783, 794),)),
     ("RGN033.GFF", DAMAGED_CRATES, (
@@ -226,6 +232,32 @@ def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None, scale: floa
     return sprites.encode_frames(frames)
 
 
+def _lower_split_bed(old: gff.Chunks, new: gff.Chunks) -> None:
+    """Resample the assembled bed, then split it back across the two stock drawing areas."""
+    from . import sequelicons, sprites
+    head, foot = ("BMP ", 524), ("BMP ", 525)
+    for key in (head, foot):
+        if key not in old or key not in new or ("SCMD", key[1]) in new:
+            return
+        if struct.unpack_from("<H", old[key], 4)[0] != 1:
+            return
+        if new[key] not in (old[key], lowered_furniture(old[key])):
+            return  # Preserve a different catalogue redraw.
+    top = sequelicons.decode(old[head])
+    bottom = sequelicons.decode(old[foot])
+    # At all four placements the foot starts 39 rows below the head, overlapping seven rows.
+    if (len(top), len(bottom), len(top[0]), len(bottom[0])) != (46, 29, 40, 40):
+        return
+    overlap = 7
+    shared = [[front if front is not None else back for back, front in zip(upper, lower)]
+              for upper, lower in zip(top[-overlap:], bottom[:overlap])]
+    joined = top[:-overlap] + shared + bottom[overlap:]
+    scaled = sequelicons.decode(lowered_furniture(sprites.encode_frames([joined])))
+    new[head] = sprites.encode_frames([scaled[:len(top)]])
+    clear = [None] * len(bottom[0])
+    new[foot] = sprites.encode_frames([[clear] * overlap + scaled[len(top):]])
+
+
 def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
     """DATA from the catalogue's import (IMPORTED: its OUT_DIR) against the game's own files (STOCK): every
     chunk of KINDS that differs, and the objects moved. Returns the counts."""
@@ -245,6 +277,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         if gone:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
         if f == "OBJEX.GFF":
+            _lower_split_bed(old, new)
             for number in (*FURNITURE, *BASE_ROWS):
                 key = ("BMP ", number)
                 # A later catalogue replacement owns its art and all its poses.
