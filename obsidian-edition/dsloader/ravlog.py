@@ -95,6 +95,10 @@ ADDRESSES: Dict[str, object] = {
     "ITEM_TYPES_PTR": 0x19CD,  # (ravds --fuzzy: 40 uses agree)
     "CREATURE_SIZE": ravager.CREATURE_SIZE, "SHEET_SIZE": ravager.SHEET_SIZE, "ITEM_SIZE": ravager.ITEM_SIZE,
     "WHOSE_TURN": ravager.WHOSE_TURN, "REGION": 0x140C, "EFFECT_COUNT": 0x2100,
+    "FINE_BOW_NAME": ravager.FINE_BOW_NAME,  # (the Spellarcher's Fine Bow: DSCLOG2's FINE_HIT)
+    # the monsters' poison, a Poisoner's first hits (DSCLOG2's POISON_HIT): the sequel's 273 and 274 are
+    # Shattered Lands' 176 and 177 by their records
+    "POISON_POWERS": {273: "Poison (10 damage)", 274: "Poison (30 damage)"}, "POISON_DAMAGE": {273: 10, 274: 30},
     # the fight's combatants, 3 bytes each (kind, the creature's number): the sequel's code reads them
     # as selector 388h at C34h (SL's 360h at C37h), selector 388h being the load segment + 3F49h
     "COMBATANTS_SEG": 0x3F49, "COMBATANTS_OFF": 0xC33,
@@ -259,6 +263,7 @@ RAV_SPELL_HANDLER_RETURNS = (
     (bytes.fromhex("83c40440e9a000"), 1),
     (bytes.fromhex("83c404050300e9"), 3),
 )
+RAV_POISON_POWER = 273  # (a Poisoner's hit's poison: DSCLOG2's RAV_POISON_POWER, kits.POISON_POWER's)
 
 # Choosing an enemy with Tab, the ring and the chance to hit under the pointer (targeting.py, rings.py,
 # hover.py): the sequel's map things (DS:67BBh, 25h bytes; the feet +0Ah, +0Ch; its finder, 29DBDh, reads
@@ -421,7 +426,7 @@ def apply_layout() -> int:
         _SAVED.append((specialize, name, getattr(specialize, name)))
         setattr(specialize, name, value)
     from . import kits  # (the kits' saves: the sequel's charms and its wizards' and priests' spells, 0-EAh;
-    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST)) + RAV_KIT_SPELLS:  # the cures')
+    for name, value in (("CHARMS", RAV_CHARMS), ("SPELL_LAST", RAV_SPELL_LAST), ("POISON_POWER", RAV_POISON_POWER)) + RAV_KIT_SPELLS:  # the cures')
         _SAVED.append((kits, name, getattr(kits, name)))
         setattr(kits, name, value)
     _SAVED.append((dicelog, "SPELL_HANDLER_RETURNS", dicelog.SPELL_HANDLER_RETURNS))  # (the cures' lines)
@@ -1110,6 +1115,8 @@ class RavGameData(game.GameData):
     spell_names: List[str] = []  # (set by RavDiceLog.attach: spell_table's)
 
     def spell_name(self, spell: int) -> str:
+        if spell in game.POISON_POWERS:  # (the monsters' poison, a Poisoner's: the records' "Mons273" and on)
+            return game.POISON_POWERS[spell]
         if 0 <= spell < len(self.spell_names) and self.spell_names[spell]:
             return self.spell_names[spell]
         return super().spell_name(spell)

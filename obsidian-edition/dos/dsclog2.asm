@@ -363,6 +363,14 @@ sh_levels_n dw 0                ; +2080 casting levels made a Shinobi's (SH_CAST
 sh_asks    dw 0                 ; +2082 ... CHOOSE A SPELL asked for one (SH_PICK_ANY) ...
 sh_paged   dw 0                 ; +2084 ... its pages cut to its own spells (SH_PAGE_CUT) ...
 sh_scrolls dw 0                 ; +2086 ... and its tries at a scroll (SH_ROLLS, SH_NOT_ITS), counted
+        times 2088 - ($ - hdr) db 0 ; (none: +2088 follows +2087)
+poison_used  dw 0               ; +2088 a Poisoner's weapons that have poisoned this fight (POISON_HIT): bit N
+                                ;      party member N's main hand, N + 4 its off hand (DSCLOG's +1860);
+                                ;      cleared at a fight's first round (ACID_ROUND)
+poison_doses dw 0               ; +2090 Poisoners' hits made poisoned (POISON_HIT, counted) ...
+poison_casts dw 0               ; +2092 ... and their poison cast on the target (PLAIN_ARROW)
+arrow_pluses dw 0               ; +2094 spell arrows made better by their archer's level (ARROW_PLUS, counted)
+fine_hits    dw 0               ; +2096 attacks with the Fine Bow, 1 better to hit (FINE_HIT, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -1027,6 +1035,7 @@ acid_round:
         je .on
         call tangle_clear               ; (the cahulaks' tangles: none at a fight's start)
         call tu_clear                   ; (and no failed turnings)
+        mov word [cs:poison_used], 0    ; (and each Poisoner's weapon poisons again: POISON_HIT)
         cmp byte [FIRST_ROUND], 0
 .on:
         pushf
@@ -4614,6 +4623,11 @@ site_table:
         dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
         dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
         dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
+        dw site_none                        ; 211 (none here: held for other work)
+        dw site_none                        ; 212 (none here: held for other work)
+        dw site_none                        ; 213 (none here: held for other work)
+        dw poison_hit                       ; 214 SITE_POISON_HIT (5D20Dh: a weapon hit's "does it cast": a Poisoner's poison)
+        dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -7104,6 +7118,13 @@ plain_arrow:
         dec word [bp - 0x18]
         cmp word [bp + 0x16], 1
         jne .shot
+        cmp byte [cs:pz_armed], 0       ; (POISON_HIT's: a Poisoner's dose, the monsters' poison)
+        je .melee
+        mov byte [cs:pz_armed], 0
+        mov word [bp - 0x18], RAV_POISON_POWER
+        inc word [cs:poison_casts]
+        iret
+.melee:
         push ax
         push bx
         push es
@@ -10563,6 +10584,7 @@ rg_heavy    dw 0                ; (rangers in armour not light given the penalty
 off_hand:
         mov ah, 0
         call kit_attacks                ; (the kits' to hit: KITS)
+        call fine_hit                   ; (the Fine Bow's +1: POISON AND ARROWS)
         call spec_attacks               ; (weapon specialization: the skill's rate and THAC0)
         call kit_wild_more              ; (Wild Fighting passed: one more in melee)
         call cah_more                   ; (the cahulaks: the off head's one more a round)
@@ -23810,6 +23832,178 @@ pp_kept_who  db 0                       ; (PP_KEEP's)
 pp_kept_kind dw 0
 pp_kept_icon dw 0
 pick_text times PICK_SIZE db 0          ; (PICK_OFF's)
+
+; ---- POISON AND ARROWS: the Poisoner's poison, the Spellarcher's arrows' plus, the Fine Bow ----
+; (DSCLOG's PROBE_POISON, PROBE_ARROW's ARROW_PLUS_NOW and FINE_HIT on the sequel's weapon attack routine,
+; 5CE80h; sites 214-215, the header's +2088 to +2095; kits.py, spellarrows.py)
+; - POISON_HIT (site 214): "cmp word [es:bx+10h],0" (5D20Dh; 5 bytes) after a weapon's hit (CAH_HIT's
+;   5D1FEh before it), where the attack asks whether the weapon (item [BP+12h], ES:BX) casts a spell (its
+;   +10h, the spell + 1) and, with none and nothing in the quiver's (308h:[7]), leaves (5D2F5h). A
+;   Poisoner's (KIT_POISONER awake, RULE_HI_KITS) first melee hit in a fight ([BP+16h] 1: not a shot or a
+;   throw) with each hand's weapon (POISON_USED: bit N party member N's main hand, N + 4 its off hand, the
+;   item's slot +13h POISON_OFF_SLOT; cleared at a fight's first round, ACID_ROUND, as a dose is used up)
+;   with a weapon of no spell of its own (one with a spell casts that, as it does: no dose used) is
+;   answered "a spell" (ZF clear) and PZ_ARMED set: PLAIN_ARROW (5D248h) then makes the hit's spell the
+;   monsters' poison, RAV_POISON_POWER (273, the sequel's "poison (10 damage)", SL's power 176 by its
+;   record), and the game casts it on the target as a weapon's spell (608h:89h, WEAPON_CAST's level 6 and
+;   no roll to hit): its save (paralysis/poison/death) and its 10 damage the game's. POISON_DOSES counts.
+; - ARROW_PLUS (site 215): "mov es:[0009h],al" (5D456h; 4 bytes) in the routine finding a missile
+;   weapon's ammunition (5D3BAh; [BP+0Ch] the weapon's type, DI the ammunition's item, ES 308h), where it
+;   keeps the ammunition's plus (AL) for the shot's damage (5D021h) and its magic (the better of the
+;   weapon's and the ammunition's, 5C7B5h): SL's PROBE_ARROW. Spell arrows (named AP_ARROW_NAME to +3, the
+;   Loader's names: ravager.mod_name of spellarrows' entries) shot from a bow by a Spellarcher whose turn
+;   it is (WHOSE_TURN's combatant, KIT_SPELLARCHER awake), or by anyone not in the party, are +1 from its
+;   SPELL_ARROW_PLUS1st level, +2 from its 2nd, +3 from its 3rd (AP_LEVEL: a party member's preserver
+;   level, anyone else's highest), where better than their own; other arrows as they are. ARROW_PLUSES counts.
+; - FINE_HIT (from OFF_HAND, whatever the rules, as DSCLOG's): the THAC0 ([BP+0Ah]) 1 better for an attack
+;   with the Fine Bow (item [BP+12h] named RAV_FINE_NAME: the Spellarcher's starting bow, kept so by the
+;   party transfer; a bow of fine make, not magic). FINE_HITS counts.
+RAV_POISON_POWER  equ 273
+POISON_OFF_SLOT   equ 10            ; (an item's slot, +13h: the left hand)
+ITEM_SLOT         equ 0x13
+ITEM_NAME_W       equ 0x14
+AP_ARROW_NAME     equ 256 + 42      ; (ravager.mod_name(0x16C): Burning, Chill, Shocking, Vampiric Arrows)
+RAV_FINE_NAME     equ 256 + 49      ; (ravager.mod_name(0x173): the Fine Bow)
+SPELL_ARROW_PLUS1 equ 5             ; (the preserver levels: kits.SPELL_ARROW_LEVELS)
+SPELL_ARROW_PLUS2 equ 9
+SPELL_ARROW_PLUS3 equ 13
+poison_hit:
+        pushad
+        push es
+        cmp word [es:bx + 0x10], 0
+        jne .flags                      ; (the weapon's own spell: cast as it is)
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .none
+        cmp word [bp + 0x16], 1
+        jne .none                       ; (a shot or a throw)
+        mov ax, [bp + 0x0E]
+        cmp ax, 3
+        ja .none                        ; (not a party member)
+        call cr_is
+        db KIT_POISONER
+        jne .none
+        mov cx, ax
+        cmp byte [es:bx + ITEM_SLOT], POISON_OFF_SLOT
+        jne .hand
+        add cx, 4
+.hand:  bt word [cs:poison_used], cx
+        jc .none                        ; (that weapon's dose used this fight)
+        bts word [cs:poison_used], cx
+        mov byte [cs:pz_armed], 1
+        inc word [cs:poison_doses]
+        or ax, 1                        ; (ZF clear: "a spell")
+        jmp .flags
+.none:  cmp word [es:bx + 0x10], 0
+.flags: pushf
+        pop ax
+        jmp acid_flags
+pz_armed db 0                           ; (1 from POISON_HIT to PLAIN_ARROW: this hit's spell the poison)
+
+arrow_plus:
+        push bx
+        push cx
+        push si
+        push ax
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .store
+        mov si, [bp + 0x0C]
+        cmp si, KIND_TYPES
+        jae .store
+        cmp byte [cs:si + kind_of_type], BOW_KIND
+        jne .store                      ; (not a bow: sling stones as they are)
+        push es
+        imul bx, di, ITEM_SIZE
+        les si, [ITEMS_PTR]
+        add bx, si
+        mov si, [es:bx + ITEM_NAME_W]
+        pop es
+        sub si, AP_ARROW_NAME
+        cmp si, 4
+        jae .store                      ; (not a spell arrow)
+        mov ax, [WHOSE_TURN]
+        call fighter_creature
+        jc .store
+        call ap_level
+        jc .store                       ; (a party member who isn't a Spellarcher: as they are)
+        mov ah, al
+        xor cl, cl
+        cmp ah, SPELL_ARROW_PLUS1       ; (each "sbb cl, -1" adds 1 when AH is at least the level)
+        sbb cl, -1
+        cmp ah, SPELL_ARROW_PLUS2
+        sbb cl, -1
+        cmp ah, SPELL_ARROW_PLUS3
+        sbb cl, -1
+        pop ax
+        cmp al, cl
+        jge .own
+        mov al, cl
+        inc word [cs:arrow_pluses]
+.own:   push ax
+.store: pop ax
+        mov [es:0x9], al
+        pop si
+        pop cx
+        pop bx
+        iret
+
+; AP_LEVEL: AL the level spell arrows' archer, creature AX, shoots them at (their plus): a party member's
+; (a Spellarcher's: CF set for any other) preserver level (class PRESERVER_CLASS or WIZARD_NEW_CLASS among
+; its sheet's classes), anyone else's highest (spellarrows.archer_level). DS the game's; others but AX kept.
+ap_level:
+        push bx
+        push cx
+        push si
+        push es
+        mov si, ax
+        cmp si, 3
+        ja .sheet
+        call cr_is
+        db KIT_SPELLARCHER
+        jne .no
+.sheet: call kit_sheet                  ; (ES:BX the sheet)
+        xor ax, ax
+        mov cx, 3
+.cls:   mov ah, [es:bx + SHEET_LEVELS]
+        cmp si, 3
+        ja .any
+        cmp byte [es:bx + SHEET_CLASSES], PRESERVER_CLASS
+        je .take
+        cmp byte [es:bx + SHEET_CLASSES], WIZARD_NEW_CLASS
+        je .take
+        jmp .next
+.any:   cmp ah, al
+        jbe .next
+.take:  mov al, ah
+.next:  inc bx
+        loop .cls
+        xor ah, ah
+        clc
+        jmp .out
+.no:    stc
+.out:   pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+
+fine_hit:
+        push ax
+        push bx
+        push es
+        mov bx, [bp + 0x12]
+        cmp bx, NO_ITEM
+        jae .out                        ; (no weapon)
+        imul bx, bx, ITEM_SIZE
+        les ax, [ITEMS_PTR]
+        add bx, ax
+        cmp word [es:bx + ITEM_NAME_W], RAV_FINE_NAME
+        jne .out
+        dec word [bp + 0x0A]            ; (+1 to hit)
+        inc word [cs:fine_hits]
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 resident_end:
 align 16

@@ -30,8 +30,10 @@ weapons, ravlog.rav_weapon: RAV_PLAIN), as is a weapon given anew (the Myrmidon'
 An Arena Champion's shield is the sequel's Shield +1 (the fighter's, object 842) in place of a +1 weapon, else its
 plain Shield (840). Each in a material the character can use (restrict.usable: the kit's limits too).
 
-Not here: a Spellarcher's Fine Bow and spell arrows (spellarrows.starting_gear): the sequel's DSCLOG2 has no
-FINE_HIT and no spell arrows made, so a Spellarcher keeps the bow and arrows its class gives.
+A Spellarcher's bow (ravfirstweapon's, of its weapon spec) is made its **Fine Bow** (fine_bow: named
+FINE_BOW_NAME, the sequel's mod_name of Shattered Lands', +1 to hit by DSCLOG2's FINE_HIT), its arrows the ones
+ravfirstweapon gives. Not here: its starting spell arrows (spellarrows.starting_gear): the sequel makes no spell
+arrows yet, so it keeps those arrows.
 """
 
 import struct
@@ -188,12 +190,29 @@ def kit_member(gd, member: int, sheet: bytes, new_items: bool = True) -> List[st
         out += weaponchoice._kit_second_weapon(gd, member, sheet, kid, chosen, worn(), read)
     if kid == kits.POISONER:
         out += _poisoner_blades(gd, member, sheet, read, chosen, new_items)
+    if kid == kits.SPELLARCHER:
+        out += fine_bow(gd, member)
     if kid == kits.GHETTO:
         out += _in_hand(gd, member, sheet, read, kits.DAGGER, new_items, "a Ghetto Fighter fights best with one")
     if kid == kits.BATTLE_MAGE and chosen \
             and not any(specialize.kind_of(_type(i)) == chosen[0] for _, i, _ in worn()):
         out += _in_hand(gd, member, sheet, read, chosen[0], new_items, "the Battle Mage's weapon spec")
     return out
+
+
+def fine_bow(gd, member: int) -> List[str]:
+    """A Spellarcher's bow made its Fine Bow (the module's notes), once: none while it has one. Lines for the log."""
+    from . import ravager
+    fine = ravager.FINE_BOW_NAME
+    bows = [(i, item) for i, item, _ in gd._worn(member) if specialize.kind_of(_type(item)) == weaponchoice.BOW]
+    if not bows or any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == fine for _, item in bows):
+        return []
+    index, item = bows[0]
+    rec = bytearray(item)
+    struct.pack_into("<H", rec, game.ITEM_NAME, fine)
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    gd.guest.write(items + index * game.ITEM_SIZE, bytes(rec))
+    return [f"{gd.creature_name(member)} starts with a Fine Bow (+1 to hit): a Spellarcher's"]
 
 
 def _in_hand(gd, member: int, sheet: bytes, read, kind: int, new_items: bool, why: str) -> List[str]:

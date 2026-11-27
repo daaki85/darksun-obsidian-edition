@@ -1235,6 +1235,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 
 ### An archer's shots
 
+- **A Computer Control archer in Wake of the Ravager shoots only when the bow outclasses its melee**
+  (logs/2026-11-26-ravager-poison-arrows.md): with a short sword in hand, or with it put in the pack in
+  memory (its readied list is the fight's start's), it closes in and strikes; with its bow +15 (`ravitems.py N
+  --bow15`, a test edit, never saved) it shoots every turn. `--fine` names its bows the Fine Bow.
 - **An archer's shots and its turn** (logs/2026-11-14-quiver-turn.md): `shotinfo.py [MEMBER]` lists
   the foes on the screen with their places (click about 10 pixels above the feet in attack mode);
   `turnwatch.py MEMBER SECONDS`, started in the background just before the click, prints each

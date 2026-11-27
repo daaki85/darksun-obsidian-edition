@@ -814,8 +814,8 @@ thief skills, movement and initiative.
 | Battle Dancer, Shadowblade, Military Scout, Ghetto Fighter, Wayfinder | whole |
 | Wilderness Avenger | whole: to hit, damage, hiding, its Cause Wounds stronger, no healing spells |
 | Rescuer | whole: movement, from behind, no shield, cures 1 more a die |
-| Spellarcher | in part: its spell arrows brought along cast on a hit, no armour; no new arrows made, no Fine Bow |
-| Poisoner | in part: its weapon spec and gear limits; no poison |
+| Spellarcher | in part: its spell arrows brought along cast on a hit at its preserver level and are +1 to +3 by it, its Fine Bow (+1 to hit), no armour; no new arrows made yet (no USE-screen buttons), so a new one starts with plain arrows |
+| Poisoner | whole: each hand's first melee hit a fight poisons (a weapon with a spell of its own casts that instead), its weapon spec and gear limits |
 | Spirit Caller | whole: its cleric spells 2 levels higher under the open sky, 1 lower under a roof |
 | Wasteland Seer | whole: its druid spells' level and its powers' PSP costs by the sky |
 | Wild Fury | whole |
@@ -834,11 +834,11 @@ says, from the sequel's own items (its gear is mostly +1 where Shattered Lands' 
   spec), and anything else a kit or the classes can't use goes as in Shattered Lands.
 
 A warrior's weapon is first made a +1 of its first weapon spec ([Starting
-weapons](WEAPON-SPECS.md#starting-weapons)). Not there: a Spellarcher's Fine Bow and spell arrows (it keeps
-the bow and arrows its class gives).
+weapons](WEAPON-SPECS.md#starting-weapons)). A Spellarcher's bow is made its Fine Bow; not there: its
+spell arrows (it keeps the arrows its weapon spec gives).
 
-The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel; a
-Spellarcher's arrows at +3 wait for its arrows there. A new character's kit hit die and PSP (a Battle
+The kits' spell slots and a Battle Mage's or Arcanist's hit points past 10th hold in the sequel, and a
+Spellarcher's arrows are +3 from its 13th preserver level there. A new character's kit hit die and PSP (a Battle
 Mage's, Arcanist's, Mind Warrior's) count from the creation screen there as here: the hit points and PSP
 are rolled again as the kit is chosen. Characters brought from Shattered Lands keep the hit points and PSP
 they have, and the sequel's own party none of these kits.

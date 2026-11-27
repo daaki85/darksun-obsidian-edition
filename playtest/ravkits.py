@@ -5,7 +5,8 @@
                                                and the classes (1-17, up to 3; the rest 0) if given
   python3 ravkits.py count                     DSCLOG2's kit counters (KITS: kit_acs, kit_hits ...; the two
                                                weapons' two_count, off_count, rg_heavy too; KITS' GEAR's
-                                               kit_refused, kit_allowed, and the classes' restrict_count) and its
+                                               kit_refused, kit_allowed, and the classes' restrict_count; POISON AND
+                                               ARROWS' poison_used, poison_doses, poison_casts, arrow_pluses, fine_hits) and its
                                                rules words, from a symbol map of obsidian-edition/dos/dsclog2.asm
   python3 ravkits.py match C1,C2 BYTE [RACE [CLASS...]]  set (as set) the member whose classes are C1,C2 (any order;
                                                c, d, r: any cleric, druid, ranger)
@@ -40,7 +41,8 @@ g = connect(argparse.Namespace(pid=int(open(os.path.join(WORK, 'rav.pid')).read(
 COUNTERS = ('kit_acs', 'kit_hits', 'kit_damages', 'kit_rates', 'kit_saves', 'kit_skills_n', 'kit_rears',
             'kit_moves', 'kit_twos', 'kit_inits', 'kit_stabs', 'stabs', 'enlarges', 'el_spheres', 'spec_hits',
             'spec_damages', 'spec_rates', 'two_count', 'off_count', 'rg_heavy', 'blast_seen', 'blast_kos',
-            'kit_refused', 'kit_allowed', 'restrict_count')
+            'kit_refused', 'kit_allowed', 'restrict_count', 'poison_used', 'poison_doses', 'poison_casts',
+            'arrow_pluses', 'fine_hits')
 
 
 def helper():

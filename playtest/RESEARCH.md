@@ -1710,6 +1710,15 @@ square or its slot puts it down; a refusal says CANNOT USE THIS ITEM and leaves 
   pushes: skip a cast before that (the game's own test of the spell at 5D24Eh, PLAIN_ARROW's way), never
   after it (a skipped 608h:89h crashed the game a round later). A test archer: memory edits (power at
   +10h and +2, plus at +16h), never saved.
+- **The monsters' poison and the ammunition's plus** (2026-11-26, logs/2026-11-26-ravager-poison-arrows.md):
+  the sequel's spell records 273, 274 and 275 are Shattered Lands' 176, 177 and 178 byte for byte but the
+  name (`Mons273`: poison 10 damage, 30, 20; the damage at the record's +1Ch), so "no monster poison power"
+  was wrong. A weapon hit with no spell of its own and nothing in `308h:[7]` leaves at 5D212h (`cmp word
+  [es:bx+10h],0` at 5D20Dh) before PLAIN_ARROW's 5D248h: a spell put on a plain weapon's hit goes in there
+  (DSCLOG2's POISON_HIT). The ammunition routine 5D3BAh ([BP+0Ah] the weapon's item, [BP+0Ch] its type, DI
+  the arrows) keeps their plus at `308h:[9]` (`mov es:[0009h],al`, 5D456h), which the shot's damage adds
+  (5D021h) and the damage kinds take where better than the weapon's (5C7B5h, the other caller): SL's
+  `ES:[6]`. `ravitems.py N --fine` names a combatant's bows the Fine Bow (a test edit, never saved).
 - **Telling foes of one name apart in the dice log**: `ravdice.py --numbers` puts each combatant's
   number after its name ("Draxan#26"), the number `ravitems.py` and `ravfight.py state` use. The
   Draxans' ambush has a fourth "Draxan", combatant 21 (sheet 14, its armour unworn: AC 7, no DEX).

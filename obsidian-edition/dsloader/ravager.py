@@ -170,6 +170,12 @@ def mod_name(sl_entry: int) -> int:
     return NAMES_GAME + sl_entry - names.OWN
 
 
+# The Spellarcher's Fine Bow in the sequel (game.FINE_BOW_NAME, Shattered Lands' 173h: names.NAMES has it, so
+# DSCLOG2's ITEM_NAMES does): DSCLOG2's RAV_FINE_NAME, FINE_HIT's +1 to hit; the party transfer keeps it
+SL_FINE_BOW_NAME = game.FINE_BOW_NAME
+FINE_BOW_NAME = NAMES_GAME + SL_FINE_BOW_NAME - 0x142  # (mod_name: names.OWN 142h)
+
+
 def item_names(kept: Sequence[bytes] = ()) -> bytes:
     """DSCLOG2's ITEM_NAMES as the Loader writes them: the mod's names at mod_name's places, then the
     party transfer's keepsakes' KEPT from KEEPSAKE_NAMES_FIRST (as many as there is room for)."""
@@ -841,6 +847,14 @@ PATCHES: Tuple[Patch, ...] = (
     # SL's PROBE_LV_PICK's place), on to CHOOSE A SPELL at a thief level up from 6th, its own spells alone
     Patch("shinobi_cast_level", 0x97DF1, bytes.fromhex("83c404"), _site(209, 3)),
     Patch("shinobi_level_up", 0x957AB, bytes.fromhex("837e080b"), _site(210, 4)),
+    # ... and the Poisoner's poison and the Spellarcher's arrows' plus (SL's PROBE_POISON, PROBE_ARROW):
+    # DSCLOG2's POISON_HIT (site 214) at the weapon hit's "does the weapon cast" (5D20Dh: a Poisoner's
+    # first melee hit of a fight with each hand's weapon casts the monsters' poison, 273, through
+    # PLAIN_ARROW) and ARROW_PLUS (site 215) where the ammunition routine keeps the arrows' plus
+    # (5D456h: a Spellarcher's spell arrows +1 to +3 by its preserver level). The Fine Bow's +1 to hit
+    # is DSCLOG2's FINE_HIT, from OFF_HAND (no site of its own).
+    Patch("poison_hit", 0x5D20D, bytes.fromhex("26837f1000"), _site(214, 5)),
+    Patch("arrow_plus", 0x5D456, bytes.fromhex("26a20900"), _site(215, 4)),
     # The DAM lines (SL's PROBE_DAM_LINE, PROBE_MISSILE_LINE, PROBE_VIEW_DAM): the inventory's line routine
     # (7AF9Eh, SL's 7286Ah) where it reads a melee weapon's attacks a round from the sheet (+24h, 7B19Eh)
     # and a missile weapon's from its type (+7, 7B124h), and View Character's where it stores the damage
