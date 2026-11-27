@@ -395,3 +395,29 @@ panel's colours left of or above it and their runs. The game's moves of the view
 writes CAM_X/CAM_Y, 2191:0648 draws, from 1B278h, 1CA32h, 1E439h) and centring (191F:01FF on a thing, 191F:0281
 on (x, y)); 2191:0648 scrolls when the view moved 40h or less. Redrawing the whole view after a move leaves the
 copy up as long as before (the top is drawn first): draw again only where the copy went.
+
+## The talk portraits (2026-11-27, logs/2026-11-27-ravager-small-portraits.md)
+
+- **The face's routine** is 88E67h (Shattered Lands' 7DEDFh, the same code): it loads `PORT` n into DS:6558h
+  (88DA2h; n 0 loads BMP 12000 instead, and only while es:[4] of selector 480h, a fight, or es:[3Ch] of 3A0h,
+  the shop, is set: a talk out of a fight with no speaker draws nothing), then draws it by C8h:3BECh (1, x,
+  y, 0, the picture, the frame number). The face is frame 0 at (0, 0), the shop's at (0EEh, 6); with no
+  speaker, **BMP 12000's frame 1** (the frame round a grey wash: the XP at a fight's end). The shop (908B9h)
+  draws 12000's frame 0 (the frame with a clear middle) at (0EEh, 6) first. A picture chunk with one frame
+  where the game asks for frame 1 draws nothing (the first try of the smaller frame, 2026-11-27).
+- **The talk window** is WIND 12500 (Shattered Lands' 3007): its height at head +0C0h, its places 30 bytes
+  from +105h (BUTN 12300 the 300 by 58 click area at (0, 0), EBOX 12400 the text at (75, 6), the scroll
+  buttons 2093/2094 at x 305). WIND 12501 is the replies' window (Shattered Lands' 3008, the same), 12502 a
+  58-high box with its text at (56, 6) (Shattered Lands' 3500). Shattered Lands' talk window has its frame
+  as BUTN 2090 at (8, 6) and the face drawn at (16, 13); the sequel draws its frame inside the face.
+- **The sequel's PORT** faces are 72 by 72 in the PLNR form (one 73 by 72, PORT 24), the frame drawn in
+  (8 left and right, 7 top and bottom: the face 56 by 58 at (8, 7)); BMP 12000 is 73 by 73, two frames.
+  The Loader's copy makes them 48 by 46 (`ravportraits`); new art for the faces goes in as the game's own
+  PORT chunks (72 by 72, frame drawn in), and the Loader cuts it down the same way.
+- **The first fight won quickly for a test** (the XP message): `ravstart.sh` (a new game), the talk (3,
+  Return, four times), a click up the street (160,45), then in memory (never saved) the party's creature
+  records' HP (+0, ids 8016h-8019h, `ravcreatures.py`) 250 and the foes' (side 7 at +15h, HP above 0) 1,
+  and `ravfight.py fight`. The party misses a lot: one run took 8 minutes, another left the last Draxan
+  standing after 20 (`fight` and `tabfight` both). Computer Control then won it in under two minutes: in
+  the fight, the top-left icon (22,17) opens USE, the small lower icon by each living member's figure (98,53;
+  47,113; 98,113), Escape.
