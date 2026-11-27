@@ -370,6 +370,19 @@ class PassTests(unittest.TestCase):
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
 
+    def test_the_kills_said(self):
+        """The monsters killed ("Draxan is killed", tracker.PartyTracker's look at the monsters) follow the hit
+        points, for the fight's tally: the sequel's every summary said "0 kills" without them. Its XP lines
+        and the prime requisites' bonus are not run; nothing while a game loads."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: ["  Draxan now 0/70 HP (-3)"]
+        log.tracker = types.SimpleNamespace(_check_monsters=lambda now: ["Draxan is killed"],
+                                            check=lambda now: self.fail("its XP part not ported"))
+        log._party_check = lambda now: False
+        self.assertEqual(log._after_rolls(False, 1.0), ["  Draxan now 0/70 HP (-3)", "Draxan is killed"])
+        log._party_check = lambda now: True
+        self.assertEqual(log._after_rolls(False, 2.0), ["  Draxan now 0/70 HP (-3)"])
+
 
     def test_slots_written_to_the_helper(self):
         """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148, an offset in its tail,

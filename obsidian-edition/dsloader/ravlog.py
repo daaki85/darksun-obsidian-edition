@@ -1901,7 +1901,7 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage), PSP and ability scores
+        fall matched with the weapon hits it took in, regeneration, spells' damage), the kills (_kills_pass), PSP and ability scores
         changing (_psp_ability_changes), effects starting and ending (effect_changes), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
@@ -1915,6 +1915,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
         out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
         out += self._step(lambda: self.hp_changes(now))
+        out += self._step(lambda: self._kills_pass(now))  # (the monsters killed: the fight's tally counts them)
         out += self._step(lambda: self._psp_ability_changes(now))  # (PSP spent, kept up, regained; abilities)
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -2284,6 +2285,14 @@ class RavDiceLog(dicelog.DiceLog):
             finally:
                 self.guest.writable = before
             self._locks_written = data
+
+    def _kills_pass(self, now: float) -> List[str]:
+        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
+        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
+        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+        if self.tracker is None or self._party_check(now):
+            return []
+        return self.tracker._check_monsters(now)
 
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep

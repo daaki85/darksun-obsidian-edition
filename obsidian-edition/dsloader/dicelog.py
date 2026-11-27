@@ -388,6 +388,11 @@ def error_key(err: BaseException) -> Tuple[str, str, int]:
 POISON_OFF_SLOT = 10  # (an item's slot +11h: the left hand; DSCLOG's)
 
 
+
+def _creature_name_bytes(rec: bytes) -> bytes:
+    """A creature record's name field (game.CREATURE_NAME), to tell the record is still the same creature's."""
+    return bytes(rec[game.CREATURE_NAME:game.CREATURE_NAME + 16])
+
 class DiceLogError(Exception):
     pass
 
@@ -700,6 +705,7 @@ class DiceLog:
         self._tries_new = False  # ... and whether it has moved since the lines were last given
         self._tries_at = -CREATION_TUMBLE  # ... and when it last moved
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
+        self._hp_who: Dict[int, Tuple[int, bytes]] = {}  # creature index -> (combatant, its record's name) at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
         self._charges_ahead: Dict[Tuple[int, int], float] = {}  # charges this poll still to tell of
@@ -2347,13 +2353,26 @@ class DiceLog:
                 self._forget_destroyed(index)
         if snapshot is None:
             snapshot = {combatant: (index, None) for combatant, index in g.combatants().items()}
-        for combatant, (index, rec) in sorted(snapshot.items()):
+        looks = sorted(snapshot.items())
+        # a creature killed leaves the fight's table, often before a look saw its last fall (the sequel's last
+        # blows and kills went unlogged so): one seen at the last look and gone from the table, its record
+        # still its own (the same name), is looked at once more, its fall said only if it is a death
+        seen = {index for _, (index, _) in looks}
+        seen_who = {}
+        gone = [(combatant, (index, rec)) for index, (combatant, name) in self._hp_who.items() if index not in seen
+                for rec in (g.creature(index),) if name.strip(b"\0") and _creature_name_bytes(rec) == name]
+        for combatant, (index, rec) in looks + gone:
             if rec is None:
                 rec = g.creature(index)
             if len(rec) < 2:
                 continue
             hp = struct.unpack_from("<h", rec, 0)[0]
-            current[index] = hp
+            if index not in seen:
+                if hp > 0 or self._hp.get(index, 0) <= hp:
+                    continue  # (no death: gone for another reason, an area change's)
+            else:
+                current[index] = hp
+                seen_who[index] = (combatant, _creature_name_bytes(rec))
             was_out_cold = self._out_cold.get(index, False)
             self._out_cold[index] = rec[game.CREATURE_STATUS] == game.OUT_COLD
             before = self._hp.get(index)
@@ -2400,7 +2419,7 @@ class DiceLog:
                 out.append(f"  {who} {left} (-{before - hp}{resisted})")
             else:
                 out.append(f"  {who} {left} (+{hp - before})")
-        self._hp = current
+        self._hp, self._hp_who = current, seen_who
         return out + self.unhurt(now)
 
     def _forget_destroyed(self, index: Optional[int] = None) -> None:

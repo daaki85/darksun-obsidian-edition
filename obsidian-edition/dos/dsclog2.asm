@@ -399,6 +399,8 @@ lock_bars    dw 0               ; +2116 open locks checks LOCK_SITE put out of r
 gl_bare      dw 0               ; +2118 gladiators' AC worked out with no armour on, no optimisation (GL_ARMOUR, counted)
 ai_walls     dw 0               ; +2120 walls the computer cast across the line of fire (AI_WALL, counted)
 kreen_cuts   dw 0               ; +2122 a party thri-kreen's natural attacks made edged (KREEN_CLAWS, counted)
+berserk_sides dw 0              ; +2124 Berserks put on with the side kept in their record (BERSERK_ADD, counted) ...
+berserk_ends dw 0               ; +2126 ... and Berserks ended with that side given back (BERSERK_END, counted)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -4704,6 +4706,8 @@ site_table:
         dw gl_armour                        ; 242 SITE_GL_ARMOUR (5D6B3h: the AC routine's gladiator test: armour optimisation needs armour)
         dw ai_wall                          ; 243 SITE_AI_WALL (5EE6Bh: the computer's cast, its two points: a wall across the line of fire)
         dw kreen_claws                      ; 244 SITE_KREEN_CLAWS (5C86Dh: a natural attack's magic tested: a party thri-kreen's claws and bite cut)
+        dw berserk_add                      ; 245 SITE_BERSERK_ADD (822A1h: an effect's add, no case of its own: Berserk keeps the side it had)
+        dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -24799,6 +24803,79 @@ kreen_claws:
         inc word [cs:kreen_cuts]
 .test:  cmp word [bp - 0x0C], 0
         retf 2
+
+; BERSERK (sites 245, 246; SL's NS_SIDE, a fix of the game's own): a berserk creature's side (its creature's
+; +15h) is rolled anew, a d2, on each of its turns the computer runs (the AI's routine, 0618h:000Eh, 81770h;
+; SL's 8053:000Eh), and when Berserk (effect 7) ended nothing put it back: the end routine (0618h:1017h)
+; has cases for Controlled and Confused (20, 21: 120Dh, the side from the effect record's +9, which the add's
+; own cases put there, 0D2Dh: the side the creature had) and the clamp of Tenser's Transformation (102, the
+; sequel's other "Berserk", 106Dh), none for 7: so a party member could stay on a side the d2 gave it.
+; - BERSERK_ADD (site 245) replaces "jmp 0F1Eh" (822A1h; 3 bytes), the add's check routine (0618h:0AF9h:
+;   [BP+6] the thing, SI too, [BP+0Ah] the effect, [BP+0Ch] a far pointer to the record's +9 to come) where
+;   the effect has no case of its own: for Berserk the side kept there, as Confused's case keeps it; a
+;   Berserk the thing already has gives its kept side (the side now is a rolled one). Then 0F1Eh.
+; - BERSERK_END (site 246) replaces "jmp 12E9h" (827D6h; 3 bytes) in the end routine ([BP+8] the effect, DX
+;   its record): Berserk to Controlled's case (120Dh, the side given back), any other on to 12E9h.
+BZ_BERSERK  equ 7
+BZ_SIDE     equ 0x15                    ; (the creature's side)
+BZ_EXTRA    equ 9                       ; (an effect record's +9: the side kept)
+BZ_ADD_TAIL equ 0x0F1E - 0x0B34         ; (less the way back: past the INT and the site's number)
+BZ_END_CASE equ 0x120D - 0x1069
+BZ_END_TAIL equ 0x12E9 - 0x1069
+berserk_add:
+        cmp word [bp + 0x0A], BZ_BERSERK
+        jne .out
+        pusha
+        push es
+        mov ax, ds
+        sub ax, EFFECTS_GAP
+        mov es, ax
+        mov bx, EFFECTS_BASE
+        mov cx, [EFFECTS_COUNT]
+        cmp cx, 400
+        ja .now
+        jcxz .now
+.find:  cmp [es:bx], si                 ; (a Berserk of this thing's already: its kept side)
+        jne .next
+        cmp byte [es:bx + 6], BZ_BERSERK
+        jne .next
+        mov al, [es:bx + BZ_EXTRA]
+        jmp short .put
+.next:  add bx, 10
+        loop .find
+.now:   mov ax, ds                      ; (else the side it has now)
+        add ax, FIGHTERS_SEG
+        mov es, ax
+        imul bx, si, 3
+        mov ax, [es:bx + FIGHTERS_OFF + 1]
+        imul ax, ax, CREATURE_SIZE
+        les bx, [CREATURES_PTR]
+        add bx, ax
+        mov al, [es:bx + BZ_SIDE]
+.put:   mov ah, 0
+        les bx, [bp + 0x0C]
+        mov [es:bx], ax
+        inc word [cs:berserk_sides]
+        pop es
+        popa
+.out:   push bp
+        mov bp, sp
+        add word [bp + 2], BZ_ADD_TAIL
+        pop bp
+        iret
+berserk_end:
+        push bx
+        mov bx, BZ_END_TAIL
+        cmp word [bp + 8], BZ_BERSERK
+        jne .go
+        mov bx, BZ_END_CASE
+        inc word [cs:berserk_ends]
+.go:    push bp
+        mov bp, sp
+        add [bp + 4], bx                ; (the way back: past BX and BP)
+        pop bp
+        pop bx
+        iret
 
 resident_end:
 align 16
