@@ -596,9 +596,26 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
                              {ravager.TYPES_CHUNK} | sheets | shine | set(weighed)
                              | {k for k in figures if k in own})  # (GFFI: the index)
-            rgn = gff.read_gff(open(os.path.join(d, "RGN03A2.GFF"), "rb").read())  # (the dining room's copy)
-            rgn_own = gff.read_gff(open(os.path.join(WOTR, "RGN03A.GFF"), "rb").read())
-            self.assertEqual({k for k in rgn_own if rgn_own[k] != rgn[k] and k[0] != "GFFI"}, {("ETAB", 58)})
+            for name, copy in ravfigures.REGIONS.items():
+                with open(os.path.join(d, copy), "rb") as f:
+                    region = gff.read_gff(f.read())
+                with open(os.path.join(WOTR, name), "rb") as f:
+                    original = gff.read_gff(f.read())
+                key = ("ETAB", int(name[3:6], 16))
+                self.assertEqual({k for k in original if original[k] != region[k] and k[0] != "GFFI"}, {key})
+                before = ravfigures.load()["files"].get(name, {}).get(key, original[key])
+                changes = []
+                for old, new in zip(struct.iter_unpack("<HHBBh", before), struct.iter_unpack("<HHBBh", region[key])):
+                    if old != new:
+                        x, y, height, flags, obj = old
+                        self.assertEqual(new, (x, new[1], height, flags, obj))
+                        changes.append((obj, x, y, new[1]))
+                self.assertEqual(len(region[key]), len(before))
+                expected = [move for region, _, moves in ravfigures.ASSEMBLIES if region == name for move in moves]
+                self.assertCountEqual(changes, expected)
+            ravager.write_regions(WOTR, d, {ravfigures.SKIP})
+            for copy in ravfigures.REGIONS.values():
+                self.assertFalse(os.path.exists(os.path.join(d, copy)))
             for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
                 for r in dataitems.records(objs[k])[0]:
                     if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
