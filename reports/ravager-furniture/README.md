@@ -4,7 +4,7 @@
 
 All 20 shipped region files have been scanned. Eight passes have revised 140 pictures at 387 placements across 16 regions. The four regions with no new furniture squash are Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover Notaku’s stall and a chair in Tyr, and four busts and Fletch’s movable bookcase in Mosaic. All 20 regions still have open in-game checks. Mosaic’s remaining checks include three bust offerings and the mirror repair. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle, including Fletch’s movable bookcase and the mirror exit. All 20 regions still have open in-game checks. Mosaic’s other rooms still need live checks, including Ikibod’s work surface. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Freestanding shelves
 
@@ -52,7 +52,7 @@ The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rect
 
 - **Jann.** Around the Sultan, applying the Tyr scale to the whole cushion opened strips of sand between overlapping pillows. On the five thick cushion drawings, the embroidered tops now sit three or five pixels lower. Only the lower edge is compressed. The thin pillows and the Sultan’s own seat keep their original depth in the pile. The two baskets near Utella’s loom use the regular Tyr treatment.
 - **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s occupied rocker keeps all four poses from the figure redraw.
-- **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. Eight active busts and eight corresponding displays share a common pedestal height. The [museum playtest](#live-check-in-the-mosaic-museum) confirms how four of the active busts change during the puzzle.
+- **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. Eight active busts and eight corresponding displays share a common pedestal height. The [museum playtest](#live-check-in-the-mosaic-museum) covers the seven bust interactions, Terris left in place, and all eight shards of the wall mirror.
 
 The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. The revised Jann and Giants rooms still need in-game inspection.
 
@@ -154,9 +154,13 @@ The gold rectangle marks the museum on the full Mosaic map. The lower pair shows
 
 ![Full Mosaic region and museum detail above matching DOSBox views of the busts before and after interaction](mosaic-museum-map.png)
 
-Keep the tested displays at their current height. The cream top shows where a bust can be placed, and the book remains visible against the front lip. Ellith’s pedestal moves down one 16-pixel map square when she comes off it. Horace then sits squarely on it in the lower position. The close-ups show both portable busts and the bookcase that already received the figure redraw. Tamind’s sheet, Finali’s hand mirror, Kaldumeir’s coins and the final mirror repair still need a playthrough. [Playtest log](../../playtest/logs/2026-11-27-ravager-mosaic-museum.md)
+Keep the tested displays at their current height. The cream top shows where a bust can be placed, and the book remains visible against the front lip. Ellith’s pedestal moves down one 16-pixel map square when she comes off it. Horace then sits squarely on it in the lower position. The close-ups show both portable busts and the bookcase that already received the figure redraw. [Playtest log](../../playtest/logs/2026-11-27-ravager-mosaic-museum.md)
 
 ![Horace detached, Ellith in the backpack, Khildril broken, Horace placed, the exposed book and Biblid holding it](mosaic-museum-states.png)
+
+Tamind’s sheet covers his head. Finali’s hand mirror remains visible on her stand. Kaldumeir acknowledges the coins with a message, and Terris stays as found. The wall mirror still looked cracked after seven shards. The eighth restored the reflective pane. Walking north through it returned the party to Veiled Alliance headquarters. Keep the museum furnishings at their reviewed heights. [Completion playtest](../../playtest/logs/2026-11-27-ravager-mosaic-mirror.md)
+
+![Museum before the puzzle and after the eighth shard, with the coin response and the room beyond the mirror](mosaic-mirror-repair.png)
 
 ## Region work queue
 
@@ -174,7 +178,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
-| 03C Mosaic | 89 | 0 | 0 | Check Tamind, Finali, Kaldumeir and the mirror repair. Four busts and the bookcase checked in play |
+| 03C Mosaic | 89 | 0 | 0 | Museum puzzle and exit verified. Check Ikibod’s work surface in play |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
 | 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |

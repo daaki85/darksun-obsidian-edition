@@ -237,6 +237,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-grouped-furniture.md) | Forest dining sets, Alliance vase and Mines 3 throne, DOS region reads and built map comparisons |
 | [2026-11-27](2026-11-27-ravager-furniture-review.md) | #265 furniture in game against stock (Alliance HQ, Forest, Mines 3): the torn beds split in two, not merged; looking at any spot after a jump |
 | [2026-11-27](2026-11-27-ravager-mosaic-museum.md) | Mosaic museum in DOSBox, including both portable busts, Khildril, Fletch’s movable bookcase and Biblid |
+| [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
 | [2026-11-27](2026-11-27-docs-pictures-retake.md) | Kalzith's talk and body pictures with the outfits; which pictures the outfits change; the sequel's items read for ITEMS.md |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 | [2026-11-27](2026-11-27-ravager-ingame-rolls.md) | Wake of the Ravager with the in-game rolls (`play --ravager`): its own dice log attached; the Loader's GOG start on Linux through a DOSBox.exe shim |
